@@ -1,485 +1,144 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH] pm8001: enhance firmware event log retrieval
-Date: Thu, 19 Jan 2012 15:37:19 +0800
-Message-ID: <30B08FEC5E894494BBDA33881AB0E955@usish.com.cn>
-References: <97204CD5-5C4D-4E62-ADD4-CE51AB11C460@xyratex.com>
+From: "Rolf Eike Beer" <eike-kernel@sf-tec.de>
+Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what's
+ missing?
+Date: Thu, 19 Jan 2012 09:16:51 +0100
+Message-ID: <5905c624d943d1f90239deec28357cd2.squirrel@webmail.sf-mail.de>
+References: <4EF2026F.2090506@redhat.com>
+    <CAL1RGDVvSbOjvCFWDSYLm4xRvKftM5OhwEf9pMGrJhjJHxzsaA@mail.gmail.com>
+    <4F1706AD.3080405@redhat.com>
+    <CAL1RGDXDaeNG_YVC38f4nxvBA+btbypcW=1KyEzm90UQOw3HiQ@mail.gmail.com>
+    <CAO+b5-qHGLXr7HtzV9R81sk8=h_L2i9-pR+uZ7yrGiKktsGZUQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:49395 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707Ab2ASHi7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2012 02:38:59 -0500
-In-Reply-To: <97204CD5-5C4D-4E62-ADD4-CE51AB11C460@xyratex.com>
+Received: from mail.sf-mail.de ([62.27.20.61]:39835 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754749Ab2ASIRI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Jan 2012 03:17:08 -0500
+Received: from a124.reverse.yawsp.de ([::ffff:62.27.20.124] HELO mail.sf-mail.de)
+	by mail.sf-mail.de (Qsmtpd 0.21svn) with (DHE-RSA-AES256-SHA encrypted) ESMTPS
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2012 08:17:06 +0000
+In-Reply-To: <CAO+b5-qHGLXr7HtzV9R81sk8=h_L2i9-pR+uZ7yrGiKktsGZUQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Mark Salyzyn' <mark_salyzyn@xyratex.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>
-Cc: 'crystal_yu' <crystal_yu@usish.com>, 'lindar_liu' <lindar_liu@usish.com>, 'James Bottomley' <JBottomley@parallels.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Roland Dreier <roland@purestorage.com>, Ric Wheeler <rwheeler@redhat.com>, linux-fsdevel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> The pm8001 driver event log currently only reports the current firmware
-event
-> log index and the first entry (if log has not wrapped). The enclosed patch
-> enhances the event log retrieved to sequentially return all un-retrieved
-> entries until hitting the last, from then on reporting the last entry. The
-> format has been changed in a parseable fashion reporting some of the
-interpreted
-> fields; the entry sequence number can be used to determine the boundary
-> condition when the last entry is retrieved.
-> 
-> Formerly, when the logging level is changed at runtime, it does not
-transmit
-> the updated level to the firmware. We also added a set of insmod
-parameters
-> so that the logging level may be set at initialization time.
-> 
-[Jack Wang] Patch is welcome.
-> As this disrupts backward compatibility, we look forward to community
-comments.
-> Also, once an earlier log entry is retrieved, it is the expectation of the
-> logging/forensic program(?) to record them as they can not be retrieved
-again.
-> Please keep in mind that the first event log entry as previously reported
-by
-> the existing code becomes somewhat moot if new entries form.
-> 
-[Jack Wang] I wonder what user need this function? How do you test this
-function?
+> On Wed, Jan 18, 2012 at 6:46 PM, Roland Dreier <roland@purestorage.com>
+> wrote:
+>> > Why would you crash is you have device mapper multipath configured to
+>> handle
+>> > path fail over? We have tons of enterprise customers that use that...
+>>
+>> cf http://www.spinics.net/lists/linux-scsi/msg56254.html
+>>
+>> Basically hot unplug of an sdX can oops on any recent kernel, no
+>> matter what dm stuff you have on top.
+>>
+>> > On the broader topic of error handling and so on, I do agree that is
+>> always
+>> > an area of concern (how many times to retry, how long time outs need
+>> to be,
+>> > when to panic/reboot or propagate up an error code)
+>>
+>> Yes, especially the scsi eh stuff escalating to a host reset when
+>> a single drive has gone bad -- even if the HBA is happily doing IO
+>> to other drives, we'll kill access to the whole SAS fabric.
+>
+> With which SCSI low-level diver does that occur and how does the call
+> stack look like ? I haven't encountered any such issues while testing
+> the srp-ha patch set. However, I have to admit that the issues
+> mentioned in the description of commit 3308511 were discovered while
+> testing the srp-ha patch set.
 
-> Signed-off-by: mark_salyzyn@xyratex.com
-> Cc: jack_wang@usish.com
-> Cc: JBottomley@parallels.com
-> Cc: crystal_yu@usish.com
-> Cc: john_gong@usish.com
-> Cc: lindar_liu <lindar_liu@usish.com>
+Likely unrelated to the stuff above, but this has happened for me. I was
+changing the USB devices while sending the machine to s2disk and this was
+what it came up with on resume:
 
-[Jack Wang] 
-Acked-by: Jack Wang <jack_wang@usish.com>
-Thanks.
+[91794.875373] BUG: unable to handle kernel NULL pointer dereference at
+0000000000000008
+[91794.875385] IP: [<ffffffff813c46c1>] sd_revalidate_disk+0x31/0x320
+[91794.875396] PGD 3fe33f067 PUD 3fff84067 PMD 0
+[91794.875403] Oops: 0000 [#1] PREEMPT SMP
+[91794.875410] CPU 7
+[91794.875412] Modules linked in: autofs4 fuse ip6t_LOG xt_tcpudp
+xt_pkttype ipt_LOG xt_limit af_packet edd ip6t_REJECT nf_conntrack_ipv6
+nf_defrag_ipv6 ip6table_raw xt_NO
+TRACK ipt_REJECT iptable_raw iptable_filter ip6table_mangle
+nf_conntrack_netbios_ns nf_conntrack_broadcast nf_conntrack_ipv4
+nf_defrag_ipv4 ip_tables xt_conntrack nf_connt
+rack ip6table_filter ip6_tables x_tables snd_pcm_oss snd_mixer_oss snd_seq
+snd_seq_device cpufreq_conservative cpufreq_userspace cpufreq_powersave
+acpi_cpufreq mperf snd_h
+da_codec_hdmi snd_hda_codec_realtek pl2303 usbserial kvm_intel kvm
+snd_hda_intel e1000e snd_hda_codec iTCO_wdt shpchp mei(C) xhci_hcd
+i2c_i801 pci_hotplug iTCO_vendor_supp
+ort snd_hwdep snd_pcm snd_timer snd soundcore snd_page_alloc sr_mod cdrom
+sg serio_raw pcspkr linear raid456 async_raid6_recov async_pq raid6_pq
+async_xor xor async_memcpy
+ async_tx raid10 raid1 raid0 i915 drm_kms_helper drm i2c_algo_bit button
+video dm_snapshot dm_mod fan processor thermal thermal_sys pata_amd
+ata_generic sata_nv [last unlo
+aded: preloadtrace]
+[91794.875522]
+[91794.875525] Pid: 5242, comm: udisks-daemon Tainted: G         C 
+3.1.0-46-desktop #1                  /DH67CL
+[91794.875534] RIP: 0010:[<ffffffff813c46c1>]  [<ffffffff813c46c1>]
+sd_revalidate_disk+0x31/0x320
+[91794.875543] RSP: 0018:ffff88040399dbb8  EFLAGS: 00010293
+[91794.875547] RAX: 0000000000000000 RBX: 0000000000000000 RCX:
+0000000000000001
+[91794.875552] RDX: ffff8803fa9ba740 RSI: ffff8803fa9ba760 RDI:
+ffff8800d3975c00
+[91794.875557] RBP: ffff8800d3975c00 R08: ffff88040399db84 R09:
+ffff8803fb546400
+[91794.875561] R10: 0000000000000001 R11: 0000000000000001 R12:
+00000000ffffff85
+[91794.875565] R13: ffff88041efcb818 R14: ffff8800d3975c00 R15:
+ffff88040399dc08
+[91794.875718] FS:  00007fb7921067a0(0000) GS:ffff88041fbc0000(0000)
+knlGS:0000000000000000
+[91794.875863] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[91794.876016] CR2: 0000000000000008 CR3: 00000003fe33e000 CR4:
+00000000000406e0
+[91794.876172] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+0000000000000000
+[91794.876321] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
+0000000000000400
+[91794.876473] Process udisks-daemon (pid: 5242, threadinfo
+ffff88040399c000, task ffff8804035fa500)
+[91794.876596] done.
+[91794.876772] Stack:
+[91794.876774]  ffff88040399dc08 ffff88041efcb800 0000000000000000
+00000000ffffff85
+[91794.876777]  ffff88041efcb818 ffffffff811c7a98 ffff88041efcb800
+000000001efcb800
+[91794.876779]  ffff8800d3975c78 ffff8800d3975c0c ffff8800d3975c00
+0000000000000000
+[91794.876782] Call Trace:
+[91794.876791]  [<ffffffff811c7a98>] rescan_partitions+0xa8/0x320
+[91794.876797]  [<ffffffff811928ee>] __blkdev_get+0x2be/0x420
+[91794.876802]  [<ffffffff81192ab2>] blkdev_get+0x62/0x2d0
+[91794.876807]  [<ffffffff81159ffa>] __dentry_open+0x23a/0x3f0
+[91794.876812]  [<ffffffff8116b668>] do_last+0x3f8/0x7b0
+[91794.876816]  [<ffffffff8116bb4b>] path_openat+0xdb/0x400
+[91794.876819]  [<ffffffff8116bedd>] do_filp_open+0x4d/0xc0
+[91794.876823]  [<ffffffff8115b511>] do_sys_open+0x101/0x1e0
+[91794.876827]  [<ffffffff815ae692>] system_call_fastpath+0x16/0x1b
+[91794.876840]  [<00007fb79189fb20>] 0x7fb79189fb1f
+[91794.876841] Code: 86 b0 9e 00 48 89 6c 24 10 48 89 5c 24 08 48 89 fd 4c
+89 64 24 18 4c 89 6c 24 20 c1 e8 15 48 8b 9f 28 03 00 00 83 e0 07 83 f8 03
+<4c> 8b 63 08 0f 87 8e 02 00 00 41 8b 84 24 50 06 00 00 31 d2 83
+[91794.876857] RIP  [<ffffffff813c46c1>] sd_revalidate_disk+0x31/0x320
+[91794.876860]  RSP <ffff88040399dbb8>
+[91794.876861] CR2: 0000000000000008
 
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c
-> b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 45bc197..3fe3d93 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -228,46 +228,140 @@ static ssize_t
-pm8001_ctl_logging_level_store(struct
-> device *cdev,
->  		return -EINVAL;
-> 
->  	pm8001_ha->logging_level = val;
-> +	pm8001_update_main_config_table(pm8001_ha);
->  	return strlen(buf);
->  }
-> 
->  static DEVICE_ATTR(logging_level, S_IRUGO | S_IWUSR,
->  	pm8001_ctl_logging_level_show, pm8001_ctl_logging_level_store);
-> +
->  /**
-> - * pm8001_ctl_aap_log_show - aap1 event log
-> + * pm8001_readlog - generic routine to read a single event log entry
-> + * @header: a pointer to the event log base header
-> + * @entry: a pointer to copy the latest event log into
-> + * @consumer_index: a current local index pointing to the last oldest
-entry
-> + *                  retrieved. Automatically incremented and wrapped.
-> + * @return: A copied entry content and a status. Status return of zero
-means
-> + *          more entries available, and the consumer index is incremented
-and
-> + *          wrapped. A positive status return means last entry, the
-consumer
-> + *          index may be incremented depending of approached or at the
-last
-> + *          entry. Status can also return a negative error code. It is
-the
-> + *          responsibility of the caller to confirm the validity of the
-copied
-> + *          event information.
-> + */
-> +int pm8001_readlog(
-> +	struct eventlog_header *header,
-> +	struct eventlog_entry *entry,
-> +	u32 *consumer_index)
-> +{
-> +	unsigned maximum_index;
-> +	unsigned producer_index;
-> +
-> +	/* Validity of header */
-> +	if ((header->offset != sizeof(*header)) ||
-> +	    (header->entry_size != sizeof(*entry)) ||
-> +	    ((header->signature != EVENTLOG_HEADER_SIGNATURE_AAP1) &&
-> +	     (header->signature != EVENTLOG_HEADER_SIGNATURE_IOP)))
-> +		return -EINVAL;
-> +	/* Validity of hardware indexii */
-> +	maximum_index = header->size / sizeof(*entry);
-> +	if ((maximum_index <= header->producer_index) ||
-> +	    (maximum_index <= header->consumer_index))
-> +		return -EINVAL;
-> +	producer_index = header->producer_index;
-> +	if (producer_index == 0)
-> +		producer_index = maximum_index - 1;
-> +	else
-> +		--producer_index;
-> +	/* Validity of current consumer index */
-> +	if (((producer_index < header->consumer_index) ?
-> +	     ((producer_index < *consumer_index) &&
-> +	      (*consumer_index < header->consumer_index)) :
-> +	     ((producer_index < *consumer_index) ||
-> +	      (*consumer_index < header->consumer_index))) ||
-> +	    (*consumer_index >= maximum_index))
-> +		*consumer_index = header->consumer_index;
-> +	*entry = ((struct eventlog_entry *)(header + 1))[*consumer_index];
-> +	if (*consumer_index != producer_index) {
-> +		++(*consumer_index);
-> +		if (*consumer_index >= maximum_index)
-> +			*consumer_index = 0;
-> +		/* More entries? */
-> +		return *consumer_index == producer_index;
-> +	}
-> +	return 2; /* Already at Last Entry */
-> +}
-> +
-> +/**
-> + * pm8001_validlog - generic routine to validate a single event log entry
-> + * @entry: a pointer to the event log entry
-> + * @return: zero if not valid
-> + */
-> +static inline int pm8001_validlog(struct eventlog_entry *entry)
-> +{
-> +	return ((entry->size <= (sizeof(entry->log) /
-sizeof(entry->log[0]))) &&
-> +		((entry->timestamp_upper != 0) ||
-> +		 (entry->timestamp_lower != 0)));
-> +}
-> +
-> +/**
-> + * pm8001_ctl_log_show - event log
->   * @cdev: pointer to embedded class device
->   * @buf: the buffer returned
-> + * @ind: The region index (AAP1 or IOP)
->   *
->   * A sysfs 'read-only' shost attribute.
->   */
-> -static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
-> -	struct device_attribute *attr, char *buf)
-> +static ssize_t pm8001_ctl_log_show(struct device *cdev, char *buf, int
-ind)
->  {
->  	struct Scsi_Host *shost = class_to_shost(cdev);
->  	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
->  	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +	struct eventlog_entry entry;
-> +	char *str = buf;
->  	int i;
-> -#define AAP1_MEMMAP(r, c) \
-> -	(*(u32 *)((u8*)pm8001_ha->memoryMap.region[AAP1].virt_ptr + (r) * 32
-\
-> -	+ (c)))
-> 
-> -	char *str = buf;
-> -	int max = 2;
-> -	for (i = 0; i < max; i++) {
-> -		str += sprintf(str, "0x%08x 0x%08x 0x%08x 0x%08x 0x%08x
-0x%08x"
-> -			       "0x%08x 0x%08x\n",
-> -			       AAP1_MEMMAP(i, 0),
-> -			       AAP1_MEMMAP(i, 4),
-> -			       AAP1_MEMMAP(i, 8),
-> -			       AAP1_MEMMAP(i, 12),
-> -			       AAP1_MEMMAP(i, 16),
-> -			       AAP1_MEMMAP(i, 20),
-> -			       AAP1_MEMMAP(i, 24),
-> -			       AAP1_MEMMAP(i, 28));
-> +	memset(&entry, 0, sizeof(entry));
-> +	do {
-> +		i = pm8001_readlog(
-> +			(struct eventlog_header *)(
-> +				pm8001_ha->memoryMap.region[ind].virt_ptr),
-> +			&entry,
-> +			(ind == AAP1) ?
-> +				&pm8001_ha->aap1_consumer :
-> +				&pm8001_ha->iop_consumer);
-> +	} while ((i == 0) && !pm8001_validlog(&entry));
-> +	if ((i >= 0) && pm8001_validlog(&entry)) {
-> +		u32 *lp;
-> +		unsigned long long timestamp =
-> +			(((unsigned long long)entry.timestamp_upper) << 32)
-|
-> +			entry.timestamp_lower;
-> +		str += snprintf(str, PAGE_SIZE - (str - buf),
-> +			"%u %llu.%09llu %u",
-> +			entry.severity,
-> +			timestamp / (1000000000 / 8),
-> +			(timestamp % (1000000000 / 8)) * 8,
-> +			entry.sequence);
-> +		for (lp = entry.log, i = entry.size; i > 0; --i)
-> +			str += snprintf(str, PAGE_SIZE - (str - buf),
-> +				" 0x%08x", *(lp++));
-> +		str += snprintf(str, PAGE_SIZE - (str - buf), "\n");
->  	}
-> -
->  	return str - buf;
->  }
-> +
-> +/**
-> + * pm8001_ctl_aap_log_show - aap1 event log
-> + * @cdev: pointer to embedded class device
-> + * @buf: the buffer returned
-> + *
-> + * A sysfs 'read-only' shost attribute.
-> + */
-> +static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
-> +	struct device_attribute *attr, char *buf)
-> +{
-> +	return pm8001_ctl_log_show(cdev, buf, AAP1);
-> +}
->  static DEVICE_ATTR(aap_log, S_IRUGO, pm8001_ctl_aap_log_show, NULL);
->  /**
->   * pm8001_ctl_aap_log_show - IOP event log
-> @@ -279,29 +373,7 @@ static DEVICE_ATTR(aap_log, S_IRUGO,
-> pm8001_ctl_aap_log_show, NULL);
->  static ssize_t pm8001_ctl_iop_log_show(struct device *cdev,
->  	struct device_attribute *attr, char *buf)
->  {
-> -	struct Scsi_Host *shost = class_to_shost(cdev);
-> -	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> -	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> -#define IOP_MEMMAP(r, c) \
-> -	(*(u32 *)((u8*)pm8001_ha->memoryMap.region[IOP].virt_ptr + (r) * 32
-\
-> -	+ (c)))
-> -	int i;
-> -	char *str = buf;
-> -	int max = 2;
-> -	for (i = 0; i < max; i++) {
-> -		str += sprintf(str, "0x%08x 0x%08x 0x%08x 0x%08x 0x%08x
-0x%08x"
-> -			       "0x%08x 0x%08x\n",
-> -			       IOP_MEMMAP(i, 0),
-> -			       IOP_MEMMAP(i, 4),
-> -			       IOP_MEMMAP(i, 8),
-> -			       IOP_MEMMAP(i, 12),
-> -			       IOP_MEMMAP(i, 16),
-> -			       IOP_MEMMAP(i, 20),
-> -			       IOP_MEMMAP(i, 24),
-> -			       IOP_MEMMAP(i, 28));
-> -	}
-> -
-> -	return str - buf;
-> +	return pm8001_ctl_log_show(cdev, buf, IOP);
->  }
->  static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_log_show, NULL);
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
-> b/drivers/scsi/pm8001/pm8001_hwi.c
-> index b7b92f7..b3bd781 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -250,8 +250,8 @@ init_default_table_values(struct pm8001_hba_info
-> *pm8001_ha)
->   * update_main_config_table - update the main default table to the HBA.
->   * @pm8001_ha: our hba card information
->   */
-> -static void __devinit
-> -update_main_config_table(struct pm8001_hba_info *pm8001_ha)
-> +void
-> +pm8001_update_main_config_table(struct pm8001_hba_info *pm8001_ha)
->  {
->  	void __iomem *address = pm8001_ha->main_cfg_tbl_addr;
->  	pm8001_mw32(address, 0x24,
-> @@ -603,7 +603,7 @@ static int __devinit pm8001_chip_init(struct
-> pm8001_hba_info *pm8001_ha)
->  	read_inbnd_queue_table(pm8001_ha);
->  	read_outbnd_queue_table(pm8001_ha);
->  	/* update main config table ,inbound table and outbound table */
-> -	update_main_config_table(pm8001_ha);
-> +	pm8001_update_main_config_table(pm8001_ha);
->  	update_inbnd_queue_table(pm8001_ha, 0);
->  	update_outbnd_queue_table(pm8001_ha, 0);
->  	mpi_set_phys_g3_with_ssc(pm8001_ha, 0);
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c
-> b/drivers/scsi/pm8001/pm8001_init.c
-> index c21a216..c638da4 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -48,6 +48,8 @@ static const struct pm8001_chip_info pm8001_chips[] = {
->  	[chip_8001] = {  8, &pm8001_8001_dispatch,},
->  };
->  static int pm8001_id;
-> +static int pm8001_logging_level = PM8001_FAIL_LOGGING;
-> +static int pm8001_logging_size = PM8001_EVENT_LOG_SIZE;
-> 
->  LIST_HEAD(hba_list);
-> 
-> @@ -212,16 +214,19 @@ static int __devinit pm8001_alloc(struct
-pm8001_hba_info
-> *pm8001_ha)
->  	pm8001_ha->tags = kzalloc(PM8001_MAX_CCB, GFP_KERNEL);
->  	if (!pm8001_ha->tags)
->  		goto err_out;
-> +	pm8001_logging_size = ((pm8001_logging_size + 31) / 32) * 32;
-> +	if (pm8001_logging_size < 64)
-> +		pm8001_logging_size = 64;
->  	/* MPI Memory region 1 for AAP Event Log for fw */
->  	pm8001_ha->memoryMap.region[AAP1].num_elements = 1;
-> -	pm8001_ha->memoryMap.region[AAP1].element_size =
-> PM8001_EVENT_LOG_SIZE;
-> -	pm8001_ha->memoryMap.region[AAP1].total_len = PM8001_EVENT_LOG_SIZE;
-> +	pm8001_ha->memoryMap.region[AAP1].element_size =
-pm8001_logging_size;
-> +	pm8001_ha->memoryMap.region[AAP1].total_len = pm8001_logging_size;
->  	pm8001_ha->memoryMap.region[AAP1].alignment = 32;
-> 
->  	/* MPI Memory region 2 for IOP Event Log for fw */
->  	pm8001_ha->memoryMap.region[IOP].num_elements = 1;
-> -	pm8001_ha->memoryMap.region[IOP].element_size =
-PM8001_EVENT_LOG_SIZE;
-> -	pm8001_ha->memoryMap.region[IOP].total_len = PM8001_EVENT_LOG_SIZE;
-> +	pm8001_ha->memoryMap.region[IOP].element_size = pm8001_logging_size;
-> +	pm8001_ha->memoryMap.region[IOP].total_len = pm8001_logging_size;
->  	pm8001_ha->memoryMap.region[IOP].alignment = 32;
-> 
->  	/* MPI Memory region 3 for consumer Index of inbound queues */
-> @@ -242,7 +247,7 @@ static int __devinit pm8001_alloc(struct
-pm8001_hba_info
-> *pm8001_ha)
->  	pm8001_ha->memoryMap.region[IB].total_len = 256 * 64;
->  	pm8001_ha->memoryMap.region[IB].alignment = 64;
-> 
-> -	/* MPI Memory region 6 inbound queues */
-> +	/* MPI Memory region 6 outbound queues */
->  	pm8001_ha->memoryMap.region[OB].num_elements = 256;
->  	pm8001_ha->memoryMap.region[OB].element_size = 64;
->  	pm8001_ha->memoryMap.region[OB].total_len = 256 * 64;
-> @@ -381,7 +386,7 @@ pm8001_pci_alloc(struct pci_dev *pdev, u32 chip_id,
-struct
-> Scsi_Host *shost)
->  	pm8001_ha->sas = sha;
->  	pm8001_ha->shost = shost;
->  	pm8001_ha->id = pm8001_id++;
-> -	pm8001_ha->logging_level = 0x01;
-> +	pm8001_ha->logging_level = pm8001_logging_level;
->  	sprintf(pm8001_ha->name, "%s%d", DRV_NAME, pm8001_ha->id);
->  #ifdef PM8001_USE_TASKLET
->  	tasklet_init(&pm8001_ha->tasklet, pm8001_tasklet,
-> @@ -614,8 +619,8 @@ intx:
->   * @ent: pci device id
->   *
->   * This function is the main initialization function, when register a new
-> - * pci driver it is invoked, all struct an hardware initilization should
-be
-> done
-> - * here, also, register interrupt
-> + * pci driver it is invoked, all struct and hardware initialization
-should
-> be
-> + * done here, also, register interrupt
->   */
->  static int __devinit pm8001_pci_probe(struct pci_dev *pdev,
->  	const struct pci_device_id *ent)
-> @@ -899,6 +904,9 @@ static void __exit pm8001_exit(void)
->  	destroy_workqueue(pm8001_wq);
->  }
-> 
-> +module_param(pm8001_logging_level, int, 0);
-> +module_param_named(logging_size, pm8001_logging_size, int,
-> S_IRUGO|S_IWUSR);
-> +MODULE_PARM_DESC(logging_size, "Event logging buffer size");
->  module_init(pm8001_init);
->  module_exit(pm8001_exit);
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.h
-> b/drivers/scsi/pm8001/pm8001_sas.h
-> index 93959fe..84d3170 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.h
-> +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -336,6 +336,29 @@ struct outbound_queue_table {
->  	__le32			producer_index;
->  	u32			consumer_idx;
->  };
-> +struct eventlog_header {
-> +	__le32			signature;
-> +#define EVENTLOG_HEADER_SIGNATURE_AAP1 0x1234AAAA
-> +#define EVENTLOG_HEADER_SIGNATURE_IOP 0x5678CCCC
-> +	__le32			offset; /* sizeof(eventlog_header) */
-> +	u32			reserved1;
-> +	__le32			size;
-> +	u32			reserved2;
-> +	__le32			consumer_index;
-> +	__le32			producer_index;
-> +	__le32			entry_size;
-> +};
-> +struct eventlog_entry {
-> +	u8			size:3;
-> +	u8			reserved1:5;
-> +	u8			reserved2[2];
-> +	u8			reserved:4;
-> +	u8			severity:4;
-> +	__le32			timestamp_upper;
-> +	__le32			timestamp_lower;
-> +	__le32			sequence;
-> +	__le32			log[4];
-> +};
->  struct pm8001_hba_memspace {
->  	void __iomem  		*memvirtaddr;
->  	u64			membase;
-> @@ -383,6 +406,9 @@ struct pm8001_hba_info {
->  	u32			logging_level;
->  	u32			fw_status;
->  	const struct firmware 	*fw_image;
-> +	/* Local consumer indexes in support of sysfs event log node */
-> +	u32			aap1_consumer;
-> +	u32			iop_consumer;
->  };
-> 
->  struct pm8001_work {
-> @@ -488,6 +514,11 @@ int pm8001_mem_alloc(struct pci_dev *pdev, void
-> **virt_addr,
->  	dma_addr_t *pphys_addr, u32 *pphys_addr_hi, u32 *pphys_addr_lo,
->  	u32 mem_size, u32 align);
-> 
-> +void pm8001_update_main_config_table(struct pm8001_hba_info *pm8001_ha);
-> +int pm8001_readlog(
-> +	struct eventlog_header *header,
-> +	struct eventlog_entry *entry,
-> +	u32 *consumer_index);
-> 
->  /* ctl shared API */
->  extern struct device_attribute *pm8001_host_attrs[];
-> 
-> ______________________________________________________________________
-> This email may contain privileged or confidential information, which
-should
-> only be used for the purpose for which it was sent by Xyratex. No further
-rights
-> or licenses are granted to use such information. If you are not the
-intended
-> recipient of this message, please notify the sender by return and delete
-it.
-> You may not use, copy, disclose or rely on the information contained in
-it.
-> 
-> Internet email is susceptible to data corruption, interception and
-> unauthorised amendment for which Xyratex does not accept liability. While
-we
-> have taken reasonable precautions to ensure that this email is free of
-viruses,
-> Xyratex does not accept liability for the presence of any computer viruses
-in
-> this email, nor for any losses caused as a result of viruses.
-> 
-> Xyratex Technology Limited (03134912), Registered in England & Wales,
-> Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
-> 
-> The Xyratex group of companies also includes, Xyratex Ltd, registered in
-> Bermuda, Xyratex International Inc, registered in California, Xyratex
-> (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co
-Ltd
-> registered in The People's Republic of China and Xyratex Japan Limited
-> registered in Japan.
-> ______________________________________________________________________
-> 
+Kernel is from openSuSE 12.1:
 
+Linux devpool02 3.1.0-46-desktop #1 SMP PREEMPT Mon Oct 24 20:49:37 UTC
+2011 (1cba112) x86_64 x86_64 x86_64 GNU/Linux
+
+Greetings,
+
+Eike
