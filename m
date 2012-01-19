@@ -1,8 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 02/10] hpsa: removed unneeded structure member max_sg_entries
-	and fix badly named constant MAXSGENTRIES
-Date: Thu, 19 Jan 2012 14:00:48 -0600
-Message-ID: <20120119200048.17835.62579.stgit@beardog.cce.hp.com>
+Subject: [PATCH 07/10] hpsa: refactor hpsa_figure_bus_target_lun
+Date: Thu, 19 Jan 2012 14:01:14 -0600
+Message-ID: <20120119200114.17835.91593.stgit@beardog.cce.hp.com>
 References: <20120119200042.17835.93058.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,131 +15,147 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-We had both h->max_sg_entries and h->maxsgentries in the per controller
-structure which is terribly confusing.  max_sg_entries was really
-just a constant, 32, which defines how big the "block fetch table"
-is, which is as large as the max number of SG elements embedded
-within a command (excluding SG elements in chain blocks).
-
-MAXSGENTRIES was the constant used to denote the max number of SG
-elements embedded within a command, also a poor name.
-
-So renamed MAXSGENTREIS to SG_ENTRIES_IN_CMD, and removed
-h->max_sg_entries and replaced it with SG_ENTRIES_IN_CMD.
-
-h->maxsgentries is unchanged, and is the maximum number of sg
-elements the controller will support in a command, including
-those in chain blocks, minus 1 for the chain block pointer..
+It should call hpsa_set_bus_target_lun rather
+than individually setting bus, target and lun.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c     |   20 ++++++++++----------
- drivers/scsi/hpsa.h     |    1 -
- drivers/scsi/hpsa_cmd.h |    4 ++--
- 3 files changed, 12 insertions(+), 13 deletions(-)
+ drivers/scsi/hpsa.c |   68 +++++++++++++++++++++++----------------------------
+ 1 files changed, 30 insertions(+), 38 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index e9b1aa8..d70d59c 100644
+index c52bc76..ea9b685 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2698,16 +2698,16 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		status = -EINVAL;
- 		goto cleanup1;
+@@ -1628,35 +1628,30 @@ static int is_msa2xxx(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
+  * in hpsa_find_target_lun, called by hpsa_scsi_add_entry.)
+  */
+ static void figure_bus_target_lun(struct ctlr_info *h,
+-	u8 *lunaddrbytes, int *bus, int *target, int *lun,
+-	struct hpsa_scsi_dev_t *device)
+-{
+-	u32 lunid;
+-
+-	if (is_logical_dev_addr_mode(lunaddrbytes)) {
+-		/* logical device */
+-		lunid = le32_to_cpu(*((__le32 *) lunaddrbytes));
+-		if (is_msa2xxx(h, device)) {
+-			/* msa2xxx way, put logicals on bus 1
+-			 * and match target/lun numbers box
+-			 * reports.
+-			 */
+-			*bus = 1;
+-			*target = (lunid >> 16) & 0x3fff;
+-			*lun = lunid & 0x00ff;
+-		} else {
+-			*bus = 0;
+-			*target = 0;
+-			*lun = (lunid & 0x3fff);
+-		}
+-	} else {
++	u8 *lunaddrbytes, struct hpsa_scsi_dev_t *device)
++{
++	u32 lunid = le32_to_cpu(*((__le32 *) lunaddrbytes));
++
++	if (!is_logical_dev_addr_mode(lunaddrbytes)) {
++		/* physical device, target and lun filled in later */
+ 		if (is_hba_lunid(lunaddrbytes))
+-			*bus = 3; /* controller */
++			hpsa_set_bus_target_lun(device, 3, 0, lunid & 0x3fff);
+ 		else
+-			*bus = 2; /* physical device */
+-		*target = -1;
+-		*lun = -1; /* we will fill these in later. */
++			/* defer target, lun assignment for physical devices */
++			hpsa_set_bus_target_lun(device, 2, -1, -1);
++		return;
++	}
++	/* It's a logical device */
++	if (is_msa2xxx(h, device)) {
++		/* msa2xxx way, put logicals on bus 1
++		 * and match target/lun numbers box
++		 * reports, other smart array, bus 0, target 0, match lunid
++		 */
++		hpsa_set_bus_target_lun(device,
++			1, (lunid >> 16) & 0x3fff, lunid & 0x00ff);
++		return;
  	}
--	if (ioc->buf_size > ioc->malloc_size * MAXSGENTRIES) {
-+	if (ioc->buf_size > ioc->malloc_size * SG_ENTRIES_IN_CMD) {
- 		status = -EINVAL;
- 		goto cleanup1;
- 	}
--	buff = kzalloc(MAXSGENTRIES * sizeof(char *), GFP_KERNEL);
-+	buff = kzalloc(SG_ENTRIES_IN_CMD * sizeof(char *), GFP_KERNEL);
- 	if (!buff) {
- 		status = -ENOMEM;
- 		goto cleanup1;
- 	}
--	buff_size = kmalloc(MAXSGENTRIES * sizeof(int), GFP_KERNEL);
-+	buff_size = kmalloc(SG_ENTRIES_IN_CMD * sizeof(int), GFP_KERNEL);
- 	if (!buff_size) {
- 		status = -ENOMEM;
- 		goto cleanup1;
-@@ -4599,15 +4599,15 @@ static __devinit void hpsa_enter_performant_mode(struct ctlr_info *h,
- 	 * Each SG entry requires 16 bytes.  The eight registers are programmed
- 	 * with the number of 16-byte blocks a command of that size requires.
- 	 * The smallest command possible requires 5 such 16 byte blocks.
--	 * the largest command possible requires MAXSGENTRIES + 4 16-byte
-+	 * the largest command possible requires SG_ENTRIES_IN_CMD + 4 16-byte
- 	 * blocks.  Note, this only extends to the SG entries contained
- 	 * within the command block, and does not extend to chained blocks
- 	 * of SG elements.   bft[] contains the eight values we write to
- 	 * the registers.  They are not evenly distributed, but have more
- 	 * sizes for small commands, and fewer sizes for larger commands.
- 	 */
--	int bft[8] = {5, 6, 8, 10, 12, 20, 28, MAXSGENTRIES + 4};
--	BUILD_BUG_ON(28 > MAXSGENTRIES + 4);
-+	int bft[8] = {5, 6, 8, 10, 12, 20, 28, SG_ENTRIES_IN_CMD + 4};
-+	BUILD_BUG_ON(28 > SG_ENTRIES_IN_CMD + 4);
- 	/*  5 = 1 s/g entry or 4k
- 	 *  6 = 2 s/g entry or 8k
- 	 *  8 = 4 s/g entry or 16k
-@@ -4620,8 +4620,9 @@ static __devinit void hpsa_enter_performant_mode(struct ctlr_info *h,
- 	memset(h->reply_pool, 0, h->reply_pool_size);
- 	h->reply_pool_head = h->reply_pool;
++	hpsa_set_bus_target_lun(device, 0, 0, lunid & 0x3fff);
+ }
  
--	bft[7] = h->max_sg_entries + 4;
--	calc_bucket_map(bft, ARRAY_SIZE(bft), 32, h->blockFetchTable);
-+	bft[7] = SG_ENTRIES_IN_CMD + 4;
-+	calc_bucket_map(bft, ARRAY_SIZE(bft),
-+				SG_ENTRIES_IN_CMD, h->blockFetchTable);
- 	for (i = 0; i < 8; i++)
- 		writel(bft[i], &h->transtable->BlockFetch[i]);
+ /*
+@@ -1673,12 +1668,11 @@ static void figure_bus_target_lun(struct ctlr_info *h,
+ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+ 	struct hpsa_scsi_dev_t *tmpdevice,
+ 	struct hpsa_scsi_dev_t *this_device, u8 *lunaddrbytes,
+-	int bus, int target, int lun, unsigned long lunzerobits[],
+-	int *nmsa2xxx_enclosures)
++	unsigned long lunzerobits[], int *nmsa2xxx_enclosures)
+ {
+ 	unsigned char scsi3addr[8];
  
-@@ -4659,14 +4660,13 @@ static __devinit void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
- 		return;
+-	if (test_bit(target, lunzerobits))
++	if (test_bit(tmpdevice->target, lunzerobits))
+ 		return 0; /* There is already a lun 0 on this target. */
  
- 	hpsa_get_max_perf_mode_cmds(h);
--	h->max_sg_entries = 32;
- 	/* Performant mode ring buffer and supporting data structures */
- 	h->reply_pool_size = h->max_commands * sizeof(u64);
- 	h->reply_pool = pci_alloc_consistent(h->pdev, h->reply_pool_size,
- 				&(h->reply_pool_dhandle));
+ 	if (!is_logical_dev_addr_mode(lunaddrbytes))
+@@ -1687,11 +1681,11 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+ 	if (!is_msa2xxx(h, tmpdevice))
+ 		return 0; /* It's only the MSA2xxx that have this problem. */
  
- 	/* Need a block fetch table for performant mode */
--	h->blockFetchTable = kmalloc(((h->max_sg_entries+1) *
-+	h->blockFetchTable = kmalloc(((SG_ENTRIES_IN_CMD + 1) *
- 				sizeof(u32)), GFP_KERNEL);
+-	if (lun == 0) /* if lun is 0, then obviously we have a lun 0. */
++	if (tmpdevice->lun == 0) /* if lun is 0, then we have a lun 0. */
+ 		return 0;
  
- 	if ((h->reply_pool == NULL)
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 91edafb..b4b97eb 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -58,7 +58,6 @@ struct ctlr_info {
- 	unsigned long paddr;
- 	int 	nr_cmds; /* Number of commands allowed on this controller */
- 	struct CfgTable __iomem *cfgtable;
--	int     max_sg_entries;
- 	int	interrupts_enabled;
- 	int	major;
- 	int 	max_commands;
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 3fd4715..516d6e5 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -23,7 +23,7 @@
+ 	memset(scsi3addr, 0, 8);
+-	scsi3addr[3] = target;
++	scsi3addr[3] = tmpdevice->target;
+ 	if (is_hba_lunid(scsi3addr))
+ 		return 0; /* Don't add the RAID controller here. */
  
- /* general boundary defintions */
- #define SENSEINFOBYTES          32 /* may vary between hbas */
--#define MAXSGENTRIES            32
-+#define SG_ENTRIES_IN_CMD	32 /* Max SG entries excluding chain blocks */
- #define HPSA_SG_CHAIN		0x80000000
- #define MAXREPLYQS              256
+@@ -1708,8 +1702,9 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+ 	if (hpsa_update_device_info(h, scsi3addr, this_device, NULL))
+ 		return 0;
+ 	(*nmsa2xxx_enclosures)++;
+-	hpsa_set_bus_target_lun(this_device, bus, target, 0);
+-	set_bit(target, lunzerobits);
++	hpsa_set_bus_target_lun(this_device,
++				tmpdevice->bus, tmpdevice->target, 0);
++	set_bit(tmpdevice->target, lunzerobits);
+ 	return 1;
+ }
  
-@@ -282,7 +282,7 @@ struct CommandList {
- 	struct CommandListHeader Header;
- 	struct RequestBlock      Request;
- 	struct ErrDescriptor     ErrDesc;
--	struct SGDescriptor      SG[MAXSGENTRIES];
-+	struct SGDescriptor      SG[SG_ENTRIES_IN_CMD];
- 	/* information associated with the command */
- 	u32			   busaddr; /* physical addr of this record */
- 	struct ErrorInfo *err_info; /* pointer to the allocated mem */
+@@ -1804,7 +1799,6 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 	int ncurrent = 0;
+ 	int reportlunsize = sizeof(*physdev_list) + HPSA_MAX_PHYS_LUN * 8;
+ 	int i, nmsa2xxx_enclosures, ndevs_to_allocate;
+-	int bus, target, lun;
+ 	int raid_ctlr_position;
+ 	DECLARE_BITMAP(lunzerobits, HPSA_MAX_TARGETS_PER_CTLR);
+ 
+@@ -1869,8 +1863,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 		if (hpsa_update_device_info(h, lunaddrbytes, tmpdevice,
+ 							&is_OBDR))
+ 			continue; /* skip it if we can't talk to it. */
+-		figure_bus_target_lun(h, lunaddrbytes, &bus, &target, &lun,
+-			tmpdevice);
++		figure_bus_target_lun(h, lunaddrbytes, tmpdevice);
+ 		this_device = currentsd[ncurrent];
+ 
+ 		/*
+@@ -1881,14 +1874,13 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 		 * there is no lun 0.
+ 		 */
+ 		if (add_msa2xxx_enclosure_device(h, tmpdevice, this_device,
+-				lunaddrbytes, bus, target, lun, lunzerobits,
++				lunaddrbytes, lunzerobits,
+ 				&nmsa2xxx_enclosures)) {
+ 			ncurrent++;
+ 			this_device = currentsd[ncurrent];
+ 		}
+ 
+ 		*this_device = *tmpdevice;
+-		hpsa_set_bus_target_lun(this_device, bus, target, lun);
+ 
+ 		switch (this_device->devtype) {
+ 		case TYPE_ROM:
