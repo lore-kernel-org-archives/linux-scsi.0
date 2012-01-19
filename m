@@ -1,107 +1,96 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what'smissing?
-Date: Thu, 19 Jan 2012 16:39:53 -0500
-Message-ID: <4F188DA9.3050804@redhat.com>
-References: <4EF2026F.2090506@redhat.com> <DBFB1B45AF80394ABD1C807E9F28D157077DD22B19@BLRX7MCDC203.AMER.DELL.COM> <20111222155849.GD1388@redhat.com> <DBFB1B45AF80394ABD1C807E9F28D157077DD22D79@BLRX7MCDC203.AMER.DELL.COM> <4F0ADB0A.9020707@suse.de> <1326113987.2580.8.camel@localhost.localdomain> <D3F292ADF945FB49B35E96C94C2061B9159134BD@nsmail.netscout.com> <4F18429C.3020803@redhat.com> <D3F292ADF945FB49B35E96C94C2061B9159134EF@nsmail.netscout.com> <4F1844F0.1030406@redhat.com> <D3F292ADF945FB49B35E96C94C2061B9159135BF@nsmail.netscout.com> <4F18566A.2060107@redhat.com> <D3F292ADF945FB49B35E96C94C2061B915913815@nsmail.netscout.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/13] Misc patches leading to target_submit_tmr
+Date: Thu, 19 Jan 2012 15:57:13 -0800
+Message-ID: <1327017433.16983.277.camel@haakon2.linux-iscsi.org>
+References: <1327009163-10177-1-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49857 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753127Ab2ASVmV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jan 2012 16:42:21 -0500
-In-Reply-To: <D3F292ADF945FB49B35E96C94C2061B915913815@nsmail.netscout.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38095 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755876Ab2ASX5P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2012 18:57:15 -0500
+In-Reply-To: <1327009163-10177-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Loke, Chetan" <Chetan.Loke@netscout.com>
-Cc: Tom Coughlan <coughlan@redhat.com>, Hannes Reinecke <hare@suse.de>, tasleson@redhat.com, Shyam_Iyer@Dell.com, vgoyal@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, kiran.patil@intel.com
 
-On 01/19/2012 04:30 PM, Loke, Chetan wrote:
->> From: Ric Wheeler [mailto:rwheeler@redhat.com]
->> Sent: January 19, 2012 12:44 PM
->> To: Loke, Chetan
->> Cc: Tom Coughlan; Hannes Reinecke; tasleson@redhat.com;
->> Shyam_Iyer@Dell.com; vgoyal@redhat.com; linux-fsdevel@vger.kernel.org;
->> linux-scsi@vger.kernel.org
->> Subject: Re: [LSF/MM TOPIC] linux servers as a storage server -
->> what'smissing?
->>
->> On 01/19/2012 12:32 PM, Loke, Chetan wrote:
->>>>> True, a single front-end won't see all of those LUNs/devices. So
->> not
->>>> a
->>>>> big concern
->>>>> about the front-end hosts.
->>>>>
->>>>> I am thinking of a use-case where folks can use a linux-box to
->>> manage
->>>>> their different storage arrays.
->>>>> So this linux box with 'libstoragemgmt + app' needs to
->>>>> manage(scan/create/delete/so on) all those LUNs.
->>>>>
->>>> People do have boxes with thousands of luns though&   file systems
-> in
->>>> active use.
->>>> Both for SAN and NAS volumes.
->>>>
->>>> One of the challenges is what to do when just one LUN (or NFS
->> server)
->>>> crashes
->>>> and burns.
->>> The FS needs to go read-only(plain&   simple) because you don't know
->>> what's going on.
->>> You can't risk writing data anymore. Let the apps fail. You can make
->> it
->>> happen even today.
->>> It's a simple exercise.
->> Nope - it needs to be torn down and we need to be able to cleanly
->> unmount it.
->>
->> Letting an application see and read-only file system when the disk is
->> gone or
->> server down is not very useful since you won't get any non-cached data
->> back.
->>
-> Sure, it's just a partial snapshot(aka cached-data) of the file-system.
->
-> But writes that have to fetch the non-cached data, will unnecessarily
-> issue I/O to the fabric. These orphaned I/O's cause more pain in the
-> cleanup.
-> And if caching is enabled on the front-side then it's all the more
-> painful.
->
-> We can go one extra step and make FS fail read I/O for non-cached data
-> too
-> to avoid more orphan IOs.
+On Thu, 2012-01-19 at 13:39 -0800, Andy Grover wrote:
+> Hi nab, Kiran, and all,
+> 
+> Here are some cleanup patches to target, scsi, and tcm_fc. The biggest
+> change is adding a target_submit_tmr to match the new target_submit_cmd
+> helper function. I've only changed tcm_fc to use it so far, if it looks ok
+> I will change over the other fabrics.
+> 
 
-I don't really see this as a useful state. Read-only without a real backing file 
-system or LUN is hit or miss, that file system should go offline :)
+Nice work to get target_submit_tmr() added here..
 
->
-> Tearing down will happen sometime later. But don't you agree that
-> something needs
-> to happen before that? And that something is, read-only, which will
-> eventually
-> propagate to the users(example when you are copying a new file).
-> Users will then report it to their IT/admins.
-> This approach of serving the snap-shot(cached) file-system could serve
-> some users for what it's worth. It's better than surprise-removal and
-> issuing
-> needless IOs(read - eh race conditions).
->
->> Also, if you have an ability to migrate that mount (same mount point)
->> to another
->> server or clone LUN, you want to unmount the source so you can remount
->> the data
->> under that same mount point/namespace....
->>
-> Won't this be protocol specific.
->
+> I'm especially looking for review of the error handling changes in the
+> last few patches. Does transport_generic_free_cmd end up doing the
+> same thing as ft_sess_put, for example?
+> 
+> Thanks -- Regards -- Andy
+> 
 
-Not really protocol specific. We need to be able to do a forced unmount and then 
-do fail over (that varies depending on many things like your HA frame work and 
-certainly the type of thing you are attempting to fail over)
+After an initial review I think these look reasonable to merge into
+lio-core for testing.
 
-Ric
+Kiran, could you have a look the tcm_fc pieces and us know if you have
+concerns..?
+
+Thanks Andy!
+
+--nab
+
+> The following changes since commit 7acd456a2fdae22d0f43db60f689ba3c57b69838:
+> 
+>   target: Fail INQUIRY commands with EVPD==0 but PAGE CODE!=0 (2012-01-17 22:54:29 -0800)
+> 
+> are available in the git repository at:
+>   git://fedorapeople.org/home/fedora/grover/public_git/linux-2.6.git for-nab
+> 
+> Andy Grover (13):
+>       scsi: Use struct scsi_lun in fc/fcp.h
+>       target: fix comment typos
+>       target: Remove unused struct se_queue_req
+>       target/iscsi: Remove unneeded wrapper functions
+>       target/fc: Simplify ft_send_work for tmr path
+>       target/fc: Remove cmd->cdb data member
+>       target: Inline struct se_tmr_req into se_cmd
+>       target/fc: Move core->fc code conversion earlier in ft_send_tm()
+>       target/fc: Call lookup_tmr_lun() for all TM types
+>       target/fc: Use transport_generic_free_cmd for ft_sess_put in ft_send_tm
+>       target: Add target_submit_tmr helper function
+>       target/fc: Use target_submit_tmr()
+>       target: Change target_submit_cmd() to return void
+> 
+>  drivers/infiniband/ulp/srpt/ib_srpt.c      |   18 +---
+>  drivers/scsi/bnx2fc/bnx2fc_io.c            |    4 +-
+>  drivers/scsi/libfc/fc_fcp.c                |    5 +-
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c         |   22 ++---
+>  drivers/target/iscsi/iscsi_target.c        |   12 +-
+>  drivers/target/iscsi/iscsi_target_device.c |   19 ----
+>  drivers/target/iscsi/iscsi_target_device.h |    2 -
+>  drivers/target/iscsi/iscsi_target_tmr.c    |    6 +-
+>  drivers/target/iscsi/iscsi_target_util.c   |    8 +-
+>  drivers/target/loopback/tcm_loop.c         |   14 +--
+>  drivers/target/target_core_device.c        |    2 +-
+>  drivers/target/target_core_internal.h      |    2 -
+>  drivers/target/target_core_tmr.c           |   20 +---
+>  drivers/target/target_core_transport.c     |   77 +++++++++++-----
+>  drivers/target/tcm_fc/tcm_fc.h             |    2 -
+>  drivers/target/tcm_fc/tfc_cmd.c            |  142 ++++++++--------------------
+>  include/scsi/fc/fc_fcp.h                   |    6 +-
+>  include/target/target_core_base.h          |   47 ++++-----
+>  include/target/target_core_fabric.h        |    7 +-
+>  19 files changed, 164 insertions(+), 251 deletions(-)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
