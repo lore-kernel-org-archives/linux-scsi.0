@@ -1,425 +1,451 @@
 From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re: [PATCH] pm8001: Add FUNC_GET_EVENTS (take 2)
-Date: Thu, 19 Jan 2012 10:34:19 +0800
-Message-ID: <C5B35CF20DA341678B633DF2939C1C55@usish.com.cn>
-References: <46C64AF8-8DB5-4380-AB15-DF861E10F3A8@xyratex.com>,  <C816DDC9-9495-4F26-80A5-3FF2C73CE175@xyratex.com> <201201141031150158092@usish.com> <393624A3-D838-4DE0-80B8-2A83F1894ED2@xyratex.com>
+Subject: RE: [PATCH] pm8001: enhance firmware event log retrieval
+Date: Thu, 19 Jan 2012 15:37:19 +0800
+Message-ID: <30B08FEC5E894494BBDA33881AB0E955@usish.com.cn>
+References: <97204CD5-5C4D-4E62-ADD4-CE51AB11C460@xyratex.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:58549 "EHLO
+Received: from sr-smtp.usish.com ([210.5.144.203]:49395 "EHLO
 	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753163Ab2ASCf5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2012 21:35:57 -0500
-In-Reply-To: <393624A3-D838-4DE0-80B8-2A83F1894ED2@xyratex.com>
+	with ESMTP id S1752707Ab2ASHi7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2012 02:38:59 -0500
+In-Reply-To: <97204CD5-5C4D-4E62-ADD4-CE51AB11C460@xyratex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: 'Mark Salyzyn' <mark_salyzyn@xyratex.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>
-Cc: 'James Bottomley' <JBottomley@parallels.com>, 'crystal_yu' <crystal_yu@usish.com>, 'john_gong' <john_gong@usish.com>, 'lindar_liu' <lindar_liu@usish.com>
+Cc: 'crystal_yu' <crystal_yu@usish.com>, 'lindar_liu' <lindar_liu@usish.com>, 'James Bottomley' <JBottomley@parallels.com>
 
-Dear Mark,
-
-This patch seems broken, I see this when apply:
-
-patch -p1 < pm8001_get_event.patch 
-patching file drivers/scsi/pm8001/pm8001_hwi.c
-patch: **** malformed patch at line 56: @@ -375,6 +374,7 @@ static void
-__devinit  mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha, u32
-SSCbit)  {
-
-> Jack noticed I dropped a patch fragment associated with a flags automatic
-> variable in  mpi_set_phys_g3_with_ssc (ooops) and that the pre-emptive
-> locking that piggy-backed this patch was not in-fact necessary because of
-> underlying atomic accesses to the hardware. Here is the updated patch
-fixing
-> these two issues.
+> The pm8001 driver event log currently only reports the current firmware
+event
+> log index and the first entry (if log has not wrapped). The enclosed patch
+> enhances the event log retrieved to sequentially return all un-retrieved
+> entries until hitting the last, from then on reporting the last entry. The
+> format has been changed in a parseable fashion reporting some of the
+interpreted
+> fields; the entry sequence number can be used to determine the boundary
+> condition when the last entry is retrieved.
 > 
+> Formerly, when the logging level is changed at runtime, it does not
+transmit
+> the updated level to the firmware. We also added a set of insmod
+parameters
+> so that the logging level may be set at initialization time.
 > 
-> The pm8001 driver is missing the FUNC_GET_EVENTS handler in the phy
-control
-> function. Since the pm8001_bar4_shift function was not designed to be
-called
-> at runtime, added locking surrounding the adjustment for all accesses.
+[Jack Wang] Patch is welcome.
+> As this disrupts backward compatibility, we look forward to community
+comments.
+> Also, once an earlier log entry is retrieved, it is the expectation of the
+> logging/forensic program(?) to record them as they can not be retrieved
+again.
+> Please keep in mind that the first event log entry as previously reported
+by
+> the existing code becomes somewhat moot if new entries form.
 > 
+[Jack Wang] I wonder what user need this function? How do you test this
+function?
+
 > Signed-off-by: mark_salyzyn@xyratex.com
 > Cc: jack_wang@usish.com
 > Cc: JBottomley@parallels.com
 > Cc: crystal_yu@usish.com
 > Cc: john_gong@usish.com
 > Cc: lindar_liu <lindar_liu@usish.com>
+
+[Jack Wang] 
+Acked-by: Jack Wang <jack_wang@usish.com>
+Thanks.
+
 > 
->  drivers/scsi/pm8001/pm8001_hwi.c |   85
-> ++++++++++++++++++++++++++++++++++++++++-------------------
->  drivers/scsi/pm8001/pm8001_sas.c |   24 +++++++++++++++-
->  drivers/scsi/pm8001/pm8001_sas.h |    1
->  3 files changed, 83 insertions(+), 27 deletions(-)
+> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c
+> b/drivers/scsi/pm8001/pm8001_ctl.c
+> index 45bc197..3fe3d93 100644
+> --- a/drivers/scsi/pm8001/pm8001_ctl.c
+> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
+> @@ -228,46 +228,140 @@ static ssize_t
+pm8001_ctl_logging_level_store(struct
+> device *cdev,
+>  		return -EINVAL;
+> 
+>  	pm8001_ha->logging_level = val;
+> +	pm8001_update_main_config_table(pm8001_ha);
+>  	return strlen(buf);
+>  }
+> 
+>  static DEVICE_ATTR(logging_level, S_IRUGO | S_IWUSR,
+>  	pm8001_ctl_logging_level_show, pm8001_ctl_logging_level_store);
+> +
+>  /**
+> - * pm8001_ctl_aap_log_show - aap1 event log
+> + * pm8001_readlog - generic routine to read a single event log entry
+> + * @header: a pointer to the event log base header
+> + * @entry: a pointer to copy the latest event log into
+> + * @consumer_index: a current local index pointing to the last oldest
+entry
+> + *                  retrieved. Automatically incremented and wrapped.
+> + * @return: A copied entry content and a status. Status return of zero
+means
+> + *          more entries available, and the consumer index is incremented
+and
+> + *          wrapped. A positive status return means last entry, the
+consumer
+> + *          index may be incremented depending of approached or at the
+last
+> + *          entry. Status can also return a negative error code. It is
+the
+> + *          responsibility of the caller to confirm the validity of the
+copied
+> + *          event information.
+> + */
+> +int pm8001_readlog(
+> +	struct eventlog_header *header,
+> +	struct eventlog_entry *entry,
+> +	u32 *consumer_index)
+> +{
+> +	unsigned maximum_index;
+> +	unsigned producer_index;
+> +
+> +	/* Validity of header */
+> +	if ((header->offset != sizeof(*header)) ||
+> +	    (header->entry_size != sizeof(*entry)) ||
+> +	    ((header->signature != EVENTLOG_HEADER_SIGNATURE_AAP1) &&
+> +	     (header->signature != EVENTLOG_HEADER_SIGNATURE_IOP)))
+> +		return -EINVAL;
+> +	/* Validity of hardware indexii */
+> +	maximum_index = header->size / sizeof(*entry);
+> +	if ((maximum_index <= header->producer_index) ||
+> +	    (maximum_index <= header->consumer_index))
+> +		return -EINVAL;
+> +	producer_index = header->producer_index;
+> +	if (producer_index == 0)
+> +		producer_index = maximum_index - 1;
+> +	else
+> +		--producer_index;
+> +	/* Validity of current consumer index */
+> +	if (((producer_index < header->consumer_index) ?
+> +	     ((producer_index < *consumer_index) &&
+> +	      (*consumer_index < header->consumer_index)) :
+> +	     ((producer_index < *consumer_index) ||
+> +	      (*consumer_index < header->consumer_index))) ||
+> +	    (*consumer_index >= maximum_index))
+> +		*consumer_index = header->consumer_index;
+> +	*entry = ((struct eventlog_entry *)(header + 1))[*consumer_index];
+> +	if (*consumer_index != producer_index) {
+> +		++(*consumer_index);
+> +		if (*consumer_index >= maximum_index)
+> +			*consumer_index = 0;
+> +		/* More entries? */
+> +		return *consumer_index == producer_index;
+> +	}
+> +	return 2; /* Already at Last Entry */
+> +}
+> +
+> +/**
+> + * pm8001_validlog - generic routine to validate a single event log entry
+> + * @entry: a pointer to the event log entry
+> + * @return: zero if not valid
+> + */
+> +static inline int pm8001_validlog(struct eventlog_entry *entry)
+> +{
+> +	return ((entry->size <= (sizeof(entry->log) /
+sizeof(entry->log[0]))) &&
+> +		((entry->timestamp_upper != 0) ||
+> +		 (entry->timestamp_lower != 0)));
+> +}
+> +
+> +/**
+> + * pm8001_ctl_log_show - event log
+>   * @cdev: pointer to embedded class device
+>   * @buf: the buffer returned
+> + * @ind: The region index (AAP1 or IOP)
+>   *
+>   * A sysfs 'read-only' shost attribute.
+>   */
+> -static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
+> -	struct device_attribute *attr, char *buf)
+> +static ssize_t pm8001_ctl_log_show(struct device *cdev, char *buf, int
+ind)
+>  {
+>  	struct Scsi_Host *shost = class_to_shost(cdev);
+>  	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+>  	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
+> +	struct eventlog_entry entry;
+> +	char *str = buf;
+>  	int i;
+> -#define AAP1_MEMMAP(r, c) \
+> -	(*(u32 *)((u8*)pm8001_ha->memoryMap.region[AAP1].virt_ptr + (r) * 32
+\
+> -	+ (c)))
+> 
+> -	char *str = buf;
+> -	int max = 2;
+> -	for (i = 0; i < max; i++) {
+> -		str += sprintf(str, "0x%08x 0x%08x 0x%08x 0x%08x 0x%08x
+0x%08x"
+> -			       "0x%08x 0x%08x\n",
+> -			       AAP1_MEMMAP(i, 0),
+> -			       AAP1_MEMMAP(i, 4),
+> -			       AAP1_MEMMAP(i, 8),
+> -			       AAP1_MEMMAP(i, 12),
+> -			       AAP1_MEMMAP(i, 16),
+> -			       AAP1_MEMMAP(i, 20),
+> -			       AAP1_MEMMAP(i, 24),
+> -			       AAP1_MEMMAP(i, 28));
+> +	memset(&entry, 0, sizeof(entry));
+> +	do {
+> +		i = pm8001_readlog(
+> +			(struct eventlog_header *)(
+> +				pm8001_ha->memoryMap.region[ind].virt_ptr),
+> +			&entry,
+> +			(ind == AAP1) ?
+> +				&pm8001_ha->aap1_consumer :
+> +				&pm8001_ha->iop_consumer);
+> +	} while ((i == 0) && !pm8001_validlog(&entry));
+> +	if ((i >= 0) && pm8001_validlog(&entry)) {
+> +		u32 *lp;
+> +		unsigned long long timestamp =
+> +			(((unsigned long long)entry.timestamp_upper) << 32)
+|
+> +			entry.timestamp_lower;
+> +		str += snprintf(str, PAGE_SIZE - (str - buf),
+> +			"%u %llu.%09llu %u",
+> +			entry.severity,
+> +			timestamp / (1000000000 / 8),
+> +			(timestamp % (1000000000 / 8)) * 8,
+> +			entry.sequence);
+> +		for (lp = entry.log, i = entry.size; i > 0; --i)
+> +			str += snprintf(str, PAGE_SIZE - (str - buf),
+> +				" 0x%08x", *(lp++));
+> +		str += snprintf(str, PAGE_SIZE - (str - buf), "\n");
+>  	}
+> -
+>  	return str - buf;
+>  }
+> +
+> +/**
+> + * pm8001_ctl_aap_log_show - aap1 event log
+> + * @cdev: pointer to embedded class device
+> + * @buf: the buffer returned
+> + *
+> + * A sysfs 'read-only' shost attribute.
+> + */
+> +static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
+> +	struct device_attribute *attr, char *buf)
+> +{
+> +	return pm8001_ctl_log_show(cdev, buf, AAP1);
+> +}
+>  static DEVICE_ATTR(aap_log, S_IRUGO, pm8001_ctl_aap_log_show, NULL);
+>  /**
+>   * pm8001_ctl_aap_log_show - IOP event log
+> @@ -279,29 +373,7 @@ static DEVICE_ATTR(aap_log, S_IRUGO,
+> pm8001_ctl_aap_log_show, NULL);
+>  static ssize_t pm8001_ctl_iop_log_show(struct device *cdev,
+>  	struct device_attribute *attr, char *buf)
+>  {
+> -	struct Scsi_Host *shost = class_to_shost(cdev);
+> -	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+> -	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
+> -#define IOP_MEMMAP(r, c) \
+> -	(*(u32 *)((u8*)pm8001_ha->memoryMap.region[IOP].virt_ptr + (r) * 32
+\
+> -	+ (c)))
+> -	int i;
+> -	char *str = buf;
+> -	int max = 2;
+> -	for (i = 0; i < max; i++) {
+> -		str += sprintf(str, "0x%08x 0x%08x 0x%08x 0x%08x 0x%08x
+0x%08x"
+> -			       "0x%08x 0x%08x\n",
+> -			       IOP_MEMMAP(i, 0),
+> -			       IOP_MEMMAP(i, 4),
+> -			       IOP_MEMMAP(i, 8),
+> -			       IOP_MEMMAP(i, 12),
+> -			       IOP_MEMMAP(i, 16),
+> -			       IOP_MEMMAP(i, 20),
+> -			       IOP_MEMMAP(i, 24),
+> -			       IOP_MEMMAP(i, 28));
+> -	}
+> -
+> -	return str - buf;
+> +	return pm8001_ctl_log_show(cdev, buf, IOP);
+>  }
+>  static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_log_show, NULL);
 > 
 > diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
 > b/drivers/scsi/pm8001/pm8001_hwi.c
-> index b7b92f7..f3c44b9 100644
+> index b7b92f7..b3bd781 100644
 > --- a/drivers/scsi/pm8001/pm8001_hwi.c
 > +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -338,26 +338,25 @@ update_outbnd_queue_table(struct pm8001_hba_info
-> *pm8001_ha, int number)
->  }
-> 
->  /**
-> - * bar4_shift - function is called to shift BAR base address
-> - * @pm8001_ha : our hba card information
-> + * pm8001_bar4_shift - function is called to shift BAR base address
-> + * @pm8001_ha : our hba card infomation
->   * @shiftValue : shifting value in memory bar.
->   */
-> -static int bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue)
-> +int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue)
->  {
->  	u32 regVal;
-> -	u32 max_wait_count;
-> +	unsigned long start;
-> 
->  	/* program the inbound AXI translation Lower Address */
->  	pm8001_cw32(pm8001_ha, 1, SPC_IBW_AXI_TRANSLATION_LOW, shiftValue);
-> 
->  	/* confirm the setting is written */
-> -	max_wait_count = 1 * 1000 * 1000;  /* 1 sec */
-> +	start = jiffies + HZ; /* 1 sec */
->  	do {
-> -		udelay(1);
->  		regVal = pm8001_cr32(pm8001_ha, 1,
-SPC_IBW_AXI_TRANSLATION_LOW);
-> -	} while ((regVal != shiftValue) && (--max_wait_count));
-> +	} while ((regVal != shiftValue) && time_before(jiffies, start));
-> 
-> -	if (!max_wait_count) {
-> +	if (regVal != shiftValue) {
->  		PM8001_INIT_DBG(pm8001_ha,
->  			pm8001_printk("TIMEOUT:SPC_IBW_AXI_TRANSLATION_LOW"
->  			" = 0x%x\n", regVal));
-> @@ -375,6 +374,7 @@ static void __devinit
->  mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha, u32 SSCbit)
->  {
->  	u32 value, offset, i;
-> +	unsigned long flags;
-> 
->  #define SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR 0x00030000
->  #define SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR 0x00040000
-> @@ -388,16 +388,23 @@ mpi_set_phys_g3_with_ssc(struct pm8001_hba_info
-> *pm8001_ha, u32 SSCbit)
->      * Using shifted destination address 0x3_0000:0x1074 + 0x4000*N
-(N=0:3)
->      * Using shifted destination address 0x4_0000:0x1074 + 0x4000*(N-4)
-> (N=4:7)
->      */
-> -	if (-1 == bar4_shift(pm8001_ha,
-> SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR))
-> +	spin_lock_irqsave(&pm8001_ha->lock, flags);
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha,
-> +				SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		return;
-> +	}
-> 
->  	for (i = 0; i < 4; i++) {
->  		offset = SAS2_SETTINGS_LOCAL_PHY_0_3_OFFSET + 0x4000 * i;
->  		pm8001_cw32(pm8001_ha, 2, offset, 0x80001501);
->  	}
->  	/* shift membase 3 for SAS2_SETTINGS_LOCAL_PHY 4 - 7 */
-> -	if (-1 == bar4_shift(pm8001_ha,
-> SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR))
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha,
-> +				SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		return;
-> +	}
->  	for (i = 4; i < 8; i++) {
->  		offset = SAS2_SETTINGS_LOCAL_PHY_4_7_OFFSET + 0x4000 *
-(i-4);
->  		pm8001_cw32(pm8001_ha, 2, offset, 0x80001501);
-> @@ -421,7 +428,8 @@ mpi_set_phys_g3_with_ssc(struct pm8001_hba_info
-> *pm8001_ha, u32 SSCbit)
->  	pm8001_cw32(pm8001_ha, 2, 0xd8, 0x8000C016);
-> 
->  	/*set the shifted destination address to 0x0 to avoid error
-operation */
-> -	bar4_shift(pm8001_ha, 0x0);
-> +	pm8001_bar4_shift(pm8001_ha, 0x0);
-> +	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  	return;
->  }
-> 
-> @@ -437,6 +445,7 @@ mpi_set_open_retry_interval_reg(struct pm8001_hba_info
-> *pm8001_ha,
->  	u32 offset;
->  	u32 value;
->  	u32 i;
-> +	unsigned long flags;
-> 
->  #define OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR 0x00030000
->  #define OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR 0x00040000
-> @@ -445,24 +454,30 @@ mpi_set_open_retry_interval_reg(struct
-pm8001_hba_info
-> *pm8001_ha,
->  #define OPEN_RETRY_INTERVAL_REG_MASK 0x0000FFFF
-> 
->  	value = interval & OPEN_RETRY_INTERVAL_REG_MASK;
-> +	spin_lock_irqsave(&pm8001_ha->lock, flags);
->  	/* shift bar and set the OPEN_REJECT(RETRY) interval time of PHY 0
--3.*/
-> -	if (-1 == bar4_shift(pm8001_ha,
-> -			     OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR))
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha,
-> +			     OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		return;
-> +	}
->  	for (i = 0; i < 4; i++) {
->  		offset = OPEN_RETRY_INTERVAL_PHY_0_3_OFFSET + 0x4000 * i;
->  		pm8001_cw32(pm8001_ha, 2, offset, value);
->  	}
-> 
-> -	if (-1 == bar4_shift(pm8001_ha,
-> -			     OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR))
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha,
-> +			     OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		return;
-> +	}
->  	for (i = 4; i < 8; i++) {
->  		offset = OPEN_RETRY_INTERVAL_PHY_4_7_OFFSET + 0x4000 *
-(i-4);
->  		pm8001_cw32(pm8001_ha, 2, offset, value);
->  	}
->  	/*set the shifted destination address to 0x0 to avoid error
-operation */
-> -	bar4_shift(pm8001_ha, 0x0);
-> +	pm8001_bar4_shift(pm8001_ha, 0x0);
-> +	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  	return;
->  }
-> 
-> @@ -688,8 +703,11 @@ static u32 soft_reset_ready_check(struct
-pm8001_hba_info
+> @@ -250,8 +250,8 @@ init_default_table_values(struct pm8001_hba_info
 > *pm8001_ha)
->  		PM8001_INIT_DBG(pm8001_ha,
->  			pm8001_printk("Firmware is ready for reset .\n"));
->  	} else {
-> -	/* Trigger NMI twice via RB6 */
-> -		if (-1 == bar4_shift(pm8001_ha, RB6_ACCESS_REG)) {
-> +		unsigned long flags;
-> +		/* Trigger NMI twice via RB6 */
-> +		spin_lock_irqsave(&pm8001_ha->lock, flags);
-> +		if (-1 == pm8001_bar4_shift(pm8001_ha, RB6_ACCESS_REG)) {
-> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  			PM8001_FAIL_DBG(pm8001_ha,
->  				pm8001_printk("Shift Bar4 to 0x%x failed\n",
->  					RB6_ACCESS_REG));
-> @@ -715,8 +733,10 @@ static u32 soft_reset_ready_check(struct
-pm8001_hba_info
-> *pm8001_ha)
->  			PM8001_FAIL_DBG(pm8001_ha,
->  				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
->  				pm8001_cr32(pm8001_ha, 0,
-MSGU_SCRATCH_PAD_3)));
-> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  			return -1;
->  		}
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  	}
->  	return 0;
->  }
-> @@ -733,6 +753,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
-*pm8001_ha,
-> u32 signature)
->  	u32	regVal, toggleVal;
->  	u32	max_wait_count;
->  	u32	regVal1, regVal2, regVal3;
-> +	unsigned long flags;
-> 
->  	/* step1: Check FW is ready for soft reset */
->  	if (soft_reset_ready_check(pm8001_ha) != 0) {
-> @@ -743,7 +764,9 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
-*pm8001_ha,
-> u32 signature)
->  	/* step 2: clear NMI status register on AAP1 and IOP, write the same
->  	value to clear */
->  	/* map 0x60000 to BAR4(0x20), BAR2(win) */
-> -	if (-1 == bar4_shift(pm8001_ha, MBIC_AAP1_ADDR_BASE)) {
-> +	spin_lock_irqsave(&pm8001_ha->lock, flags);
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha, MBIC_AAP1_ADDR_BASE)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		PM8001_FAIL_DBG(pm8001_ha,
->  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
->  			MBIC_AAP1_ADDR_BASE));
-> @@ -754,7 +777,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
-*pm8001_ha,
-> u32 signature)
->  		pm8001_printk("MBIC - NMI Enable VPE0 (IOP)= 0x%x\n",
-regVal));
->  	pm8001_cw32(pm8001_ha, 2, MBIC_NMI_ENABLE_VPE0_IOP, 0x0);
->  	/* map 0x70000 to BAR4(0x20), BAR2(win) */
-> -	if (-1 == bar4_shift(pm8001_ha, MBIC_IOP_ADDR_BASE)) {
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha, MBIC_IOP_ADDR_BASE)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		PM8001_FAIL_DBG(pm8001_ha,
->  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
->  			MBIC_IOP_ADDR_BASE));
-> @@ -796,7 +820,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
-*pm8001_ha,
-> u32 signature)
-> 
->  	/* read required registers for confirmming */
->  	/* map 0x0700000 to BAR4(0x20), BAR2(win) */
-> -	if (-1 == bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		PM8001_FAIL_DBG(pm8001_ha,
->  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
->  			GSM_ADDR_BASE));
-> @@ -862,7 +887,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
-*pm8001_ha,
-> u32 signature)
->  	/* step 5: delay 10 usec */
->  	udelay(10);
->  	/* step 5-b: set GPIO-0 output control to tristate anyway */
-> -	if (-1 == bar4_shift(pm8001_ha, GPIO_ADDR_BASE)) {
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha, GPIO_ADDR_BASE)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		PM8001_INIT_DBG(pm8001_ha,
->  				pm8001_printk("Shift Bar4 to 0x%x failed\n",
->  				GPIO_ADDR_BASE));
-> @@ -878,7 +904,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
-*pm8001_ha,
-> u32 signature)
-> 
->  	/* Step 6: Reset the IOP and AAP1 */
->  	/* map 0x00000 to BAR4(0x20), BAR2(win) */
-> -	if (-1 == bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		PM8001_FAIL_DBG(pm8001_ha,
->  			pm8001_printk("SPC Shift Bar4 to 0x%x failed\n",
->  			SPC_TOP_LEVEL_ADDR_BASE));
-> @@ -915,7 +942,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
-*pm8001_ha,
-> u32 signature)
-> 
->  	/* step 11: reads and sets the GSM Configuration and Reset Register
-*/
->  	/* map 0x0700000 to BAR4(0x20), BAR2(win) */
-> -	if (-1 == bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		PM8001_FAIL_DBG(pm8001_ha,
->  			pm8001_printk("SPC Shift Bar4 to 0x%x failed\n",
->  			GSM_ADDR_BASE));
-> @@ -968,7 +996,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
-*pm8001_ha,
-> u32 signature)
-> 
->  	/* step 13: bring the IOP and AAP1 out of reset */
->  	/* map 0x00000 to BAR4(0x20), BAR2(win) */
-> -	if (-1 == bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
-> +	if (-1 == pm8001_bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  		PM8001_FAIL_DBG(pm8001_ha,
->  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
->  			SPC_TOP_LEVEL_ADDR_BASE));
-> @@ -1010,6 +1039,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
-*pm8001_ha,
-> u32 signature)
->  				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
->  				pm8001_cr32(pm8001_ha, 0,
->  				MSGU_SCRATCH_PAD_3)));
-> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  			return -1;
->  		}
-> 
-> @@ -1039,9 +1069,12 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
-*pm8001_ha,
-> u32 signature)
->  				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
->  				pm8001_cr32(pm8001_ha, 0,
->  				MSGU_SCRATCH_PAD_3)));
-> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->  			return -1;
->  		}
->  	}
-> +	pm8001_bar4_shift(pm8001_ha, 0);
-> +	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
-> 
->  	PM8001_INIT_DBG(pm8001_ha,
->  		pm8001_printk("SPC soft reset Complete\n"));
-> @@ -1157,8 +1190,8 @@ pm8001_chip_msix_interrupt_disable(struct
-> pm8001_hba_info *pm8001_ha,
->  	msi_index = int_vec_idx * MSIX_TABLE_ELEMENT_SIZE;
->  	msi_index += MSIX_TABLE_BASE;
->  	pm8001_cw32(pm8001_ha, 0,  msi_index, MSIX_INTERRUPT_DISABLE);
-> -
->  }
-> +
->  /**
->   * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
+>   * update_main_config_table - update the main default table to the HBA.
 >   * @pm8001_ha: our hba card information
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c
-> b/drivers/scsi/pm8001/pm8001_sas.c
-> index fb3dc99..b673524 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -166,6 +166,7 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy,
-enum
-> phy_func func,
->  	struct pm8001_hba_info *pm8001_ha = NULL;
->  	struct sas_phy_linkrates *rates;
->  	DECLARE_COMPLETION_ONSTACK(completion);
-> +	unsigned long flags;
->  	pm8001_ha = sas_phy->ha->lldd_ha;
->  	pm8001_ha->phy[phy_id].enable_completion = &completion;
->  	switch (func) {
-> @@ -209,8 +210,29 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy,
-enum
-> phy_func func,
->  	case PHY_FUNC_DISABLE:
->  		PM8001_CHIP_DISP->phy_stop_req(pm8001_ha, phy_id);
->  		break;
-> +	case PHY_FUNC_GET_EVENTS:
-> +		spin_lock_irqsave(&pm8001_ha->lock, flags);
-> +		if (-1 == pm8001_bar4_shift(pm8001_ha,
-> +					(phy_id < 4) ? 0x30000 : 0x40000)) {
-> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
-> +			return -EINVAL;
-> +		}
-> +		{
-> +			struct sas_phy *phy = sas_phy->phy;
-> +			uint32_t *qp = (uint32_t *)(((char *)
-> +				pm8001_ha->io_mem[2].memvirtaddr)
-> +				+ 0x1034 + (0x4000 * (phy_id & 3)));
-> +
-> +			phy->invalid_dword_count = qp[0];
-> +			phy->running_disparity_error_count = qp[1];
-> +			phy->loss_of_dword_sync_count = qp[3];
-> +			phy->phy_reset_problem_count = qp[4];
-> +		}
-> +		pm8001_bar4_shift(pm8001_ha, 0);
-> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
-> +		return 0;
->  	default:
-> -		rc = -ENOSYS;
-> +		rc = -EOPNOTSUPP;
->  	}
->  	msleep(300);
->  	return rc;
+>   */
+> -static void __devinit
+> -update_main_config_table(struct pm8001_hba_info *pm8001_ha)
+> +void
+> +pm8001_update_main_config_table(struct pm8001_hba_info *pm8001_ha)
+>  {
+>  	void __iomem *address = pm8001_ha->main_cfg_tbl_addr;
+>  	pm8001_mw32(address, 0x24,
+> @@ -603,7 +603,7 @@ static int __devinit pm8001_chip_init(struct
+> pm8001_hba_info *pm8001_ha)
+>  	read_inbnd_queue_table(pm8001_ha);
+>  	read_outbnd_queue_table(pm8001_ha);
+>  	/* update main config table ,inbound table and outbound table */
+> -	update_main_config_table(pm8001_ha);
+> +	pm8001_update_main_config_table(pm8001_ha);
+>  	update_inbnd_queue_table(pm8001_ha, 0);
+>  	update_outbnd_queue_table(pm8001_ha, 0);
+>  	mpi_set_phys_g3_with_ssc(pm8001_ha, 0);
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c
+> b/drivers/scsi/pm8001/pm8001_init.c
+> index c21a216..c638da4 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -48,6 +48,8 @@ static const struct pm8001_chip_info pm8001_chips[] = {
+>  	[chip_8001] = {  8, &pm8001_8001_dispatch,},
+>  };
+>  static int pm8001_id;
+> +static int pm8001_logging_level = PM8001_FAIL_LOGGING;
+> +static int pm8001_logging_size = PM8001_EVENT_LOG_SIZE;
+> 
+>  LIST_HEAD(hba_list);
+> 
+> @@ -212,16 +214,19 @@ static int __devinit pm8001_alloc(struct
+pm8001_hba_info
+> *pm8001_ha)
+>  	pm8001_ha->tags = kzalloc(PM8001_MAX_CCB, GFP_KERNEL);
+>  	if (!pm8001_ha->tags)
+>  		goto err_out;
+> +	pm8001_logging_size = ((pm8001_logging_size + 31) / 32) * 32;
+> +	if (pm8001_logging_size < 64)
+> +		pm8001_logging_size = 64;
+>  	/* MPI Memory region 1 for AAP Event Log for fw */
+>  	pm8001_ha->memoryMap.region[AAP1].num_elements = 1;
+> -	pm8001_ha->memoryMap.region[AAP1].element_size =
+> PM8001_EVENT_LOG_SIZE;
+> -	pm8001_ha->memoryMap.region[AAP1].total_len = PM8001_EVENT_LOG_SIZE;
+> +	pm8001_ha->memoryMap.region[AAP1].element_size =
+pm8001_logging_size;
+> +	pm8001_ha->memoryMap.region[AAP1].total_len = pm8001_logging_size;
+>  	pm8001_ha->memoryMap.region[AAP1].alignment = 32;
+> 
+>  	/* MPI Memory region 2 for IOP Event Log for fw */
+>  	pm8001_ha->memoryMap.region[IOP].num_elements = 1;
+> -	pm8001_ha->memoryMap.region[IOP].element_size =
+PM8001_EVENT_LOG_SIZE;
+> -	pm8001_ha->memoryMap.region[IOP].total_len = PM8001_EVENT_LOG_SIZE;
+> +	pm8001_ha->memoryMap.region[IOP].element_size = pm8001_logging_size;
+> +	pm8001_ha->memoryMap.region[IOP].total_len = pm8001_logging_size;
+>  	pm8001_ha->memoryMap.region[IOP].alignment = 32;
+> 
+>  	/* MPI Memory region 3 for consumer Index of inbound queues */
+> @@ -242,7 +247,7 @@ static int __devinit pm8001_alloc(struct
+pm8001_hba_info
+> *pm8001_ha)
+>  	pm8001_ha->memoryMap.region[IB].total_len = 256 * 64;
+>  	pm8001_ha->memoryMap.region[IB].alignment = 64;
+> 
+> -	/* MPI Memory region 6 inbound queues */
+> +	/* MPI Memory region 6 outbound queues */
+>  	pm8001_ha->memoryMap.region[OB].num_elements = 256;
+>  	pm8001_ha->memoryMap.region[OB].element_size = 64;
+>  	pm8001_ha->memoryMap.region[OB].total_len = 256 * 64;
+> @@ -381,7 +386,7 @@ pm8001_pci_alloc(struct pci_dev *pdev, u32 chip_id,
+struct
+> Scsi_Host *shost)
+>  	pm8001_ha->sas = sha;
+>  	pm8001_ha->shost = shost;
+>  	pm8001_ha->id = pm8001_id++;
+> -	pm8001_ha->logging_level = 0x01;
+> +	pm8001_ha->logging_level = pm8001_logging_level;
+>  	sprintf(pm8001_ha->name, "%s%d", DRV_NAME, pm8001_ha->id);
+>  #ifdef PM8001_USE_TASKLET
+>  	tasklet_init(&pm8001_ha->tasklet, pm8001_tasklet,
+> @@ -614,8 +619,8 @@ intx:
+>   * @ent: pci device id
+>   *
+>   * This function is the main initialization function, when register a new
+> - * pci driver it is invoked, all struct an hardware initilization should
+be
+> done
+> - * here, also, register interrupt
+> + * pci driver it is invoked, all struct and hardware initialization
+should
+> be
+> + * done here, also, register interrupt
+>   */
+>  static int __devinit pm8001_pci_probe(struct pci_dev *pdev,
+>  	const struct pci_device_id *ent)
+> @@ -899,6 +904,9 @@ static void __exit pm8001_exit(void)
+>  	destroy_workqueue(pm8001_wq);
+>  }
+> 
+> +module_param(pm8001_logging_level, int, 0);
+> +module_param_named(logging_size, pm8001_logging_size, int,
+> S_IRUGO|S_IWUSR);
+> +MODULE_PARM_DESC(logging_size, "Event logging buffer size");
+>  module_init(pm8001_init);
+>  module_exit(pm8001_exit);
+> 
 > diff --git a/drivers/scsi/pm8001/pm8001_sas.h
 > b/drivers/scsi/pm8001/pm8001_sas.h
-> index 93959fe..83a48f3 100644
+> index 93959fe..84d3170 100644
 > --- a/drivers/scsi/pm8001/pm8001_sas.h
 > +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -488,6 +488,7 @@ int pm8001_mem_alloc(struct pci_dev *pdev, void
+> @@ -336,6 +336,29 @@ struct outbound_queue_table {
+>  	__le32			producer_index;
+>  	u32			consumer_idx;
+>  };
+> +struct eventlog_header {
+> +	__le32			signature;
+> +#define EVENTLOG_HEADER_SIGNATURE_AAP1 0x1234AAAA
+> +#define EVENTLOG_HEADER_SIGNATURE_IOP 0x5678CCCC
+> +	__le32			offset; /* sizeof(eventlog_header) */
+> +	u32			reserved1;
+> +	__le32			size;
+> +	u32			reserved2;
+> +	__le32			consumer_index;
+> +	__le32			producer_index;
+> +	__le32			entry_size;
+> +};
+> +struct eventlog_entry {
+> +	u8			size:3;
+> +	u8			reserved1:5;
+> +	u8			reserved2[2];
+> +	u8			reserved:4;
+> +	u8			severity:4;
+> +	__le32			timestamp_upper;
+> +	__le32			timestamp_lower;
+> +	__le32			sequence;
+> +	__le32			log[4];
+> +};
+>  struct pm8001_hba_memspace {
+>  	void __iomem  		*memvirtaddr;
+>  	u64			membase;
+> @@ -383,6 +406,9 @@ struct pm8001_hba_info {
+>  	u32			logging_level;
+>  	u32			fw_status;
+>  	const struct firmware 	*fw_image;
+> +	/* Local consumer indexes in support of sysfs event log node */
+> +	u32			aap1_consumer;
+> +	u32			iop_consumer;
+>  };
+> 
+>  struct pm8001_work {
+> @@ -488,6 +514,11 @@ int pm8001_mem_alloc(struct pci_dev *pdev, void
 > **virt_addr,
 >  	dma_addr_t *pphys_addr, u32 *pphys_addr_hi, u32 *pphys_addr_lo,
 >  	u32 mem_size, u32 align);
 > 
-> +int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
+> +void pm8001_update_main_config_table(struct pm8001_hba_info *pm8001_ha);
+> +int pm8001_readlog(
+> +	struct eventlog_header *header,
+> +	struct eventlog_entry *entry,
+> +	u32 *consumer_index);
 > 
 >  /* ctl shared API */
 >  extern struct device_attribute *pm8001_host_attrs[];
