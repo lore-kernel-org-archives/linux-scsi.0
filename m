@@ -1,58 +1,67 @@
-From: "Loke, Chetan" <Chetan.Loke@netscout.com>
-Subject: RE: [LSF/MM TOPIC] linux servers as a storage server - what's missing?
-Date: Thu, 19 Jan 2012 12:50:33 -0500
-Message-ID: <D3F292ADF945FB49B35E96C94C2061B9159135E1@nsmail.netscout.com>
-References: <4EF2026F.2090506@redhat.com> <CAL1RGDVvSbOjvCFWDSYLm4xRvKftM5OhwEf9pMGrJhjJHxzsaA@mail.gmail.com> <4F1706AD.3080405@redhat.com> <CAL1RGDXDaeNG_YVC38f4nxvBA+btbypcW=1KyEzm90UQOw3HiQ@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] sg3_utils-1.33 available
+Date: Thu, 19 Jan 2012 13:52:40 -0500
+Message-ID: <4F186678.9010303@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod6og107.obsmtp.com ([64.18.1.208]:60270 "HELO
-	exprod6og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932129Ab2ASRug convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2012 12:50:36 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <CAL1RGDXDaeNG_YVC38f4nxvBA+btbypcW=1KyEzm90UQOw3HiQ@mail.gmail.com>
+Received: from smtp.infotech.no ([82.134.31.41]:49992 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932454Ab2ASSwt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Jan 2012 13:52:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@purestorage.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>, ronnie sahlberg <ronniesahlberg@gmail.com>
 
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Roland Dreier
-> Sent: January 18, 2012 1:46 PM
-> To: Ric Wheeler
-> Cc: linux-fsdevel@vger.kernel.org; linux-scsi@vger.kernel.org
-> Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what's
-> missing?
-> 
-> > Why would you crash is you have device mapper multipath configured
-to
-> handle
-> > path fail over? We have tons of enterprise customers that use
-that...
-> 
-> cf http://www.spinics.net/lists/linux-scsi/msg56254.html
-> 
-> Basically hot unplug of an sdX can oops on any recent kernel, no
-> matter what dm stuff you have on top.
+sg3_utils is a package of command line utilities for sending
+SCSI and some ATA commands to devices. This package targets
+the linux kernel (lk) 2.6 and lk 2.4 series. It also has
+ports to FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
 
+This version reworks the sg_ses utility again. Real world testing
+has shown up many shortcomings in the sg_ses code plus there are
+plenty of (partially) broken SES device out there, some of which
+can now be handled. This version tracks various changes made by
+www.t10.org since July 2011.
 
-Depends on the use-case. In the particular (SAN)use-case that I'm
-talking about, 
-you shouldn't unplug live sdX which is still mapped on the target(array)
-side.
-I've attempted to fix it somewhere and it works. If you need more info
-about eh and initiator fixes, email me offline.
+For an overview of sg3_utils and downloads see this page:
+     http://sg.danny.cz/sg/sg3_utils.html
+A new page has been added to describe the latest rework of
+the sg_ses utility (for enclosure devices):
+     http://sg.danny.cz/sg/sg_ses.html
+The SG_IO ioctl is discussed at:
+     http://sg.danny.cz/sg/sg_io.html
+A full changelog can be found at:
+     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
 
-When would this case arise? :
-a) you unknowingly unmap *hot* LUNs from target(array) while managing
-the array.
+A release announcement will be sent to freshmeat.net .
 
-End result - reset storm on front-end. You just need a smarter way to
-isolate/localize this
-front-end storm.
+Changelog for sg3_utils-1.33 [20120118] [svn: r435]
+   - sg_ses: major rework of indexes (again), now two level
+   - sg_write_buffer: new --specific option for mode specific
+     field; new mode 13 (spc4r32)
+   - sg_vpd: add hp3par volume info vendor VPD page
+     - fix 'scsi ports' [0x88] page problem
+     - add 'sinq' pseudo page for standard inquiry response
+     - add power consumption page
+   - sg_format: add --poll= option for request sense polling
+     - improve handling of disks > 2 TB and DIF (protection)
+   - sg_logs: LB provision lpage extra (sbc3r28)
+   - sg_modes: application tag mpage subcode 0xf0->0x2
+   - sg_write_same: no prot fields when wrprotect=0
+   - sg_get_lba_status: reflect change in sbc3r25 to Parameter
+     Data Length response field (offset reduced from 8 to 4)
+   - sg_inq, sg_vpd: sync with spc4r33
+   - win32: change DataBufferOffset type per MSDN; caused
+     problem with 64 bit machines (with buffered interface)
+   - sg_luns: tweak documentation for vendor specific reports
+   - add man pages for scsi_loging_level, scsi_mandat,
+     scsi_satl and scsi_temperature
 
+Changelog for sg3_utils-1.32 [20110730] [svn: r410]
+   ...
 
-Chetan Loke
+Doug Gilbert
