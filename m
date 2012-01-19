@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 08/10] hpsa: eliminate 8 external target limitation
-Date: Thu, 19 Jan 2012 14:01:19 -0600
-Message-ID: <20120119200119.17835.89463.stgit@beardog.cce.hp.com>
+Subject: [PATCH 09/10] hpsa: improve naming on external target device functions
+Date: Thu, 19 Jan 2012 14:01:25 -0600
+Message-ID: <20120119200125.17835.4760.stgit@beardog.cce.hp.com>
 References: <20120119200042.17835.93058.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,86 +15,167 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Scott Teel <scott.teel@hp.com>
 
-Driver limits SAS external target IDs to range 1-8.
-Need to increase limit and clean up overlapping concepts of targets and paths
-in the code.
+Reduce confusion and inaccuracy caused by dated naming of vars and functions
+referring to external target devices.
 
-There are several defined constants that control this:
-HPSA_MAX_TARGETS_PER_CTLR     16
-MAX_MSA2XXX_ENCLOSURES        32
-HPSA_MAX_PATHS                8
+CURRENT NAMING:                PROPOSED NAMING:
 
-We can condense this to one constant:
-MAX_EXT_TARGETS               32
-
-SAS switches allow for 8 connections, and there is capacity for 4 switches per
-enclosure in largest blade enclosure type.
+"MSA2xxx devices"              "external target devices"
+msa2xxx_model                  ext_target_model
+is_msa2xxx                     is_ext_target
+add_msa2xxx_enclosure          add_ext_target_dev
+nmsa2xxx_enclosures            n_ext_target_devs
 
 Signed-off-by: Scott Teel <scott.teel@hp.com>
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c     |   16 ++++++++--------
- drivers/scsi/hpsa_cmd.h |    5 ++---
- 2 files changed, 10 insertions(+), 11 deletions(-)
+ drivers/scsi/hpsa.c |   43 ++++++++++++++++++++++---------------------
+ 1 files changed, 22 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ea9b685..39ac161 100644
+index 39ac161..bf75e4c 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1692,9 +1692,9 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+@@ -214,7 +214,8 @@ static int check_for_unit_attention(struct ctlr_info *h,
+ 		dev_warn(&h->pdev->dev, HPSA "%d: report LUN data "
+ 			"changed, action required\n", h->ctlr);
+ 	/*
+-	 * Note: this REPORT_LUNS_CHANGED condition only occurs on the MSA2012.
++	 * Note: this REPORT_LUNS_CHANGED condition only occurs on the external
++	 * target (array) devices.
+ 	 */
+ 		break;
+ 	case POWER_OR_RESET:
+@@ -1600,7 +1601,7 @@ bail_out:
+ 	return 1;
+ }
+ 
+-static unsigned char *msa2xxx_model[] = {
++static unsigned char *ext_target_model[] = {
+ 	"MSA2012",
+ 	"MSA2024",
+ 	"MSA2312",
+@@ -1609,19 +1610,19 @@ static unsigned char *msa2xxx_model[] = {
+ 	NULL,
+ };
+ 
+-static int is_msa2xxx(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
++static int is_ext_target(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
+ {
+ 	int i;
+ 
+-	for (i = 0; msa2xxx_model[i]; i++)
+-		if (strncmp(device->model, msa2xxx_model[i],
+-			strlen(msa2xxx_model[i])) == 0)
++	for (i = 0; ext_target_model[i]; i++)
++		if (strncmp(device->model, ext_target_model[i],
++			strlen(ext_target_model[i])) == 0)
+ 			return 1;
+ 	return 0;
+ }
+ 
+ /* Helper function to assign bus, target, lun mapping of devices.
+- * Puts non-msa2xxx logical volumes on bus 0, msa2xxx logical
++ * Puts non-external target logical volumes on bus 0, external target logical
+  * volumes on bus 1, physical devices on bus 2. and the hba on bus 3.
+  * Logical drive target and lun are assigned at this time, but
+  * physical device lun and target assignment are deferred (assigned
+@@ -1642,8 +1643,8 @@ static void figure_bus_target_lun(struct ctlr_info *h,
+ 		return;
+ 	}
+ 	/* It's a logical device */
+-	if (is_msa2xxx(h, device)) {
+-		/* msa2xxx way, put logicals on bus 1
++	if (is_ext_target(h, device)) {
++		/* external target way, put logicals on bus 1
+ 		 * and match target/lun numbers box
+ 		 * reports, other smart array, bus 0, target 0, match lunid
+ 		 */
+@@ -1656,7 +1657,7 @@ static void figure_bus_target_lun(struct ctlr_info *h,
+ 
+ /*
+  * If there is no lun 0 on a target, linux won't find any devices.
+- * For the MSA2xxx boxes, we have to manually detect the enclosure
++ * For the external targets (arrays), we have to manually detect the enclosure
+  * which is at lun zero, as CCISS_REPORT_PHYSICAL_LUNS doesn't report
+  * it for some reason.  *tmpdevice is the target we're adding,
+  * this_device is a pointer into the current element of currentsd[]
+@@ -1665,10 +1666,10 @@ static void figure_bus_target_lun(struct ctlr_info *h,
+  * lun 0 assigned.
+  * Returns 1 if an enclosure was added, 0 if not.
+  */
+-static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
++static int add_ext_target_dev(struct ctlr_info *h,
+ 	struct hpsa_scsi_dev_t *tmpdevice,
+ 	struct hpsa_scsi_dev_t *this_device, u8 *lunaddrbytes,
+-	unsigned long lunzerobits[], int *nmsa2xxx_enclosures)
++	unsigned long lunzerobits[], int *n_ext_target_devs)
+ {
+ 	unsigned char scsi3addr[8];
+ 
+@@ -1678,8 +1679,8 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+ 	if (!is_logical_dev_addr_mode(lunaddrbytes))
+ 		return 0; /* It's the logical targets that may lack lun 0. */
+ 
+-	if (!is_msa2xxx(h, tmpdevice))
+-		return 0; /* It's only the MSA2xxx that have this problem. */
++	if (!is_ext_target(h, tmpdevice))
++		return 0; /* Only external target devices have this problem. */
+ 
+ 	if (tmpdevice->lun == 0) /* if lun is 0, then we have a lun 0. */
+ 		return 0;
+@@ -1692,7 +1693,7 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
  	if (is_scsi_rev_5(h))
  		return 0; /* p1210m doesn't need to do this. */
  
--	if (*nmsa2xxx_enclosures >= MAX_MSA2XXX_ENCLOSURES) {
--		dev_warn(&h->pdev->dev, "Maximum number of MSA2XXX "
--			"enclosures exceeded.  Check your hardware "
-+	if (*nmsa2xxx_enclosures >= MAX_EXT_TARGETS) {
-+		dev_warn(&h->pdev->dev, "Maximum number of external "
-+			"target devices exceeded.  Check your hardware "
+-	if (*nmsa2xxx_enclosures >= MAX_EXT_TARGETS) {
++	if (*n_ext_target_devs >= MAX_EXT_TARGETS) {
+ 		dev_warn(&h->pdev->dev, "Maximum number of external "
+ 			"target devices exceeded.  Check your hardware "
  			"configuration.");
+@@ -1701,7 +1702,7 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+ 
+ 	if (hpsa_update_device_info(h, scsi3addr, this_device, NULL))
  		return 0;
- 	}
-@@ -1800,7 +1800,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+-	(*nmsa2xxx_enclosures)++;
++	(*n_ext_target_devs)++;
+ 	hpsa_set_bus_target_lun(this_device,
+ 				tmpdevice->bus, tmpdevice->target, 0);
+ 	set_bit(tmpdevice->target, lunzerobits);
+@@ -1798,7 +1799,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 	struct hpsa_scsi_dev_t **currentsd, *this_device, *tmpdevice;
+ 	int ncurrent = 0;
  	int reportlunsize = sizeof(*physdev_list) + HPSA_MAX_PHYS_LUN * 8;
- 	int i, nmsa2xxx_enclosures, ndevs_to_allocate;
+-	int i, nmsa2xxx_enclosures, ndevs_to_allocate;
++	int i, n_ext_target_devs, ndevs_to_allocate;
  	int raid_ctlr_position;
--	DECLARE_BITMAP(lunzerobits, HPSA_MAX_TARGETS_PER_CTLR);
-+	DECLARE_BITMAP(lunzerobits, MAX_EXT_TARGETS);
+ 	DECLARE_BITMAP(lunzerobits, MAX_EXT_TARGETS);
  
- 	currentsd = kzalloc(sizeof(*currentsd) * HPSA_MAX_DEVICES, GFP_KERNEL);
- 	physdev_list = kzalloc(reportlunsize, GFP_KERNEL);
-@@ -1817,11 +1817,11 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 			logdev_list, &nlogicals))
- 		goto out;
+@@ -1847,7 +1848,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 		raid_ctlr_position = nphysicals + nlogicals;
  
--	/* We might see up to 32 MSA2xxx enclosures, actually 8 of them
--	 * but each of them 4 times through different paths.  The plus 1
--	 * is for the RAID controller.
-+	/* We might see up to the maximum number of logical and physical disks
-+	 * plus external target devices, and a device for the local RAID
-+	 * controller.
- 	 */
--	ndevs_to_allocate = nphysicals + nlogicals + MAX_MSA2XXX_ENCLOSURES + 1;
-+	ndevs_to_allocate = nphysicals + nlogicals + MAX_EXT_TARGETS + 1;
+ 	/* adjust our table of devices */
+-	nmsa2xxx_enclosures = 0;
++	n_ext_target_devs = 0;
+ 	for (i = 0; i < nphysicals + nlogicals + 1; i++) {
+ 		u8 *lunaddrbytes, is_OBDR = 0;
  
- 	/* Allocate the per device structures */
- 	for (i = 0; i < ndevs_to_allocate; i++) {
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 516d6e5..8049815 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -122,12 +122,11 @@ union u64bit {
- };
+@@ -1867,15 +1868,15 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 		this_device = currentsd[ncurrent];
  
- /* FIXME this is a per controller value (barf!) */
--#define HPSA_MAX_TARGETS_PER_CTLR 16
- #define HPSA_MAX_LUN 1024
- #define HPSA_MAX_PHYS_LUN 1024
--#define MAX_MSA2XXX_ENCLOSURES 32
-+#define MAX_EXT_TARGETS 32
- #define HPSA_MAX_DEVICES (HPSA_MAX_PHYS_LUN + HPSA_MAX_LUN + \
--	MAX_MSA2XXX_ENCLOSURES + 1) /* + 1 is for the controller itself */
-+	MAX_EXT_TARGETS + 1) /* + 1 is for the controller itself */
- 
- /* SCSI-3 Commands */
- #pragma pack(1)
+ 		/*
+-		 * For the msa2xxx boxes, we have to insert a LUN 0 which
++		 * For external target devices, we have to insert a LUN 0 which
+ 		 * doesn't show up in CCISS_REPORT_PHYSICAL data, but there
+ 		 * is nonetheless an enclosure device there.  We have to
+ 		 * present that otherwise linux won't find anything if
+ 		 * there is no lun 0.
+ 		 */
+-		if (add_msa2xxx_enclosure_device(h, tmpdevice, this_device,
++		if (add_ext_target_dev(h, tmpdevice, this_device,
+ 				lunaddrbytes, lunzerobits,
+-				&nmsa2xxx_enclosures)) {
++				&n_ext_target_devs)) {
+ 			ncurrent++;
+ 			this_device = currentsd[ncurrent];
+ 		}
