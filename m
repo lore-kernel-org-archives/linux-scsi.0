@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 07/10] hpsa: refactor hpsa_figure_bus_target_lun
-Date: Thu, 19 Jan 2012 14:01:14 -0600
-Message-ID: <20120119200114.17835.91593.stgit@beardog.cce.hp.com>
+Subject: [PATCH 08/10] hpsa: eliminate 8 external target limitation
+Date: Thu, 19 Jan 2012 14:01:19 -0600
+Message-ID: <20120119200119.17835.89463.stgit@beardog.cce.hp.com>
 References: <20120119200042.17835.93058.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,149 +13,88 @@ To: james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mikem@beardog.cce.hp.com, stephenmcameron@gmail.com, thenzl@redhat.com, scott.teel@hp.com, akpm@linux-foundation.org, stable@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+From: Scott Teel <scott.teel@hp.com>
 
-It should call hpsa_set_bus_target_lun rather
-than individually setting bus, target and lun.
+Driver limits SAS external target IDs to range 1-8.
+Need to increase limit and clean up overlapping concepts of targets and paths
+in the code.
 
+There are several defined constants that control this:
+HPSA_MAX_TARGETS_PER_CTLR     16
+MAX_MSA2XXX_ENCLOSURES        32
+HPSA_MAX_PATHS                8
+
+We can condense this to one constant:
+MAX_EXT_TARGETS               32
+
+SAS switches allow for 8 connections, and there is capacity for 4 switches per
+enclosure in largest blade enclosure type.
+
+Signed-off-by: Scott Teel <scott.teel@hp.com>
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   68 +++++++++++++++++++++++----------------------------
- 1 files changed, 30 insertions(+), 38 deletions(-)
+ drivers/scsi/hpsa.c     |   16 ++++++++--------
+ drivers/scsi/hpsa_cmd.h |    5 ++---
+ 2 files changed, 10 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index c52bc76..ea9b685 100644
+index ea9b685..39ac161 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1628,35 +1628,30 @@ static int is_msa2xxx(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
-  * in hpsa_find_target_lun, called by hpsa_scsi_add_entry.)
-  */
- static void figure_bus_target_lun(struct ctlr_info *h,
--	u8 *lunaddrbytes, int *bus, int *target, int *lun,
--	struct hpsa_scsi_dev_t *device)
--{
--	u32 lunid;
--
--	if (is_logical_dev_addr_mode(lunaddrbytes)) {
--		/* logical device */
--		lunid = le32_to_cpu(*((__le32 *) lunaddrbytes));
--		if (is_msa2xxx(h, device)) {
--			/* msa2xxx way, put logicals on bus 1
--			 * and match target/lun numbers box
--			 * reports.
--			 */
--			*bus = 1;
--			*target = (lunid >> 16) & 0x3fff;
--			*lun = lunid & 0x00ff;
--		} else {
--			*bus = 0;
--			*target = 0;
--			*lun = (lunid & 0x3fff);
--		}
--	} else {
-+	u8 *lunaddrbytes, struct hpsa_scsi_dev_t *device)
-+{
-+	u32 lunid = le32_to_cpu(*((__le32 *) lunaddrbytes));
-+
-+	if (!is_logical_dev_addr_mode(lunaddrbytes)) {
-+		/* physical device, target and lun filled in later */
- 		if (is_hba_lunid(lunaddrbytes))
--			*bus = 3; /* controller */
-+			hpsa_set_bus_target_lun(device, 3, 0, lunid & 0x3fff);
- 		else
--			*bus = 2; /* physical device */
--		*target = -1;
--		*lun = -1; /* we will fill these in later. */
-+			/* defer target, lun assignment for physical devices */
-+			hpsa_set_bus_target_lun(device, 2, -1, -1);
-+		return;
-+	}
-+	/* It's a logical device */
-+	if (is_msa2xxx(h, device)) {
-+		/* msa2xxx way, put logicals on bus 1
-+		 * and match target/lun numbers box
-+		 * reports, other smart array, bus 0, target 0, match lunid
-+		 */
-+		hpsa_set_bus_target_lun(device,
-+			1, (lunid >> 16) & 0x3fff, lunid & 0x00ff);
-+		return;
+@@ -1692,9 +1692,9 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+ 	if (is_scsi_rev_5(h))
+ 		return 0; /* p1210m doesn't need to do this. */
+ 
+-	if (*nmsa2xxx_enclosures >= MAX_MSA2XXX_ENCLOSURES) {
+-		dev_warn(&h->pdev->dev, "Maximum number of MSA2XXX "
+-			"enclosures exceeded.  Check your hardware "
++	if (*nmsa2xxx_enclosures >= MAX_EXT_TARGETS) {
++		dev_warn(&h->pdev->dev, "Maximum number of external "
++			"target devices exceeded.  Check your hardware "
+ 			"configuration.");
+ 		return 0;
  	}
-+	hpsa_set_bus_target_lun(device, 0, 0, lunid & 0x3fff);
- }
- 
- /*
-@@ -1673,12 +1668,11 @@ static void figure_bus_target_lun(struct ctlr_info *h,
- static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
- 	struct hpsa_scsi_dev_t *tmpdevice,
- 	struct hpsa_scsi_dev_t *this_device, u8 *lunaddrbytes,
--	int bus, int target, int lun, unsigned long lunzerobits[],
--	int *nmsa2xxx_enclosures)
-+	unsigned long lunzerobits[], int *nmsa2xxx_enclosures)
- {
- 	unsigned char scsi3addr[8];
- 
--	if (test_bit(target, lunzerobits))
-+	if (test_bit(tmpdevice->target, lunzerobits))
- 		return 0; /* There is already a lun 0 on this target. */
- 
- 	if (!is_logical_dev_addr_mode(lunaddrbytes))
-@@ -1687,11 +1681,11 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
- 	if (!is_msa2xxx(h, tmpdevice))
- 		return 0; /* It's only the MSA2xxx that have this problem. */
- 
--	if (lun == 0) /* if lun is 0, then obviously we have a lun 0. */
-+	if (tmpdevice->lun == 0) /* if lun is 0, then we have a lun 0. */
- 		return 0;
- 
- 	memset(scsi3addr, 0, 8);
--	scsi3addr[3] = target;
-+	scsi3addr[3] = tmpdevice->target;
- 	if (is_hba_lunid(scsi3addr))
- 		return 0; /* Don't add the RAID controller here. */
- 
-@@ -1708,8 +1702,9 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
- 	if (hpsa_update_device_info(h, scsi3addr, this_device, NULL))
- 		return 0;
- 	(*nmsa2xxx_enclosures)++;
--	hpsa_set_bus_target_lun(this_device, bus, target, 0);
--	set_bit(target, lunzerobits);
-+	hpsa_set_bus_target_lun(this_device,
-+				tmpdevice->bus, tmpdevice->target, 0);
-+	set_bit(tmpdevice->target, lunzerobits);
- 	return 1;
- }
- 
-@@ -1804,7 +1799,6 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 	int ncurrent = 0;
+@@ -1800,7 +1800,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
  	int reportlunsize = sizeof(*physdev_list) + HPSA_MAX_PHYS_LUN * 8;
  	int i, nmsa2xxx_enclosures, ndevs_to_allocate;
--	int bus, target, lun;
  	int raid_ctlr_position;
- 	DECLARE_BITMAP(lunzerobits, HPSA_MAX_TARGETS_PER_CTLR);
+-	DECLARE_BITMAP(lunzerobits, HPSA_MAX_TARGETS_PER_CTLR);
++	DECLARE_BITMAP(lunzerobits, MAX_EXT_TARGETS);
  
-@@ -1869,8 +1863,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 		if (hpsa_update_device_info(h, lunaddrbytes, tmpdevice,
- 							&is_OBDR))
- 			continue; /* skip it if we can't talk to it. */
--		figure_bus_target_lun(h, lunaddrbytes, &bus, &target, &lun,
--			tmpdevice);
-+		figure_bus_target_lun(h, lunaddrbytes, tmpdevice);
- 		this_device = currentsd[ncurrent];
+ 	currentsd = kzalloc(sizeof(*currentsd) * HPSA_MAX_DEVICES, GFP_KERNEL);
+ 	physdev_list = kzalloc(reportlunsize, GFP_KERNEL);
+@@ -1817,11 +1817,11 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 			logdev_list, &nlogicals))
+ 		goto out;
  
- 		/*
-@@ -1881,14 +1874,13 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 		 * there is no lun 0.
- 		 */
- 		if (add_msa2xxx_enclosure_device(h, tmpdevice, this_device,
--				lunaddrbytes, bus, target, lun, lunzerobits,
-+				lunaddrbytes, lunzerobits,
- 				&nmsa2xxx_enclosures)) {
- 			ncurrent++;
- 			this_device = currentsd[ncurrent];
- 		}
+-	/* We might see up to 32 MSA2xxx enclosures, actually 8 of them
+-	 * but each of them 4 times through different paths.  The plus 1
+-	 * is for the RAID controller.
++	/* We might see up to the maximum number of logical and physical disks
++	 * plus external target devices, and a device for the local RAID
++	 * controller.
+ 	 */
+-	ndevs_to_allocate = nphysicals + nlogicals + MAX_MSA2XXX_ENCLOSURES + 1;
++	ndevs_to_allocate = nphysicals + nlogicals + MAX_EXT_TARGETS + 1;
  
- 		*this_device = *tmpdevice;
--		hpsa_set_bus_target_lun(this_device, bus, target, lun);
+ 	/* Allocate the per device structures */
+ 	for (i = 0; i < ndevs_to_allocate; i++) {
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index 516d6e5..8049815 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -122,12 +122,11 @@ union u64bit {
+ };
  
- 		switch (this_device->devtype) {
- 		case TYPE_ROM:
+ /* FIXME this is a per controller value (barf!) */
+-#define HPSA_MAX_TARGETS_PER_CTLR 16
+ #define HPSA_MAX_LUN 1024
+ #define HPSA_MAX_PHYS_LUN 1024
+-#define MAX_MSA2XXX_ENCLOSURES 32
++#define MAX_EXT_TARGETS 32
+ #define HPSA_MAX_DEVICES (HPSA_MAX_PHYS_LUN + HPSA_MAX_LUN + \
+-	MAX_MSA2XXX_ENCLOSURES + 1) /* + 1 is for the controller itself */
++	MAX_EXT_TARGETS + 1) /* + 1 is for the controller itself */
+ 
+ /* SCSI-3 Commands */
+ #pragma pack(1)
