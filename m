@@ -1,43 +1,142 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v4 0/3] virtio-scsi driver
-Date: Fri, 20 Jan 2012 17:45:36 +0100
-Message-ID: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH v4 2/3] virtio-scsi: add error handling
+Date: Fri, 20 Jan 2012 17:45:38 +0100
+Message-ID: <1327077939-7084-3-git-send-email-pbonzini@redhat.com>
+References: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Rusty Russell <rusty@rustcorp.com.au>, kvm@vger.kernel.org, "Michael S . Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, "Michael S. Tsirkin" <mst@redhat.com>, kvm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is the first implementation of the virtio-scsi driver, a virtual
-HBA that will be supported by KVM.  It implements a subset of the spec,
-in particular it does not implement asynchronous notifications for either
-LUN reset/removal/addition or CD-ROM media events, but it is already
-functional and usable.
+This commit adds basic error handling to the virtio-scsi
+HBA device.  Task management functions are sent synchronously
+via the control virtqueue.
 
-Other matching bits:
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: kvm@vger.kernel.org
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+	v3->v4: fixed 32-bit compilation; adjusted call to virtscsi_kick_cmd
 
-- spec at http://people.redhat.com/pbonzini/virtio-spec.pdf
+	v2->v3: added mempool, used GFP_NOIO instead of GFP_ATOMIC,
+	formatting fixes
 
-- QEMU implementation at git://github.com/bonzini/qemu.git,
-  branch virtio-scsi
+	v1->v2: use scmd_printk
 
-Please review.  I would like this to be included in 3.3, since the
-possibility of regressions is obviously zero.
+ drivers/scsi/virtio_scsi.c |   73 +++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 72 insertions(+), 1 deletions(-)
 
-Paolo Bonzini (3):
-  virtio-scsi: first version
-  virtio-scsi: add error handling
-  virtio-scsi: add power management support
-
-v3->v4: renamed VIRTIO_SCSI_S_UNDERRUN to VIRTIO_SCSI_S_OVERRUN;
-    fixed 32-bit compilation; added power management support;
-    adjusted calls to virtqueue_add_buf
-
- drivers/scsi/Kconfig        |    8 +
- drivers/scsi/Makefile       |    1 +
- drivers/scsi/virtio_scsi.c  |  594 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/virtio_ids.h  |    1 +
- include/linux/virtio_scsi.h |  114 +++++++++
- 5 files changed, 718 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/virtio_scsi.c
- create mode 100644 include/linux/virtio_scsi.h
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 3f87ae0..68104cd 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -29,6 +29,7 @@
+ /* Command queue element */
+ struct virtio_scsi_cmd {
+ 	struct scsi_cmnd *sc;
++	struct completion *comp;
+ 	union {
+ 		struct virtio_scsi_cmd_req       cmd;
+ 		struct virtio_scsi_ctrl_tmf_req  tmf;
+@@ -168,11 +169,12 @@ static void virtscsi_req_done(struct virtqueue *vq)
+ 	virtscsi_vq_done(vq, virtscsi_complete_cmd);
+ };
+ 
+-/* These are still stubs.  */
+ static void virtscsi_complete_free(void *buf)
+ {
+ 	struct virtio_scsi_cmd *cmd = buf;
+ 
++	if (cmd->comp)
++		complete_all(cmd->comp);
+ 	mempool_free(cmd, virtscsi_cmd_pool);
+ }
+ 
+@@ -306,12 +308,81 @@ out:
+ 	return ret;
+ }
+ 
++static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
++{
++	DECLARE_COMPLETION_ONSTACK(comp);
++	int ret;
++
++	cmd->comp = &comp;
++	ret = virtscsi_kick_cmd(vscsi, vscsi->ctrl_vq, cmd,
++			       sizeof cmd->req.tmf, sizeof cmd->resp.tmf,
++			       GFP_NOIO);
++	if (ret < 0)
++		return FAILED;
++
++	wait_for_completion(&comp);
++	if (cmd->resp.tmf.response != VIRTIO_SCSI_S_OK &&
++	    cmd->resp.tmf.response != VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
++		return FAILED;
++
++	return SUCCESS;
++}
++
++static int virtscsi_device_reset(struct scsi_cmnd *sc)
++{
++	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
++	struct virtio_scsi_cmd *cmd;
++
++	sdev_printk(KERN_INFO, sc->device, "device reset\n");
++	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_NOIO);
++	if (!cmd)
++		return FAILED;
++
++	memset(cmd, 0, sizeof(*cmd));
++	cmd->sc = sc;
++	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
++		.type = VIRTIO_SCSI_T_TMF,
++		.subtype = VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET,
++		.lun[0] = 1,
++		.lun[1] = sc->device->id,
++		.lun[2] = (sc->device->lun >> 8) | 0x40,
++		.lun[3] = sc->device->lun & 0xff,
++	};
++	return virtscsi_tmf(vscsi, cmd);
++}
++
++static int virtscsi_abort(struct scsi_cmnd *sc)
++{
++	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
++	struct virtio_scsi_cmd *cmd;
++
++	scmd_printk(KERN_INFO, sc, "abort\n");
++	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_NOIO);
++	if (!cmd)
++		return FAILED;
++
++	memset(cmd, 0, sizeof(*cmd));
++	cmd->sc = sc;
++	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
++		.type = VIRTIO_SCSI_T_TMF,
++		.subtype = VIRTIO_SCSI_T_TMF_ABORT_TASK,
++		.lun[0] = 1,
++		.lun[1] = sc->device->id,
++		.lun[2] = (sc->device->lun >> 8) | 0x40,
++		.lun[3] = sc->device->lun & 0xff,
++		.tag = (unsigned long)sc,
++	};
++	return virtscsi_tmf(vscsi, cmd);
++}
++
+ static struct scsi_host_template virtscsi_host_template = {
+ 	.module = THIS_MODULE,
+ 	.name = "Virtio SCSI HBA",
+ 	.proc_name = "virtio_scsi",
+ 	.queuecommand = virtscsi_queuecommand,
+ 	.this_id = -1,
++	.eh_abort_handler = virtscsi_abort,
++	.eh_device_reset_handler = virtscsi_device_reset,
+ 
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
+-- 
+1.7.1
