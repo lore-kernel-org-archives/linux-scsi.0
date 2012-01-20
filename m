@@ -1,63 +1,82 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH] scsi_debug: GET LBA STATUS response length correction
-Date: Thu, 19 Jan 2012 19:30:00 -0500
-Message-ID: <4F18B588.3090106@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 13/13] target: Change target_submit_cmd() to return void
+Date: Thu, 19 Jan 2012 16:46:43 -0800
+Message-ID: <1327020403.16983.302.camel@haakon2.linux-iscsi.org>
+References: <1327009163-10177-1-git-send-email-agrover@redhat.com>
+	 <1327009163-10177-14-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030204090907020803060902"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:51905 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756222Ab2ATAaI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jan 2012 19:30:08 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1327009163-10177-14-git-send-email-agrover@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, kiran.patil@intel.com
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@ORACLE.COM>
 
-This is a multi-part message in MIME format.
---------------030204090907020803060902
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Thu, 2012-01-19 at 13:39 -0800, Andy Grover wrote:
+> Retval not very useful, and may even be harmful. Once submitted, fabrics
+> should expect a sense error if anything goes wrong. All fabrics checking
+> of this retval are useless or broken:
+> 
+> fc checks it just to emit more debug output.
+> ib_srpt trickles retval up, then it is ignored.
+> qla2xxx trickles it up, which then causes a bug because the abort goto
+> in qla_target.c thinks cmd hasn't been sent to target.
+> 
+> Just returning nothing is best.
+> 
+> Signed-off-by: Andy Grover <agrover@redhat.com>
+> ---
+>  drivers/infiniband/ulp/srpt/ib_srpt.c  |    5 +----
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    7 ++-----
+>  drivers/target/target_core_transport.c |    5 ++---
+>  drivers/target/tcm_fc/tfc_cmd.c        |    9 ++-------
+>  include/target/target_core_fabric.h    |    2 +-
+>  5 files changed, 8 insertions(+), 20 deletions(-)
+> 
 
-The SCSI GET LBA STATUS command was introduced in SBC-3 revision
-20 in September 2009. At that time the Parameter Data Length
-field in the response had an associated byte offset of 8.
+<SNIP>
 
-Then in SBC-3 revision 25 (October 2010) that byte offset was
-changed to 4. The sg_get_lba_status utility in sg3_utils version
-1.33 (released earlier today) has been changed to calculate
-the newer response length. However the implementation of
-GET LBA STATUS command in the scsi_debug driver still uses the
-original byte offset.
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 15faca4..cfc4e02 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -1633,7 +1633,7 @@ EXPORT_SYMBOL(transport_handle_cdb_direct);
+>   * This may only be called from process context, and also currently
+>   * assumes internal allocation of fabric payload buffer by target-core.
+>   **/
+> -int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+> +void target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+>  		unsigned char *cdb, unsigned char *sense, u32 unpacked_lun,
+>  		u32 data_length, int task_attr, int data_dir, int flags)
+>  {
+> @@ -1682,12 +1682,11 @@ int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+>  	 * when fabric has filled the incoming buffer.
+>  	 */
+>  	transport_handle_cdb_direct(se_cmd);
+> -	return 0;
+> +	return;
+>  
+>  out_check_cond:
+>  	transport_send_check_condition_and_sense(se_cmd,
+>  				se_cmd->scsi_sense_reason, 0);
+> -	return 0;
+>  }
+>  EXPORT_SYMBOL(target_submit_cmd);
+>  
 
-Changelog:
-   - modify the Parameter Data Length field value in the GET LBA
-     STATUS command response to comply with the change in SBC-3
-     revision 25
+Your patch is fine here..
 
-Doug Gilbert
+However my original usage of transport_send_check_condition_and_sense()
+is wrong wrt target_submit_cmd() failures.  The cmd_kref will have
+already been taken by target_get_sess_cmd(), so this needs to be using
+transport_generic_request_failure() around sense_check_condition to
+handle proper TFO->check_stop_free() kref_puts + response queue_full
+cases.
 
---------------030204090907020803060902
-Content-Type: text/x-patch;
- name="sdebug32_getlba.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="sdebug32_getlba.patch"
+So I'm looking into addressing this breakage in lio-core now, and will
+post a patch for 3.3-rc-fixes soon after I can verify the fix with
+qla2xxx + ib_srpt failures.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 6888b2c..d2fd0ef 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -2220,7 +2220,7 @@ static int resp_get_lba_status(struct scsi_cmnd * scmd,
- 	mapped = map_state(lba, &num);
- 
- 	memset(arr, 0, SDEBUG_GET_LBA_STATUS_LEN);
--	put_unaligned_be32(16, &arr[0]);	/* Parameter Data Length */
-+	put_unaligned_be32(20, &arr[0]);	/* Parameter Data Length */
- 	put_unaligned_be64(lba, &arr[8]);	/* LBA */
- 	put_unaligned_be32(num, &arr[16]);	/* Number of blocks */
- 	arr[20] = !mapped;			/* mapped = 0, unmapped = 1 */
-
---------------030204090907020803060902--
+--nab
