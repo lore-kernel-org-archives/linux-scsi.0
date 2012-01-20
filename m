@@ -1,33 +1,39 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH 07/13] target: Inline struct se_tmr_req into se_cmd
-Date: Fri, 20 Jan 2012 09:44:43 -0800
-Message-ID: <4F19A80B.6000902@redhat.com>
-References: <1327009163-10177-1-git-send-email-agrover@redhat.com> <1327009163-10177-8-git-send-email-agrover@redhat.com> <20120120161209.GA22481@infradead.org>
+From: Tony Asleson <tasleson@redhat.com>
+Subject: [LSF/MM TOPIC] [ATTEND] Storage management (API & Library)
+Date: Fri, 20 Jan 2012 11:50:57 -0600
+Message-ID: <4F19A981.4080502@redhat.com>
+Reply-To: tasleson@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21276 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:30292 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753796Ab2ATRot (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jan 2012 12:44:49 -0500
-In-Reply-To: <20120120161209.GA22481@infradead.org>
+	id S1754016Ab2ATRu7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Jan 2012 12:50:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, kiran.patil@intel.com
+To: lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-On 01/20/2012 08:12 AM, Christoph Hellwig wrote:
-> On Thu, Jan 19, 2012 at 01:39:17PM -0800, Andy Grover wrote:
->> This saves all fabrics from calling core_tmr_alloc_req() and
->> having to check the result. The downside is se_cmd gets bigger for all
->> requests, but hopefully later patches will reduce it.
-> 
-> Without patches to void the overhead it's not acceptable. Fortunately
-> it should be doable fairly simply by using an union for command vs
-> TMR fields.
+I would like to give a brief background on the storage management API
+and library that I have been working on** and discuss the design and
+implementation challenges that I have encountered thus far.
 
-This was my thought too. We should be able to move cmd variables into a
-union w/tmr struct very soon, with a low risk of introducing bugs.
+Most notable is the same topic Shyam Iyer brought up about proprietary
+plug-in support (http://marc.info/?l=linux-scsi&m=132454179114038&w=2).
+This very feature has influenced libStorageMgmt heavily and has raised a
+number of discussions on design and licensing.
 
--- Andy
+Discussion topics
+* Scope (What a storage library should/should not do)
+* Role (library position in management stack)
+* Features (specific: must have to would be nice)
+* Usage scenarios which highlight needed features
+* Licensing (most appropriate open source license)
+* Proprietary plug-in support
+
+
+** http://sourceforge.net/apps/trac/libstoragemgmt
+
+Regards,
+Tony Asleson
