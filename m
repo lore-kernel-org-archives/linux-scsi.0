@@ -1,18 +1,17 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v4 2/3] virtio-scsi: add error handling
-Date: Fri, 20 Jan 2012 17:45:38 +0100
-Message-ID: <1327077939-7084-3-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH v4 3/3] virtio-scsi: add power management support
+Date: Fri, 20 Jan 2012 17:45:39 +0100
+Message-ID: <1327077939-7084-4-git-send-email-pbonzini@redhat.com>
 References: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <kvm-owner@vger.kernel.org>
 In-Reply-To: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: kvm-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, "Michael S. Tsirkin" <mst@redhat.com>, kvm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This commit adds basic error handling to the virtio-scsi
-HBA device.  Task management functions are sent synchronously
-via the control virtqueue.
+This patch adds freeze/restore handlers for the HBA.  Block queues
+are managed independently by the disk devices.
 
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Rusty Russell <rusty@rustcorp.com.au>
@@ -20,123 +19,70 @@ Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: kvm@vger.kernel.org
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
-	v3->v4: fixed 32-bit compilation; adjusted call to virtscsi_kick_cmd
+	The feature has been merged in the virtio core for 3.3, so the patch
+	is new in v4.
 
-	v2->v3: added mempool, used GFP_NOIO instead of GFP_ATOMIC,
-	formatting fixes
-
-	v1->v2: use scmd_printk
-
- drivers/scsi/virtio_scsi.c |   73 +++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 72 insertions(+), 1 deletions(-)
+ drivers/scsi/virtio_scsi.c |   26 +++++++++++++++++++++++---
+ 1 files changed, 23 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 3f87ae0..68104cd 100644
+index 68104cd..efccd72 100644
 --- a/drivers/scsi/virtio_scsi.c
 +++ b/drivers/scsi/virtio_scsi.c
-@@ -29,6 +29,7 @@
- /* Command queue element */
- struct virtio_scsi_cmd {
- 	struct scsi_cmnd *sc;
-+	struct completion *comp;
- 	union {
- 		struct virtio_scsi_cmd_req       cmd;
- 		struct virtio_scsi_ctrl_tmf_req  tmf;
-@@ -168,11 +169,12 @@ static void virtscsi_req_done(struct virtqueue *vq)
- 	virtscsi_vq_done(vq, virtscsi_complete_cmd);
+@@ -406,8 +406,8 @@ static struct scsi_host_template virtscsi_host_template = {
+ 				  &__val, sizeof(__val)); \
+ 	})
+ 
+-static int __devinit virtscsi_init(struct virtio_device *vdev,
+-				   struct virtio_scsi *vscsi)
++static int virtscsi_init(struct virtio_device *vdev,
++			 struct virtio_scsi *vscsi)
+ {
+ 	int err;
+ 	struct virtqueue *vqs[3];
+@@ -491,7 +491,7 @@ virtscsi_init_failed:
+ 	return err;
+ }
+ 
+-static void __devexit virtscsi_remove_vqs(struct virtio_device *vdev)
++static void virtscsi_remove_vqs(struct virtio_device *vdev)
+ {
+ 	/* Stop all the virtqueues. */
+ 	vdev->config->reset(vdev);
+@@ -509,6 +509,22 @@ static void __devexit virtscsi_remove(struct virtio_device *vdev)
+ 	scsi_host_put(shost);
+ }
+ 
++#ifdef CONFIG_PM
++static int virtscsi_freeze(struct virtio_device *vdev)
++{
++	virtscsi_remove_vqs(vdev);
++	return 0;
++}
++
++static int virtscsi_restore(struct virtio_device *vdev)
++{
++	struct Scsi_Host *sh = virtio_scsi_host(vdev);
++	struct virtio_scsi *vscsi = shost_priv(sh);
++
++	return virtscsi_init(vdev, vscsi);
++}
++#endif
++
+ static struct virtio_device_id id_table[] = {
+ 	{ VIRTIO_ID_SCSI, VIRTIO_DEV_ANY_ID },
+ 	{ 0 },
+@@ -519,6 +535,10 @@ static struct virtio_driver virtio_scsi_driver = {
+ 	.driver.owner = THIS_MODULE,
+ 	.id_table = id_table,
+ 	.probe = virtscsi_probe,
++#ifdef CONFIG_PM
++	.freeze = virtscsi_freeze,
++	.restore = virtscsi_restore,
++#endif
+ 	.remove = __devexit_p(virtscsi_remove),
  };
  
--/* These are still stubs.  */
- static void virtscsi_complete_free(void *buf)
- {
- 	struct virtio_scsi_cmd *cmd = buf;
- 
-+	if (cmd->comp)
-+		complete_all(cmd->comp);
- 	mempool_free(cmd, virtscsi_cmd_pool);
- }
- 
-@@ -306,12 +308,81 @@ out:
- 	return ret;
- }
- 
-+static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
-+{
-+	DECLARE_COMPLETION_ONSTACK(comp);
-+	int ret;
-+
-+	cmd->comp = &comp;
-+	ret = virtscsi_kick_cmd(vscsi, vscsi->ctrl_vq, cmd,
-+			       sizeof cmd->req.tmf, sizeof cmd->resp.tmf,
-+			       GFP_NOIO);
-+	if (ret < 0)
-+		return FAILED;
-+
-+	wait_for_completion(&comp);
-+	if (cmd->resp.tmf.response != VIRTIO_SCSI_S_OK &&
-+	    cmd->resp.tmf.response != VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
-+		return FAILED;
-+
-+	return SUCCESS;
-+}
-+
-+static int virtscsi_device_reset(struct scsi_cmnd *sc)
-+{
-+	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
-+	struct virtio_scsi_cmd *cmd;
-+
-+	sdev_printk(KERN_INFO, sc->device, "device reset\n");
-+	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_NOIO);
-+	if (!cmd)
-+		return FAILED;
-+
-+	memset(cmd, 0, sizeof(*cmd));
-+	cmd->sc = sc;
-+	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
-+		.type = VIRTIO_SCSI_T_TMF,
-+		.subtype = VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET,
-+		.lun[0] = 1,
-+		.lun[1] = sc->device->id,
-+		.lun[2] = (sc->device->lun >> 8) | 0x40,
-+		.lun[3] = sc->device->lun & 0xff,
-+	};
-+	return virtscsi_tmf(vscsi, cmd);
-+}
-+
-+static int virtscsi_abort(struct scsi_cmnd *sc)
-+{
-+	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
-+	struct virtio_scsi_cmd *cmd;
-+
-+	scmd_printk(KERN_INFO, sc, "abort\n");
-+	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_NOIO);
-+	if (!cmd)
-+		return FAILED;
-+
-+	memset(cmd, 0, sizeof(*cmd));
-+	cmd->sc = sc;
-+	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
-+		.type = VIRTIO_SCSI_T_TMF,
-+		.subtype = VIRTIO_SCSI_T_TMF_ABORT_TASK,
-+		.lun[0] = 1,
-+		.lun[1] = sc->device->id,
-+		.lun[2] = (sc->device->lun >> 8) | 0x40,
-+		.lun[3] = sc->device->lun & 0xff,
-+		.tag = (unsigned long)sc,
-+	};
-+	return virtscsi_tmf(vscsi, cmd);
-+}
-+
- static struct scsi_host_template virtscsi_host_template = {
- 	.module = THIS_MODULE,
- 	.name = "Virtio SCSI HBA",
- 	.proc_name = "virtio_scsi",
- 	.queuecommand = virtscsi_queuecommand,
- 	.this_id = -1,
-+	.eh_abort_handler = virtscsi_abort,
-+	.eh_device_reset_handler = virtscsi_device_reset,
- 
- 	.can_queue = 1024,
- 	.dma_boundary = UINT_MAX,
 -- 
 1.7.1
+
