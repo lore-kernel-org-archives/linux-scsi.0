@@ -1,68 +1,42 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] smp_utils-0.97 available
-Date: Fri, 20 Jan 2012 18:20:16 -0500
-Message-ID: <4F19F6B0.2000608@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] Storage management (API & Library)
+Date: Fri, 20 Jan 2012 15:28:51 -0800
+Message-ID: <CABE8wwvK=uQx2cTK44Sn+79dj+MyGM1y4n7MoounkR7STHFkXQ@mail.gmail.com>
+References: <4F19A981.4080502@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:40177 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755266Ab2ATXUX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jan 2012 18:20:23 -0500
+Received: from mga06.intel.com ([134.134.136.21]:50900 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750823Ab2ATX2w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jan 2012 18:28:52 -0500
+Received: by iabz7 with SMTP id z7so1561484iab.25
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Jan 2012 15:28:51 -0800 (PST)
+In-Reply-To: <4F19A981.4080502@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: David Zeuthen <david@fubar.dk>, Kay Sievers <kay.sievers@vrfy.org>
+To: tasleson@redhat.com
+Cc: lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-smp_utils is a package of command line utilities for invoking
-SMP functions to monitor and manage SAS expanders. SMP is the
-Serial Attached SCSI (SAS) Serial Management Protocol. A SAS Host
-Bus Adapter (HBA) includes a SMP initiator (along with SSP and
-STP initiators). A SAS expander contains a SMP target. Many
-SAS HBAs have a SMP pass through interface that can be used to
-send SMP requests and receive the responses. This package is
-designed to work with the linux kernel (lk) 2.6 series,
-FreeBSD 9.0 and recent Solaris versions.
+On Fri, Jan 20, 2012 at 9:50 AM, Tony Asleson <tasleson@redhat.com> wrote:
+> I would like to give a brief background on the storage management API
+> and library that I have been working on** and discuss the design and
+> implementation challenges that I have encountered thus far.
+>
+> Most notable is the same topic Shyam Iyer brought up about proprietary
+> plug-in support (http://marc.info/?l=linux-scsi&m=132454179114038&w=2).
+> This very feature has influenced libStorageMgmt heavily and has raised a
+> number of discussions on design and licensing.
+>
+> Discussion topics
+> * Scope (What a storage library should/should not do)
+> * Role (library position in management stack)
+> * Features (specific: must have to would be nice)
+> * Usage scenarios which highlight needed features
+> * Licensing (most appropriate open source license)
+> * Proprietary plug-in support
 
-Two interfaces are available for Linux: "sgv4" and "mptctl".
-The "sgv4" interface uses the bsg driver.
+Interesting, how does this relate, or not relate, to udisks in device-kit?
 
-This version adds the smp_conf_phy_event utility. Now all
-SMP functions defined in SPL and SPL-2 (up to revision 3)
-are supported. The build is now autotools-based (i.e.
-'./configure ; make ; make install') and ports to FreeBSD and
-Solaris have been added. There is now a 'smputils' library
-which may be of interest to Linux udev maintainers since
-udisks-probe-sas-expander is "a bit cheesy" to quote its C
-source.
-
-For an overview, examples and downloads of smp_utils see:
-http://sg.danny.cz/sg/smp_utils.html
-
-Changelog for smp_utils-0.97 [20120120] [svn:r116]
-   - smp_conf_phy_event: new utility
-   - change to ./configure style build and use smputils
-     runtime and development libraries
-   - change binary install from /usr/bin to /usr/sbin
-     in debian and rpm (.spec) scripts
-   - sync to SPL-2 (spl2r03)
-   - take resid into account when calculating the actual
-     response length
-   - smp_rep_phy_event, smp_rep_phy_event_list: add --enumerate
-     option to list Phy Event Source names
-   - smp_read_gpio, smp_write_gpio: move register type,
-     index and count fields in enhanced variants
-   - add solaris and freebsd ports
-
-Changelog for smp_utils-0.96 [20110620] [svn:r96]
-   ...
-
-SAS-2 expanders often include a SCSI Enclosure Services (SES)
-device. To support this there has been a major rework of the
-sg_ses utility (again) in the sg3_utils version 1.33 package.
-See http://sg.danny.cz/sg/sg3_utils.html and
-http://sg.danny.cz/sg/sg_ses.html
-
-Doug Gilbert
+--
+Dan
