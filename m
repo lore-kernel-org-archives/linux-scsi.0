@@ -1,85 +1,130 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: scsi_scan.c reports 'target allocation failed, error -6' w/
- mptsas
-Date: Fri, 20 Jan 2012 09:27:43 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A60481F5304E@inbmail02.lsi.com>
-References: <20120118100635.GA19750@dot.freshdot.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what's missing?
+Date: Fri, 20 Jan 2012 09:55:52 +0100
+Message-ID: <4F192C18.4060603@suse.de>
+References: <4EF2026F.2090506@redhat.com>  <DBFB1B45AF80394ABD1C807E9F28D157077DD22B19@BLRX7MCDC203.AMER.DELL.COM>  <20111222155849.GD1388@redhat.com>  <DBFB1B45AF80394ABD1C807E9F28D157077DD22D79@BLRX7MCDC203.AMER.DELL.COM>  <4F0ADB0A.9020707@suse.de> <1326113987.2580.8.camel@localhost.localdomain> <4F0BE06E.5000808@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:54456 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750864Ab2ATD5v convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jan 2012 22:57:51 -0500
-In-Reply-To: <20120118100635.GA19750@dot.freshdot.net>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:58598 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751953Ab2ATIz4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Jan 2012 03:55:56 -0500
+In-Reply-To: <4F0BE06E.5000808@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sander Smeenk <ssmeenk@freshdot.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Tom Coughlan <coughlan@redhat.com>, tasleson@redhat.com, Shyam_Iyer@Dell.com, vgoyal@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Request you to provide the response of  "modinfo mptsas".
-Also please capture the logs with the scsi logging set to 0x180000DB.
-"echo 0x180000db > /proc/sys/dev/scsi/logging_level".
+On 01/10/2012 07:53 AM, Ric Wheeler wrote:
+> On 01/09/2012 02:59 PM, Tom Coughlan wrote:
+>> On Mon, 2012-01-09 at 13:18 +0100, Hannes Reinecke wrote:
+>>> On 12/22/2011 09:54 PM, Shyam_Iyer@Dell.com wrote:
+>>>>
+>>>>> -----Original Message-----
+>>>>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>>>>> owner@vger.kernel.org] On Behalf Of Vivek Goyal
+>>>>> Sent: Thursday, December 22, 2011 10:59 AM
+>>>>> To: Iyer, Shyam
+>>>>> Cc: rwheeler@redhat.com; linux-fsdevel@vger.kernel.org; linux-
+>>>>> scsi@vger.kernel.org
+>>>>> Subject: Re: [LSF/MM TOPIC] linux servers as a storage server -
+>>>>> what's
+>>>>> missing?
+>>>>>
+>>>>> On Thu, Dec 22, 2011 at 01:44:16PM +0530, Shyam_Iyer@Dell.com
+>>>>> wrote:
+>>>>>
+>>>>> [..]
+>>>>>
+>>>>>> Simple asks -
+>>>>>> 1) Provide a consistent storage and fs management library that
+>>>>> discourages folks to write their own usespace storage library.
+>>>>> Include
+>>>>> things like fs formatting(fs profiles), transport
+>>>>> configuration(eg:
+>>>>> iscsiadm as a library), thin provisioning watermarks, cluster
+>>>>> management, apis for cgroups etc.
+>>>>>                                        ^^^^^^^^^^^^^^^^
+>>>>> For cgroups, we have libcgroup library. Not many people like to
+>>>>> use it
+>>>>> though as cgroup is exported as a filesystem and they prefer to
+>>>>> use
+>>>>> normal
+>>>>> libc api to traverse and configure cgroups (Instead of going
+>>>>> through
+>>>>> another library). Some examples include libvrit, systemd.
+>>>>>
+>>>>> Thanks
+>>>>> Vivek
+>>>> Well honestly I think that is a libvirt/systemd issue and
+>>>> libvirt also
+>>>> invokes things like iscsiadm, dcb etc as a binary :-/
+>>>>
+>>>> Some one could always use qemu command lines to invoke KVM/XEN but
+>>>> libvirt has saved me one too many days in doing a quick operation
+>>>> without wondering about a qemu commandline.
+>>>>
+>>>> I am also asking for ideas on how to avoid this fragmentation
+>>>> because
+>>>> just like libvirt others are also encouraged to do their own libc
+>>> thing
+>>>> in the absence of a common storage management framework..
+>>>>
+>>>> Does the standard interface for linux end at the user/kernel
+>>>> boundary
+>>>> or the user/libc boundary? If so I feel we would continue to lag
+>>> behind
+>>>> other OSes in features because of the model.
+>>>>
+>>> StorageAPI _again_.
+>>>
+>>> I was under the impression RH had someone working on it.
+>> Yes, Red Hat does. Tony Asleson. libStorageMgmt:
+>>
+>> http://sourceforge.net/apps/trac/libstoragemgmt
+>>
+>> The current focus is on managing external storage (SMI-S, etc.). Thi=
+s
+>> focus can be expanded over time. Contributions welcome.
+>>
+>>> (Actually I was trying to give it a go, but then got buried under
+>>> customer escalations).
+>>>
+>>> So yes, we know there is a shortcoming.
+>>> And yes, we should improve things.
+>>>
+>>> But I feel another discussion about this will only give us more
+>>> insight, but not moving things forward.
+>>>
+>>> What about having a separate session at the storage summit (or even
+>>> at the collab summit) to hammer out the requirements here?
+>> That would be fine, although as you say, we need more than talk.
+>>
+>> Tom
+>>
+>=20
+> Having a special session would be really a good idea - given the
+> size of the discussion, we might want to do both a talk and a
+> breakout at collab summit...
+>=20
+To advance this further, I've submitted a BoF proposal 'Storage
+Management on Linux' for the Collab Summit.
 
-And mptsas debug level set to 0x3f8
-"echo 3f8 > /sys/module/mptbase/parameters/mpt_debug_level"
+I would be available for a joint talk as an introduction if someone
+would be interested ...
 
-Regards,
-Nagalakshmi
+Cheers,
 
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Sander Smeenk
-Sent: Wednesday, January 18, 2012 3:37 PM
-To: linux-scsi@vger.kernel.org
-Subject: scsi_scan.c reports 'target allocation failed, error -6' w/ mptsas
-
-Hi,
-
-i'm experiencing issues while hot(re)plugging SAS-drives in a server
-running 2.6.32-37 (stock Ubuntu Lucid). The disks are connected to an
-LSI Logic / Symbios Logic SAS1064 PCI-X Fusion-MPT SAS HBA (1000:0500 r2)
-Google has no information at all on this specific errormessage.
-
-Situation:
-The server is running on 4xSAS drives with the mptsas module, disks are
-JBODed to the OS, the OS has them in mdadm software raid.
-
-Each disk needs to be replaced so i unconfigure one in mdadm, ask the
-kernel to 'delete' the device node:
-| # echo 1 > /sys/block/sdN/device/delete
-
-And then i pull the disk after which the kernel logs:
-| scsi: killing requests for dead queue
-| scsi target4:0:1: mptsas: ioc0: delete device: fw_channel 0, fw_id 1,
-|                   phy 1, sas_addr 0x500000e019670902
-
-When i reseat the replacement disk, nothing gets logged. When i then ask
-the kernel to rescan the scsi bus on host4, the kernel logs an error:
-
-| # echo '- - -' > /sys/class/scsi_host/host4/scan
-| scsi target4:0:4: target allocation failed, error -6
-
-The replacement drive will not be available to the OS until the system
-is rebooted after which the drive works like a charm. 
-
-The error message is produced in drivers/scsi/scsi_scan.c but i believe
-the target_alloc() call comes from the drivers/scsi/mtpsas/mptsas.c
-driver. Unfortunately my kernelhack-fu is lacking to look into this
-further. As stated, Google has no information about this either.
-
-Anyone on this list with clues as to why this happens or how to
-circumvent it from happening with the other three disks?
-
-Thanks,
-With regards,
--Sander.
--- 
-| How do you write zero in Roman numerals?
-| 4096R/20CC6CD2 - 6D40 1A20 B9AA 87D4 84C7  FBD6 F3A9 9442 20CC 6CD2
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
