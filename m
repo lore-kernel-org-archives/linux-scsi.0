@@ -1,30 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 07/13] target: Inline struct se_tmr_req into se_cmd
-Date: Fri, 20 Jan 2012 11:12:09 -0500
-Message-ID: <20120120161209.GA22481@infradead.org>
-References: <1327009163-10177-1-git-send-email-agrover@redhat.com>
- <1327009163-10177-8-git-send-email-agrover@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:60239
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753990Ab2ATQMM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jan 2012 11:12:12 -0500
-Content-Disposition: inline
-In-Reply-To: <1327009163-10177-8-git-send-email-agrover@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH v4 0/3] virtio-scsi driver
+Date: Fri, 20 Jan 2012 17:45:36 +0100
+Message-ID: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Rusty Russell <rusty@rustcorp.com.au>, kvm@vger.kernel.org, "Michael S . Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, kiran.patil@intel.com
 
-On Thu, Jan 19, 2012 at 01:39:17PM -0800, Andy Grover wrote:
-> This saves all fabrics from calling core_tmr_alloc_req() and
-> having to check the result. The downside is se_cmd gets bigger for all
-> requests, but hopefully later patches will reduce it.
+This is the first implementation of the virtio-scsi driver, a virtual
+HBA that will be supported by KVM.  It implements a subset of the spec,
+in particular it does not implement asynchronous notifications for either
+LUN reset/removal/addition or CD-ROM media events, but it is already
+functional and usable.
 
-Without patches to void the overhead it's not acceptable. Fortunately
-it should be doable fairly simply by using an union for command vs
-TMR fields.
+Other matching bits:
 
+- spec at http://people.redhat.com/pbonzini/virtio-spec.pdf
+
+- QEMU implementation at git://github.com/bonzini/qemu.git,
+  branch virtio-scsi
+
+Please review.  I would like this to be included in 3.3, since the
+possibility of regressions is obviously zero.
+
+Paolo Bonzini (3):
+  virtio-scsi: first version
+  virtio-scsi: add error handling
+  virtio-scsi: add power management support
+
+v3->v4: renamed VIRTIO_SCSI_S_UNDERRUN to VIRTIO_SCSI_S_OVERRUN;
+    fixed 32-bit compilation; added power management support;
+    adjusted calls to virtqueue_add_buf
+
+ drivers/scsi/Kconfig        |    8 +
+ drivers/scsi/Makefile       |    1 +
+ drivers/scsi/virtio_scsi.c  |  594 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/virtio_ids.h  |    1 +
+ include/linux/virtio_scsi.h |  114 +++++++++
+ 5 files changed, 718 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/virtio_scsi.c
+ create mode 100644 include/linux/virtio_scsi.h
