@@ -1,55 +1,63 @@
-From: Holger Macht <holger@homac.de>
-Subject: Re: [PATCHv2 0/7] acpi/libata: Express dependencies for devices on
- dock stations and bays
-Date: Fri, 20 Jan 2012 01:23:12 +0100
-Message-ID: <20120120002312.GJ27706@homac.suse.de>
-References: <20120120001817.GA27706@homac.suse.de>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] scsi_debug: GET LBA STATUS response length correction
+Date: Thu, 19 Jan 2012 19:30:00 -0500
+Message-ID: <4F18B588.3090106@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------030204090907020803060902"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42620 "EHLO mx2.suse.de"
+Received: from smtp.infotech.no ([82.134.31.41]:51905 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756222Ab2ATAXP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jan 2012 19:23:15 -0500
-Content-Disposition: inline
-In-Reply-To: <20120120001817.GA27706@homac.suse.de>
+	id S1756222Ab2ATAaI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Jan 2012 19:30:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Matthew Garrett <mjg@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@redhat.com>
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@ORACLE.COM>
 
-On Fr 20. Jan - 01:18:18, Holger Macht wrote:
-> Patches 2 through 5 are just a refresh of the patches from Matthew
-> Garrett sent to this list in September 2010 [1]:
+This is a multi-part message in MIME format.
+--------------030204090907020803060902
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I successfully faked the sender of the patches from Matthew (now it
-looks as they were sent by him) due to the use wrong use of git
-format-patch. Sorry for that, really wasn't intended. Hope this is not a
-problem.
+The SCSI GET LBA STATUS command was introduced in SBC-3 revision
+20 in September 2009. At that time the Parameter Data Length
+field in the response had an associated byte offset of 8.
 
-Regards,
- Holger
+Then in SBC-3 revision 25 (October 2010) that byte offset was
+changed to 4. The sg_get_lba_status utility in sg3_utils version
+1.33 (released earlier today) has been changed to calculate
+the newer response length. However the implementation of
+GET LBA STATUS command in the scsi_debug driver still uses the
+original byte offset.
 
-> 
-> Patch 1 is a new patch incorporating the corrections from James
-> Bottomley. Patch 6, 7 and 8 make the whole patch set actually work on my
-> test hardware (Thinkpad x60/Thinkpad T60) by fixing minor issues and
-> compensating changes after the first submission.
-> 
-> All patches now contain the correct Signed-off-by instead of Acked-by
-> tags.
-> 
->  [PATCH 1/8] scsi: Add wrapper to access and set scsi_bus_type in struct acpi_bus_type
->  [PATCH 2/8] libata: Bind the Linux device tree to the ACPI device tree
->  [PATCH 3/8] libata: Migrate ACPI code over to new bindings
->  [PATCH 4/8] acpi: Add support for linking docks to the objects they contain
->  [PATCH 5/8] libata: Add links between removable devices and docks
->  [PATCH 6/8] libata: Generate and pass correct acpi handles
->  [PATCH 7/8] acpi: Prevent duplicate hotplug device registration on dock stations
->  [PATCH 8/8] libata: Use correct PCI devices
-> 
-> Regards,
->  Holger
-> 
-> [1] http://comments.gmane.org/gmane.linux.acpi.devel/47378
-> 
+Changelog:
+   - modify the Parameter Data Length field value in the GET LBA
+     STATUS command response to comply with the change in SBC-3
+     revision 25
+
+Doug Gilbert
+
+--------------030204090907020803060902
+Content-Type: text/x-patch;
+ name="sdebug32_getlba.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="sdebug32_getlba.patch"
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 6888b2c..d2fd0ef 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -2220,7 +2220,7 @@ static int resp_get_lba_status(struct scsi_cmnd * scmd,
+ 	mapped = map_state(lba, &num);
+ 
+ 	memset(arr, 0, SDEBUG_GET_LBA_STATUS_LEN);
+-	put_unaligned_be32(16, &arr[0]);	/* Parameter Data Length */
++	put_unaligned_be32(20, &arr[0]);	/* Parameter Data Length */
+ 	put_unaligned_be64(lba, &arr[8]);	/* LBA */
+ 	put_unaligned_be32(num, &arr[16]);	/* Number of blocks */
+ 	arr[20] = !mapped;			/* mapped = 0, unmapped = 1 */
+
+--------------030204090907020803060902--
