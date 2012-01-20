@@ -1,8 +1,8 @@
 From: Holger Macht <holger@homac.de>
-Subject: [PATCHv2 0/7] acpi/libata: Express dependencies for devices on dock
- stations and bays
-Date: Fri, 20 Jan 2012 01:18:18 +0100
-Message-ID: <20120120001817.GA27706@homac.suse.de>
+Subject: [PATCHv2 1/8] scsi: Add wrapper to access and set scsi_bus_type in
+ struct acpi_bus_type
+Date: Fri, 20 Jan 2012 01:18:33 +0100
+Message-ID: <20120120001833.GB27706@homac.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-acpi-owner@vger.kernel.org>
@@ -12,27 +12,59 @@ To: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Matthew Garrett <mjg@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Patches 2 through 5 are just a refresh of the patches from Matthew
-Garrett sent to this list in September 2010 [1]:
+For being able to bind ata devices against acpi devices, scsi_bus_type
+needs to be set as bus in struct acpi_bus_type. So add wrapper to
+scsi_lib to accomplish that.
 
-Patch 1 is a new patch incorporating the corrections from James
-Bottomley. Patch 6, 7 and 8 make the whole patch set actually work on my
-test hardware (Thinkpad x60/Thinkpad T60) by fixing minor issues and
-compensating changes after the first submission.
+Signed-off-by: Holger Macht <holger@homac.de>
+---
+ drivers/scsi/scsi_lib.c |   11 +++++++++++
+ include/scsi/scsi.h     |   10 ++++++++++
+ 2 files changed, 21 insertions(+), 0 deletions(-)
 
-All patches now contain the correct Signed-off-by instead of Acked-by
-tags.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b2c95db..79f2654 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -68,6 +68,17 @@ static struct scsi_host_sg_pool scsi_sg_pools[] = {
+ 
+ struct kmem_cache *scsi_sdb_cache;
+ 
++#ifdef CONFIG_ACPI
++#include <acpi/acpi_bus.h>
++
++int scsi_register_acpi_bus_type(struct acpi_bus_type *bus)
++{
++        bus->bus = &scsi_bus_type;
++        return register_acpi_bus_type(bus);
++}
++EXPORT_SYMBOL_GPL(scsi_register_acpi_bus_type);
++#endif
++
+ /*
+  * When to reinvoke queueing after a resource shortage. It's 3 msecs to
+  * not change behaviour from the previous unplug mechanism, experimentation
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 8001ae4..548fe9a 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -213,6 +213,16 @@ scsi_command_size(const unsigned char *cmnd)
+ 		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
+ }
+ 
++#ifdef CONFIG_ACPI
++struct acpi_bus_type;
++
++extern int
++scsi_register_acpi_bus_type(struct acpi_bus_type *bus);
++
++static inline void
++scsi_unregister_acpi_bus_type(struct acpi_bus_type *bus) { return; }
++#endif
++
+ /*
+  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
+  *  T10/1561-D Revision 4 Draft dated 7th November 2002.
+-- 
+1.7.8
 
- [PATCH 1/8] scsi: Add wrapper to access and set scsi_bus_type in struct acpi_bus_type
- [PATCH 2/8] libata: Bind the Linux device tree to the ACPI device tree
- [PATCH 3/8] libata: Migrate ACPI code over to new bindings
- [PATCH 4/8] acpi: Add support for linking docks to the objects they contain
- [PATCH 5/8] libata: Add links between removable devices and docks
- [PATCH 6/8] libata: Generate and pass correct acpi handles
- [PATCH 7/8] acpi: Prevent duplicate hotplug device registration on dock stations
- [PATCH 8/8] libata: Use correct PCI devices
-
-Regards,
- Holger
-
-[1] http://comments.gmane.org/gmane.linux.acpi.devel/47378
