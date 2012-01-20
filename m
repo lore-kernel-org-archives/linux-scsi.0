@@ -1,70 +1,230 @@
-From: Holger Macht <holger@homac.de>
-Subject: [PATCHv2 1/8] scsi: Add wrapper to access and set scsi_bus_type in
- struct acpi_bus_type
-Date: Fri, 20 Jan 2012 01:18:33 +0100
-Message-ID: <20120120001833.GB27706@homac.suse.de>
+From: Matthew Garrett <mjg@redhat.com>
+Subject: [PATCHv2 2/8] libata: Bind the Linux device tree to the ACPI device
+ tree
+Date: Fri, 20 Jan 2012 01:18:41 +0100
+Message-ID: <20120120001841.GC27706@homac.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:42478 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757159Ab2ATASo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Jan 2012 19:18:44 -0500
 Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Matthew Garrett <mjg@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@redhat.com>
-List-Id: linux-scsi@vger.kernel.org
 
-For being able to bind ata devices against acpi devices, scsi_bus_type
-needs to be set as bus in struct acpi_bus_type. So add wrapper to
-scsi_lib to accomplish that.
+We want to be able to express the dependencies between ACPI dock devices
+and their children. This requires us to be able to associate the ACPI
+device tree and libata devices. This patch uses the generic ACPI glue
+framework to do so.
 
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
 Signed-off-by: Holger Macht <holger@homac.de>
 ---
- drivers/scsi/scsi_lib.c |   11 +++++++++++
- include/scsi/scsi.h     |   10 ++++++++++
- 2 files changed, 21 insertions(+), 0 deletions(-)
+ drivers/acpi/glue.c       |    2 +
+ drivers/ata/libata-acpi.c |  117 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-core.c |    3 +
+ drivers/ata/libata.h      |    4 ++
+ 4 files changed, 126 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b2c95db..79f2654 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -68,6 +68,17 @@ static struct scsi_host_sg_pool scsi_sg_pools[] = {
+diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+index 29a4a5c..18d6812 100644
+--- a/drivers/acpi/glue.c
++++ b/drivers/acpi/glue.c
+@@ -39,6 +39,7 @@ int register_acpi_bus_type(struct acpi_bus_type *type)
+ 	}
+ 	return -ENODEV;
+ }
++EXPORT_SYMBOL(register_acpi_bus_type);
  
- struct kmem_cache *scsi_sdb_cache;
+ int unregister_acpi_bus_type(struct acpi_bus_type *type)
+ {
+@@ -54,6 +55,7 @@ int unregister_acpi_bus_type(struct acpi_bus_type *type)
+ 	}
+ 	return -ENODEV;
+ }
++EXPORT_SYMBOL(unregister_acpi_bus_type);
  
-+#ifdef CONFIG_ACPI
-+#include <acpi/acpi_bus.h>
-+
-+int scsi_register_acpi_bus_type(struct acpi_bus_type *bus)
-+{
-+        bus->bus = &scsi_bus_type;
-+        return register_acpi_bus_type(bus);
-+}
-+EXPORT_SYMBOL_GPL(scsi_register_acpi_bus_type);
-+#endif
-+
- /*
-  * When to reinvoke queueing after a resource shortage. It's 3 msecs to
-  * not change behaviour from the previous unplug mechanism, experimentation
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 8001ae4..548fe9a 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -213,6 +213,16 @@ scsi_command_size(const unsigned char *cmnd)
- 		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
+ static struct acpi_bus_type *acpi_get_bus_type(struct bus_type *type)
+ {
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index bb7c5f1..0a23f94 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -47,6 +47,31 @@ static void ata_acpi_clear_gtf(struct ata_device *dev)
+ 	dev->gtf_cache = NULL;
  }
  
-+#ifdef CONFIG_ACPI
-+struct acpi_bus_type;
++static acpi_handle ap_acpi_handle(struct ata_port *ap)
++{
++	if (ap->flags & ATA_FLAG_ACPI_SATA)
++		return NULL;
++	return DEVICE_ACPI_HANDLE(&ap->scsi_host->shost_gendev);
++}
 +
-+extern int
-+scsi_register_acpi_bus_type(struct acpi_bus_type *bus);
++static acpi_handle dev_acpi_handle(struct ata_device *dev)
++{
++	acpi_integer adr;
++	struct ata_port *ap = dev->link->ap;
 +
-+static inline void
-+scsi_unregister_acpi_bus_type(struct acpi_bus_type *bus) { return; }
-+#endif
++	if (dev->sdev)
++		return DEVICE_ACPI_HANDLE(&dev->sdev->sdev_gendev);
 +
- /*
-  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
-  *  T10/1561-D Revision 4 Draft dated 7th November 2002.
++	if (ap->flags & ATA_FLAG_ACPI_SATA) {
++		if (!sata_pmp_attached(ap))
++			adr = SATA_ADR(ap->port_no, NO_PORT_MULT);
++		else
++			adr = SATA_ADR(ap->port_no, dev->link->pmp);
++		return acpi_get_child(DEVICE_ACPI_HANDLE(ap->host->dev), adr);
++	} else
++		return acpi_get_child(ap_acpi_handle(ap), dev->devno);
++}
++
+ /**
+  * ata_acpi_associate_sata_port - associate SATA port with ACPI objects
+  * @ap: target SATA port
+@@ -1018,3 +1043,95 @@ void ata_acpi_on_disable(struct ata_device *dev)
+ {
+ 	ata_acpi_clear_gtf(dev);
+ }
++
++static int is_pci_ata(struct device *dev)
++{
++	struct pci_dev *pdev;
++
++	if (!is_pci_dev(dev))
++		return 0;
++
++	pdev = to_pci_dev(dev);
++
++	if ((pdev->class >> 8) != PCI_CLASS_STORAGE_SATA &&
++	    (pdev->class >> 8) != PCI_CLASS_STORAGE_IDE)
++		return 0;
++
++	return 1;
++}
++
++static int ata_acpi_bind_host(struct device *dev, int host, acpi_handle *handle)
++{
++	struct Scsi_Host *shost = dev_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++
++	if (ap->flags & ATA_FLAG_ACPI_SATA)
++		return -ENODEV;
++
++	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), ap->port_no);
++
++	if (!*handle)
++		return -ENODEV;
++
++	return 0;
++}
++
++static int ata_acpi_bind_device(struct device *dev, int channel, int id,
++				acpi_handle *handle)
++{
++	struct device *host = dev->parent->parent;
++	struct Scsi_Host *shost = dev_to_shost(host);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	struct ata_device *ata_dev;
++
++	if (ap->flags & ATA_FLAG_ACPI_SATA)
++		ata_dev = &ap->link.device[channel];
++	else
++		ata_dev = &ap->link.device[id];
++
++	*handle = dev_acpi_handle(ata_dev);
++
++	if (!*handle)
++		return -ENODEV;
++
++	return 0;
++}
++
++static int ata_acpi_find_device(struct device *dev, acpi_handle *handle)
++{
++	unsigned int host, channel, id, lun;
++
++	if (sscanf(dev_name(dev), "host%u", &host) == 1) {
++		if (!is_pci_ata(dev->parent))
++			return -ENODEV;
++
++		return ata_acpi_bind_host(dev, host, handle);
++	} else if (sscanf(dev_name(dev), "%d:%d:%d:%d",
++			&host, &channel, &id, &lun) == 4) {
++		if (!is_pci_ata(dev->parent->parent->parent))
++			return -ENODEV;
++
++		return ata_acpi_bind_device(dev, channel, id, handle);
++	} else
++		return -ENODEV;
++}
++
++static int ata_acpi_find_dummy(struct device *dev, acpi_handle *handle)
++{
++	return -ENODEV;
++}
++
++static struct acpi_bus_type ata_acpi_bus = {
++	.find_bridge = ata_acpi_find_dummy,
++	.find_device = ata_acpi_find_device,
++};
++
++int ata_acpi_register(void)
++{
++	return scsi_register_acpi_bus_type(&ata_acpi_bus);
++}
++
++void ata_acpi_unregister(void)
++{
++	scsi_unregister_acpi_bus_type(&ata_acpi_bus);
++}
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c06e0ec..2339faf 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6504,6 +6504,8 @@ static int __init ata_init(void)
+ 
+ 	ata_parse_force_param();
+ 
++	ata_acpi_register();
++
+ 	rc = ata_sff_init();
+ 	if (rc) {
+ 		kfree(ata_force_tbl);
+@@ -6530,6 +6532,7 @@ static void __exit ata_exit(void)
+ 	ata_release_transport(ata_scsi_transport_template);
+ 	libata_transport_exit();
+ 	ata_sff_exit();
++	ata_acpi_unregister();
+ 	kfree(ata_force_tbl);
+ }
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 814486d..3c5de9e 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -118,6 +118,8 @@ extern void ata_acpi_on_resume(struct ata_port *ap);
+ extern int ata_acpi_on_devcfg(struct ata_device *dev);
+ extern void ata_acpi_on_disable(struct ata_device *dev);
+ extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
++extern int ata_acpi_register(void);
++extern void ata_acpi_unregister(void);
+ #else
+ static inline void ata_acpi_associate_sata_port(struct ata_port *ap) { }
+ static inline void ata_acpi_associate(struct ata_host *host) { }
+@@ -128,6 +130,8 @@ static inline int ata_acpi_on_devcfg(struct ata_device *dev) { return 0; }
+ static inline void ata_acpi_on_disable(struct ata_device *dev) { }
+ static inline void ata_acpi_set_state(struct ata_port *ap,
+ 				      pm_message_t state) { }
++static inline int ata_acpi_register(void) { return 0; }
++static void ata_acpi_unregister(void) { }
+ #endif
+ 
+ /* libata-scsi.c */
 -- 
 1.7.8
 
