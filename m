@@ -1,249 +1,213 @@
 From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re: [PATCH v6 2/7] libsas: improve ata debug statements
-Date: Sat, 21 Jan 2012 13:36:26 +0800
-Message-ID: <FA947937481B428783C02E0BD63531CA@usish.com.cn>
-References: <20120121014910.24930.54011.stgit@localhost6.localdomain6> <20120121015049.24930.6244.stgit@localhost6.localdomain6>
+Subject: RE: [PATCH v6 0/7] libsas error handling + discovery v6
+Date: Sat, 21 Jan 2012 14:12:49 +0800
+Message-ID: <491F29790D474988ACF0C10BF277BC3B@usish.com.cn>
+References: <20120121014910.24930.54011.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:48059 "EHLO
+Received: from sr-smtp.usish.com ([210.5.144.203]:47609 "EHLO
 	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821Ab2AUFiJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Jan 2012 00:38:09 -0500
-In-Reply-To: <20120121015049.24930.6244.stgit@localhost6.localdomain6>
+	with ESMTP id S1750959Ab2AUGOZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Jan 2012 01:14:25 -0500
+In-Reply-To: <20120121014910.24930.54011.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
 
+> Changes since v5: http://marc.info/?l=linux-scsi&m=132656475829637&w=2
 > 
-
+> 1/ Reworked "libsas: let libata recover links that fail to transmit
+initial
+>    sig-fis" to better handle problematic expanders and slow to attach ata
+>    devices.  libsas will now validate linkrate and take 'device-type' into
+>    account when determining if a new device is attached.
+> 
+> 2/ Added support for asynchronously scanning ata devices.
+> 
+> 3/ Reworked "libsas: fix sas_unregister_ports vs sas_drain_work" as
+lockdep
+>    complained about the original.
+> 
+> 4/ New patch "libsas: fix sas port naming" makes direct-attached device
+naming
+>    more predictable and consistent with expander attached device naming.
+> 
+> 5/ Made scan order more predictable by ensuring that regardless of device
+type
+>    we always attach in discovery order.  Slow to link devices will still
+be
+>    scanned out of order, link needs to be in at least the 'stp pending'
+state
+>    before the device will be considered attached.
+> 
 [Jack Wang] 
-Nice improvement.
+Asynchronously scan really make the discovery far more quickly, with v4
+reset expander will need more than 3 minites to get discovered, with this v6
+patchset it takes less than 5 seconds.
+
+Dear Dan,
+
+Could you share how you test procedure to find out these bugs?
+
 Thanks.
-> It's difficult to determine which domain_device is triggering error
-recovery,
-> so convert messages like:
-> 
->   sas: ex 5001b4da000e703f phy08:T attached: 5001b4da000e7028
->   sas: ex 5001b4da000e703f phy09:T attached: 5001b4da000e7029
->   ...
->   ata7: sas eh calling libata port error handler
->   ata8: sas eh calling libata port error handler
-> 
-> ...into:
-> 
->   sas: ex 5001517e85cfefff phy05:T:9 attached: 5001517e85cfefe5 (stp)
->   sas: ex 5001517e3b0af0bf phy11:T:8 attached: 5001517e3b0af0ab (stp)
->   ...
->   sas: ata7: end_device-21:1: dev error handler
->   sas: ata8: end_device-20:0:5: dev error handler
-> 
-> which shows attached link rate, device type, and associates a
-> domain_device with its ata_port id to correlate messages emitted from
-> libata-eh.
-> 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 > ---
->  drivers/scsi/libsas/sas_ata.c      |   43
-> ++++++++++++++++++++++++++++--------
->  drivers/scsi/libsas/sas_expander.c |   38
-++++++++++++++++++++++++++------
->  2 files changed, 64 insertions(+), 17 deletions(-)
 > 
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> index 0ee6831..b43e395 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -317,6 +317,28 @@ static int local_ata_check_ready(struct ata_link
-*link)
->  	}
->  }
+> Dan Williams (7):
+>       libsas: fix sas_unregister_ports vs sas_drain_work
+>       libsas: improve ata debug statements
+>       libsas: fix sas port naming
+>       libsas: let libata recover links that fail to transmit initial
+sig-fis
+>       libsas: delete device on sas address changed
+>       libsas: restore scan order
+>       libsas: async ata scanning
 > 
-> +static int sas_ata_printk(const char *level, const struct domain_device
-> *ddev,
-> +		          const char *fmt, ...)
-> +{
-> +	struct ata_port *ap = ddev->sata_dev.ap;
-> +	struct device *dev = &ddev->rphy->dev;
-> +	struct va_format vaf;
-> +	va_list args;
-> +	int r;
-> +
-> +	va_start(args, fmt);
-> +
-> +	vaf.fmt = fmt;
-> +	vaf.va = &args;
-> +
-> +	r = printk("%ssas: ata%u: %s: %pV",
-> +		   level, ap->print_id, dev_name(dev), &vaf);
-> +
-> +	va_end(args);
-> +
-> +	return r;
-> +}
-> +
->  static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
->  			      unsigned long deadline)
->  {
-> @@ -333,7 +355,7 @@ static int sas_ata_hard_reset(struct ata_link *link,
-> unsigned int *class,
->  	res = i->dft->lldd_I_T_nexus_reset(dev);
 > 
->  	if (res != TMF_RESP_FUNC_COMPLETE)
-> -		SAS_DPRINTK("%s: Unable to reset ata device?\n", __func__);
-> +		sas_ata_printk(KERN_DEBUG, dev, "Unable to reset ata
-device?\n");
+>  drivers/ata/libata-core.c           |   34 +++--
+>  drivers/ata/libata-scsi.c           |   13 ++
+>  drivers/ata/libata.h                |    1
+>  drivers/scsi/aic94xx/aic94xx_init.c |    1
+>  drivers/scsi/isci/init.c            |    1
+>  drivers/scsi/libsas/sas_ata.c       |  187 +++++++++++++++++++++--------
+>  drivers/scsi/libsas/sas_discover.c  |   47 +++++--
+>  drivers/scsi/libsas/sas_event.c     |   19 ++-
+>  drivers/scsi/libsas/sas_expander.c  |  229
+> +++++++++++++++++++++--------------
+>  drivers/scsi/libsas/sas_init.c      |   18 ++-
+>  drivers/scsi/libsas/sas_internal.h  |   16 ++
+>  drivers/scsi/libsas/sas_port.c      |    2
+>  drivers/scsi/libsas/sas_scsi_host.c |   18 ---
+>  drivers/scsi/mvsas/mv_init.c        |    1
+>  drivers/scsi/pm8001/pm8001_init.c   |    1
+>  include/linux/libata.h              |    1
+>  include/scsi/libsas.h               |    1
+>  include/scsi/sas.h                  |    4 -
+>  include/scsi/sas_ata.h              |   23 ++--
+>  19 files changed, 398 insertions(+), 219 deletions(-)
 > 
->  	phy = sas_get_local_phy(dev);
->  	if (scsi_is_sas_phy_local(phy))
-> @@ -344,7 +366,7 @@ static int sas_ata_hard_reset(struct ata_link *link,
-> unsigned int *class,
 > 
->  	ret = ata_wait_after_reset(link, deadline, check_ready);
->  	if (ret && ret != -EAGAIN)
-> -		ata_link_err(link, "COMRESET failed (errno=%d)\n", ret);
-> +		sas_ata_printk(KERN_ERR, dev, "reset failed (errno=%d)\n",
-ret);
+> Full snapshot in git:  note that
+libsas-eh-reworks-v4..libsas-eh-reworks-v6
+> is
+> a fast-forward, but that will not always be the case.
 > 
->  	/* XXX: if the class changes during the reset the upper layer
->  	 * should be informed, if the device has gone away we assume
-> @@ -665,7 +687,7 @@ static void async_sas_ata_eh(void *data,
-async_cookie_t
-> cookie)
->  	 * remove once all commands are completed
->  	 */
->  	kref_get(&dev->kref);
-> -	ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata port error
-> handler");
-> +	sas_ata_printk(KERN_DEBUG, dev, "dev error handler\n");
->  	ata_scsi_port_error_handler(ha->core.shost, ap);
->  	sas_put_device(dev);
+> The following changes since commit
+76ffe8a3f766358a0ade543153625b3e4e66159d:
 > 
-> @@ -708,26 +730,27 @@ void sas_ata_eh(struct Scsi_Host *shost, struct
-> list_head *work_q,
->  		struct list_head *done_q)
->  {
->  	struct scsi_cmnd *cmd, *n;
-> -	struct ata_port *ap;
-> +	struct domain_device *eh_dev;
+>   [SCSI] libfc: remove redundant timer init for fcp (2012-01-16 12:47:18
++0400)
 > 
->  	do {
->  		LIST_HEAD(sata_q);
-> -
-> -		ap = NULL;
-> +		eh_dev = NULL;
+> are available in the git repository at:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git
+> libsas-eh-reworks-v6
 > 
->  		list_for_each_entry_safe(cmd, n, work_q, eh_entry) {
->  			struct domain_device *ddev = cmd_to_domain_dev(cmd);
+> Dan Williams (47):
+>       libsas: remove unused ata_task_resp fields
+>       libsas: kill sas_slave_destroy
+>       libsas: fix domain_device leak
+>       libsas: fix leak of dev->sata_dev.identify_[packet_]device
+>       libsas: replace event locks with atomic bitops
+>       libsas: convert ha->state to flags
+>       libsas: introduce sas_drain_work()
+>       libsas: remove ata_port.lock management duties from lldds
+>       libsas: convert dev->gone to flags
+>       libsas: prevent domain rediscovery competing with ata error handling
+>       libsas: use ->set_dmamode to notify lldds of NCQ parameters
+>       libsas: kill invocation of scsi_eh_finish_cmd from sas_ata_task_done
+>       libsas: close error handling vs sas_ata_task_done() race
+>       libsas: prevent double completion of scmds from eh
+>       libsas: fix timeout vs completion race
+>       libsas: let libata handle command timeouts
+>       libsas: defer SAS_TASK_NEED_DEV_RESET commands to libata
+>       libsas: use libata-eh-reset for sata rediscovery fis transmit
+failures
+>       libsas: perform sas-transport resets in shost->workq context
+>       libsas: execute transport link resets with libata-eh via host
+workqueue
+>       libsas: sas_phy_enable via transport_sas_phy_reset
+>       libsas: async ata-eh
+>       libsas: poll for ata device readiness after reset
+>       libsas: don't mark expanders as gone when a child device is removed
+>       libsas: check for 'gone' expanders in smp_execute_task()
+>       libsas: fix sas_find_local_phy(), take phy references
+>       libsas: don't recover 'gone' devices in sas_ata_hard_reset()
+>       isci: kill iphy->isci_port lookups
+>       isci: kill isci_port->status
+>       isci: fix interpretation of "hard" reset
+>       isci: stop interpreting ->lldd_lu_reset() as an ata soft-reset
+>       isci: ->lldd_ata_check_ready handler
+>       isci: remove bus and reset handlers
+>       isci: remove IDEV_EH hack to disable "discovery-time" ata resets
+>       libsas: pre-clean commands that won the eh vs completion race
+>       libsas: feed the scsi_block_when_processing_errors() meter
+>       libsas: mark all domain devices gone if root port disappears
+>       libsas: close scsi_remove_target() vs libata-eh race
+>       libsas: fix mixed topology recovery
+>       libsas: route local link resets through ata-eh
+>       libsas: fix sas_unregister_ports vs sas_drain_work
+>       libsas: improve ata debug statements
+>       libsas: fix sas port naming
+>       libsas: let libata recover links that fail to transmit initial
+sig-fis
+>       libsas: delete device on sas address changed
+>       libsas: restore scan order
+>       libsas: async ata scanning
 > 
->  			if (!dev_is_sata(ddev) || TO_SAS_TASK(cmd))
->  				continue;
-> -			if (ap && ap != ddev->sata_dev.ap)
-> +			if (eh_dev && eh_dev != ddev)
->  				continue;
-> -			ap = ddev->sata_dev.ap;
-> +			eh_dev = ddev;
->  			list_move(&cmd->eh_entry, &sata_q);
->  		}
+> Jeff Skirvin (2):
+>       libsas: Remove redundant phy state notification calls.
+>       libsas: add mutex for SMP task execution
 > 
->  		if (!list_empty(&sata_q)) {
-> -			ata_port_printk(ap, KERN_DEBUG, "sas eh calling
-libata cmd
-> error handler\n");
-> +			struct ata_port *ap = eh_dev->sata_dev.ap;
-> +
-> +			sas_ata_printk(KERN_DEBUG, eh_dev, "cmd error
-handler\n");
->  			ata_scsi_cmd_error_handler(shost, ap, &sata_q);
->  			/*
->  			 * ata's error handler may leave the cmd on the list
-> @@ -743,7 +766,7 @@ void sas_ata_eh(struct Scsi_Host *shost, struct
-list_head
-> *work_q,
->  			while (!list_empty(&sata_q))
->  				list_del_init(sata_q.next);
->  		}
-> -	} while (ap);
-> +	} while (eh_dev);
->  }
+> Maciej Trela (1):
+>       libsas: kill spurious sas_put_device
 > 
->  void sas_ata_schedule_reset(struct domain_device *dev)
-> diff --git a/drivers/scsi/libsas/sas_expander.c
-> b/drivers/scsi/libsas/sas_expander.c
-> index 68a80a0..f8d941f 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -176,9 +176,10 @@ static void sas_set_ex_phy(struct domain_device *dev,
-int
-> phy_id,
->  	struct smp_resp *resp = disc_resp;
->  	struct discover_resp *dr = &resp->disc;
->  	struct sas_rphy *rphy = dev->rphy;
-> -	int rediscover = (phy->phy != NULL);
-> +	bool new_phy = !phy->phy;
-> +	char *type;
-> 
-> -	if (!rediscover) {
-> +	if (new_phy) {
->  		phy->phy = sas_phy_alloc(&rphy->dev, phy_id);
-> 
->  		/* FIXME: error_handling */
-> @@ -223,20 +224,43 @@ static void sas_set_ex_phy(struct domain_device
-*dev,
-> int phy_id,
->  	phy->phy->maximum_linkrate = dr->pmax_linkrate;
->  	phy->phy->negotiated_linkrate = phy->linkrate;
-> 
-> -	if (!rediscover)
-> +	if (new_phy)
->  		if (sas_phy_add(phy->phy)) {
->  			sas_phy_free(phy->phy);
->  			return;
->  		}
-> 
-> -	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",
-> +	switch (phy->attached_dev_type) {
-> +	case NO_DEVICE:
-> +		type = "no device";
-> +		break;
-> +	case SAS_END_DEV:
-> +		if (phy->attached_iproto) {
-> +			if (phy->attached_tproto)
-> +				type = "host+target";
-> +			else
-> +				type = "host";
-> +		} else {
-> +			if (dr->attached_sata_dev)
-> +				type = "stp";
-> +			else
-> +				type = "ssp";
-> +		}
-> +		break;
-> +	case EDGE_DEV:
-> +	case FANOUT_DEV:
-> +		type = "smp";
-> +		break;
-> +	default:
-> +		type = "unknown";
-> +	}
-> +
-> +	SAS_DPRINTK("ex %016llx phy%02d:%c:%X attached: %016llx (%s)\n",
->  		    SAS_ADDR(dev->sas_addr), phy->phy_id,
->  		    phy->routing_attr == TABLE_ROUTING ? 'T' :
->  		    phy->routing_attr == DIRECT_ROUTING ? 'D' :
->  		    phy->routing_attr == SUBTRACTIVE_ROUTING ? 'S' : '?',
-> -		    SAS_ADDR(phy->attached_sas_addr));
-> -
-> -	return;
-> +		    phy->linkrate, SAS_ADDR(phy->attached_sas_addr), type);
->  }
-> 
->  /* check if we have an existing attached ata device on this expander phy
-*/
-> 
+>  Documentation/scsi/libsas.txt       |   15 -
+>  drivers/ata/libata-core.c           |   34 +-
+>  drivers/ata/libata-eh.c             |    1 +
+>  drivers/ata/libata-scsi.c           |   13 +
+>  drivers/ata/libata.h                |    2 +-
+>  drivers/scsi/aic94xx/aic94xx.h      |    2 +
+>  drivers/scsi/aic94xx/aic94xx_dev.c  |   38 +-
+>  drivers/scsi/aic94xx/aic94xx_init.c |    6 +-
+>  drivers/scsi/aic94xx/aic94xx_tmf.c  |    9 +-
+>  drivers/scsi/isci/host.c            |    8 +-
+>  drivers/scsi/isci/host.h            |   19 +-
+>  drivers/scsi/isci/init.c            |   14 +-
+>  drivers/scsi/isci/phy.c             |   18 +-
+>  drivers/scsi/isci/phy.h             |    1 -
+>  drivers/scsi/isci/port.c            |  217 +++++-----
+>  drivers/scsi/isci/port.h            |   11 +-
+>  drivers/scsi/isci/remote_device.c   |   32 +-
+>  drivers/scsi/isci/remote_device.h   |    7 +-
+>  drivers/scsi/isci/request.c         |  198 +--------
+>  drivers/scsi/isci/request.h         |    9 +-
+>  drivers/scsi/isci/task.c            |  158 ++------
+>  drivers/scsi/isci/task.h            |   40 --
+>  drivers/scsi/libsas/sas_ata.c       |  818
+> +++++++++++++++++------------------
+>  drivers/scsi/libsas/sas_discover.c  |  204 +++++++--
+>  drivers/scsi/libsas/sas_event.c     |   96 ++++-
+>  drivers/scsi/libsas/sas_expander.c  |  304 +++++++++-----
+>  drivers/scsi/libsas/sas_host_smp.c  |   11 +-
+>  drivers/scsi/libsas/sas_init.c      |  211 ++++++++-
+>  drivers/scsi/libsas/sas_internal.h  |   80 +++--
+>  drivers/scsi/libsas/sas_phy.c       |   12 +-
+>  drivers/scsi/libsas/sas_port.c      |   30 +-
+>  drivers/scsi/libsas/sas_scsi_host.c |  354 +++++++---------
+>  drivers/scsi/mvsas/mv_init.c        |    2 -
+>  drivers/scsi/mvsas/mv_sas.c         |   11 +-
+>  drivers/scsi/pm8001/pm8001_init.c   |    2 -
+>  drivers/scsi/pm8001/pm8001_sas.c    |   29 +-
+>  drivers/scsi/scsi_transport_sas.c   |   59 +++-
+>  include/linux/libata.h              |    2 +
+>  include/scsi/libsas.h               |   70 ++--
+>  include/scsi/sas.h                  |    4 +-
+>  include/scsi/sas_ata.h              |   44 ++-
+>  include/scsi/scsi_transport_sas.h   |   12 +-
+>  42 files changed, 1686 insertions(+), 1521 deletions(-)
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
