@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v6 5/7] libsas: delete device on sas address changed
-Date: Fri, 20 Jan 2012 17:51:05 -0800
-Message-ID: <20120121015105.24930.38118.stgit@localhost6.localdomain6>
+Subject: [PATCH v6 6/7] libsas: restore scan order
+Date: Fri, 20 Jan 2012 17:51:10 -0800
+Message-ID: <20120121015110.24930.45199.stgit@localhost6.localdomain6>
 References: <20120121014910.24930.54011.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,32 +13,175 @@ To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-If the phy is attached to a new sas address unregister the first address
-before processing the new attachment.
+ata devices are always scanned after ssp.  Prior to the ata error
+handling reworks libsas would tend to scan devices in ascending expander
+phy order.  Restore this ordering by deferring ssp discovery to a
+DISCE_PROBE event, and keep the probe order consistent with the
+discovery order, not the placement of sata devices.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_expander.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+ drivers/scsi/libsas/sas_ata.c      |   29 ------------------------
+ drivers/scsi/libsas/sas_discover.c |   44 +++++++++++++++++++++++++-----------
+ drivers/scsi/libsas/sas_expander.c |    4 +--
+ include/scsi/sas_ata.h             |    5 ----
+ 4 files changed, 32 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index dc6bba5..3d6ba30 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1997,6 +1997,15 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
- 		return res;
- 	}
- 
-+	/* delete the old link */
-+	if (SAS_ADDR(phy->attached_sas_addr) &&
-+	    SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr)) {
-+		SAS_DPRINTK("ex %016llx phy 0x%x replace %016llx\n",
-+			    SAS_ADDR(dev->sas_addr), phy_id,
-+			    SAS_ADDR(phy->attached_sas_addr));
-+		sas_unregister_devs_sas_addr(dev, phy_id, last);
-+	}
-+
- 	return sas_discover_new(dev, phy_id);
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 0da1f3c..4751829 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -683,35 +683,6 @@ static void sas_get_ata_command_set(struct domain_device *dev)
+ 		dev->sata_dev.command_set = ATAPI_COMMAND_SET;
  }
  
+-void sas_probe_sata(struct work_struct *work)
+-{
+-	struct domain_device *dev, *n;
+-	struct sas_discovery_event *ev =
+-		container_of(work, struct sas_discovery_event, work);
+-	struct asd_sas_port *port = ev->port;
+-
+-	clear_bit(DISCE_PROBE, &port->disc.pending);
+-
+-	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
+-		int err;
+-
+-		spin_lock_irq(&port->dev_list_lock);
+-		list_add_tail(&dev->dev_list_node, &port->dev_list);
+-		spin_unlock_irq(&port->dev_list_lock);
+-
+-		err = sas_rphy_add(dev->rphy);
+-
+-		if (err) {
+-			SAS_DPRINTK("%s: for %s device %16llx returned %d\n",
+-				    __func__, dev->parent ? "exp-attached" :
+-							    "direct-attached",
+-				    SAS_ADDR(dev->sas_addr), err);
+-			sas_unregister_dev(port, dev);
+-		} else
+-			list_del_init(&dev->disco_list_node);
+-	}
+-}
+-
+ /**
+  * sas_discover_sata -- discover an STP/SATA domain device
+  * @dev: pointer to struct domain_device of interest
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index dc8baef..f60b602 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -152,7 +152,7 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 
+ 	dev->rphy = rphy;
+ 
+-	if (dev_is_sata(dev))
++	if (dev_is_sata(dev) || dev->dev_type == SAS_END_DEV)
+ 		list_add_tail(&dev->disco_list_node, &port->disco_list);
+ 	else {
+ 		spin_lock_irq(&port->dev_list_lock);
+@@ -198,8 +198,34 @@ void sas_notify_lldd_dev_gone(struct domain_device *dev)
+ 	}
+ }
+ 
+-/* ---------- Common/dispatchers ---------- */
++static void sas_probe_devices(struct work_struct *work)
++{
++	struct domain_device *dev, *n;
++	struct sas_discovery_event *ev =
++		container_of(work, struct sas_discovery_event, work);
++	struct asd_sas_port *port = ev->port;
+ 
++	clear_bit(DISCE_PROBE, &port->disc.pending);
++
++	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
++		int err;
++
++		spin_lock_irq(&port->dev_list_lock);
++		list_add_tail(&dev->dev_list_node, &port->dev_list);
++		spin_unlock_irq(&port->dev_list_lock);
++
++		err = sas_rphy_add(dev->rphy);
++
++		if (err) {
++			SAS_DPRINTK("%s: for %s device %16llx returned %d\n",
++				    __func__, dev->parent ? "exp-attached" :
++							    "direct-attached",
++				    SAS_ADDR(dev->sas_addr), err);
++			sas_unregister_dev(port, dev);
++		} else
++			list_del_init(&dev->disco_list_node);
++	}
++}
+ 
+ /**
+  * sas_discover_end_dev -- discover an end device (SSP, etc)
+@@ -213,18 +239,10 @@ int sas_discover_end_dev(struct domain_device *dev)
+ 
+ 	res = sas_notify_lldd_dev_found(dev);
+ 	if (res)
+-		goto out_err2;
+-
+-	res = sas_rphy_add(dev->rphy);
+-	if (res)
+-		goto out_err;
++		return res;
++	sas_discover_event(dev->port, DISCE_PROBE);
+ 
+ 	return 0;
+-
+-out_err:
+-	sas_notify_lldd_dev_gone(dev);
+-out_err2:
+-	return res;
+ }
+ 
+ /* ---------- Device registration and unregistration ---------- */
+@@ -491,7 +509,7 @@ void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *port)
+ 	static const work_func_t sas_event_fns[DISC_NUM_EVENTS] = {
+ 		[DISCE_DISCOVER_DOMAIN] = sas_discover_domain,
+ 		[DISCE_REVALIDATE_DOMAIN] = sas_revalidate_domain,
+-		[DISCE_PROBE] = sas_probe_sata,
++		[DISCE_PROBE] = sas_probe_devices,
+ 		[DISCE_DESTRUCT] = sas_destruct_devices,
+ 	};
+ 
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 3d6ba30..0aa90d7 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -791,9 +791,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 		child->rphy = rphy;
+ 		sas_fill_in_rphy(child, rphy);
+ 
+-		spin_lock_irq(&parent->port->dev_list_lock);
+-		list_add_tail(&child->dev_list_node, &parent->port->dev_list);
+-		spin_unlock_irq(&parent->port->dev_list_lock);
++		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
+ 
+ 		res = sas_discover_end_dev(child);
+ 		if (res) {
+diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
+index 0ca2f8a..1556eff 100644
+--- a/include/scsi/sas_ata.h
++++ b/include/scsi/sas_ata.h
+@@ -44,7 +44,6 @@ void sas_ata_task_abort(struct sas_task *task);
+ void sas_ata_strategy_handler(struct Scsi_Host *shost);
+ void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ 		struct list_head *done_q);
+-void sas_probe_sata(struct work_struct *work);
+ void sas_ata_schedule_reset(struct domain_device *dev);
+ void sas_ata_wait_eh(struct domain_device *dev);
+ #else
+@@ -72,10 +71,6 @@ static inline void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ {
+ }
+ 
+-static inline void sas_probe_sata(struct work_struct *work)
+-{
+-}
+-
+ static inline void sas_ata_schedule_reset(struct domain_device *dev)
+ {
+ }
 
