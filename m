@@ -1,77 +1,251 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 13/13] target: Change target_submit_cmd() to return void
-Date: Fri, 20 Jan 2012 19:27:00 -0800
-Message-ID: <1327116420.16983.444.camel@haakon2.linux-iscsi.org>
-References: <1327009163-10177-1-git-send-email-agrover@redhat.com>
-	 <1327009163-10177-14-git-send-email-agrover@redhat.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: Re: [PATCH v6 2/7] libsas: improve ata debug statements
+Date: Sat, 21 Jan 2012 13:36:26 +0800
+Message-ID: <FA947937481B428783C02E0BD63531CA@usish.com.cn>
+References: <20120121014910.24930.54011.stgit@localhost6.localdomain6> <20120121015049.24930.6244.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1327009163-10177-14-git-send-email-agrover@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, kiran.patil@intel.com, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:48059 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821Ab2AUFiJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Jan 2012 00:38:09 -0500
+In-Reply-To: <20120121015049.24930.6244.stgit@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 2012-01-19 at 13:39 -0800, Andy Grover wrote:
-> Retval not very useful, and may even be harmful. Once submitted, fabrics
-> should expect a sense error if anything goes wrong. All fabrics checking
-> of this retval are useless or broken:
 > 
-> fc checks it just to emit more debug output.
-> ib_srpt trickles retval up, then it is ignored.
-> qla2xxx trickles it up, which then causes a bug because the abort goto
-> in qla_target.c thinks cmd hasn't been sent to target.
+
+[Jack Wang] 
+Nice improvement.
+Thanks.
+> It's difficult to determine which domain_device is triggering error
+recovery,
+> so convert messages like:
 > 
-> Just returning nothing is best.
+>   sas: ex 5001b4da000e703f phy08:T attached: 5001b4da000e7028
+>   sas: ex 5001b4da000e703f phy09:T attached: 5001b4da000e7029
+>   ...
+>   ata7: sas eh calling libata port error handler
+>   ata8: sas eh calling libata port error handler
 > 
-> Signed-off-by: Andy Grover <agrover@redhat.com>
+> ...into:
+> 
+>   sas: ex 5001517e85cfefff phy05:T:9 attached: 5001517e85cfefe5 (stp)
+>   sas: ex 5001517e3b0af0bf phy11:T:8 attached: 5001517e3b0af0ab (stp)
+>   ...
+>   sas: ata7: end_device-21:1: dev error handler
+>   sas: ata8: end_device-20:0:5: dev error handler
+> 
+> which shows attached link rate, device type, and associates a
+> domain_device with its ata_port id to correlate messages emitted from
+> libata-eh.
+> 
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 > ---
->  drivers/infiniband/ulp/srpt/ib_srpt.c  |    5 +----
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    7 ++-----
->  drivers/target/target_core_transport.c |    5 ++---
->  drivers/target/tcm_fc/tfc_cmd.c        |    9 ++-------
->  include/target/target_core_fabric.h    |    2 +-
->  5 files changed, 8 insertions(+), 20 deletions(-)
+>  drivers/scsi/libsas/sas_ata.c      |   43
+> ++++++++++++++++++++++++++++--------
+>  drivers/scsi/libsas/sas_expander.c |   38
+++++++++++++++++++++++++++------
+>  2 files changed, 64 insertions(+), 17 deletions(-)
 > 
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> index 0ee6831..b43e395 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -317,6 +317,28 @@ static int local_ata_check_ready(struct ata_link
+*link)
+>  	}
+>  }
+> 
+> +static int sas_ata_printk(const char *level, const struct domain_device
+> *ddev,
+> +		          const char *fmt, ...)
+> +{
+> +	struct ata_port *ap = ddev->sata_dev.ap;
+> +	struct device *dev = &ddev->rphy->dev;
+> +	struct va_format vaf;
+> +	va_list args;
+> +	int r;
+> +
+> +	va_start(args, fmt);
+> +
+> +	vaf.fmt = fmt;
+> +	vaf.va = &args;
+> +
+> +	r = printk("%ssas: ata%u: %s: %pV",
+> +		   level, ap->print_id, dev_name(dev), &vaf);
+> +
+> +	va_end(args);
+> +
+> +	return r;
+> +}
+> +
+>  static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
+>  			      unsigned long deadline)
+>  {
+> @@ -333,7 +355,7 @@ static int sas_ata_hard_reset(struct ata_link *link,
+> unsigned int *class,
+>  	res = i->dft->lldd_I_T_nexus_reset(dev);
+> 
+>  	if (res != TMF_RESP_FUNC_COMPLETE)
+> -		SAS_DPRINTK("%s: Unable to reset ata device?\n", __func__);
+> +		sas_ata_printk(KERN_DEBUG, dev, "Unable to reset ata
+device?\n");
+> 
+>  	phy = sas_get_local_phy(dev);
+>  	if (scsi_is_sas_phy_local(phy))
+> @@ -344,7 +366,7 @@ static int sas_ata_hard_reset(struct ata_link *link,
+> unsigned int *class,
+> 
+>  	ret = ata_wait_after_reset(link, deadline, check_ready);
+>  	if (ret && ret != -EAGAIN)
+> -		ata_link_err(link, "COMRESET failed (errno=%d)\n", ret);
+> +		sas_ata_printk(KERN_ERR, dev, "reset failed (errno=%d)\n",
+ret);
+> 
+>  	/* XXX: if the class changes during the reset the upper layer
+>  	 * should be informed, if the device has gone away we assume
+> @@ -665,7 +687,7 @@ static void async_sas_ata_eh(void *data,
+async_cookie_t
+> cookie)
+>  	 * remove once all commands are completed
+>  	 */
+>  	kref_get(&dev->kref);
+> -	ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata port error
+> handler");
+> +	sas_ata_printk(KERN_DEBUG, dev, "dev error handler\n");
+>  	ata_scsi_port_error_handler(ha->core.shost, ap);
+>  	sas_put_device(dev);
+> 
+> @@ -708,26 +730,27 @@ void sas_ata_eh(struct Scsi_Host *shost, struct
+> list_head *work_q,
+>  		struct list_head *done_q)
+>  {
+>  	struct scsi_cmnd *cmd, *n;
+> -	struct ata_port *ap;
+> +	struct domain_device *eh_dev;
+> 
+>  	do {
+>  		LIST_HEAD(sata_q);
+> -
+> -		ap = NULL;
+> +		eh_dev = NULL;
+> 
+>  		list_for_each_entry_safe(cmd, n, work_q, eh_entry) {
+>  			struct domain_device *ddev = cmd_to_domain_dev(cmd);
+> 
+>  			if (!dev_is_sata(ddev) || TO_SAS_TASK(cmd))
+>  				continue;
+> -			if (ap && ap != ddev->sata_dev.ap)
+> +			if (eh_dev && eh_dev != ddev)
+>  				continue;
+> -			ap = ddev->sata_dev.ap;
+> +			eh_dev = ddev;
+>  			list_move(&cmd->eh_entry, &sata_q);
+>  		}
+> 
+>  		if (!list_empty(&sata_q)) {
+> -			ata_port_printk(ap, KERN_DEBUG, "sas eh calling
+libata cmd
+> error handler\n");
+> +			struct ata_port *ap = eh_dev->sata_dev.ap;
+> +
+> +			sas_ata_printk(KERN_DEBUG, eh_dev, "cmd error
+handler\n");
+>  			ata_scsi_cmd_error_handler(shost, ap, &sata_q);
+>  			/*
+>  			 * ata's error handler may leave the cmd on the list
+> @@ -743,7 +766,7 @@ void sas_ata_eh(struct Scsi_Host *shost, struct
+list_head
+> *work_q,
+>  			while (!list_empty(&sata_q))
+>  				list_del_init(sata_q.next);
+>  		}
+> -	} while (ap);
+> +	} while (eh_dev);
+>  }
+> 
+>  void sas_ata_schedule_reset(struct domain_device *dev)
+> diff --git a/drivers/scsi/libsas/sas_expander.c
+> b/drivers/scsi/libsas/sas_expander.c
+> index 68a80a0..f8d941f 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -176,9 +176,10 @@ static void sas_set_ex_phy(struct domain_device *dev,
+int
+> phy_id,
+>  	struct smp_resp *resp = disc_resp;
+>  	struct discover_resp *dr = &resp->disc;
+>  	struct sas_rphy *rphy = dev->rphy;
+> -	int rediscover = (phy->phy != NULL);
+> +	bool new_phy = !phy->phy;
+> +	char *type;
+> 
+> -	if (!rediscover) {
+> +	if (new_phy) {
+>  		phy->phy = sas_phy_alloc(&rphy->dev, phy_id);
+> 
+>  		/* FIXME: error_handling */
+> @@ -223,20 +224,43 @@ static void sas_set_ex_phy(struct domain_device
+*dev,
+> int phy_id,
+>  	phy->phy->maximum_linkrate = dr->pmax_linkrate;
+>  	phy->phy->negotiated_linkrate = phy->linkrate;
+> 
+> -	if (!rediscover)
+> +	if (new_phy)
+>  		if (sas_phy_add(phy->phy)) {
+>  			sas_phy_free(phy->phy);
+>  			return;
+>  		}
+> 
+> -	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",
+> +	switch (phy->attached_dev_type) {
+> +	case NO_DEVICE:
+> +		type = "no device";
+> +		break;
+> +	case SAS_END_DEV:
+> +		if (phy->attached_iproto) {
+> +			if (phy->attached_tproto)
+> +				type = "host+target";
+> +			else
+> +				type = "host";
+> +		} else {
+> +			if (dr->attached_sata_dev)
+> +				type = "stp";
+> +			else
+> +				type = "ssp";
+> +		}
+> +		break;
+> +	case EDGE_DEV:
+> +	case FANOUT_DEV:
+> +		type = "smp";
+> +		break;
+> +	default:
+> +		type = "unknown";
+> +	}
+> +
+> +	SAS_DPRINTK("ex %016llx phy%02d:%c:%X attached: %016llx (%s)\n",
+>  		    SAS_ADDR(dev->sas_addr), phy->phy_id,
+>  		    phy->routing_attr == TABLE_ROUTING ? 'T' :
+>  		    phy->routing_attr == DIRECT_ROUTING ? 'D' :
+>  		    phy->routing_attr == SUBTRACTIVE_ROUTING ? 'S' : '?',
+> -		    SAS_ADDR(phy->attached_sas_addr));
+> -
+> -	return;
+> +		    phy->linkrate, SAS_ADDR(phy->attached_sas_addr), type);
+>  }
+> 
+>  /* check if we have an existing attached ata device on this expander phy
+*/
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Just a heads-up for Sebastian..
-
-I've merged Andy's patch with the following change to usb-gadget to also
-ignore the return from target_submit_cmd() and let target-core invoke
-the proper response callbacks, et al with the recently posted kref_put
-leak bugfix..
-
-AFAICT this should work as expected with usb-gadget, but please let me
-know if you run into problems.  ;)
-
-Thanks,
-
---nab
-
-diff --git a/drivers/target/usb-gadget/fabric.c b/drivers/target/usb-gadget/fabric.c
-index f56319a..7f432c2 100644
---- a/drivers/target/usb-gadget/fabric.c
-+++ b/drivers/target/usb-gadget/fabric.c
-@@ -181,7 +181,6 @@ static void usbg_cmd_work(struct work_struct *work)
-        struct se_cmd *se_cmd;
-        struct tcm_usbg_nexus *tv_nexus;
-        struct usbg_tpg *tpg;
--       int ret;
-        int dir;
- 
-        se_cmd = &cmd->se_cmd;
-@@ -199,11 +198,9 @@ static void usbg_cmd_work(struct work_struct *work)
-                return;
-        }
- 
--       ret = target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
-+       target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
-                        cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
-                        0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE);
--       if (ret)
--               kref_put(&cmd->ref, usbg_cmd_release);
- }
- 
- int usbg_submit_command(struct f_uas *fu,
