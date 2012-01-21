@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v6 1/7] libsas: fix sas_unregister_ports vs sas_drain_work
-Date: Fri, 20 Jan 2012 17:50:44 -0800
-Message-ID: <20120121015044.24930.66073.stgit@localhost6.localdomain6>
+Subject: [PATCH v6 2/7] libsas: improve ata debug statements
+Date: Fri, 20 Jan 2012 17:50:49 -0800
+Message-ID: <20120121015049.24930.6244.stgit@localhost6.localdomain6>
 References: <20120121014910.24930.54011.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,128 +10,203 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120121014910.24930.54011.stgit@localhost6.localdomain6>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We need to hold drain_mutex across the unregistration as port down events
-queue device removal as chained events, so we need to make sure no other
-drainers are active.
+It's difficult to determine which domain_device is triggering error recovery,
+so convert messages like:
 
-[ 1118.673968] WARNING: at kernel/workqueue.c:996 __queue_work+0x11a/0x326()
-[ 1118.681982] Hardware name: S2600CP
-[ 1118.686193] Modules linked in: isci(-) libsas scsi_transport_sas nls_utf8
-ipv6 uinput sg iTCO_wdt iTCO_vendor_support i2c_i801 i2c_core ioatdma dca
-sd_mod sr_mod cdrom ahci libahci libata [last unloaded: scsi_transport_sas]
-[ 1118.709893] Pid: 6831, comm: rmmod Not tainted 3.2.0-isci+ #1
-[ 1118.716727] Call Trace:
-[ 1118.719867]  [<ffffffff8103e9f5>] warn_slowpath_common+0x85/0x9d
-[ 1118.727000]  [<ffffffff8103ea27>] warn_slowpath_null+0x1a/0x1c
-[ 1118.733942]  [<ffffffff81056d44>] __queue_work+0x11a/0x326
-[ 1118.740481]  [<ffffffff81056f99>] queue_work_on+0x1b/0x22
-[ 1118.746925]  [<ffffffff81057106>] queue_work+0x37/0x3e
-[ 1118.753105]  [<ffffffffa0120e05>] ? sas_discover_event+0x55/0x82 [libsas]
-[ 1118.761094]  [<ffffffff813217c3>] scsi_queue_work+0x42/0x44
-[ 1118.767717]  [<ffffffffa0120e19>] sas_discover_event+0x69/0x82 [libsas]
-[ 1118.775509]  [<ffffffffa0120f5b>] sas_unregister_dev+0xc3/0xcc [libsas]
-[ 1118.783319]  [<ffffffffa0120fae>] sas_unregister_domain_devices+0x4a/0xc8 [libsas]
-[ 1118.792731]  [<ffffffffa0120071>] sas_deform_port+0x60/0x1a6 [libsas]
-[ 1118.800339]  [<ffffffffa01201ea>] sas_unregister_ports+0x33/0x44 [libsas]
-[ 1118.808342]  [<ffffffffa011f7e5>] sas_unregister_ha+0x41/0x6b [libsas]
-[ 1118.816055]  [<ffffffffa0134055>] isci_unregister+0x22/0x4d [isci]
-[ 1118.823384]  [<ffffffffa0143040>] isci_pci_remove+0x2e/0x60 [isci]
+  sas: ex 5001b4da000e703f phy08:T attached: 5001b4da000e7028
+  sas: ex 5001b4da000e703f phy09:T attached: 5001b4da000e7029
+  ...
+  ata7: sas eh calling libata port error handler
+  ata8: sas eh calling libata port error handler
 
-Reported-by: Jacek Danecki <jacek.danecki@intel.com>
+...into:
+
+  sas: ex 5001517e85cfefff phy05:T:9 attached: 5001517e85cfefe5 (stp)
+  sas: ex 5001517e3b0af0bf phy11:T:8 attached: 5001517e3b0af0ab (stp)
+  ...
+  sas: ata7: end_device-21:1: dev error handler
+  sas: ata8: end_device-20:0:5: dev error handler
+
+which shows attached link rate, device type, and associates a
+domain_device with its ata_port id to correlate messages emitted from
+libata-eh.
+
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_event.c    |   19 +++++++++++++------
- drivers/scsi/libsas/sas_init.c     |   18 +++++++++++-------
- drivers/scsi/libsas/sas_internal.h |    1 +
- 3 files changed, 25 insertions(+), 13 deletions(-)
+ drivers/scsi/libsas/sas_ata.c      |   43 ++++++++++++++++++++++++++++--------
+ drivers/scsi/libsas/sas_expander.c |   38 ++++++++++++++++++++++++++------
+ 2 files changed, 64 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index dbfacee..16639bb 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -51,15 +51,11 @@ static void sas_queue_event(int event, unsigned long *pending,
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 0ee6831..b43e395 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -317,6 +317,28 @@ static int local_ata_check_ready(struct ata_link *link)
  	}
  }
  
--int sas_drain_work(struct sas_ha_struct *ha)
++static int sas_ata_printk(const char *level, const struct domain_device *ddev,
++		          const char *fmt, ...)
++{
++	struct ata_port *ap = ddev->sata_dev.ap;
++	struct device *dev = &ddev->rphy->dev;
++	struct va_format vaf;
++	va_list args;
++	int r;
 +
-+void __sas_drain_work(struct sas_ha_struct *ha)
- {
- 	struct workqueue_struct *wq = ha->core.shost->work_q;
- 	struct work_struct *w, *_w;
--	int err;
--
--	err = mutex_lock_interruptible(&ha->drain_mutex);
--	if (err)
--		return err;
- 
- 	set_bit(SAS_HA_DRAINING, &ha->state);
- 	/* flush submitters */
-@@ -75,6 +71,17 @@ int sas_drain_work(struct sas_ha_struct *ha)
- 		sas_queue_work(ha, w);
- 	}
- 	spin_unlock_irq(&ha->state_lock);
++	va_start(args, fmt);
++
++	vaf.fmt = fmt;
++	vaf.va = &args;
++
++	r = printk("%ssas: ata%u: %s: %pV",
++		   level, ap->print_id, dev_name(dev), &vaf);
++
++	va_end(args);
++
++	return r;
 +}
 +
-+int sas_drain_work(struct sas_ha_struct *ha)
-+{
-+	int err;
-+
-+	err = mutex_lock_interruptible(&ha->drain_mutex);
-+	if (err)
-+		return err;
-+	if (test_bit(SAS_HA_REGISTERED, &ha->state))
-+		__sas_drain_work(ha);
- 	mutex_unlock(&ha->drain_mutex);
- 
- 	return 0;
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index dc93e118..09c14ca 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -160,18 +160,22 @@ Undo_phys:
- 
- int sas_unregister_ha(struct sas_ha_struct *sas_ha)
+ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
+ 			      unsigned long deadline)
  {
--	unsigned long flags;
--
- 	/* Set the state to unregistered to avoid further unchained
--	 * events to be queued
-+	 * events to be queued, and flush any in-progress drainers
+@@ -333,7 +355,7 @@ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
+ 	res = i->dft->lldd_I_T_nexus_reset(dev);
+ 
+ 	if (res != TMF_RESP_FUNC_COMPLETE)
+-		SAS_DPRINTK("%s: Unable to reset ata device?\n", __func__);
++		sas_ata_printk(KERN_DEBUG, dev, "Unable to reset ata device?\n");
+ 
+ 	phy = sas_get_local_phy(dev);
+ 	if (scsi_is_sas_phy_local(phy))
+@@ -344,7 +366,7 @@ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
+ 
+ 	ret = ata_wait_after_reset(link, deadline, check_ready);
+ 	if (ret && ret != -EAGAIN)
+-		ata_link_err(link, "COMRESET failed (errno=%d)\n", ret);
++		sas_ata_printk(KERN_ERR, dev, "reset failed (errno=%d)\n", ret);
+ 
+ 	/* XXX: if the class changes during the reset the upper layer
+ 	 * should be informed, if the device has gone away we assume
+@@ -665,7 +687,7 @@ static void async_sas_ata_eh(void *data, async_cookie_t cookie)
+ 	 * remove once all commands are completed
  	 */
--	spin_lock_irqsave(&sas_ha->state_lock, flags);
-+	mutex_lock(&sas_ha->drain_mutex);
-+	spin_lock_irq(&sas_ha->state_lock);
- 	clear_bit(SAS_HA_REGISTERED, &sas_ha->state);
--	spin_unlock_irqrestore(&sas_ha->state_lock, flags);
--	sas_drain_work(sas_ha);
-+	spin_unlock_irq(&sas_ha->state_lock);
-+	__sas_drain_work(sas_ha);
-+	mutex_unlock(&sas_ha->drain_mutex);
+ 	kref_get(&dev->kref);
+-	ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata port error handler");
++	sas_ata_printk(KERN_DEBUG, dev, "dev error handler\n");
+ 	ata_scsi_port_error_handler(ha->core.shost, ap);
+ 	sas_put_device(dev);
  
- 	sas_unregister_ports(sas_ha);
--	sas_drain_work(sas_ha);
+@@ -708,26 +730,27 @@ void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ 		struct list_head *done_q)
+ {
+ 	struct scsi_cmnd *cmd, *n;
+-	struct ata_port *ap;
++	struct domain_device *eh_dev;
+ 
+ 	do {
+ 		LIST_HEAD(sata_q);
+-
+-		ap = NULL;
++		eh_dev = NULL;
+ 
+ 		list_for_each_entry_safe(cmd, n, work_q, eh_entry) {
+ 			struct domain_device *ddev = cmd_to_domain_dev(cmd);
+ 
+ 			if (!dev_is_sata(ddev) || TO_SAS_TASK(cmd))
+ 				continue;
+-			if (ap && ap != ddev->sata_dev.ap)
++			if (eh_dev && eh_dev != ddev)
+ 				continue;
+-			ap = ddev->sata_dev.ap;
++			eh_dev = ddev;
+ 			list_move(&cmd->eh_entry, &sata_q);
+ 		}
+ 
+ 		if (!list_empty(&sata_q)) {
+-			ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata cmd error handler\n");
++			struct ata_port *ap = eh_dev->sata_dev.ap;
 +
-+	/* flush unregistration work */
-+	mutex_lock(&sas_ha->drain_mutex);
-+	__sas_drain_work(sas_ha);
-+	mutex_unlock(&sas_ha->drain_mutex);
++			sas_ata_printk(KERN_DEBUG, eh_dev, "cmd error handler\n");
+ 			ata_scsi_cmd_error_handler(shost, ap, &sata_q);
+ 			/*
+ 			 * ata's error handler may leave the cmd on the list
+@@ -743,7 +766,7 @@ void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ 			while (!list_empty(&sata_q))
+ 				list_del_init(sata_q.next);
+ 		}
+-	} while (ap);
++	} while (eh_dev);
+ }
  
- 	if (sas_ha->lldd_max_execute_num > 1) {
- 		sas_shutdown_queue(sas_ha);
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 4157f6e..7818c46 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -70,6 +70,7 @@ int  sas_init_events(struct sas_ha_struct *sas_ha);
- void sas_shutdown_queue(struct sas_ha_struct *sas_ha);
- void sas_disable_revalidation(struct sas_ha_struct *ha);
- void sas_enable_revalidation(struct sas_ha_struct *ha);
-+void __sas_drain_work(struct sas_ha_struct *ha);
+ void sas_ata_schedule_reset(struct domain_device *dev)
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 68a80a0..f8d941f 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -176,9 +176,10 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
+ 	struct smp_resp *resp = disc_resp;
+ 	struct discover_resp *dr = &resp->disc;
+ 	struct sas_rphy *rphy = dev->rphy;
+-	int rediscover = (phy->phy != NULL);
++	bool new_phy = !phy->phy;
++	char *type;
  
- void sas_deform_port(struct asd_sas_phy *phy, int gone);
+-	if (!rediscover) {
++	if (new_phy) {
+ 		phy->phy = sas_phy_alloc(&rphy->dev, phy_id);
  
+ 		/* FIXME: error_handling */
+@@ -223,20 +224,43 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
+ 	phy->phy->maximum_linkrate = dr->pmax_linkrate;
+ 	phy->phy->negotiated_linkrate = phy->linkrate;
+ 
+-	if (!rediscover)
++	if (new_phy)
+ 		if (sas_phy_add(phy->phy)) {
+ 			sas_phy_free(phy->phy);
+ 			return;
+ 		}
+ 
+-	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",
++	switch (phy->attached_dev_type) {
++	case NO_DEVICE:
++		type = "no device";
++		break;
++	case SAS_END_DEV:
++		if (phy->attached_iproto) {
++			if (phy->attached_tproto)
++				type = "host+target";
++			else
++				type = "host";
++		} else {
++			if (dr->attached_sata_dev)
++				type = "stp";
++			else
++				type = "ssp";
++		}
++		break;
++	case EDGE_DEV:
++	case FANOUT_DEV:
++		type = "smp";
++		break;
++	default:
++		type = "unknown";
++	}
++
++	SAS_DPRINTK("ex %016llx phy%02d:%c:%X attached: %016llx (%s)\n",
+ 		    SAS_ADDR(dev->sas_addr), phy->phy_id,
+ 		    phy->routing_attr == TABLE_ROUTING ? 'T' :
+ 		    phy->routing_attr == DIRECT_ROUTING ? 'D' :
+ 		    phy->routing_attr == SUBTRACTIVE_ROUTING ? 'S' : '?',
+-		    SAS_ADDR(phy->attached_sas_addr));
+-
+-	return;
++		    phy->linkrate, SAS_ADDR(phy->attached_sas_addr), type);
+ }
+ 
+ /* check if we have an existing attached ata device on this expander phy */
 
