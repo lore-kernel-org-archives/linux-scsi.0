@@ -1,22 +1,18 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [LSF/MM TOPIC] [ATTEND] Future writeback topics
-Date: Sun, 22 Jan 2012 08:49:43 -0600
-Message-ID: <1327243783.2834.6.camel@dabdike.int.hansenpartnership.com>
+Date: Sun, 22 Jan 2012 09:27:14 -0600
+Message-ID: <1327246034.2834.7.camel@dabdike.int.hansenpartnership.com>
 References: <4F1C141C.2050704@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59156 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751961Ab2AVOtr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Jan 2012 09:49:47 -0500
+Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <4F1C141C.2050704@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Andrea Arcangeli <aarcange@redhat.com>, Wu Fengguang <fengguang.wu@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dave Chinner <david@fromorbit.com>, llinux-mm@kvack.org
+Cc: lsf-pc@lists.linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Andrea Arcangeli <aarcange@redhat.com>, Wu Fengguang <fengguang.wu@intel.com>, "Martin K.
+ Petersen" <martin.petersen@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-mm@kvack.org
+List-Id: linux-scsi@vger.kernel.org
 
 Since a lot of these are mm related; added linux-mm to cc list
 
@@ -115,3 +111,15 @@ adds a lock to the writeout path).
 James
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
