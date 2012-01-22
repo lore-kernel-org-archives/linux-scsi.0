@@ -1,93 +1,117 @@
-From: Roland Stigge <stigge@debian.org>
-Subject: Kernel hang w/ aacraid on supermicro X8SIE
-Date: Sun, 22 Jan 2012 13:05:42 +0100
-Message-ID: <4F1BFB96.3090905@debian.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
+Date: Sun, 22 Jan 2012 14:21:51 +0200
+Message-ID: <4F1BFF5F.6000502@panasas.com>
+References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
+	<20120117200609.GA7933@redhat.com>
+	<20120117213648.GA9457@quack.suse.cz>
+	<20120118225808.GA3074@tux1.beaverton.ibm.com>
+	<20120118232200.GA22019@quack.suse.cz>
+	<4F1758D4.9010401@panasas.com>
+	<20120119094637.GA23442@quack.suse.cz>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from antcom.de ([188.40.178.216]:35788 "EHLO chuck.antcom.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949Ab2AVMLl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Jan 2012 07:11:41 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20120119094637.GA23442@quack.suse.cz>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Jan Kara <jack@suse.cz>
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: aacraid@adaptec.com, JBottomley@parallels.com
 
-Hi,
+On 01/19/2012 11:46 AM, Jan Kara wrote:
+>>
+>> OK That one is interesting. Because I'd imagine that the Kernel would not
+>> start write-out on a busily modified page.
+>   So currently writeback doesn't use the fact how busily is page modified.
+> After all whole mm has only two sorts of pages - active & inactive - which
+> reflects how often page is accessed but says nothing about how often is it
+> dirtied. So we don't have this information in the kernel and it would be
+> relatively (memory) expensive to keep it.
+> 
 
-I'm experiencing serious temporary kernel hangs on a Supermicro X8SIE
-machine with an aacraid controller. I'm suspecting the latter one since
-the issue looks similar to:
+Don't we? what about the information used by the IO elevators per-io-group.
+Is it not collected at redirty time. Is it only recorded by the time a bio
+is submitted? How does the io-elevator keeps small IO behind heavy writer
+latency bound? We could use the reverse of that to not IO the "too soon"
 
-=========================================================================
-commit cf16123c9c8e346ed1dd171295a678d77648d7f8
-Author: Vasily Averin <vvs@parallels.com>
-Date:   Fri Nov 11 13:42:16 2011 +0400
+>> Some heavy modifying then a single write. If it's not so then there is
+>> already great inefficiency, just now exposed, but was always there. The
+>> "page-migrate" mentioned here will not help.
+>   Yes, but I believe RT guy doesn't redirty the page that often. It is just
+> that if you have to meet certain latency criteria, you cannot afford a
+> single case where you have to wait. And if you redirty pages, you are bound
+> to hit PageWriteback case sooner or later.
+> 
 
-    [SCSI] aacraid: controller hangs if kernel uses non-default ASPM policy
-=========================================================================
+OK, thanks. I need this overview. What you mean is that since the writeback
+fires periodically then there must be times when the page or group of pages
+are just in the stage of changing and the writeback takes only half of the
+modification.
 
-The problem is triggered by regular nightly backup rsyncs and is
-reproducible: The below kernel traces happen _once_ around the first
-nightly rsync after booting. During following days, no further traces
-are written, but the machine feels generally slow. I/O during the rsync
-runs leading to load values >30.
+So What if we let the dirty data always wait that writeback timeout, if
+the pages are "to-new" and memory condition is fine, then postpone the
+writeout to the next round. (Assuming we have that information from the
+first part)
 
-Both the AAC RAID and the Supermicro board have already been replaced
-(with same models) but the problem is still there.
+>> Could we not better our page write-out algorithms to avoid heavy
+>> contended pages?
+>   That's not so easy. Firstly, you'll have track and keep that information
+> somehow. Secondly, it is better to writeout a busily dirtied page than to
+> introduce a seek. 
 
-=========================================================================
-[29040.293627] INFO: task flush-8:0:1074 blocked for more than 120 seconds.
-[29040.293676] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-disables this message.
-[29040.293727] flush-8:0       D ffff880131ffcfc0     0  1074      2
-0x00000000
-[29040.293730]  ffff880131ffcfc0 0000000000000046 ffff880100000000
-ffff880134f480c0
-[29040.293733]  0000000000013440 ffff8801319f9fd8 ffff8801319f9fd8
-0000000000013440
-[29040.293735]  ffff880131ffcfc0 ffff8801319f8010 ffff8801319f9810
-00000001319f9810
-[29040.293738] Call Trace:
-[29040.293746]  [<ffffffff8134b6dc>] ? io_schedule+0x84/0xc3
-[29040.293750]  [<ffffffff811a16f1>] ? get_request_wait+0x104/0x199
-[29040.293753]  [<ffffffff81061b25>] ? wake_up_bit+0x20/0x20
-[29040.293756]  [<ffffffff811a1bc8>] ? blk_queue_bio+0x17a/0x2ce
-[29040.293759]  [<ffffffff81129076>] ? T.1020+0x17/0x17
-[29040.293761]  [<ffffffff811a106e>] ? generic_make_request+0x8e/0xcd
-[29040.293763]  [<ffffffff811a1186>] ? submit_bio+0xd9/0xf7
-[29040.293765]  [<ffffffff81129076>] ? T.1020+0x17/0x17
-[29040.293767]  [<ffffffff8112be2d>] ? bio_alloc_bioset+0x44/0xb3
-[29040.293770]  [<ffffffff81127cd1>] ? submit_bh+0xe5/0x105
-[29040.293772]  [<ffffffff8112a360>] ? __block_write_full_page+0x1dd/0x2b5
-[29040.293774]  [<ffffffff8112c354>] ? I_BDEV+0x8/0x8
-[29040.293778]  [<ffffffff810c31e2>] ? __writepage+0xa/0x21
-[29040.293781]  [<ffffffff810c42d5>] ? write_cache_pages+0x226/0x31e
-[29040.293783]  [<ffffffff810c31d8>] ? set_page_dirty+0x61/0x61
-[29040.293785]  [<ffffffff810c440b>] ? generic_writepages+0x3e/0x55
-[29040.293790]  [<ffffffff81122b15>] ? writeback_single_inode+0x178/0x35e
-[29040.293792]  [<ffffffff81123015>] ? writeback_sb_inodes+0x169/0x1ff
-[29040.293794]  [<ffffffff81123118>] ? __writeback_inodes_wb+0x6d/0xab
-[29040.293796]  [<ffffffff8112333f>] ? wb_writeback+0x128/0x222
-[29040.293798]  [<ffffffff8134b36d>] ? __schedule+0x5a0/0x5cd
-[29040.293800]  [<ffffffff811235b2>] ? wb_do_writeback+0x179/0x1de
-[29040.293805]  [<ffffffff81053dcb>] ? del_timer_sync+0x34/0x3e
-[29040.293807]  [<ffffffff811236da>] ? bdi_writeback_thread+0xc3/0x1fe
-[29040.293809]  [<ffffffff81123617>] ? wb_do_writeback+0x1de/0x1de
-[29040.293811]  [<ffffffff81123617>] ? wb_do_writeback+0x1de/0x1de
-[29040.293813]  [<ffffffff810616e9>] ? kthread+0x7a/0x82
-[29040.293816]  [<ffffffff81354eb4>] ? kernel_thread_helper+0x4/0x10
-[29040.293818]  [<ffffffff8106166f>] ? kthread_worker_fn+0x147/0x147
-[29040.293820]  [<ffffffff81354eb0>] ? gs_change+0x13/0x13
-=========================================================================
+Sure I'd say we just go on the timestamp of the first page in the group.
+Because I'd imagine that the application has changed that group of pages
+ruffly at the same time.
 
-See also full kernel log at
-http://antcom.de/linux-aacraid-supermicro-X8SIE.dmesg
+> Also definition of 'busy' differs for different purposes.
+> So to make this useful the logic won't be trivial. 
 
-Please redirect me if you suspect the problem elsewhere.
+I don't think so. 1st: io the oldest data. 2nd: Postpone the IO of
+"too new data". So any dirtying has some "aging time" before attack. The
+aging time is very much related to your writeback timer. (Which is
+ "the amount of memory buffer you want to keep" divide by your writeout-rate)
 
-Thanks in advance,
+> Thirdly, the benefit is
+> questionable anyway (at least for most of realistic workloads) because
+> flusher thread doesn't write the pages all that often - when there are not
+> many pages, we write them out just once every couple of seconds, when we
+> have lots of dirty pages we cycle through all of them so one page is not
+> written that often.
+> 
 
-Roland
+Exactly, so lets make sure dirty is always "couple of seconds" old. Don't let
+that timer sample data that is just been dirtied.
+
+Which brings me to another subject in the second case "when we have lots of
+dirty pages". I wish we could talk at LSF/MM about how to not do a dumb cycle
+on sb's inodes but do a time sort write-out. The writeout is always started
+from the lowest addressed page (inode->i_index) so take the time-of-dirty of
+that page as the sorting factor of the inode. And maybe keep a min-inode-dirty-time
+per SB to prioritize on SBs.
+
+Because you see elevator-less FileSystems. Which are none-block-dev BDIs like
+NFS or exofs have a problem. An heavy writer can easily totally starve a slow
+IOer (read or write). I can easily demonstrate how an NFS heavy writer starves
+a KDE desktop to a crawl. We should be starting to think on IO fairness and
+interactivity at the VFS layer. So to not let every none-block-FS solve it's
+own problem all over again.
+
+>> Do you have a more detailed description of the workload? Is it theoretically
+>> avoidable?
+>   See https://lkml.org/lkml/2011/10/23/156. Using page migration or copyout
+> would solve the problems of this guy.
+> 
+> 								Honza
+
+Thanks
+Boaz
