@@ -1,51 +1,74 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] SCSI:implement PM for st
-Date: Sun, 22 Jan 2012 19:58:36 +0200 (EET)
-Message-ID: <alpine.LNX.2.00.1201221957100.5707@kai.makisara.local>
-References: <201201160931.33777.oneukum@suse.de>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: [PATCH] arm: prevent inlining in arxescsi.c causing build failures
+Date: Sun, 22 Jan 2012 14:16:55 -0500
+Message-ID: <1327259815-3880-1-git-send-email-paul.gortmaker@windriver.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811327-863041256-1327255119=:5707"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vs15.mail.saunalahti.fi ([62.142.117.202]:55005 "EHLO
-	vs15.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751756Ab2AVSFU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jan 2012 13:05:20 -0500
-In-Reply-To: <201201160931.33777.oneukum@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux@arm.linux.org.uk, JBottomley@parallels.com
+Cc: linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Gortmaker <paul.gortmaker@windriver.com>, Arnd Bergmann <arnd@arndb.de>, =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+The following failure is seen in routine coverage builds:
 
----1463811327-863041256-1327255119=:5707
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+  CC [M]  drivers/scsi/arm/arxescsi.o
+/tmp/cccEyiO7.s: Assembler messages:
+/tmp/cccEyiO7.s:334: Error: symbol `.loop_1' is already defined
+/tmp/cccEyiO7.s:337: Error: symbol `.loop_2' is already defined
+/tmp/cccEyiO7.s:343: Error: symbol `.loop_3' is already defined
+/tmp/cccEyiO7.s:365: Error: symbol `.loop_1' is already defined
+/tmp/cccEyiO7.s:368: Error: symbol `.loop_2' is already defined
+/tmp/cccEyiO7.s:374: Error: symbol `.loop_3' is already defined
+make[4]: *** [drivers/scsi/arm/arxescsi.o] Error 1
 
-On Mon, 16 Jan 2012, Oliver Neukum wrote:
+It is caused by multiple inline of arxescsi_pseudo_dma_write()
+which is responsible for the above labels.  Marking the fcn
+as non-inline fixes the issue.
 
-> From 595fa6688232fd68f221fc2734545d3e995c465a Mon Sep 17 00:00:00 2001
-> From: Oliver Neukum <oliver@neukum.org>
-> Date: Sun, 15 Jan 2012 00:16:51 +0100
-> Subject: [PATCH] SCSI:implement PM for st
->=20
-> This implements basic power management for SCSI tapes.
->=20
-> Signed-off-by: Oliver Neukum <oneukum@suse.de>
-> ---
->  drivers/scsi/st.c |   11 +++++++++++
->  1 files changed, 11 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> index 9b28f39..9262cdf 100644
-> --- a/drivers/scsi/st.c
-> +++ b/drivers/scsi/st.c
-> @@ -1177,6 +1177,7 @@ static int check_tape(struct scsi_tape *STp, stru=
-ct file *filp)
+Arnd Bergmann considered un-inlinling vs fixing the loop[1] to
+use local labels and came to the following conclusion:
 
-Acked-by: Kai M=C3=A4kisara <kai.makisara@kolumbus.fi>
+  The problem is mostly in the code: The symbols are defined in an
+  inline assembly that is not meant to be instantiated multiple times.
+  gcc may decide to unroll the loop in which this is done, which causes
+  the error above. Unrolling the loop is a rather silly thing to do
+  here, because the code is rather large and does not at all benefit
+  from unrolling. You can use the patch below to fix the code to still
+  work if the loop is unrolled, but I also think that marking the
+  function as uninline is a good idea, in particular because I don't
+  trust the old assembly to still do the right thing otherwise:
+  It manually saves and restores the registers on the stack, where
+  you nowadays would specify specific clobbers for the registers
+  it uses, and let the compiler take care of it. It also doesn't
+  contain a memory clobber for the buffer, so keeping the function
+  out-of-line is probably the safe choice.
 
-Thanks,
-Kai
----1463811327-863041256-1327255119=:5707--
+[1] https://lkml.org/lkml/2011/12/1/189
+
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
+
+---
+v2: add desc. from Arnd indicating why un-inlining is the best choice
+
+diff --git a/drivers/scsi/arm/arxescsi.c b/drivers/scsi/arm/arxescsi.c
+index a750aa7..2608a9e 100644
+--- a/drivers/scsi/arm/arxescsi.c
++++ b/drivers/scsi/arm/arxescsi.c
+@@ -72,7 +72,8 @@ arxescsi_dma_setup(struct Scsi_Host *host, struct scs=
+i_pointer *SCp,
+ 	return fasdma_pseudo;
+ }
+=20
+-static void arxescsi_pseudo_dma_write(unsigned char *addr, void __iome=
+m *base)
++static noinline void
++arxescsi_pseudo_dma_write(unsigned char *addr, void __iomem *base)
+ {
+        __asm__ __volatile__(
+        "               stmdb   sp!, {r0-r12}\n"
+--=20
+1.7.7.2
