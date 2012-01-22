@@ -1,49 +1,90 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] sdparm 1.07 available
-Date: Sat, 21 Jan 2012 20:52:14 -0500
-Message-ID: <4F1B6BCE.3070105@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
+Date: Sun, 22 Jan 2012 13:31:38 +0200
+Message-ID: <4F1BF39A.6090709@panasas.com>
+References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
+	<20120117200609.GA7933@redhat.com>
+	<20120117213648.GA9457@quack.suse.cz>
+	<20120118225808.GA3074@tux1.beaverton.ibm.com>
+	<20120118232200.GA22019@quack.suse.cz>
+	<4F1758D4.9010401@panasas.com>
+	<20120119094637.GA23442@quack.suse.cz>
+	<20120119150849.GD8316@redhat.com>
+	<20120119205211.GB3629@quack.suse.cz>
+	<20120119213958.GJ8316@redhat.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: Tomas Fasth <tomfa@debian.org>, Martin Pitt <mpitt@debian.org>, kumba@gentoo.org, =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20120119213958.GJ8316@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Andrea Arcangeli <aarcange@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-sdparm is a command line utility designed to get and set
-SCSI device parameters (cf hdparm for ATA disks). The
-parameters are held in mode pages. Apart from SCSI devices
-(e.g. disks, tapes and enclosures) sdparm can be used on
-any device that uses a SCSI command set. Almost all CD/DVD/BD
-drives use the SCSI MMC set irrespective of the transport.
-sdparm also can decode VPD pages including the device
-identification page. Commands to start and stop the media;
-load and unload removable media and some other housekeeping
-functions are supported. sdparm supports both the Linux
-kernel 2.4 and 2.6 series with ports to FreeBSD, Solaris,
-Tru64 and Windows.
+On 01/19/2012 11:39 PM, Andrea Arcangeli wrote:
+> On Thu, Jan 19, 2012 at 09:52:11PM +0100, Jan Kara wrote:
+>> anything. So what will be cheaper depends on how often are redirtied pages
+>> under IO. This is rather rare because pages aren't flushed all that often.
+>> So the effect of stable pages in not observable on throughput. But you can
+>> certainly see it on max latency...
+> 
+> I see your point. A problem with migrate though is that the page must
+> be pinned by the I/O layer to prevent migration to free the page under
+> I/O, or how else it could be safe to read from a freed page? And if
+> the page is pinned migration won't work at all. See page_freeze_refs
+> in migrate_page_move_mapping. So the pinning issue would need to be
+> handled somehow. It's needed for example when there's an O_DIRECT
+> read, and the I/O is going to the page, if the page is migrated in
+> that case, we'd lose a part of the I/O. Differentiating how many page
+> pins are ok to be ignored by migration won't be trivial but probably
+> possible to do.
+> 
+> Another way maybe would be to detect when there's too much re-dirtying
+> of pages in flight in a short amount of time, and to start the bounce
+> buffering and stop waiting, until the re-dirtying stops, and then you
+> stop the bounce buffering. But unlike migration, it can't prevent an
+> initial burst of high fault latency...
 
-The version tracks changes in draft standards from
-www.t10.org since October 2010.
+Or just change that RT program that is one - latency bound but, two - does
+unpredictable, statistically bad, things to a memory mapped file.
 
-For more information and downloads see:
-     http://sg.danny.cz/sg/sdparm.html
+Can a memory-mapped-file writer have some control on the time of
+writeback with data_sync or such, or it's purely: Timer fired, Kernel see
+a dirty page, start a writeout? What about if the application maps a
+portion of the file at a time, and the Kernel gets more lazy on an active
+memory mapped region. (That's what windows NT do. It will never IO a mapped
+section unless in OOM conditions. The application needs to map small sections
+and unmap to IO. It's more of a direct_io than mmap)
 
+In any case, if you are very latency sensitive an mmap writeout is bad for
+you. Not only because of this new problem, but because mmap writeout can
+sync with tones of other things, that are do to memory management. (As mentioned
+by Andrea). The best for latency sensitive application is asynchronous direct-io
+by far. Only with asynchronous and direct-io you can have any real control on
+your latency. (I understand they used to have empirically observed latency bound
+but that is just luck, not real control)
 
-ChangeLog for sdparm-1.07 [20120121] [svn: r188]
-   - LB provisioning + Block limits VPD pages to sbc3r27
-   - Enhanced phy control page: optical mode enabled (spl-r07)
-   - Phy control and discover page: sync to spl2r02
-   - sync with spc4r31+32 (handle status good with sense)
-   - extended inquiry VPD: add POA_SUP, HRA_SUP and VSA_SUP
-   - application tag mode page subcode 0xf0->0x2 (sbc3r28)
-   - add 'sinq' pseudo VPD page for standard inquiry response
-   - add power consumption mode and VPD pages (spc4r33)
-   - point out some mode page numbers are vendor specific
+BTW: The application mentioned would probably not want it's IO bounced at
+the block layer, other wise why would it use mmap if not for preventing
+the copy induced by buffer IO?
 
-ChangeLog for sdparm-1.06 [20101031] [svn: r166]
-   ...
+All that said, a mount option to ext4 (Is ext4 used?) to revert to the old
+behavior is the easiest solution. When originally we brought this up in LSF
+my thought was that the block request Q should have some flag that says
+need_stable_pages. If set by the likes of dm/md-raid, iscsi-with-data-signed, DIFF
+enabled devices and so on, and the FS does not guaranty/wants stable pages
+then an IO bounce is set up. But if not set then the like of ext4 need not
+bother.
 
-Doug Gilbert
+Thanks
+Boaz
