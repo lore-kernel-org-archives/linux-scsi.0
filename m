@@ -1,90 +1,93 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Sun, 22 Jan 2012 13:31:38 +0200
-Message-ID: <4F1BF39A.6090709@panasas.com>
-References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
-	<20120117200609.GA7933@redhat.com>
-	<20120117213648.GA9457@quack.suse.cz>
-	<20120118225808.GA3074@tux1.beaverton.ibm.com>
-	<20120118232200.GA22019@quack.suse.cz>
-	<4F1758D4.9010401@panasas.com>
-	<20120119094637.GA23442@quack.suse.cz>
-	<20120119150849.GD8316@redhat.com>
-	<20120119205211.GB3629@quack.suse.cz>
-	<20120119213958.GJ8316@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Roland Stigge <stigge@debian.org>
+Subject: Kernel hang w/ aacraid on supermicro X8SIE
+Date: Sun, 22 Jan 2012 13:05:42 +0100
+Message-ID: <4F1BFB96.3090905@debian.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20120119213958.GJ8316@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Andrea Arcangeli <aarcange@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from antcom.de ([188.40.178.216]:35788 "EHLO chuck.antcom.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750949Ab2AVMLl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Jan 2012 07:11:41 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: aacraid@adaptec.com, JBottomley@parallels.com
 
-On 01/19/2012 11:39 PM, Andrea Arcangeli wrote:
-> On Thu, Jan 19, 2012 at 09:52:11PM +0100, Jan Kara wrote:
->> anything. So what will be cheaper depends on how often are redirtied pages
->> under IO. This is rather rare because pages aren't flushed all that often.
->> So the effect of stable pages in not observable on throughput. But you can
->> certainly see it on max latency...
-> 
-> I see your point. A problem with migrate though is that the page must
-> be pinned by the I/O layer to prevent migration to free the page under
-> I/O, or how else it could be safe to read from a freed page? And if
-> the page is pinned migration won't work at all. See page_freeze_refs
-> in migrate_page_move_mapping. So the pinning issue would need to be
-> handled somehow. It's needed for example when there's an O_DIRECT
-> read, and the I/O is going to the page, if the page is migrated in
-> that case, we'd lose a part of the I/O. Differentiating how many page
-> pins are ok to be ignored by migration won't be trivial but probably
-> possible to do.
-> 
-> Another way maybe would be to detect when there's too much re-dirtying
-> of pages in flight in a short amount of time, and to start the bounce
-> buffering and stop waiting, until the re-dirtying stops, and then you
-> stop the bounce buffering. But unlike migration, it can't prevent an
-> initial burst of high fault latency...
+Hi,
 
-Or just change that RT program that is one - latency bound but, two - does
-unpredictable, statistically bad, things to a memory mapped file.
+I'm experiencing serious temporary kernel hangs on a Supermicro X8SIE
+machine with an aacraid controller. I'm suspecting the latter one since
+the issue looks similar to:
 
-Can a memory-mapped-file writer have some control on the time of
-writeback with data_sync or such, or it's purely: Timer fired, Kernel see
-a dirty page, start a writeout? What about if the application maps a
-portion of the file at a time, and the Kernel gets more lazy on an active
-memory mapped region. (That's what windows NT do. It will never IO a mapped
-section unless in OOM conditions. The application needs to map small sections
-and unmap to IO. It's more of a direct_io than mmap)
+=========================================================================
+commit cf16123c9c8e346ed1dd171295a678d77648d7f8
+Author: Vasily Averin <vvs@parallels.com>
+Date:   Fri Nov 11 13:42:16 2011 +0400
 
-In any case, if you are very latency sensitive an mmap writeout is bad for
-you. Not only because of this new problem, but because mmap writeout can
-sync with tones of other things, that are do to memory management. (As mentioned
-by Andrea). The best for latency sensitive application is asynchronous direct-io
-by far. Only with asynchronous and direct-io you can have any real control on
-your latency. (I understand they used to have empirically observed latency bound
-but that is just luck, not real control)
+    [SCSI] aacraid: controller hangs if kernel uses non-default ASPM policy
+=========================================================================
 
-BTW: The application mentioned would probably not want it's IO bounced at
-the block layer, other wise why would it use mmap if not for preventing
-the copy induced by buffer IO?
+The problem is triggered by regular nightly backup rsyncs and is
+reproducible: The below kernel traces happen _once_ around the first
+nightly rsync after booting. During following days, no further traces
+are written, but the machine feels generally slow. I/O during the rsync
+runs leading to load values >30.
 
-All that said, a mount option to ext4 (Is ext4 used?) to revert to the old
-behavior is the easiest solution. When originally we brought this up in LSF
-my thought was that the block request Q should have some flag that says
-need_stable_pages. If set by the likes of dm/md-raid, iscsi-with-data-signed, DIFF
-enabled devices and so on, and the FS does not guaranty/wants stable pages
-then an IO bounce is set up. But if not set then the like of ext4 need not
-bother.
+Both the AAC RAID and the Supermicro board have already been replaced
+(with same models) but the problem is still there.
 
-Thanks
-Boaz
+=========================================================================
+[29040.293627] INFO: task flush-8:0:1074 blocked for more than 120 seconds.
+[29040.293676] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
+[29040.293727] flush-8:0       D ffff880131ffcfc0     0  1074      2
+0x00000000
+[29040.293730]  ffff880131ffcfc0 0000000000000046 ffff880100000000
+ffff880134f480c0
+[29040.293733]  0000000000013440 ffff8801319f9fd8 ffff8801319f9fd8
+0000000000013440
+[29040.293735]  ffff880131ffcfc0 ffff8801319f8010 ffff8801319f9810
+00000001319f9810
+[29040.293738] Call Trace:
+[29040.293746]  [<ffffffff8134b6dc>] ? io_schedule+0x84/0xc3
+[29040.293750]  [<ffffffff811a16f1>] ? get_request_wait+0x104/0x199
+[29040.293753]  [<ffffffff81061b25>] ? wake_up_bit+0x20/0x20
+[29040.293756]  [<ffffffff811a1bc8>] ? blk_queue_bio+0x17a/0x2ce
+[29040.293759]  [<ffffffff81129076>] ? T.1020+0x17/0x17
+[29040.293761]  [<ffffffff811a106e>] ? generic_make_request+0x8e/0xcd
+[29040.293763]  [<ffffffff811a1186>] ? submit_bio+0xd9/0xf7
+[29040.293765]  [<ffffffff81129076>] ? T.1020+0x17/0x17
+[29040.293767]  [<ffffffff8112be2d>] ? bio_alloc_bioset+0x44/0xb3
+[29040.293770]  [<ffffffff81127cd1>] ? submit_bh+0xe5/0x105
+[29040.293772]  [<ffffffff8112a360>] ? __block_write_full_page+0x1dd/0x2b5
+[29040.293774]  [<ffffffff8112c354>] ? I_BDEV+0x8/0x8
+[29040.293778]  [<ffffffff810c31e2>] ? __writepage+0xa/0x21
+[29040.293781]  [<ffffffff810c42d5>] ? write_cache_pages+0x226/0x31e
+[29040.293783]  [<ffffffff810c31d8>] ? set_page_dirty+0x61/0x61
+[29040.293785]  [<ffffffff810c440b>] ? generic_writepages+0x3e/0x55
+[29040.293790]  [<ffffffff81122b15>] ? writeback_single_inode+0x178/0x35e
+[29040.293792]  [<ffffffff81123015>] ? writeback_sb_inodes+0x169/0x1ff
+[29040.293794]  [<ffffffff81123118>] ? __writeback_inodes_wb+0x6d/0xab
+[29040.293796]  [<ffffffff8112333f>] ? wb_writeback+0x128/0x222
+[29040.293798]  [<ffffffff8134b36d>] ? __schedule+0x5a0/0x5cd
+[29040.293800]  [<ffffffff811235b2>] ? wb_do_writeback+0x179/0x1de
+[29040.293805]  [<ffffffff81053dcb>] ? del_timer_sync+0x34/0x3e
+[29040.293807]  [<ffffffff811236da>] ? bdi_writeback_thread+0xc3/0x1fe
+[29040.293809]  [<ffffffff81123617>] ? wb_do_writeback+0x1de/0x1de
+[29040.293811]  [<ffffffff81123617>] ? wb_do_writeback+0x1de/0x1de
+[29040.293813]  [<ffffffff810616e9>] ? kthread+0x7a/0x82
+[29040.293816]  [<ffffffff81354eb4>] ? kernel_thread_helper+0x4/0x10
+[29040.293818]  [<ffffffff8106166f>] ? kthread_worker_fn+0x147/0x147
+[29040.293820]  [<ffffffff81354eb0>] ? gs_change+0x13/0x13
+=========================================================================
+
+See also full kernel log at
+http://antcom.de/linux-aacraid-supermicro-X8SIE.dmesg
+
+Please redirect me if you suspect the problem elsewhere.
+
+Thanks in advance,
+
+Roland
