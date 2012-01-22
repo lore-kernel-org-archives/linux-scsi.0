@@ -1,38 +1,46 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 29442] target: Race between target driver unregistration and
- LUN removal
-Date: Sun, 22 Jan 2012 19:30:30 GMT
-Message-ID: <201201221930.q0MJUUYW013690@bugzilla.kernel.org>
-References: <bug-29442-11613@https.bugzilla.kernel.org/>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] Future writeback topics
+Date: Mon, 23 Jan 2012 00:11:06 +0200
+Message-ID: <4F1C897A.3070401@panasas.com>
+References: <4F1C141C.2050704@panasas.com>  <1327243783.2834.6.camel@dabdike.int.hansenpartnership.com>  <4F1C2D45.4090208@panasas.com> <1327247393.2834.15.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:34471 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752432Ab2AVULP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jan 2012 15:11:15 -0500
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q0MJUUan013691
-	for <linux-scsi@vger.kernel.org>; Sun, 22 Jan 2012 19:30:30 GMT
-In-Reply-To: <bug-29442-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1327247393.2834.15.camel@dabdike.int.hansenpartnership.com>
+Sender: owner-linux-mm@kvack.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrea Arcangeli <aarcange@redhat.com>, Wu Fengguang <fengguang.wu@intel.com>, Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lsf-pc@lists.linux-foundation.org, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=29442
+On 01/22/2012 05:49 PM, James Bottomley wrote:
+> 
+> But this topic then becomes adding alignment for non block backed
+> filesystems?  I take it you're thinking NFS rather than MTD or MMC?
+> 
 
+Sorry to differ. But no this is for most making the IO aligned in the first
+place. Block-dev or not. Today VFS has no notion of alignment and IO is
+submitted as is with out any alignment considerations.
 
-Bart Van Assche <bvanassche@acm.org> changed:
+> For multiple devices, you do a simple cascade ... a bit like dm does
+> today ... but unless all the devices are aligned to optimal I/O it never
+> really works (and it's not necessarily worth solving ... the idea that
+> if you want performance from an array of devices, you match
+> characteristics isn't a hugely hard one to get the industry to swallow).
+> 
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |CODE_FIX
+No I'm talking about raid configurations like object raid in exofs/NFS or
+raid0/5 in BTRFS and ZFS and such, where there are other larger alignment
+structures to consider. Also for large-blocks filesystems/devices who
+would like IO aligned on bigger than a page sizes.
 
+Thanks
+Boaz
 
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
