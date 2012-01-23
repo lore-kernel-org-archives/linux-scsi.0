@@ -1,134 +1,75 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v6 2/7] libsas: improve ata debug statements
-Date: Mon, 23 Jan 2012 12:51:19 -0800
-Message-ID: <CAA9_cmfHXr1GT-7OG_54NWccZHghwdK-xOPC5rjSj5L=swKTeQ@mail.gmail.com>
+Subject: Re: [PATCH v6 0/7] libsas error handling + discovery v6
+Date: Mon, 23 Jan 2012 12:57:13 -0800
+Message-ID: <CAA9_cmd6FVVjm-wMAGRrUH-i-dC3ZtiYLsO5K-0F4dm=064JHA@mail.gmail.com>
 References: <20120121014910.24930.54011.stgit@localhost6.localdomain6>
-	<20120121015049.24930.6244.stgit@localhost6.localdomain6>
-	<FA947937481B428783C02E0BD63531CA@usish.com.cn>
-	<4F1B1F69.5010000@interlog.com>
+	<491F29790D474988ACF0C10BF277BC3B@usish.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4F1B1F69.5010000@interlog.com>
+In-Reply-To: <491F29790D474988ACF0C10BF277BC3B@usish.com.cn>
 Sender: linux-ide-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Jack Wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jack Wang <jack_wang@usish.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Jan 21, 2012 at 12:26 PM, Douglas Gilbert <dgilbert@interlog.co=
-m> wrote:
-> On 12-01-21 12:36 AM, Jack Wang wrote:
->>>
->>>
+On Fri, Jan 20, 2012 at 10:12 PM, Jack Wang <jack_wang@usish.com> wrote=
+:
+>> Changes since v5: http://marc.info/?l=3Dlinux-scsi&m=3D1326564758296=
+37&w=3D2
 >>
->> [Jack Wang]
->> Nice improvement.
->> Thanks.
->>>
->>> It's difficult to determine which domain_device is triggering error
+>> 1/ Reworked "libsas: let libata recover links that fail to transmit
+> initial
+>> =A0 =A0sig-fis" to better handle problematic expanders and slow to a=
+ttach ata
+>> =A0 =A0devices. =A0libsas will now validate linkrate and take 'devic=
+e-type' into
+>> =A0 =A0account when determining if a new device is attached.
 >>
->> recovery,
->>>
->>> so convert messages like:
->>>
->>> =A0 sas: ex 5001b4da000e703f phy08:T attached: 5001b4da000e7028
->>> =A0 sas: ex 5001b4da000e703f phy09:T attached: 5001b4da000e7029
->>> =A0 ...
->>> =A0 ata7: sas eh calling libata port error handler
->>> =A0 ata8: sas eh calling libata port error handler
->>>
->>> ...into:
->>>
->>> =A0 sas: ex 5001517e85cfefff phy05:T:9 attached: 5001517e85cfefe5 (=
-stp)
->>> =A0 sas: ex 5001517e3b0af0bf phy11:T:8 attached: 5001517e3b0af0ab (=
-stp)
->>> =A0 ...
->>> =A0 sas: ata7: end_device-21:1: dev error handler
->>> =A0 sas: ata8: end_device-20:0:5: dev error handler
->>>
->>> which shows attached link rate, device type, and associates a
->>> domain_device with its ata_port id to correlate messages emitted fr=
-om
->>> libata-eh.
+>> 2/ Added support for asynchronously scanning ata devices.
+>>
+>> 3/ Reworked "libsas: fix sas_unregister_ports vs sas_drain_work" as
+> lockdep
+>> =A0 =A0complained about the original.
+>>
+>> 4/ New patch "libsas: fix sas port naming" makes direct-attached dev=
+ice
+> naming
+>> =A0 =A0more predictable and consistent with expander attached device=
+ naming.
+>>
+>> 5/ Made scan order more predictable by ensuring that regardless of d=
+evice
+> type
+>> =A0 =A0we always attach in discovery order. =A0Slow to link devices =
+will still
+> be
+>> =A0 =A0scanned out of order, link needs to be in at least the 'stp p=
+ending'
+> state
+>> =A0 =A0before the device will be considered attached.
+>>
+> [Jack Wang]
+> Asynchronously scan really make the discovery far more quickly, with =
+v4
+> reset expander will need more than 3 minites to get discovered, with =
+this v6
+> patchset it takes less than 5 seconds.
+
+Great!
+
+> Dear Dan,
 >
+> Could you share how you test procedure to find out these bugs?
 >
-> A couple of comments. The "T" in the "phy08:T" stands for
-> an expander phy's routing attribute being "table" I presume.
 
-Yes.
+These fixes have primarily been driven by libsas ata error handling as
+robust as libata, and teaching libsas that ata links need more care
+and handling than it was giving before.
 
-> In smp_utils I'm thinking of changing that to "U" in the case
-> where that expander (SAS-2 or later) supports table-to-table
-> routing. The "U" indicates that phy can join other (sibling)
-> expander phys to become an "enclosure universal port" which
-> is nirvana for SAS expanders.
-
-Ok, something like the following (please excuse mailer line wrapping):
-
-diff --git a/drivers/scsi/libsas/sas_expander.c
-b/drivers/scsi/libsas/sas_expander.c
-index f8d941f..4b2ecd3 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -166,7 +166,22 @@ static inline void *alloc_smp_resp(int size)
-        return kzalloc(size, GFP_KERNEL);
- }
-
--/* ---------- Expander configuration ---------- */
-+static char sas_route_char(struct domain_device *dev, struct ex_phy *p=
-hy)
-+{
-+       switch (phy->routing_attr) {
-+       case TABLE_ROUTING:
-+               if (dev->ex_dev.t2t_supp)
-+                       return 'U';
-+               else
-+                       return 'T';
-+       case DIRECT_ROUTING:
-+               return 'D';
-+       case SUBTRACTIVE_ROUTING:
-+               return 'S';
-+       default:
-+               return '?';
-+       }
-+}
-
- static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
-                           void *disc_resp)
-@@ -257,10 +272,8 @@ static void sas_set_ex_phy(struct domain_device
-*dev, int phy_id,
-
-        SAS_DPRINTK("ex %016llx phy%02d:%c:%X attached: %016llx (%s)\n"=
-,
-                    SAS_ADDR(dev->sas_addr), phy->phy_id,
--                   phy->routing_attr =3D=3D TABLE_ROUTING ? 'T' :
--                   phy->routing_attr =3D=3D DIRECT_ROUTING ? 'D' :
--                   phy->routing_attr =3D=3D SUBTRACTIVE_ROUTING ? 'S' =
-: '?',
--                   phy->linkrate, SAS_ADDR(phy->attached_sas_addr), ty=
-pe);
-+                   sas_route_char(dev, phy), phy->linkrate,
-+                   SAS_ADDR(phy->attached_sas_addr), type);
- }
-
-
-=2E..can also fix up the same in sas_print_parent_topology_bug
-
->
-> enum sas_dev_type::EDGE_DEV seems a pretty bad name and
-> should be changed to EXPANDER_DEV as that is more
-> accurate. Where fanout expanders ever made in SAS-1?
-> Not many I would expect. In SAS-2++ (SPL, SPL-2) the
-> "edge" and "fanout" distinction has been dropped and
-> the numerical value for fanout expanders (3) has been
-> marked as obsolete.
-
-Ok, that's a cleanup for another patch, but I'll go ahead and
-formalize the above routing char fixup and repost the patch as
-"libsas: improve debug statements" rather than "libsas: improve ata
-debug statements"
+In the case of async probing, this is something that libata has had
+since 2.6.29, but was never added to libsas.
 
 --
 Dan
