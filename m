@@ -1,65 +1,98 @@
-From: Tony Asleson <tasleson@redhat.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] Storage management (API & Library)
-Date: Mon, 23 Jan 2012 10:21:39 -0600
-Message-ID: <4F1D8913.1060709@redhat.com>
-References: <4F19A981.4080502@redhat.com> <1327157825.2748.5.camel@dabdike.int.hansenpartnership.com>
-Reply-To: tasleson@redhat.com
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
+Date: Mon, 23 Jan 2012 17:30:24 +0100
+Message-ID: <20120123163024.GD28526@quack.suse.cz>
+References: <20120117200609.GA7933@redhat.com>
+ <20120117213648.GA9457@quack.suse.cz>
+ <20120118225808.GA3074@tux1.beaverton.ibm.com>
+ <20120118232200.GA22019@quack.suse.cz>
+ <4F1758D4.9010401@panasas.com>
+ <20120119094637.GA23442@quack.suse.cz>
+ <20120119150849.GD8316@redhat.com>
+ <20120119205211.GB3629@quack.suse.cz>
+ <20120119213958.GJ8316@redhat.com>
+ <4F1BF39A.6090709@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64579 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:45221 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751106Ab2AWQVm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jan 2012 11:21:42 -0500
-In-Reply-To: <1327157825.2748.5.camel@dabdike.int.hansenpartnership.com>
+	id S1751473Ab2AWQa0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Jan 2012 11:30:26 -0500
+Content-Disposition: inline
+In-Reply-To: <4F1BF39A.6090709@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J. Wong" <djwong@us.ibm.com>
 
-On 01/21/2012 08:57 AM, James Bottomley wrote:
-> It's also a bit insular ... the first thing you usually ask in open
-> source is what can I steal^Wborrow from other projects and how do I
-> recruit others to do the work for me.
+On Sun 22-01-12 13:31:38, Boaz Harrosh wrote:
+> On 01/19/2012 11:39 PM, Andrea Arcangeli wrote:
+> > On Thu, Jan 19, 2012 at 09:52:11PM +0100, Jan Kara wrote:
+> >> anything. So what will be cheaper depends on how often are redirtied pages
+> >> under IO. This is rather rare because pages aren't flushed all that often.
+> >> So the effect of stable pages in not observable on throughput. But you can
+> >> certainly see it on max latency...
+> > 
+> > I see your point. A problem with migrate though is that the page must
+> > be pinned by the I/O layer to prevent migration to free the page under
+> > I/O, or how else it could be safe to read from a freed page? And if
+> > the page is pinned migration won't work at all. See page_freeze_refs
+> > in migrate_page_move_mapping. So the pinning issue would need to be
+> > handled somehow. It's needed for example when there's an O_DIRECT
+> > read, and the I/O is going to the page, if the page is migrated in
+> > that case, we'd lose a part of the I/O. Differentiating how many page
+> > pins are ok to be ignored by migration won't be trivial but probably
+> > possible to do.
+> > 
+> > Another way maybe would be to detect when there's too much re-dirtying
+> > of pages in flight in a short amount of time, and to start the bounce
+> > buffering and stop waiting, until the re-dirtying stops, and then you
+> > stop the bounce buffering. But unlike migration, it can't prevent an
+> > initial burst of high fault latency...
+> 
+> Or just change that RT program that is one - latency bound but, two - does
+> unpredictable, statistically bad, things to a memory mapped file.
+  Right. That's what I told the RT guy as well :) But he didn't like to
+hear that because it meant more coding for him.
 
-The project site is a little sparse on details about what we have looked
-at and considered.  Ric Wheeler covered some of this during his
-presentation in Prague, but I will place more information on the project
-web site.
+> Can a memory-mapped-file writer have some control on the time of
+> writeback with data_sync or such, or it's purely: Timer fired, Kernel see
+> a dirty page, start a writeout? What about if the application maps a
+> portion of the file at a time, and the Kernel gets more lazy on an active
+> memory mapped region. (That's what windows NT do. It will never IO a mapped
+> section unless in OOM conditions. The application needs to map small sections
+> and unmap to IO. It's more of a direct_io than mmap)
+  You can always start writeback by sync_file_range() but you have no
+guarantees what writeback does. Also if you need to redirty the page
+pernamently (e.g. it's a head of your transaction log), there's simply no
+good time when it can be written when you also want stable pages.
 
-> The first question is probably: is there anything we can liberate
-> from the Oracle storage API fisasco to help with this.
+> In any case, if you are very latency sensitive an mmap writeout is bad for
+> you. Not only because of this new problem, but because mmap writeout can
+> sync with tones of other things, that are do to memory management. (As mentioned
+> by Andrea). The best for latency sensitive application is asynchronous direct-io
+> by far. Only with asynchronous and direct-io you can have any real control on
+> your latency. (I understand they used to have empirically observed latency bound
+> but that is just luck, not real control)
+> 
+> BTW: The application mentioned would probably not want it's IO bounced at
+> the block layer, other wise why would it use mmap if not for preventing
+> the copy induced by buffer IO?
+  Yeah, I'm not sure why their design was as it was.
 
-The Oracle storage connect library was evaluated and subsequently
-rejected for the following reasons:
+> All that said, a mount option to ext4 (Is ext4 used?) to revert to the old
+> behavior is the easiest solution. When originally we brought this up in LSF
+> my thought was that the block request Q should have some flag that says
+> need_stable_pages. If set by the likes of dm/md-raid, iscsi-with-data-signed, DIFF
+> enabled devices and so on, and the FS does not guaranty/wants stable pages
+> then an IO bounce is set up. But if not set then the like of ext4 need not
+> bother.
+  There's no mount option. The behavior is on unconditionally. And so far I
+have not seen enough people complain to introduce something like that -
+automatic logic is a different thing of course. That might be nice to have.
 
-1. The Oracle storage connect library is dual licensed, GPL and a
-proprietary Oracle license which allows proprietary use.  This allows
-hardware vendors the ability to write proprietary plug-ins.  The design
-of the library has the library user and plug-in executing in the same
-address space.  Based on the information presented on plug-ins
-(http://www.gnu.org/licenses/gpl-faq.html#GPLAndPlugins) this design
-goes against the requirements of GPL license compliance.  Proprietary
-plug-ins could be in compliance if they are implemented to execute in a
-separate process.
-
-2. At the time the Oracle storage connect library was being evaluated we
-were unable to obtain a plug-in from a few different vendors.  Without
-plug-ins the value of any library becomes greatly diminished.
-
-> The second might be what would it take to get vendors interested in
-> doing the array plugin glue.
-
-By providing:
-* Permissive license (LGPL)
-* Easy to use out of process plug-in support to allow proprietary
-plug-ins (IPC is abstracted)
-* Language agnostic plug-in support (initial support is C and python)
-
-We are hoping we can get hardware vendors interested in providing their
-own plug-ins.  If anyone has additional ideas, we would certainly like
-to discuss them.
-
-Regards,
-Tony
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
