@@ -1,75 +1,59 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v6 0/7] libsas error handling + discovery v6
-Date: Mon, 23 Jan 2012 12:57:13 -0800
-Message-ID: <CAA9_cmd6FVVjm-wMAGRrUH-i-dC3ZtiYLsO5K-0F4dm=064JHA@mail.gmail.com>
-References: <20120121014910.24930.54011.stgit@localhost6.localdomain6>
-	<491F29790D474988ACF0C10BF277BC3B@usish.com.cn>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: linux-next: build failure after merge of the nfs tree
+Date: Tue, 24 Jan 2012 08:10:19 +1100
+Message-ID: <20120124081019.7c20935475f97925306de7e7@canb.auug.org.au>
+References: <20120123113949.b8d1940bb60128c5c4efeece@canb.auug.org.au>
+	<1327342389.2628.6.camel@lade.trondhjem.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <491F29790D474988ACF0C10BF277BC3B@usish.com.cn>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Tue__24_Jan_2012_08_10_19_+1100_+zQzepLY7AkmF.i5"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1327342389.2628.6.camel@lade.trondhjem.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Trond Myklebust <Trond.Myklebust@netapp.com>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jan 20, 2012 at 10:12 PM, Jack Wang <jack_wang@usish.com> wrote=
-:
->> Changes since v5: http://marc.info/?l=3Dlinux-scsi&m=3D1326564758296=
-37&w=3D2
->>
->> 1/ Reworked "libsas: let libata recover links that fail to transmit
-> initial
->> =A0 =A0sig-fis" to better handle problematic expanders and slow to a=
-ttach ata
->> =A0 =A0devices. =A0libsas will now validate linkrate and take 'devic=
-e-type' into
->> =A0 =A0account when determining if a new device is attached.
->>
->> 2/ Added support for asynchronously scanning ata devices.
->>
->> 3/ Reworked "libsas: fix sas_unregister_ports vs sas_drain_work" as
-> lockdep
->> =A0 =A0complained about the original.
->>
->> 4/ New patch "libsas: fix sas port naming" makes direct-attached dev=
-ice
-> naming
->> =A0 =A0more predictable and consistent with expander attached device=
- naming.
->>
->> 5/ Made scan order more predictable by ensuring that regardless of d=
-evice
-> type
->> =A0 =A0we always attach in discovery order. =A0Slow to link devices =
-will still
-> be
->> =A0 =A0scanned out of order, link needs to be in at least the 'stp p=
-ending'
-> state
->> =A0 =A0before the device will be considered attached.
->>
-> [Jack Wang]
-> Asynchronously scan really make the discovery far more quickly, with =
-v4
-> reset expander will need more than 3 minites to get discovered, with =
-this v6
-> patchset it takes less than 5 seconds.
+--Signature=_Tue__24_Jan_2012_08_10_19_+1100_+zQzepLY7AkmF.i5
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Great!
+Hi Trond,
 
-> Dear Dan,
+On Mon, 23 Jan 2012 13:13:09 -0500 Trond Myklebust <Trond.Myklebust@netapp.=
+com> wrote:
 >
-> Could you share how you test procedure to find out these bugs?
->
+> Yep. I believe that is identical to the patch Bryan sent to James
+> Bottomley a few days ago. Could you please carry the above in your tree
+> until the iscsi folks get around to fixing this?
 
-These fixes have primarily been driven by libsas ata error handling as
-robust as libata, and teaching libsas that ata links need more care
-and handling than it was giving before.
+Yeah, no problem.
 
-In the case of async probing, this is something that libata has had
-since 2.6.29, but was never added to libsas.
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
 
---
-Dan
+--Signature=_Tue__24_Jan_2012_08_10_19_+1100_+zQzepLY7AkmF.i5
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBCAAGBQJPHcy7AAoJEECxmPOUX5FENrYP+gNYvpU/E7nPm0eMbydEeAVp
+nkm3b/MkvkdOr26mj5yAfe6DFwERuIJX5o6N9CDCDO7C6BjAHFd79G/GX7/O7YR4
+4VYYwJuaRZMNxT0VfNhxlhM4MEE+afksy5V1dZM+iUuH1Ir921T6SuKh1sCD3QH+
+wrtjLaFaSaqIjmJvr9ecEg2kijUMjQ18gkv3gkpLpA0msvYz/8tc9ooVy0gF9XlA
+yUaHMdZ79nqwbAkch6FN8x5xA/GEqtjlCX0fNAiHwF2akJhsK0XIFASSOrLW4IGk
+zjs5QvEf9I+LTK/fkve7hIuGCb6vsjuSvPijSbVlRmvILpl1ef5EpAbh/uh0hwtz
+0H2jrd6jLL+ojjK4e8bY++V4pQDLcKPRuudGeXdOj6tRyhjctU3oMnac+zw/y3k+
+Q4wbNIDv9iLcQMOUwJZHxsNJGS0B8HigfQ5TbzXaNAbXmQvfaUC9fsaRtnUt0HbS
+ApzCMCVFGLjD0vKJcl15ynDGqGmOVgBjmUozyHiNTQWLCCzKALjOnj6oH1mEce+y
+kdJDV+aKOiJxK6KdoX3HJ0Y/dkVC7OtX64ZpGbvkzwpVq+QT2X8ug7frGBY9QnrA
+YZQIbtPDo3p6a7+n6Cc5R7zkhejZGYQAsq/uTq2F4wE4dfzM+MCAw4FKSjKdCJpJ
+IZ+umTulAxHKTBjA8SDK
+=nPRI
+-----END PGP SIGNATURE-----
+
+--Signature=_Tue__24_Jan_2012_08_10_19_+1100_+zQzepLY7AkmF.i5--
