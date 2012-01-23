@@ -1,7 +1,7 @@
 From: Neerav Parikh <neerav.parikh@intel.com>
-Subject: [PATCH 3/6] libfc: Make the libfc Common Transport(CT) code generic
-Date: Sun, 22 Jan 2012 17:30:00 -0800
-Message-ID: <20120123013000.923.44976.stgit@localhost6.localdomain6>
+Subject: [PATCH 4/6] libfc: Add support for FDMI
+Date: Sun, 22 Jan 2012 17:30:05 -0800
+Message-ID: <20120123013005.923.66153.stgit@localhost6.localdomain6>
 References: <20120123012944.923.63220.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,150 +9,581 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga01.intel.com ([192.55.52.88]:14382 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752528Ab2AWBlN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Jan 2012 20:41:13 -0500
+	id S1752528Ab2AWBlS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Jan 2012 20:41:18 -0500
 In-Reply-To: <20120123012944.923.63220.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: JBottomley@parallels.com, james.smart@emulex.com, devel@open-fcoe.org
 
-Currently the libfc Common Transport(CT) calls assume that
-the CT requests are Name Server specific only. This patch
-makes it more flexible to allow more FC-GS services to make
-use of these routines.
+This patch adds support for Fabric Device Management
+Interface as per FC-GS-4 spec. in libfc. Any driver
+making use of libfc can enable fdmi state machine
+for a given lport.
+
+If lport has enabled FDMI support the lport state
+machine will transition into FDMI after completing
+the DNS states and before entering the SCR state.
+The FDMI state transition is such that if there is an
+error, it won't stop the lport state machine from
+transitioning and the it will behave as if there was
+no FDMI support.
+
+The FDMI HBA attributes are registed with the Management
+server via Register HBA (RHBA) command and the port
+attributes are reigstered using the Register Port(RPA)
+command.
 
 Signed-off-by: Neerav Parikh <neerav.parikh@intel.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 Acked-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_elsct.c |    3 +-
- include/scsi/fc_encode.h      |   60 +++++++++++++++++++++++++++++++++--------
- 2 files changed, 49 insertions(+), 14 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |  227 ++++++++++++++++++++++++++++++-
+ include/scsi/fc/fc_ms.h       |  213 +++++++++++++++++++++++++++++
+ include/scsi/fc_encode.h      |  303 +++++++++++++++++++++++++++++++++++++++++
+ include/scsi/libfc.h          |   11 +
+ 4 files changed, 751 insertions(+), 3 deletions(-)
+ create mode 100644 include/scsi/fc/fc_ms.h
 
-diff --git a/drivers/scsi/libfc/fc_elsct.c b/drivers/scsi/libfc/fc_elsct.c
-index e17a28d..c2384d5 100644
---- a/drivers/scsi/libfc/fc_elsct.c
-+++ b/drivers/scsi/libfc/fc_elsct.c
-@@ -56,8 +56,7 @@ struct fc_seq *fc_elsct_send(struct fc_lport *lport, u32 did,
- 		rc = fc_els_fill(lport, did, fp, op, &r_ctl, &fh_type);
- 	else {
- 		/* CT requests */
--		rc = fc_ct_fill(lport, did, fp, op, &r_ctl, &fh_type);
--		did = FC_FID_DIR_SERV;
-+		rc = fc_ct_fill(lport, did, fp, op, &r_ctl, &fh_type, &did);
- 	}
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 83750eb..9a0b2a9 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -116,6 +116,8 @@ static void fc_lport_enter_ns(struct fc_lport *, enum fc_lport_state);
+ static void fc_lport_enter_scr(struct fc_lport *);
+ static void fc_lport_enter_ready(struct fc_lport *);
+ static void fc_lport_enter_logo(struct fc_lport *);
++static void fc_lport_enter_fdmi(struct fc_lport *lport);
++static void fc_lport_enter_ms(struct fc_lport *, enum fc_lport_state);
  
- 	if (rc) {
+ static const char *fc_lport_state_names[] = {
+ 	[LPORT_ST_DISABLED] = "disabled",
+@@ -126,6 +128,11 @@ static const char *fc_lport_state_names[] = {
+ 	[LPORT_ST_RSPN_ID] =  "RSPN_ID",
+ 	[LPORT_ST_RFT_ID] =   "RFT_ID",
+ 	[LPORT_ST_RFF_ID] =   "RFF_ID",
++	[LPORT_ST_FDMI] =     "FDMI",
++	[LPORT_ST_RHBA] =     "RHBA",
++	[LPORT_ST_RPA] =      "RPA",
++	[LPORT_ST_DHBA] =     "DHBA",
++	[LPORT_ST_DPRT] =     "DPRT",
+ 	[LPORT_ST_SCR] =      "SCR",
+ 	[LPORT_ST_READY] =    "Ready",
+ 	[LPORT_ST_LOGO] =     "LOGO",
+@@ -183,11 +190,14 @@ static void fc_lport_rport_callback(struct fc_lport *lport,
+ 		if (lport->state == LPORT_ST_DNS) {
+ 			lport->dns_rdata = rdata;
+ 			fc_lport_enter_ns(lport, LPORT_ST_RNN_ID);
++		} else if (lport->state == LPORT_ST_FDMI) {
++			lport->ms_rdata = rdata;
++			fc_lport_enter_ms(lport, LPORT_ST_DHBA);
+ 		} else {
+ 			FC_LPORT_DBG(lport, "Received an READY event "
+ 				     "on port (%6.6x) for the directory "
+ 				     "server, but the lport is not "
+-				     "in the DNS state, it's in the "
++				     "in the DNS or FDMI state, it's in the "
+ 				     "%d state", rdata->ids.port_id,
+ 				     lport->state);
+ 			lport->tt.rport_logoff(rdata);
+@@ -196,7 +206,10 @@ static void fc_lport_rport_callback(struct fc_lport *lport,
+ 	case RPORT_EV_LOGO:
+ 	case RPORT_EV_FAILED:
+ 	case RPORT_EV_STOP:
+-		lport->dns_rdata = NULL;
++		if (rdata->ids.port_id == FC_FID_DIR_SERV)
++			lport->dns_rdata = NULL;
++		else if (rdata->ids.port_id == FC_FID_MGMT_SERV)
++			lport->ms_rdata = NULL;
+ 		break;
+ 	case RPORT_EV_NONE:
+ 		break;
+@@ -1148,7 +1161,10 @@ static void fc_lport_ns_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			fc_lport_enter_ns(lport, LPORT_ST_RFF_ID);
+ 			break;
+ 		case LPORT_ST_RFF_ID:
+-			fc_lport_enter_scr(lport);
++			if (lport->fdmi_enabled)
++				fc_lport_enter_fdmi(lport);
++			else
++				fc_lport_enter_scr(lport);
+ 			break;
+ 		default:
+ 			/* should have already been caught by state checks */
+@@ -1163,6 +1179,85 @@ err:
+ }
+ 
+ /**
++ * fc_lport_ms_resp() - Handle response to a management server
++ *			exchange
++ * @sp:	    current sequence in exchange
++ * @fp:	    response frame
++ * @lp_arg: Fibre Channel host port instance
++ *
++ * Locking Note: This function will be called without the lport lock
++ * held, but it will lock, call an _enter_* function or fc_lport_error()
++ * and then unlock the lport.
++ */
++static void fc_lport_ms_resp(struct fc_seq *sp, struct fc_frame *fp,
++			     void *lp_arg)
++{
++	struct fc_lport *lport = lp_arg;
++	struct fc_frame_header *fh;
++	struct fc_ct_hdr *ct;
++
++	FC_LPORT_DBG(lport, "Received a ms %s\n", fc_els_resp_type(fp));
++
++	if (fp == ERR_PTR(-FC_EX_CLOSED))
++		return;
++
++	mutex_lock(&lport->lp_mutex);
++
++	if (lport->state < LPORT_ST_RHBA || lport->state > LPORT_ST_DPRT) {
++		FC_LPORT_DBG(lport, "Received a management server response, "
++			     "but in state %s\n", fc_lport_state(lport));
++		if (IS_ERR(fp))
++			goto err;
++		goto out;
++	}
++
++	if (IS_ERR(fp)) {
++		fc_lport_error(lport, fp);
++		goto err;
++	}
++
++	fh = fc_frame_header_get(fp);
++	ct = fc_frame_payload_get(fp, sizeof(*ct));
++
++	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
++	    ct->ct_fs_type == FC_FST_MGMT &&
++	    ct->ct_fs_subtype == FC_FDMI_SUBTYPE) {
++		FC_LPORT_DBG(lport, "Received a management server response, "
++				    "reason=%d explain=%d\n",
++				    ct->ct_reason,
++				    ct->ct_explan);
++
++		switch (lport->state) {
++		case LPORT_ST_RHBA:
++			if (ntohs(ct->ct_cmd) == FC_FS_ACC)
++				fc_lport_enter_ms(lport, LPORT_ST_RPA);
++			else /* Error Skip RPA */
++				fc_lport_enter_scr(lport);
++			break;
++		case LPORT_ST_RPA:
++			fc_lport_enter_scr(lport);
++			break;
++		case LPORT_ST_DPRT:
++			fc_lport_enter_ms(lport, LPORT_ST_RHBA);
++			break;
++		case LPORT_ST_DHBA:
++			fc_lport_enter_ms(lport, LPORT_ST_DPRT);
++			break;
++		default:
++			/* should have already been caught by state checks */
++			break;
++		}
++	} else {
++		/* Invalid Frame? */
++		fc_lport_error(lport, fp);
++	}
++out:
++	fc_frame_free(fp);
++err:
++	mutex_unlock(&lport->lp_mutex);
++}
++
++/**
+  * fc_lport_scr_resp() - Handle response to State Change Register (SCR) request
+  * @sp:	    current sequence in SCR exchange
+  * @fp:	    response frame
+@@ -1339,6 +1434,123 @@ err:
+ }
+ 
+ /**
++ * fc_lport_enter_ms() - management server commands
++ * @lport: Fibre Channel local port to register
++ *
++ * Locking Note: The lport lock is expected to be held before calling
++ * this routine.
++ */
++static void fc_lport_enter_ms(struct fc_lport *lport, enum fc_lport_state state)
++{
++	struct fc_frame *fp;
++	enum fc_fdmi_req cmd;
++	int size = sizeof(struct fc_ct_hdr);
++	size_t len;
++	int numattrs;
++
++	FC_LPORT_DBG(lport, "Entered %s state from %s state\n",
++		     fc_lport_state_names[state],
++		     fc_lport_state(lport));
++
++	fc_lport_state_enter(lport, state);
++
++	switch (state) {
++	case LPORT_ST_RHBA:
++		cmd = FC_FDMI_RHBA;
++		/* Number of HBA Attributes */
++		numattrs = 10;
++		len = sizeof(struct fc_fdmi_rhba);
++		len -= sizeof(struct fc_fdmi_attr_entry);
++		len += (numattrs * FC_FDMI_ATTR_ENTRY_HEADER_LEN);
++		len += FC_FDMI_HBA_ATTR_NODENAME_LEN;
++		len += FC_FDMI_HBA_ATTR_MANUFACTURER_LEN;
++		len += FC_FDMI_HBA_ATTR_SERIALNUMBER_LEN;
++		len += FC_FDMI_HBA_ATTR_MODEL_LEN;
++		len += FC_FDMI_HBA_ATTR_MODELDESCR_LEN;
++		len += FC_FDMI_HBA_ATTR_HARDWAREVERSION_LEN;
++		len += FC_FDMI_HBA_ATTR_DRIVERVERSION_LEN;
++		len += FC_FDMI_HBA_ATTR_OPTIONROMVERSION_LEN;
++		len += FC_FDMI_HBA_ATTR_FIRMWAREVERSION_LEN;
++		len += FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN;
++
++		size += len;
++		break;
++	case LPORT_ST_RPA:
++		cmd = FC_FDMI_RPA;
++		/* Number of Port Attributes */
++		numattrs = 6;
++		len = sizeof(struct fc_fdmi_rpa);
++		len -= sizeof(struct fc_fdmi_attr_entry);
++		len += (numattrs * FC_FDMI_ATTR_ENTRY_HEADER_LEN);
++		len += FC_FDMI_PORT_ATTR_FC4TYPES_LEN;
++		len += FC_FDMI_PORT_ATTR_SUPPORTEDSPEED_LEN;
++		len += FC_FDMI_PORT_ATTR_CURRENTPORTSPEED_LEN;
++		len += FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN;
++		len += FC_FDMI_PORT_ATTR_OSDEVICENAME_LEN;
++		len += FC_FDMI_PORT_ATTR_HOSTNAME_LEN;
++
++		size += len;
++		break;
++	case LPORT_ST_DPRT:
++		cmd = FC_FDMI_DPRT;
++		len = sizeof(struct fc_fdmi_dprt);
++		size += len;
++		break;
++	case LPORT_ST_DHBA:
++		cmd = FC_FDMI_DHBA;
++		len = sizeof(struct fc_fdmi_dhba);
++		size += len;
++		break;
++	default:
++		fc_lport_error(lport, NULL);
++		return;
++	}
++
++	FC_LPORT_DBG(lport, "Cmd=0x%x Len %d size %d\n",
++			     cmd, (int)len, size);
++	fp = fc_frame_alloc(lport, size);
++	if (!fp) {
++		fc_lport_error(lport, fp);
++		return;
++	}
++
++	if (!lport->tt.elsct_send(lport, FC_FID_MGMT_SERV, fp, cmd,
++				  fc_lport_ms_resp,
++				  lport, 3 * lport->r_a_tov))
++		fc_lport_error(lport, fp);
++}
++
++/**
++ * fc_rport_enter_fdmi() - Create a fc_rport for the management server
++ * @lport: The local port requesting a remote port for the management server
++ *
++ * Locking Note: The lport lock is expected to be held before calling
++ * this routine.
++ */
++static void fc_lport_enter_fdmi(struct fc_lport *lport)
++{
++	struct fc_rport_priv *rdata;
++
++	FC_LPORT_DBG(lport, "Entered FDMI state from %s state\n",
++		     fc_lport_state(lport));
++
++	fc_lport_state_enter(lport, LPORT_ST_FDMI);
++
++	mutex_lock(&lport->disc.disc_mutex);
++	rdata = lport->tt.rport_create(lport, FC_FID_MGMT_SERV);
++	mutex_unlock(&lport->disc.disc_mutex);
++	if (!rdata)
++		goto err;
++
++	rdata->ops = &fc_lport_rport_ops;
++	lport->tt.rport_login(rdata);
++	return;
++
++err:
++	fc_lport_error(lport, NULL);
++}
++
++/**
+  * fc_lport_timeout() - Handler for the retry_work timer
+  * @work: The work struct of the local port
+  */
+@@ -1371,6 +1583,15 @@ static void fc_lport_timeout(struct work_struct *work)
+ 	case LPORT_ST_RFF_ID:
+ 		fc_lport_enter_ns(lport, lport->state);
+ 		break;
++	case LPORT_ST_FDMI:
++		fc_lport_enter_fdmi(lport);
++		break;
++	case LPORT_ST_RHBA:
++	case LPORT_ST_RPA:
++	case LPORT_ST_DHBA:
++	case LPORT_ST_DPRT:
++		fc_lport_enter_ms(lport, lport->state);
++		break;
+ 	case LPORT_ST_SCR:
+ 		fc_lport_enter_scr(lport);
+ 		break;
+diff --git a/include/scsi/fc/fc_ms.h b/include/scsi/fc/fc_ms.h
+new file mode 100644
+index 0000000..f52b921
+--- /dev/null
++++ b/include/scsi/fc/fc_ms.h
+@@ -0,0 +1,213 @@
++/* * Copyright(c) 2011 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Maintained at www.Open-FCoE.org
++ */
++
++#ifndef _FC_MS_H_
++#define	_FC_MS_H_
++
++#include <linux/types.h>
++
++/*
++ * Fibre Channel Services - Management Service (MS)
++ * From T11.org FC-GS-4 Rev 7.91 February 4, 2004
++ */
++
++/*
++ * Fabric Device Management Interface
++ */
++
++/*
++ * Common-transport sub-type for FDMI
++ */
++#define	FC_FDMI_SUBTYPE	    0x10 /* fs_ct_hdr.ct_fs_subtype */
++
++/*
++ * Management server FDMI Requests.
++ */
++enum fc_fdmi_req {
++	FC_FDMI_GRHL = 0x0100,	/* Get Registered HBA List */
++	FC_FDMI_GHAT = 0x0101,	/* Get HBA Attributes */
++	FC_FDMI_GRPL = 0x0102,	/* Get Registered Port List */
++	FC_FDMI_GPAT = 0x0110,	/* Get Port Attributes */
++	FC_FDMI_RHBA = 0x0200,	/* Register HBA */
++	FC_FDMI_RHAT = 0x0201,	/* Register HBA Attributes */
++	FC_FDMI_RPRT = 0x0210,	/* Register Port */
++	FC_FDMI_RPA = 0x0211,	/* Register Port Attributes */
++	FC_FDMI_DHBA = 0x0300,	/* Deregister HBA */
++	FC_FDMI_DHAT = 0x0301,	/* Deregister HBA Attributes */
++	FC_FDMI_DPRT = 0x0310,	/* Deregister Port */
++	FC_FDMI_DPA = 0x0311,	/* Deregister Port Attributes */
++};
++
++/*
++ * HBA Attribute Entry Type
++ */
++enum fc_fdmi_hba_attr_type {
++	FC_FDMI_HBA_ATTR_NODENAME = 0x0001,
++	FC_FDMI_HBA_ATTR_MANUFACTURER = 0x0002,
++	FC_FDMI_HBA_ATTR_SERIALNUMBER = 0x0003,
++	FC_FDMI_HBA_ATTR_MODEL = 0x0004,
++	FC_FDMI_HBA_ATTR_MODELDESCRIPTION = 0x0005,
++	FC_FDMI_HBA_ATTR_HARDWAREVERSION = 0x0006,
++	FC_FDMI_HBA_ATTR_DRIVERVERSION = 0x0007,
++	FC_FDMI_HBA_ATTR_OPTIONROMVERSION = 0x0008,
++	FC_FDMI_HBA_ATTR_FIRMWAREVERSION = 0x0009,
++	FC_FDMI_HBA_ATTR_OSNAMEVERSION = 0x000A,
++	FC_FDMI_HBA_ATTR_MAXCTPAYLOAD = 0x000B,
++};
++
++/*
++ * HBA Attribute Length
++ */
++#define FC_FDMI_HBA_ATTR_NODENAME_LEN		8
++#define FC_FDMI_HBA_ATTR_MANUFACTURER_LEN	64
++#define FC_FDMI_HBA_ATTR_SERIALNUMBER_LEN	64
++#define FC_FDMI_HBA_ATTR_MODEL_LEN		256
++#define FC_FDMI_HBA_ATTR_MODELDESCR_LEN		256
++#define FC_FDMI_HBA_ATTR_HARDWAREVERSION_LEN	256
++#define FC_FDMI_HBA_ATTR_DRIVERVERSION_LEN	256
++#define FC_FDMI_HBA_ATTR_OPTIONROMVERSION_LEN	256
++#define FC_FDMI_HBA_ATTR_FIRMWAREVERSION_LEN	256
++#define FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN	256
++#define FC_FDMI_HBA_ATTR_MAXCTPAYLOAD_LEN	4
++
++/*
++ * Port Attribute Type
++ */
++enum fc_fdmi_port_attr_type {
++	FC_FDMI_PORT_ATTR_FC4TYPES = 0x0001,
++	FC_FDMI_PORT_ATTR_SUPPORTEDSPEED = 0x0002,
++	FC_FDMI_PORT_ATTR_CURRENTPORTSPEED = 0x0003,
++	FC_FDMI_PORT_ATTR_MAXFRAMESIZE = 0x0004,
++	FC_FDMI_PORT_ATTR_OSDEVICENAME = 0x0005,
++	FC_FDMI_PORT_ATTR_HOSTNAME = 0x0006,
++};
++
++/*
++ * Port Attribute Length
++ */
++#define FC_FDMI_PORT_ATTR_FC4TYPES_LEN		32
++#define FC_FDMI_PORT_ATTR_SUPPORTEDSPEED_LEN	4
++#define FC_FDMI_PORT_ATTR_CURRENTPORTSPEED_LEN	4
++#define FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN	4
++#define FC_FDMI_PORT_ATTR_OSDEVICENAME_LEN	256
++#define FC_FDMI_PORT_ATTR_HOSTNAME_LEN		256
++
++/*
++ * HBA Attribute ID
++ */
++struct fc_fdmi_hba_identifier {
++	__be64		id;
++};
++
++/*
++ * Port Name
++ */
++struct fc_fdmi_port_name {
++	__be64		portname;
++};
++
++/*
++ * Attribute Entry Block for HBA/Port Attributes
++ */
++#define FC_FDMI_ATTR_ENTRY_HEADER_LEN	4
++struct fc_fdmi_attr_entry {
++	__be16		type;
++	__be16		len;
++	__u8		value[1];
++} __attribute__((__packed__));
++
++/*
++ * Common for HBA/Port Attributes
++ */
++struct fs_fdmi_attrs {
++	__be32				numattrs;
++	struct fc_fdmi_attr_entry	attr[1];
++} __attribute__((__packed__));
++
++/*
++ * Registered Port List
++ */
++struct fc_fdmi_rpl {
++	__be32				numport;
++	struct fc_fdmi_port_name	port[1];
++} __attribute__((__packed__));
++
++/*
++ * Register HBA (RHBA)
++ */
++struct fc_fdmi_rhba {
++	struct fc_fdmi_hba_identifier hbaid;
++	struct fc_fdmi_rpl		 port;
++	struct fs_fdmi_attrs		 hba_attrs;
++} __attribute__((__packed__));
++
++/*
++ * Register HBA Attributes (RHAT)
++ */
++struct fc_fdmi_rhat {
++	struct fc_fdmi_hba_identifier hbaid;
++	struct fs_fdmi_attrs		 hba_attrs;
++} __attribute__((__packed__));
++
++/*
++ * Register Port (RPRT)
++ */
++struct fc_fdmi_rprt {
++	struct fc_fdmi_hba_identifier hbaid;
++	struct fc_fdmi_port_name	 port;
++	struct fs_fdmi_attrs		 hba_attrs;
++} __attribute__((__packed__));
++
++/*
++ * Register Port Attributes (RPA)
++ */
++struct fc_fdmi_rpa {
++	struct fc_fdmi_port_name	 port;
++	struct fs_fdmi_attrs		 hba_attrs;
++} __attribute__((__packed__));
++
++/*
++ * Deregister Port (DPRT)
++ */
++struct fc_fdmi_dprt {
++	struct fc_fdmi_port_name	 port;
++} __attribute__((__packed__));
++
++/*
++ * Deregister Port Attributes (DPA)
++ */
++struct fc_fdmi_dpa {
++	struct fc_fdmi_port_name	 port;
++	struct fs_fdmi_attrs		 hba_attrs;
++} __attribute__((__packed__));
++
++/*
++ * Deregister HBA Attributes (DHAT)
++ */
++struct fc_fdmi_dhat {
++	struct fc_fdmi_hba_identifier hbaid;
++} __attribute__((__packed__));
++
++/*
++ * Deregister HBA (DHBA)
++ */
++struct fc_fdmi_dhba {
++	struct fc_fdmi_hba_identifier hbaid;
++} __attribute__((__packed__));
++
++#endif /* _FC_MS_H_ */
 diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
-index be418d8..73bc433 100644
+index 73bc433..35fd474 100644
 --- a/include/scsi/fc_encode.h
 +++ b/include/scsi/fc_encode.h
-@@ -97,7 +97,9 @@ static inline void fc_adisc_fill(struct fc_lport *lport, struct fc_frame *fp)
-  * returns pointer to ct request.
-  */
- static inline struct fc_ct_req *fc_ct_hdr_fill(const struct fc_frame *fp,
--					       unsigned int op, size_t req_size)
-+					       unsigned int op, size_t req_size,
-+					       enum fc_ct_fs_type fs_type,
-+					       u8 subtype)
- {
- 	struct fc_ct_req *ct;
- 	size_t ct_plen;
-@@ -106,14 +108,14 @@ static inline struct fc_ct_req *fc_ct_hdr_fill(const struct fc_frame *fp,
- 	ct = fc_frame_payload_get(fp, ct_plen);
- 	memset(ct, 0, ct_plen);
- 	ct->hdr.ct_rev = FC_CT_REV;
--	ct->hdr.ct_fs_type = FC_FST_DIR;
--	ct->hdr.ct_fs_subtype = FC_NS_SUBTYPE;
-+	ct->hdr.ct_fs_type = fs_type;
-+	ct->hdr.ct_fs_subtype = subtype;
- 	ct->hdr.ct_cmd = htons((u16) op);
- 	return ct;
+@@ -20,6 +20,7 @@
+ #ifndef _FC_ENCODE_H_
+ #define _FC_ENCODE_H_
+ #include <asm/unaligned.h>
++#include <linux/utsname.h>
+ 
+ /*
+  * F_CTL values for simple requests and responses.
+@@ -43,6 +44,10 @@ struct fc_ct_req {
+ 		struct fc_ns_fid fid;
+ 		struct fc_ns_rsnn snn;
+ 		struct fc_ns_rspn spn;
++		struct fc_fdmi_rhba rhba;
++		struct fc_fdmi_rpa  rpa;
++		struct fc_fdmi_dprt dprt;
++		struct fc_fdmi_dhba dhba;
+ 	} payload;
+ };
+ 
+@@ -199,6 +204,300 @@ static inline int fc_ct_ns_fill(struct fc_lport *lport,
  }
  
  /**
-- * fc_ct_fill() - Fill in a name service request frame
-+ * fc_ct_ns_fill() - Fill in a name service request frame
-  * @lport: local port.
-  * @fc_id: FC_ID of non-destination rport for GPN_ID and similar inquiries.
-  * @fp: frame to contain payload.
-@@ -121,7 +123,7 @@ static inline struct fc_ct_req *fc_ct_hdr_fill(const struct fc_frame *fp,
-  * @r_ctl: pointer to FC header R_CTL.
-  * @fh_type: pointer to FC-4 type.
-  */
--static inline int fc_ct_fill(struct fc_lport *lport,
-+static inline int fc_ct_ns_fill(struct fc_lport *lport,
- 		      u32 fc_id, struct fc_frame *fp,
- 		      unsigned int op, enum fc_rctl *r_ctl,
- 		      enum fc_fh_type *fh_type)
-@@ -131,23 +133,28 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- 
- 	switch (op) {
- 	case FC_NS_GPN_FT:
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_gid_ft));
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_gid_ft),
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		ct->payload.gid.fn_fc4_type = FC_TYPE_FCP;
- 		break;
- 
- 	case FC_NS_GPN_ID:
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_fid));
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_fid),
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
-+		ct->payload.gid.fn_fc4_type = FC_TYPE_FCP;
- 		hton24(ct->payload.fid.fp_fid, fc_id);
- 		break;
- 
- 	case FC_NS_RFT_ID:
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rft));
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rft),
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		hton24(ct->payload.rft.fid.fp_fid, lport->port_id);
- 		ct->payload.rft.fts = lport->fcts;
- 		break;
- 
- 	case FC_NS_RFF_ID:
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rff_id));
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rff_id),
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		hton24(ct->payload.rff.fr_fid.fp_fid, lport->port_id);
- 		ct->payload.rff.fr_type = FC_TYPE_FCP;
- 		if (lport->service_params & FCP_SPPF_INIT_FCN)
-@@ -157,14 +164,16 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- 		break;
- 
- 	case FC_NS_RNN_ID:
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rn_id));
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rn_id),
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		hton24(ct->payload.rn.fr_fid.fp_fid, lport->port_id);
- 		put_unaligned_be64(lport->wwnn, &ct->payload.rn.fr_wwn);
- 		break;
- 
- 	case FC_NS_RSPN_ID:
- 		len = strnlen(fc_host_symbolic_name(lport->host), 255);
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rspn) + len);
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rspn) + len,
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		hton24(ct->payload.spn.fr_fid.fp_fid, lport->port_id);
- 		strncpy(ct->payload.spn.fr_name,
- 			fc_host_symbolic_name(lport->host), len);
-@@ -173,7 +182,8 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- 
- 	case FC_NS_RSNN_NN:
- 		len = strnlen(fc_host_symbolic_name(lport->host), 255);
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rsnn) + len);
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rsnn) + len,
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		put_unaligned_be64(lport->wwnn, &ct->payload.snn.fr_wwn);
- 		strncpy(ct->payload.snn.fr_name,
- 			fc_host_symbolic_name(lport->host), len);
-@@ -189,6 +199,32 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- }
- 
- /**
-+ * fc_ct_fill() - Fill in a common transport service request frame
++ * fc_ct_ms_fill() - Fill in a mgmt service request frame
 + * @lport: local port.
 + * @fc_id: FC_ID of non-destination rport for GPN_ID and similar inquiries.
 + * @fp: frame to contain payload.
@@ -160,25 +591,361 @@ index be418d8..73bc433 100644
 + * @r_ctl: pointer to FC header R_CTL.
 + * @fh_type: pointer to FC-4 type.
 + */
-+static inline int fc_ct_fill(struct fc_lport *lport,
++static inline int fc_ct_ms_fill(struct fc_lport *lport,
 +		      u32 fc_id, struct fc_frame *fp,
 +		      unsigned int op, enum fc_rctl *r_ctl,
-+		      enum fc_fh_type *fh_type, u32 *did)
++		      enum fc_fh_type *fh_type)
 +{
-+	int rc = -EINVAL;
++	struct fc_ct_req *ct;
++	size_t len;
++	struct fc_fdmi_attr_entry *entry;
++	struct fs_fdmi_attrs *hba_attrs;
++	int numattrs = 0;
 +
-+	switch (fc_id) {
-+	case FC_FID_DIR_SERV:
-+	default:
-+		rc = fc_ct_ns_fill(lport, fc_id, fp, op, r_ctl, fh_type);
-+		*did = FC_FID_DIR_SERV;
++	switch (op) {
++	case FC_FDMI_RHBA:
++		numattrs = 10;
++		len = sizeof(struct fc_fdmi_rhba);
++		len -= sizeof(struct fc_fdmi_attr_entry);
++		len += (numattrs * FC_FDMI_ATTR_ENTRY_HEADER_LEN);
++		len += FC_FDMI_HBA_ATTR_NODENAME_LEN;
++		len += FC_FDMI_HBA_ATTR_MANUFACTURER_LEN;
++		len += FC_FDMI_HBA_ATTR_SERIALNUMBER_LEN;
++		len += FC_FDMI_HBA_ATTR_MODEL_LEN;
++		len += FC_FDMI_HBA_ATTR_MODELDESCR_LEN;
++		len += FC_FDMI_HBA_ATTR_HARDWAREVERSION_LEN;
++		len += FC_FDMI_HBA_ATTR_DRIVERVERSION_LEN;
++		len += FC_FDMI_HBA_ATTR_OPTIONROMVERSION_LEN;
++		len += FC_FDMI_HBA_ATTR_FIRMWAREVERSION_LEN;
++		len += FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN;
++		ct = fc_ct_hdr_fill(fp, op, len, FC_FST_MGMT,
++				    FC_FDMI_SUBTYPE);
++
++		/* HBA Identifier */
++		put_unaligned_be64(lport->wwpn, &ct->payload.rhba.hbaid.id);
++		/* Number of Ports - always 1 */
++		put_unaligned_be32(1, &ct->payload.rhba.port.numport);
++		/* Port Name */
++		put_unaligned_be64(lport->wwpn,
++				   &ct->payload.rhba.port.port[0].portname);
++
++		/* HBA Attributes */
++		put_unaligned_be32(numattrs,
++				   &ct->payload.rhba.hba_attrs.numattrs);
++		hba_attrs = &ct->payload.rhba.hba_attrs;
++		entry = (struct fc_fdmi_attr_entry *)hba_attrs->attr;
++		/* NodeName*/
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_HBA_ATTR_NODENAME_LEN;
++		put_unaligned_be16(FC_FDMI_HBA_ATTR_NODENAME,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		put_unaligned_be64(lport->wwnn,
++				   (__be64 *)&entry->value[0]);
++
++		/* Manufacturer */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_HBA_ATTR_NODENAME_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_HBA_ATTR_MANUFACTURER_LEN;
++		put_unaligned_be16(FC_FDMI_HBA_ATTR_MANUFACTURER,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		strncpy((char *)&entry->value,
++			fc_host_manufacturer(lport->host),
++			FC_FDMI_HBA_ATTR_MANUFACTURER_LEN);
++
++		/* SerialNumber */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_HBA_ATTR_MANUFACTURER_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_HBA_ATTR_SERIALNUMBER_LEN;
++		put_unaligned_be16(FC_FDMI_HBA_ATTR_SERIALNUMBER,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		strncpy((char *)&entry->value,
++			fc_host_serial_number(lport->host),
++			FC_FDMI_HBA_ATTR_SERIALNUMBER_LEN);
++
++		/* Model */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_HBA_ATTR_SERIALNUMBER_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_HBA_ATTR_MODEL_LEN;
++		put_unaligned_be16(FC_FDMI_HBA_ATTR_MODEL,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		strncpy((char *)&entry->value,
++			fc_host_model(lport->host),
++			FC_FDMI_HBA_ATTR_MODEL_LEN);
++
++		/* Model Description */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_HBA_ATTR_MODEL_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_HBA_ATTR_MODELDESCR_LEN;
++		put_unaligned_be16(FC_FDMI_HBA_ATTR_MODELDESCRIPTION,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		strncpy((char *)&entry->value,
++			fc_host_model_description(lport->host),
++			FC_FDMI_HBA_ATTR_MODELDESCR_LEN);
++
++		/* Hardware Version */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_HBA_ATTR_MODELDESCR_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_HBA_ATTR_HARDWAREVERSION_LEN;
++		put_unaligned_be16(FC_FDMI_HBA_ATTR_HARDWAREVERSION,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		strncpy((char *)&entry->value,
++			fc_host_hardware_version(lport->host),
++			FC_FDMI_HBA_ATTR_HARDWAREVERSION_LEN);
++
++		/* Driver Version */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_HBA_ATTR_HARDWAREVERSION_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_HBA_ATTR_DRIVERVERSION_LEN;
++		put_unaligned_be16(FC_FDMI_HBA_ATTR_DRIVERVERSION,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		strncpy((char *)&entry->value,
++			fc_host_driver_version(lport->host),
++			FC_FDMI_HBA_ATTR_DRIVERVERSION_LEN);
++
++		/* OptionROM Version */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_HBA_ATTR_DRIVERVERSION_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_HBA_ATTR_OPTIONROMVERSION_LEN;
++		put_unaligned_be16(FC_FDMI_HBA_ATTR_OPTIONROMVERSION,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		strncpy((char *)&entry->value,
++			fc_host_optionrom_version(lport->host),
++			FC_FDMI_HBA_ATTR_OPTIONROMVERSION_LEN);
++
++		/* Firmware Version */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_HBA_ATTR_OPTIONROMVERSION_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_HBA_ATTR_FIRMWAREVERSION_LEN;
++		put_unaligned_be16(FC_FDMI_HBA_ATTR_FIRMWAREVERSION,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		strncpy((char *)&entry->value,
++			fc_host_firmware_version(lport->host),
++			FC_FDMI_HBA_ATTR_FIRMWAREVERSION_LEN);
++
++		/* OS Name and Version */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_HBA_ATTR_FIRMWAREVERSION_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN;
++		put_unaligned_be16(FC_FDMI_HBA_ATTR_OSNAMEVERSION,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		snprintf((char *)&entry->value,
++			FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN,
++			"%s v%s",
++			init_utsname()->sysname,
++			init_utsname()->release);
 +		break;
-+	}
++	case FC_FDMI_RPA:
++		numattrs = 6;
++		len = sizeof(struct fc_fdmi_rpa);
++		len -= sizeof(struct fc_fdmi_attr_entry);
++		len += (numattrs * FC_FDMI_ATTR_ENTRY_HEADER_LEN);
++		len += FC_FDMI_PORT_ATTR_FC4TYPES_LEN;
++		len += FC_FDMI_PORT_ATTR_SUPPORTEDSPEED_LEN;
++		len += FC_FDMI_PORT_ATTR_CURRENTPORTSPEED_LEN;
++		len += FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN;
++		len += FC_FDMI_PORT_ATTR_OSDEVICENAME_LEN;
++		len += FC_FDMI_PORT_ATTR_HOSTNAME_LEN;
++		ct = fc_ct_hdr_fill(fp, op, len, FC_FST_MGMT,
++				    FC_FDMI_SUBTYPE);
 +
-+	return rc;
++		/* Port Name */
++		put_unaligned_be64(lport->wwpn,
++				   &ct->payload.rpa.port.portname);
++
++		/* Port Attributes */
++		put_unaligned_be32(numattrs,
++				   &ct->payload.rpa.hba_attrs.numattrs);
++
++		hba_attrs = &ct->payload.rpa.hba_attrs;
++		entry = (struct fc_fdmi_attr_entry *)hba_attrs->attr;
++
++		/* FC4 types */
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_PORT_ATTR_FC4TYPES_LEN;
++		put_unaligned_be16(FC_FDMI_PORT_ATTR_FC4TYPES,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		memcpy(&entry->value, fc_host_supported_fc4s(lport->host),
++		       FC_FDMI_PORT_ATTR_FC4TYPES_LEN);
++
++		/* Supported Speed */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_PORT_ATTR_FC4TYPES_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_PORT_ATTR_SUPPORTEDSPEED_LEN;
++		put_unaligned_be16(FC_FDMI_PORT_ATTR_SUPPORTEDSPEED,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++
++		put_unaligned_be32(fc_host_supported_speeds(lport->host),
++				   &entry->value);
++
++		/* Current Port Speed */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_PORT_ATTR_SUPPORTEDSPEED_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_PORT_ATTR_CURRENTPORTSPEED_LEN;
++		put_unaligned_be16(FC_FDMI_PORT_ATTR_CURRENTPORTSPEED,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		put_unaligned_be32(lport->link_speed,
++				   &entry->value);
++
++		/* Max Frame Size */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_PORT_ATTR_CURRENTPORTSPEED_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN;
++		put_unaligned_be16(FC_FDMI_PORT_ATTR_MAXFRAMESIZE,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		put_unaligned_be32(fc_host_maxframe_size(lport->host),
++				   &entry->value);
++
++		/* OS Device Name */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_PORT_ATTR_OSDEVICENAME_LEN;
++		put_unaligned_be16(FC_FDMI_PORT_ATTR_OSDEVICENAME,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		/* Use the sysfs device name */
++		strncpy((char *)&entry->value,
++			dev_name(&lport->host->shost_gendev),
++			strnlen(dev_name(&lport->host->shost_gendev),
++				FC_FDMI_PORT_ATTR_HOSTNAME_LEN));
++
++		/* Host Name */
++		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
++					FC_FDMI_PORT_ATTR_OSDEVICENAME_LEN);
++		len = FC_FDMI_ATTR_ENTRY_HEADER_LEN;
++		len += FC_FDMI_PORT_ATTR_HOSTNAME_LEN;
++		put_unaligned_be16(FC_FDMI_PORT_ATTR_HOSTNAME,
++				   &entry->type);
++		put_unaligned_be16(len, &entry->len);
++		if (strlen(fc_host_system_hostname(lport->host)))
++			strncpy((char *)&entry->value,
++				fc_host_system_hostname(lport->host),
++				strnlen(fc_host_system_hostname(lport->host),
++					FC_FDMI_PORT_ATTR_HOSTNAME_LEN));
++		else
++			strncpy((char *)&entry->value,
++				init_utsname()->nodename,
++				FC_FDMI_PORT_ATTR_HOSTNAME_LEN);
++		break;
++	case FC_FDMI_DPRT:
++		len = sizeof(struct fc_fdmi_dprt);
++		ct = fc_ct_hdr_fill(fp, op, len, FC_FST_MGMT,
++				    FC_FDMI_SUBTYPE);
++		/* Port Name */
++		put_unaligned_be64(lport->wwpn,
++				   &ct->payload.dprt.port.portname);
++		break;
++	case FC_FDMI_DHBA:
++		len = sizeof(struct fc_fdmi_dhba);
++		ct = fc_ct_hdr_fill(fp, op, len, FC_FST_MGMT,
++				    FC_FDMI_SUBTYPE);
++		/* HBA Identifier */
++		put_unaligned_be64(lport->wwpn, &ct->payload.dhba.hbaid.id);
++		break;
++	default:
++		return -EINVAL;
++	}
++	*r_ctl = FC_RCTL_DD_UNSOL_CTL;
++	*fh_type = FC_TYPE_CT;
++	return 0;
 +}
++
 +/**
-  * fc_plogi_fill - Fill in plogi request frame
-  */
- static inline void fc_plogi_fill(struct fc_lport *lport, struct fc_frame *fp,
+  * fc_ct_fill() - Fill in a common transport service request frame
+  * @lport: local port.
+  * @fc_id: FC_ID of non-destination rport for GPN_ID and similar inquiries.
+@@ -215,6 +514,10 @@ static inline int fc_ct_fill(struct fc_lport *lport,
+ 	int rc = -EINVAL;
+ 
+ 	switch (fc_id) {
++	case FC_FID_MGMT_SERV:
++		rc = fc_ct_ms_fill(lport, fc_id, fp, op, r_ctl, fh_type);
++		*did = FC_FID_MGMT_SERV;
++		break;
+ 	case FC_FID_DIR_SERV:
+ 	default:
+ 		rc = fc_ct_ns_fill(lport, fc_id, fp, op, r_ctl, fh_type);
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index 6a3922f..8f9dfba 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -30,6 +30,7 @@
+ 
+ #include <scsi/fc/fc_fcp.h>
+ #include <scsi/fc/fc_ns.h>
++#include <scsi/fc/fc_ms.h>
+ #include <scsi/fc/fc_els.h>
+ #include <scsi/fc/fc_gs.h>
+ 
+@@ -52,6 +53,8 @@
+  * @LPORT_ST_RPN_ID:   Register port name by ID (RPN_ID) sent
+  * @LPORT_ST_RFT_ID:   Register Fibre Channel types by ID (RFT_ID) sent
+  * @LPORT_ST_RFF_ID:   Register FC-4 Features by ID (RFF_ID) sent
++ * @LPORT_ST_FDMI:     Waiting for mgmt server rport to become ready
++ * @LPORT_ST_RHBA:
+  * @LPORT_ST_SCR:      State Change Register (SCR) sent
+  * @LPORT_ST_READY:    Ready for use
+  * @LPORT_ST_LOGO:     Local port logout (LOGO) sent
+@@ -66,6 +69,11 @@ enum fc_lport_state {
+ 	LPORT_ST_RSPN_ID,
+ 	LPORT_ST_RFT_ID,
+ 	LPORT_ST_RFF_ID,
++	LPORT_ST_FDMI,
++	LPORT_ST_RHBA,
++	LPORT_ST_RPA,
++	LPORT_ST_DHBA,
++	LPORT_ST_DPRT,
+ 	LPORT_ST_SCR,
+ 	LPORT_ST_READY,
+ 	LPORT_ST_LOGO,
+@@ -797,6 +805,7 @@ enum fc_lport_event {
+  * @host:                  The SCSI host associated with a local port
+  * @ema_list:              Exchange manager anchor list
+  * @dns_rdata:             The directory server remote port
++ * @ms_rdata:		   The management server remote port
+  * @ptp_rdata:             Point to point remote port
+  * @scsi_priv:             FCP layer internal data
+  * @disc:                  Discovery context
+@@ -842,6 +851,7 @@ struct fc_lport {
+ 	struct Scsi_Host	       *host;
+ 	struct list_head	       ema_list;
+ 	struct fc_rport_priv	       *dns_rdata;
++	struct fc_rport_priv	       *ms_rdata;
+ 	struct fc_rport_priv	       *ptp_rdata;
+ 	void			       *scsi_priv;
+ 	struct fc_disc                 disc;
+@@ -877,6 +887,7 @@ struct fc_lport {
+ 	u32			       does_npiv:1;
+ 	u32			       npiv_enabled:1;
+ 	u32			       point_to_multipoint:1;
++	u32			       fdmi_enabled:1;
+ 	u32			       mfs;
+ 	u8			       max_retry_count;
+ 	u8			       max_rport_retry_count;
 
