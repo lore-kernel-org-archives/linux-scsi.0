@@ -1,93 +1,160 @@
 From: Greg KH <gregkh@suse.de>
-Subject: [23/27] kernel.h: add printk_ratelimited and pr_<level>_rl
-Date: Mon, 23 Jan 2012 15:41:09 -0800
-Message-ID: <20120123234203.649739932@clark.kroah.org>
+Subject: [22/27] block: add and use scsi_blk_cmd_ioctl
+Date: Mon, 23 Jan 2012 15:41:08 -0800
+Message-ID: <20120123234203.558382347@clark.kroah.org>
 References: <20120123234224.GA19510@kroah.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20120123234224.GA19510@kroah.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Paolo Bonzini <pbonzini@redhat.com>, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Joe Perches <joe@perches.com>, Naohiro Ooiwa <nooiwa@miraclelinux.com>, Ingo Molnar <mingo@elte.hu>, Hiroshi Shimamoto <h-shimamoto@ct.jp.nec.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>, Ben Hutchings <ben@decadent.org.uk>
 List-Id: linux-scsi@vger.kernel.org
 
 2.6.32-longterm review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
+From: Paolo Bonzini <pbonzini@redhat.com>
 
-From: Joe Perches <joe@perches.com>
+commit 577ebb374c78314ac4617242f509e2f5e7156649 upstream.
 
-commit 8a64f336bc1d4aa203b138d29d5a9c414a9fbb47 upstream.
+Introduce a wrapper around scsi_cmd_ioctl that takes a block device.
 
-Add a printk_ratelimited statement expression macro that uses a per-call
-ratelimit_state so that multiple subsystems output messages are not
-suppressed by a global __ratelimit state.
+The function will then be enhanced to detect partition block devices
+and, in that case, subject the ioctls to whitelisting.
 
-[akpm@linux-foundation.org: coding-style fixes]
-[akpm@linux-foundation.org: s/_rl/_ratelimited/g]
-Signed-off-by: Joe Perches <joe@perches.com>
-Cc: Naohiro Ooiwa <nooiwa@miraclelinux.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Hiroshi Shimamoto <h-shimamoto@ct.jp.nec.com>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <JBottomley@parallels.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
+[bwh: Backport to 2.6.32 - adjust context]
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- include/linux/kernel.h |   44 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ block/scsi_ioctl.c             |    7 +++++++
+ drivers/block/cciss.c          |    6 +++---
+ drivers/block/ub.c             |    3 +--
+ drivers/block/virtio_blk.c     |    4 ++--
+ drivers/cdrom/cdrom.c          |    3 +--
+ drivers/ide/ide-floppy_ioctl.c |    3 +--
+ drivers/scsi/sd.c              |    2 +-
+ include/linux/blkdev.h         |    2 ++
+ 8 files changed, 18 insertions(+), 12 deletions(-)
 
---- a/include/linux/kernel.h
-+++ b/include/linux/kernel.h
-@@ -407,6 +407,50 @@ static inline char *pack_hex_byte(char *
- #endif
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -689,6 +689,13 @@ int scsi_cmd_ioctl(struct request_queue
+ }
+ EXPORT_SYMBOL(scsi_cmd_ioctl);
+ 
++int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
++		       unsigned int cmd, void __user *arg)
++{
++	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
++}
++EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
++
+ int __init blk_scsi_ioctl_init(void)
+ {
+ 	blk_set_cmd_filter_defaults(&blk_default_cmd_filter);
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1583,7 +1583,7 @@ static int cciss_ioctl(struct block_devi
+ 			return status;
+ 		}
+ 
+-	/* scsi_cmd_ioctl handles these, below, though some are not */
++	/* scsi_cmd_blk_ioctl handles these, below, though some are not */
+ 	/* very meaningful for cciss.  SG_IO is the main one people want. */
+ 
+ 	case SG_GET_VERSION_NUM:
+@@ -1594,9 +1594,9 @@ static int cciss_ioctl(struct block_devi
+ 	case SG_EMULATED_HOST:
+ 	case SG_IO:
+ 	case SCSI_IOCTL_SEND_COMMAND:
+-		return scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
++		return scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 
+-	/* scsi_cmd_ioctl would normally handle these, below, but */
++	/* scsi_cmd_blk_ioctl would normally handle these, below, but */
+ 	/* they aren't a good fit for cciss, as CD-ROMs are */
+ 	/* not supported, and we don't have any bus/target/lun */
+ 	/* which we present to the kernel. */
+--- a/drivers/block/ub.c
++++ b/drivers/block/ub.c
+@@ -1726,10 +1726,9 @@ static int ub_bd_release(struct gendisk
+ static int ub_bd_ioctl(struct block_device *bdev, fmode_t mode,
+     unsigned int cmd, unsigned long arg)
+ {
+-	struct gendisk *disk = bdev->bd_disk;
+ 	void __user *usermem = (void __user *) arg;
+ 
+-	return scsi_cmd_ioctl(disk->queue, disk, mode, cmd, usermem);
++	return scsi_cmd_blk_ioctl(bdev, mode, cmd, usermem);
+ }
  
  /*
-+ * ratelimited messages with local ratelimit_state,
-+ * no local ratelimit_state used in the !PRINTK case
-+ */
-+#ifdef CONFIG_PRINTK
-+#define printk_ratelimited(fmt, ...)  ({		\
-+	static struct ratelimit_state _rs = {		\
-+		.interval = DEFAULT_RATELIMIT_INTERVAL, \
-+		.burst = DEFAULT_RATELIMIT_BURST,       \
-+	};                                              \
-+							\
-+	if (!__ratelimit(&_rs))                         \
-+		printk(fmt, ##__VA_ARGS__);		\
-+})
-+#else
-+/* No effect, but we still get type checking even in the !PRINTK case: */
-+#define printk_ratelimited printk
-+#endif
-+
-+#define pr_emerg_ratelimited(fmt, ...) \
-+	printk_ratelimited(KERN_EMERG pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_alert_ratelimited(fmt, ...) \
-+	printk_ratelimited(KERN_ALERT pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_crit_ratelimited(fmt, ...) \
-+	printk_ratelimited(KERN_CRIT pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_err_ratelimited(fmt, ...) \
-+	printk_ratelimited(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_warning_ratelimited(fmt, ...) \
-+	printk_ratelimited(KERN_WARNING pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_notice_ratelimited(fmt, ...) \
-+	printk_ratelimited(KERN_NOTICE pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_info_ratelimited(fmt, ...) \
-+	printk_ratelimited(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
-+/* no pr_cont_ratelimited, don't do that... */
-+/* If you are writing a driver, please use dev_dbg instead */
-+#if defined(DEBUG)
-+#define pr_debug_ratelimited(fmt, ...) \
-+	printk_ratelimited(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
-+#else
-+#define pr_debug_ratelimited(fmt, ...) \
-+	({ if (0) printk_ratelimited(KERN_DEBUG pr_fmt(fmt), \
-+				     ##__VA_ARGS__); 0; })
-+#endif
-+
-+/*
-  * General tracing related utility functions - trace_printk(),
-  * tracing_on/tracing_off and tracing_start()/tracing_stop
-  *
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -200,8 +200,8 @@ static int virtblk_ioctl(struct block_de
+ 	if (!virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_SCSI))
+ 		return -ENOTTY;
+ 
+-	return scsi_cmd_ioctl(disk->queue, disk, mode, cmd,
+-			      (void __user *)data);
++	return scsi_cmd_blk_ioctl(bdev, mode, cmd,
++				  (void __user *)data);
+ }
+ 
+ /* We provide getgeo only to please some old bootloader/partitioning tools */
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -2684,12 +2684,11 @@ int cdrom_ioctl(struct cdrom_device_info
+ {
+ 	void __user *argp = (void __user *)arg;
+ 	int ret;
+-	struct gendisk *disk = bdev->bd_disk;
+ 
+ 	/*
+ 	 * Try the generic SCSI command ioctl's first.
+ 	 */
+-	ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
++	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 	if (ret != -ENOTTY)
+ 		return ret;
+ 
+--- a/drivers/ide/ide-floppy_ioctl.c
++++ b/drivers/ide/ide-floppy_ioctl.c
+@@ -287,8 +287,7 @@ int ide_floppy_ioctl(ide_drive_t *drive,
+ 	 * and CDROM_SEND_PACKET (legacy) ioctls
+ 	 */
+ 	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
+-		err = scsi_cmd_ioctl(bdev->bd_disk->queue, bdev->bd_disk,
+-				mode, cmd, argp);
++		err = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 
+ 	if (err == -ENOTTY)
+ 		err = generic_ide_ioctl(drive, bdev, cmd, arg);
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -838,7 +838,7 @@ static int sd_ioctl(struct block_device
+ 		case SCSI_IOCTL_GET_BUS_NUMBER:
+ 			return scsi_ioctl(sdp, cmd, p);
+ 		default:
+-			error = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, p);
++			error = scsi_cmd_blk_ioctl(bdev, mode, cmd, p);
+ 			if (error != -ENOTTY)
+ 				return error;
+ 	}
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -777,6 +777,8 @@ extern void blk_plug_device(struct reque
+ extern void blk_plug_device_unlocked(struct request_queue *);
+ extern int blk_remove_plug(struct request_queue *);
+ extern void blk_recount_segments(struct request_queue *, struct bio *);
++extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
++			      unsigned int, void __user *);
+ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ 			  unsigned int, void __user *);
+ extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
