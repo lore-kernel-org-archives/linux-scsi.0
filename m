@@ -1,53 +1,38 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Mon, 23 Jan 2012 14:19:33 -0500
-Message-ID: <x49lioy9qgq.fsf@segfault.boston.devel.redhat.com>
-References: <20120117200609.GA7933@redhat.com>
-	<20120117213648.GA9457@quack.suse.cz>
-	<20120118225808.GA3074@tux1.beaverton.ibm.com>
-	<20120118232200.GA22019@quack.suse.cz> <4F1758D4.9010401@panasas.com>
-	<20120119094637.GA23442@quack.suse.cz> <4F1BFF5F.6000502@panasas.com>
-	<20120123161857.GC28526@quack.suse.cz>
-	<20120123175353.GD30782@redhat.com>
-	<x49r4yq9suf.fsf@segfault.boston.devel.redhat.com>
-	<20120123185650.GF30782@redhat.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] Future writeback topics
+Date: Mon, 23 Jan 2012 15:19:04 -0500
+Message-ID: <20120123201904.GN25986@redhat.com>
+References: <4F1C141C.2050704@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26464 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40570 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753019Ab2AWTUN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jan 2012 14:20:13 -0500
-In-Reply-To: <20120123185650.GF30782@redhat.com> (Andrea Arcangeli's message
-	of "Mon, 23 Jan 2012 19:56:50 +0100")
+	id S1753912Ab2AWUTk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Jan 2012 15:19:40 -0500
+Content-Disposition: inline
+In-Reply-To: <4F1C141C.2050704@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrea Arcangeli <aarcange@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J. Wong" <djwong@us.ibm.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: lsf-pc@lists.linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrea Arcangeli <aarcange@redhat.com>, Dave Chinner <david@fromorbit.com>, Wu Fengguang <fengguang.wu@intel.com>, Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Andrea Arcangeli <aarcange@redhat.com> writes:
+On Sun, Jan 22, 2012 at 03:50:20PM +0200, Boaz Harrosh wrote:
+> Hi
+> 
+> Now that we have the "IO-less dirty throttling" in and kicking (ass I might say)
+> Are there plans for second stage? I can see few areas that need some love.
+> 
+> [IO Fairness, time sorted writeback, properly delayed writeback]
+> 
+>   As we started to talk about in another thread: "[LSF/MM TOPIC] a few storage topics"
+>   I would like to propose the following topics:
+> 
+> * Do we have enough information for the time of dirty of pages, such as the
+>   IO-elevators information, readily available to be used at the VFS layer.
 
-> On Mon, Jan 23, 2012 at 01:28:08PM -0500, Jeff Moyer wrote:
->> Are you speaking from experience?  If so, what workloads were negatively
->> affected by merging, and how did you measure that?
->
-> Any workload where two processes compete for accessing the same disk
-> and one process writes big requests (usually async writes), the other
-> small (usually sync reads). The one with the small 4k requests
-> (usually reads) gets some artificial latency if the big requests are
-> 512k. Vivek did a recent measurement to verify the issue is still
-> there, and it's basically an hardware issue. Software can't do much
-> other than possibly reducing the max request size when we notice such
-> an I/O pattern coming in cfq. I did old measurements that's how I knew
-> it, but they were so ancient they're worthless by now, this is why
-> Vivek had to repeat it to verify before we could assume it still
-> existed on recent hardware.
->
-> These days with cgroups it may be a bit more relevant as max write
-> bandwidth may be secondary to latency/QoS.
+Assuming it is available, what's the plan. How would VFS layer make use
+of it?
 
-Thanks, Vivek was able to point me at the old thread:
-  http://www.spinics.net/lists/linux-fsdevel/msg44191.html
-
-Cheers,
-Jeff
+Thanks
+Vivek
