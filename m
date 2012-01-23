@@ -1,100 +1,59 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: build failure after merge of the nfs tree
-Date: Mon, 23 Jan 2012 11:39:49 +1100
-Message-ID: <20120123113949.b8d1940bb60128c5c4efeece@canb.auug.org.au>
+From: Neerav Parikh <neerav.parikh@intel.com>
+Subject: [PATCH 0/6] Support FDMI in libfc
+Date: Sun, 22 Jan 2012 17:29:44 -0800
+Message-ID: <20120123012944.923.63220.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Mon__23_Jan_2012_11_39_49_+1100_SxY68HtSrrc+lFx5"
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Trond Myklebust <trond.myklebust@fys.uio.no>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:11283 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752528Ab2AWBk6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Jan 2012 20:40:58 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, james.smart@emulex.com, devel@open-fcoe.org
 
---Signature=_Mon__23_Jan_2012_11_39_49_+1100_SxY68HtSrrc+lFx5
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hi Trond,
+The following series implements support for FC-GS
+Fabric Device Management Interface (FDMI) in libfc
+and scsi_transport_fc in preparation to support
+FDMI via open-fcoe stack in the kernel.
 
-After merging the nfs tree, today's linux-next build (x86_64 allmodconfig)
-failed like this:
+The series provides an optional capability for any
+driver dependent on libfc to register FDMI HBA and
+Port attributes with the Fabric's Management Service
+entity via libfc lport state machine.
 
-drivers/target/iscsi/iscsi_target_configfs.c: In function 'lio_target_call_=
-addnptotpg':
-drivers/target/iscsi/iscsi_target_configfs.c:214:3: error: implicit declara=
-tion of function 'in6_pton' [-Werror=3Dimplicit-function-declaration]
-drivers/target/iscsi/iscsi_target_configfs.c:239:3: error: implicit declara=
-tion of function 'in_aton' [-Werror=3Dimplicit-function-declaration]
+It also allows any FC/FCoE HBA/CNA driver that does
+not depend on libfc to expose FDMI attributes via
+fc_host class in sysfs.
 
-Presumably caused by some include file cleanup in the nfs tree (probably
-commit 0b5357cfc2e6 "NFS: Remove unnecessary includes from
-linux/nfs_fs_i.h").
+The last two patches utilizes the FDMI facility of
+libfc in FCoE driver.
 
-I applied the following patch for today:
-
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Date: Mon, 23 Jan 2012 11:35:02 +1100
-Subject: [PATCH] iscsi: in_aton needs linux/inet.h
-
-so include it directly.
-
-Fixes this error after a recent nfs cleanup:
-
-drivers/target/iscsi/iscsi_target_configfs.c: In function 'lio_target_call_=
-addnptotpg':
-drivers/target/iscsi/iscsi_target_configfs.c:214:3: error: implicit declara=
-tion of function 'in6_pton' [-Werror=3Dimplicit-function-declaration]
-drivers/target/iscsi/iscsi_target_configfs.c:239:3: error: implicit declara=
-tion of function 'in_aton' [-Werror=3Dimplicit-function-declaration]
-
-Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
 ---
- drivers/target/iscsi/iscsi_target_configfs.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/=
-iscsi/iscsi_target_configfs.c
-index 3468caa..6b35b37 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -21,6 +21,7 @@
-=20
- #include <linux/configfs.h>
- #include <linux/export.h>
-+#include <linux/inet.h>
- #include <target/target_core_base.h>
- #include <target/target_core_fabric.h>
- #include <target/target_core_fabric_configfs.h>
---=20
-1.7.9.rc0.23.g7e521
+Neerav Parikh (6):
+      scsi_transport_fc: Add FDMI host attributes
+      scsi_transport_fc: Getting FC Port Speed in sync with FC-GS
+      libfc: Make the libfc Common Transport(CT) code generic
+      libfc: Add support for FDMI
+      fcoe: Add support for FDMI in fcoe
+      fcoe: Allow exposing FDMI attributes via sysfs
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
 
---Signature=_Mon__23_Jan_2012_11_39_49_+1100_SxY68HtSrrc+lFx5
-Content-Type: application/pgp-signature
+ drivers/scsi/fcoe/fcoe.c         |   90 +++++++++
+ drivers/scsi/libfc/fc_elsct.c    |    3 
+ drivers/scsi/libfc/fc_lport.c    |  227 +++++++++++++++++++++++-
+ drivers/scsi/scsi_transport_fc.c |   30 +++
+ include/scsi/fc/fc_ms.h          |  213 ++++++++++++++++++++++
+ include/scsi/fc_encode.h         |  363 +++++++++++++++++++++++++++++++++++++-
+ include/scsi/libfc.h             |   11 +
+ include/scsi/scsi_transport_fc.h |   32 +++
+ 8 files changed, 949 insertions(+), 20 deletions(-)
+ create mode 100644 include/scsi/fc/fc_ms.h
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBCAAGBQJPHKxVAAoJEECxmPOUX5FEvsAQAIPz+rftVIzKlFxU1U4OmRDg
-1EnrXtD0kkaAsDPyzomCMfcRNS8S135CUrQcei6fUmcyH+JcMCNFdlwna1S2pGFm
-bqbcvWLOD7puR/UGi2tX3EkGees22u6rudute9BRQy5+0iVmqBkczD822L0zht/A
-eGQA0KbwnQeqitwppivNpeM0zzBYcJAk2/kWvhH16n0iDqnUD3Y0vpW3VDq/GBpJ
-95gEsBKHFYYjBHAIufMsaBITI0MyJRajx7oA4nOAbttQxrjtInmTalD8VRd6Oavu
-UUBRYB+Xnc6aPxjnOiEWonzW5oC06XnoSkSmvDzMeA4rtxB6fPbUiY4FsjSLtOWi
-ewEY+nraZki5s1uJJ8MGWcLNdMPCI4lohCiczylmT2WOB8UhAGbBgc3Afzhaz+pT
-NpBY++FnhlksGPZ6pUw+jlPC6sqe5SKH6mZNpyjfk8NkG1Z/K4c+yuB2ImVUiXi2
-bjVVE+d3ai85tyBL1smA23dNcmlmA76exAYPkJeKEgFJJ+7RRd/cgkgeqiNYom1Q
-mACsyYFFVYmIfjJBVbNjR2dj9OrlAFozWEv2kyFLH5rweX8O7MjgARUI80xJ2hGf
-zwhT5G3TxO3vsRNNjoxrJslvKeiQS5Y8kmbnHZ2YN/LAo/RUn9jGHK9T7yZ3yKee
-FMFf736wwwwaOrdzezhn
-=gMy0
------END PGP SIGNATURE-----
-
---Signature=_Mon__23_Jan_2012_11_39_49_+1100_SxY68HtSrrc+lFx5--
+-- 
+Neerav Parikh <neerav.parikh@intel.com>
