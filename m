@@ -1,48 +1,36 @@
-From: Sander Smeenk <ssmeenk@freshdot.net>
-Subject: Re: scsi_scan.c reports 'target allocation failed, error -6' w/
- mptsas
-Date: Mon, 23 Jan 2012 14:03:44 +0100
-Message-ID: <20120123130343.GA28136@dot.freshdot.net>
-References: <20120118100635.GA19750@dot.freshdot.net>
- <A6888A6805518E4EA4AF7072A28264A60481F5304E@inbmail02.lsi.com>
+From: Tony Asleson <tasleson@redhat.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] Storage management (API & Library)
+Date: Mon, 23 Jan 2012 08:47:21 -0600
+Message-ID: <4F1D72F9.8000409@redhat.com>
+References: <4F19A981.4080502@redhat.com> <CABE8wwvK=uQx2cTK44Sn+79dj+MyGM1y4n7MoounkR7STHFkXQ@mail.gmail.com>
+Reply-To: tasleson@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dot.freshdot.net ([213.154.236.176]:40044 "EHLO
-	dot.freshdot.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752317Ab2AWNqW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jan 2012 08:46:22 -0500
-Content-Disposition: inline
-In-Reply-To: <A6888A6805518E4EA4AF7072A28264A60481F5304E@inbmail02.lsi.com>
+Received: from mx1.redhat.com ([209.132.183.28]:62378 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752780Ab2AWOrY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Jan 2012 09:47:24 -0500
+In-Reply-To: <CABE8wwvK=uQx2cTK44Sn+79dj+MyGM1y4n7MoounkR7STHFkXQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-Quoting Nandigama, Nagalakshmi (Nagalakshmi.Nandigama@lsi.com):
+On 01/20/2012 05:28 PM, Dan Williams wrote:
+> Interesting, how does this relate, or not relate, to udisks in device-kit?
 
-Sorry for the delay. We're all busy. :-)
+The initial focus for libStorageMgmt is on managing external block level
+storage arrays (LUN creation, deletion, re-sizing, replication and
+mapping/un-mapping storage to initiators).  Once the logical unit is
+available for the system, other libraries/tools will take over to get
+the storage ready for use (Partitioning, FS creation etc.).
 
-> request you to provide the response of  "modinfo mptsas".
-> Also please capture the logs with the scsi logging set to 0x180000DB.
-> "echo 0x180000db > /proc/sys/dev/scsi/logging_level".
-> And mptsas debug level set to 0x3f8
-> "echo 3f8 > /sys/module/mptbase/parameters/mpt_debug_level"
+One could envision udisks as being a user of libStorageMgmt.  To
+dynamically add/remove storage devices to a system and to leverage the
+operations that can be completed on the array hardware vs. local system
+(e.g. hardware array snapshot vs. lvm snapshot).
 
-This generated a lot of output, please find it in this paste:
-http://8n1.org/raw/8314/8fd6
-
-With this disk i did *NOT* do:
-
-| echo 1 >/sys/block/sdN/deviCe/delete
-
-before pulling the old drive from the system. This might well be related
-as the new disk was detected properly after inserting and scanning this
-time.
-
-Thanks for your time!
-
-With regards,
--Sander.
--- 
-| Do people in Australia call the rest of the world "up over"?
-| 4096R/20CC6CD2 - 6D40 1A20 B9AA 87D4 84C7  FBD6 F3A9 9442 20CC 6CD2
+Regards,
+Tony
