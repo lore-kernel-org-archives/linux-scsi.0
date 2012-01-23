@@ -1,98 +1,34 @@
-From: Jan Kara <jack@suse.cz>
+From: Andrea Arcangeli <aarcange@redhat.com>
 Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Mon, 23 Jan 2012 17:30:24 +0100
-Message-ID: <20120123163024.GD28526@quack.suse.cz>
-References: <20120117200609.GA7933@redhat.com>
+Date: Mon, 23 Jan 2012 18:53:53 +0100
+Message-ID: <20120123175353.GD30782@redhat.com>
+References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
+ <20120117200609.GA7933@redhat.com>
  <20120117213648.GA9457@quack.suse.cz>
  <20120118225808.GA3074@tux1.beaverton.ibm.com>
  <20120118232200.GA22019@quack.suse.cz>
  <4F1758D4.9010401@panasas.com>
  <20120119094637.GA23442@quack.suse.cz>
- <20120119150849.GD8316@redhat.com>
- <20120119205211.GB3629@quack.suse.cz>
- <20120119213958.GJ8316@redhat.com>
- <4F1BF39A.6090709@panasas.com>
+ <4F1BFF5F.6000502@panasas.com>
+ <20120123161857.GC28526@quack.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45221 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751473Ab2AWQa0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jan 2012 11:30:26 -0500
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4F1BF39A.6090709@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20120123161857.GC28526@quack.suse.cz>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J. Wong" <djwong@us.ibm.com>
 
-On Sun 22-01-12 13:31:38, Boaz Harrosh wrote:
-> On 01/19/2012 11:39 PM, Andrea Arcangeli wrote:
-> > On Thu, Jan 19, 2012 at 09:52:11PM +0100, Jan Kara wrote:
-> >> anything. So what will be cheaper depends on how often are redirtied pages
-> >> under IO. This is rather rare because pages aren't flushed all that often.
-> >> So the effect of stable pages in not observable on throughput. But you can
-> >> certainly see it on max latency...
-> > 
-> > I see your point. A problem with migrate though is that the page must
-> > be pinned by the I/O layer to prevent migration to free the page under
-> > I/O, or how else it could be safe to read from a freed page? And if
-> > the page is pinned migration won't work at all. See page_freeze_refs
-> > in migrate_page_move_mapping. So the pinning issue would need to be
-> > handled somehow. It's needed for example when there's an O_DIRECT
-> > read, and the I/O is going to the page, if the page is migrated in
-> > that case, we'd lose a part of the I/O. Differentiating how many page
-> > pins are ok to be ignored by migration won't be trivial but probably
-> > possible to do.
-> > 
-> > Another way maybe would be to detect when there's too much re-dirtying
-> > of pages in flight in a short amount of time, and to start the bounce
-> > buffering and stop waiting, until the re-dirtying stops, and then you
-> > stop the bounce buffering. But unlike migration, it can't prevent an
-> > initial burst of high fault latency...
-> 
-> Or just change that RT program that is one - latency bound but, two - does
-> unpredictable, statistically bad, things to a memory mapped file.
-  Right. That's what I told the RT guy as well :) But he didn't like to
-hear that because it meant more coding for him.
+On Mon, Jan 23, 2012 at 05:18:57PM +0100, Jan Kara wrote:
+> requst granularity. Sure, big requests will take longer to complete but
+> maximum request size is relatively low (512k by default) so writing maximum
+> sized request isn't that much slower than writing 4k. So it works OK in
+> practice.
 
-> Can a memory-mapped-file writer have some control on the time of
-> writeback with data_sync or such, or it's purely: Timer fired, Kernel see
-> a dirty page, start a writeout? What about if the application maps a
-> portion of the file at a time, and the Kernel gets more lazy on an active
-> memory mapped region. (That's what windows NT do. It will never IO a mapped
-> section unless in OOM conditions. The application needs to map small sections
-> and unmap to IO. It's more of a direct_io than mmap)
-  You can always start writeback by sync_file_range() but you have no
-guarantees what writeback does. Also if you need to redirty the page
-pernamently (e.g. it's a head of your transaction log), there's simply no
-good time when it can be written when you also want stable pages.
-
-> In any case, if you are very latency sensitive an mmap writeout is bad for
-> you. Not only because of this new problem, but because mmap writeout can
-> sync with tones of other things, that are do to memory management. (As mentioned
-> by Andrea). The best for latency sensitive application is asynchronous direct-io
-> by far. Only with asynchronous and direct-io you can have any real control on
-> your latency. (I understand they used to have empirically observed latency bound
-> but that is just luck, not real control)
-> 
-> BTW: The application mentioned would probably not want it's IO bounced at
-> the block layer, other wise why would it use mmap if not for preventing
-> the copy induced by buffer IO?
-  Yeah, I'm not sure why their design was as it was.
-
-> All that said, a mount option to ext4 (Is ext4 used?) to revert to the old
-> behavior is the easiest solution. When originally we brought this up in LSF
-> my thought was that the block request Q should have some flag that says
-> need_stable_pages. If set by the likes of dm/md-raid, iscsi-with-data-signed, DIFF
-> enabled devices and so on, and the FS does not guaranty/wants stable pages
-> then an IO bounce is set up. But if not set then the like of ext4 need not
-> bother.
-  There's no mount option. The behavior is on unconditionally. And so far I
-have not seen enough people complain to introduce something like that -
-automatic logic is a different thing of course. That might be nice to have.
-
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Totally unrelated to the writeback, but the merged big 512k requests
+actually adds up some measurable I/O scheduler latencies and they in
+turn slightly diminish the fairness that cfq could provide with
+smaller max request size. Probably even more measurable with SSDs (but
+then SSDs are even faster).
