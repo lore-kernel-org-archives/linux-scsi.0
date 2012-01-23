@@ -1,167 +1,98 @@
-From: Greg KH <gregkh@suse.de>
-Subject: [61/90] block: add and use scsi_blk_cmd_ioctl
-Date: Mon, 23 Jan 2012 15:39:47 -0800
-Message-ID: <20120123234028.142173454@clark.kroah.org>
-References: <20120123234211.GA19504@kroah.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v3 08/14] isci: kill iphy->isci_port lookups
+Date: Mon, 23 Jan 2012 15:45:12 -0800
+Message-ID: <CAA9_cmc-pJ5x7C-v8DwHqn6WvdZNECS4rTAKBAmGhTMDLGvP1Q@mail.gmail.com>
+References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
+	<20120106005941.11464.12937.stgit@localhost6.localdomain6>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42836 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932351Ab2AWXvR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jan 2012 18:51:17 -0500
-In-Reply-To: <20120123234211.GA19504@kroah.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:38700 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754297Ab2AWXpN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jan 2012 18:45:13 -0500
+In-Reply-To: <20120106005941.11464.12937.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: Maciej Trela <maciej.trela@intel.com>, linux-ide@vger.kernel.org, David Milburn <dmilburn@redhat.com>
 
-3.0-stable review patch.  If anyone has any objections, please let me know.
+On Thu, Jan 5, 2012 at 4:59 PM, Dan Williams <dan.j.williams@intel.com>=
+ wrote:
+> This field is a holdover from the OS abstraction conversion. =A0The s=
+table
+> phy to port lookups are done via iphy->ownining_port under scic_lock.
+> After this conversion to use port->lldd_port the only volatile lookup=
+ is
+> the initial lookup in isci_port_formed(). =A0After that point any loo=
+kup
+> via a successfully notified domain_device is guaranteed to be valid
+> until the domain_device is destroyed.
+>
+> Delete ->start_complete as it is only set once and is set as a
+> consequence of the port going link up, by definition of getting a por=
+t
+> formed event the port is "ready".
+>
+> While we are correcting port lookups also move the asd_sas_port table
+> out from under the isci_port. =A0This is to preclude any temptation t=
+o use
+> container_of() to convert an asd_sas_port to an isci_port, the
+> association is dynamic and under libsas control.
+>
+> Tested-by: Maciej Trela <maciej.trela@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+[..]
+> @@ -1714,24 +1721,55 @@ int isci_port_perform_hard_reset(struct isci_=
+host *ihost, struct isci_port *ipor
+> =A0 =A0 =A0 =A0return ret;
+> =A0}
+>
+> -/**
+> - * isci_port_deformed() - This function is called by libsas when a p=
+ort becomes
+> - * =A0 =A0inactive.
+> - * @phy: This parameter specifies the libsas phy with the inactive p=
+ort.
+> - *
+> - */
+> =A0void isci_port_deformed(struct asd_sas_phy *phy)
+> =A0{
+> - =A0 =A0 =A0 pr_debug("%s: sas_phy =3D %p\n", __func__, phy);
+> + =A0 =A0 =A0 struct isci_host *ihost =3D phy->ha->lldd_ha;
+> + =A0 =A0 =A0 struct isci_port *iport =3D phy->port->lldd_port;
+> + =A0 =A0 =A0 unsigned long flags;
+> + =A0 =A0 =A0 int i;
+> +
+> + =A0 =A0 =A0 /* we got a port notification on a port that was subseq=
+uently
+> + =A0 =A0 =A0 =A0* torn down and libsas is just now catching up
+> + =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 if (!iport)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> +
+> + =A0 =A0 =A0 spin_lock_irqsave(&ihost->scic_lock, flags);
+> + =A0 =A0 =A0 for (i =3D 0; i < SCI_MAX_PHYS; i++) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (iport->active_phy_mask & 1 << i)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 }
+> + =A0 =A0 =A0 spin_unlock_irqrestore(&ihost->scic_lock, flags);
+> +
+> + =A0 =A0 =A0 if (i >=3D SCI_MAX_PHYS)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_dbg(&ihost->pdev->dev, "%s: port: %=
+ld\n",
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 __func__, iport - &ihos=
+t->ports[0]);
+> =A0}
 
-------------------
+As spotted by David this causes 32-bit build breakage.  I'll fold in
+the fix, rebase, and re-post for the next round of libsas fixups.
 
-From: Paolo Bonzini <pbonzini@redhat.com>
-
-commit 577ebb374c78314ac4617242f509e2f5e7156649 upstream.
-
-Introduce a wrapper around scsi_cmd_ioctl that takes a block device.
-
-The function will then be enhanced to detect partition block devices
-and, in that case, subject the ioctls to whitelisting.
-
-Cc: linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: James Bottomley <JBottomley@parallels.com>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- block/scsi_ioctl.c             |    7 +++++++
- drivers/block/cciss.c          |    6 +++---
- drivers/block/ub.c             |    3 +--
- drivers/block/virtio_blk.c     |    4 ++--
- drivers/cdrom/cdrom.c          |    3 +--
- drivers/ide/ide-floppy_ioctl.c |    3 +--
- drivers/scsi/sd.c              |    2 +-
- include/linux/blkdev.h         |    2 ++
- 8 files changed, 18 insertions(+), 12 deletions(-)
-
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -691,6 +691,13 @@ int scsi_cmd_ioctl(struct request_queue
- }
- EXPORT_SYMBOL(scsi_cmd_ioctl);
- 
-+int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
-+		       unsigned int cmd, void __user *arg)
-+{
-+	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
-+}
-+EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
-+
- static int __init blk_scsi_ioctl_init(void)
- {
- 	blk_set_cmd_filter_defaults(&blk_default_cmd_filter);
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -1716,7 +1716,7 @@ static int cciss_ioctl(struct block_devi
- 	case CCISS_BIG_PASSTHRU:
- 		return cciss_bigpassthru(h, argp);
- 
--	/* scsi_cmd_ioctl handles these, below, though some are not */
-+	/* scsi_cmd_blk_ioctl handles these, below, though some are not */
- 	/* very meaningful for cciss.  SG_IO is the main one people want. */
- 
- 	case SG_GET_VERSION_NUM:
-@@ -1727,9 +1727,9 @@ static int cciss_ioctl(struct block_devi
- 	case SG_EMULATED_HOST:
- 	case SG_IO:
- 	case SCSI_IOCTL_SEND_COMMAND:
--		return scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
-+		return scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
- 
--	/* scsi_cmd_ioctl would normally handle these, below, but */
-+	/* scsi_cmd_blk_ioctl would normally handle these, below, but */
- 	/* they aren't a good fit for cciss, as CD-ROMs are */
- 	/* not supported, and we don't have any bus/target/lun */
- 	/* which we present to the kernel. */
---- a/drivers/block/ub.c
-+++ b/drivers/block/ub.c
-@@ -1744,12 +1744,11 @@ static int ub_bd_release(struct gendisk
- static int ub_bd_ioctl(struct block_device *bdev, fmode_t mode,
-     unsigned int cmd, unsigned long arg)
- {
--	struct gendisk *disk = bdev->bd_disk;
- 	void __user *usermem = (void __user *) arg;
- 	int ret;
- 
- 	mutex_lock(&ub_mutex);
--	ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, usermem);
-+	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, usermem);
- 	mutex_unlock(&ub_mutex);
- 
- 	return ret;
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -236,8 +236,8 @@ static int virtblk_ioctl(struct block_de
- 	if (!virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_SCSI))
- 		return -ENOTTY;
- 
--	return scsi_cmd_ioctl(disk->queue, disk, mode, cmd,
--			      (void __user *)data);
-+	return scsi_cmd_blk_ioctl(bdev, mode, cmd,
-+				  (void __user *)data);
- }
- 
- /* We provide getgeo only to please some old bootloader/partitioning tools */
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -2741,12 +2741,11 @@ int cdrom_ioctl(struct cdrom_device_info
- {
- 	void __user *argp = (void __user *)arg;
- 	int ret;
--	struct gendisk *disk = bdev->bd_disk;
- 
- 	/*
- 	 * Try the generic SCSI command ioctl's first.
- 	 */
--	ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
-+	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
- 	if (ret != -ENOTTY)
- 		return ret;
- 
---- a/drivers/ide/ide-floppy_ioctl.c
-+++ b/drivers/ide/ide-floppy_ioctl.c
-@@ -292,8 +292,7 @@ int ide_floppy_ioctl(ide_drive_t *drive,
- 	 * and CDROM_SEND_PACKET (legacy) ioctls
- 	 */
- 	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
--		err = scsi_cmd_ioctl(bdev->bd_disk->queue, bdev->bd_disk,
--				mode, cmd, argp);
-+		err = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
- 
- 	if (err == -ENOTTY)
- 		err = generic_ide_ioctl(drive, bdev, cmd, arg);
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1095,7 +1095,7 @@ static int sd_ioctl(struct block_device
- 			error = scsi_ioctl(sdp, cmd, p);
- 			break;
- 		default:
--			error = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, p);
-+			error = scsi_cmd_blk_ioctl(bdev, mode, cmd, p);
- 			if (error != -ENOTTY)
- 				break;
- 			error = scsi_ioctl(sdp, cmd, p);
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -670,6 +670,8 @@ extern int blk_insert_cloned_request(str
- 				     struct request *rq);
- extern void blk_delay_queue(struct request_queue *, unsigned long);
- extern void blk_recount_segments(struct request_queue *, struct bio *);
-+extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
-+			      unsigned int, void __user *);
- extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
- 			  unsigned int, void __user *);
- extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
-
-
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
