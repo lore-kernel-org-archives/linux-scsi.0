@@ -1,42 +1,37 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [23/27] kernel.h: add printk_ratelimited and pr_<level>_rl
-Date: Tue, 24 Jan 2012 08:43:16 -0800
-Message-ID: <20120124164316.GA26126@suse.de>
-References: <20120123234224.GA19510@kroah.com>
- <20120123234203.649739932@clark.kroah.org>
- <20120124144613.GD3180@pcarmody2.research.nokia.com>
- <1327422950.5400.40.camel@deadeye>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [dm-devel] [Lsf-pc] [LSF/MM TOPIC] a few storage topics
+Date: Tue, 24 Jan 2012 11:56:31 -0500
+Message-ID: <20120124165631.GA8941@infradead.org>
+References: <20120117213648.GA9457@quack.suse.cz>
+ <20120118225808.GA3074@tux1.beaverton.ibm.com>
+ <20120118232200.GA22019@quack.suse.cz>
+ <4F1758D4.9010401@panasas.com>
+ <20120119094637.GA23442@quack.suse.cz>
+ <4F1BFF5F.6000502@panasas.com>
+ <20120123161857.GC28526@quack.suse.cz>
+ <20120123175353.GD30782@redhat.com>
+ <x49r4yq9suf.fsf@segfault.boston.devel.redhat.com>
+ <20120124151504.GQ4387@shiny>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1327422950.5400.40.camel@deadeye>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Phil Carmody <ext-phil.2.carmody@nokia.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Paolo Bonzini <pbonzini@redhat.com>, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@suse.de>
+In-Reply-To: <20120124151504.GQ4387@shiny>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Chris Mason <chris.mason@oracle.com>, Jeff Moyer <jmoyer@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 24, 2012 at 04:35:50PM +0000, Ben Hutchings wrote:
-> On Tue, 2012-01-24 at 16:46 +0200, Phil Carmody wrote:
-> > On 23/01/12 15:41 -0800, ext Greg KH wrote:
-> > > 2.6.32-longterm review patch.  If anyone has any objections, please let me know.
-> > 
-> > This looks like an added feature with no users in .32 - does it really 
-> > belong in a stable tree?
-> > (But to be explicit, I have no issue with its contents at all.)
+On Tue, Jan 24, 2012 at 10:15:04AM -0500, Chris Mason wrote:
+> https://lkml.org/lkml/2011/12/13/326
 > 
-> It's required for commit 0bfc96cb77224736dfa35c3c555d37b3646ef35e
-> ('block: fail SCSI passthrough ioctls on partition devices'), though
-> that hasn't actually been included in this series.  I think that's
-> because there is still ongoing discussion of which error codes need to
-> be used.
+> This patch is another example, although for a slight different reason.
+> I really have no idea yet what the right answer is in a generic sense,
+> but you don't need a 512K request to see higher latencies from merging.
 
-That is exactly right.
+That assumes the 512k requests is created by merging.  We have enough
+workloads that create large I/O from the get go, and not splitting them
+and eventually merging them again would be a big win.  E.g. I'm
+currently looking at a distributed block device which uses internal 4MB
+chunks, and increasing the maximum request size to that dramatically
+increases the read performance.
 
-Phil, thanks for reviewing, you are correct that this is a new
-"feature", but it is needed for this other patch that people are still
-arguing over :)
-
-thanks,
-
-greg k-h
