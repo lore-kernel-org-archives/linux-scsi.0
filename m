@@ -1,96 +1,40 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v7 6/6] libsas: revert ata srst
-Date: Mon, 23 Jan 2012 23:50:45 -0800
-Message-ID: <20120124075045.22384.23228.stgit@localhost6.localdomain6>
-References: <20120124074825.22384.17157.stgit@localhost6.localdomain6>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] target: handle empty string writes in sysfs
+Date: Tue, 24 Jan 2012 11:40:36 +0300
+Message-ID: <20120124084036.GB29097@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120124074825.22384.17157.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-libata issues follow up srsts when the controller has a hard time
-recording the signature-fis after a reset, or if the link supports port
-multipliers.  libsas does not support port multipliers and no current
-libsas lldds appear to need help retrieving the signature fis.  Revert
-it for now to remove confusion.
+These are root only and we're not likely to hit the problem in practise,
+but it makes a the static checkers happy.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/libsas/sas_ata.c |   38 --------------------------------------
- include/scsi/libsas.h         |    1 -
- 2 files changed, 0 insertions(+), 39 deletions(-)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index f82997a..653aa97 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -443,43 +443,6 @@ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
- 	return ret;
- }
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 0955bb8..9b86330 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -1707,6 +1707,8 @@ static ssize_t target_core_store_dev_alias(
+ 	se_dev->su_dev_flags |= SDF_USING_ALIAS;
+ 	read_bytes = snprintf(&se_dev->se_dev_alias[0], SE_DEV_ALIAS_LEN,
+ 			"%s", page);
++	if (read_bytes == 0)
++		return -EINVAL;
  
--static int sas_ata_soft_reset(struct ata_link *link, unsigned int *class,
--			       unsigned long deadline)
--{
--	struct ata_port *ap = link->ap;
--	struct domain_device *dev = ap->private_data;
--	struct sas_internal *i = dev_to_sas_internal(dev);
--	int res = TMF_RESP_FUNC_FAILED;
--	int ret = 0;
--
--	if (i->dft->lldd_ata_soft_reset)
--		res = i->dft->lldd_ata_soft_reset(dev);
--
--	if (res != TMF_RESP_FUNC_COMPLETE) {
--		SAS_DPRINTK("%s: Unable to soft reset\n", __func__);
--		ret = -EAGAIN;
--	}
--
--	switch (dev->sata_dev.command_set) {
--	case ATA_COMMAND_SET:
--		SAS_DPRINTK("%s: Found ATA device.\n", __func__);
--		*class = ATA_DEV_ATA;
--		break;
--	case ATAPI_COMMAND_SET:
--		SAS_DPRINTK("%s: Found ATAPI device.\n", __func__);
--		*class = ATA_DEV_ATAPI;
--		break;
--	default:
--		SAS_DPRINTK("%s: Unknown SATA command set: %d.\n",
--			    __func__, dev->sata_dev.command_set);
--		*class = ATA_DEV_UNKNOWN;
--		break;
--	}
--
--	ap->cbl = ATA_CBL_SATA;
--	return ret;
--}
--
- /*
-  * notify the lldd to forget the sas_task for this internal ata command
-  * that bypasses scsi-eh
-@@ -563,7 +526,6 @@ static void sas_ata_set_dmamode(struct ata_port *ap, struct ata_device *ata_dev)
+ 	if (se_dev->se_dev_alias[read_bytes - 1] == '\n')
+ 		se_dev->se_dev_alias[read_bytes - 1] = '\0';
+@@ -1756,6 +1758,8 @@ static ssize_t target_core_store_dev_udev_path(
+ 	se_dev->su_dev_flags |= SDF_USING_UDEV_PATH;
+ 	read_bytes = snprintf(&se_dev->se_dev_udev_path[0], SE_UDEV_PATH_LEN,
+ 			"%s", page);
++	if (read_bytes == 0)
++		return -EINVAL;
  
- static struct ata_port_operations sas_sata_ops = {
- 	.prereset		= ata_std_prereset,
--	.softreset		= sas_ata_soft_reset,
- 	.hardreset		= sas_ata_hard_reset,
- 	.postreset		= ata_std_postreset,
- 	.error_handler		= ata_std_error_handler,
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 20153d5..5f5ed1b 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -619,7 +619,6 @@ struct sas_domain_function_template {
- 	int (*lldd_clear_aca)(struct domain_device *, u8 *lun);
- 	int (*lldd_clear_task_set)(struct domain_device *, u8 *lun);
- 	int (*lldd_I_T_nexus_reset)(struct domain_device *);
--	int (*lldd_ata_soft_reset)(struct domain_device *);
- 	int (*lldd_ata_check_ready)(struct domain_device *);
- 	void (*lldd_ata_set_dmamode)(struct domain_device *);
- 	int (*lldd_lu_reset)(struct domain_device *, u8 *lun);
-
+ 	if (se_dev->se_dev_udev_path[read_bytes - 1] == '\n')
+ 		se_dev->se_dev_udev_path[read_bytes - 1] = '\0';
