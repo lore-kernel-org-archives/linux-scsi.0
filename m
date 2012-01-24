@@ -1,297 +1,396 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v7 0/6] libsas error handling + discovery v7
-Date: Mon, 23 Jan 2012 23:50:14 -0800
-Message-ID: <20120124074825.22384.17157.stgit@localhost6.localdomain6>
+Subject: [PATCH v7 1/6] isci: kill iphy->isci_port lookups
+Date: Mon, 23 Jan 2012 23:50:19 -0800
+Message-ID: <20120124075019.22384.53132.stgit@localhost6.localdomain6>
+References: <20120124074825.22384.17157.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:63635 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754308Ab2AXHuV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2012 02:50:21 -0500
+In-Reply-To: <20120124074825.22384.17157.stgit@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Maciej Trela <maciej.trela@intel.com>, linux-ide@vger.kernel.org, David Milburn <dmilburn@redhat.com>
 
-Changes since v6: http://marc.info/?l=linux-scsi&m=132711081125550&w=2
+This field is a holdover from the OS abstraction conversion.  The stable
+phy to port lookups are done via iphy->ownining_port under scic_lock.
+After this conversion to use port->lldd_port the only volatile lookup is
+the initial lookup in isci_port_formed().  After that point any lookup
+via a successfully notified domain_device is guaranteed to be valid
+until the domain_device is destroyed.
 
-1/ "isci: kill iphy->isci_port lookups": refreshed to fix a build error on
-    32-bit.  I think it is time for these changes to get some soak time in
-    -next.
+Delete ->start_complete as it is only set once and is set as a
+consequence of the port going link up, by definition of getting a port
+formed event the port is "ready".
 
-2/ "libsas: improve debug statements": changed 'routing char' for
-    table-to-table capable expanders to 'U' per Doug.
+While we are correcting port lookups also move the asd_sas_port table
+out from under the isci_port.  This is to preclude any temptation to use
+container_of() to convert an asd_sas_port to an isci_port, the
+association is dynamic and under libsas control.
 
-3/ "libsas: let libata recover links that fail to transmit initial
-    sig-fis": no functional changes, content rebased due to note 2.
+Tested-by: Maciej Trela <maciej.trela@intel.com>
+Cc: David Milburn <dmilburn@redhat.com>
+[dmilburn@redhat.com: fix i686 compile error]
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/isci/host.h          |   19 --------
+ drivers/scsi/isci/init.c          |    7 ---
+ drivers/scsi/isci/phy.c           |   18 +++++---
+ drivers/scsi/isci/phy.h           |    1 
+ drivers/scsi/isci/port.c          |   84 +++++++++++++++++++++++++++----------
+ drivers/scsi/isci/port.h          |    2 -
+ drivers/scsi/isci/remote_device.c |   29 ++++---------
+ 7 files changed, 83 insertions(+), 77 deletions(-)
 
-4/ "libsas: async ata scanning": fixed to close potential crash if eh is
-    already active when libsas tries to probe a new device.
-
-5/ new "libsas: fix lifetime of SAS_HA_FROZEN": slub debug caught a
-    regression due to SAS_HA_FROZEN preventing eh_scmds from being completed
-    normally.
-
-6/ new "libsas: revert ata srst": originally added to take advantage of
-    the srst generation capabilities of isci, but since isci has opted not
-    to use it we no longer need to carry it upstream.
-
-[PATCH 0/1] isci: kill iphy->isci_port lookups
-[PATCH 0/2] libsas: improve debug statements
-[PATCH 0/3] libsas: let libata recover links that fail to transmit initial sig-fis
-[PATCH 0/4] libsas: async ata scanning
-[PATCH 0/5] libsas: fix lifetime of SAS_HA_FROZEN
-[PATCH 0/6] libsas: revert ata srst
-
-Incremental diff (libsas-eh-reworks-v6..libsas-eh-reworks-v7):
-
+diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+index 646051a..26d4cba 100644
+--- a/drivers/scsi/isci/host.h
++++ b/drivers/scsi/isci/host.h
+@@ -187,6 +187,7 @@ struct isci_host {
+ 	int id; /* unique within a given pci device */
+ 	struct isci_phy phys[SCI_MAX_PHYS];
+ 	struct isci_port ports[SCI_MAX_PORTS + 1]; /* includes dummy port */
++	struct asd_sas_port sas_ports[SCI_MAX_PORTS];
+ 	struct sas_ha_struct sas_ha;
+ 
+ 	spinlock_t state_lock;
+@@ -393,24 +394,6 @@ static inline int sci_remote_device_node_count(struct isci_remote_device *idev)
+ #define sci_controller_clear_invalid_phy(controller, phy) \
+ 	((controller)->invalid_phy_mask &= ~(1 << (phy)->phy_index))
+ 
+-static inline struct device *sciphy_to_dev(struct isci_phy *iphy)
+-{
+-
+-	if (!iphy || !iphy->isci_port || !iphy->isci_port->isci_host)
+-		return NULL;
+-
+-	return &iphy->isci_port->isci_host->pdev->dev;
+-}
+-
+-static inline struct device *sciport_to_dev(struct isci_port *iport)
+-{
+-
+-	if (!iport || !iport->isci_host)
+-		return NULL;
+-
+-	return &iport->isci_host->pdev->dev;
+-}
+-
+ static inline struct device *scirdev_to_dev(struct isci_remote_device *idev)
+ {
+ 	if (!idev || !idev->isci_port || !idev->isci_port->isci_host)
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index f988c16..59f2ae7 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -233,18 +233,13 @@ static int isci_register_sas_ha(struct isci_host *isci_host)
+ 	if (!sas_ports)
+ 		return -ENOMEM;
+ 
+-	/*----------------- Libsas Initialization Stuff----------------------
+-	 * Set various fields in the sas_ha struct:
+-	 */
+-
+ 	sas_ha->sas_ha_name = DRV_NAME;
+ 	sas_ha->lldd_module = THIS_MODULE;
+ 	sas_ha->sas_addr    = &isci_host->phys[0].sas_addr[0];
+ 
+-	/* set the array of phy and port structs.  */
+ 	for (i = 0; i < SCI_MAX_PHYS; i++) {
+ 		sas_phys[i] = &isci_host->phys[i].sas_phy;
+-		sas_ports[i] = &isci_host->ports[i].sas_port;
++		sas_ports[i] = &isci_host->sas_ports[i];
+ 	}
+ 
+ 	sas_ha->sas_phy  = sas_phys;
+diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
+index 35f50c2..59f3d2e 100644
+--- a/drivers/scsi/isci/phy.c
++++ b/drivers/scsi/isci/phy.c
+@@ -67,6 +67,14 @@ enum sas_linkrate sci_phy_linkrate(struct isci_phy *iphy)
+ 	return iphy->max_negotiated_speed;
+ }
+ 
++static struct device *sciphy_to_dev(struct isci_phy *iphy)
++{
++	struct isci_phy *table = iphy - iphy->phy_index;
++	struct isci_host *ihost = container_of(table, typeof(*ihost), phys[0]);
++
++	return &ihost->pdev->dev;
++}
++
+ static enum sci_status
+ sci_phy_transport_layer_initialization(struct isci_phy *iphy,
+ 				       struct scu_transport_layer_registers __iomem *reg)
+@@ -1249,7 +1257,6 @@ void isci_phy_init(struct isci_phy *iphy, struct isci_host *ihost, int index)
+ 	sas_addr = cpu_to_be64(sci_sas_addr);
+ 	memcpy(iphy->sas_addr, &sas_addr, sizeof(sas_addr));
+ 
+-	iphy->isci_port = NULL;
+ 	iphy->sas_phy.enabled = 0;
+ 	iphy->sas_phy.id = index;
+ 	iphy->sas_phy.sas_addr = &iphy->sas_addr[0];
+@@ -1283,13 +1290,13 @@ int isci_phy_control(struct asd_sas_phy *sas_phy,
+ {
+ 	int ret = 0;
+ 	struct isci_phy *iphy = sas_phy->lldd_phy;
+-	struct isci_port *iport = iphy->isci_port;
++	struct asd_sas_port *port = sas_phy->port;
+ 	struct isci_host *ihost = sas_phy->ha->lldd_ha;
+ 	unsigned long flags;
+ 
+ 	dev_dbg(&ihost->pdev->dev,
+ 		"%s: phy %p; func %d; buf %p; isci phy %p, port %p\n",
+-		__func__, sas_phy, func, buf, iphy, iport);
++		__func__, sas_phy, func, buf, iphy, port);
+ 
+ 	switch (func) {
+ 	case PHY_FUNC_DISABLE:
+@@ -1306,11 +1313,10 @@ int isci_phy_control(struct asd_sas_phy *sas_phy,
+ 		break;
+ 
+ 	case PHY_FUNC_HARD_RESET:
+-		if (!iport)
++		if (!port)
+ 			return -ENODEV;
+ 
+-		/* Perform the port reset. */
+-		ret = isci_port_perform_hard_reset(ihost, iport, iphy);
++		ret = isci_port_perform_hard_reset(ihost, port->lldd_port, iphy);
+ 
+ 		break;
+ 	case PHY_FUNC_GET_EVENTS: {
+diff --git a/drivers/scsi/isci/phy.h b/drivers/scsi/isci/phy.h
+index 67699c8..a5e1a9e 100644
+--- a/drivers/scsi/isci/phy.h
++++ b/drivers/scsi/isci/phy.h
+@@ -103,7 +103,6 @@ struct isci_phy {
+ 	struct scu_transport_layer_registers __iomem *transport_layer_registers;
+ 	struct scu_link_layer_registers __iomem *link_layer_registers;
+ 	struct asd_sas_phy sas_phy;
+-	struct isci_port *isci_port;
+ 	u8 sas_addr[SAS_ADDR_SIZE];
+ 	union {
+ 		struct sas_identify_frame iaf;
 diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
-index eca9ba0..d8d2068 100644
+index ac7f277..841bd48 100644
 --- a/drivers/scsi/isci/port.c
 +++ b/drivers/scsi/isci/port.c
-@@ -1710,7 +1710,7 @@ void isci_port_deformed(struct asd_sas_phy *phy)
+@@ -60,6 +60,21 @@
+ #define SCIC_SDS_PORT_HARD_RESET_TIMEOUT  (1000)
+ #define SCU_DUMMY_INDEX    (0xFFFF)
  
- 	if (i >= SCI_MAX_PHYS)
- 		dev_dbg(&ihost->pdev->dev, "%s: port: %ld\n",
--			__func__, iport - &ihost->ports[0]);
-+			__func__, (long) (iport - &ihost->ports[0]));
- }
- 
- void isci_port_formed(struct asd_sas_phy *phy)
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index fe60736..653aa97 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -376,7 +376,7 @@ static int local_ata_check_ready(struct ata_link *link)
- }
- 
- static int sas_ata_printk(const char *level, const struct domain_device *ddev,
--		          const char *fmt, ...)
-+			  const char *fmt, ...)
++static struct device *sciport_to_dev(struct isci_port *iport)
++{
++	int i = iport->physical_port_index;
++	struct isci_port *table;
++	struct isci_host *ihost;
++
++	if (i == SCIC_SDS_DUMMY_PORT)
++		i = SCI_MAX_PORTS+1;
++
++	table = iport - i;
++	ihost = container_of(table, typeof(*ihost), ports[0]);
++
++	return &ihost->pdev->dev;
++}
++
+ static void isci_port_change_state(struct isci_port *iport, enum isci_status status)
  {
- 	struct ata_port *ap = ddev->sata_dev.ap;
- 	struct device *dev = &ddev->rphy->dev;
-@@ -443,43 +443,6 @@ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
+ 	unsigned long flags;
+@@ -165,17 +180,13 @@ static void isci_port_link_up(struct isci_host *isci_host,
+ 	struct sci_port_properties properties;
+ 	unsigned long success = true;
+ 
+-	BUG_ON(iphy->isci_port != NULL);
+-
+-	iphy->isci_port = iport;
+-
+ 	dev_dbg(&isci_host->pdev->dev,
+ 		"%s: isci_port = %p\n",
+ 		__func__, iport);
+ 
+ 	spin_lock_irqsave(&iphy->sas_phy.frame_rcvd_lock, flags);
+ 
+-	isci_port_change_state(iphy->isci_port, isci_starting);
++	isci_port_change_state(iport, isci_starting);
+ 
+ 	sci_port_get_properties(iport, &properties);
+ 
+@@ -269,8 +280,6 @@ static void isci_port_link_down(struct isci_host *isci_host,
+ 	isci_host->sas_ha.notify_phy_event(&isci_phy->sas_phy,
+ 					   PHYE_LOSS_OF_SIGNAL);
+ 
+-	isci_phy->isci_port = NULL;
+-
+ 	dev_dbg(&isci_host->pdev->dev,
+ 		"%s: isci_port = %p - Done\n", __func__, isci_port);
+ }
+@@ -288,7 +297,6 @@ static void isci_port_ready(struct isci_host *isci_host, struct isci_port *isci_
+ 	dev_dbg(&isci_host->pdev->dev,
+ 		"%s: isci_port = %p\n", __func__, isci_port);
+ 
+-	complete_all(&isci_port->start_complete);
+ 	isci_port_change_state(isci_port, isci_ready);
+ 	return;
+ }
+@@ -1633,7 +1641,6 @@ void isci_port_init(struct isci_port *iport, struct isci_host *ihost, int index)
+ 	INIT_LIST_HEAD(&iport->remote_dev_list);
+ 	INIT_LIST_HEAD(&iport->domain_dev_list);
+ 	spin_lock_init(&iport->state_lock);
+-	init_completion(&iport->start_complete);
+ 	iport->isci_host = ihost;
+ 	isci_port_change_state(iport, isci_freed);
+ }
+@@ -1714,24 +1721,55 @@ int isci_port_perform_hard_reset(struct isci_host *ihost, struct isci_port *ipor
  	return ret;
  }
  
--static int sas_ata_soft_reset(struct ata_link *link, unsigned int *class,
--			       unsigned long deadline)
--{
--	struct ata_port *ap = link->ap;
--	struct domain_device *dev = ap->private_data;
--	struct sas_internal *i = dev_to_sas_internal(dev);
--	int res = TMF_RESP_FUNC_FAILED;
--	int ret = 0;
--
--	if (i->dft->lldd_ata_soft_reset)
--		res = i->dft->lldd_ata_soft_reset(dev);
--
--	if (res != TMF_RESP_FUNC_COMPLETE) {
--		SAS_DPRINTK("%s: Unable to soft reset\n", __func__);
--		ret = -EAGAIN;
--	}
--
--	switch (dev->sata_dev.command_set) {
--	case ATA_COMMAND_SET:
--		SAS_DPRINTK("%s: Found ATA device.\n", __func__);
--		*class = ATA_DEV_ATA;
--		break;
--	case ATAPI_COMMAND_SET:
--		SAS_DPRINTK("%s: Found ATAPI device.\n", __func__);
--		*class = ATA_DEV_ATAPI;
--		break;
--	default:
--		SAS_DPRINTK("%s: Unknown SATA command set: %d.\n",
--			    __func__, dev->sata_dev.command_set);
--		*class = ATA_DEV_UNKNOWN;
--		break;
--	}
--
--	ap->cbl = ATA_CBL_SATA;
--	return ret;
--}
--
- /*
-  * notify the lldd to forget the sas_task for this internal ata command
-  * that bypasses scsi-eh
-@@ -563,7 +526,6 @@ static void sas_ata_set_dmamode(struct ata_port *ap, struct ata_device *ata_dev)
- 
- static struct ata_port_operations sas_sata_ops = {
- 	.prereset		= ata_std_prereset,
--	.softreset		= sas_ata_soft_reset,
- 	.hardreset		= sas_ata_hard_reset,
- 	.postreset		= ata_std_postreset,
- 	.error_handler		= ata_std_error_handler,
-@@ -606,6 +568,8 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev)
- 	ap->private_data = found_dev;
- 	ap->cbl = ATA_CBL_SATA;
- 	ap->scsi_host = shost;
-+	/* publish initialized ata port */
-+	smp_wmb();
- 	found_dev->sata_dev.ap = ap;
- 
- 	return 0;
-@@ -760,6 +724,18 @@ static void async_sas_ata_eh(void *data, async_cookie_t cookie)
- 	wake_up(&ha->core.shost->host_wait);
- }
- 
-+static bool sas_ata_dev_eh_valid(struct domain_device *dev)
-+{
-+	struct ata_port *ap;
-+
-+	if (!dev_is_sata(dev))
-+		return false;
-+	ap = dev->sata_dev.ap;
-+	/* consume fully initialized ata ports */
-+	smp_rmb();
-+	return !!ap;
-+}
-+
- void sas_ata_strategy_handler(struct Scsi_Host *shost)
+-/**
+- * isci_port_deformed() - This function is called by libsas when a port becomes
+- *    inactive.
+- * @phy: This parameter specifies the libsas phy with the inactive port.
+- *
+- */
+ void isci_port_deformed(struct asd_sas_phy *phy)
  {
- 	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(shost);
-@@ -783,7 +759,7 @@ void sas_ata_strategy_handler(struct Scsi_Host *shost)
- 
- 		spin_lock(&port->dev_list_lock);
- 		list_for_each_entry(dev, &port->dev_list, dev_list_node) {
--			if (!dev_is_sata(dev))
-+			if (!sas_ata_dev_eh_valid(dev))
- 				continue;
- 			async_schedule_domain(async_sas_ata_eh, dev, &async);
- 		}
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 0aa90d7..14e3244 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -166,6 +166,23 @@ static inline void *alloc_smp_resp(int size)
- 	return kzalloc(size, GFP_KERNEL);
- }
- 
-+static char sas_route_char(struct domain_device *dev, struct ex_phy *phy)
-+{
-+	switch (phy->routing_attr) {
-+	case TABLE_ROUTING:
-+		if (dev->ex_dev.t2t_supp)
-+			return 'U';
-+		else
-+			return 'T';
-+	case DIRECT_ROUTING:
-+		return 'D';
-+	case SUBTRACTIVE_ROUTING:
-+		return 'S';
-+	default:
-+		return '?';
+-	pr_debug("%s: sas_phy = %p\n", __func__, phy);
++	struct isci_host *ihost = phy->ha->lldd_ha;
++	struct isci_port *iport = phy->port->lldd_port;
++	unsigned long flags;
++	int i;
++
++	/* we got a port notification on a port that was subsequently
++	 * torn down and libsas is just now catching up
++	 */
++	if (!iport)
++		return;
++
++	spin_lock_irqsave(&ihost->scic_lock, flags);
++	for (i = 0; i < SCI_MAX_PHYS; i++) {
++		if (iport->active_phy_mask & 1 << i)
++			break;
 +	}
-+}
++	spin_unlock_irqrestore(&ihost->scic_lock, flags);
 +
- static enum sas_dev_type to_dev_type(struct discover_resp *dr)
- {
- 	/* This is detecting a failure to transmit initial dev to host
-@@ -287,10 +304,8 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
- 
- 	SAS_DPRINTK("ex %016llx phy%02d:%c:%X attached: %016llx (%s)\n",
- 		    SAS_ADDR(dev->sas_addr), phy->phy_id,
--		    phy->routing_attr == TABLE_ROUTING ? 'T' :
--		    phy->routing_attr == DIRECT_ROUTING ? 'D' :
--		    phy->routing_attr == SUBTRACTIVE_ROUTING ? 'S' : '?',
--		    phy->linkrate, SAS_ADDR(phy->attached_sas_addr), type);
-+		    sas_route_char(dev, phy), phy->linkrate,
-+		    SAS_ADDR(phy->attached_sas_addr), type);
++	if (i >= SCI_MAX_PHYS)
++		dev_dbg(&ihost->pdev->dev, "%s: port: %ld\n",
++			__func__, (long) (iport - &ihost->ports[0]));
  }
  
- /* check if we have an existing attached ata device on this expander phy */
-@@ -1192,32 +1207,25 @@ static void sas_print_parent_topology_bug(struct domain_device *child,
- 						 struct ex_phy *parent_phy,
- 						 struct ex_phy *child_phy)
+-/**
+- * isci_port_formed() - This function is called by libsas when a port becomes
+- *    active.
+- * @phy: This parameter specifies the libsas phy with the active port.
+- *
+- */
+ void isci_port_formed(struct asd_sas_phy *phy)
  {
--	static const char ra_char[] = {
--		[DIRECT_ROUTING] = 'D',
--		[SUBTRACTIVE_ROUTING] = 'S',
--		[TABLE_ROUTING] = 'T',
--	};
- 	static const char *ex_type[] = {
- 		[EDGE_DEV] = "edge",
- 		[FANOUT_DEV] = "fanout",
- 	};
- 	struct domain_device *parent = child->parent;
- 
--	sas_printk("%s ex %016llx (T2T supp:%d) phy 0x%x <--> %s ex %016llx "
--		   "(T2T supp:%d) phy 0x%x has %c:%c routing link!\n",
-+	sas_printk("%s ex %016llx phy 0x%x <--> %s ex %016llx "
-+		   "phy 0x%x has %c:%c routing link!\n",
- 
- 		   ex_type[parent->dev_type],
- 		   SAS_ADDR(parent->sas_addr),
--		   parent->ex_dev.t2t_supp,
- 		   parent_phy->phy_id,
- 
- 		   ex_type[child->dev_type],
- 		   SAS_ADDR(child->sas_addr),
--		   child->ex_dev.t2t_supp,
- 		   child_phy->phy_id,
- 
--		   ra_char[parent_phy->routing_attr],
--		   ra_char[child_phy->routing_attr]);
-+		   sas_route_char(parent, parent_phy),
-+		   sas_route_char(child, child_phy));
+-	pr_debug("%s: sas_phy = %p, sas_port = %p\n", __func__, phy, phy->port);
++	struct isci_host *ihost = phy->ha->lldd_ha;
++	struct isci_phy *iphy = to_iphy(phy);
++	struct asd_sas_port *port = phy->port;
++	struct isci_port *iport;
++	unsigned long flags;
++	int i;
++
++	/* initial ports are formed as the driver is still initializing,
++	 * wait for that process to complete
++	 */
++	wait_for_start(ihost);
++
++	spin_lock_irqsave(&ihost->scic_lock, flags);
++	for (i = 0; i < SCI_MAX_PORTS; i++) {
++		iport = &ihost->ports[i];
++		if (iport->active_phy_mask & 1 << iphy->phy_index)
++			break;
++	}
++	spin_unlock_irqrestore(&ihost->scic_lock, flags);
++
++	if (i >= SCI_MAX_PORTS)
++		iport = NULL;
++
++	port->lldd_port = iport;
  }
- 
- static int sas_check_eeds(struct domain_device *child,
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 3701ff7..fd32913 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -521,8 +521,7 @@ try_bus_reset:
- 	return FAILED;
- }
- 
--static int sas_eh_handle_sas_errors(struct Scsi_Host *shost,
--				    struct list_head *work_q)
-+static void sas_eh_handle_sas_errors(struct Scsi_Host *shost, struct list_head *work_q)
+diff --git a/drivers/scsi/isci/port.h b/drivers/scsi/isci/port.h
+index cb5ffbc..83de4b4 100644
+--- a/drivers/scsi/isci/port.h
++++ b/drivers/scsi/isci/port.h
+@@ -92,11 +92,9 @@ enum isci_status {
+ struct isci_port {
+ 	enum isci_status status;
+ 	struct isci_host *isci_host;
+-	struct asd_sas_port sas_port;
+ 	struct list_head remote_dev_list;
+ 	spinlock_t state_lock;
+ 	struct list_head domain_dev_list;
+-	struct completion start_complete;
+ 	struct completion hard_reset_complete;
+ 	enum sci_status hard_reset_status;
+ 	struct sci_base_state_machine sm;
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index b207cd3..49259e0 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -1377,31 +1377,18 @@ void isci_remote_device_gone(struct domain_device *dev)
+  *
+  * status, zero indicates success.
+  */
+-int isci_remote_device_found(struct domain_device *domain_dev)
++int isci_remote_device_found(struct domain_device *dev)
  {
- 	struct scsi_cmnd *cmd, *n;
- 	enum task_disposition res = TASK_IS_DONE;
-@@ -658,7 +657,7 @@ static int sas_eh_handle_sas_errors(struct Scsi_Host *shost,
-  out:
- 	list_splice_tail(&done, work_q);
- 	list_splice_tail_init(&ha->eh_ata_q, work_q);
--	return list_empty(work_q);
-+	return;
+-	struct isci_host *isci_host = dev_to_ihost(domain_dev);
+-	struct isci_port *isci_port;
+-	struct isci_phy *isci_phy;
+-	struct asd_sas_port *sas_port;
+-	struct asd_sas_phy *sas_phy;
++	struct isci_host *isci_host = dev_to_ihost(dev);
++	struct isci_port *isci_port = dev->port->lldd_port;
+ 	struct isci_remote_device *isci_device;
+ 	enum sci_status status;
  
-  clear_q:
- 	SAS_DPRINTK("--- Exit %s -- clear_q\n", __func__);
-@@ -682,10 +681,13 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
- 		    __func__, shost->host_busy, shost->host_failed);
- 	/*
- 	 * Deal with commands that still have SAS tasks (i.e. they didn't
--	 * complete via the normal sas_task completion mechanism)
-+	 * complete via the normal sas_task completion mechanism),
-+	 * SAS_HA_FROZEN gives eh dominion over all sas_task completion.
- 	 */
- 	set_bit(SAS_HA_FROZEN, &ha->state);
--	if (sas_eh_handle_sas_errors(shost, &eh_work_q))
-+	sas_eh_handle_sas_errors(shost, &eh_work_q);
-+	clear_bit(SAS_HA_FROZEN, &ha->state);
-+	if (list_empty(&eh_work_q))
- 		goto out;
+ 	dev_dbg(&isci_host->pdev->dev,
+-		"%s: domain_device = %p\n", __func__, domain_dev);
++		"%s: domain_device = %p\n", __func__, dev);
  
- 	/*
-@@ -699,7 +701,6 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
- 		scsi_eh_ready_devs(shost, &eh_work_q, &ha->eh_done_q);
+-	wait_for_start(isci_host);
+-
+-	sas_port = domain_dev->port;
+-	sas_phy = list_first_entry(&sas_port->phy_list, struct asd_sas_phy,
+-				   port_phy_el);
+-	isci_phy = to_iphy(sas_phy);
+-	isci_port = isci_phy->isci_port;
+-
+-	/* we are being called for a device on this port,
+-	 * so it has to come up eventually
+-	 */
+-	wait_for_completion(&isci_port->start_complete);
++	if (!isci_port)
++		return -ENODEV;
  
- out:
--	clear_bit(SAS_HA_FROZEN, &ha->state);
- 	if (ha->lldd_max_execute_num > 1)
- 		wake_up_process(ha->core.queue_thread);
+ 	if ((isci_stopping == isci_port_get_state(isci_port)) ||
+ 	    (isci_stopped == isci_port_get_state(isci_port)))
+@@ -1415,7 +1402,7 @@ int isci_remote_device_found(struct domain_device *domain_dev)
+ 	INIT_LIST_HEAD(&isci_device->node);
  
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 20153d5..5f5ed1b 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -619,7 +619,6 @@ struct sas_domain_function_template {
- 	int (*lldd_clear_aca)(struct domain_device *, u8 *lun);
- 	int (*lldd_clear_task_set)(struct domain_device *, u8 *lun);
- 	int (*lldd_I_T_nexus_reset)(struct domain_device *);
--	int (*lldd_ata_soft_reset)(struct domain_device *);
- 	int (*lldd_ata_check_ready)(struct domain_device *);
- 	void (*lldd_ata_set_dmamode)(struct domain_device *);
- 	int (*lldd_lu_reset)(struct domain_device *, u8 *lun);
+ 	spin_lock_irq(&isci_host->scic_lock);
+-	isci_device->domain_dev = domain_dev;
++	isci_device->domain_dev = dev;
+ 	isci_device->isci_port = isci_port;
+ 	list_add_tail(&isci_device->node, &isci_port->remote_dev_list);
+ 
+@@ -1428,7 +1415,7 @@ int isci_remote_device_found(struct domain_device *domain_dev)
+ 
+ 	if (status == SCI_SUCCESS) {
+ 		/* device came up, advertise it to the world */
+-		domain_dev->lldd_dev = isci_device;
++		dev->lldd_dev = isci_device;
+ 	} else
+ 		isci_put_device(isci_device);
+ 	spin_unlock_irq(&isci_host->scic_lock);
+
