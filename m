@@ -1,78 +1,86 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
-Date: Tue, 24 Jan 2012 22:08:23 +0100
-Message-ID: <20120124210823.GE20650@quack.suse.cz>
-References: <20120124165631.GA8941@infradead.org>
- <186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca>
- <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
- <20120124184054.GA23227@infradead.org>
- <20120124190732.GH4387@shiny>
- <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
- <20120124200932.GB20650@quack.suse.cz>
- <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
- <20120124203936.GC20650@quack.suse.cz>
- <x49liowkeax.fsf@segfault.boston.devel.redhat.com>
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [LSF/MM TOPIC][ATTEND] linux servers as a storage server -
+ what's missing?
+Date: Tue, 24 Jan 2012 16:36:09 -0500
+Message-ID: <20120124213609.GA12426@fieldses.org>
+References: <4EF2026F.2090506@redhat.com>
+ <20120103142609.2b4d06cb@tlielax.poochiereds.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51985 "EHLO mx2.suse.de"
+Received: from fieldses.org ([174.143.236.118]:50548 "EHLO fieldses.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755919Ab2AXVIZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2012 16:08:25 -0500
+	id S1756710Ab2AXVgK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2012 16:36:10 -0500
 Content-Disposition: inline
-In-Reply-To: <x49liowkeax.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <20120103142609.2b4d06cb@tlielax.poochiereds.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, Andreas Dilger <adilger@dilger.ca>, Andrea Arcangeli <aarcange@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de" <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, fengguang.wu@gmail.com, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, linux-fsdevel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue 24-01-12 15:59:02, Jeff Moyer wrote:
-> Jan Kara <jack@suse.cz> writes:
-> > On Tue 24-01-12 15:13:40, Jeff Moyer wrote:
-> >> Jan Kara <jack@suse.cz> writes:
-> >> 
-> >> > On Tue 24-01-12 14:14:14, Jeff Moyer wrote:
-> >> >> Chris Mason <chris.mason@oracle.com> writes:
-> >> >> 
-> >> >> >> All three filesystems use the generic mpages code for reads, so they
-> >> >> >> all get the same (bad) I/O patterns.  Looks like we need to fix this up
-> >> >> >> ASAP.
-> >> >> >
-> >> >> > Can you easily run btrfs through the same rig?  We don't use mpages and
-> >> >> > I'm curious.
-> >> >> 
-> >> >> The readahead code was to blame, here.  I wonder if we can change the
-> >> >> logic there to not break larger I/Os down into smaller sized ones.
-> >> >> Fengguang, doing a dd if=file of=/dev/null bs=1M results in 128K I/Os,
-> >> >> when 128KB is the read_ahead_kb value.  Is there any heuristic you could
-> >> >> apply to not break larger I/Os up like this?  Does that make sense?
-> >> >   Well, not breaking up I/Os would be fairly simple as ondemand_readahead()
-> >> > already knows how much do we want to read. We just trim the submitted I/O to
-> >> > read_ahead_kb artificially. And that is done so that you don't trash page
-> >> > cache (possibly evicting pages you have not yet copied to userspace) when
-> >> > there are several processes doing large reads.
-> >> 
-> >> Do you really think applications issue large reads and then don't use
-> >> the data?  I mean, I've seen some bad programming, so I can believe that
-> >> would be the case.  Still, I'd like to think it doesn't happen.  ;-)
-> >   No, I meant a cache thrashing problem. Suppose that we always readahead
-> > as much as user asks and there are say 100 processes each wanting to read 4
-> > MB.  Then you need to find 400 MB in the page cache so that all reads can
-> > fit.  And if you don't have them, reads for process 50 may evict pages we
-> > already preread for process 1, but process one didn't yet get to CPU to
-> > copy the data to userspace buffer. So the read becomes wasted.
+On Tue, Jan 03, 2012 at 02:26:09PM -0500, Jeff Layton wrote:
+> On Wed, 21 Dec 2011 10:59:43 -0500
+> Ric Wheeler <rwheeler@redhat.com> wrote:
 > 
-> Yeah, you're right, cache thrashing is an issue.  In my tests, I didn't
-> actually see the *initial* read come through as a full 1MB I/O, though.
-> That seems odd to me.
-  At first sight yes. But buffered reading internally works page-by-page
-so what it does is that it looks at the first page it wants, sees we don't
-have that in memory, so we submit readahead (hence 128 KB request) and then
-wait for that page to become uptodate. Then, when we are coming to the end
-of preread window (trip over marked page), we submit another chunk of
-readahead...
+> > 
+> > One common thing that I see a lot of these days is an increasing number of 
+> > platforms that are built on our stack as storage servers. Ranging from the 
+> > common linux based storage/NAS devices up to various distributed systems.  
+> > Almost all of them use our common stack - software RAID, LVM, XFS/ext4 and samba.
+> > 
+> > At last year's SNIA developers conference, it was clear that Microsoft is 
+> > putting a lot of effort into enhancing windows 8 server as a storage server with 
+> > both support for a pNFS server and of course SMB. I think that linux (+samba) is 
+> > ahead of the windows based storage appliances today, but they are putting 
+> > together a very aggressive list of features.
+> > 
+> > I think that it would be useful and interesting to take a slot at this year's 
+> > LSF to see how we are doing in this space. How large do we need to scale for an 
+> > appliance?  What kind of work is needed (support for the copy offload system 
+> > call? better support for out of band notifications like those used in "thinly 
+> > provisioned" SCSI devices? management API's? Ease of use CLI work? SMB2.2 support?).
+> > 
+> > The goal would be to see what technical gaps we have that need more active 
+> > development in, not just a wish list :)
+> > 
+> > Ric
+> 
+> Unfortunately, w/o a wishlist of sorts, it's hard to know what needs
+> more active development ;).
+> 
+> While HCH will probably disagree, being able to support more
+> NFSv4/Windows API features at the VFS layer would make it a lot easier
+> to do a more unified serving appliance. Right now, both knfsd and samba
+> track too much info internally, and that makes it very difficult to
+> serve the same data via multiple protocols.
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+By the way, we could really use a
+Windows/Samba expert if we're going to discuss that.
+
+I don't think their list(s) got the announcement?
+
+--b.
+
+> 
+> Off the top of my head, my "wishlist" for better NFSv4 serving would be:
+> 
+> - RichACLs
+> - Share/Deny mode support on open
+> - mandatory locking that doesn't rely on weirdo file modes
+> 
+> It's always going to be hard for us to compete with dedicated
+> appliances. Where Linux can shine though is in allowing for more
+> innovative combinations.
+> 
+> Being able to do active/active NFS serving from clustered filesystems,
+> for instance is something that we can eventually attain but that would
+> be harder to do in an appliance. This sort of discussion might also
+> dovetail with Benny's proposal about pNFS serving.
+> 
+> -- 
+> Jeff Layton <jlayton@redhat.com>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
