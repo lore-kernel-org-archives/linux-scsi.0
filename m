@@ -1,54 +1,60 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [LSF/MM TOPIC] Copy offload
-Date: Tue, 24 Jan 2012 12:16:48 +0200
-Message-ID: <4F1E8510.80003@panasas.com>
-References: <4F0AC112.2000709@suse.de> <CAL1RGDWJjzBnN6Aj_ngvkFco_toe8Dey5QApgmYafpEqECuTSw@mail.gmail.com>
+From: walter harms <wharms@bfs.de>
+Subject: Re: [patch] target: handle empty string writes in sysfs
+Date: Tue, 24 Jan 2012 11:55:45 +0100
+Message-ID: <4F1E8E31.1070507@bfs.de>
+References: <20120124084036.GB29097@elgon.mountain>
+Reply-To: wharms@bfs.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from natasha.panasas.com ([67.152.220.90]:36630 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754982Ab2AXKRA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2012 05:17:00 -0500
-In-Reply-To: <CAL1RGDWJjzBnN6Aj_ngvkFco_toe8Dey5QApgmYafpEqECuTSw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20120124084036.GB29097@elgon.mountain>
+Sender: target-devel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@purestorage.com>
 
-On 01/13/2012 09:35 PM, Roland Dreier wrote:
-> In general, with my target vendor hat on, I'd be very interested in
-> what special SCSI commands the Linux initiator stack might want
-> to use.  Extended copy is one (very complex) case -- and BTW
-> Microsoft seems to plan on using XCOPY LITE with NTFS.
+
+
+Am 24.01.2012 09:40, schrieb Dan Carpenter:
+> These are root only and we're not likely to hit the problem in practise,
+> but it makes a the static checkers happy.
 > 
-> Another possibly interesting example would be COMPARE AND
-> WRITE for clustered filesystems.
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> Any other storage operations that FS developers might want
-> from the block device?  (Either standard SCSI commands or
-> more speculative stuff that T10 hasn't thought of yet)
-> 
+> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> index 0955bb8..9b86330 100644
+> --- a/drivers/target/target_core_configfs.c
+> +++ b/drivers/target/target_core_configfs.c
+> @@ -1707,6 +1707,8 @@ static ssize_t target_core_store_dev_alias(
+>  	se_dev->su_dev_flags |= SDF_USING_ALIAS;
+>  	read_bytes = snprintf(&se_dev->se_dev_alias[0], SE_DEV_ALIAS_LEN,
+>  			"%s", page);
 
-copy-and-modify
+Would it help to check page==NULL or *page==0 at start ?
+Now you have se_dev->su_dev_flags initialised.
 
-the command looks like a a write with destination [write_start, num_sectors]
-The command also receives a read destination [read_start, num_sectors]
+re,
+ wh
 
-where  read_start <= write_start && write_start+num_sectors <= read_start+num_sectors
 
-That's for the like of pNFS blocks layout where the FS maintains a copy-on-write
-with FS blocks larger than a sector. Today it needs to do the copy then the
-modification. (2 + 1) operations instead of 1
-
-Na, too marginal. Is it worth it? It might depend on the FS block size.
-
-Just some crazy idea
-Boaz
-
->  - R.
+> +	if (read_bytes == 0)
+> +		return -EINVAL;
+>  
+>  	if (se_dev->se_dev_alias[read_bytes - 1] == '\n')
+>  		se_dev->se_dev_alias[read_bytes - 1] = '\0';
+> @@ -1756,6 +1758,8 @@ static ssize_t target_core_store_dev_udev_path(
+>  	se_dev->su_dev_flags |= SDF_USING_UDEV_PATH;
+>  	read_bytes = snprintf(&se_dev->se_dev_udev_path[0], SE_UDEV_PATH_LEN,
+>  			"%s", page);
+> +	if (read_bytes == 0)
+> +		return -EINVAL;
+>  
+>  	if (se_dev->se_dev_udev_path[read_bytes - 1] == '\n')
+>  		se_dev->se_dev_udev_path[read_bytes - 1] = '\0';
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> 
+> 
