@@ -1,60 +1,36 @@
-From: walter harms <wharms@bfs.de>
-Subject: Re: [patch] target: handle empty string writes in sysfs
-Date: Tue, 24 Jan 2012 11:55:45 +0100
-Message-ID: <4F1E8E31.1070507@bfs.de>
-References: <20120124084036.GB29097@elgon.mountain>
-Reply-To: wharms@bfs.de
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH stable 3/4] block: fail SCSI passthrough ioctls on partition
+ devices
+Date: Tue, 24 Jan 2012 13:56:10 +0100
+Message-ID: <4F1EAA6A.6020207@redhat.com>
+References: <1326772723.2819.167.camel@deadeye>  <1326773222.2819.172.camel@deadeye> <4F1545A4.3000809@redhat.com>  <1326862077.2819.210.camel@deadeye> <4F168A49.8000606@redhat.com> <1326902676.3271.10.camel@deadeye>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20120124084036.GB29097@elgon.mountain>
-Sender: target-devel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:44201 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754825Ab2AXM4V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2012 07:56:21 -0500
+In-Reply-To: <1326902676.3271.10.camel@deadeye>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: stable@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
 
+On 01/18/2012 05:04 PM, Ben Hutchings wrote:
+> >  There is harm.  You'll be blacklisting also the standard block device
+> >  ioctls, and those won't work on 32-on-64 anymore.  A system with 32-bit
+> >  userland will likely not boot anymore.
+>
+> It does (yes, I tested that myself now).  The standard block device
+> ioctls are handled without calling the driver's compat_ioctl.
 
+What about the non-compat path when done by non-root?
 
-Am 24.01.2012 09:40, schrieb Dan Carpenter:
-> These are root only and we're not likely to hit the problem in practise,
-> but it makes a the static checkers happy.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-> index 0955bb8..9b86330 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -1707,6 +1707,8 @@ static ssize_t target_core_store_dev_alias(
->  	se_dev->su_dev_flags |= SDF_USING_ALIAS;
->  	read_bytes = snprintf(&se_dev->se_dev_alias[0], SE_DEV_ALIAS_LEN,
->  			"%s", page);
+* Does BLKROSET still return EACCES when run by non-root and without 
+CAP_SYS_ADMIN?  I suspect your patch is changing it to EINVAL.
 
-Would it help to check page==NULL or *page==0 at start ?
-Now you have se_dev->su_dev_flags initialised.
+* Does BLKFLSBUF work when run by non-root but with CAP_SYS_ADMIN?
 
-re,
- wh
-
-
-> +	if (read_bytes == 0)
-> +		return -EINVAL;
->  
->  	if (se_dev->se_dev_alias[read_bytes - 1] == '\n')
->  		se_dev->se_dev_alias[read_bytes - 1] = '\0';
-> @@ -1756,6 +1758,8 @@ static ssize_t target_core_store_dev_udev_path(
->  	se_dev->su_dev_flags |= SDF_USING_UDEV_PATH;
->  	read_bytes = snprintf(&se_dev->se_dev_udev_path[0], SE_UDEV_PATH_LEN,
->  			"%s", page);
-> +	if (read_bytes == 0)
-> +		return -EINVAL;
->  
->  	if (se_dev->se_dev_udev_path[read_bytes - 1] == '\n')
->  		se_dev->se_dev_udev_path[read_bytes - 1] = '\0';
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Paolo
