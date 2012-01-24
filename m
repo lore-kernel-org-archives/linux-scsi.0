@@ -1,41 +1,52 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [LSF/MM TOPIC] a few storage topics
-Date: Tue, 24 Jan 2012 15:04:02 -0500
-Message-ID: <yq18vkw3m19.fsf@sermon.lab.mkp.net>
-References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
-	<20120117200609.GA7933@redhat.com>
-	<yq162g13rsg.fsf@sermon.lab.mkp.net> <4F1F0B26.301@interlog.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
+Date: Tue, 24 Jan 2012 21:09:32 +0100
+Message-ID: <20120124200932.GB20650@quack.suse.cz>
+References: <20120123161857.GC28526@quack.suse.cz>
+ <20120123175353.GD30782@redhat.com>
+ <x49r4yq9suf.fsf@segfault.boston.devel.redhat.com>
+ <20120124151504.GQ4387@shiny>
+ <20120124165631.GA8941@infradead.org>
+ <186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca>
+ <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
+ <20120124184054.GA23227@infradead.org>
+ <20120124190732.GH4387@shiny>
+ <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:55567 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754966Ab2AXUEM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2012 15:04:12 -0500
-In-Reply-To: <4F1F0B26.301@interlog.com> (Douglas Gilbert's message of "Tue,
-	24 Jan 2012 14:48:54 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Chris Mason <chris.mason@oracle.com>, Andreas Dilger <adilger@dilger.ca>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de" <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, fengguang.wu@gmail.com, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "Darrick J.Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
 
->>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+On Tue 24-01-12 14:14:14, Jeff Moyer wrote:
+> Chris Mason <chris.mason@oracle.com> writes:
+> 
+> >> All three filesystems use the generic mpages code for reads, so they
+> >> all get the same (bad) I/O patterns.  Looks like we need to fix this up
+> >> ASAP.
+> >
+> > Can you easily run btrfs through the same rig?  We don't use mpages and
+> > I'm curious.
+> 
+> The readahead code was to blame, here.  I wonder if we can change the
+> logic there to not break larger I/Os down into smaller sized ones.
+> Fengguang, doing a dd if=file of=/dev/null bs=1M results in 128K I/Os,
+> when 128KB is the read_ahead_kb value.  Is there any heuristic you could
+> apply to not break larger I/Os up like this?  Does that make sense?
+  Well, not breaking up I/Os would be fairly simple as ondemand_readahead()
+already knows how much do we want to read. We just trim the submitted I/O to
+read_ahead_kb artificially. And that is done so that you don't trash page
+cache (possibly evicting pages you have not yet copied to userspace) when
+there are several processes doing large reads.
 
->> I hadn't thought of that use case. Going to be a bit tricky given how
->> GET LBA STATUS works...
+Maybe 128 KB is a too small default these days but OTOH noone prevents you
+from raising it (e.g. SLES uses 1 MB as a default).
 
-Doug> What's new in ACS-3 (t13.org ATA Command Set): .....
-Doug>   f10138r6 Adds the ability for the device to return a
-Doug>            list of the LBAs that are currently trimmed.
-
-Doug> So it looks like t13.org are adding a GET LBA STATUS type
-Doug> facility.  That in turn should lead to a SAT-3 (SCSI to ATA
-Doug> Translation) definition of a mapping between both facilities.
-
-Yep.
-
-It is mostly how to handle the multi-range stuff going up the stack that
-concerns me. We'd need something like FIEMAP...
-
+								Honza
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
