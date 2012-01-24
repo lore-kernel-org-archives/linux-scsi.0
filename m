@@ -1,168 +1,181 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [23/27] kernel.h: add printk_ratelimited and pr_<level>_rl
-Date: Tue, 24 Jan 2012 16:35:50 +0000
-Message-ID: <1327422950.5400.40.camel@deadeye>
-References: <20120123234224.GA19510@kroah.com>
-	 <20120123234203.649739932@clark.kroah.org>
-	 <20120124144613.GD3180@pcarmody2.research.nokia.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-bRtAGwA5ctm1rsqCZGr7"
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [v2] Re: [091/129] block: fail SCSI passthrough ioctls on partition devices
+Date: Tue, 24 Jan 2012 17:43:50 +0100
+Message-ID: <1327423431-13965-1-git-send-email-pbonzini@redhat.com>
+References: <20120124023932.023409422@clark.kroah.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120124144613.GD3180@pcarmody2.research.nokia.com>
+In-Reply-To: <20120124023932.023409422@clark.kroah.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Phil Carmody <ext-phil.2.carmody@nokia.com>
-Cc: ext Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Paolo Bonzini <pbonzini@redhat.com>, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
+> You need to return -ENOTTY from scsi_verify_blk_ioctl and -ENOIOCTLCMD from
+> sd_compat_ioctl, because -ENOIOCTLCMD will not be handled correctly by
+> block/ioctl.c.  This would break BLKROSET and BLKFLSBUF done by non-root
+> but with the appropriate capabilities.
+>
+> Fixed patch follows.  If you prefer that I send an interdiff, let me know.
 
---=-bRtAGwA5ctm1rsqCZGr7
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Now with fixed space-and-tabs.
 
-On Tue, 2012-01-24 at 16:46 +0200, Phil Carmody wrote:
-> On 23/01/12 15:41 -0800, ext Greg KH wrote:
-> > 2.6.32-longterm review patch.  If anyone has any objections, please let=
- me know.
->=20
-> This looks like an added feature with no users in .32 - does it really=
-=20
-> belong in a stable tree?
-> (But to be explicit, I have no issue with its contents at all.)
+Paolo
 
-It's required for commit 0bfc96cb77224736dfa35c3c555d37b3646ef35e
-('block: fail SCSI passthrough ioctls on partition devices'), though
-that hasn't actually been included in this series.  I think that's
-because there is still ongoing discussion of which error codes need to
-be used.
+-------- 8< ---------
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH] block: fail SCSI passthrough ioctls on partition devices
 
-Ben.
+commit 0bfc96cb77224736dfa35c3c555d37b3646ef35e upstream.
 
-> Phil
->=20
-> > ------------------
-> >=20
-> >=20
-> > From: Joe Perches <joe@perches.com>
-> >=20
-> > commit 8a64f336bc1d4aa203b138d29d5a9c414a9fbb47 upstream.
-> >=20
-> > Add a printk_ratelimited statement expression macro that uses a per-cal=
-l
-> > ratelimit_state so that multiple subsystems output messages are not
-> > suppressed by a global __ratelimit state.
-> >=20
-> > [akpm@linux-foundation.org: coding-style fixes]
-> > [akpm@linux-foundation.org: s/_rl/_ratelimited/g]
-> > Signed-off-by: Joe Perches <joe@perches.com>
-> > Cc: Naohiro Ooiwa <nooiwa@miraclelinux.com>
-> > Cc: Ingo Molnar <mingo@elte.hu>
-> > Cc: Hiroshi Shimamoto <h-shimamoto@ct.jp.nec.com>
-> > Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> > Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> >=20
-> > ---
-> >  include/linux/kernel.h |   44 ++++++++++++++++++++++++++++++++++++++++=
-++++
-> >  1 file changed, 44 insertions(+)
-> >=20
-> > --- a/include/linux/kernel.h
-> > +++ b/include/linux/kernel.h
-> > @@ -407,6 +407,50 @@ static inline char *pack_hex_byte(char *
-> >  #endif
-> > =20
-> >  /*
-> > + * ratelimited messages with local ratelimit_state,
-> > + * no local ratelimit_state used in the !PRINTK case
-> > + */
-> > +#ifdef CONFIG_PRINTK
-> > +#define printk_ratelimited(fmt, ...)  ({		\
-> > +	static struct ratelimit_state _rs =3D {		\
-> > +		.interval =3D DEFAULT_RATELIMIT_INTERVAL, \
-> > +		.burst =3D DEFAULT_RATELIMIT_BURST,       \
-> > +	};                                              \
-> > +							\
-> > +	if (!__ratelimit(&_rs))                         \
-> > +		printk(fmt, ##__VA_ARGS__);		\
-> > +})
-> > +#else
-> > +/* No effect, but we still get type checking even in the !PRINTK case:=
- */
-> > +#define printk_ratelimited printk
-> > +#endif
-> > +
-> > +#define pr_emerg_ratelimited(fmt, ...) \
-> > +	printk_ratelimited(KERN_EMERG pr_fmt(fmt), ##__VA_ARGS__)
-> > +#define pr_alert_ratelimited(fmt, ...) \
-> > +	printk_ratelimited(KERN_ALERT pr_fmt(fmt), ##__VA_ARGS__)
-> > +#define pr_crit_ratelimited(fmt, ...) \
-> > +	printk_ratelimited(KERN_CRIT pr_fmt(fmt), ##__VA_ARGS__)
-> > +#define pr_err_ratelimited(fmt, ...) \
-> > +	printk_ratelimited(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
-> > +#define pr_warning_ratelimited(fmt, ...) \
-> > +	printk_ratelimited(KERN_WARNING pr_fmt(fmt), ##__VA_ARGS__)
-> > +#define pr_notice_ratelimited(fmt, ...) \
-> > +	printk_ratelimited(KERN_NOTICE pr_fmt(fmt), ##__VA_ARGS__)
-> > +#define pr_info_ratelimited(fmt, ...) \
-> > +	printk_ratelimited(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
-> > +/* no pr_cont_ratelimited, don't do that... */
-> > +/* If you are writing a driver, please use dev_dbg instead */
-> > +#if defined(DEBUG)
-> > +#define pr_debug_ratelimited(fmt, ...) \
-> > +	printk_ratelimited(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
-> > +#else
-> > +#define pr_debug_ratelimited(fmt, ...) \
-> > +	({ if (0) printk_ratelimited(KERN_DEBUG pr_fmt(fmt), \
-> > +				     ##__VA_ARGS__); 0; })
-> > +#endif
-> > +
-> > +/*
-> >   * General tracing related utility functions - trace_printk(),
-> >   * tracing_on/tracing_off and tracing_start()/tracing_stop
-> >   *
-> >=20
-> >=20
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel"=
- in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> >=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe stable" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+Linux allows executing the SG_IO ioctl on a partition or LVM volume, and
+will pass the command to the underlying block device.  This is
+well-known, but it is also a large security problem when (via Unix
+permissions, ACLs, SELinux or a combination thereof) a program or user
+needs to be granted access only to part of the disk.
 
---=20
-Ben Hutchings
-Horngren's Observation:
-                   Among economists, the real world is often a special case=
-.
+This patch lets partitions forward a small set of harmless ioctls;
+others are logged with printk so that we can see which ioctls are
+actually sent.  In my tests only CDROM_GET_CAPABILITY actually occurred.
+Of course it was being sent to a (partition on a) hard disk, so it would
+have failed with ENOTTY and the patch isn't changing anything in
+practice.  Still, I'm treating it specially to avoid spamming the logs.
 
---=-bRtAGwA5ctm1rsqCZGr7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+In principle, this restriction should include programs running with
+CAP_SYS_RAWIO.  If for example I let a program access /dev/sda2 and
+/dev/sdb, it still should not be able to read/write outside the
+boundaries of /dev/sda2 independent of the capabilities.  However, for
+now programs with CAP_SYS_RAWIO will still be allowed to send the
+ioctls.  Their actions will still be logged.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+This patch does not affect the non-libata IDE driver.  That driver
+however already tests for bd != bd->bd_contains before issuing some
+ioctl; it could be restricted further to forbid these ioctls even for
+programs running with CAP_SYS_ADMIN/CAP_SYS_RAWIO.
 
-iQIVAwUATx7d5ue/yOyVhhEJAQqVhhAAuzYvBQ4jP2EiJT6dM0kemBK2EGCDTcMi
-4ScHTn5P6wWYkCCOfl9gNN2jQjnQEKopXEmD3UZliEVnNxvgaqeTKMWpFtwrhHE/
-+XxF51sAwH3kY4F6UmAHEFGvOIlcAgLNd43ppy4R8gCSX1kFbzMxrQ+EdpZzhWlR
-bTv0c7zVdCVaHK1ptMZQfUkNaQ0BWWLwgB6yEx/upmCyabTbPjxYjLgLiOq9gQ74
-+Sop3ofmZwjHzTM5Rmq4TliNpKBUpaA/F5G3j92n0linVUAnbPIkBrcHm0gPqN1T
-eQpRSELXeGJ3tTMaDMEiIeIQDysX9yIlsiqY+MPuB4bWzBVCSW6iOwnThs/VUNq8
-BwqxnNVxricvp8+Y60J448zLOqc+fR3/rTrM2y+3kW4Wf9+8xyyyVfIEqVKKns9Z
-ym36WgY8Wru0xkTM+ByjP0PJdT1vJ2ObAmni+Yh42Kq9jTPC7AAnqXuHtQs0Be6x
-1dcvItpky2EhNZQynwdwQ1KP/aUVPfawQeXrjGWvR0ftuZbR55ULrl0ew06Jgt8v
-Evx43P09yGyDYJ3WPxa8dhCL3btguTQhWgs3dS0we5fVYl98H2Qmbz5zYJ6uyCRw
-iqrztvIdJNSNJ9/iPQrMemV0R1khZ9MKJ0Kt2gQgUDfZgzwTK+V7CaCSLoObrC8T
-dSrKPDcVxm4=
-=SMBY
------END PGP SIGNATURE-----
+Cc: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <JBottomley@parallels.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+[ Make it also print the command name when warning - Linus ]
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
 
---=-bRtAGwA5ctm1rsqCZGr7--
+[ Changes with respect to 3.3: return -ENOTTY from scsi_verify_blk_ioctl
+  and -ENOIOCTLCMD from sd_compat_ioctl. ]
+
+---
+ block/scsi_ioctl.c     |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c      |   11 +++++++++--
+ include/linux/blkdev.h |    1 +
+ 3 files changed, 55 insertions(+), 2 deletions(-)
+
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -24,6 +24,7 @@
+ #include <linux/capability.h>
+ #include <linux/completion.h>
+ #include <linux/cdrom.h>
++#include <linux/ratelimit.h>
+ #include <linux/slab.h>
+ #include <linux/times.h>
+ #include <asm/uaccess.h>
+@@ -690,9 +691,53 @@ int scsi_cmd_ioctl(struct request_queue
+ }
+ EXPORT_SYMBOL(scsi_cmd_ioctl);
+ 
++int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
++{
++	if (bd && bd == bd->bd_contains)
++		return 0;
++
++	/* Actually none of these is particularly useful on a partition,
++	 * but they are safe.
++	 */
++	switch (cmd) {
++	case SCSI_IOCTL_GET_IDLUN:
++	case SCSI_IOCTL_GET_BUS_NUMBER:
++	case SCSI_IOCTL_GET_PCI:
++	case SCSI_IOCTL_PROBE_HOST:
++	case SG_GET_VERSION_NUM:
++	case SG_SET_TIMEOUT:
++	case SG_GET_TIMEOUT:
++	case SG_GET_RESERVED_SIZE:
++	case SG_SET_RESERVED_SIZE:
++	case SG_EMULATED_HOST:
++		return 0;
++	case CDROM_GET_CAPABILITY:
++		/* Keep this until we remove the printk below.  udev sends it
++		 * and we do not want to spam dmesg about it.   CD-ROMs do
++		 * not have partitions, so we get here only for disks.
++		 */
++		return -ENOTTY;
++	default:
++		break;
++	}
++
++	/* In particular, rule out all resets and host-specific ioctls.  */
++	printk_ratelimited(KERN_WARNING
++			   "%s: sending ioctl %x to a partition!\n", current->comm, cmd);
++
++	return capable(CAP_SYS_RAWIO) ? 0 : -ENOTTY;
++}
++EXPORT_SYMBOL(scsi_verify_blk_ioctl);
++
+ int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
+ 		       unsigned int cmd, void __user *arg)
+ {
++	int ret;
++
++	ret = scsi_verify_blk_ioctl(bd, cmd);
++	if (ret < 0)
++		return ret;
++
+ 	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
+ }
+ EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1074,6 +1074,10 @@ static int sd_ioctl(struct block_device
+ 	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp, "sd_ioctl: disk=%s, "
+ 				    "cmd=0x%x\n", disk->disk_name, cmd));
+ 
++	error = scsi_verify_blk_ioctl(bdev, cmd);
++	if (error < 0)
++		return error;
++
+ 	/*
+ 	 * If we are in the middle of error recovery, don't let anyone
+ 	 * else try and use this device.  Also, if error recovery fails, it
+@@ -1266,6 +1270,11 @@ static int sd_compat_ioctl(struct block_
+ 			   unsigned int cmd, unsigned long arg)
+ {
+ 	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
++	int ret;
++
++	ret = scsi_verify_blk_ioctl(bdev, cmd);
++	if (ret < 0)
++		return -ENOIOCTLCMD;
+ 
+ 	/*
+ 	 * If we are in the middle of error recovery, don't let anyone
+@@ -1277,8 +1286,6 @@ static int sd_compat_ioctl(struct block_
+ 		return -ENODEV;
+ 	       
+ 	if (sdev->host->hostt->compat_ioctl) {
+-		int ret;
+-
+ 		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
+ 
+ 		return ret;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -675,6 +675,7 @@ extern int blk_insert_cloned_request(str
+ 				     struct request *rq);
+ extern void blk_delay_queue(struct request_queue *, unsigned long);
+ extern void blk_recount_segments(struct request_queue *, struct bio *);
++extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
+ extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
+ 			      unsigned int, void __user *);
+ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
