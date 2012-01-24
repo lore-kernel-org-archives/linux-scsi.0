@@ -1,55 +1,41 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 0/3] SCSI & usb-storage: new flags for VPD pages and
- REPORT LUNS
-Date: Tue, 24 Jan 2012 12:01:22 -0800
-Message-ID: <20120124200122.GA7739@kroah.com>
-References: <E9801365-C2D1-4E5C-8BE4-BD712DA0D2FD@mac.com>
- <Pine.LNX.4.44L0.1201101327030.1594-100000@iolanthe.rowland.org>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: [PATCH 1/2] scsi : Correctly setting the scsi host/msg/status bytes
+Date: Tue, 24 Jan 2012 20:38:42 +0000
+Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2BEA7F@SACEXCMBX02-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:34359 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756318Ab2AXURj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2012 15:17:39 -0500
-Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 1A46A20BC4
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2012 15:17:39 -0500 (EST)
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1201101327030.1594-100000@iolanthe.rowland.org>
+Received: from mx2.netapp.com ([216.240.18.37]:6468 "EHLO mx2.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756901Ab2AXUjF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2012 15:39:05 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Perry Wagle <wagle@mac.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "device-mapper development (dm-devel@redhat.com)" <dm-devel@redhat.com>
 
-On Tue, Jan 10, 2012 at 01:42:40PM -0500, Alan Stern wrote:
-> James and Greg:
-> 
-> Perry Wagle reports that his new USB-ESATA drives don't work properly 
-> because they don't like getting the LUN bits in the second byte of the 
-> command string.  We set those bits only because usb-storage adjusts the 
-> SCSI revision level for all devices to SCSI-2; the drives themselves 
-> report a value of 0x06 (which would be SCSI-7).
-> 
-> The reason for mangling the scsi_level value was that some USB devices 
-> reported SCSI-3 but couldn't handle some of the mandatory features: VPD 
-> pages and the REPORT LUNS command.  It's now clear that instead of 
-> abusing scsi_level, we should have separate flags for the individual 
-> features we need to control.
-> 
-> That's what this patch series does.  The first merely corrects an 
-> existing typo in the definition of struct scsi_target.  The second adds 
-> the new flags and makes usb-storage use them.  The third takes this 
-> opportunity to do a little code clean-up in usb-storage.
-> 
-> The changes are more or less equally divided between SCSI and
-> usb-storage.  James, if they look okay to you and you don't mind taking
-> them through your tree, that would be fine.  Or if you prefer, I'm sure
-> Greg won't mind taking them.
-
-I'll be glad to take these, James, any objection?
-
-thanks,
-
-greg k-h
+UmVzdWJtaXR0aW5nIGFzIG15IHByZXZpb3VzIHBvc3QgaGFkIGZvcm1hdCBpc3N1ZXMgYW5kIGRp
+ZCBub3QgZ28gbGxpbnV4LXNjc2kuDQpUaGlzIHBhdGNoIGNoYW5nZXMgdGhlIGZ1bmN0aW9uIHRv
+ICBzZXRfbXNnX2J5dGUsIHNldF9ob3N0X2J5dGUgYW5kIHNldF9kcml2ZXJfYnl0ZSB0byBjb3Jy
+ZWN0bHkNCnNldCB0aGUgY29ycmVzcG9uZGluZyBieXRlcyBhcHByb3ByaWF0ZWx5LiANCg0KSXQg
+d2lsbCByZXNldCB0aGUgb3JpZ2luYWwgc2V0dGluZyBhbmQgY29ycmVjdGx5IHNldCBpdCB0byB0
+aGUgbmV3IHZhbHVlLiAgVGhlIHByZXZpb3VzIE9SIG9wZXJhdGlvbiBkb2VzDQpub3QgYWx3YXlz
+ICBzZXQgaXQgYmFjayB0byBuZXcgdmFsdWUuIExvb2sgYXQgcGF0Y2ggMi8yIGZvciBhbiBleGFt
+cGxlLg0KDQpTaWduZWQtb2ZmLWJ5OiBCYWJ1IE1vZ2VyIDxiYWJ1Lm1vZ2VyQG5ldGFwcC5jb20+
+DQotLS0NCi0tLSBsaW51eC0zLjMtcmMxLW5ldy9pbmNsdWRlL3Njc2kvc2NzaV9jbW5kLmgub3Jp
+ZwkyMDEyLTAxLTIzIDExOjMwOjQ2LjAwMDAwMDAwMCAtMDYwMA0KKysrIGxpbnV4LTMuMy1yYzEt
+bmV3L2luY2x1ZGUvc2NzaS9zY3NpX2NtbmQuaAkyMDEyLTAxLTIzIDExOjM4OjMwLjAwMDAwMDAw
+MCAtMDYwMA0KQEAgLTI4OSwxNyArMjg5LDE3IEBAIHN0YXRpYyBpbmxpbmUgc3RydWN0IHNjc2lf
+ZGF0YV9idWZmZXIgKnMNCiANCiBzdGF0aWMgaW5saW5lIHZvaWQgc2V0X21zZ19ieXRlKHN0cnVj
+dCBzY3NpX2NtbmQgKmNtZCwgY2hhciBzdGF0dXMpDQogew0KLQljbWQtPnJlc3VsdCB8PSBzdGF0
+dXMgPDwgODsNCisJY21kLT5yZXN1bHQgPSAoY21kLT5yZXN1bHQgJiAweGZmZmYwMGZmKSB8IChz
+dGF0dXMgPDwgOCk7DQogfQ0KIA0KIHN0YXRpYyBpbmxpbmUgdm9pZCBzZXRfaG9zdF9ieXRlKHN0
+cnVjdCBzY3NpX2NtbmQgKmNtZCwgY2hhciBzdGF0dXMpDQogew0KLQljbWQtPnJlc3VsdCB8PSBz
+dGF0dXMgPDwgMTY7DQorCWNtZC0+cmVzdWx0ID0gKGNtZC0+cmVzdWx0ICYgMHhmZjAwZmZmZikg
+fCAoc3RhdHVzIDw8IDE2KTsNCiB9DQogDQogc3RhdGljIGlubGluZSB2b2lkIHNldF9kcml2ZXJf
+Ynl0ZShzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQsIGNoYXIgc3RhdHVzKQ0KIHsNCi0JY21kLT5yZXN1
+bHQgfD0gc3RhdHVzIDw8IDI0Ow0KKwljbWQtPnJlc3VsdCA9IChjbWQtPnJlc3VsdCAmIDB4MDBm
+ZmZmZmYpIHwgKHN0YXR1cyA8PCAyNCk7DQogfQ0KIA0KICNlbmRpZiAvKiBfU0NTSV9TQ1NJX0NN
+TkRfSCAqLw0KDQoNCg==
