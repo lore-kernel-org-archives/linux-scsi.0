@@ -1,201 +1,57 @@
-From: Sven Joachim <svenjoac@gmx.de>
-Subject: Re: [091/129] block: fail SCSI passthrough ioctls on partition devices
-Date: Tue, 24 Jan 2012 15:10:05 +0100
-Message-ID: <87sjj5b39e.fsf@turtle.gmx.de>
-References: <20120124023932.023409422@clark.kroah.org>
-	<1327410067-5957-1-git-send-email-pbonzini@redhat.com>
+From: Sasha Levin <levinsasha928@gmail.com>
+Subject: [BUG] Hang (deadlock?) inside iscsi_if_rx
+Date: Tue, 24 Jan 2012 09:30:47 -0500
+Message-ID: <1327415447.15015.0.camel@lappy>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1327410067-5957-1-git-send-email-pbonzini@redhat.com> (Paolo
-	Bonzini's message of "Tue, 24 Jan 2012 14:01:06 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
+To: michaelc@cs.wisc.edu, JBottomley@parallels.com
+Cc: Dave Jones <davej@redhat.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2012-01-24 14:01 +0100, Paolo Bonzini wrote:
+Hi all,
 
-> You need to return -ENOTTY from scsi_verify_blk_ioctl and -ENOIOCTLCMD from
-> sd_compat_ioctl, because -ENOIOCTLCMD will not be handled correctly by
-> block/ioctl.c.  This would break BLKROSET and BLKFLSBUF done by non-root
-> but with the appropriate capabilities.
+I got the following hang when running trinity under KVM tool:
 
-I assume this is the reason why I suddenly got lots of ioctl32 warnings
-in dmesg with 3.2.2-rc1?
+[ 2520.824250] INFO: task trinity:31986 blocked for more than 120 seconds.
+[ 2520.825513] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 2520.826983] trinity         D 0000000000000000  5504 31986   2767 0x00000004
+[ 2520.828416]  ffff88000a21ba98 0000000000000086 ffff88000a3f8000 ffff88000a3f8000
+[ 2520.829892]  00000000001d4340 ffff88000a21bfd8 ffff88000a21a000 00000000001d4340
+[ 2520.831380]  00000000001d4340 00000000001d4340 ffff88000a21bfd8 00000000001d4340
+[ 2520.832838] Call Trace:
+[ 2520.837089]  [<ffffffff8265297a>] schedule+0x3a/0x50
+[ 2520.837983]  [<ffffffff82651049>] __mutex_lock_common+0x209/0x5b0
+[ 2520.839181]  [<ffffffff81af64f3>] ? iscsi_if_rx+0x23/0xa00
+[ 2520.840232]  [<ffffffff81053943>] ? sched_clock+0x13/0x20
+[ 2520.841242]  [<ffffffff81af64f3>] ? iscsi_if_rx+0x23/0xa00
+[ 2520.842271]  [<ffffffff82651430>] mutex_lock_nested+0x40/0x50
+[ 2520.843353]  [<ffffffff81af64f3>] iscsi_if_rx+0x23/0xa00
+[ 2520.844461]  [<ffffffff810dfffd>] ? sub_preempt_count+0x9d/0xd0
+[ 2520.845576]  [<ffffffff82654130>] ? _raw_read_unlock+0x30/0x60
+[ 2520.846705]  [<ffffffff8221632e>] netlink_unicast+0x1ae/0x1f0
+[ 2520.847790]  [<ffffffff82216ae7>] netlink_sendmsg+0x227/0x350
+[ 2520.848884]  [<ffffffff821a490d>] ? sock_update_netprioidx+0xdd/0x1b0
+[ 2520.850105]  [<ffffffff821a4882>] ? sock_update_netprioidx+0x52/0x1b0
+[ 2520.851282]  [<ffffffff8219e376>] sock_aio_write+0x166/0x180
+[ 2520.852317]  [<ffffffff810dfe51>] ? get_parent_ip+0x11/0x50
+[ 2520.853342]  [<ffffffff811d0b1a>] do_sync_write+0xda/0x120
+[ 2520.854347]  [<ffffffff81109c42>] ? lock_release_holdtime+0xb2/0x160
+[ 2520.855533]  [<ffffffff810dfe51>] ? get_parent_ip+0x11/0x50
+[ 2520.856569]  [<ffffffff817914e7>] ? security_file_permission+0x27/0xb0
+[ 2520.857756]  [<ffffffff811d0ccc>] vfs_write+0x16c/0x180
+[ 2520.858713]  [<ffffffff811d0dcf>] sys_write+0x4f/0xa0
+[ 2520.859680]  [<ffffffff826553f9>] system_call_fastpath+0x16/0x1b
+[ 2520.873039] 1 lock held by trinity/31986:
+[ 2520.873801]  #0:  (rx_queue_mutex){+.+...}, at: [<ffffffff81af64f3>] iscsi_if_rx+0x23/0xa00
+[ 2520.875587] Kernel panic - not syncing: hung_task: blocked tasks
 
-,----
-| $ dmesg | grep ioctl | head
-| [    0.815394] ioctl32(blkid:150): Unknown cmd fd(3) cmd(00005331){t:'S';sz:0} arg(00000000) on /dev/sda1
-| [    0.815812] ioctl32(blkid:154): Unknown cmd fd(3) cmd(00005331){t:'S';sz:0} arg(00000000) on /dev/sda6
-| [    0.816184] ioctl32(blkid:151): Unknown cmd fd(3) cmd(00005331){t:'S';sz:0} arg(00000000) on /dev/sda5
-| [    0.816559] ioctl32(blkid:155): Unknown cmd fd(3) cmd(00005331){t:'S';sz:0} arg(00000000) on /dev/sda9
-| [    0.816997] ioctl32(blkid:157): Unknown cmd fd(3) cmd(00005331){t:'S';sz:0} arg(00000000) on /dev/sda8
-| [    0.817371] ioctl32(blkid:153): Unknown cmd fd(3) cmd(00005331){t:'S';sz:0} arg(00000000) on /dev/sda3
-| [    0.817692] ioctl32(blkid:156): Unknown cmd fd(3) cmd(00005331){t:'S';sz:0} arg(00000000) on /dev/sda2
-| [    0.818063] ioctl32(blkid:152): Unknown cmd fd(3) cmd(00005331){t:'S';sz:0} arg(00000000) on /dev/sda7
-| [    2.824909] ioctl32(findfs:204): Unknown cmd fd(3) cmd(00005331){t:'S';sz:0} arg(00000000) on /dev/sda6
-| [    5.545235] ioctl32(blkid:435): Unknown cmd fd(3) cmd(00005331){t:'S';sz:0} arg(00000000) on /dev/sda3
-`----
+>From looking at the logs, there were two instances of the fuzzer blocked on a write() to a netlink socket. There are no iSCSI targets anywhere on the network.
 
-> Fixed patch follows.  If you prefer that I send an interdiff, let me know.
+Thanks.
 
-Going to try that.
+-- 
 
-> Paolo
->
-> -------- 8< ---------
-> From: Paolo Bonzini <pbonzini@redhat.com>
-> Subject: [PATCH] block: fail SCSI passthrough ioctls on partition devices
->
-> commit 0bfc96cb77224736dfa35c3c555d37b3646ef35e upstream.
->
-> Linux allows executing the SG_IO ioctl on a partition or LVM volume, and
-> will pass the command to the underlying block device.  This is
-> well-known, but it is also a large security problem when (via Unix
-> permissions, ACLs, SELinux or a combination thereof) a program or user
-> needs to be granted access only to part of the disk.
->
-> This patch lets partitions forward a small set of harmless ioctls;
-> others are logged with printk so that we can see which ioctls are
-> actually sent.  In my tests only CDROM_GET_CAPABILITY actually occurred.
-> Of course it was being sent to a (partition on a) hard disk, so it would
-> have failed with ENOTTY and the patch isn't changing anything in
-> practice.  Still, I'm treating it specially to avoid spamming the logs.
->
-> In principle, this restriction should include programs running with
-> CAP_SYS_RAWIO.  If for example I let a program access /dev/sda2 and
-> /dev/sdb, it still should not be able to read/write outside the
-> boundaries of /dev/sda2 independent of the capabilities.  However, for
-> now programs with CAP_SYS_RAWIO will still be allowed to send the
-> ioctls.  Their actions will still be logged.
->
-> This patch does not affect the non-libata IDE driver.  That driver
-> however already tests for bd != bd->bd_contains before issuing some
-> ioctl; it could be restricted further to forbid these ioctls even for
-> programs running with CAP_SYS_ADMIN/CAP_SYS_RAWIO.
->
-> Cc: linux-scsi@vger.kernel.org
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: James Bottomley <JBottomley@parallels.com>
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-> [ Make it also print the command name when warning - Linus ]
-> Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
->
-> [ Changes with respect to 3.3: return -ENOTTY from scsi_verify_blk_ioctl
->   and -ENOIOCTLCMD from sd_compat_ioctl. ]
->
-> ---
->  block/scsi_ioctl.c     |   45 +++++++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/sd.c      |   11 +++++++++--
->  include/linux/blkdev.h |    1 +
->  3 files changed, 55 insertions(+), 2 deletions(-)
->
-> --- a/block/scsi_ioctl.c
-> +++ b/block/scsi_ioctl.c
-> @@ -24,6 +24,7 @@
->  #include <linux/capability.h>
->  #include <linux/completion.h>
->  #include <linux/cdrom.h>
-> +#include <linux/ratelimit.h>
->  #include <linux/slab.h>
->  #include <linux/times.h>
->  #include <asm/uaccess.h>
-> @@ -690,9 +691,53 @@ int scsi_cmd_ioctl(struct request_queue
->  }
->  EXPORT_SYMBOL(scsi_cmd_ioctl);
->  
-> +int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
-> +{
-> +       if (bd && bd == bd->bd_contains)
-> +               return 0;
-> +
-> +       /* Actually none of these is particularly useful on a partition,
-> +        * but they are safe.
-> +        */
-> +       switch (cmd) {
-> +       case SCSI_IOCTL_GET_IDLUN:
-> +       case SCSI_IOCTL_GET_BUS_NUMBER:
-> +       case SCSI_IOCTL_GET_PCI:
-> +       case SCSI_IOCTL_PROBE_HOST:
-> +       case SG_GET_VERSION_NUM:
-> +       case SG_SET_TIMEOUT:
-> +       case SG_GET_TIMEOUT:
-> +       case SG_GET_RESERVED_SIZE:
-> +       case SG_SET_RESERVED_SIZE:
-> +       case SG_EMULATED_HOST:
-> +               return 0;
-> +       case CDROM_GET_CAPABILITY:
-> +               /* Keep this until we remove the printk below.  udev sends it
-> +                * and we do not want to spam dmesg about it.   CD-ROMs do
-> +                * not have partitions, so we get here only for disks.
-> +                */
-> +               return -ENOTTY;
-> +       default:
-> +               break;
-> +       }
-> +
-> +       /* In particular, rule out all resets and host-specific ioctls.  */
-> +       printk_ratelimited(KERN_WARNING
-> +                          "%s: sending ioctl %x to a partition!\n", current->comm, cmd);
-> +
-> +       return capable(CAP_SYS_RAWIO) ? 0 : -ENOTTY;
-> +}
-> +EXPORT_SYMBOL(scsi_verify_blk_ioctl);
-> +
->  int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
->                        unsigned int cmd, void __user *arg)
->  {
-> +       int ret;
-> +
-> +       ret = scsi_verify_blk_ioctl(bd, cmd);
-> +       if (ret < 0)
-> +               return ret;
-> +
->         return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
->  }
->  EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1074,6 +1074,10 @@ static int sd_ioctl(struct block_device
->         SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp, "sd_ioctl: disk=%s, "
->                                     "cmd=0x%x\n", disk->disk_name, cmd));
->  
-> +       error = scsi_verify_blk_ioctl(bdev, cmd);
-> +       if (error < 0)
-> +               return error;
-> +
->         /*
->          * If we are in the middle of error recovery, don't let anyone
->          * else try and use this device.  Also, if error recovery fails, it
-> @@ -1266,6 +1270,11 @@ static int sd_compat_ioctl(struct block_
->                            unsigned int cmd, unsigned long arg)
->  {
->         struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
-> +       int ret;
-> +
-> +       ret = scsi_verify_blk_ioctl(bdev, cmd);
-> +       if (ret < 0)
-> +               return -ENOIOCTLCMD;
->  
->         /*
->          * If we are in the middle of error recovery, don't let anyone
-> @@ -1277,8 +1286,6 @@ static int sd_compat_ioctl(struct block_
->                 return -ENODEV;
->                
->         if (sdev->host->hostt->compat_ioctl) {
-> -               int ret;
-> -
->                 ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
->  
->                 return ret;
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -675,6 +675,7 @@ extern int blk_insert_cloned_request(str
->                                      struct request *rq);
->  extern void blk_delay_queue(struct request_queue *, unsigned long);
->  extern void blk_recount_segments(struct request_queue *, struct bio *);
-> +extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
->  extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
->                               unsigned int, void __user *);
->  extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+Sasha.
