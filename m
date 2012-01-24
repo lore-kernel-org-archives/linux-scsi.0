@@ -1,35 +1,169 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 0/4] bnx2fc version 1.0.10
-Date: Mon, 23 Jan 2012 18:00:45 -0800
-Message-ID: <1327370449-28168-1-git-send-email-bprakash@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2205 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755457Ab2AXCBD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jan 2012 21:01:03 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Greg KH <gregkh@suse.de>
+Subject: [091/129] block: fail SCSI passthrough ioctls on partition devices
+Date: Mon, 23 Jan 2012 18:35:11 -0800
+Message-ID: <20120124023932.023409422@clark.kroah.org>
+References: <20120124024041.GA18422@kroah.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120124024041.GA18422@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, mchan@broadcom.com
 
-James,
+3.2-stable review patch.  If anyone has any objections, please let me know.
 
-Please include the following bug fixes in the next merge window.
+------------------
+Content-Length: 5337
+Lines: 152
 
-Thanks,
-Bhanu
+From: Paolo Bonzini <pbonzini@redhat.com>
 
-Bhanu Prakash Gollapudi (4):
-  bnx2fc: fix panic in bnx2fc_post_io_req
-  bnx2fc: Handle LOGO flooding from the target
-  bnx2fc: NPIV ports go offline when interface is brought down & up
-  bnx2fc: Bumped version to 1.0.10
+commit 0bfc96cb77224736dfa35c3c555d37b3646ef35e upstream.
 
- drivers/scsi/bnx2fc/bnx2fc.h      |    8 ++++++--
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   20 ++++++++++++++------
- 2 files changed, 20 insertions(+), 8 deletions(-)
+Linux allows executing the SG_IO ioctl on a partition or LVM volume, and
+will pass the command to the underlying block device.  This is
+well-known, but it is also a large security problem when (via Unix
+permissions, ACLs, SELinux or a combination thereof) a program or user
+needs to be granted access only to part of the disk.
 
+This patch lets partitions forward a small set of harmless ioctls;
+others are logged with printk so that we can see which ioctls are
+actually sent.  In my tests only CDROM_GET_CAPABILITY actually occurred.
+Of course it was being sent to a (partition on a) hard disk, so it would
+have failed with ENOTTY and the patch isn't changing anything in
+practice.  Still, I'm treating it specially to avoid spamming the logs.
 
+In principle, this restriction should include programs running with
+CAP_SYS_RAWIO.  If for example I let a program access /dev/sda2 and
+/dev/sdb, it still should not be able to read/write outside the
+boundaries of /dev/sda2 independent of the capabilities.  However, for
+now programs with CAP_SYS_RAWIO will still be allowed to send the
+ioctls.  Their actions will still be logged.
+
+This patch does not affect the non-libata IDE driver.  That driver
+however already tests for bd != bd->bd_contains before issuing some
+ioctl; it could be restricted further to forbid these ioctls even for
+programs running with CAP_SYS_ADMIN/CAP_SYS_RAWIO.
+
+Cc: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <JBottomley@parallels.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+[ Make it also print the command name when warning - Linus ]
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ block/scsi_ioctl.c     |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c      |   11 +++++++++--
+ include/linux/blkdev.h |    1 +
+ 3 files changed, 55 insertions(+), 2 deletions(-)
+
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -24,6 +24,7 @@
+ #include <linux/capability.h>
+ #include <linux/completion.h>
+ #include <linux/cdrom.h>
++#include <linux/ratelimit.h>
+ #include <linux/slab.h>
+ #include <linux/times.h>
+ #include <asm/uaccess.h>
+@@ -690,9 +691,53 @@ int scsi_cmd_ioctl(struct request_queue
+ }
+ EXPORT_SYMBOL(scsi_cmd_ioctl);
+ 
++int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
++{
++	if (bd && bd == bd->bd_contains)
++		return 0;
++
++	/* Actually none of these is particularly useful on a partition,
++	 * but they are safe.
++	 */
++	switch (cmd) {
++	case SCSI_IOCTL_GET_IDLUN:
++	case SCSI_IOCTL_GET_BUS_NUMBER:
++	case SCSI_IOCTL_GET_PCI:
++	case SCSI_IOCTL_PROBE_HOST:
++	case SG_GET_VERSION_NUM:
++	case SG_SET_TIMEOUT:
++	case SG_GET_TIMEOUT:
++	case SG_GET_RESERVED_SIZE:
++	case SG_SET_RESERVED_SIZE:
++	case SG_EMULATED_HOST:
++		return 0;
++	case CDROM_GET_CAPABILITY:
++		/* Keep this until we remove the printk below.  udev sends it
++		 * and we do not want to spam dmesg about it.   CD-ROMs do
++		 * not have partitions, so we get here only for disks.
++		 */
++		return -ENOIOCTLCMD;
++	default:
++		break;
++	}
++
++	/* In particular, rule out all resets and host-specific ioctls.  */
++	printk_ratelimited(KERN_WARNING
++			   "%s: sending ioctl %x to a partition!\n", current->comm, cmd);
++
++	return capable(CAP_SYS_RAWIO) ? 0 : -ENOIOCTLCMD;
++}
++EXPORT_SYMBOL(scsi_verify_blk_ioctl);
++
+ int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
+ 		       unsigned int cmd, void __user *arg)
+ {
++	int ret;
++
++	ret = scsi_verify_blk_ioctl(bd, cmd);
++	if (ret < 0)
++		return ret;
++
+ 	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
+ }
+ EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1074,6 +1074,10 @@ static int sd_ioctl(struct block_device
+ 	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp, "sd_ioctl: disk=%s, "
+ 				    "cmd=0x%x\n", disk->disk_name, cmd));
+ 
++	error = scsi_verify_blk_ioctl(bdev, cmd);
++	if (error < 0)
++		return error;
++
+ 	/*
+ 	 * If we are in the middle of error recovery, don't let anyone
+ 	 * else try and use this device.  Also, if error recovery fails, it
+@@ -1266,6 +1270,11 @@ static int sd_compat_ioctl(struct block_
+ 			   unsigned int cmd, unsigned long arg)
+ {
+ 	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
++	int ret;
++
++	ret = scsi_verify_blk_ioctl(bdev, cmd);
++	if (ret < 0)
++		return ret;
+ 
+ 	/*
+ 	 * If we are in the middle of error recovery, don't let anyone
+@@ -1277,8 +1286,6 @@ static int sd_compat_ioctl(struct block_
+ 		return -ENODEV;
+ 	       
+ 	if (sdev->host->hostt->compat_ioctl) {
+-		int ret;
+-
+ 		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
+ 
+ 		return ret;
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -675,6 +675,7 @@ extern int blk_insert_cloned_request(str
+ 				     struct request *rq);
+ extern void blk_delay_queue(struct request_queue *, unsigned long);
+ extern void blk_recount_segments(struct request_queue *, struct bio *);
++extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
+ extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
+ 			      unsigned int, void __user *);
+ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
