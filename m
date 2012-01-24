@@ -1,109 +1,96 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v7 5/6] libsas: fix lifetime of SAS_HA_FROZEN
-Date: Mon, 23 Jan 2012 23:50:40 -0800
-Message-ID: <20120124075040.22384.27014.stgit@localhost6.localdomain6>
+Subject: [PATCH v7 6/6] libsas: revert ata srst
+Date: Mon, 23 Jan 2012 23:50:45 -0800
+Message-ID: <20120124075045.22384.23228.stgit@localhost6.localdomain6>
 References: <20120124074825.22384.17157.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57681 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754482Ab2AXHul (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2012 02:50:41 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120124074825.22384.17157.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Until all sas_tasks are known to no longer be in-flight this flag gates late
-completions from colliding with error handling.  However, it must be cleared
-prior to the submission of scsi_send_eh_cmnd() requests, otherwise those
-commands will never be completed correctly.
-
-This was spotted by slub debug:
- =============================================================================
- BUG sas_task: Objects remaining on kmem_cache_close()
- -----------------------------------------------------------------------------
-
- INFO: Slab 0xffffea001f0eba00 objects=34 used=1 fp=0xffff8807c3aecb00 flags=0x8000000000004080
- Pid: 22919, comm: modprobe Not tainted 3.2.0-isci+ #2
- Call Trace:
-  [<ffffffff810fcdcd>] slab_err+0xb0/0xd2
-  [<ffffffff810e1c50>] ? free_percpu+0x31/0x117
-  [<ffffffff81100122>] ? kzalloc+0x14/0x16
-  [<ffffffff81100122>] ? kzalloc+0x14/0x16
-  [<ffffffff81100486>] kmem_cache_destroy+0x11d/0x270
-  [<ffffffffa0112bdc>] sas_class_exit+0x10/0x12 [libsas]
-  [<ffffffff81078fba>] sys_delete_module+0x1c4/0x23c
-  [<ffffffff814797ba>] ? sysret_check+0x2e/0x69
-  [<ffffffff8126479e>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-  [<ffffffff81479782>] system_call_fastpath+0x16/0x1b
- INFO: Object 0xffff8807c3aed280 @offset=21120
- INFO: Allocated in sas_alloc_task+0x22/0x90 [libsas] age=4615311 cpu=2 pid=12966
-  __slab_alloc.clone.3+0x1d1/0x234
-  kmem_cache_alloc+0x52/0x10d
-  sas_alloc_task+0x22/0x90 [libsas]
-  sas_queuecommand+0x20e/0x230 [libsas]
-  scsi_send_eh_cmnd+0xd1/0x30c
-  scsi_eh_try_stu+0x4f/0x6b
-  scsi_eh_ready_devs+0xba/0x6ef
-  sas_scsi_recover_host+0xa35/0xab1 [libsas]
-  scsi_error_handler+0x14b/0x5fa
-  kthread+0x9d/0xa5
-  kernel_thread_helper+0x4/0x10
+libata issues follow up srsts when the controller has a hard time
+recording the signature-fis after a reset, or if the link supports port
+multipliers.  libsas does not support port multipliers and no current
+libsas lldds appear to need help retrieving the signature fis.  Revert
+it for now to remove confusion.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_scsi_host.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/scsi/libsas/sas_ata.c |   38 --------------------------------------
+ include/scsi/libsas.h         |    1 -
+ 2 files changed, 0 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 3701ff7..fd32913 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -521,8 +521,7 @@ try_bus_reset:
- 	return FAILED;
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index f82997a..653aa97 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -443,43 +443,6 @@ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
+ 	return ret;
  }
  
--static int sas_eh_handle_sas_errors(struct Scsi_Host *shost,
--				    struct list_head *work_q)
-+static void sas_eh_handle_sas_errors(struct Scsi_Host *shost, struct list_head *work_q)
- {
- 	struct scsi_cmnd *cmd, *n;
- 	enum task_disposition res = TASK_IS_DONE;
-@@ -658,7 +657,7 @@ static int sas_eh_handle_sas_errors(struct Scsi_Host *shost,
-  out:
- 	list_splice_tail(&done, work_q);
- 	list_splice_tail_init(&ha->eh_ata_q, work_q);
--	return list_empty(work_q);
-+	return;
+-static int sas_ata_soft_reset(struct ata_link *link, unsigned int *class,
+-			       unsigned long deadline)
+-{
+-	struct ata_port *ap = link->ap;
+-	struct domain_device *dev = ap->private_data;
+-	struct sas_internal *i = dev_to_sas_internal(dev);
+-	int res = TMF_RESP_FUNC_FAILED;
+-	int ret = 0;
+-
+-	if (i->dft->lldd_ata_soft_reset)
+-		res = i->dft->lldd_ata_soft_reset(dev);
+-
+-	if (res != TMF_RESP_FUNC_COMPLETE) {
+-		SAS_DPRINTK("%s: Unable to soft reset\n", __func__);
+-		ret = -EAGAIN;
+-	}
+-
+-	switch (dev->sata_dev.command_set) {
+-	case ATA_COMMAND_SET:
+-		SAS_DPRINTK("%s: Found ATA device.\n", __func__);
+-		*class = ATA_DEV_ATA;
+-		break;
+-	case ATAPI_COMMAND_SET:
+-		SAS_DPRINTK("%s: Found ATAPI device.\n", __func__);
+-		*class = ATA_DEV_ATAPI;
+-		break;
+-	default:
+-		SAS_DPRINTK("%s: Unknown SATA command set: %d.\n",
+-			    __func__, dev->sata_dev.command_set);
+-		*class = ATA_DEV_UNKNOWN;
+-		break;
+-	}
+-
+-	ap->cbl = ATA_CBL_SATA;
+-	return ret;
+-}
+-
+ /*
+  * notify the lldd to forget the sas_task for this internal ata command
+  * that bypasses scsi-eh
+@@ -563,7 +526,6 @@ static void sas_ata_set_dmamode(struct ata_port *ap, struct ata_device *ata_dev)
  
-  clear_q:
- 	SAS_DPRINTK("--- Exit %s -- clear_q\n", __func__);
-@@ -682,10 +681,13 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
- 		    __func__, shost->host_busy, shost->host_failed);
- 	/*
- 	 * Deal with commands that still have SAS tasks (i.e. they didn't
--	 * complete via the normal sas_task completion mechanism)
-+	 * complete via the normal sas_task completion mechanism),
-+	 * SAS_HA_FROZEN gives eh dominion over all sas_task completion.
- 	 */
- 	set_bit(SAS_HA_FROZEN, &ha->state);
--	if (sas_eh_handle_sas_errors(shost, &eh_work_q))
-+	sas_eh_handle_sas_errors(shost, &eh_work_q);
-+	clear_bit(SAS_HA_FROZEN, &ha->state);
-+	if (list_empty(&eh_work_q))
- 		goto out;
- 
- 	/*
-@@ -699,7 +701,6 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
- 		scsi_eh_ready_devs(shost, &eh_work_q, &ha->eh_done_q);
- 
- out:
--	clear_bit(SAS_HA_FROZEN, &ha->state);
- 	if (ha->lldd_max_execute_num > 1)
- 		wake_up_process(ha->core.queue_thread);
- 
+ static struct ata_port_operations sas_sata_ops = {
+ 	.prereset		= ata_std_prereset,
+-	.softreset		= sas_ata_soft_reset,
+ 	.hardreset		= sas_ata_hard_reset,
+ 	.postreset		= ata_std_postreset,
+ 	.error_handler		= ata_std_error_handler,
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 20153d5..5f5ed1b 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -619,7 +619,6 @@ struct sas_domain_function_template {
+ 	int (*lldd_clear_aca)(struct domain_device *, u8 *lun);
+ 	int (*lldd_clear_task_set)(struct domain_device *, u8 *lun);
+ 	int (*lldd_I_T_nexus_reset)(struct domain_device *);
+-	int (*lldd_ata_soft_reset)(struct domain_device *);
+ 	int (*lldd_ata_check_ready)(struct domain_device *);
+ 	void (*lldd_ata_set_dmamode)(struct domain_device *);
+ 	int (*lldd_lu_reset)(struct domain_device *, u8 *lun);
 
