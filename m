@@ -1,7 +1,7 @@
-From: Andrea Arcangeli <aarcange@redhat.com>
+From: Chris Mason <chris.mason@oracle.com>
 Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
-Date: Tue, 24 Jan 2012 18:06:36 +0100
-Message-ID: <20120124170636.GG30782@redhat.com>
+Date: Tue, 24 Jan 2012 12:08:18 -0500
+Message-ID: <20120124170818.GY4387@shiny>
 References: <20120118225808.GA3074@tux1.beaverton.ibm.com>
  <20120118232200.GA22019@quack.suse.cz>
  <4F1758D4.9010401@panasas.com>
@@ -15,18 +15,25 @@ References: <20120118225808.GA3074@tux1.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30585 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756194Ab2AXRHS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2012 12:07:18 -0500
+Received: from acsinet15.oracle.com ([141.146.126.227]:31031 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756312Ab2AXRIr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2012 12:08:47 -0500
 Content-Disposition: inline
 In-Reply-To: <20120124165631.GA8941@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Chris Mason <chris.mason@oracle.com>, Jeff Moyer <jmoyer@redhat.com>, Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jeff Moyer <jmoyer@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J. Wong" <djwong@us.ibm.com>
 
 On Tue, Jan 24, 2012 at 11:56:31AM -0500, Christoph Hellwig wrote:
+> On Tue, Jan 24, 2012 at 10:15:04AM -0500, Chris Mason wrote:
+> > https://lkml.org/lkml/2011/12/13/326
+> > 
+> > This patch is another example, although for a slight different reason.
+> > I really have no idea yet what the right answer is in a generic sense,
+> > but you don't need a 512K request to see higher latencies from merging.
+> 
 > That assumes the 512k requests is created by merging.  We have enough
 > workloads that create large I/O from the get go, and not splitting them
 > and eventually merging them again would be a big win.  E.g. I'm
@@ -34,22 +41,10 @@ On Tue, Jan 24, 2012 at 11:56:31AM -0500, Christoph Hellwig wrote:
 > chunks, and increasing the maximum request size to that dramatically
 > increases the read performance.
 
-Depends on the device though, if it's a normal disk, it likely only
-reduces the number of dma ops without increasing performance too
-much. Most disks should reach platter speed at 64KB, so larger request
-only saves a bit of cpu in interrutps and stuff.
+Is this read latency or read tput?  If you're waiting on the whole 4MB
+anyway, I'd expect one request to be better for both.  But Andrea's
+original question  was on the impact of the big request on other requests
+being serviced by the drive....there's really not much we can do about
+that outside of more knobs for the admin.
 
-But I think nobody here was suggesting to reduce the request size by
-default. cfq should easily notice when there are multiple queues that
-are being submitted in the same time range. A device in addition to
-specifying the max request dma size it can handle it could specify the
-minimum it runs at platter speed and cfq could degrade to it when
-there's multiple queues running in parallel over the same millisecond
-or so. Reads will return in the I/O queue almost immediately but
-they'll be out for a little while until the data is copied to
-userland. So it'd need to keep it down to the min request size the
-device allows to reach platter speed, for a little while. Then if no
-other queue presents itself it double up the request size for each
-unit of time until it reaches the max again. Maybe that could work, maybe
-not :). Waiting only once for 4MB sounds better than waiting every
-time 4MB for each 4k metadata seeking read.
+-chris
