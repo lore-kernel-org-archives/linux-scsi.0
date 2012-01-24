@@ -1,77 +1,168 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [BUG] Hang (deadlock?) inside iscsi_if_rx
-Date: Tue, 24 Jan 2012 10:32:15 -0600
-Message-ID: <4F1EDD0F.1060104@cs.wisc.edu>
-References: <1327415447.15015.0.camel@lappy> <4F1EDC6D.1060102@cs.wisc.edu>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [23/27] kernel.h: add printk_ratelimited and pr_<level>_rl
+Date: Tue, 24 Jan 2012 16:35:50 +0000
+Message-ID: <1327422950.5400.40.camel@deadeye>
+References: <20120123234224.GA19510@kroah.com>
+	 <20120123234203.649739932@clark.kroah.org>
+	 <20120124144613.GD3180@pcarmody2.research.nokia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncCLPJla3WGRCXuvv4BBoEyZBwkA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <4F1EDC6D.1060102-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-bRtAGwA5ctm1rsqCZGr7"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120124144613.GD3180@pcarmody2.research.nokia.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Phil Carmody <ext-phil.2.carmody@nokia.com>
+Cc: ext Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Paolo Bonzini <pbonzini@redhat.com>, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/24/2012 10:29 AM, Mike Christie wrote:
-> On 01/24/2012 08:30 AM, Sasha Levin wrote:
->> Hi all,
->>
->> I got the following hang when running trinity under KVM tool:
->>
->> [ 2520.824250] INFO: task trinity:31986 blocked for more than 120 seconds.
->> [ 2520.825513] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->> [ 2520.826983] trinity         D 0000000000000000  5504 31986   2767 0x00000004
->> [ 2520.828416]  ffff88000a21ba98 0000000000000086 ffff88000a3f8000 ffff88000a3f8000
->> [ 2520.829892]  00000000001d4340 ffff88000a21bfd8 ffff88000a21a000 00000000001d4340
->> [ 2520.831380]  00000000001d4340 00000000001d4340 ffff88000a21bfd8 00000000001d4340
->> [ 2520.832838] Call Trace:
->> [ 2520.837089]  [<ffffffff8265297a>] schedule+0x3a/0x50
->> [ 2520.837983]  [<ffffffff82651049>] __mutex_lock_common+0x209/0x5b0
->> [ 2520.839181]  [<ffffffff81af64f3>] ? iscsi_if_rx+0x23/0xa00
->> [ 2520.840232]  [<ffffffff81053943>] ? sched_clock+0x13/0x20
->> [ 2520.841242]  [<ffffffff81af64f3>] ? iscsi_if_rx+0x23/0xa00
->> [ 2520.842271]  [<ffffffff82651430>] mutex_lock_nested+0x40/0x50
->> [ 2520.843353]  [<ffffffff81af64f3>] iscsi_if_rx+0x23/0xa00
->> [ 2520.844461]  [<ffffffff810dfffd>] ? sub_preempt_count+0x9d/0xd0
->> [ 2520.845576]  [<ffffffff82654130>] ? _raw_read_unlock+0x30/0x60
->> [ 2520.846705]  [<ffffffff8221632e>] netlink_unicast+0x1ae/0x1f0
->> [ 2520.847790]  [<ffffffff82216ae7>] netlink_sendmsg+0x227/0x350
->> [ 2520.848884]  [<ffffffff821a490d>] ? sock_update_netprioidx+0xdd/0x1b0
->> [ 2520.850105]  [<ffffffff821a4882>] ? sock_update_netprioidx+0x52/0x1b0
->> [ 2520.851282]  [<ffffffff8219e376>] sock_aio_write+0x166/0x180
->> [ 2520.852317]  [<ffffffff810dfe51>] ? get_parent_ip+0x11/0x50
->> [ 2520.853342]  [<ffffffff811d0b1a>] do_sync_write+0xda/0x120
->> [ 2520.854347]  [<ffffffff81109c42>] ? lock_release_holdtime+0xb2/0x160
->> [ 2520.855533]  [<ffffffff810dfe51>] ? get_parent_ip+0x11/0x50
->> [ 2520.856569]  [<ffffffff817914e7>] ? security_file_permission+0x27/0xb0
->> [ 2520.857756]  [<ffffffff811d0ccc>] vfs_write+0x16c/0x180
->> [ 2520.858713]  [<ffffffff811d0dcf>] sys_write+0x4f/0xa0
->> [ 2520.859680]  [<ffffffff826553f9>] system_call_fastpath+0x16/0x1b
->> [ 2520.873039] 1 lock held by trinity/31986:
->> [ 2520.873801]  #0:  (rx_queue_mutex){+.+...}, at: [<ffffffff81af64f3>] iscsi_if_rx+0x23/0xa00
->> [ 2520.875587] Kernel panic - not syncing: hung_task: blocked tasks
->>
->> From looking at the logs, there were two instances of the fuzzer blocked on a write() to a netlink socket. There are no iSCSI targets anywhere on the network.
->>
-> 
-> What does the trinity test do? Does it write random junk to netlink
-> sockets to test the kernel handlers or were you actually stressing the
-> creation of targets. If the latter what driver were you trying to create
-> targets with (iscsi_tcp, bnx2i, etc)?
 
+--=-bRtAGwA5ctm1rsqCZGr7
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Oh yeah, for the random type of test, how much data does userspace write?
+On Tue, 2012-01-24 at 16:46 +0200, Phil Carmody wrote:
+> On 23/01/12 15:41 -0800, ext Greg KH wrote:
+> > 2.6.32-longterm review patch.  If anyone has any objections, please let=
+ me know.
+>=20
+> This looks like an added feature with no users in .32 - does it really=
+=20
+> belong in a stable tree?
+> (But to be explicit, I have no issue with its contents at all.)
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+It's required for commit 0bfc96cb77224736dfa35c3c555d37b3646ef35e
+('block: fail SCSI passthrough ioctls on partition devices'), though
+that hasn't actually been included in this series.  I think that's
+because there is still ongoing discussion of which error codes need to
+be used.
+
+Ben.
+
+> Phil
+>=20
+> > ------------------
+> >=20
+> >=20
+> > From: Joe Perches <joe@perches.com>
+> >=20
+> > commit 8a64f336bc1d4aa203b138d29d5a9c414a9fbb47 upstream.
+> >=20
+> > Add a printk_ratelimited statement expression macro that uses a per-cal=
+l
+> > ratelimit_state so that multiple subsystems output messages are not
+> > suppressed by a global __ratelimit state.
+> >=20
+> > [akpm@linux-foundation.org: coding-style fixes]
+> > [akpm@linux-foundation.org: s/_rl/_ratelimited/g]
+> > Signed-off-by: Joe Perches <joe@perches.com>
+> > Cc: Naohiro Ooiwa <nooiwa@miraclelinux.com>
+> > Cc: Ingo Molnar <mingo@elte.hu>
+> > Cc: Hiroshi Shimamoto <h-shimamoto@ct.jp.nec.com>
+> > Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> > Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> >=20
+> > ---
+> >  include/linux/kernel.h |   44 ++++++++++++++++++++++++++++++++++++++++=
+++++
+> >  1 file changed, 44 insertions(+)
+> >=20
+> > --- a/include/linux/kernel.h
+> > +++ b/include/linux/kernel.h
+> > @@ -407,6 +407,50 @@ static inline char *pack_hex_byte(char *
+> >  #endif
+> > =20
+> >  /*
+> > + * ratelimited messages with local ratelimit_state,
+> > + * no local ratelimit_state used in the !PRINTK case
+> > + */
+> > +#ifdef CONFIG_PRINTK
+> > +#define printk_ratelimited(fmt, ...)  ({		\
+> > +	static struct ratelimit_state _rs =3D {		\
+> > +		.interval =3D DEFAULT_RATELIMIT_INTERVAL, \
+> > +		.burst =3D DEFAULT_RATELIMIT_BURST,       \
+> > +	};                                              \
+> > +							\
+> > +	if (!__ratelimit(&_rs))                         \
+> > +		printk(fmt, ##__VA_ARGS__);		\
+> > +})
+> > +#else
+> > +/* No effect, but we still get type checking even in the !PRINTK case:=
+ */
+> > +#define printk_ratelimited printk
+> > +#endif
+> > +
+> > +#define pr_emerg_ratelimited(fmt, ...) \
+> > +	printk_ratelimited(KERN_EMERG pr_fmt(fmt), ##__VA_ARGS__)
+> > +#define pr_alert_ratelimited(fmt, ...) \
+> > +	printk_ratelimited(KERN_ALERT pr_fmt(fmt), ##__VA_ARGS__)
+> > +#define pr_crit_ratelimited(fmt, ...) \
+> > +	printk_ratelimited(KERN_CRIT pr_fmt(fmt), ##__VA_ARGS__)
+> > +#define pr_err_ratelimited(fmt, ...) \
+> > +	printk_ratelimited(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+> > +#define pr_warning_ratelimited(fmt, ...) \
+> > +	printk_ratelimited(KERN_WARNING pr_fmt(fmt), ##__VA_ARGS__)
+> > +#define pr_notice_ratelimited(fmt, ...) \
+> > +	printk_ratelimited(KERN_NOTICE pr_fmt(fmt), ##__VA_ARGS__)
+> > +#define pr_info_ratelimited(fmt, ...) \
+> > +	printk_ratelimited(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
+> > +/* no pr_cont_ratelimited, don't do that... */
+> > +/* If you are writing a driver, please use dev_dbg instead */
+> > +#if defined(DEBUG)
+> > +#define pr_debug_ratelimited(fmt, ...) \
+> > +	printk_ratelimited(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+> > +#else
+> > +#define pr_debug_ratelimited(fmt, ...) \
+> > +	({ if (0) printk_ratelimited(KERN_DEBUG pr_fmt(fmt), \
+> > +				     ##__VA_ARGS__); 0; })
+> > +#endif
+> > +
+> > +/*
+> >   * General tracing related utility functions - trace_printk(),
+> >   * tracing_on/tracing_off and tracing_start()/tracing_stop
+> >   *
+> >=20
+> >=20
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel"=
+ in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> >=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe stable" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+--=20
+Ben Hutchings
+Horngren's Observation:
+                   Among economists, the real world is often a special case=
+.
+
+--=-bRtAGwA5ctm1rsqCZGr7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIVAwUATx7d5ue/yOyVhhEJAQqVhhAAuzYvBQ4jP2EiJT6dM0kemBK2EGCDTcMi
+4ScHTn5P6wWYkCCOfl9gNN2jQjnQEKopXEmD3UZliEVnNxvgaqeTKMWpFtwrhHE/
++XxF51sAwH3kY4F6UmAHEFGvOIlcAgLNd43ppy4R8gCSX1kFbzMxrQ+EdpZzhWlR
+bTv0c7zVdCVaHK1ptMZQfUkNaQ0BWWLwgB6yEx/upmCyabTbPjxYjLgLiOq9gQ74
++Sop3ofmZwjHzTM5Rmq4TliNpKBUpaA/F5G3j92n0linVUAnbPIkBrcHm0gPqN1T
+eQpRSELXeGJ3tTMaDMEiIeIQDysX9yIlsiqY+MPuB4bWzBVCSW6iOwnThs/VUNq8
+BwqxnNVxricvp8+Y60J448zLOqc+fR3/rTrM2y+3kW4Wf9+8xyyyVfIEqVKKns9Z
+ym36WgY8Wru0xkTM+ByjP0PJdT1vJ2ObAmni+Yh42Kq9jTPC7AAnqXuHtQs0Be6x
+1dcvItpky2EhNZQynwdwQ1KP/aUVPfawQeXrjGWvR0ftuZbR55ULrl0ew06Jgt8v
+Evx43P09yGyDYJ3WPxa8dhCL3btguTQhWgs3dS0we5fVYl98H2Qmbz5zYJ6uyCRw
+iqrztvIdJNSNJ9/iPQrMemV0R1khZ9MKJ0Kt2gQgUDfZgzwTK+V7CaCSLoObrC8T
+dSrKPDcVxm4=
+=SMBY
+-----END PGP SIGNATURE-----
+
+--=-bRtAGwA5ctm1rsqCZGr7--
