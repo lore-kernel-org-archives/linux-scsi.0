@@ -1,91 +1,109 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [dm-devel] [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Tue, 24 Jan 2012 13:05:50 -0500
-Message-ID: <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
-References: <20120117213648.GA9457@quack.suse.cz>
-	<20120118225808.GA3074@tux1.beaverton.ibm.com>
-	<20120118232200.GA22019@quack.suse.cz> <4F1758D4.9010401@panasas.com>
-	<20120119094637.GA23442@quack.suse.cz> <4F1BFF5F.6000502@panasas.com>
-	<20120123161857.GC28526@quack.suse.cz>
-	<20120123175353.GD30782@redhat.com>
-	<x49r4yq9suf.fsf@segfault.boston.devel.redhat.com>
-	<20120124151504.GQ4387@shiny> <20120124165631.GA8941@infradead.org>
-	<186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca>
+From: Ric Wheeler <ricwheeler@gmail.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] Storage management (API & Library)
+Date: Tue, 24 Jan 2012 13:11:47 -0500
+Message-ID: <4F1EF463.6030800@gmail.com>
+References: <4F19A981.4080502@redhat.com>  <1327157825.2748.5.camel@dabdike.int.hansenpartnership.com>  <4F1D8913.1060709@redhat.com> <1327423944.2894.45.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55834 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752197Ab2AXSGk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2012 13:06:40 -0500
-In-Reply-To: <186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca> (Andreas
-	Dilger's message of "Tue, 24 Jan 2012 10:08:47 -0700")
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:53825 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753513Ab2AXSLx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2012 13:11:53 -0500
+Received: by ggnb1 with SMTP id b1so2117311ggn.19
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2012 10:11:53 -0800 (PST)
+In-Reply-To: <1327423944.2894.45.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "Darrick J.Wong" <djwong@us.ibm.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: tasleson@redhat.com, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-Andreas Dilger <adilger@dilger.ca> writes:
-
-> On 2012-01-24, at 9:56, Christoph Hellwig <hch@infradead.org> wrote:
->> On Tue, Jan 24, 2012 at 10:15:04AM -0500, Chris Mason wrote:
->>> https://lkml.org/lkml/2011/12/13/326
->>> 
->>> This patch is another example, although for a slight different reason.
->>> I really have no idea yet what the right answer is in a generic sense,
->>> but you don't need a 512K request to see higher latencies from merging.
->> 
->> That assumes the 512k requests is created by merging.  We have enough
->> workloads that create large I/O from the get go, and not splitting them
->> and eventually merging them again would be a big win.  E.g. I'm
->> currently looking at a distributed block device which uses internal 4MB
->> chunks, and increasing the maximum request size to that dramatically
->> increases the read performance.
+On 01/24/2012 11:52 AM, James Bottomley wrote:
+> On Mon, 2012-01-23 at 10:21 -0600, Tony Asleson wrote:
+>> On 01/21/2012 08:57 AM, James Bottomley wrote:
+>>> It's also a bit insular ... the first thing you usually ask in open
+>>> source is what can I steal^Wborrow from other projects and how do I
+>>> recruit others to do the work for me.
+>> The project site is a little sparse on details about what we have looked
+>> at and considered.  Ric Wheeler covered some of this during his
+>> presentation in Prague, but I will place more information on the project
+>> web site.
+> That would be good for those who didn't go to that presentation ...
 >
-> (sorry about last email, hit send by accident)
+>>> The first question is probably: is there anything we can liberate
+>>> from the Oracle storage API fisasco to help with this.
+>> The Oracle storage connect library was evaluated and subsequently
+>> rejected for the following reasons:
+>>
+>> 1. The Oracle storage connect library is dual licensed, GPL and a
+>> proprietary Oracle license which allows proprietary use.  This allows
+>> hardware vendors the ability to write proprietary plug-ins.  The design
+>> of the library has the library user and plug-in executing in the same
+>> address space.  Based on the information presented on plug-ins
+>> (http://www.gnu.org/licenses/gpl-faq.html#GPLAndPlugins) this design
+>> goes against the requirements of GPL license compliance.  Proprietary
+>> plug-ins could be in compliance if they are implemented to execute in a
+>> separate process.
+> This is actually wrong thinking.  Almost every Open Source project has
+> an incompatible licence.  The way we work around this (once we've
+> determined there's something worth stealing) is to ask the project owner
+> for a compatible grant (in this case, some pieces under LGPL).  That's
+> how we share driver code between Linux and BSD for instance.
 >
-> I don't think we can have a "one size fits all" policy here. In most
-> RAID devices the IO size needs to be at least 1MB, and with newer
-> devices 4MB gives better performance.
+> If Oracle is intent on pursuing an open core business model for this and
+> says "no" to the request, then you can say they're incompatible ... did
+> anyone ask them?
 
-Right, and there's more to it than just I/O size.  There's access
-pattern, and more importantly, workload and related requirements
-(latency vs throughput).
+I think that ignores the history behind the Oracle storage management project. 
+We did look at the Oracle work, it certainly has been a long time coming and was 
+not done in a community fashion as far as I can tell.
 
-> One of the reasons that Lustre used to hack so much around the VFS and
-> VM APIs is exactly to avoid the splitting of read/write requests into
-> pages and then depend on the elevator to reconstruct a good-sized IO
-> out of it.
+Putting the burden back on you, can you point to a single post about their 
+project on a community list or name an individual (still employed by Oracle) 
+that we can discuss with :) ?
+
+We waited years for them to get to the dual license decision in the first place.
+
+Having looked at their code, I think it is easier to write it - in a community 
+way - the way we would have it done than to spend another year waiting on their 
+legal team to change the license.
+
+Clearly, using GPL for a library (not LGPL) is meant to push people into the 
+commercial license....
+
+Ric
+
+
+
+>> 2. At the time the Oracle storage connect library was being evaluated we
+>> were unable to obtain a plug-in from a few different vendors.  Without
+>> plug-ins the value of any library becomes greatly diminished.
+> Why?  You have no plug ins for your project currently ... that doesn't
+> really diminish the value of it as an emerging project.
 >
-> Things have gotten better with newer kernels, but there is still a
-> ways to go w.r.t. allowing large IO requests to pass unhindered
-> through to disk (or at least as far as enduring that the IO is aligned
-> to the underlying disk geometry).
+> It sounds like you evaluated the Oracle project from an all or nothing
+> standpoint rather than a what can we learn/steal standpoint.
+>
+> One of the big things we could co-opt from oracle looks to be vendor buy
+> in (they seem to be investing more in marketing than actual
+> engineering).  Vendors hate being confused or making choices, so one
+> easy way to bring them on board might be API compatibility with the
+> Oracle project.
+>
+>>> The second might be what would it take to get vendors interested in
+>>> doing the array plugin glue.
+>> By providing:
+>> * Permissive license (LGPL)
+>> * Easy to use out of process plug-in support to allow proprietary
+>> plug-ins (IPC is abstracted)
+>> * Language agnostic plug-in support (initial support is C and python)
+>>
+>> We are hoping we can get hardware vendors interested in providing their
+>> own plug-ins.  If anyone has additional ideas, we would certainly like
+>> to discuss them.
+> So no actual vendors have provided any input yet?
+>
+> James
+>
 
-I've been wondering if it's gotten better, so decided to run a few quick
-tests.
-
-kernel version 3.2.0, storage: hp eva fc array, i/o scheduler cfq,
-max_sectors_kb: 1024, test program: dd
-
-ext3:
-- buffered writes and buffered O_SYNC writes, all 1MB block size show 4k
-  I/Os passed down to the I/O scheduler
-- buffered 1MB reads are a little better, typically in the 128k-256k
-  range when they hit the I/O scheduler.
-
-ext4:
-- buffered writes: 512K I/Os show up at the elevator
-- buffered O_SYNC writes: data is again 512KB, journal writes are 4K
-- buffered 1MB reads get down to the scheduler in 128KB chunks
-
-xfs:
-- buffered writes: 1MB I/Os show up at the elevator
-- buffered O_SYNC writes: 1MB I/Os
-- buffered 1MB reads: 128KB chunks show up at the I/O scheduler
-
-So, ext4 is doing better than ext3, but still not perfect.  xfs is
-kicking ass for writes, but reads are still split up.
-
-Cheers,
-Jeff
