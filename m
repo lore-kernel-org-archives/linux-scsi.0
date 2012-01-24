@@ -1,112 +1,64 @@
-From: Phil Carmody <ext-phil.2.carmody@nokia.com>
-Subject: Re: [23/27] kernel.h: add printk_ratelimited and pr_<level>_rl
-Date: Tue, 24 Jan 2012 16:46:13 +0200
-Message-ID: <20120124144613.GD3180@pcarmody2.research.nokia.com>
-References: <20120123234224.GA19510@kroah.com>
- <20120123234203.649739932@clark.kroah.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [BUG] Hang (deadlock?) inside iscsi_if_rx
+Date: Tue, 24 Jan 2012 10:29:33 -0600
+Message-ID: <4F1EDC6D.1060102@cs.wisc.edu>
+References: <1327415447.15015.0.camel@lappy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120123234203.649739932@clark.kroah.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: ext Greg KH <gregkh@suse.de>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Paolo Bonzini <pbonzini@redhat.com>, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41853 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755186Ab2AXQ3p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2012 11:29:45 -0500
+In-Reply-To: <1327415447.15015.0.camel@lappy>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sasha Levin <levinsasha928@gmail.com>
+Cc: JBottomley@parallels.com, Dave Jones <davej@redhat.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-On 23/01/12 15:41 -0800, ext Greg KH wrote:
-> 2.6.32-longterm review patch.  If anyone has any objections, please let me know.
+On 01/24/2012 08:30 AM, Sasha Levin wrote:
+> Hi all,
+> 
+> I got the following hang when running trinity under KVM tool:
+> 
+> [ 2520.824250] INFO: task trinity:31986 blocked for more than 120 seconds.
+> [ 2520.825513] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [ 2520.826983] trinity         D 0000000000000000  5504 31986   2767 0x00000004
+> [ 2520.828416]  ffff88000a21ba98 0000000000000086 ffff88000a3f8000 ffff88000a3f8000
+> [ 2520.829892]  00000000001d4340 ffff88000a21bfd8 ffff88000a21a000 00000000001d4340
+> [ 2520.831380]  00000000001d4340 00000000001d4340 ffff88000a21bfd8 00000000001d4340
+> [ 2520.832838] Call Trace:
+> [ 2520.837089]  [<ffffffff8265297a>] schedule+0x3a/0x50
+> [ 2520.837983]  [<ffffffff82651049>] __mutex_lock_common+0x209/0x5b0
+> [ 2520.839181]  [<ffffffff81af64f3>] ? iscsi_if_rx+0x23/0xa00
+> [ 2520.840232]  [<ffffffff81053943>] ? sched_clock+0x13/0x20
+> [ 2520.841242]  [<ffffffff81af64f3>] ? iscsi_if_rx+0x23/0xa00
+> [ 2520.842271]  [<ffffffff82651430>] mutex_lock_nested+0x40/0x50
+> [ 2520.843353]  [<ffffffff81af64f3>] iscsi_if_rx+0x23/0xa00
+> [ 2520.844461]  [<ffffffff810dfffd>] ? sub_preempt_count+0x9d/0xd0
+> [ 2520.845576]  [<ffffffff82654130>] ? _raw_read_unlock+0x30/0x60
+> [ 2520.846705]  [<ffffffff8221632e>] netlink_unicast+0x1ae/0x1f0
+> [ 2520.847790]  [<ffffffff82216ae7>] netlink_sendmsg+0x227/0x350
+> [ 2520.848884]  [<ffffffff821a490d>] ? sock_update_netprioidx+0xdd/0x1b0
+> [ 2520.850105]  [<ffffffff821a4882>] ? sock_update_netprioidx+0x52/0x1b0
+> [ 2520.851282]  [<ffffffff8219e376>] sock_aio_write+0x166/0x180
+> [ 2520.852317]  [<ffffffff810dfe51>] ? get_parent_ip+0x11/0x50
+> [ 2520.853342]  [<ffffffff811d0b1a>] do_sync_write+0xda/0x120
+> [ 2520.854347]  [<ffffffff81109c42>] ? lock_release_holdtime+0xb2/0x160
+> [ 2520.855533]  [<ffffffff810dfe51>] ? get_parent_ip+0x11/0x50
+> [ 2520.856569]  [<ffffffff817914e7>] ? security_file_permission+0x27/0xb0
+> [ 2520.857756]  [<ffffffff811d0ccc>] vfs_write+0x16c/0x180
+> [ 2520.858713]  [<ffffffff811d0dcf>] sys_write+0x4f/0xa0
+> [ 2520.859680]  [<ffffffff826553f9>] system_call_fastpath+0x16/0x1b
+> [ 2520.873039] 1 lock held by trinity/31986:
+> [ 2520.873801]  #0:  (rx_queue_mutex){+.+...}, at: [<ffffffff81af64f3>] iscsi_if_rx+0x23/0xa00
+> [ 2520.875587] Kernel panic - not syncing: hung_task: blocked tasks
+> 
+> From looking at the logs, there were two instances of the fuzzer blocked on a write() to a netlink socket. There are no iSCSI targets anywhere on the network.
+> 
 
-This looks like an added feature with no users in .32 - does it really 
-belong in a stable tree?
-(But to be explicit, I have no issue with its contents at all.)
-
-Phil
-
-> ------------------
-> 
-> 
-> From: Joe Perches <joe@perches.com>
-> 
-> commit 8a64f336bc1d4aa203b138d29d5a9c414a9fbb47 upstream.
-> 
-> Add a printk_ratelimited statement expression macro that uses a per-call
-> ratelimit_state so that multiple subsystems output messages are not
-> suppressed by a global __ratelimit state.
-> 
-> [akpm@linux-foundation.org: coding-style fixes]
-> [akpm@linux-foundation.org: s/_rl/_ratelimited/g]
-> Signed-off-by: Joe Perches <joe@perches.com>
-> Cc: Naohiro Ooiwa <nooiwa@miraclelinux.com>
-> Cc: Ingo Molnar <mingo@elte.hu>
-> Cc: Hiroshi Shimamoto <h-shimamoto@ct.jp.nec.com>
-> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> 
-> ---
->  include/linux/kernel.h |   44 ++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 44 insertions(+)
-> 
-> --- a/include/linux/kernel.h
-> +++ b/include/linux/kernel.h
-> @@ -407,6 +407,50 @@ static inline char *pack_hex_byte(char *
->  #endif
->  
->  /*
-> + * ratelimited messages with local ratelimit_state,
-> + * no local ratelimit_state used in the !PRINTK case
-> + */
-> +#ifdef CONFIG_PRINTK
-> +#define printk_ratelimited(fmt, ...)  ({		\
-> +	static struct ratelimit_state _rs = {		\
-> +		.interval = DEFAULT_RATELIMIT_INTERVAL, \
-> +		.burst = DEFAULT_RATELIMIT_BURST,       \
-> +	};                                              \
-> +							\
-> +	if (!__ratelimit(&_rs))                         \
-> +		printk(fmt, ##__VA_ARGS__);		\
-> +})
-> +#else
-> +/* No effect, but we still get type checking even in the !PRINTK case: */
-> +#define printk_ratelimited printk
-> +#endif
-> +
-> +#define pr_emerg_ratelimited(fmt, ...) \
-> +	printk_ratelimited(KERN_EMERG pr_fmt(fmt), ##__VA_ARGS__)
-> +#define pr_alert_ratelimited(fmt, ...) \
-> +	printk_ratelimited(KERN_ALERT pr_fmt(fmt), ##__VA_ARGS__)
-> +#define pr_crit_ratelimited(fmt, ...) \
-> +	printk_ratelimited(KERN_CRIT pr_fmt(fmt), ##__VA_ARGS__)
-> +#define pr_err_ratelimited(fmt, ...) \
-> +	printk_ratelimited(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
-> +#define pr_warning_ratelimited(fmt, ...) \
-> +	printk_ratelimited(KERN_WARNING pr_fmt(fmt), ##__VA_ARGS__)
-> +#define pr_notice_ratelimited(fmt, ...) \
-> +	printk_ratelimited(KERN_NOTICE pr_fmt(fmt), ##__VA_ARGS__)
-> +#define pr_info_ratelimited(fmt, ...) \
-> +	printk_ratelimited(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
-> +/* no pr_cont_ratelimited, don't do that... */
-> +/* If you are writing a driver, please use dev_dbg instead */
-> +#if defined(DEBUG)
-> +#define pr_debug_ratelimited(fmt, ...) \
-> +	printk_ratelimited(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
-> +#else
-> +#define pr_debug_ratelimited(fmt, ...) \
-> +	({ if (0) printk_ratelimited(KERN_DEBUG pr_fmt(fmt), \
-> +				     ##__VA_ARGS__); 0; })
-> +#endif
-> +
-> +/*
->   * General tracing related utility functions - trace_printk(),
->   * tracing_on/tracing_off and tracing_start()/tracing_stop
->   *
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+What does the trinity test do? Does it write random junk to netlink
+sockets to test the kernel handlers or were you actually stressing the
+creation of targets. If the latter what driver were you trying to create
+targets with (iscsi_tcp, bnx2i, etc)?
