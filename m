@@ -1,52 +1,101 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [dm-devel] [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Tue, 24 Jan 2012 13:40:54 -0500
-Message-ID: <20120124184054.GA23227@infradead.org>
-References: <4F1758D4.9010401@panasas.com>
- <20120119094637.GA23442@quack.suse.cz>
- <4F1BFF5F.6000502@panasas.com>
- <20120123161857.GC28526@quack.suse.cz>
- <20120123175353.GD30782@redhat.com>
- <x49r4yq9suf.fsf@segfault.boston.devel.redhat.com>
- <20120124151504.GQ4387@shiny>
- <20120124165631.GA8941@infradead.org>
- <186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca>
- <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] Storage management (API &
+ Library)
+Date: Tue, 24 Jan 2012 12:44:31 -0600
+Message-ID: <1327430671.2894.63.camel@dabdike>
+References: <4F19A981.4080502@redhat.com>
+	 <1327157825.2748.5.camel@dabdike.int.hansenpartnership.com>
+	 <4F1D8913.1060709@redhat.com> <1327423944.2894.45.camel@dabdike>
+	 <4F1EF463.6030800@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:49515
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754964Ab2AXSlE (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36701 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752699Ab2AXSog (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2012 13:41:04 -0500
-Content-Disposition: inline
-In-Reply-To: <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
+	Tue, 24 Jan 2012 13:44:36 -0500
+In-Reply-To: <4F1EF463.6030800@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "Darrick J.Wong" <djwong@us.ibm.com>
+To: Ric Wheeler <ricwheeler@gmail.com>
+Cc: tasleson@redhat.com, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-On Tue, Jan 24, 2012 at 01:05:50PM -0500, Jeff Moyer wrote:
-> - buffered writes and buffered O_SYNC writes, all 1MB block size show 4k
->   I/Os passed down to the I/O scheduler
-> - buffered 1MB reads are a little better, typically in the 128k-256k
->   range when they hit the I/O scheduler.
+On Tue, 2012-01-24 at 13:11 -0500, Ric Wheeler wrote:
+> On 01/24/2012 11:52 AM, James Bottomley wrote:
+> > On Mon, 2012-01-23 at 10:21 -0600, Tony Asleson wrote:
+> >> On 01/21/2012 08:57 AM, James Bottomley wrote:
+> >>> It's also a bit insular ... the first thing you usually ask in open
+> >>> source is what can I steal^Wborrow from other projects and how do I
+> >>> recruit others to do the work for me.
+> >> The project site is a little sparse on details about what we have looked
+> >> at and considered.  Ric Wheeler covered some of this during his
+> >> presentation in Prague, but I will place more information on the project
+> >> web site.
+> > That would be good for those who didn't go to that presentation ...
+> >
+> >>> The first question is probably: is there anything we can liberate
+> >>> from the Oracle storage API fisasco to help with this.
+> >> The Oracle storage connect library was evaluated and subsequently
+> >> rejected for the following reasons:
+> >>
+> >> 1. The Oracle storage connect library is dual licensed, GPL and a
+> >> proprietary Oracle license which allows proprietary use.  This allows
+> >> hardware vendors the ability to write proprietary plug-ins.  The design
+> >> of the library has the library user and plug-in executing in the same
+> >> address space.  Based on the information presented on plug-ins
+> >> (http://www.gnu.org/licenses/gpl-faq.html#GPLAndPlugins) this design
+> >> goes against the requirements of GPL license compliance.  Proprietary
+> >> plug-ins could be in compliance if they are implemented to execute in a
+> >> separate process.
+> > This is actually wrong thinking.  Almost every Open Source project has
+> > an incompatible licence.  The way we work around this (once we've
+> > determined there's something worth stealing) is to ask the project owner
+> > for a compatible grant (in this case, some pieces under LGPL).  That's
+> > how we share driver code between Linux and BSD for instance.
+> >
+> > If Oracle is intent on pursuing an open core business model for this and
+> > says "no" to the request, then you can say they're incompatible ... did
+> > anyone ask them?
 > 
-> ext4:
-> - buffered writes: 512K I/Os show up at the elevator
-> - buffered O_SYNC writes: data is again 512KB, journal writes are 4K
-> - buffered 1MB reads get down to the scheduler in 128KB chunks
-> 
-> xfs:
-> - buffered writes: 1MB I/Os show up at the elevator
-> - buffered O_SYNC writes: 1MB I/Os
-> - buffered 1MB reads: 128KB chunks show up at the I/O scheduler
-> 
-> So, ext4 is doing better than ext3, but still not perfect.  xfs is
-> kicking ass for writes, but reads are still split up.
+> I think that ignores the history behind the Oracle storage management project. 
+> We did look at the Oracle work, it certainly has been a long time coming and was 
+> not done in a community fashion as far as I can tell.
 
-All three filesystems use the generic mpages code for reads, so they
-all get the same (bad) I/O patterns.  Looks like we need to fix this up
-ASAP.
+I'm not denying it's been a royal screw up ... particularly with the
+"sure we're releasing it any day now" message we got for two years.  But
+that is partly due to the fact that the open source guy left the project
+a while back.
+
+> Putting the burden back on you, can you point to a single post about their 
+> project on a community list or name an individual (still employed by Oracle) 
+> that we can discuss with :) ?
+
+Um, that question is rhetorical, right?  Or are you implying Martin
+Petersen is no longer at oracle (which will come as news to him, I
+think)?
+
+> We waited years for them to get to the dual license decision in the first place.
+> 
+> Having looked at their code, I think it is easier to write it - in a community 
+> way - the way we would have it done than to spend another year waiting on their 
+> legal team to change the license.
+
+However annoyed we might be with Oracle, reinventing an existing project
+that already has committed vendor plugin contributors and thus forcing
+vendors to choose which project to support isn't going to be hugely
+helpful.  Assuming the worst about Oracle, what's the barriers to
+reusing the plugins (the API is public and doesn't have a licensing
+issue)?
+
+> Clearly, using GPL for a library (not LGPL) is meant to push people into the 
+> commercial license....
+
+You're assuming a malign motive where there could be simple open source
+ignorance.  I'll dig around and see if I can get a read on what they're
+actually up to.
+
+James
+
 
