@@ -1,40 +1,41 @@
-From: Andreas Dilger <aedilger@gmail.com>
-Subject: Re: [dm-devel] [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Tue, 24 Jan 2012 10:01:03 -0700
-Message-ID: <D41B7239-90BF-428B-9A74-9A148AC61AD9@gmail.com>
-References: <20120117213648.GA9457@quack.suse.cz> <20120118225808.GA3074@tux1.beaverton.ibm.com> <20120118232200.GA22019@quack.suse.cz> <4F1758D4.9010401@panasas.com> <20120119094637.GA23442@quack.suse.cz> <4F1BFF5F.6000502@panasas.com> <20120123161857.GC28526@quack.suse.cz> <20120123175353.GD30782@redhat.com> <x49r4yq9suf.fsf@segfault.boston.devel.redhat.com> <20120124151504.GQ4387@shiny> <20120124165631.GA8941@infradead.org>
-Mime-Version: 1.0 (1.0)
+From: "Loke, Chetan" <Chetan.Loke@netscout.com>
+Subject: RE: [LSF/MM TOPIC] linux servers as a storage server - what'smissing?
+Date: Tue, 24 Jan 2012 12:05:23 -0500
+Message-ID: <D3F292ADF945FB49B35E96C94C2061B9159D00EC@nsmail.netscout.com>
+References: <4EF2026F.2090506@redhat.com> <DBFB1B45AF80394ABD1C807E9F28D157077DD22B19@BLRX7MCDC203.AMER.DELL.COM> <20111222155849.GD1388@redhat.com> <DBFB1B45AF80394ABD1C807E9F28D157077DD22D79@BLRX7MCDC203.AMER.DELL.COM> <4F0ADB0A.9020707@suse.de> <1326113987.2580.8.camel@localhost.localdomain> <D3F292ADF945FB49B35E96C94C2061B9159134BD@nsmail.netscout.com> <4F18429C.3020803@redhat.com> <D3F292ADF945FB49B35E96C94C2061B9159134EF@nsmail.netscout.com> <4F1844F0.1030406@redhat.com> <D3F292ADF945FB49B35E96C94C2061B9159135BF@nsmail.netscout.com> <4F18566A.2060107@redhat.com> <D3F292ADF945FB49B35E96C94C2061B915913815@nsmail.netscout.com> <4F188DA9.3050804@redhat.com>
+Mime-Version: 1.0
 Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20120124165631.GA8941@infradead.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Chris Mason <chris.mason@oracle.com>, Jeff Moyer <jmoyer@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "Darrick J.Wong" <djwong@us.ibm.com>
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod6og102.obsmtp.com ([64.18.1.183]:35228 "HELO
+	exprod6og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756172Ab2AXRF0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2012 12:05:26 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <4F188DA9.3050804@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Tom Coughlan <coughlan@redhat.com>, Hannes Reinecke <hare@suse.de>, tasleson@redhat.com, Shyam_Iyer@Dell.com, vgoyal@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-
-
-Cheers, Andreas
-
-On 2012-01-24, at 9:56, Christoph Hellwig <hch@infradead.org> wrote:
-
-> On Tue, Jan 24, 2012 at 10:15:04AM -0500, Chris Mason wrote:
->> https://lkml.org/lkml/2011/12/13/326
->> 
->> This patch is another example, although for a slight different reason.
->> I really have no idea yet what the right answer is in a generic sense,
->> but you don't need a 512K request to see higher latencies from merging.
+> > But writes that have to fetch the non-cached data, will
+unnecessarily
+> > issue I/O to the fabric. These orphaned I/O's cause more pain in the
+> > cleanup.
+> > And if caching is enabled on the front-side then it's all the more
+> > painful.
+> >
+> > We can go one extra step and make FS fail read I/O for non-cached
+data
+> > too to avoid more orphan IOs.
 > 
-> That assumes the 512k requests is created by merging.  We have enough
-> workloads that create large I/O from the get go, and not splitting them
-> and eventually merging them again would be a big win.  E.g. I'm
-> currently looking at a distributed block device which uses internal 4MB
-> chunks, and increasing the maximum request size to that dramatically
-> increases the read performance.
+> I don't really see this as a useful state. Read-only without a real
+> backing file
+> system or LUN is hit or miss, that file system should go offline :)
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Last year when I checked, I forget but I think xfs(or ext4) was going
+read-only.
+If this is still the case then you are basically asking FS's to modify
+that behavior.
