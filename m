@@ -1,72 +1,55 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [Lsf-pc]   [LSF/MM TOPIC] a few storage topics
-Date: Tue, 24 Jan 2012 15:13:40 -0500
-Message-ID: <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
-References: <20120123161857.GC28526@quack.suse.cz>
-	<20120123175353.GD30782@redhat.com>
-	<x49r4yq9suf.fsf@segfault.boston.devel.redhat.com>
-	<20120124151504.GQ4387@shiny> <20120124165631.GA8941@infradead.org>
-	<186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca>
-	<x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
-	<20120124184054.GA23227@infradead.org> <20120124190732.GH4387@shiny>
-	<x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
-	<20120124200932.GB20650@quack.suse.cz>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 0/3] SCSI & usb-storage: new flags for VPD pages and
+ REPORT LUNS
+Date: Tue, 24 Jan 2012 12:01:22 -0800
+Message-ID: <20120124200122.GA7739@kroah.com>
+References: <E9801365-C2D1-4E5C-8BE4-BD712DA0D2FD@mac.com>
+ <Pine.LNX.4.44L0.1201101327030.1594-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20120124200932.GB20650@quack.suse.cz> (Jan Kara's message of
-	"Tue, 24 Jan 2012 21:09:32 +0100")
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jan Kara <jack@suse.cz>
-Cc: Andreas Dilger <adilger@dilger.ca>, Andrea Arcangeli <aarcange@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, fengguang.wu@gmail.com, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:34359 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756318Ab2AXURj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2012 15:17:39 -0500
+Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 1A46A20BC4
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2012 15:17:39 -0500 (EST)
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1201101327030.1594-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Perry Wagle <wagle@mac.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Jan Kara <jack@suse.cz> writes:
+On Tue, Jan 10, 2012 at 01:42:40PM -0500, Alan Stern wrote:
+> James and Greg:
+> 
+> Perry Wagle reports that his new USB-ESATA drives don't work properly 
+> because they don't like getting the LUN bits in the second byte of the 
+> command string.  We set those bits only because usb-storage adjusts the 
+> SCSI revision level for all devices to SCSI-2; the drives themselves 
+> report a value of 0x06 (which would be SCSI-7).
+> 
+> The reason for mangling the scsi_level value was that some USB devices 
+> reported SCSI-3 but couldn't handle some of the mandatory features: VPD 
+> pages and the REPORT LUNS command.  It's now clear that instead of 
+> abusing scsi_level, we should have separate flags for the individual 
+> features we need to control.
+> 
+> That's what this patch series does.  The first merely corrects an 
+> existing typo in the definition of struct scsi_target.  The second adds 
+> the new flags and makes usb-storage use them.  The third takes this 
+> opportunity to do a little code clean-up in usb-storage.
+> 
+> The changes are more or less equally divided between SCSI and
+> usb-storage.  James, if they look okay to you and you don't mind taking
+> them through your tree, that would be fine.  Or if you prefer, I'm sure
+> Greg won't mind taking them.
 
-> On Tue 24-01-12 14:14:14, Jeff Moyer wrote:
->> Chris Mason <chris.mason@oracle.com> writes:
->> 
->> >> All three filesystems use the generic mpages code for reads, so they
->> >> all get the same (bad) I/O patterns.  Looks like we need to fix this up
->> >> ASAP.
->> >
->> > Can you easily run btrfs through the same rig?  We don't use mpages and
->> > I'm curious.
->> 
->> The readahead code was to blame, here.  I wonder if we can change the
->> logic there to not break larger I/Os down into smaller sized ones.
->> Fengguang, doing a dd if=file of=/dev/null bs=1M results in 128K I/Os,
->> when 128KB is the read_ahead_kb value.  Is there any heuristic you could
->> apply to not break larger I/Os up like this?  Does that make sense?
->   Well, not breaking up I/Os would be fairly simple as ondemand_readahead()
-> already knows how much do we want to read. We just trim the submitted I/O to
-> read_ahead_kb artificially. And that is done so that you don't trash page
-> cache (possibly evicting pages you have not yet copied to userspace) when
-> there are several processes doing large reads.
+I'll be glad to take these, James, any objection?
 
-Do you really think applications issue large reads and then don't use
-the data?  I mean, I've seen some bad programming, so I can believe that
-would be the case.  Still, I'd like to think it doesn't happen.  ;-)
+thanks,
 
-> Maybe 128 KB is a too small default these days but OTOH noone prevents you
-> from raising it (e.g. SLES uses 1 MB as a default).
-
-For some reason, I thought it had been bumped to 512KB by default.  Must
-be that overactive imagination I have...  Anyway, if all of the distros
-start bumping the default, don't you think it's time to consider bumping
-it upstream, too?  I thought there was a lot of work put into not being
-too aggressive on readahead, so the downside of having a larger
-read_ahead_kb setting was fairly small.
-
-Cheers,
-Jeff
+greg k-h
