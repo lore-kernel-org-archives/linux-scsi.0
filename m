@@ -1,540 +1,475 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v7 3/6] libsas: let libata recover links that fail to transmit
- initial sig-fis
-Date: Mon, 23 Jan 2012 23:50:30 -0800
-Message-ID: <20120124075030.22384.47658.stgit@localhost6.localdomain6>
+Subject: [PATCH v7 4/6] libsas: async ata scanning
+Date: Mon, 23 Jan 2012 23:50:35 -0800
+Message-ID: <20120124075035.22384.48107.stgit@localhost6.localdomain6>
 References: <20120124074825.22384.17157.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58735 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754482Ab2AXHua (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2012 02:50:30 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120124074825.22384.17157.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
+List-Id: linux-scsi@vger.kernel.org
 
-libsas fails to discover all sata devices in the domain.  If a device fails
-negotiation and does not transmit a signature fis the link needs recovery.
-libata already understands how to manage slow to come up links, so treat these
-conditions as ata device attach events for the purposes of creating an
-ata_port.  This allows libata to manage retrying link bring up.
+libsas ata error handling is already async but this does not help the
+scan case.  Move initial link recovery out from under host->scan_mutex,
+and delay synchronization with eh until after all port probe/recovery
+work has been queued.
 
-Rediscovery is modified to be careful about checking changes in dev_type.  It
-looks like libsas leaks old devices if the sas address changes, but that's a
-fix for another patch.
+Device ordering is maintained with scan order by still calling
+sas_rphy_add() in order of domain discovery.
+
+Since we now scan the domain list when invoking libata-eh we need to be
+careful to check for fully initialized ata ports.
 
 Cc: Xiangliang Yu <yuxiangl@marvell.com>
 Cc: Luben Tuikov <ltuikov@yahoo.com>
-Acked-by: Jack Wang <jack_wang@usish.com>
+Cc: Jack Wang <jack_wang@usish.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_ata.c      |   71 +++++++++++++-
- drivers/scsi/libsas/sas_discover.c |    1 
- drivers/scsi/libsas/sas_expander.c |  178 ++++++++++++++++++++----------------
- drivers/scsi/libsas/sas_internal.h |    6 +
- include/scsi/sas.h                 |    4 -
- include/scsi/sas_ata.h             |    8 +-
- 6 files changed, 179 insertions(+), 89 deletions(-)
+ drivers/ata/libata-core.c           |   34 +++++++++-------
+ drivers/ata/libata-scsi.c           |   13 ++++++
+ drivers/ata/libata.h                |    1 
+ drivers/scsi/aic94xx/aic94xx_init.c |    1 
+ drivers/scsi/isci/init.c            |    1 
+ drivers/scsi/libsas/sas_ata.c       |   74 ++++++++++++++++++++++++++++++-----
+ drivers/scsi/libsas/sas_discover.c  |   22 +++++-----
+ drivers/scsi/libsas/sas_internal.h  |    9 ++++
+ drivers/scsi/libsas/sas_scsi_host.c |   18 ---------
+ drivers/scsi/mvsas/mv_init.c        |    1 
+ drivers/scsi/pm8001/pm8001_init.c   |    1 
+ include/linux/libata.h              |    1 
+ include/scsi/libsas.h               |    1 
+ include/scsi/sas_ata.h              |   12 +++---
+ 14 files changed, 123 insertions(+), 66 deletions(-)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c04ad68..1654c94 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5874,29 +5874,31 @@ void ata_host_init(struct ata_host *host, struct device *dev,
+ 	host->ops = ops;
+ }
+ 
+-int ata_port_probe(struct ata_port *ap)
++void __ata_port_probe(struct ata_port *ap)
+ {
+-	int rc = 0;
++	struct ata_eh_info *ehi = &ap->link.eh_info;
++	unsigned long flags;
+ 
+-	/* probe */
+-	if (ap->ops->error_handler) {
+-		struct ata_eh_info *ehi = &ap->link.eh_info;
+-		unsigned long flags;
++	/* kick EH for boot probing */
++	spin_lock_irqsave(ap->lock, flags);
+ 
+-		/* kick EH for boot probing */
+-		spin_lock_irqsave(ap->lock, flags);
++	ehi->probe_mask |= ATA_ALL_DEVICES;
++	ehi->action |= ATA_EH_RESET;
++	ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
+ 
+-		ehi->probe_mask |= ATA_ALL_DEVICES;
+-		ehi->action |= ATA_EH_RESET;
+-		ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
++	ap->pflags &= ~ATA_PFLAG_INITIALIZING;
++	ap->pflags |= ATA_PFLAG_LOADING;
++	ata_port_schedule_eh(ap);
+ 
+-		ap->pflags &= ~ATA_PFLAG_INITIALIZING;
+-		ap->pflags |= ATA_PFLAG_LOADING;
+-		ata_port_schedule_eh(ap);
++	spin_unlock_irqrestore(ap->lock, flags);
++}
+ 
+-		spin_unlock_irqrestore(ap->lock, flags);
++int ata_port_probe(struct ata_port *ap)
++{
++	int rc = 0;
+ 
+-		/* wait for EH to finish */
++	if (ap->ops->error_handler) {
++		__ata_port_probe(ap);
+ 		ata_port_wait_eh(ap);
+ 	} else {
+ 		DPRINTK("ata%u: bus probe begin\n", ap->print_id);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 2a5412e..faf8730 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3837,6 +3837,19 @@ void ata_sas_port_stop(struct ata_port *ap)
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_port_stop);
+ 
++int ata_sas_async_port_init(struct ata_port *ap)
++{
++	int rc = ap->ops->port_start(ap);
++
++	if (!rc) {
++		ap->print_id = ata_print_id++;
++		__ata_port_probe(ap);
++	}
++
++	return rc;
++}
++EXPORT_SYMBOL_GPL(ata_sas_async_port_init);
++
+ /**
+  *	ata_sas_port_init - Initialize a SATA device
+  *	@ap: SATA port to initialize
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 78c356d..2a2aa51 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -104,6 +104,7 @@ extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
+ extern struct ata_port *ata_port_alloc(struct ata_host *host);
+ extern const char *sata_spd_string(unsigned int spd);
+ extern int ata_port_probe(struct ata_port *ap);
++extern void __ata_port_probe(struct ata_port *ap);
+ 
+ /* libata-acpi.c */
+ #ifdef CONFIG_ATA_ACPI
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index eea988a..ff80552 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -81,7 +81,6 @@ static struct scsi_host_template aic94xx_sht = {
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.eh_device_reset_handler	= sas_eh_device_reset_handler,
+ 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
+-	.slave_alloc		= sas_slave_alloc,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ };
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 437f76b..9a28270 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -157,7 +157,6 @@ static struct scsi_host_template isci_sht = {
+ 	.sg_tablesize			= SG_ALL,
+ 	.max_sectors			= SCSI_DEFAULT_MAX_SECTORS,
+ 	.use_clustering			= ENABLE_CLUSTERING,
+-	.slave_alloc			= sas_slave_alloc,
+ 	.target_destroy			= sas_target_destroy,
+ 	.ioctl				= sas_ioctl,
+ 	.shost_attrs			= isci_host_attrs,
 diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index c0519f4..e777fe7 100644
+index 5f8adb8..f82997a 100644
 --- a/drivers/scsi/libsas/sas_ata.c
 +++ b/drivers/scsi/libsas/sas_ata.c
-@@ -278,26 +278,84 @@ static struct sas_internal *dev_to_sas_internal(struct domain_device *dev)
- 	return to_sas_internal(dev->port->ha->core.shost->transportt);
- }
+@@ -585,11 +585,10 @@ static struct ata_port_info sata_port_info = {
+ 	.port_ops = &sas_sata_ops
+ };
  
-+static void sas_get_ata_command_set(struct domain_device *dev);
-+
-+int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy)
-+{
-+	if (phy->attached_tproto & SAS_PROTOCOL_STP)
-+		dev->tproto = phy->attached_tproto;
-+	if (phy->attached_sata_dev)
-+		dev->tproto |= SATA_DEV;
-+
-+	if (phy->attached_dev_type == SATA_PENDING)
-+		dev->dev_type = SATA_PENDING;
-+	else {
-+		int res;
-+
-+		dev->dev_type = SATA_DEV;
-+		res = sas_get_report_phy_sata(dev->parent, phy->phy_id,
-+					      &dev->sata_dev.rps_resp);
-+		if (res) {
-+			SAS_DPRINTK("report phy sata to %016llx:0x%x returned "
-+				    "0x%x\n", SAS_ADDR(dev->parent->sas_addr),
-+				    phy->phy_id, res);
-+			return res;
-+		}
-+		memcpy(dev->frame_rcvd, &dev->sata_dev.rps_resp.rps.fis,
-+		       sizeof(struct dev_to_host_fis));
-+		/* TODO switch to ata_dev_classify() */
-+		sas_get_ata_command_set(dev);
-+	}
-+	return 0;
-+}
-+
-+static int sas_ata_clear_pending(struct domain_device *dev, struct ex_phy *phy)
-+{
-+	int res;
-+
-+	/* we weren't pending, so successfully end the reset sequence now */
-+	if (dev->dev_type != SATA_PENDING)
-+		return 1;
-+
-+	/* hmmm, if this succeeds do we need to repost the domain_device to the
-+	 * lldd so it can pick up new parameters?
-+	 */
-+	res = sas_get_ata_info(dev, phy);
-+	if (res)
-+		return 0; /* retry */
-+	else
-+		return 1;
-+}
-+
- static int smp_ata_check_ready(struct ata_link *link)
+-int sas_ata_init_host_and_port(struct domain_device *found_dev,
+-			       struct scsi_target *starget)
++int sas_ata_init_host_and_port(struct domain_device *found_dev)
  {
- 	int res;
--	u8 addr[8];
- 	struct ata_port *ap = link->ap;
- 	struct domain_device *dev = ap->private_data;
- 	struct domain_device *ex_dev = dev->parent;
- 	struct sas_phy *phy = sas_get_local_phy(dev);
-+	struct ex_phy *ex_phy = &ex_dev->ex_dev.ex_phy[phy->number];
+-	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
+-	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
++	struct sas_ha_struct *ha = found_dev->port->ha;
++	struct Scsi_Host *shost = ha->core.shost;
+ 	struct ata_port *ap;
  
--	res = sas_get_phy_attached_sas_addr(ex_dev, phy->number, addr);
-+	res = sas_ex_phy_discover(ex_dev, phy->number);
- 	sas_put_local_phy(phy);
-+
- 	/* break the wait early if the expander is unreachable,
- 	 * otherwise keep polling
- 	 */
- 	if (res == -ECOMM)
- 		return res;
--	if (res != SMP_RESP_FUNC_ACC || SAS_ADDR(addr) == 0)
-+	if (res != SMP_RESP_FUNC_ACC)
- 		return 0;
--	else
--		return 1;
-+
-+	switch (ex_phy->attached_dev_type) {
-+	case SATA_PENDING:
-+		return 0;
-+	case SAS_END_DEV:
-+		if (ex_phy->attached_sata_dev)
-+			return sas_ata_clear_pending(dev, ex_phy);
-+	default:
-+		return -ENODEV;
-+	}
+ 	ata_host_init(&found_dev->sata_dev.ata_host,
+@@ -607,6 +606,8 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev,
+ 	ap->private_data = found_dev;
+ 	ap->cbl = ATA_CBL_SATA;
+ 	ap->scsi_host = shost;
++	/* publish initialized ata port */
++	smp_wmb();
+ 	found_dev->sata_dev.ap = ap;
+ 
+ 	return 0;
+@@ -683,6 +684,38 @@ static void sas_get_ata_command_set(struct domain_device *dev)
+ 		dev->sata_dev.command_set = ATAPI_COMMAND_SET;
  }
  
- static int local_ata_check_ready(struct ata_link *link)
-@@ -584,6 +642,9 @@ static void sas_get_ata_command_set(struct domain_device *dev)
- 	struct dev_to_host_fis *fis =
- 		(struct dev_to_host_fis *) dev->frame_rcvd;
- 
-+	if (dev->dev_type == SATA_PENDING)
-+		return;
++void sas_probe_sata(struct asd_sas_port *port)
++{
++	struct domain_device *dev, *n;
++	int err;
 +
- 	if ((fis->sector_count == 1 && /* ATA */
- 	     fis->lbal         == 1 &&
- 	     fis->lbam         == 0 &&
++	mutex_lock(&port->ha->disco_mutex);
++	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
++		if (!dev_is_sata(dev))
++			continue;
++
++		err = sas_ata_init_host_and_port(dev);
++		if (err)
++			sas_fail_probe(dev, __func__, err);
++		else
++			ata_sas_async_port_init(dev->sata_dev.ap);
++	}
++	mutex_unlock(&port->ha->disco_mutex);
++
++	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
++		if (!dev_is_sata(dev))
++			continue;
++
++		sas_ata_wait_eh(dev);
++
++		/* if libata could not bring the link up, don't surface
++		 * the device
++		 */
++		if (ata_dev_disabled(sas_to_ata_dev(dev)))
++			sas_fail_probe(dev, __func__, -ENODEV);
++	}
++}
++
+ /**
+  * sas_discover_sata -- discover an STP/SATA domain device
+  * @dev: pointer to struct domain_device of interest
+@@ -729,11 +762,23 @@ static void async_sas_ata_eh(void *data, async_cookie_t cookie)
+ 	wake_up(&ha->core.shost->host_wait);
+ }
+ 
++static bool sas_ata_dev_eh_valid(struct domain_device *dev)
++{
++	struct ata_port *ap;
++
++	if (!dev_is_sata(dev))
++		return false;
++	ap = dev->sata_dev.ap;
++	/* consume fully initialized ata ports */
++	smp_rmb();
++	return !!ap;
++}
++
+ void sas_ata_strategy_handler(struct Scsi_Host *shost)
+ {
+-	struct scsi_device *sdev;
+ 	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(shost);
+ 	LIST_HEAD(async);
++	int i;
+ 
+ 	/* it's ok to defer revalidation events during ata eh, these
+ 	 * disks are in one of three states:
+@@ -745,14 +790,21 @@ void sas_ata_strategy_handler(struct Scsi_Host *shost)
+ 	 */
+ 	sas_disable_revalidation(sas_ha);
+ 
+-	shost_for_each_device(sdev, shost) {
+-		struct domain_device *ddev = sdev_to_domain_dev(sdev);
+-
+-		if (!dev_is_sata(ddev))
+-			continue;
++	spin_lock_irq(&sas_ha->phy_port_lock);
++	for (i = 0; i < sas_ha->num_phys; i++) {
++		struct asd_sas_port *port = sas_ha->sas_port[i];
++		struct domain_device *dev;
+ 
+-		async_schedule_domain(async_sas_ata_eh, ddev, &async);
++		spin_lock(&port->dev_list_lock);
++		list_for_each_entry(dev, &port->dev_list, dev_list_node) {
++			if (!sas_ata_dev_eh_valid(dev))
++				continue;
++			async_schedule_domain(async_sas_ata_eh, dev, &async);
++		}
++		spin_unlock(&port->dev_list_lock);
+ 	}
++	spin_unlock_irq(&sas_ha->phy_port_lock);
++
+ 	async_synchronize_full_domain(&async);
+ 
+ 	sas_enable_revalidation(sas_ha);
 diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index c6681b4..dc8baef 100644
+index f60b602..ed3f8c0 100644
 --- a/drivers/scsi/libsas/sas_discover.c
 +++ b/drivers/scsi/libsas/sas_discover.c
-@@ -48,6 +48,7 @@ void sas_init_dev(struct domain_device *dev)
-         case SATA_DEV:
-         case SATA_PM:
-         case SATA_PM_PORT:
-+	case SATA_PENDING:
-                 INIT_LIST_HEAD(&dev->sata_dev.children);
-                 break;
-         default:
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 4b2ecd3..7e2d3c4 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -183,13 +183,27 @@ static char sas_route_char(struct domain_device *dev, struct ex_phy *phy)
- 	}
- }
+@@ -207,22 +207,22 @@ static void sas_probe_devices(struct work_struct *work)
  
--static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
--			   void *disc_resp)
-+static enum sas_dev_type to_dev_type(struct discover_resp *dr)
- {
-+	/* This is detecting a failure to transmit initial dev to host
-+	 * FIS as described in section J.5 of sas-2 r16
-+	 */
-+	if (dr->attached_dev_type == NO_DEVICE && dr->attached_sata_dev &&
-+	    dr->linkrate >= SAS_LINK_RATE_1_5_GBPS)
-+		return SATA_PENDING;
-+	else
-+		return dr->attached_dev_type;
-+}
-+
-+static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
-+{
-+	enum sas_dev_type dev_type;
-+	enum sas_linkrate linkrate;
-+	u8 sas_addr[SAS_ADDR_SIZE];
-+	struct smp_resp *resp = rsp;
-+	struct discover_resp *dr = &resp->disc;
- 	struct expander_device *ex = &dev->ex_dev;
- 	struct ex_phy *phy = &ex->ex_phy[phy_id];
--	struct smp_resp *resp = disc_resp;
--	struct discover_resp *dr = &resp->disc;
- 	struct sas_rphy *rphy = dev->rphy;
- 	bool new_phy = !phy->phy;
- 	char *type;
-@@ -213,8 +227,13 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
- 		break;
- 	}
+ 	clear_bit(DISCE_PROBE, &port->disc.pending);
  
-+	/* check if anything important changed to squelch debug */
-+	dev_type = phy->attached_dev_type;
-+	linkrate  = phy->linkrate;
-+	memcpy(sas_addr, phy->attached_sas_addr, SAS_ADDR_SIZE);
-+
-+	phy->attached_dev_type = to_dev_type(dr);
- 	phy->phy_id = phy_id;
--	phy->attached_dev_type = dr->attached_dev_type;
- 	phy->linkrate = dr->linkrate;
- 	phy->attached_sata_host = dr->attached_sata_host;
- 	phy->attached_sata_dev  = dr->attached_sata_dev;
-@@ -229,7 +248,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
- 	phy->last_da_index = -1;
- 
- 	phy->phy->identify.sas_address = SAS_ADDR(phy->attached_sas_addr);
--	phy->phy->identify.device_type = phy->attached_dev_type;
-+	phy->phy->identify.device_type = dr->attached_dev_type;
- 	phy->phy->identify.initiator_port_protocols = phy->attached_iproto;
- 	phy->phy->identify.target_port_protocols = phy->attached_tproto;
- 	phy->phy->identify.phy_identifier = phy_id;
-@@ -246,6 +265,9 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
- 		}
- 
- 	switch (phy->attached_dev_type) {
-+	case SATA_PENDING:
-+		type = "stp pending";
-+		break;
- 	case NO_DEVICE:
- 		type = "no device";
- 		break;
-@@ -270,6 +292,16 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
- 		type = "unknown";
- 	}
- 
-+	/* this routine is polled by libata error recovery so filter
-+	 * unimportant messages
-+	 */
-+	if (new_phy || phy->attached_dev_type != dev_type ||
-+	    phy->linkrate != linkrate ||
-+	    SAS_ADDR(phy->attached_sas_addr) != SAS_ADDR(sas_addr))
-+		/* pass */;
-+	else
-+		return;
-+
- 	SAS_DPRINTK("ex %016llx phy%02d:%c:%X attached: %016llx (%s)\n",
- 		    SAS_ADDR(dev->sas_addr), phy->phy_id,
- 		    sas_route_char(dev, phy), phy->linkrate,
-@@ -304,50 +336,25 @@ struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
- static int sas_ex_phy_discover_helper(struct domain_device *dev, u8 *disc_req,
- 				      u8 *disc_resp, int single)
- {
--	struct domain_device *ata_dev = sas_ex_to_ata(dev, single);
--	int i, res;
-+	struct discover_resp *dr;
-+	int res;
- 
- 	disc_req[9] = single;
--	for (i = 1 ; i < 3; i++) {
--		struct discover_resp *dr;
- 
--		res = smp_execute_task(dev, disc_req, DISCOVER_REQ_SIZE,
--				       disc_resp, DISCOVER_RESP_SIZE);
--		if (res)
--			return res;
--		dr = &((struct smp_resp *)disc_resp)->disc;
--		if (memcmp(dev->sas_addr, dr->attached_sas_addr,
--			  SAS_ADDR_SIZE) == 0) {
--			sas_printk("Found loopback topology, just ignore it!\n");
--			return 0;
--		}
+-	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
+-		int err;
 -
--		/* This is detecting a failure to transmit initial
--		 * dev to host FIS as described in section J.5 of
--		 * sas-2 r16
--		 */
--		if (!(dr->attached_dev_type == 0 &&
--		      dr->attached_sata_dev))
--			break;
--
--		/* In order to generate the dev to host FIS, we send a
--		 * link reset to the expander port.  If a device was
--		 * previously detected on this port we ask libata to
--		 * manage the reset and link recovery.
--		 */
--		if (ata_dev) {
--			sas_ata_schedule_reset(ata_dev);
--			break;
--		}
--		sas_smp_phy_control(dev, single, PHY_FUNC_LINK_RESET, NULL);
--		/* Wait for the reset to trigger the negotiation */
--		msleep(500);
-+	res = smp_execute_task(dev, disc_req, DISCOVER_REQ_SIZE,
-+			       disc_resp, DISCOVER_RESP_SIZE);
-+	if (res)
-+		return res;
-+	dr = &((struct smp_resp *)disc_resp)->disc;
-+	if (memcmp(dev->sas_addr, dr->attached_sas_addr, SAS_ADDR_SIZE) == 0) {
-+		sas_printk("Found loopback topology, just ignore it!\n");
-+		return 0;
- 	}
- 	sas_set_ex_phy(dev, single, disc_resp);
- 	return 0;
- }
- 
--static int sas_ex_phy_discover(struct domain_device *dev, int single)
-+int sas_ex_phy_discover(struct domain_device *dev, int single)
- {
- 	struct expander_device *ex = &dev->ex_dev;
- 	int  res = 0;
-@@ -652,9 +659,8 @@ int sas_smp_get_phy_events(struct sas_phy *phy)
- #define RPS_REQ_SIZE  16
- #define RPS_RESP_SIZE 60
- 
--static int sas_get_report_phy_sata(struct domain_device *dev,
--					  int phy_id,
--					  struct smp_resp *rps_resp)
-+int sas_get_report_phy_sata(struct domain_device *dev, int phy_id,
-+			    struct smp_resp *rps_resp)
- {
- 	int res;
- 	u8 *rps_req = alloc_smp_req(RPS_REQ_SIZE);
-@@ -764,21 +770,9 @@ static struct domain_device *sas_ex_discover_end_dev(
- 
- #ifdef CONFIG_SCSI_SAS_ATA
- 	if ((phy->attached_tproto & SAS_PROTOCOL_STP) || phy->attached_sata_dev) {
--		child->dev_type = SATA_DEV;
--		if (phy->attached_tproto & SAS_PROTOCOL_STP)
--			child->tproto = phy->attached_tproto;
--		if (phy->attached_sata_dev)
--			child->tproto |= SATA_DEV;
--		res = sas_get_report_phy_sata(parent, phy_id,
--					      &child->sata_dev.rps_resp);
--		if (res) {
--			SAS_DPRINTK("report phy sata to %016llx:0x%x returned "
--				    "0x%x\n", SAS_ADDR(parent->sas_addr),
--				    phy_id, res);
-+		res = sas_get_ata_info(child, phy);
-+		if (res)
- 			goto out_free;
--		}
--		memcpy(child->frame_rcvd, &child->sata_dev.rps_resp.rps.fis,
--		       sizeof(struct dev_to_host_fis));
- 
- 		rphy = sas_end_device_alloc(phy->port);
- 		if (unlikely(!rphy))
-@@ -993,7 +987,8 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
- 
- 	if (ex_phy->attached_dev_type != SAS_END_DEV &&
- 	    ex_phy->attached_dev_type != FANOUT_DEV &&
--	    ex_phy->attached_dev_type != EDGE_DEV) {
-+	    ex_phy->attached_dev_type != EDGE_DEV &&
-+	    ex_phy->attached_dev_type != SATA_PENDING) {
- 		SAS_DPRINTK("unknown device type(0x%x) attached to ex %016llx "
- 			    "phy 0x%x\n", ex_phy->attached_dev_type,
- 			    SAS_ADDR(dev->sas_addr),
-@@ -1019,6 +1014,7 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
- 
- 	switch (ex_phy->attached_dev_type) {
- 	case SAS_END_DEV:
-+	case SATA_PENDING:
- 		child = sas_ex_discover_end_dev(dev, phy_id);
- 		break;
- 	case FANOUT_DEV:
-@@ -1688,8 +1684,8 @@ static int sas_get_phy_change_count(struct domain_device *dev,
- 	return res;
- }
- 
--int sas_get_phy_attached_sas_addr(struct domain_device *dev, int phy_id,
--				  u8 *attached_sas_addr)
-+static int sas_get_phy_attached_dev(struct domain_device *dev, int phy_id,
-+				    u8 *sas_addr, enum sas_dev_type *type)
- {
- 	int res;
- 	struct smp_resp *disc_resp;
-@@ -1701,10 +1697,11 @@ int sas_get_phy_attached_sas_addr(struct domain_device *dev, int phy_id,
- 	dr = &disc_resp->disc;
- 
- 	res = sas_get_phy_discover(dev, phy_id, disc_resp);
--	if (!res) {
--		memcpy(attached_sas_addr,disc_resp->disc.attached_sas_addr,8);
--		if (dr->attached_dev_type == 0)
--			memset(attached_sas_addr, 0, 8);
-+	if (res == 0) {
-+		memcpy(sas_addr, disc_resp->disc.attached_sas_addr, 8);
-+		*type = to_dev_type(dr);
-+		if (*type == 0)
-+			memset(sas_addr, 0, 8);
- 	}
- 	kfree(disc_resp);
- 	return res;
-@@ -1953,39 +1950,62 @@ out:
- 	return res;
- }
- 
-+static bool dev_type_flutter(enum sas_dev_type new, enum sas_dev_type old)
-+{
-+	if (old == new)
-+		return true;
-+
-+	/* treat device directed resets as flutter, if we went
-+	 * SAS_END_DEV to SATA_PENDING the link needs recovery
-+	 */
-+	if ((old == SATA_PENDING && new == SAS_END_DEV) ||
-+	    (old == SAS_END_DEV && new == SATA_PENDING))
-+		return true;
-+
-+	return false;
-+}
-+
- static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
- {
- 	struct expander_device *ex = &dev->ex_dev;
- 	struct ex_phy *phy = &ex->ex_phy[phy_id];
--	u8 attached_sas_addr[8];
-+	enum sas_dev_type type = NO_DEVICE;
-+	u8 sas_addr[8];
- 	int res;
- 
--	res = sas_get_phy_attached_sas_addr(dev, phy_id, attached_sas_addr);
-+	res = sas_get_phy_attached_dev(dev, phy_id, sas_addr, &type);
- 	switch (res) {
- 	case SMP_RESP_NO_PHY:
- 		phy->phy_state = PHY_NOT_PRESENT;
- 		sas_unregister_devs_sas_addr(dev, phy_id, last);
--		goto out; break;
-+		return res;
- 	case SMP_RESP_PHY_VACANT:
- 		phy->phy_state = PHY_VACANT;
- 		sas_unregister_devs_sas_addr(dev, phy_id, last);
--		goto out; break;
-+		return res;
- 	case SMP_RESP_FUNC_ACC:
- 		break;
- 	}
- 
--	if (SAS_ADDR(attached_sas_addr) == 0) {
-+	if (SAS_ADDR(sas_addr) == 0) {
- 		phy->phy_state = PHY_EMPTY;
- 		sas_unregister_devs_sas_addr(dev, phy_id, last);
--	} else if (SAS_ADDR(attached_sas_addr) ==
--		   SAS_ADDR(phy->attached_sas_addr)) {
--		SAS_DPRINTK("ex %016llx phy 0x%x broadcast flutter\n",
--			    SAS_ADDR(dev->sas_addr), phy_id);
-+		return res;
-+	} else if (SAS_ADDR(sas_addr) == SAS_ADDR(phy->attached_sas_addr) &&
-+		   dev_type_flutter(type, phy->attached_dev_type)) {
-+		struct domain_device *ata_dev = sas_ex_to_ata(dev, phy_id);
-+		char *action = "";
-+
- 		sas_ex_phy_discover(dev, phy_id);
--	} else
--		res = sas_discover_new(dev, phy_id);
--out:
--	return res;
-+
-+		if (ata_dev && phy->attached_dev_type == SATA_PENDING)
-+			action = ", needs recovery";
-+		SAS_DPRINTK("ex %016llx phy 0x%x broadcast flutter%s\n",
-+			    SAS_ADDR(dev->sas_addr), phy_id, action);
-+		return res;
++	/* devices must be domain members before link recovery and probe */
++	list_for_each_entry(dev, &port->disco_list, disco_list_node) {
+ 		spin_lock_irq(&port->dev_list_lock);
+ 		list_add_tail(&dev->dev_list_node, &port->dev_list);
+ 		spin_unlock_irq(&port->dev_list_lock);
 +	}
-+
-+	return sas_discover_new(dev, phy_id);
- }
  
- /**
+-		err = sas_rphy_add(dev->rphy);
++	sas_probe_sata(port);
+ 
+-		if (err) {
+-			SAS_DPRINTK("%s: for %s device %16llx returned %d\n",
+-				    __func__, dev->parent ? "exp-attached" :
+-							    "direct-attached",
+-				    SAS_ADDR(dev->sas_addr), err);
+-			sas_unregister_dev(port, dev);
+-		} else
++	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
++		int err;
++
++		err = sas_rphy_add(dev->rphy);
++		if (err)
++			sas_fail_probe(dev, __func__, err);
++		else
+ 			list_del_init(&dev->disco_list_node);
+ 	}
+ }
 diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 7818c46..e028d7a 100644
+index e028d7a..d0d9bf1 100644
 --- a/drivers/scsi/libsas/sas_internal.h
 +++ b/drivers/scsi/libsas/sas_internal.h
-@@ -91,8 +91,9 @@ int sas_smp_get_phy_events(struct sas_phy *phy);
- void sas_device_set_phy(struct domain_device *dev, struct sas_port *port);
- struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
- struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id);
--int sas_get_phy_attached_sas_addr(struct domain_device *dev, int phy_id,
--				  u8 *attached_sas_addr);
-+int sas_ex_phy_discover(struct domain_device *dev, int single);
-+int sas_get_report_phy_sata(struct domain_device *dev, int phy_id,
-+			    struct smp_resp *rps_resp);
- int sas_try_ata_reset(struct asd_sas_phy *phy);
- void sas_hae_reset(struct work_struct *work);
- 
-@@ -122,6 +123,7 @@ static inline void sas_fill_in_rphy(struct domain_device *dev,
- 	case SATA_DEV:
- 		/* FIXME: need sata device type */
- 	case SAS_END_DEV:
-+	case SATA_PENDING:
- 		rphy->identify.device_type = SAS_END_DEVICE;
- 		break;
- 	case EDGE_DEV:
-diff --git a/include/scsi/sas.h b/include/scsi/sas.h
-index 3673d68..a577a83 100644
---- a/include/scsi/sas.h
-+++ b/include/scsi/sas.h
-@@ -89,8 +89,7 @@ enum sas_oob_mode {
- 	SAS_OOB_MODE
- };
- 
--/* See sas_discover.c if you plan on changing these.
-- */
-+/* See sas_discover.c if you plan on changing these */
- enum sas_dev_type {
- 	NO_DEVICE   = 0,	  /* protocol */
- 	SAS_END_DEV = 1,	  /* protocol */
-@@ -100,6 +99,7 @@ enum sas_dev_type {
- 	SATA_DEV    = 5,
- 	SATA_PM     = 7,
- 	SATA_PM_PORT= 8,
-+	SATA_PENDING  = 9,
- };
- 
- enum sas_protocol {
-diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-index cb724fd..0ca2f8a 100644
---- a/include/scsi/sas_ata.h
-+++ b/include/scsi/sas_ata.h
-@@ -33,9 +33,10 @@
- static inline int dev_is_sata(struct domain_device *dev)
- {
- 	return dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM ||
--	       dev->dev_type == SATA_PM_PORT;
-+	       dev->dev_type == SATA_PM_PORT || dev->dev_type == SATA_PENDING;
+@@ -113,6 +113,15 @@ static inline int sas_smp_host_handler(struct Scsi_Host *shost,
  }
- 
-+int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy);
- int sas_ata_init_host_and_port(struct domain_device *found_dev,
- 			       struct scsi_target *starget);
- 
-@@ -82,6 +83,11 @@ static inline void sas_ata_schedule_reset(struct domain_device *dev)
- static inline void sas_ata_wait_eh(struct domain_device *dev)
- {
- }
-+
-+static inline int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy)
-+{
-+	return 0;
-+}
  #endif
  
- #endif /* _SAS_ATA_H_ */
++static inline void sas_fail_probe(struct domain_device *dev, const char *func, int err)
++{
++	SAS_DPRINTK("%s: for %s device %16llx returned %d\n",
++		    func, dev->parent ? "exp-attached" :
++					    "direct-attached",
++		    SAS_ADDR(dev->sas_addr), err);
++	sas_unregister_dev(dev->port, dev);
++}
++
+ static inline void sas_fill_in_rphy(struct domain_device *dev,
+ 				    struct sas_rphy *rphy)
+ {
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index e58ca50..3701ff7 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -762,17 +762,10 @@ int sas_target_alloc(struct scsi_target *starget)
+ {
+ 	struct sas_rphy *rphy = dev_to_rphy(starget->dev.parent);
+ 	struct domain_device *found_dev = sas_find_dev_by_rphy(rphy);
+-	int res;
+ 
+ 	if (!found_dev)
+ 		return -ENODEV;
+ 
+-	if (dev_is_sata(found_dev)) {
+-		res = sas_ata_init_host_and_port(found_dev, starget);
+-		if (res)
+-			return res;
+-	}
+-
+ 	kref_get(&found_dev->kref);
+ 	starget->hostdata = found_dev;
+ 	return 0;
+@@ -1012,16 +1005,6 @@ void sas_task_abort(struct sas_task *task)
+ 	}
+ }
+ 
+-int sas_slave_alloc(struct scsi_device *scsi_dev)
+-{
+-	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
+-
+-	if (dev_is_sata(dev))
+-		return ata_sas_port_init(dev->sata_dev.ap);
+-
+-	return 0;
+-}
+-
+ void sas_target_destroy(struct scsi_target *starget)
+ {
+ 	struct domain_device *found_dev = starget->hostdata;
+@@ -1082,6 +1065,5 @@ EXPORT_SYMBOL_GPL(sas_task_abort);
+ EXPORT_SYMBOL_GPL(sas_phy_reset);
+ EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
+ EXPORT_SYMBOL_GPL(sas_eh_bus_reset_handler);
+-EXPORT_SYMBOL_GPL(sas_slave_alloc);
+ EXPORT_SYMBOL_GPL(sas_target_destroy);
+ EXPORT_SYMBOL_GPL(sas_ioctl);
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index d45878b..cc59dff 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -73,7 +73,6 @@ static struct scsi_host_template mvs_sht = {
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.eh_device_reset_handler = sas_eh_device_reset_handler,
+ 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
+-	.slave_alloc		= sas_slave_alloc,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ 	.shost_attrs		= mvst_host_attrs,
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index bd165ea..36efaa7 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -75,7 +75,6 @@ static struct scsi_host_template pm8001_sht = {
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.eh_device_reset_handler = sas_eh_device_reset_handler,
+ 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
+-	.slave_alloc		= sas_slave_alloc,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ 	.shost_attrs		= pm8001_host_attrs,
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index aa42704..42378d6 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -996,6 +996,7 @@ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
+ extern void ata_sas_port_destroy(struct ata_port *);
+ extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+ 					   struct ata_port_info *, struct Scsi_Host *);
++extern int ata_sas_async_port_init(struct ata_port *);
+ extern int ata_sas_port_init(struct ata_port *);
+ extern int ata_sas_port_start(struct ata_port *ap);
+ extern void ata_sas_port_stop(struct ata_port *ap);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 4a42be3..20153d5 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -646,7 +646,6 @@ int sas_phy_reset(struct sas_phy *phy, int hard_reset);
+ int sas_queue_up(struct sas_task *task);
+ extern int sas_queuecommand(struct Scsi_Host * ,struct scsi_cmnd *);
+ extern int sas_target_alloc(struct scsi_target *);
+-extern int sas_slave_alloc(struct scsi_device *);
+ extern int sas_slave_configure(struct scsi_device *);
+ extern int sas_change_queue_depth(struct scsi_device *, int new_depth,
+ 				  int reason);
+diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
+index 1556eff..cdccd2e 100644
+--- a/include/scsi/sas_ata.h
++++ b/include/scsi/sas_ata.h
+@@ -37,15 +37,14 @@ static inline int dev_is_sata(struct domain_device *dev)
+ }
+ 
+ int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy);
+-int sas_ata_init_host_and_port(struct domain_device *found_dev,
+-			       struct scsi_target *starget);
+-
++int sas_ata_init_host_and_port(struct domain_device *found_dev);
+ void sas_ata_task_abort(struct sas_task *task);
+ void sas_ata_strategy_handler(struct Scsi_Host *shost);
+ void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ 		struct list_head *done_q);
+ void sas_ata_schedule_reset(struct domain_device *dev);
+ void sas_ata_wait_eh(struct domain_device *dev);
++void sas_probe_sata(struct asd_sas_port *port);
+ #else
+ 
+ 
+@@ -53,8 +52,7 @@ static inline int dev_is_sata(struct domain_device *dev)
+ {
+ 	return 0;
+ }
+-static inline int sas_ata_init_host_and_port(struct domain_device *found_dev,
+-			       struct scsi_target *starget)
++static inline int sas_ata_init_host_and_port(struct domain_device *found_dev)
+ {
+ 	return 0;
+ }
+@@ -79,6 +77,10 @@ static inline void sas_ata_wait_eh(struct domain_device *dev)
+ {
+ }
+ 
++static inline void sas_probe_sata(struct asd_sas_port *port)
++{
++}
++
+ static inline int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy)
+ {
+ 	return 0;
 
