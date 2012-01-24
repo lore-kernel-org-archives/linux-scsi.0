@@ -1,61 +1,81 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: [PATCH 2/2] scsi : fixing the new host byte settings
- (DID_TARGET_FAILURE and DID_NEXUS_FAILURE)
-Date: Tue, 24 Jan 2012 20:38:46 +0000
-Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2BEA86@SACEXCMBX02-PRD.hq.netapp.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
+Date: Tue, 24 Jan 2012 21:39:36 +0100
+Message-ID: <20120124203936.GC20650@quack.suse.cz>
+References: <x49r4yq9suf.fsf@segfault.boston.devel.redhat.com>
+ <20120124151504.GQ4387@shiny>
+ <20120124165631.GA8941@infradead.org>
+ <186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca>
+ <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
+ <20120124184054.GA23227@infradead.org>
+ <20120124190732.GH4387@shiny>
+ <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
+ <20120124200932.GB20650@quack.suse.cz>
+ <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:6468 "EHLO mx2.netapp.com"
+Received: from cantor2.suse.de ([195.135.220.15]:50729 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756904Ab2AXUjF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2012 15:39:05 -0500
-Content-Language: en-US
+	id S1756790Ab2AXUjj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2012 15:39:39 -0500
+Content-Disposition: inline
+In-Reply-To: <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "device-mapper development (dm-devel@redhat.com)" <dm-devel@redhat.com>
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, Andreas Dilger <adilger@dilger.ca>, Andrea Arcangeli <aarcange@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de" <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, fengguang.wu@gmail.com, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
 
-UmVzdWJtaXR0aW5nIGFzIG15IHByZXZpb3VzIHBvc3QgaGFkIGZvcm1hdCBpc3N1ZXMgYW5kIGRp
-ZCBub3QgZ28gbGludXgtc2NzaS4NCg0KVGhpcyBwYXRjaCBmaXhlcyB0aGUgaG9zdCBieXRlIHNl
-dHRpbmdzIERJRF9UQVJHRVRfRkFJTFVSRSBhbmQgRElEX05FWFVTX0ZBSUxVUkUuDQpUaGUgZnVu
-Y3Rpb24gX19zY3NpX2Vycm9yX2Zyb21faG9zdF9ieXRlLCAgdHJpZXMgdG8gcmVzZXQgdGhlIGhv
-c3QgYnl0ZSB0byBESURfT0suIEJ1dCB0aGF0DQpkb2VzIG5vdCBoYXBwZW4gYmVjYXVzZSBvZiB0
-aGUgT1Igb3BlcmF0aW9uLiANCg0KSGVyZSBpcyB0aGUgZmxvdy4NCnNjc2lfc29mdGlycV9kb25l
-LT4gc2NzaV9kZWNpZGVfZGlzcG9zaXRpb24gLT4gX19zY3NpX2Vycm9yX2Zyb21faG9zdF9ieXRl
-DQoNCkxldCdzIHRha2UgYW4gZXhhbXBsZSB3aXRoIERJRF9ORVhVU19GQUlMVVJFLiBJbiBzY3Np
-X2RlY2lkZV9kaXNwb3NpdGlvbiwgcmVzdWx0IHdpbGwgYmUgc2V0IGFzDQpESURfTkVYVVNfRkFJ
-TFVSRSAoPTB4MTEpLiBUaGVuIGluIF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSwgd2hlbiB3
-ZSBkbyBPUiB3aXRoIA0KRElEX09LLiAgUHVycG9zZSBpcyB0byByZXNldCBpdCBiYWNrIHRvIERJ
-RF9PSy4gQnV0IHRoYXQgZG9lcyBub3QgaGFwcGVuLiAgVGhpcyBwYXRjaCBmaXhlcyB0aGlzIGlz
-c3VlLiANCg0KU2lnbmVkLW9mZi1ieTogQmFidSBNb2dlciA8YmFidS5tb2dlckBuZXRhcHAuY29t
-Pg0KLS0tDQpkaWZmIC11cHJOIC1YIGxpbnV4LTMuMy1yYzEvRG9jdW1lbnRhdGlvbi9kb250ZGlm
-ZiBsaW51eC0zLjMtcmMxLy9kcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5jIGxpbnV4LTMuMy1yYzEt
-bmV3Ly9kcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5jDQotLS0gbGludXgtMy4zLXJjMS8vZHJpdmVy
-cy9zY3NpL3Njc2lfZXJyb3IuYwkyMDEyLTAxLTE5IDE3OjA0OjQ4LjAwMDAwMDAwMCAtMDYwMA0K
-KysrIGxpbnV4LTMuMy1yYzEtbmV3Ly9kcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5jCTIwMTItMDEt
-MjMgMTE6NTU6MjYuMDAwMDAwMDAwIC0wNjAwDQpAQCAtMTU0MCw3ICsxNTQwLDcgQEAgaW50IHNj
-c2lfZGVjaWRlX2Rpc3Bvc2l0aW9uKHN0cnVjdCBzY3NpXw0KIAkJCSAqIE5lZWQgdG8gbW9kaWZ5
-IGhvc3QgYnl0ZSB0byBzaWduYWwgYQ0KIAkJCSAqIHBlcm1hbmVudCB0YXJnZXQgZmFpbHVyZQ0K
-IAkJCSAqLw0KLQkJCXNjbWQtPnJlc3VsdCB8PSAoRElEX1RBUkdFVF9GQUlMVVJFIDw8IDE2KTsN
-CisJCQlzZXRfaG9zdF9ieXRlKHNjbWQsIERJRF9UQVJHRVRfRkFJTFVSRSk7DQogCQkJcnRuID0g
-U1VDQ0VTUzsNCiAJCX0NCiAJCS8qIGlmIHJ0biA9PSBGQUlMRUQsIHdlIGhhdmUgbm8gc2Vuc2Ug
-aW5mb3JtYXRpb247DQpAQCAtMTU2MCw3ICsxNTYwLDcgQEAgaW50IHNjc2lfZGVjaWRlX2Rpc3Bv
-c2l0aW9uKHN0cnVjdCBzY3NpXw0KIAljYXNlIFJFU0VSVkFUSU9OX0NPTkZMSUNUOg0KIAkJc2Rl
-dl9wcmludGsoS0VSTl9JTkZPLCBzY21kLT5kZXZpY2UsDQogCQkJICAgICJyZXNlcnZhdGlvbiBj
-b25mbGljdFxuIik7DQotCQlzY21kLT5yZXN1bHQgfD0gKERJRF9ORVhVU19GQUlMVVJFIDw8IDE2
-KTsNCisJCXNldF9ob3N0X2J5dGUoc2NtZCwgRElEX05FWFVTX0ZBSUxVUkUpOw0KIAkJcmV0dXJu
-IFNVQ0NFU1M7IC8qIGNhdXNlcyBpbW1lZGlhdGUgaS9vIGVycm9yICovDQogCWRlZmF1bHQ6DQog
-CQlyZXR1cm4gRkFJTEVEOw0KZGlmZiAtdXByTiAtWCBsaW51eC0zLjMtcmMxL0RvY3VtZW50YXRp
-b24vZG9udGRpZmYgbGludXgtMy4zLXJjMS8vZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgbGludXgt
-My4zLXJjMS1uZXcvL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQotLS0gbGludXgtMy4zLXJjMS8v
-ZHJpdmVycy9zY3NpL3Njc2lfbGliLmMJMjAxMi0wMS0xOSAxNzowNDo0OC4wMDAwMDAwMDAgLTA2
-MDANCisrKyBsaW51eC0zLjMtcmMxLW5ldy8vZHJpdmVycy9zY3NpL3Njc2lfbGliLmMJMjAxMi0w
-MS0yMyAxMTo1MDoyNS4wMDAwMDAwMDAgLTA2MDANCkBAIC02ODIsMTEgKzY4MiwxMSBAQCBzdGF0
-aWMgaW50IF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZShzDQogCQllcnJvciA9IC1FTk9MSU5L
-Ow0KIAkJYnJlYWs7DQogCWNhc2UgRElEX1RBUkdFVF9GQUlMVVJFOg0KLQkJY21kLT5yZXN1bHQg
-fD0gKERJRF9PSyA8PCAxNik7DQorCQlzZXRfaG9zdF9ieXRlKGNtZCwgRElEX09LKTsNCiAJCWVy
-cm9yID0gLUVSRU1PVEVJTzsNCiAJCWJyZWFrOw0KIAljYXNlIERJRF9ORVhVU19GQUlMVVJFOg0K
-LQkJY21kLT5yZXN1bHQgfD0gKERJRF9PSyA8PCAxNik7DQorCQlzZXRfaG9zdF9ieXRlKGNtZCwg
-RElEX09LKTsNCiAJCWVycm9yID0gLUVCQURFOw0KIAkJYnJlYWs7DQogCWRlZmF1bHQ6DQoNCg0K
+On Tue 24-01-12 15:13:40, Jeff Moyer wrote:
+> Jan Kara <jack@suse.cz> writes:
+> 
+> > On Tue 24-01-12 14:14:14, Jeff Moyer wrote:
+> >> Chris Mason <chris.mason@oracle.com> writes:
+> >> 
+> >> >> All three filesystems use the generic mpages code for reads, so they
+> >> >> all get the same (bad) I/O patterns.  Looks like we need to fix this up
+> >> >> ASAP.
+> >> >
+> >> > Can you easily run btrfs through the same rig?  We don't use mpages and
+> >> > I'm curious.
+> >> 
+> >> The readahead code was to blame, here.  I wonder if we can change the
+> >> logic there to not break larger I/Os down into smaller sized ones.
+> >> Fengguang, doing a dd if=file of=/dev/null bs=1M results in 128K I/Os,
+> >> when 128KB is the read_ahead_kb value.  Is there any heuristic you could
+> >> apply to not break larger I/Os up like this?  Does that make sense?
+> >   Well, not breaking up I/Os would be fairly simple as ondemand_readahead()
+> > already knows how much do we want to read. We just trim the submitted I/O to
+> > read_ahead_kb artificially. And that is done so that you don't trash page
+> > cache (possibly evicting pages you have not yet copied to userspace) when
+> > there are several processes doing large reads.
+> 
+> Do you really think applications issue large reads and then don't use
+> the data?  I mean, I've seen some bad programming, so I can believe that
+> would be the case.  Still, I'd like to think it doesn't happen.  ;-)
+  No, I meant a cache thrashing problem. Suppose that we always readahead
+as much as user asks and there are say 100 processes each wanting to read 4
+MB.  Then you need to find 400 MB in the page cache so that all reads can
+fit.  And if you don't have them, reads for process 50 may evict pages we
+already preread for process 1, but process one didn't yet get to CPU to
+copy the data to userspace buffer. So the read becomes wasted.
+
+> > Maybe 128 KB is a too small default these days but OTOH noone prevents you
+> > from raising it (e.g. SLES uses 1 MB as a default).
+> 
+> For some reason, I thought it had been bumped to 512KB by default.  Must
+> be that overactive imagination I have...  Anyway, if all of the distros
+> start bumping the default, don't you think it's time to consider bumping
+> it upstream, too?  I thought there was a lot of work put into not being
+> too aggressive on readahead, so the downside of having a larger
+> read_ahead_kb setting was fairly small.
+  Yeah, I believe 512KB should be pretty safe these days except for
+embedded world. OTOH average desktop user doesn't really care so it's
+mostly servers with beefy storage that care... (note that I wrote we raised
+the read_ahead_kb for SLES but not for openSUSE or SLED (desktop enterprise
+distro)).
+
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
