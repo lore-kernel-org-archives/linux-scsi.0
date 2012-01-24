@@ -1,57 +1,65 @@
-From: Andreas Dilger <adilger@dilger.ca>
+From: Jeff Moyer <jmoyer@redhat.com>
 Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Tue, 24 Jan 2012 10:08:47 -0700
-Message-ID: <186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca>
-References: <20120117213648.GA9457@quack.suse.cz>
+Date: Tue, 24 Jan 2012 12:12:30 -0500
+Message-ID: <x49k44hkosh.fsf@segfault.boston.devel.redhat.com>
+References: <20120117200609.GA7933@redhat.com>
+	<20120117213648.GA9457@quack.suse.cz>
 	<20120118225808.GA3074@tux1.beaverton.ibm.com>
-	<20120118232200.GA22019@quack.suse.cz>
-	<4F1758D4.9010401@panasas.com>
-	<20120119094637.GA23442@quack.suse.cz>
-	<4F1BFF5F.6000502@panasas.com>
+	<20120118232200.GA22019@quack.suse.cz> <4F1758D4.9010401@panasas.com>
+	<20120119094637.GA23442@quack.suse.cz> <4F1BFF5F.6000502@panasas.com>
 	<20120123161857.GC28526@quack.suse.cz>
 	<20120123175353.GD30782@redhat.com>
 	<x49r4yq9suf.fsf@segfault.boston.devel.redhat.com>
-	<20120124151504.GQ4387@shiny> <20120124165631.GA8941@infradead.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20120124165631.GA8941@infradead.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>
+	<20120124151504.GQ4387@shiny>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:57390 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752401Ab2AXRNL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2012 12:13:11 -0500
+In-Reply-To: <20120124151504.GQ4387@shiny> (Chris Mason's message of "Tue, 24
+	Jan 2012 10:15:04 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chris Mason <chris.mason@oracle.com>
+Cc: Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J. Wong" <djwong@us.ibm.com>
 
-On 2012-01-24, at 9:56, Christoph Hellwig <hch@infradead.org> wrote:
-> On Tue, Jan 24, 2012 at 10:15:04AM -0500, Chris Mason wrote:
->> https://lkml.org/lkml/2011/12/13/326
+Chris Mason <chris.mason@oracle.com> writes:
+
+> On Mon, Jan 23, 2012 at 01:28:08PM -0500, Jeff Moyer wrote:
+>> Andrea Arcangeli <aarcange@redhat.com> writes:
 >> 
->> This patch is another example, although for a slight different reason.
->> I really have no idea yet what the right answer is in a generic sense,
->> but you don't need a 512K request to see higher latencies from merging.
-> 
-> That assumes the 512k requests is created by merging.  We have enough
-> workloads that create large I/O from the get go, and not splitting them
-> and eventually merging them again would be a big win.  E.g. I'm
-> currently looking at a distributed block device which uses internal 4MB
-> chunks, and increasing the maximum request size to that dramatically
-> increases the read performance.
+>> > On Mon, Jan 23, 2012 at 05:18:57PM +0100, Jan Kara wrote:
+>> >> requst granularity. Sure, big requests will take longer to complete but
+>> >> maximum request size is relatively low (512k by default) so writing maximum
+>> >> sized request isn't that much slower than writing 4k. So it works OK in
+>> >> practice.
+>> >
+>> > Totally unrelated to the writeback, but the merged big 512k requests
+>> > actually adds up some measurable I/O scheduler latencies and they in
+>> > turn slightly diminish the fairness that cfq could provide with
+>> > smaller max request size. Probably even more measurable with SSDs (but
+>> > then SSDs are even faster).
+>> 
+>> Are you speaking from experience?  If so, what workloads were negatively
+>> affected by merging, and how did you measure that?
+>
+> https://lkml.org/lkml/2011/12/13/326
+>
+> This patch is another example, although for a slight different reason.
+> I really have no idea yet what the right answer is in a generic sense,
+> but you don't need a 512K request to see higher latencies from merging.
 
-(sorry about last email, hit send by accident)
+Well, this patch has almost nothing to with merging, right?  It's about
+keeping I/O from the I/O scheduler for too long (or, prior to on-stack
+plugging, it was about keeping the queue plugged for too long).  And,
+I'm pretty sure that the testing involved there was with deadline or
+noop, nothing to do with CFQ fairness.  ;-)
 
-I don't think we can have a "one size fits all" policy here. In most RAID devices the IO size needs to be at least 1MB, and with newer devices 4MB gives better performance.
+However, this does bring to light the bigger problem of optimizing for
+the underlying storage and the workload requirements.  Some tuning can
+be done in the I/O scheduler, but the plugging definitely circumvents
+that a little bit.
 
-One of the reasons that Lustre used to hack so much around the VFS and VM APIs is exactly to avoid the splitting of read/write requests into pages and then depend on the elevator to reconstruct a good-sized IO out of it.
-
-Things have gotten better with newer kernels, but there is still a ways to go w.r.t. allowing large IO requests to pass unhindered through to disk (or at least as far as enduring that the IO is aligned to the underlying disk geometry). 
-
-Cheers, Andreas
+-Jeff
