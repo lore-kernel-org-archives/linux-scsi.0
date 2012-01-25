@@ -1,109 +1,47 @@
-From: Daniel Taylor <Daniel.Taylor@wdc.com>
-Subject: RE: [usb-storage] Re: [PATCH 0/3] SCSI & usb-storage: new flags for
- VPD pages and REPORT LUNS
-Date: Wed, 25 Jan 2012 05:42:21 +0000
-Message-ID: <5A9BC72FD5CEC94EA024CED8E31D701A2765C25A@wdscexmb03.sc.wdc.com>
-References: <E9801365-C2D1-4E5C-8BE4-BD712DA0D2FD@mac.com>
- <Pine.LNX.4.44L0.1201101327030.1594-100000@iolanthe.rowland.org>
- <20120124200122.GA7739@kroah.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Andreas Dilger <adilger@dilger.ca>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
+Date: Tue, 24 Jan 2012 23:11:33 -0700
+Message-ID: <45219028-09FB-476E-8519-1D4528C4D288@dilger.ca>
+References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com> <20120117200609.GA7933@redhat.com> <20120117213648.GA9457@quack.suse.cz> <20120118225808.GA3074@tux1.beaverton.ibm.com> <20120118232200.GA22019@quack.suse.cz> <4F1758D4.9010401@panasas.com> <20120125112352.0dfadc0b@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1084)
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wdmail02.wdc.com ([129.253.55.42]:53754 "EHLO wdmail02.wdc.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751610Ab2AYFvm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2012 00:51:42 -0500
-In-Reply-To: <20120124200122.GA7739@kroah.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20120125112352.0dfadc0b@notabene.brown>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <djwong@us.ibm.com>, Mike Snitzer <snitzer@redhat.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Greg KH' <greg@kroah.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Perry Wagle <wagle@mac.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>
 
- 
-
-> -----Original Message-----
-> From: usb-storage@lists.one-eyed-alien.net 
-> [mailto:usb-storage@lists.one-eyed-alien.net] On Behalf Of Greg KH
-> Sent: Tuesday, January 24, 2012 12:01 PM
-> To: Alan Stern; James Bottomley
-> Cc: Matthew Dharm; Perry Wagle; USB Storage list; SCSI 
-> development list
-> Subject: [usb-storage] Re: [PATCH 0/3] SCSI & usb-storage: 
-> new flags for VPD pages and REPORT LUNS
+On 2012-01-24, at 5:23 PM, NeilBrown wrote:
+> On Thu, 19 Jan 2012 01:42:12 +0200 Boaz Harrosh <bharrosh@panasas.com> wrote:
 > 
-> On Tue, Jan 10, 2012 at 01:42:40PM -0500, Alan Stern wrote:
-> > James and Greg:
-> > 
-> > Perry Wagle reports that his new USB-ESATA drives don't 
-> work properly 
-> > because they don't like getting the LUN bits in the second 
-> byte of the 
-> > command string.  We set those bits only because usb-storage 
-> adjusts the 
-> > SCSI revision level for all devices to SCSI-2; the drives 
-> themselves 
-> > report a value of 0x06 (which would be SCSI-7).
-> > 
-> > The reason for mangling the scsi_level value was that some 
-> USB devices 
-> > reported SCSI-3 but couldn't handle some of the mandatory 
-> features: VPD 
-> > pages and the REPORT LUNS command.  It's now clear that instead of 
-> > abusing scsi_level, we should have separate flags for the 
-> individual 
-> > features we need to control.
-> > 
-> > That's what this patch series does.  The first merely corrects an 
-> > existing typo in the definition of struct scsi_target.  The 
-> second adds 
-> > the new flags and makes usb-storage use them.  The third takes this 
-> > opportunity to do a little code clean-up in usb-storage.
-> > 
-> > The changes are more or less equally divided between SCSI and
-> > usb-storage.  James, if they look okay to you and you don't 
-> mind taking
-> > them through your tree, that would be fine.  Or if you 
-> prefer, I'm sure
-> > Greg won't mind taking them.
+>>>> Or possibly modify md-raid5 not to snapshot dirty pages prior to xor/write?
+>>>> (I never really bothered to find out if it really does this.)
+>> 
+>> md-raid5/1 currently copies all pages if that what you meant.
+>> 
 > 
-> I'll be glad to take these, James, any objection?
+> Small correction:  RAID5 and RAID6 copy all pages.
+>                   RAID1 and RAID10 do not.
 > 
-> thanks,
-> 
-> greg k-h
+> If the incoming bios had nicely aligned pages which were somehow flagged to
+> say that they would not change until the request completed, then it should be
+> trivial to avoid that copy.
 
-I handled this a bit differently, for our old 2.6.32 kernel, based on
-discussions on this list with Matthew Dharm back in April 2011.
+Lustre has a patch to that effect that we've been carrying for several years.
+It avoids copying of the pages submitted to the RAID5/6 layer, and provides
+a significant improvement in performance and efficiency.
 
-I changed the scsi_level entry in /sys to be read/write, rather than
-read-only.  This allows a ussr-space white-list handler to fixup
-drives that are known to work.
+A version of the patches for RHEL6 is available at:
 
-The gist of the discussion was whether the kernel should keep a white
-or black list for every drive on the planet to handle the scsi_level
-change/no-change or that user space could have the database and either
-apply it manually or automatically through udevd.  Matthew expressed
-a preference for user space to manage the information.
+http://review.whamcloud.com/1142
 
-I can't find the patch set for these flag changes in my local email
-archive, but can we have controls for these available in user-space?
+though I don't know how close it is to working with the latest kernel.
 
-Thanks,
+Cheers, Andreas
 
-Dan
 
-> 
-> -- 
-> You received this message because you are subscribed to the 
-> Google Groups "USB Mass Storage on Linux" group.
-> To post to this group, send email to 
-> usb-storage@lists.one-eyed-alien.net.
-> To unsubscribe from this group, send email to 
-> usb-storage+unsubscribe@lists.one-eyed-alien.net.
-> For more options, visit this group at 
-> http://groups.google.com/a/lists.one-eyed-alien.net/group/usb-
-> storage/?hl=en.
-> 
-> 
+
+
+
