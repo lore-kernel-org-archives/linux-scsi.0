@@ -1,75 +1,105 @@
-From: Andrea Arcangeli <aarcange@redhat.com>
-Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
-Date: Wed, 25 Jan 2012 23:46:14 +0100
-Message-ID: <20120125224614.GM30782@redhat.com>
-References: <20120124203936.GC20650@quack.suse.cz>
- <20120125032932.GA7150@localhost>
- <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
- <1327502034.2720.23.camel@menhir>
- <D3F292ADF945FB49B35E96C94C2061B915A638A6@nsmail.netscout.com>
- <1327509623.2720.52.camel@menhir>
- <1327512727.2776.52.camel@dabdike.int.hansenpartnership.com>
- <D3F292ADF945FB49B35E96C94C2061B915A63A30@nsmail.netscout.com>
- <1327516668.7168.7.camel@dabdike.int.hansenpartnership.com>
- <20120125200613.GH15866@shiny>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 2/2] scsi : fixing the new host byte settings
+ (DID_TARGET_FAILURE and DID_NEXUS_FAILURE)
+Date: Wed, 25 Jan 2012 17:47:51 -0500
+Message-ID: <20120125224751.GA24571@redhat.com>
+References: <77471C95FAFD844C8CA02DD4F4C5FE2BEA86@SACEXCMBX02-PRD.hq.netapp.com>
+ <20120124230320.GE9784@redhat.com>
+ <77471C95FAFD844C8CA02DD4F4C5FE2BF002@SACEXCMBX02-PRD.hq.netapp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52884 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750806Ab2AYWr5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jan 2012 17:47:57 -0500
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q0PMlvoh018703
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2012 17:47:57 -0500
 Content-Disposition: inline
-In-Reply-To: <20120125200613.GH15866@shiny>
-Sender: owner-linux-mm@kvack.org
-To: Chris Mason <chris.mason@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Loke, Chetan" <Chetan.Loke@netscout.com>, Steven Whitehouse <swhiteho@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Wu Fengguang <fengguang.wu@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J.Wong" <djwong@us.ibm.com>
+In-Reply-To: <77471C95FAFD844C8CA02DD4F4C5FE2BF002@SACEXCMBX02-PRD.hq.netapp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, Jan 25, 2012 at 03:06:13PM -0500, Chris Mason wrote:
-> We can talk about scaling up how big the RA windows get on their own,
-> but if userland asks for 1MB, we don't have to worry about futile RA, we
-> just have to make sure we don't oom the box trying to honor 1MB reads
-> from 5000 different procs.
+On Wed, Jan 25 2012 at  4:39pm -0500,
+Moger, Babu <Babu.Moger@netapp.com> wrote:
 
-:) that's for sure if read has a 1M buffer as destination. However
-even cp /dev/sda reads/writes through a 32kb buffer, so it's not so
-common to read in 1m buffers.
+> > -----Original Message-----
+> > From: Mike Snitzer [mailto:snitzer@redhat.com]
+> > Sent: Tuesday, January 24, 2012 5:03 PM
+> > To: Moger, Babu
+> > Cc: linux-scsi@vger.kernel.org; device-mapper development (dm-
+> > devel@redhat.com)
+> > Subject: Re: [PATCH 2/2] scsi : fixing the new host byte settings
+> > (DID_TARGET_FAILURE and DID_NEXUS_FAILURE)
+> > 
+> > Hi Babu,
+> > 
+> > Thanks for finding this.
+> > 
+> > On Tue, Jan 24 2012 at  3:38pm -0500,
+> > Moger, Babu <Babu.Moger@netapp.com> wrote:
+> > 
+> > > Resubmitting as my previous post had format issues and did not go linux-scsi.
+> > >
+> > > This patch fixes the host byte settings DID_TARGET_FAILURE and
+> > DID_NEXUS_FAILURE.
+> > > The function __scsi_error_from_host_byte,  tries to reset the host byte to
+> > DID_OK. But that
+> > > does not happen because of the OR operation.
+> > >
+> > > Here is the flow.
+> > > scsi_softirq_done-> scsi_decide_disposition -> __scsi_error_from_host_byte
+> > 
+> > or more accurately:
+> > 
+> > scsi_softirq_done -> scsi_decide_disposition
+> > scsi_softirq_done -> scsi_finish_command -> scsi_io_completion ->
+> > __scsi_error_from_host_byte
+> > 
+> > > Let's take an example with DID_NEXUS_FAILURE. In scsi_decide_disposition,
+> > result will be set as
+> > > DID_NEXUS_FAILURE (=0x11). Then in __scsi_error_from_host_byte, when we
+> > do OR with
+> > > DID_OK.  Purpose is to reset it back to DID_OK. But that does not happen.  This
+> > patch fixes this issue.
+> > 
+> > We clearly aren't properly resetting to DID_OK but I'm not seeing an
+> > obvious "nasty bug" that is lurking due to this.  Am I missing
+> > something?
+> 
+> Yes. It is causing some issues in our proprietary multipath driver. Normally, our assumption
+> is that host status  overrides all other statuses. If host status is set to status other than DID_OK
+> then we normally ignore other statuses(like reading the check sense).  We have worked this around.
+> My assumption is, most of the user Level code does the same thing.  It might give wrong impression
+> about the kind of error.
+> 
+> One question..  Did the newlines wrapped in this patch  also? 
 
-But I also would prefer to stay on the simple side (on a side note we
-run out of page flags already on 32bit I think as I had to nuke
-PG_buddy already).
+Looks fine to me.
 
-Overall I think the risk of the pages being evicted before they can be
-copied to userland is quite a minor risk. A 16G system with 100
-readers all hitting on disk at the same time using 100M readahead
-would still only create a 100m memory pressure... So it'd sure be ok,
-100m is less than what kswapd keeps always free for example. Think a
-4TB system. Especially if 128k fixed has been ok so far on a 1G system.
+> > __scsi_error_from_host_byte() is setting error which is passed back up
+> > via blk_end_request() and blk_end_request_all().  And in my previous
+> > testing I know that corresponding errors are making it out to
+> > dm-multipath (e.g. -EREMOTEIO).
+> > 
+> > Also, your patch header is missing the location where DID_OK is not
+> > properly matched (because it wasn't set exclussively due to being
+> 
+> I am not sure what you meant here.
 
-If we really want to be more dynamic than a setting at boot depending
-on ram size, we could limit it to a fraction of freeable memory (using
-similar math to determine_dirtyable_memory, maybe calling it over time
-but not too frequently to reduce the overhead). Like if there's 0
-memory freeable keep it low. If there's 1G freeable out of that math
-(and we assume the readahead hit rate is near 100%), raise the maximum
-readahead to 1M even if the total ram is only 1G. So we allow up to
-1000 readers before we even recycle the readahead.
+Well like I said, it is clear that scsi_noretry_cmd() won't match the
+DID_OK case in the host_byte select statement.  I was just wondering
+where else this improperly set DID_OK was causing a DID_OK match to not
+happen.
 
-I doubt the complexity of tracking exactly how many pages are getting
-recycled before they're copied to userland would be worth it, besides
-it'd be 0% for 99% of systems and workloads.
+But the fact that this is impacting your proprietary multipath driver
+basically answers my question (I was trying to understand what was
+ultimately broken as a result of us improperly resetting to DID_OK).
 
-Way more important is to have feedback on the readahead hits and be
-sure when readahead is raised to the maximum the hit rate is near 100%
-and fallback to lower readaheads if we don't get that hit rate. But
-that's not a VM problem and it's a readahead issue only.
+All said:
 
-The actual VM pressure side of it, sounds minor issue if the hit rate
-of the readahead cache is close to 100%.
-
-The config option is also ok with me, but I think it'd be nicer to set
-it at boot depending on ram size (one less option to configure
-manually and zero overhead).
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Mike Snitzer <snitzer@redhat.com>
