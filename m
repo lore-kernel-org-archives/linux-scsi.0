@@ -1,72 +1,43 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out of the staging area
-Date: Wed, 25 Jan 2012 10:29:47 -0800
-Message-ID: <1327516187-21793-1-git-send-email-kys@microsoft.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCHSET 0/1] osd_uld: Important fix also for 3.2 Stable
+Date: Wed, 25 Jan 2012 21:40:31 +0200
+Message-ID: <4F205AAF.7000305@panasas.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from natasha.panasas.com ([67.152.220.90]:46252 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771Ab2AYTkt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2012 14:40:49 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
+Cc: "Welch, Brent" <welch@panasas.com>, "Bhamare, Sachin" <sbhamare@panasas.com>, Stable Tree <stable@vger.kernel.org>
 
-The storage driver (storvsc_drv.c) handles all block storage devices
-assigned to Linux guests hosted on Hyper-V. This driver has been in the
-staging tree for a while and this patch moves it out of the staging area.
 
-This patch is based on the storvsc patches that are already on Greg's queue
-for the staging tree. This patch-set addressed Christoph's review comments.
-If need be, I can re-send this patch-set in Greg's queue
-or I can  send the fully patched storvsc_drv.c.
+There was a mine hiding in the osd_uld driver. It was limited by the number of device minors
+it registers at startup which was 64.
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
----
- drivers/scsi/Kconfig                       |    7 +++++++
- drivers/scsi/Makefile                      |    3 +++
- drivers/{staging/hv => scsi}/storvsc_drv.c |    0
- 3 files changed, 10 insertions(+), 0 deletions(-)
- rename drivers/{staging/hv => scsi}/storvsc_drv.c (100%)
+The rest of the code is not limited at all and can hold as many devices as permitted
+by memory conditions.
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 16570aa..d3d18e8 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -662,6 +662,13 @@ config VMWARE_PVSCSI
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called vmw_pvscsi.
- 
-+config HYPERV_STORAGE
-+	tristate "Microsoft Hyper-V virtual storage driver"
-+	depends on SCSI && HYPERV
-+	default HYPERV
-+	help
-+	  Select this option to enable the Hyper-V virtual storage driver.
-+
- config LIBFC
- 	tristate "LibFC module"
- 	select SCSI_FC_ATTRS
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 2b88749..e4c1a69 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -142,6 +142,7 @@ obj-$(CONFIG_SCSI_BNX2_ISCSI)	+= libiscsi.o bnx2i/
- obj-$(CONFIG_BE2ISCSI)		+= libiscsi.o be2iscsi/
- obj-$(CONFIG_SCSI_PMCRAID)	+= pmcraid.o
- obj-$(CONFIG_VMWARE_PVSCSI)	+= vmw_pvscsi.o
-+obj-$(CONFIG_HYPERV_STORAGE)	+= hv_storvsc.o
- 
- obj-$(CONFIG_ARM)		+= arm/
- 
-@@ -170,6 +171,8 @@ scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
- scsi_mod-y			+= scsi_trace.o
- scsi_mod-$(CONFIG_PM)		+= scsi_pm.o
- 
-+hv_storvsc-y			:= storvsc_drv.o
-+
- scsi_tgt-y			+= scsi_tgt_lib.o scsi_tgt_if.o
- 
- sd_mod-objs	:= sd.o
-diff --git a/drivers/staging/hv/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-similarity index 100%
-rename from drivers/staging/hv/storvsc_drv.c
-rename to drivers/scsi/storvsc_drv.c
--- 
-1.7.4.1
+The fix is very simple just bump the max number to the maximum minor permitted which
+is 2^20.
+
+This is a serious BUG because some of the systems that intend to use the 3.2 Kernel
+to deploy pnfs. (Fedora 17 most probably) are bigger then 64 OSDs and will break.
+
+I have tested this on 64bit platform and user-mode works just fine with this.
+(Kernel is not an issue). Might there be issues hiding in 32bit ARCHs. From
+reading the code I could not find any.
+
+James would you like to take this through your tree for the next rc-fixes round
+or give me an ACK-BY: and I'll push it through the osd tree?
+
+The patch:
+[PATCH 1/1] osd_uld: Bump MAX_OSD_DEVICES from 64 to 1,048,576
+
+Thanks
+Boaz
+
