@@ -1,76 +1,138 @@
-From: Chris Mason <chris.mason@oracle.com>
-Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
-Date: Wed, 25 Jan 2012 15:06:13 -0500
-Message-ID: <20120125200613.GH15866@shiny>
-References: <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
- <20120124203936.GC20650@quack.suse.cz>
- <20120125032932.GA7150@localhost>
- <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
- <1327502034.2720.23.camel@menhir>
- <D3F292ADF945FB49B35E96C94C2061B915A638A6@nsmail.netscout.com>
- <1327509623.2720.52.camel@menhir>
- <1327512727.2776.52.camel@dabdike.int.hansenpartnership.com>
- <D3F292ADF945FB49B35E96C94C2061B915A63A30@nsmail.netscout.com>
- <1327516668.7168.7.camel@dabdike.int.hansenpartnership.com>
+From: "Christopher R. Hertel" <crh@samba.org>
+Subject: Re: [LSF/MM TOPIC][ATTEND] linux servers as a storage server - what's
+ missing?
+Date: Wed, 25 Jan 2012 14:25:39 -0600
+Message-ID: <4F206543.60309@samba.org>
+References: <4EF2026F.2090506@redhat.com> <20120103142609.2b4d06cb@tlielax.poochiereds.net> <20120124213609.GA12426@fieldses.org> <4F1F3B00.8060603@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1327516668.7168.7.camel@dabdike.int.hansenpartnership.com>
-Sender: owner-linux-mm@kvack.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Loke, Chetan" <Chetan.Loke@netscout.com>, Steven Whitehouse <swhiteho@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Wu Fengguang <fengguang.wu@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J.Wong" <djwong@us.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from qmta14.emeryville.ca.mail.comcast.net ([76.96.27.212]:33661
+	"EHLO qmta14.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751430Ab2AYUbY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jan 2012 15:31:24 -0500
+In-Reply-To: <4F1F3B00.8060603@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@redhat.com>, linux-fsdevel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jeremy Allison <jra@samba.org>, Simo Sorce <simo@redhat.com>
 
-On Wed, Jan 25, 2012 at 12:37:48PM -0600, James Bottomley wrote:
-> On Wed, 2012-01-25 at 13:28 -0500, Loke, Chetan wrote:
-> > > So there are two separate problems mentioned here.  The first is to
-> > > ensure that readahead (RA) pages are treated as more disposable than
-> > > accessed pages under memory pressure and then to derive a statistic for
-> > > futile RA (those pages that were read in but never accessed).
-> > > 
-> > > The first sounds really like its an LRU thing rather than adding yet
-> > > another page flag.  We need a position in the LRU list for never
-> > > accessed ... that way they're first to be evicted as memory pressure
-> > > rises.
-> > > 
-> > > The second is you can derive this futile readahead statistic from the
-> > > LRU position of unaccessed pages ... you could keep this globally.
-> > > 
-> > > Now the problem: if you trash all unaccessed RA pages first, you end up
-> > > with the situation of say playing a movie under moderate memory
-> > > pressure that we do RA, then trash the RA page then have to re-read to display
-> > > to the user resulting in an undesirable uptick in read I/O.
-> > > 
-> > > Based on the above, it sounds like a better heuristic would be to evict
-> > > accessed clean pages at the top of the LRU list before unaccessed clean
-> > > pages because the expectation is that the unaccessed clean pages will
-> > > be accessed (that's after all, why we did the readahead).  As RA pages age
-> > 
-> > Well, the movie example is one case where evicting unaccessed page may not be the right thing to do. But what about a workload that perform a random one-shot search?
-> > The search was done and the RA'd blocks are of no use anymore. So it seems one solution would hurt another.
+I have actually been mulling this over a good deal in my mind, but I keep
+approaching it from different perspectives.
+
+Here are some random questions that pop up in my mind...
+
+Can we put FibreChannel HBAs in *target* mode into a Linux-based PC and
+export LUNs via FibreChannel?
+  - Do we support multipath in this configuration?
+  - Zoning?  Muli-access LUNs for Clustering?
+
+Where are we on FCoE support?
+
+Where to we stand on ATAoE?
+  - Coraid, the creaters of ATAoE, were recently listed 3rd on a
+    "Most Promising Storage Start-Ups in 2012" list[1].
+  - ATAoE support has been standard in Linux for years.
+  - The target software is very low-level.  It needs an overhaul
+    and a powerful configuration API.
+
+What about other block-level protocols?  My familiarity with these varies.
+
+Chris -)-----
+
+
+[1]http://www.storagenewsletter.com/news/startups/most-promising-storage-start-ups
+
+
+Ric Wheeler wrote:
+> On 01/24/2012 04:36 PM, J. Bruce Fields wrote:
+>> On Tue, Jan 03, 2012 at 02:26:09PM -0500, Jeff Layton wrote:
+>>> On Wed, 21 Dec 2011 10:59:43 -0500
+>>> Ric Wheeler<rwheeler@redhat.com>  wrote:
+>>>
+>>>> One common thing that I see a lot of these days is an increasing
+>>>> number of
+>>>> platforms that are built on our stack as storage servers. Ranging
+>>>> from the
+>>>> common linux based storage/NAS devices up to various distributed
+>>>> systems.
+>>>> Almost all of them use our common stack - software RAID, LVM,
+>>>> XFS/ext4 and samba.
+>>>>
+>>>> At last year's SNIA developers conference, it was clear that
+>>>> Microsoft is
+>>>> putting a lot of effort into enhancing windows 8 server as a storage
+>>>> server with
+>>>> both support for a pNFS server and of course SMB. I think that linux
+>>>> (+samba) is
+>>>> ahead of the windows based storage appliances today, but they are
+>>>> putting
+>>>> together a very aggressive list of features.
+>>>>
+>>>> I think that it would be useful and interesting to take a slot at
+>>>> this year's
+>>>> LSF to see how we are doing in this space. How large do we need to
+>>>> scale for an
+>>>> appliance?  What kind of work is needed (support for the copy
+>>>> offload system
+>>>> call? better support for out of band notifications like those used
+>>>> in "thinly
+>>>> provisioned" SCSI devices? management API's? Ease of use CLI work?
+>>>> SMB2.2 support?).
+>>>>
+>>>> The goal would be to see what technical gaps we have that need more
+>>>> active
+>>>> development in, not just a wish list :)
+>>>>
+>>>> Ric
+>>> Unfortunately, w/o a wishlist of sorts, it's hard to know what needs
+>>> more active development ;).
+>>>
+>>> While HCH will probably disagree, being able to support more
+>>> NFSv4/Windows API features at the VFS layer would make it a lot easier
+>>> to do a more unified serving appliance. Right now, both knfsd and samba
+>>> track too much info internally, and that makes it very difficult to
+>>> serve the same data via multiple protocols.
+>> By the way, we could really use a
+>> Windows/Samba expert if we're going to discuss that.
+>>
+>> I don't think their list(s) got the announcement?
+>>
+>> --b.
 > 
-> Well not really: RA is always wrong for random reads.  The whole purpose
-> of RA is assumption of sequential access patterns.
+> Adding in three windows/samba people that I know of :)
+> 
+> Ric
+> 
+>>> Off the top of my head, my "wishlist" for better NFSv4 serving would be:
+>>>
+>>> - RichACLs
+>>> - Share/Deny mode support on open
+>>> - mandatory locking that doesn't rely on weirdo file modes
+>>>
+>>> It's always going to be hard for us to compete with dedicated
+>>> appliances. Where Linux can shine though is in allowing for more
+>>> innovative combinations.
+>>>
+>>> Being able to do active/active NFS serving from clustered filesystems,
+>>> for instance is something that we can eventually attain but that would
+>>> be harder to do in an appliance. This sort of discussion might also
+>>> dovetail with Benny's proposal about pNFS serving.
+>>>
+>>> -- 
+>>> Jeff Layton<jlayton@redhat.com>
+>>> -- 
+>>> To unsubscribe from this list: send the line "unsubscribe
+>>> linux-fsdevel" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Just to jump back, Jeff's benchmark that started this (on xfs and ext4):
-
-	- buffered 1MB reads get down to the scheduler in 128KB chunks
-
-The really hard part about readahead is that you don't know what
-userland wants.  In Jeff's test, he's telling the kernel he wants 1MB
-ios and our RA engine is doing 128KB ios.
-
-We can talk about scaling up how big the RA windows get on their own,
-but if userland asks for 1MB, we don't have to worry about futile RA, we
-just have to make sure we don't oom the box trying to honor 1MB reads
-from 5000 different procs.
-
--chris
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+"Implementing CIFS - the Common Internet FileSystem" ISBN: 013047116X
+Samba Team -- http://www.samba.org/     -)-----   Christopher R. Hertel
+jCIFS Team -- http://jcifs.samba.org/   -)-----   ubiqx development, uninq.
+ubiqx Team -- http://www.ubiqx.org/     -)-----   crh@ubiqx.mn.org
+OnLineBook -- http://ubiqx.org/cifs/    -)-----   crh@ubiqx.org
