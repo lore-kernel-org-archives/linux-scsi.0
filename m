@@ -1,43 +1,72 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] Storage management (API & Library)
-Date: Wed, 25 Jan 2012 14:09:35 +0100
-Message-ID: <4F1FFF0F.1030007@suse.de>
-References: <4F19A981.4080502@redhat.com> <1327157825.2748.5.camel@dabdike.int.hansenpartnership.com> <4F1D8913.1060709@redhat.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
+Date: Wed, 25 Jan 2012 15:00:48 +0100
+Message-ID: <20120125140048.GC32361@quack.suse.cz>
+References: <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
+ <20120124184054.GA23227@infradead.org>
+ <20120124190732.GH4387@shiny>
+ <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
+ <20120124200932.GB20650@quack.suse.cz>
+ <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
+ <20120124203936.GC20650@quack.suse.cz>
+ <20120125032932.GA7150@localhost>
+ <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
+ <20120125063552.GA27375@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59823 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751357Ab2AYNJh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jan 2012 08:09:37 -0500
-In-Reply-To: <4F1D8913.1060709@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120125063552.GA27375@localhost>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Wu Fengguang <fengguang.wu@gmail.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de" <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: tasleson@redhat.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-On 01/23/2012 05:21 PM, Tony Asleson wrote:
-> On 01/21/2012 08:57 AM, James Bottomley wrote:
-[ .. ]
->> The second might be what would it take to get vendors interested in
->> doing the array plugin glue.
+On Wed 25-01-12 14:35:52, Wu Fengguang wrote:
+> On Tue, Jan 24, 2012 at 11:15:13PM -0700, Andreas Dilger wrote:
+> > On 2012-01-24, at 8:29 PM, Wu Fengguang wrote:
+> > > On Tue, Jan 24, 2012 at 09:39:36PM +0100, Jan Kara wrote:
+> > >> On Tue 24-01-12 15:13:40, Jeff Moyer wrote:
+> > >>>> Maybe 128 KB is a too small default these days but OTOH noone prevents you
+> > >>>> from raising it (e.g. SLES uses 1 MB as a default).
+> > >>> 
+> > >>> For some reason, I thought it had been bumped to 512KB by default.  Must
+> > >>> be that overactive imagination I have...  Anyway, if all of the distros
+> > >>> start bumping the default, don't you think it's time to consider bumping
+> > >>> it upstream, too?  I thought there was a lot of work put into not being
+> > >>> too aggressive on readahead, so the downside of having a larger
+> > >>> read_ahead_kb setting was fairly small.
+> > >> 
+> > >>  Yeah, I believe 512KB should be pretty safe these days except for
+> > >> embedded world. OTOH average desktop user doesn't really care so it's
+> > >> mostly servers with beefy storage that care... (note that I wrote we raised
+> > >> the read_ahead_kb for SLES but not for openSUSE or SLED (desktop enterprise
+> > >> distro)).
+> > > 
+> > > Maybe we don't need to care much about the embedded world when raising
+> > > the default readahead size? Because even the current 128KB is too much
+> > > for them, and I see Android setting the readahead size to 4KB...
+> > > 
+> > > Some time ago I posted a series for raising the default readahead size
+> > > to 512KB. But I'm open to use 1MB now (shall we vote on it?).
+> > 
+> > I'm all in favour of 1MB (aligned) readahead.
 > 
-> By providing:
-> * Permissive license (LGPL)
-> * Easy to use out of process plug-in support to allow proprietary
-> plug-ins (IPC is abstracted)
-> * Language agnostic plug-in support (initial support is C and python)
-> 
-> We are hoping we can get hardware vendors interested in providing their
-> own plug-ins.  If anyone has additional ideas, we would certainly like
-> to discuss them.
-> 
-The various hardware vendors already have the means of managing their
-arrays, in most cases also providing a CLI.
-I would be hoping we could draft the API support such that we can
-use the existing tools, without the need of special plug-ins.
+> 1MB readahead aligned to i*1MB boundaries? I like this idea. It will
+> work well if the filesystems employ the same alignment rule for large
+> files.
+  Yeah. Clever filesystems (e.g. XFS) can be configured to align files e.g.
+to raid stripes AFAIK so for them this could be worthwhile.
 
-Cheers,
+> > I think the embedded folks
+> > already set enough CONFIG opts that we could trigger on one of those
+> > (e.g. CONFIG_EMBEDDED) to avoid stepping on their toes.
+> 
+> Good point. We could add a configurable CONFIG_READAHEAD_KB=128 when
+> CONFIG_EMBEDDED is selected.
+  Sounds good.
 
-Hannes
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
