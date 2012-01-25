@@ -1,47 +1,66 @@
 From: Andreas Dilger <adilger@dilger.ca>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Tue, 24 Jan 2012 23:11:33 -0700
-Message-ID: <45219028-09FB-476E-8519-1D4528C4D288@dilger.ca>
-References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com> <20120117200609.GA7933@redhat.com> <20120117213648.GA9457@quack.suse.cz> <20120118225808.GA3074@tux1.beaverton.ibm.com> <20120118232200.GA22019@quack.suse.cz> <4F1758D4.9010401@panasas.com> <20120125112352.0dfadc0b@notabene.brown>
+Subject: Re: [Lsf-pc]   [LSF/MM TOPIC] a few storage topics
+Date: Tue, 24 Jan 2012 23:15:13 -0700
+Message-ID: <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
+References: <20120124151504.GQ4387@shiny> <20120124165631.GA8941@infradead.org>
+	<186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca>
+	<x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
+	<20120124184054.GA23227@infradead.org>
+	<20120124190732.GH4387@shiny>
+	<x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
+	<20120124200932.GB20650@quack.suse.cz>
+	<x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
+	<20120124203936.GC20650@quack.suse.cz>
+	<20120125032932.GA7150@localhost>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20120125112352.0dfadc0b@notabene.brown>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <djwong@us.ibm.com>, Mike Snitzer <snitzer@redhat.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20120125032932.GA7150@localhost>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Wu Fengguang <fengguang.wu@gmail.com>
+Cc: Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2012-01-24, at 5:23 PM, NeilBrown wrote:
-> On Thu, 19 Jan 2012 01:42:12 +0200 Boaz Harrosh <bharrosh@panasas.com> wrote:
-> 
->>>> Or possibly modify md-raid5 not to snapshot dirty pages prior to xor/write?
->>>> (I never really bothered to find out if it really does this.)
+On 2012-01-24, at 8:29 PM, Wu Fengguang wrote:
+> On Tue, Jan 24, 2012 at 09:39:36PM +0100, Jan Kara wrote:
+>> On Tue 24-01-12 15:13:40, Jeff Moyer wrote:
+>>>> Maybe 128 KB is a too small default these days but OTOH noone prevents you
+>>>> from raising it (e.g. SLES uses 1 MB as a default).
+>>> 
+>>> For some reason, I thought it had been bumped to 512KB by default.  Must
+>>> be that overactive imagination I have...  Anyway, if all of the distros
+>>> start bumping the default, don't you think it's time to consider bumping
+>>> it upstream, too?  I thought there was a lot of work put into not being
+>>> too aggressive on readahead, so the downside of having a larger
+>>> read_ahead_kb setting was fairly small.
 >> 
->> md-raid5/1 currently copies all pages if that what you meant.
->> 
+>>  Yeah, I believe 512KB should be pretty safe these days except for
+>> embedded world. OTOH average desktop user doesn't really care so it's
+>> mostly servers with beefy storage that care... (note that I wrote we raised
+>> the read_ahead_kb for SLES but not for openSUSE or SLED (desktop enterprise
+>> distro)).
 > 
-> Small correction:  RAID5 and RAID6 copy all pages.
->                   RAID1 and RAID10 do not.
+> Maybe we don't need to care much about the embedded world when raising
+> the default readahead size? Because even the current 128KB is too much
+> for them, and I see Android setting the readahead size to 4KB...
 > 
-> If the incoming bios had nicely aligned pages which were somehow flagged to
-> say that they would not change until the request completed, then it should be
-> trivial to avoid that copy.
+> Some time ago I posted a series for raising the default readahead size
+> to 512KB. But I'm open to use 1MB now (shall we vote on it?).
 
-Lustre has a patch to that effect that we've been carrying for several years.
-It avoids copying of the pages submitted to the RAID5/6 layer, and provides
-a significant improvement in performance and efficiency.
-
-A version of the patches for RHEL6 is available at:
-
-http://review.whamcloud.com/1142
-
-though I don't know how close it is to working with the latest kernel.
+I'm all in favour of 1MB (aligned) readahead.  I think the embedded folks
+already set enough CONFIG opts that we could trigger on one of those
+(e.g. CONFIG_EMBEDDED) to avoid stepping on their toes.  It would also be
+possible to trigger on the size of the device so that the 32MB USB stick
+doesn't sit busy for a minute with readahead that is useless.
 
 Cheers, Andreas
-
-
-
-
-
