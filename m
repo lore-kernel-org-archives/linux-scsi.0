@@ -1,62 +1,47 @@
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [dm-devel] [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Fri, 27 Jan 2012 09:31:11 +1100
-Message-ID: <20120126223111.GY15102@dastard>
-References: <4F1758D4.9010401@panasas.com>
- <20120119094637.GA23442@quack.suse.cz>
- <4F1BFF5F.6000502@panasas.com>
- <20120123161857.GC28526@quack.suse.cz>
- <20120123175353.GD30782@redhat.com>
- <x49r4yq9suf.fsf@segfault.boston.devel.redhat.com>
- <20120124151504.GQ4387@shiny>
- <20120124165631.GA8941@infradead.org>
- <186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca>
- <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
+Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
+Date: Fri, 27 Jan 2012 09:34:49 +1100
+Message-ID: <20120126223449.GZ15102@dastard>
+References: <20120124184054.GA23227@infradead.org>
+ <20120124190732.GH4387@shiny>
+ <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
+ <20120124200932.GB20650@quack.suse.cz>
+ <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
+ <20120124203936.GC20650@quack.suse.cz>
+ <20120125032932.GA7150@localhost>
+ <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
+ <20120125063552.GA27375@localhost>
+ <20120126162555.GF1891@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:1491 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:41012 "EHLO
 	ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752361Ab2AZWbP (ORCPT
+	by vger.kernel.org with ESMTP id S1751515Ab2AZWew (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jan 2012 17:31:15 -0500
+	Thu, 26 Jan 2012 17:34:52 -0500
 Content-Disposition: inline
-In-Reply-To: <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <20120126162555.GF1891@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "Darrick J.Wong" <djwong@us.ibm.com>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Wu Fengguang <fengguang.wu@gmail.com>, Andreas Dilger <adilger@dilger.ca>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de" <neilb@suse.de>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
 
-On Tue, Jan 24, 2012 at 01:05:50PM -0500, Jeff Moyer wrote:
-> Andreas Dilger <adilger@dilger.ca> writes:
-> I've been wondering if it's gotten better, so decided to run a few quick
-> tests.
+On Thu, Jan 26, 2012 at 11:25:56AM -0500, Vivek Goyal wrote:
+> On Wed, Jan 25, 2012 at 02:35:52PM +0800, Wu Fengguang wrote:
+> > > It would also be
+> > > possible to trigger on the size of the device so that the 32MB USB stick
+> > > doesn't sit busy for a minute with readahead that is useless.
+> > 
+> > Yeah, I do have a patch for shrinking readahead size based on device size.
 > 
-> kernel version 3.2.0, storage: hp eva fc array, i/o scheduler cfq,
-> max_sectors_kb: 1024, test program: dd
-> 
-> ext3:
-> - buffered writes and buffered O_SYNC writes, all 1MB block size show 4k
->   I/Os passed down to the I/O scheduler
-> - buffered 1MB reads are a little better, typically in the 128k-256k
->   range when they hit the I/O scheduler.
-> 
-> ext4:
-> - buffered writes: 512K I/Os show up at the elevator
-> - buffered O_SYNC writes: data is again 512KB, journal writes are 4K
-> - buffered 1MB reads get down to the scheduler in 128KB chunks
-> 
-> xfs:
-> - buffered writes: 1MB I/Os show up at the elevator
-> - buffered O_SYNC writes: 1MB I/Os
-> - buffered 1MB reads: 128KB chunks show up at the I/O scheduler
-> 
-> So, ext4 is doing better than ext3, but still not perfect.  xfs is
-> kicking ass for writes, but reads are still split up.
+> Should it be a udev rule to change read_ahead_kb on device based on device
+> size, instead of a kernel patch?
 
-Isn't that simply because the default readahead is 128k? Change the
-readahead to be much larger, and you should see much larger IOs
-being issued....
+That's effectively what vendors like SGI have been doing since udev
+was first introduced, though more often the rules are based on device
+type rather than size. e.g. a 64GB device might be a USB flash drive
+now, but a 40GB device might be a really fast SSD....
 
 Cheers,
 
