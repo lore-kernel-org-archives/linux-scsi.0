@@ -1,90 +1,60 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH] iscsi: don't hang in endless loop if no targets present
-Date: Wed, 25 Jan 2012 23:31:34 -0600
-Message-ID: <4F20E536.7090808@cs.wisc.edu>
-References: <1327547776-2890-1-git-send-email-levinsasha928@gmail.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [v2] Re: [091/129] block: fail SCSI passthrough ioctls on partition
+ devices
+Date: Thu, 26 Jan 2012 09:02:29 +0100
+Message-ID: <4F210895.8090100@redhat.com>
+References: <20120124023932.023409422@clark.kroah.org> <1327423431-13965-1-git-send-email-pbonzini@redhat.com> <20120125223937.GA12516@kroah.com> <alpine.DEB.2.02.1201252348520.22090@aurora.sdinet.de> <CA+5PVA601fTyuTc66nvY_9pZPE5i5DkBkKpyL3-i=q9OxkoT+g@mail.gmail.com> <20120126000749.GC14281@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncCLPJla3WGRDByoP5BBoEpbcWhw-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1327547776-2890-1-git-send-email-levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120126000749.GC14281@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Josh Boyer <jwboyer@gmail.com>, Sven-Haegar Koch <haegar@sdinet.de>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/25/2012 09:16 PM, Sasha Levin wrote:
-> iscsi_if_send_reply() may return -ESRCH if there were no targets to send
-> data to. Currently we're ignoring this value and looping in attempt to do it
-> over and over, which will usually lead in a hung task like this one:
-> 
-> [ 4920.817298] INFO: task trinity:9074 blocked for more than 120 seconds.
-> [ 4920.818527] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [ 4920.819982] trinity         D 0000000000000000  5504  9074   2756 0x00000004
-> [ 4920.825374]  ffff880003961a98 0000000000000086 ffff8800001aa000 ffff8800001aa000
-> [ 4920.826791]  00000000001d4340 ffff880003961fd8 ffff880003960000 00000000001d4340
-> [ 4920.828241]  00000000001d4340 00000000001d4340 ffff880003961fd8 00000000001d4340
-> [ 4920.833231]
-> [ 4920.833519] Call Trace:
-> [ 4920.834010]  [<ffffffff826363fa>] schedule+0x3a/0x50
-> [ 4920.834953]  [<ffffffff82634ac9>] __mutex_lock_common+0x209/0x5b0
-> [ 4920.836226]  [<ffffffff81af805d>] ? iscsi_if_rx+0x2d/0x990
-> [ 4920.837281]  [<ffffffff81053943>] ? sched_clock+0x13/0x20
-> [ 4920.838305]  [<ffffffff81af805d>] ? iscsi_if_rx+0x2d/0x990
-> [ 4920.839336]  [<ffffffff82634eb0>] mutex_lock_nested+0x40/0x50
-> [ 4920.840423]  [<ffffffff81af805d>] iscsi_if_rx+0x2d/0x990
-> [ 4920.841434]  [<ffffffff810dffed>] ? sub_preempt_count+0x9d/0xd0
-> [ 4920.842548]  [<ffffffff82637bb0>] ? _raw_read_unlock+0x30/0x60
-> [ 4920.843666]  [<ffffffff821f71de>] netlink_unicast+0x1ae/0x1f0
-> [ 4920.844751]  [<ffffffff821f7997>] netlink_sendmsg+0x227/0x350
-> [ 4920.845850]  [<ffffffff821857bd>] ? sock_update_netprioidx+0xdd/0x1b0
-> [ 4920.847060]  [<ffffffff82185732>] ? sock_update_netprioidx+0x52/0x1b0
-> [ 4920.848276]  [<ffffffff8217f226>] sock_aio_write+0x166/0x180
-> [ 4920.849348]  [<ffffffff810dfe41>] ? get_parent_ip+0x11/0x50
-> [ 4920.850428]  [<ffffffff811d0d9a>] do_sync_write+0xda/0x120
-> [ 4920.851465]  [<ffffffff810dffed>] ? sub_preempt_count+0x9d/0xd0
-> [ 4920.852579]  [<ffffffff810dfe41>] ? get_parent_ip+0x11/0x50
-> [ 4920.853608]  [<ffffffff81791887>] ? security_file_permission+0x27/0xb0
-> [ 4920.854821]  [<ffffffff811d0f4c>] vfs_write+0x16c/0x180
-> [ 4920.855781]  [<ffffffff811d104f>] sys_write+0x4f/0xa0
-> [ 4920.856798]  [<ffffffff82638e79>] system_call_fastpath+0x16/0x1b
-> [ 4920.877487] 1 lock held by trinity/9074:
-> [ 4920.878239]  #0:  (rx_queue_mutex){+.+...}, at: [<ffffffff81af805d>] iscsi_if_rx+0x2d/0x990
-> [ 4920.880005] Kernel panic - not syncing: hung_task: blocked tasks
-> 
-> Signed-off-by: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index cfd4914..c26707a 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2110,7 +2110,7 @@ iscsi_if_rx(struct sk_buff *skb)
->  				break;
->  			err = iscsi_if_send_reply(group, nlh->nlmsg_seq,
->  				nlh->nlmsg_type, 0, 0, ev, sizeof(*ev));
-> -		} while (err < 0 && err != -ECONNREFUSED);
-> +		} while (err < 0 && err != -ECONNREFUSED && err != -ESRCH);
->  		skb_pull(skb, rlen);
->  	}
->  	mutex_unlock(&rx_queue_mutex);
+On 01/26/2012 01:07 AM, Greg KH wrote:
+> On Wed, Jan 25, 2012 at 06:10:47PM -0500, Josh Boyer wrote:
+>> On Wed, Jan 25, 2012 at 5:51 PM, Sven-Haegar Koch<haegar@sdinet.de>  wrote:
+>>> On Wed, 25 Jan 2012, Greg KH wrote:
+>>>
+>>>> On Tue, Jan 24, 2012 at 05:43:50PM +0100, Paolo Bonzini wrote:
+>>>>>> You need to return -ENOTTY from scsi_verify_blk_ioctl and -ENOIOCTLCMD from
+>>>>>> sd_compat_ioctl, because -ENOIOCTLCMD will not be handled correctly by
+>>>>>> block/ioctl.c.  This would break BLKROSET and BLKFLSBUF done by non-root
+>>>>>> but with the appropriate capabilities.
+>>>>>>
+>>>>>> Fixed patch follows.  If you prefer that I send an interdiff, let me know.
+>>>>
+>>>> Wait, why do you want the stable trees to diverge from what is in
+>>>> Linus's tree with regards to the error codes being returned?
+>>>>
+>>>> That doesn't seem safe, or sane.
+>>>>
+>>>> So for now, I'm going to follow what is in Linus's tree.  If you
+>>>> need/want the error codes to be different, then shouldn't it also be
+>>>> done there as well?
+>>>
+>>> May be because the stable trees do not have
+>>> 07d106d0a33d6063d2061305903deb02489eba20? "vfs: fix up ENOIOCTLCMD error
+>>> handling"?
+>>
+>> I believe that is the case, yes.  Linus was unhappy about ENOIOCTLCMD vs.
+>> ENOTTY overall when the patch was first submitted, which lead to that commit.
+>> The patches Paolo submitted for stable are the original versions that apply
+>> directly to 3.2 and older.
+>>
+>> 07d106d0a isn't really stable material as it was put into 3.3 to catch any odd
+>> fallout from the change.
+>
+> Ok, thanks both of you, that makes more sense now.  I'll take Paolo's
+> updated patches and do a release now.
 
+Yes, that's correct.  Thanks Sven and Josh, I was already sleeping. :)
 
-Looks ok. Thanks for debugging and the patch.
+FWIW, there are a couple more ioctls that need to be in the whitelist. 
+I'll submit the patch today or tomorrow, but it doesn't need to hold the 
+stable release.
 
-Acked-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+Paolo
