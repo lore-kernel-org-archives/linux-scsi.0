@@ -1,46 +1,85 @@
-From: "Loke, Chetan" <Chetan.Loke@netscout.com>
-Subject: RE: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
-Date: Thu, 26 Jan 2012 11:17:05 -0500
-Message-ID: <D3F292ADF945FB49B35E96C94C2061B915A640A5@nsmail.netscout.com>
-References: <20120124151504.GQ4387@shiny> <20120124165631.GA8941@infradead.org> <186EA560-1720-4975-AC2F-8C72C4A777A9@dilger.ca> <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com> <20120124184054.GA23227@infradead.org> <20120124190732.GH4387@shiny> <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com> <20120124200932.GB20650@quack.suse.cz> <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com> <20120124203936.GC20650@quack.suse.cz> <20120125032932.GA7150@localhost> <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca> <1327502034.2720.23.camel@menhir> <D3F292ADF945FB49B35E96C94C2061B915A638A6@nsmail.netscout.com> <1327509623.2720.52.camel@menhir> <1327512727.2776.52.camel@dabdike.int.hansenpartnership.com> <D3F292ADF945FB49B35E96C94C2061B915A63A30@nsmail.netscout.com> <1327516668.7168.7.camel@dabdike.
- int.hansenpartnership.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
+Date: Thu, 26 Jan 2012 11:25:56 -0500
+Message-ID: <20120126162555.GF1891@redhat.com>
+References: <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com>
+ <20120124184054.GA23227@infradead.org>
+ <20120124190732.GH4387@shiny>
+ <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
+ <20120124200932.GB20650@quack.suse.cz>
+ <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
+ <20120124203936.GC20650@quack.suse.cz>
+ <20120125032932.GA7150@localhost>
+ <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
+ <20120125063552.GA27375@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod6og111.obsmtp.com ([64.18.1.27]:34634 "HELO
-	exprod6og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752186Ab2AZQRI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jan 2012 11:17:08 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1327516668.7168.7.camel@dabdike.int.hansenpartnership.com>
+Received: from mx1.redhat.com ([209.132.183.28]:1070 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752011Ab2AZQ0o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jan 2012 11:26:44 -0500
+Content-Disposition: inline
+In-Reply-To: <20120125063552.GA27375@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Steven Whitehouse <swhiteho@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Wu Fengguang <fengguang.wu@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
+To: Wu Fengguang <fengguang.wu@gmail.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de" <neilb@suse.de>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
 
-PiA+IFdlbGwsIHRoZSBtb3ZpZSBleGFtcGxlIGlzIG9uZSBjYXNlIHdoZXJlIGV2aWN0aW5nIHVu
-YWNjZXNzZWQgcGFnZSBtYXkgbm90IGJlIHRoZSByaWdodCB0aGluZyB0byBkby4gQnV0IHdoYXQg
-YWJvdXQgYSB3b3JrbG9hZCB0aGF0IHBlcmZvcm0gYSByYW5kb20gb25lLXNob3Qgc2VhcmNoPw0K
-PiA+IFRoZSBzZWFyY2ggd2FzIGRvbmUgYW5kIHRoZSBSQSdkIGJsb2NrcyBhcmUgb2Ygbm8gdXNl
-IGFueW1vcmUuIFNvIGl0IHNlZW1zIG9uZSBzb2x1dGlvbiB3b3VsZCBodXJ0IGFub3RoZXIuDQo+
-IA0KPiBXZWxsIG5vdCByZWFsbHk6IFJBIGlzIGFsd2F5cyB3cm9uZyBmb3IgcmFuZG9tIHJlYWRz
-LiAgVGhlIHdob2xlIHB1cnBvc2Ugb2YgUkEgaXMgYXNzdW1wdGlvbiBvZiBzZXF1ZW50aWFsIGFj
-Y2VzcyBwYXR0ZXJucy4NCj4gDQoNCkphbWVzIC0gSSBtdXN0IGFncmVlIHRoYXQgJ3JhbmRvbScg
-d2FzIG5vdCB0aGUgcHJvcGVyIGNob2ljZSBvZiB3b3JkIGhlcmUuIFdoYXQgSSBtZWFudCB3YXMg
-dGhpcyAtIA0KDQpzZWFyY2gtYXBwIHJlYWRzIGVub3VnaCBkYXRhIHRvIHRyaWNrIHRoZSBsYXp5
-L2RlZmVycmVkLVJBIGxvZ2ljLiBSQSB0aGlua3MsIG9oIHdlbGwsIHRoaXMgaXMgbm93IGEgc2Vx
-dWVudGlhbCBwYXR0ZXJuIGFuZCB3aWxsIFJBLg0KQnV0IGFsbCB0aGlzIHNlYXJjaC1hcHAgZGlk
-IHdhcyB0aGF0IGl0IGtlcHQgcmVhZGluZyB0aWxsIGl0IGZvdW5kIHdoYXQgaXQgd2FzIGxvb2tp
-bmcgZm9yLiBPbmNlIGl0IHdhcyBkb25lLCBpdCB3ZW50IGJhY2sgdG8gc2xlZXAgd2FpdGluZyBm
-b3IgdGhlIG5leHQgcXVlcnkuDQpOb3cgYWxsIHRoYXQgUkEgZGF0YSBjb3VsZCBiZSBvZiB0b3Rh
-bCB3YXN0ZSBpZiB0aGUgcmVhZC1oaXQgb24gdGhlIFJBIGRhdGEtc2V0IHdhcyAnemVybyBwZXJj
-ZW50Jy4NCg0KU29tZSB3b3VsZCBhcmd1ZSB0aGF0IGhvdyB3b3VsZCB3ZSh0aGUga2VybmVsKSBr
-bm93IHRoYXQgdGhlIG5leHQgcXVlcnkgbWF5IG5vdCBiZSBjbG9zZSB0aGUgZWFybGllciBkYXRh
-LXNldD8gV2VsbCwgd2UgZG9uJ3QgYW5kIHdlIG1heSBub3Qgd2FudCB0by4gVGhhdCBpcyB3aHkg
-dGhlIGFwcGxpY2F0aW9uIGJldHRlciBrbm93IGhvdyB0byB1c2UgWFhYX2FkdmlzZSBjYWxscy4g
-SWYgdGhleSBhcmUgbm90IHVzaW5nIGl0IHRoZW4gd2VsbCBpdCdzIHRoZWlyIHByb2JsZW0uIFRo
-ZSBhcHAga25vd3MgYWJvdXQgdGhlIHN0YXRpc3RpY3MvZXRjIGFib3V0IHRoZSBxdWVyaWVzLiBX
-aGF0IHdhcyB1c2VkIGFuZCB3aGF0IHdhc24ndC4NCg0KDQo+IEphbWVzDQoNCkNoZXRhbiBMb2tl
-DQo=
+On Wed, Jan 25, 2012 at 02:35:52PM +0800, Wu Fengguang wrote:
+> On Tue, Jan 24, 2012 at 11:15:13PM -0700, Andreas Dilger wrote:
+> > On 2012-01-24, at 8:29 PM, Wu Fengguang wrote:
+> > > On Tue, Jan 24, 2012 at 09:39:36PM +0100, Jan Kara wrote:
+> > >> On Tue 24-01-12 15:13:40, Jeff Moyer wrote:
+> > >>>> Maybe 128 KB is a too small default these days but OTOH noone prevents you
+> > >>>> from raising it (e.g. SLES uses 1 MB as a default).
+> > >>> 
+> > >>> For some reason, I thought it had been bumped to 512KB by default.  Must
+> > >>> be that overactive imagination I have...  Anyway, if all of the distros
+> > >>> start bumping the default, don't you think it's time to consider bumping
+> > >>> it upstream, too?  I thought there was a lot of work put into not being
+> > >>> too aggressive on readahead, so the downside of having a larger
+> > >>> read_ahead_kb setting was fairly small.
+> > >> 
+> > >>  Yeah, I believe 512KB should be pretty safe these days except for
+> > >> embedded world. OTOH average desktop user doesn't really care so it's
+> > >> mostly servers with beefy storage that care... (note that I wrote we raised
+> > >> the read_ahead_kb for SLES but not for openSUSE or SLED (desktop enterprise
+> > >> distro)).
+> > > 
+> > > Maybe we don't need to care much about the embedded world when raising
+> > > the default readahead size? Because even the current 128KB is too much
+> > > for them, and I see Android setting the readahead size to 4KB...
+> > > 
+> > > Some time ago I posted a series for raising the default readahead size
+> > > to 512KB. But I'm open to use 1MB now (shall we vote on it?).
+> > 
+> > I'm all in favour of 1MB (aligned) readahead.
+> 
+> 1MB readahead aligned to i*1MB boundaries? I like this idea. It will
+> work well if the filesystems employ the same alignment rule for large
+> files.
+> 
+> > I think the embedded folks
+> > already set enough CONFIG opts that we could trigger on one of those
+> > (e.g. CONFIG_EMBEDDED) to avoid stepping on their toes.
+> 
+> Good point. We could add a configurable CONFIG_READAHEAD_KB=128 when
+> CONFIG_EMBEDDED is selected.
+> 
+> > It would also be
+> > possible to trigger on the size of the device so that the 32MB USB stick
+> > doesn't sit busy for a minute with readahead that is useless.
+> 
+> Yeah, I do have a patch for shrinking readahead size based on device size.
+
+Should it be a udev rule to change read_ahead_kb on device based on device
+size, instead of a kernel patch?
+
+This is assuming device size is a good way to determine read ahead window
+size. I would guess that device speed should also matter though isn't it.
+If device is small but fast then it is probably ok to have larger read ahead
+window and vice versa.
+
+Thanks
+Vivek
