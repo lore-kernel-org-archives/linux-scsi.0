@@ -1,70 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [LSF/MM TOPIC] end-to-end data and metadata corruption detection
-Date: Thu, 26 Jan 2012 17:21:44 -0600
-Message-ID: <1327620104.6151.23.camel@dabdike.int.hansenpartnership.com>
-References: <38C050B3-2AAD-4767-9A25-02C33627E427@oracle.com>
-	 <4F2147BA.6030607@itwm.fraunhofer.de> <yq1k44e1pn6.fsf@sermon.lab.mkp.net>
-	 <4F217F0C.6030105@itwm.fraunhofer.de>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Ioctl warning for a partition
+Date: Fri, 27 Jan 2012 03:56:24 +0400
+Message-ID: <4F21E828.8090502@msgid.tls.msk.ru>
+References: <20120126223037.GE28368@quack.suse.cz> <CA+55aFwkRhsdAYwP-S5_qPkRX=dMSnxv5Ow1ULaSJjKe3aTy2w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43510 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751788Ab2AZXVq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jan 2012 18:21:46 -0500
-In-Reply-To: <4F217F0C.6030105@itwm.fraunhofer.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+55aFwkRhsdAYwP-S5_qPkRX=dMSnxv5Ow1ULaSJjKe3aTy2w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jan Kara <jack@suse.cz>, Paolo Bonzini <pbonzini@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, mmarek@suse.cz
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Chuck Lever <chuck.lever@oracle.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org, Sven Breuner <sven.breuner@itwm.fraunhofer.de>
 
-On Thu, 2012-01-26 at 17:27 +0100, Bernd Schubert wrote:
-> On 01/26/2012 03:53 PM, Martin K. Petersen wrote:
-> >>>>>> "Bernd" == Bernd Schubert<bernd.schubert@itwm.fraunhofer.de>  writes:
-> >
-> > Bernd>  We from the Fraunhofer FhGFS team would like to also see the T10
-> > Bernd>  DIF/DIX API exposed to user space, so that we could make use of
-> > Bernd>  it for our FhGFS file system.  And I think this feature is not
-> > Bernd>  only useful for file systems, but in general, scientific
-> > Bernd>  applications, databases, etc also would benefit from insurance of
-> > Bernd>  data integrity.
-> >
-> > I'm attending a SNIA meeting today to discuss a (cross-OS) data
-> > integrity aware API. We'll see what comes out of that.
-> >
-> > With the Linux hat on I'm still mainly interested in pursuing the
-> > sys_dio interface Joel and I proposed last year. We have good experience
-> > with that I/O model and it suits applications that want to interact with
-> > the protection information well. libaio is also on my list.
-> >
-> > But obviously any help and input is appreciated...
-> >
+On 27.01.2012 03:01, Linus Torvalds wrote:
+> On Thu, Jan 26, 2012 at 2:30 PM, Jan Kara <jack@suse.cz> wrote:
+>>
+>> It's easy enough to silence the warning the same way as
+>> CDROM_GET_CAPABILITY since the ioctl is safe but it's not so simple for
+>> 32-bit userspace.  MTIOCGET32 is defined only in fs/compat_ioctl.c so we
+>> cannot easily add it to scsi_verify_blk_ioctl(). Any opinion how to cleanly
+>> solve this? The only idea I had was to define compat structures and ioctl
+>> numbers in a special header and use it both in fs/compat_ioctl.c and in
+>> block/scsi_ioctl.c.
 > 
-> I guess you are referring to the interface described here
+> I suspect we can just remove the warning entirely - once we've gotten
+> enough coverage with the -rc kernels that people (me in particular)
+> are happy that no normal load really needs it, and returning an error
+> is fine.
 > 
-> http://www.spinics.net/lists/linux-mm/msg14512.html
+> So I don't really consider the warning to be something long-term - I
+> wanted it to make sure that some random binary in some odd
+> distribution wouldn't break in mysterious ways that would take a lot
+> of debugging to find. And so that we really know what we end up
+> blocking in practice.
 > 
-> Hmm, direct IO would mean we could not use the page cache. As we are 
-> using it, that would not really suit us. libaio then might be another 
-> option then.
+> I'm not sure how good the -rc kernel coverage is, but I think it's
+> good enough that we can drop the warning before doing a real 3.3
+> release. And I don't think the stable kernel versions ever got that
+> warning printout, did they? That would be great for coverage, of
+> course, if they did.
 
-Are you really sure you want protection information and the page cache?
-The reason for using DIO is that no-one could really think of a valid
-page cache based use case.  What most applications using protection
-information want is to say: This is my data and this is the integrity
-verification, send it down and assure me you wrote it correctly.  If you
-go via the page cache, we have all sorts of problems, like our
-granularity is a page (not a block) so you'd have to guarantee to write
-a page at a time (a mechanism for combining subpage units of protection
-information sounds like a nightmare).  The write becomes mark page dirty
-and wait for the system to flush it, and we can update the page in the
-meantime.  How do we update the page and its protection information
-atomically.  What happens if the page gets updated but no protection
-information is supplied and so on ...  The can of worms just gets more
-squirmy.  Doing DIO only avoids all of this.
+They did, 3.0 and 3.2.
 
-James
+For example, 3.0.18:
 
+[  610.488489] kvm: sending ioctl 5326 to a partition!
+[  610.488540] kvm: sending ioctl 80200204 to a partition!
 
+mdadm ioctls reported in various places apparently got fixed by
+ENOTTY/ENOIOCTLCMD change.
+
+Thanks,
+
+/mjt
