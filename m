@@ -1,44 +1,65 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [LSF/MM TOPIC][ATTEND] linux servers as a storage server - what's
- missing?
-Date: Thu, 26 Jan 2012 13:52:17 -0800
-Message-ID: <4F21CB11.7080205@redhat.com>
-References: <4EF2026F.2090506@redhat.com> <20120103142609.2b4d06cb@tlielax.poochiereds.net> <20120124213609.GA12426@fieldses.org> <4F1F3B00.8060603@redhat.com> <4F206543.60309@samba.org> <CAL1RGDWxbYHQdFOxAfEWSxxjQKjQgsPgVAGYrZL4NrsB2apKzw@mail.gmail.com> <4F207DB4.50804@samba.org>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what'smissing?
+Date: Fri, 27 Jan 2012 09:24:28 +1100
+Message-ID: <20120126222428.GX15102@dastard>
+References: <1326113987.2580.8.camel@localhost.localdomain>
+ <D3F292ADF945FB49B35E96C94C2061B9159134BD@nsmail.netscout.com>
+ <4F18429C.3020803@redhat.com>
+ <D3F292ADF945FB49B35E96C94C2061B9159134EF@nsmail.netscout.com>
+ <4F1844F0.1030406@redhat.com>
+ <D3F292ADF945FB49B35E96C94C2061B9159135BF@nsmail.netscout.com>
+ <4F18566A.2060107@redhat.com>
+ <D3F292ADF945FB49B35E96C94C2061B915913815@nsmail.netscout.com>
+ <4F188DA9.3050804@redhat.com>
+ <D3F292ADF945FB49B35E96C94C2061B9159D00EC@nsmail.netscout.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62970 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753888Ab2AZVwW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jan 2012 16:52:22 -0500
-In-Reply-To: <4F207DB4.50804@samba.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <D3F292ADF945FB49B35E96C94C2061B9159D00EC@nsmail.netscout.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Loke, Chetan" <Chetan.Loke@netscout.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, Tom Coughlan <coughlan@redhat.com>, Hannes Reinecke <hare@suse.de>, tasleson@redhat.com, Shyam_Iyer@Dell.com, vgoyal@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Christopher R. Hertel" <crh@samba.org>
-Cc: Roland Dreier <roland@purestorage.com>, Ric Wheeler <rwheeler@redhat.com>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@redhat.com>, linux-fsdevel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jeremy Allison <jra@samba.org>, Simo Sorce <simo@redhat.com>
 
-On 01/25/2012 02:09 PM, Christopher R. Hertel wrote:
-> Roland Dreier wrote:
->> On Wed, Jan 25, 2012 at 12:25 PM, Christopher R. Hertel <crh@samba.org> wrote:
->>> Can we put FibreChannel HBAs in *target* mode into a Linux-based PC and
->>> export LUNs via FibreChannel?
->>>  - Do we support multipath in this configuration?
->>>  - Zoning?  Muli-access LUNs for Clustering?
->>
->> Yes to everything, although the low-level FC driver patches are not
->> quite upstream yet.
+On Tue, Jan 24, 2012 at 12:05:23PM -0500, Loke, Chetan wrote:
+> > > But writes that have to fetch the non-cached data, will
+> unnecessarily
+> > > issue I/O to the fabric. These orphaned I/O's cause more pain in the
+> > > cleanup.
+> > > And if caching is enabled on the front-side then it's all the more
+> > > painful.
+> > >
+> > > We can go one extra step and make FS fail read I/O for non-cached
+> data
+> > > too to avoid more orphan IOs.
+> > 
+> > I don't really see this as a useful state. Read-only without a real
+> > backing file
+> > system or LUN is hit or miss, that file system should go offline :)
+> > 
 > 
-> Cool!
-> Thanks for the update.
-> 
-> I assume that the management API for this is similar to or the same as the
-> FCoE API?  That would make it easier to produce a consistent look-and-feel
-> in whatever end-user management tools a third-party my create.
+> Last year when I checked, I forget but I think xfs(or ext4) was going
+> read-only.
+> If this is still the case then you are basically asking FS's to modify
+> that behavior.
 
-If you're talking about the kernel target stuff, you need to do the
-FCoE-specific setup using the same fcoe tools, and then configure the
-kernel target via configfs, so that's probably going to be a little
-different.
+ext4 goes read only on erro by default. I think that behaviour can
+be changed by a mount option.
 
-Regards -- Andy
+XFS shuts the filesystem down (takes it offline) preventing all
+dirty data and metadata from being issued to disk, aborts any
+journal IO that might be going on, etc. It the returns fatal errors
+(EIO or EUCLEAN "structure needs cleaning" errors) to all callers
+that attempt to write or modify the filesystem, and EIO to all
+attempts to read from it.
+
+IOWs, the XFS filesystem is *gone* once it shuts down and requires
+administrator intervention to get it back to a working state....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
