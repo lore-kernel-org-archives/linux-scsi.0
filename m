@@ -1,74 +1,38 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] target: handle empty string writes in sysfs
-Date: Thu, 26 Jan 2012 15:19:59 +0300
-Message-ID: <20120126121959.GS3294@mwanda>
-References: <20120124084036.GB29097@elgon.mountain>
- <4F1E8E31.1070507@bfs.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/U0GMd1Pus0mbMSS"
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4F1E8E31.1070507@bfs.de>
-Sender: target-devel-owner@vger.kernel.org
-To: walter harms <wharms@bfs.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Andreas Dilger <adilger@dilger.ca>
+Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
+Date: Thu, 26 Jan 2012 05:29:03 -0700
+Message-ID: <5B229F2F-4B0D-4AC1-A726-9E0CC8CE5FBE@dilger.ca>
+References: <x49fwf5kmbl.fsf@segfault.boston.devel.redhat.com> <20120124184054.GA23227@infradead.org> <20120124190732.GH4387@shiny> <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com> <20120124200932.GB20650@quack.suse.cz> <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com> <20120124203936.GC20650@quack.suse.cz> <20120125032932.GA7150@localhost> <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca> <20120125063552.GA27375@localhost> <20120125140048.GC32361@quack.suse.cz>
+Mime-Version: 1.0 (Apple Message framework v1084)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20120125140048.GC32361@quack.suse.cz>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Wu Fengguang <fengguang.wu@gmail.com>
+Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de Brown" <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, "dm-devel@redhat.com development" <dm-devel@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org Devel" <linux-fsdevel@vger.kernel.org>, lsf-pc@lists.linux-foundation.org, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On 2012-01-25, at 7:00 AM, Jan Kara wrote:
+> On Wed 25-01-12 14:35:52, Wu Fengguang wrote:
+>> On Tue, Jan 24, 2012 at 11:15:13PM -0700, Andreas Dilger wrote:
+>>> I'm all in favour of 1MB (aligned) readahead.
+>> 
+>> 1MB readahead aligned to i*1MB boundaries? I like this idea. It will
+>> work well if the filesystems employ the same alignment rule for large
+>> files.
+> 
+> Yeah. Clever filesystems (e.g. XFS) can be configured to align files e.g.
+> to raid stripes AFAIK so for them this could be worthwhile.
 
---/U0GMd1Pus0mbMSS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Ext4 will also align IO to 1MB boundaries (from the start of LUN/partition)
+by default.  If the mke2fs code detects the underlying RAID geometry (or the
+sysadmin sets this manually with tune2fs) it will store this in the superblock
+for the allocator to pick a better alignment.
 
-On Tue, Jan 24, 2012 at 11:55:45AM +0100, walter harms wrote:
->=20
->=20
-> Am 24.01.2012 09:40, schrieb Dan Carpenter:
-> > These are root only and we're not likely to hit the problem in practise,
-> > but it makes a the static checkers happy.
-> >=20
-> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> >=20
-> > diff --git a/drivers/target/target_core_configfs.c b/drivers/target/tar=
-get_core_configfs.c
-> > index 0955bb8..9b86330 100644
-> > --- a/drivers/target/target_core_configfs.c
-> > +++ b/drivers/target/target_core_configfs.c
-> > @@ -1707,6 +1707,8 @@ static ssize_t target_core_store_dev_alias(
-> >  	se_dev->su_dev_flags |=3D SDF_USING_ALIAS;
-> >  	read_bytes =3D snprintf(&se_dev->se_dev_alias[0], SE_DEV_ALIAS_LEN,
-> >  			"%s", page);
->=20
-> Would it help to check page=3D=3DNULL or *page=3D=3D0 at start ?
-> Now you have se_dev->su_dev_flags initialised.
-
-It's a fair point.  Let me redo it.
-
-regards,
-dan carpenter
+Cheers, Andreas
 
 
---/U0GMd1Pus0mbMSS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
 
-iQIcBAEBAgAGBQJPIUTvAAoJEOnZkXI/YHqR8H8P/j72PeivHtXwNuKnp6dFFdBD
-daQA7Cvm8ayUAOEQgA639RxuMINA5Ck3zd1zgwZ5OxHGLeBwQF7FndBNcBTKaRWe
-cd0qo8uFiW2J7+u/MTybDXa700WgQnIY8D5MKrBtlL921VvUhhSdvf2FzIyf332i
-DiV9HDdEVAWpoyIw3Jeo2chyaOd2b3M8as1islTVoip76+IA23ddb2qCt0ypr3M4
-D7FsIqvf0YguM67N/db6I2AtbxqaTJXOjJ1Evh9H4dpUNqPzcPueKvQ2iRQux1r0
-WnGP+eBTze/MOet5BfbFzr8WVQp4uu0rhAfdpRbHQ7LqztxDXrVIMxLonxcUUXtP
-UjYT6hEdKjhjx65kY6YfZeRXbmOzLkIIxe4ovc1tJmYg5pz8pg1Nn0uu91hZQhDp
-j/G4DhMO0E/C1m8tE2hLRjVNp5e0UN1qVT34Rvimm/qQby+j9doH64HWKlkjriIk
-baI8vJYJ3FEjD7YWnZrt+82e7D/prbUKpt+fuhcUXsqphWo3sm0NBsVbjPBlIYxe
-E77izpR5J0NlpBg+afX4l6RCA2ZIb9DxzqO7t8ww5I+RTjEWN7EyfJ25VZPcn5/f
-sS6lKsaPIMKaFhDO5HzVrg7Yv9HaLyf5+5jTExLv9xuw5FzYjiC0KQvjgcTHI8Ex
-vKka9SjbweNbUvtb27Xh
-=U4BQ
------END PGP SIGNATURE-----
 
---/U0GMd1Pus0mbMSS--
