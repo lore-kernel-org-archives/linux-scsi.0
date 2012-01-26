@@ -1,92 +1,49 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
-Date: Thu, 26 Jan 2012 21:37:50 +0100
-Message-ID: <20120126203750.GB27283@quack.suse.cz>
-References: <20120124184054.GA23227@infradead.org>
- <20120124190732.GH4387@shiny>
- <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
- <20120124200932.GB20650@quack.suse.cz>
- <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
- <20120124203936.GC20650@quack.suse.cz>
- <20120125032932.GA7150@localhost>
- <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
- <20120125063552.GA27375@localhost>
- <20120126162555.GF1891@redhat.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] Storage management (API & Library)
+Date: Thu, 26 Jan 2012 12:53:16 -0800
+Message-ID: <4F21BD3C.8050809@redhat.com>
+References: <4F19A981.4080502@redhat.com> <20120125174411.GB12620@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49846 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:50298 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751581Ab2AZUhx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jan 2012 15:37:53 -0500
-Content-Disposition: inline
-In-Reply-To: <20120126162555.GF1891@redhat.com>
+	id S1751854Ab2AZUxX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jan 2012 15:53:23 -0500
+In-Reply-To: <20120125174411.GB12620@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Wu Fengguang <fengguang.wu@gmail.com>, Andreas Dilger <adilger@dilger.ca>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de" <neilb@suse.de>, Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Tony Asleson <tasleson@redhat.com>, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-On Thu 26-01-12 11:25:56, Vivek Goyal wrote:
-> On Wed, Jan 25, 2012 at 02:35:52PM +0800, Wu Fengguang wrote:
-> > On Tue, Jan 24, 2012 at 11:15:13PM -0700, Andreas Dilger wrote:
-> > > On 2012-01-24, at 8:29 PM, Wu Fengguang wrote:
-> > > > On Tue, Jan 24, 2012 at 09:39:36PM +0100, Jan Kara wrote:
-> > > >> On Tue 24-01-12 15:13:40, Jeff Moyer wrote:
-> > > >>>> Maybe 128 KB is a too small default these days but OTOH noone prevents you
-> > > >>>> from raising it (e.g. SLES uses 1 MB as a default).
-> > > >>> 
-> > > >>> For some reason, I thought it had been bumped to 512KB by default.  Must
-> > > >>> be that overactive imagination I have...  Anyway, if all of the distros
-> > > >>> start bumping the default, don't you think it's time to consider bumping
-> > > >>> it upstream, too?  I thought there was a lot of work put into not being
-> > > >>> too aggressive on readahead, so the downside of having a larger
-> > > >>> read_ahead_kb setting was fairly small.
-> > > >> 
-> > > >>  Yeah, I believe 512KB should be pretty safe these days except for
-> > > >> embedded world. OTOH average desktop user doesn't really care so it's
-> > > >> mostly servers with beefy storage that care... (note that I wrote we raised
-> > > >> the read_ahead_kb for SLES but not for openSUSE or SLED (desktop enterprise
-> > > >> distro)).
-> > > > 
-> > > > Maybe we don't need to care much about the embedded world when raising
-> > > > the default readahead size? Because even the current 128KB is too much
-> > > > for them, and I see Android setting the readahead size to 4KB...
-> > > > 
-> > > > Some time ago I posted a series for raising the default readahead size
-> > > > to 512KB. But I'm open to use 1MB now (shall we vote on it?).
-> > > 
-> > > I'm all in favour of 1MB (aligned) readahead.
-> > 
-> > 1MB readahead aligned to i*1MB boundaries? I like this idea. It will
-> > work well if the filesystems employ the same alignment rule for large
-> > files.
-> > 
-> > > I think the embedded folks
-> > > already set enough CONFIG opts that we could trigger on one of those
-> > > (e.g. CONFIG_EMBEDDED) to avoid stepping on their toes.
-> > 
-> > Good point. We could add a configurable CONFIG_READAHEAD_KB=128 when
-> > CONFIG_EMBEDDED is selected.
-> > 
-> > > It would also be
-> > > possible to trigger on the size of the device so that the 32MB USB stick
-> > > doesn't sit busy for a minute with readahead that is useless.
-> > 
-> > Yeah, I do have a patch for shrinking readahead size based on device size.
+On 01/25/2012 09:44 AM, Christoph Hellwig wrote:
+> There's another project which is creating a very ad-hoc storage
+> management abstraction, the nova-volume code in openstack.  Right now
+> it supports iSCSI with a few vendor-specific extensions for management,
+> RBD and sheepdog, but it looks like the numbers of vendors that want
+> to be supported is growing.
 > 
-> Should it be a udev rule to change read_ahead_kb on device based on device
-> size, instead of a kernel patch?
-  Yes, we talked about that and I think having the logic in udev rule is
-easier. Just if we decided the logic should use a lot of kernel internal
-state, then it's better to have it in kernel.
+> See https://github.com/openstack/nova/blob/master/nova/volume/driver.py
+> and other files in that directory for the little bits that exist at the
+> moment.
 
-> This is assuming device size is a good way to determine read ahead window
-> size. I would guess that device speed should also matter though isn't it.
-> If device is small but fast then it is probably ok to have larger read ahead
-> window and vice versa.
-  Yes, but speed is harder to measure than size ;)
+<two minutes prior>
+On 01/25/2012 09:42 AM, Christoph Hellwig wrote:
+> Wrapping tools from libraries is more of a last resort than a proper
+> solution.  But if we can't get better APIs that's probably what we
+> will have to resort to if vendors don't cooperate.
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Nova is wrapping cmdline tools, and all the vendors interested so far
+are foss/cloudy.
+
+This definitely shows others see a need for an API, but if we really
+want big storage vendor buy-in, then a better (C?/sockets?) API and
+working with non-foss code seems key.
+
+Also, Nova code executes on the target machine, whereas libstoragemgmt
+is running on the mgmt node and the plugins are responsible for
+communication with the target node. (just wanted to point out another
+difference.)
+
+-- Andy
