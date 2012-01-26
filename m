@@ -1,72 +1,70 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
-Date: Thu, 26 Jan 2012 10:59:51 +0200
-Message-ID: <4F211607.10403@panasas.com>
-References: <20120124203936.GC20650@quack.suse.cz> <20120125032932.GA7150@localhost> <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca> <1327502034.2720.23.camel@menhir> <D3F292ADF945FB49B35E96C94C2061B915A638A6@nsmail.netscout.com> <1327509623.2720.52.camel@menhir> <1327512727.2776.52.camel@dabdike.int.hansenpartnership.com> <D3F292ADF945FB49B35E96C94C2061B915A63A30@nsmail.netscout.com> <1327516668.7168.7.camel@dabdike.int.hansenpartnership.com> <20120125200613.GH15866@shiny> <20120125224614.GM30782@redhat.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: BUG: unable to handle kernel NULL pointer dereference at
+ scsi_prep_state_check+0x9/0x90
+Date: Thu, 26 Jan 2012 11:49:13 +0100
+Message-ID: <20120126104913.GA5095@x1.osrc.amd.com>
+References: <20120125162748.GA2715@x1.osrc.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120125224614.GM30782@redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: Andrea Arcangeli <aarcange@redhat.com>
-Cc: Chris Mason <chris.mason@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Loke, Chetan" <Chetan.Loke@netscout.com>, Steven Whitehouse <swhiteho@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Wu Fengguang <fengguang.wu@gmail.com>, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J.Wong" <djwong@us.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([78.46.96.112]:56319 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751275Ab2AZKtS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jan 2012 05:49:18 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTP id 989CB1D9896
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2012 11:49:16 +0100 (CET)
+Received: from mail.skyhub.de ([127.0.0.1])
+	by localhost (door.skyhub.de [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id GqPv7HJsRrlG for <linux-scsi@vger.kernel.org>;
+	Thu, 26 Jan 2012 11:49:16 +0100 (CET)
+Received: from x1.localdomain (ip-90-186-152-201.web.vodafone.de [90.186.152.201])
+	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2012 11:49:16 +0100 (CET)
+Content-Disposition: inline
+In-Reply-To: <20120125162748.GA2715@x1.osrc.amd.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 01/26/2012 12:46 AM, Andrea Arcangeli wrote:
-> On Wed, Jan 25, 2012 at 03:06:13PM -0500, Chris Mason wrote:
->> We can talk about scaling up how big the RA windows get on their own,
->> but if userland asks for 1MB, we don't have to worry about futile RA, we
->> just have to make sure we don't oom the box trying to honor 1MB reads
->> from 5000 different procs.
+On Wed, Jan 25, 2012 at 05:27:49PM +0100, Borislav Petkov wrote:
+> Hi all,
 > 
-> :) that's for sure if read has a 1M buffer as destination. However
-> even cp /dev/sda reads/writes through a 32kb buffer, so it's not so
-> common to read in 1m buffers.
-> 
+> this is the oopsie I'm getting on 3.3-rc1 when inserting a Nokia
+> internet stick CS-19 which has obviously a CD-ROM interface which
+> is addressed through the SCSI layer. However, the blk request gets
+> killed prematurely, causing a scsi_device * ptr to be NULL in
+> scsi_prep_state_check(), which, IMHO, shouldn't happen, no matter
+> whether the request is killed or not. Here's the relevant dmesg text and
+> follow-up oops:
 
-That's not so true. cp is a bad example because it's brain dead and
-someone should fix it. cp performance is terrible. Even KDE's GUI
-copy is better.
+Btw,
 
-But applications (and dd users) that do care about read performance
-do use large buffers and want the Kernel to not ignore that.
+I forgot to dump the actual function decode. So, according to the
+register dump in the backtrace, we have %rdi = 0x0
 
-What a better hint for Kernel is the read() destination buffer size.
+And we are right at the beginning of scsi_prep_state_check:
 
-> But I also would prefer to stay on the simple side (on a side note we
-> run out of page flags already on 32bit I think as I had to nuke
-> PG_buddy already).
-> 
+scsi_prep_state_check:
+	pushq	%rbp	#
+	movq	%rsp, %rbp	#,
+	call	mcount
+	movl	2536(%rdi), %eax	# sdev_3(D)->sdev_state, D.34805
 
-So what would be more simple then not ignoring read() request
-size from application, which will give applications all the control
-they need.
 
-<snip> (I Agree)
+0000000000000b80 <scsi_prep_state_check>:
+     b80:       55                      push   %rbp
+     b81:       48 89 e5                mov    %rsp,%rbp
+     b84:       e8 00 00 00 00          callq  b89 <scsi_prep_state_check+0x9>
+     b89:       8b 87 e8 09 00 00       mov    0x9e8(%rdi),%eax			<-------------
+     b8f:       83 f8 02                cmp    $0x2,%eax
+     b92:       75 04                   jne    b98 <scsi_prep_state_check+0x18>
+     b94:       31 c0                   xor    %eax,%eax
 
-> The config option is also ok with me, but I think it'd be nicer to set
-> it at boot depending on ram size (one less option to configure
-> manually and zero overhead).
+so sdev is NULL.
 
-If you actually take into account the destination buffer size, you'll see
-that the read-ahead size becomes less important for these workloads that
-actually care. But Yes some mount time heuristics could be nice, depending
-on DEV size and MEM size.
-
-For example in my file-system with self registered BDI I set readhead sizes
-according to raid-strip sizes and such so to get good read performance.
-
-And speaking of reads and readhead. What about alignments? both of offset
-and length? though in reads it's not so important. One thing some people
-have ask for is raid-verify-reads as a mount option.
-
-Thanks
-Boaz
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Regards/Gruss,
+Boris.
