@@ -1,101 +1,51 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] isci: enable clock gating
-Date: Fri, 27 Jan 2012 11:14:50 -0800
-Message-ID: <20120127191436.27475.19560.stgit@localhost6.localdomain6>
+Subject: [3.3-rc PATCH] isci: Fix NULL ptr dereference when no firmware is
+ being loaded
+Date: Fri, 27 Jan 2012 11:17:37 -0800
+Message-ID: <20120127191643.27551.23976.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:48727 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:41822 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752011Ab2A0TOv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jan 2012 14:14:51 -0500
+	id S1752582Ab2A0TRi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jan 2012 14:17:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Marcin Tomczak <marcin.tomczak@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>, Dan Melnic <dan@seamicro.com>
 
-From: Marcin Tomczak <marcin.tomczak@intel.com>
+From: Dave Jiang <dave.jiang@intel.com>
 
-Enabling clock gating for power savings on entry to controller ready
-state. Disable SCU clock gating for power savings on exit from the
-controller ready state.
+NULL orom ptr passed in for verification which caused page fault.
+We will set a default version when we don't have orom struct.
 
-The gating is fully automated by silicon after setting the mode.
-
-Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
+Reported-by: Dan Melnic <dan@seamicro.com>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
-for scsi-misc / 3.4
+ for scsi-fixes / 3.3
 
- drivers/scsi/isci/host.c      |    9 +++++++++
- drivers/scsi/isci/registers.h |   27 +++++++++++++++++++++++++--
- 2 files changed, 34 insertions(+), 2 deletions(-)
+ drivers/scsi/isci/host.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index e7e5d06..963d7e8 100644
+index 1a65d65..418391b 100644
 --- a/drivers/scsi/isci/host.c
 +++ b/drivers/scsi/isci/host.c
-@@ -1488,6 +1488,15 @@ sci_controller_set_interrupt_coalescence(struct isci_host *ihost,
- static void sci_controller_ready_state_enter(struct sci_base_state_machine *sm)
- {
- 	struct isci_host *ihost = container_of(sm, typeof(*ihost), sm);
-+	u32 val;
-+
-+	/* enable clock gating for power control of the scu unit */
-+	val = readl(&ihost->smu_registers->clock_gating_control);
-+	val &= ~(SMU_CGUCR_GEN_BIT(REGCLK_ENABLE) |
-+		 SMU_CGUCR_GEN_BIT(TXCLK_ENABLE) |
-+		 SMU_CGUCR_GEN_BIT(XCLK_ENABLE));
-+	val |= SMU_CGUCR_GEN_BIT(IDLE_ENABLE);
-+	writel(val, &ihost->smu_registers->clock_gating_control);
+@@ -1848,9 +1848,11 @@ static enum sci_status sci_oem_parameters_set(struct isci_host *ihost)
+ 	if (state == SCIC_RESET ||
+ 	    state == SCIC_INITIALIZING ||
+ 	    state == SCIC_INITIALIZED) {
++		u8 oem_version = pci_info->orom ? pci_info->orom->hdr.version :
++			ISCI_ROM_VER_1_0;
  
- 	/* set the default interrupt coalescence number and timeout value. */
- 	sci_controller_set_interrupt_coalescence(ihost, 0, 0);
-diff --git a/drivers/scsi/isci/registers.h b/drivers/scsi/isci/registers.h
-index eaa541a..7eb0ccd 100644
---- a/drivers/scsi/isci/registers.h
-+++ b/drivers/scsi/isci/registers.h
-@@ -370,6 +370,27 @@ struct scu_iit_entry {
- 		>> SMU_DEVICE_CONTEXT_CAPACITY_MAX_RNC_SHIFT \
- 	)
+ 		if (sci_oem_parameters_validate(&ihost->oem_parameters,
+-						pci_info->orom->hdr.version))
++						oem_version))
+ 			return SCI_FAILURE_INVALID_PARAMETER_VALUE;
  
-+/* ***************************************************************************** */
-+#define SMU_CLOCK_GATING_CONTROL_IDLE_ENABLE_SHIFT    (0)
-+#define SMU_CLOCK_GATING_CONTROL_IDLE_ENABLE_MASK     (0x00000001)
-+#define SMU_CLOCK_GATING_CONTROL_XCLK_ENABLE_SHIFT    (1)
-+#define SMU_CLOCK_GATING_CONTROL_XCLK_ENABLE_MASK     (0x00000002)
-+#define SMU_CLOCK_GATING_CONTROL_TXCLK_ENABLE_SHIFT   (2)
-+#define SMU_CLOCK_GATING_CONTROL_TXCLK_ENABLE_MASK    (0x00000004)
-+#define SMU_CLOCK_GATING_CONTROL_REGCLK_ENABLE_SHIFT  (3)
-+#define SMU_CLOCK_GATING_CONTROL_REGCLK_ENABLE_MASK   (0x00000008)
-+#define SMU_CLOCK_GATING_CONTROL_IDLE_TIMEOUT_SHIFT   (16)
-+#define SMU_CLOCK_GATING_CONTROL_IDLE_TIMEOUT_MASK    (0x000F0000)
-+#define SMU_CLOCK_GATING_CONTROL_FORCE_IDLE_SHIFT     (31)
-+#define SMU_CLOCK_GATING_CONTROL_FORCE_IDLE_MASK      (0x80000000)
-+#define SMU_CLOCK_GATING_CONTROL_RESERVED_MASK        (0x7FF0FFF0)
-+
-+#define SMU_CGUCR_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SMU_CLOCK_GATING_CONTROL_##name, value)
-+
-+#define SMU_CGUCR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SMU_CLOCK_GATING_CONTROL_##name)
-+
- /* -------------------------------------------------------------------------- */
- 
- #define SMU_CONTROL_STATUS_TASK_CONTEXT_RANGE_ENABLE_SHIFT      (0)
-@@ -992,8 +1013,10 @@ struct smu_registers {
- 	u32 mmr_address_window;
- /* 0x00A4 SMDW */
- 	u32 mmr_data_window;
--	u32 reserved_A8;
--	u32 reserved_AC;
-+/* 0x00A8 CGUCR */
-+	u32 clock_gating_control;
-+/* 0x00AC CGUPC */
-+	u32 clock_gating_performance;
- /* A whole bunch of reserved space */
- 	u32 reserved_Bx[4];
- 	u32 reserved_Cx[4];
+ 		return SCI_SUCCESS;
 
