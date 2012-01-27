@@ -1,332 +1,101 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] isci: T10 DIF support
-Date: Fri, 27 Jan 2012 11:14:31 -0800
-Message-ID: <20120127191358.27475.26561.stgit@localhost6.localdomain6>
+Subject: [PATCH] isci: enable clock gating
+Date: Fri, 27 Jan 2012 11:14:50 -0800
+Message-ID: <20120127191436.27475.19560.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:8432 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:48727 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752252Ab2A0TOc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jan 2012 14:14:32 -0500
+	id S1752011Ab2A0TOv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jan 2012 14:14:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dave Jiang <dave.jiang@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Marcin Tomczak <marcin.tomczak@intel.com>
 
-From: Dave Jiang <dave.jiang@intel.com>
+From: Marcin Tomczak <marcin.tomczak@intel.com>
 
-This allows the controller to do WRITE_INSERT and READ_STRIP for SAS
-disks that support protection information. SAS disks must be formatted
-with protection information to use this feature via sg_format.
+Enabling clock gating for power savings on entry to controller ready
+state. Disable SCU clock gating for power savings on exit from the
+controller ready state.
 
-  sg3_utils-1.32 -- sg_format version 1.19 20110730
-  sg_format usage:
-  sg_format --format --verbose --pinfo /dev/sda
+The gating is fully automated by silicon after setting the mode.
 
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
 for scsi-misc / 3.4
 
- drivers/scsi/isci/init.c             |    7 ++
- drivers/scsi/isci/request.c          |  148 ++++++++++++++++++++++++++++++++++
- drivers/scsi/isci/scu_task_context.h |   55 +++++++++----
- 3 files changed, 194 insertions(+), 16 deletions(-)
+ drivers/scsi/isci/host.c      |    9 +++++++++
+ drivers/scsi/isci/registers.h |   27 +++++++++++++++++++++++++--
+ 2 files changed, 34 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 437f76b..2a63027 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -506,6 +506,13 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
- 			goto err_host_alloc;
- 		}
- 		pci_info->hosts[i] = h;
-+
-+		/* turn on DIF support */
-+		scsi_host_set_prot(h->shost,
-+				   SHOST_DIF_TYPE1_PROTECTION |
-+				   SHOST_DIF_TYPE2_PROTECTION |
-+				   SHOST_DIF_TYPE3_PROTECTION);
-+		scsi_host_set_guard(h->shost, SHOST_DIX_GUARD_CRC);
- 	}
- 
- 	err = isci_setup_interrupts(pdev);
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 0e43efd..06e0541 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -53,6 +53,7 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  */
- 
-+#include <scsi/scsi_cmnd.h>
- #include "isci.h"
- #include "task.h"
- #include "request.h"
-@@ -264,6 +265,142 @@ static void scu_ssp_reqeust_construct_task_context(
- 	task_context->response_iu_lower = lower_32_bits(dma_addr);
- }
- 
-+static u8 scu_bg_blk_size(struct scsi_device *sdp)
-+{
-+	switch (sdp->sector_size) {
-+		case 512:
-+			return 0;
-+		case 1024:
-+			return 1;
-+		case 4096:
-+			return 3;
-+		default:
-+			return 0xff;
-+	}
-+}
-+
-+static u32 scu_dif_bytes(u32 len, u32 sector_size)
-+{
-+	return (len >> ilog2(sector_size)) * 8;
-+}
-+
-+static void scu_ssp_ireq_dif_insert(struct isci_request *ireq, u8 type, u8 op)
-+{
-+	struct scu_task_context *tc = ireq->tc;
-+	struct scsi_cmnd *scmd = ireq->ttype_ptr.io_task_ptr->uldd_task;
-+	u8 blk_sz = scu_bg_blk_size(scmd->device);
-+
-+	tc->block_guard_enable = 1;
-+	tc->blk_prot_en = 1;
-+	tc->blk_sz = blk_sz;
-+	/* DIF write insert */
-+	tc->blk_prot_func = 0x2;
-+
-+	tc->transfer_length_bytes += scu_dif_bytes(tc->transfer_length_bytes,
-+						   scmd->device->sector_size);
-+
-+	/* always init to 0, used by hw */
-+	tc->interm_crc_val = 0;
-+
-+	tc->init_crc_seed = 0;
-+	tc->app_tag_verify = 0;
-+	tc->app_tag_gen = 0;
-+	tc->ref_tag_seed_verify = 0;
-+
-+	/* always init to same as bg_blk_sz */
-+	tc->UD_bytes_immed_val = scmd->device->sector_size;
-+
-+	tc->reserved_DC_0 = 0;
-+
-+	/* always init to 8 */
-+	tc->DIF_bytes_immed_val = 8;
-+
-+	tc->reserved_DC_1 = 0;
-+	tc->bgc_blk_sz = scmd->device->sector_size;
-+	tc->reserved_E0_0 = 0;
-+	tc->app_tag_gen_mask = 0;
-+
-+	/** setup block guard control **/
-+	tc->bgctl = 0;
-+
-+	/* DIF write insert */
-+	tc->bgctl_f.op = 0x2;
-+
-+	tc->app_tag_verify_mask = 0;
-+
-+	/* must init to 0 for hw */
-+	tc->blk_guard_err = 0;
-+
-+	tc->reserved_E8_0 = 0;
-+
-+	if ((type & SCSI_PROT_DIF_TYPE1) || (type & SCSI_PROT_DIF_TYPE2)) {
-+		tc->ref_tag_seed_gen = scsi_get_lba(scmd) & 0xffffffff;
-+	} else if (type & SCSI_PROT_DIF_TYPE3)
-+		tc->ref_tag_seed_gen = 0;
-+
-+}
-+
-+static void scu_ssp_ireq_dif_strip(struct isci_request *ireq, u8 type, u8 op)
-+{
-+	struct scu_task_context *tc = ireq->tc;
-+	struct scsi_cmnd *scmd = ireq->ttype_ptr.io_task_ptr->uldd_task;
-+	u8 blk_sz = scu_bg_blk_size(scmd->device);
-+
-+	tc->block_guard_enable = 1;
-+	tc->blk_prot_en = 1;
-+	tc->blk_sz = blk_sz;
-+	/* DIF read strip */
-+	tc->blk_prot_func = 0x1;
-+
-+	tc->transfer_length_bytes += scu_dif_bytes(tc->transfer_length_bytes,
-+						   scmd->device->sector_size);
-+
-+	/* always init to 0, used by hw */
-+	tc->interm_crc_val = 0;
-+
-+	tc->init_crc_seed = 0;
-+	tc->app_tag_verify = 0;
-+	tc->app_tag_gen = 0;
-+
-+	if ((type & SCSI_PROT_DIF_TYPE1) || (type & SCSI_PROT_DIF_TYPE2)) {
-+		tc->ref_tag_seed_verify = scsi_get_lba(scmd) & 0xffffffff;
-+	} else if (type & SCSI_PROT_DIF_TYPE3)
-+		tc->ref_tag_seed_verify = 0;
-+
-+	/* always init to same as bg_blk_sz */
-+	tc->UD_bytes_immed_val = scmd->device->sector_size;
-+
-+	tc->reserved_DC_0 = 0;
-+
-+	/* always init to 8 */
-+	tc->DIF_bytes_immed_val = 8;
-+
-+	tc->reserved_DC_1 = 0;
-+	tc->bgc_blk_sz = scmd->device->sector_size;
-+	tc->reserved_E0_0 = 0;
-+	tc->app_tag_gen_mask = 0;
-+
-+	/** setup block guard control **/
-+	tc->bgctl = 0;
-+
-+	/* DIF read strip */
-+	tc->bgctl_f.crc_verify = 1;
-+	tc->bgctl_f.op = 0x1;
-+	if ((type & SCSI_PROT_DIF_TYPE1) || (type & SCSI_PROT_DIF_TYPE2)) {
-+		tc->bgctl_f.ref_tag_chk = 1;
-+		tc->bgctl_f.app_f_detect = 1;
-+	} else if (type & SCSI_PROT_DIF_TYPE3)
-+		tc->bgctl_f.app_ref_f_detect = 1;
-+
-+	tc->app_tag_verify_mask = 0;
-+
-+	/* must init to 0 for hw */
-+	tc->blk_guard_err = 0;
-+
-+	tc->reserved_E8_0 = 0;
-+	tc->ref_tag_seed_gen = 0;
-+}
-+
- /**
-  * This method is will fill in the SCU Task Context for a SSP IO request.
-  * @sci_req:
-@@ -274,6 +411,10 @@ static void scu_ssp_io_request_construct_task_context(struct isci_request *ireq,
- 						      u32 len)
+diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
+index e7e5d06..963d7e8 100644
+--- a/drivers/scsi/isci/host.c
++++ b/drivers/scsi/isci/host.c
+@@ -1488,6 +1488,15 @@ sci_controller_set_interrupt_coalescence(struct isci_host *ihost,
+ static void sci_controller_ready_state_enter(struct sci_base_state_machine *sm)
  {
- 	struct scu_task_context *task_context = ireq->tc;
-+	struct sas_task *sas_task = ireq->ttype_ptr.io_task_ptr;
-+	struct scsi_cmnd *scmd = sas_task->uldd_task;
-+	u8 prot_type = scsi_get_prot_type(scmd);
-+	u8 prot_op = scsi_get_prot_op(scmd);
- 
- 	scu_ssp_reqeust_construct_task_context(ireq, task_context);
- 
-@@ -296,6 +437,13 @@ static void scu_ssp_io_request_construct_task_context(struct isci_request *ireq,
- 
- 	if (task_context->transfer_length_bytes > 0)
- 		sci_request_build_sgl(ireq);
+ 	struct isci_host *ihost = container_of(sm, typeof(*ihost), sm);
++	u32 val;
 +
-+	if (prot_type != SCSI_PROT_DIF_TYPE0) {
-+		if (prot_op == SCSI_PROT_READ_STRIP)
-+			scu_ssp_ireq_dif_strip(ireq, prot_type, prot_op);
-+		else if (prot_op == SCSI_PROT_WRITE_INSERT)
-+			scu_ssp_ireq_dif_insert(ireq, prot_type, prot_op);
-+	}
- }
++	/* enable clock gating for power control of the scu unit */
++	val = readl(&ihost->smu_registers->clock_gating_control);
++	val &= ~(SMU_CGUCR_GEN_BIT(REGCLK_ENABLE) |
++		 SMU_CGUCR_GEN_BIT(TXCLK_ENABLE) |
++		 SMU_CGUCR_GEN_BIT(XCLK_ENABLE));
++	val |= SMU_CGUCR_GEN_BIT(IDLE_ENABLE);
++	writel(val, &ihost->smu_registers->clock_gating_control);
  
- /**
-diff --git a/drivers/scsi/isci/scu_task_context.h b/drivers/scsi/isci/scu_task_context.h
-index 7df87d9..869a979 100644
---- a/drivers/scsi/isci/scu_task_context.h
-+++ b/drivers/scsi/isci/scu_task_context.h
-@@ -866,9 +866,9 @@ struct scu_task_context {
- 	struct transport_snapshot snapshot; /* read only set to 0 */
+ 	/* set the default interrupt coalescence number and timeout value. */
+ 	sci_controller_set_interrupt_coalescence(ihost, 0, 0);
+diff --git a/drivers/scsi/isci/registers.h b/drivers/scsi/isci/registers.h
+index eaa541a..7eb0ccd 100644
+--- a/drivers/scsi/isci/registers.h
++++ b/drivers/scsi/isci/registers.h
+@@ -370,6 +370,27 @@ struct scu_iit_entry {
+ 		>> SMU_DEVICE_CONTEXT_CAPACITY_MAX_RNC_SHIFT \
+ 	)
  
- 	/* OFFSET 0x5C */
--	u32 block_protection_enable:1;
--	u32 block_size:2;
--	u32 block_protection_function:2;
-+	u32 blk_prot_en:1;
-+	u32 blk_sz:2;
-+	u32 blk_prot_func:2;
- 	u32 reserved_5C_0:9;
- 	u32 active_sgl_element:2;  /* read only set to 0 */
- 	u32 sgl_exhausted:1;  /* read only set to 0 */
-@@ -896,33 +896,56 @@ struct scu_task_context {
- 	u32 reserved_C4_CC[3];
- 
- 	/* OFFSET 0xD0 */
--	u32 intermediate_crc_value:16;
--	u32 initial_crc_seed:16;
-+	u32 interm_crc_val:16;
-+	u32 init_crc_seed:16;
- 
- 	/* OFFSET 0xD4 */
--	u32 application_tag_for_verify:16;
--	u32 application_tag_for_generate:16;
-+	u32 app_tag_verify:16;
-+	u32 app_tag_gen:16;
- 
- 	/* OFFSET 0xD8 */
--	u32 reference_tag_seed_for_verify_function;
-+	u32 ref_tag_seed_verify;
- 
- 	/* OFFSET 0xDC */
--	u32 reserved_DC;
-+	u32 UD_bytes_immed_val:13;
-+	u32 reserved_DC_0:3;
-+	u32 DIF_bytes_immed_val:4;
-+	u32 reserved_DC_1:12;
- 
- 	/* OFFSET 0xE0 */
--	u32 reserved_E0_0:16;
--	u32 application_tag_mask_for_generate:16;
-+	u32 bgc_blk_sz:13;
-+	u32 reserved_E0_0:3;
-+	u32 app_tag_gen_mask:16;
- 
- 	/* OFFSET 0xE4 */
--	u32 block_protection_control:16;
--	u32 application_tag_mask_for_verify:16;
-+	union {
-+		u16 bgctl;
-+		struct {
-+			u16 crc_verify:1;
-+			u16 app_tag_chk:1;
-+			u16 ref_tag_chk:1;
-+			u16 op:2;
-+			u16 legacy:1;
-+			u16 invert_crc_seed:1;
-+			u16 ref_tag_gen:1;
-+			u16 fixed_ref_tag:1;
-+			u16 invert_crc:1;
-+			u16 app_ref_f_detect:1;
-+			u16 uninit_dif_check_err:1;
-+			u16 uninit_dif_bypass:1;
-+			u16 app_f_detect:1;
-+			u16 reserved_0:2;
-+		} bgctl_f;
-+	};
++/* ***************************************************************************** */
++#define SMU_CLOCK_GATING_CONTROL_IDLE_ENABLE_SHIFT    (0)
++#define SMU_CLOCK_GATING_CONTROL_IDLE_ENABLE_MASK     (0x00000001)
++#define SMU_CLOCK_GATING_CONTROL_XCLK_ENABLE_SHIFT    (1)
++#define SMU_CLOCK_GATING_CONTROL_XCLK_ENABLE_MASK     (0x00000002)
++#define SMU_CLOCK_GATING_CONTROL_TXCLK_ENABLE_SHIFT   (2)
++#define SMU_CLOCK_GATING_CONTROL_TXCLK_ENABLE_MASK    (0x00000004)
++#define SMU_CLOCK_GATING_CONTROL_REGCLK_ENABLE_SHIFT  (3)
++#define SMU_CLOCK_GATING_CONTROL_REGCLK_ENABLE_MASK   (0x00000008)
++#define SMU_CLOCK_GATING_CONTROL_IDLE_TIMEOUT_SHIFT   (16)
++#define SMU_CLOCK_GATING_CONTROL_IDLE_TIMEOUT_MASK    (0x000F0000)
++#define SMU_CLOCK_GATING_CONTROL_FORCE_IDLE_SHIFT     (31)
++#define SMU_CLOCK_GATING_CONTROL_FORCE_IDLE_MASK      (0x80000000)
++#define SMU_CLOCK_GATING_CONTROL_RESERVED_MASK        (0x7FF0FFF0)
 +
-+	u16 app_tag_verify_mask;
++#define SMU_CGUCR_GEN_VAL(name, value) \
++	SCU_GEN_VALUE(SMU_CLOCK_GATING_CONTROL_##name, value)
++
++#define SMU_CGUCR_GEN_BIT(name) \
++	SCU_GEN_BIT(SMU_CLOCK_GATING_CONTROL_##name)
++
+ /* -------------------------------------------------------------------------- */
  
- 	/* OFFSET 0xE8 */
--	u32 block_protection_error:8;
-+	u32 blk_guard_err:8;
- 	u32 reserved_E8_0:24;
- 
- 	/* OFFSET 0xEC */
--	u32 reference_tag_seed_for_verify;
-+	u32 ref_tag_seed_gen;
- 
- 	/* OFFSET 0xF0 */
- 	u32 intermediate_crc_valid_snapshot:16;
-@@ -937,6 +960,6 @@ struct scu_task_context {
- 	/* OFFSET 0xFC */
- 	u32 reference_tag_seed_for_generate_function_snapshot;
- 
--};
-+} __packed;
- 
- #endif /* _SCU_TASK_CONTEXT_H_ */
+ #define SMU_CONTROL_STATUS_TASK_CONTEXT_RANGE_ENABLE_SHIFT      (0)
+@@ -992,8 +1013,10 @@ struct smu_registers {
+ 	u32 mmr_address_window;
+ /* 0x00A4 SMDW */
+ 	u32 mmr_data_window;
+-	u32 reserved_A8;
+-	u32 reserved_AC;
++/* 0x00A8 CGUCR */
++	u32 clock_gating_control;
++/* 0x00AC CGUPC */
++	u32 clock_gating_performance;
+ /* A whole bunch of reserved space */
+ 	u32 reserved_Bx[4];
+ 	u32 reserved_Cx[4];
 
