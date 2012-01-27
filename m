@@ -1,54 +1,81 @@
-From: Andreas Dilger <adilger@dilger.ca>
-Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
-Date: Thu, 26 Jan 2012 22:25:33 -0700
-Message-ID: <20C51818-5C53-4417-B62A-AD7C020CE283@dilger.ca>
-References: <20120124190732.GH4387@shiny> <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com> <20120124200932.GB20650@quack.suse.cz> <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com> <20120124203936.GC20650@quack.suse.cz> <20120125032932.GA7150@localhost> <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca> <20120125063552.GA27375@localhost> <20120126162555.GF1891@redhat.com> <20120126223449.GZ15102@dastard> <20120127032734.GA16980@localhost>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: =?euc-kr?B?wPyzssDn?= <namjae.jeon@samsung.com>
+Subject: Re: Re: [PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal
+ routine fails
+Date: Fri, 27 Jan 2012 06:41:19 +0000 (GMT)
+Message-ID: <19811243.113401327646477519.JavaMail.weblogic@epml09>
+Reply-To: namjae.jeon@samsung.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=euc-kr
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:23865 "EHLO
-	idcmail-mo2no.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752688Ab2A0FZf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2012 00:25:35 -0500
-In-Reply-To: <20120127032734.GA16980@localhost>
+Received: from mailout1.samsung.com ([203.254.224.24]:64179 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948Ab2A0GlV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2012 01:41:21 -0500
+Received: from epcpsbge4.samsung.com (mailout1.samsung.com [203.254.224.24])
+ by mailout1.samsung.com
+ (Oracle Communications Messaging Exchange Server 7u4-19.01 64bit (built Sep  7
+ 2010)) with ESMTP id <0LYG000XF2KJB570@mailout1.samsung.com> for
+ linux-scsi@vger.kernel.org; Fri, 27 Jan 2012 15:41:19 +0900 (KST)
+MIME-version: 1.0
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wu Fengguang <fengguang.wu@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Vivek Goyal <vgoyal@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de" <neilb@suse.de>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>
+Cc: Amit Sahrawat <amit.sahrawat83@gmail.com>, Namjae Jeon <linkinjeon@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mdharm-usb@one-eyed-alien.net" <mdharm-usb@one-eyed-alien.net>
 
-On 2012-01-26, at 8:27 PM, Wu Fengguang wrote:
-> On Fri, Jan 27, 2012 at 09:34:49AM +1100, Dave Chinner wrote:
->> On Thu, Jan 26, 2012 at 11:25:56AM -0500, Vivek Goyal wrote:
->>> On Wed, Jan 25, 2012 at 02:35:52PM +0800, Wu Fengguang wrote:
->>>>> It would also be
->>>>> possible to trigger on the size of the device so that the 32MB USB stick
->>>>> doesn't sit busy for a minute with readahead that is useless.
->>>> 
->>>> Yeah, I do have a patch for shrinking readahead size based on device size.
->>> 
->>> Should it be a udev rule to change read_ahead_kb on device based on device
->>> size, instead of a kernel patch?
->> 
->> That's effectively what vendors like SGI have been doing since udev
->> was first introduced, though more often the rules are based on device
->> type rather than size. e.g. a 64GB device might be a USB flash drive
->> now, but a 40GB device might be a really fast SSD....
-> 
-> Fair enough. I'll drop this kernel policy patch 
-> 
->        block: limit default readahead size for small devices
->        https://lkml.org/lkml/2011/12/19/89
-
-Fengguang,
-Doesn't the kernel derive at least some idea of the speed of a device
-due to the writeback changes that you made?  It would be very useful
-if we could derive at least some rough metric for the device performance
-in the kernel and use that as input to the readahead window size as well.
-
-Cheers, Andreas
-
-
-
+SSBjaGFuZ2VkIHJlY2lwaWVudHMuDQoNCkkgaG9wZSB5b3UgYW5zd2VyIHVzIGFib3V0IHRoZSBi
+ZWxvdyBlbWFpbC4NCg0KVGhhbmtzLiANCi0tLS0tLS0gT3JpZ2luYWwgTWVzc2FnZSAtLS0tLS0t
+DQpTZW5kZXIgOiBBbWl0IFNhaHJhd2F0PGFtaXQuc2FocmF3YXQ4M0BnbWFpbC5jb20+IA0KRGF0
+ZSAgIDogMjAxMi0wMS0yNyAxNDoyMCAoR01UKzA5OjAwKQ0KVGl0bGUgIDogUmU6IFtQQVRDSCAx
+LzFdIHNjc2k6IHJldHJpZXZlIGNhY2hlIG1vZGUgdXNpbmcgQVRBXzE2IGlmIG5vcm1hbA0KIHJv
+dXRpbmUgZmFpbHMNCg0KRGVhciBKYW1lcy9KZWZmLA0KDQpJIGhhdmUgZmV3IHF1ZXN0aW9ucyBy
+ZWdhcmRpbmcgdGhlIGNvZGUgY2hhbmdlcyB3aGljaCBjYW4gYmUgYWNjZXB0ZWQNCmluIHRoaXMg
+cmVnYXJkcy4NCg0KSW4gb3VyIHNjZW5hcmlvIHdlIGFyZSBub3QgbWFraW5nIHVzZSBvZiBDT05G
+SUdfQVRBLCBidXQgc3RpbGwgaWYgdGhhdA0KaXMgdGhlIHByb3BlciBtYW5uZXIgdG8gYnJpbmcg
+b3V0IHRoZSBjaGFuZ2VzID8gdGhlbiB3ZSBjYW4gZW5hYmxlIGFuZA0KbWFrZSBjaGFuZ2VzIGlu
+IHRoZSByZXNwZWN0aXZlIGZpbGUgd2hpY2ggc2VlbXMgdG8gYmUgbGliYXRhLXNjc2kuYw0KDQpX
+ZSBuZWVkIGEgbWVjaGFuaXNtIHdoZXJlaW4gd2UgY2FuIHF1ZXJ5IGFuZCB0aGVuIGdldCB0aGUg
+cmVzcG9uc2Ugc28NCnRoYXQgd2Ugc2V0IHRoZSBXQ0UgYml0IGFjY29yZGluZ2x5LiBGb3IgdGhh
+dCBtYXR0ZXIsIEkgdGhpbmsgd2UgY2FuDQppbnRyb2R1Y2Ugc29tZSBmdW5jdGlvbiBpbiBsaWJh
+dGEtc2NzaS5jIGFuZCB0aGVuIGNhbGwgdGhhdCBmdW5jdGlvbg0KZnJvbSBlaXRoZXIgZHJpdmVy
+cy9zY3NpL3NkLmMgb3IgZHJpdmVycy91c2Ivc3RvcmFnZS9zY3NpZ2x1ZS5jDQoNClBsZWFzZSBz
+aGFyZSB5b3VyIHZhbHVhYmxlIGlucHV0cyBvbiBob3cgYW5kIHdoZXJlIGFjdHVhbGx5IHRoZXNl
+DQpjaGFuZ2VzIHNob3VsZCBiZSBkb25lLiBPdGhlcndpc2UsIHRoZXJlIGlzIGFnYWluIGEgY2hh
+bmNlIHRoYXQgb3VyDQpjaGFuZ2VzIGdldHMgcmVqZWN0ZWQuDQoNClBsZWFzZSBoZWxwIGluIHRo
+aXMgcmVnYXJkcy4NCg0KVGhhbmtzICYgUmVnYXJkcywNCkFtaXQgU2FocmF3YXQNCg0KDQoNCk9u
+IFRodSwgRGVjIDE1LCAyMDExIGF0IDU6NTUgQU0sIE5hbWphZSBKZW9uIDxsaW5raW5qZW9uQGdt
+YWlsLmNvbT4gd3JvdGU6DQo+IDIwMTEvMTIvMTQgSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0
+b21sZXlAaGFuc2VucGFydG5lcnNoaXAuY29tPjoNCj4+IE9uIFdlZCwgMjAxMS0xMi0xNCBhdCAw
+OToxNCArMDUzMCwgQW1pdCBTYWhyYXdhdCB3cm90ZToNCj4+PiBKdXN0IHRvIGFkZCBhIHRob3Vn
+aHQgLSB0aGlzIGlzc3VlcyBpcyBub3QgcmVsYXRlZCB3aXRoIEFUQSwgdGhpcyBpcw0KPj4+IHBy
+aW1hcmlseSByZWxhdGVkIHdpdGggSEREJ3Mgd2l0aCBhIFVTQiBpbnRlcmZhY2UgaS5lLiwgU0NT
+SSA8LT4gVVNCLg0KPj4+IEFuZCwgd2hlbiBJIGNoZWNrIG15IGtlcm5lbCBjb25maWcsIENPTkZJ
+R19BVEEgaXMgbm90IHNlbGVjdGVkLA0KPj4+IGxpYmF0YS1zY3NpIC0gdGhpcyBnZXRzIGNvbXBp
+bGVkIG9ubHkgaW4gY2FzZSBDT05GSUdfQVRBIGlzIG9uLg0KPj4+IEFyZSB0aGVzZSB0d28gdGhp
+bmdzIGludGVyLXJlbGF0ZWQ/DQo+Pg0KPiBIaS4gSmFtZXMuDQo+DQo+PiBPSywgc28gd2hhdCB5
+b3UncmUgdGVsbGluZyB1cyBpcyB0aGF0IHlvdSdyZSB0cnlpbmcgdG8gY29ycmVjdCBhDQo+PiBk
+ZWZpY2llbmN5IGluIGEgU0FUTCBpbnNpZGUgYSBVU0IgZGV2aWNlPyA/VGhlIGRldmljZSBpdHNl
+bGYgaXMgQVRBIGJ1dA0KPj4gaXQgZG9lc24ndCB1c2Ugb3VyIGxpYmF0YSBjb25uZWN0b3JzLg0K
+Pj4NCj4+IEkgdGhpbmsgaW4gdGhhdCBjYXNlLCB0aGUgYmVzdCB3YXkgZm9yd2FyZHMgaXMgYSBt
+aW5pLVNBVEwgY29ycmVjdGlvbg0KPj4gbGF5ZXIgd2l0aGluIFVTQiBzdG9yYWdlLiA/VVNCIHN0
+b3JhZ2UgaXMgY2VydGFpbmx5IHRoZSBwbGFjZSB0bw0KPj4gYmxhY2svd2hpdGUgbGlzdCB3aGV0
+aGVyIHRoaXMgc2hvdWxkIGJlIGRvbmUuID9BVEFfMTYgaXMgYSBiaXQgb2YgYQ0KPj4gZGFuZ2Vy
+b3VzIGNvbW1hbmQgdG8gYmUgdGhyb3dpbmcgYXJvdW5kIGJlY2F1c2UgaXQncyBrbm93biB0byBj
+cmFzaA0KPj4gdmFyaW91cyBVU0IgZGV2aWNlcyAoYW5kIHNvbWUgb2xkIFNDU0kgb25lcyBtaWdo
+dCBldmVuIGNob2tlIG9uIGl0KS4NCj4gT2theSwgaG93IGFib3V0IG1ha2Ugc29tZSBvcHRpb24g
+aW4gS2NvbmZpZyBvZiBzY3NpIG9yIHVzYiBzdG9yYWdlIHRvDQo+IHByb3RlY3QgZnJvbSB0aGUg
+YSBiaXQgb2YgcmlzayBBVEFfMTYgPw0KPiBUaGUgdXNlciBjYW4gc2VsZWN0IHRoaXMgb3B0aW9u
+IHRvIHVzZSBzdGFibGUgZmlsZXN5c3RlbSBvbiBVU0IgSERELg0KPj4NCj4+IGRlcGVuZGluZyBv
+biBob3cgYmlnIHRoaXMgU0FUTCBlbmRzIHVwIGJlaW5nIHdlIHNob3VsZCBjb25zaWRlciB3aGV0
+aGVyDQo+PiBpdCBzaG91bGQgc2hhcmUgcHJvY2Vzc2luZyB3aXRoIHRoZSBsaWJhdGEgU0FUTC4g
+P0lmIGl0J3MganVzdCBhIHNpbmdsZQ0KPj4gbW9kZSBzZW5zZSwgbXkgaW5zdGluY3QgaXMgdGhh
+dCBpdCdzIHByb2JhYmx5IE9LIHRvIGltcGxlbWVudCBzZXBhcmF0ZWx5DQo+PiAoaG93ZXZlciwg
+eW91IG5lZWQgdG8gdXNlIHRoZSBsaWJhdGEgaGVhZGVycyAuLi4gbm8gZHVwbGljYXRpb24gb2YN
+Cj4+IGxpYmF0YSBvcGNvZGVzIGFuZCBzdGF0dXMgZGVmaW5lcyBsaWtlIHlvdSBoYWQgaW4gdGhl
+IG9yaWdpbmFsIFNDU0kNCj4+IHBhdGNoKS4gP0lmIHRoZXJlIGFyZSBtb3JlIGNvbW1hbmRzIHRv
+IGNvcnJlY3Qgb24gdGhlIHdheSwgaXQgbWlnaHQgYmUNCj4+IGJldHRlciBhcyBzaGFyZWQgY29k
+ZS4NCj4gSSBhZ3JlZS4gSSBhbmQgQW1pdCB3aWxsIGNoZWNrIHRoZSBiZXN0IHdheSBiZXR3ZWVu
+IFNBVEwgb3IgbWluaVNBVEwNCj4gaW4gdXNiX3N0b3JhZ2UgYWNjb2RpbmcgdG8geW91ciBhZHZp
+Y2UuDQo+DQo+PiBKYW1lcw0KPj4NCj4+DQo8cD4mbmJzcDs8L3A+PHA+Jm5ic3A7PC9wPg==
 
 
