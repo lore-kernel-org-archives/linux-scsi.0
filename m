@@ -1,99 +1,167 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch v2] target: handle empty string writes in sysfs
-Date: Fri, 27 Jan 2012 15:50:55 +0300
-Message-ID: <20120127125055.GT3294@mwanda>
-References: <20120124084036.GB29097@elgon.mountain>
- <4F1E8E31.1070507@bfs.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3T2jnoiI0lx9XXvh"
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH 2.6.32-stable] block: fail SCSI passthrough ioctls on partition devices
+Date: Fri, 27 Jan 2012 17:56:54 +0100
+Message-ID: <1327683414-31156-1-git-send-email-pbonzini@redhat.com>
+References: <20120126213307.GA28807@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:48282 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754298Ab2A0Mtk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2012 07:49:40 -0500
-Content-Disposition: inline
-In-Reply-To: <4F1E8E31.1070507@bfs.de>
+Received: from mx1.redhat.com ([209.132.183.28]:50875 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751579Ab2A0Q5M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jan 2012 11:57:12 -0500
+In-Reply-To: <20120126213307.GA28807@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: walter harms <wharms@bfs.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: Ben Hutchings <ben@decadent.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
 
+commit 0bfc96cb77224736dfa35c3c555d37b3646ef35e upstream.
 
---3T2jnoiI0lx9XXvh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Linux allows executing the SG_IO ioctl on a partition or LVM volume, and
+will pass the command to the underlying block device.  This is
+well-known, but it is also a large security problem when (via Unix
+permissions, ACLs, SELinux or a combination thereof) a program or user
+needs to be granted access only to part of the disk.
 
-These are root only and we're not likely to hit the problem in practise,
-but it makes the static checkers happy.
+This patch lets partitions forward a small set of harmless ioctls;
+others are logged with printk so that we can see which ioctls are
+actually sent.  In my tests only CDROM_GET_CAPABILITY actually occurred.
+Of course it was being sent to a (partition on a) hard disk, so it would
+have failed with ENOTTY and the patch isn't changing anything in
+practice.  Still, I'm treating it specially to avoid spamming the logs.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+In principle, this restriction should include programs running with
+CAP_SYS_RAWIO.  If for example I let a program access /dev/sda2 and
+/dev/sdb, it still should not be able to read/write outside the
+boundaries of /dev/sda2 independent of the capabilities.  However, for
+now programs with CAP_SYS_RAWIO will still be allowed to send the
+ioctls.  Their actions will still be logged.
+
+This patch does not affect the non-libata IDE driver.  That driver
+however already tests for bd != bd->bd_contains before issuing some
+ioctl; it could be restricted further to forbid these ioctls even for
+programs running with CAP_SYS_ADMIN/CAP_SYS_RAWIO.
+
+Cc: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <JBottomley@parallels.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+[ Make it also print the command name when warning - Linus ]
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+
+[ Changes with respect to 3.3: return -ENOTTY from scsi_verify_blk_ioctl
+  and -ENOIOCTLCMD from sd_compat_ioctl. ]
+
 ---
-v2: only set ->su_dev_flags on success.
+ block/scsi_ioctl.c     |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c      |   11 +++++++++--
+ include/linux/blkdev.h |    1 +
+ 3 files changed, 55 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_=
-core_configfs.c
-index 0955bb8..6e043ee 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -1704,13 +1704,15 @@ static ssize_t target_core_store_dev_alias(
- 		return -EINVAL;
- 	}
-=20
--	se_dev->su_dev_flags |=3D SDF_USING_ALIAS;
- 	read_bytes =3D snprintf(&se_dev->se_dev_alias[0], SE_DEV_ALIAS_LEN,
- 			"%s", page);
--
-+	if (!read_bytes)
-+		return -EINVAL;
- 	if (se_dev->se_dev_alias[read_bytes - 1] =3D=3D '\n')
- 		se_dev->se_dev_alias[read_bytes - 1] =3D '\0';
-=20
-+	se_dev->su_dev_flags |=3D SDF_USING_ALIAS;
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -24,6 +24,7 @@
+ #include <linux/capability.h>
+ #include <linux/completion.h>
+ #include <linux/cdrom.h>
++#include <linux/ratelimit.h>
+ #include <linux/slab.h>
+ #include <linux/times.h>
+ #include <asm/uaccess.h>
+@@ -689,9 +690,53 @@ int scsi_cmd_ioctl(struct request_queue
+ }
+ EXPORT_SYMBOL(scsi_cmd_ioctl);
+ 
++int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
++{
++	if (bd && bd == bd->bd_contains)
++		return 0;
 +
- 	pr_debug("Target_Core_ConfigFS: %s/%s set alias: %s\n",
- 		config_item_name(&hba->hba_group.cg_item),
- 		config_item_name(&se_dev->se_dev_group.cg_item),
-@@ -1753,13 +1755,15 @@ static ssize_t target_core_store_dev_udev_path(
- 		return -EINVAL;
- 	}
-=20
--	se_dev->su_dev_flags |=3D SDF_USING_UDEV_PATH;
- 	read_bytes =3D snprintf(&se_dev->se_dev_udev_path[0], SE_UDEV_PATH_LEN,
- 			"%s", page);
--
-+	if (!read_bytes)
-+		return -EINVAL;
- 	if (se_dev->se_dev_udev_path[read_bytes - 1] =3D=3D '\n')
- 		se_dev->se_dev_udev_path[read_bytes - 1] =3D '\0';
-=20
-+	se_dev->su_dev_flags |=3D SDF_USING_UDEV_PATH;
++	/* Actually none of these is particularly useful on a partition,
++	 * but they are safe.
++	 */
++	switch (cmd) {
++	case SCSI_IOCTL_GET_IDLUN:
++	case SCSI_IOCTL_GET_BUS_NUMBER:
++	case SCSI_IOCTL_GET_PCI:
++	case SCSI_IOCTL_PROBE_HOST:
++	case SG_GET_VERSION_NUM:
++	case SG_SET_TIMEOUT:
++	case SG_GET_TIMEOUT:
++	case SG_GET_RESERVED_SIZE:
++	case SG_SET_RESERVED_SIZE:
++	case SG_EMULATED_HOST:
++		return 0;
++	case CDROM_GET_CAPABILITY:
++		/* Keep this until we remove the printk below.  udev sends it
++		 * and we do not want to spam dmesg about it.   CD-ROMs do
++		 * not have partitions, so we get here only for disks.
++		 */
++		return -ENOTTY;
++	default:
++		break;
++	}
 +
- 	pr_debug("Target_Core_ConfigFS: %s/%s set udev_path: %s\n",
- 		config_item_name(&hba->hba_group.cg_item),
- 		config_item_name(&se_dev->se_dev_group.cg_item),
-
---3T2jnoiI0lx9XXvh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIp2uAAoJEOnZkXI/YHqR130P/R3GshEG6EUHDfv2OSuAAzWW
-nlV27hFGvPyLz1K1rd/2RDu8qvhGXjzLA+avBJySLMAKSpDm1c9HEhvM3aN+gAQr
-rqLUX3HCyX6AdeHaXzyV3nFgaVske0fHgtF+b6QUGX7t0186fHJ6IMMLQKITUhJ6
-6P4fhQuR7b0BH1MG9OWRDYqy2SyoyzIJforPEkFYQNSWjor5EIDU4luwU6FMF8ev
-GgHHNT+Llmi67txhgrsmu29N1FS0unl2LRg9x/49FKgZH4QSV2uinUiMGzz29rIi
-kJDAvQ1Q5s2HYg10pGaZglrPMp4lGR7UJ1m1uHRb/eofg/Ob8ZU2q9qjfM79hazL
-o5PrCuZAAwh/rd0EVmSiVkI9h3FcHk5VWnSavtL5qq5r/iR8A+XwBbszu2rBtaBD
-yTo5TWpgXC7OK5SL5/2c3M4ljpsiZKfvHA2/nveJQUGMi0/kQPXEUMER+f8ZCEnp
-bA7v+A/REHgwIEGdp5ROb+mP9Bqz/tmU35jAvIC3SVBYuZeLpHYvDBkX2zzv5V7i
-HseGLrLGY2i25p2aKoy+BpkEsT5N6iN4thL+HeCKHycsel12TSTRQkahsWQ474j+
-Ynh40nxxPUruS3ZM7k7ShLdoj0WxdT7A4OOl5tJJ88Uz6U89YZyjCtkhxx/Ureaz
-OQZ+JZRMSRZaXxSA0LRj
-=jgDj
------END PGP SIGNATURE-----
-
---3T2jnoiI0lx9XXvh--
++	/* In particular, rule out all resets and host-specific ioctls.  */
++	printk_ratelimited(KERN_WARNING
++			   "%s: sending ioctl %x to a partition!\n", current->comm, cmd);
++
++	return capable(CAP_SYS_RAWIO) ? 0 : -ENOTTY;
++}
++EXPORT_SYMBOL(scsi_verify_blk_ioctl);
++
+ int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
+ 		       unsigned int cmd, void __user *arg)
+ {
++	int ret;
++
++	ret = scsi_verify_blk_ioctl(bd, cmd);
++	if (ret < 0)
++		return ret;
++
+ 	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
+ }
+ EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -817,6 +817,10 @@ static int sd_ioctl(struct block_device
+ 	SCSI_LOG_IOCTL(1, printk("sd_ioctl: disk=%s, cmd=0x%x\n",
+ 						disk->disk_name, cmd));
+ 
++	error = scsi_verify_blk_ioctl(bdev, cmd);
++	if (error < 0)
++		return error;
++
+ 	/*
+ 	 * If we are in the middle of error recovery, don't let anyone
+ 	 * else try and use this device.  Also, if error recovery fails, it
+@@ -996,6 +1000,11 @@ static int sd_compat_ioctl(struct block_
+ 			   unsigned int cmd, unsigned long arg)
+ {
+ 	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
++	int ret;
++
++	ret = scsi_verify_blk_ioctl(bdev, cmd);
++	if (ret < 0)
++		return -ENOIOCTLCMD;
+ 
+ 	/*
+ 	 * If we are in the middle of error recovery, don't let anyone
+@@ -1007,8 +1016,6 @@ static int sd_compat_ioctl(struct block_
+ 		return -ENODEV;
+ 	       
+ 	if (sdev->host->hostt->compat_ioctl) {
+-		int ret;
+-
+ 		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
+ 
+ 		return ret;
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -777,6 +777,7 @@ extern void blk_plug_device(struct reque
+ extern void blk_plug_device_unlocked(struct request_queue *);
+ extern int blk_remove_plug(struct request_queue *);
+ extern void blk_recount_segments(struct request_queue *, struct bio *);
++extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
+ extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
+ 			      unsigned int, void __user *);
+ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
