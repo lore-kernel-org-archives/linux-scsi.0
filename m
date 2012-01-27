@@ -1,46 +1,58 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: Ioctl warning for a partition
-Date: Fri, 27 Jan 2012 17:37:56 -0200
-Message-ID: <20120127193756.GC25348@khazad-dum.debian.net>
-References: <20120126223037.GE28368@quack.suse.cz>
- <CA+55aFwkRhsdAYwP-S5_qPkRX=dMSnxv5Ow1ULaSJjKe3aTy2w@mail.gmail.com>
- <4F21E828.8090502@msgid.tls.msk.ru>
- <20120127192817.GB25348@khazad-dum.debian.net>
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: [PATCH] SCSI, bfa: don't leak mem in bfad_im_bsg_els_ct_request()
+Date: Sat, 28 Jan 2012 00:23:41 +0100 (CET)
+Message-ID: <alpine.LNX.2.00.1201280021320.13952@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120127192817.GB25348@khazad-dum.debian.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jan Kara <jack@suse.cz>, Paolo Bonzini <pbonzini@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, mmarek@suse.cz
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Jing Huang <huangj@brocade.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Joe Perches <joe@perches.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 27 Jan 2012, Henrique de Moraes Holschuh wrote:
-> On Fri, 27 Jan 2012, Michael Tokarev wrote:
-> > mdadm ioctls reported in various places apparently got fixed by
-> > ENOTTY/ENOIOCTLCMD change.
-> 
-> Does that fix still need to be backported to -stable?
-> 
-> Linux v3.0.18 + Debian stable userspace (mdadm v3.1.4) causes this on
-> boot (when mdadm runs in the initramfs):
-> 
-> mdadm: sending ioctl 1261 to a partition!
-> mdadm: sending ioctl 1261 to a partition!
-> mdadm: sending ioctl 1261 to a partition!
-> mdadm: sending ioctl 1261 to a partition!
-> mdadm: sending ioctl 1261 to a partition!
-> mdadm: sending ioctl 1261 to a partition!
-> mdadm: sending ioctl 1261 to a partition!
-> mdadm: sending ioctl 1261 to a partition!
-> mdadm: sending ioctl 800c0910 to a partition!
-> mdadm: sending ioctl 800c0910 to a partition!
+If 'drv_fcxp = kzalloc(sizeof(struct bfad_fcxp), GFP_KERNEL);' fails
+and returns NULL, then we'll leak the memory allocated to 'bsg_fcpt'
+when we jump to 'out:' and the variable subsequently goes out of
+scope.
 
-This is on x86-64/amd64.
+Also remove the cast of the kzalloc() return value. kzalloc() returns
+a void* which is implicitly converted, so the explicit cast is
+pointless.
+
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ drivers/scsi/bfa/bfad_bsg.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+ Compile tested only, as I have no hardware to test for real.
+
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 530de2b..8005c6c 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -3047,8 +3047,7 @@ bfad_im_bsg_els_ct_request(struct fc_bsg_job *job)
+ 	 * Allocate buffer for bsg_fcpt and do a copy_from_user op for payload
+ 	 * buffer of size bsg_data->payload_len
+ 	 */
+-	bsg_fcpt = (struct bfa_bsg_fcpt_s *)
+-		   kzalloc(bsg_data->payload_len, GFP_KERNEL);
++	bsg_fcpt = kzalloc(bsg_data->payload_len, GFP_KERNEL);
+ 	if (!bsg_fcpt)
+ 		goto out;
+ 
+@@ -3060,6 +3059,7 @@ bfad_im_bsg_els_ct_request(struct fc_bsg_job *job)
+ 
+ 	drv_fcxp = kzalloc(sizeof(struct bfad_fcxp), GFP_KERNEL);
+ 	if (drv_fcxp == NULL) {
++		kfree(bsg_fcpt);
+ 		rc = -ENOMEM;
+ 		goto out;
+ 	}
+-- 
+1.7.8.4
+
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
