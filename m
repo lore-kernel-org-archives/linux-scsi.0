@@ -1,51 +1,80 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [3.3-rc PATCH] isci: Fix NULL ptr dereference when no firmware is
- being loaded
-Date: Fri, 27 Jan 2012 11:17:37 -0800
-Message-ID: <20120127191643.27551.23976.stgit@localhost6.localdomain6>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: Ioctl warning for a partition
+Date: Fri, 27 Jan 2012 17:28:17 -0200
+Message-ID: <20120127192817.GB25348@khazad-dum.debian.net>
+References: <20120126223037.GE28368@quack.suse.cz>
+ <CA+55aFwkRhsdAYwP-S5_qPkRX=dMSnxv5Ow1ULaSJjKe3aTy2w@mail.gmail.com>
+ <4F21E828.8090502@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41822 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752582Ab2A0TRi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jan 2012 14:17:38 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4F21E828.8090502@msgid.tls.msk.ru>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jan Kara <jack@suse.cz>, Paolo Bonzini <pbonzini@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, mmarek@suse.cz
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Dave Jiang <dave.jiang@intel.com>, Dan Melnic <dan@seamicro.com>
 
-From: Dave Jiang <dave.jiang@intel.com>
+Hi Michael!
 
-NULL orom ptr passed in for verification which caused page fault.
-We will set a default version when we don't have orom struct.
+On Fri, 27 Jan 2012, Michael Tokarev wrote:
 
-Reported-by: Dan Melnic <dan@seamicro.com>
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
+> On 27.01.2012 03:01, Linus Torvalds wrote:
+> > On Thu, Jan 26, 2012 at 2:30 PM, Jan Kara <jack@suse.cz> wrote:
+> >>
+> >> It's easy enough to silence the warning the same way as
+> >> CDROM_GET_CAPABILITY since the ioctl is safe but it's not so simple for
+> >> 32-bit userspace.  MTIOCGET32 is defined only in fs/compat_ioctl.c so we
+> >> cannot easily add it to scsi_verify_blk_ioctl(). Any opinion how to cleanly
+> >> solve this? The only idea I had was to define compat structures and ioctl
+> >> numbers in a special header and use it both in fs/compat_ioctl.c and in
+> >> block/scsi_ioctl.c.
+> > 
+> > I suspect we can just remove the warning entirely - once we've gotten
+> > enough coverage with the -rc kernels that people (me in particular)
+> > are happy that no normal load really needs it, and returning an error
+> > is fine.
+> > 
+> > So I don't really consider the warning to be something long-term - I
+> > wanted it to make sure that some random binary in some odd
+> > distribution wouldn't break in mysterious ways that would take a lot
+> > of debugging to find. And so that we really know what we end up
+> > blocking in practice.
+> > 
+> > I'm not sure how good the -rc kernel coverage is, but I think it's
+> > good enough that we can drop the warning before doing a real 3.3
+> > release. And I don't think the stable kernel versions ever got that
+> > warning printout, did they? That would be great for coverage, of
+> > course, if they did.
+> 
+> They did, 3.0 and 3.2.
+> 
+> For example, 3.0.18:
+> 
+> [  610.488489] kvm: sending ioctl 5326 to a partition!
+> [  610.488540] kvm: sending ioctl 80200204 to a partition!
+> 
+> mdadm ioctls reported in various places apparently got fixed by
+> ENOTTY/ENOIOCTLCMD change.
 
- for scsi-fixes / 3.3
+Does that fix still need to be backported to -stable?
 
- drivers/scsi/isci/host.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Linux v3.0.18 + Debian stable userspace (mdadm v3.1.4) causes this on
+boot (when mdadm runs in the initramfs):
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 1a65d65..418391b 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -1848,9 +1848,11 @@ static enum sci_status sci_oem_parameters_set(struct isci_host *ihost)
- 	if (state == SCIC_RESET ||
- 	    state == SCIC_INITIALIZING ||
- 	    state == SCIC_INITIALIZED) {
-+		u8 oem_version = pci_info->orom ? pci_info->orom->hdr.version :
-+			ISCI_ROM_VER_1_0;
- 
- 		if (sci_oem_parameters_validate(&ihost->oem_parameters,
--						pci_info->orom->hdr.version))
-+						oem_version))
- 			return SCI_FAILURE_INVALID_PARAMETER_VALUE;
- 
- 		return SCI_SUCCESS;
+mdadm: sending ioctl 1261 to a partition!
+mdadm: sending ioctl 1261 to a partition!
+mdadm: sending ioctl 1261 to a partition!
+mdadm: sending ioctl 1261 to a partition!
+mdadm: sending ioctl 1261 to a partition!
+mdadm: sending ioctl 1261 to a partition!
+mdadm: sending ioctl 1261 to a partition!
+mdadm: sending ioctl 1261 to a partition!
+mdadm: sending ioctl 800c0910 to a partition!
+mdadm: sending ioctl 800c0910 to a partition!
 
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
