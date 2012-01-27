@@ -1,167 +1,53 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 2.6.32-stable] block: fail SCSI passthrough ioctls on partition devices
-Date: Fri, 27 Jan 2012 17:56:54 +0100
-Message-ID: <1327683414-31156-1-git-send-email-pbonzini@redhat.com>
-References: <20120126213307.GA28807@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50875 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751579Ab2A0Q5M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jan 2012 11:57:12 -0500
-In-Reply-To: <20120126213307.GA28807@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ted Ts'o <tytso@mit.edu>
+Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
+Date: Fri, 27 Jan 2012 12:03:50 -0500
+Message-ID: <20120127170350.GA10479@thunk.org>
+References: <20120124190732.GH4387@shiny>
+ <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
+ <20120124200932.GB20650@quack.suse.cz>
+ <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
+ <20120124203936.GC20650@quack.suse.cz>
+ <20120125032932.GA7150@localhost>
+ <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
+ <20120125063552.GA27375@localhost>
+ <20120125140048.GC32361@quack.suse.cz>
+ <5B229F2F-4B0D-4AC1-A726-9E0CC8CE5FBE@dilger.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5B229F2F-4B0D-4AC1-A726-9E0CC8CE5FBE@dilger.ca>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: Wu Fengguang <fengguang.wu@gmail.com>, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de Brown" <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, "dm-devel@redhat.com development" <dm-devel@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org Devel" <linux-fsdevel@vger.kernel.org>, lsf-pc@lists.linux-foundation.org, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: stable@vger.kernel.org
-Cc: Ben Hutchings <ben@decadent.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
 
-commit 0bfc96cb77224736dfa35c3c555d37b3646ef35e upstream.
+On Thu, Jan 26, 2012 at 05:29:03AM -0700, Andreas Dilger wrote:
+> 
+> Ext4 will also align IO to 1MB boundaries (from the start of
+> LUN/partition) by default.  If the mke2fs code detects the
+> underlying RAID geometry (or the sysadmin sets this manually with
+> tune2fs) it will store this in the superblock for the allocator to
+> pick a better alignment.
 
-Linux allows executing the SG_IO ioctl on a partition or LVM volume, and
-will pass the command to the underlying block device.  This is
-well-known, but it is also a large security problem when (via Unix
-permissions, ACLs, SELinux or a combination thereof) a program or user
-needs to be granted access only to part of the disk.
+(Still in Hawaii on vacation, but picked this up while I was quickly
+scanning through e-mail.)
 
-This patch lets partitions forward a small set of harmless ioctls;
-others are logged with printk so that we can see which ioctls are
-actually sent.  In my tests only CDROM_GET_CAPABILITY actually occurred.
-Of course it was being sent to a (partition on a) hard disk, so it would
-have failed with ENOTTY and the patch isn't changing anything in
-practice.  Still, I'm treating it specially to avoid spamming the logs.
+This is true only if you're using the special (non-upstream'ed) Lustre
+interfaces for writing Lustre objects.  The writepages interface
+doesn't have all of the necessary smarts to do the right thing.  It's
+been on my todo list to look at, but I've been mostly concentrated on
+single disk file systems since that's what we use at Google.  (GFS can
+scale to many many file systems and servers, and avoiding RAID means
+fast FSCK recoveries, simplifying things since we don't have to worry
+about RAID-related failures, etc.)
 
-In principle, this restriction should include programs running with
-CAP_SYS_RAWIO.  If for example I let a program access /dev/sda2 and
-/dev/sdb, it still should not be able to read/write outside the
-boundaries of /dev/sda2 independent of the capabilities.  However, for
-now programs with CAP_SYS_RAWIO will still be allowed to send the
-ioctls.  Their actions will still be logged.
+Eventually I'd like ext4 to handle RAID better, but unless you're
+forced to support really large files, I've come around to believing
+that n=3 replication or Reed-Solomon encoding across multiple servers
+is a much better way of achieving data robustness, so it's just not
+been high on my list of priorities.  I'm much more interested in
+making sure ext4 works well under high memory pressure, and other
+cloud-related issues.
 
-This patch does not affect the non-libata IDE driver.  That driver
-however already tests for bd != bd->bd_contains before issuing some
-ioctl; it could be restricted further to forbid these ioctls even for
-programs running with CAP_SYS_ADMIN/CAP_SYS_RAWIO.
-
-Cc: linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: James Bottomley <JBottomley@parallels.com>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-[ Make it also print the command name when warning - Linus ]
-Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-
-[ Changes with respect to 3.3: return -ENOTTY from scsi_verify_blk_ioctl
-  and -ENOIOCTLCMD from sd_compat_ioctl. ]
-
----
- block/scsi_ioctl.c     |   45 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sd.c      |   11 +++++++++--
- include/linux/blkdev.h |    1 +
- 3 files changed, 55 insertions(+), 2 deletions(-)
-
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -24,6 +24,7 @@
- #include <linux/capability.h>
- #include <linux/completion.h>
- #include <linux/cdrom.h>
-+#include <linux/ratelimit.h>
- #include <linux/slab.h>
- #include <linux/times.h>
- #include <asm/uaccess.h>
-@@ -689,9 +690,53 @@ int scsi_cmd_ioctl(struct request_queue
- }
- EXPORT_SYMBOL(scsi_cmd_ioctl);
- 
-+int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
-+{
-+	if (bd && bd == bd->bd_contains)
-+		return 0;
-+
-+	/* Actually none of these is particularly useful on a partition,
-+	 * but they are safe.
-+	 */
-+	switch (cmd) {
-+	case SCSI_IOCTL_GET_IDLUN:
-+	case SCSI_IOCTL_GET_BUS_NUMBER:
-+	case SCSI_IOCTL_GET_PCI:
-+	case SCSI_IOCTL_PROBE_HOST:
-+	case SG_GET_VERSION_NUM:
-+	case SG_SET_TIMEOUT:
-+	case SG_GET_TIMEOUT:
-+	case SG_GET_RESERVED_SIZE:
-+	case SG_SET_RESERVED_SIZE:
-+	case SG_EMULATED_HOST:
-+		return 0;
-+	case CDROM_GET_CAPABILITY:
-+		/* Keep this until we remove the printk below.  udev sends it
-+		 * and we do not want to spam dmesg about it.   CD-ROMs do
-+		 * not have partitions, so we get here only for disks.
-+		 */
-+		return -ENOTTY;
-+	default:
-+		break;
-+	}
-+
-+	/* In particular, rule out all resets and host-specific ioctls.  */
-+	printk_ratelimited(KERN_WARNING
-+			   "%s: sending ioctl %x to a partition!\n", current->comm, cmd);
-+
-+	return capable(CAP_SYS_RAWIO) ? 0 : -ENOTTY;
-+}
-+EXPORT_SYMBOL(scsi_verify_blk_ioctl);
-+
- int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
- 		       unsigned int cmd, void __user *arg)
- {
-+	int ret;
-+
-+	ret = scsi_verify_blk_ioctl(bd, cmd);
-+	if (ret < 0)
-+		return ret;
-+
- 	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
- }
- EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -817,6 +817,10 @@ static int sd_ioctl(struct block_device
- 	SCSI_LOG_IOCTL(1, printk("sd_ioctl: disk=%s, cmd=0x%x\n",
- 						disk->disk_name, cmd));
- 
-+	error = scsi_verify_blk_ioctl(bdev, cmd);
-+	if (error < 0)
-+		return error;
-+
- 	/*
- 	 * If we are in the middle of error recovery, don't let anyone
- 	 * else try and use this device.  Also, if error recovery fails, it
-@@ -996,6 +1000,11 @@ static int sd_compat_ioctl(struct block_
- 			   unsigned int cmd, unsigned long arg)
- {
- 	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
-+	int ret;
-+
-+	ret = scsi_verify_blk_ioctl(bdev, cmd);
-+	if (ret < 0)
-+		return -ENOIOCTLCMD;
- 
- 	/*
- 	 * If we are in the middle of error recovery, don't let anyone
-@@ -1007,8 +1016,6 @@ static int sd_compat_ioctl(struct block_
- 		return -ENODEV;
- 	       
- 	if (sdev->host->hostt->compat_ioctl) {
--		int ret;
--
- 		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
- 
- 		return ret;
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -777,6 +777,7 @@ extern void blk_plug_device(struct reque
- extern void blk_plug_device_unlocked(struct request_queue *);
- extern int blk_remove_plug(struct request_queue *);
- extern void blk_recount_segments(struct request_queue *, struct bio *);
-+extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
- extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
- 			      unsigned int, void __user *);
- extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+							- Ted
