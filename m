@@ -1,52 +1,61 @@
-From: Wu Fengguang <fengguang.wu@gmail.com>
-Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
-Date: Fri, 27 Jan 2012 15:53:07 +0800
-Message-ID: <20120127075306.GA8795@localhost>
-References: <20120124200932.GB20650@quack.suse.cz>
- <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
- <20120124203936.GC20650@quack.suse.cz>
- <20120125032932.GA7150@localhost>
- <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
- <20120125063552.GA27375@localhost>
- <20120126162555.GF1891@redhat.com>
- <20120126223449.GZ15102@dastard>
- <20120127032734.GA16980@localhost>
- <20C51818-5C53-4417-B62A-AD7C020CE283@dilger.ca>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: Ioctl warning for a partition
+Date: Fri, 27 Jan 2012 09:35:11 +0100
+Message-ID: <4F2261BF.8040206@redhat.com>
+References: <20120126223037.GE28368@quack.suse.cz> <CA+55aFwkRhsdAYwP-S5_qPkRX=dMSnxv5Ow1ULaSJjKe3aTy2w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:33325 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754332Ab2A0HxS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2012 02:53:18 -0500
-Content-Disposition: inline
-In-Reply-To: <20C51818-5C53-4417-B62A-AD7C020CE283@dilger.ca>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+55aFwkRhsdAYwP-S5_qPkRX=dMSnxv5Ow1ULaSJjKe3aTy2w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, mmarek@suse.cz
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Dave Chinner <david@fromorbit.com>, Vivek Goyal <vgoyal@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, Jan Kara <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de" <neilb@suse.de>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
 
-On Thu, Jan 26, 2012 at 10:25:33PM -0700, Andreas Dilger wrote:
-[snip]
-> Doesn't the kernel derive at least some idea of the speed of a device
-> due to the writeback changes that you made?  It would be very useful
-> if we could derive at least some rough metric for the device performance
-> in the kernel and use that as input to the readahead window size as well.
+On 01/27/2012 12:01 AM, Linus Torvalds wrote:
+> I suspect we can just remove the warning entirely - once we've gotten
+> enough coverage with the -rc kernels that people (me in particular)
+> are happy that no normal load really needs it, and returning an error
+> is fine.
+>
+> So I don't really consider the warning to be something long-term - I
+> wanted it to make sure that some random binary in some odd
+> distribution wouldn't break in mysterious ways that would take a lot
+> of debugging to find. And so that we really know what we end up
+> blocking in practice.
+>
+> I'm not sure how good the -rc kernel coverage is, but I think it's
+> good enough that we can drop the warning before doing a real 3.3
+> release. And I don't think the stable kernel versions ever got that
+> warning printout, did they? That would be great for coverage, of
+> course, if they did.
 
-Yeah we now have bdi->write_bandwidth (exported as "BdiWriteBandwidth"
-in /debug/bdi/8:0/stats) for estimating the bdi write bandwidth.
+They did.
 
-However the value is not reflecting the sequential throughput in some
-cases:
+Here is the list I put together from people who contacted me about the 
+warning:
 
-1) when doing random writes
-2) when doing mixed reads+writes
-3) when not enough IO have been issued
-4) in the rare case, when writing to a small area repeatedly so that
-   it's effectively writing to the internal disk buffer at high speed
+BLKFLSBUF, BLKROSET:
+	These two can be passed down to ops->ioctl even though
+	they are generic block layer ioctls.  Nothing overrides them
+	*and* calls scsi_verify_blk_ioctl so we aren't breaking
+	anything.  However, these ioctls are obviously good for
+	partitions so we should add them to the whitelist.
 
-So there are still some challenges in getting a reliably usable
-runtime estimation.
+CDROM_DRIVE_STATUS, FDGETPRM, MTIOCGET32:
+	These three are used for detection of devices that do not
+	support	partitions.  They can be handled the same as
+	CDROM_GET_CAPABILITY, i.e. we can fail them and not break
+	anything.
 
-Thanks,
-Fengguang
+RAID_VERSION:
+	Also used for detection, however (unlike floppies and CD-ROMs)
+	RAID devices do have partitions.  RAID partitions do not
+	support SCSI ioctls and thus do not call scsi_verify_blk_ioctl,
+	which means we can fail this one right away too.
+
+I was preparing a patch to update the whitelist, but I think I will wait 
+a couple more weeks and remove the warning altogether.
+
+Paolo
