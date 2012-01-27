@@ -1,53 +1,332 @@
-From: Ted Ts'o <tytso@mit.edu>
-Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
-Date: Fri, 27 Jan 2012 12:03:50 -0500
-Message-ID: <20120127170350.GA10479@thunk.org>
-References: <20120124190732.GH4387@shiny>
- <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
- <20120124200932.GB20650@quack.suse.cz>
- <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
- <20120124203936.GC20650@quack.suse.cz>
- <20120125032932.GA7150@localhost>
- <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
- <20120125063552.GA27375@localhost>
- <20120125140048.GC32361@quack.suse.cz>
- <5B229F2F-4B0D-4AC1-A726-9E0CC8CE5FBE@dilger.ca>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] isci: T10 DIF support
+Date: Fri, 27 Jan 2012 11:14:31 -0800
+Message-ID: <20120127191358.27475.26561.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5B229F2F-4B0D-4AC1-A726-9E0CC8CE5FBE@dilger.ca>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Wu Fengguang <fengguang.wu@gmail.com>, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, "neilb@suse.de Brown" <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, "dm-devel@redhat.com development" <dm-devel@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-fsdevel@vger.kernel.org Devel" <linux-fsdevel@vger.kernel.org>, lsf-pc@lists.linux-foundation.org, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:8432 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752252Ab2A0TOc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jan 2012 14:14:32 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Dave Jiang <dave.jiang@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Thu, Jan 26, 2012 at 05:29:03AM -0700, Andreas Dilger wrote:
-> 
-> Ext4 will also align IO to 1MB boundaries (from the start of
-> LUN/partition) by default.  If the mke2fs code detects the
-> underlying RAID geometry (or the sysadmin sets this manually with
-> tune2fs) it will store this in the superblock for the allocator to
-> pick a better alignment.
+From: Dave Jiang <dave.jiang@intel.com>
 
-(Still in Hawaii on vacation, but picked this up while I was quickly
-scanning through e-mail.)
+This allows the controller to do WRITE_INSERT and READ_STRIP for SAS
+disks that support protection information. SAS disks must be formatted
+with protection information to use this feature via sg_format.
 
-This is true only if you're using the special (non-upstream'ed) Lustre
-interfaces for writing Lustre objects.  The writepages interface
-doesn't have all of the necessary smarts to do the right thing.  It's
-been on my todo list to look at, but I've been mostly concentrated on
-single disk file systems since that's what we use at Google.  (GFS can
-scale to many many file systems and servers, and avoiding RAID means
-fast FSCK recoveries, simplifying things since we don't have to worry
-about RAID-related failures, etc.)
+  sg3_utils-1.32 -- sg_format version 1.19 20110730
+  sg_format usage:
+  sg_format --format --verbose --pinfo /dev/sda
 
-Eventually I'd like ext4 to handle RAID better, but unless you're
-forced to support really large files, I've come around to believing
-that n=3 replication or Reed-Solomon encoding across multiple servers
-is a much better way of achieving data robustness, so it's just not
-been high on my list of priorities.  I'm much more interested in
-making sure ext4 works well under high memory pressure, and other
-cloud-related issues.
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
 
-							- Ted
+for scsi-misc / 3.4
+
+ drivers/scsi/isci/init.c             |    7 ++
+ drivers/scsi/isci/request.c          |  148 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/isci/scu_task_context.h |   55 +++++++++----
+ 3 files changed, 194 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 437f76b..2a63027 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -506,6 +506,13 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
+ 			goto err_host_alloc;
+ 		}
+ 		pci_info->hosts[i] = h;
++
++		/* turn on DIF support */
++		scsi_host_set_prot(h->shost,
++				   SHOST_DIF_TYPE1_PROTECTION |
++				   SHOST_DIF_TYPE2_PROTECTION |
++				   SHOST_DIF_TYPE3_PROTECTION);
++		scsi_host_set_guard(h->shost, SHOST_DIX_GUARD_CRC);
+ 	}
+ 
+ 	err = isci_setup_interrupts(pdev);
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index 0e43efd..06e0541 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -53,6 +53,7 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#include <scsi/scsi_cmnd.h>
+ #include "isci.h"
+ #include "task.h"
+ #include "request.h"
+@@ -264,6 +265,142 @@ static void scu_ssp_reqeust_construct_task_context(
+ 	task_context->response_iu_lower = lower_32_bits(dma_addr);
+ }
+ 
++static u8 scu_bg_blk_size(struct scsi_device *sdp)
++{
++	switch (sdp->sector_size) {
++		case 512:
++			return 0;
++		case 1024:
++			return 1;
++		case 4096:
++			return 3;
++		default:
++			return 0xff;
++	}
++}
++
++static u32 scu_dif_bytes(u32 len, u32 sector_size)
++{
++	return (len >> ilog2(sector_size)) * 8;
++}
++
++static void scu_ssp_ireq_dif_insert(struct isci_request *ireq, u8 type, u8 op)
++{
++	struct scu_task_context *tc = ireq->tc;
++	struct scsi_cmnd *scmd = ireq->ttype_ptr.io_task_ptr->uldd_task;
++	u8 blk_sz = scu_bg_blk_size(scmd->device);
++
++	tc->block_guard_enable = 1;
++	tc->blk_prot_en = 1;
++	tc->blk_sz = blk_sz;
++	/* DIF write insert */
++	tc->blk_prot_func = 0x2;
++
++	tc->transfer_length_bytes += scu_dif_bytes(tc->transfer_length_bytes,
++						   scmd->device->sector_size);
++
++	/* always init to 0, used by hw */
++	tc->interm_crc_val = 0;
++
++	tc->init_crc_seed = 0;
++	tc->app_tag_verify = 0;
++	tc->app_tag_gen = 0;
++	tc->ref_tag_seed_verify = 0;
++
++	/* always init to same as bg_blk_sz */
++	tc->UD_bytes_immed_val = scmd->device->sector_size;
++
++	tc->reserved_DC_0 = 0;
++
++	/* always init to 8 */
++	tc->DIF_bytes_immed_val = 8;
++
++	tc->reserved_DC_1 = 0;
++	tc->bgc_blk_sz = scmd->device->sector_size;
++	tc->reserved_E0_0 = 0;
++	tc->app_tag_gen_mask = 0;
++
++	/** setup block guard control **/
++	tc->bgctl = 0;
++
++	/* DIF write insert */
++	tc->bgctl_f.op = 0x2;
++
++	tc->app_tag_verify_mask = 0;
++
++	/* must init to 0 for hw */
++	tc->blk_guard_err = 0;
++
++	tc->reserved_E8_0 = 0;
++
++	if ((type & SCSI_PROT_DIF_TYPE1) || (type & SCSI_PROT_DIF_TYPE2)) {
++		tc->ref_tag_seed_gen = scsi_get_lba(scmd) & 0xffffffff;
++	} else if (type & SCSI_PROT_DIF_TYPE3)
++		tc->ref_tag_seed_gen = 0;
++
++}
++
++static void scu_ssp_ireq_dif_strip(struct isci_request *ireq, u8 type, u8 op)
++{
++	struct scu_task_context *tc = ireq->tc;
++	struct scsi_cmnd *scmd = ireq->ttype_ptr.io_task_ptr->uldd_task;
++	u8 blk_sz = scu_bg_blk_size(scmd->device);
++
++	tc->block_guard_enable = 1;
++	tc->blk_prot_en = 1;
++	tc->blk_sz = blk_sz;
++	/* DIF read strip */
++	tc->blk_prot_func = 0x1;
++
++	tc->transfer_length_bytes += scu_dif_bytes(tc->transfer_length_bytes,
++						   scmd->device->sector_size);
++
++	/* always init to 0, used by hw */
++	tc->interm_crc_val = 0;
++
++	tc->init_crc_seed = 0;
++	tc->app_tag_verify = 0;
++	tc->app_tag_gen = 0;
++
++	if ((type & SCSI_PROT_DIF_TYPE1) || (type & SCSI_PROT_DIF_TYPE2)) {
++		tc->ref_tag_seed_verify = scsi_get_lba(scmd) & 0xffffffff;
++	} else if (type & SCSI_PROT_DIF_TYPE3)
++		tc->ref_tag_seed_verify = 0;
++
++	/* always init to same as bg_blk_sz */
++	tc->UD_bytes_immed_val = scmd->device->sector_size;
++
++	tc->reserved_DC_0 = 0;
++
++	/* always init to 8 */
++	tc->DIF_bytes_immed_val = 8;
++
++	tc->reserved_DC_1 = 0;
++	tc->bgc_blk_sz = scmd->device->sector_size;
++	tc->reserved_E0_0 = 0;
++	tc->app_tag_gen_mask = 0;
++
++	/** setup block guard control **/
++	tc->bgctl = 0;
++
++	/* DIF read strip */
++	tc->bgctl_f.crc_verify = 1;
++	tc->bgctl_f.op = 0x1;
++	if ((type & SCSI_PROT_DIF_TYPE1) || (type & SCSI_PROT_DIF_TYPE2)) {
++		tc->bgctl_f.ref_tag_chk = 1;
++		tc->bgctl_f.app_f_detect = 1;
++	} else if (type & SCSI_PROT_DIF_TYPE3)
++		tc->bgctl_f.app_ref_f_detect = 1;
++
++	tc->app_tag_verify_mask = 0;
++
++	/* must init to 0 for hw */
++	tc->blk_guard_err = 0;
++
++	tc->reserved_E8_0 = 0;
++	tc->ref_tag_seed_gen = 0;
++}
++
+ /**
+  * This method is will fill in the SCU Task Context for a SSP IO request.
+  * @sci_req:
+@@ -274,6 +411,10 @@ static void scu_ssp_io_request_construct_task_context(struct isci_request *ireq,
+ 						      u32 len)
+ {
+ 	struct scu_task_context *task_context = ireq->tc;
++	struct sas_task *sas_task = ireq->ttype_ptr.io_task_ptr;
++	struct scsi_cmnd *scmd = sas_task->uldd_task;
++	u8 prot_type = scsi_get_prot_type(scmd);
++	u8 prot_op = scsi_get_prot_op(scmd);
+ 
+ 	scu_ssp_reqeust_construct_task_context(ireq, task_context);
+ 
+@@ -296,6 +437,13 @@ static void scu_ssp_io_request_construct_task_context(struct isci_request *ireq,
+ 
+ 	if (task_context->transfer_length_bytes > 0)
+ 		sci_request_build_sgl(ireq);
++
++	if (prot_type != SCSI_PROT_DIF_TYPE0) {
++		if (prot_op == SCSI_PROT_READ_STRIP)
++			scu_ssp_ireq_dif_strip(ireq, prot_type, prot_op);
++		else if (prot_op == SCSI_PROT_WRITE_INSERT)
++			scu_ssp_ireq_dif_insert(ireq, prot_type, prot_op);
++	}
+ }
+ 
+ /**
+diff --git a/drivers/scsi/isci/scu_task_context.h b/drivers/scsi/isci/scu_task_context.h
+index 7df87d9..869a979 100644
+--- a/drivers/scsi/isci/scu_task_context.h
++++ b/drivers/scsi/isci/scu_task_context.h
+@@ -866,9 +866,9 @@ struct scu_task_context {
+ 	struct transport_snapshot snapshot; /* read only set to 0 */
+ 
+ 	/* OFFSET 0x5C */
+-	u32 block_protection_enable:1;
+-	u32 block_size:2;
+-	u32 block_protection_function:2;
++	u32 blk_prot_en:1;
++	u32 blk_sz:2;
++	u32 blk_prot_func:2;
+ 	u32 reserved_5C_0:9;
+ 	u32 active_sgl_element:2;  /* read only set to 0 */
+ 	u32 sgl_exhausted:1;  /* read only set to 0 */
+@@ -896,33 +896,56 @@ struct scu_task_context {
+ 	u32 reserved_C4_CC[3];
+ 
+ 	/* OFFSET 0xD0 */
+-	u32 intermediate_crc_value:16;
+-	u32 initial_crc_seed:16;
++	u32 interm_crc_val:16;
++	u32 init_crc_seed:16;
+ 
+ 	/* OFFSET 0xD4 */
+-	u32 application_tag_for_verify:16;
+-	u32 application_tag_for_generate:16;
++	u32 app_tag_verify:16;
++	u32 app_tag_gen:16;
+ 
+ 	/* OFFSET 0xD8 */
+-	u32 reference_tag_seed_for_verify_function;
++	u32 ref_tag_seed_verify;
+ 
+ 	/* OFFSET 0xDC */
+-	u32 reserved_DC;
++	u32 UD_bytes_immed_val:13;
++	u32 reserved_DC_0:3;
++	u32 DIF_bytes_immed_val:4;
++	u32 reserved_DC_1:12;
+ 
+ 	/* OFFSET 0xE0 */
+-	u32 reserved_E0_0:16;
+-	u32 application_tag_mask_for_generate:16;
++	u32 bgc_blk_sz:13;
++	u32 reserved_E0_0:3;
++	u32 app_tag_gen_mask:16;
+ 
+ 	/* OFFSET 0xE4 */
+-	u32 block_protection_control:16;
+-	u32 application_tag_mask_for_verify:16;
++	union {
++		u16 bgctl;
++		struct {
++			u16 crc_verify:1;
++			u16 app_tag_chk:1;
++			u16 ref_tag_chk:1;
++			u16 op:2;
++			u16 legacy:1;
++			u16 invert_crc_seed:1;
++			u16 ref_tag_gen:1;
++			u16 fixed_ref_tag:1;
++			u16 invert_crc:1;
++			u16 app_ref_f_detect:1;
++			u16 uninit_dif_check_err:1;
++			u16 uninit_dif_bypass:1;
++			u16 app_f_detect:1;
++			u16 reserved_0:2;
++		} bgctl_f;
++	};
++
++	u16 app_tag_verify_mask;
+ 
+ 	/* OFFSET 0xE8 */
+-	u32 block_protection_error:8;
++	u32 blk_guard_err:8;
+ 	u32 reserved_E8_0:24;
+ 
+ 	/* OFFSET 0xEC */
+-	u32 reference_tag_seed_for_verify;
++	u32 ref_tag_seed_gen;
+ 
+ 	/* OFFSET 0xF0 */
+ 	u32 intermediate_crc_valid_snapshot:16;
+@@ -937,6 +960,6 @@ struct scu_task_context {
+ 	/* OFFSET 0xFC */
+ 	u32 reference_tag_seed_for_generate_function_snapshot;
+ 
+-};
++} __packed;
+ 
+ #endif /* _SCU_TASK_CONTEXT_H_ */
+
