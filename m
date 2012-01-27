@@ -1,81 +1,35 @@
-From: =?euc-kr?B?wPyzssDn?= <namjae.jeon@samsung.com>
-Subject: Re: Re: [PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal
- routine fails
-Date: Fri, 27 Jan 2012 06:41:19 +0000 (GMT)
-Message-ID: <19811243.113401327646477519.JavaMail.weblogic@epml09>
-Reply-To: namjae.jeon@samsung.com
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 1/3] iscsi: fix setting of pid from netlink skb
+Date: Fri, 27 Jan 2012 08:04:58 +0100
+Message-ID: <CAO+b5-o8GoYaTx=c9E+8vDJdkDR53YceUCQTu+VSpO9ZUeL6iA@mail.gmail.com>
+References: <1327633991-2615-1-git-send-email-michaelc@cs.wisc.edu>
+	<1327633991-2615-2-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=euc-kr
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:64179 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750948Ab2A0GlV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2012 01:41:21 -0500
-Received: from epcpsbge4.samsung.com (mailout1.samsung.com [203.254.224.24])
- by mailout1.samsung.com
- (Oracle Communications Messaging Exchange Server 7u4-19.01 64bit (built Sep  7
- 2010)) with ESMTP id <0LYG000XF2KJB570@mailout1.samsung.com> for
- linux-scsi@vger.kernel.org; Fri, 27 Jan 2012 15:41:19 +0900 (KST)
-MIME-version: 1.0
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:45362 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752324Ab2A0HE7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2012 02:04:59 -0500
+Received: by wics10 with SMTP id s10so976733wic.19
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2012 23:04:58 -0800 (PST)
+In-Reply-To: <1327633991-2615-2-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>
-Cc: Amit Sahrawat <amit.sahrawat83@gmail.com>, Namjae Jeon <linkinjeon@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mdharm-usb@one-eyed-alien.net" <mdharm-usb@one-eyed-alien.net>
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org
 
-SSBjaGFuZ2VkIHJlY2lwaWVudHMuDQoNCkkgaG9wZSB5b3UgYW5zd2VyIHVzIGFib3V0IHRoZSBi
-ZWxvdyBlbWFpbC4NCg0KVGhhbmtzLiANCi0tLS0tLS0gT3JpZ2luYWwgTWVzc2FnZSAtLS0tLS0t
-DQpTZW5kZXIgOiBBbWl0IFNhaHJhd2F0PGFtaXQuc2FocmF3YXQ4M0BnbWFpbC5jb20+IA0KRGF0
-ZSAgIDogMjAxMi0wMS0yNyAxNDoyMCAoR01UKzA5OjAwKQ0KVGl0bGUgIDogUmU6IFtQQVRDSCAx
-LzFdIHNjc2k6IHJldHJpZXZlIGNhY2hlIG1vZGUgdXNpbmcgQVRBXzE2IGlmIG5vcm1hbA0KIHJv
-dXRpbmUgZmFpbHMNCg0KRGVhciBKYW1lcy9KZWZmLA0KDQpJIGhhdmUgZmV3IHF1ZXN0aW9ucyBy
-ZWdhcmRpbmcgdGhlIGNvZGUgY2hhbmdlcyB3aGljaCBjYW4gYmUgYWNjZXB0ZWQNCmluIHRoaXMg
-cmVnYXJkcy4NCg0KSW4gb3VyIHNjZW5hcmlvIHdlIGFyZSBub3QgbWFraW5nIHVzZSBvZiBDT05G
-SUdfQVRBLCBidXQgc3RpbGwgaWYgdGhhdA0KaXMgdGhlIHByb3BlciBtYW5uZXIgdG8gYnJpbmcg
-b3V0IHRoZSBjaGFuZ2VzID8gdGhlbiB3ZSBjYW4gZW5hYmxlIGFuZA0KbWFrZSBjaGFuZ2VzIGlu
-IHRoZSByZXNwZWN0aXZlIGZpbGUgd2hpY2ggc2VlbXMgdG8gYmUgbGliYXRhLXNjc2kuYw0KDQpX
-ZSBuZWVkIGEgbWVjaGFuaXNtIHdoZXJlaW4gd2UgY2FuIHF1ZXJ5IGFuZCB0aGVuIGdldCB0aGUg
-cmVzcG9uc2Ugc28NCnRoYXQgd2Ugc2V0IHRoZSBXQ0UgYml0IGFjY29yZGluZ2x5LiBGb3IgdGhh
-dCBtYXR0ZXIsIEkgdGhpbmsgd2UgY2FuDQppbnRyb2R1Y2Ugc29tZSBmdW5jdGlvbiBpbiBsaWJh
-dGEtc2NzaS5jIGFuZCB0aGVuIGNhbGwgdGhhdCBmdW5jdGlvbg0KZnJvbSBlaXRoZXIgZHJpdmVy
-cy9zY3NpL3NkLmMgb3IgZHJpdmVycy91c2Ivc3RvcmFnZS9zY3NpZ2x1ZS5jDQoNClBsZWFzZSBz
-aGFyZSB5b3VyIHZhbHVhYmxlIGlucHV0cyBvbiBob3cgYW5kIHdoZXJlIGFjdHVhbGx5IHRoZXNl
-DQpjaGFuZ2VzIHNob3VsZCBiZSBkb25lLiBPdGhlcndpc2UsIHRoZXJlIGlzIGFnYWluIGEgY2hh
-bmNlIHRoYXQgb3VyDQpjaGFuZ2VzIGdldHMgcmVqZWN0ZWQuDQoNClBsZWFzZSBoZWxwIGluIHRo
-aXMgcmVnYXJkcy4NCg0KVGhhbmtzICYgUmVnYXJkcywNCkFtaXQgU2FocmF3YXQNCg0KDQoNCk9u
-IFRodSwgRGVjIDE1LCAyMDExIGF0IDU6NTUgQU0sIE5hbWphZSBKZW9uIDxsaW5raW5qZW9uQGdt
-YWlsLmNvbT4gd3JvdGU6DQo+IDIwMTEvMTIvMTQgSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0
-b21sZXlAaGFuc2VucGFydG5lcnNoaXAuY29tPjoNCj4+IE9uIFdlZCwgMjAxMS0xMi0xNCBhdCAw
-OToxNCArMDUzMCwgQW1pdCBTYWhyYXdhdCB3cm90ZToNCj4+PiBKdXN0IHRvIGFkZCBhIHRob3Vn
-aHQgLSB0aGlzIGlzc3VlcyBpcyBub3QgcmVsYXRlZCB3aXRoIEFUQSwgdGhpcyBpcw0KPj4+IHBy
-aW1hcmlseSByZWxhdGVkIHdpdGggSEREJ3Mgd2l0aCBhIFVTQiBpbnRlcmZhY2UgaS5lLiwgU0NT
-SSA8LT4gVVNCLg0KPj4+IEFuZCwgd2hlbiBJIGNoZWNrIG15IGtlcm5lbCBjb25maWcsIENPTkZJ
-R19BVEEgaXMgbm90IHNlbGVjdGVkLA0KPj4+IGxpYmF0YS1zY3NpIC0gdGhpcyBnZXRzIGNvbXBp
-bGVkIG9ubHkgaW4gY2FzZSBDT05GSUdfQVRBIGlzIG9uLg0KPj4+IEFyZSB0aGVzZSB0d28gdGhp
-bmdzIGludGVyLXJlbGF0ZWQ/DQo+Pg0KPiBIaS4gSmFtZXMuDQo+DQo+PiBPSywgc28gd2hhdCB5
-b3UncmUgdGVsbGluZyB1cyBpcyB0aGF0IHlvdSdyZSB0cnlpbmcgdG8gY29ycmVjdCBhDQo+PiBk
-ZWZpY2llbmN5IGluIGEgU0FUTCBpbnNpZGUgYSBVU0IgZGV2aWNlPyA/VGhlIGRldmljZSBpdHNl
-bGYgaXMgQVRBIGJ1dA0KPj4gaXQgZG9lc24ndCB1c2Ugb3VyIGxpYmF0YSBjb25uZWN0b3JzLg0K
-Pj4NCj4+IEkgdGhpbmsgaW4gdGhhdCBjYXNlLCB0aGUgYmVzdCB3YXkgZm9yd2FyZHMgaXMgYSBt
-aW5pLVNBVEwgY29ycmVjdGlvbg0KPj4gbGF5ZXIgd2l0aGluIFVTQiBzdG9yYWdlLiA/VVNCIHN0
-b3JhZ2UgaXMgY2VydGFpbmx5IHRoZSBwbGFjZSB0bw0KPj4gYmxhY2svd2hpdGUgbGlzdCB3aGV0
-aGVyIHRoaXMgc2hvdWxkIGJlIGRvbmUuID9BVEFfMTYgaXMgYSBiaXQgb2YgYQ0KPj4gZGFuZ2Vy
-b3VzIGNvbW1hbmQgdG8gYmUgdGhyb3dpbmcgYXJvdW5kIGJlY2F1c2UgaXQncyBrbm93biB0byBj
-cmFzaA0KPj4gdmFyaW91cyBVU0IgZGV2aWNlcyAoYW5kIHNvbWUgb2xkIFNDU0kgb25lcyBtaWdo
-dCBldmVuIGNob2tlIG9uIGl0KS4NCj4gT2theSwgaG93IGFib3V0IG1ha2Ugc29tZSBvcHRpb24g
-aW4gS2NvbmZpZyBvZiBzY3NpIG9yIHVzYiBzdG9yYWdlIHRvDQo+IHByb3RlY3QgZnJvbSB0aGUg
-YSBiaXQgb2YgcmlzayBBVEFfMTYgPw0KPiBUaGUgdXNlciBjYW4gc2VsZWN0IHRoaXMgb3B0aW9u
-IHRvIHVzZSBzdGFibGUgZmlsZXN5c3RlbSBvbiBVU0IgSERELg0KPj4NCj4+IGRlcGVuZGluZyBv
-biBob3cgYmlnIHRoaXMgU0FUTCBlbmRzIHVwIGJlaW5nIHdlIHNob3VsZCBjb25zaWRlciB3aGV0
-aGVyDQo+PiBpdCBzaG91bGQgc2hhcmUgcHJvY2Vzc2luZyB3aXRoIHRoZSBsaWJhdGEgU0FUTC4g
-P0lmIGl0J3MganVzdCBhIHNpbmdsZQ0KPj4gbW9kZSBzZW5zZSwgbXkgaW5zdGluY3QgaXMgdGhh
-dCBpdCdzIHByb2JhYmx5IE9LIHRvIGltcGxlbWVudCBzZXBhcmF0ZWx5DQo+PiAoaG93ZXZlciwg
-eW91IG5lZWQgdG8gdXNlIHRoZSBsaWJhdGEgaGVhZGVycyAuLi4gbm8gZHVwbGljYXRpb24gb2YN
-Cj4+IGxpYmF0YSBvcGNvZGVzIGFuZCBzdGF0dXMgZGVmaW5lcyBsaWtlIHlvdSBoYWQgaW4gdGhl
-IG9yaWdpbmFsIFNDU0kNCj4+IHBhdGNoKS4gP0lmIHRoZXJlIGFyZSBtb3JlIGNvbW1hbmRzIHRv
-IGNvcnJlY3Qgb24gdGhlIHdheSwgaXQgbWlnaHQgYmUNCj4+IGJldHRlciBhcyBzaGFyZWQgY29k
-ZS4NCj4gSSBhZ3JlZS4gSSBhbmQgQW1pdCB3aWxsIGNoZWNrIHRoZSBiZXN0IHdheSBiZXR3ZWVu
-IFNBVEwgb3IgbWluaVNBVEwNCj4gaW4gdXNiX3N0b3JhZ2UgYWNjb2RpbmcgdG8geW91ciBhZHZp
-Y2UuDQo+DQo+PiBKYW1lcw0KPj4NCj4+DQo8cD4mbmJzcDs8L3A+PHA+Jm5ic3A7PC9wPg==
+On Fri, Jan 27, 2012 at 4:13 AM, <michaelc@cs.wisc.edu> wrote:
+> NETLINK_CREDS's pid now returns 0, so I guess we are supposed to
+> be using NETLINK_CB. This changed while the patch to export the
+> pid was getting merged upstream, so it was not noticed until both
+> the network and iscsi changes were in the same tree.
+>
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
+If my analysis is correct this patch has not only to be applied on the
+master branch but also on kernel 3.2. Shouldn't "Cc:
+stable@vger.kernel.org #3.2" be added here ? See also
+http://www.spinics.net/lists/netdev/msg185565.html.
 
+Bart.
