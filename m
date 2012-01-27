@@ -1,61 +1,99 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: Ioctl warning for a partition
-Date: Fri, 27 Jan 2012 09:35:11 +0100
-Message-ID: <4F2261BF.8040206@redhat.com>
-References: <20120126223037.GE28368@quack.suse.cz> <CA+55aFwkRhsdAYwP-S5_qPkRX=dMSnxv5Ow1ULaSJjKe3aTy2w@mail.gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch v2] target: handle empty string writes in sysfs
+Date: Fri, 27 Jan 2012 15:50:55 +0300
+Message-ID: <20120127125055.GT3294@mwanda>
+References: <20120124084036.GB29097@elgon.mountain>
+ <4F1E8E31.1070507@bfs.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFwkRhsdAYwP-S5_qPkRX=dMSnxv5Ow1ULaSJjKe3aTy2w@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, mmarek@suse.cz
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="3T2jnoiI0lx9XXvh"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:48282 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754298Ab2A0Mtk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2012 07:49:40 -0500
+Content-Disposition: inline
+In-Reply-To: <4F1E8E31.1070507@bfs.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: walter harms <wharms@bfs.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On 01/27/2012 12:01 AM, Linus Torvalds wrote:
-> I suspect we can just remove the warning entirely - once we've gotten
-> enough coverage with the -rc kernels that people (me in particular)
-> are happy that no normal load really needs it, and returning an error
-> is fine.
->
-> So I don't really consider the warning to be something long-term - I
-> wanted it to make sure that some random binary in some odd
-> distribution wouldn't break in mysterious ways that would take a lot
-> of debugging to find. And so that we really know what we end up
-> blocking in practice.
->
-> I'm not sure how good the -rc kernel coverage is, but I think it's
-> good enough that we can drop the warning before doing a real 3.3
-> release. And I don't think the stable kernel versions ever got that
-> warning printout, did they? That would be great for coverage, of
-> course, if they did.
 
-They did.
+--3T2jnoiI0lx9XXvh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Here is the list I put together from people who contacted me about the 
-warning:
+These are root only and we're not likely to hit the problem in practise,
+but it makes the static checkers happy.
 
-BLKFLSBUF, BLKROSET:
-	These two can be passed down to ops->ioctl even though
-	they are generic block layer ioctls.  Nothing overrides them
-	*and* calls scsi_verify_blk_ioctl so we aren't breaking
-	anything.  However, these ioctls are obviously good for
-	partitions so we should add them to the whitelist.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+v2: only set ->su_dev_flags on success.
 
-CDROM_DRIVE_STATUS, FDGETPRM, MTIOCGET32:
-	These three are used for detection of devices that do not
-	support	partitions.  They can be handled the same as
-	CDROM_GET_CAPABILITY, i.e. we can fail them and not break
-	anything.
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_=
+core_configfs.c
+index 0955bb8..6e043ee 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -1704,13 +1704,15 @@ static ssize_t target_core_store_dev_alias(
+ 		return -EINVAL;
+ 	}
+=20
+-	se_dev->su_dev_flags |=3D SDF_USING_ALIAS;
+ 	read_bytes =3D snprintf(&se_dev->se_dev_alias[0], SE_DEV_ALIAS_LEN,
+ 			"%s", page);
+-
++	if (!read_bytes)
++		return -EINVAL;
+ 	if (se_dev->se_dev_alias[read_bytes - 1] =3D=3D '\n')
+ 		se_dev->se_dev_alias[read_bytes - 1] =3D '\0';
+=20
++	se_dev->su_dev_flags |=3D SDF_USING_ALIAS;
++
+ 	pr_debug("Target_Core_ConfigFS: %s/%s set alias: %s\n",
+ 		config_item_name(&hba->hba_group.cg_item),
+ 		config_item_name(&se_dev->se_dev_group.cg_item),
+@@ -1753,13 +1755,15 @@ static ssize_t target_core_store_dev_udev_path(
+ 		return -EINVAL;
+ 	}
+=20
+-	se_dev->su_dev_flags |=3D SDF_USING_UDEV_PATH;
+ 	read_bytes =3D snprintf(&se_dev->se_dev_udev_path[0], SE_UDEV_PATH_LEN,
+ 			"%s", page);
+-
++	if (!read_bytes)
++		return -EINVAL;
+ 	if (se_dev->se_dev_udev_path[read_bytes - 1] =3D=3D '\n')
+ 		se_dev->se_dev_udev_path[read_bytes - 1] =3D '\0';
+=20
++	se_dev->su_dev_flags |=3D SDF_USING_UDEV_PATH;
++
+ 	pr_debug("Target_Core_ConfigFS: %s/%s set udev_path: %s\n",
+ 		config_item_name(&hba->hba_group.cg_item),
+ 		config_item_name(&se_dev->se_dev_group.cg_item),
 
-RAID_VERSION:
-	Also used for detection, however (unlike floppies and CD-ROMs)
-	RAID devices do have partitions.  RAID partitions do not
-	support SCSI ioctls and thus do not call scsi_verify_blk_ioctl,
-	which means we can fail this one right away too.
+--3T2jnoiI0lx9XXvh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-I was preparing a patch to update the whitelist, but I think I will wait 
-a couple more weeks and remove the warning altogether.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-Paolo
+iQIcBAEBAgAGBQJPIp2uAAoJEOnZkXI/YHqR130P/R3GshEG6EUHDfv2OSuAAzWW
+nlV27hFGvPyLz1K1rd/2RDu8qvhGXjzLA+avBJySLMAKSpDm1c9HEhvM3aN+gAQr
+rqLUX3HCyX6AdeHaXzyV3nFgaVske0fHgtF+b6QUGX7t0186fHJ6IMMLQKITUhJ6
+6P4fhQuR7b0BH1MG9OWRDYqy2SyoyzIJforPEkFYQNSWjor5EIDU4luwU6FMF8ev
+GgHHNT+Llmi67txhgrsmu29N1FS0unl2LRg9x/49FKgZH4QSV2uinUiMGzz29rIi
+kJDAvQ1Q5s2HYg10pGaZglrPMp4lGR7UJ1m1uHRb/eofg/Ob8ZU2q9qjfM79hazL
+o5PrCuZAAwh/rd0EVmSiVkI9h3FcHk5VWnSavtL5qq5r/iR8A+XwBbszu2rBtaBD
+yTo5TWpgXC7OK5SL5/2c3M4ljpsiZKfvHA2/nveJQUGMi0/kQPXEUMER+f8ZCEnp
+bA7v+A/REHgwIEGdp5ROb+mP9Bqz/tmU35jAvIC3SVBYuZeLpHYvDBkX2zzv5V7i
+HseGLrLGY2i25p2aKoy+BpkEsT5N6iN4thL+HeCKHycsel12TSTRQkahsWQ474j+
+Ynh40nxxPUruS3ZM7k7ShLdoj0WxdT7A4OOl5tJJ88Uz6U89YZyjCtkhxx/Ureaz
+OQZ+JZRMSRZaXxSA0LRj
+=jgDj
+-----END PGP SIGNATURE-----
+
+--3T2jnoiI0lx9XXvh--
