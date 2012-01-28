@@ -1,70 +1,116 @@
-From: Krishna Gudipati <kgudipat@Brocade.com>
-Subject: RE: [PATCH] SCSI, bfa: don't leak mem in
- bfad_im_bsg_els_ct_request()
-Date: Fri, 27 Jan 2012 15:36:11 -0800
-Message-ID: <B5EE62D80D50B84BB9E5174F7FCCE80A260325B189@HQ1-EXCH02.corp.brocade.com>
-References: <alpine.LNX.2.00.1201280021320.13952@swampdragon.chaosbits.net>
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH] bfa: add readme file
+Date: Fri, 27 Jan 2012 16:51:51 -0800
+Message-ID: <1327711911-8661-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1201280021320.13952@swampdragon.chaosbits.net>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: 'Jesper Juhl' <jj@chaosbits.net>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Krishna Gudipati <kgudipat@Brocade.com>
-Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Jing Huang <huangj@Brocade.COM>, "'James E.J. Bottomley'" <JBottomley@parallels.com>, 'Joe Perches' <joe@perches.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:44320 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751975Ab2A1BQd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jan 2012 20:16:33 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+Cc: adapter_linux_open_src_team@brocade.com, Jing Huang <huangj@brocade.com>
 
-Looks good. Thanks for the patch.
+This patch add bfa driver readme file to Documentation/scsi
 
-Acked-by: Krishna Gudipati <kgudipat@brocade.com>
-
----------------
-
-If 'drv_fcxp = kzalloc(sizeof(struct bfad_fcxp), GFP_KERNEL);' fails
-and returns NULL, then we'll leak the memory allocated to 'bsg_fcpt'
-when we jump to 'out:' and the variable subsequently goes out of
-scope.
-
-Also remove the cast of the kzalloc() return value. kzalloc() returns
-a void* which is implicitly converted, so the explicit cast is
-pointless.
-
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
- drivers/scsi/bfa/bfad_bsg.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ Documentation/scsi/bfa.txt |   82 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 82 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/scsi/bfa.txt
 
- Compile tested only, as I have no hardware to test for real.
-
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 530de2b..8005c6c 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -3047,8 +3047,7 @@ bfad_im_bsg_els_ct_request(struct fc_bsg_job *job)
- 	 * Allocate buffer for bsg_fcpt and do a copy_from_user op for payload
- 	 * buffer of size bsg_data->payload_len
- 	 */
--	bsg_fcpt = (struct bfa_bsg_fcpt_s *)
--		   kzalloc(bsg_data->payload_len, GFP_KERNEL);
-+	bsg_fcpt = kzalloc(bsg_data->payload_len, GFP_KERNEL);
- 	if (!bsg_fcpt)
- 		goto out;
- 
-@@ -3060,6 +3059,7 @@ bfad_im_bsg_els_ct_request(struct fc_bsg_job *job)
- 
- 	drv_fcxp = kzalloc(sizeof(struct bfad_fcxp), GFP_KERNEL);
- 	if (drv_fcxp == NULL) {
-+		kfree(bsg_fcpt);
- 		rc = -ENOMEM;
- 		goto out;
- 	}
+diff --git a/Documentation/scsi/bfa.txt b/Documentation/scsi/bfa.txt
+new file mode 100644
+index 0000000..62c02e0
+--- /dev/null
++++ b/Documentation/scsi/bfa.txt
+@@ -0,0 +1,82 @@
++Linux driver for Brocade FC/FCOE adapters
++
++
++Supported Hardware
++------------------
++
++bfa 3.0.2.2 driver supports all Brocade FC/FCOE adapters. Below is a list of 
++adapter models with corresponding PCIIDs.
++
++	PCIID		  	Model		
++
++	1657:0013:1657:0014	425 4Gbps dual port FC HBA
++	1657:0013:1657:0014	825 8Gbps PCIe dual port FC HBA
++	1657:0013:103c:1742	HP 82B 8Gbps PCIedual port FC HBA
++	1657:0013:103c:1744	HP 42B 4Gbps dual port FC HBA
++	1657:0017:1657:0014	415 4Gbps single port FC HBA
++	1657:0017:1657:0014	815 8Gbps single port FC HBA
++	1657:0017:103c:1741	HP 41B 4Gbps single port FC HBA
++	1657:0017:103c 1743	HP 81B 8Gbps single port FC HBA
++	1657:0021:103c:1779	804 8Gbps FC HBA for HP Bladesystem c-class
++
++	1657:0014:1657:0014	1010 10Gbps single port CNA - FCOE
++	1657:0014:1657:0014	1020 10Gbps dual port CNA - FCOE
++	1657:0014:1657:0014	1007 10Gbps dual port CNA - FCOE
++	1657:0014:1657:0014	1741 10Gbps dual port CNA - FCOE
++
++	1657:0022:1657:0024	1860 16Gbps FC HBA
++	1657:0022:1657:0022	1860 10Gbps CNA - FCOE
++
++
++Firmware download
++-----------------
++
++The latest Firmware package for 3.0.2.2 bfa driver can be found at:
++
++http://www.brocade.com/services-support/drivers-downloads/adapters/Linux.page
++
++and then click following respective util package link:
++
++	Version			Link 
++
++	v3.0.0.0	Linux Adapter Firmware package for RHEL 6.2, SLES 11SP2
++
++
++Configuration & Management utility download
++-------------------------------------------
++
++The latest driver configuration & management utility for 3.0.2.2 bfa driver can
++be found at: 
++
++http://www.brocade.com/services-support/drivers-downloads/adapters/Linux.page
++
++and then click following respective util pacakge link
++
++	Version			Link			
++
++	v3.0.2.0	Linux Adapter Firmware package for RHEL 6.2, SLES 11SP2
++
++
++Documentation
++-------------
++
++The latest Administration's Guide, Installation and Reference Manual,
++Troubleshooting Guide, and Release Notes for the corresponding out-of-box
++driver can be found at:
++
++http://www.brocade.com/services-support/drivers-downloads/adapters/Linux.page
++
++and use the following inbox and out-of-box driver version mapping to find
++the corresponding documentation:
++
++	Inbox Version		Out-of-box Version 
++
++	v3.0.2.2		v3.0.0.0
++
++
++Support
++-------
++
++For general product and support info, go to the Brocade website at:
++
++http://www.brocade.com/services-support/index.page
 -- 
-1.7.8.4
-
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
+1.6.5.2
 
