@@ -1,38 +1,43 @@
-From: Kevin Shanahan <kmshanah@disenchant.net>
-Subject: Re: READ CAPACITY(16) failed, failure in mpt2sas_transport_port_add
-Date: Sat, 28 Jan 2012 15:32:09 +1030
-Message-ID: <20120128050209.GD31749@tuon>
-References: <20120125015725.GA2938@tuon>
- <A6888A6805518E4EA4AF7072A28264A6048BC1A2FE@inbmail02.lsi.com>
- <20120125080728.GA1957@tuon>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: Ioctl warning for a partition
+Date: Sat, 28 Jan 2012 11:22:11 +0100
+Message-ID: <4F23CC53.4040304@redhat.com>
+References: <20120126223037.GE28368@quack.suse.cz> <CA+55aFwkRhsdAYwP-S5_qPkRX=dMSnxv5Ow1ULaSJjKe3aTy2w@mail.gmail.com> <4F21E828.8090502@msgid.tls.msk.ru> <20120127192817.GB25348@khazad-dum.debian.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:28577 "EHLO
-	ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751017Ab2A1FKQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Jan 2012 00:10:16 -0500
-Content-Disposition: inline
-In-Reply-To: <20120125080728.GA1957@tuon>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:57405 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751331Ab2A1KWR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jan 2012 05:22:17 -0500
+In-Reply-To: <20120127192817.GB25348@khazad-dum.debian.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, stable@vger.kernel.org
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Linus Torvalds <torvalds@linux-foundation.org>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, mmarek@suse.cz
 
-On Wed, Jan 25, 2012 at 06:37:28PM +1030, Kevin Shanahan wrote:
-> On Wed, Jan 25, 2012 at 10:52:34AM +0530, Nandigama, Nagalakshmi wrote:
-> > Request to apply the attached patch and test.
-> >  scsi-misc-2[1].6.git-2cb6fc8c014b9b00c4487a79b8f6ed0da4121f45.patch
-> 
-> Great, that fixes the issue!
+On 01/27/2012 08:28 PM, Henrique de Moraes Holschuh wrote:
+> Does that fix still need to be backported to -stable?
+>
+> Linux v3.0.18 + Debian stable userspace (mdadm v3.1.4) causes this on
+> boot (when mdadm runs in the initramfs):
+>
+> mdadm: sending ioctl 1261 to a partition!
+> mdadm: sending ioctl 1261 to a partition!
+> mdadm: sending ioctl 1261 to a partition!
+> mdadm: sending ioctl 1261 to a partition!
+> mdadm: sending ioctl 1261 to a partition!
+> mdadm: sending ioctl 1261 to a partition!
+> mdadm: sending ioctl 1261 to a partition!
+> mdadm: sending ioctl 1261 to a partition!
+> mdadm: sending ioctl 800c0910 to a partition!
+> mdadm: sending ioctl 800c0910 to a partition!
 
-Any chance this patch can go into 3.2.3?
+The warnings are intended; the kernel will behave as before they were 
+introduced.  I'm monitoring reports and looking at them as they come in. 
+  They are harmless as long as the ioctls have always failed, and so far 
+this has always been the case.  As soon as we are reasonably certain, 
+the warnings will go away.
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=2cb6fc8c014b9b00c4487a79b8f6ed0da4121f45
-
-Makes my Intel/LSI SAS controller usable, working great on top of
-3.2.1 for several days now.
-
-Thanks,
-Kevin.
+Paolo
