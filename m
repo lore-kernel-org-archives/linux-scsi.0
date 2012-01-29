@@ -1,39 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [LSF/MM TOPIC] [ATTEND] qla2xxx FC target mode
-Date: Sat, 28 Jan 2012 16:27:49 -0800
-Message-ID: <1327796869.18763.211.camel@haakon2.linux-iscsi.org>
+From: WEBMAIL OFFICE UPGRADE TEAM <alelias@pmcnet.ca>
+Subject: UpGrade Your Webmail Account!!!
+Date: Sun, 29 Jan 2012 14:34:50 -0600 (CST)
+Message-ID: <11896125.60501327869290127.JavaMail.root__17872.9622894481$1327869979$gmane$org@zmail.prairiemobile.net>
+Reply-To: WEBMAIL OFFICE UPGRADE TEAM <c.care_web@pkuit.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: lsf-pc <lsf-pc@lists.linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
-Cc: Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <mail@hannes-reinecke.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zmail.pmcnet.ca ([66.244.213.213]:12259 "EHLO
+	zmail.prairiemobile.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751834Ab2A2Upy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2012 15:45:54 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+Dear Account Owner,
 
-Given the interest getting the Qlogic FC Target driver merged into
-mainline during the v3.4 -> v3.5 time frame, I would like to propose a
-LSF storage track discussion for some of the longer term items wrt
-qla2xxx target mode that are stretching across SCSI + target subsystems.
+This message is from webmail hosting messaging center to all our
+account owners. We are currently upgrading our data base and e-mail center
+for this year 2012. We are deleting all unused account to create more
+space for new one and to prevent spam mails. To prevent your account from
+closing you will have to update it below so that we will know that it's a
+present used account.
 
-We would like to eventually support mixed SCSI initiator / target mode
-on a per HW port context basis.  Before that can happen in mainline some
-of the interaction between SCSI core and target core will need to be
-sorted out..
+Warning!!! E-mail owner that refuses to update his or her Email,within
+48hrs of receiving this warning will lose his or her E-mail permanently.
+You are required to send us the below information via email below.
 
-This includes:
+CONFIRM YOUR E-MAIL IDENTITY BELOW:
 
-- I -> T transition between active initiator mode LLD LUNs 
-  + active TCM ports in same LLD
-- T -> I transition + rescan of ports without having to restart SCSI LLD
-- mixed mode running on the same physical/virtual port
-- target core dependencies in SCSI core to make this work..?
+First Name:____________________________
+Last Name:_____________________________
+E-mail Username:________________________
+E-mail Password:_______________________
 
-More background is available in the RFC-v4 posting here:
-http://www.spinics.net/lists/target-devel/msg01424.html
+Click on reply and send us the above details.
 
-Thanks!
+Warning!!!
 
---nab
+In failure to verify your  account within 48hrs on receiving this
+notification, your account will automatically be deactivated.
+Thank you for using webmail Account.
+Warning Code: QATO8B52AXV
+
+Kind Regards,
+Webmail Account Service Team Management.
+Thanks for your co-operation.
+Copyright @2012 WEBMAIL OFFICE All rights reserved.
