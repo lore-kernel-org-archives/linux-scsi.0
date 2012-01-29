@@ -1,45 +1,39 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] isci: T10 DIF support
-Date: Sat, 28 Jan 2012 12:00:50 -0800
-Message-ID: <CAA9_cmeF4_1Mx1tkaMgB1QguU4WgDHi0MaZ6-XbSLFHnHDhc0Q@mail.gmail.com>
-References: <20120127191358.27475.26561.stgit@localhost6.localdomain6>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [LSF/MM TOPIC] [ATTEND] qla2xxx FC target mode
+Date: Sat, 28 Jan 2012 16:27:49 -0800
+Message-ID: <1327796869.18763.211.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:52059 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547Ab2A1UAv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jan 2012 15:00:51 -0500
-Received: by vbbfc26 with SMTP id fc26so2046755vbb.19
-        for <linux-scsi@vger.kernel.org>; Sat, 28 Jan 2012 12:00:50 -0800 (PST)
-In-Reply-To: <20120127191358.27475.26561.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: lsf-pc <lsf-pc@lists.linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+Cc: Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <mail@hannes-reinecke.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Dave Jiang <dave.jiang@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Fri, Jan 27, 2012 at 11:14 AM, Dan Williams <dan.j.williams@intel.co=
-m> wrote:
-> From: Dave Jiang <dave.jiang@intel.com>
->
-> This allows the controller to do WRITE_INSERT and READ_STRIP for SAS
-> disks that support protection information. SAS disks must be formatte=
-d
-> with protection information to use this feature via sg_format.
->
-> =A0sg3_utils-1.32 -- sg_format version 1.19 20110730
-> =A0sg_format usage:
-> =A0sg_format --format --verbose --pinfo /dev/sda
->
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
+Hello,
 
-Sorry, some checkpatch escapes in this one... will resend.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Given the interest getting the Qlogic FC Target driver merged into
+mainline during the v3.4 -> v3.5 time frame, I would like to propose a
+LSF storage track discussion for some of the longer term items wrt
+qla2xxx target mode that are stretching across SCSI + target subsystems.
+
+We would like to eventually support mixed SCSI initiator / target mode
+on a per HW port context basis.  Before that can happen in mainline some
+of the interaction between SCSI core and target core will need to be
+sorted out..
+
+This includes:
+
+- I -> T transition between active initiator mode LLD LUNs 
+  + active TCM ports in same LLD
+- T -> I transition + rescan of ports without having to restart SCSI LLD
+- mixed mode running on the same physical/virtual port
+- target core dependencies in SCSI core to make this work..?
+
+More background is available in the RFC-v4 posting here:
+http://www.spinics.net/lists/target-devel/msg01424.html
+
+Thanks!
+
+--nab
