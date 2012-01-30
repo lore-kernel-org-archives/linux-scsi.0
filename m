@@ -1,57 +1,49 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v4 0/3] virtio-scsi driver
-Date: Mon, 30 Jan 2012 09:48:43 +0100
-Message-ID: <4F26596B.6030703@redhat.com>
-References: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
+From: =?UTF-8?B?6ZKi6ZmI?= <ggggchen@gmail.com>
+Subject: what's the requirement if multi queuing commands access the same LBAs
+Date: Mon, 30 Jan 2012 18:40:17 +0800
+Message-ID: <CALpNg8cus+ZCiMrkd-zn5_om23dqf7=g5vY0r5SakiwVi_3AsA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:41705 "EHLO
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:58780 "EHLO
 	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753165Ab2A3Ist (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2012 03:48:49 -0500
-In-Reply-To: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
+	with ESMTP id S1750900Ab2A3KkS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2012 05:40:18 -0500
+Received: by ggnb1 with SMTP id b1so1718741ggn.19
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2012 02:40:17 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 01/20/2012 05:45 PM, Paolo Bonzini wrote:
-> This is the first implementation of the virtio-scsi driver, a virtual
-> HBA that will be supported by KVM.  It implements a subset of the spec,
-> in particular it does not implement asynchronous notifications for either
-> LUN reset/removal/addition or CD-ROM media events, but it is already
-> functional and usable.
->
-> Other matching bits:
->
-> - spec at http://people.redhat.com/pbonzini/virtio-spec.pdf
->
-> - QEMU implementation at git://github.com/bonzini/qemu.git,
->    branch virtio-scsi
->
-> Please review.  I would like this to be included in 3.3, since the
-> possibility of regressions is obviously zero.
->
-> Paolo Bonzini (3):
->    virtio-scsi: first version
->    virtio-scsi: add error handling
->    virtio-scsi: add power management support
->
-> v3->v4: renamed VIRTIO_SCSI_S_UNDERRUN to VIRTIO_SCSI_S_OVERRUN;
->      fixed 32-bit compilation; added power management support;
->      adjusted calls to virtqueue_add_buf
->
->   drivers/scsi/Kconfig        |    8 +
->   drivers/scsi/Makefile       |    1 +
->   drivers/scsi/virtio_scsi.c  |  594 +++++++++++++++++++++++++++++++++++++++++++
->   include/linux/virtio_ids.h  |    1 +
->   include/linux/virtio_scsi.h |  114 +++++++++
->   5 files changed, 718 insertions(+), 0 deletions(-)
->   create mode 100644 drivers/scsi/virtio_scsi.c
->   create mode 100644 include/linux/virtio_scsi.h
->
+Hello,
+How about below below cases.
 
-Ping?
+All the requests are queue commands and they are not returned.
 
-Paolo
+here assume w(1,1, 5) means write lba 1 and length is 1 and the
+content is 5 filled. and r(1,1) means read lba 1 and length is 1.
+
+
+The scsi target device receives 6 queue commands that all access lba 1.
+
+1) w(1,1, 2)
+
+2) r( 1,1)
+
+3) w(1,1,3)
+
+4)r(1,1)
+
+5) w(1,1,4)
+
+6) r(1,1)
+
+I have some questions, If the scsi target device receives this serial commands,
+  1)  can the request return not in order?
+  2)  is it ok that all the 3 read commands return finally and all out
+data buffer is filled by 4.
+  3)  is it ok that all the 3 read commands return finally and all out
+data buffer is filled by 3. And finally the content in lba 1 is 3.
+
+
+thanks.
