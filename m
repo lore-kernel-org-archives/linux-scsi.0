@@ -1,52 +1,57 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: READ CAPACITY(16) failed, failure in mpt2sas_transport_port_add
-Date: Mon, 30 Jan 2012 11:50:33 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6048BC1A59A@inbmail02.lsi.com>
-References: <20120125015725.GA2938@tuon>
- <A6888A6805518E4EA4AF7072A28264A6048BC1A2FE@inbmail02.lsi.com>
- <20120125080728.GA1957@tuon> <20120128050209.GD31749@tuon>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH v4 0/3] virtio-scsi driver
+Date: Mon, 30 Jan 2012 09:48:43 +0100
+Message-ID: <4F26596B.6030703@redhat.com>
+References: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:32794 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751993Ab2A3GUo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jan 2012 01:20:44 -0500
-In-Reply-To: <20120128050209.GD31749@tuon>
-Content-Language: en-US
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:41705 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753165Ab2A3Ist (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2012 03:48:49 -0500
+In-Reply-To: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kevin Shanahan <kmshanah@disenchant.net>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>
 
-Ok. Posted this patch to stable kernel today.
+On 01/20/2012 05:45 PM, Paolo Bonzini wrote:
+> This is the first implementation of the virtio-scsi driver, a virtual
+> HBA that will be supported by KVM.  It implements a subset of the spec,
+> in particular it does not implement asynchronous notifications for either
+> LUN reset/removal/addition or CD-ROM media events, but it is already
+> functional and usable.
+>
+> Other matching bits:
+>
+> - spec at http://people.redhat.com/pbonzini/virtio-spec.pdf
+>
+> - QEMU implementation at git://github.com/bonzini/qemu.git,
+>    branch virtio-scsi
+>
+> Please review.  I would like this to be included in 3.3, since the
+> possibility of regressions is obviously zero.
+>
+> Paolo Bonzini (3):
+>    virtio-scsi: first version
+>    virtio-scsi: add error handling
+>    virtio-scsi: add power management support
+>
+> v3->v4: renamed VIRTIO_SCSI_S_UNDERRUN to VIRTIO_SCSI_S_OVERRUN;
+>      fixed 32-bit compilation; added power management support;
+>      adjusted calls to virtqueue_add_buf
+>
+>   drivers/scsi/Kconfig        |    8 +
+>   drivers/scsi/Makefile       |    1 +
+>   drivers/scsi/virtio_scsi.c  |  594 +++++++++++++++++++++++++++++++++++++++++++
+>   include/linux/virtio_ids.h  |    1 +
+>   include/linux/virtio_scsi.h |  114 +++++++++
+>   5 files changed, 718 insertions(+), 0 deletions(-)
+>   create mode 100644 drivers/scsi/virtio_scsi.c
+>   create mode 100644 include/linux/virtio_scsi.h
+>
 
-Regards,
-Nagalakshmi
+Ping?
 
-
------Original Message-----
-From: Kevin Shanahan [mailto:kmshanah@disenchant.net] 
-Sent: Saturday, January 28, 2012 10:32 AM
-To: Nandigama, Nagalakshmi
-Cc: linux-scsi@vger.kernel.org; stable@vger.kernel.org
-Subject: Re: READ CAPACITY(16) failed, failure in mpt2sas_transport_port_add
-
-On Wed, Jan 25, 2012 at 06:37:28PM +1030, Kevin Shanahan wrote:
-> On Wed, Jan 25, 2012 at 10:52:34AM +0530, Nandigama, Nagalakshmi wrote:
-> > Request to apply the attached patch and test.
-> >  scsi-misc-2[1].6.git-2cb6fc8c014b9b00c4487a79b8f6ed0da4121f45.patch
-> 
-> Great, that fixes the issue!
-
-Any chance this patch can go into 3.2.3?
-
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=2cb6fc8c014b9b00c4487a79b8f6ed0da4121f45
-
-Makes my Intel/LSI SAS controller usable, working great on top of
-3.2.1 for several days now.
-
-Thanks,
-Kevin.
+Paolo
