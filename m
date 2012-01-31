@@ -1,62 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 42702] New: MPT2SAS - devices disabled at boot
-Date: Tue, 31 Jan 2012 12:10:16 GMT
-Message-ID: <bug-42702-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:54903 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752699Ab2AaMKR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2012 07:10:17 -0500
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q0VCAG8n032236
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Jan 2012 12:10:16 GMT
-Sender: linux-scsi-owner@vger.kernel.org
+From: Petr Uzel <petr.uzel@suse.cz>
+Subject: [PATCH] [SCSI] qla4xxx: Add missing spaces to error messages
+Date: Tue, 31 Jan 2012 13:15:04 +0100
+Message-ID: <1328012104-11887-1-git-send-email-petr.uzel@suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ravi Anand <ravi.anand@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "supporter:QLOGIC QLA4XXX iS..." <iscsi-driver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:QLOGIC QLA4XXX iS..." <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-https://bugzilla.kernel.org/show_bug.cgi?id=42702
-
-           Summary: MPT2SAS - devices disabled at boot
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 3.2.2
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: blocking
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: yohan@proxad.net
-                CC: yohan@proxad.net
-        Regression: Yes
 
 
-Created an attachment (id=72244)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=72244)
-boot log
+Signed-off-by: Petr Uzel <petr.uzel@suse.cz>
+---
+ drivers/scsi/qla4xxx/ql4_os.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-On a recent server Tyan B7018 motherboard with 2 LSI SAS 9211-4i HOST BUS
-ADAPTER, with 4 disks on each ( one with 2 SSD Kingston KC100 + 2 Hitachi SAS
-300Go, the other with 4 SSD Kingston KC100) 
-
-On the boot, the mpt2sas removes one of the hard drives :
-
-
-[   11.435148]  port-0:0: remove: sas_addr(0x4433221100000000)
-[   11.435270]  port-0:0: remove: sas_addr(0x4433221100000000), phy(0)
-[   11.435709] mpt2sas0: removing handle(0x0009), sas_addr(0x4433221100000000)
-[   11.435839] mpt2sas0: failure at
-drivers/scsi/mpt2sas/mpt2sas_transport.c:705/mpt2sas_transport_port_add()!
-
-joined the full log..
-
-It's OK on 2.6.32.55...
-
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index ce6d3b7..edf5034 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -3382,7 +3382,7 @@ static int get_fw_boot_info(struct scsi_qla_host *ha, uint16_t ddb_index[])
+ 		if (qla4xxx_get_flash(ha, buf_dma, addr,
+ 				      13 * sizeof(uint8_t)) != QLA_SUCCESS) {
+ 			DEBUG2(ql4_printk(KERN_ERR, ha, "scsi%ld: %s: Get Flash"
+-					  "failed\n", ha->host_no, __func__));
++					  " failed\n", ha->host_no, __func__));
+ 			ret = QLA_ERROR;
+ 			goto exit_boot_info_free;
+ 		}
+@@ -3620,7 +3620,7 @@ static int qla4xxx_setup_boot_info(struct scsi_qla_host *ha)
+ 
+ 	if (ql4xdisablesysfsboot) {
+ 		ql4_printk(KERN_INFO, ha,
+-			   "%s: syfsboot disabled - driver will trigger login"
++			   "%s: syfsboot disabled - driver will trigger login "
+ 			   "and publish session for discovery .\n", __func__);
+ 		return QLA_SUCCESS;
+ 	}
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.7.7
