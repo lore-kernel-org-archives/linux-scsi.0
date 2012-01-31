@@ -1,13 +1,13 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/5] block: ioctl to zero block ranges
-Date: Mon, 30 Jan 2012 19:31:30 -0500
-Message-ID: <1327969892-5090-4-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 4/5] scsi: Add a report opcode helper
+Date: Mon, 30 Jan 2012 19:31:31 -0500
+Message-ID: <1327969892-5090-5-git-send-email-martin.petersen@oracle.com>
 References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:53216 "EHLO
+Received: from rcsinet15.oracle.com ([148.87.113.117]:53226 "EHLO
 	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754483Ab2AaAbx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2012 19:31:53 -0500
+	with ESMTP id S1754483Ab2AaAbz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2012 19:31:55 -0500
 In-Reply-To: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,72 +16,145 @@ Cc: James.Bottomley@hansenpartnership.com, snitzer@redhat.com, jaxboe@fusionio.c
 
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Introduce a BLKZEROOUT ioctl which can be used to clear block ranges by
-way of blkdev_issue_zeroout().
+The REPORT SUPPORTED OPERATION CODES command can be used to query
+whether a given opcode is supported by a device. Add a helper function
+that allows us to look up commands.
+
+We only issue RSOC if the device reports compliance with SPC-3 or
+later. But to err on the side of caution we disable the command for ATA,
+FireWire and USB.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/ioctl.c      |   27 +++++++++++++++++++++++++++
- include/linux/fs.h |    1 +
- 2 files changed, 28 insertions(+), 0 deletions(-)
+ drivers/ata/libata-scsi.c      |    1 +
+ drivers/firewire/sbp2.c        |    1 +
+ drivers/scsi/scsi.c            |   45 ++++++++++++++++++++++++++++++++++++++++
+ drivers/usb/storage/scsiglue.c |    3 ++
+ include/scsi/scsi_device.h     |    3 ++
+ 5 files changed, 53 insertions(+), 0 deletions(-)
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index ba15b2d..0c6e633 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -132,6 +132,22 @@ static int blk_ioctl_discard(struct block_device *bdev, uint64_t start,
- 	return blkdev_issue_discard(bdev, start, len, GFP_KERNEL, flags);
- }
- 
-+static int blk_ioctl_zeroout(struct block_device *bdev, uint64_t start,
-+			     uint64_t len)
-+{
-+	if (start & 511)
-+		return -EINVAL;
-+	if (len & 511)
-+		return -EINVAL;
-+	start >>= 9;
-+	len >>= 9;
-+
-+	if (start + len > (i_size_read(bdev->bd_inode) >> 9))
-+		return -EINVAL;
-+
-+	return blkdev_issue_zeroout(bdev, start, len, GFP_KERNEL);
-+}
-+
- static int put_ushort(unsigned long arg, unsigned short val)
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 508a60b..b6db28f 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1052,6 +1052,7 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
  {
- 	return put_user(val, (unsigned short __user *)arg);
-@@ -247,6 +263,17 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 		return blk_ioctl_discard(bdev, range[0], range[1],
- 					 cmd == BLKSECDISCARD);
- 	}
-+	case BLKZEROOUT: {
-+		uint64_t range[2];
-+
-+		if (!(mode & FMODE_WRITE))
-+			return -EBADF;
-+
-+		if (copy_from_user(range, (void __user *)arg, sizeof(range)))
-+			return -EFAULT;
-+
-+		return blk_ioctl_zeroout(bdev, range[0], range[1]);
-+	}
+ 	sdev->use_10_for_rw = 1;
+ 	sdev->use_10_for_ms = 1;
++	sdev->no_report_opcodes = 1;
  
- 	case HDIO_GETGEO: {
- 		struct hd_geometry geo;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 386da09..e918ef7 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -320,6 +320,7 @@ struct inodes_stat_t {
- #define BLKDISCARDZEROES _IO(0x12,124)
- #define BLKSECDISCARD _IO(0x12,125)
- #define BLKROTATIONAL _IO(0x12,126)
-+#define BLKZEROOUT _IO(0x12,127)
+ 	/* Schedule policy is determined by ->qc_defer() callback and
+ 	 * it needs to see every deferred qc.  Set dev_blocked to 1 to
+diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
+index 80e95aa..d956dd38 100644
+--- a/drivers/firewire/sbp2.c
++++ b/drivers/firewire/sbp2.c
+@@ -1517,6 +1517,7 @@ static int sbp2_scsi_slave_configure(struct scsi_device *sdev)
+ 	struct sbp2_logical_unit *lu = sdev->hostdata;
  
- #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
- #define FIBMAP	   _IO(0x00,1)	/* bmap access */
+ 	sdev->use_10_for_rw = 1;
++	sdev->no_report_opcodes = 1;
+ 
+ 	if (sbp2_param_exclusive_login)
+ 		sdev->manage_start_stop = 1;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 2aeb2e9..8d00214 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -54,6 +54,7 @@
+ #include <linux/notifier.h>
+ #include <linux/cpu.h>
+ #include <linux/mutex.h>
++#include <asm/unaligned.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -1063,6 +1064,50 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
+ 
+ /**
++ * scsi_report_opcode - Find out if a given command opcode is supported
++ * @sdp:	scsi device to query
++ * @buffer:	scratch buffer (must be at least 20 bytes long)
++ * @len:	length of buffer
++ * @opcode:	opcode for command to look up
++ *
++ * Uses the REPORT SUPPORTED OPERATION CODES to look up the given
++ * opcode. Returns 0 if RSOC fails or if the command opcode is
++ * unsupported. Returns 1 if the device claims to support the command.
++ */
++int scsi_report_opcode(struct scsi_device *sdp, unsigned char *buffer,
++		       unsigned int len, unsigned char opcode)
++{
++	unsigned char cmd[16];
++	struct scsi_sense_hdr sshdr;
++	int result;
++
++	if (sdp->no_report_opcodes || sdp->scsi_level < SCSI_SPC_3)
++		return 0;
++
++	memset(cmd, 0, 16);
++	cmd[0] = MAINTENANCE_IN;
++	cmd[1] = MI_REPORT_SUPPORTED_OPERATION_CODES;
++	cmd[2] = 1;		/* One command format */
++	cmd[3] = opcode;
++	put_unaligned_be32(len, &cmd[6]);
++	memset(buffer, 0, len);
++
++	result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE, buffer, len,
++				  &sshdr, 30 * HZ, 3, NULL);
++
++	if (result && scsi_sense_valid(&sshdr) &&
++	    sshdr.sense_key == ILLEGAL_REQUEST &&
++	    (sshdr.asc == 0x20 || sshdr.asc == 0x24) && sshdr.ascq == 0x00)
++		return 0;
++
++	if ((buffer[1] & 3) == 3) /* Command supported */
++		return 1;
++
++	return 0;
++}
++EXPORT_SYMBOL(scsi_report_opcode);
++
++/**
+  * scsi_device_get  -  get an additional reference to a scsi_device
+  * @sdev:	device to get a reference to
+  *
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index 13b8bcd..61178b8 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -197,6 +197,9 @@ static int slave_configure(struct scsi_device *sdev)
+ 		 * page x08, so we will skip it. */
+ 		sdev->skip_ms_page_8 = 1;
+ 
++		/* Do not attempt to use REPORT SUPPORTED OPERATION CODES */
++		sdev->no_report_opcodes = 1;
++
+ 		/* Some disks return the total number of blocks in response
+ 		 * to READ CAPACITY rather than the highest block number.
+ 		 * If this device makes that mistake, tell the sd driver. */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 77273f2..59f31dc 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -134,6 +134,7 @@ struct scsi_device {
+ 				     * because we did a bus reset. */
+ 	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+ 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
++	unsigned no_report_opcodes:1;	/* no REPORT SUPPORTED OPERATION CODES */
+ 	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08 */
+ 	unsigned skip_ms_page_3f:1;	/* do not use MODE SENSE page 0x3f */
+ 	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
+@@ -354,6 +355,8 @@ extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
+ 				int retries, struct scsi_sense_hdr *sshdr);
+ extern int scsi_get_vpd_page(struct scsi_device *, u8 page, unsigned char *buf,
+ 			     int buf_len);
++extern int scsi_report_opcode(struct scsi_device *sdp, unsigned char *buffer,
++			      unsigned int len, unsigned char opcode);
+ extern int scsi_device_set_state(struct scsi_device *sdev,
+ 				 enum scsi_device_state state);
+ extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
 -- 
 1.7.8.3.21.gab8a7
 
