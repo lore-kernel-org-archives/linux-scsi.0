@@ -1,58 +1,43 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [LSF/MM TOPIC][ATTEND]IOPS based ioscheduler
-Date: Tue, 31 Jan 2012 13:12:21 -0500
-Message-ID: <x49ehufd9mi.fsf@segfault.boston.devel.redhat.com>
-References: <1327997806.21268.47.camel@sli10-conroe>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: [LSF/MM TOPIC] [ATTEND] SR-IOV Management
+Date: Tue, 31 Jan 2012 14:02:48 -0500
+Message-ID: <alpine.WNT.2.00.1201311356390.3392@N5102REMCQXM4BS.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed; charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1028 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752894Ab2AaS0u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Jan 2012 13:26:50 -0500
-In-Reply-To: <1327997806.21268.47.camel@sli10-conroe> (Shaohua Li's message of
-	"Tue, 31 Jan 2012 16:16:46 +0800")
+Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:45768
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753237Ab2AaTC5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Jan 2012 14:02:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-Shaohua Li <shaohua.li@intel.com> writes:
+With more and more storage controller hardware supporting SR-IOV in next
+couple of years it seems to make sense at this point to discuss, from a
+storage stack perspective, managing how we instantiate and manage SR-IOV
+virtual functions (VFs).  Currently for hardware that does support SR-IOV,
+the management of that functionality is managed entirely by the hardware
+device driver.  However, a more dynamic management to how VFs are created
+and destroyed (assuming the hardware supports it) may be more desirable
+since the most common use case, assigning VFs to virtual guests, also
+tends to be very dynamic and fluid.  We also need to consider how VFs
+interact with complimentary technology such as NPIV in Fibre Channel.
 
-> Flash based storage has its characteristics. CFQ has some optimizations
-> for it, but not enough. The big problem is CFQ doesn't drive deep queue
-> depth, which causes poor performance in some workloads. CFQ also isn't
-> quite fair for fast storage (or further sacrifice of performance to get
-> fairness) because it uses time based accounting. This isn't good for
-> block cgroup. We need something different to make both performance and
-> fairness good.
->
-> A recent attempt is to use IOPS based ioscheduler for flash based
-> storage. It's expected to drive deep queue depth (so better performance)
-> and be more fairness (IOPS based accounting instead of time based).
->
-> I'd like to discuss:
->  - Do we really need it? Or the question is if it is popular real
-> workloads drive deep io depth?
->  - Should we have a separate ioscheduler for this or merge it to CFQ?
->  - Other implementation discussions like differentiation of read/write
-> requests and request size. Flash based storage doesn't like rotate
-> storage, request cost of read/write and different request size usually
-> is different.
+I'd like to propose that we discuss the following issues to see if a
+consensus can be reached about how to deal with them:
 
-I think you need to define a couple things to really gain traction.
-First, what is the target?  Flash storage comes in many varieties, from
-really poor performance to really, really fast.  Are you aiming to
-address all of them?  If so, then let's see some numbers that prove that
-you're basing your scheduling decisions on the right metrics for the
-target storage device types.
+* VF instantiation
+* VF/NPIV port pairing
+* Namespace management
+* LUN presentation
 
-Second, demonstrate how one workload can negatively affect another.  In
-other words, justify the need for *any* I/O prioritization.  Building on
-that, you'd have to show that you can't achieve your goals with existing
-solutions, like deadline or noop with bandwidth control.  Proportional
-weight I/O scheduling is often sub-optimal when the device is not kept
-busy.  How will you address that?
+Any other subtopics to add to this discussion are obviously welcomed.
 
-Cheers,
-Jeff
+Thanks,
+Chad
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
