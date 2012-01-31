@@ -1,53 +1,42 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [LSF/MM TOPIC] end-to-end data and metadata corruption detection
-Date: Tue, 31 Jan 2012 15:04:20 -0500
-Message-ID: <yq1y5snskor.fsf@sermon.lab.mkp.net>
-References: <38C050B3-2AAD-4767-9A25-02C33627E427@oracle.com>
-	<4F2147BA.6030607@itwm.fraunhofer.de>
-	<yq1k44e1pn6.fsf@sermon.lab.mkp.net>
-	<4F217F0C.6030105@itwm.fraunhofer.de>
-	<1327620104.6151.23.camel@dabdike.int.hansenpartnership.com>
-	<4F283E0E.7010407@itwm.fraunhofer.de>
-	<22F078FB-0EB9-4A68-82C1-CB4059356EFF@oracle.com>
+Subject: Re: [PATCH 4/5] scsi: Add a report opcode helper
+Date: Tue, 31 Jan 2012 15:16:13 -0500
+Message-ID: <yq1ty3bsk4y.fsf@sermon.lab.mkp.net>
+References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
+	<1327969892-5090-5-git-send-email-martin.petersen@oracle.com>
+	<4F2846CE.2050907@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:64555 "EHLO
+Received: from rcsinet15.oracle.com ([148.87.113.117]:33344 "EHLO
 	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754346Ab2AaUEb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2012 15:04:31 -0500
-In-Reply-To: <22F078FB-0EB9-4A68-82C1-CB4059356EFF@oracle.com> (Chuck Lever's
-	message of "Tue, 31 Jan 2012 14:21:48 -0500")
+	with ESMTP id S1755131Ab2AaUQr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2012 15:16:47 -0500
+In-Reply-To: <4F2846CE.2050907@garzik.org> (Jeff Garzik's message of "Tue, 31
+	Jan 2012 14:53:50 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chuck Lever <chuck.lever@oracle.com>
-Cc: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org, Sven Breuner <sven.breuner@itwm.fraunhofer.de>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, jaxboe@fusionio.com
 
->>>>> "Chuck" == Chuck Lever <chuck.lever@oracle.com> writes:
+>>>>> "Jeff" == Jeff Garzik <jeff@garzik.org> writes:
 
->> I guess if we couldn't use the page cache, we probably wouldn't
->> attempt to use DIF/DIX interface, but will calculate our own
->> checksums once we are going to work on the data integrity feature on
->> our side.
+Hey Jeff,
 
-Chuck> This is interesting.  I imagine the Linux kernel NFS server will
-Chuck> have the same issue: it depends on the page cache for good
-Chuck> performance, and does not, itself, use direct I/O.
+Jeff> While this is bare minimum acceptable, remember this covers ATA
+Jeff> and ATAPI devices both.
 
-Just so we're perfectly clear here: There's nothing that prevents you
-from hanging protection information off of your page private pointer so
-it can be submitted along with the data.
+Proper write same support is making its way through T13. It is my intent
+to wire it up in libata once I find a SATA device that implements it.
 
-The concern is purely that the filesystem owning the pages need to
-handle access conflicts (racing DI and non-DI updates) and potentially
-sub page modifications for small filesystem block sizes.
 
-The other problem with buffered I/O is that the notion of "all these
-pages are belong to us^wone write request" goes out the window. You
-really need something like aio to be able to be able to get completion
-status and re-drive the I/O if there's an integrity error. Otherwise you
-might as well just let the kernel autoprotect the pages from the block
-layer down (which is what we do now).
+Jeff> A preferred patch would simulate the RSOC op for ATA devices, and
+Jeff> only apply the above condition to ATAPI devices.
+
+I can do that if you insist. It just adds a superfluous heuristic to the
+SCSI pile since I still need the existing flag to short out USB and
+FireWire. I also can't rely exclusively on RSOC since only very recent
+devices support it (and not even all of them)...
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
