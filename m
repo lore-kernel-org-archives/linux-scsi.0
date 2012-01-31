@@ -1,41 +1,43 @@
-From: Gregory Farnum <gregory.farnum@dreamhost.com>
-Subject: Re: [LSF/MM TOPIC] end-to-end data and metadata corruption detection
-Date: Tue, 31 Jan 2012 11:28:26 -0800
-Message-ID: <CAF3hT9AgVpcZkGLkr4EH4x4heNFgxNykM4Mp3V_C-RBSwJh7mA@mail.gmail.com>
-References: <38C050B3-2AAD-4767-9A25-02C33627E427@oracle.com>
-	<4F2147BA.6030607@itwm.fraunhofer.de>
-	<yq1k44e1pn6.fsf@sermon.lab.mkp.net>
-	<4F217F0C.6030105@itwm.fraunhofer.de>
-	<yq1y5sovcyw.fsf@sermon.lab.mkp.net>
-	<4F283F7A.4020905@itwm.fraunhofer.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 4/5] scsi: Add a report opcode helper
+Date: Tue, 31 Jan 2012 14:53:50 -0500
+Message-ID: <4F2846CE.2050907@garzik.org>
+References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com> <1327969892-5090-5-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:50258 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753996Ab2AaT20 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2012 14:28:26 -0500
-In-Reply-To: <4F283F7A.4020905@itwm.fraunhofer.de>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:38413 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755146Ab2AaTx4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2012 14:53:56 -0500
+Received: by bkcjm19 with SMTP id jm19so309711bkc.19
+        for <linux-scsi@vger.kernel.org>; Tue, 31 Jan 2012 11:53:55 -0800 (PST)
+In-Reply-To: <1327969892-5090-5-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Chuck Lever <chuck.lever@oracle.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org, Sven Breuner <sven.breuner@itwm.fraunhofer.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, jaxboe@fusionio.com
 
-On Tue, Jan 31, 2012 at 11:22 AM, Bernd Schubert
-<bernd.schubert@itwm.fraunhofer.de> wrote:
-> I guess we should talk to developers of other parallel file systems and see
-> what they think about it. I think cephfs already uses data integrity
-> provided by btrfs, although I'm not entirely sure and need to check the
-> code. As I said before, Lustre does network checksums already and *might* be
-> interested.
+On 01/30/2012 07:31 PM, Martin K. Petersen wrote:
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1052,6 +1052,7 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
+>   {
+>   	sdev->use_10_for_rw = 1;
+>   	sdev->use_10_for_ms = 1;
+> +	sdev->no_report_opcodes = 1;
+>
+>   	/* Schedule policy is determined by ->qc_defer() callback and
+>   	 * it needs to see every deferred qc.  Set dev_blocked to 1 to
 
-Actually, right now Ceph doesn't check btrfs' data integrity
-information, but since Ceph doesn't have any data-at-rest integrity
-verification it relies on btrfs if you want that. Integrating
-integrity verification throughout the system is on our long-term to-do
-list.
-We too will be said if using a kernel-level integrity system requires
-using DIO, although we could probably work out a way to do
-"translation" between our own integrity checksums and the
-btrfs-generated ones if we have to (thanks to replication).
--Greg
+
+While this is bare minimum acceptable, remember this covers ATA and 
+ATAPI devices both.
+
+A preferred patch would simulate the RSOC op for ATA devices, and only 
+apply the above condition to ATAPI devices.
+
+	Jeff
+
+
