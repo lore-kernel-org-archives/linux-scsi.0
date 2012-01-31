@@ -1,36 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] Storage management (API &
- Library)
-Date: Tue, 31 Jan 2012 11:38:38 -0500
-Message-ID: <20120131163838.GA28673@infradead.org>
-References: <4F19A981.4080502@redhat.com>
- <20120125174411.GB12620@infradead.org>
- <4F21BD3C.8050809@redhat.com>
- <20120127060733O.fujita.tomonori@lab.ntt.co.jp>
+From: "RICHARD TANG" <tagnrichard@yahoo.com.hk>
+Subject: MAIL
+Date: Tue, 31 Jan 2012 12:53:30 +0200
+Message-ID: <20120131125330.11916wstfj6kdrfu@82.137.248.25>
+Reply-To: trichad@yahoo.cn
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:55055
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753841Ab2AaQip (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Jan 2012 11:38:45 -0500
+Received: from mgw06.190.sy ([82.137.248.25]:55317 "EHLO smtp6.190.sy"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752541Ab2AaSNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Jan 2012 13:13:37 -0500
 Content-Disposition: inline
-In-Reply-To: <20120127060733O.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: agrover@redhat.com, hch@infradead.org, tasleson@redhat.com, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-On Fri, Jan 27, 2012 at 06:12:34AM +0900, FUJITA Tomonori wrote:
-> , and all the vendors interested so far
-> > are foss/cloudy.
-> 
-> True (HP lefthand is supported though).
 
-NetApp is adding one, too:
-https://blueprints.launchpad.net/nova/+spec/netapp-volume-driver
 
-Seems like cloud currently is the better buzzword than Linux, even if
-this is all for Linux deployments, at least at the hypervisor level.
+Mail From Tang.
+
+I work with the hang seng Bank Hong Kong.I have a business proposition  
+for you involving a trade in my bank which I know we will be of mutual  
+benefit to both of us, If interested mail me at:trichad@yahoo.cn
+
+Regards,
+Richard Tang.
+
+
+----------------------------------------------------------------
+This message was sent using IMP, the Internet Messaging Program.
 
