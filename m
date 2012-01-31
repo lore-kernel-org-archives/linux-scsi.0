@@ -1,40 +1,42 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [LSF/MM TOPIC] end-to-end data and metadata corruption detection
-Date: Mon, 30 Jan 2012 21:10:31 -0500
-Message-ID: <yq1y5sovcyw.fsf@sermon.lab.mkp.net>
+Date: Mon, 30 Jan 2012 21:22:49 -0500
+Message-ID: <yq1ty3cvcee.fsf@sermon.lab.mkp.net>
 References: <38C050B3-2AAD-4767-9A25-02C33627E427@oracle.com>
 	<4F2147BA.6030607@itwm.fraunhofer.de>
 	<yq1k44e1pn6.fsf@sermon.lab.mkp.net>
-	<4F217F0C.6030105@itwm.fraunhofer.de>
+	<DE0353DF-83EA-480E-9C42-1EE760D6EE41@dilger.ca>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:53336 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753373Ab2AaCKn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2012 21:10:43 -0500
-In-Reply-To: <4F217F0C.6030105@itwm.fraunhofer.de> (Bernd Schubert's message
-	of "Thu, 26 Jan 2012 17:27:56 +0100")
+Received: from rcsinet15.oracle.com ([148.87.113.117]:42390 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753060Ab2AaCXB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2012 21:23:01 -0500
+In-Reply-To: <DE0353DF-83EA-480E-9C42-1EE760D6EE41@dilger.ca> (Andreas
+	Dilger's message of "Thu, 26 Jan 2012 09:34:44 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Chuck Lever <chuck.lever@oracle.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org, Sven Breuner <sven.breuner@itwm.fraunhofer.de>
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, Chuck Lever <chuck.lever@oracle.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sven Breuner <sven.breuner@itwm.fraunhofer.de>
 
->>>>> "Bernd" == Bernd Schubert <bernd.schubert@itwm.fraunhofer.de> writes:
+>>>>> "Andreas" == Andreas Dilger <adilger@dilger.ca> writes:
 
-Bernd> Hmm, direct IO would mean we could not use the page cache. As we
-Bernd> are using it, that would not really suit us. libaio then might be
-Bernd> another option then.
+Andreas> Is there a description of sys_dio() somewhere?
 
-Bernd> What kind of help do you exactly need?
+This was the original draft:
 
-As far as libaio is concerned I had a PoC working a few years ago. I'll
-be happy to revive it if people are actually interested. So a real world
-use case would be a great help...
+	http://www.spinics.net/lists/linux-mm/msg14512.html
 
-But James is right that buffered I/O is much more challenging than
-direct I/O. And all the use cases we have had have involved databases
-and business apps that were doing direct I/O anyway.
+
+Andreas> In particular, I'm interested to know whether it allows full
+Andreas> scatter-gather IO submission, unlike pwrite() which only allows
+Andreas> multiple input buffers, and not multiple file offsets.
+
+Each request descriptor contains buffer, target file, and offset. So
+it's a single entry per descriptor. But many descriptors can be
+submitted (and reaped) in a single syscall. So you don't have the single
+file offset limitation of pwritev().
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
