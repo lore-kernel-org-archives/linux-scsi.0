@@ -1,40 +1,62 @@
-From: Shaohua Li <shaohua.li@intel.com>
-Subject: [LSF/MM TOPIC][ATTEND]IOPS based ioscheduler
-Date: Tue, 31 Jan 2012 16:16:46 +0800
-Message-ID: <1327997806.21268.47.camel@sli10-conroe>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 42702] New: MPT2SAS - devices disabled at boot
+Date: Tue, 31 Jan 2012 12:10:16 GMT
+Message-ID: <bug-42702-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45672 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751973Ab2AaIRp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Jan 2012 03:17:45 -0500
+Received: from bugzilla.kernel.org ([198.145.19.204]:54903 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752699Ab2AaMKR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2012 07:10:17 -0500
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q0VCAG8n032236
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Jan 2012 12:10:16 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Flash based storage has its characteristics. CFQ has some optimizations
-for it, but not enough. The big problem is CFQ doesn't drive deep queue
-depth, which causes poor performance in some workloads. CFQ also isn't
-quite fair for fast storage (or further sacrifice of performance to get
-fairness) because it uses time based accounting. This isn't good for
-block cgroup. We need something different to make both performance and
-fairness good.
+https://bugzilla.kernel.org/show_bug.cgi?id=42702
 
-A recent attempt is to use IOPS based ioscheduler for flash based
-storage. It's expected to drive deep queue depth (so better performance)
-and be more fairness (IOPS based accounting instead of time based).
+           Summary: MPT2SAS - devices disabled at boot
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.2.2
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: blocking
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: yohan@proxad.net
+                CC: yohan@proxad.net
+        Regression: Yes
 
-I'd like to discuss:
- - Do we really need it? Or the question is if it is popular real
-workloads drive deep io depth?
- - Should we have a separate ioscheduler for this or merge it to CFQ?
- - Other implementation discussions like differentiation of read/write
-requests and request size. Flash based storage doesn't like rotate
-storage, request cost of read/write and different request size usually
-is different.
 
-Thanks,
-Shaohua
+Created an attachment (id=72244)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=72244)
+boot log
 
+On a recent server Tyan B7018 motherboard with 2 LSI SAS 9211-4i HOST BUS
+ADAPTER, with 4 disks on each ( one with 2 SSD Kingston KC100 + 2 Hitachi SAS
+300Go, the other with 4 SSD Kingston KC100) 
+
+On the boot, the mpt2sas removes one of the hard drives :
+
+
+[   11.435148]  port-0:0: remove: sas_addr(0x4433221100000000)
+[   11.435270]  port-0:0: remove: sas_addr(0x4433221100000000), phy(0)
+[   11.435709] mpt2sas0: removing handle(0x0009), sas_addr(0x4433221100000000)
+[   11.435839] mpt2sas0: failure at
+drivers/scsi/mpt2sas/mpt2sas_transport.c:705/mpt2sas_transport_port_add()!
+
+joined the full log..
+
+It's OK on 2.6.32.55...
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
