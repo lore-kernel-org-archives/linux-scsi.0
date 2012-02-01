@@ -1,78 +1,88 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/1] osd_uld: Bump MAX_OSD_DEVICES from 64 to 1,048,576
-Date: Wed, 1 Feb 2012 17:50:30 +0200
-Message-ID: <4F295F46.2010106@panasas.com>
-References: <4F205AAF.7000305@panasas.com> <4F205B42.9020200@panasas.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [ANNOUNCE] lsscsi 0.26 beta 2, add --wwn
+Date: Wed, 01 Feb 2012 11:32:57 -0500
+Message-ID: <4F296939.9040806@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from natasha.panasas.com ([67.152.220.90]:41228 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754852Ab2BAPux (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2012 10:50:53 -0500
-In-Reply-To: <4F205B42.9020200@panasas.com>
+Received: from smtp.infotech.no ([82.134.31.41]:41237 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752824Ab2BAQdH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Feb 2012 11:33:07 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by smtp.infotech.no (Postfix) with ESMTP id A4D192041B6
+	for <linux-scsi@vger.kernel.org>; Wed,  1 Feb 2012 17:33:00 +0100 (CET)
+Received: from smtp.infotech.no ([127.0.0.1])
+	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id sLQPL9yYINLQ for <linux-scsi@vger.kernel.org>;
+	Wed,  1 Feb 2012 17:32:59 +0100 (CET)
+Received: from [192.168.48.66] (unknown [216.99.49.31])
+	by smtp.infotech.no (Postfix) with ESMTPA id CBA0D2041B5
+	for <linux-scsi@vger.kernel.org>; Wed,  1 Feb 2012 17:32:58 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, "Welch, Brent" <welch@panasas.com>, "Bhamare, Sachin" <sbhamare@panasas.com>, Stable Tree <stable@vger.kernel.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-On 01/25/2012 09:42 PM, Boaz Harrosh wrote:
-> 
-> It used to be that minors where 8 bit. But now they
-> are actually 20 bit. So the fix is simplicity itself.
-> 
-> I've tested with 300 devices and all user-mode utils
-> work just fine. I have also mechanically added 10,000
-> to the ida (so devices are /dev/osd10000, /dev/osd10001 ...)
-> and was able to mkfs an exofs filesystem and access osds
-> from user-mode.
-> 
-> All the open-osd user-mode code uses the same library
-> to access devices through their symbolic names in
-> /dev/osdX so I'd say it's pretty safe. (Well tested)
-> 
-> This patch is very important because some of the systems
-> that will be deploying the 3.2 pnfs-objects code are larger
-> than 64 OSDs and will stop to work properly when reaching
-> that number.
-> 
-> CC: Stable <stable@vger.kernel.org>
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+lsscsi currently can provide some transport related
+WWN information when the --transport (-t) option
+is used. This will probably be a target port name rather
+than a LU name.
+Fetching the LU name has proven elusive. The most direct
+way would be to issue an INQUIRY to get the device
+identification VPD page but that would require root
+permissions. A feature of lsscsi is that it doesn't need
+root permissions (or related tricks).
 
-James Hi
+This beta adds a --wwn (-w) option which searches the udev
+provided /dev/disk/by-id/wwn-* symlinks. This will find
+WWNs (LU names) for disks if udev can find them.
 
-You never came back to me on this patch. It is very important for the
-setups all this osd stuff is intended for. It is a simple bug right in the
-middle of the system, which makes it useless. (I'm so embarrassed I made it
-in the first place)
+If there is no averse feedback version 0.26 will be released
+in a few weeks.
 
-I have put it in today's linux-next, so it can collect dust there.
-Please tell me if you want to carry this for this rc-fixes or I should
-push it through the osd tree.
 
-Thanks
-Boaz
+There are two SATA disks in the example below: /dev/sda and
+/dev/sdd . /dev/sda has no WWN and is directly connected to
+a SATA controller on the motherboard. /dev/sdd has a WNN and
+is connected via a SAS expander.
 
-> ---
->  drivers/scsi/osd/osd_uld.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-> index b31a8e3..d4ed9eb 100644
-> --- a/drivers/scsi/osd/osd_uld.c
-> +++ b/drivers/scsi/osd/osd_uld.c
-> @@ -69,10 +69,10 @@
->  #ifndef SCSI_OSD_MAJOR
->  #  define SCSI_OSD_MAJOR 260
->  #endif
-> -#define SCSI_OSD_MAX_MINOR 64
-> +#define SCSI_OSD_MAX_MINOR MINORMASK
->  
->  static const char osd_name[] = "osd";
-> -static const char *osd_version_string = "open-osd 0.2.0";
-> +static const char *osd_version_string = "open-osd 0.2.1";
->  
->  MODULE_AUTHOR("Boaz Harrosh <bharrosh@panasas.com>");
->  MODULE_DESCRIPTION("open-osd Upper-Layer-Driver osd.ko");
+# lsscsi
+[1:0:0:0]    disk    ATA      ST3320620AS      3.AA  /dev/sda
+[6:0:0:0]    enclosu Intel    RES2SV240        0600  -
+[6:0:1:0]    disk    SEAGATE  ST33000650SS     0002  /dev/sdb
+[6:0:2:0]    disk    SEAGATE  ST32000444SS     0006  /dev/sdc
+[6:0:3:0]    disk    ATA      ST3500418AS      CC34  /dev/sdd
 
+# lsscsi -w
+[1:0:0:0]    disk                                    /dev/sda
+[6:0:0:0]    enclosu                                 -
+[6:0:1:0]    disk    0x5000c50033fe58db              /dev/sdb
+[6:0:2:0]    disk    0x5000c500215725bf              /dev/sdc
+[6:0:3:0]    disk    0x5000c500120bfe84              /dev/sdd
+
+# lsscsi -t
+[1:0:0:0]    disk    sata:                           /dev/sda
+[6:0:0:0]    enclosu sas:0x5001517e85c3effd          -
+[6:0:1:0]    disk    sas:0x5000c50033fe58d9          /dev/sdb
+[6:0:2:0]    disk    sas:0x5000c500215725bd          /dev/sdc
+[6:0:3:0]    disk    sas:0x5001517e85c3efe2          /dev/sdd
+
+
+Version 0.26 beta 2 is available at:
+     http://sg.danny.cz/scsi/lsscsi.html
+More information can be found on that page including examples
+and a Download section for the tarball:
+   http://sg.danny.cz/scsi/lsscsi-0.26b2.tgz
+There are no debian or redhat packages built for this beta.
+
+Version 0.26 2012/01/31 [svn: r97]
+   - add 'fcoe' transport indicator
+   - add '--wwn' option, datamine /dev/disk/by-id/wwn*
+   - move lsscsi.c into src directory
+
+Version 0.25 2011/05/09 [svn: r92]
+...
+
+Doug Gilbert
