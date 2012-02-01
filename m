@@ -1,94 +1,46 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC][ATTEND]IOPS based ioscheduler
-Date: Wed, 1 Feb 2012 13:54:05 -0500
-Message-ID: <20120201185405.GB13246@redhat.com>
-References: <1327997806.21268.47.camel@sli10-conroe>
- <x49ehufd9mi.fsf@segfault.boston.devel.redhat.com>
- <1328079791.21268.61.camel@sli10-conroe>
+From: Andrea Arcangeli <aarcange@redhat.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] end-to-end data and metadata corruption
+ detection
+Date: Wed, 1 Feb 2012 19:30:54 +0100
+Message-ID: <20120201183054.GM31817@redhat.com>
+References: <yq1k44e1pn6.fsf@sermon.lab.mkp.net>
+ <4F217F0C.6030105@itwm.fraunhofer.de>
+ <yq1y5sovcyw.fsf@sermon.lab.mkp.net>
+ <4F283F7A.4020905@itwm.fraunhofer.de>
+ <CAF3hT9AgVpcZkGLkr4EH4x4heNFgxNykM4Mp3V_C-RBSwJh7mA@mail.gmail.com>
+ <20120201164521.GY16796@shiny>
+ <1328115175.2768.11.camel@dabdike.int.hansenpartnership.com>
+ <20120201174131.GD16796@shiny>
+ <4F297D90.1010509@fastmail.fm>
+ <1328120165.2768.39.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37032 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751996Ab2BATHs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Feb 2012 14:07:48 -0500
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1328079791.21268.61.camel@sli10-conroe>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1328120165.2768.39.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Bernd Schubert <bernd.schubert@fastmail.fm>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Chuck Lever <chuck.lever@oracle.com>, Sven Breuner <sven.breuner@itwm.fraunhofer.de>, Gregory Farnum <gregory.farnum@dreamhost.com>, lsf-pc@lists.linux-foundation.org, Chris Mason <chris.mason@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-On Wed, Feb 01, 2012 at 03:03:11PM +0800, Shaohua Li wrote:
-> On Tue, 2012-01-31 at 13:12 -0500, Jeff Moyer wrote:
-> > Shaohua Li <shaohua.li@intel.com> writes:
-> > 
-> > > Flash based storage has its characteristics. CFQ has some optimizations
-> > > for it, but not enough. The big problem is CFQ doesn't drive deep queue
-> > > depth, which causes poor performance in some workloads. CFQ also isn't
-> > > quite fair for fast storage (or further sacrifice of performance to get
-> > > fairness) because it uses time based accounting. This isn't good for
-> > > block cgroup. We need something different to make both performance and
-> > > fairness good.
-> > >
-> > > A recent attempt is to use IOPS based ioscheduler for flash based
-> > > storage. It's expected to drive deep queue depth (so better performance)
-> > > and be more fairness (IOPS based accounting instead of time based).
-> > >
-> > > I'd like to discuss:
-> > >  - Do we really need it? Or the question is if it is popular real
-> > > workloads drive deep io depth?
-> > >  - Should we have a separate ioscheduler for this or merge it to CFQ?
-> > >  - Other implementation discussions like differentiation of read/write
-> > > requests and request size. Flash based storage doesn't like rotate
-> > > storage, request cost of read/write and different request size usually
-> > > is different.
-> > 
-> > I think you need to define a couple things to really gain traction.
-> > First, what is the target?  Flash storage comes in many varieties, from
-> > really poor performance to really, really fast.  Are you aiming to
-> > address all of them?  If so, then let's see some numbers that prove that
-> > you're basing your scheduling decisions on the right metrics for the
-> > target storage device types.
-> For fast storage, like SSD or PCIe flash card.
+On Wed, Feb 01, 2012 at 12:16:05PM -0600, James Bottomley wrote:
+> supplying protection information to user space isn't about the
+> application checking what's on disk .. there's automatic verification in
+> the chain to do that (both the HBA and the disk will check the
+> protection information on entry/exit and transfer).  Supplying
+> protection information to userspace is about checking nothing went wrong
+> in the handoff between the end of the DIF stack and the application.
 
-PCIe flash card can drive really deep queue depths to achieve optimal
-performance. IIRC, we have driven queue depths of 512 or even more. If
-that's the case, then threre might not be much point in IO scheduler
-trying to provide per process fairness. Deadline doing batches of reads
-and writes might be just enough.
-
-> 
-> > Second, demonstrate how one workload can negatively affect another.  In
-> > other words, justify the need for *any* I/O prioritization.  Building on
-> > that, you'd have to show that you can't achieve your goals with existing
-> > solutions, like deadline or noop with bandwidth control.
-> Basically some workloads with cgroup. bandwidth control doesn't cover
-> all requirements for cgroup users, that's why we have cgroup for CFQ
-> anyway.
-
-What requirements are not covered? If you are just looking for fairness
-among cgroups and CFQ already has iops mode for groups.
-
-> 
-> >   Proportional
-> > weight I/O scheduling is often sub-optimal when the device is not kept
-> > busy.  How will you address that?
-> That's true. I choose better performance instead of better fairness if
-> device isn't busy. Fast flash storage is expensive, I thought
-> performance is more important in such case.
-
-How do you decide whether drive is being utilized to the capacity? Looking
-at queue depths itself is not sufficient. In flash based PCIe devices we
-have noticed that driving deeper queue depths helped with throughput. So
-just looking at random number of requests in flight to determine whether
-drive is fully used or not is not a very good idea.
-
-I agree with Jeff that we probably first need some real workload examples
-and numbers to justify the need of an IOPS based scheduler. Once we are
-convinced that we need it, discussion can go to next level where we
-try to figure out whether we need to extend CFQ to handle that mode or
-we need a new IO scheduler altoghether.
-
-Thanks
-Vivek
+Not sure if I got this right, but keeping protection information for
+in-ram pagecache and exposing it to userland somehow, to me sounds a
+bit of overkill as a concept. Then you should want that for anonymous
+memory too. If you copy the pagecache to a malloc()ed buffer and
+verify pagecache was consistent, but then the buffer is corrupt by
+hardware bitflip or software bug, then what's the point. Besides if
+this is getting exposed to userland and it's not hidden in the kernel
+(FS/Storage layers), userland could code its own verification logic
+without much added complexity. With CRC in hardware on the CPU it
+doesn't sound like a big cost to do it fully in userland and then you
+could run it on anonymous memory too if you need and not be dependent
+on hardware or filesystem details (well other than a a cpuid check at
+startup).
