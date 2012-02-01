@@ -1,71 +1,78 @@
-From: Chris Mason <chris.mason-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+From: Bernd Schubert <bernd.schubert@fastmail.fm>
 Subject: Re: [Lsf-pc] [LSF/MM TOPIC] end-to-end data and metadata corruption
  detection
-Date: Wed, 1 Feb 2012 12:41:31 -0500
-Message-ID: <20120201174131.GD16796@shiny>
-References: <38C050B3-2AAD-4767-9A25-02C33627E427@oracle.com>
- <4F2147BA.6030607@itwm.fraunhofer.de>
- <yq1k44e1pn6.fsf@sermon.lab.mkp.net>
- <4F217F0C.6030105@itwm.fraunhofer.de>
- <yq1y5sovcyw.fsf@sermon.lab.mkp.net>
- <4F283F7A.4020905@itwm.fraunhofer.de>
- <CAF3hT9AgVpcZkGLkr4EH4x4heNFgxNykM4Mp3V_C-RBSwJh7mA@mail.gmail.com>
- <20120201164521.GY16796@shiny>
- <1328115175.2768.11.camel@dabdike.int.hansenpartnership.com>
+Date: Wed, 01 Feb 2012 18:59:44 +0100
+Message-ID: <4F297D90.1010509@fastmail.fm>
+References: <38C050B3-2AAD-4767-9A25-02C33627E427@oracle.com> <4F2147BA.6030607@itwm.fraunhofer.de> <yq1k44e1pn6.fsf@sermon.lab.mkp.net> <4F217F0C.6030105@itwm.fraunhofer.de> <yq1y5sovcyw.fsf@sermon.lab.mkp.net> <4F283F7A.4020905@itwm.fraunhofer.de> <CAF3hT9AgVpcZkGLkr4EH4x4heNFgxNykM4Mp3V_C-RBSwJh7mA@mail.gmail.com> <20120201164521.GY16796@shiny> <1328115175.2768.11.camel@dabdike.int.hansenpartnership.com> <20120201174131.GD16796@shiny>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1328115175.2768.11.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Gregory Farnum <gregory.farnum-OZUH0SiS3Izby3iVrkZq2A@public.gmane.org>, Bernd Schubert <bernd.schubert-mPn0NPGs4xGatNDF+KUbs4QuADTiUCJX@public.gmane.org>, Linux NFS Mailing List <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Sven Breuner <sven.breuner-mPn0NPGs4xGatNDF+KUbs4QuADTiUCJX@public.gmane.org>, Chuck Lever <chuck.lever-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailgw1.uni-kl.de ([131.246.120.220]:58844 "EHLO
+	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752907Ab2BAR7v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2012 12:59:51 -0500
+In-Reply-To: <20120201174131.GD16796@shiny>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chris Mason <chris.mason@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Gregory Farnum <gregory.farnum@dreamhost.com>, Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Sven Breuner <sven.breuner@itwm.fraunhofer.de>, Chuck Lever <chuck.lever@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lsf-pc@lists.linux-foundation.org
 
-On Wed, Feb 01, 2012 at 10:52:55AM -0600, James Bottomley wrote:
-> On Wed, 2012-02-01 at 11:45 -0500, Chris Mason wrote:
-> > On Tue, Jan 31, 2012 at 11:28:26AM -0800, Gregory Farnum wrote:
-> > > On Tue, Jan 31, 2012 at 11:22 AM, Bernd Schubert
-> > > <bernd.schubert-mPn0NPGs4xGatNDF+KUbs4QuADTiUCJX@public.gmane.org> wrote:
-> > > > I guess we should talk to developers of other parallel file systems and see
-> > > > what they think about it. I think cephfs already uses data integrity
-> > > > provided by btrfs, although I'm not entirely sure and need to check the
-> > > > code. As I said before, Lustre does network checksums already and *might* be
-> > > > interested.
-> > > 
-> > > Actually, right now Ceph doesn't check btrfs' data integrity
-> > > information, but since Ceph doesn't have any data-at-rest integrity
-> > > verification it relies on btrfs if you want that. Integrating
-> > > integrity verification throughout the system is on our long-term to-do
-> > > list.
-> > > We too will be said if using a kernel-level integrity system requires
-> > > using DIO, although we could probably work out a way to do
-> > > "translation" between our own integrity checksums and the
-> > > btrfs-generated ones if we have to (thanks to replication).
-> > 
-> > DIO isn't really required, but doing this without synchronous writes
-> > will get painful in a hurry.  There's nothing wrong with letting the
-> > data sit in the page cache after the IO is done though.
-> 
-> I broadly agree with this, but even if you do sync writes and cache read
-> only copies, we still have the problem of how we do the read side
-> verification of DIX.  In theory, when you read, you could either get the
-> cached copy or an actual read (which will supply protection
-> information), so for the cached copy we need to return cached protection
-> information implying that we need some way of actually caching it.
+On 02/01/2012 06:41 PM, Chris Mason wrote:
+> On Wed, Feb 01, 2012 at 10:52:55AM -0600, James Bottomley wrote:
+>> On Wed, 2012-02-01 at 11:45 -0500, Chris Mason wrote:
+>>> On Tue, Jan 31, 2012 at 11:28:26AM -0800, Gregory Farnum wrote:
+>>>> On Tue, Jan 31, 2012 at 11:22 AM, Bernd Schubert
+>>>> <bernd.schubert@itwm.fraunhofer.de>  wrote:
+>>>>> I guess we should talk to developers of other parallel file systems and see
+>>>>> what they think about it. I think cephfs already uses data integrity
+>>>>> provided by btrfs, although I'm not entirely sure and need to check the
+>>>>> code. As I said before, Lustre does network checksums already and *might* be
+>>>>> interested.
+>>>>
+>>>> Actually, right now Ceph doesn't check btrfs' data integrity
+>>>> information, but since Ceph doesn't have any data-at-rest integrity
+>>>> verification it relies on btrfs if you want that. Integrating
+>>>> integrity verification throughout the system is on our long-term to-do
+>>>> list.
+>>>> We too will be said if using a kernel-level integrity system requires
+>>>> using DIO, although we could probably work out a way to do
+>>>> "translation" between our own integrity checksums and the
+>>>> btrfs-generated ones if we have to (thanks to replication).
+>>>
+>>> DIO isn't really required, but doing this without synchronous writes
+>>> will get painful in a hurry.  There's nothing wrong with letting the
+>>> data sit in the page cache after the IO is done though.
+>>
+>> I broadly agree with this, but even if you do sync writes and cache read
+>> only copies, we still have the problem of how we do the read side
+>> verification of DIX.  In theory, when you read, you could either get the
+>> cached copy or an actual read (which will supply protection
+>> information), so for the cached copy we need to return cached protection
+>> information implying that we need some way of actually caching it.
+>
+> Good point, reading from the cached copy is a lower level of protection
+> because in theory bugs in your scsi drivers could corrupt the pages
+> later on.
 
-Good point, reading from the cached copy is a lower level of protection
-because in theory bugs in your scsi drivers could corrupt the pages
-later on.
+But that only matters if the application is going to verify if data are 
+really on disk. For example (client server scenario)
 
-But I think even without keeping the crcs attached to the page, there is
-value in keeping  the cached copy in lots of workloads.  The database is
-going to O_DIRECT read (with crcs checked) and then stuff it into a
-database buffer cache for long term use.  Stuffing it into a page cache
-on the kernel side is about the same.
+1) client-A writes a page
+2) client-B reads this page
 
--chris
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+client-B is simply not interested here where it gets the page from, as 
+long as it gets correct data. The network files system in between also 
+will just be happy existing in-cache crcs for network verification.
+Only if the page is later on dropped from the cache and read again, 
+on-disk crcs matter. If those are bad, one of the layers is going to 
+complain or correct those data.
+
+If the application wants to check data on disk it can either use DIO or 
+alternatively something like fadvsise(DONTNEED_LOCAL_AND_REMOTE) 
+(something I wanted to propose for some time already, at least I'm not 
+happy that posix_fadvise(POSIX_FADV_DONTNEED) is not passed to the file 
+system at all).
+
+
+Cheers,
+Bernd
