@@ -1,64 +1,42 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: FireWire/SBP2 Target mode
-Date: Wed, 1 Feb 2012 22:41:56 +0100
-Message-ID: <20120201224156.0773ebc6@stein>
-References: <4E4BD560.4010806@bootc.net> <4E4D3B88.30003@ladisch.de>
-	<4F29978A.3010707@redhat.com>
+From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] end-to-end data and metadata corruption
+ detection
+Date: Thu, 2 Feb 2012 01:03:00 +0200
+Message-ID: <4F29C4A4.8020005@panasas.com>
+References: <38C050B3-2AAD-4767-9A25-02C33627E427@oracle.com> <4F2147BA.6030607@itwm.fraunhofer.de> <yq1k44e1pn6.fsf@sermon.lab.mkp.net> <4F217F0C.6030105@itwm.fraunhofer.de> <yq1y5sovcyw.fsf@sermon.lab.mkp.net> <4F283F7A.4020905@itwm.fraunhofer.de> <CAF3hT9AgVpcZkGLkr4EH4x4heNFgxNykM4Mp3V_C-RBSwJh7mA@mail.gmail.com> <20120201164521.GY16796@shiny> <1328115175.2768.11.camel@dabdike.int.hansenpartnership.com> <yq1d39ys9n1.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <4F29978A.3010707@redhat.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Andy Grover <agrover@redhat.com>
-Cc: linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <yq1d39ys9n1.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Chris Mason <chris.mason-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Gregory Farnum <gregory.farnum-OZUH0SiS3Izby3iVrkZq2A@public.gmane.org>, Bernd Schubert <bernd.schubert-mPn0NPGs4xGatNDF+KUbs4QuADTiUCJX@public.gmane.org>, Linux NFS Mailing List <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sven Breuner <sven.breuner-mPn0NPGs4xGatNDF+KUbs4QuADTiUCJX@public.gmane.org>, Chuck Lever <chuck.lever-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Feb 01 Andy Grover wrote:
-> You're saying the sbp2 protocol can theoretically be used other places
-> besides firewire? I'd say put it all in the fabric module for now.
+On 02/01/2012 08:15 PM, Martin K. Petersen wrote:
+>>>>>> "James" == James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> writes:
+> 
+> IOW, the filesystem should only ever act as a conduit. The only real
+> challenge as far as I can tell is how to handle concurrent protected and
+> unprotected updates to a page. If a non-PI-aware app updates a cached
+> page which is subsequently read by an app requesting PI that means we
+> may have to force a write-out followed by a read to get valid PI. We
+> could synthesize it to avoid the I/O but I think that would be violating
+> the premise of protected transfer. Another option is to have an
+> exclusive write access mechanism that only permits either protected or
+> unprotected access to a page.
 
-While SBP-2 is explicitly specified for IEEE 1394 a.k.a. FireWire only,
-it could be used on any bus architecture which implements IEEE 1212
-"Control and Status Registers (CSR) Architecture for Microcomputer
-Buses".  But IEEE 1394 a.k.a. FireWire is nowadays the only remaining IEEE
-1212 implementation, as far as I know.
+Yes. a protected write implies a byte-range locking on the file.
+(And can be implemented with one)
 
-On the other hand, the transport protocol SBP-2 can be used to encapsulate
-various protocols besides SCSI.  A long time ago I heard that there were
-SBP-2 printers that weren't SCSI printers, but I may have confused
-something.
+Also the open() call demands an O_PROTECT option. Protection is
+then a file attribute as well.
 
-The current version of the protocol, SBP-3 which extends SBP-2
-in an upwards compatible way, has been developed specifically in
-order to transport AV/C command sets.  (AV/C is a set of specifications
-from the 1394 Trade Association that build on top of IEC 61883 "Consumer
-audio/video equipment - Digital interface" and is used for camcorders,
-audio interfaces, studio-grade video equipment, TV set top boxes etc.)
-But I am not aware of any existing SBP-3 target or SBP-3 initiator which
-actually implements AV/C.
+> 
 
-So in short,
-  - SBP-2/3 is only used on the FireWire bus.
-  - Potentially there could be SBP-2/3 targets or initiators that
-    implement something else than SCSI.  But stock SBP-2/3 initiator
-    drivers of popular OSs are SCSI initiators, and non-SCSI SBP-2/3
-    targets are extremely rare or don't exist actually.
--- 
-Stefan Richter
--=====-===-- --=- ----=
-http://arcgraph.de/sr/
-
-------------------------------------------------------------------------------
-Keep Your Developer Skills Current with LearnDevNow!
-The most comprehensive online learning library for Microsoft developers
-is just $99.99! Visual Studio, SharePoint, SQL - plus HTML5, CSS3, MVC3,
-Metro Style Apps, more. Free future releases when you subscribe now!
-http://p.sf.net/sfu/learndevnow-d2d
+Boaz
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
