@@ -1,69 +1,52 @@
-From: Pekka Enberg <penberg@kernel.org>
+From: Paolo Bonzini <pbonzini@redhat.com>
 Subject: Re: [PATCH v4 0/3] virtio-scsi driver
-Date: Wed, 1 Feb 2012 09:31:12 +0200
-Message-ID: <CAOJsxLHwT0o=mS2nCSxjtwdfOif7oZkT_ZED3UOybFACVG6WvQ@mail.gmail.com>
-References: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
-	<4F26596B.6030703@redhat.com>
+Date: Wed, 01 Feb 2012 09:13:30 +0100
+Message-ID: <4F28F42A.1050103@redhat.com>
+References: <1327077939-7084-1-git-send-email-pbonzini@redhat.com> <4F26596B.6030703@redhat.com> <CAOJsxLHwT0o=mS2nCSxjtwdfOif7oZkT_ZED3UOybFACVG6WvQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4F26596B.6030703@redhat.com>
+In-Reply-To: <CAOJsxLHwT0o=mS2nCSxjtwdfOif7oZkT_ZED3UOybFACVG6WvQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
+To: Pekka Enberg <penberg@kernel.org>
 Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, Sasha Levin <levinsasha928@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Paolo,
+On 02/01/2012 08:31 AM, Pekka Enberg wrote:
+> What's the benefit of virtio-scsi over virtio-blk?
 
-On Mon, Jan 30, 2012 at 10:48 AM, Paolo Bonzini <pbonzini@redhat.com> w=
-rote:
-> On 01/20/2012 05:45 PM, Paolo Bonzini wrote:
->>
->> This is the first implementation of the virtio-scsi driver, a virtua=
-l
->> HBA that will be supported by KVM. =A0It implements a subset of the =
-spec,
->> in particular it does not implement asynchronous notifications for e=
-ither
->> LUN reset/removal/addition or CD-ROM media events, but it is already
->> functional and usable.
->>
->> Other matching bits:
->>
->> - spec at http://people.redhat.com/pbonzini/virtio-spec.pdf
->>
->> - QEMU implementation at git://github.com/bonzini/qemu.git,
->> =A0 branch virtio-scsi
->>
->> Please review. =A0I would like this to be included in 3.3, since the
->> possibility of regressions is obviously zero.
->>
->> Paolo Bonzini (3):
->> =A0 virtio-scsi: first version
->> =A0 virtio-scsi: add error handling
->> =A0 virtio-scsi: add power management support
->>
->> v3->v4: renamed VIRTIO_SCSI_S_UNDERRUN to VIRTIO_SCSI_S_OVERRUN;
->> =A0 =A0 fixed 32-bit compilation; added power management support;
->> =A0 =A0 adjusted calls to virtqueue_add_buf
->>
->> =A0drivers/scsi/Kconfig =A0 =A0 =A0 =A0| =A0 =A08 +
->> =A0drivers/scsi/Makefile =A0 =A0 =A0 | =A0 =A01 +
->> =A0drivers/scsi/virtio_scsi.c =A0| =A0594
->> +++++++++++++++++++++++++++++++++++++++++++
->> =A0include/linux/virtio_ids.h =A0| =A0 =A01 +
->> =A0include/linux/virtio_scsi.h | =A0114 +++++++++
->> =A05 files changed, 718 insertions(+), 0 deletions(-)
->> =A0create mode 100644 drivers/scsi/virtio_scsi.c
->> =A0create mode 100644 include/linux/virtio_scsi.h
->
-> Ping?
+Most of this is in the spec or the KVM Forum 2011 presentation.
 
-What's the benefit of virtio-scsi over virtio-blk? Are we going to
-support both or eventually phase out virtio-blk?
+1) scalability limitations: virtio-blk-over-PCI puts a strong upper
+limit on the number of devices that can be added to a guest. Common
+configurations have a limit of ~30 devices. While this can be worked
+around by implementing a PCI-to-PCI bridge, or by using multifunction
+virtio-blk devices, these solutions either have not been implemented
+yet, or introduce management restrictions.
 
-Have the virtio specification changes been reviewed? Can we guarantee
-stable ABI for the virtio-scsi driver?
+2) limited flexibility: virtio-blk does not support all possible storage
+scenarios.  For example, persistent reservations require you to pass a
+whole LUN to the guest, they do not work with images.  In principle,
+virtio-scsi provides anything that the underlying SCSI target supports.
+The SCSI target can also be the in-kernel LIO target, which can
+talk to virio-scsi via vhost.
 
-                        Pekka
+3) limited extensibility: over the time, many features have been added
+to virtio-blk. Each such change requires modifications to the virtio
+specification, to the guest drivers, and to the device model in the
+host. The virtio-scsi spec has been written to follow SAM conventions,
+and exposing new features to the guest will only require changes to the
+host's SCSI target implementation.
+
+> Are we going to support both or eventually phase out virtio-blk?
+
+Certainly older guests will have no virtio-scsi support, so it's going
+to stay with us for a long time.
+
+> Have the virtio specification changes been reviewed? Can we guarantee
+> stable ABI for the virtio-scsi driver?
+
+Of course.  I would have proposed it for staging otherwise.
+
+Paolo
