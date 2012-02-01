@@ -1,70 +1,69 @@
-From: Shaohua Li <shaohua.li@intel.com>
-Subject: Re: [LSF/MM TOPIC][ATTEND]IOPS based ioscheduler
-Date: Wed, 01 Feb 2012 15:03:11 +0800
-Message-ID: <1328079791.21268.61.camel@sli10-conroe>
-References: <1327997806.21268.47.camel@sli10-conroe>
-	 <x49ehufd9mi.fsf@segfault.boston.devel.redhat.com>
+From: Pekka Enberg <penberg@kernel.org>
+Subject: Re: [PATCH v4 0/3] virtio-scsi driver
+Date: Wed, 1 Feb 2012 09:31:12 +0200
+Message-ID: <CAOJsxLHwT0o=mS2nCSxjtwdfOif7oZkT_ZED3UOybFACVG6WvQ@mail.gmail.com>
+References: <1327077939-7084-1-git-send-email-pbonzini@redhat.com>
+	<4F26596B.6030703@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:20453 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755189Ab2BAHES (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Feb 2012 02:04:18 -0500
-In-Reply-To: <x49ehufd9mi.fsf@segfault.boston.devel.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4F26596B.6030703@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, Sasha Levin <levinsasha928@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2012-01-31 at 13:12 -0500, Jeff Moyer wrote:
-> Shaohua Li <shaohua.li@intel.com> writes:
-> 
-> > Flash based storage has its characteristics. CFQ has some optimizations
-> > for it, but not enough. The big problem is CFQ doesn't drive deep queue
-> > depth, which causes poor performance in some workloads. CFQ also isn't
-> > quite fair for fast storage (or further sacrifice of performance to get
-> > fairness) because it uses time based accounting. This isn't good for
-> > block cgroup. We need something different to make both performance and
-> > fairness good.
-> >
-> > A recent attempt is to use IOPS based ioscheduler for flash based
-> > storage. It's expected to drive deep queue depth (so better performance)
-> > and be more fairness (IOPS based accounting instead of time based).
-> >
-> > I'd like to discuss:
-> >  - Do we really need it? Or the question is if it is popular real
-> > workloads drive deep io depth?
-> >  - Should we have a separate ioscheduler for this or merge it to CFQ?
-> >  - Other implementation discussions like differentiation of read/write
-> > requests and request size. Flash based storage doesn't like rotate
-> > storage, request cost of read/write and different request size usually
-> > is different.
-> 
-> I think you need to define a couple things to really gain traction.
-> First, what is the target?  Flash storage comes in many varieties, from
-> really poor performance to really, really fast.  Are you aiming to
-> address all of them?  If so, then let's see some numbers that prove that
-> you're basing your scheduling decisions on the right metrics for the
-> target storage device types.
-For fast storage, like SSD or PCIe flash card.
+Hello Paolo,
 
-> Second, demonstrate how one workload can negatively affect another.  In
-> other words, justify the need for *any* I/O prioritization.  Building on
-> that, you'd have to show that you can't achieve your goals with existing
-> solutions, like deadline or noop with bandwidth control.
-Basically some workloads with cgroup. bandwidth control doesn't cover
-all requirements for cgroup users, that's why we have cgroup for CFQ
-anyway.
+On Mon, Jan 30, 2012 at 10:48 AM, Paolo Bonzini <pbonzini@redhat.com> w=
+rote:
+> On 01/20/2012 05:45 PM, Paolo Bonzini wrote:
+>>
+>> This is the first implementation of the virtio-scsi driver, a virtua=
+l
+>> HBA that will be supported by KVM. =A0It implements a subset of the =
+spec,
+>> in particular it does not implement asynchronous notifications for e=
+ither
+>> LUN reset/removal/addition or CD-ROM media events, but it is already
+>> functional and usable.
+>>
+>> Other matching bits:
+>>
+>> - spec at http://people.redhat.com/pbonzini/virtio-spec.pdf
+>>
+>> - QEMU implementation at git://github.com/bonzini/qemu.git,
+>> =A0 branch virtio-scsi
+>>
+>> Please review. =A0I would like this to be included in 3.3, since the
+>> possibility of regressions is obviously zero.
+>>
+>> Paolo Bonzini (3):
+>> =A0 virtio-scsi: first version
+>> =A0 virtio-scsi: add error handling
+>> =A0 virtio-scsi: add power management support
+>>
+>> v3->v4: renamed VIRTIO_SCSI_S_UNDERRUN to VIRTIO_SCSI_S_OVERRUN;
+>> =A0 =A0 fixed 32-bit compilation; added power management support;
+>> =A0 =A0 adjusted calls to virtqueue_add_buf
+>>
+>> =A0drivers/scsi/Kconfig =A0 =A0 =A0 =A0| =A0 =A08 +
+>> =A0drivers/scsi/Makefile =A0 =A0 =A0 | =A0 =A01 +
+>> =A0drivers/scsi/virtio_scsi.c =A0| =A0594
+>> +++++++++++++++++++++++++++++++++++++++++++
+>> =A0include/linux/virtio_ids.h =A0| =A0 =A01 +
+>> =A0include/linux/virtio_scsi.h | =A0114 +++++++++
+>> =A05 files changed, 718 insertions(+), 0 deletions(-)
+>> =A0create mode 100644 drivers/scsi/virtio_scsi.c
+>> =A0create mode 100644 include/linux/virtio_scsi.h
+>
+> Ping?
 
->   Proportional
-> weight I/O scheduling is often sub-optimal when the device is not kept
-> busy.  How will you address that?
-That's true. I choose better performance instead of better fairness if
-device isn't busy. Fast flash storage is expensive, I thought
-performance is more important in such case.
+What's the benefit of virtio-scsi over virtio-blk? Are we going to
+support both or eventually phase out virtio-blk?
 
-Thanks,
-Shaohua
+Have the virtio specification changes been reviewed? Can we guarantee
+stable ABI for the virtio-scsi driver?
 
+                        Pekka
