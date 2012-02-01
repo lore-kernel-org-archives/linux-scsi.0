@@ -1,88 +1,47 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] lsscsi 0.26 beta 2, add --wwn
-Date: Wed, 01 Feb 2012 11:32:57 -0500
-Message-ID: <4F296939.9040806@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Chris Mason <chris.mason@oracle.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] end-to-end data and metadata corruption
+ detection
+Date: Wed, 1 Feb 2012 11:45:21 -0500
+Message-ID: <20120201164521.GY16796@shiny>
+References: <38C050B3-2AAD-4767-9A25-02C33627E427@oracle.com>
+ <4F2147BA.6030607@itwm.fraunhofer.de>
+ <yq1k44e1pn6.fsf@sermon.lab.mkp.net>
+ <4F217F0C.6030105@itwm.fraunhofer.de>
+ <yq1y5sovcyw.fsf@sermon.lab.mkp.net>
+ <4F283F7A.4020905@itwm.fraunhofer.de>
+ <CAF3hT9AgVpcZkGLkr4EH4x4heNFgxNykM4Mp3V_C-RBSwJh7mA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:41237 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752824Ab2BAQdH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Feb 2012 11:33:07 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.infotech.no (Postfix) with ESMTP id A4D192041B6
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Feb 2012 17:33:00 +0100 (CET)
-Received: from smtp.infotech.no ([127.0.0.1])
-	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id sLQPL9yYINLQ for <linux-scsi@vger.kernel.org>;
-	Wed,  1 Feb 2012 17:32:59 +0100 (CET)
-Received: from [192.168.48.66] (unknown [216.99.49.31])
-	by smtp.infotech.no (Postfix) with ESMTPA id CBA0D2041B5
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Feb 2012 17:32:58 +0100 (CET)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAF3hT9AgVpcZkGLkr4EH4x4heNFgxNykM4Mp3V_C-RBSwJh7mA@mail.gmail.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Gregory Farnum <gregory.farnum@dreamhost.com>
+Cc: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Sven Breuner <sven.breuner@itwm.fraunhofer.de>, Chuck Lever <chuck.lever@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lsf-pc@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
 
-lsscsi currently can provide some transport related
-WWN information when the --transport (-t) option
-is used. This will probably be a target port name rather
-than a LU name.
-Fetching the LU name has proven elusive. The most direct
-way would be to issue an INQUIRY to get the device
-identification VPD page but that would require root
-permissions. A feature of lsscsi is that it doesn't need
-root permissions (or related tricks).
+On Tue, Jan 31, 2012 at 11:28:26AM -0800, Gregory Farnum wrote:
+> On Tue, Jan 31, 2012 at 11:22 AM, Bernd Schubert
+> <bernd.schubert@itwm.fraunhofer.de> wrote:
+> > I guess we should talk to developers of other parallel file systems and see
+> > what they think about it. I think cephfs already uses data integrity
+> > provided by btrfs, although I'm not entirely sure and need to check the
+> > code. As I said before, Lustre does network checksums already and *might* be
+> > interested.
+> 
+> Actually, right now Ceph doesn't check btrfs' data integrity
+> information, but since Ceph doesn't have any data-at-rest integrity
+> verification it relies on btrfs if you want that. Integrating
+> integrity verification throughout the system is on our long-term to-do
+> list.
+> We too will be said if using a kernel-level integrity system requires
+> using DIO, although we could probably work out a way to do
+> "translation" between our own integrity checksums and the
+> btrfs-generated ones if we have to (thanks to replication).
 
-This beta adds a --wwn (-w) option which searches the udev
-provided /dev/disk/by-id/wwn-* symlinks. This will find
-WWNs (LU names) for disks if udev can find them.
+DIO isn't really required, but doing this without synchronous writes
+will get painful in a hurry.  There's nothing wrong with letting the
+data sit in the page cache after the IO is done though.
 
-If there is no averse feedback version 0.26 will be released
-in a few weeks.
+-chris
 
-
-There are two SATA disks in the example below: /dev/sda and
-/dev/sdd . /dev/sda has no WWN and is directly connected to
-a SATA controller on the motherboard. /dev/sdd has a WNN and
-is connected via a SAS expander.
-
-# lsscsi
-[1:0:0:0]    disk    ATA      ST3320620AS      3.AA  /dev/sda
-[6:0:0:0]    enclosu Intel    RES2SV240        0600  -
-[6:0:1:0]    disk    SEAGATE  ST33000650SS     0002  /dev/sdb
-[6:0:2:0]    disk    SEAGATE  ST32000444SS     0006  /dev/sdc
-[6:0:3:0]    disk    ATA      ST3500418AS      CC34  /dev/sdd
-
-# lsscsi -w
-[1:0:0:0]    disk                                    /dev/sda
-[6:0:0:0]    enclosu                                 -
-[6:0:1:0]    disk    0x5000c50033fe58db              /dev/sdb
-[6:0:2:0]    disk    0x5000c500215725bf              /dev/sdc
-[6:0:3:0]    disk    0x5000c500120bfe84              /dev/sdd
-
-# lsscsi -t
-[1:0:0:0]    disk    sata:                           /dev/sda
-[6:0:0:0]    enclosu sas:0x5001517e85c3effd          -
-[6:0:1:0]    disk    sas:0x5000c50033fe58d9          /dev/sdb
-[6:0:2:0]    disk    sas:0x5000c500215725bd          /dev/sdc
-[6:0:3:0]    disk    sas:0x5001517e85c3efe2          /dev/sdd
-
-
-Version 0.26 beta 2 is available at:
-     http://sg.danny.cz/scsi/lsscsi.html
-More information can be found on that page including examples
-and a Download section for the tarball:
-   http://sg.danny.cz/scsi/lsscsi-0.26b2.tgz
-There are no debian or redhat packages built for this beta.
-
-Version 0.26 2012/01/31 [svn: r97]
-   - add 'fcoe' transport indicator
-   - add '--wwn' option, datamine /dev/disk/by-id/wwn*
-   - move lsscsi.c into src directory
-
-Version 0.25 2011/05/09 [svn: r92]
-...
-
-Doug Gilbert
