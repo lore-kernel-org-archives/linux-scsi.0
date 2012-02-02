@@ -1,36 +1,33 @@
-From: Sander Smeenk <ssmeenk@freshdot.net>
-Subject: Re: scsi_scan.c reports 'target allocation failed, error -6' w/
- mptsas
-Date: Thu, 2 Feb 2012 13:45:45 +0100
-Message-ID: <20120202124545.GG10289@dot.freshdot.net>
-References: <20120118100635.GA19750@dot.freshdot.net>
- <A6888A6805518E4EA4AF7072A28264A6048BC1A714@inbmail02.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dot.freshdot.net ([213.154.236.176]:44898 "EHLO
-	dot.freshdot.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753586Ab2BBNQW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2012 08:16:22 -0500
-Content-Disposition: inline
-In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6048BC1A714@inbmail02.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] [trivial] scsi: Fix typo in mvumi.c
+Date: Thu,  2 Feb 2012 22:34:43 +0900
+Message-ID: <1328189683-1722-1-git-send-email-standby24x7@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: standby24x7@gmail.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Quoting Nandigama, Nagalakshmi (Nagalakshmi.Nandigama@lsi.com):
+Correct spelling "resouce" to "resource" in
+drivers/scsi/mvumi.c
 
-> Sander, can you apply the attached patch and redo the test.
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ drivers/scsi/mvumi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks a bundle. I had to test this on a different machine but i could
-reproduce the problem there too. This patch fixes the issues. The drive
-can now be removed an replaced withouth the 'target allocation failed'
-messages appearing.
-
-Thanks a lot!
-
-With regards,
--Sander.
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 88cf1db..787d9bd 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -122,7 +122,7 @@ static struct mvumi_res *mvumi_alloc_mem_resource(struct mvumi_hba *mhba,
+ 
+ 	if (!res) {
+ 		dev_err(&mhba->pdev->dev,
+-			"Failed to allocate memory for resouce manager.\n");
++			"Failed to allocate memory for resource manager.\n");
+ 		return NULL;
+ 	}
+ 
 -- 
-| Man who scratches ass should not bite fingernail.
-| 4096R/20CC6CD2 - 6D40 1A20 B9AA 87D4 84C7  FBD6 F3A9 9442 20CC 6CD2
+1.7.6.5
