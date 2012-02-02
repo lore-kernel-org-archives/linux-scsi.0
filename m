@@ -1,116 +1,65 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: [PATCH] scsi_dh_rdac: Fix for unbalanced reference count
-Date: Wed, 1 Feb 2012 23:41:21 +0000
-Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B0101FE@SACEXCMBX02-PRD.hq.netapp.com>
+From: Joe Jin <joe.jin@oracle.com>
+Subject: [PATCH-RESEND] [SCSI] fnic: return zero on fnic_reset() success
+Date: Thu, 02 Feb 2012 10:26:30 +0800
+Message-ID: <4F29F456.8090508@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:44091 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752806Ab2BAXlr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Feb 2012 18:41:47 -0500
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>, Brian Uchino <buchino@cisco.com>, torvalds@linux-foundation.org
+Cc: Sriharsha <sriharsha.devdas@oracle.com>, Joe Jin <joe.jin@oracle.com>, stable@vger.kernel.org, linux-scsi@vger.kernel.org, andrew thomas <andrew.thomas@oracle.com>, Greg Marsden <greg.marsden@oracle.com>, Guru Anbalagane <guru.anbalagane@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "device-mapper development (dm-devel@redhat.com)" <dm-devel@redhat.com>, "Mike Snitzer <snitzer@redhat.com> (snitzer@redhat.com)" <snitzer@redhat.com>
 
-VGhpcyBwYXRjaCBmaXhlcyBhbiB1bmJhbGFuY2VkIHJlZmNvdW50IGlzc3VlLg0KDQpFbGV2YXRp
-bmcgdGhlIGxvY2sgZm9yIGJvdGgga3JlZl9wdXQgYW5kIGFsc28gZm9yIGNvbnRyb2xsZXIgbm9k
-ZSBkZWxldGlvbi4NClByZXZpb3VzbHksIGNvbnRyb2xsZXIgZGVsZXRpb24gd2FzIHByb3RlY3Rl
-ZCBidXQgdGhlIG5vdCB0aGUga3JlZl9wdXQuIFRoaXMgd2FzIGNhdXNpbmcNCnRoZSBvdGhlciB0
-aHJlYWQgdG8gcGljayB1cCB0aGUgY29udHJvbGxlciBzdHJ1Y3R1cmUgd2hpY2ggd2FzIGFscmVh
-ZHkga3JlZidkIHplcm8uDQoNClRoaXMgd2FzIGNhdXNpbmcgdGhlIGZvbGxvd2luZyBCVUdfT04g
-YW5kIGFsc28gc29tZXRpbWVzIHBhbmljLg0KDQpXQVJOSU5HOiBhdCBsaWIva3JlZi5jOjQzIGty
-ZWZfZ2V0KzB4MmQvMHgzMCgpIChOb3QgdGFpbnRlZCkNCkhhcmR3YXJlIG5hbWU6IElCTSBTeXN0
-ZW0geDM2NTUgLVs3OTg1QUMxXS0NCk1vZHVsZXMgbGlua2VkIGluOiBmdXNlIHNjc2lfZGhfcmRh
-YyBhdXRvZnM0IG5mcyBsb2NrZCBmc2NhY2hlIG5mc19hY2wNCmF1dGhfcnBjZ3NzIHN1bnJwYyA4
-MDIxcSBnYXJwIHN0cCBsbGMgaXB2NiBpYl9zcnAoVSkgc2NzaV90cmFuc3BvcnRfc3JwDQpzY3Np
-X3RndCBpYl9jbShVKSBpYl9zYShVKSBpYl91dmVyYnMoVSkgaWJfdW1hZChVKSBtbHg0X2liKFUp
-IG1seDRfY29yZShVKQ0KaWJfbXRoY2EoVSkgaWJfbWFkKFUpIGliX2NvcmUoVSkgZG1fbWlycm9y
-IGRtX3JlZ2lvbl9oYXNoIGRtX2xvZyBkbV9yb3VuZF9yb2Jpbg0KZG1fbXVsdGlwYXRoIHVpbnB1
-dCBibngyIHNlcyBlbmNsb3N1cmUgc2cgaWJtcGV4IGlibWFlbSBpcG1pX21zZ2hhbmRsZXINCnNl
-cmlvX3JhdyBrOHRlbXAgaHdtb24gYW1kNjRfZWRhY19tb2QgZWRhY19jb3JlIGVkYWNfbWNlX2Ft
-ZCBzaHBjaHAgaTJjX3BpaXg0DQpleHQ0IG1iY2FjaGUgamJkMiBzcl9tb2QgY2Ryb20gc2RfbW9k
-IGNyY190MTBkaWYgc2F0YV9zdncgcGF0YV9hY3BpIGF0YV9nZW5lcmljDQpwYXRhX3NlcnZlcndv
-cmtzIGFhY3JhaWQgcmFkZW9uIHR0bSBkcm1fa21zX2hlbHBlciBkcm0gaTJjX2FsZ29fYml0IGky
-Y19jb3JlDQpkbV9tb2QgW2xhc3QgdW5sb2FkZWQ6IGZyZXFfdGFibGVdDQpQaWQ6IDEzNzM1LCBj
-b21tOiBzcnBfZGFlbW9uIE5vdCB0YWludGVkIDIuNi4zMi03MS5lbDYueDg2XzY0ICMxDQpDYWxs
-IFRyYWNlOg0KWzxmZmZmZmZmZjgxMDZiODU3Pl0gd2Fybl9zbG93cGF0aF9jb21tb24rMHg4Ny8w
-eGMwDQpbPGZmZmZmZmZmODEwNmI4YWE+XSB3YXJuX3Nsb3dwYXRoX251bGwrMHgxYS8weDIwDQpb
-PGZmZmZmZmZmODEyNWMzOWQ+XSBrcmVmX2dldCsweDJkLzB4MzANCls8ZmZmZmZmZmZhMDFiNDAy
-OT5dIHJkYWNfYnVzX2F0dGFjaCsweDQ1OS8weDU4MCBbc2NzaV9kaF9yZGFjXQ0KWzxmZmZmZmZm
-ZjgxMzUyMzJhPl0gc2NzaV9kaF9oYW5kbGVyX2F0dGFjaCsweDJhLzB4ODANCls8ZmZmZmZmZmY4
-MTM1MmM3Yj5dIHNjc2lfZGhfbm90aWZpZXIrMHg5Yi8weGEwDQpbPGZmZmZmZmZmODE0Y2Q3YTU+
-XSBub3RpZmllcl9jYWxsX2NoYWluKzB4NTUvMHg4MA0KWzxmZmZmZmZmZjgxMDk3MTFhPl0gX19i
-bG9ja2luZ19ub3RpZmllcl9jYWxsX2NoYWluKzB4NWEvMHg4MA0KWzxmZmZmZmZmZjgxMDk3MTU2
-Pl0gYmxvY2tpbmdfbm90aWZpZXJfY2FsbF9jaGFpbisweDE2LzB4MjANCls8ZmZmZmZmZmY4MTMy
-YmVjNT5dIGRldmljZV9hZGQrMHg1MTUvMHg2NDANCls8ZmZmZmZmZmY4MTMzMjllND5dID8gYXR0
-cmlidXRlX2NvbnRhaW5lcl9kZXZpY2VfdHJpZ2dlcisweGM0LzB4ZTANCls8ZmZmZmZmZmY4MTM0
-ZjY1OT5dIHNjc2lfc3lzZnNfYWRkX3NkZXYrMHg4OS8weDJjMA0KWzxmZmZmZmZmZjgxMzRkMDk2
-Pl0gc2NzaV9wcm9iZV9hbmRfYWRkX2x1bisweGVhNi8weGVkMA0KWzxmZmZmZmZmZjgxMzRiZWIy
-Pl0gPyBzY3NpX2FsbG9jX3RhcmdldCsweDI5Mi8weDJkMA0KWzxmZmZmZmZmZjgxMzRkMWUxPl0g
-X19zY3NpX3NjYW5fdGFyZ2V0KzB4MTIxLzB4NzUwDQpbPGZmZmZmZmZmODExZGY4MDY+XSA/IHN5
-c2ZzX2NyZWF0ZV9maWxlKzB4MjYvMHgzMA0KWzxmZmZmZmZmZjgxMzJiNzU5Pl0gPyBkZXZpY2Vf
-Y3JlYXRlX2ZpbGUrMHgxOS8weDIwDQpbPGZmZmZmZmZmODEzMzI4Mzg+XSA/IGF0dHJpYnV0ZV9j
-b250YWluZXJfYWRkX2F0dHJzKzB4NzgvMHg5MA0KWzxmZmZmZmZmZjgxNGIwMDhjPl0gPyBrbGlz
-dF9uZXh0KzB4NGMvMHhmMA0KWzxmZmZmZmZmZjgxMzMyZTMwPl0gPyB0cmFuc3BvcnRfY29uZmln
-dXJlKzB4MC8weDIwDQpbPGZmZmZmZmZmODEzMzI5ZTQ+XSA/IGF0dHJpYnV0ZV9jb250YWluZXJf
-ZGV2aWNlX3RyaWdnZXIrMHhjNC8weGUwDQpbPGZmZmZmZmZmODEzNGRmNDA+XSBzY3NpX3NjYW5f
-dGFyZ2V0KzB4ZDAvMHhlMA0KWzxmZmZmZmZmZmEwMmYwNTNhPl0gc3JwX2NyZWF0ZV90YXJnZXQr
-MHg3NWEvMHg4OTAgW2liX3NycF0NCls8ZmZmZmZmZmY4MTMyYTEzMD5dIGRldl9hdHRyX3N0b3Jl
-KzB4MjAvMHgzMA0KWzxmZmZmZmZmZjgxMWRmMTQ1Pl0gc3lzZnNfd3JpdGVfZmlsZSsweGU1LzB4
-MTcwDQpbPGZmZmZmZmZmODExNmM4MTg+XSB2ZnNfd3JpdGUrMHhiOC8weDFhMA0KWzxmZmZmZmZm
-ZjgxMGQ0MGEyPl0gPyBhdWRpdF9zeXNjYWxsX2VudHJ5KzB4MjcyLzB4MmEwDQpbPGZmZmZmZmZm
-ODExNmQyNTE+XSBzeXNfd3JpdGUrMHg1MS8weDkwDQpbPGZmZmZmZmZmODEwMTMxNzI+XSBzeXN0
-ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWINCg0KDQpTaWduZWQtb2ZmLWJ5OiBCYWJ1IE1vZ2Vy
-IDxiYWJ1Lm1vZ2VyQG5ldGFwcC5jb20+DQpBY2tlZC1ieTogTWlrZSBTbml0emVyIDxzbml0emVy
-QHJlZGhhdC5jb20+DQotLS0NCi0tLSBsaW51eC0zLjMtcmMxLW5ldy9kcml2ZXJzL3Njc2kvZGV2
-aWNlX2hhbmRsZXIvc2NzaV9kaF9yZGFjLmMub3JpZwkyMDEyLTAxLTE5IDE3OjA0OjQ4LjAwMDAw
-MDAwMCAtMDYwMA0KKysrIGxpbnV4LTMuMy1yYzEtbmV3L2RyaXZlcnMvc2NzaS9kZXZpY2VfaGFu
-ZGxlci9zY3NpX2RoX3JkYWMuYwkyMDEyLTAyLTAxIDEwOjUwOjMxLjAwMDAwMDAwMCAtMDYwMA0K
-QEAgLTM2NCwxMCArMzY0LDcgQEAgc3RhdGljIHZvaWQgcmVsZWFzZV9jb250cm9sbGVyKHN0cnVj
-dCBrcg0KIAlzdHJ1Y3QgcmRhY19jb250cm9sbGVyICpjdGxyOw0KIAljdGxyID0gY29udGFpbmVy
-X29mKGtyZWYsIHN0cnVjdCByZGFjX2NvbnRyb2xsZXIsIGtyZWYpOw0KIA0KLQlmbHVzaF93b3Jr
-cXVldWUoa21wYXRoX3JkYWNkKTsNCi0Jc3Bpbl9sb2NrKCZsaXN0X2xvY2spOw0KIAlsaXN0X2Rl
-bCgmY3Rsci0+bm9kZSk7DQotCXNwaW5fdW5sb2NrKCZsaXN0X2xvY2spOw0KIAlrZnJlZShjdGxy
-KTsNCiB9DQogDQpAQCAtMzc2LDIwICszNzMsMTcgQEAgc3RhdGljIHN0cnVjdCByZGFjX2NvbnRy
-b2xsZXIgKmdldF9jb250cg0KIHsNCiAJc3RydWN0IHJkYWNfY29udHJvbGxlciAqY3RsciwgKnRt
-cDsNCiANCi0Jc3Bpbl9sb2NrKCZsaXN0X2xvY2spOw0KLQ0KIAlsaXN0X2Zvcl9lYWNoX2VudHJ5
-KHRtcCwgJmN0bHJfbGlzdCwgbm9kZSkgew0KIAkJaWYgKChtZW1jbXAodG1wLT5hcnJheV9pZCwg
-YXJyYXlfaWQsIFVOSVFVRV9JRF9MRU4pID09IDApICYmDQogCQkJICAodG1wLT5pbmRleCA9PSBp
-bmRleCkgJiYNCiAJCQkgICh0bXAtPmhvc3QgPT0gc2Rldi0+aG9zdCkpIHsNCiAJCQlrcmVmX2dl
-dCgmdG1wLT5rcmVmKTsNCi0JCQlzcGluX3VubG9jaygmbGlzdF9sb2NrKTsNCiAJCQlyZXR1cm4g
-dG1wOw0KIAkJfQ0KIAl9DQogCWN0bHIgPSBrbWFsbG9jKHNpemVvZigqY3RsciksIEdGUF9BVE9N
-SUMpOw0KIAlpZiAoIWN0bHIpDQotCQlnb3RvIGRvbmU7DQorCQlyZXR1cm4gTlVMTDsNCiANCiAJ
-LyogaW5pdGlhbGl6ZSBmaWVsZHMgb2YgY29udHJvbGxlciAqLw0KIAltZW1jcHkoY3Rsci0+YXJy
-YXlfaWQsIGFycmF5X2lkLCBVTklRVUVfSURfTEVOKTsNCkBAIC00MDUsOCArMzk5LDcgQEAgc3Rh
-dGljIHN0cnVjdCByZGFjX2NvbnRyb2xsZXIgKmdldF9jb250cg0KIAlJTklUX1dPUksoJmN0bHIt
-Pm1zX3dvcmssIHNlbmRfbW9kZV9zZWxlY3QpOw0KIAlJTklUX0xJU1RfSEVBRCgmY3Rsci0+bXNf
-aGVhZCk7DQogCWxpc3RfYWRkKCZjdGxyLT5ub2RlLCAmY3Rscl9saXN0KTsNCi1kb25lOg0KLQlz
-cGluX3VubG9jaygmbGlzdF9sb2NrKTsNCisNCiAJcmV0dXJuIGN0bHI7DQogfQ0KIA0KQEAgLTUx
-Nyw5ICs1MTAsMTIgQEAgc3RhdGljIGludCBpbml0aWFsaXplX2NvbnRyb2xsZXIoc3RydWN0DQog
-CQkJaW5kZXggPSAwOw0KIAkJZWxzZQ0KIAkJCWluZGV4ID0gMTsNCisNCisJCXNwaW5fbG9jaygm
-bGlzdF9sb2NrKTsNCiAJCWgtPmN0bHIgPSBnZXRfY29udHJvbGxlcihpbmRleCwgYXJyYXlfbmFt
-ZSwgYXJyYXlfaWQsIHNkZXYpOw0KIAkJaWYgKCFoLT5jdGxyKQ0KIAkJCWVyciA9IFNDU0lfREhf
-UkVTX1RFTVBfVU5BVkFJTDsNCisJCXNwaW5fdW5sb2NrKCZsaXN0X2xvY2spOw0KIAl9DQogCXJl
-dHVybiBlcnI7DQogfQ0KQEAgLTkwNiw3ICs5MDIsOSBAQCBzdGF0aWMgaW50IHJkYWNfYnVzX2F0
-dGFjaChzdHJ1Y3Qgc2NzaV9kDQogCXJldHVybiAwOw0KIA0KIGNsZWFuX2N0bHI6DQorCXNwaW5f
-bG9jaygmbGlzdF9sb2NrKTsNCiAJa3JlZl9wdXQoJmgtPmN0bHItPmtyZWYsIHJlbGVhc2VfY29u
-dHJvbGxlcik7DQorCXNwaW5fdW5sb2NrKCZsaXN0X2xvY2spOw0KIA0KIGZhaWxlZDoNCiAJa2Zy
-ZWUoc2NzaV9kaF9kYXRhKTsNCkBAIC05MjEsMTQgKzkxOSwxOSBAQCBzdGF0aWMgdm9pZCByZGFj
-X2J1c19kZXRhY2goIHN0cnVjdCBzY3NpDQogCXN0cnVjdCByZGFjX2RoX2RhdGEgKmg7DQogCXVu
-c2lnbmVkIGxvbmcgZmxhZ3M7DQogDQotCXNwaW5fbG9ja19pcnFzYXZlKHNkZXYtPnJlcXVlc3Rf
-cXVldWUtPnF1ZXVlX2xvY2ssIGZsYWdzKTsNCiAJc2NzaV9kaF9kYXRhID0gc2Rldi0+c2NzaV9k
-aF9kYXRhOw0KKwloID0gKHN0cnVjdCByZGFjX2RoX2RhdGEgKikgc2NzaV9kaF9kYXRhLT5idWY7
-DQorCWlmIChoLT5jdGxyICYmIGgtPmN0bHItPm1zX3F1ZXVlZCkNCisJCWZsdXNoX3dvcmtxdWV1
-ZShrbXBhdGhfcmRhY2QpOw0KKw0KKwlzcGluX2xvY2tfaXJxc2F2ZShzZGV2LT5yZXF1ZXN0X3F1
-ZXVlLT5xdWV1ZV9sb2NrLCBmbGFncyk7DQogCXNkZXYtPnNjc2lfZGhfZGF0YSA9IE5VTEw7DQog
-CXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoc2Rldi0+cmVxdWVzdF9xdWV1ZS0+cXVldWVfbG9jaywg
-ZmxhZ3MpOw0KIA0KLQloID0gKHN0cnVjdCByZGFjX2RoX2RhdGEgKikgc2NzaV9kaF9kYXRhLT5i
-dWY7DQorCXNwaW5fbG9jaygmbGlzdF9sb2NrKTsNCiAJaWYgKGgtPmN0bHIpDQogCQlrcmVmX3B1
-dCgmaC0+Y3Rsci0+a3JlZiwgcmVsZWFzZV9jb250cm9sbGVyKTsNCisJc3Bpbl91bmxvY2soJmxp
-c3RfbG9jayk7DQogCWtmcmVlKHNjc2lfZGhfZGF0YSk7DQogCW1vZHVsZV9wdXQoVEhJU19NT0RV
-TEUpOw0KIAlzZGV2X3ByaW50ayhLRVJOX05PVElDRSwgc2RldiwgIiVzOiBEZXRhY2hlZFxuIiwg
-UkRBQ19OQU1FKTsNCg0KDQo=
+When issue LIP by sysfs found write("1") returned 8194, this caused by
+fnic_reset() return SUCCESS to store_fc_private_host_issue_lip().
+Return 0/-1 for fnic_reset() fix this issue.
+
+Tested-by: Sriharsha <sriharsha.devdas@oracle.com>
+Signed-off-by: Joe Jin <joe.jin@oracle.com>
+Cc: Abhijeet Joglekar <abjoglek@cisco.com>
+Cc: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>
+Cc: Brian Uchino <buchino@cisco.com>
+CC: stable@vger.kernel.org
+---
+ drivers/scsi/fnic/fnic_scsi.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index c40ce52..e705e5e 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -1662,7 +1662,7 @@ int fnic_reset(struct Scsi_Host *shost)
+ {
+ 	struct fc_lport *lp;
+ 	struct fnic *fnic;
+-	int ret = SUCCESS;
++	int ret = 0;
+ 
+ 	lp = shost_priv(shost);
+ 	fnic = lport_priv(lp);
+@@ -1675,11 +1675,11 @@ int fnic_reset(struct Scsi_Host *shost)
+ 	 * reset remote port sessions, and if link is up, begin flogi
+ 	 */
+ 	if (lp->tt.lport_reset(lp))
+-		ret = FAILED;
++		ret = -1;
+ 
+ 	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+ 		      "Returning from fnic reset %s\n",
+-		      (ret == SUCCESS) ?
++		      (ret == 0) ?
+ 		      "SUCCESS" : "FAILED");
+ 
+ 	return ret;
+@@ -1706,7 +1706,7 @@ int fnic_host_reset(struct scsi_cmnd *sc)
+ 	 * scsi-ml tries to send a TUR to every device if host reset is
+ 	 * successful, so before returning to scsi, fabric should be up
+ 	 */
+-	ret = fnic_reset(shost);
++	ret = (fnic_reset(shost) == 0) ? SUCCESS : FAILED;
+ 	if (ret == SUCCESS) {
+ 		wait_host_tmo = jiffies + FNIC_HOST_RESET_SETTLE_TIME * HZ;
+ 		ret = FAILED;
+-- 
+1.7.7.5
