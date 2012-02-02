@@ -1,52 +1,106 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: GRUB doesn't like ServeRAID M1015/LSI 9220-8i (was Re: mvsas with 3.1)
-Date: Wed, 1 Feb 2012 21:04:20 -0700
-Message-ID: <201202012104.20564.thomas@fjellstrom.ca>
-References: <201201131144.58044.thomas@fjellstrom.ca> <201202010742.07818.thomas@fjellstrom.ca> <4F29FCB2.6040204@fnarfbargle.com>
-Reply-To: thomas@fjellstrom.ca
+From: Vinayak Holikatti <vinholikatti@gmail.com>
+Subject: [PATCH 0/4] [SCSI] ufshcd: UFS Host Controller Driver
+Date: Thu,  2 Feb 2012 10:27:25 +0530
+Message-ID: <1328158649-4137-1-git-send-email-vinholikatti@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F29FCB2.6040204@fnarfbargle.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@fnarfbargle.com>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, saugata.das@linaro.org, arnd@arndb.de, venkat@linaro.org, girish.shivananjappa@linaro.org, vishak.g@samsung.com, k.rajesh@samsung.com, yejin.moon@samsung.com, Santosh Yaraganavi <santoshsy@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed Feb 1, 2012, Brad Campbell wrote:
-> On 01/02/12 22:42, Thomas Fjellstrom wrote:
-> > Yeah, GRUB immediately throws an "out of memory. Aborted" error, its
-> > annoying, but I reported the issue on GRUB's bug tracker after talking
-> > to a guy in #grub on freenode. Hopefully someone looks at it soon. It
-> > appears it happens so early in grub's startup that it can't even output
-> > any debug info (I was asked to run: `grub-install --debug-image=all
-> > /dev/sdX`, and did so, I get debug output when the card is not
-> > installed, but absolutely nothing when it is installed.
-> 
-> Just another data point. I've seen this issue also. It does not appear to
-> be GRUB's fault. It appears the BIOS on the card does something funky as
-> it also prevents syslinux/isolinux/pxelinux and its friends from properly
-> detecting/reporting the machines memory. Machine has 16GB but a PXE boot
-> believes it has 3GB.
-> 
-> I "worked around" the problem by swapping out the mainboard for a later
-> model with a different BIOS and the problem went away. Not pretty, but it
-> was the only way I could get the machine to boot with those cards in it. I
-> have 4 IBM cards in 2 machines and they work fine here. I still have the
-> dodgy mainboard and can set it up if you need help testing/reproducing the
-> issue.
+=46rom: Santosh Yaraganavi <santoshsy@gmail.com>
 
-I meant to do some testing on it tonight, but that doesn't seem like its going 
-to happen. Basically I'm going to try that grub change and see if it helps, if 
-you have the time, and desire to help, that would be nice, but I'm most likely 
-going to try it out tomorrow sometime regardless.
+UFS is designed to be the most advanced specification for
+both embedded and removable flash memory-based storage in mobile device=
+s
+such as smart phones and tablet computers.  The UFS standard represents
+an evolutionary progression of JEDEC standards in this field, and has b=
+een
+specifically tailored for mobile applications and computing systems req=
+uiring
+high performance and low power consumption.  The initial data throughpu=
+t for
+UFS will be ~300 megabytes per second (MB/s), and the standard also sup=
+ports
+command queuing features to raise random read/write speeds.
 
-> Regards,
-> Brad
+To achieve the highest performance and most power efficient data
+transport, UFS uses the leading industry interface standards to form it=
+s
+Interconnect Layer: MIPI=C2=AE Alliance=E2=80=99s M-PHY and UniProSM  s=
+pecifications.
+UniPro is a comprehensive specification meant to act as a universal
+chip-to-chip protocol, providing a common tunnel for other protocols.
+The M-PHY interface is designed as the primary physical interface (PHY =
+layer)
+for the UniPro specification, and is a high speed serial interface targ=
+eting
+up to 2.9 gigabits per second (Gbps) per lane with up-scalability to 5.=
+8Gbps
+per lane.
 
+MIPI=E2=80=99s M-PHY and UniPro specifications are optimized for mobile=
+ applications,
+and are designed from the ground up for efficient power management in m=
+obile
+devices, including enabling efficient transitions between the active an=
+d power
+save modes. Combined with a low active power level and a near-zero idle=
+ power
+level, UFS offers the promise for significant reductions in device powe=
+r
+consumption.
 
--- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+The UFS standard adopts the well-known SCSI Architecture Model and comm=
+and
+protocols supporting multiple commands with command queuing features an=
+d
+enabling a multi-thread programming paradigm. This differs from convent=
+ional
+flash-based memory cards and embedded flash solutions which process one
+command at a time, limiting random read/write access performance.
+In addition, a forthcoming complementary UFS Host Controller Interface =
+(HCI)
+specification will allow system designers greater flexibility by simpli=
+fying
+the involvement of the host processor in the operation of the flash sto=
+rage
+subsystem. The UFS HCI specification and the adoption of SCSI will prov=
+ide
+a well-known software programming model and enable wider market adoptio=
+n.
+
+This patchset contains PCIe based UFS host controller driver which comp=
+lies
+to UFSHCI 1.0 and 1.1. The driver is based on Linux SCSI framework.
+The driver is tested with UFS Host controller(FPGA) and UFS device(FPGA=
+).
+
+This patch set is successfully applied on kernel version 3.3-rc2.
+
+Santosh Yaraganavi (4):
+  [SCSI] ufshcd: UFS Host controller driver
+  [SCSI] ufshcd: UFS UTP Transfer requests handling
+  [SCSI] ufshcd: UFSHCI error handling
+  [SCSI] ufshcd: SCSI error handling
+
+ drivers/scsi/Kconfig      |    1 +
+ drivers/scsi/Makefile     |    1 +
+ drivers/scsi/ufs/Kconfig  |   49 ++
+ drivers/scsi/ufs/Makefile |    2 +
+ drivers/scsi/ufs/ufs.h    |  203 +++++
+ drivers/scsi/ufs/ufshcd.c | 1954 +++++++++++++++++++++++++++++++++++++=
+++++++++
+ drivers/scsi/ufs/ufshci.h |  360 +++++++++
+ 7 files changed, 2570 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/ufs/Kconfig
+ create mode 100644 drivers/scsi/ufs/Makefile
+ create mode 100644 drivers/scsi/ufs/ufs.h
+ create mode 100644 drivers/scsi/ufs/ufshcd.c
+ create mode 100644 drivers/scsi/ufs/ufshci.h
+
+--=20
+1.7.5.4
