@@ -1,14 +1,15 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: Clemens Ladisch <clemens@ladisch.de>
 Subject: Re: FireWire/SBP2 Target mode
-Date: Thu, 2 Feb 2012 11:22:01 +0200
-Message-ID: <4F2A55B9.4040005@panasas.com>
+Date: Thu, 02 Feb 2012 11:09:32 +0100
+Message-ID: <4F2A60DC.9030007@ladisch.de>
 References: <4E4BD560.4010806@bootc.net> <4E4D3B88.30003@ladisch.de>
 	<4F29978A.3010707@redhat.com> <20120201224156.0773ebc6@stein>
+	<4F2A55B9.4040005@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20120201224156.0773ebc6@stein>
+In-Reply-To: <4F2A55B9.4040005@panasas.com>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
 	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
@@ -17,51 +18,28 @@ List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
 List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
 	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
 Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Andy Grover <agrover@redhat.com>, linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Andy Grover <agrover@redhat.com>, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/01/2012 11:41 PM, Stefan Richter wrote:
-> On Feb 01 Andy Grover wrote:
->> You're saying the sbp2 protocol can theoretically be used other places
->> besides firewire? I'd say put it all in the fabric module for now.
-> 
-> While SBP-2 is explicitly specified for IEEE 1394 a.k.a. FireWire only,
-> it could be used on any bus architecture which implements IEEE 1212
-> "Control and Status Registers (CSR) Architecture for Microcomputer
-> Buses".  But IEEE 1394 a.k.a. FireWire is nowadays the only remaining IEEE
-> 1212 implementation, as far as I know.
-> 
-> On the other hand, the transport protocol SBP-2 can be used to encapsulate
-> various protocols besides SCSI.  A long time ago I heard that there were
-> SBP-2 printers that weren't SCSI printers, but I may have confused
-> something.
-> 
+Boaz Harrosh wrote:
+> [...] So what do the other FireWire protocols use, like networking,
+> DV video, audio?
 
-Hmm Interesting. So what do the other FireWire protocols use, like
-networking, DV video, audio? they have yet another encapsulating transport
-other than SBP-2? What a mess
+Their own standard or non-standard mechanism.
 
-> The current version of the protocol, SBP-3 which extends SBP-2
-> in an upwards compatible way, has been developed specifically in
-> order to transport AV/C command sets.  (AV/C is a set of specifications
-> from the 1394 Trade Association that build on top of IEC 61883 "Consumer
-> audio/video equipment - Digital interface" and is used for camcorders,
-> audio interfaces, studio-grade video equipment, TV set top boxes etc.)
-> But I am not aware of any existing SBP-3 target or SBP-3 initiator which
-> actually implements AV/C.
-> 
-> So in short,
->   - SBP-2/3 is only used on the FireWire bus.
->   - Potentially there could be SBP-2/3 targets or initiators that
->     implement something else than SCSI.  But stock SBP-2/3 initiator
->     drivers of popular OSs are SCSI initiators, and non-SCSI SBP-2/3
->     targets are extremely rare or don't exist actually.
+> they have yet another encapsulating transport other than SBP-2?
 
-Thanks that was informative
-I'll have a deeper look
+These other devices require isochronous or broadcast transfers, which
+SBP-2/3 does not handle well or at all.  It might be possible to use
+SBP-3 for control commands (which is exactly what SBP-3's AV/C support
+is), but using it would not bring any worthwhile benefits over existing
+transports, and would just introduce incompatibilities with all previous
+soft- and hardware.
 
-Boaz
+
+Regards,
+Clemens
 
 ------------------------------------------------------------------------------
 Keep Your Developer Skills Current with LearnDevNow!
