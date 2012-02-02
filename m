@@ -1,72 +1,71 @@
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] end-to-end data and metadata corruption
- detection
-Date: Thu, 02 Feb 2012 10:04:59 +0100
-Message-ID: <4F2A51BB.4050409@itwm.fraunhofer.de>
-References: <yq1k44e1pn6.fsf@sermon.lab.mkp.net> <4F217F0C.6030105@itwm.fraunhofer.de> <yq1y5sovcyw.fsf@sermon.lab.mkp.net> <4F283F7A.4020905@itwm.fraunhofer.de> <CAF3hT9AgVpcZkGLkr4EH4x4heNFgxNykM4Mp3V_C-RBSwJh7mA@mail.gmail.com> <20120201164521.GY16796@shiny> <1328115175.2768.11.camel@dabdike.int.hansenpartnership.com> <20120201174131.GD16796@shiny> <4F297D90.1010509@fastmail.fm> <1328120165.2768.39.camel@dabdike.int.hansenpartnership.com> <20120201183054.GM31817@redhat.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: FireWire/SBP2 Target mode
+Date: Thu, 2 Feb 2012 11:22:01 +0200
+Message-ID: <4F2A55B9.4040005@panasas.com>
+References: <4E4BD560.4010806@bootc.net> <4E4D3B88.30003@ladisch.de>
+	<4F29978A.3010707@redhat.com> <20120201224156.0773ebc6@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailgw1.uni-kl.de ([131.246.120.220]:52021 "EHLO
-	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643Ab2BBJFI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2012 04:05:08 -0500
-In-Reply-To: <20120201183054.GM31817@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20120201224156.0773ebc6@stein>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Andy Grover <agrover@redhat.com>, linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Andrea Arcangeli <aarcange@redhat.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Bernd Schubert <bernd.schubert@fastmail.fm>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Chuck Lever <chuck.lever@oracle.com>, Sven Breuner <sven.breuner@itwm.fraunhofer.de>, Gregory Farnum <gregory.farnum@dreamhost.com>, lsf-pc@lists.linux-foundation.org, Chris Mason <chris.mason@oracle.com>
 
-On 02/01/2012 07:30 PM, Andrea Arcangeli wrote:
-> On Wed, Feb 01, 2012 at 12:16:05PM -0600, James Bottomley wrote:
->> supplying protection information to user space isn't about the
->> application checking what's on disk .. there's automatic verification in
->> the chain to do that (both the HBA and the disk will check the
->> protection information on entry/exit and transfer).  Supplying
->> protection information to userspace is about checking nothing went wrong
->> in the handoff between the end of the DIF stack and the application.
->
-> Not sure if I got this right, but keeping protection information for
-> in-ram pagecache and exposing it to userland somehow, to me sounds a
-> bit of overkill as a concept. Then you should want that for anonymous
-> memory too. If you copy the pagecache to a malloc()ed buffer and
-> verify pagecache was consistent, but then the buffer is corrupt by
-> hardware bitflip or software bug, then what's the point. Besides if
-> this is getting exposed to userland and it's not hidden in the kernel
-> (FS/Storage layers), userland could code its own verification logic
-> without much added complexity. With CRC in hardware on the CPU it
-> doesn't sound like a big cost to do it fully in userland and then you
-> could run it on anonymous memory too if you need and not be dependent
-> on hardware or filesystem details (well other than a a cpuid check at
-> startup).
+On 02/01/2012 11:41 PM, Stefan Richter wrote:
+> On Feb 01 Andy Grover wrote:
+>> You're saying the sbp2 protocol can theoretically be used other places
+>> besides firewire? I'd say put it all in the fabric module for now.
+> 
+> While SBP-2 is explicitly specified for IEEE 1394 a.k.a. FireWire only,
+> it could be used on any bus architecture which implements IEEE 1212
+> "Control and Status Registers (CSR) Architecture for Microcomputer
+> Buses".  But IEEE 1394 a.k.a. FireWire is nowadays the only remaining IEEE
+> 1212 implementation, as far as I know.
+> 
+> On the other hand, the transport protocol SBP-2 can be used to encapsulate
+> various protocols besides SCSI.  A long time ago I heard that there were
+> SBP-2 printers that weren't SCSI printers, but I may have confused
+> something.
+> 
 
-I think the point for network file systems is that they can reuse the 
-disk-checksum for network verification. So instead of calculating a 
-checksum for network and disk, just use one for both. The checksum also 
-is supposed to be cached in memory, as that avoids re-calculation for 
-other clients.
+Hmm Interesting. So what do the other FireWire protocols use, like
+networking, DV video, audio? they have yet another encapsulating transport
+other than SBP-2? What a mess
 
-1)
-client-1: sends data and checksum
+> The current version of the protocol, SBP-3 which extends SBP-2
+> in an upwards compatible way, has been developed specifically in
+> order to transport AV/C command sets.  (AV/C is a set of specifications
+> from the 1394 Trade Association that build on top of IEC 61883 "Consumer
+> audio/video equipment - Digital interface" and is used for camcorders,
+> audio interfaces, studio-grade video equipment, TV set top boxes etc.)
+> But I am not aware of any existing SBP-3 target or SBP-3 initiator which
+> actually implements AV/C.
+> 
+> So in short,
+>   - SBP-2/3 is only used on the FireWire bus.
+>   - Potentially there could be SBP-2/3 targets or initiators that
+>     implement something else than SCSI.  But stock SBP-2/3 initiator
+>     drivers of popular OSs are SCSI initiators, and non-SCSI SBP-2/3
+>     targets are extremely rare or don't exist actually.
 
-server: Receives those data and verifies the checksum -> network 
-transfer was ok, sends data and checksum to disk
+Thanks that was informative
+I'll have a deeper look
 
-2)
-client-2 ... client-N: Ask for those data
+Boaz
 
-server:  send cached data and cached checksum
-
-client-2 ... client-N: Receive data and verify checksum
-
-
-So the hole point of caching checksums is to avoid the server needs to 
-recalculate those for dozens of clients. Recalculating checksums simply 
-does not scale with an increasing number of clients, which want to read 
-data processed by another client.
-
-
-Cheers,
-Bernd
-
+------------------------------------------------------------------------------
+Keep Your Developer Skills Current with LearnDevNow!
+The most comprehensive online learning library for Microsoft developers
+is just $99.99! Visual Studio, SharePoint, SQL - plus HTML5, CSS3, MVC3,
+Metro Style Apps, more. Free future releases when you subscribe now!
+http://p.sf.net/sfu/learndevnow-d2d
