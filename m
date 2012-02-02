@@ -1,38 +1,66 @@
-From: Masanari Iida <standby24x7@gmail.com>
-Subject: Re: [PATCH] [trivial] pm8001: Fix typo in pm8001_hwi.c
-Date: Fri, 3 Feb 2012 02:27:02 +0900
-Message-ID: <CALLJCT2reS9VHHZ1ejNpFiQz-mN17s7jiyR0d_0MQnhxuDLHtA@mail.gmail.com>
-References: <1328191660-2037-1-git-send-email-standby24x7@gmail.com>
-	<1328202004.18641.28.camel@joe2Laptop>
+From: Andrea Arcangeli <aarcange@redhat.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] end-to-end data and metadata corruption
+ detection
+Date: Thu, 2 Feb 2012 20:26:43 +0100
+Message-ID: <20120202192643.GC5873@redhat.com>
+References: <yq1y5sovcyw.fsf@sermon.lab.mkp.net>
+ <4F283F7A.4020905@itwm.fraunhofer.de>
+ <CAF3hT9AgVpcZkGLkr4EH4x4heNFgxNykM4Mp3V_C-RBSwJh7mA@mail.gmail.com>
+ <20120201164521.GY16796@shiny>
+ <1328115175.2768.11.camel@dabdike.int.hansenpartnership.com>
+ <20120201174131.GD16796@shiny>
+ <4F297D90.1010509@fastmail.fm>
+ <1328120165.2768.39.camel@dabdike.int.hansenpartnership.com>
+ <20120201183054.GM31817@redhat.com>
+ <4F2A51BB.4050409@itwm.fraunhofer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1328202004.18641.28.camel@joe2Laptop>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: jack_wang@usish.com, lindar_liu@usish.com, linux-scsi@vger.kernel.org, trivial@kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4F2A51BB.4050409@itwm.fraunhofer.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Bernd Schubert <bernd.schubert@fastmail.fm>, James Bottomley <James.Bottomley@HansenPartnership.com>, Sven Breuner <sven.breuner@itwm.fraunhofer.de>, Chuck Lever <chuck.lever@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Gregory Farnum <gregory.farnum@dreamhost.com>, lsf-pc@lists.linux-foundation.org, Chris Mason <chris.mason@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Feb 3, 2012 at 2:00 AM, Joe Perches <joe@perches.com> wrote:
-> On Thu, 2012-02-02 at 23:07 +0900, Masanari Iida wrote:
->> Correct typo "deviece" to "device" in
->> drivers/scsi/pm8001/pm8001_hwi.c
-> []
->> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/=
-pm8001_hwi.c
-> []
->> @@ -3532,7 +3532,7 @@ static void process_one_iomb(struct pm8001_hba=
-_info *pm8001_ha, void *piomb)
->> []
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pm8001_printk("unresgister=
- the deviece\n"));
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pm8001_printk("unresgister=
- the device\n"));
->
-> another typo of unregister
->
-Thanks
-I just sent v2 patch to the list.
+On Thu, Feb 02, 2012 at 10:04:59AM +0100, Bernd Schubert wrote:
+> I think the point for network file systems is that they can reuse the 
+> disk-checksum for network verification. So instead of calculating a 
+> checksum for network and disk, just use one for both. The checksum also 
+> is supposed to be cached in memory, as that avoids re-calculation for 
+> other clients.
+> 
+> 1)
+> client-1: sends data and checksum
+> 
+> server: Receives those data and verifies the checksum -> network 
+> transfer was ok, sends data and checksum to disk
+> 
+> 2)
+> client-2 ... client-N: Ask for those data
+> 
+> server:  send cached data and cached checksum
+> 
+> client-2 ... client-N: Receive data and verify checksum
+> 
+> 
+> So the hole point of caching checksums is to avoid the server needs to 
+> recalculate those for dozens of clients. Recalculating checksums simply 
+> does not scale with an increasing number of clients, which want to read 
+> data processed by another client.
 
-Masanari
+This makes sense indeed. My argument was only about the exposure of
+the storage hw format cksum to userland (through some new ioctl for
+further userland verification of the pagecache data in the client
+pagecache, done by whatever program is reading from the cache). The
+network fs client lives in kernel, the network fs server lives in
+kernel, so no need to expose the cksum to userland to do what you
+described above.
+
+I meant if we can't trust the pagecache to be correct (after the
+network fs client code already checked the cksum cached by the server
+and sent to the client along the server cached data), I don't see much
+value added through a further verification by the userland program
+running on the client and accessing pagecache in the client. If we
+can't trust client pagecache to be safe against memory bitflips or
+software bugs, we can hardly trust the anonymous memory too.
