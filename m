@@ -1,49 +1,40 @@
-From: Clemens Ladisch <clemens@ladisch.de>
-Subject: Re: FireWire/SBP2 Target mode
-Date: Thu, 02 Feb 2012 11:09:32 +0100
-Message-ID: <4F2A60DC.9030007@ladisch.de>
-References: <4E4BD560.4010806@bootc.net> <4E4D3B88.30003@ladisch.de>
-	<4F29978A.3010707@redhat.com> <20120201224156.0773ebc6@stein>
-	<4F2A55B9.4040005@panasas.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [ATTEND]
+Date: Thu, 02 Feb 2012 11:16:58 +0100
+Message-ID: <4F2A629A.6000305@suse.de>
+References: <CAH+dOxKMwMskM18=GhBmEao4aSvZmccSiZmmnZm42TBMPUFONw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <4F2A55B9.4040005@panasas.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Andy Grover <agrover@redhat.com>, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:40646 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754095Ab2BBKQ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Feb 2012 05:16:59 -0500
+In-Reply-To: <CAH+dOxKMwMskM18=GhBmEao4aSvZmccSiZmmnZm42TBMPUFONw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kent Overstreet <koverstreet@google.com>
+Cc: lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Boaz Harrosh wrote:
-> [...] So what do the other FireWire protocols use, like networking,
-> DV video, audio?
+On 02/02/2012 10:03 AM, Kent Overstreet wrote:
+> I'm the author of bcache - a flash caching implementation for block
+> devices. I'd like to talk a bit about it and some
+> cleanups/improvements to the block layer.
+Hey, cool, then we can do a match which implementation is better :-)
 
-Their own standard or non-standard mechanism.
+Reminder to self: send dm-ssdcache upstream ...
 
-> they have yet another encapsulating transport other than SBP-2?
+Cheers,
 
-These other devices require isochronous or broadcast transfers, which
-SBP-2/3 does not handle well or at all.  It might be possible to use
-SBP-3 for control commands (which is exactly what SBP-3's AV/C support
-is), but using it would not bring any worthwhile benefits over existing
-transports, and would just introduce incompatibilities with all previous
-soft- and hardware.
-
-
-Regards,
-Clemens
-
-------------------------------------------------------------------------------
-Keep Your Developer Skills Current with LearnDevNow!
-The most comprehensive online learning library for Microsoft developers
-is just $99.99! Visual Studio, SharePoint, SQL - plus HTML5, CSS3, MVC3,
-Metro Style Apps, more. Free future releases when you subscribe now!
-http://p.sf.net/sfu/learndevnow-d2d
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
