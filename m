@@ -1,65 +1,38 @@
-From: Joe Jin <joe.jin@oracle.com>
-Subject: [PATCH-RESEND] [SCSI] fnic: return zero on fnic_reset() success
-Date: Thu, 02 Feb 2012 10:26:30 +0800
-Message-ID: <4F29F456.8090508@oracle.com>
+From: Brad Campbell <brad@fnarfbargle.com>
+Subject: Re: GRUB doesn't like ServeRAID M1015/LSI 9220-8i (was Re: mvsas
+ with 3.1)
+Date: Thu, 02 Feb 2012 11:02:10 +0800
+Message-ID: <4F29FCB2.6040204@fnarfbargle.com>
+References: <201201131144.58044.thomas@fjellstrom.ca> <201202010703.09833.thomas@fjellstrom.ca> <4F294E64.10204@anonymous.org.uk> <201202010742.07818.thomas@fjellstrom.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201202010742.07818.thomas@fjellstrom.ca>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>, Brian Uchino <buchino@cisco.com>, torvalds@linux-foundation.org
-Cc: Sriharsha <sriharsha.devdas@oracle.com>, Joe Jin <joe.jin@oracle.com>, stable@vger.kernel.org, linux-scsi@vger.kernel.org, andrew thomas <andrew.thomas@oracle.com>, Greg Marsden <greg.marsden@oracle.com>, Guru Anbalagane <guru.anbalagane@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: thomas@fjellstrom.ca
+Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-When issue LIP by sysfs found write("1") returned 8194, this caused by
-fnic_reset() return SUCCESS to store_fc_private_host_issue_lip().
-Return 0/-1 for fnic_reset() fix this issue.
+On 01/02/12 22:42, Thomas Fjellstrom wrote:
+>
+> Yeah, GRUB immediately throws an "out of memory. Aborted" error, its annoying,
+> but I reported the issue on GRUB's bug tracker after talking to a guy in #grub
+> on freenode. Hopefully someone looks at it soon. It appears it happens so
+> early in grub's startup that it can't even output any debug info (I was asked
+> to run: `grub-install --debug-image=all /dev/sdX`, and did so, I get debug
+> output when the card is not installed, but absolutely nothing when it is
+> installed.
 
-Tested-by: Sriharsha <sriharsha.devdas@oracle.com>
-Signed-off-by: Joe Jin <joe.jin@oracle.com>
-Cc: Abhijeet Joglekar <abjoglek@cisco.com>
-Cc: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>
-Cc: Brian Uchino <buchino@cisco.com>
-CC: stable@vger.kernel.org
----
- drivers/scsi/fnic/fnic_scsi.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Just another data point. I've seen this issue also. It does not appear to be GRUB's fault. It 
+appears the BIOS on the card does something funky as it also prevents syslinux/isolinux/pxelinux and 
+its friends from properly detecting/reporting the machines memory. Machine has 16GB but a PXE boot 
+believes it has 3GB.
 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index c40ce52..e705e5e 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -1662,7 +1662,7 @@ int fnic_reset(struct Scsi_Host *shost)
- {
- 	struct fc_lport *lp;
- 	struct fnic *fnic;
--	int ret = SUCCESS;
-+	int ret = 0;
- 
- 	lp = shost_priv(shost);
- 	fnic = lport_priv(lp);
-@@ -1675,11 +1675,11 @@ int fnic_reset(struct Scsi_Host *shost)
- 	 * reset remote port sessions, and if link is up, begin flogi
- 	 */
- 	if (lp->tt.lport_reset(lp))
--		ret = FAILED;
-+		ret = -1;
- 
- 	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 		      "Returning from fnic reset %s\n",
--		      (ret == SUCCESS) ?
-+		      (ret == 0) ?
- 		      "SUCCESS" : "FAILED");
- 
- 	return ret;
-@@ -1706,7 +1706,7 @@ int fnic_host_reset(struct scsi_cmnd *sc)
- 	 * scsi-ml tries to send a TUR to every device if host reset is
- 	 * successful, so before returning to scsi, fabric should be up
- 	 */
--	ret = fnic_reset(shost);
-+	ret = (fnic_reset(shost) == 0) ? SUCCESS : FAILED;
- 	if (ret == SUCCESS) {
- 		wait_host_tmo = jiffies + FNIC_HOST_RESET_SETTLE_TIME * HZ;
- 		ret = FAILED;
--- 
-1.7.7.5
+I "worked around" the problem by swapping out the mainboard for a later model with a different BIOS 
+and the problem went away. Not pretty, but it was the only way I could get the machine to boot with 
+those cards in it. I have 4 IBM cards in 2 machines and they work fine here. I still have the dodgy 
+mainboard and can set it up if you need help testing/reproducing the issue.
+
+Regards,
+Brad
