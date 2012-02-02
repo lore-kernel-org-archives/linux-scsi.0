@@ -1,7 +1,7 @@
 From: Vinayak Holikatti <vinholikatti@gmail.com>
-Subject: [PATCH 4/4] [SCSI] ufshcd: SCSI error handling
-Date: Thu,  2 Feb 2012 10:27:29 +0530
-Message-ID: <1328158649-4137-5-git-send-email-vinholikatti@gmail.com>
+Subject: [PATCH 2/4] [SCSI] ufshcd: UFS UTP Transfer requests handling
+Date: Thu,  2 Feb 2012 10:27:27 +0530
+Message-ID: <1328158649-4137-3-git-send-email-vinholikatti@gmail.com>
 References: <1328158649-4137-1-git-send-email-vinholikatti@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1328158649-4137-1-git-send-email-vinholikatti@gmail.com>
@@ -12,10 +12,13 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Santosh Yaraganavi <santoshsy@gmail.com>
 
-UFSHCD SCSI error handling includes following implementations,
- - Abort task
- - Device reset
- - Host reset
+This patch adds support for Transfer request handling.
+
+ufshcd includes following implementations:
+ - SCSI queuecommand
+ - Compose UPIU(UFS Protocol information unit)
+ - Issue commands to UFS host controller
+ - Handle completed commands
 
 Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
 Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
@@ -24,415 +27,578 @@ Reviewed-by: Saugata Das <saugata.das@linaro.org>
 Reviewed-by: Vishak G <vishak.g@samsung.com>
 Reviewed-by: Girish K S <girish.shivananjappa@linaro.org>
 ---
- drivers/scsi/ufs/ufshcd.c |  312 +++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 312 insertions(+), 0 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |  447 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 447 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1bfae84..7589dd1 100644
+index c82eeea..23d758b 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -76,6 +76,8 @@
- #define NULL 0
- #endif  /* NULL */
+@@ -62,6 +62,7 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_host.h>
++#include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_dbg.h>
  
-+#define UFSHCD_MAX_TM_SLOTS	0xFF
-+
- #define BYTES_TO_DWORDS(p)	(p >> 2)
- #define UFSHCD_MMIO_BASE	(hba->mmio_base)
- 
-@@ -83,6 +85,7 @@ enum {
+ #include "ufs.h"
+@@ -81,6 +82,7 @@ enum {
  	UFSHCD_MAX_CHANNEL	= 1,
  	UFSHCD_MAX_ID		= 1,
  	UFSHCD_MAX_LUNS		= 8,
-+	UFSHCD_MAX_TM_CMDS	= 8,
- 	UFSHCD_CMD_PER_LUN	= 16,
++	UFSHCD_CMD_PER_LUN	= 16,
  	UFSHCD_CAN_QUEUE	= 32,
  	BYTES_128		= 128,
-@@ -149,6 +152,7 @@ struct uic_command {
+ 	BYTES_1024		= 1024
+@@ -146,6 +148,7 @@ struct uic_command {
   * @host: Scsi_Host instance of the driver
   * @pdev: PCI device handle
   * @lrb: local reference block
-+ * @outstanding_tasks: Bits representing outstanding task requests
-  * @outstanding_reqs: Bits representing outstanding transfer requests
++ * @outstanding_reqs: Bits representing outstanding transfer requests
   * @capabilities: UFS Controller Capabilities
   * @nutrs: Transfer Request Queue depth supported by controller
-@@ -192,6 +196,7 @@ struct ufs_hba {
+  * @nutmrs: Task Management Queue depth supported by controller
+@@ -184,6 +187,8 @@ struct ufs_hba {
  
  	struct ufshcd_lrb *lrb;
  
-+	u32 outstanding_tasks;
- 	u32 outstanding_reqs;
- 
++	u32 outstanding_reqs;
++
  	u32 capabilities;
-@@ -200,6 +205,8 @@ struct ufs_hba {
- 	u32 ufs_version;
+ 	int nutrs;
+ 	int nutmrs;
+@@ -204,12 +209,28 @@ struct ufs_hba {
+  * @ucd_cmd_ptr: UCD address of the command
+  * @ucd_rsp_ptr: Response UPIU address for this command
+  * @ucd_prdt_ptr: PRDT address of the command
++ * @cmd: pointer to scsi command
++ * @sense_buffer: pointer sense buffer address of the scsi command
++ * @sense_bufflen: Length of the sense buffer
++ * @scsi_status: SCSI status of the command
++ * @command_type: SCSI, UFS, Query.
++ * @task_tag: Task tag of the command
++ * @lun: LUN of the command
+  */
+ struct ufshcd_lrb {
+ 	struct utp_transfer_req_desc *utr_descriptor_ptr;
+ 	struct utp_upiu_cmd *ucd_cmd_ptr;
+ 	struct utp_upiu_rsp *ucd_rsp_ptr;
+ 	struct ufshcd_sg_entry *ucd_prdt_ptr;
++
++	struct scsi_cmnd *cmd;
++	u8 *sense_buffer;
++	unsigned int sense_bufflen;
++	int scsi_status;
++
++	int command_type;
++	int task_tag;
++	int lun;
+ };
  
- 	struct uic_command active_uic_cmd;
-+	wait_queue_head_t ufshcd_tm_wait_queue;
-+	u8 tm_condition[UFSHCD_MAX_TM_CMDS];
- 
- 	u32 ufshcd_state;
- 	u32 int_enable_mask;
-@@ -278,6 +285,30 @@ static inline int ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp)
+ /**
+@@ -236,6 +257,18 @@ static inline int ufshcd_is_device_present(u32 reg_hcs)
  }
  
  /**
-+ * ufshcd_get_tmr_ocs - Get the UTMRD Overall Command Status
-+ * @task_req_descp: pointer to utp_task_req_desc structure
++ * ufshcd_get_tr_ocs - Get the UTRD Overall Command Status
++ * @lrb: pointer to local command reference block
 + *
-+ * This function is used to get the OCS field from UTMRD
-+ * Returns the OCS field in the UTMRD
++ * This function is used to get the OCS field from UTRD
++ * Returns the OCS field in the UTRD
 + */
-+static inline int
-+ufshcd_get_tmr_ocs(struct utp_task_req_desc *task_req_descp)
++static inline int ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp)
 +{
-+	return task_req_descp->header.dword_2 & MASK_OCS;
-+}
-+
-+/**
-+ * ufshcd_is_tmq_full - checks if the task management slots are full
-+ * @outstanding_tasks: contains the task management doorbell value
-+ *
-+ * Returns 1 if a free slot available, 0 if task slots are full
-+ */
-+static inline int ufshcd_is_tmq_full(u32 outstanding_tasks)
-+{
-+	return (UFSHCD_MAX_TM_SLOTS == outstanding_tasks) ? 0 : 1;
++	return lrbp->utr_descriptor_ptr->header.dword_2 & MASK_OCS;
 +}
 +
 +/**
   * ufshcd_get_lists_status - Check UCRDY, UTRLRDY and UTMRLRDY
   * @reg: Register value of host controller status
   *
-@@ -1098,6 +1129,45 @@ static void ufshcd_slave_destroy(struct scsi_device *sdev)
+@@ -303,6 +336,36 @@ static inline void ufshcd_free_hba_memory(struct ufs_hba *hba)
  }
  
  /**
-+ * ufshcd_task_req_compl - handle task management request completion
-+ * @hba: per adapter instance
-+ * @index: index of the completed request
++ * ufshcd_is_valid_req_rsp - checks if controller TR response is valid
++ * @ucd_rsp_ptr: pointer to response UPIU
 + *
-+ * Returns 0 on success, non-zero value on failure
++ * This function checks the response UPIU for valid transaction type in
++ * response field
++ * Returns 0 on success, non-zero on failure
 + */
-+static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
++static inline int
++ufshcd_is_valid_req_rsp(struct utp_upiu_rsp *ucd_rsp_ptr)
 +{
-+	struct utp_upiu_task_rsp *task_rsp_upiup;
-+	struct utp_task_req_desc *task_req_descp;
-+	unsigned long flags;
-+	int ocs_value;
-+	int task_response = -1;
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+
-+	/* clear completed tasks from outstanding_tasks */
-+	hba->outstanding_tasks ^= index;
-+
-+	task_req_descp =
-+		(struct utp_task_req_desc *)hba->utmrdl_virt_addr_aligned;
-+	ocs_value = ufshcd_get_tmr_ocs(&task_req_descp[index]);
-+
-+	if (OCS_SUCCESS == ocs_value) {
-+
-+		task_rsp_upiup = (struct utp_upiu_task_rsp *)
-+				 task_req_descp[index].task_rsp_upiu;
-+		task_response = be32_to_cpu(task_rsp_upiup->header.dword_1);
-+		task_response = ((task_response & MASK_TASK_RESPONSE) >> 8);
-+
-+		/* clear task response */
-+		memset(task_rsp_upiup, 0, sizeof(struct utp_upiu_task_rsp));
-+	}
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	return task_response;
++	return ((be32_to_cpu(ucd_rsp_ptr->header.dword_0) >> 24) ==
++		 UPIU_TRANSACTION_RESPONSE) ? 0 :
++					      (DID_ERROR << 16 |
++					       COMMAND_COMPLETE << 8);
 +}
 +
 +/**
-  * ufshcd_scsi_cmd_status - Update SCSI command result based on scsi status
-  * @lrb: pointer to local reference block of completed command
-  * @scsi_status: SCSI command status
-@@ -1314,6 +1384,31 @@ fatal_eh:
++ * ufshcd_get_rsp_upiu_result - Get the result from response UPIU
++ * @ucd_rsp_ptr: pointer to response UPIU
++ *
++ * This function gets the response status and scsi_status from response UPIU
++ * Returns the response result code.
++ */
++static inline int
++ufshcd_get_rsp_upiu_result(struct utp_upiu_rsp *ucd_rsp_ptr)
++{
++	return be32_to_cpu(ucd_rsp_ptr->header.dword_1) & MASK_RSP_UPIU_RESULT;
++}
++
++/**
+  * ufshcd_config_int_aggr - Configure interrupt aggregation values
+  *		currently there is no use case where we want to configure
+  *		interrupt aggregation dynamically. So to configure interrupt
+@@ -342,6 +405,34 @@ static inline void ufshcd_hba_stop(struct ufs_hba *hba)
  }
  
  /**
-+ * ufshcd_tmc_handler - handle task management function completion
++ * ufshcd_send_command - Send SCSI or device management commands
 + * @hba: per adapter instance
++ * @task_tag: Task tag of the command
 + */
-+static void ufshcd_tmc_handler(struct ufs_hba *hba)
++static inline
++void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
 +{
-+	u32 completed_reqs;
-+	u32 tm_doorbell;
-+	int i;
++	hba->outstanding_reqs |= (1 << task_tag);
++	writel((1 << task_tag),
++	       (UFSHCD_MMIO_BASE + REG_UTP_TRANSFER_REQ_DOOR_BELL));
++}
 +
-+	tm_doorbell = readl(hba->mmio_base + REG_UTP_TASK_REQ_DOOR_BELL);
-+	completed_reqs = tm_doorbell ^ hba->outstanding_tasks;
-+	for (i = 0; i < hba->nutmrs; i++) {
-+		if (completed_reqs & (1 << i)) {
-+
-+			/*
-+			 * Change the default value 0xFF to 0 to indicate
-+			 * completion of respective task management command
-+			 */
-+			hba->tm_condition[i] = 0;
-+			wake_up_interruptible(&hba->ufshcd_tm_wait_queue);
-+		}
++/**
++ * ufshcd_copy_sense_data - Copy sense data in case of check condition
++ * @lrb - pointer to local reference block
++ */
++static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
++{
++	int len;
++	if (lrbp->sense_buffer != NULL) {
++		len = be16_to_cpu(lrbp->ucd_rsp_ptr->sense_data_len);
++		memcpy(lrbp->sense_buffer,
++			lrbp->ucd_rsp_ptr->sense_data,
++			min_t(int, len, SCSI_SENSE_BUFFERSIZE));
 +	}
 +}
 +
 +/**
-  * ufshcd_sl_intr - Interrupt service routine
+  * ufshcd_hba_capabilities - Read controller capabilities
   * @hba: per adapter instance
-  * @intr_status: contains interrupts generated by the controller
-@@ -1327,6 +1422,9 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- 	if (intr_status & UIC_COMMAND_COMPL)
- 		schedule_work(&hba->uic_workq);
- 
-+	if (intr_status & UTP_TASK_REQ_COMPL)
-+		ufshcd_tmc_handler(hba);
-+
- 	if (intr_status & UTP_TRANSFER_REQ_COMPL)
- 		ufshcd_transfer_req_compl(hba);
- }
-@@ -1362,6 +1460,209 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
- 	return retval;
+  */
+@@ -385,6 +476,42 @@ ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
  }
  
-+/**
-+ * ufshcd_issue_tm_cmd - issues task management commands to controller
-+ * @hba: per adapter instance
-+ * @lrbp: pointer to local reference block
-+ *
-+ * Returns 0 on success, non-zero value on failure
+ /**
++ * ufshcd_map_sg - Map scatter-gather list to prdt
++ * @lrbp - pointer to local reference block
 + */
-+static int
-+ufshcd_issue_tm_cmd(struct ufs_hba *hba,
-+		    struct ufshcd_lrb *lrbp,
-+		    u8 tm_function)
++static void ufshcd_map_sg(struct ufshcd_lrb *lrbp)
 +{
-+	struct utp_task_req_desc *task_req_descp;
-+	struct utp_upiu_task_req *task_req_upiup;
-+	struct Scsi_Host *host;
-+	unsigned long flags;
++	struct ufshcd_sg_entry *prd_table;
++	struct scatterlist *sg;
++	struct scsi_cmnd *cmd;
++	int sg_segments;
 +	int i;
-+	int free_slot = 0;
-+	int err = -1;
 +
-+	host = hba->host;
++	cmd = lrbp->cmd;
++	sg_segments = scsi_dma_map(cmd);
 +
-+	spin_lock_irqsave(host->host_lock, flags);
++	BUG_ON(sg_segments < 0);
 +
-+	/* If task management queue is full */
-+	if (!ufshcd_is_tmq_full(hba->outstanding_tasks)) {
-+		dev_err(&hba->pdev->dev, "Task management queue full\n");
-+		spin_unlock_irqrestore(host->host_lock, flags);
-+		return err;
-+	}
++	if (sg_segments) {
++		lrbp->utr_descriptor_ptr->prd_table_length =
++					cpu_to_le16((u16) (sg_segments));
 +
-+	for (i = 0; i < hba->nutmrs; i++) {
-+		if (!(hba->outstanding_tasks & (1 << i))) {
-+			free_slot = i;
-+			break;
++		prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
++
++		scsi_for_each_sg(cmd, sg, sg_segments, i) {
++			prd_table[i].size  =
++				cpu_to_le32(((u32) sg_dma_len(sg))-1);
++			prd_table[i].base_addr =
++				cpu_to_le32(sg->dma_address);
++			prd_table[i].upper_addr =
++				cpu_to_le32((sg->dma_address >> 32));
 +		}
++	} else {
++		lrbp->utr_descriptor_ptr->prd_table_length = 0;
 +	}
++}
 +
-+	/* Configure task request descriptor */
-+	task_req_descp =
-+		(struct utp_task_req_desc *) hba->utmrdl_virt_addr_aligned;
-+	task_req_descp += free_slot;
++/**
+  * ufshcd_int_config - enable/disable interrupts
+  * @hba: per adapter instance
+  * @option: interrupt option
+@@ -410,6 +537,124 @@ static void ufshcd_int_config(struct ufs_hba *hba, u32 option)
+ }
+ 
+ /**
++ * ufshcd_compose_upiu - form UFS Protocol Information Unit(UPIU)
++ * @hba: per adapter instance
++ * @lrb - pointer to local reference block
++ */
++static void ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
++{
++	struct utp_transfer_req_desc *req_desc;
++	struct utp_upiu_cmd *ucd_cmd_ptr;
++	u32 data_direction;
++	u32 upiu_flags;
 +
-+	memset(task_req_descp, 0, sizeof(struct utp_task_req_desc));
-+	task_req_descp->header.dword_0 = cpu_to_le32(UTP_REQ_DESC_INT_CMD);
-+	task_req_descp->header.dword_2 =
++	ucd_cmd_ptr = lrbp->ucd_cmd_ptr;
++	req_desc = lrbp->utr_descriptor_ptr;
++
++	memset(ucd_cmd_ptr, 0, sizeof(struct utp_upiu_cmd));
++
++	switch (lrbp->command_type) {
++	case UTP_CMD_TYPE_SCSI:
++		if (DMA_FROM_DEVICE == lrbp->cmd->sc_data_direction) {
++			data_direction = UTP_DEVICE_TO_HOST;
++			upiu_flags = UPIU_CMD_FLAGS_READ;
++		} else if (DMA_TO_DEVICE == lrbp->cmd->sc_data_direction) {
++			data_direction = UTP_HOST_TO_DEVICE;
++			upiu_flags = UPIU_CMD_FLAGS_WRITE;
++		} else {
++			data_direction = UTP_NO_DATA_TRANSFER;
++			upiu_flags = 0;
++		}
++
++		/*
++		 * Transfer request desc header fields
++		 * set interrupt bit if interrupt aggregation is disabled
++		 */
++		req_desc->header.dword_0 = cpu_to_le32(data_direction |
++						       UTP_SCSI_COMMAND);
++
++		/*
++		 * assigning invalid value for command status. Controller
++		 * updates OCS on command completion, with the command
++		 * status
++		 */
++		req_desc->header.dword_2 =
 +			cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
 +
-+	/* Configure task request UPIU */
-+	task_req_upiup =
-+		(struct utp_upiu_task_req *) task_req_descp->task_req_upiu;
-+	task_req_upiup->header.dword_0 =
-+		cpu_to_be32(UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ, 0,
-+					      lrbp->lun, lrbp->task_tag));
-+	task_req_upiup->header.dword_1 =
-+	cpu_to_be32(UPIU_HEADER_DWORD(0, tm_function, 0, 0));
++		/* command descriptor fields */
++		ucd_cmd_ptr->exp_data_transfer_len =
++			cpu_to_be32(lrbp->cmd->transfersize);
++		memcpy(ucd_cmd_ptr->cdb, lrbp->cmd->cmnd,
++		      (min_t(unsigned short,
++			     lrbp->cmd->cmd_len,
++			     (unsigned short)MAX_CDB_SIZE)));
 +
-+	task_req_upiup->input_param1 = lrbp->lun;
-+	task_req_upiup->input_param1 =
-+		cpu_to_be32(task_req_upiup->input_param1);
-+	task_req_upiup->input_param2 = lrbp->task_tag;
-+	task_req_upiup->input_param2 =
-+		cpu_to_be32(task_req_upiup->input_param2);
++		ucd_cmd_ptr->header.dword_0 =
++			cpu_to_be32(UPIU_HEADER_DWORD(UPIU_TRANSACTION_COMMAND,
++						      upiu_flags,
++						      lrbp->lun,
++						      lrbp->task_tag));
++		ucd_cmd_ptr->header.dword_1 =
++			cpu_to_be32(
++				UPIU_HEADER_DWORD(UPIU_COMMAND_SET_TYPE_SCSI,
++						  0,
++						  0,
++						  0));
 +
-+	/* send command to the controller */
-+	hba->outstanding_tasks |= (1 << free_slot);
-+	writel((1 << free_slot),
-+	       (UFSHCD_MMIO_BASE + REG_UTP_TASK_REQ_DOOR_BELL));
-+
-+	spin_unlock_irqrestore(host->host_lock, flags);
-+
-+	/* wait until the task management command is completed */
-+	err = wait_event_interruptible_timeout(hba->ufshcd_tm_wait_queue,
-+					 (hba->tm_condition[free_slot] != 0),
-+					 60 * HZ);
-+	hba->tm_condition[free_slot] = 0xFF;
-+	if (!err) {
-+		dev_err(&hba->pdev->dev,
-+			"Task management command timed-out\n");
-+		return err;
-+	}
-+	return ufshcd_task_req_compl(hba, free_slot);
++		/* set command response to zero */
++		memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
++	case UTP_CMD_TYPE_DEV_MANAGE:
++		/* For query function implementation */
++		break;
++	case UTP_CMD_TYPE_UFS:
++		/* For UFS native command implementation */
++		break;
++	} /* end of switch, command_type */
 +}
 +
 +/**
-+ * ufshcd_device_reset - reset device and abort all the pending commands
-+ * @cmd: SCSI command pointer
++ * ufshcd_queuecommand - main entry point for SCSI requests
++ * @cmd: command from SCSI Midlayer
++ * @done: call back function
 + *
-+ * Returns 0 on success, non-zero value on failure
++ * Retruns 0 for success, SCSI Midlayer specific error in case of failure
 + */
-+static int ufshcd_device_reset(struct scsi_cmnd *cmd)
++static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
 +{
-+	struct Scsi_Host *host;
++	struct ufshcd_lrb *lrbp;
 +	struct ufs_hba *hba;
 +	unsigned long flags;
-+	int reset_lun;
-+	unsigned int tag;
-+	u32 i;
-+	u32 pos; /* pos: represents a bit in a register */
-+	int err = -1;
++	int tag;
 +
-+	host = cmd->device->host;
-+	hba = (struct ufs_hba *)host->hostdata;
++	hba = (struct ufs_hba *) &host->hostdata[0];
++
 +	tag = cmd->request->tag;
 +
-+	if ((hba->lrb[tag].cmd == cmd))
-+		reset_lun = hba->lrb[tag].lun;
-+	else
-+		goto out;
++	if (UFSHCD_STATE_OPERATIONAL != hba->ufshcd_state)
++		return SCSI_MLQUEUE_HOST_BUSY;
 +
-+	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_LOGICAL_RESET);
-+	if (!err) {
-+		spin_lock_irqsave(host->host_lock, flags);
-+		for (i = 0; i < hba->nutrs; i++) {
-+			pos = (1 << i);
-+			if ((pos & hba->outstanding_reqs) &&
-+			    (reset_lun == hba->lrb[i].lun)) {
++	lrbp = &hba->lrb[tag];
 +
-+				/* clear the respective UTRLCLR bit */
-+				writel(~pos, (UFSHCD_MMIO_BASE +
-+				REG_UTP_TRANSFER_REQ_LIST_CLEAR));
++	lrbp->cmd = cmd;
++	lrbp->sense_bufflen = SCSI_SENSE_BUFFERSIZE;
++	lrbp->sense_buffer = cmd->sense_buffer;
++	lrbp->task_tag = tag;
++	lrbp->lun = cmd->device->lun;
 +
-+				hba->outstanding_reqs ^= pos;
++	lrbp->command_type = UTP_CMD_TYPE_SCSI;
 +
-+				if (hba->lrb[i].cmd) {
-+					scsi_dma_unmap(hba->lrb[i].cmd);
-+					hba->lrb[i].cmd->result =
-+							DID_ABORT << 16;
-+					hba->lrb[i].cmd->scsi_done(cmd);
-+					hba->lrb[i].cmd = NULL;
-+				}
-+			}
-+		} /* end of for */
-+		spin_unlock_irqrestore(host->host_lock, flags);
-+	} /*end of if */
-+out:
-+	return err;
-+}
++	/* form UPIU before issuing the command */
++	ufshcd_compose_upiu(hba, lrbp);
++	ufshcd_map_sg(lrbp);
 +
-+/**
-+ * ufshcd_host_reset - Main reset function registered with scsi layer
-+ * @cmd: SCSI command pointer
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+static int ufshcd_host_reset(struct scsi_cmnd *cmd)
-+{
-+	struct ufs_hba *hba = NULL;
-+
-+	hba = (struct ufs_hba *) &cmd->device->host->hostdata[0];
-+
-+	if (UFSHCD_STATE_RESET == hba->ufshcd_state)
-+		return 0;
-+
-+	return ufshcd_do_reset(hba) ? -1 : 0;
-+}
-+
-+/**
-+ * ufshcd_abort - abort a specific command
-+ * @cmd: SCSI command pointer
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+static int ufshcd_abort(struct scsi_cmnd *cmd)
-+{
-+	struct Scsi_Host *host;
-+	struct ufs_hba *hba;
-+	unsigned long flags;
-+	unsigned int tag;
-+	unsigned int pos;
-+	int err;
-+
-+	host = cmd->device->host;
-+	hba = (struct ufs_hba *) host->hostdata;
-+	tag = cmd->request->tag;
-+
++	/* issue command to the controller */
 +	spin_lock_irqsave(host->host_lock, flags);
-+	pos = (1 << tag);
-+
-+	/* check if command is still pending */
-+	if (!(hba->outstanding_reqs & pos)) {
-+		err = -1;
-+		spin_unlock_irqrestore(host->host_lock, flags);
-+		goto out;
-+	}
-+
-+	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_ABORT_TASK);
-+	if (!err) {
-+		spin_lock_irqsave(host->host_lock, flags);
-+		scsi_dma_unmap(cmd);
-+
-+		/* clear the respective UTRLCLR bit */
-+		writel(~pos,
-+			(UFSHCD_MMIO_BASE +
-+			 REG_UTP_TRANSFER_REQ_LIST_CLEAR));
-+		hba->outstanding_reqs &= ~pos;
-+		hba->lrb[tag].cmd = NULL;
-+		spin_unlock_irqrestore(host->host_lock, flags);
-+	}
-+out:
-+	return err;
++	ufshcd_send_command(hba, tag);
++	spin_unlock_irqrestore(host->host_lock, flags);
++	return 0;
 +}
 +
- static struct scsi_host_template ufshcd_driver_template = {
++/**
+  * ufshcd_memory_alloc - allocate memory for host memory space data structures
+  * @hba: per adapter instance
+  *
+@@ -680,6 +925,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+ 	ufshcd_config_int_aggr(hba, INT_AGGR_CONFIG);
+ 
+ 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
++	scsi_scan_host(hba->host);
+ 
+ 	return 0;
+ }
+@@ -763,6 +1009,190 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
+ }
+ 
+ /**
++ * ufshcd_slave_alloc - handle initial scsi devie configurations
++ * @sdev: pointer to scsi device
++ *
++ * Returns success
++ */
++static int ufshcd_slave_alloc(struct scsi_device *sdev)
++{
++	struct ufs_hba *hba;
++
++	hba = (struct ufs_hba *)sdev->host->hostdata;
++	sdev->tagged_supported = 1;
++	scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
++	scsi_activate_tcq(sdev, hba->nutrs);
++
++	return 0;
++}
++
++/**
++ * ufshcd_slave_destroy - remove scsi device configurations
++ * @sdev: pointer to scsi device
++ */
++static void ufshcd_slave_destroy(struct scsi_device *sdev)
++{
++	struct ufs_hba *hba;
++
++	hba = (struct ufs_hba *)sdev->host->hostdata;
++	scsi_deactivate_tcq(sdev, hba->nutrs);
++}
++
++/**
++ * ufshcd_scsi_cmd_status - Update SCSI command result based on scsi status
++ * @lrb: pointer to local reference block of completed command
++ * @scsi_status: SCSI command status
++ *
++ * Returns value base on SCSI command status
++ */
++static inline int
++ufshcd_scsi_cmd_status(struct ufshcd_lrb *lrbp, int scsi_status)
++{
++	int result = 0;
++
++	switch (scsi_status) {
++	case SAM_STAT_GOOD:
++		result |= DID_OK << 16 |
++			  COMMAND_COMPLETE << 8 |
++			  SAM_STAT_GOOD;
++		break;
++	case SAM_STAT_CHECK_CONDITION:
++		result |= DRIVER_SENSE << 24 |
++			  COMMAND_COMPLETE << 8 |
++			  SAM_STAT_CHECK_CONDITION;
++		ufshcd_copy_sense_data(lrbp);
++		break;
++	case SAM_STAT_BUSY:
++		result |= DID_BUS_BUSY << 16 |
++			  SAM_STAT_BUSY;
++		break;
++	case SAM_STAT_TASK_SET_FULL:
++		result |= DID_OK << 16 |
++			  COMMAND_COMPLETE << 8 |
++			  SAM_STAT_TASK_SET_FULL;
++		break;
++	case SAM_STAT_TASK_ABORTED:
++		result |=  DID_ABORT << 16 |
++			   ABORT_TASK << 8 |
++			   SAM_STAT_TASK_ABORTED;
++	default:
++		result |= DID_ERROR << 16;
++		break;
++	} /* end of switch */
++
++	return result;
++}
++
++/**
++ * ufshcd_transfer_rsp_status - Get overall status of the response
++ * @lrb: pointer to local reference block of completed command
++ *
++ * Returns result of the command to notify SCSI midlayer
++ */
++static inline int ufshcd_transfer_rsp_status(struct ufshcd_lrb *lrbp)
++{
++	int result = 0;
++	int scsi_status;
++	int ocs;
++
++	/* overall command status of utrd */
++	ocs = ufshcd_get_tr_ocs(lrbp);
++
++	switch (ocs) {
++	case OCS_SUCCESS:
++
++		/* check if the returned transfer response is valid */
++		result = ufshcd_is_valid_req_rsp(lrbp->ucd_rsp_ptr);
++		if (result) {
++			pr_err(UFSHCD ":Invalid Response\n");
++			break;
++		}
++
++		/*
++		 * get the response UPIU result to extract
++		 * the SCSI command status
++		 */
++		result = ufshcd_get_rsp_upiu_result(lrbp->ucd_rsp_ptr);
++
++		/*
++		 * get the result based on SCSI status response
++		 * to notify the SCSI midlayer of the command status
++		 */
++		scsi_status = result & MASK_SCSI_STATUS;
++		result = ufshcd_scsi_cmd_status(lrbp, scsi_status);
++		break;
++	case OCS_INVALID_CMD_TABLE_ATTR:
++		result |= DID_ERROR << 16 | COMMAND_COMPLETE << 8;
++		break;
++	case OCS_INVALID_PRDT_ATTR:
++		result |= DID_ERROR << 16 | COMMAND_COMPLETE << 8;
++		break;
++	case OCS_MISMATCH_DATA_BUF_SIZE:
++		result |= DID_ERROR << 16 | COMMAND_COMPLETE << 8;
++		break;
++	case OCS_MISMATCH_RESP_UPIU_SIZE:
++		result |= DID_ERROR << 16 | COMMAND_COMPLETE << 8;
++		break;
++	case OCS_PEER_COMM_FAILURE:
++		result |= DID_ERROR << 16 | COMMAND_COMPLETE << 8;
++		break;
++	case OCS_ABORTED:
++		result |= DID_ABORT << 16 | ABORT_TASK << 8;
++		break;
++	case OCS_FATAL_ERROR:
++		result |= DID_ERROR << 16 | COMMAND_COMPLETE << 8;
++		break;
++	default:
++		/* should not come here */
++		result |= DID_ERROR << 16 | COMMAND_COMPLETE << 8;
++		pr_err(UFSHCD ":Invalid OCS from controller\n");
++		break;
++	} /* end of switch */
++
++	return result;
++}
++
++/**
++ * ufshcd_transfer_req_compl - handle SCSI and query command completion
++ * @hba: per adapter instance
++ */
++static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
++{
++	struct ufshcd_lrb *lrb;
++	u32 completed_reqs;
++	u32 tr_doorbell;
++	int result;
++	int index;
++
++	lrb = hba->lrb;
++	tr_doorbell =
++		readl(hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
++
++	/* clear completed commands from outstanding_reqs */
++	hba->outstanding_reqs ^= completed_reqs;
++
++	for (index = 0; index < hba->nutrs; index++) {
++		if (completed_reqs & (1 << index)) {
++
++			result = ufshcd_transfer_rsp_status(&lrb[index]);
++
++			if (NULL != lrb[index].cmd) {
++				scsi_dma_unmap(lrb[index].cmd);
++				lrb[index].cmd->result = result;
++				lrb[index].cmd->scsi_done(lrb[index].cmd);
++
++				/* Mark completed command as NULL in LRB */
++				lrb[index].cmd = NULL;
++			}
++		} /* end of if */
++	} /* end of for */
++
++	/* Reset interrupt aggregation counters */
++	ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
++}
++
++/**
+  * ufshcd_uic_cc_handler - handle UIC command completion
+  * @work: pointer to a work queue structure
+  *
+@@ -793,6 +1223,9 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+ {
+ 	if (intr_status & UIC_COMMAND_COMPL)
+ 		schedule_work(&hba->uic_workq);
++
++	if (intr_status & UTP_TRANSFER_REQ_COMPL)
++		ufshcd_transfer_req_compl(hba);
+ }
+ 
+ /**
+@@ -830,7 +1263,13 @@ static struct scsi_host_template ufshcd_driver_template = {
  	.module			= THIS_MODULE,
  	.name			= UFSHCD,
-@@ -1369,6 +1670,9 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.queuecommand		= ufshcd_queuecommand,
- 	.slave_alloc		= ufshcd_slave_alloc,
- 	.slave_destroy		= ufshcd_slave_destroy,
-+	.eh_abort_handler	= ufshcd_abort,
-+	.eh_device_reset_handler = ufshcd_device_reset,
-+	.eh_host_reset_handler	= ufshcd_host_reset,
+ 	.proc_name		= UFSHCD,
++	.queuecommand		= ufshcd_queuecommand,
++	.slave_alloc		= ufshcd_slave_alloc,
++	.slave_destroy		= ufshcd_slave_destroy,
  	.this_id		= -1,
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
-@@ -1483,6 +1787,7 @@ ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	struct Scsi_Host *host;
- 	struct ufs_hba *hba;
- 	int ufs_hba_len;
-+	int index;
- 	int err;
++	.sg_tablesize		= SG_ALL,
++	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
++	.can_queue		= UFSHCD_CAN_QUEUE
+ };
  
- 	ufs_hba_len = sizeof(struct ufs_hba);
-@@ -1547,6 +1852,13 @@ ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ /**
+@@ -1003,6 +1442,7 @@ ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	host->max_lun = UFSHCD_MAX_LUNS;
+ 	host->max_channel = UFSHCD_MAX_CHANNEL;
  	host->unique_id = host->host_no;
- 	host->max_cmd_len = MAX_CDB_SIZE;
++	host->max_cmd_len = MAX_CDB_SIZE;
  
-+	/* Initailze wait queue for task management */
-+	init_waitqueue_head(&hba->ufshcd_tm_wait_queue);
-+
-+	/* Initially assign invalid value to tm_condition */
-+	for (index = 0; index < hba->nutmrs; index++)
-+		hba->tm_condition[index] = 0xFF;
-+
  	/* Initialize work queues */
  	INIT_WORK(&hba->uic_workq, ufshcd_uic_cc_handler);
- 	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
+@@ -1014,6 +1454,13 @@ ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out_lrb_free;
+ 	}
+ 
++	/* Enable scsi tag mapping */
++	err = scsi_init_shared_tag_map(host, host->can_queue);
++	if (err) {
++		dev_err(&pdev->dev, "init shared queue failed\n");
++		goto out_free_irq;
++	}
++
+ 	pci_set_drvdata(pdev, hba);
+ 
+ 	err = scsi_add_host(host, &pdev->dev);
 -- 
 1.7.5.4
