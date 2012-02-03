@@ -1,46 +1,57 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH] [trivial] qla2xxx: Fix typo in qla_bsg.c
-Date: Fri, 3 Feb 2012 12:36:04 -0500
-Message-ID: <alpine.WNT.2.00.1202031234580.2256@N5102REMCQXM4BS.qlogic.org>
-References: <1328274925-1809-1-git-send-email-standby24x7@gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: Write same support
+Date: Fri, 3 Feb 2012 14:15:01 -0500
+Message-ID: <20120203191501.GB14392@redhat.com>
+References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1328274925-1809-1-git-send-email-standby24x7@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Masanari Iida <standby24x7@gmail.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Dept-ENG Linux Driver <Linux-Driver@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "trivial@kernel.org" <trivial@kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53182 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753377Ab2BCTPL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Feb 2012 14:15:11 -0500
+Content-Disposition: inline
+In-Reply-To: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com
 
+Hey Martin,
 
-Looks good. Thanks for the catch.
+On Mon, Jan 30 2012 at  7:31pm -0500,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+> 
+> Here's my stab at write same support.
+> 
+> I have mainly tested using blkdev_issue_zeroout which I have modified to
+> use write same if available. It will fall back to writing zeroes the
+> old-fashioned way if write same fails. I also wired up an ioctl so I
+> could trigger zeroout from userland.
+> 
+> I have gone back and forth over whether blkdev_issue_write_same() should
+> take a struct page or a virtual address. It's not such a big deal for
+> devices with a 512-byte logical block size. But for devices with 4K it's
+> more of an issue. Comments welcome.
+> 
+> The discovery heuristics is what stopped this patchkit in its tracks
+> last year. So I've spent the last few days testing with every exotic
+> (i.e. ancient) SCSI device I could find. I'm pretty happy with how it
+> works now but it would be great if more people would put it to the test.
+> 
+> I have a 'writesame' branch available at:
+> 
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git
+> 
+> for those that want to try it out...
 
-On Fri, 3 Feb 2012, Masanari Iida wrote:
+Thanks for getting this together.
 
-> Correct spelling "curent" to "current" in
-> drivers/scsi/qla2xxx/qla_bsg.c
->
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
-> ---
-> drivers/scsi/qla2xxx/qla_bsg.c |    2 +-
-> 1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-> index b1d0f93..a1c6a16 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -745,7 +745,7 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
->
->                       if (elreq.options != EXTERNAL_LOOPBACK) {
->                               ql_dbg(ql_dbg_user, vha, 0x7020,
-> -                                 "Internal: curent port config = %x\n",
-> +                                 "Internal: current port config = %x\n",
->                                   config[0]);
->                               if (qla81xx_set_internal_loopback(vha, config,
->                                       new_config)) {
->
+Just wanted to let you know I've pulled your branch and will be looking
+have dm-thinp make use of write same for the zeroing that it does.
 
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+In the process I'll review your code in more detail (so far it looks
+good).  So please expect to hear back from me next week.
+
+Mike
