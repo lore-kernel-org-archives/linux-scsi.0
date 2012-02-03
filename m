@@ -1,158 +1,84 @@
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Subject: [PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal routine fails
-Date: Fri,  3 Feb 2012 18:29:14 +0530
-Message-ID: <1328273954-5010-1-git-send-email-amit.sahrawat83@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Nam-Jae Jeon <namjae.jeon@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Amit Sahrawat <amit.sahrawat83@gmail.com>
+From: Wu Fengguang <fengguang.wu@gmail.com>
+Subject: Re: [Lsf-pc] [dm-devel]  [LSF/MM TOPIC] a few storage topics
+Date: Fri, 3 Feb 2012 20:55:43 +0800
+Message-ID: <20120203125543.GA13410@localhost>
+References: <20120124190732.GH4387@shiny>
+ <x49vco0kj5l.fsf@segfault.boston.devel.redhat.com>
+ <20120124200932.GB20650@quack.suse.cz>
+ <x49pqe8kgej.fsf@segfault.boston.devel.redhat.com>
+ <20120124203936.GC20650@quack.suse.cz>
+ <20120125032932.GA7150@localhost>
+ <F6F2DEB8-F096-4A3B-89E3-3A132033BC76@dilger.ca>
+ <1327502034.2720.23.camel@menhir>
+ <D3F292ADF945FB49B35E96C94C2061B915A638A6@nsmail.netscout.com>
+ <1327509623.2720.52.camel@menhir>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:48902 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276Ab2BCMzz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2012 07:55:55 -0500
+Content-Disposition: inline
+In-Reply-To: <1327509623.2720.52.camel@menhir>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Steven Whitehouse <swhiteho@redhat.com>
+Cc: "Loke, Chetan" <Chetan.Loke@netscout.com>, Andreas Dilger <adilger@dilger.ca>, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, neilb@suse.de, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, Boaz Harrosh <bharrosh@panasas.com>, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, Chris Mason <chris.mason@oracle.com>, "Darrick J.Wong" <djwong@us.ibm.com>, Dan Magenheimer <dan.magenheimer@oracle.com>
 
-It has been observed that a number of USB HDD's do not respond correctly
-to SCSI mode sense command(retrieve caching pages) which results in their
-Write Cache being discarded by queue requests i.e., WCE if left set to
-'0'(disabled).
-This results in a number of Filesystem corruptions, when the device
-is unplugged abruptly.
+On Wed, Jan 25, 2012 at 04:40:23PM +0000, Steven Whitehouse wrote:
+> Hi,
+> 
+> On Wed, 2012-01-25 at 11:22 -0500, Loke, Chetan wrote:
+> > > If the reason for not setting a larger readahead value is just that it
+> > > might increase memory pressure and thus decrease performance, is it
+> > > possible to use a suitable metric from the VM in order to set the value
+> > > automatically according to circumstances?
+> > > 
+> > 
+> > How about tracking heuristics for 'read-hits from previous read-aheads'? If the hits are in acceptable range(user-configurable knob?) then keep seeking else back-off a little on the read-ahead?
+> > 
+> > > Steve.
+> > 
+> > Chetan Loke
+> 
+> I'd been wondering about something similar to that. The basic scheme
+> would be:
+> 
+>  - Set a page flag when readahead is performed
+>  - Clear the flag when the page is read (or on page fault for mmap)
+> (i.e. when it is first used after readahead)
+> 
+> Then when the VM scans for pages to eject from cache, check the flag and
+> keep an exponential average (probably on a per-cpu basis) of the rate at
+> which such flagged pages are ejected. That number can then be used to
+> reduce the max readahead value.
+> 
+> The questions are whether this would provide a fast enough reduction in
+> readahead size to avoid problems? and whether the extra complication is
+> worth it compared with using an overall metric for memory pressure?
+> 
+> There may well be better solutions though,
 
-So, in order to identify the devices correctly - give it
-a last try using ATA_16 after failure from normal routine.
+The caveat is, on a consistently thrashed machine, the readahead size
+should better be determined for each read stream.
 
-Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+Repeated readahead thrashing typically happen in a file server with
+large number of concurrent clients. For example, if there are 1000
+read streams each doing 1MB readahead, since there are 2 readahead
+window for each stream, there could be up to 2GB readahead pages that
+will sure be thrashed in a server with only 1GB memory.
 
----
- drivers/ata/libata-scsi.c |   51 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sd.c         |   17 +++++++++++++++
- include/linux/libata.h    |    3 ++
- 3 files changed, 71 insertions(+), 0 deletions(-)
+Typically the 1000 clients will have different read speeds. A few of
+them will be doing 1MB/s, most others may be doing 100KB/s. In this
+case, we shall only decrease readahead size for the 100KB/s clients.
+The 1MB/s clients actually won't see readahead thrashing at all and
+we'll want them to do large 1MB I/O to achieve good disk utilization.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 508a60b..d5b00e6 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -562,6 +562,57 @@ error:
- }
- 
- /**
-+ *      ata_get_cachestatus - Handler for to get WriteCache Status
-+ *                      using ATA_16 scsi command
-+ *      @scsidev: Device to which we are issuing command
-+ *
-+ *      LOCKING:
-+ *      Defined by the SCSI layer.  We don't really care.
-+ *
-+ *      RETURNS:
-+ *      '0' for Write Cache Disabled and on any error.
-+ *      '1' for Write Cache enabled
-+ */
-+int ata_get_cachestatus(struct scsi_device *scsidev)
-+{
-+	int rc = 0;
-+	u8 scsi_cmd[MAX_COMMAND_SIZE] = {0};
-+	u8 *sensebuf = NULL, *argbuf = NULL;
-+	enum dma_data_direction data_dir;
-+
-+	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+	if (!sensebuf)
-+		return rc;
-+
-+	argbuf = kmalloc(ATA_SECT_SIZE, GFP_KERNEL);
-+	if (argbuf == NULL)
-+		goto error;
-+
-+	scsi_cmd[0] = ATA_16;
-+	scsi_cmd[1]  = (4 << 1); /* PIO Data-in */
-+	scsi_cmd[2]  = 0x0e;     /* no off.line or cc, read from dev,
-+				block count in sector count field */
-+	data_dir = DMA_FROM_DEVICE;
-+	scsi_cmd[14] = ATA_IDENTIFY_DEV;
-+
-+	if (!scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, ATA_SECT_SIZE,
-+				sensebuf, (10*HZ), 5, 0, NULL)) {
-+		/*
-+		 * '6th' Bit in Word 85 Corresponds to Write Cache
-+		 * being Enabled/disabled, Word 85 represnets the
-+		 * features supported
-+		 */
-+		if (le16_to_cpu(((unsigned short *)argbuf)[85]) & 0x20)
-+			rc = 1;
-+	}
-+
-+error:
-+	kfree(sensebuf);
-+	kfree(argbuf);
-+	return rc;
-+}
-+
-+/**
-  *	ata_task_ioctl - Handler for HDIO_DRIVE_TASK ioctl
-  *	@scsidev: Device to which we are issuing command
-  *	@arg: User provided data for issuing command
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c691fb5..a6b887d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -50,6 +50,11 @@
- #include <linux/string_helpers.h>
- #include <linux/async.h>
- #include <linux/slab.h>
-+
-+#ifdef CONFIG_ATA
-+#include <linux/libata.h>
-+#endif
-+
- #include <linux/pm_runtime.h>
- #include <asm/uaccess.h>
- #include <asm/unaligned.h>
-@@ -2129,7 +2134,11 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 		if (modepage == 0x3F) {
- 			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
- 				  "present\n");
-+#ifdef CONFIG_ATA
-+			goto WCE_USING_ATA;
-+#else
- 			goto defaults;
-+#endif
- 		} else if ((buffer[offset] & 0x3f) != modepage) {
- 			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
- 			goto defaults;
-@@ -2149,6 +2158,14 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 				  "Uses READ/WRITE(6), disabling FUA\n");
- 			sdkp->DPOFUA = 0;
- 		}
-+#ifdef CONFIG_ATA
-+WCE_USING_ATA:
-+		if (!sdp->removable && !sdkp->WCE) {
-+			sd_printk(KERN_NOTICE, sdkp, "Try to check write cache "
-+				"enable/disable using ATA command\n");
-+			sdkp->WCE = ata_get_cachestatus(sdp);
-+		}
-+#endif
- 
- 		if (sdkp->first_scan || old_wce != sdkp->WCE ||
- 		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index cafc09a..33fc73f 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -84,6 +84,8 @@
- 	}							\
- })
- 
-+#define ATA_IDENTIFY_DEV	0xEC
-+
- /* NEW: debug levels */
- #define HAVE_LIBATA_MSG 1
- 
-@@ -990,6 +992,7 @@ extern void ata_host_init(struct ata_host *, struct device *,
- 			  unsigned long, struct ata_port_operations *);
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
-+extern int ata_get_cachestatus(struct scsi_device *scsidev);
- extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
- extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
- 			    int cmd, void __user *arg);
--- 
-1.7.2.3
+So we need something better than the "global feedback" scheme, and we
+do have such a solution ;)  As said in my other email, the number of
+history pages remained in the page cache is a good estimation of that
+particular read stream's thrashing safe readahead size.
 
+Thanks,
+Fengguang
