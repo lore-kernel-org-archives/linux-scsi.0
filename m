@@ -1,55 +1,57 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH v2] [trivial] pm8001: Fix typo in pm8001_hwi.c
-Date: Fri, 3 Feb 2012 08:46:32 +0800
-Message-ID: <63F9BE2E1F114ADA8301965998CCDE03@usish.com.cn>
-References: <1328203522-3862-1-git-send-email-standby24x7@gmail.com>
+From: "Eddie Wai" <eddie.wai@broadcom.com>
+Subject: Re: [PATCH] bnx2i: use kthread_create_on_node()
+Date: Thu, 2 Feb 2012 16:57:50 -0800
+Message-ID: <1328230670.5058.160.camel@dhcp-10-12-137-160.irv.broadcom.com>
+References: <1328187802.2279.27.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:50311 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753895Ab2BCAs3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2012 19:48:29 -0500
-In-Reply-To: <1328203522-3862-1-git-send-email-standby24x7@gmail.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:2481 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753570Ab2BCAyp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:54:45 -0500
+In-Reply-To: <1328187802.2279.27.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Masanari Iida' <standby24x7@gmail.com>, lindar_liu@usish.com, linux-scsi@vger.kernel.org
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Michael Chan <mchan@broadcom.com>, Benjamin Li <benli@broadcom.com>, James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
 
-Oh, thanks for fix.
+Looks good, thanks.
 
-Acked-by : Jack Wang <jack_wang@usish.com>
+Acked-by: Eddie Wai <eddie.wai@broadcom.com>
+
+On Thu, 2012-02-02 at 14:03 +0100, Eric Dumazet wrote:
+> bnx2i_percpu_thread_create() create per cpu kthread, and should use
+> proper NUMA aware API.
 > 
-> Correct typo "unresgister" to "unregister" and "deviece" to
-> "device" in drivers/scsi/pm8001/pm8001_hwi.c
-> 
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+> Cc: Eddie Wai <eddie.wai@broadcom.com>
+> Cc: Benjamin Li <benli@broadcom.com>
+> Cc: Michael Chan <mchan@broadcom.com>
+> Cc: James Bottomley <JBottomley@Parallels.com>
 > ---
->  drivers/scsi/pm8001/pm8001_hwi.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  drivers/scsi/bnx2i/bnx2i_init.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
-> b/drivers/scsi/pm8001/pm8001_hwi.c
-> index b7b92f7..e12c4f6 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -3532,7 +3532,7 @@ static void process_one_iomb(struct pm8001_hba_info
-> *pm8001_ha, void *piomb)
->  		break;
->  	case OPC_OUB_DEREG_DEV:
->  		PM8001_MSG_DBG(pm8001_ha,
-> -			pm8001_printk("unresgister the deviece\n"));
-> +			pm8001_printk("unregister the device\n"));
->  		mpi_dereg_resp(pm8001_ha, piomb);
->  		break;
->  	case OPC_OUB_GET_DEV_HANDLE:
-> --
-> 1.7.6.5
+> diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+> index 1a947f1..62c8c0a 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_init.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_init.c
+> @@ -393,8 +393,9 @@ static void bnx2i_percpu_thread_create(unsigned int cpu)
+>  
+>  	p = &per_cpu(bnx2i_percpu, cpu);
+>  
+> -	thread = kthread_create(bnx2i_percpu_io_thread, (void *)p,
+> -				"bnx2i_thread/%d", cpu);
+> +	thread = kthread_create_on_node(bnx2i_percpu_io_thread, (void *)p,
+> +					cpu_to_node(cpu),
+> +					"bnx2i_thread/%d", cpu);
+>  	/* bind thread to the cpu */
+>  	if (likely(!IS_ERR(thread))) {
+>  		kthread_bind(thread, cpu);
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
 
