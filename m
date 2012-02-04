@@ -1,154 +1,250 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: device removal causes "sysfs: can not remove 'bsg', no directory"
-Date: Fri, 03 Feb 2012 20:02:10 -0800
-Message-ID: <m1wr83mekd.fsf@fess.ebiederm.org>
-References: <CAErSpo5vyFDA9OikJM5GvUbb8Bk6fU47JjY7t9GU4Ppqr1O_BQ@mail.gmail.com>
+From: Santosh Y <santoshsy@gmail.com>
+Subject: Re: [PATCH 1/4] [SCSI] ufshcd: UFS Host controller driver
+Date: Sat, 4 Feb 2012 12:28:27 +0530
+Message-ID: <CALMYJDvihhEojJMuohHDz3jXV7V3ty2BbgcJOxfXgckKyMas7w@mail.gmail.com>
+References: <1328158649-4137-1-git-send-email-vinholikatti@gmail.com>
+ <1328158649-4137-2-git-send-email-vinholikatti@gmail.com> <201202031519.02296.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out01.mta.xmission.com ([166.70.13.231]:40581 "EHLO
-	out01.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753442Ab2BDD71 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2012 22:59:27 -0500
-In-Reply-To: <CAErSpo5vyFDA9OikJM5GvUbb8Bk6fU47JjY7t9GU4Ppqr1O_BQ@mail.gmail.com>
-	(Bjorn Helgaas's message of "Fri, 3 Feb 2012 14:44:44 -0800")
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:37692 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751764Ab2BDG6t convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Feb 2012 01:58:49 -0500
+In-Reply-To: <201202031519.02296.arnd@arndb.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-scsi@vger.kernel.org, Eric Moore <Eric.Moore@lsi.com>, DL-MPTFusionLinux@lsi.com
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, saugata.das@linaro.org, venkat@linaro.org, girish.shivananjappa@linaro.org, vishak.g@samsung.com, k.rajesh@samsung.com, yejin.moon@samsung.com
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
-
-> Eric recently added ce59791936, which is a check that complains if we
-> try to remove files from non-existent directories.
-
-Yes.  It has always been a bug but since no one checked their error
-codes it has been going unnoticed.
-
-> When I remove a device (LSI SAS2008 in this case, but I don't know if
-> it's specific to that), I hit that warning three times.  Let me know
-> if I can collect any more data.
-
-I tried to read that code and understand what is going on but I don't
-know enough about the block and scsi layers to have a clue where to
-start.
-
-bsg_unregister_queue seems to be a generic piece of infrastructure.
-
-q->kobj seems to be managed separately from  q->bsg_dev->class_dev.
-
-If I read q->kobj correctly that is managed with blk_put_queue.
-
-So it seems like the final blk_put_queue or blk_unregister_queue is
-being called before bsg_unregister_queue and causing this problem.
-
-What the solution might be I can't believe to figure out.
-
-Eric
-
-
-> # lspci -s0000:08:00.0
-> 08:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic
-> SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 03)
+On Fri, Feb 3, 2012 at 8:49 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Thursday 02 February 2012, Vinayak Holikatti wrote:
+>> From: Santosh Yaraganavi <santoshsy@gmail.com>
+>>
+>> This patch adds support for Universal Flash Storage(UFS)
+>> host controllers. The UFS host controller driver
+>> includes host controller initialization method.
+>>
+>> The Initialization process involves following steps:
+>> =A0- Initiate UFS Host Controller initialization process by writing
+>> =A0 =A0to Host controller enable register
+>> =A0- Configure UFS Host controller registers with host memory space
+>> =A0 =A0datastructure offsets.
+>> =A0- Unipro link startup procedure
+>> =A0- Check for connected device
+>> =A0- Configure UFS host controller to process requests
+>> =A0- Enable required interrupts
+>> =A0- Configure interrupt aggregation
+>>
+>> Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
+>> Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
+>> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+>> Reviewed-by: Saugata Das <saugata.das@linaro.org>
+>> Reviewed-by: Vishak G <vishak.g@samsung.com>
+>> Reviewed-by: Girish K S <girish.shivananjappa@linaro.org>
 >
-> # echo 0000:08:00.0 > /sys/bus/pci/drivers/mpt2sas/unbind
-> [  193.105962] sd 6:0:0:0: [sdb] Synchronizing SCSI cache
-> [  193.111132] sd 6:0:0:0: [sdb]  Result: hostbyte=DID_NO_CONNECT
-> driverbyte=DRIVER_OK
-> [  193.234690] ------------[ cut here ]------------
-> [  193.239302] WARNING: at fs/sysfs/inode.c:323
-> sysfs_hash_and_remove+0xa4/0xb0()
-> [  193.249908] sysfs: can not remove 'bsg', no directory
-> [  193.254949] Modules linked in: w1_therm ds2482 wire msr cpuid
-> e1000e bnx2x crc32c libcrc32c mdio ipv6 genrtc
-> [  193.265035] Pid: 15020, comm: bash Not tainted 3.3.0-smp-DEV #11
-> [  193.271030] Call Trace:
-> [  193.273482]  [<ffffffff8108de33>] warn_slowpath_common+0x83/0x120
-> [  193.279558]  [<ffffffff8108df86>] warn_slowpath_fmt+0x46/0x60
-> [  193.285308]  [<ffffffff81225d24>] sysfs_hash_and_remove+0xa4/0xb0
-> [  193.291397]  [<ffffffff81229eb6>] sysfs_remove_link+0x26/0x30
-> [  193.297128]  [<ffffffff8131041c>] bsg_unregister_queue+0xbc/0x100
-> [  193.303224]  [<ffffffff8143cb08>] sas_rphy_free+0xa8/0xe0
-> [  193.308611]  [<ffffffff8143d9c5>] sas_port_delete+0x35/0x170
-> [  193.314266]  [<ffffffff81229eb6>] ? sysfs_remove_link+0x26/0x30
-> [  193.320187]  [<ffffffff8146342a>] mpt2sas_transport_port_remove+0x15a/0x200
-> [  193.327138]  [<ffffffff8145bbdb>] _scsih_remove_device+0xbb/0xc0
-> [  193.333147]  [<ffffffff815f86d9>] _scsih_remove+0x294/0x343
-> [  193.338719]  [<ffffffff813404d7>] pci_device_remove+0x37/0x70
-> [  193.344452]  [<ffffffff813f621b>] __device_release_driver+0x7b/0xe0
-> [  193.350708]  [<ffffffff813f636d>] device_release_driver+0x2d/0x40
-> [  193.356797]  [<ffffffff813f5521>] driver_unbind+0xc1/0xe0
-> [  193.362192]  [<ffffffff813f473c>] drv_attr_store+0x2c/0x30
-> [  193.367665]  [<ffffffff812269b2>] sysfs_write_file+0xe2/0x170
-> [  193.373404]  [<ffffffff811ac0d8>] vfs_write+0xc8/0x190
-> [  193.378531]  [<ffffffff811ac291>] sys_write+0x51/0x90
-> [  193.383573]  [<ffffffff81606bdf>] sysenter_dispatch+0x7/0x1a
-> [  193.389228] ---[ end trace d10f9ac01058d5da ]---
-> [  193.393971] mpt2sas0: removing handle(0x0009), sas_addr(0x4433221100000000)
-> [  193.554031] sd 6:0:1:0: [sdc] Synchronizing SCSI cache
-> [  193.559199] sd 6:0:1:0: [sdc]  Result: hostbyte=DID_NO_CONNECT
-> driverbyte=DRIVER_OK
-> [  193.683925] ------------[ cut here ]------------
-> [  193.688536] WARNING: at fs/sysfs/inode.c:323
-> sysfs_hash_and_remove+0xa4/0xb0()
-> [  193.699144] sysfs: can not remove 'bsg', no directory
-> [  193.704183] Modules linked in: w1_therm ds2482 wire msr cpuid
-> e1000e bnx2x crc32c libcrc32c mdio ipv6 genrtc
-> [  193.714269] Pid: 15020, comm: bash Tainted: G        W    3.3.0-smp-DEV #11
-> [  193.721209] Call Trace:
-> [  193.723665]  [<ffffffff8108de33>] warn_slowpath_common+0x83/0x120
-> [  193.729753]  [<ffffffff8108df86>] warn_slowpath_fmt+0x46/0x60
-> [  193.735487]  [<ffffffff81225d24>] sysfs_hash_and_remove+0xa4/0xb0
-> [  193.741573]  [<ffffffff81229eb6>] sysfs_remove_link+0x26/0x30
-> [  193.747313]  [<ffffffff8131041c>] bsg_unregister_queue+0xbc/0x100
-> [  193.753393]  [<ffffffff8143cb08>] sas_rphy_free+0xa8/0xe0
-> [  193.758780]  [<ffffffff8143d9c5>] sas_port_delete+0x35/0x170
-> [  193.764425]  [<ffffffff81229eb6>] ? sysfs_remove_link+0x26/0x30
-> [  193.770348]  [<ffffffff8146342a>] mpt2sas_transport_port_remove+0x15a/0x200
-> [  193.777299]  [<ffffffff8145bbdb>] _scsih_remove_device+0xbb/0xc0
-> [  193.783306]  [<ffffffff815f86d9>] _scsih_remove+0x294/0x343
-> [  193.788864]  [<ffffffff813404d7>] pci_device_remove+0x37/0x70
-> [  193.794595]  [<ffffffff813f621b>] __device_release_driver+0x7b/0xe0
-> [  193.800853]  [<ffffffff813f636d>] device_release_driver+0x2d/0x40
-> [  193.806933]  [<ffffffff813f5521>] driver_unbind+0xc1/0xe0
-> [  193.812334]  [<ffffffff813f473c>] drv_attr_store+0x2c/0x30
-> [  193.817824]  [<ffffffff812269b2>] sysfs_write_file+0xe2/0x170
-> [  193.823558]  [<ffffffff811ac0d8>] vfs_write+0xc8/0x190
-> [  193.828684]  [<ffffffff811ac291>] sys_write+0x51/0x90
-> [  193.833733]  [<ffffffff81606bdf>] sysenter_dispatch+0x7/0x1a
-> [  193.839381] ---[ end trace d10f9ac01058d5db ]---
-> [  193.844158] mpt2sas0: removing handle(0x000a), sas_addr(0x4433221104000000)
-> [  193.851639] mpt2sas0: sending message unit reset !!
-> [  193.858290] mpt2sas0: message unit reset: SUCCESS
-> [  194.234126] ------------[ cut here ]------------
-> [  194.238736] WARNING: at fs/sysfs/inode.c:323
-> sysfs_hash_and_remove+0xa4/0xb0()
-> [  194.249335] sysfs: can not remove 'bsg', no directory
-> [  194.254375] Modules linked in: w1_therm ds2482 wire msr cpuid
-> e1000e bnx2x crc32c libcrc32c mdio ipv6 genrtc
-> [  194.264441] Pid: 15020, comm: bash Tainted: G        W    3.3.0-smp-DEV #11
-> [  194.271401] Call Trace:
-> [  194.273849]  [<ffffffff8108de33>] warn_slowpath_common+0x83/0x120
-> [  194.279926]  [<ffffffff8108df86>] warn_slowpath_fmt+0x46/0x60
-> [  194.285658]  [<ffffffff813fac00>] ? transport_add_device+0x20/0x20
-> [  194.291831]  [<ffffffff81225d24>] sysfs_hash_and_remove+0xa4/0xb0
-> [  194.297909]  [<ffffffff813fac00>] ? transport_add_device+0x20/0x20
-> [  194.304074]  [<ffffffff81229eb6>] sysfs_remove_link+0x26/0x30
-> [  194.309806]  [<ffffffff8131041c>] bsg_unregister_queue+0xbc/0x100
-> [  194.315883]  [<ffffffff8143c378>] sas_host_remove+0x48/0x60
-> [  194.321442]  [<ffffffff813fac31>] transport_remove_classdev+0x31/0x70
-> [  194.327869]  [<ffffffff813fa4b0>]
-> attribute_container_device_trigger+0xa0/0xe0
-> [  194.335069]  [<ffffffff813fabb5>] transport_remove_device+0x15/0x20
-> [  194.341321]  [<ffffffff8142a69f>] scsi_remove_host+0xaf/0x120
-> [  194.347055]  [<ffffffff815f8771>] _scsih_remove+0x32c/0x343
-> [  194.352612]  [<ffffffff813404d7>] pci_device_remove+0x37/0x70
-> [  194.358345]  [<ffffffff813f621b>] __device_release_driver+0x7b/0xe0
-> [  194.364602]  [<ffffffff813f636d>] device_release_driver+0x2d/0x40
-> [  194.370688]  [<ffffffff813f5521>] driver_unbind+0xc1/0xe0
-> [  194.376084]  [<ffffffff813f473c>] drv_attr_store+0x2c/0x30
-> [  194.381557]  [<ffffffff812269b2>] sysfs_write_file+0xe2/0x170
-> [  194.387289]  [<ffffffff811ac0d8>] vfs_write+0xc8/0x190
-> [  194.392417]  [<ffffffff811ac291>] sys_write+0x51/0x90
-> [  194.397467]  [<ffffffff81606bdf>] sysenter_dispatch+0x7/0x1a
-> [  194.403121] ---[ end trace d10f9ac01058d5dc ]---
+> Thanks for posting this here. Note that while I did review the patche=
+s
+> in private email, I did not reply with a "Reviewed-by" tag, so you sh=
+ould
+> not add it yourself.
+
+Sure, we'll keep in mind.
+
+>In particular, I had made some additional comments
+> about the ufshcd_memory_alloc() function that have not been addressed=
+=2E
+>
+> Getting the code changed will certainly not be a problem, but please
+> be careful with assigning those tags in the future.
+>
+> The only major thing that I see missing is a review from James or
+> someone else who is familiar with other scsi device drivers. Saugata
+> and I have (in private) commented on a a number of more general issue=
+s
+> and the comments were addressed before this patch set got sent out.
+>
+> Unless there are important concerns from the SCSI side, I believe thi=
+s
+> is going to be ready to get merged very soon, after the usual nitpick=
+ing
+> is done ;-)
+>
+> Speaking of nitpicking:
+>
+>>--- /dev/null
+>>+++ b/drivers/scsi/ufs/Kconfig
+>>+
+>>+#ifndef NULL
+>>+#define NULL 0
+>>+#endif =A0/* NULL */
+>
+> Please remove this #define, NULL is defined in <linux/stddef.h>
+>
+>>+#define BYTES_TO_DWORDS(p) =A0 =A0 (p >> 2)
+>>+#define UFSHCD_MMIO_BASE =A0 =A0 =A0 (hba->mmio_base)
+>
+> Better remove these macros, too: The are clearly longer than the
+> expanded text, and less clear.
+>
+
+Ok, we'll do so.
+
+>>+struct ufs_hba {
+>>+ =A0 =A0 =A0 /* Virtual memory reference */
+>>+ =A0 =A0 =A0 void *ucdl_virt_addr;
+>>+ =A0 =A0 =A0 void *utrdl_virt_addr;
+>>+ =A0 =A0 =A0 void *utmrdl_virt_addr;
+>>+ =A0 =A0 =A0 void *utrdl_virt_addr_aligned;
+>>+ =A0 =A0 =A0 void *utmrdl_virt_addr_aligned;
+>>+ =A0 =A0 =A0 void *ucdl_virt_addr_aligned;
+>>+
+>>+ =A0 =A0 =A0 size_t ucdl_size;
+>>+ =A0 =A0 =A0 size_t utrdl_size;
+>>+ =A0 =A0 =A0 size_t utmrdl_size;
+>>+
+>>+ =A0 =A0 =A0 /* DMA memory reference */
+>>+ =A0 =A0 =A0 dma_addr_t ucdl_dma_addr;
+>>+ =A0 =A0 =A0 dma_addr_t utrdl_dma_addr;
+>>+ =A0 =A0 =A0 dma_addr_t utmrdl_dma_addr;
+>>+ =A0 =A0 =A0 dma_addr_t utrdl_dma_addr_aligned;
+>>+ =A0 =A0 =A0 dma_addr_t utmrdl_dma_addr_aligned;
+>>+ =A0 =A0 =A0 dma_addr_t ucdl_dma_addr_aligned;
+>
+> You can remove most of these members by simplifying the allocation:
+>
+> - remove the _aligned variables and use WARN_ON to test that
+> =A0the allocated buffers are aligned (they always are)
+> - remove the sizes because they are computed from the number of
+> =A0descriptors
+> - if possible, remove the _dma_addr members by referencing them only
+> =A0in the ufshcd_host_memory_configure() function that can get merged
+> =A0into ufshcd_memory_alloc()
+> - while you're here, change the type of the *_virt_addr to
+> =A0struct utp_task_req_desc/utp_transfer_req_desc/utp_transfer_req_cm=
+d_desc
+> =A0and remove the _virt_addr postfix.
+>
+
+I tried,
+if( !ucdl_dma_addr  || WARN_ON(ucdl_dma_addr & PAGE_SIZE))
+        pr_err("Memory allocation failed\n");
+but I was getting "memory allocation failed error".
+
+Since we need ucdl 128 byte aligned,  utrdl and utmrdl 1kb aligned,
+Currently I'm testing with the following code,
+
+if( !ucdl_dma_addr  || WARN_ON(ucdl_dma_addr & (128 - 1))
+        pr_err("Memory allocation failed\n");
+
+if( !utrdl_dma_addr  || WARN_ON(utrdl_dma_addr & (1024 - 1))
+        pr_err("Memory allocation failed\n");
+
+and
+if( !utmrdl_dma_addr  || WARN_ON(utmrdl_dma_addr & (1024 - 1))
+        pr_err("Memory allocation failed\n");
+
+also I'll make changes to the other things you pointed out.
+
+>>+ =A0 =A0 =A0 if (NULL =3D=3D hba->ucdl_virt_addr) {
+>
+> Here and in many other places, it's better to use the common kernel s=
+tyle
+>
+> =A0 =A0 =A0 =A0if (!hba->ucdl_virt_addr) {
+>
+> to check the validity of an object.
+>
+
+ok, we'll do so.
+
+>>+static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+>>+{
+>>+ =A0 =A0 =A0 u32 reg;
+>>+
+>>+ =A0 =A0 =A0 /* check if device present */
+>>+ =A0 =A0 =A0 reg =3D readl((UFSHCD_MMIO_BASE + REG_CONTROLLER_STATUS=
+));
+>>+ =A0 =A0 =A0 if (ufshcd_is_device_present(reg)) {
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev, "cc: Device no=
+t present\n");
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+>>+ =A0 =A0 =A0 }
+>>+
+>>+ =A0 =A0 =A0 /*
+>>+ =A0 =A0 =A0 =A0* UCRDY, UTMRLDY and UTRLRDY bits must be 1
+>>+ =A0 =A0 =A0 =A0* DEI, HEI bits must be 0
+>>+ =A0 =A0 =A0 =A0*/
+>>+ =A0 =A0 =A0 if (!(ufshcd_get_lists_status(reg))) {
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 writel(UTP_TASK_REQ_LIST_RUN_STOP_BIT,
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0(UFSHCD_MMIO_BASE +
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 REG_UTP_TASK_REQ_LIST_R=
+UN_STOP));
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 writel(UTP_TRANSFER_REQ_LIST_RUN_STOP_B=
+IT,
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0(UFSHCD_MMIO_BASE +
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 REG_UTP_TRANSFER_REQ_LI=
+ST_RUN_STOP));
+>>+ =A0 =A0 =A0 } else {
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev,
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "Host controller not re=
+ady to process requests");
+>>+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+>>+ =A0 =A0 =A0 }
+>
+> I guess ENXIO or EIO would be more fitting here than EINVAL, because =
+you
+> are not referring to incorrect user input.
+>
+
+ok, we'll update accordingly.
+
+>>+#ifdef CONFIG_PM
+>>+/**
+>>+ * ufshcd_suspend - suspend power management function
+>>+ * @pdev: pointer to PCI device handle
+>>+ * @state: power state
+>>+ *
+>>+ * Returns -ENOSYS
+>>+ */
+>>+static int ufshcd_suspend(struct pci_dev *pdev, pm_message_t state)
+>>+{
+>>+ =A0 =A0 =A0 return -ENOSYS;
+>>+}
+>>+
+>>+/**
+>>+ * ufshcd_resume - resume power management function
+>>+ * @pdev: pointer to PCI device handle
+>>+ *
+>>+ * Returns -ENOSYS
+>>+ */
+>>+static int ufshcd_resume(struct pci_dev *pdev)
+>>+{
+>>+ =A0 =A0 =A0 return -ENOSYS;
+>>+}
+>>+#endif /* CONFIG_PM */
+>
+> These look wrong. Are you planning to fill them in a later patch? If =
+not,
+> it's probably better to just remove these functions.
+>
+
+Yes, We'll implement power management in the next patch.
+linux/Documentation/SubmittingDrivers suggested to define
+=2Esuspend and .resume methods returning -ENOSYS, if not yet implemente=
+d.
+So it was added.
+
+Thanks for your comments. Please let us know if you have any comments
+on the other patches as well.
+
+> =A0 =A0 =A0 =A0Arnd
+
+--=20
+~Santosh
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
