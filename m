@@ -1,47 +1,88 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v5 0/3] virtio-scsi driver
-Date: Sun,  5 Feb 2012 12:15:59 +0100
-Message-ID: <1328440562-19425-1-git-send-email-pbonzini@redhat.com>
-Return-path: <kvm-owner@vger.kernel.org>
-Sender: kvm-owner@vger.kernel.org
+Subject: [PATCH v5 3/3] virtio-scsi: add power management support
+Date: Sun,  5 Feb 2012 12:16:02 +0100
+Message-ID: <1328440562-19425-4-git-send-email-pbonzini@redhat.com>
+References: <1328440562-19425-1-git-send-email-pbonzini@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1328440562-19425-1-git-send-email-pbonzini@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Rusty Russell <rusty@rustcorp.com.au>, kvm@vger.kernel.org, Pekka Enberg <penberg@kernel.org>, "Michael S . Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>, Pekka Enberg <penberg@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, "Michael S. Tsirkin" <mst@redhat.com>, kvm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is the first implementation of the virtio-scsi driver, a virtual
-HBA that will be supported by KVM.  It implements a subset of the spec,
-in particular it does not implement asynchronous notifications for either
-LUN reset/removal/addition or CD-ROM media events, but it is already
-functional and usable.
+This patch adds freeze/restore handlers for the HBA.  Block queues
+are managed independently by the disk devices.
 
-Other matching bits:
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: kvm@vger.kernel.org
+Acked-by: Pekka Enberg <penberg@kernel.org> 
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+	The feature has been merged in the virtio core for 3.3, so the patch
+	is new in v4.
 
-- spec at http://people.redhat.com/pbonzini/virtio-spec.pdf
+ drivers/scsi/virtio_scsi.c |   26 +++++++++++++++++++++++---
+ 1 files changed, 23 insertions(+), 3 deletions(-)
 
-- QEMU implementation at git://github.com/bonzini/qemu.git,
-  branch virtio-scsi
-
-Please review.  Getting this in 3.3 is starting to look like wishful thinking,
-but the possibility of regressions is obviously zero so I'm still dreaming.
-Otherwise, that would be 3.4.
-
-Paolo Bonzini (3):
-  virtio-scsi: first version
-  virtio-scsi: add error handling
-  virtio-scsi: add power management support
-
-v4->v5: change virtio id from 7 to 8
-
-v3->v4: renamed VIRTIO_SCSI_S_UNDERRUN to VIRTIO_SCSI_S_OVERRUN;
-    fixed 32-bit compilation; added power management support;
-    adjusted calls to virtqueue_add_buf
-
- drivers/scsi/Kconfig        |    8 +
- drivers/scsi/Makefile       |    1 +
- drivers/scsi/virtio_scsi.c  |  594 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/virtio_ids.h  |    1 +
- include/linux/virtio_scsi.h |  114 +++++++++
- 5 files changed, 718 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/virtio_scsi.c
- create mode 100644 include/linux/virtio_scsi.h
-
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 68104cd..efccd72 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -406,8 +406,8 @@ static struct scsi_host_template virtscsi_host_template = {
+ 				  &__val, sizeof(__val)); \
+ 	})
+ 
+-static int __devinit virtscsi_init(struct virtio_device *vdev,
+-				   struct virtio_scsi *vscsi)
++static int virtscsi_init(struct virtio_device *vdev,
++			 struct virtio_scsi *vscsi)
+ {
+ 	int err;
+ 	struct virtqueue *vqs[3];
+@@ -491,7 +491,7 @@ virtscsi_init_failed:
+ 	return err;
+ }
+ 
+-static void __devexit virtscsi_remove_vqs(struct virtio_device *vdev)
++static void virtscsi_remove_vqs(struct virtio_device *vdev)
+ {
+ 	/* Stop all the virtqueues. */
+ 	vdev->config->reset(vdev);
+@@ -509,6 +509,22 @@ static void __devexit virtscsi_remove(struct virtio_device *vdev)
+ 	scsi_host_put(shost);
+ }
+ 
++#ifdef CONFIG_PM
++static int virtscsi_freeze(struct virtio_device *vdev)
++{
++	virtscsi_remove_vqs(vdev);
++	return 0;
++}
++
++static int virtscsi_restore(struct virtio_device *vdev)
++{
++	struct Scsi_Host *sh = virtio_scsi_host(vdev);
++	struct virtio_scsi *vscsi = shost_priv(sh);
++
++	return virtscsi_init(vdev, vscsi);
++}
++#endif
++
+ static struct virtio_device_id id_table[] = {
+ 	{ VIRTIO_ID_SCSI, VIRTIO_DEV_ANY_ID },
+ 	{ 0 },
+@@ -519,6 +535,10 @@ static struct virtio_driver virtio_scsi_driver = {
+ 	.driver.owner = THIS_MODULE,
+ 	.id_table = id_table,
+ 	.probe = virtscsi_probe,
++#ifdef CONFIG_PM
++	.freeze = virtscsi_freeze,
++	.restore = virtscsi_restore,
++#endif
+ 	.remove = __devexit_p(virtscsi_remove),
+ };
+ 
+-- 
+1.7.1
