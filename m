@@ -1,727 +1,174 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v5 1/3] virtio-scsi: first version
-Date: Sun,  5 Feb 2012 12:16:00 +0100
-Message-ID: <1328440562-19425-2-git-send-email-pbonzini@redhat.com>
-References: <1328440562-19425-1-git-send-email-pbonzini@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1328440562-19425-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>, Pekka Enberg <penberg@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, "Michael S. Tsirkin" <mst@redhat.com>, kvm@vger.kernel.org
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal
+ routine fails
+Date: Sun, 05 Feb 2012 16:05:48 +0400
+Message-ID: <4F2E709C.5060000@mvista.com>
+References: <1328273954-5010-1-git-send-email-amit.sahrawat83@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1328273954-5010-1-git-send-email-amit.sahrawat83@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Nam-Jae Jeon <namjae.jeon@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The virtio-scsi HBA is the basis of an alternative storage stack
-for QEMU-based virtual machines (including KVM).  Compared to
-virtio-blk it is more scalable, because it supports many LUNs
-on a single PCI slot), more powerful (it more easily supports
-passthrough of host devices to the guest) and more easily
-extensible (new SCSI features implemented by QEMU should not
-require updating the driver in the guest).
+Hello.
 
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: kvm@vger.kernel.org
-Acked-by: Pekka Enberg <penberg@kernel.org> 
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
-	v4->v5: change virtio id from 7 to 8
+On 03-02-2012 16:59, Amit Sahrawat wrote:
 
-	v3->v4: renamed VIRTIO_SCSI_S_UNDERRUN to VIRTIO_SCSI_S_OVERRUN;
-	fixed 32-bit compilation; adjust call to virtqueue_add_buf
+> It has been observed that a number of USB HDD's do not respond correctly
 
-	v2->v3: added mempool, formatting fixes
+    Why are you working around this in libata-scsi.c then if it's USB HDD?
 
-	v1->v2: use dbg_dev, sdev_printk, scmd_printk
-	   - renamed lock to vq_lock
-	   - renamed cmd_vq to req_vq (and other similar changes)
-	   - fixed missing break in VIRTIO_SCSI_S_OVERRUN
-	   - added VIRTIO_SCSI_S_BUSY
-	   - removed unused argument from virtscsi_map_cmd
-	   - fixed two tabs that had slipped in
-	   - moved max_sectors and cmd_per_lun from template to config space
-	   - __attribute__((packed)) -> __packed
+> to SCSI mode sense command(retrieve caching pages) which results in their
+> Write Cache being discarded by queue requests i.e., WCE if left set to
+> '0'(disabled).
+> This results in a number of Filesystem corruptions, when the device
+> is unplugged abruptly.
 
- drivers/scsi/Kconfig        |    8 +
- drivers/scsi/Makefile       |    1 +
- drivers/scsi/virtio_scsi.c  |  503 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/virtio_ids.h  |    1 +
- include/linux/virtio_scsi.h |  114 ++++++++++
- 5 files changed, 627 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/virtio_scsi.c
- create mode 100644 include/linux/virtio_scsi.h
+> So, in order to identify the devices correctly - give it
+> a last try using ATA_16 after failure from normal routine.
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 16570aa..827ebaf 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1897,6 +1897,14 @@ config SCSI_BFA_FC
- 	  To compile this driver as a module, choose M here. The module will
- 	  be called bfa.
- 
-+config SCSI_VIRTIO
-+	tristate "virtio-scsi support (EXPERIMENTAL)"
-+	depends on EXPERIMENTAL && VIRTIO
-+	help
-+          This is the virtual HBA driver for virtio.  If the kernel will
-+          be used in a virtual machine, say Y or M.
-+
-+
- endif # SCSI_LOWLEVEL
- 
- source "drivers/scsi/pcmcia/Kconfig"
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 2b88749..351b28b 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -141,6 +141,7 @@ obj-$(CONFIG_SCSI_CXGB4_ISCSI)	+= libiscsi.o libiscsi_tcp.o cxgbi/
- obj-$(CONFIG_SCSI_BNX2_ISCSI)	+= libiscsi.o bnx2i/
- obj-$(CONFIG_BE2ISCSI)		+= libiscsi.o be2iscsi/
- obj-$(CONFIG_SCSI_PMCRAID)	+= pmcraid.o
-+obj-$(CONFIG_SCSI_VIRTIO)	+= virtio_scsi.o
- obj-$(CONFIG_VMWARE_PVSCSI)	+= vmw_pvscsi.o
- 
- obj-$(CONFIG_ARM)		+= arm/
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-new file mode 100644
-index 0000000..3f87ae0
---- /dev/null
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -0,0 +1,503 @@
-+/*
-+ * Virtio SCSI HBA driver
-+ *
-+ * Copyright IBM Corp. 2010
-+ * Copyright Red Hat, Inc. 2011
-+ *
-+ * Authors:
-+ *  Stefan Hajnoczi   <stefanha@linux.vnet.ibm.com>
-+ *  Paolo Bonzini   <pbonzini@redhat.com>
-+ *
-+ * This work is licensed under the terms of the GNU GPL, version 2 or later.
-+ * See the COPYING file in the top-level directory.
-+ *
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+#include <linux/mempool.h>
-+#include <linux/virtio.h>
-+#include <linux/virtio_ids.h>
-+#include <linux/virtio_config.h>
-+#include <linux/virtio_scsi.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_cmnd.h>
-+
-+#define VIRTIO_SCSI_MEMPOOL_SZ 64
-+
-+/* Command queue element */
-+struct virtio_scsi_cmd {
-+	struct scsi_cmnd *sc;
-+	union {
-+		struct virtio_scsi_cmd_req       cmd;
-+		struct virtio_scsi_ctrl_tmf_req  tmf;
-+		struct virtio_scsi_ctrl_an_req   an;
-+	} req;
-+	union {
-+		struct virtio_scsi_cmd_resp      cmd;
-+		struct virtio_scsi_ctrl_tmf_resp tmf;
-+		struct virtio_scsi_ctrl_an_resp  an;
-+		struct virtio_scsi_event         evt;
-+	} resp;
-+} ____cacheline_aligned_in_smp;
-+
-+/* Driver instance state */
-+struct virtio_scsi {
-+	/* Protects ctrl_vq, req_vq and sg[] */
-+	spinlock_t vq_lock;
-+
-+	struct virtio_device *vdev;
-+	struct virtqueue *ctrl_vq;
-+	struct virtqueue *event_vq;
-+	struct virtqueue *req_vq;
-+
-+	/* For sglist construction when adding commands to the virtqueue.  */
-+	struct scatterlist sg[];
-+};
-+
-+static struct kmem_cache *virtscsi_cmd_cache;
-+static mempool_t *virtscsi_cmd_pool;
-+
-+static inline struct Scsi_Host *virtio_scsi_host(struct virtio_device *vdev)
-+{
-+	return vdev->priv;
-+}
-+
-+static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
-+{
-+	if (!resid)
-+		return;
-+
-+	if (!scsi_bidi_cmnd(sc)) {
-+		scsi_set_resid(sc, resid);
-+		return;
-+	}
-+
-+	scsi_in(sc)->resid = min(resid, scsi_in(sc)->length);
-+	scsi_out(sc)->resid = resid - scsi_in(sc)->resid;
-+}
-+
-+/**
-+ * virtscsi_complete_cmd - finish a scsi_cmd and invoke scsi_done
-+ *
-+ * Called with vq_lock held.
-+ */
-+static void virtscsi_complete_cmd(void *buf)
-+{
-+	struct virtio_scsi_cmd *cmd = buf;
-+	struct scsi_cmnd *sc = cmd->sc;
-+	struct virtio_scsi_cmd_resp *resp = &cmd->resp.cmd;
-+
-+	dev_dbg(&sc->device->sdev_gendev,
-+		"cmd %p response %u status %#02x sense_len %u\n",
-+		sc, resp->response, resp->status, resp->sense_len);
-+
-+	sc->result = resp->status;
-+	virtscsi_compute_resid(sc, resp->resid);
-+	switch (resp->response) {
-+	case VIRTIO_SCSI_S_OK:
-+		set_host_byte(sc, DID_OK);
-+		break;
-+	case VIRTIO_SCSI_S_OVERRUN:
-+		set_host_byte(sc, DID_ERROR);
-+		break;
-+	case VIRTIO_SCSI_S_ABORTED:
-+		set_host_byte(sc, DID_ABORT);
-+		break;
-+	case VIRTIO_SCSI_S_BAD_TARGET:
-+		set_host_byte(sc, DID_BAD_TARGET);
-+		break;
-+	case VIRTIO_SCSI_S_RESET:
-+		set_host_byte(sc, DID_RESET);
-+		break;
-+	case VIRTIO_SCSI_S_BUSY:
-+		set_host_byte(sc, DID_BUS_BUSY);
-+		break;
-+	case VIRTIO_SCSI_S_TRANSPORT_FAILURE:
-+		set_host_byte(sc, DID_TRANSPORT_DISRUPTED);
-+		break;
-+	case VIRTIO_SCSI_S_TARGET_FAILURE:
-+		set_host_byte(sc, DID_TARGET_FAILURE);
-+		break;
-+	case VIRTIO_SCSI_S_NEXUS_FAILURE:
-+		set_host_byte(sc, DID_NEXUS_FAILURE);
-+		break;
-+	default:
-+		scmd_printk(KERN_WARNING, sc, "Unknown response %d",
-+			    resp->response);
-+		/* fall through */
-+	case VIRTIO_SCSI_S_FAILURE:
-+		set_host_byte(sc, DID_ERROR);
-+		break;
-+	}
-+
-+	WARN_ON(resp->sense_len > VIRTIO_SCSI_SENSE_SIZE);
-+	if (sc->sense_buffer) {
-+		memcpy(sc->sense_buffer, resp->sense,
-+		       min_t(u32, resp->sense_len, VIRTIO_SCSI_SENSE_SIZE));
-+		if (resp->sense_len)
-+			set_driver_byte(sc, DRIVER_SENSE);
-+	}
-+
-+	mempool_free(cmd, virtscsi_cmd_pool);
-+	sc->scsi_done(sc);
-+}
-+
-+static void virtscsi_vq_done(struct virtqueue *vq, void (*fn)(void *buf))
-+{
-+	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
-+	struct virtio_scsi *vscsi = shost_priv(sh);
-+	void *buf;
-+	unsigned long flags;
-+	unsigned int len;
-+
-+	spin_lock_irqsave(&vscsi->vq_lock, flags);
-+
-+	do {
-+		virtqueue_disable_cb(vq);
-+		while ((buf = virtqueue_get_buf(vq, &len)) != NULL)
-+			fn(buf);
-+	} while (!virtqueue_enable_cb(vq));
-+
-+	spin_unlock_irqrestore(&vscsi->vq_lock, flags);
-+}
-+
-+static void virtscsi_req_done(struct virtqueue *vq)
-+{
-+	virtscsi_vq_done(vq, virtscsi_complete_cmd);
-+};
-+
-+/* These are still stubs.  */
-+static void virtscsi_complete_free(void *buf)
-+{
-+	struct virtio_scsi_cmd *cmd = buf;
-+
-+	mempool_free(cmd, virtscsi_cmd_pool);
-+}
-+
-+static void virtscsi_ctrl_done(struct virtqueue *vq)
-+{
-+	virtscsi_vq_done(vq, virtscsi_complete_free);
-+};
-+
-+static void virtscsi_event_done(struct virtqueue *vq)
-+{
-+	virtscsi_vq_done(vq, virtscsi_complete_free);
-+};
-+
-+static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
-+			     struct scsi_data_buffer *sdb)
-+{
-+	struct sg_table *table = &sdb->table;
-+	struct scatterlist *sg_elem;
-+	unsigned int idx = *p_idx;
-+	int i;
-+
-+	for_each_sg(table->sgl, sg_elem, table->nents, i)
-+		sg_set_buf(&sg[idx++], sg_virt(sg_elem), sg_elem->length);
-+
-+	*p_idx = idx;
-+}
-+
-+/**
-+ * virtscsi_map_cmd - map a scsi_cmd to a virtqueue scatterlist
-+ * @vscsi	: virtio_scsi state
-+ * @cmd		: command structure
-+ * @out_num	: number of read-only elements
-+ * @in_num	: number of write-only elements
-+ * @req_size	: size of the request buffer
-+ * @resp_size	: size of the response buffer
-+ *
-+ * Called with vq_lock held.
-+ */
-+static void virtscsi_map_cmd(struct virtio_scsi *vscsi,
-+			     struct virtio_scsi_cmd *cmd,
-+			     unsigned *out_num, unsigned *in_num,
-+			     size_t req_size, size_t resp_size)
-+{
-+	struct scsi_cmnd *sc = cmd->sc;
-+	struct scatterlist *sg = vscsi->sg;
-+	unsigned int idx = 0;
-+
-+	if (sc) {
-+		struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
-+		BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
-+
-+		/* TODO: check feature bit and fail if unsupported?  */
-+		BUG_ON(sc->sc_data_direction == DMA_BIDIRECTIONAL);
-+	}
-+
-+	/* Request header.  */
-+	sg_set_buf(&sg[idx++], &cmd->req, req_size);
-+
-+	/* Data-out buffer.  */
-+	if (sc && sc->sc_data_direction != DMA_FROM_DEVICE)
-+		virtscsi_map_sgl(sg, &idx, scsi_out(sc));
-+
-+	*out_num = idx;
-+
-+	/* Response header.  */
-+	sg_set_buf(&sg[idx++], &cmd->resp, resp_size);
-+
-+	/* Data-in buffer */
-+	if (sc && sc->sc_data_direction != DMA_TO_DEVICE)
-+		virtscsi_map_sgl(sg, &idx, scsi_in(sc));
-+
-+	*in_num = idx - *out_num;
-+}
-+
-+static int virtscsi_kick_cmd(struct virtio_scsi *vscsi, struct virtqueue *vq,
-+			     struct virtio_scsi_cmd *cmd,
-+			     size_t req_size, size_t resp_size, gfp_t gfp)
-+{
-+	unsigned int out_num, in_num;
-+	unsigned long flags;
-+	int ret;
-+
-+	spin_lock_irqsave(&vscsi->vq_lock, flags);
-+
-+	virtscsi_map_cmd(vscsi, cmd, &out_num, &in_num, req_size, resp_size);
-+
-+	ret = virtqueue_add_buf(vq, vscsi->sg, out_num, in_num, cmd, gfp);
-+	if (ret >= 0)
-+		virtqueue_kick(vq);
-+
-+	spin_unlock_irqrestore(&vscsi->vq_lock, flags);
-+	return ret;
-+}
-+
-+static int virtscsi_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
-+{
-+	struct virtio_scsi *vscsi = shost_priv(sh);
-+	struct virtio_scsi_cmd *cmd;
-+	int ret;
-+
-+	dev_dbg(&sc->device->sdev_gendev,
-+		"cmd %p CDB: %#02x\n", sc, sc->cmnd[0]);
-+
-+	ret = SCSI_MLQUEUE_HOST_BUSY;
-+	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_ATOMIC);
-+	if (!cmd)
-+		goto out;
-+
-+	memset(cmd, 0, sizeof(*cmd));
-+	cmd->sc = sc;
-+	cmd->req.cmd = (struct virtio_scsi_cmd_req){
-+		.lun[0] = 1,
-+		.lun[1] = sc->device->id,
-+		.lun[2] = (sc->device->lun >> 8) | 0x40,
-+		.lun[3] = sc->device->lun & 0xff,
-+		.tag = (unsigned long)sc,
-+		.task_attr = VIRTIO_SCSI_S_SIMPLE,
-+		.prio = 0,
-+		.crn = 0,
-+	};
-+
-+	BUG_ON(sc->cmd_len > VIRTIO_SCSI_CDB_SIZE);
-+	memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
-+
-+	if (virtscsi_kick_cmd(vscsi, vscsi->req_vq, cmd,
-+			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd,
-+			      GFP_ATOMIC) >= 0)
-+		ret = 0;
-+
-+out:
-+	return ret;
-+}
-+
-+static struct scsi_host_template virtscsi_host_template = {
-+	.module = THIS_MODULE,
-+	.name = "Virtio SCSI HBA",
-+	.proc_name = "virtio_scsi",
-+	.queuecommand = virtscsi_queuecommand,
-+	.this_id = -1,
-+
-+	.can_queue = 1024,
-+	.dma_boundary = UINT_MAX,
-+	.use_clustering = ENABLE_CLUSTERING,
-+};
-+
-+#define virtscsi_config_get(vdev, fld) \
-+	({ \
-+		typeof(((struct virtio_scsi_config *)0)->fld) __val; \
-+		vdev->config->get(vdev, \
-+				  offsetof(struct virtio_scsi_config, fld), \
-+				  &__val, sizeof(__val)); \
-+		__val; \
-+	})
-+
-+#define virtscsi_config_set(vdev, fld, val) \
-+	(void)({ \
-+		typeof(((struct virtio_scsi_config *)0)->fld) __val = (val); \
-+		vdev->config->set(vdev, \
-+				  offsetof(struct virtio_scsi_config, fld), \
-+				  &__val, sizeof(__val)); \
-+	})
-+
-+static int __devinit virtscsi_init(struct virtio_device *vdev,
-+				   struct virtio_scsi *vscsi)
-+{
-+	int err;
-+	struct virtqueue *vqs[3];
-+	vq_callback_t *callbacks[] = {
-+		virtscsi_ctrl_done,
-+		virtscsi_event_done,
-+		virtscsi_req_done
-+	};
-+	const char *names[] = {
-+		"control",
-+		"event",
-+		"request"
-+	};
-+
-+	/* Discover virtqueues and write information to configuration.  */
-+	err = vdev->config->find_vqs(vdev, 3, vqs, callbacks, names);
-+	if (err)
-+		return err;
-+
-+	vscsi->ctrl_vq = vqs[0];
-+	vscsi->event_vq = vqs[1];
-+	vscsi->req_vq = vqs[2];
-+
-+	virtscsi_config_set(vdev, cdb_size, VIRTIO_SCSI_CDB_SIZE);
-+	virtscsi_config_set(vdev, sense_size, VIRTIO_SCSI_SENSE_SIZE);
-+	return 0;
-+}
-+
-+static int __devinit virtscsi_probe(struct virtio_device *vdev)
-+{
-+	struct Scsi_Host *shost;
-+	struct virtio_scsi *vscsi;
-+	int err;
-+	u32 sg_elems;
-+	u32 cmd_per_lun;
-+
-+	/* We need to know how many segments before we allocate.
-+	 * We need an extra sg elements at head and tail.
-+	 */
-+	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
-+
-+	/* Allocate memory and link the structs together.  */
-+	shost = scsi_host_alloc(&virtscsi_host_template,
-+		sizeof(*vscsi) + sizeof(vscsi->sg[0]) * (sg_elems + 2));
-+
-+	if (!shost)
-+		return -ENOMEM;
-+
-+	shost->sg_tablesize = sg_elems;
-+	vscsi = shost_priv(shost);
-+	vscsi->vdev = vdev;
-+	vdev->priv = shost;
-+
-+	/* Random initializations.  */
-+	spin_lock_init(&vscsi->vq_lock);
-+	sg_init_table(vscsi->sg, sg_elems + 2);
-+
-+	err = virtscsi_init(vdev, vscsi);
-+	if (err)
-+		goto virtscsi_init_failed;
-+
-+	cmd_per_lun = virtscsi_config_get(vdev, cmd_per_lun) ?: 1;
-+	shost->cmd_per_lun = min_t(u32, cmd_per_lun, shost->can_queue);
-+	shost->max_sectors = virtscsi_config_get(vdev, max_sectors) ?: 0xFFFF;
-+	shost->max_lun = virtscsi_config_get(vdev, max_lun) + 1;
-+	shost->max_id = virtscsi_config_get(vdev, max_target) + 1;
-+	shost->max_channel = 0;
-+	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
-+	err = scsi_add_host(shost, &vdev->dev);
-+	if (err)
-+		goto scsi_add_host_failed;
-+
-+	scsi_scan_host(shost);
-+
-+	return 0;
-+
-+scsi_add_host_failed:
-+	vdev->config->del_vqs(vdev);
-+virtscsi_init_failed:
-+	scsi_host_put(shost);
-+	return err;
-+}
-+
-+static void __devexit virtscsi_remove_vqs(struct virtio_device *vdev)
-+{
-+	/* Stop all the virtqueues. */
-+	vdev->config->reset(vdev);
-+
-+	vdev->config->del_vqs(vdev);
-+}
-+
-+static void __devexit virtscsi_remove(struct virtio_device *vdev)
-+{
-+	struct Scsi_Host *shost = virtio_scsi_host(vdev);
-+
-+	scsi_remove_host(shost);
-+
-+	virtscsi_remove_vqs(vdev);
-+	scsi_host_put(shost);
-+}
-+
-+static struct virtio_device_id id_table[] = {
-+	{ VIRTIO_ID_SCSI, VIRTIO_DEV_ANY_ID },
-+	{ 0 },
-+};
-+
-+static struct virtio_driver virtio_scsi_driver = {
-+	.driver.name = KBUILD_MODNAME,
-+	.driver.owner = THIS_MODULE,
-+	.id_table = id_table,
-+	.probe = virtscsi_probe,
-+	.remove = __devexit_p(virtscsi_remove),
-+};
-+
-+static int __init init(void)
-+{
-+	int ret = -ENOMEM;
-+
-+	virtscsi_cmd_cache = KMEM_CACHE(virtio_scsi_cmd, 0);
-+	if (!virtscsi_cmd_cache) {
-+		printk(KERN_ERR "kmem_cache_create() for "
-+				"virtscsi_cmd_cache failed\n");
-+		goto error;
-+	}
-+
-+
-+	virtscsi_cmd_pool =
-+		mempool_create_slab_pool(VIRTIO_SCSI_MEMPOOL_SZ,
-+					 virtscsi_cmd_cache);
-+	if (!virtscsi_cmd_pool) {
-+		printk(KERN_ERR "mempool_create() for"
-+				"virtscsi_cmd_pool failed\n");
-+		goto error;
-+	}
-+	ret = register_virtio_driver(&virtio_scsi_driver);
-+	if (ret < 0)
-+		goto error;
-+
-+	return 0;
-+
-+error:
-+	if (virtscsi_cmd_pool) {
-+		mempool_destroy(virtscsi_cmd_pool);
-+		virtscsi_cmd_pool = NULL;
-+	}
-+	if (virtscsi_cmd_cache) {
-+		kmem_cache_destroy(virtscsi_cmd_cache);
-+		virtscsi_cmd_cache = NULL;
-+	}
-+	return ret;
-+}
-+
-+static void __exit fini(void)
-+{
-+	unregister_virtio_driver(&virtio_scsi_driver);
-+	mempool_destroy(virtscsi_cmd_pool);
-+	kmem_cache_destroy(virtscsi_cmd_cache);
-+}
-+module_init(init);
-+module_exit(fini);
-+
-+MODULE_DEVICE_TABLE(virtio, id_table);
-+MODULE_DESCRIPTION("Virtio SCSI HBA driver");
-+MODULE_LICENSE("GPL");
-diff --git a/include/linux/virtio_ids.h b/include/linux/virtio_ids.h
-index 85bb0bb..d83ae52 100644
---- a/include/linux/virtio_ids.h
-+++ b/include/linux/virtio_ids.h
-@@ -34,6 +34,7 @@
- #define VIRTIO_ID_CONSOLE	3 /* virtio console */
- #define VIRTIO_ID_RNG		4 /* virtio ring */
- #define VIRTIO_ID_BALLOON	5 /* virtio balloon */
-+#define VIRTIO_ID_SCSI		8 /* virtio scsi */
- #define VIRTIO_ID_9P		9 /* 9p virtio console */
- 
- #endif /* _LINUX_VIRTIO_IDS_H */
-diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
-new file mode 100644
-index 0000000..8ddeafd
---- /dev/null
-+++ b/include/linux/virtio_scsi.h
-@@ -0,0 +1,114 @@
-+#ifndef _LINUX_VIRTIO_SCSI_H
-+#define _LINUX_VIRTIO_SCSI_H
-+/* This header is BSD licensed so anyone can use the definitions to implement
-+ * compatible drivers/servers. */
-+
-+#define VIRTIO_SCSI_CDB_SIZE   32
-+#define VIRTIO_SCSI_SENSE_SIZE 96
-+
-+/* SCSI command request, followed by data-out */
-+struct virtio_scsi_cmd_req {
-+	u8 lun[8];		/* Logical Unit Number */
-+	u64 tag;		/* Command identifier */
-+	u8 task_attr;		/* Task attribute */
-+	u8 prio;
-+	u8 crn;
-+	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
-+} __packed;
-+
-+/* Response, followed by sense data and data-in */
-+struct virtio_scsi_cmd_resp {
-+	u32 sense_len;		/* Sense data length */
-+	u32 resid;		/* Residual bytes in data buffer */
-+	u16 status_qualifier;	/* Status qualifier */
-+	u8 status;		/* Command completion status */
-+	u8 response;		/* Response values */
-+	u8 sense[VIRTIO_SCSI_SENSE_SIZE];
-+} __packed;
-+
-+/* Task Management Request */
-+struct virtio_scsi_ctrl_tmf_req {
-+	u32 type;
-+	u32 subtype;
-+	u8 lun[8];
-+	u64 tag;
-+} __packed;
-+
-+struct virtio_scsi_ctrl_tmf_resp {
-+	u8 response;
-+} __packed;
-+
-+/* Asynchronous notification query/subscription */
-+struct virtio_scsi_ctrl_an_req {
-+	u32 type;
-+	u8 lun[8];
-+	u32 event_requested;
-+} __packed;
-+
-+struct virtio_scsi_ctrl_an_resp {
-+	u32 event_actual;
-+	u8 response;
-+} __packed;
-+
-+struct virtio_scsi_event {
-+	u32 event;
-+	u8 lun[8];
-+	u32 reason;
-+} __packed;
-+
-+struct virtio_scsi_config {
-+	u32 num_queues;
-+	u32 seg_max;
-+	u32 max_sectors;
-+	u32 cmd_per_lun;
-+	u32 event_info_size;
-+	u32 sense_size;
-+	u32 cdb_size;
-+	u16 max_channel;
-+	u16 max_target;
-+	u32 max_lun;
-+} __packed;
-+
-+/* Response codes */
-+#define VIRTIO_SCSI_S_OK                       0
-+#define VIRTIO_SCSI_S_OVERRUN                  1
-+#define VIRTIO_SCSI_S_ABORTED                  2
-+#define VIRTIO_SCSI_S_BAD_TARGET               3
-+#define VIRTIO_SCSI_S_RESET                    4
-+#define VIRTIO_SCSI_S_BUSY                     5
-+#define VIRTIO_SCSI_S_TRANSPORT_FAILURE        6
-+#define VIRTIO_SCSI_S_TARGET_FAILURE           7
-+#define VIRTIO_SCSI_S_NEXUS_FAILURE            8
-+#define VIRTIO_SCSI_S_FAILURE                  9
-+#define VIRTIO_SCSI_S_FUNCTION_SUCCEEDED       10
-+#define VIRTIO_SCSI_S_FUNCTION_REJECTED        11
-+#define VIRTIO_SCSI_S_INCORRECT_LUN            12
-+
-+/* Controlq type codes.  */
-+#define VIRTIO_SCSI_T_TMF                      0
-+#define VIRTIO_SCSI_T_AN_QUERY                 1
-+#define VIRTIO_SCSI_T_AN_SUBSCRIBE             2
-+
-+/* Valid TMF subtypes.  */
-+#define VIRTIO_SCSI_T_TMF_ABORT_TASK           0
-+#define VIRTIO_SCSI_T_TMF_ABORT_TASK_SET       1
-+#define VIRTIO_SCSI_T_TMF_CLEAR_ACA            2
-+#define VIRTIO_SCSI_T_TMF_CLEAR_TASK_SET       3
-+#define VIRTIO_SCSI_T_TMF_I_T_NEXUS_RESET      4
-+#define VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET   5
-+#define VIRTIO_SCSI_T_TMF_QUERY_TASK           6
-+#define VIRTIO_SCSI_T_TMF_QUERY_TASK_SET       7
-+
-+/* Events.  */
-+#define VIRTIO_SCSI_T_EVENTS_MISSED            0x80000000
-+#define VIRTIO_SCSI_T_NO_EVENT                 0
-+#define VIRTIO_SCSI_T_TRANSPORT_RESET          1
-+#define VIRTIO_SCSI_T_ASYNC_NOTIFY             2
-+
-+#define VIRTIO_SCSI_S_SIMPLE                   0
-+#define VIRTIO_SCSI_S_ORDERED                  1
-+#define VIRTIO_SCSI_S_HEAD                     2
-+#define VIRTIO_SCSI_S_ACA                      3
-+
-+
-+#endif /* _LINUX_VIRTIO_SCSI_H */
--- 
-1.7.1
+    Shouldn't this be done in drivers/usb/storage somewhere?
+
+> Signed-off-by: Amit Sahrawat<a.sahrawat@samsung.com>
+> Signed-off-by: Namjae Jeon<namjae.jeon@samsung.com>
+
+[...]
+
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 508a60b..d5b00e6 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -562,6 +562,57 @@ error:
+>   }
+>
+>   /**
+> + *      ata_get_cachestatus - Handler for to get WriteCache Status
+> + *                      using ATA_16 scsi command
+> + *      @scsidev: Device to which we are issuing command
+> + *
+> + *      LOCKING:
+> + *      Defined by the SCSI layer.  We don't really care.
+> + *
+> + *      RETURNS:
+> + *      '0' for Write Cache Disabled and on any error.
+> + *      '1' for Write Cache enabled
+> + */
+> +int ata_get_cachestatus(struct scsi_device *scsidev)
+> +{
+> +	int rc = 0;
+> +	u8 scsi_cmd[MAX_COMMAND_SIZE] = {0};
+> +	u8 *sensebuf = NULL, *argbuf = NULL;
+
+    No need to initialize them.
+
+> +	enum dma_data_direction data_dir;
+> +
+> +	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
+> +	if (!sensebuf)
+> +		return rc;
+> +
+> +	argbuf = kmalloc(ATA_SECT_SIZE, GFP_KERNEL);
+> +	if (argbuf == NULL)
+
+    Could you use an uniform NULL-check, either '!x' or 'x == NULL'?
+
+> +		goto error;
+> +
+> +	scsi_cmd[0] = ATA_16;
+> +	scsi_cmd[1]  = (4<<  1); /* PIO Data-in */
+> +	scsi_cmd[2]  = 0x0e;     /* no off.line or cc, read from dev,
+> +				block count in sector count field */
+> +	data_dir = DMA_FROM_DEVICE;
+> +	scsi_cmd[14] = ATA_IDENTIFY_DEV;
+> +
+> +	if (!scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, ATA_SECT_SIZE,
+> +				sensebuf, (10*HZ), 5, 0, NULL)) {
+> +		/*
+> +		 * '6th' Bit in Word 85 Corresponds to Write Cache
+
+    No need for apostrophes here.
+
+> +		 * being Enabled/disabled, Word 85 represnets the
+> +		 * features supported
+> +		 */
+> +		if (le16_to_cpu(((unsigned short *)argbuf)[85])&  0x20)
+> +			rc = 1;
+> +	}
+> +
+> +error:
+> +	kfree(sensebuf);
+> +	kfree(argbuf);
+> +	return rc;
+> +}
+> +
+> +/**
+>    *	ata_task_ioctl - Handler for HDIO_DRIVE_TASK ioctl
+>    *	@scsidev: Device to which we are issuing command
+>    *	@arg: User provided data for issuing command
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index c691fb5..a6b887d 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -50,6 +50,11 @@
+>   #include<linux/string_helpers.h>
+>   #include<linux/async.h>
+>   #include<linux/slab.h>
+> +
+> +#ifdef CONFIG_ATA
+
+    #ifdef not necessary here.
+
+> +#include<linux/libata.h>
+> +#endif
+> +
+>   #include<linux/pm_runtime.h>
+>   #include<asm/uaccess.h>
+>   #include<asm/unaligned.h>
+> @@ -2129,7 +2134,11 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+>   		if (modepage == 0x3F) {
+>   			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
+>   				  "present\n");
+> +#ifdef CONFIG_ATA
+> +			goto WCE_USING_ATA;
+
+    Yikes.
+
+> +#else
+>   			goto defaults;
+> +#endif
+>   		} else if ((buffer[offset]&  0x3f) != modepage) {
+>   			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
+>   			goto defaults;
+> @@ -2149,6 +2158,14 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+>   				  "Uses READ/WRITE(6), disabling FUA\n");
+>   			sdkp->DPOFUA = 0;
+>   		}
+> +#ifdef CONFIG_ATA
+> +WCE_USING_ATA:
+> +		if (!sdp->removable && !sdkp->WCE) {
+> +			sd_printk(KERN_NOTICE, sdkp, "Try to check write cache "
+> +				"enable/disable using ATA command\n");
+> +			sdkp->WCE = ata_get_cachestatus(sdp);
+> +		}
+> +#endif
+>
+>   		if (sdkp->first_scan || old_wce != sdkp->WCE ||
+>   		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index cafc09a..33fc73f 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -84,6 +84,8 @@
+>   	}							\
+>   })
+>
+> +#define ATA_IDENTIFY_DEV	0xEC
+> +
+
+    This is alerady #defined in <linux/ata.h> as ATA_CMD_ID_ATA.
+
+MBR, Sergei
