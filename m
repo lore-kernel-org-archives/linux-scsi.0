@@ -1,124 +1,88 @@
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: Re: [PATCH 0/4] [SCSI] ufshcd: UFS Host Controller Driver
-Date: Sun, 5 Feb 2012 16:20:47 +0900
-Message-ID: <CAKYAXd_sRKCfw_rNrRD8yKKQEP_8Zee+E5rZW0G1NuuCA4HcNA@mail.gmail.com>
+Subject: Re: [PATCH 4/4] [SCSI] ufshcd: SCSI error handling
+Date: Sun, 5 Feb 2012 16:37:05 +0900
+Message-ID: <CAKYAXd9k5i2_SuD8YSJeG25CBpK0b4jQGJstc-Ef1jD20cph1Q@mail.gmail.com>
 References: <1328158649-4137-1-git-send-email-vinholikatti@gmail.com>
+	<1328158649-4137-5-git-send-email-vinholikatti@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-samsung-soc-owner@vger.kernel.org>
-In-Reply-To: <1328158649-4137-1-git-send-email-vinholikatti@gmail.com>
-Sender: linux-samsung-soc-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:54317 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751458Ab2BEHhH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Feb 2012 02:37:07 -0500
+In-Reply-To: <1328158649-4137-5-git-send-email-vinholikatti@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Vinayak Holikatti <vinholikatti@gmail.com>
 Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, saugata.das@linaro.org, arnd@arndb.de, venkat@linaro.org, girish.shivananjappa@linaro.org, vishak.g@samsung.com, k.rajesh@samsung.com, yejin.moon@samsung.com, Santosh Yaraganavi <santoshsy@gmail.com>
-List-Id: linux-scsi@vger.kernel.org
 
-2012/2/2 Vinayak Holikatti <vinholikatti@gmail.com>:
-> From: Santosh Yaraganavi <santoshsy@gmail.com>
->
-> UFS is designed to be the most advanced specification for
-> both embedded and removable flash memory-based storage in mobile devi=
-ces
-> such as smart phones and tablet computers. =C2=A0The UFS standard rep=
-resents
-> an evolutionary progression of JEDEC standards in this field, and has=
- been
-> specifically tailored for mobile applications and computing systems r=
-equiring
-> high performance and low power consumption. =C2=A0The initial data th=
-roughput for
-> UFS will be ~300 megabytes per second (MB/s), and the standard also s=
-upports
-> command queuing features to raise random read/write speeds.
->
-> To achieve the highest performance and most power efficient data
-> transport, UFS uses the leading industry interface standards to form =
-its
-> Interconnect Layer: MIPI=C2=AE Alliance=E2=80=99s M-PHY and UniProSM =
-=C2=A0specifications.
-> UniPro is a comprehensive specification meant to act as a universal
-> chip-to-chip protocol, providing a common tunnel for other protocols.
-> The M-PHY interface is designed as the primary physical interface (PH=
-Y layer)
-> for the UniPro specification, and is a high speed serial interface ta=
-rgeting
-> up to 2.9 gigabits per second (Gbps) per lane with up-scalability to =
-5.8Gbps
-> per lane.
->
-> MIPI=E2=80=99s M-PHY and UniPro specifications are optimized for mobi=
-le applications,
-> and are designed from the ground up for efficient power management in=
- mobile
-> devices, including enabling efficient transitions between the active =
-and power
-> save modes. Combined with a low active power level and a near-zero id=
-le power
-> level, UFS offers the promise for significant reductions in device po=
-wer
-> consumption.
->
-> The UFS standard adopts the well-known SCSI Architecture Model and co=
-mmand
-> protocols supporting multiple commands with command queuing features =
-and
-> enabling a multi-thread programming paradigm. This differs from conve=
-ntional
-> flash-based memory cards and embedded flash solutions which process o=
-ne
-> command at a time, limiting random read/write access performance.
-> In addition, a forthcoming complementary UFS Host Controller Interfac=
-e (HCI)
-> specification will allow system designers greater flexibility by simp=
-lifying
-> the involvement of the host processor in the operation of the flash s=
-torage
-> subsystem. The UFS HCI specification and the adoption of SCSI will pr=
-ovide
-> a well-known software programming model and enable wider market adopt=
-ion.
->
-> This patchset contains PCIe based UFS host controller driver which co=
-mplies
-> to UFSHCI 1.0 and 1.1. The driver is based on Linux SCSI framework.
-> The driver is tested with UFS Host controller(FPGA) and UFS device(FP=
-GA).
->
-> This patch set is successfully applied on kernel version 3.3-rc2.
->
-> Santosh Yaraganavi (4):
-> =C2=A0[SCSI] ufshcd: UFS Host controller driver
-> =C2=A0[SCSI] ufshcd: UFS UTP Transfer requests handling
-> =C2=A0[SCSI] ufshcd: UFSHCI error handling
-> =C2=A0[SCSI] ufshcd: SCSI error handling
->
-> =C2=A0drivers/scsi/Kconfig =C2=A0 =C2=A0 =C2=A0| =C2=A0 =C2=A01 +
-> =C2=A0drivers/scsi/Makefile =C2=A0 =C2=A0 | =C2=A0 =C2=A01 +
-> =C2=A0drivers/scsi/ufs/Kconfig =C2=A0| =C2=A0 49 ++
-> =C2=A0drivers/scsi/ufs/Makefile | =C2=A0 =C2=A02 +
-> =C2=A0drivers/scsi/ufs/ufs.h =C2=A0 =C2=A0| =C2=A0203 +++++
-> =C2=A0drivers/scsi/ufs/ufshcd.c | 1954 ++++++++++++++++++++++++++++++=
-+++++++++++++++
-> =C2=A0drivers/scsi/ufs/ufshci.h | =C2=A0360 +++++++++
-> =C2=A07 files changed, 2570 insertions(+), 0 deletions(-)
-> =C2=A0create mode 100644 drivers/scsi/ufs/Kconfig
-> =C2=A0create mode 100644 drivers/scsi/ufs/Makefile
-> =C2=A0create mode 100644 drivers/scsi/ufs/ufs.h
-> =C2=A0create mode 100644 drivers/scsi/ufs/ufshcd.c
-> =C2=A0create mode 100644 drivers/scsi/ufs/ufshci.h
->
-> --
-> 1.7.5.4
+> +
+> +/**
+> + * ufshcd_abort - abort a specific command
+> + * @cmd: SCSI command pointer
+> + *
+> + * Returns 0 on success, non-zero value on failure
+> + */
+> +static int ufshcd_abort(struct scsi_cmnd *cmd)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 struct Scsi_Host *host;
+> + =C2=A0 =C2=A0 =C2=A0 struct ufs_hba *hba;
+> + =C2=A0 =C2=A0 =C2=A0 unsigned long flags;
+> + =C2=A0 =C2=A0 =C2=A0 unsigned int tag;
+> + =C2=A0 =C2=A0 =C2=A0 unsigned int pos;
+> + =C2=A0 =C2=A0 =C2=A0 int err;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 host =3D cmd->device->host;
+> + =C2=A0 =C2=A0 =C2=A0 hba =3D (struct ufs_hba *) host->hostdata;
+> + =C2=A0 =C2=A0 =C2=A0 tag =3D cmd->request->tag;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 spin_lock_irqsave(host->host_lock, flags);
+> + =C2=A0 =C2=A0 =C2=A0 pos =3D (1 << tag);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 /* check if command is still pending */
+> + =C2=A0 =C2=A0 =C2=A0 if (!(hba->outstanding_reqs & pos)) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 err =3D -1;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 spin_unlock_irqres=
+tore(host->host_lock, flags);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto out;
+> + =C2=A0 =C2=A0 =C2=A0 }
+> +
+> + =C2=A0 =C2=A0 =C2=A0 err =3D ufshcd_issue_tm_cmd(hba, &hba->lrb[tag=
+], UFS_ABORT_TASK);
 Hi.
-I have been waiting for ufs contribution.
-Unfortunately I don't have real target supported ufs(maybe only you
-have it). I can not debug and run this code, So just review only code
-with specification.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
-l" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
-> Please read the FAQ at =C2=A0http://www.tux.org/lkml/
+You called spin_lock_irqsave in ufshcd_issue_tm_cmd() without
+spin_unlock_irqrestore.
+
+> + =C2=A0 =C2=A0 =C2=A0 if (!err) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 spin_lock_irqsave(=
+host->host_lock, flags);
+This case is same also.
+Thanks.
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 scsi_dma_unmap(cmd=
+);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* clear the respe=
+ctive UTRLCLR bit */
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 writel(~pos,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 (UFSHCD_MMIO_BASE +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0REG_UTP_TRANSFER_REQ_LIST_CLEAR));
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 hba->outstanding_r=
+eqs &=3D ~pos;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 hba->lrb[tag].cmd =
+=3D NULL;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 spin_unlock_irqres=
+tore(host->host_lock, flags);
+> + =C2=A0 =C2=A0 =C2=A0 }
+> +out:
+> + =C2=A0 =C2=A0 =C2=A0 return err;
+> +}
+> +
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
