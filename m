@@ -1,130 +1,43 @@
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: Re: [PATCH 0/4] [SCSI] ufshcd: UFS Host Controller Driver
-Date: Mon, 6 Feb 2012 07:45:03 +0900
-Message-ID: <CAKYAXd_msUdB2UbMvxqn751nuN5R=T6W5sjLDMxqEOR6KTX38w@mail.gmail.com>
-References: <1328158649-4137-1-git-send-email-vinholikatti@gmail.com>
-	<CAKYAXd_sRKCfw_rNrRD8yKKQEP_8Zee+E5rZW0G1NuuCA4HcNA@mail.gmail.com>
+From: Willy Tarreau <w@1wt.eu>
+Subject: Re: [PATCH 90/91] block: fail SCSI passthrough ioctls on partition devices
+Date: Sun, 5 Feb 2012 23:53:14 +0100
+Message-ID: <20120205225314.GF8334@1wt.eu>
+References: <0635750f5f06ed2ca212b91fcb5c4483@local> <20120205220953.312427771@pcw.home.local> <4F2F0669.3000601@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKYAXd_sRKCfw_rNrRD8yKKQEP_8Zee+E5rZW0G1NuuCA4HcNA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Yaraganavi <santoshsy@gmail.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, saugata.das@linaro.org, arnd@arndb.de, venkat@linaro.org, girish.shivananjappa@linaro.org, vishak.g@samsung.com, k.rajesh@samsung.com, yejin.moon@samsung.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 1wt.eu ([62.212.114.60]:62232 "EHLO 1wt.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752339Ab2BEWxY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Feb 2012 17:53:24 -0500
+Content-Disposition: inline
+In-Reply-To: <4F2F0669.3000601@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Linus Torvalds <torvalds@linux-foundation.org>, Ben Hutchings <ben@decadent.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-2012/2/5 Namjae Jeon <linkinjeon@gmail.com>:
-> 2012/2/2 Vinayak Holikatti <vinholikatti@gmail.com>:
->> From: Santosh Yaraganavi <santoshsy@gmail.com>
->>
->> UFS is designed to be the most advanced specification for
->> both embedded and removable flash memory-based storage in mobile dev=
-ices
->> such as smart phones and tablet computers. =C2=A0The UFS standard re=
-presents
->> an evolutionary progression of JEDEC standards in this field, and ha=
-s been
->> specifically tailored for mobile applications and computing systems =
-requiring
->> high performance and low power consumption. =C2=A0The initial data t=
-hroughput for
->> UFS will be ~300 megabytes per second (MB/s), and the standard also =
-supports
->> command queuing features to raise random read/write speeds.
->>
->> To achieve the highest performance and most power efficient data
->> transport, UFS uses the leading industry interface standards to form=
- its
->> Interconnect Layer: MIPI=C2=AE Alliance=E2=80=99s M-PHY and UniProSM=
- =C2=A0specifications.
->> UniPro is a comprehensive specification meant to act as a universal
->> chip-to-chip protocol, providing a common tunnel for other protocols=
-=2E
->> The M-PHY interface is designed as the primary physical interface (P=
-HY layer)
->> for the UniPro specification, and is a high speed serial interface t=
-argeting
->> up to 2.9 gigabits per second (Gbps) per lane with up-scalability to=
- 5.8Gbps
->> per lane.
->>
->> MIPI=E2=80=99s M-PHY and UniPro specifications are optimized for mob=
-ile applications,
->> and are designed from the ground up for efficient power management i=
-n mobile
->> devices, including enabling efficient transitions between the active=
- and power
->> save modes. Combined with a low active power level and a near-zero i=
-dle power
->> level, UFS offers the promise for significant reductions in device p=
-ower
->> consumption.
->>
->> The UFS standard adopts the well-known SCSI Architecture Model and c=
-ommand
->> protocols supporting multiple commands with command queuing features=
- and
->> enabling a multi-thread programming paradigm. This differs from conv=
-entional
->> flash-based memory cards and embedded flash solutions which process =
-one
->> command at a time, limiting random read/write access performance.
->> In addition, a forthcoming complementary UFS Host Controller Interfa=
-ce (HCI)
->> specification will allow system designers greater flexibility by sim=
-plifying
->> the involvement of the host processor in the operation of the flash =
-storage
->> subsystem. The UFS HCI specification and the adoption of SCSI will p=
-rovide
->> a well-known software programming model and enable wider market adop=
-tion.
->>
->> This patchset contains PCIe based UFS host controller driver which c=
-omplies
->> to UFSHCI 1.0 and 1.1. The driver is based on Linux SCSI framework.
->> The driver is tested with UFS Host controller(FPGA) and UFS device(F=
-PGA).
->>
->> This patch set is successfully applied on kernel version 3.3-rc2.
->>
->> Santosh Yaraganavi (4):
->> =C2=A0[SCSI] ufshcd: UFS Host controller driver
->> =C2=A0[SCSI] ufshcd: UFS UTP Transfer requests handling
->> =C2=A0[SCSI] ufshcd: UFSHCI error handling
->> =C2=A0[SCSI] ufshcd: SCSI error handling
->>
->> =C2=A0drivers/scsi/Kconfig =C2=A0 =C2=A0 =C2=A0| =C2=A0 =C2=A01 +
->> =C2=A0drivers/scsi/Makefile =C2=A0 =C2=A0 | =C2=A0 =C2=A01 +
->> =C2=A0drivers/scsi/ufs/Kconfig =C2=A0| =C2=A0 49 ++
->> =C2=A0drivers/scsi/ufs/Makefile | =C2=A0 =C2=A02 +
->> =C2=A0drivers/scsi/ufs/ufs.h =C2=A0 =C2=A0| =C2=A0203 +++++
->> =C2=A0drivers/scsi/ufs/ufshcd.c | 1954 +++++++++++++++++++++++++++++=
-++++++++++++++++
->> =C2=A0drivers/scsi/ufs/ufshci.h | =C2=A0360 +++++++++
->> =C2=A07 files changed, 2570 insertions(+), 0 deletions(-)
->> =C2=A0create mode 100644 drivers/scsi/ufs/Kconfig
->> =C2=A0create mode 100644 drivers/scsi/ufs/Makefile
->> =C2=A0create mode 100644 drivers/scsi/ufs/ufs.h
->> =C2=A0create mode 100644 drivers/scsi/ufs/ufshcd.c
->> =C2=A0create mode 100644 drivers/scsi/ufs/ufshci.h
->>
->> --
->> 1.7.5.4
-> Hi.
-> I have been waiting for ufs contribution.
-> Unfortunately I don't have real target supported ufs(maybe only you
-> have it). I can not debug and run this code, So just review only code
-> with specification.
->>
-Hi. Santosh.
-Would you share performance measurement result (read/write seq,ran) ?
-Thanks.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kern=
-el" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
-tml
->> Please read the FAQ at =C2=A0http://www.tux.org/lkml/
+Hi Paolo,
+
+On Sun, Feb 05, 2012 at 11:44:57PM +0100, Paolo Bonzini wrote:
+> On 02/05/2012 11:11 PM, Willy Tarreau wrote:
+> >Signed-off-by: Ben Hutchings<ben@decadent.org.uk>
+> >Signed-off-by: Greg Kroah-Hartman<gregkh@linuxfoundation.org>
+> >[wt: no scsi_cmd_blk_ioctl in 2.6.27, change callers instead. cciss is OK,
+> >  ub,virtio_blk,ide-floppy,sd need fixing, cdrom&st can be ignored ]
+> 
+> NACK, you aren't fixing virtio-blk to call scsi_verify_blk_ioctl, are you?
+> 
+> You need to backport the patch that introduced scsi_cmd_blk_ioctl, 
+> which, in fact was in the same patch series as this one.
+
+Thanks for this report, I missed this patch. I thought the reason for the lack
+of scsi_cmd_blk_ioctl() it was one of the differences between 2.6.27 and 2.6.32,
+so I have adapted the callers I identified to perform the same test as what's
+in scsi_cmd_blk_ioctl(). I *think* I did it correctly, but it would be safer
+to apply the original patch, of course. Now I see the patch (618 in my queue).
+ I'll merge it and it will simplify the backport.
+
+Thank you,
+Willy
+
