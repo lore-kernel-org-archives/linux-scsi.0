@@ -1,100 +1,54 @@
-From: Christian Hoff <christian.hoff@de.ibm.com>
-Subject: Pe: [PATCH v5 1/3] virtio-scsi: first version
-Date: Mon, 6 Feb 2012 10:51:26 +0100
-Message-ID: <OF2D939B55.7C07E33B-ONC125799C.0032B83A-C125799C.0036282C@de.ibm.com>
+From: Chris Boot <bootc@bootc.net>
+Subject: Re: FireWire/SBP2 Target mode
+Date: Mon, 06 Feb 2012 13:13:24 +0000
+Message-ID: <4F2FD1F4.9050702@bootc.net>
+References: <4E4BD560.4010806@bootc.net> <4E4D3B88.30003@ladisch.de> <4F29978A.3010707@redhat.com> <20120201224156.0773ebc6@stein> <4F2A55B9.4040005@panasas.com> <4F2A60DC.9030007@ladisch.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e06smtp11.uk.ibm.com ([195.75.94.107]:33371 "EHLO
-	e06smtp11.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754541Ab2BFJvq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2012 04:51:46 -0500
-Received: from /spool/local
-	by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <christian.hoff@de.ibm.com>;
-	Mon, 6 Feb 2012 09:51:44 -0000
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <4F2A60DC.9030007@ladisch.de>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+Cc: Clemens Ladisch <clemens@ladisch.de>, Boaz Harrosh <bharrosh@panasas.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Andy Grover <agrover@redhat.com>, linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: pbonzini@redhat.com, linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, mst@redhat.com, kvm@vger.kernel.org
 
-Hello Paolo,
+Hi folks,
 
-first let me say that your patch is working fine on my local clone of t=
-he=20
-qemu repository.
+I've been forging ahead in the last few days with my target code and 
+have got to a point where it appears to work fairly well and now needs 
+some real testing and ideally some initial review.
 
-Let me ask just one question about the format of the data being=20
-transmitted over the virtqueue.
+So far I've tested that I can export LUNs to Linux and Mac OS X machines 
+and they can read/write data without issues as you might expect. I've 
+even installed Mac OS X onto an exported LUN and booted from it on an 
+old PowerBook without issue.
 
-Paolo Bonzini wrote:
-+                cmd->req.cmd =3D (struct virtio_scsi_cmd_req){
-+                                .lun[0] =3D 1,
-+                                .lun[1] =3D sc->device->id,
-+                                .lun[2] =3D (sc->device->lun >> 8) | 0=
-x40,
-+                                .lun[3] =3D sc->device->lun & 0xff,
-+                               [...]
-+                };
+You can pull the code from:
+git://github.com/bootc/Linux-SBP-2-Target.git
 
-Can't we have seperate fields for the SCSI target ID and the LUN number=
-=20
-here? Putting all this into a single field seems confusing. The followi=
-ng=20
-line of code (sc->device->lun >> 8) | 0x40 essentially means that LUN=20
-numbers will be limited to 8+6 Bits=3D14 Bits for no obvious reason tha=
-t I=20
-can see. Maybe we could just split the LUN field up into two uint32 fie=
-lds=20
-for target ID and LUN number?
+Or use GitHub to have a look etc...:
+https://github.com/bootc/Linux-SBP-2-Target
 
-Also, lun[1] =3D sc->device->id means that only 255 SCSI target IDs wil=
-l be=20
-supported. Think about bigger usage scenarios, such as FCP networks wit=
-h=20
-several hundred HBAs in the net. If you want to have the target ID<->HB=
-A=20
-mapping the same as on the guest as on the host, then 255 virtual targe=
-t=20
-IDs could be a limit.
+I used the following script to set up a LUN on the target:
 
-Sorry for coming up so late with these suggestions. I hope there is sti=
-ll=20
-enough time left to discuss and address these problems.
+modprobe firewire-sbp-target
+mkdir /sys/kernel/config/target/sbp
+mkdir /sys/kernel/config/target/sbp/test
+mkdir /sys/kernel/config/target/sbp/test/unit_0
+mkdir /sys/kernel/config/target/sbp/test/unit_0/lun/lun_0
+ln -s /sys/kernel/config/target/core/iblock_0/test 
+/sys/kernel/config/target/sbp/test/unit_0/lun/lun_0/test
+echo 1 > /sys/kernel/config/target/sbp/test/unit_0/enable
 
-Mit freundlichen Gr=FC=DFen / Kind regards
+Please note that you can't then disable a unit until all the targets are 
+logged-out. For Linux this usually means 'rmmod firewire_sbp2'. This is 
+one of the first things I'd like to fix but I'm not entirely sure how to 
+go about it yet.
 
-Christian Hoff
+Thanks,
+Chris
 
-Student - Applied Computer Science
-
-
-Phone:
-49-16098976-950
- IBM Deutschland
-
-E-Mail:
-christian.hoff@de.ibm.com
- Am Fichtenberg 1
-
-
- 71083 Herrenberg
-
-
- Germany
-
-
-IBM Deutschland GmbH / Vorsitzender des Aufsichtsrats: Martin Jetter
-Gesch=E4ftsf=FChrung: Martina Koederitz (Vorsitzende), Reinhard Reschke=
-,=20
-Dieter Scholz, Gregor Pillen, Joachim Heel, Christian Noll
-Sitz der Gesellschaft: Ehningen / Registergericht: Amtsgericht Stuttgar=
-t,=20
-HRB 14562 / WEEE-Reg.-Nr. DE 99369940=20
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Chris Boot
+bootc@bootc.net
