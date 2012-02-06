@@ -1,103 +1,98 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: DID_IMM_RETRY considered harmful
-Date: Mon, 06 Feb 2012 09:07:31 +0100
-Message-ID: <4F2F8A43.70104@suse.de>
+From: Christian Hoff <christian.hoff@de.ibm.com>
+Subject: Pe: [PATCH v5 1/3] virtio-scsi: first version
+Date: Mon, 6 Feb 2012 10:51:26 +0100
+Message-ID: <OF2D939B55.7C07E33B-ONC125799C.0032B83A-C125799C.0036282C@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43736 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751087Ab2BFIHd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Feb 2012 03:07:33 -0500
+Received: from e06smtp11.uk.ibm.com ([195.75.94.107]:33371 "EHLO
+	e06smtp11.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754541Ab2BFJvq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2012 04:51:46 -0500
+Received: from /spool/local
+	by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <christian.hoff@de.ibm.com>;
+	Mon, 6 Feb 2012 09:51:44 -0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James Bottomley <jbottomley@parallels.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+To: pbonzini@redhat.com, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, mst@redhat.com, kvm@vger.kernel.org
 
-Hi all,
+Hello Paolo,
 
-I've run into a spot of bother during stress-testing the recent 3.x
-seriesl kernel. The consistent signature is req->special =3D=3D NULL
-in scsi_done_softirq(). Apparently this is caused by retrying that
-command due to DID_IMM_RETRY in scsi_decide_disposition().
+first let me say that your patch is working fine on my local clone of t=
+he=20
+qemu repository.
 
-I have added a WARN_ON statement in block/blk-softirq.c:
-diff --git a/block/blk-softirq.c b/block/blk-softirq.c
-index ee9c216..89a68a3 100644
---- a/block/blk-softirq.c
-+++ b/block/blk-softirq.c
-@@ -156,6 +156,7 @@ void blk_complete_request(struct request *req)
- {
-        if (unlikely(blk_should_fake_timeout(req->q)))
-                return;
-+       WARN_ON(!(req->cmd_flags & REQ_STARTED));
-        if (!blk_mark_rq_complete(req))
-                __blk_complete_request(req);
- }
+Let me ask just one question about the format of the data being=20
+transmitted over the virtqueue.
 
-which caused this nice stack trace:
-[<000003c001336cba>] zfcp_scsi_queuecommand+0xbe/0x1d0 [zfcp])
-[<000003c0046ed07a>] scsi_dispatch_cmd+0x15e/0x34c [scsi_mod]
-[<000003c0046f5920>] scsi_request_fn+0x4b8/0x5bc [scsi_mod]
-[<0000000000353fb0>] queue_unplugged+0x9c/0xe0
-[<0000000000354282>] blk_flush_plug_list+0x28e/0x2f4
-[<00000000004de5f8>] io_schedule+0x94/0x100
-[<00000000001fabd6>] sleep_on_page_killable+0x22/0x68
-[<00000000001face4>] __lock_page_killable+0xc8/0x114
-[<00000000001fc530>] do_generic_file_read+0x3f0/0x54c
-[<00000000001fd436>] generic_file_aio_read+0x1a2/0x2ec
-[<000000000025c87c>] do_sync_read+0xc8/0x12c
-[<000000000025d7f4>] vfs_read+0xac/0x184
-[<000000000025d9c8>] SyS_read+0x58/0xb4
-[<00000000004e1170>] sysc_noemu+0x16/0x1c
-[<000003fffd3f0054>] 0x3fffd3f0054
+Paolo Bonzini wrote:
++                cmd->req.cmd =3D (struct virtio_scsi_cmd_req){
++                                .lun[0] =3D 1,
++                                .lun[1] =3D sc->device->id,
++                                .lun[2] =3D (sc->device->lun >> 8) | 0=
+x40,
++                                .lun[3] =3D sc->device->lun & 0xff,
++                               [...]
++                };
 
-However, seeing all the nice safeguards around in scsi_request_fn():
+Can't we have seperate fields for the SCSI target ID and the LUN number=
+=20
+here? Putting all this into a single field seems confusing. The followi=
+ng=20
+line of code (sc->device->lun >> 8) | 0x40 essentially means that LUN=20
+numbers will be limited to 8+6 Bits=3D14 Bits for no obvious reason tha=
+t I=20
+can see. Maybe we could just split the LUN field up into two uint32 fie=
+lds=20
+for target ID and LUN number?
 
-		spin_unlock(q->queue_lock);
-		cmd =3D req->special;
-		if (unlikely(cmd =3D=3D NULL)) {
+Also, lun[1] =3D sc->device->id means that only 255 SCSI target IDs wil=
+l be=20
+supported. Think about bigger usage scenarios, such as FCP networks wit=
+h=20
+several hundred HBAs in the net. If you want to have the target ID<->HB=
+A=20
+mapping the same as on the guest as on the host, then 255 virtual targe=
+t=20
+IDs could be a limit.
 
-this _cannot_ have happened within this thread.
-Hence some other thread must have modified this particular request.
+Sorry for coming up so late with these suggestions. I hope there is sti=
+ll=20
+enough time left to discuss and address these problems.
 
-Looking closer at the requeuing code, it just adds the request to
-the _head_ of the request queue and kicks off a worker thread:
+Mit freundlichen Gr=FC=DFen / Kind regards
 
-	spin_lock_irqsave(q->queue_lock, flags);
-	blk_requeue_request(q, cmd->request);
-	spin_unlock_irqrestore(q->queue_lock, flags);
+Christian Hoff
 
-	if (reason =3D=3D SCSI_MLQUEUE_DELAYED_RETRY)
-		blk_delay_queue(q, 2000);
-	else
-		kblockd_schedule_work(q, &device->requeue_work);
+Student - Applied Computer Science
 
-However, as this might have been called asynchronously via
-scsi_done(), the original thread might still be running at this
-point, and, as request_fn() hasn't signalled an error, continue
-trying to pull requests off the request queue.
 
-So now we have _two_ instances trying to pull requests.
-And, as the hardware is blocked at this point, _both_ will be having
-to requeue commands. But as the requeueing code puts the request at
-the _head_ of the queue, both will be working _on the same request_.
-Which of course will lead to all sorts of race issues.
+Phone:
+49-16098976-950
+ IBM Deutschland
 
-So, question for the experts here:
+E-Mail:
+christian.hoff@de.ibm.com
+ Am Fichtenberg 1
 
-What are the safeguards that blk_run_queue() might not be called on
-a queue where ->request_fn is already active?
 
-Cheers,
+ 71083 Herrenberg
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Immend=F6rfer, HRB 16746 (AG N=FCrnberg)
+
+ Germany
+
+
+IBM Deutschland GmbH / Vorsitzender des Aufsichtsrats: Martin Jetter
+Gesch=E4ftsf=FChrung: Martina Koederitz (Vorsitzende), Reinhard Reschke=
+,=20
+Dieter Scholz, Gregor Pillen, Joachim Heel, Christian Noll
+Sitz der Gesellschaft: Ehningen / Registergericht: Amtsgericht Stuttgar=
+t,=20
+HRB 14562 / WEEE-Reg.-Nr. DE 99369940=20
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
