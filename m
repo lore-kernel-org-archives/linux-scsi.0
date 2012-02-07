@@ -1,50 +1,47 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH 1/5] block: Implement support for WRITE SAME
-Date: Tue, 7 Feb 2012 16:40:05 -0500
-Message-ID: <20120207214005.GG6346@redhat.com>
-References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
- <1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
+From: "Loke, Chetan" <Chetan.Loke@netscout.com>
+Subject: RE: [ATTEND]
+Date: Tue, 7 Feb 2012 18:31:18 -0500
+Message-ID: <D3F292ADF945FB49B35E96C94C2061B915D0A6CB@nsmail.netscout.com>
+References: <CAH+dOxKMwMskM18=GhBmEao4aSvZmccSiZmmnZm42TBMPUFONw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22530 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756744Ab2BGWJo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Feb 2012 17:09:44 -0500
-Content-Disposition: inline
-In-Reply-To: <1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <CAH+dOxKMwMskM18=GhBmEao4aSvZmccSiZmmnZm42TBMPUFONw@mail.gmail.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Kent Overstreet <koverstreet@google.com>, lsf-pc@lists.linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, dedekind@infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, jaxboe@fusionio.com
 
-On Mon, Jan 30, 2012 at 07:31:28PM -0500, Martin K. Petersen wrote:
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Kent Overstreet
+> Sent: February 02, 2012 4:04 AM
+> To: lsf-pc@lists.linux-foundation.org
+> Cc: linux-scsi@vger.kernel.org; linux-fsdevel@vger.kernel.org
+> Subject: [ATTEND]
+> 
+> I'm the author of bcache - a flash caching implementation for block
+> devices. I'd like to talk a bit about it and some
+> cleanups/improvements to the block layer.
 
-[..]
-> --- a/block/elevator.c
-> +++ b/block/elevator.c
-> @@ -82,6 +82,12 @@ int elv_rq_merge_ok(struct request *rq, struct bio *bio)
->  		return 0;
->  
->  	/*
-> +	 * Don't merge write same requests
-> +	 */
-> +	if ((bio->bi_rw & REQ_WRITE_SAME) || (rq->bio->bi_rw & REQ_WRITE_SAME))
-> +		return 0;
-> +
+Kent,
+
+I came across UBIFS when I was looking to implement just a backing
+device. So I'm trying to understand if you looked at UBIFS and if parts
+of that could have been used(or if they are used already?). Because in
+the end we need to create an erase-aware FS(without the usual
+defrag/syscall/etc support) and manage that in conjunction with
+block-layer. Agreed that UBIFS is a generic FS. But we also need to
+worry about erase-cycles/counters etc
+(http://lxr.linux.no/#linux+v3.2.5/Documentation/filesystems/ubifs.txt#L
+12 - all the 5 points). Plus, it supports on-the-fly compression. I've
+never used UBIFS. So I don't know how it performs. May be we could just
+pick UBI's FS part and stick that with your block-layer code?
+
+CC'd Artem (found his email from sys-abi file).
 
 
-[..]
->  #define rq_mergeable(rq)	\
->  	(!((rq)->cmd_flags & RQ_NOMERGE_FLAGS) && \
-> -	 (((rq)->cmd_flags & REQ_DISCARD) || \
-> -	  (rq)->cmd_type == REQ_TYPE_FS))
-> +	 (((rq)->cmd_flags & REQ_DISCARD || \
-> +	   (rq)->cmd_flags & REQ_WRITE_SAME ||	\
-> +	   (rq)->cmd_type == REQ_TYPE_FS)))
-
-In elv_rq_merge_ok() we don't allow merge of WRITE_SAME requests but
-in rq_mergeable() we do say that requests having WRITE_SAME can be merged.
-
-Thanks
-Vivek
+Chetan Loke
