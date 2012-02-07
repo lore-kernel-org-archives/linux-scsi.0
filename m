@@ -1,38 +1,32 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: [PATCH 90/91] block: fail SCSI passthrough ioctls on partition devices
-Date: Tue, 7 Feb 2012 11:21:04 +0100
-Message-ID: <20120207102104.GA27069@1wt.eu>
-References: <0635750f5f06ed2ca212b91fcb5c4483@local> <20120205220953.312427771@pcw.home.local> <4F2F0669.3000601@redhat.com> <20120205225314.GF8334@1wt.eu> <4F30F6D7.8080401@redhat.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: Pe: [PATCH v5 1/3] virtio-scsi: first version
+Date: Tue, 7 Feb 2012 13:10:41 +0200
+Message-ID: <20120207111041.GA6674@redhat.com>
+References: <OF2D939B55.7C07E33B-ONC125799C.0032B83A-C125799C.0036282C@de.ibm.com>
+ <4F30F4EE.4080607@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4F30F6D7.8080401@redhat.com>
+In-Reply-To: <4F30F4EE.4080607@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Linus Torvalds <torvalds@linux-foundation.org>, Ben Hutchings <ben@decadent.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Christian Hoff <christian.hoff@de.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, kvm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Paolo,
-
-On Tue, Feb 07, 2012 at 11:03:03AM +0100, Paolo Bonzini wrote:
-> On 02/05/2012 11:53 PM, Willy Tarreau wrote:
-> >Thanks for this report, I missed this patch. I thought the reason for the 
-> >lack
-> >of scsi_cmd_blk_ioctl() it was one of the differences between 2.6.27 and 
-> >2.6.32,
-> >so I have adapted the callers I identified to perform the same test as 
-> >what's
-> >in scsi_cmd_blk_ioctl().
+On Tue, Feb 07, 2012 at 10:54:54AM +0100, Paolo Bonzini wrote:
+> >Also, lun[1] = sc->device->id means that only 255 SCSI target IDs will be
+> >supported. Think about bigger usage scenarios, such as FCP networks with
+> >several hundred HBAs in the net. If you want to have the target ID<->HBA
+> >mapping the same as on the guest as on the host, then 255 virtual target
+> >IDs could be a limit.
 > 
-> There were other callers in patch 1/3, most notably virtio-blk, that are 
-> not in your patch.
+> I think you would hit other scalability limitations well before
+> that.  I plan to give each target its own MSI-X interrupt, but there
+> is no infinite supplies of those either.
 
-Yes it was, just like ub, sd and ide-floppy. In fact backport this whole patch
-was the trickiest task as I had to review each caller one after the other, and
-I'm quite confident the result is fine. But I prefer to redo it from scratch
-with your original patch that I missed, as it will wipe any doubts and make
-further maintenance easier.
+virtio-pci generally lets guests share MSI-X vectors between queues,
+why not allow this here?
 
-Thanks,
-Willy
+-- 
+MST
