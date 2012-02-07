@@ -1,36 +1,52 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH v3] Add virtio-scsi to the virtio spec
-Date: Tue, 07 Feb 2012 10:06:04 +1030
-Message-ID: <87ehu7ilgb.fsf@rustcorp.com.au>
-References: <1328439694-18705-1-git-send-email-pbonzini@redhat.com>
+From: Huang Ying <ying.huang@intel.com>
+Subject: Re: [RFC 0/5] scsi, sd, pm, request based runtime PM for scsi disk
+Date: Tue, 07 Feb 2012 12:59:33 +0800
+Message-ID: <1328590773.9146.46.camel@yhuang-dev>
+References: <Pine.LNX.4.44L0.1202061007570.1525-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:48299 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756034Ab2BGAaM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Feb 2012 19:30:12 -0500
-In-Reply-To: <1328439694-18705-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1202061007570.1525-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, virtualization <virtualization@lists.linux-foundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun,  5 Feb 2012 12:01:34 +0100, Paolo Bonzini <pbonzini@redhat.com> wrote:
-> Hi Rusty,
+Hi, Alan,
+
+On Mon, 2012-02-06 at 10:13 -0500, Alan Stern wrote:
+> On Mon, 6 Feb 2012, Huang Ying wrote:
 > 
-> here is the specification for a virtio-based SCSI host (controller, HBA,
-> you name it) so that you can apply it to the spec document and publish it.
+> > SSD becomes more and more popular, this makes it possible to put disk into
+> > low power state more often.  And request based runtime PM for scsi disk is
+> > more useful than open/close based one because disk is normally mounted at
+> > most time.
+> > 
+> > One known issue, because SCSI TEST_UNIT_READY will be put into request
+> > queue every 2 seconds by default, this makes it hard for disk to sleep.
+> > Maybe we can implement check_events callback in some other way?
+> > 
+> > [RFC 1/5] pm, runtime, Add resume notifier
+> > [RFC 2/5] scsi, pm, rename scsi_autopm_get/put_xxx to
+> > [RFC 3/5] scsi, pm, add pm_runtime_get/put in scsi request
+> > [RFC 4/5] scsi, pm, use autosuspend for scsi runtime PM
+> > [RFC 5/5] scsi, sd, pm, request based runtime PM support
 > 
-> I changed the index from 7 to 8 to account for the rpmsg device,
-> and added a feature bit to tell the guest in advance whether the host
-> supports hotplug.  Otherwise there is no change from v2.
+> Your whole approach is at the wrong level.  Runtime PM between I/O 
+> requests for block devices should be implemented in the block layer, 
+> not in the SCSI layer.
 > 
-> Paolo
+> It also is much more difficult than your patches would indicate.  For 
+> example, some USB card readers indicate a media change every time they 
+> resume; therefore they must not be suspended while the device file is 
+> open.
+> 
+> Another difficulty arises because some drivers need to send SCSI 
+> commands (such as SYNCHRONIZE CACHE) _while_ suspending or resuming.
 
-Thanks, applied!
+Thank you very much for your valuable response!  We will do more
+research work on this topic, including your previous effort. :)
 
-I will release a new draft version shortly.
-
-Cheers,
-Rusty.
+Best Regards,
+Huang Ying
