@@ -1,115 +1,79 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target: pending updates for v3.3-rc3
-Date: Tue, 07 Feb 2012 10:58:04 -0800
-Message-ID: <1328641084.2904.90.camel@haakon2.linux-iscsi.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: FireWire/SBP2 Target mode
+Date: Tue, 7 Feb 2012 20:17:30 +0100
+Message-ID: <20120207201730.1c8cf6a3@stein>
+References: <4E4BD560.4010806@bootc.net>
+	<4E4D3B88.30003@ladisch.de>
+	<4F29978A.3010707@redhat.com>
+	<20120201224156.0773ebc6@stein>
+	<4F2A55B9.4040005@panasas.com>
+	<4F2A60DC.9030007@ladisch.de>
+	<4F2FD1F4.9050702@bootc.net>
+	<4F2FE705.3070509@ladisch.de>
+	<4F2FE8DA.70502@bootc.net>
+	<20120206212628.6880c506@stein>
+	<5C167A1D-2203-4F1C-B538-E99DD87E7E42@bootc.net>
+	<CAGRGNgWf0epcam-jpCzMCSqefCKDSm892mw-X49FrcoRO0QYrQ@mail.gmail.com>
+	<476E7976-738A-4202-9FC4-FA5B060EA95F@bootc.net>
+	<4F30D4F6.1040802@bootc.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4F30D4F6.1040802@bootc.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Chris Boot <bootc@bootc.net>
+Cc: Julian Calaby <julian.calaby@gmail.com>, Clemens Ladisch <clemens@ladisch.de>, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, Boaz Harrosh <bharrosh@panasas.com>, Andy Grover <agrover@redhat.com>, linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Linus,
+On Feb 07 Chris Boot wrote:
+> On 06/02/2012 23:09, Chris Boot wrote:
+> > On 6 Feb 2012, at 23:00, Julian Calaby wrote:
+> >> On Tue, Feb 7, 2012 at 09:28, Chris Boot<bootc@bootc.net>  wrote:
+> >>> Waiting until the bus scan is complete isn't actually that great
+> >>> as I see the first LOGIN requests often before the fw_node is seen
+> >>> at all. I'd have to turn away the requester and hope they try again.
 
-The following series contains pending target bug-fixes and cleanups for
-v3.3-rc3 that have been addressed the past weeks in lio-core.git.
+An SBP-2 initiator should be prepared to retry its first login attempt if
+it sent it shortly after a bus reset.  The target may still hold
+reservations for previously loggend in initiators for up to reconnect_hold
++ 2 seconds after bus reset.
 
-Some of the highlights include:
+> >>> I'm fairly sure my little tweak in my patch is a simple enough
+> >>> solution.
 
-- Fix handling for control CDBs with data greater than PAGE_SIZE (andy)
-- Use IP_FREEBIND for iscsi-target to address network portal creation
-  issues with systemd (dax)
-- Allow PERSISTENT RESERVE IN for non-reservation holder (marco)
-- Fix iblock se_dev_attrib.unmap_granularity (marco)
-- Fix unsupported WRITE_SAME sense payload handling (martin)
-- Add workaround for zero-length control CDB handling (nab)
-- Fix discovery with INADDR_ANY and IN6ADDR_ANY_INIT (nab)
-- Fix target_submit_cmd() exception handling (nab)
-- Return correct ASC for unimplemented VPD pages (roland)
-- Don't zero pages used for data buffers (roland)
-- Fix return code of core_tpg_.*_lun (sebastian)
+Yep.
 
-Please go ahead and pull from:
+> >> Stupid question: Could you use a completion queue or something
+> >> equivalent to wait until you have seen the fw_node, *then* process the
+> >> LOGIN request?
+> >
+> > The fw_address_handler callback is called in interrupt context, and
+> > I can't sleep from within there. As far as I'm aware I must call
+> > fw_send_response() from within the callback and can't defer that until
+> > I've scheduled something on a work queue. Please correct me if I'm
+> > wrong though, as that might be useful anyway.
+> 
+> Hmm sorry I've thought about this overnight and clearly I was talking 
+> rubbish. Yes, I need to reply in the fw_address_handler but all I tend 
+> to do in there is schedule a task to the the main part of the work 
+> anyway. As most of the operations require fetching an ORB from the 
+> initiator I have to do this from user context.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git 3.3-rc-fixes
+Technically there are two things to perform:
 
-Thanks!
+ 1. Finish the inbound IEEE 1394 transaction to the management agent
+    register by means of fw_send_response().  As far as I can tell, you
+    don't have to do that in the address_callback().  But there is little
+    reason not to.
 
---nab
+    fw_send_response() ends the lifetime of an fw_request, so read the
+    speed code before you respond.
 
-Andy Grover (2):
-  target: Allow control CDBs with data > 1 page
-  target: Change target_submit_cmd() to return void
-
-Christoph Hellwig (2):
-  target: don't allocate bio headroom in iblock
-  iblock: fix handling of large requests
-
-Dan Carpenter (2):
-  iscsi-target: make one-bit bitfields unsigned
-  target: handle empty string writes in sysfs
-
-Dax Kelson (1):
-  iscsi: use IP_FREEBIND socket option
-
-Jesper Juhl (1):
-  iscsi-target: Fix up a few assignments
-
-Marco Sanvido (3):
-  target: Use correct preempted registration sense code
-  target: Allow PERSISTENT RESERVE IN for non-reservation holder
-  target: Fix iblock se_dev_attrib.unmap_granularity
-
-Martin Svec (1):
-  target: Fix unsupported WRITE_SAME sense payload
-
-Nicholas Bellinger (5):
-  target: Add workaround for zero-length control CDB handling
-  iscsi-target: Fix reject release handling in iscsit_free_cmd()
-  iscsi-target: Fix double list_add with iscsit_alloc_buffs reject
-  iscsi-target: Fix discovery with INADDR_ANY and IN6ADDR_ANY_INIT
-  target: Fix target_submit_cmd() exception handling
-
-Roland Dreier (3):
-  target: Correct sense key for INVALID FIELD IN {PARAMETER LIST,CDB}
-  target: Return correct ASC for unimplemented VPD pages
-  target: Fail INQUIRY commands with EVPD==0 but PAGE CODE!=0
-
-Sebastian Andrzej Siewior (4):
-  target: avoid multiple outputs in scsi_dump_inquiry()
-  target: use save/restore lock primitive in core_dec_lacl_count()
-  target: fix return code of core_tpg_.*_lun
-  target: accept REQUEST_SENSE with 18bytes
-
-Stephen Rothwell (1):
-  iscsi_target: in_aton needs linux/inet.h
-
-roland@purestorage.com (1):
-  target: Don't zero pages used for data buffers
-
- drivers/target/iscsi/iscsi_target.c          |   39 +++++++-
- drivers/target/iscsi/iscsi_target_configfs.c |    1 +
- drivers/target/iscsi/iscsi_target_core.h     |    6 +-
- drivers/target/iscsi/iscsi_target_erl1.c     |    4 +-
- drivers/target/iscsi/iscsi_target_login.c    |   39 +++++++-
- drivers/target/iscsi/iscsi_target_util.c     |   11 +++
- drivers/target/target_core_alua.c            |    8 +-
- drivers/target/target_core_cdb.c             |   51 ++++++-----
- drivers/target/target_core_configfs.c        |   12 ++-
- drivers/target/target_core_device.c          |   28 +++---
- drivers/target/target_core_fabric_configfs.c |    4 +-
- drivers/target/target_core_iblock.c          |   11 ++-
- drivers/target/target_core_internal.h        |    2 +-
- drivers/target/target_core_pr.c              |   43 +++++-----
- drivers/target/target_core_pscsi.c           |    4 +-
- drivers/target/target_core_tpg.c             |    3 +-
- drivers/target/target_core_transport.c       |  124 +++++++++++++++++---------
- drivers/target/tcm_fc/tfc_cmd.c              |    9 +--
- include/target/target_core_backend.h         |    4 +-
- include/target/target_core_base.h            |    1 +
- include/target/target_core_fabric.h          |    2 +-
- 21 files changed, 266 insertions(+), 140 deletions(-)
-
+ 2. Finish the inbound SBP-2 transaction; here the login.  This and
+    everything that leads up to it is definitely easiest to implement in
+    a process context, e.g. workqueue item.
 -- 
+Stefan Richter
+-=====-===-- --=- --===
+http://arcgraph.de/sr/
