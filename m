@@ -1,50 +1,59 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] SCSI, st: modify tape driver to allow writing immediate
- filemarks
-Date: Wed, 8 Feb 2012 19:19:06 +0200 (EET)
-Message-ID: <alpine.LNX.2.00.1202081910400.6087@kai.makisara.local>
-References: <4F31CAC0.3010905@suse.com>
+From: "Loke, Chetan" <Chetan.Loke@netscout.com>
+Subject: RE: [ATTEND]
+Date: Wed, 8 Feb 2012 13:15:51 -0500
+Message-ID: <D3F292ADF945FB49B35E96C94C2061B915D0ACF0@nsmail.netscout.com>
+References: <CAH+dOxKMwMskM18=GhBmEao4aSvZmccSiZmmnZm42TBMPUFONw@mail.gmail.com><D3F292ADF945FB49B35E96C94C2061B915D0A6CB@nsmail.netscout.com> <CAH+dOx+4mL0uMBAjv+zo+XGJvaZvushYT5=Ev=8K8-zVhLHR2w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vs14.mail.saunalahti.fi ([62.142.117.201]:50887 "EHLO
-	vs14.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751155Ab2BHRTQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2012 12:19:16 -0500
-In-Reply-To: <4F31CAC0.3010905@suse.com>
+Received: from exprod6og112.obsmtp.com ([64.18.1.29]:56529 "HELO
+	exprod6og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754422Ab2BHSPx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2012 13:15:53 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <CAH+dOx+4mL0uMBAjv+zo+XGJvaZvushYT5=Ev=8K8-zVhLHR2w@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kent Overstreet <koverstreet@google.com>
+Cc: lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, dedekind@infradead.org
 
-On Tue, 7 Feb 2012, Lee Duncan wrote:
-
-> Add an st module option st_nowait_eof which defaults to 0. Setting this
-> option to 1 tells the st driver not to wait when writing a filemark, which
-> can result in much faster times on streaming tape drives.
+> -----Original Message-----
+> From: Kent Overstreet [mailto:koverstreet@google.com]
+> Sent: February 07, 2012 10:46 PM
+> To: Loke, Chetan
+> Cc: lsf-pc@lists.linux-foundation.org; linux-scsi@vger.kernel.org;
+> linux-fsdevel@vger.kernel.org; dedekind@infradead.org
+> Subject: Re: [ATTEND]
 > 
-> Legacy applications cannot take advantage of the newer MTWEOFI ioctl, so this
-> patch gives such applications the ability to write an immediate EOF using the
-> normal MTWEOF ioctl if they set st_nowait_eof=1.
+> On Tue, Feb 7, 2012 at 3:31 PM, Loke, Chetan
+<Chetan.Loke@netscout.com>
+> wrote:
+> > I came across UBIFS when I was looking to implement just a backing
+> > device. So I'm trying to understand if you looked at UBIFS and if
+parts
+> > of that could have been used(or if they are used already?). Because
+in
+> > the end we need to create an erase-aware FS(without the usual
+> > defrag/syscall/etc support) and manage that in conjunction with
+> > block-layer. Agreed that UBIFS is a generic FS. But we also need to
+> > worry about erase-cycles/counters etc
+
+.......
 > 
-> Reference: https://bugzilla.novell.com/show_bug.cgi?id=688996
+> I don't quite follow what you're trying to do - you want to turn raw
+> flash into a block device, i.e. an ftl?
 > 
-Is there a real application? I can't open your reference. (Yes, I know 
-that this feature can speed up writing dramatically in some cases, but is 
-there a case with legacy applications?)
+> Bcache is pretty close to being an ftl, and I think what's left will
 
-Anyway, I don't think this should be implemented as a pure module option. 
-The standard semantics specify that MTWEOF is a synchronization point and 
-this module option breaks that for all users.
+Exactly. So what I'm saying is, if UBI also does ftl then you could be
+duplicating code/efforts. UBI is already upstream. Now whether it
+supports everything we want is another thing.
+(and that's why I CC'd its author). So pieces that aren't there could be
+implemented. But they also talk about erase-counters etc and I don't
+know if I saw something similar in your bucket_struct[or foo_struct].
+May be its somewhere else.
 
-The driver supports several tape device files with different properties 
-that can be set at run-time. Why not implement this as one of the mode 
-options? This would allow the "normal" users to use a device file with 
-synchronizing MTWEOF and the users needing unsynchronizing MTWEOF would 
-use another device file.
 
-The st driver exports the options in sysfs. This is important so that the 
-users can check what the options for a device are. This new option should 
-also be exported.
 
-Kai
