@@ -1,27 +1,64 @@
-From: PRIVATE MAIL <elainekc@netvigator.com>
-Subject: Greetings
-Date: Thu, 9 Feb 2012 03:55:35 +0800 (HKT)
-Message-ID: <241223052.401063.1328730935950.JavaMail.root__27391.3703546443$1328731271$gmane$org@yzbmbs10>
-Reply-To: privatepot5@live.co.uk
+From: Artem Bityutskiy <dedekind1@gmail.com>
+Subject: RE: [ATTEND]
+Date: Wed, 08 Feb 2012 22:20:03 +0200
+Message-ID: <1328732432.2101.3.camel@koala>
+References: <CAH+dOxKMwMskM18=GhBmEao4aSvZmccSiZmmnZm42TBMPUFONw@mail.gmail.com>
+	<D3F292ADF945FB49B35E96C94C2061B915D0A6CB@nsmail.netscout.com>
+	 <CAH+dOx+4mL0uMBAjv+zo+XGJvaZvushYT5=Ev=8K8-zVhLHR2w@mail.gmail.com>
+	 <D3F292ADF945FB49B35E96C94C2061B915D0ACF0@nsmail.netscout.com>
+Reply-To: dedekind1@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wobosm01.netvigator.com ([218.102.32.144]:59496 "EHLO
-	wobosm01.netvigator.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755304Ab2BHUAn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2012 15:00:43 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-sMXnraNMJkJW9Z3JHste"
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <D3F292ADF945FB49B35E96C94C2061B915D0ACF0@nsmail.netscout.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Loke, Chetan" <Chetan.Loke@netscout.com>
+Cc: Kent Overstreet <koverstreet@google.com>, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, dedekind@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
 
+--=-sMXnraNMJkJW9Z3JHste
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Good-day.
+On Wed, 2012-02-08 at 13:15 -0500, Loke, Chetan wrote:
+> Exactly. So what I'm saying is, if UBI also does ftl then you could be
+> duplicating code/efforts. UBI is already upstream. Now whether it
+> supports everything we want is another thing.
+> (and that's why I CC'd its author). So pieces that aren't there could be
+> implemented. But they also talk about erase-counters etc and I don't
+> know if I saw something similar in your bucket_struct[or foo_struct].
+> May be its somewhere else.
 
-This is a personal email directed to you for your consideration alone, I request that it remain and be treated as such only. Please bear with me for now and do not ask my name. I am a banker with HSBC in the Malta. I have an interesting business proposal for you that will be of immense benefit to both of us. Although this may be hard for you to believe, we stand to gain 7.2 million USD between us in a matter of days. Please grant me the benefit of doubt and hear me out. I need you to signify your interest by replying to this email.
+Hi, UBI is not an FTL, but it implements a lot of things a decent FTL
+would also need to implement. And implementing FTL on top of UBI would
+be much simpler than on top of a raw flash (I assume you are discussing
+a flash?). UBI has it's own strong sides and limitations. Here I
+described a simple FTL on top of UBI (long time ago):
 
-Most importantly, I will need you to promise to keep whatever you learn from me between us even if you decide not to go along with me. I will make more details available to you on receipt of a positive response from you. Do contact me only at my private emailaddress:privatepot5@live.co.uk
+http://lists.infradead.org/pipermail/linux-mtd/2008-January/020381.html
 
+--=20
+Best Regards,
+Artem Bityutskiy
 
-Warm regard from Malta.
+--=-sMXnraNMJkJW9Z3JHste
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQEcBAABAgAGBQJPMtjzAAoJEJtuLFy+q7feoQEH/jn1cQ4icZdohrF3w0IH9W7H
+IWgCN3hGVat5zO7j1rewUQxjw07xmvL7+2U6wM64BgiXaqbGGmmnFHSF7OZ5r6hs
+SAlUfekx1MwDRseigq8pjqFcwhcnCp3bINVeWJ7ITHY/t1E6LQaO5Msc09Zdf+wa
+STqnQo39SqADV8nJSEQe7mEjGGHL23FgQrt8CHDi8b67oH+XGFIA/FIrOSHorLvP
+WTxFPAcPFsqPs7AGSxm1fpNA2CEJ8PoLuHuVKECq7EKRmteL54s3xoO0TveLM3xZ
+NA3WC1pRlsDe7I+r46+/j61K6ZBMppYabh4l0vTMmw0KtaQuAkUiRsxHDCBmKow=
+=4p4M
+-----END PGP SIGNATURE-----
+
+--=-sMXnraNMJkJW9Z3JHste--
 
