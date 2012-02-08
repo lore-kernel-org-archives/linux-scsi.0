@@ -1,60 +1,83 @@
-From: akpm@linux-foundation.org
-Subject: [patch 3/4] drivers/scsi/mpt2sas/mpt2sas_scsih.c: spell "primitive" correctly
-Date: Wed, 08 Feb 2012 12:52:22 -0800
-Message-ID: <20120208205222.5C19AA03DE@akpm.mtv.corp.google.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 1/5] block: Implement support for WRITE SAME
+Date: Wed, 8 Feb 2012 17:50:23 -0500
+Message-ID: <20120208225023.GA16401@redhat.com>
+References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
+ <1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ASCII
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f74.google.com ([209.85.161.74]:45210 "EHLO
-	mail-fx0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033Ab2BHU7n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2012 15:59:43 -0500
-Received: by faaa19 with SMTP id a19so32312faa.1
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2012 12:59:42 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:23296 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757435Ab2BHWu3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Feb 2012 17:50:29 -0500
+Content-Disposition: inline
+In-Reply-To: <1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com
 
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: drivers/scsi/mpt2sas/mpt2sas_scsih.c: spell "primitive" correctly
+On Mon, Jan 30 2012 at  7:31pm -0500,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
+> From: "Martin K. Petersen" <martin.petersen@oracle.com>
+> 
+> The WRITE SAME command supported on some SCSI devices allows the same
+> block to be efficiently replicated throughout a block range. Only a
+> single logical block is transferred from the host and the storage device
+> writes the same data to all blocks described by the I/O.
+> 
+> This patch implements support for WRITE SAME in the block layer. The
+> blkdev_issue_write_same() function can be used by filesystems and block
+> drivers to replicate a buffer across a block range. This can be used to
+> efficiently initialize software RAID devices, etc.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+...
 
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index 2b461b4..19f4754 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -115,6 +115,85 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+>  EXPORT_SYMBOL(blkdev_issue_discard);
+>  
+>  /**
+> + * blkdev_issue_write_same - queue a write same operation
+> + * @bdev:	target blockdev
+> + * @sector:	start sector
+> + * @nr_sects:	number of sectors to write
+> + * @gfp_mask:	memory allocation flags (for bio_alloc)
+> + * @buffer:	pointer to buffer containing data to write
+> + * @length:	buffer length. Must be equal to bdev logical block size.
+> + *
+> + * Description:
+> + *    Issue a write same request for the sectors in question.
+> + */
+> +int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+> +			    sector_t nr_sects, gfp_t gfp_mask, void *buffer,
+> +			    unsigned int length)
+> +{
+> +	DECLARE_COMPLETION_ONSTACK(wait);
+> +	struct request_queue *q = bdev_get_queue(bdev);
+> +	unsigned int max_write_same_sectors;
+> +	struct bio_batch bb;
+> +	struct bio *bio;
+> +	int ret = 0;
+> +
+> +	if (!q)
+> +		return -ENXIO;
+> +
+> +	max_write_same_sectors = q->limits.max_write_same_sectors;
+> +
+> +	if (max_write_same_sectors == 0)
+> +		return -EOPNOTSUPP;
+> +
+> +	BUG_ON(length != bdev_logical_block_size(bdev));
 
-diff -puN drivers/scsi/mpt2sas/mpt2sas_scsih.c~drivers-scsi-mpt2sas-mpt2sas_scsihc-spell-primitive-correctly drivers/scsi/mpt2sas/mpt2sas_scsih.c
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c~drivers-scsi-mpt2sas-mpt2sas_scsihc-spell-primitive-correctly
-+++ a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -5744,7 +5744,7 @@ _scsih_sas_enclosure_dev_status_change_e
- }
- 
- /**
-- * _scsih_sas_broadcast_primative_event - handle broadcast events
-+ * _scsih_sas_broadcast_primitive_event - handle broadcast events
-  * @ioc: per adapter object
-  * @fw_event: The fw_event_work object
-  * Context: user.
-@@ -5752,7 +5752,7 @@ _scsih_sas_enclosure_dev_status_change_e
-  * Return nothing.
-  */
- static void
--_scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
-+_scsih_sas_broadcast_primitive_event(struct MPT2SAS_ADAPTER *ioc,
-     struct fw_event_work *fw_event)
- {
- 	struct scsi_cmnd *scmd;
-@@ -7263,7 +7263,7 @@ _firmware_event_work(struct work_struct 
- 		    fw_event);
- 		break;
- 	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
--		_scsih_sas_broadcast_primative_event(ioc,
-+		_scsih_sas_broadcast_primitive_event(ioc,
- 		    fw_event);
- 		break;
- 	case MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE:
-_
+Why require @length to be passed in if we can easily determine the only
+correct length, via bdev_logical_block_size, locally?
+
+Mike
