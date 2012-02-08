@@ -1,83 +1,35 @@
-From: Mike Snitzer <snitzer@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH 1/5] block: Implement support for WRITE SAME
-Date: Wed, 8 Feb 2012 17:50:23 -0500
-Message-ID: <20120208225023.GA16401@redhat.com>
+Date: Wed, 08 Feb 2012 18:12:50 -0500
+Message-ID: <yq139akor65.fsf@sermon.lab.mkp.net>
 References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
- <1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
+	<1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
+	<20120208225023.GA16401@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23296 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757435Ab2BHWu3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Feb 2012 17:50:29 -0500
-Content-Disposition: inline
-In-Reply-To: <1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:45021 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755667Ab2BHXM6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2012 18:12:58 -0500
+In-Reply-To: <20120208225023.GA16401@redhat.com> (Mike Snitzer's message of
+	"Wed, 8 Feb 2012 17:50:23 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com
 
-On Mon, Jan 30 2012 at  7:31pm -0500,
-Martin K. Petersen <martin.petersen@oracle.com> wrote:
+>>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
 
-> From: "Martin K. Petersen" <martin.petersen@oracle.com>
-> 
-> The WRITE SAME command supported on some SCSI devices allows the same
-> block to be efficiently replicated throughout a block range. Only a
-> single logical block is transferred from the host and the storage device
-> writes the same data to all blocks described by the I/O.
-> 
-> This patch implements support for WRITE SAME in the block layer. The
-> blkdev_issue_write_same() function can be used by filesystems and block
-> drivers to replicate a buffer across a block range. This can be used to
-> efficiently initialize software RAID devices, etc.
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+>> + BUG_ON(length != bdev_logical_block_size(bdev));
 
-...
+Mike> Why require @length to be passed in if we can easily determine the
+Mike> only correct length, via bdev_logical_block_size, locally?
 
-> diff --git a/block/blk-lib.c b/block/blk-lib.c
-> index 2b461b4..19f4754 100644
-> --- a/block/blk-lib.c
-> +++ b/block/blk-lib.c
-> @@ -115,6 +115,85 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
->  EXPORT_SYMBOL(blkdev_issue_discard);
->  
->  /**
-> + * blkdev_issue_write_same - queue a write same operation
-> + * @bdev:	target blockdev
-> + * @sector:	start sector
-> + * @nr_sects:	number of sectors to write
-> + * @gfp_mask:	memory allocation flags (for bio_alloc)
-> + * @buffer:	pointer to buffer containing data to write
-> + * @length:	buffer length. Must be equal to bdev logical block size.
-> + *
-> + * Description:
-> + *    Issue a write same request for the sectors in question.
-> + */
-> +int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
-> +			    sector_t nr_sects, gfp_t gfp_mask, void *buffer,
-> +			    unsigned int length)
-> +{
-> +	DECLARE_COMPLETION_ONSTACK(wait);
-> +	struct request_queue *q = bdev_get_queue(bdev);
-> +	unsigned int max_write_same_sectors;
-> +	struct bio_batch bb;
-> +	struct bio *bio;
-> +	int ret = 0;
-> +
-> +	if (!q)
-> +		return -ENXIO;
-> +
-> +	max_write_same_sectors = q->limits.max_write_same_sectors;
-> +
-> +	if (max_write_same_sectors == 0)
-> +		return -EOPNOTSUPP;
-> +
-> +	BUG_ON(length != bdev_logical_block_size(bdev));
+Just sanity checking since the caller is passing in a buffer pointer.
+See my comment in the patch series introduction about a page vs a
+buffer. I don't really care whether we pick one or the other. Whatever
+makes the most sense to dm, md and the filesystems...
 
-Why require @length to be passed in if we can easily determine the only
-correct length, via bdev_logical_block_size, locally?
-
-Mike
+-- 
+Martin K. Petersen	Oracle Linux Engineering
