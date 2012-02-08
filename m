@@ -1,59 +1,66 @@
 From: akpm@linux-foundation.org
-Subject: [patch 2/4] drivers/scsi/mpt2sas/mpt2sas_base.c: fix mismatch in mpt2sas_base_hard_reset_handler() mutex lock-unlock
+Subject: [patch 1/4] drivers/scsi/aacraid/commctrl.c: fix mem leak in aac_send_raw_srb()
 Date: Wed, 08 Feb 2012 12:52:21 -0800
-Message-ID: <20120208205222.18565A04F8@akpm.mtv.corp.google.com>
+Message-ID: <20120208205221.A66E4A03DE@akpm.mtv.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ASCII
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:58672 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755572Ab2BHUwY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2012 15:52:24 -0500
-Received: by eekb15 with SMTP id b15so33252eek.1
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2012 12:52:23 -0800 (PST)
+Received: from mail-gx0-f202.google.com ([209.85.161.202]:60921 "EHLO
+	mail-gx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755435Ab2BHUwW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2012 15:52:22 -0500
+Received: by ggnp1 with SMTP id p1so103156ggn.1
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2012 12:52:22 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, khoroshilov@ispras.ru, kashyap.desai@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jj@chaosbits.net, mark_salyzyn@xyratex.com
 
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: drivers/scsi/mpt2sas/mpt2sas_base.c: fix mismatch in mpt2sas_base_hard_reset_handler() mutex lock-unlock
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: drivers/scsi/aacraid/commctrl.c: fix mem leak in aac_send_raw_srb()
 
-If ioc->pci_error_recovery is set, goto out in
-mpt2sas_base_hard_reset_handler() leads to unlock unheld
-ioc->reset_in_progress_mutex.
+We leak in drivers/scsi/aacraid/commctrl.c::aac_send_raw_srb() :
 
-Fix the issue by jumping afer mutex_unlock() call.
+We allocate memory:
+        ...
+                        struct user_sgmap* usg;
+                        usg = kmalloc(actual_fibsize - sizeof(struct aac_srb)
+                          + sizeof(struct sgmap), GFP_KERNEL);
+and then neglect to free it:
+        ...
+                        for (i = 0; i < usg->count; i++) {
+                                u64 addr;
+                                void* p;
+                                if (usg->sg[i].count >
+                                    ((dev->adapter_info.options &
+                                     AAC_OPT_NEW_COMM) ?
+                                      (dev->scsi_host_ptr->max_sectors << 9) :
+                                      65536)) {
+                                        rcode = -EINVAL;
+                                        goto cleanup;
+        ... this 'goto' makes 'usg' go out of scope and leak the memory we
+            allocated.
+            Other exits properly kfree(usg), it's just here it is neglected.
 
-Found by Linux Driver Verification project (linuxtesting.org).
-
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: Kashyap Desai <kashyap.desai@lsi.com>
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Acked-by: Mark Salyzyn <mark_salyzyn@xyratex.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/mpt2sas/mpt2sas_base.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/aacraid/commctrl.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff -puN drivers/scsi/mpt2sas/mpt2sas_base.c~mpt2sas-fix-mismatch-in-mpt2sas_base_hard_reset_handler-mutex-lock-unlock drivers/scsi/mpt2sas/mpt2sas_base.c
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c~mpt2sas-fix-mismatch-in-mpt2sas_base_hard_reset_handler-mutex-lock-unlock
-+++ a/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -4548,7 +4548,7 @@ mpt2sas_base_hard_reset_handler(struct M
- 		printk(MPT2SAS_ERR_FMT "%s: pci error recovery reset\n",
- 		    ioc->name, __func__);
- 		r = 0;
--		goto out;
-+		goto out_unlocked;
- 	}
- 
- 	if (mpt2sas_fwfault_debug)
-@@ -4604,6 +4604,7 @@ mpt2sas_base_hard_reset_handler(struct M
- 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 	mutex_unlock(&ioc->reset_in_progress_mutex);
- 
-+ out_unlocked:
- 	dtmprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: exit\n", ioc->name,
- 	    __func__));
- 	return r;
+diff -puN drivers/scsi/aacraid/commctrl.c~drivers-scsi-aacraid-commctrlc-fix-mem-leak-in-aac_send_raw_srb drivers/scsi/aacraid/commctrl.c
+--- a/drivers/scsi/aacraid/commctrl.c~drivers-scsi-aacraid-commctrlc-fix-mem-leak-in-aac_send_raw_srb
++++ a/drivers/scsi/aacraid/commctrl.c
+@@ -650,6 +650,7 @@ static int aac_send_raw_srb(struct aac_d
+ 				     AAC_OPT_NEW_COMM) ?
+ 				      (dev->scsi_host_ptr->max_sectors << 9) :
+ 				      65536)) {
++					kfree(usg);
+ 					rcode = -EINVAL;
+ 					goto cleanup;
+ 				}
 _
