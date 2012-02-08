@@ -1,33 +1,71 @@
-From: Kent Overstreet <koverstreet@google.com>
-Subject: Re: [ATTEND]
-Date: Wed, 8 Feb 2012 12:48:01 -0800
-Message-ID: <CAH+dOxLxL7CzMk+sLcAUO==4ShtS4JHfgaGRSMmP49LXWVC+fw@mail.gmail.com>
-References: <CAH+dOxKMwMskM18=GhBmEao4aSvZmccSiZmmnZm42TBMPUFONw@mail.gmail.com>
-	<D3F292ADF945FB49B35E96C94C2061B915D0A6CB@nsmail.netscout.com>
-	<CAH+dOx+4mL0uMBAjv+zo+XGJvaZvushYT5=Ev=8K8-zVhLHR2w@mail.gmail.com>
-	<D3F292ADF945FB49B35E96C94C2061B915D0ACF0@nsmail.netscout.com>
-	<1328732432.2101.3.camel@koala>
+From: akpm@linux-foundation.org
+Subject: [patch 4/4] drivers/scsi/hpsa.c: use find_first_zero_bit()
+Date: Wed, 08 Feb 2012 12:52:22 -0800
+Message-ID: <20120208205222.C6A22A04FD@akpm.mtv.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ASCII
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:57513 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753535Ab2BHUsC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2012 15:48:02 -0500
-Received: by iacb35 with SMTP id b35so1397978iac.19
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2012 12:48:01 -0800 (PST)
-In-Reply-To: <1328732432.2101.3.camel@koala>
+Received: from mail-yx0-f202.google.com ([209.85.213.202]:46254 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755434Ab2BHUwX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2012 15:52:23 -0500
+Received: by yenm1 with SMTP id m1so100149yen.1
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2012 12:52:23 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dedekind1@gmail.com
-Cc: "Loke, Chetan" <Chetan.Loke@netscout.com>, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, dedekind@infradead.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, akinobu.mita@gmail.com, JBottomley@parallels.com, scameron@beardog.cce.hp.com
 
-On Wed, Feb 8, 2012 at 12:20 PM, Artem Bityutskiy <dedekind1@gmail.com> wrote:
-> Hi, UBI is not an FTL, but it implements a lot of things a decent FTL
-> would also need to implement. And implementing FTL on top of UBI would
-> be much simpler than on top of a raw flash (I assume you are discussing
-> a flash?). UBI has it's own strong sides and limitations. Here I
-> described a simple FTL on top of UBI (long time ago):
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: drivers/scsi/hpsa.c: use find_first_zero_bit()
 
-You going to be at LSF? Would love to talk to other people with
-experience with the gory details of flash :)
+Use find_first_zero_bit to find the first cleared bit in a memory region.
+
+This also includes the following minor changes.
+- Use bitmap_zero
+- Reduce unnecessary atomic bitops usage
+
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Acked-by: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/hpsa.c |   18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
+
+diff -puN drivers/scsi/hpsa.c~drivers-scsi-hpsac-use-find_first_zero_bit drivers/scsi/hpsa.c
+--- a/drivers/scsi/hpsa.c~drivers-scsi-hpsac-use-find_first_zero_bit
++++ a/drivers/scsi/hpsa.c
+@@ -577,21 +577,19 @@ static int hpsa_find_target_lun(struct c
+ 	int i, found = 0;
+ 	DECLARE_BITMAP(lun_taken, HPSA_MAX_DEVICES);
+ 
+-	memset(&lun_taken[0], 0, HPSA_MAX_DEVICES >> 3);
++	bitmap_zero(lun_taken, HPSA_MAX_DEVICES);
+ 
+ 	for (i = 0; i < h->ndevices; i++) {
+ 		if (h->dev[i]->bus == bus && h->dev[i]->target != -1)
+-			set_bit(h->dev[i]->target, lun_taken);
++			__set_bit(h->dev[i]->target, lun_taken);
+ 	}
+ 
+-	for (i = 0; i < HPSA_MAX_DEVICES; i++) {
+-		if (!test_bit(i, lun_taken)) {
+-			/* *bus = 1; */
+-			*target = i;
+-			*lun = 0;
+-			found = 1;
+-			break;
+-		}
++	i = find_first_zero_bit(lun_taken, HPSA_MAX_DEVICES);
++	if (i < HPSA_MAX_DEVICES) {
++		/* *bus = 1; */
++		*target = i;
++		*lun = 0;
++		found = 1;
+ 	}
+ 	return !found;
+ }
+_
