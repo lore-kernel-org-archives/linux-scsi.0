@@ -1,17 +1,17 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 25/29] qla2xxx: Add ha->max_fibre_devices to keep track of the maximum number of targets.
-Date: Thu, 9 Feb 2012 11:15:57 -0800
-Message-ID: <1328814961-21866-26-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 24/29] qla2xxx: Cache swl during fabric discovery.
+Date: Thu, 9 Feb 2012 11:15:56 -0800
+Message-ID: <1328814961-21866-25-git-send-email-chad.dupuis@qlogic.com>
 References: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:34242
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:41846
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758451Ab2BITcO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:14 -0500
-Received: from mail106-ch1 (localhost [127.0.0.1])	by
- mail106-ch1-R.bigfish.com (Postfix) with ESMTP id BEF4018039E	for
+	by vger.kernel.org with ESMTP id S1758473Ab2BITcY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:24 -0500
+Received: from mail143-ch1 (localhost [127.0.0.1])	by
+ mail143-ch1-R.bigfish.com (Postfix) with ESMTP id 65B5B4C0245	for
  <linux-scsi@vger.kernel.org>; Thu,  9 Feb 2012 19:32:13 +0000 (UTC)
 In-Reply-To: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,527 +19,98 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Add a field to the qla_hw_data struct to allow us to set the maximum number of
-fabric devices on a per adapter basis based on ISP type.
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Rather than continuously allocating and freeing swl within the discovery
+process, simply pre-allocate it the first time that it's needed, cache it
+through the rest of the lifecycle of the driver and free it at module unload.
+
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c    |    4 +-
- drivers/scsi/qla2xxx/qla_def.h    |   20 +++++++++-----
- drivers/scsi/qla2xxx/qla_gs.c     |   50 ++++++++++++++++++++++--------------
- drivers/scsi/qla2xxx/qla_init.c   |   11 +++----
- drivers/scsi/qla2xxx/qla_inline.h |    6 ++++
- drivers/scsi/qla2xxx/qla_mid.c    |    2 +-
- drivers/scsi/qla2xxx/qla_os.c     |   30 ++++++++++++++--------
- 7 files changed, 76 insertions(+), 47 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |    2 ++
+ drivers/scsi/qla2xxx/qla_init.c |   12 +++++-------
+ drivers/scsi/qla2xxx/qla_os.c   |    1 +
+ 3 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index d16b1c0..897731b 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -89,7 +89,7 @@ qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
- 	WRT_REG_WORD(&reg->mailbox0, MBC_DUMP_RISC_RAM_EXTENDED);
- 	clear_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
- 
--	dwords = GID_LIST_SIZE / 4;
-+	dwords = qla2x00_gid_list_size(ha) / 4;
- 	for (cnt = 0; cnt < ram_dwords && rval == QLA_SUCCESS;
- 	    cnt += dwords, addr += dwords) {
- 		if (cnt + dwords > ram_dwords)
-@@ -264,7 +264,7 @@ qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint16_t *ram,
- 	WRT_MAILBOX_REG(ha, reg, 0, MBC_DUMP_RISC_RAM_EXTENDED);
- 	clear_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
- 
--	words = GID_LIST_SIZE / 2;
-+	words = qla2x00_gid_list_size(ha) / 2;
- 	for (cnt = 0; cnt < ram_words && rval == QLA_SUCCESS;
- 	    cnt += words, addr += words) {
- 		if (cnt + words > ram_words)
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 649748f..a244303 100644
+index 9d353ca..649748f 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -125,7 +125,10 @@
-  * Fibre Channel device definitions.
-  */
- #define WWN_SIZE		8	/* Size of WWPN, WWN & WWNN */
--#define MAX_FIBRE_DEVICES	512
-+#define MAX_FIBRE_DEVICES_2100	512
-+#define MAX_FIBRE_DEVICES_2400	2048
-+#define MAX_FIBRE_DEVICES_LOOP	128
-+#define MAX_FIBRE_DEVICES_MAX	MAX_FIBRE_DEVICES_2400
- #define MAX_FIBRE_LUNS  	0xFFFF
- #define	MAX_HOST_COUNT		16
+@@ -2674,6 +2674,8 @@ struct qla_hw_data {
+ 	void		*async_pd;
+ 	dma_addr_t	async_pd_dma;
  
-@@ -133,8 +136,6 @@
-  * Host adapter default definitions.
-  */
- #define MAX_BUSES		1  /* We only have one bus today */
--#define MAX_TARGETS_2100	MAX_FIBRE_DEVICES
--#define MAX_TARGETS_2200	MAX_FIBRE_DEVICES
- #define MIN_LUNS		8
- #define MAX_LUNS		MAX_FIBRE_LUNS
- #define MAX_CMDS_PER_LUN	255
-@@ -1773,7 +1774,6 @@ static const char * const port_state_str[] = {
- 
- #define	GID_PT_CMD	0x1A1
- #define	GID_PT_REQ_SIZE	(16 + 4)
--#define	GID_PT_RSP_SIZE	(16 + (MAX_FIBRE_DEVICES * 4))
- 
- #define	GPN_ID_CMD	0x112
- #define	GPN_ID_REQ_SIZE	(16 + 4)
-@@ -2063,7 +2063,9 @@ struct ct_sns_rsp {
- 		} ga_nxt;
- 
- 		struct {
--			struct ct_sns_gid_pt_data entries[MAX_FIBRE_DEVICES];
-+			/* Assume the largest number of targets for the union */
-+			struct ct_sns_gid_pt_data
-+			    entries[MAX_FIBRE_DEVICES_MAX];
- 		} gid_pt;
- 
- 		struct {
-@@ -2124,7 +2126,11 @@ struct ct_sns_pkt {
- 
- #define	GID_PT_SNS_SCMD_LEN	6
- #define	GID_PT_SNS_CMD_SIZE	28
--#define	GID_PT_SNS_DATA_SIZE	(MAX_FIBRE_DEVICES * 4 + 16)
-+/*
-+ * Assume MAX_FIBRE_DEVICES_2100 as these defines are only used with older
-+ * adapters.
-+ */
-+#define	GID_PT_SNS_DATA_SIZE	(MAX_FIBRE_DEVICES_2100 * 4 + 16)
- 
- #define	GPN_ID_SNS_SCMD_LEN	6
- #define	GPN_ID_SNS_CMD_SIZE	28
-@@ -2172,7 +2178,6 @@ struct gid_list_info {
- 	uint16_t loop_id;	/* ISP23XX         -- 6 bytes. */
- 	uint16_t reserved_1;	/* ISP24XX         -- 8 bytes. */
- };
--#define GID_LIST_SIZE (sizeof(struct gid_list_info) * MAX_FIBRE_DEVICES)
- 
- /* NPIV */
- typedef struct vport_info {
-@@ -2499,6 +2504,7 @@ struct qla_hw_data {
- 	atomic_t	loop_down_timer;         /* loop down timer */
- 	uint8_t		link_down_timeout;       /* link down timeout */
- 	uint16_t	max_loop_id;
-+	uint16_t	max_fibre_devices;	/* Maximum number of targets */
- 
- 	uint16_t	fb_rev;
- 	uint16_t	min_external_loopid;    /* First external loop Id */
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 6924303..f82b00a 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -240,6 +240,12 @@ qla2x00_ga_nxt(scsi_qla_host_t *vha, fc_port_t *fcport)
- 	return (rval);
- }
- 
-+static inline int
-+qla2x00_gid_pt_rsp_size(scsi_qla_host_t *vha)
-+{
-+	return vha->hw->max_fibre_devices * 4 + 16;
-+}
++	void		*swl;
 +
- /**
-  * qla2x00_gid_pt() - SNS scan for fabric devices via GID_PT command.
-  * @ha: HA context
-@@ -261,20 +267,21 @@ qla2x00_gid_pt(scsi_qla_host_t *vha, sw_info_t *list)
+ 	/* These are used by mailbox operations. */
+ 	volatile uint16_t mailbox_out[MAILBOX_REGISTER_COUNT];
  
- 	struct ct_sns_gid_pt_data *gid_data;
- 	struct qla_hw_data *ha = vha->hw;
-+	uint16_t gid_pt_rsp_size;
- 
- 	if (IS_QLA2100(ha) || IS_QLA2200(ha))
- 		return qla2x00_sns_gid_pt(vha, list);
- 
- 	gid_data = NULL;
--
-+	gid_pt_rsp_size = qla2x00_gid_pt_rsp_size(vha);
- 	/* Issue GID_PT */
- 	/* Prepare common MS IOCB */
- 	ms_pkt = ha->isp_ops->prep_ms_iocb(vha, GID_PT_REQ_SIZE,
--	    GID_PT_RSP_SIZE);
-+	    gid_pt_rsp_size);
- 
- 	/* Prepare CT request */
- 	ct_req = qla2x00_prep_ct_req(&ha->ct_sns->p.req, GID_PT_CMD,
--	    GID_PT_RSP_SIZE);
-+	    gid_pt_rsp_size);
- 	ct_rsp = &ha->ct_sns->p.rsp;
- 
- 	/* Prepare CT arguments -- port_type */
-@@ -292,7 +299,7 @@ qla2x00_gid_pt(scsi_qla_host_t *vha, sw_info_t *list)
- 		rval = QLA_FUNCTION_FAILED;
- 	} else {
- 		/* Set port IDs in switch info list. */
--		for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
-+		for (i = 0; i < ha->max_fibre_devices; i++) {
- 			gid_data = &ct_rsp->rsp.gid_pt.entries[i];
- 			list[i].d_id.b.domain = gid_data->port_id[0];
- 			list[i].d_id.b.area = gid_data->port_id[1];
-@@ -313,7 +320,7 @@ qla2x00_gid_pt(scsi_qla_host_t *vha, sw_info_t *list)
- 		 * single call.  Return a failed status, and let GA_NXT handle
- 		 * the overload.
- 		 */
--		if (i == MAX_FIBRE_DEVICES)
-+		if (i == ha->max_fibre_devices)
- 			rval = QLA_FUNCTION_FAILED;
- 	}
- 
-@@ -330,7 +337,7 @@ qla2x00_gid_pt(scsi_qla_host_t *vha, sw_info_t *list)
- int
- qla2x00_gpn_id(scsi_qla_host_t *vha, sw_info_t *list)
- {
--	int		rval;
-+	int		rval = QLA_SUCCESS;
- 	uint16_t	i;
- 
- 	ms_iocb_entry_t	*ms_pkt;
-@@ -341,7 +348,7 @@ qla2x00_gpn_id(scsi_qla_host_t *vha, sw_info_t *list)
- 	if (IS_QLA2100(ha) || IS_QLA2200(ha))
- 		return qla2x00_sns_gpn_id(vha, list);
- 
--	for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
-+	for (i = 0; i < ha->max_fibre_devices; i++) {
- 		/* Issue GPN_ID */
- 		/* Prepare common MS IOCB */
- 		ms_pkt = ha->isp_ops->prep_ms_iocb(vha, GPN_ID_REQ_SIZE,
-@@ -391,7 +398,7 @@ qla2x00_gpn_id(scsi_qla_host_t *vha, sw_info_t *list)
- int
- qla2x00_gnn_id(scsi_qla_host_t *vha, sw_info_t *list)
- {
--	int		rval;
-+	int		rval = QLA_SUCCESS;
- 	uint16_t	i;
- 	struct qla_hw_data *ha = vha->hw;
- 	ms_iocb_entry_t	*ms_pkt;
-@@ -401,7 +408,7 @@ qla2x00_gnn_id(scsi_qla_host_t *vha, sw_info_t *list)
- 	if (IS_QLA2100(ha) || IS_QLA2200(ha))
- 		return qla2x00_sns_gnn_id(vha, list);
- 
--	for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
-+	for (i = 0; i < ha->max_fibre_devices; i++) {
- 		/* Issue GNN_ID */
- 		/* Prepare common MS IOCB */
- 		ms_pkt = ha->isp_ops->prep_ms_iocb(vha, GNN_ID_REQ_SIZE,
-@@ -735,7 +742,7 @@ qla2x00_prep_sns_cmd(scsi_qla_host_t *vha, uint16_t cmd, uint16_t scmd_len,
- static int
- qla2x00_sns_ga_nxt(scsi_qla_host_t *vha, fc_port_t *fcport)
- {
--	int		rval;
-+	int		rval = QLA_SUCCESS;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct sns_cmd_pkt	*sns_cmd;
- 
-@@ -814,11 +821,14 @@ qla2x00_sns_gid_pt(scsi_qla_host_t *vha, sw_info_t *list)
- 	uint16_t	i;
- 	uint8_t		*entry;
- 	struct sns_cmd_pkt	*sns_cmd;
-+	uint16_t gid_pt_sns_data_size;
-+
-+	gid_pt_sns_data_size = qla2x00_gid_pt_rsp_size(vha);
- 
- 	/* Issue GID_PT. */
- 	/* Prepare SNS command request. */
- 	sns_cmd = qla2x00_prep_sns_cmd(vha, GID_PT_CMD, GID_PT_SNS_SCMD_LEN,
--	    GID_PT_SNS_DATA_SIZE);
-+	    gid_pt_sns_data_size);
- 
- 	/* Prepare SNS command arguments -- port_type. */
- 	sns_cmd->p.cmd.param[0] = NS_NX_PORT_TYPE;
-@@ -839,7 +849,7 @@ qla2x00_sns_gid_pt(scsi_qla_host_t *vha, sw_info_t *list)
- 		rval = QLA_FUNCTION_FAILED;
- 	} else {
- 		/* Set port IDs in switch info list. */
--		for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
-+		for (i = 0; i < ha->max_fibre_devices; i++) {
- 			entry = &sns_cmd->p.gid_data[(i * 4) + 16];
- 			list[i].d_id.b.domain = entry[1];
- 			list[i].d_id.b.area = entry[2];
-@@ -858,7 +868,7 @@ qla2x00_sns_gid_pt(scsi_qla_host_t *vha, sw_info_t *list)
- 		 * single call.  Return a failed status, and let GA_NXT handle
- 		 * the overload.
- 		 */
--		if (i == MAX_FIBRE_DEVICES)
-+		if (i == ha->max_fibre_devices)
- 			rval = QLA_FUNCTION_FAILED;
- 	}
- 
-@@ -882,7 +892,7 @@ qla2x00_sns_gpn_id(scsi_qla_host_t *vha, sw_info_t *list)
- 	uint16_t	i;
- 	struct sns_cmd_pkt	*sns_cmd;
- 
--	for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
-+	for (i = 0; i < ha->max_fibre_devices; i++) {
- 		/* Issue GPN_ID */
- 		/* Prepare SNS command request. */
- 		sns_cmd = qla2x00_prep_sns_cmd(vha, GPN_ID_CMD,
-@@ -933,12 +943,12 @@ qla2x00_sns_gpn_id(scsi_qla_host_t *vha, sw_info_t *list)
- static int
- qla2x00_sns_gnn_id(scsi_qla_host_t *vha, sw_info_t *list)
- {
--	int		rval;
-+	int		rval = QLA_SUCCESS;
- 	struct qla_hw_data *ha = vha->hw;
- 	uint16_t	i;
- 	struct sns_cmd_pkt	*sns_cmd;
- 
--	for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
-+	for (i = 0; i < ha->max_fibre_devices; i++) {
- 		/* Issue GNN_ID */
- 		/* Prepare SNS command request. */
- 		sns_cmd = qla2x00_prep_sns_cmd(vha, GNN_ID_CMD,
-@@ -1734,7 +1744,7 @@ qla2x00_fdmi_register(scsi_qla_host_t *vha)
- int
- qla2x00_gfpn_id(scsi_qla_host_t *vha, sw_info_t *list)
- {
--	int		rval;
-+	int		rval = QLA_SUCCESS;
- 	uint16_t	i;
- 	struct qla_hw_data *ha = vha->hw;
- 	ms_iocb_entry_t	*ms_pkt;
-@@ -1744,7 +1754,7 @@ qla2x00_gfpn_id(scsi_qla_host_t *vha, sw_info_t *list)
- 	if (!IS_IIDMA_CAPABLE(ha))
- 		return QLA_FUNCTION_FAILED;
- 
--	for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
-+	for (i = 0; i < ha->max_fibre_devices; i++) {
- 		/* Issue GFPN_ID */
- 		/* Prepare common MS IOCB */
- 		ms_pkt = ha->isp_ops->prep_ms_iocb(vha, GFPN_ID_REQ_SIZE,
-@@ -1856,7 +1866,7 @@ qla2x00_gpsc(scsi_qla_host_t *vha, sw_info_t *list)
- 	if (rval)
- 		return rval;
- 
--	for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
-+	for (i = 0; i < ha->max_fibre_devices; i++) {
- 		/* Issue GFPN_ID */
- 		/* Prepare common MS IOCB */
- 		ms_pkt = qla24xx_prep_ms_fm_iocb(vha, GPSC_REQ_SIZE,
-@@ -1957,7 +1967,7 @@ qla2x00_gff_id(scsi_qla_host_t *vha, sw_info_t *list)
- 	struct qla_hw_data *ha = vha->hw;
- 	uint8_t fcp_scsi_features = 0;
- 
--	for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
-+	for (i = 0; i < ha->max_fibre_devices; i++) {
- 		/* Set default FC4 Type as UNKNOWN so the default is to
- 		 * Process this port */
- 		list[i].fc4_type = FC4_TYPE_UNKNOWN;
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 24b2d11..2627c87 100644
+index b28eb40..24b2d11 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2567,8 +2567,7 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 			ql_dbg(ql_dbg_disc, vha, 0x2015,
- 			    "Loop resync needed, failing.\n");
- 			rval = QLA_FUNCTION_FAILED;
--		}
--		else
-+		} else
- 			rval = qla2x00_configure_local_loop(vha);
- 	}
- 
-@@ -2642,7 +2641,7 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
- 
- 	found_devs = 0;
- 	new_fcport = NULL;
--	entries = MAX_FIBRE_DEVICES;
-+	entries = MAX_FIBRE_DEVICES_LOOP;
- 
- 	ql_dbg(ql_dbg_disc, vha, 0x2016,
- 	    "Getting FCAL position map.\n");
-@@ -2650,7 +2649,7 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
- 		qla2x00_get_fcal_position_map(vha, NULL);
- 
- 	/* Get list of logged in devices. */
--	memset(ha->gid_list, 0, GID_LIST_SIZE);
-+	memset(ha->gid_list, 0, qla2x00_gid_list_size(ha));
- 	rval = qla2x00_get_id_list(vha, ha->gid_list, ha->gid_list_dma,
- 	    &entries);
- 	if (rval != QLA_SUCCESS)
-@@ -3134,7 +3133,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+@@ -3133,20 +3133,21 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 	rval = QLA_SUCCESS;
  
  	/* Try GID_PT to get device list, else GAN. */
- 	if (!ha->swl)
--		ha->swl = kcalloc(MAX_FIBRE_DEVICES, sizeof(sw_info_t),
-+		ha->swl = kcalloc(ha->max_fibre_devices, sizeof(sw_info_t),
- 		    GFP_KERNEL);
- 	swl = ha->swl;
+-	swl = kcalloc(MAX_FIBRE_DEVICES, sizeof(sw_info_t), GFP_KERNEL);
++	if (!ha->swl)
++		ha->swl = kcalloc(MAX_FIBRE_DEVICES, sizeof(sw_info_t),
++		    GFP_KERNEL);
++	swl = ha->swl;
  	if (!swl) {
-@@ -3142,7 +3141,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 		/*EMPTY*/
  		ql_dbg(ql_dbg_disc, vha, 0x2054,
  		    "GID_PT allocations failed, fallback on GA_NXT.\n");
  	} else {
--		memset(swl, 0, MAX_FIBRE_DEVICES * sizeof(sw_info_t));
-+		memset(swl, 0, ha->max_fibre_devices * sizeof(sw_info_t));
++		memset(swl, 0, MAX_FIBRE_DEVICES * sizeof(sw_info_t));
  		if (qla2x00_gid_pt(vha, swl) != QLA_SUCCESS) {
+-			kfree(swl);
  			swl = NULL;
  		} else if (qla2x00_gpn_id(vha, swl) != QLA_SUCCESS) {
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index 3ea0ced..6e45764 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -181,3 +181,9 @@ qla2x00_init_timer(srb_t *sp, unsigned long tmo)
- 	add_timer(&sp->u.iocb_cmd.timer);
- 	sp->free = qla2x00_sp_free;
- }
-+
-+static inline int
-+qla2x00_gid_list_size(struct qla_hw_data *ha)
-+{
-+	return sizeof(struct gid_list_info) * ha->max_fibre_devices;
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index f488cc6..aa062a1 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -479,7 +479,7 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
- 	host->max_channel = MAX_BUSES - 1;
- 	host->max_lun = ql2xmaxlun;
- 	host->unique_id = host->host_no;
--	host->max_id = MAX_TARGETS_2200;
-+	host->max_id = ha->max_fibre_devices;
- 	host->transportt = qla2xxx_transport_vport_template;
+-			kfree(swl);
+ 			swl = NULL;
+ 		} else if (qla2x00_gnn_id(vha, swl) != QLA_SUCCESS) {
+-			kfree(swl);
+ 			swl = NULL;
+ 		} else if (ql2xiidmaenable &&
+ 		    qla2x00_gfpn_id(vha, swl) == QLA_SUCCESS) {
+@@ -3164,7 +3165,6 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 	if (new_fcport == NULL) {
+ 		ql_log(ql_log_warn, vha, 0x205e,
+ 		    "Failed to allocate memory for fcport.\n");
+-		kfree(swl);
+ 		return (QLA_MEMORY_ALLOC_FAILED);
+ 	}
+ 	new_fcport->flags |= (FCF_FABRIC_DEVICE | FCF_LOGIN_NEEDED);
+@@ -3341,14 +3341,12 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 		if (new_fcport == NULL) {
+ 			ql_log(ql_log_warn, vha, 0x2066,
+ 			    "Memory allocation failed for fcport.\n");
+-			kfree(swl);
+ 			return (QLA_MEMORY_ALLOC_FAILED);
+ 		}
+ 		new_fcport->flags |= (FCF_FABRIC_DEVICE | FCF_LOGIN_NEEDED);
+ 		new_fcport->d_id.b24 = nxt_d_id.b24;
+ 	}
  
- 	ql_dbg(ql_dbg_vport, vha, 0xa007,
+-	kfree(swl);
+ 	kfree(new_fcport);
+ 
+ 	return (rval);
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 94ff3a5..094af74 100644
+index ffa3488..94ff3a5 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2135,7 +2135,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	char pci_info[30];
- 	char fw_str[30];
- 	struct scsi_host_template *sht;
--	int bars, max_id, mem_only = 0;
-+	int bars, mem_only = 0;
- 	uint16_t req_length = 0, rsp_length = 0;
- 	struct req_que *req = NULL;
- 	struct rsp_que *rsp = NULL;
-@@ -2200,9 +2200,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	ha->optrom_size = OPTROM_SIZE_2300;
+@@ -3280,6 +3280,7 @@ qla2x00_mem_free(struct qla_hw_data *ha)
+ 	vfree(ha->optrom_buffer);
+ 	kfree(ha->nvram);
+ 	kfree(ha->npiv_info);
++	kfree(ha->swl);
  
- 	/* Assign ISP specific operations. */
--	max_id = MAX_TARGETS_2200;
- 	if (IS_QLA2100(ha)) {
--		max_id = MAX_TARGETS_2100;
-+		ha->max_fibre_devices = MAX_FIBRE_DEVICES_2100;
- 		ha->mbx_count = MAILBOX_REGISTER_COUNT_2100;
- 		req_length = REQUEST_ENTRY_CNT_2100;
- 		rsp_length = RESPONSE_ENTRY_CNT_2100;
-@@ -2214,6 +2213,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->nvram_data_off = ~0;
- 		ha->isp_ops = &qla2100_isp_ops;
- 	} else if (IS_QLA2200(ha)) {
-+		ha->max_fibre_devices = MAX_FIBRE_DEVICES_2100;
- 		ha->mbx_count = MAILBOX_REGISTER_COUNT_2200;
- 		req_length = REQUEST_ENTRY_CNT_2200;
- 		rsp_length = RESPONSE_ENTRY_CNT_2100;
-@@ -2225,6 +2225,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->nvram_data_off = ~0;
- 		ha->isp_ops = &qla2100_isp_ops;
- 	} else if (IS_QLA23XX(ha)) {
-+		ha->max_fibre_devices = MAX_FIBRE_DEVICES_2100;
- 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
- 		req_length = REQUEST_ENTRY_CNT_2200;
- 		rsp_length = RESPONSE_ENTRY_CNT_2300;
-@@ -2238,6 +2239,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->nvram_data_off = ~0;
- 		ha->isp_ops = &qla2300_isp_ops;
- 	} else if (IS_QLA24XX_TYPE(ha)) {
-+		ha->max_fibre_devices = MAX_FIBRE_DEVICES_2400;
- 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
- 		req_length = REQUEST_ENTRY_CNT_24XX;
- 		rsp_length = RESPONSE_ENTRY_CNT_2300;
-@@ -2252,6 +2254,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->nvram_conf_off = FARX_ACCESS_NVRAM_CONF;
- 		ha->nvram_data_off = FARX_ACCESS_NVRAM_DATA;
- 	} else if (IS_QLA25XX(ha)) {
-+		ha->max_fibre_devices = MAX_FIBRE_DEVICES_2400;
- 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
- 		req_length = REQUEST_ENTRY_CNT_24XX;
- 		rsp_length = RESPONSE_ENTRY_CNT_2300;
-@@ -2266,6 +2269,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->nvram_conf_off = FARX_ACCESS_NVRAM_CONF;
- 		ha->nvram_data_off = FARX_ACCESS_NVRAM_DATA;
- 	} else if (IS_QLA81XX(ha)) {
-+		ha->max_fibre_devices = MAX_FIBRE_DEVICES_2400;
- 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
- 		req_length = REQUEST_ENTRY_CNT_24XX;
- 		rsp_length = RESPONSE_ENTRY_CNT_2300;
-@@ -2280,6 +2284,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->nvram_conf_off = ~0;
- 		ha->nvram_data_off = ~0;
- 	} else if (IS_QLA82XX(ha)) {
-+		ha->max_fibre_devices = MAX_FIBRE_DEVICES_2400;
- 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
- 		req_length = REQUEST_ENTRY_CNT_82XX;
- 		rsp_length = RESPONSE_ENTRY_CNT_82XX;
-@@ -2294,6 +2299,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->nvram_conf_off = FARX_ACCESS_NVRAM_CONF;
- 		ha->nvram_data_off = FARX_ACCESS_NVRAM_DATA;
- 	} else if (IS_QLA83XX(ha)) {
-+		ha->max_fibre_devices = MAX_FIBRE_DEVICES_2400;
- 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
- 		req_length = REQUEST_ENTRY_CNT_24XX;
- 		rsp_length = RESPONSE_ENTRY_CNT_2300;
-@@ -2312,10 +2318,11 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	ql_dbg_pci(ql_dbg_init, pdev, 0x001e,
- 	    "mbx_count=%d, req_length=%d, "
- 	    "rsp_length=%d, max_loop_id=%d, init_cb_size=%d, "
--	    "gid_list_info_size=%d, optrom_size=%d, nvram_npiv_size=%d, .\n",
-+	    "gid_list_info_size=%d, optrom_size=%d, nvram_npiv_size=%d, "
-+	    "max_fibre_devices=%d.\n",
- 	    ha->mbx_count, req_length, rsp_length, ha->max_loop_id,
- 	    ha->init_cb_size, ha->gid_list_info_size, ha->optrom_size,
--	    ha->nvram_npiv_size);
-+	    ha->nvram_npiv_size, ha->max_fibre_devices);
- 	ql_dbg_pci(ql_dbg_init, pdev, 0x001f,
- 	    "isp_ops=%p, flash_conf_off=%d, "
- 	    "flash_data_off=%d, nvram_conf_off=%d, nvram_data_off=%d.\n",
-@@ -2389,7 +2396,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	    "mgmt_svr_loop_id=%d, sg_tablesize=%d.\n",
- 	    host->can_queue, base_vha->req,
- 	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
--	host->max_id = max_id;
-+	host->max_id = ha->max_fibre_devices;
- 	host->this_id = 255;
- 	host->cmd_per_lun = 3;
- 	host->unique_id = host->host_no;
-@@ -2939,8 +2946,8 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 	if (!ha->init_cb)
- 		goto fail;
- 
--	ha->gid_list = dma_alloc_coherent(&ha->pdev->dev, GID_LIST_SIZE,
--		&ha->gid_list_dma, GFP_KERNEL);
-+	ha->gid_list = dma_alloc_coherent(&ha->pdev->dev,
-+		qla2x00_gid_list_size(ha), &ha->gid_list_dma, GFP_KERNEL);
- 	if (!ha->gid_list)
- 		goto fail_free_init_cb;
- 
-@@ -3155,7 +3162,8 @@ fail_free_srb_mempool:
- 	mempool_destroy(ha->srb_mempool);
  	ha->srb_mempool = NULL;
- fail_free_gid_list:
--	dma_free_coherent(&ha->pdev->dev, GID_LIST_SIZE, ha->gid_list,
-+	dma_free_coherent(&ha->pdev->dev, qla2x00_gid_list_size(ha),
-+	ha->gid_list,
- 	ha->gid_list_dma);
- 	ha->gid_list = NULL;
- 	ha->gid_list_dma = 0;
-@@ -3247,8 +3255,8 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- 		dma_pool_destroy(ha->s_dma_pool);
- 
- 	if (ha->gid_list)
--		dma_free_coherent(&ha->pdev->dev, GID_LIST_SIZE, ha->gid_list,
--		ha->gid_list_dma);
-+		dma_free_coherent(&ha->pdev->dev, qla2x00_gid_list_size(ha),
-+		ha->gid_list, ha->gid_list_dma);
- 
- 	if (IS_QLA82XX(ha)) {
- 		if (!list_empty(&ha->gbl_dsd_list)) {
+ 	ha->ctx_mempool = NULL;
 -- 
 1.6.0.2
 
