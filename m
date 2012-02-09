@@ -1,86 +1,144 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
- of the staging area
-Date: Thu, 9 Feb 2012 22:13:51 +0000
-Message-ID: <6E21E5352C11B742B20C142EB499E0481B70CC1A@TK5EX14MBXC128.redmond.corp.microsoft.com>
-References: <1328817851-13435-1-git-send-email-kys@microsoft.com>
-	 <20120209200404.GA8816@kroah.com>
-	 <1328818718.2944.20.camel@dabdike.int.hansenpartnership.com>
-	 <20120209202409.GA22365@kroah.com>
-	 <6E21E5352C11B742B20C142EB499E0481B70CB38@TK5EX14MBXC128.redmond.corp.microsoft.com>
- <1328820356.2944.24.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out of the staging area
+Date: Thu,  9 Feb 2012 14:14:48 -0800
+Message-ID: <1328825688-4337-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:53734
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753944Ab2BIWOU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 17:14:20 -0500
-In-Reply-To: <1328820356.2944.24.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
+Received: from p3plsmtps2ded01.prod.phx3.secureserver.net ([208.109.80.58]:51311
+	"HELO p3plsmtps2ded01-02.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932303Ab2BIWXh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Feb 2012 17:23:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-VGh1cnNkYXksIEZlYnJ1YXJ5IDA5LCAyMDEyIDM6NDYgUE0NCj4gVG86IEtZIFNyaW5pdmFzYW4N
-Cj4gQ2M6IEdyZWcgS0g7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmVsQGxpbnV4
-ZHJpdmVycHJvamVjdC5vcmc7DQo+IHZpcnR1YWxpemF0aW9uQGxpc3RzLm9zZGwub3JnOyBvaGVy
-aW5nQHN1c2UuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJu
-ZWwub3JnDQo+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggMS8xXSBTdGFnaW5nOiBodjogc3RvcnZzYzog
-TW92ZSB0aGUgc3RvcmFnZSBkcml2ZXIgb3V0IG9mIHRoZQ0KPiBzdGFnaW5nIGFyZWENCj4gDQo+
-IE9uIFRodSwgMjAxMi0wMi0wOSBhdCAyMDo0MyArMDAwMCwgS1kgU3Jpbml2YXNhbiB3cm90ZToN
-Cj4gPg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IEdyZWcg
-S0ggW21haWx0bzpncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZ10NCj4gPiA+IFNlbnQ6IFRodXJz
-ZGF5LCBGZWJydWFyeSAwOSwgMjAxMiAzOjI0IFBNDQo+ID4gPiBUbzogSmFtZXMgQm90dG9tbGV5
-DQo+ID4gPiBDYzogS1kgU3Jpbml2YXNhbjsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsN
-Cj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsNCj4gPiA+IHZpcnR1YWxpemF0aW9uQGxp
-c3RzLm9zZGwub3JnOyBvaGVyaW5nQHN1c2UuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgt
-DQo+ID4gPiBzY3NpQHZnZXIua2VybmVsLm9yZw0KPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSCAx
-LzFdIFN0YWdpbmc6IGh2OiBzdG9ydnNjOiBNb3ZlIHRoZSBzdG9yYWdlIGRyaXZlciBvdXQgb2YN
-Cj4gdGhlDQo+ID4gPiBzdGFnaW5nIGFyZWENCj4gPiA+DQo+ID4gPiBPbiBUaHUsIEZlYiAwOSwg
-MjAxMiBhdCAwMjoxODozOFBNIC0wNjAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6DQo+ID4gPiA+
-IE9uIFRodSwgMjAxMi0wMi0wOSBhdCAxMjowNCAtMDgwMCwgR3JlZyBLSCB3cm90ZToNCj4gPiA+
-ID4gPiBPbiBUaHUsIEZlYiAwOSwgMjAxMiBhdCAxMjowNDoxMVBNIC0wODAwLCBLLiBZLiBTcmlu
-aXZhc2FuIHdyb3RlOg0KPiA+ID4gPiA+ID4gVGhlIHN0b3JhZ2UgZHJpdmVyIChzdG9ydnNjX2Ry
-di5jKSBoYW5kbGVzIGFsbCBibG9jayBzdG9yYWdlIGRldmljZXMNCj4gPiA+ID4gPiA+IGFzc2ln
-bmVkIHRvIExpbnV4IGd1ZXN0cyBob3N0ZWQgb24gSHlwZXItVi4gVGhpcyBkcml2ZXIgaGFzIGJl
-ZW4gaW4gdGhlDQo+ID4gPiA+ID4gPiBzdGFnaW5nIHRyZWUgZm9yIGEgd2hpbGUgYW5kIHRoaXMg
-cGF0Y2ggbW92ZXMgaXQgb3V0IG9mIHRoZSBzdGFnaW5nIGFyZWEuDQo+ID4gPiA+ID4gPiBBcyBw
-ZXIgR3JlZydzIHJlY29tbWVuZGF0aW9uLCB0aGlzIHBhdGNoIG1ha2VzIG5vIGNoYW5nZXMgdG8g
-dGhlDQo+ID4gPiBzdGFnaW5nL2h2DQo+ID4gPiA+ID4gPiBkaXJlY3RvcnkuIE9uY2UgdGhlIGRy
-aXZlciBtb3ZlcyBvdXQgb2Ygc3RhZ2luZywgd2Ugd2lsbCBjbGVhbnVwIHRoZQ0KPiA+ID4gPiA+
-ID4gc3RhZ2luZy9odiBkaXJlY3RvcnkuDQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gSmFtZXMg
-d2FzIHdpbGxpbmcgdG8gYXBwbHkgdGhpcyBwYXRjaCBkdXJpbmcgdGhlIDMuMy1yYyBwaGFzZSBh
-bmQgYQ0KPiBkZWNpc2lvbg0KPiA+ID4gPiA+ID4gd2FzIHRha2VuIHRvIGRlZmVyIHRoaXMgdG8g
-My40IHNpbmNlIEdyZWcgaGFkIHF1ZXVlZCB1cCBhIGJ1bmNoIG9mDQo+IHN0b3J2c2MNCj4gPiA+
-ID4gPiA+IHBhdGNoZXMgZm9yIDMuNC4gTm93IHRoYXQgR3JlZyBoYXMgYXBwbGllZCBhbGwgb2Yg
-dGhlIHBlbmRpbmcgc3RvcnZzYw0KPiA+ID4gcGF0Y2hlcywNCj4gPiA+ID4gPiA+IEkgYW0gcmUt
-c2VuZGluZyB0aGlzIHBhdGNoIHRvIG1vdmUgdGhpcyBkcml2ZXIgb3V0IG9mIHN0YWdpbmcuDQo+
-ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IFNpZ25lZC1vZmYtYnk6IEsuIFku
-IFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQuY29tPg0KPiA+ID4gPiA+ID4gLS0tDQo+ID4gPiA+
-ID4gPiAgZHJpdmVycy9zY3NpL0tjb25maWcgICAgICAgfCAgICA3ICsNCj4gPiA+ID4gPiA+ICBk
-cml2ZXJzL3Njc2kvTWFrZWZpbGUgICAgICB8ICAgIDMgKw0KPiA+ID4gPiA+ID4gIGRyaXZlcnMv
-c2NzaS9zdG9ydnNjX2Rydi5jIHwgMTU0OA0KPiA+ID4gKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysNCj4gPiA+ID4gPiA+ICAzIGZpbGVzIGNoYW5nZWQsIDE1NTgg
-aW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkNCj4gPiA+ID4gPiA+ICBjcmVhdGUgbW9kZSAx
-MDA2NDQgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4gPiA+ID4gPg0KPiA+ID4gPiA+IEph
-bWVzLCBhbnkgb2JqZWN0aW9uIHRvIG1lIGFwcGx5aW5nIHRoaXMgdG8gdGhlIHN0YWdpbmctbmV4
-dCB0cmVlLCBhbmQNCj4gPiA+ID4gPiBhdCB0aGUgc2FtZSB0aW1lLCBkZWxldGluZyB0aGlzIHZl
-cnNpb24gb2YgdGhlIGRyaXZlciBmcm9tIHRoZQ0KPiA+ID4gPiA+IGRyaXZlcnMvc3RhZ2luZy9o
-di8gZGlyZWN0b3J5Pw0KPiA+ID4gPg0KPiA+ID4gPiBXZWxsLCB5ZXMsIGl0IGhhcyB0aGUgc2Ft
-ZSBidWlsZCBmYWlsdXJlIGFzIHRoZSBwcmV2aW91cyBvbmUgYW5kIHRoYXQNCj4gPiA+ID4gd2ls
-bCBtYWtlIGl0IG5vbiBiaXNlY3RhYmxlLg0KPiA+ID4NCj4gPiA+IEFoLCB0aGF0IHdvdWxkIG1h
-a2UgdGhpbmdzIGEgYml0IGRpZmZpY3VsdCwgS1ksIHBsZWFzZSB0ZXN0IHlvdXINCj4gPiA+IHBh
-dGNoZXMuLi4NCj4gPg0KPiA+IEdyZWcsDQo+ID4NCj4gPiBJIHB1bGxlZCBkb3duIHlvdXIgc3Rh
-Z2luZyB0cmVlIGVhcmxpZXIgdG9kYXkgdGhhdCBoYWQgYWxsIHRoZSBzdG9ydnNjIHBhdGNoZXMN
-Cj4gdGhhdCB5b3UNCj4gPiBjaGVja2VkIGluIHllc3RlcmRheSwgYXBwbGllZCB0aGlzIHBhdGNo
-IGFuZCBidWlsdCBpdCAoc3VjY2Vzc2Z1bGx5KS4NCj4gDQo+IFlvdSdyZSBsZWF2aW5nIHJlbW5h
-bnRzIGluIHN0YWdpbmcuDQo+IA0KPiBNb3ZlIHRoZSBkYW1uIHRoaW5nIGFuZCBwdWxsIHRoZSBj
-b25maWcgb3B0aW9ucyBmcm9tIHN0YWdpbmcgd2hlbiB5b3UNCj4gcHV0IHRoZW0gaW4gU0NTSS4N
-Cg0KSSBoYXZlIG5vdyBhbHNvIHNlbnQgb3V0IGEgcGF0Y2ggdGhhdCBkb2VzIHdoYXQgeW91IGFy
-ZSBzdWdnZXN0aW5nIGhlcmUuIA0KDQpSZWdhcmRzLA0KDQpLLiBZDQogDQoNCg==
+The storage driver (storvsc_drv.c) handles all block storage devices
+assigned to Linux guests hosted on Hyper-V. This driver has been in the
+staging tree for a while and this patch moves it out of the staging area.
+
+James was willing to apply this patch during the 3.3-rc phase and a decision
+was taken to defer this to 3.4 since Greg had queued up a bunch of storvsc
+patches for 3.4. Now that Greg has applied all of the pending storvsc patches,
+I am sending this patch to move this driver out of staging. Based on James'
+recommendation, this patch gets rid of the unneeded files in the staging/hv
+directory.
+
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/scsi/Kconfig                       |    7 +++++++
+ drivers/scsi/Makefile                      |    3 +++
+ drivers/{staging/hv => scsi}/storvsc_drv.c |    0
+ drivers/staging/Kconfig                    |    2 --
+ drivers/staging/Makefile                   |    1 -
+ drivers/staging/hv/Kconfig                 |    5 -----
+ drivers/staging/hv/Makefile                |    3 ---
+ drivers/staging/hv/TODO                    |    5 -----
+ 8 files changed, 10 insertions(+), 16 deletions(-)
+ rename drivers/{staging/hv => scsi}/storvsc_drv.c (100%)
+ delete mode 100644 drivers/staging/hv/Kconfig
+ delete mode 100644 drivers/staging/hv/Makefile
+ delete mode 100644 drivers/staging/hv/TODO
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 16570aa..d3d18e8 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -662,6 +662,13 @@ config VMWARE_PVSCSI
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called vmw_pvscsi.
+ 
++config HYPERV_STORAGE
++	tristate "Microsoft Hyper-V virtual storage driver"
++	depends on SCSI && HYPERV
++	default HYPERV
++	help
++	  Select this option to enable the Hyper-V virtual storage driver.
++
+ config LIBFC
+ 	tristate "LibFC module"
+ 	select SCSI_FC_ATTRS
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 2b88749..e4c1a69 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -142,6 +142,7 @@ obj-$(CONFIG_SCSI_BNX2_ISCSI)	+= libiscsi.o bnx2i/
+ obj-$(CONFIG_BE2ISCSI)		+= libiscsi.o be2iscsi/
+ obj-$(CONFIG_SCSI_PMCRAID)	+= pmcraid.o
+ obj-$(CONFIG_VMWARE_PVSCSI)	+= vmw_pvscsi.o
++obj-$(CONFIG_HYPERV_STORAGE)	+= hv_storvsc.o
+ 
+ obj-$(CONFIG_ARM)		+= arm/
+ 
+@@ -170,6 +171,8 @@ scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
+ scsi_mod-y			+= scsi_trace.o
+ scsi_mod-$(CONFIG_PM)		+= scsi_pm.o
+ 
++hv_storvsc-y			:= storvsc_drv.o
++
+ scsi_tgt-y			+= scsi_tgt_lib.o scsi_tgt_if.o
+ 
+ sd_mod-objs	:= sd.o
+diff --git a/drivers/staging/hv/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+similarity index 100%
+rename from drivers/staging/hv/storvsc_drv.c
+rename to drivers/scsi/storvsc_drv.c
+diff --git a/drivers/staging/Kconfig b/drivers/staging/Kconfig
+index 783bc0a..eb914ce 100644
+--- a/drivers/staging/Kconfig
++++ b/drivers/staging/Kconfig
+@@ -78,8 +78,6 @@ source "drivers/staging/vt6655/Kconfig"
+ 
+ source "drivers/staging/vt6656/Kconfig"
+ 
+-source "drivers/staging/hv/Kconfig"
+-
+ source "drivers/staging/vme/Kconfig"
+ 
+ source "drivers/staging/sep/Kconfig"
+diff --git a/drivers/staging/Makefile b/drivers/staging/Makefile
+index 077a3f3..e6f14f5 100644
+--- a/drivers/staging/Makefile
++++ b/drivers/staging/Makefile
+@@ -30,7 +30,6 @@ obj-$(CONFIG_USB_SERIAL_QUATECH_USB2)	+= quatech_usb2/
+ obj-$(CONFIG_OCTEON_ETHERNET)	+= octeon/
+ obj-$(CONFIG_VT6655)		+= vt6655/
+ obj-$(CONFIG_VT6656)		+= vt6656/
+-obj-$(CONFIG_HYPERV)		+= hv/
+ obj-$(CONFIG_VME_BUS)		+= vme/
+ obj-$(CONFIG_DX_SEP)            += sep/
+ obj-$(CONFIG_IIO)		+= iio/
+diff --git a/drivers/staging/hv/Kconfig b/drivers/staging/hv/Kconfig
+deleted file mode 100644
+index 60ac479..0000000
+--- a/drivers/staging/hv/Kconfig
++++ /dev/null
+@@ -1,5 +0,0 @@
+-config HYPERV_STORAGE
+-	tristate "Microsoft Hyper-V virtual storage driver"
+-	depends on HYPERV && SCSI
+-	help
+-	 Select this option to enable the Hyper-V virtual storage driver.
+diff --git a/drivers/staging/hv/Makefile b/drivers/staging/hv/Makefile
+deleted file mode 100644
+index af95a6b..0000000
+--- a/drivers/staging/hv/Makefile
++++ /dev/null
+@@ -1,3 +0,0 @@
+-obj-$(CONFIG_HYPERV_STORAGE)	+= hv_storvsc.o
+-
+-hv_storvsc-y := storvsc_drv.o
+diff --git a/drivers/staging/hv/TODO b/drivers/staging/hv/TODO
+deleted file mode 100644
+index dea7d92..0000000
+--- a/drivers/staging/hv/TODO
++++ /dev/null
+@@ -1,5 +0,0 @@
+-TODO:
+-	- audit the scsi driver
+-
+-Please send patches for this code to Greg Kroah-Hartman <gregkh@suse.de>,
+-Haiyang Zhang <haiyangz@microsoft.com>, and K. Y. Srinivasan <kys@microsoft.com>
+-- 
+1.7.4.1
 
