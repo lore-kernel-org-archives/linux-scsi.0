@@ -1,50 +1,47 @@
 From: Mike Snitzer <snitzer@redhat.com>
 Subject: Re: [PATCH 1/5] block: Implement support for WRITE SAME
-Date: Wed, 8 Feb 2012 22:33:52 -0500
-Message-ID: <20120209033352.GA17456@redhat.com>
+Date: Wed, 8 Feb 2012 22:40:28 -0500
+Message-ID: <20120209034028.GB17456@redhat.com>
 References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
  <1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
- <20120208225023.GA16401@redhat.com>
- <yq139akor65.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58915 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:28404 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757610Ab2BIDeD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Feb 2012 22:34:03 -0500
+	id S1757896Ab2BIDkd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Feb 2012 22:40:33 -0500
 Content-Disposition: inline
-In-Reply-To: <yq139akor65.fsf@sermon.lab.mkp.net>
+In-Reply-To: <1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com
 
-On Wed, Feb 08 2012 at  6:12pm -0500,
+On Mon, Jan 30 2012 at  7:31pm -0500,
 Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-> >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
-> 
-> >> + BUG_ON(length != bdev_logical_block_size(bdev));
-> 
-> Mike> Why require @length to be passed in if we can easily determine the
-> Mike> only correct length, via bdev_logical_block_size, locally?
-> 
-> Just sanity checking since the caller is passing in a buffer pointer.
-> See my comment in the patch series introduction about a page vs a
-> buffer. I don't really care whether we pick one or the other. Whatever
-> makes the most sense to dm, md and the filesystems...
+> diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
+> index c1eb41c..e5f4194 100644
+> --- a/Documentation/ABI/testing/sysfs-block
+> +++ b/Documentation/ABI/testing/sysfs-block
+> @@ -206,3 +206,16 @@ Description:
+>  		when a discarded area is read the discard_zeroes_data
+>  		parameter will be set to one. Otherwise it will be 0 and
+>  		the result of reading a discarded area is undefined.
+> +
+> +What:		/sys/block/<disk>/queue/max_write_same_bytes
+> +Date:		January 2012
+> +Contact:	Martin K. Petersen <martin.petersen@oracle.com>
+> +Description:
+> +		Some devices support a write same operation in which a
+> +		single data block can be written to a range of several
+> +		contiguous blocks on storage. This can be used to wipe
+> +		areas on disk or to initialize drives in a RAID
+> +		configuration. max_write_same_bytes indicates how many
+> +		bytes can be written in a single write same command. If
+> +		max_write_same_bytes is 0, write same is not supported
+> +		by the device.
 
-OK, I see -- might make sense to use a page.  But I don't have a
-strong opinion (and not sure I will have one in the near-term).
-
-I wrote a patch for dm-kcopyd (and dm-io) to add support for WRITE_SAME,
-but it doesn't use the new blkdev_* interfaces you've provided -- only
-because I needed to wire it up to dm-thinp which uses dm_kcopyd_zero()
-to provide async zeroing.
-
-So the patch open codes a small portion of bio prep code from
-blkdev_issue_write_same() in dm-io's do_region().  I'll post it once I
-verify it works.
-
-Mike
+How about write_same_max_bytes to follow the pattern established with
+/sys/block/<disk>/queue/discard_max_bytes?
