@@ -1,60 +1,72 @@
 From: Lee Duncan <lduncan@suse.com>
 Subject: Re: [PATCH] SCSI, st: modify tape driver to allow writing immediate
  filemarks
-Date: Thu, 09 Feb 2012 09:22:39 -0800
-Message-ID: <4F3400DF.9080603@suse.com>
-References: <4F31CAC0.3010905@suse.com> <1328663723.27428.2.camel@joe2Laptop>
+Date: Thu, 09 Feb 2012 09:43:37 -0800
+Message-ID: <4F3405C9.3020606@suse.com>
+References: <4F31CAC0.3010905@suse.com> <alpine.LNX.2.00.1202081910400.6087@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1328663723.27428.2.camel@joe2Laptop>
+In-Reply-To: <alpine.LNX.2.00.1202081910400.6087@kai.makisara.local>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Joe:
-
-Thanks for the quick review.
-
-On 02/07/2012 05:15 PM, Joe Perches wrote:
-> On Tue, 2012-02-07 at 17:07 -0800, Lee Duncan wrote:
+On 02/08/2012 09:19 AM, Kai Makisara wrote:
+> On Tue, 7 Feb 2012, Lee Duncan wrote:
+> 
 >> Add an st module option st_nowait_eof which defaults to 0. Setting this
 >> option to 1 tells the st driver not to wait when writing a filemark, which
 >> can result in much faster times on streaming tape drives.
-> 
-> trivial comments:
-> 
->> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> []
->> @@ -81,6 +81,7 @@ static int max_sg_segs;
->>  static int try_direct_io = TRY_DIRECT_IO;
->>  static int try_rdio = 1;
->>  static int try_wdio = 1;
->> +static int st_nowait_eof = 0;
-> 
-> Could be bool.
+>>
+>> Legacy applications cannot take advantage of the newer MTWEOFI ioctl, so this
+>> patch gives such applications the ability to write an immediate EOF using the
+>> normal MTWEOF ioctl if they set st_nowait_eof=1.
+>>
+>> Reference: https://bugzilla.novell.com/show_bug.cgi?id=688996
+>>
+> Is there a real application? I can't open your reference. (Yes, I know 
+> that this feature can speed up writing dramatically in some cases, but is 
+> there a case with legacy applications?)
 
-In both this case and the one you site below, the existing variables are
-not bool. I'd rather see new variables match existing variables, in
-naming, type, and usage. Next major update of the driver, I'd like to
-see all of these bools-in-use fixed.
+Yes, there are real applications. My apologies for supplying a Reference
+to a non-public bug listing. This bug appeared because SAN backup
+software was writing to an LT04 tape drive, but performance sucked.
+
+I was able to reproduce the problem with a simple program that wrote a
+megabyte then an EOF to my LT04, then a megabyte then another EOF. Any
+tape backup or copy program that uses this basic pattern will exhibit
+this problem.
 
 > 
->> @@ -1106,6 +1109,11 @@ static int check_tape(struct scsi_tape *STp, struct file *filp)
->>                                      STp->drv_buffer));
->>  		}
->>  		STp->drv_write_prot = ((STp->buffer)->b_data[2] & 0x80) != 0;
->> +		if (!STp->drv_buffer && STp->immediate_filemark) {
->> +			printk(KERN_WARNING "%s: non-buffered tape: "
->> +			    "disabling writing immediate filemarks", name);
+> Anyway, I don't think this should be implemented as a pure module option. 
+> The standard semantics specify that MTWEOF is a synchronization point and 
+> this module option breaks that for all users.
+
+The Standard specifies that writing a filemark (i.e. an EOF) is a
+synchronization point if and only if the data is being written in
+immediate mode. In other words, you are not supposed to set both
+immediate writes and immediate EOFs. This is why I didn't overload the
+already-existing "immediate" flag in the driver.
+
+I will add a check to the driver to disallow immediate EOFs if immediate
+writes are requested.
+
 > 
-> Needs terminating "\n" and it's better to coalesce the
-> format and ignore 80 char lines to make arbitrary greps
-> a bit easier.
+> The driver supports several tape device files with different properties 
+> that can be set at run-time. Why not implement this as one of the mode 
+> options? This would allow the "normal" users to use a device file with 
+> synchronizing MTWEOF and the users needing unsynchronizing MTWEOF would 
+> use another device file.
+> 
+> The st driver exports the options in sysfs. This is important so that the 
+> users can check what the options for a device are. This new option should 
+> also be exported.
+> 
+> Kai
 
-Good catch. Thanks.
-
+Thanks, Kai. I agree with this. I will update my patch and resubmit.
 -- 
 Lee Duncan
