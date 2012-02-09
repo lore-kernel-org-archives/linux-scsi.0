@@ -1,222 +1,65 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 03/11] qla2xxx: Add an "is reset active" helper.
-Date: Thu, 9 Feb 2012 11:14:05 -0800
-Message-ID: <1328814853-21764-4-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 08/11] qla2xxx: Complete mailbox command timedout to avoid initialization failures during next reset cycle.
+Date: Thu, 9 Feb 2012 11:14:10 -0800
+Message-ID: <1328814853-21764-9-git-send-email-chad.dupuis@qlogic.com>
 References: <1328814853-21764-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:40113
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:30396
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758391Ab2BITaa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:30:30 -0500
-Received: from mail177-ch1 (localhost [127.0.0.1])	by
- mail177-ch1-R.bigfish.com (Postfix) with ESMTP id 29A641A01E8	for
- <linux-scsi@vger.kernel.org>; Thu,  9 Feb 2012 19:30:30 +0000 (UTC)
+	by vger.kernel.org with ESMTP id S1758300Ab2BITa3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:30:29 -0500
+Received: from mail158-ch1 (localhost [127.0.0.1])	by
+ mail158-ch1-R.bigfish.com (Postfix) with ESMTP id D2B923400C9	for
+ <linux-scsi@vger.kernel.org>; Thu,  9 Feb 2012 19:30:28 +0000 (UTC)
 In-Reply-To: <1328814853-21764-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Many locations within the driver would use an inconsistent set of
-checks to determine ISP-reset state.  Consolidate the checks into
-this inline-helper.
+Complete the mailbox command timed out before initiating another abort cycle
+to recover so that mailbox commands issued during next reset cycle don't fail
+due to pending mailbox access timeout.
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c   |   13 +++------
- drivers/scsi/qla2xxx/qla_bsg.c    |   50 ++++++------------------------------
- drivers/scsi/qla2xxx/qla_dbg.c    |    3 +-
- drivers/scsi/qla2xxx/qla_inline.h |   13 +++++++++
- 4 files changed, 28 insertions(+), 51 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index a2f1b30..9f41b3b 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1036,8 +1036,7 @@ qla2x00_link_state_show(struct device *dev, struct device_attribute *attr,
- 	    vha->device_flags & DFLG_NO_CABLE)
- 		len = snprintf(buf, PAGE_SIZE, "Link Down\n");
- 	else if (atomic_read(&vha->loop_state) != LOOP_READY ||
--	    test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
--	    test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags))
-+	    qla2x00_reset_active(vha))
- 		len = snprintf(buf, PAGE_SIZE, "Unknown Link State\n");
- 	else {
- 		len = snprintf(buf, PAGE_SIZE, "Link Up - ");
-@@ -1359,8 +1358,7 @@ qla2x00_thermal_temp_show(struct device *dev,
- 		return snprintf(buf, PAGE_SIZE, "\n");
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 8635722..08f1d01 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -342,6 +342,8 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
  
- 	temp = frac = 0;
--	if (test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
--	    test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags))
-+	if (qla2x00_reset_active(vha))
- 		ql_log(ql_log_warn, vha, 0x707b,
- 		    "ISP reset active.\n");
- 	else if (!vha->hw->flags.eeh_busy)
-@@ -1379,8 +1377,7 @@ qla2x00_fw_state_show(struct device *dev, struct device_attribute *attr,
- 	int rval = QLA_FUNCTION_FAILED;
- 	uint16_t state[5];
- 
--	if (test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
--		test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags))
-+	if (qla2x00_reset_active(vha))
- 		ql_log(ql_log_warn, vha, 0x707c,
- 		    "ISP reset active.\n");
- 	else if (!vha->hw->flags.eeh_busy)
-@@ -1693,9 +1690,7 @@ qla2x00_get_fc_host_stats(struct Scsi_Host *shost)
- 	if (IS_FWI2_CAPABLE(ha)) {
- 		rval = qla24xx_get_isp_stats(base_vha, stats, stats_dma);
- 	} else if (atomic_read(&base_vha->loop_state) == LOOP_READY &&
--		    !test_bit(ABORT_ISP_ACTIVE, &base_vha->dpc_flags) &&
--		    !test_bit(ISP_ABORT_NEEDED, &base_vha->dpc_flags) &&
--		    !ha->dpc_active) {
-+	    !qla2x00_reset_active(vha) && !ha->dpc_active) {
- 		/* Must be in a 'READY' state for statistics retrieval. */
- 		rval = qla2x00_get_link_status(base_vha, base_vha->loop_id,
- 						stats, stats_dma);
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index b1d0f93..1682e2e 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -108,13 +108,6 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
- 		goto exit_fcp_prio_cfg;
+ 				set_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags);
+ 				clear_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
++				/* Allow next mbx cmd to come in. */
++				complete(&ha->mbx_cmd_comp);
+ 				if (ha->isp_ops->abort_isp(vha)) {
+ 					/* Failed. retry later. */
+ 					set_bit(ISP_ABORT_NEEDED,
+@@ -350,6 +352,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 				clear_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags);
+ 				ql_dbg(ql_dbg_mbx, base_vha, 0x101f,
+ 				    "Finished abort_isp.\n");
++				goto mbx_done;
+ 			}
+ 		}
  	}
+@@ -358,6 +361,7 @@ premature_exit:
+ 	/* Allow next mbx cmd to come in. */
+ 	complete(&ha->mbx_cmd_comp);
  
--	if (test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
--		test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
--		test_bit(ISP_ABORT_RETRY, &vha->dpc_flags)) {
--		ret = -EBUSY;
--		goto exit_fcp_prio_cfg;
--	}
--
- 	/* Get the sub command */
- 	oper = bsg_job->request->rqst_data.h_vendor.vendor_cmd[1];
- 
-@@ -646,13 +639,6 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 	dma_addr_t rsp_data_dma;
- 	uint32_t rsp_data_len;
- 
--	if (test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
--		test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
--		test_bit(ISP_ABORT_RETRY, &vha->dpc_flags)) {
--		ql_log(ql_log_warn, vha, 0x7018, "Abort active or needed.\n");
--		return -EBUSY;
--	}
--
- 	if (!vha->flags.online) {
- 		ql_log(ql_log_warn, vha, 0x7019, "Host is not online.\n");
- 		return -EIO;
-@@ -874,13 +860,6 @@ qla84xx_reset(struct fc_bsg_job *bsg_job)
- 	int rval = 0;
- 	uint32_t flag;
- 
--	if (test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
--	    test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
--	    test_bit(ISP_ABORT_RETRY, &vha->dpc_flags)) {
--		ql_log(ql_log_warn, vha, 0x702e, "Abort active or needed.\n");
--		return -EBUSY;
--	}
--
- 	if (!IS_QLA84XX(ha)) {
- 		ql_dbg(ql_dbg_user, vha, 0x702f, "Not 84xx, exiting.\n");
- 		return -EINVAL;
-@@ -922,11 +901,6 @@ qla84xx_updatefw(struct fc_bsg_job *bsg_job)
- 	uint32_t flag;
- 	uint32_t fw_ver;
- 
--	if (test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
--		test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
--		test_bit(ISP_ABORT_RETRY, &vha->dpc_flags))
--		return -EBUSY;
--
- 	if (!IS_QLA84XX(ha)) {
- 		ql_dbg(ql_dbg_user, vha, 0x7032,
- 		    "Not 84xx, exiting.\n");
-@@ -1036,14 +1010,6 @@ qla84xx_mgmt_cmd(struct fc_bsg_job *bsg_job)
- 	uint32_t data_len = 0;
- 	uint32_t dma_direction = DMA_NONE;
- 
--	if (test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
--		test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
--		test_bit(ISP_ABORT_RETRY, &vha->dpc_flags)) {
--		ql_log(ql_log_warn, vha, 0x7039,
--		    "Abort active or needed.\n");
--		return -EBUSY;
--	}
--
- 	if (!IS_QLA84XX(ha)) {
- 		ql_log(ql_log_warn, vha, 0x703a,
- 		    "Not 84xx, exiting.\n");
-@@ -1246,13 +1212,6 @@ qla24xx_iidma(struct fc_bsg_job *bsg_job)
- 
- 	bsg_job->reply->reply_payload_rcv_len = 0;
- 
--	if (test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
--		test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
--		test_bit(ISP_ABORT_RETRY, &vha->dpc_flags)) {
--		ql_log(ql_log_warn, vha, 0x7045, "abort active or needed.\n");
--		return -EBUSY;
--	}
--
- 	if (!IS_IIDMA_CAPABLE(vha->hw)) {
- 		ql_log(ql_log_info, vha, 0x7046, "iiDMA not supported.\n");
- 		return -EINVAL;
-@@ -1668,6 +1627,15 @@ qla24xx_bsg_request(struct fc_bsg_job *bsg_job)
- 		vha = shost_priv(host);
- 	}
- 
-+	if (qla2x00_reset_active(vha)) {
-+		ql_dbg(ql_dbg_user, vha, 0x709f,
-+		    "BSG: ISP abort active/needed -- cmd=%d.\n",
-+		    bsg_job->request->msgcode);
-+		bsg_job->reply->result = (DID_ERROR << 16);
-+		bsg_job->job_done(bsg_job);
-+		return -EBUSY;
-+	}
-+
- 	ql_dbg(ql_dbg_user, vha, 0x7000,
- 	    "Entered %s msgcode=0x%x.\n", __func__, bsg_job->request->msgcode);
- 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 7c54624..45cbf0b 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -19,7 +19,8 @@
-  * | DPC Thread                   |       0x401c       |		|
-  * | Async Events                 |       0x5057       | 0x5052		|
-  * | Timer Routines               |       0x6011       | 0x600e,0x600f  |
-- * | User Space Interactions      |       0x709e       |		|
-+ * | User Space Interactions      |       0x709e       | 0x7018,0x702e  |
-+ * |                              |                    | 0x7039,0x7045  |
-  * | Task Management              |       0x803c       | 0x8025-0x8026  |
-  * |                              |                    | 0x800b,0x8039  |
-  * | AER/EEH                      |       0x900f       |		|
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index 9902834..7cc4f36 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -131,3 +131,16 @@ qla2x00_hba_err_chk_enabled(srb_t *sp)
- 	}
- 	return 0;
- }
-+
-+static inline int
-+qla2x00_reset_active(scsi_qla_host_t *vha)
-+{
-+	scsi_qla_host_t *base_vha = pci_get_drvdata(vha->hw->pdev);
-+
-+	/* Test appropriate base-vha and vha flags. */
-+	return test_bit(ISP_ABORT_NEEDED, &base_vha->dpc_flags) ||
-+	    test_bit(ABORT_ISP_ACTIVE, &base_vha->dpc_flags) ||
-+	    test_bit(ISP_ABORT_RETRY, &base_vha->dpc_flags) ||
-+	    test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
-+	    test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags);
-+}
++mbx_done:
+ 	if (rval) {
+ 		ql_dbg(ql_dbg_mbx, base_vha, 0x1020,
+ 		    "**** Failed mbx[0]=%x, mb[1]=%x, mb[2]=%x, cmd=%x ****.\n",
 -- 
 1.6.0.2
 
