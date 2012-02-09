@@ -1,351 +1,47 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 07/29] qla2xxx: Handle change notifications based on switch scan results.
-Date: Thu, 9 Feb 2012 11:15:39 -0800
-Message-ID: <1328814961-21866-8-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 21/29] qla2xxx: Perform firmware dump procedure on mailbox command timeout.
+Date: Thu, 9 Feb 2012 11:15:53 -0800
+Message-ID: <1328814961-21866-22-git-send-email-chad.dupuis@qlogic.com>
 References: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:42153
+Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:41066
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758400Ab2BITcK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:10 -0500
-Received: from mail32-ch1 (localhost [127.0.0.1])	by mail32-ch1-R.bigfish.com
- (Postfix) with ESMTP id 0C70B80472	for <linux-scsi@vger.kernel.org>; Thu,  9
- Feb 2012 19:32:10 +0000 (UTC)
+	by vger.kernel.org with ESMTP id S1758407Ab2BITcM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:12 -0500
+Received: from mail124-ch1 (localhost [127.0.0.1])	by
+ mail124-ch1-R.bigfish.com (Postfix) with ESMTP id B859C20209	for
+ <linux-scsi@vger.kernel.org>; Thu,  9 Feb 2012 19:32:11 +0000 (UTC)
 In-Reply-To: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Arun Easi <arun.easi@qlogic.com>
-
-Instead of processing each RSCN individually, use only the name server results
-from the switch to tell the existance of a given fcport.
-
-Signed-off-by: Arun Easi <arun.easi@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |    9 +--
- drivers/scsi/qla2xxx/qla_init.c |  136 ++++-----------------------------------
- drivers/scsi/qla2xxx/qla_isr.c  |   12 ----
- 3 files changed, 13 insertions(+), 144 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 6704ef8..7a224b7 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -127,7 +127,6 @@
- #define WWN_SIZE		8	/* Size of WWPN, WWN & WWNN */
- #define MAX_FIBRE_DEVICES	512
- #define MAX_FIBRE_LUNS  	0xFFFF
--#define	MAX_RSCN_COUNT		32
- #define	MAX_HOST_COUNT		16
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 957a4b8..adc2b14 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -277,6 +277,12 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 		    "mb[0] = 0x%x.\n", mb0);
+ 		ql_dump_regs(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1019);
  
- /*
-@@ -1720,6 +1719,7 @@ typedef struct fc_port {
- 
- 	uint16_t vp_idx;
- 	uint8_t fc4_type;
-+	uint8_t scan_state;
- } fc_port_t;
- 
- /*
-@@ -2877,7 +2877,6 @@ typedef struct scsi_qla_host {
- 	volatile struct {
- 		uint32_t	init_done		:1;
- 		uint32_t	online			:1;
--		uint32_t	rscn_queue_overflow	:1;
- 		uint32_t	reset_active		:1;
- 
- 		uint32_t	management_server_logged_in :1;
-@@ -2931,11 +2930,6 @@ typedef struct scsi_qla_host {
- 
- 
- 
--	/* RSCN queue. */
--	uint32_t rscn_queue[MAX_RSCN_COUNT];
--	uint8_t rscn_in_ptr;
--	uint8_t rscn_out_ptr;
--
- 	/* Timeout timers. */
- 	uint8_t         loop_down_abort_time;    /* port down timer */
- 	atomic_t        loop_down_timer;         /* loop down timer */
-@@ -3031,7 +3025,6 @@ typedef struct scsi_qla_host {
- #define QLA_ABORTED			0x105
- #define QLA_SUSPENDED			0x106
- #define QLA_BUSY			0x107
--#define QLA_RSCNS_HANDLED		0x108
- #define QLA_ALREADY_REGISTERED		0x109
- 
- #define NVRAM_DELAY()		udelay(10)
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 4837b58..ff841d7 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -29,7 +29,6 @@ static int qla2x00_configure_loop(scsi_qla_host_t *);
- static int qla2x00_configure_local_loop(scsi_qla_host_t *);
- static int qla2x00_configure_fabric(scsi_qla_host_t *);
- static int qla2x00_find_all_fabric_devs(scsi_qla_host_t *, struct list_head *);
--static int qla2x00_device_resync(scsi_qla_host_t *);
- static int qla2x00_fabric_dev_login(scsi_qla_host_t *, fc_port_t *,
-     uint16_t *);
- 
-@@ -1755,7 +1754,6 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 	struct qla_hw_data *ha = vha->hw;
- 	struct req_que *req;
- 	struct rsp_que *rsp;
--	struct scsi_qla_host *vp;
- 	struct mid_init_cb_24xx *mid_init_cb =
- 	    (struct mid_init_cb_24xx *) ha->init_cb;
- 
-@@ -1786,11 +1784,6 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 	}
- 
- 	spin_lock(&ha->vport_slock);
--	/* Clear RSCN queue. */
--	list_for_each_entry(vp, &ha->vp_list, list) {
--		vp->rscn_in_ptr = 0;
--		vp->rscn_out_ptr = 0;
--	}
- 
- 	spin_unlock(&ha->vport_slock);
- 
-@@ -2551,13 +2544,11 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 	if (ha->current_topology == ISP_CFG_FL &&
- 	    (test_bit(LOCAL_LOOP_UPDATE, &flags))) {
- 
--		vha->flags.rscn_queue_overflow = 1;
- 		set_bit(RSCN_UPDATE, &flags);
- 
- 	} else if (ha->current_topology == ISP_CFG_F &&
- 	    (test_bit(LOCAL_LOOP_UPDATE, &flags))) {
- 
--		vha->flags.rscn_queue_overflow = 1;
- 		set_bit(RSCN_UPDATE, &flags);
- 		clear_bit(LOCAL_LOOP_UPDATE, &flags);
- 
-@@ -2567,7 +2558,6 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 	} else if (!vha->flags.online ||
- 	    (test_bit(ABORT_ISP_ACTIVE, &flags))) {
- 
--		vha->flags.rscn_queue_overflow = 1;
- 		set_bit(RSCN_UPDATE, &flags);
- 		set_bit(LOCAL_LOOP_UPDATE, &flags);
- 	}
-@@ -2617,8 +2607,6 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
- 		if (test_bit(RSCN_UPDATE, &save_flags)) {
- 			set_bit(RSCN_UPDATE, &vha->dpc_flags);
--			if (!IS_ALOGIO_CAPABLE(ha))
--				vha->flags.rscn_queue_overflow = 1;
- 		}
- 	}
- 
-@@ -2926,7 +2914,7 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
- static int
- qla2x00_configure_fabric(scsi_qla_host_t *vha)
- {
--	int	rval, rval2;
-+	int	rval;
- 	fc_port_t	*fcport, *fcptemp;
- 	uint16_t	next_loopid;
- 	uint16_t	mb[MAILBOX_REGISTER_COUNT];
-@@ -2950,12 +2938,6 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 	}
- 	vha->device_flags |= SWITCH_FOUND;
- 
--	/* Mark devices that need re-synchronization. */
--	rval2 = qla2x00_device_resync(vha);
--	if (rval2 == QLA_RSCNS_HANDLED) {
--		/* No point doing the scan, just continue. */
--		return (QLA_SUCCESS);
--	}
- 	do {
- 		/* FDMI support. */
- 		if (ql2xfdmienable &&
-@@ -2999,6 +2981,13 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 			}
- 		}
- 
-+#define QLA_FCPORT_SCAN		1
-+#define QLA_FCPORT_FOUND	2
++		/*
++		 * Attempt to capture a firmware dump for further analysis
++		 * of the current firmware state
++		 */
++		ha->isp_ops->fw_dump(vha, 0);
 +
-+		list_for_each_entry(fcport, &vha->vp_fcports, list) {
-+			fcport->scan_state = QLA_FCPORT_SCAN;
-+		}
-+
- 		rval = qla2x00_find_all_fabric_devs(vha, &new_fcports);
- 		if (rval != QLA_SUCCESS)
- 			break;
-@@ -3014,7 +3003,8 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0)
- 				continue;
+ 		rval = QLA_FUNCTION_TIMEOUT;
+ 	}
  
--			if (atomic_read(&fcport->state) == FCS_DEVICE_LOST) {
-+			if (fcport->scan_state == QLA_FCPORT_SCAN &&
-+			    atomic_read(&fcport->state) == FCS_ONLINE) {
- 				qla2x00_mark_device_lost(vha, fcport,
- 				    ql2xplogiabsentdevice, 0);
- 				if (fcport->loop_id != FC_NO_LOOP_ID &&
-@@ -3287,6 +3277,8 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
- 			    WWN_SIZE))
- 				continue;
- 
-+			fcport->scan_state = QLA_FCPORT_FOUND;
-+
- 			found++;
- 
- 			/* Update port state. */
-@@ -3443,110 +3435,6 @@ qla2x00_find_new_loop_id(scsi_qla_host_t *vha, fc_port_t *dev)
- }
- 
- /*
-- * qla2x00_device_resync
-- *	Marks devices in the database that needs resynchronization.
-- *
-- * Input:
-- *	ha = adapter block pointer.
-- *
-- * Context:
-- *	Kernel context.
-- */
--static int
--qla2x00_device_resync(scsi_qla_host_t *vha)
--{
--	int	rval;
--	uint32_t mask;
--	fc_port_t *fcport;
--	uint32_t rscn_entry;
--	uint8_t rscn_out_iter;
--	uint8_t format;
--	port_id_t d_id = {};
--
--	rval = QLA_RSCNS_HANDLED;
--
--	while (vha->rscn_out_ptr != vha->rscn_in_ptr ||
--	    vha->flags.rscn_queue_overflow) {
--
--		rscn_entry = vha->rscn_queue[vha->rscn_out_ptr];
--		format = MSB(MSW(rscn_entry));
--		d_id.b.domain = LSB(MSW(rscn_entry));
--		d_id.b.area = MSB(LSW(rscn_entry));
--		d_id.b.al_pa = LSB(LSW(rscn_entry));
--
--		ql_dbg(ql_dbg_disc, vha, 0x2020,
--		    "RSCN queue entry[%d] = [%02x/%02x%02x%02x].\n",
--		    vha->rscn_out_ptr, format, d_id.b.domain, d_id.b.area,
--		    d_id.b.al_pa);
--
--		vha->rscn_out_ptr++;
--		if (vha->rscn_out_ptr == MAX_RSCN_COUNT)
--			vha->rscn_out_ptr = 0;
--
--		/* Skip duplicate entries. */
--		for (rscn_out_iter = vha->rscn_out_ptr;
--		    !vha->flags.rscn_queue_overflow &&
--		    rscn_out_iter != vha->rscn_in_ptr;
--		    rscn_out_iter = (rscn_out_iter ==
--			(MAX_RSCN_COUNT - 1)) ? 0: rscn_out_iter + 1) {
--
--			if (rscn_entry != vha->rscn_queue[rscn_out_iter])
--				break;
--
--			ql_dbg(ql_dbg_disc, vha, 0x2021,
--			    "Skipping duplicate RSCN queue entry found at "
--			    "[%d].\n", rscn_out_iter);
--
--			vha->rscn_out_ptr = rscn_out_iter;
--		}
--
--		/* Queue overflow, set switch default case. */
--		if (vha->flags.rscn_queue_overflow) {
--			ql_dbg(ql_dbg_disc, vha, 0x2022,
--			    "device_resync: rscn overflow.\n");
--
--			format = 3;
--			vha->flags.rscn_queue_overflow = 0;
--		}
--
--		switch (format) {
--		case 0:
--			mask = 0xffffff;
--			break;
--		case 1:
--			mask = 0xffff00;
--			break;
--		case 2:
--			mask = 0xff0000;
--			break;
--		default:
--			mask = 0x0;
--			d_id.b24 = 0;
--			vha->rscn_out_ptr = vha->rscn_in_ptr;
--			break;
--		}
--
--		rval = QLA_SUCCESS;
--
--		list_for_each_entry(fcport, &vha->vp_fcports, list) {
--			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0 ||
--			    (fcport->d_id.b24 & mask) != d_id.b24 ||
--			    fcport->port_type == FCT_BROADCAST)
--				continue;
--
--			if (atomic_read(&fcport->state) == FCS_ONLINE) {
--				if (format != 3 ||
--				    fcport->port_type != FCT_INITIATOR) {
--					qla2x00_mark_device_lost(vha, fcport,
--					    0, 0);
--				}
--			}
--		}
--	}
--	return (rval);
--}
--
--/*
-  * qla2x00_fabric_dev_login
-  *	Login fabric target device and update FC port database.
-  *
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index d16b8dc..18d5c1f 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -328,7 +328,6 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
- 	struct device_reg_24xx __iomem *reg24 = &ha->iobase->isp24;
- 	struct device_reg_82xx __iomem *reg82 = &ha->iobase->isp82;
- 	uint32_t	rscn_entry, host_pid;
--	uint8_t		rscn_queue_index;
- 	unsigned long	flags;
- 
- 	/* Setup to process RIO completion. */
-@@ -685,8 +684,6 @@ skip_rio:
- 
- 		qla2x00_mark_all_devices_lost(vha, 1);
- 
--		vha->flags.rscn_queue_overflow = 1;
--
- 		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
- 		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
- 		break;
-@@ -715,15 +712,6 @@ skip_rio:
- 
- 		/* Ignore reserved bits from RSCN-payload. */
- 		rscn_entry = ((mb[1] & 0x3ff) << 16) | mb[2];
--		rscn_queue_index = vha->rscn_in_ptr + 1;
--		if (rscn_queue_index == MAX_RSCN_COUNT)
--			rscn_queue_index = 0;
--		if (rscn_queue_index != vha->rscn_out_ptr) {
--			vha->rscn_queue[vha->rscn_in_ptr] = rscn_entry;
--			vha->rscn_in_ptr = rscn_queue_index;
--		} else {
--			vha->flags.rscn_queue_overflow = 1;
--		}
- 
- 		atomic_set(&vha->loop_down_timer, 0);
- 		vha->flags.management_server_logged_in = 0;
 -- 
 1.6.0.2
 
