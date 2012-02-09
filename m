@@ -1,17 +1,17 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 26/29] qla2xxx: Handle device mapping changes due to device logout.
-Date: Thu, 9 Feb 2012 11:15:58 -0800
-Message-ID: <1328814961-21866-27-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 14/29] qla2xxx: Print mailbox command opcode and return code when a command times out.
+Date: Thu, 9 Feb 2012 11:15:46 -0800
+Message-ID: <1328814961-21866-15-git-send-email-chad.dupuis@qlogic.com>
 References: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:3207
+Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:31841
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758400Ab2BITc1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:27 -0500
-Received: from mail70-ch1 (localhost [127.0.0.1])	by mail70-ch1-R.bigfish.com
- (Postfix) with ESMTP id 912601A0584	for <linux-scsi@vger.kernel.org>; Thu,  9
+	by vger.kernel.org with ESMTP id S1758449Ab2BITcO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:14 -0500
+Received: from mail42-ch1 (localhost [127.0.0.1])	by mail42-ch1-R.bigfish.com
+ (Postfix) with ESMTP id 5430B200147	for <linux-scsi@vger.kernel.org>; Thu,  9
  Feb 2012 19:32:13 +0000 (UTC)
 In-Reply-To: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,98 +19,53 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Arun Easi <arun.easi@qlogic.com>
-
-A device logout sent in the delete path of a fcport would clear the
-port handle binding inside the firmware. This could lead to queued
-work items for the fcport, if any, getting incorrect results. This
-patch fixes the issue by checking for device name changes after a
-call to get port database.
-
-Signed-off-by: Arun Easi <arun.easi@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |    8 ++++++++
- drivers/scsi/qla2xxx/qla_mbx.c  |   19 +++++++++++++++++++
- 2 files changed, 27 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c |   16 +++++++++-------
+ 1 files changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 2627c87..b946564 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -350,6 +350,13 @@ qla2x00_async_login_done(struct scsi_qla_host *vha, fc_port_t *fcport,
- 		 * requests.
- 		 */
- 		rval = qla2x00_get_port_database(vha, fcport, 0);
-+		if (rval == QLA_NOT_LOGGED_IN) {
-+			fcport->flags &= ~FCF_ASYNC_SENT;
-+			fcport->flags |= FCF_LOGIN_NEEDED;
-+			set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
-+			break;
-+		}
-+
- 		if (rval != QLA_SUCCESS) {
- 			qla2x00_post_async_logout_work(vha, fcport, NULL);
- 			qla2x00_post_async_login_work(vha, fcport, NULL);
-@@ -3318,6 +3325,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
- 			fcport->flags |= FCF_LOGIN_NEEDED;
- 			if (fcport->loop_id != FC_NO_LOOP_ID &&
- 			    (fcport->flags & FCF_FCP2_DEVICE) == 0 &&
-+			    (fcport->flags & FCF_ASYNC_SENT) == 0 &&
- 			    fcport->port_type != FCT_INITIATOR &&
- 			    fcport->port_type != FCT_BROADCAST) {
- 				ha->isp_ops->fabric_logout(vha, fcport->loop_id,
 diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index adc2b14..b4a2339 100644
+index 5470177..bde3eb2 100644
 --- a/drivers/scsi/qla2xxx/qla_mbx.c
 +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -1289,6 +1289,7 @@ qla2x00_get_port_database(scsi_qla_host_t *vha, fc_port_t *fcport, uint8_t opt)
- 		goto gpd_error_out;
+@@ -90,7 +90,8 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	if (!wait_for_completion_timeout(&ha->mbx_cmd_comp, mcp->tov * HZ)) {
+ 		/* Timeout occurred. Return error. */
+ 		ql_log(ql_log_warn, base_vha, 0x1005,
+-		    "Cmd access timeout, Exiting.\n");
++		    "Cmd access timeout, cmd=0x%x, Exiting.\n",
++		    mcp->mb[0]);
+ 		return QLA_FUNCTION_TIMEOUT;
+ 	}
  
- 	if (IS_FWI2_CAPABLE(ha)) {
-+		uint64_t zero = 0;
- 		pd24 = (struct port_database_24xx *) pd;
- 
- 		/* Check for logged in state. */
-@@ -1302,6 +1303,14 @@ qla2x00_get_port_database(scsi_qla_host_t *vha, fc_port_t *fcport, uint8_t opt)
- 			goto gpd_error_out;
- 		}
- 
-+		if (fcport->loop_id == FC_NO_LOOP_ID ||
-+		    (memcmp(fcport->port_name, (uint8_t *)&zero, 8) &&
-+		     memcmp(fcport->port_name, pd24->port_name, 8))) {
-+			/* We lost the device mid way. */
-+			rval = QLA_NOT_LOGGED_IN;
-+			goto gpd_error_out;
-+		}
-+
- 		/* Names are little-endian. */
- 		memcpy(fcport->node_name, pd24->node_name, WWN_SIZE);
- 		memcpy(fcport->port_name, pd24->port_name, WWN_SIZE);
-@@ -1318,6 +1327,8 @@ qla2x00_get_port_database(scsi_qla_host_t *vha, fc_port_t *fcport, uint8_t opt)
- 		else
- 			fcport->port_type = FCT_TARGET;
- 	} else {
-+		uint64_t zero = 0;
-+
- 		/* Check for logged in state. */
- 		if (pd->master_state != PD_STATE_PORT_LOGGED_IN &&
- 		    pd->slave_state != PD_STATE_PORT_LOGGED_IN) {
-@@ -1330,6 +1341,14 @@ qla2x00_get_port_database(scsi_qla_host_t *vha, fc_port_t *fcport, uint8_t opt)
- 			goto gpd_error_out;
- 		}
- 
-+		if (fcport->loop_id == FC_NO_LOOP_ID ||
-+		    (memcmp(fcport->port_name, (uint8_t *)&zero, 8) &&
-+		     memcmp(fcport->port_name, pd->port_name, 8))) {
-+			/* We lost the device mid way. */
-+			rval = QLA_NOT_LOGGED_IN;
-+			goto gpd_error_out;
-+		}
-+
- 		/* Names are little-endian. */
- 		memcpy(fcport->node_name, pd->node_name, WWN_SIZE);
- 		memcpy(fcport->port_name, pd->port_name, WWN_SIZE);
+@@ -313,9 +314,10 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 					    CRB_NIU_XG_PAUSE_CTL_P1);
+ 				}
+ 				ql_log(ql_log_info, base_vha, 0x101c,
+-				    "Mailbox cmd timeout occured. "
+-				    "Scheduling ISP abort eeh_busy=0x%x.\n",
+-					ha->flags.eeh_busy);
++				    "Mailbox cmd timeout occured, cmd=0x%x, "
++				    "mb[0]=0x%x, eeh_busy=0x%x. Scheduling ISP "
++				    "abort.\n", command, mcp->mb[0],
++				    ha->flags.eeh_busy);
+ 				set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+ 				qla2xxx_wake_dpc(vha);
+ 			}
+@@ -337,9 +339,9 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 					    CRB_NIU_XG_PAUSE_CTL_P1);
+ 				}
+ 				ql_log(ql_log_info, base_vha, 0x101e,
+-				    "Mailbox cmd timeout occured. "
+-				    "Scheduling ISP abort.\n");
+-
++				    "Mailbox cmd timeout occured, cmd=0x%x, "
++				    "mb[0]=0x%x. Scheduling ISP abort ",
++				    command, mcp->mb[0]);
+ 				set_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags);
+ 				clear_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+ 				/* Allow next mbx cmd to come in. */
 -- 
 1.6.0.2
 
