@@ -1,35 +1,86 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: Re: [patch 1/4] drivers/scsi/aacraid/commctrl.c: fix mem leak in
- aac_send_raw_srb()
-Date: Thu, 9 Feb 2012 22:30:05 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1202092229040.32491@swampdragon.chaosbits.net>
-References: <20120208205221.A66E4A03DE@akpm.mtv.corp.google.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of the staging area
+Date: Thu, 9 Feb 2012 22:13:51 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481B70CC1A@TK5EX14MBXC128.redmond.corp.microsoft.com>
+References: <1328817851-13435-1-git-send-email-kys@microsoft.com>
+	 <20120209200404.GA8816@kroah.com>
+	 <1328818718.2944.20.camel@dabdike.int.hansenpartnership.com>
+	 <20120209202409.GA22365@kroah.com>
+	 <6E21E5352C11B742B20C142EB499E0481B70CB38@TK5EX14MBXC128.redmond.corp.microsoft.com>
+ <1328820356.2944.24.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:26125 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754346Ab2BIV33 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 16:29:29 -0500
-In-Reply-To: <20120208205221.A66E4A03DE@akpm.mtv.corp.google.com>
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:53734
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753944Ab2BIWOU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 17:14:20 -0500
+In-Reply-To: <1328820356.2944.24.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, mark_salyzyn@xyratex.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 8 Feb 2012, akpm@linux-foundation.org wrote:
-
-> From: Jesper Juhl <jj@chaosbits.net>
-> Subject: drivers/scsi/aacraid/commctrl.c: fix mem leak in aac_send_raw_srb()
-> 
-
-Linus already took this into his tree as commit 
-7dd72f5189b257f927cc3b35d98643a5c392f5c3 , so you can drop it from your 
-queue.
-
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+VGh1cnNkYXksIEZlYnJ1YXJ5IDA5LCAyMDEyIDM6NDYgUE0NCj4gVG86IEtZIFNyaW5pdmFzYW4N
+Cj4gQ2M6IEdyZWcgS0g7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmVsQGxpbnV4
+ZHJpdmVycHJvamVjdC5vcmc7DQo+IHZpcnR1YWxpemF0aW9uQGxpc3RzLm9zZGwub3JnOyBvaGVy
+aW5nQHN1c2UuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJu
+ZWwub3JnDQo+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggMS8xXSBTdGFnaW5nOiBodjogc3RvcnZzYzog
+TW92ZSB0aGUgc3RvcmFnZSBkcml2ZXIgb3V0IG9mIHRoZQ0KPiBzdGFnaW5nIGFyZWENCj4gDQo+
+IE9uIFRodSwgMjAxMi0wMi0wOSBhdCAyMDo0MyArMDAwMCwgS1kgU3Jpbml2YXNhbiB3cm90ZToN
+Cj4gPg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IEdyZWcg
+S0ggW21haWx0bzpncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZ10NCj4gPiA+IFNlbnQ6IFRodXJz
+ZGF5LCBGZWJydWFyeSAwOSwgMjAxMiAzOjI0IFBNDQo+ID4gPiBUbzogSmFtZXMgQm90dG9tbGV5
+DQo+ID4gPiBDYzogS1kgU3Jpbml2YXNhbjsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsN
+Cj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsNCj4gPiA+IHZpcnR1YWxpemF0aW9uQGxp
+c3RzLm9zZGwub3JnOyBvaGVyaW5nQHN1c2UuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgt
+DQo+ID4gPiBzY3NpQHZnZXIua2VybmVsLm9yZw0KPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSCAx
+LzFdIFN0YWdpbmc6IGh2OiBzdG9ydnNjOiBNb3ZlIHRoZSBzdG9yYWdlIGRyaXZlciBvdXQgb2YN
+Cj4gdGhlDQo+ID4gPiBzdGFnaW5nIGFyZWENCj4gPiA+DQo+ID4gPiBPbiBUaHUsIEZlYiAwOSwg
+MjAxMiBhdCAwMjoxODozOFBNIC0wNjAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6DQo+ID4gPiA+
+IE9uIFRodSwgMjAxMi0wMi0wOSBhdCAxMjowNCAtMDgwMCwgR3JlZyBLSCB3cm90ZToNCj4gPiA+
+ID4gPiBPbiBUaHUsIEZlYiAwOSwgMjAxMiBhdCAxMjowNDoxMVBNIC0wODAwLCBLLiBZLiBTcmlu
+aXZhc2FuIHdyb3RlOg0KPiA+ID4gPiA+ID4gVGhlIHN0b3JhZ2UgZHJpdmVyIChzdG9ydnNjX2Ry
+di5jKSBoYW5kbGVzIGFsbCBibG9jayBzdG9yYWdlIGRldmljZXMNCj4gPiA+ID4gPiA+IGFzc2ln
+bmVkIHRvIExpbnV4IGd1ZXN0cyBob3N0ZWQgb24gSHlwZXItVi4gVGhpcyBkcml2ZXIgaGFzIGJl
+ZW4gaW4gdGhlDQo+ID4gPiA+ID4gPiBzdGFnaW5nIHRyZWUgZm9yIGEgd2hpbGUgYW5kIHRoaXMg
+cGF0Y2ggbW92ZXMgaXQgb3V0IG9mIHRoZSBzdGFnaW5nIGFyZWEuDQo+ID4gPiA+ID4gPiBBcyBw
+ZXIgR3JlZydzIHJlY29tbWVuZGF0aW9uLCB0aGlzIHBhdGNoIG1ha2VzIG5vIGNoYW5nZXMgdG8g
+dGhlDQo+ID4gPiBzdGFnaW5nL2h2DQo+ID4gPiA+ID4gPiBkaXJlY3RvcnkuIE9uY2UgdGhlIGRy
+aXZlciBtb3ZlcyBvdXQgb2Ygc3RhZ2luZywgd2Ugd2lsbCBjbGVhbnVwIHRoZQ0KPiA+ID4gPiA+
+ID4gc3RhZ2luZy9odiBkaXJlY3RvcnkuDQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gSmFtZXMg
+d2FzIHdpbGxpbmcgdG8gYXBwbHkgdGhpcyBwYXRjaCBkdXJpbmcgdGhlIDMuMy1yYyBwaGFzZSBh
+bmQgYQ0KPiBkZWNpc2lvbg0KPiA+ID4gPiA+ID4gd2FzIHRha2VuIHRvIGRlZmVyIHRoaXMgdG8g
+My40IHNpbmNlIEdyZWcgaGFkIHF1ZXVlZCB1cCBhIGJ1bmNoIG9mDQo+IHN0b3J2c2MNCj4gPiA+
+ID4gPiA+IHBhdGNoZXMgZm9yIDMuNC4gTm93IHRoYXQgR3JlZyBoYXMgYXBwbGllZCBhbGwgb2Yg
+dGhlIHBlbmRpbmcgc3RvcnZzYw0KPiA+ID4gcGF0Y2hlcywNCj4gPiA+ID4gPiA+IEkgYW0gcmUt
+c2VuZGluZyB0aGlzIHBhdGNoIHRvIG1vdmUgdGhpcyBkcml2ZXIgb3V0IG9mIHN0YWdpbmcuDQo+
+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IFNpZ25lZC1vZmYtYnk6IEsuIFku
+IFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQuY29tPg0KPiA+ID4gPiA+ID4gLS0tDQo+ID4gPiA+
+ID4gPiAgZHJpdmVycy9zY3NpL0tjb25maWcgICAgICAgfCAgICA3ICsNCj4gPiA+ID4gPiA+ICBk
+cml2ZXJzL3Njc2kvTWFrZWZpbGUgICAgICB8ICAgIDMgKw0KPiA+ID4gPiA+ID4gIGRyaXZlcnMv
+c2NzaS9zdG9ydnNjX2Rydi5jIHwgMTU0OA0KPiA+ID4gKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysNCj4gPiA+ID4gPiA+ICAzIGZpbGVzIGNoYW5nZWQsIDE1NTgg
+aW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkNCj4gPiA+ID4gPiA+ICBjcmVhdGUgbW9kZSAx
+MDA2NDQgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4gPiA+ID4gPg0KPiA+ID4gPiA+IEph
+bWVzLCBhbnkgb2JqZWN0aW9uIHRvIG1lIGFwcGx5aW5nIHRoaXMgdG8gdGhlIHN0YWdpbmctbmV4
+dCB0cmVlLCBhbmQNCj4gPiA+ID4gPiBhdCB0aGUgc2FtZSB0aW1lLCBkZWxldGluZyB0aGlzIHZl
+cnNpb24gb2YgdGhlIGRyaXZlciBmcm9tIHRoZQ0KPiA+ID4gPiA+IGRyaXZlcnMvc3RhZ2luZy9o
+di8gZGlyZWN0b3J5Pw0KPiA+ID4gPg0KPiA+ID4gPiBXZWxsLCB5ZXMsIGl0IGhhcyB0aGUgc2Ft
+ZSBidWlsZCBmYWlsdXJlIGFzIHRoZSBwcmV2aW91cyBvbmUgYW5kIHRoYXQNCj4gPiA+ID4gd2ls
+bCBtYWtlIGl0IG5vbiBiaXNlY3RhYmxlLg0KPiA+ID4NCj4gPiA+IEFoLCB0aGF0IHdvdWxkIG1h
+a2UgdGhpbmdzIGEgYml0IGRpZmZpY3VsdCwgS1ksIHBsZWFzZSB0ZXN0IHlvdXINCj4gPiA+IHBh
+dGNoZXMuLi4NCj4gPg0KPiA+IEdyZWcsDQo+ID4NCj4gPiBJIHB1bGxlZCBkb3duIHlvdXIgc3Rh
+Z2luZyB0cmVlIGVhcmxpZXIgdG9kYXkgdGhhdCBoYWQgYWxsIHRoZSBzdG9ydnNjIHBhdGNoZXMN
+Cj4gdGhhdCB5b3UNCj4gPiBjaGVja2VkIGluIHllc3RlcmRheSwgYXBwbGllZCB0aGlzIHBhdGNo
+IGFuZCBidWlsdCBpdCAoc3VjY2Vzc2Z1bGx5KS4NCj4gDQo+IFlvdSdyZSBsZWF2aW5nIHJlbW5h
+bnRzIGluIHN0YWdpbmcuDQo+IA0KPiBNb3ZlIHRoZSBkYW1uIHRoaW5nIGFuZCBwdWxsIHRoZSBj
+b25maWcgb3B0aW9ucyBmcm9tIHN0YWdpbmcgd2hlbiB5b3UNCj4gcHV0IHRoZW0gaW4gU0NTSS4N
+Cg0KSSBoYXZlIG5vdyBhbHNvIHNlbnQgb3V0IGEgcGF0Y2ggdGhhdCBkb2VzIHdoYXQgeW91IGFy
+ZSBzdWdnZXN0aW5nIGhlcmUuIA0KDQpSZWdhcmRzLA0KDQpLLiBZDQogDQoNCg==
 
