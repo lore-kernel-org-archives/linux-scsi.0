@@ -1,239 +1,68 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 23/29] qla2xxx: Remove EDC sysfs interface.
-Date: Thu, 9 Feb 2012 11:15:55 -0800
-Message-ID: <1328814961-21866-24-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 16/29] qla2xxx: Use ql_log* #define's in ql_log() and ql_log_pci().
+Date: Thu, 9 Feb 2012 11:15:48 -0800
+Message-ID: <1328814961-21866-17-git-send-email-chad.dupuis@qlogic.com>
 References: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:38623
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:3789
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758425Ab2BITcO (ORCPT
+	by vger.kernel.org with ESMTP id S1758450Ab2BITcO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:14 -0500
-Received: from mail97-ch1 (localhost [127.0.0.1])	by mail97-ch1-R.bigfish.com
- (Postfix) with ESMTP id 4ED6E60571	for <linux-scsi@vger.kernel.org>; Thu,  9
- Feb 2012 19:32:13 +0000 (UTC)
+Received: from mail52-ch1 (localhost [127.0.0.1])	by mail52-ch1-R.bigfish.com
+ (Postfix) with ESMTP id D84A53E0635	for <linux-scsi@vger.kernel.org>; Thu,  9
+ Feb 2012 19:32:11 +0000 (UTC)
 In-Reply-To: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
-
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |  140 ---------------------------------------
- drivers/scsi/qla2xxx/qla_dbg.c  |    6 +-
- drivers/scsi/qla2xxx/qla_def.h  |    4 -
- drivers/scsi/qla2xxx/qla_os.c   |    3 -
- 4 files changed, 4 insertions(+), 149 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index e21db2f..5926f5a 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -628,144 +628,6 @@ static struct bin_attribute sysfs_reset_attr = {
- };
- 
- static ssize_t
--qla2x00_sysfs_write_edc(struct file *filp, struct kobject *kobj,
--			struct bin_attribute *bin_attr,
--			char *buf, loff_t off, size_t count)
--{
--	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
--	    struct device, kobj)));
--	struct qla_hw_data *ha = vha->hw;
--	uint16_t dev, adr, opt, len;
--	int rval;
--
--	ha->edc_data_len = 0;
--
--	if (!capable(CAP_SYS_ADMIN) || off != 0 || count < 8)
--		return -EINVAL;
--
--	if (!ha->edc_data) {
--		ha->edc_data = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
--		    &ha->edc_data_dma);
--		if (!ha->edc_data) {
--			ql_log(ql_log_warn, vha, 0x7073,
--			    "Unable to allocate memory for EDC write.\n");
--			return -ENOMEM;
--		}
--	}
--
--	dev = le16_to_cpup((void *)&buf[0]);
--	adr = le16_to_cpup((void *)&buf[2]);
--	opt = le16_to_cpup((void *)&buf[4]);
--	len = le16_to_cpup((void *)&buf[6]);
--
--	if (!(opt & BIT_0))
--		if (len == 0 || len > DMA_POOL_SIZE || len > count - 8)
--			return -EINVAL;
--
--	memcpy(ha->edc_data, &buf[8], len);
--
--	rval = qla2x00_write_sfp(vha, ha->edc_data_dma, ha->edc_data,
--	    dev, adr, len, opt);
--	if (rval != QLA_SUCCESS) {
--		ql_log(ql_log_warn, vha, 0x7074,
--		    "Unable to write EDC (%x) %02x:%02x:%04x:%02x:%02hhx\n",
--		    rval, dev, adr, opt, len, buf[8]);
--		return -EIO;
--	}
--
--	return count;
--}
--
--static struct bin_attribute sysfs_edc_attr = {
--	.attr = {
--		.name = "edc",
--		.mode = S_IWUSR,
--	},
--	.size = 0,
--	.write = qla2x00_sysfs_write_edc,
--};
--
--static ssize_t
--qla2x00_sysfs_write_edc_status(struct file *filp, struct kobject *kobj,
--			struct bin_attribute *bin_attr,
--			char *buf, loff_t off, size_t count)
--{
--	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
--	    struct device, kobj)));
--	struct qla_hw_data *ha = vha->hw;
--	uint16_t dev, adr, opt, len;
--	int rval;
--
--	ha->edc_data_len = 0;
--
--	if (!capable(CAP_SYS_ADMIN) || off != 0 || count < 8)
--		return -EINVAL;
--
--	if (!ha->edc_data) {
--		ha->edc_data = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
--		    &ha->edc_data_dma);
--		if (!ha->edc_data) {
--			ql_log(ql_log_warn, vha, 0x708c,
--			    "Unable to allocate memory for EDC status.\n");
--			return -ENOMEM;
--		}
--	}
--
--	dev = le16_to_cpup((void *)&buf[0]);
--	adr = le16_to_cpup((void *)&buf[2]);
--	opt = le16_to_cpup((void *)&buf[4]);
--	len = le16_to_cpup((void *)&buf[6]);
--
--	if (!(opt & BIT_0))
--		if (len == 0 || len > DMA_POOL_SIZE)
--			return -EINVAL;
--
--	memset(ha->edc_data, 0, len);
--	rval = qla2x00_read_sfp(vha, ha->edc_data_dma, ha->edc_data,
--			dev, adr, len, opt);
--	if (rval != QLA_SUCCESS) {
--		ql_log(ql_log_info, vha, 0x7075,
--		    "Unable to write EDC status (%x) %02x:%02x:%04x:%02x.\n",
--		    rval, dev, adr, opt, len);
--		return -EIO;
--	}
--
--	ha->edc_data_len = len;
--
--	return count;
--}
--
--static ssize_t
--qla2x00_sysfs_read_edc_status(struct file *filp, struct kobject *kobj,
--			   struct bin_attribute *bin_attr,
--			   char *buf, loff_t off, size_t count)
--{
--	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
--	    struct device, kobj)));
--	struct qla_hw_data *ha = vha->hw;
--
--	if (!capable(CAP_SYS_ADMIN) || off != 0 || count == 0)
--		return 0;
--
--	if (!ha->edc_data || ha->edc_data_len == 0 || ha->edc_data_len > count)
--		return -EINVAL;
--
--	memcpy(buf, ha->edc_data, ha->edc_data_len);
--
--	return ha->edc_data_len;
--}
--
--static struct bin_attribute sysfs_edc_status_attr = {
--	.attr = {
--		.name = "edc_status",
--		.mode = S_IRUSR | S_IWUSR,
--	},
--	.size = 0,
--	.write = qla2x00_sysfs_write_edc_status,
--	.read = qla2x00_sysfs_read_edc_status,
--};
--
--static ssize_t
- qla2x00_sysfs_read_xgmac_stats(struct file *filp, struct kobject *kobj,
- 		       struct bin_attribute *bin_attr,
- 		       char *buf, loff_t off, size_t count)
-@@ -880,8 +742,6 @@ static struct sysfs_entry {
- 	{ "vpd", &sysfs_vpd_attr, 1 },
- 	{ "sfp", &sysfs_sfp_attr, 1 },
- 	{ "reset", &sysfs_reset_attr, },
--	{ "edc", &sysfs_edc_attr, 2 },
--	{ "edc_status", &sysfs_edc_status_attr, 2 },
- 	{ "xgmac_stats", &sysfs_xgmac_stats_attr, 3 },
- 	{ "dcbx_tlv", &sysfs_dcbx_tlv_attr, 3 },
- 	{ NULL },
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index c28309b..d16b1c0 100644
+index 472ee5e..e915310 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -21,8 +21,10 @@
-  * | Async Events                 |       0x505d       | 0x502b-0x502f  |
-  * |                              |                    | 0x5047,0x5052  |
-  * | Timer Routines               |       0x6011       | 0x600e-0x600f  |
-- * | User Space Interactions      |       0x709e       | 0x7018,0x702e  |
-- * |                              |                    | 0x7039,0x7045  |
-+ * | User Space Interactions      |       0x709f       | 0x7018,0x702e, |
-+ * |                              |                    | 0x7039,0x7045, |
-+ * |                              |                    | 0x7073-0x7075, |
-+ * |                              |                    | 0x708c         |
-  * | Task Management              |       0x803c       | 0x8025-0x8026  |
-  * |                              |                    | 0x800b,0x8039  |
-  * | AER/EEH                      |       0x900f       |		|
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 1281f5b..9d353ca 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2646,10 +2646,6 @@ struct qla_hw_data {
- 	void		*sfp_data;
- 	dma_addr_t	sfp_data_dma;
+@@ -2364,13 +2364,13 @@ ql_log(uint32_t level, scsi_qla_host_t *vha, int32_t id, const char *fmt, ...)
+ 	vaf.va = &va;
  
--	uint8_t		*edc_data;
--	dma_addr_t	edc_data_dma;
--	uint16_t	edc_data_len;
--
- #define XGMAC_DATA_SIZE	4096
- 	void		*xgmac_data;
- 	dma_addr_t	xgmac_data_dma;
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index a8de6a3..ffa3488 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3233,9 +3233,6 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- 	if (ha->sfp_data)
- 		dma_pool_free(ha->s_dma_pool, ha->sfp_data, ha->sfp_data_dma);
+ 	switch (level) {
+-	case 0: /* FATAL LOG */
++	case ql_log_fatal: /* FATAL LOG */
+ 		pr_crit("%s%pV", pbuf, &vaf);
+ 		break;
+-	case 1:
++	case ql_log_warn:
+ 		pr_err("%s%pV", pbuf, &vaf);
+ 		break;
+-	case 2:
++	case ql_log_info:
+ 		pr_warn("%s%pV", pbuf, &vaf);
+ 		break;
+ 	default:
+@@ -2419,13 +2419,13 @@ ql_log_pci(uint32_t level, struct pci_dev *pdev, int32_t id,
+ 	vaf.va = &va;
  
--	if (ha->edc_data)
--		dma_pool_free(ha->s_dma_pool, ha->edc_data, ha->edc_data_dma);
--
- 	if (ha->ms_iocb)
- 		dma_pool_free(ha->s_dma_pool, ha->ms_iocb, ha->ms_iocb_dma);
- 
+ 	switch (level) {
+-	case 0: /* FATAL LOG */
++	case ql_log_fatal: /* FATAL LOG */
+ 		pr_crit("%s%pV", pbuf, &vaf);
+ 		break;
+-	case 1:
++	case ql_log_warn:
+ 		pr_err("%s%pV", pbuf, &vaf);
+ 		break;
+-	case 2:
++	case ql_log_info:
+ 		pr_warn("%s%pV", pbuf, &vaf);
+ 		break;
+ 	default:
 -- 
 1.6.0.2
 
