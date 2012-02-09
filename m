@@ -1,37 +1,54 @@
 From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] iscsi_tcp: bound max_r2t in iscsi_sw_tcp_conn_set_param()
-Date: Thu, 9 Feb 2012 08:04:00 -0800
-Message-ID: <20120209160400.GA27492@kroah.com>
-References: <1325368867-13696-1-git-send-email-xi.wang@gmail.com>
- <4F015753.1010106@cs.wisc.edu>
- <2EB25344-4C9E-4D3C-8406-5A4D015CB364@gmail.com>
+Subject: Re: [PATCH 1/2] Staging: hv: Applied all the patches already in the
+ staging queue
+Date: Thu, 9 Feb 2012 08:29:40 -0800
+Message-ID: <20120209162940.GA16395@kroah.com>
+References: <1327599460-12593-1-git-send-email-kys@microsoft.com>
+ <1327599515-12679-1-git-send-email-kys@microsoft.com>
+ <20120126173751.GA14400@suse.de>
+ <1327600244.6151.5.camel@dabdike.int.hansenpartnership.com>
+ <6E21E5352C11B742B20C142EB499E0481B70C8A1@TK5EX14MBXC128.redmond.corp.microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:40753 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753539Ab2BIQUC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 11:20:02 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <2EB25344-4C9E-4D3C-8406-5A4D015CB364@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <6E21E5352C11B742B20C142EB499E0481B70C8A1@TK5EX14MBXC128.redmond.corp.microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <gregkh@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Xi Wang <xi.wang@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 
-On Mon, Jan 02, 2012 at 09:18:07AM -0500, Xi Wang wrote:
-> On Jan 2, 2012, at 2:05 AM, Mike Christie wrote:
-> > Are you actually hitting this and if so with what tools and target? And
-> > when using greater than 1 do you see any throughput improvements?
+On Thu, Feb 09, 2012 at 03:31:50PM +0000, KY Srinivasan wrote:
 > 
-> No, I was worrying about security.
 > 
-> > What about the attached patch? It also fixes cxgb*i.
-> > <0001-libiscsi_tcp-fix-max_r2t-manipulation.patch>
+> > -----Original Message-----
+> > From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+> > Sent: Thursday, January 26, 2012 12:51 PM
+> > To: Greg KH
+> > Cc: KY Srinivasan; linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> > virtualization@lists.osdl.org; ohering@suse.com; hch@infradead.org; linux-
+> > scsi@vger.kernel.org
+> > Subject: Re: [PATCH 1/2] Staging: hv: Applied all the patches already in the staging
+> > queue
+> > 
+> > > Yes, I have pending patches for this driver in my "to-apply" queue, but
+> > > that is for 3.4, not now.
+> > >
+> > > So, how about I just apply those patches, and then apply a patch that
+> > > moves it out of staging into drivers/scsi/, and queue all of those up
+> > > for 3.4.
+> > >
+> > > James, any objection to that?
+> > 
+> > Well, we were going to try to stage this driver for 3.3-rc.  If everyone
+> > agrees to push it back to 3.4, then this works for me.
 > 
-> Looks good to me.  Thanks!
+> Greg,
+> 
+> Now that you have applied all the pending patches for the Hyper-V storage
+> driver; do you want me to resend the patch that moved this driver out of staging?
 
-What ever happened to this patch, is it in Linus's tree yet?
+Please do, I need James's ACK on it as well.
 
 thanks,
 
