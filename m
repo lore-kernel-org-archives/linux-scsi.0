@@ -1,67 +1,62 @@
-From: Artem Bityutskiy <dedekind1@gmail.com>
-Subject: Re: [ATTEND]
-Date: Thu, 09 Feb 2012 08:34:12 +0200
-Message-ID: <1328769265.2112.0.camel@koala>
-References: <CAH+dOxKMwMskM18=GhBmEao4aSvZmccSiZmmnZm42TBMPUFONw@mail.gmail.com>
-	 <D3F292ADF945FB49B35E96C94C2061B915D0A6CB@nsmail.netscout.com>
-	 <CAH+dOx+4mL0uMBAjv+zo+XGJvaZvushYT5=Ev=8K8-zVhLHR2w@mail.gmail.com>
-	 <D3F292ADF945FB49B35E96C94C2061B915D0ACF0@nsmail.netscout.com>
-	 <1328732432.2101.3.camel@koala>
-	 <CAH+dOxLxL7CzMk+sLcAUO==4ShtS4JHfgaGRSMmP49LXWVC+fw@mail.gmail.com>
-Reply-To: dedekind1@gmail.com
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCHv2 0/7] acpi/libata: Express dependencies for devices on
+ dock stations and bays
+Date: Thu, 9 Feb 2012 14:46:11 +0800
+Message-ID: <CAF1ivSYhOTitPctsJOTKWN9HDt0VZpQe_-_a0LnLefVGxOJtXg@mail.gmail.com>
+References: <20120120001817.GA27706@homac.suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-HmQHyykHAOj5dyzO6JZT"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:40039 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750985Ab2BIGe2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 01:34:28 -0500
-In-Reply-To: <CAH+dOxLxL7CzMk+sLcAUO==4ShtS4JHfgaGRSMmP49LXWVC+fw@mail.gmail.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:48924 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756126Ab2BIGqM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 01:46:12 -0500
+In-Reply-To: <20120120001817.GA27706@homac.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kent Overstreet <koverstreet@google.com>
-Cc: "Loke, Chetan" <Chetan.Loke@netscout.com>, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, dedekind@infradead.org
+To: Holger Macht <holger@homac.de>
+Cc: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Garrett <mjg@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@redhat.com>
 
+On Fri, Jan 20, 2012 at 8:18 AM, Holger Macht <holger@homac.de> wrote:
+> Patches 2 through 5 are just a refresh of the patches from Matthew
+> Garrett sent to this list in September 2010 [1]:
+>
+> Patch 1 is a new patch incorporating the corrections from James
+> Bottomley. Patch 6, 7 and 8 make the whole patch set actually work on=
+ my
+> test hardware (Thinkpad x60/Thinkpad T60) by fixing minor issues and
+> compensating changes after the first submission.
+>
+> All patches now contain the correct Signed-off-by instead of Acked-by
+> tags.
+>
+> =A0[PATCH 1/8] scsi: Add wrapper to access and set scsi_bus_type in s=
+truct acpi_bus_type
+> =A0[PATCH 2/8] libata: Bind the Linux device tree to the ACPI device =
+tree
+> =A0[PATCH 3/8] libata: Migrate ACPI code over to new bindings
+> =A0[PATCH 4/8] acpi: Add support for linking docks to the objects the=
+y contain
+> =A0[PATCH 5/8] libata: Add links between removable devices and docks
+> =A0[PATCH 6/8] libata: Generate and pass correct acpi handles
+> =A0[PATCH 7/8] acpi: Prevent duplicate hotplug device registration on=
+ dock stations
+> =A0[PATCH 8/8] libata: Use correct PCI devices
 
---=-HmQHyykHAOj5dyzO6JZT
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Hi Holger,
 
-On Wed, 2012-02-08 at 12:48 -0800, Kent Overstreet wrote:
-> On Wed, Feb 8, 2012 at 12:20 PM, Artem Bityutskiy <dedekind1@gmail.com> w=
-rote:
-> > Hi, UBI is not an FTL, but it implements a lot of things a decent FTL
-> > would also need to implement. And implementing FTL on top of UBI would
-> > be much simpler than on top of a raw flash (I assume you are discussing
-> > a flash?). UBI has it's own strong sides and limitations. Here I
-> > described a simple FTL on top of UBI (long time ago):
->=20
-> You going to be at LSF? Would love to talk to other people with
-> experience with the gory details of flash :)
+What's the status of these patches?
 
-Unfortunately no :-(
+Some of my patches also need ata device binded to ACPI handle.
+I hope these patches will be merged soon.
 
---=20
-Best Regards,
-Artem Bityutskiy
+Thanks for the great work.
 
---=-HmQHyykHAOj5dyzO6JZT
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQEcBAABAgAGBQJPM2jkAAoJEJtuLFy+q7fe9c8H/ia0NaCbHUBGgUflleNCt7QM
-//i+F71ctCTKnVFU/sL7dkB8JAEEjbKwpDv+ADHR7AnkCpWn9L9ZRk/wS8eQdAo7
-BFZ4NTvJJJs/C/vCAlnKEZgcN90Lwou7xtzEzg8uEUNVNr3zMMrqdhqksnWGgFvb
-0Wd+a5zNjtMmcLF6oHOAHa/KOOvfprgjFfVc7B3EU4rXsL97LY28rQkVGpFulmyf
-glwDWFlR7O+khGVy6ksPQ7D6dA2ocbhGKDuY8FNsSiY7LF8+U5lCKmFY/wyDddEB
-ol6RwrVqLLP2SLwhAHjGn4+JCU8eWAdwFSuG9Jmy+WsKqlK52BSKjuLl24nE5+E=
-=tffE
------END PGP SIGNATURE-----
-
---=-HmQHyykHAOj5dyzO6JZT--
-
+Regards,
+Lin Ming
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
