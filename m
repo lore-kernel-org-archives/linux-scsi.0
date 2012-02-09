@@ -1,51 +1,57 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out of
- the staging area
-Date: Thu, 9 Feb 2012 12:24:09 -0800
-Message-ID: <20120209202409.GA22365@kroah.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of the staging area
+Date: Thu, 9 Feb 2012 20:21:36 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481B70CB0A@TK5EX14MBXC128.redmond.corp.microsoft.com>
 References: <1328817851-13435-1-git-send-email-kys@microsoft.com>
- <20120209200404.GA8816@kroah.com>
+	 <20120209200404.GA8816@kroah.com>
  <1328818718.2944.20.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <1328818718.2944.20.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, hch@infradead.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <gregkh@linuxfoundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 09, 2012 at 02:18:38PM -0600, James Bottomley wrote:
-> On Thu, 2012-02-09 at 12:04 -0800, Greg KH wrote:
-> > On Thu, Feb 09, 2012 at 12:04:11PM -0800, K. Y. Srinivasan wrote:
-> > > The storage driver (storvsc_drv.c) handles all block storage devices
-> > > assigned to Linux guests hosted on Hyper-V. This driver has been in the
-> > > staging tree for a while and this patch moves it out of the staging area.
-> > > As per Greg's recommendation, this patch makes no changes to the staging/hv
-> > > directory. Once the driver moves out of staging, we will cleanup the
-> > > staging/hv directory.
-> > > 
-> > > James was willing to apply this patch during the 3.3-rc phase and a decision
-> > > was taken to defer this to 3.4 since Greg had queued up a bunch of storvsc
-> > > patches for 3.4. Now that Greg has applied all of the pending storvsc patches,
-> > > I am re-sending this patch to move this driver out of staging.
-> > > 
-> > > 
-> > > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> > > ---
-> > >  drivers/scsi/Kconfig       |    7 +
-> > >  drivers/scsi/Makefile      |    3 +
-> > >  drivers/scsi/storvsc_drv.c | 1548 ++++++++++++++++++++++++++++++++++++++++++++
-> > >  3 files changed, 1558 insertions(+), 0 deletions(-)
-> > >  create mode 100644 drivers/scsi/storvsc_drv.c
-> > 
-> > James, any objection to me applying this to the staging-next tree, and
-> > at the same time, deleting this version of the driver from the
-> > drivers/staging/hv/ directory?
-> 
-> Well, yes, it has the same build failure as the previous one and that
-> will make it non bisectable.
-
-Ah, that would make things a bit difficult, KY, please test your
-patches...
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+VGh1cnNkYXksIEZlYnJ1YXJ5IDA5LCAyMDEyIDM6MTkgUE0NCj4gVG86IEdyZWcgS0gNCj4gQ2M6
+IEtZIFNyaW5pdmFzYW47IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmVsQGxpbnV4
+ZHJpdmVycHJvamVjdC5vcmc7DQo+IHZpcnR1YWxpemF0aW9uQGxpc3RzLm9zZGwub3JnOyBvaGVy
+aW5nQHN1c2UuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJu
+ZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8xXSBTdGFnaW5nOiBodjogc3RvcnZzYzog
+TW92ZSB0aGUgc3RvcmFnZSBkcml2ZXIgb3V0IG9mIHRoZQ0KPiBzdGFnaW5nIGFyZWENCj4gDQo+
+IE9uIFRodSwgMjAxMi0wMi0wOSBhdCAxMjowNCAtMDgwMCwgR3JlZyBLSCB3cm90ZToNCj4gPiBP
+biBUaHUsIEZlYiAwOSwgMjAxMiBhdCAxMjowNDoxMVBNIC0wODAwLCBLLiBZLiBTcmluaXZhc2Fu
+IHdyb3RlOg0KPiA+ID4gVGhlIHN0b3JhZ2UgZHJpdmVyIChzdG9ydnNjX2Rydi5jKSBoYW5kbGVz
+IGFsbCBibG9jayBzdG9yYWdlIGRldmljZXMNCj4gPiA+IGFzc2lnbmVkIHRvIExpbnV4IGd1ZXN0
+cyBob3N0ZWQgb24gSHlwZXItVi4gVGhpcyBkcml2ZXIgaGFzIGJlZW4gaW4gdGhlDQo+ID4gPiBz
+dGFnaW5nIHRyZWUgZm9yIGEgd2hpbGUgYW5kIHRoaXMgcGF0Y2ggbW92ZXMgaXQgb3V0IG9mIHRo
+ZSBzdGFnaW5nIGFyZWEuDQo+ID4gPiBBcyBwZXIgR3JlZydzIHJlY29tbWVuZGF0aW9uLCB0aGlz
+IHBhdGNoIG1ha2VzIG5vIGNoYW5nZXMgdG8gdGhlDQo+IHN0YWdpbmcvaHYNCj4gPiA+IGRpcmVj
+dG9yeS4gT25jZSB0aGUgZHJpdmVyIG1vdmVzIG91dCBvZiBzdGFnaW5nLCB3ZSB3aWxsIGNsZWFu
+dXAgdGhlDQo+ID4gPiBzdGFnaW5nL2h2IGRpcmVjdG9yeS4NCj4gPiA+DQo+ID4gPiBKYW1lcyB3
+YXMgd2lsbGluZyB0byBhcHBseSB0aGlzIHBhdGNoIGR1cmluZyB0aGUgMy4zLXJjIHBoYXNlIGFu
+ZCBhIGRlY2lzaW9uDQo+ID4gPiB3YXMgdGFrZW4gdG8gZGVmZXIgdGhpcyB0byAzLjQgc2luY2Ug
+R3JlZyBoYWQgcXVldWVkIHVwIGEgYnVuY2ggb2Ygc3RvcnZzYw0KPiA+ID4gcGF0Y2hlcyBmb3Ig
+My40LiBOb3cgdGhhdCBHcmVnIGhhcyBhcHBsaWVkIGFsbCBvZiB0aGUgcGVuZGluZyBzdG9ydnNj
+IHBhdGNoZXMsDQo+ID4gPiBJIGFtIHJlLXNlbmRpbmcgdGhpcyBwYXRjaCB0byBtb3ZlIHRoaXMg
+ZHJpdmVyIG91dCBvZiBzdGFnaW5nLg0KPiA+ID4NCj4gPiA+DQo+ID4gPiBTaWduZWQtb2ZmLWJ5
+OiBLLiBZLiBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT4NCj4gPiA+IC0tLQ0KPiA+ID4g
+IGRyaXZlcnMvc2NzaS9LY29uZmlnICAgICAgIHwgICAgNyArDQo+ID4gPiAgZHJpdmVycy9zY3Np
+L01ha2VmaWxlICAgICAgfCAgICAzICsNCj4gPiA+ICBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYu
+YyB8IDE1NDgNCj4gKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysN
+Cj4gPiA+ICAzIGZpbGVzIGNoYW5nZWQsIDE1NTggaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMo
+LSkNCj4gPiA+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMN
+Cj4gPg0KPiA+IEphbWVzLCBhbnkgb2JqZWN0aW9uIHRvIG1lIGFwcGx5aW5nIHRoaXMgdG8gdGhl
+IHN0YWdpbmctbmV4dCB0cmVlLCBhbmQNCj4gPiBhdCB0aGUgc2FtZSB0aW1lLCBkZWxldGluZyB0
+aGlzIHZlcnNpb24gb2YgdGhlIGRyaXZlciBmcm9tIHRoZQ0KPiA+IGRyaXZlcnMvc3RhZ2luZy9o
+di8gZGlyZWN0b3J5Pw0KPiANCj4gV2VsbCwgeWVzLCBpdCBoYXMgdGhlIHNhbWUgYnVpbGQgZmFp
+bHVyZSBhcyB0aGUgcHJldmlvdXMgb25lIGFuZCB0aGF0DQo+IHdpbGwgbWFrZSBpdCBub24gYmlz
+ZWN0YWJsZS4NCg0KSmFtZXMsDQoNCldoYXQgYnVpbGQgZmFpbHVyZSBpcyB0aGlzLiBJIGp1c3Qg
+cHVsbGVkIGRvd24gR3JlZydzIHRyZWUgZWFybGllciB0b2RheSBhbmQgYXBwbGllZCB0aGlzDQpw
+YXRjaCBhbmQgYnVpbHQgaXQuDQoNClJlZ2FyZHMsDQoNCksuIFkgDQogDQoNCg==
