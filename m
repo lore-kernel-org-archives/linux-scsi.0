@@ -1,85 +1,382 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 22/29] qla2xxx: Update LICENSE.qla2xxx.
-Date: Thu, 9 Feb 2012 11:15:54 -0800
-Message-ID: <1328814961-21866-23-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 19/29] qla2xxx: Log messages to use correct vha.
+Date: Thu, 9 Feb 2012 11:15:51 -0800
+Message-ID: <1328814961-21866-20-git-send-email-chad.dupuis@qlogic.com>
 References: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:41846
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:3207
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758411Ab2BITcM (ORCPT
+	by vger.kernel.org with ESMTP id S1758404Ab2BITcM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:12 -0500
-Received: from mail102-ch1 (localhost [127.0.0.1])	by
- mail102-ch1-R.bigfish.com (Postfix) with ESMTP id DE1DC60572	for
- <linux-scsi@vger.kernel.org>; Thu,  9 Feb 2012 19:32:11 +0000 (UTC)
+Received: from mail88-ch1 (localhost [127.0.0.1])	by mail88-ch1-R.bigfish.com
+ (Postfix) with ESMTP id 008ED260529	for <linux-scsi@vger.kernel.org>; Thu,  9
+ Feb 2012 19:32:12 +0000 (UTC)
 In-Reply-To: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Arun Easi <arun.easi@qlogic.com>
+
+Signed-off-by: Arun Easi <arun.easi@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- Documentation/scsi/LICENSE.qla2xxx |   41 +----------------------------------
- 1 files changed, 2 insertions(+), 39 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |   34 +++++++++++-----------
+ drivers/scsi/qla2xxx/qla_mbx.c |   60 ++++++++++++++++++++--------------------
+ 2 files changed, 47 insertions(+), 47 deletions(-)
 
-diff --git a/Documentation/scsi/LICENSE.qla2xxx b/Documentation/scsi/LICENSE.qla2xxx
-index 19e7cd4..ce0fdf3 100644
---- a/Documentation/scsi/LICENSE.qla2xxx
-+++ b/Documentation/scsi/LICENSE.qla2xxx
-@@ -1,48 +1,11 @@
- Copyright (c) 2003-2011 QLogic Corporation
--QLogic Linux/ESX Fibre Channel HBA Driver
-+QLogic Linux FC-FCoE Driver
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index ea6d6b0..32ab837 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1141,7 +1141,7 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	data[1] = lio->u.logio.flags & SRB_LOGIN_RETRIED ?
+ 		QLA_LOGIO_LOGIN_RETRIED : 0;
+ 	if (logio->entry_status) {
+-		ql_log(ql_log_warn, vha, 0x5034,
++		ql_log(ql_log_warn, fcport->vha, 0x5034,
+ 		    "Async-%s error entry - hdl=%x"
+ 		    "portid=%02x%02x%02x entry-status=%x.\n",
+ 		    type, sp->handle, fcport->d_id.b.domain,
+@@ -1154,7 +1154,7 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	}
  
--This program includes a device driver for Linux 2.6/ESX that may be
--distributed with QLogic hardware specific firmware binary file.
-+This program includes a device driver for Linux 3.x.
- You may modify and redistribute the device driver code under the
- GNU General Public License (a copy of which is attached hereto as
- Exhibit A) published by the Free Software Foundation (version 2).
+ 	if (le16_to_cpu(logio->comp_status) == CS_COMPLETE) {
+-		ql_dbg(ql_dbg_async, vha, 0x5036,
++		ql_dbg(ql_dbg_async, fcport->vha, 0x5036,
+ 		    "Async-%s complete - hdl=%x portid=%02x%02x%02x "
+ 		    "iop0=%x.\n", type, sp->handle, fcport->d_id.b.domain,
+ 		    fcport->d_id.b.area, fcport->d_id.b.al_pa,
+@@ -1195,7 +1195,7 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		break;
+ 	}
  
--You may redistribute the hardware specific firmware binary file
--under the following terms:
--
--	1. Redistribution of source code (only if applicable),
--	   must retain the above copyright notice, this list of
--	   conditions and the following disclaimer.
--
--	2. Redistribution in binary form must reproduce the above
--	   copyright notice, this list of conditions and the
--	   following disclaimer in the documentation and/or other
--	   materials provided with the distribution.
--
--	3. The name of QLogic Corporation may not be used to
--	   endorse or promote products derived from this software
--	   without specific prior written permission
--
--REGARDLESS OF WHAT LICENSING MECHANISM IS USED OR APPLICABLE,
--THIS PROGRAM IS PROVIDED BY QLOGIC CORPORATION "AS IS'' AND ANY
--EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
--IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
--PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
--BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
--EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
--TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
--DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
--ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
--OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
--OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
--POSSIBILITY OF SUCH DAMAGE.
--
--USER ACKNOWLEDGES AND AGREES THAT USE OF THIS PROGRAM WILL NOT
--CREATE OR GIVE GROUNDS FOR A LICENSE BY IMPLICATION, ESTOPPEL, OR
--OTHERWISE IN ANY INTELLECTUAL PROPERTY RIGHTS (PATENT, COPYRIGHT,
--TRADE SECRET, MASK WORK, OR OTHER PROPRIETARY RIGHT) EMBODIED IN
--ANY OTHER QLOGIC HARDWARE OR SOFTWARE EITHER SOLELY OR IN
--COMBINATION WITH THIS PROGRAM.
+-	ql_dbg(ql_dbg_async, vha, 0x5037,
++	ql_dbg(ql_dbg_async, fcport->vha, 0x5037,
+ 	    "Async-%s failed - hdl=%x portid=%02x%02x%02x comp=%x "
+ 	    "iop0=%x iop1=%x.\n", type, sp->handle, fcport->d_id.b.domain,
+ 	    fcport->d_id.b.area, fcport->d_id.b.al_pa,
+@@ -1228,24 +1228,24 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	fcport = sp->fcport;
+ 
+ 	if (sts->entry_status) {
+-		ql_log(ql_log_warn, vha, 0x5038,
++		ql_log(ql_log_warn, fcport->vha, 0x5038,
+ 		    "Async-%s error - hdl=%x entry-status(%x).\n",
+ 		    type, sp->handle, sts->entry_status);
+ 	} else if (sts->comp_status != __constant_cpu_to_le16(CS_COMPLETE)) {
+-		ql_log(ql_log_warn, vha, 0x5039,
++		ql_log(ql_log_warn, fcport->vha, 0x5039,
+ 		    "Async-%s error - hdl=%x completion status(%x).\n",
+ 		    type, sp->handle, sts->comp_status);
+ 	} else if (!(le16_to_cpu(sts->scsi_status) &
+ 	    SS_RESPONSE_INFO_LEN_VALID)) {
+-		ql_log(ql_log_warn, vha, 0x503a,
++		ql_log(ql_log_warn, fcport->vha, 0x503a,
+ 		    "Async-%s error - hdl=%x no response info(%x).\n",
+ 		    type, sp->handle, sts->scsi_status);
+ 	} else if (le32_to_cpu(sts->rsp_data_len) < 4) {
+-		ql_log(ql_log_warn, vha, 0x503b,
++		ql_log(ql_log_warn, fcport->vha, 0x503b,
+ 		    "Async-%s error - hdl=%x not enough response(%d).\n",
+ 		    type, sp->handle, sts->rsp_data_len);
+ 	} else if (sts->data[3]) {
+-		ql_log(ql_log_warn, vha, 0x503c,
++		ql_log(ql_log_warn, fcport->vha, 0x503c,
+ 		    "Async-%s error - hdl=%x response(%x).\n",
+ 		    type, sp->handle, sts->data[3]);
+ 	} else {
+@@ -1630,7 +1630,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 			par_sense_len -= rsp_info_len;
+ 		}
+ 		if (rsp_info_len > 3 && rsp_info[3]) {
+-			ql_dbg(ql_dbg_io, vha, 0x3019,
++			ql_dbg(ql_dbg_io, fcport->vha, 0x3019,
+ 			    "FCP I/O protocol failure (0x%x/0x%x).\n",
+ 			    rsp_info_len, rsp_info[3]);
+ 
+@@ -1661,7 +1661,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 			if (!lscsi_status &&
+ 			    ((unsigned)(scsi_bufflen(cp) - resid) <
+ 			     cp->underflow)) {
+-				ql_dbg(ql_dbg_io, vha, 0x301a,
++				ql_dbg(ql_dbg_io, fcport->vha, 0x301a,
+ 				    "Mid-layer underflow "
+ 				    "detected (0x%x of 0x%x bytes).\n",
+ 				    resid, scsi_bufflen(cp));
+@@ -1673,7 +1673,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 		res = DID_OK << 16 | lscsi_status;
+ 
+ 		if (lscsi_status == SAM_STAT_TASK_SET_FULL) {
+-			ql_dbg(ql_dbg_io, vha, 0x301b,
++			ql_dbg(ql_dbg_io, fcport->vha, 0x301b,
+ 			    "QUEUE FULL detected.\n");
+ 			break;
+ 		}
+@@ -1695,7 +1695,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 		scsi_set_resid(cp, resid);
+ 		if (scsi_status & SS_RESIDUAL_UNDER) {
+ 			if (IS_FWI2_CAPABLE(ha) && fw_resid_len != resid_len) {
+-				ql_dbg(ql_dbg_io, vha, 0x301d,
++				ql_dbg(ql_dbg_io, fcport->vha, 0x301d,
+ 				    "Dropped frame(s) detected "
+ 				    "(0x%x of 0x%x bytes).\n",
+ 				    resid, scsi_bufflen(cp));
+@@ -1707,7 +1707,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 			if (!lscsi_status &&
+ 			    ((unsigned)(scsi_bufflen(cp) - resid) <
+ 			    cp->underflow)) {
+-				ql_dbg(ql_dbg_io, vha, 0x301e,
++				ql_dbg(ql_dbg_io, fcport->vha, 0x301e,
+ 				    "Mid-layer underflow "
+ 				    "detected (0x%x of 0x%x bytes).\n",
+ 				    resid, scsi_bufflen(cp));
+@@ -1716,7 +1716,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 				break;
+ 			}
+ 		} else {
+-			ql_dbg(ql_dbg_io, vha, 0x301f,
++			ql_dbg(ql_dbg_io, fcport->vha, 0x301f,
+ 			    "Dropped frame(s) detected (0x%x "
+ 			    "of 0x%x bytes).\n", resid, scsi_bufflen(cp));
+ 
+@@ -1734,7 +1734,7 @@ check_scsi_status:
+ 		 */
+ 		if (lscsi_status != 0) {
+ 			if (lscsi_status == SAM_STAT_TASK_SET_FULL) {
+-				ql_dbg(ql_dbg_io, vha, 0x3020,
++				ql_dbg(ql_dbg_io, fcport->vha, 0x3020,
+ 				    "QUEUE FULL detected.\n");
+ 				logit = 1;
+ 				break;
+@@ -1774,7 +1774,7 @@ check_scsi_status:
+ 				break;
+ 		}
+ 
+-		ql_dbg(ql_dbg_io, vha, 0x3021,
++		ql_dbg(ql_dbg_io, fcport->vha, 0x3021,
+ 		    "Port down status: port-state=0x%x.\n",
+ 		    atomic_read(&fcport->state));
+ 
+@@ -1796,7 +1796,7 @@ check_scsi_status:
+ 
+ out:
+ 	if (logit)
+-		ql_dbg(ql_dbg_io, vha, 0x3022,
++		ql_dbg(ql_dbg_io, fcport->vha, 0x3022,
+ 		    "FCP command status: 0x%x-0x%x (0x%x) "
+ 		    "nexus=%ld:%d:%d portid=%02x%02x%02x oxid=0x%x "
+ 		    "cdb=%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x len=0x%x "
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index bde3eb2..957a4b8 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -46,17 +46,17 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
+ 
+-	ql_dbg(ql_dbg_mbx, base_vha, 0x1000, "Entered %s.\n", __func__);
++	ql_dbg(ql_dbg_mbx, vha, 0x1000, "Entered %s.\n", __func__);
+ 
+ 	if (ha->pdev->error_state > pci_channel_io_frozen) {
+-		ql_log(ql_log_warn, base_vha, 0x1001,
++		ql_log(ql_log_warn, vha, 0x1001,
+ 		    "error_state is greater than pci_channel_io_frozen, "
+ 		    "exiting.\n");
+ 		return QLA_FUNCTION_TIMEOUT;
+ 	}
+ 
+ 	if (vha->device_flags & DFLG_DEV_FAILED) {
+-		ql_log(ql_log_warn, base_vha, 0x1002,
++		ql_log(ql_log_warn, vha, 0x1002,
+ 		    "Device in failed state, exiting.\n");
+ 		return QLA_FUNCTION_TIMEOUT;
+ 	}
+@@ -69,7 +69,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
  
  
- EXHIBIT A
+ 	if (ha->flags.pci_channel_io_perm_failure) {
+-		ql_log(ql_log_warn, base_vha, 0x1003,
++		ql_log(ql_log_warn, vha, 0x1003,
+ 		    "Perm failure on EEH timeout MBX, exiting.\n");
+ 		return QLA_FUNCTION_TIMEOUT;
+ 	}
+@@ -77,7 +77,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	if (ha->flags.isp82xx_fw_hung) {
+ 		/* Setting Link-Down error */
+ 		mcp->mb[0] = MBS_LINK_DOWN_ERROR;
+-		ql_log(ql_log_warn, base_vha, 0x1004,
++		ql_log(ql_log_warn, vha, 0x1004,
+ 		    "FW hung = %d.\n", ha->flags.isp82xx_fw_hung);
+ 		return QLA_FUNCTION_TIMEOUT;
+ 	}
+@@ -89,7 +89,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	 */
+ 	if (!wait_for_completion_timeout(&ha->mbx_cmd_comp, mcp->tov * HZ)) {
+ 		/* Timeout occurred. Return error. */
+-		ql_log(ql_log_warn, base_vha, 0x1005,
++		ql_log(ql_log_warn, vha, 0x1005,
+ 		    "Cmd access timeout, cmd=0x%x, Exiting.\n",
+ 		    mcp->mb[0]);
+ 		return QLA_FUNCTION_TIMEOUT;
+@@ -99,7 +99,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	/* Save mailbox command for debug */
+ 	ha->mcp = mcp;
+ 
+-	ql_dbg(ql_dbg_mbx, base_vha, 0x1006,
++	ql_dbg(ql_dbg_mbx, vha, 0x1006,
+ 	    "Prepare to issue mbox cmd=0x%x.\n", mcp->mb[0]);
+ 
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+@@ -128,28 +128,28 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 		iptr++;
+ 	}
+ 
+-	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x1111,
++	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1111,
+ 	    "Loaded MBX registers (displayed in bytes) =.\n");
+-	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x1112,
++	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1112,
+ 	    (uint8_t *)mcp->mb, 16);
+-	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x1113,
++	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1113,
+ 	    ".\n");
+-	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x1114,
++	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1114,
+ 	    ((uint8_t *)mcp->mb + 0x10), 16);
+-	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x1115,
++	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1115,
+ 	    ".\n");
+-	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x1116,
++	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1116,
+ 	    ((uint8_t *)mcp->mb + 0x20), 8);
+-	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x1117,
++	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1117,
+ 	    "I/O Address = %p.\n", optr);
+-	ql_dump_regs(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x100e);
++	ql_dump_regs(ql_dbg_mbx + ql_dbg_buffer, vha, 0x100e);
+ 
+ 	/* Issue set host interrupt command to send cmd out. */
+ 	ha->flags.mbox_int = 0;
+ 	clear_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
+ 
+ 	/* Unlock mbx registers and wait for interrupt */
+-	ql_dbg(ql_dbg_mbx, base_vha, 0x100f,
++	ql_dbg(ql_dbg_mbx, vha, 0x100f,
+ 	    "Going to unlock irq & waiting for interrupts. "
+ 	    "jiffies=%lx.\n", jiffies);
+ 
+@@ -164,7 +164,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 				spin_unlock_irqrestore(&ha->hardware_lock,
+ 					flags);
+ 				ha->flags.mbox_busy = 0;
+-				ql_dbg(ql_dbg_mbx, base_vha, 0x1010,
++				ql_dbg(ql_dbg_mbx, vha, 0x1010,
+ 				    "Pending mailbox timeout, exiting.\n");
+ 				rval = QLA_FUNCTION_TIMEOUT;
+ 				goto premature_exit;
+@@ -181,7 +181,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 		clear_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags);
+ 
+ 	} else {
+-		ql_dbg(ql_dbg_mbx, base_vha, 0x1011,
++		ql_dbg(ql_dbg_mbx, vha, 0x1011,
+ 		    "Cmd=%x Polling Mode.\n", command);
+ 
+ 		if (IS_QLA82XX(ha)) {
+@@ -190,7 +190,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 				spin_unlock_irqrestore(&ha->hardware_lock,
+ 					flags);
+ 				ha->flags.mbox_busy = 0;
+-				ql_dbg(ql_dbg_mbx, base_vha, 0x1012,
++				ql_dbg(ql_dbg_mbx, vha, 0x1012,
+ 				    "Pending mailbox timeout, exiting.\n");
+ 				rval = QLA_FUNCTION_TIMEOUT;
+ 				goto premature_exit;
+@@ -215,7 +215,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 			    command == MBC_LOAD_RISC_RAM_EXTENDED))
+ 				msleep(10);
+ 		} /* while */
+-		ql_dbg(ql_dbg_mbx, base_vha, 0x1013,
++		ql_dbg(ql_dbg_mbx, vha, 0x1013,
+ 		    "Waited %d sec.\n",
+ 		    (uint)((jiffies - (wait_time - (mcp->tov * HZ)))/HZ));
+ 	}
+@@ -224,7 +224,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	if (ha->flags.mbox_int) {
+ 		uint16_t *iptr2;
+ 
+-		ql_dbg(ql_dbg_mbx, base_vha, 0x1014,
++		ql_dbg(ql_dbg_mbx, vha, 0x1014,
+ 		    "Cmd=%x completed.\n", command);
+ 
+ 		/* Got interrupt. Clear the flag. */
+@@ -237,7 +237,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 			mcp->mb[0] = MBS_LINK_DOWN_ERROR;
+ 			ha->mcp = NULL;
+ 			rval = QLA_FUNCTION_FAILED;
+-			ql_log(ql_log_warn, base_vha, 0x1015,
++			ql_log(ql_log_warn, vha, 0x1015,
+ 			    "FW hung = %d.\n", ha->flags.isp82xx_fw_hung);
+ 			goto premature_exit;
+ 		}
+@@ -269,13 +269,13 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 			mb0 = RD_MAILBOX_REG(ha, &reg->isp, 0);
+ 			ictrl = RD_REG_WORD(&reg->isp.ictrl);
+ 		}
+-		ql_dbg(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x1119,
++		ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1119,
+ 		    "MBX Command timeout for cmd %x.\n", command);
+-		ql_dbg(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x111a,
++		ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x111a,
+ 		    "iocontrol=%x jiffies=%lx.\n", ictrl, jiffies);
+-		ql_dbg(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x111b,
++		ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x111b,
+ 		    "mb[0] = 0x%x.\n", mb0);
+-		ql_dump_regs(ql_dbg_mbx + ql_dbg_buffer, base_vha, 0x1019);
++		ql_dump_regs(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1019);
+ 
+ 		rval = QLA_FUNCTION_TIMEOUT;
+ 	}
+@@ -286,7 +286,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	ha->mcp = NULL;
+ 
+ 	if ((abort_active || !io_lock_on) && !IS_NOPOLLING_TYPE(ha)) {
+-		ql_dbg(ql_dbg_mbx, base_vha, 0x101a,
++		ql_dbg(ql_dbg_mbx, vha, 0x101a,
+ 		    "Checking for additional resp interrupt.\n");
+ 
+ 		/* polling mode for non isp_abort commands. */
+@@ -298,7 +298,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 		if (!io_lock_on || (mcp->flags & IOCTL_CMD) ||
+ 		    ha->flags.eeh_busy) {
+ 			/* not in dpc. schedule it for dpc to take over. */
+-			ql_dbg(ql_dbg_mbx, base_vha, 0x101b,
++			ql_dbg(ql_dbg_mbx, vha, 0x101b,
+ 			    "Timeout, schedule isp_abort_needed.\n");
+ 
+ 			if (!test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) &&
+@@ -323,7 +323,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 			}
+ 		} else if (!abort_active) {
+ 			/* call abort directly since we are in the DPC thread */
+-			ql_dbg(ql_dbg_mbx, base_vha, 0x101d,
++			ql_dbg(ql_dbg_mbx, vha, 0x101d,
+ 			    "Timeout, calling abort_isp.\n");
+ 
+ 			if (!test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) &&
+@@ -352,7 +352,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 					    &vha->dpc_flags);
+ 				}
+ 				clear_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags);
+-				ql_dbg(ql_dbg_mbx, base_vha, 0x101f,
++				ql_dbg(ql_dbg_mbx, vha, 0x101f,
+ 				    "Finished abort_isp.\n");
+ 				goto mbx_done;
+ 			}
 -- 
 1.6.0.2
 
