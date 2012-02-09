@@ -1,74 +1,55 @@
-From: Christian Hoff <christian.hoff@de.ibm.com>
-Subject: Re: Pe: [PATCH v5 1/3] virtio-scsi: first version
-Date: Thu, 9 Feb 2012 13:18:21 +0100
-Message-ID: <OFDF7B0B80.B44589BA-ONC125799F.00410C52-C125799F.00439AD0@de.ibm.com>
-References: <OF2D939B55.7C07E33B-ONC125799C.0032B83A-C125799C.0036282C@de.ibm.com> <4F30F4EE.4080607@redhat.com> <4F311154.9080407@de.ibm.com> <4F3119A0.7080005@redhat.com> <4F312492.1040002@de.ibm.com> <OFAFB86CAE.9917478D-ONC125799D.004AF231-C125799D.004CE6D2@de.ibm.com> <4F313526.2050907@redhat.com> <OF36197712.1A42EB9E-ONC125799E.0049E3C2-C125799E.004AD4BF@de.ibm.com> <4F3390FB.80107@redhat.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCHv2 0/7] acpi/libata: Express dependencies for devices on
+ dock stations and bays
+Date: Thu, 09 Feb 2012 10:28:21 -0500
+Message-ID: <4F33E615.6070607@garzik.org>
+References: <20120120001817.GA27706@homac.suse.de> <CAF1ivSYhOTitPctsJOTKWN9HDt0VZpQe_-_a0LnLefVGxOJtXg@mail.gmail.com> <20120209073345.GA11121@homac.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4F3390FB.80107@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: BORNTRAE@linux.vnet.ibm.com, James Bottomley <JBottomley@parallels.com>, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, rusty@rustcorp.com.au
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20120209073345.GA11121@homac.suse.de>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Holger Macht <holger@homac.de>
+Cc: Lin Ming <ming.m.lin@intel.com>, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Garrett <mjg@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Paolo Bonzini wrote:
-> James, will you include virtio-scsi in 3.4?
+On 02/09/2012 02:33 AM, Holger Macht wrote:
+> On Do 09. Feb - 14:46:11, Lin Ming wrote:
+>> On Fri, Jan 20, 2012 at 8:18 AM, Holger Macht<holger@homac.de>  wrote:
+>>> Patches 2 through 5 are just a refresh of the patches from Matthew
+>>> Garrett sent to this list in September 2010 [1]:
+>>>
+>>> Patch 1 is a new patch incorporating the corrections from James
+>>> Bottomley. Patch 6, 7 and 8 make the whole patch set actually work on my
+>>> test hardware (Thinkpad x60/Thinkpad T60) by fixing minor issues and
+>>> compensating changes after the first submission.
+>>>
+>>> All patches now contain the correct Signed-off-by instead of Acked-by
+>>> tags.
+>>>
+>>>   [PATCH 1/8] scsi: Add wrapper to access and set scsi_bus_type in struct acpi_bus_type
+>>>   [PATCH 2/8] libata: Bind the Linux device tree to the ACPI device tree
+>>>   [PATCH 3/8] libata: Migrate ACPI code over to new bindings
+>>>   [PATCH 4/8] acpi: Add support for linking docks to the objects they contain
+>>>   [PATCH 5/8] libata: Add links between removable devices and docks
+>>>   [PATCH 6/8] libata: Generate and pass correct acpi handles
+>>>   [PATCH 7/8] acpi: Prevent duplicate hotplug device registration on dock stations
+>>>   [PATCH 8/8] libata: Use correct PCI devices
+>>
+>> Hi Holger,
+>>
+>> What's the status of these patches?
+>
+> They've been ACKed by both ACPI (Len Brown) and libata (James Bottomley)
+> people, so I guess they are good to go and I'm waiting for someone (Jeff
+> Garzik?) to pick them up.
 
-The key arguments from my side for inclusion of virtio-scsi are:
-- Support for SCSI multipathing, which can optionally be done on the ho=
-st=20
-operating system.
-- We can now use other SCSI(non-block) devices and make them accessible=
- to=20
-the guest. For example we were able to virtualize a SCSI FCP tape using=
-=20
-virtio-scsi. One of the biggest constraints of virtio-block is that it =
-is=20
-limited to block devices, while virtio-scsi presents you with a more=20
-generic solution.
+I ACK'd for libata.  It's queued in libata-dev...  but looks like that 
+did not get pushed out.  Should show up in the next linux-next.
 
-So I consider virtio-scsi to be the cleaner approach to do virtualizati=
-on=20
-of SCSI commands. This is supported by the fact that virtio-block has a=
-=20
-maintenance problem and has to change its protocol from time to time to=
-=20
-support new features introduced by a new version of the SCSI standard.
-
-So please consider including virtio-scsi into the mainline kernel tree.=
-=20
-This is good and conceptually clean code, and it has proven to work ver=
-y=20
-well in our internal testing.
-
-Mit freundlichen Gr=FC=DFen / Kind regards
-
-Christian Hoff
-
-Student - Applied Computer Science
-
-
-Phone:
-49-16098976-950
- IBM Deutschland
-
-E-Mail:
-christian.hoff@de.ibm.com
- Am Fichtenberg 1
+	Jeff
 
 
- 71083 Herrenberg
 
 
- Germany
-
-
-IBM Deutschland GmbH / Vorsitzender des Aufsichtsrats: Martin Jetter
-Gesch=E4ftsf=FChrung: Martina Koederitz (Vorsitzende), Reinhard Reschke=
-,=20
-Dieter Scholz, Gregor Pillen, Joachim Heel, Christian Noll
-Sitz der Gesellschaft: Ehningen / Registergericht: Amtsgericht Stuttgar=
-t,=20
-HRB 14562 / WEEE-Reg.-Nr. DE 99369940=20
