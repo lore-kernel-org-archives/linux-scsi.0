@@ -1,149 +1,116 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 11/29] qla2xxx: Perform implicit logout during rport tear-down.
-Date: Thu, 9 Feb 2012 11:15:43 -0800
-Message-ID: <1328814961-21866-12-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 26/29] qla2xxx: Handle device mapping changes due to device logout.
+Date: Thu, 9 Feb 2012 11:15:58 -0800
+Message-ID: <1328814961-21866-27-git-send-email-chad.dupuis@qlogic.com>
 References: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:3207
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758468Ab2BITc0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:26 -0500
-Received: from mail18-ch1 (localhost [127.0.0.1])	by mail18-ch1-R.bigfish.com
- (Postfix) with ESMTP id 791AA30028E	for <linux-scsi@vger.kernel.org>; Thu,  9
- Feb 2012 19:32:12 +0000 (UTC)
+	by vger.kernel.org with ESMTP id S1758400Ab2BITc1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:27 -0500
+Received: from mail70-ch1 (localhost [127.0.0.1])	by mail70-ch1-R.bigfish.com
+ (Postfix) with ESMTP id 912601A0584	for <linux-scsi@vger.kernel.org>; Thu,  9
+ Feb 2012 19:32:13 +0000 (UTC)
 In-Reply-To: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: Arun Easi <arun.easi@qlogic.com>
 
-During rport tear-down, make sure we do an implicit LOGO of the fcport in our
-firmware to try to clear any residual commands associated with that fcport.
+A device logout sent in the delete path of a fcport would clear the
+port handle binding inside the firmware. This could lead to queued
+work items for the fcport, if any, getting incorrect results. This
+patch fixes the issue by checking for device name changes after a
+call to get port database.
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: Arun Easi <arun.easi@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |   12 ++++++++----
- drivers/scsi/qla2xxx/qla_dbg.c  |    3 ++-
- drivers/scsi/qla2xxx/qla_def.h  |    1 +
- drivers/scsi/qla2xxx/qla_gbl.h  |    3 +++
- drivers/scsi/qla2xxx/qla_mbx.c  |   37 +++++++++++++++++++++++++++++++++++++
- 5 files changed, 51 insertions(+), 5 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |    8 ++++++++
+ drivers/scsi/qla2xxx/qla_mbx.c  |   19 +++++++++++++++++++
+ 2 files changed, 27 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 5433f95..e21db2f 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1647,10 +1647,14 @@ qla2x00_terminate_rport_io(struct fc_rport *rport)
- 	 * final cleanup of firmware resources (PCBs and XCBs).
- 	 */
- 	if (fcport->loop_id != FC_NO_LOOP_ID &&
--	    !test_bit(UNLOADING, &fcport->vha->dpc_flags))
--		fcport->vha->hw->isp_ops->fabric_logout(fcport->vha,
--			fcport->loop_id, fcport->d_id.b.domain,
--			fcport->d_id.b.area, fcport->d_id.b.al_pa);
-+	    !test_bit(UNLOADING, &fcport->vha->dpc_flags)) {
-+		if (IS_FWI2_CAPABLE(fcport->vha->hw))
-+			fcport->vha->hw->isp_ops->fabric_logout(fcport->vha,
-+			    fcport->loop_id, fcport->d_id.b.domain,
-+			    fcport->d_id.b.area, fcport->d_id.b.al_pa);
-+		else
-+			qla2x00_port_logout(fcport->vha, fcport);
-+	}
- }
- 
- static int
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index b85ba1e..4ba30b2 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -12,7 +12,8 @@
-  * |             Level            |   Last Value Used  |     Holes	|
-  * ----------------------------------------------------------------------
-  * | Module Init and Probe        |       0x0120       | 0x4b,0xba,0xfa |
-- * | Mailbox commands             |       0x1139       | 0x112c-0x112e  |
-+ * | Mailbox commands             |       0x113e       | 0x112c-0x112e  |
-+ * |                              |                    | 0x113a         |
-  * | Device Discovery             |       0x2085       | 0x2020-0x2022  |
-  * | Queue Command and IO tracing |       0x302f       | 0x3006,0x3008  |
-  * |                              |                    | 0x302d-0x302e  |
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 7a224b7..1281f5b 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -665,6 +665,7 @@ typedef struct {
- #define MBC_CONFIGURE_VF		0x4b	/* Configure VFs */
- #define MBC_RESET_LINK_STATUS		0x52	/* Reset Link Error Status */
- #define MBC_IOCB_COMMAND_A64		0x54	/* Execute IOCB command (64) */
-+#define MBC_PORT_LOGOUT			0x56	/* Port Logout request */
- #define MBC_SEND_RNID_ELS		0x57	/* Send RNID ELS request */
- #define MBC_SET_RNID_PARAMS		0x59	/* Set RNID parameters */
- #define MBC_GET_RNID_PARAMS		0x5a	/* Data Rate */
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 87fee23..9f06580 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -367,6 +367,9 @@ qla81xx_get_port_config(scsi_qla_host_t *, uint16_t *);
- extern int
- qla81xx_set_port_config(scsi_qla_host_t *, uint16_t *);
- 
-+extern int
-+qla2x00_port_logout(scsi_qla_host_t *, struct fc_port *);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 2627c87..b946564 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -350,6 +350,13 @@ qla2x00_async_login_done(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 		 * requests.
+ 		 */
+ 		rval = qla2x00_get_port_database(vha, fcport, 0);
++		if (rval == QLA_NOT_LOGGED_IN) {
++			fcport->flags &= ~FCF_ASYNC_SENT;
++			fcport->flags |= FCF_LOGIN_NEEDED;
++			set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
++			break;
++		}
 +
- /*
-  * Global Function Prototypes in qla_isr.c source file.
-  */
+ 		if (rval != QLA_SUCCESS) {
+ 			qla2x00_post_async_logout_work(vha, fcport, NULL);
+ 			qla2x00_post_async_login_work(vha, fcport, NULL);
+@@ -3318,6 +3325,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 			fcport->flags |= FCF_LOGIN_NEEDED;
+ 			if (fcport->loop_id != FC_NO_LOOP_ID &&
+ 			    (fcport->flags & FCF_FCP2_DEVICE) == 0 &&
++			    (fcport->flags & FCF_ASYNC_SENT) == 0 &&
+ 			    fcport->port_type != FCT_INITIATOR &&
+ 			    fcport->port_type != FCT_BROADCAST) {
+ 				ha->isp_ops->fabric_logout(vha, fcport->loop_id,
 diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 50ec272..61e2fb7 100644
+index adc2b14..b4a2339 100644
 --- a/drivers/scsi/qla2xxx/qla_mbx.c
 +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -4502,5 +4502,42 @@ qla83xx_write_remote_reg(scsi_qla_host_t *vha, uint32_t reg, uint32_t data)
- 		ql_dbg(ql_dbg_mbx, vha, 0x1132,
- 		    "Done %s.\n", __func__);
- 	}
+@@ -1289,6 +1289,7 @@ qla2x00_get_port_database(scsi_qla_host_t *vha, fc_port_t *fcport, uint8_t opt)
+ 		goto gpd_error_out;
+ 
+ 	if (IS_FWI2_CAPABLE(ha)) {
++		uint64_t zero = 0;
+ 		pd24 = (struct port_database_24xx *) pd;
+ 
+ 		/* Check for logged in state. */
+@@ -1302,6 +1303,14 @@ qla2x00_get_port_database(scsi_qla_host_t *vha, fc_port_t *fcport, uint8_t opt)
+ 			goto gpd_error_out;
+ 		}
+ 
++		if (fcport->loop_id == FC_NO_LOOP_ID ||
++		    (memcmp(fcport->port_name, (uint8_t *)&zero, 8) &&
++		     memcmp(fcport->port_name, pd24->port_name, 8))) {
++			/* We lost the device mid way. */
++			rval = QLA_NOT_LOGGED_IN;
++			goto gpd_error_out;
++		}
 +
- 	return rval;
- }
+ 		/* Names are little-endian. */
+ 		memcpy(fcport->node_name, pd24->node_name, WWN_SIZE);
+ 		memcpy(fcport->port_name, pd24->port_name, WWN_SIZE);
+@@ -1318,6 +1327,8 @@ qla2x00_get_port_database(scsi_qla_host_t *vha, fc_port_t *fcport, uint8_t opt)
+ 		else
+ 			fcport->port_type = FCT_TARGET;
+ 	} else {
++		uint64_t zero = 0;
 +
-+int
-+qla2x00_port_logout(scsi_qla_host_t *vha, struct fc_port *fcport)
-+{
-+	int rval;
-+	struct qla_hw_data *ha = vha->hw;
-+	mbx_cmd_t mc;
-+	mbx_cmd_t *mcp = &mc;
+ 		/* Check for logged in state. */
+ 		if (pd->master_state != PD_STATE_PORT_LOGGED_IN &&
+ 		    pd->slave_state != PD_STATE_PORT_LOGGED_IN) {
+@@ -1330,6 +1341,14 @@ qla2x00_get_port_database(scsi_qla_host_t *vha, fc_port_t *fcport, uint8_t opt)
+ 			goto gpd_error_out;
+ 		}
+ 
++		if (fcport->loop_id == FC_NO_LOOP_ID ||
++		    (memcmp(fcport->port_name, (uint8_t *)&zero, 8) &&
++		     memcmp(fcport->port_name, pd->port_name, 8))) {
++			/* We lost the device mid way. */
++			rval = QLA_NOT_LOGGED_IN;
++			goto gpd_error_out;
++		}
 +
-+	if (IS_QLA2100(ha) || IS_QLA2200(ha)) {
-+		ql_dbg(ql_dbg_mbx, vha, 0x113b,
-+		    "Implicit LOGO Unsupported.\n");
-+		return QLA_FUNCTION_FAILED;
-+	}
-+
-+
-+	ql_dbg(ql_dbg_mbx, vha, 0x113c, "Done %s.\n",  __func__);
-+
-+	/* Perform Implicit LOGO. */
-+	mcp->mb[0] = MBC_PORT_LOGOUT;
-+	mcp->mb[1] = fcport->loop_id;
-+	mcp->mb[10] = BIT_15;
-+	mcp->out_mb = MBX_10|MBX_1|MBX_0;
-+	mcp->in_mb = MBX_0;
-+	mcp->tov = MBX_TOV_SECONDS;
-+	mcp->flags = 0;
-+	rval = qla2x00_mailbox_command(vha, mcp);
-+	if (rval != QLA_SUCCESS)
-+		ql_dbg(ql_dbg_mbx, vha, 0x113d,
-+		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
-+	else
-+		ql_dbg(ql_dbg_mbx, vha, 0x113e, "Done %s.\n", __func__);
-+
-+	return rval;
-+}
-+
+ 		/* Names are little-endian. */
+ 		memcpy(fcport->node_name, pd->node_name, WWN_SIZE);
+ 		memcpy(fcport->port_name, pd->port_name, WWN_SIZE);
 -- 
 1.6.0.2
 
