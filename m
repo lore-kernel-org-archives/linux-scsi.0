@@ -1,18 +1,18 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 15/29] qla2xxx: Convert remaining printk's to ql_log format.
-Date: Thu, 9 Feb 2012 11:15:47 -0800
-Message-ID: <1328814961-21866-16-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 22/29] qla2xxx: Update LICENSE.qla2xxx.
+Date: Thu, 9 Feb 2012 11:15:54 -0800
+Message-ID: <1328814961-21866-23-git-send-email-chad.dupuis@qlogic.com>
 References: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:41640
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:41846
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758448Ab2BITcO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:14 -0500
-Received: from mail2-ch1 (localhost [127.0.0.1])	by mail2-ch1-R.bigfish.com
- (Postfix) with ESMTP id 5AFB71C01FF	for <linux-scsi@vger.kernel.org>; Thu,  9
- Feb 2012 19:32:13 +0000 (UTC)
+	by vger.kernel.org with ESMTP id S1758411Ab2BITcM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:12 -0500
+Received: from mail102-ch1 (localhost [127.0.0.1])	by
+ mail102-ch1-R.bigfish.com (Postfix) with ESMTP id DE1DC60572	for
+ <linux-scsi@vger.kernel.org>; Thu,  9 Feb 2012 19:32:11 +0000 (UTC)
 In-Reply-To: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,118 +22,64 @@ Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |    4 ++--
- drivers/scsi/qla2xxx/qla_isr.c |   24 ++++++++++++------------
- drivers/scsi/qla2xxx/qla_nx.c  |    4 ++--
- 3 files changed, 16 insertions(+), 16 deletions(-)
+ Documentation/scsi/LICENSE.qla2xxx |   41 +----------------------------------
+ 1 files changed, 2 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 4ba30b2..472ee5e 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -18,7 +18,7 @@
-  * | Queue Command and IO tracing |       0x302f       | 0x3006,0x3008  |
-  * |                              |                    | 0x302d-0x302e  |
-  * | DPC Thread                   |       0x401c       |		|
-- * | Async Events                 |       0x5057       | 0x502b-0x502f  |
-+ * | Async Events                 |       0x505d       | 0x502b-0x502f  |
-  * |                              |                    | 0x5047,0x5052  |
-  * | Timer Routines               |       0x6011       | 0x600e-0x600f  |
-  * | User Space Interactions      |       0x709e       | 0x7018,0x702e  |
-@@ -27,7 +27,7 @@
-  * |                              |                    | 0x800b,0x8039  |
-  * | AER/EEH                      |       0x900f       |		|
-  * | Virtual Port                 |       0xa007       |		|
-- * | ISP82XX Specific             |       0xb052       |		|
-+ * | ISP82XX Specific             |       0xb054       | 0xb053         |
-  * | MultiQ                       |       0xc00c       |		|
-  * | Misc                         |       0xd010       |		|
-  * ----------------------------------------------------------------------
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 18d5c1f..ea6d6b0 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -44,8 +44,8 @@ qla2100_intr_handler(int irq, void *dev_id)
+diff --git a/Documentation/scsi/LICENSE.qla2xxx b/Documentation/scsi/LICENSE.qla2xxx
+index 19e7cd4..ce0fdf3 100644
+--- a/Documentation/scsi/LICENSE.qla2xxx
++++ b/Documentation/scsi/LICENSE.qla2xxx
+@@ -1,48 +1,11 @@
+ Copyright (c) 2003-2011 QLogic Corporation
+-QLogic Linux/ESX Fibre Channel HBA Driver
++QLogic Linux FC-FCoE Driver
  
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
--		printk(KERN_INFO
--		    "%s(): NULL response queue pointer.\n", __func__);
-+		ql_log(ql_log_info, NULL, 0x505d,
-+		    "%s: NULL response queue pointer.\n", __func__);
- 		return (IRQ_NONE);
- 	}
+-This program includes a device driver for Linux 2.6/ESX that may be
+-distributed with QLogic hardware specific firmware binary file.
++This program includes a device driver for Linux 3.x.
+ You may modify and redistribute the device driver code under the
+ GNU General Public License (a copy of which is attached hereto as
+ Exhibit A) published by the Free Software Foundation (version 2).
  
-@@ -141,8 +141,8 @@ qla2300_intr_handler(int irq, void *dev_id)
+-You may redistribute the hardware specific firmware binary file
+-under the following terms:
+-
+-	1. Redistribution of source code (only if applicable),
+-	   must retain the above copyright notice, this list of
+-	   conditions and the following disclaimer.
+-
+-	2. Redistribution in binary form must reproduce the above
+-	   copyright notice, this list of conditions and the
+-	   following disclaimer in the documentation and/or other
+-	   materials provided with the distribution.
+-
+-	3. The name of QLogic Corporation may not be used to
+-	   endorse or promote products derived from this software
+-	   without specific prior written permission
+-
+-REGARDLESS OF WHAT LICENSING MECHANISM IS USED OR APPLICABLE,
+-THIS PROGRAM IS PROVIDED BY QLOGIC CORPORATION "AS IS'' AND ANY
+-EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
+-BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+-TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+-OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-POSSIBILITY OF SUCH DAMAGE.
+-
+-USER ACKNOWLEDGES AND AGREES THAT USE OF THIS PROGRAM WILL NOT
+-CREATE OR GIVE GROUNDS FOR A LICENSE BY IMPLICATION, ESTOPPEL, OR
+-OTHERWISE IN ANY INTELLECTUAL PROPERTY RIGHTS (PATENT, COPYRIGHT,
+-TRADE SECRET, MASK WORK, OR OTHER PROPRIETARY RIGHT) EMBODIED IN
+-ANY OTHER QLOGIC HARDWARE OR SOFTWARE EITHER SOLELY OR IN
+-COMBINATION WITH THIS PROGRAM.
  
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
--		printk(KERN_INFO
--		    "%s(): NULL response queue pointer.\n", __func__);
-+		ql_log(ql_log_info, NULL, 0x5058,
-+		    "%s: NULL response queue pointer.\n", __func__);
- 		return (IRQ_NONE);
- 	}
  
-@@ -2097,8 +2097,8 @@ qla24xx_intr_handler(int irq, void *dev_id)
- 
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
--		printk(KERN_INFO
--		    "%s(): NULL response queue pointer.\n", __func__);
-+		ql_log(ql_log_info, NULL, 0x5059,
-+		    "%s: NULL response queue pointer.\n", __func__);
- 		return IRQ_NONE;
- 	}
- 
-@@ -2181,8 +2181,8 @@ qla24xx_msix_rsp_q(int irq, void *dev_id)
- 
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
--		printk(KERN_INFO
--		"%s(): NULL response queue pointer.\n", __func__);
-+		ql_log(ql_log_info, NULL, 0x505a,
-+		    "%s: NULL response queue pointer.\n", __func__);
- 		return IRQ_NONE;
- 	}
- 	ha = rsp->hw;
-@@ -2211,8 +2211,8 @@ qla25xx_msix_rsp_q(int irq, void *dev_id)
- 
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
--		printk(KERN_INFO
--			"%s(): NULL response queue pointer.\n", __func__);
-+		ql_log(ql_log_info, NULL, 0x505b,
-+		    "%s: NULL response queue pointer.\n", __func__);
- 		return IRQ_NONE;
- 	}
- 	ha = rsp->hw;
-@@ -2245,8 +2245,8 @@ qla24xx_msix_default(int irq, void *dev_id)
- 
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
--		printk(KERN_INFO
--			"%s(): NULL response queue pointer.\n", __func__);
-+		ql_log(ql_log_info, NULL, 0x505c,
-+		    "%s: NULL response queue pointer.\n", __func__);
- 		return IRQ_NONE;
- 	}
- 	ha = rsp->hw;
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index b0df7da..b251b4d 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -2050,8 +2050,8 @@ qla82xx_intr_handler(int irq, void *dev_id)
- 
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
--		printk(KERN_INFO
--			"%s(): NULL response queue pointer.\n", __func__);
-+		ql_log(ql_log_info, NULL, 0xb054,
-+		    "%s: NULL response queue pointer.\n", __func__);
- 		return IRQ_NONE;
- 	}
- 	ha = rsp->hw;
+ EXHIBIT A
 -- 
 1.6.0.2
 
