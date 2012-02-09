@@ -1,17 +1,17 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 28/29] qla2xxx: Stop iteration after first failure in *_id functions.
-Date: Thu, 9 Feb 2012 11:16:00 -0800
-Message-ID: <1328814961-21866-29-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 11/29] qla2xxx: Perform implicit logout during rport tear-down.
+Date: Thu, 9 Feb 2012 11:15:43 -0800
+Message-ID: <1328814961-21866-12-git-send-email-chad.dupuis@qlogic.com>
 References: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:38706
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:3207
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758470Ab2BITcX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:23 -0500
-Received: from mail69-ch1 (localhost [127.0.0.1])	by mail69-ch1-R.bigfish.com
- (Postfix) with ESMTP id 5D4B8380477	for <linux-scsi@vger.kernel.org>; Thu,  9
+	by vger.kernel.org with ESMTP id S1758468Ab2BITc0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2012 14:32:26 -0500
+Received: from mail18-ch1 (localhost [127.0.0.1])	by mail18-ch1-R.bigfish.com
+ (Postfix) with ESMTP id 791AA30028E	for <linux-scsi@vger.kernel.org>; Thu,  9
  Feb 2012 19:32:12 +0000 (UTC)
 In-Reply-To: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,54 +19,131 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Arun Easi <arun.easi@qlogic.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Signed-off-by: Arun Easi <arun.easi@qlogic.com>
+During rport tear-down, make sure we do an implicit LOGO of the fcport in our
+firmware to try to clear any residual commands associated with that fcport.
+
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_gs.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |   12 ++++++++----
+ drivers/scsi/qla2xxx/qla_dbg.c  |    3 ++-
+ drivers/scsi/qla2xxx/qla_def.h  |    1 +
+ drivers/scsi/qla2xxx/qla_gbl.h  |    3 +++
+ drivers/scsi/qla2xxx/qla_mbx.c  |   37 +++++++++++++++++++++++++++++++++++++
+ 5 files changed, 51 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index f82b00a..6cbbcde 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -371,9 +371,11 @@ qla2x00_gpn_id(scsi_qla_host_t *vha, sw_info_t *list)
- 			/*EMPTY*/
- 			ql_dbg(ql_dbg_disc, vha, 0x2056,
- 			    "GPN_ID issue IOCB failed (%d).\n", rval);
-+			break;
- 		} else if (qla2x00_chk_ms_status(vha, ms_pkt, ct_rsp,
- 		    "GPN_ID") != QLA_SUCCESS) {
- 			rval = QLA_FUNCTION_FAILED;
-+			break;
- 		} else {
- 			/* Save portname */
- 			memcpy(list[i].port_name,
-@@ -431,9 +433,11 @@ qla2x00_gnn_id(scsi_qla_host_t *vha, sw_info_t *list)
- 			/*EMPTY*/
- 			ql_dbg(ql_dbg_disc, vha, 0x2057,
- 			    "GNN_ID issue IOCB failed (%d).\n", rval);
-+			break;
- 		} else if (qla2x00_chk_ms_status(vha, ms_pkt, ct_rsp,
- 		    "GNN_ID") != QLA_SUCCESS) {
- 			rval = QLA_FUNCTION_FAILED;
-+			break;
- 		} else {
- 			/* Save nodename */
- 			memcpy(list[i].node_name,
-@@ -1777,9 +1781,11 @@ qla2x00_gfpn_id(scsi_qla_host_t *vha, sw_info_t *list)
- 			/*EMPTY*/
- 			ql_dbg(ql_dbg_disc, vha, 0x2023,
- 			    "GFPN_ID issue IOCB failed (%d).\n", rval);
-+			break;
- 		} else if (qla2x00_chk_ms_status(vha, ms_pkt, ct_rsp,
- 		    "GFPN_ID") != QLA_SUCCESS) {
- 			rval = QLA_FUNCTION_FAILED;
-+			break;
- 		} else {
- 			/* Save fabric portname */
- 			memcpy(list[i].fabric_port_name,
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 5433f95..e21db2f 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1647,10 +1647,14 @@ qla2x00_terminate_rport_io(struct fc_rport *rport)
+ 	 * final cleanup of firmware resources (PCBs and XCBs).
+ 	 */
+ 	if (fcport->loop_id != FC_NO_LOOP_ID &&
+-	    !test_bit(UNLOADING, &fcport->vha->dpc_flags))
+-		fcport->vha->hw->isp_ops->fabric_logout(fcport->vha,
+-			fcport->loop_id, fcport->d_id.b.domain,
+-			fcport->d_id.b.area, fcport->d_id.b.al_pa);
++	    !test_bit(UNLOADING, &fcport->vha->dpc_flags)) {
++		if (IS_FWI2_CAPABLE(fcport->vha->hw))
++			fcport->vha->hw->isp_ops->fabric_logout(fcport->vha,
++			    fcport->loop_id, fcport->d_id.b.domain,
++			    fcport->d_id.b.area, fcport->d_id.b.al_pa);
++		else
++			qla2x00_port_logout(fcport->vha, fcport);
++	}
+ }
+ 
+ static int
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index b85ba1e..4ba30b2 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -12,7 +12,8 @@
+  * |             Level            |   Last Value Used  |     Holes	|
+  * ----------------------------------------------------------------------
+  * | Module Init and Probe        |       0x0120       | 0x4b,0xba,0xfa |
+- * | Mailbox commands             |       0x1139       | 0x112c-0x112e  |
++ * | Mailbox commands             |       0x113e       | 0x112c-0x112e  |
++ * |                              |                    | 0x113a         |
+  * | Device Discovery             |       0x2085       | 0x2020-0x2022  |
+  * | Queue Command and IO tracing |       0x302f       | 0x3006,0x3008  |
+  * |                              |                    | 0x302d-0x302e  |
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 7a224b7..1281f5b 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -665,6 +665,7 @@ typedef struct {
+ #define MBC_CONFIGURE_VF		0x4b	/* Configure VFs */
+ #define MBC_RESET_LINK_STATUS		0x52	/* Reset Link Error Status */
+ #define MBC_IOCB_COMMAND_A64		0x54	/* Execute IOCB command (64) */
++#define MBC_PORT_LOGOUT			0x56	/* Port Logout request */
+ #define MBC_SEND_RNID_ELS		0x57	/* Send RNID ELS request */
+ #define MBC_SET_RNID_PARAMS		0x59	/* Set RNID parameters */
+ #define MBC_GET_RNID_PARAMS		0x5a	/* Data Rate */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 87fee23..9f06580 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -367,6 +367,9 @@ qla81xx_get_port_config(scsi_qla_host_t *, uint16_t *);
+ extern int
+ qla81xx_set_port_config(scsi_qla_host_t *, uint16_t *);
+ 
++extern int
++qla2x00_port_logout(scsi_qla_host_t *, struct fc_port *);
++
+ /*
+  * Global Function Prototypes in qla_isr.c source file.
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 50ec272..61e2fb7 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -4502,5 +4502,42 @@ qla83xx_write_remote_reg(scsi_qla_host_t *vha, uint32_t reg, uint32_t data)
+ 		ql_dbg(ql_dbg_mbx, vha, 0x1132,
+ 		    "Done %s.\n", __func__);
+ 	}
++
+ 	return rval;
+ }
++
++int
++qla2x00_port_logout(scsi_qla_host_t *vha, struct fc_port *fcport)
++{
++	int rval;
++	struct qla_hw_data *ha = vha->hw;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++
++	if (IS_QLA2100(ha) || IS_QLA2200(ha)) {
++		ql_dbg(ql_dbg_mbx, vha, 0x113b,
++		    "Implicit LOGO Unsupported.\n");
++		return QLA_FUNCTION_FAILED;
++	}
++
++
++	ql_dbg(ql_dbg_mbx, vha, 0x113c, "Done %s.\n",  __func__);
++
++	/* Perform Implicit LOGO. */
++	mcp->mb[0] = MBC_PORT_LOGOUT;
++	mcp->mb[1] = fcport->loop_id;
++	mcp->mb[10] = BIT_15;
++	mcp->out_mb = MBX_10|MBX_1|MBX_0;
++	mcp->in_mb = MBX_0;
++	mcp->tov = MBX_TOV_SECONDS;
++	mcp->flags = 0;
++	rval = qla2x00_mailbox_command(vha, mcp);
++	if (rval != QLA_SUCCESS)
++		ql_dbg(ql_dbg_mbx, vha, 0x113d,
++		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
++	else
++		ql_dbg(ql_dbg_mbx, vha, 0x113e, "Done %s.\n", __func__);
++
++	return rval;
++}
++
 -- 
 1.6.0.2
 
