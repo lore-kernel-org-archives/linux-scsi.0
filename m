@@ -1,118 +1,170 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: bsg_unregister_queue attempts to remove "bsg" sysfs link that
- doesn't exist
-Date: Fri, 10 Feb 2012 09:01:57 +0100
-Message-ID: <4F34CEF5.6020103@kernel.dk>
-References: <4F32E0F8.4080203@simon.arlott.org.uk> <20120209152402.cdaf1b55.akpm@linux-foundation.org> <4F347119.5070706@panasas.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH v8 00/13] libsas error handling + discovery v8
+Date: Fri, 10 Feb 2012 00:44:39 -0800
+Message-ID: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:54234 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754262Ab2BJIDg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2012 03:03:36 -0500
-In-Reply-To: <4F347119.5070706@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Simon Arlott <simon@fire.lp0.eu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On 02/10/2012 02:21 AM, Boaz Harrosh wrote:
-> On 02/10/2012 01:24 AM, Andrew Morton wrote:
->> (cc's added)
->>
->> Kernel version appears to be 3.3-rc2.  
->>
->> On Wed, 08 Feb 2012 20:54:16 +0000
->> Simon Arlott <simon@fire.lp0.eu> wrote:
->>
->>> I unplugged two hard drives and this happened:
->>> [168525.975223] mptbase: ioc0: LogInfo(0x31110d00): Originator={PL}, Code={Reset}, SubCode(0x0d00) cb_idx mptbase_reply
->>> [168527.976303] mptbase: ioc0: LogInfo(0x31110d00): Originator={PL}, Code={Reset}, SubCode(0x0d00) cb_idx mptbase_reply
->>> [168530.879028]  end_device-8:2: mptsas: ioc0: removing sata device: fw_channel 0, fw_id 13, phy 7,sas_addr 0xde5c3f3bbc9bae8f
->>> [168530.879034]  phy-8:7: mptsas: ioc0: delete phy 7, phy-obj (0xffff88027582b800)
->>> [168530.879045]  port-8:2: mptsas: ioc0: delete port 2, sas_addr (0xde5c3f3bbc9bae8f)
->>> [168530.879525] sd 8:0:2:0: [sdh] Synchronizing SCSI cache
->>> [168530.879581] sd 8:0:2:0: [sdh]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
->>> [168530.879651] scsi target8:0:2: mptsas: ioc0: delete device: fw_channel 0, fw_id 13, phy 7, sas_addr 0xde5c3f3bbc9bae8f
->>> [168530.879706] ------------[ cut here ]------------
->>> [168530.879715] WARNING: at fs/sysfs/inode.c:323 sysfs_hash_and_remove+0x9c/0xb0()
->>> [168530.879717] Hardware name: empty
->>> [168530.879719] sysfs: can not remove 'bsg', no directory
->>> [168530.879721] Modules linked in: zaurus cdc_ether usbnet bnep rfcomm bridge stp fuse ext4 jbd2 nf_conntrack_ipv6 ipt_REJECT iptable_filter nf_defrag_ipv6 xt_state ip6t_REJECT iptable_mangle xt_tcpudp iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 ip6table_filter xt_dscp xt_string xt_owner xt_NFQUEUE xt_multiport xt_mark xt_iprange xt_hashlimit xt_conntrack xt_connmark nf_conntrack ip6_tables ip_tables x_tables btusb bluetooth crc16
->>> [168530.879757] Pid: 1578, comm: kworker/u:7 Tainted: G       A     3.3.0-rc2+ #00119-gd8e94fc-dirty
->>> [168530.879761] Call Trace:
->>> [168530.879770]  [<ffffffff8103a29a>] warn_slowpath_common+0x7a/0xb0
->>> [168530.879774]  [<ffffffff8103a371>] warn_slowpath_fmt+0x41/0x50
->>> [168530.879778]  [<ffffffff81154fbc>] sysfs_hash_and_remove+0x9c/0xb0
->>> [168530.879782]  [<ffffffff81157a01>] sysfs_remove_link+0x21/0x30
->>> [168530.879788]  [<ffffffff81274bb7>] bsg_unregister_queue+0x47/0xa0
->>> [168530.879795]  [<ffffffff813fdc20>] sas_rphy_free+0xa0/0xd0
->>> [168530.879798]  [<ffffffff813fe9e9>] sas_rphy_delete+0x19/0x20
->>> [168530.879801]  [<ffffffff813fea15>] sas_port_delete+0x25/0x130
->>> [168530.879806]  [<ffffffff814581c3>] mptsas_del_end_device+0x183/0x1c0
->>> [168530.879810]  [<ffffffff8145aedc>] mptsas_hotplug_work+0x1ec/0x6a0
->>> [168530.879816]  [<ffffffff810698e5>] ? idle_balance+0xf5/0x150
->>> [168530.879820]  [<ffffffff81061779>] ? finish_task_switch+0x49/0xd0
->>> [168530.879824]  [<ffffffff8145c183>] mptsas_firmware_event_work+0xa63/0xca0
->>> [168530.879829]  [<ffffffff81046cf7>] ? lock_timer_base+0x37/0x70
->>> [168530.879832]  [<ffffffff8145b720>] ? mptsas_send_ir2_event+0x110/0x110
->>> [168530.879836]  [<ffffffff8104fd67>] process_one_work+0x117/0x3c0
->>> [168530.879839]  [<ffffffff81050382>] worker_thread+0x172/0x3e0
->>> [168530.879844]  [<ffffffff8105e651>] ? __wake_up_common+0x51/0x80
->>> [168530.879847]  [<ffffffff81050210>] ? manage_workers+0x200/0x200
->>> [168530.879852]  [<ffffffff81056796>] kthread+0x96/0xa0
->>> [168530.879858]  [<ffffffff816d01d4>] kernel_thread_helper+0x4/0x10
->>> [168530.879862]  [<ffffffff81056700>] ? kthread_freezable_should_stop+0x60/0x60
->>> [168530.879866]  [<ffffffff816d01d0>] ? gs_change+0xb/0xb
->>> [168530.879869] ---[ end trace b116d5a791652b31 ]---
->>> [168532.879048]  end_device-8:1: mptsas: ioc0: removing sata device: fw_channel 0, fw_id 12, phy 6,sas_addr 0xde5c3f3cc395aa8e
->>> [168532.879054]  phy-8:6: mptsas: ioc0: delete phy 6, phy-obj (0xffff88027582b000)
->>> [168532.879065]  port-8:1: mptsas: ioc0: delete port 1, sas_addr (0xde5c3f3cc395aa8e)
->>> [168532.879580] sd 8:0:1:0: [sdg] Synchronizing SCSI cache
->>> [168532.879692] sd 8:0:1:0: [sdg]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
->>> [168532.879877] scsi target8:0:1: mptsas: ioc0: delete device: fw_channel 0, fw_id 12, phy 6, sas_addr 0xde5c3f3cc395aa8e
->>> [168532.879999] ------------[ cut here ]------------
->>> [168532.880033] WARNING: at fs/sysfs/inode.c:323 sysfs_hash_and_remove+0x9c/0xb0()
->>> [168532.880038] Hardware name: empty
->>> [168532.880042] sysfs: can not remove 'bsg', no directory
->>> [168532.880045] Modules linked in: zaurus cdc_ether usbnet bnep rfcomm bridge stp fuse ext4 jbd2 nf_conntrack_ipv6 ipt_REJECT iptable_filter nf_defrag_ipv6 xt_state ip6t_REJECT iptable_mangle xt_tcpudp iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 ip6table_filter xt_dscp xt_string xt_owner xt_NFQUEUE xt_multiport xt_mark xt_iprange xt_hashlimit xt_conntrack xt_connmark nf_conntrack ip6_tables ip_tables x_tables btusb bluetooth crc16
->>> [168532.880108] Pid: 1578, comm: kworker/u:7 Tainted: G       AW    3.3.0-rc2+ #00119-gd8e94fc-dirty
->>> [168532.880115] Call Trace:
->>> [168532.880128]  [<ffffffff8103a29a>] warn_slowpath_common+0x7a/0xb0
->>> [168532.880136]  [<ffffffff8103a371>] warn_slowpath_fmt+0x41/0x50
->>> [168532.880143]  [<ffffffff81154fbc>] sysfs_hash_and_remove+0x9c/0xb0
->>> [168532.880152]  [<ffffffff81157a01>] sysfs_remove_link+0x21/0x30
->>> [168532.880160]  [<ffffffff81274bb7>] bsg_unregister_queue+0x47/0xa0
->>> [168532.880171]  [<ffffffff813fdc20>] sas_rphy_free+0xa0/0xd0
->>> [168532.880177]  [<ffffffff813fe9e9>] sas_rphy_delete+0x19/0x20
->>> [168532.880183]  [<ffffffff813fea15>] sas_port_delete+0x25/0x130
->>> [168532.880192]  [<ffffffff814581c3>] mptsas_del_end_device+0x183/0x1c0
->>> [168532.880218]  [<ffffffff8145aedc>] mptsas_hotplug_work+0x1ec/0x6a0
->>> [168532.880227]  [<ffffffff810698e5>] ? idle_balance+0xf5/0x150
->>> [168532.880234]  [<ffffffff81061779>] ? finish_task_switch+0x49/0xd0
->>> [168532.880241]  [<ffffffff8145c183>] mptsas_firmware_event_work+0xa63/0xca0
->>> [168532.880250]  [<ffffffff81046cf7>] ? lock_timer_base+0x37/0x70
->>> [168532.880256]  [<ffffffff8145b720>] ? mptsas_send_ir2_event+0x110/0x110
->>> [168532.880264]  [<ffffffff8104fd67>] process_one_work+0x117/0x3c0
->>> [168532.880270]  [<ffffffff81050382>] worker_thread+0x172/0x3e0
->>> [168532.880279]  [<ffffffff8105e651>] ? __wake_up_common+0x51/0x80
->>> [168532.880285]  [<ffffffff81050210>] ? manage_workers+0x200/0x200
->>> [168532.880293]  [<ffffffff81056796>] kthread+0x96/0xa0
->>> [168532.880303]  [<ffffffff816d01d4>] kernel_thread_helper+0x4/0x10
->>> [168532.880316]  [<ffffffff81056700>] ? kthread_freezable_should_stop+0x60/0x60
->>> [168532.880329]  [<ffffffff816d01d0>] ? gs_change+0xb/0xb
->>> [168532.880336] ---[ end trace b116d5a791652b32 ]---
->>
-> 
-> It might be the same as the other reports see a fix here:
-> https://lkml.org/lkml/2012/2/8/246
-> 
-> See thread: device removal causes "sysfs: can not remove 'bsg', no directory"
+Changes since v7: http://marc.info/?l=linux-scsi&m=132739159230095&w=2
 
-Fix has been queued up for a few days, it'll go out today.
+1/ Dropped "libsas: feed the scsi_block_when_processing_errors() meter"
+   [1].  Patches 1-3 are just resends of the patches affected by that
+   rebase.
 
--- 
-Jens Axboe
+2/ Fixed up the phy identify data that is exported to userspace.
+   sas_phy/phyX/device_type and sas_phy/phyX/target_port_protocols are
+   now populated more reliably.  Patches 4-5
 
+3/ User-disabled ssp phys are now no longer inadvertantly re-enabled by
+   error recovery (they need an explicit reset from userspace).  This
+   enables scripted hotplug testing. Patches 6-8
+
+4/ Fixed up the eh_strategy_handlers to prevent them being called from
+   outside eh context, added an abort handler, and made sure all resets
+   are notified to the lldd. Patches 9-12
+
+5/ A small diet for sas_task to move slow path infrastructue out of the
+   fast path use case. Patch 13
+
+[1]: http://marc.info/?l=linux-scsi&m=132677728817896&w=2
+
+---
+
+[PATCH 01/13] libsas: close scsi_remove_target() vs libata-eh race
+[PATCH 02/13] libsas: improve debug statements
+[PATCH 03/13] libsas: async ata scanning
+[PATCH 04/13] libsas: set attached device type and target protocols for local phys
+[PATCH 05/13] libsas: fixup target_port_protocols for expanders that don't report sata
+[PATCH 06/13] libsas: don't recover end devices attached to disabled phys
+[PATCH 07/13] scsi_transport_sas: 'enable' phys on reset
+[PATCH 08/13] libsas: libsas.force_hard_reset module parameter
+[PATCH 09/13] libsas: enforce eh strategy handlers only in eh context
+[PATCH 10/13] libsas: add sas_eh_abort_handler
+[PATCH 11/13] libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_handler
+[PATCH 12/13] isci: use sas eh strategy handlers
+[PATCH 13/13] libsas: trim sas_task of slow path infrastructure
+
+The following changes since commit d65b4e98d7ea3038b767b70fe8be959b2913f16d:
+
+  Linux 3.3-rc3 (2012-02-08 19:21:53 -0800)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas-eh-reworks-v8
+
+Dan Williams (58):
+      libsas: remove unused ata_task_resp fields
+      libsas: kill sas_slave_destroy
+      libsas: fix domain_device leak
+      libsas: fix leak of dev->sata_dev.identify_[packet_]device
+      libsas: replace event locks with atomic bitops
+      libsas: convert ha->state to flags
+      libsas: introduce sas_drain_work()
+      libsas: remove ata_port.lock management duties from lldds
+      libsas: convert dev->gone to flags
+      libsas: prevent domain rediscovery competing with ata error handling
+      libsas: use ->set_dmamode to notify lldds of NCQ parameters
+      libsas: kill invocation of scsi_eh_finish_cmd from sas_ata_task_done
+      libsas: close error handling vs sas_ata_task_done() race
+      libsas: prevent double completion of scmds from eh
+      libsas: fix timeout vs completion race
+      libsas: let libata handle command timeouts
+      libsas: defer SAS_TASK_NEED_DEV_RESET commands to libata
+      libsas: use libata-eh-reset for sata rediscovery fis transmit failures
+      libsas: perform sas-transport resets in shost->workq context
+      libsas: execute transport link resets with libata-eh via host workqueue
+      libsas: sas_phy_enable via transport_sas_phy_reset
+      libsas: async ata-eh
+      libsas: poll for ata device readiness after reset
+      libsas: don't mark expanders as gone when a child device is removed
+      libsas: check for 'gone' expanders in smp_execute_task()
+      libsas: fix sas_find_local_phy(), take phy references
+      libsas: don't recover 'gone' devices in sas_ata_hard_reset()
+      isci: kill iphy->isci_port lookups
+      isci: kill isci_port->status
+      isci: fix interpretation of "hard" reset
+      isci: stop interpreting ->lldd_lu_reset() as an ata soft-reset
+      isci: ->lldd_ata_check_ready handler
+      isci: remove bus and reset handlers
+      isci: remove IDEV_EH hack to disable "discovery-time" ata resets
+      libsas: pre-clean commands that won the eh vs completion race
+      libsas: mark all domain devices gone if root port disappears
+      libsas: close scsi_remove_target() vs libata-eh race
+      libsas: fix mixed topology recovery
+      libsas: route local link resets through ata-eh
+      libsas: fix sas_unregister_ports vs sas_drain_work
+      libsas: improve debug statements
+      libsas: fix sas port naming
+      libsas: let libata recover links that fail to transmit initial sig-fis
+      libsas: delete device on sas address changed
+      libsas: restore scan order
+      libsas: async ata scanning
+      libsas: fix lifetime of SAS_HA_FROZEN
+      libsas: revert ata srst
+      libsas: set attached device type and target protocols for local phys
+      libsas: fixup target_port_protocols for expanders that don't report sata
+      libsas: don't recover end devices attached to disabled phys
+      scsi_transport_sas: 'enable' phys on reset
+      libsas: libsas.force_hard_reset module parameter
+      libsas: enforce eh strategy handlers only in eh context
+      libsas: add sas_eh_abort_handler
+      libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_handler
+      isci: use sas eh strategy handlers
+      libsas: trim sas_task of slow path infrastructure
+
+Jeff Skirvin (2):
+      libsas: Remove redundant phy state notification calls.
+      libsas: add mutex for SMP task execution
+
+Maciej Trela (1):
+      libsas: kill spurious sas_put_device
+
+ Documentation/kernel-parameters.txt |    6 +
+ Documentation/scsi/libsas.txt       |   15 -
+ drivers/ata/libata-core.c           |   34 +-
+ drivers/ata/libata-eh.c             |    1 +
+ drivers/ata/libata-scsi.c           |   13 +
+ drivers/ata/libata.h                |    2 +-
+ drivers/scsi/aic94xx/aic94xx.h      |    2 +
+ drivers/scsi/aic94xx/aic94xx_dev.c  |   38 +-
+ drivers/scsi/aic94xx/aic94xx_init.c |    6 +-
+ drivers/scsi/aic94xx/aic94xx_tmf.c  |   11 +-
+ drivers/scsi/isci/host.c            |    8 +-
+ drivers/scsi/isci/host.h            |   19 +-
+ drivers/scsi/isci/init.c            |   17 +-
+ drivers/scsi/isci/phy.c             |   18 +-
+ drivers/scsi/isci/phy.h             |    1 -
+ drivers/scsi/isci/port.c            |  217 +++++-----
+ drivers/scsi/isci/port.h            |   11 +-
+ drivers/scsi/isci/remote_device.c   |   32 +-
+ drivers/scsi/isci/remote_device.h   |    7 +-
+ drivers/scsi/isci/request.c         |  198 +--------
+ drivers/scsi/isci/request.h         |    9 +-
+ drivers/scsi/isci/task.c            |  158 ++------
+ drivers/scsi/isci/task.h            |   40 --
+ drivers/scsi/libsas/sas_ata.c       |  827 +++++++++++++++++------------------
+ drivers/scsi/libsas/sas_discover.c  |  216 ++++++++--
+ drivers/scsi/libsas/sas_event.c     |   96 ++++-
+ drivers/scsi/libsas/sas_expander.c  |  360 ++++++++++------
+ drivers/scsi/libsas/sas_host_smp.c  |   11 +-
+ drivers/scsi/libsas/sas_init.c      |  243 +++++++++--
+ drivers/scsi/libsas/sas_internal.h  |   97 +++--
+ drivers/scsi/libsas/sas_phy.c       |   12 +-
+ drivers/scsi/libsas/sas_port.c      |   32 +-
+ drivers/scsi/libsas/sas_scsi_host.c |  421 +++++++++----------
+ drivers/scsi/mvsas/mv_init.c        |    2 -
+ drivers/scsi/mvsas/mv_sas.c         |   31 +-
+ drivers/scsi/pm8001/pm8001_init.c   |    2 -
+ drivers/scsi/pm8001/pm8001_sas.c    |   59 ++--
+ drivers/scsi/scsi_transport_sas.c   |   60 +++-
+ include/linux/libata.h              |    2 +
+ include/scsi/libsas.h               |   86 +++--
+ include/scsi/sas.h                  |    4 +-
+ include/scsi/sas_ata.h              |   44 ++-
+ include/scsi/scsi_transport_sas.h   |   12 +-
+ 43 files changed, 1859 insertions(+), 1621 deletions(-)
