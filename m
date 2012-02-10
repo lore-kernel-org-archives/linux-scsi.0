@@ -1,170 +1,123 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v8 00/13] libsas error handling + discovery v8
-Date: Fri, 10 Feb 2012 00:44:39 -0800
-Message-ID: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH v8 01/13] libsas: close scsi_remove_target() vs libata-eh race
+Date: Fri, 10 Feb 2012 00:44:44 -0800
+Message-ID: <20120210084444.25701.31139.stgit@dwillia2-linux.jf.intel.com>
+References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Marcin Tomczak <marcin.tomczak@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Changes since v7: http://marc.info/?l=linux-scsi&m=132739159230095&w=2
+ata_port lifetime in libata follows the host.  In libsas it follows the
+scsi_target.  Once scsi_remove_device() has caused all commands to be
+completed it allows scsi_remove_target() to immediately proceed to
+freeing the ata_port causing bug reports like:
 
-1/ Dropped "libsas: feed the scsi_block_when_processing_errors() meter"
-   [1].  Patches 1-3 are just resends of the patches affected by that
-   rebase.
+[  848.393333] BUG: spinlock bad magic on CPU#4, kworker/u:2/5107
+[  848.400262] general protection fault: 0000 [#1] SMP
+[  848.406244] CPU 4
+[  848.408310] Modules linked in: nls_utf8 ipv6 uinput i2c_i801 i2c_core iTCO_wdt iTCO_vendor_support ioatdma dca sg sd_mod sr_mod cdrom ahci libahci isci libsas libata scsi_transport_sas [last unloaded: scsi_wait_scan]
+[  848.432060]
+[  848.434137] Pid: 5107, comm: kworker/u:2 Not tainted 3.2.0-isci+ #8 Intel Corporation S2600CP/S2600CP
+[  848.445310] RIP: 0010:[<ffffffff8126a68c>]  [<ffffffff8126a68c>] spin_dump+0x5e/0x8c
+[  848.454787] RSP: 0018:ffff8807f868dca0  EFLAGS: 00010002
+[  848.461137] RAX: 0000000000000048 RBX: ffff8807fe86a630 RCX: ffffffff817d0be0
+[  848.469520] RDX: 0000000000000000 RSI: ffffffff814af1cf RDI: 0000000000000002
+[  848.477959] RBP: ffff8807f868dcb0 R08: 00000000ffffffff R09: 000000006b6b6b6b
+[  848.486327] R10: 000000000003fb8c R11: ffffffff81a19448 R12: 6b6b6b6b6b6b6b6b
+[  848.494699] R13: ffff8808027dc520 R14: 0000000000000000 R15: 000000000000001e
+[  848.503067] FS:  0000000000000000(0000) GS:ffff88083fd00000(0000) knlGS:0000000000000000
+[  848.512899] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  848.519710] CR2: 00007ff77d001000 CR3: 00000007f7a5d000 CR4: 00000000000406e0
+[  848.528072] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  848.536446] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  848.544831] Process kworker/u:2 (pid: 5107, threadinfo ffff8807f868c000, task ffff8807ff348000)
+[  848.555327] Stack:
+[  848.557959]  ffff8807fe86a630 ffff8807fe86a630 ffff8807f868dcd0 ffffffff8126a6e0
+[  848.567072]  ffffffff817c142f ffff8807fe86a630 ffff8807f868dcf0 ffffffff8126a703
+[  848.576190]  ffff8808027dc520 0000000000000286 ffff8807f868dd10 ffffffff814af1bb
+[  848.585281] Call Trace:
+[  848.588409]  [<ffffffff8126a6e0>] spin_bug+0x26/0x28
+[  848.594357]  [<ffffffff8126a703>] do_raw_spin_unlock+0x21/0x88
+[  848.601283]  [<ffffffff814af1bb>] _raw_spin_unlock_irqrestore+0x2c/0x65
+[  848.609089]  [<ffffffffa001c103>] ata_scsi_port_error_handler+0x548/0x557 [libata]
+[  848.618331]  [<ffffffff81061813>] ? async_schedule+0x17/0x17
+[  848.625060]  [<ffffffffa004f30f>] async_sas_ata_eh+0x45/0x69 [libsas]
+[  848.632655]  [<ffffffff810618aa>] async_run_entry_fn+0x97/0x125
+[  848.639670]  [<ffffffff81057439>] process_one_work+0x207/0x38d
+[  848.646577]  [<ffffffff8105738c>] ? process_one_work+0x15a/0x38d
+[  848.653681]  [<ffffffff810576f7>] worker_thread+0x138/0x21c
+[  848.660305]  [<ffffffff810575bf>] ? process_one_work+0x38d/0x38d
+[  848.667493]  [<ffffffff8105b098>] kthread+0x9d/0xa5
+[  848.673382]  [<ffffffff8106e1bd>] ? trace_hardirqs_on_caller+0x12f/0x166
+[  848.681304]  [<ffffffff814b7704>] kernel_thread_helper+0x4/0x10
+[  848.688324]  [<ffffffff814af534>] ? retint_restore_args+0x13/0x13
+[  848.695530]  [<ffffffff8105affb>] ? __init_kthread_worker+0x5b/0x5b
+[  848.702929]  [<ffffffff814b7700>] ? gs_change+0x13/0x13
+[  848.709155] Code: 00 00 48 8d 88 38 04 00 00 44 8b 80 84 02 00 00 31 c0 e8 cf 1b 24 00 41 83 c8 ff 44 8b 4b 08 48 c7 c1 e0 0b 7d 81 4d 85 e4 74 10 <45> 8b 84 24 84 02 00 00 49 8d 8c 24 38 04 00 00 8b 53 04 48 89
+[  848.732467] RIP  [<ffffffff8126a68c>] spin_dump+0x5e/0x8c
+[  848.738905]  RSP <ffff8807f868dca0>
+[  848.743743] ---[ end trace 143161646eee8caa ]---
 
-2/ Fixed up the phy identify data that is exported to userspace.
-   sas_phy/phyX/device_type and sas_phy/phyX/target_port_protocols are
-   now populated more reliably.  Patches 4-5
+...so arrange for the ata_port to have the same end of life as the domain
+device.
 
-3/ User-disabled ssp phys are now no longer inadvertantly re-enabled by
-   error recovery (they need an explicit reset from userspace).  This
-   enables scripted hotplug testing. Patches 6-8
-
-4/ Fixed up the eh_strategy_handlers to prevent them being called from
-   outside eh context, added an abort handler, and made sure all resets
-   are notified to the lldd. Patches 9-12
-
-5/ A small diet for sas_task to move slow path infrastructue out of the
-   fast path use case. Patch 13
-
-[1]: http://marc.info/?l=linux-scsi&m=132677728817896&w=2
-
+Reported-by: Marcin Tomczak <marcin.tomczak@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/scsi/libsas/sas_ata.c       |    4 ++++
+ drivers/scsi/libsas/sas_discover.c  |    5 +++++
+ drivers/scsi/libsas/sas_scsi_host.c |    3 ---
+ 3 files changed, 9 insertions(+), 3 deletions(-)
 
-[PATCH 01/13] libsas: close scsi_remove_target() vs libata-eh race
-[PATCH 02/13] libsas: improve debug statements
-[PATCH 03/13] libsas: async ata scanning
-[PATCH 04/13] libsas: set attached device type and target protocols for local phys
-[PATCH 05/13] libsas: fixup target_port_protocols for expanders that don't report sata
-[PATCH 06/13] libsas: don't recover end devices attached to disabled phys
-[PATCH 07/13] scsi_transport_sas: 'enable' phys on reset
-[PATCH 08/13] libsas: libsas.force_hard_reset module parameter
-[PATCH 09/13] libsas: enforce eh strategy handlers only in eh context
-[PATCH 10/13] libsas: add sas_eh_abort_handler
-[PATCH 11/13] libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_handler
-[PATCH 12/13] isci: use sas eh strategy handlers
-[PATCH 13/13] libsas: trim sas_task of slow path infrastructure
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 37a9e73..852b1b1 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -661,6 +661,10 @@ static void async_sas_ata_eh(void *data, async_cookie_t cookie)
+ 	struct ata_port *ap = dev->sata_dev.ap;
+ 	struct sas_ha_struct *ha = dev->port->ha;
+ 
++	/* hold a reference over eh since we may be racing with final
++	 * remove once all commands are completed
++	 */
++	kref_get(&dev->kref);
+ 	ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata port error handler");
+ 	ata_scsi_port_error_handler(ha->core.shost, ap);
+ }
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 3ef7741..9367101 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -242,6 +242,11 @@ void sas_free_device(struct kref *kref)
+ 	if (dev->dev_type == EDGE_DEV || dev->dev_type == FANOUT_DEV)
+ 		kfree(dev->ex_dev.ex_phy);
+ 
++	if (dev_is_sata(dev) && dev->sata_dev.ap) {
++		ata_sas_port_destroy(dev->sata_dev.ap);
++		dev->sata_dev.ap = NULL;
++	}
++
+ 	kfree(dev);
+ }
+ 
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 731c892..b563ff2 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -1028,9 +1028,6 @@ void sas_target_destroy(struct scsi_target *starget)
+ 	if (!found_dev)
+ 		return;
+ 
+-	if (dev_is_sata(found_dev))
+-		ata_sas_port_destroy(found_dev->sata_dev.ap);
+-
+ 	starget->hostdata = NULL;
+ 	sas_put_device(found_dev);
+ }
 
-The following changes since commit d65b4e98d7ea3038b767b70fe8be959b2913f16d:
-
-  Linux 3.3-rc3 (2012-02-08 19:21:53 -0800)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas-eh-reworks-v8
-
-Dan Williams (58):
-      libsas: remove unused ata_task_resp fields
-      libsas: kill sas_slave_destroy
-      libsas: fix domain_device leak
-      libsas: fix leak of dev->sata_dev.identify_[packet_]device
-      libsas: replace event locks with atomic bitops
-      libsas: convert ha->state to flags
-      libsas: introduce sas_drain_work()
-      libsas: remove ata_port.lock management duties from lldds
-      libsas: convert dev->gone to flags
-      libsas: prevent domain rediscovery competing with ata error handling
-      libsas: use ->set_dmamode to notify lldds of NCQ parameters
-      libsas: kill invocation of scsi_eh_finish_cmd from sas_ata_task_done
-      libsas: close error handling vs sas_ata_task_done() race
-      libsas: prevent double completion of scmds from eh
-      libsas: fix timeout vs completion race
-      libsas: let libata handle command timeouts
-      libsas: defer SAS_TASK_NEED_DEV_RESET commands to libata
-      libsas: use libata-eh-reset for sata rediscovery fis transmit failures
-      libsas: perform sas-transport resets in shost->workq context
-      libsas: execute transport link resets with libata-eh via host workqueue
-      libsas: sas_phy_enable via transport_sas_phy_reset
-      libsas: async ata-eh
-      libsas: poll for ata device readiness after reset
-      libsas: don't mark expanders as gone when a child device is removed
-      libsas: check for 'gone' expanders in smp_execute_task()
-      libsas: fix sas_find_local_phy(), take phy references
-      libsas: don't recover 'gone' devices in sas_ata_hard_reset()
-      isci: kill iphy->isci_port lookups
-      isci: kill isci_port->status
-      isci: fix interpretation of "hard" reset
-      isci: stop interpreting ->lldd_lu_reset() as an ata soft-reset
-      isci: ->lldd_ata_check_ready handler
-      isci: remove bus and reset handlers
-      isci: remove IDEV_EH hack to disable "discovery-time" ata resets
-      libsas: pre-clean commands that won the eh vs completion race
-      libsas: mark all domain devices gone if root port disappears
-      libsas: close scsi_remove_target() vs libata-eh race
-      libsas: fix mixed topology recovery
-      libsas: route local link resets through ata-eh
-      libsas: fix sas_unregister_ports vs sas_drain_work
-      libsas: improve debug statements
-      libsas: fix sas port naming
-      libsas: let libata recover links that fail to transmit initial sig-fis
-      libsas: delete device on sas address changed
-      libsas: restore scan order
-      libsas: async ata scanning
-      libsas: fix lifetime of SAS_HA_FROZEN
-      libsas: revert ata srst
-      libsas: set attached device type and target protocols for local phys
-      libsas: fixup target_port_protocols for expanders that don't report sata
-      libsas: don't recover end devices attached to disabled phys
-      scsi_transport_sas: 'enable' phys on reset
-      libsas: libsas.force_hard_reset module parameter
-      libsas: enforce eh strategy handlers only in eh context
-      libsas: add sas_eh_abort_handler
-      libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_handler
-      isci: use sas eh strategy handlers
-      libsas: trim sas_task of slow path infrastructure
-
-Jeff Skirvin (2):
-      libsas: Remove redundant phy state notification calls.
-      libsas: add mutex for SMP task execution
-
-Maciej Trela (1):
-      libsas: kill spurious sas_put_device
-
- Documentation/kernel-parameters.txt |    6 +
- Documentation/scsi/libsas.txt       |   15 -
- drivers/ata/libata-core.c           |   34 +-
- drivers/ata/libata-eh.c             |    1 +
- drivers/ata/libata-scsi.c           |   13 +
- drivers/ata/libata.h                |    2 +-
- drivers/scsi/aic94xx/aic94xx.h      |    2 +
- drivers/scsi/aic94xx/aic94xx_dev.c  |   38 +-
- drivers/scsi/aic94xx/aic94xx_init.c |    6 +-
- drivers/scsi/aic94xx/aic94xx_tmf.c  |   11 +-
- drivers/scsi/isci/host.c            |    8 +-
- drivers/scsi/isci/host.h            |   19 +-
- drivers/scsi/isci/init.c            |   17 +-
- drivers/scsi/isci/phy.c             |   18 +-
- drivers/scsi/isci/phy.h             |    1 -
- drivers/scsi/isci/port.c            |  217 +++++-----
- drivers/scsi/isci/port.h            |   11 +-
- drivers/scsi/isci/remote_device.c   |   32 +-
- drivers/scsi/isci/remote_device.h   |    7 +-
- drivers/scsi/isci/request.c         |  198 +--------
- drivers/scsi/isci/request.h         |    9 +-
- drivers/scsi/isci/task.c            |  158 ++------
- drivers/scsi/isci/task.h            |   40 --
- drivers/scsi/libsas/sas_ata.c       |  827 +++++++++++++++++------------------
- drivers/scsi/libsas/sas_discover.c  |  216 ++++++++--
- drivers/scsi/libsas/sas_event.c     |   96 ++++-
- drivers/scsi/libsas/sas_expander.c  |  360 ++++++++++------
- drivers/scsi/libsas/sas_host_smp.c  |   11 +-
- drivers/scsi/libsas/sas_init.c      |  243 +++++++++--
- drivers/scsi/libsas/sas_internal.h  |   97 +++--
- drivers/scsi/libsas/sas_phy.c       |   12 +-
- drivers/scsi/libsas/sas_port.c      |   32 +-
- drivers/scsi/libsas/sas_scsi_host.c |  421 +++++++++----------
- drivers/scsi/mvsas/mv_init.c        |    2 -
- drivers/scsi/mvsas/mv_sas.c         |   31 +-
- drivers/scsi/pm8001/pm8001_init.c   |    2 -
- drivers/scsi/pm8001/pm8001_sas.c    |   59 ++--
- drivers/scsi/scsi_transport_sas.c   |   60 +++-
- include/linux/libata.h              |    2 +
- include/scsi/libsas.h               |   86 +++--
- include/scsi/sas.h                  |    4 +-
- include/scsi/sas_ata.h              |   44 ++-
- include/scsi/scsi_transport_sas.h   |   12 +-
- 43 files changed, 1859 insertions(+), 1621 deletions(-)
