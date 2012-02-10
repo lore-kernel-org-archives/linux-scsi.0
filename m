@@ -1,330 +1,1303 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v1 1/5] isci: T10 DIF support
-Date: Fri, 10 Feb 2012 01:18:34 -0800
-Message-ID: <20120210091834.26719.25785.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH v1 3/5] isci: debug, provide state-enum-to-string conversions
+Date: Fri, 10 Feb 2012 01:18:44 -0800
+Message-ID: <20120210091844.26719.10844.stgit@dwillia2-linux.jf.intel.com>
 References: <20120210091814.26719.75603.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32758 "EHLO mga02.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:27021 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758465Ab2BJJDs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2012 04:03:48 -0500
+	id S1758612Ab2BJJDu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2012 04:03:50 -0500
 In-Reply-To: <20120210091814.26719.75603.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dave Jiang <dave.jiang@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-From: Dave Jiang <dave.jiang@intel.com>
+Debugging the driver requires tracing the state transtions and tracing
+state names is less work than decoding numbers.
 
-This allows the controller to do WRITE_INSERT and READ_STRIP for SAS
-disks that support protection information. SAS disks must be formatted
-with protection information to use this feature via sg_format.
-
-  sg3_utils-1.32 -- sg_format version 1.19 20110730
-  sg_format usage:
-  sg_format --format --verbose --pinfo /dev/sda
-
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/init.c             |    7 ++
- drivers/scsi/isci/request.c          |  147 ++++++++++++++++++++++++++++++++++
- drivers/scsi/isci/scu_task_context.h |   55 +++++++++----
- 3 files changed, 193 insertions(+), 16 deletions(-)
+ drivers/scsi/isci/phy.c                 |   34 +++--
+ drivers/scsi/isci/phy.h                 |  154 ++++++++--------------
+ drivers/scsi/isci/port.c                |   46 ++++---
+ drivers/scsi/isci/port.h                |  103 ++++++---------
+ drivers/scsi/isci/remote_device.c       |   50 ++++---
+ drivers/scsi/isci/remote_device.h       |  205 +++++++++++++----------------
+ drivers/scsi/isci/remote_node_context.c |   19 +--
+ drivers/scsi/isci/remote_node_context.h |   97 ++++++--------
+ drivers/scsi/isci/request.c             |   25 ++--
+ drivers/scsi/isci/request.h             |  219 +++++++++++++------------------
+ 10 files changed, 432 insertions(+), 520 deletions(-)
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index f682ca1..c3fe39b 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -523,6 +523,13 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
- 			goto err_host_alloc;
- 		}
- 		pci_info->hosts[i] = h;
+diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
+index 8d412ca..87064f1 100644
+--- a/drivers/scsi/isci/phy.c
++++ b/drivers/scsi/isci/phy.c
+@@ -59,6 +59,16 @@
+ #include "scu_event_codes.h"
+ #include "probe_roms.h"
+ 
++#undef C
++#define C(a) (#a)
++static const char *phy_state_name(enum sci_phy_states state)
++{
++	static const char * const strings[] = PHY_STATES;
 +
-+		/* turn on DIF support */
-+		scsi_host_set_prot(h->shost,
-+				   SHOST_DIF_TYPE1_PROTECTION |
-+				   SHOST_DIF_TYPE2_PROTECTION |
-+				   SHOST_DIF_TYPE3_PROTECTION);
-+		scsi_host_set_guard(h->shost, SHOST_DIX_GUARD_CRC);
++	return strings[state];
++}
++#undef C
++
+ /* Maximum arbitration wait time in micro-seconds */
+ #define SCIC_SDS_PHY_MAX_ARBITRATION_WAIT_TIME  (700)
+ 
+@@ -454,8 +464,8 @@ enum sci_status sci_phy_start(struct isci_phy *iphy)
+ 	enum sci_phy_states state = iphy->sm.current_state_id;
+ 
+ 	if (state != SCI_PHY_STOPPED) {
+-		dev_dbg(sciphy_to_dev(iphy),
+-			 "%s: in wrong state: %d\n", __func__, state);
++		dev_dbg(sciphy_to_dev(iphy), "%s: in wrong state: %s\n",
++			__func__, phy_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
  	}
  
- 	err = isci_setup_interrupts(pdev);
+@@ -480,8 +490,8 @@ enum sci_status sci_phy_stop(struct isci_phy *iphy)
+ 	case SCI_PHY_READY:
+ 		break;
+ 	default:
+-		dev_dbg(sciphy_to_dev(iphy),
+-			"%s: in wrong state: %d\n", __func__, state);
++		dev_dbg(sciphy_to_dev(iphy), "%s: in wrong state: %s\n",
++			__func__, phy_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ 
+@@ -494,8 +504,8 @@ enum sci_status sci_phy_reset(struct isci_phy *iphy)
+ 	enum sci_phy_states state = iphy->sm.current_state_id;
+ 
+ 	if (state != SCI_PHY_READY) {
+-		dev_dbg(sciphy_to_dev(iphy),
+-			"%s: in wrong state: %d\n", __func__, state);
++		dev_dbg(sciphy_to_dev(iphy), "%s: in wrong state: %s\n",
++			__func__, phy_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ 
+@@ -544,8 +554,8 @@ enum sci_status sci_phy_consume_power_handler(struct isci_phy *iphy)
+ 		return SCI_SUCCESS;
+ 	}
+ 	default:
+-		dev_dbg(sciphy_to_dev(iphy),
+-			"%s: in wrong state: %d\n", __func__, state);
++		dev_dbg(sciphy_to_dev(iphy), "%s: in wrong state: %s\n",
++			__func__, phy_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ }
+@@ -870,8 +880,8 @@ enum sci_status sci_phy_event_handler(struct isci_phy *iphy, u32 event_code)
+ 		}
+ 		return SCI_SUCCESS;
+ 	default:
+-		dev_dbg(sciphy_to_dev(iphy),
+-			"%s: in wrong state: %d\n", __func__, state);
++		dev_dbg(sciphy_to_dev(iphy), "%s: in wrong state: %s\n",
++			__func__, phy_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ }
+@@ -964,8 +974,8 @@ enum sci_status sci_phy_frame_handler(struct isci_phy *iphy, u32 frame_index)
+ 		return result;
+ 	}
+ 	default:
+-		dev_dbg(sciphy_to_dev(iphy),
+-			"%s: in wrong state: %d\n", __func__, state);
++		dev_dbg(sciphy_to_dev(iphy), "%s: in wrong state: %s\n",
++			__func__, phy_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ 
+diff --git a/drivers/scsi/isci/phy.h b/drivers/scsi/isci/phy.h
+index a5e1a9e..0e45833 100644
+--- a/drivers/scsi/isci/phy.h
++++ b/drivers/scsi/isci/phy.h
+@@ -343,101 +343,65 @@ enum sci_phy_counter_id {
+ 	SCIC_PHY_COUNTER_SN_DWORD_SYNC_ERROR
+ };
+ 
+-enum sci_phy_states {
+-	/**
+-	 * Simply the initial state for the base domain state machine.
+-	 */
+-	SCI_PHY_INITIAL,
+-
+-	/**
+-	 * This state indicates that the phy has successfully been stopped.
+-	 * In this state no new IO operations are permitted on this phy.
+-	 * This state is entered from the INITIAL state.
+-	 * This state is entered from the STARTING state.
+-	 * This state is entered from the READY state.
+-	 * This state is entered from the RESETTING state.
+-	 */
+-	SCI_PHY_STOPPED,
+-
+-	/**
+-	 * This state indicates that the phy is in the process of becomming
+-	 * ready.  In this state no new IO operations are permitted on this phy.
+-	 * This state is entered from the STOPPED state.
+-	 * This state is entered from the READY state.
+-	 * This state is entered from the RESETTING state.
+-	 */
+-	SCI_PHY_STARTING,
+-
+-	/**
+-	 * Initial state
+-	 */
+-	SCI_PHY_SUB_INITIAL,
+-
+-	/**
+-	 * Wait state for the hardware OSSP event type notification
+-	 */
+-	SCI_PHY_SUB_AWAIT_OSSP_EN,
+-
+-	/**
+-	 * Wait state for the PHY speed notification
+-	 */
+-	SCI_PHY_SUB_AWAIT_SAS_SPEED_EN,
+-
+-	/**
+-	 * Wait state for the IAF Unsolicited frame notification
+-	 */
+-	SCI_PHY_SUB_AWAIT_IAF_UF,
+-
+-	/**
+-	 * Wait state for the request to consume power
+-	 */
+-	SCI_PHY_SUB_AWAIT_SAS_POWER,
+-
+-	/**
+-	 * Wait state for request to consume power
+-	 */
+-	SCI_PHY_SUB_AWAIT_SATA_POWER,
+-
+-	/**
+-	 * Wait state for the SATA PHY notification
+-	 */
+-	SCI_PHY_SUB_AWAIT_SATA_PHY_EN,
+-
+-	/**
+-	 * Wait for the SATA PHY speed notification
+-	 */
+-	SCI_PHY_SUB_AWAIT_SATA_SPEED_EN,
+-
+-	/**
+-	 * Wait state for the SIGNATURE FIS unsolicited frame notification
+-	 */
+-	SCI_PHY_SUB_AWAIT_SIG_FIS_UF,
+-
+-	/**
+-	 * Exit state for this state machine
+-	 */
+-	SCI_PHY_SUB_FINAL,
+-
+-	/**
+-	 * This state indicates the the phy is now ready.  Thus, the user
+-	 * is able to perform IO operations utilizing this phy as long as it
+-	 * is currently part of a valid port.
+-	 * This state is entered from the STARTING state.
+-	 */
+-	SCI_PHY_READY,
+-
+-	/**
+-	 * This state indicates that the phy is in the process of being reset.
+-	 * In this state no new IO operations are permitted on this phy.
+-	 * This state is entered from the READY state.
+-	 */
+-	SCI_PHY_RESETTING,
+-
+-	/**
+-	 * Simply the final state for the base phy state machine.
+-	 */
+-	SCI_PHY_FINAL,
+-};
++/**
++ * enum sci_phy_states - phy state machine states
++ * @SCI_PHY_INITIAL: Simply the initial state for the base domain state
++ *		     machine.
++ * @SCI_PHY_STOPPED: phy has successfully been stopped.  In this state
++ *		     no new IO operations are permitted on this phy.
++ * @SCI_PHY_STARTING: the phy is in the process of becomming ready.  In
++ *		      this state no new IO operations are permitted on
++ *		      this phy.
++ * @SCI_PHY_SUB_INITIAL: Initial state
++ * @SCI_PHY_SUB_AWAIT_OSSP_EN: Wait state for the hardware OSSP event
++ *			       type notification
++ * @SCI_PHY_SUB_AWAIT_SAS_SPEED_EN: Wait state for the PHY speed
++ *				    notification
++ * @SCI_PHY_SUB_AWAIT_IAF_UF: Wait state for the IAF Unsolicited frame
++ *			      notification
++ * @SCI_PHY_SUB_AWAIT_SAS_POWER: Wait state for the request to consume
++ *				 power
++ * @SCI_PHY_SUB_AWAIT_SATA_POWER: Wait state for request to consume
++ *				  power
++ * @SCI_PHY_SUB_AWAIT_SATA_PHY_EN: Wait state for the SATA PHY
++ *				   notification
++ * @SCI_PHY_SUB_AWAIT_SATA_SPEED_EN: Wait for the SATA PHY speed
++ *				     notification
++ * @SCI_PHY_SUB_AWAIT_SIG_FIS_UF: Wait state for the SIGNATURE FIS
++ *				  unsolicited frame notification
++ * @SCI_PHY_SUB_FINAL: Exit state for this state machine
++ * @SCI_PHY_READY: phy is now ready.  Thus, the user is able to perform
++ *		   IO operations utilizing this phy as long as it is
++ *		   currently part of a valid port.  This state is
++ *		   entered from the STARTING state.
++ * @SCI_PHY_RESETTING: phy is in the process of being reset.  In this
++ *		       state no new IO operations are permitted on this
++ *		       phy.  This state is entered from the READY state.
++ * @SCI_PHY_FINAL: Simply the final state for the base phy state
++ *		   machine.
++ */
++#define PHY_STATES {\
++	C(PHY_INITIAL),\
++	C(PHY_STOPPED),\
++	C(PHY_STARTING),\
++	C(PHY_SUB_INITIAL),\
++	C(PHY_SUB_AWAIT_OSSP_EN),\
++	C(PHY_SUB_AWAIT_SAS_SPEED_EN),\
++	C(PHY_SUB_AWAIT_IAF_UF),\
++	C(PHY_SUB_AWAIT_SAS_POWER),\
++	C(PHY_SUB_AWAIT_SATA_POWER),\
++	C(PHY_SUB_AWAIT_SATA_PHY_EN),\
++	C(PHY_SUB_AWAIT_SATA_SPEED_EN),\
++	C(PHY_SUB_AWAIT_SIG_FIS_UF),\
++	C(PHY_SUB_FINAL),\
++	C(PHY_READY),\
++	C(PHY_RESETTING),\
++	C(PHY_FINAL),\
++	}
++#undef C
++#define C(a) SCI_##a
++enum sci_phy_states PHY_STATES;
++#undef C
+ 
+ void sci_phy_construct(
+ 	struct isci_phy *iphy,
+diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
+index c5ae94d..5fada73 100644
+--- a/drivers/scsi/isci/port.c
++++ b/drivers/scsi/isci/port.c
+@@ -60,6 +60,16 @@
+ #define SCIC_SDS_PORT_HARD_RESET_TIMEOUT  (1000)
+ #define SCU_DUMMY_INDEX    (0xFFFF)
+ 
++#undef C
++#define C(a) (#a)
++const char *port_state_name(enum sci_port_states state)
++{
++	static const char * const strings[] = PORT_STATES;
++
++	return strings[state];
++}
++#undef C
++
+ static struct device *sciport_to_dev(struct isci_port *iport)
+ {
+ 	int i = iport->physical_port_index;
+@@ -1054,8 +1064,8 @@ enum sci_status sci_port_start(struct isci_port *iport)
+ 
+ 	state = iport->sm.current_state_id;
+ 	if (state != SCI_PORT_STOPPED) {
+-		dev_warn(sciport_to_dev(iport),
+-			 "%s: in wrong state: %d\n", __func__, state);
++		dev_warn(sciport_to_dev(iport), "%s: in wrong state: %s\n",
++			 __func__, port_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ 
+@@ -1129,8 +1139,8 @@ enum sci_status sci_port_stop(struct isci_port *iport)
+ 					  SCI_PORT_STOPPING);
+ 		return SCI_SUCCESS;
+ 	default:
+-		dev_warn(sciport_to_dev(iport),
+-			 "%s: in wrong state: %d\n", __func__, state);
++		dev_warn(sciport_to_dev(iport), "%s: in wrong state: %s\n",
++			 __func__, port_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ }
+@@ -1144,8 +1154,8 @@ static enum sci_status sci_port_hard_reset(struct isci_port *iport, u32 timeout)
+ 
+ 	state = iport->sm.current_state_id;
+ 	if (state != SCI_PORT_SUB_OPERATIONAL) {
+-		dev_warn(sciport_to_dev(iport),
+-			 "%s: in wrong state: %d\n", __func__, state);
++		dev_warn(sciport_to_dev(iport), "%s: in wrong state: %s\n",
++			 __func__, port_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ 
+@@ -1239,8 +1249,8 @@ enum sci_status sci_port_add_phy(struct isci_port *iport,
+ 					  SCI_PORT_SUB_CONFIGURING);
+ 		return SCI_SUCCESS;
+ 	default:
+-		dev_warn(sciport_to_dev(iport),
+-			 "%s: in wrong state: %d\n", __func__, state);
++		dev_warn(sciport_to_dev(iport), "%s: in wrong state: %s\n",
++			 __func__, port_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ }
+@@ -1289,8 +1299,8 @@ enum sci_status sci_port_remove_phy(struct isci_port *iport,
+ 					  SCI_PORT_SUB_CONFIGURING);
+ 		return SCI_SUCCESS;
+ 	default:
+-		dev_warn(sciport_to_dev(iport),
+-			 "%s: in wrong state: %d\n", __func__, state);
++		dev_warn(sciport_to_dev(iport), "%s: in wrong state: %s\n",
++			 __func__, port_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ }
+@@ -1332,8 +1342,8 @@ enum sci_status sci_port_link_up(struct isci_port *iport,
+ 		sci_port_general_link_up_handler(iport, iphy, PF_RESUME);
+ 		return SCI_SUCCESS;
+ 	default:
+-		dev_warn(sciport_to_dev(iport),
+-			 "%s: in wrong state: %d\n", __func__, state);
++		dev_warn(sciport_to_dev(iport), "%s: in wrong state: %s\n",
++			 __func__, port_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ }
+@@ -1362,8 +1372,8 @@ enum sci_status sci_port_link_down(struct isci_port *iport,
+ 		sci_port_deactivate_phy(iport, iphy, false);
+ 		return SCI_SUCCESS;
+ 	default:
+-		dev_warn(sciport_to_dev(iport),
+-			 "%s: in wrong state: %d\n", __func__, state);
++		dev_warn(sciport_to_dev(iport), "%s: in wrong state: %s\n",
++			 __func__, port_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ }
+@@ -1382,8 +1392,8 @@ enum sci_status sci_port_start_io(struct isci_port *iport,
+ 		iport->started_request_count++;
+ 		return SCI_SUCCESS;
+ 	default:
+-		dev_warn(sciport_to_dev(iport),
+-			 "%s: in wrong state: %d\n", __func__, state);
++		dev_warn(sciport_to_dev(iport), "%s: in wrong state: %s\n",
++			 __func__, port_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ }
+@@ -1397,8 +1407,8 @@ enum sci_status sci_port_complete_io(struct isci_port *iport,
+ 	state = iport->sm.current_state_id;
+ 	switch (state) {
+ 	case SCI_PORT_STOPPED:
+-		dev_warn(sciport_to_dev(iport),
+-			 "%s: in wrong state: %d\n", __func__, state);
++		dev_warn(sciport_to_dev(iport), "%s: in wrong state: %s\n",
++			 __func__, port_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	case SCI_PORT_STOPPING:
+ 		sci_port_decrement_request_count(iport);
+diff --git a/drivers/scsi/isci/port.h b/drivers/scsi/isci/port.h
+index 321b987..6b56240 100644
+--- a/drivers/scsi/isci/port.h
++++ b/drivers/scsi/isci/port.h
+@@ -144,70 +144,47 @@ struct sci_port_properties {
+ };
+ 
+ /**
+- * enum sci_port_states - This enumeration depicts all the states for the
+- *    common port state machine.
+- *
+- *
++ * enum sci_port_states - port state machine states
++ * @SCI_PORT_STOPPED: port has successfully been stopped.  In this state
++ *		      no new IO operations are permitted.  This state is
++ *		      entered from the STOPPING state.
++ * @SCI_PORT_STOPPING: port is in the process of stopping.  In this
++ *		       state no new IO operations are permitted, but
++ *		       existing IO operations are allowed to complete.
++ *		       This state is entered from the READY state.
++ * @SCI_PORT_READY: port is now ready.  Thus, the user is able to
++ *		    perform IO operations on this port. This state is
++ *		    entered from the STARTING state.
++ * @SCI_PORT_SUB_WAITING: port is started and ready but has no active
++ *			  phys.
++ * @SCI_PORT_SUB_OPERATIONAL: port is started and ready and there is at
++ *			      least one phy operational.
++ * @SCI_PORT_SUB_CONFIGURING: port is started and there was an
++ *			      add/remove phy event.  This state is only
++ *			      used in Automatic Port Configuration Mode
++ *			      (APC)
++ * @SCI_PORT_RESETTING: port is in the process of performing a hard
++ *			reset.  Thus, the user is unable to perform IO
++ *			operations on this port.  This state is entered
++ *			from the READY state.
++ * @SCI_PORT_FAILED: port has failed a reset request.  This state is
++ *		     entered when a port reset request times out. This
++ *		     state is entered from the RESETTING state.
+  */
+-enum sci_port_states {
+-	/**
+-	 * This state indicates that the port has successfully been stopped.
+-	 * In this state no new IO operations are permitted.
+-	 * This state is entered from the STOPPING state.
+-	 */
+-	SCI_PORT_STOPPED,
+-
+-	/**
+-	 * This state indicates that the port is in the process of stopping.
+-	 * In this state no new IO operations are permitted, but existing IO
+-	 * operations are allowed to complete.
+-	 * This state is entered from the READY state.
+-	 */
+-	SCI_PORT_STOPPING,
+-
+-	/**
+-	 * This state indicates the port is now ready.  Thus, the user is
+-	 * able to perform IO operations on this port.
+-	 * This state is entered from the STARTING state.
+-	 */
+-	SCI_PORT_READY,
+-
+-	/**
+-	 * The substate where the port is started and ready but has no
+-	 * active phys.
+-	 */
+-	SCI_PORT_SUB_WAITING,
+-
+-	/**
+-	 * The substate where the port is started and ready and there is
+-	 * at least one phy operational.
+-	 */
+-	SCI_PORT_SUB_OPERATIONAL,
+-
+-	/**
+-	 * The substate where the port is started and there was an
+-	 * add/remove phy event.  This state is only used in Automatic
+-	 * Port Configuration Mode (APC)
+-	 */
+-	SCI_PORT_SUB_CONFIGURING,
+-
+-	/**
+-	 * This state indicates the port is in the process of performing a hard
+-	 * reset.  Thus, the user is unable to perform IO operations on this
+-	 * port.
+-	 * This state is entered from the READY state.
+-	 */
+-	SCI_PORT_RESETTING,
+-
+-	/**
+-	 * This state indicates the port has failed a reset request.  This state
+-	 * is entered when a port reset request times out.
+-	 * This state is entered from the RESETTING state.
+-	 */
+-	SCI_PORT_FAILED,
+-
+-
+-};
++#define PORT_STATES {\
++	C(PORT_STOPPED),\
++	C(PORT_STOPPING),\
++	C(PORT_READY),\
++	C(PORT_SUB_WAITING),\
++	C(PORT_SUB_OPERATIONAL),\
++	C(PORT_SUB_CONFIGURING),\
++	C(PORT_RESETTING),\
++	C(PORT_FAILED),\
++	}
++#undef C
++#define C(a) SCI_##a
++enum sci_port_states PORT_STATES;
++#undef C
+ 
+ static inline void sci_port_decrement_request_count(struct isci_port *iport)
+ {
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index 934d21e..8f501b0 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -62,6 +62,16 @@
+ #include "scu_event_codes.h"
+ #include "task.h"
+ 
++#undef C
++#define C(a) (#a)
++const char *dev_state_name(enum sci_remote_device_states state)
++{
++	static const char * const strings[] = REMOTE_DEV_STATES;
++
++	return strings[state];
++}
++#undef C
++
+ /**
+  * isci_remote_device_not_ready() - This function is called by the ihost when
+  *    the remote device is not ready. We mark the isci device as ready (not
+@@ -167,8 +177,8 @@ enum sci_status sci_remote_device_stop(struct isci_remote_device *idev,
+ 	case SCI_DEV_FAILED:
+ 	case SCI_DEV_FINAL:
+ 	default:
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %d\n",
+-			 __func__, state);
++		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
++			 __func__, dev_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	case SCI_DEV_STOPPED:
+ 		return SCI_SUCCESS;
+@@ -226,8 +236,8 @@ enum sci_status sci_remote_device_reset(struct isci_remote_device *idev)
+ 	case SCI_DEV_RESETTING:
+ 	case SCI_DEV_FINAL:
+ 	default:
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %d\n",
+-			 __func__, state);
++		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
++			 __func__, dev_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	case SCI_DEV_READY:
+ 	case SCI_STP_DEV_IDLE:
+@@ -246,8 +256,8 @@ enum sci_status sci_remote_device_reset_complete(struct isci_remote_device *idev
+ 	enum sci_remote_device_states state = sm->current_state_id;
+ 
+ 	if (state != SCI_DEV_RESETTING) {
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %d\n",
+-			 __func__, state);
++		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
++			 __func__, dev_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ 
+@@ -262,8 +272,8 @@ enum sci_status sci_remote_device_suspend(struct isci_remote_device *idev,
+ 	enum sci_remote_device_states state = sm->current_state_id;
+ 
+ 	if (state != SCI_STP_DEV_CMD) {
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %d\n",
+-			 __func__, state);
++		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
++			 __func__, dev_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ 
+@@ -287,8 +297,8 @@ enum sci_status sci_remote_device_frame_handler(struct isci_remote_device *idev,
+ 	case SCI_SMP_DEV_IDLE:
+ 	case SCI_DEV_FINAL:
+ 	default:
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %d\n",
+-			 __func__, state);
++		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
++			 __func__, dev_state_name(state));
+ 		/* Return the frame back to the controller */
+ 		sci_controller_release_frame(ihost, frame_index);
+ 		return SCI_FAILURE_INVALID_STATE;
+@@ -502,8 +512,8 @@ enum sci_status sci_remote_device_start_io(struct isci_host *ihost,
+ 	case SCI_DEV_RESETTING:
+ 	case SCI_DEV_FINAL:
+ 	default:
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %d\n",
+-			 __func__, state);
++		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
++			 __func__, dev_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	case SCI_DEV_READY:
+ 		/* attempt to start an io request for this device object. The remote
+@@ -637,8 +647,8 @@ enum sci_status sci_remote_device_complete_io(struct isci_host *ihost,
+ 	case SCI_DEV_FAILED:
+ 	case SCI_DEV_FINAL:
+ 	default:
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %d\n",
+-			 __func__, state);
++		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
++			 __func__, dev_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	case SCI_DEV_READY:
+ 	case SCI_STP_DEV_AWAIT_RESET:
+@@ -721,8 +731,8 @@ enum sci_status sci_remote_device_start_task(struct isci_host *ihost,
+ 	case SCI_DEV_RESETTING:
+ 	case SCI_DEV_FINAL:
+ 	default:
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %d\n",
+-			 __func__, state);
++		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
++			 __func__, dev_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	case SCI_STP_DEV_IDLE:
+ 	case SCI_STP_DEV_CMD:
+@@ -853,8 +863,8 @@ static enum sci_status sci_remote_device_destruct(struct isci_remote_device *ide
+ 	struct isci_host *ihost;
+ 
+ 	if (state != SCI_DEV_STOPPED) {
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %d\n",
+-			 __func__, state);
++		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
++			 __func__, dev_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ 
+@@ -1204,8 +1214,8 @@ static enum sci_status sci_remote_device_start(struct isci_remote_device *idev,
+ 	enum sci_status status;
+ 
+ 	if (state != SCI_DEV_STOPPED) {
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %d\n",
+-			 __func__, state);
++		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
++			 __func__, dev_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ 
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index 98c2801..58637ee 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -179,122 +179,101 @@ enum sci_status sci_remote_device_reset_complete(
+ /**
+  * enum sci_remote_device_states - This enumeration depicts all the states
+  *    for the common remote device state machine.
++ * @SCI_DEV_INITIAL: Simply the initial state for the base remote device
++ * state machine.
+  *
++ * @SCI_DEV_STOPPED: This state indicates that the remote device has
++ * successfully been stopped.  In this state no new IO operations are
++ * permitted.  This state is entered from the INITIAL state.  This state
++ * is entered from the STOPPING state.
+  *
++ * @SCI_DEV_STARTING: This state indicates the the remote device is in
++ * the process of becoming ready (i.e. starting).  In this state no new
++ * IO operations are permitted.  This state is entered from the STOPPED
++ * state.
++ *
++ * @SCI_DEV_READY: This state indicates the remote device is now ready.
++ * Thus, the user is able to perform IO operations on the remote device.
++ * This state is entered from the STARTING state.
++ *
++ * @SCI_STP_DEV_IDLE: This is the idle substate for the stp remote
++ * device.  When there are no active IO for the device it is is in this
++ * state.
++ *
++ * @SCI_STP_DEV_CMD: This is the command state for for the STP remote
++ * device.  This state is entered when the device is processing a
++ * non-NCQ command.  The device object will fail any new start IO
++ * requests until this command is complete.
++ *
++ * @SCI_STP_DEV_NCQ: This is the NCQ state for the STP remote device.
++ * This state is entered when the device is processing an NCQ reuqest.
++ * It will remain in this state so long as there is one or more NCQ
++ * requests being processed.
++ *
++ * @SCI_STP_DEV_NCQ_ERROR: This is the NCQ error state for the STP
++ * remote device.  This state is entered when an SDB error FIS is
++ * received by the device object while in the NCQ state.  The device
++ * object will only accept a READ LOG command while in this state.
++ *
++ * @SCI_STP_DEV_ATAPI_ERROR: This is the ATAPI error state for the STP
++ * ATAPI remote device.  This state is entered when ATAPI device sends
++ * error status FIS without data while the device object is in CMD
++ * state.  A suspension event is expected in this state.  The device
++ * object will resume right away.
++ *
++ * @SCI_STP_DEV_AWAIT_RESET: This is the READY substate indicates the
++ * device is waiting for the RESET task coming to be recovered from
++ * certain hardware specific error.
++ *
++ * @SCI_SMP_DEV_IDLE: This is the ready operational substate for the
++ * remote device.  This is the normal operational state for a remote
++ * device.
++ *
++ * @SCI_SMP_DEV_CMD: This is the suspended state for the remote device.
++ * This is the state that the device is placed in when a RNC suspend is
++ * received by the SCU hardware.
++ *
++ * @SCI_DEV_STOPPING: This state indicates that the remote device is in
++ * the process of stopping.  In this state no new IO operations are
++ * permitted, but existing IO operations are allowed to complete.  This
++ * state is entered from the READY state.  This state is entered from
++ * the FAILED state.
++ *
++ * @SCI_DEV_FAILED: This state indicates that the remote device has
++ * failed.  In this state no new IO operations are permitted.  This
++ * state is entered from the INITIALIZING state.  This state is entered
++ * from the READY state.
++ *
++ * @SCI_DEV_RESETTING: This state indicates the device is being reset.
++ * In this state no new IO operations are permitted.  This state is
++ * entered from the READY state.
++ *
++ * @SCI_DEV_FINAL: Simply the final state for the base remote device
++ * state machine.
+  */
+-enum sci_remote_device_states {
+-	/**
+-	 * Simply the initial state for the base remote device state machine.
+-	 */
+-	SCI_DEV_INITIAL,
+-
+-	/**
+-	 * This state indicates that the remote device has successfully been
+-	 * stopped.  In this state no new IO operations are permitted.
+-	 * This state is entered from the INITIAL state.
+-	 * This state is entered from the STOPPING state.
+-	 */
+-	SCI_DEV_STOPPED,
+-
+-	/**
+-	 * This state indicates the the remote device is in the process of
+-	 * becoming ready (i.e. starting).  In this state no new IO operations
+-	 * are permitted.
+-	 * This state is entered from the STOPPED state.
+-	 */
+-	SCI_DEV_STARTING,
+-
+-	/**
+-	 * This state indicates the remote device is now ready.  Thus, the user
+-	 * is able to perform IO operations on the remote device.
+-	 * This state is entered from the STARTING state.
+-	 */
+-	SCI_DEV_READY,
+-
+-	/**
+-	 * This is the idle substate for the stp remote device.  When there are no
+-	 * active IO for the device it is is in this state.
+-	 */
+-	SCI_STP_DEV_IDLE,
+-
+-	/**
+-	 * This is the command state for for the STP remote device.  This state is
+-	 * entered when the device is processing a non-NCQ command.  The device object
+-	 * will fail any new start IO requests until this command is complete.
+-	 */
+-	SCI_STP_DEV_CMD,
+-
+-	/**
+-	 * This is the NCQ state for the STP remote device.  This state is entered
+-	 * when the device is processing an NCQ reuqest.  It will remain in this state
+-	 * so long as there is one or more NCQ requests being processed.
+-	 */
+-	SCI_STP_DEV_NCQ,
+-
+-	/**
+-	 * This is the NCQ error state for the STP remote device.  This state is
+-	 * entered when an SDB error FIS is received by the device object while in the
+-	 * NCQ state.  The device object will only accept a READ LOG command while in
+-	 * this state.
+-	 */
+-	SCI_STP_DEV_NCQ_ERROR,
+-
+-	/**
+-	 * This is the ATAPI error state for the STP ATAPI remote device.
+-	 * This state is entered when ATAPI device sends error status FIS
+-	 * without data while the device object is in CMD state.
+-	 * A suspension event is expected in this state.
+-	 * The device object will resume right away.
+-	 */
+-	SCI_STP_DEV_ATAPI_ERROR,
+-
+-	/**
+-	 * This is the READY substate indicates the device is waiting for the RESET task
+-	 * coming to be recovered from certain hardware specific error.
+-	 */
+-	SCI_STP_DEV_AWAIT_RESET,
+-
+-	/**
+-	 * This is the ready operational substate for the remote device.  This is the
+-	 * normal operational state for a remote device.
+-	 */
+-	SCI_SMP_DEV_IDLE,
+-
+-	/**
+-	 * This is the suspended state for the remote device.  This is the state that
+-	 * the device is placed in when a RNC suspend is received by the SCU hardware.
+-	 */
+-	SCI_SMP_DEV_CMD,
+-
+-	/**
+-	 * This state indicates that the remote device is in the process of
+-	 * stopping.  In this state no new IO operations are permitted, but
+-	 * existing IO operations are allowed to complete.
+-	 * This state is entered from the READY state.
+-	 * This state is entered from the FAILED state.
+-	 */
+-	SCI_DEV_STOPPING,
+-
+-	/**
+-	 * This state indicates that the remote device has failed.
+-	 * In this state no new IO operations are permitted.
+-	 * This state is entered from the INITIALIZING state.
+-	 * This state is entered from the READY state.
+-	 */
+-	SCI_DEV_FAILED,
+-
+-	/**
+-	 * This state indicates the device is being reset.
+-	 * In this state no new IO operations are permitted.
+-	 * This state is entered from the READY state.
+-	 */
+-	SCI_DEV_RESETTING,
+-
+-	/**
+-	 * Simply the final state for the base remote device state machine.
+-	 */
+-	SCI_DEV_FINAL,
+-};
++#define REMOTE_DEV_STATES {\
++	C(DEV_INITIAL),\
++	C(DEV_STOPPED),\
++	C(DEV_STARTING),\
++	C(DEV_READY),\
++	C(STP_DEV_IDLE),\
++	C(STP_DEV_CMD),\
++	C(STP_DEV_NCQ),\
++	C(STP_DEV_NCQ_ERROR),\
++	C(STP_DEV_ATAPI_ERROR),\
++	C(STP_DEV_AWAIT_RESET),\
++	C(SMP_DEV_IDLE),\
++	C(SMP_DEV_CMD),\
++	C(DEV_STOPPING),\
++	C(DEV_FAILED),\
++	C(DEV_RESETTING),\
++	C(DEV_FINAL),\
++	}
++#undef C
++#define C(a) SCI_##a
++enum sci_remote_device_states REMOTE_DEV_STATES;
++#undef C
++const char *dev_state_name(enum sci_remote_device_states state);
+ 
+ static inline struct isci_remote_device *rnc_to_dev(struct sci_remote_node_context *rnc)
+ {
+diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
+index 748e833..3a94634 100644
+--- a/drivers/scsi/isci/remote_node_context.c
++++ b/drivers/scsi/isci/remote_node_context.c
+@@ -60,18 +60,15 @@
+ #include "scu_event_codes.h"
+ #include "scu_task_context.h"
+ 
++#undef C
++#define C(a) (#a)
++const char *rnc_state_name(enum scis_sds_remote_node_context_states state)
++{
++	static const char * const strings[] = RNC_STATES;
+ 
+-/**
+- *
+- * @sci_rnc: The RNC for which the is posted request is being made.
+- *
+- * This method will return true if the RNC is not in the initial state.  In all
+- * other states the RNC is considered active and this will return true. The
+- * destroy request of the state machine drives the RNC back to the initial
+- * state.  If the state machine changes then this routine will also have to be
+- * changed. bool true if the state machine is not in the initial state false if
+- * the state machine is in the initial state
+- */
++	return strings[state];
++}
++#undef C
+ 
+ /**
+  *
+diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
+index 41580ad..a241e0f 100644
+--- a/drivers/scsi/isci/remote_node_context.h
++++ b/drivers/scsi/isci/remote_node_context.h
+@@ -85,61 +85,50 @@ struct sci_remote_node_context;
+ typedef void (*scics_sds_remote_node_context_callback)(void *);
+ 
+ /**
+- * This is the enumeration of the remote node context states.
++ * enum sci_remote_node_context_states
++ * @SCI_RNC_INITIAL initial state for a remote node context.  On a resume
++ * request the remote node context will transition to the posting state.
++ *
++ * @SCI_RNC_POSTING: transition state that posts the RNi to the hardware. Once
++ * the RNC is posted the remote node context will be made ready.
++ *
++ * @SCI_RNC_INVALIDATING: transition state that will post an RNC invalidate to
++ * the hardware.  Once the invalidate is complete the remote node context will
++ * transition to the posting state.
++ *
++ * @SCI_RNC_RESUMING: transition state that will post an RNC resume to the
++ * hardare.  Once the event notification of resume complete is received the
++ * remote node context will transition to the ready state.
++ *
++ * @SCI_RNC_READY: state that the remote node context must be in to accept io
++ * request operations.
++ *
++ * @SCI_RNC_TX_SUSPENDED: state that the remote node context transitions to when
++ * it gets a TX suspend notification from the hardware.
++ *
++ * @SCI_RNC_TX_RX_SUSPENDED: state that the remote node context transitions to
++ * when it gets a TX RX suspend notification from the hardware.
++ *
++ * @SCI_RNC_AWAIT_SUSPENSION: wait state for the remote node context that waits
++ * for a suspend notification from the hardware.  This state is entered when
++ * either there is a request to supend the remote node context or when there is
++ * a TC completion where the remote node will be suspended by the hardware.
+  */
+-enum scis_sds_remote_node_context_states {
+-	/**
+-	 * This state is the initial state for a remote node context.  On a resume
+-	 * request the remote node context will transition to the posting state.
+-	 */
+-	SCI_RNC_INITIAL,
+-
+-	/**
+-	 * This is a transition state that posts the RNi to the hardware. Once the RNC
+-	 * is posted the remote node context will be made ready.
+-	 */
+-	SCI_RNC_POSTING,
+-
+-	/**
+-	 * This is a transition state that will post an RNC invalidate to the
+-	 * hardware.  Once the invalidate is complete the remote node context will
+-	 * transition to the posting state.
+-	 */
+-	SCI_RNC_INVALIDATING,
+-
+-	/**
+-	 * This is a transition state that will post an RNC resume to the hardare.
+-	 * Once the event notification of resume complete is received the remote node
+-	 * context will transition to the ready state.
+-	 */
+-	SCI_RNC_RESUMING,
+-
+-	/**
+-	 * This is the state that the remote node context must be in to accept io
+-	 * request operations.
+-	 */
+-	SCI_RNC_READY,
+-
+-	/**
+-	 * This is the state that the remote node context transitions to when it gets
+-	 * a TX suspend notification from the hardware.
+-	 */
+-	SCI_RNC_TX_SUSPENDED,
+-
+-	/**
+-	 * This is the state that the remote node context transitions to when it gets
+-	 * a TX RX suspend notification from the hardware.
+-	 */
+-	SCI_RNC_TX_RX_SUSPENDED,
+-
+-	/**
+-	 * This state is a wait state for the remote node context that waits for a
+-	 * suspend notification from the hardware.  This state is entered when either
+-	 * there is a request to supend the remote node context or when there is a TC
+-	 * completion where the remote node will be suspended by the hardware.
+-	 */
+-	SCI_RNC_AWAIT_SUSPENSION
+-};
++#define RNC_STATES {\
++	C(RNC_INITIAL),\
++	C(RNC_POSTING),\
++	C(RNC_INVALIDATING),\
++	C(RNC_RESUMING),\
++	C(RNC_READY),\
++	C(RNC_TX_SUSPENDED),\
++	C(RNC_TX_RX_SUSPENDED),\
++	C(RNC_AWAIT_SUSPENSION),\
++	}
++#undef C
++#define C(a) SCI_##a
++enum scis_sds_remote_node_context_states RNC_STATES;
++#undef C
++const char *rnc_state_name(enum scis_sds_remote_node_context_states state);
+ 
+ /**
+  *
 diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 0e43efd..1a39ce5 100644
+index 1a39ce5..ab18ee0fe 100644
 --- a/drivers/scsi/isci/request.c
 +++ b/drivers/scsi/isci/request.c
-@@ -53,6 +53,7 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  */
+@@ -61,6 +61,16 @@
+ #include "scu_event_codes.h"
+ #include "sas.h"
  
-+#include <scsi/scsi_cmnd.h>
- #include "isci.h"
- #include "task.h"
- #include "request.h"
-@@ -264,6 +265,141 @@ static void scu_ssp_reqeust_construct_task_context(
- 	task_context->response_iu_lower = lower_32_bits(dma_addr);
- }
- 
-+static u8 scu_bg_blk_size(struct scsi_device *sdp)
++#undef C
++#define C(a) (#a)
++const char *req_state_name(enum sci_base_request_states state)
 +{
-+	switch (sdp->sector_size) {
-+	case 512:
-+		return 0;
-+	case 1024:
-+		return 1;
-+	case 4096:
-+		return 3;
-+	default:
-+		return 0xff;
-+	}
++	static const char * const strings[] = REQUEST_STATES;
++
++	return strings[state];
 +}
++#undef C
 +
-+static u32 scu_dif_bytes(u32 len, u32 sector_size)
-+{
-+	return (len >> ilog2(sector_size)) * 8;
-+}
-+
-+static void scu_ssp_ireq_dif_insert(struct isci_request *ireq, u8 type, u8 op)
-+{
-+	struct scu_task_context *tc = ireq->tc;
-+	struct scsi_cmnd *scmd = ireq->ttype_ptr.io_task_ptr->uldd_task;
-+	u8 blk_sz = scu_bg_blk_size(scmd->device);
-+
-+	tc->block_guard_enable = 1;
-+	tc->blk_prot_en = 1;
-+	tc->blk_sz = blk_sz;
-+	/* DIF write insert */
-+	tc->blk_prot_func = 0x2;
-+
-+	tc->transfer_length_bytes += scu_dif_bytes(tc->transfer_length_bytes,
-+						   scmd->device->sector_size);
-+
-+	/* always init to 0, used by hw */
-+	tc->interm_crc_val = 0;
-+
-+	tc->init_crc_seed = 0;
-+	tc->app_tag_verify = 0;
-+	tc->app_tag_gen = 0;
-+	tc->ref_tag_seed_verify = 0;
-+
-+	/* always init to same as bg_blk_sz */
-+	tc->UD_bytes_immed_val = scmd->device->sector_size;
-+
-+	tc->reserved_DC_0 = 0;
-+
-+	/* always init to 8 */
-+	tc->DIF_bytes_immed_val = 8;
-+
-+	tc->reserved_DC_1 = 0;
-+	tc->bgc_blk_sz = scmd->device->sector_size;
-+	tc->reserved_E0_0 = 0;
-+	tc->app_tag_gen_mask = 0;
-+
-+	/** setup block guard control **/
-+	tc->bgctl = 0;
-+
-+	/* DIF write insert */
-+	tc->bgctl_f.op = 0x2;
-+
-+	tc->app_tag_verify_mask = 0;
-+
-+	/* must init to 0 for hw */
-+	tc->blk_guard_err = 0;
-+
-+	tc->reserved_E8_0 = 0;
-+
-+	if ((type & SCSI_PROT_DIF_TYPE1) || (type & SCSI_PROT_DIF_TYPE2))
-+		tc->ref_tag_seed_gen = scsi_get_lba(scmd) & 0xffffffff;
-+	else if (type & SCSI_PROT_DIF_TYPE3)
-+		tc->ref_tag_seed_gen = 0;
-+}
-+
-+static void scu_ssp_ireq_dif_strip(struct isci_request *ireq, u8 type, u8 op)
-+{
-+	struct scu_task_context *tc = ireq->tc;
-+	struct scsi_cmnd *scmd = ireq->ttype_ptr.io_task_ptr->uldd_task;
-+	u8 blk_sz = scu_bg_blk_size(scmd->device);
-+
-+	tc->block_guard_enable = 1;
-+	tc->blk_prot_en = 1;
-+	tc->blk_sz = blk_sz;
-+	/* DIF read strip */
-+	tc->blk_prot_func = 0x1;
-+
-+	tc->transfer_length_bytes += scu_dif_bytes(tc->transfer_length_bytes,
-+						   scmd->device->sector_size);
-+
-+	/* always init to 0, used by hw */
-+	tc->interm_crc_val = 0;
-+
-+	tc->init_crc_seed = 0;
-+	tc->app_tag_verify = 0;
-+	tc->app_tag_gen = 0;
-+
-+	if ((type & SCSI_PROT_DIF_TYPE1) || (type & SCSI_PROT_DIF_TYPE2))
-+		tc->ref_tag_seed_verify = scsi_get_lba(scmd) & 0xffffffff;
-+	else if (type & SCSI_PROT_DIF_TYPE3)
-+		tc->ref_tag_seed_verify = 0;
-+
-+	/* always init to same as bg_blk_sz */
-+	tc->UD_bytes_immed_val = scmd->device->sector_size;
-+
-+	tc->reserved_DC_0 = 0;
-+
-+	/* always init to 8 */
-+	tc->DIF_bytes_immed_val = 8;
-+
-+	tc->reserved_DC_1 = 0;
-+	tc->bgc_blk_sz = scmd->device->sector_size;
-+	tc->reserved_E0_0 = 0;
-+	tc->app_tag_gen_mask = 0;
-+
-+	/** setup block guard control **/
-+	tc->bgctl = 0;
-+
-+	/* DIF read strip */
-+	tc->bgctl_f.crc_verify = 1;
-+	tc->bgctl_f.op = 0x1;
-+	if ((type & SCSI_PROT_DIF_TYPE1) || (type & SCSI_PROT_DIF_TYPE2)) {
-+		tc->bgctl_f.ref_tag_chk = 1;
-+		tc->bgctl_f.app_f_detect = 1;
-+	} else if (type & SCSI_PROT_DIF_TYPE3)
-+		tc->bgctl_f.app_ref_f_detect = 1;
-+
-+	tc->app_tag_verify_mask = 0;
-+
-+	/* must init to 0 for hw */
-+	tc->blk_guard_err = 0;
-+
-+	tc->reserved_E8_0 = 0;
-+	tc->ref_tag_seed_gen = 0;
-+}
-+
- /**
-  * This method is will fill in the SCU Task Context for a SSP IO request.
-  * @sci_req:
-@@ -274,6 +410,10 @@ static void scu_ssp_io_request_construct_task_context(struct isci_request *ireq,
- 						      u32 len)
+ static struct scu_sgl_element_pair *to_sgl_element_pair(struct isci_request *ireq,
+ 							int idx)
  {
- 	struct scu_task_context *task_context = ireq->tc;
-+	struct sas_task *sas_task = ireq->ttype_ptr.io_task_ptr;
-+	struct scsi_cmnd *scmd = sas_task->uldd_task;
-+	u8 prot_type = scsi_get_prot_type(scmd);
-+	u8 prot_op = scsi_get_prot_op(scmd);
+@@ -910,7 +920,8 @@ enum sci_status sci_request_complete(struct isci_request *ireq)
  
- 	scu_ssp_reqeust_construct_task_context(ireq, task_context);
+ 	state = ireq->sm.current_state_id;
+ 	if (WARN_ONCE(state != SCI_REQ_COMPLETED,
+-		      "isci: request completion from wrong state (%d)\n", state))
++		      "isci: request completion from wrong state (%s)\n",
++		      req_state_name(state)))
+ 		return SCI_FAILURE_INVALID_STATE;
  
-@@ -296,6 +436,13 @@ static void scu_ssp_io_request_construct_task_context(struct isci_request *ireq,
+ 	if (ireq->saved_rx_frame_index != SCU_INVALID_FRAME_INDEX)
+@@ -931,8 +942,8 @@ enum sci_status sci_io_request_event_handler(struct isci_request *ireq,
+ 	state = ireq->sm.current_state_id;
  
- 	if (task_context->transfer_length_bytes > 0)
- 		sci_request_build_sgl(ireq);
-+
-+	if (prot_type != SCSI_PROT_DIF_TYPE0) {
-+		if (prot_op == SCSI_PROT_READ_STRIP)
-+			scu_ssp_ireq_dif_strip(ireq, prot_type, prot_op);
-+		else if (prot_op == SCSI_PROT_WRITE_INSERT)
-+			scu_ssp_ireq_dif_insert(ireq, prot_type, prot_op);
-+	}
+ 	if (state != SCI_REQ_STP_PIO_DATA_IN) {
+-		dev_warn(&ihost->pdev->dev, "%s: (%x) in wrong state %d\n",
+-			 __func__, event_code, state);
++		dev_warn(&ihost->pdev->dev, "%s: (%x) in wrong state %s\n",
++			 __func__, event_code, req_state_name(state));
+ 
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+@@ -2306,12 +2317,8 @@ sci_io_request_tc_completion(struct isci_request *ireq,
+ 		return atapi_data_tc_completion_handler(ireq, completion_code);
+ 
+ 	default:
+-		dev_warn(&ihost->pdev->dev,
+-			 "%s: SCIC IO Request given task completion "
+-			 "notification %x while in wrong state %d\n",
+-			 __func__,
+-			 completion_code,
+-			 state);
++		dev_warn(&ihost->pdev->dev, "%s: %x in wrong state %s\n",
++			 __func__, completion_code, req_state_name(state));
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ }
+diff --git a/drivers/scsi/isci/request.h b/drivers/scsi/isci/request.h
+index bcf2f37..057f237 100644
+--- a/drivers/scsi/isci/request.h
++++ b/drivers/scsi/isci/request.h
+@@ -182,134 +182,103 @@ static inline struct isci_request *to_ireq(struct isci_stp_request *stp_req)
  }
  
  /**
-diff --git a/drivers/scsi/isci/scu_task_context.h b/drivers/scsi/isci/scu_task_context.h
-index 7df87d9..869a979 100644
---- a/drivers/scsi/isci/scu_task_context.h
-+++ b/drivers/scsi/isci/scu_task_context.h
-@@ -866,9 +866,9 @@ struct scu_task_context {
- 	struct transport_snapshot snapshot; /* read only set to 0 */
- 
- 	/* OFFSET 0x5C */
--	u32 block_protection_enable:1;
--	u32 block_size:2;
--	u32 block_protection_function:2;
-+	u32 blk_prot_en:1;
-+	u32 blk_sz:2;
-+	u32 blk_prot_func:2;
- 	u32 reserved_5C_0:9;
- 	u32 active_sgl_element:2;  /* read only set to 0 */
- 	u32 sgl_exhausted:1;  /* read only set to 0 */
-@@ -896,33 +896,56 @@ struct scu_task_context {
- 	u32 reserved_C4_CC[3];
- 
- 	/* OFFSET 0xD0 */
--	u32 intermediate_crc_value:16;
--	u32 initial_crc_seed:16;
-+	u32 interm_crc_val:16;
-+	u32 init_crc_seed:16;
- 
- 	/* OFFSET 0xD4 */
--	u32 application_tag_for_verify:16;
--	u32 application_tag_for_generate:16;
-+	u32 app_tag_verify:16;
-+	u32 app_tag_gen:16;
- 
- 	/* OFFSET 0xD8 */
--	u32 reference_tag_seed_for_verify_function;
-+	u32 ref_tag_seed_verify;
- 
- 	/* OFFSET 0xDC */
--	u32 reserved_DC;
-+	u32 UD_bytes_immed_val:13;
-+	u32 reserved_DC_0:3;
-+	u32 DIF_bytes_immed_val:4;
-+	u32 reserved_DC_1:12;
- 
- 	/* OFFSET 0xE0 */
--	u32 reserved_E0_0:16;
--	u32 application_tag_mask_for_generate:16;
-+	u32 bgc_blk_sz:13;
-+	u32 reserved_E0_0:3;
-+	u32 app_tag_gen_mask:16;
- 
- 	/* OFFSET 0xE4 */
--	u32 block_protection_control:16;
--	u32 application_tag_mask_for_verify:16;
-+	union {
-+		u16 bgctl;
-+		struct {
-+			u16 crc_verify:1;
-+			u16 app_tag_chk:1;
-+			u16 ref_tag_chk:1;
-+			u16 op:2;
-+			u16 legacy:1;
-+			u16 invert_crc_seed:1;
-+			u16 ref_tag_gen:1;
-+			u16 fixed_ref_tag:1;
-+			u16 invert_crc:1;
-+			u16 app_ref_f_detect:1;
-+			u16 uninit_dif_check_err:1;
-+			u16 uninit_dif_bypass:1;
-+			u16 app_f_detect:1;
-+			u16 reserved_0:2;
-+		} bgctl_f;
-+	};
-+
-+	u16 app_tag_verify_mask;
- 
- 	/* OFFSET 0xE8 */
--	u32 block_protection_error:8;
-+	u32 blk_guard_err:8;
- 	u32 reserved_E8_0:24;
- 
- 	/* OFFSET 0xEC */
--	u32 reference_tag_seed_for_verify;
-+	u32 ref_tag_seed_gen;
- 
- 	/* OFFSET 0xF0 */
- 	u32 intermediate_crc_valid_snapshot:16;
-@@ -937,6 +960,6 @@ struct scu_task_context {
- 	/* OFFSET 0xFC */
- 	u32 reference_tag_seed_for_generate_function_snapshot;
- 
+- * enum sci_base_request_states - This enumeration depicts all the states for
+- *    the common request state machine.
++ * enum sci_base_request_states - request state machine states
+  *
++ * @SCI_REQ_INIT: Simply the initial state for the base request state machine.
+  *
++ * @SCI_REQ_CONSTRUCTED: This state indicates that the request has been
++ * constructed.  This state is entered from the INITIAL state.
++ *
++ * @SCI_REQ_STARTED: This state indicates that the request has been started.
++ * This state is entered from the CONSTRUCTED state.
++ *
++ * @SCI_REQ_STP_UDMA_WAIT_TC_COMP:
++ * @SCI_REQ_STP_UDMA_WAIT_D2H:
++ * @SCI_REQ_STP_NON_DATA_WAIT_H2D:
++ * @SCI_REQ_STP_NON_DATA_WAIT_D2H:
++ *
++ * @SCI_REQ_STP_PIO_WAIT_H2D: While in this state the IO request object is
++ * waiting for the TC completion notification for the H2D Register FIS
++ *
++ * @SCI_REQ_STP_PIO_WAIT_FRAME: While in this state the IO request object is
++ * waiting for either a PIO Setup FIS or a D2H register FIS.  The type of frame
++ * received is based on the result of the prior frame and line conditions.
++ *
++ * @SCI_REQ_STP_PIO_DATA_IN: While in this state the IO request object is
++ * waiting for a DATA frame from the device.
++ *
++ * @SCI_REQ_STP_PIO_DATA_OUT: While in this state the IO request object is
++ * waiting to transmit the next data frame to the device.
++ *
++ * @SCI_REQ_ATAPI_WAIT_H2D: While in this state the IO request object is
++ * waiting for the TC completion notification for the H2D Register FIS
++ *
++ * @SCI_REQ_ATAPI_WAIT_PIO_SETUP: While in this state the IO request object is
++ * waiting for either a PIO Setup.
++ *
++ * @SCI_REQ_ATAPI_WAIT_D2H: The non-data IO transit to this state in this state
++ * after receiving TC completion. While in this state IO request object is
++ * waiting for D2H status frame as UF.
++ *
++ * @SCI_REQ_ATAPI_WAIT_TC_COMP: When transmitting raw frames hardware reports
++ * task context completion after every frame submission, so in the
++ * non-accelerated case we need to expect the completion for the "cdb" frame.
++ *
++ * @SCI_REQ_TASK_WAIT_TC_COMP: The AWAIT_TC_COMPLETION sub-state indicates that
++ * the started raw task management request is waiting for the transmission of
++ * the initial frame (i.e. command, task, etc.).
++ *
++ * @SCI_REQ_TASK_WAIT_TC_RESP: This sub-state indicates that the started task
++ * management request is waiting for the reception of an unsolicited frame
++ * (i.e.  response IU).
++ *
++ * @SCI_REQ_SMP_WAIT_RESP: This sub-state indicates that the started task
++ * management request is waiting for the reception of an unsolicited frame
++ * (i.e.  response IU).
++ *
++ * @SCI_REQ_SMP_WAIT_TC_COMP: The AWAIT_TC_COMPLETION sub-state indicates that
++ * the started SMP request is waiting for the transmission of the initial frame
++ * (i.e.  command, task, etc.).
++ *
++ * @SCI_REQ_COMPLETED: This state indicates that the request has completed.
++ * This state is entered from the STARTED state. This state is entered from the
++ * ABORTING state.
++ *
++ * @SCI_REQ_ABORTING: This state indicates that the request is in the process
++ * of being terminated/aborted.  This state is entered from the CONSTRUCTED
++ * state.  This state is entered from the STARTED state.
++ *
++ * @SCI_REQ_FINAL: Simply the final state for the base request state machine.
+  */
+-enum sci_base_request_states {
+-	/*
+-	 * Simply the initial state for the base request state machine.
+-	 */
+-	SCI_REQ_INIT,
+-
+-	/*
+-	 * This state indicates that the request has been constructed.
+-	 * This state is entered from the INITIAL state.
+-	 */
+-	SCI_REQ_CONSTRUCTED,
+-
+-	/*
+-	 * This state indicates that the request has been started. This state
+-	 * is entered from the CONSTRUCTED state.
+-	 */
+-	SCI_REQ_STARTED,
+-
+-	SCI_REQ_STP_UDMA_WAIT_TC_COMP,
+-	SCI_REQ_STP_UDMA_WAIT_D2H,
+-
+-	SCI_REQ_STP_NON_DATA_WAIT_H2D,
+-	SCI_REQ_STP_NON_DATA_WAIT_D2H,
+-
+-	/*
+-	 * While in this state the IO request object is waiting for the TC
+-	 * completion notification for the H2D Register FIS
+-	 */
+-	SCI_REQ_STP_PIO_WAIT_H2D,
+-
+-	/*
+-	 * While in this state the IO request object is waiting for either a
+-	 * PIO Setup FIS or a D2H register FIS.  The type of frame received is
+-	 * based on the result of the prior frame and line conditions.
+-	 */
+-	SCI_REQ_STP_PIO_WAIT_FRAME,
+-
+-	/*
+-	 * While in this state the IO request object is waiting for a DATA
+-	 * frame from the device.
+-	 */
+-	SCI_REQ_STP_PIO_DATA_IN,
+-
+-	/*
+-	 * While in this state the IO request object is waiting to transmit
+-	 * the next data frame to the device.
+-	 */
+-	SCI_REQ_STP_PIO_DATA_OUT,
+-
+-	/*
+-	 * While in this state the IO request object is waiting for the TC
+-	 * completion notification for the H2D Register FIS
+-	 */
+-	SCI_REQ_ATAPI_WAIT_H2D,
+-
+-	/*
+-	 * While in this state the IO request object is waiting for either a
+-	 * PIO Setup.
+-	 */
+-	SCI_REQ_ATAPI_WAIT_PIO_SETUP,
+-
+-	/*
+-	 * The non-data IO transit to this state in this state after receiving
+-	 * TC completion. While in this state IO request object is waiting for
+-	 * D2H status frame as UF.
+-	 */
+-	SCI_REQ_ATAPI_WAIT_D2H,
+-
+-	/*
+-	 * When transmitting raw frames hardware reports task context completion
+-	 * after every frame submission, so in the non-accelerated case we need
+-	 * to expect the completion for the "cdb" frame.
+-	 */
+-	SCI_REQ_ATAPI_WAIT_TC_COMP,
+-
+-	/*
+-	 * The AWAIT_TC_COMPLETION sub-state indicates that the started raw
+-	 * task management request is waiting for the transmission of the
+-	 * initial frame (i.e. command, task, etc.).
+-	 */
+-	SCI_REQ_TASK_WAIT_TC_COMP,
+-
+-	/*
+-	 * This sub-state indicates that the started task management request
+-	 * is waiting for the reception of an unsolicited frame
+-	 * (i.e. response IU).
+-	 */
+-	SCI_REQ_TASK_WAIT_TC_RESP,
+-
+-	/*
+-	 * This sub-state indicates that the started task management request
+-	 * is waiting for the reception of an unsolicited frame
+-	 * (i.e. response IU).
+-	 */
+-	SCI_REQ_SMP_WAIT_RESP,
+-
+-	/*
+-	 * The AWAIT_TC_COMPLETION sub-state indicates that the started SMP
+-	 * request is waiting for the transmission of the initial frame
+-	 * (i.e. command, task, etc.).
+-	 */
+-	SCI_REQ_SMP_WAIT_TC_COMP,
+-
+-	/*
+-	 * This state indicates that the request has completed.
+-	 * This state is entered from the STARTED state. This state is entered
+-	 * from the ABORTING state.
+-	 */
+-	SCI_REQ_COMPLETED,
+-
+-	/*
+-	 * This state indicates that the request is in the process of being
+-	 * terminated/aborted.
+-	 * This state is entered from the CONSTRUCTED state.
+-	 * This state is entered from the STARTED state.
+-	 */
+-	SCI_REQ_ABORTING,
+-
+-	/*
+-	 * Simply the final state for the base request state machine.
+-	 */
+-	SCI_REQ_FINAL,
 -};
-+} __packed;
++#define REQUEST_STATES {\
++	C(REQ_INIT),\
++	C(REQ_CONSTRUCTED),\
++	C(REQ_STARTED),\
++	C(REQ_STP_UDMA_WAIT_TC_COMP),\
++	C(REQ_STP_UDMA_WAIT_D2H),\
++	C(REQ_STP_NON_DATA_WAIT_H2D),\
++	C(REQ_STP_NON_DATA_WAIT_D2H),\
++	C(REQ_STP_PIO_WAIT_H2D),\
++	C(REQ_STP_PIO_WAIT_FRAME),\
++	C(REQ_STP_PIO_DATA_IN),\
++	C(REQ_STP_PIO_DATA_OUT),\
++	C(REQ_ATAPI_WAIT_H2D),\
++	C(REQ_ATAPI_WAIT_PIO_SETUP),\
++	C(REQ_ATAPI_WAIT_D2H),\
++	C(REQ_ATAPI_WAIT_TC_COMP),\
++	C(REQ_TASK_WAIT_TC_COMP),\
++	C(REQ_TASK_WAIT_TC_RESP),\
++	C(REQ_SMP_WAIT_RESP),\
++	C(REQ_SMP_WAIT_TC_COMP),\
++	C(REQ_COMPLETED),\
++	C(REQ_ABORTING),\
++	C(REQ_FINAL),\
++	}
++#undef C
++#define C(a) SCI_##a
++enum sci_base_request_states REQUEST_STATES;
++#undef C
++const char *req_state_name(enum sci_base_request_states state);
  
- #endif /* _SCU_TASK_CONTEXT_H_ */
+ enum sci_status sci_request_start(struct isci_request *ireq);
+ enum sci_status sci_io_request_terminate(struct isci_request *ireq);
 
