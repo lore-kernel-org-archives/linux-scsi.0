@@ -1,80 +1,50 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v8 01/13] libsas: close scsi_remove_target() vs libata-eh
- race
-Date: Fri, 10 Feb 2012 13:32:57 -0500
-Message-ID: <4F3562D9.1010009@garzik.org>
-References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com> <20120210084444.25701.31139.stgit@dwillia2-linux.jf.intel.com>
+Subject: Re: [PATCH v8 03/13] libsas: async ata scanning
+Date: Fri, 10 Feb 2012 13:34:24 -0500
+Message-ID: <4F356330.4060703@garzik.org>
+References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com> <20120210084454.25701.66737.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qw0-f53.google.com ([209.85.216.53]:64949 "EHLO
-	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759676Ab2BJSc7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2012 13:32:59 -0500
-In-Reply-To: <20120210084444.25701.31139.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120210084454.25701.66737.stgit@dwillia2-linux.jf.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Marcin Tomczak <marcin.tomczak@intel.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
+List-Id: linux-scsi@vger.kernel.org
 
 On 02/10/2012 03:44 AM, Dan Williams wrote:
-> ata_port lifetime in libata follows the host.  In libsas it follows the
-> scsi_target.  Once scsi_remove_device() has caused all commands to be
-> completed it allows scsi_remove_target() to immediately proceed to
-> freeing the ata_port causing bug reports like:
+> libsas ata error handling is already async but this does not help the
+> scan case.  Move initial link recovery out from under host->scan_mutex,
+> and delay synchronization with eh until after all port probe/recovery
+> work has been queued.
 >
-> [  848.393333] BUG: spinlock bad magic on CPU#4, kworker/u:2/5107
-> [  848.400262] general protection fault: 0000 [#1] SMP
-> [  848.406244] CPU 4
-> [  848.408310] Modules linked in: nls_utf8 ipv6 uinput i2c_i801 i2c_core iTCO_wdt iTCO_vendor_support ioatdma dca sg sd_mod sr_mod cdrom ahci libahci isci libsas libata scsi_transport_sas [last unloaded: scsi_wait_scan]
-> [  848.432060]
-> [  848.434137] Pid: 5107, comm: kworker/u:2 Not tainted 3.2.0-isci+ #8 Intel Corporation S2600CP/S2600CP
-> [  848.445310] RIP: 0010:[<ffffffff8126a68c>]  [<ffffffff8126a68c>] spin_dump+0x5e/0x8c
-> [  848.454787] RSP: 0018:ffff8807f868dca0  EFLAGS: 00010002
-> [  848.461137] RAX: 0000000000000048 RBX: ffff8807fe86a630 RCX: ffffffff817d0be0
-> [  848.469520] RDX: 0000000000000000 RSI: ffffffff814af1cf RDI: 0000000000000002
-> [  848.477959] RBP: ffff8807f868dcb0 R08: 00000000ffffffff R09: 000000006b6b6b6b
-> [  848.486327] R10: 000000000003fb8c R11: ffffffff81a19448 R12: 6b6b6b6b6b6b6b6b
-> [  848.494699] R13: ffff8808027dc520 R14: 0000000000000000 R15: 000000000000001e
-> [  848.503067] FS:  0000000000000000(0000) GS:ffff88083fd00000(0000) knlGS:0000000000000000
-> [  848.512899] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [  848.519710] CR2: 00007ff77d001000 CR3: 00000007f7a5d000 CR4: 00000000000406e0
-> [  848.528072] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> [  848.536446] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> [  848.544831] Process kworker/u:2 (pid: 5107, threadinfo ffff8807f868c000, task ffff8807ff348000)
-> [  848.555327] Stack:
-> [  848.557959]  ffff8807fe86a630 ffff8807fe86a630 ffff8807f868dcd0 ffffffff8126a6e0
-> [  848.567072]  ffffffff817c142f ffff8807fe86a630 ffff8807f868dcf0 ffffffff8126a703
-> [  848.576190]  ffff8808027dc520 0000000000000286 ffff8807f868dd10 ffffffff814af1bb
-> [  848.585281] Call Trace:
-> [  848.588409]  [<ffffffff8126a6e0>] spin_bug+0x26/0x28
-> [  848.594357]  [<ffffffff8126a703>] do_raw_spin_unlock+0x21/0x88
-> [  848.601283]  [<ffffffff814af1bb>] _raw_spin_unlock_irqrestore+0x2c/0x65
-> [  848.609089]  [<ffffffffa001c103>] ata_scsi_port_error_handler+0x548/0x557 [libata]
-> [  848.618331]  [<ffffffff81061813>] ? async_schedule+0x17/0x17
-> [  848.625060]  [<ffffffffa004f30f>] async_sas_ata_eh+0x45/0x69 [libsas]
-> [  848.632655]  [<ffffffff810618aa>] async_run_entry_fn+0x97/0x125
-> [  848.639670]  [<ffffffff81057439>] process_one_work+0x207/0x38d
-> [  848.646577]  [<ffffffff8105738c>] ? process_one_work+0x15a/0x38d
-> [  848.653681]  [<ffffffff810576f7>] worker_thread+0x138/0x21c
-> [  848.660305]  [<ffffffff810575bf>] ? process_one_work+0x38d/0x38d
-> [  848.667493]  [<ffffffff8105b098>] kthread+0x9d/0xa5
-> [  848.673382]  [<ffffffff8106e1bd>] ? trace_hardirqs_on_caller+0x12f/0x166
-> [  848.681304]  [<ffffffff814b7704>] kernel_thread_helper+0x4/0x10
-> [  848.688324]  [<ffffffff814af534>] ? retint_restore_args+0x13/0x13
-> [  848.695530]  [<ffffffff8105affb>] ? __init_kthread_worker+0x5b/0x5b
-> [  848.702929]  [<ffffffff814b7700>] ? gs_change+0x13/0x13
-> [  848.709155] Code: 00 00 48 8d 88 38 04 00 00 44 8b 80 84 02 00 00 31 c0 e8 cf 1b 24 00 41 83 c8 ff 44 8b 4b 08 48 c7 c1 e0 0b 7d 81 4d 85 e4 74 10<45>  8b 84 24 84 02 00 00 49 8d 8c 24 38 04 00 00 8b 53 04 48 89
-> [  848.732467] RIP  [<ffffffff8126a68c>] spin_dump+0x5e/0x8c
-> [  848.738905]  RSP<ffff8807f868dca0>
-> [  848.743743] ---[ end trace 143161646eee8caa ]---
+> Device ordering is maintained with scan order by still calling
+> sas_rphy_add() in order of domain discovery.
 >
-> ...so arrange for the ata_port to have the same end of life as the domain
-> device.
+> Since we now scan the domain list when invoking libata-eh we need to be
+> careful to check for fully initialized ata ports.
 >
-> Reported-by: Marcin Tomczak<marcin.tomczak@intel.com>
+> Cc: Xiangliang Yu<yuxiangl@marvell.com>
+> Cc: Luben Tuikov<ltuikov@yahoo.com>
+> Acked-by: Jack Wang<jack_wang@usish.com>
 > Signed-off-by: Dan Williams<dan.j.williams@intel.com>
+> ---
+>   drivers/ata/libata-core.c           |   34 +++++++++-------
+>   drivers/ata/libata-scsi.c           |   13 ++++++
+>   drivers/ata/libata.h                |    1
+>   drivers/scsi/aic94xx/aic94xx_init.c |    1
+>   drivers/scsi/isci/init.c            |    1
+>   drivers/scsi/libsas/sas_ata.c       |   74 ++++++++++++++++++++++++++++++-----
+>   drivers/scsi/libsas/sas_discover.c  |   22 +++++-----
+>   drivers/scsi/libsas/sas_internal.h  |    9 ++++
+>   drivers/scsi/libsas/sas_scsi_host.c |   18 ---------
+>   drivers/scsi/mvsas/mv_init.c        |    1
+>   drivers/scsi/pm8001/pm8001_init.c   |    1
+>   include/linux/libata.h              |    1
+>   include/scsi/libsas.h               |    1
+>   include/scsi/sas_ata.h              |   12 +++---
+>   14 files changed, 123 insertions(+), 66 deletions(-)
 
 Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
