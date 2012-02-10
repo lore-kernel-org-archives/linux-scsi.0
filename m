@@ -1,53 +1,100 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v1 0/5] isci updates for -next
-Date: Fri, 10 Feb 2012 01:18:29 -0800
-Message-ID: <20120210091814.26719.75603.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH v1 2/5] isci: enable clock gating
+Date: Fri, 10 Feb 2012 01:18:39 -0800
+Message-ID: <20120210091839.26719.6605.stgit@dwillia2-linux.jf.intel.com>
+References: <20120210091814.26719.75603.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:25870 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:12683 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758615Ab2BJJDk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2012 04:03:40 -0500
+	id S1758612Ab2BJJDo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2012 04:03:44 -0500
+In-Reply-To: <20120210091814.26719.75603.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Marcin Tomczak <marcin.tomczak@intel.com>
 
-This is a resend of the T10 DIF and clock gating patches (checkpatch
-fixups), some debug updates, and a fix for driver load/unload testing.
+From: Marcin Tomczak <marcin.tomczak@intel.com>
 
-This is based on branch of the pending libsas changes as it grew an
-entanglement with the phy reference counting and lldd_port reworks.
+Enabling clock gating for power savings on entry to controller ready
+state. Disable SCU clock gating for power savings on exit from the
+controller ready state.
 
+The gating is fully automated by silicon after setting the mode.
+
+Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/scsi/isci/host.c      |    9 +++++++++
+ drivers/scsi/isci/registers.h |   27 +++++++++++++++++++++++++--
+ 2 files changed, 34 insertions(+), 2 deletions(-)
 
-Andrzej Jakowski (1):
-      isci: improvements in driver unloading routine
+diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
+index 36c443f..2b62af2 100644
+--- a/drivers/scsi/isci/host.c
++++ b/drivers/scsi/isci/host.c
+@@ -1489,6 +1489,15 @@ sci_controller_set_interrupt_coalescence(struct isci_host *ihost,
+ static void sci_controller_ready_state_enter(struct sci_base_state_machine *sm)
+ {
+ 	struct isci_host *ihost = container_of(sm, typeof(*ihost), sm);
++	u32 val;
++
++	/* enable clock gating for power control of the scu unit */
++	val = readl(&ihost->smu_registers->clock_gating_control);
++	val &= ~(SMU_CGUCR_GEN_BIT(REGCLK_ENABLE) |
++		 SMU_CGUCR_GEN_BIT(TXCLK_ENABLE) |
++		 SMU_CGUCR_GEN_BIT(XCLK_ENABLE));
++	val |= SMU_CGUCR_GEN_BIT(IDLE_ENABLE);
++	writel(val, &ihost->smu_registers->clock_gating_control);
+ 
+ 	/* set the default interrupt coalescence number and timeout value. */
+ 	sci_controller_set_interrupt_coalescence(ihost, 0, 0);
+diff --git a/drivers/scsi/isci/registers.h b/drivers/scsi/isci/registers.h
+index eaa541a..f232f7e 100644
+--- a/drivers/scsi/isci/registers.h
++++ b/drivers/scsi/isci/registers.h
+@@ -370,6 +370,27 @@ struct scu_iit_entry {
+ 		>> SMU_DEVICE_CONTEXT_CAPACITY_MAX_RNC_SHIFT \
+ 	)
+ 
++/* ************************************************************************** */
++#define SMU_CLOCK_GATING_CONTROL_IDLE_ENABLE_SHIFT    (0)
++#define SMU_CLOCK_GATING_CONTROL_IDLE_ENABLE_MASK     (0x00000001)
++#define SMU_CLOCK_GATING_CONTROL_XCLK_ENABLE_SHIFT    (1)
++#define SMU_CLOCK_GATING_CONTROL_XCLK_ENABLE_MASK     (0x00000002)
++#define SMU_CLOCK_GATING_CONTROL_TXCLK_ENABLE_SHIFT   (2)
++#define SMU_CLOCK_GATING_CONTROL_TXCLK_ENABLE_MASK    (0x00000004)
++#define SMU_CLOCK_GATING_CONTROL_REGCLK_ENABLE_SHIFT  (3)
++#define SMU_CLOCK_GATING_CONTROL_REGCLK_ENABLE_MASK   (0x00000008)
++#define SMU_CLOCK_GATING_CONTROL_IDLE_TIMEOUT_SHIFT   (16)
++#define SMU_CLOCK_GATING_CONTROL_IDLE_TIMEOUT_MASK    (0x000F0000)
++#define SMU_CLOCK_GATING_CONTROL_FORCE_IDLE_SHIFT     (31)
++#define SMU_CLOCK_GATING_CONTROL_FORCE_IDLE_MASK      (0x80000000)
++#define SMU_CLOCK_GATING_CONTROL_RESERVED_MASK        (0x7FF0FFF0)
++
++#define SMU_CGUCR_GEN_VAL(name, value) \
++	SCU_GEN_VALUE(SMU_CLOCK_GATING_CONTROL_##name, value)
++
++#define SMU_CGUCR_GEN_BIT(name) \
++	SCU_GEN_BIT(SMU_CLOCK_GATING_CONTROL_##name)
++
+ /* -------------------------------------------------------------------------- */
+ 
+ #define SMU_CONTROL_STATUS_TASK_CONTEXT_RANGE_ENABLE_SHIFT      (0)
+@@ -992,8 +1013,10 @@ struct smu_registers {
+ 	u32 mmr_address_window;
+ /* 0x00A4 SMDW */
+ 	u32 mmr_data_window;
+-	u32 reserved_A8;
+-	u32 reserved_AC;
++/* 0x00A8 CGUCR */
++	u32 clock_gating_control;
++/* 0x00AC CGUPC */
++	u32 clock_gating_performance;
+ /* A whole bunch of reserved space */
+ 	u32 reserved_Bx[4];
+ 	u32 reserved_Cx[4];
 
-Dan Williams (2):
-      isci: debug, provide state-enum-to-string conversions
-      isci: improve phy event warnings
-
-Dave Jiang (1):
-      isci: T10 DIF support
-
-Marcin Tomczak (1):
-      isci: enable clock gating
-
-
- drivers/scsi/isci/host.c                |    9 +
- drivers/scsi/isci/init.c                |   10 +
- drivers/scsi/isci/phy.c                 |  157 +++++++++++++---------
- drivers/scsi/isci/phy.h                 |  154 ++++++++--------------
- drivers/scsi/isci/port.c                |   46 ++++---
- drivers/scsi/isci/port.h                |  103 ++++++---------
- drivers/scsi/isci/registers.h           |   27 ++++
- drivers/scsi/isci/remote_device.c       |   50 ++++---
- drivers/scsi/isci/remote_device.h       |  205 +++++++++++++----------------
- drivers/scsi/isci/remote_node_context.c |   19 +--
- drivers/scsi/isci/remote_node_context.h |   97 ++++++--------
- drivers/scsi/isci/request.c             |  172 +++++++++++++++++++++++-
- drivers/scsi/isci/request.h             |  219 +++++++++++++------------------
- drivers/scsi/isci/scu_task_context.h    |   55 ++++++--
- 14 files changed, 732 insertions(+), 591 deletions(-)
