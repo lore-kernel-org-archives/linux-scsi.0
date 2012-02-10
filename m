@@ -1,7 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v8 08/13] libsas: libsas.force_hard_reset module parameter
-Date: Fri, 10 Feb 2012 00:45:20 -0800
-Message-ID: <20120210084520.25701.83280.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH v8 09/13] libsas: enforce eh strategy handlers only in eh
+ context
+Date: Fri, 10 Feb 2012 00:45:25 -0800
+Message-ID: <20120210084525.25701.51128.stgit@dwillia2-linux.jf.intel.com>
 References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,68 +11,55 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-It is possible for a host to get "locked out" from talking to sata
-devices in the domain if, for example, its sas address changes but the
-expander topology has existing affiliations with the old address.  If
-the system is booted userspace can write to
-/sys/class/sas_phy/<phy-X>/hard_reset to clear the affiliation, however
-if this condition exists for the root device the module parameter can be
-used to promote all ata resets to hard resets.
+The strategy handlers may be called in places that are problematic for
+libsas (i.e. sata resets outside of domain revalidation filtering /
+libata link recovery), or problematic for userspace (non-blocking ioctl
+to sleeping reset functions).  However, these routines are also called
+for eh escalations and recovery of scsi_eh_prep_cmnd(), so permit them
+as long as we are running in the host's error handler.
 
-After the system is booted this state can be cleared via
-/sys/module/libsas/parameters/force_hard_reset
-
-Cc: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Luben Tuikov <ltuikov@yahoo.com>
-Cc: Jack Wang <jack_wang@usish.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- Documentation/kernel-parameters.txt |    6 ++++++
- drivers/scsi/libsas/sas_init.c      |    6 +++++-
- 2 files changed, 11 insertions(+), 1 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c |   15 +++++++++++----
+ 1 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 81c287f..ffefa3b 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -1283,6 +1283,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 			If there are multiple matching configurations changing
- 			the same attribute, the last one is used.
- 
-+	libsas.force_hard_reset=
-+			[LIBSAS] Clear SATA affiliations with every reset, for
-+			cases where affiliation errors are causing boot
-+			failures, otherwise use sysfs hard_reset interface to
-+			clear individual phys.
-+
- 	memblock=debug	[KNL] Enable memblock debug messages.
- 
- 	load_ramdisk=	[RAM] List of ramdisks to load from floppy
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 120bff6..2fc23d3 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -293,6 +293,10 @@ static int sas_phy_enable(struct sas_phy *phy, int enable)
- 	return ret;
- }
- 
-+static bool force_hard_reset;
-+module_param(force_hard_reset, bool, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(force_hard_reset, "clear sata affiliations on every reset");
-+
- int sas_phy_reset(struct sas_phy *phy, int hard_reset)
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index f0b9b7b..1cabedc 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -463,11 +463,14 @@ EXPORT_SYMBOL_GPL(sas_get_local_phy);
+ /* Attempt to send a LUN reset message to a device */
+ int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
  {
- 	int ret;
-@@ -301,7 +305,7 @@ int sas_phy_reset(struct sas_phy *phy, int hard_reset)
- 	if (!phy->enabled)
- 		return -ENODEV;
+-	struct domain_device *dev = cmd_to_domain_dev(cmd);
+-	struct sas_internal *i =
+-		to_sas_internal(dev->port->ha->core.shost->transportt);
+-	struct scsi_lun lun;
+ 	int res;
++	struct scsi_lun lun;
++	struct Scsi_Host *host = cmd->device->host;
++	struct domain_device *dev = cmd_to_domain_dev(cmd);
++	struct sas_internal *i = to_sas_internal(host->transportt);
++
++	if (current != host->ehandler)
++		return FAILED;
  
--	if (hard_reset)
-+	if (hard_reset || force_hard_reset)
- 		reset_type = PHY_FUNC_HARD_RESET;
- 	else
- 		reset_type = PHY_FUNC_LINK_RESET;
+ 	int_to_scsilun(cmd->device->lun, &lun);
+ 
+@@ -486,8 +489,12 @@ int sas_eh_bus_reset_handler(struct scsi_cmnd *cmd)
+ {
+ 	struct domain_device *dev = cmd_to_domain_dev(cmd);
+ 	struct sas_phy *phy = sas_get_local_phy(dev);
++	struct Scsi_Host *host = cmd->device->host;
+ 	int res;
+ 
++	if (current != host->ehandler)
++		return FAILED;
++
+ 	res = sas_phy_reset(phy, 1);
+ 	if (res)
+ 		SAS_DPRINTK("Bus reset of %s failed 0x%x\n",
 
