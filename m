@@ -1,476 +1,620 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v9 3/3] libsas: async ata scanning
-Date: Fri, 10 Feb 2012 13:53:11 -0800
-Message-ID: <20120210215311.17007.91133.stgit@dwillia2-linux.jf.intel.com>
-References: <20120210215220.17007.80540.stgit@dwillia2-linux.jf.intel.com>
+From: Cong Wang <amwang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 21/60] scsi: remove the second argument of k[un]map_atomic()
+Date: Fri, 10 Feb 2012 13:39:42 +0800
+Message-ID: <1328852421-19678-22-git-send-email-amwang@redhat.com>
+References: <1328852421-19678-1-git-send-email-amwang@redhat.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120210215220.17007.80540.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>, Jeff Garzik <jgarzik@redhat.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <open-iscsi+bncCPuPwefDHRC8n9b5BBoEeOKLxQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1328852421-19678-1-git-send-email-amwang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cong Wang <amwang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Bhanu Prakash Gollapudi <bprakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Achim Leubner <achim_leubner-ugMvIWC9OiRBDgjK7y7TUQ@public.gmane.org>, Adaptec OEM Raid Solutions <aacraid-ugMvIWC9OiRBDgjK7y7TUQ@public.gmane.org>, Dave Jeffery <ipslinux-ugMvIWC9OiRBDgjK7y7TUQ@public.gmane.org>, Intel SCU Linux support <intel-linux-scu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ed Nadolski <edmund.nadolski-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, Neela Syam Kolli <megaraidlinux-M7mHMAq9Yzo@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Tomas henzl <thenzl-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Nick Cheng <nick.cheng-ojgj0hWszvWnedCIQ9mT8A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-libsas ata error handling is already async but this does not help the
-scan case.  Move initial link recovery out from under host->scan_mutex,
-and delay synchronization with eh until after all port probe/recovery
-work has been queued.
-
-Device ordering is maintained with scan order by still calling
-sas_rphy_add() in order of domain discovery.
-
-Since we now scan the domain list when invoking libata-eh we need to be
-careful to check for fully initialized ata ports.
-
-Cc: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Luben Tuikov <ltuikov@yahoo.com>
-Acked-by: Jack Wang <jack_wang@usish.com>
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Cong Wang <amwang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/ata/libata-core.c           |   34 +++++++++-------
- drivers/ata/libata-scsi.c           |   13 ++++++
- drivers/ata/libata.h                |    1 
- drivers/scsi/aic94xx/aic94xx_init.c |    1 
- drivers/scsi/isci/init.c            |    1 
- drivers/scsi/libsas/sas_ata.c       |   74 ++++++++++++++++++++++++++++++-----
- drivers/scsi/libsas/sas_discover.c  |   22 +++++-----
- drivers/scsi/libsas/sas_internal.h  |    9 ++++
- drivers/scsi/libsas/sas_scsi_host.c |   18 ---------
- drivers/scsi/mvsas/mv_init.c        |    1 
- drivers/scsi/pm8001/pm8001_init.c   |    1 
- include/linux/libata.h              |    1 
- include/scsi/libsas.h               |    1 
- include/scsi/sas_ata.h              |   12 +++---
- 14 files changed, 123 insertions(+), 66 deletions(-)
+ drivers/scsi/arcmsr/arcmsr_hba.c   |    8 ++++----
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c  |    5 ++---
+ drivers/scsi/cxgbi/libcxgbi.c      |    5 ++---
+ drivers/scsi/fcoe/fcoe.c           |    4 ++--
+ drivers/scsi/fcoe/fcoe_transport.c |    5 ++---
+ drivers/scsi/gdth.c                |    4 ++--
+ drivers/scsi/ips.c                 |    6 +++---
+ drivers/scsi/isci/request.c        |   16 ++++++++--------
+ drivers/scsi/libfc/fc_fcp.c        |    8 ++++----
+ drivers/scsi/libfc/fc_libfc.c      |    8 +++-----
+ drivers/scsi/libfc/fc_libfc.h      |    2 +-
+ drivers/scsi/libfc/fc_lport.c      |    2 +-
+ drivers/scsi/libiscsi_tcp.c        |    4 ++--
+ drivers/scsi/libsas/sas_host_smp.c |    8 ++++----
+ drivers/scsi/megaraid.c            |    4 ++--
+ drivers/scsi/mvsas/mv_sas.c        |    4 ++--
+ drivers/scsi/scsi_debug.c          |   24 ++++++++++++------------
+ drivers/scsi/scsi_lib.c            |    4 ++--
+ drivers/scsi/sd_dif.c              |   12 ++++++------
+ 19 files changed, 64 insertions(+), 69 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c04ad68..1654c94 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5874,29 +5874,31 @@ void ata_host_init(struct ata_host *host, struct device *dev,
- 	host->ops = ops;
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index f980600..2fe9e90 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1736,7 +1736,7 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
+ 						(uint32_t ) cmd->cmnd[8];
+ 						/* 4 bytes: Areca io control code */
+ 	sg = scsi_sglist(cmd);
+-	buffer = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
++	buffer = kmap_atomic(sg_page(sg)) + sg->offset;
+ 	if (scsi_sg_count(cmd) > 1) {
+ 		retvalue = ARCMSR_MESSAGE_FAIL;
+ 		goto message_out;
+@@ -1985,7 +1985,7 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
+ 	}
+ 	message_out:
+ 	sg = scsi_sglist(cmd);
+-	kunmap_atomic(buffer - sg->offset, KM_IRQ0);
++	kunmap_atomic(buffer - sg->offset);
+ 	return retvalue;
  }
  
--int ata_port_probe(struct ata_port *ap)
-+void __ata_port_probe(struct ata_port *ap)
- {
--	int rc = 0;
-+	struct ata_eh_info *ehi = &ap->link.eh_info;
-+	unsigned long flags;
+@@ -2035,11 +2035,11 @@ static void arcmsr_handle_virtual_command(struct AdapterControlBlock *acb,
+ 		strncpy(&inqdata[32], "R001", 4); /* Product Revision */
  
--	/* probe */
--	if (ap->ops->error_handler) {
--		struct ata_eh_info *ehi = &ap->link.eh_info;
--		unsigned long flags;
-+	/* kick EH for boot probing */
-+	spin_lock_irqsave(ap->lock, flags);
+ 		sg = scsi_sglist(cmd);
+-		buffer = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
++		buffer = kmap_atomic(sg_page(sg)) + sg->offset;
  
--		/* kick EH for boot probing */
--		spin_lock_irqsave(ap->lock, flags);
-+	ehi->probe_mask |= ATA_ALL_DEVICES;
-+	ehi->action |= ATA_EH_RESET;
-+	ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
+ 		memcpy(buffer, inqdata, sizeof(inqdata));
+ 		sg = scsi_sglist(cmd);
+-		kunmap_atomic(buffer - sg->offset, KM_IRQ0);
++		kunmap_atomic(buffer - sg->offset);
  
--		ehi->probe_mask |= ATA_ALL_DEVICES;
--		ehi->action |= ATA_EH_RESET;
--		ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
-+	ap->pflags &= ~ATA_PFLAG_INITIALIZING;
-+	ap->pflags |= ATA_PFLAG_LOADING;
-+	ata_port_schedule_eh(ap);
- 
--		ap->pflags &= ~ATA_PFLAG_INITIALIZING;
--		ap->pflags |= ATA_PFLAG_LOADING;
--		ata_port_schedule_eh(ap);
-+	spin_unlock_irqrestore(ap->lock, flags);
-+}
- 
--		spin_unlock_irqrestore(ap->lock, flags);
-+int ata_port_probe(struct ata_port *ap)
-+{
-+	int rc = 0;
- 
--		/* wait for EH to finish */
-+	if (ap->ops->error_handler) {
-+		__ata_port_probe(ap);
- 		ata_port_wait_eh(ap);
+ 		cmd->scsi_done(cmd);
+ 	}
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 8c6156a..a9af42e 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -322,8 +322,7 @@ static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 			return -ENOMEM;
+ 		}
+ 		frag = &skb_shinfo(skb)->frags[skb_shinfo(skb)->nr_frags - 1];
+-		cp = kmap_atomic(skb_frag_page(frag), KM_SKB_DATA_SOFTIRQ)
+-				+ frag->page_offset;
++		cp = kmap_atomic(skb_frag_page(frag)) + frag->page_offset;
  	} else {
- 		DPRINTK("ata%u: bus probe begin\n", ap->print_id);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2a5412e..faf8730 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3837,6 +3837,19 @@ void ata_sas_port_stop(struct ata_port *ap)
- }
- EXPORT_SYMBOL_GPL(ata_sas_port_stop);
- 
-+int ata_sas_async_port_init(struct ata_port *ap)
-+{
-+	int rc = ap->ops->port_start(ap);
-+
-+	if (!rc) {
-+		ap->print_id = ata_print_id++;
-+		__ata_port_probe(ap);
-+	}
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_async_port_init);
-+
- /**
-  *	ata_sas_port_init - Initialize a SATA device
-  *	@ap: SATA port to initialize
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 78c356d..2a2aa51 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -104,6 +104,7 @@ extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern struct ata_port *ata_port_alloc(struct ata_host *host);
- extern const char *sata_spd_string(unsigned int spd);
- extern int ata_port_probe(struct ata_port *ap);
-+extern void __ata_port_probe(struct ata_port *ap);
- 
- /* libata-acpi.c */
- #ifdef CONFIG_ATA_ACPI
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index eea988a..ff80552 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -81,7 +81,6 @@ static struct scsi_host_template aic94xx_sht = {
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.eh_device_reset_handler	= sas_eh_device_reset_handler,
- 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
--	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- };
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 437f76b..9a28270 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -157,7 +157,6 @@ static struct scsi_host_template isci_sht = {
- 	.sg_tablesize			= SG_ALL,
- 	.max_sectors			= SCSI_DEFAULT_MAX_SECTORS,
- 	.use_clustering			= ENABLE_CLUSTERING,
--	.slave_alloc			= sas_slave_alloc,
- 	.target_destroy			= sas_target_destroy,
- 	.ioctl				= sas_ioctl,
- 	.shost_attrs			= isci_host_attrs,
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index a9ec164..eb8b77c 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -585,11 +585,10 @@ static struct ata_port_info sata_port_info = {
- 	.port_ops = &sas_sata_ops
- };
- 
--int sas_ata_init_host_and_port(struct domain_device *found_dev,
--			       struct scsi_target *starget)
-+int sas_ata_init_host_and_port(struct domain_device *found_dev)
- {
--	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
--	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
-+	struct sas_ha_struct *ha = found_dev->port->ha;
-+	struct Scsi_Host *shost = ha->core.shost;
- 	struct ata_port *ap;
- 
- 	ata_host_init(&found_dev->sata_dev.ata_host,
-@@ -607,6 +606,8 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev,
- 	ap->private_data = found_dev;
- 	ap->cbl = ATA_CBL_SATA;
- 	ap->scsi_host = shost;
-+	/* publish initialized ata port */
-+	smp_wmb();
- 	found_dev->sata_dev.ap = ap;
- 
- 	return 0;
-@@ -683,6 +684,38 @@ static void sas_get_ata_command_set(struct domain_device *dev)
- 		dev->sata_dev.command_set = ATAPI_COMMAND_SET;
- }
- 
-+void sas_probe_sata(struct asd_sas_port *port)
-+{
-+	struct domain_device *dev, *n;
-+	int err;
-+
-+	mutex_lock(&port->ha->disco_mutex);
-+	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
-+		if (!dev_is_sata(dev))
-+			continue;
-+
-+		err = sas_ata_init_host_and_port(dev);
-+		if (err)
-+			sas_fail_probe(dev, __func__, err);
-+		else
-+			ata_sas_async_port_init(dev->sata_dev.ap);
-+	}
-+	mutex_unlock(&port->ha->disco_mutex);
-+
-+	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
-+		if (!dev_is_sata(dev))
-+			continue;
-+
-+		sas_ata_wait_eh(dev);
-+
-+		/* if libata could not bring the link up, don't surface
-+		 * the device
-+		 */
-+		if (ata_dev_disabled(sas_to_ata_dev(dev)))
-+			sas_fail_probe(dev, __func__, -ENODEV);
-+	}
-+}
-+
- /**
-  * sas_discover_sata -- discover an STP/SATA domain device
-  * @dev: pointer to struct domain_device of interest
-@@ -724,11 +757,23 @@ static void async_sas_ata_eh(void *data, async_cookie_t cookie)
- 	sas_put_device(dev);
- }
- 
-+static bool sas_ata_dev_eh_valid(struct domain_device *dev)
-+{
-+	struct ata_port *ap;
-+
-+	if (!dev_is_sata(dev))
-+		return false;
-+	ap = dev->sata_dev.ap;
-+	/* consume fully initialized ata ports */
-+	smp_rmb();
-+	return !!ap;
-+}
-+
- void sas_ata_strategy_handler(struct Scsi_Host *shost)
- {
--	struct scsi_device *sdev;
- 	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(shost);
- 	LIST_HEAD(async);
-+	int i;
- 
- 	/* it's ok to defer revalidation events during ata eh, these
- 	 * disks are in one of three states:
-@@ -740,14 +785,21 @@ void sas_ata_strategy_handler(struct Scsi_Host *shost)
- 	 */
- 	sas_disable_revalidation(sas_ha);
- 
--	shost_for_each_device(sdev, shost) {
--		struct domain_device *ddev = sdev_to_domain_dev(sdev);
--
--		if (!dev_is_sata(ddev))
--			continue;
-+	spin_lock_irq(&sas_ha->phy_port_lock);
-+	for (i = 0; i < sas_ha->num_phys; i++) {
-+		struct asd_sas_port *port = sas_ha->sas_port[i];
-+		struct domain_device *dev;
- 
--		async_schedule_domain(async_sas_ata_eh, ddev, &async);
-+		spin_lock(&port->dev_list_lock);
-+		list_for_each_entry(dev, &port->dev_list, dev_list_node) {
-+			if (!sas_ata_dev_eh_valid(dev))
-+				continue;
-+			async_schedule_domain(async_sas_ata_eh, dev, &async);
-+		}
-+		spin_unlock(&port->dev_list_lock);
+ 		cp = (struct fcoe_crc_eof *)skb_put(skb, tlen);
  	}
-+	spin_unlock_irq(&sas_ha->phy_port_lock);
-+
- 	async_synchronize_full_domain(&async);
+@@ -332,7 +331,7 @@ static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	cp->fcoe_eof = eof;
+ 	cp->fcoe_crc32 = cpu_to_le32(~crc);
+ 	if (skb_is_nonlinear(skb)) {
+-		kunmap_atomic(cp, KM_SKB_DATA_SOFTIRQ);
++		kunmap_atomic(cp);
+ 		cp = NULL;
+ 	}
  
- 	sas_enable_revalidation(sas_ha);
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index f60b602..ed3f8c0 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -207,22 +207,22 @@ static void sas_probe_devices(struct work_struct *work)
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index d3ff9cd..89afd6d 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -1956,12 +1956,11 @@ int cxgbi_conn_init_pdu(struct iscsi_task *task, unsigned int offset,
  
- 	clear_bit(DISCE_PROBE, &port->disc.pending);
+ 			/* data fits in the skb's headroom */
+ 			for (i = 0; i < tdata->nr_frags; i++, frag++) {
+-				char *src = kmap_atomic(frag->page,
+-							KM_SOFTIRQ0);
++				char *src = kmap_atomic(frag->page);
  
--	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
--		int err;
--
-+	/* devices must be domain members before link recovery and probe */
-+	list_for_each_entry(dev, &port->disco_list, disco_list_node) {
- 		spin_lock_irq(&port->dev_list_lock);
- 		list_add_tail(&dev->dev_list_node, &port->dev_list);
- 		spin_unlock_irq(&port->dev_list_lock);
-+	}
+ 				memcpy(dst, src+frag->offset, frag->size);
+ 				dst += frag->size;
+-				kunmap_atomic(src, KM_SOFTIRQ0);
++				kunmap_atomic(src);
+ 			}
+ 			if (padlen) {
+ 				memset(dst, 0, padlen);
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index e959960..1094357 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1515,7 +1515,7 @@ static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 			return -ENOMEM;
+ 		}
+ 		frag = &skb_shinfo(skb)->frags[skb_shinfo(skb)->nr_frags - 1];
+-		cp = kmap_atomic(skb_frag_page(frag), KM_SKB_DATA_SOFTIRQ)
++		cp = kmap_atomic(skb_frag_page(frag))
+ 			+ frag->page_offset;
+ 	} else {
+ 		cp = (struct fcoe_crc_eof *)skb_put(skb, tlen);
+@@ -1526,7 +1526,7 @@ static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	cp->fcoe_crc32 = cpu_to_le32(~crc);
  
--		err = sas_rphy_add(dev->rphy);
-+	sas_probe_sata(port);
+ 	if (skb_is_nonlinear(skb)) {
+-		kunmap_atomic(cp, KM_SKB_DATA_SOFTIRQ);
++		kunmap_atomic(cp);
+ 		cp = NULL;
+ 	}
  
--		if (err) {
--			SAS_DPRINTK("%s: for %s device %16llx returned %d\n",
--				    __func__, dev->parent ? "exp-attached" :
--							    "direct-attached",
--				    SAS_ADDR(dev->sas_addr), err);
--			sas_unregister_dev(port, dev);
--		} else
-+	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
-+		int err;
-+
-+		err = sas_rphy_add(dev->rphy);
-+		if (err)
-+			sas_fail_probe(dev, __func__, err);
-+		else
- 			list_del_init(&dev->disco_list_node);
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index bd97b22..4d119a3 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -210,10 +210,9 @@ u32 fcoe_fc_crc(struct fc_frame *fp)
+ 		while (len > 0) {
+ 			clen = min(len, PAGE_SIZE - (off & ~PAGE_MASK));
+ 			data = kmap_atomic(
+-				skb_frag_page(frag) + (off >> PAGE_SHIFT),
+-				KM_SKB_DATA_SOFTIRQ);
++				skb_frag_page(frag) + (off >> PAGE_SHIFT));
+ 			crc = crc32(crc, data + (off & ~PAGE_MASK), clen);
+-			kunmap_atomic(data, KM_SKB_DATA_SOFTIRQ);
++			kunmap_atomic(data);
+ 			off += clen;
+ 			len -= clen;
+ 		}
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 3242bca..d42ec92 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -2310,10 +2310,10 @@ static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
+                 return;
+             }
+             local_irq_save(flags);
+-            address = kmap_atomic(sg_page(sl), KM_BIO_SRC_IRQ) + sl->offset;
++            address = kmap_atomic(sg_page(sl)) + sl->offset;
+             memcpy(address, buffer, cpnow);
+             flush_dcache_page(sg_page(sl));
+-            kunmap_atomic(address, KM_BIO_SRC_IRQ);
++            kunmap_atomic(address);
+             local_irq_restore(flags);
+             if (cpsum == cpcount)
+                 break;
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index d77891e..b6d7a5c 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -1511,14 +1511,14 @@ static int ips_is_passthru(struct scsi_cmnd *SC)
+                 /* kmap_atomic() ensures addressability of the user buffer.*/
+                 /* local_irq_save() protects the KM_IRQ0 address slot.     */
+                 local_irq_save(flags);
+-                buffer = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
++                buffer = kmap_atomic(sg_page(sg)) + sg->offset;
+                 if (buffer && buffer[0] == 'C' && buffer[1] == 'O' &&
+                     buffer[2] == 'P' && buffer[3] == 'P') {
+-                        kunmap_atomic(buffer - sg->offset, KM_IRQ0);
++                        kunmap_atomic(buffer - sg->offset);
+                         local_irq_restore(flags);
+                         return 1;
+                 }
+-                kunmap_atomic(buffer - sg->offset, KM_IRQ0);
++                kunmap_atomic(buffer - sg->offset);
+                 local_irq_restore(flags);
+ 	}
+ 	return 0;
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index 192cb48..ee0dc05 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -1304,9 +1304,9 @@ sci_stp_request_pio_data_in_copy_data_buffer(struct isci_stp_request *stp_req,
+ 			struct page *page = sg_page(sg);
+ 
+ 			copy_len = min_t(int, total_len, sg_dma_len(sg));
+-			kaddr = kmap_atomic(page, KM_IRQ0);
++			kaddr = kmap_atomic(page);
+ 			memcpy(kaddr + sg->offset, src_addr, copy_len);
+-			kunmap_atomic(kaddr, KM_IRQ0);
++			kunmap_atomic(kaddr);
+ 			total_len -= copy_len;
+ 			src_addr += copy_len;
+ 			sg = sg_next(sg);
+@@ -1654,7 +1654,7 @@ sci_io_request_frame_handler(struct isci_request *ireq,
+ 		sci_unsolicited_frame_control_get_header(&ihost->uf_control,
+ 							 frame_index,
+ 							 &frame_header);
+-		kaddr = kmap_atomic(sg_page(sg), KM_IRQ0);
++		kaddr = kmap_atomic(sg_page(sg));
+ 		rsp = kaddr + sg->offset;
+ 		sci_swab32_cpy(rsp, frame_header, 1);
+ 
+@@ -1691,7 +1691,7 @@ sci_io_request_frame_handler(struct isci_request *ireq,
+ 			ireq->sci_status = SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR;
+ 			sci_change_state(&ireq->sm, SCI_REQ_COMPLETED);
+ 		}
+-		kunmap_atomic(kaddr, KM_IRQ0);
++		kunmap_atomic(kaddr);
+ 
+ 		sci_controller_release_frame(ihost, frame_index);
+ 
+@@ -3023,10 +3023,10 @@ static void isci_request_io_request_complete(struct isci_host *ihost,
+ 		dma_unmap_sg(&ihost->pdev->dev, sg, 1, DMA_TO_DEVICE);
+ 
+ 		/* need to swab it back in case the command buffer is re-used */
+-		kaddr = kmap_atomic(sg_page(sg), KM_IRQ0);
++		kaddr = kmap_atomic(sg_page(sg));
+ 		smp_req = kaddr + sg->offset;
+ 		sci_swab32_cpy(smp_req, smp_req, sg->length / sizeof(u32));
+-		kunmap_atomic(kaddr, KM_IRQ0);
++		kunmap_atomic(kaddr);
+ 		break;
+ 	}
+ 	default:
+@@ -3311,7 +3311,7 @@ sci_io_request_construct_smp(struct device *dev,
+ 	u8 req_len;
+ 	u32 cmd;
+ 
+-	kaddr = kmap_atomic(sg_page(sg), KM_IRQ0);
++	kaddr = kmap_atomic(sg_page(sg));
+ 	smp_req = kaddr + sg->offset;
+ 	/*
+ 	 * Look at the SMP requests' header fields; for certain SAS 1.x SMP
+@@ -3337,7 +3337,7 @@ sci_io_request_construct_smp(struct device *dev,
+ 	req_len = smp_req->req_len;
+ 	sci_swab32_cpy(smp_req, smp_req, sg->length / sizeof(u32));
+ 	cmd = *(u32 *) smp_req;
+-	kunmap_atomic(kaddr, KM_IRQ0);
++	kunmap_atomic(kaddr);
+ 
+ 	if (!dma_map_sg(dev, sg, 1, DMA_TO_DEVICE))
+ 		return SCI_FAILURE;
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index f607314..b577c90 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -485,11 +485,11 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 
+ 	if (!(fr_flags(fp) & FCPHF_CRC_UNCHECKED)) {
+ 		copy_len = fc_copy_buffer_to_sglist(buf, len, sg, &nents,
+-						    &offset, KM_SOFTIRQ0, NULL);
++						    &offset, NULL);
+ 	} else {
+ 		crc = crc32(~0, (u8 *) fh, sizeof(*fh));
+ 		copy_len = fc_copy_buffer_to_sglist(buf, len, sg, &nents,
+-						    &offset, KM_SOFTIRQ0, &crc);
++						    &offset, &crc);
+ 		buf = fc_frame_payload_get(fp, 0);
+ 		if (len % 4)
+ 			crc = crc32(crc, buf + len, 4 - (len % 4));
+@@ -650,10 +650,10 @@ static int fc_fcp_send_data(struct fc_fcp_pkt *fsp, struct fc_seq *seq,
+ 			 * The scatterlist item may be bigger than PAGE_SIZE,
+ 			 * but we must not cross pages inside the kmap.
+ 			 */
+-			page_addr = kmap_atomic(page, KM_SOFTIRQ0);
++			page_addr = kmap_atomic(page);
+ 			memcpy(data, (char *)page_addr + (off & ~PAGE_MASK),
+ 			       sg_bytes);
+-			kunmap_atomic(page_addr, KM_SOFTIRQ0);
++			kunmap_atomic(page_addr);
+ 			data += sg_bytes;
+ 		}
+ 		offset += sg_bytes;
+diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
+index 1bf9841..8d65a51a 100644
+--- a/drivers/scsi/libfc/fc_libfc.c
++++ b/drivers/scsi/libfc/fc_libfc.c
+@@ -105,14 +105,13 @@ module_exit(libfc_exit);
+  * @sg: pointer to the pointer of the SG list.
+  * @nents: pointer to the remaining number of entries in the SG list.
+  * @offset: pointer to the current offset in the SG list.
+- * @km_type: dedicated page table slot type for kmap_atomic.
+  * @crc: pointer to the 32-bit crc value.
+  *	 If crc is NULL, CRC is not calculated.
+  */
+ u32 fc_copy_buffer_to_sglist(void *buf, size_t len,
+ 			     struct scatterlist *sg,
+ 			     u32 *nents, size_t *offset,
+-			     enum km_type km_type, u32 *crc)
++			     u32 *crc)
+ {
+ 	size_t remaining = len;
+ 	u32 copy_len = 0;
+@@ -142,12 +141,11 @@ u32 fc_copy_buffer_to_sglist(void *buf, size_t len,
+ 		off = *offset + sg->offset;
+ 		sg_bytes = min(sg_bytes,
+ 			       (size_t)(PAGE_SIZE - (off & ~PAGE_MASK)));
+-		page_addr = kmap_atomic(sg_page(sg) + (off >> PAGE_SHIFT),
+-					km_type);
++		page_addr = kmap_atomic(sg_page(sg) + (off >> PAGE_SHIFT));
+ 		if (crc)
+ 			*crc = crc32(*crc, buf, sg_bytes);
+ 		memcpy((char *)page_addr + (off & ~PAGE_MASK), buf, sg_bytes);
+-		kunmap_atomic(page_addr, km_type);
++		kunmap_atomic(page_addr);
+ 		buf += sg_bytes;
+ 		*offset += sg_bytes;
+ 		remaining -= sg_bytes;
+diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
+index c7d0712..c2830cc 100644
+--- a/drivers/scsi/libfc/fc_libfc.h
++++ b/drivers/scsi/libfc/fc_libfc.h
+@@ -134,6 +134,6 @@ extern void fc_fc4_conf_lport_params(struct fc_lport *, enum fc_fh_type);
+ u32 fc_copy_buffer_to_sglist(void *buf, size_t len,
+ 			     struct scatterlist *sg,
+ 			     u32 *nents, size_t *offset,
+-			     enum km_type km_type, u32 *crc);
++			     u32 *crc);
+ 
+ #endif /* _FC_LIBFC_H_ */
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 83750eb..c1a808c 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1698,7 +1698,7 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	job->reply->reply_payload_rcv_len +=
+ 		fc_copy_buffer_to_sglist(buf, len, info->sg, &info->nents,
+-					 &info->offset, KM_BIO_SRC_IRQ, NULL);
++					 &info->offset, NULL);
+ 
+ 	if (fr_eof(fp) == FC_EOF_T &&
+ 	    (ntoh24(fh->fh_f_ctl) & (FC_FC_LAST_SEQ | FC_FC_END_SEQ)) ==
+diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+index 5715a3d..7f0465b 100644
+--- a/drivers/scsi/libiscsi_tcp.c
++++ b/drivers/scsi/libiscsi_tcp.c
+@@ -135,7 +135,7 @@ static void iscsi_tcp_segment_map(struct iscsi_segment *segment, int recv)
+ 
+ 	if (recv) {
+ 		segment->atomic_mapped = true;
+-		segment->sg_mapped = kmap_atomic(sg_page(sg), KM_SOFTIRQ0);
++		segment->sg_mapped = kmap_atomic(sg_page(sg));
+ 	} else {
+ 		segment->atomic_mapped = false;
+ 		/* the xmit path can sleep with the page mapped so use kmap */
+@@ -149,7 +149,7 @@ void iscsi_tcp_segment_unmap(struct iscsi_segment *segment)
+ {
+ 	if (segment->sg_mapped) {
+ 		if (segment->atomic_mapped)
+-			kunmap_atomic(segment->sg_mapped, KM_SOFTIRQ0);
++			kunmap_atomic(segment->sg_mapped);
+ 		else
+ 			kunmap(sg_page(segment->sg));
+ 		segment->sg_mapped = NULL;
+diff --git a/drivers/scsi/libsas/sas_host_smp.c b/drivers/scsi/libsas/sas_host_smp.c
+index bb8f492..3814d3e 100644
+--- a/drivers/scsi/libsas/sas_host_smp.c
++++ b/drivers/scsi/libsas/sas_host_smp.c
+@@ -246,9 +246,9 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+ 	}
+ 
+ 	local_irq_disable();
+-	buf = kmap_atomic(bio_page(req->bio), KM_USER0) + bio_offset(req->bio);
++	buf = kmap_atomic(bio_page(req->bio));
+ 	memcpy(req_data, buf, blk_rq_bytes(req));
+-	kunmap_atomic(buf - bio_offset(req->bio), KM_USER0);
++	kunmap_atomic(buf - bio_offset(req->bio));
+ 	local_irq_enable();
+ 
+ 	if (req_data[0] != SMP_REQUEST)
+@@ -361,10 +361,10 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+ 	}
+ 
+ 	local_irq_disable();
+-	buf = kmap_atomic(bio_page(rsp->bio), KM_USER0) + bio_offset(rsp->bio);
++	buf = kmap_atomic(bio_page(rsp->bio));
+ 	memcpy(buf, resp_data, blk_rq_bytes(rsp));
+ 	flush_kernel_dcache_page(bio_page(rsp->bio));
+-	kunmap_atomic(buf - bio_offset(rsp->bio), KM_USER0);
++	kunmap_atomic(buf - bio_offset(rsp->bio));
+ 	local_irq_enable();
+ 
+  out:
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 15eefa1..4d39a9f 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -670,10 +670,10 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
+ 			struct scatterlist *sg;
+ 
+ 			sg = scsi_sglist(cmd);
+-			buf = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
++			buf = kmap_atomic(sg_page(sg)) + sg->offset;
+ 
+ 			memset(buf, 0, cmd->cmnd[4]);
+-			kunmap_atomic(buf - sg->offset, KM_IRQ0);
++			kunmap_atomic(buf - sg->offset);
+ 
+ 			cmd->result = (DID_OK << 16);
+ 			cmd->scsi_done(cmd);
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index a4884a5..01ab9c4 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1885,11 +1885,11 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
+ 	case SAS_PROTOCOL_SMP: {
+ 			struct scatterlist *sg_resp = &task->smp_task.smp_resp;
+ 			tstat->stat = SAM_STAT_GOOD;
+-			to = kmap_atomic(sg_page(sg_resp), KM_IRQ0);
++			to = kmap_atomic(sg_page(sg_resp));
+ 			memcpy(to + sg_resp->offset,
+ 				slot->response + sizeof(struct mvs_err_info),
+ 				sg_dma_len(sg_resp));
+-			kunmap_atomic(to, KM_IRQ0);
++			kunmap_atomic(to);
+ 			break;
+ 		}
+ 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 6888b2c..68da6c0 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1778,7 +1778,7 @@ static int prot_verify_read(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 	scsi_for_each_prot_sg(SCpnt, psgl, scsi_prot_sg_count(SCpnt), i) {
+ 		int len = min(psgl->length, resid);
+ 
+-		paddr = kmap_atomic(sg_page(psgl), KM_IRQ0) + psgl->offset;
++		paddr = kmap_atomic(sg_page(psgl)) + psgl->offset;
+ 		memcpy(paddr, dif_storep + dif_offset(sector), len);
+ 
+ 		sector += len >> 3;
+@@ -1788,7 +1788,7 @@ static int prot_verify_read(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 			sector = do_div(tmp_sec, sdebug_store_sectors);
+ 		}
+ 		resid -= len;
+-		kunmap_atomic(paddr, KM_IRQ0);
++		kunmap_atomic(paddr);
+ 	}
+ 
+ 	dix_reads++;
+@@ -1881,12 +1881,12 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 	BUG_ON(scsi_sg_count(SCpnt) == 0);
+ 	BUG_ON(scsi_prot_sg_count(SCpnt) == 0);
+ 
+-	paddr = kmap_atomic(sg_page(psgl), KM_IRQ1) + psgl->offset;
++	paddr = kmap_atomic(sg_page(psgl)) + psgl->offset;
+ 	ppage_offset = 0;
+ 
+ 	/* For each data page */
+ 	scsi_for_each_sg(SCpnt, dsgl, scsi_sg_count(SCpnt), i) {
+-		daddr = kmap_atomic(sg_page(dsgl), KM_IRQ0) + dsgl->offset;
++		daddr = kmap_atomic(sg_page(dsgl)) + dsgl->offset;
+ 
+ 		/* For each sector-sized chunk in data page */
+ 		for (j = 0 ; j < dsgl->length ; j += scsi_debug_sector_size) {
+@@ -1895,10 +1895,10 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 			 * protection page advance to the next one
+ 			 */
+ 			if (ppage_offset >= psgl->length) {
+-				kunmap_atomic(paddr, KM_IRQ1);
++				kunmap_atomic(paddr);
+ 				psgl = sg_next(psgl);
+ 				BUG_ON(psgl == NULL);
+-				paddr = kmap_atomic(sg_page(psgl), KM_IRQ1)
++				paddr = kmap_atomic(sg_page(psgl))
+ 					+ psgl->offset;
+ 				ppage_offset = 0;
+ 			}
+@@ -1971,10 +1971,10 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 			ppage_offset += sizeof(struct sd_dif_tuple);
+ 		}
+ 
+-		kunmap_atomic(daddr, KM_IRQ0);
++		kunmap_atomic(daddr);
+ 	}
+ 
+-	kunmap_atomic(paddr, KM_IRQ1);
++	kunmap_atomic(paddr);
+ 
+ 	dix_writes++;
+ 
+@@ -1982,8 +1982,8 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 
+ out:
+ 	dif_errors++;
+-	kunmap_atomic(daddr, KM_IRQ0);
+-	kunmap_atomic(paddr, KM_IRQ1);
++	kunmap_atomic(daddr);
++	kunmap_atomic(paddr);
+ 	return ret;
+ }
+ 
+@@ -2303,7 +2303,7 @@ static int resp_xdwriteread(struct scsi_cmnd *scp, unsigned long long lba,
+ 
+ 	offset = 0;
+ 	for_each_sg(sdb->table.sgl, sg, sdb->table.nents, i) {
+-		kaddr = (unsigned char *)kmap_atomic(sg_page(sg), KM_USER0);
++		kaddr = (unsigned char *)kmap_atomic(sg_page(sg));
+ 		if (!kaddr)
+ 			goto out;
+ 
+@@ -2311,7 +2311,7 @@ static int resp_xdwriteread(struct scsi_cmnd *scp, unsigned long long lba,
+ 			*(kaddr + sg->offset + j) ^= *(buf + offset + j);
+ 
+ 		offset += sg->length;
+-		kunmap_atomic(kaddr, KM_USER0);
++		kunmap_atomic(kaddr);
+ 	}
+ 	ret = 0;
+ out:
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b2c95db..a33b2b6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2567,7 +2567,7 @@ void *scsi_kmap_atomic_sg(struct scatterlist *sgl, int sg_count,
+ 	if (*len > sg_len)
+ 		*len = sg_len;
+ 
+-	return kmap_atomic(page, KM_BIO_SRC_IRQ);
++	return kmap_atomic(page);
+ }
+ EXPORT_SYMBOL(scsi_kmap_atomic_sg);
+ 
+@@ -2577,6 +2577,6 @@ EXPORT_SYMBOL(scsi_kmap_atomic_sg);
+  */
+ void scsi_kunmap_atomic_sg(void *virt)
+ {
+-	kunmap_atomic(virt, KM_BIO_SRC_IRQ);
++	kunmap_atomic(virt);
+ }
+ EXPORT_SYMBOL(scsi_kunmap_atomic_sg);
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+index 0cb39ff..e981d97 100644
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -392,7 +392,7 @@ int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_s
+ 		virt = bio->bi_integrity->bip_sector & 0xffffffff;
+ 
+ 		bip_for_each_vec(iv, bio->bi_integrity, i) {
+-			sdt = kmap_atomic(iv->bv_page, KM_USER0)
++			sdt = kmap_atomic(iv->bv_page)
+ 				+ iv->bv_offset;
+ 
+ 			for (j = 0 ; j < iv->bv_len ; j += tuple_sz, sdt++) {
+@@ -405,7 +405,7 @@ int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_s
+ 				phys++;
+ 			}
+ 
+-			kunmap_atomic(sdt, KM_USER0);
++			kunmap_atomic(sdt);
+ 		}
+ 
+ 		bio->bi_flags |= BIO_MAPPED_INTEGRITY;
+@@ -414,7 +414,7 @@ int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_s
+ 	return 0;
+ 
+ error:
+-	kunmap_atomic(sdt, KM_USER0);
++	kunmap_atomic(sdt);
+ 	sd_printk(KERN_ERR, sdkp, "%s: virt %u, phys %u, ref %u, app %4x\n",
+ 		  __func__, virt, phys, be32_to_cpu(sdt->ref_tag),
+ 		  be16_to_cpu(sdt->app_tag));
+@@ -453,13 +453,13 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
+ 		virt = bio->bi_integrity->bip_sector & 0xffffffff;
+ 
+ 		bip_for_each_vec(iv, bio->bi_integrity, i) {
+-			sdt = kmap_atomic(iv->bv_page, KM_USER0)
++			sdt = kmap_atomic(iv->bv_page)
+ 				+ iv->bv_offset;
+ 
+ 			for (j = 0 ; j < iv->bv_len ; j += tuple_sz, sdt++) {
+ 
+ 				if (sectors == 0) {
+-					kunmap_atomic(sdt, KM_USER0);
++					kunmap_atomic(sdt);
+ 					return;
+ 				}
+ 
+@@ -474,7 +474,7 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
+ 				sectors--;
+ 			}
+ 
+-			kunmap_atomic(sdt, KM_USER0);
++			kunmap_atomic(sdt);
+ 		}
  	}
  }
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index e028d7a..d0d9bf1 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -113,6 +113,15 @@ static inline int sas_smp_host_handler(struct Scsi_Host *shost,
- }
- #endif
- 
-+static inline void sas_fail_probe(struct domain_device *dev, const char *func, int err)
-+{
-+	SAS_DPRINTK("%s: for %s device %16llx returned %d\n",
-+		    func, dev->parent ? "exp-attached" :
-+					    "direct-attached",
-+		    SAS_ADDR(dev->sas_addr), err);
-+	sas_unregister_dev(dev->port, dev);
-+}
-+
- static inline void sas_fill_in_rphy(struct domain_device *dev,
- 				    struct sas_rphy *rphy)
- {
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index e58ca50..3701ff7 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -762,17 +762,10 @@ int sas_target_alloc(struct scsi_target *starget)
- {
- 	struct sas_rphy *rphy = dev_to_rphy(starget->dev.parent);
- 	struct domain_device *found_dev = sas_find_dev_by_rphy(rphy);
--	int res;
- 
- 	if (!found_dev)
- 		return -ENODEV;
- 
--	if (dev_is_sata(found_dev)) {
--		res = sas_ata_init_host_and_port(found_dev, starget);
--		if (res)
--			return res;
--	}
--
- 	kref_get(&found_dev->kref);
- 	starget->hostdata = found_dev;
- 	return 0;
-@@ -1012,16 +1005,6 @@ void sas_task_abort(struct sas_task *task)
- 	}
- }
- 
--int sas_slave_alloc(struct scsi_device *scsi_dev)
--{
--	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
--
--	if (dev_is_sata(dev))
--		return ata_sas_port_init(dev->sata_dev.ap);
--
--	return 0;
--}
--
- void sas_target_destroy(struct scsi_target *starget)
- {
- 	struct domain_device *found_dev = starget->hostdata;
-@@ -1082,6 +1065,5 @@ EXPORT_SYMBOL_GPL(sas_task_abort);
- EXPORT_SYMBOL_GPL(sas_phy_reset);
- EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
- EXPORT_SYMBOL_GPL(sas_eh_bus_reset_handler);
--EXPORT_SYMBOL_GPL(sas_slave_alloc);
- EXPORT_SYMBOL_GPL(sas_target_destroy);
- EXPORT_SYMBOL_GPL(sas_ioctl);
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index d45878b..cc59dff 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -73,7 +73,6 @@ static struct scsi_host_template mvs_sht = {
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
--	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- 	.shost_attrs		= mvst_host_attrs,
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index bd165ea..36efaa7 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -75,7 +75,6 @@ static struct scsi_host_template pm8001_sht = {
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
--	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- 	.shost_attrs		= pm8001_host_attrs,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index aa42704..42378d6 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -996,6 +996,7 @@ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
- extern void ata_sas_port_destroy(struct ata_port *);
- extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
- 					   struct ata_port_info *, struct Scsi_Host *);
-+extern int ata_sas_async_port_init(struct ata_port *);
- extern int ata_sas_port_init(struct ata_port *);
- extern int ata_sas_port_start(struct ata_port *ap);
- extern void ata_sas_port_stop(struct ata_port *ap);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 4a42be3..20153d5 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -646,7 +646,6 @@ int sas_phy_reset(struct sas_phy *phy, int hard_reset);
- int sas_queue_up(struct sas_task *task);
- extern int sas_queuecommand(struct Scsi_Host * ,struct scsi_cmnd *);
- extern int sas_target_alloc(struct scsi_target *);
--extern int sas_slave_alloc(struct scsi_device *);
- extern int sas_slave_configure(struct scsi_device *);
- extern int sas_change_queue_depth(struct scsi_device *, int new_depth,
- 				  int reason);
-diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-index 1556eff..cdccd2e 100644
---- a/include/scsi/sas_ata.h
-+++ b/include/scsi/sas_ata.h
-@@ -37,15 +37,14 @@ static inline int dev_is_sata(struct domain_device *dev)
- }
- 
- int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy);
--int sas_ata_init_host_and_port(struct domain_device *found_dev,
--			       struct scsi_target *starget);
--
-+int sas_ata_init_host_and_port(struct domain_device *found_dev);
- void sas_ata_task_abort(struct sas_task *task);
- void sas_ata_strategy_handler(struct Scsi_Host *shost);
- void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
- 		struct list_head *done_q);
- void sas_ata_schedule_reset(struct domain_device *dev);
- void sas_ata_wait_eh(struct domain_device *dev);
-+void sas_probe_sata(struct asd_sas_port *port);
- #else
- 
- 
-@@ -53,8 +52,7 @@ static inline int dev_is_sata(struct domain_device *dev)
- {
- 	return 0;
- }
--static inline int sas_ata_init_host_and_port(struct domain_device *found_dev,
--			       struct scsi_target *starget)
-+static inline int sas_ata_init_host_and_port(struct domain_device *found_dev)
- {
- 	return 0;
- }
-@@ -79,6 +77,10 @@ static inline void sas_ata_wait_eh(struct domain_device *dev)
- {
- }
- 
-+static inline void sas_probe_sata(struct asd_sas_port *port)
-+{
-+}
-+
- static inline int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy)
- {
- 	return 0;
+-- 
+1.7.7.6
 
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
