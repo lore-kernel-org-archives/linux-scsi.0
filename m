@@ -1,91 +1,46 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 25/60] target: remove the second argument of
- k[un]map_atomic()
-Date: Fri, 10 Feb 2012 14:18:43 -0800
-Message-ID: <1328912323.9333.92.camel@haakon2.linux-iscsi.org>
-References: <1328852421-19678-1-git-send-email-amwang@redhat.com>
-	 <1328852421-19678-26-git-send-email-amwang@redhat.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 01/12] libfcoe: Don't KERN_ERR on netdev notification
+Date: Fri, 10 Feb 2012 17:17:59 -0800
+Message-ID: <20120211011759.7668.77814.stgit@localhost6.localdomain6>
+References: <20120211011754.7668.51489.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1328852421-19678-26-git-send-email-amwang@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Cong Wang <amwang@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, Kiran Patil <kiran.patil@intel.com>, Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:64623 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753419Ab2BKBSA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2012 20:18:00 -0500
+In-Reply-To: <20120211011754.7668.51489.stgit@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Ross Brattain <ross.b.brattain@intel.com>
 
-On Fri, 2012-02-10 at 13:39 +0800, Cong Wang wrote:
-> Signed-off-by: Cong Wang <amwang@redhat.com>
-> ---
->  drivers/target/target_core_transport.c |    4 ++--
->  drivers/target/tcm_fc/tfc_io.c         |   10 ++++------
->  2 files changed, 6 insertions(+), 8 deletions(-)
-> 
+This is more of a debug statement. As a KERN_ERR we generate
+log entries anytime any netdev goes up or down, so when booting
+there are notification log entries for all system interfaces
+including 'lo'. This is too much. Let's just log when necessary.
 
-Hi Cong,
+Signed-off-by: Robert Love <robert.w.love@intel.com>
+Tested-by: Ross Brattain <ross.b.brattain@intel.com>
+---
+ drivers/scsi/fcoe/fcoe_transport.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-This looks fine to me, I assume you'll push this upstream..?
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index bd97b22..0897be0 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -620,8 +620,8 @@ static int libfcoe_device_notification(struct notifier_block *notifier,
+ 
+ 	switch (event) {
+ 	case NETDEV_UNREGISTER:
+-		printk(KERN_ERR "libfcoe_device_notification: NETDEV_UNREGISTER %s\n",
+-				netdev->name);
++		LIBFCOE_TRANSPORT_DBG("NETDEV_UNREGISTER %s\n",
++				      netdev->name);
+ 		fcoe_del_netdev_mapping(netdev);
+ 		break;
+ 	}
 
-Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
-
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 58cea07..58c12d7 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -2344,7 +2344,7 @@ static void transport_xor_callback(struct se_cmd *cmd)
->  
->  	offset = 0;
->  	for_each_sg(cmd->t_bidi_data_sg, sg, cmd->t_bidi_data_nents, count) {
-> -		addr = kmap_atomic(sg_page(sg), KM_USER0);
-> +		addr = kmap_atomic(sg_page(sg));
->  		if (!addr)
->  			goto out;
->  
-> @@ -2352,7 +2352,7 @@ static void transport_xor_callback(struct se_cmd *cmd)
->  			*(addr + sg->offset + i) ^= *(buf + offset + i);
->  
->  		offset += sg->length;
-> -		kunmap_atomic(addr, KM_USER0);
-> +		kunmap_atomic(addr);
->  	}
->  
->  out:
-> diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-> index d8cabc2..2b693ee 100644
-> --- a/drivers/target/tcm_fc/tfc_io.c
-> +++ b/drivers/target/tcm_fc/tfc_io.c
-> @@ -146,14 +146,13 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
->  					PAGE_SIZE << compound_order(page);
->  		} else {
->  			BUG_ON(!page);
-> -			from = kmap_atomic(page + (mem_off >> PAGE_SHIFT),
-> -					   KM_SOFTIRQ0);
-> +			from = kmap_atomic(page + (mem_off >> PAGE_SHIFT));
->  			page_addr = from;
->  			from += mem_off & ~PAGE_MASK;
->  			tlen = min(tlen, (size_t)(PAGE_SIZE -
->  						(mem_off & ~PAGE_MASK)));
->  			memcpy(to, from, tlen);
-> -			kunmap_atomic(page_addr, KM_SOFTIRQ0);
-> +			kunmap_atomic(page_addr);
->  			to += tlen;
->  		}
->  
-> @@ -291,14 +290,13 @@ void ft_recv_write_data(struct ft_cmd *cmd, struct fc_frame *fp)
->  
->  		tlen = min(mem_len, frame_len);
->  
-> -		to = kmap_atomic(page + (mem_off >> PAGE_SHIFT),
-> -				 KM_SOFTIRQ0);
-> +		to = kmap_atomic(page + (mem_off >> PAGE_SHIFT));
->  		page_addr = to;
->  		to += mem_off & ~PAGE_MASK;
->  		tlen = min(tlen, (size_t)(PAGE_SIZE -
->  					  (mem_off & ~PAGE_MASK)));
->  		memcpy(to, from, tlen);
-> -		kunmap_atomic(page_addr, KM_SOFTIRQ0);
-> +		kunmap_atomic(page_addr);
->  
->  		from += tlen;
->  		frame_len -= tlen;
