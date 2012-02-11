@@ -1,95 +1,149 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 09/12] fcoe: Do not switch context in vport_delete callback
-Date: Fri, 10 Feb 2012 17:18:41 -0800
-Message-ID: <20120211011841.7668.27533.stgit@localhost6.localdomain6>
+Subject: [PATCH 10/12] fcoe: Remove reference counting on 'stuct
+ fcoe_interface'
+Date: Fri, 10 Feb 2012 17:18:46 -0800
+Message-ID: <20120211011846.7668.12007.stgit@localhost6.localdomain6>
 References: <20120211011754.7668.51489.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:9500 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:44082 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754586Ab2BKBSm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2012 20:18:42 -0500
+	id S1754586Ab2BKBSr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2012 20:18:47 -0500
 In-Reply-To: <20120211011754.7668.51489.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Ross Brattain <ross.b.brattain@intel.com>
 
-Currently all port deletion is routed though the FCoE
-workqueue (fcoe_wq). When fc_remove_host is called on
-an N_Port (for example, from fcoe_destroy) the vports
-are queued into a FC Transport workqueue. fc_remove_host
-flushes that queue and each vport is passed to fcoe's
-fcoe_vport_destroy, which simply queues the associated
-fcoe_ports for later deletion. This queue cannot be
-flushed within the N_Ports destroy path because of
-circular locking issues. The result is that the NPIV
-ports are destroyed after the N_Port, which is reverse
-of how they are created.
-
-This quirk causes fcoe to keep references on the
-fcoe_interface shared by each of these ports (N_Port
-and NPIV). Changing the ordering such that NPIV ports
-are destroyed before the N_Port will allow us to remove
-reference counting on the fcoe_interface instances.
-
-This patch simply allows fcoe_vport_destory to destroy
-NPIV ports without deferring them to a workqueue context.
-This ensures that when fc_remove_host is called the
-NPIV ports will be destroyed first before the N_Port and
-allows reference counting on the fcoe's fcoe_interface
-to be remove in a later patch.
+The reference counting was necessary on these instances
+because it was possible for NPIV ports to be destroyed
+after the N_Port. A previous patch ensures that all NPIV
+ports are destroyed before the N_Port making the need to
+track references on the interface unnecessary.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   15 ++++++---------
- 1 files changed, 6 insertions(+), 9 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   48 +++++-----------------------------------------
+ drivers/scsi/fcoe/fcoe.h |    3 ---
+ 2 files changed, 5 insertions(+), 46 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 449df17..f5286c4 100644
+index f5286c4..0233242 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2099,20 +2099,14 @@ static void fcoe_destroy_work(struct work_struct *work)
- {
- 	struct fcoe_port *port;
- 	struct fcoe_interface *fcoe;
--	int npiv = 0;
+@@ -376,7 +376,6 @@ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
+ 	}
  
- 	port = container_of(work, struct fcoe_port, destroy_work);
- 	mutex_lock(&fcoe_config_mutex);
+ 	dev_hold(netdev);
+-	kref_init(&fcoe->kref);
  
--	/* set if this is an NPIV port */
--	npiv = port->lport->vport ? 1 : 0;
+ 	/*
+ 	 * Initialize FIP.
+@@ -404,42 +403,6 @@ out:
+ }
+ 
+ /**
+- * fcoe_interface_release() - fcoe_port kref release function
+- * @kref: Embedded reference count in an fcoe_interface struct
+- */
+-static void fcoe_interface_release(struct kref *kref)
+-{
+-	struct fcoe_interface *fcoe;
+-	struct net_device *netdev;
 -
+-	fcoe = container_of(kref, struct fcoe_interface, kref);
+-	netdev = fcoe->netdev;
+-	/* tear-down the FCoE controller */
+-	fcoe_ctlr_destroy(&fcoe->ctlr);
+-	kfree(fcoe);
+-	dev_put(netdev);
+-	module_put(THIS_MODULE);
+-}
+-
+-/**
+- * fcoe_interface_get() - Get a reference to a FCoE interface
+- * @fcoe: The FCoE interface to be held
+- */
+-static inline void fcoe_interface_get(struct fcoe_interface *fcoe)
+-{
+-	kref_get(&fcoe->kref);
+-}
+-
+-/**
+- * fcoe_interface_put() - Put a reference to a FCoE interface
+- * @fcoe: The FCoE interface to be released
+- */
+-static inline void fcoe_interface_put(struct fcoe_interface *fcoe)
+-{
+-	kref_put(&fcoe->kref, fcoe_interface_release);
+-}
+-
+-/**
+  * fcoe_interface_cleanup() - Clean up a FCoE interface
+  * @fcoe: The FCoE interface to be cleaned up
+  *
+@@ -486,7 +449,11 @@ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
+ 	rtnl_unlock();
+ 
+ 	/* Release the self-reference taken during fcoe_interface_create() */
+-	fcoe_interface_put(fcoe);
++	/* tear-down the FCoE controller */
++	fcoe_ctlr_destroy(fip);
++	kfree(fcoe);
++	dev_put(netdev);
++	module_put(THIS_MODULE);
+ }
+ 
+ /**
+@@ -968,9 +935,6 @@ static void fcoe_if_destroy(struct fc_lport *lport)
+ 		dev_uc_del(netdev, port->data_src_addr);
+ 	rtnl_unlock();
+ 
+-	/* Release reference held in fcoe_if_create() */
+-	fcoe_interface_put(fcoe);
+-
+ 	/* Free queued packets for the per-CPU receive threads */
+ 	fcoe_percpu_clean(lport);
+ 
+@@ -1160,7 +1124,6 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 		goto out_lp_destroy;
+ 	}
+ 
+-	fcoe_interface_get(fcoe);
+ 	return lport;
+ 
+ out_lp_destroy:
+@@ -2105,7 +2068,6 @@ static void fcoe_destroy_work(struct work_struct *work)
+ 
  	fcoe = port->priv;
  	fcoe_if_destroy(port->lport);
- 
--	/* Do not tear down the fcoe interface for NPIV port */
--	if (!npiv)
--		fcoe_interface_cleanup(fcoe);
-+	fcoe_interface_cleanup(fcoe);
+-
+ 	fcoe_interface_cleanup(fcoe);
  
  	mutex_unlock(&fcoe_config_mutex);
- }
-@@ -2683,12 +2677,15 @@ static int fcoe_vport_destroy(struct fc_vport *vport)
- 	struct Scsi_Host *shost = vport_to_shost(vport);
- 	struct fc_lport *n_port = shost_priv(shost);
- 	struct fc_lport *vn_port = vport->dd_data;
--	struct fcoe_port *port = lport_priv(vn_port);
+diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
+index bcc89e6..3c2733a 100644
+--- a/drivers/scsi/fcoe/fcoe.h
++++ b/drivers/scsi/fcoe/fcoe.h
+@@ -71,8 +71,6 @@ do {                                                            	\
+  * @ctlr:	      The FCoE controller (for FIP)
+  * @oem:	      The offload exchange manager for all local port
+  *		      instances associated with this port
+- * @kref:	      The kernel reference
+- *
+  * This structure is 1:1 with a net devive.
+  */
+ struct fcoe_interface {
+@@ -83,7 +81,6 @@ struct fcoe_interface {
+ 	struct packet_type fip_packet_type;
+ 	struct fcoe_ctlr   ctlr;
+ 	struct fc_exch_mgr *oem;
+-	struct kref	   kref;
+ };
  
- 	mutex_lock(&n_port->lp_mutex);
- 	list_del(&vn_port->list);
- 	mutex_unlock(&n_port->lp_mutex);
--	queue_work(fcoe_wq, &port->destroy_work);
-+
-+	mutex_lock(&fcoe_config_mutex);
-+	fcoe_if_destroy(vn_port);
-+	mutex_unlock(&fcoe_config_mutex);
-+
- 	return 0;
- }
- 
+ #define fcoe_from_ctlr(fip) container_of(fip, struct fcoe_interface, ctlr)
 
