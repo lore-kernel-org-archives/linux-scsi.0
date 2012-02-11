@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 04/12] libfc: Make the libfc Common Transport(CT) code generic
-Date: Fri, 10 Feb 2012 17:18:15 -0800
-Message-ID: <20120211011815.7668.42232.stgit@localhost6.localdomain6>
+Subject: [PATCH 06/12] fcoe: Add support for FDMI in fcoe
+Date: Fri, 10 Feb 2012 17:18:25 -0800
+Message-ID: <20120211011825.7668.73901.stgit@localhost6.localdomain6>
 References: <20120211011754.7668.51489.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42530 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:60988 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758581Ab2BKBSZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2012 20:18:25 -0500
+	id S1758601Ab2BKBS0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2012 20:18:26 -0500
 In-Reply-To: <20120211011754.7668.51489.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,169 +19,115 @@ Cc: Ross Brattain <ross.b.brattain@intel.com>, Neerav Parikh <neerav.parikh@inte
 
 From: Neerav Parikh <neerav.parikh@intel.com>
 
-Currently the libfc Common Transport(CT) calls assume that
-the CT requests are Name Server specific only. This patch
-makes it more flexible to allow more FC-GS services to make
-use of these routines.
+This adds support for updating the FC-GS FDMI attributes
+in the fcoe driver.
 
 Signed-off-by: Neerav Parikh <neerav.parikh@intel.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 Acked-by: Robert Love <robert.w.love@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_elsct.c |    3 +-
- include/scsi/fc_encode.h      |   60 +++++++++++++++++++++++++++++++++--------
- 2 files changed, 49 insertions(+), 14 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 82 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_elsct.c b/drivers/scsi/libfc/fc_elsct.c
-index e17a28d..c2384d5 100644
---- a/drivers/scsi/libfc/fc_elsct.c
-+++ b/drivers/scsi/libfc/fc_elsct.c
-@@ -56,8 +56,7 @@ struct fc_seq *fc_elsct_send(struct fc_lport *lport, u32 did,
- 		rc = fc_els_fill(lport, did, fp, op, &r_ctl, &fh_type);
- 	else {
- 		/* CT requests */
--		rc = fc_ct_fill(lport, did, fp, op, &r_ctl, &fh_type);
--		did = FC_FID_DIR_SERV;
-+		rc = fc_ct_fill(lport, did, fp, op, &r_ctl, &fh_type, &did);
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index e959960..b222e2d 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -734,6 +734,85 @@ static int fcoe_shost_config(struct fc_lport *lport, struct device *dev)
+ 	return 0;
+ }
+ 
++
++/**
++ * fcoe_fdmi_info() - Get FDMI related info from net devive for SW FCoE
++ * @lport:  The local port that is associated with the net device
++ * @netdev: The associated net device
++ *
++ * Must be called after fcoe_shost_config() as it will use local port mutex
++ *
++ */
++static void fcoe_fdmi_info(struct fc_lport *lport, struct net_device *netdev)
++{
++	struct fcoe_interface *fcoe;
++	struct fcoe_port *port;
++	struct net_device *realdev;
++	int rc;
++	struct netdev_fcoe_hbainfo fdmi;
++
++	port = lport_priv(lport);
++	fcoe = port->priv;
++	realdev = fcoe->realdev;
++
++	if (!realdev)
++		return;
++
++	/* No FDMI state m/c for NPIV ports */
++	if (lport->vport)
++		return;
++
++	if (realdev->netdev_ops->ndo_fcoe_get_hbainfo) {
++		memset(&fdmi, 0, sizeof(fdmi));
++		rc = realdev->netdev_ops->ndo_fcoe_get_hbainfo(realdev,
++							       &fdmi);
++		if (rc) {
++			printk(KERN_INFO "fcoe: Failed to retrieve FDMI "
++					"information from netdev.\n");
++			return;
++		}
++
++		snprintf(fc_host_serial_number(lport->host),
++			 FC_SERIAL_NUMBER_SIZE,
++			 "%s",
++			 fdmi.serial_number);
++		snprintf(fc_host_manufacturer(lport->host),
++			 FC_SERIAL_NUMBER_SIZE,
++			 "%s",
++			 fdmi.manufacturer);
++		snprintf(fc_host_model(lport->host),
++			 FC_SYMBOLIC_NAME_SIZE,
++			 "%s",
++			 fdmi.model);
++		snprintf(fc_host_model_description(lport->host),
++			 FC_SYMBOLIC_NAME_SIZE,
++			 "%s",
++			 fdmi.model_description);
++		snprintf(fc_host_hardware_version(lport->host),
++			 FC_VERSION_STRING_SIZE,
++			 "%s",
++			 fdmi.hardware_version);
++		snprintf(fc_host_driver_version(lport->host),
++			 FC_VERSION_STRING_SIZE,
++			 "%s",
++			 fdmi.driver_version);
++		snprintf(fc_host_optionrom_version(lport->host),
++			 FC_VERSION_STRING_SIZE,
++			 "%s",
++			 fdmi.optionrom_version);
++		snprintf(fc_host_firmware_version(lport->host),
++			 FC_VERSION_STRING_SIZE,
++			 "%s",
++			 fdmi.firmware_version);
++
++		/* Enable FDMI lport states */
++		lport->fdmi_enabled = 1;
++	} else {
++		lport->fdmi_enabled = 0;
++		printk(KERN_INFO "fcoe: No FDMI support.\n");
++	}
++}
++
+ /**
+  * fcoe_oem_match() - The match routine for the offloaded exchange manager
+  * @fp: The I/O frame
+@@ -1047,6 +1126,9 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 		goto out_lp_destroy;
  	}
  
- 	if (rc) {
-diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
-index be418d8..73bc433 100644
---- a/include/scsi/fc_encode.h
-+++ b/include/scsi/fc_encode.h
-@@ -97,7 +97,9 @@ static inline void fc_adisc_fill(struct fc_lport *lport, struct fc_frame *fp)
-  * returns pointer to ct request.
-  */
- static inline struct fc_ct_req *fc_ct_hdr_fill(const struct fc_frame *fp,
--					       unsigned int op, size_t req_size)
-+					       unsigned int op, size_t req_size,
-+					       enum fc_ct_fs_type fs_type,
-+					       u8 subtype)
- {
- 	struct fc_ct_req *ct;
- 	size_t ct_plen;
-@@ -106,14 +108,14 @@ static inline struct fc_ct_req *fc_ct_hdr_fill(const struct fc_frame *fp,
- 	ct = fc_frame_payload_get(fp, ct_plen);
- 	memset(ct, 0, ct_plen);
- 	ct->hdr.ct_rev = FC_CT_REV;
--	ct->hdr.ct_fs_type = FC_FST_DIR;
--	ct->hdr.ct_fs_subtype = FC_NS_SUBTYPE;
-+	ct->hdr.ct_fs_type = fs_type;
-+	ct->hdr.ct_fs_subtype = subtype;
- 	ct->hdr.ct_cmd = htons((u16) op);
- 	return ct;
- }
- 
- /**
-- * fc_ct_fill() - Fill in a name service request frame
-+ * fc_ct_ns_fill() - Fill in a name service request frame
-  * @lport: local port.
-  * @fc_id: FC_ID of non-destination rport for GPN_ID and similar inquiries.
-  * @fp: frame to contain payload.
-@@ -121,7 +123,7 @@ static inline struct fc_ct_req *fc_ct_hdr_fill(const struct fc_frame *fp,
-  * @r_ctl: pointer to FC header R_CTL.
-  * @fh_type: pointer to FC-4 type.
-  */
--static inline int fc_ct_fill(struct fc_lport *lport,
-+static inline int fc_ct_ns_fill(struct fc_lport *lport,
- 		      u32 fc_id, struct fc_frame *fp,
- 		      unsigned int op, enum fc_rctl *r_ctl,
- 		      enum fc_fh_type *fh_type)
-@@ -131,23 +133,28 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- 
- 	switch (op) {
- 	case FC_NS_GPN_FT:
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_gid_ft));
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_gid_ft),
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		ct->payload.gid.fn_fc4_type = FC_TYPE_FCP;
- 		break;
- 
- 	case FC_NS_GPN_ID:
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_fid));
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_fid),
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
-+		ct->payload.gid.fn_fc4_type = FC_TYPE_FCP;
- 		hton24(ct->payload.fid.fp_fid, fc_id);
- 		break;
- 
- 	case FC_NS_RFT_ID:
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rft));
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rft),
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		hton24(ct->payload.rft.fid.fp_fid, lport->port_id);
- 		ct->payload.rft.fts = lport->fcts;
- 		break;
- 
- 	case FC_NS_RFF_ID:
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rff_id));
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rff_id),
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		hton24(ct->payload.rff.fr_fid.fp_fid, lport->port_id);
- 		ct->payload.rff.fr_type = FC_TYPE_FCP;
- 		if (lport->service_params & FCP_SPPF_INIT_FCN)
-@@ -157,14 +164,16 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- 		break;
- 
- 	case FC_NS_RNN_ID:
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rn_id));
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rn_id),
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		hton24(ct->payload.rn.fr_fid.fp_fid, lport->port_id);
- 		put_unaligned_be64(lport->wwnn, &ct->payload.rn.fr_wwn);
- 		break;
- 
- 	case FC_NS_RSPN_ID:
- 		len = strnlen(fc_host_symbolic_name(lport->host), 255);
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rspn) + len);
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rspn) + len,
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		hton24(ct->payload.spn.fr_fid.fp_fid, lport->port_id);
- 		strncpy(ct->payload.spn.fr_name,
- 			fc_host_symbolic_name(lport->host), len);
-@@ -173,7 +182,8 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- 
- 	case FC_NS_RSNN_NN:
- 		len = strnlen(fc_host_symbolic_name(lport->host), 255);
--		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rsnn) + len);
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rsnn) + len,
-+				    FC_FST_DIR, FC_NS_SUBTYPE);
- 		put_unaligned_be64(lport->wwnn, &ct->payload.snn.fr_wwn);
- 		strncpy(ct->payload.snn.fr_name,
- 			fc_host_symbolic_name(lport->host), len);
-@@ -189,6 +199,32 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- }
- 
- /**
-+ * fc_ct_fill() - Fill in a common transport service request frame
-+ * @lport: local port.
-+ * @fc_id: FC_ID of non-destination rport for GPN_ID and similar inquiries.
-+ * @fp: frame to contain payload.
-+ * @op: CT opcode.
-+ * @r_ctl: pointer to FC header R_CTL.
-+ * @fh_type: pointer to FC-4 type.
-+ */
-+static inline int fc_ct_fill(struct fc_lport *lport,
-+		      u32 fc_id, struct fc_frame *fp,
-+		      unsigned int op, enum fc_rctl *r_ctl,
-+		      enum fc_fh_type *fh_type, u32 *did)
-+{
-+	int rc = -EINVAL;
++	/* Initialized FDMI information */
++	fcoe_fdmi_info(lport, netdev);
 +
-+	switch (fc_id) {
-+	case FC_FID_DIR_SERV:
-+	default:
-+		rc = fc_ct_ns_fill(lport, fc_id, fp, op, r_ctl, fh_type);
-+		*did = FC_FID_DIR_SERV;
-+		break;
-+	}
-+
-+	return rc;
-+}
-+/**
-  * fc_plogi_fill - Fill in plogi request frame
-  */
- static inline void fc_plogi_fill(struct fc_lport *lport, struct fc_frame *fp,
+ 	/*
+ 	 * fcoe_em_alloc() and fcoe_hostlist_add() both
+ 	 * need to be atomic with respect to other changes to the
 
