@@ -1,66 +1,78 @@
-From: =?UTF-8?q?Ra=C3=BAl=20Porcel?= <armin76@gentoo.org>
-Subject: [PATCH] [trivial] qla2xxx: Fix typo in qla_init.c
-Date: Sat, 11 Feb 2012 19:00:42 +0000
-Message-ID: <1328986842-24384-1-git-send-email-armin76@gentoo.org>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [RFC 0/5] scsi, sd, pm, request based runtime PM for scsi disk
+Date: Sat, 11 Feb 2012 20:37:07 +0100
+Message-ID: <201202112037.07173.oliver@neukum.org>
+References: <Pine.LNX.4.44L0.1202061007570.1525-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:55310 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751335Ab2BKTCQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Feb 2012 14:02:16 -0500
+Received: from smtp-out002.kontent.com ([81.88.40.216]:43704 "EHLO
+	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751335Ab2BKTep (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Feb 2012 14:34:45 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1202061007570.1525-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
-Cc: =?UTF-8?q?Ra=C3=BAl=20Porcel?= <armin76@gentoo.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Huang Ying <ying.huang@intel.com>, ming.m.lin@intel.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>
 
-Replace "Inconisistent" with "Inconsistent" in
-drivers/scsi/qla2xxx/qla_init.c
+Am Montag, 6. Februar 2012, 16:13:37 schrieb Alan Stern:
+> On Mon, 6 Feb 2012, Huang Ying wrote:
+> 
+> > SSD becomes more and more popular, this makes it possible to put disk into
+> > low power state more often.  And request based runtime PM for scsi disk is
+> > more useful than open/close based one because disk is normally mounted at
+> > most time.
 
-Signed-off-by: Ra=C3=BAl Porcel <armin76@gentoo.org>
----
- drivers/scsi/qla2xxx/qla_init.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Yes.
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla=
-_init.c
-index 1fa067e..72f7aa3 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2230,7 +2230,7 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
- 	    nv->id[2] !=3D 'P' || nv->id[3] !=3D ' ' || nv->nvram_version < 1=
-) {
- 		/* Reset NVRAM data. */
- 		ql_log(ql_log_warn, vha, 0x0064,
--		    "Inconisistent NVRAM "
-+		    "Inconsistent NVRAM "
- 		    "detected: checksum=3D0x%x id=3D%c version=3D0x%x.\n",
- 		    chksum, nv->id[0], nv->nvram_version);
- 		ql_log(ql_log_warn, vha, 0x0065,
-@@ -4425,7 +4425,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
- 	    nv->nvram_version < __constant_cpu_to_le16(ICB_VERSION)) {
- 		/* Reset NVRAM data. */
- 		ql_log(ql_log_warn, vha, 0x006b,
--		    "Inconisistent NVRAM detected: checksum=3D0x%x id=3D%c "
-+		    "Inconsistent NVRAM detected: checksum=3D0x%x id=3D%c "
- 		    "version=3D0x%x.\n", chksum, nv->id[0], nv->nvram_version);
- 		ql_log(ql_log_warn, vha, 0x006c,
- 		    "Falling back to functioning (yet invalid -- WWPN) "
-@@ -5169,7 +5169,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
- 	    nv->nvram_version < __constant_cpu_to_le16(ICB_VERSION)) {
- 		/* Reset NVRAM data. */
- 		ql_log(ql_log_info, vha, 0x0073,
--		    "Inconisistent NVRAM detected: checksum=3D0x%x id=3D%c "
-+		    "Inconsistent NVRAM detected: checksum=3D0x%x id=3D%c "
- 		    "version=3D0x%x.\n", chksum, nv->id[0],
- 		    le16_to_cpu(nv->nvram_version));
- 		ql_log(ql_log_info, vha, 0x0074,
---=20
-1.7.3.4
+> > One known issue, because SCSI TEST_UNIT_READY will be put into request
+> > queue every 2 seconds by default, this makes it hard for disk to sleep.
+> > Maybe we can implement check_events callback in some other way?
+> > 
+> > [RFC 1/5] pm, runtime, Add resume notifier
+> > [RFC 2/5] scsi, pm, rename scsi_autopm_get/put_xxx to
+> > [RFC 3/5] scsi, pm, add pm_runtime_get/put in scsi request
+> > [RFC 4/5] scsi, pm, use autosuspend for scsi runtime PM
+> > [RFC 5/5] scsi, sd, pm, request based runtime PM support
+> 
+> Your whole approach is at the wrong level.  Runtime PM between I/O 
+> requests for block devices should be implemented in the block layer, 
+> not in the SCSI layer.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I must disagree. The block layer has no more information than the SCSI
+layer and lacks everything the lower layers know.
+
+> It also is much more difficult than your patches would indicate.  For 
+> example, some USB card readers indicate a media change every time they 
+> resume; therefore they must not be suspended while the device file is 
+> open.
+
+Actually they must not be suspended while they contain a medium,
+lest you drive the GUI and the user mad.
+ 
+> Another difficulty arises because some drivers need to send SCSI 
+> commands (such as SYNCHRONIZE CACHE) _while_ suspending or resuming.
+
+It seems to me that most of these difficulties go away if we strictly
+differentiate between host adapter and disks.
+
+First, the sr driver cannot really suspend a disk. It can spin down a disk,
+but that is not the same thing as suspending, because the disk is still
+functional. It may just return special sense codes. The sr driver just
+prepares devices for suspension.
+It is true, that the sr driver probably does have a few conditions under
+which a device should not be suspended (eg. error handling) but it
+lacks positive knowledge about when we may suspend.
+
+The same is also true for any higher layer.
+
+The problem of needing to do IO for suspension goes away if we
+treat the disk as always suspendable and use an active command
+as a condition for not suspending the storage device as opposed to the disk
+the problem goes away.
+
+	Regards
+		Oliver
