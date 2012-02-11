@@ -1,69 +1,152 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 00/12] libfc, libfcoe and fcoe updates for scsi-misc
-Date: Fri, 10 Feb 2012 17:17:54 -0800
-Message-ID: <20120211011754.7668.51489.stgit@localhost6.localdomain6>
+Subject: [PATCH 02/12] scsi_transport_fc: Add FDMI host attributes
+Date: Fri, 10 Feb 2012 17:18:04 -0800
+Message-ID: <20120211011804.7668.47035.stgit@localhost6.localdomain6>
+References: <20120211011754.7668.51489.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56003 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:54779 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753419Ab2BKBRz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2012 20:17:55 -0500
+	id S1754696Ab2BKBSF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2012 20:18:05 -0500
+In-Reply-To: <20120211011754.7668.51489.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Ross Brattain <ross.b.brattain@intel.com>, Neerav Parikh <neerav.parikh@intel.com>
 
-This series contains a variety of fixes and general
-improvements to the libfc, libfcoe and fcoe kernel
-modules.
+From: Neerav Parikh <neerav.parikh@intel.com>
 
-Note that this series resends Neerav Parikh's FDMI
-feature patch series that was previously posted to
-linux-scsi. It's a FC/FCoE feature, so I put it in
-my tree to make sure I keep track of it. If I should
-resend this series without it, please let me know,
-I would be happy to do so.
+This adds FC-GS Fabric Device Management Interface
+(FDMI) related attributes to fc_host_attr structure.
 
-Aside from the contributors own testing I ran
-basic tests against this series on scsi-misc on
-the day of this posting.
+This is in preparation for allowing FDMI attributes
+to be registered via libfc.
 
+Signed-off-by: Neerav Parikh <neerav.parikh@intel.com>
+Tested-by: Ross Brattain <ross.b.brattain@intel.com>
+Acked-by: Robert Love <robert.w.love@intel.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
+ drivers/scsi/scsi_transport_fc.c |   30 +++++++++++++++++++++++++++++-
+ include/scsi/scsi_transport_fc.h |   28 ++++++++++++++++++++++++++++
+ 2 files changed, 57 insertions(+), 1 deletions(-)
 
-Bhanu Prakash Gollapudi (2):
-      libfc: Fix panic in fc_exch_recv
-      libfc: Handle discovery failure during ctlr link down
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index f59d4a0..80fbe2a 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -313,7 +313,7 @@ static void fc_scsi_scan_rport(struct work_struct *work);
+ #define FC_STARGET_NUM_ATTRS 	3
+ #define FC_RPORT_NUM_ATTRS	10
+ #define FC_VPORT_NUM_ATTRS	9
+-#define FC_HOST_NUM_ATTRS	22
++#define FC_HOST_NUM_ATTRS	29
+ 
+ struct fc_internal {
+ 	struct scsi_transport_template t;
+@@ -399,6 +399,20 @@ static int fc_host_setup(struct transport_container *tc, struct device *dev,
+ 	fc_host->max_npiv_vports = 0;
+ 	memset(fc_host->serial_number, 0,
+ 		sizeof(fc_host->serial_number));
++	memset(fc_host->manufacturer, 0,
++		sizeof(fc_host->manufacturer));
++	memset(fc_host->model, 0,
++		sizeof(fc_host->model));
++	memset(fc_host->model_description, 0,
++		sizeof(fc_host->model_description));
++	memset(fc_host->hardware_version, 0,
++		sizeof(fc_host->hardware_version));
++	memset(fc_host->driver_version, 0,
++		sizeof(fc_host->driver_version));
++	memset(fc_host->firmware_version, 0,
++		sizeof(fc_host->firmware_version));
++	memset(fc_host->optionrom_version, 0,
++		sizeof(fc_host->optionrom_version));
+ 
+ 	fc_host->port_id = -1;
+ 	fc_host->port_type = FC_PORTTYPE_UNKNOWN;
+@@ -1513,6 +1527,13 @@ fc_private_host_rd_attr_cast(permanent_port_name, "0x%llx\n", 20,
+ fc_private_host_rd_attr(maxframe_size, "%u bytes\n", 20);
+ fc_private_host_rd_attr(max_npiv_vports, "%u\n", 20);
+ fc_private_host_rd_attr(serial_number, "%s\n", (FC_SERIAL_NUMBER_SIZE +1));
++fc_private_host_rd_attr(manufacturer, "%s\n", FC_SERIAL_NUMBER_SIZE + 1);
++fc_private_host_rd_attr(model, "%s\n", FC_SYMBOLIC_NAME_SIZE + 1);
++fc_private_host_rd_attr(model_description, "%s\n", FC_SYMBOLIC_NAME_SIZE + 1);
++fc_private_host_rd_attr(hardware_version, "%s\n", FC_VERSION_STRING_SIZE + 1);
++fc_private_host_rd_attr(driver_version, "%s\n", FC_VERSION_STRING_SIZE + 1);
++fc_private_host_rd_attr(firmware_version, "%s\n", FC_VERSION_STRING_SIZE + 1);
++fc_private_host_rd_attr(optionrom_version, "%s\n", FC_VERSION_STRING_SIZE + 1);
+ 
+ 
+ /* Dynamic Host Attributes */
+@@ -2208,6 +2229,13 @@ fc_attach_transport(struct fc_function_template *ft)
+ 		SETUP_HOST_ATTRIBUTE_RD_NS(npiv_vports_inuse);
+ 	}
+ 	SETUP_HOST_ATTRIBUTE_RD(serial_number);
++	SETUP_HOST_ATTRIBUTE_RD(manufacturer);
++	SETUP_HOST_ATTRIBUTE_RD(model);
++	SETUP_HOST_ATTRIBUTE_RD(model_description);
++	SETUP_HOST_ATTRIBUTE_RD(hardware_version);
++	SETUP_HOST_ATTRIBUTE_RD(driver_version);
++	SETUP_HOST_ATTRIBUTE_RD(firmware_version);
++	SETUP_HOST_ATTRIBUTE_RD(optionrom_version);
+ 
+ 	SETUP_HOST_ATTRIBUTE_RD(port_id);
+ 	SETUP_HOST_ATTRIBUTE_RD(port_type);
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 2a65167..0135cbc 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -486,6 +486,13 @@ struct fc_host_attrs {
+ 	u32 maxframe_size;
+ 	u16 max_npiv_vports;
+ 	char serial_number[FC_SERIAL_NUMBER_SIZE];
++	char manufacturer[FC_SERIAL_NUMBER_SIZE];
++	char model[FC_SYMBOLIC_NAME_SIZE];
++	char model_description[FC_SYMBOLIC_NAME_SIZE];
++	char hardware_version[FC_VERSION_STRING_SIZE];
++	char driver_version[FC_VERSION_STRING_SIZE];
++	char firmware_version[FC_VERSION_STRING_SIZE];
++	char optionrom_version[FC_VERSION_STRING_SIZE];
+ 
+ 	/* Dynamic Attributes */
+ 	u32 port_id;
+@@ -541,6 +548,20 @@ struct fc_host_attrs {
+ 	(((struct fc_host_attrs *)(x)->shost_data)->max_npiv_vports)
+ #define fc_host_serial_number(x)	\
+ 	(((struct fc_host_attrs *)(x)->shost_data)->serial_number)
++#define fc_host_manufacturer(x)	\
++	(((struct fc_host_attrs *)(x)->shost_data)->manufacturer)
++#define fc_host_model(x)	\
++	(((struct fc_host_attrs *)(x)->shost_data)->model)
++#define fc_host_model_description(x)	\
++	(((struct fc_host_attrs *)(x)->shost_data)->model_description)
++#define fc_host_hardware_version(x)	\
++	(((struct fc_host_attrs *)(x)->shost_data)->hardware_version)
++#define fc_host_driver_version(x)	\
++	(((struct fc_host_attrs *)(x)->shost_data)->driver_version)
++#define fc_host_firmware_version(x)	\
++	(((struct fc_host_attrs *)(x)->shost_data)->firmware_version)
++#define fc_host_optionrom_version(x)	\
++	(((struct fc_host_attrs *)(x)->shost_data)->optionrom_version)
+ #define fc_host_port_id(x)	\
+ 	(((struct fc_host_attrs *)(x)->shost_data)->port_id)
+ #define fc_host_port_type(x)	\
+@@ -700,6 +721,13 @@ struct fc_function_template {
+ 	unsigned long	show_host_supported_speeds:1;
+ 	unsigned long	show_host_maxframe_size:1;
+ 	unsigned long	show_host_serial_number:1;
++	unsigned long	show_host_manufacturer:1;
++	unsigned long	show_host_model:1;
++	unsigned long	show_host_model_description:1;
++	unsigned long	show_host_hardware_version:1;
++	unsigned long	show_host_driver_version:1;
++	unsigned long	show_host_firmware_version:1;
++	unsigned long	show_host_optionrom_version:1;
+ 	/* host dynamic attributes */
+ 	unsigned long	show_host_port_id:1;
+ 	unsigned long	show_host_port_type:1;
 
-Neerav Parikh (6):
-      scsi_transport_fc: Add FDMI host attributes
-      scsi_transport_fc: Getting FC Port Speed in sync with FC-GS
-      libfc: Make the libfc Common Transport(CT) code generic
-      libfc: Add support for FDMI
-      fcoe: Add support for FDMI in fcoe
-      fcoe: Allow exposing FDMI attributes via sysfs
-
-Robert Love (4):
-      libfcoe: Don't KERN_ERR on netdev notification
-      fcoe: Rename out_nomod label to out_putmod
-      fcoe: Do not switch context in vport_delete callback
-      fcoe: Remove reference counting on 'stuct fcoe_interface'
-
-
- drivers/scsi/fcoe/fcoe.c           |  159 ++++++++++------
- drivers/scsi/fcoe/fcoe.h           |    3 
- drivers/scsi/fcoe/fcoe_transport.c |    4 
- drivers/scsi/libfc/fc_disc.c       |    7 +
- drivers/scsi/libfc/fc_elsct.c      |    3 
- drivers/scsi/libfc/fc_exch.c       |    7 -
- drivers/scsi/libfc/fc_lport.c      |  227 ++++++++++++++++++++++-
- drivers/scsi/scsi_transport_fc.c   |   30 +++
- include/scsi/fc/fc_ms.h            |  213 +++++++++++++++++++++
- include/scsi/fc_encode.h           |  363 +++++++++++++++++++++++++++++++++++-
- include/scsi/libfc.h               |   11 +
- include/scsi/scsi_transport_fc.h   |   32 +++
- 12 files changed, 976 insertions(+), 83 deletions(-)
- create mode 100644 include/scsi/fc/fc_ms.h
-
--- 
-Thanks, //Rob
