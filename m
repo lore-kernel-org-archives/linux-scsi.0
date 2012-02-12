@@ -1,40 +1,26 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 1/4] [SCSI] ufshcd: UFS Host controller driver
-Date: Sat, 11 Feb 2012 19:52:08 +0000
-Message-ID: <201202111952.08745.arnd@arndb.de>
-References: <1328158649-4137-1-git-send-email-vinholikatti@gmail.com> <CAGxe1ZGDy-MWetg_rki2ms1Yy0dn4WqfrJgK+wPrucojyt-fHw@mail.gmail.com> <CALMYJDtCc_M8dOna1wfeLai1Fjj3NfcnJb7AcFNgMdvGQtuamA@mail.gmail.com>
+From: "SYSTEM ADMIN." <noreply@mail.com>
+Subject: Account Owner....
+Date: Sun, 12 Feb 2012 08:32:51 +0800
+Message-ID: <20120212003335.M79485@mail.com>
+Reply-To: upgradeteamalert@w.cn
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CALMYJDtCc_M8dOna1wfeLai1Fjj3NfcnJb7AcFNgMdvGQtuamA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Santosh Y <santoshsy@gmail.com>
-Cc: Girish K S <girish.shivananjappa@linaro.org>, Vinayak Holikatti <vinholikatti@gmail.com>, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, saugata.das@linaro.org, venkat@linaro.org, vishak.g@samsung.com, k.rajesh@samsung.com, yejin.moon@samsung.com, Sree kumar <sreekumar.c@samsung.com>
+Content-Type: text/plain;
+	charset=big5
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pop.nfu.edu.tw ([140.130.1.8]:47934 "EHLO sunws.nfu.edu.tw"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751274Ab2BLIsL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 12 Feb 2012 03:48:11 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Friday 10 February 2012, Santosh Y wrote:
-> > UFS host controller specification Section 7.2.1, step 11,  mentions
-> > that the aggregation control register should be set if run/stop bit is
-> > not enabled.
-> > But In this case the run/ stop bit is set above before configuring the
-> > aggregation register. Please check for the same in other places from
-> > where it is called.
-> >
-> 
-> The spec mentions, (Section 7.2.1, step 11)
-> "UTRIACR initialization may be executed at any time when the Run/Stop
-> register (UTRLRSR)
-> is not enabled or when no requests are outstanding."
-> 
-> At this point in the code, during execution, there will not be any
-> outstanding requests.
+You Must Login With Your Full Email:
 
-One meta-comment: When you reply on a long email like this, please
-make sure you only quote the minimum amount of lines from the original
-email to give enough context for your comment. Otherwise it becomes
-much more time consuming to read your reply and readers might miss
-your contribution in the middle of a long quote.
+Your mailbox has exceeded the storage limit set by your administrator, you may
+not be able to send or receive new mail until you re-validate your mailbox.
+copy or click this below link and fillin the form to re-validate your mailbox
 
-	Arnd
+http://mental-worship.co.cc/lastsecured/yeah_net.htm
+
+Thanks
+System Administrator
