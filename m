@@ -1,106 +1,58 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [RFC 0/5] scsi, sd, pm, request based runtime PM for scsi disk
-Date: Sun, 12 Feb 2012 21:00:05 +0100
-Message-ID: <201202122100.05349.oliver@neukum.org>
-References: <Pine.LNX.4.44L0.1202121255400.18114-100000@netrider.rowland.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Pe: [PATCH v5 1/3] virtio-scsi: first version
+Date: Sun, 12 Feb 2012 14:16:17 -0600
+Message-ID: <1329077777.21613.60.camel@dabdike.int.hansenpartnership.com>
+References: <OF2D939B55.7C07E33B-ONC125799C.0032B83A-C125799C.0036282C@de.ibm.com>
+	 <4F30F4EE.4080607@redhat.com> <4F311154.9080407@de.ibm.com>
+	 <4F3119A0.7080005@redhat.com> <4F312492.1040002@de.ibm.com>
+	 <OFAFB86CAE.9917478D-ONC125799D.004AF231-C125799D.004CE6D2@de.ibm.com>
+	 <4F313526.2050907@redhat.com>
+	 <OF36197712.1A42EB9E-ONC125799E.0049E3C2-C125799E.004AD4BF@de.ibm.com>
+	 <4F3390FB.80107@redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:37448 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752494Ab2BLT5k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Feb 2012 14:57:40 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1202121255400.18114-100000@netrider.rowland.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33610 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753929Ab2BLUQV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 12 Feb 2012 15:16:21 -0500
+In-Reply-To: <4F3390FB.80107@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Huang Ying <ying.huang@intel.com>, ming.m.lin@intel.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Christian Hoff <christian.hoff@de.ibm.com>, BORNTRAE@linux.vnet.ibm.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, rusty@rustcorp.com.au
 
-Am Sonntag, 12. Februar 2012, 19:05:51 schrieb Alan Stern:
-> On Sat, 11 Feb 2012, Oliver Neukum wrote:
+On Thu, 2012-02-09 at 10:25 +0100, Paolo Bonzini wrote:
+> On 02/08/2012 02:37 PM, Christian Hoff wrote:
+> > Again, I have already done much testing with virtio-scsi and can confirm
+> > that the code is working flawlessly. In my opinion, virtio-scsi is a
+> > worthwhile addition to virtio-block and should be considered for inclusion
+> > into mainline kernel code.
 > 
-> > > Your whole approach is at the wrong level.  Runtime PM between I/O 
-> > > requests for block devices should be implemented in the block layer, 
-> > > not in the SCSI layer.
-> > 
-> > I must disagree. The block layer has no more information than the SCSI
-> > layer and lacks everything the lower layers know.
+> Thank you very much!
 > 
-> But the block layer handles all block devices, not just SCSI ones.  You 
-> would end up duplicating code unnecessarily.
-> 
-> What pertinent information is known by the SCSI and lower layers but
-> not the block layer?
+> James, will you include virtio-scsi in 3.4?
 
-It doesn't know what consequences suspending a host controller
-has for the devices attached to it. It simply cannot know because
-that depends on the hardware.
+Well, no-one's yet answered the question I had about why.  virtio-scsi
+seems to be a basic duplication of virtio-blk except that it seems to
+fix some problems virtio-blk has.  Namely queue parameter discover,
+which virtio-blk doesn't seem to do.  There may also be a reason to cut
+the stack lower down.  Error handling is most often cited for this, but
+no-one's satisfactorily explaned why it's better to do error handling in
+the guest instead of the host.
 
-A very good example is the media change problem of the media readers.
-For example an iSCSI virtual host controller can suspend while a command
-is in flight if the network controller used can do remote wakeup well enough.
+Could someone please explain to me why you can't simply fix virtio-blk?
+Or would virtio-blk maintainers give a reason why they're unwilling to
+have it fixed?
 
-> > It seems to me that most of these difficulties go away if we strictly
-> > differentiate between host adapter and disks.
-> 
-> To be more precise, you mean "disk drives".  You can suspend a drive,
-> but you can't suspend a disk.
+This isn't a "no" by the way: we have absolutely hideous virtual drivers
+for other virtualisation systems in SCSI which should also have been in
+block, except that's not the way the various virt people think, so I'm
+willing to extend KVM the same courtesy ... I'd just really like to know
+that the virtio-blk situation is intractable before I do.
 
-Yes.
- 
-> > It is true, that the sr driver probably does have a few conditions under
-> > which a device should not be suspended (eg. error handling) but it
-> > lacks positive knowledge about when we may suspend.
-> > 
-> > The same is also true for any higher layer.
-> 
-> Then what's wrong with handling runtime suspend in the higher layers?
+James
 
-They know some reasons to not suspend, but not all reasons.
- 
-> > The problem of needing to do IO for suspension goes away if we
-> > treat the disk as always suspendable and use an active command
-> > as a condition for not suspending the storage device as opposed to the disk
-> > the problem goes away.
-> 
-> I don't entirely understand.  What's the difference between "the
-> storage device" and "the disk"?
 
-The storage device == a USB device that implements the storage class
-the disk == a SCSI disk drive
- 
-> However, using an active command as the condition is not the right 
-> thing to do.  It would use extra energy and slow everything down to 
-> suspend and resume the device between every pair of commands that were 
-> separated by a slight time delay.  There needs to be a timeout.
-
-Yes, we can use the same heuristics as everywhere.
-command queued -> autopm_get
-command finished -> autopm_put
-
-but for the USB host adapter, not the sr device
-
-> Furthermore, if you use active commands as the condition for 
-> suspending, what do you do when the act of suspending causes a command 
-> to be sent?  It is necessary to distinguish between ordinary commands 
-> and those that are PM-related.
-
-No. This problem goes away if you correctly make the distinction between
-host controller/storage device and the disk drive.
-You use the "active command standard" for the host controller.
-Then you need not care about the commands needed to suspend a disk drive.
-You cannot suspend the host controller while the disk drive is being suspended
-anyway, as the tree constraint prevents it.
-
-For the disk drive you just declare them busy restarting the timeout as a command
-goes down to the hardware. There is an interesting case about what you do if
-the generic layer wants to autosuspend an sr device which has a command queued.
-I propose we catch that case in sr_suspend() and return -EBUSY in
-the autosuspend with command in flight case.
-
-And I admit we will need to special case the stupid card readers.
-
-	Regards
-		Oliver
