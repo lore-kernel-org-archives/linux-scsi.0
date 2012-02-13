@@ -1,59 +1,94 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
- of the staging area
-Date: Mon, 13 Feb 2012 19:31:40 +0000
-Message-ID: <6E21E5352C11B742B20C142EB499E0481B70D5E0@TK5EX14MBXC128.redmond.corp.microsoft.com>
-References: <1328825688-4337-1-git-send-email-kys@microsoft.com>
-	 <20120210180212.GA605@kroah.com> <1329161318.20751.30.camel@dabdike>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [RFC PATCH 1/6] ACPI: Introduce ACPI D3_COLD state support
+Date: Mon, 13 Feb 2012 21:25:15 +0100
+Message-ID: <201202132125.15537.rjw@sisk.pl>
+References: <1329124271-29464-1-git-send-email-ming.m.lin@intel.com> <1329124271-29464-2-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1329161318.20751.30.camel@dabdike>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>, Greg KH <gregkh@linuxfoundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1329124271-29464-2-git-send-email-ming.m.lin@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86amJvdHRvbWxleUBwYXJhbGxlbHMuY29tXQ0KPiBTZW50OiBNb25kYXksIEZlYnJ1
-YXJ5IDEzLCAyMDEyIDI6MjkgUE0NCj4gVG86IEdyZWcgS0gNCj4gQ2M6IEtZIFNyaW5pdmFzYW47
-IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5v
-cmc7DQo+IHZpcnR1YWxpemF0aW9uQGxpc3RzLm9zZGwub3JnOyBvaGVyaW5nQHN1c2UuY29tOyBo
-Y2hAaW5mcmFkZWFkLm9yZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJuZWwub3JnDQo+IFN1Ympl
-Y3Q6IFJlOiBbUEFUQ0ggMS8xXSBTdGFnaW5nOiBodjogc3RvcnZzYzogTW92ZSB0aGUgc3RvcmFn
-ZSBkcml2ZXIgb3V0IG9mIHRoZQ0KPiBzdGFnaW5nIGFyZWENCj4gDQo+IE9uIEZyaSwgMjAxMi0w
-Mi0xMCBhdCAxMDowMiAtMDgwMCwgR3JlZyBLSCB3cm90ZToNCj4gPiBPbiBUaHUsIEZlYiAwOSwg
-MjAxMiBhdCAwMjoxNDo0OFBNIC0wODAwLCBLLiBZLiBTcmluaXZhc2FuIHdyb3RlOg0KPiA+ID4g
-VGhlIHN0b3JhZ2UgZHJpdmVyIChzdG9ydnNjX2Rydi5jKSBoYW5kbGVzIGFsbCBibG9jayBzdG9y
-YWdlIGRldmljZXMNCj4gPiA+IGFzc2lnbmVkIHRvIExpbnV4IGd1ZXN0cyBob3N0ZWQgb24gSHlw
-ZXItVi4gVGhpcyBkcml2ZXIgaGFzIGJlZW4gaW4gdGhlDQo+ID4gPiBzdGFnaW5nIHRyZWUgZm9y
-IGEgd2hpbGUgYW5kIHRoaXMgcGF0Y2ggbW92ZXMgaXQgb3V0IG9mIHRoZSBzdGFnaW5nIGFyZWEu
-DQo+ID4gPg0KPiA+ID4gSmFtZXMgd2FzIHdpbGxpbmcgdG8gYXBwbHkgdGhpcyBwYXRjaCBkdXJp
-bmcgdGhlIDMuMy1yYyBwaGFzZSBhbmQgYSBkZWNpc2lvbg0KPiA+ID4gd2FzIHRha2VuIHRvIGRl
-ZmVyIHRoaXMgdG8gMy40IHNpbmNlIEdyZWcgaGFkIHF1ZXVlZCB1cCBhIGJ1bmNoIG9mIHN0b3J2
-c2MNCj4gPiA+IHBhdGNoZXMgZm9yIDMuNC4gTm93IHRoYXQgR3JlZyBoYXMgYXBwbGllZCBhbGwg
-b2YgdGhlIHBlbmRpbmcgc3RvcnZzYyBwYXRjaGVzLA0KPiA+ID4gSSBhbSBzZW5kaW5nIHRoaXMg
-cGF0Y2ggdG8gbW92ZSB0aGlzIGRyaXZlciBvdXQgb2Ygc3RhZ2luZy4gQmFzZWQgb24gSmFtZXMn
-DQo+ID4gPiByZWNvbW1lbmRhdGlvbiwgdGhpcyBwYXRjaCBnZXRzIHJpZCBvZiB0aGUgdW5uZWVk
-ZWQgZmlsZXMgaW4gdGhlIHN0YWdpbmcvaHYNCj4gPiA+IGRpcmVjdG9yeS4NCj4gPiA+DQo+ID4g
-PiBTaWduZWQtb2ZmLWJ5OiBLLiBZLiBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT4NCj4g
-PiA+IC0tLQ0KPiA+ID4gIGRyaXZlcnMvc2NzaS9LY29uZmlnICAgICAgICAgICAgICAgICAgICAg
-ICB8ICAgIDcgKysrKysrKw0KPiA+ID4gIGRyaXZlcnMvc2NzaS9NYWtlZmlsZSAgICAgICAgICAg
-ICAgICAgICAgICB8ICAgIDMgKysrDQo+ID4gPiAgZHJpdmVycy97c3RhZ2luZy9odiA9PiBzY3Np
-fS9zdG9ydnNjX2Rydi5jIHwgICAgMA0KPiA+ID4gIGRyaXZlcnMvc3RhZ2luZy9LY29uZmlnICAg
-ICAgICAgICAgICAgICAgICB8ICAgIDIgLS0NCj4gPiA+ICBkcml2ZXJzL3N0YWdpbmcvTWFrZWZp
-bGUgICAgICAgICAgICAgICAgICAgfCAgICAxIC0NCj4gPiA+ICBkcml2ZXJzL3N0YWdpbmcvaHYv
-S2NvbmZpZyAgICAgICAgICAgICAgICAgfCAgICA1IC0tLS0tDQo+ID4gPiAgZHJpdmVycy9zdGFn
-aW5nL2h2L01ha2VmaWxlICAgICAgICAgICAgICAgIHwgICAgMyAtLS0NCj4gPiA+ICBkcml2ZXJz
-L3N0YWdpbmcvaHYvVE9ETyAgICAgICAgICAgICAgICAgICAgfCAgICA1IC0tLS0tDQo+ID4gPiAg
-OCBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspLCAxNiBkZWxldGlvbnMoLSkNCj4gPiA+
-ICByZW5hbWUgZHJpdmVycy97c3RhZ2luZy9odiA9PiBzY3NpfS9zdG9ydnNjX2Rydi5jICgxMDAl
-KQ0KPiA+ID4gIGRlbGV0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3N0YWdpbmcvaHYvS2NvbmZpZw0K
-PiA+ID4gIGRlbGV0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3N0YWdpbmcvaHYvTWFrZWZpbGUNCj4g
-PiA+ICBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zdGFnaW5nL2h2L1RPRE8NCj4gPg0KPiA+
-IEphbWVzLCBjYW4gSSBhZGQgeW91ciBBY2tlZC1ieTogZm9yIHRoaXMgcGF0Y2g/DQo+IA0KPiBZ
-ZXMgLi4uIGkgZmluYWxseSBtYW5hZ2VkIHRvIHB1bGwgeW91ciB0cmVlIGRvd24gYW5kIHZlcmlm
-eSBpdC4NCj4gDQo+IEFja2VkLWJ5OiBKYW1lcyBCb3R0b21sZXkgPEpCb3R0b21sZXlAUGFyYWxs
-ZWxzLmNvbT4NCg0KVGhhbmsgeW91Lg0KDQpLLiBZDQo=
+On Monday, February 13, 2012, Lin Ming wrote:
+> From: Zhang Rui <rui.zhang@intel.com>
+> 
+> If a device has _PR3._ON, it means the device supports D3_HOT.
+> If a device has _PR3._OFF, it means the device supports D3_COLD.
+> Add the ability to validate and enter D3_COLD state in ACPI.
+> 
+> Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+
+This is supposed to be ACPI 5.0 support, right?
+
+So can anyone please tell me what part of the ACPI 5.0 spec is the
+basis of this patch, because I can't see that immediately?
+
+The only places where D3Cold is _mentioned_ are Section 7.2.12 (_PRE, which
+appears to be new in 5.0), Section 7.2.20 (_S0W), Section 7.2.21 (_S1W),
+Section 7.2.22 (_S2W), Section 7.2.23 (_S3W) and Section 7.2.24 (_S4W).
+None of them mentions those _PR3._ON and _PR3._OFF things above.
+
+Moreover, my understanding of the spec is that D3Cold means all of the
+power resources returned by _PR3 are "off" (whereas some of them will be
+"on" in D3hot).
+
+> ---
+>  drivers/acpi/power.c |    4 ++--
+>  drivers/acpi/scan.c  |   10 +++++++++-
+>  2 files changed, 11 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
+> index 9ac2a9f..0d681fb 100644
+> --- a/drivers/acpi/power.c
+> +++ b/drivers/acpi/power.c
+> @@ -500,14 +500,14 @@ int acpi_power_transition(struct acpi_device *device, int state)
+>  {
+>  	int result;
+>  
+> -	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3))
+> +	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+>  		return -EINVAL;
+>  
+>  	if (device->power.state == state)
+>  		return 0;
+>  
+>  	if ((device->power.state < ACPI_STATE_D0)
+> -	    || (device->power.state > ACPI_STATE_D3))
+> +	    || (device->power.state > ACPI_STATE_D3_COLD))
+>  		return -ENODEV;
+>  
+>  	/* TBD: Resources must be ordered. */
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 8ab80ba..a9d4391 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -881,8 +881,16 @@ static int acpi_bus_get_power_flags(struct acpi_device *device)
+>  
+>  			device->power.flags.power_resources = 1;
+>  			ps->flags.valid = 1;
+> -			for (j = 0; j < ps->resources.count; j++)
+> +			for (j = 0; j < ps->resources.count; j++) {
+>  				acpi_bus_add_power_resource(ps->resources.handles[j]);
+> +				/* Check for D3_COLD support. _PR3._OFF equals D3_COLD ? */
+> +				if (i == ACPI_STATE_D3) {
+> +					if (j == 0)
+> +						device->power.states[ACPI_STATE_D3_COLD].flags.valid = 1;
+> +					status = acpi_get_handle(ps->resources.handles[j], "_OFF",  &handle);
+> +					device->power.states[ACPI_STATE_D3_COLD].flags.valid &= ACPI_SUCCESS(status);
+> +				}
+> +			}
+
+Sorry, but this doesn't make sense to me.  Power resources always have
+the _OFF method, right?
+
+>  		}
+>  
+>  		/* Evaluate "_PSx" to see if we can do explicit sets */
+> 
+
+Rafael
