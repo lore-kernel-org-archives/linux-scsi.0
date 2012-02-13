@@ -1,147 +1,90 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 4/4] qla_target/tcm_qla2xxx: Fix TMR_ABORT_TASK with target mode usage
-Date: Mon, 13 Feb 2012 11:42:27 +0000
-Message-ID: <1329133347-13359-5-git-send-email-nab@linux-iscsi.org>
-References: <1329133347-13359-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: Pe: [PATCH v5 1/3] virtio-scsi: first version
+Date: Mon, 13 Feb 2012 04:40:06 -0800
+Message-ID: <1329136806.9333.383.camel@haakon2.linux-iscsi.org>
+References: <OF2D939B55.7C07E33B-ONC125799C.0032B83A-C125799C.0036282C@de.ibm.com>
+	 <4F30F4EE.4080607@redhat.com> <4F311154.9080407@de.ibm.com>
+	 <4F3119A0.7080005@redhat.com> <4F312492.1040002@de.ibm.com>
+	 <OFAFB86CAE.9917478D-ONC125799D.004AF231-C125799D.004CE6D2@de.ibm.com>
+	 <4F313526.2050907@redhat.com>
+	 <OF36197712.1A42EB9E-ONC125799E.0049E3C2-C125799E.004AD4BF@de.ibm.com>
+	 <4F3390FB.80107@redhat.com>
+	 <1329077777.21613.60.camel@dabdike.int.hansenpartnership.com>
+	 <4F38B657.7060405@de.ibm.com>  <4F38C27E.7030300@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1329133347-13359-1-git-send-email-nab@linux-iscsi.org>
+In-Reply-To: <4F38C27E.7030300@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>, Madhuranath Iyengar <mni@risingtidesystems.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: dlaor@redhat.com
+Cc: Christian Borntraeger <borntraeger@de.ibm.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Hoff <christian.hoff@de.ibm.com>, borntrae@linux.vnet.ibm.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, rusty@rustcorp.com.au, Stefan Hajnoczi <stefanha@gmail.com>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Hi Dor, James & Co,
 
-This patch fixes qla_target.c code use the proper TMR_ABORT_TASK
-that target-core is expecting, instead of the incorrect ABORT_TASK
-message code usage from include/scsi/scsi.h.
+On Mon, 2012-02-13 at 09:57 +0200, Dor Laor wrote:
+> On 02/13/2012 09:05 AM, Christian Borntraeger wrote:
+> > On 12/02/12 21:16, James Bottomley wrote:
+> >> Well, no-one's yet answered the question I had about why.
+> >
+> > Just to give one example from a different angle:
+> > In the big datacenters tape libraries are still very important, and lots
+> > of them have a scsi attachement. virtio-blk certainly is not the right
+> > way to handle those. Furthermore it seems even pretty hard to craft
+> > a virtio-tape since most of those libraries have vendor specific library
+> > controls (via sg). We would need to duplicate scsi generic (hint, hint :-)
+> >
+> >> virtio-scsi seems to be a basic duplication of virtio-blk except that it seems to
+> >> fix some problems virtio-blk has.  Namely queue parameter discover,
+> >> which virtio-blk doesn't seem to do.  There may also be a reason to cut
+> >> the stack lower down.  Error handling is most often cited for this, but
+> >> no-one's satisfactorily explaned why it's better to do error handling in
+> >> the guest instead of the host.
+> >>
+> >> Could someone please explain to me why you can't simply fix virtio-blk?
+> >
+> > I dont think that virtio-scsi will replace virtio-blk everywhere. For non-scsi
+> > block devices, image files or logical volumes virtio-blk seems to be the right
+> > approach, I think.
+> 
+> +1
+> 
+> virtio-scsi is superior w.r.t:
+>    - Device support: tapes, cdroms, other
 
-It also changes tgt_ops->handle_tmr() -> tcm_qla2xxx_handle_tmr()
-to accept referenced tag for TMR_ABORT_TASK that is setup to
-se_tmr_req->ref_task_tag.
+AFAICT any type of non TYPE_DISK struct scsi_device passthrough is going
+to currently require virtio-scsi in order to work.
 
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/scsi/qla2xxx/qla_target.c  |   15 +++++++--------
- drivers/scsi/qla2xxx/qla_target.h  |    2 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |    6 +++++-
- drivers/scsi/qla2xxx/tcm_qla2xxx.h |    3 ++-
- 4 files changed, 15 insertions(+), 11 deletions(-)
+>    - Does guest-host mapped multipath
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 4b24457..ac203ef 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1304,7 +1304,8 @@ static int __qla_tgt_24xx_handle_abts(struct scsi_qla_host *vha,
- 	mcmd->sess = sess;
- 	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
- 
--	rc = ha->tgt_ops->handle_tmr(mcmd, 0, ABORT_TASK);
-+	rc = ha->tgt_ops->handle_tmr(mcmd, 0, TMR_ABORT_TASK,
-+				abts->exchange_addr_to_abort);
- 	if (rc != 0) {
- 		printk(KERN_ERR "qla_target(%d):  tgt_ops->handle_tmr()"
- 				" failed: %d", vha->vp_idx, rc);
-@@ -1428,7 +1429,7 @@ void qla_tgt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
- 	unsigned long flags;
- 
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xe116, "TM response mcmd"
--		" (%p) status %#x state %#x", mcmd, mcmd->se_tmr_req->response,
-+		" (%p) status %#x state %#x", mcmd, mcmd->fc_tm_rsp,
- 		mcmd->flags);
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
-@@ -1436,7 +1437,7 @@ void qla_tgt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
- 		qla_tgt_send_notify_ack(vha, &mcmd->orig_iocb.imm_ntfy,
- 			0, 0, 0, 0, 0, 0);
- 	else {
--		if (mcmd->se_tmr_req->function == ABORT_TASK)
-+		if (mcmd->se_tmr_req->function == TMR_ABORT_TASK)
- 			qla_tgt_24xx_send_abts_resp(vha, &mcmd->orig_iocb.abts,
- 				mcmd->fc_tm_rsp, false);
- 		else
-@@ -2804,7 +2805,7 @@ static int qla_tgt_issue_task_mgmt(struct qla_tgt_sess *sess, uint32_t lun,
- 		return -ENOSYS;
- 	}
- 
--	res = ha->tgt_ops->handle_tmr(mcmd, lun, tmr_func);
-+	res = ha->tgt_ops->handle_tmr(mcmd, lun, tmr_func, 0);
- 	if (res != 0) {
- 		printk(KERN_ERR "qla_target(%d): tgt_ops->handle_tmr() failed: %d\n",
- 			    sess->vha->vp_idx, res);
-@@ -2857,7 +2858,6 @@ static int __qla_tgt_abort_task(struct scsi_qla_host *vha,
- 	struct qla_tgt_mgmt_cmd *mcmd;
- 	uint32_t lun, unpacked_lun;
- 	int rc;
--	uint16_t tag;
- 
- 	mcmd = mempool_alloc(qla_tgt_mgmt_cmd_mempool, GFP_ATOMIC);
- 	if (mcmd == NULL) {
-@@ -2870,12 +2870,11 @@ static int __qla_tgt_abort_task(struct scsi_qla_host *vha,
- 	mcmd->sess = sess;
- 	memcpy(&mcmd->orig_iocb.imm_ntfy, iocb, sizeof(mcmd->orig_iocb.imm_ntfy));
- 
--	tag = le16_to_cpu(iocb->u.isp2x.seq_id);
--
- 	lun = a->u.isp24.fcp_cmnd.lun;
- 	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
- 
--	rc = ha->tgt_ops->handle_tmr(mcmd, unpacked_lun, ABORT_TASK);
-+	rc = ha->tgt_ops->handle_tmr(mcmd, unpacked_lun, TMR_ABORT_TASK,
-+				le16_to_cpu(iocb->u.isp2x.seq_id));
- 	if (rc != 0) {
- 		printk(KERN_ERR "qla_target(%d): tgt_ops->handle_tmr()"
- 			" failed: %d\n", vha->vp_idx, rc);
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index b98b923..935ea32 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -634,7 +634,7 @@ struct qla_tgt_func_tmpl {
- 	int (*handle_cmd)(struct scsi_qla_host *, struct qla_tgt_cmd *,
- 			unsigned char *, uint32_t, int, int, int);
- 	int (*handle_data)(struct qla_tgt_cmd *);
--	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, uint32_t, uint8_t);
-+	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, uint32_t, uint8_t, uint32_t);
- 	void (*free_cmd)(struct qla_tgt_cmd *);
- 	void (*free_session)(struct qla_tgt_sess *);
- 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 71de7a6..5456af2 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -668,7 +668,8 @@ int tcm_qla2xxx_handle_data(struct qla_tgt_cmd *cmd)
- /*
-  * Called from qla_target.c:qla_tgt_issue_task_mgmt()
-  */
--int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun, uint8_t tmr_func)
-+int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
-+			uint8_t tmr_func, uint32_t tag)
- {
- 	struct qla_tgt_sess *sess = mcmd->sess;
- 	struct se_session *se_sess = sess->se_sess;
-@@ -688,6 +689,9 @@ int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun, uint8_t
- 	 * Save the se_tmr_req for qla_tgt_xmit_tm_rsp() callback into LLD code
- 	 */
- 	mcmd->se_tmr_req = &se_cmd->se_tmr_req;
-+
-+	if (tmr_func == TMR_ABORT_TASK)
-+		mcmd->se_tmr_req->ref_task_tag = tag;
- 	/*
- 	 * Locate the underlying TCM struct se_lun from sc->device->lun
- 	 */
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-index 9dbac00..e700c15 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-@@ -139,7 +139,8 @@ extern int tcm_qla2xxx_handle_cmd(struct scsi_qla_host *, struct qla_tgt_cmd *,
- 			unsigned char *, uint32_t, int, int, int);
- extern int tcm_qla2xxx_new_cmd_map(struct se_cmd *);
- extern int tcm_qla2xxx_handle_data(struct qla_tgt_cmd *);
--extern int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *, uint32_t, uint8_t);
-+extern int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *, uint32_t,
-+				uint8_t, uint32_t);
- extern int tcm_qla2xxx_queue_data_in(struct se_cmd *);
- extern int tcm_qla2xxx_queue_status(struct se_cmd *);
- extern int tcm_qla2xxx_queue_tm_rsp(struct se_cmd *);
--- 
-1.7.2.5
+The logic that comes with target_core_fabric_configfs.c and the native
+target control plane gives a host-side (tcm_vhost) fabric driver generic
+explict/implict ALUA multipath support by default.
+
+I think there are some interesting possibilities for paravirtualized
+ALUA multipath..  8-)
+
+>    - Supports plenty of virtual disks mapped to the guest w/o need for a
+>      pci slot per each virtio-blk
+
+Ouch, virtio-blk lacks multi-lun per pci slot support..?
+
+>    - offload fancy/new/sophisticated scsi commands from the guest to the
+>      storage array w/o need for qemu implementation. Example XCOPY.
+> 
+
+...
+
+> There are some more goodies like ability to support windows guest 
+> clustering w/o hacky versions of scsi pass through over virtio-blk.
+> virtio-blk is also a candidate to change the request based towards bio 
+> based implementation, so sticking to it does not buy us too much.
+> 
+
+MSFT cluster guests that require SPC-3 PR support can run today with
+tcm_loop LLD SCSI LUNs + SG_IO/BSG + right megasas QEMU HBA emulation,
+but I do agree this would be better served by virtio-scsi for guests
+that require SPC-3 PR support or passthrough.
+
+--nab
