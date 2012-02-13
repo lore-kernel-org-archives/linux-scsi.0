@@ -1,15 +1,13 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 06/11] qla4xxx: Proper detection of firmware abort error code for ISP82xx
-Date: Mon, 13 Feb 2012 18:30:45 +0530
-Message-ID: <1329138050-1042-7-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1329138050-1042-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 00/11] qla4xxx: Update for scsi-misc
+Date: Mon, 13 Feb 2012 18:30:39 +0530
+Message-ID: <1329138050-1042-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:11557
+Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:39499
 	"HELO magana.localdomain" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1751333Ab2BMNJl (ORCPT
+	by vger.kernel.org with SMTP id S1756596Ab2BMNJl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 13 Feb 2012 08:09:41 -0500
-In-Reply-To: <1329138050-1042-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
@@ -17,51 +15,41 @@ Cc: linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, lalit.chandivade@qlogic.c
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_def.h |    2 --
- drivers/scsi/qla4xxx/ql4_nx.h  |    1 +
- drivers/scsi/qla4xxx/ql4_os.c  |    2 +-
- 3 files changed, 2 insertions(+), 3 deletions(-)
+James,
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index bfe6854..ec48dc3 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -150,8 +150,6 @@
- #define QL4_SESS_RECOVERY_TMO		120	/* iSCSI session */
- 						/* recovery timeout */
- 
--#define MSB(x) ((uint8_t)((uint16_t)(x) >> 8))
--#define LSW(x) ((uint16_t)(x))
- #define LSDW(x) ((u32)((u64)(x)))
- #define MSDW(x) ((u32)((((u64)(x)) >> 16) >> 16))
- 
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.h b/drivers/scsi/qla4xxx/ql4_nx.h
-index dc45ac9..dc7500e 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.h
-+++ b/drivers/scsi/qla4xxx/ql4_nx.h
-@@ -623,6 +623,7 @@ struct crb_addr_pair {
- 
- #define ADDR_ERROR	((unsigned long) 0xffffffff)
- #define MAX_CTL_CHECK	1000
-+#define QLA82XX_FWERROR_CODE(code)	((code >> 8) & 0x1fffff)
- 
- /***************************************************************************
-  *		PCI related defines.
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 3339cc1..2cd2077 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -2165,7 +2165,7 @@ void qla4_8xxx_watchdog(struct scsi_qla_host *ha)
- 				halt_status = qla4_8xxx_rd_32(ha,
- 						QLA82XX_PEG_HALT_STATUS1);
- 
--				if (LSW(MSB(halt_status)) == 0x67)
-+				if (QLA82XX_FWERROR_CODE(halt_status) == 0x67)
- 					ql4_printk(KERN_ERR, ha, "%s:"
- 						   " Firmware aborted with"
- 						   " error code 0x00006700."
--- 
-1.7.8.247.g10f4e
+Please apply the following patches to scsi-misc for inclusion in mainline.
 
+Lalit Chandivade (3):
+      qla4xxx: Fix un-necessary delay on invalid DDB
+      qla4xxx: Fix verify boot idx correctly
+      qla4xxx: Remove un-necessary print statment
+
+Manish Rangankar (1):
+      qla4xxx: Modified debug log messages for boot info.
+
+Vikas Chaudhary (7):
+      qla4xxx: Remove unused code
+      qla4xxx: Proper detection of firmware abort error code for ISP82xx
+      scsi_transport_iscsi: added support for host event
+      qla4xxx: added support for host event
+      iscsi_transport: Added Ping support
+      qla4xxx: added ping support
+      qla4xxx: Update driver version to 5.02.00-k14
+
+ drivers/scsi/qla4xxx/ql4_def.h      |   41 ++++++-
+ drivers/scsi/qla4xxx/ql4_fw.h       |   20 +++
+ drivers/scsi/qla4xxx/ql4_glbl.h     |    7 +
+ drivers/scsi/qla4xxx/ql4_init.c     |    5 +
+ drivers/scsi/qla4xxx/ql4_iocb.c     |   92 ++++++++++++++
+ drivers/scsi/qla4xxx/ql4_isr.c      |   78 ++++++++++++
+ drivers/scsi/qla4xxx/ql4_mbx.c      |    2 +
+ drivers/scsi/qla4xxx/ql4_nx.c       |   17 +---
+ drivers/scsi/qla4xxx/ql4_nx.h       |    1 +
+ drivers/scsi/qla4xxx/ql4_os.c       |  235 ++++++++++++++++++++++++++++++++---
+ drivers/scsi/qla4xxx/ql4_version.h  |    2 +-
+ drivers/scsi/scsi_transport_iscsi.c |   90 +++++++++++++
+ include/scsi/iscsi_if.h             |   30 +++++
+ include/scsi/scsi_transport_iscsi.h |   14 ++
+
+Thanks,
+Vikas.
