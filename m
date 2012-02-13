@@ -1,51 +1,108 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: Pe: [PATCH v5 1/3] virtio-scsi: first version
-Date: Mon, 13 Feb 2012 10:11:03 +1030
-Message-ID: <87vcnbd3hs.fsf@rustcorp.com.au>
-References: <OF2D939B55.7C07E33B-ONC125799C.0032B83A-C125799C.0036282C@de.ibm.com> <4F30F4EE.4080607@redhat.com> <4F311154.9080407@de.ibm.com> <4F3119A0.7080005@redhat.com> <4F312492.1040002@de.ibm.com> <OFAFB86CAE.9917478D-ONC125799D.004AF231-C125799D.004CE6D2@de.ibm.com> <4F313526.2050907@redhat.com> <OF36197712.1A42EB9E-ONC125799E.0049E3C2-C125799E.004AD4BF@de.ibm.com> <4F3390FB.80107@redhat.com> <1329077777.21613.60.camel@dabdike.int.hansenpartnership.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: isci.git#all for linux-next
+Date: Mon, 13 Feb 2012 11:24:54 +1100
+Message-ID: <20120213112454.41ad83568a6cd4a9f8c2ff81@canb.auug.org.au>
+References: <1328900367.27478.29.camel@ultramagnus.opencreations.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1329077777.21613.60.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Paolo Bonzini <pbonzini@redhat.com>
-Cc: Christian Hoff <christian.hoff@de.ibm.com>, BORNTRAE@linux.vnet.ibm.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Mon__13_Feb_2012_11_24_54_+1100_B/LOEZjnwXn1H..v"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from haggis.pcug.org.au ([203.10.76.10]:58835 "EHLO
+	members.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754757Ab2BMAZC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Feb 2012 19:25:02 -0500
+In-Reply-To: <1328900367.27478.29.camel@ultramagnus.opencreations.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
-On Sun, 12 Feb 2012 14:16:17 -0600, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Thu, 2012-02-09 at 10:25 +0100, Paolo Bonzini wrote:
-> > On 02/08/2012 02:37 PM, Christian Hoff wrote:
-> > > Again, I have already done much testing with virtio-scsi and can confirm
-> > > that the code is working flawlessly. In my opinion, virtio-scsi is a
-> > > worthwhile addition to virtio-block and should be considered for inclusion
-> > > into mainline kernel code.
-> > 
-> > Thank you very much!
-> > 
-> > James, will you include virtio-scsi in 3.4?
-> 
-> Well, no-one's yet answered the question I had about why.  virtio-scsi
-> seems to be a basic duplication of virtio-blk except that it seems to
-> fix some problems virtio-blk has.  Namely queue parameter discover,
-> which virtio-blk doesn't seem to do.  There may also be a reason to cut
-> the stack lower down.  Error handling is most often cited for this, but
-> no-one's satisfactorily explaned why it's better to do error handling in
-> the guest instead of the host.
-> 
-> Could someone please explain to me why you can't simply fix virtio-blk?
-> Or would virtio-blk maintainers give a reason why they're unwilling to
-> have it fixed?
+--Signature=_Mon__13_Feb_2012_11_24_54_+1100_B/LOEZjnwXn1H..v
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-My concern is simple: virtio_blk covers the 99% of cases, with very
-little complexity.  To get that last 1%, we will end up re-specing much
-of SCSI.
+Hi Dan,
 
-Having found someone who understand SCSI and is eager to maintain a
-driver and spec, I am deeply tempted to partition the problem as simple
-== virtio_blk, complex == virtio_scsi.
+On Fri, 10 Feb 2012 10:59:25 -0800 Dan Williams <dan.j.williams@intel.com> =
+wrote:
+>
+> I have a couple of active topic branches brewing for 3.4 that address
+> problems in libsas as well as ongoing development of the libsas-based
+> isci driver.  They are at the point where they should be getting
+> exposure in -next, so I have combined them into a daily-merge branch
+> 'all' for linux-next consumption.
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git all
 
-In fact, it would allow us to tighten the spec on VIRTIO_BLK_T_SCSI_CMD
-to its actual use, which AFAICT is CDROMEJECT (maybe CDROMCLOSETRAY).
+I have added this from today.
 
+> For at least the next few weeks I would like to have this tree in -next.
+> This gives James the option of letting these brew with -next exposure
+> before applying the patches, or just pulling the git topics directly for
+> the merge window.  If this tree ever develops a conflict with scsi-misc
+> -next should drop it as that probably means the patches have started
+> making their way into scsi-misc.
+
+I try my best to not drop trees because that will screw up Andrew's work,
+if nothing else.  And with any luck, James will actually merge your
+branches rather than apply your patches and thus we will get no
+conflicts ...
+
+Thanks for adding your subsystem tree as a participant of linux-next.  As
+you may know, this is not a judgment of your code.  The purpose of
+linux-next is for integration testing and to lower the impact of
+conflicts between subsystems in the next merge window.=20
+
+You will need to ensure that the patches/commits in your tree/series have
+been:
+     * submitted under GPL v2 (or later) and include the Contributor's
+	Signed-off-by,
+     * posted to the relevant mailing list,
+     * reviewed by you (or another maintainer of your subsystem tree),
+     * successfully unit tested, and=20
+     * destined for the current or next Linux merge window.
+
+Basically, this should be just what you would send to Linus (or ask him
+to fetch).  It is allowed to be rebased if you deem it necessary.
+
+--=20
 Cheers,
-Rusty.
+Stephen Rothwell=20
+sfr@canb.auug.org.au
+
+Legal Stuff:
+By participating in linux-next, your subsystem tree contributions are
+public and will be included in the linux-next trees.  You may be sent
+e-mail messages indicating errors or other issues when the
+patches/commits from your subsystem tree are merged and tested in
+linux-next.  These messages may also be cross-posted to the linux-next
+mailing list, the linux-kernel mailing list, etc.  The linux-next tree
+project and IBM (my employer) make no warranties regarding the linux-next
+project, the testing procedures, the results, the e-mails, etc.  If you
+don't agree to these ground rules, let me know and I'll remove your tree
+from participation in linux-next.
+
+--Signature=_Mon__13_Feb_2012_11_24_54_+1100_B/LOEZjnwXn1H..v
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBCAAGBQJPOFhWAAoJEECxmPOUX5FEVR0P/2HuuWOUP0ckRris7RBjig2q
+6tuk0zLb2kV25ppFHE2sSW8mWY49mpmJe04GTe80RDMaH6+DRUtKNiNN7RiNE0hA
+wm2YfWzTsZJ9pA4PNwap5KYtII54XNBEMsQJU6FrrnNojrpk22QkLpbrF13Y76Mt
+jRwWxTqN5MR3zpMX4xolIpfEJGwjdHNTmiGQdbeF7ljU5mZ32UFlMqVMI2Q22bN8
+AJYFYdKBqJP3QyGPieXNd+Yjr/i47BYaoEKZm0IRaXFomFe89yCUH6/KJWELjo7F
+r1oSe0qvsTKoBLOf5zlgcTSNm8cj439syO433SUSBqkV2RHdCcA+vgMEMytAkaZR
+hinqCJkXTd5K1vFcWgaFx4Zn3VNhAdMNNfUH2XaUAbChqa5GH0r3gtUHf5FqPzpL
+Mxsp+5KrknllnouGOMnFR489Jw5/DRDYz/I4gV7tFdlEzRRo7+fEhNy5+73dB9Pu
+r5F+bGdrPm1y/Q8x+vF3gwK8kWg5c6YMtask+Ydq1UprEHIB9ags2tOiDF4f23+h
+wY3x1bIJ4UQvILjMzQhjEi2Dcw1x+jEOhcOdEasDHTdr4WEOX8+J6OzLEXFDqsHE
+dk5UJgsyHLV7byP2DPANrif76QYhcoRTgijTesjHmcxTcp3OBgzdOSSe2oy4hzNU
+NILoVs5vzhukHA+SSFOM
+=001m
+-----END PGP SIGNATURE-----
+
+--Signature=_Mon__13_Feb_2012_11_24_54_+1100_B/LOEZjnwXn1H..v--
