@@ -1,178 +1,60 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [RFC PATCH 5/6] PCI: Move acpi_dev_run_wake to acpi core
-Date: Mon, 13 Feb 2012 21:49:15 +0100
-Message-ID: <201202132149.16118.rjw@sisk.pl>
-References: <1329124271-29464-1-git-send-email-ming.m.lin@intel.com> <1329124271-29464-6-git-send-email-ming.m.lin@intel.com>
+Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
+Date: Mon, 13 Feb 2012 21:50:41 +0100
+Message-ID: <201202132150.42115.rjw@sisk.pl>
+References: <Pine.LNX.4.44L0.1202131534040.11382-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="iso-8859-2"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1329124271-29464-6-git-send-email-ming.m.lin@intel.com>
+In-Reply-To: <Pine.LNX.4.44L0.1202131534040.11382-100000@iolanthe.rowland.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Lin Ming <ming.m.lin@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Monday, February 13, 2012, Lin Ming wrote:
-> acpi_dev_run_wake is a generic function which can be used by
-> other subsystem too. Rename it to acpi_pm_device_run_wake, to be
-> consistent with acpi_pm_device_sleep_wake.
+On Monday, February 13, 2012, Alan Stern wrote:
+> On Mon, 13 Feb 2012, Rafael J. Wysocki wrote:
 > 
-> Then move it to acpi core.
+> > > I'm not sure if this is really the right approach.  What you're trying 
+> > > to do is implement two different low-power states, basically D3hot and 
+> > > D3cold.  Currently the runtime PM core doesn't support such things; all 
+> > > it knows about is low power and full power.
+> > 
+> > I'd rather say all it knows about is "suspended" and "active", which mean
+> > "the device is not processing I/O" and "the device may be processing I/O",
+> > respectively.  A "suspended" device may or may not be in a low-power state,
+> > but the runtime PM core doesn't care about that.
 > 
-> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> Yes, okay.  We can say that this patch tries to implement two different 
+> "suspended" states, basically "low power" and "power off" (or D3hot and 
+> D3cold).
+> 
+> > > Before doing an ad-hoc implementation, it would be best to step back
+> > > and think about other subsystems.  Other sorts of devices may well have
+> > > multiple low-power states.  What's the best way for this to be
+> > > supported by the PM core?
+> > 
+> > Well, I honestly don't think there's any way they all can be covered at the
+> > same time and that's why we chose to support only "suspended" and "active"
+> > as defined above.  The handling of multiple low-power states must be
+> > implemented outside of the runtime PM core (like in the PCI core, for example).
+> 
+> That's the point.  If this is to be implemented outside of the runtime
+> PM core, should the patch be allowed to add new fields to struct
+> dev_pm_info (which has to be shared among all subsystems)?
+> 
+> Or to put it another way, if we do add new fields to struct dev_pm_info
+> (like can_power_off) in order to help support multiple "suspended"  
+> states, shouldn't these new fields be such that they can be used by
+> many different subsystems rather than being special for the
+> full-power/no-power situation?
+> 
+> Likewise, should new routines like pm_runtime_allow_power_off() be
+> added to the runtime PM core if they are going to be used just by PCI?
 
-OK, why not.
+No, they shouldn't.
 
-Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-
-> ---
->  drivers/acpi/sleep.c    |   35 +++++++++++++++++++++++++++++++++++
->  drivers/pci/pci-acpi.c  |   40 +++-------------------------------------
->  include/acpi/acpi_bus.h |    5 +++++
->  3 files changed, 43 insertions(+), 37 deletions(-)
-> 
-> diff --git a/drivers/acpi/sleep.c b/drivers/acpi/sleep.c
-> index ca191ff..00fa664 100644
-> --- a/drivers/acpi/sleep.c
-> +++ b/drivers/acpi/sleep.c
-> @@ -17,6 +17,7 @@
->  #include <linux/suspend.h>
->  #include <linux/reboot.h>
->  #include <linux/acpi.h>
-> +#include <linux/pm_runtime.h>
->  
->  #include <asm/io.h>
->  
-> @@ -730,6 +731,40 @@ int acpi_pm_device_sleep_state(struct device *dev, int *d_min_p)
->  
->  #ifdef CONFIG_PM_SLEEP
->  /**
-> + * acpi_pm_device_run_wake - Enable/disable wake-up for given device.
-> + * @phys_dev: Device to enable/disable the platform to wake-up the system for.
-> + * @enable: Whether enable or disable the wake-up functionality.
-> + *
-> + * Find the ACPI device object corresponding to @pci_dev and try to
-> + * enable/disable the GPE associated with it.
-> + */
-> +int acpi_pm_device_run_wake(struct device *phys_dev, bool enable)
-> +{
-> +	struct acpi_device *dev;
-> +	acpi_handle handle;
-> +
-> +	if (!device_run_wake(phys_dev))
-> +		return -EINVAL;
-> +
-> +	handle = DEVICE_ACPI_HANDLE(phys_dev);
-> +	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &dev))) {
-> +		dev_dbg(phys_dev, "ACPI handle has no context in %s!\n",
-> +			__func__);
-> +		return -ENODEV;
-> +	}
-> +
-> +	if (enable) {
-> +		acpi_enable_wakeup_device_power(dev, ACPI_STATE_S0);
-> +		acpi_enable_gpe(dev->wakeup.gpe_device, dev->wakeup.gpe_number);
-> +	} else {
-> +		acpi_disable_gpe(dev->wakeup.gpe_device, dev->wakeup.gpe_number);
-> +		acpi_disable_wakeup_device_power(dev);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +/**
->   *	acpi_pm_device_sleep_wake - enable or disable the system wake-up
->   *                                  capability of given device
->   *	@dev: device to handle
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 060fd22..0f150f2 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -277,40 +277,6 @@ static int acpi_pci_sleep_wake(struct pci_dev *dev, bool enable)
->  	return 0;
->  }
->  
-> -/**
-> - * acpi_dev_run_wake - Enable/disable wake-up for given device.
-> - * @phys_dev: Device to enable/disable the platform to wake-up the system for.
-> - * @enable: Whether enable or disable the wake-up functionality.
-> - *
-> - * Find the ACPI device object corresponding to @pci_dev and try to
-> - * enable/disable the GPE associated with it.
-> - */
-> -static int acpi_dev_run_wake(struct device *phys_dev, bool enable)
-> -{
-> -	struct acpi_device *dev;
-> -	acpi_handle handle;
-> -
-> -	if (!device_run_wake(phys_dev))
-> -		return -EINVAL;
-> -
-> -	handle = DEVICE_ACPI_HANDLE(phys_dev);
-> -	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &dev))) {
-> -		dev_dbg(phys_dev, "ACPI handle has no context in %s!\n",
-> -			__func__);
-> -		return -ENODEV;
-> -	}
-> -
-> -	if (enable) {
-> -		acpi_enable_wakeup_device_power(dev, ACPI_STATE_S0);
-> -		acpi_enable_gpe(dev->wakeup.gpe_device, dev->wakeup.gpe_number);
-> -	} else {
-> -		acpi_disable_gpe(dev->wakeup.gpe_device, dev->wakeup.gpe_number);
-> -		acpi_disable_wakeup_device_power(dev);
-> -	}
-> -
-> -	return 0;
-> -}
-> -
->  static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
->  {
->  	while (bus->parent) {
-> @@ -318,14 +284,14 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
->  
->  		if (bridge->pme_interrupt)
->  			return;
-> -		if (!acpi_dev_run_wake(&bridge->dev, enable))
-> +		if (!acpi_pm_device_run_wake(&bridge->dev, enable))
->  			return;
->  		bus = bus->parent;
->  	}
->  
->  	/* We have reached the root bus. */
->  	if (bus->bridge)
-> -		acpi_dev_run_wake(bus->bridge, enable);
-> +		acpi_pm_device_run_wake(bus->bridge, enable);
->  }
->  
->  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
-> @@ -333,7 +299,7 @@ static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
->  	if (dev->pme_interrupt)
->  		return 0;
->  
-> -	if (!acpi_dev_run_wake(&dev->dev, enable))
-> +	if (!acpi_pm_device_run_wake(&dev->dev, enable))
->  		return 0;
->  
->  	acpi_pci_propagate_run_wake(dev->bus, enable);
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 32fb899..2d556e3 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -394,8 +394,13 @@ static inline int acpi_pm_device_sleep_state(struct device *d, int *p)
->  #endif
->  
->  #ifdef CONFIG_PM_SLEEP
-> +int acpi_pm_device_run_wake(struct device *, bool);
->  int acpi_pm_device_sleep_wake(struct device *, bool);
->  #else
-> +static inline int acpi_pm_device_run_wake(struct device *dev, bool enable)
-> +{
-> +	return -ENODEV;
-> +}
->  static inline int acpi_pm_device_sleep_wake(struct device *dev, bool enable)
->  {
->  	return -ENODEV;
-> 
+Thanks,
+Rafael
