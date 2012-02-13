@@ -1,53 +1,59 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: scsi_error: do not allow IO errors with certain ILLEGAL_REQUEST
- sense to be retryable
-Date: Mon, 13 Feb 2012 14:38:53 -0500
-Message-ID: <1329161933.20751.31.camel@dabdike>
-References: <1322857889-2623-1-git-send-email-snitzer@redhat.com>
-	 <yq1zkf5pfx1.fsf@sermon.lab.mkp.net> <20111206212704.GB30719@redhat.com>
-	 <yq1vcptpdch.fsf@sermon.lab.mkp.net> <20111206224218.GA31543@redhat.com>
-	 <20120213162923.GA29578@redhat.com> <yq1d39iipra.fsf@sermon.lab.mkp.net>
-	 <20120213181359.GA5803@redhat.com> <yq14nuuilxd.fsf@sermon.lab.mkp.net>
-	 <20120213193615.GA10349@redhat.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of the staging area
+Date: Mon, 13 Feb 2012 19:31:40 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481B70D5E0@TK5EX14MBXC128.redmond.corp.microsoft.com>
+References: <1328825688-4337-1-git-send-email-kys@microsoft.com>
+	 <20120210180212.GA605@kroah.com> <1329161318.20751.30.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120213193615.GA10349@redhat.com>
+In-Reply-To: <1329161318.20751.30.camel@dabdike>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>, Greg KH <gregkh@linuxfoundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2012-02-13 at 14:36 -0500, Mike Snitzer wrote:
-> On Mon, Feb 13 2012 at  2:16pm -0500,
-> Martin K. Petersen <martin.petersen@oracle.com> wrote:
-> 
-> > >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
-> > 
-> > >> I don't have a fundamental problem with your patch. But since we
-> > >> explicitly handle ILLEGAL REQUEST with 0x20 and 0x24 in sd.c I wonder
-> > >> what's broken? We should disable discard support if the WRITE SAME w/
-> > >> UNMAP fails.
-> > 
-> > Mike> Yeah, I thought the disabling would be sufficient too.  But
-> > Mike> unfortunately multipath doesn't inspect the request it is retrying
-> > Mike> (after it fails the path the request just failed on).
-> > 
-> > Well, we shouldn't be returning something that multipath should ever act
-> > on.
-> > 
-> > I think I understand what's going on. Can you try the following patch?
-> 
-> Looks good to me (small nit below), it'll solve the immediate problem,
-> I'll pass it on.  Please add my:
-> 
-> Acked-by: Mike Snitzer <snitzer@redhat.com>
-> 
-> But I also think establishing a baseline of TARGET_ERROR for certain
-> ILLEGAL REQUEST is still sane and should go in too...
-
-So someone still needs to package up the final agreed version with a
-nice changelog and send it to the list ...
-
-James
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86amJvdHRvbWxleUBwYXJhbGxlbHMuY29tXQ0KPiBTZW50OiBNb25kYXksIEZlYnJ1
+YXJ5IDEzLCAyMDEyIDI6MjkgUE0NCj4gVG86IEdyZWcgS0gNCj4gQ2M6IEtZIFNyaW5pdmFzYW47
+IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5v
+cmc7DQo+IHZpcnR1YWxpemF0aW9uQGxpc3RzLm9zZGwub3JnOyBvaGVyaW5nQHN1c2UuY29tOyBo
+Y2hAaW5mcmFkZWFkLm9yZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJuZWwub3JnDQo+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0ggMS8xXSBTdGFnaW5nOiBodjogc3RvcnZzYzogTW92ZSB0aGUgc3RvcmFn
+ZSBkcml2ZXIgb3V0IG9mIHRoZQ0KPiBzdGFnaW5nIGFyZWENCj4gDQo+IE9uIEZyaSwgMjAxMi0w
+Mi0xMCBhdCAxMDowMiAtMDgwMCwgR3JlZyBLSCB3cm90ZToNCj4gPiBPbiBUaHUsIEZlYiAwOSwg
+MjAxMiBhdCAwMjoxNDo0OFBNIC0wODAwLCBLLiBZLiBTcmluaXZhc2FuIHdyb3RlOg0KPiA+ID4g
+VGhlIHN0b3JhZ2UgZHJpdmVyIChzdG9ydnNjX2Rydi5jKSBoYW5kbGVzIGFsbCBibG9jayBzdG9y
+YWdlIGRldmljZXMNCj4gPiA+IGFzc2lnbmVkIHRvIExpbnV4IGd1ZXN0cyBob3N0ZWQgb24gSHlw
+ZXItVi4gVGhpcyBkcml2ZXIgaGFzIGJlZW4gaW4gdGhlDQo+ID4gPiBzdGFnaW5nIHRyZWUgZm9y
+IGEgd2hpbGUgYW5kIHRoaXMgcGF0Y2ggbW92ZXMgaXQgb3V0IG9mIHRoZSBzdGFnaW5nIGFyZWEu
+DQo+ID4gPg0KPiA+ID4gSmFtZXMgd2FzIHdpbGxpbmcgdG8gYXBwbHkgdGhpcyBwYXRjaCBkdXJp
+bmcgdGhlIDMuMy1yYyBwaGFzZSBhbmQgYSBkZWNpc2lvbg0KPiA+ID4gd2FzIHRha2VuIHRvIGRl
+ZmVyIHRoaXMgdG8gMy40IHNpbmNlIEdyZWcgaGFkIHF1ZXVlZCB1cCBhIGJ1bmNoIG9mIHN0b3J2
+c2MNCj4gPiA+IHBhdGNoZXMgZm9yIDMuNC4gTm93IHRoYXQgR3JlZyBoYXMgYXBwbGllZCBhbGwg
+b2YgdGhlIHBlbmRpbmcgc3RvcnZzYyBwYXRjaGVzLA0KPiA+ID4gSSBhbSBzZW5kaW5nIHRoaXMg
+cGF0Y2ggdG8gbW92ZSB0aGlzIGRyaXZlciBvdXQgb2Ygc3RhZ2luZy4gQmFzZWQgb24gSmFtZXMn
+DQo+ID4gPiByZWNvbW1lbmRhdGlvbiwgdGhpcyBwYXRjaCBnZXRzIHJpZCBvZiB0aGUgdW5uZWVk
+ZWQgZmlsZXMgaW4gdGhlIHN0YWdpbmcvaHYNCj4gPiA+IGRpcmVjdG9yeS4NCj4gPiA+DQo+ID4g
+PiBTaWduZWQtb2ZmLWJ5OiBLLiBZLiBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT4NCj4g
+PiA+IC0tLQ0KPiA+ID4gIGRyaXZlcnMvc2NzaS9LY29uZmlnICAgICAgICAgICAgICAgICAgICAg
+ICB8ICAgIDcgKysrKysrKw0KPiA+ID4gIGRyaXZlcnMvc2NzaS9NYWtlZmlsZSAgICAgICAgICAg
+ICAgICAgICAgICB8ICAgIDMgKysrDQo+ID4gPiAgZHJpdmVycy97c3RhZ2luZy9odiA9PiBzY3Np
+fS9zdG9ydnNjX2Rydi5jIHwgICAgMA0KPiA+ID4gIGRyaXZlcnMvc3RhZ2luZy9LY29uZmlnICAg
+ICAgICAgICAgICAgICAgICB8ICAgIDIgLS0NCj4gPiA+ICBkcml2ZXJzL3N0YWdpbmcvTWFrZWZp
+bGUgICAgICAgICAgICAgICAgICAgfCAgICAxIC0NCj4gPiA+ICBkcml2ZXJzL3N0YWdpbmcvaHYv
+S2NvbmZpZyAgICAgICAgICAgICAgICAgfCAgICA1IC0tLS0tDQo+ID4gPiAgZHJpdmVycy9zdGFn
+aW5nL2h2L01ha2VmaWxlICAgICAgICAgICAgICAgIHwgICAgMyAtLS0NCj4gPiA+ICBkcml2ZXJz
+L3N0YWdpbmcvaHYvVE9ETyAgICAgICAgICAgICAgICAgICAgfCAgICA1IC0tLS0tDQo+ID4gPiAg
+OCBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspLCAxNiBkZWxldGlvbnMoLSkNCj4gPiA+
+ICByZW5hbWUgZHJpdmVycy97c3RhZ2luZy9odiA9PiBzY3NpfS9zdG9ydnNjX2Rydi5jICgxMDAl
+KQ0KPiA+ID4gIGRlbGV0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3N0YWdpbmcvaHYvS2NvbmZpZw0K
+PiA+ID4gIGRlbGV0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3N0YWdpbmcvaHYvTWFrZWZpbGUNCj4g
+PiA+ICBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zdGFnaW5nL2h2L1RPRE8NCj4gPg0KPiA+
+IEphbWVzLCBjYW4gSSBhZGQgeW91ciBBY2tlZC1ieTogZm9yIHRoaXMgcGF0Y2g/DQo+IA0KPiBZ
+ZXMgLi4uIGkgZmluYWxseSBtYW5hZ2VkIHRvIHB1bGwgeW91ciB0cmVlIGRvd24gYW5kIHZlcmlm
+eSBpdC4NCj4gDQo+IEFja2VkLWJ5OiBKYW1lcyBCb3R0b21sZXkgPEpCb3R0b21sZXlAUGFyYWxs
+ZWxzLmNvbT4NCg0KVGhhbmsgeW91Lg0KDQpLLiBZDQo=
