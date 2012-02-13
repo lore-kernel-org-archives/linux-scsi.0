@@ -1,55 +1,74 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
- of the staging area
-Date: Mon, 13 Feb 2012 19:28:38 +0000
-Message-ID: <1329161318.20751.30.camel@dabdike>
-References: <1328825688-4337-1-git-send-email-kys@microsoft.com>
-	 <20120210180212.GA605@kroah.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
+Date: Mon, 13 Feb 2012 20:38:12 +0100
+Message-ID: <201202132038.12927.rjw@sisk.pl>
+References: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:60956 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757656Ab2BMT2n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Feb 2012 14:28:43 -0500
-In-Reply-To: <20120210180212.GA605@kroah.com>
-Content-Language: en-US
-Content-ID: <F864D1A82274D24DBA6A882DE77342CC@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Lin Ming <ming.m.lin@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gRnJpLCAyMDEyLTAyLTEwIGF0IDEwOjAyIC0wODAwLCBHcmVnIEtIIHdyb3RlOg0KPiBPbiBU
-aHUsIEZlYiAwOSwgMjAxMiBhdCAwMjoxNDo0OFBNIC0wODAwLCBLLiBZLiBTcmluaXZhc2FuIHdy
-b3RlOg0KPiA+IFRoZSBzdG9yYWdlIGRyaXZlciAoc3RvcnZzY19kcnYuYykgaGFuZGxlcyBhbGwg
-YmxvY2sgc3RvcmFnZSBkZXZpY2VzDQo+ID4gYXNzaWduZWQgdG8gTGludXggZ3Vlc3RzIGhvc3Rl
-ZCBvbiBIeXBlci1WLiBUaGlzIGRyaXZlciBoYXMgYmVlbiBpbiB0aGUNCj4gPiBzdGFnaW5nIHRy
-ZWUgZm9yIGEgd2hpbGUgYW5kIHRoaXMgcGF0Y2ggbW92ZXMgaXQgb3V0IG9mIHRoZSBzdGFnaW5n
-IGFyZWEuDQo+ID4gDQo+ID4gSmFtZXMgd2FzIHdpbGxpbmcgdG8gYXBwbHkgdGhpcyBwYXRjaCBk
-dXJpbmcgdGhlIDMuMy1yYyBwaGFzZSBhbmQgYSBkZWNpc2lvbg0KPiA+IHdhcyB0YWtlbiB0byBk
-ZWZlciB0aGlzIHRvIDMuNCBzaW5jZSBHcmVnIGhhZCBxdWV1ZWQgdXAgYSBidW5jaCBvZiBzdG9y
-dnNjDQo+ID4gcGF0Y2hlcyBmb3IgMy40LiBOb3cgdGhhdCBHcmVnIGhhcyBhcHBsaWVkIGFsbCBv
-ZiB0aGUgcGVuZGluZyBzdG9ydnNjIHBhdGNoZXMsDQo+ID4gSSBhbSBzZW5kaW5nIHRoaXMgcGF0
-Y2ggdG8gbW92ZSB0aGlzIGRyaXZlciBvdXQgb2Ygc3RhZ2luZy4gQmFzZWQgb24gSmFtZXMnDQo+
-ID4gcmVjb21tZW5kYXRpb24sIHRoaXMgcGF0Y2ggZ2V0cyByaWQgb2YgdGhlIHVubmVlZGVkIGZp
-bGVzIGluIHRoZSBzdGFnaW5nL2h2DQo+ID4gZGlyZWN0b3J5Lg0KPiA+IA0KPiA+IFNpZ25lZC1v
-ZmYtYnk6IEsuIFkuIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQuY29tPg0KPiA+IC0tLQ0KPiA+
-ICBkcml2ZXJzL3Njc2kvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgICAgfCAgICA3ICsrKysr
-KysNCj4gPiAgZHJpdmVycy9zY3NpL01ha2VmaWxlICAgICAgICAgICAgICAgICAgICAgIHwgICAg
-MyArKysNCj4gPiAgZHJpdmVycy97c3RhZ2luZy9odiA9PiBzY3NpfS9zdG9ydnNjX2Rydi5jIHwg
-ICAgMA0KPiA+ICBkcml2ZXJzL3N0YWdpbmcvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgfCAg
-ICAyIC0tDQo+ID4gIGRyaXZlcnMvc3RhZ2luZy9NYWtlZmlsZSAgICAgICAgICAgICAgICAgICB8
-ICAgIDEgLQ0KPiA+ICBkcml2ZXJzL3N0YWdpbmcvaHYvS2NvbmZpZyAgICAgICAgICAgICAgICAg
-fCAgICA1IC0tLS0tDQo+ID4gIGRyaXZlcnMvc3RhZ2luZy9odi9NYWtlZmlsZSAgICAgICAgICAg
-ICAgICB8ICAgIDMgLS0tDQo+ID4gIGRyaXZlcnMvc3RhZ2luZy9odi9UT0RPICAgICAgICAgICAg
-ICAgICAgICB8ICAgIDUgLS0tLS0NCj4gPiAgOCBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNlcnRpb25z
-KCspLCAxNiBkZWxldGlvbnMoLSkNCj4gPiAgcmVuYW1lIGRyaXZlcnMve3N0YWdpbmcvaHYgPT4g
-c2NzaX0vc3RvcnZzY19kcnYuYyAoMTAwJSkNCj4gPiAgZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZl
-cnMvc3RhZ2luZy9odi9LY29uZmlnDQo+ID4gIGRlbGV0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3N0
-YWdpbmcvaHYvTWFrZWZpbGUNCj4gPiAgZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc3RhZ2lu
-Zy9odi9UT0RPDQo+IA0KPiBKYW1lcywgY2FuIEkgYWRkIHlvdXIgQWNrZWQtYnk6IGZvciB0aGlz
-IHBhdGNoPw0KDQpZZXMgLi4uIGkgZmluYWxseSBtYW5hZ2VkIHRvIHB1bGwgeW91ciB0cmVlIGRv
-d24gYW5kIHZlcmlmeSBpdC4NCg0KQWNrZWQtYnk6IEphbWVzIEJvdHRvbWxleSA8SkJvdHRvbWxl
-eUBQYXJhbGxlbHMuY29tPg0KDQpKYW1lcw0KDQo=
+On Monday, February 13, 2012, Alan Stern wrote:
+> On Mon, 13 Feb 2012, Lin Ming wrote:
+> 
+> > From: Zhang Rui <rui.zhang@intel.com>
+> > 
+> > Introduce flag can_power_off in device structure to support runtime
+> > power off/on.
+> > 
+> > Note that, for a specific device driver,
+> > "support runtime power off/on" means that the driver .runtime_suspend
+> > callback needs to
+> > 1) save all the context so that it can restore the device back to the previous
+> >    working state after powered on.
+> > 2) set can_power_off flag to tell the driver model that it's ready for power off.
+> > 
+> > The following example shows how this works.
+> > 
+> > device A
+> >  |---------|
+> >  v         v
+> > device B  device C
+> > 
+> > A is the parent of device B and device C, and device A/B/C shares the
+> > same power logic
+> > (Only device A knows how to turn on/off the power).
+> > 
+> > In order to power off A, B, C at runtime,
+> > 1) device B and device C should support runtime power off
+> >    (runtime suspended with can_power_off flag set)
+> > 2) pm idle request for device A is fired by runtime PM core.
+> > 3) in device A .runtime_suspend callback, it tries to set can_power_off flag.
+> > 4) if succeed, it means all its children have been ready for power off
+> >    and it can turn off the power at any time.
+> > 5) if failed, it means at least one of its children does not support runtime
+> >    power off, thus the power can not be turned off.
+> 
+> I'm not sure if this is really the right approach.  What you're trying 
+> to do is implement two different low-power states, basically D3hot and 
+> D3cold.  Currently the runtime PM core doesn't support such things; all 
+> it knows about is low power and full power.
+
+I'd rather say all it knows about is "suspended" and "active", which mean
+"the device is not processing I/O" and "the device may be processing I/O",
+respectively.  A "suspended" device may or may not be in a low-power state,
+but the runtime PM core doesn't care about that.
+
+> Before doing an ad-hoc implementation, it would be best to step back
+> and think about other subsystems.  Other sorts of devices may well have
+> multiple low-power states.  What's the best way for this to be
+> supported by the PM core?
+
+Well, I honestly don't think there's any way they all can be covered at the
+same time and that's why we chose to support only "suspended" and "active"
+as defined above.  The handling of multiple low-power states must be
+implemented outside of the runtime PM core (like in the PCI core, for example).
+
+Thanks,
+Rafael
