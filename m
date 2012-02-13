@@ -1,39 +1,182 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/4] target: Make target_release_cmd_kref release on empty list
-Date: Mon, 13 Feb 2012 11:42:25 +0000
-Message-ID: <1329133347-13359-3-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 3/4] target: Add TMR_ABORT_TASK task management support
+Date: Mon, 13 Feb 2012 11:42:26 +0000
+Message-ID: <1329133347-13359-4-git-send-email-nab@linux-iscsi.org>
 References: <1329133347-13359-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:37376 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755041Ab2BMLuA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2012 06:50:00 -0500
 In-Reply-To: <1329133347-13359-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>, Madhuranath Iyengar <mni@risingtidesystems.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch changes target_release_cmd_kref() to make TFO->release_cmd()
-call when list_empty(&se_cmd->se_cmd_list) is TRUE.  This is required
-for TMR_ABORT_TASK operation where the referenced tag descriptor may
-have already been pulled of the session command list.
+This patch adds initial support for TMR_ABORT_TASK ops for se_cmd
+descriptors using se_sess->sess_cmd_list and se_cmd->cmd_kref counting.
+
+It will perform an explict abort for all outstanding se_cmd ops based
+upon tmr->ref_task_tag that have not been set CMD_T_COMPLETE.
+It will cancel se_cmd->work and wait for backing I/O to complete before
+attempting to send SAM_STAT_TASK_ABORTED and perform
+target_put_sess_cmd() to release the referenced descriptor.
+
+It also adds a CMD_T_ABORTED check into transport_complete_task() to
+catch the completion from backend I/O that has been aborted, and
+updates transport_wait_for_tasks() to allow CMD_T_ABORTED usage with
+core_tmr_abort_task() context.
 
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/target/target_core_internal.h  |    2 +
+ drivers/target/target_core_tmr.c       |   64 ++++++++++++++++++++++++++++++++
+ drivers/target/target_core_transport.c |   20 ++++++---
+ 3 files changed, 79 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index e414c90..88bdb57 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -75,6 +75,8 @@ struct se_hba *core_alloc_hba(const char *, u32, u32);
+ int	core_delete_hba(struct se_hba *);
+ 
+ /* target_core_tmr.c */
++void	core_tmr_abort_task(struct se_device *, struct se_tmr_req *,
++			struct se_session *);
+ int	core_tmr_lun_reset(struct se_device *, struct se_tmr_req *,
+ 		struct list_head *, struct se_cmd *);
+ 
+diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+index 4c91ad0..eb4ea0c 100644
+--- a/drivers/target/target_core_tmr.c
++++ b/drivers/target/target_core_tmr.c
+@@ -105,6 +105,70 @@ static int target_check_cdb_and_preempt(struct list_head *list,
+ 	return 1;
+ }
+ 
++void core_tmr_abort_task(
++	struct se_device *dev,
++	struct se_tmr_req *tmr,
++	struct se_session *se_sess)
++{
++	struct se_cmd *se_cmd, *tmp_cmd;
++	unsigned long flags;
++	int ref_tag;
++
++	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
++	list_for_each_entry_safe(se_cmd, tmp_cmd,
++			&se_sess->sess_cmd_list, se_cmd_list) {
++
++		if (dev != se_cmd->se_dev)
++			continue;
++		ref_tag = se_cmd->se_tfo->get_task_tag(se_cmd);
++		if (tmr->ref_task_tag != ref_tag)
++			continue;
++
++		printk("ABORT_TASK: Found referenced %s task_tag: %u\n",
++			se_cmd->se_tfo->get_fabric_name(), ref_tag);
++
++		spin_lock_irq(&se_cmd->t_state_lock);
++		if (se_cmd->transport_state & CMD_T_COMPLETE) {
++			printk("ABORT_TASK: ref_tag: %u already complete, skipping\n", ref_tag);
++			spin_unlock_irq(&se_cmd->t_state_lock);
++			spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
++			goto out;
++		}
++		se_cmd->transport_state |= CMD_T_ABORTED;
++		spin_unlock_irq(&se_cmd->t_state_lock);
++
++		list_del_init(&se_cmd->se_cmd_list);
++		kref_get(&se_cmd->cmd_kref);
++		spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
++
++		cancel_work_sync(&se_cmd->work);
++		transport_wait_for_tasks(se_cmd);
++		/*
++		 * Now send SAM_STAT_TASK_ABORTED status for the referenced
++		 * se_cmd descriptor..
++		 */
++		transport_send_task_abort(se_cmd);
++		/*
++		 * Also deal with possible extra acknowledge reference..
++		 */
++		if (se_cmd->se_cmd_flags & SCF_ACK_KREF)
++			target_put_sess_cmd(se_sess, se_cmd);
++
++		target_put_sess_cmd(se_sess, se_cmd);
++
++		printk("ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for"
++				" ref_tag: %d\n", ref_tag);
++		tmr->response = TMR_FUNCTION_COMPLETE;
++		return;
++	}
++	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
++
++out:
++	printk("ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST for ref_tag: %d\n",
++			tmr->ref_task_tag);
++	tmr->response = TMR_TASK_DOES_NOT_EXIST;
++}
++
+ static void core_tmr_drain_tmr_list(
+ 	struct se_device *dev,
+ 	struct se_tmr_req *tmr,
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 4a6ece1..17183da 100644
+index 17183da..bba671a 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -4056,7 +4056,7 @@ static void target_release_cmd_kref(struct kref *kref)
- 	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
- 	if (list_empty(&se_cmd->se_cmd_list)) {
- 		spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
--		WARN_ON(1);
-+		se_cmd->se_tfo->release_cmd(se_cmd);
+@@ -701,17 +701,24 @@ void transport_complete_task(struct se_task *task, int success)
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
  		return;
  	}
- 	if (se_sess->sess_tearing_down && se_cmd->cmd_wait_set) {
+-
+-	if (cmd->transport_state & CMD_T_FAILED) {
++	/*
++	 * Check for case where an explict ABORT_TASK has been received
++	 * and transport_wait_for_tasks() will be waiting for completion..
++	 */
++	if (cmd->transport_state & CMD_T_ABORTED &&
++	    cmd->transport_state & CMD_T_STOP) {
++		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++		complete(&cmd->t_transport_stop_comp);
++		return;
++	} else if (cmd->transport_state & CMD_T_FAILED) {
+ 		cmd->scsi_sense_reason = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 		INIT_WORK(&cmd->work, target_complete_failure_work);
+ 	} else {
+-		cmd->transport_state |= CMD_T_COMPLETE;
+ 		INIT_WORK(&cmd->work, target_complete_ok_work);
+ 	}
+ 
+ 	cmd->t_state = TRANSPORT_COMPLETE;
+-	cmd->transport_state |= CMD_T_ACTIVE;
++	cmd->transport_state |= (CMD_T_COMPLETE | CMD_T_ACTIVE);
+ 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+ 
+ 	queue_work(target_completion_wq, &cmd->work);
+@@ -4379,8 +4386,7 @@ bool transport_wait_for_tasks(struct se_cmd *cmd)
+ 		cmd->transport_state &= ~CMD_T_LUN_STOP;
+ 	}
+ 
+-	if (!(cmd->transport_state & CMD_T_ACTIVE) ||
+-	     (cmd->transport_state & CMD_T_ABORTED)) {
++	if (!(cmd->transport_state & CMD_T_ACTIVE)) {
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+ 		return false;
+ 	}
+@@ -4686,7 +4692,7 @@ static int transport_generic_do_tmr(struct se_cmd *cmd)
+ 
+ 	switch (tmr->function) {
+ 	case TMR_ABORT_TASK:
+-		tmr->response = TMR_FUNCTION_REJECTED;
++		core_tmr_abort_task(dev, tmr, cmd->se_sess);
+ 		break;
+ 	case TMR_ABORT_TASK_SET:
+ 	case TMR_CLEAR_ACA:
 -- 
 1.7.2.5
+
