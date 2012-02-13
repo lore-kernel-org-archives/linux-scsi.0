@@ -1,165 +1,117 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/5] block: Implement support for WRITE SAME
-Date: Mon, 13 Feb 2012 17:19:43 -0500
-Message-ID: <yq1hayugyv4.fsf@sermon.lab.mkp.net>
-References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
-	<1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
-	<20120207214005.GG6346@redhat.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: Pe: [PATCH v5 1/3] virtio-scsi: first version
+Date: Tue, 14 Feb 2012 00:59:06 +0200
+Message-ID: <20120213225623.GA2988@redhat.com>
+References: <4F38B657.7060405@de.ibm.com>
+ <4F38C27E.7030300@redhat.com>
+ <1329136806.9333.383.camel@haakon2.linux-iscsi.org>
+ <4F3907EB.4030402@redhat.com>
+ <20120213130005.GB26773@redhat.com>
+ <CAN05THTOY894httm5PjzsHELBB-P8DmpZ4bGoBR7FH1s6Tmcrg@mail.gmail.com>
+ <20120213131848.GD26773@redhat.com>
+ <4F39287A.9030808@suse.de>
+ <CAN05THT=7xJhqAMrAvDsK2Z1_4d+=tV9yhOFkr5Z-i43k5hAGA@mail.gmail.com>
+ <CAN05THT6t_w=9Zt+o-B4s8E3jUMWsxiBvTyySxNEK2QfvLe-BA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:42713 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753006Ab2BMWTw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2012 17:19:52 -0500
-In-Reply-To: <20120207214005.GG6346@redhat.com> (Vivek Goyal's message of
-	"Tue, 7 Feb 2012 16:40:05 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kvm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAN05THT6t_w=9Zt+o-B4s8E3jUMWsxiBvTyySxNEK2QfvLe-BA@mail.gmail.com>
+Sender: kvm-owner@vger.kernel.org
+To: ronnie sahlberg <ronniesahlberg@gmail.com>
+Cc: Hannes Reinecke <hare@suse.de>, Dor Laor <dlaor@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christian Borntraeger <borntraeger@de.ibm.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Hoff <christian.hoff@de.ibm.com>, borntrae@linux.vnet.ibm.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, Stefan Hajnoczi <stefanha@gmail.com>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, jaxboe@fusionio.com
 
->>>>> "Vivek" == Vivek Goyal <vgoyal@redhat.com> writes:
+On Tue, Feb 14, 2012 at 07:53:26AM +1100, ronnie sahlberg wrote:
+> On Tue, Feb 14, 2012 at 7:42 AM, ronnie sahlberg
+> <ronniesahlberg@gmail.com> wrote:
+> > On Tue, Feb 14, 2012 at 2:12 AM, Hannes Reinecke <hare@suse.de> wro=
+te:
+> >> On 02/13/2012 02:18 PM, Michael S. Tsirkin wrote:
+> >>> On Tue, Feb 14, 2012 at 12:13:36AM +1100, ronnie sahlberg wrote:
+> >>>> On Tue, Feb 14, 2012 at 12:00 AM, Michael S. Tsirkin <mst@redhat=
+=2Ecom> wrote:
+> >>>>> On Mon, Feb 13, 2012 at 02:54:03PM +0200, Dor Laor wrote:
+> >>>>>> Only if you use the pci multi-function option but that kills
+> >>>>>> standard hot unplug
+> >>>>>
+> >>>>> It doesn't kill it as such, rather you can't unplug luns indivi=
+dually.
+> >>>>
+> >>>> Isnt that just a consequence of the current implementation rathe=
+r than
+> >>>> a SCSI limitation?
+> >>>
+> >>> Yes.
+> >>>
+> >>>> A different way to do hoplug could be to flag all devices as rem=
+ovable
+> >>>> in the standard inq page then
+> >>>> leave the LUN there persistently and what you remove/add is not =
+the
+> >>>> LUN device itself but just the media in the device.
+> >>>>
+> >>>> Instead of hot-plug remove the LUN, =A0hot-plug becomes "media e=
+ject" or
+> >>>> "media insert".
+> >>>> The device remains present all time, you never remove it, but in=
+stead
+> >>>> hot-plug controls if the media is present or not.
+> >>>>
+> >>>>
+> >>>> This would require implementing at least START_STOP_UNIT and
+> >>>> PREVENT_ALLOW_MEDIUM_REMOVAL opcode emulation from SBC.
+> >>>>
+> >>>>
+> >>>> regards
+> >>>> ronnie sahlberg
+> >>>
+> >>> That would work.
+> >>>
+> >> Or we simply use the Peripheral Qualifier that the device is gone;
+> >> eg we could simply set PQ =3D 1, return sense code 0x25/00 and be =
+done
+> >> with ...
+> >>
+> >
+> > That is still similar to "rip a device out from the guest without n=
+otice"
+> > and can cause the guest to be "surprised".
+> >
+> >
+> > Removable media is standard feature in SCSI SBC (and other commands=
+ets).
+> > The nice part of removable media is that it activates a contract
+> > between the device and the guest
+> > to prevent removal of the media when the guest depends on the media
+> > not being removed.
+> >
+> > I.e. =A0If you have a SBC device with the removable-media bit set,
+> > this is used to tell the initiator "this media can be removed, be
+> > prepared that this might happen".
+> > So when you mount such a SBC device in the guest, the guest will is=
+sue
+> > a "PREVENT_ALLOW_MEDIUM_REMOVAL"
+> > to tell the device "this medium is in use and may not be removed".
+> >
+>=20
+> What I mean is that if /dev/sdb is removable,
+> if you mount this as   "mount /dev/sdb1 /mnt"
+> this will automatically cause the guest kernel to send a
+> PREVENT_ALLOW_MEDIUM_REMOVAL to /dev/sdb to prevent removal.
+>=20
+> When you "umount /dev/sdb1"   the kernel/guest will automagically sen=
+d
+> PREVENT_ALLOW_MEDIUM_REMOVEAL to /dev/sdb and allow removal of the
+> media again.
+>=20
+>=20
+> If you capture this command and track the "prevent/allow removal
+> status"  you automatically get a channel where qemu will
+> know when it is safe to unplug the device  and when it is not safe to
+> unplug the device.
+> This is a nice feature.
 
-Vivek> In elv_rq_merge_ok() we don't allow merge of WRITE_SAME requests
-Vivek> but in rq_mergeable() we do say that requests having WRITE_SAME
-Vivek> can be merged.
-
-Thanks for spotting this! I was blindly hooking into all the places
-where REQ_DISCARD was present. However, the way we special-case discard
-merging all over is broken.
-
-I propose we do the following. I'll update the write same patch kit
-accordingly.
-
-
-block: Mark discard requests unmergeable
-
-Discards were globally marked as mergeable and as a result we had
-several code paths that explicitly disabled merging when REQ_DISCARD was
-set.
-
-Mark discard requests as unmergable and remove special-casing of
-REQ_DISCARD.
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 3a78b00..32bbdb1 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1545,8 +1545,8 @@ generic_make_request_checks(struct bio *bio)
- 		goto end_io;
- 	}
- 
--	if (unlikely(!(bio->bi_rw & REQ_DISCARD) &&
--		     nr_sectors > queue_max_hw_sectors(q))) {
-+	if (likely(bio_has_data(bio) &&
-+		   nr_sectors > queue_max_hw_sectors(q))) {
- 		printk(KERN_ERR "bio too big device %s (%u > %u)\n",
- 		       bdevname(bio->bi_bdev, b),
- 		       bio_sectors(bio),
-@@ -1698,7 +1698,7 @@ void submit_bio(int rw, struct bio *bio)
- 	 * If it's a regular read/write or a barrier with data attached,
- 	 * go through the normal accounting stuff before submission.
- 	 */
--	if (bio_has_data(bio) && !(rw & REQ_DISCARD)) {
-+	if (bio_has_data(bio)) {
- 		if (rw & WRITE) {
- 			count_vm_events(PGPGOUT, count);
- 		} else {
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 160035f..3f73823 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -371,12 +371,6 @@ static int attempt_merge(struct request_queue *q, struct request *req,
- 		return 0;
- 
- 	/*
--	 * Don't merge file system requests and discard requests
--	 */
--	if ((req->cmd_flags & REQ_DISCARD) != (next->cmd_flags & REQ_DISCARD))
--		return 0;
--
--	/*
- 	 * Don't merge discard requests and secure discard requests
- 	 */
- 	if ((req->cmd_flags & REQ_SECURE) != (next->cmd_flags & REQ_SECURE))
-@@ -477,10 +471,6 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
- 	if (!rq_mergeable(rq))
- 		return false;
- 
--	/* don't merge file system requests and discard requests */
--	if ((bio->bi_rw & REQ_DISCARD) != (rq->bio->bi_rw & REQ_DISCARD))
--		return false;
--
- 	/* don't merge discard requests and secure discard requests */
- 	if ((bio->bi_rw & REQ_SECURE) != (rq->bio->bi_rw & REQ_SECURE))
- 		return false;
-diff --git a/block/elevator.c b/block/elevator.c
-index f016855..cccfdbf 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -591,8 +591,7 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
- 
- 	if (rq->cmd_flags & REQ_SOFTBARRIER) {
- 		/* barriers are scheduling boundary, update end_sector */
--		if (rq->cmd_type == REQ_TYPE_FS ||
--		    (rq->cmd_flags & REQ_DISCARD)) {
-+		if (rq->cmd_type == REQ_TYPE_FS) {
- 			q->end_sector = rq_end_sector(rq);
- 			q->boundary_rq = rq;
- 		}
-@@ -634,8 +633,7 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
- 		if (elv_attempt_insert_merge(q, rq))
- 			break;
- 	case ELEVATOR_INSERT_SORT:
--		BUG_ON(rq->cmd_type != REQ_TYPE_FS &&
--		       !(rq->cmd_flags & REQ_DISCARD));
-+		BUG_ON(rq->cmd_type != REQ_TYPE_FS);
- 		rq->cmd_flags |= REQ_SORTED;
- 		q->nr_sorted++;
- 		if (rq_mergeable(rq)) {
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 129a9c0..b0d25ea 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -358,9 +358,15 @@ static inline char *__bio_kmap_irq(struct bio *bio, unsigned short idx,
- /*
-  * Check whether this bio carries any data or not. A NULL bio is allowed.
-  */
--static inline int bio_has_data(struct bio *bio)
-+static inline unsigned int bio_has_data(struct bio *bio)
- {
--	return bio && bio->bi_io_vec != NULL;
-+	if (!bio)
-+		return 0;
-+
-+	if (bio->bi_rw & REQ_DISCARD)
-+		return 0;
-+
-+	return bio->bi_io_vec != NULL;
- }
- 
- /*
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 606cf33..4bfa699 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -575,11 +575,12 @@ static inline void blk_clear_queue_full(struct request_queue *q, int sync)
-  * it already be started by driver.
-  */
- #define RQ_NOMERGE_FLAGS	\
--	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA)
-+	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | \
-+	 REQ_DISCARD)
- #define rq_mergeable(rq)	\
--	(!((rq)->cmd_flags & RQ_NOMERGE_FLAGS) && \
--	 (((rq)->cmd_flags & REQ_DISCARD) || \
--	  (rq)->cmd_type == REQ_TYPE_FS))
-+	(!((rq)->cmd_flags & RQ_NOMERGE_FLAGS) && (rq)->cmd_type == REQ_TYPE_FS)
-+
-+
- 
- /*
-  * q->prep_rq_fn return values
+Presumably there's a way for device to notify the OS
+that user requested removal, as well?
