@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/4] target: Add SCF_ACK_KREF flag for acknowledgement kref
-Date: Mon, 13 Feb 2012 11:42:24 +0000
-Message-ID: <1329133347-13359-2-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 2/4] target: Make target_release_cmd_kref release on empty list
+Date: Mon, 13 Feb 2012 11:42:25 +0000
+Message-ID: <1329133347-13359-3-git-send-email-nab@linux-iscsi.org>
 References: <1329133347-13359-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1329133347-13359-1-git-send-email-nab@linux-iscsi.org>
@@ -12,46 +12,28 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-When TARGET_SCF_ACK_KREF is in use with target_submit_cmd() for
-setting the extra acknowledgement reference to se_cmd->cmd_kref,
-go ahead and set SCF_ACK_KREF in order to be used later by
-abort task.
+This patch changes target_release_cmd_kref() to make TFO->release_cmd()
+call when list_empty(&se_cmd->se_cmd_list) is TRUE.  This is required
+for TMR_ABORT_TASK operation where the referenced tag descriptor may
+have already been pulled of the session command list.
 
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |    4 +++-
- include/target/target_core_base.h      |    3 ++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/target/target_core_transport.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 1fe946c..4a6ece1 100644
+index 4a6ece1..17183da 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -4035,8 +4035,10 @@ void target_get_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd,
- 	 * fabric acknowledgement that requires two target_put_sess_cmd()
- 	 * invocations before se_cmd descriptor release.
- 	 */
--	if (ack_kref == true)
-+	if (ack_kref == true) {
- 		kref_get(&se_cmd->cmd_kref);
-+		se_cmd->se_cmd_flags |= SCF_ACK_KREF;
-+	}
- 
+@@ -4056,7 +4056,7 @@ static void target_release_cmd_kref(struct kref *kref)
  	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
- 	list_add_tail(&se_cmd->se_cmd_list, &se_sess->sess_cmd_list);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 870768c..2d3d79a 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -183,7 +183,8 @@ enum se_cmd_flags_table {
- 	SCF_ALUA_NON_OPTIMIZED		= 0x00040000,
- 	SCF_DELAYED_CMD_FROM_SAM_ATTR	= 0x00080000,
- 	SCF_UNUSED			= 0x00100000,
--	SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC = 0x00400000,
-+	SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC = 0x00200000,
-+	SCF_ACK_KREF			= 0x00400000,
- };
- 
- /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
+ 	if (list_empty(&se_cmd->se_cmd_list)) {
+ 		spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+-		WARN_ON(1);
++		se_cmd->se_tfo->release_cmd(se_cmd);
+ 		return;
+ 	}
+ 	if (se_sess->sess_tearing_down && se_cmd->cmd_wait_set) {
 -- 
 1.7.2.5
