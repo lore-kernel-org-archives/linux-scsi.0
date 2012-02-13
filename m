@@ -1,60 +1,67 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: scsi_error: do not allow IO errors with certain ILLEGAL_REQUEST
- sense to be retryable
-Date: Mon, 13 Feb 2012 13:59:48 -0500
-Message-ID: <20120213185948.GA9229@redhat.com>
-References: <1322857889-2623-1-git-send-email-snitzer@redhat.com>
- <yq1zkf5pfx1.fsf@sermon.lab.mkp.net>
- <20111206212704.GB30719@redhat.com>
- <yq1vcptpdch.fsf@sermon.lab.mkp.net>
- <20111206224218.GA31543@redhat.com>
- <20120213162923.GA29578@redhat.com>
- <yq1d39iipra.fsf@sermon.lab.mkp.net>
- <20120213181359.GA5803@redhat.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of the staging area
+Date: Mon, 13 Feb 2012 18:59:35 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481B70D570@TK5EX14MBXC128.redmond.corp.microsoft.com>
+References: <1328825688-4337-1-git-send-email-kys@microsoft.com>
+ <20120210180212.GA605@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120213181359.GA5803@redhat.com>
+In-Reply-To: <20120210180212.GA605@kroah.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 13 2012 at  1:13pm -0500,
-Mike Snitzer <snitzer@redhat.com> wrote:
 
-> On Mon, Feb 13 2012 at 12:53pm -0500,
-> Martin K. Petersen <martin.petersen@oracle.com> wrote:
+
+> -----Original Message-----
+> From: Greg KH [mailto:gregkh@linuxfoundation.org]
+> Sent: Friday, February 10, 2012 1:02 PM
+> To: KY Srinivasan; jbottomley@parallels.com
+> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> virtualization@lists.osdl.org; ohering@suse.com; hch@infradead.org; linux-
+> scsi@vger.kernel.org
+> Subject: Re: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out of the
+> staging area
 > 
-> > >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
-> > 
-> > Mike> So that makes 3 different _prominent_ storage vendors, that I am
-> > Mike> aware of, that are bitten by their broken storage (relative to
-> > Mike> discard and properly advertising which variant they actually
-> > Mike> support).  I'd much rather deal with the storage vendors (or their
-> > Mike> customers) reporting that discards aren't working than mutual
-> > Mike> customers reporting that they cannot even install to the storage.
-> > 
-> > More graceful handling of the sense data aside, we do have a couple of
-> > options:
-> > 
-> >  1. Now that the provisioning portion seems to be stable in SBC-3 we can
-> >     nuke the interim spec heuristics and only support devices that
-> >     report the right thing. This may disable provisioning for some
-> >     existing users whose arrays run non-compliant firmware.
-> > 
-> >  2. We can add another layer of heuristics based on the RSOC wrapper I
-> >     introduced for write same. Maybe you could send me sg_opcodes output
-> >     for the arrays in question?
+> On Thu, Feb 09, 2012 at 02:14:48PM -0800, K. Y. Srinivasan wrote:
+> > The storage driver (storvsc_drv.c) handles all block storage devices
+> > assigned to Linux guests hosted on Hyper-V. This driver has been in the
+> > staging tree for a while and this patch moves it out of the staging area.
+> >
+> > James was willing to apply this patch during the 3.3-rc phase and a decision
+> > was taken to defer this to 3.4 since Greg had queued up a bunch of storvsc
+> > patches for 3.4. Now that Greg has applied all of the pending storvsc patches,
+> > I am sending this patch to move this driver out of staging. Based on James'
+> > recommendation, this patch gets rid of the unneeded files in the staging/hv
+> > directory.
+> >
+> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> > ---
+> >  drivers/scsi/Kconfig                       |    7 +++++++
+> >  drivers/scsi/Makefile                      |    3 +++
+> >  drivers/{staging/hv => scsi}/storvsc_drv.c |    0
+> >  drivers/staging/Kconfig                    |    2 --
+> >  drivers/staging/Makefile                   |    1 -
+> >  drivers/staging/hv/Kconfig                 |    5 -----
+> >  drivers/staging/hv/Makefile                |    3 ---
+> >  drivers/staging/hv/TODO                    |    5 -----
+> >  8 files changed, 10 insertions(+), 16 deletions(-)
+> >  rename drivers/{staging/hv => scsi}/storvsc_drv.c (100%)
+> >  delete mode 100644 drivers/staging/hv/Kconfig
+> >  delete mode 100644 drivers/staging/hv/Makefile
+> >  delete mode 100644 drivers/staging/hv/TODO
 > 
-> Yeah, I think that would be welcomed evolution (but as you say,
-> independent of improving additional ILLEGAL REQUEST processing).
+> James, can I add your Acked-by: for this patch?
 
-That was a response to 1 above.
+James,
+Based on my understanding of your comments, I think this is what you
+wanted. So, what is the verdict.
 
-I don't have direct access to the arrays in question to get sg_opcodes.
+Regards,
 
-But I can work on getting them.
-
-Mike
+K. Y. 
