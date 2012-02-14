@@ -1,62 +1,84 @@
-From: Danny Kukawka <danny.kukawka@bisect.de>
-Subject: [PATCH] pm8001: fix enum checks
-Date: Tue, 14 Feb 2012 15:40:55 +0100
-Message-ID: <1329230455-27084-1-git-send-email-danny.kukawka@bisect.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Chetan Loke <loke.chetan@gmail.com>
+Subject: [PATCH 1/1] qla2xxx: Micro optimization in queuecommand handler
+Date: Tue, 14 Feb 2012 09:47:46 -0500
+Message-ID: <1329230866-905-1-git-send-email-loke.chetan@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wp188.webpack.hosteurope.de ([80.237.132.195]:52644 "EHLO
-	wp188.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756666Ab2BNOlB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Feb 2012 09:41:01 -0500
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:36490 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760781Ab2BNOs0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2012 09:48:26 -0500
+Received: by qcqw6 with SMTP id w6so19297qcq.19
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Feb 2012 06:48:25 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Danny Kukawka <dkukawka@suse.de>, jack_wang@usish.com, lindar_liu@usish.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com
+Cc: linux-driver@qlogic.com, loke.chetan@gmail.com
 
-=46ix for:
-drivers/scsi/pm8001/pm8001_hwi.c: In function =E2=80=98hw_event_sas_phy=
-_up=E2=80=99:
-drivers/scsi/pm8001/pm8001_hwi.c:2932:32: warning: comparison between
-  =E2=80=98enum sas_device_type=E2=80=99 and =E2=80=98enum sas_dev_type=
-=E2=80=99 [-Wenum-compare]
-drivers/scsi/pm8001/pm8001_hwi.c:2934:37: warning: comparison between
-  =E2=80=98enum sas_device_type=E2=80=99 and =E2=80=98enum sas_dev_type=
-=E2=80=99 [-Wenum-compare]
+Optimized queuecommand handler's to eliminate double head-room checks.
+The checks are moved inside the 1st if-loop otherwise you would end up checking twice when there is enough head room.
 
-Changed SAS_END_DEV to SAS_END_DEVICE and NO_DEVICE with
-SAS_PHY_UNUSED.
-
-Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
+Signed-off-by: Chetan Loke <loke.chetan@gmail.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_iocb.c |   19 +++++++++----------
+ 1 files changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8=
-001_hwi.c
-index b7b92f7..46fd7219 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -2929,9 +2929,9 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm800=
-1_ha, void *piomb)
- 	phy->phy_type |=3D PORT_TYPE_SAS;
- 	phy->identify.device_type =3D deviceType;
- 	phy->phy_attached =3D 1;
--	if (phy->identify.device_type =3D=3D SAS_END_DEV)
-+	if (phy->identify.device_type =3D=3D SAS_END_DEVICE)
- 		phy->identify.target_port_protocols =3D SAS_PROTOCOL_SSP;
--	else if (phy->identify.device_type !=3D NO_DEVICE)
-+	else if (phy->identify.device_type !=3D SAS_PHY_UNUSED)
- 		phy->identify.target_port_protocols =3D SAS_PROTOCOL_SMP;
- 	phy->sas_phy.oob_mode =3D SAS_OOB_MODE;
- 	sas_ha->notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE);
---=20
-1.7.7.3
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 55a9676..825a046 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -383,9 +383,10 @@ qla2x00_start_scsi(srb_t *sp)
+ 		else
+ 			req->cnt = req->length -
+ 			    (req->ring_index - cnt);
++		/* If still no head room then bail out */
++		if (req->cnt < (req_cnt + 2))
++			goto queuing_error;
+ 	}
+-	if (req->cnt < (req_cnt + 2))
+-		goto queuing_error;
+ 
+ 	/* Build command packet */
+ 	req->current_outstanding_cmd = handle;
+@@ -1502,9 +1503,9 @@ qla24xx_start_scsi(srb_t *sp)
+ 		else
+ 			req->cnt = req->length -
+ 				(req->ring_index - cnt);
++		if (req->cnt < (req_cnt + 2))
++			goto queuing_error;
+ 	}
+-	if (req->cnt < (req_cnt + 2))
+-		goto queuing_error;
+ 
+ 	/* Build command packet. */
+ 	req->current_outstanding_cmd = handle;
+@@ -1717,11 +1718,10 @@ qla24xx_dif_start_scsi(srb_t *sp)
+ 		else
+ 			req->cnt = req->length -
+ 				(req->ring_index - cnt);
++		if (req->cnt < (req_cnt + 2))
++			goto queuing_error;
+ 	}
+ 
+-	if (req->cnt < (req_cnt + 2))
+-		goto queuing_error;
+-
+ 	status |= QDSS_GOT_Q_SPACE;
+ 
+ 	/* Build header part of command packet (excluding the OPCODE). */
+@@ -2349,11 +2349,10 @@ sufficient_dsds:
+ 			else
+ 				req->cnt = req->length -
+ 					(req->ring_index - cnt);
++			if (req->cnt < (req_cnt + 2))
++				goto queuing_error;
+ 		}
+ 
+-		if (req->cnt < (req_cnt + 2))
+-			goto queuing_error;
+-
+ 		ctx = sp->ctx = mempool_alloc(ha->ctx_mempool, GFP_ATOMIC);
+ 		if (!sp->ctx) {
+ 			ql_log(ql_log_fatal, vha, 0x3010,
+-- 
+1.7.5.2
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
