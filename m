@@ -1,28 +1,28 @@
 From: Danny Kukawka <danny.kukawka@bisect.de>
-Subject: [PATCH] mvsas: fix enum checks
-Date: Tue, 14 Feb 2012 15:40:39 +0100
-Message-ID: <1329230439-26976-1-git-send-email-danny.kukawka@bisect.de>
+Subject: [PATCH] pm8001: fix enum checks
+Date: Tue, 14 Feb 2012 15:40:55 +0100
+Message-ID: <1329230455-27084-1-git-send-email-danny.kukawka@bisect.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wp188.webpack.hosteurope.de ([80.237.132.195]:52526 "EHLO
+Received: from wp188.webpack.hosteurope.de ([80.237.132.195]:52644 "EHLO
 	wp188.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756666Ab2BNOko (ORCPT
+	by vger.kernel.org with ESMTP id S1756666Ab2BNOlB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Feb 2012 09:40:44 -0500
+	Tue, 14 Feb 2012 09:41:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Danny Kukawka <dkukawka@suse.de>, Xiangliang Yu <yuxiangl@marvell.com>, Dan Williams <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Danny Kukawka <dkukawka@suse.de>, jack_wang@usish.com, lindar_liu@usish.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 =46ix for:
-drivers/scsi/mvsas/mv_sas.c: In function =E2=80=98mvs_update_phyinfo=E2=
-=80=99:
-drivers/scsi/mvsas/mv_sas.c:1163:34: warning: comparison between
+drivers/scsi/pm8001/pm8001_hwi.c: In function =E2=80=98hw_event_sas_phy=
+_up=E2=80=99:
+drivers/scsi/pm8001/pm8001_hwi.c:2932:32: warning: comparison between
   =E2=80=98enum sas_device_type=E2=80=99 and =E2=80=98enum sas_dev_type=
 =E2=80=99 [-Wenum-compare]
-drivers/scsi/mvsas/mv_sas.c:1166:39: warning: comparison between
+drivers/scsi/pm8001/pm8001_hwi.c:2934:37: warning: comparison between
   =E2=80=98enum sas_device_type=E2=80=99 and =E2=80=98enum sas_dev_type=
 =E2=80=99 [-Wenum-compare]
 
@@ -31,27 +31,27 @@ SAS_PHY_UNUSED.
 
 Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
 ---
- drivers/scsi/mvsas/mv_sas.c |    4 ++--
+ drivers/scsi/pm8001/pm8001_hwi.c |    4 ++--
  1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index a4884a5..7a57780 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1160,10 +1160,10 @@ void mvs_update_phyinfo(struct mvs_info *mvi, i=
-nt i, int get_st)
- 			phy->identify.device_type =3D
- 				phy->att_dev_info & PORT_DEV_TYPE_MASK;
-=20
--			if (phy->identify.device_type =3D=3D SAS_END_DEV)
-+			if (phy->identify.device_type =3D=3D SAS_END_DEVICE)
- 				phy->identify.target_port_protocols =3D
- 							SAS_PROTOCOL_SSP;
--			else if (phy->identify.device_type !=3D NO_DEVICE)
-+			else if (phy->identify.device_type !=3D SAS_PHY_UNUSED)
- 				phy->identify.target_port_protocols =3D
- 							SAS_PROTOCOL_SMP;
- 			if (oob_done)
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8=
+001_hwi.c
+index b7b92f7..46fd7219 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -2929,9 +2929,9 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm800=
+1_ha, void *piomb)
+ 	phy->phy_type |=3D PORT_TYPE_SAS;
+ 	phy->identify.device_type =3D deviceType;
+ 	phy->phy_attached =3D 1;
+-	if (phy->identify.device_type =3D=3D SAS_END_DEV)
++	if (phy->identify.device_type =3D=3D SAS_END_DEVICE)
+ 		phy->identify.target_port_protocols =3D SAS_PROTOCOL_SSP;
+-	else if (phy->identify.device_type !=3D NO_DEVICE)
++	else if (phy->identify.device_type !=3D SAS_PHY_UNUSED)
+ 		phy->identify.target_port_protocols =3D SAS_PROTOCOL_SMP;
+ 	phy->sas_phy.oob_mode =3D SAS_OOB_MODE;
+ 	sas_ha->notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE);
 --=20
 1.7.7.3
 
