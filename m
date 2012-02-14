@@ -1,54 +1,26 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH v2] [SCSI] scsi_error: classify some ILLEGAL_REQUEST sense as
- a permanent TARGET_ERROR
-Date: Mon, 13 Feb 2012 18:35:11 -0500
-Message-ID: <20120213233511.GA27146@redhat.com>
-References: <1322857889-2623-1-git-send-email-snitzer@redhat.com>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: Pe: [PATCH v5 1/3] virtio-scsi: first version
+Date: Tue, 14 Feb 2012 10:37:46 +1030
+Message-ID: <87ipjacm5p.fsf@rustcorp.com.au>
+References: <OF2D939B55.7C07E33B-ONC125799C.0032B83A-C125799C.0036282C@de.ibm.com>  <4F30F4EE.4080607@redhat.com> <4F311154.9080407@de.ibm.com>  <4F3119A0.7080005@redhat.com> <4F312492.1040002@de.ibm.com>  <OFAFB86CAE.9917478D-ONC125799D.004AF231-C125799D.004CE6D2@de.ibm.com>  <4F313526.2050907@redhat.com>  <OF36197712.1A42EB9E-ONC125799E.0049E3C2-C125799E.004AD4BF@de.ibm.com>  <4F3390FB.80107@redhat.com> <1329077777.21613.60.camel@dabdike.int.hansenpartnership.com> <4F38D5BC.8010705@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41109 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751555Ab2BMXfW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Feb 2012 18:35:22 -0500
-Content-Disposition: inline
-In-Reply-To: <1322857889-2623-1-git-send-email-snitzer@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4F38D5BC.8010705@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christian Hoff <christian.hoff@de.ibm.com>, BORNTRAE@linux.vnet.ibm.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com
 
-Permanent target failures are non-retryable and should be classified as
-TARGET_ERROR; otherwise dm-multipath will retry an IO request that will
-always fail at the target.
+On Mon, 13 Feb 2012 10:19:56 +0100, Paolo Bonzini <pbonzini@redhat.com> wrote:
+> block layer _is_ growing support for new operations: discard is already 
+> there, write same is in the works, extended copy will also come in due 
+> time.  Perhaps we'll add them to virtio-blk, perhaps not.
 
-A SCSI command that fails with ILLEGAL_REQUEST sense and Additional
-sense 0x20, 0x21, 0x24 or 0x26 represents a permanent TARGET_ERROR.
+FYI, I'd take patches for discard in virtio_blk today; it's a no-brainer
+in a virtual devoce.
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- drivers/scsi/scsi_error.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+But I wouldn't want extended copy and write same.
 
-v2: revised patch header to not be hyper-focused on WRITE SAME failures
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index dc6131e..33d3a50 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -366,6 +366,14 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 			return TARGET_ERROR;
- 
- 	case ILLEGAL_REQUEST:
-+		if (sshdr.asc == 0x20 || /* Invalid command operation code */
-+		    sshdr.asc == 0x21 || /* Logical block address out of range */
-+		    sshdr.asc == 0x24 || /* Invalid field in cdb */
-+		    sshdr.asc == 0x26) { /* Parameter value invalid */
-+			return TARGET_ERROR;
-+		}
-+		return SUCCESS;
-+
- 	default:
- 		return SUCCESS;
- 	}
-
+Thanks,
+Rusty.
