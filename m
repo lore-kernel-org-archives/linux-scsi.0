@@ -1,75 +1,97 @@
-From: Yang Bai <hamo.by@gmail.com>
-Subject: Re: [PATCH] scsi: if sd card is removed, do not revalidate it
-Date: Tue, 14 Feb 2012 12:13:18 +0800
-Message-ID: <CAO_0yfOyrK_no3KDS7mX1uaFszKWtMtkkRxUKgb+8xrDQANzew@mail.gmail.com>
-References: <1329192654-11284-1-git-send-email-hamo.by@gmail.com>
+From: Zhang Rui <rui.zhang@intel.com>
+Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
+Date: Tue, 14 Feb 2012 14:07:07 +0800
+Message-ID: <1329199627.19384.6.camel@rui.sh.intel.com>
+References: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:62666 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754461Ab2BNENi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2012 23:13:38 -0500
-In-Reply-To: <1329192654-11284-1-git-send-email-hamo.by@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:7395 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751317Ab2BNGHU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Feb 2012 01:07:20 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Yang Bai <hamo.by@gmail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 
-On Tue, Feb 14, 2012 at 12:10 PM, Yang Bai <hamo.by@gmail.com> wrote:
-> During revalidating, if sd card is removed, scsi_device
-> will be NULL, so we should not revalidate or it will cause
-> a panic.
-> This problem is report at:
-> http://comments.gmane.org/gmane.linux.kernel/1250235
->
-> Signed-off-by: Yang Bai <hamo.by@gmail.com>
-> ---
-> =C2=A0drivers/scsi/sd.c | =C2=A0 =C2=A04 ++--
-> =C2=A01 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index c691fb5..470339c 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2370,10 +2370,10 @@ static int sd_revalidate_disk(struct gendisk =
-*disk)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0"sd_reva=
-lidate_disk\n"));
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0* If the device is offline, don't try an=
-d read capacity or any
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0* If the device is removed or offline, d=
-on't try and read capacity or any
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * of the other niceties.
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
-> - =C2=A0 =C2=A0 =C2=A0 if (!scsi_device_online(sdp))
-> + =C2=A0 =C2=A0 =C2=A0 if (!sdp || !scsi_device_online(sdp))
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto out;
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0buffer =3D kmalloc(SD_BUF_SIZE, GFP_KERNEL=
-);
-> --
-> 1.7.9
->
+On =E4=B8=80, 2012-02-13 at 10:01 -0500, Alan Stern wrote:
+> On Mon, 13 Feb 2012, Lin Ming wrote:
+>=20
+> > From: Zhang Rui <rui.zhang@intel.com>
+> >=20
+> > Introduce flag can_power_off in device structure to support runtime
+> > power off/on.
+> >=20
+> > Note that, for a specific device driver,
+> > "support runtime power off/on" means that the driver .runtime_suspe=
+nd
+> > callback needs to
+> > 1) save all the context so that it can restore the device back to t=
+he previous
+> >    working state after powered on.
+> > 2) set can_power_off flag to tell the driver model that it's ready =
+for power off.
+> >=20
+> > The following example shows how this works.
+> >=20
+> > device A
+> >  |---------|
+> >  v         v
+> > device B  device C
+> >=20
+> > A is the parent of device B and device C, and device A/B/C shares t=
+he
+> > same power logic
+> > (Only device A knows how to turn on/off the power).
+> >=20
+> > In order to power off A, B, C at runtime,
+> > 1) device B and device C should support runtime power off
+> >    (runtime suspended with can_power_off flag set)
+> > 2) pm idle request for device A is fired by runtime PM core.
+> > 3) in device A .runtime_suspend callback, it tries to set can_power=
+_off flag.
+> > 4) if succeed, it means all its children have been ready for power =
+off
+> >    and it can turn off the power at any time.
+> > 5) if failed, it means at least one of its children does not suppor=
+t runtime
+> >    power off, thus the power can not be turned off.
+>=20
+> I'm not sure if this is really the right approach.  What you're tryin=
+g=20
+> to do is implement two different low-power states, basically D3hot an=
+d=20
+> D3cold.  Currently the runtime PM core doesn't support such things; a=
+ll=20
+> it knows about is low power and full power.
+>=20
+Exactly.
+what I'm trying to fix here is to add a "special" runtime low power
+state, aka, power off.
 
-Is this the right way to solve this problem? Or should we add
-a lock to this struct to protect it?
+> Before doing an ad-hoc implementation, it would be best to step back
+> and think about other subsystems.  Other sorts of devices may well ha=
+ve
+> multiple low-power states.  What's the best way for this to be
+> supported by the PM core?
+>=20
+I thought about this before, e.g. introduce support for multiple runtim=
+e
+low power states in runtime PM core, like suspend/hibernate for system
+low power states. But I'm not sure if this is workable because the low
+power states varies between devices/buses/platforms.
 
---=20
-=C2=A0 =C2=A0 """
-=C2=A0 =C2=A0 Keep It Simple,Stupid.
-=C2=A0 =C2=A0 """
+So I decided to introduce a special low power state, aka, runtime power
+off, first, which means the same thing to different
+devices/buses/platforms.
 
-Chinese Name: =E7=99=BD=E6=9D=A8
-Nick Name: Hamo
-Homepage: http://hamobai.com/
-GPG KEY ID: 0xA4691A33
-Key fingerprint =3D 09D5 2D78 8E2B 0995 CF8E=C2=A0 4331 33C4 3D24 A469 =
-1A33
+thanks,
+rui
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
