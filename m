@@ -1,49 +1,134 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: Pe: [PATCH v5 1/3] virtio-scsi: first version
-Date: Tue, 14 Feb 2012 10:57:43 +0100
-Message-ID: <4F3A3017.4060202@redhat.com>
-References: <20120213130005.GB26773@redhat.com> <CAN05THTOY894httm5PjzsHELBB-P8DmpZ4bGoBR7FH1s6Tmcrg@mail.gmail.com> <20120213131848.GD26773@redhat.com> <4F39287A.9030808@suse.de> <CAN05THT=7xJhqAMrAvDsK2Z1_4d+=tV9yhOFkr5Z-i43k5hAGA@mail.gmail.com> <CAN05THT6t_w=9Zt+o-B4s8E3jUMWsxiBvTyySxNEK2QfvLe-BA@mail.gmail.com> <20120213225623.GA2988@redhat.com> <CAN05THS_zTf2VRz6QdccHbkOacnE86LNhtxp7b8twe+XezBU6Q@mail.gmail.com> <20120213233334.GC4430@redhat.com> <CAN05THTTva709Dab9f_PBWxehMWnP9Gg4T7Nnmg7Swk3xuz7aQ@mail.gmail.com> <20120214011144.GB5192@redhat.com>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: Kernel crashing on eject SD card
+Date: Tue, 14 Feb 2012 20:14:40 +0900
+Message-ID: <4F3A4220.4010901@ce.jp.nec.com>
+References: <1328660390.4f31bfa6e8f4b@www.imp.polymtl.ca> <20120212220836.6aa7fa4d@stein> <20120212222027.71651e8b@stein> <20120213021813.GA589@redhat.com> <1329154831.4f394b0f3c69c@www.imp.polymtl.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:45628 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754178Ab2BNJ5w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2012 04:57:52 -0500
-In-Reply-To: <20120214011144.GB5192@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1329154831.4f394b0f3c69c@www.imp.polymtl.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Naveen Goswamy <naveen.goswamy@polymtl.ca>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Dave Jones <davej@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: ronnie sahlberg <ronniesahlberg@gmail.com>, Hannes Reinecke <hare@suse.de>, Dor Laor <dlaor@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christian Borntraeger <borntraeger@de.ibm.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christian Hoff <christian.hoff@de.ibm.com>, borntrae@linux.vnet.ibm.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, Stefan Hajnoczi <stefanha@gmail.com>, target-devel <target-devel@vger.kernel.org>
 
-On 02/14/2012 02:11 AM, Michael S. Tsirkin wrote:
-> On Tue, Feb 14, 2012 at 11:49:55AM +1100, ronnie sahlberg wrote:
->> By just exposing this device to the kernel, the kernel keeps sending,
->> or if not the kernel maybe some other process trying to poll the
->> status?
->>
->> every few seconds :
->> PREVENT_ALLOW_MEDIUM_REMOVAL  prevent removal
->> PREVENT_ALLOW_MEDIUM_REMOVAL  to immediatel change it back to allow
->> removal again
->> TEST_UNIT_READY
->>
->>
->> After I run this
->> mount /dev/sdd1 /mnt
->>
->> The kernel sends a single
->> PREVENT_ALLOW_MEDIUM_REMOVAL to prevent removal
->> then every few seconds a
->> TEST_UNIT_READY
+On 02/14/12 02:40, Naveen Goswamy wrote:
+> Feb 13 08:50:53 speedy kernel: scsi 6:0:0:0: killing request
+> Feb 13 08:50:53 speedy kernel: BUG: unable to handle kernel NULL pointer
+> dereference at 0000000000000008
+> Feb 13 08:50:53 speedy kernel: IP: [<ffffffff8135b798>]
+> sd_revalidate_disk+0x1a/0x16ee
+> Feb 13 08:50:53 speedy kernel: PGD 223493067 PUD 2234de067 PMD 0
+> Feb 13 08:50:53 speedy kernel: Oops: 0000 [#1] SMP
+> Feb 13 08:50:53 speedy kernel: CPU 2
+> Feb 13 08:50:53 speedy kernel: Modules linked in: aes_x86_64 aes_generic
+> ipt_REJECT iptable_mangle iptable_nat nf_nat iptable_filter ip_tables ipv6
+> dm_mod uvcvideo videodev v4l2_compat_ioctl32 usb_storage arc4 brcmsmac
+> snd_hda_codec_hdmi snd_hda_codec_idt mac80211 brcmutil snd_hda_intel
+> snd_hda_codec cfg80211 r8169 rfkill snd_pcm snd_timer dell_wmi snd
+> sparse_keymap ehci_hcd wmi firmware_class dcdbas crc8 soundcore rtc usbcore
+> snd_page_alloc sg cordic usb_common
+> Feb 13 08:50:53 speedy kernel:
+> Feb 13 08:50:53 speedy kernel: Pid: 2721, comm: udisks-daemon Not tainted
+> 3.2.5-gentoo_MINE_V00 #1 Dell Inc. Vostro 3400/07MJFM
+> Feb 13 08:50:53 speedy kernel: RIP: 0010:[<ffffffff8135b798>]
+> [<ffffffff8135b798>] sd_revalidate_disk+0x1a/0x16ee
+> Feb 13 08:50:53 speedy kernel: RSP: 0018:ffff8802234ddb08  EFLAGS: 00010292
+> Feb 13 08:50:53 speedy kernel: RAX: ffffffff8135b77e RBX: 0000000000000000 RCX:
+> 0000000000000002
+> Feb 13 08:50:53 speedy kernel: RDX: 0000000000000002 RSI: 0000000800000000 RDI:
+> ffff880231599000
+> Feb 13 08:50:53 speedy kernel: RBP: ffff880231599000 R08: ffff88023ab4f9a0 R09:
+> ffffffff81852ec8
+> Feb 13 08:50:53 speedy kernel: R10: 0000000000000002 R11: 0000000000011e00 R12:
+> ffff880231599000
+> Feb 13 08:50:53 speedy kernel: R13: ffff880232322698 R14: 0000000000000000 R15:
+> ffff880232322680
+> Feb 13 08:50:53 speedy kernel: FS:  00007f7666c6b700(0000)
+> GS:ffff88023bd00000(0000) knlGS:0000000000000000
+> Feb 13 08:50:53 speedy kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> Feb 13 08:50:53 speedy kernel: CR2: 0000000000000008 CR3: 0000000223492000 CR4:
+> 00000000000006e0
+> Feb 13 08:50:53 speedy kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+> 0000000000000000
+> Feb 13 08:50:53 speedy kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
+> 0000000000000400
+> Feb 13 08:50:53 speedy kernel: Process udisks-daemon (pid: 2721, threadinfo
+> ffff8802234dc000, task ffff880230f76920)
+> Feb 13 08:50:53 speedy kernel: Stack:
+> Feb 13 08:50:53 speedy kernel: ffffffff8103468a ffff880231599048
+> 0000000000000000 ffff880231599000
+> Feb 13 08:50:53 speedy kernel: ffff880232322698 000000000000001d
+> ffff880232322680 ffffffff810a0f35
+> Feb 13 08:50:53 speedy kernel: ffff880232322680 ffff880231599000
+> 0000000000000000 ffff880232322758
+> Feb 13 08:50:53 speedy kernel: Call Trace:
+> Feb 13 08:50:53 speedy kernel: [<ffffffff8103468a>] ? try_to_wake_up+0x200/0x200
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810a0f35>] ? get_super+0x1a/0x95
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810b2460>] ? iput+0x2b/0x17e
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810eb4b6>] ?
+> rescan_partitions+0xac/0x446
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810c5498>] ? __blkdev_get+0x162/0x33f
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810c5913>] ? blkdev_get+0x29e/0x29e
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810c5835>] ? blkdev_get+0x1c0/0x29e
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810c5913>] ? blkdev_get+0x29e/0x29e
+> Feb 13 08:50:53 speedy kernel: [<ffffffff8109e0a7>] ?
+> __dentry_open.clone.14+0x16b/0x294
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810aab37>] ?
+> do_last.clone.34+0x64e/0x662
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810aac4d>] ? path_openat+0xcb/0x354
+> Feb 13 08:50:53 speedy kernel: [<ffffffff8133e9b0>] ?
+> scsi_set_medium_removal+0x46/0x6b
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810aafb1>] ? do_filp_open+0x2c/0x72
+> Feb 13 08:50:53 speedy kernel: [<ffffffff810b4066>] ? alloc_fd+0x69/0x10f
+> Feb 13 08:50:53 speedy kernel: [<ffffffff8109ed9a>] ? do_sys_open+0x101/0x18f
+> Feb 13 08:50:53 speedy kernel: [<ffffffff81483292>] ?
+> system_call_fastpath+0x16/0x1b
+> Feb 13 08:50:53 speedy kernel: Code: ff ff 48 83 c4 68 5b 5d 41 5c 41 5d 41 5e
+> 41 5f c3 41 57 41 56 41 55 41 54 55 53 48 83 ec 78 48 8b 9f 50 02 00 00 48 89
+> 7c 24 48 <48> 8b 43 08 48 89 44 24 28 8b 05 49 dc 7e 00 c1 e8 15 83 e0 07
+> Feb 13 08:50:53 speedy kernel: RIP  [<ffffffff8135b798>]
+> sd_revalidate_disk+0x1a/0x16ee
+> Feb 13 08:50:53 speedy kernel: RSP <ffff8802234ddb08>
+> Feb 13 08:50:53 speedy kernel: CR2: 0000000000000008
+> Feb 13 08:50:53 speedy kernel: ---[ end trace 0370d79d444e26e5 ]---
 
-Sorry to interrupt you again guys, but: the discussion started with 
-virtio-blk hotplug and now we're talking about SCSI commands?  Sure 
-somebody switched topic at some point :) and anyway this is irrelevant 
-to what virtio-blk can/cannot do.
+According to the comments by Huajun Li:
+http://www.spinics.net/lists/linux-scsi/msg55698.html
 
-BTW, for virtio-scsi the spec provides a way to do hotplug and hotunplug 
-without any polling, though it's not implemented yet in the driver.
+The following commit has changed __blkdev_get() to end up calling
+sd_revalidate_disk() without getting a refcount of scsi_device:
 
-Paolo
+  commit 1196f8b814f32cd04df334abf47648c2a9fd8324
+  Author: Tejun Heo <tj@kernel.org>
+  Date:   Thu Apr 21 20:54:45 2011 +0200
+
+    block: rescan partitions on invalidated devices on -ENOMEDIA too
+
+that could lead to oops like this:
+
+  process A                  process B
+  ----------------------------------------------
+  sys_open
+    __blkdev_get
+      sd_open
+        returns -ENOMEDIUM
+                             scsi_remove_device
+                               <scsi_device torn down>
+      rescan_partitions
+        sd_revalidate_disk
+          <oops>
+
+Should "revalidate_disk" of block_device_operations work
+without successful open()?
+
+If so, sd_revalidate_disk() (and possibly other drivers) needs to be
+fixed. (e.g. use scsi_disk_get/put by itself)
+
+If not, __blkdev_get() or rescan_partision() should avoid calling
+"revalidate_disk" for -ENOMEDIUM case.
+
+Thanks,
+-- 
+Jun'ichi Nomura, NEC Corporation
