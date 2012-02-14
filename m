@@ -1,45 +1,67 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 42765] mptscsih driver issues task aborts during high write
- utilization
-Date: Tue, 14 Feb 2012 14:57:39 GMT
-Message-ID: <201202141457.q1EEvdPE015030@bugzilla.kernel.org>
-References: <bug-42765-11613@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Kernel crashing on eject SD card
+Date: Tue, 14 Feb 2012 08:28:58 -0800
+Message-ID: <20120214162858.GM12117@google.com>
+References: <1328660390.4f31bfa6e8f4b@www.imp.polymtl.ca>
+ <20120212220836.6aa7fa4d@stein>
+ <20120212222027.71651e8b@stein>
+ <20120213021813.GA589@redhat.com>
+ <1329154831.4f394b0f3c69c@www.imp.polymtl.ca>
+ <4F3A4220.4010901@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:56687 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753855Ab2BNO5j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2012 09:57:39 -0500
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q1EEvdul015031
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Feb 2012 14:57:39 GMT
-In-Reply-To: <bug-42765-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4F3A4220.4010901@ce.jp.nec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: Naveen Goswamy <naveen.goswamy@polymtl.ca>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Dave Jones <davej@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42765
+Hello,
 
+On Tue, Feb 14, 2012 at 08:14:40PM +0900, Jun'ichi Nomura wrote:
+> The following commit has changed __blkdev_get() to end up calling
+> sd_revalidate_disk() without getting a refcount of scsi_device:
+> 
+>   commit 1196f8b814f32cd04df334abf47648c2a9fd8324
+>   Author: Tejun Heo <tj@kernel.org>
+>   Date:   Thu Apr 21 20:54:45 2011 +0200
+> 
+>     block: rescan partitions on invalidated devices on -ENOMEDIA too
+> 
+> that could lead to oops like this:
+> 
+>   process A                  process B
+>   ----------------------------------------------
+>   sys_open
+>     __blkdev_get
+>       sd_open
+>         returns -ENOMEDIUM
+>                              scsi_remove_device
+>                                <scsi_device torn down>
+>       rescan_partitions
+>         sd_revalidate_disk
+>           <oops>
+> 
+> Should "revalidate_disk" of block_device_operations work
+> without successful open()?
+> 
+> If so, sd_revalidate_disk() (and possibly other drivers) needs to be
+> fixed. (e.g. use scsi_disk_get/put by itself)
+> 
+> If not, __blkdev_get() or rescan_partision() should avoid calling
+> "revalidate_disk" for -ENOMEDIUM case.
 
+Hmmm... right, that's a problem.  Missed rescan_partitions() calling
+into driver.  What we should probably do is separating out
+invalidation & partition shoot down into a separate function, say
+trucate_disk(), and call that on -ENOMEDIUM instead of
+rescan_partitions().  All that's necessary is killing the partition
+devices (and maybe zapping device size to zero).  Any one interested
+in trying it?
 
-
-
---- Comment #1 from Eric <eric.hidle@gmail.com>  2012-02-14 14:57:38 ---
-Created an attachment (id=72375)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=72375)
-TGZ file with patched mptsas driver for ESXi 5.0
-
-This is a TGZ file designed to be used with the ESXi Customizer v2.5 or v2.6 to
-patch a new mptsas driver into the stock ESXi 5.0 installation CD. I recompiled
-the community source driver to incorporate the patch against this driver that
-was introduced in Linux 2.6.35 that is not present in the ESXi 5.0 driver. 
-
-I did this because I suspect this problem is being caused by ESXi, and not the
-Linux Guest. I will follow up once I have been able to test this new driver on
-an ESXi installation.
+Thanks.
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+tejun
