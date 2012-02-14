@@ -1,84 +1,158 @@
-From: Chetan Loke <loke.chetan@gmail.com>
-Subject: [PATCH 1/1] qla2xxx: Micro optimization in queuecommand handler
-Date: Tue, 14 Feb 2012 09:47:46 -0500
-Message-ID: <1329230866-905-1-git-send-email-loke.chetan@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:36490 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760781Ab2BNOs0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2012 09:48:26 -0500
-Received: by qcqw6 with SMTP id w6so19297qcq.19
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Feb 2012 06:48:25 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Danny Kukawka <danny.kukawka@bisect.de>
+Subject: [PATCH] libsas: move SAM_STAT_CHECK_CONDITION out of switch
+Date: Tue, 14 Feb 2012 15:49:07 +0100
+Message-ID: <1329230947-27675-1-git-send-email-danny.kukawka@bisect.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Danny Kukawka <dkukawka@suse.de>, Jeff Garzik <jgarzik@redhat.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>, Paul Gortmaker <paul.gortmaker@windriver.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com
-Cc: linux-driver@qlogic.com, loke.chetan@gmail.com
 
-Optimized queuecommand handler's to eliminate double head-room checks.
-The checks are moved inside the 1st if-loop otherwise you would end up checking twice when there is enough head room.
+Move SAM_STAT_CHECK_CONDITION out of switch to fix:
 
-Signed-off-by: Chetan Loke <loke.chetan@gmail.com>
+warning: case value =E2=80=982=E2=80=99 not in enumerated type =E2=80=98=
+enum exec_status=E2=80=99
+  [-Wswitch]
+
+Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c |   19 +++++++++----------
- 1 files changed, 9 insertions(+), 10 deletions(-)
+ drivers/scsi/libsas/sas_ata.c       |    3 +-
+ drivers/scsi/libsas/sas_scsi_host.c |   91 ++++++++++++++++++---------=
+--------
+ 2 files changed, 48 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 55a9676..825a046 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -383,9 +383,10 @@ qla2x00_start_scsi(srb_t *sp)
- 		else
- 			req->cnt = req->length -
- 			    (req->ring_index - cnt);
-+		/* If still no head room then bail out */
-+		if (req->cnt < (req_cnt + 2))
-+			goto queuing_error;
- 	}
--	if (req->cnt < (req_cnt + 2))
--		goto queuing_error;
- 
- 	/* Build command packet */
- 	req->current_outstanding_cmd = handle;
-@@ -1502,9 +1503,9 @@ qla24xx_start_scsi(srb_t *sp)
- 		else
- 			req->cnt = req->length -
- 				(req->ring_index - cnt);
-+		if (req->cnt < (req_cnt + 2))
-+			goto queuing_error;
- 	}
--	if (req->cnt < (req_cnt + 2))
--		goto queuing_error;
- 
- 	/* Build command packet. */
- 	req->current_outstanding_cmd = handle;
-@@ -1717,11 +1718,10 @@ qla24xx_dif_start_scsi(srb_t *sp)
- 		else
- 			req->cnt = req->length -
- 				(req->ring_index - cnt);
-+		if (req->cnt < (req_cnt + 2))
-+			goto queuing_error;
- 	}
- 
--	if (req->cnt < (req_cnt + 2))
--		goto queuing_error;
--
- 	status |= QDSS_GOT_Q_SPACE;
- 
- 	/* Build header part of command packet (excluding the OPCODE). */
-@@ -2349,11 +2349,10 @@ sufficient_dsds:
- 			else
- 				req->cnt = req->length -
- 					(req->ring_index - cnt);
-+			if (req->cnt < (req_cnt + 2))
-+				goto queuing_error;
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_at=
+a.c
+index db9238f..4cbdb6e 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -43,6 +43,8 @@ static enum ata_completion_errors sas_to_ata_err(stru=
+ct task_status_struct *ts)
+ 	/* transport error */
+ 	if (ts->resp =3D=3D SAS_TASK_UNDELIVERED)
+ 		return AC_ERR_ATA_BUS;
++	if (ts->stat =3D=3D SAM_STAT_CHECK_CONDITION)
++		return AC_ERR_DEV;
+=20
+ 	/* ts->resp =3D=3D SAS_TASK_COMPLETE */
+ 	/* task delivered, what happened afterwards? */
+@@ -77,7 +79,6 @@ static enum ata_completion_errors sas_to_ata_err(stru=
+ct task_status_struct *ts)
+ 				    __func__, ts->stat);
+ 			return AC_ERR_OTHER;
+=20
+-		case SAM_STAT_CHECK_CONDITION:
+ 		case SAS_ABORTED_TASK:
+ 			return AC_ERR_DEV;
+=20
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/=
+sas_scsi_host.c
+index b6e233d..559b37c 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -75,53 +75,54 @@ static void sas_scsi_task_done(struct sas_task *tas=
+k)
+ 		hs =3D DID_NO_CONNECT;
+ 	} else { /* ts->resp =3D=3D SAS_TASK_COMPLETE */
+ 		/* task delivered, what happened afterwards? */
+-		switch (ts->stat) {
+-		case SAS_DEV_NO_RESPONSE:
+-		case SAS_INTERRUPTED:
+-		case SAS_PHY_DOWN:
+-		case SAS_NAK_R_ERR:
+-		case SAS_OPEN_TO:
+-			hs =3D DID_NO_CONNECT;
+-			break;
+-		case SAS_DATA_UNDERRUN:
+-			scsi_set_resid(sc, ts->residual);
+-			if (scsi_bufflen(sc) - scsi_get_resid(sc) < sc->underflow)
+-				hs =3D DID_ERROR;
+-			break;
+-		case SAS_DATA_OVERRUN:
+-			hs =3D DID_ERROR;
+-			break;
+-		case SAS_QUEUE_FULL:
+-			hs =3D DID_SOFT_ERROR; /* retry */
+-			break;
+-		case SAS_DEVICE_UNKNOWN:
+-			hs =3D DID_BAD_TARGET;
+-			break;
+-		case SAS_SG_ERR:
+-			hs =3D DID_PARITY;
+-			break;
+-		case SAS_OPEN_REJECT:
+-			if (ts->open_rej_reason =3D=3D SAS_OREJ_RSVD_RETRY)
+-				hs =3D DID_SOFT_ERROR; /* retry */
+-			else
+-				hs =3D DID_ERROR;
+-			break;
+-		case SAS_PROTO_RESPONSE:
+-			SAS_DPRINTK("LLDD:%s sent SAS_PROTO_RESP for an SSP "
+-				    "task; please report this\n",
+-				    task->dev->port->ha->sas_ha_name);
+-			break;
+-		case SAS_ABORTED_TASK:
+-			hs =3D DID_ABORT;
+-			break;
+-		case SAM_STAT_CHECK_CONDITION:
++		if (ts->stat =3D=3D SAM_STAT_CHECK_CONDITION) {
+ 			memcpy(sc->sense_buffer, ts->buf,
+-			       min(SCSI_SENSE_BUFFERSIZE, ts->buf_valid_size));
++				min(SCSI_SENSE_BUFFERSIZE, ts->buf_valid_size));
+ 			stat =3D SAM_STAT_CHECK_CONDITION;
+-			break;
+-		default:
+-			stat =3D ts->stat;
+-			break;
++		} else {
++			switch (ts->stat) {
++			case SAS_DEV_NO_RESPONSE:
++			case SAS_INTERRUPTED:
++			case SAS_PHY_DOWN:
++			case SAS_NAK_R_ERR:
++			case SAS_OPEN_TO:
++				hs =3D DID_NO_CONNECT;
++				break;
++			case SAS_DATA_UNDERRUN:
++				scsi_set_resid(sc, ts->residual);
++				if (scsi_bufflen(sc) - scsi_get_resid(sc) < sc->underflow)
++					hs =3D DID_ERROR;
++				break;
++			case SAS_DATA_OVERRUN:
++				hs =3D DID_ERROR;
++				break;
++			case SAS_QUEUE_FULL:
++				hs =3D DID_SOFT_ERROR; /* retry */
++				break;
++			case SAS_DEVICE_UNKNOWN:
++				hs =3D DID_BAD_TARGET;
++				break;
++			case SAS_SG_ERR:
++				hs =3D DID_PARITY;
++				break;
++			case SAS_OPEN_REJECT:
++				if (ts->open_rej_reason =3D=3D SAS_OREJ_RSVD_RETRY)
++					hs =3D DID_SOFT_ERROR; /* retry */
++				else
++					hs =3D DID_ERROR;
++				break;
++			case SAS_PROTO_RESPONSE:
++				SAS_DPRINTK("LLDD:%s sent SAS_PROTO_RESP for "
++					    "an SSP task; please report this\n",
++					    task->dev->port->ha->sas_ha_name);
++				break;
++			case SAS_ABORTED_TASK:
++				hs =3D DID_ABORT;
++				break;
++			default:
++				stat =3D ts->stat;
++				break;
++			}
  		}
- 
--		if (req->cnt < (req_cnt + 2))
--			goto queuing_error;
--
- 		ctx = sp->ctx = mempool_alloc(ha->ctx_mempool, GFP_ATOMIC);
- 		if (!sp->ctx) {
- 			ql_log(ql_log_fatal, vha, 0x3010,
--- 
-1.7.5.2
-
+ 	}
+ 	ASSIGN_SAS_TASK(sc, NULL);
+--=20
+1.7.7.3
