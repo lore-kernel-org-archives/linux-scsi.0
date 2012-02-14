@@ -1,134 +1,190 @@
 From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: Kernel crashing on eject SD card
-Date: Tue, 14 Feb 2012 20:14:40 +0900
-Message-ID: <4F3A4220.4010901@ce.jp.nec.com>
-References: <1328660390.4f31bfa6e8f4b@www.imp.polymtl.ca> <20120212220836.6aa7fa4d@stein> <20120212222027.71651e8b@stein> <20120213021813.GA589@redhat.com> <1329154831.4f394b0f3c69c@www.imp.polymtl.ca>
+Subject: Re: Yet another hot unplug NULL pointer dereference (was Re: status
+ of oops in sd_revalidate_disk?)
+Date: Tue, 14 Feb 2012 20:34:53 +0900
+Message-ID: <4F3A46DD.8030305@ce.jp.nec.com>
+References: <4EE8E419.8010000@pre-sense.de> <CA+v9cxZFUC45WD0=+8mvH2Tq_xvX3PgaW4ttzPep0jqvqab_6w@mail.gmail.com> <20111225215804.03ef9402@stein>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1329154831.4f394b0f3c69c@www.imp.polymtl.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Naveen Goswamy <naveen.goswamy@polymtl.ca>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Dave Jones <davej@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from TYO202.gate.nec.co.jp ([202.32.8.206]:57727 "EHLO
+	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002Ab2BNLfm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2012 06:35:42 -0500
+In-Reply-To: <20111225215804.03ef9402@stein>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>, jbottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, Huajun Li <huajun.li.lee@gmail.com>, Axel Theilmann <theilmann@pre-sense.de>, linux-kernel@vger.kernel.org
 
-On 02/14/12 02:40, Naveen Goswamy wrote:
-> Feb 13 08:50:53 speedy kernel: scsi 6:0:0:0: killing request
-> Feb 13 08:50:53 speedy kernel: BUG: unable to handle kernel NULL pointer
-> dereference at 0000000000000008
-> Feb 13 08:50:53 speedy kernel: IP: [<ffffffff8135b798>]
-> sd_revalidate_disk+0x1a/0x16ee
-> Feb 13 08:50:53 speedy kernel: PGD 223493067 PUD 2234de067 PMD 0
-> Feb 13 08:50:53 speedy kernel: Oops: 0000 [#1] SMP
-> Feb 13 08:50:53 speedy kernel: CPU 2
-> Feb 13 08:50:53 speedy kernel: Modules linked in: aes_x86_64 aes_generic
-> ipt_REJECT iptable_mangle iptable_nat nf_nat iptable_filter ip_tables ipv6
-> dm_mod uvcvideo videodev v4l2_compat_ioctl32 usb_storage arc4 brcmsmac
-> snd_hda_codec_hdmi snd_hda_codec_idt mac80211 brcmutil snd_hda_intel
-> snd_hda_codec cfg80211 r8169 rfkill snd_pcm snd_timer dell_wmi snd
-> sparse_keymap ehci_hcd wmi firmware_class dcdbas crc8 soundcore rtc usbcore
-> snd_page_alloc sg cordic usb_common
-> Feb 13 08:50:53 speedy kernel:
-> Feb 13 08:50:53 speedy kernel: Pid: 2721, comm: udisks-daemon Not tainted
-> 3.2.5-gentoo_MINE_V00 #1 Dell Inc. Vostro 3400/07MJFM
-> Feb 13 08:50:53 speedy kernel: RIP: 0010:[<ffffffff8135b798>]
-> [<ffffffff8135b798>] sd_revalidate_disk+0x1a/0x16ee
-> Feb 13 08:50:53 speedy kernel: RSP: 0018:ffff8802234ddb08  EFLAGS: 00010292
-> Feb 13 08:50:53 speedy kernel: RAX: ffffffff8135b77e RBX: 0000000000000000 RCX:
-> 0000000000000002
-> Feb 13 08:50:53 speedy kernel: RDX: 0000000000000002 RSI: 0000000800000000 RDI:
-> ffff880231599000
-> Feb 13 08:50:53 speedy kernel: RBP: ffff880231599000 R08: ffff88023ab4f9a0 R09:
-> ffffffff81852ec8
-> Feb 13 08:50:53 speedy kernel: R10: 0000000000000002 R11: 0000000000011e00 R12:
-> ffff880231599000
-> Feb 13 08:50:53 speedy kernel: R13: ffff880232322698 R14: 0000000000000000 R15:
-> ffff880232322680
-> Feb 13 08:50:53 speedy kernel: FS:  00007f7666c6b700(0000)
-> GS:ffff88023bd00000(0000) knlGS:0000000000000000
-> Feb 13 08:50:53 speedy kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> Feb 13 08:50:53 speedy kernel: CR2: 0000000000000008 CR3: 0000000223492000 CR4:
-> 00000000000006e0
-> Feb 13 08:50:53 speedy kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-> 0000000000000000
-> Feb 13 08:50:53 speedy kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-> 0000000000000400
-> Feb 13 08:50:53 speedy kernel: Process udisks-daemon (pid: 2721, threadinfo
-> ffff8802234dc000, task ffff880230f76920)
-> Feb 13 08:50:53 speedy kernel: Stack:
-> Feb 13 08:50:53 speedy kernel: ffffffff8103468a ffff880231599048
-> 0000000000000000 ffff880231599000
-> Feb 13 08:50:53 speedy kernel: ffff880232322698 000000000000001d
-> ffff880232322680 ffffffff810a0f35
-> Feb 13 08:50:53 speedy kernel: ffff880232322680 ffff880231599000
-> 0000000000000000 ffff880232322758
-> Feb 13 08:50:53 speedy kernel: Call Trace:
-> Feb 13 08:50:53 speedy kernel: [<ffffffff8103468a>] ? try_to_wake_up+0x200/0x200
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810a0f35>] ? get_super+0x1a/0x95
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810b2460>] ? iput+0x2b/0x17e
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810eb4b6>] ?
-> rescan_partitions+0xac/0x446
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810c5498>] ? __blkdev_get+0x162/0x33f
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810c5913>] ? blkdev_get+0x29e/0x29e
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810c5835>] ? blkdev_get+0x1c0/0x29e
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810c5913>] ? blkdev_get+0x29e/0x29e
-> Feb 13 08:50:53 speedy kernel: [<ffffffff8109e0a7>] ?
-> __dentry_open.clone.14+0x16b/0x294
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810aab37>] ?
-> do_last.clone.34+0x64e/0x662
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810aac4d>] ? path_openat+0xcb/0x354
-> Feb 13 08:50:53 speedy kernel: [<ffffffff8133e9b0>] ?
-> scsi_set_medium_removal+0x46/0x6b
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810aafb1>] ? do_filp_open+0x2c/0x72
-> Feb 13 08:50:53 speedy kernel: [<ffffffff810b4066>] ? alloc_fd+0x69/0x10f
-> Feb 13 08:50:53 speedy kernel: [<ffffffff8109ed9a>] ? do_sys_open+0x101/0x18f
-> Feb 13 08:50:53 speedy kernel: [<ffffffff81483292>] ?
-> system_call_fastpath+0x16/0x1b
-> Feb 13 08:50:53 speedy kernel: Code: ff ff 48 83 c4 68 5b 5d 41 5c 41 5d 41 5e
-> 41 5f c3 41 57 41 56 41 55 41 54 55 53 48 83 ec 78 48 8b 9f 50 02 00 00 48 89
-> 7c 24 48 <48> 8b 43 08 48 89 44 24 28 8b 05 49 dc 7e 00 c1 e8 15 83 e0 07
-> Feb 13 08:50:53 speedy kernel: RIP  [<ffffffff8135b798>]
-> sd_revalidate_disk+0x1a/0x16ee
-> Feb 13 08:50:53 speedy kernel: RSP <ffff8802234ddb08>
-> Feb 13 08:50:53 speedy kernel: CR2: 0000000000000008
-> Feb 13 08:50:53 speedy kernel: ---[ end trace 0370d79d444e26e5 ]---
+On 12/26/11 05:58, Stefan Richter wrote:
+> First I tested a FireWire drive and got the first log which is included
+> below, instantly in two attempts.  Then I made two attempts with a USB
+> CD-ROM which did not oops immediately at device removal but when I then
+> hit the eject button in the still open grip.  This consistently produced
+> the second log at the end of this post.
+> 
+> First test with 1394 CD-ROM:
+> -----------------------------------------------------------------
+>   - attach CD-ROM drive
+> -----------------------------------------------------------------
+> scsi4 : SBP-2 IEEE-1394
+> firewire_sbp2 fw1.0: logged in to LUN 0000 (0 retries)
+> scsi 4:0:0:0: CD-ROM		TEAC	 CD-W28E	  1.1A PQ: 0 ANSI: 0 CCS
+> sr1: scsi3-mmc drive: 24x/24x writer cd/rw xa/form2 cdda tray
+> sr 4:0:0:0: Attached scsi CD-ROM sr1
+> -----------------------------------------------------------------
+>   - start grip
+>   - detach CD-ROM drive
+> -----------------------------------------------------------------
+> sr 4:0:0:0: Attached scsi generic sg2 type 5
+> scsi 4:0:0:0: killing request
+> BUG: unable to handle kernel NULL pointer dereference at 000003f0
+> IP: [<c11bc19f>] scsi_prep_state_check+0x6/0x68
+> *pde = 00000000 
+> Oops: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
+> Modules linked in: firewire_sbp2 firewire_ohci firewire_core netconsole snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss nfs lockd sunrpc i2c_i801 applesmc sr_mod rtc sg input_polldev cdrom snd_hda_codec_idt snd_hda_intel snd_hda_codec snd_pcm snd_timer snd sky2 snd_page_alloc
+> 
+> Pid: 2832, comm: grip Not tainted 3.2.0-rc7 #1 Apple Computer, Inc. Macmini1,1/Mac-F4208EC8
+> EIP: 0060:[<c11bc19f>] EFLAGS: 00010046 CPU: 0
+> EIP is at scsi_prep_state_check+0x6/0x68
+> EAX: 00000000 EBX: f33f3f18 ECX: 00000000 EDX: f33f3f18
+> ESI: f4815a68 EDI: 00000000 EBP: f160bc14 ESP: f160bc10
+>  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+> Process grip (pid: 2832, ti=f160a000 task=f5d48760 task.ti=f160a000)
+> Stack:
+>  f33f3f18 f160bc2c c11bc8b1 f160bc3c f33f3f18 f4815a68 f33f3f18 f160bc3c
+>  c11bc9a5 f33f3f18 f4815a68 f160bc50 c10efad5 00000000 f33f3f18 f4815a68
+>  f160bc78 c11bd09f f4815db0 f33f3f18 00000001 f33f3f18 f4815a68 f4815a68
+> 
+> Call Trace:
+>  [<c11bc8b1>] scsi_setup_blk_pc_cmnd+0x12/0xe7
+>  [<c11bc9a5>] scsi_prep_fn+0x1f/0x2e
+>  [<c10efad5>] blk_peek_request+0x98/0x168
+>  [<c11bd09f>] scsi_request_fn+0x23/0x3b5
+>  [<c10ed9d6>] __blk_run_queue+0x14/0x16
+>  [<c10f25d5>] blk_execute_rq_nowait+0x7d/0x98
+>  [<c10f2697>] blk_execute_rq+0xa7/0xe8
+>  [<c10f2530>] ? blk_rq_map_user+0x1b7/0x1b7
+>  [<c10f8c81>] ? changed_ioprio+0x70/0x70
+>  [<c10ed700>] ? elv_set_request+0x12/0x20
+>  [<c10eeebd>] ? get_request+0x21e/0x2bb
+>  [<c11bcad2>] scsi_execute+0xc4/0x10a
+>  [<c11bcb6c>] scsi_execute_req+0x54/0x81
+>  [<c11bcbea>] scsi_test_unit_ready+0x51/0xb2
+>  [<f828248b>] sr_drive_status+0x33/0xd5 [sr_mod]
+>  [<f81f7860>] cdrom_ioctl+0x6a9/0xb31 [cdrom]
+>  [<c1279f36>] ? mutex_lock_nested+0x26c/0x2b0
+>  [<c10231e5>] ? get_parent_ip+0xb/0x31
+>  [<c1023287>] ? sub_preempt_count+0x7c/0x89
+>  [<c1279f5f>] ? mutex_lock_nested+0x295/0x2b0
+>  [<f82815f1>] ? sr_block_ioctl+0x2e/0x9a [sr_mod]
+>  [<f8281612>] sr_block_ioctl+0x4f/0x9a [sr_mod]
+>  [<f82815c3>] ? sr_block_check_events+0x13/0x13 [sr_mod]
+>  [<c10f39ee>] __blkdev_driver_ioctl+0x22/0x2e
+>  [<c10f42f5>] blkdev_ioctl+0x66d/0x68c
+>  [<c104bf7e>] ? __lock_acquire+0x62e/0x14bb
+>  [<c10b1861>] block_ioctl+0x32/0x3a
+>  [<c10b1861>] ? block_ioctl+0x32/0x3a
+>  [<c10b182f>] ? bd_set_size+0x67/0x67
+>  [<c109bfd5>] do_vfs_ioctl+0x481/0x4b7
+>  [<c1090993>] ? fget_light+0x4c/0xd0
+>  [<c109c039>] sys_ioctl+0x2e/0x49
+>  [<c127bb50>] sysenter_do_call+0x12/0x36
 
-According to the comments by Huajun Li:
-http://www.spinics.net/lists/linux-scsi/msg55698.html
+While scsi_device is propery refcounted object,
+q->queuedata is set to NULL by scsi_remove_device() asynchronously.
+So every reader of scsi_device's q->queuedata should always check it.
 
-The following commit has changed __blkdev_get() to end up calling
-sd_revalidate_disk() without getting a refcount of scsi_device:
+Though I don't have a machine to actually test it,
+the following patch should remove such places.
 
-  commit 1196f8b814f32cd04df334abf47648c2a9fd8324
-  Author: Tejun Heo <tj@kernel.org>
-  Date:   Thu Apr 21 20:54:45 2011 +0200
-
-    block: rescan partitions on invalidated devices on -ENOMEDIA too
-
-that could lead to oops like this:
-
-  process A                  process B
-  ----------------------------------------------
-  sys_open
-    __blkdev_get
-      sd_open
-        returns -ENOMEDIUM
-                             scsi_remove_device
-                               <scsi_device torn down>
-      rescan_partitions
-        sd_revalidate_disk
-          <oops>
-
-Should "revalidate_disk" of block_device_operations work
-without successful open()?
-
-If so, sd_revalidate_disk() (and possibly other drivers) needs to be
-fixed. (e.g. use scsi_disk_get/put by itself)
-
-If not, __blkdev_get() or rescan_partision() should avoid calling
-"revalidate_disk" for -ENOMEDIUM case.
-
-Thanks,
--- 
-Jun'ichi Nomura, NEC Corporation
+Index: linux-3.3/drivers/scsi/scsi_lib.c
+===================================================================
+--- linux-3.3.orig/drivers/scsi/scsi_lib.c	2012-02-01 06:31:54.000000000 +0900
++++ linux-3.3/drivers/scsi/scsi_lib.c	2012-02-14 19:12:57.641216402 +0900
+@@ -1214,10 +1214,8 @@ int scsi_prep_state_check(struct scsi_de
+ }
+ EXPORT_SYMBOL(scsi_prep_state_check);
+ 
+-int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
++int scsi_prep_return(struct request_queue *q, struct scsi_device *sdev, struct request *req, int ret)
+ {
+-	struct scsi_device *sdev = q->queuedata;
+-
+ 	switch (ret) {
+ 	case BLKPREP_KILL:
+ 		req->errors = DID_NO_CONNECT << 16;
+@@ -1251,9 +1249,11 @@ int scsi_prep_fn(struct request_queue *q
+ 	struct scsi_device *sdev = q->queuedata;
+ 	int ret = BLKPREP_KILL;
+ 
++	if (!sdev)
++		return ret;
+ 	if (req->cmd_type == REQ_TYPE_BLOCK_PC)
+ 		ret = scsi_setup_blk_pc_cmnd(sdev, req);
+-	return scsi_prep_return(q, req, ret);
++	return scsi_prep_return(q, sdev, req, ret);
+ }
+ EXPORT_SYMBOL(scsi_prep_fn);
+ 
+Index: linux-3.3/drivers/scsi/sd.c
+===================================================================
+--- linux-3.3.orig/drivers/scsi/sd.c	2012-02-13 13:02:14.000000000 +0900
++++ linux-3.3/drivers/scsi/sd.c	2012-02-14 19:15:18.224212107 +0900
+@@ -653,6 +653,9 @@ static int sd_prep_fn(struct request_que
+ 	int ret, host_dif;
+ 	unsigned char protect;
+ 
++	if (!sdp)
++		return BLKPREP_KILL;
++
+ 	/*
+ 	 * Discard request come in as REQ_TYPE_FS but we turn them into
+ 	 * block PC requests to make life easier.
+@@ -905,7 +908,7 @@ static int sd_prep_fn(struct request_que
+ 	 */
+ 	ret = BLKPREP_OK;
+  out:
+-	return scsi_prep_return(q, rq, ret);
++	return scsi_prep_return(q, sdp, rq, ret);
+ }
+ 
+ /**
+Index: linux-3.3/drivers/scsi/sr.c
+===================================================================
+--- linux-3.3.orig/drivers/scsi/sr.c	2012-02-01 06:31:54.000000000 +0900
++++ linux-3.3/drivers/scsi/sr.c	2012-02-14 19:15:59.001211143 +0900
+@@ -372,6 +372,9 @@ static int sr_prep_fn(struct request_que
+ 	struct scsi_device *sdp = q->queuedata;
+ 	int ret;
+ 
++	if (!sdp)
++		return BLKPREP_KILL;
++
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+ 		goto out;
+@@ -503,7 +506,7 @@ static int sr_prep_fn(struct request_que
+ 	 */
+ 	ret = BLKPREP_OK;
+  out:
+-	return scsi_prep_return(q, rq, ret);
++	return scsi_prep_return(q, sdp, rq, ret);
+ }
+ 
+ static int sr_block_open(struct block_device *bdev, fmode_t mode)
+Index: linux-3.3/include/scsi/scsi_driver.h
+===================================================================
+--- linux-3.3.orig/include/scsi/scsi_driver.h	2012-02-01 06:31:54.000000000 +0900
++++ linux-3.3/include/scsi/scsi_driver.h	2012-02-14 19:16:47.478209843 +0900
+@@ -31,7 +31,7 @@ extern int scsi_register_interface(struc
+ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req);
+ int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req);
+ int scsi_prep_state_check(struct scsi_device *sdev, struct request *req);
+-int scsi_prep_return(struct request_queue *q, struct request *req, int ret);
++int scsi_prep_return(struct request_queue *q, struct scsi_device *sdev, struct request *req, int ret);
+ int scsi_prep_fn(struct request_queue *, struct request *);
+ 
+ #endif /* _SCSI_SCSI_DRIVER_H */
