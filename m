@@ -1,67 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Kernel crashing on eject SD card
-Date: Tue, 14 Feb 2012 08:28:58 -0800
-Message-ID: <20120214162858.GM12117@google.com>
-References: <1328660390.4f31bfa6e8f4b@www.imp.polymtl.ca>
- <20120212220836.6aa7fa4d@stein>
- <20120212222027.71651e8b@stein>
- <20120213021813.GA589@redhat.com>
- <1329154831.4f394b0f3c69c@www.imp.polymtl.ca>
- <4F3A4220.4010901@ce.jp.nec.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] hpsa: add some older controllers to the kdump blacklist
+Date: Tue, 14 Feb 2012 18:07:59 +0100
+Message-ID: <4F3A94EF.50300@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4F3A4220.4010901@ce.jp.nec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Naveen Goswamy <naveen.goswamy@polymtl.ca>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Dave Jones <davej@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:14027 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756719Ab2BNRIt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Feb 2012 12:08:49 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
 
-Hello,
+Some other older controllers also do have problems to perform a kdump.
+Adding controllers to this list means that the driver will signal
+this non-ability via a resettable flag correctly. 
+The unsupported list was created after a consultation with HP.
 
-On Tue, Feb 14, 2012 at 08:14:40PM +0900, Jun'ichi Nomura wrote:
-> The following commit has changed __blkdev_get() to end up calling
-> sd_revalidate_disk() without getting a refcount of scsi_device:
-> 
->   commit 1196f8b814f32cd04df334abf47648c2a9fd8324
->   Author: Tejun Heo <tj@kernel.org>
->   Date:   Thu Apr 21 20:54:45 2011 +0200
-> 
->     block: rescan partitions on invalidated devices on -ENOMEDIA too
-> 
-> that could lead to oops like this:
-> 
->   process A                  process B
->   ----------------------------------------------
->   sys_open
->     __blkdev_get
->       sd_open
->         returns -ENOMEDIUM
->                              scsi_remove_device
->                                <scsi_device torn down>
->       rescan_partitions
->         sd_revalidate_disk
->           <oops>
-> 
-> Should "revalidate_disk" of block_device_operations work
-> without successful open()?
-> 
-> If so, sd_revalidate_disk() (and possibly other drivers) needs to be
-> fixed. (e.g. use scsi_disk_get/put by itself)
-> 
-> If not, __blkdev_get() or rescan_partision() should avoid calling
-> "revalidate_disk" for -ENOMEDIUM case.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 
-Hmmm... right, that's a problem.  Missed rescan_partitions() calling
-into driver.  What we should probably do is separating out
-invalidation & partition shoot down into a separate function, say
-trucate_disk(), and call that on -ENOMEDIUM instead of
-rescan_partitions().  All that's necessary is killing the partition
-devices (and maybe zapping device size to zero).  Any one interested
-in trying it?
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index b96962c..faac5a9 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -296,11 +296,23 @@ static u32 unresettable_controller[] = {
+ 	0x40800E11, /* Smart Array 5i */
+ 	0x409C0E11, /* Smart Array 6400 */
+ 	0x409D0E11, /* Smart Array 6400 EM */
++	0x40700E11, /* Smart Array 5300 */
++	0x40820E11, /* Smart Array 532 */
++	0x40830E11, /* Smart Array 5312 */
++	0x409A0E11, /* Smart Array 641 */
++	0x409B0E11, /* Smart Array 642 */
++	0x40910E11, /* Smart Array 6i */
+ };
+ 
+ /* List of controllers which cannot even be soft reset */
+ static u32 soft_unresettable_controller[] = {
+ 	0x40800E11, /* Smart Array 5i */
++	0x40700E11, /* Smart Array 5300 */
++	0x40820E11, /* Smart Array 532 */
++	0x40830E11, /* Smart Array 5312 */
++	0x409A0E11, /* Smart Array 641 */
++	0x409B0E11, /* Smart Array 642 */
++	0x40910E11, /* Smart Array 6i */
+ 	/* Exclude 640x boards.  These are two pci devices in one slot
+ 	 * which share a battery backed cache module.  One controls the
+ 	 * cache, the other accesses the cache through the one that controls
 
-Thanks.
 
--- 
-tejun
