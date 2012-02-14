@@ -1,43 +1,67 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Yet another hot unplug NULL pointer dereference (was Re: status
- of oops in sd_revalidate_disk?)
-Date: Tue, 14 Feb 2012 14:38:00 +0100
-Message-ID: <20120214143800.69703df9@stein>
-References: <4EE8E419.8010000@pre-sense.de>
-	<CA+v9cxZFUC45WD0=+8mvH2Tq_xvX3PgaW4ttzPep0jqvqab_6w@mail.gmail.com>
-	<20111225215804.03ef9402@stein>
-	<4F3A46DD.8030305@ce.jp.nec.com>
-	<CAO+b5-pCW-F1nD365TnEiAfoN7zKB4zXkk3uO6p5QyUPY2icsA@mail.gmail.com>
+From: Danny Kukawka <danny.kukawka@bisect.de>
+Subject: [PATCH] mpt2sas: fix -Wunused-variable warning
+Date: Tue, 14 Feb 2012 15:38:46 +0100
+Message-ID: <1329230326-26868-1-git-send-email-danny.kukawka@bisect.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAO+b5-pCW-F1nD365TnEiAfoN7zKB4zXkk3uO6p5QyUPY2icsA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, jbottomley@parallels.com, linux-scsi@vger.kernel.org, Huajun Li <huajun.li.lee@gmail.com>, Axel Theilmann <theilmann@pre-sense.de>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wp188.webpack.hosteurope.de ([80.237.132.195]:52394 "EHLO
+	wp188.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756647Ab2BNOiv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Feb 2012 09:38:51 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: LSI Corporation <DL-MPTFusionLinux@lsi.com>
+Cc: Danny Kukawka <dkukawka@suse.de>, Kashyap Desai <kashyap.desai@lsi.com>, James Bottomley <James.Bottomley@suse.de>, Eric Moore <eric.moore@lsi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Feb 14 Bart Van Assche wrote:
-> On Tue, Feb 14, 2012 at 12:34 PM, Jun'ichi Nomura
-> <j-nomura@ce.jp.nec.com> wrote:
-> > While scsi_device is propery refcounted object,
-> > q->queuedata is set to NULL by scsi_remove_device() asynchronously.
-> > So every reader of scsi_device's q->queuedata should always check it.
-> 
-> As far as I can see this patch narrows the race window but doesn't fix
-> the race. At least sd_prep_fn() still reads queuedata and if I'm not
-> mistaken that read races with scsi_remove_device(). Has it been
-> considered to modify scsi_remove_device() and scsi_request_fn() such
-> that device removal is communicated from the former to the latter in
-> another way than by clearing queuedata ?
+=46ix for:
+drivers/scsi/mpt2sas/mpt2sas_scsih.c: In function
+  =E2=80=98_scsih_sas_broadcast_primative_event=E2=80=99:
+drivers/scsi/mpt2sas/mpt2sas_scsih.c:5766:40: warning: unused
+  variable =E2=80=98event_data=E2=80=99 [-Wunused-variable]
 
-Or asked differently, *what* is supposed to serialize the ->queuedata
-accesses?
+remove Mpi2EventDataSasBroadcastPrimitive_t *event_data,
+use fw_event->event_data directly instead.
 
-(If it is the BKL -- well, some bleeding edge kernel versions lack it,
-sources say.)
--- 
-Stefan Richter
--=====-===-- --=- -===-
-http://arcgraph.de/sr/
+Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
+---
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sa=
+s/mpt2sas_scsih.c
+index 193e33e..067d359 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -5763,7 +5763,6 @@ _scsih_sas_broadcast_primative_event(struct MPT2S=
+AS_ADAPTER *ioc,
+ 	u32 termination_count;
+ 	u32 query_count;
+ 	Mpi2SCSITaskManagementReply_t *mpi_reply;
+-	Mpi2EventDataSasBroadcastPrimitive_t *event_data =3D fw_event->event_=
+data;
+ 	u16 ioc_status;
+ 	unsigned long flags;
+ 	int r;
+@@ -5772,8 +5771,8 @@ _scsih_sas_broadcast_primative_event(struct MPT2S=
+AS_ADAPTER *ioc,
+=20
+ 	mutex_lock(&ioc->tm_cmds.mutex);
+ 	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: enter: phy number(%d), "
+-	    "width(%d)\n", ioc->name, __func__, event_data->PhyNum,
+-	     event_data->PortWidth));
++	    "width(%d)\n", ioc->name, __func__, fw_event->event_data->PhyNum,
++	     fw_event->event_data->PortWidth));
+=20
+ 	_scsih_block_io_all_device(ioc);
+=20
+--=20
+1.7.7.3
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
