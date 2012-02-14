@@ -1,50 +1,70 @@
-From: Ayman El-Khashab <ayman@elkhashab.com>
-Subject: need help solving mpt2sas target unplug can hang worker thread
-Date: Tue, 14 Feb 2012 07:15:41 -0600
-Message-ID: <20120214131541.GA28005@crust.elkhashab.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Kernel crashing on eject SD card
+Date: Tue, 14 Feb 2012 14:31:19 +0100
+Message-ID: <20120214143119.345fead9@stein>
+References: <1328660390.4f31bfa6e8f4b@www.imp.polymtl.ca>
+	<20120212220836.6aa7fa4d@stein>
+	<20120212222027.71651e8b@stein>
+	<20120213021813.GA589@redhat.com>
+	<1329154831.4f394b0f3c69c@www.imp.polymtl.ca>
+	<4F3A4220.4010901@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:18625 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756418Ab2BNNPn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2012 08:15:43 -0500
-Received: from crust.elkhashab.com (localhost [127.0.0.1])
-	by crust.elkhashab.com (8.14.3/8.14.3/Debian-9.4) with ESMTP id q1EDFfsF028256
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Feb 2012 07:15:41 -0600
-Received: (from ayman@localhost)
-	by crust.elkhashab.com (8.14.3/8.14.3/Submit) id q1EDFf9S028255
-	for linux-scsi@vger.kernel.org; Tue, 14 Feb 2012 07:15:41 -0600
-Content-Disposition: inline
+Received: from einhorn.in-berlin.de ([192.109.42.8]:54283 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693Ab2BNNcB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2012 08:32:01 -0500
+In-Reply-To: <4F3A4220.4010901@ce.jp.nec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: Naveen Goswamy <naveen.goswamy@polymtl.ca>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Jones <davej@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I'm doing this on powerpc/4xx (if that matters).  Basically
-I can normally hot-plug or hot-remove disks from the mpt2sas
-just fine.  It is easy to replicate on my system if I unplug
-the drive during the enumeration process.  Based on what I
-see, I gather it is in the scsi layer rather than the
-mpt2sas driver, but I don't have that much experience in the
-scsi driver to be certain.
+On Feb 14 Jun'ichi Nomura wrote:
+> According to the comments by Huajun Li:
+> http://www.spinics.net/lists/linux-scsi/msg55698.html
+> 
+> The following commit has changed __blkdev_get() to end up calling
+> sd_revalidate_disk() without getting a refcount of scsi_device:
+> 
+>   commit 1196f8b814f32cd04df334abf47648c2a9fd8324
+>   Author: Tejun Heo <tj@kernel.org>
+>   Date:   Thu Apr 21 20:54:45 2011 +0200
+> 
+>     block: rescan partitions on invalidated devices on -ENOMEDIA too
+> 
+> that could lead to oops like this:
+> 
+>   process A                  process B
+>   ----------------------------------------------
+>   sys_open
+>     __blkdev_get
+>       sd_open
+>         returns -ENOMEDIUM
+>                              scsi_remove_device
+>                                <scsi_device torn down>
+>       rescan_partitions
+>         sd_revalidate_disk
+>           <oops>
+> 
+> Should "revalidate_disk" of block_device_operations work
+> without successful open()?
+> 
+> If so, sd_revalidate_disk() (and possibly other drivers) needs to be
+> fixed. (e.g. use scsi_disk_get/put by itself)
+> 
+> If not, __blkdev_get() or rescan_partision() should avoid calling
+> "revalidate_disk" for -ENOMEDIUM case.
 
-There are 2 cases that cause this ...
+It may very well be that not only sd_revalidate_disk is affected.
 
-1) Device never finishes the initial enumerate sequence
-because there is something wrong with the drive, firmware on
-the drive, etc.  
-
-2) The drive was unplugged before the enumeration completes.
-
-*MAYBE* this is addressed by the null pointer dereference
-patches I've seen posted.  In any case, I get the thread
-dumping every 120s, I cannot remove the driver module from
-the kernel.  My only option is to reboot.  It would be great
-if it didn't happen at all, but even if I can reset the
-controller and get things back to a happier time, that would
-be perfect.  Any tips for how I might accomplish that or is
-there a particular patch I should take a look at / apply?
-
-Thanks
-Ayman
+I have yet to check whether the "open -> unplug -> ioctl -> oops" bug from
+http://www.spinics.net/lists/linux-scsi/msg56254.html
+(a) happens under 3.3-rc still (was reported against 3.2-rc7),
+(b) affects sd devices too (was reported against sr devices).
+-- 
+Stefan Richter
+-=====-===-- --=- -===-
+http://arcgraph.de/sr/
