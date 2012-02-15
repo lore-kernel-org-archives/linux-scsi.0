@@ -1,376 +1,115 @@
 From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH v8 13/13] libsas: trim sas_task of slow path infrastructure
-Date: Wed, 15 Feb 2012 09:09:52 +0800
-Message-ID: <148DC651B237489889F363B0D4EDD2D4@usish.com.cn>
-References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com> <20120210084545.25701.4897.stgit@dwillia2-linux.jf.intel.com>
+Subject: pm8001: [PATCH] fix missed changes during trim sas task of slow path change
+Date: Wed, 15 Feb 2012 09:35:05 +0800
+Message-ID: <E2EC78FE4D924618947E7C7FA03910BA@usish.com.cn>
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0009_01CCEBC5.1E4DC680"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:51862 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755622Ab2BOBh2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2012 20:37:28 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: "'James E.J. Bottomley'" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: 'Dan Williams' <dan.j.williams@intel.com>, lindar_liu@usish.com, crystal_yu@usish.com
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0009_01CCEBC5.1E4DC680
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:51171 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757453Ab2BOBMK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2012 20:12:10 -0500
-In-Reply-To: <20120210084545.25701.4897.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, 'Christoph Hellwig' <hch@lst.de>
 
-Dear Dan,
+Dan forget to change sas_alloc_task to sas_alloc_slow_task in pm8001, which
+will lead to NULL point dereference, fix this.
 
-You seems forget change sas_alloc_task to sas_alloc_slow_task in pm8001.
-I'll post a patch to fix this later.
-Thanks for your work.
+>From b93ecdd72d6eaf96bd9c1d735dac0b350a3b2bff Mon Sep 17 00:00:00 2001
+From: Jack Wang <jack_wang@usish.com>
+Date: Tue, 14 Feb 2012 08:27:52 -0500
+Subject: [PATCH] fix missed changes during trim sas task of slow path change
 
-Jack
-[PATCH v8 13/13] libsas: trim sas_task of slow path infrastructure
-> 
-> The timer and the completion are only used for slow path tasks (smp, and
-> lldd tmfs), yet we incur the allocation space and cpu setup time for
-> every fast path task.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/scsi/libsas/sas_expander.c  |   20 ++++++++++----------
->  drivers/scsi/libsas/sas_init.c      |   23 +++++++++++++++++++++--
->  drivers/scsi/libsas/sas_scsi_host.c |    8 ++++++--
->  drivers/scsi/mvsas/mv_sas.c         |   20 ++++++++++----------
->  drivers/scsi/pm8001/pm8001_sas.c    |   30 +++++++++++++++---------------
->  include/scsi/libsas.h               |   14 +++++++++-----
->  6 files changed, 71 insertions(+), 44 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_expander.c
-> b/drivers/scsi/libsas/sas_expander.c
-> index 05acd9e..0ab3796 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -51,14 +51,14 @@ static void smp_task_timedout(unsigned long _task)
->  		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
->  	spin_unlock_irqrestore(&task->task_state_lock, flags);
-> 
-> -	complete(&task->completion);
-> +	complete(&task->slow_task->completion);
->  }
-> 
->  static void smp_task_done(struct sas_task *task)
->  {
-> -	if (!del_timer(&task->timer))
-> +	if (!del_timer(&task->slow_task->timer))
->  		return;
-> -	complete(&task->completion);
-> +	complete(&task->slow_task->completion);
->  }
-> 
->  /* Give it some long enough timeout. In seconds. */
-> @@ -79,7 +79,7 @@ static int smp_execute_task(struct domain_device *dev,
-void
-> *req, int req_size,
->  			break;
->  		}
-> 
-> -		task = sas_alloc_task(GFP_KERNEL);
-> +		task = sas_alloc_slow_task(GFP_KERNEL);
->  		if (!task) {
->  			res = -ENOMEM;
->  			break;
-> @@ -91,20 +91,20 @@ static int smp_execute_task(struct domain_device *dev,
-> void *req, int req_size,
-> 
->  		task->task_done = smp_task_done;
-> 
-> -		task->timer.data = (unsigned long) task;
-> -		task->timer.function = smp_task_timedout;
-> -		task->timer.expires = jiffies + SMP_TIMEOUT*HZ;
-> -		add_timer(&task->timer);
-> +		task->slow_task->timer.data = (unsigned long) task;
-> +		task->slow_task->timer.function = smp_task_timedout;
-> +		task->slow_task->timer.expires = jiffies + SMP_TIMEOUT*HZ;
-> +		add_timer(&task->slow_task->timer);
-> 
->  		res = i->dft->lldd_execute_task(task, 1, GFP_KERNEL);
-> 
->  		if (res) {
-> -			del_timer(&task->timer);
-> +			del_timer(&task->slow_task->timer);
->  			SAS_DPRINTK("executing SMP task failed:%d\n", res);
->  			break;
->  		}
-> 
-> -		wait_for_completion(&task->completion);
-> +		wait_for_completion(&task->slow_task->completion);
->  		res = -ECOMM;
->  		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
->  			SAS_DPRINTK("smp task timed out or aborted\n");
-> diff --git a/drivers/scsi/libsas/sas_init.c
-> b/drivers/scsi/libsas/sas_init.c
-> index 2fc23d3..57e7ac9 100644
-> --- a/drivers/scsi/libsas/sas_init.c
-> +++ b/drivers/scsi/libsas/sas_init.c
-> @@ -48,18 +48,37 @@ struct sas_task *sas_alloc_task(gfp_t flags)
->  		INIT_LIST_HEAD(&task->list);
->  		spin_lock_init(&task->task_state_lock);
->  		task->task_state_flags = SAS_TASK_STATE_PENDING;
-> -		init_timer(&task->timer);
-> -		init_completion(&task->completion);
->  	}
-> 
->  	return task;
->  }
->  EXPORT_SYMBOL_GPL(sas_alloc_task);
-> 
-> +struct sas_task *sas_alloc_slow_task(gfp_t flags)
-> +{
-> +	struct sas_task *task = sas_alloc_task(flags);
-> +	struct sas_task_slow *slow = kmalloc(sizeof(*slow), flags);
-> +
-> +	if (!task || !slow) {
-> +		if (task)
-> +			kmem_cache_free(sas_task_cache, task);
-> +		kfree(slow);
-> +		return NULL;
-> +	}
-> +
-> +	task->slow_task = slow;
-> +	init_timer(&slow->timer);
-> +	init_completion(&slow->completion);
-> +
-> +	return task;
-> +}
-> +EXPORT_SYMBOL_GPL(sas_alloc_slow_task);
-> +
->  void sas_free_task(struct sas_task *task)
->  {
->  	if (task) {
->  		BUG_ON(!list_empty(&task->list));
-> +		kfree(task->slow_task);
->  		kmem_cache_free(sas_task_cache, task);
->  	}
->  }
-> diff --git a/drivers/scsi/libsas/sas_scsi_host.c
-> b/drivers/scsi/libsas/sas_scsi_host.c
-> index 86ffd8f..9716f2e 100644
-> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> @@ -1013,9 +1013,13 @@ void sas_task_abort(struct sas_task *task)
-> 
->  	/* Escape for libsas internal commands */
->  	if (!sc) {
-> -		if (!del_timer(&task->timer))
-> +		struct sas_task_slow *slow = task->slow_task;
-> +
-> +		if (!slow)
-> +			return;
-> +		if (!del_timer(&slow->timer))
->  			return;
-> -		task->timer.function(task->timer.data);
-> +		slow->timer.function(slow->timer.data);
->  		return;
->  	}
-> 
-> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-> index b68a653..d0462b8 100644
-> --- a/drivers/scsi/mvsas/mv_sas.c
-> +++ b/drivers/scsi/mvsas/mv_sas.c
-> @@ -1365,9 +1365,9 @@ void mvs_dev_gone(struct domain_device *dev)
-> 
->  static void mvs_task_done(struct sas_task *task)
->  {
-> -	if (!del_timer(&task->timer))
-> +	if (!del_timer(&task->slow_task->timer))
->  		return;
-> -	complete(&task->completion);
-> +	complete(&task->slow_task->completion);
->  }
-> 
->  static void mvs_tmf_timedout(unsigned long data)
-> @@ -1375,7 +1375,7 @@ static void mvs_tmf_timedout(unsigned long data)
->  	struct sas_task *task = (struct sas_task *)data;
-> 
->  	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
-> -	complete(&task->completion);
-> +	complete(&task->slow_task->completion);
->  }
-> 
->  #define MVS_TASK_TIMEOUT 20
-> @@ -1386,7 +1386,7 @@ static int mvs_exec_internal_tmf_task(struct
-> domain_device *dev,
->  	struct sas_task *task = NULL;
-> 
->  	for (retry = 0; retry < 3; retry++) {
-> -		task = sas_alloc_task(GFP_KERNEL);
-> +		task = sas_alloc_slow_task(GFP_KERNEL);
->  		if (!task)
->  			return -ENOMEM;
-> 
-> @@ -1396,20 +1396,20 @@ static int mvs_exec_internal_tmf_task(struct
-> domain_device *dev,
->  		memcpy(&task->ssp_task, parameter, para_len);
->  		task->task_done = mvs_task_done;
-> 
-> -		task->timer.data = (unsigned long) task;
-> -		task->timer.function = mvs_tmf_timedout;
-> -		task->timer.expires = jiffies + MVS_TASK_TIMEOUT*HZ;
-> -		add_timer(&task->timer);
-> +		task->slow_task->timer.data = (unsigned long) task;
-> +		task->slow_task->timer.function = mvs_tmf_timedout;
-> +		task->slow_task->timer.expires = jiffies +
-MVS_TASK_TIMEOUT*HZ;
-> +		add_timer(&task->slow_task->timer);
-> 
->  		res = mvs_task_exec(task, 1, GFP_KERNEL, NULL, 1, tmf);
-> 
->  		if (res) {
-> -			del_timer(&task->timer);
-> +			del_timer(&task->slow_task->timer);
->  			mv_printk("executing internel task failed:%d\n",
-res);
->  			goto ex_err;
->  		}
-> 
-> -		wait_for_completion(&task->completion);
-> +		wait_for_completion(&task->slow_task->completion);
->  		res = TMF_RESP_FUNC_FAILED;
->  		/* Even TMF timed out, return direct. */
->  		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c
-> b/drivers/scsi/pm8001/pm8001_sas.c
-> index b111018..ad36f1a 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -627,9 +627,9 @@ int pm8001_dev_found(struct domain_device *dev)
-> 
->  static void pm8001_task_done(struct sas_task *task)
->  {
-> -	if (!del_timer(&task->timer))
-> +	if (!del_timer(&task->slow_task->timer))
->  		return;
-> -	complete(&task->completion);
-> +	complete(&task->slow_task->completion);
->  }
-> 
->  static void pm8001_tmf_timedout(unsigned long data)
-> @@ -637,7 +637,7 @@ static void pm8001_tmf_timedout(unsigned long data)
->  	struct sas_task *task = (struct sas_task *)data;
-> 
->  	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
-> -	complete(&task->completion);
-> +	complete(&task->slow_task->completion);
->  }
-> 
->  #define PM8001_TASK_TIMEOUT 20
-> @@ -668,21 +668,21 @@ static int pm8001_exec_internal_tmf_task(struct
-> domain_device *dev,
->  		task->task_proto = dev->tproto;
->  		memcpy(&task->ssp_task, parameter, para_len);
->  		task->task_done = pm8001_task_done;
-> -		task->timer.data = (unsigned long)task;
-> -		task->timer.function = pm8001_tmf_timedout;
-> -		task->timer.expires = jiffies + PM8001_TASK_TIMEOUT*HZ;
-> -		add_timer(&task->timer);
-> +		task->slow_task->timer.data = (unsigned long)task;
-> +		task->slow_task->timer.function = pm8001_tmf_timedout;
-> +		task->slow_task->timer.expires = jiffies +
-PM8001_TASK_TIMEOUT*HZ;
-> +		add_timer(&task->slow_task->timer);
-> 
->  		res = pm8001_task_exec(task, 1, GFP_KERNEL, 1, tmf);
-> 
->  		if (res) {
-> -			del_timer(&task->timer);
-> +			del_timer(&task->slow_task->timer);
->  			PM8001_FAIL_DBG(pm8001_ha,
->  				pm8001_printk("Executing internal task "
->  				"failed\n"));
->  			goto ex_err;
->  		}
-> -		wait_for_completion(&task->completion);
-> +		wait_for_completion(&task->slow_task->completion);
->  		res = -TMF_RESP_FUNC_FAILED;
->  		/* Even TMF timed out, return direct. */
->  		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
-> @@ -749,10 +749,10 @@ pm8001_exec_internal_task_abort(struct
-pm8001_hba_info
-> *pm8001_ha,
->  		task->dev = dev;
->  		task->task_proto = dev->tproto;
->  		task->task_done = pm8001_task_done;
-> -		task->timer.data = (unsigned long)task;
-> -		task->timer.function = pm8001_tmf_timedout;
-> -		task->timer.expires = jiffies + PM8001_TASK_TIMEOUT * HZ;
-> -		add_timer(&task->timer);
-> +		task->slow_task->timer.data = (unsigned long)task;
-> +		task->slow_task->timer.function = pm8001_tmf_timedout;
-> +		task->slow_task->timer.expires = jiffies +
-PM8001_TASK_TIMEOUT *
-> HZ;
-> +		add_timer(&task->slow_task->timer);
-> 
->  		res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
->  		if (res)
-> @@ -766,13 +766,13 @@ pm8001_exec_internal_task_abort(struct
-pm8001_hba_info
-> *pm8001_ha,
->  			pm8001_dev, flag, task_tag, ccb_tag);
-> 
->  		if (res) {
-> -			del_timer(&task->timer);
-> +			del_timer(&task->slow_task->timer);
->  			PM8001_FAIL_DBG(pm8001_ha,
->  				pm8001_printk("Executing internal task "
->  				"failed\n"));
->  			goto ex_err;
->  		}
-> -		wait_for_completion(&task->completion);
-> +		wait_for_completion(&task->slow_task->completion);
->  		res = TMF_RESP_FUNC_FAILED;
->  		/* Even TMF timed out, return direct. */
->  		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 484bc52..4e84ef3 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -568,10 +568,6 @@ struct sas_task {
-> 
->  	enum   sas_protocol      task_proto;
-> 
-> -	/* Used by the discovery code. */
-> -	struct timer_list     timer;
-> -	struct completion     completion;
-> -
->  	union {
->  		struct sas_ata_task ata_task;
->  		struct sas_smp_task smp_task;
-> @@ -588,8 +584,15 @@ struct sas_task {
-> 
->  	void   *lldd_task;	  /* for use by LLDDs */
->  	void   *uldd_task;
-> +	struct sas_task_slow *slow_task;
-> +};
-> 
-> -	struct work_struct abort_work;
-> +struct sas_task_slow {
-> +	/* standard/extra infrastructure for slow path commands (SMP and
-> +	 * internal lldd commands
-> +	 */
-> +	struct timer_list     timer;
-> +	struct completion     completion;
->  };
-> 
->  #define SAS_TASK_STATE_PENDING      1
-> @@ -599,6 +602,7 @@ struct sas_task {
->  #define SAS_TASK_AT_INITIATOR       16
-> 
->  extern struct sas_task *sas_alloc_task(gfp_t flags);
-> +extern struct sas_task *sas_alloc_slow_task(gfp_t flags);
->  extern void sas_free_task(struct sas_task *task);
-> 
->  struct sas_domain_function_template {
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jack Wang <jack_wang@usish.com>
+---
+ drivers/scsi/pm8001/pm8001_sas.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c
+b/drivers/scsi/pm8001/pm8001_sas.c
+index ad36f1a..ab98c41 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -660,7 +660,7 @@ static int pm8001_exec_internal_tmf_task(struct
+domain_device *dev,
+ 	struct pm8001_hba_info *pm8001_ha = pm8001_find_ha_by_dev(dev);
+ 
+ 	for (retry = 0; retry < 3; retry++) {
+-		task = sas_alloc_task(GFP_KERNEL);
++		task = sas_alloc_slow_task(GFP_KERNEL);
+ 		if (!task)
+ 			return -ENOMEM;
+ 
+@@ -742,7 +742,7 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info
+*pm8001_ha,
+ 	struct sas_task *task = NULL;
+ 
+ 	for (retry = 0; retry < 3; retry++) {
+-		task = sas_alloc_task(GFP_KERNEL);
++		task = sas_alloc_slow_task(GFP_KERNEL);
+ 		if (!task)
+ 			return -ENOMEM;
+ 
+-- 
+1.7.4.4
+
+
+------=_NextPart_000_0009_01CCEBC5.1E4DC680
+Content-Type: application/octet-stream;
+	name="0001-fix-missed-changes-during-trim-sas-task-of-slow-path.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="0001-fix-missed-changes-during-trim-sas-task-of-slow-path.patch"
+
+>From b93ecdd72d6eaf96bd9c1d735dac0b350a3b2bff Mon Sep 17 00:00:00 2001=0A=
+From: Jack Wang <jack_wang@usish.com>=0A=
+Date: Tue, 14 Feb 2012 08:27:52 -0500=0A=
+Subject: [PATCH] fix missed changes during trim sas task of slow path =
+change=0A=
+=0A=
+Signed-off-by: Jack Wang <jack_wang@usish.com>=0A=
+---=0A=
+ drivers/scsi/pm8001/pm8001_sas.c |    4 ++--=0A=
+ 1 files changed, 2 insertions(+), 2 deletions(-)=0A=
+=0A=
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c =
+b/drivers/scsi/pm8001/pm8001_sas.c=0A=
+index ad36f1a..ab98c41 100644=0A=
+--- a/drivers/scsi/pm8001/pm8001_sas.c=0A=
++++ b/drivers/scsi/pm8001/pm8001_sas.c=0A=
+@@ -660,7 +660,7 @@ static int pm8001_exec_internal_tmf_task(struct =
+domain_device *dev,=0A=
+ 	struct pm8001_hba_info *pm8001_ha =3D pm8001_find_ha_by_dev(dev);=0A=
+ =0A=
+ 	for (retry =3D 0; retry < 3; retry++) {=0A=
+-		task =3D sas_alloc_task(GFP_KERNEL);=0A=
++		task =3D sas_alloc_slow_task(GFP_KERNEL);=0A=
+ 		if (!task)=0A=
+ 			return -ENOMEM;=0A=
+ =0A=
+@@ -742,7 +742,7 @@ pm8001_exec_internal_task_abort(struct =
+pm8001_hba_info *pm8001_ha,=0A=
+ 	struct sas_task *task =3D NULL;=0A=
+ =0A=
+ 	for (retry =3D 0; retry < 3; retry++) {=0A=
+-		task =3D sas_alloc_task(GFP_KERNEL);=0A=
++		task =3D sas_alloc_slow_task(GFP_KERNEL);=0A=
+ 		if (!task)=0A=
+ 			return -ENOMEM;=0A=
+ =0A=
+-- =0A=
+1.7.4.4=0A=
+=0A=
+
+------=_NextPart_000_0009_01CCEBC5.1E4DC680--
 
