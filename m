@@ -1,70 +1,39 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH 1/5] block: Implement support for WRITE SAME
-Date: Wed, 15 Feb 2012 10:33:19 -0500
-Message-ID: <20120215153319.GA27312@redhat.com>
-References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
- <1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
- <20120207214005.GG6346@redhat.com>
- <yq1hayugyv4.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30629 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750907Ab2BOPdY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Feb 2012 10:33:24 -0500
-Content-Disposition: inline
-In-Reply-To: <yq1hayugyv4.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] [trivial] scsi: Fix typo in pmcraid.h
+Date: Thu, 16 Feb 2012 00:48:38 +0900
+Message-ID: <1329320918-2745-1-git-send-email-standby24x7@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, standby24x7@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, jaxboe@fusionio.com
 
-On Mon, Feb 13, 2012 at 05:19:43PM -0500, Martin K. Petersen wrote:
+Correct spelling "thresold" to "threshold" in
+drivers/scsi/pmraid.h
 
-[..]
-> 
-> block: Mark discard requests unmergeable
-> 
-> Discards were globally marked as mergeable and as a result we had
-> several code paths that explicitly disabled merging when REQ_DISCARD was
-> set.
-> 
-> Mark discard requests as unmergable and remove special-casing of
-> REQ_DISCARD.
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ drivers/scsi/pmcraid.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Mike Snitzer mentioned that we do allow merging of one discard request
-with another except following two cases.
-
-- Don't allow merging of secure discard.
-- Don't allow merging of discard request with another non-discard request.
-
-I guess that's why DISCARD requests are mergeable globally and later
-we deny merge in selected cases. Do we want to disable that behavior?
-
-[..]
-> @@ -591,8 +591,7 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
->  
->  	if (rq->cmd_flags & REQ_SOFTBARRIER) {
->  		/* barriers are scheduling boundary, update end_sector */
-> -		if (rq->cmd_type == REQ_TYPE_FS ||
-> -		    (rq->cmd_flags & REQ_DISCARD)) {
-> +		if (rq->cmd_type == REQ_TYPE_FS) {
-
-This is orthogonal to merging?
-
-
-[..]
-> @@ -634,8 +633,7 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
->  		if (elv_attempt_insert_merge(q, rq))
->  			break;
->  	case ELEVATOR_INSERT_SORT:
-> -		BUG_ON(rq->cmd_type != REQ_TYPE_FS &&
-> -		       !(rq->cmd_flags & REQ_DISCARD));
-> +		BUG_ON(rq->cmd_type != REQ_TYPE_FS);
-
-This change also looks orthogonal to merging. Will it not trigger BUG_ON()
-when DISCARD request is being inserted into the elevator?
-
-Thanks
-Vivek
+diff --git a/drivers/scsi/pmcraid.h b/drivers/scsi/pmcraid.h
+index ca496c7..e1d150f 100644
+--- a/drivers/scsi/pmcraid.h
++++ b/drivers/scsi/pmcraid.h
+@@ -857,11 +857,11 @@ static struct pmcraid_ioasc_error pmcraid_ioasc_error_table[] = {
+ 	{0x01180600, IOASC_LOG_LEVEL_HARD,
+ 	 "Recovered Error, soft media error, sector reassignment suggested"},
+ 	{0x015D0000, IOASC_LOG_LEVEL_HARD,
+-	 "Recovered Error, failure prediction thresold exceeded"},
++	 "Recovered Error, failure prediction threshold exceeded"},
+ 	{0x015D9200, IOASC_LOG_LEVEL_HARD,
+-	 "Recovered Error, soft Cache Card Battery error thresold"},
++	 "Recovered Error, soft Cache Card Battery error threshold"},
+ 	{0x015D9200, IOASC_LOG_LEVEL_HARD,
+-	 "Recovered Error, soft Cache Card Battery error thresold"},
++	 "Recovered Error, soft Cache Card Battery error threshold"},
+ 	{0x02048000, IOASC_LOG_LEVEL_HARD,
+ 	 "Not Ready, IOA Reset Required"},
+ 	{0x02408500, IOASC_LOG_LEVEL_HARD,
+-- 
+1.7.6.5
