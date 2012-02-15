@@ -1,178 +1,86 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: Kernel crashing on eject SD card
-Date: Wed, 15 Feb 2012 11:56:19 +0900
-Message-ID: <4F3B1ED3.4000706@ce.jp.nec.com>
-References: <1328660390.4f31bfa6e8f4b@www.imp.polymtl.ca> <20120212220836.6aa7fa4d@stein> <20120212222027.71651e8b@stein> <20120213021813.GA589@redhat.com> <1329154831.4f394b0f3c69c@www.imp.polymtl.ca> <4F3A4220.4010901@ce.jp.nec.com> <20120214162858.GM12117@google.com>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: Re: [RFC PATCH 6/6] libata: add ZPODD support
+Date: Wed, 15 Feb 2012 14:06:23 +0800
+Message-ID: <CAOzJMDQHbM9Hyx_W=0nhzK+FTk5i5Hvvn00TerYH54-yH1so2A@mail.gmail.com>
+References: <1329124271-29464-1-git-send-email-ming.m.lin@intel.com>
+	<1329124271-29464-7-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120214162858.GM12117@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Naveen Goswamy <naveen.goswamy@polymtl.ca>
-Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Dave Jones <davej@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:34627 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab2BOGGY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2012 01:06:24 -0500
+In-Reply-To: <1329124271-29464-7-git-send-email-ming.m.lin@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 
 Hi,
 
-Thank you for the comments.
+Good work, I'm also working on ZPODD for AMD platforms, some comments b=
+elow.
 
-On 02/15/12 01:28, Tejun Heo wrote:
->> that could lead to oops like this:
->>
->>   process A                  process B
->>   ----------------------------------------------
->>   sys_open
->>     __blkdev_get
->>       sd_open
->>         returns -ENOMEDIUM
->>                              scsi_remove_device
->>                                <scsi_device torn down>
->>       rescan_partitions
->>         sd_revalidate_disk
->>           <oops>
->>
->> Should "revalidate_disk" of block_device_operations work
->> without successful open()?
->>
->> If so, sd_revalidate_disk() (and possibly other drivers) needs to be
->> fixed. (e.g. use scsi_disk_get/put by itself)
->>
->> If not, __blkdev_get() or rescan_partision() should avoid calling
->> "revalidate_disk" for -ENOMEDIUM case.
-> 
-> Hmmm... right, that's a problem.  Missed rescan_partitions() calling
-> into driver.  What we should probably do is separating out
-> invalidation & partition shoot down into a separate function, say
-> trucate_disk(), and call that on -ENOMEDIUM instead of
-> rescan_partitions().  All that's necessary is killing the partition
-> devices (and maybe zapping device size to zero).  Any one interested
-> in trying it?
+On Mon, Feb 13, 2012 at 5:11 PM, Lin Ming <ming.m.lin@intel.com> wrote:
+> ZPODD(Zero Power Optical Disk Drive) is a new feature in
+> SATA 3.1 specification. It provides a way to power off unused CDROM.
 
-How about this?
+I don't see anywhere in the sata 3.1 spec mentioned how to power off th=
+e
+cdrom, the only relevant content is the newly defined device attention =
+pin,
+which is used to notify the host that this powered off device needs att=
+ention.
+Or do I miss something?
 
-If the patch looks ok, I appreciate if somebody with removable media
-could test the followings:
-  - the oops in sd_revalidate_disk() should not occur:
-    http://marc.info/?l=linux-scsi&m=132388619710052
-  - the problem reported here should not be re-introduced:
-    https://bugzilla.kernel.org/show_bug.cgi?id=13029
+>
+> CDROM is powered off by executing ACPI power resource's _OFF method.
+>
 
-Index: linux-3.3/block/partition-generic.c
-===================================================================
---- linux-3.3.orig/block/partition-generic.c	2012-02-15 09:00:25.147293790 +0900
-+++ linux-3.3/block/partition-generic.c	2012-02-15 11:31:33.835554974 +0900
-@@ -389,17 +389,11 @@ static bool disk_unlock_native_capacity(
- 	}
- }
- 
--int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
-+static int drop_partitions(struct gendisk *disk, struct block_device *bdev)
- {
--	struct parsed_partitions *state = NULL;
- 	struct disk_part_iter piter;
- 	struct hd_struct *part;
--	int p, highest, res;
--rescan:
--	if (state && !IS_ERR(state)) {
--		kfree(state);
--		state = NULL;
--	}
-+	int res;
- 
- 	if (bdev->bd_part_count)
- 		return -EBUSY;
-@@ -412,6 +406,24 @@ rescan:
- 		delete_partition(disk, part->partno);
- 	disk_part_iter_exit(&piter);
- 
-+	return 0;
-+}
-+
-+int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
-+{
-+	struct parsed_partitions *state = NULL;
-+	struct hd_struct *part;
-+	int p, highest, res;
-+rescan:
-+	if (state && !IS_ERR(state)) {
-+		kfree(state);
-+		state = NULL;
-+	}
-+
-+	res = drop_partitions(disk, bdev);
-+	if (res)
-+		return res;
-+
- 	if (disk->fops->revalidate_disk)
- 		disk->fops->revalidate_disk(disk);
- 	check_disk_size_change(disk, bdev);
-@@ -515,6 +527,22 @@ rescan:
- 	return 0;
- }
- 
-+int invalidate_partitions(struct gendisk *disk, struct block_device *bdev)
-+{
-+	int res;
-+
-+	res = drop_partitions(disk, bdev);
-+	if (res)
-+		return res;
-+
-+	check_disk_size_change(disk, bdev);
-+	bdev->bd_invalidated = 0;
-+	/* tell userspace that the media / partition table may have changed */
-+	kobject_uevent(&disk_to_dev(disk)->kobj, KOBJ_CHANGE);
-+
-+	return 0;
-+}
-+
- unsigned char *read_dev_sector(struct block_device *bdev, sector_t n, Sector *p)
- {
- 	struct address_space *mapping = bdev->bd_inode->i_mapping;
-Index: linux-3.3/include/linux/genhd.h
-===================================================================
---- linux-3.3.orig/include/linux/genhd.h	2012-02-09 12:21:53.000000000 +0900
-+++ linux-3.3/include/linux/genhd.h	2012-02-15 11:18:59.661594629 +0900
-@@ -596,6 +596,7 @@ extern char *disk_name (struct gendisk *
- 
- extern int disk_expand_part_tbl(struct gendisk *disk, int target);
- extern int rescan_partitions(struct gendisk *disk, struct block_device *bdev);
-+extern int invalidate_partitions(struct gendisk *disk, struct block_device *bdev);
- extern struct hd_struct * __must_check add_partition(struct gendisk *disk,
- 						     int partno, sector_t start,
- 						     sector_t len, int flags,
-Index: linux-3.3/fs/block_dev.c
-===================================================================
---- linux-3.3.orig/fs/block_dev.c	2012-02-09 12:21:53.000000000 +0900
-+++ linux-3.3/fs/block_dev.c	2012-02-15 11:34:48.800549266 +0900
-@@ -1183,8 +1183,12 @@ static int __blkdev_get(struct block_dev
- 			 * The latter is necessary to prevent ghost
- 			 * partitions on a removed medium.
- 			 */
--			if (bdev->bd_invalidated && (!ret || ret == -ENOMEDIUM))
--				rescan_partitions(disk, bdev);
-+			if (bdev->bd_invalidated) {
-+				if (!ret)
-+					rescan_partitions(disk, bdev);
-+				else if (ret == -ENOMEDIUM)
-+					invalidate_partitions(disk, bdev);
-+			}
- 			if (ret)
- 				goto out_clear;
- 		} else {
-@@ -1214,8 +1218,12 @@ static int __blkdev_get(struct block_dev
- 			if (bdev->bd_disk->fops->open)
- 				ret = bdev->bd_disk->fops->open(bdev, mode);
- 			/* the same as first opener case, read comment there */
--			if (bdev->bd_invalidated && (!ret || ret == -ENOMEDIUM))
--				rescan_partitions(bdev->bd_disk, bdev);
-+			if (bdev->bd_invalidated) {
-+				if (!ret)
-+					rescan_partitions(bdev->bd_disk, bdev);
-+				else if (ret == -ENOMEDIUM)
-+					invalidate_partitions(bdev->bd_disk, bdev);
-+			}
- 			if (ret)
- 				goto out_unlock_bdev;
- 		}
+AMD has a different implementation to power off the CDROM, I'll need to
+prepare another patch based on yours.
+
+> When CDROM is powered off(D3Cold state), inserting disk will trigger =
+a
+> wakeup event(GPE). GPE AML handler notifies the associated device. Th=
+en
+> CDROM is resumed in the notify handler.
+>
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> ---
+> =A0drivers/ata/libata-acpi.c | =A0 64 +++++++++++++++++++++++++++++++=
+++++++-------
+> =A0drivers/scsi/sr.c =A0 =A0 =A0 =A0 | =A0 39 +++++++++++++++++++++++=
+++++
+> =A0drivers/scsi/sr.h =A0 =A0 =A0 =A0 | =A0 =A03 ++
+> =A03 files changed, 95 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 5fc97d2..bf4eace 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -716,6 +752,9 @@ static int sr_probe(struct device *dev)
+> =A0 =A0 =A0 =A0disk->flags |=3D GENHD_FL_REMOVABLE;
+> =A0 =A0 =A0 =A0add_disk(disk);
+>
+> + =A0 =A0 =A0 if (device_run_wake(dev))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 cd->zpodd =3D 1;
+> +
+
+=46or a cd to support zero power, it has to support device attention pi=
+n.
+If it does not support that, once it is powered off, it can't be power =
+up
+back. So I don't think device_run_wake is enough to set the zpodd flag,
+unless your firmware has done the check and created the acpi table
+according to the result. Is it the case?
+
+Thanks,
+Aaron
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
