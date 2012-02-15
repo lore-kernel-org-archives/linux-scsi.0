@@ -1,105 +1,81 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: Re: [RFC PATCH 6/6] libata: add ZPODD support
-Date: Wed, 15 Feb 2012 15:18:19 +0800
-Message-ID: <20120215071818.GA10754@ladygaga>
-References: <1329124271-29464-1-git-send-email-ming.m.lin@intel.com>
- <1329124271-29464-7-git-send-email-ming.m.lin@intel.com>
- <CAOzJMDQHbM9Hyx_W=0nhzK+FTk5i5Hvvn00TerYH54-yH1so2A@mail.gmail.com>
- <1329288365.3104.34.camel@minggr>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: SCSI Enclosure Support (multipath)
+Date: Wed, 15 Feb 2012 11:06:08 +0200
+Message-ID: <20120215090608.GN12984@reaktio.net>
+References: <CAB9NSeWgz_m+F7-3JE5Jn12Yi_PjG002UCoKdq9sj7WQLnJ29w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.tele.fi ([192.89.123.25]:64668 "EHLO smtp.tele.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751359Ab2BOJGK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Feb 2012 04:06:10 -0500
 Content-Disposition: inline
-In-Reply-To: <1329288365.3104.34.camel@minggr>
-Sender: linux-ide-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+In-Reply-To: <CAB9NSeWgz_m+F7-3JE5Jn12Yi_PjG002UCoKdq9sj7WQLnJ29w@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Robert Woodworth <robertjwoodworth@gmail.com>
 
-On Wed, Feb 15, 2012 at 02:46:05PM +0800, Lin Ming wrote:
-> On Wed, 2012-02-15 at 14:06 +0800, Aaron Lu wrote:
-> > Hi,
-> > 
-> > Good work, I'm also working on ZPODD for AMD platforms, some comments below.
-> 
-> Great :)
-> 
-> > 
-> > On Mon, Feb 13, 2012 at 5:11 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> > > ZPODD(Zero Power Optical Disk Drive) is a new feature in
-> > > SATA 3.1 specification. It provides a way to power off unused CDROM.
-> > 
-> > I don't see anywhere in the sata 3.1 spec mentioned how to power off the
-> > cdrom, the only relevant content is the newly defined device attention pin,
-> > which is used to notify the host that this powered off device needs attention.
-> > Or do I miss something?
-> 
-> You're right.
-> 
-> > 
-> > >
-> > > CDROM is powered off by executing ACPI power resource's _OFF method.
-> > >
-> > 
-> > AMD has a different implementation to power off the CDROM, I'll need to
-> > prepare another patch based on yours.
-> 
-> Could you share AMD's implementation?
+> Hello all.
+
+Hello!
+
+> I'm a firmware engineer working on an expander inside an external
+> enclosure that supports SES.  I have been using the sg interface
+> (/dev/sgXX) sg_ses and sg_write_buffer to communicate to my device
+> fine for some time now.
 >
+> Searching through the list archives, I found a thread from 2008
+> discussing the ses.c kernel patch and associated /sys/ interface and
+> lack of /dev/ interface in that code.
+>
+> For my enclosure, the /sys/ interface is inadequate.  It does not
+> appear to provide access to a SSP READ_BUFFER, WRITE_BUFFER or monitor
+> generic SES elements.  (the enclosure provides SES monitoring of temp,
+> fans and PSU voltages)
+>
+>
+> What I would like to see is a /dev/sesXX mapping such that the I, and
+> my soon to come ses monitoring apps don't have to search through the
+> /dev/sgXX system to find the SES devices.
+>
+> Second, my enclosure is 'dual redundant'.  I have two expanders
+> providing two paths to each drive and two SES devices in one
+> enclosure.  In the sg interface, this becomes two handles (/dev/sg5
+> and /dev/sg6  or whatever...)  To handle the true multipath this
+> should have a single virtual handle accessing both SES devices and
+> failover abilities.
+>
+> However, my end customers will never need such a Linux kernel system.
+> The enclosure is only supported by the mfg on a LSI MegaRAID.  The LSI
+> firmware already works perfectly with this system.  It reports one SES
+> device and each drive one time and has no problems if one expander is
+> removed, re-added then the second expander removed.  The LSI hides the
+> SES from the OS anyway, just like it hides the individual drives.
+>
+>
+> Does anyone have similar needs or working on something like this?
 
-Sure.
-We have defined a special device, named ODDZ, under the SATA scope in the
-DSDT table. So basically, the existence of device ODDZ means the support
-of ZPODD at the platform level. And there are the _PS0 and _PS3 control
-methods under device ODDZ to power on/off the attached cdrom.
-The code is not ready yet, I'm still working on it.
 
-Thanks,
-Aaron
+I'm not aware of anyone working on this, but I'm sure it's needed
+by other aswell!
 
-> > 
-> > > When CDROM is powered off(D3Cold state), inserting disk will trigger a
-> > > wakeup event(GPE). GPE AML handler notifies the associated device. Then
-> > > CDROM is resumed in the notify handler.
-> > >
-> > > Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-> > > ---
-> > >  drivers/ata/libata-acpi.c |   64 +++++++++++++++++++++++++++++++++++++-------
-> > >  drivers/scsi/sr.c         |   39 +++++++++++++++++++++++++++
-> > >  drivers/scsi/sr.h         |    3 ++
-> > >  3 files changed, 95 insertions(+), 11 deletions(-)
-> > >
-> > > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> > > index 5fc97d2..bf4eace 100644
-> > > --- a/drivers/scsi/sr.c
-> > > +++ b/drivers/scsi/sr.c
-> > > @@ -716,6 +752,9 @@ static int sr_probe(struct device *dev)
-> > >        disk->flags |= GENHD_FL_REMOVABLE;
-> > >        add_disk(disk);
-> > >
-> > > +       if (device_run_wake(dev))
-> > > +               cd->zpodd = 1;
-> > > +
-> > 
-> > For a cd to support zero power, it has to support device attention pin.
-> > If it does not support that, once it is powered off, it can't be power up
-> > back. So I don't think device_run_wake is enough to set the zpodd flag,
-> > unless your firmware has done the check and created the acpi table
-> > according to the result. Is it the case?
-> 
-> I should add device attention pin check.
-> 
-> Thanks for the comments.
-> Lin Ming
-> 
-> > 
-> > Thanks,
-> > Aaron
-> 
-> 
+
+> If I don't find anything our there, I intend on writing my own kernel
+> module to support this.
+> Would it be useful enough to share and possibly submit a patch?
+
+
+Yes please, definitely send a patch :)
+
+
+-- Pasi
+
+
+> RJW.
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
