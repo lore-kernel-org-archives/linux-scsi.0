@@ -1,37 +1,36 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 26692] Fusion MPT SPI bringup takes 80 seconds when the kernel
- is quiet
-Date: Wed, 15 Feb 2012 21:08:09 GMT
-Message-ID: <201202152108.q1FL893G011597@bugzilla.kernel.org>
-References: <bug-26692-11613@https.bugzilla.kernel.org/>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: pm8001: [PATCH] fix missed changes during trim sas task of slow
+ path change
+Date: Wed, 15 Feb 2012 15:32:02 -0800
+Message-ID: <CAA9_cmemGvOwDDun68_g_xFTioPQZUjjWB=TSKuG=P83=R+BKw@mail.gmail.com>
+References: <E2EC78FE4D924618947E7C7FA03910BA@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:58991 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755009Ab2BOVIJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2012 16:08:09 -0500
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q1FL892F011598
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Feb 2012 21:08:09 GMT
-In-Reply-To: <bug-26692-11613@https.bugzilla.kernel.org/>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:42840 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820Ab2BOXcD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2012 18:32:03 -0500
+Received: by vcge1 with SMTP id e1so1150190vcg.19
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Feb 2012 15:32:02 -0800 (PST)
+In-Reply-To: <E2EC78FE4D924618947E7C7FA03910BA@usish.com.cn>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jack Wang <jack_wang@usish.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, lindar_liu@usish.com, crystal_yu@usish.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=26692
+On Tue, Feb 14, 2012 at 5:35 PM, Jack Wang <jack_wang@usish.com> wrote:
+> Dan forget to change sas_alloc_task to sas_alloc_slow_task in pm8001, which
+> will lead to NULL point dereference, fix this.
+>
+> From b93ecdd72d6eaf96bd9c1d735dac0b350a3b2bff Mon Sep 17 00:00:00 2001
+> From: Jack Wang <jack_wang@usish.com>
+> Date: Tue, 14 Feb 2012 08:27:52 -0500
+> Subject: [PATCH] fix missed changes during trim sas task of slow path change
+>
+> Signed-off-by: Jack Wang <jack_wang@usish.com>
 
+Thanks Jack, I'll fold this into the existing patch and add your Acked-by.
 
-
-
-
---- Comment #7 from Jonathan Nieder <jrnieder@gmail.com>  2012-02-15 21:08:07 ---
-(In reply to comment #5)
-> scsi0 : ioc0: LSI53C1030 B2, FwRev=01000e00h, Ports=1, MaxQ=222, IRQ=27
-
-Is there a firmware update available?
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--
+Dan
