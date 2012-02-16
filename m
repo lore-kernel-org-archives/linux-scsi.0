@@ -1,47 +1,47 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 26692] Fusion MPT SPI bringup takes 80 seconds when the kernel
- is quiet
-Date: Thu, 16 Feb 2012 15:25:26 GMT
-Message-ID: <201202161525.q1GFPQ65000430@bugzilla.kernel.org>
-References: <bug-26692-11613@https.bugzilla.kernel.org/>
+Subject: [Bug 42783] Kernel ooops when disconnecting the USB flash disk, in
+ which I've just modified partition table
+Date: Thu, 16 Feb 2012 15:38:36 GMT
+Message-ID: <201202161538.q1GFcaPO000909@bugzilla.kernel.org>
+References: <bug-42783-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:32787 "EHLO
+Received: from bugzilla.kernel.org ([198.145.19.204]:32832 "EHLO
 	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267Ab2BPPZ1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2012 10:25:27 -0500
+	with ESMTP id S1751220Ab2BPPig (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2012 10:38:36 -0500
 Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q1GFPQb2000431
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2012 15:25:26 GMT
-In-Reply-To: <bug-26692-11613@https.bugzilla.kernel.org/>
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q1GFca93000910
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2012 15:38:36 GMT
+In-Reply-To: <bug-42783-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D26692
+https://bugzilla.kernel.org/show_bug.cgi?id=42783
+
+
+Alan Stern <stern@rowland.harvard.edu> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |stern@rowland.harvard.edu
 
 
 
 
+--- Comment #2 from Alan Stern <stern@rowland.harvard.edu>  2012-02-16 15:38:35 ---
+For bug reports like this, it's generally more useful to attach the output from
+the "dmesg" command rather than copying the system log file or the contents of
+the console directly into the text of the report.
 
---- Comment #8 from Ferenc W=C3=A1gner <wferi@niif.hu>  2012-02-16 15:2=
-5:25 ---
-http://www.lsi.com/support/products/Pages/LSI53C1030.aspx doesn't make =
-it
-particularly clear for me, but if 01000e00 corresponds to FW-1.0.14.0, =
-then
-probably there is: FW-1.03.29.20 or FW-1.03.34. IS, IT and IME doesn't =
-say much
-to me, I'll give them a try.
+Also, when tracking down problems in the kernel, it helps to build your kernel
+with CONFIG_FRAME_POINTER enabled.
 
---=20
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
-l
+Why are you running hald-addon-stor?  hal has been obsolete for some time.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
 ------- You are receiving this mail because: -------
-You are watching the assignee of the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You are the assignee for the bug.
