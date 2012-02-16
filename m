@@ -1,53 +1,137 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH 07/13] target: Inline struct se_tmr_req into se_cmd
-Date: Wed, 15 Feb 2012 22:30:00 -0800
-Message-ID: <4F3CA268.2040403@redhat.com>
-References: <1327009163-10177-1-git-send-email-agrover@redhat.com>	 <1327009163-10177-8-git-send-email-agrover@redhat.com>	 <20120120161209.GA22481@infradead.org>  <4F19A80B.6000902@redhat.com> <1329350733.5093.128.camel@haakon2.linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755072Ab2BPGaW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2012 01:30:22 -0500
-In-Reply-To: <1329350733.5093.128.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Subject: [PATCH 2/2] scsi: retrieve cache mode using ATA_16 cmd if normal routine fails
+Date: Thu, 16 Feb 2012 12:22:21 +0530
+Message-ID: <1329375141-6944-1-git-send-email-amit.sahrawat83@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: Nam-Jae Jeon <namjae.jeon@samsung.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Amit Sahrawat <amit.sahrawat83@gmail.com>, Amit Sahrawat <a.sahrawat@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@infradead.org>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, kiran.patil@intel.com
 
-On 02/15/2012 04:05 PM, Nicholas A. Bellinger wrote:
-> On Fri, 2012-01-20 at 09:44 -0800, Andy Grover wrote:
->> On 01/20/2012 08:12 AM, Christoph Hellwig wrote:
->>> On Thu, Jan 19, 2012 at 01:39:17PM -0800, Andy Grover wrote:
->>>> This saves all fabrics from calling core_tmr_alloc_req() and
->>>> having to check the result. The downside is se_cmd gets bigger for all
->>>> requests, but hopefully later patches will reduce it.
->>>
->>> Without patches to void the overhead it's not acceptable. Fortunately
->>> it should be doable fairly simply by using an union for command vs
->>> TMR fields.
->>
->> This was my thought too. We should be able to move cmd variables into a
->> union w/tmr struct very soon, with a low risk of introducing bugs.
->>
-> 
-> Hi Andy,
-> 
-> Ping on this..?  I've been merging patches from lio-core into
-> target-pending/for-next the past week, and i've stopped ahead of this
-> patch to inline se_tmr_req into se_cmd due of the extra overhead in
-> question here..
-> 
-> I'd really like to get this resolved in v3.4 for-next, so would you mind
-> taking care of the lio-core conversion to union for command vs
-> TMR fields so this can be squashed into for-next..?
+It has been observed that a number of USB HDD's do not respond correctly
+to SCSI mode sense command(retrieve caching pages) which results in their
+Write Cache being discarded by queue requests i.e., WCE if left set to
+'0'(disabled).
+This results in a number of Filesystem corruptions, when the device
+is unplugged abruptly.
 
-Hi Nick,
+So, in order to identify the devices correctly - give it
+a last try using ATA_16 cmd after failure from normal routine.
 
-Haven't had a chance to make further progress. You can drop it and I'll
-resubmit it later with the supplementary work.
+Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
+Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+---
+ drivers/ata/libata-scsi.c |   39 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c         |   18 ++++++++++++++++++
+ include/linux/libata.h    |    1 +
+ 3 files changed, 58 insertions(+), 0 deletions(-)
 
-Regards -- Andy
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 508a60b..218df4f 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -561,6 +561,45 @@ error:
+ 	return rc;
+ }
+ 
++int ata_get_cachestatus(struct scsi_device *scsidev)
++{
++	int rc = 0;
++	u8 scsi_cmd[MAX_COMMAND_SIZE] = {0};
++	u8 *sensebuf = NULL, *argbuf = NULL;
++	enum dma_data_direction data_dir;
++	int cmd_result;
++	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
++	if (!sensebuf)
++		return rc;
++
++	argbuf = kzalloc(ATA_SECT_SIZE, GFP_KERNEL);
++	if (!argbuf)
++		goto error;
++
++	scsi_cmd[0] = ATA_16;
++	scsi_cmd[1]  = (4 << 1); /* PIO Data-in */
++	scsi_cmd[2]  = 0x0e;     /* no off.line or cc, read from dev,
++				block count in sector count field */
++	data_dir = DMA_FROM_DEVICE;
++	scsi_cmd[14] = ATA_CMD_ID_ATA;
++
++	if (!scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, ATA_SECT_SIZE,
++					sensebuf, (10*HZ), 5, 0, NULL)) {
++		/*
++		 * 6th Bit in Word 85 Corresponds to Write Cache
++		 * being Enabled/disabled, Word 85 represnets the
++		 * features supported
++		 */
++		 if (le16_to_cpu(((unsigned short *)argbuf)[85]) & 0x20)
++			rc = 1;
++	}
++
++error:
++	kfree(sensebuf);
++	kfree(argbuf);
++	return rc;
++}
++
+ /**
+  *	ata_task_ioctl - Handler for HDIO_DRIVE_TASK ioctl
+  *	@scsidev: Device to which we are issuing command
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index c691fb5..3ca507a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -50,6 +50,11 @@
+ #include <linux/string_helpers.h>
+ #include <linux/async.h>
+ #include <linux/slab.h>
++
++#ifdef CONFIG_ATA
++#include <linux/libata.h>
++#endif
++
+ #include <linux/pm_runtime.h>
+ #include <asm/uaccess.h>
+ #include <asm/unaligned.h>
+@@ -2129,7 +2134,11 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 		if (modepage == 0x3F) {
+ 			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
+ 				  "present\n");
++#ifdef CONFIG_ATA
++			goto WCE_USING_ATA;
++#else
+ 			goto defaults;
++#endif
+ 		} else if ((buffer[offset] & 0x3f) != modepage) {
+ 			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
+ 			goto defaults;
+@@ -2149,6 +2158,15 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 				  "Uses READ/WRITE(6), disabling FUA\n");
+ 			sdkp->DPOFUA = 0;
+ 		}
++#ifdef CONFIG_ATA
++WCE_USING_ATA:
++		if (!sdp->removable && !sdkp->WCE) {
++			sd_printk(KERN_NOTICE, sdkp, "Try to check write cache"
++				" enable/disable using ATA command\n");
++			sdkp->WCE = ata_get_cachestatus(sdp);
++		}
++#endif
++
+ 
+ 		if (sdkp->first_scan || old_wce != sdkp->WCE ||
+ 		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index cafc09a..20c5c33 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -990,6 +990,7 @@ extern void ata_host_init(struct ata_host *, struct device *,
+ 			  unsigned long, struct ata_port_operations *);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++extern int ata_get_cachestatus(struct scsi_device *scsidev);
+ extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
+ 			    int cmd, void __user *arg);
+-- 
+1.7.2.3
 
