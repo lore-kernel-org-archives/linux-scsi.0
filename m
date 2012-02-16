@@ -1,55 +1,35 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 07/13] target: Inline struct se_tmr_req into se_cmd
-Date: Wed, 15 Feb 2012 16:05:33 -0800
-Message-ID: <1329350733.5093.128.camel@haakon2.linux-iscsi.org>
-References: <1327009163-10177-1-git-send-email-agrover@redhat.com>
-	 <1327009163-10177-8-git-send-email-agrover@redhat.com>
-	 <20120120161209.GA22481@infradead.org>  <4F19A80B.6000902@redhat.com>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: Yet another hot unplug NULL pointer dereference (was Re: status
+ of oops in sd_revalidate_disk?)
+Date: Thu, 16 Feb 2012 10:04:03 +0900
+Message-ID: <4F3C5603.1040108@ce.jp.nec.com>
+References: <4EE8E419.8010000@pre-sense.de> <CAO+b5-pCW-F1nD365TnEiAfoN7zKB4zXkk3uO6p5QyUPY2icsA@mail.gmail.com> <20120214143800.69703df9@stein> <2173642.Y3HxI15Hxl@asus> <4F3B17C7.9040107@ce.jp.nec.com> <CAO+b5-rNF1R5NcSdVSsKLML4wyZBBGv-zUdq+B1y0kfHxLpupA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:50177 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755743Ab2BPAFg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2012 19:05:36 -0500
-In-Reply-To: <4F19A80B.6000902@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAO+b5-rNF1R5NcSdVSsKLML4wyZBBGv-zUdq+B1y0kfHxLpupA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, jbottomley@parallels.com, linux-scsi@vger.kernel.org, Huajun Li <huajun.li.lee@gmail.com>, Axel Theilmann <theilmann@pre-sense.de>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, kiran.patil@intel.com
 
-On Fri, 2012-01-20 at 09:44 -0800, Andy Grover wrote:
-> On 01/20/2012 08:12 AM, Christoph Hellwig wrote:
-> > On Thu, Jan 19, 2012 at 01:39:17PM -0800, Andy Grover wrote:
-> >> This saves all fabrics from calling core_tmr_alloc_req() and
-> >> having to check the result. The downside is se_cmd gets bigger for all
-> >> requests, but hopefully later patches will reduce it.
-> > 
-> > Without patches to void the overhead it's not acceptable. Fortunately
-> > it should be doable fairly simply by using an union for command vs
-> > TMR fields.
+Hi,
+
+On 02/15/12 20:29, Bart Van Assche wrote:
+> On Wed, Feb 15, 2012 at 3:26 AM, Jun'ichi Nomura <j-nomura@ce.jp.nec.com> wrote:
+>> I think this patch is good, too.
+>> Since QUEUE_FLAG_DEAD is also racy, it is not much different
+>> from queuedata check, IMO.
 > 
-> This was my thought too. We should be able to move cmd variables into a
-> union w/tmr struct very soon, with a low risk of introducing bugs.
-> 
+> Are you sure ? As far as I know the block layer takes care of
+> synchronizing queue flag modifications against request_fn invocations.
 
-Hi Andy,
+QUEUE_FLAG_DEAD is set outside of queue_lock. So it's racy.
+However, it's single directional change and the race is benign
+if the driver, who sets QUEUE_FLAG_DEAD, is ready to reject
+requests.
+q->queuedata is same with that regard.
 
-Ping on this..?  I've been merging patches from lio-core into
-target-pending/for-next the past week, and i've stopped ahead of this
-patch to inline se_tmr_req into se_cmd due of the extra overhead in
-question here..
-
-I'd really like to get this resolved in v3.4 for-next, so would you mind
-taking care of the lio-core conversion to union for command vs
-TMR fields so this can be squashed into for-next..?
-
-Thanks,
-
---nab
-
-
-
-
-
+-- 
+Jun'ichi Nomura, NEC Corporation
