@@ -1,137 +1,77 @@
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Subject: [PATCH 2/2] scsi: retrieve cache mode using ATA_16 cmd if normal routine fails
-Date: Thu, 16 Feb 2012 12:22:21 +0530
-Message-ID: <1329375141-6944-1-git-send-email-amit.sahrawat83@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: Nam-Jae Jeon <namjae.jeon@samsung.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Amit Sahrawat <amit.sahrawat83@gmail.com>, Amit Sahrawat <a.sahrawat@samsung.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] qla2xxx: Set disable_target_scan=1 when initiator-mode is disabled
+Date: Thu, 16 Feb 2012 06:47:13 +0000
+Message-ID: <1329374833-7086-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: target-devel <target-devel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Ben Lairson <ben.lairson@4bright.com>, Roland Dreier <roland@purestorage.com>, Arun Easi <arun.easi@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@Parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-It has been observed that a number of USB HDD's do not respond correctly
-to SCSI mode sense command(retrieve caching pages) which results in their
-Write Cache being discarded by queue requests i.e., WCE if left set to
-'0'(disabled).
-This results in a number of Filesystem corruptions, when the device
-is unplugged abruptly.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-So, in order to identify the devices correctly - give it
-a last try using ATA_16 cmd after failure from normal routine.
+This patch sets fc_function_template->disable_target_scan=1 with
+qla2xxx_transport_functions + qla2xxx_transport_vport_functions during
+qla2x00_module_init() when qla_target.c init code is explictly asking
+to disable initiator-mode for all ports with QLA2XXX_INI_MODE_DISABLED.
 
-Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+This fixes a bug where a FC fabric LOOP UP event causes an initiator-mode
+LUN SCAN to occur via scsi_transport_fc.:fc_scsi_scan_rport() ->
+scsi_scan_target() before tcm_qla2xxx ports are configured -> enabled
+to run in target-mode.
+
+This ends up causing SCSI layer timeouts during normal tcm_qla2xxx port
+setup w/ ISP reset, so go ahead and explictly set disable_target_scan=1
+during init to prevent this from occuring.
+
+Reported-by: Ben Lairson <ben.lairson@4bright.com>
+Cc: Ben Lairson <ben.lairson@4bright.com>
+Cc: Roland Dreier <roland@purestorage.com>
+Cc: Arun Easi <arun.easi@qlogic.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <JBottomley@Parallels.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/ata/libata-scsi.c |   39 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sd.c         |   18 ++++++++++++++++++
- include/linux/libata.h    |    1 +
- 3 files changed, 58 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c     |    8 ++++++++
+ drivers/scsi/qla2xxx/qla_target.c |    6 ++++--
+ 2 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 508a60b..218df4f 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -561,6 +561,45 @@ error:
- 	return rc;
- }
- 
-+int ata_get_cachestatus(struct scsi_device *scsidev)
-+{
-+	int rc = 0;
-+	u8 scsi_cmd[MAX_COMMAND_SIZE] = {0};
-+	u8 *sensebuf = NULL, *argbuf = NULL;
-+	enum dma_data_direction data_dir;
-+	int cmd_result;
-+	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+	if (!sensebuf)
-+		return rc;
-+
-+	argbuf = kzalloc(ATA_SECT_SIZE, GFP_KERNEL);
-+	if (!argbuf)
-+		goto error;
-+
-+	scsi_cmd[0] = ATA_16;
-+	scsi_cmd[1]  = (4 << 1); /* PIO Data-in */
-+	scsi_cmd[2]  = 0x0e;     /* no off.line or cc, read from dev,
-+				block count in sector count field */
-+	data_dir = DMA_FROM_DEVICE;
-+	scsi_cmd[14] = ATA_CMD_ID_ATA;
-+
-+	if (!scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, ATA_SECT_SIZE,
-+					sensebuf, (10*HZ), 5, 0, NULL)) {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 3db960b..8b08bec 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4405,6 +4405,14 @@ qla2x00_module_init(void)
+ 	if (ret < 0) {
+ 		kmem_cache_destroy(srb_cachep);
+ 		return ret;
++	} else if (ret > 0) {
 +		/*
-+		 * 6th Bit in Word 85 Corresponds to Write Cache
-+		 * being Enabled/disabled, Word 85 represnets the
-+		 * features supported
++		 * If initiator mode is explictly disabled by qla_tgt_init(),
++		 * prevent scsi_transport_fc.c:fc_scsi_scan_rport() from
++		 * performing scsi_scan_target() during LOOP UP event.
 +		 */
-+		 if (le16_to_cpu(((unsigned short *)argbuf)[85]) & 0x20)
-+			rc = 1;
-+	}
-+
-+error:
-+	kfree(sensebuf);
-+	kfree(argbuf);
-+	return rc;
-+}
-+
- /**
-  *	ata_task_ioctl - Handler for HDIO_DRIVE_TASK ioctl
-  *	@scsidev: Device to which we are issuing command
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c691fb5..3ca507a 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -50,6 +50,11 @@
- #include <linux/string_helpers.h>
- #include <linux/async.h>
- #include <linux/slab.h>
-+
-+#ifdef CONFIG_ATA
-+#include <linux/libata.h>
-+#endif
-+
- #include <linux/pm_runtime.h>
- #include <asm/uaccess.h>
- #include <asm/unaligned.h>
-@@ -2129,7 +2134,11 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 		if (modepage == 0x3F) {
- 			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
- 				  "present\n");
-+#ifdef CONFIG_ATA
-+			goto WCE_USING_ATA;
-+#else
- 			goto defaults;
-+#endif
- 		} else if ((buffer[offset] & 0x3f) != modepage) {
- 			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
- 			goto defaults;
-@@ -2149,6 +2158,15 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 				  "Uses READ/WRITE(6), disabling FUA\n");
- 			sdkp->DPOFUA = 0;
- 		}
-+#ifdef CONFIG_ATA
-+WCE_USING_ATA:
-+		if (!sdp->removable && !sdkp->WCE) {
-+			sd_printk(KERN_NOTICE, sdkp, "Try to check write cache"
-+				" enable/disable using ATA command\n");
-+			sdkp->WCE = ata_get_cachestatus(sdp);
-+		}
-+#endif
-+
++		qla2xxx_transport_functions.disable_target_scan = 1;
++		qla2xxx_transport_vport_functions.disable_target_scan = 1;
+ 	}
  
- 		if (sdkp->first_scan || old_wce != sdkp->WCE ||
- 		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index cafc09a..20c5c33 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -990,6 +990,7 @@ extern void ata_host_init(struct ata_host *, struct device *,
- 			  unsigned long, struct ata_port_operations *);
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
-+extern int ata_get_cachestatus(struct scsi_device *scsidev);
- extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
- extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
- 			    int cmd, void __user *arg);
+ 	/* Derive version string. */
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index ac203ef..9282014 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -4753,8 +4753,10 @@ int __init qla_tgt_init(void)
+ 		ret = -ENOMEM;
+ 		goto out_cmd_mempool;
+ 	}
+-
+-	return 0;
++	/*
++	 * Return 1 to signal that initiator-mode is being disabled
++	 */
++	return (ql2x_ini_mode == QLA2XXX_INI_MODE_DISABLED) ? 1 : 0;
+ 
+ out_cmd_mempool:
+ 	mempool_destroy(qla_tgt_mgmt_cmd_mempool);
 -- 
-1.7.2.3
-
+1.7.2.5
