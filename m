@@ -1,36 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 42783] Kernel ooops when disconnecting the USB flash disk, in
- which I've just modified partition table
-Date: Thu, 16 Feb 2012 18:24:15 GMT
-Message-ID: <201202161824.q1GIOFH3004540@bugzilla.kernel.org>
-References: <bug-42783-11613@https.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/5] block: Implement support for WRITE SAME
+Date: Thu, 16 Feb 2012 14:12:25 -0500
+Message-ID: <yq1ty2qa8yu.fsf@sermon.lab.mkp.net>
+References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
+	<1327969892-5090-2-git-send-email-martin.petersen@oracle.com>
+	<20120207214005.GG6346@redhat.com>
+	<yq1hayugyv4.fsf@sermon.lab.mkp.net>
+	<20120215153319.GA27312@redhat.com>
+	<yq1fwebbgmq.fsf@sermon.lab.mkp.net>
+	<20120216171640.GA11633@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:33282 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754368Ab2BPSYQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2012 13:24:16 -0500
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q1GIOFbC004541
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2012 18:24:15 GMT
-In-Reply-To: <bug-42783-11613@https.bugzilla.kernel.org/>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:40869 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753934Ab2BPTMd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2012 14:12:33 -0500
+In-Reply-To: <20120216171640.GA11633@redhat.com> (Vivek Goyal's message of
+	"Thu, 16 Feb 2012 12:16:40 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, jaxboe@fusionio.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42783
+>>>>> "Vivek" == Vivek Goyal <vgoyal@redhat.com> writes:
 
+>> 
+>> I thought the same thing. But I was unable to trigger it.
 
+Vivek> Given the fact that REQ_DISCARD will have REQ_TYPE_FS set, then
+Vivek> second condition is anyway redundant and that explains why bug is
+Vivek> not triggered.
 
-
-
---- Comment #4 from Alan Stern <stern@rowland.harvard.edu>  2012-02-16 18:24:14 ---
-This patch may be a better solution:
-
-http://marc.info/?l=linux-kernel&m=132935572612353&w=2
+You're right! Missed that first time around.
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Martin K. Petersen	Oracle Linux Engineering
