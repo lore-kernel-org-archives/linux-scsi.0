@@ -1,80 +1,82 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm-io async WRITE_SAME results in iSCSI NULL pointer [was: Re:
- Write same support]
-Date: Thu, 16 Feb 2012 16:35:02 -0500
-Message-ID: <20120216213502.GB29691@redhat.com>
-References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
- <20120216200202.GA27311@redhat.com>
- <20120216210301.GA27404@redhat.com>
- <4F3D7430.2080506@cs.wisc.edu>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH] [trivial] qla2xxx: Fix typo in qla_init.c
+Date: Thu, 16 Feb 2012 17:07:59 -0500
+Message-ID: <alpine.WNT.2.00.1202161704120.1748@N5102REMCQXM4BS.qlogic.org>
+References: <1328986842-24384-1-git-send-email-armin76@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="274924-12016-1329430081=:1748"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10856 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754111Ab2BPVfS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2012 16:35:18 -0500
-Content-Disposition: inline
-In-Reply-To: <4F3D7430.2080506@cs.wisc.edu>
+Received: from am1ehsobe005.messaging.microsoft.com ([213.199.154.208]:51760
+	"EHLO AM1EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751487Ab2BPWIK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Feb 2012 17:08:10 -0500
+In-Reply-To: <1328986842-24384-1-git-send-email-armin76@gentoo.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: jaxboe@fusionio.com, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, device-mapper development <dm-devel@redhat.com>
+To: =?ISO-8859-15?Q?Ra=FAl_Porcel?= <armin76@gentoo.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, Feb 16 2012 at  4:25pm -0500,
-Mike Christie <michaelc@cs.wisc.edu> wrote:
+--274924-12016-1329430081=:1748
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-> On 02/16/2012 03:03 PM, Mike Snitzer wrote:
-> > On Thu, Feb 16 2012 at  3:02pm -0500,
-> > Mike Snitzer <snitzer@redhat.com> wrote:
-> > 
-> >> FYI, I'll bounce a message detailing the iSCSI scatter-gather NULL
-> >> pointer I _always_ hit with dm-io issuing async WRITE_SAME.
-> > 
-> > I developed a patch for dm-io so that the new dm-thinp target can
-> > leverage your new WRITE SAME functionality for, hopefully, more
-> > efficient zeroing of the disk (see: dm-io-WRITE_SAME.patch at the end of
-> > the following patchset).
-> > 
-> > Here is the patchset I'm using ontop of Linux 3.2:
-> > http://people.redhat.com/msnitzer/patches/upstream/dm-io-WRITE_SAME/series.html
-> > 
-> > All works great on FC (tested against NetApp 3040 LUN)... I'm using the
-> > thinp-test-suite to test dm-thinp's use of dm_kcopyd_zero().
-> > 
-> > But testing with iSCSI, I get a NULL pointer _every_ time in the iSCSI
-> > scatter-gather code, see:
-> > http://people.redhat.com/msnitzer/patches/upstream/dm-io-WRITE_SAME/async-WRITE_SAME-makes-iscsi-sg-die.txt
-> > -- in the middle of that file you'll see my 'crash' analysis of the
-> > issue -- but that is just the NULL pointer.. no idea what the smoking
-> > gun is that caused the iscsi_segment to become NULL.
-> > 
-> > Anyway, taking a step back... WRITE SAME is all about transfering a
-> > single logical block, backed by a single empty_zero_page in this test
-> > case, so I'm wondering if for some reason iSCSI's sg code is getting
-> > confused and thinking that more pages need to be transferred than were
-> > in the original bio's payload (but iSCSI is way beneath the bio -> SCSI
-> > command translation... grr)
-> 
-> Yeah, probably a request/scsi_cmnd/sg sector/length/offset value is off
-> or iscsi is making a bad assumption.
-> 
-> Do:
-> 
-> echo 1 > /sys/module/libiscsi/parameters/debug_libiscsi_session
-> echo 1 > /sys/module/libiscsi/parameters/debug_libiscsi_session
-> echo 1 > /sys/module/libiscsi_tcp/parameters/debug_libiscsi_tcp
-> echo 1 > /sys/module/libiscsi_tcp/parameters/iscsi_tcp
-> 
-> then rerun your test.
+Looks good. Thanks.
 
-OK, will retry with all 4.. but just this caused the system to crap
-itself:
+Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
 
-echo 1 > /sys/module/libiscsi_tcp/parameters/debug_libiscsi_tcp
+On Sat, 11 Feb 2012, Ra=C3=BAl Porcel wrote:
 
-(I did this to turn on the ISCSI_DBG_TCP messages I noticed while
-reviewing the code).
+> Replace "Inconisistent" with "Inconsistent" in
+> drivers/scsi/qla2xxx/qla_init.c
+>
+> Signed-off-by: Ra=C3=BAl Porcel <armin76@gentoo.org>
+> ---
+> drivers/scsi/qla2xxx/qla_init.c |    6 +++---
+> 1 files changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index 1fa067e..72f7aa3 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -2230,7 +2230,7 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
+>           nv->id[2] !=3D 'P' || nv->id[3] !=3D ' ' || nv->nvram_version <=
+ 1) {
+>               /* Reset NVRAM data. */
+>               ql_log(ql_log_warn, vha, 0x0064,
+> -                 "Inconisistent NVRAM "
+> +                 "Inconsistent NVRAM "
+>                   "detected: checksum=3D0x%x id=3D%c version=3D0x%x.\n",
+>                   chksum, nv->id[0], nv->nvram_version);
+>               ql_log(ql_log_warn, vha, 0x0065,
+> @@ -4425,7 +4425,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
+>           nv->nvram_version < __constant_cpu_to_le16(ICB_VERSION)) {
+>               /* Reset NVRAM data. */
+>               ql_log(ql_log_warn, vha, 0x006b,
+> -                 "Inconisistent NVRAM detected: checksum=3D0x%x id=3D%c =
+"
+> +                 "Inconsistent NVRAM detected: checksum=3D0x%x id=3D%c "
+>                   "version=3D0x%x.\n", chksum, nv->id[0], nv->nvram_versi=
+on);
+>               ql_log(ql_log_warn, vha, 0x006c,
+>                   "Falling back to functioning (yet invalid -- WWPN) "
+> @@ -5169,7 +5169,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+>           nv->nvram_version < __constant_cpu_to_le16(ICB_VERSION)) {
+>               /* Reset NVRAM data. */
+>               ql_log(ql_log_info, vha, 0x0073,
+> -                 "Inconisistent NVRAM detected: checksum=3D0x%x id=3D%c =
+"
+> +                 "Inconsistent NVRAM detected: checksum=3D0x%x id=3D%c "
+>                   "version=3D0x%x.\n", chksum, nv->id[0],
+>                   le16_to_cpu(nv->nvram_version));
+>               ql_log(ql_log_info, vha, 0x0074,
+>
 
-I saw a bunch of opcode 0x25 (READ CAPACITY) but never did see 0x93
-(WRITE_SAME_16) come through.
+This message and any attached documents contain information from QLogic Cor=
+poration or its wholly-owned subsidiaries that may be confidential. If you =
+are not the intended recipient, you may not read, copy, distribute, or use =
+this information. If you have received this transmission in error, please n=
+otify the sender immediately by reply e-mail and then delete this message.
+
+--274924-12016-1329430081=:1748--
