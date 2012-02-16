@@ -1,80 +1,53 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [patch 3/4] drivers/scsi/mpt2sas/mpt2sas_scsih.c: spell
- "primitive" correctly
-Date: Thu, 16 Feb 2012 10:44:19 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6067E49FF81@inbmail02.lsi.com>
-References: <20120208205222.5C19AA03DE@akpm.mtv.corp.google.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCH 07/13] target: Inline struct se_tmr_req into se_cmd
+Date: Wed, 15 Feb 2012 22:30:00 -0800
+Message-ID: <4F3CA268.2040403@redhat.com>
+References: <1327009163-10177-1-git-send-email-agrover@redhat.com>	 <1327009163-10177-8-git-send-email-agrover@redhat.com>	 <20120120161209.GA22481@infradead.org>  <4F19A80B.6000902@redhat.com> <1329350733.5093.128.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:51006 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750941Ab2BPFOZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2012 00:14:25 -0500
-In-Reply-To: <20120208205222.5C19AA03DE@akpm.mtv.corp.google.com>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755072Ab2BPGaW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Feb 2012 01:30:22 -0500
+In-Reply-To: <1329350733.5093.128.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@infradead.org>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, kiran.patil@intel.com
 
-This patch seem to be fine. Please consider this patch as Acked-by: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+On 02/15/2012 04:05 PM, Nicholas A. Bellinger wrote:
+> On Fri, 2012-01-20 at 09:44 -0800, Andy Grover wrote:
+>> On 01/20/2012 08:12 AM, Christoph Hellwig wrote:
+>>> On Thu, Jan 19, 2012 at 01:39:17PM -0800, Andy Grover wrote:
+>>>> This saves all fabrics from calling core_tmr_alloc_req() and
+>>>> having to check the result. The downside is se_cmd gets bigger for all
+>>>> requests, but hopefully later patches will reduce it.
+>>>
+>>> Without patches to void the overhead it's not acceptable. Fortunately
+>>> it should be doable fairly simply by using an union for command vs
+>>> TMR fields.
+>>
+>> This was my thought too. We should be able to move cmd variables into a
+>> union w/tmr struct very soon, with a low risk of introducing bugs.
+>>
+> 
+> Hi Andy,
+> 
+> Ping on this..?  I've been merging patches from lio-core into
+> target-pending/for-next the past week, and i've stopped ahead of this
+> patch to inline se_tmr_req into se_cmd due of the extra overhead in
+> question here..
+> 
+> I'd really like to get this resolved in v3.4 for-next, so would you mind
+> taking care of the lio-core conversion to union for command vs
+> TMR fields so this can be squashed into for-next..?
 
-Regards,
-Nagalakshmi
+Hi Nick,
 
+Haven't had a chance to make further progress. You can drop it and I'll
+resubmit it later with the supplementary work.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of akpm@linux-foundation.org
-Sent: Thursday, February 09, 2012 2:22 AM
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org
-Subject: [patch 3/4] drivers/scsi/mpt2sas/mpt2sas_scsih.c: spell "primitive" correctly
+Regards -- Andy
 
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: drivers/scsi/mpt2sas/mpt2sas_scsih.c: spell "primitive" correctly
-
-
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff -puN drivers/scsi/mpt2sas/mpt2sas_scsih.c~drivers-scsi-mpt2sas-mpt2sas_scsihc-spell-primitive-correctly drivers/scsi/mpt2sas/mpt2sas_scsih.c
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c~drivers-scsi-mpt2sas-mpt2sas_scsihc-spell-primitive-correctly
-+++ a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -5744,7 +5744,7 @@ _scsih_sas_enclosure_dev_status_change_e
- }
- 
- /**
-- * _scsih_sas_broadcast_primative_event - handle broadcast events
-+ * _scsih_sas_broadcast_primitive_event - handle broadcast events
-  * @ioc: per adapter object
-  * @fw_event: The fw_event_work object
-  * Context: user.
-@@ -5752,7 +5752,7 @@ _scsih_sas_enclosure_dev_status_change_e
-  * Return nothing.
-  */
- static void
--_scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
-+_scsih_sas_broadcast_primitive_event(struct MPT2SAS_ADAPTER *ioc,
-     struct fw_event_work *fw_event)
- {
- 	struct scsi_cmnd *scmd;
-@@ -7263,7 +7263,7 @@ _firmware_event_work(struct work_struct 
- 		    fw_event);
- 		break;
- 	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
--		_scsih_sas_broadcast_primative_event(ioc,
-+		_scsih_sas_broadcast_primitive_event(ioc,
- 		    fw_event);
- 		break;
- 	case MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE:
-_
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
