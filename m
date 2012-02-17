@@ -1,114 +1,168 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] SCSI: Fix bug in the SCSI power management handler
-Date: Fri, 17 Feb 2012 16:25:08 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1202171622160.1194-100000@iolanthe.rowland.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [RFC PATCH 1/6] ACPI: Introduce ACPI D3_COLD state support
+Date: Fri, 17 Feb 2012 23:23:17 +0100
+Message-ID: <201202172323.18022.rjw@sisk.pl>
+References: <1329124271-29464-1-git-send-email-ming.m.lin@intel.com> <201202142329.16516.rjw@sisk.pl> <1329376106.28581.5.camel@rui.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:53658 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752633Ab2BQVZJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2012 16:25:09 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1329376106.28581.5.camel@rui.sh.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Zhang Rui <rui.zhang@intel.com>
+Cc: Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch (as1520) fixes a bug in the SCSI layer's power management
-implementation.
+On Thursday, February 16, 2012, Zhang Rui wrote:
+> On =E4=BA=8C, 2012-02-14 at 23:29 +0100, Rafael J. Wysocki wrote:
+> > On Tuesday, February 14, 2012, Zhang Rui wrote:
+> > > Hi, Rafael,
+> > >=20
+> > > On =E4=B8=80, 2012-02-13 at 21:25 +0100, Rafael J. Wysocki wrote:
+> > > > On Monday, February 13, 2012, Lin Ming wrote:
+> > > > > From: Zhang Rui <rui.zhang@intel.com>
+> > > > >=20
+> > > > > If a device has _PR3._ON, it means the device supports D3_HOT=
+=2E
+> > > > > If a device has _PR3._OFF, it means the device supports D3_CO=
+LD.
+> > > > > Add the ability to validate and enter D3_COLD state in ACPI.
+> > > > >=20
+> > > > > Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+> > > >=20
+> > > > This is supposed to be ACPI 5.0 support, right?
+> > > >=20
+> > > No, D3_HOT is introduced in ACPI spec 4.0.
+> > > According to the spec, _PR3 is used for devices that support both
+> > > D3(D3_COLD) and D3HOT.
+> >=20
+> > Yes, it does.
+> >=20
+> > > The confusion here is that Linux D3 equals ACPICA D3HOT and Linux
+> > > D3_COLD equals ACPICA D3.
+> > > For example, when enter Linux ACPI D3, the reference count of ACP=
+I Power
+> > > Resources in _PR3 is increased by one.
+> >=20
+> > That's correct.
+> >=20
+> > > > So can anyone please tell me what part of the ACPI 5.0 spec is =
+the
+> > > > basis of this patch, because I can't see that immediately?
+> > > >=20
+> > > > The only places where D3Cold is _mentioned_ are Section 7.2.12 =
+(_PRE, which
+> > > > appears to be new in 5.0), Section 7.2.20 (_S0W), Section 7.2.2=
+1 (_S1W),
+> > > > Section 7.2.22 (_S2W), Section 7.2.23 (_S3W) and Section 7.2.24=
+ (_S4W).
+> > > > None of them mentions those _PR3._ON and _PR3._OFF things above=
+=2E
+> > > >=20
+> > > > Moreover, my understanding of the spec is that D3Cold means all=
+ of the
+> > > > power resources returned by _PR3 are "off" (whereas some of the=
+m will be
+> > > > "on" in D3hot).
+> > > >=20
+> > > Agreed.
+> > >=20
+> > > > > ---
+> > > > >  drivers/acpi/power.c |    4 ++--
+> > > > >  drivers/acpi/scan.c  |   10 +++++++++-
+> > > > >  2 files changed, 11 insertions(+), 3 deletions(-)
+> > > > >=20
+> > > > > diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
+> > > > > index 9ac2a9f..0d681fb 100644
+> > > > > --- a/drivers/acpi/power.c
+> > > > > +++ b/drivers/acpi/power.c
+> > > > > @@ -500,14 +500,14 @@ int acpi_power_transition(struct acpi_d=
+evice *device, int state)
+> > > > >  {
+> > > > >  	int result;
+> > > > > =20
+> > > > > -	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STA=
+TE_D3))
+> > > > > +	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STA=
+TE_D3_COLD))
+> > > > >  		return -EINVAL;
+> > > > > =20
+> > > > >  	if (device->power.state =3D=3D state)
+> > > > >  		return 0;
+> > > > > =20
+> > > > >  	if ((device->power.state < ACPI_STATE_D0)
+> > > > > -	    || (device->power.state > ACPI_STATE_D3))
+> > > > > +	    || (device->power.state > ACPI_STATE_D3_COLD))
+> > > > >  		return -ENODEV;
+> > > > > =20
+> > > > >  	/* TBD: Resources must be ordered. */
+> > > > > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> > > > > index 8ab80ba..a9d4391 100644
+> > > > > --- a/drivers/acpi/scan.c
+> > > > > +++ b/drivers/acpi/scan.c
+> > > > > @@ -881,8 +881,16 @@ static int acpi_bus_get_power_flags(stru=
+ct acpi_device *device)
+> > > > > =20
+> > > > >  			device->power.flags.power_resources =3D 1;
+> > > > >  			ps->flags.valid =3D 1;
+> > > > > -			for (j =3D 0; j < ps->resources.count; j++)
+> > > > > +			for (j =3D 0; j < ps->resources.count; j++) {
+> > > > >  				acpi_bus_add_power_resource(ps->resources.handles[j]);
+> > > > > +				/* Check for D3_COLD support. _PR3._OFF equals D3_COLD ?=
+ */
+> > > > > +				if (i =3D=3D ACPI_STATE_D3) {
+> > > > > +					if (j =3D=3D 0)
+> > > > > +						device->power.states[ACPI_STATE_D3_COLD].flags.valid =3D=
+ 1;
+> > > > > +					status =3D acpi_get_handle(ps->resources.handles[j], "_=
+OFF",  &handle);
+> > > > > +					device->power.states[ACPI_STATE_D3_COLD].flags.valid &=3D=
+ ACPI_SUCCESS(status);
+> > > > > +				}
+> > > > > +			}
+> > > >=20
+> > > > Sorry, but this doesn't make sense to me.  Power resources alwa=
+ys have
+> > > > the _OFF method, right?
+> > > >=20
+> > > I'm not sure.
+> >=20
+> > That would be explicitly against the spec that says that power reso=
+urces
+> > are *required* to have _ON, _OFF and _STA.
+> >=20
+> > > I thought I had seen ACPI Power Resources without _OFF
+> > > control method somewhere in bugzilla, but I can not find it out n=
+ow.
+> >=20
+> > That, clearly, is a firmware bug.
+> >=20
+> Okay, agreed.
+> so how about this? _PR3 equals D3_HOT support.
 
-LUN scanning can be carried out asynchronously in do_scan_async(), and
-sd uses an asynchronous thread for the time-consuming parts of disk
-probing in sd_probe_async().  Currently nothing coordinates these
-async threads with system sleep transitions; they can and do attempt
-to continue scanning/probing SCSI devices even after the host adapter
-has been suspended.  As one might expect, the outcome is not ideal.
+Yes, I can agree with that. :-)
 
-This is what the "prepare" stage of system suspend was created for.
-After the prepare callback has been called for a host, target, or
-device, drivers are not allowed to register any children underneath
-them.  Currently the SCSI prepare callback is not implemented; this
-patch rectifies that omission.
+> > > Hmm, how about set D3_COLD support if _PR3 exists, but leave a wa=
+rning
+> > > message if _OFF doesn't exist, for now?
+> >=20
+> > I don't think we need to set D3_COLD support at all.  In fact, it i=
+s always
+> > supported (as I said, if all power resources used by a device are o=
+ff, the
+> > device is in D3_COLD pretty much by definition).
+> >=20
+> Yeah, but it seems that Linux uses ACPI_D3 for both ACPICA D3_HOT and=
+ D3
+> (off). I'm generating a patch to remove ACPI_D3_COLD and introduce
+> D3_HOT support in Linux kernel.
 
-For SCSI hosts, the prepare routine calls scsi_complete_async_scans()
-to wait until async scanning is finished.  It might be slightly more
-efficient to wait only until the host in question has been scanned,
-but there's currently no way to do that.  Besides, during a sleep
-transition we will ultimately have to wait until all the host scanning
-has finished anyway.
+That's a good idea in my opinion.
 
-For SCSI devices, the prepare routine calls async_synchronize_full()
-to wait until sd probing is finished.  The routine does nothing for
-SCSI targets, because asynchronous target scanning is done only as
-part of host scanning.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-CC: <stable@kernel.org>
-
----
-
- drivers/scsi/scsi_pm.c   |   16 ++++++++++++++++
- drivers/scsi/scsi_priv.h |    1 +
- 2 files changed, 17 insertions(+)
-
-Index: usb-3.3/drivers/scsi/scsi_pm.c
-===================================================================
---- usb-3.3.orig/drivers/scsi/scsi_pm.c
-+++ usb-3.3/drivers/scsi/scsi_pm.c
-@@ -7,6 +7,7 @@
- 
- #include <linux/pm_runtime.h>
- #include <linux/export.h>
-+#include <linux/async.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
-@@ -92,6 +93,19 @@ static int scsi_bus_resume_common(struct
- 	return err;
- }
- 
-+static int scsi_bus_prepare(struct device *dev)
-+{
-+	if (scsi_is_sdev_device(dev)) {
-+		/* sd probing uses async_schedule.  Wait until it finishes. */
-+		async_synchronize_full();
-+
-+	} else if (scsi_is_host_device(dev)) {
-+		/* Wait until async scanning is finished */
-+		scsi_complete_async_scans();
-+	}
-+	return 0;
-+}
-+
- static int scsi_bus_suspend(struct device *dev)
- {
- 	return scsi_bus_suspend_common(dev, PMSG_SUSPEND);
-@@ -110,6 +124,7 @@ static int scsi_bus_poweroff(struct devi
- #else /* CONFIG_PM_SLEEP */
- 
- #define scsi_bus_resume_common		NULL
-+#define scsi_bus_prepare		NULL
- #define scsi_bus_suspend		NULL
- #define scsi_bus_freeze			NULL
- #define scsi_bus_poweroff		NULL
-@@ -218,6 +233,7 @@ void scsi_autopm_put_host(struct Scsi_Ho
- #endif /* CONFIG_PM_RUNTIME */
- 
- const struct dev_pm_ops scsi_bus_pm_ops = {
-+	.prepare =		scsi_bus_prepare,
- 	.suspend =		scsi_bus_suspend,
- 	.resume =		scsi_bus_resume_common,
- 	.freeze =		scsi_bus_freeze,
-Index: usb-3.3/drivers/scsi/scsi_priv.h
-===================================================================
---- usb-3.3.orig/drivers/scsi/scsi_priv.h
-+++ usb-3.3/drivers/scsi/scsi_priv.h
-@@ -109,6 +109,7 @@ extern void scsi_exit_procfs(void);
- #endif /* CONFIG_PROC_FS */
- 
- /* scsi_scan.c */
-+extern int scsi_complete_async_scans(void);
- extern int scsi_scan_host_selected(struct Scsi_Host *, unsigned int,
- 				   unsigned int, unsigned int, int);
- extern void scsi_forget_host(struct Scsi_Host *);
-
+Thanks,
+Rafael
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
