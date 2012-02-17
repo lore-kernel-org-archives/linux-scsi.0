@@ -1,82 +1,89 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH] [trivial] qla2xxx: Fix typo in qla_init.c
-Date: Thu, 16 Feb 2012 17:07:59 -0500
-Message-ID: <alpine.WNT.2.00.1202161704120.1748@N5102REMCQXM4BS.qlogic.org>
-References: <1328986842-24384-1-git-send-email-armin76@gentoo.org>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [RFC PATCH 2/6] ACPI: Reference devices in ACPI Power Resource
+Date: Fri, 17 Feb 2012 09:12:06 +0800
+Message-ID: <1329441126.3376.30.camel@minggr>
+References: <Pine.LNX.4.44L0.1202161010500.1268-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="274924-12016-1329430081=:1748"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from am1ehsobe005.messaging.microsoft.com ([213.199.154.208]:51760
-	"EHLO AM1EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751487Ab2BPWIK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2012 17:08:10 -0500
-In-Reply-To: <1328986842-24384-1-git-send-email-armin76@gentoo.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1202161010500.1268-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Zhang Rui <rui.zhang@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-15?Q?Ra=FAl_Porcel?= <armin76@gentoo.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---274924-12016-1329430081=:1748
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2012-02-16 at 10:13 -0500, Alan Stern wrote:
+> On Thu, 16 Feb 2012, Zhang Rui wrote:
+> 
+> > > I'm not exactly sure what you're trying to achieve and what you mean by
+> > > "resume a device directly"?  Do you want to run the device's resume
+> > > callback at the time when another device is being resumed?
+> > > 
+> > I mean, wakeup event is sent to ATA port, but our goal is to resume
+> > ZPODD after receiving this wakeup event.
+> > Ideally, it is ACPI that resumes ATA port. And then, the ATA port
+> > runtime resumes ZPODD. But this does not look good to runtime resume a
+> > child device in the parent's .runtime_resume callback.
+> > So I introduced these two APIs so that an runtime_resume request can be
+> > sent to ZPODD directly and the runtime PM core can resume all the
+> > parents of ZPODD automatically.
+> 
+> It's not clear what you're trying to achieve.  Do you basically want
+> the ZPODD always to be suspended and resumed along with the ATA port,
+> or should it be possible to suspend the ZPODD while the port remains
+> running?
 
-Looks good. Thanks.
+We want to ZPODD always to be suspended and resumed along with the ATA
+port.
 
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Below is part of the GPE handler for ZPODD device attention event.
 
-On Sat, 11 Feb 2012, Ra=C3=BAl Porcel wrote:
+        Scope (\_GPE)
+        {
+            Method (_L13, 0, NotSerialized)
+            {
+                ADBG ("ZPODD DA Event")
+                ....
 
-> Replace "Inconisistent" with "Inconsistent" in
-> drivers/scsi/qla2xxx/qla_init.c
->
-> Signed-off-by: Ra=C3=BAl Porcel <armin76@gentoo.org>
-> ---
-> drivers/scsi/qla2xxx/qla_init.c |    6 +++---
-> 1 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
-nit.c
-> index 1fa067e..72f7aa3 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -2230,7 +2230,7 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
->           nv->id[2] !=3D 'P' || nv->id[3] !=3D ' ' || nv->nvram_version <=
- 1) {
->               /* Reset NVRAM data. */
->               ql_log(ql_log_warn, vha, 0x0064,
-> -                 "Inconisistent NVRAM "
-> +                 "Inconsistent NVRAM "
->                   "detected: checksum=3D0x%x id=3D%c version=3D0x%x.\n",
->                   chksum, nv->id[0], nv->nvram_version);
->               ql_log(ql_log_warn, vha, 0x0065,
-> @@ -4425,7 +4425,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
->           nv->nvram_version < __constant_cpu_to_le16(ICB_VERSION)) {
->               /* Reset NVRAM data. */
->               ql_log(ql_log_warn, vha, 0x006b,
-> -                 "Inconisistent NVRAM detected: checksum=3D0x%x id=3D%c =
-"
-> +                 "Inconsistent NVRAM detected: checksum=3D0x%x id=3D%c "
->                   "version=3D0x%x.\n", chksum, nv->id[0], nv->nvram_versi=
-on);
->               ql_log(ql_log_warn, vha, 0x006c,
->                   "Falling back to functioning (yet invalid -- WWPN) "
-> @@ -5169,7 +5169,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
->           nv->nvram_version < __constant_cpu_to_le16(ICB_VERSION)) {
->               /* Reset NVRAM data. */
->               ql_log(ql_log_info, vha, 0x0073,
-> -                 "Inconisistent NVRAM detected: checksum=3D0x%x id=3D%c =
-"
-> +                 "Inconsistent NVRAM detected: checksum=3D0x%x id=3D%c "
->                   "version=3D0x%x.\n", chksum, nv->id[0],
->                   le16_to_cpu(nv->nvram_version));
->               ql_log(ql_log_info, vha, 0x0074,
->
+                Notify (\_SB.PCI0.SAT0.PRT2, 0x02)
+                ....
+            }
+        }
 
-This message and any attached documents contain information from QLogic Cor=
-poration or its wholly-owned subsidiaries that may be confidential. If you =
-are not the intended recipient, you may not read, copy, distribute, or use =
-this information. If you have received this transmission in error, please n=
-otify the sender immediately by reply e-mail and then delete this message.
+It maybe a bit confused, but actually, \_SB.PCI0.SAT0.PRT2 is bind to
+the attached device, not the ata port itself.
 
---274924-12016-1329430081=:1748--
+See below commit in linux-next tree.
+75d22c(libata: Bind the Linux device tree to the ACPI device tree)
+
+And below notify handler(PATCH 6) will resume the attached device(CDROM
+in ZPODD case).
+
++static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
++{
++       struct ata_device *ata_dev = context;
++
++       if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev)
++               scsi_autopm_get_device(ata_dev->sdev);
++}
++
+
+But the code to power on/power off the device is in ata_acpi_set_state,
+which is called when ata port is resumed/suspended.
+
+ata_eh_handle_port_resume/suspend
+    ata_acpi_set_state
+        ata_for_each_dev {
+            acpi_bus_set_power(<the acpi handle of the device>, acpi_state)
+        }
+
+Could you take a look at PATCH 6?
+It's more clear over there.
+
+Thanks,
+Lin Ming
+
+> 
+> Alan Stern
+> 
