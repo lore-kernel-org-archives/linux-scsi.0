@@ -1,107 +1,58 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC 0/5] scsi, sd, pm, request based runtime PM for scsi disk
-Date: Sat, 18 Feb 2012 15:44:08 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1202121855090.23796-100000@netrider.rowland.org>
-References: <201202122100.05349.oliver@neukum.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/3] iscsi: fix setting of pid from netlink skb
+Date: Sat, 18 Feb 2012 16:06:00 -0600
+Message-ID: <1329602760.2862.35.camel@dabdike>
+References: <1327633991-2615-1-git-send-email-michaelc@cs.wisc.edu>
+	 <1327633991-2615-2-git-send-email-michaelc@cs.wisc.edu>
+	 <CAO+b5-o8GoYaTx=c9E+8vDJdkDR53YceUCQTu+VSpO9ZUeL6iA@mail.gmail.com>
+	 <4F225446.1000709@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201202122100.05349.oliver@neukum.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Huang Ying <ying.huang@intel.com>, ming.m.lin@intel.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50011 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753582Ab2BRWGD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Feb 2012 17:06:03 -0500
+In-Reply-To: <4F225446.1000709@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
 
-On Sun, 12 Feb 2012, Oliver Neukum wrote:
-
-> Am Sonntag, 12. Februar 2012, 19:05:51 schrieb Alan Stern:
-> > On Sat, 11 Feb 2012, Oliver Neukum wrote:
+On Fri, 2012-01-27 at 01:37 -0600, Mike Christie wrote:
+> On 01/27/2012 01:04 AM, Bart Van Assche wrote:
+> > On Fri, Jan 27, 2012 at 4:13 AM, <michaelc@cs.wisc.edu> wrote:
+> >> NETLINK_CREDS's pid now returns 0, so I guess we are supposed to
+> >> be using NETLINK_CB. This changed while the patch to export the
+> >> pid was getting merged upstream, so it was not noticed until both
+> >> the network and iscsi changes were in the same tree.
+> >>
+> >> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 > > 
-> > > > Your whole approach is at the wrong level.  Runtime PM between I/O 
-> > > > requests for block devices should be implemented in the block layer, 
-> > > > not in the SCSI layer.
-> > > 
-> > > I must disagree. The block layer has no more information than the SCSI
-> > > layer and lacks everything the lower layers know.
+> > If my analysis is correct this patch has not only to be applied on the
+> > master branch but also on kernel 3.2. Shouldn't "Cc:
+> > stable@vger.kernel.org #3.2" be added here ? See also
+> > http://www.spinics.net/lists/netdev/msg185565.html.
 > > 
-> > But the block layer handles all block devices, not just SCSI ones.  You 
-> > would end up duplicating code unnecessarily.
-> > 
-> > What pertinent information is known by the SCSI and lower layers but
-> > not the block layer?
 > 
-> It doesn't know what consequences suspending a host controller
-> has for the devices attached to it. It simply cannot know because
-> that depends on the hardware.
+> The iscsi code that uses the pid just got merged in the 3.3 feature
+> window, so no need.
 > 
-> A very good example is the media change problem of the media readers.
-> For example an iSCSI virtual host controller can suspend while a command
-> is in flight if the network controller used can do remote wakeup well enough.
+> Also for stable, I think we normally just tell James it should go in
+> stable and then he does some magic. In the past, when he knows it should
+> go there, when the patch gets merged and sent upstream the stable people
+> were notified automagically.
 
-I don't see how this is relevant.  We're talking about suspending the
-drive, not suspending the host adapter.  Runtime PM for an iSCSI host
-adapter can be implemented to suspend in the middle of commands if it
-wants; that has no bearing on this discussion and patch set.
+That's the
 
-> > Then what's wrong with handling runtime suspend in the higher layers?
-> 
-> They know some reasons to not suspend, but not all reasons.
+cc: stable@kernel.org
 
-So the lower layers can do their own autopm_get when necessary.
+tag in the commit ... but don't necessarily rely on me to add this.  I
+do add it in a few cases, but I do need people to indicate should go to
+stable by adding the cc: in their commit, otherwise I have to guess.
 
-> > > The problem of needing to do IO for suspension goes away if we
-> > > treat the disk as always suspendable and use an active command
-> > > as a condition for not suspending the storage device as opposed to the disk
-> > > the problem goes away.
-> > 
-> > I don't entirely understand.  What's the difference between "the
-> > storage device" and "the disk"?
-> 
-> The storage device == a USB device that implements the storage class
-> the disk == a SCSI disk drive
+James
 
-And in the case of some other sort of SCSI transport, I suppose "the 
-storage device" includes the host adapter or equivalent.
 
-> > However, using an active command as the condition is not the right 
-> > thing to do.  It would use extra energy and slow everything down to 
-> > suspend and resume the device between every pair of commands that were 
-> > separated by a slight time delay.  There needs to be a timeout.
-> 
-> Yes, we can use the same heuristics as everywhere.
-> command queued -> autopm_get
-> command finished -> autopm_put
-> 
-> but for the USB host adapter, not the sr device
-
-Didn't we discuss this a long time ago and decide it was a bad 
-approach?
-
-> > Furthermore, if you use active commands as the condition for 
-> > suspending, what do you do when the act of suspending causes a command 
-> > to be sent?  It is necessary to distinguish between ordinary commands 
-> > and those that are PM-related.
-> 
-> No. This problem goes away if you correctly make the distinction between
-> host controller/storage device and the disk drive.
-> You use the "active command standard" for the host controller.
-> Then you need not care about the commands needed to suspend a disk drive.
-> You cannot suspend the host controller while the disk drive is being suspended
-> anyway, as the tree constraint prevents it.
-
-Heh, you're talking about ignoring the tree constraint anyway if you're 
-going to suspend the USB device while the children beneath it remain 
-unchanged.
-
-> 
-> For the disk drive you just declare them busy restarting the timeout as a command
-> goes down to the hardware. There is an interesting case about what you do if
-> the generic layer wants to autosuspend an sr device which has a command queued.
-> I propose we catch that case in sr_suspend() and return -EBUSY in
-> the autosuspend with command in flight case.
-> 
-> And I admit we will need to special case the stupid card readers.
-> 
-> 	Regards
-> 		Oliver
-> 
