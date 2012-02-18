@@ -1,91 +1,107 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
-Date: Sat, 18 Feb 2012 21:35:06 +0100
-Message-ID: <201202182135.06868.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org> <201202180054.49284.rjw@sisk.pl> <CAC=cRTOCpH8haMGDEDDG8k0k2DpaVM7DoU5AayrcscR1rZKXgQ@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC 0/5] scsi, sd, pm, request based runtime PM for scsi disk
+Date: Sat, 18 Feb 2012 15:44:08 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1202121855090.23796-100000@netrider.rowland.org>
+References: <201202122100.05349.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAC=cRTOCpH8haMGDEDDG8k0k2DpaVM7DoU5AayrcscR1rZKXgQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: huang ying <huang.ying.caritas@gmail.com>
-Cc: Zhang Rui <rui.zhang@intel.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201202122100.05349.oliver@neukum.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: Huang Ying <ying.huang@intel.com>, ming.m.lin@intel.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Saturday, February 18, 2012, huang ying wrote:
-> On Sat, Feb 18, 2012 at 7:54 AM, Rafael J. Wysocki <rjw@sisk.pl> wrot=
-e:
-> > On Thursday, February 16, 2012, Zhang Rui wrote:
-> >> On =E4=BA=8C, 2012-02-14 at 23:39 +0100, Rafael J. Wysocki wrote:
-> >> > On Tuesday, February 14, 2012, Zhang Rui wrote:
-> >> > > On =E4=B8=80, 2012-02-13 at 20:38 +0100, Rafael J. Wysocki wro=
-te:
-> >> > > > On Monday, February 13, 2012, Alan Stern wrote:
-> >> > > > > On Mon, 13 Feb 2012, Lin Ming wrote:
-> [snip]
-> >> Yeah, I have thought about this for quite a while before, there AR=
-E
-> >> several ways to do this, but these need a lot of changes in bus co=
-de, at
-> >> least for the buses that support device runtime D3 (off) by ACPI.
-> >>
-> >> Lets also take SATA port and ZPODD for example,
-> >> proposal one,
-> >> 1) introduce scsi_can_power_off and ata_can_power_off.
-> >> 2) sr driver set scsi_can_power_off bit and scsi layer is aware of=
- this,
-> >> thus the scsi host can set this bit as well.
-> >> 3) in the .runtime_suspend callback of ata port, it knows that its=
- scsi
-> >> host interface can be powered off, thus it invokes ata_can_power_o=
-ff to
-> >> tell the ata layer.
-> >
-> > Hmm.  I'm not sure why you want to introduce this special "power of=
-f"
-> > condition.  In fact, it's nothing special, it only means that the d=
-evice
-> > in question shouldn't be accessed by software, which pretty much is=
- equivalent
-> > to the "suspended" condition (as defined in the runtime PM docs).
->=20
-> I think some reasons to introduce can_poweroff can be:
->=20
-> 1) To indicate the implementation of .runtime_suspend/.runtime_resume
-> is compatible with power off.  That is, .runtime_suspend will save al=
-l
-> needed information and .runtime_resume can work on the uninitialized
-> device.
->=20
-> If this is already the requirement of
-> .runtime_suspend/.runtime_resume.
+On Sun, 12 Feb 2012, Oliver Neukum wrote:
 
-Yes, it is.
+> Am Sonntag, 12. Februar 2012, 19:05:51 schrieb Alan Stern:
+> > On Sat, 11 Feb 2012, Oliver Neukum wrote:
+> > 
+> > > > Your whole approach is at the wrong level.  Runtime PM between I/O 
+> > > > requests for block devices should be implemented in the block layer, 
+> > > > not in the SCSI layer.
+> > > 
+> > > I must disagree. The block layer has no more information than the SCSI
+> > > layer and lacks everything the lower layers know.
+> > 
+> > But the block layer handles all block devices, not just SCSI ones.  You 
+> > would end up duplicating code unnecessarily.
+> > 
+> > What pertinent information is known by the SCSI and lower layers but
+> > not the block layer?
+> 
+> It doesn't know what consequences suspending a host controller
+> has for the devices attached to it. It simply cannot know because
+> that depends on the hardware.
+> 
+> A very good example is the media change problem of the media readers.
+> For example an iSCSI virtual host controller can suspend while a command
+> is in flight if the network controller used can do remote wakeup well enough.
 
-> Then this is not needed.   Maybe we
-> can make that explicitly for these callbacks via some kind of
-> documentation.
+I don't see how this is relevant.  We're talking about suspending the
+drive, not suspending the host adapter.  Runtime PM for an iSCSI host
+adapter can be implemented to suspend in the middle of commands if it
+wants; that has no bearing on this discussion and patch set.
 
-I thought it was documented.
+> > Then what's wrong with handling runtime suspend in the higher layers?
+> 
+> They know some reasons to not suspend, but not all reasons.
 
-> 2) To support something like pm-qos.  power off device may have more
-> exit.latency than normal low power state (such as D3Hot).  Some devic=
-e
-> may disable can_power_off based on that.
+So the lower layers can do their own autopm_get when necessary.
 
-No, please.  There would be totally _no_ _meaning_ of that flag at the =
-core
-level.  Please use subsys_data in struct dev_pm_info for subsystem-spec=
-ific
-data (which is this one).
+> > > The problem of needing to do IO for suspension goes away if we
+> > > treat the disk as always suspendable and use an active command
+> > > as a condition for not suspending the storage device as opposed to the disk
+> > > the problem goes away.
+> > 
+> > I don't entirely understand.  What's the difference between "the
+> > storage device" and "the disk"?
+> 
+> The storage device == a USB device that implements the storage class
+> the disk == a SCSI disk drive
 
-> 3) Whether to go to power off should be determined by leaf device
-> (such as SATA disk), but that may be done by its parent device (such
-> as SATA port).  It's a way for leaf device to tell its parent device
-> whether it want to go to power off.
+And in the case of some other sort of SCSI transport, I suppose "the 
+storage device" includes the host adapter or equivalent.
 
-Well, please see above.
+> > However, using an active command as the condition is not the right 
+> > thing to do.  It would use extra energy and slow everything down to 
+> > suspend and resume the device between every pair of commands that were 
+> > separated by a slight time delay.  There needs to be a timeout.
+> 
+> Yes, we can use the same heuristics as everywhere.
+> command queued -> autopm_get
+> command finished -> autopm_put
+> 
+> but for the USB host adapter, not the sr device
 
-Thanks,
-Rafael
+Didn't we discuss this a long time ago and decide it was a bad 
+approach?
+
+> > Furthermore, if you use active commands as the condition for 
+> > suspending, what do you do when the act of suspending causes a command 
+> > to be sent?  It is necessary to distinguish between ordinary commands 
+> > and those that are PM-related.
+> 
+> No. This problem goes away if you correctly make the distinction between
+> host controller/storage device and the disk drive.
+> You use the "active command standard" for the host controller.
+> Then you need not care about the commands needed to suspend a disk drive.
+> You cannot suspend the host controller while the disk drive is being suspended
+> anyway, as the tree constraint prevents it.
+
+Heh, you're talking about ignoring the tree constraint anyway if you're 
+going to suspend the USB device while the children beneath it remain 
+unchanged.
+
+> 
+> For the disk drive you just declare them busy restarting the timeout as a command
+> goes down to the hardware. There is an interesting case about what you do if
+> the generic layer wants to autosuspend an sr device which has a command queued.
+> I propose we catch that case in sr_suspend() and return -EBUSY in
+> the autosuspend with command in flight case.
+> 
+> And I admit we will need to special case the stupid card readers.
+> 
+> 	Regards
+> 		Oliver
+> 
