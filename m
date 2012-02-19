@@ -1,83 +1,35 @@
-From: jack_wang <jack_wang@usish.com>
-Subject: Re: Re: [PATCH] pm8001: enhance firmware event log retrieval
-Date: Sun, 19 Feb 2012 14:55:13 +0800
-Message-ID: <201202191454024304010@usish.com>
-References: <97204CD5-5C4D-4E62-ADD4-CE51AB11C460@xyratex.com>,
-	<1329578412.2862.24.camel@dabdike>
-Reply-To: jack_wang <jack_wang@usish.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: sniffing scsi
+Date: Sun, 19 Feb 2012 10:25:54 +0000
+Message-ID: <CAO+b5-pu7sj8UH4qW_WRkcG74t2BzeVmHj7Aug036dQPCxzANQ@mail.gmail.com>
+References: <CAAMvbhEcheTpAU1kX9nR=D+p3X6uWCu1uXEr6xaH3Wuezpcn+g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:38843 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752397Ab2BSGzV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Feb 2012 01:55:21 -0500
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:41419 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753280Ab2BSKZ4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Feb 2012 05:25:56 -0500
+Received: by wgbdt10 with SMTP id dt10so3914409wgb.1
+        for <linux-scsi@vger.kernel.org>; Sun, 19 Feb 2012 02:25:54 -0800 (PST)
+In-Reply-To: <CAAMvbhEcheTpAU1kX9nR=D+p3X6uWCu1uXEr6xaH3Wuezpcn+g@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Mark Salyzyn <mark_salyzyn@xyratex.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, crystal_yu <crystal_yu@usish.com>, lindar_liu <lindar_liu@usish.com>
+To: James Courtier-Dutton <james.dutton@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-SmFtZXMsDQoNClRoYW5rcyBmb3IgZml4LCBsb29rcyBPSyBmb3IgbWUuDQoNCg0KDQotLS0tLS0t
-LS0tLS0tLQ0KamFja193YW5nDQo+T24gV2VkLCAyMDEyLTAxLTE4IGF0IDEwOjQ4IC0wNTAwLCBN
-YXJrIFNhbHl6eW4gd3JvdGU6DQo+PiAtc3RhdGljIHNzaXplX3QgcG04MDAxX2N0bF9hYXBfbG9n
-X3Nob3coc3RydWN0IGRldmljZSAqY2RldiwNCj4+IC0Jc3RydWN0IGRldmljZV9hdHRyaWJ1dGUg
-KmF0dHIsIGNoYXIgKmJ1ZikNCj4+ICtzdGF0aWMgc3NpemVfdCBwbTgwMDFfY3RsX2xvZ19zaG93
-KHN0cnVjdCBkZXZpY2UgKmNkZXYsIGNoYXIgKmJ1ZiwgaW50IGluZCkNCj4+ICB7DQo+PiAgCXN0
-cnVjdCBTY3NpX0hvc3QgKnNob3N0ID0gY2xhc3NfdG9fc2hvc3QoY2Rldik7DQo+PiAgCXN0cnVj
-dCBzYXNfaGFfc3RydWN0ICpzaGEgPSBTSE9TVF9UT19TQVNfSEEoc2hvc3QpOw0KPj4gIAlzdHJ1
-Y3QgcG04MDAxX2hiYV9pbmZvICpwbTgwMDFfaGEgPSBzaGEtPmxsZGRfaGE7DQo+PiArCXN0cnVj
-dCBldmVudGxvZ19lbnRyeSBlbnRyeTsNCj4+ICsJY2hhciAqc3RyID0gYnVmOw0KPj4gIAlpbnQg
-aTsNCj4+IC0jZGVmaW5lIEFBUDFfTUVNTUFQKHIsIGMpIFwNCj4+IC0JKCoodTMyICopKCh1OCop
-cG04MDAxX2hhLT5tZW1vcnlNYXAucmVnaW9uW0FBUDFdLnZpcnRfcHRyICsgKHIpICogMzIgXA0K
-Pj4gLQkrIChjKSkpDQo+PiAgDQo+PiAtCWNoYXIgKnN0ciA9IGJ1ZjsNCj4+IC0JaW50IG1heCA9
-IDI7DQo+PiAtCWZvciAoaSA9IDA7IGkgPCBtYXg7IGkrKykgew0KPj4gLQkJc3RyICs9IHNwcmlu
-dGYoc3RyLCAiMHglMDh4IDB4JTA4eCAweCUwOHggMHglMDh4IDB4JTA4eCAweCUwOHgiDQo+PiAt
-CQkJICAgICAgICIweCUwOHggMHglMDh4XG4iLA0KPj4gLQkJCSAgICAgICBBQVAxX01FTU1BUChp
-LCAwKSwNCj4+IC0JCQkgICAgICAgQUFQMV9NRU1NQVAoaSwgNCksDQo+PiAtCQkJICAgICAgIEFB
-UDFfTUVNTUFQKGksIDgpLA0KPj4gLQkJCSAgICAgICBBQVAxX01FTU1BUChpLCAxMiksDQo+PiAt
-CQkJICAgICAgIEFBUDFfTUVNTUFQKGksIDE2KSwNCj4+IC0JCQkgICAgICAgQUFQMV9NRU1NQVAo
-aSwgMjApLA0KPj4gLQkJCSAgICAgICBBQVAxX01FTU1BUChpLCAyNCksDQo+PiAtCQkJICAgICAg
-IEFBUDFfTUVNTUFQKGksIDI4KSk7DQo+PiArCW1lbXNldCgmZW50cnksIDAsIHNpemVvZihlbnRy
-eSkpOw0KPj4gKwlkbyB7DQo+PiArCQlpID0gcG04MDAxX3JlYWRsb2coDQo+PiArCQkJKHN0cnVj
-dCBldmVudGxvZ19oZWFkZXIgKikoDQo+PiArCQkJCXBtODAwMV9oYS0+bWVtb3J5TWFwLnJlZ2lv
-bltpbmRdLnZpcnRfcHRyKSwNCj4+ICsJCQkmZW50cnksDQo+PiArCQkJKGluZCA9PSBBQVAxKSA/
-DQo+PiArCQkJCSZwbTgwMDFfaGEtPmFhcDFfY29uc3VtZXIgOg0KPj4gKwkJCQkmcG04MDAxX2hh
-LT5pb3BfY29uc3VtZXIpOw0KPj4gKwl9IHdoaWxlICgoaSA9PSAwKSAmJiAhcG04MDAxX3ZhbGlk
-bG9nKCZlbnRyeSkpOw0KPj4gKwlpZiAoKGkgPj0gMCkgJiYgcG04MDAxX3ZhbGlkbG9nKCZlbnRy
-eSkpIHsNCj4+ICsJCXUzMiAqbHA7DQo+PiArCQl1bnNpZ25lZCBsb25nIGxvbmcgdGltZXN0YW1w
-ID0NCj4+ICsJCQkoKCh1bnNpZ25lZCBsb25nIGxvbmcpZW50cnkudGltZXN0YW1wX3VwcGVyKSA8
-PCAzMikgfA0KPj4gKwkJCWVudHJ5LnRpbWVzdGFtcF9sb3dlcjsNCj4+ICsJCXN0ciArPSBzbnBy
-aW50ZihzdHIsIFBBR0VfU0laRSAtIChzdHIgLSBidWYpLA0KPj4gKwkJCSIldSAlbGx1LiUwOWxs
-dSAldSIsDQo+PiArCQkJZW50cnkuc2V2ZXJpdHksDQo+PiArCQkJdGltZXN0YW1wIC8gKDEwMDAw
-MDAwMDAgLyA4KSwNCj4+ICsJCQkodGltZXN0YW1wICUgKDEwMDAwMDAwMDAgLyA4KSkgKiA4LA0K
-Pj4gKwkJCWVudHJ5LnNlcXVlbmNlKTsNCj4NCj5Zb3UgY2FuJ3QgZG8gdGhpcy4gIEl0IHByb2R1
-Y2VzIHRoaXMgZXJyb3Igb24gYSAzMiBiaXQgY29tcGlsZToNCj4NCj4gIE1PRFBPU1QgMTU0MCBt
-b2R1bGVzDQo+RVJST1I6ICJfX3VkaXZkaTMiIFtkcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMS5r
-b10gdW5kZWZpbmVkIQ0KPkVSUk9SOiAiX191bW9kZGkzIiBbZHJpdmVycy9zY3NpL3BtODAwMS9w
-bTgwMDEua29dIHVuZGVmaW5lZCENCj5tYWtlWzFdOiAqKiogW19fbW9kcG9zdF0gRXJyb3IgMQ0K
-Pm1ha2U6ICoqKiBbZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDEua29dIEVycm9yIDINCj4NCj5i
-ZWNhdXNlIHRoZSBjb21waWxlciBjYW4ndCBuYXRpdmVseSBkbyA2NCBiaXQgZGl2aXNpb24uDQo+
-DQo+VGhlIGZpeCBpcyBzb21ldGhpbmcgbGlrZSB0aGlzIChjb21waWxlIHRlc3RlZCBvbmx5KQ0K
-Pg0KPkphbWVzDQo+DQo+LS0tDQo+DQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEv
-cG04MDAxX2N0bC5jIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfY3RsLmMNCj5pbmRleCAz
-ZmUzZDkzLi4wZWRmZTg2IDEwMDY0NA0KPi0tLSBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAx
-X2N0bC5jDQo+KysrIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfY3RsLmMNCj5AQCAtMzM1
-LDEyICszMzUsMTMgQEAgc3RhdGljIHNzaXplX3QgcG04MDAxX2N0bF9sb2dfc2hvdyhzdHJ1Y3Qg
-ZGV2aWNlICpjZGV2LCBjaGFyICpidWYsIGludCBpbmQpDQo+IAkJdTMyICpscDsNCj4gCQl1bnNp
-Z25lZCBsb25nIGxvbmcgdGltZXN0YW1wID0NCj4gCQkJKCgodW5zaWduZWQgbG9uZyBsb25nKWVu
-dHJ5LnRpbWVzdGFtcF91cHBlcikgPDwgMzIpIHwNCj4tCQkJZW50cnkudGltZXN0YW1wX2xvd2Vy
-Ow0KPisJCQllbnRyeS50aW1lc3RhbXBfbG93ZXIsIHJlbWFpbmRlcjsNCj4rCQlyZW1haW5kZXIg
-PSBkb19kaXYodGltZXN0YW1wLCAxMDAwMDAwMDAwIC8gOCkgKiA4Ow0KPiAJCXN0ciArPSBzbnBy
-aW50ZihzdHIsIFBBR0VfU0laRSAtIChzdHIgLSBidWYpLA0KPiAJCQkiJXUgJWxsdS4lMDlsbHUg
-JXUiLA0KPiAJCQllbnRyeS5zZXZlcml0eSwNCj4tCQkJdGltZXN0YW1wIC8gKDEwMDAwMDAwMDAg
-LyA4KSwNCj4tCQkJKHRpbWVzdGFtcCAlICgxMDAwMDAwMDAwIC8gOCkpICogOCwNCj4rCQkJdGlt
-ZXN0YW1wLA0KPisJCQlyZW1haW5kZXIsDQo+IAkJCWVudHJ5LnNlcXVlbmNlKTsNCj4gCQlmb3Ig
-KGxwID0gZW50cnkubG9nLCBpID0gZW50cnkuc2l6ZTsgaSA+IDA7IC0taSkNCj4gCQkJc3RyICs9
-IHNucHJpbnRmKHN0ciwgUEFHRV9TSVpFIC0gKHN0ciAtIGJ1ZiksDQo+DQo+DQo+X19fX19fX19f
-XyBJbmZvcm1hdGlvbiBmcm9tIEVTRVQgTk9EMzIgQW50aXZpcnVzLCB2ZXJzaW9uIG9mIHZpcnVz
-IHNpZ25hdHVyZSBkYXRhYmFzZSA1NjU5ICgyMDEwMTEyOSkgX19fX19fX19fXw0KPg0KPlRoZSBt
-ZXNzYWdlIHdhcyBjaGVja2VkIGJ5IEVTRVQgTk9EMzIgQW50aXZpcnVzLg0KPg0KPmh0dHA6Ly93
-d3cuZXNldC5jb20NCj4NCj4NCj4=
+On Sun, Jan 15, 2012 at 11:54 AM, James Courtier-Dutton
+<james.dutton@gmail.com> wrote:
+> Is it possible to monitor scsi messages on a particular bus.
+> E.g. Attach to /dev/sda or /dev/sr0 and capture all messages going between them.
+> Ideally, in such a way that wireshark can capture it.
+> We can do this for Ethernet and USB, but I cannot find SCSI bus capture.
 
+Depends on the SCSI bus type. CDBs without transport information do
+not provide enough information for SCSI transports supporting I/O
+depth > 1. As far as I know the only SCSI transport type currently
+supported by Wireshark is iSCSI. The first step when adding support
+for another SCSI transport would be to define a new libpcap link-layer
+header type. See also http://www.tcpdump.org/linktypes.html.
+
+Bart.
