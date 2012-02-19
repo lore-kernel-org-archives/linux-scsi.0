@@ -1,43 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 42783] Kernel ooops when disconnecting the USB flash disk, in
- which I've just modified partition table
-Date: Sun, 19 Feb 2012 12:48:25 GMT
-Message-ID: <201202191248.q1JCmPXX014260@bugzilla.kernel.org>
-References: <bug-42783-11613@https.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 25/29] qla2xxx: Add ha->max_fibre_devices to keep track
+ of the maximum number of targets.
+Date: Sun, 19 Feb 2012 08:33:44 -0600
+Message-ID: <1329662024.2806.2.camel@dabdike.int.hansenpartnership.com>
+References: <1328814961-21866-1-git-send-email-chad.dupuis@qlogic.com>
+	 <1328814961-21866-26-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:41044 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389Ab2BSMsZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Feb 2012 07:48:25 -0500
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q1JCmPnu014261
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Feb 2012 12:48:25 GMT
-In-Reply-To: <bug-42783-11613@https.bugzilla.kernel.org/>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51048 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753443Ab2BSOdr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Feb 2012 09:33:47 -0500
+In-Reply-To: <1328814961-21866-26-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42783
+On Thu, 2012-02-09 at 11:15 -0800, Chad Dupuis wrote: 
+> @@ -882,7 +892,7 @@ qla2x00_sns_gpn_id(scsi_qla_host_t *vha, sw_info_t *list)
+>  	uint16_t	i;
+>  	struct sns_cmd_pkt	*sns_cmd;
+>  
+> -	for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
+> +	for (i = 0; i < ha->max_fibre_devices; i++) {
+>  		/* Issue GPN_ID */
+>  		/* Prepare SNS command request. */
+>  		sns_cmd = qla2x00_prep_sns_cmd(vha, GPN_ID_CMD,
+
+You missed adding
+
+-       int             rval;
++       int             rval = QLA_SUCCESS;
+
+Here, which causes a compile warning:
+
+Since you did the above in every other case, I've just fixed it up.
+
+James
 
 
-Stefan Richter <stefanr@s5r6.in-berlin.de> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |stefanr@s5r6.in-berlin.de
-
-
-
-
---- Comment #6 from Stefan Richter <stefanr@s5r6.in-berlin.de>  2012-02-19 12:48:23 ---
-Whether you have hal or not does not really matter.  More recent userland
-without hal but with udisks-daemon triggers an oops at unplug of
-removable-media drives too.  This is meant to be addressed by the patch from
-comment 4.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
