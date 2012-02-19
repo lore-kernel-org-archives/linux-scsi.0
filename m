@@ -1,72 +1,71 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] lsscsi-0.26 released
-Date: Sun, 19 Feb 2012 14:07:46 -0500
-Message-ID: <4F414882.6080304@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: [PATCH v2 24/28] libsas: poll for ata device readiness after
+ reset
+Date: Sun, 19 Feb 2012 16:06:36 -0600
+Message-ID: <1329689195.2806.10.camel@dabdike.int.hansenpartnership.com>
+References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
+	 <20111223030033.21827.46127.stgit@localhost6.localdomain6>
+	 <FD5571266F8C4E5ABC22D51C90F90A79@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Matt Taggart <taggart@debian.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51818 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754026Ab2BSWGi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Feb 2012 17:06:38 -0500
+In-Reply-To: <FD5571266F8C4E5ABC22D51C90F90A79@usish.com.cn>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jack Wang <jack_wang@usish.com>
+Cc: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, 'Tejun Heo' <tj@kernel.org>, linux-ide@vger.kernel.org
 
-lsscsi currently can provide some transport related
-identifiers when the --transport (-t) option is used. This
-will probably be a target port identifier rather than a LU
-name (a.k.a. the WWN). Fetching the LU name has proven
-elusive. The most direct way would be to issue an INQUIRY
-to get the device identification VPD page but that would
-require root permissions. A feature of lsscsi is that it
-does not need root permissions (or related tricks).
+On Thu, 2011-12-29 at 14:18 +0800, Jack Wang wrote:
+> > @@ -267,39 +267,84 @@ static bool sas_ata_qc_fill_rtf(struct
+> ata_queued_cmd
+> > *qc)
+> >  	return true;
+> >  }
+> > 
+> > -static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
+> > -			       unsigned long deadline)
+> > +static struct sas_internal *dev_to_sas_internal(struct domain_device
+> *dev)
+> > +{
+> > +	return to_sas_internal(dev->port->ha->core.shost->transportt);
+> > +}
+> > +
+> > +static int smp_ata_check_ready(struct ata_link *link)
+> >  {
+> > +	int res;
+> > +	u8 addr[8];
+> >  	struct ata_port *ap = link->ap;
+> >  	struct domain_device *dev = ap->private_data;
+> > -	struct sas_internal *i
+> > -		to_sas_internal(dev->port->ha->core.shost->transportt);
+> > -	int res = TMF_RESP_FUNC_FAILED;
+> > -	int ret = 0;
+> > +	struct domain_device *ex_dev = dev->parent;
+> > +	struct sas_phy *phy = sas_find_local_phy(dev);
+> > 
+> > -	if (i->dft->lldd_I_T_nexus_reset)
+> > -		res = i->dft->lldd_I_T_nexus_reset(dev);
+> > +	res = sas_get_phy_attached_sas_addr(ex_dev, phy->number, addr);
+> > +	/* break the wait early if the expander is unreachable,
+> > +	 * otherwise keep polling
+> > +	 */
+> > +	if (res == -ECOMM)
+> > +		return res;
+> > +	if (res != SMP_RESP_FUNC_ACC || SAS_ADDR(addr) == 0)
+> [Jack Wang] 
+> This check may not guarantee the FIS have received by the expander, should
+> we
+>  Use sas_ex_phy_discover instead, we still need to teach
+> sas_ex_phy_discover_helper to return right code.
 
-This version adds a --wwn (-w) option which searches the udev
-provided /dev/disk/by-id/wwn-* symlinks. This will find
-WWNs (LU names) for disks if udev can find them.
+So the concern seems valid, do we have a fix yet?
+
+James
 
 
-There are two SATA disks in the example below: /dev/sda and
-/dev/sdd . /dev/sda is older and has no WWN plus it is
-directly connected to a SATA controller on the motherboard.
-/dev/sdd has a WNN and is connected via a SAS expander.
-
-# lsscsi
-[1:0:0:0]    disk    ATA      ST3320620AS      3.AA  /dev/sda
-[6:0:0:0]    enclosu Intel    RES2SV240        0600  -
-[6:0:1:0]    disk    SEAGATE  ST33000650SS     0002  /dev/sdb
-[6:0:2:0]    disk    SEAGATE  ST32000444SS     0006  /dev/sdc
-[6:0:3:0]    disk    ATA      ST3500418AS      CC34  /dev/sdd
-
-# lsscsi -w
-[1:0:0:0]    disk                                    /dev/sda
-[6:0:0:0]    enclosu                                 -
-[6:0:1:0]    disk    0x5000c50033fe58db              /dev/sdb
-[6:0:2:0]    disk    0x5000c500215725bf              /dev/sdc
-[6:0:3:0]    disk    0x5000c500120bfe84              /dev/sdd
-
-# lsscsi -t
-[1:0:0:0]    disk    sata:                           /dev/sda
-[6:0:0:0]    enclosu sas:0x5001517e85c3effd          -
-[6:0:1:0]    disk    sas:0x5000c50033fe58d9          /dev/sdb
-[6:0:2:0]    disk    sas:0x5000c500215725bd          /dev/sdc
-[6:0:3:0]    disk    sas:0x5001517e85c3efe2          /dev/sdd
-
-
-Version 0.26 is available at:
-     http://sg.danny.cz/scsi/lsscsi.html
-More information can be found on that page including examples
-and a Download section for the tarball, Debian and Redhat
-packages.
-
-ChangeLog:
-
-Version 0.26 2012/01/31 [svn: r97]
-   - add 'fcoe' transport indicator
-   - add '--wwn' option, datamine /dev/disk/by-id/wwn*
-   - move lsscsi.c into src directory
-
-Version 0.25 2011/05/09 [svn: r92]
-...
-
-Doug Gilbert
