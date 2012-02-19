@@ -1,72 +1,86 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v1 3/5] isci: debug, provide state-enum-to-string
- conversions
-Date: Sun, 19 Feb 2012 09:17:40 -0600
-Message-ID: <1329664660.2806.3.camel@dabdike.int.hansenpartnership.com>
-References: <20120210091814.26719.75603.stgit@dwillia2-linux.jf.intel.com>
-	 <20120210091844.26719.10844.stgit@dwillia2-linux.jf.intel.com>
+Subject: Re: [PATCH][SCSI] enclosure & ses: modernize and add target power
+ management
+Date: Sun, 19 Feb 2012 10:02:50 -0600
+Message-ID: <1329667370.2806.6.camel@dabdike.int.hansenpartnership.com>
+References: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com>
+	 <1321028069.21400.24.camel@nebulus.xyus.xyratex.com>
+	 <4EBD948E.9000104@interlog.com>
+	 <FC1F9E38C0703341A1A750524E2525A9018F9648@XYUS-EX22.xyus.xyratex.com>
+	 <3789993A-8AA9-4FBF-BBC0-3DD1CF1898D0@xyratex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51155 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51279 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753978Ab2BSPRm (ORCPT
+	by vger.kernel.org with ESMTP id S1753873Ab2BSQCw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Feb 2012 10:17:42 -0500
-In-Reply-To: <20120210091844.26719.10844.stgit@dwillia2-linux.jf.intel.com>
+	Sun, 19 Feb 2012 11:02:52 -0500
+In-Reply-To: <3789993A-8AA9-4FBF-BBC0-3DD1CF1898D0@xyratex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org
+To: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, dgilbert@interlog.com
 
-On Fri, 2012-02-10 at 01:18 -0800, Dan Williams wrote:
-> Debugging the driver requires tracing the state transtions and tracing
-> state names is less work than decoding numbers.
+On Thu, 2012-01-12 at 12:03 -0500, Mark Salyzyn wrote:
+> Coincident repair of enclosure and ses device support. Fix problems
+> with setting enclosure values careful to preserve other settings.
+> Corrected fault setting as well. Modernize code. Add support for
+> Device Power Management via a new r/w device_power node in sysfs and
+> some internal interfaces to permit them to be called in the future by
+> error recovery escalation. Enclosures that do not support individual
+> power management will always return a status that the device has
+> power.
 > 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> The controversial adjustment in this patch is the support in the ses
+> driver to punch-through error recovery, a specification requirement.
+> Debate could be that scsi_error.c needs to export a scsi command
+> queueing interface; also a controversial subject ...
 
-I've got 1 now and 2 was sent as a previous patch, so I have it.  This
-one doesn't apply:
+Hmm, it is controversial, but I see where it's required.  It would be
+nice to export the eh interfaces for this rather than clone them,
+though.
 
-patching file drivers/scsi/isci/phy.c
-Hunk #2 succeeded at 456 (offset -8 lines).
-Hunk #3 succeeded at 482 (offset -8 lines).
-Hunk #4 succeeded at 496 (offset -8 lines).
-Hunk #5 succeeded at 546 (offset -8 lines).
-Hunk #6 succeeded at 872 (offset -8 lines).
-Hunk #7 succeeded at 966 (offset -8 lines).
-patching file drivers/scsi/isci/phy.h
-Hunk #1 succeeded at 344 (offset 1 line).
-patching file drivers/scsi/isci/port.c
-Hunk #1 FAILED at 60.
-Hunk #2 succeeded at 1097 (offset 43 lines).
-Hunk #3 succeeded at 1172 (offset 43 lines).
-Hunk #4 succeeded at 1187 (offset 43 lines).
-Hunk #5 succeeded at 1282 (offset 43 lines).
-Hunk #6 succeeded at 1332 (offset 43 lines).
-Hunk #7 succeeded at 1375 (offset 43 lines).
-Hunk #8 succeeded at 1405 (offset 43 lines).
-Hunk #9 succeeded at 1425 (offset 43 lines).
-Hunk #10 succeeded at 1440 (offset 43 lines).
-1 out of 10 hunks FAILED -- saving rejects to file
-drivers/scsi/isci/port.c.rej
-patching file drivers/scsi/isci/port.h
-Hunk #1 succeeded at 147 (offset 3 lines).
-patching file drivers/scsi/isci/remote_device.c
-patching file drivers/scsi/isci/remote_device.h
-Hunk #1 succeeded at 180 (offset 1 line).
-patching file drivers/scsi/isci/remote_node_context.c
-patching file drivers/scsi/isci/remote_node_context.h
-patching file drivers/scsi/isci/request.c
-Hunk #2 succeeded at 957 (offset 37 lines).
-Hunk #3 succeeded at 979 (offset 37 lines).
-Hunk #4 succeeded at 2466 (offset 149 lines).
-patching file drivers/scsi/isci/request.h
-Hunk #1 FAILED at 182.
-1 out of 1 hunk FAILED -- saving rejects to file
-drivers/scsi/isci/request.h.rej
+> Future: Add target device power-cycle to error recovery escalation
+> before considering hba reset (tested in a libsas skunkwork on a 2.6.32
+> vintage kernel)
+
+Did you actually test this?  It won't compile for me without the
+following patch because of the lack of slab.h include and the argument
+problems in ->queuecommand.
 
 James
+
+---
+
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+index 287903b..06978f8 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -27,6 +27,7 @@
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/mutex.h>
++#include <linux/slab.h>
+ 
+ static LIST_HEAD(container_list);
+ static DEFINE_MUTEX(container_list_lock);
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 27bc0ef..c31427b 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -170,9 +170,10 @@ static int ses_scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 
+ 	scsi_eh_prep_cmnd(scmd, &ses, cmnd, cmnd_size, sense_bytes);
+ 	shost->eh_action = &done;
++	scmd->scsi_done = ses_scsi_eh_done;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	shost->hostt->queuecommand(scmd, ses_scsi_eh_done);
++	shost->hostt->queuecommand(shost, scmd);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+ 	timeleft = wait_for_completion_timeout(&done, timeout);
 
 
