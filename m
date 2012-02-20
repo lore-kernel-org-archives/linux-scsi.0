@@ -1,51 +1,44 @@
-From: =?utf-8?Q?=D0=98=D0=BD=D0=BD=D0=B0_=D0=A4=D0=B5=D0=BD=D0=B5=D0=BD=D0=BA=D0=BE?=
-	<dave_glemore@bigpond.com>
-Subject: =?utf-8?Q?=D1=82=D1=80=D1=8F=D0=BC=D1=81=2C_=D0=BC=D0=BE=D0=B9_=D1=81=D0=BB=D0=B0=D0=B2=D0=BD=D1=8B=D0=B9...=29=29_?=
-Date: Mon, 20 Feb 2012 5:25:49 +0500
-Message-ID: <8823468619.20120220052549@bigpond.com>
+From: "Western Union Outlet" <westernunion@wu.com>
+Subject: Transfer Notice!!
+Date: Mon, 20 Feb 2012 08:22:17 +0100
+Message-ID: <20120220072311.162535DC156A@mail.kpoly.edu.gh>
+Reply-To: westernunionpaycenter@fastservice.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nskntqsrv02p.mx.bigpond.com ([61.9.168.234]:54169 "EHLO
-	nskntqsrv02p.mx.bigpond.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751252Ab2BTF50 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Feb 2012 00:57:26 -0500
-Received: from nskntotgx03p.mx.bigpond.com ([85.10.235.105])
-          by nskntmtas03p.mx.bigpond.com with ESMTP
-          id <20120220032629.PQGM10464.nskntmtas03p.mx.bigpond.com@nskntotgx03p.mx.bigpond.com>
-          for <linux-scsi@vger.kernel.org>; Mon, 20 Feb 2012 03:26:29 +0000
-Received: from [192.168.0.19] (really [85.10.235.105])
-          by nskntotgx03p.mx.bigpond.com with ESMTP
-          id <20120220032629.UVCC22866.nskntotgx03p.mx.bigpond.com@[192.168.0.19]>
-          for <linux-scsi@vger.kernel.org>; Mon, 20 Feb 2012 03:26:29 +0000
+Received: from 41-204-38-3-dedicated.4u.com.gh ([41.204.38.3]:53925 "EHLO
+	mail.kpoly.edu.gh" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905Ab2BTIRg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2012 03:17:36 -0500
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Recipients <westernunion@wu.com>
 
-=D0=B7=D0=B4=D0=B0=D1=80=D0=BE=D0=B2=D1=87=D0=B8=D0=BA, =D0=B0=D0=B4=D1=
-=80=D0=B5=D1=81=D1=81 =D0=BC=D0=B5=D0=B9=D0=BB=D0=B0 =D1=82=D0=B2=D0=BE=
-=D0=B5=D0=B3=D0=BE =D0=BC=D0=BC=D0=BD=D0=B5 =D0=BF=D0=BE=D1=81=D0=BE=D0=
-=B2=D0=B5=D1=82=D0=BE=D0=B2=D0=B0=D0=BB=D0=B0 =D0=98=D0=B7=D0=B0=D0=B1=D0=
-=B5=D0=BB=D0=BB=D0=B0..=20
-=D0=B0 =D1=82=D1=8B =D0=B2=D0=BD=D0=B5=D1=88=D0=BD=D0=B5 =D0=B8=D0=BD=D1=
-=82=D0=B5=D1=80=D0=B5=D1=81=D0=BD=D0=B5=D0=BD=D1=8C=D0=BA=D0=B8=D0=B9!)=
-)=20
-=D0=B5=D1=81=D0=BB=D0=B8 =D1=81=D0=B2=D0=BE=D0=B1=D0=BE=D0=B4=D0=B5=D0=BD=
- =D0=B8 =D0=B5=D1=81=D1=82=D1=8C =D0=B6=D0=B5=D0=BB=D0=B0=D0=BD=D0=B8=D0=
-=B5 =D0=BF=D0=BE=D0=B4=D1=80=D1=83=D0=B6=D0=B8=D1=82=D1=8C=D1=81=D1=8F,=
- =D0=B7=D0=B0=D1=85=D0=BE=D0=B4=D0=B8 =D0=BD=D0=B0 =D0=BC=D0=BE=D1=8E =D1=
-=81=D1=82=D1=80=D0=B0=D0=BD=D0=B8=D1=87=D0=BA=D1=83 z=EF=BB=BF=C2=ADs=EF=
-=BB=BF=C2=ADd=C2=ADm=E2=80=8Cw=E2=80=8Cy=C2=ADe=E2=80=8Bh=EF=BB=BF=C2=AD=
-t=E2=80=8Br=E2=80=8Bq=EF=BB=BF=C2=ADg=EF=BB=BF=C2=ADs=E2=80=8D=E3=80=82=
-=C2=ADh=E2=80=8Do=E2=80=8Dt=E2=80=8Dm=E2=80=8Ba=EF=BB=BF=C2=ADi=E2=80=8D=
-l=EF=BB=BF=C2=AD=E3=80=82=E2=80=8Br=E2=80=8Cu/quiflkohatuo.html
-=D0=BD=D0=B0=D1=85=D0=BE=D0=B4=D0=B8 =D1=87=D0=B5=D1=80=D0=B5=D0=B7 =D0=
-=BF=D0=BE=D0=B8=D1=81=D0=BA =D0=98=D0=BD=D0=BD=D0=B0 =D0=A4=D0=B5=D0=BD=
-=D0=B5=D0=BD=D0=BA=D0=BE
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dear Beneficiary.
+
+We write to inform you that we have transferred USD$400,000.00 dollars, I could have called you via phone to give you the MTCN information but we lost your contact phone number. So, I decided to email you the information so that you can start cashing your money in USD5000.00 daily installment with the same MTCN and sender's name which will be valid for 20 days until you cash the full $400,000.00usd as it automatically activates for use for 20 days after the first reactivation.
+
+The money is available for pick up which was deposited for transfer to you by MR Bernard Harry from United Nation Trust Funds.  The money is available for pick up by receiver (you) but when you track it, it will display PICKED UP due to the fact that it has been deactivated from our head office for security reason because it has stayed too long in the air as we have been trying to reach you on the phone for some days now but it was not reachable,so it was blocked.
+
+Therefore you can not cash it out in any western union office due to its restriction from our head office,which was a security measure because the money has been in the air for three days now and maybe in danger, hence the mtcn has to be reactivated to enable you cash out the money in any western union office in your area, the reactivation of the MTCN will cost you a token of $155, once this is paid, our head office will release the fund on hold to enable you cash it.To be sure of this please log on to www.westernunion.com and click on track to and enter the sender's info and mtcn below.
+
+Sender's Fist name: Abraham
+Sender's Last Name: Elizabeth
+MTCN: 5801913322
+Question: Who Is Great
+Answer: God
+Amount: $5000.00USD
+Total Amount To be Cashed: $400,000.00Usd
+
+Please also send to us the following details..
+1,Re-Comfirm Your Contact Phone Number.................
+
+With due respect please get back to me urgently after tracking the money on-line so i can instruct you on how to send the $155 to us for the reactivation of the MTCN.
+
+
+Best Regards
+Mr.Smith Mcferrin.
+Outlet Manager,
+Western Union Money Transfer.
