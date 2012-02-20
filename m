@@ -1,58 +1,55 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] lpfc 8.3.29: T10 Diff fixes and enhancements
-Date: Mon, 20 Feb 2012 14:39:33 +0300
-Message-ID: <20120220113933.GA28224@elgon.mountain>
+Subject: re: [SCSI] mpt2sas: Fixed Big Indian Issues on 32 bit PPC
+Date: Mon, 20 Feb 2012 17:05:38 +0300
+Message-ID: <20120220140538.GA750@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:29649 "EHLO
+Received: from acsinet15.oracle.com ([141.146.126.227]:18386 "EHLO
 	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752506Ab2BTLjo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2012 06:39:44 -0500
+	with ESMTP id S1752788Ab2BTOFt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2012 09:05:49 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com
+To: kashyap.desai@lsi.com
 Cc: linux-scsi@vger.kernel.org
 
-Hello James Smart,
+Hello Kashyap, Desai,
 
-This is a semi-automatic email about new static checker warnings.
+The patch c97951ec46d4: "[SCSI] mpt2sas: Fixed Big Indian Issues on 
+32 bit PPC" from Jun 14, 2011, leads to the following static checker
+warning:
 
-The patch acd6859b084d: "[SCSI] lpfc 8.3.29: T10 Diff fixes and 
-enhancements" from Jan 18, 2012, leads to the following Smatch 
-complaint:
+drivers/scsi/mpt2sas/mpt2sas_base.c:3352 _base_get_port_facts()
+	 warn: are we memsetting too much? 6 vs 28
 
-drivers/scsi/lpfc/lpfc_scsi.c:1592 lpfc_bg_err_inject()
-	 error: we previously assumed 'apptag' could be null (see line 1430)
+We changed the size of certain data structures.
 
-drivers/scsi/lpfc/lpfc_scsi.c
-  1429		/* Should we change the Application Tag */
-  1430		if (apptag) {
-                    ^^^^^^
-Old check.
+-       Mpi2IOCFactsReply_t facts;
+-       Mpi2PortFactsReply_t *pfacts;
++       struct mpt2sas_facts facts;
++       struct mpt2sas_port_facts *pfacts;
 
-  1431			if (phba->lpfc_injerr_wapp_cnt) {
-  1432				switch (op) {
-  1433				case SCSI_PROT_WRITE_PASS:
-  1434					if (blockoff && src) {
+But it's not done consistently.  We still memset it as if it were the
+original size.
 
-[snip]
+	memset(facts, 0, sizeof(Mpi2IOCFactsReply_t));
 
-  1585				case SCSI_PROT_READ_STRIP:
-  1586				case SCSI_PROT_READ_PASS:
-  1587					/*
-  1588					 * For READ_STRIP and READ_PASS, force the
-  1589					 * error on data being read off the wire. It
-  1590					 * should force an IO error to the driver.
-  1591					 */
-  1592					*apptag = 0xDEAD;
-                                        ^^^^^^^
-New dereference not checked.  Btw, apptag is always zero in the current
-code.
+And we still allocate the original size data structure:
 
-  1593					phba->lpfc_injerr_rgrd_cnt--;
-  1594					phba->lpfc_injerr_lba = LPFC_INJERR_LBA_OFF;
+  4270          ioc->pfacts = kcalloc(ioc->facts.NumberOfPorts,
+  4271              sizeof(Mpi2PortFactsReply_t), GFP_KERNEL);
+
+There are a couple other warnings as well.
+drivers/scsi/mpt2sas/mpt2sas_base.c:3394 _base_get_ioc_facts(24)
+	warn: are we memsetting too much? 60 vs 64
+drivers/scsi/mpt2sas/mpt2sas_base.c:4270 mpt2sas_base_attach(56)
+	warn: double check that we're allocating correct size: 6 vs 28
+
+Obviously the concern with a too big memset is that we're corrupting
+the next element in the array or we're corrupting past the end of the
+array.
 
 regards,
 dan carpenter
