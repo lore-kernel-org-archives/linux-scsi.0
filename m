@@ -1,131 +1,131 @@
-From: Jan Schmidt <list.linux-scsi@jan-o-sch.net>
-Subject: mpt2sas: BUG: using smp_processor_id() in preemptible
-Date: Mon, 20 Feb 2012 14:56:21 +0100
-Message-ID: <4F425105.4090505@jan-o-sch.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Subject: Re: [PATCH] pm8001: enhance firmware event log retrieval
+Date: Mon, 20 Feb 2012 11:04:54 -0500
+Message-ID: <8BB4E44E-AD13-48E8-BA20-A5AAF068E8C6@xyratex.com>
+References: <97204CD5-5C4D-4E62-ADD4-CE51AB11C460@xyratex.com>,  <1329578412.2862.24.camel@dabdike> <201202191454024304010@usish.com>
+Mime-Version: 1.0 (Apple Message framework v1257)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brockman.in8.de ([85.214.220.56]:36765 "EHLO mail.in8.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752352Ab2BTOGe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Feb 2012 09:06:34 -0500
-Received: from [172.24.1.213] (yian-ho01.nir.cronon.net [192.166.201.94])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.in8.de (Postfix) with ESMTPSA id 1AEEE6AC29C
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Feb 2012 14:56:22 +0100 (CET)
+Received: from xyratex195.xyratex.com ([194.131.166.195]:39908 "EHLO
+	XY01EX22.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752871Ab2BTQFA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Feb 2012 11:05:00 -0500
+In-Reply-To: <201202191454024304010@usish.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: jack_wang <jack_wang@usish.com>
+Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, crystal_yu <crystal_yu@usish.com>, lindar_liu <lindar_liu@usish.com>
 
-Hi,
+Thanks James!
 
-I discovered a bug when loading mpt2sas module with the current btrfs
-tree (which is 3.2.0 plus current btrfs) and verified with linux
-3.3.0-rc4. It hides away when I set CONFIG_DEBUG_PREEMPT=n.
+Sincerely -- Mark Salyzyn
 
-Feb 20 13:53:04 zarzz kernel: [    3.834047] Freeing unused kernel
-memory: 868k freed
-Feb 20 13:53:04 zarzz kernel: [    3.835019] Freeing unused kernel
-memory: 192k freed
-Feb 20 13:53:04 zarzz kernel: [    3.917143] modprobe used greatest
-stack depth: 4488 bytes left
-Feb 20 13:53:04 zarzz kernel: [    3.942538] mpt2sas version
-12.100.00.00 loaded
-Feb 20 13:53:04 zarzz kernel: [    3.942994] scsi6 : Fusion MPT SAS Host
-Feb 20 13:53:04 zarzz kernel: [    3.946028] mpt2sas0: 64 BIT PCI BUS
-DMA ADDRESSING SUPPORTED, total mem (16399548 kB)
-Feb 20 13:53:04 zarzz kernel: [    3.946179] mpt2sas 0000:01:00.0: irq
-57 for MSI/MSI-X
-Feb 20 13:53:04 zarzz kernel: [    3.946238] mpt2sas0-msix0: PCI-MSI-X
-enabled: IRQ 57
-Feb 20 13:53:04 zarzz kernel: [    3.946241] mpt2sas0:
-iomem(0x00000000fb43c000), mapped(0xffffc90001860000), size(16384)
-Feb 20 13:53:04 zarzz kernel: [    3.946245] mpt2sas0:
-ioport(0x000000000000c000), size(256)
-Feb 20 13:53:04 zarzz kernel: [    3.962802] ata_id used greatest stack
-depth: 3904 bytes left
-Feb 20 13:53:04 zarzz kernel: [    4.018627] mpt2sas0: sending message
-unit reset !!
-Feb 20 13:53:04 zarzz kernel: [    4.020616] mpt2sas0: message unit
-reset: SUCCESS
-Feb 20 13:53:04 zarzz kernel: [    4.087887] mpt2sas0: Allocated
-physical memory: size(8027 kB)
-Feb 20 13:53:04 zarzz kernel: [    4.087890] mpt2sas0: Current
-Controller Queue Depth(3577), Max Controller Queue Depth(3712)
-Feb 20 13:53:04 zarzz kernel: [    4.087892] mpt2sas0: Scatter Gather
-Elements per IO(128)
-Feb 20 13:53:04 zarzz kernel: [    4.146377] BUG: using
-smp_processor_id() in preemptible [00000000] code: modprobe/1330
-Feb 20 13:53:04 zarzz kernel: [    4.242064] caller is
-mpt2sas_base_put_smid_default+0x2f/0x80 [mpt2sas]
-Feb 20 13:53:04 zarzz kernel: [    4.242067] Pid: 1330, comm: modprobe
-Not tainted 3.3.0-rc4 #43
-Feb 20 13:53:04 zarzz kernel: [    4.242069] Call Trace:
-Feb 20 13:53:04 zarzz kernel: [    4.242076]  [<ffffffff81436972>]
-debug_smp_processor_id+0xd2/0xf0
-Feb 20 13:53:04 zarzz kernel: [    4.242084]  [<ffffffffa00152af>]
-mpt2sas_base_put_smid_default+0x2f/0x80 [mpt2sas]
-Feb 20 13:53:04 zarzz kernel: [    4.242094]  [<ffffffffa0015436>]
-_base_event_notification+0x136/0x280 [mpt2sas]
-Feb 20 13:53:04 zarzz kernel: [    4.242104]  [<ffffffffa0015a79>]
-_base_make_ioc_operational+0x469/0x10e0 [mpt2sas]
-Feb 20 13:53:04 zarzz kernel: [    4.242111]  [<ffffffff810e6b0b>] ?
-is_module_address+0x2b/0x60
-Feb 20 13:53:04 zarzz kernel: [    4.242118]  [<ffffffff810d73c4>] ?
-static_obj+0x44/0x60
-Feb 20 13:53:04 zarzz kernel: [    4.242123]  [<ffffffff810d89cb>] ?
-lockdep_init_map+0x5b/0x150
-Feb 20 13:53:04 zarzz kernel: [    4.242129]  [<ffffffff810d5f96>] ?
-debug_mutex_init+0x36/0x50
-Feb 20 13:53:04 zarzz kernel: [    4.242138]  [<ffffffffa001ac29>]
-mpt2sas_base_attach+0x10b9/0x15a0 [mpt2sas]
-Feb 20 13:53:04 zarzz kernel: [    4.242147]  [<ffffffffa00201d6>]
-_scsih_probe+0x3d6/0x610 [mpt2sas]
-Feb 20 13:53:04 zarzz kernel: [    4.242151]  [<ffffffff810b0eb1>] ?
-get_parent_ip+0x11/0x50
-Feb 20 13:53:04 zarzz kernel: [    4.242155]  [<ffffffff819198a5>] ?
-sub_preempt_count+0x95/0xd0
-Feb 20 13:53:04 zarzz kernel: [    4.242158]  [<ffffffff81916000>] ?
-_raw_spin_unlock+0x30/0x60
-Feb 20 13:53:04 zarzz kernel: [    4.242164]  [<ffffffff8144cb32>]
-local_pci_probe+0x12/0x20
-Feb 20 13:53:04 zarzz kernel: [    4.242167]  [<ffffffff8144dbf9>]
-pci_device_probe+0xf9/0x120
-Feb 20 13:53:04 zarzz kernel: [    4.242171]  [<ffffffff8155a78a>] ?
-driver_sysfs_add+0x7a/0xb0
-Feb 20 13:53:04 zarzz kernel: [    4.242174]  [<ffffffff8155a91b>]
-driver_probe_device+0x8b/0x2e0
-Feb 20 13:53:04 zarzz kernel: [    4.242177]  [<ffffffff8155ac03>]
-__driver_attach+0x93/0xa0
-Feb 20 13:53:04 zarzz kernel: [    4.242180]  [<ffffffff8155ab70>] ?
-driver_probe_device+0x2e0/0x2e0
-Feb 20 13:53:04 zarzz kernel: [    4.242184]  [<ffffffff81558e38>]
-bus_for_each_dev+0x68/0x90
-Feb 20 13:53:04 zarzz kernel: [    4.242187]  [<ffffffff8155a6b9>]
-driver_attach+0x19/0x20
-Feb 20 13:53:04 zarzz kernel: [    4.242190]  [<ffffffff8155a378>]
-bus_add_driver+0x208/0x2b0
-Feb 20 13:53:04 zarzz kernel: [    4.242195]  [<ffffffffa0041000>] ?
-0xffffffffa0040fff
-Feb 20 13:53:04 zarzz kernel: [    4.242199]  [<ffffffff8155b248>]
-driver_register+0x78/0x140
-Feb 20 13:53:04 zarzz kernel: [    4.242204]  [<ffffffff814366e6>] ?
-__raw_spin_lock_init+0x36/0x60
-Feb 20 13:53:04 zarzz kernel: [    4.242208]  [<ffffffffa0041000>] ?
-0xffffffffa0040fff
-Feb 20 13:53:04 zarzz kernel: [    4.242213]  [<ffffffff8144deb1>]
-__pci_register_driver+0x61/0xe0
-Feb 20 13:53:04 zarzz kernel: [    4.242217]  [<ffffffffa0041000>] ?
-0xffffffffa0040fff
-Feb 20 13:53:04 zarzz kernel: [    4.242226]  [<ffffffffa004116a>]
-_scsih_init+0x16a/0x18e [mpt2sas]
-Feb 20 13:53:04 zarzz kernel: [    4.242233]  [<ffffffff810001cd>]
-do_one_initcall+0x3d/0x170
-Feb 20 13:53:04 zarzz kernel: [    4.242238]  [<ffffffff810ea67a>]
-sys_init_module+0x8a/0x1e0
-Feb 20 13:53:04 zarzz kernel: [    4.242242]  [<ffffffff8191d122>]
-system_call_fastpath+0x16/0x1b
+On Feb 19, 2012, at 1:55 AM, jack_wang wrote:
 
--Jan
+> James,
+> 
+> Thanks for fix, looks OK for me.
+> 
+> 
+> 
+> --------------
+> jack_wang
+>> On Wed, 2012-01-18 at 10:48 -0500, Mark Salyzyn wrote:
+>>> -static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
+>>> -	struct device_attribute *attr, char *buf)
+>>> +static ssize_t pm8001_ctl_log_show(struct device *cdev, char *buf, int ind)
+>>> {
+>>> 	struct Scsi_Host *shost = class_to_shost(cdev);
+>>> 	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+>>> 	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
+>>> +	struct eventlog_entry entry;
+>>> +	char *str = buf;
+>>> 	int i;
+>>> -#define AAP1_MEMMAP(r, c) \
+>>> -	(*(u32 *)((u8*)pm8001_ha->memoryMap.region[AAP1].virt_ptr + (r) * 32 \
+>>> -	+ (c)))
+>>> 
+>>> -	char *str = buf;
+>>> -	int max = 2;
+>>> -	for (i = 0; i < max; i++) {
+>>> -		str += sprintf(str, "0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x"
+>>> -			       "0x%08x 0x%08x\n",
+>>> -			       AAP1_MEMMAP(i, 0),
+>>> -			       AAP1_MEMMAP(i, 4),
+>>> -			       AAP1_MEMMAP(i, 8),
+>>> -			       AAP1_MEMMAP(i, 12),
+>>> -			       AAP1_MEMMAP(i, 16),
+>>> -			       AAP1_MEMMAP(i, 20),
+>>> -			       AAP1_MEMMAP(i, 24),
+>>> -			       AAP1_MEMMAP(i, 28));
+>>> +	memset(&entry, 0, sizeof(entry));
+>>> +	do {
+>>> +		i = pm8001_readlog(
+>>> +			(struct eventlog_header *)(
+>>> +				pm8001_ha->memoryMap.region[ind].virt_ptr),
+>>> +			&entry,
+>>> +			(ind == AAP1) ?
+>>> +				&pm8001_ha->aap1_consumer :
+>>> +				&pm8001_ha->iop_consumer);
+>>> +	} while ((i == 0) && !pm8001_validlog(&entry));
+>>> +	if ((i >= 0) && pm8001_validlog(&entry)) {
+>>> +		u32 *lp;
+>>> +		unsigned long long timestamp =
+>>> +			(((unsigned long long)entry.timestamp_upper) << 32) |
+>>> +			entry.timestamp_lower;
+>>> +		str += snprintf(str, PAGE_SIZE - (str - buf),
+>>> +			"%u %llu.%09llu %u",
+>>> +			entry.severity,
+>>> +			timestamp / (1000000000 / 8),
+>>> +			(timestamp % (1000000000 / 8)) * 8,
+>>> +			entry.sequence);
+>> 
+>> You can't do this.  It produces this error on a 32 bit compile:
+>> 
+>> MODPOST 1540 modules
+>> ERROR: "__udivdi3" [drivers/scsi/pm8001/pm8001.ko] undefined!
+>> ERROR: "__umoddi3" [drivers/scsi/pm8001/pm8001.ko] undefined!
+>> make[1]: *** [__modpost] Error 1
+>> make: *** [drivers/scsi/pm8001/pm8001.ko] Error 2
+>> 
+>> because the compiler can't natively do 64 bit division.
+>> 
+>> The fix is something like this (compile tested only)
+>> 
+>> James
+>> 
+>> ---
+>> 
+>> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+>> index 3fe3d93..0edfe86 100644
+>> --- a/drivers/scsi/pm8001/pm8001_ctl.c
+>> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
+>> @@ -335,12 +335,13 @@ static ssize_t pm8001_ctl_log_show(struct device *cdev, char *buf, int ind)
+>> 		u32 *lp;
+>> 		unsigned long long timestamp =
+>> 			(((unsigned long long)entry.timestamp_upper) << 32) |
+>> -			entry.timestamp_lower;
+>> +			entry.timestamp_lower, remainder;
+>> +		remainder = do_div(timestamp, 1000000000 / 8) * 8;
+>> 		str += snprintf(str, PAGE_SIZE - (str - buf),
+>> 			"%u %llu.%09llu %u",
+>> 			entry.severity,
+>> -			timestamp / (1000000000 / 8),
+>> -			(timestamp % (1000000000 / 8)) * 8,
+>> +			timestamp,
+>> +			remainder,
+>> 			entry.sequence);
+>> 		for (lp = entry.log, i = entry.size; i > 0; --i)
+>> 			str += snprintf(str, PAGE_SIZE - (str - buf),
+>> 
+>> 
+>> __________ Information from ESET NOD32 Antivirus, version of virus signature database 5659 (20101129) __________
+>> 
+>> The message was checked by ESET NOD32 Antivirus.
+>> 
+>> http://www.eset.com
+>> 
+>> 
+
