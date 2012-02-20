@@ -1,37 +1,31 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] pm8001: enhance firmware event log retrieval
-Date: Mon, 20 Feb 2012 10:43:25 -0600
-Message-ID: <1329756205.2791.39.camel@dabdike.int.hansenpartnership.com>
-References: <97204CD5-5C4D-4E62-ADD4-CE51AB11C460@xyratex.com>
-	,  <1329578412.2862.24.camel@dabdike> <201202191454024304010@usish.com>
-	 <8BB4E44E-AD13-48E8-BA20-A5AAF068E8C6@xyratex.com>
-	 <95CA7344-D026-40CC-9A1E-176C632FC7E0@xyratex.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 5/5] sd: Implement support for WRITE SAME
+Date: Mon, 20 Feb 2012 12:36:51 -0500
+Message-ID: <yq17gzh5rv0.fsf@sermon.lab.mkp.net>
+References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
+	<1327969892-5090-6-git-send-email-martin.petersen@oracle.com>
+	<20120220161645.GA29207@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53994 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752824Ab2BTQn1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Feb 2012 11:43:27 -0500
-In-Reply-To: <95CA7344-D026-40CC-9A1E-176C632FC7E0@xyratex.com>
+Received: from acsinet15.oracle.com ([141.146.126.227]:19738 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407Ab2BTRhA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2012 12:37:00 -0500
+In-Reply-To: <20120220161645.GA29207@redhat.com> (Mike Snitzer's message of
+	"Mon, 20 Feb 2012 11:16:45 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <mark_salyzyn@xyratex.com>
-Cc: jack_wang <jack_wang@usish.com>, linux-scsi <linux-scsi@vger.kernel.org>, crystal_yu <crystal_yu@usish.com>, lindar_liu <lindar_liu@usish.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com
 
-On Mon, 2012-02-20 at 11:31 -0500, Mark Salyzyn wrote:
-> No testing, I agreed on the appearance, make excellent sense and can
-> see no problem with it. I have NOT tested it (Xyratex has no interest
-> in 32-bit systems, this turns into a one-of with no Q/A backing). I
-> will put it in my own queue for testing and submit a fix if I feel it
-> is necessary (my WAG on risk of that is 0.000234% ;-/ )
+>>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
 
-You don't need to test it on a 32 bit system ... just make sure that it
-gives a correct log entry on a 64 bit one (i.e. that I got all the
-factors correct).
+Mike> Just a small nit, this should be scsi_setup_write_same_cmnd given
+Mike> we already have: scsi_setup_{discard,flush}_cmnd
 
-James
+This was deliberate. It's the two other functions that are
+misnamed. They clearly belong in the sd_ name space.
 
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
