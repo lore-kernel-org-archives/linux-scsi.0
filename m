@@ -1,32 +1,35 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: dm-io async WRITE_SAME results in iSCSI NULL pointer [was: Re: Write same support]
-Date: Mon, 20 Feb 2012 12:44:48 -0500
-Message-ID: <yq139a55rhr.fsf@sermon.lab.mkp.net>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 5/5] sd: Implement support for WRITE SAME
+Date: Mon, 20 Feb 2012 13:28:39 -0500
+Message-ID: <20120220182839.GA30034@redhat.com>
 References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
-	<20120216200202.GA27311@redhat.com>
-	<20120216210301.GA27404@redhat.com>
+ <1327969892-5090-6-git-send-email-martin.petersen@oracle.com>
+ <20120220161645.GA29207@redhat.com>
+ <yq17gzh5rv0.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:35112 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750971Ab2BTRpG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2012 12:45:06 -0500
-In-Reply-To: <20120216210301.GA27404@redhat.com> (Mike Snitzer's message of
-	"Thu, 16 Feb 2012 16:03:01 -0500")
+Received: from mx1.redhat.com ([209.132.183.28]:26862 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752084Ab2BTS2p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Feb 2012 13:28:45 -0500
+Content-Disposition: inline
+In-Reply-To: <yq17gzh5rv0.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com, michaelc@cs.wisc.edu
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com
 
->>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
+On Mon, Feb 20 2012 at 12:36pm -0500,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-Mike> But testing with iSCSI, I get a NULL pointer _every_ time in the
-Mike> iSCSI scatter-gather code,
+> >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
+> 
+> Mike> Just a small nit, this should be scsi_setup_write_same_cmnd given
+> Mike> we already have: scsi_setup_{discard,flush}_cmnd
+> 
+> This was deliberate. It's the two other functions that are
+> misnamed. They clearly belong in the sd_ name space.
 
-I finally managed to get a WRITE SAME-capable iSCSI target set up.
-
-Can you beam me your test case?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+OK, sure, might make the most sense to have an earlier patch in the
+series rename the others.
