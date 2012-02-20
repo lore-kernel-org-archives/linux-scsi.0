@@ -1,76 +1,94 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [SCSI] mpt2sas: Fixed Big Indian Issues on 32 bit PPC
-Date: Mon, 20 Feb 2012 16:15:40 -0700
-Message-ID: <4565AEA676113A449269C2F3A549520FB5AE22B2@cosmail03.lsi.com>
-References: <20120220140538.GA750@elgon.mountain>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-io async WRITE_SAME results in iSCSI NULL pointer [was: Re:
+ Write same support]
+Date: Mon, 20 Feb 2012 18:44:10 -0500
+Message-ID: <20120220234410.GC31853@redhat.com>
+References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
+ <20120216200202.GA27311@redhat.com>
+ <20120216210301.GA27404@redhat.com>
+ <yq139a55rhr.fsf@sermon.lab.mkp.net>
+ <20120220184623.GA29931@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:45020 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752698Ab2BTXUR convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Feb 2012 18:20:17 -0500
-In-Reply-To: <20120220140538.GA750@elgon.mountain>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:37970 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753851Ab2BTXo1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Feb 2012 18:44:27 -0500
+Content-Disposition: inline
+In-Reply-To: <20120220184623.GA29931@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com, michaelc@cs.wisc.edu, Vivek Goyal <vgoyal@redhat.com>
 
-Dan - I fixed the issue about a couple weeks ago in the in-house drivers.  From _base_get_ioc_facts, we should be memset'ing the "struct mpt2sas_facts" instead of "Mpi2IOCFactsReply_t ", because the its four bytes larger, the ioc->pfacts is getting set to NULL.   Nagalaksmi will pick it up this fix and post upstream in a future patch.
+On Mon, Feb 20 2012 at  1:46pm -0500,
+Mike Snitzer <snitzer@redhat.com> wrote:
 
-Thankyou,
-Eric
+> I'm adding more debug printks to blk_rq_map_sg() to try to understand
+> what is going on... will share more once I have it.
 
-________________________________________
-From: linux-scsi-owner@vger.kernel.org [linux-scsi-owner@vger.kernel.org] On Behalf Of Dan Carpenter [dan.carpenter@oracle.com]
-Sent: Monday, February 20, 2012 7:05 AM
-To: Desai, Kashyap
-Cc: linux-scsi@vger.kernel.org
-Subject: re: [SCSI] mpt2sas: Fixed Big Indian Issues on 32 bit PPC
+The REQ_WRITE_SAME request, that SCSI is processing on behalf of the
+dm_kcopyd_zero() generated bio, has multiple bios (as if merging
+occurred).
 
-Hello Kashyap, Desai,
+Curiously, using the dm_kcopyd_zero() interface, I'll see repeat calls
+to elv_rq_merge_ok() for a bio with a given bi_sector:
 
-The patch c97951ec46d4: "[SCSI] mpt2sas: Fixed Big Indian Issues on
-32 bit PPC" from Jun 14, 2011, leads to the following static checker
-warning:
+           <...>-10    [000]  6047.137941: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214336
+           <...>-10    [000]  6047.137942: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214336
+           <...>-10    [000]  6047.137942: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214336
+           <...>-10    [000]  6047.137943: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214336
+           <...>-10    [000]  6047.137943: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214336
+           <...>-10    [000]  6047.137944: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214336
+           <...>-10    [000]  6047.137944: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214336
+           <...>-10    [000]  6047.137945: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214336
 
-drivers/scsi/mpt2sas/mpt2sas_base.c:3352 _base_get_port_facts()
-         warn: are we memsetting too much? 6 vs 28
+           <...>-10    [000]  6047.137958: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214464
+           <...>-10    [000]  6047.137959: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214464
+           <...>-10    [000]  6047.137959: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214464
+           <...>-10    [000]  6047.137960: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214464
+           <...>-10    [000]  6047.137960: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214464
+           <...>-10    [000]  6047.137961: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214464
+           <...>-10    [000]  6047.137961: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214464
+           <...>-10    [000]  6047.137962: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214464
+           <...>-10    [000]  6047.137963: elv_rq_merge_ok: WRITE_SAME bio bi_sector=5214464
 
-We changed the size of certain data structures.
+So something in the dm-kcopyd and dm-io bio submission path is causing
+multiple calls to elv_rq_merge_ok() for the _same_ bio, really quite
+bizarre!
 
--       Mpi2IOCFactsReply_t facts;
--       Mpi2PortFactsReply_t *pfacts;
-+       struct mpt2sas_facts facts;
-+       struct mpt2sas_port_facts *pfacts;
+If I use the bdev_write_same() interface I only get one elv_rq_merge_ok
+for a given bi_sector:
 
-But it's not done consistently.  We still memset it as if it were the
-original size.
+           <...>-2088  [001] 10430.160868: elv_rq_merge_ok: WRITE_SAME bio bi_sector=4652928
+           <...>-1990  [001] 10432.565862: elv_rq_merge_ok: WRITE_SAME bio bi_sector=6659456
+           <...>-1990  [001] 10434.050269: elv_rq_merge_ok: WRITE_SAME bio bi_sector=6667904
+           <...>-1990  [001] 10434.238763: elv_rq_merge_ok: WRITE_SAME bio bi_sector=6668032
+           <...>-1990  [001] 10435.852311: elv_rq_merge_ok: WRITE_SAME bio bi_sector=6668160
+           <...>-1990  [001] 10437.730371: elv_rq_merge_ok: WRITE_SAME bio bi_sector=6668288
+           <...>-1990  [001] 10438.275437: elv_rq_merge_ok: WRITE_SAME bio bi_sector=6668416
+           <...>-1990  [001] 10439.737049: elv_rq_merge_ok: WRITE_SAME bio bi_sector=6668544
+           <...>-1990  [001] 10440.100221: elv_rq_merge_ok: WRITE_SAME bio bi_sector=6668672
+           <...>-1990  [001] 10441.987857: elv_rq_merge_ok: WRITE_SAME bio bi_sector=6668800
+           <...>-1990  [001] 10443.875244: elv_rq_merge_ok: WRITE_SAME bio bi_sector=6668928
 
-        memset(facts, 0, sizeof(Mpi2IOCFactsReply_t));
+And as if the above wasn't weird enough, I can avoid the scatter-gather
+NULL pointer (in libiscsi_tcp when using the dm_kcopyd_zero() interface)
+if I switch elv_rq_merge_ok() to checking the rq->cmd_flags for
+REQ_WRITE_SAME, rather than checking the request's first bio's bi_rw:
 
-And we still allocate the original size data structure:
+        /*
+         * Don't merge write same requests
+         */
+-       if ((bio->bi_rw & REQ_WRITE_SAME) || (rq->bio->bi_rw & REQ_WRITE_SAME))
++       if ((bio->bi_rw & REQ_WRITE_SAME) || (rq->cmd_flags & REQ_WRITE_SAME))
+                return 0;
 
-  4270          ioc->pfacts = kcalloc(ioc->facts.NumberOfPorts,
-  4271              sizeof(Mpi2PortFactsReply_t), GFP_KERNEL);
+That would seem to imply to me that some WRITE SAME bios are losing the
+REQ_WRITE_SAME flag in bio->bi_rw!? (or there is some other un-guarded
+merge point -- also associated with the issue above).
 
-There are a couple other warnings as well.
-drivers/scsi/mpt2sas/mpt2sas_base.c:3394 _base_get_ioc_facts(24)
-        warn: are we memsetting too much? 60 vs 64
-drivers/scsi/mpt2sas/mpt2sas_base.c:4270 mpt2sas_base_attach(56)
-        warn: double check that we're allocating correct size: 6 vs 28
-
-Obviously the concern with a too big memset is that we're corrupting
-the next element in the array or we're corrupting past the end of the
-array.
-
-regards,
-dan carpenter
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(It at least starts to explain why I was seeing 512b sg segments at the
+end of a WRITE's sg list with 4096b segments... but I still have
+unanswered questions I need to sort out).
