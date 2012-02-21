@@ -1,62 +1,122 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC PATCH 2/6] ACPI: Reference devices in ACPI Power Resource
-Date: Tue, 21 Feb 2012 11:06:39 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1202211059180.1366-100000@iolanthe.rowland.org>
-References: <CAF1ivSY4-cYsHjrM3g5D_Skt=mCxvKuLWc+fgGDEgE2XaZN+gQ@mail.gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-io async WRITE_SAME results in iSCSI NULL pointer [was: Re:
+ Write same support]
+Date: Tue, 21 Feb 2012 14:33:12 -0500
+Message-ID: <20120221193312.GA6565@redhat.com>
+References: <20120216210301.GA27404@redhat.com>
+ <yq139a55rhr.fsf@sermon.lab.mkp.net>
+ <20120220184623.GA29931@redhat.com>
+ <20120220234410.GC31853@redhat.com>
+ <yq1k43h2gm9.fsf@sermon.lab.mkp.net>
+ <20120221031854.GA468@redhat.com>
+ <yq1pqd825zt.fsf@sermon.lab.mkp.net>
+ <20120221065504.GB468@redhat.com>
+ <yq1linw1i6e.fsf@sermon.lab.mkp.net>
+ <20120221144145.GA4743@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAF1ivSY4-cYsHjrM3g5D_Skt=mCxvKuLWc+fgGDEgE2XaZN+gQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: "Zhang, Rui" <rui.zhang@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:7509 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753033Ab2BUTd1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Feb 2012 14:33:27 -0500
+Content-Disposition: inline
+In-Reply-To: <20120221144145.GA4743@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com, michaelc@cs.wisc.edu, Vivek Goyal <vgoyal@redhat.com>
 
-On Tue, 21 Feb 2012, Lin Ming wrote:
+On Tue, Feb 21 2012 at  9:41am -0500,
+Mike Snitzer <snitzer@redhat.com> wrote:
 
-> > Then maybe you can use pm_runtime_no_callbacks() for the ZPODD devi=
-ce.
-> > It's explained in Documentation/power/runtime_pm.txt, and I use it =
-for
-> > USB interfaces.
->=20
-> If pm_runtime_no_callbacks() is used, runtime PM sysfs attributes
-> won't be created.
-> Then how to disable ZPODD feature in userspace?
->=20
-> Currently, I use "control" file of scsi device to enable/disable
-> ZPODD, for example
-> echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata0/host1/target1:0=
-:0/1:0:0:0/power/control
-> echo on > /sys/devices/pci0000:00/0000:00:1f.2/ata0/host1/target1:0:0=
-/1:0:0:0/power/control
+> On Tue, Feb 21 2012 at  7:31am -0500,
+> Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-You could get the same result by using the "control" file for the ATA
-port.
+> > PS. The good news is that your async stuff works when I set phys_segs to
+> > 1 in sd.
+> 
+> Yeah, it worked with the patch I provided in my previous mail too.  But
+> ultimately the async stuff wasn't working for me due to merging.
 
-> > The idea is that the ZPODD will never receive any runtime PM callba=
-cks
-> > from the PM core. =A0Instead the ATA port callback routines will be
-> > responsible for power management of the ZPODD device.
->=20
-> Does the ATA port callback also responsible to resume its child?
->=20
-> For example,
-> /sys/devices/pci0000:00/0000:00:1f.2/ata0/host1/target1:0:0/1:0:0:0/
->=20
-> ata0 is resumed.
->=20
-> Then who will be responsible to resume host1, target1:0:0 and 1:0:0:0=
-?
->=20
-> Or do you mean that we don't need to resume these devices at all?
-> host1 and target1:0:0 are logical devices, but I think 1:0:0:0 is not=
-=2E
+(not related to async interface but...)
 
-That's right.  It makes no difference whether the host and target=20
-are resumed or suspended.  In fact, you could also call=20
-pm_runtime_no_callbacks() for them.
+After further testing (iSCSI from with a guest) it is clear that we
+still have a problem with REQ_WRITE_SAME bios being merged into WRITE
+requests (I added a debugging WARN_ON_ONCE to generate the following):
 
-Alan Stern
+------------[ cut here ]------------
+WARNING: at block/blk-merge.c:476 blk_rq_merge_ok+0x4d/0xb4()
+Hardware name: KVM
+Modules linked in: dm_thin_pool dm_persistent_data dm_bufio libcrc32c dm_mod sunrpc iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi virtio_net virtio_balloon i2c_piix4 i2c_core virtio_blk virtio_pci virtio_ring virtio [last unloaded: dm_thin_pool]
+Pid: 5, comm: kworker/u:0 Not tainted 3.2.0-snitm+ #185
+Call Trace:
+ [<ffffffff81042efa>] warn_slowpath_common+0x85/0x9d
+ [<ffffffff81042f2c>] warn_slowpath_null+0x1a/0x1c
+ [<ffffffff811cd8bc>] blk_rq_merge_ok+0x4d/0xb4
+ [<ffffffff811c4213>] elv_rq_merge_ok+0x17/0x47
+ [<ffffffff811c4287>] elv_merge+0x44/0xc2
+ [<ffffffff811ca815>] blk_queue_bio+0xf2/0x2d5
+ [<ffffffff811c9ca2>] generic_make_request+0xa1/0xe2
+ [<ffffffff811c9dc2>] submit_bio+0xdf/0x119
+ [<ffffffff8113191d>] ? bio_alloc_bioset+0x4d/0xc2
+ [<ffffffff811ceee3>] blkdev_issue_write_same+0x203/0x26c
+ [<ffffffff8106511a>] ? local_clock+0x41/0x5a
+ [<ffffffffa00f5dbf>] do_worker+0x3b6/0x5f1 [dm_thin_pool]
+ [<ffffffff8107084e>] ? trace_hardirqs_off_caller+0x1f/0x9e
+ [<ffffffffa00f5a09>] ? process_shared_bio+0x36e/0x36e [dm_thin_pool]
+ [<ffffffffa00f5a09>] ? process_shared_bio+0x36e/0x36e [dm_thin_pool]
+ [<ffffffff8105b6d0>] process_one_work+0x213/0x37b
+ [<ffffffff8105b641>] ? process_one_work+0x184/0x37b
+ [<ffffffff8105bb6d>] worker_thread+0x138/0x21c
+ [<ffffffff8105ba35>] ? rescuer_thread+0x1fd/0x1fd
+ [<ffffffff8105f6b1>] kthread+0xa0/0xa8
+ [<ffffffff81073663>] ? trace_hardirqs_on_caller+0x12f/0x166
+ [<ffffffff81398384>] kernel_thread_helper+0x4/0x10
+ [<ffffffff81390534>] ? retint_restore_args+0x13/0x13
+ [<ffffffff8105f611>] ? __init_kthread_worker+0x5b/0x5b
+ [<ffffffff81398380>] ? gs_change+0x13/0x13
+---[ end trace 07b896d4bdef61b0 ]---
 
+This patch fixes it for me, please feel free to add it to your series:
+
+From: Mike Snitzer <snitzer@redhat.com>
+Date:   Tue Feb 21 13:55:42 2012 -0500
+
+    block: disallow certain bios from being merged into a request
+    
+    Not all WRITE bios are pure WRITEs (there may be other flags set,
+    e.g. REQ_WRITE_SAME).  Introduce bio_mergeable() and have
+    blk_rq_merge_ok() check that a given bio is mergeable.
+    
+    Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 3f73823..81484d3 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -468,7 +468,7 @@ int blk_attempt_req_merge(struct request_queue *q, struct request *rq,
+ 
+ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+ {
+-	if (!rq_mergeable(rq))
++	if (!rq_mergeable(rq) || !bio_mergeable(bio))
+ 		return false;
+ 
+ 	/* don't merge discard requests and secure discard requests */
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 5a505d7..7cf2d37 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -568,7 +568,10 @@ static inline void blk_clear_queue_full(struct request_queue *q, int sync)
+ #define rq_mergeable(rq)	\
+ 	(!((rq)->cmd_flags & RQ_NOMERGE_FLAGS) && (rq)->cmd_type == REQ_TYPE_FS)
+ 
+-
++#define BIO_NOMERGE_FLAGS	\
++	(REQ_DISCARD | REQ_WRITE_SAME)
++#define bio_mergeable(bio)	\
++	(!((bio)->bi_rw & BIO_NOMERGE_FLAGS))
+ 
+ /*
+  * q->prep_rq_fn return values
