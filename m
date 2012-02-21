@@ -1,72 +1,62 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm-io async WRITE_SAME results in iSCSI NULL pointer [was: Re:
- Write same support]
-Date: Tue, 21 Feb 2012 09:42:22 -0500
-Message-ID: <20120221144145.GA4743@redhat.com>
-References: <20120216200202.GA27311@redhat.com>
- <20120216210301.GA27404@redhat.com>
- <yq139a55rhr.fsf@sermon.lab.mkp.net>
- <20120220184623.GA29931@redhat.com>
- <20120220234410.GC31853@redhat.com>
- <yq1k43h2gm9.fsf@sermon.lab.mkp.net>
- <20120221031854.GA468@redhat.com>
- <yq1pqd825zt.fsf@sermon.lab.mkp.net>
- <20120221065504.GB468@redhat.com>
- <yq1linw1i6e.fsf@sermon.lab.mkp.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC PATCH 2/6] ACPI: Reference devices in ACPI Power Resource
+Date: Tue, 21 Feb 2012 11:06:39 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1202211059180.1366-100000@iolanthe.rowland.org>
+References: <CAF1ivSY4-cYsHjrM3g5D_Skt=mCxvKuLWc+fgGDEgE2XaZN+gQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53112 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751796Ab2BUOml (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Feb 2012 09:42:41 -0500
-Content-Disposition: inline
-In-Reply-To: <yq1linw1i6e.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAF1ivSY4-cYsHjrM3g5D_Skt=mCxvKuLWc+fgGDEgE2XaZN+gQ@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: "Zhang, Rui" <rui.zhang@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com, michaelc@cs.wisc.edu, Vivek Goyal <vgoyal@redhat.com>
 
-On Tue, Feb 21 2012 at  7:31am -0500,
-Martin K. Petersen <martin.petersen@oracle.com> wrote:
+On Tue, 21 Feb 2012, Lin Ming wrote:
 
-> >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
-> 
-> Mike> This patch fixed the issue for me (though I'm still missing why
-> Mike> bio->bi_phys_segments was 0 given blkdev_issue_write_same() sets
-> Mike> it):
-> 
-> Ok, I see what's going on. You have your own dm-specific make request
-> function. When cloning the original bio phys_segments isn't carried
-> over. And that's why we see 0 in sd.
+> > Then maybe you can use pm_runtime_no_callbacks() for the ZPODD devi=
+ce.
+> > It's explained in Documentation/power/runtime_pm.txt, and I use it =
+for
+> > USB interfaces.
+>=20
+> If pm_runtime_no_callbacks() is used, runtime PM sysfs attributes
+> won't be created.
+> Then how to disable ZPODD feature in userspace?
+>=20
+> Currently, I use "control" file of scsi device to enable/disable
+> ZPODD, for example
+> echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata0/host1/target1:0=
+:0/1:0:0:0/power/control
+> echo on > /sys/devices/pci0000:00/0000:00:1f.2/ata0/host1/target1:0:0=
+/1:0:0:0/power/control
 
-Ah, yes indeed.  I was just setting out to answer the why on it so
-you've saved me some time, thanks!
+You could get the same result by using the "control" file for the ATA
+port.
 
-> For discard this is not a problem because we hardwire things in sd.c
-> regardless of what was passed down. And besides you have special
-> handling for mapping discards in DM.
+> > The idea is that the ZPODD will never receive any runtime PM callba=
+cks
+> > from the PM core. =A0Instead the ATA port callback routines will be
+> > responsible for power management of the ZPODD device.
+>=20
+> Does the ATA port callback also responsible to resume its child?
+>=20
+> For example,
+> /sys/devices/pci0000:00/0000:00:1f.2/ata0/host1/target1:0:0/1:0:0:0/
+>=20
+> ata0 is resumed.
+>=20
+> Then who will be responsible to resume host1, target1:0:0 and 1:0:0:0=
+?
+>=20
+> Or do you mean that we don't need to resume these devices at all?
+> host1 and target1:0:0 are logical devices, but I think 1:0:0:0 is not=
+=2E
 
-sd allocating the page used for discard was what enabled DM to have
-discard support; otherwise cloning a discard required allocation of the
-page and it all got _really_ ugly.
+That's right.  It makes no difference whether the host and target=20
+are resumed or suspended.  In fact, you could also call=20
+pm_runtime_no_callbacks() for them.
 
-> I was trying to avoid perpetuating Christoph's horrible hack (his words,
-> not mine). But maybe it's better to do it the same way as for discard so
-> we only have to have to deal with pure evil in one place.
+Alan Stern
 
-Which hack are you referring to?  sd allocates the page used for
-discard (I had a hand in that work, along with tomo, and don't hold it
-to be too big a hack really).
-
-But I'm not immediately seeing a clean way to do so for WRITE SAME
-because the user provided buffer would need to get down to sd somehow.
-
-> I'll contemplate a bit...
-> 
-> 
-> PS. The good news is that your async stuff works when I set phys_segs to
-> 1 in sd.
-
-Yeah, it worked with the patch I provided in my previous mail too.  But
-ultimately the async stuff wasn't working for me due to merging.
