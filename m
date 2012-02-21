@@ -1,64 +1,56 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2/3] mpt2sas: Add a module parameter that permits overriding protection capabilities
-Date: Mon, 20 Feb 2012 20:36:23 -0500
-Message-ID: <1329788184-6477-3-git-send-email-martin.petersen@oracle.com>
-References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH V2] SCSI: Add runtime pm in the sd_check_events()
+Date: Mon, 20 Feb 2012 21:06:58 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1202202106210.17444-100000@netrider.rowland.org>
+References: <1329788086-17820-1-git-send-email-tianyu.lan@intel.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:33338 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752672Ab2BUBgi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2012 20:36:38 -0500
-In-Reply-To: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
+Received: from netrider.rowland.org ([192.131.102.5]:37260 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754997Ab2BUCG7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2012 21:06:59 -0500
+In-Reply-To: <1329788086-17820-1-git-send-email-tianyu.lan@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@hansenpartnership.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Nagalakshmi.Nandigama@lsi.com, Eric.Moore@lsi.com
+To: Lan Tianyu <tianyu.lan@intel.com>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+On Tue, 21 Feb 2012, Lan Tianyu wrote:
 
-Add a parameter that allows the host protection capabilities mask to be
-provided at module load time.
+> The sd_check_event() will be called periodly even when the device is in
+> the suspended status to check media event. The scsi_test_unit_ready() in
+> the sd_check_event() will issue scsi cmd request. Issuing scsi request when
+> the device is in the suspeneded status will cause problem. For example, when
+> a usb flash disk in the suspended status, scsi_test_unit_ready() issues a
+> scsi request. The request will be returned as failed because the usb device
+> is not active. The patch adds scsi_autopm_get_device() and scsi_autopm_put_device()
+> around scsi_test_unit_ready() in the sd_check_event() to resolve such problem.
+> 
+> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+> ---
+>  drivers/scsi/sd.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index c691fb5..2d18aa9 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1182,9 +1182,14 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+>  	retval = -ENODEV;
+>  
+>  	if (scsi_block_when_processing_errors(sdp)) {
+> +		retval = scsi_autopm_get_device(sdp);
+> +		if (retval)
+> +			goto out;
+> +
+>  		sshdr  = kzalloc(sizeof(*sshdr), GFP_KERNEL);
+>  		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES,
+>  					      sshdr);
+> +		scsi_autopm_put_device(sdp);
+>  	}
+>  
+>  	/* failed to execute TUR, assume media not present */
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Nagalakshmi.Nandigama@lsi.com
-Cc: Eric.Moore@lsi.com
----
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |   15 +++++++++++++--
- 1 files changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 9085d3e..f398300 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -119,6 +119,11 @@ module_param(diag_buffer_enable, int, 0);
- MODULE_PARM_DESC(diag_buffer_enable, " post diag buffers "
- 	"(TRACE=1/SNAPSHOT=2/EXTENDED=4/default=0)");
- 
-+/* permit overriding the host protection capabilities mask (EEDP/T10 PI) */
-+static int prot_mask = 0;
-+module_param(prot_mask, int, 0);
-+MODULE_PARM_DESC(prot_mask, " host protection capabilities mask, def=7 ");
-+
- /**
-  * struct sense_info - common structure for obtaining sense keys
-  * @skey: sense key
-@@ -8007,8 +8012,14 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto out_add_shost_fail;
- 	}
- 
--	scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
--	    | SHOST_DIF_TYPE2_PROTECTION | SHOST_DIF_TYPE3_PROTECTION);
-+	/* register EEDP capabilities with SCSI layer */
-+	if (prot_mask)
-+		scsi_host_set_prot(shost, prot_mask);
-+	else
-+		scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
-+				   | SHOST_DIF_TYPE2_PROTECTION
-+				   | SHOST_DIF_TYPE3_PROTECTION);
-+
- 	scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
- 
- 	/* event thread */
--- 
-1.7.8.3.21.gab8a7
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
