@@ -1,103 +1,72 @@
-From: Jan Schmidt <list.linux-scsi@jan-o-sch.net>
-Subject: Re: mpt2sas: BUG: using smp_processor_id() in preemptible
-Date: Tue, 21 Feb 2012 15:24:20 +0100
-Message-ID: <4F43A914.8070403@jan-o-sch.net>
-References: <4F425105.4090505@jan-o-sch.net>	 <4565AEA676113A449269C2F3A549520FB5AE22B0@cosmail03.lsi.com>	 <4F435D59.1000302@jan-o-sch.net> <1329833936.2922.10.camel@dabdike.int.hansenpartnership.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-io async WRITE_SAME results in iSCSI NULL pointer [was: Re:
+ Write same support]
+Date: Tue, 21 Feb 2012 09:42:22 -0500
+Message-ID: <20120221144145.GA4743@redhat.com>
+References: <20120216200202.GA27311@redhat.com>
+ <20120216210301.GA27404@redhat.com>
+ <yq139a55rhr.fsf@sermon.lab.mkp.net>
+ <20120220184623.GA29931@redhat.com>
+ <20120220234410.GC31853@redhat.com>
+ <yq1k43h2gm9.fsf@sermon.lab.mkp.net>
+ <20120221031854.GA468@redhat.com>
+ <yq1pqd825zt.fsf@sermon.lab.mkp.net>
+ <20120221065504.GB468@redhat.com>
+ <yq1linw1i6e.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brockman.in8.de ([85.214.220.56]:54049 "EHLO mail.in8.de"
+Received: from mx1.redhat.com ([209.132.183.28]:53112 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753255Ab2BUOYW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Feb 2012 09:24:22 -0500
-In-Reply-To: <1329833936.2922.10.camel@dabdike.int.hansenpartnership.com>
+	id S1751796Ab2BUOml (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Feb 2012 09:42:41 -0500
+Content-Disposition: inline
+In-Reply-To: <yq1linw1i6e.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com, michaelc@cs.wisc.edu, Vivek Goyal <vgoyal@redhat.com>
 
-On 21.02.2012 15:18, James Bottomley wrote:
-> On Tue, 2012-02-21 at 10:01 +0100, Jan Schmidt wrote:
->> Hi Eric,
->>
->> On 21.02.2012 00:06, Moore, Eric wrote:
->>> Jan - the smp_processor_id() is part of NUMA support which I added over a year ago. I don't see any problem with the driver running on sles11sp2 which has btrfs support ( I'm not sure  if CONFIG_DEBUG_PREEMPT is turned on as I have not checked).   Any theory why its oopsing in smp_processor_id() ?
->>
->> -- excerpt from include/linux/smp.h --
->> /*
->>  * smp_processor_id(): get the current CPU ID.
->>  *
->>  * if DEBUG_PREEMPT is enabled then we check whether it is
->>  * used in a preemption-safe way. (smp_processor_id() is safe
->>  * if it's used in a preemption-off critical section, or in
->>  * a thread that is bound to the current CPU.)
->> [...]
->>  */
->> #ifdef CONFIG_DEBUG_PREEMPT
->>   extern unsigned int debug_smp_processor_id(void);
->> # define smp_processor_id() debug_smp_processor_id()
->> #else
->> # define smp_processor_id() raw_smp_processor_id()
->> #endif
->>  
->> #define get_cpu()               ({ preempt_disable(); smp_processor_id(); })
->> #define put_cpu()               preempt_enable()
->> -- end --
->>
->> ... and ...
->>
->> -- excerpt from drivers/scsi/mpt2sas/mpt2sas_base.c --
->> static inline u8 
->> _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
->> {
->>         return ioc->cpu_msix_table[smp_processor_id()]; 
->> }
->> -- end --
->>
->> Suggestion: Use get_cpu() and put_cpu().
+On Tue, Feb 21 2012 at  7:31am -0500,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
+
+> >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
 > 
-> you mean
+> Mike> This patch fixed the issue for me (though I'm still missing why
+> Mike> bio->bi_phys_segments was 0 given blkdev_issue_write_same() sets
+> Mike> it):
 > 
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index 0b2c955..5235068 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -1785,7 +1785,9 @@ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
->  static inline u8
->  _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
->  {
-> -	return ioc->cpu_msix_table[smp_processor_id()];
-> +	int cpu = get_cpu();
-> +	put_cpu();
-> +	return ioc->cpu_msix_table[cpu];
->  }
->  
->  /**
+> Ok, I see what's going on. You have your own dm-specific make request
+> function. When cloning the original bio phys_segments isn't carried
+> over. And that's why we see 0 in sd.
+
+Ah, yes indeed.  I was just setting out to answer the why on it so
+you've saved me some time, thanks!
+
+> For discard this is not a problem because we hardwire things in sd.c
+> regardless of what was passed down. And besides you have special
+> handling for mapping discards in DM.
+
+sd allocating the page used for discard was what enabled DM to have
+discard support; otherwise cloning a discard required allocation of the
+page and it all got _really_ ugly.
+
+> I was trying to avoid perpetuating Christoph's horrible hack (his words,
+> not mine). But maybe it's better to do it the same way as for discard so
+> we only have to have to deal with pure evil in one place.
+
+Which hack are you referring to?  sd allocates the page used for
+discard (I had a hand in that work, along with tomo, and don't hold it
+to be too big a hack really).
+
+But I'm not immediately seeing a clean way to do so for WRITE SAME
+because the user provided buffer would need to get down to sd somehow.
+
+> I'll contemplate a bit...
 > 
 > 
-> This is the I/O hot path we're talking about.  The point about this use
-> of smp_processor_id() is that if the block layer doesn't specify a CPU
-> affinity for the request and we're using MSI interrupt steering, we have
-> to (because the MSIs steer to different CPUs), so we just fill in the
-> approximation of the current CPU ... we don't care that it be exactly
-> accurate at the time.  We need the lightest weight way of getting
-> current CPU (and we don't care if it changes because of pre-empt at the
-> next instruction).
+> PS. The good news is that your async stuff works when I set phys_segs to
+> 1 in sd.
 
-Okay, maybe I [...]-ed out the most important part of the comment from
-include/linux/smp.h then. It says:
-
-[...]
- * NOTE: raw_smp_processor_id() is for internal use only
- * (smp_processor_id() is the preferred variant), but in rare
- * instances it might also be used to turn off false positives
- * (i.e. smp_processor_id() use that the debugging code reports but
- * which use for some reason is legal). Don't use this to hack around
- * the warning message, as your code might not work under PREEMPT.
- */
-
-For this case, raw_smp_processor_id() seems to be the best choice.
-
-Thanks!
--Jan
+Yeah, it worked with the patch I provided in my previous mail too.  But
+ultimately the async stuff wasn't working for me due to merging.
