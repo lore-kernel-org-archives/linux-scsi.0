@@ -1,37 +1,47 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 09/11] iscsi_transport: Added Ping support
-Date: Tue, 21 Feb 2012 16:58:34 -0600
-Message-ID: <4F44219A.6070207@cs.wisc.edu>
-References: <1329138050-1042-1-git-send-email-vikas.chaudhary@qlogic.com>	<1329138050-1042-10-git-send-email-vikas.chaudhary@qlogic.com>	<CAJZOPZLdXtdLyTstWLu8A1Q454LD4k-0+HoDdqEHwFzbs+Ro6g@mail.gmail.com>	<4F441BC5.4000301@cs.wisc.edu> <CAJZOPZKo5O8GMO9dz09UAvX8gHd5bT-Y2MdRkckh9dv2Q=m1jA@mail.gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-io async WRITE_SAME results in iSCSI NULL pointer [was: Re:
+ Write same support]
+Date: Tue, 21 Feb 2012 18:36:35 -0500
+Message-ID: <20120221233635.GB9079@redhat.com>
+References: <20120220184623.GA29931@redhat.com>
+ <20120220234410.GC31853@redhat.com>
+ <yq1k43h2gm9.fsf@sermon.lab.mkp.net>
+ <20120221031854.GA468@redhat.com>
+ <yq1pqd825zt.fsf@sermon.lab.mkp.net>
+ <20120221065504.GB468@redhat.com>
+ <yq1linw1i6e.fsf@sermon.lab.mkp.net>
+ <20120221144145.GA4743@redhat.com>
+ <20120221193312.GA6565@redhat.com>
+ <yq14nuj27qu.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:41280 "EHLO sabe.cs.wisc.edu"
+Received: from mx1.redhat.com ([209.132.183.28]:10103 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753162Ab2BUW6K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Feb 2012 17:58:10 -0500
-In-Reply-To: <CAJZOPZKo5O8GMO9dz09UAvX8gHd5bT-Y2MdRkckh9dv2Q=m1jA@mail.gmail.com>
+	id S1754220Ab2BUXgv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Feb 2012 18:36:51 -0500
+Content-Disposition: inline
+In-Reply-To: <yq14nuj27qu.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Or Gerlitz <or.gerlitz@gmail.com>
-Cc: vikas.chaudhary@qlogic.com, jbottomley@parallels.com, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, lalit.chandivade@qlogic.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com, michaelc@cs.wisc.edu, Vivek Goyal <vgoyal@redhat.com>
 
-On 02/21/2012 04:39 PM, Or Gerlitz wrote:
-> On Wed, Feb 22, 2012 at 12:33 AM, Mike Christie <michaelc@cs.wisc.edu> wrote:
->> This is network based. ICMP pings. The stuff we have today is iscsi
->> based pings. So you can do some basic network diag type of stuff.
+On Tue, Feb 21 2012 at  4:31pm -0500,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
+
+> >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
 > 
-> So what's wrong with plain ICMP pings... or is this is for
-> cards/drivers which don't expose plain network interface to the
-> kernel?
+> >> Yeah, it worked with the patch I provided in my previous mail too.
+> >> But ultimately the async stuff wasn't working for me due to merging.
+> 
+> New writesame3 branch on kernel.org. Please give it a whirl...
 
-Yeah, the latter. There is a network driver for the card, but the
-networking stack is completely different for the 2 functions. The
-network driver is a normal old net device driver. Then for the iscsi
-function they basically have a complete network stack in fw. The
-networking settings for the 2 functions are going to be separate. So the
-iscsi function port has a different ip and MAC than the network driver
-one. The ip could then be on different subnets, different vlans, etc. So
-you might not be able to reach the target from the normal network driver
-net device.
+Looks good.  And it works great (with both your improved
+blkdev_issue_write_same interface and the dm_kcopyd_zero interface).
+
+Please feel free to add my Acked-by: Mike Snitzer <snitzer@redhat.com>
+to the entire set.
+
+(and thanks for working with me on chasing down and/or explaining the
+various issues I was seeing!)
