@@ -1,50 +1,95 @@
-From: Candid Shot <candid_shot_1@yahoo.com>
-Subject: scsi (sg) device status vs FC connectivity
-Date: Tue, 21 Feb 2012 13:35:07 -0800 (PST)
-Message-ID: <1329860107.22873.YahooMailNeo@web46407.mail.sp1.yahoo.com>
-Reply-To: Candid Shot <candid_shot_1@yahoo.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
+Date: Tue, 21 Feb 2012 22:43:52 +0100
+Message-ID: <201202212243.52788.rjw@sisk.pl>
+References: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org> <201202210013.02397.rjw@sisk.pl> <1329786806.1511.54.camel@rui.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: Text/Plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm19.bullet.mail.sp2.yahoo.com ([98.139.91.89]:41153 "HELO
-	nm19.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753033Ab2BUVfI convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Feb 2012 16:35:08 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1329786806.1511.54.camel@rui.sh.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Zhang Rui <rui.zhang@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-(I hope this list is the right place to ask SG Driver related question =
-=2E.)
+On Tuesday, February 21, 2012, Zhang Rui wrote:
+> On =E4=BA=8C, 2012-02-21 at 00:13 +0100, Rafael J. Wysocki wrote:
+> > > So how to handle this case, say, for a device in the generic PM d=
+omain
+> > > that supports 2 different low power state, D1 and D2.
+> > > D2 is deeper than D1, and it is kind of cold power off with remot=
+e
+> > > wakeup disabled. If the driver needs to runtime suspend the devic=
+e with
+> > > remote wakeup enabled, it should set the device to D1, but it can=
+ not
+> > > set the RPM_SUSPEND?
+> >=20
+> > The device is regarded as "suspended" if its bus type's (or PM doma=
+in's)
+> > .runtime_suspend() callback has been executed and has returned 0 (s=
+uccess).
+> > What the callback has actually done is not of any interest to the c=
+ore.
+> >=20
+> right.
+>=20
+> > Now, the D1 and D2 case has to be handled by the bus (PM domain) an=
+d
+> > driver.  In both cases the device will be regarded as "suspended" a=
+nd the
+> > core doesn't track the actual device state.
+> >=20
+>=20
+>=20
+> > I think the problem here is that the PCI bus type's runtime PM call=
+backs
+> > aren't very sophisticated (they just choose the lowest possible low=
+-power
+> > state and attempt to put the device into it) and I can see two poss=
+ible
+> > ways to address that.
+> >=20
+> > First, you can modify pci_pm_runtime_suspend/_resume() to handle mu=
+ltiple
+> > states (for example, to choose the target low-power state more inte=
+lligently
+> > than they do right now).  Second, you can add a PM domain that will=
+ do what
+> > you want from pci_pm_runtime_suspend/_resume() for a specific set o=
+f devices.
+> >=20
+> But RPM_SUSPENDED is set by PM core after .runtime_suspend() being
+> invoked, even if device is in D1 instead of D2, right?
+>=20
+> So the problem is that, if a device in a generic power domain support=
+s
+> two low power state, one is compatible with generic power domain powe=
+r
+> off and another is not, how can the device driver pass this informati=
+on
+> to the generic power domain, i.e. how to runtime suspend a device whi=
+le
+> keep the generic power domain always on?
 
-Background: A FC cable-pull is simulated by disabling the FC switch (Br=
-ocade) port.
+There are two "low-power" levels in the generic PM domains framework.  =
+The
+first one is the per-device low-power in which devices are put into the=
+ir
+individual (programmable) low-power states by the domain .dev_ops->stop=
+()
+callback.  The second one is when .stop() has been called for all devic=
+es,
+so presumably all of them are in programmable low-power states and it's
+possible to switch the entire domain off.  This is done by the domain
+=2Epower_off() callback.
 
-
-While /sys/class/fc_host/hostx/port_state might confirm the FC connecti=
-vity is missing,
-
-/proc/scsi/sg/devices will show the scsi device to be 'online'.
-
-My goal is to be able to return an error to the application, should a c=
-able-pull happen.
-
-Is there a way to be able to tweak this behavior where the scsi driver =
-is able to look at port events,
-and possibly return errors during read/write operations?=A0
+It seems that the trick might be to make .dev_ops->stop() avoid turning=
+ off
+power resources for the last suspending device in the domain and leave =
+that
+to domain .power_off().
 
 Thanks,
-Raj.
-
-Platform: =A0=A0Adapter: EMC LPe12002-E 8Gb 2-port PCIe Fibre Channel A=
-dapter on PCI
-=A0 =A0 =A0 =A0 =A0 =A0 Server: =A0Linux ostqa-media3a.sie.hds.com 2.6.=
-18-238.el5 #1 SMP Sun Dec 19 14:22:44 EST 2010 x86_64 x86_64 x86_64 GNU=
-/Linux
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Rafael
