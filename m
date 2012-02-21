@@ -1,46 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: dm-io async WRITE_SAME results in iSCSI NULL pointer [was: Re: Write same support]
-Date: Tue, 21 Feb 2012 14:56:34 -0500
-Message-ID: <yq18vjw0xl9.fsf@sermon.lab.mkp.net>
-References: <1327969892-5090-1-git-send-email-martin.petersen@oracle.com>
-	<20120216200202.GA27311@redhat.com>
-	<20120216210301.GA27404@redhat.com>
+Date: Tue, 21 Feb 2012 16:31:53 -0500
+Message-ID: <yq14nuj27qu.fsf@sermon.lab.mkp.net>
+References: <20120216210301.GA27404@redhat.com>
 	<yq139a55rhr.fsf@sermon.lab.mkp.net>
 	<20120220184623.GA29931@redhat.com>
 	<20120220234410.GC31853@redhat.com>
 	<yq1k43h2gm9.fsf@sermon.lab.mkp.net> <20120221031854.GA468@redhat.com>
 	<yq1pqd825zt.fsf@sermon.lab.mkp.net> <20120221065504.GB468@redhat.com>
-	<20120221194717.GF21618@redhat.com>
+	<yq1linw1i6e.fsf@sermon.lab.mkp.net>
+	<20120221144145.GA4743@redhat.com> <20120221193312.GA6565@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:42821 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754295Ab2BUT4t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2012 14:56:49 -0500
-In-Reply-To: <20120221194717.GF21618@redhat.com> (Vivek Goyal's message of
-	"Tue, 21 Feb 2012 14:47:17 -0500")
+Received: from acsinet15.oracle.com ([141.146.126.227]:35495 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033Ab2BUVcK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2012 16:32:10 -0500
+In-Reply-To: <20120221193312.GA6565@redhat.com> (Mike Snitzer's message of
+	"Tue, 21 Feb 2012 14:33:12 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com, michaelc@cs.wisc.edu
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com, michaelc@cs.wisc.edu, Vivek Goyal <vgoyal@redhat.com>
 
->>>>> "Vivek" == Vivek Goyal <vgoyal@redhat.com> writes:
+>>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
 
-Vivek> First we returned "false" from bio_has_data() and skipped above
-Vivek> assignment, in blk_rq_bio_prep() and now we are trying to make up
-Vivek> for it.
+>> Yeah, it worked with the patch I provided in my previous mail too.
+>> But ultimately the async stuff wasn't working for me due to merging.
 
-Vivek> Maybe returning false from bio_has_data() for WRITE_SAME is not
-Vivek> such a good idea because this bio has one logical block of data.
-
-bio_has_data() is used for two different things. In my current tree I
-split it up into bio_has_data() and bio_is_rw().
-
-But given Mike's merge observation I think I'll take a step back and see
-if I can come up with a better way to handle these
-REQ_I_CANT_BELIEVE_ITS_NOT_FS requests in general. I really don't want
-to have all the special cases scattered all over the place.
+New writesame3 branch on kernel.org. Please give it a whirl...
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
