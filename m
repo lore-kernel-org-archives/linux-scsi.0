@@ -1,44 +1,41 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] qla2xxx: handle default case in
- qla2x00_request_firmware()
-Date: Tue, 21 Feb 2012 10:29:40 +0300
-Message-ID: <20120221072939.GB6896@elgon.mountain>
+Subject: [patch] [SCSI] qla4xxx: silence a Sparse warning
+Date: Tue, 21 Feb 2012 10:30:12 +0300
+Message-ID: <20120221073011.GC6896@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:27005 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425Ab2BUH3v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2012 02:29:51 -0500
+Received: from acsinet15.oracle.com ([141.146.126.227]:50574 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752519Ab2BUHaW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2012 02:30:22 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Ravi Anand <ravi.anand@qlogic.com>
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, iscsi-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-This silences a static checker warning.  Also we're always adding new
-types of firmware, so it might fix a bug in real life some day.
+Sparse complains that the definition of this funciton doesn't match the
+implementation.  The "uint32_t aen_code" should be an enum.
+
+drivers/scsi/qla4xxx/ql4_os.c:2966:5: error: symbol
+	'qla4xxx_post_aen_work' redeclared with different type
+	(originally declared at drivers/scsi/qla4xxx/ql4_glbl.h:184)
+	- incompatible argument 2 (different signedness)
 
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 094af74..a2f9992 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4058,7 +4058,6 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
- 	struct qla_hw_data *ha = vha->hw;
- 	struct fw_blob *blob;
- 
--	blob = NULL;
- 	if (IS_QLA2100(ha)) {
- 		blob = &qla_fw_blobs[FW_ISP21XX];
- 	} else if (IS_QLA2200(ha)) {
-@@ -4079,6 +4078,8 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
- 		blob = &qla_fw_blobs[FW_ISP2031];
- 	} else if (IS_QLA8031(ha)) {
- 		blob = &qla_fw_blobs[FW_ISP8031];
-+	} else {
-+		return NULL;
- 	}
- 
- 	mutex_lock(&qla_fw_lock);
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index 954ba91..71bbc07 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -181,7 +181,8 @@ int qla4xxx_flash_ddb_change(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ int qla4xxx_ddb_change(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ 		       struct ddb_entry *ddb_entry, uint32_t state);
+ void qla4xxx_build_ddb_list(struct scsi_qla_host *ha, int is_reset);
+-int qla4xxx_post_aen_work(struct scsi_qla_host *ha, uint32_t aen_code,
++int qla4xxx_post_aen_work(struct scsi_qla_host *ha,
++			  enum iscsi_host_event_code aen_code,
+ 			  uint32_t data_size, uint8_t *data);
+ int qla4xxx_ping_iocb(struct scsi_qla_host *ha, uint32_t options,
+ 		      uint32_t payload_size, uint32_t pid, uint8_t *ipaddr);
