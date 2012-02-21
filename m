@@ -1,35 +1,50 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: dm-io async WRITE_SAME results in iSCSI NULL pointer [was: Re: Write same support]
-Date: Tue, 21 Feb 2012 16:31:53 -0500
-Message-ID: <yq14nuj27qu.fsf@sermon.lab.mkp.net>
-References: <20120216210301.GA27404@redhat.com>
-	<yq139a55rhr.fsf@sermon.lab.mkp.net>
-	<20120220184623.GA29931@redhat.com>
-	<20120220234410.GC31853@redhat.com>
-	<yq1k43h2gm9.fsf@sermon.lab.mkp.net> <20120221031854.GA468@redhat.com>
-	<yq1pqd825zt.fsf@sermon.lab.mkp.net> <20120221065504.GB468@redhat.com>
-	<yq1linw1i6e.fsf@sermon.lab.mkp.net>
-	<20120221144145.GA4743@redhat.com> <20120221193312.GA6565@redhat.com>
+From: Candid Shot <candid_shot_1@yahoo.com>
+Subject: scsi (sg) device status vs FC connectivity
+Date: Tue, 21 Feb 2012 13:35:07 -0800 (PST)
+Message-ID: <1329860107.22873.YahooMailNeo@web46407.mail.sp1.yahoo.com>
+Reply-To: Candid Shot <candid_shot_1@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:35495 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753033Ab2BUVcK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2012 16:32:10 -0500
-In-Reply-To: <20120221193312.GA6565@redhat.com> (Mike Snitzer's message of
-	"Tue, 21 Feb 2012 14:33:12 -0500")
+Received: from nm19.bullet.mail.sp2.yahoo.com ([98.139.91.89]:41153 "HELO
+	nm19.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753033Ab2BUVfI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Feb 2012 16:35:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jaxboe@fusionio.com, dm-devel@redhat.com, michaelc@cs.wisc.edu, Vivek Goyal <vgoyal@redhat.com>
+To: linux-scsi@vger.kernel.org
 
->>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
+(I hope this list is the right place to ask SG Driver related question =
+=2E.)
 
->> Yeah, it worked with the patch I provided in my previous mail too.
->> But ultimately the async stuff wasn't working for me due to merging.
+Background: A FC cable-pull is simulated by disabling the FC switch (Br=
+ocade) port.
 
-New writesame3 branch on kernel.org. Please give it a whirl...
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+While /sys/class/fc_host/hostx/port_state might confirm the FC connecti=
+vity is missing,
+
+/proc/scsi/sg/devices will show the scsi device to be 'online'.
+
+My goal is to be able to return an error to the application, should a c=
+able-pull happen.
+
+Is there a way to be able to tweak this behavior where the scsi driver =
+is able to look at port events,
+and possibly return errors during read/write operations?=A0
+
+Thanks,
+Raj.
+
+Platform: =A0=A0Adapter: EMC LPe12002-E 8Gb 2-port PCIe Fibre Channel A=
+dapter on PCI
+=A0 =A0 =A0 =A0 =A0 =A0 Server: =A0Linux ostqa-media3a.sie.hds.com 2.6.=
+18-238.el5 #1 SMP Sun Dec 19 14:22:44 EST 2010 x86_64 x86_64 x86_64 GNU=
+/Linux
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
