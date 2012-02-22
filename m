@@ -1,51 +1,95 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: scsi (sg) device status vs FC connectivity
-Date: Wed, 22 Feb 2012 03:02:33 -0600
-Message-ID: <4F44AF29.6020608@cs.wisc.edu>
-References: <1329860107.22873.YahooMailNeo@web46407.mail.sp1.yahoo.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/1] scsi scan: don't fail scans when host is in recovery
+Date: Wed, 22 Feb 2012 10:56:58 +0100
+Message-ID: <4F44BBEA.3020400@suse.de>
+References: <1314250598-2852-1-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:42031 "EHLO sabe.cs.wisc.edu"
+Received: from cantor2.suse.de ([195.135.220.15]:32998 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752950Ab2BVJCj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2012 04:02:39 -0500
-In-Reply-To: <1329860107.22873.YahooMailNeo@web46407.mail.sp1.yahoo.com>
+	id S1752877Ab2BVJ5A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2012 04:57:00 -0500
+In-Reply-To: <1314250598-2852-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Candid Shot <candid_shot_1@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@parallels.com>
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-On 02/21/2012 03:35 PM, Candid Shot wrote:
-> (I hope this list is the right place to ask SG Driver related question ..)
-> 
-> Background: A FC cable-pull is simulated by disabling the FC switch (Brocade) port.
-> 
-> 
-> While /sys/class/fc_host/hostx/port_state might confirm the FC connectivity is missing,
-> 
-> /proc/scsi/sg/devices will show the scsi device to be 'online'.
-> 
-> My goal is to be able to return an error to the application, should a cable-pull happen.
-> 
-> Is there a way to be able to tweak this behavior where the scsi driver is able to look at port events,
-> and possibly return errors during read/write operations? 
+On 08/25/2011 07:36 AM, michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
+>=20
+> The problem is that if we are doing a scsi scan then the device goes
+> into recovery then we will wait for the recovery to complete. It wait=
+s
+> because scsi-ml will send inquiries or report luns and the queueing c=
+ode
+> will have been blocked due to the host not being ready. However, if w=
+e
+> are in recovery and then a scan is started the scan will silently fai=
+l
+> and some devices will not be added.
+>=20
+> It is easy to hit the problem where devices do not show up with
+> FC where we are doing tests that disrupt the target controllers.
+> When the controller is disruprted (reboot, or setting firmware, etc),
+> and we cause the dev loss tmo to fire then devices will be removed
+> Then when the problem has been fixed, the rport will be scanned and
+> devices should be added back. But if we cause another disruption befo=
+re
+> scanning has started then devices will not get added back. If the pro=
+blem
+> is not started until the scan is started then the devices will be add=
+ed
+> back.
+>=20
+> This patch fixes that problem by not failing scans when the host
+> is in recovery. We will let scsi-ml send the IO and let the queueing
+> and scsi error handling deal with it like is done if we went into
+> recovery while scanning.
+>=20
+> For recovery cases where the host is being torn down then with the
+> patch we will still fail the scan since there is not point in scannin=
+g.
+>=20
+> Patch was made and tested over scsi-misc.
+>=20
+>=20
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> ---
+>  include/scsi/scsi_host.h |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index f1f2644..22b7b23 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -791,7 +791,8 @@ static inline struct device *scsi_get_device(stru=
+ct Scsi_Host *shost)
+>   **/
+>  static inline int scsi_host_scan_allowed(struct Scsi_Host *shost)
+>  {
+> -	return shost->shost_state =3D=3D SHOST_RUNNING;
+> +	return shost->shost_state =3D=3D SHOST_RUNNING ||
+> +	       shost->shost_state =3D=3D SHOST_RECOVERY;
+>  }
+> =20
+>  extern void scsi_unblock_requests(struct Scsi_Host *);
 
+James, ping?
+Any reason it was not included?
 
-You can listen on the fc scsi netlink socket for fc_host_event_code. You
-get values like:
+Cheers,
 
-
-        { FCH_EVT_LIP,                  "lip" },
-        { FCH_EVT_LINKUP,               "link_up" },
-        { FCH_EVT_LINKDOWN,             "link_down" },
-        { FCH_EVT_LIPRESET,             "lip_reset" },
-        { FCH_EVT_RSCN,                 "rscn" },
-        { FCH_EVT_ADAPTER_CHANGE,       "adapter_chg" },
-        { FCH_EVT_PORT_UNKNOWN,         "port_unknown" },
-        { FCH_EVT_PORT_ONLINE,          "port_online" },
-        { FCH_EVT_PORT_OFFLINE,         "port_offline" },
-        { FCH_EVT_PORT_FABRIC,          "port_fabric" },
-        { FCH_EVT_LINK_UNKNOWN,         "link_unknown" },
-        { FCH_EVT_VENDOR_UNIQUE,        "vendor_unique" },
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
