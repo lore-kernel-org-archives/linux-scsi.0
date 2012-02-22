@@ -1,112 +1,170 @@
-From: Zhang Rui <rui.zhang@intel.com>
-Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
-Date: Wed, 22 Feb 2012 08:57:47 +0800
-Message-ID: <1329872267.1511.76.camel@rui.sh.intel.com>
-References: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org>
-	 <201202210013.02397.rjw@sisk.pl>
-	 <1329786806.1511.54.camel@rui.sh.intel.com>
-	 <201202212243.52788.rjw@sisk.pl>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: [PATCH] Fix NULL pointer dereference in sd_revalidate_disk
+Date: Wed, 22 Feb 2012 10:01:53 +0900
+Message-ID: <4F443E81.2060402@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <201202212243.52788.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Naveen Goswamy <naveen.goswamy@polymtl.ca>, James Bottomley <James.Bottomley@HansenPartnership.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Dave Jones <davej@redhat.com>, sgruszka@redhat.com, Huajun Li <huajun.li.lee@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On =E4=BA=8C, 2012-02-21 at 22:43 +0100, Rafael J. Wysocki wrote:
-> On Tuesday, February 21, 2012, Zhang Rui wrote:
-> > On =E4=BA=8C, 2012-02-21 at 00:13 +0100, Rafael J. Wysocki wrote:
-> > > > So how to handle this case, say, for a device in the generic PM=
- domain
-> > > > that supports 2 different low power state, D1 and D2.
-> > > > D2 is deeper than D1, and it is kind of cold power off with rem=
-ote
-> > > > wakeup disabled. If the driver needs to runtime suspend the dev=
-ice with
-> > > > remote wakeup enabled, it should set the device to D1, but it c=
-an not
-> > > > set the RPM_SUSPEND?
-> > >=20
-> > > The device is regarded as "suspended" if its bus type's (or PM do=
-main's)
-> > > .runtime_suspend() callback has been executed and has returned 0 =
-(success).
-> > > What the callback has actually done is not of any interest to the=
- core.
-> > >=20
-> > right.
-> >=20
-> > > Now, the D1 and D2 case has to be handled by the bus (PM domain) =
-and
-> > > driver.  In both cases the device will be regarded as "suspended"=
- and the
-> > > core doesn't track the actual device state.
-> > >=20
-> >=20
-> >=20
-> > > I think the problem here is that the PCI bus type's runtime PM ca=
-llbacks
-> > > aren't very sophisticated (they just choose the lowest possible l=
-ow-power
-> > > state and attempt to put the device into it) and I can see two po=
-ssible
-> > > ways to address that.
-> > >=20
-> > > First, you can modify pci_pm_runtime_suspend/_resume() to handle =
-multiple
-> > > states (for example, to choose the target low-power state more in=
-telligently
-> > > than they do right now).  Second, you can add a PM domain that wi=
-ll do what
-> > > you want from pci_pm_runtime_suspend/_resume() for a specific set=
- of devices.
-> > >=20
-> > But RPM_SUSPENDED is set by PM core after .runtime_suspend() being
-> > invoked, even if device is in D1 instead of D2, right?
-> >=20
-> > So the problem is that, if a device in a generic power domain suppo=
-rts
-> > two low power state, one is compatible with generic power domain po=
-wer
-> > off and another is not, how can the device driver pass this informa=
-tion
-> > to the generic power domain, i.e. how to runtime suspend a device w=
-hile
-> > keep the generic power domain always on?
->=20
-> There are two "low-power" levels in the generic PM domains framework.=
-  The
-> first one is the per-device low-power in which devices are put into t=
-heir
-> individual (programmable) low-power states by the domain .dev_ops->st=
-op()
-> callback.  The second one is when .stop() has been called for all dev=
-ices,
-> so presumably all of them are in programmable low-power states and it=
-'s
-> possible to switch the entire domain off.  This is done by the domain
-> .power_off() callback.
->=20
-> It seems that the trick might be to make .dev_ops->stop() avoid turni=
-ng off
-> power resources for the last suspending device in the domain and leav=
-e that
-> to domain .power_off().
->=20
-Yeah, that's a good idea.
-so how about this proposal for ZPODD.
-1. create an ACPI generic power domain for every device that has an _PR=
-3
-   method, the SATA port in this case.
-2. add sr device to the generic power domain via genpd APIs.
-   this can be done either in ATA port driver or in sr driver.
-3. the .power_off callback of the generic power domain
-   a) checks if all the devices allows power off (for the trick above)
-   b) turns off the power resources in _PR3.
+Since 2.6.39 (1196f8b), when a driver returns -ENOMEDIUM for open(),
+__blkdev_get() calls rescan_partitions() to remove
+in-kernel partition structures and raise KOBJ_CHANGE uevent.
 
-thanks,
-rui
+However it ends up calling driver's revalidate_disk without open
+and could cause oops.
 
+In the case of SCSI:
+
+  process A                  process B
+  ----------------------------------------------
+  sys_open
+    __blkdev_get
+      sd_open
+        returns -ENOMEDIUM
+                             scsi_remove_device
+                               <scsi_device torn down>
+      rescan_partitions
+        sd_revalidate_disk
+          <oops>
+
+Oopses are reported here:
+http://marc.info/?l=linux-scsi&m=132388619710052
+
+This patch separates the partition invalidation from rescan_partitions()
+and use it for -ENOMEDIUM case. 
+
+Reported-by: Huajun Li <huajun.li.lee@gmail.com>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+--
+ block/partition-generic.c |   48 ++++++++++++++++++++++++++++++++++++++--------
+ fs/block_dev.c            |   16 +++++++++++----
+ include/linux/genhd.h     |    1 
+ 3 files changed, 53 insertions(+), 12 deletions(-)
+
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index fe23ee7..e61d319 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -596,6 +596,7 @@ extern char *disk_name (struct gendisk *hd, int partno, char *buf);
+ 
+ extern int disk_expand_part_tbl(struct gendisk *disk, int target);
+ extern int rescan_partitions(struct gendisk *disk, struct block_device *bdev);
++extern int invalidate_partitions(struct gendisk *disk, struct block_device *bdev);
+ extern struct hd_struct * __must_check add_partition(struct gendisk *disk,
+ 						     int partno, sector_t start,
+ 						     sector_t len, int flags,
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 0e575d1..5e9f198 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -1183,8 +1183,12 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 			 * The latter is necessary to prevent ghost
+ 			 * partitions on a removed medium.
+ 			 */
+-			if (bdev->bd_invalidated && (!ret || ret == -ENOMEDIUM))
+-				rescan_partitions(disk, bdev);
++			if (bdev->bd_invalidated) {
++				if (!ret)
++					rescan_partitions(disk, bdev);
++				else if (ret == -ENOMEDIUM)
++					invalidate_partitions(disk, bdev);
++			}
+ 			if (ret)
+ 				goto out_clear;
+ 		} else {
+@@ -1214,8 +1218,12 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 			if (bdev->bd_disk->fops->open)
+ 				ret = bdev->bd_disk->fops->open(bdev, mode);
+ 			/* the same as first opener case, read comment there */
+-			if (bdev->bd_invalidated && (!ret || ret == -ENOMEDIUM))
+-				rescan_partitions(bdev->bd_disk, bdev);
++			if (bdev->bd_invalidated) {
++				if (!ret)
++					rescan_partitions(bdev->bd_disk, bdev);
++				else if (ret == -ENOMEDIUM)
++					invalidate_partitions(bdev->bd_disk, bdev);
++			}
+ 			if (ret)
+ 				goto out_unlock_bdev;
+ 		}
+diff --git a/block/partition-generic.c b/block/partition-generic.c
+index d06ec1c..6df5d69 100644
+--- a/block/partition-generic.c
++++ b/block/partition-generic.c
+@@ -389,17 +389,11 @@ static bool disk_unlock_native_capacity(struct gendisk *disk)
+ 	}
+ }
+ 
+-int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
++static int drop_partitions(struct gendisk *disk, struct block_device *bdev)
+ {
+-	struct parsed_partitions *state = NULL;
+ 	struct disk_part_iter piter;
+ 	struct hd_struct *part;
+-	int p, highest, res;
+-rescan:
+-	if (state && !IS_ERR(state)) {
+-		kfree(state);
+-		state = NULL;
+-	}
++	int res;
+ 
+ 	if (bdev->bd_part_count)
+ 		return -EBUSY;
+@@ -412,6 +406,24 @@ rescan:
+ 		delete_partition(disk, part->partno);
+ 	disk_part_iter_exit(&piter);
+ 
++	return 0;
++}
++
++int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
++{
++	struct parsed_partitions *state = NULL;
++	struct hd_struct *part;
++	int p, highest, res;
++rescan:
++	if (state && !IS_ERR(state)) {
++		kfree(state);
++		state = NULL;
++	}
++
++	res = drop_partitions(disk, bdev);
++	if (res)
++		return res;
++
+ 	if (disk->fops->revalidate_disk)
+ 		disk->fops->revalidate_disk(disk);
+ 	check_disk_size_change(disk, bdev);
+@@ -515,6 +527,26 @@ rescan:
+ 	return 0;
+ }
+ 
++int invalidate_partitions(struct gendisk *disk, struct block_device *bdev)
++{
++	int res;
++
++	if (!bdev->bd_invalidated)
++		return 0;
++
++	res = drop_partitions(disk, bdev);
++	if (res)
++		return res;
++
++	set_capacity(disk, 0);
++	check_disk_size_change(disk, bdev);
++	bdev->bd_invalidated = 0;
++	/* tell userspace that the media / partition table may have changed */
++	kobject_uevent(&disk_to_dev(disk)->kobj, KOBJ_CHANGE);
++
++	return 0;
++}
++
+ unsigned char *read_dev_sector(struct block_device *bdev, sector_t n, Sector *p)
+ {
+ 	struct address_space *mapping = bdev->bd_inode->i_mapping;
