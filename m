@@ -1,173 +1,143 @@
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] block: fix __blkdev_get and add_disk race condition
-Date: Wed, 22 Feb 2012 17:59:49 +0100
-Message-ID: <20120222165948.GA12961@redhat.com>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: RE: [PATCH] scsi_dh_rdac: Fix for unbalanced reference count
+Date: Wed, 22 Feb 2012 17:53:43 +0000
+Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B0181ED@SACEXCMBX02-PRD.hq.netapp.com>
+References: <77471C95FAFD844C8CA02DD4F4C5FE2B01032D@SACEXCMBX02-PRD.hq.netapp.com>
+ <1328211835.2213.27.camel@chandra-lucid.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23570 "EHLO mx1.redhat.com"
+Received: from mx2.netapp.com ([216.240.18.37]:23216 "EHLO mx2.netapp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750888Ab2BVQ76 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2012 11:59:58 -0500
-Content-Disposition: inline
+	id S1751065Ab2BVRyH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2012 12:54:07 -0500
+In-Reply-To: <1328211835.2213.27.camel@chandra-lucid.austin.ibm.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "sekharan@us.ibm.com" <sekharan@us.ibm.com>
 
-The following situation might occur:
-
-__blkdev_get:			add_disk:
-
-				register_disk()
-get_gendisk()
-
-disk_block_events()
-	disk->ev == NULL
-
-				disk_add_events()
-
-__disk_unblock_events()
-	disk->ev != NULL
-	--ev->block
-
-Then we unblock events, when they are suppose to be blocked. This can
-trigger events related block/genhd.c warnings, but also can crash in
-sd_check_events() or other places.
-
-I'm able to reproduce crashes with the following scripts (with
-connected usb dongle as sdb disk).
-
-<snip>
-DEV=/dev/sdb
-ENABLE=/sys/bus/usb/devices/1-2/bConfigurationValue
-
-function stop_me()
-{
-	for i in `jobs -p` ; do kill $i 2> /dev/null ; done
-	exit
-}
-
-trap stop_me SIGHUP SIGINT SIGTERM
-
-for ((i = 0; i < 10; i++)) ; do
-	while true; do fdisk -l $DEV  2>&1 > /dev/null ; done &
-done
-
-while true ; do
-echo 1 > $ENABLE
-sleep 1
-echo 0 > $ENABLE
-done
-</snip>
-
-I use the script to verify patch fixing oops in sd_revalidate_disk
-http://marc.info/?l=linux-scsi&m=132935572512352&w=2
-Without Jun'ichi Nomura patch titled "Fix NULL pointer dereference in
-sd_revalidate_disk" or this one, script easily crash kernel within
-a few seconds. With both patches applied I do not observe crash.
-Unfortunately after some time (dozen of minutes), script will hung in:
-
-[ 1563.906432]  [<c08354f5>] schedule_timeout_uninterruptible+0x15/0x20
-[ 1563.906437]  [<c04532d5>] msleep+0x15/0x20
-[ 1563.906443]  [<c05d60b2>] blk_drain_queue+0x32/0xd0
-[ 1563.906447]  [<c05d6e00>] blk_cleanup_queue+0xd0/0x170
-[ 1563.906454]  [<c06d278f>] scsi_free_queue+0x3f/0x60
-[ 1563.906459]  [<c06d7e6e>] __scsi_remove_device+0x6e/0xb0
-[ 1563.906463]  [<c06d4aff>] scsi_forget_host+0x4f/0x60
-[ 1563.906468]  [<c06cd84a>] scsi_remove_host+0x5a/0xf0
-[ 1563.906482]  [<f7f030fb>] quiesce_and_remove_host+0x5b/0xa0 [usb_storage]
-[ 1563.906490]  [<f7f03203>] usb_stor_disconnect+0x13/0x20 [usb_storage]
-
-Anyway I think this patch is some step forward.
-
-As drawback, I do not teardown on sysfs file create error, because I do
-not know how to nullify disk->ev (since it can be used). However add_disk
-error handling practically does not exist too, and things will work
-without this sysfs file, except events will not be exported to user
-space.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
-RFC -> PATCH: some changelog tweaks and Tejun ack added
-
- block/genhd.c |   32 +++++++++++++++++++-------------
- 1 files changed, 19 insertions(+), 13 deletions(-)
-
-diff --git a/block/genhd.c b/block/genhd.c
-index 23b4f70..b26c408 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -35,6 +35,7 @@ static DEFINE_IDR(ext_devt_idr);
- 
- static struct device_type disk_type;
- 
-+static void disk_alloc_events(struct gendisk *disk);
- static void disk_add_events(struct gendisk *disk);
- static void disk_del_events(struct gendisk *disk);
- static void disk_release_events(struct gendisk *disk);
-@@ -601,6 +602,8 @@ void add_disk(struct gendisk *disk)
- 	disk->major = MAJOR(devt);
- 	disk->first_minor = MINOR(devt);
- 
-+	disk_alloc_events(disk);
-+
- 	/* Register BDI before referencing it from bdev */
- 	bdi = &disk->queue->backing_dev_info;
- 	bdi_register_dev(bdi, disk_devt(disk));
-@@ -1733,9 +1736,9 @@ module_param_cb(events_dfl_poll_msecs, &disk_events_dfl_poll_msecs_param_ops,
- 		&disk_events_dfl_poll_msecs, 0644);
- 
- /*
-- * disk_{add|del|release}_events - initialize and destroy disk_events.
-+ * disk_{alloc|add|del|release}_events - initialize and destroy disk_events.
-  */
--static void disk_add_events(struct gendisk *disk)
-+static void disk_alloc_events(struct gendisk *disk)
- {
- 	struct disk_events *ev;
- 
-@@ -1748,16 +1751,6 @@ static void disk_add_events(struct gendisk *disk)
- 		return;
- 	}
- 
--	if (sysfs_create_files(&disk_to_dev(disk)->kobj,
--			       disk_events_attrs) < 0) {
--		pr_warn("%s: failed to create sysfs files for events\n",
--			disk->disk_name);
--		kfree(ev);
--		return;
--	}
--
--	disk->ev = ev;
--
- 	INIT_LIST_HEAD(&ev->node);
- 	ev->disk = disk;
- 	spin_lock_init(&ev->lock);
-@@ -1766,8 +1759,21 @@ static void disk_add_events(struct gendisk *disk)
- 	ev->poll_msecs = -1;
- 	INIT_DELAYED_WORK(&ev->dwork, disk_events_workfn);
- 
-+	disk->ev = ev;
-+}
-+
-+static void disk_add_events(struct gendisk *disk)
-+{
-+	if (!disk->ev)
-+		return;
-+
-+	/* FIXME: error handling */
-+	if (sysfs_create_files(&disk_to_dev(disk)->kobj, disk_events_attrs) < 0)
-+		pr_warn("%s: failed to create sysfs files for events\n",
-+			disk->disk_name);
-+
- 	mutex_lock(&disk_events_mutex);
--	list_add_tail(&ev->node, &disk_events);
-+	list_add_tail(&disk->ev->node, &disk_events);
- 	mutex_unlock(&disk_events_mutex);
- 
- 	/*
--- 
-1.7.1
-
+SmFtZXMsIENhbiB5b3UgcGxlYXNlIHBpY2sgdGhpcyB1cCBmb3IgdGhlIG5leHQgdXBkYXRlLg0K
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IENoYW5kcmEgU2VldGhhcmFt
+YW4gW21haWx0bzpzZWtoYXJhbkB1cy5pYm0uY29tXQ0KPiBTZW50OiBUaHVyc2RheSwgRmVicnVh
+cnkgMDIsIDIwMTIgMTo0NCBQTQ0KPiBUbzogTW9nZXIsIEJhYnUNCj4gQ2M6IGxpbnV4LWtlcm5l
+bEB2Z2VyLmtlcm5lbC5vcmc7IGRldmljZS1tYXBwZXIgZGV2ZWxvcG1lbnQ7IE1pa2UNCj4gU25p
+dHplcg0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBzY3NpX2RoX3JkYWM6IEZpeCBmb3IgdW5iYWxh
+bmNlZCByZWZlcmVuY2UgY291bnQNCj4gDQo+IFJldmlld2VkLWJ5OiBDaGFuZHJhIFNlZXRoYXJh
+bWFuIDxzZWtoYXJhbkB1cy5pYm0uY29tPg0KPiANCj4gT24gVGh1LCAyMDEyLTAyLTAyIGF0IDE1
+OjIxICswMDAwLCBNb2dlciwgQmFidSB3cm90ZToNCj4gPiBSZXN1Ym1pdHRpbmcgaXQgYWdhaW4o
+UHJvYmFibHkgbGFzdCBvbmUgaGFkIHNvbWUgZm9ybWF0IGlzc3VlcykuDQo+ID4NCj4gPiBUaGlz
+IHBhdGNoIGZpeGVzIGFuIHVuYmFsYW5jZWQgcmVmY291bnQgaXNzdWUuDQo+ID4NCj4gPiBFbGV2
+YXRpbmcgdGhlIGxvY2sgZm9yIGJvdGgga3JlZl9wdXQgYW5kIGFsc28gZm9yIGNvbnRyb2xsZXIg
+bm9kZQ0KPiBkZWxldGlvbi4NCj4gPiBQcmV2aW91c2x5LCBjb250cm9sbGVyIGRlbGV0aW9uIHdh
+cyBwcm90ZWN0ZWQgYnV0IHRoZSBub3QgdGhlDQo+IGtyZWZfcHV0LiBUaGlzIHdhcyBjYXVzaW5n
+DQo+ID4gdGhlIG90aGVyIHRocmVhZCB0byBwaWNrIHVwIHRoZSBjb250cm9sbGVyIHN0cnVjdHVy
+ZSB3aGljaCB3YXMNCj4gYWxyZWFkeSBrcmVmJ2QgemVyby4NCj4gPg0KPiA+IFRoaXMgd2FzIGNh
+dXNpbmcgdGhlIGZvbGxvd2luZyBCVUdfT04gYW5kIGFsc28gc29tZXRpbWVzIHBhbmljLg0KPiA+
+DQo+ID4gV0FSTklORzogYXQgbGliL2tyZWYuYzo0MyBrcmVmX2dldCsweDJkLzB4MzAoKSAoTm90
+IHRhaW50ZWQpDQo+ID4gSGFyZHdhcmUgbmFtZTogSUJNIFN5c3RlbSB4MzY1NSAtWzc5ODVBQzFd
+LQ0KPiA+IE1vZHVsZXMgbGlua2VkIGluOiBmdXNlIHNjc2lfZGhfcmRhYyBhdXRvZnM0IG5mcyBs
+b2NrZCBmc2NhY2hlDQo+IG5mc19hY2wNCj4gPiBhdXRoX3JwY2dzcyBzdW5ycGMgODAyMXEgZ2Fy
+cCBzdHAgbGxjIGlwdjYgaWJfc3JwKFUpDQo+IHNjc2lfdHJhbnNwb3J0X3NycA0KPiA+IHNjc2lf
+dGd0IGliX2NtKFUpIGliX3NhKFUpIGliX3V2ZXJicyhVKSBpYl91bWFkKFUpIG1seDRfaWIoVSkN
+Cj4gbWx4NF9jb3JlKFUpDQo+ID4gaWJfbXRoY2EoVSkgaWJfbWFkKFUpIGliX2NvcmUoVSkgZG1f
+bWlycm9yIGRtX3JlZ2lvbl9oYXNoIGRtX2xvZw0KPiBkbV9yb3VuZF9yb2Jpbg0KPiA+IGRtX211
+bHRpcGF0aCB1aW5wdXQgYm54MiBzZXMgZW5jbG9zdXJlIHNnIGlibXBleCBpYm1hZW0NCj4gaXBt
+aV9tc2doYW5kbGVyDQo+ID4gc2VyaW9fcmF3IGs4dGVtcCBod21vbiBhbWQ2NF9lZGFjX21vZCBl
+ZGFjX2NvcmUgZWRhY19tY2VfYW1kIHNocGNocA0KPiBpMmNfcGlpeDQNCj4gPiBleHQ0IG1iY2Fj
+aGUgamJkMiBzcl9tb2QgY2Ryb20gc2RfbW9kIGNyY190MTBkaWYgc2F0YV9zdncgcGF0YV9hY3Bp
+DQo+IGF0YV9nZW5lcmljDQo+ID4gcGF0YV9zZXJ2ZXJ3b3JrcyBhYWNyYWlkIHJhZGVvbiB0dG0g
+ZHJtX2ttc19oZWxwZXIgZHJtIGkyY19hbGdvX2JpdA0KPiBpMmNfY29yZQ0KPiA+IGRtX21vZCBb
+bGFzdCB1bmxvYWRlZDogZnJlcV90YWJsZV0NCj4gPiBQaWQ6IDEzNzM1LCBjb21tOiBzcnBfZGFl
+bW9uIE5vdCB0YWludGVkIDIuNi4zMi03MS5lbDYueDg2XzY0ICMxDQo+ID4gQ2FsbCBUcmFjZToN
+Cj4gPiBbPGZmZmZmZmZmODEwNmI4NTc+XSB3YXJuX3Nsb3dwYXRoX2NvbW1vbisweDg3LzB4YzAN
+Cj4gPiBbPGZmZmZmZmZmODEwNmI4YWE+XSB3YXJuX3Nsb3dwYXRoX251bGwrMHgxYS8weDIwDQo+
+ID4gWzxmZmZmZmZmZjgxMjVjMzlkPl0ga3JlZl9nZXQrMHgyZC8weDMwDQo+ID4gWzxmZmZmZmZm
+ZmEwMWI0MDI5Pl0gcmRhY19idXNfYXR0YWNoKzB4NDU5LzB4NTgwIFtzY3NpX2RoX3JkYWNdDQo+
+ID4gWzxmZmZmZmZmZjgxMzUyMzJhPl0gc2NzaV9kaF9oYW5kbGVyX2F0dGFjaCsweDJhLzB4ODAN
+Cj4gPiBbPGZmZmZmZmZmODEzNTJjN2I+XSBzY3NpX2RoX25vdGlmaWVyKzB4OWIvMHhhMA0KPiA+
+IFs8ZmZmZmZmZmY4MTRjZDdhNT5dIG5vdGlmaWVyX2NhbGxfY2hhaW4rMHg1NS8weDgwDQo+ID4g
+WzxmZmZmZmZmZjgxMDk3MTFhPl0gX19ibG9ja2luZ19ub3RpZmllcl9jYWxsX2NoYWluKzB4NWEv
+MHg4MA0KPiA+IFs8ZmZmZmZmZmY4MTA5NzE1Nj5dIGJsb2NraW5nX25vdGlmaWVyX2NhbGxfY2hh
+aW4rMHgxNi8weDIwDQo+ID4gWzxmZmZmZmZmZjgxMzJiZWM1Pl0gZGV2aWNlX2FkZCsweDUxNS8w
+eDY0MA0KPiA+IFs8ZmZmZmZmZmY4MTMzMjllND5dID8gYXR0cmlidXRlX2NvbnRhaW5lcl9kZXZp
+Y2VfdHJpZ2dlcisweGM0LzB4ZTANCj4gPiBbPGZmZmZmZmZmODEzNGY2NTk+XSBzY3NpX3N5c2Zz
+X2FkZF9zZGV2KzB4ODkvMHgyYzANCj4gPiBbPGZmZmZmZmZmODEzNGQwOTY+XSBzY3NpX3Byb2Jl
+X2FuZF9hZGRfbHVuKzB4ZWE2LzB4ZWQwDQo+ID4gWzxmZmZmZmZmZjgxMzRiZWIyPl0gPyBzY3Np
+X2FsbG9jX3RhcmdldCsweDI5Mi8weDJkMA0KPiA+IFs8ZmZmZmZmZmY4MTM0ZDFlMT5dIF9fc2Nz
+aV9zY2FuX3RhcmdldCsweDEyMS8weDc1MA0KPiA+IFs8ZmZmZmZmZmY4MTFkZjgwNj5dID8gc3lz
+ZnNfY3JlYXRlX2ZpbGUrMHgyNi8weDMwDQo+ID4gWzxmZmZmZmZmZjgxMzJiNzU5Pl0gPyBkZXZp
+Y2VfY3JlYXRlX2ZpbGUrMHgxOS8weDIwDQo+ID4gWzxmZmZmZmZmZjgxMzMyODM4Pl0gPyBhdHRy
+aWJ1dGVfY29udGFpbmVyX2FkZF9hdHRycysweDc4LzB4OTANCj4gPiBbPGZmZmZmZmZmODE0YjAw
+OGM+XSA/IGtsaXN0X25leHQrMHg0Yy8weGYwDQo+ID4gWzxmZmZmZmZmZjgxMzMyZTMwPl0gPyB0
+cmFuc3BvcnRfY29uZmlndXJlKzB4MC8weDIwDQo+ID4gWzxmZmZmZmZmZjgxMzMyOWU0Pl0gPyBh
+dHRyaWJ1dGVfY29udGFpbmVyX2RldmljZV90cmlnZ2VyKzB4YzQvMHhlMA0KPiA+IFs8ZmZmZmZm
+ZmY4MTM0ZGY0MD5dIHNjc2lfc2Nhbl90YXJnZXQrMHhkMC8weGUwDQo+ID4gWzxmZmZmZmZmZmEw
+MmYwNTNhPl0gc3JwX2NyZWF0ZV90YXJnZXQrMHg3NWEvMHg4OTAgW2liX3NycF0NCj4gPiBbPGZm
+ZmZmZmZmODEzMmExMzA+XSBkZXZfYXR0cl9zdG9yZSsweDIwLzB4MzANCj4gPiBbPGZmZmZmZmZm
+ODExZGYxNDU+XSBzeXNmc193cml0ZV9maWxlKzB4ZTUvMHgxNzANCj4gPiBbPGZmZmZmZmZmODEx
+NmM4MTg+XSB2ZnNfd3JpdGUrMHhiOC8weDFhMA0KPiA+IFs8ZmZmZmZmZmY4MTBkNDBhMj5dID8g
+YXVkaXRfc3lzY2FsbF9lbnRyeSsweDI3Mi8weDJhMA0KPiA+IFs8ZmZmZmZmZmY4MTE2ZDI1MT5d
+IHN5c193cml0ZSsweDUxLzB4OTANCj4gPiBbPGZmZmZmZmZmODEwMTMxNzI+XSBzeXN0ZW1fY2Fs
+bF9mYXN0cGF0aCsweDE2LzB4MWINCj4gPg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogQmFidSBN
+b2dlciA8YmFidS5tb2dlckBuZXRhcHAuY29tPg0KPiA+IEFja2VkLWJ5OiBNaWtlIFNuaXR6ZXIg
+PHNuaXR6ZXJAcmVkaGF0LmNvbT4NCj4gPiAtLS0NCj4gPiAtLS0gbGludXgtMy4zLXJjMS1uZXcv
+ZHJpdmVycy9zY3NpL2RldmljZV9oYW5kbGVyL3Njc2lfZGhfcmRhYy5jLm9yaWcNCj4gCTIwMTIt
+MDEtMTkgMTc6MDQ6NDguMDAwMDAwMDAwIC0wNjAwDQo+ID4gKysrIGxpbnV4LTMuMy1yYzEtbmV3
+L2RyaXZlcnMvc2NzaS9kZXZpY2VfaGFuZGxlci9zY3NpX2RoX3JkYWMuYw0KPiAJMjAxMi0wMi0w
+MSAxMDo1MDozMS4wMDAwMDAwMDAgLTA2MDANCj4gPiBAQCAtMzY0LDEwICszNjQsNyBAQCBzdGF0
+aWMgdm9pZCByZWxlYXNlX2NvbnRyb2xsZXIoc3RydWN0IGtyDQo+ID4gIAlzdHJ1Y3QgcmRhY19j
+b250cm9sbGVyICpjdGxyOw0KPiA+ICAJY3RsciA9IGNvbnRhaW5lcl9vZihrcmVmLCBzdHJ1Y3Qg
+cmRhY19jb250cm9sbGVyLCBrcmVmKTsNCj4gPg0KPiA+IC0JZmx1c2hfd29ya3F1ZXVlKGttcGF0
+aF9yZGFjZCk7DQo+ID4gLQlzcGluX2xvY2soJmxpc3RfbG9jayk7DQo+ID4gIAlsaXN0X2RlbCgm
+Y3Rsci0+bm9kZSk7DQo+ID4gLQlzcGluX3VubG9jaygmbGlzdF9sb2NrKTsNCj4gPiAgCWtmcmVl
+KGN0bHIpOw0KPiA+ICB9DQo+ID4NCj4gPiBAQCAtMzc2LDIwICszNzMsMTcgQEAgc3RhdGljIHN0
+cnVjdCByZGFjX2NvbnRyb2xsZXIgKmdldF9jb250cg0KPiA+ICB7DQo+ID4gIAlzdHJ1Y3QgcmRh
+Y19jb250cm9sbGVyICpjdGxyLCAqdG1wOw0KPiA+DQo+ID4gLQlzcGluX2xvY2soJmxpc3RfbG9j
+ayk7DQo+ID4gLQ0KPiA+ICAJbGlzdF9mb3JfZWFjaF9lbnRyeSh0bXAsICZjdGxyX2xpc3QsIG5v
+ZGUpIHsNCj4gPiAgCQlpZiAoKG1lbWNtcCh0bXAtPmFycmF5X2lkLCBhcnJheV9pZCwgVU5JUVVF
+X0lEX0xFTikgPT0gMCkNCj4gJiYNCj4gPiAgCQkJICAodG1wLT5pbmRleCA9PSBpbmRleCkgJiYN
+Cj4gPiAgCQkJICAodG1wLT5ob3N0ID09IHNkZXYtPmhvc3QpKSB7DQo+ID4gIAkJCWtyZWZfZ2V0
+KCZ0bXAtPmtyZWYpOw0KPiA+IC0JCQlzcGluX3VubG9jaygmbGlzdF9sb2NrKTsNCj4gPiAgCQkJ
+cmV0dXJuIHRtcDsNCj4gPiAgCQl9DQo+ID4gIAl9DQo+ID4gIAljdGxyID0ga21hbGxvYyhzaXpl
+b2YoKmN0bHIpLCBHRlBfQVRPTUlDKTsNCj4gPiAgCWlmICghY3RscikNCj4gPiAtCQlnb3RvIGRv
+bmU7DQo+ID4gKwkJcmV0dXJuIE5VTEw7DQo+ID4NCj4gPiAgCS8qIGluaXRpYWxpemUgZmllbGRz
+IG9mIGNvbnRyb2xsZXIgKi8NCj4gPiAgCW1lbWNweShjdGxyLT5hcnJheV9pZCwgYXJyYXlfaWQs
+IFVOSVFVRV9JRF9MRU4pOw0KPiA+IEBAIC00MDUsOCArMzk5LDcgQEAgc3RhdGljIHN0cnVjdCBy
+ZGFjX2NvbnRyb2xsZXIgKmdldF9jb250cg0KPiA+ICAJSU5JVF9XT1JLKCZjdGxyLT5tc193b3Jr
+LCBzZW5kX21vZGVfc2VsZWN0KTsNCj4gPiAgCUlOSVRfTElTVF9IRUFEKCZjdGxyLT5tc19oZWFk
+KTsNCj4gPiAgCWxpc3RfYWRkKCZjdGxyLT5ub2RlLCAmY3Rscl9saXN0KTsNCj4gPiAtZG9uZToN
+Cj4gPiAtCXNwaW5fdW5sb2NrKCZsaXN0X2xvY2spOw0KPiA+ICsNCj4gPiAgCXJldHVybiBjdGxy
+Ow0KPiA+ICB9DQo+ID4NCj4gPiBAQCAtNTE3LDkgKzUxMCwxMiBAQCBzdGF0aWMgaW50IGluaXRp
+YWxpemVfY29udHJvbGxlcihzdHJ1Y3QNCj4gPiAgCQkJaW5kZXggPSAwOw0KPiA+ICAJCWVsc2UN
+Cj4gPiAgCQkJaW5kZXggPSAxOw0KPiA+ICsNCj4gPiArCQlzcGluX2xvY2soJmxpc3RfbG9jayk7
+DQo+ID4gIAkJaC0+Y3RsciA9IGdldF9jb250cm9sbGVyKGluZGV4LCBhcnJheV9uYW1lLCBhcnJh
+eV9pZCwNCj4gc2Rldik7DQo+ID4gIAkJaWYgKCFoLT5jdGxyKQ0KPiA+ICAJCQllcnIgPSBTQ1NJ
+X0RIX1JFU19URU1QX1VOQVZBSUw7DQo+ID4gKwkJc3Bpbl91bmxvY2soJmxpc3RfbG9jayk7DQo+
+ID4gIAl9DQo+ID4gIAlyZXR1cm4gZXJyOw0KPiA+ICB9DQo+ID4gQEAgLTkwNiw3ICs5MDIsOSBA
+QCBzdGF0aWMgaW50IHJkYWNfYnVzX2F0dGFjaChzdHJ1Y3Qgc2NzaV9kDQo+ID4gIAlyZXR1cm4g
+MDsNCj4gPg0KPiA+ICBjbGVhbl9jdGxyOg0KPiA+ICsJc3Bpbl9sb2NrKCZsaXN0X2xvY2spOw0K
+PiA+ICAJa3JlZl9wdXQoJmgtPmN0bHItPmtyZWYsIHJlbGVhc2VfY29udHJvbGxlcik7DQo+ID4g
+KwlzcGluX3VubG9jaygmbGlzdF9sb2NrKTsNCj4gPg0KPiA+ICBmYWlsZWQ6DQo+ID4gIAlrZnJl
+ZShzY3NpX2RoX2RhdGEpOw0KPiA+IEBAIC05MjEsMTQgKzkxOSwxOSBAQCBzdGF0aWMgdm9pZCBy
+ZGFjX2J1c19kZXRhY2goIHN0cnVjdCBzY3NpDQo+ID4gIAlzdHJ1Y3QgcmRhY19kaF9kYXRhICpo
+Ow0KPiA+ICAJdW5zaWduZWQgbG9uZyBmbGFnczsNCj4gPg0KPiA+IC0Jc3Bpbl9sb2NrX2lycXNh
+dmUoc2Rldi0+cmVxdWVzdF9xdWV1ZS0+cXVldWVfbG9jaywgZmxhZ3MpOw0KPiA+ICAJc2NzaV9k
+aF9kYXRhID0gc2Rldi0+c2NzaV9kaF9kYXRhOw0KPiA+ICsJaCA9IChzdHJ1Y3QgcmRhY19kaF9k
+YXRhICopIHNjc2lfZGhfZGF0YS0+YnVmOw0KPiA+ICsJaWYgKGgtPmN0bHIgJiYgaC0+Y3Rsci0+
+bXNfcXVldWVkKQ0KPiA+ICsJCWZsdXNoX3dvcmtxdWV1ZShrbXBhdGhfcmRhY2QpOw0KPiA+ICsN
+Cj4gPiArCXNwaW5fbG9ja19pcnFzYXZlKHNkZXYtPnJlcXVlc3RfcXVldWUtPnF1ZXVlX2xvY2ss
+IGZsYWdzKTsNCj4gPiAgCXNkZXYtPnNjc2lfZGhfZGF0YSA9IE5VTEw7DQo+ID4gIAlzcGluX3Vu
+bG9ja19pcnFyZXN0b3JlKHNkZXYtPnJlcXVlc3RfcXVldWUtPnF1ZXVlX2xvY2ssIGZsYWdzKTsN
+Cj4gPg0KPiA+IC0JaCA9IChzdHJ1Y3QgcmRhY19kaF9kYXRhICopIHNjc2lfZGhfZGF0YS0+YnVm
+Ow0KPiA+ICsJc3Bpbl9sb2NrKCZsaXN0X2xvY2spOw0KPiA+ICAJaWYgKGgtPmN0bHIpDQo+ID4g
+IAkJa3JlZl9wdXQoJmgtPmN0bHItPmtyZWYsIHJlbGVhc2VfY29udHJvbGxlcik7DQo+ID4gKwlz
+cGluX3VubG9jaygmbGlzdF9sb2NrKTsNCj4gPiAgCWtmcmVlKHNjc2lfZGhfZGF0YSk7DQo+ID4g
+IAltb2R1bGVfcHV0KFRISVNfTU9EVUxFKTsNCj4gPiAgCXNkZXZfcHJpbnRrKEtFUk5fTk9USUNF
+LCBzZGV2LCAiJXM6IERldGFjaGVkXG4iLCBSREFDX05BTUUpOw0KPiA+DQo+ID4NCj4gPiAtLQ0K
+PiA+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNj
+cmliZSBsaW51eC1zY3NpIg0KPiBpbg0KPiA+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
+cmRvbW9Admdlci5rZXJuZWwub3JnDQo+ID4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
+L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+ID4NCj4gDQoNCg==
