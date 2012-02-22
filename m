@@ -1,15 +1,15 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 18/34] scsi proc_ops: convert drivers/scsi/ips.c
-Date: Wed, 22 Feb 2012 22:46:09 +0300
-Message-ID: <1329939985-26793-18-git-send-email-adobriyan@gmail.com>
+Subject: [PATCH 19/34] scsi proc_ops: convert drivers/scsi/in2000.c
+Date: Wed, 22 Feb 2012 22:46:10 +0300
+Message-ID: <1329939985-26793-19-git-send-email-adobriyan@gmail.com>
 References: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59220 "EHLO
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:44011 "EHLO
 	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755505Ab2BVTrG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2012 14:47:06 -0500
-Received: by mail-bk0-f46.google.com with SMTP id jm19so433763bkc.19
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2012 11:47:05 -0800 (PST)
+	with ESMTP id S1755525Ab2BVTrI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2012 14:47:08 -0500
+Received: by mail-bk0-f46.google.com with SMTP id jm19so433831bkc.19
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2012 11:47:07 -0800 (PST)
 In-Reply-To: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,341 +18,296 @@ Cc: linux-scsi@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>
 
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
- drivers/scsi/ips.c |  176 ++++++++++++++--------------------------------------
- drivers/scsi/ips.h |    9 ---
- 2 files changed, 46 insertions(+), 139 deletions(-)
+ drivers/scsi/in2000.c |  191 ++++++++++++++++++++++++-------------------------
+ drivers/scsi/in2000.h |    1 -
+ 2 files changed, 93 insertions(+), 99 deletions(-)
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index d77891e..6e960cc 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -174,6 +174,7 @@
- #include <linux/pci.h>
+diff --git a/drivers/scsi/in2000.c b/drivers/scsi/in2000.c
+index 112f1be..1f45434 100644
+--- a/drivers/scsi/in2000.c
++++ b/drivers/scsi/in2000.c
+@@ -119,6 +119,7 @@
+ #include <linux/string.h>
+ #include <linux/delay.h>
  #include <linux/proc_fs.h>
- #include <linux/reboot.h>
 +#include <linux/seq_file.h>
- #include <linux/interrupt.h>
+ #include <linux/ioport.h>
+ #include <linux/stat.h>
  
- #include <linux/blkdev.h>
-@@ -326,10 +327,8 @@ static void ips_scmd_buf_write(struct scsi_cmnd * scmd, void *data,
- static void ips_scmd_buf_read(struct scsi_cmnd * scmd, void *data,
- 			      unsigned int count);
+@@ -2056,7 +2057,7 @@ static int __init in2000_detect(struct scsi_host_template * tpnt)
+ 			hostdata->sync_off = 0xff;	/* sync defaults to off */
  
--static int ips_proc_info(struct Scsi_Host *, char *, char **, off_t, int, int);
--static int ips_host_info(ips_ha_t *, char *, off_t, int);
--static void copy_mem_info(IPS_INFOSTR *, char *, int);
--static int copy_info(IPS_INFOSTR *, char *, ...);
-+static const struct file_operations ips_proc_ops;
-+static void ips_host_info(ips_ha_t *, struct seq_file *);
- static int ips_abort_init(ips_ha_t * ha, int index);
- static int ips_init_phase2(int index);
- 
-@@ -367,7 +366,7 @@ static struct scsi_host_template ips_driver_template = {
- 	.eh_abort_handler	= ips_eh_abort,
- 	.eh_host_reset_handler	= ips_eh_reset,
- 	.proc_name		= "ips",
--	.proc_info		= ips_proc_info,
-+	.proc_ops		= &ips_proc_ops,
- 	.slave_configure	= ips_slave_configure,
- 	.bios_param		= ips_biosparam,
- 	.this_id		= -1,
-@@ -1433,25 +1432,12 @@ ips_info(struct Scsi_Host *SH)
- 	return (bp);
+ #ifdef PROC_INTERFACE
+-		hostdata->proc = PR_VERSION | PR_INFO | PR_STATISTICS | PR_CONNECTED | PR_INPUTQ | PR_DISCQ | PR_STOP;
++		hostdata->proc = PR_VERSION | PR_INFO | PR_STATISTICS | PR_CONNECTED | PR_INPUTQ | PR_DISCQ;
+ #ifdef PROC_STATISTICS
+ 		hostdata->int_cnt = 0;
+ #endif
+@@ -2166,161 +2167,155 @@ static int in2000_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 	return 0;
  }
  
--/****************************************************************************/
--/*                                                                          */
--/* Routine Name: ips_proc_info                                              */
--/*                                                                          */
--/* Routine Description:                                                     */
--/*                                                                          */
--/*   The passthru interface for the driver                                  */
--/*                                                                          */
--/****************************************************************************/
--static int
--ips_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
--	      int length, int func)
-+static int ips_proc_show(struct seq_file *m, void *v)
- {
-+	struct Scsi_Host *host = m->private;
- 	int i;
--	int ret;
- 	ips_ha_t *ha = NULL;
- 
--	METHOD_TRACE("ips_proc_info", 1);
 -
- 	/* Find our host structure */
- 	for (i = 0; i < ips_next_controller; i++) {
- 		if (ips_sh[i]) {
-@@ -1465,20 +1451,22 @@ ips_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
- 	if (!ha)
- 		return (-EINVAL);
- 
--	if (func) {
--		/* write */
--		return (0);
--	} else {
--		/* read */
--		if (start)
--			*start = buffer;
+-static int in2000_proc_info(struct Scsi_Host *instance, char *buf, char **start, off_t off, int len, int in)
+-{
 -
--		ret = ips_host_info(ha, buffer, offset, length);
-+	ips_host_info(ha, m);
+ #ifdef PROC_INTERFACE
+-
+-	char *bp;
+-	char tbuf[128];
++static int in2000_proc_show(struct seq_file *m, void *v)
++{
++	struct Scsi_Host *instance = m->private;
+ 	unsigned long flags;
+ 	struct IN2000_hostdata *hd;
+ 	Scsi_Cmnd *cmd;
+-	int x, i;
+-	static int stop = 0;
++	int x;
+ 
+ 	hd = (struct IN2000_hostdata *) instance->hostdata;
+ 
+-/* If 'in' is TRUE we need to _read_ the proc file. We accept the following
+- * keywords (same format as command-line, but only ONE per read):
+- *    debug
+- *    disconnect
+- *    period
+- *    resync
+- *    proc
+- */
+-
+-	if (in) {
+-		buf[len] = '\0';
+-		bp = buf;
+-		if (!strncmp(bp, "debug:", 6)) {
+-			bp += 6;
+-			hd->args = simple_strtoul(bp, NULL, 0) & DB_MASK;
+-		} else if (!strncmp(bp, "disconnect:", 11)) {
+-			bp += 11;
+-			x = simple_strtoul(bp, NULL, 0);
+-			if (x < DIS_NEVER || x > DIS_ALWAYS)
+-				x = DIS_ADAPTIVE;
+-			hd->disconnect = x;
+-		} else if (!strncmp(bp, "period:", 7)) {
+-			bp += 7;
+-			x = simple_strtoul(bp, NULL, 0);
+-			hd->default_sx_per = sx_table[round_period((unsigned int) x)].period_ns;
+-		} else if (!strncmp(bp, "resync:", 7)) {
+-			bp += 7;
+-			x = simple_strtoul(bp, NULL, 0);
+-			for (i = 0; i < 7; i++)
+-				if (x & (1 << i))
+-					hd->sync_stat[i] = SS_UNSET;
+-		} else if (!strncmp(bp, "proc:", 5)) {
+-			bp += 5;
+-			hd->proc = simple_strtoul(bp, NULL, 0);
+-		} else if (!strncmp(bp, "level2:", 7)) {
+-			bp += 7;
+-			hd->level2 = simple_strtoul(bp, NULL, 0);
+-		}
+-		return len;
+-	}
+-
+ 	spin_lock_irqsave(instance->host_lock, flags);
+-	bp = buf;
+-	*bp = '\0';
+ 	if (hd->proc & PR_VERSION) {
+-		sprintf(tbuf, "\nVersion %s - %s.", IN2000_VERSION, IN2000_DATE);
+-		strcat(bp, tbuf);
++		seq_printf(m, "\nVersion %s - %s.", IN2000_VERSION, IN2000_DATE);
+ 	}
+ 	if (hd->proc & PR_INFO) {
+-		sprintf(tbuf, "\ndip_switch=%02x: irq=%d io=%02x floppy=%s sync/DOS5=%s", (hd->dip_switch & 0x7f), instance->irq, hd->io_base, (hd->dip_switch & 0x40) ? "Yes" : "No", (hd->dip_switch & 0x20) ? "Yes" : "No");
+-		strcat(bp, tbuf);
+-		strcat(bp, "\nsync_xfer[] =       ");
++		seq_printf(m, "\ndip_switch=%02x: irq=%d io=%02x floppy=%s sync/DOS5=%s", (hd->dip_switch & 0x7f), instance->irq, hd->io_base, (hd->dip_switch & 0x40) ? "Yes" : "No", (hd->dip_switch & 0x20) ? "Yes" : "No");
++		seq_printf(m, "\nsync_xfer[] =       ");
+ 		for (x = 0; x < 7; x++) {
+-			sprintf(tbuf, "\t%02x", hd->sync_xfer[x]);
+-			strcat(bp, tbuf);
++			seq_printf(m, "\t%02x", hd->sync_xfer[x]);
+ 		}
+-		strcat(bp, "\nsync_stat[] =       ");
++		seq_printf(m, "\nsync_stat[] =       ");
+ 		for (x = 0; x < 7; x++) {
+-			sprintf(tbuf, "\t%02x", hd->sync_stat[x]);
+-			strcat(bp, tbuf);
++			seq_printf(m, "\t%02x", hd->sync_stat[x]);
+ 		}
+ 	}
+ #ifdef PROC_STATISTICS
+ 	if (hd->proc & PR_STATISTICS) {
+-		strcat(bp, "\ncommands issued:    ");
++		seq_printf(m, "\ncommands issued:    ");
+ 		for (x = 0; x < 7; x++) {
+-			sprintf(tbuf, "\t%ld", hd->cmd_cnt[x]);
+-			strcat(bp, tbuf);
++			seq_printf(m, "\t%ld", hd->cmd_cnt[x]);
+ 		}
+-		strcat(bp, "\ndisconnects allowed:");
++		seq_printf(m, "\ndisconnects allowed:");
+ 		for (x = 0; x < 7; x++) {
+-			sprintf(tbuf, "\t%ld", hd->disc_allowed_cnt[x]);
+-			strcat(bp, tbuf);
++			seq_printf(m, "\t%ld", hd->disc_allowed_cnt[x]);
+ 		}
+-		strcat(bp, "\ndisconnects done:   ");
++		seq_printf(m, "\ndisconnects done:   ");
+ 		for (x = 0; x < 7; x++) {
+-			sprintf(tbuf, "\t%ld", hd->disc_done_cnt[x]);
+-			strcat(bp, tbuf);
++			seq_printf(m, "\t%ld", hd->disc_done_cnt[x]);
+ 		}
+-		sprintf(tbuf, "\ninterrupts:      \t%ld", hd->int_cnt);
+-		strcat(bp, tbuf);
++		seq_printf(m, "\ninterrupts:      \t%ld", hd->int_cnt);
+ 	}
+ #endif
+ 	if (hd->proc & PR_CONNECTED) {
+-		strcat(bp, "\nconnected:     ");
++		seq_printf(m, "\nconnected:     ");
+ 		if (hd->connected) {
+ 			cmd = (Scsi_Cmnd *) hd->connected;
+-			sprintf(tbuf, " %d:%d(%02x)", cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
+-			strcat(bp, tbuf);
++			seq_printf(m, " %d:%d(%02x)", cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
+ 		}
+ 	}
+ 	if (hd->proc & PR_INPUTQ) {
+-		strcat(bp, "\ninput_Q:       ");
++		seq_printf(m, "\ninput_Q:       ");
+ 		cmd = (Scsi_Cmnd *) hd->input_Q;
+ 		while (cmd) {
+-			sprintf(tbuf, " %d:%d(%02x)", cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
+-			strcat(bp, tbuf);
++			seq_printf(m, " %d:%d(%02x)", cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
+ 			cmd = (Scsi_Cmnd *) cmd->host_scribble;
+ 		}
+ 	}
+ 	if (hd->proc & PR_DISCQ) {
+-		strcat(bp, "\ndisconnected_Q:");
++		seq_printf(m, "\ndisconnected_Q:");
+ 		cmd = (Scsi_Cmnd *) hd->disconnected_Q;
+ 		while (cmd) {
+-			sprintf(tbuf, " %d:%d(%02x)", cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
+-			strcat(bp, tbuf);
++			seq_printf(m, " %d:%d(%02x)", cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
+ 			cmd = (Scsi_Cmnd *) cmd->host_scribble;
+ 		}
+ 	}
+ 	if (hd->proc & PR_TEST) {
+ 		;		/* insert your own custom function here */
+ 	}
+-	strcat(bp, "\n");
++	seq_putc(m, '\n');
+ 	spin_unlock_irqrestore(instance->host_lock, flags);
+-	*start = buf;
+-	if (stop) {
+-		stop = 0;
+-		return 0;	/* return 0 to signal end-of-file */
+-	}
+-	if (off > 0x40000)	/* ALWAYS stop after 256k bytes have been read */
+-		stop = 1;
+-	if (hd->proc & PR_STOP)	/* stop every other time */
+-		stop = 1;
+-	return strlen(bp);
 +	return 0;
 +}
  
--		return (ret);
--	}
-+static int ips_proc_open(struct inode *inode, struct file *file)
+-#else				/* PROC_INTERFACE */
++static int in2000_proc_open(struct inode *inode, struct file *file)
 +{
-+	return single_open(file, ips_proc_show, PDE(inode)->data);
++	return single_open(file, in2000_proc_show, PDE(inode)->data);
++}
+ 
+-	return 0;
++static ssize_t in2000_proc_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
++{
++	struct Scsi_Host *instance = PDE(file->f_path.dentry->d_inode)->data;
++	struct IN2000_hostdata *hd = (struct IN2000_hostdata *)instance->hostdata;
++	char cmd[42], *bp;
++	size_t len;
++	int x, i;
++
++	len = min(count, sizeof(cmd) - 1);
++	if (copy_from_user(cmd, buf, len))
++		return -EFAULT;
++	cmd[len] = '\0';
+ 
+-#endif				/* PROC_INTERFACE */
++	/*
++	 * We accept the following keywords (same format as command-line,
++	 * but only ONE per read):
++	 *    debug
++	 *    disconnect
++	 *    period
++	 *    resync
++	 *    proc
++	 */
++	bp = cmd;
++	if (!strncmp(bp, "debug:", 6)) {
++		bp += 6;
++		hd->args = simple_strtoul(bp, NULL, 0) & DB_MASK;
++	} else if (!strncmp(bp, "disconnect:", 11)) {
++		bp += 11;
++		x = simple_strtoul(bp, NULL, 0);
++		if (x < DIS_NEVER || x > DIS_ALWAYS)
++			x = DIS_ADAPTIVE;
++		hd->disconnect = x;
++	} else if (!strncmp(bp, "period:", 7)) {
++		bp += 7;
++		x = simple_strtoul(bp, NULL, 0);
++		hd->default_sx_per = sx_table[round_period((unsigned int) x)].period_ns;
++	} else if (!strncmp(bp, "resync:", 7)) {
++		bp += 7;
++		x = simple_strtoul(bp, NULL, 0);
++		for (i = 0; i < 7; i++)
++			if (x & (1 << i))
++				hd->sync_stat[i] = SS_UNSET;
++	} else if (!strncmp(bp, "proc:", 5)) {
++		bp += 5;
++		hd->proc = simple_strtoul(bp, NULL, 0);
++	} else if (!strncmp(bp, "level2:", 7)) {
++		bp += 7;
++		hd->level2 = simple_strtoul(bp, NULL, 0);
++	}
+ 
++	return count;
  }
  
-+static const struct file_operations ips_proc_ops = {
-+	.open		= ips_proc_open,
++static const struct file_operations in2000_proc_ops = {
++	.open		= in2000_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
++	.write		= in2000_proc_write,
 +};
++#endif
 +
- /*--------------------------------------------------------------------------*/
- /* Helper Functions                                                         */
- /*--------------------------------------------------------------------------*/
-@@ -2034,51 +2022,43 @@ ips_cleanup_passthru(ips_ha_t * ha, ips_scb_t * scb)
- /*   The passthru interface for the driver                                  */
- /*                                                                          */
- /****************************************************************************/
--static int
--ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
-+static void
-+ips_host_info(ips_ha_t * ha, struct seq_file *m)
- {
--	IPS_INFOSTR info;
--
- 	METHOD_TRACE("ips_host_info", 1);
+ MODULE_LICENSE("GPL");
  
--	info.buffer = ptr;
--	info.length = len;
--	info.offset = offset;
--	info.pos = 0;
--	info.localpos = 0;
--
--	copy_info(&info, "\nIBM ServeRAID General Information:\n\n");
-+	seq_printf(m, "\nIBM ServeRAID General Information:\n\n");
  
- 	if ((le32_to_cpu(ha->nvram->signature) == IPS_NVRAM_P5_SIG) &&
- 	    (le16_to_cpu(ha->nvram->adapter_type) != 0))
--		copy_info(&info, "\tController Type                   : %s\n",
-+		seq_printf(m, "\tController Type                   : %s\n",
- 			  ips_adapter_name[ha->ad_type - 1]);
- 	else
--		copy_info(&info,
-+		seq_printf(m,
- 			  "\tController Type                   : Unknown\n");
+ static struct scsi_host_template driver_template = {
+ 	.proc_name       		= "in2000",
+-	.proc_info       		= in2000_proc_info,
++#ifdef PROC_INTERFACE
++	.proc_ops			= &in2000_proc_ops,
++#endif
+ 	.name            		= "Always IN2000",
+ 	.detect          		= in2000_detect, 
+ 	.release			= in2000_release,
+diff --git a/drivers/scsi/in2000.h b/drivers/scsi/in2000.h
+index 5821e1f..bf86cc7 100644
+--- a/drivers/scsi/in2000.h
++++ b/drivers/scsi/in2000.h
+@@ -383,7 +383,6 @@ struct IN2000_hostdata {
+ #define PR_INPUTQ    1<<4
+ #define PR_DISCQ     1<<5
+ #define PR_TEST      1<<6
+-#define PR_STOP      1<<7
  
- 	if (ha->io_addr)
--		copy_info(&info,
--			  "\tIO region                         : 0x%lx (%d bytes)\n",
-+		seq_printf(m,
-+			  "\tIO region                         : 0x%x (%d bytes)\n",
- 			  ha->io_addr, ha->io_len);
  
- 	if (ha->mem_addr) {
--		copy_info(&info,
--			  "\tMemory region                     : 0x%lx (%d bytes)\n",
-+		seq_printf(m,
-+			  "\tMemory region                     : 0x%x (%d bytes)\n",
- 			  ha->mem_addr, ha->mem_len);
--		copy_info(&info,
--			  "\tShared memory address             : 0x%lx\n",
-+		seq_printf(m,
-+			  "\tShared memory address             : %p\n",
- 			  ha->mem_ptr);
- 	}
- 
--	copy_info(&info, "\tIRQ number                        : %d\n", ha->pcidev->irq);
-+	seq_printf(m, "\tIRQ number                        : %d\n", ha->pcidev->irq);
- 
-     /* For the Next 3 lines Check for Binary 0 at the end and don't include it if it's there. */
-     /* That keeps everything happy for "text" operations on the proc file.                    */
- 
- 	if (le32_to_cpu(ha->nvram->signature) == IPS_NVRAM_P5_SIG) {
- 	if (ha->nvram->bios_low[3] == 0) {
--            copy_info(&info,
-+            seq_printf(m,
- 			          "\tBIOS Version                      : %c%c%c%c%c%c%c\n",
- 			          ha->nvram->bios_high[0], ha->nvram->bios_high[1],
- 			          ha->nvram->bios_high[2], ha->nvram->bios_high[3],
-@@ -2086,7 +2066,7 @@ ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
- 			          ha->nvram->bios_low[2]);
- 
-         } else {
--		    copy_info(&info,
-+		    seq_printf(m,
- 			          "\tBIOS Version                      : %c%c%c%c%c%c%c%c\n",
- 			          ha->nvram->bios_high[0], ha->nvram->bios_high[1],
- 			          ha->nvram->bios_high[2], ha->nvram->bios_high[3],
-@@ -2097,14 +2077,14 @@ ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
-     }
- 
-     if (ha->enq->CodeBlkVersion[7] == 0) {
--        copy_info(&info,
-+        seq_printf(m,
- 		          "\tFirmware Version                  : %c%c%c%c%c%c%c\n",
- 		          ha->enq->CodeBlkVersion[0], ha->enq->CodeBlkVersion[1],
- 		          ha->enq->CodeBlkVersion[2], ha->enq->CodeBlkVersion[3],
- 		          ha->enq->CodeBlkVersion[4], ha->enq->CodeBlkVersion[5],
- 		          ha->enq->CodeBlkVersion[6]);
-     } else {
--        copy_info(&info,
-+        seq_printf(m,
- 		          "\tFirmware Version                  : %c%c%c%c%c%c%c%c\n",
- 		          ha->enq->CodeBlkVersion[0], ha->enq->CodeBlkVersion[1],
- 		          ha->enq->CodeBlkVersion[2], ha->enq->CodeBlkVersion[3],
-@@ -2113,14 +2093,14 @@ ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
-     }
- 
-     if (ha->enq->BootBlkVersion[7] == 0) {
--        copy_info(&info,
-+        seq_printf(m,
- 		          "\tBoot Block Version                : %c%c%c%c%c%c%c\n",
- 		          ha->enq->BootBlkVersion[0], ha->enq->BootBlkVersion[1],
- 		          ha->enq->BootBlkVersion[2], ha->enq->BootBlkVersion[3],
- 		          ha->enq->BootBlkVersion[4], ha->enq->BootBlkVersion[5],
- 		          ha->enq->BootBlkVersion[6]);
-     } else {
--        copy_info(&info,
-+        seq_printf(m,
- 		          "\tBoot Block Version                : %c%c%c%c%c%c%c%c\n",
- 		          ha->enq->BootBlkVersion[0], ha->enq->BootBlkVersion[1],
- 		          ha->enq->BootBlkVersion[2], ha->enq->BootBlkVersion[3],
-@@ -2128,90 +2108,26 @@ ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
- 		          ha->enq->BootBlkVersion[6], ha->enq->BootBlkVersion[7]);
-     }
- 
--	copy_info(&info, "\tDriver Version                    : %s%s\n",
-+	seq_printf(m, "\tDriver Version                    : %s%s\n",
- 		  IPS_VERSION_HIGH, IPS_VERSION_LOW);
- 
--	copy_info(&info, "\tDriver Build                      : %d\n",
-+	seq_printf(m, "\tDriver Build                      : %d\n",
- 		  IPS_BUILD_IDENT);
- 
--	copy_info(&info, "\tMax Physical Devices              : %d\n",
-+	seq_printf(m, "\tMax Physical Devices              : %d\n",
- 		  ha->enq->ucMaxPhysicalDevices);
--	copy_info(&info, "\tMax Active Commands               : %d\n",
-+	seq_printf(m, "\tMax Active Commands               : %d\n",
- 		  ha->max_cmds);
--	copy_info(&info, "\tCurrent Queued Commands           : %d\n",
-+	seq_printf(m, "\tCurrent Queued Commands           : %d\n",
- 		  ha->scb_waitlist.count);
--	copy_info(&info, "\tCurrent Active Commands           : %d\n",
-+	seq_printf(m, "\tCurrent Active Commands           : %d\n",
- 		  ha->scb_activelist.count - ha->num_ioctl);
--	copy_info(&info, "\tCurrent Queued PT Commands        : %d\n",
-+	seq_printf(m, "\tCurrent Queued PT Commands        : %d\n",
- 		  ha->copp_waitlist.count);
--	copy_info(&info, "\tCurrent Active PT Commands        : %d\n",
-+	seq_printf(m, "\tCurrent Active PT Commands        : %d\n",
- 		  ha->num_ioctl);
- 
--	copy_info(&info, "\n");
--
--	return (info.localpos);
--}
--
--/****************************************************************************/
--/*                                                                          */
--/* Routine Name: copy_mem_info                                              */
--/*                                                                          */
--/* Routine Description:                                                     */
--/*                                                                          */
--/*   Copy data into an IPS_INFOSTR structure                                */
--/*                                                                          */
--/****************************************************************************/
--static void
--copy_mem_info(IPS_INFOSTR * info, char *data, int len)
--{
--	METHOD_TRACE("copy_mem_info", 1);
--
--	if (info->pos + len < info->offset) {
--		info->pos += len;
--		return;
--	}
--
--	if (info->pos < info->offset) {
--		data += (info->offset - info->pos);
--		len -= (info->offset - info->pos);
--		info->pos += (info->offset - info->pos);
--	}
--
--	if (info->localpos + len > info->length)
--		len = info->length - info->localpos;
--
--	if (len > 0) {
--		memcpy(info->buffer + info->localpos, data, len);
--		info->pos += len;
--		info->localpos += len;
--	}
--}
--
--/****************************************************************************/
--/*                                                                          */
--/* Routine Name: copy_info                                                  */
--/*                                                                          */
--/* Routine Description:                                                     */
--/*                                                                          */
--/*   printf style wrapper for an info structure                             */
--/*                                                                          */
--/****************************************************************************/
--static int
--copy_info(IPS_INFOSTR * info, char *fmt, ...)
--{
--	va_list args;
--	char buf[128];
--	int len;
--
--	METHOD_TRACE("copy_info", 1);
--
--	va_start(args, fmt);
--	len = vsprintf(buf, fmt, args);
--	va_end(args);
--
--	copy_mem_info(info, buf, len);
--
--	return (len);
-+	seq_printf(m, "\n");
- }
- 
- /****************************************************************************/
-diff --git a/drivers/scsi/ips.h b/drivers/scsi/ips.h
-index f2df059..45b9566 100644
---- a/drivers/scsi/ips.h
-+++ b/drivers/scsi/ips.h
-@@ -416,7 +416,6 @@
-    /*
-     * Scsi_Host Template
-     */
--   static int ips_proc_info(struct Scsi_Host *, char *, char **, off_t, int, int);
-    static int ips_biosparam(struct scsi_device *sdev, struct block_device *bdev,
- 		sector_t capacity, int geom[]);
-    static int ips_slave_configure(struct scsi_device *SDptr);
-@@ -959,14 +958,6 @@ typedef union {
-    IPS_ENH_SG_LIST  *enh_list;
- } IPS_SG_LIST;
- 
--typedef struct _IPS_INFOSTR {
--   char *buffer;
--   int   length;
--   int   offset;
--   int   pos;
--   int   localpos;
--} IPS_INFOSTR;
--
- typedef struct {
-    char *option_name;
-    int  *option_flag;
+ # include <linux/init.h>
 -- 
 1.7.3.4
 
