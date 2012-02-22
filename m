@@ -1,15 +1,15 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 26/34] scsi proc_ops: convert drivers/message/fusion/
-Date: Wed, 22 Feb 2012 22:46:17 +0300
-Message-ID: <1329939985-26793-26-git-send-email-adobriyan@gmail.com>
+Subject: [PATCH 11/34] scsi proc_ops: convert drivers/scsi/fd_mcs.c
+Date: Wed, 22 Feb 2012 22:46:02 +0300
+Message-ID: <1329939985-26793-11-git-send-email-adobriyan@gmail.com>
 References: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:62313 "EHLO
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:44011 "EHLO
 	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755647Ab2BVTrV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2012 14:47:21 -0500
-Received: by mail-bk0-f46.google.com with SMTP id jm19so434319bkc.19
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2012 11:47:19 -0800 (PST)
+	with ESMTP id S1755461Ab2BVTqw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2012 14:46:52 -0500
+Received: by mail-bk0-f46.google.com with SMTP id jm19so433831bkc.19
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2012 11:46:52 -0800 (PST)
 In-Reply-To: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,206 +18,86 @@ Cc: linux-scsi@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>
 
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
- drivers/message/fusion/mptfc.c    |    2 +-
- drivers/message/fusion/mptsas.c   |    2 +-
- drivers/message/fusion/mptscsih.c |  109 +++++++------------------------------
- drivers/message/fusion/mptscsih.h |    2 +-
- drivers/message/fusion/mptspi.c   |    2 +-
- 5 files changed, 23 insertions(+), 94 deletions(-)
+ drivers/scsi/fd_mcs.c |   47 ++++++++++++++++++++---------------------------
+ 1 files changed, 20 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
-index d784c36..80e7508 100644
---- a/drivers/message/fusion/mptfc.c
-+++ b/drivers/message/fusion/mptfc.c
-@@ -109,7 +109,7 @@ static int mptfc_host_reset(struct scsi_cmnd *SCpnt);
- static struct scsi_host_template mptfc_driver_template = {
- 	.module				= THIS_MODULE,
- 	.proc_name			= "mptfc",
--	.proc_info			= mptscsih_proc_info,
-+	.proc_ops			= &mptscsih_proc_ops,
- 	.name				= "MPT FC Host",
- 	.info				= mptscsih_info,
- 	.queuecommand			= mptfc_qcmd,
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 551262e..40806d3 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -1977,7 +1977,7 @@ done:
- static struct scsi_host_template mptsas_driver_template = {
- 	.module				= THIS_MODULE,
- 	.proc_name			= "mptsas",
--	.proc_info			= mptscsih_proc_info,
-+	.proc_ops			= &mptscsih_proc_ops,
- 	.name				= "MPT SAS Host",
- 	.info				= mptscsih_info,
- 	.queuecommand			= mptsas_qcmd,
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 0c3ced7..866f782 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -54,6 +54,7 @@
- #include <linux/delay.h>	/* for mdelay */
- #include <linux/interrupt.h>	/* needed for in_interrupt() proto */
- #include <linux/reboot.h>	/* notifier code */
+diff --git a/drivers/scsi/fd_mcs.c b/drivers/scsi/fd_mcs.c
+index a2c6135..ff6175d 100644
+--- a/drivers/scsi/fd_mcs.c
++++ b/drivers/scsi/fd_mcs.c
+@@ -85,6 +85,7 @@
+ #include <linux/string.h>
+ #include <linux/ioport.h>
+ #include <linux/proc_fs.h>
 +#include <linux/seq_file.h>
- #include <linux/workqueue.h>
+ #include <linux/delay.h>
+ #include <linux/mca.h>
+ #include <linux/spinlock.h>
+@@ -529,37 +530,29 @@ static const char *fd_mcs_info(struct Scsi_Host *shpnt)
  
- #include <scsi/scsi.h>
-@@ -1283,102 +1284,31 @@ mptscsih_info(struct Scsi_Host *SChost)
- 	return h->info_kbuf;
- }
+ static int TOTAL_INTR = 0;
  
--struct info_str {
--	char *buffer;
--	int   length;
--	int   offset;
--	int   pos;
--};
--
--static void
--mptscsih_copy_mem_info(struct info_str *info, char *data, int len)
-+static int mptscsih_proc_show(struct seq_file *m, void *v)
- {
--	if (info->pos + len > info->length)
--		len = info->length - info->pos;
--
--	if (info->pos + len < info->offset) {
--		info->pos += len;
--		return;
--	}
--
--	if (info->pos < info->offset) {
--	        data += (info->offset - info->pos);
--	        len  -= (info->offset - info->pos);
--	}
-+	struct Scsi_Host *host = m->private;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
-+	MPT_ADAPTER	*ioc = hd->ioc;
- 
--	if (len > 0) {
--                memcpy(info->buffer + info->pos, data, len);
--                info->pos += len;
--	}
-+	seq_printf(m, "%s: %s, ", ioc->name, ioc->prod_name);
-+	seq_printf(m, "%s%08xh, ", MPT_FW_REV_MAGIC_ID_STRING, ioc->facts.FWVersion.Word);
-+	seq_printf(m, "Ports=%d, ", ioc->facts.NumberOfPorts);
-+	seq_printf(m, "MaxQ=%d\n", ioc->req_depth);
-+	return 0;
- }
- 
--static int
--mptscsih_copy_info(struct info_str *info, char *fmt, ...)
-+static int mptscsih_proc_open(struct inode *inode, struct file *file)
- {
--	va_list args;
--	char buf[81];
--	int len;
--
--	va_start(args, fmt);
--	len = vsprintf(buf, fmt, args);
--	va_end(args);
--
--	mptscsih_copy_mem_info(info, buf, len);
--	return len;
-+	return single_open(file, mptscsih_proc_show, PDE(inode)->data);
- }
- 
--static int
--mptscsih_host_info(MPT_ADAPTER *ioc, char *pbuf, off_t offset, int len)
--{
--	struct info_str info;
--
--	info.buffer	= pbuf;
--	info.length	= len;
--	info.offset	= offset;
--	info.pos	= 0;
--
--	mptscsih_copy_info(&info, "%s: %s, ", ioc->name, ioc->prod_name);
--	mptscsih_copy_info(&info, "%s%08xh, ", MPT_FW_REV_MAGIC_ID_STRING, ioc->facts.FWVersion.Word);
--	mptscsih_copy_info(&info, "Ports=%d, ", ioc->facts.NumberOfPorts);
--	mptscsih_copy_info(&info, "MaxQ=%d\n", ioc->req_depth);
--
--	return ((info.pos > info.offset) ? info.pos - info.offset : 0);
--}
--
--/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
--/**
-- *	mptscsih_proc_info - Return information about MPT adapter
-- * 	@host:   scsi host struct
-- * 	@buffer: if write, user data; if read, buffer for user
-- *	@start: returns the buffer address
-- * 	@offset: if write, 0; if read, the current offset into the buffer from
-- * 		 the previous read.
-- * 	@length: if write, return length;
-- *	@func:   write = 1; read = 0
-- *
-- *	(linux scsi_host_template.info routine)
+-/*
+- * inout : decides on the direction of the dataflow and the meaning of the 
+- *         variables
+- * buffer: If inout==FALSE data is being written to it else read from it
+- * *start: If inout==FALSE start of the valid data in the buffer
+- * offset: If inout==FALSE offset from the beginning of the imaginary file 
+- *         from which we start writing into the buffer
+- * length: If inout==FALSE max number of bytes to be written into the buffer 
+- *         else number of bytes in the buffer
 - */
--int
--mptscsih_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
--			int length, int func)
--{
--	MPT_SCSI_HOST	*hd = shost_priv(host);
--	MPT_ADAPTER	*ioc = hd->ioc;
--	int size = 0;
+-static int fd_mcs_proc_info(struct Scsi_Host *shpnt, char *buffer, char **start, off_t offset, int length, int inout)
++static int fd_mcs_proc_show(struct seq_file *m, void *v)
+ {
+-	int len = 0;
++	struct Scsi_Host *shpnt = m->private;
+ 
+-	if (inout)
+-		return (-ENOSYS);
 -
--	if (func) {
--		/*
--		 * write is not supported
--		 */
--	} else {
--		if (start)
--			*start = buffer;
+-	*start = buffer + offset;
 -
--		size = mptscsih_host_info(ioc, buffer, offset, length);
--	}
--
--	return size;
--}
-+const struct file_operations mptscsih_proc_ops = {
-+	.open		= mptscsih_proc_open,
+-	len += sprintf(buffer + len, "Future Domain MCS-600/700 Driver %s\n", DRIVER_VERSION);
+-	len += sprintf(buffer + len, "HOST #%d: %s\n", shpnt->host_no, adapter_name);
+-	len += sprintf(buffer + len, "FIFO Size=0x%x, FIFO Count=%d\n", FIFO_Size, FIFO_COUNT);
+-	len += sprintf(buffer + len, "DriverCalls=%d, Interrupts=%d, BytesRead=%d, BytesWrite=%d\n\n", TOTAL_INTR, INTR_Processed, Bytes_Read, Bytes_Written);
++	seq_printf(m, "Future Domain MCS-600/700 Driver %s\n", DRIVER_VERSION);
++	seq_printf(m, "HOST #%d: %s\n", shpnt->host_no, adapter_name);
++	seq_printf(m, "FIFO Size=0x%x, FIFO Count=%d\n", FIFO_Size, FIFO_COUNT);
++	seq_printf(m, "DriverCalls=%d, Interrupts=%d, BytesRead=%d, BytesWrite=%d\n\n", TOTAL_INTR, INTR_Processed, Bytes_Read, Bytes_Written);
++	return 0;
++}
+ 
+-	if ((len -= offset) <= 0)
+-		return 0;
+-	if (len > length)
+-		len = length;
+-	return len;
++static int fd_mcs_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, fd_mcs_proc_show, PDE(inode)->data);
+ }
+ 
++static const struct file_operations fd_mcs_proc_ops = {
++	.open		= fd_mcs_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
 +};
-+EXPORT_SYMBOL(mptscsih_proc_ops);
++
+ static int fd_mcs_select(struct Scsi_Host *shpnt, int target)
+ {
+ 	int status;
+@@ -1336,7 +1329,7 @@ static int fd_mcs_biosparam(struct scsi_device * disk, struct block_device *bdev
  
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- #define ADD_INDEX_LOG(req_ent)	do { } while(0)
-@@ -3347,7 +3277,6 @@ EXPORT_SYMBOL(mptscsih_shutdown);
- EXPORT_SYMBOL(mptscsih_suspend);
- EXPORT_SYMBOL(mptscsih_resume);
- #endif
--EXPORT_SYMBOL(mptscsih_proc_info);
- EXPORT_SYMBOL(mptscsih_info);
- EXPORT_SYMBOL(mptscsih_qcmd);
- EXPORT_SYMBOL(mptscsih_slave_destroy);
-diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
-index 43e75ff..3a4f9a1 100644
---- a/drivers/message/fusion/mptscsih.h
-+++ b/drivers/message/fusion/mptscsih.h
-@@ -111,7 +111,7 @@ extern void mptscsih_shutdown(struct pci_dev *);
- extern int mptscsih_suspend(struct pci_dev *pdev, pm_message_t state);
- extern int mptscsih_resume(struct pci_dev *pdev);
- #endif
--extern int mptscsih_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset, int length, int func);
-+extern const struct file_operations mptscsih_proc_ops;
- extern const char * mptscsih_info(struct Scsi_Host *SChost);
- extern int mptscsih_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *));
- extern int mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd, u8 type, u8 channel,
-diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-index 8f61ba6..85a0ba2 100644
---- a/drivers/message/fusion/mptspi.c
-+++ b/drivers/message/fusion/mptspi.c
-@@ -831,7 +831,7 @@ static void mptspi_slave_destroy(struct scsi_device *sdev)
- static struct scsi_host_template mptspi_driver_template = {
- 	.module				= THIS_MODULE,
- 	.proc_name			= "mptspi",
--	.proc_info			= mptscsih_proc_info,
-+	.proc_ops			= &mptscsih_proc_ops,
- 	.name				= "MPT SPI Host",
- 	.info				= mptscsih_info,
- 	.queuecommand			= mptspi_qcmd,
+ static struct scsi_host_template driver_template = {
+ 	.proc_name			= "fd_mcs",
+-	.proc_info			= fd_mcs_proc_info,
++	.proc_ops			= &fd_mcs_proc_ops,
+ 	.detect				= fd_mcs_detect,
+ 	.release			= fd_mcs_release,
+ 	.info				= fd_mcs_info,
 -- 
 1.7.3.4
 
