@@ -1,15 +1,15 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 02/34] scsi proc_ops: convert drivers/scsi/scsi_debug.c
-Date: Wed, 22 Feb 2012 22:45:53 +0300
-Message-ID: <1329939985-26793-2-git-send-email-adobriyan@gmail.com>
+Subject: [PATCH 04/34] scsi proc_ops: convert drivers/scsi/imm.c
+Date: Wed, 22 Feb 2012 22:45:55 +0300
+Message-ID: <1329939985-26793-4-git-send-email-adobriyan@gmail.com>
 References: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-bk0-f46.google.com ([209.85.214.46]:59220 "EHLO
 	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754798Ab2BVTqf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2012 14:46:35 -0500
+	with ESMTP id S1755224Ab2BVTqk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2012 14:46:40 -0500
 Received: by mail-bk0-f46.google.com with SMTP id jm19so433763bkc.19
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2012 11:46:35 -0800 (PST)
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2012 11:46:39 -0800 (PST)
 In-Reply-To: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,116 +18,116 @@ Cc: linux-scsi@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>
 
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
- drivers/scsi/scsi_debug.c |   70 ++++++++++++++++++++++-----------------------
- 1 files changed, 34 insertions(+), 36 deletions(-)
+ drivers/scsi/imm.c |   72 +++++++++++++++++++++++----------------------------
+ 1 files changed, 33 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 6888b2c..2f3fd1d 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -40,6 +40,7 @@
- #include <linux/vmalloc.h>
- #include <linux/moduleparam.h>
- #include <linux/scatterlist.h>
-+#include <linux/seq_file.h>
+diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
+index 26cd9d1..b655b64 100644
+--- a/drivers/scsi/imm.c
++++ b/drivers/scsi/imm.c
+@@ -13,6 +13,7 @@
+ #include <linux/module.h>
  #include <linux/blkdev.h>
- #include <linux/crc-t10dif.h>
- 
-@@ -2803,35 +2804,12 @@ static const char * scsi_debug_info(struct Scsi_Host * shp)
- 	return sdebug_info;
+ #include <linux/parport.h>
++#include <linux/seq_file.h>
+ #include <linux/workqueue.h>
+ #include <linux/delay.h>
+ #include <linux/slab.h>
+@@ -114,54 +115,47 @@ static inline void imm_pb_release(imm_struct *dev)
+ 	parport_release(dev->dev);
  }
  
--/* scsi_debug_proc_info
-+/*
-  * Used if the driver currently has no own support for /proc/scsi
-  */
--static int scsi_debug_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
--				int length, int inout)
-+static int scsi_debug_proc_show(struct seq_file *m, void *v)
+-/* This is to give the imm driver a way to modify the timings (and other
+- * parameters) by writing to the /proc/scsi/imm/0 file.
+- * Very simple method really... (Too simple, no error checking :( )
+- * Reason: Kernel hackers HATE having to unload and reload modules for
+- * testing...
+- * Also gives a method to use a script to obtain optimum timings (TODO)
+- */
+-static inline int imm_proc_write(imm_struct *dev, char *buffer, int length)
++static int imm_proc_show(struct seq_file *m, void *v)
  {
--	int len, pos, begin;
--	int orig_length;
--
--	orig_length = length;
--
--	if (inout == 1) {
--		char arr[16];
--		int minLen = length > 15 ? 15 : length;
--
--		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
--			return -EACCES;
--		memcpy(arr, buffer, minLen);
--		arr[minLen] = '\0';
--		if (1 != sscanf(arr, "%d", &pos))
--			return -EINVAL;
--		scsi_debug_opts = pos;
--		if (scsi_debug_every_nth != 0)
--                        scsi_debug_cmnd_count = 0;
+-	unsigned long x;
++	struct Scsi_Host *host = m->private;
++	imm_struct *dev = imm_dev(host);
+ 
+-	if ((length > 5) && (strncmp(buffer, "mode=", 5) == 0)) {
+-		x = simple_strtoul(buffer + 5, NULL, 0);
+-		dev->mode = x;
 -		return length;
 -	}
--	begin = 0;
--	pos = len = sprintf(buffer, "scsi_debug adapter driver, version "
--	    "%s [%s]\n"
-+	seq_printf(m, "scsi_debug adapter driver, version %s [%s]\n"
- 	    "num_tgts=%d, shared (ram) size=%d MB, opts=0x%x, "
- 	    "every_nth=%d(curr:%d)\n"
- 	    "delay=%d, max_luns=%d, scsi_level=%d\n"
-@@ -2845,17 +2823,37 @@ static int scsi_debug_proc_info(struct Scsi_Host *host, char *buffer, char **sta
- 	    scsi_debug_sector_size, sdebug_cylinders_per, sdebug_heads,
- 	    sdebug_sectors_per, num_aborts, num_dev_resets, num_bus_resets,
- 	    num_host_resets, dix_reads, dix_writes, dif_errors);
--	if (pos < offset) {
--		len = 0;
--		begin = pos;
--	}
--	*start = buffer + (offset - begin);	/* Start of wanted data */
--	len -= (offset - begin);
--	if (len > length)
--		len = length;
--	return len;
+-	printk("imm /proc: invalid variable\n");
+-	return (-EINVAL);
++	seq_printf(m, "Version : %s\n", IMM_VERSION);
++	seq_printf(m, "Parport : %s\n", dev->dev->port->name);
++	seq_printf(m, "Mode    : %s\n", IMM_MODE_STRING[dev->mode]);
 +	return 0;
  }
  
-+static int scsi_debug_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, scsi_debug_proc_show, NULL);
+-static int imm_proc_info(struct Scsi_Host *host, char *buffer, char **start,
+-			off_t offset, int length, int inout)
++static int imm_proc_open(struct inode *inode, struct file *file)
+ {
+-	imm_struct *dev = imm_dev(host);
+-	int len = 0;
+-
+-	if (inout)
+-		return imm_proc_write(dev, buffer, length);
++	return single_open(file, imm_proc_show, PDE(inode)->data);
 +}
-+
-+static ssize_t scsi_debug_proc_write(struct file *file, const char __user *buf,
-+				     size_t count, loff_t *pos)
+ 
+-	len += sprintf(buffer + len, "Version : %s\n", IMM_VERSION);
+-	len +=
+-	    sprintf(buffer + len, "Parport : %s\n",
+-		    dev->dev->port->name);
+-	len +=
+-	    sprintf(buffer + len, "Mode    : %s\n",
+-		    IMM_MODE_STRING[dev->mode]);
++static ssize_t imm_proc_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
 +{
-+	int rv;
-+
-+	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-+		return -EACCES;
-+	rv = kstrtoint_from_user(buf, count, 10, &scsi_debug_opts);
-+	if (rv < 0)
-+		return rv;
-+	if (scsi_debug_every_nth != 0)
-+		scsi_debug_cmnd_count = 0;
++	struct Scsi_Host *host = PDE(file->f_path.dentry->d_inode)->data;
++	imm_struct *dev = imm_dev(host);
++	char kbuf[42];
++	size_t len;
+ 
+-	/* Request for beyond end of buffer */
+-	if (offset > len)
+-		return 0;
++	len = min(count, sizeof(kbuf) - 1);
++	if (copy_from_user(kbuf, buf, len))
++		return -EFAULT;
++	kbuf[len] = '\0';
+ 
+-	*start = buffer + offset;
+-	len -= offset;
+-	if (len > length)
+-		len = length;
+-	return len;
++	if (sscanf(kbuf, "mode=%i", &dev->mode) != 1)
++		return -EINVAL;
 +	return count;
-+}
-+
-+static const struct file_operations scsi_debug_proc_ops = {
-+	.open		= scsi_debug_proc_open,
+ }
+ 
++static const struct file_operations imm_proc_ops = {
++	.open		= imm_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
-+	.write		= scsi_debug_proc_write,
++	.write		= imm_proc_write,
 +};
 +
- static ssize_t sdebug_delay_show(struct device_driver * ddp, char * buf)
- {
-         return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_delay);
-@@ -3916,7 +3914,7 @@ write:
- static DEF_SCSI_QCMD(scsi_debug_queuecommand)
- 
- static struct scsi_host_template sdebug_driver_template = {
--	.proc_info =		scsi_debug_proc_info,
-+	.proc_ops =		&scsi_debug_proc_ops,
- 	.proc_name =		sdebug_proc_name,
- 	.name =			"SCSI DEBUG",
- 	.info =			scsi_debug_info,
+ #if IMM_DEBUG > 0
+ #define imm_fail(x,y) printk("imm: imm_fail(%i) from %s at line %d\n",\
+ 	   y, __func__, __LINE__); imm_fail_func(x,y);
+@@ -1118,7 +1112,7 @@ static int imm_adjust_queue(struct scsi_device *device)
+ static struct scsi_host_template imm_template = {
+ 	.module			= THIS_MODULE,
+ 	.proc_name		= "imm",
+-	.proc_info		= imm_proc_info,
++	.proc_ops		= &imm_proc_ops,
+ 	.name			= "Iomega VPI2 (imm) interface",
+ 	.queuecommand		= imm_queuecommand,
+ 	.eh_abort_handler	= imm_abort,
 -- 
 1.7.3.4
 
