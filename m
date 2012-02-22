@@ -1,95 +1,60 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/1] scsi scan: don't fail scans when host is in recovery
-Date: Wed, 22 Feb 2012 10:56:58 +0100
-Message-ID: <4F44BBEA.3020400@suse.de>
-References: <1314250598-2852-1-git-send-email-michaelc@cs.wisc.edu>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [patch] [SCSI] qla2xxx: handle default case in
+ qla2x00_request_firmware()
+Date: Wed, 22 Feb 2012 10:17:36 -0500
+Message-ID: <alpine.WNT.2.00.1202221017110.5728@N5102REMCQXM4BS.qlogic.org>
+References: <20120221072939.GB6896@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:32998 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752877Ab2BVJ5A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2012 04:57:00 -0500
-In-Reply-To: <1314250598-2852-1-git-send-email-michaelc@cs.wisc.edu>
+Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:45597
+	"EHLO VA3EHSOBE007.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751921Ab2BVPRr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2012 10:17:47 -0500
+In-Reply-To: <20120221072939.GB6896@elgon.mountain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@parallels.com>
-Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-On 08/25/2011 07:36 AM, michaelc@cs.wisc.edu wrote:
-> From: Mike Christie <michaelc@cs.wisc.edu>
->=20
-> The problem is that if we are doing a scsi scan then the device goes
-> into recovery then we will wait for the recovery to complete. It wait=
-s
-> because scsi-ml will send inquiries or report luns and the queueing c=
-ode
-> will have been blocked due to the host not being ready. However, if w=
-e
-> are in recovery and then a scan is started the scan will silently fai=
-l
-> and some devices will not be added.
->=20
-> It is easy to hit the problem where devices do not show up with
-> FC where we are doing tests that disrupt the target controllers.
-> When the controller is disruprted (reboot, or setting firmware, etc),
-> and we cause the dev loss tmo to fire then devices will be removed
-> Then when the problem has been fixed, the rport will be scanned and
-> devices should be added back. But if we cause another disruption befo=
-re
-> scanning has started then devices will not get added back. If the pro=
-blem
-> is not started until the scan is started then the devices will be add=
-ed
-> back.
->=20
-> This patch fixes that problem by not failing scans when the host
-> is in recovery. We will let scsi-ml send the IO and let the queueing
-> and scsi error handling deal with it like is done if we went into
-> recovery while scanning.
->=20
-> For recovery cases where the host is being torn down then with the
-> patch we will still fail the scan since there is not point in scannin=
-g.
->=20
-> Patch was made and tested over scsi-misc.
->=20
->=20
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> ---
->  include/scsi/scsi_host.h |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->=20
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index f1f2644..22b7b23 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -791,7 +791,8 @@ static inline struct device *scsi_get_device(stru=
-ct Scsi_Host *shost)
->   **/
->  static inline int scsi_host_scan_allowed(struct Scsi_Host *shost)
->  {
-> -	return shost->shost_state =3D=3D SHOST_RUNNING;
-> +	return shost->shost_state =3D=3D SHOST_RUNNING ||
-> +	       shost->shost_state =3D=3D SHOST_RECOVERY;
->  }
-> =20
->  extern void scsi_unblock_requests(struct Scsi_Host *);
+Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
 
-James, ping?
-Any reason it was not included?
+On Mon, 20 Feb 2012, Dan Carpenter wrote:
 
-Cheers,
+> This silences a static checker warning.  Also we're always adding new
+> types of firmware, so it might fix a bug in real life some day.
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 094af74..a2f9992 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -4058,7 +4058,6 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
+>       struct qla_hw_data *ha = vha->hw;
+>       struct fw_blob *blob;
+>
+> -     blob = NULL;
+>       if (IS_QLA2100(ha)) {
+>               blob = &qla_fw_blobs[FW_ISP21XX];
+>       } else if (IS_QLA2200(ha)) {
+> @@ -4079,6 +4078,8 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
+>               blob = &qla_fw_blobs[FW_ISP2031];
+>       } else if (IS_QLA8031(ha)) {
+>               blob = &qla_fw_blobs[FW_ISP8031];
+> +     } else {
+> +             return NULL;
+>       }
+>
+>       mutex_lock(&qla_fw_lock);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
