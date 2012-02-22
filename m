@@ -1,181 +1,163 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 30/34] scsi proc_ops: convert drivers/scsi/g_NCR5380.c
-Date: Wed, 22 Feb 2012 22:46:21 +0300
-Message-ID: <1329939985-26793-30-git-send-email-adobriyan@gmail.com>
+Subject: [PATCH 34/34] scsi proc_ops: remove scsi_host_template::proc_info
+Date: Wed, 22 Feb 2012 22:46:25 +0300
+Message-ID: <1329939985-26793-34-git-send-email-adobriyan@gmail.com>
 References: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-bk0-f46.google.com ([209.85.214.46]:62313 "EHLO
 	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755621Ab2BVTr1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2012 14:47:27 -0500
+	with ESMTP id S1755809Ab2BVTre (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2012 14:47:34 -0500
 Received: by mail-bk0-f46.google.com with SMTP id jm19so434319bkc.19
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2012 11:47:26 -0800 (PST)
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2012 11:47:34 -0800 (PST)
 In-Reply-To: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
 Cc: linux-scsi@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>
 
+Now that all users have been converted.
+
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
- drivers/scsi/g_NCR5380.c |   79 +++++++++++++++++++--------------------------
- 1 files changed, 33 insertions(+), 46 deletions(-)
+ drivers/scsi/scsi_proc.c |   79 ++++-----------------------------------------
+ include/scsi/scsi_host.h |    1 -
+ 2 files changed, 7 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 81182ba..cdd8dc2 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -114,6 +114,8 @@
- #include <linux/isapnp.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/proc_fs.h>
-+#include <linux/seq_file.h>
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+index 31da690..cb72a61 100644
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -36,68 +36,12 @@
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
  
- #define NCR_NOT_SET 0
- static int ncr_irq = NCR_NOT_SET;
-@@ -746,24 +748,21 @@ static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src,
-  
- #include "NCR5380.c"
+-
+-/* 4K page size, but our output routines, use some slack for overruns */
+-#define PROC_BLOCK_SIZE (3*1024)
+-
+ static struct proc_dir_entry *proc_scsi;
  
--#define PRINTP(x) len += sprintf(buffer+len, x)
-+#define PRINTP(x) seq_printf(m, x)
- #define ANDP ,
- 
--static int sprint_opcode(char *buffer, int len, int opcode)
-+static void sprint_opcode(struct seq_file *m, int opcode)
- {
--	int start = len;
- 	PRINTP("0x%02x " ANDP opcode);
--	return len - start;
- }
- 
--static int sprint_command(char *buffer, int len, unsigned char *command)
-+static void sprint_command(struct seq_file *m, unsigned char *command)
- {
--	int i, s, start = len;
--	len += sprint_opcode(buffer, len, command[0]);
-+	int i, s;
-+	sprint_opcode(m, command[0]);
- 	for (i = 1, s = COMMAND_SIZE(command[0]); i < s; ++i)
- 		PRINTP("%02x " ANDP command[i]);
- 	PRINTP("\n");
--	return len - start;
- }
+ /* Protect sht->present and sht->proc_dir */
+ static DEFINE_MUTEX(global_host_template_mutex);
  
  /**
-@@ -775,35 +774,16 @@ static int sprint_command(char *buffer, int len, unsigned char *command)
-  *	Print out the target and command data in hex
-  */
- 
--static int sprint_Scsi_Cmnd(char *buffer, int len, Scsi_Cmnd * cmd)
-+static void sprint_Scsi_Cmnd(struct seq_file *m, Scsi_Cmnd * cmd)
- {
--	int start = len;
- 	PRINTP("host number %d destination target %d, lun %d\n" ANDP cmd->device->host->host_no ANDP cmd->device->id ANDP cmd->device->lun);
- 	PRINTP("        command = ");
--	len += sprint_command(buffer, len, cmd->cmnd);
--	return len - start;
-+	sprint_command(m, cmd->cmnd);
- }
- 
--/**
-- *	generic_NCR5380_proc_info	-	/proc for NCR5380 driver
-- *	@buffer: buffer to print into
-- *	@start: start position
-- *	@offset: offset into buffer
-- *	@len: length
-- *	@hostno: instance to affect
-- *	@inout: read/write
-- *
-- *	Provide the procfs information for the 5380 controller. We fill
-- *	this with useful debugging information including the commands
-- *	being executed, disconnected command queue and the statistical
-- *	data
-- *
-- *	Locks: global cli/lock for queue walk
+- * proc_scsi_read - handle read from /proc by calling host's proc_info() command
+- * @buffer: passed to proc_info
+- * @start: passed to proc_info
+- * @offset: passed to proc_info
+- * @length: passed to proc_info
+- * @eof: returns whether length read was less than requested
+- * @data: pointer to a &struct Scsi_Host
 - */
-- 
--static int generic_NCR5380_proc_info(struct Scsi_Host *scsi_ptr, char *buffer, char **start, off_t offset, int length, int inout)
-+static int generic_NCR5380_proc_show(struct seq_file *m, void *v)
+-
+-static int proc_scsi_read(char *buffer, char **start, off_t offset,
+-			  int length, int *eof, void *data)
+-{
+-	struct Scsi_Host *shost = data;
+-	int n;
+-
+-	n = shost->hostt->proc_info(shost, buffer, start, offset, length, 0);
+-	*eof = (n < length);
+-
+-	return n;
+-}
+-
+-/**
+- * proc_scsi_write_proc - Handle write to /proc by calling host's proc_info()
+- * @file: not used
+- * @buf: source of data to write.
+- * @count: number of bytes (at most PROC_BLOCK_SIZE) to write.
+- * @data: pointer to &struct Scsi_Host
+- */
+-static int proc_scsi_write_proc(struct file *file, const char __user *buf,
+-                           unsigned long count, void *data)
+-{
+-	struct Scsi_Host *shost = data;
+-	ssize_t ret = -ENOMEM;
+-	char *page;
+-	char *start;
+-    
+-	if (count > PROC_BLOCK_SIZE)
+-		return -EOVERFLOW;
+-
+-	page = (char *)__get_free_page(GFP_KERNEL);
+-	if (page) {
+-		ret = -EFAULT;
+-		if (copy_from_user(page, buf, count))
+-			goto out;
+-		ret = shost->hostt->proc_info(shost, page, &start, 0, count, 1);
+-	}
+-out:
+-	free_page((unsigned long)page);
+-	return ret;
+-}
+-
+-/**
+  * scsi_proc_hostdir_add - Create directory in /proc for a scsi host
+  * @sht: owner of this directory
+  *
+@@ -106,7 +50,7 @@ out:
+ 
+ void scsi_proc_hostdir_add(struct scsi_host_template *sht)
  {
--	int len = 0;
-+	struct Scsi_Host *scsi_ptr = m->private;
- 	NCR5380_local_declare();
- 	unsigned long flags;
- 	unsigned char status;
-@@ -854,16 +834,16 @@ static int generic_NCR5380_proc_info(struct Scsi_Host *scsi_ptr, char *buffer, c
- 		PRINTP("  T:%d %s " ANDP dev->id ANDP scsi_device_type(dev->type));
- 		for (i = 0; i < 8; i++)
- 			if (dev->vendor[i] >= 0x20)
--				*(buffer + (len++)) = dev->vendor[i];
--		*(buffer + (len++)) = ' ';
-+				seq_putc(m, dev->vendor[i]);
-+		seq_putc(m, ' ');
- 		for (i = 0; i < 16; i++)
- 			if (dev->model[i] >= 0x20)
--				*(buffer + (len++)) = dev->model[i];
--		*(buffer + (len++)) = ' ';
-+				seq_putc(m, dev->model[i]);
-+		seq_putc(m, ' ');
- 		for (i = 0; i < 4; i++)
- 			if (dev->rev[i] >= 0x20)
--				*(buffer + (len++)) = dev->rev[i];
--		*(buffer + (len++)) = ' ';
-+				seq_putc(m, dev->rev[i]);
-+		seq_putc(m, ' ');
+-	if (!sht->proc_info && !sht->proc_ops)
++	if (!sht->proc_ops)
+ 		return;
  
- 		PRINTP("\n%10ld kb read    in %5ld secs" ANDP br / 1024 ANDP tr);
- 		if (tr)
-@@ -887,32 +867,39 @@ static int generic_NCR5380_proc_info(struct Scsi_Host *scsi_ptr, char *buffer, c
- 	if (!hostdata->connected) {
- 		PRINTP("No currently connected command\n");
- 	} else {
--		len += sprint_Scsi_Cmnd(buffer, len, (Scsi_Cmnd *) hostdata->connected);
-+		sprint_Scsi_Cmnd(m, (Scsi_Cmnd *) hostdata->connected);
- 	}
+ 	mutex_lock(&global_host_template_mutex);
+@@ -125,7 +69,7 @@ void scsi_proc_hostdir_add(struct scsi_host_template *sht)
+  */
+ void scsi_proc_hostdir_rm(struct scsi_host_template *sht)
+ {
+-	if (!sht->proc_info && !sht->proc_ops)
++	if (!sht->proc_ops)
+ 		return;
  
- 	PRINTP("issue_queue\n");
+ 	mutex_lock(&global_host_template_mutex);
+@@ -146,25 +90,16 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
+ 	struct scsi_host_template *sht = shost->hostt;
+ 	struct proc_dir_entry *p;
+ 	char name[10];
++	mode_t mode;
  
- 	for (ptr = (Scsi_Cmnd *) hostdata->issue_queue; ptr; ptr = (Scsi_Cmnd *) ptr->host_scribble)
--		len += sprint_Scsi_Cmnd(buffer, len, ptr);
-+		sprint_Scsi_Cmnd(m, ptr);
+ 	if (!sht->proc_dir)
+ 		return;
  
- 	PRINTP("disconnected_queue\n");
+ 	sprintf(name,"%d", shost->host_no);
+-	if (sht->proc_ops) {
+-		mode_t mode;
+-
+-		mode = S_IRUGO;
+-		if (sht->proc_ops->write)
+-			mode |= S_IWUSR;
+-		p = proc_create_data(name, mode, sht->proc_dir,
+-				     sht->proc_ops, shost);
+-	} else {
+-		p = create_proc_read_entry(name, S_IFREG | S_IRUGO | S_IWUSR,
+-			sht->proc_dir, proc_scsi_read, shost);
+-		if (p)
+-			p->write_proc = proc_scsi_write_proc;
+-	}
++	mode = S_IRUGO;
++	if (sht->proc_ops->write)
++		mode |= S_IWUSR;
++	p = proc_create_data(name, mode, sht->proc_dir, sht->proc_ops, shost);
+ 	if (!p) {
+ 		printk(KERN_ERR "%s: Failed to register host %d in"
+ 		       "%s\n", __func__, shost->host_no,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index f81c80f..34fd834 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -340,7 +340,6 @@ struct scsi_host_template {
+ 	 *
+ 	 * Status: OBSOLETE
+ 	 */
+-	int (*proc_info)(struct Scsi_Host *, char *, char **, off_t, int, int);
+ 	const struct file_operations *proc_ops;
  
- 	for (ptr = (Scsi_Cmnd *) hostdata->disconnected_queue; ptr; ptr = (Scsi_Cmnd *) ptr->host_scribble)
--		len += sprint_Scsi_Cmnd(buffer, len, ptr);
-+		sprint_Scsi_Cmnd(m, ptr);
- 
--	*start = buffer + offset;
--	len -= offset;
--	if (len > length)
--		len = length;
- 	spin_unlock_irqrestore(scsi_ptr->host_lock, flags);
--	return len;
-+	return 0;
- }
- 
- #undef PRINTP
- #undef ANDP
- 
-+static int generic_NCR5380_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, generic_NCR5380_proc_show, PDE(inode)->data);
-+}
-+
-+static const struct file_operations generic_NCR5380_proc_ops = {
-+	.open		= generic_NCR5380_proc_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= single_release,
-+};
- static struct scsi_host_template driver_template = {
--	.proc_info      	= generic_NCR5380_proc_info,
-+	.proc_ops		= &generic_NCR5380_proc_ops,
- 	.name           	= "Generic NCR5380/NCR53C400 Scsi Driver",
- 	.detect         	= generic_NCR5380_detect,
- 	.release        	= generic_NCR5380_release_resources,
+ 	/*
 -- 
 1.7.3.4
 
