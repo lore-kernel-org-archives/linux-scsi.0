@@ -1,43 +1,67 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: scsi (sg) device status vs FC connectivity
-Date: Tue, 21 Feb 2012 21:21:08 -0600
-Message-ID: <1329880868.2922.127.camel@dabdike.int.hansenpartnership.com>
-References: <1329860107.22873.YahooMailNeo@web46407.mail.sp1.yahoo.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH] Fix NULL pointer dereference in sd_revalidate_disk
+Date: Wed, 22 Feb 2012 12:58:08 +0800
+Message-ID: <95E22EAF20104309BF3938E7820F36D6@usish.com.cn>
+References: <4F443E81.2060402@ce.jp.nec.com> <20120222010435.GI12236@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58547 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753108Ab2BVDVL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Feb 2012 22:21:11 -0500
-In-Reply-To: <1329860107.22873.YahooMailNeo@web46407.mail.sp1.yahoo.com>
+Received: from sr-smtp.usish.com ([210.5.144.203]:45591 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750714Ab2BVFA4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2012 00:00:56 -0500
+In-Reply-To: <20120222010435.GI12236@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Candid Shot <candid_shot_1@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: 'Tejun Heo' <tj@kernel.org>, 'Jun'ichi Nomura' <j-nomura@ce.jp.nec.com>
+Cc: 'Jens Axboe' <axboe@kernel.dk>, linux-kernel@vger.kernel.org, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'Naveen Goswamy' <naveen.goswamy@polymtl.ca>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, 'Stefan Richter' <stefanr@s5r6.in-berlin.de>, 'Dave Jones' <davej@redhat.com>, sgruszka@redhat.com, 'Huajun Li' <huajun.li.lee@gmail.com>
 
-On Tue, 2012-02-21 at 13:35 -0800, Candid Shot wrote:
-> (I hope this list is the right place to ask SG Driver related question ..)
-> 
-> Background: A FC cable-pull is simulated by disabling the FC switch (Brocade) port.
-> 
-> 
-> While /sys/class/fc_host/hostx/port_state might confirm the FC connectivity is missing,
-> 
-> /proc/scsi/sg/devices will show the scsi device to be 'online'.
-> 
-> My goal is to be able to return an error to the application, should a cable-pull happen.
-> 
-> Is there a way to be able to tweak this behavior where the scsi driver is able to look at port events,
-> and possibly return errors during read/write operations? 
+Should this need pick up into stable too?
 
-Yes, set the dev_loss_tmo to zero.  That parameter was introduced to
-allow the cables to be disconnected and reconnected without tearing down
-the fibre channel connections.  By default it waits 60 seconds for
-reconnection, if you set it to zero, teardown will happen immediately.
-
-James
-
+Jack
+Re: [PATCH] Fix NULL pointer dereference in sd_revalidate_disk
+> 
+> On Wed, Feb 22, 2012 at 10:01:53AM +0900, Jun'ichi Nomura wrote:
+> > Since 2.6.39 (1196f8b), when a driver returns -ENOMEDIUM for open(),
+> > __blkdev_get() calls rescan_partitions() to remove
+> > in-kernel partition structures and raise KOBJ_CHANGE uevent.
+> >
+> > However it ends up calling driver's revalidate_disk without open
+> > and could cause oops.
+> >
+> > In the case of SCSI:
+> >
+> >   process A                  process B
+> >   ----------------------------------------------
+> >   sys_open
+> >     __blkdev_get
+> >       sd_open
+> >         returns -ENOMEDIUM
+> >                              scsi_remove_device
+> >                                <scsi_device torn down>
+> >       rescan_partitions
+> >         sd_revalidate_disk
+> >           <oops>
+> >
+> > Oopses are reported here:
+> > http://marc.info/?l=linux-scsi&m=132388619710052
+> >
+> > This patch separates the partition invalidation from rescan_partitions()
+> > and use it for -ENOMEDIUM case.
+> >
+> > Reported-by: Huajun Li <huajun.li.lee@gmail.com>
+> > Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> Thank you!
+> 
+> --
+> tejun
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
