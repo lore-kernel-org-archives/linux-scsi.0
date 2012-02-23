@@ -1,36 +1,36 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: 3.3-rc4+: Reported regressions from 3.2
-Date: Thu, 23 Feb 2012 18:28:25 -0500 (EST)
-Message-ID: <20120223.182825.1031311733171854243.davem@davemloft.net>
-References: <y44pDJ8xoDC.A.08E.h8rRPB@chimera>
+From: Florian Mickler <florian@mickler.org>
+Subject: Re: 3.2.x Regression for SAS Controller on Dell C6100
+Date: Fri, 24 Feb 2012 00:35:59 +0100
+Message-ID: <20120224003559.41dea166@schatten>
+References: <20120131180949.GT29272@MAIL.13thfloor.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <y44pDJ8xoDC.A.08E.h8rRPB@chimera>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: rjw@sisk.pl
-Cc: linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, florian@mickler.org, akpm@linux-foundation.org, kernel-testers@vger.kernel.org, torvalds@linux-foundation.org, linux-pm@lists.linux-foundation.org, maciej.rutecki@gmail.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120131180949.GT29272@MAIL.13thfloor.at>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Herbert Poetzl <herbert@13thfloor.at>
+Cc: Linux Kernel ML <linux-kernel@vger.kernel.org>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Date: Thu, 23 Feb 2012 23:51:20 +0100 (CET)
+[adding some cc's from that area ]
+On Tue, 31 Jan 2012 19:09:49 +0100
+Herbert Poetzl <herbert@13thfloor.at> wrote:
 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=42776
-> Subject		: OF-related boot crash in 3.3.0-rc3-00188-g3ec1e88
-> Submitter	: Meelis Roos <mroos@linux.ee>
-> Date		: 2012-02-13 7:45 (11 days old)
-> Message-ID	: <alpine.SOC.1.00.1202130942030.1488@math.ut.ee>
-> References	: http://marc.info/?l=linux-kernel&m=132911916331615&w=2
-
-Potential workaround/fix at:
-
-http://marc.info/?l=linux-kernel&m=132993294018762&w=2
+> 
+> Greetings!
+> 
+> I'm seeing a regression on a Dell C6100 machine with
+> 3.2.x kernels, where the second disk (in a raid setup)
+> is not properly recogniced and so the raid drops into
+> degraded mode
+> 
+> the same hardware works fine with 3.1.x kernels and
+> older
+> 
+> attached the dmesg output of the bootup for a working
+> and a failing kernel
+> 
+> thanks in advance,
+> Herbert
+> 
