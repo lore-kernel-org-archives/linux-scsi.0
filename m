@@ -1,139 +1,36 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: 3.3-rc4+: Reported regressions 3.1 -> 3.2
-Date: Fri, 24 Feb 2012 00:05:04 +0100 (CET)
-Message-ID: <1qKPXd1RqtP.A.wjG.ShsRPB@chimera>
+From: David Miller <davem@davemloft.net>
+Subject: Re: 3.3-rc4+: Reported regressions from 3.2
+Date: Thu, 23 Feb 2012 18:28:25 -0500 (EST)
+Message-ID: <20120223.182825.1031311733171854243.davem@davemloft.net>
+References: <y44pDJ8xoDC.A.08E.h8rRPB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <y44pDJ8xoDC.A.08E.h8rRPB@chimera>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: rjw@sisk.pl
+Cc: linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, florian@mickler.org, akpm@linux-foundation.org, kernel-testers@vger.kernel.org, torvalds@linux-foundation.org, linux-pm@lists.linux-foundation.org, maciej.rutecki@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-This message contains a list of some post-3.1 regressions introduced be=
-fore
-3.2, for which there are no fixes in the mainline known to the tracking=
- team.
-If any of them have been fixed already, please let us know.
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Date: Thu, 23 Feb 2012 23:51:20 +0100 (CET)
 
-If you know of any other unresolved post-3.1 regressions, please let us=
- know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=42776
+> Subject		: OF-related boot crash in 3.3.0-rc3-00188-g3ec1e88
+> Submitter	: Meelis Roos <mroos@linux.ee>
+> Date		: 2012-02-13 7:45 (11 days old)
+> Message-ID	: <alpine.SOC.1.00.1202130942030.1488@math.ut.ee>
+> References	: http://marc.info/?l=linux-kernel&m=132911916331615&w=2
 
-Each entry from the list will be sent additionally in an automatic repl=
-y to
-this message with CCs to the people involved in reporting and handling =
-the
-issue.
+Potential workaround/fix at:
 
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2012-02-24        9        8           7
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D42714
-Subject		: 3.2.x Regression for SAS Controller on Dell C6100
-Submitter	: Herbert Poetzl <herbert-dBHVzrDq9nF4Lj/PQRBjDg@public.gmane.org>
-Date		: 2012-01-31 18:09 (24 days old)
-Message-ID	: <20120131180949.GT29272-ZD0Mn47LIGX0Pe/G4T7+5F6hYfS7NtTn@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132803360019481&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D42685
-Subject		: multi-media key "mute" no longer recognized
-Submitter	: Toralf F=C3=B6rster <toralf.foerster-Mmb7MZpHnFY@public.gmane.org>
-Date		: 2012-01-23 10:52 (32 days old)
-Message-ID	: <201201231152.25344.toralf.foerster-Mmb7MZpHnFY@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132731613606121&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D42684
-Subject		: FYIO: usb/video 3.2 breaks logitech 9000pro webcam focus con=
-trol
-Submitter	: M G Berberich <berberic-vmG2aq7wDA3mFSIgyKwhw7NAH6kLmebB@public.gmane.org>
-Date		: 2012-01-23 21:49 (32 days old)
-Message-ID	: <20120123214934.GA4240@invalid>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132735609521443&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D42631
-Subject		: Sound broken in 3.2.0 and 3.2.1
-Submitter	: Joseph Parmelee <jparmele-0t/HR9YC43JWk0Htik3J/w@public.gmane.org>
-Date		: 2012-01-13 19:44 (42 days old)
-Message-ID	: <alpine.LNX.2.00.1201131241090.1239@bruno>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132648462806235&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D42629
-Subject		: recvmsg sleeping from invalid context
-Submitter	: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Date		: 2012-01-13 18:24 (42 days old)
-Message-ID	: <20120113182401.GA25885-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132647921304184&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D42611
-Subject		: kernel 3.2 crashes too early on HP dc7700 and HP t5000 serie=
-s
-Submitter	: Dmitry D. Khlebnikov <galaxy-cxoSlKxDwOJWk0Htik3J/w@public.gmane.org>
-Date		: 2012-01-10 11:49 (45 days old)
-Message-ID	: <20120110114905.GC13535-cxoSlKxDwOJWk0Htik3J/w@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132619793012702&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D42610
-Subject		: 3.2.0 reboot powers off machine
-Submitter	: Tom Weber <l_linux-kernel-w8lRr17kQ6puIcIf6OMhTAC/G2K4zDHf@public.gmane.org>
-Date		: 2012-01-11 11:03 (44 days old)
-Message-ID	: <1326279818.24835.12.camel@utumno>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132628059308023&w=3D=
-2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D42571
-Subject		: BUG in ofcs2_change_file_space
-Submitter	: Bret Towe <magnade-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2012-01-05 22:23 (50 days old)
-Message-ID	: <CALjC5haTNDMOTDPL1m1uBTc2a-Qb8cvR44SCaVDFMzGc+Gw3+w@mail.=
-gmail.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132580236211209&w=3D=
-2
-Patch		: http://oss.oracle.com/pipermail/ocfs2-devel/2012-January/00846=
-4.html
-
-
-=46or details, please visit the bug entries and follow the links given =
-in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regres=
-sions.
-There also is a Bugzilla entry used for tracking the regressions introd=
-uced
-between 3.1 and 3.2, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=3D42566
-
-Please let the tracking team know if there are any Bugzilla entries tha=
-t
-should be added to the list in there.
-
-Thanks!
+http://marc.info/?l=linux-kernel&m=132993294018762&w=2
