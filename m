@@ -1,31 +1,34 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] Changed alocate to allocate in
- Documentation/target/tcm_mod_builder.py
-Date: Thu, 23 Feb 2012 16:03:17 -0800
-Message-ID: <20120224000317.GA1055@kroah.com>
-References: <1330041039-26284-1-git-send-email-nibz@cat.pdx.edu>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 3.3-rc4+: Reported regressions from 3.2
+Date: Fri, 24 Feb 2012 01:13:13 +0100
+Message-ID: <201202240113.13575.rjw@sisk.pl>
+References: <y44pDJ8xoDC.A.08E.h8rRPB@chimera> <20120223.182825.1031311733171854243.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1330041039-26284-1-git-send-email-nibz@cat.pdx.edu>
-Sender: target-devel-owner@vger.kernel.org
-To: Spencer Krum <nibz@cat.pdx.edu>
-Cc: nab@linux-iscsi.org, rdunlap@xenotime.net, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, MostAwesomeDude@gmail.com, Spencer O Krum <krum.spencer@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20120223.182825.1031311733171854243.davem@davemloft.net>
+Sender: linux-acpi-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org, maciej.rutecki@gmail.com, florian@mickler.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, kernel-testers@vger.kernel.org, netdev@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 23, 2012 at 03:50:39PM -0800, Spencer Krum wrote:
-> From: Spencer O Krum <krum.spencer@gmail.com>
+On Friday, February 24, 2012, David Miller wrote:
+> From: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Date: Thu, 23 Feb 2012 23:51:20 +0100 (CET)
 > 
-> Signed-off-by: Spencer Krum <nibz@cat.pdx.edu>
-> ---
->  Documentation/target/tcm_mod_builder.py |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=42776
+> > Subject		: OF-related boot crash in 3.3.0-rc3-00188-g3ec1e88
+> > Submitter	: Meelis Roos <mroos@linux.ee>
+> > Date		: 2012-02-13 7:45 (11 days old)
+> > Message-ID	: <alpine.SOC.1.00.1202130942030.1488@math.ut.ee>
+> > References	: http://marc.info/?l=linux-kernel&m=132911916331615&w=2
+> 
+> Potential workaround/fix at:
+> 
+> http://marc.info/?l=linux-kernel&m=132993294018762&w=2
 
-<formletter>
+Thanks, updated.
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-for how to do this properly.
-
-</formletter>
+Rafael
