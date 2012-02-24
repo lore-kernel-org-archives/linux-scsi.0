@@ -1,35 +1,47 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH] iscsi-target: Fix memory leak if iscsit_alloc_buffs() fails
-Date: Thu, 23 Feb 2012 17:28:43 -0800
-Message-ID: <1330046923-4034-1-git-send-email-roland@kernel.org>
+From: Herbert Poetzl <herbert@13thfloor.at>
+Subject: Re: 3.2.x Regression for SAS Controller on Dell C6100
+Date: Fri, 24 Feb 2012 04:37:42 +0100
+Message-ID: <20120224033742.GP29141@MAIL.13thfloor.at>
+References: <20120131180949.GT29272@MAIL.13thfloor.at> <20120224003559.41dea166@schatten>
 Mime-Version: 1.0
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120224003559.41dea166@schatten>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Florian Mickler <florian@mickler.org>
+Cc: Linux Kernel ML <linux-kernel@vger.kernel.org>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Roland Dreier <roland@purestorage.com>
+On Fri, Feb 24, 2012 at 12:35:59AM +0100, Florian Mickler wrote:
+> [adding some cc's from that area ]
+> On Tue, 31 Jan 2012 19:09:49 +0100
+> Herbert Poetzl <herbert@13thfloor.at> wrote:
 
-The function kzalloc()s sgl, but if page allocation fails, it never
-frees sgl on the page_alloc_failed path.
+>> Greetings!
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
----
- drivers/target/iscsi/iscsi_target.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+>> I'm seeing a regression on a Dell C6100 machine with
+>> 3.2.x kernels, where the second disk (in a raid setup)
+>> is not properly recogniced and so the raid drops into
+>> degraded mode
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 9cd2837..529bf3b 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -830,6 +830,7 @@ page_alloc_failed:
- 		__free_page(sg_page(&sgl[i]));
- 		i--;
- 	}
-+	kfree(sgl);
- 	kfree(cmd->t_mem_sg);
- 	cmd->t_mem_sg = NULL;
- 	return -ENOMEM;
--- 
-1.7.9
+Just retested with 3.2.7 and 3.3-rc4 and it seems that
+this regression got fixed somewhere between 3.2.2 and
+3.2.7 ...
+
+if there is interest, I can narrow it down to a specific
+version change, just drop me a message ...
+
+will do some more testing in the meantime.
+
+HTH,
+Herbert
+
+>> the same hardware works fine with 3.1.x kernels and
+>> older
+
+>> attached the dmesg output of the bootup for a working
+>> and a failing kernel
+
+>> thanks in advance,
+>> Herbert
