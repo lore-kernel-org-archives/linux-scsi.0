@@ -1,34 +1,56 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 3.3-rc4+: Reported regressions from 3.2
-Date: Fri, 24 Feb 2012 01:13:13 +0100
-Message-ID: <201202240113.13575.rjw@sisk.pl>
-References: <y44pDJ8xoDC.A.08E.h8rRPB@chimera> <20120223.182825.1031311733171854243.davem@davemloft.net>
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH] target: Fix 16-bit target ports for SET TARGET PORT GROUPS emulation
+Date: Thu, 23 Feb 2012 17:22:12 -0800
+Message-ID: <1330046532-3484-1-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20120223.182825.1031311733171854243.davem@davemloft.net>
-Sender: linux-acpi-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, maciej.rutecki@gmail.com, florian@mickler.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, kernel-testers@vger.kernel.org, netdev@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Friday, February 24, 2012, David Miller wrote:
-> From: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Date: Thu, 23 Feb 2012 23:51:20 +0100 (CET)
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=42776
-> > Subject		: OF-related boot crash in 3.3.0-rc3-00188-g3ec1e88
-> > Submitter	: Meelis Roos <mroos@linux.ee>
-> > Date		: 2012-02-13 7:45 (11 days old)
-> > Message-ID	: <alpine.SOC.1.00.1202130942030.1488@math.ut.ee>
-> > References	: http://marc.info/?l=linux-kernel&m=132911916331615&w=2
-> 
-> Potential workaround/fix at:
-> 
-> http://marc.info/?l=linux-kernel&m=132993294018762&w=2
+From: Roland Dreier <roland@purestorage.com>
 
-Thanks, updated.
+The old code did (MSB << 8) & 0xff, which always evaluates to 0.  Just use
+get_unaligned_be16() so we don't have to worry about whether our open-coded
+version is correct or not.
 
-Rafael
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+---
+ drivers/target/target_core_alua.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index 01a2691..c7746a3 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -30,6 +30,7 @@
+ #include <linux/export.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
++#include <asm/unaligned.h>
+ 
+ #include <target/target_core_base.h>
+ #include <target/target_core_backend.h>
+@@ -267,8 +268,7 @@ int target_emulate_set_target_port_groups(struct se_task *task)
+ 		 * changed.
+ 		 */
+ 		if (primary) {
+-			tg_pt_id = ((ptr[2] << 8) & 0xff);
+-			tg_pt_id |= (ptr[3] & 0xff);
++			tg_pt_id = get_unaligned_be16(ptr + 2);
+ 			/*
+ 			 * Locate the matching target port group ID from
+ 			 * the global tg_pt_gp list
+@@ -312,8 +312,7 @@ int target_emulate_set_target_port_groups(struct se_task *task)
+ 			 * the Target Port in question for the the incoming
+ 			 * SET_TARGET_PORT_GROUPS op.
+ 			 */
+-			rtpi = ((ptr[2] << 8) & 0xff);
+-			rtpi |= (ptr[3] & 0xff);
++			rtpi = get_unaligned_be16(ptr + 2);
+ 			/*
+ 			 * Locate the matching relative target port identifer
+ 			 * for the struct se_device storage object.
+-- 
+1.7.9
