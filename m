@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 7/7] qla_target: Drop qla_tgt_mgmt_cmd->se_tmr_req usage
-Date: Sat, 25 Feb 2012 21:05:59 +0000
-Message-ID: <1330203959-6170-8-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 2/7] target: Fix target_submit_tmr LUN lookup failures
+Date: Sat, 25 Feb 2012 21:05:54 +0000
+Message-ID: <1330203959-6170-3-git-send-email-nab@linux-iscsi.org>
 References: <1330203959-6170-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:45557 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:45531 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754605Ab2BYVOV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Feb 2012 16:14:21 -0500
+	with ESMTP id S1753563Ab2BYVOO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Feb 2012 16:14:14 -0500
 In-Reply-To: <1330203959-6170-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,44 +16,36 @@ Cc: Andy Grover <agrover@redhat.com>, Kiran Patil <kiran.patil@intel.com>, Arun 
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Convert qla_target.c callback qla_tgt_xmit_tm_rsp() to use
-qla_tgt_mgmt_cmd->se_cmd->se_tmr_req instead of local qla_target.h
-pointer.
+This patch changes target_submit_tmr() LUN lookup failures to set response
+status TMR_LUN_DOES_NOT_EXIST and invoke TFO->queue_tm_rsp(), instead of
+sending CHECK_CONDITION status that can cause problems with Linux FCoE
+clients.
+
+Tested with tcm_fc ports and explict LUN_RESET lookup failures.
 
 Cc: Andy Grover <agrover@redhat.com>
 Cc: Kiran Patil <kiran.patil@intel.com>
 Cc: Arun Easi <arun.easi@qlogic.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c |    2 +-
- drivers/scsi/qla2xxx/qla_target.h |    1 -
- 2 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/target/target_core_transport.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 5d88e69..a2dabb4 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1437,7 +1437,7 @@ void qla_tgt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
- 		qla_tgt_send_notify_ack(vha, &mcmd->orig_iocb.imm_ntfy,
- 			0, 0, 0, 0, 0, 0);
- 	else {
--		if (mcmd->se_tmr_req->function == TMR_ABORT_TASK)
-+		if (mcmd->se_cmd.se_tmr_req->function == TMR_ABORT_TASK)
- 			qla_tgt_24xx_send_abts_resp(vha, &mcmd->orig_iocb.abts,
- 				mcmd->fc_tm_rsp, false);
- 		else
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 935ea32..1e03d47 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -869,7 +869,6 @@ struct qla_tgt_mgmt_cmd {
- 	uint8_t fc_tm_rsp;
- 	struct qla_tgt_sess *sess;
- 	struct se_cmd se_cmd;
--	struct se_tmr_req *se_tmr_req;
- 	unsigned int flags;
- #define QLA24XX_MGMT_SEND_NACK	1
- 	union {
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 4988899..a526907 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1741,8 +1741,8 @@ void target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 
+ 	ret = transport_lookup_tmr_lun(se_cmd, unpacked_lun);
+ 	if (ret) {
+-		transport_send_check_condition_and_sense(se_cmd,
+-			se_cmd->scsi_sense_reason, 0);
++		se_cmd->se_tmr_req->response = TMR_LUN_DOES_NOT_EXIST;
++		se_cmd->se_tfo->queue_tm_rsp(se_cmd);
+ 		transport_generic_free_cmd(se_cmd, 0);
+ 		return;
+ 	}
 -- 
 1.7.2.5
 
