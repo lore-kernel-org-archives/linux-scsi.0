@@ -1,115 +1,52 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] iscsi-target: Fix memory leak if iscsit_alloc_buffs()
- fails
-Date: Sat, 25 Feb 2012 13:28:00 -0800
-Message-ID: <1330205280.4528.200.camel@haakon2.linux-iscsi.org>
-References: <1330046923-4034-1-git-send-email-roland@kernel.org>
-	 <1330132633.4528.148.camel@haakon2.linux-iscsi.org>
-	 <CAL1RGDU7ZJ2hRh1tnpofMQcP5LD=y2qhoL0TPGNmB-4OSVLOUw@mail.gmail.com>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: Re: [PATCH v2 4/5] [SCSI] ufshcd: SCSI error handling
+Date: Sun, 26 Feb 2012 12:46:39 +0800
+Message-ID: <CAJd=RBAVfG1J66VVrCNAiaoMEJ3O7MZOU21g-T_CkyF10WJa8w@mail.gmail.com>
+References: <1330067945-9128-1-git-send-email-santoshsy@gmail.com>
+	<1330067945-9128-5-git-send-email-santoshsy@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAL1RGDU7ZJ2hRh1tnpofMQcP5LD=y2qhoL0TPGNmB-4OSVLOUw@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1330067945-9128-5-git-send-email-santoshsy@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Santosh Y <santoshsy@gmail.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, yeji@jasper.es
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2012-02-24 at 21:19 -0800, Roland Dreier wrote:
-> On Fri, Feb 24, 2012 at 5:17 PM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > This looks like a double free here on the second failure of
-> > iscsit_allocate_iovecs().  Fixing this up now to drop the extra bogus
-> > kfree(cmd->t_mem_sg) here..
-> 
-> I don't see how the patch you committed:
-> 
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -830,7 +830,7 @@ page_alloc_failed:
->                 __free_page(sg_page(&sgl[i]));
->                 i--;
->         }
-> -       kfree(cmd->t_mem_sg);
-> +       kfree(sgl);
->         cmd->t_mem_sg = NULL;
->         return -ENOMEM;
->  }
-> 
-> could possibly be right... you drop the kfree() of cmd->t_mem_sg but leave
-> in the "cmd->t_mem_sg = NULL".  Isn't that a guaranteed leak of cmd->t_mem_sg?
-> 
+On Fri, Feb 24, 2012 at 3:19 PM, Santosh Y <santoshsy@gmail.com> wrote:
+> +/**
+> + * ufshcd_is_tmq_full - checks if the task management slots are full
+> + * @hba: per adapter instance
+> + *
+> + * Returns maximum number of task management request slots in case o=
+f
+> + * task management queue full or returns the free slot number
+> + */
+> +static inline int ufshcd_is_tmq_full(struct ufs_hba *hba)
 
-It's the same memory that's being allocated in iscsit_alloc_buffs(), but
-you're right that this is bogus for the iscsit_allocate_iovecs() failure
-case.
+This helper function is named to be misleading, little to do with
+its functionality as full is checked at callsite.
 
-> I think the old code was probably OK (although I get lost a bit in the
-> twisty maze of what exactly happens to the cmd on this failure path), and
-> maybe the new code would be OK if you got rid of the "cmd->t_mem_sg = NULL".
-> 
+-hd
 
-After testing with simulated alloc_page() + iscsit_allocate_iovecs()
-failures in iscsit_alloc_buffs(), the old code was in fact doing the
-wrong thing.
-
-Here is the incremental patch that I'm pushing for lio-core, and will
-get this fixed up in for-next shortly.
-
-Thanks,
-
---nab
-
-commit 742c0d2e4436c7bc3c62c07dd838c7f52b3ccdcf
-Author: Nicholas Bellinger <nab@linux-iscsi.org>
-Date:   Sat Feb 25 12:18:48 2012 -0800
-
-    iscsi-target: Fix iscsit_alloc_buffs() failure cases
-    
-    Make iscsit_alloc_buffs() failure case for page_alloc_failed use correct
-    __free_page() SGL pointer, and return -ENOMEM for iscsit_allocate_iovecs
-    failure to push se_cmd->t_mem_sg release into iscsit_release_cmd()
-    callback during iscsit_add_reject_from_cmd() connection reset.
-    
-    Also drop cmd->t_mem_sg = NULL assignment from page_alloc_failed
-    failure case.
-    
-    Cc: Roland Dreier <roland@purestorage.com>
-    Cc: Andy Grover <agrover@redhat.com>
-    Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 3e18efd..eb25737 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -780,7 +780,7 @@ static int iscsit_alloc_buffs(struct iscsi_cmd *cmd)
-        struct scatterlist *sgl;
-        u32 length = cmd->se_cmd.data_length;
-        int nents = DIV_ROUND_UP(length, PAGE_SIZE);
--       int i = 0, ret;
-+       int i = 0, j = 0, ret;
-        /*
-         * If no SCSI payload is present, allocate the default iovecs used for
-         * iSCSI PDU Header
-@@ -821,17 +821,15 @@ static int iscsit_alloc_buffs(struct iscsi_cmd *cmd)
-         */
-         ret = iscsit_allocate_iovecs(cmd);
-         if (ret < 0)
--               goto page_alloc_failed;
-+               return -ENOMEM;
- 
-        return 0;
- 
- page_alloc_failed:
--       while (i >= 0) {
--               __free_page(sg_page(&sgl[i]));
--               i--;
--       }
-+       while (j < i)
-+               __free_page(sg_page(&sgl[j++]));
-+
-        kfree(sgl);
--       cmd->t_mem_sg = NULL;
-        return -ENOMEM;
- }
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 return find_first_zero_bit(&hba->outstanding_t=
+asks, hba->nutmrs);
+> +}
+> +
+[...]
+> + =C2=A0 =C2=A0 =C2=A0 host =3D hba->host;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 spin_lock_irqsave(host->host_lock, flags);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 /* If task management queue is full */
+> + =C2=A0 =C2=A0 =C2=A0 free_slot =3D ufshcd_is_tmq_full(hba);
+> + =C2=A0 =C2=A0 =C2=A0 if (free_slot >=3D hba->nutmrs) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 spin_unlock_irqres=
+tore(host->host_lock, flags);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 dev_err(&hba->pdev=
+->dev, "Task management queue full\n");
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 err =3D FAILED;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto out;
+> + =C2=A0 =C2=A0 =C2=A0 }
