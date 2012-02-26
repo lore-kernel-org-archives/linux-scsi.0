@@ -1,82 +1,80 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 1/2] [SCSI] pm8001: Fix bogus interrupt state flag issue.
-Date: Sun, 26 Feb 2012 18:07:20 +0300
-Message-ID: <20120226150720.GB4763@mwanda>
-References: <1330263210-25134-1-git-send-email-santoshprasadnayak@gmail.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: Bug#661057: linux-2.6: hpsa driver does not support multipath
+ on Smart Array 712m with latest firmware
+Date: Sun, 26 Feb 2012 17:36:28 +0000
+Message-ID: <1330277788.8460.90.camel@deadeye>
+References: <20120223203730.32558.81859.reportbug@pirate.dialogue.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3uo+9/B/ebqu+fSQ"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1330263210-25134-1-git-send-email-santoshprasadnayak@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: santosh nayak <santoshprasadnayak@gmail.com>
-Cc: jack_wang@usish.com, lindar_liu@usish.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-uXDCSEBTpJssOcsrz6br"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57119 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751838Ab2BZRgq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Feb 2012 12:36:46 -0500
+In-Reply-To: <20120223203730.32558.81859.reportbug@pirate.dialogue.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, Scott Teel <scott.teel@hp.com>, James Bottomley <JBottomley@Parallels.com>
+Cc: 661057@bugs.debian.org, Steven Williamson <steven.williamson@dialogue.net>, linux-scsi <linux-scsi@vger.kernel.org>
 
 
---3uo+9/B/ebqu+fSQ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-uXDCSEBTpJssOcsrz6br
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Feb 26, 2012 at 07:03:30PM +0530, santosh nayak wrote:
-> From: Santosh Nayak <santoshprasadnayak@gmail.com>
+On Thu, 2012-02-23 at 20:37 +0000, Steven Williamson wrote:
+> Package: linux-2.6
+> Severity: important
+> Tags: patch
 >=20
-> Static checker is giving following warning:
-> " error: calling 'spin_unlock_irqrestore()' with bogus flags"
 >=20
-> The code flow is as shown below:
-> process_oq() --> process_one_iomb --> mpi_sata_completion
+> The hpsa driver fails to correctly assign devices when there are
+> multiple paths on at least the Smart Array 712m with the latest
+> firmware.
+>
+> The end result is only one device node is created in /dev and multipath
+> tools then only detect one path.
 >=20
-> In 'mpi_sata_completion'
-> the first call for 'spin_unlock_irqrestore()' is with flags=3D0,
-> which is as good as 'spin_unlock_irq()' ( unconditional interrupt
-> enabling).
+> Applying the patch here:
+> http://www.spinics.net/lists/linux-scsi/msg56690.html
+> to the current stable version of the squeeze kernel fixes the issue.
 >=20
-> So for better performance 'spin_unlock_irqrestore()' can be replaced
-> with 'spin_unlock_irq()' and 'spin_lock_irqsave()' can be replaced by
-> 'spin_lock_irq()'.
->=20
+> This was tested on a Smart Array 712m, connected via 2 SAS switches to a
+> HP P2000 G3 SAS Array.
 
-process_oq() is called from the interrupt handler pm8001_chip_isr()
-with interrupts disabled.
+This sounds important; why has it not been sent to Linus for 3.3 (and
+cc: stable)?
 
-drivers/scsi/pm8001/pm8001_hwi.c
-  4301          spin_lock_irqsave(&pm8001_ha->lock, flags);
-  4302          pm8001_chip_interrupt_disable(pm8001_ha);
-  4303          process_oq(pm8001_ha);
-  4304          pm8001_chip_interrupt_enable(pm8001_ha);
-  4305          spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+Ben.
 
-Probably we should just be doing a spin_lock() and spin_unlock()
-without re-enabling the IRQs.  Should we even be doing that in the
-irq handler anyway?
+--=20
+Ben Hutchings
+Lowery's Law:
+             If it jams, force it. If it breaks, it needed replacing anyway=
+.
 
-regards,
-dan carpenter
-
-
---3uo+9/B/ebqu+fSQ
+--=-uXDCSEBTpJssOcsrz6br
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iQIcBAEBAgAGBQJPSkqnAAoJEOnZkXI/YHqRMF4P/jZn0tklrsklESB5qd8kOrW8
-UZRmxq1wfv9ut3EFGDjPNl2HNSKCNknOgEWAZlOTvys/kZXmF4U2svQHwGvLGnFs
-9c9cf6APIFLrHwacFhW8HO5U/au/D0POTrqreHMyGQeNFlQqRcXW7ScIRu4v/QsZ
-fgRNPPFtXEmKBUHF0pBshdGW8qSb+FuljsBdYZLSq/Op+PhbJCo0UeQzVXKmTGGT
-+vyOb/2mOf7YATH7oc+5H7oTbneih/rV9ReKePJWyfdkyZ91dgghS5j6rJeXdW/5
-dOcgo0asUvI8GxZO6O/ozgJuKmPd7mgMp6m42JXXYeddQpNG/7ndQ1mLmxrLOmVo
-H0TgspSMByLZ2qQUzIu14TDRro5t29LqjnOdIpHNqgkRth+Xvs6mv9PZ0dN4j7ZT
-xg0YNn6qa1MTtnHlm1WxxDLES0BWT5P706561Y6Lc7PIrAs22nEgpnB2ELQp3l3S
-enUmMA7tX7tcSQP3ExPghBwy9NiFS+0LbGBf4jBPG/1i5tqHZ93Lv44kW9xVg2uR
-EbN9bm7yPyKcFVyg5rZeUM+AtnfSLKx5QMQSxjaDjp/B5nFJ8i8v47Vhjfy6YihR
-hnCkvJtTB8bHtb5rzNfOg8mYLvMHLFixdIVJuR1tJuc1yea/R1BIITv9inwU1IqB
-VeF2NlKgIhb9gcdXryM3
-=G+Ch
+iQIVAwUAT0ptnOe/yOyVhhEJAQpKrQ//ZZjgWYYlHny7AU51LXKfMHZ543ksIQUg
+YDOZTA38jIW2JIWGEYRofndxCbh5EY43+45ozMxyUnecQdKxQG0wFXp2hD2c0/gG
+nBaunHLmhNmB3sveqfL0EwmKVTJHV6Ls4KXgiztgZhY3psne1CmImKK1El5ar1sD
+SzBT6MToGx51KAzCuC2I0ybz2/Qw24GXt627tJx6P8yKbE2BgFID6a+V2tjRJjjg
+W0BnWm8x/LBC/eHm+ow+kWZD3pC6vSXRH7FxLDAhAvorFo1kXKBhy7vnZDvPIcxE
+liihMt4j8j02kyPxp9uZslVPZoMde5CYwE+UOUkf3NGZWzJEDoIu4DkWoylRXD6c
+FsyeODSrV/kUIy5kQFjgcDZaEABTNHNhmQm9PL9FCKlidQa5kTmWOlGgTXN9jf7I
+FbWb68+M+323ybf9HJN+O8HwEKqusJdZcw9OYBV3Zoc6IaQFXFTCspW8JY/bokDG
+jB6XQLG9Rp8VTW4pS7snLyVZrxEKJg3vTrZqO9gLpfAQoeLmpwWaarWGUTiAX1Hv
+Clofe2nDYOCH6lGbLKTfIej7gCZLaOVubIllbQkT0GthwdErSZNNaAnw4JjofICm
+XIw8g6+cyuRcT7eOK5WyHH5DZXojlHNkLTR1XQeLnWZZBs4OhYMKiEhYSGGeI50H
+Pqg4PC41+UY=
+=dYlm
 -----END PGP SIGNATURE-----
 
---3uo+9/B/ebqu+fSQ--
+--=-uXDCSEBTpJssOcsrz6br--
