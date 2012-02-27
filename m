@@ -1,63 +1,53 @@
-From: Milan =?UTF-8?B?S27DrcW+ZWs=?= <knizek.confy@gmail.com>
-Subject: Re: sending ioctl warnings for a partition
-Date: Mon, 27 Feb 2012 11:48:46 +0100
-Message-ID: <20120227114846.7b824b05@athlon.garagome>
+From: <vikas.chaudhary@qlogic.com>
+Subject: [PATCH 0/8] qla4xxx: Update for scsi-misc
+Date: Mon, 27 Feb 2012 03:08:50 -0800
+Message-ID: <1330340938-12893-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:37235 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539Ab2B0Kst convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2012 05:48:49 -0500
-Received: by bkcik5 with SMTP id ik5so80216bkc.19
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Feb 2012 02:48:48 -0800 (PST)
+Received: from am1ehsobe004.messaging.microsoft.com ([213.199.154.207]:53981
+	"EHLO AM1EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751886Ab2B0LW3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Feb 2012 06:22:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-Hello Tullio,
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-can you pls point me where in zfs-fuse project is the issue reported?
+James,
 
-I have not found anything in zfs-fuse @ googlegroups and
-http://zfs-fuse.net/issues
+Please apply the following patches to scsi-misc for inclusion in mainline.
 
-Thank you and regards,
-Milan
+Manish Rangankar (1):
+      qla4xxx: Add support for multiple session per host.
 
---=20
+Mike Christie (2):
+      scsi_transport: Export CHAP index as sysfs attribute
+      qla4xxx: Export CHAP index as sysfs attribute
 
-To: Paolo Bonzini <pbonzini@xxxxxxxxxx>
-Subject: Re: sending ioctl warnings for a partition
-=46rom: Tullio Dovera <tdovera@xxxxxxxxx>
-Date: Tue, 7 Feb 2012 17:34:58 +0100
-Cc: linux-scsi <linux-scsi@xxxxxxxxxxxxxxx>, zfs-fuse@xxxxxxx
-In-reply-to: <4F2E8EB3.3010307@redhat.com>
-Thank you very much. I have opened an issue in zfs-fuse project.
+Nilesh Javali (2):
+      iscsi_transport: Add support to display CHAP list and delete CHAP entry
+      qla4xxx: Add support to display CHAP list and delete CHAP entry
 
-Tullio
+Vikas Chaudhary (3):
+      qla4xxx: Fix sparse warning
+      qla4xxx: trivial cleanup
+      qla4xxx: Update driver version to 5.02.00-k15
 
-On Sun, Feb 5, 2012 at 3:14 PM, Paolo Bonzini <pbonzini@xxxxxxxxxx>
-wrote:
-> On 02/05/2012 12:30 AM, Paolo Bonzini wrote:
->>
->> That's correct.  zfs-fuse is trying to send a SYNCHRONIZE CACHE
->> command, they should just use BLKFLSBUF (which will also give a
->> warning due to a quirk in block/ioctl.c, but it's a false positive
->> and the warning will go away soonish).
->
->
-> Not even that.  All that is needed is fsync.
->
-> Paolo
+ drivers/scsi/qla4xxx/ql4_def.h      |    4 +-
+ drivers/scsi/qla4xxx/ql4_glbl.h     |    2 +
+ drivers/scsi/qla4xxx/ql4_iocb.c     |    4 +-
+ drivers/scsi/qla4xxx/ql4_mbx.c      |   21 ++-
+ drivers/scsi/qla4xxx/ql4_os.c       |  278 +++++++++++++++++++++++++++++++++--
+ drivers/scsi/qla4xxx/ql4_version.h  |    2 +-
+ drivers/scsi/scsi_transport_iscsi.c |  109 +++++++++++++-
+ include/scsi/iscsi_if.h             |   32 ++++
+ include/scsi/scsi_transport_iscsi.h |    4 +
 
---=20
-http://www.milan-knizek.net/
-About linux and photography (Czech only)
-O linuxu a fotografov=C3=A1n=C3=AD
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Thanks,
+Vikas.
+
