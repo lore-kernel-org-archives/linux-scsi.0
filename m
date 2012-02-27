@@ -1,62 +1,54 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH v2 4/5] [SCSI] ufshcd: SCSI error handling
-Date: Mon, 27 Feb 2012 11:52:09 +0530
-Message-ID: <CALMYJDtxKw_doL=nwJiyE4sGFXcwrdAUCR4KbmAmwPvgK+78pw@mail.gmail.com>
-References: <1330067945-9128-1-git-send-email-santoshsy@gmail.com>
- <1330067945-9128-5-git-send-email-santoshsy@gmail.com> <CAJd=RBAVfG1J66VVrCNAiaoMEJ3O7MZOU21g-T_CkyF10WJa8w@mail.gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 1/2] [SCSI] pm8001: Fix bogus interrupt state flag issue.
+Date: Mon, 27 Feb 2012 09:55:18 +0300
+Message-ID: <20120227065518.GD4763@mwanda>
+References: <1330263210-25134-1-git-send-email-santoshprasadnayak@gmail.com>
+ <20120226150720.GB4763@mwanda>
+ <CAOD=uF4VGsM5AQTSCW4ZRr_n4HUSr0qO3fG_MAtsYgq=ogXvAQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OROCMA9jn6tkzFBc"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAJd=RBAVfG1J66VVrCNAiaoMEJ3O7MZOU21g-T_CkyF10WJa8w@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAOD=uF4VGsM5AQTSCW4ZRr_n4HUSr0qO3fG_MAtsYgq=ogXvAQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hillf Danton <dhillf@gmail.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, yeji@jasper.es
+To: santosh prasad nayak <santoshprasadnayak@gmail.com>
+Cc: jack_wang@usish.com, lindar_liu@usish.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Feb 26, 2012 at 10:16 AM, Hillf Danton <dhillf@gmail.com> wrote=
-:
-> On Fri, Feb 24, 2012 at 3:19 PM, Santosh Y <santoshsy@gmail.com> wrot=
-e:
->> +/**
->> + * ufshcd_is_tmq_full - checks if the task management slots are ful=
-l
->> + * @hba: per adapter instance
->> + *
->> + * Returns maximum number of task management request slots in case =
-of
->> + * task management queue full or returns the free slot number
->> + */
->> +static inline int ufshcd_is_tmq_full(struct ufs_hba *hba)
->
-> This helper function is named to be misleading, little to do with
-> its functionality as full is checked at callsite.
 
-ok, thanks, I'll change it.
+--OROCMA9jn6tkzFBc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
->
-> -hd
->
->> +{
->> + =A0 =A0 =A0 return find_first_zero_bit(&hba->outstanding_tasks, hb=
-a->nutmrs);
->> +}
->> +
-> [...]
->> + =A0 =A0 =A0 host =3D hba->host;
->> +
->> + =A0 =A0 =A0 spin_lock_irqsave(host->host_lock, flags);
->> +
->> + =A0 =A0 =A0 /* If task management queue is full */
->> + =A0 =A0 =A0 free_slot =3D ufshcd_is_tmq_full(hba);
->> + =A0 =A0 =A0 if (free_slot >=3D hba->nutmrs) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irqrestore(host->host_lock=
-, flags);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev, "Task managem=
-ent queue full\n");
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 err =3D FAILED;
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
->> + =A0 =A0 =A0 }
+Sorry, I misread the code.  I thought we were trying to nest
+spin_lock_irq() for but we're not.  My mistake.
 
---=20
-~Santosh
+regards,
+dan carpenter
+
+
+
+--OROCMA9jn6tkzFBc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPSyjVAAoJEOnZkXI/YHqRW24P/R2lvRvPrITVOdu4GzbE+duN
+Rat3ShQBnhLCrRbXd0uoBOb2mUGoCpe702fmNaa5axNM1C87nFpdb65LHEir9Yki
+jowv3gkE6w/Rtb3IHcjZga8hrGwtALaMgn5B6ehoghTSlDQu3QnvOppJAWU3/sCl
+oLtTfA66zv0ijSl4NmfYZiCeesKBdksla9MpiJw23nAKV0sPMpxqXGhitOuB8E1x
+c+Dj6SazeTgguHn/DXDlF+2lpFIt/mTkbmPvovd2kAUjYp8buq8t7Qdxfd24MxiZ
+gkWcXfvocakms3A1mme+XYoFK55zz5vvpL2S+CkgGwCFlGj3ST0zsPyhxXdORGAV
+uyfP1qmql+U1z3wLSQn23erTuPwAIub6A/vpCpWwhqeNLij+t5bjuDkHfu9TUGeS
+Uzth5Iwoz3Jp0YJMej+xcEYevRkbSf2eHydEXvWl/v1VMBrikv1jI4hDWGgcnJE4
+zoZRB3DPYlzG2CeE8Kz73ZPCMspM4mbU+JGPDF7I6uxE1p86ySGftoaQnIYk7WI6
+vExaiHCjCDS+6bXm6PEAVYtB8Vv+U78tl2f0S6C1bNecdGTSbv+OEA3Zw7+zcj0L
+QVeH8E4xQ76z4CysK/CtMPaopzgNelEpxokTFcNmZz9w8vqnnT5uhhVJz08SHbDf
+2EnkLG/3sVDrIcUuNY2Y
+=gc4Y
+-----END PGP SIGNATURE-----
+
+--OROCMA9jn6tkzFBc--
