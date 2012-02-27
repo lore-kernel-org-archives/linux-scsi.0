@@ -1,66 +1,63 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: Re: [PATCH] [trivial] [resend] [SCSI] qla4xxx: Add missing spaces
- to error messages
-Date: Mon, 27 Feb 2012 01:23:40 -0800
-Message-ID: <CB714933.CF07%vikas.chaudhary@qlogic.com>
-References: <1330097579-25679-1-git-send-email-petr.uzel@suse.cz>
+From: Milan =?UTF-8?B?S27DrcW+ZWs=?= <knizek.confy@gmail.com>
+Subject: Re: sending ioctl warnings for a partition
+Date: Mon, 27 Feb 2012 11:48:46 +0100
+Message-ID: <20120227114846.7b824b05@athlon.garagome>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1330097579-25679-1-git-send-email-petr.uzel@suse.cz>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Petr Uzel <petr.uzel@suse.cz>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: Ravi Anand <ravi.anand@qlogic.com>, Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Jiri Kosina <trivial@kernel.org>, scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:37235 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539Ab2B0Kst convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2012 05:48:49 -0500
+Received: by bkcik5 with SMTP id ik5so80216bkc.19
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Feb 2012 02:48:48 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
------Original Message-----
-From: Petr Uzel <petr.uzel@suse.cz>
-Date: Fri, 24 Feb 2012 07:32:59 -0800
-To: linux-kernel <linux-kernel@vger.kernel.org>
-Cc: Ravi Anand <ravi.anand@qlogic.com>, Vikas Chaudhary
-<vikas.chaudhary@qlogic.com>, Dept-Eng iSCSI Driver
-<Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley"
-<JBottomley@parallels.com>, Jiri Kosina <trivial@kernel.org>, scsi
-<linux-scsi@vger.kernel.org>
-Subject: [PATCH] [trivial] [resend] [SCSI] qla4xxx: Add missing spaces to
-error messages
+Hello Tullio,
 
+can you pls point me where in zfs-fuse project is the issue reported?
+
+I have not found anything in zfs-fuse @ googlegroups and
+http://zfs-fuse.net/issues
+
+Thank you and regards,
+Milan
+
+--=20
+
+To: Paolo Bonzini <pbonzini@xxxxxxxxxx>
+Subject: Re: sending ioctl warnings for a partition
+=46rom: Tullio Dovera <tdovera@xxxxxxxxx>
+Date: Tue, 7 Feb 2012 17:34:58 +0100
+Cc: linux-scsi <linux-scsi@xxxxxxxxxxxxxxx>, zfs-fuse@xxxxxxx
+In-reply-to: <4F2E8EB3.3010307@redhat.com>
+Thank you very much. I have opened an issue in zfs-fuse project.
+
+Tullio
+
+On Sun, Feb 5, 2012 at 3:14 PM, Paolo Bonzini <pbonzini@xxxxxxxxxx>
+wrote:
+> On 02/05/2012 12:30 AM, Paolo Bonzini wrote:
+>>
+>> That's correct.  zfs-fuse is trying to send a SYNCHRONIZE CACHE
+>> command, they should just use BLKFLSBUF (which will also give a
+>> warning due to a quirk in block/ioctl.c, but it's a false positive
+>> and the warning will go away soonish).
 >
->Signed-off-by: Petr Uzel <petr.uzel@suse.cz>
->---
-> drivers/scsi/qla4xxx/ql4_os.c |    4 ++--
-> 1 files changed, 2 insertions(+), 2 deletions(-)
 >
->diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
->index ce6d3b7..edf5034 100644
->--- a/drivers/scsi/qla4xxx/ql4_os.c
->+++ b/drivers/scsi/qla4xxx/ql4_os.c
->@@ -3382,7 +3382,7 @@ static int get_fw_boot_info(struct scsi_qla_host
->*ha, uint16_t ddb_index[])
->               if (qla4xxx_get_flash(ha, buf_dma, addr,
->                                     13 * sizeof(uint8_t)) != QLA_SUCCESS) {
->                       DEBUG2(ql4_printk(KERN_ERR, ha, "scsi%ld: %s: Get Flash"
->-                                        "failed\n", ha->host_no, __func__));
->+                                        " failed\n", ha->host_no, __func__));
->                       ret = QLA_ERROR;
->                       goto exit_boot_info_free;
->               }
->@@ -3620,7 +3620,7 @@ static int qla4xxx_setup_boot_info(struct
->scsi_qla_host *ha)
+> Not even that.  All that is needed is fsync.
 >
->       if (ql4xdisablesysfsboot) {
->               ql4_printk(KERN_INFO, ha,
->-                         "%s: syfsboot disabled - driver will trigger login"
->+                         "%s: syfsboot disabled - driver will trigger login "
->                          "and publish session for discovery .\n", __func__);
->               return QLA_SUCCESS;
->       }
->--
->1.7.7
+> Paolo
 
-Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+--=20
+http://www.milan-knizek.net/
+About linux and photography (Czech only)
+O linuxu a fotografov=C3=A1n=C3=AD
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
