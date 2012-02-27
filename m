@@ -1,139 +1,74 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 5/8] qla4xxx: Add support for multiple session per host.
-Date: Mon, 27 Feb 2012 03:08:55 -0800
-Message-ID: <1330340938-12893-6-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 6/8] qla4xxx: Fix sparse warning
+Date: Mon, 27 Feb 2012 03:08:56 -0800
+Message-ID: <1330340938-12893-7-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1330340938-12893-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from am1ehsobe001.messaging.microsoft.com ([213.199.154.204]:12769
-	"EHLO AM1EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752171Ab2B0LW3 (ORCPT
+Received: from am1ehsobe005.messaging.microsoft.com ([213.199.154.208]:2356
+	"EHLO AM1EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752042Ab2B0LW3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 27 Feb 2012 06:22:29 -0500
 In-Reply-To: <1330340938-12893-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Manish Rangankar <manish.rangankar@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Manish Rangankar <manish.rangankar@qlogic.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-This patch will allow iscsiadm to create multiple session
-for the same target on per host.
+Fix following warning:-
+drivers/scsi/qla4xxx/ql4_os.c:35:5: warning: symbol 'ql4xdisablesysfsboot' was not declared. Should it be static?
 
-Signed-off-by: Manish Rangankar <manish.rangankar@qlogic.com>
+drivers/scsi/qla4xxx/ql4_iocb.c:461:5: warning: symbol 'qla4xxx_send_mbox_iocb' was not declared. Should it be static?
+
+drivers/scsi/qla4xxx/ql4_os.c:3025:6: warning: symbol 'qla4xxx_do_work' was not declared. Should it be static?
+
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_def.h |    1 +
- drivers/scsi/qla4xxx/ql4_mbx.c |   10 +++++++++-
- drivers/scsi/qla4xxx/ql4_os.c  |   28 +++++++++++++++++++++++++---
- 3 files changed, 35 insertions(+), 4 deletions(-)
+ drivers/scsi/qla4xxx/ql4_iocb.c |    4 ++--
+ drivers/scsi/qla4xxx/ql4_os.c   |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 0b24876..7f2492e 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -291,6 +291,7 @@ struct ql4_tuple_ddb {
- 	uint16_t options;
- #define DDB_OPT_IPV6 0x0e0e
- #define DDB_OPT_IPV4 0x0f0f
-+	uint8_t isid[6];
- };
- 
- /*
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 71331e3..b2d336c 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1607,7 +1607,7 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
- 	char *ip;
- 	uint16_t iscsi_opts = 0;
- 	uint32_t options = 0;
--	uint16_t idx;
-+	uint16_t idx, *ptid;
- 
- 	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
- 					  &fw_ddb_entry_dma, GFP_KERNEL);
-@@ -1633,6 +1633,14 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
- 		goto exit_set_param;
- 	}
- 
-+	ptid = (uint16_t *)&fw_ddb_entry->isid[1];
-+	*ptid = cpu_to_le16((uint16_t)ddb_entry->sess->target_id);
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%02x%02x%02x%02x%02x%02x]\n",
-+			  fw_ddb_entry->isid[5], fw_ddb_entry->isid[4],
-+			  fw_ddb_entry->isid[3], fw_ddb_entry->isid[2],
-+			  fw_ddb_entry->isid[1], fw_ddb_entry->isid[0]));
-+
- 	iscsi_opts = le16_to_cpu(fw_ddb_entry->iscsi_options);
- 	memset(fw_ddb_entry->iscsi_alias, 0, sizeof(fw_ddb_entry->iscsi_alias));
- 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index cbaf2b3..50074ed 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -4252,11 +4252,13 @@ static void qla4xxx_convert_param_ddb(struct dev_db_entry *fw_ddb_entry,
- 		sprintf(tddb->ip_addr, "%pI4", fw_ddb_entry->ip_addr);
- 
- 	tddb->port = le16_to_cpu(fw_ddb_entry->port);
-+	memcpy(&tddb->isid[0], &fw_ddb_entry->isid[0], sizeof(tddb->isid));
+diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
+index c70651d..2a2022a 100644
+--- a/drivers/scsi/qla4xxx/ql4_iocb.c
++++ b/drivers/scsi/qla4xxx/ql4_iocb.c
+@@ -458,8 +458,8 @@ static struct mrb *qla4xxx_get_new_mrb(struct scsi_qla_host *ha)
+ 	return mrb;
  }
  
- static int qla4xxx_compare_tuple_ddb(struct scsi_qla_host *ha,
- 				     struct ql4_tuple_ddb *old_tddb,
--				     struct ql4_tuple_ddb *new_tddb)
-+				     struct ql4_tuple_ddb *new_tddb,
-+				     uint8_t is_isid_compare)
+-int qla4xxx_send_mbox_iocb(struct scsi_qla_host *ha, struct mrb *mrb,
+-			   uint32_t *in_mbox)
++static int qla4xxx_send_mbox_iocb(struct scsi_qla_host *ha, struct mrb *mrb,
++				  uint32_t *in_mbox)
  {
- 	if (strcmp(old_tddb->iscsi_name, new_tddb->iscsi_name))
- 		return QLA_ERROR;
-@@ -4267,6 +4269,26 @@ static int qla4xxx_compare_tuple_ddb(struct scsi_qla_host *ha,
- 	if (old_tddb->port != new_tddb->port)
- 		return QLA_ERROR;
+ 	int rval = QLA_SUCCESS;
+ 	uint32_t i;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 50074ed..d1520ad 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -32,7 +32,7 @@ static struct kmem_cache *srb_cachep;
+ /*
+  * Module parameter information and variables
+  */
+-int ql4xdisablesysfsboot = 1;
++static int ql4xdisablesysfsboot = 1;
+ module_param(ql4xdisablesysfsboot, int, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(ql4xdisablesysfsboot,
+ 		 " Set to disable exporting boot targets to sysfs.\n"
+@@ -3238,7 +3238,7 @@ int qla4xxx_post_ping_evt_work(struct scsi_qla_host *ha,
+ 	return QLA_SUCCESS;
+ }
  
-+	/* For multi sessions, driver generates the ISID, so do not compare
-+	 * ISID in reset path since it would be a comparision between the
-+	 * driver generated ISID and firmware generated ISID. This could
-+	 * lead to adding duplicated DDBs in the list as driver generated
-+	 * ISID would not match firmware generated ISID.
-+	 */
-+	if (is_isid_compare) {
-+		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: old ISID [%02x%02x%02x"
-+			"%02x%02x%02x] New ISID [%02x%02x%02x%02x%02x%02x]\n",
-+			__func__, old_tddb->isid[5], old_tddb->isid[4],
-+			old_tddb->isid[3], old_tddb->isid[2], old_tddb->isid[1],
-+			old_tddb->isid[0], new_tddb->isid[5], new_tddb->isid[4],
-+			new_tddb->isid[3], new_tddb->isid[2], new_tddb->isid[1],
-+			new_tddb->isid[0]));
-+
-+		if (memcmp(&old_tddb->isid[0], &new_tddb->isid[0],
-+			   sizeof(old_tddb->isid)))
-+			return QLA_ERROR;
-+	}
-+
- 	DEBUG2(ql4_printk(KERN_INFO, ha,
- 			  "Match Found, fw[%d,%d,%s,%s], [%d,%d,%s,%s]",
- 			  old_tddb->port, old_tddb->tpgt, old_tddb->ip_addr,
-@@ -4309,7 +4331,7 @@ static int qla4xxx_is_session_exists(struct scsi_qla_host *ha,
- 			continue;
- 
- 		qla4xxx_get_param_ddb(ddb_entry, tmp_tddb);
--		if (!qla4xxx_compare_tuple_ddb(ha, fw_tddb, tmp_tddb)) {
-+		if (!qla4xxx_compare_tuple_ddb(ha, fw_tddb, tmp_tddb, false)) {
- 			ret = QLA_SUCCESS; /* found */
- 			goto exit_check;
- 		}
-@@ -4352,7 +4374,7 @@ static int qla4xxx_is_flash_ddb_exists(struct scsi_qla_host *ha,
- 
- 	list_for_each_entry_safe(nt_ddb_idx, nt_ddb_idx_tmp, list_nt, list) {
- 		qla4xxx_convert_param_ddb(&nt_ddb_idx->fw_ddb, tmp_tddb);
--		if (!qla4xxx_compare_tuple_ddb(ha, fw_tddb, tmp_tddb)) {
-+		if (!qla4xxx_compare_tuple_ddb(ha, fw_tddb, tmp_tddb, true)) {
- 			ret = QLA_SUCCESS; /* found */
- 			goto exit_check;
- 		}
+-void qla4xxx_do_work(struct scsi_qla_host *ha)
++static void qla4xxx_do_work(struct scsi_qla_host *ha)
+ {
+ 	struct qla4_work_evt *e, *tmp;
+ 	unsigned long flags;
 -- 
 1.7.9.1.265.gb3a76
 
