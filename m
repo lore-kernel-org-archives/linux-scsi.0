@@ -1,80 +1,139 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 7/8] qla4xxx: trivial cleanup
-Date: Mon, 27 Feb 2012 03:08:57 -0800
-Message-ID: <1330340938-12893-8-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 5/8] qla4xxx: Add support for multiple session per host.
+Date: Mon, 27 Feb 2012 03:08:55 -0800
+Message-ID: <1330340938-12893-6-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1330340938-12893-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from am1ehsobe002.messaging.microsoft.com ([213.199.154.205]:56107
-	"EHLO AM1EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753385Ab2B0LWa (ORCPT
+Received: from am1ehsobe001.messaging.microsoft.com ([213.199.154.204]:12769
+	"EHLO AM1EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752171Ab2B0LW3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Feb 2012 06:22:30 -0500
+	Mon, 27 Feb 2012 06:22:29 -0500
 In-Reply-To: <1330340938-12893-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Manish Rangankar <manish.rangankar@qlogic.com>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Manish Rangankar <manish.rangankar@qlogic.com>
 
- 1. Do not initialise globals to 0
- 2. Fix wrong spelling in debug message
- 3. Modified debug log messages
+This patch will allow iscsiadm to create multiple session
+for the same target on per host.
 
+Signed-off-by: Manish Rangankar <manish.rangankar@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_mbx.c |    2 +-
- drivers/scsi/qla4xxx/ql4_os.c  |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/qla4xxx/ql4_def.h |    1 +
+ drivers/scsi/qla4xxx/ql4_mbx.c |   10 +++++++++-
+ drivers/scsi/qla4xxx/ql4_os.c  |   28 +++++++++++++++++++++++++---
+ 3 files changed, 35 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 0b24876..7f2492e 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -291,6 +291,7 @@ struct ql4_tuple_ddb {
+ 	uint16_t options;
+ #define DDB_OPT_IPV6 0x0e0e
+ #define DDB_OPT_IPV4 0x0f0f
++	uint8_t isid[6];
+ };
+ 
+ /*
 diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index b2d336c..7ac21da 100644
+index 71331e3..b2d336c 100644
 --- a/drivers/scsi/qla4xxx/ql4_mbx.c
 +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -622,7 +622,7 @@ int qla4xxx_get_firmware_status(struct scsi_qla_host * ha)
- 		return QLA_ERROR;
+@@ -1607,7 +1607,7 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
+ 	char *ip;
+ 	uint16_t iscsi_opts = 0;
+ 	uint32_t options = 0;
+-	uint16_t idx;
++	uint16_t idx, *ptid;
+ 
+ 	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
+ 					  &fw_ddb_entry_dma, GFP_KERNEL);
+@@ -1633,6 +1633,14 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
+ 		goto exit_set_param;
  	}
  
--	ql4_printk(KERN_INFO, ha, "%ld firmare IOCBs available (%d).\n",
-+	ql4_printk(KERN_INFO, ha, "%ld firmware IOCBs available (%d).\n",
- 	    ha->host_no, mbox_sts[2]);
++	ptid = (uint16_t *)&fw_ddb_entry->isid[1];
++	*ptid = cpu_to_le16((uint16_t)ddb_entry->sess->target_id);
++
++	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%02x%02x%02x%02x%02x%02x]\n",
++			  fw_ddb_entry->isid[5], fw_ddb_entry->isid[4],
++			  fw_ddb_entry->isid[3], fw_ddb_entry->isid[2],
++			  fw_ddb_entry->isid[1], fw_ddb_entry->isid[0]));
++
+ 	iscsi_opts = le16_to_cpu(fw_ddb_entry->iscsi_options);
+ 	memset(fw_ddb_entry->iscsi_alias, 0, sizeof(fw_ddb_entry->iscsi_alias));
  
- 	return QLA_SUCCESS;
 diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index d1520ad..281328d 100644
+index cbaf2b3..50074ed 100644
 --- a/drivers/scsi/qla4xxx/ql4_os.c
 +++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -39,7 +39,7 @@ MODULE_PARM_DESC(ql4xdisablesysfsboot,
- 		 "\t\t  0 - Export boot targets\n"
- 		 "\t\t  1 - Do not export boot targets (Default)");
+@@ -4252,11 +4252,13 @@ static void qla4xxx_convert_param_ddb(struct dev_db_entry *fw_ddb_entry,
+ 		sprintf(tddb->ip_addr, "%pI4", fw_ddb_entry->ip_addr);
  
--int ql4xdontresethba = 0;
-+int ql4xdontresethba;
- module_param(ql4xdontresethba, int, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(ql4xdontresethba,
- 		 " Don't reset the HBA for driver recovery.\n"
-@@ -71,7 +71,7 @@ MODULE_PARM_DESC(ql4xmaxqdepth,
- static int ql4xsess_recovery_tmo = QL4_SESS_RECOVERY_TMO;
- module_param(ql4xsess_recovery_tmo, int, S_IRUGO);
- MODULE_PARM_DESC(ql4xsess_recovery_tmo,
--		"Target Session Recovery Timeout.\n"
-+		" Target Session Recovery Timeout.\n"
- 		"\t\t  Default: 120 sec.");
+ 	tddb->port = le16_to_cpu(fw_ddb_entry->port);
++	memcpy(&tddb->isid[0], &fw_ddb_entry->isid[0], sizeof(tddb->isid));
+ }
  
- static int qla4xxx_wait_for_hba_online(struct scsi_qla_host *ha);
-@@ -5033,8 +5033,8 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
- 	       ha->patch_number, ha->build_number);
+ static int qla4xxx_compare_tuple_ddb(struct scsi_qla_host *ha,
+ 				     struct ql4_tuple_ddb *old_tddb,
+-				     struct ql4_tuple_ddb *new_tddb)
++				     struct ql4_tuple_ddb *new_tddb,
++				     uint8_t is_isid_compare)
+ {
+ 	if (strcmp(old_tddb->iscsi_name, new_tddb->iscsi_name))
+ 		return QLA_ERROR;
+@@ -4267,6 +4269,26 @@ static int qla4xxx_compare_tuple_ddb(struct scsi_qla_host *ha,
+ 	if (old_tddb->port != new_tddb->port)
+ 		return QLA_ERROR;
  
- 	if (qla4xxx_setup_boot_info(ha))
--		ql4_printk(KERN_ERR, ha, "%s:ISCSI boot info setup failed\n",
--			   __func__);
-+		ql4_printk(KERN_ERR, ha,
-+			   "%s: No iSCSI boot target configured\n", __func__);
++	/* For multi sessions, driver generates the ISID, so do not compare
++	 * ISID in reset path since it would be a comparision between the
++	 * driver generated ISID and firmware generated ISID. This could
++	 * lead to adding duplicated DDBs in the list as driver generated
++	 * ISID would not match firmware generated ISID.
++	 */
++	if (is_isid_compare) {
++		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: old ISID [%02x%02x%02x"
++			"%02x%02x%02x] New ISID [%02x%02x%02x%02x%02x%02x]\n",
++			__func__, old_tddb->isid[5], old_tddb->isid[4],
++			old_tddb->isid[3], old_tddb->isid[2], old_tddb->isid[1],
++			old_tddb->isid[0], new_tddb->isid[5], new_tddb->isid[4],
++			new_tddb->isid[3], new_tddb->isid[2], new_tddb->isid[1],
++			new_tddb->isid[0]));
++
++		if (memcmp(&old_tddb->isid[0], &new_tddb->isid[0],
++			   sizeof(old_tddb->isid)))
++			return QLA_ERROR;
++	}
++
+ 	DEBUG2(ql4_printk(KERN_INFO, ha,
+ 			  "Match Found, fw[%d,%d,%s,%s], [%d,%d,%s,%s]",
+ 			  old_tddb->port, old_tddb->tpgt, old_tddb->ip_addr,
+@@ -4309,7 +4331,7 @@ static int qla4xxx_is_session_exists(struct scsi_qla_host *ha,
+ 			continue;
  
- 		/* Perform the build ddb list and login to each */
- 	qla4xxx_build_ddb_list(ha, INIT_ADAPTER);
+ 		qla4xxx_get_param_ddb(ddb_entry, tmp_tddb);
+-		if (!qla4xxx_compare_tuple_ddb(ha, fw_tddb, tmp_tddb)) {
++		if (!qla4xxx_compare_tuple_ddb(ha, fw_tddb, tmp_tddb, false)) {
+ 			ret = QLA_SUCCESS; /* found */
+ 			goto exit_check;
+ 		}
+@@ -4352,7 +4374,7 @@ static int qla4xxx_is_flash_ddb_exists(struct scsi_qla_host *ha,
+ 
+ 	list_for_each_entry_safe(nt_ddb_idx, nt_ddb_idx_tmp, list_nt, list) {
+ 		qla4xxx_convert_param_ddb(&nt_ddb_idx->fw_ddb, tmp_tddb);
+-		if (!qla4xxx_compare_tuple_ddb(ha, fw_tddb, tmp_tddb)) {
++		if (!qla4xxx_compare_tuple_ddb(ha, fw_tddb, tmp_tddb, true)) {
+ 			ret = QLA_SUCCESS; /* found */
+ 			goto exit_check;
+ 		}
 -- 
 1.7.9.1.265.gb3a76
 
