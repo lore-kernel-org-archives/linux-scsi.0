@@ -1,31 +1,64 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC PATCH] kick ksoftirqd more often to please soft lockup detector
-Date: Tue, 28 Feb 2012 08:48:38 -0800
-Message-ID: <CABE8wwtv2YDCYkk5C5waZCkdG3+9pMbwsKvuce0q-Kj=pnduwg@mail.gmail.com>
-References: <20120227203847.22153.62468.stgit@dwillia2-linux.jf.intel.com>
-	<1330422535.11248.78.camel@twins>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] [SCSI] sr: fix multi-drive performance, remove BKL
+ replacement
+Date: Tue, 28 Feb 2012 10:57:37 -0600
+Message-ID: <1330448257.2822.138.camel@dabdike.int.hansenpartnership.com>
+References: <20120228153244.70413d34@stein> <20120228170930.132f7c1e@stein>
+	 <1330445795.2822.134.camel@dabdike.int.hansenpartnership.com>
+	 <201202281642.16496.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1330422535.11248.78.camel@twins>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Zijlstra <a.p.zijlstra@chello.nl>
-Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Lukasz Dorau <lukasz.dorau@intel.com>, James Bottomley <JBottomley@parallels.com>, Andrzej Jakowski <andrzej.jakowski@intel.com>, Thomas Gleixner <tglx@linutronix.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43797 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755001Ab2B1Q5k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Feb 2012 11:57:40 -0500
+In-Reply-To: <201202281642.16496.arnd@arndb.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Feb 28, 2012 at 1:48 AM, Peter Zijlstra <a.p.zijlstra@chello.nl> wrote:
->> BUG: soft lockup - CPU#3 stuck for 22s! [kworker/3:1:78]
->
-> So you're stuck in softirq for 22s+, max_restart is 10, this gives that
-> on average you spend 2.2s+ per softirq invocation, this is completely
-> absolutely bonkers. Softirq handlers should never consume significant
-> amount of cpu-time.
+On Tue, 2012-02-28 at 16:42 +0000, Arnd Bergmann wrote:
+> On Tuesday 28 February 2012, James Bottomley wrote:
+> > On Tue, 2012-02-28 at 17:09 +0100, Stefan Richter wrote:
+> > > On Feb 28 James Bottomley wrote:
+> > > 
+> > > While I do remove sr_mutex aroud scsi_cd_get/put() calls, these ones
+> > > internally use another lock: sr_ref_mutex.  Always did, still do, since
+> > > neither Arnd's mechanical BKL pushdown and BKL-to-mutex conversions
+> > > patches nor my patch changed that.  This sr_ref_mutex also protects sr's
+> > > reference counting outside of the three block_device_operations methods
+> > > which I changed.
+> > > 
+> > > I suppose I could have mentioned right away in the changelog that the
+> > > sr driver's own reference counting serialization remains in place, via that
+> > > other mutex.
+> > 
+> > OK, agreed ... the thing that caught my eye was the get/open and the
+> > release/put, but I think that's completely safe.
+> 
+> I took another look and I believe the cdi->use_count in
+> cdrom_open/cdrom_release still requires some protection that is
+> currently provided by sr_mutex.
 
-I'm not sure whether this was just one __do_softirq() invocation, or
-multiple.  I'll see if I can instrument this, but the suspicion is
-that max_restart can't help when softirq is constantly re-triggered.
-I'll also add the below patch to see if any single invocation is
-violating these expectations.
+So I think this is fine ... it's protected by the bdev->bd_mutex.
 
---
-Dan
+>  Some parts of cdrom_ioctl also
+> access this variable and things like cdi->options or cdi->keeplocked.
+
+This would be problematic because we no longer lock the ioctl.
+
+> I could imagine that you can get rid of the mutex if you turn those
+> into atomics and bitops, but there may be other parts of cdrom_device_info
+> that need locking. A safer option to solve the performance problems
+> could be to replace sr_mutex with a per-device mutex inside of
+> cdrom_device_info.
+
+I'd say the latter.
+
+James
+
+
