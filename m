@@ -1,90 +1,85 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] [SCSI] st: expand ability to write immediate filemarks
-Date: Tue, 28 Feb 2012 21:40:33 +0200 (EET)
-Message-ID: <alpine.LNX.2.00.1202282103460.6053@kai.makisara.local>
-References: <4F3C1189.7090406@suse.com>
+From: Tullio Dovera <tdovera@gmail.com>
+Subject: Re: sending ioctl warnings for a partition
+Date: Tue, 28 Feb 2012 21:48:57 +0100
+Message-ID: <CANDSw5i45BAJY5jPc3hkYFihd9qWMWxnvbTKU97MGE3YxBWx5Q@mail.gmail.com>
+References: <20120227114846.7b824b05@athlon.garagome>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vs16.mail.saunalahti.fi ([62.142.117.197]:46837 "EHLO
-	vs16.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757264Ab2B1Tkh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2012 14:40:37 -0500
-In-Reply-To: <4F3C1189.7090406@suse.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:45031 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752470Ab2B1Us5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2012 15:48:57 -0500
+Received: by iagj37 with SMTP id j37so1657040iag.19
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2012 12:48:57 -0800 (PST)
+In-Reply-To: <20120227114846.7b824b05@athlon.garagome>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
+To: =?UTF-8?B?TWlsYW4gS27DrcW+ZWs=?= <knizek.confy@gmail.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, 15 Feb 2012, Lee Duncan wrote:
+Dear Milan,
+   I have reopened the issue because I can't find it in zfs-fuse projec=
+t.
 
-> The st tape driver recently added the MTWEOFI ioctl, which writes
-> a tape filemark (EOF), like the MTWEOF ioctl, except that MTWEOFI
-> returns immediately. This makes certain applications, like backup
-> software, run much more quickly on buffered tape drives.
-> 
-> Since legacy applications do not know about this new MTWEOFI ioctl,
-> this patch adds a new flag that tells the st driver to return
-> immediately when writing an EOF (i.e. a filemark). This new flag
-> is much like the existing flag that tells the st driver to perform
-> writes (and certain other IOs) immediately, but this new flag only
-> applies to writing EOFs.
-> 
-> This new feature can be enabled via a new module flag: st_nowait_eof.
-> It can also be set or cleared via the MTSETDRVBUFFER ioctl, using
-> the newly-defined MT_ST_NOWAIT_EOF flag.
-> 
-> Lastly, this new feature is displayed via the sysfs tape "options"
-> attribute.
-> 
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-> ---
->  Documentation/scsi/st.txt |    2 ++
->  drivers/scsi/st.c         |   24 +++++++++++++++++++++---
->  drivers/scsi/st.h         |    1 +
->  include/linux/mtio.h      |    1 +
->  4 files changed, 25 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/scsi/st.txt b/Documentation/scsi/st.txt
-> index 691ca29..85c1b1a 100644
-> --- a/Documentation/scsi/st.txt
-> +++ b/Documentation/scsi/st.txt
-> @@ -390,6 +390,8 @@ MTSETDRVBUFFER
->  	     MT_ST_SYSV sets the SYSV semantics (mode)
->  	     MT_ST_NOWAIT enables immediate mode (i.e., don't wait for
->  	        the command to finish) for some commands (e.g., rewind)
-> +	     MT_ST_NOWAIT_EOF enables immediate filemark mode (i.e. when
-> +	        writing a filemark, don't wait for it to complete)
+The issue is #143
 
-You could add a note that errors before EOF may not be noticed.
+Best regards,
+   Tullio
 
->  	     MT_ST_SILI enables setting the SILI bit in SCSI commands when
->  		reading in variable block mode to enhance performance when
->  		reading blocks shorter than the byte count; set this only
-> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> index 9b28f39..f18d10b 100644
-> --- a/drivers/scsi/st.c
-> +++ b/drivers/scsi/st.c
-> @@ -81,6 +81,7 @@ static int max_sg_segs;
->  static int try_direct_io = TRY_DIRECT_IO;
->  static int try_rdio = 1;
->  static int try_wdio = 1;
-> +static int st_nowait_eof;
->  
->  static int st_dev_max;
->  static int st_nr_dev;
-> @@ -103,6 +104,8 @@ module_param_named(max_sg_segs, max_sg_segs, int, 0);
->  MODULE_PARM_DESC(max_sg_segs, "Maximum number of scatter/gather segments to use (256)");
->  module_param_named(try_direct_io, try_direct_io, int, 0);
->  MODULE_PARM_DESC(try_direct_io, "Try direct I/O between user buffer and tape drive (1)");
-> +module_param_named(st_nowait_eof, st_nowait_eof, int, 0);
-> +MODULE_PARM_DESC(st_nowait_eof, "Do not wait when writing EOF (filemark) (0)");
->  
-
-I think this should not be a module option. The property should be 
-settable only as a mode option like other options of this kind.
-(I may have not written this clearly in my previous reply).
-
-Otherwise the patch looks good.
-
-Kai
+On Mon, Feb 27, 2012 at 11:48 AM, Milan Kn=C3=AD=C5=BEek <knizek.confy@=
+gmail.com> wrote:
+>
+> Hello Tullio,
+>
+> can you pls point me where in zfs-fuse project is the issue reported?
+>
+> I have not found anything in zfs-fuse @ googlegroups and
+> http://zfs-fuse.net/issues
+>
+> Thank you and regards,
+> Milan
+>
+> --
+>
+> To: Paolo Bonzini <pbonzini@xxxxxxxxxx>
+> Subject: Re: sending ioctl warnings for a partition
+> From: Tullio Dovera <tdovera@xxxxxxxxx>
+> Date: Tue, 7 Feb 2012 17:34:58 +0100
+> Cc: linux-scsi <linux-scsi@xxxxxxxxxxxxxxx>, zfs-fuse@xxxxxxx
+> In-reply-to: <4F2E8EB3.3010307@redhat.com>
+> Thank you very much. I have opened an issue in zfs-fuse project.
+>
+> Tullio
+>
+> On Sun, Feb 5, 2012 at 3:14 PM, Paolo Bonzini <pbonzini@xxxxxxxxxx>
+> wrote:
+> > On 02/05/2012 12:30 AM, Paolo Bonzini wrote:
+> >>
+> >> That's correct. =C2=A0zfs-fuse is trying to send a SYNCHRONIZE CAC=
+HE
+> >> command, they should just use BLKFLSBUF (which will also give a
+> >> warning due to a quirk in block/ioctl.c, but it's a false positive
+> >> and the warning will go away soonish).
+> >
+> >
+> > Not even that. =C2=A0All that is needed is fsync.
+> >
+> > Paolo
+>
+> --
+> http://www.milan-knizek.net/
+> About linux and photography (Czech only)
+> O linuxu a fotografov=C3=A1n=C3=AD
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
