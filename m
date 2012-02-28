@@ -1,22 +1,22 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH] [SCSI] sr: fix multi-drive performance, remove BKL
  replacement
-Date: Tue, 28 Feb 2012 10:16:35 -0600
-Message-ID: <1330445795.2822.134.camel@dabdike.int.hansenpartnership.com>
+Date: Tue, 28 Feb 2012 17:22:28 +0100
+Message-ID: <20120228172228.78e22e14@stein>
 References: <20120228153244.70413d34@stein>
-	 <1330441201.2822.126.camel@dabdike.int.hansenpartnership.com>
-	 <20120228170930.132f7c1e@stein>
+	<1330441201.2822.126.camel@dabdike.int.hansenpartnership.com>
+	<20120228170930.132f7c1e@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20120228170930.132f7c1e@stein>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2012-02-28 at 17:09 +0100, Stefan Richter wrote:
+On Feb 28 Stefan Richter wrote:
 > On Feb 28 James Bottomley wrote:
 > > On Tue, 2012-02-28 at 15:32 +0100, Stefan Richter wrote:
 > > > Commit 2a48fc0ab242 "block: autoconvert trivial BKL users to private
@@ -53,21 +53,17 @@ On Tue, 2012-02-28 at 17:09 +0100, Stefan Richter wrote:
 > sr driver's own reference counting serialization remains in place, via that
 > other mutex.
 
-OK, agreed ... the thing that caught my eye was the get/open and the
-release/put, but I think that's completely safe.
-
-> > The sr.c use case looks like bd_mutex would mediate ... but that's
-> > because it doesn't use driver shutdown and has no power management
-> > functions ... I think I have vague memories that someone is working on
-> > pm for cdroms?
-> > 
-> > I don't think the mutex needs to be on the ioctls, though, which is
-> > what's causing your performance problems, right?
-> 
-> I guess sr_block_open/release are less of an issue; after all they are
-> still partly serialized across all sr devices (the sections which are
-> under the mentioned sr_ref_mutex protection).
-
-They're also per bdev serialised by bd_mutex, so yes.
-
-James
+PS:
+Entirely independently of this, it is important to remember that sr has
+been and still is broken WRT hot removal/ hot unbinding of devices.
+http://marc.info/?t=132484687700001
+I haven't tried the last proposed patches from Jun'ichi Nomura or from Bart
+Van Assche yet.  While I tested my BKL-replacement-removal patch, I made
+sure to quit all processes that accessed /dev/sr*, including udisks-daemon,
+every time before I unplugged a CD-ROM drive.  Or actually /almost/ every
+time; sometimes I missed to kill udisks-daemon but was lucky enough not to
+hit that bug in these sessions.
+-- 
+Stefan Richter
+-=====-===-- --=- ===--
+http://arcgraph.de/sr/
