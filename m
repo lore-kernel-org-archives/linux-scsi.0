@@ -1,22 +1,33 @@
-From: "8555644712051" <skwilliamson70@yahoo.com>
-Subject: ACH payment was Disallowed Id37257495
-Date: Wed, 29 Feb 2012 18:12:07 +0500
-Message-ID: <13169.27126.bm@smtp136.mail.sg3.yahoo.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm25-vm10.bullet.mail.sg3.yahoo.com ([106.10.151.105]:41521
-	"HELO nm25-vm10.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751051Ab2B2Msv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Feb 2012 07:48:51 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Naveen Goswamy <naveen.goswamy@polymtl.ca>
+Subject: Re: [PATCH] Fix NULL pointer dereference in sd_revalidate_disk
+Date: Wed, 29 Feb 2012 07:57:24 -0500
+Message-ID: <1330520244.4f4e20b4cfdc0@www.imp.polymtl.ca>
+References: <4F443E81.2060402@ce.jp.nec.com> <20120222010435.GI12236@google.com> <95E22EAF20104309BF3938E7820F36D6@usish.com.cn> <20120222053651.GA7891@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120222053651.GA7891@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: 'Dave Jones' <davej@redhat.com>
+Cc: Jack Wang <jack_wang@usish.com>, 'Tejun Heo' <tj@kernel.org>, 'Jun'ichi Nomura' <j-nomura@ce.jp.nec.com>, 'Jens Axboe' <axboe@kernel.dk>, linux-kernel@vger.kernel.org, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, 'Stefan Richter' <stefanr@s5r6.in-berlin.de>, sgruszka@redhat.com, 'Huajun Li' <huajun.li.lee@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Natalie <dl-roszinateam@att.com>, Reba <adamamy@espn.go.com>, Mia <bretonm@fairpoint.com>, Jaime <ze0985@att.com>, Leanne <logistics.ua@philips.com>, Ashley <norma.j.sommerfelt@ameritech.com>, Autumn <sb975u@att.com>, Ella <ann.jimmison@philips.com>, Martha <jaquisu2@yahoo.com>, Lacey <linux-scsi@vger.kernel.org>
 
-Ref11-8194136-83982418-2-916 
+I have tested this patch, and it fixes the problem where when I ejected the SD
+card it would oops and crash and burn my kernel, as reported here :
+
+https://lkml.org/lkml/2012/2/7/462
+
+and here:
+
+https://bugs.gentoo.org/show_bug.cgi?id=402433
+
+I tested it with the 3.3-rc5 sources, found here:
+
+http://www.kernel.org/pub/linux/kernel/v3.0/testing/
 
 
-http://goo.gl/PqVJb
 
- xwzdoh1sxw3pshmoew8-
+Thanks,
 
-
+Tested-by:Naveen Goswamy
