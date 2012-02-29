@@ -1,64 +1,56 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v8 09/13] libsas: enforce eh strategy handlers only in
- eh context
-Date: Wed, 29 Feb 2012 16:05:51 -0600
-Message-ID: <1330553151.8846.26.camel@dabdike>
-References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
-	 <20120210084525.25701.51128.stgit@dwillia2-linux.jf.intel.com>
+Subject: Re: [PATCH 01/34] scsi proc_ops: add struct
+ scsi_host_template::proc_ops
+Date: Wed, 29 Feb 2012 16:29:58 -0600
+Message-ID: <1330554598.8846.31.camel@dabdike>
+References: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
+	 <CACVxJT_veCVyrdEfNoD=r6Aq3Bk5MdjgqXmt0ZxhPzV8nFsW5Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47867 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47984 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964851Ab2B2WFx (ORCPT
+	by vger.kernel.org with ESMTP id S964772Ab2B2WaC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Feb 2012 17:05:53 -0500
-In-Reply-To: <20120210084525.25701.51128.stgit@dwillia2-linux.jf.intel.com>
+	Wed, 29 Feb 2012 17:30:02 -0500
+In-Reply-To: <CACVxJT_veCVyrdEfNoD=r6Aq3Bk5MdjgqXmt0ZxhPzV8nFsW5Q@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alexey Dobriyan <adobriyan@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2012-02-10 at 00:45 -0800, Dan Williams wrote:
-> The strategy handlers may be called in places that are problematic for
-> libsas (i.e. sata resets outside of domain revalidation filtering /
-> libata link recovery), or problematic for userspace (non-blocking ioctl
-> to sleeping reset functions).  However, these routines are also called
-> for eh escalations and recovery of scsi_eh_prep_cmnd(), so permit them
-> as long as we are running in the host's error handler.
+On Wed, 2012-02-29 at 15:39 +0200, Alexey Dobriyan wrote:
+> James, ping!
 > 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/scsi/libsas/sas_scsi_host.c |   15 +++++++++++----
->  1 files changed, 11 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-> index f0b9b7b..1cabedc 100644
-> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> @@ -463,11 +463,14 @@ EXPORT_SYMBOL_GPL(sas_get_local_phy);
->  /* Attempt to send a LUN reset message to a device */
->  int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
->  {
-> -	struct domain_device *dev = cmd_to_domain_dev(cmd);
-> -	struct sas_internal *i =
-> -		to_sas_internal(dev->port->ha->core.shost->transportt);
-> -	struct scsi_lun lun;
->  	int res;
-> +	struct scsi_lun lun;
-> +	struct Scsi_Host *host = cmd->device->host;
-> +	struct domain_device *dev = cmd_to_domain_dev(cmd);
-> +	struct sas_internal *i = to_sas_internal(host->transportt);
-> +
-> +	if (current != host->ehandler)
-> +		return FAILED;
+> Are you going to apply this?
 
-Doing this will ensure that SG_SCSI_RESET now fails.
+I think so ... I've queued them for inspection and testing (probably
+this weekend).
 
-I don't mind checking for O_NONBLOCK in the sg handler and failing if it
-is, but disallowing everything looks a trifle drastic.
+Ideally, I'd have liked some maintainer acks because the changes are
+quite invasive, but I'm reasonably OK with pushing them as an
+infrastructure change
+
+> If not, what can I do to make them applied?
+
+Well, next time around, a more conformant change log would have been
+nice (saves me having to edit every commit).
+
+the form is
+
+[driver]: change
+
+so instead of
+
+scsi proc_ops: convert drivers/scsi/ips.c
+
+it should be
+
+ips: convert to proc_ops
 
 James
+
+
 
 
