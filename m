@@ -1,159 +1,67 @@
-From: Naveen Goswamy <naveen.goswamy@polymtl.ca>
-Subject: Re: [PATCH] Fix NULL pointer dereference in sd_revalidate_disk
-Date: Wed, 29 Feb 2012 13:46:43 -0500
-Message-ID: <1330541203.4f4e7293d1477@www.imp.polymtl.ca>
-References: <4F443E81.2060402@ce.jp.nec.com> <20120222010435.GI12236@google.com> <95E22EAF20104309BF3938E7820F36D6@usish.com.cn> <20120222053651.GA7891@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC PATCH] kick ksoftirqd more often to please soft lockup detector
+Date: Wed, 29 Feb 2012 11:49:39 -0800
+Message-ID: <CABE8wwvhZTB8AONcdCyoE+i3rNKUHFwDSiwVWcLOU=zeKz_Nbg@mail.gmail.com>
+References: <20120227203847.22153.62468.stgit@dwillia2-linux.jf.intel.com>
+	<1330422535.11248.78.camel@twins>
+	<alpine.LFD.2.02.1202282240340.2794@ionos>
+	<CABE8wwsmWqDddMqgQ6HvMPkbK+Vu7G7GOY-VO_Tru2JV2NUUcw@mail.gmail.com>
+	<1330507023.11248.113.camel@twins>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120222053651.GA7891@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: 'Dave Jones' <davej@redhat.com>
-Cc: Jack Wang <jack_wang@usish.com>, 'Tejun Heo' <tj@kernel.org>, 'Jun'ichi Nomura' <j-nomura@ce.jp.nec.com>, 'Jens Axboe' <axboe@kernel.dk>, linux-kernel@vger.kernel.org, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, 'Stefan Richter' <stefanr@s5r6.in-berlin.de>, sgruszka@redhat.com, 'Huajun Li' <huajun.li.lee@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:52468 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753912Ab2B2Ttl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Feb 2012 14:49:41 -0500
+Received: by obbwd18 with SMTP id wd18so4225600obb.25
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Feb 2012 11:49:39 -0800 (PST)
+In-Reply-To: <1330507023.11248.113.camel@twins>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Peter Zijlstra <a.p.zijlstra@chello.nl>
+Cc: Thomas Gleixner <tglx@linutronix.de>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Lukasz Dorau <lukasz.dorau@intel.com>, James Bottomley <JBottomley@parallels.com>, Andrzej Jakowski <andrzej.jakowski@intel.com>
 
-I have tested Dave Jones' 3.2 backport patch in gentoo, against kernel sources
-3.2.1-gentoo-r2 and it works as well.
+On Wed, Feb 29, 2012 at 1:17 AM, Peter Zijlstra <a.p.zijlstra@chello.nl=
+> wrote:
+> On Tue, 2012-02-28 at 14:16 -0800, Dan Williams wrote:
+>> Looks like everyone is guilty:
+>>
+>> [ =A0422.765336] softirq took longer than 1/4 tick: 3 NET_RX fffffff=
+f813f0aa0
+>> ...
+>> [ =A0423.971878] softirq took longer than 1/4 tick: 4 BLOCK ffffffff=
+812519c8
+>> [ =A0423.985093] softirq took longer than 1/4 tick: 6 TASKLET ffffff=
+ff8103422e
+>> [ =A0423.993157] softirq took longer than 1/4 tick: 7 SCHED ffffffff=
+8105e2e1
+>> [ =A0424.001018] softirq took longer than 1/4 tick: 9 RCU ffffffff81=
+0a0fed
+>> [ =A0424.008691] softirq loop took longer than 1/2 tick need_resched=
+:
+>
+> /me kicks himself for not printing the actual duration.. :-)
+>
+>> As expected whenever that 1/2 tick message gets emitted the softirq
+>> handler is almost running in a need_resched() context.
+>
+> Yeah.. that's quite expected.
+>
+>> So is it a good idea to get more aggressive about scheduling ksoftrr=
+qd?
+>
+> Nah, moving away from softirq more like. I'll put moving the
+> load-balancer into a kthread on the todo list. And it looks like
+> everybody else should move to kthreads too.
 
-Regards,
+I seem to recall this running into resistance (but maybe things have
+changed in the last few years)?
 
-Naveen
-
-
-
-
-
-Quoting 'Dave Jones' <davej@redhat.com>:
-
-> On Wed, Feb 22, 2012 at 12:58:08PM +0800, Jack Wang wrote:
->  > Should this need pick up into stable too?
->  >
->  > Jack
->
-> The 3.2 backport seems fairly trivial (just some stuff moved to different
-> files)
-> Here's the patch I did for Fedora.
->
-> 	Dave
->
-> --- linux/fs/partitions/check.c~	2012-02-20 18:32:55.314253719 -0500
-> +++ linux/fs/partitions/check.c	2012-02-20 18:34:46.509859745 -0500
-> @@ -539,17 +539,11 @@ static bool disk_unlock_native_capacity(
->  	}
->  }
->
-> -int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
-> +static int drop_partitions(struct gendisk *disk, struct block_device *bdev)
->  {
-> -	struct parsed_partitions *state = NULL;
->  	struct disk_part_iter piter;
->  	struct hd_struct *part;
-> -	int p, highest, res;
-> -rescan:
-> -	if (state && !IS_ERR(state)) {
-> -		kfree(state);
-> -		state = NULL;
-> -	}
-> +	int res;
->
->  	if (bdev->bd_part_count)
->  		return -EBUSY;
-> @@ -562,6 +556,24 @@ rescan:
->  		delete_partition(disk, part->partno);
->  	disk_part_iter_exit(&piter);
->
-> +	return 0;
-> +}
-> +
-> +int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
-> +{
-> +	struct parsed_partitions *state = NULL;
-> +	struct hd_struct *part;
-> +	int p, highest, res;
-> +rescan:
-> +	if (state && !IS_ERR(state)) {
-> +		kfree(state);
-> +		state = NULL;
-> +	}
-> +
-> +	res = drop_partitions(disk, bdev);
-> +	if (res)
-> +		return res;
-> +
->  	if (disk->fops->revalidate_disk)
->  		disk->fops->revalidate_disk(disk);
->  	check_disk_size_change(disk, bdev);
-> @@ -665,6 +677,26 @@ rescan:
->  	return 0;
->  }
->
-> +int invalidate_partitions(struct gendisk *disk, struct block_device *bdev)
-> +{
-> +	int res;
-> +
-> +	if (!bdev->bd_invalidated)
-> +		return 0;
-> +
-> +	res = drop_partitions(disk, bdev);
-> +	if (res)
-> +		return res;
-> +
-> +	set_capacity(disk, 0);
-> +	check_disk_size_change(disk, bdev);
-> +	bdev->bd_invalidated = 0;
-> +	/* tell userspace that the media / partition table may have changed */
-> +	kobject_uevent(&disk_to_dev(disk)->kobj, KOBJ_CHANGE);
-> +
-> +	return 0;
-> +}
-> +
->  unsigned char *read_dev_sector(struct block_device *bdev, sector_t n, Sector
-> *p)
->  {
->  	struct address_space *mapping = bdev->bd_inode->i_mapping;
-> --- linux/include/linux/genhd.h~	2012-02-20 18:35:02.777802107 -0500
-> +++ linux/include/linux/genhd.h	2012-02-20 18:35:13.873762792 -0500
-> @@ -596,6 +596,7 @@ extern char *disk_name (struct gendisk *
->
->  extern int disk_expand_part_tbl(struct gendisk *disk, int target);
->  extern int rescan_partitions(struct gendisk *disk, struct block_device
-> *bdev);
-> +extern int invalidate_partitions(struct gendisk *disk, struct block_device
-> *bdev);
->  extern struct hd_struct * __must_check add_partition(struct gendisk *disk,
->  						     int partno, sector_t start,
->  						     sector_t len, int flags,
-> --- linux/fs/block_dev.c~	2012-02-20 18:35:24.890723757 -0500
-> +++ linux/fs/block_dev.c	2012-02-20 18:36:25.166510197 -0500
-> @@ -1159,8 +1159,12 @@ static int __blkdev_get(struct block_dev
->  			 * The latter is necessary to prevent ghost
->  			 * partitions on a removed medium.
->  			 */
-> -			if (bdev->bd_invalidated && (!ret || ret == -ENOMEDIUM))
-> -				rescan_partitions(disk, bdev);
-> +			if (bdev->bd_invalidated) {
-> +				if (!ret)
-> +					rescan_partitions(disk, bdev);
-> +				else if (ret == -ENOMEDIUM)
-> +					invalidate_partitions(disk, bdev);
-> +			}
->  			if (ret)
->  				goto out_clear;
->  		} else {
-> @@ -1190,8 +1194,12 @@ static int __blkdev_get(struct block_dev
->  			if (bdev->bd_disk->fops->open)
->  				ret = bdev->bd_disk->fops->open(bdev, mode);
->  			/* the same as first opener case, read comment there */
-> -			if (bdev->bd_invalidated && (!ret || ret == -ENOMEDIUM))
-> -				rescan_partitions(bdev->bd_disk, bdev);
-> +			if (bdev->bd_invalidated) {
-> +				if (!ret)
-> +					rescan_partitions(bdev->bd_disk, bdev);
-> +				else if (ret == -ENOMEDIUM)
-> +					invalidate_partitions(bdev->bd_disk, bdev);
-> +			}
->  			if (ret)
->  				goto out_unlock_bdev;
->  		}
->
+https://lkml.org/lkml/2007/6/29/155
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
