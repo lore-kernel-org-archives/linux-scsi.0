@@ -1,33 +1,62 @@
-From: Naveen Goswamy <naveen.goswamy@polymtl.ca>
-Subject: Re: [PATCH] Fix NULL pointer dereference in sd_revalidate_disk
-Date: Wed, 29 Feb 2012 07:57:24 -0500
-Message-ID: <1330520244.4f4e20b4cfdc0@www.imp.polymtl.ca>
-References: <4F443E81.2060402@ce.jp.nec.com> <20120222010435.GI12236@google.com> <95E22EAF20104309BF3938E7820F36D6@usish.com.cn> <20120222053651.GA7891@redhat.com>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [resend] [patch] [SCSI] bfa: dereferencing freed memory in
+ bfad_im_probe()
+Date: Wed, 29 Feb 2012 15:59:33 +0300
+Message-ID: <20120229125933.GA23250@elgon.mountain>
+References: <20110729085306.GH3752@shale.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120222053651.GA7891@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20110729085306.GH3752@shale.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
-To: 'Dave Jones' <davej@redhat.com>
-Cc: Jack Wang <jack_wang@usish.com>, 'Tejun Heo' <tj@kernel.org>, 'Jun'ichi Nomura' <j-nomura@ce.jp.nec.com>, 'Jens Axboe' <axboe@kernel.dk>, linux-kernel@vger.kernel.org, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, 'Stefan Richter' <stefanr@s5r6.in-berlin.de>, sgruszka@redhat.com, 'Huajun Li' <huajun.li.lee@gmail.com>
+To: Jing Huang <huangj@brocade.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:BROCADE BFA FC SC..." <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-I have tested this patch, and it fixes the problem where when I ejected the SD
-card it would oops and crash and burn my kernel, as reported here :
+If bfad_thread_workq(bfad) was not BFA_STATUS_OK then we freed "im"
+and then dereferenced it.
 
-https://lkml.org/lkml/2012/2/7/462
+I did a little clean up because it seemed nicer to return directly
+instead of doing a superfluous goto.  I looked at other functions in
+this file and it seems like returning directly is standard.
 
-and here:
+Signed-off-by: Dan Carpenter <error27@gmail.com>
+---
+I sent this last July and asked about it again in November but I never
+heard back.  It still applies fine with 2 lines of fuzz.
 
-https://bugs.gentoo.org/show_bug.cgi?id=402433
-
-I tested it with the 3.3-rc5 sources, found here:
-
-http://www.kernel.org/pub/linux/kernel/v3.0/testing/
-
-
-
-Thanks,
-
-Tested-by:Naveen Goswamy
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 0131238..7f7cca0 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -685,25 +685,21 @@ bfa_status_t
+ bfad_im_probe(struct bfad_s *bfad)
+ {
+ 	struct bfad_im_s      *im;
+-	bfa_status_t    rc = BFA_STATUS_OK;
+ 
+ 	im = kzalloc(sizeof(struct bfad_im_s), GFP_KERNEL);
+-	if (im == NULL) {
+-		rc = BFA_STATUS_ENOMEM;
+-		goto ext;
+-	}
++	if (im == NULL)
++		return BFA_STATUS_ENOMEM;
+ 
+ 	bfad->im = im;
+ 	im->bfad = bfad;
+ 
+ 	if (bfad_thread_workq(bfad) != BFA_STATUS_OK) {
+ 		kfree(im);
+-		rc = BFA_STATUS_FAILED;
++		return BFA_STATUS_FAILED;
+ 	}
+ 
+ 	INIT_WORK(&im->aen_im_notify_work, bfad_aen_im_notify_handler);
+-ext:
+-	return rc;
++	return BFA_STATUS_OK;
+ }
+ 
+ void
