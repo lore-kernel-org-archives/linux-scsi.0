@@ -1,62 +1,36 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: [resend] [patch] [SCSI] bfa: dereferencing freed memory in
- bfad_im_probe()
-Date: Wed, 29 Feb 2012 15:59:33 +0300
-Message-ID: <20120229125933.GA23250@elgon.mountain>
-References: <20110729085306.GH3752@shale.localdomain>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: Re: [PATCH 01/34] scsi proc_ops: add struct scsi_host_template::proc_ops
+Date: Wed, 29 Feb 2012 15:39:50 +0200
+Message-ID: <CACVxJT_veCVyrdEfNoD=r6Aq3Bk5MdjgqXmt0ZxhPzV8nFsW5Q@mail.gmail.com>
+References: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110729085306.GH3752@shale.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jing Huang <huangj@brocade.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:BROCADE BFA FC SC..." <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43261 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757978Ab2B2Nju (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Feb 2012 08:39:50 -0500
+Received: by iagj37 with SMTP id j37so2664019iag.19
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Feb 2012 05:39:50 -0800 (PST)
+In-Reply-To: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>
 
-If bfad_thread_workq(bfad) was not BFA_STATUS_OK then we freed "im"
-and then dereferenced it.
+James, ping!
 
-I did a little clean up because it seemed nicer to return directly
-instead of doing a superfluous goto.  I looked at other functions in
-this file and it seems like returning directly is standard.
+Are you going to apply this?
+If not, what can I do to make them applied?
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
----
-I sent this last July and asked about it again in November but I never
-heard back.  It still applies fine with 2 lines of fuzz.
-
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 0131238..7f7cca0 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -685,25 +685,21 @@ bfa_status_t
- bfad_im_probe(struct bfad_s *bfad)
- {
- 	struct bfad_im_s      *im;
--	bfa_status_t    rc = BFA_STATUS_OK;
- 
- 	im = kzalloc(sizeof(struct bfad_im_s), GFP_KERNEL);
--	if (im == NULL) {
--		rc = BFA_STATUS_ENOMEM;
--		goto ext;
--	}
-+	if (im == NULL)
-+		return BFA_STATUS_ENOMEM;
- 
- 	bfad->im = im;
- 	im->bfad = bfad;
- 
- 	if (bfad_thread_workq(bfad) != BFA_STATUS_OK) {
- 		kfree(im);
--		rc = BFA_STATUS_FAILED;
-+		return BFA_STATUS_FAILED;
- 	}
- 
- 	INIT_WORK(&im->aen_im_notify_work, bfad_aen_im_notify_handler);
--ext:
--	return rc;
-+	return BFA_STATUS_OK;
- }
- 
- void
+On Wed, Feb 22, 2012 at 10:45 PM, Alexey Dobriyan <adobriyan@gmail.com> wrote:
+> The last user of ->write_proc interface is scsi_proc.c passing through
+> data to individual drivers. There are still quite a few drivers using
+> ->proc_info interface, so do conversion gradually.
+>
+> Introduce temporary logic allowing both ->proc_info and ->proc_ops
+> with ->proc_ops being the first thing to check, convert drivers,
+> remove ->proc_info interface.
+>
+> Removing all relevant SCSI proc files is risky because it'd take only one
+> broken user to revert whole thing and do it right.
