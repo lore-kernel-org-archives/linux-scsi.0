@@ -1,36 +1,28 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: Re: [PATCH 01/34] scsi proc_ops: add struct scsi_host_template::proc_ops
-Date: Wed, 29 Feb 2012 15:39:50 +0200
-Message-ID: <CACVxJT_veCVyrdEfNoD=r6Aq3Bk5MdjgqXmt0ZxhPzV8nFsW5Q@mail.gmail.com>
-References: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [PATCH] block: fix __blkdev_get and add_disk race condition
+Date: Wed, 29 Feb 2012 15:57:11 +0100
+Message-ID: <20120229145710.GB20516@redhat.com>
+References: <20120222165948.GA12961@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43261 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757978Ab2B2Nju (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Feb 2012 08:39:50 -0500
-Received: by iagj37 with SMTP id j37so2664019iag.19
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Feb 2012 05:39:50 -0800 (PST)
-In-Reply-To: <1329939985-26793-1-git-send-email-adobriyan@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120222165948.GA12961@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>
 
-James, ping!
+On Wed, Feb 22, 2012 at 05:59:49PM +0100, Stanislaw Gruszka wrote:
+> I use the script to verify patch fixing oops in sd_revalidate_disk
+> http://marc.info/?l=linux-scsi&m=132935572512352&w=2
+> Without Jun'ichi Nomura patch titled "Fix NULL pointer dereference in
+> sd_revalidate_disk" or this one, script easily crash kernel within
+> a few seconds.
 
-Are you going to apply this?
-If not, what can I do to make them applied?
+Jens could you pick up both patches for 3.3 ? Both are actually a -stable
+fixes, despite they are not marked so, perhaps we should repost patches
+with that mark?
 
-On Wed, Feb 22, 2012 at 10:45 PM, Alexey Dobriyan <adobriyan@gmail.com> wrote:
-> The last user of ->write_proc interface is scsi_proc.c passing through
-> data to individual drivers. There are still quite a few drivers using
-> ->proc_info interface, so do conversion gradually.
->
-> Introduce temporary logic allowing both ->proc_info and ->proc_ops
-> with ->proc_ops being the first thing to check, convert drivers,
-> remove ->proc_info interface.
->
-> Removing all relevant SCSI proc files is risky because it'd take only one
-> broken user to revert whole thing and do it right.
+Thanks
+Stanislaw
