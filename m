@@ -1,191 +1,177 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH v3 3/5] [SCSI] ufshcd: UFSHCI error handling
-Date: Wed, 29 Feb 2012 12:11:52 +0530
-Message-ID: <1330497714-26504-4-git-send-email-santoshsy@gmail.com>
+Subject: [PATCH v3 5/5] Documentation: UFS Host Controller Driver
+Date: Wed, 29 Feb 2012 12:11:54 +0530
+Message-ID: <1330497714-26504-6-git-send-email-santoshsy@gmail.com>
 References: <1330497714-26504-1-git-send-email-santoshsy@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
 In-Reply-To: <1330497714-26504-1-git-send-email-santoshsy@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-samsung-soc-owner@vger.kernel.org
 To: James.Bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, arnd.bergmann@linaro.org, saugata.das@linaro.org, dsaxena@linaro.org, stephen.doel@linaro.org, venkat@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, girish.shivananjappa@linaro.org, vishak.g@samsung.com, k.rajesh@samsung.com, yejin.moon@samsung.com, sreekumar.c@samsung.com, vinholikatti@gmail.com, linkinjeon@gmail.com, michaelc@cs.wisc.edu, Santosh Yaraganavi <santoshsy@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Santosh Yaraganavi <santoshsy@gmail.com>
 
-UFSHCI error handling includes support for:
- - UFS host controller errors
- - System bus errors
- - Unipro errors
+The document provides Universal Flash Storage(UFS) and
+UFS host controller driver overview.
 
 Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
-Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
-Reviewed-by: Arnd Bergmann <arnd@linaro.org>
 Reviewed-by: Vishak G <vishak.g@samsung.com>
-Reviewed-by: Girish K S <girish.shivananjappa@linaro.org>
 Reviewed-by: Namjae Jeon <linkinjeon@gmail.com>
 ---
-v2 -> v3:
-	- use shost_priv() instead of accessing hostdata directly.
-v1 -> v2:
-	- ufshcd_do_reset(): change return value to SUCCESS/FAILED,
-	  since the function can also be called from UFSHCD registered
-	  SCSI midlayer error handling routines.
-	  Ex: .eh_host_reset_handler which expects return value
-	  SUCCESS/FAILED
-	- ufshcd_do_reset(): aquire spin_lock_irqsave only for
-	  instructions which share common data structure.
+ Documentation/scsi/00-INDEX |    2 +
+ Documentation/scsi/ufs.txt  |  133 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 135 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/scsi/ufs.txt
 
- drivers/scsi/ufs/ufshcd.c |   97 +++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 97 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 43b9c62..fa2fa96 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -138,6 +138,8 @@ struct uic_command {
-  * @ufshcd_state: UFSHCD states
-  * @int_enable_mask: Interrupt Mask Bits
-  * @uic_workq: Work queue for UIC completion handling
-+ * @feh_workq: Work queue for fatal controller error handling
-+ * @errors: HBA errors
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -171,6 +173,10 @@ struct ufs_hba {
- 
- 	/* Work Queues */
- 	struct work_struct uic_workq;
-+	struct work_struct feh_workq;
+diff --git a/Documentation/scsi/00-INDEX b/Documentation/scsi/00-INDEX
+index b48ded5..b7dd650 100644
+--- a/Documentation/scsi/00-INDEX
++++ b/Documentation/scsi/00-INDEX
+@@ -94,3 +94,5 @@ sym53c8xx_2.txt
+ 	- info on second generation driver for sym53c8xx based adapters
+ tmscsim.txt
+ 	- info on driver for AM53c974 based adapters
++ufs.txt
++	- info on Universal Flash Storage(UFS) and UFS host controller driver.
+diff --git a/Documentation/scsi/ufs.txt b/Documentation/scsi/ufs.txt
+new file mode 100644
+index 0000000..41a6164
+--- /dev/null
++++ b/Documentation/scsi/ufs.txt
+@@ -0,0 +1,133 @@
++                       Universal Flash Storage
++                       =======================
 +
-+	/* HBA Errors */
-+	u32 errors;
- };
- 
- /**
-@@ -893,6 +899,9 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 	/* Configure interrupt aggregation */
- 	ufshcd_config_int_aggr(hba, INT_AGGR_CONFIG);
- 
-+	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
-+		scsi_unblock_requests(hba->host);
 +
- 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 	scsi_scan_host(hba->host);
- out:
-@@ -994,6 +1003,51 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
- }
- 
- /**
-+ * ufshcd_do_reset - reset the host controller
-+ * @hba: per adapter instance
-+ *
-+ * Returns SUCCESS/FAILED
-+ */
-+static int ufshcd_do_reset(struct ufs_hba *hba)
-+{
-+	struct ufshcd_lrb *lrbp;
-+	unsigned long flags;
-+	int tag;
++Contents
++--------
 +
-+	/* block commands from midlayer */
-+	scsi_block_requests(hba->host);
++1. Overview
++2. UFS Architecture Overview
++  2.1 Application Layer
++  2.2 UFS Transport Protocol(UTP) layer
++  2.3 UFS Interconnect(UIC) Layer
++3. UFSHCD Overview
++  3.1 UFS controller initialization
++  3.2 UTP Transfer requests
++  3.3 UFS error handling
++  3.4 SCSI Error handling
 +
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->ufshcd_state = UFSHCD_STATE_RESET;
 +
-+	/* send controller to reset state */
-+	ufshcd_hba_stop(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
++1. Overview
++-----------
 +
-+	/* abort outstanding commands */
-+	for (tag = 0; tag < hba->nutrs; tag++) {
-+		if (test_bit(tag, &hba->outstanding_reqs)) {
-+			lrbp = &hba->lrb[tag];
-+			scsi_dma_unmap(lrbp->cmd);
-+			lrbp->cmd->result = DID_RESET << 16;
-+			lrbp->cmd->scsi_done(lrbp->cmd);
-+			lrbp->cmd = NULL;
-+		}
-+	}
++Universal Flash Storage(UFS) is a storage specification for flash devices.
++It is aimed to provide a universal storage interface for both
++embedded and removable flash memory based storage in mobile
++devices such as smart phones and tablet computers. The specification
++is defined by JEDEC Solid State Technology Association. UFS is based
++on MIPI M-PHY physical layer standard. UFS uses MIPI M-PHY as the
++physical layer and MIPI Unipro as the link layer.
 +
-+	/* clear outstanding request bit maps */
-+	hba->outstanding_reqs = 0;
++The main goals of UFS is to provide,
++ * Optimized performance:
++   For UFS version 1.0 and 1.1 the target performance is as follows,
++   Support for Gear1 is mandatory (rate A: 1248Mbps, rate B: 1457.6Mbps)
++   Support for Gear2 is optional (rate A: 2496Mbps, rate B: 2915.2Mbps)
++   Future version of the standard,
++   Gear3 (rate A: 4992Mbps, rate B: 5830.4Mbps)
++ * Low power consumption
++ * High random IOPs and low latency
 +
-+	/* start the initialization process */
-+	if (ufshcd_initialize_hba(hba)) {
-+		dev_err(&hba->pdev->dev,
-+			"Reset: Controller initialization failed\n");
-+		return FAILED;
-+	}
-+	return SUCCESS;
-+}
 +
-+/**
-  * ufshcd_slave_alloc - handle initial SCSI device configurations
-  * @sdev: pointer to SCSI device
-  *
-@@ -1240,12 +1294,54 @@ static void ufshcd_uic_cc_handler (struct work_struct *work)
- }
- 
- /**
-+ * ufshcd_fatal_err_handler - handle fatal errors
-+ * @hba: per adapter instance
-+ */
-+static void ufshcd_fatal_err_handler(struct work_struct *work)
-+{
-+	struct ufs_hba *hba;
-+	hba = container_of(work, struct ufs_hba, feh_workq);
++2. UFS Architecture Overview
++----------------------------
 +
-+	/* check if reset is already in progress */
-+	if (hba->ufshcd_state != UFSHCD_STATE_RESET)
-+		ufshcd_do_reset(hba);
-+}
++UFS has a layered communication architecture which is based on SCSI
++SAM-5 architectural model.
 +
-+/**
-+ * ufshcd_err_handler - Check for fatal errors
-+ * @work: pointer to a work queue structure
-+ */
-+static void ufshcd_err_handler(struct ufs_hba *hba)
-+{
-+	u32 reg;
++UFS communication architecture consists of following layers,
 +
-+	if (hba->errors & INT_FATAL_ERRORS)
-+		goto fatal_eh;
++2.1 Application Layer
 +
-+	if (hba->errors & UIC_ERROR) {
++  The Application layer is composed of UFS command set layer(UCS),
++  Task Manager and Device manager. The UFS interface is designed to be
++  protocol agnostic, however SCSI has been selected as a baseline
++  protocol for versions 1.0 and 1.1 of UFS protocol  layer.
++  UFS supports subset of SCSI commands defined by SPC-4 and SBC-3.
++  * UCS: It handles SCSI commands supported by UFS specification.
++  * Task manager: It handles task management functions defined by the
++     UFS which are meant for command queue control.
++  * Device manager: It handles device level operations and device
++     configuration operations. Device level operations mainly involve
++     device power management operations and commands to Interconnect
++     layers. Device level configurations involve handling of query
++     requests which are used to modify and retrieve configuration
++     information of the device.
 +
-+		reg = readl(hba->mmio_base +
-+			    REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
-+		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
-+			goto fatal_eh;
-+	}
-+	return;
-+fatal_eh:
-+	hba->ufshcd_state = UFSHCD_STATE_ERROR;
-+	schedule_work(&hba->feh_workq);
-+}
++2.2 UFS Transport Protocol(UTP) layer
 +
-+/**
-  * ufshcd_sl_intr - Interrupt service routine
-  * @hba: per adapter instance
-  * @intr_status: contains interrupts generated by the controller
-  */
- static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- {
-+	hba->errors = UFSHCD_ERROR_MASK & intr_status;
-+	if (hba->errors)
-+		ufshcd_err_handler(hba);
++  UTP layer provides services for
++  the higher layers through Service Access Points. UTP defines 3
++  service access points for higher layers.
++  * UDM_SAP: Device manager service access point is exposed to device
++    manager for device level operations. These device level operations
++    are done through query requests.
++  * UTP_CMD_SAP: Command service access point is exposed to UFS command
++    set layer(UCS) to transport commands.
++  * UTP_TM_SAP: Task management service access point is exposed to task
++    manager to transport task management functions.
++  UTP transports messages through UFS protocol information unit(UPIU).
 +
- 	if (intr_status & UIC_COMMAND_COMPL)
- 		schedule_work(&hba->uic_workq);
- 
-@@ -1492,6 +1588,7 @@ ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	/* Initialize work queues */
- 	INIT_WORK(&hba->uic_workq, ufshcd_uic_cc_handler);
-+	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
- 
- 	/* IRQ registration */
- 	err = request_irq(pdev->irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
++2.3 UFS Interconnect(UIC) Layer
++
++  UIC is the lowest layer of UFS layered architecture. It handles
++  connection between UFS host and UFS device. UIC consists of
++  MIPI UniPro and MIPI M-PHY. UIC provides 2 service access points
++  to upper layer,
++  * UIC_SAP: To transport UPIU between UFS host and UFS device.
++  * UIO_SAP: To issue commands to Unipro layers.
++
++
++3. UFSHCD Overview
++------------------
++
++The UFS host controller driver is based on Linux SCSI Framework.
++UFSHCD is a low level device driver which acts as an interface between
++SCSI Midlayer and PCIe based UFS host controllers.
++
++The current UFSHCD implementation supports following functionality,
++
++3.1 UFS controller initialization
++
++  The initialization module brings UFS host controller to active state
++  and prepares the controller to transfer commands/response between
++  UFSHCD and UFS device.
++
++3.2 UTP Transfer requests
++
++  Transfer request handling module of UFSHCD receives SCSI commands
++  from SCSI Midlayer, forms UPIUs and issues the UPIUs to UFS Host
++  controller. Also, the module decodes, responses received from UFS
++  host controller in the form of UPIUs and intimates the SCSI Midlayer
++  of the status of the command.
++
++3.3 UFS error handling
++
++  Error handling module handles Host controller fatal errors,
++  Device fatal errors and UIC interconnect layer related errors.
++
++3.4 SCSI Error handling
++
++  This is done through UFSHCD SCSI error handling routines registered
++  with SCSI Midlayer. Examples of some of the error handling commands
++  issues by SCSI Midlayer are Abort task, Lun reset and host reset.
++  UFSHCD Routines to perform these tasks are registered with
++  SCSI Midlayer through .eh_abort_handler, .eh_device_reset_handler and
++  .eh_host_reset_handler.
++
++In this version of UFSHCD Query requests and power management
++functionality are not implemented.
++
++UFS Specifications can be found at,
++UFS - http://www.jedec.org/sites/default/files/docs/JESD220.pdf
++UFSHCI - http://www.jedec.org/sites/default/files/docs/JESD223.pdf
 -- 
 1.7.5.4
