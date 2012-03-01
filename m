@@ -1,89 +1,60 @@
-From: santosh prasad nayak <santoshprasadnayak@gmail.com>
-Subject: Re: [SCSI] pm8001: Fix bogus interrupt state flag issue.
-Date: Thu, 1 Mar 2012 19:54:57 +0530
-Message-ID: <CAOD=uF46HF3iLto3AhnTkjzSDebAkCYtTE-UJ26s00CwgwRPYA@mail.gmail.com>
-References: <20120301142225.GA9789@elgon.mountain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v8 08/13] libsas: libsas.force_hard_reset module
+ parameter
+Date: Thu, 01 Mar 2012 08:27:45 -0600
+Message-ID: <1330612065.2888.8.camel@dabdike.int.hansenpartnership.com>
+References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
+	 <20120210084520.25701.83280.stgit@dwillia2-linux.jf.intel.com>
+	 <1330552551.8846.24.camel@dabdike>
+	 <CABE8wwt3tMT7wmSG=k_z6FOvBaStwuG1NF68Cjqi0qacaQVA0Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:42785 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932157Ab2CAOY5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 09:24:57 -0500
-Received: by pbcup15 with SMTP id up15so944089pbc.19
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Mar 2012 06:24:57 -0800 (PST)
-In-Reply-To: <20120301142225.GA9789@elgon.mountain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CABE8wwt3tMT7wmSG=k_z6FOvBaStwuG1NF68Cjqi0qacaQVA0Q@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Jack Wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org
 
-The warnings are  there since from the beginning.
-Even before my fix.
+On Wed, 2012-02-29 at 15:22 -0800, Dan Williams wrote:
+> On Wed, Feb 29, 2012 at 1:55 PM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > On Fri, 2012-02-10 at 00:45 -0800, Dan Williams wrote:
+> >> It is possible for a host to get "locked out" from talking to sata
+> >> devices in the domain if, for example, its sas address changes but the
+> >> expander topology has existing affiliations with the old address.  If
+> >> the system is booted userspace can write to
+> >> /sys/class/sas_phy/<phy-X>/hard_reset to clear the affiliation, however
+> >> if this condition exists for the root device the module parameter can be
+> >> used to promote all ata resets to hard resets.
+> >
+> > I don't quite understand this.  Are you saying we can't (or shouldn't)
+> > execute
+> >
+> > /sys/class/sas_phy/<phy-X>/hard_reset
+> >
+> > on the root device for some reason?
+> 
+> The case I ran into was accidentally changing the host sas address
+> between reboots.  If the sata device had been a root device then I
+> would not have been able boot the system.  But now that I think about
+> it, if Linux could not boot then neither could the pre-os
+> option-rom/efi driver.
+> 
+> >> After the system is booted this state can be cleared via
+> >> /sys/module/libsas/parameters/force_hard_reset
+> >
+> > I really don't think a module parameter for this is such a good idea ...
+> > it effectively promotes all soft resets to being hard ones, which can
+> > have a lot of unintended consequences.
+> 
+> Yes, it was only meant as a temporary "get out of a sticky situation"
+> option, but given the above pre-os-driver realization it is not even
+> useful for that case.  So I'm fine killing this patch.
 
-There are two locks:
-1.  pm8001_ha->lock
-2. t->task_state_lock
+Great, I'll drop it, thanks.
 
-regards
-santosh
+James
 
-On Thu, Mar 1, 2012 at 7:52 PM, Dan Carpenter <dan.carpenter@oracle.com=
-> wrote:
-> Hello Santosh Nayak,
->
-> The patch bdaefbf580cd: "[SCSI] pm8001: Fix bogus interrupt state
-> flag issue." from Feb 26, 2012, leads to the following warning:
-> drivers/scsi/pm8001/pm8001_hwi.c:2400 mpi_sata_completion()
-> =A0 =A0 =A0 =A0 error: double unlock 'irq:'
->
->
-> =A0 =A0 =A0 =A0} else if (t->uldd_task) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irqrestore(&t->task_state_l=
-ock, flags);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(&t->task_state_lock);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0^^^^^^^^^^^^^^^
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pm8001_ccb_task_free(pm8001_ha, t, ccb=
-, tag);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mb();/* ditto */
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irqrestore(&pm8001_ha->lock=
-, flags);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(&pm8001_ha->lock);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0^^^^^^^^^^^^^^^
-> It doesn't make sense to enable IRQs twice. =A0I'm not sure if it sho=
-uld
-> be the first or second unlock which enables them.
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0t->task_done(t);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irqsave(&pm8001_ha->lock, fla=
-gs);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irq(&pm8001_ha->lock);
-> =A0 =A0 =A0 =A0} else if (!t->uldd_task) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irqrestore(&t->task_state_l=
-ock, flags);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(&t->task_state_lock);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0^^^^^^^^^^^^^^^
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pm8001_ccb_task_free(pm8001_ha, t, ccb=
-, tag);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mb();/*ditto*/
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irqrestore(&pm8001_ha->lock=
-, flags);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(&pm8001_ha->lock);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0^^^^^^^^^^^^^^^
-> Same thing again.
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0t->task_done(t);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irqsave(&pm8001_ha->lock, fla=
-gs);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irq(&pm8001_ha->lock);
-> =A0 =A0 =A0 =A0}
->
-> regards,
-> dan carpenter
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
