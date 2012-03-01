@@ -1,86 +1,42 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v8 08/13] libsas: libsas.force_hard_reset module parameter
-Date: Wed, 29 Feb 2012 16:35:28 -0800
-Message-ID: <CABE8wwsckPEN_MzpzbzDraGAjvbRFEn-J9eLkni+0pTTFuikQQ@mail.gmail.com>
-References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
-	<20120210084520.25701.83280.stgit@dwillia2-linux.jf.intel.com>
-	<1330552551.8846.24.camel@dabdike>
-	<4F4EA976.4010607@interlog.com>
-	<CABE8wwsQdhg-LhEN=sLoZAsNpOmfMVzHCpvaW5E3A1LuXzTKkw@mail.gmail.com>
-	<4F4EC166.4010101@interlog.com>
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH] [SCSI] be2iscsi: Remove unused OFFSET_IN_PAGE() macro
+Date: Wed, 29 Feb 2012 22:41:49 -0800
+Message-ID: <1330584109-4001-1-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4F4EC166.4010101@interlog.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys010aog108.obsmtp.com ([74.125.245.84]:41271 "HELO
+	na3sys010aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755416Ab2CAGl7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 01:41:59 -0500
+Received: by mail-pz0-f47.google.com with SMTP id o14so153848dad.34
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Feb 2012 22:41:56 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Feb 29, 2012 at 4:23 PM, Douglas Gilbert <dgilbert@interlog.com=
-> wrote:
-> On 12-02-29 06:27 PM, Dan Williams wrote:
->>
->> On Wed, Feb 29, 2012 at 2:40 PM, Douglas Gilbert<dgilbert@interlog.c=
-om>
->> =A0wrote:
->>>
->>> On 12-02-29 04:55 PM, James Bottomley wrote:
->>>>
->>>>
->>>> On Fri, 2012-02-10 at 00:45 -0800, Dan Williams wrote:
->>>>>
->>>>>
->>>>> It is possible for a host to get "locked out" from talking to sat=
-a
->>>>> devices in the domain if, for example, its sas address changes bu=
-t the
->>>>> expander topology has existing affiliations with the old address.=
- =A0If
->>>>> the system is booted userspace can write to
->>>>> /sys/class/sas_phy/<phy-X>/hard_reset to clear the affiliation, h=
-owever
->>>>> if this condition exists for the root device the module parameter=
- can
->>>>> be
->>>>> used to promote all ata resets to hard resets.
->>>
->>>
->>>
->>> A point of order: SAS has link resets and hard resets. The
->>> hard reset is a superset of link reset. A "link reset sequence
->>> serves as a hard reset for SATA devices" and hence is
->>> sufficient to reset a SATA device. To reset a SAS device
->>> (e.g. a SAS disk) you need a SAS hard reset. Therefore a link
->>> reset is the appropriately sized "gun" to reset a SATA device.
->>>
->>> I have a SAS-2 expander that annoyingly powers up with the
->>> programmed maximum physical link rate of its phys at 3 Gbps
->>> even though its hardware maximum rate is 6 Gbps. For expander
->>> phys connected to SAS-2 disks I can up the programmed maximum
->>> value to 6 Gbps on the expander phy then do a link reset on
->>> that phy. So without upsetting Linux (or any other OS) I can
->>> switch that path from 3 Gbps to 6 Gbps. Can't do that with a
->>> SATA disk without the OS finding out.
->>
->>
->> At least now (with these pending patches) if you trigger a link-rese=
-t
->> via the sysfs interface libsas will manage the link recovery like an=
-y
->> other error-recovery initiated reset.
->
->
-> I can think of 4 cases for link reset. The other end
-> of the link is:
-> =A0a) a SAS target: not error recovery situation
-> =A0b) a SAS expander phy: not error recovery situation
-> =A0c) a SATA device: error recovery situation
+From: Roland Dreier <roland@purestorage.com>
 
-sas_try_ata_reset() [1] is what promotes user requested resets into
-error recovery managed resets if the other end of the link is sata.
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+---
+ drivers/scsi/be2iscsi/be.h |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-[1]: http://git.kernel.org/?p=3Dlinux/kernel/git/djbw/isci.git;a=3Dblob=
-;f=3Ddrivers/scsi/libsas/sas_init.c;h=3D57e7ac97b3e3dba3091f83a64c0c32a=
-6660390cb;hb=3Drefs/heads/all#l222
+diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+index 1d7b976..a50b6a9 100644
+--- a/drivers/scsi/be2iscsi/be.h
++++ b/drivers/scsi/be2iscsi/be.h
+@@ -132,10 +132,6 @@ struct be_ctrl_info {
+ 		((u32)((((size_t)(_address) & (PAGE_SIZE_4K - 1)) +	\
+ 			(size) + (PAGE_SIZE_4K - 1)) >> PAGE_SHIFT_4K))
+ 
+-/* Byte offset into the page corresponding to given address */
+-#define OFFSET_IN_PAGE(addr)						\
+-		((size_t)(addr) & (PAGE_SIZE_4K-1))
+-
+ /* Returns bit offset within a DWORD of a bitfield */
+ #define AMAP_BIT_OFFSET(_struct, field)					\
+ 		(((size_t)&(((_struct *)0)->field))%32)
+-- 
+1.7.9
+
