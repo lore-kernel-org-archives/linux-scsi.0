@@ -1,42 +1,19 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 5/7] scsi: Add a report opcode helper
-Date: Thu, 01 Mar 2012 23:08:44 -0500
-Message-ID: <4F5047CC.2080002@garzik.org>
-References: <1330658571-12958-1-git-send-email-martin.petersen@oracle.com> <1330658571-12958-6-git-send-email-martin.petersen@oracle.com>
+From: =?utf-8?Q?=D0=91=D0=BE=D0=B3=D0=B4=D0=B0=D0=BD=D0=B0__=D0=93=D0=B0=D0=B9=D0=B4=D0=B5=D0=BD=D0=BA=D0=BE?=
+	<jpplant@lawrenceburg.com>
+Subject: =?utf-8?Q?=D0=9F=C2=AD=D1=80=C2=AD=D0=B8=E2=80=8B=D0=B2=E2=80=8D=D0=B5=E2=80=8C=D0=B5=E2=80=8B=D0=B5=EF=BB=BF=C2=AD=D0=B5=E2=80=8B=D0=B5=E2=80=8C=D1=82=E2=80=8C=2C=E2=80=8C_=E2=80=8C=D0=BC=E2=80=8C=D0=B0=E2=80=8D=D1=81=E2=80=8C=D1=8E=E2=80=8C=D0=BD=E2=80=8B=D1=8F=E2=80=8C_=EF=BB=BF=C2=AD=D0=BC=E2=80=8B=D0=BE=E2=80=8C=D0=B9=E2=80=8C.=EF=BB=BF=C2=AD.=E2=80=8B=21=C2=AD=29=E2=80=8D=29=C2=AD_=E2=80=8D=C2=AD=EF=BB=BF=C2=AD=E2=80=8C=C2=AD=C2=AD=C2=AD=E2=80=8C=E2=80=8C=E2=80=8B=E2=80=8C=E2=80=8D=C2=AD=EF=BB=BF=C2=AD=EF=BB=BF=C2=AD=E2=80=8C=E2=80=8D=C2=AD=C2=AD?=
+Date: Thu, 1 Mar 2012 21:33:22 +0400
+Message-ID: <1288636491.2012031213322@lawrenceburg.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:64801 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754650Ab2CBEIu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 23:08:50 -0500
-Received: by vbbff1 with SMTP id ff1so1163672vbb.19
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Mar 2012 20:08:49 -0800 (PST)
-In-Reply-To: <1330658571-12958-6-git-send-email-martin.petersen@oracle.com>
+Received: from 96-38-11-34.static.jcsn.tn.charter.com ([96.38.11.34]:2825 "EHLO
+	host94-19-153-216.michaelsalvucci.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753627Ab2CBFtH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Mar 2012 00:49:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, vgoyal@redhat.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
-
-On 03/01/2012 10:22 PM, Martin K. Petersen wrote:
-> From: "Martin K. Petersen"<martin.petersen@oracle.com>
->
-> The REPORT SUPPORTED OPERATION CODES command can be used to query
-> whether a given opcode is supported by a device. Add a helper function
-> that allows us to look up commands.
->
-> We only issue RSOC if the device reports compliance with SPC-3 or
-> later. But to err on the side of caution we disable the command for ATA,
-> FireWire and USB.
->
-> Signed-off-by: Martin K. Petersen<martin.petersen@oracle.com>
-> Acked-by: Mike Snitzer<snitzer@redhat.com>
-
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
-
-(though implementing RSOC in simulator for ATA is still desired, as that 
-placeholder will be used in the future)
+To: linux-scsi@vger.kernel.org
 
 
 
