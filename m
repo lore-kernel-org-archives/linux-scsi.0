@@ -1,7 +1,7 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [RFC PATCH v2 5/8] libata-acpi: add ata port runtime D3Cold support
-Date: Thu,  1 Mar 2012 17:02:54 +0800
-Message-ID: <1330592577-16546-6-git-send-email-ming.m.lin@intel.com>
+Subject: [RFC PATCH v2 2/8] ACPI: Add interface to register/unregister device to/from power resources
+Date: Thu,  1 Mar 2012 17:02:51 +0800
+Message-ID: <1330592577-16546-3-git-send-email-ming.m.lin@intel.com>
 References: <1330592577-16546-1-git-send-email-ming.m.lin@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1330592577-16546-1-git-send-email-ming.m.lin@intel.com>
@@ -10,191 +10,270 @@ To: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-ATA port may support runtime D3Cold state, for example, Zero-power ODD case.
-This patch adds wakeup notifier and enable/disable run_wake during
-supend/resume.
+Devices may share same list of power resources in _PR0, for example
+
+Device(Dev0)
+{
+	Name (_PR0, Package (0x01)
+	{
+		P0PR,
+		P1PR
+	})
+}
+
+Device(Dev1)
+{
+	Name (_PR0, Package (0x01)
+	{
+		P0PR,
+		P1PR
+	}
+}
+
+Assume Dev0 and Dev1 were runtime suspended.
+Then Dev0 is resumed first and it goes into D0 state.
+But Dev1 is left in D0_Uninitialised state.
+
+This is wrong. In this case, Dev1 must be resumed too.
+
+In order to hand this case, each power resource maintains a list of
+devices which relies on it.
+
+When power resource is ON, it will check if the devices on its list
+can be resumed. The device can only be resumed when all the power
+resouces of its _PR0 are ON.
 
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/ata/libata-acpi.c |   82 +++++++++++++++++++++++++++++++++++++++++---
- drivers/ata/libata-scsi.c |    6 ++--
- drivers/ata/libata.h      |    8 ++--
- 3 files changed, 83 insertions(+), 13 deletions(-)
+ drivers/acpi/power.c    |  162 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_bus.h |    2 +
+ 2 files changed, 164 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 104c1d0..c2a4db6 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -16,6 +16,7 @@
- #include <linux/libata.h>
- #include <linux/pci.h>
+diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
+index 0d681fb..7049a7d 100644
+--- a/drivers/acpi/power.c
++++ b/drivers/acpi/power.c
+@@ -40,9 +40,11 @@
+ #include <linux/init.h>
+ #include <linux/types.h>
  #include <linux/slab.h>
 +#include <linux/pm_runtime.h>
- #include <scsi/scsi_device.h>
- #include "libata.h"
+ #include <acpi/acpi_bus.h>
+ #include <acpi/acpi_drivers.h>
+ #include "sleep.h"
++#include "internal.h"
  
-@@ -852,10 +853,23 @@ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
+ #define PREFIX "ACPI: "
  
- 	ata_for_each_dev(dev, &ap->link, ENABLED) {
- 		handle = ata_dev_acpi_handle(dev);
--		if (handle)
--			acpi_bus_set_power(handle,
--				state.event == PM_EVENT_ON ?
--					ACPI_STATE_D0 : ACPI_STATE_D3);
-+		if (!handle)
-+			continue;
+@@ -77,6 +79,20 @@ static struct acpi_driver acpi_power_driver = {
+ 		},
+ };
+ 
++/*
++ * A power managed device
++ * A device may rely on multiple power resources.
++ * */
++struct acpi_power_managed_device {
++	struct device *dev; /* The physical device */
++	acpi_handle *handle;
++};
 +
-+		if (state.event != PM_EVENT_ON) {
-+			acpi_state = acpi_pm_device_sleep_state(
-+				&dev->sdev->sdev_gendev, NULL);
-+			if (acpi_state > 0)
-+				acpi_bus_set_power(handle, acpi_state);
-+			if (ap->tdev.power.request == RPM_REQ_SUSPEND)
-+				acpi_pm_device_run_wake(
-+					&dev->sdev->sdev_gendev, true);
-+		} else {
-+			if (ap->tdev.power.request == RPM_REQ_RESUME)
-+				acpi_pm_device_run_wake(
-+					&dev->sdev->sdev_gendev, false);
-+			acpi_bus_set_power(handle, ACPI_STATE_D0);
++struct acpi_power_resource_device {
++	struct acpi_power_managed_device *device;
++	struct acpi_power_resource_device *next;
++};
++
+ struct acpi_power_resource {
+ 	struct acpi_device * device;
+ 	acpi_bus_id name;
+@@ -84,6 +100,9 @@ struct acpi_power_resource {
+ 	u32 order;
+ 	unsigned int ref_count;
+ 	struct mutex resource_lock;
++
++	/* List of devices relying on this power resource */
++	struct acpi_power_resource_device *devices;
+ };
+ 
+ static struct list_head acpi_power_resource_list;
+@@ -183,8 +202,26 @@ static int acpi_power_get_list_state(struct acpi_handle_list *list, int *state)
+ 	return 0;
+ }
+ 
++/* Resume the device when all power resources in _PR0 are on */
++static void acpi_power_on_device(struct acpi_power_managed_device *device)
++{
++	struct acpi_device *acpi_dev;
++	acpi_handle handle = device->handle;
++	int state;
++
++	if (acpi_bus_get_device(handle, &acpi_dev))
++		return;
++
++	if(acpi_power_get_inferred_state(acpi_dev, &state))
++		return;
++
++	if (state == ACPI_STATE_D0 && pm_runtime_suspended(device->dev))
++		pm_request_resume(device->dev);
++}
++
+ static int __acpi_power_on(struct acpi_power_resource *resource)
+ {
++	struct acpi_power_resource_device *device_list = resource->devices;
+ 	acpi_status status = AE_OK;
+ 
+ 	status = acpi_evaluate_object(resource->device->handle, "_ON", NULL, NULL);
+@@ -197,6 +234,12 @@ static int __acpi_power_on(struct acpi_power_resource *resource)
+ 	ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Power resource [%s] turned on\n",
+ 			  resource->name));
+ 
++	while (device_list) {
++		acpi_power_on_device(device_list->device);
++
++		device_list = device_list->next;
++	}
++
+ 	return 0;
+ }
+ 
+@@ -299,6 +342,125 @@ static int acpi_power_on_list(struct acpi_handle_list *list)
+ 	return result;
+ }
+ 
++static void __acpi_power_resource_unregister_device(struct device *dev,
++		acpi_handle res_handle)
++{
++	struct acpi_power_resource *resource = NULL;
++	struct acpi_power_resource_device *prev, *curr;
++
++	if (acpi_power_get_context(res_handle, &resource))
++		return;
++
++	mutex_lock(&resource->resource_lock);
++	prev = NULL;
++	curr = resource->devices;
++	while (curr) {
++		if (curr->device->dev == dev) {
++			if (!prev)
++				resource->devices = curr->next;
++			else
++				prev->next = curr->next;
++
++			kfree(curr);
++			break;
 +		}
- 	}
- 
- 	handle = ata_ap_acpi_handle(ap);
-@@ -955,7 +969,7 @@ void ata_acpi_on_disable(struct ata_device *dev)
- 	ata_acpi_clear_gtf(dev);
- }
- 
--void ata_acpi_bind_dock(struct ata_device *dev)
-+static void ata_acpi_bind_dock(struct ata_device *dev)
- {
- 	struct device **docks;
- 
-@@ -965,7 +979,7 @@ void ata_acpi_bind_dock(struct ata_device *dev)
- 	kfree(docks);
- }
- 
--void ata_acpi_unbind_dock(struct ata_device *dev)
-+static void ata_acpi_unbind_dock(struct ata_device *dev)
- {
- 	struct device **docks;
- 
-@@ -975,6 +989,62 @@ void ata_acpi_unbind_dock(struct ata_device *dev)
- 	kfree(docks);
- }
- 
-+static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
-+{
-+	struct ata_device *ata_dev = context;
 +
-+	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev)
-+		scsi_autopm_get_device(ata_dev->sdev);
++		prev = curr;
++		curr = curr->next;
++	}
++	mutex_unlock(&resource->resource_lock);
 +}
 +
-+static void ata_acpi_add_pm_notifier(struct ata_device *dev)
++/* Unlink dev from all power resources in _PR0 */
++void acpi_power_resource_unregister_device(struct device *dev, acpi_handle handle)
 +{
 +	struct acpi_device *acpi_dev;
-+	acpi_handle handle;
-+	acpi_status status;
++	struct acpi_handle_list *list;
++	int i;
 +
-+	handle = ata_dev_acpi_handle(dev);
-+	if (!handle)
++	if (!dev || !handle)
 +		return;
 +
-+	status = acpi_bus_get_device(handle, &acpi_dev);
-+	if (ACPI_SUCCESS(status) && acpi_dev->wakeup.flags.run_wake) {
-+		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+			ata_acpi_wake_dev, dev);
-+		device_set_run_wake(&dev->sdev->sdev_gendev, true);
-+	}
++	if (acpi_bus_get_device(handle, &acpi_dev))
++		return;
++
++	list = &acpi_dev->power.states[ACPI_STATE_D0].resources;
++
++	for (i = 0; i < list->count; i++)
++		__acpi_power_resource_unregister_device(dev,
++			list->handles[i]);
 +}
 +
-+static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
++static int __acpi_power_resource_register_device(
++	struct acpi_power_managed_device *powered_device, acpi_handle handle)
++{
++	struct acpi_power_resource *resource = NULL;
++	struct acpi_power_resource_device *power_resource_device;
++	int result;
++
++	result = acpi_power_get_context(handle, &resource);
++	if (result)
++		return result;
++
++	power_resource_device = kzalloc(
++		sizeof(*power_resource_device), GFP_KERNEL);
++	if (!power_resource_device)
++		return -ENOMEM;
++
++	power_resource_device->device = powered_device;
++
++	mutex_lock(&resource->resource_lock);
++	power_resource_device->next = resource->devices;
++	resource->devices = power_resource_device;
++	mutex_unlock(&resource->resource_lock);
++
++	return 0;
++}
++
++/* Link dev to all power resources in _PR0 */
++int acpi_power_resource_register_device(struct device *dev, acpi_handle handle)
 +{
 +	struct acpi_device *acpi_dev;
-+	acpi_handle handle;
-+	acpi_status status;
++	struct acpi_handle_list *list;
++	struct acpi_power_managed_device *powered_device;
++	int i, ret;
 +
-+	handle = ata_dev_acpi_handle(dev);
-+	if (!handle)
-+		return;
++	if (!dev || !handle)
++		return -ENODEV;
 +
-+	status = acpi_bus_get_device(handle, &acpi_dev);
-+	if (ACPI_SUCCESS(status) && acpi_dev->wakeup.flags.run_wake) {
-+		device_set_run_wake(&dev->sdev->sdev_gendev, false);
-+		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+			ata_acpi_wake_dev);
++	ret = acpi_bus_get_device(handle, &acpi_dev);
++	if (ret)
++		goto no_power_resource;
++
++	if (!acpi_dev->power.flags.power_resources)
++		goto no_power_resource;
++
++	powered_device = kzalloc(sizeof(*powered_device), GFP_KERNEL);
++	if (!powered_device)
++		return -ENOMEM;
++
++	powered_device->dev = dev;
++	powered_device->handle = handle;
++
++	list = &acpi_dev->power.states[ACPI_STATE_D0].resources;
++
++	for (i = 0; i < list->count; i++) {
++		ret = __acpi_power_resource_register_device(powered_device,
++			list->handles[i]);
++
++		if (ret) {
++			acpi_power_resource_unregister_device(dev, handle);
++			break;
++		}
 +	}
++
++	return ret;
++
++no_power_resource:
++	printk(KERN_WARNING PREFIX "Invalid Power Resource to register!");
++	return -ENODEV;
 +}
 +
-+void ata_acpi_bind(struct ata_device *dev)
-+{
-+	ata_acpi_bind_dock(dev);
-+	ata_acpi_add_pm_notifier(dev);
-+}
-+
-+void ata_acpi_unbind(struct ata_device *dev)
-+{
-+	ata_acpi_unbind_dock(dev);
-+	ata_acpi_remove_pm_notifier(dev);
-+}
-+
- static int is_pci_ata(struct device *dev)
- {
- 	struct pci_dev *pdev;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index f08c447..231c3ec 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3444,7 +3444,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 			if (!IS_ERR(sdev)) {
- 				dev->sdev = sdev;
- 				scsi_device_put(sdev);
--				ata_acpi_bind_dock(dev);
-+				ata_acpi_bind(dev);
- 			} else {
- 				dev->sdev = NULL;
- 			}
-@@ -3541,12 +3541,12 @@ static void ata_scsi_remove_dev(struct ata_device *dev)
- 	mutex_lock(&ap->scsi_host->scan_mutex);
- 	spin_lock_irqsave(ap->lock, flags);
- 
-+	ata_acpi_unbind(dev);
-+
- 	/* clearing dev->sdev is protected by host lock */
- 	sdev = dev->sdev;
- 	dev->sdev = NULL;
- 
--	ata_acpi_unbind_dock(dev);
--
- 	if (sdev) {
- 		/* If user initiated unplug races with us, sdev can go
- 		 * away underneath us after the host lock and
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index e61ba10..2ec7c38 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -117,8 +117,8 @@ extern void ata_acpi_on_disable(struct ata_device *dev);
- extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
- extern int ata_acpi_register(void);
- extern void ata_acpi_unregister(void);
--extern void ata_acpi_bind_dock(struct ata_device *dev);
--extern void ata_acpi_unbind_dock(struct ata_device *dev);
-+extern void ata_acpi_bind(struct ata_device *dev);
-+extern void ata_acpi_unbind(struct ata_device *dev);
- #else
- static inline void ata_acpi_dissociate(struct ata_host *host) { }
- static inline int ata_acpi_on_suspend(struct ata_port *ap) { return 0; }
-@@ -129,8 +129,8 @@ static inline void ata_acpi_set_state(struct ata_port *ap,
- 				      pm_message_t state) { }
- static inline int ata_acpi_register(void) { return 0; }
- static void ata_acpi_unregister(void) { }
--static void ata_acpi_bind_dock(struct ata_device *dev) { }
--static void ata_acpi_unbind_dock(struct ata_device *dev) { }
-+static void ata_acpi_bind(struct ata_device *dev) { }
-+static void ata_acpi_unbind(struct ata_device *dev) { }
- #endif
- 
- /* libata-scsi.c */
+ /**
+  * acpi_device_sleep_wake - execute _DSW (Device Sleep Wake) or (deprecated in
+  *                          ACPI 3.0) _PSW (Power State Wake)
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 6cd5b64..e168fff 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -323,6 +323,8 @@ int acpi_bus_set_power(acpi_handle handle, int state);
+ int acpi_bus_update_power(acpi_handle handle, int *state_p);
+ bool acpi_bus_power_manageable(acpi_handle handle);
+ bool acpi_bus_can_wakeup(acpi_handle handle);
++int acpi_power_resource_register_device(struct device *dev, acpi_handle handle);
++void acpi_power_resource_unregister_device(struct device *dev, acpi_handle handle);
+ #ifdef CONFIG_ACPI_PROC_EVENT
+ int acpi_bus_generate_proc_event(struct acpi_device *device, u8 type, int data);
+ int acpi_bus_generate_proc_event4(const char *class, const char *bid, u8 type, int data);
 -- 
 1.7.2.5
