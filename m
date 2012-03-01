@@ -1,49 +1,53 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [RFC PATCH v2 0/8] ACPI D3Cold state and SATA ZPODD support
-Date: Thu,  1 Mar 2012 17:02:49 +0800
-Message-ID: <1330592577-16546-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lu@amd.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: scsi_wait_scan and scsi_complete_async_scans
+Date: Thu, 01 Mar 2012 07:26:57 -0600
+Message-ID: <1330608417.2888.6.camel@dabdike.int.hansenpartnership.com>
+References: <Pine.LNX.4.44L0.1202160916160.1268-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50029 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966222Ab2CAN07 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 08:26:59 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1202160916160.1268-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi all,
+On Thu, 2012-02-16 at 09:29 -0500, Alan Stern wrote:
+> James or anyone else:
+> 
+> The purpose of the scsi_wait_scan module is to provide a method for
+> initramfs images to wait until all the SCSI drives available at boot-up
+> have been discovered and probed, so that the drive containing the root
+> filesystem will be available when the time comes to mount it.
+> 
+> Now, in include/scsi/scsi_scan.h, the declaration of 
+> scsi_complete_async_scans() depends on CONFIG_SCSI.  If the SCSI core 
+> is built as a module, scsi_complete_async_scans() is defined as an 
+> empty inline routine.
+> 
+> This doesn't seem to make any sense.  The drive containing the root 
+> filesystem needs to be available for mounting regardless of whether 
+> scsi_mod is built into the kernel or is loaded as a module within an 
+> initramfs image.
+> 
+> In short, is there any reason not to remove the "#ifdef CONFIG_SCSI"  
+> from include/scsi/scsi_scan.h?
+> 
+> My reason for asking is because I need to fix a bug in scsi_pm.c, and 
+> the fix involves calling scsi_complete_async_scans().  This has to 
+> happen even when CONFIG_SCSI isn't defined, so I'd like to change the 
+> header file.  If necessary, I can put the call in scsi_wait_scan.c 
+> inside a "#ifdef CONFIG_SCSI" block.
 
-This is the v2 RFC patches to add ACPI D3Cold state and SATA ZPODD support.
+I'm fine with that.  scsi_wait_scan was supposed to be a hack until all
+distros got wait for device in initrd sorted out ... but like all hacks
+it's lived on way past its time.
 
-v2:
-- _PR3 indicates D3Cold support
-- move can_power_off flag to pm_subsys_data
-- allow all combinations of power resource and device
-- split patches into smaller ones to make review easy
+James
 
-v1:
-https://lkml.org/lkml/2012/2/13/86
 
-[PATCH 1/8] ACPI: Introduce ACPI D3_COLD state support
-[PATCH 2/8] ACPI: Add interface to register/unregister device to/from power resources
-[PATCH 3/8] PCI: Move acpi_dev_run_wake to acpi core
-[PATCH 4/8] libata-acpi: set acpi state for SATA port
-[PATCH 5/8] libata-acpi: add ata port runtime D3Cold support
-[PATCH 6/8] libata-acpi: register/unregister device to/from power resource
-[PATCH 7/8] PM / Runtime: Add can_power_off flag to subsys data
-[PATCH 8/8] [SCSI] sr: check and enable Zero-power ODD support
-
- drivers/acpi/power.c       |  166 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/acpi/scan.c        |    7 ++
- drivers/acpi/sleep.c       |   35 +++++++++
- drivers/ata/libata-acpi.c  |  137 +++++++++++++++++++++++++++++++++----
- drivers/ata/libata-scsi.c  |    6 +-
- drivers/ata/libata.h       |    8 +-
- drivers/pci/pci-acpi.c     |   40 +----------
- drivers/scsi/scsi_pm.c     |    8 ++
- drivers/scsi/sr.c          |   46 ++++++++++++
- drivers/scsi/sr.h          |    3 +
- include/acpi/acpi_bus.h    |    7 ++
- include/linux/pm.h         |    1 +
- include/scsi/scsi_device.h |    2 +
- 13 files changed, 407 insertions(+), 59 deletions(-)
-
-Thanks for any comment.
-Lin Ming
