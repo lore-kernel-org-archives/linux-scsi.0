@@ -1,52 +1,131 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC PATCH v2 8/8] [SCSI] sr: check and enable Zero-power ODD
- support
-Date: Thu, 1 Mar 2012 11:02:20 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1203011059230.9392-100000@netrider.rowland.org>
-References: <1330592577-16546-9-git-send-email-ming.m.lin@intel.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH] [SCSI] st: expand ability to write immediate filemarks
+Date: Thu, 01 Mar 2012 08:44:16 -0800
+Message-ID: <4F4FA760.6090900@suse.com>
+References: <4F3C1189.7090406@suse.com> <alpine.LNX.2.00.1202282103460.6053@kai.makisara.local> <4F4D4F3F.5040204@suse.com> <4F4DCE31.1000001@kolumbus.fi>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1330592577-16546-9-git-send-email-ming.m.lin@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lu@amd.com>, Kernel development list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@vger.kernel.org>, linux-acpi <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from charybdis-ext.suse.de ([195.135.221.2]:49077 "EHLO
+	nat.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756005Ab2CAQoX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 11:44:23 -0500
+In-Reply-To: <4F4DCE31.1000001@kolumbus.fi>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?ISO-8859-1?Q?Kai_M=E4kisara?= <kai.makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 1 Mar 2012, Lin Ming wrote:
+Kai:
 
-> ZPODD(Zero Power Optical Disk Drive) is a new feature in
-> SATA 3.1 specification. It provides a way to power off unused ODD.
-> 
-> ZPODD support is checked in in sr_probe().
-> can_power_off flag is set during suspend if ZPODD is supported.
-> 
-> ATA port's runtime suspend callback will actually power off the ODD
-> and its runtime resume callback will actually power on the ODD.
-> 
-> When ODD is powered off(D3Cold state), inserting disk will trigger a
-> wakeup event(GPE). GPE AML handler notifies the associated device. Then
-> ODD is resumed in the notify handler.
+Your argument makes sense. I will resubmit the patch without the module
+variable, and with a little more added to the documentation concerning
+the possible dangers of writing immediate EOFs.
 
-I have one stylistic comment on this patch...
+On 02/28/2012 11:05 PM, Kai M=E4kisara wrote:
+> On 02/29/2012 12:03 AM, Lee Duncan wrote:
+>> Hi Kai:
+>>
+>> Thanks for your response ...
+>>
+>> On 02/28/2012 11:40 AM, Kai Makisara wrote:
+>>> On Wed, 15 Feb 2012, Lee Duncan wrote:
+>>>
+>>>> The st tape driver recently added the MTWEOFI ioctl, which writes
+>>>> a tape filemark (EOF), like the MTWEOF ioctl, except that MTWEOFI
+>>>> returns immediately. This makes certain applications, like backup
+>>>> software, run much more quickly on buffered tape drives.
+>>>>
+> ...
+>>>>
+>>>>   static int st_dev_max;
+>>>>   static int st_nr_dev;
+>>>> @@ -103,6 +104,8 @@ module_param_named(max_sg_segs, max_sg_segs,
+>>>> int, 0);
+>>>>   MODULE_PARM_DESC(max_sg_segs, "Maximum number of scatter/gather
+>>>> segments to use (256)");
+>>>>   module_param_named(try_direct_io, try_direct_io, int, 0);
+>>>>   MODULE_PARM_DESC(try_direct_io, "Try direct I/O between user
+>>>> buffer and tape drive (1)");
+>>>> +module_param_named(st_nowait_eof, st_nowait_eof, int, 0);
+>>>> +MODULE_PARM_DESC(st_nowait_eof, "Do not wait when writing EOF
+>>>> (filemark) (0)");
+>>>>
+>>>
+>>> I think this should not be a module option. The property should be
+>>> settable only as a mode option like other options of this kind.
+>>> (I may have not written this clearly in my previous reply).
+>>>
+>>
+>> I respectfully disagree.
+>>
+>> There are legacy applications, such as the IBM network backup progra=
+m
+>> that sparked this
+>> bug fix. Such applications do not know about the capability added by
+>> this patch, just as
+>> they do not know about the relatively new MTWEOFI ioctl. Hence the
+>> module option is a
+>> convenient method for such applications to achieve increased through=
+put.
+>>
+> You may not have fully understood what there mode options mean in
+> practice. For each physical tape, you have up to four different devic=
+e
+> files (modes; eight if you count both auto-rewind and non-rewind
+> devices). Each can be programmed with different characteristics using
+> the ioctls. For instance, you can have /dev/nst0a which uses "normal"
+> WEOF and /dev/nst0b which uses immediate WEOF. If you want the progra=
+m
+> to benefit from immeadiate WEOFs, you tell it to use /dev/nst0b. The
+> program does not have to know anything about the new options.
+>=20
+> The system should configure the devices when detected, according to t=
+he
+> choices made by the system manager. I once made a proof-of-concept
+> program stinit for this purpose. mt can also be used for this. The tr=
+end
+> is systems has for tens of years to move from boot-time configuration=
+ to
+> run-time configuration.
+>=20
+>> I agree there is a small risk of loosing errors or error context whe=
+n
+>> writing immediate
+>> filemarks, but is the same problem that already exists in the case o=
+f
+>> the MTWEOFI ioctl.
+>>
+> Yes, but in case of MWEOFI, the programmer takes a calculated risk. F=
+or
+> instance, he/she can use MTWEOF for the last filemark to catch the
+> errors (or just look at possible errors from close()). The defaults a=
+re
+> safe. In case of a module option, the default for the unsuspecting us=
+er
+> is unsafe.
+>=20
+>> I would be glad to add a section in the st documentation that mentio=
+ns
+>> the dangers of
+>> writing immediate filemarks, if you think that would help clarify
+>> usage of this feature.
+>>
+> It helps clarity but it does not remove the danger.
+>=20
+> Kai
+> --=20
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
-> index 37c8f6b..39b3d8c 100644
-> --- a/drivers/scsi/sr.h
-> +++ b/drivers/scsi/sr.h
-> @@ -42,6 +42,9 @@ typedef struct scsi_cd {
->  	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
->  	unsigned media_present:1;	/* media is present */
->  
-> +	unsigned zpodd:1;	/* is ZPODD supported */
-> +	unsigned zpodd_event:1;
-> +
-
-You should not expect your readers to understand what "ZPODD" means.  
-drivers/scsi/sr.h is used by lots of different people, many of whom 
-will have no idea what it refers to, especially since it is part of 
-the SATA spec and not the SCSI spec.  You should provide a brief 
-explanation.
-
-Alan Stern
-
+--=20
+Lee Duncan
+SUSE Labs
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
