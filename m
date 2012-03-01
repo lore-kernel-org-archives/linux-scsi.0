@@ -1,67 +1,61 @@
-From: santosh prasad nayak <santoshprasadnayak@gmail.com>
-Subject: Re: [SCSI] pm8001: Fix bogus interrupt state flag issue.
-Date: Thu, 1 Mar 2012 20:11:26 +0530
-Message-ID: <CAOD=uF42w9zHyi_=S1a05owWfXZRSsa3QbLwrD8=Ape-DBUqdg@mail.gmail.com>
-References: <20120301142225.GA9789@elgon.mountain>
-	<CAOD=uF46HF3iLto3AhnTkjzSDebAkCYtTE-UJ26s00CwgwRPYA@mail.gmail.com>
-	<20120301143757.GT1003@mwanda>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: scsi_wait_scan and scsi_complete_async_scans
+Date: Thu, 1 Mar 2012 10:58:33 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1203011048060.8663-100000@netrider.rowland.org>
+References: <1330608417.2888.6.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:54405 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030519Ab2CAOl0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 09:41:26 -0500
-Received: by pbcup15 with SMTP id up15so959584pbc.19
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Mar 2012 06:41:26 -0800 (PST)
-In-Reply-To: <20120301143757.GT1003@mwanda>
+Received: from netrider.rowland.org ([192.131.102.5]:38087 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751959Ab2CAP6f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 10:58:35 -0500
+In-Reply-To: <1330608417.2888.6.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Jack Wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-t->task_state_lock  can be changed to simple spin lock instead of 'irq
-spin lock'
+On Thu, 1 Mar 2012, James Bottomley wrote:
 
-Initially I thought to do so. But could not get the intention of the
-developer why he used
-an irq lock there. Hence left it unchanged. Just changed from 'irqsave
-spin lock' to 'irq spin lock'
+> On Thu, 2012-02-16 at 09:29 -0500, Alan Stern wrote:
+> > James or anyone else:
+> > 
+> > The purpose of the scsi_wait_scan module is to provide a method for
+> > initramfs images to wait until all the SCSI drives available at boot-up
+> > have been discovered and probed, so that the drive containing the root
+> > filesystem will be available when the time comes to mount it.
+> > 
+> > Now, in include/scsi/scsi_scan.h, the declaration of 
+> > scsi_complete_async_scans() depends on CONFIG_SCSI.  If the SCSI core 
+> > is built as a module, scsi_complete_async_scans() is defined as an 
+> > empty inline routine.
+> > 
+> > This doesn't seem to make any sense.  The drive containing the root 
+> > filesystem needs to be available for mounting regardless of whether 
+> > scsi_mod is built into the kernel or is loaded as a module within an 
+> > initramfs image.
+> > 
+> > In short, is there any reason not to remove the "#ifdef CONFIG_SCSI"  
+> > from include/scsi/scsi_scan.h?
+> > 
+> > My reason for asking is because I need to fix a bug in scsi_pm.c, and 
+> > the fix involves calling scsi_complete_async_scans().  This has to 
+> > happen even when CONFIG_SCSI isn't defined, so I'd like to change the 
+> > header file.  If necessary, I can put the call in scsi_wait_scan.c 
+> > inside a "#ifdef CONFIG_SCSI" block.
+> 
+> I'm fine with that.  scsi_wait_scan was supposed to be a hack until all
+> distros got wait for device in initrd sorted out ... but like all hacks
+> it's lived on way past its time.
 
-regard
-santosh
+This is now a dead issue.  I was able to do what I wanted by adding a 
+declaration for scsi_complete_async_scans() in scsi_priv.h.
 
+BTW, it turned out there really is a reason for
+include/scsi/scsi_scan.h to be written the way it is.  There are some 
+calls to scsi_complete_async_scans() in the core kernel, which must not 
+be present if the SCSI core is built as a module.
 
+Alan Stern
 
-On Thu, Mar 1, 2012 at 8:07 PM, Dan Carpenter <dan.carpenter@oracle.com=
-> wrote:
-> On Thu, Mar 01, 2012 at 07:54:57PM +0530, santosh prasad nayak wrote:
->> The warnings are =A0there since from the beginning.
->> Even before my fix.
->>
->> There are two locks:
->> 1. =A0pm8001_ha->lock
->> 2. t->task_state_lock
->>
->
-> Yes. =A0But IRQs are either enabled or disabled for the CPU. =A0You
-> can't enable them twice.
->
-> In this case we enable them in the first call to unlock and the
-> second call doesn't do anything. =A0So possibly the current behavior
-> is correct and we should change the second unlock or possibly the
-> current behavior is wrong and we should change the first unlock.
->
-> But actually the email was more of just a form letter. =A0Perhaps Jac=
-k
-> knows what to do here...
->
-> regards,
-> dan carpenter
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
