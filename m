@@ -1,61 +1,52 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: scsi_wait_scan and scsi_complete_async_scans
-Date: Thu, 1 Mar 2012 10:58:33 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1203011048060.8663-100000@netrider.rowland.org>
-References: <1330608417.2888.6.camel@dabdike.int.hansenpartnership.com>
+Subject: Re: [RFC PATCH v2 8/8] [SCSI] sr: check and enable Zero-power ODD
+ support
+Date: Thu, 1 Mar 2012 11:02:20 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1203011059230.9392-100000@netrider.rowland.org>
+References: <1330592577-16546-9-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:38087 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751959Ab2CAP6f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 10:58:35 -0500
-In-Reply-To: <1330608417.2888.6.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1330592577-16546-9-git-send-email-ming.m.lin@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lu@amd.com>, Kernel development list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@vger.kernel.org>, linux-acpi <linux-acpi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 1 Mar 2012, James Bottomley wrote:
+On Thu, 1 Mar 2012, Lin Ming wrote:
 
-> On Thu, 2012-02-16 at 09:29 -0500, Alan Stern wrote:
-> > James or anyone else:
-> > 
-> > The purpose of the scsi_wait_scan module is to provide a method for
-> > initramfs images to wait until all the SCSI drives available at boot-up
-> > have been discovered and probed, so that the drive containing the root
-> > filesystem will be available when the time comes to mount it.
-> > 
-> > Now, in include/scsi/scsi_scan.h, the declaration of 
-> > scsi_complete_async_scans() depends on CONFIG_SCSI.  If the SCSI core 
-> > is built as a module, scsi_complete_async_scans() is defined as an 
-> > empty inline routine.
-> > 
-> > This doesn't seem to make any sense.  The drive containing the root 
-> > filesystem needs to be available for mounting regardless of whether 
-> > scsi_mod is built into the kernel or is loaded as a module within an 
-> > initramfs image.
-> > 
-> > In short, is there any reason not to remove the "#ifdef CONFIG_SCSI"  
-> > from include/scsi/scsi_scan.h?
-> > 
-> > My reason for asking is because I need to fix a bug in scsi_pm.c, and 
-> > the fix involves calling scsi_complete_async_scans().  This has to 
-> > happen even when CONFIG_SCSI isn't defined, so I'd like to change the 
-> > header file.  If necessary, I can put the call in scsi_wait_scan.c 
-> > inside a "#ifdef CONFIG_SCSI" block.
+> ZPODD(Zero Power Optical Disk Drive) is a new feature in
+> SATA 3.1 specification. It provides a way to power off unused ODD.
 > 
-> I'm fine with that.  scsi_wait_scan was supposed to be a hack until all
-> distros got wait for device in initrd sorted out ... but like all hacks
-> it's lived on way past its time.
+> ZPODD support is checked in in sr_probe().
+> can_power_off flag is set during suspend if ZPODD is supported.
+> 
+> ATA port's runtime suspend callback will actually power off the ODD
+> and its runtime resume callback will actually power on the ODD.
+> 
+> When ODD is powered off(D3Cold state), inserting disk will trigger a
+> wakeup event(GPE). GPE AML handler notifies the associated device. Then
+> ODD is resumed in the notify handler.
 
-This is now a dead issue.  I was able to do what I wanted by adding a 
-declaration for scsi_complete_async_scans() in scsi_priv.h.
+I have one stylistic comment on this patch...
 
-BTW, it turned out there really is a reason for
-include/scsi/scsi_scan.h to be written the way it is.  There are some 
-calls to scsi_complete_async_scans() in the core kernel, which must not 
-be present if the SCSI core is built as a module.
+> diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
+> index 37c8f6b..39b3d8c 100644
+> --- a/drivers/scsi/sr.h
+> +++ b/drivers/scsi/sr.h
+> @@ -42,6 +42,9 @@ typedef struct scsi_cd {
+>  	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
+>  	unsigned media_present:1;	/* media is present */
+>  
+> +	unsigned zpodd:1;	/* is ZPODD supported */
+> +	unsigned zpodd_event:1;
+> +
+
+You should not expect your readers to understand what "ZPODD" means.  
+drivers/scsi/sr.h is used by lots of different people, many of whom 
+will have no idea what it refers to, especially since it is part of 
+the SATA spec and not the SCSI spec.  You should provide a brief 
+explanation.
 
 Alan Stern
 
