@@ -1,51 +1,34 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: If abort request comes in for command not known to LLD?
-Date: Fri, 02 Mar 2012 15:10:02 -0600
-Message-ID: <4F51372A.8080309@cs.wisc.edu>
-References: <20120302154438.GE17975@beardog.cce.hp.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command to
+ the host
+Date: Fri, 2 Mar 2012 13:13:54 -0800
+Message-ID: <20120302211354.GB6008@kroah.com>
+References: <1330721347-26781-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:38024 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757162Ab2CBVNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Mar 2012 16:13:31 -0500
-In-Reply-To: <20120302154438.GE17975@beardog.cce.hp.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:33678 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932156Ab2CBVQ5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Mar 2012 16:16:57 -0500
+Received: by dajr28 with SMTP id r28so2419337daj.19
+        for <linux-scsi@vger.kernel.org>; Fri, 02 Mar 2012 13:16:56 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1330721347-26781-1-git-send-email-kys@microsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: linux-scsi@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
 
-On 03/02/2012 09:44 AM, scameron@beardog.cce.hp.com wrote:
+On Fri, Mar 02, 2012 at 12:49:07PM -0800, K. Y. Srinivasan wrote:
+> Windows hosts don't handle the ATA_16 command; don't pass it to the host.
 > 
-> What should the LLD do if an abort request comes into the
-> abort error handler from the midlayer for a command which is
-> not known to the LLD?
-> 
-> I see aic7xxx_osm.c handles it in this way in ahc_linux_queue_recovery_cmd():
-> 
-> no_cmd:
->         /*
->          * Our assumption is that if we don't have the command, no
->          * recovery action was required, so we return success.  Again,
->          * the semantics of the mid-layer recovery engine are not
->          * well defined, so this may change in time.
->          */
->         retval = SUCCESS;
-> 
-> Is that the right thing to do?  Seems a bit weird, but if that's
-> the right thing to do, I can do that too.
-> 
+> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 
-How do you hit this case?
+Should this go to older kernel versions as well?
 
-I think it is ok. The reasons I have seen drivers hit it this is that
-race where the driver is completing a command while the timer code is
-starting to go off, or the cmd has timed out then the driver completes
-the command before the abort code is run.
-
-In those cases the driver has cleaned up its internal accounting because
-the command has completed. At that point there is not much it can do
-even if it wanted to. It does not have away to look up things like
-internal tags/ids for the command.
+greg k-h
