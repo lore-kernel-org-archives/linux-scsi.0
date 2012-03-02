@@ -1,21 +1,22 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 02/21] lpfc 8.3.30: Fix lack of LOGO with vport delete.
-Date: Thu, 1 Mar 2012 22:33:52 -0500
-Message-ID: <1330659235.18500.29.camel@ogier>
+Subject: [PATCH 03/21] lpfc 8.3.30: Fix port and system failure in SLI4 FC
+ function reset
+Date: Thu, 1 Mar 2012 22:34:19 -0500
+Message-ID: <1330659262.18500.30.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:38846 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:38849 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752690Ab2CBDeR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 22:34:17 -0500
+	with ESMTP id S1752690Ab2CBDem (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 22:34:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix bug with driver not sending a LOGO with vport delete.
+Fixed port and system failure in handling SLI4 FC port function reset
 
 
 Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -23,30 +24,41 @@ Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_sli.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ lpfc_init.c |    6 +++++-
+ lpfc_sli.c  |    2 ++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
 
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2012-02-27 23:35:05.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2012-03-01 17:33:36.000000000 -0500
+@@ -2786,9 +2786,13 @@ lpfc_scsi_buf_update(struct lpfc_hba *ph
+ 
+ 	spin_lock_irq(&phba->hbalock);
+ 	spin_lock(&phba->scsi_buf_list_lock);
+-	list_for_each_entry_safe(sb, sb_next, &phba->lpfc_scsi_buf_list, list)
++	list_for_each_entry_safe(sb, sb_next, &phba->lpfc_scsi_buf_list, list) {
+ 		sb->cur_iocbq.sli4_xritag =
+ 			phba->sli4_hba.xri_ids[sb->cur_iocbq.sli4_lxritag];
++		set_bit(sb->cur_iocbq.sli4_lxritag, phba->sli4_hba.xri_bmask);
++		phba->sli4_hba.max_cfg_param.xri_used++;
++		phba->sli4_hba.xri_count++;
++	}
+ 	spin_unlock(&phba->scsi_buf_list_lock);
+ 	spin_unlock_irq(&phba->hbalock);
+ 	return 0;
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2012-03-01 17:33:30.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-03-01 17:33:35.000000000 -0500
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2004-2011 Emulex.  All rights reserved.           *
-+ * Copyright (C) 2004-2012 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-  * www.emulex.com                                                  *
-  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
-@@ -7743,6 +7743,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 			if (pcmd && (*pcmd == ELS_CMD_FLOGI ||
- 				*pcmd == ELS_CMD_SCR ||
- 				*pcmd == ELS_CMD_FDISC ||
-+				*pcmd == ELS_CMD_LOGO ||
- 				*pcmd == ELS_CMD_PLOGI)) {
- 				bf_set(els_req64_sp, &wqe->els_req, 1);
- 				bf_set(els_req64_sid, &wqe->els_req,
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-03-01 17:33:35.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-03-01 17:33:36.000000000 -0500
+@@ -5613,6 +5613,8 @@ lpfc_sli4_alloc_resource_identifiers(str
+ 			rc = -ENOMEM;
+ 			goto free_vpi_ids;
+ 		}
++		phba->sli4_hba.max_cfg_param.xri_used = 0;
++		phba->sli4_hba.xri_count = 0;
+ 		phba->sli4_hba.xri_ids = kzalloc(count *
+ 						 sizeof(uint16_t),
+ 						 GFP_KERNEL);
 
 
 
