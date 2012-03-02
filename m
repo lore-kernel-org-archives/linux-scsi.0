@@ -1,8 +1,8 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 03/21] lpfc 8.3.30: Fix port and system failure in SLI4 FC
- function reset
-Date: Thu, 1 Mar 2012 22:34:19 -0500
-Message-ID: <1330659262.18500.30.camel@ogier>
+Subject: [PATCH 04/21] lpfc 8.3.30: Fix driver handling of XRI Aborted CQE
+ response
+Date: Thu, 1 Mar 2012 22:34:36 -0500
+Message-ID: <1330659278.18500.31.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
@@ -10,13 +10,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:38849 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752690Ab2CBDem (ORCPT
+	with ESMTP id S1753985Ab2CBDem (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 22:34:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed port and system failure in handling SLI4 FC port function reset
+Fix driver handling of XRI Aborted CQE response
 
 
 Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -24,41 +24,62 @@ Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_init.c |    6 +++++-
- lpfc_sli.c  |    2 ++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ lpfc_hw4.h |    6 ++++++
+ lpfc_sli.c |   15 ++++++++++++---
+ 2 files changed, 18 insertions(+), 3 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2012-02-27 23:35:05.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2012-03-01 17:33:36.000000000 -0500
-@@ -2786,9 +2786,13 @@ lpfc_scsi_buf_update(struct lpfc_hba *ph
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2012-02-27 23:35:05.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2012-03-01 17:33:37.000000000 -0500
+@@ -338,6 +338,12 @@ struct lpfc_cqe {
+ #define CQE_CODE_XRI_ABORTED		0x5
+ #define CQE_CODE_RECEIVE_V1		0x9
  
- 	spin_lock_irq(&phba->hbalock);
- 	spin_lock(&phba->scsi_buf_list_lock);
--	list_for_each_entry_safe(sb, sb_next, &phba->lpfc_scsi_buf_list, list)
-+	list_for_each_entry_safe(sb, sb_next, &phba->lpfc_scsi_buf_list, list) {
- 		sb->cur_iocbq.sli4_xritag =
- 			phba->sli4_hba.xri_ids[sb->cur_iocbq.sli4_lxritag];
-+		set_bit(sb->cur_iocbq.sli4_lxritag, phba->sli4_hba.xri_bmask);
-+		phba->sli4_hba.max_cfg_param.xri_used++;
-+		phba->sli4_hba.xri_count++;
-+	}
- 	spin_unlock(&phba->scsi_buf_list_lock);
- 	spin_unlock_irq(&phba->hbalock);
- 	return 0;
++/*
++ * Define mask value for xri_aborted and wcqe completed CQE extended status.
++ * Currently, extended status is limited to 9 bits (0x0 -> 0x103) .
++ */
++#define WCQE_PARAM_MASK		0x1FF;
++
+ /* completion queue entry for wqe completions */
+ struct lpfc_wcqe_complete {
+ 	uint32_t word0;
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2012-03-01 17:33:35.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-03-01 17:33:36.000000000 -0500
-@@ -5613,6 +5613,8 @@ lpfc_sli4_alloc_resource_identifiers(str
- 			rc = -ENOMEM;
- 			goto free_vpi_ids;
- 		}
-+		phba->sli4_hba.max_cfg_param.xri_used = 0;
-+		phba->sli4_hba.xri_count = 0;
- 		phba->sli4_hba.xri_ids = kzalloc(count *
- 						 sizeof(uint16_t),
- 						 GFP_KERNEL);
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-03-01 17:33:36.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-03-01 17:33:37.000000000 -0500
+@@ -8388,6 +8388,7 @@ lpfc_sli4_abts_err_handler(struct lpfc_h
+ 			   struct sli4_wcqe_xri_aborted *axri)
+ {
+ 	struct lpfc_vport *vport;
++	uint32_t ext_status = 0;
+ 
+ 	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
+@@ -8399,12 +8400,20 @@ lpfc_sli4_abts_err_handler(struct lpfc_h
+ 	vport = ndlp->vport;
+ 	lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
+ 			"3116 Port generated FCP XRI ABORT event on "
+-			"vpi %d rpi %d xri x%x status 0x%x\n",
++			"vpi %d rpi %d xri x%x status 0x%x parameter x%x\n",
+ 			ndlp->vport->vpi, ndlp->nlp_rpi,
+ 			bf_get(lpfc_wcqe_xa_xri, axri),
+-			bf_get(lpfc_wcqe_xa_status, axri));
++			bf_get(lpfc_wcqe_xa_status, axri),
++			axri->parameter);
+ 
+-	if (bf_get(lpfc_wcqe_xa_status, axri) == IOSTAT_LOCAL_REJECT)
++	/*
++	 * Catch the ABTS protocol failure case.  Older OCe FW releases returned
++	 * LOCAL_REJECT and 0 for a failed ABTS exchange and later OCe and
++	 * LPe FW releases returned LOCAL_REJECT and SEQUENCE_TIMEOUT.
++	 */
++	ext_status = axri->parameter & WCQE_PARAM_MASK;
++	if ((bf_get(lpfc_wcqe_xa_status, axri) == IOSTAT_LOCAL_REJECT) &&
++	    ((ext_status == IOERR_SEQUENCE_TIMEOUT) || (ext_status == 0)))
+ 		lpfc_sli_abts_recover_port(vport, ndlp);
+ }
+ 
 
 
 
