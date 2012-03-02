@@ -1,62 +1,41 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH 1/7] block: Clean up merge logic
-Date: Fri, 2 Mar 2012 15:21:39 -0500
-Message-ID: <20120302202139.GG26315@redhat.com>
-References: <1330658571-12958-1-git-send-email-martin.petersen@oracle.com>
- <1330658571-12958-2-git-send-email-martin.petersen@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command to the host
+Date: Fri,  2 Mar 2012 12:49:07 -0800
+Message-ID: <1330721347-26781-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41498 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754224Ab2CBUVv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:21:51 -0500
-Content-Disposition: inline
-In-Reply-To: <1330658571-12958-2-git-send-email-martin.petersen@oracle.com>
+Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:47992
+	"HELO p3plsmtps2ded03-02.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1030592Ab2CBUnL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Mar 2012 15:43:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>
 
-On Thu, Mar 01, 2012 at 10:22:45PM -0500, Martin K. Petersen wrote:
+Windows hosts don't handle the ATA_16 command; don't pass it to the host.
 
-[..]
-> -static inline int bio_has_data(struct bio *bio)
-> +static inline bool bio_has_data(struct bio *bio)
->  {
-> -	return bio && bio->bi_io_vec != NULL;
-> +	if (bio && bio->bi_io_vec)
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
-> +static inline bool bio_is_rw(struct bio *bio)
-> +{
-> +	if (!bio_has_data(bio))
-> +		return false;
-> +
-> +	return true;
-> +}
-> +
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Hi Martin,
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 44c7a48..1404c9b 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1221,8 +1221,10 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
+ 	/*
+ 	 * smartd sends this command and the host does not handle
+ 	 * this. So, don't send it.
++	 * Host also does not support ATA_16 command.
+ 	 */
+ 	case SET_WINDOW:
++	case ATA_16:
+ 		scmnd->result = ILLEGAL_REQUEST << 16;
+ 		allowed = false;
+ 		break;
+-- 
+1.7.4.1
 
-So in this patch bio_is_rw() == bio_is_data(). Do they diverge in later
-patches?
-
-> +static inline bool bio_mergeable(struct bio *bio)
-> +{
-> +	if (bio->bi_rw & REQ_NOMERGE_FLAGS)
-> +		return false;
-> +
-> +	return true;
->  }
-
-Some of the flags in REQ_NOMERGE_FLAGS are rq only and should not be used on
-bio. For example REQ_NOMERGE and REQ_STARTED.
-
-Will it be better to define BIO_NOMERGE_FLAGS separately?
-
-Thanks
-Vivek
