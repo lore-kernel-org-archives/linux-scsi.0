@@ -1,45 +1,35 @@
-From: scameron@beardog.cce.hp.com
-Subject: If abort request comes in for command not known to LLD?
-Date: Fri, 2 Mar 2012 09:44:38 -0600
-Message-ID: <20120302154438.GE17975@beardog.cce.hp.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] mptsas: Added code for checking the LU type is SSC for
+ SILI bit in READ_6  and READ_16 CDB
+Date: Fri, 2 Mar 2012 07:38:17 -0800
+Message-ID: <20120302153817.GB27141@kroah.com>
+References: <201203020956.q229uGR2002732@milmhbs0.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:30595 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030283Ab2CBPoj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Mar 2012 10:44:39 -0500
-Received: from g4t0018.houston.hp.com (g4t0018.houston.hp.com [16.234.32.27])
-	by g4t0016.houston.hp.com (Postfix) with ESMTP id 603BA14048
-	for <linux-scsi@vger.kernel.org>; Fri,  2 Mar 2012 15:44:39 +0000 (UTC)
-Received: from beardog.cce.hp.com (beardog.cce.hp.com [16.84.84.24])
-	by g4t0018.houston.hp.com (Postfix) with ESMTP id 50C9E10054
-	for <linux-scsi@vger.kernel.org>; Fri,  2 Mar 2012 15:44:39 +0000 (UTC)
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:62666 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030370Ab2CBPrz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Mar 2012 10:47:55 -0500
+Received: by mail-pw0-f46.google.com with SMTP id un15so233980pbc.19
+        for <linux-scsi@vger.kernel.org>; Fri, 02 Mar 2012 07:47:54 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <201203020956.q229uGR2002732@milmhbs0.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: scameron@beardog.cce.hp.com
+To: nagalakshmi.nandigama@lsi.com
+Cc: stable@vger.kernel.org, linux-scsi@vger.kernel.org, jejb@kernel.org
 
+On Fri, Mar 02, 2012 at 03:26:55PM +0530, nagalakshmi.nandigama@lsi.com wrote:
+> Added code for checking the LU type is SSC for SILI bit in READ_6  and READ_16 CDB 
+> 
+> Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+> ---
 
-What should the LLD do if an abort request comes into the
-abort error handler from the midlayer for a command which is
-not known to the LLD?
+<formletter>
 
-I see aic7xxx_osm.c handles it in this way in ahc_linux_queue_recovery_cmd():
+This is not the correct way to submit patches for inclusion in the
+stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+for how to do this properly.
 
-no_cmd:
-        /*
-         * Our assumption is that if we don't have the command, no
-         * recovery action was required, so we return success.  Again,
-         * the semantics of the mid-layer recovery engine are not
-         * well defined, so this may change in time.
-         */
-        retval = SUCCESS;
-
-Is that the right thing to do?  Seems a bit weird, but if that's
-the right thing to do, I can do that too.
-
--- steve
-
-
+</formletter>
