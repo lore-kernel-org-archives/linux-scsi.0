@@ -1,32 +1,76 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: Kernel crashing on eject SD card
-Date: Fri, 02 Mar 2012 09:12:02 +0900
-Message-ID: <4F501052.5070301@ce.jp.nec.com>
-References: <1328660390.4f31bfa6e8f4b@www.imp.polymtl.ca> <20120212220836.6aa7fa4d@stein> <20120212222027.71651e8b@stein> <20120213021813.GA589@redhat.com> <1329154831.4f394b0f3c69c@www.imp.polymtl.ca> <4F3A4220.4010901@ce.jp.nec.com> <20120214162858.GM12117@google.com> <4F3B1ED3.4000706@ce.jp.nec.com> <20120215172617.GB24986@google.com> <4F3C5B4E.3080606@ce.jp.nec.com> <20120301185817.GA16253@zeus>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [SCSI] pm8001: Fix bogus interrupt state flag issue.
+Date: Fri, 2 Mar 2012 09:06:42 +0800
+Message-ID: <1A8CC42AE967403AB159BA2489CE1CB2@usish.com.cn>
+References: <20120301142225.GA9789@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120301185817.GA16253@zeus>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luis Henriques <luis.henriques@canonical.com>, Jens Axboe <axboe@kernel.dk>
-Cc: Tejun Heo <tj@kernel.org>, Naveen Goswamy <naveen.goswamy@polymtl.ca>, James Bottomley <James.Bottomley@HansenPartnership.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Dave Jones <davej@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:43189 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757172Ab2CBBHi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 20:07:38 -0500
+In-Reply-To: <20120301142225.GA9789@elgon.mountain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Dan Carpenter' <dan.carpenter@oracle.com>, santoshprasadnayak@gmail.com
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+Dear Dan and Santosh Nayak,
 
-On 03/02/12 03:58, Luis Henriques wrote:
-> Are there any updates on this fix?  I was wondering if any progress has been
-> made and if this patch has any chances of hitting mainline soon.
+I change task_state_lock to spin_lock is OK. Please feel free to send patch
+out.
+
+Thanks.
+
+Jack
 > 
-> I have executed a quick test and it seems to solve the problem (or, at least, I
-> am not able to reproduce the oops anymore).
+> Hello Santosh Nayak,
+> 
+> The patch bdaefbf580cd: "[SCSI] pm8001: Fix bogus interrupt state
+> flag issue." from Feb 26, 2012, leads to the following warning:
+> drivers/scsi/pm8001/pm8001_hwi.c:2400 mpi_sata_completion()
+> 	 error: double unlock 'irq:'
+> 
+> 
+>         } else if (t->uldd_task) {
+> -               spin_unlock_irqrestore(&t->task_state_lock, flags);
+> +               spin_unlock_irq(&t->task_state_lock);
+>                 ^^^^^^^^^^^^^^^
+>                 pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+>                 mb();/* ditto */
+> -               spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+> +               spin_unlock_irq(&pm8001_ha->lock);
+>                 ^^^^^^^^^^^^^^^
+> It doesn't make sense to enable IRQs twice.  I'm not sure if it should
+> be the first or second unlock which enables them.
+> 
+>                 t->task_done(t);
+> -               spin_lock_irqsave(&pm8001_ha->lock, flags);
+> +               spin_lock_irq(&pm8001_ha->lock);
+>         } else if (!t->uldd_task) {
+> -               spin_unlock_irqrestore(&t->task_state_lock, flags);
+> +               spin_unlock_irq(&t->task_state_lock);
+>                 ^^^^^^^^^^^^^^^
+>                 pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+>                 mb();/*ditto*/
+> -               spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+> +               spin_unlock_irq(&pm8001_ha->lock);
+>                 ^^^^^^^^^^^^^^^
+> Same thing again.
+> 
+>                 t->task_done(t);
+> -               spin_lock_irqsave(&pm8001_ha->lock, flags);
+> +               spin_lock_irq(&pm8001_ha->lock);
+>         }
+> 
+> regards,
+> dan carpenter
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Thank you for testing and feedback.
-
-The patch is posted here and waiting for Jens to pick up:
-  https://lkml.org/lkml/2012/2/21/443
-  [PATCH] Fix NULL pointer dereference in sd_revalidate_disk
-
--- 
-Jun'ichi Nomura, NEC Corporation
