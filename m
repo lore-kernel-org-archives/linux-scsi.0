@@ -1,41 +1,51 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command to the host
-Date: Fri,  2 Mar 2012 12:49:07 -0800
-Message-ID: <1330721347-26781-1-git-send-email-kys@microsoft.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: If abort request comes in for command not known to LLD?
+Date: Fri, 02 Mar 2012 15:10:02 -0600
+Message-ID: <4F51372A.8080309@cs.wisc.edu>
+References: <20120302154438.GE17975@beardog.cce.hp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:47992
-	"HELO p3plsmtps2ded03-02.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1030592Ab2CBUnL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:43:11 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:38024 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757162Ab2CBVNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Mar 2012 16:13:31 -0500
+In-Reply-To: <20120302154438.GE17975@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>
+To: scameron@beardog.cce.hp.com
+Cc: linux-scsi@vger.kernel.org
 
-Windows hosts don't handle the ATA_16 command; don't pass it to the host.
+On 03/02/2012 09:44 AM, scameron@beardog.cce.hp.com wrote:
+> 
+> What should the LLD do if an abort request comes into the
+> abort error handler from the midlayer for a command which is
+> not known to the LLD?
+> 
+> I see aic7xxx_osm.c handles it in this way in ahc_linux_queue_recovery_cmd():
+> 
+> no_cmd:
+>         /*
+>          * Our assumption is that if we don't have the command, no
+>          * recovery action was required, so we return success.  Again,
+>          * the semantics of the mid-layer recovery engine are not
+>          * well defined, so this may change in time.
+>          */
+>         retval = SUCCESS;
+> 
+> Is that the right thing to do?  Seems a bit weird, but if that's
+> the right thing to do, I can do that too.
+> 
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
----
- drivers/scsi/storvsc_drv.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+How do you hit this case?
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 44c7a48..1404c9b 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1221,8 +1221,10 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
- 	/*
- 	 * smartd sends this command and the host does not handle
- 	 * this. So, don't send it.
-+	 * Host also does not support ATA_16 command.
- 	 */
- 	case SET_WINDOW:
-+	case ATA_16:
- 		scmnd->result = ILLEGAL_REQUEST << 16;
- 		allowed = false;
- 		break;
--- 
-1.7.4.1
+I think it is ok. The reasons I have seen drivers hit it this is that
+race where the driver is completing a command while the timer code is
+starting to go off, or the cmd has timed out then the driver completes
+the command before the abort code is run.
 
+In those cases the driver has cleaned up its internal accounting because
+the command has completed. At that point there is not much it can do
+even if it wanted to. It does not have away to look up things like
+internal tags/ids for the command.
