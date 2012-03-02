@@ -1,51 +1,49 @@
-From: <nagalakshmi.nandigama@lsi.com>
-Subject: [PATCH] mptsas: Added code for checking the LU type is SSC for
- SILI bit in READ_6  and READ_16 CDB
-Date: Fri, 2 Mar 2012 15:26:55 +0530
-Message-ID: <201203020956.q229uGR2002732@milmhbs0.lsil.com>
+From: <vikas.chaudhary@qlogic.com>
+Subject: [PATCH] qla4xxx: assign correct address for iscsi_cls_host
+Date: Fri, 2 Mar 2012 01:55:31 -0800
+Message-ID: <1330682131-28116-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:40638 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755946Ab2CBJ4Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Mar 2012 04:56:24 -0500
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:20365
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753041Ab2CBKJG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Mar 2012 05:09:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stable@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: jejb@kernel.org
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-Added code for checking the LU type is SSC for SILI bit in READ_6  and READ_16 CDB 
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
+ drivers/scsi/qla4xxx/ql4_os.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 0c3ced7..266bb14 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -827,13 +827,16 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
- 				 * DID_SOFT_ERROR is set.
- 				 */
- 				if (ioc->bus_type == SPI) {
--					if ((pScsiReq->CDB[0] == READ_6  && ((pScsiReq->CDB[1] & 0x02) == 0)) ||
--					    pScsiReq->CDB[0] == READ_10 ||
--					    pScsiReq->CDB[0] == READ_12 ||
--						(pScsiReq->CDB[0] == READ_16 &&
--						((pScsiReq->CDB[1] & 0x02) == 0)) ||
--					    pScsiReq->CDB[0] == VERIFY  ||
--					    pScsiReq->CDB[0] == VERIFY_16) {
-+					if ((pScsiReq->CDB[0] == READ_6  &&
-+					((pScsiReq->CDB[1] & 0x02) == 0) &&
-+					(sc->device->type == TYPE_TAPE)) ||
-+					pScsiReq->CDB[0] == READ_10 ||
-+					pScsiReq->CDB[0] == READ_12 ||
-+					(pScsiReq->CDB[0] == READ_16 &&
-+					((pScsiReq->CDB[1] & 0x02) == 0) &&
-+					(sc->device->type == TYPE_TAPE)) ||
-+					 pScsiReq->CDB[0] == VERIFY  ||
-+					 pScsiReq->CDB[0] == VERIFY_16) {
- 						if (scsi_bufflen(sc) !=
- 							xfer_cnt) {
- 							sc->result =
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 281328d..d57f6eb 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -834,7 +834,7 @@ static enum blk_eh_timer_return qla4xxx_eh_cmd_timed_out(struct scsi_cmnd *sc)
+ static void qla4xxx_set_port_speed(struct Scsi_Host *shost)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(shost);
+-	struct iscsi_cls_host *ihost = shost_priv(shost);
++	struct iscsi_cls_host *ihost = shost->shost_data;
+ 	uint32_t speed = ISCSI_PORT_SPEED_UNKNOWN;
+ 
+ 	qla4xxx_get_firmware_state(ha);
+@@ -859,7 +859,7 @@ static void qla4xxx_set_port_speed(struct Scsi_Host *shost)
+ static void qla4xxx_set_port_state(struct Scsi_Host *shost)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(shost);
+-	struct iscsi_cls_host *ihost = shost_priv(shost);
++	struct iscsi_cls_host *ihost = shost->shost_data;
+ 	uint32_t state = ISCSI_PORT_STATE_DOWN;
+ 
+ 	if (test_bit(AF_LINK_UP, &ha->flags))
+-- 
+1.7.9.1.265.gb3a76
+
+
