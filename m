@@ -1,164 +1,32 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH] SCSI st: expand ability to write immediate filemarks
-Date: Thu, 01 Mar 2012 12:41:01 -0800
-Message-ID: <4F4FDEDD.1000701@suse.com>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: Kernel crashing on eject SD card
+Date: Fri, 02 Mar 2012 09:12:02 +0900
+Message-ID: <4F501052.5070301@ce.jp.nec.com>
+References: <1328660390.4f31bfa6e8f4b@www.imp.polymtl.ca> <20120212220836.6aa7fa4d@stein> <20120212222027.71651e8b@stein> <20120213021813.GA589@redhat.com> <1329154831.4f394b0f3c69c@www.imp.polymtl.ca> <4F3A4220.4010901@ce.jp.nec.com> <20120214162858.GM12117@google.com> <4F3B1ED3.4000706@ce.jp.nec.com> <20120215172617.GB24986@google.com> <4F3C5B4E.3080606@ce.jp.nec.com> <20120301185817.GA16253@zeus>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120301185817.GA16253@zeus>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Kai Makisara <Kai.Makisara@kolumbus.fi>
+To: Luis Henriques <luis.henriques@canonical.com>, Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, Naveen Goswamy <naveen.goswamy@polymtl.ca>, James Bottomley <James.Bottomley@HansenPartnership.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Dave Jones <davej@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The st tape driver recently added the MTWEOFI ioctl, which writes
-a tape filemark (EOF), like the MTWEOF ioctl, except that MTWEOFI
-returns immediately. This makes certain applications, like backup
-software, run much more quickly on buffered tape drives.
+Hi,
 
-Since legacy applications do not know about this new MTWEOFI ioctl,
-this patch adds a new ioctl option that tells the st driver to return
-immediately when writing an EOF (i.e. a filemark). This new flag
-is much like the existing flag that tells the st driver to perform
-writes (and certain other IOs) immediately, but this new flag only
-applies to writing EOFs.
+On 03/02/12 03:58, Luis Henriques wrote:
+> Are there any updates on this fix?  I was wondering if any progress has been
+> made and if this patch has any chances of hitting mainline soon.
+> 
+> I have executed a quick test and it seems to solve the problem (or, at least, I
+> am not able to reproduce the oops anymore).
 
-This new feature is controlled via the MTSETDRVBUFFER ioctl, using
-the newly-defined MT_ST_NOWAIT_EOF flag.
+Thank you for testing and feedback.
 
-Use of this new feature is displayed via the sysfs tape "options"
-attribute.
+The patch is posted here and waiting for Jens to pick up:
+  https://lkml.org/lkml/2012/2/21/443
+  [PATCH] Fix NULL pointer dereference in sd_revalidate_disk
 
-The st documentation was updated to mention this new flag, as well
-as the problems that can occur from using it.
-
-Signed-off-by: Lee Duncan <lduncan@suse.com>
----
- Documentation/scsi/st.txt |    4 ++++
- drivers/scsi/st.c         |   21 ++++++++++++++++++---
- drivers/scsi/st.h         |    1 +
- include/linux/mtio.h      |    1 +
- 4 files changed, 24 insertions(+), 3 deletions(-)
-
-diff --git a/Documentation/scsi/st.txt b/Documentation/scsi/st.txt
-index 691ca29..14b6e5a 100644
---- a/Documentation/scsi/st.txt
-+++ b/Documentation/scsi/st.txt
-@@ -390,6 +390,10 @@ MTSETDRVBUFFER
- 	     MT_ST_SYSV sets the SYSV semantics (mode)
- 	     MT_ST_NOWAIT enables immediate mode (i.e., don't wait for
- 	        the command to finish) for some commands (e.g., rewind)
-+	     MT_ST_NOWAIT_EOF enables immediate filemark mode (i.e. when
-+	        writing a filemark, don't wait for it to complete). Please
-+		see the BASICS note about MTWEOFI with respect to the
-+		possible dangers of writing immediate filemarks.
- 	     MT_ST_SILI enables setting the SILI bit in SCSI commands when
- 		reading in variable block mode to enhance performance when
- 		reading blocks shorter than the byte count; set this only
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 9262cdf..8c663e1 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -1106,6 +1106,12 @@ static int check_tape(struct scsi_tape *STp, struct file *filp)
-                                     STp->drv_buffer));
- 		}
- 		STp->drv_write_prot = ((STp->buffer)->b_data[2] & 0x80) != 0;
-+		if (!STp->drv_buffer && STp->immediate_filemark) {
-+			printk(KERN_WARNING
-+			    "%s: non-buffered tape: disabling writing immediate filemarks\n",
-+			    name);
-+			STp->immediate_filemark = 0;
-+		}
- 	}
- 	st_release_request(SRpnt);
- 	SRpnt = NULL;
-@@ -1314,6 +1320,8 @@ static int st_flush(struct file *filp, fl_owner_t id)
- 
- 		memset(cmd, 0, MAX_COMMAND_SIZE);
- 		cmd[0] = WRITE_FILEMARKS;
-+		if (STp->immediate_filemark)
-+			cmd[1] = 1;
- 		cmd[4] = 1 + STp->two_fm;
- 
- 		SRpnt = st_do_scsi(NULL, STp, cmd, 0, DMA_NONE,
-@@ -2181,8 +2189,9 @@ static void st_log_options(struct scsi_tape * STp, struct st_modedef * STm, char
- 		       name, STm->defaults_for_writes, STp->omit_blklims, STp->can_partitions,
- 		       STp->scsi2_logical);
- 		printk(KERN_INFO
--		       "%s:    sysv: %d nowait: %d sili: %d\n", name, STm->sysv, STp->immediate,
--			STp->sili);
-+		       "%s:    sysv: %d nowait: %d sili: %d nowait_filemark: %d\n",
-+		       name, STm->sysv, STp->immediate, STp->sili,
-+		       STp->immediate_filemark);
- 		printk(KERN_INFO "%s:    debugging: %d\n",
- 		       name, debugging);
- 	}
-@@ -2224,6 +2233,7 @@ static int st_set_options(struct scsi_tape *STp, long options)
- 			STp->can_partitions = (options & MT_ST_CAN_PARTITIONS) != 0;
- 		STp->scsi2_logical = (options & MT_ST_SCSI2LOGICAL) != 0;
- 		STp->immediate = (options & MT_ST_NOWAIT) != 0;
-+		STp->immediate_filemark = (options & MT_ST_NOWAIT_EOF) != 0;
- 		STm->sysv = (options & MT_ST_SYSV) != 0;
- 		STp->sili = (options & MT_ST_SILI) != 0;
- 		DEB( debugging = (options & MT_ST_DEBUGGING) != 0;
-@@ -2255,6 +2265,8 @@ static int st_set_options(struct scsi_tape *STp, long options)
- 			STp->scsi2_logical = value;
- 		if ((options & MT_ST_NOWAIT) != 0)
- 			STp->immediate = value;
-+		if ((options & MT_ST_NOWAIT_EOF) != 0)
-+			STp->immediate_filemark = value;
- 		if ((options & MT_ST_SYSV) != 0)
- 			STm->sysv = value;
- 		if ((options & MT_ST_SILI) != 0)
-@@ -2714,7 +2726,8 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
- 		cmd[0] = WRITE_FILEMARKS;
- 		if (cmd_in == MTWSM)
- 			cmd[1] = 2;
--		if (cmd_in == MTWEOFI)
-+		if (cmd_in == MTWEOFI ||
-+		    (cmd_in == MTWEOF && STp->immediate_filemark))
- 			cmd[1] |= 1;
- 		cmd[2] = (arg >> 16);
- 		cmd[3] = (arg >> 8);
-@@ -4093,6 +4106,7 @@ static int st_probe(struct device *dev)
- 	tpnt->scsi2_logical = ST_SCSI2LOGICAL;
- 	tpnt->sili = ST_SILI;
- 	tpnt->immediate = ST_NOWAIT;
-+	tpnt->immediate_filemark = 0;
- 	tpnt->default_drvbuffer = 0xff;		/* No forced buffering */
- 	tpnt->partition = 0;
- 	tpnt->new_partition = 0;
-@@ -4478,6 +4492,7 @@ st_options_show(struct device *dev, struct device_attribute *attr, char *buf)
- 	options |= STp->scsi2_logical ? MT_ST_SCSI2LOGICAL : 0;
- 	options |= STm->sysv ? MT_ST_SYSV : 0;
- 	options |= STp->immediate ? MT_ST_NOWAIT : 0;
-+	options |= STp->immediate_filemark ? MT_ST_NOWAIT_EOF : 0;
- 	options |= STp->sili ? MT_ST_SILI : 0;
- 
- 	l = snprintf(buf, PAGE_SIZE, "0x%08x\n", options);
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index f91a67c..ea35632 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -120,6 +120,7 @@ struct scsi_tape {
- 	unsigned char c_algo;			/* compression algorithm */
- 	unsigned char pos_unknown;			/* after reset position unknown */
- 	unsigned char sili;			/* use SILI when reading in variable b mode */
-+	unsigned char immediate_filemark;	/* write filemark immediately */
- 	int tape_type;
- 	int long_timeout;	/* timeout for commands known to take long time */
- 
-diff --git a/include/linux/mtio.h b/include/linux/mtio.h
-index 8f82575..18543e2 100644
---- a/include/linux/mtio.h
-+++ b/include/linux/mtio.h
-@@ -194,6 +194,7 @@ struct	mtpos {
- #define MT_ST_SYSV              0x1000
- #define MT_ST_NOWAIT            0x2000
- #define MT_ST_SILI		0x4000
-+#define MT_ST_NOWAIT_EOF	0x8000
- 
- /* The mode parameters to be controlled. Parameter chosen with bits 20-28 */
- #define MT_ST_CLEAR_DEFAULT	0xfffff
 -- 
-1.7.8.3
+Jun'ichi Nomura, NEC Corporation
