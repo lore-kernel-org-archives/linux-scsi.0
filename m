@@ -1,76 +1,58 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 7/7] sd: Use sd_ prefix for flush and discard functions
-Date: Thu,  1 Mar 2012 22:22:51 -0500
-Message-ID: <1330658571-12958-8-git-send-email-martin.petersen@oracle.com>
-References: <1330658571-12958-1-git-send-email-martin.petersen@oracle.com>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 00/21] lpfc 8.3.30: Update lpfc to revision 8.3.30
+Date: Thu, 1 Mar 2012 22:33:07 -0500
+Message-ID: <1330659190.18500.27.camel@ogier>
+Reply-To: james.smart@emulex.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:42166 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932161Ab2CBDYV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 22:24:21 -0500
-In-Reply-To: <1330658571-12958-1-git-send-email-martin.petersen@oracle.com>
+Received: from exht1.emulex.com ([138.239.113.183]:38839 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752690Ab2CBDdc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Mar 2012 22:33:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, vgoyal@redhat.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org
 
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+This patch set updates the lpfc driver to revision 8.3.30
 
-The commands to set up flush and discard operations used a scsi_ prefix
-despite being local to the sd driver. Use an sd_ prefix instead.
+The patches for 8.3.30 contain:
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Acked-by: Mike Snitzer <snitzer@redhat.com>
----
- drivers/scsi/sd.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+- Make BA_ACC work on a fully qualified exchange (CR: 126289)
+- Fix bug with driver not sending a LOGO with vport delete.
+- Fixed port and system failure in handling SLI4 FC port function reset
+- Fix driver handling of XRI Aborted CQE response
+- Fix same RPI registered multiple times after HBA reset
+- Fix deadlock during adapter offline request.
+- Fixed missing CVL event causing round-robin FCF failover process
+  to stop (CR: 123367)
+- Fixed SLI4 driver module load and unload test in a loop
+  crashes the system (CR: 126397)
+- Fix resource leak when acc fails for received plogi.
+- Fixed the system panic during EEH recovery
+- Add additional compilation flag
+- Fixed system panic when extents enabled with large number of small blocks
+- Update copyright date for files modified in 2012.
+- Used PCI configure space read to flush PCI funciton reset register write
+- Change default DA_ID support from disabled to enabled
+- Enhancements for T10 DIF debugfs error injection for DVT usage (CR: 123966)
+- Fix bug with mailbox handling of REG_VFI and cable pull.
+- Update copyright date for files modified in 2012.
+- Added some more features for T10 DIF debugfs error injection (CR: 123966)
+- Revert fix for Link Pull Causes I/O Failures
+- Update lpfc to version 8.3.30
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 34b2f3b..0191f1d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -575,14 +575,14 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- }
- 
- /**
-- * scsi_setup_discard_cmnd - unmap blocks on thinly provisioned device
-+ * sd_setup_discard_cmnd - unmap blocks on thinly provisioned device
-  * @sdp: scsi device to operate one
-  * @rq: Request to prepare
-  *
-  * Will issue either UNMAP or WRITE SAME(16) depending on preference
-  * indicated by target device.
-  **/
--static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
-+static int sd_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
- {
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 	struct bio *bio = rq->bio;
-@@ -734,7 +734,7 @@ static int sd_setup_write_same_cmnd(struct scsi_device *sdp, struct request *rq)
- 	return scsi_setup_blk_pc_cmnd(sdp, rq);
- }
- 
--static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct request *rq)
-+static int sd_setup_flush_cmnd(struct scsi_device *sdp, struct request *rq)
- {
- 	rq->timeout = SD_FLUSH_TIMEOUT;
- 	rq->retries = SD_MAX_RETRIES;
-@@ -777,13 +777,13 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	 * block PC requests to make life easier.
- 	 */
- 	if (rq->cmd_flags & REQ_DISCARD) {
--		ret = scsi_setup_discard_cmnd(sdp, rq);
-+		ret = sd_setup_discard_cmnd(sdp, rq);
- 		goto out;
- 	} else if (rq->cmd_flags & REQ_WRITE_SAME) {
- 		ret = sd_setup_write_same_cmnd(sdp, rq);
- 		goto out;
- 	} else if (rq->cmd_flags & REQ_FLUSH) {
--		ret = scsi_setup_flush_cmnd(sdp, rq);
-+		ret = sd_setup_flush_cmnd(sdp, rq);
- 		goto out;
- 	} else if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
- 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
--- 
-1.7.8.3.21.gab8a7
+
+The patches were cut against scsi-misc-2.6
+
+-- james s
+
+
+Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
+Signed-off-by: James Smart <james.smart@emulex.com>
+
+
+
+
 
