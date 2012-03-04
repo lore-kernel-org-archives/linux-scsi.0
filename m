@@ -1,140 +1,56 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: 3.3-rc6: Reported regressions 3.1 -> 3.2
-Date: Sun,  4 Mar 2012 22:15:40 +0100 (CET)
-Message-ID: <QW36V-vSgyB.A.YIG.i79UPB@chimera>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command
+ to the host
+Date: Sun, 4 Mar 2012 23:15:07 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481B74A8EE@TK5EX14MBXC126.redmond.corp.microsoft.com>
+References: <1330721347-26781-1-git-send-email-kys@microsoft.com>
+ <1330870770.2858.4.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1330870770.2858.4.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This message contains a list of some post-3.1 regressions introduced be=
-fore
-3.2, for which there are no fixes in the mainline known to the tracking=
- team.
-If any of them have been fixed already, please let us know.
-
-If you know of any other unresolved post-3.1 regressions, please let us=
- know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic repl=
-y to
-this message with CCs to the people involved in reporting and handling =
-the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2012-03-04        9        8           7
-  2012-02-24        9        8           7
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42714
-Subject		: 3.2.x Regression for SAS Controller on Dell C6100
-Submitter	: Herbert Poetzl <herbert-dBHVzrDq9nF4Lj/PQRBjDg@public.gmane.org>
-Date		: 2012-01-31 18:09 (34 days old)
-Message-ID	: <20120131180949.GT29272-ZD0Mn47LIGX0Pe/G4T7+5F6hYfS7NtTn@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132803360019481&w=3D=
-2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42685
-Subject		: multi-media key "mute" no longer recognized
-Submitter	: Toralf F=C3=B6rster <toralf.foerster-Mmb7MZpHnFY@public.gmane.org>
-Date		: 2012-01-23 10:52 (42 days old)
-Message-ID	: <201201231152.25344.toralf.foerster-Mmb7MZpHnFY@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132731613606121&w=3D=
-2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42684
-Subject		: FYIO: usb/video 3.2 breaks logitech 9000pro webcam focus con=
-trol
-Submitter	: M G Berberich <berberic-vmG2aq7wDA3mFSIgyKwhw7NAH6kLmebB@public.gmane.org>
-Date		: 2012-01-23 21:49 (42 days old)
-Message-ID	: <20120123214934.GA4240@invalid>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132735609521443&w=3D=
-2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42631
-Subject		: Sound broken in 3.2.0 and 3.2.1
-Submitter	: Joseph Parmelee <jparmele-0t/HR9YC43JWk0Htik3J/w@public.gmane.org>
-Date		: 2012-01-13 19:44 (52 days old)
-Message-ID	: <alpine.LNX.2.00.1201131241090.1239@bruno>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132648462806235&w=3D=
-2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42629
-Subject		: recvmsg sleeping from invalid context
-Submitter	: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Date		: 2012-01-13 18:24 (52 days old)
-Message-ID	: <20120113182401.GA25885-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132647921304184&w=3D=
-2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42611
-Subject		: kernel 3.2 crashes too early on HP dc7700 and HP t5000 serie=
-s
-Submitter	: Dmitry D. Khlebnikov <galaxy-cxoSlKxDwOJWk0Htik3J/w@public.gmane.org>
-Date		: 2012-01-10 11:49 (55 days old)
-Message-ID	: <20120110114905.GC13535-cxoSlKxDwOJWk0Htik3J/w@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132619793012702&w=3D=
-2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42610
-Subject		: 3.2.0 reboot powers off machine
-Submitter	: Tom Weber <l_linux-kernel-w8lRr17kQ6puIcIf6OMhTAC/G2K4zDHf@public.gmane.org>
-Date		: 2012-01-11 11:03 (54 days old)
-Message-ID	: <1326279818.24835.12.camel@utumno>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132628059308023&w=3D=
-2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42571
-Subject		: BUG in ofcs2_change_file_space
-Submitter	: Bret Towe <magnade-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2012-01-05 22:23 (60 days old)
-Message-ID	: <CALjC5haTNDMOTDPL1m1uBTc2a-Qb8cvR44SCaVDFMzGc+Gw3+w@mail.=
-gmail.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132580236211209&w=3D=
-2
-Patch		: http://oss.oracle.com/pipermail/ocfs2-devel/2012-January/00846=
-4.html
-
-
-=46or details, please visit the bug entries and follow the links given =
-in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regres=
-sions.
-There also is a Bugzilla entry used for tracking the regressions introd=
-uced
-between 3.1 and 3.2, unresolved as well as resolved, at:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=3D42566
-
-Please let the tracking team know if there are any Bugzilla entries tha=
-t
-should be added to the list in there.
-
-Thanks!
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+U3VuZGF5LCBNYXJjaCAwNCwgMjAxMiA5OjIwIEFNDQo+IFRvOiBLWSBTcmluaXZhc2FuDQo+IENj
+OiBncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9y
+ZzsNCj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgb2hlcmluZ0BzdXNlLmNvbTsgaGNo
+QGluZnJhZGVhZC5vcmc7IGxpbnV4LQ0KPiBzY3NpQHZnZXIua2VybmVsLm9yZzsgSGFpeWFuZyBa
+aGFuZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvMV0gRHJpdmVyczogc2NzaTogc3RvcnZzYzog
+RG9uJ3QgcGFzcyBBVEFfMTYgY29tbWFuZCB0bw0KPiB0aGUgaG9zdA0KPiANCj4gT24gRnJpLCAy
+MDEyLTAzLTAyIGF0IDEyOjQ5IC0wODAwLCBLLiBZLiBTcmluaXZhc2FuIHdyb3RlOg0KPiA+IFdp
+bmRvd3MgaG9zdHMgZG9uJ3QgaGFuZGxlIHRoZSBBVEFfMTYgY29tbWFuZDsgZG9uJ3QgcGFzcyBp
+dCB0byB0aGUgaG9zdC4NCj4gDQo+IFdoYXQgZG8geW91IG1lYW4gYnkgdGhpcz8gIE1vc3QgU0NT
+SSBkZXZpY2VzIGRvbid0IGhhbmRsZSBBVEFfMTYgYmVjYXVzZQ0KPiBpdCdzIG9ubHkgdXNlZnVs
+IGlmIHRoZSBkZXZpY2UgaXMgYWN0dWFsbHkgYW4gQVRBIGRldmljZSBiZWhpbmQgYQ0KPiBicmlk
+Z2UuDQo+IA0KPiBBcyBhIGdlbmVyYWwgcnVsZSwgeW91IHNob3VsZG4ndCBmaWx0ZXIgaW4gdGhl
+IGRyaXZlciBjb21tYW5kcyB5b3UgdGhpbmsNCj4gdGhlIGhvc3Qgd29uJ3Qgd2FudCB0byBzZWUs
+IHlvdSBzaG91bGQgbGV0IHRoZSBob3N0IHJlcGx5IHdpdGggYW4gZXJyb3INCj4gY29kZS4gIFlv
+dSBzaG91bGQgKm9ubHkqIGZpbHRlciBjb21tYW5kcyB0aGF0IGNhdXNlIGFuIGFjdHVhbCBidWcg
+aW4gdGhlDQo+IGhvc3QuICBJcyB0aGUgbGF0dGVyIHRoZSBjYXNlIGZvciB0aGlzIGNvbW1hbmQg
+KGlmIHNvIHRoYXQgbmVlZHMgdG8gYmUNCj4gZXhwbGFpbmVkKT8NCg0KQXMgSSBleHBsYWluZWQg
+aW4gbXkgZW1haWwgdG8gQ2hyaXN0b3BoLCB0aGUgV2luZG93cyBob3N0IHJldHVybnMgZXJyb3Ig
+Y29kZXMgdGhhdA0KSSBjYW5ub3QgcHJvcGVybHkgZGVjb2RlIGFzIGJlaW5nICJ1bnN1cHBvcnRl
+ZCBvcGNvZGUiLiBMZXQgbWUgaW52ZXN0aWdhdGUgYSBsaXR0bGUgbW9yZQ0KYW5kIHNlZSBpZiBJ
+IGNhbiBwcm9wZXJseSBhbmFseXplIHRoZSBmYWlsdXJlIGFuZCByZXR1cm4gdGhlIGNvcnJlY3Qg
+ZXJyb3IgY29kZSB1cC4gSWYgdGhlIGVycm9yIGNvZGUNCkkgZ2V0IGJhY2sgZnJvbSBXaW5kb3dz
+IGlzIHN1Y2ggdGhhdCBJIGNhbm5vdCBkZWR1Y2UgdGhlIGNhdXNlIG9mIHRoZSBmYWlsdXJlLCB0
+aGVuIGFwYXJ0IGZyb20gZmlsdGVyaW5nDQp0aGUgY29tbWFuZHMgaW4gdGhlIG91dGdvaW5nIHBh
+dGgsIEkgYW0gbm90IHN1cmUgd2hhdCBteSBvcHRpb25zIGFyZS4NCiANCj4gDQo+ID4gU2lnbmVk
+LW9mZi1ieTogSy4gWS4gU3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQo+ID4gU2lnbmVk
+LW9mZi1ieTogSGFpeWFuZyBaaGFuZyA8aGFpeWFuZ3pAbWljcm9zb2Z0LmNvbT4NCj4gDQo+IFRo
+aXMgc2lnbm9mZiBjaGFpbiBkb2Vzbid0IG1ha2Ugc2Vuc2UsIHNpbmNlIHlvdSdyZSBzZW5kaW5n
+IG1lIHRoZSBwYXRjaA0KPiBhbmQgYXBwYXJlbnRseSB5b3UgYXV0aG9yZWQgaXQuDQoNCkdvb2Qg
+cG9pbnQuIFNpbmNlIEkgY2FtZSB0byBNU0ZULCB0aGlzIGhhcyBiZWVuIHRoZSBwcmFjdGljZSBo
+ZXJlIC0gDQphbGwgdGhlIHBhdGNoZXMgd2VyZSByZXZpZXdlZCBhbmQgInNpZ25lZC1vZmYiIGJ5
+IGFsbCB0aGUgcmVsZXZhbnQgZGV2ZWxvcGVycw0KaW5kZXBlbmRlbnQgb2YgdGhlIGF1dGhvcnNo
+aXAgYW5kIEdyZWcgc2VlbWVkIG9rIHdpdGggaXQgYW5kIGhhcyBiZWVuIGFzY3JpYmluZw0Kb3du
+ZXJzaGlwIGJhc2VkIG9uIHRoZSBwZXJzb24gc2VuZGluZyB0aGUgcGF0Y2ggd2hvIGlzIGFsd2F5
+cyB0aGUgYXV0aG9yIG9mIHRoZQ0KcGF0Y2guIEhvdyB3b3VsZCB5b3UgcmVjb21tZW5kIHdlIGNo
+YW5nZSB0aGlzIHByYWN0aWNlLiANCg0KUmVnYXJkcywNCg0KSy4gWQ0KDQo=
