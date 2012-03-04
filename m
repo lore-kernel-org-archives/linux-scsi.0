@@ -1,36 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command
  to the host
-Date: Sun, 04 Mar 2012 08:19:30 -0600
-Message-ID: <1330870770.2858.4.camel@dabdike.int.hansenpartnership.com>
+Date: Sun, 4 Mar 2012 14:23:28 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481B74886F@TK5EX14MBXC126.redmond.corp.microsoft.com>
 References: <1330721347-26781-1-git-send-email-kys@microsoft.com>
+ <20120304091225.GA27297@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1330721347-26781-1-git-send-email-kys@microsoft.com>
+In-Reply-To: <20120304091225.GA27297@infradead.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, hch@infradead.org, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2012-03-02 at 12:49 -0800, K. Y. Srinivasan wrote:
-> Windows hosts don't handle the ATA_16 command; don't pass it to the host.
 
-What do you mean by this?  Most SCSI devices don't handle ATA_16 because
-it's only useful if the device is actually an ATA device behind a
-bridge.
 
-As a general rule, you shouldn't filter in the driver commands you think
-the host won't want to see, you should let the host reply with an error
-code.  You should *only* filter commands that cause an actual bug in the
-host.  Is the latter the case for this command (if so that needs to be
-explained)?
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Sunday, March 04, 2012 4:12 AM
+> To: KY Srinivasan
+> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
+> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
+> Haiyang Zhang
+> Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command to
+> the host
+> 
+> On Fri, Mar 02, 2012 at 12:49:07PM -0800, K. Y. Srinivasan wrote:
+> > Windows hosts don't handle the ATA_16 command; don't pass it to the host.
+> 
+> Most devices don't handle it, and answer with and unsupported opcode
+> sense reason.  If hyperv iis buggy enough to crap out on it please add
+> a comment explaining that.
 
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+The host does not "crap out", it does return an error code but it is not "unsupported opcode".
+The sense reason that comes back is a generic error SRB_STATUS code. It is easier for me to filter the
+command on the outgoing side as opposed to dealing with a generic error code that is coming back from
+the host.
 
-This signoff chain doesn't make sense, since you're sending me the patch
-and apparently you authored it.
+Regards,
 
-James
+K. Y 
