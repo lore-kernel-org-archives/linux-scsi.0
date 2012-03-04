@@ -1,215 +1,124 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: 3.3-rc6: Reported regressions from 3.2
-Date: Sun,  4 Mar 2012 21:29:30 +0100 (CET)
-Message-ID: <FNlNbnGKWLP.A.dME.3F9UPB@chimera>
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: 3.3-rc6: Reported regressions 3.1 -> 3.2
+Date: Sun,  4 Mar 2012 22:15:40 +0100 (CET)
+Message-ID: <QW36V-vSgyB.A.YIG.i79UPB@chimera>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-Sender: netdev-owner@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, Florian Mickler <florian@mickler.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi all,
-
-It looks like many people have switched away from the kernel Bugzilla
-after the kernel.org outage and they are using various means of reporti=
-ng
-(and tracking) kernel bugs.  For this reason, it's becoming increasingl=
-y
-difficult for us to track all of the possible sources of reports and we
-are not aware of a number of them as a result.  To tackle this issue we
-kindly request that regression reports be CCed or forwarded to the LKML
-as stated below.
-
-Thanks,
-Rafael
-
------------------------------------------------------------------------=
-------
-
-This message contains a list of some regressions from 3.2,
-for which there are no fixes in the mainline known to the tracking team=
-=2E
+This message contains a list of some post-3.1 regressions introduced be=
+fore
+3.2, for which there are no fixes in the mainline known to the tracking=
+ team.
 If any of them have been fixed already, please let us know.
 
-If you know of any other unresolved regressions from 3.2, please let us
-know either and we'll add them to the list.  Moreover, when you are
-reporting a kernel regression, please send a CC of your report to the L=
-KML
-(or forward it to the LKML if you are not reporting the regression by e=
--mail)
-with the word "regression" in the subject, as that will make it much
-easier for us to find it.  Also, please let us know if any of the entri=
-es
-below are invalid.
+If you know of any other unresolved post-3.1 regressions, please let us=
+ know
+either and we'll add them to the list.  Also, please let us know if any
+of the entries below are invalid.
 
 Each entry from the list will be sent additionally in an automatic repl=
-y
-to this message with CCs to the people involved in reporting and handli=
-ng
-the issue.
+y to
+this message with CCs to the people involved in reporting and handling =
+the
+issue.
 
 
 Listed regressions statistics:
 
   Date          Total  Pending  Unresolved
   ----------------------------------------
-  2012-03-04       23       15          15
-  2012-02-23       15       13          13
+  2012-03-04        9        8           7
+  2012-02-24        9        8           7
 
 
 Unresolved regressions
 ----------------------
 
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42860
-Subject		: 3.3.0-rc5: OOps in dql_completed (Broadcom tg3 driver)
-Submitter	: Christoph Lameter <cl@gentwo.org>
-Date		: 2012-03-01 21:13 (4 days old)
-Message-ID	: <alpine.DEB.2.00.1203011505510.6685@router.home>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D133063645224373&w=3D=
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42714
+Subject		: 3.2.x Regression for SAS Controller on Dell C6100
+Submitter	: Herbert Poetzl <herbert-dBHVzrDq9nF4Lj/PQRBjDg@public.gmane.org>
+Date		: 2012-01-31 18:09 (34 days old)
+Message-ID	: <20120131180949.GT29272-ZD0Mn47LIGX0Pe/G4T7+5F6hYfS7NtTn@public.gmane.org>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D132803360019481&w=3D=
 2
 
 
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42850
-Subject		: [BUG] Kernel Bug at fs/btrfs/volumes.c:3638
-Submitter	: Nageswara R Sastry <rnsastry@linux.vnet.ibm.com>
-Date		: 2012-02-24 10:53 (10 days old)
-Message-ID	: <4F476959.2010400@linux.vnet.ibm.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D133008013332251&w=3D=
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42685
+Subject		: multi-media key "mute" no longer recognized
+Submitter	: Toralf F=C3=B6rster <toralf.foerster-Mmb7MZpHnFY@public.gmane.org>
+Date		: 2012-01-23 10:52 (42 days old)
+Message-ID	: <201201231152.25344.toralf.foerster-Mmb7MZpHnFY@public.gmane.org>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D132731613606121&w=3D=
 2
 
 
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42823
-Subject		: WARNING: at block/genhd.c:1465
-Submitter	: Christian Kujau <lists@nerdbynature.de>
-Date		: 2012-02-21 11:00 (13 days old)
-Message-ID	: <alpine.DEB.2.01.1202210246400.4930@trent.utfs.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132982259213941&w=3D=
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42684
+Subject		: FYIO: usb/video 3.2 breaks logitech 9000pro webcam focus con=
+trol
+Submitter	: M G Berberich <berberic-vmG2aq7wDA3mFSIgyKwhw7NAH6kLmebB@public.gmane.org>
+Date		: 2012-01-23 21:49 (42 days old)
+Message-ID	: <20120123214934.GA4240@invalid>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D132735609521443&w=3D=
 2
 
 
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42822
-Subject		: [3.3.0-rc3][uvcvideo][regression] oops - uvc_video_clock_upd=
-ate
-Submitter	: Shawn Starr <shawn.starr@rogers.com>
-Date		: 2012-02-20 1:08 (14 days old)
-Message-ID	: <5887142.ZMTDAjc4qf@segfault.sh0n.net>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132970057611642&w=3D=
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42631
+Subject		: Sound broken in 3.2.0 and 3.2.1
+Submitter	: Joseph Parmelee <jparmele-0t/HR9YC43JWk0Htik3J/w@public.gmane.org>
+Date		: 2012-01-13 19:44 (52 days old)
+Message-ID	: <alpine.LNX.2.00.1201131241090.1239@bruno>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D132648462806235&w=3D=
 2
 
 
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42821
-Subject		: alpha: futex regression bisected
-Submitter	: Michael Cree <mcree@orcon.net.nz>
-Date		: 2012-02-20 8:20 (14 days old)
-=46irst-Bad-Commit: http://git.kernel.org/linus/8d7718aa082aaf30a0b4989=
-e1f04858952f941bc
-Message-ID	: <4F420256.2090600@orcon.net.nz>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132972606917069&w=3D=
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42629
+Subject		: recvmsg sleeping from invalid context
+Submitter	: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Date		: 2012-01-13 18:24 (52 days old)
+Message-ID	: <20120113182401.GA25885-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D132647921304184&w=3D=
 2
 
 
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42776
-Subject		: OF-related boot crash in 3.3.0-rc3-00188-g3ec1e88
-Submitter	: Meelis Roos <mroos@linux.ee>
-Date		: 2012-02-13 7:45 (21 days old)
-Message-ID	: <alpine.SOC.1.00.1202130942030.1488@math.ut.ee>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132911916331615&w=3D=
-2
-		  http://marc.info/?l=3Dlinux-kernel&m=3D132993294018762&w=3D2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42761
-Subject		: Possible circular locking dependency (3.3-rc2)
-Submitter	: Felipe Balbi <balbi@ti.com>
-Date		: 2012-02-08 12:41 (26 days old)
-Message-ID	: <20120208124147.GF16334@legolas.emea.dhcp.ti.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132870492311858&w=3D=
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42611
+Subject		: kernel 3.2 crashes too early on HP dc7700 and HP t5000 serie=
+s
+Submitter	: Dmitry D. Khlebnikov <galaxy-cxoSlKxDwOJWk0Htik3J/w@public.gmane.org>
+Date		: 2012-01-10 11:49 (55 days old)
+Message-ID	: <20120110114905.GC13535-cxoSlKxDwOJWk0Htik3J/w@public.gmane.org>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D132619793012702&w=3D=
 2
 
 
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42746
-Subject		: 3.3-rc2 snd_pcm lockdep backtrace
-Submitter	: Josh Boyer <jwboyer@redhat.com>
-Date		: 2012-02-06 14:56 (28 days old)
-Message-ID	: <20120206145621.GA4771@zod.bos.redhat.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132854040916172&w=3D=
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42610
+Subject		: 3.2.0 reboot powers off machine
+Submitter	: Tom Weber <l_linux-kernel-w8lRr17kQ6puIcIf6OMhTAC/G2K4zDHf@public.gmane.org>
+Date		: 2012-01-11 11:03 (54 days old)
+Message-ID	: <1326279818.24835.12.camel@utumno>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D132628059308023&w=3D=
 2
 
 
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42733
-Subject		: Regression 3.2 -> 3.3-rc1 10 sec hang at boot and resume, CO=
-MRESET failed
-Submitter	: Norbert Preining <preining@logic.at>
-Date		: 2012-02-02 5:12 (32 days old)
-Message-ID	: <20120202051258.GA15550@gamma.logic.tuwien.ac.at>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132815978615112&w=3D=
+Regressions with patches
+------------------------
+
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42571
+Subject		: BUG in ofcs2_change_file_space
+Submitter	: Bret Towe <magnade-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2012-01-05 22:23 (60 days old)
+Message-ID	: <CALjC5haTNDMOTDPL1m1uBTc2a-Qb8cvR44SCaVDFMzGc+Gw3+w@mail.=
+gmail.com>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D132580236211209&w=3D=
 2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42713
-Subject		: Regression in skge that started around acb42a3 (so past v3.3=
--rc1)
-Submitter	: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Date		: 2012-01-30 15:58 (35 days old)
-Message-ID	: <20120130155816.GA1400@phenom.dumpdata.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132793944220262&w=3D=
-2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42707
-Subject		: Hang deconfiguring network interface (in shutdown) on 3.3-rc=
-1
-Submitter	: James Bottomley <James.Bottomley@hansenpartnership.com>
-Date		: 2012-01-28 19:56 (37 days old)
-=46irst-Bad-Commit: http://git.kernel.org/linus/92feeabf3f673767c6ee4cf=
-c7fc224098446c1c1
-Message-ID	: <1327780565.2924.24.camel@dabdike.int.hansenpartnership.co=
-m>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132778076214873&w=3D=
-2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42686
-Subject		: iwlagn is getting even worse with 3.3-rc1
-Submitter	: Norbert Preining <preining@logic.at>
-Date		: 2012-01-24 1:36 (41 days old)
-Message-ID	: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132736918325378&w=3D=
-2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42683
-Subject		: WARN... Device 'cpu1' does not have a release() function, it=
- is broken and must be fixed. when doing 'xl vcpu-set <guest_id> 1'
-Submitter	: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Date		: 2012-01-23 18:06 (42 days old)
-Message-ID	: <20120123180601.GA24553@phenom.dumpdata.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132734233916154&w=3D=
-2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42678
-Subject		: [3.3-rc1] radeon stuck in kernel after lockup
-Submitter	: Torsten Kaiser <just.for.lkml@googlemail.com>
-Date		: 2012-01-21 19:03 (44 days old)
-Message-ID	: <CAPVoSvSXMvRb=3D1itu9DjF+s=3D6zfAChvUxS-x=3Db8EV9kOZinNpA=
-@mail.gmail.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D132717279606670&w=3D=
-2
-Handled-By	: J=C3=A9r=C3=B4me Glisse <glisse@freedesktop.org>
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=3D42649
-Subject		: Regression 3.2 -> 3.3-rc1 commit b4b583d4 inet/media keyboar=
-d: stuck "extra" keys
-Submitter	: Duncan <1i5t5.duncan@cox.net>
-Date		: 2012-01-24 18:18 (41 days old)
-=46irst-Bad-Commit: http://git.kernel.org/linus/b4b583d4e9a5ff28c4a150b=
-b25a4fff5cd4dfbbd
+Patch		: http://oss.oracle.com/pipermail/ocfs2-devel/2012-January/00846=
+4.html
 
 
 =46or details, please visit the bug entries and follow the links given =
@@ -218,11 +127,11 @@ references.
 
 As you can see, there is a Bugzilla entry for each of the listed regres=
 sions.
-There also is a Bugzilla entry used for tracking the regressions from 3=
-=2E2,
-unresolved as well as resolved, at:
+There also is a Bugzilla entry used for tracking the regressions introd=
+uced
+between 3.1 and 3.2, unresolved as well as resolved, at:
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D42644
+https://bugzilla.kernel.org/show_bug.cgi?id=3D42566
 
 Please let the tracking team know if there are any Bugzilla entries tha=
 t
