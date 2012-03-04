@@ -1,64 +1,54 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command
-	to the host
-Date: Sun, 04 Mar 2012 08:48:33 -0600
-Message-ID: <1330872513.2858.14.camel@dabdike.int.hansenpartnership.com>
-References: <1330721347-26781-1-git-send-email-kys@microsoft.com>
-	<20120304091225.GA27297@infradead.org>
-	<6E21E5352C11B742B20C142EB499E0481B74886F@TK5EX14MBXC126.redmond.corp.microsoft.com>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH] SCSI st: expand ability to write immediate filemarks
+Date: Sun, 4 Mar 2012 22:09:41 +0200 (EET)
+Message-ID: <alpine.LNX.2.00.1203042208460.5050@kai.makisara.local>
+References: <4F4FDEDD.1000701@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces@linuxdriverproject.org>
-In-Reply-To: <6E21E5352C11B742B20C142EB499E0481B74886F@TK5EX14MBXC126.redmond.corp.microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
-List-Post: <mailto:devel@linuxdriverproject.org>
-List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: devel-bounces@linuxdriverproject.org
-Sender: devel-bounces@linuxdriverproject.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Haiyang Zhang <haiyangz@microsoft.com>, "ohering@suse.com" <ohering@suse.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vs15.mail.saunalahti.fi ([62.142.117.202]:38955 "EHLO
+	vs15.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754809Ab2CDUJx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Mar 2012 15:09:53 -0500
+In-Reply-To: <4F4FDEDD.1000701@suse.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, 2012-03-04 at 14:23 +0000, KY Srinivasan wrote:
+On Thu, 1 Mar 2012, Lee Duncan wrote:
+
+> The st tape driver recently added the MTWEOFI ioctl, which writes
+> a tape filemark (EOF), like the MTWEOF ioctl, except that MTWEOFI
+> returns immediately. This makes certain applications, like backup
+> software, run much more quickly on buffered tape drives.
 > 
-> > -----Original Message-----
-> > From: Christoph Hellwig [mailto:hch@infradead.org]
-> > Sent: Sunday, March 04, 2012 4:12 AM
-> > To: KY Srinivasan
-> > Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> > devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
-> > jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
-> > Haiyang Zhang
-> > Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command to
-> > the host
-> > 
-> > On Fri, Mar 02, 2012 at 12:49:07PM -0800, K. Y. Srinivasan wrote:
-> > > Windows hosts don't handle the ATA_16 command; don't pass it to the host.
-> > 
-> > Most devices don't handle it, and answer with and unsupported opcode
-> > sense reason.  If hyperv iis buggy enough to crap out on it please add
-> > a comment explaining that.
+> Since legacy applications do not know about this new MTWEOFI ioctl,
+> this patch adds a new ioctl option that tells the st driver to return
+> immediately when writing an EOF (i.e. a filemark). This new flag
+> is much like the existing flag that tells the st driver to perform
+> writes (and certain other IOs) immediately, but this new flag only
+> applies to writing EOFs.
 > 
-> The host does not "crap out", it does return an error code but it is not "unsupported opcode".
-> The sense reason that comes back is a generic error SRB_STATUS code. It is easier for me to filter the
-> command on the outgoing side as opposed to dealing with a generic error code that is coming back from
-> the host.
+> This new feature is controlled via the MTSETDRVBUFFER ioctl, using
+> the newly-defined MT_ST_NOWAIT_EOF flag.
+> 
+> Use of this new feature is displayed via the sysfs tape "options"
+> attribute.
+> 
+> The st documentation was updated to mention this new flag, as well
+> as the problems that can occur from using it.
+> 
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
+Acked-by: Kai Makisara <kai.makisara@kolumbus.fi>
 
-That's the wrong thing to do ... you need to unwrap the error code.
-The reason being I presume it's not impossible for Windows to host a
-device supporting ATA_16 and there are signs that this is going to be
-necessary to prevent data corruption on some USB devices ... if you just
-filter the command without checking if the host supports it, you're
-going to end up perpetuating the corruption problem.
+> ---
+>  Documentation/scsi/st.txt |    4 ++++
+>  drivers/scsi/st.c         |   21 ++++++++++++++++++---
+>  drivers/scsi/st.h         |    1 +
+>  include/linux/mtio.h      |    1 +
+>  4 files changed, 24 insertions(+), 3 deletions(-)
 
-The general rule of thumb for avoiding this is to let the lower layers
-handle as much as possible, and only begin behaviour alterations in the
-upper layers if the lower layers have a provable and usually fatal
-failure.
+Thanks,
+Kai
 
-James
