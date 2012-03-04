@@ -1,52 +1,22 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 3.3-rc5
-Date: Sat, 03 Mar 2012 18:34:35 -0600
-Message-ID: <1330821275.15243.6.camel@dabdike.int.hansenpartnership.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command to
+ the host
+Date: Sun, 4 Mar 2012 04:12:25 -0500
+Message-ID: <20120304091225.GA27297@infradead.org>
+References: <1330721347-26781-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1330721347-26781-1-git-send-email-kys@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-There's just a single fix in here: the osd max device number fix.
+On Fri, Mar 02, 2012 at 12:49:07PM -0800, K. Y. Srinivasan wrote:
+> Windows hosts don't handle the ATA_16 command; don't pass it to the host.
 
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git scsi-fixes
-
-The short changelog is
-
-Boaz Harrosh (1):
-      osd_uld: Bump MAX_OSD_DEVICES from 64 to 1,048,576
-
-The diffstat is:
-
- drivers/scsi/osd/osd_uld.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-And the complete diff is below.
-
-James
-
----
-
-diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-index b31a8e3..d4ed9eb 100644
---- a/drivers/scsi/osd/osd_uld.c
-+++ b/drivers/scsi/osd/osd_uld.c
-@@ -69,10 +69,10 @@
- #ifndef SCSI_OSD_MAJOR
- #  define SCSI_OSD_MAJOR 260
- #endif
--#define SCSI_OSD_MAX_MINOR 64
-+#define SCSI_OSD_MAX_MINOR MINORMASK
- 
- static const char osd_name[] = "osd";
--static const char *osd_version_string = "open-osd 0.2.0";
-+static const char *osd_version_string = "open-osd 0.2.1";
- 
- MODULE_AUTHOR("Boaz Harrosh <bharrosh@panasas.com>");
- MODULE_DESCRIPTION("open-osd Upper-Layer-Driver osd.ko");
+Most devices don't handle it, and answer with and unsupported opcode
+sense reason.  If hyperv iis buggy enough to crap out on it please add
+a comment explaining that.
