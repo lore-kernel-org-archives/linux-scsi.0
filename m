@@ -1,57 +1,59 @@
-From: <nagalakshmi.nandigama@lsi.com>
-Subject: [RESEND PATCH] mptsas: Fixed code to check whether the LU type is SSC or not for SILI bit in READ_6 and READ_16 CDB
-Date: Mon, 5 Mar 2012 10:24:31 +0530
-Message-ID: <201203050453.q254rqa5002619@milmhbs0.lsil.com>
+From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Subject: Re: [PATCH 00/18, v2] Make ib_srp better suited for H.A. purposes
+Date: Mon, 05 Mar 2012 01:13:28 -0500
+Message-ID: <1330928009.31361.9.camel@obelisk.thedillows.org>
+References: <3109536.qySrY1Ts3e@asus>
+	 <1326579013.8227.4.camel@obelisk.thedillows.org>
+	 <CAO+b5-qv0LRFZ3QkyS+bFXF7Sx7WPeqgSX3q5Ph-jCFKNU0uCw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:57516 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755083Ab2CEEx4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Mar 2012 23:53:56 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAO+b5-qv0LRFZ3QkyS+bFXF7Sx7WPeqgSX3q5Ph-jCFKNU0uCw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: stable@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: jejb@kernel.org
 
-This SILI bit (suppress incorrect length indicator) is defined only for SSC
-READ(6) and READ(16) commands. For other device types bit is part of LBA
-field. In the current implementation, it is not checked whether the logical
-unit is a SSC device.
+On Sun, 2012-01-15 at 09:28 +0000, Bart Van Assche wrote:
+> On Sat, Jan 14, 2012 at 10:10 PM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
+> > Patch 17 (srp_transport: Add transport layer recovery support) doesn't
+> > apply with 'git am'. I haven't investigated why yet, so it may be quite
+> > simple.
+> 
+> Hmm, that's strange. As far as I can see what arrived on the
+> linux-scsi mailing list is identical to the patches I prepared, and
+> I've just checked that these apply cleanly on top of Linus' tree. By
+> the way, this patch series is available on github too:
+> http://github.com/bvanassche/linux/commits/srp-ha/
 
+I suspect it was the local Exchange server substituting spaces for the
+tabs; git am was upset with the white space damage. If you can put a URL
+in the cover letter, that will be quite helpful for future reviews.
 
-Added code for checking the LU type is SSC for SILI bit in READ_6 and READ_16 CDB 
+I'm a bit worried about the lack of comments from others about your
+changes to scsi_transport_srp.*. We really should see some ACKs from the
+SCSI guys, and while I would think they should go via James Bottomley
+rather than Roland, I don't think that going through the InfiniBand tree
+will be a real issue if James is OK with them.
 
-Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
-CC: <stable@kernel.org>
----
+However, given the lack of any comments from that side, I wonder if it
+makes any sense to contain the changes to the initiator for now, and
+then migrate the common functionality to the transport layer via the
+SCSI tree as we can get the right people's attention?
 
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 0c3ced7..266bb14 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -827,13 +827,16 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
- 				 * DID_SOFT_ERROR is set.
- 				 */
- 				if (ioc->bus_type == SPI) {
--					if ((pScsiReq->CDB[0] == READ_6  && ((pScsiReq->CDB[1] & 0x02) == 0)) ||
--					    pScsiReq->CDB[0] == READ_10 ||
--					    pScsiReq->CDB[0] == READ_12 ||
--						(pScsiReq->CDB[0] == READ_16 &&
--						((pScsiReq->CDB[1] & 0x02) == 0)) ||
--					    pScsiReq->CDB[0] == VERIFY  ||
--					    pScsiReq->CDB[0] == VERIFY_16) {
-+					if ((pScsiReq->CDB[0] == READ_6  &&
-+					((pScsiReq->CDB[1] & 0x02) == 0) &&
-+					(sc->device->type == TYPE_TAPE)) ||
-+					pScsiReq->CDB[0] == READ_10 ||
-+					pScsiReq->CDB[0] == READ_12 ||
-+					(pScsiReq->CDB[0] == READ_16 &&
-+					((pScsiReq->CDB[1] & 0x02) == 0) &&
-+					(sc->device->type == TYPE_TAPE)) ||
-+					 pScsiReq->CDB[0] == VERIFY  ||
-+					 pScsiReq->CDB[0] == VERIFY_16) {
- 						if (scsi_bufflen(sc) !=
- 							xfer_cnt) {
- 							sc->result =
+I'm not particularly happy with that approach, as I'd rather we do it
+correctly the first time, but I know people would like to see the
+improvements in the SRP initiator as well.
+
+What do others think?
+-- 
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
