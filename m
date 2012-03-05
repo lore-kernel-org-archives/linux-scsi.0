@@ -1,40 +1,47 @@
-From: Sathisha Nanjappa <sathisha.nanjappa@hp.com>
-Subject: [PATCH]     Corrected the constant in comparison to a hexadecimal.
-Date: Mon,  5 Mar 2012 12:13:19 -0800
-Message-ID: <1330978399-32081-2-git-send-email-sathisha.nanjappa@hp.com>
-References: <1330978399-32081-1-git-send-email-sathisha.nanjappa@hp.com>
+From: Yi Zou <yi.zou@intel.com>
+Subject: [PATCH] scsi_lib: rate-limit the error message from failing commands
+Date: Mon, 05 Mar 2012 12:42:42 -0800
+Message-ID: <20120305204242.6245.69668.stgit@localhost6.localdomain6>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:25853 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757494Ab2CEUNy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Mar 2012 15:13:54 -0500
-Received: from g1t0039.austin.hp.com (g1t0039.austin.hp.com [16.236.32.45])
-	by g1t0026.austin.hp.com (Postfix) with ESMTP id 27AF3C26F
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Mar 2012 20:13:54 +0000 (UTC)
-In-Reply-To: <1330978399-32081-1-git-send-email-sathisha.nanjappa@hp.com>
+Received: from mga11.intel.com ([192.55.52.93]:42680 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757724Ab2CEUZc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Mar 2012 15:25:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Sathisha Nanjappa <sathisha.nanjappa@hp.com>
+Cc: devel@open-fcoe.org
 
-    Bug 42142 - mpt2sas: Number specified in wrong base
+When performing a cable pull test w/ active stress I/O using fio over
+a dual port Intel 82599 FCoE CNA, w/ 256LUNs on one port and about 32LUNs
+on the other, it is observed that the system becomes not usable due to
+scsi-ml being busy printing the error messages for all the failing commands.
+I don't believe this problem is specific to FCoE and these commands are
+anyway failing due to link being down (DID_NO_CONNECT), just rate-limit
+the messages here to solve this issue.
+
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Cc: www.Open-FCoE.org <devel@open-fcoe.org>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 0b2c955..f9a1244 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -657,7 +657,7 @@ _base_sas_log_info(struct MPT2SAS_ADAPTER *ioc , u32 log_info)
- 		return;
- 
- 	/* eat the loginfos associated with task aborts */
--	if (ioc->ignore_loginfos && (log_info == 30050000 || log_info ==
-+	if (ioc->ignore_loginfos && (log_info == 0x30050000 || log_info ==
- 	    0x31140000 || log_info == 0x31130000))
- 		return;
- 
--- 
-1.7.7.6
+ drivers/scsi/scsi_lib.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b2c95db..e2128d9 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -934,7 +934,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	case ACTION_FAIL:
+ 		/* Give up and fail the remainder of the request */
+ 		scsi_release_buffers(cmd);
+-		if (!(req->cmd_flags & REQ_QUIET)) {
++		if (!(req->cmd_flags & REQ_QUIET) &&
++		    printk_ratelimit()) {
+ 			if (description)
+ 				scmd_printk(KERN_INFO, cmd, "%s\n",
+ 					    description);
 
