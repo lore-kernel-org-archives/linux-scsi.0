@@ -1,39 +1,29 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [RESEND PATCH] mptsas: Fixed code to check whether the LU type
- is SSC or not for SILI bit in READ_6 and READ_16 CDB
-Date: Mon, 5 Mar 2012 08:41:22 -0800
-Message-ID: <20120305164122.GC2459@kroah.com>
-References: <201203050453.q254rqa5002619@milmhbs0.lsil.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: WARNING: at block/genhd.c:1474 __disk_unblock_events+0xe1/0xf0()
+ -- should I be concerned?
+Date: Mon, 05 Mar 2012 17:56:33 +0000
+Message-ID: <4F54FE51.1010401@acm.org>
+References: <4F5379F5.6010604@msgid.tls.msk.ru> <4F545EB5.1070700@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:50650 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756940Ab2CEQxl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Mar 2012 11:53:41 -0500
-Received: by mail-pz0-f52.google.com with SMTP id p12so5333803dad.11
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Mar 2012 08:53:41 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <201203050453.q254rqa5002619@milmhbs0.lsil.com>
+Received: from relay02ant.iops.be ([212.53.4.35]:43796 "EHLO
+	relay02ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755153Ab2CER4i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Mar 2012 12:56:38 -0500
+In-Reply-To: <4F545EB5.1070700@msgid.tls.msk.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nagalakshmi.nandigama@lsi.com
-Cc: stable@vger.kernel.org, linux-scsi@vger.kernel.org, jejb@kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Mar 05, 2012 at 10:24:31AM +0530, nagalakshmi.nandigama@lsi.com wrote:
-> This SILI bit (suppress incorrect length indicator) is defined only for SSC
-> READ(6) and READ(16) commands. For other device types bit is part of LBA
-> field. In the current implementation, it is not checked whether the logical
-> unit is a SSC device.
-> 
-> 
-> Added code for checking the LU type is SSC for SILI bit in READ_6 and READ_16 CDB 
-> 
-> Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
-> CC: <stable@kernel.org>
-> ---
+On 03/05/12 06:35, Michael Tokarev wrote:
+> [   22.635290] WARNING: at block/genhd.c:1474 __disk_unblock_events+0xe1/0xf0()
 
-Note, that is NOT the stable email address, you got it right in the cc:
-for the email, but not here, please fix it.
+I've seen that warning message a few times myself, but no longer after
+having applied this patch:*[PATCH] Fix NULL pointer dereference in
+sd_revalidate_disk <http://marc.info/?t=113987361900002&r=1&w=2>*
+(http://marc.info/?l=linux-kernel&m=132987267132047).
 
-greg k-h
+Bart.
