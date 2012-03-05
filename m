@@ -1,47 +1,64 @@
-From: Yi Zou <yi.zou@intel.com>
-Subject: [PATCH] scsi_lib: rate-limit the error message from failing commands
-Date: Mon, 05 Mar 2012 12:42:42 -0800
-Message-ID: <20120305204242.6245.69668.stgit@localhost6.localdomain6>
+From: scameron@beardog.cce.hp.com
+Subject: Are these comments in scsi_host.h still true?
+Date: Mon, 5 Mar 2012 17:18:58 -0600
+Message-ID: <20120305231858.GB22578@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:42680 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757724Ab2CEUZc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:25:32 -0500
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:41615 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757584Ab2CEXS7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Mar 2012 18:18:59 -0500
+Received: from g4t0009.houston.hp.com (g4t0009.houston.hp.com [16.234.32.26])
+	by g4t0014.houston.hp.com (Postfix) with ESMTP id 291792435F
+	for <linux-scsi@vger.kernel.org>; Mon,  5 Mar 2012 23:18:59 +0000 (UTC)
+Received: from beardog.cce.hp.com (beardog.cce.hp.com [16.84.84.24])
+	by g4t0009.houston.hp.com (Postfix) with ESMTP id 1A6E2C092
+	for <linux-scsi@vger.kernel.org>; Mon,  5 Mar 2012 23:18:59 +0000 (UTC)
+Received: from beardog.cce.hp.com (beardog.cce.hp.com [127.0.0.1])
+	by beardog.cce.hp.com (8.13.8/8.13.8) with ESMTP id q25NIw6P023451
+	for <linux-scsi@vger.kernel.org>; Mon, 5 Mar 2012 17:18:58 -0600
+Received: (from scameron@localhost)
+	by beardog.cce.hp.com (8.13.8/8.13.8/Submit) id q25NIw9K023450
+	for linux-scsi@vger.kernel.org; Mon, 5 Mar 2012 17:18:58 -0600
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: devel@open-fcoe.org
 
-When performing a cable pull test w/ active stress I/O using fio over
-a dual port Intel 82599 FCoE CNA, w/ 256LUNs on one port and about 32LUNs
-on the other, it is observed that the system becomes not usable due to
-scsi-ml being busy printing the error messages for all the failing commands.
-I don't believe this problem is specific to FCoE and these commands are
-anyway failing due to link being down (DID_NO_CONNECT), just rate-limit
-the messages here to solve this issue.
 
-Signed-off-by: Yi Zou <yi.zou@intel.com>
-Cc: www.Open-FCoE.org <devel@open-fcoe.org>
----
+Is this comment from include/scsi/scsi_host.h still true?
 
- drivers/scsi/scsi_lib.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+        /*
+         * This is an error handling strategy routine.  You don't need to
+         * define one of these if you don't want to - there is a default
+         * routine that is present that should work in most cases.  For those
+         * driver authors that have the inclination and ability to write their
+         * own strategy routine, this is where it is specified.  Note - the
+---->    * strategy routine is *ALWAYS* run in the context of the kernel eh
+---->    * thread.  Thus you are guaranteed to *NOT* be in an interrupt
+---->    * handler when you execute this, and you are also guaranteed to
+---->    * *NOT* have any other commands being queued while you are in the
+         * strategy routine. When you return from this function, operations
+         * return to normal.
+         *
+         * See scsi_error.c scsi_unjam_host for additional comments about
+         * what this function should and should not be attempting to do.
+         *
+         * Status: REQUIRED     (at least one of them)
+         */
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b2c95db..e2128d9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -934,7 +934,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	case ACTION_FAIL:
- 		/* Give up and fail the remainder of the request */
- 		scsi_release_buffers(cmd);
--		if (!(req->cmd_flags & REQ_QUIET)) {
-+		if (!(req->cmd_flags & REQ_QUIET) &&
-+		    printk_ratelimit()) {
- 			if (description)
- 				scmd_printk(KERN_INFO, cmd, "%s\n",
- 					    description);
+Also what about this, about scsi_unjam_host() from scsi_error.c?
+
+ * Notes:
+ *    When we come in here, we *know* that all commands on the bus have
+ *    either completed, failed or timed out.  we also know that no further
+ *    commands are being sent to the host, so things are relatively quiet
+ *    and we have freedom to fiddle with things as we wish.
+
+I'm not seeing what code makes sure those are true.
+
+Thanks,
+
+-- steve
 
