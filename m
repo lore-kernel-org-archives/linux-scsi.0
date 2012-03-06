@@ -1,44 +1,44 @@
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [BUG] scsi_device.device == NULL in sd_revalidate_disk()
-Date: Mon, 5 Mar 2012 16:11:46 -0800
-Message-ID: <20120306001146.GA31227@localhost>
-References: <20120305234133.GA13690@localhost>
- <CA+5PVA4axkm-S5-E1pnkgNpDLy3DHegFL2Cfo2i-8HOsfGMHDw@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 10/11] qla4xxx: Added ping support
+Date: Mon, 05 Mar 2012 20:49:37 -0600
+Message-ID: <4F557B41.5010703@cs.wisc.edu>
+References: <1329138050-1042-1-git-send-email-vikas.chaudhary@qlogic.com> <1329138050-1042-11-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA+5PVA4axkm-S5-E1pnkgNpDLy3DHegFL2Cfo2i-8HOsfGMHDw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Josh Boyer <jwboyer@gmail.com>
-Cc: "linux-fsdevel@vger.kernel.o..." <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:43846 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030241Ab2CFCtr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Mar 2012 21:49:47 -0500
+In-Reply-To: <1329138050-1042-11-git-send-email-vikas.chaudhary@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vikas.chaudhary@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, lalit.chandivade@qlogic.com
 
-On Mon, Mar 05, 2012 at 07:02:08PM -0500, Josh Boyer wrote:
-> On Mon, Mar 5, 2012 at 6:41 PM, Fengguang Wu <fengguang.wu@intel.com>=
- wrote:
-> > Hi,
-> >
-> > I ran into a NULL dereference bug on USB key hot remove, which shou=
-ld
-> > be caused by the below skdp->device reference
-> >
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0static int sd_revalidate_disk(struct gen=
-disk *disk)
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0{
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct scsi_=
-disk *sdkp =3D scsi_disk(disk);
-> > =3D=3D> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct scsi_devic=
-e *sdp =3D sdkp->device;
->=20
-> This has been reported numerous times.  There are patches to the bloc=
-k layer
-> that are supposed to fix it, but they haven't hit Linus' tree yet.  I=
- think
-> we're waiting on Jens to push them.
+On 02/13/2012 07:00 AM, vikas.chaudhary@qlogic.com wrote:
+> +
+> +		if (mbox_sts_entry->out_mbox[0] == MBOX_STS_COMMAND_COMPLETE)
+> +			status = QLA_SUCCESS;
+> +		else
+> +			status = QLA_ERROR;
+> +
+> +		data_size = sizeof(mbox_sts_entry->out_mbox);
+> +
+> +		qla4xxx_post_ping_evt_work(ha, status, mrb->pid, data_size,
+> +					(uint8_t *) mbox_sts_entry->out_mbox);
+> +		break;
+> +
 
-OK, thanks for the information!
+Not sure what I was thinking. This is not going to work.
 
-Thanks,
-=46engguang
+We are not going to pass back vendor specific values, and then have
+multiple decoders in userspace.
+
+What are you trying to pass back up to userspace? Can you add a enum or
+defines for some common error values? We can also pass back vendor
+specific info, but we have to also have some common error cls info or it
+is completely useless to other apps.
+
+And, can we get more info that if it failed or not?
