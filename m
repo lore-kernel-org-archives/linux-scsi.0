@@ -1,70 +1,68 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] iscsi class: fix gfp use in ping compl and host event
-Date: Tue,  6 Mar 2012 16:09:01 -0600
-Message-ID: <1331071741-5951-1-git-send-email-michaelc@cs.wisc.edu>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: Are these comments in scsi_host.h still true?
+Date: Tue, 06 Mar 2012 17:07:16 -0600
+Message-ID: <4F5698A4.5090306@cs.wisc.edu>
+References: <20120305231858.GB22578@beardog.cce.hp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31131 "EHLO mx1.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:45897 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758988Ab2CFWJK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:09:10 -0500
+	id S1031456Ab2CFXKp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Mar 2012 18:10:45 -0500
+In-Reply-To: <20120305231858.GB22578@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: scameron@beardog.cce.hp.com
+Cc: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On 03/05/2012 05:18 PM, scameron@beardog.cce.hp.com wrote:
+> 
+> Is this comment from include/scsi/scsi_host.h still true?
+> 
+>         /*
+>          * This is an error handling strategy routine.  You don't need to
+>          * define one of these if you don't want to - there is a default
+>          * routine that is present that should work in most cases.  For those
+>          * driver authors that have the inclination and ability to write their
+>          * own strategy routine, this is where it is specified.  Note - the
+> ---->    * strategy routine is *ALWAYS* run in the context of the kernel eh
+> ---->    * thread.  Thus you are guaranteed to *NOT* be in an interrupt
+> ---->    * handler when you execute this, and you are also guaranteed to
+> ---->    * *NOT* have any other commands being queued while you are in the
+>          * strategy routine. When you return from this function, operations
+>          * return to normal.
+>          *
+>          * See scsi_error.c scsi_unjam_host for additional comments about
+>          * what this function should and should not be attempting to do.
+>          *
+>          * Status: REQUIRED     (at least one of them)
+>          */
+> 
+> Also what about this, about scsi_unjam_host() from scsi_error.c?
+> 
+>  * Notes:
+>  *    When we come in here, we *know* that all commands on the bus have
+>  *    either completed, failed or timed out.  we also know that no further
+>  *    commands are being sent to the host, so things are relatively quiet
+>  *    and we have freedom to fiddle with things as we wish.
+> 
+> I'm not seeing what code makes sure those are true.
+> 
 
-If a ping or host event were to occur when memory is low
-we do not want to use GFP_KERNEL, because the paths
-sending them cannot block for data to be written. These
-paths might be needed to recover write paths. Use GFP_NOIO
-instead.
+For the strategy handler/unjam case this is true. See scsi_times_out ->
+scsi_eh_scmd_add. That will set the host state so not new commands are
+stated and will begin the process of making sure that commands are
+either timedout or completed. See the host_busy and host_failed checks
+in scsi_error.c. Those will prevent the scsi eh unjam stuff from
+starting when commands not completed or timedout (host_busy is
+incremented in scsi_request_fn when commands are queued).
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/scsi_transport_iscsi.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index fac3173..1cf640e 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1486,7 +1486,7 @@ void iscsi_post_host_event(uint32_t host_no, struct iscsi_transport *transport,
- 	struct iscsi_uevent *ev;
- 	int len = NLMSG_SPACE(sizeof(*ev) + data_size);
- 
--	skb = alloc_skb(len, GFP_KERNEL);
-+	skb = alloc_skb(len, GFP_NOIO);
- 	if (!skb) {
- 		printk(KERN_ERR "gracefully ignored host event (%d):%d OOM\n",
- 		       host_no, code);
-@@ -1504,7 +1504,7 @@ void iscsi_post_host_event(uint32_t host_no, struct iscsi_transport *transport,
- 	if (data_size)
- 		memcpy((char *)ev + sizeof(*ev), data, data_size);
- 
--	iscsi_multicast_skb(skb, ISCSI_NL_GRP_ISCSID, GFP_KERNEL);
-+	iscsi_multicast_skb(skb, ISCSI_NL_GRP_ISCSID, GFP_NOIO);
- }
- EXPORT_SYMBOL_GPL(iscsi_post_host_event);
- 
-@@ -1517,7 +1517,7 @@ void iscsi_ping_comp_event(uint32_t host_no, struct iscsi_transport *transport,
- 	struct iscsi_uevent *ev;
- 	int len = NLMSG_SPACE(sizeof(*ev) + data_size);
- 
--	skb = alloc_skb(len, GFP_KERNEL);
-+	skb = alloc_skb(len, GFP_NOIO);
- 	if (!skb) {
- 		printk(KERN_ERR "gracefully ignored ping comp: OOM\n");
- 		return;
-@@ -1533,7 +1533,7 @@ void iscsi_ping_comp_event(uint32_t host_no, struct iscsi_transport *transport,
- 	ev->r.ping_comp.data_size = data_size;
- 	memcpy((char *)ev + sizeof(*ev), data, data_size);
- 
--	iscsi_multicast_skb(skb, ISCSI_NL_GRP_ISCSID, GFP_KERNEL);
-+	iscsi_multicast_skb(skb, ISCSI_NL_GRP_ISCSID, GFP_NOIO);
- }
- EXPORT_SYMBOL_GPL(iscsi_ping_comp_event);
- 
--- 
-1.7.7.6
-
+However, some of your eh callbacks can be called while IO is still
+running. If you did sg_reset /dev/sda for example, that calls
+scsi_nonblockable_ioctl and that prevents new IOs from coming in
+(scsi_reset_provider sets the tmf_in_progress flag which is checked in
+scsi_host_queue_ready's scsi_host_in_recovery call). But in this path we
+do not wait for all IO to timeout or complete like we do in the
+unjam/strategy handler cases.
