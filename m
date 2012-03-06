@@ -1,50 +1,67 @@
-From: santosh nayak <santoshprasadnayak@gmail.com>
-Subject: [PATCH] [SCSI] bfa: Fix endian bug in bfad_iocmd_debug_fw_core().
-Date: Tue,  6 Mar 2012 22:36:59 +0530
-Message-ID: <1331053619-7211-1-git-send-email-santoshprasadnayak@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: huangj@brocade.com
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Santosh Nayak <santoshprasadnayak@gmail.com>
+From: "Zou, Yi" <yi.zou@intel.com>
+Subject: RE: [PATCH] scsi_lib: rate-limit the error message from failing
+ commands
+Date: Tue, 6 Mar 2012 17:10:40 +0000
+Message-ID: <138EA028228D124A900F5E6746F3C21605C5973A@ORSMSX102.amr.corp.intel.com>
+References: <20120305204242.6245.69668.stgit@localhost6.localdomain6>
+ <4F562FD8.6040504@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:4889 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751453Ab2CFRKn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Mar 2012 12:10:43 -0500
+In-Reply-To: <4F562FD8.6040504@redhat.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-From: Santosh Nayak <santoshprasadnayak@gmail.com>
-
-Casting pointer from native data type to other type is
-endian-sensitive.
-
-"iocmd->offset"  is 64 bit but we use only first 32 bit.
-It works in little-endian system but in big-endian system
-it will break.
-
-Signed-off-by: Santosh Nayak <santoshprasadnayak@gmail.com>
----
- drivers/scsi/bfa/bfad_bsg.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 530de2b..c4edc63 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -1918,6 +1918,7 @@ bfad_iocmd_debug_fw_core(struct bfad_s *bfad, void *cmd,
- 	struct bfa_bsg_debug_s *iocmd = (struct bfa_bsg_debug_s *)cmd;
- 	void	*iocmd_bufptr;
- 	unsigned long	flags;
-+	u32 offset;
- 
- 	if (bfad_chk_iocmd_sz(payload_len, sizeof(struct bfa_bsg_debug_s),
- 			BFA_DEBUG_FW_CORE_CHUNK_SZ) != BFA_STATUS_OK) {
-@@ -1935,8 +1936,10 @@ bfad_iocmd_debug_fw_core(struct bfad_s *bfad, void *cmd,
- 
- 	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_debug_s);
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	offset = iocmd->offset;
- 	iocmd->status = bfa_ioc_debug_fwcore(&bfad->bfa.ioc, iocmd_bufptr,
--				(u32 *)&iocmd->offset, &iocmd->bufsz);
-+				&offset, &iocmd->bufsz);
-+	iocmd->offset = offset;
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- out:
- 	return 0;
--- 
-1.7.4.4
+PiANCj4gT24gMDMvMDUvMjAxMiAwOTo0MiBQTSwgWWkgWm91IHdyb3RlOg0KPiA+IFdoZW4gcGVy
+Zm9ybWluZyBhIGNhYmxlIHB1bGwgdGVzdCB3LyBhY3RpdmUgc3RyZXNzIEkvTyB1c2luZyBmaW8g
+b3Zlcg0KPiA+IGEgZHVhbCBwb3J0IEludGVsIDgyNTk5IEZDb0UgQ05BLCB3LyAyNTZMVU5zIG9u
+IG9uZSBwb3J0IGFuZCBhYm91dA0KPiAzMkxVTnMNCj4gPiBvbiB0aGUgb3RoZXIsIGl0IGlzIG9i
+c2VydmVkIHRoYXQgdGhlIHN5c3RlbSBiZWNvbWVzIG5vdCB1c2FibGUgZHVlIHRvDQo+ID4gc2Nz
+aS1tbCBiZWluZyBidXN5IHByaW50aW5nIHRoZSBlcnJvciBtZXNzYWdlcyBmb3IgYWxsIHRoZSBm
+YWlsaW5nDQo+IGNvbW1hbmRzLg0KPiA+IEkgZG9uJ3QgYmVsaWV2ZSB0aGlzIHByb2JsZW0gaXMg
+c3BlY2lmaWMgdG8gRkNvRSBhbmQgdGhlc2UgY29tbWFuZHMgYXJlDQo+ID4gYW55d2F5IGZhaWxp
+bmcgZHVlIHRvIGxpbmsgYmVpbmcgZG93biAoRElEX05PX0NPTk5FQ1QpLCBqdXN0IHJhdGUtbGlt
+aXQNCj4gPiB0aGUgbWVzc2FnZXMgaGVyZSB0byBzb2x2ZSB0aGlzIGlzc3VlLg0KPiA+DQo+ID4g
+U2lnbmVkLW9mZi1ieTogWWkgWm91IDx5aS56b3VAaW50ZWwuY29tPg0KPiA+IENjOiB3d3cuT3Bl
+bi1GQ29FLm9yZyA8ZGV2ZWxAb3Blbi1mY29lLm9yZz4NCj4gSGkgWm91LA0KPiB5b3Ugc2hvdWxk
+bid0IHVzZSBwcmludGtfcmF0ZWxpbWl0IC4NCj4gY2hlY2twYXRjaCBzYXlzOiAgV0FSTklORzog
+UHJlZmVyIHByaW50a19yYXRlbGltaXRlZCBvcg0KPiBwcl88bGV2ZWw+X3JhdGVsaW1pdGVkIHRv
+IHByaW50a19yYXRlbGltaXQNCj4gVG9tYXMNCg0KWWVzLCBJIHNhdyB0aGF0IHdoZW4gSSBkaWQg
+dGhlIGNoZWNrcGF0Y2gsIGJ1dCBwcmF0ZWtfcmF0ZWxpbWl0KCkgYWN0dWFsbHkNCnNlcnZlcyB0
+aGUgcHVycG9zZSBiZXR0ZXIsIGFzIGl0IGd1YXJkcyB0aGUgYmxvY2sgb2YgdGhlIHNldmVyYWwg
+c2NzaSByZWxhdGVkDQpwcmludHMgdGhhdCBmb2xsb3csIGFuZCB0aGlzIHdvcmtzIHdlbGwgcGFy
+dGljdWxhcmx5IGZvciB0aGlzIGJ1Zy4gRm9yIHRoZSB3b3JzdA0KY2FzZSwgdGhlIHNoYXJlZCBy
+YXRlbGltaXQgc3VycHJlc3NlcyBldmVyeXRoaW5nIGhlcmUsIGJsayBpL28gZXJyb3IgcmVwb3J0
+DQp3b3VsZCBzdGlsbCBiZSBhYmxlIHBpY2sgdXAgcHJpbnRpbmcgc29tZXRoaW5nLg0KDQpJZiBp
+dCBpcyBkZXNpcmVkLCB3aGljaCBJIGRvdWJ0LCBJIGNvdWxkIGNoYW5nZSBhbGwgc2NtZF9wcmlu
+dGssIHNjc2lfcHJpbnRfeHh4eA0KY2FsbHMgdG8gdXNlIHByaW50a19yYXRlbGltaXRlZCgpLCBz
+ZWVtcyBhbiBvdmVya2lsbCBmb3IgdGhpcyB0byBtZS4gSSBhbSBvcGVuDQpmb3IgYSBiZXR0ZXIg
+c29sdXRpb24uDQoNCnlpDQoNCj4gDQo+ID4gLS0tDQo+ID4NCj4gPiAgZHJpdmVycy9zY3NpL3Nj
+c2lfbGliLmMgfCAgICAzICsrLQ0KPiA+ICAxIGZpbGVzIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygr
+KSwgMSBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2Nz
+aV9saWIuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+ID4gaW5kZXggYjJjOTVkYi4uZTIx
+MjhkOSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiA+ICsrKyBi
+L2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+ID4gQEAgLTkzNCw3ICs5MzQsOCBAQCB2b2lkIHNj
+c2lfaW9fY29tcGxldGlvbihzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQsDQo+IHVuc2lnbmVkIGludCBn
+b29kX2J5dGVzKQ0KPiA+ICAJY2FzZSBBQ1RJT05fRkFJTDoNCj4gPiAgCQkvKiBHaXZlIHVwIGFu
+ZCBmYWlsIHRoZSByZW1haW5kZXIgb2YgdGhlIHJlcXVlc3QgKi8NCj4gPiAgCQlzY3NpX3JlbGVh
+c2VfYnVmZmVycyhjbWQpOw0KPiA+IC0JCWlmICghKHJlcS0+Y21kX2ZsYWdzICYgUkVRX1FVSUVU
+KSkgew0KPiA+ICsJCWlmICghKHJlcS0+Y21kX2ZsYWdzICYgUkVRX1FVSUVUKSAmJg0KPiA+ICsJ
+CSAgICBwcmludGtfcmF0ZWxpbWl0KCkpIHsNCj4gPiAgCQkJaWYgKGRlc2NyaXB0aW9uKQ0KPiA+
+ICAJCQkJc2NtZF9wcmludGsoS0VSTl9JTkZPLCBjbWQsICIlc1xuIiwNCj4gPiAgCQkJCQkgICAg
+ZGVzY3JpcHRpb24pOw0KPiA+DQo+ID4gLS0NCj4gPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMg
+bGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSINCj4gaW4NCj4gPiB0
+aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiA+IE1v
+cmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWlu
+Zm8uaHRtbA0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQg
+dGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVz
+c2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8g
+YXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
