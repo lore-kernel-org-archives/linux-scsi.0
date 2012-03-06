@@ -1,67 +1,112 @@
-From: "Zou, Yi" <yi.zou@intel.com>
-Subject: RE: [PATCH] scsi_lib: rate-limit the error message from failing
- commands
-Date: Tue, 6 Mar 2012 17:10:40 +0000
-Message-ID: <138EA028228D124A900F5E6746F3C21605C5973A@ORSMSX102.amr.corp.intel.com>
-References: <20120305204242.6245.69668.stgit@localhost6.localdomain6>
- <4F562FD8.6040504@redhat.com>
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Subject: Re: [PATCH 2/2] scsi: retrieve cache mode using ATA_16 cmd if normal
+ routine fails
+Date: Tue, 6 Mar 2012 23:08:57 +0530
+Message-ID: <CADDb1s0rhEDnRunexnEyL3htpkN+Fu4P7cKJjiZr_s-F48J57g@mail.gmail.com>
+References: <1329375141-6944-1-git-send-email-amit.sahrawat83@gmail.com>
+	<1329398881.2893.8.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:4889 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751453Ab2CFRKn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Mar 2012 12:10:43 -0500
-In-Reply-To: <4F562FD8.6040504@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1329398881.2893.8.camel@dabdike>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Nam-Jae Jeon <namjae.jeon@samsung.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Amit Sahrawat <a.sahrawat@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-PiANCj4gT24gMDMvMDUvMjAxMiAwOTo0MiBQTSwgWWkgWm91IHdyb3RlOg0KPiA+IFdoZW4gcGVy
-Zm9ybWluZyBhIGNhYmxlIHB1bGwgdGVzdCB3LyBhY3RpdmUgc3RyZXNzIEkvTyB1c2luZyBmaW8g
-b3Zlcg0KPiA+IGEgZHVhbCBwb3J0IEludGVsIDgyNTk5IEZDb0UgQ05BLCB3LyAyNTZMVU5zIG9u
-IG9uZSBwb3J0IGFuZCBhYm91dA0KPiAzMkxVTnMNCj4gPiBvbiB0aGUgb3RoZXIsIGl0IGlzIG9i
-c2VydmVkIHRoYXQgdGhlIHN5c3RlbSBiZWNvbWVzIG5vdCB1c2FibGUgZHVlIHRvDQo+ID4gc2Nz
-aS1tbCBiZWluZyBidXN5IHByaW50aW5nIHRoZSBlcnJvciBtZXNzYWdlcyBmb3IgYWxsIHRoZSBm
-YWlsaW5nDQo+IGNvbW1hbmRzLg0KPiA+IEkgZG9uJ3QgYmVsaWV2ZSB0aGlzIHByb2JsZW0gaXMg
-c3BlY2lmaWMgdG8gRkNvRSBhbmQgdGhlc2UgY29tbWFuZHMgYXJlDQo+ID4gYW55d2F5IGZhaWxp
-bmcgZHVlIHRvIGxpbmsgYmVpbmcgZG93biAoRElEX05PX0NPTk5FQ1QpLCBqdXN0IHJhdGUtbGlt
-aXQNCj4gPiB0aGUgbWVzc2FnZXMgaGVyZSB0byBzb2x2ZSB0aGlzIGlzc3VlLg0KPiA+DQo+ID4g
-U2lnbmVkLW9mZi1ieTogWWkgWm91IDx5aS56b3VAaW50ZWwuY29tPg0KPiA+IENjOiB3d3cuT3Bl
-bi1GQ29FLm9yZyA8ZGV2ZWxAb3Blbi1mY29lLm9yZz4NCj4gSGkgWm91LA0KPiB5b3Ugc2hvdWxk
-bid0IHVzZSBwcmludGtfcmF0ZWxpbWl0IC4NCj4gY2hlY2twYXRjaCBzYXlzOiAgV0FSTklORzog
-UHJlZmVyIHByaW50a19yYXRlbGltaXRlZCBvcg0KPiBwcl88bGV2ZWw+X3JhdGVsaW1pdGVkIHRv
-IHByaW50a19yYXRlbGltaXQNCj4gVG9tYXMNCg0KWWVzLCBJIHNhdyB0aGF0IHdoZW4gSSBkaWQg
-dGhlIGNoZWNrcGF0Y2gsIGJ1dCBwcmF0ZWtfcmF0ZWxpbWl0KCkgYWN0dWFsbHkNCnNlcnZlcyB0
-aGUgcHVycG9zZSBiZXR0ZXIsIGFzIGl0IGd1YXJkcyB0aGUgYmxvY2sgb2YgdGhlIHNldmVyYWwg
-c2NzaSByZWxhdGVkDQpwcmludHMgdGhhdCBmb2xsb3csIGFuZCB0aGlzIHdvcmtzIHdlbGwgcGFy
-dGljdWxhcmx5IGZvciB0aGlzIGJ1Zy4gRm9yIHRoZSB3b3JzdA0KY2FzZSwgdGhlIHNoYXJlZCBy
-YXRlbGltaXQgc3VycHJlc3NlcyBldmVyeXRoaW5nIGhlcmUsIGJsayBpL28gZXJyb3IgcmVwb3J0
-DQp3b3VsZCBzdGlsbCBiZSBhYmxlIHBpY2sgdXAgcHJpbnRpbmcgc29tZXRoaW5nLg0KDQpJZiBp
-dCBpcyBkZXNpcmVkLCB3aGljaCBJIGRvdWJ0LCBJIGNvdWxkIGNoYW5nZSBhbGwgc2NtZF9wcmlu
-dGssIHNjc2lfcHJpbnRfeHh4eA0KY2FsbHMgdG8gdXNlIHByaW50a19yYXRlbGltaXRlZCgpLCBz
-ZWVtcyBhbiBvdmVya2lsbCBmb3IgdGhpcyB0byBtZS4gSSBhbSBvcGVuDQpmb3IgYSBiZXR0ZXIg
-c29sdXRpb24uDQoNCnlpDQoNCj4gDQo+ID4gLS0tDQo+ID4NCj4gPiAgZHJpdmVycy9zY3NpL3Nj
-c2lfbGliLmMgfCAgICAzICsrLQ0KPiA+ICAxIGZpbGVzIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygr
-KSwgMSBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2Nz
-aV9saWIuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+ID4gaW5kZXggYjJjOTVkYi4uZTIx
-MjhkOSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiA+ICsrKyBi
-L2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+ID4gQEAgLTkzNCw3ICs5MzQsOCBAQCB2b2lkIHNj
-c2lfaW9fY29tcGxldGlvbihzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQsDQo+IHVuc2lnbmVkIGludCBn
-b29kX2J5dGVzKQ0KPiA+ICAJY2FzZSBBQ1RJT05fRkFJTDoNCj4gPiAgCQkvKiBHaXZlIHVwIGFu
-ZCBmYWlsIHRoZSByZW1haW5kZXIgb2YgdGhlIHJlcXVlc3QgKi8NCj4gPiAgCQlzY3NpX3JlbGVh
-c2VfYnVmZmVycyhjbWQpOw0KPiA+IC0JCWlmICghKHJlcS0+Y21kX2ZsYWdzICYgUkVRX1FVSUVU
-KSkgew0KPiA+ICsJCWlmICghKHJlcS0+Y21kX2ZsYWdzICYgUkVRX1FVSUVUKSAmJg0KPiA+ICsJ
-CSAgICBwcmludGtfcmF0ZWxpbWl0KCkpIHsNCj4gPiAgCQkJaWYgKGRlc2NyaXB0aW9uKQ0KPiA+
-ICAJCQkJc2NtZF9wcmludGsoS0VSTl9JTkZPLCBjbWQsICIlc1xuIiwNCj4gPiAgCQkJCQkgICAg
-ZGVzY3JpcHRpb24pOw0KPiA+DQo+ID4gLS0NCj4gPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMg
-bGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSINCj4gaW4NCj4gPiB0
-aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiA+IE1v
-cmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWlu
-Zm8uaHRtbA0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQg
-dGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVz
-c2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8g
-YXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+Hi James,
+
+=46ew queries relating to solution for this long pending problem.
+As per your suggestions - it is clear - we cannot have this as part of
+default routine to retrieve WCE using ATA - as for some USB HDD - it
+will result in halting their operations.
+So,
+1) USB quirks -> i think this will only be a workaround for few USB
+hard disks - wherein we can their add their entries in the quirks list
+and control this WC. So, this wont be a solution which can be used as
+part of a long term solution.
+2) As part of 'sysfs' interface - there is already an array for
+cache_types in sd.c - Can we make an entry in this array for "write
+back(ata cmd)" and make corresponding changes - to reflect this when
+we do " echo "write back(ata cmd) >
+/sys/class/scsi_disk/<>/cache_type".
+So, these changes won't be part of default routine - but this will
+still need minor changes in sd.c - will those changes be acceptable?
+sd_store_cache_type()->revalidate_disk()->sd_revalidate_disk()->sd_read=
+_cache_type()
+
+Please share your opinion to bring out a solution to this.
+
+Thanks & Regards,
+Amit Sahrawat
+
+On Thu, Feb 16, 2012 at 6:58 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Thu, 2012-02-16 at 12:22 +0530, Amit Sahrawat wrote:
+>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index c691fb5..3ca507a 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -50,6 +50,11 @@
+>> =A0#include <linux/string_helpers.h>
+>> =A0#include <linux/async.h>
+>> =A0#include <linux/slab.h>
+>> +
+>> +#ifdef CONFIG_ATA
+>> +#include <linux/libata.h>
+>> +#endif
+>> +
+>> =A0#include <linux/pm_runtime.h>
+>> =A0#include <asm/uaccess.h>
+>> =A0#include <asm/unaligned.h>
+>> @@ -2129,7 +2134,11 @@ sd_read_cache_type(struct scsi_disk *sdkp, un=
+signed char *buffer)
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (modepage =3D=3D 0x3F) {
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sd_printk(KERN_ERR, sdkp=
+, "No Caching mode page "
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "pre=
+sent\n");
+>> +#ifdef CONFIG_ATA
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto WCE_USING_ATA;
+>> +#else
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto defaults;
+>> +#endif
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 } else if ((buffer[offset] & 0x3f) !=3D =
+modepage) {
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sd_printk(KERN_ERR, sdkp=
+, "Got wrong page\n");
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto defaults;
+>> @@ -2149,6 +2158,15 @@ sd_read_cache_type(struct scsi_disk *sdkp, un=
+signed char *buffer)
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "Use=
+s READ/WRITE(6), disabling FUA\n");
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sdkp->DPOFUA =3D 0;
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+>> +#ifdef CONFIG_ATA
+>> +WCE_USING_ATA:
+>> + =A0 =A0 =A0 =A0 =A0 =A0 if (!sdp->removable && !sdkp->WCE) {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sd_printk(KERN_NOTICE, sdk=
+p, "Try to check write cache"
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 " enable/d=
+isable using ATA command\n");
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sdkp->WCE =3D ata_get_cach=
+estatus(sdp);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 }
+>> +#endif
+>> +
+>
+> I already said before, this is a non starter: we can't randomly send
+> SCSI encapsulated ATA commands to disks from sd. =A0What we can do is=
+ give
+> you a WCE variable you can change on the fly in sysfs via whatever
+> mechanism is most appropriate (but this would have to be a mechanism
+> external to sd.c).
+>
+> Alternatively, you can co-opt the USB quirks handling to set it for y=
+ou.
+>
+> James
+>
+>
