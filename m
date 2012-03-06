@@ -1,44 +1,57 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 10/11] qla4xxx: Added ping support
-Date: Mon, 05 Mar 2012 20:49:37 -0600
-Message-ID: <4F557B41.5010703@cs.wisc.edu>
-References: <1329138050-1042-1-git-send-email-vikas.chaudhary@qlogic.com> <1329138050-1042-11-git-send-email-vikas.chaudhary@qlogic.com>
+From: <nagalakshmi.nandigama@lsi.com>
+Subject: [RESEND PATCH] mptsas: Fixed code to check whether the LU type is SSC or not for SILI bit in READ_6 and READ_16 CDB
+Date: Tue, 6 Mar 2012 12:16:07 +0530
+Message-ID: <201203060645.q266jR8Y026994@milmhbs0.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43846 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030241Ab2CFCtr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Mar 2012 21:49:47 -0500
-In-Reply-To: <1329138050-1042-11-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:48442 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752776Ab2CFGr2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Mar 2012 01:47:28 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, lalit.chandivade@qlogic.com
+To: stable@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: jejb@kernel.org
 
-On 02/13/2012 07:00 AM, vikas.chaudhary@qlogic.com wrote:
-> +
-> +		if (mbox_sts_entry->out_mbox[0] == MBOX_STS_COMMAND_COMPLETE)
-> +			status = QLA_SUCCESS;
-> +		else
-> +			status = QLA_ERROR;
-> +
-> +		data_size = sizeof(mbox_sts_entry->out_mbox);
-> +
-> +		qla4xxx_post_ping_evt_work(ha, status, mrb->pid, data_size,
-> +					(uint8_t *) mbox_sts_entry->out_mbox);
-> +		break;
-> +
+This SILI bit (suppress incorrect length indicator) is defined only for SSC
+READ(6) and READ(16) commands. For other device types bit is part of LBA
+field. In the current implementation, it is not checked whether the logical
+unit is a SSC device.
 
-Not sure what I was thinking. This is not going to work.
 
-We are not going to pass back vendor specific values, and then have
-multiple decoders in userspace.
+Added code for checking the LU type is SSC for SILI bit in READ_6 and READ_16 CDB 
 
-What are you trying to pass back up to userspace? Can you add a enum or
-defines for some common error values? We can also pass back vendor
-specific info, but we have to also have some common error cls info or it
-is completely useless to other apps.
+Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+CC: stable@vger.kernel.org
+---
 
-And, can we get more info that if it failed or not?
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index 0c3ced7..266bb14 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -827,13 +827,16 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
+ 				 * DID_SOFT_ERROR is set.
+ 				 */
+ 				if (ioc->bus_type == SPI) {
+-					if ((pScsiReq->CDB[0] == READ_6  && ((pScsiReq->CDB[1] & 0x02) == 0)) ||
+-					    pScsiReq->CDB[0] == READ_10 ||
+-					    pScsiReq->CDB[0] == READ_12 ||
+-						(pScsiReq->CDB[0] == READ_16 &&
+-						((pScsiReq->CDB[1] & 0x02) == 0)) ||
+-					    pScsiReq->CDB[0] == VERIFY  ||
+-					    pScsiReq->CDB[0] == VERIFY_16) {
++					if ((pScsiReq->CDB[0] == READ_6  &&
++					((pScsiReq->CDB[1] & 0x02) == 0) &&
++					(sc->device->type == TYPE_TAPE)) ||
++					pScsiReq->CDB[0] == READ_10 ||
++					pScsiReq->CDB[0] == READ_12 ||
++					(pScsiReq->CDB[0] == READ_16 &&
++					((pScsiReq->CDB[1] & 0x02) == 0) &&
++					(sc->device->type == TYPE_TAPE)) ||
++					 pScsiReq->CDB[0] == VERIFY  ||
++					 pScsiReq->CDB[0] == VERIFY_16) {
+ 						if (scsi_bufflen(sc) !=
+ 							xfer_cnt) {
+ 							sc->result =
