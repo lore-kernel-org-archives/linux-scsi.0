@@ -1,68 +1,43 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Are these comments in scsi_host.h still true?
-Date: Tue, 06 Mar 2012 17:07:16 -0600
-Message-ID: <4F5698A4.5090306@cs.wisc.edu>
-References: <20120305231858.GB22578@beardog.cce.hp.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RESEND PATCH] mptsas: Fixed code to check whether the LU type
+ is SSC or not for SILI bit in READ_6 and READ_16 CDB
+Date: Tue, 06 Mar 2012 18:43:20 -0600
+Message-ID: <1331081000.3226.37.camel@dabdike.int.hansenpartnership.com>
+References: <201203060645.q266jR8Y026994@milmhbs0.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:45897 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031456Ab2CFXKp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Mar 2012 18:10:45 -0500
-In-Reply-To: <20120305231858.GB22578@beardog.cce.hp.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43602 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756654Ab2CGAnW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Mar 2012 19:43:22 -0500
+In-Reply-To: <201203060645.q266jR8Y026994@milmhbs0.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: linux-scsi@vger.kernel.org
+To: nagalakshmi.nandigama@lsi.com
+Cc: stable@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 03/05/2012 05:18 PM, scameron@beardog.cce.hp.com wrote:
-> 
-> Is this comment from include/scsi/scsi_host.h still true?
-> 
->         /*
->          * This is an error handling strategy routine.  You don't need to
->          * define one of these if you don't want to - there is a default
->          * routine that is present that should work in most cases.  For those
->          * driver authors that have the inclination and ability to write their
->          * own strategy routine, this is where it is specified.  Note - the
-> ---->    * strategy routine is *ALWAYS* run in the context of the kernel eh
-> ---->    * thread.  Thus you are guaranteed to *NOT* be in an interrupt
-> ---->    * handler when you execute this, and you are also guaranteed to
-> ---->    * *NOT* have any other commands being queued while you are in the
->          * strategy routine. When you return from this function, operations
->          * return to normal.
->          *
->          * See scsi_error.c scsi_unjam_host for additional comments about
->          * what this function should and should not be attempting to do.
->          *
->          * Status: REQUIRED     (at least one of them)
->          */
-> 
-> Also what about this, about scsi_unjam_host() from scsi_error.c?
-> 
->  * Notes:
->  *    When we come in here, we *know* that all commands on the bus have
->  *    either completed, failed or timed out.  we also know that no further
->  *    commands are being sent to the host, so things are relatively quiet
->  *    and we have freedom to fiddle with things as we wish.
-> 
-> I'm not seeing what code makes sure those are true.
-> 
+On Tue, 2012-03-06 at 12:16 +0530, nagalakshmi.nandigama@lsi.com wrote:
+> This SILI bit (suppress incorrect length indicator) is defined only for SSC
+> READ(6) and READ(16) commands. For other device types bit is part of LBA
 
-For the strategy handler/unjam case this is true. See scsi_times_out ->
-scsi_eh_scmd_add. That will set the host state so not new commands are
-stated and will begin the process of making sure that commands are
-either timedout or completed. See the host_busy and host_failed checks
-in scsi_error.c. Those will prevent the scsi eh unjam stuff from
-starting when commands not completed or timedout (host_busy is
-incremented in scsi_request_fn when commands are queued).
+This isn't right ... it is for READ(6) but it's FUA_NV for
+READ(10,12,16) on block devices.
 
-However, some of your eh callbacks can be called while IO is still
-running. If you did sg_reset /dev/sda for example, that calls
-scsi_nonblockable_ioctl and that prevents new IOs from coming in
-(scsi_reset_provider sets the tmf_in_progress flag which is checked in
-scsi_host_queue_ready's scsi_host_in_recovery call). But in this path we
-do not wait for all IO to timeout or complete like we do in the
-unjam/strategy handler cases.
+> field. In the current implementation, it is not checked whether the logical
+> unit is a SSC device.
+> 
+> 
+> Added code for checking the LU type is SSC for SILI bit in READ_6 and READ_16 CDB 
+
+I still don't have a description of what you think the actual bug is.
+
+I think the problem is that strict block length checking is accidentally
+turned off if FUA_NV is set on a block device (which currently doesn't
+happen in practise ... nor do we ever really use READ_6 for block
+devices) ... is that it?
+
+James
+
+
