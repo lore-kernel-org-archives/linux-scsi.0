@@ -1,39 +1,53 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] [SCSI] sd: set BIO_MAPPED_INTEGRITY bit correctly in
-	sd_dif_prepare().
-Date: Wed, 7 Mar 2012 08:56:25 -0700
-Message-ID: <20120307155624.GC19570@parisc-linux.org>
-References: <1331131295-3707-1-git-send-email-santoshprasadnayak@gmail.com>
+From: walter harms <wharms@bfs.de>
+Subject: Re: [PATCH] [SCSI] pm8001: fix endian issue with code optimization.
+Date: Wed, 07 Mar 2012 16:58:33 +0100
+Message-ID: <4F5785A9.2040707@bfs.de>
+References: <4f4a4580.aa3a440a.34c7.2776@mx.google.com> <4AB8AEEB15F74D15A87019F5663EA805@usish.com.cn> <D65B94D9-B33A-436F-9BCE-A500B35652D2@xyratex.com> <00F74E64-A5EC-4DF8-A347-2D8BC5659638@xyratex.com>
+Reply-To: wharms@bfs.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:59273 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754458Ab2CGP41 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Mar 2012 10:56:27 -0500
-Content-Disposition: inline
-In-Reply-To: <1331131295-3707-1-git-send-email-santoshprasadnayak@gmail.com>
+Received: from mx01.sz.bfs.de ([194.94.69.103]:1144 "EHLO mx01.sz.bfs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755889Ab2CGP6g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Mar 2012 10:58:36 -0500
+In-Reply-To: <00F74E64-A5EC-4DF8-A347-2D8BC5659638@xyratex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: santosh nayak <santoshprasadnayak@gmail.com>
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, mkp@mkp.net
+To: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Cc: santoshprasadnayak@gmail.com, lindar_liu <lindar_liu@usish.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Jack Wang <jack_wang@usish.com>
 
-On Wed, Mar 07, 2012 at 08:11:35PM +0530, santosh nayak wrote:
-> From: Santosh Nayak <santoshprasadnayak@gmail.com>
+
+
+Am 07.03.2012 16:11, schrieb Mark Salyzyn:
+> One more NAK:
 > 
-> Value of BIO_MAPPED_INTEGRITY is 11. Intention was to set the 11th bit.
+>> @@ -3497,7 +3499,7 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void* piomb)
+>> static void process_one_iomb(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>> {
+>> 	u32 pHeader = (u32)*(u32 *)piomb;
+>> -	u8 opc = (u8)((le32_to_cpu(pHeader)) & 0xFFF);
+>> +	u8 opc = (u8)(pHeader & 0xFFF);
+>>
+>> 	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("process_one_iomb:"));
+> 
+> The swap is necessary. Should be:
+> 
+> 	__le32 pHeader = (__le32)*(__le32 *)piomb;
+> 
+> instead ...
+> 
 
-Also, can we introduce:
+hi,
 
-#define bio_set_flag(bio, flag)	((bio)->bi_flags |= (1 << (flag)))
+would it help to make piomb __le32 instead of void ?
 
-Then hunt down and kill all the places that manipulate bi_flags by hand?
-We might also need:
+Also i do not understand what want to gain from 0xFFF
+Doing (u8) is effectively doing & 0xFF.
 
-#define bio_set_flag_atomic(bio, flag) set_bit(&(bio)->bi_flags, (flag))
+re,
+ wh
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
+
