@@ -1,267 +1,109 @@
-From: Arvind Kumar <arvindkumar@vmware.com>
-Subject: [PATCH] VMW_PVSCSI: Try setting host->max_id as suggested by the
- device.
-Date: Wed, 07 Mar 2012 16:39:47 +0530
-Message-ID: <1331118587.3170.39.camel@arvind-laptop>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] scsi_lib: rate-limit the error message from failing commands
+Date: Wed, 07 Mar 2012 14:17:17 +0100
+Message-ID: <4F575FDD.5050406@redhat.com>
+References: <20120305204242.6245.69668.stgit@localhost6.localdomain6> <4F562FD8.6040504@redhat.com> <138EA028228D124A900F5E6746F3C21605C5973A@ORSMSX102.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-1.vmware.com ([208.91.2.12]:57875 "EHLO
-	smtp-outbound-1.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755120Ab2CGLJw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Mar 2012 06:09:52 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:30151 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751536Ab2CGNRX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Mar 2012 08:17:23 -0500
+In-Reply-To: <138EA028228D124A900F5E6746F3C21605C5973A@ORSMSX102.amr.corp.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, pv-drivers@vmware.com, akataria@vmware.com
+To: "Zou, Yi" <yi.zou@intel.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-Try setting host->max_id as suggested by the device.
+On 03/06/2012 06:10 PM, Zou, Yi wrote:
+>> On 03/05/2012 09:42 PM, Yi Zou wrote:
+>>> When performing a cable pull test w/ active stress I/O using fio over
+>>> a dual port Intel 82599 FCoE CNA, w/ 256LUNs on one port and about
+>> 32LUNs
+>>> on the other, it is observed that the system becomes not usable due to
+>>> scsi-ml being busy printing the error messages for all the failing
+>> commands.
+>>> I don't believe this problem is specific to FCoE and these commands are
+>>> anyway failing due to link being down (DID_NO_CONNECT), just rate-limit
+>>> the messages here to solve this issue.
+>>>
+>>> Signed-off-by: Yi Zou <yi.zou@intel.com>
+>>> Cc: www.Open-FCoE.org <devel@open-fcoe.org>
+>> Hi Zou,
+>> you shouldn't use printk_ratelimit .
+>> checkpatch says:  WARNING: Prefer printk_ratelimited or
+>> pr_<level>_ratelimited to printk_ratelimit
+>> Tomas
+> Yes, I saw that when I did the checkpatch, but pratek_ratelimit() actually
+> serves the purpose better, as it guards the block of the several scsi related
+> prints that follow, and this works well particularly for this bug. For the worst
+> case, the shared ratelimit surpresses everything here, blk i/o error report
+> would still be able pick up printing something.
+>
+> If it is desired, which I doubt, I could change all scmd_printk, scsi_print_xxxx
+> calls to use printk_ratelimited(), seems an overkill for this to me. I am open
+> for a better solution.
+For a whole block of commands you can use __ratelimit, so something like this
+were possible:
 
-Fetch the config page from the device to learn max target id to set host->max_id.
-
-Also, fix some indentation issues and update the 'Maintained by' field.
-
-From: Arvind Kumar <arvindkumar@vmware.com>
-
-Signed-off-by: Arvind Kumar <arvindkumar@vmware.com>
-Cc: Alok N Kataria <akataria@vmware.com>
----
- drivers/scsi/vmw_pvscsi.c |   65 +++++++++++++++++++++++++++-
- drivers/scsi/vmw_pvscsi.h |  107 +++++++++++++++++++++++++++++++++++----------
- 2 files changed, 148 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index 7264116..92c941f 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -17,7 +17,7 @@
-  * along with this program; if not, write to the Free Software
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
-  *
-- * Maintained by: Alok N Kataria <akataria@vmware.com>
-+ * Maintained by: Arvind Kumar <arvindkumar@vmware.com>
-  *
-  */
+@@ -20,6 +20,7 @@
+ #include <linux/delay.h>
+ #include <linux/hardirq.h>
+ #include <linux/scatterlist.h>
++#include <linux/ratelimit.h>
  
-@@ -1178,6 +1178,63 @@ static int __devinit pvscsi_allocate_sg(struct pvscsi_adapter *adapter)
- 	return 0;
- }
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -745,6 +746,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+        enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
+              ACTION_DELAYED_RETRY} action;
+        char *description = NULL;
++       static DEFINE_RATELIMIT_STATE(rs,  DEFAULT_RATELIMIT_INTERVAL,
++                                               DEFAULT_RATELIMIT_BURST);
  
-+/*
-+ * Query the device, fetch the config info and return the
-+ * maximum number of targets on the adapter. In case of
-+ * failure due to any reason return default i.e. 16.
-+ */
-+static u32 pvscsi_get_max_targets(struct pvscsi_adapter *adapter)
-+{
-+	struct PVSCSICmdDescConfigCmd cmd;
-+	struct PVSCSIConfigPageHeader *header;
-+	dma_addr_t configPagePA;
-+	void *config_page;
-+	u32 numPhys;
-+
-+	numPhys = 16;
-+	config_page = pci_alloc_consistent(adapter->dev, PAGE_SIZE,
-+					   &configPagePA);
-+	if (!config_page) {
-+		printk(KERN_INFO "vmw_pvscsi: failed to allocate memory for"
-+		       " config page\n");
-+		goto exit;
-+	}
-+	BUG_ON(configPagePA & ~PAGE_MASK);
-+
-+	/* Fetch config info from the device. */
-+	cmd.configPageAddress = (((u64)(PVSCSI_CONFIG_CONTROLLER_ADDRESS))
-+				 << 32);
-+	cmd.configPageNum = PVSCSI_CONFIG_PAGE_CONTROLLER;
-+	cmd.cmpAddr = configPagePA;
-+	cmd._pad = 0;
-+
-+	/*
-+	 * Mark the completion page header with error values. If the device
-+	 * completes the command successfully, it sets the status values to
-+	 * indicate success.
-+	 */
-+	header = config_page;
-+	memset(header, 0, sizeof *header);
-+	header->hostStatus = BTSTAT_INVPARAM;
-+	header->scsiStatus = SDSTAT_CHECK;
-+
-+	pvscsi_write_cmd_desc(adapter, PVSCSI_CMD_CONFIG, &cmd, sizeof cmd);
-+
-+	if (header->hostStatus == BTSTAT_SUCCESS &&
-+	    header->scsiStatus == SDSTAT_GOOD) {
-+		struct PVSCSIConfigPageController *config;
-+
-+		config = config_page;
-+		numPhys = config->numPhys;
-+	} else
-+		printk(KERN_INFO "vmw_pvscsi: PVSCSI_CMD_CONFIG failed."
-+		       " hostStatus = 0x%x, scsiStatus = 0x%x\n",
-+		       header->hostStatus, header->scsiStatus);
-+	pci_free_consistent(adapter->dev, PAGE_SIZE, config_page, configPagePA);
-+exit:
-+	return numPhys;
-+}
-+
- static int __devinit pvscsi_probe(struct pci_dev *pdev,
- 				  const struct pci_device_id *id)
- {
-@@ -1272,6 +1329,12 @@ static int __devinit pvscsi_probe(struct pci_dev *pdev,
- 	}
- 
- 	/*
-+	 * Ask the device for max number of targets.
-+	 */
-+	host->max_id = pvscsi_get_max_targets(adapter);
-+	printk(KERN_INFO "vmw_pvscsi: host->max_id: %u\n", host->max_id);
-+
-+	/*
- 	 * From this point on we should reset the adapter if anything goes
- 	 * wrong.
- 	 */
-diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
-index 62e36e7..3a5d7e8 100644
---- a/drivers/scsi/vmw_pvscsi.h
-+++ b/drivers/scsi/vmw_pvscsi.h
-@@ -17,7 +17,7 @@
-  * along with this program; if not, write to the Free Software
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
-  *
-- * Maintained by: Alok N Kataria <akataria@vmware.com>
-+ * Maintained by: Arvind Kumar <arvindkumar@vmware.com>
-  *
-  */
- 
-@@ -39,28 +39,45 @@
-  * host adapter status/error codes
-  */
- enum HostBusAdapterStatus {
--   BTSTAT_SUCCESS       = 0x00,  /* CCB complete normally with no errors */
--   BTSTAT_LINKED_COMMAND_COMPLETED           = 0x0a,
--   BTSTAT_LINKED_COMMAND_COMPLETED_WITH_FLAG = 0x0b,
--   BTSTAT_DATA_UNDERRUN = 0x0c,
--   BTSTAT_SELTIMEO      = 0x11,  /* SCSI selection timeout */
--   BTSTAT_DATARUN       = 0x12,  /* data overrun/underrun */
--   BTSTAT_BUSFREE       = 0x13,  /* unexpected bus free */
--   BTSTAT_INVPHASE      = 0x14,  /* invalid bus phase or sequence requested by target */
--   BTSTAT_LUNMISMATCH   = 0x17,  /* linked CCB has different LUN from first CCB */
--   BTSTAT_SENSFAILED    = 0x1b,  /* auto request sense failed */
--   BTSTAT_TAGREJECT     = 0x1c,  /* SCSI II tagged queueing message rejected by target */
--   BTSTAT_BADMSG        = 0x1d,  /* unsupported message received by the host adapter */
--   BTSTAT_HAHARDWARE    = 0x20,  /* host adapter hardware failed */
--   BTSTAT_NORESPONSE    = 0x21,  /* target did not respond to SCSI ATN, sent a SCSI RST */
--   BTSTAT_SENTRST       = 0x22,  /* host adapter asserted a SCSI RST */
--   BTSTAT_RECVRST       = 0x23,  /* other SCSI devices asserted a SCSI RST */
--   BTSTAT_DISCONNECT    = 0x24,  /* target device reconnected improperly (w/o tag) */
--   BTSTAT_BUSRESET      = 0x25,  /* host adapter issued BUS device reset */
--   BTSTAT_ABORTQUEUE    = 0x26,  /* abort queue generated */
--   BTSTAT_HASOFTWARE    = 0x27,  /* host adapter software error */
--   BTSTAT_HATIMEOUT     = 0x30,  /* host adapter hardware timeout error */
--   BTSTAT_SCSIPARITY    = 0x34,  /* SCSI parity error detected */
-+	BTSTAT_SUCCESS       = 0x00,  /* CCB complete normally with no errors */
-+	BTSTAT_LINKED_COMMAND_COMPLETED           = 0x0a,
-+	BTSTAT_LINKED_COMMAND_COMPLETED_WITH_FLAG = 0x0b,
-+	BTSTAT_DATA_UNDERRUN = 0x0c,
-+	BTSTAT_SELTIMEO      = 0x11,  /* SCSI selection timeout */
-+	BTSTAT_DATARUN       = 0x12,  /* data overrun/underrun */
-+	BTSTAT_BUSFREE       = 0x13,  /* unexpected bus free */
-+	BTSTAT_INVPHASE      = 0x14,  /* invalid bus phase or sequence
-+				       * requested by target */
-+	BTSTAT_LUNMISMATCH   = 0x17,  /* linked CCB has different LUN from
-+				       * first CCB */
-+	BTSTAT_INVPARAM      = 0x1a,  /* invalid parameter in CCB or segment
-+				       * list */
-+	BTSTAT_SENSFAILED    = 0x1b,  /* auto request sense failed */
-+	BTSTAT_TAGREJECT     = 0x1c,  /* SCSI II tagged queueing message
-+				       * rejected by target */
-+	BTSTAT_BADMSG        = 0x1d,  /* unsupported message received by the
-+				       * host adapter */
-+	BTSTAT_HAHARDWARE    = 0x20,  /* host adapter hardware failed */
-+	BTSTAT_NORESPONSE    = 0x21,  /* target did not respond to SCSI ATN,
-+				       * sent a SCSI RST */
-+	BTSTAT_SENTRST       = 0x22,  /* host adapter asserted a SCSI RST */
-+	BTSTAT_RECVRST       = 0x23,  /* other SCSI devices asserted a SCSI
-+				       * RST */
-+	BTSTAT_DISCONNECT    = 0x24,  /* target device reconnected improperly
-+				       * (w/o tag) */
-+	BTSTAT_BUSRESET      = 0x25,  /* host adapter issued BUS device reset */
-+	BTSTAT_ABORTQUEUE    = 0x26,  /* abort queue generated */
-+	BTSTAT_HASOFTWARE    = 0x27,  /* host adapter software error */
-+	BTSTAT_HATIMEOUT     = 0x30,  /* host adapter hardware timeout error */
-+	BTSTAT_SCSIPARITY    = 0x34,  /* SCSI parity error detected */
-+};
-+
-+/*
-+ * SCSI device status values.
-+ */
-+enum ScsiDeviceStatus {
-+	SDSTAT_GOOD  = 0x00, /* No errors. */
-+	SDSTAT_CHECK = 0x02, /* Check condition. */
- };
- 
- /*
-@@ -114,6 +131,29 @@ struct PVSCSICmdDescResetDevice {
- } __packed;
- 
- /*
-+ * Command descriptor for PVSCSI_CMD_CONFIG --
-+ */
-+
-+struct PVSCSICmdDescConfigCmd {
-+	u64 cmpAddr;
-+	u64 configPageAddress;
-+	u32 configPageNum;
-+	u32 _pad;
-+} __packed;
-+
-+enum PVSCSIConfigPageType {
-+	PVSCSI_CONFIG_PAGE_CONTROLLER = 0x1958,
-+	PVSCSI_CONFIG_PAGE_PHY        = 0x1959,
-+	PVSCSI_CONFIG_PAGE_DEVICE     = 0x195a,
-+};
-+
-+enum PVSCSIConfigPageAddressType {
-+	PVSCSI_CONFIG_CONTROLLER_ADDRESS = 0x2120,
-+	PVSCSI_CONFIG_BUSTARGET_ADDRESS  = 0x2121,
-+	PVSCSI_CONFIG_PHY_ADDRESS        = 0x2122,
-+};
-+
-+/*
-  * Command descriptor for PVSCSI_CMD_ABORT_CMD --
-  *
-  * - currently does not support specifying the LUN.
-@@ -332,6 +372,27 @@ struct PVSCSIRingCmpDesc {
- 	u32	_pad[2];
- } __packed;
- 
-+struct PVSCSIConfigPageHeader {
-+	u32 pageNum;
-+	u16 numDwords;
-+	u16 hostStatus;
-+	u16 scsiStatus;
-+	u16 reserved[3];
-+} __packed;
-+
-+struct PVSCSIConfigPageController {
-+	struct PVSCSIConfigPageHeader header;
-+	u64 nodeWWN; /* Device name as defined in the SAS spec. */
-+	u16 manufacturer[64];
-+	u16 serialNumber[64];
-+	u16 opromVersion[32];
-+	u16 hwVersion[32];
-+	u16 firmwareVersion[32];
-+	u32 numPhys;
-+	u8  useConsecutivePhyWWNs;
-+	u8  reserved[3];
-+} __packed;
-+
- /*
-  * Interrupt status / IRQ bits.
-  */
--- 
-1.7.1
+        if (result) {
+                sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
+@@ -935,7 +938,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+        case ACTION_FAIL:
+                /* Give up and fail the remainder of the request */
+                scsi_release_buffers(cmd);
+-               if (!(req->cmd_flags & REQ_QUIET)) {
++               if (!(req->cmd_flags & REQ_QUIET) &&  __ratelimit(&rs)) {
+                        if (description)
+                                scmd_printk(KERN_INFO, cmd, "%s\n",
+                                            description);yi
 
 
+>>> ---
+>>>
+>>>  drivers/scsi/scsi_lib.c |    3 ++-
+>>>  1 files changed, 2 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>>> index b2c95db..e2128d9 100644
+>>> --- a/drivers/scsi/scsi_lib.c
+>>> +++ b/drivers/scsi/scsi_lib.c
+>>> @@ -934,7 +934,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd,
+>> unsigned int good_bytes)
+>>>  	case ACTION_FAIL:
+>>>  		/* Give up and fail the remainder of the request */
+>>>  		scsi_release_buffers(cmd);
+>>> -		if (!(req->cmd_flags & REQ_QUIET)) {
+>>> +		if (!(req->cmd_flags & REQ_QUIET) &&
+>>> +		    printk_ratelimit()) {
+>>>  			if (description)
+>>>  				scmd_printk(KERN_INFO, cmd, "%s\n",
+>>>  					    description);
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+>> in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
