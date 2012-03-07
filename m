@@ -1,99 +1,69 @@
-From: "Zou, Yi" <yi.zou@intel.com>
-Subject: RE: [PATCH] scsi_lib: rate-limit the error message from failing
- commands
-Date: Wed, 7 Mar 2012 14:55:15 +0000
-Message-ID: <138EA028228D124A900F5E6746F3C21605C5A149@ORSMSX102.amr.corp.intel.com>
-References: <20120305204242.6245.69668.stgit@localhost6.localdomain6>
- <4F562FD8.6040504@redhat.com>
- <138EA028228D124A900F5E6746F3C21605C5973A@ORSMSX102.amr.corp.intel.com>
- <4F575FDD.5050406@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:24777 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757605Ab2CGOzS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Mar 2012 09:55:18 -0500
-In-Reply-To: <4F575FDD.5050406@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Subject: Re: [PATCH] [SCSI] pm8001: fix endian issue with code optimization.
+Date: Wed, 7 Mar 2012 10:11:28 -0500
+Message-ID: <00F74E64-A5EC-4DF8-A347-2D8BC5659638@xyratex.com>
+References: <4f4a4580.aa3a440a.34c7.2776@mx.google.com> <4AB8AEEB15F74D15A87019F5663EA805@usish.com.cn> <D65B94D9-B33A-436F-9BCE-A500B35652D2@xyratex.com>
+Mime-Version: 1.0 (Apple Message framework v1257)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <D65B94D9-B33A-436F-9BCE-A500B35652D2@xyratex.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: santoshprasadnayak@gmail.com
+Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, lindar_liu <lindar_liu@usish.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Jack Wang <jack_wang@usish.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-PiANCj4gT24gMDMvMDYvMjAxMiAwNjoxMCBQTSwgWm91LCBZaSB3cm90ZToNCj4gPj4gT24gMDMv
-MDUvMjAxMiAwOTo0MiBQTSwgWWkgWm91IHdyb3RlOg0KPiA+Pj4gV2hlbiBwZXJmb3JtaW5nIGEg
-Y2FibGUgcHVsbCB0ZXN0IHcvIGFjdGl2ZSBzdHJlc3MgSS9PIHVzaW5nIGZpbyBvdmVyDQo+ID4+
-PiBhIGR1YWwgcG9ydCBJbnRlbCA4MjU5OSBGQ29FIENOQSwgdy8gMjU2TFVOcyBvbiBvbmUgcG9y
-dCBhbmQgYWJvdXQNCj4gPj4gMzJMVU5zDQo+ID4+PiBvbiB0aGUgb3RoZXIsIGl0IGlzIG9ic2Vy
-dmVkIHRoYXQgdGhlIHN5c3RlbSBiZWNvbWVzIG5vdCB1c2FibGUgZHVlDQo+IHRvDQo+ID4+PiBz
-Y3NpLW1sIGJlaW5nIGJ1c3kgcHJpbnRpbmcgdGhlIGVycm9yIG1lc3NhZ2VzIGZvciBhbGwgdGhl
-IGZhaWxpbmcNCj4gPj4gY29tbWFuZHMuDQo+ID4+PiBJIGRvbid0IGJlbGlldmUgdGhpcyBwcm9i
-bGVtIGlzIHNwZWNpZmljIHRvIEZDb0UgYW5kIHRoZXNlIGNvbW1hbmRzDQo+IGFyZQ0KPiA+Pj4g
-YW55d2F5IGZhaWxpbmcgZHVlIHRvIGxpbmsgYmVpbmcgZG93biAoRElEX05PX0NPTk5FQ1QpLCBq
-dXN0IHJhdGUtDQo+IGxpbWl0DQo+ID4+PiB0aGUgbWVzc2FnZXMgaGVyZSB0byBzb2x2ZSB0aGlz
-IGlzc3VlLg0KPiA+Pj4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6IFlpIFpvdSA8eWkuem91QGludGVs
-LmNvbT4NCj4gPj4+IENjOiB3d3cuT3Blbi1GQ29FLm9yZyA8ZGV2ZWxAb3Blbi1mY29lLm9yZz4N
-Cj4gPj4gSGkgWm91LA0KPiA+PiB5b3Ugc2hvdWxkbid0IHVzZSBwcmludGtfcmF0ZWxpbWl0IC4N
-Cj4gPj4gY2hlY2twYXRjaCBzYXlzOiAgV0FSTklORzogUHJlZmVyIHByaW50a19yYXRlbGltaXRl
-ZCBvcg0KPiA+PiBwcl88bGV2ZWw+X3JhdGVsaW1pdGVkIHRvIHByaW50a19yYXRlbGltaXQNCj4g
-Pj4gVG9tYXMNCj4gPiBZZXMsIEkgc2F3IHRoYXQgd2hlbiBJIGRpZCB0aGUgY2hlY2twYXRjaCwg
-YnV0IHByYXRla19yYXRlbGltaXQoKQ0KPiBhY3R1YWxseQ0KPiA+IHNlcnZlcyB0aGUgcHVycG9z
-ZSBiZXR0ZXIsIGFzIGl0IGd1YXJkcyB0aGUgYmxvY2sgb2YgdGhlIHNldmVyYWwgc2NzaQ0KPiBy
-ZWxhdGVkDQo+ID4gcHJpbnRzIHRoYXQgZm9sbG93LCBhbmQgdGhpcyB3b3JrcyB3ZWxsIHBhcnRp
-Y3VsYXJseSBmb3IgdGhpcyBidWcuIEZvcg0KPiB0aGUgd29yc3QNCj4gPiBjYXNlLCB0aGUgc2hh
-cmVkIHJhdGVsaW1pdCBzdXJwcmVzc2VzIGV2ZXJ5dGhpbmcgaGVyZSwgYmxrIGkvbyBlcnJvcg0K
-PiByZXBvcnQNCj4gPiB3b3VsZCBzdGlsbCBiZSBhYmxlIHBpY2sgdXAgcHJpbnRpbmcgc29tZXRo
-aW5nLg0KPiA+DQo+ID4gSWYgaXQgaXMgZGVzaXJlZCwgd2hpY2ggSSBkb3VidCwgSSBjb3VsZCBj
-aGFuZ2UgYWxsIHNjbWRfcHJpbnRrLA0KPiBzY3NpX3ByaW50X3h4eHgNCj4gPiBjYWxscyB0byB1
-c2UgcHJpbnRrX3JhdGVsaW1pdGVkKCksIHNlZW1zIGFuIG92ZXJraWxsIGZvciB0aGlzIHRvIG1l
-LiBJDQo+IGFtIG9wZW4NCj4gPiBmb3IgYSBiZXR0ZXIgc29sdXRpb24uDQo+IEZvciBhIHdob2xl
-IGJsb2NrIG9mIGNvbW1hbmRzIHlvdSBjYW4gdXNlIF9fcmF0ZWxpbWl0LCBzbyBzb21ldGhpbmcg
-bGlrZQ0KPiB0aGlzDQo+IHdlcmUgcG9zc2libGU6DQoNCj4gDQo+IEBAIC0yMCw2ICsyMCw3IEBA
-DQo+ICAjaW5jbHVkZSA8bGludXgvZGVsYXkuaD4NCj4gICNpbmNsdWRlIDxsaW51eC9oYXJkaXJx
-Lmg+DQo+ICAjaW5jbHVkZSA8bGludXgvc2NhdHRlcmxpc3QuaD4NCj4gKyNpbmNsdWRlIDxsaW51
-eC9yYXRlbGltaXQuaD4NCj4gDQo+ICAjaW5jbHVkZSA8c2NzaS9zY3NpLmg+DQo+ICAjaW5jbHVk
-ZSA8c2NzaS9zY3NpX2NtbmQuaD4NCj4gQEAgLTc0NSw2ICs3NDYsOCBAQCB2b2lkIHNjc2lfaW9f
-Y29tcGxldGlvbihzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQsDQo+IHVuc2lnbmVkIGludCBnb29kX2J5
-dGVzKQ0KPiAgICAgICAgIGVudW0ge0FDVElPTl9GQUlMLCBBQ1RJT05fUkVQUkVQLCBBQ1RJT05f
-UkVUUlksDQo+ICAgICAgICAgICAgICAgQUNUSU9OX0RFTEFZRURfUkVUUll9IGFjdGlvbjsNCj4g
-ICAgICAgICBjaGFyICpkZXNjcmlwdGlvbiA9IE5VTEw7DQo+ICsgICAgICAgc3RhdGljIERFRklO
-RV9SQVRFTElNSVRfU1RBVEUocnMsICBERUZBVUxUX1JBVEVMSU1JVF9JTlRFUlZBTCwNCj4gKyAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgREVGQVVMVF9SQVRF
-TElNSVRfQlVSU1QpOw0KPiANCj4gICAgICAgICBpZiAocmVzdWx0KSB7DQo+ICAgICAgICAgICAg
-ICAgICBzZW5zZV92YWxpZCA9IHNjc2lfY29tbWFuZF9ub3JtYWxpemVfc2Vuc2UoY21kLCAmc3No
-ZHIpOw0KPiBAQCAtOTM1LDcgKzkzOCw3IEBAIHZvaWQgc2NzaV9pb19jb21wbGV0aW9uKHN0cnVj
-dCBzY3NpX2NtbmQgKmNtZCwNCj4gdW5zaWduZWQgaW50IGdvb2RfYnl0ZXMpDQo+ICAgICAgICAg
-Y2FzZSBBQ1RJT05fRkFJTDoNCj4gICAgICAgICAgICAgICAgIC8qIEdpdmUgdXAgYW5kIGZhaWwg
-dGhlIHJlbWFpbmRlciBvZiB0aGUgcmVxdWVzdCAqLw0KPiAgICAgICAgICAgICAgICAgc2NzaV9y
-ZWxlYXNlX2J1ZmZlcnMoY21kKTsNCj4gLSAgICAgICAgICAgICAgIGlmICghKHJlcS0+Y21kX2Zs
-YWdzICYgUkVRX1FVSUVUKSkgew0KPiArICAgICAgICAgICAgICAgaWYgKCEocmVxLT5jbWRfZmxh
-Z3MgJiBSRVFfUVVJRVQpICYmICBfX3JhdGVsaW1pdCgmcnMpKSB7DQo+ICAgICAgICAgICAgICAg
-ICAgICAgICAgIGlmIChkZXNjcmlwdGlvbikNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICBzY21kX3ByaW50ayhLRVJOX0lORk8sIGNtZCwgIiVzXG4iLA0KPiAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uKTt5aQ0KPiANClRoaXMg
-bG9va3MgYmV0dGVyLCBJIHdpbGwgcmVzZW5kIHRoZSBwYXRjaCwgd2hpY2ggd2lsbCBiZSBwcmV0
-dHkgbXVjaCB0aGUgc2FtZSANCndoYXQgeW91IGhhdmUgaGVyZS4NCg0KdGhhbmtzLg0KeWkNCg0K
-DQo+IA0KPiA+Pj4gLS0tDQo+ID4+Pg0KPiA+Pj4gIGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jIHwg
-ICAgMyArKy0NCj4gPj4+ICAxIGZpbGVzIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMSBkZWxl
-dGlvbnMoLSkNCj4gPj4+DQo+ID4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGli
-LmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiA+Pj4gaW5kZXggYjJjOTVkYi4uZTIxMjhk
-OSAxMDA2NDQNCj4gPj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+ID4+PiArKysg
-Yi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiA+Pj4gQEAgLTkzNCw3ICs5MzQsOCBAQCB2b2lk
-IHNjc2lfaW9fY29tcGxldGlvbihzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQsDQo+ID4+IHVuc2lnbmVk
-IGludCBnb29kX2J5dGVzKQ0KPiA+Pj4gIAljYXNlIEFDVElPTl9GQUlMOg0KPiA+Pj4gIAkJLyog
-R2l2ZSB1cCBhbmQgZmFpbCB0aGUgcmVtYWluZGVyIG9mIHRoZSByZXF1ZXN0ICovDQo+ID4+PiAg
-CQlzY3NpX3JlbGVhc2VfYnVmZmVycyhjbWQpOw0KPiA+Pj4gLQkJaWYgKCEocmVxLT5jbWRfZmxh
-Z3MgJiBSRVFfUVVJRVQpKSB7DQo+ID4+PiArCQlpZiAoIShyZXEtPmNtZF9mbGFncyAmIFJFUV9R
-VUlFVCkgJiYNCj4gPj4+ICsJCSAgICBwcmludGtfcmF0ZWxpbWl0KCkpIHsNCj4gPj4+ICAJCQlp
-ZiAoZGVzY3JpcHRpb24pDQo+ID4+PiAgCQkJCXNjbWRfcHJpbnRrKEtFUk5fSU5GTywgY21kLCAi
-JXNcbiIsDQo+ID4+PiAgCQkJCQkgICAgZGVzY3JpcHRpb24pOw0KPiA+Pj4NCj4gPj4+IC0tDQo+
-ID4+PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJz
-Y3JpYmUgbGludXgtc2NzaSINCj4gPj4gaW4NCj4gPj4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0
-byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+ID4+PiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0
-ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCj4gPj4gLS0NCj4g
-Pj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2Ny
-aWJlIGxpbnV4LXNjc2kiDQo+IGluDQo+ID4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
-cmRvbW9Admdlci5rZXJuZWwub3JnDQo+ID4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6
-Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQo=
+One more NAK:
+
+> @@ -3497,7 +3499,7 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void* piomb)
+> static void process_one_iomb(struct pm8001_hba_info *pm8001_ha, void *piomb)
+> {
+> 	u32 pHeader = (u32)*(u32 *)piomb;
+> -	u8 opc = (u8)((le32_to_cpu(pHeader)) & 0xFFF);
+> +	u8 opc = (u8)(pHeader & 0xFFF);
+> 
+> 	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("process_one_iomb:"));
+
+The swap is necessary. Should be:
+
+	__le32 pHeader = (__le32)*(__le32 *)piomb;
+
+instead ...
+
+Sincerely -- Mark Salyzyn
+
+On Mar 7, 2012, at 9:58 AM, Mark Salyzyn wrote:
+
+> NAK on one point.
+> 
+> The fw_flash_Update_resp structure erroneously defines tag as a dma_addr_t, when in fact it should be an __le32, as the response hTag is reported in this field. The removal of the le32_to_cpu(ppayload->tag) was done to remove a warning, but is incorrect. The warning should have been solved by correctly defining the tag element in the structure.
+> 
+> Sincerely -- Mark Salyzyn
+> 
+> On Feb 26, 2012, at 11:51 PM, Jack Wang wrote:
+> 
+>> Thanks for fix.
+>> Acked-by: Jack Wang <jack_wang@usish.com>
+>>> 
+>>> From: Santosh Nayak <santoshprasadnayak@gmail.com>
+>>> 
+>>> 1. Fix endian issue.
+>>> 2. Fix the following warning :
+>>>   " drivers/scsi/pm8001/pm8001_hwi.c:2932:32: warning: comparison
+>>>     between 'enum sas_device_type' and 'enum sas_dev_type'".
+>>> 3. Few code optimization.
+>>> 
+>>> Signed-off-by: Santosh Nayak <santoshprasadnayak@gmail.com>
+>>> ---
+>>> . . .
+>>> @@ -3149,7 +3152,7 @@ mpi_fw_flash_update_resp(struct pm8001_hba_info
+>>> *pm8001_ha, void *piomb)
+>>> 	struct fw_control_ex	fw_control_context;
+>>> 	struct fw_flash_Update_resp *ppayload
+>>> 		(struct fw_flash_Update_resp *)(piomb + 4);
+>>> -	u32 tag = le32_to_cpu(ppayload->tag);
+>>> +	u32 tag = ppayload->tag;
+>>> 	struct pm8001_ccb_info *ccb = &pm8001_ha->ccb_info[tag];
+>>> 	status = le32_to_cpu(ppayload->status);
+>>> 	memcpy(&fw_control_context,
+> 
