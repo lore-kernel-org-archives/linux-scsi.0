@@ -1,112 +1,97 @@
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] scsi_debug: add LBPRZ support
-Date: Wed, 07 Mar 2012 14:09:05 -0600
-Message-ID: <4F57C061.9020807@redhat.com>
+From: Yi Zou <yi.zou@intel.com>
+Subject: [PATCH v2] scsi_lib: rate-limit the error message from failing
+ commands
+Date: Wed, 07 Mar 2012 15:56:32 -0800
+Message-ID: <20120307235632.10375.55053.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58038 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:24857 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757048Ab2CGUJJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Mar 2012 15:09:09 -0500
+	id S1757034Ab2CGXjV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Mar 2012 18:39:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: mkp@mkp.net, =?windows-1252?Q?Luk=E1=9A_Czerner?= <lczerner@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: devel@open-fcoe.org, thenzl@redhat.com
 
-Add LBPRZ support to scsi_debug; i.e. return zero for
-unmapped blocks.
+When performing a cable pull test w/ active stress I/O using fio over
+a dual port Intel 82599 FCoE CNA, w/ 256LUNs on one port and about 32LUNs
+on the other, it is observed that the system becomes not usable due to
+scsi-ml being busy printing the error messages for all the failing commands.
+I don't believe this problem is specific to FCoE and these commands are
+anyway failing due to link being down (DID_NO_CONNECT), just rate-limit
+the messages here to solve this issue.
 
-Rather than checking for unmapped blocks at
-read time, this just zeroes them on the backing store
-at unmap time so it behaves the same way.
+v2->v1: use __ratelimit() as Tomas Henzl mentioned as the proper way for
+rate-limit per function. However, in this case, the failed i/o gets to
+blk_end_request_err() and then blk_update_request(), which also has to
+be rate-limited, as added in the v2 of this patch.
 
-This also adds a module parameter to disable it, since
-some SSDs have this behavior.
-
-unmap_zeroes, "unmapped blocks return 0 on read (def=1)"
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Cc: www.Open-FCoE.org <devel@open-fcoe.org>
+Cc: Tomas Henzl <thenzl@redhat.com>
 ---
 
-Note: This was sent long ago as "TPRZ" support, but lost, I guess.
+ block/blk-core.c        |    8 +++++---
+ drivers/scsi/scsi_lib.c |    5 ++++-
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-Note2: dgilbert preferred "zeros" to "zeroes" at the time,
-but since we have "discard_zeroes_data" in sysfs it seems like
-we should be consistent with the kernel precedent, rather than
-the spec spelling.
-
-But I really don't are if this gets searched & replaced before 
-commit.  :)
-
-Thanks,
--Eric
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 6888b2c..32e6c19 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -114,6 +114,7 @@ static const char * scsi_debug_version_date = "20100324";
- #define DEF_UNMAP_GRANULARITY 1
- #define DEF_UNMAP_MAX_BLOCKS 0xFFFFFFFF
- #define DEF_UNMAP_MAX_DESC 256
-+#define DEF_UNMAP_ZEROES 1
- #define DEF_VIRTUAL_GB   0
- #define DEF_VPD_USE_HOSTNO 1
- #define DEF_WRITESAME_LENGTH 0xFFFF
-@@ -189,6 +190,7 @@ static unsigned int scsi_debug_unmap_alignment = DEF_UNMAP_ALIGNMENT;
- static unsigned int scsi_debug_unmap_granularity = DEF_UNMAP_GRANULARITY;
- static unsigned int scsi_debug_unmap_max_blocks = DEF_UNMAP_MAX_BLOCKS;
- static unsigned int scsi_debug_unmap_max_desc = DEF_UNMAP_MAX_DESC;
-+static unsigned int scsi_debug_unmap_zeroes = DEF_UNMAP_ZEROES;
- static unsigned int scsi_debug_write_same_length = DEF_WRITESAME_LENGTH;
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 3a78b00..4415c86 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -29,6 +29,7 @@
+ #include <linux/fault-inject.h>
+ #include <linux/list_sort.h>
+ #include <linux/delay.h>
++#include <linux/ratelimit.h>
  
- static int scsi_debug_cmnd_count = 0;
-@@ -1070,8 +1072,11 @@ static int resp_readcap16(struct scsi_cmnd * scp,
- 	arr[13] = scsi_debug_physblk_exp & 0xf;
- 	arr[14] = (scsi_debug_lowest_aligned >> 8) & 0x3f;
- 
--	if (scsi_debug_lbp())
-+	if (scsi_debug_lbp()) {
- 		arr[14] |= 0x80; /* LBPME */
-+		if (scsi_debug_unmap_zeroes)
-+			arr[14] |= 0x40; /* LBPRZ */
-+	}
- 
- 	arr[15] = scsi_debug_lowest_aligned & 0xff;
- 
-@@ -2045,10 +2050,13 @@ static void unmap_region(sector_t lba, unsigned int len)
- 		block = lba + alignment;
- 		rem = do_div(block, granularity);
- 
--		if (rem == 0 && lba + granularity <= end &&
--		    block < map_size)
-+		if (rem == 0 && lba + granularity <= end && block < map_size) {
- 			clear_bit(block, map_storep);
--
-+			if (scsi_debug_unmap_zeroes)
-+				memset(fake_storep +
-+				       block * scsi_debug_sector_size, 0,
-+				       scsi_debug_sector_size);
-+		}
- 		lba += granularity - rem;
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/block.h>
+@@ -2132,9 +2133,10 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
+ 			error_type = "I/O";
+ 			break;
+ 		}
+-		printk(KERN_ERR "end_request: %s error, dev %s, sector %llu\n",
+-		       error_type, req->rq_disk ? req->rq_disk->disk_name : "?",
+-		       (unsigned long long)blk_rq_pos(req));
++		printk_ratelimited(KERN_ERR "end_request: %s error, dev %s, "
++				   "sector %llu\n", error_type, req->rq_disk ?
++				   req->rq_disk->disk_name : "?",
++				   (unsigned long long)blk_rq_pos(req));
  	}
- }
-@@ -2747,6 +2755,7 @@ module_param_named(unmap_alignment, scsi_debug_unmap_alignment, int, S_IRUGO);
- module_param_named(unmap_granularity, scsi_debug_unmap_granularity, int, S_IRUGO);
- module_param_named(unmap_max_blocks, scsi_debug_unmap_max_blocks, int, S_IRUGO);
- module_param_named(unmap_max_desc, scsi_debug_unmap_max_desc, int, S_IRUGO);
-+module_param_named(unmap_zeroes, scsi_debug_unmap_zeroes, int, S_IRUGO);
- module_param_named(virtual_gb, scsi_debug_virtual_gb, int, S_IRUGO | S_IWUSR);
- module_param_named(vpd_use_hostno, scsi_debug_vpd_use_hostno, int,
- 		   S_IRUGO | S_IWUSR);
-@@ -2788,6 +2797,7 @@ MODULE_PARM_DESC(unmap_alignment, "lowest aligned thin provisioning lba (def=0)"
- MODULE_PARM_DESC(unmap_granularity, "thin provisioning granularity in blocks (def=1)");
- MODULE_PARM_DESC(unmap_max_blocks, "max # of blocks can be unmapped in one cmd (def=0xffffffff)");
- MODULE_PARM_DESC(unmap_max_desc, "max # of ranges that can be unmapped in one cmd (def=256)");
-+MODULE_PARM_DESC(unmap_zeroes, "unmapped blocks return 0 on read (def=1)");
- MODULE_PARM_DESC(virtual_gb, "virtual gigabyte size (def=0 -> use dev_size_mb)");
- MODULE_PARM_DESC(vpd_use_hostno, "0 -> dev ids ignore hostno (def=1 -> unique dev ids)");
- MODULE_PARM_DESC(write_same_length, "Maximum blocks per WRITE SAME cmd (def=0xffff)");
+ 
+ 	blk_account_io_completion(req, nr_bytes);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b2c95db..06cf08a 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -20,6 +20,7 @@
+ #include <linux/delay.h>
+ #include <linux/hardirq.h>
+ #include <linux/scatterlist.h>
++#include <linux/ratelimit.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -745,6 +746,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
+ 	      ACTION_DELAYED_RETRY} action;
+ 	char *description = NULL;
++	static DEFINE_RATELIMIT_STATE(rs,  DEFAULT_RATELIMIT_INTERVAL,
++				      DEFAULT_RATELIMIT_BURST);
+ 
+ 	if (result) {
+ 		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
+@@ -934,7 +937,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	case ACTION_FAIL:
+ 		/* Give up and fail the remainder of the request */
+ 		scsi_release_buffers(cmd);
+-		if (!(req->cmd_flags & REQ_QUIET)) {
++		if (!(req->cmd_flags & REQ_QUIET) && __ratelimit(&rs)) {
+ 			if (description)
+ 				scmd_printk(KERN_INFO, cmd, "%s\n",
+ 					    description);
 
