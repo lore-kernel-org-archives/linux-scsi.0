@@ -1,61 +1,39 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH 1/7] block: Clean up merge logic
-Date: Wed, 7 Mar 2012 11:52:53 -0500
-Message-ID: <20120307165253.GD13430@redhat.com>
-References: <1330658571-12958-1-git-send-email-martin.petersen@oracle.com>
- <1330658571-12958-2-git-send-email-martin.petersen@oracle.com>
- <20120302202139.GG26315@redhat.com>
- <yq1ty21lj6x.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: santosh nayak <santoshprasadnayak@gmail.com>
+Subject: [PATCH v2] [SCSI] sd: set BIO_MAPPED_INTEGRITY bit correctly in sd_dif_prepare()
+Date: Wed,  7 Mar 2012 22:30:52 +0530
+Message-ID: <1331139652-25870-1-git-send-email-santoshprasadnayak@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39487 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756315Ab2CGQxE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Mar 2012 11:53:04 -0500
-Content-Disposition: inline
-In-Reply-To: <yq1ty21lj6x.fsf@sermon.lab.mkp.net>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:54151 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757670Ab2CGRB7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Mar 2012 12:01:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: matthew@wil.cx, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Santosh Nayak <santoshprasadnayak@gmail.com>
 
-On Tue, Mar 06, 2012 at 12:42:46PM -0500, Martin K. Petersen wrote:
-> >>>>> "Vivek" == Vivek Goyal <vgoyal@redhat.com> writes:
-> 
-> Vivek> So in this patch bio_is_rw() == bio_is_data(). Do they diverge in
-> Vivek> later patches?
-> 
-> Yep.
-> 
-> 
-> Vivek> Some of the flags in REQ_NOMERGE_FLAGS are rq only and should not
-> Vivek> be used on bio. For example REQ_NOMERGE and REQ_STARTED.
-> 
-> Right, but even if the caller passed down invalid flags they'd be masked
-> off when we create the request.
-> 
-> 
-> Vivek> Will it be better to define BIO_NOMERGE_FLAGS separately?
-> 
-> I'd rather not have things defined two places. That leads us down the
-> path to the mess we have now.
-> 
-> However, I don't have a problem with doing:
-> 
-> #define BIO_NOMERGE_FLAGS (REQ_NOMERGE_FLAGS & REQ_COMMON_MASK)
+From: Santosh Nayak <santoshprasadnayak@gmail.com>
 
-May be we can leave it as it is. Using REQ_COMMON_MASK makes things more
-confusing and if we want to use a bio only flag to determine whether
-bio should be merged or not, then it will be broken again. For example,
-hypothetically, if I said that any bio which has already been throttled
-(__REQ_THROTTLED), don't merge it, then above will not work.
+Value of BIO_MAPPED_INTEGRITY is 11. Intention was to set the 11th bit.
 
-So may be it is better to leave it as it is and have the understanding
-that REQ_NOMERGE_FLAGS represents flags both for bio and reqeust. Given the
-fact that bio only bits will not be set in req and vice a versa, it
-is fine to use this either on bio or rq. May be 1-2 line of comment
-above REQ_NOMERGE_FLAG will help.
+Signed-off-by: Santosh Nayak <santoshprasadnayak@gmail.com>
+---
+ drivers/scsi/sd_dif.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks
-Vivek
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+index e981d97..8fdaf42 100644
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -408,7 +408,7 @@ int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_s
+ 			kunmap_atomic(sdt);
+ 		}
+ 
+-		bio->bi_flags |= BIO_MAPPED_INTEGRITY;
++		__set_bit(BIO_MAPPED_INTEGRITY, &bio->bi_flags);
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.4.4
+
