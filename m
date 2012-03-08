@@ -1,103 +1,58 @@
-From: jack_wang <jack_wang@usish.com>
-Subject: Re: Re: [PATCH 1/2] [SCSI] pm8001: Fix bogus interrupt state flag issue.
-Date: Thu, 8 Mar 2012 22:15:03 +0800
-Message-ID: <201203082215017182231@usish.com>
-References: <1330263210-25134-1-git-send-email-santoshprasadnayak@gmail.com>,
-	<528D7E8A-B2F6-4EDB-A7C0-E0BF494038D0@xyratex.com>
-Reply-To: jack_wang <jack_wang@usish.com>
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: [PATCH V2] scsi_debug: add LBPRZ support
+Date: Thu, 08 Mar 2012 10:48:29 -0500
+Message-ID: <yq1ty1zf60i.fsf@sermon.lab.mkp.net>
+References: <4F57C061.9020807@redhat.com> <4F58049C.5010505@interlog.com>
+	<4F584BCF.7030803@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:49847 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752884Ab2CHOPL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Mar 2012 09:15:11 -0500
+Received: from mojo.mkp.net ([70.38.64.14]:60593 "EHLO mojo.mkp.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757980Ab2CHQLN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Mar 2012 11:11:13 -0500
+In-Reply-To: <4F584BCF.7030803@redhat.com> (Eric Sandeen's message of "Thu, 08
+	Mar 2012 00:03:59 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: santosh nayak <santoshprasadnayak@gmail.com>
-Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, lindar_liu <lindar_liu@usish.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kernel-janitors <kernel-janitors@vger.kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: dgilbert@interlog.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
 
-VGhhbmtzIE1hcmsgZm9yIGxvb2sgaW50byB0aGlzLllvdSdyZSByaWdodC4gVGhlIGNoYW5nZSBm
-b3IgdGFza19zdGF0ZV9sb2NrIGlzIG5vdCByaWdodC4NClNvcnJ5IGZvciBub3QgbG9vayBjYXJl
-ZnVsbHkgYWJvdXQgdGhlIGNoYW5nZS4NCg0KDQoNCi0tLS0tLS0tLS0tLS0tDQpqYWNrX3dhbmcN
-Cj5OQUsNCj4NCj5JbiB0aGUgZnJhZ21lbnQgYmVsb3csIHRoZSAnc3Bpbl9sb2NrX2lycXNhdmUo
-JnQtPnRhc2tfc3RhdGVfbG9jaywgZmxhZ3MpOycgaXMgMTAwJSBsZWdpdGltYXRlLiBUaGUgY2hh
-bmdlIHlvdSBkaWQgd2FzIG5vdCBpbmVydCwgYW5kIHJlc3VsdCBpbiB0aGUgSVJRIGJlaW5nIGRp
-c2FibGVkIHVwb24gZXhpdCBzaG91bGQgYSBTQVNfVEFTS19TVEFURV9BQk9SVEVEIHRhc2sgc3Rh
-dGUgY29uZGl0aW9uIG9jY3VyLg0KPg0KPkkgcHJvcG9zZSAoYW5ub3RhdGVkIGJlbG93KSB5b3Ug
-bGVhdmUgdGhlIGZsYWdzIGF1dG9tYXRpYyB2YXJpYWJsZSwgYnV0IHVuaW5pdGlhbGl6ZWQuIFRo
-ZSBjaGFuZ2VzIHN1cnJvdW5kaW5nIHNwaW5fKmxvY2tfaXJxKigmcG04MDAxX2hhLT5sb2NrLCBm
-bGFncykgYXJlIE9LLCBidXQgcmV2ZXJ0IGJhY2sgdGhlIGNoYW5nZXMgc3Vycm91bmRpbmcgdGhl
-IHNwaW5fKmxvY2tfaXJxKigmdC0+dGFzay0+c3RhdGVfbG9jayxmbGFncykgc28gdGhhdCBsb2Nr
-IHdvdWxkIGJlIHByb3Blcmx5IG5lc3RlZC4NCj4NCj5UbyBiZSBwZWRhbnRpYywgYW5kIHRvIGJl
-IG1vcmUgY29ycmVjdCwgdGhpcyBjb2RlIHNob3VsZCBoYXZlIHNwYXduZWQgYSB3b3JrIHF1ZXVl
-IHRhc2sgdG8gcGVyZm9ybSB0aGUgdC0+dGFza19kb25lKHQpIG9wZXJhdGlvbiBpbiBhIHNlcGFy
-YXRlIHRocmVhZCByYXRoZXIgdGhhbiBpbmxpbmUgYW5kIHByZWNhcmlvdXNseSB1bmxvY2tlZDsg
-YnV0IHRoYXQgd291bGQgYmUgYmV5b25kIHRoZSBzY29wZSBvZiB0aGVzZSBjaGFuZ2VzIGFuZCBz
-aG91bGQgYmUgbGVmdCBmb3IgZnV0dXJlIHdvcmsgdG8gZGVjaWRlIGlmIGl0IGlzIGV2ZW4gbmVj
-ZXNzYXJ5LiBOb3Qgc3VyZSBob3cgc3VjaCBhIGNoYW5nZSB3b3VsZCBhZmZlY3QgcGVyZm9ybWFu
-Y2UgKHVzaW5nIHRoZSB3b3JrIHF1ZXVlKSAuLi4gc28gSSBhbSAnYWZyYWlkJyBvZiBwdXNoaW5n
-IHN1Y2ggYSBjaGFuZ2UgaW4gYW55IGNhc2UgZ2l2ZW4gdGhlIHJlbGF0aXZlbHkgcmVsaWFibGUg
-b3BlcmF0aW9uIG9mIHRoaXMgZHJpdmVyIChhbmQgdGhlIGR5bmFtaWMgbmF0dXJlIG9mIHRoZSBj
-aGFuZ2VzIERhbiBpcyBtYWtpbmcgdG8gdGhlIFNBVEEgc2lkZSBvZiB0aGluZ3MgZm9yIGluc3Rh
-bmNlIDstfSApLg0KPg0KPkkgYW0gc29ycnkgZm9yIHRha2luZyBzbyBsb25nIHRvIGdldCB0byB0
-aGUgdGFzayBvZiByZXZpZXdpbmcgdGhpcyAoYW5kIHRoZSBwcmV2aW91cykgY29kZS4gSSBsb29r
-IGZvcndhcmQgdG8geW91ciBjb21tZW50cy4NCj4NCj5TaW5jZXJlbHkgLS0gTWFyayBTYWx5enlu
-DQo+DQo+T24gRmViIDI2LCAyMDEyLCBhdCA4OjMzIEFNLCBzYW50b3NoIG5heWFrIHdyb3RlOg0K
-Pg0KPj4gQEAgLTIyMDcsNyArMjIwNiw2IEBAIG1waV9zYXRhX2NvbXBsZXRpb24oc3RydWN0IHBt
-ODAwMV9oYmFfaW5mbyAqcG04MDAxX2hhLCB2b2lkICpwaW9tYikNCj4+IHN0YXRpYyB2b2lkIG1w
-aV9zYXRhX2V2ZW50KHN0cnVjdCBwbTgwMDFfaGJhX2luZm8gKnBtODAwMV9oYSAsIHZvaWQgKnBp
-b21iKQ0KPj4gew0KPj4gCXN0cnVjdCBzYXNfdGFzayAqdDsNCj4+IC0JdW5zaWduZWQgbG9uZyBm
-bGFncyA9IDA7DQo+TUdTPgl1bnNpZ25lZCBsb25nIGZsYWdzOw0KPj4gCXN0cnVjdCB0YXNrX3N0
-YXR1c19zdHJ1Y3QgKnRzOw0KPj4gCXN0cnVjdCBwbTgwMDFfY2NiX2luZm8gKmNjYjsNCj4+IAlz
-dHJ1Y3QgcG04MDAxX2RldmljZSAqcG04MDAxX2RldjsNCj4+IEBAIC0yMjg3LDkgKzIyODUsOSBA
-QCBzdGF0aWMgdm9pZCBtcGlfc2F0YV9ldmVudChzdHJ1Y3QgcG04MDAxX2hiYV9pbmZvICpwbTgw
-MDFfaGEgLCB2b2lkICpwaW9tYikNCj4+IAkJCXRzLT5zdGF0ID0gU0FTX1FVRVVFX0ZVTEw7DQo+
-PiAJCQlwbTgwMDFfY2NiX3Rhc2tfZnJlZShwbTgwMDFfaGEsIHQsIGNjYiwgdGFnKTsNCj4+IAkJ
-CW1iKCk7LypkaXR0byovDQo+PiAtCQkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcG04MDAxX2hh
-LT5sb2NrLCBmbGFncyk7DQo+PiArCQkJc3Bpbl91bmxvY2tfaXJxKCZwbTgwMDFfaGEtPmxvY2sp
-Ow0KPj4gCQkJdC0+dGFza19kb25lKHQpOw0KPj4gLQkJCXNwaW5fbG9ja19pcnFzYXZlKCZwbTgw
-MDFfaGEtPmxvY2ssIGZsYWdzKTsNCj4+ICsJCQlzcGluX2xvY2tfaXJxKCZwbTgwMDFfaGEtPmxv
-Y2spOw0KPj4gCQkJcmV0dXJuOw0KPj4gCQl9DQo+PiAJCWJyZWFrOw0KPj4gQEAgLTIzODcsMzEg
-KzIzODUsMzEgQEAgc3RhdGljIHZvaWQgbXBpX3NhdGFfZXZlbnQoc3RydWN0IHBtODAwMV9oYmFf
-aW5mbyAqcG04MDAxX2hhICwgdm9pZCAqcGlvbWIpDQo+PiAJCXRzLT5zdGF0ID0gU0FTX09QRU5f
-VE87DQo+PiAJCWJyZWFrOw0KPj4gCX0NCj4+IC0Jc3Bpbl9sb2NrX2lycXNhdmUoJnQtPnRhc2tf
-c3RhdGVfbG9jaywgZmxhZ3MpOw0KPj4gKwlzcGluX2xvY2tfaXJxKCZ0LT50YXNrX3N0YXRlX2xv
-Y2spOw0KPk1HUz4Jc3Bpbl9sb2NrX2lycXNhdmUoJnQtPnRhc2tfc3RhdGVfbG9jaywgZmxhZ3Mp
-Ow0KPj4gCXQtPnRhc2tfc3RhdGVfZmxhZ3MgJj0gflNBU19UQVNLX1NUQVRFX1BFTkRJTkc7DQo+
-PiAJdC0+dGFza19zdGF0ZV9mbGFncyAmPSB+U0FTX1RBU0tfQVRfSU5JVElBVE9SOw0KPj4gCXQt
-PnRhc2tfc3RhdGVfZmxhZ3MgfD0gU0FTX1RBU0tfU1RBVEVfRE9ORTsNCj4+IAlpZiAodW5saWtl
-bHkoKHQtPnRhc2tfc3RhdGVfZmxhZ3MgJiBTQVNfVEFTS19TVEFURV9BQk9SVEVEKSkpIHsNCj4+
-IC0JCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnQtPnRhc2tfc3RhdGVfbG9jaywgZmxhZ3MpOw0K
-Pj4gKwkJc3Bpbl91bmxvY2tfaXJxKCZ0LT50YXNrX3N0YXRlX2xvY2spOw0KPk1HUz4JCXNwaW5f
-dW5sb2NrX2lycXJlc3RvcmUoJnQtPnRhc2tfc3RhdGVfbG9jaywgZmxhZ3MpOw0KPj4gCQlQTTgw
-MDFfRkFJTF9EQkcocG04MDAxX2hhLA0KPj4gCQkJcG04MDAxX3ByaW50aygidGFzayAweCVwIGRv
-bmUgd2l0aCBpb19zdGF0dXMgMHgleCINCj4+IAkJCSIgcmVzcCAweCV4IHN0YXQgMHgleCBidXQg
-YWJvcnRlZCBieSB1cHBlciBsYXllciFcbiIsDQo+PiAJCQl0LCBldmVudCwgdHMtPnJlc3AsIHRz
-LT5zdGF0KSk7DQo+PiAJCXBtODAwMV9jY2JfdGFza19mcmVlKHBtODAwMV9oYSwgdCwgY2NiLCB0
-YWcpOw0KPj4gCX0gZWxzZSBpZiAodC0+dWxkZF90YXNrKSB7DQo+PiAtCQlzcGluX3VubG9ja19p
-cnFyZXN0b3JlKCZ0LT50YXNrX3N0YXRlX2xvY2ssIGZsYWdzKTsNCj4+ICsJCXNwaW5fdW5sb2Nr
-X2lycSgmdC0+dGFza19zdGF0ZV9sb2NrKTsNCj4+IAkJcG04MDAxX2NjYl90YXNrX2ZyZWUocG04
-MDAxX2hhLCB0LCBjY2IsIHRhZyk7DQo+PiAJCW1iKCk7LyogZGl0dG8gKi8NCj4+IC0JCXNwaW5f
-dW5sb2NrX2lycXJlc3RvcmUoJnBtODAwMV9oYS0+bG9jaywgZmxhZ3MpOw0KPj4gKwkJc3Bpbl91
-bmxvY2tfaXJxKCZwbTgwMDFfaGEtPmxvY2spOw0KPj4gCQl0LT50YXNrX2RvbmUodCk7DQo+PiAt
-CQlzcGluX2xvY2tfaXJxc2F2ZSgmcG04MDAxX2hhLT5sb2NrLCBmbGFncyk7DQo+PiArCQlzcGlu
-X2xvY2tfaXJxKCZwbTgwMDFfaGEtPmxvY2spOw0KPj4gCX0gZWxzZSBpZiAoIXQtPnVsZGRfdGFz
-aykgew0KPj4gLQkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmdC0+dGFza19zdGF0ZV9sb2NrLCBm
-bGFncyk7DQo+PiArCQlzcGluX3VubG9ja19pcnEoJnQtPnRhc2tfc3RhdGVfbG9jayk7DQo+PiAJ
-CXBtODAwMV9jY2JfdGFza19mcmVlKHBtODAwMV9oYSwgdCwgY2NiLCB0YWcpOw0KPj4gCQltYigp
-Oy8qZGl0dG8qLw0KPj4gLQkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcG04MDAxX2hhLT5sb2Nr
-LCBmbGFncyk7DQo+PiArCQlzcGluX3VubG9ja19pcnEoJnBtODAwMV9oYS0+bG9jayk7DQo+PiAJ
-CXQtPnRhc2tfZG9uZSh0KTsNCj4+IC0JCXNwaW5fbG9ja19pcnFzYXZlKCZwbTgwMDFfaGEtPmxv
-Y2ssIGZsYWdzKTsNCj4+ICsJCXNwaW5fbG9ja19pcnEoJnBtODAwMV9oYS0+bG9jayk7DQo+PiAJ
-fQ0KPj4gfQ0KPg0KPi0tDQo+VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhl
-IGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQo+dGhlIGJvZHkgb2YgYSBtZXNzYWdl
-IHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj5Nb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBo
-dHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCj4NCj5fX19fX19fX19f
-IEluZm9ybWF0aW9uIGZyb20gRVNFVCBOT0QzMiBBbnRpdmlydXMsIHZlcnNpb24gb2YgdmlydXMg
-c2lnbmF0dXJlIGRhdGFiYXNlIDU2NTkgKDIwMTAxMTI5KSBfX19fX19fX19fDQo+DQo+VGhlIG1l
-c3NhZ2Ugd2FzIGNoZWNrZWQgYnkgRVNFVCBOT0QzMiBBbnRpdmlydXMuDQo+DQo+aHR0cDovL3d3
-dy5lc2V0LmNvbQ0KPg0KPg0KPg==
+>>>>> "Eric" == Eric Sandeen <sandeen@redhat.com> writes:
 
+Eric> note, I didn't change the return value of inquiry_evpd_b2(); that
+Eric> seems unrelated to this change, and should be a separate patch,
+Eric> no?
+
+
+scsi_debug: Fix incorrect page length in logical block provisioning VPD
+
+The page length for the 0xb2 VPD page is defined to be 4 bytes when no
+provisioning descriptors are provided (DP=0).
+
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+---
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 6888b2c..a393a61 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -777,7 +777,7 @@ static int inquiry_evpd_b1(unsigned char *arr)
+ /* Thin provisioning VPD page (SBC-3) */
+ static int inquiry_evpd_b2(unsigned char *arr)
+ {
+-	memset(arr, 0, 0x8);
++	memset(arr, 0, 0x4);
+ 	arr[0] = 0;			/* threshold exponent */
+ 
+ 	if (scsi_debug_lbpu)
+@@ -789,7 +789,7 @@ static int inquiry_evpd_b2(unsigned char *arr)
+ 	if (scsi_debug_lbpws10)
+ 		arr[1] |= 1 << 5;
+ 
+-	return 0x8;
++	return 0x4;
+ }
+ 
+ #define SDEBUG_LONG_INQ_SZ 96
