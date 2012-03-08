@@ -1,20 +1,22 @@
 From: Arvind Kumar <arvindkumar@vmware.com>
 Subject: [PATCH] VMW_PVSCSI: Try setting host->max_id as suggested by the
  device.
-Date: Thu, 08 Mar 2012 15:48:53 +0530
-Message-ID: <1331201933.5943.10.camel@arvind-laptop>
+Date: Thu, 08 Mar 2012 16:02:13 +0530
+Message-ID: <1331202733.5943.18.camel@arvind-laptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-1.vmware.com ([208.91.2.12]:59583 "EHLO
+Received: from smtp-outbound-1.vmware.com ([208.91.2.12]:52399 "EHLO
 	smtp-outbound-1.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752286Ab2CHKS6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Mar 2012 05:18:58 -0500
+	by vger.kernel.org with ESMTP id S1750795Ab2CHKcS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Mar 2012 05:32:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, JBottemley@parallels.com
-Cc: pv-drivers@vmware.com, akataria@vmware.com, skekre@vmware.com, jsavanyo@vmware.com
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: pv-drivers@vmware.com, akataria@vmware.com, skekre@vmware.com
+
+Oops! Mis-spelled JBottomley@parallels.com in To field. Sending again with the right email id.
 
 Try setting host->max_id as suggested by the device.
 
@@ -278,6 +280,7 @@ index 62e36e7..3546e86 100644
   */
 -- 
 1.7.1
+
 
 
 
