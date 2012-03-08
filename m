@@ -1,82 +1,109 @@
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: DISCARD/WRITE_SAME request accounting (Was: Re: [PATCH 2/7]
- block: Implement support for WRITE SAME)
-Date: Thu, 8 Mar 2012 11:48:53 +0100 (CET)
-Message-ID: <alpine.LFD.2.00.1203081138440.5987@dhcp-27-109.brq.redhat.com>
-References: <1330658571-12958-1-git-send-email-martin.petersen@oracle.com> <1330658571-12958-3-git-send-email-martin.petersen@oracle.com> <20120302220823.GI26315@redhat.com> <yq1lindlimr.fsf@sermon.lab.mkp.net> <20120307170310.GE13430@redhat.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2] scsi_lib: rate-limit the error message from failing
+ commands
+Date: Thu, 08 Mar 2012 11:59:52 +0100
+Message-ID: <4F589128.9020506@redhat.com>
+References: <20120307235632.10375.55053.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44670 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:16666 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752401Ab2CHKtM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Mar 2012 05:49:12 -0500
-In-Reply-To: <20120307170310.GE13430@redhat.com>
+	id S1756376Ab2CHLAV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Mar 2012 06:00:21 -0500
+In-Reply-To: <20120307235632.10375.55053.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>
+To: Yi Zou <yi.zou@intel.com>
+Cc: linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-On Wed, 7 Mar 2012, Vivek Goyal wrote:
+On 03/08/2012 12:56 AM, Yi Zou wrote:
+> When performing a cable pull test w/ active stress I/O using fio over
+> a dual port Intel 82599 FCoE CNA, w/ 256LUNs on one port and about 32LUNs
+> on the other, it is observed that the system becomes not usable due to
+> scsi-ml being busy printing the error messages for all the failing commands.
+> I don't believe this problem is specific to FCoE and these commands are
+> anyway failing due to link being down (DID_NO_CONNECT), just rate-limit
+> the messages here to solve this issue.
+>
+> v2->v1: use __ratelimit() as Tomas Henzl mentioned as the proper way for
+> rate-limit per function. However, in this case, the failed i/o gets to
+> blk_end_request_err() and then blk_update_request(), which also has to
+> be rate-limited, as added in the v2 of this patch.
+>
+> Signed-off-by: Yi Zou <yi.zou@intel.com>
+> Cc: www.Open-FCoE.org <devel@open-fcoe.org>
+> Cc: Tomas Henzl <thenzl@redhat.com>
+I thinks the rate limit is fine, thanks.
 
-> On Tue, Mar 06, 2012 at 12:54:52PM -0500, Martin K. Petersen wrote:
-> > >>>>> "Vivek" == Vivek Goyal <vgoyal@redhat.com> writes:
-> > 
-> > Vivek> Thinking loud. Will it logically make sense to account for whole
-> > Vivek> BIO (all the sectors and not just 1). Target device did the
-> > Vivek> actual work of writing the sector. Just that we reduced the data
-> > Vivek> transfer overhead.
-> > 
-> > We have absolutely no idea how much work the storage device will do. It
-> > could be doing zero-detect or dedup causing it to update an internal
-> > allocation map instead of actually writing out blocks. Or it could be
-> > forced to do more I/O than we requested due to wear leveling or because
-> > it is a RAID device which has to write out full stripes and parity
-> > blocks.
-> > 
-> > 
-> > Vivek> I thought it will make more sense to count WRITE_SAME towards
-> > Vivek> number of sectors written and not DISCARDS. Not sure why it make
-> > Vivek> sense to count discard sectors towards sectors written in
-> > Vivek> disk/part stat.
-> > 
-> > But we're measuring page out activity, right?
-> > 
-> > In my mind the only thing we can reliably measure is the I/O we're
-> > transmitting to or receiving from the device. So I'd personally like to
-> > see zero for discard and logical block size for write same.
-> 
-> counting IO which is being transmitted/received from device makes
-> sense (Given the fact we don't know how much actual work device will
-> have to do). So counting 1 block for write same and zero block for discard
-> sounds reasonable to me.
-> 
-> Looks like current code counts all the discard sectors towards number of
-> blocks written. So that will need to be changed. CCing Lukas, he might have
-> thoughts/opinion on discard request accounting.
+Acked-by: Tomas Henzl <thenzl@redhat.com>
 
-I am little surprised that we still count all the discard sectors
-towards the number of bock written. I have mentioned this problem to
-Jens last year.
+> ---
+>
+>  block/blk-core.c        |    8 +++++---
+>  drivers/scsi/scsi_lib.c |    5 ++++-
+>  2 files changed, 9 insertions(+), 4 deletions(-)
+>
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 3a78b00..4415c86 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -29,6 +29,7 @@
+>  #include <linux/fault-inject.h>
+>  #include <linux/list_sort.h>
+>  #include <linux/delay.h>
+> +#include <linux/ratelimit.h>
+>  
+>  #define CREATE_TRACE_POINTS
+>  #include <trace/events/block.h>
+> @@ -2132,9 +2133,10 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
+>  			error_type = "I/O";
+>  			break;
+>  		}
+> -		printk(KERN_ERR "end_request: %s error, dev %s, sector %llu\n",
+> -		       error_type, req->rq_disk ? req->rq_disk->disk_name : "?",
+> -		       (unsigned long long)blk_rq_pos(req));
+> +		printk_ratelimited(KERN_ERR "end_request: %s error, dev %s, "
+> +				   "sector %llu\n", error_type, req->rq_disk ?
+> +				   req->rq_disk->disk_name : "?",
+> +				   (unsigned long long)blk_rq_pos(req));
+>  	}
+>  
+>  	blk_account_io_completion(req, nr_bytes);
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index b2c95db..06cf08a 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/delay.h>
+>  #include <linux/hardirq.h>
+>  #include <linux/scatterlist.h>
+> +#include <linux/ratelimit.h>
+>  
+>  #include <scsi/scsi.h>
+>  #include <scsi/scsi_cmnd.h>
+> @@ -745,6 +746,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
+>  	      ACTION_DELAYED_RETRY} action;
+>  	char *description = NULL;
+> +	static DEFINE_RATELIMIT_STATE(rs,  DEFAULT_RATELIMIT_INTERVAL,
+> +				      DEFAULT_RATELIMIT_BURST);
+>  
+>  	if (result) {
+>  		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
+> @@ -934,7 +937,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  	case ACTION_FAIL:
+>  		/* Give up and fail the remainder of the request */
+>  		scsi_release_buffers(cmd);
+> -		if (!(req->cmd_flags & REQ_QUIET)) {
+> +		if (!(req->cmd_flags & REQ_QUIET) && __ratelimit(&rs)) {
+>  			if (description)
+>  				scmd_printk(KERN_INFO, cmd, "%s\n",
+>  					    description);
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Anyway, it would be nice to have separate counter for discard requests
-and actually counting the discard sectors rather than just one for each
-discard bio. I know that the device can ignore the whole, or part of the
-request for its own reasons. But it is not a reason for not counting
-what we actually intended to discard. I think this statistic will be
-useful.
-
-Consider for example the situation where you find you that you're
-constantly discarding more than you actually write to the device over
-some period of time. The you would probably want to adjust your discard
-policy.
-
-Thanks!
--Lukas
-
-> 
-> Thanks
-> Vivek
-> 
-
--- 
