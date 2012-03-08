@@ -1,28 +1,35 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 0/7] powerpc: remove the legacy iSeries platform
- specific drivers
-Date: Wed, 07 Mar 2012 22:53:01 -0800 (PST)
-Message-ID: <20120307.225301.360050313988337392.davem@davemloft.net>
-References: <20120308152853.b5010336abbb8f90e8a2500c@canb.auug.org.au>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] mvsas: remove unused variable in mvs_task_exec()
+Date: Thu, 8 Mar 2012 10:26:33 +0300
+Message-ID: <20120308072633.GB27713@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:58204 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491Ab2CHG5h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Mar 2012 01:57:37 -0500
-In-Reply-To: <20120308152853.b5010336abbb8f90e8a2500c@canb.auug.org.au>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:43230 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487Ab2CHH1A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Mar 2012 02:27:00 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sfr@canb.auug.org.au
-Cc: benh@kernel.crashing.org, linuxppc-dev@lists.ozlabs.org, JBottomley@parallels.com, netdev@vger.kernel.org, alan@linux.intel.com, brking@linux.vnet.ibm.com, gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Xiangliang Yu <yuxiangl@marvell.com>, James Bottomley <James.Bottomley@suse.de>, Jack Wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Date: Thu, 8 Mar 2012 15:28:53 +1100
+We don't use "dev" any more after 07ec747a5f ("libsas: remove
+ata_port.lock management duties from lldds") and it causes a compile
+warning.
 
-> It would probably be easiest if all these patches were merged via the
-> powerpc tree to eliminate any dependencies between them.  Their impact on
-> generic code is very small.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-No objections.
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 7d46c1a..4539d59 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -885,7 +885,6 @@ static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags,
+ 				struct completion *completion, int is_tmf,
+ 				struct mvs_tmf_task *tmf)
+ {
+-	struct domain_device *dev = task->dev;
+ 	struct mvs_info *mvi = NULL;
+ 	u32 rc = 0;
+ 	u32 pass = 0;
