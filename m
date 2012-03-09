@@ -1,61 +1,65 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 03/10] libfcoe: Do not sends FDISCs before FLOGI during CVL
-Date: Fri, 09 Mar 2012 14:49:53 -0800
-Message-ID: <20120309224953.6515.45655.stgit@localhost6.localdomain6>
+Subject: [PATCH 04/10] libfc: update fc_host mfs along with updating lport->mfs
+Date: Fri, 09 Mar 2012 14:49:58 -0800
+Message-ID: <20120309224958.6515.40289.stgit@localhost6.localdomain6>
 References: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:55949 "EHLO mga03.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:42039 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755601Ab2CIWty (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Mar 2012 17:49:54 -0500
+	id S1755601Ab2CIWt7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Mar 2012 17:49:59 -0500
 In-Reply-To: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: Ross Brattain <ross.b.brattain@intel.com>, Vasu Dev <vasu.dev@intel.com>
 
-From: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+From: Vasu Dev <vasu.dev@intel.com>
 
-When handling CVL with no Vx port descriptors, lports for NPIV ports are reset
-before issuing the ctlr_reset. This causes FDISCs to be issued before
-successful FLOGI. Fix it by resetting the controller before resetting the
-lports.
+Currently fc_host mfs is not getting updated in
+case its changed during FLOGI and that leaves fc_host
+to show its initial old value in sysfs, so instead
+have fc_host mfs updated along with updating lport mfs
+during FLOGI.
 
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Also in case of bad mfs during flogi, error out
+instead of continuing with flogi.
+
+[ Changes made by Robert Love: condition to '>=' and
+  added printing of lport->mfs in DBG statement. FLOGI
+  resp processing failed without being able to compare
+  FCoE MFS 2112 against an incoming MFS of 2112 ]
+
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe_ctlr.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index e7522dc..a43dad2 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -1273,11 +1273,6 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
- 		 * No Vx_Port description. Clear all NPIV ports,
- 		 * followed by physical port
- 		 */
--		mutex_lock(&lport->lp_mutex);
--		list_for_each_entry(vn_port, &lport->vports, list)
--			fc_lport_reset(vn_port);
--		mutex_unlock(&lport->lp_mutex);
--
- 		mutex_lock(&fip->ctlr_mutex);
- 		per_cpu_ptr(lport->dev_stats,
- 			    get_cpu())->VLinkFailureCount++;
-@@ -1285,6 +1280,11 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
- 		fcoe_ctlr_reset(fip);
- 		mutex_unlock(&fip->ctlr_mutex);
- 
-+		mutex_lock(&lport->lp_mutex);
-+		list_for_each_entry(vn_port, &lport->vports, list)
-+			fc_lport_reset(vn_port);
-+		mutex_unlock(&lport->lp_mutex);
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 9a0b2a9..4f7ef76 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1743,8 +1743,16 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 	mfs = ntohs(flp->fl_csp.sp_bb_data) &
+ 		FC_SP_BB_DATA_MASK;
+ 	if (mfs >= FC_SP_MIN_MAX_PAYLOAD &&
+-	    mfs < lport->mfs)
++	    mfs <= lport->mfs) {
+ 		lport->mfs = mfs;
++		fc_host_maxframe_size(lport->host) = mfs;
++	} else {
++		FC_LPORT_DBG(lport, "FLOGI bad mfs:%hu response, "
++			     "lport->mfs:%hu\n", mfs, lport->mfs);
++		fc_lport_error(lport, fp);
++		goto err;
++	}
 +
- 		fc_lport_reset(fip->lp);
- 		fcoe_ctlr_solicit(fip, NULL);
- 	} else {
+ 	csp_flags = ntohs(flp->fl_csp.sp_features);
+ 	r_a_tov = ntohl(flp->fl_csp.sp_r_a_tov);
+ 	e_d_tov = ntohl(flp->fl_csp.sp_e_d_tov);
 
