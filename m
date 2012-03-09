@@ -1,83 +1,67 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 08/10] fcoe: remove frame dropping code from fcoe_percpu_clean
-Date: Fri, 09 Mar 2012 14:50:19 -0800
-Message-ID: <20120309225019.6515.24193.stgit@localhost6.localdomain6>
+Subject: [PATCH 10/10] libfc: fcoe_transport_create fails in single-CPU
+ environment
+Date: Fri, 09 Mar 2012 14:50:30 -0800
+Message-ID: <20120309225030.6515.1152.stgit@localhost6.localdomain6>
 References: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58131 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:2826 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964830Ab2CIWuT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Mar 2012 17:50:19 -0500
+	id S964830Ab2CIWua (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Mar 2012 17:50:30 -0500
 In-Reply-To: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Vasu Dev <vasu.dev@linux.intel.com>, Neil Horman <nhorman@tuxdriver.com>, Vasu Dev <vasu.dev@intel.com>
+Cc: Steven Clark <sclark@crossbeam.com>
 
-From: Neil Horman <nhorman@tuxdriver.com>
+From: Steven Clark <sclark@crossbeam.com>
 
-commit e7a51997dad4e17395be1209970e18d2e9305b24 added a skb flush to the
-fcoe_rx_list, which ensures that we push any pending frames on the list through
-the per-cpu receive thread.  Because of this, its redundant to lock and scan the
-list first, dropping any arriving frames.
+Starting fcoe fails at fcoe_transport_create when attempting to allocate a pool of 4K exchanges on a
+64-bit single-CPU environment because the call  to __alloc_percpu() is greater than the max of 32K.
+This patch reduces the number of exchanges to fit within the maximum allowed space.
 
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-CC: Robert Love <robert.w.love@intel.com>
-CC: Vasu Dev <vasu.dev@linux.intel.com>
-CC: "James E.J. Bottomley" <JBottomley@parallels.com>
-Acked-by: Vasu Dev <vasu.dev@intel.com>
+[ Whitespace problems fixed by Robert Love to satisfy chechpatch.pl ]
+
+Signed-off-by: Steven Clark <sclark@crossbeam.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   22 +++-------------------
- 1 files changed, 3 insertions(+), 19 deletions(-)
+ drivers/scsi/libfc/fc_exch.c |   14 ++++++++++++--
+ 1 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 961bf36..d86ca37 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2254,31 +2254,14 @@ static int fcoe_link_ok(struct fc_lport *lport)
- static void fcoe_percpu_clean(struct fc_lport *lport)
- {
- 	struct fcoe_percpu_s *pp;
--	struct fcoe_rcv_info *fr;
--	struct sk_buff_head *list;
--	struct sk_buff *skb, *next;
--	struct sk_buff *head;
-+	struct sk_buff *skb;
- 	unsigned int cpu;
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 588060f..31cf794 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -2284,7 +2284,18 @@ struct fc_exch_mgr *fc_exch_mgr_alloc(struct fc_lport *lport,
+ 	mp->class = class;
+ 	/* adjust em exch xid range for offload */
+ 	mp->min_xid = min_xid;
+-	mp->max_xid = max_xid;
++
++       /* reduce range so per cpu pool fits into PCPU_MIN_UNIT_SIZE pool */
++	pool_exch_range = (PCPU_MIN_UNIT_SIZE - sizeof(*pool)) /
++		sizeof(struct fc_exch *);
++	if ((max_xid - min_xid + 1) / (fc_cpu_mask + 1) > pool_exch_range) {
++		mp->max_xid = pool_exch_range * (fc_cpu_mask + 1) +
++			min_xid - 1;
++	} else {
++		mp->max_xid = max_xid;
++		pool_exch_range = (mp->max_xid - mp->min_xid + 1) /
++			(fc_cpu_mask + 1);
++	}
  
- 	for_each_possible_cpu(cpu) {
- 		pp = &per_cpu(fcoe_percpu, cpu);
--		spin_lock_bh(&pp->fcoe_rx_list.lock);
--		list = &pp->fcoe_rx_list;
--		head = list->next;
--		for (skb = head; skb != (struct sk_buff *)list;
--		     skb = next) {
--			next = skb->next;
--			fr = fcoe_dev_from_skb(skb);
--			if (fr->fr_dev == lport) {
--				__skb_unlink(skb, list);
--				kfree_skb(skb);
--			}
--		}
+ 	mp->ep_pool = mempool_create_slab_pool(2, fc_em_cachep);
+ 	if (!mp->ep_pool)
+@@ -2295,7 +2306,6 @@ struct fc_exch_mgr *fc_exch_mgr_alloc(struct fc_lport *lport,
+ 	 * divided across all cpus. The exch pointers array memory is
+ 	 * allocated for exch range per pool.
+ 	 */
+-	pool_exch_range = (mp->max_xid - mp->min_xid + 1) / (fc_cpu_mask + 1);
+ 	mp->pool_max_index = pool_exch_range - 1;
  
--		if (!pp->thread || !cpu_online(cpu)) {
--			spin_unlock_bh(&pp->fcoe_rx_list.lock);
-+		if (!pp->thread || !cpu_online(cpu))
- 			continue;
--		}
- 
- 		skb = dev_alloc_skb(0);
- 		if (!skb) {
-@@ -2287,6 +2270,7 @@ static void fcoe_percpu_clean(struct fc_lport *lport)
- 		}
- 		skb->destructor = fcoe_percpu_flush_done;
- 
-+		spin_lock_bh(&pp->fcoe_rx_list.lock);
- 		__skb_queue_tail(&pp->fcoe_rx_list, skb);
- 		if (pp->fcoe_rx_list.qlen == 1)
- 			wake_up_process(pp->thread);
+ 	/*
 
