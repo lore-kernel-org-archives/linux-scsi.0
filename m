@@ -1,8 +1,8 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 02/10] fcoe: Ensure fcoe_recv_frame is always called in
- process context
-Date: Fri, 09 Mar 2012 14:49:48 -0800
-Message-ID: <20120309224948.6515.58974.stgit@localhost6.localdomain6>
+Subject: [PATCH 05/10] libfcoe: Support extra MAC descriptor to be used as
+ FCoE MAC
+Date: Fri, 09 Mar 2012 14:50:03 -0800
+Message-ID: <20120309225003.6515.11520.stgit@localhost6.localdomain6>
 References: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,82 +10,126 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga09.intel.com ([134.134.136.24]:63318 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964830Ab2CIWuu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Mar 2012 17:50:50 -0500
+	id S964908Ab2CIWuv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Mar 2012 17:50:51 -0500
 In-Reply-To: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>, Vasu Dev <vasu.dev@intel.com>
+Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-From: Neil Horman <nhorman@tuxdriver.com>
+From: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-commit 859b7b649ab58ee5cbfb761491317d5b315c1b0f introduced the ability to call
-fcoe_recv_frame in softirq context.  While this is beneficial to performance,
-its not safe to do, as it breaks the serialization of access to the lport
-structure (i.e. when an fcoe interface is being torn down, theres no way to
-serialize the teardown effort with the completion of receieve operations
-occuring in softirq context.  As a result, lport (and other) data structures can
-be read and modified in parallel leading to corruption.  Most notable is the
-vport list, which is protected by a mutex, that will cause a panic if a softirq
-receive while said mutex is locked.  Additionaly, the ema_list, discussed here:
+Some switch implementations (eg., HP virtual connect FlexFabric) send two MAC
+descriptors in FIP FLOGI response, with first MAC descriptor (granted_mac) used
+as FPMA, and the second one (fcoe_mac) used as destination address for
+sending/receiving FCoE packets. fip_mac continues to be used for FIP traffic.
+This patch introduces fcoe_mac in fcoe_fcf structure. For regular switches,
+both fcoe_mac and fip_mac will be the same. For the switches that send
+additional MAC descriptor, fcoe_mac is updated.
 
-http://lists.open-fcoe.org/pipermail/devel/2012-February/011947.html
-
-Can be corrupted if a list traversal occurs in softirq context at the same time
-as a list delete in process context.  And generally the lport state variables
-will not be stable, and may lead to unpredictable results.
-
-The most direct fix is to remove the bits from the above commit that allowed
-fcoe_recv_frame to be called in softirq context.  We just force all frames to be
-handled by the per-cpu rx threads.  This will allow the fcoe_if_destroy's use of
-fcoe_percpu_clean to function properly, ensuring that no frames are being
-received while the lport is being torn down.
-
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-Reviewed-by: Vasu Dev <vasu.dev@intel.com>
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   27 ++++++++++-----------------
- 1 files changed, 10 insertions(+), 17 deletions(-)
+ drivers/scsi/fcoe/fcoe_ctlr.c |   28 +++++++++++++++++++++++-----
+ include/scsi/libfcoe.h        |    4 +++-
+ 2 files changed, 26 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 2789581..22ae295 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1463,24 +1463,17 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 	 * so we're free to queue skbs into it's queue.
- 	 */
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index a43dad2..249a106 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -242,7 +242,7 @@ static void fcoe_ctlr_announce(struct fcoe_ctlr *fip)
+ 		printk(KERN_INFO "libfcoe: host%d: FIP selected "
+ 		       "Fibre-Channel Forwarder MAC %pM\n",
+ 		       fip->lp->host->host_no, sel->fcf_mac);
+-		memcpy(fip->dest_addr, sel->fcf_mac, ETH_ALEN);
++		memcpy(fip->dest_addr, sel->fcoe_mac, ETH_ALEN);
+ 		fip->map_dest = 0;
+ 	}
+ unlock:
+@@ -824,6 +824,7 @@ static int fcoe_ctlr_parse_adv(struct fcoe_ctlr *fip,
+ 			memcpy(fcf->fcf_mac,
+ 			       ((struct fip_mac_desc *)desc)->fd_mac,
+ 			       ETH_ALEN);
++			memcpy(fcf->fcoe_mac, fcf->fcf_mac, ETH_ALEN);
+ 			if (!is_valid_ether_addr(fcf->fcf_mac)) {
+ 				LIBFCOE_FIP_DBG(fip,
+ 					"Invalid MAC addr %pM in FIP adv\n",
+@@ -1013,6 +1014,7 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	struct fip_desc *desc;
+ 	struct fip_encaps *els;
+ 	struct fcoe_dev_stats *stats;
++	struct fcoe_fcf *sel;
+ 	enum fip_desc_type els_dtype = 0;
+ 	u8 els_op;
+ 	u8 sub;
+@@ -1040,7 +1042,8 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 			goto drop;
+ 		/* Drop ELS if there are duplicate critical descriptors */
+ 		if (desc->fip_dtype < 32) {
+-			if (desc_mask & 1U << desc->fip_dtype) {
++			if ((desc->fip_dtype != FIP_DT_MAC) &&
++			    (desc_mask & 1U << desc->fip_dtype)) {
+ 				LIBFCOE_FIP_DBG(fip, "Duplicate Critical "
+ 						"Descriptors in FIP ELS\n");
+ 				goto drop;
+@@ -1049,17 +1052,32 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 		}
+ 		switch (desc->fip_dtype) {
+ 		case FIP_DT_MAC:
++			sel = fip->sel_fcf;
+ 			if (desc_cnt == 1) {
+ 				LIBFCOE_FIP_DBG(fip, "FIP descriptors "
+ 						"received out of order\n");
+ 				goto drop;
+ 			}
++			/*
++			 * Some switch implementations send two MAC descriptors,
++			 * with first MAC(granted_mac) being the FPMA, and the
++			 * second one(fcoe_mac) is used as destination address
++			 * for sending/receiving FCoE packets. FIP traffic is
++			 * sent using fip_mac. For regular switches, both
++			 * fip_mac and fcoe_mac would be the same.
++			 */
++			if (desc_cnt == 2)
++				memcpy(granted_mac,
++				       ((struct fip_mac_desc *)desc)->fd_mac,
++				       ETH_ALEN);
  
--	/* If this is a SCSI-FCP frame, and this is already executing on the
--	 * correct CPU, and the queue for this CPU is empty, then go ahead
--	 * and process the frame directly in the softirq context.
--	 * This lets us process completions without context switching from the
--	 * NET_RX softirq, to our receive processing thread, and then back to
--	 * BLOCK softirq context.
-+	/*
-+	 * Note: We used to have a set of conditions under which we would
-+	 * call fcoe_recv_frame directly, rather than queuing to the rx list
-+	 * as it could save a few cycles, but doing so is prohibited, as
-+	 * fcoe_recv_frame has several paths that may sleep, which is forbidden
-+	 * in softirq context.
- 	 */
--	if (fh->fh_type == FC_TYPE_FCP &&
--	    cpu == smp_processor_id() &&
--	    skb_queue_empty(&fps->fcoe_rx_list)) {
--		spin_unlock_bh(&fps->fcoe_rx_list.lock);
--		fcoe_recv_frame(skb);
--	} else {
--		__skb_queue_tail(&fps->fcoe_rx_list, skb);
--		if (fps->fcoe_rx_list.qlen == 1)
--			wake_up_process(fps->thread);
--		spin_unlock_bh(&fps->fcoe_rx_list.lock);
--	}
-+	__skb_queue_tail(&fps->fcoe_rx_list, skb);
-+	if (fps->fcoe_rx_list.qlen == 1)
-+		wake_up_process(fps->thread);
-+	spin_unlock_bh(&fps->fcoe_rx_list.lock);
+ 			if (dlen != sizeof(struct fip_mac_desc))
+ 				goto len_err;
+-			memcpy(granted_mac,
+-			       ((struct fip_mac_desc *)desc)->fd_mac,
+-			       ETH_ALEN);
++
++			if ((desc_cnt == 3) && (sel))
++				memcpy(sel->fcoe_mac,
++				       ((struct fip_mac_desc *)desc)->fd_mac,
++				       ETH_ALEN);
+ 			break;
+ 		case FIP_DT_FLOGI:
+ 		case FIP_DT_FDISC:
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index 5a35a2a..cfdb55f 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -165,7 +165,8 @@ struct fcoe_ctlr {
+  * @switch_name: WWN of switch from advertisement
+  * @fabric_name: WWN of fabric from advertisement
+  * @fc_map:	 FC_MAP value from advertisement
+- * @fcf_mac:	 Ethernet address of the FCF
++ * @fcf_mac:	 Ethernet address of the FCF for FIP traffic
++ * @fcoe_mac:	 Ethernet address of the FCF for FCoE traffic
+  * @vfid:	 virtual fabric ID
+  * @pri:	 selection priority, smaller values are better
+  * @flogi_sent:	 current FLOGI sent to this FCF
+@@ -188,6 +189,7 @@ struct fcoe_fcf {
+ 	u32 fc_map;
+ 	u16 vfid;
+ 	u8 fcf_mac[ETH_ALEN];
++	u8 fcoe_mac[ETH_ALEN];
  
- 	return 0;
- err:
+ 	u8 pri;
+ 	u8 flogi_sent;
 
