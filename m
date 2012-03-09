@@ -1,44 +1,79 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 3/7] block: Make blkdev_issue_zeroout use WRITE SAME
-Date: Fri, 09 Mar 2012 19:05:49 +0100
-Message-ID: <4F5A467D.1000703@redhat.com>
-References: <1330658571-12958-1-git-send-email-martin.petersen@oracle.com> <1330658571-12958-4-git-send-email-martin.petersen@oracle.com>
+From: Jing Huang <huangj@Brocade.COM>
+Subject: RE: [PATCH] [SCSI] bfa: Fix endian bug in
+ bfad_iocmd_debug_fw_core().
+Date: Fri, 9 Mar 2012 10:51:32 -0800
+Message-ID: <E5313AF6F2BFD14293E5FD0F94750F86B3A6FB85CC@HQ1-EXCH01.corp.brocade.com>
+References: <1331053619-7211-1-git-send-email-santoshprasadnayak@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:46002 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754296Ab2CISF4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Mar 2012 13:05:56 -0500
-Received: by dajr28 with SMTP id r28so1698711daj.19
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Mar 2012 10:05:56 -0800 (PST)
-In-Reply-To: <1330658571-12958-4-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1331053619-7211-1-git-send-email-santoshprasadnayak@gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: santosh nayak <santoshprasadnayak@gmail.com>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Krishna Gudipati <kgudipat@Brocade.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, vgoyal@redhat.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-Il 02/03/2012 04:22, Martin K. Petersen ha scritto:
-> +int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
-> +			 sector_t nr_sects, gfp_t gfp_mask)
-> +{
-> +	if (bdev_write_same(bdev)) {
-> +		unsigned char bdn[BDEVNAME_SIZE];
-> +
-> +		if (!blkdev_issue_write_same(bdev, sector, nr_sects, gfp_mask,
-> +					     ZERO_PAGE(0)))
-> +			return 0;
-> +
-> +		bdevname(bdev, bdn);
-> +		printk(KERN_ERR "%s: WRITE SAME failed. Manually zeroing.\n",
-> +		       bdn);
-> +	}
-> +
-> +	return __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask);
-> +}
+Change looks good to me. Thanks
 
-Why not try DISCARD first if lbprz is true and the alignment is okay?
-This doesn't even require WRITE SAME support in the disk.
+Acked-by: Jing Huang <huangj@brocade.com>
 
-Paolo
+
+>-----Original Message-----
+>From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org]
+>On Behalf Of santosh nayak
+>Sent: Tuesday, March 06, 2012 9:07 AM
+>To: Jing Huang
+>Cc: JBottomley@parallels.com; linux-scsi@vger.kernel.org; linux-
+>kernel@vger.kernel.org; kernel-janitors@vger.kernel.org; Santosh Nayak
+>Subject: [PATCH] [SCSI] bfa: Fix endian bug in bfad_iocmd_debug_fw_core().
+>
+>From: Santosh Nayak <santoshprasadnayak@gmail.com>
+>
+>Casting pointer from native data type to other type is
+>endian-sensitive.
+>
+>"iocmd->offset"  is 64 bit but we use only first 32 bit.
+>It works in little-endian system but in big-endian system
+>it will break.
+>
+>Signed-off-by: Santosh Nayak <santoshprasadnayak@gmail.com>
+>---
+> drivers/scsi/bfa/bfad_bsg.c |    5 ++++-
+> 1 files changed, 4 insertions(+), 1 deletions(-)
+>
+>diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+>index 530de2b..c4edc63 100644
+>--- a/drivers/scsi/bfa/bfad_bsg.c
+>+++ b/drivers/scsi/bfa/bfad_bsg.c
+>@@ -1918,6 +1918,7 @@ bfad_iocmd_debug_fw_core(struct bfad_s *bfad, void
+>*cmd,
+> 	struct bfa_bsg_debug_s *iocmd = (struct bfa_bsg_debug_s *)cmd;
+> 	void	*iocmd_bufptr;
+> 	unsigned long	flags;
+>+	u32 offset;
+>
+> 	if (bfad_chk_iocmd_sz(payload_len, sizeof(struct bfa_bsg_debug_s),
+> 			BFA_DEBUG_FW_CORE_CHUNK_SZ) !=
+>BFA_STATUS_OK) {
+>@@ -1935,8 +1936,10 @@ bfad_iocmd_debug_fw_core(struct bfad_s *bfad, void
+>*cmd,
+>
+> 	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_debug_s);
+> 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+>+	offset = iocmd->offset;
+> 	iocmd->status = bfa_ioc_debug_fwcore(&bfad->bfa.ioc, iocmd_bufptr,
+>-				(u32 *)&iocmd->offset, &iocmd->bufsz);
+>+				&offset, &iocmd->bufsz);
+>+	iocmd->offset = offset;
+> 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+> out:
+> 	return 0;
+>--
+>1.7.4.4
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
