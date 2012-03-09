@@ -1,67 +1,91 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 10/10] libfc: fcoe_transport_create fails in single-CPU
- environment
-Date: Fri, 09 Mar 2012 14:50:30 -0800
-Message-ID: <20120309225030.6515.1152.stgit@localhost6.localdomain6>
+Subject: [PATCH 02/10] fcoe: Ensure fcoe_recv_frame is always called in
+ process context
+Date: Fri, 09 Mar 2012 14:49:48 -0800
+Message-ID: <20120309224948.6515.58974.stgit@localhost6.localdomain6>
 References: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:2826 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:63318 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964830Ab2CIWua (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Mar 2012 17:50:30 -0500
+	id S964830Ab2CIWuu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Mar 2012 17:50:50 -0500
 In-Reply-To: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Steven Clark <sclark@crossbeam.com>
+Cc: Neil Horman <nhorman@tuxdriver.com>, Vasu Dev <vasu.dev@intel.com>
 
-From: Steven Clark <sclark@crossbeam.com>
+From: Neil Horman <nhorman@tuxdriver.com>
 
-Starting fcoe fails at fcoe_transport_create when attempting to allocate a pool of 4K exchanges on a
-64-bit single-CPU environment because the call  to __alloc_percpu() is greater than the max of 32K.
-This patch reduces the number of exchanges to fit within the maximum allowed space.
+commit 859b7b649ab58ee5cbfb761491317d5b315c1b0f introduced the ability to call
+fcoe_recv_frame in softirq context.  While this is beneficial to performance,
+its not safe to do, as it breaks the serialization of access to the lport
+structure (i.e. when an fcoe interface is being torn down, theres no way to
+serialize the teardown effort with the completion of receieve operations
+occuring in softirq context.  As a result, lport (and other) data structures can
+be read and modified in parallel leading to corruption.  Most notable is the
+vport list, which is protected by a mutex, that will cause a panic if a softirq
+receive while said mutex is locked.  Additionaly, the ema_list, discussed here:
 
-[ Whitespace problems fixed by Robert Love to satisfy chechpatch.pl ]
+http://lists.open-fcoe.org/pipermail/devel/2012-February/011947.html
 
-Signed-off-by: Steven Clark <sclark@crossbeam.com>
+Can be corrupted if a list traversal occurs in softirq context at the same time
+as a list delete in process context.  And generally the lport state variables
+will not be stable, and may lead to unpredictable results.
+
+The most direct fix is to remove the bits from the above commit that allowed
+fcoe_recv_frame to be called in softirq context.  We just force all frames to be
+handled by the per-cpu rx threads.  This will allow the fcoe_if_destroy's use of
+fcoe_percpu_clean to function properly, ensuring that no frames are being
+received while the lport is being torn down.
+
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+Reviewed-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_exch.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   27 ++++++++++-----------------
+ 1 files changed, 10 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 588060f..31cf794 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -2284,7 +2284,18 @@ struct fc_exch_mgr *fc_exch_mgr_alloc(struct fc_lport *lport,
- 	mp->class = class;
- 	/* adjust em exch xid range for offload */
- 	mp->min_xid = min_xid;
--	mp->max_xid = max_xid;
-+
-+       /* reduce range so per cpu pool fits into PCPU_MIN_UNIT_SIZE pool */
-+	pool_exch_range = (PCPU_MIN_UNIT_SIZE - sizeof(*pool)) /
-+		sizeof(struct fc_exch *);
-+	if ((max_xid - min_xid + 1) / (fc_cpu_mask + 1) > pool_exch_range) {
-+		mp->max_xid = pool_exch_range * (fc_cpu_mask + 1) +
-+			min_xid - 1;
-+	} else {
-+		mp->max_xid = max_xid;
-+		pool_exch_range = (mp->max_xid - mp->min_xid + 1) /
-+			(fc_cpu_mask + 1);
-+	}
- 
- 	mp->ep_pool = mempool_create_slab_pool(2, fc_em_cachep);
- 	if (!mp->ep_pool)
-@@ -2295,7 +2306,6 @@ struct fc_exch_mgr *fc_exch_mgr_alloc(struct fc_lport *lport,
- 	 * divided across all cpus. The exch pointers array memory is
- 	 * allocated for exch range per pool.
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 2789581..22ae295 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1463,24 +1463,17 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 	 * so we're free to queue skbs into it's queue.
  	 */
--	pool_exch_range = (mp->max_xid - mp->min_xid + 1) / (fc_cpu_mask + 1);
- 	mp->pool_max_index = pool_exch_range - 1;
  
- 	/*
+-	/* If this is a SCSI-FCP frame, and this is already executing on the
+-	 * correct CPU, and the queue for this CPU is empty, then go ahead
+-	 * and process the frame directly in the softirq context.
+-	 * This lets us process completions without context switching from the
+-	 * NET_RX softirq, to our receive processing thread, and then back to
+-	 * BLOCK softirq context.
++	/*
++	 * Note: We used to have a set of conditions under which we would
++	 * call fcoe_recv_frame directly, rather than queuing to the rx list
++	 * as it could save a few cycles, but doing so is prohibited, as
++	 * fcoe_recv_frame has several paths that may sleep, which is forbidden
++	 * in softirq context.
+ 	 */
+-	if (fh->fh_type == FC_TYPE_FCP &&
+-	    cpu == smp_processor_id() &&
+-	    skb_queue_empty(&fps->fcoe_rx_list)) {
+-		spin_unlock_bh(&fps->fcoe_rx_list.lock);
+-		fcoe_recv_frame(skb);
+-	} else {
+-		__skb_queue_tail(&fps->fcoe_rx_list, skb);
+-		if (fps->fcoe_rx_list.qlen == 1)
+-			wake_up_process(fps->thread);
+-		spin_unlock_bh(&fps->fcoe_rx_list.lock);
+-	}
++	__skb_queue_tail(&fps->fcoe_rx_list, skb);
++	if (fps->fcoe_rx_list.qlen == 1)
++		wake_up_process(fps->thread);
++	spin_unlock_bh(&fps->fcoe_rx_list.lock);
+ 
+ 	return 0;
+ err:
 
