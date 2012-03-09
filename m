@@ -1,110 +1,85 @@
-From: Mark Salyzyn <mark_salyzyn@xyratex.com>
-Subject: Re: [PATCH] [SCSI] pm8001: Use spin_lock_irqsave() for task_state.
-Date: Fri, 9 Mar 2012 07:59:33 -0500
-Message-ID: <3AC0015A-DFF5-4D08-A535-1FC6F2094B31@xyratex.com>
-References: <1331280818-14042-1-git-send-email-santoshprasadnayak@gmail.com>
-Mime-Version: 1.0 (Apple Message framework v1257)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1331280818-14042-1-git-send-email-santoshprasadnayak@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: santosh nayak <santoshprasadnayak@gmail.com>
-Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, jack_wang@usish.com, lindar_liu@usish.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: santosh prasad nayak <santoshprasadnayak@gmail.com>
+Subject: Re: [PATCH] [SCSI] bfa: Fix endian bug in bfad_iocmd_debug_fw_core().
+Date: Fri, 9 Mar 2012 19:41:49 +0530
+Message-ID: <CAOD=uF6X-m_7ZExq6apKvS1B6dbmuGKGQOru2ySKDjYKntYeJw@mail.gmail.com>
+References: <1331053619-7211-1-git-send-email-santoshprasadnayak@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:62439 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752579Ab2CIOLu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Mar 2012 09:11:50 -0500
+Received: by dajr28 with SMTP id r28so1513313daj.19
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Mar 2012 06:11:49 -0800 (PST)
+In-Reply-To: <1331053619-7211-1-git-send-email-santoshprasadnayak@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: huangj@brocade.com
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-ACK
+Can you please review it ?
 
-On Mar 9, 2012, at 3:13 AM, santosh nayak wrote:
 
+regards
+Santosh
+
+On Tue, Mar 6, 2012 at 10:36 PM, santosh nayak
+<santoshprasadnayak@gmail.com> wrote:
 > From: Santosh Nayak <santoshprasadnayak@gmail.com>
-> 
-> Use spin_lock_irqsave() for task_state.
-> 
+>
+> Casting pointer from native data type to other type is
+> endian-sensitive.
+>
+> "iocmd->offset" =A0is 64 bit but we use only first 32 bit.
+> It works in little-endian system but in big-endian system
+> it will break.
+>
 > Signed-off-by: Santosh Nayak <santoshprasadnayak@gmail.com>
 > ---
-> drivers/scsi/pm8001/pm8001_hwi.c |   18 ++++++++++--------
-> 1 files changed, 10 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 3619f6e..9d82ee5 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -2093,6 +2093,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
-> 	struct ata_task_resp *resp ;
-> 	u32 *sata_resp;
-> 	struct pm8001_device *pm8001_dev;
-> +	unsigned long flags;
-> 
-> 	psataPayload = (struct sata_completion_resp *)(piomb + 4);
-> 	status = le32_to_cpu(psataPayload->status);
-> @@ -2382,26 +2383,26 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
-> 		ts->stat = SAS_DEV_NO_RESPONSE;
-> 		break;
-> 	}
-> -	spin_lock_irq(&t->task_state_lock);
-> +	spin_lock_irqsave(&t->task_state_lock, flags);
-> 	t->task_state_flags &= ~SAS_TASK_STATE_PENDING;
-> 	t->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
-> 	t->task_state_flags |= SAS_TASK_STATE_DONE;
-> 	if (unlikely((t->task_state_flags & SAS_TASK_STATE_ABORTED))) {
-> -		spin_unlock_irq(&t->task_state_lock);
-> +		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> 		PM8001_FAIL_DBG(pm8001_ha,
-> 			pm8001_printk("task 0x%p done with io_status 0x%x"
-> 			" resp 0x%x stat 0x%x but aborted by upper layer!\n",
-> 			t, status, ts->resp, ts->stat));
-> 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> 	} else if (t->uldd_task) {
-> -		spin_unlock_irq(&t->task_state_lock);
-> +		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> 		mb();/* ditto */
-> 		spin_unlock_irq(&pm8001_ha->lock);
-> 		t->task_done(t);
-> 		spin_lock_irq(&pm8001_ha->lock);
-> 	} else if (!t->uldd_task) {
-> -		spin_unlock_irq(&t->task_state_lock);
-> +		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> 		mb();/*ditto*/
-> 		spin_unlock_irq(&pm8001_ha->lock);
-> @@ -2423,6 +2424,7 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
-> 	u32 tag = le32_to_cpu(psataPayload->tag);
-> 	u32 port_id = le32_to_cpu(psataPayload->port_id);
-> 	u32 dev_id = le32_to_cpu(psataPayload->device_id);
-> +	unsigned long flags;
-> 
-> 	ccb = &pm8001_ha->ccb_info[tag];
-> 	t = ccb->task;
-> @@ -2593,26 +2595,26 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
-> 		ts->stat = SAS_OPEN_TO;
-> 		break;
-> 	}
-> -	spin_lock_irq(&t->task_state_lock);
-> +	spin_lock_irqsave(&t->task_state_lock, flags);
-> 	t->task_state_flags &= ~SAS_TASK_STATE_PENDING;
-> 	t->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
-> 	t->task_state_flags |= SAS_TASK_STATE_DONE;
-> 	if (unlikely((t->task_state_flags & SAS_TASK_STATE_ABORTED))) {
-> -		spin_unlock_irq(&t->task_state_lock);
-> +		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> 		PM8001_FAIL_DBG(pm8001_ha,
-> 			pm8001_printk("task 0x%p done with io_status 0x%x"
-> 			" resp 0x%x stat 0x%x but aborted by upper layer!\n",
-> 			t, event, ts->resp, ts->stat));
-> 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> 	} else if (t->uldd_task) {
-> -		spin_unlock_irq(&t->task_state_lock);
-> +		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> 		mb();/* ditto */
-> 		spin_unlock_irq(&pm8001_ha->lock);
-> 		t->task_done(t);
-> 		spin_lock_irq(&pm8001_ha->lock);
-> 	} else if (!t->uldd_task) {
-> -		spin_unlock_irq(&t->task_state_lock);
-> +		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> 		mb();/*ditto*/
-> 		spin_unlock_irq(&pm8001_ha->lock);
+> =A0drivers/scsi/bfa/bfad_bsg.c | =A0 =A05 ++++-
+> =A01 files changed, 4 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.=
+c
+> index 530de2b..c4edc63 100644
+> --- a/drivers/scsi/bfa/bfad_bsg.c
+> +++ b/drivers/scsi/bfa/bfad_bsg.c
+> @@ -1918,6 +1918,7 @@ bfad_iocmd_debug_fw_core(struct bfad_s *bfad, v=
+oid *cmd,
+> =A0 =A0 =A0 =A0struct bfa_bsg_debug_s *iocmd =3D (struct bfa_bsg_debu=
+g_s *)cmd;
+> =A0 =A0 =A0 =A0void =A0 =A0*iocmd_bufptr;
+> =A0 =A0 =A0 =A0unsigned long =A0 flags;
+> + =A0 =A0 =A0 u32 offset;
+>
+> =A0 =A0 =A0 =A0if (bfad_chk_iocmd_sz(payload_len, sizeof(struct bfa_b=
+sg_debug_s),
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0BFA_DEBUG_FW_CORE_CHUN=
+K_SZ) !=3D BFA_STATUS_OK) {
+> @@ -1935,8 +1936,10 @@ bfad_iocmd_debug_fw_core(struct bfad_s *bfad, =
+void *cmd,
+>
+> =A0 =A0 =A0 =A0iocmd_bufptr =3D (char *)iocmd + sizeof(struct bfa_bsg=
+_debug_s);
+> =A0 =A0 =A0 =A0spin_lock_irqsave(&bfad->bfad_lock, flags);
+> + =A0 =A0 =A0 offset =3D iocmd->offset;
+> =A0 =A0 =A0 =A0iocmd->status =3D bfa_ioc_debug_fwcore(&bfad->bfa.ioc,=
+ iocmd_bufptr,
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (u32 *)=
+&iocmd->offset, &iocmd->bufsz);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 &offset=
+, &iocmd->bufsz);
+> + =A0 =A0 =A0 iocmd->offset =3D offset;
+> =A0 =A0 =A0 =A0spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+> =A0out:
+> =A0 =A0 =A0 =A0return 0;
+> --
+> 1.7.4.4
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
