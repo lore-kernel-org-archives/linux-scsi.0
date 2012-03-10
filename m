@@ -1,203 +1,93 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
 Subject: Re: [PATCH 01/10] fcoe: avoid getting into dev_queue_xmit with
  bottom halves disabled
-Date: Fri, 9 Mar 2012 15:50:44 -0800
-Message-ID: <4F5A9754.6080009@broadcom.com>
+Date: Sat, 10 Mar 2012 00:12:04 +0000
+Message-ID: <4F5A9C53.5040200@intel.com>
 References: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
  <20120309224942.6515.83069.stgit@localhost6.localdomain6>
+ <4F5A9754.6080009@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3246 "EHLO mms2.broadcom.com"
+Received: from mga03.intel.com ([143.182.124.21]:19129 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756025Ab2CIXuu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Mar 2012 18:50:50 -0500
-In-Reply-To: <20120309224942.6515.83069.stgit@localhost6.localdomain6>
+	id S1753150Ab2CJAMT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Mar 2012 19:12:19 -0500
+In-Reply-To: <4F5A9754.6080009@broadcom.com>
+Content-Language: en-US
+Content-ID: <8F1A06E279E2EC4395F2C936F25CAC48@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Neil Horman <nhorman@tuxdriver.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-On 3/9/2012 2:49 PM, Robert Love wrote:
-> From: Neil Horman<nhorman@tuxdriver.com>
->
-> Recieved this warning recently:
->
-> WARNING: at kernel/softirq.c:143 local_bh_enable+0x7d/0xb0() (Not tainted)
-> Hardware name: C6100
-> Modules linked in: autofs4 bnx2fc cnic uio fcoe libfcoe libfc scsi_transport_fc
-> scsi_tgt 8021q garp stp llc sunrpc cpufreq_ondemand acpi_cpufreq freq_table
-> mperf ipv6 ixgbe mdio igb dcdbas microcode i2c_i801 i2c_core sg iTCO_wdt
-> iTCO_vendor_support ioatdma dca i7core_edac edac_core shpchp ext4 mbcache jbd2
-> sd_mod crc_t10dif ahci dm_mirror dm_region_hash dm_log dm_mod [last unloaded:
-> scsi_wait_scan]
-> Pid: 4926, comm: fc_rport_eq Not tainted 2.6.32 #2
-> Call Trace:
->   [<ffffffff81069c67>] ? warn_slowpath_common+0x87/0xc0
->   [<ffffffff81069cba>] ? warn_slowpath_null+0x1a/0x20
->   [<ffffffff8107216d>] ? local_bh_enable+0x7d/0xb0
->   [<ffffffff81433567>] ? dev_queue_xmit+0x177/0x6c0
->   [<ffffffffa0293a34>] ? vlan_dev_hwaccel_hard_start_xmit+0x84/0xb0 [8021q]
->   [<ffffffff8142f46c>] ? dev_hard_start_xmit+0x2bc/0x3f0
->   [<ffffffff8143392e>] ? dev_queue_xmit+0x53e/0x6c0
->   [<ffffffff8142348e>] ? __skb_clone+0x2e/0x120
->   [<ffffffffa02ea83d>] ? fcoe_clean_pending_queue+0xcd/0x100 [libfcoe]
->   [<ffffffff810559ca>] ? find_busiest_group+0x9aa/0xb20
->   [<ffffffffa02f7624>] ? fcoe_port_send+0x24/0x50 [fcoe]
->   [<ffffffffa02f9568>] ? fcoe_xmit+0x228/0x3e0 [fcoe]
->   [<ffffffffa02c1896>] ? fc_seq_send+0xb6/0x160 [libfc]
->   [<ffffffffa02c1a76>] ? fc_exch_abort_locked+0x136/0x1c0 [libfc]
->   [<ffffffffa02c1ca7>] ? fc_exch_mgr_reset+0x147/0x2a0 [libfc]
->   [<ffffffff814f2c7e>] ? _spin_unlock_irq+0xe/0x20
->   [<ffffffffa02c91d3>] ? fc_rport_work+0x123/0x5f0 [libfc]
->   [<ffffffffa02c90b0>] ? fc_rport_work+0x0/0x5f0 [libfc]
->   [<ffffffff8108b559>] ? worker_thread+0x179/0x2a0
->   [<ffffffff81090ea0>] ? autoremove_wake_function+0x0/0x40
->   [<ffffffff8108b3e0>] ? worker_thread+0x0/0x2a0
->   [<ffffffff81090b56>] ? kthread+0x96/0xa0
->   [<ffffffff8100c10a>] ? child_rip+0xa/0x20
->   [<ffffffff81090ac0>] ? kthread+0x0/0xa0
->   [<ffffffff8100c100>] ? child_rip+0x0/0x20
->
-> fc_exch_abort_locked attempts to send an abort frame, but it does so with a
-> spinlock held and irqs/bh's disabled.  Because of this dev_queue_xmit issues a
-> warning. This patch allows the fc_exch_abort_locked to drop and re-acquire the
-> lock so that the warning is suppressed.
->
-> Note this isn't a great fix, given that we need to free and re-acquire the
-> ex_lock during the fc_exch_abort_locked operation, but any other solution is
-> going to be a fairly major undertaking I think.  This should work until a proper
-> fix can be found.
->
-> Signed-off-by: Neil Horman<nhorman@tuxdriver.com>
-> Signed-off-by: Robert Love<robert.w.love@intel.com>
-
-Robert,  This patch is not required based on what we discussed in this 
-thread..
-http://lists.open-fcoe.org/pipermail/devel/2012-February/011946.html
-
-Neil provided "fcoe: Ensure fcoe_recv_frame is always called in process 
-context" instead of the two patches he submitted initially.
-http://lists.open-fcoe.org/pipermail/devel/2012-February/011962.html
-
-Neil, correct me if I'm wrong.
-
-Thanks,
-Bhanu
-
-
-> ---
->   drivers/scsi/libfc/fc_exch.c |   31 ++++++++++++++++++++++++++-----
->   include/scsi/libfc.h         |    1 +
->   2 files changed, 27 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-> index 630291f..588060f 100644
-> --- a/drivers/scsi/libfc/fc_exch.c
-> +++ b/drivers/scsi/libfc/fc_exch.c
-> @@ -594,16 +594,23 @@ static int fc_exch_abort_locked(struct fc_exch *ep,
->   	struct fc_frame *fp;
->   	int error;
->
-> +	if (ep->in_locked_transaction == true)
-> +		return -EAGAIN;
-> +
-> +	ep->in_locked_transaction = true;
-> +
-> +	error = -ENXIO;
->   	if (ep->esb_stat&  (ESB_ST_COMPLETE | ESB_ST_ABNORMAL) ||
->   	    ep->state&  (FC_EX_DONE | FC_EX_RST_CLEANUP))
-> -		return -ENXIO;
-> +		goto out;
->
->   	/*
->   	 * Send the abort on a new sequence if possible.
->   	 */
-> +	error = -ENOMEM;
->   	sp = fc_seq_start_next_locked(&ep->seq);
->   	if (!sp)
-> -		return -ENOMEM;
-> +		goto out;
->
->   	ep->esb_stat |= ESB_ST_SEQ_INIT | ESB_ST_ABNORMAL;
->   	if (timer_msec)
-> @@ -613,8 +620,9 @@ static int fc_exch_abort_locked(struct fc_exch *ep,
->   	 * If not logged into the fabric, don't send ABTS but leave
->   	 * sequence active until next timeout.
->   	 */
-> +	error = 0;
->   	if (!ep->sid)
-> -		return 0;
-> +		goto out;
->
->   	/*
->   	 * Send an abort for the sequence that timed out.
-> @@ -623,9 +631,13 @@ static int fc_exch_abort_locked(struct fc_exch *ep,
->   	if (fp) {
->   		fc_fill_fc_hdr(fp, FC_RCTL_BA_ABTS, ep->did, ep->sid,
->   			       FC_TYPE_BLS, FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
-> +		spin_unlock_bh(&ep->ex_lock);
->   		error = fc_seq_send(ep->lp, sp, fp);
-> +		spin_lock_bh(&ep->ex_lock);
->   	} else
->   		error = -ENOBUFS;
-> +out:
-> +	ep->in_locked_transaction = false;
->   	return error;
->   }
->
-> @@ -645,9 +657,12 @@ static int fc_seq_exch_abort(const struct fc_seq *req_sp,
->   	int error;
->
->   	ep = fc_seq_exch(req_sp);
-> +retry:
->   	spin_lock_bh(&ep->ex_lock);
->   	error = fc_exch_abort_locked(ep, timer_msec);
->   	spin_unlock_bh(&ep->ex_lock);
-> +	if (error == -EAGAIN)
-> +		goto retry;
->   	return error;
->   }
->
-> @@ -1732,10 +1747,16 @@ static void fc_exch_reset(struct fc_exch *ep)
->   	struct fc_seq *sp;
->   	void (*resp)(struct fc_seq *, struct fc_frame *, void *);
->   	void *arg;
-> -	int rc = 1;
-> +	int rc;
->
-> +retry:
->   	spin_lock_bh(&ep->ex_lock);
-> -	fc_exch_abort_locked(ep, 0);
-> +	rc = fc_exch_abort_locked(ep, 0);
-> +	if (rc == -EAGAIN) {
-> +		spin_unlock_bh(&ep->ex_lock);
-> +		goto retry;
-> +	}
-> +
->   	ep->state |= FC_EX_RST_CLEANUP;
->   	if (cancel_delayed_work(&ep->timeout_work))
->   		atomic_dec(&ep->ex_refcnt);	/* drop hold for timer */
-> diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-> index 8f9dfba..0a4ceb8 100644
-> --- a/include/scsi/libfc.h
-> +++ b/include/scsi/libfc.h
-> @@ -438,6 +438,7 @@ struct fc_exch {
->   	void		    (*resp)(struct fc_seq *, struct fc_frame *, void *);
->   	void		    *arg;
->   	void		    (*destructor)(struct fc_seq *, void *);
-> +	bool		    in_locked_transaction;
->   	struct delayed_work timeout_work;
->   } ____cacheline_aligned_in_smp;
->   #define	fc_seq_exch(sp) container_of(sp, struct fc_exch, seq)
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+T24gMDMvMDkvMjAxMiAwMzo1MCBQTSwgQmhhbnUgUHJha2FzaCBHb2xsYXB1ZGkgd3JvdGU6DQo+
+IE9uIDMvOS8yMDEyIDI6NDkgUE0sIFJvYmVydCBMb3ZlIHdyb3RlOg0KPj4gRnJvbTogTmVpbCBI
+b3JtYW48bmhvcm1hbkB0dXhkcml2ZXIuY29tPg0KPj4NCj4+IFJlY2lldmVkIHRoaXMgd2Fybmlu
+ZyByZWNlbnRseToNCj4+DQo+PiBXQVJOSU5HOiBhdCBrZXJuZWwvc29mdGlycS5jOjE0MyBsb2Nh
+bF9iaF9lbmFibGUrMHg3ZC8weGIwKCkgKE5vdCANCj4+IHRhaW50ZWQpDQo+PiBIYXJkd2FyZSBu
+YW1lOiBDNjEwMA0KPj4gTW9kdWxlcyBsaW5rZWQgaW46IGF1dG9mczQgYm54MmZjIGNuaWMgdWlv
+IGZjb2UgbGliZmNvZSBsaWJmYyANCj4+IHNjc2lfdHJhbnNwb3J0X2ZjDQo+PiBzY3NpX3RndCA4
+MDIxcSBnYXJwIHN0cCBsbGMgc3VucnBjIGNwdWZyZXFfb25kZW1hbmQgYWNwaV9jcHVmcmVxIA0K
+Pj4gZnJlcV90YWJsZQ0KPj4gbXBlcmYgaXB2NiBpeGdiZSBtZGlvIGlnYiBkY2RiYXMgbWljcm9j
+b2RlIGkyY19pODAxIGkyY19jb3JlIHNnIGlUQ09fd2R0DQo+PiBpVENPX3ZlbmRvcl9zdXBwb3J0
+IGlvYXRkbWEgZGNhIGk3Y29yZV9lZGFjIGVkYWNfY29yZSBzaHBjaHAgZXh0NCANCj4+IG1iY2Fj
+aGUgamJkMg0KPj4gc2RfbW9kIGNyY190MTBkaWYgYWhjaSBkbV9taXJyb3IgZG1fcmVnaW9uX2hh
+c2ggZG1fbG9nIGRtX21vZCBbbGFzdCANCj4+IHVubG9hZGVkOg0KPj4gc2NzaV93YWl0X3NjYW5d
+DQo+PiBQaWQ6IDQ5MjYsIGNvbW06IGZjX3Jwb3J0X2VxIE5vdCB0YWludGVkIDIuNi4zMiAjMg0K
+Pj4gQ2FsbCBUcmFjZToNCj4+ICAgWzxmZmZmZmZmZjgxMDY5YzY3Pl0gPyB3YXJuX3Nsb3dwYXRo
+X2NvbW1vbisweDg3LzB4YzANCj4+ICAgWzxmZmZmZmZmZjgxMDY5Y2JhPl0gPyB3YXJuX3Nsb3dw
+YXRoX251bGwrMHgxYS8weDIwDQo+PiAgIFs8ZmZmZmZmZmY4MTA3MjE2ZD5dID8gbG9jYWxfYmhf
+ZW5hYmxlKzB4N2QvMHhiMA0KPj4gICBbPGZmZmZmZmZmODE0MzM1Njc+XSA/IGRldl9xdWV1ZV94
+bWl0KzB4MTc3LzB4NmMwDQo+PiAgIFs8ZmZmZmZmZmZhMDI5M2EzND5dID8gdmxhbl9kZXZfaHdh
+Y2NlbF9oYXJkX3N0YXJ0X3htaXQrMHg4NC8weGIwIA0KPj4gWzgwMjFxXQ0KPj4gICBbPGZmZmZm
+ZmZmODE0MmY0NmM+XSA/IGRldl9oYXJkX3N0YXJ0X3htaXQrMHgyYmMvMHgzZjANCj4+ICAgWzxm
+ZmZmZmZmZjgxNDMzOTJlPl0gPyBkZXZfcXVldWVfeG1pdCsweDUzZS8weDZjMA0KPj4gICBbPGZm
+ZmZmZmZmODE0MjM0OGU+XSA/IF9fc2tiX2Nsb25lKzB4MmUvMHgxMjANCj4+ICAgWzxmZmZmZmZm
+ZmEwMmVhODNkPl0gPyBmY29lX2NsZWFuX3BlbmRpbmdfcXVldWUrMHhjZC8weDEwMCBbbGliZmNv
+ZV0NCj4+ICAgWzxmZmZmZmZmZjgxMDU1OWNhPl0gPyBmaW5kX2J1c2llc3RfZ3JvdXArMHg5YWEv
+MHhiMjANCj4+ICAgWzxmZmZmZmZmZmEwMmY3NjI0Pl0gPyBmY29lX3BvcnRfc2VuZCsweDI0LzB4
+NTAgW2Zjb2VdDQo+PiAgIFs8ZmZmZmZmZmZhMDJmOTU2OD5dID8gZmNvZV94bWl0KzB4MjI4LzB4
+M2UwIFtmY29lXQ0KPj4gICBbPGZmZmZmZmZmYTAyYzE4OTY+XSA/IGZjX3NlcV9zZW5kKzB4YjYv
+MHgxNjAgW2xpYmZjXQ0KPj4gICBbPGZmZmZmZmZmYTAyYzFhNzY+XSA/IGZjX2V4Y2hfYWJvcnRf
+bG9ja2VkKzB4MTM2LzB4MWMwIFtsaWJmY10NCj4+ICAgWzxmZmZmZmZmZmEwMmMxY2E3Pl0gPyBm
+Y19leGNoX21ncl9yZXNldCsweDE0Ny8weDJhMCBbbGliZmNdDQo+PiAgIFs8ZmZmZmZmZmY4MTRm
+MmM3ZT5dID8gX3NwaW5fdW5sb2NrX2lycSsweGUvMHgyMA0KPj4gICBbPGZmZmZmZmZmYTAyYzkx
+ZDM+XSA/IGZjX3Jwb3J0X3dvcmsrMHgxMjMvMHg1ZjAgW2xpYmZjXQ0KPj4gICBbPGZmZmZmZmZm
+YTAyYzkwYjA+XSA/IGZjX3Jwb3J0X3dvcmsrMHgwLzB4NWYwIFtsaWJmY10NCj4+ICAgWzxmZmZm
+ZmZmZjgxMDhiNTU5Pl0gPyB3b3JrZXJfdGhyZWFkKzB4MTc5LzB4MmEwDQo+PiAgIFs8ZmZmZmZm
+ZmY4MTA5MGVhMD5dID8gYXV0b3JlbW92ZV93YWtlX2Z1bmN0aW9uKzB4MC8weDQwDQo+PiAgIFs8
+ZmZmZmZmZmY4MTA4YjNlMD5dID8gd29ya2VyX3RocmVhZCsweDAvMHgyYTANCj4+ICAgWzxmZmZm
+ZmZmZjgxMDkwYjU2Pl0gPyBrdGhyZWFkKzB4OTYvMHhhMA0KPj4gICBbPGZmZmZmZmZmODEwMGMx
+MGE+XSA/IGNoaWxkX3JpcCsweGEvMHgyMA0KPj4gICBbPGZmZmZmZmZmODEwOTBhYzA+XSA/IGt0
+aHJlYWQrMHgwLzB4YTANCj4+ICAgWzxmZmZmZmZmZjgxMDBjMTAwPl0gPyBjaGlsZF9yaXArMHgw
+LzB4MjANCj4+DQo+PiBmY19leGNoX2Fib3J0X2xvY2tlZCBhdHRlbXB0cyB0byBzZW5kIGFuIGFi
+b3J0IGZyYW1lLCBidXQgaXQgZG9lcyBzbyANCj4+IHdpdGggYQ0KPj4gc3BpbmxvY2sgaGVsZCBh
+bmQgaXJxcy9iaCdzIGRpc2FibGVkLiAgQmVjYXVzZSBvZiB0aGlzIGRldl9xdWV1ZV94bWl0IA0K
+Pj4gaXNzdWVzIGENCj4+IHdhcm5pbmcuIFRoaXMgcGF0Y2ggYWxsb3dzIHRoZSBmY19leGNoX2Fi
+b3J0X2xvY2tlZCB0byBkcm9wIGFuZCANCj4+IHJlLWFjcXVpcmUgdGhlDQo+PiBsb2NrIHNvIHRo
+YXQgdGhlIHdhcm5pbmcgaXMgc3VwcHJlc3NlZC4NCj4+DQo+PiBOb3RlIHRoaXMgaXNuJ3QgYSBn
+cmVhdCBmaXgsIGdpdmVuIHRoYXQgd2UgbmVlZCB0byBmcmVlIGFuZCANCj4+IHJlLWFjcXVpcmUg
+dGhlDQo+PiBleF9sb2NrIGR1cmluZyB0aGUgZmNfZXhjaF9hYm9ydF9sb2NrZWQgb3BlcmF0aW9u
+LCBidXQgYW55IG90aGVyIA0KPj4gc29sdXRpb24gaXMNCj4+IGdvaW5nIHRvIGJlIGEgZmFpcmx5
+IG1ham9yIHVuZGVydGFraW5nIEkgdGhpbmsuICBUaGlzIHNob3VsZCB3b3JrIA0KPj4gdW50aWwg
+YSBwcm9wZXINCj4+IGZpeCBjYW4gYmUgZm91bmQuDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogTmVp
+bCBIb3JtYW48bmhvcm1hbkB0dXhkcml2ZXIuY29tPg0KPj4gU2lnbmVkLW9mZi1ieTogUm9iZXJ0
+IExvdmU8cm9iZXJ0LncubG92ZUBpbnRlbC5jb20+DQo+DQo+IFJvYmVydCwgIFRoaXMgcGF0Y2gg
+aXMgbm90IHJlcXVpcmVkIGJhc2VkIG9uIHdoYXQgd2UgZGlzY3Vzc2VkIGluIHRoaXMgDQo+IHRo
+cmVhZC4uDQo+IGh0dHA6Ly9saXN0cy5vcGVuLWZjb2Uub3JnL3BpcGVybWFpbC9kZXZlbC8yMDEy
+LUZlYnJ1YXJ5LzAxMTk0Ni5odG1sDQo+DQo+IE5laWwgcHJvdmlkZWQgImZjb2U6IEVuc3VyZSBm
+Y29lX3JlY3ZfZnJhbWUgaXMgYWx3YXlzIGNhbGxlZCBpbiANCj4gcHJvY2VzcyBjb250ZXh0IiBp
+bnN0ZWFkIG9mIHRoZSB0d28gcGF0Y2hlcyBoZSBzdWJtaXR0ZWQgaW5pdGlhbGx5Lg0KPiBodHRw
+Oi8vbGlzdHMub3Blbi1mY29lLm9yZy9waXBlcm1haWwvZGV2ZWwvMjAxMi1GZWJydWFyeS8wMTE5
+NjIuaHRtbA0KPg0KVGhhbmtzIGZvciBwb2ludGluZyB0aGlzIG91dCBCaGFudSwgSSBvdmVybG9v
+a2VkIHRoZSBsYXN0IGNvbW1lbnQgaW4gdGhlIA0KZGlzY3Vzc2lvbiBvZiB0aGlzIHBhdGNoLg0K
+DQpKYW1lcywgSSBiZWxpZXZlIHRoZSBjb3JyZWN0IHBhdGNoIGlzIDAyLzEwIGluIHRoaXMgc2Vy
+aWVzLCBzbyBJIHRoaW5rIA0KeW91IHNob3VsZCBiZSBhYmxlIHRvIGRyb3AgdGhpcyBwYXRjaCBh
+bmQgd2UnbGwgYmUgYmFjayBvbiB0cmFjay4gSWYgDQp5b3UnZCBsaWtlIG1lIHRvIHJlc2VuZCB0
+aGUgc2VyaWVzIHdpdGhvdXQgdGhpcyBwYXRjaCBwbGVhc2UgbGV0IG1lIA0Ka25vdy4gSSdsbCBj
+aGVjayB0byBtYWtlIHN1cmUgMDIvMTAgdGhyb3VnaCAxMC8xMCBhcHBseSB3aXRob3V0IDAxLzEw
+IA0KYW5kIHJlc2VuZCBpZiBJIGhhdmUgdG8gbWFrZSBjaGFuZ2VzLg0KDQpGb3IgZm9ybWFsaXR5
+J3Mgc2FrZToNCg0KTmFja2VkLWJ5OiBSb2JlcnQgTG92ZSA8cm9iZXJ0LncubG92ZUBpbnRlbC5j
+b20+DQoNClRoYW5rcywgLy9Sb2I=
