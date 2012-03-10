@@ -1,64 +1,111 @@
-From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Subject: [PATCH] tcm_fc: Fix fc_exch memory leak in
-	ft_send_resp_status
-Date: Sat, 10 Mar 2012 08:06:36 +0000
-Message-ID: <1331366796-11775-1-git-send-email-nab@linux-iscsi.org>
+From: E-MAIL SENDER 2012 <vgcxvg34@aol.com>
+Subject: =?utf-8?Q?=D8=AC=D8=A7=D8=A6=D8=B2=D8=A9_=D8=A7=D9=84=D8=A7=D9=84=D9=83?=
+ =?utf-8?Q?=D8=AA=D8=B1=D9=88=D9=86=D9=8A=D8=A9_=D8=A7=D9=84=D9=81=D8=A7?=
+ =?utf-8?Q?=D8=A6=D8=B2=D8=A9_=D8=A5=D8=B9=D9=84=D8=A7=D9=85:_=D8=A7?=
+ =?utf-8?Q?=D9=84=D8=A7=D8=AA=D8=B5=D8=A7=D9=84_=D8=A8=D9=83_=D9=88?=
+ =?utf-8?Q?=D9=83=D9=8A=D9=84_=D8=A7=D9=84=D9=85=D8=B7=D8=A7=D9=84=D8=A8?=
+ =?utf-8?Q?=D8=A7=D8=AA_(customercare.cl?=
+ =?utf-8?Q?aimsunit.02@gmail.com?=
+ =?utf-8?Q?)?=
+Date: Sat, 10 Mar 2012 12:41:02 -0500 (EST)
+Message-ID: <8CECCFC18E52704-1BA8-6410@Webmail-m121.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Unsubscribe: <https://lists.open-fcoe.org/mailman/options/devel>,
- <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.open-fcoe.org/mailman/listinfo/devel>,
- <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Open-FCoE devel <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ims-m12.mx.aol.com ([64.12.207.145]:36003 "EHLO
+	ims-m12.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751162Ab2CJRmV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Mar 2012 12:42:21 -0500
+Received: from oms-ma01.r1000.mx.aol.com (oms-ma01.r1000.mx.aol.com [64.12.140.129])
+	by ims-m12.mx.aol.com (8.14.1/8.14.1) with ESMTP id q2AHgGMc007216
+	for <linux-scsi@vger.kernel.org>; Sat, 10 Mar 2012 12:42:16 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+ELECTRONIC =D8=AD=D8=A7=D8=A6=D8=B2=D8=A9 =D8=B9=D9=84=D9=89 =D8=AC=D9=88=
+=D8=A7=D8=A6=D8=B2 =D8=A7=D9=84=D8=A5=D8=AE=D8=B7=D8=A7=D8=B1
 
-This patch fixes a bug in tcm_fc where fc_exch memory from fc_exch_mgr->ep_pool
-is currently being leaked by ft_send_resp_status() usage.  Following current
-code in ft_queue_status() response path, using lport->tt.seq_send() needs to be
-followed by a lport->tt.exch_done() in order to release fc_exch memory back into
-libfc_em kmem_cache.
+=D8=A7=D9=84=D9=85=D8=B1=D8=AC=D8=B9: 475061725
+=D8=AF=D9=81=D8=B9=D8=A9: 9056490902/188
+=D9=88=D8=AA=D9=88 =D9=86=D9=88=D8=B9: =D9=85=D9=8A=D8=AC=D8=A7 =D9=85=D9=
+=84=D9=8A=D9=88=D9=86
+=D8=B9=D8=AF=D8=AF =D8=A7=D9=84=D8=A7=D9=88=D8=B1=D8=A7=D9=82 =D8=A7=D9=
+=84=D8=B1=D8=A7=D8=A8=D8=AD=D8=A9: GB8701/LPRC
 
-ft_send_resp_status() code is currently used in pre submit se_cmd ft_send_work()
-error exceptions, TM request setup exceptions, and main TM response callback
-path in ft_queue_tm_resp().  This bugfix addresses the leak in these cases.
+=D8=B9=D8=B2=D9=8A=D8=B2=D9=8A =D8=A7=D9=84=D9=81=D8=A7=D8=A6=D8=B2=D8=8C
 
-Cc: Mark D Rustad <mark.d.rustad-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Kiran Patil <kiran.patil-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
----
- drivers/target/tcm_fc/tfc_cmd.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+=D9=83=D8=A7=D9=85=D9=84 =D8=A7=D9=84=D8=A7=D8=B3=D8=AA=D8=B1=D8=A7=D9=84=
+=D9=8A=D8=A9 =D8=AA=D9=86=D8=B8=D9=8A=D9=85 =D9=8A=D8=A7=D9=86=D8=B5=D9=
+=8A=D8=A8 =D9=88=D8=B7=D9=86=D9=8A =D8=A3=D8=B4=D8=B9=D8=B1 =D8=A8=D8=A7=
+=D9=84=D8=B3=D8=B9=D8=A7=D8=AF=D8=A9
+=D8=A3=D9=86 =D8=A3=D8=AD=D9=8A=D8=B7=D9=83=D9=85 =D8=B9=D9=84=D9=85=D8=
+=A7 =D8=A8=D8=A3=D9=86 =D8=A7=D9=84=D8=A8=D8=B1=D9=8A=D8=AF =D8=A7=D9=84=
+=D8=A5=D9=84=D9=83=D8=AA=D8=B1=D9=88=D9=86=D9=8A =D8=A7=D9=84=D8=AE=D8=A7=
+=D8=B5 =D8=A8=D9=83 =D9=82=D8=AF =D9=81=D8=A7=D8=B2 =D8=A8=D8=A7=D9=84=D8=
+=AC=D8=A7=D8=A6=D8=B2=D8=A9 =D9=85=D9=86 =D8=A7=D9=84=D9=85=D8=A7=D9=84
+=D8=B3=D8=AA =D9=85=D8=A7=D8=A6=D8=A9 =D9=88=D8=AE=D9=85=D8=B3=D9=8A=D9=
+=86 =D8=A3=D9=84=D9=81 =D8=AF=D9=88=D9=84=D8=A7=D8=B1 =D8=A3=D9=85=D9=8A=
+=D8=B1=D9=83=D9=8A ($ 650=D8=8C000=D8=8C00) =D9=81=D9=8A
+2011 =D8=AC=D8=A7=D8=A6=D8=B2=D8=A9 =D9=84=D8=AA=D8=B4=D8=AC=D9=8A=D8=B9=
+ =D8=AA=D9=86=D8=B8=D9=8A=D9=85 =D8=A7=D9=84=D9=85=D8=A4=D8=AA=D9=85=D8=
+=B1 =D8=A7=D9=84=D9=88=D8=B7=D9=86=D9=8A =D8=A7=D9=84=D8=B9=D8=B1=D8=A7=
+=D9=82=D9=8A =D8=A7=D9=84=D9=85=D8=B3=D8=A4=D9=88=D9=84 =D8=B9=D9=86 =D8=
+=A7=D9=84=D9=85=D9=88=D9=82=D8=B9
 
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 346e72d..dc772f9 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -315,10 +315,12 @@ static void ft_send_resp_status(struct fc_lport *lport,
- 
- 	fc_fill_reply_hdr(fp, rx_fp, FC_RCTL_DD_CMD_STATUS, 0);
- 	sp = fr_seq(fp);
--	if (sp)
-+	if (sp) {
- 		lport->tt.seq_send(lport, sp, fp);
--	else
-+		lport->tt.exch_done(sp);
-+	} else {
- 		lport->tt.frame_send(lport, fp);
-+	}
- }
- 
- /*
--- 
-1.7.2.5
+=D9=8A=D8=B1=D8=AC=D9=89 =D9=85=D9=84=D8=A7=D8=AD=D8=B8=D8=A9 =D8=A3=D9=
+=86 =D8=B9=D8=AF=D8=AF =D9=85=D8=AD=D8=B8=D9=88=D8=B8 =D9=81=D9=88=D8=B2=
+=D9=83 =D9=8A=D9=86=D8=AF=D8=B1=D8=AC =D9=81=D9=8A =D8=A3=D9=88=D8=B1=D9=
+=88=D8=A8=D8=A7 =D9=84=D8=AF=D9=8A=D9=86=D8=A7
+=D9=83=D8=AA=D9=8A=D8=A8 =D9=85=D9=83=D8=AA=D8=A8 =D8=AA=D9=85=D8=AB=D9=
+=8A=D9=84=D9=8A =D9=81=D9=8A =D8=A3=D9=81=D8=B1=D9=8A=D9=82=D9=8A=D8=A7=
+ =D9=83=D9=85=D8=A7 =D9=87=D9=88 =D9=85=D8=A8=D9=8A=D9=86 =D9=81=D9=8A =
+=D8=A7=D9=84=D8=AE=D8=A7=D8=B5
+=D8=A7=D9=84=D9=82=D8=B3=D9=8A=D9=85=D8=A9. =D9=86=D8=B8=D8=B1=D8=A7 =D8=
+=A5=D9=84=D9=89 =D9=87=D8=B0=D8=A7=D8=8C =D8=B3=D9=8A=D8=AA=D9=85 =D8=A7=
+=D9=84=D8=A7=D9=81=D8=B1=D8=A7=D8=AC =D8=B9=D9=86 $ 650=D8=8C000.00 =D9=
+=84=D9=83=D9=85 =D9=84=D9=83=D9=85
+=D9=85=D9=86 =D9=82=D8=A8=D9=84 =D8=A3=D9=8A =D9=85=D9=86 =D9=85=D9=83=D8=
+=A7=D8=AA=D8=A8 =D8=A7=D9=84=D8=AF=D9=81=D8=B9 =D9=84=D8=AF=D9=8A=D9=86=
+=D8=A7 =D9=81=D9=8A =D8=A7=D9=81=D8=B1=D9=8A=D9=82=D9=8A=D8=A7.
+
+=D9=84=D9=84=D9=85=D8=B7=D8=A7=D9=84=D8=A8=D8=A9 =D8=A7=D9=84=D9=85=D8=A7=
+=D9=84 =D8=A7=D9=84=D8=AE=D8=A7=D8=B5 =D8=A8=D8=A7=D9=84=D8=AC=D8=A7=D8=
+=A6=D8=B2=D8=A9=D8=8C =D8=A7=D9=84=D8=B1=D8=AC=D8=A7=D8=A1 =D8=A7=D9=84=
+=D8=A7=D8=AA=D8=B5=D8=A7=D9=84 =D9=85=D8=B9 =D9=88=D9=83=D9=8A=D9=84 =D8=
+=A7=D9=84=D8=A7=D8=A6=D8=AA=D9=85=D8=A7=D9=86=D9=8A=D8=A9
+=D8=A7=D9=84=D9=85=D8=AD=D8=A7=D9=85=D9=8A =D8=A8=D9=88=D9=84 =D8=A3=D9=
+=86=D8=AF=D8=B1=D8=B3=D9=88=D9=86 =D8=B9=D8=A8=D8=B1 =D8=A7=D9=84=D8=A8=
+=D8=B1=D9=8A=D8=AF =D8=A7=D9=84=D8=A7=D9=84=D9=83=D8=AA=D8=B1=D9=88=D9=86=
+=D9=8A =D9=85=D8=B9 =D8=A7=D9=84=D9=85=D8=B9=D9=84=D9=88=D9=85=D8=A7=D8=
+=AA =D8=A7=D9=84=D8=AA=D8=A7=D9=84=D9=8A=D8=A9:
+=D9=85=D8=B9=D9=84=D9=88=D9=85=D8=A7=D8=AA =D8=A7=D9=84=D8=A7=D8=AA=D8=B5=
+=D8=A7=D9=84:
+
+=D8=A7=D9=84=D8=A7=D8=B3=D9=85: =D8=A7=D9=84=D9=85=D8=AD=D8=A7=D9=85=D9=
+=8A =D8=A8=D9=88=D9=84 =D8=A3=D9=86=D8=AF=D8=B1=D8=B3=D9=88=D9=86
+=D8=A7=D9=84=D8=A8=D8=B1=D9=8A=D8=AF =D8=A7=D9=84=D8=A7=D9=84=D9=83=D8=AA=
+=D8=B1=D9=88=D9=86=D9=8A:customercare.claimsunit.02@gmail.com
+=D9=87=D8=A7=D8=AA=D9=81: +23470-6910-3666
+
+Contact your claims agent:customercare.claimsunit.02@gmail.com
+
+=D9=85=D8=B9 =D8=A3=D8=B7=D9=8A=D8=A8 =D8=A7=D9=84=D8=AA=D8=AD=D9=8A=D8=
+=A7=D8=AA=D8=8C
+=D8=A2=D8=AF=D9=85 =D8=B1=D9=88=D8=B2 (=D8=A7=D9=84=D8=B3=D9=8A=D8=AF=D8=
+=A9)
+
+=D8=B3=D9=88=D9=81 =D8=A7=D9=86=D8=AA=D9=87=D8=A7=D9=83 =D9=84=D9=84=D8=
+=B3=D8=B1=D9=8A=D8=A9 =D9=85=D9=86 =D8=AC=D8=A7=D9=86=D8=A8 =D9=81=D8=A7=
+=D8=A6=D8=B2=D9=8A=D9=86 =D8=A7=D9=84=D9=86=D8=AA=D9=8A=D8=AC=D8=A9 =D8=
+=A5=D9=84=D9=89 =D9=81=D9=82=D8=AF=D8=A7=D9=86 =D8=A7=D9=84=D8=A3=D9=87=
+=D9=84=D9=8A=D8=A9
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
