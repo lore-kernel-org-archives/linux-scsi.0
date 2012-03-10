@@ -1,111 +1,46 @@
-From: E-MAIL SENDER 2012 <vgcxvg34@aol.com>
-Subject: =?utf-8?Q?=D8=AC=D8=A7=D8=A6=D8=B2=D8=A9_=D8=A7=D9=84=D8=A7=D9=84=D9=83?=
- =?utf-8?Q?=D8=AA=D8=B1=D9=88=D9=86=D9=8A=D8=A9_=D8=A7=D9=84=D9=81=D8=A7?=
- =?utf-8?Q?=D8=A6=D8=B2=D8=A9_=D8=A5=D8=B9=D9=84=D8=A7=D9=85:_=D8=A7?=
- =?utf-8?Q?=D9=84=D8=A7=D8=AA=D8=B5=D8=A7=D9=84_=D8=A8=D9=83_=D9=88?=
- =?utf-8?Q?=D9=83=D9=8A=D9=84_=D8=A7=D9=84=D9=85=D8=B7=D8=A7=D9=84=D8=A8?=
- =?utf-8?Q?=D8=A7=D8=AA_(customercare.cl?=
- =?utf-8?Q?aimsunit.02@gmail.com?=
- =?utf-8?Q?)?=
-Date: Sat, 10 Mar 2012 12:41:02 -0500 (EST)
-Message-ID: <8CECCFC18E52704-1BA8-6410@Webmail-m121.sysops.aol.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH V2] scsi_debug: add LBPRZ support
+Date: Sat, 10 Mar 2012 19:45:15 +0100
+Message-ID: <4F5BA13B.1040409@interlog.com>
+References: <4F57C061.9020807@redhat.com> <4F58049C.5010505@interlog.com> <4F584BCF.7030803@redhat.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ims-m12.mx.aol.com ([64.12.207.145]:36003 "EHLO
-	ims-m12.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162Ab2CJRmV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Mar 2012 12:42:21 -0500
-Received: from oms-ma01.r1000.mx.aol.com (oms-ma01.r1000.mx.aol.com [64.12.140.129])
-	by ims-m12.mx.aol.com (8.14.1/8.14.1) with ESMTP id q2AHgGMc007216
-	for <linux-scsi@vger.kernel.org>; Sat, 10 Mar 2012 12:42:16 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:40734 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751248Ab2CJSp7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Mar 2012 13:45:59 -0500
+In-Reply-To: <4F584BCF.7030803@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, mkp@mkp.net, =?windows-1252?Q?Luk=E1=9A_Czerner?= <lczerner@redhat.com>
 
-ELECTRONIC =D8=AD=D8=A7=D8=A6=D8=B2=D8=A9 =D8=B9=D9=84=D9=89 =D8=AC=D9=88=
-=D8=A7=D8=A6=D8=B2 =D8=A7=D9=84=D8=A5=D8=AE=D8=B7=D8=A7=D8=B1
+On 12-03-08 07:03 AM, Eric Sandeen wrote:
+> Add LBPRZ support to scsi_debug; i.e. read zeros for
+> unmapped blocks.
+>
+> Rather than checking for unmapped blocks at
+> read time, this just zeroes them on the backing store
+> at unmap time so it behaves the same way.
+>
+> This also adds a module parameter to disable it.
+>
+> lbprz, "unmapped blocks return 0 on read (def=1)"
+>
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+> ---
+>
+> V2: set flag in inquiry_evpd_b2() as well, and rename *_zeroes
+> type symbols to *_lbprz
+>
+> note, I didn't change the return value of inquiry_evpd_b2();
+> that seems unrelated to this change, and should be a separate
+> patch, no?
+>
+> Thanks,
+> -Eric
 
-=D8=A7=D9=84=D9=85=D8=B1=D8=AC=D8=B9: 475061725
-=D8=AF=D9=81=D8=B9=D8=A9: 9056490902/188
-=D9=88=D8=AA=D9=88 =D9=86=D9=88=D8=B9: =D9=85=D9=8A=D8=AC=D8=A7 =D9=85=D9=
-=84=D9=8A=D9=88=D9=86
-=D8=B9=D8=AF=D8=AF =D8=A7=D9=84=D8=A7=D9=88=D8=B1=D8=A7=D9=82 =D8=A7=D9=
-=84=D8=B1=D8=A7=D8=A8=D8=AD=D8=A9: GB8701/LPRC
-
-=D8=B9=D8=B2=D9=8A=D8=B2=D9=8A =D8=A7=D9=84=D9=81=D8=A7=D8=A6=D8=B2=D8=8C
-
-=D9=83=D8=A7=D9=85=D9=84 =D8=A7=D9=84=D8=A7=D8=B3=D8=AA=D8=B1=D8=A7=D9=84=
-=D9=8A=D8=A9 =D8=AA=D9=86=D8=B8=D9=8A=D9=85 =D9=8A=D8=A7=D9=86=D8=B5=D9=
-=8A=D8=A8 =D9=88=D8=B7=D9=86=D9=8A =D8=A3=D8=B4=D8=B9=D8=B1 =D8=A8=D8=A7=
-=D9=84=D8=B3=D8=B9=D8=A7=D8=AF=D8=A9
-=D8=A3=D9=86 =D8=A3=D8=AD=D9=8A=D8=B7=D9=83=D9=85 =D8=B9=D9=84=D9=85=D8=
-=A7 =D8=A8=D8=A3=D9=86 =D8=A7=D9=84=D8=A8=D8=B1=D9=8A=D8=AF =D8=A7=D9=84=
-=D8=A5=D9=84=D9=83=D8=AA=D8=B1=D9=88=D9=86=D9=8A =D8=A7=D9=84=D8=AE=D8=A7=
-=D8=B5 =D8=A8=D9=83 =D9=82=D8=AF =D9=81=D8=A7=D8=B2 =D8=A8=D8=A7=D9=84=D8=
-=AC=D8=A7=D8=A6=D8=B2=D8=A9 =D9=85=D9=86 =D8=A7=D9=84=D9=85=D8=A7=D9=84
-=D8=B3=D8=AA =D9=85=D8=A7=D8=A6=D8=A9 =D9=88=D8=AE=D9=85=D8=B3=D9=8A=D9=
-=86 =D8=A3=D9=84=D9=81 =D8=AF=D9=88=D9=84=D8=A7=D8=B1 =D8=A3=D9=85=D9=8A=
-=D8=B1=D9=83=D9=8A ($ 650=D8=8C000=D8=8C00) =D9=81=D9=8A
-2011 =D8=AC=D8=A7=D8=A6=D8=B2=D8=A9 =D9=84=D8=AA=D8=B4=D8=AC=D9=8A=D8=B9=
- =D8=AA=D9=86=D8=B8=D9=8A=D9=85 =D8=A7=D9=84=D9=85=D8=A4=D8=AA=D9=85=D8=
-=B1 =D8=A7=D9=84=D9=88=D8=B7=D9=86=D9=8A =D8=A7=D9=84=D8=B9=D8=B1=D8=A7=
-=D9=82=D9=8A =D8=A7=D9=84=D9=85=D8=B3=D8=A4=D9=88=D9=84 =D8=B9=D9=86 =D8=
-=A7=D9=84=D9=85=D9=88=D9=82=D8=B9
-
-=D9=8A=D8=B1=D8=AC=D9=89 =D9=85=D9=84=D8=A7=D8=AD=D8=B8=D8=A9 =D8=A3=D9=
-=86 =D8=B9=D8=AF=D8=AF =D9=85=D8=AD=D8=B8=D9=88=D8=B8 =D9=81=D9=88=D8=B2=
-=D9=83 =D9=8A=D9=86=D8=AF=D8=B1=D8=AC =D9=81=D9=8A =D8=A3=D9=88=D8=B1=D9=
-=88=D8=A8=D8=A7 =D9=84=D8=AF=D9=8A=D9=86=D8=A7
-=D9=83=D8=AA=D9=8A=D8=A8 =D9=85=D9=83=D8=AA=D8=A8 =D8=AA=D9=85=D8=AB=D9=
-=8A=D9=84=D9=8A =D9=81=D9=8A =D8=A3=D9=81=D8=B1=D9=8A=D9=82=D9=8A=D8=A7=
- =D9=83=D9=85=D8=A7 =D9=87=D9=88 =D9=85=D8=A8=D9=8A=D9=86 =D9=81=D9=8A =
-=D8=A7=D9=84=D8=AE=D8=A7=D8=B5
-=D8=A7=D9=84=D9=82=D8=B3=D9=8A=D9=85=D8=A9. =D9=86=D8=B8=D8=B1=D8=A7 =D8=
-=A5=D9=84=D9=89 =D9=87=D8=B0=D8=A7=D8=8C =D8=B3=D9=8A=D8=AA=D9=85 =D8=A7=
-=D9=84=D8=A7=D9=81=D8=B1=D8=A7=D8=AC =D8=B9=D9=86 $ 650=D8=8C000.00 =D9=
-=84=D9=83=D9=85 =D9=84=D9=83=D9=85
-=D9=85=D9=86 =D9=82=D8=A8=D9=84 =D8=A3=D9=8A =D9=85=D9=86 =D9=85=D9=83=D8=
-=A7=D8=AA=D8=A8 =D8=A7=D9=84=D8=AF=D9=81=D8=B9 =D9=84=D8=AF=D9=8A=D9=86=
-=D8=A7 =D9=81=D9=8A =D8=A7=D9=81=D8=B1=D9=8A=D9=82=D9=8A=D8=A7.
-
-=D9=84=D9=84=D9=85=D8=B7=D8=A7=D9=84=D8=A8=D8=A9 =D8=A7=D9=84=D9=85=D8=A7=
-=D9=84 =D8=A7=D9=84=D8=AE=D8=A7=D8=B5 =D8=A8=D8=A7=D9=84=D8=AC=D8=A7=D8=
-=A6=D8=B2=D8=A9=D8=8C =D8=A7=D9=84=D8=B1=D8=AC=D8=A7=D8=A1 =D8=A7=D9=84=
-=D8=A7=D8=AA=D8=B5=D8=A7=D9=84 =D9=85=D8=B9 =D9=88=D9=83=D9=8A=D9=84 =D8=
-=A7=D9=84=D8=A7=D8=A6=D8=AA=D9=85=D8=A7=D9=86=D9=8A=D8=A9
-=D8=A7=D9=84=D9=85=D8=AD=D8=A7=D9=85=D9=8A =D8=A8=D9=88=D9=84 =D8=A3=D9=
-=86=D8=AF=D8=B1=D8=B3=D9=88=D9=86 =D8=B9=D8=A8=D8=B1 =D8=A7=D9=84=D8=A8=
-=D8=B1=D9=8A=D8=AF =D8=A7=D9=84=D8=A7=D9=84=D9=83=D8=AA=D8=B1=D9=88=D9=86=
-=D9=8A =D9=85=D8=B9 =D8=A7=D9=84=D9=85=D8=B9=D9=84=D9=88=D9=85=D8=A7=D8=
-=AA =D8=A7=D9=84=D8=AA=D8=A7=D9=84=D9=8A=D8=A9:
-=D9=85=D8=B9=D9=84=D9=88=D9=85=D8=A7=D8=AA =D8=A7=D9=84=D8=A7=D8=AA=D8=B5=
-=D8=A7=D9=84:
-
-=D8=A7=D9=84=D8=A7=D8=B3=D9=85: =D8=A7=D9=84=D9=85=D8=AD=D8=A7=D9=85=D9=
-=8A =D8=A8=D9=88=D9=84 =D8=A3=D9=86=D8=AF=D8=B1=D8=B3=D9=88=D9=86
-=D8=A7=D9=84=D8=A8=D8=B1=D9=8A=D8=AF =D8=A7=D9=84=D8=A7=D9=84=D9=83=D8=AA=
-=D8=B1=D9=88=D9=86=D9=8A:customercare.claimsunit.02@gmail.com
-=D9=87=D8=A7=D8=AA=D9=81: +23470-6910-3666
-
-Contact your claims agent:customercare.claimsunit.02@gmail.com
-
-=D9=85=D8=B9 =D8=A3=D8=B7=D9=8A=D8=A8 =D8=A7=D9=84=D8=AA=D8=AD=D9=8A=D8=
-=A7=D8=AA=D8=8C
-=D8=A2=D8=AF=D9=85 =D8=B1=D9=88=D8=B2 (=D8=A7=D9=84=D8=B3=D9=8A=D8=AF=D8=
-=A9)
-
-=D8=B3=D9=88=D9=81 =D8=A7=D9=86=D8=AA=D9=87=D8=A7=D9=83 =D9=84=D9=84=D8=
-=B3=D8=B1=D9=8A=D8=A9 =D9=85=D9=86 =D8=AC=D8=A7=D9=86=D8=A8 =D9=81=D8=A7=
-=D8=A6=D8=B2=D9=8A=D9=86 =D8=A7=D9=84=D9=86=D8=AA=D9=8A=D8=AC=D8=A9 =D8=
-=A5=D9=84=D9=89 =D9=81=D9=82=D8=AF=D8=A7=D9=86 =D8=A7=D9=84=D8=A3=D9=87=
-=D9=84=D9=8A=D8=A9
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
