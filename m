@@ -1,93 +1,126 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: Re: [PATCH 01/10] fcoe: avoid getting into dev_queue_xmit with
- bottom halves disabled
-Date: Sat, 10 Mar 2012 00:12:04 +0000
-Message-ID: <4F5A9C53.5040200@intel.com>
-References: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
- <20120309224942.6515.83069.stgit@localhost6.localdomain6>
- <4F5A9754.6080009@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:19129 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753150Ab2CJAMT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Mar 2012 19:12:19 -0500
-In-Reply-To: <4F5A9754.6080009@broadcom.com>
-Content-Language: en-US
-Content-ID: <8F1A06E279E2EC4395F2C936F25CAC48@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] qla_target/tcm_qla2xxx: Make qla_tgt_mgmt_cmd use TARGET_SCF_ACK_KREF
+Date: Sat, 10 Mar 2012 05:19:52 +0000
+Message-ID: <1331356792-8432-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>, Madhuranath Iyengar <mni@risingtidesystems.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Joern Engel <joern@logfs.org>, Andy Grover <agrover@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Neil Horman <nhorman@tuxdriver.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-T24gMDMvMDkvMjAxMiAwMzo1MCBQTSwgQmhhbnUgUHJha2FzaCBHb2xsYXB1ZGkgd3JvdGU6DQo+
-IE9uIDMvOS8yMDEyIDI6NDkgUE0sIFJvYmVydCBMb3ZlIHdyb3RlOg0KPj4gRnJvbTogTmVpbCBI
-b3JtYW48bmhvcm1hbkB0dXhkcml2ZXIuY29tPg0KPj4NCj4+IFJlY2lldmVkIHRoaXMgd2Fybmlu
-ZyByZWNlbnRseToNCj4+DQo+PiBXQVJOSU5HOiBhdCBrZXJuZWwvc29mdGlycS5jOjE0MyBsb2Nh
-bF9iaF9lbmFibGUrMHg3ZC8weGIwKCkgKE5vdCANCj4+IHRhaW50ZWQpDQo+PiBIYXJkd2FyZSBu
-YW1lOiBDNjEwMA0KPj4gTW9kdWxlcyBsaW5rZWQgaW46IGF1dG9mczQgYm54MmZjIGNuaWMgdWlv
-IGZjb2UgbGliZmNvZSBsaWJmYyANCj4+IHNjc2lfdHJhbnNwb3J0X2ZjDQo+PiBzY3NpX3RndCA4
-MDIxcSBnYXJwIHN0cCBsbGMgc3VucnBjIGNwdWZyZXFfb25kZW1hbmQgYWNwaV9jcHVmcmVxIA0K
-Pj4gZnJlcV90YWJsZQ0KPj4gbXBlcmYgaXB2NiBpeGdiZSBtZGlvIGlnYiBkY2RiYXMgbWljcm9j
-b2RlIGkyY19pODAxIGkyY19jb3JlIHNnIGlUQ09fd2R0DQo+PiBpVENPX3ZlbmRvcl9zdXBwb3J0
-IGlvYXRkbWEgZGNhIGk3Y29yZV9lZGFjIGVkYWNfY29yZSBzaHBjaHAgZXh0NCANCj4+IG1iY2Fj
-aGUgamJkMg0KPj4gc2RfbW9kIGNyY190MTBkaWYgYWhjaSBkbV9taXJyb3IgZG1fcmVnaW9uX2hh
-c2ggZG1fbG9nIGRtX21vZCBbbGFzdCANCj4+IHVubG9hZGVkOg0KPj4gc2NzaV93YWl0X3NjYW5d
-DQo+PiBQaWQ6IDQ5MjYsIGNvbW06IGZjX3Jwb3J0X2VxIE5vdCB0YWludGVkIDIuNi4zMiAjMg0K
-Pj4gQ2FsbCBUcmFjZToNCj4+ICAgWzxmZmZmZmZmZjgxMDY5YzY3Pl0gPyB3YXJuX3Nsb3dwYXRo
-X2NvbW1vbisweDg3LzB4YzANCj4+ICAgWzxmZmZmZmZmZjgxMDY5Y2JhPl0gPyB3YXJuX3Nsb3dw
-YXRoX251bGwrMHgxYS8weDIwDQo+PiAgIFs8ZmZmZmZmZmY4MTA3MjE2ZD5dID8gbG9jYWxfYmhf
-ZW5hYmxlKzB4N2QvMHhiMA0KPj4gICBbPGZmZmZmZmZmODE0MzM1Njc+XSA/IGRldl9xdWV1ZV94
-bWl0KzB4MTc3LzB4NmMwDQo+PiAgIFs8ZmZmZmZmZmZhMDI5M2EzND5dID8gdmxhbl9kZXZfaHdh
-Y2NlbF9oYXJkX3N0YXJ0X3htaXQrMHg4NC8weGIwIA0KPj4gWzgwMjFxXQ0KPj4gICBbPGZmZmZm
-ZmZmODE0MmY0NmM+XSA/IGRldl9oYXJkX3N0YXJ0X3htaXQrMHgyYmMvMHgzZjANCj4+ICAgWzxm
-ZmZmZmZmZjgxNDMzOTJlPl0gPyBkZXZfcXVldWVfeG1pdCsweDUzZS8weDZjMA0KPj4gICBbPGZm
-ZmZmZmZmODE0MjM0OGU+XSA/IF9fc2tiX2Nsb25lKzB4MmUvMHgxMjANCj4+ICAgWzxmZmZmZmZm
-ZmEwMmVhODNkPl0gPyBmY29lX2NsZWFuX3BlbmRpbmdfcXVldWUrMHhjZC8weDEwMCBbbGliZmNv
-ZV0NCj4+ICAgWzxmZmZmZmZmZjgxMDU1OWNhPl0gPyBmaW5kX2J1c2llc3RfZ3JvdXArMHg5YWEv
-MHhiMjANCj4+ICAgWzxmZmZmZmZmZmEwMmY3NjI0Pl0gPyBmY29lX3BvcnRfc2VuZCsweDI0LzB4
-NTAgW2Zjb2VdDQo+PiAgIFs8ZmZmZmZmZmZhMDJmOTU2OD5dID8gZmNvZV94bWl0KzB4MjI4LzB4
-M2UwIFtmY29lXQ0KPj4gICBbPGZmZmZmZmZmYTAyYzE4OTY+XSA/IGZjX3NlcV9zZW5kKzB4YjYv
-MHgxNjAgW2xpYmZjXQ0KPj4gICBbPGZmZmZmZmZmYTAyYzFhNzY+XSA/IGZjX2V4Y2hfYWJvcnRf
-bG9ja2VkKzB4MTM2LzB4MWMwIFtsaWJmY10NCj4+ICAgWzxmZmZmZmZmZmEwMmMxY2E3Pl0gPyBm
-Y19leGNoX21ncl9yZXNldCsweDE0Ny8weDJhMCBbbGliZmNdDQo+PiAgIFs8ZmZmZmZmZmY4MTRm
-MmM3ZT5dID8gX3NwaW5fdW5sb2NrX2lycSsweGUvMHgyMA0KPj4gICBbPGZmZmZmZmZmYTAyYzkx
-ZDM+XSA/IGZjX3Jwb3J0X3dvcmsrMHgxMjMvMHg1ZjAgW2xpYmZjXQ0KPj4gICBbPGZmZmZmZmZm
-YTAyYzkwYjA+XSA/IGZjX3Jwb3J0X3dvcmsrMHgwLzB4NWYwIFtsaWJmY10NCj4+ICAgWzxmZmZm
-ZmZmZjgxMDhiNTU5Pl0gPyB3b3JrZXJfdGhyZWFkKzB4MTc5LzB4MmEwDQo+PiAgIFs8ZmZmZmZm
-ZmY4MTA5MGVhMD5dID8gYXV0b3JlbW92ZV93YWtlX2Z1bmN0aW9uKzB4MC8weDQwDQo+PiAgIFs8
-ZmZmZmZmZmY4MTA4YjNlMD5dID8gd29ya2VyX3RocmVhZCsweDAvMHgyYTANCj4+ICAgWzxmZmZm
-ZmZmZjgxMDkwYjU2Pl0gPyBrdGhyZWFkKzB4OTYvMHhhMA0KPj4gICBbPGZmZmZmZmZmODEwMGMx
-MGE+XSA/IGNoaWxkX3JpcCsweGEvMHgyMA0KPj4gICBbPGZmZmZmZmZmODEwOTBhYzA+XSA/IGt0
-aHJlYWQrMHgwLzB4YTANCj4+ICAgWzxmZmZmZmZmZjgxMDBjMTAwPl0gPyBjaGlsZF9yaXArMHgw
-LzB4MjANCj4+DQo+PiBmY19leGNoX2Fib3J0X2xvY2tlZCBhdHRlbXB0cyB0byBzZW5kIGFuIGFi
-b3J0IGZyYW1lLCBidXQgaXQgZG9lcyBzbyANCj4+IHdpdGggYQ0KPj4gc3BpbmxvY2sgaGVsZCBh
-bmQgaXJxcy9iaCdzIGRpc2FibGVkLiAgQmVjYXVzZSBvZiB0aGlzIGRldl9xdWV1ZV94bWl0IA0K
-Pj4gaXNzdWVzIGENCj4+IHdhcm5pbmcuIFRoaXMgcGF0Y2ggYWxsb3dzIHRoZSBmY19leGNoX2Fi
-b3J0X2xvY2tlZCB0byBkcm9wIGFuZCANCj4+IHJlLWFjcXVpcmUgdGhlDQo+PiBsb2NrIHNvIHRo
-YXQgdGhlIHdhcm5pbmcgaXMgc3VwcHJlc3NlZC4NCj4+DQo+PiBOb3RlIHRoaXMgaXNuJ3QgYSBn
-cmVhdCBmaXgsIGdpdmVuIHRoYXQgd2UgbmVlZCB0byBmcmVlIGFuZCANCj4+IHJlLWFjcXVpcmUg
-dGhlDQo+PiBleF9sb2NrIGR1cmluZyB0aGUgZmNfZXhjaF9hYm9ydF9sb2NrZWQgb3BlcmF0aW9u
-LCBidXQgYW55IG90aGVyIA0KPj4gc29sdXRpb24gaXMNCj4+IGdvaW5nIHRvIGJlIGEgZmFpcmx5
-IG1ham9yIHVuZGVydGFraW5nIEkgdGhpbmsuICBUaGlzIHNob3VsZCB3b3JrIA0KPj4gdW50aWwg
-YSBwcm9wZXINCj4+IGZpeCBjYW4gYmUgZm91bmQuDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogTmVp
-bCBIb3JtYW48bmhvcm1hbkB0dXhkcml2ZXIuY29tPg0KPj4gU2lnbmVkLW9mZi1ieTogUm9iZXJ0
-IExvdmU8cm9iZXJ0LncubG92ZUBpbnRlbC5jb20+DQo+DQo+IFJvYmVydCwgIFRoaXMgcGF0Y2gg
-aXMgbm90IHJlcXVpcmVkIGJhc2VkIG9uIHdoYXQgd2UgZGlzY3Vzc2VkIGluIHRoaXMgDQo+IHRo
-cmVhZC4uDQo+IGh0dHA6Ly9saXN0cy5vcGVuLWZjb2Uub3JnL3BpcGVybWFpbC9kZXZlbC8yMDEy
-LUZlYnJ1YXJ5LzAxMTk0Ni5odG1sDQo+DQo+IE5laWwgcHJvdmlkZWQgImZjb2U6IEVuc3VyZSBm
-Y29lX3JlY3ZfZnJhbWUgaXMgYWx3YXlzIGNhbGxlZCBpbiANCj4gcHJvY2VzcyBjb250ZXh0IiBp
-bnN0ZWFkIG9mIHRoZSB0d28gcGF0Y2hlcyBoZSBzdWJtaXR0ZWQgaW5pdGlhbGx5Lg0KPiBodHRw
-Oi8vbGlzdHMub3Blbi1mY29lLm9yZy9waXBlcm1haWwvZGV2ZWwvMjAxMi1GZWJydWFyeS8wMTE5
-NjIuaHRtbA0KPg0KVGhhbmtzIGZvciBwb2ludGluZyB0aGlzIG91dCBCaGFudSwgSSBvdmVybG9v
-a2VkIHRoZSBsYXN0IGNvbW1lbnQgaW4gdGhlIA0KZGlzY3Vzc2lvbiBvZiB0aGlzIHBhdGNoLg0K
-DQpKYW1lcywgSSBiZWxpZXZlIHRoZSBjb3JyZWN0IHBhdGNoIGlzIDAyLzEwIGluIHRoaXMgc2Vy
-aWVzLCBzbyBJIHRoaW5rIA0KeW91IHNob3VsZCBiZSBhYmxlIHRvIGRyb3AgdGhpcyBwYXRjaCBh
-bmQgd2UnbGwgYmUgYmFjayBvbiB0cmFjay4gSWYgDQp5b3UnZCBsaWtlIG1lIHRvIHJlc2VuZCB0
-aGUgc2VyaWVzIHdpdGhvdXQgdGhpcyBwYXRjaCBwbGVhc2UgbGV0IG1lIA0Ka25vdy4gSSdsbCBj
-aGVjayB0byBtYWtlIHN1cmUgMDIvMTAgdGhyb3VnaCAxMC8xMCBhcHBseSB3aXRob3V0IDAxLzEw
-IA0KYW5kIHJlc2VuZCBpZiBJIGhhdmUgdG8gbWFrZSBjaGFuZ2VzLg0KDQpGb3IgZm9ybWFsaXR5
-J3Mgc2FrZToNCg0KTmFja2VkLWJ5OiBSb2JlcnQgTG92ZSA8cm9iZXJ0LncubG92ZUBpbnRlbC5j
-b20+DQoNClRoYW5rcywgLy9Sb2I=
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+
+This patch addresses an bug in recent qla_target/tcm_qla2xxx code where
+transport_generic_free_cmd() is not being called for TMR ops and associated
+qla_tgt_mgmt_cmd->se_cmd.  This results in core_tmr_release_req() not being
+called and tmr->tmr_list being leaked after TMR response completion.
+
+To address this issue, this patch changes tcm_qla2xxx_handle_tmr() ->
+target_submit_tmr() to use TARGET_SCF_ACK_KREF flags, and adds a new
+qla_tgt_ops->free_mcmd() callback to invoke the extra ACK ->cmd_kref put
+from process context in the TFO->queue_tm_rsp() -> tcm_qla2xxx_queue_tm_rsp()
+-> qla_tgt_xmit_tm_rsp() codepath.
+
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Arun Easi <arun.easi@qlogic.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Cc: Roland Dreier <roland@purestorage.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Joern Engel <joern@logfs.org>
+Cc: Andy Grover <agrover@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/scsi/qla2xxx/qla_target.c  |    9 +++++++++
+ drivers/scsi/qla2xxx/qla_target.h  |    2 ++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |   22 +++++++++++++++++++++-
+ 3 files changed, 32 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index b6db377..b03393a 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1409,6 +1409,15 @@ void qla_tgt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
+ 		else
+ 			qla_tgt_24xx_send_task_mgmt_ctio(vha, mcmd, mcmd->fc_tm_rsp);
+ 	}
++	/*
++	 * Make the callback for ->free_mcmd() to queue_work() and invoke
++	 * target_put_sess_cmd() to drop cmd_kref to 1.  The final
++	 * target_put_sess_cmd() call will be made from TFO->check_stop_free()
++	 * -> tcm_qla2xxx_check_stop_free() to release the TMR associated se_cmd
++	 * descriptor after TFO->queue_tm_rsp() -> tcm_qla2xxx_queue_tm_rsp() ->
++	 * qla_tgt_xmit_tm_rsp() returns here..
++	 */
++	ha->tgt_ops->free_mcmd(mcmd);
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ }
+ EXPORT_SYMBOL(qla_tgt_xmit_tm_rsp);
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 6930d58..d643f27 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -636,6 +636,7 @@ struct qla_tgt_func_tmpl {
+ 	int (*handle_data)(struct qla_tgt_cmd *);
+ 	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, uint32_t, uint8_t, uint32_t);
+ 	void (*free_cmd)(struct qla_tgt_cmd *);
++	void (*free_mcmd)(struct qla_tgt_mgmt_cmd *);
+ 	void (*free_session)(struct qla_tgt_sess *);
+ 
+ 	int (*check_initiator_node_acl)(struct scsi_qla_host *, unsigned char *,
+@@ -870,6 +871,7 @@ struct qla_tgt_mgmt_cmd {
+ 	uint8_t fc_tm_rsp;
+ 	struct qla_tgt_sess *sess;
+ 	struct se_cmd se_cmd;
++	struct work_struct free_work;
+ 	unsigned int flags;
+ #define QLA24XX_MGMT_SEND_NACK	1
+ 	union {
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 85eec3e..c6acb80 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -387,6 +387,25 @@ u32 tcm_qla2xxx_tpg_get_inst_index(struct se_portal_group *se_tpg)
+ 	return tpg->lport_tpgt;
+ }
+ 
++static void tcm_qla2xxx_complete_mcmd(struct work_struct *work)
++{
++	struct qla_tgt_mgmt_cmd *mcmd = container_of(work,
++			struct qla_tgt_mgmt_cmd, free_work);
++
++	transport_generic_free_cmd(&mcmd->se_cmd, 0);
++}
++
++/*
++ * Called from qla_target_template->free_mcmd(), and will call
++ * tcm_qla2xxx_release_cmd() via normal struct target_core_fabric_ops
++ * release callback.  qla_hw_data->hardware_lock is expected to be held
++ */
++static void tcm_qla2xxx_free_mcmd(struct qla_tgt_mgmt_cmd *mcmd)
++{
++	INIT_WORK(&mcmd->free_work, tcm_qla2xxx_complete_mcmd);
++	queue_work(tcm_qla2xxx_free_wq, &mcmd->free_work);
++}
++
+ static void tcm_qla2xxx_complete_free(struct work_struct *work)
+ {
+ 	struct qla_tgt_cmd *cmd = container_of(work, struct qla_tgt_cmd, work);
+@@ -637,7 +656,7 @@ int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
+ 	struct se_cmd *se_cmd = &mcmd->se_cmd;
+ 
+ 	return target_submit_tmr(se_cmd, sess->se_sess, NULL, lun, mcmd,
+-			tmr_func, GFP_ATOMIC, tag, 0);
++			tmr_func, GFP_ATOMIC, tag, TARGET_SCF_ACK_KREF);
+ }
+ 
+ int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
+@@ -1536,6 +1555,7 @@ static struct qla_tgt_func_tmpl tcm_qla2xxx_template = {
+ 	.handle_data		= tcm_qla2xxx_handle_data,
+ 	.handle_tmr		= tcm_qla2xxx_handle_tmr,
+ 	.free_cmd		= tcm_qla2xxx_free_cmd,
++	.free_mcmd		= tcm_qla2xxx_free_mcmd,
+ 	.free_session		= tcm_qla2xxx_free_session,
+ 	.check_initiator_node_acl = tcm_qla2xxx_check_initiator_node_acl,
+ 	.find_sess_by_s_id	= tcm_qla2xxx_find_sess_by_s_id,
+-- 
+1.7.2.5
