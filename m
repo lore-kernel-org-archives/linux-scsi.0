@@ -1,137 +1,107 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci PATCH v2 10/18] isci: fix interrupt disable
-Date: Sat, 10 Mar 2012 23:28:35 -0800
-Message-ID: <20120311072835.6320.23343.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci PATCH v2 11/18] isci: kill isci_host.shost
+Date: Sat, 10 Mar 2012 23:28:40 -0800
+Message-ID: <20120311072840.6320.58208.stgit@dwillia2-linux.jf.intel.com>
 References: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:42596 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751645Ab2CKHNY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Mar 2012 03:13:24 -0400
 In-Reply-To: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Richard Boyd <richard.g.boyd@intel.com>, Jacek Danecki <jacek.danecki@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
 
-There is a (dubious?) lost irq workaround in sci_controller_isr() that
-effectively nullifies attempts to disable interrupts.  Until the
-workaround can be re-evaluated add some infrastructure to prevent the
-interrupt handler from inadvertantly re-enabling interrupts.
+We can retrieve the shost from the sas_ha like the rest of libsas and
+drop this out of our local data structure.
 
-The failure mode was interrupts continuing to run after the driver had
-been removed and its iomappings torn down.
-
-Reported-by: Jacek Danecki <jacek.danecki@intel.com>
-Tested-by: Jacek Danecki <jacek.danecki@intel.com>
-[richard: clear remaining interrupts at the end of reset]
-Acked-by: Richard Boyd <richard.g.boyd@intel.com>
+Acked-by: Jacek Danecki <jacek.danecki@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.c |   39 ++++++++++++++++++++++++++-------------
- drivers/scsi/isci/host.h |    1 +
- 2 files changed, 27 insertions(+), 13 deletions(-)
+ drivers/scsi/isci/host.h |    6 +++++-
+ drivers/scsi/isci/init.c |   16 +++++++---------
+ 2 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 577a836..5832b13 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -192,22 +192,27 @@ static bool sci_controller_completion_queue_has_entries(struct isci_host *ihost)
- 
- static bool sci_controller_isr(struct isci_host *ihost)
- {
--	if (sci_controller_completion_queue_has_entries(ihost)) {
-+	if (sci_controller_completion_queue_has_entries(ihost))
- 		return true;
--	} else {
--		/*
--		 * we have a spurious interrupt it could be that we have already
--		 * emptied the completion queue from a previous interrupt */
--		writel(SMU_ISR_COMPLETION, &ihost->smu_registers->interrupt_status);
- 
--		/*
--		 * There is a race in the hardware that could cause us not to be notified
--		 * of an interrupt completion if we do not take this step.  We will mask
--		 * then unmask the interrupts so if there is another interrupt pending
--		 * the clearing of the interrupt source we get the next interrupt message. */
-+	/* we have a spurious interrupt it could be that we have already
-+	 * emptied the completion queue from a previous interrupt
-+	 * FIXME: really!?
-+	 */
-+	writel(SMU_ISR_COMPLETION, &ihost->smu_registers->interrupt_status);
-+
-+	/* There is a race in the hardware that could cause us not to be
-+	 * notified of an interrupt completion if we do not take this
-+	 * step.  We will mask then unmask the interrupts so if there is
-+	 * another interrupt pending the clearing of the interrupt
-+	 * source we get the next interrupt message.
-+	 */
-+	spin_lock(&ihost->scic_lock);
-+	if (test_bit(IHOST_IRQ_ENABLED, &ihost->flags)) {
- 		writel(0xFF000000, &ihost->smu_registers->interrupt_mask);
- 		writel(0, &ihost->smu_registers->interrupt_mask);
- 	}
-+	spin_unlock(&ihost->scic_lock);
- 
- 	return false;
- }
-@@ -698,14 +703,15 @@ static u32 sci_controller_get_suggested_start_timeout(struct isci_host *ihost)
- 
- static void sci_controller_enable_interrupts(struct isci_host *ihost)
- {
--	BUG_ON(ihost->smu_registers == NULL);
-+	set_bit(IHOST_IRQ_ENABLED, &ihost->flags);
- 	writel(0, &ihost->smu_registers->interrupt_mask);
- }
- 
- void sci_controller_disable_interrupts(struct isci_host *ihost)
- {
--	BUG_ON(ihost->smu_registers == NULL);
-+	clear_bit(IHOST_IRQ_ENABLED, &ihost->flags);
- 	writel(0xffffffff, &ihost->smu_registers->interrupt_mask);
-+	readl(&ihost->smu_registers->interrupt_mask); /* flush */
- }
- 
- static void sci_controller_enable_port_task_scheduler(struct isci_host *ihost)
-@@ -1318,7 +1324,9 @@ void isci_host_deinit(struct isci_host *ihost)
- 	 */
- 	writel(0, &ihost->scu_registers->peg0.sgpio.interface_control);
- 
-+	spin_lock_irq(&ihost->scic_lock);
- 	sci_controller_reset(ihost);
-+	spin_unlock_irq(&ihost->scic_lock);
- 
- 	/* Cancel any/all outstanding port timers */
- 	for (i = 0; i < ihost->logical_port_entries; i++) {
-@@ -1605,6 +1613,9 @@ static void sci_controller_reset_hardware(struct isci_host *ihost)
- 
- 	/* The write to the UFQGP clears the UFQPR */
- 	writel(0, &ihost->scu_registers->sdma.unsolicited_frame_get_pointer);
-+
-+	/* clear all interrupts */
-+	writel(~SMU_INTERRUPT_STATUS_RESERVED_MASK, &ihost->smu_registers->interrupt_status);
- }
- 
- static void sci_controller_resetting_state_enter(struct sci_base_state_machine *sm)
-@@ -2391,7 +2402,9 @@ int isci_host_init(struct isci_host *ihost)
- 	int i, err;
- 	enum sci_status status;
- 
-+	spin_lock_irq(&ihost->scic_lock);
- 	status = sci_controller_construct(ihost, scu_base(ihost), smu_base(ihost));
-+	spin_unlock_irq(&ihost->scic_lock);
- 	if (status != SCI_SUCCESS) {
- 		dev_err(&ihost->pdev->dev,
- 			"%s: sci_controller_construct failed - status = %x\n",
 diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 9dc910b..9701c1d 100644
+index 9701c1d..7272a0a 100644
 --- a/drivers/scsi/isci/host.h
 +++ b/drivers/scsi/isci/host.h
-@@ -200,6 +200,7 @@ struct isci_host {
- 	struct pci_dev *pdev;
- 	#define IHOST_START_PENDING 0
- 	#define IHOST_STOP_PENDING 1
-+	#define IHOST_IRQ_ENABLED 2
+@@ -203,7 +203,6 @@ struct isci_host {
+ 	#define IHOST_IRQ_ENABLED 2
  	unsigned long flags;
  	wait_queue_head_t eventq;
- 	struct Scsi_Host *shost;
+-	struct Scsi_Host *shost;
+ 	struct tasklet_struct completion_tasklet;
+ 	struct list_head requests_to_complete;
+ 	struct list_head requests_to_errorback;
+@@ -308,6 +307,11 @@ static inline struct isci_pci_info *to_pci_info(struct pci_dev *pdev)
+ 	return pci_get_drvdata(pdev);
+ }
+ 
++static inline struct Scsi_Host *to_shost(struct isci_host *ihost)
++{
++	return ihost->sas_ha.core.shost;
++}
++
+ #define for_each_isci_host(id, ihost, pdev) \
+ 	for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
+ 	     id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index eda4385..fdae42f 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -271,13 +271,12 @@ static void isci_unregister(struct isci_host *isci_host)
+ 	if (!isci_host)
+ 		return;
+ 
+-	shost = isci_host->shost;
+-
+ 	sas_unregister_ha(&isci_host->sas_ha);
+ 
+-	sas_remove_host(isci_host->shost);
+-	scsi_remove_host(isci_host->shost);
+-	scsi_host_put(isci_host->shost);
++	shost = to_shost(isci_host);
++	sas_remove_host(shost);
++	scsi_remove_host(shost);
++	scsi_host_put(shost);
+ }
+ 
+ static int __devinit isci_pci_init(struct pci_dev *pdev)
+@@ -578,7 +577,6 @@ static struct isci_host *isci_host_alloc(struct pci_dev *pdev, int id)
+ 	shost = scsi_host_alloc(&isci_sht, sizeof(void *));
+ 	if (!shost)
+ 		return NULL;
+-	ihost->shost = shost;
+ 
+ 	dev_info(&pdev->dev, "%sSCU controller %d: phy 3-0 cables: "
+ 		 "{%s, %s, %s, %s}\n",
+@@ -690,11 +688,11 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
+ 		pci_info->hosts[i] = h;
+ 
+ 		/* turn on DIF support */
+-		scsi_host_set_prot(h->shost,
++		scsi_host_set_prot(to_shost(h),
+ 				   SHOST_DIF_TYPE1_PROTECTION |
+ 				   SHOST_DIF_TYPE2_PROTECTION |
+ 				   SHOST_DIF_TYPE3_PROTECTION);
+-		scsi_host_set_guard(h->shost, SHOST_DIX_GUARD_CRC);
++		scsi_host_set_guard(to_shost(h), SHOST_DIX_GUARD_CRC);
+ 	}
+ 
+ 	err = isci_setup_interrupts(pdev);
+@@ -702,7 +700,7 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
+ 		goto err_host_alloc;
+ 
+ 	for_each_isci_host(i, isci_host, pdev)
+-		scsi_scan_host(isci_host->shost);
++		scsi_scan_host(to_shost(isci_host));
+ 
+ 	return 0;
+ 
 
