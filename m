@@ -1,110 +1,73 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [libsas PATCH v10 2/9] libsas: cleanup spurious calls to
- scsi_schedule_eh
-Date: Sat, 10 Mar 2012 20:39:07 -0800
-Message-ID: <20120311043906.27797.28938.stgit@dwillia2-linux.jf.intel.com>
-References: <20120311043722.27797.97791.stgit@dwillia2-linux.jf.intel.com>
+From: jack_wang <jack_wang@usish.com>
+Subject: Re: [libsas PATCH v10 6/9] libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_handler
+Date: Sun, 11 Mar 2012 13:37:10 +0800
+Message-ID: <201203111336235783450@usish.com>
+References: <20120311043722.27797.97791.stgit@dwillia2-linux.jf.intel.com>,
+	<20120311043927.27797.43676.stgit@dwillia2-linux.jf.intel.com>
+Reply-To: jack_wang <jack_wang@usish.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120311043722.27797.97791.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-ide <linux-ide@vger.kernel.org>, Jacek Danecki <jacek.danecki@intel.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
 List-Id: linux-scsi@vger.kernel.org
 
-eh is woken up automatically by the presence of failed commands,
-scsi_schedule_eh is reserved for cases where there are no failed
-commands.  This guarantees that host_eh_sceduled is only incremented
-when an explicit eh request is made.
-
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/libsas/sas_ata.c       |   25 -------------------------
- drivers/scsi/libsas/sas_scsi_host.c |    5 -----
- include/scsi/sas_ata.h              |    4 ----
- 3 files changed, 0 insertions(+), 34 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index bc0cecc..729a7b6 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -574,31 +574,6 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev)
- 	return 0;
- }
- 
--void sas_ata_task_abort(struct sas_task *task)
--{
--	struct ata_queued_cmd *qc = task->uldd_task;
--	struct completion *waiting;
--
--	/* Bounce SCSI-initiated commands to the SCSI EH */
--	if (qc->scsicmd) {
--		struct request_queue *q = qc->scsicmd->device->request_queue;
--		unsigned long flags;
--
--		spin_lock_irqsave(q->queue_lock, flags);
--		blk_abort_request(qc->scsicmd->request);
--		spin_unlock_irqrestore(q->queue_lock, flags);
--		scsi_schedule_eh(qc->scsicmd->device->host);
--		return;
--	}
--
--	/* Internal command, fake a timeout and complete. */
--	qc->flags &= ~ATA_QCFLAG_ACTIVE;
--	qc->flags |= ATA_QCFLAG_FAILED;
--	qc->err_mask |= AC_ERR_TIMEOUT;
--	waiting = qc->private_data;
--	complete(waiting);
--}
--
- static void sas_get_ata_command_set(struct domain_device *dev)
- {
- 	struct dev_to_host_fis *fis =
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index f0b9b7b..49a9113 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -992,10 +992,6 @@ void sas_task_abort(struct sas_task *task)
- 			return;
- 		task->timer.function(task->timer.data);
- 		return;
--	}
--
--	if (dev_is_sata(task->dev)) {
--		sas_ata_task_abort(task);
- 	} else {
- 		struct request_queue *q = sc->device->request_queue;
- 		unsigned long flags;
-@@ -1003,7 +999,6 @@ void sas_task_abort(struct sas_task *task)
- 		spin_lock_irqsave(q->queue_lock, flags);
- 		blk_abort_request(sc->request);
- 		spin_unlock_irqrestore(q->queue_lock, flags);
--		scsi_schedule_eh(sc->device->host);
- 	}
- }
- 
-diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-index cdccd2e..6d5d60c 100644
---- a/include/scsi/sas_ata.h
-+++ b/include/scsi/sas_ata.h
-@@ -38,7 +38,6 @@ static inline int dev_is_sata(struct domain_device *dev)
- 
- int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy);
- int sas_ata_init_host_and_port(struct domain_device *found_dev);
--void sas_ata_task_abort(struct sas_task *task);
- void sas_ata_strategy_handler(struct Scsi_Host *shost);
- void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
- 		struct list_head *done_q);
-@@ -56,9 +55,6 @@ static inline int sas_ata_init_host_and_port(struct domain_device *found_dev)
- {
- 	return 0;
- }
--static inline void sas_ata_task_abort(struct sas_task *task)
--{
--}
- 
- static inline void sas_ata_strategy_handler(struct Scsi_Host *shost)
- {
+TG9va3MgT0sgdG8gbWUuDQpUaGFua3MuDQpBY2tlZC1ieTogSmFjayBXYW5nIDxqYWNrX3dhbmdA
+dXNpc2guY29tPg0KDQoNCi0tLS0tLS0tLS0tLS0tDQpqYWNrX3dhbmcNCj5zYXNfZWhfYnVzX3Jl
+c2V0X2hhbmRsZXIoKSBhbW91bnRzIHRvIHNhc19waHlfcmVzZXQoKSB3aXRob3V0DQo+bm90aWZp
+Y2F0aW9uIG9mIHRoZSByZXNldCB0byB0aGUgbGxkZC4gIElmIHRoaXMgaXMgdHJpZ2dlcmVkIGZy
+b20NCj5laC1jbW5kIHJlY292ZXJ5IHRoZXJlIG1heSBiZSBzYXNfdGFza3MgZm9yIHRoZSBsbGRk
+IHRvIHRlcm1pbmF0ZSwgc28NCj4tPmxsZGRfSV9UX25leHVzX3Jlc2V0IGlzIHdhcnJhbnRlZC4N
+Cj4NCj5DYzogWGlhbmdsaWFuZyBZdSA8eXV4aWFuZ2xAbWFydmVsbC5jb20+DQo+Q2M6IEx1YmVu
+IFR1aWtvdiA8bHR1aWtvdkB5YWhvby5jb20+DQo+Q2M6IEphY2sgV2FuZyA8amFja193YW5nQHVz
+aXNoLmNvbT4NCj5SZXZpZXdlZC1ieTogSmFjZWsgRGFuZWNraSA8amFjZWsuZGFuZWNraUBpbnRl
+bC5jb20+DQo+W2phY2VrOiBtb2RpZnkgcG04MDAxX0lfVF9uZXh1c19yZXNldCB0byByZXR1cm4g
+LUVOT0RFVl0NCj5TaWduZWQtb2ZmLWJ5OiBEYW4gV2lsbGlhbXMgPGRhbi5qLndpbGxpYW1zQGlu
+dGVsLmNvbT4NCj4tLS0NCj4gZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNfc2NzaV9ob3N0LmMgfCAg
+IDE5ICsrKysrKysrLS0tLS0tLS0tLS0NCj4gZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2Fz
+LmMgICAgfCAgICAzICsrLQ0KPiAyIGZpbGVzIGNoYW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDEy
+IGRlbGV0aW9ucygtKQ0KPg0KPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19z
+Y3NpX2hvc3QuYyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX3Njc2lfaG9zdC5jDQo+aW5kZXgg
+ZGVjOTkyYi4uYTVjNGNlNCAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19z
+Y3NpX2hvc3QuYw0KPisrKyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX3Njc2lfaG9zdC5jDQo+
+QEAgLTU3NiwyNSArNTc2LDIyIEBAIGludCBzYXNfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXIoc3Ry
+dWN0IHNjc2lfY21uZCAqY21kKQ0KPiAJcmV0dXJuIEZBSUxFRDsNCj4gfQ0KPiANCj4tLyogQXR0
+ZW1wdCB0byBzZW5kIGEgcGh5IChidXMpIHJlc2V0ICovDQo+IGludCBzYXNfZWhfYnVzX3Jlc2V0
+X2hhbmRsZXIoc3RydWN0IHNjc2lfY21uZCAqY21kKQ0KPiB7DQo+LQlzdHJ1Y3QgZG9tYWluX2Rl
+dmljZSAqZGV2ID0gY21kX3RvX2RvbWFpbl9kZXYoY21kKTsNCj4tCXN0cnVjdCBzYXNfcGh5ICpw
+aHkgPSBzYXNfZ2V0X2xvY2FsX3BoeShkZXYpOw0KPi0Jc3RydWN0IFNjc2lfSG9zdCAqaG9zdCA9
+IGNtZC0+ZGV2aWNlLT5ob3N0Ow0KPiAJaW50IHJlczsNCj4rCXN0cnVjdCBTY3NpX0hvc3QgKmhv
+c3QgPSBjbWQtPmRldmljZS0+aG9zdDsNCj4rCXN0cnVjdCBkb21haW5fZGV2aWNlICpkZXYgPSBj
+bWRfdG9fZG9tYWluX2RldihjbWQpOw0KPisJc3RydWN0IHNhc19pbnRlcm5hbCAqaSA9IHRvX3Nh
+c19pbnRlcm5hbChob3N0LT50cmFuc3BvcnR0KTsNCj4gDQo+IAlpZiAoY3VycmVudCAhPSBob3N0
+LT5laGFuZGxlcikNCj4gCQlyZXR1cm4gc2FzX3F1ZXVlX3Jlc2V0KGRldiwgU0FTX0RFVl9SRVNF
+VCwgMCwgMCk7DQo+IA0KPi0JcmVzID0gc2FzX3BoeV9yZXNldChwaHksIDEpOw0KPi0JaWYgKHJl
+cykNCj4tCQlTQVNfRFBSSU5USygiQnVzIHJlc2V0IG9mICVzIGZhaWxlZCAweCV4XG4iLA0KPi0J
+CQkgICAga29iamVjdF9uYW1lKCZwaHktPmRldi5rb2JqKSwNCj4tCQkJICAgIHJlcyk7DQo+LQlz
+YXNfcHV0X2xvY2FsX3BoeShwaHkpOw0KPisJaWYgKCFpLT5kZnQtPmxsZGRfSV9UX25leHVzX3Jl
+c2V0KQ0KPisJCXJldHVybiBGQUlMRUQ7DQo+IA0KPi0JaWYgKHJlcyA9PSBUTUZfUkVTUF9GVU5D
+X1NVQ0MgfHwgcmVzID09IFRNRl9SRVNQX0ZVTkNfQ09NUExFVEUpDQo+KwlyZXMgPSBpLT5kZnQt
+PmxsZGRfSV9UX25leHVzX3Jlc2V0KGRldik7DQo+KwlpZiAocmVzID09IFRNRl9SRVNQX0ZVTkNf
+U1VDQyB8fCByZXMgPT0gVE1GX1JFU1BfRlVOQ19DT01QTEVURSB8fA0KPisJICAgIHJlcyA9PSAt
+RU5PREVWKQ0KPiAJCXJldHVybiBTVUNDRVNTOw0KPiANCj4gCXJldHVybiBGQUlMRUQ7DQo+ZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX3Nhcy5jIGIvZHJpdmVycy9zY3Np
+L3BtODAwMS9wbTgwMDFfc2FzLmMNCj5pbmRleCBiMTExMDE4Li4zYTAzYjQwIDEwMDY0NA0KPi0t
+LSBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX3Nhcy5jDQo+KysrIGIvZHJpdmVycy9zY3Np
+L3BtODAwMS9wbTgwMDFfc2FzLmMNCj5AQCAtODY4LDggKzg2OCw5IEBAIGludCBwbTgwMDFfSV9U
+X25leHVzX3Jlc2V0KHN0cnVjdCBkb21haW5fZGV2aWNlICpkZXYpDQo+IAlzdHJ1Y3QgcG04MDAx
+X2RldmljZSAqcG04MDAxX2RldjsNCj4gCXN0cnVjdCBwbTgwMDFfaGJhX2luZm8gKnBtODAwMV9o
+YTsNCj4gCXN0cnVjdCBzYXNfcGh5ICpwaHk7DQo+Kw0KPiAJaWYgKCFkZXYgfHwgIWRldi0+bGxk
+ZF9kZXYpDQo+LQkJcmV0dXJuIC0xOw0KPisJCXJldHVybiAtRU5PREVWOw0KPiANCj4gCXBtODAw
+MV9kZXYgPSBkZXYtPmxsZGRfZGV2Ow0KPiAJcG04MDAxX2hhID0gcG04MDAxX2ZpbmRfaGFfYnlf
+ZGV2KGRldik7DQo+DQo+LS0NCj5UbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0
+aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSIgaW4NCj50aGUgYm9keSBvZiBhIG1lc3Nh
+Z2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPk1vcmUgbWFqb3Jkb21vIGluZm8gYXQg
+IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPg0KPl9fX19fX19f
+X18gSW5mb3JtYXRpb24gZnJvbSBFU0VUIE5PRDMyIEFudGl2aXJ1cywgdmVyc2lvbiBvZiB2aXJ1
+cyBzaWduYXR1cmUgZGF0YWJhc2UgNTY1OSAoMjAxMDExMjkpIF9fX19fX19fX18NCj4NCj5UaGUg
+bWVzc2FnZSB3YXMgY2hlY2tlZCBieSBFU0VUIE5PRDMyIEFudGl2aXJ1cy4NCj4NCj5odHRwOi8v
+d3d3LmVzZXQuY29tDQo+DQo+DQo+
 
