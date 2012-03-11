@@ -1,218 +1,280 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci PATCH v2 02/18] isci: kill ->is_direct_attached
-Date: Sat, 10 Mar 2012 23:27:54 -0800
-Message-ID: <20120311072754.6320.10223.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci PATCH v2 03/18] isci: kill sci_phy_protocol and
+ sci_request_protocol
+Date: Sat, 10 Mar 2012 23:28:00 -0800
+Message-ID: <20120311072759.6320.51523.stgit@dwillia2-linux.jf.intel.com>
 References: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7574 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751084Ab2CKHMi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Mar 2012 03:12:38 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-domain_device ->parent conveys the same information.
-
-Occurrences of ->is_direct_attached appear next to incomplete open-coded
-versions of dev_is_sata(), clean those up as well.
+Holdovers from the initial driver cleanup, replace with enum sas_protocol.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.h                |    4 ++--
- drivers/scsi/isci/remote_device.c       |   29 +++++------------------------
- drivers/scsi/isci/remote_device.h       |    1 -
- drivers/scsi/isci/remote_node_context.c |   27 ++++++++-------------------
- drivers/scsi/isci/request.c             |    5 ++---
- 5 files changed, 17 insertions(+), 49 deletions(-)
+ drivers/scsi/isci/host.c    |    4 ++--
+ drivers/scsi/isci/phy.c     |   12 ++++++------
+ drivers/scsi/isci/phy.h     |    9 +--------
+ drivers/scsi/isci/port.c    |   14 ++++++--------
+ drivers/scsi/isci/request.c |   10 +++++-----
+ drivers/scsi/isci/request.h |    9 +--------
+ include/scsi/sas.h          |    1 +
+ 7 files changed, 22 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index adbad69..a9679ee 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -55,6 +55,7 @@
- #ifndef _SCI_HOST_H_
- #define _SCI_HOST_H_
+diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
+index 3822ffb..83886a2 100644
+--- a/drivers/scsi/isci/host.c
++++ b/drivers/scsi/isci/host.c
+@@ -1911,7 +1911,7 @@ static void power_control_timeout(unsigned long data)
+ 		ihost->power_control.phys_granted_power++;
+ 		sci_phy_consume_power_handler(iphy);
  
-+#include <scsi/sas_ata.h>
- #include "remote_device.h"
- #include "phy.h"
- #include "isci.h"
-@@ -378,8 +379,7 @@ static inline int sci_remote_device_node_count(struct isci_remote_device *idev)
- {
- 	struct domain_device *dev = idev->domain_dev;
+-		if (iphy->protocol == SCIC_SDS_PHY_PROTOCOL_SAS) {
++		if (iphy->protocol == SAS_PROTOCOL_SSP) {
+ 			u8 j;
  
--	if ((dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) &&
--	    !idev->is_direct_attached)
-+	if (dev_is_sata(dev) && dev->parent)
- 		return SCU_STP_REMOTE_NODE_COUNT;
- 	return SCU_SSP_REMOTE_NODE_COUNT;
+ 			for (j = 0; j < SCI_MAX_PHYS; j++) {
+@@ -1985,7 +1985,7 @@ void sci_controller_power_control_queue_insert(struct isci_host *ihost,
+ 				       sizeof(current_phy->frame_rcvd.iaf.sas_addr));
+ 
+ 			if (current_phy->sm.current_state_id == SCI_PHY_READY &&
+-			    current_phy->protocol == SCIC_SDS_PHY_PROTOCOL_SAS &&
++			    current_phy->protocol == SAS_PROTOCOL_SSP &&
+ 			    other == 0) {
+ 				sci_phy_consume_power_handler(iphy);
+ 				break;
+diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
+index fab3586..c685ab0 100644
+--- a/drivers/scsi/isci/phy.c
++++ b/drivers/scsi/isci/phy.c
+@@ -580,7 +580,7 @@ static void sci_phy_start_sas_link_training(struct isci_phy *iphy)
+ 
+ 	sci_change_state(&iphy->sm, SCI_PHY_SUB_AWAIT_SAS_SPEED_EN);
+ 
+-	iphy->protocol = SCIC_SDS_PHY_PROTOCOL_SAS;
++	iphy->protocol = SAS_PROTOCOL_SSP;
  }
-diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index 8f501b0..71f5090 100644
---- a/drivers/scsi/isci/remote_device.c
-+++ b/drivers/scsi/isci/remote_device.c
-@@ -1113,33 +1113,20 @@ static enum sci_status sci_remote_device_da_construct(struct isci_port *iport,
- {
- 	enum sci_status status;
- 	struct sci_port_properties properties;
--	struct domain_device *dev = idev->domain_dev;
  
- 	sci_remote_device_construct(iport, idev);
- 
--	/*
--	 * This information is request to determine how many remote node context
--	 * entries will be needed to store the remote node.
--	 */
--	idev->is_direct_attached = true;
--
- 	sci_port_get_properties(iport, &properties);
- 	/* Get accurate port width from port's phy mask for a DA device. */
- 	idev->device_port_width = hweight32(properties.phy_mask);
- 
- 	status = sci_controller_allocate_remote_node_context(iport->owning_controller,
--								  idev,
--								  &idev->rnc.remote_node_index);
-+							     idev,
-+							     &idev->rnc.remote_node_index);
- 
- 	if (status != SCI_SUCCESS)
- 		return status;
- 
--	if (dev->dev_type == SAS_END_DEV || dev->dev_type == SATA_DEV ||
--	    (dev->tproto & SAS_PROTOCOL_STP) || dev_is_expander(dev))
--		/* pass */;
--	else
--		return SCI_FAILURE_UNSUPPORTED_PROTOCOL;
--
- 	idev->connection_rate = sci_port_get_max_allowed_speed(iport);
- 
- 	return SCI_SUCCESS;
-@@ -1171,19 +1158,13 @@ static enum sci_status sci_remote_device_ea_construct(struct isci_port *iport,
- 	if (status != SCI_SUCCESS)
- 		return status;
- 
--	if (dev->dev_type == SAS_END_DEV || dev->dev_type == SATA_DEV ||
--	    (dev->tproto & SAS_PROTOCOL_STP) || dev_is_expander(dev))
--		/* pass */;
--	else
--		return SCI_FAILURE_UNSUPPORTED_PROTOCOL;
--
--	/*
--	 * For SAS-2 the physical link rate is actually a logical link
-+	/* For SAS-2 the physical link rate is actually a logical link
- 	 * rate that incorporates multiplexing.  The SCU doesn't
- 	 * incorporate multiplexing and for the purposes of the
- 	 * connection the logical link rate is that same as the
- 	 * physical.  Furthermore, the SAS-2 and SAS-1.1 fields overlay
--	 * one another, so this code works for both situations. */
-+	 * one another, so this code works for both situations.
-+	 */
- 	idev->connection_rate = min_t(u16, sci_port_get_max_allowed_speed(iport),
- 					 dev->linkrate);
- 
-diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
-index 58637ee..4a67ff0 100644
---- a/drivers/scsi/isci/remote_device.h
-+++ b/drivers/scsi/isci/remote_device.h
-@@ -94,7 +94,6 @@ struct isci_remote_device {
- 	struct sci_base_state_machine sm;
- 	u32 device_port_width;
- 	enum sas_linkrate connection_rate;
--	bool is_direct_attached;
- 	struct isci_port *owning_port;
- 	struct sci_remote_node_context rnc;
- 	/* XXX unify with device reference counting and delete */
-diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
-index 994ec0c..8ce5a35 100644
---- a/drivers/scsi/isci/remote_node_context.c
-+++ b/drivers/scsi/isci/remote_node_context.c
-@@ -131,7 +131,7 @@ static void sci_remote_node_context_construct_buffer(struct sci_remote_node_cont
- 
- 	rnc->ssp.arbitration_wait_time = 0;
- 
--	if (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) {
-+	if (dev_is_sata(dev)) {
- 		rnc->ssp.connection_occupancy_timeout =
- 			ihost->user_parameters.stp_max_occupancy_timeout;
- 		rnc->ssp.connection_inactivity_timeout =
-@@ -219,13 +219,12 @@ static void sci_remote_node_context_validate_context_buffer(struct sci_remote_no
- 
- 	rnc_buffer->ssp.is_valid = true;
- 
--	if (!idev->is_direct_attached &&
--	    (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP))) {
-+	if (dev_is_sata(dev) && dev->parent) {
- 		sci_remote_device_post_request(idev, SCU_CONTEXT_COMMAND_POST_RNC_96);
- 	} else {
- 		sci_remote_device_post_request(idev, SCU_CONTEXT_COMMAND_POST_RNC_32);
- 
--		if (idev->is_direct_attached)
-+		if (!dev->parent)
- 			sci_port_setup_transports(idev->owning_port,
- 						  sci_rnc->remote_node_index);
- 	}
-@@ -287,10 +286,8 @@ static void sci_remote_node_context_resuming_state_enter(struct sci_base_state_m
- 	 * resume because of a target reset we also need to update
- 	 * the STPTLDARNI register with the RNi of the device
+ static void sci_phy_start_sata_link_training(struct isci_phy *iphy)
+@@ -591,7 +591,7 @@ static void sci_phy_start_sata_link_training(struct isci_phy *iphy)
  	 */
--	if ((dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) &&
--	    idev->is_direct_attached)
--		sci_port_setup_transports(idev->owning_port,
--					       rnc->remote_node_index);
-+	if (dev_is_sata(dev) && !dev->parent)
-+		sci_port_setup_transports(idev->owning_port, rnc->remote_node_index);
+ 	sci_change_state(&iphy->sm, SCI_PHY_SUB_AWAIT_SATA_POWER);
  
- 	sci_remote_device_post_request(idev, SCU_CONTEXT_COMMAND_POST_RNC_RESUME);
+-	iphy->protocol = SCIC_SDS_PHY_PROTOCOL_SATA;
++	iphy->protocol = SAS_PROTOCOL_SATA;
  }
-@@ -553,18 +550,10 @@ enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *s
  
- 		sci_remote_node_context_setup_to_resume(sci_rnc, cb_fn, cb_p);
+ /**
+@@ -797,7 +797,7 @@ enum sci_status sci_phy_event_handler(struct isci_phy *iphy, u32 event_code)
+ 			 */
+ 			break;
+ 		case SCU_EVENT_SATA_PHY_DETECTED:
+-			iphy->protocol = SCIC_SDS_PHY_PROTOCOL_SATA;
++			iphy->protocol = SAS_PROTOCOL_SATA;
  
--		/* TODO: consider adding a resume action of NONE, INVALIDATE, WRITE_TLCR */
--		if (dev->dev_type == SAS_END_DEV || dev_is_expander(dev))
-+		if (dev_is_sata(dev) && dev->parent)
-+			sci_change_state(&sci_rnc->sm, SCI_RNC_INVALIDATING);
-+		else
- 			sci_change_state(&sci_rnc->sm, SCI_RNC_RESUMING);
--		else if (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) {
--			if (idev->is_direct_attached) {
--				/* @todo Fix this since I am being silly in writing to the STPTLDARNI register. */
--				sci_change_state(&sci_rnc->sm, SCI_RNC_RESUMING);
--			} else {
--				sci_change_state(&sci_rnc->sm, SCI_RNC_INVALIDATING);
--			}
--		} else
--			return SCI_FAILURE;
- 		return SCI_SUCCESS;
- 	}
- 	case SCI_RNC_TX_RX_SUSPENDED:
+ 			/* We have received the SATA PHY notification change state */
+ 			sci_change_state(&iphy->sm, SCI_PHY_SUB_AWAIT_SATA_SPEED_EN);
+@@ -1215,7 +1215,7 @@ static void sci_phy_starting_state_enter(struct sci_base_state_machine *sm)
+ 	scu_link_layer_start_oob(iphy);
+ 
+ 	/* We don't know what kind of phy we are going to be just yet */
+-	iphy->protocol = SCIC_SDS_PHY_PROTOCOL_UNKNOWN;
++	iphy->protocol = SAS_PROTOCOL_NONE;
+ 	iphy->bcn_received_while_port_unassigned = false;
+ 
+ 	if (iphy->sm.previous_state_id == SCI_PHY_READY)
+@@ -1250,7 +1250,7 @@ static void sci_phy_resetting_state_enter(struct sci_base_state_machine *sm)
+ 	 */
+ 	sci_port_deactivate_phy(iphy->owning_port, iphy, false);
+ 
+-	if (iphy->protocol == SCIC_SDS_PHY_PROTOCOL_SAS) {
++	if (iphy->protocol == SAS_PROTOCOL_SSP) {
+ 		scu_link_layer_tx_hard_reset(iphy);
+ 	} else {
+ 		/* The SCU does not need to have a discrete reset state so
+@@ -1316,7 +1316,7 @@ void sci_phy_construct(struct isci_phy *iphy,
+ 	iphy->owning_port = iport;
+ 	iphy->phy_index = phy_index;
+ 	iphy->bcn_received_while_port_unassigned = false;
+-	iphy->protocol = SCIC_SDS_PHY_PROTOCOL_UNKNOWN;
++	iphy->protocol = SAS_PROTOCOL_NONE;
+ 	iphy->link_layer_registers = NULL;
+ 	iphy->max_negotiated_speed = SAS_LINK_RATE_UNKNOWN;
+ 
+diff --git a/drivers/scsi/isci/phy.h b/drivers/scsi/isci/phy.h
+index 0e45833..45fecfa 100644
+--- a/drivers/scsi/isci/phy.h
++++ b/drivers/scsi/isci/phy.h
+@@ -76,13 +76,6 @@
+  */
+ #define SCIC_SDS_SATA_LINK_TRAINING_TIMEOUT  250
+ 
+-enum sci_phy_protocol {
+-	SCIC_SDS_PHY_PROTOCOL_UNKNOWN,
+-	SCIC_SDS_PHY_PROTOCOL_SAS,
+-	SCIC_SDS_PHY_PROTOCOL_SATA,
+-	SCIC_SDS_MAX_PHY_PROTOCOLS
+-};
+-
+ /**
+  * isci_phy - hba local phy infrastructure
+  * @sm:
+@@ -95,7 +88,7 @@ struct isci_phy {
+ 	struct sci_base_state_machine sm;
+ 	struct isci_port *owning_port;
+ 	enum sas_linkrate max_negotiated_speed;
+-	enum sci_phy_protocol protocol;
++	enum sas_protocol protocol;
+ 	u8 phy_index;
+ 	bool bcn_received_while_port_unassigned;
+ 	bool is_in_link_training;
+diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
+index 5fada73..923579f 100644
+--- a/drivers/scsi/isci/port.c
++++ b/drivers/scsi/isci/port.c
+@@ -184,7 +184,7 @@ static void isci_port_link_up(struct isci_host *isci_host,
+ 
+ 	sci_port_get_properties(iport, &properties);
+ 
+-	if (iphy->protocol == SCIC_SDS_PHY_PROTOCOL_SATA) {
++	if (iphy->protocol == SAS_PROTOCOL_SATA) {
+ 		u64 attached_sas_address;
+ 
+ 		iphy->sas_phy.oob_mode = SATA_OOB_MODE;
+@@ -204,7 +204,7 @@ static void isci_port_link_up(struct isci_host *isci_host,
+ 
+ 		memcpy(&iphy->sas_phy.attached_sas_addr,
+ 		       &attached_sas_address, sizeof(attached_sas_address));
+-	} else if (iphy->protocol == SCIC_SDS_PHY_PROTOCOL_SAS) {
++	} else if (iphy->protocol == SAS_PROTOCOL_SSP) {
+ 		iphy->sas_phy.oob_mode = SAS_OOB_MODE;
+ 		iphy->sas_phy.frame_rcvd_size = sizeof(struct sas_identify_frame);
+ 
+@@ -517,7 +517,7 @@ void sci_port_get_attached_sas_address(struct isci_port *iport, struct sci_sas_a
+ 	 */
+ 	iphy = sci_port_get_a_connected_phy(iport);
+ 	if (iphy) {
+-		if (iphy->protocol != SCIC_SDS_PHY_PROTOCOL_SATA) {
++		if (iphy->protocol != SAS_PROTOCOL_SATA) {
+ 			sci_phy_get_attached_sas_address(iphy, sas);
+ 		} else {
+ 			sci_phy_get_sas_address(iphy, sas);
+@@ -624,7 +624,7 @@ static void sci_port_activate_phy(struct isci_port *iport,
+ {
+ 	struct isci_host *ihost = iport->owning_controller;
+ 
+-	if (iphy->protocol != SCIC_SDS_PHY_PROTOCOL_SATA && (flags & PF_RESUME))
++	if (iphy->protocol != SAS_PROTOCOL_SATA && (flags & PF_RESUME))
+ 		sci_phy_resume(iphy);
+ 
+ 	iport->active_phy_mask |= 1 << iphy->phy_index;
+@@ -751,12 +751,10 @@ static bool sci_port_is_wide(struct isci_port *iport)
+  * wide ports and direct attached phys.  Since there are no wide ported SATA
+  * devices this could become an invalid port configuration.
+  */
+-bool sci_port_link_detected(
+-	struct isci_port *iport,
+-	struct isci_phy *iphy)
++bool sci_port_link_detected(struct isci_port *iport, struct isci_phy *iphy)
+ {
+ 	if ((iport->logical_port_index != SCIC_SDS_DUMMY_PORT) &&
+-	    (iphy->protocol == SCIC_SDS_PHY_PROTOCOL_SATA)) {
++	    (iphy->protocol == SAS_PROTOCOL_SATA)) {
+ 		if (sci_port_is_wide(iport)) {
+ 			sci_port_invalid_link_up(iport, iphy);
+ 			return false;
 diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index ab18ee0fe..9a9b59d 100644
+index 9a9b59d..1cda610 100644
 --- a/drivers/scsi/isci/request.c
 +++ b/drivers/scsi/isci/request.c
-@@ -3193,7 +3193,7 @@ sci_io_request_construct(struct isci_host *ihost,
+@@ -730,7 +730,7 @@ static enum sci_status sci_io_request_construct_basic_ssp(struct isci_request *i
+ {
+ 	struct sas_task *task = isci_request_access_task(ireq);
  
- 	if (dev->dev_type == SAS_END_DEV)
- 		/* pass */;
--	else if (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP))
-+	else if (dev_is_sata(dev))
- 		memset(&ireq->stp.cmd, 0, sizeof(ireq->stp.cmd));
- 	else if (dev_is_expander(dev))
- 		/* pass */;
-@@ -3215,8 +3215,7 @@ enum sci_status sci_task_request_construct(struct isci_host *ihost,
- 	/* Build the common part of the request */
- 	sci_general_request_construct(ihost, idev, ireq);
+-	ireq->protocol = SCIC_SSP_PROTOCOL;
++	ireq->protocol = SAS_PROTOCOL_SSP;
  
--	if (dev->dev_type == SAS_END_DEV ||
--	    dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) {
-+	if (dev->dev_type == SAS_END_DEV || dev_is_sata(dev)) {
- 		set_bit(IREQ_TMF, &ireq->flags);
- 		memset(ireq->tc, 0, sizeof(struct scu_task_context));
- 	} else
+ 	scu_ssp_io_request_construct_task_context(ireq,
+ 						  task->data_dir,
+@@ -763,7 +763,7 @@ static enum sci_status sci_io_request_construct_basic_sata(struct isci_request *
+ 	bool copy = false;
+ 	struct sas_task *task = isci_request_access_task(ireq);
+ 
+-	ireq->protocol = SCIC_STP_PROTOCOL;
++	ireq->protocol = SAS_PROTOCOL_STP;
+ 
+ 	copy = (task->data_dir == DMA_NONE) ? false : true;
+ 
+@@ -1070,7 +1070,7 @@ request_started_state_tc_event(struct isci_request *ireq,
+ 	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_UNEXP_SDBFIS):
+ 	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_REG_ERR):
+ 	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_SDB_ERR):
+-		if (ireq->protocol == SCIC_STP_PROTOCOL) {
++		if (ireq->protocol == SAS_PROTOCOL_STP) {
+ 			ireq->scu_status = SCU_GET_COMPLETION_TL_STATUS(completion_code) >>
+ 					   SCU_COMPLETION_TL_STATUS_SHIFT;
+ 			ireq->sci_status = SCI_FAILURE_REMOTE_DEVICE_RESET_REQUIRED;
+@@ -3169,7 +3169,7 @@ sci_general_request_construct(struct isci_host *ihost,
+ 	sci_init_sm(&ireq->sm, sci_request_state_table, SCI_REQ_INIT);
+ 
+ 	ireq->target_device = idev;
+-	ireq->protocol = SCIC_NO_PROTOCOL;
++	ireq->protocol = SAS_PROTOCOL_NONE;
+ 	ireq->saved_rx_frame_index = SCU_INVALID_FRAME_INDEX;
+ 
+ 	ireq->sci_status   = SCI_SUCCESS;
+@@ -3310,7 +3310,7 @@ sci_io_request_construct_smp(struct device *dev,
+ 	if (!dma_map_sg(dev, sg, 1, DMA_TO_DEVICE))
+ 		return SCI_FAILURE;
+ 
+-	ireq->protocol = SCIC_SMP_PROTOCOL;
++	ireq->protocol = SAS_PROTOCOL_SMP;
+ 
+ 	/* byte swap the smp request. */
+ 
+diff --git a/drivers/scsi/isci/request.h b/drivers/scsi/isci/request.h
+index 057f237..4961f9f 100644
+--- a/drivers/scsi/isci/request.h
++++ b/drivers/scsi/isci/request.h
+@@ -77,13 +77,6 @@ enum isci_request_status {
+ 	dead        = 0x07
+ };
+ 
+-enum sci_request_protocol {
+-	SCIC_NO_PROTOCOL,
+-	SCIC_SMP_PROTOCOL,
+-	SCIC_SSP_PROTOCOL,
+-	SCIC_STP_PROTOCOL
+-}; /* XXX remove me, use sas_task.{dev|task_proto} instead */;
+-
+ /**
+  * isci_stp_request - extra request infrastructure to handle pio/atapi protocol
+  * @pio_len - number of bytes requested at PIO setup
+@@ -140,7 +133,7 @@ struct isci_request {
+ 	struct isci_host *owning_controller;
+ 	struct isci_remote_device *target_device;
+ 	u16 io_tag;
+-	enum sci_request_protocol protocol;
++	enum sas_protocol protocol;
+ 	u32 scu_status; /* hardware result */
+ 	u32 sci_status; /* upper layer disposition */
+ 	u32 post_context;
+diff --git a/include/scsi/sas.h b/include/scsi/sas.h
+index a577a83..be3eb0b 100644
+--- a/include/scsi/sas.h
++++ b/include/scsi/sas.h
+@@ -103,6 +103,7 @@ enum sas_dev_type {
+ };
+ 
+ enum sas_protocol {
++	SAS_PROTOCOL_NONE		= 0,
+ 	SAS_PROTOCOL_SATA		= 0x01,
+ 	SAS_PROTOCOL_SMP		= 0x02,
+ 	SAS_PROTOCOL_STP		= 0x04,
 
