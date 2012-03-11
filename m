@@ -1,117 +1,86 @@
-From: jack_wang <jack_wang@usish.com>
-Subject: Re: Re: [PATCH] [SCSI] pm8001: Use spin_lock_irqsave() for task_state.
-Date: Sun, 11 Mar 2012 15:09:41 +0800
-Message-ID: <201203111509407962111@usish.com>
-References: <1331280818-14042-1-git-send-email-santoshprasadnayak@gmail.com>,
-	<3AC0015A-DFF5-4D08-A535-1FC6F2094B31@xyratex.com>
-Reply-To: jack_wang <jack_wang@usish.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [isci PATCH v2 00/18] isci: suspend/resume support + general updates
+Date: Sat, 10 Mar 2012 23:27:44 -0800
+Message-ID: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: santosh nayak <santoshprasadnayak@gmail.com>
-Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, lindar_liu <lindar_liu@usish.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kernel-janitors <kernel-janitors@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-TG9va3MgT0sgdG8gbWUuDQpUaGFua3MuDQpBY2tlZC1ieTogSmFjayBXYW5nIDxqYWNrX3dhbmdA
-dXNpc2guY29tPg0KDQoNCi0tLS0tLS0tLS0tLS0tDQpqYWNrX3dhbmcNCj5BQ0sNCj4NCj5PbiBN
-YXIgOSwgMjAxMiwgYXQgMzoxMyBBTSwgc2FudG9zaCBuYXlhayB3cm90ZToNCj4NCj4+IEZyb206
-IFNhbnRvc2ggTmF5YWsgPHNhbnRvc2hwcmFzYWRuYXlha0BnbWFpbC5jb20+DQo+PiANCj4+IFVz
-ZSBzcGluX2xvY2tfaXJxc2F2ZSgpIGZvciB0YXNrX3N0YXRlLg0KPj4gDQo+PiBTaWduZWQtb2Zm
-LWJ5OiBTYW50b3NoIE5heWFrIDxzYW50b3NocHJhc2FkbmF5YWtAZ21haWwuY29tPg0KPj4gLS0t
-DQo+PiBkcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9od2kuYyB8ICAgMTggKysrKysrKysrKy0t
-LS0tLS0tDQo+PiAxIGZpbGVzIGNoYW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDggZGVsZXRpb25z
-KC0pDQo+PiANCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9od2ku
-YyBiL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2h3aS5jDQo+PiBpbmRleCAzNjE5ZjZlLi45
-ZDgyZWU1IDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfaHdpLmMN
-Cj4+ICsrKyBiL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2h3aS5jDQo+PiBAQCAtMjA5Myw2
-ICsyMDkzLDcgQEAgbXBpX3NhdGFfY29tcGxldGlvbihzdHJ1Y3QgcG04MDAxX2hiYV9pbmZvICpw
-bTgwMDFfaGEsIHZvaWQgKnBpb21iKQ0KPj4gCXN0cnVjdCBhdGFfdGFza19yZXNwICpyZXNwIDsN
-Cj4+IAl1MzIgKnNhdGFfcmVzcDsNCj4+IAlzdHJ1Y3QgcG04MDAxX2RldmljZSAqcG04MDAxX2Rl
-djsNCj4+ICsJdW5zaWduZWQgbG9uZyBmbGFnczsNCj4+IA0KPj4gCXBzYXRhUGF5bG9hZCA9IChz
-dHJ1Y3Qgc2F0YV9jb21wbGV0aW9uX3Jlc3AgKikocGlvbWIgKyA0KTsNCj4+IAlzdGF0dXMgPSBs
-ZTMyX3RvX2NwdShwc2F0YVBheWxvYWQtPnN0YXR1cyk7DQo+PiBAQCAtMjM4MiwyNiArMjM4Mywy
-NiBAQCBtcGlfc2F0YV9jb21wbGV0aW9uKHN0cnVjdCBwbTgwMDFfaGJhX2luZm8gKnBtODAwMV9o
-YSwgdm9pZCAqcGlvbWIpDQo+PiAJCXRzLT5zdGF0ID0gU0FTX0RFVl9OT19SRVNQT05TRTsNCj4+
-IAkJYnJlYWs7DQo+PiAJfQ0KPj4gLQlzcGluX2xvY2tfaXJxKCZ0LT50YXNrX3N0YXRlX2xvY2sp
-Ow0KPj4gKwlzcGluX2xvY2tfaXJxc2F2ZSgmdC0+dGFza19zdGF0ZV9sb2NrLCBmbGFncyk7DQo+
-PiAJdC0+dGFza19zdGF0ZV9mbGFncyAmPSB+U0FTX1RBU0tfU1RBVEVfUEVORElORzsNCj4+IAl0
-LT50YXNrX3N0YXRlX2ZsYWdzICY9IH5TQVNfVEFTS19BVF9JTklUSUFUT1I7DQo+PiAJdC0+dGFz
-a19zdGF0ZV9mbGFncyB8PSBTQVNfVEFTS19TVEFURV9ET05FOw0KPj4gCWlmICh1bmxpa2VseSgo
-dC0+dGFza19zdGF0ZV9mbGFncyAmIFNBU19UQVNLX1NUQVRFX0FCT1JURUQpKSkgew0KPj4gLQkJ
-c3Bpbl91bmxvY2tfaXJxKCZ0LT50YXNrX3N0YXRlX2xvY2spOw0KPj4gKwkJc3Bpbl91bmxvY2tf
-aXJxcmVzdG9yZSgmdC0+dGFza19zdGF0ZV9sb2NrLCBmbGFncyk7DQo+PiAJCVBNODAwMV9GQUlM
-X0RCRyhwbTgwMDFfaGEsDQo+PiAJCQlwbTgwMDFfcHJpbnRrKCJ0YXNrIDB4JXAgZG9uZSB3aXRo
-IGlvX3N0YXR1cyAweCV4Ig0KPj4gCQkJIiByZXNwIDB4JXggc3RhdCAweCV4IGJ1dCBhYm9ydGVk
-IGJ5IHVwcGVyIGxheWVyIVxuIiwNCj4+IAkJCXQsIHN0YXR1cywgdHMtPnJlc3AsIHRzLT5zdGF0
-KSk7DQo+PiAJCXBtODAwMV9jY2JfdGFza19mcmVlKHBtODAwMV9oYSwgdCwgY2NiLCB0YWcpOw0K
-Pj4gCX0gZWxzZSBpZiAodC0+dWxkZF90YXNrKSB7DQo+PiAtCQlzcGluX3VubG9ja19pcnEoJnQt
-PnRhc2tfc3RhdGVfbG9jayk7DQo+PiArCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZ0LT50YXNr
-X3N0YXRlX2xvY2ssIGZsYWdzKTsNCj4+IAkJcG04MDAxX2NjYl90YXNrX2ZyZWUocG04MDAxX2hh
-LCB0LCBjY2IsIHRhZyk7DQo+PiAJCW1iKCk7LyogZGl0dG8gKi8NCj4+IAkJc3Bpbl91bmxvY2tf
-aXJxKCZwbTgwMDFfaGEtPmxvY2spOw0KPj4gCQl0LT50YXNrX2RvbmUodCk7DQo+PiAJCXNwaW5f
-bG9ja19pcnEoJnBtODAwMV9oYS0+bG9jayk7DQo+PiAJfSBlbHNlIGlmICghdC0+dWxkZF90YXNr
-KSB7DQo+PiAtCQlzcGluX3VubG9ja19pcnEoJnQtPnRhc2tfc3RhdGVfbG9jayk7DQo+PiArCQlz
-cGluX3VubG9ja19pcnFyZXN0b3JlKCZ0LT50YXNrX3N0YXRlX2xvY2ssIGZsYWdzKTsNCj4+IAkJ
-cG04MDAxX2NjYl90YXNrX2ZyZWUocG04MDAxX2hhLCB0LCBjY2IsIHRhZyk7DQo+PiAJCW1iKCk7
-LypkaXR0byovDQo+PiAJCXNwaW5fdW5sb2NrX2lycSgmcG04MDAxX2hhLT5sb2NrKTsNCj4+IEBA
-IC0yNDIzLDYgKzI0MjQsNyBAQCBzdGF0aWMgdm9pZCBtcGlfc2F0YV9ldmVudChzdHJ1Y3QgcG04
-MDAxX2hiYV9pbmZvICpwbTgwMDFfaGEgLCB2b2lkICpwaW9tYikNCj4+IAl1MzIgdGFnID0gbGUz
-Ml90b19jcHUocHNhdGFQYXlsb2FkLT50YWcpOw0KPj4gCXUzMiBwb3J0X2lkID0gbGUzMl90b19j
-cHUocHNhdGFQYXlsb2FkLT5wb3J0X2lkKTsNCj4+IAl1MzIgZGV2X2lkID0gbGUzMl90b19jcHUo
-cHNhdGFQYXlsb2FkLT5kZXZpY2VfaWQpOw0KPj4gKwl1bnNpZ25lZCBsb25nIGZsYWdzOw0KPj4g
-DQo+PiAJY2NiID0gJnBtODAwMV9oYS0+Y2NiX2luZm9bdGFnXTsNCj4+IAl0ID0gY2NiLT50YXNr
-Ow0KPj4gQEAgLTI1OTMsMjYgKzI1OTUsMjYgQEAgc3RhdGljIHZvaWQgbXBpX3NhdGFfZXZlbnQo
-c3RydWN0IHBtODAwMV9oYmFfaW5mbyAqcG04MDAxX2hhICwgdm9pZCAqcGlvbWIpDQo+PiAJCXRz
-LT5zdGF0ID0gU0FTX09QRU5fVE87DQo+PiAJCWJyZWFrOw0KPj4gCX0NCj4+IC0Jc3Bpbl9sb2Nr
-X2lycSgmdC0+dGFza19zdGF0ZV9sb2NrKTsNCj4+ICsJc3Bpbl9sb2NrX2lycXNhdmUoJnQtPnRh
-c2tfc3RhdGVfbG9jaywgZmxhZ3MpOw0KPj4gCXQtPnRhc2tfc3RhdGVfZmxhZ3MgJj0gflNBU19U
-QVNLX1NUQVRFX1BFTkRJTkc7DQo+PiAJdC0+dGFza19zdGF0ZV9mbGFncyAmPSB+U0FTX1RBU0tf
-QVRfSU5JVElBVE9SOw0KPj4gCXQtPnRhc2tfc3RhdGVfZmxhZ3MgfD0gU0FTX1RBU0tfU1RBVEVf
-RE9ORTsNCj4+IAlpZiAodW5saWtlbHkoKHQtPnRhc2tfc3RhdGVfZmxhZ3MgJiBTQVNfVEFTS19T
-VEFURV9BQk9SVEVEKSkpIHsNCj4+IC0JCXNwaW5fdW5sb2NrX2lycSgmdC0+dGFza19zdGF0ZV9s
-b2NrKTsNCj4+ICsJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnQtPnRhc2tfc3RhdGVfbG9jaywg
-ZmxhZ3MpOw0KPj4gCQlQTTgwMDFfRkFJTF9EQkcocG04MDAxX2hhLA0KPj4gCQkJcG04MDAxX3By
-aW50aygidGFzayAweCVwIGRvbmUgd2l0aCBpb19zdGF0dXMgMHgleCINCj4+IAkJCSIgcmVzcCAw
-eCV4IHN0YXQgMHgleCBidXQgYWJvcnRlZCBieSB1cHBlciBsYXllciFcbiIsDQo+PiAJCQl0LCBl
-dmVudCwgdHMtPnJlc3AsIHRzLT5zdGF0KSk7DQo+PiAJCXBtODAwMV9jY2JfdGFza19mcmVlKHBt
-ODAwMV9oYSwgdCwgY2NiLCB0YWcpOw0KPj4gCX0gZWxzZSBpZiAodC0+dWxkZF90YXNrKSB7DQo+
-PiAtCQlzcGluX3VubG9ja19pcnEoJnQtPnRhc2tfc3RhdGVfbG9jayk7DQo+PiArCQlzcGluX3Vu
-bG9ja19pcnFyZXN0b3JlKCZ0LT50YXNrX3N0YXRlX2xvY2ssIGZsYWdzKTsNCj4+IAkJcG04MDAx
-X2NjYl90YXNrX2ZyZWUocG04MDAxX2hhLCB0LCBjY2IsIHRhZyk7DQo+PiAJCW1iKCk7LyogZGl0
-dG8gKi8NCj4+IAkJc3Bpbl91bmxvY2tfaXJxKCZwbTgwMDFfaGEtPmxvY2spOw0KPj4gCQl0LT50
-YXNrX2RvbmUodCk7DQo+PiAJCXNwaW5fbG9ja19pcnEoJnBtODAwMV9oYS0+bG9jayk7DQo+PiAJ
-fSBlbHNlIGlmICghdC0+dWxkZF90YXNrKSB7DQo+PiAtCQlzcGluX3VubG9ja19pcnEoJnQtPnRh
-c2tfc3RhdGVfbG9jayk7DQo+PiArCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZ0LT50YXNrX3N0
-YXRlX2xvY2ssIGZsYWdzKTsNCj4+IAkJcG04MDAxX2NjYl90YXNrX2ZyZWUocG04MDAxX2hhLCB0
-LCBjY2IsIHRhZyk7DQo+PiAJCW1iKCk7LypkaXR0byovDQo+PiAJCXNwaW5fdW5sb2NrX2lycSgm
-cG04MDAxX2hhLT5sb2NrKTsNCj4NCj5fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQo+VGhpcyBlbWFpbCBtYXkgY29u
-dGFpbiBwcml2aWxlZ2VkIG9yIGNvbmZpZGVudGlhbCBpbmZvcm1hdGlvbiwgd2hpY2ggc2hvdWxk
-IG9ubHkgYmUgdXNlZCBmb3IgdGhlIHB1cnBvc2UgZm9yIHdoaWNoIGl0IHdhcyBzZW50IGJ5IFh5
-cmF0ZXguIE5vIGZ1cnRoZXIgcmlnaHRzIG9yIGxpY2Vuc2VzIGFyZSBncmFudGVkIHRvIHVzZSBz
-dWNoIGluZm9ybWF0aW9uLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50IG9m
-IHRoaXMgbWVzc2FnZSwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGJ5IHJldHVybiBhbmQgZGVs
-ZXRlIGl0LiBZb3UgbWF5IG5vdCB1c2UsIGNvcHksIGRpc2Nsb3NlIG9yIHJlbHkgb24gdGhlIGlu
-Zm9ybWF0aW9uIGNvbnRhaW5lZCBpbiBpdC4NCj4gDQo+SW50ZXJuZXQgZW1haWwgaXMgc3VzY2Vw
-dGlibGUgdG8gZGF0YSBjb3JydXB0aW9uLCBpbnRlcmNlcHRpb24gYW5kIHVuYXV0aG9yaXNlZCBh
-bWVuZG1lbnQgZm9yIHdoaWNoIFh5cmF0ZXggZG9lcyBub3QgYWNjZXB0IGxpYWJpbGl0eS4gV2hp
-bGUgd2UgaGF2ZSB0YWtlbiByZWFzb25hYmxlIHByZWNhdXRpb25zIHRvIGVuc3VyZSB0aGF0IHRo
-aXMgZW1haWwgaXMgZnJlZSBvZiB2aXJ1c2VzLCBYeXJhdGV4IGRvZXMgbm90IGFjY2VwdCBsaWFi
-aWxpdHkgZm9yIHRoZSBwcmVzZW5jZSBvZiBhbnkgY29tcHV0ZXIgdmlydXNlcyBpbiB0aGlzIGVt
-YWlsLCBub3IgZm9yIGFueSBsb3NzZXMgY2F1c2VkIGFzIGEgcmVzdWx0IG9mIHZpcnVzZXMuDQo+
-IA0KPlh5cmF0ZXggVGVjaG5vbG9neSBMaW1pdGVkICgwMzEzNDkxMiksIFJlZ2lzdGVyZWQgaW4g
-RW5nbGFuZCAmIFdhbGVzLCBSZWdpc3RlcmVkIE9mZmljZSwgTGFuZ3N0b25lIFJvYWQsIEhhdmFu
-dCwgSGFtcHNoaXJlLCBQTzkgMVNBLg0KPiANCj5UaGUgWHlyYXRleCBncm91cCBvZiBjb21wYW5p
-ZXMgYWxzbyBpbmNsdWRlcywgWHlyYXRleCBMdGQsIHJlZ2lzdGVyZWQgaW4gQmVybXVkYSwgWHly
-YXRleCBJbnRlcm5hdGlvbmFsIEluYywgcmVnaXN0ZXJlZCBpbiBDYWxpZm9ybmlhLCBYeXJhdGV4
-IChNYWxheXNpYSkgU2RuIEJoZCByZWdpc3RlcmVkIGluIE1hbGF5c2lhLCBYeXJhdGV4IFRlY2hu
-b2xvZ3kgKFd1eGkpIENvIEx0ZCByZWdpc3RlcmVkIGluIFRoZSBQZW9wbGUncyBSZXB1YmxpYyBv
-ZiBDaGluYSBhbmQgWHlyYXRleCBKYXBhbiBMaW1pdGVkIHJlZ2lzdGVyZWQgaW4gSmFwYW4uDQo+
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXw0KPiANCj4NCj4NCj5fX19fX19fX19fIEluZm9ybWF0aW9uIGZyb20gRVNF
-VCBOT0QzMiBBbnRpdmlydXMsIHZlcnNpb24gb2YgdmlydXMgc2lnbmF0dXJlIGRhdGFiYXNlIDU2
-NTkgKDIwMTAxMTI5KSBfX19fX19fX19fDQo+DQo+VGhlIG1lc3NhZ2Ugd2FzIGNoZWNrZWQgYnkg
-RVNFVCBOT0QzMiBBbnRpdmlydXMuDQo+DQo+aHR0cDovL3d3dy5lc2V0LmNvbQ0KPg0KPg0KPg==
+Changes since v1: http://marc.info/?l=linux-scsi&m=132886463201718&w=2
+
+This series has been rebased on top of v10 of the libsas reworks, merged
+with a recent scsi-rc-fixes (commit fea6d60).
+
+1/ PATCH 1 - 3, 6, 11, 15: Cleanups identified along the way towards
+   implementing the below fixes and features.
+
+2/ PATCH 4, 9, 13, 18: Fixes to discovery in both the driver and libsas.
+
+3/ PATCH 7 - 8, 12, 14, 16 - 17:  Suspend support.  The approach taken
+   with suspend/resume support is to put the bulk of the responsibility on
+   libsas.  The lldd is free to tear down its links and domain_device info
+   with the knowledge that libsas will handle recovering those connections
+   and devices at resume time.
+  
+---
+
+[isci PATCH v2 01/18] isci: improve 'invalid state' warnings
+[isci PATCH v2 02/18] isci: kill ->is_direct_attached
+[isci PATCH v2 03/18] isci: kill sci_phy_protocol and sci_request_protocol
+[isci PATCH v2 04/18] isci: Don't filter BROADCAST CHANGE primitives
+[isci PATCH v2 05/18] isci: kill ->status, and ->state_lock in isci_host
+[isci PATCH v2 06/18] isci: kill isci_port.domain_dev_list
+[isci PATCH v2 07/18] isci: refactor initialization for S3/S4
+[isci PATCH v2 08/18] isci: fix controller stop
+[isci PATCH v2 09/18] isci: fix 'link-up' events occur after 'start-complete'
+[isci PATCH v2 10/18] isci: fix interrupt disable
+[isci PATCH v2 11/18] isci: kill isci_host.shost
+[isci PATCH v2 12/18] libata: make ata_print_id atomic
+[isci PATCH v2 13/18] libsas: continue revalidation
+[isci PATCH v2 14/18] libata: export ata_port suspend/resume infrastructure for sas
+[isci PATCH v2 15/18] libsas: drop sata port multiplier infrastructure
+[isci PATCH v2 16/18] libsas: suspend / resume support
+[isci PATCH v2 17/18] isci: implement suspend/resume support
+[isci PATCH v2 18/18] isci: Changes in COMSAS timings enabling ISCI to detect buggy disc drives.
+
+ drivers/ata/libata-core.c                     |   62 ++-
+ drivers/ata/libata-scsi.c                     |    4 
+ drivers/ata/libata.h                          |    2 
+ drivers/scsi/isci/host.c                      |  564 +++++++++----------------
+ drivers/scsi/isci/host.h                      |  118 +----
+ drivers/scsi/isci/init.c                      |  271 +++++++++++-
+ drivers/scsi/isci/phy.c                       |   74 +++
+ drivers/scsi/isci/phy.h                       |    9 
+ drivers/scsi/isci/port.c                      |   21 -
+ drivers/scsi/isci/port.h                      |    6 
+ drivers/scsi/isci/port_config.c               |   18 -
+ drivers/scsi/isci/probe_roms.c                |   12 -
+ drivers/scsi/isci/probe_roms.h                |    2 
+ drivers/scsi/isci/registers.h                 |    8 
+ drivers/scsi/isci/remote_device.c             |   29 -
+ drivers/scsi/isci/remote_device.h             |    1 
+ drivers/scsi/isci/remote_node_context.c       |   60 +--
+ drivers/scsi/isci/request.c                   |   19 -
+ drivers/scsi/isci/request.h                   |    9 
+ drivers/scsi/isci/unsolicited_frame_control.c |   30 -
+ drivers/scsi/isci/unsolicited_frame_control.h |    6 
+ drivers/scsi/libsas/sas_ata.c                 |   86 ++++
+ drivers/scsi/libsas/sas_discover.c            |   74 +++
+ drivers/scsi/libsas/sas_dump.c                |    1 
+ drivers/scsi/libsas/sas_event.c               |    4 
+ drivers/scsi/libsas/sas_expander.c            |    8 
+ drivers/scsi/libsas/sas_init.c                |   90 ++++
+ drivers/scsi/libsas/sas_internal.h            |    2 
+ drivers/scsi/libsas/sas_phy.c                 |   21 +
+ drivers/scsi/libsas/sas_port.c                |   52 ++
+ drivers/scsi/libsas/sas_scsi_host.c           |    2 
+ include/linux/libata.h                        |    2 
+ include/scsi/libsas.h                         |   21 +
+ include/scsi/sas.h                            |    1 
+ include/scsi/sas_ata.h                        |   10 
+ 35 files changed, 1017 insertions(+), 682 deletions(-)
