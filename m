@@ -1,211 +1,137 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci PATCH v2 09/18] isci: fix 'link-up' events occur after
- 'start-complete'
-Date: Sat, 10 Mar 2012 23:28:30 -0800
-Message-ID: <20120311072830.6320.51979.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci PATCH v2 10/18] isci: fix interrupt disable
+Date: Sat, 10 Mar 2012 23:28:35 -0800
+Message-ID: <20120311072835.6320.23343.stgit@dwillia2-linux.jf.intel.com>
 References: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:18382 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751550Ab2CKHNO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Mar 2012 03:13:14 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org, Richard Boyd <richard.g.boyd@intel.com>
+Cc: linux-ide@vger.kernel.org, Richard Boyd <richard.g.boyd@intel.com>, Jacek Danecki <jacek.danecki@intel.com>
+List-Id: linux-scsi@vger.kernel.org
 
-The call to wait_for_start() is meant to ensure that all links have been
-given a chance to come up before letting the kernel proceed with
-probing.  However, the implementation is not correctly syncing with the
-port configuration agent.  In the MPC case the ports are hard-coded, in
-the APC case we need to wait for the port-configuration to form ports
-from the started phys.
+There is a (dubious?) lost irq workaround in sci_controller_isr() that
+effectively nullifies attempts to disable interrupts.  Until the
+workaround can be re-evaluated add some infrastructure to prevent the
+interrupt handler from inadvertantly re-enabling interrupts.
 
-Towards that end increase the timeout for the APC agent to form ports,
-and delay start complete until all phys are out of link-training.
+The failure mode was interrupts continuing to run after the driver had
+been removed and its iomappings torn down.
 
-Cc: <stable@vger.kernel.org>
-Cc: Richard Boyd <richard.g.boyd@intel.com>
+Reported-by: Jacek Danecki <jacek.danecki@intel.com>
+Tested-by: Jacek Danecki <jacek.danecki@intel.com>
+[richard: clear remaining interrupts at the end of reset]
+Acked-by: Richard Boyd <richard.g.boyd@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.c        |   67 +++++++++++++++++++++------------------
- drivers/scsi/isci/host.h        |    3 ++
- drivers/scsi/isci/port_config.c |   18 ++++++----
- 3 files changed, 50 insertions(+), 38 deletions(-)
+ drivers/scsi/isci/host.c |   39 ++++++++++++++++++++++++++-------------
+ drivers/scsi/isci/host.h |    1 +
+ 2 files changed, 27 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 95c3da6..577a836 100644
+index 577a836..5832b13 100644
 --- a/drivers/scsi/isci/host.c
 +++ b/drivers/scsi/isci/host.c
-@@ -816,7 +816,7 @@ static void sci_controller_initialize_unsolicited_frame_queue(struct isci_host *
- 	       &ihost->scu_registers->sdma.unsolicited_frame_put_pointer);
- }
+@@ -192,22 +192,27 @@ static bool sci_controller_completion_queue_has_entries(struct isci_host *ihost)
  
--static void sci_controller_transition_to_ready(struct isci_host *ihost, enum sci_status status)
-+void sci_controller_transition_to_ready(struct isci_host *ihost, enum sci_status status)
+ static bool sci_controller_isr(struct isci_host *ihost)
  {
- 	if (ihost->sm.current_state_id == SCIC_STARTING) {
- 		/*
-@@ -843,6 +843,7 @@ static bool is_phy_starting(struct isci_phy *iphy)
- 	case SCI_PHY_SUB_AWAIT_SATA_POWER:
- 	case SCI_PHY_SUB_AWAIT_SATA_PHY_EN:
- 	case SCI_PHY_SUB_AWAIT_SATA_SPEED_EN:
-+	case SCI_PHY_SUB_AWAIT_OSSP_EN:
- 	case SCI_PHY_SUB_AWAIT_SIG_FIS_UF:
- 	case SCI_PHY_SUB_FINAL:
+-	if (sci_controller_completion_queue_has_entries(ihost)) {
++	if (sci_controller_completion_queue_has_entries(ihost))
  		return true;
-@@ -851,6 +852,39 @@ static bool is_phy_starting(struct isci_phy *iphy)
+-	} else {
+-		/*
+-		 * we have a spurious interrupt it could be that we have already
+-		 * emptied the completion queue from a previous interrupt */
+-		writel(SMU_ISR_COMPLETION, &ihost->smu_registers->interrupt_status);
+ 
+-		/*
+-		 * There is a race in the hardware that could cause us not to be notified
+-		 * of an interrupt completion if we do not take this step.  We will mask
+-		 * then unmask the interrupts so if there is another interrupt pending
+-		 * the clearing of the interrupt source we get the next interrupt message. */
++	/* we have a spurious interrupt it could be that we have already
++	 * emptied the completion queue from a previous interrupt
++	 * FIXME: really!?
++	 */
++	writel(SMU_ISR_COMPLETION, &ihost->smu_registers->interrupt_status);
++
++	/* There is a race in the hardware that could cause us not to be
++	 * notified of an interrupt completion if we do not take this
++	 * step.  We will mask then unmask the interrupts so if there is
++	 * another interrupt pending the clearing of the interrupt
++	 * source we get the next interrupt message.
++	 */
++	spin_lock(&ihost->scic_lock);
++	if (test_bit(IHOST_IRQ_ENABLED, &ihost->flags)) {
+ 		writel(0xFF000000, &ihost->smu_registers->interrupt_mask);
+ 		writel(0, &ihost->smu_registers->interrupt_mask);
  	}
++	spin_unlock(&ihost->scic_lock);
+ 
+ 	return false;
+ }
+@@ -698,14 +703,15 @@ static u32 sci_controller_get_suggested_start_timeout(struct isci_host *ihost)
+ 
+ static void sci_controller_enable_interrupts(struct isci_host *ihost)
+ {
+-	BUG_ON(ihost->smu_registers == NULL);
++	set_bit(IHOST_IRQ_ENABLED, &ihost->flags);
+ 	writel(0, &ihost->smu_registers->interrupt_mask);
  }
  
-+bool is_controller_start_complete(struct isci_host *ihost)
-+{
-+	int i;
-+
-+	for (i = 0; i < SCI_MAX_PHYS; i++) {
-+		struct isci_phy *iphy = &ihost->phys[i];
-+		u32 state = iphy->sm.current_state_id;
-+
-+		/* in apc mode we need to check every phy, in
-+		 * mpc mode we only need to check phys that have
-+		 * been configured into a port
-+		 */
-+		if (is_port_config_apc(ihost))
-+			/* pass */;
-+		else if (!phy_get_non_dummy_port(iphy))
-+			continue;
-+
-+		/* The controller start operation is complete iff:
-+		 * - all links have been given an opportunity to start
-+		 * - have no indication of a connected device
-+		 * - have an indication of a connected device and it has
-+		 *   finished the link training process.
-+		 */
-+		if ((iphy->is_in_link_training == false && state == SCI_PHY_INITIAL) ||
-+		    (iphy->is_in_link_training == false && state == SCI_PHY_STOPPED) ||
-+		    (iphy->is_in_link_training == true && is_phy_starting(iphy)) ||
-+		    (ihost->port_agent.phy_ready_mask != ihost->port_agent.phy_configured_mask))
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
- /**
-  * sci_controller_start_next_phy - start phy
-  * @scic: controller
-@@ -871,36 +905,7 @@ static enum sci_status sci_controller_start_next_phy(struct isci_host *ihost)
- 		return status;
+ void sci_controller_disable_interrupts(struct isci_host *ihost)
+ {
+-	BUG_ON(ihost->smu_registers == NULL);
++	clear_bit(IHOST_IRQ_ENABLED, &ihost->flags);
+ 	writel(0xffffffff, &ihost->smu_registers->interrupt_mask);
++	readl(&ihost->smu_registers->interrupt_mask); /* flush */
+ }
  
- 	if (ihost->next_phy_to_start >= SCI_MAX_PHYS) {
--		bool is_controller_start_complete = true;
--		u32 state;
--		u8 index;
--
--		for (index = 0; index < SCI_MAX_PHYS; index++) {
--			iphy = &ihost->phys[index];
--			state = iphy->sm.current_state_id;
--
--			if (!phy_get_non_dummy_port(iphy))
--				continue;
--
--			/* The controller start operation is complete iff:
--			 * - all links have been given an opportunity to start
--			 * - have no indication of a connected device
--			 * - have an indication of a connected device and it has
--			 *   finished the link training process.
--			 */
--			if ((iphy->is_in_link_training == false && state == SCI_PHY_INITIAL) ||
--			    (iphy->is_in_link_training == false && state == SCI_PHY_STOPPED) ||
--			    (iphy->is_in_link_training == true && is_phy_starting(iphy)) ||
--			    (ihost->port_agent.phy_ready_mask != ihost->port_agent.phy_configured_mask)) {
--				is_controller_start_complete = false;
--				break;
--			}
--		}
--
--		/*
--		 * The controller has successfully finished the start process.
--		 * Inform the SCI Core user and transition to the READY state. */
--		if (is_controller_start_complete == true) {
-+		if (is_controller_start_complete(ihost)) {
- 			sci_controller_transition_to_ready(ihost, SCI_SUCCESS);
- 			sci_del_timer(&ihost->phy_timer);
- 			ihost->phy_startup_timer_pending = false;
+ static void sci_controller_enable_port_task_scheduler(struct isci_host *ihost)
+@@ -1318,7 +1324,9 @@ void isci_host_deinit(struct isci_host *ihost)
+ 	 */
+ 	writel(0, &ihost->scu_registers->peg0.sgpio.interface_control);
+ 
++	spin_lock_irq(&ihost->scic_lock);
+ 	sci_controller_reset(ihost);
++	spin_unlock_irq(&ihost->scic_lock);
+ 
+ 	/* Cancel any/all outstanding port timers */
+ 	for (i = 0; i < ihost->logical_port_entries; i++) {
+@@ -1605,6 +1613,9 @@ static void sci_controller_reset_hardware(struct isci_host *ihost)
+ 
+ 	/* The write to the UFQGP clears the UFQPR */
+ 	writel(0, &ihost->scu_registers->sdma.unsolicited_frame_get_pointer);
++
++	/* clear all interrupts */
++	writel(~SMU_INTERRUPT_STATUS_RESERVED_MASK, &ihost->smu_registers->interrupt_status);
+ }
+ 
+ static void sci_controller_resetting_state_enter(struct sci_base_state_machine *sm)
+@@ -2391,7 +2402,9 @@ int isci_host_init(struct isci_host *ihost)
+ 	int i, err;
+ 	enum sci_status status;
+ 
++	spin_lock_irq(&ihost->scic_lock);
+ 	status = sci_controller_construct(ihost, scu_base(ihost), smu_base(ihost));
++	spin_unlock_irq(&ihost->scic_lock);
+ 	if (status != SCI_SUCCESS) {
+ 		dev_err(&ihost->pdev->dev,
+ 			"%s: sci_controller_construct failed - status = %x\n",
 diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index a89c0e3..9dc910b 100644
+index 9dc910b..9701c1d 100644
 --- a/drivers/scsi/isci/host.h
 +++ b/drivers/scsi/isci/host.h
-@@ -109,6 +109,8 @@ struct sci_port_configuration_agent;
- typedef void (*port_config_fn)(struct isci_host *,
- 			       struct sci_port_configuration_agent *,
- 			       struct isci_port *, struct isci_phy *);
-+bool is_port_config_apc(struct isci_host *ihost);
-+bool is_controller_start_complete(struct isci_host *ihost);
- 
- struct sci_port_configuration_agent {
- 	u16 phy_configured_mask;
-@@ -473,6 +475,7 @@ void isci_host_completion_routine(unsigned long data);
- void isci_host_deinit(struct isci_host *);
- void sci_controller_disable_interrupts(struct isci_host *ihost);
- bool sci_controller_has_remote_devices_stopping(struct isci_host *ihost);
-+void sci_controller_transition_to_ready(struct isci_host *ihost, enum sci_status status);
- 
- enum sci_status sci_controller_start_io(
- 	struct isci_host *ihost,
-diff --git a/drivers/scsi/isci/port_config.c b/drivers/scsi/isci/port_config.c
-index 6d1e954..cd962da 100644
---- a/drivers/scsi/isci/port_config.c
-+++ b/drivers/scsi/isci/port_config.c
-@@ -57,7 +57,7 @@
- 
- #define SCIC_SDS_MPC_RECONFIGURATION_TIMEOUT    (10)
- #define SCIC_SDS_APC_RECONFIGURATION_TIMEOUT    (10)
--#define SCIC_SDS_APC_WAIT_LINK_UP_NOTIFICATION  (250)
-+#define SCIC_SDS_APC_WAIT_LINK_UP_NOTIFICATION  (1000)
- 
- enum SCIC_SDS_APC_ACTIVITY {
- 	SCIC_SDS_APC_SKIP_PHY,
-@@ -472,13 +472,9 @@ sci_apc_agent_validate_phy_configuration(struct isci_host *ihost,
-  * down event or a link up event where we can not yet tell to which a phy
-  * belongs.
-  */
--static void sci_apc_agent_start_timer(
--	struct sci_port_configuration_agent *port_agent,
--	u32 timeout)
-+static void sci_apc_agent_start_timer(struct sci_port_configuration_agent *port_agent,
-+				      u32 timeout)
- {
--	if (port_agent->timer_pending)
--		sci_del_timer(&port_agent->timer);
--
- 	port_agent->timer_pending = true;
- 	sci_mod_timer(&port_agent->timer, timeout);
- }
-@@ -697,6 +693,9 @@ static void apc_agent_timeout(unsigned long data)
- 						   &ihost->phys[index], false);
- 	}
- 
-+	if (is_controller_start_complete(ihost))
-+		sci_controller_transition_to_ready(ihost, SCI_SUCCESS);
-+
- done:
- 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
- }
-@@ -732,6 +731,11 @@ void sci_port_configuration_agent_construct(
- 	}
- }
- 
-+bool is_port_config_apc(struct isci_host *ihost)
-+{
-+	return ihost->port_agent.link_up_handler == sci_apc_agent_link_up;
-+}
-+
- enum sci_status sci_port_configuration_agent_initialize(
- 	struct isci_host *ihost,
- 	struct sci_port_configuration_agent *port_agent)
+@@ -200,6 +200,7 @@ struct isci_host {
+ 	struct pci_dev *pdev;
+ 	#define IHOST_START_PENDING 0
+ 	#define IHOST_STOP_PENDING 1
++	#define IHOST_IRQ_ENABLED 2
+ 	unsigned long flags;
+ 	wait_queue_head_t eventq;
+ 	struct Scsi_Host *shost;
 
