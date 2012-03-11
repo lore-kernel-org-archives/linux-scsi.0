@@ -1,107 +1,85 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci PATCH v2 11/18] isci: kill isci_host.shost
-Date: Sat, 10 Mar 2012 23:28:40 -0800
-Message-ID: <20120311072840.6320.58208.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci PATCH v2 12/18] libata: make ata_print_id atomic
+Date: Sat, 10 Mar 2012 23:28:46 -0800
+Message-ID: <20120311072845.6320.68461.stgit@dwillia2-linux.jf.intel.com>
 References: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:42596 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751645Ab2CKHNY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Mar 2012 03:13:24 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
+List-Id: linux-scsi@vger.kernel.org
 
-We can retrieve the shost from the sas_ha like the rest of libsas and
-drop this out of our local data structure.
+This variable is incremented from multiple contexts (module_init via
+libata-lldds and the libsas discovery thread).  Make it atomic to head
+off any chance of libsas and libata creating duplicate ids.
 
 Acked-by: Jacek Danecki <jacek.danecki@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.h |    6 +++++-
- drivers/scsi/isci/init.c |   16 +++++++---------
- 2 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/ata/libata-core.c |    4 ++--
+ drivers/ata/libata-scsi.c |    4 ++--
+ drivers/ata/libata.h      |    2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 9701c1d..7272a0a 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -203,7 +203,6 @@ struct isci_host {
- 	#define IHOST_IRQ_ENABLED 2
- 	unsigned long flags;
- 	wait_queue_head_t eventq;
--	struct Scsi_Host *shost;
- 	struct tasklet_struct completion_tasklet;
- 	struct list_head requests_to_complete;
- 	struct list_head requests_to_errorback;
-@@ -308,6 +307,11 @@ static inline struct isci_pci_info *to_pci_info(struct pci_dev *pdev)
- 	return pci_get_drvdata(pdev);
- }
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index ea8444e..bd79c8b 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -97,7 +97,7 @@ static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
+ static void ata_dev_xfermask(struct ata_device *dev);
+ static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
  
-+static inline struct Scsi_Host *to_shost(struct isci_host *ihost)
-+{
-+	return ihost->sas_ha.core.shost;
-+}
-+
- #define for_each_isci_host(id, ihost, pdev) \
- 	for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
- 	     id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index eda4385..fdae42f 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -271,13 +271,12 @@ static void isci_unregister(struct isci_host *isci_host)
- 	if (!isci_host)
- 		return;
+-unsigned int ata_print_id = 1;
++atomic_t ata_print_id = ATOMIC_INIT(1);
  
--	shost = isci_host->shost;
--
- 	sas_unregister_ha(&isci_host->sas_ha);
+ struct ata_force_param {
+ 	const char	*name;
+@@ -6031,7 +6031,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
  
--	sas_remove_host(isci_host->shost);
--	scsi_remove_host(isci_host->shost);
--	scsi_host_put(isci_host->shost);
-+	shost = to_shost(isci_host);
-+	sas_remove_host(shost);
-+	scsi_remove_host(shost);
-+	scsi_host_put(shost);
- }
+ 	/* give ports names and add SCSI hosts */
+ 	for (i = 0; i < host->n_ports; i++)
+-		host->ports[i]->print_id = ata_print_id++;
++		host->ports[i]->print_id = atomic_inc_return(&ata_print_id);
  
- static int __devinit isci_pci_init(struct pci_dev *pdev)
-@@ -578,7 +577,6 @@ static struct isci_host *isci_host_alloc(struct pci_dev *pdev, int id)
- 	shost = scsi_host_alloc(&isci_sht, sizeof(void *));
- 	if (!shost)
- 		return NULL;
--	ihost->shost = shost;
  
- 	dev_info(&pdev->dev, "%sSCU controller %d: phy 3-0 cables: "
- 		 "{%s, %s, %s, %s}\n",
-@@ -690,11 +688,11 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
- 		pci_info->hosts[i] = h;
+ 	/* Create associated sysfs transport objects  */
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 1ee00c8..93dabdc 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3843,7 +3843,7 @@ int ata_sas_async_port_init(struct ata_port *ap)
+ 	int rc = ap->ops->port_start(ap);
  
- 		/* turn on DIF support */
--		scsi_host_set_prot(h->shost,
-+		scsi_host_set_prot(to_shost(h),
- 				   SHOST_DIF_TYPE1_PROTECTION |
- 				   SHOST_DIF_TYPE2_PROTECTION |
- 				   SHOST_DIF_TYPE3_PROTECTION);
--		scsi_host_set_guard(h->shost, SHOST_DIX_GUARD_CRC);
-+		scsi_host_set_guard(to_shost(h), SHOST_DIX_GUARD_CRC);
+ 	if (!rc) {
+-		ap->print_id = ata_print_id++;
++		ap->print_id = atomic_inc_return(&ata_print_id);
+ 		__ata_port_probe(ap);
  	}
  
- 	err = isci_setup_interrupts(pdev);
-@@ -702,7 +700,7 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
- 		goto err_host_alloc;
+@@ -3867,7 +3867,7 @@ int ata_sas_port_init(struct ata_port *ap)
+ 	int rc = ap->ops->port_start(ap);
  
- 	for_each_isci_host(i, isci_host, pdev)
--		scsi_scan_host(isci_host->shost);
-+		scsi_scan_host(to_shost(isci_host));
+ 	if (!rc) {
+-		ap->print_id = ata_print_id++;
++		ap->print_id = atomic_inc_return(&ata_print_id);
+ 		rc = ata_port_probe(ap);
+ 	}
  
- 	return 0;
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 2e26fca..9d0fd0b 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -53,7 +53,7 @@ enum {
+ 	ATA_DNXFER_QUIET	= (1 << 31),
+ };
  
+-extern unsigned int ata_print_id;
++extern atomic_t ata_print_id;
+ extern int atapi_passthru16;
+ extern int libata_fua;
+ extern int libata_noacpi;
 
