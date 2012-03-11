@@ -1,216 +1,218 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci PATCH v2 01/18] isci: improve 'invalid state' warnings
-Date: Sat, 10 Mar 2012 23:27:49 -0800
-Message-ID: <20120311072749.6320.3240.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci PATCH v2 02/18] isci: kill ->is_direct_attached
+Date: Sat, 10 Mar 2012 23:27:54 -0800
+Message-ID: <20120311072754.6320.10223.stgit@dwillia2-linux.jf.intel.com>
 References: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:7574 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751084Ab2CKHMi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Mar 2012 03:12:38 -0400
 In-Reply-To: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-Convert controller state machine warnings to emit the state number (it
-missed the number to string conversion, but since these error rarely
-happen not much motivation to go further).
+domain_device ->parent conveys the same information.
 
-Fix up the rnc warnings to use the state name.
+Occurrences of ->is_direct_attached appear next to incomplete open-coded
+versions of dev_is_sata(), clean those up as well.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.c                |   33 +++++++++++++++----------------
- drivers/scsi/isci/remote_node_context.c |   33 +++++++++++++++++++------------
- 2 files changed, 36 insertions(+), 30 deletions(-)
+ drivers/scsi/isci/host.h                |    4 ++--
+ drivers/scsi/isci/remote_device.c       |   29 +++++------------------------
+ drivers/scsi/isci/remote_device.h       |    1 -
+ drivers/scsi/isci/remote_node_context.c |   27 ++++++++-------------------
+ drivers/scsi/isci/request.c             |    5 ++---
+ 5 files changed, 17 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index d4bf9c1..3822ffb 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -987,9 +987,8 @@ static enum sci_status sci_controller_start(struct isci_host *ihost,
- 	u16 index;
+diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+index adbad69..a9679ee 100644
+--- a/drivers/scsi/isci/host.h
++++ b/drivers/scsi/isci/host.h
+@@ -55,6 +55,7 @@
+ #ifndef _SCI_HOST_H_
+ #define _SCI_HOST_H_
  
- 	if (ihost->sm.current_state_id != SCIC_INITIALIZED) {
--		dev_warn(&ihost->pdev->dev,
--			 "SCIC Controller start operation requested in "
--			 "invalid state\n");
-+		dev_warn(&ihost->pdev->dev, "%s invalid state: %d\n",
-+			 __func__, ihost->sm.current_state_id);
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
- 
-@@ -1213,9 +1212,8 @@ static void isci_host_completion_routine(unsigned long data)
- static enum sci_status sci_controller_stop(struct isci_host *ihost, u32 timeout)
++#include <scsi/sas_ata.h>
+ #include "remote_device.h"
+ #include "phy.h"
+ #include "isci.h"
+@@ -378,8 +379,7 @@ static inline int sci_remote_device_node_count(struct isci_remote_device *idev)
  {
- 	if (ihost->sm.current_state_id != SCIC_READY) {
--		dev_warn(&ihost->pdev->dev,
--			 "SCIC Controller stop operation requested in "
--			 "invalid state\n");
-+		dev_warn(&ihost->pdev->dev, "%s invalid state: %d\n",
-+			 __func__, ihost->sm.current_state_id);
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
+ 	struct domain_device *dev = idev->domain_dev;
  
-@@ -1250,9 +1248,8 @@ static enum sci_status sci_controller_reset(struct isci_host *ihost)
- 		sci_change_state(&ihost->sm, SCIC_RESETTING);
- 		return SCI_SUCCESS;
- 	default:
--		dev_warn(&ihost->pdev->dev,
--			 "SCIC Controller reset operation requested in "
--			 "invalid state\n");
-+		dev_warn(&ihost->pdev->dev, "%s invalid state: %d\n",
-+			 __func__, ihost->sm.current_state_id);
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
+-	if ((dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) &&
+-	    !idev->is_direct_attached)
++	if (dev_is_sata(dev) && dev->parent)
+ 		return SCU_STP_REMOTE_NODE_COUNT;
+ 	return SCU_SSP_REMOTE_NODE_COUNT;
  }
-@@ -2279,9 +2276,8 @@ static enum sci_status sci_controller_initialize(struct isci_host *ihost)
- 	unsigned long i, state, val;
- 
- 	if (ihost->sm.current_state_id != SCIC_RESET) {
--		dev_warn(&ihost->pdev->dev,
--			 "SCIC Controller initialize operation requested "
--			 "in invalid state\n");
-+		dev_warn(&ihost->pdev->dev, "%s invalid state: %d\n",
-+			 __func__, ihost->sm.current_state_id);
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
- 
-@@ -2842,7 +2838,8 @@ enum sci_status sci_controller_start_io(struct isci_host *ihost,
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index 8f501b0..71f5090 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -1113,33 +1113,20 @@ static enum sci_status sci_remote_device_da_construct(struct isci_port *iport,
+ {
  	enum sci_status status;
+ 	struct sci_port_properties properties;
+-	struct domain_device *dev = idev->domain_dev;
  
- 	if (ihost->sm.current_state_id != SCIC_READY) {
--		dev_warn(&ihost->pdev->dev, "invalid state to start I/O");
-+		dev_warn(&ihost->pdev->dev, "%s invalid state: %d\n",
-+			 __func__, ihost->sm.current_state_id);
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
+ 	sci_remote_device_construct(iport, idev);
  
-@@ -2866,8 +2863,8 @@ enum sci_status sci_controller_terminate_request(struct isci_host *ihost,
- 	enum sci_status status;
+-	/*
+-	 * This information is request to determine how many remote node context
+-	 * entries will be needed to store the remote node.
+-	 */
+-	idev->is_direct_attached = true;
+-
+ 	sci_port_get_properties(iport, &properties);
+ 	/* Get accurate port width from port's phy mask for a DA device. */
+ 	idev->device_port_width = hweight32(properties.phy_mask);
  
- 	if (ihost->sm.current_state_id != SCIC_READY) {
--		dev_warn(&ihost->pdev->dev,
--			 "invalid state to terminate request\n");
-+		dev_warn(&ihost->pdev->dev, "%s invalid state: %d\n",
-+			 __func__, ihost->sm.current_state_id);
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
+ 	status = sci_controller_allocate_remote_node_context(iport->owning_controller,
+-								  idev,
+-								  &idev->rnc.remote_node_index);
++							     idev,
++							     &idev->rnc.remote_node_index);
  
-@@ -2915,7 +2912,8 @@ enum sci_status sci_controller_complete_io(struct isci_host *ihost,
- 		clear_bit(IREQ_ACTIVE, &ireq->flags);
- 		return SCI_SUCCESS;
- 	default:
--		dev_warn(&ihost->pdev->dev, "invalid state to complete I/O");
-+		dev_warn(&ihost->pdev->dev, "%s invalid state: %d\n",
-+			 __func__, ihost->sm.current_state_id);
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
+ 	if (status != SCI_SUCCESS)
+ 		return status;
  
-@@ -2926,7 +2924,8 @@ enum sci_status sci_controller_continue_io(struct isci_request *ireq)
- 	struct isci_host *ihost = ireq->owning_controller;
+-	if (dev->dev_type == SAS_END_DEV || dev->dev_type == SATA_DEV ||
+-	    (dev->tproto & SAS_PROTOCOL_STP) || dev_is_expander(dev))
+-		/* pass */;
+-	else
+-		return SCI_FAILURE_UNSUPPORTED_PROTOCOL;
+-
+ 	idev->connection_rate = sci_port_get_max_allowed_speed(iport);
  
- 	if (ihost->sm.current_state_id != SCIC_READY) {
--		dev_warn(&ihost->pdev->dev, "invalid state to continue I/O");
-+		dev_warn(&ihost->pdev->dev, "%s invalid state: %d\n",
-+			 __func__, ihost->sm.current_state_id);
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
+ 	return SCI_SUCCESS;
+@@ -1171,19 +1158,13 @@ static enum sci_status sci_remote_device_ea_construct(struct isci_port *iport,
+ 	if (status != SCI_SUCCESS)
+ 		return status;
  
+-	if (dev->dev_type == SAS_END_DEV || dev->dev_type == SATA_DEV ||
+-	    (dev->tproto & SAS_PROTOCOL_STP) || dev_is_expander(dev))
+-		/* pass */;
+-	else
+-		return SCI_FAILURE_UNSUPPORTED_PROTOCOL;
+-
+-	/*
+-	 * For SAS-2 the physical link rate is actually a logical link
++	/* For SAS-2 the physical link rate is actually a logical link
+ 	 * rate that incorporates multiplexing.  The SCU doesn't
+ 	 * incorporate multiplexing and for the purposes of the
+ 	 * connection the logical link rate is that same as the
+ 	 * physical.  Furthermore, the SAS-2 and SAS-1.1 fields overlay
+-	 * one another, so this code works for both situations. */
++	 * one another, so this code works for both situations.
++	 */
+ 	idev->connection_rate = min_t(u16, sci_port_get_max_allowed_speed(iport),
+ 					 dev->linkrate);
+ 
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index 58637ee..4a67ff0 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -94,7 +94,6 @@ struct isci_remote_device {
+ 	struct sci_base_state_machine sm;
+ 	u32 device_port_width;
+ 	enum sas_linkrate connection_rate;
+-	bool is_direct_attached;
+ 	struct isci_port *owning_port;
+ 	struct sci_remote_node_context rnc;
+ 	/* XXX unify with device reference counting and delete */
 diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
-index 3a94634..994ec0c 100644
+index 994ec0c..8ce5a35 100644
 --- a/drivers/scsi/isci/remote_node_context.c
 +++ b/drivers/scsi/isci/remote_node_context.c
-@@ -443,14 +443,16 @@ enum sci_status sci_remote_node_context_event_handler(struct sci_remote_node_con
- 		break;
- 	default:
- 		dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
--			 "%s: invalid state %d\n", __func__, state);
-+			 "%s: invalid state: %s\n", __func__,
-+			 rnc_state_name(state));
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
- 	return SCI_SUCCESS;
+@@ -131,7 +131,7 @@ static void sci_remote_node_context_construct_buffer(struct sci_remote_node_cont
  
-  out:
- 	dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
--		 "%s: code: %#x state: %d\n", __func__, event_code, state);
-+		 "%s: code: %#x state: %s\n", __func__, event_code,
-+		 rnc_state_name(state));
- 	return SCI_FAILURE;
+ 	rnc->ssp.arbitration_wait_time = 0;
  
- }
-@@ -477,7 +479,8 @@ enum sci_status sci_remote_node_context_destruct(struct sci_remote_node_context
- 		return SCI_SUCCESS;
- 	case SCI_RNC_INITIAL:
- 		dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
--			 "%s: invalid state %d\n", __func__, state);
-+			 "%s: invalid state: %s\n", __func__,
-+			 rnc_state_name(state));
- 		/* We have decided that the destruct request on the remote node context
- 		 * can not fail since it is either in the initial/destroyed state or is
- 		 * can be destroyed.
-@@ -485,7 +488,8 @@ enum sci_status sci_remote_node_context_destruct(struct sci_remote_node_context
- 		return SCI_SUCCESS;
- 	default:
- 		dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
--			 "%s: invalid state %d\n", __func__, state);
-+			 "%s: invalid state %s\n", __func__,
-+			 rnc_state_name(state));
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
- }
-@@ -500,7 +504,8 @@ enum sci_status sci_remote_node_context_suspend(struct sci_remote_node_context *
- 	state = sci_rnc->sm.current_state_id;
- 	if (state != SCI_RNC_READY) {
- 		dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
--			 "%s: invalid state %d\n", __func__, state);
-+			 "%s: invalid state %s\n", __func__,
-+			 rnc_state_name(state));
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
+-	if (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) {
++	if (dev_is_sata(dev)) {
+ 		rnc->ssp.connection_occupancy_timeout =
+ 			ihost->user_parameters.stp_max_occupancy_timeout;
+ 		rnc->ssp.connection_inactivity_timeout =
+@@ -219,13 +219,12 @@ static void sci_remote_node_context_validate_context_buffer(struct sci_remote_no
  
-@@ -571,7 +576,8 @@ enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *s
- 		return SCI_SUCCESS;
- 	default:
- 		dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
--			 "%s: invalid state %d\n", __func__, state);
-+			 "%s: invalid state %s\n", __func__,
-+			 rnc_state_name(state));
- 		return SCI_FAILURE_INVALID_STATE;
+ 	rnc_buffer->ssp.is_valid = true;
+ 
+-	if (!idev->is_direct_attached &&
+-	    (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP))) {
++	if (dev_is_sata(dev) && dev->parent) {
+ 		sci_remote_device_post_request(idev, SCU_CONTEXT_COMMAND_POST_RNC_96);
+ 	} else {
+ 		sci_remote_device_post_request(idev, SCU_CONTEXT_COMMAND_POST_RNC_32);
+ 
+-		if (idev->is_direct_attached)
++		if (!dev->parent)
+ 			sci_port_setup_transports(idev->owning_port,
+ 						  sci_rnc->remote_node_index);
  	}
+@@ -287,10 +286,8 @@ static void sci_remote_node_context_resuming_state_enter(struct sci_base_state_m
+ 	 * resume because of a target reset we also need to update
+ 	 * the STPTLDARNI register with the RNi of the device
+ 	 */
+-	if ((dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) &&
+-	    idev->is_direct_attached)
+-		sci_port_setup_transports(idev->owning_port,
+-					       rnc->remote_node_index);
++	if (dev_is_sata(dev) && !dev->parent)
++		sci_port_setup_transports(idev->owning_port, rnc->remote_node_index);
+ 
+ 	sci_remote_device_post_request(idev, SCU_CONTEXT_COMMAND_POST_RNC_RESUME);
  }
-@@ -590,15 +596,15 @@ enum sci_status sci_remote_node_context_start_io(struct sci_remote_node_context
+@@ -553,18 +550,10 @@ enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *s
+ 
+ 		sci_remote_node_context_setup_to_resume(sci_rnc, cb_fn, cb_p);
+ 
+-		/* TODO: consider adding a resume action of NONE, INVALIDATE, WRITE_TLCR */
+-		if (dev->dev_type == SAS_END_DEV || dev_is_expander(dev))
++		if (dev_is_sata(dev) && dev->parent)
++			sci_change_state(&sci_rnc->sm, SCI_RNC_INVALIDATING);
++		else
+ 			sci_change_state(&sci_rnc->sm, SCI_RNC_RESUMING);
+-		else if (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) {
+-			if (idev->is_direct_attached) {
+-				/* @todo Fix this since I am being silly in writing to the STPTLDARNI register. */
+-				sci_change_state(&sci_rnc->sm, SCI_RNC_RESUMING);
+-			} else {
+-				sci_change_state(&sci_rnc->sm, SCI_RNC_INVALIDATING);
+-			}
+-		} else
+-			return SCI_FAILURE;
+ 		return SCI_SUCCESS;
+ 	}
  	case SCI_RNC_TX_RX_SUSPENDED:
- 	case SCI_RNC_AWAIT_SUSPENSION:
- 		dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
--			 "%s: invalid state %d\n", __func__, state);
-+			 "%s: invalid state %s\n", __func__,
-+			 rnc_state_name(state));
- 		return SCI_FAILURE_REMOTE_DEVICE_RESET_REQUIRED;
- 	default:
--		break;
-+		dev_dbg(scirdev_to_dev(rnc_to_dev(sci_rnc)),
-+			"%s: invalid state %s\n", __func__,
-+			rnc_state_name(state));
-+		return SCI_FAILURE_INVALID_STATE;
- 	}
--	dev_dbg(scirdev_to_dev(rnc_to_dev(sci_rnc)),
--		"%s: requested to start IO while still resuming, %d\n",
--		__func__, state);
--	return SCI_FAILURE_INVALID_STATE;
- }
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index ab18ee0fe..9a9b59d 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -3193,7 +3193,7 @@ sci_io_request_construct(struct isci_host *ihost,
  
- enum sci_status sci_remote_node_context_start_task(struct sci_remote_node_context *sci_rnc,
-@@ -618,7 +624,8 @@ enum sci_status sci_remote_node_context_start_task(struct sci_remote_node_contex
- 		return SCI_SUCCESS;
- 	default:
- 		dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
--			 "%s: invalid state %d\n", __func__, state);
-+			"%s: invalid state %s\n", __func__,
-+			rnc_state_name(state));
- 		return SCI_FAILURE_INVALID_STATE;
- 	}
- }
+ 	if (dev->dev_type == SAS_END_DEV)
+ 		/* pass */;
+-	else if (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP))
++	else if (dev_is_sata(dev))
+ 		memset(&ireq->stp.cmd, 0, sizeof(ireq->stp.cmd));
+ 	else if (dev_is_expander(dev))
+ 		/* pass */;
+@@ -3215,8 +3215,7 @@ enum sci_status sci_task_request_construct(struct isci_host *ihost,
+ 	/* Build the common part of the request */
+ 	sci_general_request_construct(ihost, idev, ireq);
+ 
+-	if (dev->dev_type == SAS_END_DEV ||
+-	    dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) {
++	if (dev->dev_type == SAS_END_DEV || dev_is_sata(dev)) {
+ 		set_bit(IREQ_TMF, &ireq->flags);
+ 		memset(ireq->tc, 0, sizeof(struct scu_task_context));
+ 	} else
 
