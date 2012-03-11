@@ -1,234 +1,211 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci PATCH v2 08/18] isci: fix controller stop
-Date: Sat, 10 Mar 2012 23:28:25 -0800
-Message-ID: <20120311072825.6320.19024.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci PATCH v2 09/18] isci: fix 'link-up' events occur after
+ 'start-complete'
+Date: Sat, 10 Mar 2012 23:28:30 -0800
+Message-ID: <20120311072830.6320.51979.stgit@dwillia2-linux.jf.intel.com>
 References: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:18382 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751550Ab2CKHNO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Mar 2012 03:13:14 -0400
 In-Reply-To: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Richard Boyd <richard.g.boyd@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org, Richard Boyd <richard.g.boyd@intel.com>
 
-1/ notify waiters when controller stop completes (fixes 10 second stall
-   unloading the driver)
-2/ make sure phy stop is after port and device stop
+The call to wait_for_start() is meant to ensure that all links have been
+given a chance to come up before letting the kernel proceed with
+probing.  However, the implementation is not correctly syncing with the
+port configuration agent.  In the MPC case the ports are hard-coded, in
+the APC case we need to wait for the port-configuration to form ports
+from the started phys.
 
+Towards that end increase the timeout for the APC agent to form ports,
+and delay start complete until all phys are out of link-training.
+
+Cc: <stable@vger.kernel.org>
 Cc: Richard Boyd <richard.g.boyd@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.c |   99 +++++++++++++++++++++++++---------------------
- drivers/scsi/isci/host.h |    8 ----
- 2 files changed, 55 insertions(+), 52 deletions(-)
+ drivers/scsi/isci/host.c        |   67 +++++++++++++++++++++------------------
+ drivers/scsi/isci/host.h        |    3 ++
+ drivers/scsi/isci/port_config.c |   18 ++++++----
+ 3 files changed, 50 insertions(+), 38 deletions(-)
 
 diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 0fe372f..95c3da6 100644
+index 95c3da6..577a836 100644
 --- a/drivers/scsi/isci/host.c
 +++ b/drivers/scsi/isci/host.c
-@@ -1046,7 +1046,7 @@ void isci_host_scan_start(struct Scsi_Host *shost)
- 	spin_unlock_irq(&ihost->scic_lock);
+@@ -816,7 +816,7 @@ static void sci_controller_initialize_unsolicited_frame_queue(struct isci_host *
+ 	       &ihost->scu_registers->sdma.unsolicited_frame_put_pointer);
  }
  
--static void isci_host_stop_complete(struct isci_host *ihost, enum sci_status completion_status)
-+static void isci_host_stop_complete(struct isci_host *ihost)
+-static void sci_controller_transition_to_ready(struct isci_host *ihost, enum sci_status status)
++void sci_controller_transition_to_ready(struct isci_host *ihost, enum sci_status status)
  {
- 	sci_controller_disable_interrupts(ihost);
- 	clear_bit(IHOST_STOP_PENDING, &ihost->flags);
-@@ -1232,7 +1232,7 @@ static enum sci_status sci_controller_reset(struct isci_host *ihost)
- 	switch (ihost->sm.current_state_id) {
- 	case SCIC_RESET:
- 	case SCIC_READY:
--	case SCIC_STOPPED:
-+	case SCIC_STOPPING:
- 	case SCIC_FAILED:
+ 	if (ihost->sm.current_state_id == SCIC_STARTING) {
  		/*
- 		 * The reset operation is not a graceful cleanup, just
-@@ -1247,6 +1247,44 @@ static enum sci_status sci_controller_reset(struct isci_host *ihost)
+@@ -843,6 +843,7 @@ static bool is_phy_starting(struct isci_phy *iphy)
+ 	case SCI_PHY_SUB_AWAIT_SATA_POWER:
+ 	case SCI_PHY_SUB_AWAIT_SATA_PHY_EN:
+ 	case SCI_PHY_SUB_AWAIT_SATA_SPEED_EN:
++	case SCI_PHY_SUB_AWAIT_OSSP_EN:
+ 	case SCI_PHY_SUB_AWAIT_SIG_FIS_UF:
+ 	case SCI_PHY_SUB_FINAL:
+ 		return true;
+@@ -851,6 +852,39 @@ static bool is_phy_starting(struct isci_phy *iphy)
  	}
  }
  
-+static enum sci_status sci_controller_stop_phys(struct isci_host *ihost)
++bool is_controller_start_complete(struct isci_host *ihost)
 +{
-+	u32 index;
-+	enum sci_status status;
-+	enum sci_status phy_status;
++	int i;
 +
-+	status = SCI_SUCCESS;
++	for (i = 0; i < SCI_MAX_PHYS; i++) {
++		struct isci_phy *iphy = &ihost->phys[i];
++		u32 state = iphy->sm.current_state_id;
 +
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		phy_status = sci_phy_stop(&ihost->phys[index]);
++		/* in apc mode we need to check every phy, in
++		 * mpc mode we only need to check phys that have
++		 * been configured into a port
++		 */
++		if (is_port_config_apc(ihost))
++			/* pass */;
++		else if (!phy_get_non_dummy_port(iphy))
++			continue;
 +
-+		if (phy_status != SCI_SUCCESS &&
-+		    phy_status != SCI_FAILURE_INVALID_STATE) {
-+			status = SCI_FAILURE;
-+
-+			dev_warn(&ihost->pdev->dev,
-+				 "%s: Controller stop operation failed to stop "
-+				 "phy %d because of status %d.\n",
-+				 __func__,
-+				 ihost->phys[index].phy_index, phy_status);
-+		}
++		/* The controller start operation is complete iff:
++		 * - all links have been given an opportunity to start
++		 * - have no indication of a connected device
++		 * - have an indication of a connected device and it has
++		 *   finished the link training process.
++		 */
++		if ((iphy->is_in_link_training == false && state == SCI_PHY_INITIAL) ||
++		    (iphy->is_in_link_training == false && state == SCI_PHY_STOPPED) ||
++		    (iphy->is_in_link_training == true && is_phy_starting(iphy)) ||
++		    (ihost->port_agent.phy_ready_mask != ihost->port_agent.phy_configured_mask))
++			return false;
 +	}
 +
-+	return status;
++	return true;
 +}
 +
-+
-+/**
-+ * isci_host_deinit - shutdown frame reception and dma
-+ * @ihost: host to take down
-+ *
-+ * This is called in either the driver shutdown or the suspend path.  In
-+ * the shutdown case libsas went through port teardown and normal device
-+ * removal (i.e. physical links stayed up to service scsi_device removal
-+ * commands).  In the suspend case we disable the hardware without
-+ * notifying libsas of the link down events since we want libsas to
-+ * remember the domain across the suspend/resume cycle
-+ */
- void isci_host_deinit(struct isci_host *ihost)
- {
- 	int i;
-@@ -1255,16 +1293,6 @@ void isci_host_deinit(struct isci_host *ihost)
- 	for (i = 0; i < isci_gpio_count(ihost); i++)
- 		writel(SGPIO_HW_CONTROL, &ihost->scu_registers->peg0.sgpio.output_data_select[i]);
+ /**
+  * sci_controller_start_next_phy - start phy
+  * @scic: controller
+@@ -871,36 +905,7 @@ static enum sci_status sci_controller_start_next_phy(struct isci_host *ihost)
+ 		return status;
  
--	for (i = 0; i < SCI_MAX_PORTS; i++) {
--		struct isci_port *iport = &ihost->ports[i];
--		struct isci_remote_device *idev, *d;
+ 	if (ihost->next_phy_to_start >= SCI_MAX_PHYS) {
+-		bool is_controller_start_complete = true;
+-		u32 state;
+-		u8 index;
 -
--		list_for_each_entry_safe(idev, d, &iport->remote_dev_list, node) {
--			if (test_bit(IDEV_ALLOCATED, &idev->flags))
--				isci_remote_device_stop(ihost, idev);
+-		for (index = 0; index < SCI_MAX_PHYS; index++) {
+-			iphy = &ihost->phys[index];
+-			state = iphy->sm.current_state_id;
+-
+-			if (!phy_get_non_dummy_port(iphy))
+-				continue;
+-
+-			/* The controller start operation is complete iff:
+-			 * - all links have been given an opportunity to start
+-			 * - have no indication of a connected device
+-			 * - have an indication of a connected device and it has
+-			 *   finished the link training process.
+-			 */
+-			if ((iphy->is_in_link_training == false && state == SCI_PHY_INITIAL) ||
+-			    (iphy->is_in_link_training == false && state == SCI_PHY_STOPPED) ||
+-			    (iphy->is_in_link_training == true && is_phy_starting(iphy)) ||
+-			    (ihost->port_agent.phy_ready_mask != ihost->port_agent.phy_configured_mask)) {
+-				is_controller_start_complete = false;
+-				break;
+-			}
 -		}
--	}
 -
- 	set_bit(IHOST_STOP_PENDING, &ihost->flags);
- 
- 	spin_lock_irq(&ihost->scic_lock);
-@@ -1273,6 +1301,13 @@ void isci_host_deinit(struct isci_host *ihost)
- 
- 	wait_for_stop(ihost);
- 
-+	/* phy stop is after controller stop to allow port and device to
-+	 * go idle before shutting down the phys, but the expectation is
-+	 * that i/o has been shut off well before we reach this
-+	 * function.
-+	 */
-+	sci_controller_stop_phys(ihost);
-+
- 	/* disable sgpio: where the above wait should give time for the
- 	 * enclosure to sample the gpios going inactive
- 	 */
-@@ -1476,32 +1511,6 @@ static void sci_controller_ready_state_exit(struct sci_base_state_machine *sm)
- 	sci_controller_set_interrupt_coalescence(ihost, 0, 0);
- }
- 
--static enum sci_status sci_controller_stop_phys(struct isci_host *ihost)
--{
--	u32 index;
--	enum sci_status status;
--	enum sci_status phy_status;
--
--	status = SCI_SUCCESS;
--
--	for (index = 0; index < SCI_MAX_PHYS; index++) {
--		phy_status = sci_phy_stop(&ihost->phys[index]);
--
--		if (phy_status != SCI_SUCCESS &&
--		    phy_status != SCI_FAILURE_INVALID_STATE) {
--			status = SCI_FAILURE;
--
--			dev_warn(&ihost->pdev->dev,
--				 "%s: Controller stop operation failed to stop "
--				 "phy %d because of status %d.\n",
--				 __func__,
--				 ihost->phys[index].phy_index, phy_status);
--		}
--	}
--
--	return status;
--}
--
- static enum sci_status sci_controller_stop_ports(struct isci_host *ihost)
- {
- 	u32 index;
-@@ -1561,10 +1570,11 @@ static void sci_controller_stopping_state_enter(struct sci_base_state_machine *s
- {
- 	struct isci_host *ihost = container_of(sm, typeof(*ihost), sm);
- 
--	/* Stop all of the components for this controller */
--	sci_controller_stop_phys(ihost);
--	sci_controller_stop_ports(ihost);
- 	sci_controller_stop_devices(ihost);
-+	sci_controller_stop_ports(ihost);
-+
-+	if (!sci_controller_has_remote_devices_stopping(ihost))
-+		isci_host_stop_complete(ihost);
- }
- 
- static void sci_controller_stopping_state_exit(struct sci_base_state_machine *sm)
-@@ -1621,7 +1631,6 @@ static const struct sci_base_state sci_controller_state_table[] = {
- 		.enter_state = sci_controller_stopping_state_enter,
- 		.exit_state = sci_controller_stopping_state_exit,
- 	},
--	[SCIC_STOPPED] = {},
- 	[SCIC_FAILED] = {}
- };
- 
-@@ -1641,7 +1650,7 @@ static void controller_timeout(unsigned long data)
- 		sci_controller_transition_to_ready(ihost, SCI_FAILURE_TIMEOUT);
- 	else if (sm->current_state_id == SCIC_STOPPING) {
- 		sci_change_state(sm, SCIC_FAILED);
--		isci_host_stop_complete(ihost, SCI_FAILURE_TIMEOUT);
-+		isci_host_stop_complete(ihost);
- 	} else	/* / @todo Now what do we want to do in this case? */
- 		dev_err(&ihost->pdev->dev,
- 			"%s: Controller timer fired when controller was not "
-@@ -2452,7 +2461,7 @@ void sci_controller_link_down(struct isci_host *ihost, struct isci_port *iport,
- 	}
- }
- 
--static bool sci_controller_has_remote_devices_stopping(struct isci_host *ihost)
-+bool sci_controller_has_remote_devices_stopping(struct isci_host *ihost)
- {
- 	u32 index;
- 
-@@ -2478,7 +2487,7 @@ void sci_controller_remote_device_stopped(struct isci_host *ihost,
- 	}
- 
- 	if (!sci_controller_has_remote_devices_stopping(ihost))
--		sci_change_state(&ihost->sm, SCIC_STOPPED);
-+		isci_host_stop_complete(ihost);
- }
- 
- void sci_controller_post_request(struct isci_host *ihost, u32 request)
+-		/*
+-		 * The controller has successfully finished the start process.
+-		 * Inform the SCI Core user and transition to the READY state. */
+-		if (is_controller_start_complete == true) {
++		if (is_controller_start_complete(ihost)) {
+ 			sci_controller_transition_to_ready(ihost, SCI_SUCCESS);
+ 			sci_del_timer(&ihost->phy_timer);
+ 			ihost->phy_startup_timer_pending = false;
 diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 4695162..a89c0e3 100644
+index a89c0e3..9dc910b 100644
 --- a/drivers/scsi/isci/host.h
 +++ b/drivers/scsi/isci/host.h
-@@ -277,13 +277,6 @@ enum sci_controller_states {
- 	SCIC_STOPPING,
+@@ -109,6 +109,8 @@ struct sci_port_configuration_agent;
+ typedef void (*port_config_fn)(struct isci_host *,
+ 			       struct sci_port_configuration_agent *,
+ 			       struct isci_port *, struct isci_phy *);
++bool is_port_config_apc(struct isci_host *ihost);
++bool is_controller_start_complete(struct isci_host *ihost);
  
- 	/**
--	 * This state indicates that the controller has successfully been stopped.
--	 * In this state no new IO operations are permitted.
--	 * This state is entered from the STOPPING state.
--	 */
--	SCIC_STOPPED,
--
--	/**
- 	 * This state indicates that the controller could not successfully be
- 	 * initialized.  In this state no new IO operations are permitted.
- 	 * This state is entered from the INITIALIZING state.
-@@ -479,6 +472,7 @@ int isci_host_init(struct isci_host *);
- void isci_host_completion_routine(unsigned long data);
+ struct sci_port_configuration_agent {
+ 	u16 phy_configured_mask;
+@@ -473,6 +475,7 @@ void isci_host_completion_routine(unsigned long data);
  void isci_host_deinit(struct isci_host *);
  void sci_controller_disable_interrupts(struct isci_host *ihost);
-+bool sci_controller_has_remote_devices_stopping(struct isci_host *ihost);
+ bool sci_controller_has_remote_devices_stopping(struct isci_host *ihost);
++void sci_controller_transition_to_ready(struct isci_host *ihost, enum sci_status status);
  
  enum sci_status sci_controller_start_io(
  	struct isci_host *ihost,
+diff --git a/drivers/scsi/isci/port_config.c b/drivers/scsi/isci/port_config.c
+index 6d1e954..cd962da 100644
+--- a/drivers/scsi/isci/port_config.c
++++ b/drivers/scsi/isci/port_config.c
+@@ -57,7 +57,7 @@
+ 
+ #define SCIC_SDS_MPC_RECONFIGURATION_TIMEOUT    (10)
+ #define SCIC_SDS_APC_RECONFIGURATION_TIMEOUT    (10)
+-#define SCIC_SDS_APC_WAIT_LINK_UP_NOTIFICATION  (250)
++#define SCIC_SDS_APC_WAIT_LINK_UP_NOTIFICATION  (1000)
+ 
+ enum SCIC_SDS_APC_ACTIVITY {
+ 	SCIC_SDS_APC_SKIP_PHY,
+@@ -472,13 +472,9 @@ sci_apc_agent_validate_phy_configuration(struct isci_host *ihost,
+  * down event or a link up event where we can not yet tell to which a phy
+  * belongs.
+  */
+-static void sci_apc_agent_start_timer(
+-	struct sci_port_configuration_agent *port_agent,
+-	u32 timeout)
++static void sci_apc_agent_start_timer(struct sci_port_configuration_agent *port_agent,
++				      u32 timeout)
+ {
+-	if (port_agent->timer_pending)
+-		sci_del_timer(&port_agent->timer);
+-
+ 	port_agent->timer_pending = true;
+ 	sci_mod_timer(&port_agent->timer, timeout);
+ }
+@@ -697,6 +693,9 @@ static void apc_agent_timeout(unsigned long data)
+ 						   &ihost->phys[index], false);
+ 	}
+ 
++	if (is_controller_start_complete(ihost))
++		sci_controller_transition_to_ready(ihost, SCI_SUCCESS);
++
+ done:
+ 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
+ }
+@@ -732,6 +731,11 @@ void sci_port_configuration_agent_construct(
+ 	}
+ }
+ 
++bool is_port_config_apc(struct isci_host *ihost)
++{
++	return ihost->port_agent.link_up_handler == sci_apc_agent_link_up;
++}
++
+ enum sci_status sci_port_configuration_agent_initialize(
+ 	struct isci_host *ihost,
+ 	struct sci_port_configuration_agent *port_agent)
 
