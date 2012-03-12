@@ -1,245 +1,155 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [RFC PATCH v2 8/8] [SCSI] sr: check and enable Zero-power ODD
- support
-Date: Mon, 12 Mar 2012 10:49:58 +0800
-Message-ID: <1331520598.3436.10.camel@minggr>
-References: <Pine.LNX.4.44L0.1203011059230.9392-100000@netrider.rowland.org>
-	 <1330671765.3412.7.camel@minggr>
-	 <CAOzJMDRTbq5o+jCyTtaAW_RPysfY3LhQ9gFC-tsvM8bsnh=rxQ@mail.gmail.com>
-	 <1330743921.6369.2.camel@hp6530s>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH 01/10] fcoe: avoid getting into dev_queue_xmit with
+ bottom halves disabled
+Date: Sun, 11 Mar 2012 20:25:30 -0700
+Message-ID: <4F5D6CAA.7050304@broadcom.com>
+References: <20120309224937.6515.83801.stgit@localhost6.localdomain6>
+ <20120309224942.6515.83069.stgit@localhost6.localdomain6>
+ <4F5A9754.6080009@broadcom.com>
+ <20120311174332.GA3518@neilslaptop.think-freely.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1330743921.6369.2.camel@hp6530s>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@vger.kernel.org>, linux-acpi <linux-acpi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:2665 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751174Ab2CLDZn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Mar 2012 23:25:43 -0400
+In-Reply-To: <20120311174332.GA3518@neilslaptop.think-freely.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: Robert Love <robert.w.love@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-On Sat, 2012-03-03 at 11:05 +0800, Lin Ming wrote:
-> On Fri, 2012-03-02 at 23:08 +0800, Aaron Lu wrote:
-> > Hi,
-> > 
-> > On Fri, Mar 2, 2012 at 3:02 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> > > On Thu, 2012-03-01 at 11:02 -0500, Alan Stern wrote:
-> > >> On Thu, 1 Mar 2012, Lin Ming wrote:
-> > >>
-> > >> > ZPODD(Zero Power Optical Disk Drive) is a new feature in
-> > >> > SATA 3.1 specification. It provides a way to power off unused ODD.
-> > >> >
-> > >> > ZPODD support is checked in in sr_probe().
-> > >> > can_power_off flag is set during suspend if ZPODD is supported.
-> > >> >
-> > >> > ATA port's runtime suspend callback will actually power off the ODD
-> > >> > and its runtime resume callback will actually power on the ODD.
-> > >> >
-> > >> > When ODD is powered off(D3Cold state), inserting disk will trigger a
-> > >> > wakeup event(GPE). GPE AML handler notifies the associated device. Then
-> > >> > ODD is resumed in the notify handler.
-> > >>
-> > >> I have one stylistic comment on this patch...
-> > >>
-> > >> > diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
-> > >> > index 37c8f6b..39b3d8c 100644
-> > >> > --- a/drivers/scsi/sr.h
-> > >> > +++ b/drivers/scsi/sr.h
-> > >> > @@ -42,6 +42,9 @@ typedef struct scsi_cd {
-> > >> >     unsigned readcd_cdda:1; /* reading audio data using READ_CD */
-> > >> >     unsigned media_present:1;       /* media is present */
-> > >> >
-> > >> > +   unsigned zpodd:1;       /* is ZPODD supported */
-> > >> > +   unsigned zpodd_event:1;
-> > >> > +
-> > >>
-> > >> You should not expect your readers to understand what "ZPODD" means.
-> > >> drivers/scsi/sr.h is used by lots of different people, many of whom
-> > >> will have no idea what it refers to, especially since it is part of
-> > >> the SATA spec and not the SCSI spec.  You should provide a brief
-> > >> explanation.
-> > >
-> > > I'll add some explanation.
-> > >
-> > > But I'm thinking maybe it's better to move this flag to ata layer, for
-> > 
-> > Agree.
-> > 
-> > > example, adding a flag to libata.h
-> > >
-> > > ATA_DFLAG_ZPODD
-> > >
-> > 
-> > How about ATA_DFLAG_DA(device attention)?
-> 
-> Yes, it's better.
-> 
-> > It follows the name used in the sata spec and this feature might have
-> > other uses in the future in addition to zero power odd(just my wild guess).
-> > 
-> > > sr runtime pm is only enabled when ZPODD(or more general, power off) is
-> > > supported.
-> > > So the problem is how will sr driver know this flag?
-> > >
-> > 
-> > What about adding a new field to scsi_device to reflect this capability of
-> > the underlying sata device? We can then set this field in ata_scsi_scan_host.
-> 
-> Nice idea.
-> 
-> I'll refresh this patch.
+On 3/11/2012 10:43 AM, Neil Horman wrote:
+> On Fri, Mar 09, 2012 at 03:50:44PM -0800, Bhanu Prakash Gollapudi wrote:
+>> On 3/9/2012 2:49 PM, Robert Love wrote:
+>>> From: Neil Horman<nhorman@tuxdriver.com>
+>>>
+>>> Recieved this warning recently:
+>>>
+>>> WARNING: at kernel/softirq.c:143 local_bh_enable+0x7d/0xb0() (Not tainted)
+>>> Hardware name: C6100
+>>> Modules linked in: autofs4 bnx2fc cnic uio fcoe libfcoe libfc scsi_transport_fc
+>>> scsi_tgt 8021q garp stp llc sunrpc cpufreq_ondemand acpi_cpufreq freq_table
+>>> mperf ipv6 ixgbe mdio igb dcdbas microcode i2c_i801 i2c_core sg iTCO_wdt
+>>> iTCO_vendor_support ioatdma dca i7core_edac edac_core shpchp ext4 mbcache jbd2
+>>> sd_mod crc_t10dif ahci dm_mirror dm_region_hash dm_log dm_mod [last unloaded:
+>>> scsi_wait_scan]
+>>> Pid: 4926, comm: fc_rport_eq Not tainted 2.6.32 #2
+>>> Call Trace:
+>>>   [<ffffffff81069c67>] ? warn_slowpath_common+0x87/0xc0
+>>>   [<ffffffff81069cba>] ? warn_slowpath_null+0x1a/0x20
+>>>   [<ffffffff8107216d>] ? local_bh_enable+0x7d/0xb0
+>>>   [<ffffffff81433567>] ? dev_queue_xmit+0x177/0x6c0
+>>>   [<ffffffffa0293a34>] ? vlan_dev_hwaccel_hard_start_xmit+0x84/0xb0 [8021q]
+>>>   [<ffffffff8142f46c>] ? dev_hard_start_xmit+0x2bc/0x3f0
+>>>   [<ffffffff8143392e>] ? dev_queue_xmit+0x53e/0x6c0
+>>>   [<ffffffff8142348e>] ? __skb_clone+0x2e/0x120
+>>>   [<ffffffffa02ea83d>] ? fcoe_clean_pending_queue+0xcd/0x100 [libfcoe]
+>>>   [<ffffffff810559ca>] ? find_busiest_group+0x9aa/0xb20
+>>>   [<ffffffffa02f7624>] ? fcoe_port_send+0x24/0x50 [fcoe]
+>>>   [<ffffffffa02f9568>] ? fcoe_xmit+0x228/0x3e0 [fcoe]
+>>>   [<ffffffffa02c1896>] ? fc_seq_send+0xb6/0x160 [libfc]
+>>>   [<ffffffffa02c1a76>] ? fc_exch_abort_locked+0x136/0x1c0 [libfc]
+>>>   [<ffffffffa02c1ca7>] ? fc_exch_mgr_reset+0x147/0x2a0 [libfc]
+>>>   [<ffffffff814f2c7e>] ? _spin_unlock_irq+0xe/0x20
+>>>   [<ffffffffa02c91d3>] ? fc_rport_work+0x123/0x5f0 [libfc]
+>>>   [<ffffffffa02c90b0>] ? fc_rport_work+0x0/0x5f0 [libfc]
+>>>   [<ffffffff8108b559>] ? worker_thread+0x179/0x2a0
+>>>   [<ffffffff81090ea0>] ? autoremove_wake_function+0x0/0x40
+>>>   [<ffffffff8108b3e0>] ? worker_thread+0x0/0x2a0
+>>>   [<ffffffff81090b56>] ? kthread+0x96/0xa0
+>>>   [<ffffffff8100c10a>] ? child_rip+0xa/0x20
+>>>   [<ffffffff81090ac0>] ? kthread+0x0/0xa0
+>>>   [<ffffffff8100c100>] ? child_rip+0x0/0x20
+>>>
+>>> fc_exch_abort_locked attempts to send an abort frame, but it does so with a
+>>> spinlock held and irqs/bh's disabled.  Because of this dev_queue_xmit issues a
+>>> warning. This patch allows the fc_exch_abort_locked to drop and re-acquire the
+>>> lock so that the warning is suppressed.
+>>>
+>>> Note this isn't a great fix, given that we need to free and re-acquire the
+>>> ex_lock during the fc_exch_abort_locked operation, but any other solution is
+>>> going to be a fairly major undertaking I think.  This should work until a proper
+>>> fix can be found.
+>>>
+>>> Signed-off-by: Neil Horman<nhorman@tuxdriver.com>
+>>> Signed-off-by: Robert Love<robert.w.love@intel.com>
+>>
+>> Robert,  This patch is not required based on what we discussed in
+>> this thread..
+>> http://lists.open-fcoe.org/pipermail/devel/2012-February/011946.html
+>>
+>> Neil provided "fcoe: Ensure fcoe_recv_frame is always called in
+>> process context" instead of the two patches he submitted initially.
+>> http://lists.open-fcoe.org/pipermail/devel/2012-February/011962.html
+>>
+>> Neil, correct me if I'm wrong.
+>>
+> Bhanu, This is not quite right (although that was a very confusing thread).  The
+> ema_list fix that I was proposing is no longer necessecary, because after that
+> conversation we realized the whole issue cold be avoided by making sure that we
+> never allowed fcoe_recv_frame to be called in process context.
+>
+> This patch is still necessecary.
 
-Would you like the draft incremental patch below?
-I have not tested it yet.
 
----
- drivers/ata/libata-core.c  |    3 +++
- drivers/ata/libata-scsi.c  |    2 ++
- drivers/scsi/sr.c          |   16 +++++++---------
- drivers/scsi/sr.h          |    1 -
- include/linux/ata.h        |    1 +
- include/linux/libata.h     |    2 ++
- include/scsi/scsi_device.h |    1 +
- 7 files changed, 16 insertions(+), 10 deletions(-)
+Neil, The reason you saw this (WARNING) stack trace (in softirq.c) was 
+because of using spin_lock_irqsave() instead of spin_lock_bh() in 
+fc_exch_reset() as part of  "[PATCH 1/2] fcoe: provide exclusion to 
+concurrent ema_list access", which was not eventually submitted.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6742cc4..2a10701 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2368,6 +2368,9 @@ int ata_dev_configure(struct ata_device *dev)
- 			dma_dir_string = ", DMADIR";
- 		}
- 
-+		if (atapi_id_has_da(dev->id))
-+			dev->flags |= ATA_DFLAG_DA;
-+
- 		/* print device info to dmesg */
- 		if (ata_msg_drv(ap) && print_info)
- 			ata_dev_info(dev,
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 231c3ec..0bfbe41 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3445,6 +3445,8 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 				dev->sdev = sdev;
- 				scsi_device_put(sdev);
- 				ata_acpi_bind(dev);
-+				if (dev->flags & ATA_DFLAG_DA)
-+					sdev->power_off = 1;
- 			} else {
- 				dev->sdev = NULL;
- 			}
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 7cd0489..0a75613 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -87,7 +87,7 @@ static int sr_suspend(struct device *dev, pm_message_t mesg)
- 	struct scsi_cd *cd;
- 
- 	cd = dev_get_drvdata(dev);
--	if (cd->zpodd)
-+	if (cd->device->power_off)
- 		dev->power.subsys_data->can_power_off = true;
- 
- 	return 0;
-@@ -98,7 +98,7 @@ static int sr_resume(struct device *dev)
- 	struct scsi_cd *cd;
- 
- 	cd = dev_get_drvdata(dev);
--	if (cd->zpodd) {
-+	if (cd->device->power_off) {
- 		dev->power.subsys_data->can_power_off = false;
- 		cd->zpodd_event = 0;
- 	}
-@@ -245,7 +245,8 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
- 	int ret;
- 
- 	/* Not necessary to check events if enter ZPODD state */
--	if (cd->zpodd && pm_runtime_suspended(&cd->device->sdev_gendev))
-+	if (cd->device->power_off &&
-+			pm_runtime_suspended(&cd->device->sdev_gendev))
- 		return 0;
- 
- 	/* no changer support */
-@@ -292,7 +293,7 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
- 	cd->media_present = scsi_status_is_good(ret) ||
- 		(scsi_sense_valid(&sshdr) && sshdr.asc != 0x3a);
- 
--	if (!cd->media_present && cd->zpodd && !cd->zpodd_event) {
-+	if (!cd->media_present && cd->device->power_off && !cd->zpodd_event) {
- 		scsi_autopm_put_device(cd->device);
- 		cd->zpodd_event = 1;
- 	}
-@@ -753,11 +754,8 @@ static int sr_probe(struct device *dev)
- 	disk->flags |= GENHD_FL_REMOVABLE;
- 	add_disk(disk);
- 
--	/* TODO: add device attention bit check for ZPODD */
--	if (device_run_wake(dev)) {
--		cd->zpodd = 1;
-+	if (sdev->power_off)
- 		dev_pm_get_subsys_data(dev);
--	}
- 
- 	sdev_printk(KERN_DEBUG, sdev,
- 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
-@@ -1015,7 +1013,7 @@ static int sr_remove(struct device *dev)
- 	kref_put(&cd->kref, sr_kref_release);
- 	mutex_unlock(&sr_ref_mutex);
- 
--	if (cd->zpodd)
-+	if (cd->device->power_off)
- 		dev_pm_put_subsys_data(dev);
- 
- 	return 0;
-diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
-index 39b3d8c..e81da64 100644
---- a/drivers/scsi/sr.h
-+++ b/drivers/scsi/sr.h
-@@ -42,7 +42,6 @@ typedef struct scsi_cd {
- 	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
- 	unsigned media_present:1;	/* media is present */
- 
--	unsigned zpodd:1;	/* is ZPODD supported */
- 	unsigned zpodd_event:1;
- 
- 	/* GET_EVENT spurious event handling, blk layer guarantees exclusion */
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 32df2b6..6ee41cc 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -578,6 +578,7 @@ static inline int ata_is_data(u8 prot)
- 	  ((u64) (id)[(n) + 0]) )
- 
- #define ata_id_cdb_intr(id)	(((id)[ATA_ID_CONFIG] & 0x60) == 0x20)
-+#define atapi_id_has_da(id)	((id)[77] & (1 << 4))
- 
- static inline bool ata_id_has_hipm(const u16 *id)
- {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 36970c6..3085bdc 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -161,6 +161,8 @@ enum {
- 	ATA_DFLAG_DETACH	= (1 << 24),
- 	ATA_DFLAG_DETACHED	= (1 << 25),
- 
-+	ATA_DFLAG_DA		= (1 << 26), /* device supports Device Attention */
-+
- 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
- 	ATA_DEV_ATA		= 1,	/* ATA device */
- 	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 8b6c247..4805d5a 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -151,6 +151,7 @@ struct scsi_device {
- 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
- 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
-+	unsigned power_off:1; /* Device supports runtime power off */
- 
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
+Because of using spin_lock_irqsave(), the following WARN_ON is hit in 
+_local_bh_enable_ip().
 
+static inline void _local_bh_enable_ip(unsigned long ip)
+{
+          WARN_ON_ONCE(in_irq() || irqs_disabled());
+
+I don't think you will see this WARNING with the existing code.
+
+
+  Its needed beacuse fc_exch_abort_locked is (by
+> definition) called with the ex_lock held.  fc_exch_abort_locked however calls
+> fc_seq_send, which can lock the same ex_lock, causing deadlock.
+
+
+This is NOT an issue. Although fc_seq_send takes ex_lock, 
+fc_exch_abort_locked() code path does not come here, as we return from 
+this function if fh_type is BLS.
+
+         if (fh_type == FC_TYPE_BLS)
+                 return error;
+
+         /*
+          * Update the exchange and sequence flags,
+          * assuming all frames for the sequence have been sent.
+          * We can only be called to send once for each sequence.
+          */
+         spin_lock_bh(&ep->ex_lock);
+	...
+
+
+Thanks,
+Bhanu
+>
+> So yes, we need a fix for this.  That said, I'd just as soon you drop this
+> patch, as I was looking at this code and realized that I can make a much more
+> efficient fix for this problem.  So let me know how you want to handle this: If
+> you want to drop this patch, I'll have an improved fix for you early this week.
+> If you want to keep this patch in place, thats fine with me too.  My new fix
+> will just revert these bits.  Let me know how you want to play it.
+>
+> Thank you for bringing this up though, I'd been meaning to review this and see
+> if I could fix it a bit better.
+>
+> Best
+> Neil
+>
+>
+>
 
 
