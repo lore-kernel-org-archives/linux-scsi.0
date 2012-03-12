@@ -1,649 +1,607 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 4/4] fcoe, bnx2fc, libfcoe: SW FCoE and bnx2fc use FCoE Syfs
-Date: Mon, 12 Mar 2012 16:09:36 -0700
-Message-ID: <20120312230936.10580.87671.stgit@localhost6.localdomain6>
+Subject: [PATCH 2/4] bnx2fc: Allocate fcoe_ctlr with bnx2fc_interface,
+ not as a member
+Date: Mon, 12 Mar 2012 16:09:26 -0700
+Message-ID: <20120312230926.10580.41942.stgit@localhost6.localdomain6>
 References: <20120312230915.10580.52548.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37846 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:18381 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752942Ab2CLXJg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Mar 2012 19:09:36 -0400
+	id S1758025Ab2CLXKR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Mar 2012 19:10:17 -0400
 In-Reply-To: <20120312230915.10580.52548.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: gregkh@linuxfoundation.org, james.smart@emulex.com, giridhar.malavali@qlogic.com
 
-This patch has the SW FCoE driver and the bnx2fc
-driver make use of the new fcoe_sysfs API added
-earlier in this patch series.
+Currently the fcoe_ctlr associated with an interface is allocated
+    as a member of struct bnx2fc_interface. This causes problems when
+    attempting to use the new fcoe_sysfs APIs which allow us to allocate
+    the bnx2fc_interface as private data to the fcoe_ctlr_attrs instance.
+    The problem is that libfcoe wants to be able use pointer math to find a
+    fcoe_ctlr's fcoe_ctlr_attrs as well as finding a fcoe_ctlr_attrs'
+    assocated fcoe_ctlr. To do this we need to allocate the
+    fcoe_ctlr_attrs, with private data for the LLD. The private data
+    contains the fcoe_ctlr and it's private data is the bnx2fc_interface.
 
-After this patch a fcoe_ctlr_attrs is allocated with
-private data in this order.
+    +------------------+
+    | fcoe_ctlr_attrs  |
+    +------------------+
+    | fcoe_ctlr        |
+    +------------------+
+    | bnx2fc_interface |
+    +------------------+
 
-+-----------------+   +------------------+
-| fcoe_ctlr_attrs |   | fcoe_ctlr_attrs  |
-+-----------------+   +------------------+
-| fcoe_ctlr       |   | fcoe_ctlr        |
-+-----------------+   +------------------+
-| fcoe_interface  |   | bnx2fc_interface |
-+-----------------+   +------------------+
-
-libfcoe also takes part in this new model since it
-discovers and manages fcoe_fcf instances. The memory
-allocation is different for FCFs. I didn't want to
-impact libfcoe's fcoe_fcf processing, so this patch
-creates fcoe_fcf_attrs instances for each discovered
-fcoe_fcf. The two are paired using a (void * priv)
-member of the fcoe_ctlr_attrs. This allows libfcoe
-to continue maintaining its list of fcoe_fcf instances
-and simply attaches and detaches them from existing
-or new fcoe_fcf_attrs instances.
+    This prep work allows us to go from a fcoe_ctlr_attrs instance to its
+    fcoe_ctlr and we can also go from a fcoe_ctlr to its fcoe_ctlr_attrs
+    once the fcoe_sysfs API is in use (later patches in this series).
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   63 ++++++++++++++-
- drivers/scsi/fcoe/fcoe.c          |   70 +++++++++++++++-
- drivers/scsi/fcoe/fcoe_ctlr.c     |  159 ++++++++++++++++++++++++++++++++++---
- include/scsi/libfcoe.h            |   17 ++++
- 4 files changed, 285 insertions(+), 24 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc.h      |    7 ++
+ drivers/scsi/bnx2fc/bnx2fc_els.c  |    2 -
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |  116 ++++++++++++++++++++++++-------------
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c  |   39 +++++++-----
+ 4 files changed, 101 insertions(+), 63 deletions(-)
 
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index a4953ef..349bb14 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -228,13 +228,16 @@ struct bnx2fc_interface {
+ 	struct packet_type fip_packet_type;
+ 	struct workqueue_struct *timer_work_queue;
+ 	struct kref kref;
+-	struct fcoe_ctlr ctlr;
+ 	u8 vlan_enabled;
+ 	int vlan_id;
+ 	bool enabled;
+ };
+ 
+-#define bnx2fc_from_ctlr(fip) container_of(fip, struct bnx2fc_interface, ctlr)
++#define bnx2fc_from_ctlr(x)			\
++	((struct bnx2fc_interface *)((x) + 1))
++
++#define bnx2fc_to_ctlr(x)					\
++	((struct fcoe_ctlr *)(((struct fcoe_ctlr *)(x)) - 1))
+ 
+ struct bnx2fc_lport {
+ 	struct list_head list;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
+index ce0ce3e..9a13912 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_els.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
+@@ -910,7 +910,7 @@ struct fc_seq *bnx2fc_elsct_send(struct fc_lport *lport, u32 did,
+ {
+ 	struct fcoe_port *port = lport_priv(lport);
+ 	struct bnx2fc_interface *interface = port->priv;
+-	struct fcoe_ctlr *fip = &interface->ctlr;
++	struct fcoe_ctlr *fip = bnx2fc_to_ctlr(interface);
+ 	struct fc_frame_header *fh = fc_frame_header_get(fp);
+ 
+ 	switch (op) {
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 90aaaf7..89547f6 100644
+index 1c34a44..90aaaf7 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -54,6 +54,7 @@ static struct cnic_ulp_ops bnx2fc_cnic_cb;
- static struct libfc_function_template bnx2fc_libfc_fcn_templ;
- static struct scsi_host_template bnx2fc_shost_template;
- static struct fc_function_template bnx2fc_transport_function;
-+static struct fcoe_sysfs_function_template bnx2fc_fcoe_sysfs_templ;
- static struct fc_function_template bnx2fc_vport_xport_function;
- static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode);
- static void __bnx2fc_destroy(struct bnx2fc_interface *interface);
-@@ -88,6 +89,7 @@ static void bnx2fc_port_shutdown(struct fc_lport *lport);
- static void bnx2fc_stop(struct bnx2fc_interface *interface);
- static int __init bnx2fc_mod_init(void);
- static void __exit bnx2fc_mod_exit(void);
-+static void bnx2fc_ctlr_get_lesb(struct fcoe_ctlr_attrs *ctlr_attrs);
+@@ -244,6 +244,7 @@ static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	struct sk_buff		*skb;
+ 	struct fc_frame_header	*fh;
+ 	struct bnx2fc_interface	*interface;
++	struct fcoe_ctlr        *ctlr;
+ 	struct bnx2fc_hba *hba;
+ 	struct fcoe_port	*port;
+ 	struct fcoe_hdr		*hp;
+@@ -256,6 +257,7 @@ static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
  
- unsigned int bnx2fc_debug_level;
- module_param_named(debug_logging, bnx2fc_debug_level, int, S_IRUGO|S_IWUSR);
-@@ -118,6 +120,41 @@ static void bnx2fc_get_lesb(struct fc_lport *lport,
- 	__fcoe_get_lesb(lport, fc_lesb, netdev);
+ 	port = (struct fcoe_port *)lport_priv(lport);
+ 	interface = port->priv;
++	ctlr = bnx2fc_to_ctlr(interface);
+ 	hba = interface->hba;
+ 
+ 	fh = fc_frame_header_get(fp);
+@@ -268,12 +270,12 @@ static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	}
+ 
+ 	if (unlikely(fh->fh_r_ctl == FC_RCTL_ELS_REQ)) {
+-		if (!interface->ctlr.sel_fcf) {
++		if (!ctlr->sel_fcf) {
+ 			BNX2FC_HBA_DBG(lport, "FCF not selected yet!\n");
+ 			kfree_skb(skb);
+ 			return -EINVAL;
+ 		}
+-		if (fcoe_ctlr_els_send(&interface->ctlr, lport, skb))
++		if (fcoe_ctlr_els_send(ctlr, lport, skb))
+ 			return 0;
+ 	}
+ 
+@@ -347,14 +349,14 @@ static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	/* fill up mac and fcoe headers */
+ 	eh = eth_hdr(skb);
+ 	eh->h_proto = htons(ETH_P_FCOE);
+-	if (interface->ctlr.map_dest)
++	if (ctlr->map_dest)
+ 		fc_fcoe_set_mac(eh->h_dest, fh->fh_d_id);
+ 	else
+ 		/* insert GW address */
+-		memcpy(eh->h_dest, interface->ctlr.dest_addr, ETH_ALEN);
++		memcpy(eh->h_dest, ctlr->dest_addr, ETH_ALEN);
+ 
+-	if (unlikely(interface->ctlr.flogi_oxid != FC_XID_UNKNOWN))
+-		memcpy(eh->h_source, interface->ctlr.ctl_src_addr, ETH_ALEN);
++	if (unlikely(ctlr->flogi_oxid != FC_XID_UNKNOWN))
++		memcpy(eh->h_source, ctlr->ctl_src_addr, ETH_ALEN);
+ 	else
+ 		memcpy(eh->h_source, port->data_src_addr, ETH_ALEN);
+ 
+@@ -404,6 +406,7 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+ {
+ 	struct fc_lport *lport;
+ 	struct bnx2fc_interface *interface;
++	struct fcoe_ctlr *ctlr;
+ 	struct fc_frame_header *fh;
+ 	struct fcoe_rcv_info *fr;
+ 	struct fcoe_percpu_s *bg;
+@@ -411,7 +414,8 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+ 
+ 	interface = container_of(ptype, struct bnx2fc_interface,
+ 				 fcoe_packet_type);
+-	lport = interface->ctlr.lp;
++	ctlr = bnx2fc_to_ctlr(interface);
++	lport = ctlr->lp;
+ 
+ 	if (unlikely(lport == NULL)) {
+ 		printk(KERN_ERR PFX "bnx2fc_rcv: lport is NULL\n");
+@@ -759,11 +763,13 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
+ {
+ 	struct bnx2fc_hba *hba;
+ 	struct bnx2fc_interface *interface;
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_port *port;
+ 	u64 wwnn, wwpn;
+ 
+ 	port = lport_priv(lport);
+ 	interface = port->priv;
++	ctlr = bnx2fc_to_ctlr(interface);
+ 	hba = interface->hba;
+ 
+ 	/* require support for get_pauseparam ethtool op. */
+@@ -782,13 +788,13 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
+ 
+ 	if (!lport->vport) {
+ 		if (fcoe_get_wwn(netdev, &wwnn, NETDEV_FCOE_WWNN))
+-			wwnn = fcoe_wwn_from_mac(interface->ctlr.ctl_src_addr,
++			wwnn = fcoe_wwn_from_mac(ctlr->ctl_src_addr,
+ 						 1, 0);
+ 		BNX2FC_HBA_DBG(lport, "WWNN = 0x%llx\n", wwnn);
+ 		fc_set_wwnn(lport, wwnn);
+ 
+ 		if (fcoe_get_wwn(netdev, &wwpn, NETDEV_FCOE_WWPN))
+-			wwpn = fcoe_wwn_from_mac(interface->ctlr.ctl_src_addr,
++			wwpn = fcoe_wwn_from_mac(ctlr->ctl_src_addr,
+ 						 2, 0);
+ 
+ 		BNX2FC_HBA_DBG(lport, "WWPN = 0x%llx\n", wwpn);
+@@ -825,6 +831,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 	struct fc_lport *lport;
+ 	struct fc_lport *vport;
+ 	struct bnx2fc_interface *interface, *tmp;
++	struct fcoe_ctlr *ctlr;
+ 	int wait_for_upload = 0;
+ 	u32 link_possible = 1;
+ 
+@@ -875,7 +882,8 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 		if (interface->hba != hba)
+ 			continue;
+ 
+-		lport = interface->ctlr.lp;
++		ctlr = bnx2fc_to_ctlr(interface);
++		lport = ctlr->lp;
+ 		BNX2FC_HBA_DBG(lport, "netevent handler - event=%s %ld\n",
+ 				interface->netdev->name, event);
+ 
+@@ -890,8 +898,8 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 			 * on a stale vlan
+ 			 */
+ 			if (interface->enabled)
+-				fcoe_ctlr_link_up(&interface->ctlr);
+-		} else if (fcoe_ctlr_link_down(&interface->ctlr)) {
++				fcoe_ctlr_link_up(ctlr);
++		} else if (fcoe_ctlr_link_down(ctlr)) {
+ 			mutex_lock(&lport->lp_mutex);
+ 			list_for_each_entry(vport, &lport->vports, list)
+ 				fc_host_port_type(vport->host) =
+@@ -996,9 +1004,11 @@ static int bnx2fc_fip_recv(struct sk_buff *skb, struct net_device *dev,
+ 			   struct net_device *orig_dev)
+ {
+ 	struct bnx2fc_interface *interface;
++	struct fcoe_ctlr *ctlr;
+ 	interface = container_of(ptype, struct bnx2fc_interface,
+ 				 fip_packet_type);
+-	fcoe_ctlr_recv(&interface->ctlr, skb);
++	ctlr = bnx2fc_to_ctlr(interface);
++	fcoe_ctlr_recv(ctlr, skb);
+ 	return 0;
  }
  
-+static void bnx2fc_ctlr_get_lesb(struct fcoe_ctlr_attrs *ctlr_attrs)
-+{
-+	struct fcoe_ctlr *fip = fcoe_ctlr_attrs_priv(ctlr_attrs);
-+	struct net_device *netdev = bnx2fc_netdev(fip->lp);
-+	struct fcoe_fc_els_lesb *fcoe_lesb;
-+	struct fc_els_lesb fc_lesb;
-+
-+	__fcoe_get_lesb(fip->lp, &fc_lesb, netdev);
-+	fcoe_lesb = (struct fcoe_fc_els_lesb *)(&fc_lesb);
-+
-+	ctlr_attrs->lesb.lesb_link_fail =
-+		ntohl(fcoe_lesb->lesb_link_fail);
-+	ctlr_attrs->lesb.lesb_vlink_fail =
-+		ntohl(fcoe_lesb->lesb_vlink_fail);
-+	ctlr_attrs->lesb.lesb_miss_fka =
-+		ntohl(fcoe_lesb->lesb_miss_fka);
-+	ctlr_attrs->lesb.lesb_symb_err =
-+		ntohl(fcoe_lesb->lesb_symb_err);
-+	ctlr_attrs->lesb.lesb_err_block =
-+		ntohl(fcoe_lesb->lesb_err_block);
-+	ctlr_attrs->lesb.lesb_fcs_error =
-+		ntohl(fcoe_lesb->lesb_fcs_error);
-+}
-+EXPORT_SYMBOL(bnx2fc_ctlr_get_lesb);
-+
-+static void bnx2fc_fcf_get_vlan_id(struct fcoe_fcf_attrs *fcf_attrs)
-+{
-+	struct fcoe_ctlr_attrs *ctlr_attrs =
-+		fcoe_fcf_to_ctlr(fcf_attrs);
-+	struct fcoe_ctlr *ctlr = fcoe_ctlr_attrs_priv(ctlr_attrs);
-+	struct bnx2fc_interface *fcoe = fcoe_ctlr_priv(ctlr);
-+
-+	fcf_attrs->vlan_id = fcoe->vlan_id;
-+}
-+
- static void bnx2fc_clean_rx_queue(struct fc_lport *lp)
+@@ -1156,6 +1166,7 @@ static int bnx2fc_interface_setup(struct bnx2fc_interface *interface)
  {
- 	struct fcoe_percpu_s *bg;
-@@ -1236,6 +1273,7 @@ static void bnx2fc_release_transport(void)
+ 	struct net_device *netdev = interface->netdev;
+ 	struct net_device *physdev = interface->hba->phys_dev;
++	struct fcoe_ctlr *ctlr = bnx2fc_to_ctlr(interface);
+ 	struct netdev_hw_addr *ha;
+ 	int sel_san_mac = 0;
  
+@@ -1170,7 +1181,7 @@ static int bnx2fc_interface_setup(struct bnx2fc_interface *interface)
+ 
+ 		if ((ha->type == NETDEV_HW_ADDR_T_SAN) &&
+ 		    (is_valid_ether_addr(ha->addr))) {
+-			memcpy(interface->ctlr.ctl_src_addr, ha->addr,
++			memcpy(ctlr->ctl_src_addr, ha->addr,
+ 			       ETH_ALEN);
+ 			sel_san_mac = 1;
+ 			BNX2FC_MISC_DBG("Found SAN MAC\n");
+@@ -1226,18 +1237,20 @@ static void bnx2fc_release_transport(void)
  static void bnx2fc_interface_release(struct kref *kref)
  {
-+	struct fcoe_ctlr_attrs *ctlr_attrs;
  	struct bnx2fc_interface *interface;
- 	struct fcoe_ctlr *ctlr;
++	struct fcoe_ctlr *ctlr;
  	struct net_device *netdev;
-@@ -1244,13 +1282,14 @@ static void bnx2fc_interface_release(struct kref *kref)
+ 
+ 	interface = container_of(kref, struct bnx2fc_interface, kref);
  	BNX2FC_MISC_DBG("Interface is being released\n");
  
- 	ctlr = bnx2fc_to_ctlr(interface);
-+	ctlr_attrs = ctlr_to_ctlr_attrs(ctlr);
++	ctlr = bnx2fc_to_ctlr(interface);
  	netdev = interface->netdev;
  
  	/* tear-down FIP controller */
  	if (test_and_clear_bit(BNX2FC_CTLR_INIT_DONE, &interface->if_flags))
- 		fcoe_ctlr_destroy(ctlr);
+-		fcoe_ctlr_destroy(&interface->ctlr);
++		fcoe_ctlr_destroy(ctlr);
  
--	kfree(ctlr);
-+	fcoe_ctlr_attrs_delete(ctlr_attrs);
+-	kfree(interface);
++	kfree(ctlr);
  
  	dev_put(netdev);
  	module_put(THIS_MODULE);
-@@ -1343,17 +1382,20 @@ struct bnx2fc_interface *bnx2fc_interface_create(struct bnx2fc_hba *hba,
- 				      struct net_device *netdev,
+@@ -1331,32 +1344,36 @@ struct bnx2fc_interface *bnx2fc_interface_create(struct bnx2fc_hba *hba,
  				      enum fip_state fip_mode)
  {
-+	struct fcoe_ctlr_attrs *ctlr_attrs;
  	struct bnx2fc_interface *interface;
- 	struct fcoe_ctlr *ctlr;
- 	int size;
++	struct fcoe_ctlr *ctlr;
++	int size;
  	int rc = 0;
  
- 	size = (sizeof(*interface) + sizeof(struct fcoe_ctlr));
--	ctlr = kzalloc(size, GFP_KERNEL);
--	if (!ctlr) {
-+	ctlr_attrs = fcoe_ctlr_attrs_add(&netdev->dev, &bnx2fc_fcoe_sysfs_templ,
-+					 size);
-+	if (!ctlr_attrs) {
+-	interface = kzalloc(sizeof(*interface), GFP_KERNEL);
+-	if (!interface) {
++	size = (sizeof(*interface) + sizeof(struct fcoe_ctlr));
++	ctlr = kzalloc(size, GFP_KERNEL);
++	if (!ctlr) {
  		printk(KERN_ERR PFX "Unable to allocate interface structure\n");
  		return NULL;
  	}
-+	ctlr = fcoe_ctlr_attrs_priv(ctlr_attrs);
- 	interface = fcoe_ctlr_priv(ctlr);
++	interface = fcoe_ctlr_priv(ctlr);
  	dev_hold(netdev);
  	kref_init(&interface->kref);
-@@ -1373,7 +1415,7 @@ struct bnx2fc_interface *bnx2fc_interface_create(struct bnx2fc_hba *hba,
+ 	interface->hba = hba;
+ 	interface->netdev = netdev;
  
- 	fcoe_ctlr_destroy(ctlr);
+ 	/* Initialize FIP */
+-	fcoe_ctlr_init(&interface->ctlr, fip_mode);
+-	interface->ctlr.send = bnx2fc_fip_send;
+-	interface->ctlr.update_mac = bnx2fc_update_src_mac;
+-	interface->ctlr.get_src_addr = bnx2fc_get_src_mac;
++	fcoe_ctlr_init(ctlr, fip_mode);
++	ctlr->send = bnx2fc_fip_send;
++	ctlr->update_mac = bnx2fc_update_src_mac;
++	ctlr->get_src_addr = bnx2fc_get_src_mac;
+ 	set_bit(BNX2FC_CTLR_INIT_DONE, &interface->if_flags);
+ 
+ 	rc = bnx2fc_interface_setup(interface);
+ 	if (!rc)
+ 		return interface;
+ 
+-	fcoe_ctlr_destroy(&interface->ctlr);
++	fcoe_ctlr_destroy(ctlr);
  	dev_put(netdev);
--	kfree(ctlr);
-+	fcoe_ctlr_attrs_delete(ctlr_attrs);
+-	kfree(interface);
++	kfree(ctlr);
  	return NULL;
  }
  
-@@ -2472,6 +2514,19 @@ static void __exit bnx2fc_mod_exit(void)
- module_init(bnx2fc_mod_init);
- module_exit(bnx2fc_mod_exit);
- 
-+static struct fcoe_sysfs_function_template bnx2fc_fcoe_sysfs_templ = {
-+	.get_fcoe_ctlr_mode = fcoe_ctlr_get_fip_mode,
-+	.get_fcoe_ctlr_link_fail = bnx2fc_ctlr_get_lesb,
-+	.get_fcoe_ctlr_vlink_fail = bnx2fc_ctlr_get_lesb,
-+	.get_fcoe_ctlr_miss_fka = bnx2fc_ctlr_get_lesb,
-+	.get_fcoe_ctlr_symb_err = bnx2fc_ctlr_get_lesb,
-+	.get_fcoe_ctlr_err_block = bnx2fc_ctlr_get_lesb,
-+	.get_fcoe_ctlr_fcs_error = bnx2fc_ctlr_get_lesb,
-+
-+	.get_fcoe_fcf_selected = fcoe_fcf_get_selected,
-+	.get_fcoe_fcf_vlan_id = bnx2fc_fcf_get_vlan_id,
-+};
-+
- static struct fc_function_template bnx2fc_transport_function = {
- 	.show_host_node_name = 1,
- 	.show_host_port_name = 1,
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 85ab965..bb32cab 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -41,6 +41,7 @@
- 
- #include <scsi/fc/fc_encaps.h>
- #include <scsi/fc/fc_fip.h>
-+#include <scsi/fc/fc_fcoe.h>
- 
- #include <scsi/libfc.h>
- #include <scsi/fc_frame.h>
-@@ -150,6 +151,21 @@ static int fcoe_vport_create(struct fc_vport *, bool disabled);
- static int fcoe_vport_disable(struct fc_vport *, bool disable);
- static void fcoe_set_vport_symbolic_name(struct fc_vport *);
- static void fcoe_set_port_id(struct fc_lport *, u32, struct fc_frame *);
-+static void fcoe_ctlr_get_lesb(struct fcoe_ctlr_attrs *);
-+static void fcoe_fcf_get_vlan_id(struct fcoe_fcf_attrs *);
-+
-+static struct fcoe_sysfs_function_template fcoe_sysfs_templ = {
-+	.get_fcoe_ctlr_mode = fcoe_ctlr_get_fip_mode,
-+	.get_fcoe_ctlr_link_fail = fcoe_ctlr_get_lesb,
-+	.get_fcoe_ctlr_vlink_fail = fcoe_ctlr_get_lesb,
-+	.get_fcoe_ctlr_miss_fka = fcoe_ctlr_get_lesb,
-+	.get_fcoe_ctlr_symb_err = fcoe_ctlr_get_lesb,
-+	.get_fcoe_ctlr_err_block = fcoe_ctlr_get_lesb,
-+	.get_fcoe_ctlr_fcs_error = fcoe_ctlr_get_lesb,
-+
-+	.get_fcoe_fcf_selected = fcoe_fcf_get_selected,
-+	.get_fcoe_fcf_vlan_id = fcoe_fcf_get_vlan_id,
-+};
- 
- static struct libfc_function_template fcoe_libfc_fcn_templ = {
- 	.frame_send = fcoe_xmit,
-@@ -366,6 +382,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
- static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
- 						    enum fip_state fip_mode)
+@@ -1374,6 +1391,7 @@ struct bnx2fc_interface *bnx2fc_interface_create(struct bnx2fc_hba *hba,
+ static struct fc_lport *bnx2fc_if_create(struct bnx2fc_interface *interface,
+ 				  struct device *parent, int npiv)
  {
-+	struct fcoe_ctlr_attrs *ctlr_attrs;
- 	struct fcoe_ctlr *ctlr;
- 	struct fcoe_interface *fcoe;
- 	int size;
-@@ -379,14 +396,17 @@ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
++	struct fcoe_ctlr        *ctlr = bnx2fc_to_ctlr(interface);
+ 	struct fc_lport		*lport, *n_port;
+ 	struct fcoe_port	*port;
+ 	struct Scsi_Host	*shost;
+@@ -1384,7 +1402,7 @@ static struct fc_lport *bnx2fc_if_create(struct bnx2fc_interface *interface,
+ 
+ 	blport = kzalloc(sizeof(struct bnx2fc_lport), GFP_KERNEL);
+ 	if (!blport) {
+-		BNX2FC_HBA_DBG(interface->ctlr.lp, "Unable to alloc blport\n");
++		BNX2FC_HBA_DBG(ctlr->lp, "Unable to alloc blport\n");
+ 		return NULL;
  	}
  
- 	size = sizeof(struct fcoe_ctlr) + sizeof(struct fcoe_interface);
--	ctlr = kzalloc(size, GFP_KERNEL);
--	fcoe = fcoe_ctlr_priv(ctlr);
--	if (!fcoe) {
--		FCOE_NETDEV_DBG(netdev, "Could not allocate fcoe structure\n");
-+	ctlr_attrs = fcoe_ctlr_attrs_add(&netdev->dev, &fcoe_sysfs_templ,
-+					 size);
-+	if (!ctlr_attrs) {
-+		FCOE_DBG("Failed to add fcoe_ctlr_attrs\n");
- 		fcoe = ERR_PTR(-ENOMEM);
- 		goto out_putmod;
- 	}
+@@ -1480,7 +1498,8 @@ static void bnx2fc_net_cleanup(struct bnx2fc_interface *interface)
  
-+	ctlr = fcoe_ctlr_attrs_priv(ctlr_attrs);
-+	fcoe = fcoe_ctlr_priv(ctlr);
-+
- 	dev_hold(netdev);
- 
- 	/*
-@@ -400,6 +420,7 @@ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
- 	err = fcoe_interface_setup(fcoe, netdev);
- 	if (err) {
- 		fcoe_ctlr_destroy(ctlr);
-+		fcoe_ctlr_attrs_delete(ctlr_attrs);
- 		dev_put(netdev);
- 		fcoe = ERR_PTR(err);
- 		goto out_putmod;
-@@ -423,6 +444,7 @@ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
+ static void bnx2fc_interface_cleanup(struct bnx2fc_interface *interface)
  {
- 	struct net_device *netdev = fcoe->netdev;
- 	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
-+	struct fcoe_ctlr_attrs *ctlr_attrs = ctlr_to_ctlr_attrs(fip);
- 	u8 flogi_maddr[ETH_ALEN];
- 	const struct net_device_ops *ops;
+-	struct fc_lport *lport = interface->ctlr.lp;
++	struct fcoe_ctlr *ctlr = bnx2fc_to_ctlr(interface);
++	struct fc_lport *lport = ctlr->lp;
+ 	struct fcoe_port *port = lport_priv(lport);
+ 	struct bnx2fc_hba *hba = interface->hba;
  
-@@ -462,6 +484,7 @@ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 	/* Release the self-reference taken during fcoe_interface_create() */
- 	/* tear-down the FCoE controller */
- 	fcoe_ctlr_destroy(fip);
-+	fcoe_ctlr_attrs_delete(ctlr_attrs);
- 	dev_put(netdev);
- 	module_put(THIS_MODULE);
- }
-@@ -2175,6 +2198,7 @@ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
- static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
+@@ -1520,7 +1539,8 @@ static void bnx2fc_if_destroy(struct fc_lport *lport)
+ 
+ static void __bnx2fc_destroy(struct bnx2fc_interface *interface)
  {
+-	struct fc_lport *lport = interface->ctlr.lp;
++	struct fcoe_ctlr *ctlr = bnx2fc_to_ctlr(interface);
++	struct fc_lport *lport = ctlr->lp;
+ 	struct fcoe_port *port = lport_priv(lport);
+ 
+ 	bnx2fc_interface_cleanup(interface);
+@@ -1544,13 +1564,15 @@ static int bnx2fc_destroy(struct net_device *netdev)
+ {
+ 	struct bnx2fc_interface *interface = NULL;
+ 	struct workqueue_struct *timer_work_queue;
++	struct fcoe_ctlr *ctlr;
  	int rc = 0;
-+	struct fcoe_ctlr_attrs *ctlr_attrs;
- 	struct fcoe_ctlr *ctlr;
- 	struct fcoe_interface *fcoe;
- 	struct fc_lport *lport;
-@@ -2195,8 +2219,8 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
- 	}
  
- 	ctlr = fcoe_to_ctlr(fcoe);
--
--	lport = fcoe_if_create(fcoe, &netdev->dev, 0);
-+	ctlr_attrs = ctlr_to_ctlr_attrs(ctlr);
-+	lport = fcoe_if_create(fcoe, &ctlr_attrs->dev, 0);
- 	if (IS_ERR(lport)) {
- 		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
- 		       netdev->name);
-@@ -2744,6 +2768,40 @@ static void fcoe_get_lesb(struct fc_lport *lport,
- 	__fcoe_get_lesb(lport, fc_lesb, netdev);
- }
+ 	rtnl_lock();
+ 	mutex_lock(&bnx2fc_dev_lock);
  
-+static void fcoe_ctlr_get_lesb(struct fcoe_ctlr_attrs *ctlr_attrs)
-+{
-+	struct fcoe_ctlr *fip = fcoe_ctlr_attrs_priv(ctlr_attrs);
-+	struct net_device *netdev = fcoe_netdev(fip->lp);
-+	struct fcoe_fc_els_lesb *fcoe_lesb;
-+	struct fc_els_lesb fc_lesb;
-+
-+	__fcoe_get_lesb(fip->lp, &fc_lesb, netdev);
-+	fcoe_lesb = (struct fcoe_fc_els_lesb *)(&fc_lesb);
-+
-+	ctlr_attrs->lesb.lesb_link_fail =
-+		ntohl(fcoe_lesb->lesb_link_fail);
-+	ctlr_attrs->lesb.lesb_vlink_fail =
-+		ntohl(fcoe_lesb->lesb_vlink_fail);
-+	ctlr_attrs->lesb.lesb_miss_fka =
-+		ntohl(fcoe_lesb->lesb_miss_fka);
-+	ctlr_attrs->lesb.lesb_symb_err =
-+		ntohl(fcoe_lesb->lesb_symb_err);
-+	ctlr_attrs->lesb.lesb_err_block =
-+		ntohl(fcoe_lesb->lesb_err_block);
-+	ctlr_attrs->lesb.lesb_fcs_error =
-+		ntohl(fcoe_lesb->lesb_fcs_error);
-+}
-+
-+static void fcoe_fcf_get_vlan_id(struct fcoe_fcf_attrs *fcf_attrs)
-+{
-+	struct fcoe_ctlr_attrs *ctlr_attrs =
-+		fcoe_fcf_to_ctlr(fcf_attrs);
-+	struct fcoe_ctlr *ctlr = fcoe_ctlr_attrs_priv(ctlr_attrs);
-+	struct fcoe_interface *fcoe = fcoe_ctlr_priv(ctlr);
-+
-+	fcf_attrs->vlan_id = vlan_dev_vlan_id(fcoe->netdev);
-+}
-+
- /**
-  * fcoe_set_port_id() - Callback from libfc when Port_ID is set.
-  * @lport: the local port
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 249a106..00887cf 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -160,6 +160,76 @@ void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_state mode)
- }
- EXPORT_SYMBOL(fcoe_ctlr_init);
- 
-+static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
-+{
-+	struct fcoe_ctlr *fip = new->fip;
-+	struct fcoe_ctlr_attrs *ctlr_attrs = ctlr_to_ctlr_attrs(fip);
-+	struct fcoe_fcf_attrs temp, *fcf_attrs;
-+	int rc = 0;
-+
-+	LIBFCOE_FIP_DBG(fip, "New FCF fab %16.16llx mac %pM\n",
-+			new->fabric_name, new->fcf_mac);
-+
-+	mutex_lock(&ctlr_attrs->lock);
-+
-+	temp.fabric_name = new->fabric_name;
-+	temp.switch_name = new->switch_name;
-+	temp.fc_map = new->fc_map;
-+	temp.vfid = new->vfid;
-+	memcpy(temp.mac, new->fcf_mac, ETH_ALEN);
-+	temp.priority = new->pri;
-+	temp.fka_period = new->fka_period;
-+	temp.selected = 0; /* default to unselected */
-+
-+	fcf_attrs = fcoe_fcf_attrs_add(ctlr_attrs, &temp);
-+	if (unlikely(!fcf_attrs)) {
-+		rc = -ENOMEM;
-+		goto out;
-+	}
-+
-+	/*
-+	 * The fcoe_sysfs layer can return a CONNECTED fcf that
-+	 * has a priv (fcf was never deleted) or a CONNECTED fcf
-+	 * that doesn't have a priv (fcf was deleted). However,
-+	 * libfcoe will always delete FCFs before trying to add
-+	 * them. This is ensured because both recv_adv and
-+	 * age_fcfs are protected by the the fcoe_ctlr's mutex.
-+	 * This means that we should never get a FCF with a
-+	 * non-NULL priv pointer.
-+	 */
-+	BUG_ON(fcf_attrs->priv);
-+
-+	fcf_attrs->priv = new;
-+	new->fcf_attrs = fcf_attrs;
-+
-+	list_add(&new->list, &fip->fcfs);
-+	fip->fcf_count++;
-+
-+out:
-+	mutex_unlock(&ctlr_attrs->lock);
-+	return rc;
-+}
-+
-+static void fcoe_sysfs_fcf_del(struct fcoe_fcf *new)
-+{
-+	struct fcoe_ctlr *fip = new->fip;
-+	struct fcoe_ctlr_attrs *ctlr_attrs = ctlr_to_ctlr_attrs(fip);
-+	struct fcoe_fcf_attrs *fcf_attrs;
-+
-+	list_del(&new->list);
-+	fip->fcf_count--;
-+
-+	mutex_lock(&ctlr_attrs->lock);
-+
-+	fcf_attrs = fcf_to_fcf_attrs(new);
-+	WARN_ON(!fcf_attrs);
-+	new->fcf_attrs = NULL;
-+	fcoe_fcf_attrs_delete(fcf_attrs);
-+	kfree(new);
-+
-+	mutex_unlock(&ctlr_attrs->lock);
-+}
-+
- /**
-  * fcoe_ctlr_reset_fcfs() - Reset and free all FCFs for a controller
-  * @fip: The FCoE controller whose FCFs are to be reset
-@@ -173,10 +243,10 @@ static void fcoe_ctlr_reset_fcfs(struct fcoe_ctlr *fip)
- 
- 	fip->sel_fcf = NULL;
- 	list_for_each_entry_safe(fcf, next, &fip->fcfs, list) {
--		list_del(&fcf->list);
--		kfree(fcf);
-+		fcoe_sysfs_fcf_del(fcf);
- 	}
--	fip->fcf_count = 0;
-+	WARN_ON(fip->fcf_count);
-+
- 	fip->sel_time = 0;
- }
- 
-@@ -717,8 +787,11 @@ static unsigned long fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
- 	unsigned long next_timer = jiffies + msecs_to_jiffies(FIP_VN_KA_PERIOD);
- 	unsigned long deadline;
- 	unsigned long sel_time = 0;
-+	struct list_head del_list;
- 	struct fcoe_dev_stats *stats;
- 
-+	INIT_LIST_HEAD(&del_list);
-+
- 	stats = per_cpu_ptr(fip->lp->dev_stats, get_cpu());
- 
- 	list_for_each_entry_safe(fcf, next, &fip->fcfs, list) {
-@@ -739,10 +812,13 @@ static unsigned long fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
- 		if (time_after_eq(jiffies, deadline)) {
- 			if (fip->sel_fcf == fcf)
- 				fip->sel_fcf = NULL;
-+			/*
-+			 * Move to delete list so we can call
-+			 * fcoe_sysfs_fcf_del (which can sleep)
-+			 * after the put_cpu().
-+			 */
- 			list_del(&fcf->list);
--			WARN_ON(!fip->fcf_count);
--			fip->fcf_count--;
--			kfree(fcf);
-+			list_add(&fcf->list, &del_list);
- 			stats->VLinkFailureCount++;
- 		} else {
- 			if (time_after(next_timer, deadline))
-@@ -753,6 +829,12 @@ static unsigned long fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
- 		}
- 	}
- 	put_cpu();
-+
-+	list_for_each_entry_safe(fcf, next, &del_list, list) {
-+		/* Removes fcf from current list */
-+		fcoe_sysfs_fcf_del(fcf);
-+	}
-+
- 	if (sel_time && !fip->sel_fcf && !fip->sel_time) {
- 		sel_time += msecs_to_jiffies(FCOE_CTLR_START_DELAY);
- 		fip->sel_time = sel_time;
-@@ -903,23 +985,23 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	interface = bnx2fc_interface_lookup(netdev);
+-	if (!interface || !interface->ctlr.lp) {
++	ctlr = bnx2fc_to_ctlr(interface);
++	if (!interface || !ctlr->lp) {
+ 		rc = -ENODEV;
+ 		printk(KERN_ERR PFX "bnx2fc_destroy: interface or lport not found\n");
+ 		goto netdev_err;
+@@ -1647,6 +1669,7 @@ static void bnx2fc_ulp_start(void *handle)
  {
- 	struct fcoe_fcf *fcf;
- 	struct fcoe_fcf new;
--	struct fcoe_fcf *found;
- 	unsigned long sol_tov = msecs_to_jiffies(FCOE_CTRL_SOL_TOV);
- 	int first = 0;
- 	int mtu_valid;
-+	int found = 0;
-+	int rc = 0;
+ 	struct bnx2fc_hba *hba = handle;
+ 	struct bnx2fc_interface *interface;
++	struct fcoe_ctlr *ctlr;
+ 	struct fc_lport *lport;
  
- 	if (fcoe_ctlr_parse_adv(fip, skb, &new))
+ 	mutex_lock(&bnx2fc_dev_lock);
+@@ -1658,7 +1681,8 @@ static void bnx2fc_ulp_start(void *handle)
+ 
+ 	list_for_each_entry(interface, &if_list, list) {
+ 		if (interface->hba == hba) {
+-			lport = interface->ctlr.lp;
++			ctlr = bnx2fc_to_ctlr(interface);
++			lport = ctlr->lp;
+ 			/* Kick off Fabric discovery*/
+ 			printk(KERN_ERR PFX "ulp_init: start discovery\n");
+ 			lport->tt.frame_send = bnx2fc_xmit;
+@@ -1678,13 +1702,14 @@ static void bnx2fc_port_shutdown(struct fc_lport *lport)
+ 
+ static void bnx2fc_stop(struct bnx2fc_interface *interface)
+ {
++	struct fcoe_ctlr *ctlr = bnx2fc_to_ctlr(interface);
+ 	struct fc_lport *lport;
+ 	struct fc_lport *vport;
+ 
+ 	if (!test_bit(BNX2FC_FLAG_FW_INIT_DONE, &interface->hba->flags))
  		return;
  
- 	mutex_lock(&fip->ctlr_mutex);
- 	first = list_empty(&fip->fcfs);
--	found = NULL;
- 	list_for_each_entry(fcf, &fip->fcfs, list) {
- 		if (fcf->switch_name == new.switch_name &&
- 		    fcf->fabric_name == new.fabric_name &&
- 		    fcf->fc_map == new.fc_map &&
- 		    compare_ether_addr(fcf->fcf_mac, new.fcf_mac) == 0) {
--			found = fcf;
-+			found = 1;
- 			break;
- 		}
- 	}
-@@ -931,9 +1013,16 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
- 		if (!fcf)
- 			goto out;
+-	lport = interface->ctlr.lp;
++	lport = ctlr->lp;
+ 	bnx2fc_port_shutdown(lport);
  
--		fip->fcf_count++;
- 		memcpy(fcf, &new, sizeof(new));
--		list_add(&fcf->list, &fip->fcfs);
-+		fcf->fip = fip;
-+		rc = fcoe_sysfs_fcf_add(fcf);
-+		if (rc) {
-+			printk(KERN_ERR "Failed to allocate sysfs instance "
-+			       "for FCF, fab %16.16llx mac %pM\n",
-+			       new.fabric_name, new.fcf_mac);
-+			kfree(fcf);
-+			goto out;
-+		}
+ 	mutex_lock(&lport->lp_mutex);
+@@ -1693,7 +1718,7 @@ static void bnx2fc_stop(struct bnx2fc_interface *interface)
+ 					FC_PORTTYPE_UNKNOWN;
+ 	mutex_unlock(&lport->lp_mutex);
+ 	fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
+-	fcoe_ctlr_link_down(&interface->ctlr);
++	fcoe_ctlr_link_down(ctlr);
+ 	fcoe_clean_pending_queue(lport);
+ }
+ 
+@@ -1805,6 +1830,7 @@ exit:
+ 
+ static void bnx2fc_start_disc(struct bnx2fc_interface *interface)
+ {
++	struct fcoe_ctlr *ctlr = bnx2fc_to_ctlr(interface);
+ 	struct fc_lport *lport;
+ 	int wait_cnt = 0;
+ 
+@@ -1815,18 +1841,18 @@ static void bnx2fc_start_disc(struct bnx2fc_interface *interface)
+ 		return;
+ 	}
+ 
+-	lport = interface->ctlr.lp;
++	lport = ctlr->lp;
+ 	BNX2FC_HBA_DBG(lport, "calling fc_fabric_login\n");
+ 
+ 	if (!bnx2fc_link_ok(lport) && interface->enabled) {
+ 		BNX2FC_HBA_DBG(lport, "ctlr_link_up\n");
+-		fcoe_ctlr_link_up(&interface->ctlr);
++		fcoe_ctlr_link_up(ctlr);
+ 		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
+ 		set_bit(ADAPTER_STATE_READY, &interface->hba->adapter_state);
+ 	}
+ 
+ 	/* wait for the FCF to be selected before issuing FLOGI */
+-	while (!interface->ctlr.sel_fcf) {
++	while (!ctlr->sel_fcf) {
+ 		msleep(250);
+ 		/* give up after 3 secs */
+ 		if (++wait_cnt > 12)
+@@ -1890,19 +1916,21 @@ static void bnx2fc_ulp_init(struct cnic_dev *dev)
+ static int bnx2fc_disable(struct net_device *netdev)
+ {
+ 	struct bnx2fc_interface *interface;
++	struct fcoe_ctlr *ctlr;
+ 	int rc = 0;
+ 
+ 	rtnl_lock();
+ 	mutex_lock(&bnx2fc_dev_lock);
+ 
+ 	interface = bnx2fc_interface_lookup(netdev);
+-	if (!interface || !interface->ctlr.lp) {
++	ctlr = bnx2fc_to_ctlr(interface);
++	if (!interface || !ctlr->lp) {
+ 		rc = -ENODEV;
+ 		printk(KERN_ERR PFX "bnx2fc_disable: interface or lport not found\n");
  	} else {
- 		/*
- 		 * Update the FCF's keep-alive descriptor flags.
-@@ -954,6 +1043,7 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
- 		fcf->fka_period = new.fka_period;
- 		memcpy(fcf->fcf_mac, new.fcf_mac, ETH_ALEN);
+ 		interface->enabled = false;
+-		fcoe_ctlr_link_down(&interface->ctlr);
+-		fcoe_clean_pending_queue(interface->ctlr.lp);
++		fcoe_ctlr_link_down(ctlr);
++		fcoe_clean_pending_queue(ctlr->lp);
  	}
-+
- 	mtu_valid = fcoe_ctlr_mtu_valid(fcf);
- 	fcf->time = jiffies;
- 	if (!found)
-@@ -996,6 +1086,7 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
- 		    time_before(fip->sel_time, fip->timer.expires))
- 			mod_timer(&fip->timer, fip->sel_time);
+ 
+ 	mutex_unlock(&bnx2fc_dev_lock);
+@@ -1914,17 +1942,19 @@ static int bnx2fc_disable(struct net_device *netdev)
+ static int bnx2fc_enable(struct net_device *netdev)
+ {
+ 	struct bnx2fc_interface *interface;
++	struct fcoe_ctlr *ctlr;
+ 	int rc = 0;
+ 
+ 	rtnl_lock();
+ 	mutex_lock(&bnx2fc_dev_lock);
+ 
+ 	interface = bnx2fc_interface_lookup(netdev);
+-	if (!interface || !interface->ctlr.lp) {
++	ctlr = bnx2fc_to_ctlr(interface);
++	if (!interface || !ctlr->lp) {
+ 		rc = -ENODEV;
+ 		printk(KERN_ERR PFX "bnx2fc_enable: interface or lport not found\n");
+-	} else if (!bnx2fc_link_ok(interface->ctlr.lp)) {
+-		fcoe_ctlr_link_up(&interface->ctlr);
++	} else if (!bnx2fc_link_ok(ctlr->lp)) {
++		fcoe_ctlr_link_up(ctlr);
+ 		interface->enabled = true;
  	}
-+
- out:
- 	mutex_unlock(&fip->ctlr_mutex);
- }
-@@ -2712,9 +2803,9 @@ unlock:
  
- /**
-  * fcoe_libfc_config() - Sets up libfc related properties for local port
-- * @lp: The local port to configure libfc for
-- * @fip: The FCoE controller in use by the local port
-- * @tt: The libfc function template
-+ * @lport:    The local port to configure libfc for
-+ * @fip:      The FCoE controller in use by the local port
-+ * @tt:       The libfc function template
-  * @init_fcp: If non-zero, the FCP portion of libfc should be initialized
-  *
-  * Returns : 0 for success
-@@ -2747,3 +2838,43 @@ int fcoe_libfc_config(struct fc_lport *lport, struct fcoe_ctlr *fip,
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(fcoe_libfc_config);
-+
-+void fcoe_fcf_get_selected(struct fcoe_fcf_attrs *fcf_attrs)
-+{
-+	struct fcoe_ctlr_attrs *ctlr_attrs = fcoe_fcf_to_ctlr(fcf_attrs);
-+	struct fcoe_ctlr *fip = fcoe_ctlr_attrs_priv(ctlr_attrs);
-+	struct fcoe_fcf *fcf;
-+
-+	mutex_lock(&fip->ctlr_mutex);
-+	mutex_lock(&ctlr_attrs->lock);
-+
-+	fcf = fcoe_fcf_attrs_priv(fcf_attrs);
-+	if (fcf)
-+		fcf_attrs->selected = (fcf == fip->sel_fcf) ? 1 : 0;
-+	else
-+		fcf_attrs->selected = 0;
-+
-+	mutex_unlock(&ctlr_attrs->lock);
-+	mutex_unlock(&fip->ctlr_mutex);
-+}
-+EXPORT_SYMBOL(fcoe_fcf_get_selected);
-+
-+void fcoe_ctlr_get_fip_mode(struct fcoe_ctlr_attrs *ctlr_attrs)
-+{
-+	struct fcoe_ctlr *ctlr = fcoe_ctlr_attrs_priv(ctlr_attrs);
-+
-+	mutex_lock(&ctlr->ctlr_mutex);
-+	switch (ctlr->mode) {
-+	case FIP_MODE_FABRIC:
-+		ctlr_attrs->mode = FIP_CONN_TYPE_FABRIC;
-+		break;
-+	case FIP_MODE_VN2VN:
-+		ctlr_attrs->mode = FIP_CONN_TYPE_VN2VN;
-+		break;
-+	default:
-+		ctlr_attrs->mode = FIP_CONN_TYPE_UNKNOWN;
-+		break;
-+	}
-+	mutex_unlock(&ctlr->ctlr_mutex);
-+}
-+EXPORT_SYMBOL(fcoe_ctlr_get_fip_mode);
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 7b93f21..d46ac6e 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -168,9 +168,16 @@ static inline void *fcoe_ctlr_priv(const struct fcoe_ctlr *ctlr)
- 	return (void *)(ctlr + 1);
- }
- 
-+#define ctlr_to_ctlr_attrs(x)						\
-+	(struct fcoe_ctlr_attrs *)(((struct fcoe_ctlr_attrs *)(x)) - 1)
-+
- /**
-  * struct fcoe_fcf - Fibre-Channel Forwarder
-  * @list:	 list linkage
-+ * @event_work:  Work for FC Transport actions queue
-+ * @event:       The event to be processed
-+ * @fip:         The controller that the FCF was discovered on
-+ * @fcf_attrs:   The associated fcoe_fcf_attrs instance
-  * @time:	 system time (jiffies) when an advertisement was last received
-  * @switch_name: WWN of switch from advertisement
-  * @fabric_name: WWN of fabric from advertisement
-@@ -192,6 +199,9 @@ static inline void *fcoe_ctlr_priv(const struct fcoe_ctlr *ctlr)
+@@ -1945,6 +1975,7 @@ static int bnx2fc_enable(struct net_device *netdev)
   */
- struct fcoe_fcf {
- 	struct list_head list;
-+	struct work_struct event_work;
-+	struct fcoe_ctlr *fip;
-+	struct fcoe_fcf_attrs *fcf_attrs;
- 	unsigned long time;
+ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
+ {
++	struct fcoe_ctlr *ctlr;
+ 	struct bnx2fc_interface *interface;
+ 	struct bnx2fc_hba *hba;
+ 	struct net_device *phys_dev;
+@@ -2011,6 +2042,7 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
+ 		goto ifput_err;
+ 	}
  
- 	u64 switch_name;
-@@ -208,6 +218,9 @@ struct fcoe_fcf {
- 	u8 fd_flags:1;
- };
++	ctlr = bnx2fc_to_ctlr(interface);
+ 	interface->vlan_id = vlan_id;
+ 	interface->vlan_enabled = 1;
  
-+#define fcf_to_fcf_attrs(x)			\
-+	((x)->fcf_attrs)
-+
- /**
-  * struct fcoe_rport - VN2VN remote port
-  * @time:	time of create or last beacon packet received from node
-@@ -343,6 +356,10 @@ void fcoe_queue_timer(ulong lport);
- int fcoe_get_paged_crc_eof(struct sk_buff *skb, int tlen,
- 			   struct fcoe_percpu_s *fps);
+@@ -2036,10 +2068,10 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
+ 	lport->boot_time = jiffies;
  
-+/* FCoE Sysfs helpers */
-+void fcoe_fcf_get_selected(struct fcoe_fcf_attrs *);
-+void fcoe_ctlr_get_fip_mode(struct fcoe_ctlr_attrs *);
-+
- /**
-  * struct netdev_list
-  * A mapping from netdevice to fcoe_transport
+ 	/* Make this master N_port */
+-	interface->ctlr.lp = lport;
++	ctlr->lp = lport;
+ 
+ 	if (!bnx2fc_link_ok(lport)) {
+-		fcoe_ctlr_link_up(&interface->ctlr);
++		fcoe_ctlr_link_up(ctlr);
+ 		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
+ 		set_bit(ADAPTER_STATE_READY, &interface->hba->adapter_state);
+ 	}
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index 1923a25..6aa6508 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -167,6 +167,7 @@ int bnx2fc_send_session_ofld_req(struct fcoe_port *port,
+ {
+ 	struct fc_lport *lport = port->lport;
+ 	struct bnx2fc_interface *interface = port->priv;
++	struct fcoe_ctlr *ctlr = bnx2fc_to_ctlr(interface);
+ 	struct bnx2fc_hba *hba = interface->hba;
+ 	struct kwqe *kwqe_arr[4];
+ 	struct fcoe_kwqe_conn_offload1 ofld_req1;
+@@ -314,13 +315,13 @@ int bnx2fc_send_session_ofld_req(struct fcoe_port *port,
+ 	ofld_req4.src_mac_addr_mid[1] =  port->data_src_addr[2];
+ 	ofld_req4.src_mac_addr_hi[0] =  port->data_src_addr[1];
+ 	ofld_req4.src_mac_addr_hi[1] =  port->data_src_addr[0];
+-	ofld_req4.dst_mac_addr_lo[0] =  interface->ctlr.dest_addr[5];
++	ofld_req4.dst_mac_addr_lo[0] =  ctlr->dest_addr[5];
+ 							/* fcf mac */
+-	ofld_req4.dst_mac_addr_lo[1] =  interface->ctlr.dest_addr[4];
+-	ofld_req4.dst_mac_addr_mid[0] =  interface->ctlr.dest_addr[3];
+-	ofld_req4.dst_mac_addr_mid[1] =  interface->ctlr.dest_addr[2];
+-	ofld_req4.dst_mac_addr_hi[0] =  interface->ctlr.dest_addr[1];
+-	ofld_req4.dst_mac_addr_hi[1] =  interface->ctlr.dest_addr[0];
++	ofld_req4.dst_mac_addr_lo[1] = ctlr->dest_addr[4];
++	ofld_req4.dst_mac_addr_mid[0] = ctlr->dest_addr[3];
++	ofld_req4.dst_mac_addr_mid[1] = ctlr->dest_addr[2];
++	ofld_req4.dst_mac_addr_hi[0] = ctlr->dest_addr[1];
++	ofld_req4.dst_mac_addr_hi[1] = ctlr->dest_addr[0];
+ 
+ 	ofld_req4.lcq_addr_lo = (u32) tgt->lcq_dma;
+ 	ofld_req4.lcq_addr_hi = (u32)((u64) tgt->lcq_dma >> 32);
+@@ -351,6 +352,7 @@ static int bnx2fc_send_session_enable_req(struct fcoe_port *port,
+ {
+ 	struct kwqe *kwqe_arr[2];
+ 	struct bnx2fc_interface *interface = port->priv;
++	struct fcoe_ctlr *ctlr = bnx2fc_to_ctlr(interface);
+ 	struct bnx2fc_hba *hba = interface->hba;
+ 	struct fcoe_kwqe_conn_enable_disable enbl_req;
+ 	struct fc_lport *lport = port->lport;
+@@ -374,12 +376,12 @@ static int bnx2fc_send_session_enable_req(struct fcoe_port *port,
+ 	enbl_req.src_mac_addr_hi[1] =  port->data_src_addr[0];
+ 	memcpy(tgt->src_addr, port->data_src_addr, ETH_ALEN);
+ 
+-	enbl_req.dst_mac_addr_lo[0] =  interface->ctlr.dest_addr[5];
+-	enbl_req.dst_mac_addr_lo[1] =  interface->ctlr.dest_addr[4];
+-	enbl_req.dst_mac_addr_mid[0] =  interface->ctlr.dest_addr[3];
+-	enbl_req.dst_mac_addr_mid[1] =  interface->ctlr.dest_addr[2];
+-	enbl_req.dst_mac_addr_hi[0] =  interface->ctlr.dest_addr[1];
+-	enbl_req.dst_mac_addr_hi[1] =  interface->ctlr.dest_addr[0];
++	enbl_req.dst_mac_addr_lo[0] =  ctlr->dest_addr[5];
++	enbl_req.dst_mac_addr_lo[1] =  ctlr->dest_addr[4];
++	enbl_req.dst_mac_addr_mid[0] = ctlr->dest_addr[3];
++	enbl_req.dst_mac_addr_mid[1] = ctlr->dest_addr[2];
++	enbl_req.dst_mac_addr_hi[0] = ctlr->dest_addr[1];
++	enbl_req.dst_mac_addr_hi[1] = ctlr->dest_addr[0];
+ 
+ 	port_id = fc_host_port_id(lport->host);
+ 	if (port_id != tgt->sid) {
+@@ -419,6 +421,7 @@ int bnx2fc_send_session_disable_req(struct fcoe_port *port,
+ 				    struct bnx2fc_rport *tgt)
+ {
+ 	struct bnx2fc_interface *interface = port->priv;
++	struct fcoe_ctlr *ctlr = bnx2fc_to_ctlr(interface);
+ 	struct bnx2fc_hba *hba = interface->hba;
+ 	struct fcoe_kwqe_conn_enable_disable disable_req;
+ 	struct kwqe *kwqe_arr[2];
+@@ -440,12 +443,12 @@ int bnx2fc_send_session_disable_req(struct fcoe_port *port,
+ 	disable_req.src_mac_addr_hi[0] =  tgt->src_addr[1];
+ 	disable_req.src_mac_addr_hi[1] =  tgt->src_addr[0];
+ 
+-	disable_req.dst_mac_addr_lo[0] =  interface->ctlr.dest_addr[5];
+-	disable_req.dst_mac_addr_lo[1] =  interface->ctlr.dest_addr[4];
+-	disable_req.dst_mac_addr_mid[0] =  interface->ctlr.dest_addr[3];
+-	disable_req.dst_mac_addr_mid[1] =  interface->ctlr.dest_addr[2];
+-	disable_req.dst_mac_addr_hi[0] =  interface->ctlr.dest_addr[1];
+-	disable_req.dst_mac_addr_hi[1] =  interface->ctlr.dest_addr[0];
++	disable_req.dst_mac_addr_lo[0] =  ctlr->dest_addr[5];
++	disable_req.dst_mac_addr_lo[1] =  ctlr->dest_addr[4];
++	disable_req.dst_mac_addr_mid[0] = ctlr->dest_addr[3];
++	disable_req.dst_mac_addr_mid[1] = ctlr->dest_addr[2];
++	disable_req.dst_mac_addr_hi[0] = ctlr->dest_addr[1];
++	disable_req.dst_mac_addr_hi[1] = ctlr->dest_addr[0];
+ 
+ 	port_id = tgt->sid;
+ 	disable_req.s_id[0] = (port_id & 0x000000FF);
 
