@@ -1,67 +1,37 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: qla2xxx: Add LLD target-mode infrastructure for >= 24xx series
-Date: Tue, 13 Mar 2012 20:20:45 +0300
-Message-ID: <20120313172044.GD31808@elgon.mountain>
+Subject: [patch] tcm_qla2xxx: checking for NULL instead of IS_ERR()
+Date: Tue, 13 Mar 2012 20:21:19 +0300
+Message-ID: <20120313172119.GE31808@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:47747 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758366Ab2CMRU4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Mar 2012 13:20:56 -0400
+Received: from acsinet15.oracle.com ([141.146.126.227]:19639 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758545Ab2CMRVe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Mar 2012 13:21:34 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Hello Nicholas,
+target_fabric_configfs_init() never returns NULLs, only ERR_PTRs.
 
-The patch 962f988d031f: "qla2xxx: Add LLD target-mode infrastructure 
-for >= 24xx series" from Mar 8, 2012, leads to the following Smatch
-warning:
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-drivers/scsi/qla2xxx/qla_target.c:3207 qla_tgt_handle_srr_work()
-	 error: potential null derefence 'vha'.
-
-
-drivers/scsi/qla2xxx/qla_target.c
-  3198                  imm = NULL;
-  3199                  list_for_each_entry_safe(i, ti, &tgt->srr_imm_list,
-  3200                                                  srr_list_entry) {
-  3201                          if (i->srr_id == sctio->srr_id) {
-  3202                                  list_del(&i->srr_list_entry);
-  3203                                  if (imm) {
-  3204                                          printk(KERN_ERR "qla_target(%d): There must "
-  3205                                            "be only one IMM SRR per CTIO SRR "
-  3206                                            "(IMM SRR %p, id %d, CTIO %p\n",
-  3207                                            vha->vp_idx, i, i->srr_id, sctio);
-                                                  ^^^
-It looks like "vha" might not be initialized yet.
-
-  3208                                          qla_tgt_reject_free_srr_imm(vha, i, 0);
-  3209                                  } else
-  3210                                          imm = i;
-  3211                          }
-  3212                  }
-  3213  
-  3214                  ql_dbg(ql_dbg_tgt_mgt, tgt->vha, 0xe12f, "IMM SRR %p, CTIO SRR %p (id %d)\n",
-  3215                          imm, sctio, sctio->srr_id);
-  3216  
-  3217                  if (imm == NULL) {
-  3218                          ql_dbg(ql_dbg_tgt_mgt, tgt->vha, 0xe130, "Not found matching IMM"
-  3219                                  " for SRR CTIO (id %d)\n", sctio->srr_id);
-  3220                          continue;
-  3221                  } else
-  3222                          list_del(&sctio->srr_list_entry);
-  3223  
-  3224                  spin_unlock_irqrestore(&tgt->srr_lock, flags);
-  3225  
-  3226                  cmd = sctio->cmd;
-  3227                  vha = cmd->vha;
-                        ^^^
-It gets set here.
-
-regards,
-dan carpenter
-
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index dcbcedc..08cf507 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1885,9 +1885,9 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	 * Register the top level struct config_item_type for NPIV with TCM core
+ 	 */
+ 	npiv_fabric = target_fabric_configfs_init(THIS_MODULE, "qla2xxx_npiv");
+-	if (!npiv_fabric) {
++	if (IS_ERR(npiv_fabric)) {
+ 		pr_err("target_fabric_configfs_init() failed\n");
+-		ret = -ENOMEM;
++		ret = PTR_ERR(npiv_fabric);
+ 		goto out_fabric;
+ 	}
+ 	/*
