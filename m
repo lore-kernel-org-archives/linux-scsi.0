@@ -1,33 +1,58 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/7] block: Make blkdev_issue_zeroout use WRITE SAME
-Date: Mon, 12 Mar 2012 22:30:05 -0400
-Message-ID: <yq1zkblb5ci.fsf@sermon.lab.mkp.net>
-References: <1330658571-12958-1-git-send-email-martin.petersen@oracle.com>
-	<1330658571-12958-4-git-send-email-martin.petersen@oracle.com>
-	<4F5A467D.1000703@redhat.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 0/4] FCoE Sysfs
+Date: Mon, 12 Mar 2012 21:56:27 -0700
+Message-ID: <20120313045627.GA15426@kroah.com>
+References: <20120312230915.10580.52548.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30412 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022Ab2CMCaX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Mar 2012 22:30:23 -0400
-In-Reply-To: <4F5A467D.1000703@redhat.com> (Paolo Bonzini's message of "Fri,
-	09 Mar 2012 19:05:49 +0100")
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48788 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757174Ab2CME4c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Mar 2012 00:56:32 -0400
+Received: by iagz16 with SMTP id z16so258882iag.19
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Mar 2012 21:56:31 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20120312230915.10580.52548.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, vgoyal@redhat.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+To: Robert Love <robert.w.love@intel.com>
+Cc: linux-scsi@vger.kernel.org, james.smart@emulex.com, giridhar.malavali@qlogic.com
 
->>>>> "Paolo" == Paolo Bonzini <pbonzini@redhat.com> writes:
+On Mon, Mar 12, 2012 at 04:09:15PM -0700, Robert Love wrote:
+> This patch series adds a sysfs layer to libfcoe. It adds
+> a sysfs instance for FIP controllers (a SW entity) and
+> discovered Fibre Channel Forwarders (FCFs), which are
+> simply FCoE switches.
+> 
+> The new sysfs code is used by any driver that currently
+> uses libfcoe, namely fcoe.ko and bnx2fc_fcoe.ko. Any other
+> FCoE capable device that wishes to use the high-level APIs
+> defined in fcoe_syfs.h may, without having to use the
+> the protocol processing portions of libfcoe.
+> 
+> The code borrows heavily from the FC Transport, but is
+> less complicated because it does not need to interact
+> with the SCSI layer directly.
+> 
+> I think one thing to consider with this series is that
+> drivers, such as traditional HBAs, which wish to use
+> this infrastructure will now need to depend on libfcoe.ko.
+> It was either this or create a superfluous kernel module;
+> I think libfcoe is an appropriate place for this code.
+> 
+> This series was created against scsi-misc + 9 patches
+> mailed by me to linux-scsi on 03/09/12. (Note that 10
+> patches were mailed, but that patch 01/10 will be dropped)
+> 
+> I'm not sure if there's somewhere I should cross-post
+> this for general sysfs review. I don't think I'm doing
+> anything odd; I added Greg K-H to the CC list to try and
+> get some sysfs eyes on this code.
 
-Paolo> Why not try DISCARD first if lbprz is true and the alignment is
-Paolo> okay?  This doesn't even require WRITE SAME support in the disk.
+As you are adding new sysfs files, please always add the proper
+Documentation/ABI/ files as well.
 
-Because we may want to use WRITE SAME to preallocate or anchor blocks.
+thanks,
 
-If you don't care about block allocation then by all means use
-blkdev_issue_discard().
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+greg k-h
