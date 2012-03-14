@@ -1,191 +1,114 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci PATCH v3 1/4] libata: export ata_port suspend/resume
- infrastructure for sas
-Date: Wed, 14 Mar 2012 00:13:53 -0700
-Message-ID: <20120314071353.7223.5361.stgit@dwillia2-linux.jf.intel.com>
-References: <20120314071312.7223.10946.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci PATCH v3 0/4] isci: suspend/resume support+
+Date: Wed, 14 Mar 2012 00:13:48 -0700
+Message-ID: <20120314071312.7223.10946.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120314071312.7223.10946.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:55280 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751149Ab2CNG6a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Mar 2012 02:58:30 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Reuse ata_port_{suspend|resume}_common for sas.  This path is chosen
-over adding coordination between ata-tranport and sas-transport because
-libsas wants to revalidate the domain at resume-time at the host level.
-It can not validate links have resumed properly until libata has had a
-chance to perform its revalidation, and any sane placing of an ata_port
-in the sas-transport model would delay it's resumption until after the
-host.
+Changes since v2: http://marc.info/?l=linux-scsi&m=133144999728737&w=2
 
-Export the common portion of port suspend/resume (bypass pm_runtime),
-and allow sas to perform these operations asynchronously (similar to the
-libsas async-ata probe implmentation).  Async operation is determined by
-having an external, rather than stack based, location for storing the
-result of the operation.
+This topic has been rebased on top of the libsas topic / scsi-misc:
+http://marc.info/?l=linux-scsi&m=133170574921314&w=2
 
-Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/ata/libata-core.c |   58 ++++++++++++++++++++++++++++++++++++---------
- include/linux/libata.h    |   11 +++++++++
- 2 files changed, 57 insertions(+), 12 deletions(-)
+1/ Fixed handling of the 'device unplugged during suspend' case.
+   sd_remove() sets up an ABBA deadlock with the driver-core device_lock()
+   and async_synchronize_full(), so this version arranges for resume
+   actions to be flushed before attempting removals.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index bd79c8b..a13c36d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5241,16 +5241,20 @@ bool ata_link_offline(struct ata_link *link)
- #ifdef CONFIG_PM
- static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 			       unsigned int action, unsigned int ehi_flags,
--			       int wait)
-+			       int *async)
- {
- 	struct ata_link *link;
- 	unsigned long flags;
--	int rc;
-+	int rc = 0;
- 
- 	/* Previous resume operation might still be in
- 	 * progress.  Wait for PM_PENDING to clear.
- 	 */
- 	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
-+		if (async) {
-+			*async = -EAGAIN;
-+			return 0;
-+		}
- 		ata_port_wait_eh(ap);
- 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
- 	}
-@@ -5259,10 +5263,10 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 	spin_lock_irqsave(ap->lock, flags);
- 
- 	ap->pm_mesg = mesg;
--	if (wait) {
--		rc = 0;
-+	if (async)
-+		ap->pm_result = async;
-+	else
- 		ap->pm_result = &rc;
--	}
- 
- 	ap->pflags |= ATA_PFLAG_PM_PENDING;
- 	ata_for_each_link(link, ap, HOST_FIRST) {
-@@ -5275,7 +5279,7 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
- 	/* wait and check result */
--	if (wait) {
-+	if (!async) {
- 		ata_port_wait_eh(ap);
- 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
- 	}
-@@ -5285,9 +5289,8 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 
- #define to_ata_port(d) container_of(d, struct ata_port, tdev)
- 
--static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
-+static int __ata_port_suspend_common(struct ata_port *ap, pm_message_t mesg, int *async)
- {
--	struct ata_port *ap = to_ata_port(dev);
- 	unsigned int ehi_flags = ATA_EHI_QUIET;
- 	int rc;
- 
-@@ -5302,10 +5305,17 @@ static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
- 	if (mesg.event == PM_EVENT_SUSPEND)
- 		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
- 
--	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, 1);
-+	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, async);
- 	return rc;
- }
- 
-+static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
-+{
-+	struct ata_port *ap = to_ata_port(dev);
-+
-+	return __ata_port_suspend_common(ap, mesg, NULL);
-+}
-+
- static int ata_port_suspend(struct device *dev)
- {
- 	if (pm_runtime_suspended(dev))
-@@ -5330,16 +5340,22 @@ static int ata_port_poweroff(struct device *dev)
- 	return ata_port_suspend_common(dev, PMSG_HIBERNATE);
- }
- 
--static int ata_port_resume_common(struct device *dev)
-+static int __ata_port_resume_common(struct ata_port *ap, int *async)
- {
--	struct ata_port *ap = to_ata_port(dev);
- 	int rc;
- 
- 	rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
--		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
-+		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, async);
- 	return rc;
- }
- 
-+static int ata_port_resume_common(struct device *dev)
-+{
-+	struct ata_port *ap = to_ata_port(dev);
-+
-+	return __ata_port_resume_common(ap, NULL);
-+}
-+
- static int ata_port_resume(struct device *dev)
- {
- 	int rc;
-@@ -5372,6 +5388,24 @@ static const struct dev_pm_ops ata_port_pm_ops = {
- 	.runtime_idle = ata_port_runtime_idle,
- };
- 
-+/* sas ports don't participate in pm runtime management of ata_ports,
-+ * and need to resume ata devices at the domain level, not the per-port
-+ * level. sas suspend/resume is async to allow parallel port recovery
-+ * since sas has multiple ata_port instances per Scsi_Host.
-+ */
-+int ata_sas_port_async_suspend(struct ata_port *ap, int *async)
-+{
-+	return __ata_port_suspend_common(ap, PMSG_SUSPEND, async);
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_async_suspend);
-+
-+int ata_sas_port_async_resume(struct ata_port *ap, int *async)
-+{
-+	return __ata_port_resume_common(ap, async);
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_async_resume);
-+
-+
- /**
-  *	ata_host_suspend - suspend host
-  *	@host: host to suspend
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 83ff256..e2da9c0 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1013,6 +1013,17 @@ extern bool ata_link_offline(struct ata_link *link);
- #ifdef CONFIG_PM
- extern int ata_host_suspend(struct ata_host *host, pm_message_t mesg);
- extern void ata_host_resume(struct ata_host *host);
-+extern int ata_sas_port_async_suspend(struct ata_port *ap, int *async);
-+extern int ata_sas_port_async_resume(struct ata_port *ap, int *async);
-+#else
-+static inline int ata_sas_port_async_suspend(struct ata_port *ap, int *async)
-+{
-+	return 0;
-+}
-+static inline int ata_sas_port_async_resume(struct ata_port *ap, int *async)
-+{
-+	return 0;
-+}
- #endif
- extern int ata_ratelimit(void);
- extern void ata_msleep(struct ata_port *ap, unsigned int msecs);
+2/ Add a new fix for a case where the isci driver inadvertently filters
+   BCNs
 
+3/ Fix up compile breakage in the CONFIG_PM=n case
+
+4/ Minor fixups for the rebase (sas_init_dev reindent collision)
+
+[isci PATCH v3 1/4] libata: export ata_port suspend/resume infrastructure for sas
+[isci PATCH v3 2/4] libsas: drop sata port multiplier infrastructure
+[isci PATCH v3 3/4] libsas: suspend / resume support
+[isci PATCH v3 4/4] isci: enable BCN in sci_port_add_phy()
+
+Full diffstat versus scsi-misc (cd8df93..isci-for-3.4-v3):
+
+Andrzej Jakowski (1):
+      isci: Changes in COMSAS timings enabling ISCI to detect buggy disc drives.
+
+Artur Wojcik (1):
+      isci: implement suspend/resume support
+
+Dan Williams (19):
+      libsas: introduce sas_work to fix sas_drain_work vs sas_queue_work
+      libsas: cleanup spurious calls to scsi_schedule_eh
+      libata, libsas: introduce sched_eh and end_eh port ops
+      libsas: enforce eh strategy handlers only in eh context
+      isci: improve 'invalid state' warnings
+      isci: kill ->is_direct_attached
+      isci: kill sci_phy_protocol and sci_request_protocol
+      isci: kill ->status, and ->state_lock in isci_host
+      isci: kill isci_port.domain_dev_list
+      isci: refactor initialization for S3/S4
+      isci: fix controller stop
+      isci: fix 'link-up' events occur after 'start-complete'
+      isci: fix interrupt disable
+      isci: kill isci_host.shost
+      libata: make ata_print_id atomic
+      libsas: continue revalidation
+      libata: export ata_port suspend/resume infrastructure for sas
+      libsas: drop sata port multiplier infrastructure
+      libsas: suspend / resume support
+
+Jesper Juhl (1):
+      isci: Just #include "host.h" once in host.c
+
+Maciej Trela (1):
+      isci: enable BCN in sci_port_add_phy()
+
+Tom Jackson (1):
+      isci: Don't filter BROADCAST CHANGE primitives
+
+ drivers/ata/libata-core.c                     |   66 +++-
+ drivers/ata/libata-eh.c                       |   57 ++-
+ drivers/ata/libata-scsi.c                     |    4 +-
+ drivers/ata/libata.h                          |    2 +-
+ drivers/scsi/isci/host.c                      |  565 +++++++++----------------
+ drivers/scsi/isci/host.h                      |  118 ++----
+ drivers/scsi/isci/init.c                      |  271 +++++++++++--
+ drivers/scsi/isci/phy.c                       |   74 +++-
+ drivers/scsi/isci/phy.h                       |    9 +-
+ drivers/scsi/isci/port.c                      |   23 +-
+ drivers/scsi/isci/port.h                      |    6 -
+ drivers/scsi/isci/port_config.c               |   18 +-
+ drivers/scsi/isci/probe_roms.c                |   12 -
+ drivers/scsi/isci/probe_roms.h                |    2 -
+ drivers/scsi/isci/registers.h                 |    8 +
+ drivers/scsi/isci/remote_device.c             |   29 +-
+ drivers/scsi/isci/remote_device.h             |    1 -
+ drivers/scsi/isci/remote_node_context.c       |   60 ++--
+ drivers/scsi/isci/request.c                   |   19 +-
+ drivers/scsi/isci/request.h                   |    9 +-
+ drivers/scsi/isci/unsolicited_frame_control.c |   30 +-
+ drivers/scsi/isci/unsolicited_frame_control.h |    6 +-
+ drivers/scsi/libsas/sas_ata.c                 |  149 ++++++--
+ drivers/scsi/libsas/sas_discover.c            |  132 +++++--
+ drivers/scsi/libsas/sas_dump.c                |    1 +
+ drivers/scsi/libsas/sas_event.c               |   40 +-
+ drivers/scsi/libsas/sas_expander.c            |    8 +-
+ drivers/scsi/libsas/sas_init.c                |  129 +++++-
+ drivers/scsi/libsas/sas_internal.h            |    7 +-
+ drivers/scsi/libsas/sas_phy.c                 |   42 ++-
+ drivers/scsi/libsas/sas_port.c                |   67 +++-
+ drivers/scsi/libsas/sas_scsi_host.c           |  153 ++++++-
+ include/linux/libata.h                        |   15 +
+ include/scsi/libsas.h                         |   76 +++-
+ include/scsi/sas.h                            |    1 +
+ include/scsi/sas_ata.h                        |   19 +-
+ 36 files changed, 1409 insertions(+), 819 deletions(-)
