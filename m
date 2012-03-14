@@ -1,8 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [libsas PATCH v11 1/2] libsas: enforce eh strategy handlers only in
- eh context
-Date: Tue, 13 Mar 2012 23:30:18 -0700
-Message-ID: <20120314063018.6772.58856.stgit@dwillia2-linux.jf.intel.com>
+Subject: [libsas PATCH v11 2/2] libsas: fix sas_get_port_device regression
+Date: Tue, 13 Mar 2012 23:30:23 -0700
+Message-ID: <20120314063023.6772.67780.stgit@dwillia2-linux.jf.intel.com>
 References: <20120314062643.6772.79462.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,271 +10,52 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120314062643.6772.79462.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Cc: Tom Jackson <thomas.p.jackson@intel.com>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The strategy handlers may be called in places that are problematic for
-libsas (i.e. sata resets outside of domain revalidation filtering /
-libata link recovery), or problematic for userspace (non-blocking ioctl
-to sleeping reset functions).  However, these routines are also called
-for eh escalations and recovery of scsi_eh_prep_cmnd(), so permit them
-as long as we are running in the host's error handler, otherwise arrange
-for them to be triggered in eh_context.
+Commit 899fcf4 "[SCSI] libsas: set attached device type and target
+protocols for local phys" setup 'phy' to be dereferenced after
+list_for_each_entry(phy, &port->phy_list, port_phy_el) (i.e. phy ==
+&port->phy_list) resulting in reports like:
 
+  BUG: unable to handle kernel NULL pointer dereference at 00000000000002b0
+  IP: [<ffffffffa00ce948>] sas_discover_domain+0x29e/0x4fb [libsas]
+
+...fix by deferring sas_phy_set_target() to the end of
+sas_get_port_device().
+
+Reported-by: Tom Jackson <thomas.p.jackson@intel.com>
+Tested-by: Tom Jackson <thomas.p.jackson@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_discover.c  |   11 +++
- drivers/scsi/libsas/sas_init.c      |    2 +
- drivers/scsi/libsas/sas_scsi_host.c |  121 ++++++++++++++++++++++++++++++++++-
- include/scsi/libsas.h               |   10 +++
- 4 files changed, 140 insertions(+), 4 deletions(-)
+ drivers/scsi/libsas/sas_discover.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index b82949c..c140355 100644
+index c140355..8ab1de6 100644
 --- a/drivers/scsi/libsas/sas_discover.c
 +++ b/drivers/scsi/libsas/sas_discover.c
-@@ -39,6 +39,7 @@ void sas_init_dev(struct domain_device *dev)
- {
- 	switch (dev->dev_type) {
- 	case SAS_END_DEV:
-+		INIT_LIST_HEAD(&dev->ssp_dev.eh_list_node);
- 		break;
- 	case EDGE_DEV:
- 	case FANOUT_DEV:
-@@ -274,6 +275,8 @@ void sas_free_device(struct kref *kref)
+@@ -135,10 +135,6 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 		return -ENODEV;
+ 	}
  
- static void sas_unregister_common_dev(struct asd_sas_port *port, struct domain_device *dev)
- {
-+	struct sas_ha_struct *ha = port->ha;
-+
- 	sas_notify_lldd_dev_gone(dev);
- 	if (!dev->parent)
- 		dev->port->port_dev = NULL;
-@@ -286,6 +289,14 @@ static void sas_unregister_common_dev(struct asd_sas_port *port, struct domain_d
- 		sas_ata_end_eh(dev->sata_dev.ap);
- 	spin_unlock_irq(&port->dev_list_lock);
+-	spin_lock_irq(&port->phy_list_lock);
+-	list_for_each_entry(phy, &port->phy_list, port_phy_el)
+-		sas_phy_set_target(phy, dev);
+-	spin_unlock_irq(&port->phy_list_lock);
+ 	rphy->identify.phy_identifier = phy->phy->identify.phy_identifier;
+ 	memcpy(dev->sas_addr, port->attached_sas_addr, SAS_ADDR_SIZE);
+ 	sas_fill_in_rphy(dev, rphy);
+@@ -165,6 +161,11 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 		spin_unlock_irq(&port->dev_list_lock);
+ 	}
  
-+	spin_lock_irq(&ha->lock);
-+	if (dev->dev_type == SAS_END_DEV &&
-+	    !list_empty(&dev->ssp_dev.eh_list_node)) {
-+		list_del_init(&dev->ssp_dev.eh_list_node);
-+		ha->eh_active--;
-+	}
-+	spin_unlock_irq(&ha->lock);
++	spin_lock_irq(&port->phy_list_lock);
++	list_for_each_entry(phy, &port->phy_list, port_phy_el)
++		sas_phy_set_target(phy, dev);
++	spin_unlock_irq(&port->phy_list_lock);
 +
- 	sas_put_device(dev);
+ 	return 0;
  }
- 
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 6909fef..1bbab3d 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -116,7 +116,9 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
- 	set_bit(SAS_HA_REGISTERED, &sas_ha->state);
- 	spin_lock_init(&sas_ha->lock);
- 	mutex_init(&sas_ha->drain_mutex);
-+	init_waitqueue_head(&sas_ha->eh_wait_q);
- 	INIT_LIST_HEAD(&sas_ha->defer_q);
-+	INIT_LIST_HEAD(&sas_ha->eh_dev_q);
- 
- 	error = sas_register_phys(sas_ha);
- 	if (error) {
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index cd63d80..50a18a6 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -460,14 +460,88 @@ struct sas_phy *sas_get_local_phy(struct domain_device *dev)
- }
- EXPORT_SYMBOL_GPL(sas_get_local_phy);
- 
-+static void sas_wait_eh(struct domain_device *dev)
-+{
-+	struct sas_ha_struct *ha = dev->port->ha;
-+	DEFINE_WAIT(wait);
-+
-+	if (dev_is_sata(dev)) {
-+		ata_port_wait_eh(dev->sata_dev.ap);
-+		return;
-+	}
-+ retry:
-+	spin_lock_irq(&ha->lock);
-+
-+	while (test_bit(SAS_DEV_EH_PENDING, &dev->state)) {
-+		prepare_to_wait(&ha->eh_wait_q, &wait, TASK_UNINTERRUPTIBLE);
-+		spin_unlock_irq(&ha->lock);
-+		schedule();
-+		spin_lock_irq(&ha->lock);
-+	}
-+	finish_wait(&ha->eh_wait_q, &wait);
-+
-+	spin_unlock_irq(&ha->lock);
-+
-+	/* make sure SCSI EH is complete */
-+	if (scsi_host_in_recovery(ha->core.shost)) {
-+		msleep(10);
-+		goto retry;
-+	}
-+}
-+EXPORT_SYMBOL(sas_wait_eh);
-+
-+static int sas_queue_reset(struct domain_device *dev, int reset_type, int lun, int wait)
-+{
-+	struct sas_ha_struct *ha = dev->port->ha;
-+	int scheduled = 0, tries = 100;
-+
-+	/* ata: promote lun reset to bus reset */
-+	if (dev_is_sata(dev)) {
-+		sas_ata_schedule_reset(dev);
-+		if (wait)
-+			sas_ata_wait_eh(dev);
-+		return SUCCESS;
-+	}
-+
-+	while (!scheduled && tries--) {
-+		spin_lock_irq(&ha->lock);
-+		if (!test_bit(SAS_DEV_EH_PENDING, &dev->state) &&
-+		    !test_bit(reset_type, &dev->state)) {
-+			scheduled = 1;
-+			ha->eh_active++;
-+			list_add_tail(&dev->ssp_dev.eh_list_node, &ha->eh_dev_q);
-+			set_bit(SAS_DEV_EH_PENDING, &dev->state);
-+			set_bit(reset_type, &dev->state);
-+			int_to_scsilun(lun, &dev->ssp_dev.reset_lun);
-+			scsi_schedule_eh(ha->core.shost);
-+		}
-+		spin_unlock_irq(&ha->lock);
-+
-+		if (wait)
-+			sas_wait_eh(dev);
-+
-+		if (scheduled)
-+			return SUCCESS;
-+	}
-+
-+	SAS_DPRINTK("%s reset of %s failed\n",
-+		    reset_type == SAS_DEV_LU_RESET ? "LUN" : "Bus",
-+		    dev_name(&dev->rphy->dev));
-+
-+	return FAILED;
-+}
-+
- /* Attempt to send a LUN reset message to a device */
- int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
- {
--	struct domain_device *dev = cmd_to_domain_dev(cmd);
--	struct sas_internal *i =
--		to_sas_internal(dev->port->ha->core.shost->transportt);
--	struct scsi_lun lun;
- 	int res;
-+	struct scsi_lun lun;
-+	struct Scsi_Host *host = cmd->device->host;
-+	struct domain_device *dev = cmd_to_domain_dev(cmd);
-+	struct sas_internal *i = to_sas_internal(host->transportt);
-+
-+	if (current != host->ehandler)
-+		return sas_queue_reset(dev, SAS_DEV_LU_RESET, cmd->device->lun, 0);
- 
- 	int_to_scsilun(cmd->device->lun, &lun);
- 
-@@ -486,8 +560,12 @@ int sas_eh_bus_reset_handler(struct scsi_cmnd *cmd)
- {
- 	struct domain_device *dev = cmd_to_domain_dev(cmd);
- 	struct sas_phy *phy = sas_get_local_phy(dev);
-+	struct Scsi_Host *host = cmd->device->host;
- 	int res;
- 
-+	if (current != host->ehandler)
-+		return sas_queue_reset(dev, SAS_DEV_RESET, 0, 0);
-+
- 	res = sas_phy_reset(phy, 1);
- 	if (res)
- 		SAS_DPRINTK("Bus reset of %s failed 0x%x\n",
-@@ -667,6 +745,39 @@ static void sas_eh_handle_sas_errors(struct Scsi_Host *shost, struct list_head *
- 	goto out;
- }
- 
-+static void sas_eh_handle_resets(struct Scsi_Host *shost)
-+{
-+	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
-+	struct sas_internal *i = to_sas_internal(shost->transportt);
-+
-+	/* handle directed resets to sas devices */
-+	spin_lock_irq(&ha->lock);
-+	while (!list_empty(&ha->eh_dev_q)) {
-+		struct domain_device *dev;
-+		struct ssp_device *ssp;
-+
-+		ssp = list_entry(ha->eh_dev_q.next, typeof(*ssp), eh_list_node);
-+		list_del_init(&ssp->eh_list_node);
-+		dev = container_of(ssp, typeof(*dev), ssp_dev);
-+		kref_get(&dev->kref);
-+		WARN_ONCE(dev_is_sata(dev), "ssp reset to ata device?\n");
-+
-+		spin_unlock_irq(&ha->lock);
-+
-+		if (test_and_clear_bit(SAS_DEV_LU_RESET, &dev->state))
-+			i->dft->lldd_lu_reset(dev, ssp->reset_lun.scsi_lun);
-+
-+		if (test_and_clear_bit(SAS_DEV_RESET, &dev->state))
-+			i->dft->lldd_I_T_nexus_reset(dev);
-+
-+		sas_put_device(dev);
-+		spin_lock_irq(&ha->lock);
-+		clear_bit(SAS_DEV_EH_PENDING, &dev->state);
-+		ha->eh_active--;
-+	}
-+	spin_unlock_irq(&ha->lock);
-+}
-+
- 
- void sas_scsi_recover_host(struct Scsi_Host *shost)
- {
-@@ -709,6 +820,8 @@ out:
- 	if (ha->lldd_max_execute_num > 1)
- 		wake_up_process(ha->core.queue_thread);
- 
-+	sas_eh_handle_resets(shost);
-+
- 	/* now link into libata eh --- if we have any ata devices */
- 	sas_ata_strategy_handler(shost);
- 
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index c0c94b3..1b14d80 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -174,10 +174,17 @@ struct sata_device {
- 	struct ata_taskfile tf;
- };
- 
-+struct ssp_device {
-+	struct list_head eh_list_node; /* pending a user requested eh action */
-+	struct scsi_lun reset_lun;
-+};
-+
- enum {
- 	SAS_DEV_GONE,
- 	SAS_DEV_DESTROY,
- 	SAS_DEV_EH_PENDING,
-+	SAS_DEV_LU_RESET,
-+	SAS_DEV_RESET,
- };
- 
- struct domain_device {
-@@ -211,6 +218,7 @@ struct domain_device {
-         union {
-                 struct expander_device ex_dev;
-                 struct sata_device     sata_dev; /* STP & directly attached */
-+		struct ssp_device      ssp_dev;
-         };
- 
-         void *lldd_dev;
-@@ -387,6 +395,8 @@ struct sas_ha_struct {
- 	unsigned long	  state;
- 	spinlock_t 	  lock;
- 	int		  eh_active;
-+	wait_queue_head_t eh_wait_q;
-+	struct list_head  eh_dev_q;
- 
- 	struct mutex disco_mutex;
  
 
