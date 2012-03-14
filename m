@@ -1,63 +1,104 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [isci PATCH v3 3/4] libsas: suspend / resume support
-Date: Wed, 14 Mar 2012 10:21:23 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1203141010470.1644-100000@iolanthe.rowland.org>
-References: <20120314071403.7223.82124.stgit@dwillia2-linux.jf.intel.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [Lsf-pc] [Topic] Bcache
+Date: Wed, 14 Mar 2012 11:53:39 -0400
+Message-ID: <20120314155339.GC30235@redhat.com>
+References: <20120314133228.GA2284@dhcp-172-18-216-138.mtv.corp.google.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56238 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752988Ab2CNOVY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Mar 2012 10:21:24 -0400
-In-Reply-To: <20120314071403.7223.82124.stgit@dwillia2-linux.jf.intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:30896 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752947Ab2CNPxr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Mar 2012 11:53:47 -0400
+Content-Disposition: inline
+In-Reply-To: <20120314133228.GA2284@dhcp-172-18-216-138.mtv.corp.google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
+To: Kent Overstreet <koverstreet@google.com>
+Cc: lsf-pc@lists.linux-foundation.org, nauman@google.com, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-On Wed, 14 Mar 2012, Dan Williams wrote:
+On Wed, Mar 14, 2012 at 09:32:28AM -0400, Kent Overstreet wrote:
+> I'm already registered to attend, but would it be too late in the
+> process to give a talk? I'd like to give a short talk about bcache, what
+> it does and where it's going (more than just caching).
 
-> libsas power management routines to suspend and recover the sas domain
-> based on a model where the lldd is allowed and expected to be
-> "forgetful".
+[CCing dm-devel list]
 
-What exactly does that mean?  What is there for the lldd to remember?  
-Does it maintain some sort of state information about the devices 
-attached to the links?
+I am curious if you considered writing a device mapper driver for this? If
+yes, why that is not a good choice. It seems to be stacked device and device
+mapper should be good at that. All the configuration through sysfs seems
+little odd to me.
 
-> sas_suspend_ha - disable event processing allowing the lldd to take down
->                  links without concern for causing hotplug events.
->                  Regardless of whether the lldd actually posts link down
->                  messages libsas notifies the lldd that all
->                  domain_devices are gone.
-> 
-> sas_prep_resume_ha - on the way back up before the lldd starts link
->                      training clean out any spurious events that were
->                      generated on the way down, and re-enable event
->                      processing
-> 
-> sas_resume_ha - after the lldd has started and decided that all phys
-> 		have posted link-up events this routine is called to let
-> 		libsas start it's own timeout of any phys that did not
-> 		resume.  After the timeout an lldd can cancel the
->                 phy teardown by posting a link-up event.
-> 
-> Storage for ex_change_count (u16) and phy_change_count (u8) are changed
-> to int so they can be set to -1 to indicate 'invalidated'.
-> 
-> There's a hack added to sas_destruct_devices to workaround a deadlock
-> when a device is removed across the suspend cycle.  sd_remove is called
-> under device_lock() and wants to async_synchronize_full(), while the
-> resume path is running in an async callback and is trying to grab
-> device_lock()... fun ensues.  So we guarantee that async resume actions
-> have been flushed before allowing new invocations of sd_remove.
+On a side note, I was playing with bcache a bit. I tried to register the
+cache device and it crashes. (I guess I should post this on relevant mailing
+list).
 
-Ooh, that doesn't sound like a good way to handle it.  For one thing, 
-it's possible for the resume routine to be called while the caller 
-holds the device-lock for the device being resumed.  It would be best 
-if the resume path defers removal of devices that have disappeared to a 
-different thread.
+# echo /dev/sdc > /sys/fs/bcache/register
 
-Alan Stern
+[ 6758.314093] Pid: 0, comm: kworker/0:1 Not tainted 3.1.0-bcache+ #2
+Hewlett-Packard HP xw6600 Workstation/0A9Ch
+[ 6758.314093] RIP: 0010:[<ffffffff8146625b>]  [<ffffffff8146625b>]
+closure_put+0x5b/0xe0
+[ 6758.314093] RSP: 0018:ffff88013fc83c60  EFLAGS: 00010246
+[ 6758.314093] RAX: 6b6b6b6b6b6b6b6b RBX: ffff8801281204a0 RCX:
+0000000000000000
+[ 6758.314093] RDX: 0000000000000000 RSI: 00000000ffffffff RDI:
+ffff88013906ec48
+[ 6758.314093] RBP: ffff88013fc83c60 R08: 0000000000000000 R09:
+0000000000000001
+[ 6758.314093] R10: 0000000000000000 R11: 0000000000000000 R12:
+0000000000000000
+[ 6758.314093] R13: ffff880130b58560 R14: 0000000000080000 R15:
+0000000000000000
+[ 6758.314093] FS:  0000000000000000(0000) GS:ffff88013fc80000(0000)
+knlGS:0000000000000000
+[ 6758.314093] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[ 6758.314093] CR2: 00007f9becec7000 CR3: 0000000137fe0000 CR4:
+00000000000006e0
+[ 6758.314093] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+0000000000000000
+[ 6758.314093] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
+0000000000000400
+[ 6758.314093] Process kworker/0:1 (pid: 0, threadinfo ffff88013a44a000,
+task ffff88013a458000)
+[ 6758.314093] Stack:
+[ 6758.314093]  ffff88013fc83c80 ffffffff8145ee6d ffffffff00000000
+ffff8801281204a0
+[ 6758.314093]  ffff88013fc83c90 ffffffff81173a9d ffff88013fc83cc0
+ffffffff812d15d3
+[ 6758.314093]  ffff88013a44a000 0000000000000000 ffff8801281204a0
+0000000000080000
+[ 6758.314093] Call Trace:
+[ 6758.314093]  <IRQ> 
+[ 6758.314093]  [<ffffffff8145ee6d>] uuid_endio+0x3d/0x50
+[ 6758.314093]  [<ffffffff81173a9d>] bio_endio+0x1d/0x40
+[ 6758.314093]  [<ffffffff812d15d3>] req_bio_endio+0x83/0xc0
+[ 6758.314093]  [<ffffffff812d4f71>] blk_update_request+0x101/0x5c0
+[ 6758.314093]  [<ffffffff812d51a2>] ? blk_update_request+0x332/0x5c0
+[ 6758.314093]  [<ffffffff812d5461>] blk_update_bidi_request+0x31/0x90
+[ 6758.314093]  [<ffffffff812d54ec>] blk_end_bidi_request+0x2c/0x80
+[ 6758.314093]  [<ffffffff812d5580>] blk_end_request+0x10/0x20
+[ 6758.314093]  [<ffffffff81471b7c>] scsi_io_completion+0x9c/0x5f0
+[ 6758.314093]  [<ffffffff81468940>] scsi_finish_command+0xb0/0xe0
+[ 6758.314093]  [<ffffffff81471965>] scsi_softirq_done+0xa5/0x140
+[ 6758.314093]  [<ffffffff812db70b>] blk_done_softirq+0x7b/0x90
+[ 6758.314093]  [<ffffffff8104fc65>] __do_softirq+0xc5/0x3a0
+[ 6758.314093]  [<ffffffff817f6dac>] call_softirq+0x1c/0x30
+[ 6758.314093]  [<ffffffff8100419d>] do_softirq+0x8d/0xc0
+[ 6758.314093]  [<ffffffff8105027e>] irq_exit+0xae/0xe0
+[ 6758.314093]  [<ffffffff817f74b3>] do_IRQ+0x63/0xe0
+[ 6758.314093]  [<ffffffff817ecc30>] common_interrupt+0x70/0x70
+[ 6758.314093]  <EOI> 
+[ 6758.314093]  [<ffffffff8100a1f6>] ? mwait_idle+0xb6/0x470
+[ 6758.314093]  [<ffffffff8100a1ed>] ? mwait_idle+0xad/0x470
+[ 6758.314093]  [<ffffffff810011df>] cpu_idle+0x8f/0xd0
+[ 6758.314093]  [<ffffffff817da107>] start_secondary+0x1be/0x1c2
+[ 6758.314093] Code: 00 48 8b 50 48 83 e2 08 0f 85 9c 00 00 00 48 8b 50 48
+83 e2 10 0f 85 8d 00 00 00 48 83 78 18 00 75 46 48 8b 40 40 48 85 c0 74 24 
+[ 6758.314093]  8b 50 48 48 c1 ea 04 89 d1 89 f2 83 e1 01 f0 0f c1 50 4c
+83 
+[ 6758.314093] RIP  [<ffffffff8146625b>] closure_put+0x5b/0xe0
+[ 6758.314093]  RSP <ffff88013fc83c60>
 
+Thanks
+Vivek
