@@ -1,61 +1,74 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [libsas PATCH v11 2/2] libsas: fix sas_get_port_device regression
-Date: Tue, 13 Mar 2012 23:30:23 -0700
-Message-ID: <20120314063023.6772.67780.stgit@dwillia2-linux.jf.intel.com>
-References: <20120314062643.6772.79462.stgit@dwillia2-linux.jf.intel.com>
+From: Hu Tao <hutao@cn.fujitsu.com>
+Subject: Re: [PATCH v3 2/2] virtio-scsi: add error handling
+Date: Wed, 14 Mar 2012 14:35:34 +0800
+Message-ID: <20120314063534.GB1750@localhost.localdomain>
+References: <1324296188-3426-1-git-send-email-pbonzini@redhat.com>
+ <1324296188-3426-3-git-send-email-pbonzini@redhat.com>
+ <20120310084806.GB24958@localhost.localdomain>
+ <4F5C9ECF.8060803@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120314062643.6772.79462.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Tom Jackson <thomas.p.jackson@intel.com>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4F5C9ECF.8060803@redhat.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
 
-Commit 899fcf4 "[SCSI] libsas: set attached device type and target
-protocols for local phys" setup 'phy' to be dereferenced after
-list_for_each_entry(phy, &port->phy_list, port_phy_el) (i.e. phy ==
-&port->phy_list) resulting in reports like:
+On Sun, Mar 11, 2012 at 01:47:11PM +0100, Paolo Bonzini wrote:
+> Il 10/03/2012 09:48, Hu Tao ha scritto:
+> > Is there a race here that the cmd may have been already freed (by
+> > virtscsi_complete_free) after waking up from the completion?
+> 
+> Looks right, can you submit with a Signed-off-by?
+> 
 
-  BUG: unable to handle kernel NULL pointer dereference at 00000000000002b0
-  IP: [<ffffffffa00ce948>] sas_discover_domain+0x29e/0x4fb [libsas]
+Here it is:
 
-...fix by deferring sas_phy_set_target() to the end of
-sas_get_port_device().
+Fix a race in tmf path that the cmd may have been already freed
+(by virtscsi_complete_free) after waking up from the completion.
 
-Reported-by: Tom Jackson <thomas.p.jackson@intel.com>
-Tested-by: Tom Jackson <thomas.p.jackson@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Hu Tao <hutao@cn.fujitsu.com>
 ---
- drivers/scsi/libsas/sas_discover.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/virtio_scsi.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index c140355..8ab1de6 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -135,10 +135,6 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 		return -ENODEV;
- 	}
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 3f20678..7cba05d 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -175,7 +175,8 @@ static void virtscsi_complete_free(void *buf)
  
--	spin_lock_irq(&port->phy_list_lock);
--	list_for_each_entry(phy, &port->phy_list, port_phy_el)
--		sas_phy_set_target(phy, dev);
--	spin_unlock_irq(&port->phy_list_lock);
- 	rphy->identify.phy_identifier = phy->phy->identify.phy_identifier;
- 	memcpy(dev->sas_addr, port->attached_sas_addr, SAS_ADDR_SIZE);
- 	sas_fill_in_rphy(dev, rphy);
-@@ -165,6 +161,11 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 		spin_unlock_irq(&port->dev_list_lock);
- 	}
- 
-+	spin_lock_irq(&port->phy_list_lock);
-+	list_for_each_entry(phy, &port->phy_list, port_phy_el)
-+		sas_phy_set_target(phy, dev);
-+	spin_unlock_irq(&port->phy_list_lock);
-+
- 	return 0;
+        if (cmd->comp)
+                complete_all(cmd->comp);
+-       mempool_free(cmd, virtscsi_cmd_pool);
++       else
++               mempool_free(cmd, virtscsi_cmd_pool);
  }
  
-
+ static void virtscsi_ctrl_done(struct virtqueue *vq)
+@@ -305,7 +306,7 @@ out:
+ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+ {
+        DECLARE_COMPLETION_ONSTACK(comp);
+-       int ret;
++       int ret = SUCCESS;
+ 
+        cmd->comp = &comp;
+        ret = virtscsi_kick_cmd(vscsi, vscsi->ctrl_vq, cmd);
+@@ -315,9 +316,10 @@ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+        wait_for_completion(&comp);
+        if (cmd->resp.tmf.response != VIRTIO_SCSI_S_OK &&
+            cmd->resp.tmf.response != VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
+-               return FAILED;
++               ret = FAILED;
+ 
+-       return SUCCESS;
++       mempool_free(cmd, virtscsi_cmd_pool);
++       return ret;
+ }
+ 
+ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+-- 
+1.7.1
