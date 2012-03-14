@@ -1,40 +1,77 @@
-From: <kgudipat@brocade.com>
-Subject: [PATCH 9/9] bfa: Update the driver version to 3.0.23.0
-Date: Tue, 13 Mar 2012 17:41:25 -0700
-Message-ID: <1331685685-22352-1-git-send-email-kgudipat@brocade.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Re: [PATCH] fcoe: Don't hold rtnl_mutex in fcoe_update_src_mac
+Date: Wed, 14 Mar 2012 00:42:05 +0000
+Message-ID: <4F5FE95D.8040408@intel.com>
+References: <bug-42918-11613@https.bugzilla.kernel.org>
+ <20120313225254.5473.92174.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:35026 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759910Ab2CNAlq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Mar 2012 20:41:46 -0400
+Received: from mga14.intel.com ([143.182.124.37]:16756 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757646Ab2CNApR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Mar 2012 20:45:17 -0400
+In-Reply-To: <20120313225254.5473.92174.stgit@localhost6.localdomain6>
+Content-Language: en-US
+Content-ID: <900869DFF3A7324EA0F50D751DF0F245@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
+To: "bvanassche@acm.org" <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "Zou, Yi" <yi.zou@intel.com>
 
-From: Krishna Gudipati <kgudipat@brocade.com>
-
-Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
----
- drivers/scsi/bfa/bfad_drv.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index dc5b9d9..7f74f1d 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -56,7 +56,7 @@
- #ifdef BFA_DRIVER_VERSION
- #define BFAD_DRIVER_VERSION    BFA_DRIVER_VERSION
- #else
--#define BFAD_DRIVER_VERSION    "3.0.2.2"
-+#define BFAD_DRIVER_VERSION    "3.0.23.0"
- #endif
- 
- #define BFAD_PROTO_NAME FCPI_NAME
--- 
-1.7.3.rc1
-
+T24gMDMvMTMvMjAxMiAwMzo1MiBQTSwgUm9iZXJ0IExvdmUgd3JvdGU6DQo+IFRoZSBydG5sX211
+dGV4IHdhcyBoZWxkIHRvIHByb3RlY3QgY2FsbHMgdG8gZGV2X3VjX2FkZA0KPiBhbmQgZGV2X3Vj
+X2RlbC4gSG9sZGluZyBydG5sIGlzIG5vdCByZXF1aXJlZCBhcyB0aG9zZQ0KPiBmdW5jdGlvbnMg
+bWFrZSB1c2Ugb2YgdGhlIG5ldGlmX2FkZHJfbG9jayogQVBJIHRvDQo+IHByb3RlY3QgdGhlIE1B
+QyBjaGFuZ2luZy4NCj4NCj4gVGhpcyBjaGFuZ2UgZml4ZXMgdGhlIGZvbGxvd2luZyByZWdyZXNz
+aW9uIGJ5IHJlbW92aW5nDQo+IHRoZSBydG5sIHVzYWdlIHdoZW4gZmNvZV91cGRhdGVfc3JjX21h
+YyBpcyBjYWxsZWQuDQo+DQo+IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5j
+Z2k/aWQ9NDI5MTgNCj4NCj4gdGhlIGV4aXN0aW5nIGRlcGVuZGVuY3kgY2hhaW4gKGluIHJldmVy
+c2Ugb3JkZXIpIGlzOg0KPg0KPiAtPiAgIzEgKCZmaXAtPmN0bHJfbXV0ZXgpeysuKy4uLn06DQo+
+ICAgICAgICAgWzxjMTA5MWY3MD5dIGxvY2tfYWNxdWlyZSsweDgwLzB4MWIwDQo+ICAgICAgICAg
+WzxjMTQ3NjU1ZD5dIG11dGV4X2xvY2tfbmVzdGVkKzB4NmQvMHgzNDANCj4gICAgICAgICBbPGY4
+OTcwYzMyPl0gZmNvZV9jdGxyX2xpbmtfdXArMHgyMi8weDE4MCBbbGliZmNvZV0NCj4gICAgICAg
+ICBbPGY4OTQ2MjBlPl0gZmNvZV9jcmVhdGUrMHg0N2UvMHg2ZTAgW2Zjb2VdDQo+ICAgICAgICAg
+WzxmODk3M2RkMz5dIGZjb2VfdHJhbnNwb3J0X2NyZWF0ZSsweDE0My8weDI1MCBbbGliZmNvZV0N
+Cj4gICAgICAgICBbPGMxMDUyN2UwPl0gcGFyYW1fYXR0cl9zdG9yZSsweDMwLzB4NjANCj4gICAg
+ICAgICBbPGMxMDUyNjk2Pl0gbW9kdWxlX2F0dHJfc3RvcmUrMHgyNi8weDQwDQo+ICAgICAgICAg
+WzxjMTFhMjAxZT5dIHN5c2ZzX3dyaXRlX2ZpbGUrMHhhZS8weDEwMA0KPiAgICAgICAgIFs8YzEx
+NDQ5ZGY+XSB2ZnNfd3JpdGUrMHg4Zi8weDE2MA0KPiAgICAgICAgIFs8YzExNDRjYmQ+XSBzeXNf
+d3JpdGUrMHgzZC8weDcwDQo+ICAgICAgICAgWzxjMTQ3YTBjND5dIHN5c2NhbGxfY2FsbCsweDcv
+MHhiDQo+DQo+IC0+ICAjMCAocnRubF9tdXRleCl7Ky4rLisufToNCj4gICAgICAgICBbPGMxMDkx
+NjRiPl0gX19sb2NrX2FjcXVpcmUrMHgxNDBiLzB4MTcyMA0KPiAgICAgICAgIFs8YzEwOTFmNzA+
+XSBsb2NrX2FjcXVpcmUrMHg4MC8weDFiMA0KPiAgICAgICAgIFs8YzE0NzY1NWQ+XSBtdXRleF9s
+b2NrX25lc3RlZCsweDZkLzB4MzQwDQo+ICAgICAgICAgWzxjMTNhMTBjND5dIHJ0bmxfbG9jaysw
+eDE0LzB4MjANCj4gICAgICAgICBbPGY4OTQ0NWFjPl0gZmNvZV91cGRhdGVfc3JjX21hYysweDJj
+LzB4YjAgW2Zjb2VdDQo+ICAgICAgICAgWzxmODk3MTcxMj5dIGZjb2VfY3Rscl90aW1lcl93b3Jr
+KzB4NzEyLzB4YjYwIFtsaWJmY29lXQ0KPiAgICAgICAgIFs8YzEwNGZiNjk+XSBwcm9jZXNzX29u
+ZV93b3JrKzB4MTc5LzB4NWQwDQo+ICAgICAgICAgWzxjMTA1MDJmMT5dIHdvcmtlcl90aHJlYWQr
+MHgxMjEvMHgyZDANCj4gICAgICAgICBbPGMxMDU1MGVkPl0ga3RocmVhZCsweDdkLzB4OTANCj4g
+ICAgICAgICBbPGMxNDgxYTgyPl0ga2VybmVsX3RocmVhZF9oZWxwZXIrMHg2LzB4MTANCj4NCj4g
+b3RoZXIgaW5mbyB0aGF0IG1pZ2h0IGhlbHAgdXMgZGVidWcgdGhpczoNCj4NCj4gICBQb3NzaWJs
+ZSB1bnNhZmUgbG9ja2luZyBzY2VuYXJpbzoNCj4NCj4gICAgICAgICBDUFUwICAgICAgICAgICAg
+ICAgICAgICBDUFUxDQo+ICAgICAgICAgLS0tLSAgICAgICAgICAgICAgICAgICAgLS0tLQ0KPiAg
+ICBsb2NrKCZmaXAtPmN0bHJfbXV0ZXgpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIGxvY2socnRubF9tdXRleCk7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+bG9jaygmZmlwLT5jdGxyX211dGV4KTsNCj4gICAgbG9jayhydG5sX211dGV4KTsNCj4NCj4gICAq
+KiogREVBRExPQ0sgKioqDQo+DQo+IFNpZ25lZC1vZmYtYnk6IFJvYmVydCBMb3ZlPHJvYmVydC53
+LmxvdmVAaW50ZWwuY29tPg0KPiAtLS0NCj4gICBkcml2ZXJzL3Njc2kvZmNvZS9mY29lLmMgfCAg
+ICAyIC0tDQo+ICAgMSBmaWxlcyBjaGFuZ2VkLCAwIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25z
+KC0pDQo+DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvZmNvZS9mY29lLmMgYi9kcml2ZXJz
+L3Njc2kvZmNvZS9mY29lLmMNCj4gaW5kZXggZTk1OTk2MC4uODViODIwMyAxMDA2NDQNCj4gLS0t
+IGEvZHJpdmVycy9zY3NpL2Zjb2UvZmNvZS5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9mY29lL2Zj
+b2UuYw0KPiBAQCAtNTM5LDEzICs1MzksMTEgQEAgc3RhdGljIHZvaWQgZmNvZV91cGRhdGVfc3Jj
+X21hYyhzdHJ1Y3QgZmNfbHBvcnQgKmxwb3J0LCB1OCAqYWRkcikNCj4gICAJc3RydWN0IGZjb2Vf
+cG9ydCAqcG9ydCA9IGxwb3J0X3ByaXYobHBvcnQpOw0KPiAgIAlzdHJ1Y3QgZmNvZV9pbnRlcmZh
+Y2UgKmZjb2UgPSBwb3J0LT5wcml2Ow0KPg0KPiAtCXJ0bmxfbG9jaygpOw0KPiAgIAlpZiAoIWlz
+X3plcm9fZXRoZXJfYWRkcihwb3J0LT5kYXRhX3NyY19hZGRyKSkNCj4gICAJCWRldl91Y19kZWwo
+ZmNvZS0+bmV0ZGV2LCBwb3J0LT5kYXRhX3NyY19hZGRyKTsNCj4gICAJaWYgKCFpc196ZXJvX2V0
+aGVyX2FkZHIoYWRkcikpDQo+ICAgCQlkZXZfdWNfYWRkKGZjb2UtPm5ldGRldiwgYWRkcik7DQo+
+ICAgCW1lbWNweShwb3J0LT5kYXRhX3NyY19hZGRyLCBhZGRyLCBFVEhfQUxFTik7DQo+IC0JcnRu
+bF91bmxvY2soKTsNCj4gICB9DQo+DQo+ICAgLyoqDQo+DQpUaGlzIGlzbid0IGdvaW5nIHRvIHdv
+cmsuIFdlIGRvIG5lZWQgcnRubF9sb2NrIHdoZW4gY2FsbGluZyANCmRldl91Y19hZGQvZGVsIHRv
+IGVuc3VyZSB0aGUgZHJpdmVyIGlzbid0IHJlbW92ZWQgd2hpbGUgbWFraW5nIHRoZSANCmNoYW5n
+ZS4gSSBoYXZlIGFuIGFsdGVybmF0aXZlIHBhdGNoIHRoYXQgSSdsbCBwb3N0IGFzIHNvb24gYXMg
+SSBjbGVhbiBpdCANCnVwIGEgYml0Lg0KDQpOYWNrZWQtYnk6IFJvYmVydCBMb3ZlIDxyb2JlcnQu
+dy5sb3ZlQGludGVsLmNvbT4=
