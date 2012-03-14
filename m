@@ -1,74 +1,191 @@
-From: Hu Tao <hutao@cn.fujitsu.com>
-Subject: Re: [PATCH v3 2/2] virtio-scsi: add error handling
-Date: Wed, 14 Mar 2012 14:35:34 +0800
-Message-ID: <20120314063534.GB1750@localhost.localdomain>
-References: <1324296188-3426-1-git-send-email-pbonzini@redhat.com>
- <1324296188-3426-3-git-send-email-pbonzini@redhat.com>
- <20120310084806.GB24958@localhost.localdomain>
- <4F5C9ECF.8060803@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [isci PATCH v3 1/4] libata: export ata_port suspend/resume
+ infrastructure for sas
+Date: Wed, 14 Mar 2012 00:13:53 -0700
+Message-ID: <20120314071353.7223.5361.stgit@dwillia2-linux.jf.intel.com>
+References: <20120314071312.7223.10946.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4F5C9ECF.8060803@redhat.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120314071312.7223.10946.stgit@dwillia2-linux.jf.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Mar 11, 2012 at 01:47:11PM +0100, Paolo Bonzini wrote:
-> Il 10/03/2012 09:48, Hu Tao ha scritto:
-> > Is there a race here that the cmd may have been already freed (by
-> > virtscsi_complete_free) after waking up from the completion?
-> 
-> Looks right, can you submit with a Signed-off-by?
-> 
+Reuse ata_port_{suspend|resume}_common for sas.  This path is chosen
+over adding coordination between ata-tranport and sas-transport because
+libsas wants to revalidate the domain at resume-time at the host level.
+It can not validate links have resumed properly until libata has had a
+chance to perform its revalidation, and any sane placing of an ata_port
+in the sas-transport model would delay it's resumption until after the
+host.
 
-Here it is:
+Export the common portion of port suspend/resume (bypass pm_runtime),
+and allow sas to perform these operations asynchronously (similar to the
+libsas async-ata probe implmentation).  Async operation is determined by
+having an external, rather than stack based, location for storing the
+result of the operation.
 
-Fix a race in tmf path that the cmd may have been already freed
-(by virtscsi_complete_free) after waking up from the completion.
-
-Signed-off-by: Hu Tao <hutao@cn.fujitsu.com>
+Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/virtio_scsi.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/ata/libata-core.c |   58 ++++++++++++++++++++++++++++++++++++---------
+ include/linux/libata.h    |   11 +++++++++
+ 2 files changed, 57 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 3f20678..7cba05d 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -175,7 +175,8 @@ static void virtscsi_complete_free(void *buf)
- 
-        if (cmd->comp)
-                complete_all(cmd->comp);
--       mempool_free(cmd, virtscsi_cmd_pool);
-+       else
-+               mempool_free(cmd, virtscsi_cmd_pool);
- }
- 
- static void virtscsi_ctrl_done(struct virtqueue *vq)
-@@ -305,7 +306,7 @@ out:
- static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index bd79c8b..a13c36d 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5241,16 +5241,20 @@ bool ata_link_offline(struct ata_link *link)
+ #ifdef CONFIG_PM
+ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 			       unsigned int action, unsigned int ehi_flags,
+-			       int wait)
++			       int *async)
  {
-        DECLARE_COMPLETION_ONSTACK(comp);
--       int ret;
-+       int ret = SUCCESS;
+ 	struct ata_link *link;
+ 	unsigned long flags;
+-	int rc;
++	int rc = 0;
  
-        cmd->comp = &comp;
-        ret = virtscsi_kick_cmd(vscsi, vscsi->ctrl_vq, cmd);
-@@ -315,9 +316,10 @@ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
-        wait_for_completion(&comp);
-        if (cmd->resp.tmf.response != VIRTIO_SCSI_S_OK &&
-            cmd->resp.tmf.response != VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
--               return FAILED;
-+               ret = FAILED;
+ 	/* Previous resume operation might still be in
+ 	 * progress.  Wait for PM_PENDING to clear.
+ 	 */
+ 	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
++		if (async) {
++			*async = -EAGAIN;
++			return 0;
++		}
+ 		ata_port_wait_eh(ap);
+ 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+ 	}
+@@ -5259,10 +5263,10 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 	spin_lock_irqsave(ap->lock, flags);
  
--       return SUCCESS;
-+       mempool_free(cmd, virtscsi_cmd_pool);
-+       return ret;
+ 	ap->pm_mesg = mesg;
+-	if (wait) {
+-		rc = 0;
++	if (async)
++		ap->pm_result = async;
++	else
+ 		ap->pm_result = &rc;
+-	}
+ 
+ 	ap->pflags |= ATA_PFLAG_PM_PENDING;
+ 	ata_for_each_link(link, ap, HOST_FIRST) {
+@@ -5275,7 +5279,7 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 	/* wait and check result */
+-	if (wait) {
++	if (!async) {
+ 		ata_port_wait_eh(ap);
+ 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+ 	}
+@@ -5285,9 +5289,8 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 
+ #define to_ata_port(d) container_of(d, struct ata_port, tdev)
+ 
+-static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
++static int __ata_port_suspend_common(struct ata_port *ap, pm_message_t mesg, int *async)
+ {
+-	struct ata_port *ap = to_ata_port(dev);
+ 	unsigned int ehi_flags = ATA_EHI_QUIET;
+ 	int rc;
+ 
+@@ -5302,10 +5305,17 @@ static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
+ 	if (mesg.event == PM_EVENT_SUSPEND)
+ 		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
+ 
+-	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, 1);
++	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, async);
+ 	return rc;
  }
  
- static int virtscsi_device_reset(struct scsi_cmnd *sc)
--- 
-1.7.1
++static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
++{
++	struct ata_port *ap = to_ata_port(dev);
++
++	return __ata_port_suspend_common(ap, mesg, NULL);
++}
++
+ static int ata_port_suspend(struct device *dev)
+ {
+ 	if (pm_runtime_suspended(dev))
+@@ -5330,16 +5340,22 @@ static int ata_port_poweroff(struct device *dev)
+ 	return ata_port_suspend_common(dev, PMSG_HIBERNATE);
+ }
+ 
+-static int ata_port_resume_common(struct device *dev)
++static int __ata_port_resume_common(struct ata_port *ap, int *async)
+ {
+-	struct ata_port *ap = to_ata_port(dev);
+ 	int rc;
+ 
+ 	rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
+-		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
++		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, async);
+ 	return rc;
+ }
+ 
++static int ata_port_resume_common(struct device *dev)
++{
++	struct ata_port *ap = to_ata_port(dev);
++
++	return __ata_port_resume_common(ap, NULL);
++}
++
+ static int ata_port_resume(struct device *dev)
+ {
+ 	int rc;
+@@ -5372,6 +5388,24 @@ static const struct dev_pm_ops ata_port_pm_ops = {
+ 	.runtime_idle = ata_port_runtime_idle,
+ };
+ 
++/* sas ports don't participate in pm runtime management of ata_ports,
++ * and need to resume ata devices at the domain level, not the per-port
++ * level. sas suspend/resume is async to allow parallel port recovery
++ * since sas has multiple ata_port instances per Scsi_Host.
++ */
++int ata_sas_port_async_suspend(struct ata_port *ap, int *async)
++{
++	return __ata_port_suspend_common(ap, PMSG_SUSPEND, async);
++}
++EXPORT_SYMBOL_GPL(ata_sas_port_async_suspend);
++
++int ata_sas_port_async_resume(struct ata_port *ap, int *async)
++{
++	return __ata_port_resume_common(ap, async);
++}
++EXPORT_SYMBOL_GPL(ata_sas_port_async_resume);
++
++
+ /**
+  *	ata_host_suspend - suspend host
+  *	@host: host to suspend
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 83ff256..e2da9c0 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1013,6 +1013,17 @@ extern bool ata_link_offline(struct ata_link *link);
+ #ifdef CONFIG_PM
+ extern int ata_host_suspend(struct ata_host *host, pm_message_t mesg);
+ extern void ata_host_resume(struct ata_host *host);
++extern int ata_sas_port_async_suspend(struct ata_port *ap, int *async);
++extern int ata_sas_port_async_resume(struct ata_port *ap, int *async);
++#else
++static inline int ata_sas_port_async_suspend(struct ata_port *ap, int *async)
++{
++	return 0;
++}
++static inline int ata_sas_port_async_resume(struct ata_port *ap, int *async)
++{
++	return 0;
++}
+ #endif
+ extern int ata_ratelimit(void);
+ extern void ata_msleep(struct ata_port *ap, unsigned int msecs);
+
