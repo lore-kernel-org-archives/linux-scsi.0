@@ -1,47 +1,84 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: linux-next: Tree for Mar 13 (ata)
-Date: Tue, 13 Mar 2012 17:36:50 -0700
-Message-ID: <CAA9_cmf=WzQkDpahv73yBbe1NHTrxV7=K1PToH80K9EY_rzUgg@mail.gmail.com>
-References: <20120313204114.e160849af7dbe5a4b4e5c0ad@canb.auug.org.au>
-	<4F5FB6F0.6050300@xenotime.net>
-	<4F5FBAA3.3080508@pobox.com>
+From: <kgudipat@brocade.com>
+Subject: [PATCH 1/9] bfa: Add fc host issue lip support
+Date: Tue, 13 Mar 2012 17:37:26 -0700
+Message-ID: <1331685446-20724-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4F5FBAA3.3080508@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Randy Dunlap <rdunlap@xenotime.net>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:34845 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932103Ab2CNAiR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Mar 2012 20:38:17 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
 
-On Tue, Mar 13, 2012 at 2:22 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
-> On 03/13/2012 05:06 PM, Randy Dunlap wrote:
->>
->> On 03/13/2012 02:41 AM, Stephen Rothwell wrote:
->>
->>> Hi all,
->>>
->>> Changes since 20120309:
->>
->>
->>
->> on x86_64:
->>
->> ERROR: "ata_sas_port_async_resume" [drivers/scsi/libsas/libsas.ko]
->> undefined!
->> ERROR: "ata_sas_port_async_suspend" [drivers/scsi/libsas/libsas.ko]
->> undefined!
->>
->>
->> # CONFIG_SUSPEND is not set
->> # CONFIG_PM_RUNTIME is not set
->> # CONFIG_ACPI is not set
->
->
-> That sounds like the scsi tree (linux-scsi CC added).
+From: Krishna Gudipati <kgudipat@brocade.com>
 
-That's on me, new suspend/resume support for libsas.  Looks like I
-need stubs for the CONFIG_PM=n case.  Revised patches coming up.
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfad_attr.c |   39 ++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 38 insertions(+), 1 deletions(-)
 
---
-Dan
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index 1938fe0..06310b8 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -442,6 +442,43 @@ bfad_im_vport_create(struct fc_vport *fc_vport, bool disable)
+ 	return status;
+ }
+ 
++int
++bfad_im_issue_fc_host_lip(struct Scsi_Host *shost)
++{
++	struct bfad_im_port_s *im_port =
++			(struct bfad_im_port_s *) shost->hostdata[0];
++	struct bfad_s *bfad = im_port->bfad;
++	struct bfad_hal_comp fcomp;
++	unsigned long flags;
++	uint32_t status;
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	status = bfa_port_disable(&bfad->bfa.modules.port,
++					bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++
++	if (status != BFA_STATUS_OK)
++		return -EIO;
++
++	wait_for_completion(&fcomp.comp);
++	if (fcomp.status != BFA_STATUS_OK)
++		return -EIO;
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	status = bfa_port_enable(&bfad->bfa.modules.port,
++					bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	if (status != BFA_STATUS_OK)
++		return -EIO;
++
++	wait_for_completion(&fcomp.comp);
++	if (fcomp.status != BFA_STATUS_OK)
++		return -EIO;
++
++	return 0;
++}
++
+ static int
+ bfad_im_vport_delete(struct fc_vport *fc_vport)
+ {
+@@ -579,7 +616,7 @@ struct fc_function_template bfad_im_fc_function_template = {
+ 	.show_rport_dev_loss_tmo = 1,
+ 	.get_rport_dev_loss_tmo = bfad_im_get_rport_loss_tmo,
+ 	.set_rport_dev_loss_tmo = bfad_im_set_rport_loss_tmo,
+-
++	.issue_fc_host_lip = bfad_im_issue_fc_host_lip,
+ 	.vport_create = bfad_im_vport_create,
+ 	.vport_delete = bfad_im_vport_delete,
+ 	.vport_disable = bfad_im_vport_disable,
+-- 
+1.7.3.rc1
+
