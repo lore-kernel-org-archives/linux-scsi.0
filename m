@@ -1,104 +1,144 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: Re: [PATCH 3/4] libfcoe: Add fcoe_sysfs
-Date: Wed, 14 Mar 2012 01:19:44 +0000
-Message-ID: <4F5FF22F.2030105@intel.com>
-References: <20120312230915.10580.52548.stgit@localhost6.localdomain6>
- <20120312230931.10580.58845.stgit@localhost6.localdomain6>
- <20120313050013.GB15426@kroah.com>
+From: <kgudipat@brocade.com>
+Subject: [PATCH 3/9] bfa: Serialize the IOC hw semaphore unlock logic.
+Date: Tue, 13 Mar 2012 17:38:56 -0700
+Message-ID: <1331685536-21567-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21617 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759896Ab2CNBTr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Mar 2012 21:19:47 -0400
-In-Reply-To: <20120313050013.GB15426@kroah.com>
-Content-Language: en-US
-Content-ID: <32C103113177644D822921ACD1DEB1CD@intel.com>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:52654 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760180Ab2CNBUn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Mar 2012 21:20:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "james.smart@emulex.com" <james.smart@emulex.com>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
 
-On 03/12/2012 10:00 PM, Greg KH wrote:
-> On Mon, Mar 12, 2012 at 04:09:31PM -0700, Robert Love wrote:
->> +static void fcoe_ctlr_attrs_release(struct device *dev)
->> +{
->> +	struct fcoe_ctlr_attrs *ctlr = dev_to_ctlr(dev);
->> +
->> +	put_device(ctlr->dev.parent);
->> +	ctlr->dev.parent = NULL;
-> You should never have to put a reference count on your parent, nor worry
-> about setting this value to NULL.  Just assign the parent when you
-> register the device, no need to increment it.
+From: Krishna Gudipati <kgudipat@brocade.com>
 
-Cool, I'll make these changes.
+Change details:
+	- Made changes to ensure only the function that comes first will execute
+	  the IOC hw semaphore unlock logic.
+	- Used IOC init sem register to serialize execution of the unlock logic.
 
->> +#define fcoe_ctlr_id(x)				\
->> +	((x)->id)
->> +#define fcoe_ctlr_work_q_name(x)		\
->> +	((x)->work_q_name)
-> <snip>
->
-> Ick, what are all of these for, please don't do that.
->
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfa_ioc.c |   58 ++++++++++++++++++++++++++++++++++---------
+ 1 files changed, 46 insertions(+), 12 deletions(-)
 
-These are only interesting when you look at the macros used to create 
-the show/store handlers for the attributes.
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index eca7ab7..3164f7b 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -97,7 +97,6 @@ static void bfa_ioc_debug_save_ftrc(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_fail_notify(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_pf_fwmismatch(struct bfa_ioc_s *ioc);
+ 
+-
+ /*
+  * IOC state machine definitions/declarations
+  */
+@@ -738,26 +737,60 @@ static void
+ bfa_iocpf_sm_fwcheck_entry(struct bfa_iocpf_s *iocpf)
+ {
+ 	struct bfi_ioc_image_hdr_s	fwhdr;
+-	u32	fwstate = readl(iocpf->ioc->ioc_regs.ioc_fwstate);
++	u32	r32, fwstate, pgnum, pgoff, loff = 0;
++	int	i;
++
++	/*
++	 * Spin on init semaphore to serialize.
++	 */
++	r32 = readl(iocpf->ioc->ioc_regs.ioc_init_sem_reg);
++	while (r32 & 0x1) {
++		udelay(20);
++		r32 = readl(iocpf->ioc->ioc_regs.ioc_init_sem_reg);
++	}
+ 
+ 	/* h/w sem init */
+-	if (fwstate == BFI_IOC_UNINIT)
++	fwstate = readl(iocpf->ioc->ioc_regs.ioc_fwstate);
++	if (fwstate == BFI_IOC_UNINIT) {
++		writel(1, iocpf->ioc->ioc_regs.ioc_init_sem_reg);
+ 		goto sem_get;
++	}
+ 
+ 	bfa_ioc_fwver_get(iocpf->ioc, &fwhdr);
+ 
+-	if (swab32(fwhdr.exec) == BFI_FWBOOT_TYPE_NORMAL)
++	if (swab32(fwhdr.exec) == BFI_FWBOOT_TYPE_NORMAL) {
++		writel(1, iocpf->ioc->ioc_regs.ioc_init_sem_reg);
+ 		goto sem_get;
++	}
++
++	/*
++	 * Clear fwver hdr
++	 */
++	pgnum = PSS_SMEM_PGNUM(iocpf->ioc->ioc_regs.smem_pg0, loff);
++	pgoff = PSS_SMEM_PGOFF(loff);
++	writel(pgnum, iocpf->ioc->ioc_regs.host_page_num_fn);
++
++	for (i = 0; i < sizeof(struct bfi_ioc_image_hdr_s) / sizeof(u32); i++) {
++		bfa_mem_write(iocpf->ioc->ioc_regs.smem_page_start, loff, 0);
++		loff += sizeof(u32);
++	}
+ 
+ 	bfa_trc(iocpf->ioc, fwstate);
+-	bfa_trc(iocpf->ioc, fwhdr.exec);
++	bfa_trc(iocpf->ioc, swab32(fwhdr.exec));
+ 	writel(BFI_IOC_UNINIT, iocpf->ioc->ioc_regs.ioc_fwstate);
++	writel(BFI_IOC_UNINIT, iocpf->ioc->ioc_regs.alt_ioc_fwstate);
+ 
+ 	/*
+-	 * Try to lock and then unlock the semaphore.
++	 * Unlock the hw semaphore. Should be here only once per boot.
+ 	 */
+ 	readl(iocpf->ioc->ioc_regs.ioc_sem_reg);
+ 	writel(1, iocpf->ioc->ioc_regs.ioc_sem_reg);
++
++	/*
++	 * unlock init semaphore.
++	 */
++	writel(1, iocpf->ioc->ioc_regs.ioc_init_sem_reg);
++
+ sem_get:
+ 	bfa_ioc_hw_sem_get(iocpf->ioc);
+ }
+@@ -1707,11 +1740,6 @@ bfa_ioc_download_fw(struct bfa_ioc_s *ioc, u32 boot_type,
+ 	u32 i;
+ 	u32 asicmode;
+ 
+-	/*
+-	 * Initialize LMEM first before code download
+-	 */
+-	bfa_ioc_lmem_init(ioc);
+-
+ 	bfa_trc(ioc, bfa_cb_image_get_size(bfa_ioc_asic_gen(ioc)));
+ 	fwimg = bfa_cb_image_get_chunk(bfa_ioc_asic_gen(ioc), chunkno);
+ 
+@@ -1999,6 +2027,12 @@ bfa_ioc_pll_init(struct bfa_ioc_s *ioc)
+ 	bfa_ioc_pll_init_asic(ioc);
+ 
+ 	ioc->pllinit = BFA_TRUE;
++
++	/*
++	 * Initialize LMEM
++	 */
++	bfa_ioc_lmem_init(ioc);
++
+ 	/*
+ 	 *  release semaphore.
+ 	 */
+@@ -4772,7 +4806,7 @@ diag_ledtest_send(struct bfa_diag_s *diag, struct bfa_diag_ledtest_s *ledtest)
+ }
+ 
+ static void
+-diag_ledtest_comp(struct bfa_diag_s *diag, struct bfi_diag_ledtest_rsp_s * msg)
++diag_ledtest_comp(struct bfa_diag_s *diag, struct bfi_diag_ledtest_rsp_s *msg)
+ {
+ 	bfa_trc(diag, diag->ledtest.lock);
+ 	diag->ledtest.lock = BFA_FALSE;
+-- 
+1.7.3.rc1
 
-#define fcoe_ctlr_show_function(field, format_string, sz, cast) \
-static ssize_t show_fcoe_ctlr_attrs_##field(struct device *dev, \
-                                             struct device_attribute 
-*attr, \
-                                             char *buf)                  \
-{                                                                       \
-         struct fcoe_ctlr_attrs *ctlr = dev_to_ctlr(dev);                \
-         if (ctlr->f->get_fcoe_ctlr_##field)                             \
-                 ctlr->f->get_fcoe_ctlr_##field(ctlr);                   \
-         return snprintf(buf, sz, format_string,                         \
-                         cast fcoe_ctlr_##field(ctlr));                  \
-}
-
-It's the last functional line that matters. I might be able to change 
-that to something like:
-
-cast ctlr->field
-
-I'm pretty sure that won't compile, but if it did, it would only work 
-for the simple members of fcoe_ctlr_attrs. It gets a bit more 
-complicated because I have an embedded structure in fcoe_ctlr_attrs:
-
-struct fcoe_ctlr_attrs {
-         u32                             id;
-...
-         struct fcoe_fc_els_lesb         lesb;
-};
-
-So, when I want to use the fcoe_ctlr_show_function to build the 'show 
-handler' for this sysfs attribute I rely on the following:
-
-#define fcoe_ctlr_link_fail(x)                  \
-         ((x)->lesb.lesb_link_fail)
-
-This allows my fcoe_ctlr_show_function macro to be generic and the fact 
-that the lesb members are within a sub-structure is contained within the 
-attribute's accessor macro.
-I'm sure I could come up with a workaround, it would likely require me 
-to have a separate fcoe_ctlr_show_function for the lesb attributes. I 
-like that my fcoe_ctlr_show_function works for the simple 
-fcoe_ctlr_attrs members as well as for the embedded lesb members.
-
-My feeling is that when you looked at the code you just saw unnecessary 
-accessors routines as their usage is not so obvious. I do not intend to 
-be using these accessors anywhere else other than the withing the 
-show/store building routines.
-
-Given my explanation, do you still dislike these?
-
-I could move them to the fcoe_sysfs.c so they're not in a header and 
-therefore would look less like accessors that developers should use...
-
-Thanks, //Rob
-
-PS: I'll also address your documentation concern before I repost.
