@@ -1,74 +1,54 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 3/4] libfcoe: Add fcoe_sysfs
-Date: Tue, 13 Mar 2012 19:42:40 -0700
-Message-ID: <20120314024240.GB22955@kroah.com>
-References: <20120312230915.10580.52548.stgit@localhost6.localdomain6>
- <20120312230931.10580.58845.stgit@localhost6.localdomain6>
- <20120313050013.GB15426@kroah.com>
- <4F5FF22F.2030105@intel.com>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH] mpt2sas: Corrected the constant in comparison to a
+ hexadecimal.
+Date: Wed, 14 Mar 2012 09:51:30 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6067E731D0E@inbmail02.lsi.com>
+References: <1331665168-22561-1-git-send-email-sathisha.nanjappa@hp.com>
+ <1331665168-22561-2-git-send-email-sathisha.nanjappa@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52387 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030422Ab2CNCmp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Mar 2012 22:42:45 -0400
-Received: by iagz16 with SMTP id z16so1647886iag.19
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Mar 2012 19:42:44 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4F5FF22F.2030105@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1331665168-22561-2-git-send-email-sathisha.nanjappa@hp.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sathisha Nanjappa <sathisha.nanjappa@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <jejb@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Love, Robert W" <robert.w.love@intel.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "james.smart@emulex.com" <james.smart@emulex.com>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>
 
-On Wed, Mar 14, 2012 at 01:19:44AM +0000, Love, Robert W wrote:
-> On 03/12/2012 10:00 PM, Greg KH wrote:
-> > On Mon, Mar 12, 2012 at 04:09:31PM -0700, Robert Love wrote:
-> >> +static void fcoe_ctlr_attrs_release(struct device *dev)
-> >> +{
-> >> +	struct fcoe_ctlr_attrs *ctlr = dev_to_ctlr(dev);
-> >> +
-> >> +	put_device(ctlr->dev.parent);
-> >> +	ctlr->dev.parent = NULL;
-> > You should never have to put a reference count on your parent, nor worry
-> > about setting this value to NULL.  Just assign the parent when you
-> > register the device, no need to increment it.
-> 
-> Cool, I'll make these changes.
-> 
-> >> +#define fcoe_ctlr_id(x)				\
-> >> +	((x)->id)
-> >> +#define fcoe_ctlr_work_q_name(x)		\
-> >> +	((x)->work_q_name)
-> > <snip>
-> >
-> > Ick, what are all of these for, please don't do that.
-> >
-> 
-> These are only interesting when you look at the macros used to create 
-> the show/store handlers for the attributes.
+This patch seem to be fine. Please consider this patch as Acked-by: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
 
-<snip>
+Regards,
+Nagalakshmi
 
-Ah, yes, sorry, that's worthwhile.
 
-> My feeling is that when you looked at the code you just saw unnecessary 
-> accessors routines as their usage is not so obvious. I do not intend to 
-> be using these accessors anywhere else other than the withing the 
-> show/store building routines.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Sathisha Nanjappa
+Sent: Wednesday, March 14, 2012 12:29 AM
+To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+Cc: Sathisha Nanjappa
+Subject: [PATCH] mpt2sas: Corrected the constant in comparison to a hexadecimal.
 
-Ok, and they are in the .c file, not .h, right?
+    Bugzilla 42142 - mpt2sas: Number specified in wrong base
+    https://bugzilla.kernel.org/show_bug.cgi?id=42142
 
-> Given my explanation, do you still dislike these?
+Signed-off-by: Sathisha Nanjappa <sathisha.nanjappa@hp.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Nope, they are fine.
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 0b2c955..f9a1244 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -657,7 +657,7 @@ _base_sas_log_info(struct MPT2SAS_ADAPTER *ioc , u32 log_info)
+ 		return;
+ 
+ 	/* eat the loginfos associated with task aborts */
+-	if (ioc->ignore_loginfos && (log_info == 30050000 || log_info ==
++	if (ioc->ignore_loginfos && (log_info == 0x30050000 || log_info ==
+ 	    0x31140000 || log_info == 0x31130000))
+ 		return;
+ 
+-- 
+1.7.7.6
 
-> I could move them to the fcoe_sysfs.c so they're not in a header and 
-> therefore would look less like accessors that developers should use...
-
-Yes, that will be good.
-
-thanks,
-
-greg k-h
