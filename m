@@ -1,158 +1,104 @@
-From: <kgudipat@brocade.com>
-Subject: [PATCH 8/9] bfa: BSG and User interface fixes.
-Date: Tue, 13 Mar 2012 17:41:02 -0700
-Message-ID: <1331685662-22269-1-git-send-email-kgudipat@brocade.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Re: [PATCH 3/4] libfcoe: Add fcoe_sysfs
+Date: Wed, 14 Mar 2012 01:19:44 +0000
+Message-ID: <4F5FF22F.2030105@intel.com>
+References: <20120312230915.10580.52548.stgit@localhost6.localdomain6>
+ <20120312230931.10580.58845.stgit@localhost6.localdomain6>
+ <20120313050013.GB15426@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:52163 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964778Ab2CNBOd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Mar 2012 21:14:33 -0400
+Received: from mga01.intel.com ([192.55.52.88]:21617 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759896Ab2CNBTr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Mar 2012 21:19:47 -0400
+In-Reply-To: <20120313050013.GB15426@kroah.com>
+Content-Language: en-US
+Content-ID: <32C103113177644D822921ACD1DEB1CD@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "james.smart@emulex.com" <james.smart@emulex.com>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>
 
-From: Krishna Gudipati <kgudipat@brocade.com>
+On 03/12/2012 10:00 PM, Greg KH wrote:
+> On Mon, Mar 12, 2012 at 04:09:31PM -0700, Robert Love wrote:
+>> +static void fcoe_ctlr_attrs_release(struct device *dev)
+>> +{
+>> +	struct fcoe_ctlr_attrs *ctlr = dev_to_ctlr(dev);
+>> +
+>> +	put_device(ctlr->dev.parent);
+>> +	ctlr->dev.parent = NULL;
+> You should never have to put a reference count on your parent, nor worry
+> about setting this value to NULL.  Just assign the parent when you
+> register the device, no need to increment it.
 
-Change details:
-	- Made changes to set the rport maxfrsize param to use a value that is
-	  equal to or less than the Buffer-to-Buffer Receive Data_Field size
-	  specified in the Common Service Parameters.
-	- Increased the diag memtest timeout for the Brocade-1860 adapters.
-	- Made changes to enable valid port speed configuration check for all adapters.
-	- Made changes to increase the max hw segments in a request, in order to
-	  support larger data transfers from user space.
+Cool, I'll make these changes.
 
-Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
----
- drivers/scsi/bfa/bfa_fcs_rport.c |    5 ++++-
- drivers/scsi/bfa/bfa_ioc.c       |    8 ++++++--
- drivers/scsi/bfa/bfa_svc.c       |   38 ++++++++++++++++++--------------------
- drivers/scsi/bfa/bfad_bsg.c      |    7 +++++++
- 4 files changed, 35 insertions(+), 23 deletions(-)
+>> +#define fcoe_ctlr_id(x)				\
+>> +	((x)->id)
+>> +#define fcoe_ctlr_work_q_name(x)		\
+>> +	((x)->work_q_name)
+> <snip>
+>
+> Ick, what are all of these for, please don't do that.
+>
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
-index 52628d5..fe0463a 100644
---- a/drivers/scsi/bfa/bfa_fcs_rport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_rport.c
-@@ -2169,7 +2169,10 @@ bfa_fcs_rport_update(struct bfa_fcs_rport_s *rport, struct fc_logi_s *plogi)
- 	 * - MAX receive frame size
- 	 */
- 	rport->cisc = plogi->csp.cisc;
--	rport->maxfrsize = be16_to_cpu(plogi->class3.rxsz);
-+	if (be16_to_cpu(plogi->class3.rxsz) < be16_to_cpu(plogi->csp.rxsz))
-+		rport->maxfrsize = be16_to_cpu(plogi->class3.rxsz);
-+	else
-+		rport->maxfrsize = be16_to_cpu(plogi->csp.rxsz);
- 
- 	bfa_trc(port->fcs, be16_to_cpu(plogi->csp.bbcred));
- 	bfa_trc(port->fcs, port->fabric->bb_credit);
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 56cf3f6..14e6284 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -4449,7 +4449,7 @@ bfa_flash_read_part(struct bfa_flash_s *flash, enum bfa_flash_part_type type,
-  */
- 
- #define BFA_DIAG_MEMTEST_TOV	50000	/* memtest timeout in msec */
--#define BFA_DIAG_FWPING_TOV	1000	/* msec */
-+#define CT2_BFA_DIAG_MEMTEST_TOV	(9*30*1000)  /* 4.5 min */
- 
- /* IOC event handler */
- static void
-@@ -4804,6 +4804,8 @@ bfa_diag_memtest(struct bfa_diag_s *diag, struct bfa_diag_memtest_s *memtest,
- 		u32 pattern, struct bfa_diag_memtest_result *result,
- 		bfa_cb_diag_t cbfn, void *cbarg)
- {
-+	u32	memtest_tov;
-+
- 	bfa_trc(diag, pattern);
- 
- 	if (!bfa_ioc_adapter_is_disabled(diag->ioc))
-@@ -4823,8 +4825,10 @@ bfa_diag_memtest(struct bfa_diag_s *diag, struct bfa_diag_memtest_s *memtest,
- 	/* download memtest code and take LPU0 out of reset */
- 	bfa_ioc_boot(diag->ioc, BFI_FWBOOT_TYPE_MEMTEST, BFI_FWBOOT_ENV_OS);
- 
-+	memtest_tov = (bfa_ioc_asic_gen(diag->ioc) == BFI_ASIC_GEN_CT2) ?
-+		       CT2_BFA_DIAG_MEMTEST_TOV : BFA_DIAG_MEMTEST_TOV;
- 	bfa_timer_begin(diag->ioc->timer_mod, &diag->timer,
--			bfa_diag_memtest_done, diag, BFA_DIAG_MEMTEST_TOV);
-+			bfa_diag_memtest_done, diag, memtest_tov);
- 	diag->timer_active = 1;
- 	return BFA_STATUS_OK;
- }
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index 6583b2d..2e856e6 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -3576,26 +3576,24 @@ bfa_fcport_cfg_speed(struct bfa_s *bfa, enum bfa_port_speed speed)
- 		return BFA_STATUS_UNSUPP_SPEED;
- 	}
- 
--	/* For Mezz card, port speed entered needs to be checked */
--	if (bfa_mfg_is_mezz(fcport->bfa->ioc.attr->card_type)) {
--		if (bfa_ioc_get_type(&fcport->bfa->ioc) == BFA_IOC_TYPE_FC) {
--			/* For CT2, 1G is not supported */
--			if ((speed == BFA_PORT_SPEED_1GBPS) &&
--			    (bfa_asic_id_ct2(bfa->ioc.pcidev.device_id)))
--				return BFA_STATUS_UNSUPP_SPEED;
-+	/* Port speed entered needs to be checked */
-+	if (bfa_ioc_get_type(&fcport->bfa->ioc) == BFA_IOC_TYPE_FC) {
-+		/* For CT2, 1G is not supported */
-+		if ((speed == BFA_PORT_SPEED_1GBPS) &&
-+		    (bfa_asic_id_ct2(bfa->ioc.pcidev.device_id)))
-+			return BFA_STATUS_UNSUPP_SPEED;
- 
--			/* Already checked for Auto Speed and Max Speed supp */
--			if (!(speed == BFA_PORT_SPEED_1GBPS ||
--			      speed == BFA_PORT_SPEED_2GBPS ||
--			      speed == BFA_PORT_SPEED_4GBPS ||
--			      speed == BFA_PORT_SPEED_8GBPS ||
--			      speed == BFA_PORT_SPEED_16GBPS ||
--			      speed == BFA_PORT_SPEED_AUTO))
--				return BFA_STATUS_UNSUPP_SPEED;
--		} else {
--			if (speed != BFA_PORT_SPEED_10GBPS)
--				return BFA_STATUS_UNSUPP_SPEED;
--		}
-+		/* Already checked for Auto Speed and Max Speed supp */
-+		if (!(speed == BFA_PORT_SPEED_1GBPS ||
-+		      speed == BFA_PORT_SPEED_2GBPS ||
-+		      speed == BFA_PORT_SPEED_4GBPS ||
-+		      speed == BFA_PORT_SPEED_8GBPS ||
-+		      speed == BFA_PORT_SPEED_16GBPS ||
-+		      speed == BFA_PORT_SPEED_AUTO))
-+			return BFA_STATUS_UNSUPP_SPEED;
-+	} else {
-+		if (speed != BFA_PORT_SPEED_10GBPS)
-+			return BFA_STATUS_UNSUPP_SPEED;
- 	}
- 
- 	fcport->cfg.speed = speed;
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 31a1d8a..e1f4b10 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -2762,9 +2762,16 @@ bfad_im_bsg_vendor_request(struct fc_bsg_job *job)
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) job->shost->hostdata[0];
- 	struct bfad_s *bfad = im_port->bfad;
-+	struct request_queue *request_q = job->req->q;
- 	void *payload_kbuf;
- 	int rc = -EINVAL;
- 
-+	/*
-+	 * Set the BSG device request_queue size to 256 to support
-+	 * payloads larger than 512*1024K bytes.
-+	 */
-+	blk_queue_max_segments(request_q, 256);
-+
- 	/* Allocate a temp buffer to hold the passed in user space command */
- 	payload_kbuf = kzalloc(job->request_payload.payload_len, GFP_KERNEL);
- 	if (!payload_kbuf) {
--- 
-1.7.3.rc1
+These are only interesting when you look at the macros used to create 
+the show/store handlers for the attributes.
 
+#define fcoe_ctlr_show_function(field, format_string, sz, cast) \
+static ssize_t show_fcoe_ctlr_attrs_##field(struct device *dev, \
+                                             struct device_attribute 
+*attr, \
+                                             char *buf)                  \
+{                                                                       \
+         struct fcoe_ctlr_attrs *ctlr = dev_to_ctlr(dev);                \
+         if (ctlr->f->get_fcoe_ctlr_##field)                             \
+                 ctlr->f->get_fcoe_ctlr_##field(ctlr);                   \
+         return snprintf(buf, sz, format_string,                         \
+                         cast fcoe_ctlr_##field(ctlr));                  \
+}
+
+It's the last functional line that matters. I might be able to change 
+that to something like:
+
+cast ctlr->field
+
+I'm pretty sure that won't compile, but if it did, it would only work 
+for the simple members of fcoe_ctlr_attrs. It gets a bit more 
+complicated because I have an embedded structure in fcoe_ctlr_attrs:
+
+struct fcoe_ctlr_attrs {
+         u32                             id;
+...
+         struct fcoe_fc_els_lesb         lesb;
+};
+
+So, when I want to use the fcoe_ctlr_show_function to build the 'show 
+handler' for this sysfs attribute I rely on the following:
+
+#define fcoe_ctlr_link_fail(x)                  \
+         ((x)->lesb.lesb_link_fail)
+
+This allows my fcoe_ctlr_show_function macro to be generic and the fact 
+that the lesb members are within a sub-structure is contained within the 
+attribute's accessor macro.
+I'm sure I could come up with a workaround, it would likely require me 
+to have a separate fcoe_ctlr_show_function for the lesb attributes. I 
+like that my fcoe_ctlr_show_function works for the simple 
+fcoe_ctlr_attrs members as well as for the embedded lesb members.
+
+My feeling is that when you looked at the code you just saw unnecessary 
+accessors routines as their usage is not so obvious. I do not intend to 
+be using these accessors anywhere else other than the withing the 
+show/store building routines.
+
+Given my explanation, do you still dislike these?
+
+I could move them to the fcoe_sysfs.c so they're not in a header and 
+therefore would look less like accessors that developers should use...
+
+Thanks, //Rob
+
+PS: I'll also address your documentation concern before I repost.
