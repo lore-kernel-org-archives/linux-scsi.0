@@ -1,110 +1,74 @@
-From: John Fastabend <john.r.fastabend@intel.com>
-Subject: Re: [Open-FCoE] [PATCH] fcoe: Don't hold rtnl_mutex in fcoe_update_src_mac
-Date: Tue, 13 Mar 2012 19:14:49 -0700
-Message-ID: <4F5FFF19.1060601@intel.com>
-References: <bug-42918-11613@https.bugzilla.kernel.org> <20120313225254.5473.92174.stgit@localhost6.localdomain6> <4F5FE95D.8040408@intel.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 3/4] libfcoe: Add fcoe_sysfs
+Date: Tue, 13 Mar 2012 19:42:40 -0700
+Message-ID: <20120314024240.GB22955@kroah.com>
+References: <20120312230915.10580.52548.stgit@localhost6.localdomain6>
+ <20120312230931.10580.58845.stgit@localhost6.localdomain6>
+ <20120313050013.GB15426@kroah.com>
+ <4F5FF22F.2030105@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65009 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760671Ab2CNCOu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Mar 2012 22:14:50 -0400
-In-Reply-To: <4F5FE95D.8040408@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52387 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030422Ab2CNCmp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Mar 2012 22:42:45 -0400
+Received: by iagz16 with SMTP id z16so1647886iag.19
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Mar 2012 19:42:44 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <4F5FF22F.2030105@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Love, Robert W" <robert.w.love@intel.com>
-Cc: "bvanassche@acm.org" <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "james.smart@emulex.com" <james.smart@emulex.com>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>
 
-On 3/13/2012 5:42 PM, Love, Robert W wrote:
-> On 03/13/2012 03:52 PM, Robert Love wrote:
->> The rtnl_mutex was held to protect calls to dev_uc_add
->> and dev_uc_del. Holding rtnl is not required as those
->> functions make use of the netif_addr_lock* API to
->> protect the MAC changing.
->>
->> This change fixes the following regression by removing
->> the rtnl usage when fcoe_update_src_mac is called.
->>
->> https://bugzilla.kernel.org/show_bug.cgi?id=42918
->>
->> the existing dependency chain (in reverse order) is:
->>
->> ->  #1 (&fip->ctlr_mutex){+.+...}:
->>         [<c1091f70>] lock_acquire+0x80/0x1b0
->>         [<c147655d>] mutex_lock_nested+0x6d/0x340
->>         [<f8970c32>] fcoe_ctlr_link_up+0x22/0x180 [libfcoe]
->>         [<f894620e>] fcoe_create+0x47e/0x6e0 [fcoe]
->>         [<f8973dd3>] fcoe_transport_create+0x143/0x250 [libfcoe]
->>         [<c10527e0>] param_attr_store+0x30/0x60
->>         [<c1052696>] module_attr_store+0x26/0x40
->>         [<c11a201e>] sysfs_write_file+0xae/0x100
->>         [<c11449df>] vfs_write+0x8f/0x160
->>         [<c1144cbd>] sys_write+0x3d/0x70
->>         [<c147a0c4>] syscall_call+0x7/0xb
->>
->> ->  #0 (rtnl_mutex){+.+.+.}:
->>         [<c109164b>] __lock_acquire+0x140b/0x1720
->>         [<c1091f70>] lock_acquire+0x80/0x1b0
->>         [<c147655d>] mutex_lock_nested+0x6d/0x340
->>         [<c13a10c4>] rtnl_lock+0x14/0x20
->>         [<f89445ac>] fcoe_update_src_mac+0x2c/0xb0 [fcoe]
->>         [<f8971712>] fcoe_ctlr_timer_work+0x712/0xb60 [libfcoe]
->>         [<c104fb69>] process_one_work+0x179/0x5d0
->>         [<c10502f1>] worker_thread+0x121/0x2d0
->>         [<c10550ed>] kthread+0x7d/0x90
->>         [<c1481a82>] kernel_thread_helper+0x6/0x10
->>
->> other info that might help us debug this:
->>
->>   Possible unsafe locking scenario:
->>
->>         CPU0                    CPU1
->>         ----                    ----
->>    lock(&fip->ctlr_mutex);
->>                                 lock(rtnl_mutex);
->>                                 lock(&fip->ctlr_mutex);
->>    lock(rtnl_mutex);
->>
->>   *** DEADLOCK ***
->>
->> Signed-off-by: Robert Love<robert.w.love@intel.com>
->> ---
->>   drivers/scsi/fcoe/fcoe.c |    2 --
->>   1 files changed, 0 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
->> index e959960..85b8203 100644
->> --- a/drivers/scsi/fcoe/fcoe.c
->> +++ b/drivers/scsi/fcoe/fcoe.c
->> @@ -539,13 +539,11 @@ static void fcoe_update_src_mac(struct fc_lport *lport, u8 *addr)
->>   	struct fcoe_port *port = lport_priv(lport);
->>   	struct fcoe_interface *fcoe = port->priv;
->>
->> -	rtnl_lock();
->>   	if (!is_zero_ether_addr(port->data_src_addr))
->>   		dev_uc_del(fcoe->netdev, port->data_src_addr);
->>   	if (!is_zero_ether_addr(addr))
->>   		dev_uc_add(fcoe->netdev, addr);
->>   	memcpy(port->data_src_addr, addr, ETH_ALEN);
->> -	rtnl_unlock();
->>   }
->>
->>   /**
->>
-> This isn't going to work. We do need rtnl_lock when calling 
-> dev_uc_add/del to ensure the driver isn't removed while making the 
-> change. I have an alternative patch that I'll post as soon as I clean it 
-> up a bit.
+On Wed, Mar 14, 2012 at 01:19:44AM +0000, Love, Robert W wrote:
+> On 03/12/2012 10:00 PM, Greg KH wrote:
+> > On Mon, Mar 12, 2012 at 04:09:31PM -0700, Robert Love wrote:
+> >> +static void fcoe_ctlr_attrs_release(struct device *dev)
+> >> +{
+> >> +	struct fcoe_ctlr_attrs *ctlr = dev_to_ctlr(dev);
+> >> +
+> >> +	put_device(ctlr->dev.parent);
+> >> +	ctlr->dev.parent = NULL;
+> > You should never have to put a reference count on your parent, nor worry
+> > about setting this value to NULL.  Just assign the parent when you
+> > register the device, no need to increment it.
 > 
-> Nacked-by: Robert Love <robert.w.love@intel.com>
+> Cool, I'll make these changes.
+> 
+> >> +#define fcoe_ctlr_id(x)				\
+> >> +	((x)->id)
+> >> +#define fcoe_ctlr_work_q_name(x)		\
+> >> +	((x)->work_q_name)
+> > <snip>
+> >
+> > Ick, what are all of these for, please don't do that.
+> >
+> 
+> These are only interesting when you look at the macros used to create 
+> the show/store handlers for the attributes.
 
-So there is a case you don't have a ref cnt on the netdev here? 
+<snip>
 
-I guess my point is if your carrying around a ptr to the struct why
-haven't you incremented the refcnt. I think the dev_hold() in the
-create path would be enough to stop the above concern.
+Ah, yes, sorry, that's worthwhile.
 
-Thanks,
-John
+> My feeling is that when you looked at the code you just saw unnecessary 
+> accessors routines as their usage is not so obvious. I do not intend to 
+> be using these accessors anywhere else other than the withing the 
+> show/store building routines.
+
+Ok, and they are in the .c file, not .h, right?
+
+> Given my explanation, do you still dislike these?
+
+Nope, they are fine.
+
+> I could move them to the fcoe_sysfs.c so they're not in a header and 
+> therefore would look less like accessors that developers should use...
+
+Yes, that will be good.
+
+thanks,
+
+greg k-h
