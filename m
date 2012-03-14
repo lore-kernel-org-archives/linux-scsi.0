@@ -1,54 +1,65 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [PATCH] mpt2sas: Corrected the constant in comparison to a
- hexadecimal.
-Date: Wed, 14 Mar 2012 09:51:30 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6067E731D0E@inbmail02.lsi.com>
-References: <1331665168-22561-1-git-send-email-sathisha.nanjappa@hp.com>
- <1331665168-22561-2-git-send-email-sathisha.nanjappa@hp.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [libsas PATCH v11 0/2] libsas error handling + discovery v11
+Date: Tue, 13 Mar 2012 23:30:13 -0700
+Message-ID: <20120314062643.6772.79462.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1331665168-22561-2-git-send-email-sathisha.nanjappa@hp.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sathisha Nanjappa <sathisha.nanjappa@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <jejb@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch seem to be fine. Please consider this patch as Acked-by: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Changes since v10: http://marc.info/?l=linux-scsi&m=133143989626340&0w=2
 
-Regards,
-Nagalakshmi
+Rebase the tree on the scsi-misc to drop the accepted patches and
+resolve the conflicts in -next.  Only "libsas: enforce eh strategy
+handlers only in eh context" had to be fixed up (collision in
+sas_init_dev).
 
+Add a new fix for a regression in sas_get_port_device().
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Sathisha Nanjappa
-Sent: Wednesday, March 14, 2012 12:29 AM
-To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Cc: Sathisha Nanjappa
-Subject: [PATCH] mpt2sas: Corrected the constant in comparison to a hexadecimal.
+ [libsas PATCH 1/2 v11] libsas: enforce eh strategy handlers only in eh context
+ [libsas PATCH 2/2 v11] libsas: fix sas_get_port_device regression
 
-    Bugzilla 42142 - mpt2sas: Number specified in wrong base
-    https://bugzilla.kernel.org/show_bug.cgi?id=42142
+The delta vs scsi-misc is now (cd8df93..libsas-eh-reworks-v11):
 
-Signed-off-by: Sathisha Nanjappa <sathisha.nanjappa@hp.com>
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Dan Carpenter (1):
+      mvsas: remove unused variable in mvs_task_exec()
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 0b2c955..f9a1244 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -657,7 +657,7 @@ _base_sas_log_info(struct MPT2SAS_ADAPTER *ioc , u32 log_info)
- 		return;
- 
- 	/* eat the loginfos associated with task aborts */
--	if (ioc->ignore_loginfos && (log_info == 30050000 || log_info ==
-+	if (ioc->ignore_loginfos && (log_info == 0x30050000 || log_info ==
- 	    0x31140000 || log_info == 0x31130000))
- 		return;
- 
--- 
-1.7.7.6
+Dan Williams (9):
+      libsas: introduce sas_work to fix sas_drain_work vs sas_queue_work
+      libsas: cleanup spurious calls to scsi_schedule_eh
+      libata, libsas: introduce sched_eh and end_eh port ops
+      libsas: enforce eh strategy handlers only in eh context
+      libsas: add sas_eh_abort_handler
+      libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_handler
+      isci: use sas eh strategy handlers
+      libsas: trim sas_task of slow path infrastructure
+      libsas: fix sas_get_port_device regression
 
+Jeff Skirvin (1):
+      libsas: sas_rediscover_dev did not look at the SMP exec status.
+
+Thomas Jackson (1):
+      libsas: fix sas_find_bcast_phy() in the presence of 'vacant' phys
+
+ drivers/ata/libata-core.c           |    4 +
+ drivers/ata/libata-eh.c             |   57 ++++++++--
+ drivers/scsi/isci/init.c            |    3 +
+ drivers/scsi/libsas/sas_ata.c       |   63 ++++++-----
+ drivers/scsi/libsas/sas_discover.c  |   54 ++++++----
+ drivers/scsi/libsas/sas_event.c     |   36 ++++---
+ drivers/scsi/libsas/sas_expander.c  |   44 +++++---
+ drivers/scsi/libsas/sas_init.c      |   50 ++++++---
+ drivers/scsi/libsas/sas_internal.h  |    6 +-
+ drivers/scsi/libsas/sas_phy.c       |   21 ++---
+ drivers/scsi/libsas/sas_port.c      |   15 +--
+ drivers/scsi/libsas/sas_scsi_host.c |  199 ++++++++++++++++++++++++++++++-----
+ drivers/scsi/mvsas/mv_sas.c         |   21 ++--
+ drivers/scsi/pm8001/pm8001_sas.c    |   37 ++++---
+ include/linux/libata.h              |    4 +
+ include/scsi/libsas.h               |   69 ++++++++++--
+ include/scsi/sas_ata.h              |    9 +-
+ 17 files changed, 487 insertions(+), 205 deletions(-)
