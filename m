@@ -1,88 +1,50 @@
-From: chetan loke <loke.chetan@gmail.com>
-Subject: Re: [LSF/MM TOPIC] [ATTEND] SR-IOV Management
-Date: Wed, 14 Mar 2012 14:48:37 -0400
-Message-ID: <CAAsGZS6aQ2Gw+wzozCenOJ+sfhoz4R5B52h3v0GScnuEUFJNjg@mail.gmail.com>
-References: <alpine.WNT.2.00.1201311356390.3392@N5102REMCQXM4BS.qlogic.org>
-	<4F29058B.6020904@suse.de>
-	<alpine.WNT.2.00.1203141337330.3968@N5102REMCQXM4BS.qlogic.org>
+From: Ted Ts'o <tytso@mit.edu>
+Subject: Re: [Lsf-pc] [Topic] Bcache
+Date: Wed, 14 Mar 2012 14:54:56 -0400
+Message-ID: <20120314185455.GD28042@thunk.org>
+References: <20120314133228.GA2284@dhcp-172-18-216-138.mtv.corp.google.com>
+ <20120314155339.GC30235@redhat.com>
+ <CAAsGZS6Jw8xCdu3Wuve=iaKpd_UNdm72kbTbiQtypAfrZ46PWw@mail.gmail.com>
+ <CAH+dOx+Vgv12w=Q=8hCQggLg+kq6TnT2i3ZtnpZ=bNVyMgk31Q@mail.gmail.com>
+ <CAAsGZS5UTrYTbncAjk1Vor6R_-KWDboTw3sh+jXCbXm5q_o-TA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:49093 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754940Ab2CNSsh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Mar 2012 14:48:37 -0400
-Received: by dadp12 with SMTP id p12so3350752dad.11
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Mar 2012 11:48:37 -0700 (PDT)
-In-Reply-To: <alpine.WNT.2.00.1203141337330.3968@N5102REMCQXM4BS.qlogic.org>
+Received: from li9-11.members.linode.com ([67.18.176.11]:58401 "EHLO
+	test.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755142Ab2CNSzC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Mar 2012 14:55:02 -0400
+Content-Disposition: inline
+In-Reply-To: <CAAsGZS5UTrYTbncAjk1Vor6R_-KWDboTw3sh+jXCbXm5q_o-TA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: chetan loke <loke.chetan@gmail.com>
+Cc: Kent Overstreet <koverstreet@google.com>, Vivek Goyal <vgoyal@redhat.com>, lsf-pc@lists.linux-foundation.org, nauman@google.com, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-On Wed, Mar 14, 2012 at 2:07 PM, Chad Dupuis <chad.dupuis@qlogic.com> w=
-rote:
->
->
-> On Wed, 1 Feb 2012, Hannes Reinecke wrote:
->
->> On 01/31/2012 08:02 PM, Chad Dupuis wrote:
->>>
->>> With more and more storage controller hardware supporting SR-IOV in
->>> next
->>> couple of years it seems to make sense at this point to discuss, fr=
-om a
->>> storage stack perspective, managing how we instantiate and manage
->>> SR-IOV
->>> virtual functions (VFs). =C2=A0Currently for hardware that does sup=
-port
->>> SR-IOV,
->>> the management of that functionality is managed entirely by the
->>> hardware
->>> device driver. =C2=A0However, a more dynamic management to how VFs =
-are
->>> created
->>> and destroyed (assuming the hardware supports it) may be more desir=
-able
->>> since the most common use case, assigning VFs to virtual guests, al=
-so
->>> tends to be very dynamic and fluid. =C2=A0We also need to consider =
-how VFs
->>> interact with complimentary technology such as NPIV in Fibre Channe=
-l.
->>>
->>> I'd like to propose that we discuss the following issues to see if =
-a
->>> consensus can be reached about how to deal with them:
->>>
->>> * VF instantiation
->>> * VF/NPIV port pairing
->>> * Namespace management
->>> * LUN presentation
->>>
->> Actually, SR-IOV on FC should be easy to handle; it maps quite
->> easily on NPIV (which probably was the intention :-).
->
->
-> I would bet it's not a coincidence ;-) =C2=A0The question I had was d=
-o we
-> represent this relationship at the transport level, such as the FC
-> transport in this case, or do we let the low-leve driver take care of=
- the
-> mapping? In other words, do we have a low level driver create the vpo=
-rt when
-> it is instantiating a VF or do we add an option to say fc_vport_creat=
-e so
-> that a VF is created along with a vport.
+On Wed, Mar 14, 2012 at 02:33:25PM -0400, chetan loke wrote:
+> But you are not explaining why dm is not the right stack. Just because
+> it crashed when you tried doesn't mean it's not the right place.
+> flash-cache works, doesn't it? flash-cache's limitation is because
+> it's a dm-target or because it is using hashing or something else?
+> There are start-ups who are doing quite great with SSD-cache+dm. So
+> please stop kidding yourself.
 
-Chad - would we always need a vport-context if just a VF needs to be
-mapped to a guest and NPIV is not enabled?
+SATA-attached flash is not the only kind of flash out there you know.
+There is also PCIe-attached flash which is a wee bit faster (where wee
+is defined as multiple orders of magnitude --- SATA-attached SSD's
+typically have thousands of IOPS; Fusion I/O is shipping product today
+with hundreds of thousands of IOPS, and has demonstrated a billion
+IOPS early this year).  And Fusion I/O isn't the only company shipping
+PCIe-attached flash products.
 
+Startups may be doing great on SSD's; you may want to accept the fact
+that there is stuff which is way, way, way better out there than
+SSD's which are available on the market *today*.
 
-Chetan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And it's not like bache which is a new project.  It's working code,
+just like flash cache is today.  So it's not like it needs to justify
+its existence.
+
+Best regards,
+
+					- Ted
