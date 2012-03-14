@@ -1,116 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH v3] fusion: use pci_dev->revision
-Date: Wed, 14 Mar 2012 22:19:30 +0300
-Message-ID: <201203142219.31119.sshtylyov@ru.mvista.com>
+From: chetan loke <loke.chetan@gmail.com>
+Subject: Re: [Lsf-pc] [Topic] Bcache
+Date: Wed, 14 Mar 2012 14:33:25 -0400
+Message-ID: <CAAsGZS5UTrYTbncAjk1Vor6R_-KWDboTw3sh+jXCbXm5q_o-TA@mail.gmail.com>
+References: <20120314133228.GA2284@dhcp-172-18-216-138.mtv.corp.google.com>
+	<20120314155339.GC30235@redhat.com>
+	<CAAsGZS6Jw8xCdu3Wuve=iaKpd_UNdm72kbTbiQtypAfrZ46PWw@mail.gmail.com>
+	<CAH+dOx+Vgv12w=Q=8hCQggLg+kq6TnT2i3ZtnpZ=bNVyMgk31Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Eric.Moore@lsi.com, akpm@linux-foundation.org
-Cc: DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, support@lsi.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:53408 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756938Ab2CNSd0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Mar 2012 14:33:26 -0400
+Received: by yhmm54 with SMTP id m54so2105528yhm.19
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Mar 2012 11:33:26 -0700 (PDT)
+In-Reply-To: <CAH+dOx+Vgv12w=Q=8hCQggLg+kq6TnT2i3ZtnpZ=bNVyMgk31Q@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kent Overstreet <koverstreet@google.com>
+Cc: Vivek Goyal <vgoyal@redhat.com>, lsf-pc@lists.linux-foundation.org, nauman@google.com, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-This driver uses PCI_CLASS_REVISION instead of PCI_REVISION_ID, so it wasn't
-converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65 (PCI: Change all
-drivers to use pci_device->revision).
+On Wed, Mar 14, 2012 at 2:17 PM, Kent Overstreet <koverstreet@google.com> wrote:
+> On Wed, Mar 14, 2012 at 2:12 PM, chetan loke <loke.chetan@gmail.com> wrote:
+>> I'm not a dm guru but a quick scan at flash-cache seems like it does
+>> what you are saying. Now, if performance isn't acceptable then hashes
+>> can be replaced with trees and what-not. Also no one would need to
+>> re-invent the stacking mechanism. I saw thin support(atleast
+>> documented) for dm. Plus, no matter what cache you come up with you
+>> may have to persist/store the meta-data associated with it. And dm
+>> seems like the right place to abstract that.
+>
+> Bcache kills flash cache on performance - bcache can do around a
+> million iops on 4k random reads, and beats it on real world
+> applications and hardware too (i.e. mysql).
+>
 
-In one case, it even reads PCI revision ID without using it -- that code is now
-removed...
+Don't get too carried away with the perf numbers. re-read what I said:
+ "if performance isn't acceptable then hashes can be replaced with
+trees and what-not".
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> I'm not aware of any real features I'm missing out on by not using dm...
 
----
-This patch is refreshed against the recent Linus' tree.
-
-This patch hasn't been applied to 3.1, 3.2, or 3.3, hopefully it can be applied
-to 3.4 at last...
-
-Andrew M., maybe you can take it if the maintainers don't seem to be bothered?
-
- drivers/message/fusion/mptbase.c |   12 ++++--------
- drivers/message/fusion/mptctl.c  |    4 +---
- 2 files changed, 5 insertions(+), 11 deletions(-)
-
-Index: linux-2.6/drivers/message/fusion/mptbase.c
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptbase.c
-+++ linux-2.6/drivers/message/fusion/mptbase.c
-@@ -1652,7 +1652,6 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 	unsigned long	 port;
- 	u32		 msize;
- 	u32		 psize;
--	u8		 revision;
- 	int		 r = -ENODEV;
- 	struct pci_dev *pdev;
- 
-@@ -1669,8 +1668,6 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 		return r;
- 	}
- 
--	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
--
- 	if (sizeof(dma_addr_t) > 4) {
- 		const uint64_t required_mask = dma_get_required_mask
- 		    (&pdev->dev);
-@@ -1778,7 +1775,6 @@ mpt_attach(struct pci_dev *pdev, const s
- 	MPT_ADAPTER	*ioc;
- 	u8		 cb_idx;
- 	int		 r = -ENODEV;
--	u8		 revision;
- 	u8		 pcixcmd;
- 	static int	 mpt_ids = 0;
- #ifdef CONFIG_PROC_FS
-@@ -1886,8 +1882,8 @@ mpt_attach(struct pci_dev *pdev, const s
- 	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "facts @ %p, pfacts[0] @ %p\n",
- 	    ioc->name, &ioc->facts, &ioc->pfacts[0]));
- 
--	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
--	mpt_get_product_name(pdev->vendor, pdev->device, revision, ioc->prod_name);
-+	mpt_get_product_name(pdev->vendor, pdev->device, pdev->revision,
-+			     ioc->prod_name);
- 
- 	switch (pdev->device)
- 	{
-@@ -1902,7 +1898,7 @@ mpt_attach(struct pci_dev *pdev, const s
- 		break;
- 
- 	case MPI_MANUFACTPAGE_DEVICEID_FC929X:
--		if (revision < XL_929) {
-+		if (pdev->revision < XL_929) {
- 			/* 929X Chip Fix. Set Split transactions level
- 		 	* for PCIX. Set MOST bits to zero.
- 		 	*/
-@@ -1933,7 +1929,7 @@ mpt_attach(struct pci_dev *pdev, const s
- 		/* 1030 Chip Fix. Disable Split transactions
- 		 * for PCIX. Set MOST bits to zero if Rev < C0( = 8).
- 		 */
--		if (revision < C0_1030) {
-+		if (pdev->revision < C0_1030) {
- 			pci_read_config_byte(pdev, 0x6a, &pcixcmd);
- 			pcixcmd &= 0x8F;
- 			pci_write_config_byte(pdev, 0x6a, pcixcmd);
-Index: linux-2.6/drivers/message/fusion/mptctl.c
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptctl.c
-+++ linux-2.6/drivers/message/fusion/mptctl.c
-@@ -1250,7 +1250,6 @@ mptctl_getiocinfo (unsigned long arg, un
- 	int			iocnum;
- 	unsigned int		port;
- 	int			cim_rev;
--	u8			revision;
- 	struct scsi_device 	*sdev;
- 	VirtDevice		*vdevice;
- 
-@@ -1324,8 +1323,7 @@ mptctl_getiocinfo (unsigned long arg, un
- 	pdev = (struct pci_dev *) ioc->pcidev;
- 
- 	karg->pciId = pdev->device;
--	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
--	karg->hwRev = revision;
-+	karg->hwRev = pdev->revision;
- 	karg->subSystemDevice = pdev->subsystem_device;
- 	karg->subSystemVendor = pdev->subsystem_vendor;
- 
+But you are not explaining why dm is not the right stack. Just because
+it crashed when you tried doesn't mean it's not the right place.
+flash-cache works, doesn't it? flash-cache's limitation is because
+it's a dm-target or because it is using hashing or something else?
+There are start-ups who are doing quite great with SSD-cache+dm. So
+please stop kidding yourself.
