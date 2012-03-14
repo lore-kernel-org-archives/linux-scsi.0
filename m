@@ -1,45 +1,54 @@
-From: Chris Dunlop <chris@onthe.net.au>
-Subject: Re: [PATCH] mpt2sas: Fix hex/decimal typo in _base_sas_log_info()
-Date: Thu, 15 Mar 2012 05:08:22 +1100
-Message-ID: <20120314180822.GA29954@onthe.net.au>
-References: <20120314035610.GA21520@onthe.net.au>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 3/3 v4] qla4xxx: use pci_dev->revision
+Date: Wed, 14 Mar 2012 22:10:03 +0300
+Message-ID: <201203142210.03891.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20120314035610.GA21520@onthe.net.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, Kashyap Desai <kashyap.desai@lsi.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, sathisha.nanjappa@hp.com
+To: linux-scsi@vger.kernel.org, JBottomley@parallels.com
+Cc: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com, iscsi-driver@qlogic.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Mar 14, 2012 at 02:56:10PM +1100, Chris Dunlop wrote:
-> The log_info constant is supposed to be IOP_LOGINFO_CODE_TASK_TERMINATED
-> (see drivers/message/fusion/lsi/mpi_log_sas.h) rather than the
-> non-sensical 0x1CA86D0.
+Commit f4f5df23bf72208d0c2f1d8be629839924c2f4c2 ([SCSI] qla4xxx: Added support
+for ISP82XX) added code to read the PCI revision ID from the PCI configuration
+register while it's already stored by PCI subsystem in the 'revision' field of
+'struct pci_dev'...
 
-Oops, I see Sathisha Nanjappa has already submitted this fix:
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-http://article.gmane.org/gmane.linux.scsi/73446
+---
+The patch is refreshed against the recent Linus' tree.
 
+ drivers/scsi/qla4xxx/ql4_os.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-> Signed-off-by: Chris Dunlop <chris@onthe.net.au>
-> ---
->  drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index a78036f..224ed29 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -657,7 +657,7 @@ _base_sas_log_info(struct MPT2SAS_ADAPTER *ioc , u32 log_info)
->  		return;
->  
->  	/* eat the loginfos associated with task aborts */
-> -	if (ioc->ignore_loginfos && (log_info == 30050000 || log_info ==
-> +	if (ioc->ignore_loginfos && (log_info == 0x30050000 || log_info ==
->  	    0x31140000 || log_info == 0x31130000))
->  		return;
->  
-> -- 
-> 1.7.0.4
-> 
+Index: linux-2.6/drivers/scsi/qla4xxx/ql4_os.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/qla4xxx/ql4_os.c
++++ linux-2.6/drivers/scsi/qla4xxx/ql4_os.c
+@@ -2962,7 +2962,6 @@ static void qla4xxx_free_adapter(struct 
+ int qla4_8xxx_iospace_config(struct scsi_qla_host *ha)
+ {
+ 	int status = 0;
+-	uint8_t revision_id;
+ 	unsigned long mem_base, mem_len, db_base, db_len;
+ 	struct pci_dev *pdev = ha->pdev;
+ 
+@@ -2974,10 +2973,9 @@ int qla4_8xxx_iospace_config(struct scsi
+ 		goto iospace_error_exit;
+ 	}
+ 
+-	pci_read_config_byte(pdev, PCI_REVISION_ID, &revision_id);
+ 	DEBUG2(printk(KERN_INFO "%s: revision-id=%d\n",
+-	    __func__, revision_id));
+-	ha->revision_id = revision_id;
++	    __func__, pdev->revision));
++	ha->revision_id = pdev->revision;
+ 
+ 	/* remap phys address */
+ 	mem_base = pci_resource_start(pdev, 0); /* 0 is for BAR 0 */
