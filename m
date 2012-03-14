@@ -1,100 +1,242 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH] fcoe: Drop the rtnl_mutex before calling fcoe_ctlr_link_up
-Date: Tue, 13 Mar 2012 18:22:12 -0700
-Message-ID: <20120314012212.7143.52793.stgit@localhost6.localdomain6>
-References: <bug-42918-11613@https.bugzilla.kernel.org/>
+From: <kgudipat@brocade.com>
+Subject: [PATCH 4/9] bfa: Flash controller IOC pll init fixes.
+Date: Tue, 13 Mar 2012 17:39:22 -0700
+Message-ID: <1331685562-21633-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16507 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760077Ab2CNBWM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Mar 2012 21:22:12 -0400
-In-Reply-To: <bug-42918-11613@https.bugzilla.kernel.org/>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:52654 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760242Ab2CNBYp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Mar 2012 21:24:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bvanassche@acm.org, linux-scsi@vger.kernel.org
-Cc: devel@open-fcoe.org, yi.zou@intel.com
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
 
-The rtnl_lock is primarily used to serialize networking
-driver changes as well as to ensure that a networking driver
-is not removed when making changes to it. fcoe also uses
-the rtnl_lock to protect the fcoe hostlist.
+From: Krishna Gudipati <kgudipat@brocade.com>
 
-fcoe_create holds the rtnl_lock over the entirity of the
-routine including a the call to fcoe_ctlr_link_up.
-This causes the below deadlock because fcoe_ctlr_link_up
-acquires the fcoe_ctlr ctlr_mutex and this deadlocks with
-a libfcoe thread that acquires the fcoe_ctlr ctlr_mutex and
-then the rtnl_lock (to update a MAC address).
+Change details:
+	- Made changes to resume the flash controller if it is halted before going
+	  ahead with flash controller pause/resume logic.
+	- Made changes to avoid clearing off the interrupts during the initial
+	  pll initialization.
 
-This patch drops the rtnl_lock before calling
-fcoe_ctlr_link_up and therefore the deadlock is prevented.
-
-https://bugzilla.kernel.org/show_bug.cgi?id=42918
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (&fip->ctlr_mutex){+.+...}:
-       [<c1091f70>] lock_acquire+0x80/0x1b0
-       [<c147655d>] mutex_lock_nested+0x6d/0x340
-       [<f8970c32>] fcoe_ctlr_link_up+0x22/0x180 [libfcoe]
-       [<f894620e>] fcoe_create+0x47e/0x6e0 [fcoe]
-       [<f8973dd3>] fcoe_transport_create+0x143/0x250 [libfcoe]
-       [<c10527e0>] param_attr_store+0x30/0x60
-       [<c1052696>] module_attr_store+0x26/0x40
-       [<c11a201e>] sysfs_write_file+0xae/0x100
-       [<c11449df>] vfs_write+0x8f/0x160
-       [<c1144cbd>] sys_write+0x3d/0x70
-       [<c147a0c4>] syscall_call+0x7/0xb
-
--> #0 (rtnl_mutex){+.+.+.}:
-       [<c109164b>] __lock_acquire+0x140b/0x1720
-       [<c1091f70>] lock_acquire+0x80/0x1b0
-       [<c147655d>] mutex_lock_nested+0x6d/0x340
-       [<c13a10c4>] rtnl_lock+0x14/0x20
-       [<f89445ac>] fcoe_update_src_mac+0x2c/0xb0 [fcoe]
-       [<f8971712>] fcoe_ctlr_timer_work+0x712/0xb60 [libfcoe]
-       [<c104fb69>] process_one_work+0x179/0x5d0
-       [<c10502f1>] worker_thread+0x121/0x2d0
-       [<c10550ed>] kthread+0x7d/0x90
-       [<c1481a82>] kernel_thread_helper+0x6/0x10
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(&fip->ctlr_mutex);
-                               lock(rtnl_mutex);
-                               lock(&fip->ctlr_mutex);
-  lock(rtnl_mutex);
-
- *** DEADLOCK ***
-
-Signed-off-by: Robert Love <robert.w.love@intel.com>
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/fcoe/fcoe.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ drivers/scsi/bfa/bfa_ioc_ct.c |  151 +++++++++++++++++++++++++++++------------
+ drivers/scsi/bfa/bfi_reg.h    |    6 ++
+ 2 files changed, 112 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index e959960..408ca0e 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2133,8 +2133,12 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
- 	/* start FIP Discovery and FLOGI */
- 	lport->boot_time = jiffies;
- 	fc_fabric_login(lport);
--	if (!fcoe_link_ok(lport))
-+	if (!fcoe_link_ok(lport)) {
-+		rtnl_unlock();
- 		fcoe_ctlr_link_up(&fcoe->ctlr);
-+		mutex_unlock(&fcoe_config_mutex);
-+		return rc;
-+	}
+diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
+index d1b8f0c..2eb0c6a 100644
+--- a/drivers/scsi/bfa/bfa_ioc_ct.c
++++ b/drivers/scsi/bfa/bfa_ioc_ct.c
+@@ -786,17 +786,73 @@ bfa_ioc_ct2_mac_reset(void __iomem *rb)
+ }
  
- out_nodev:
- 	rtnl_unlock();
+ #define CT2_NFC_MAX_DELAY	1000
++#define CT2_NFC_VER_VALID	0x143
++#define BFA_IOC_PLL_POLL	1000000
++
++static bfa_boolean_t
++bfa_ioc_ct2_nfc_halted(void __iomem *rb)
++{
++	u32	r32;
++
++	r32 = readl(rb + CT2_NFC_CSR_SET_REG);
++	if (r32 & __NFC_CONTROLLER_HALTED)
++		return BFA_TRUE;
++
++	return BFA_FALSE;
++}
++
++static void
++bfa_ioc_ct2_nfc_resume(void __iomem *rb)
++{
++	u32	r32;
++	int i;
++
++	writel(__HALT_NFC_CONTROLLER, rb + CT2_NFC_CSR_CLR_REG);
++	for (i = 0; i < CT2_NFC_MAX_DELAY; i++) {
++		r32 = readl(rb + CT2_NFC_CSR_SET_REG);
++		if (!(r32 & __NFC_CONTROLLER_HALTED))
++			return;
++		udelay(1000);
++	}
++	WARN_ON(1);
++}
++
+ bfa_status_t
+ bfa_ioc_ct2_pll_init(void __iomem *rb, enum bfi_asic_mode mode)
+ {
+-	u32	wgn, r32;
+-	int i;
++	u32 wgn, r32, nfc_ver, i;
+ 
+-	/*
+-	 * Initialize PLL if not already done by NFC
+-	 */
+ 	wgn = readl(rb + CT2_WGN_STATUS);
+-	if (!(wgn & __GLBL_PF_VF_CFG_RDY)) {
++	nfc_ver = readl(rb + CT2_RSC_GPR15_REG);
++
++	if ((wgn == (__A2T_AHB_LOAD | __WGN_READY)) &&
++	    (nfc_ver >= CT2_NFC_VER_VALID)) {
++		if (bfa_ioc_ct2_nfc_halted(rb))
++			bfa_ioc_ct2_nfc_resume(rb);
++
++		writel(__RESET_AND_START_SCLK_LCLK_PLLS,
++		       rb + CT2_CSI_FW_CTL_SET_REG);
++
++		for (i = 0; i < BFA_IOC_PLL_POLL; i++) {
++			r32 = readl(rb + CT2_APP_PLL_LCLK_CTL_REG);
++			if (r32 & __RESET_AND_START_SCLK_LCLK_PLLS)
++				break;
++		}
++
++		WARN_ON(!(r32 & __RESET_AND_START_SCLK_LCLK_PLLS));
++
++		for (i = 0; i < BFA_IOC_PLL_POLL; i++) {
++			r32 = readl(rb + CT2_APP_PLL_LCLK_CTL_REG);
++			if (!(r32 & __RESET_AND_START_SCLK_LCLK_PLLS))
++				break;
++		}
++
++		WARN_ON(r32 & __RESET_AND_START_SCLK_LCLK_PLLS);
++		udelay(1000);
++
++		r32 = readl(rb + CT2_CSI_FW_CTL_REG);
++		WARN_ON(r32 & __RESET_AND_START_SCLK_LCLK_PLLS);
++	} else {
+ 		writel(__HALT_NFC_CONTROLLER, rb + CT2_NFC_CSR_SET_REG);
+ 		for (i = 0; i < CT2_NFC_MAX_DELAY; i++) {
+ 			r32 = readl(rb + CT2_NFC_CSR_SET_REG);
+@@ -804,57 +860,62 @@ bfa_ioc_ct2_pll_init(void __iomem *rb, enum bfi_asic_mode mode)
+ 				break;
+ 			udelay(1000);
+ 		}
+-	}
+ 
+-	/*
+-	 * Mask the interrupts and clear any
+-	 * pending interrupts.
+-	 */
+-	writel(1, (rb + CT2_LPU0_HOSTFN_MBOX0_MSK));
+-	writel(1, (rb + CT2_LPU1_HOSTFN_MBOX0_MSK));
+-
+-	r32 = readl((rb + CT2_LPU0_HOSTFN_CMD_STAT));
+-	if (r32 == 1) {
+-		writel(1, (rb + CT2_LPU0_HOSTFN_CMD_STAT));
+-		readl((rb + CT2_LPU0_HOSTFN_CMD_STAT));
++		bfa_ioc_ct2_mac_reset(rb);
++		bfa_ioc_ct2_sclk_init(rb);
++		bfa_ioc_ct2_lclk_init(rb);
++
++		/*
++		 * release soft reset on s_clk & l_clk
++		 */
++		r32 = readl(rb + CT2_APP_PLL_SCLK_CTL_REG);
++		writel(r32 & ~__APP_PLL_SCLK_LOGIC_SOFT_RESET,
++		       (rb + CT2_APP_PLL_SCLK_CTL_REG));
++
++		/*
++		 * release soft reset on s_clk & l_clk
++		 */
++		r32 = readl(rb + CT2_APP_PLL_LCLK_CTL_REG);
++		writel(r32 & ~__APP_PLL_LCLK_LOGIC_SOFT_RESET,
++		      (rb + CT2_APP_PLL_LCLK_CTL_REG));
+ 	}
+-	r32 = readl((rb + CT2_LPU1_HOSTFN_CMD_STAT));
+-	if (r32 == 1) {
+-		writel(1, (rb + CT2_LPU1_HOSTFN_CMD_STAT));
+-		readl((rb + CT2_LPU1_HOSTFN_CMD_STAT));
+-	}
+-
+-	bfa_ioc_ct2_mac_reset(rb);
+-	bfa_ioc_ct2_sclk_init(rb);
+-	bfa_ioc_ct2_lclk_init(rb);
+-
+-	/*
+-	 * release soft reset on s_clk & l_clk
+-	 */
+-	r32 = readl((rb + CT2_APP_PLL_SCLK_CTL_REG));
+-	writel(r32 & ~__APP_PLL_SCLK_LOGIC_SOFT_RESET,
+-		(rb + CT2_APP_PLL_SCLK_CTL_REG));
+-
+-	/*
+-	 * release soft reset on s_clk & l_clk
+-	 */
+-	r32 = readl((rb + CT2_APP_PLL_LCLK_CTL_REG));
+-	writel(r32 & ~__APP_PLL_LCLK_LOGIC_SOFT_RESET,
+-		(rb + CT2_APP_PLL_LCLK_CTL_REG));
+ 
+ 	/*
+ 	 * Announce flash device presence, if flash was corrupted.
+ 	 */
+ 	if (wgn == (__WGN_READY | __GLBL_PF_VF_CFG_RDY)) {
+-		r32 = readl((rb + PSS_GPIO_OUT_REG));
++		r32 = readl(rb + PSS_GPIO_OUT_REG);
+ 		writel(r32 & ~1, (rb + PSS_GPIO_OUT_REG));
+-		r32 = readl((rb + PSS_GPIO_OE_REG));
++		r32 = readl(rb + PSS_GPIO_OE_REG);
+ 		writel(r32 | 1, (rb + PSS_GPIO_OE_REG));
+ 	}
+ 
++	/*
++	 * Mask the interrupts and clear any
++	 * pending interrupts.
++	 */
++	writel(1, (rb + CT2_LPU0_HOSTFN_MBOX0_MSK));
++	writel(1, (rb + CT2_LPU1_HOSTFN_MBOX0_MSK));
++
++	/* For first time initialization, no need to clear interrupts */
++	r32 = readl(rb + HOST_SEM5_REG);
++	if (r32 & 0x1) {
++		r32 = readl(rb + CT2_LPU0_HOSTFN_CMD_STAT);
++		if (r32 == 1) {
++			writel(1, rb + CT2_LPU0_HOSTFN_CMD_STAT);
++			readl((rb + CT2_LPU0_HOSTFN_CMD_STAT));
++		}
++		r32 = readl(rb + CT2_LPU1_HOSTFN_CMD_STAT);
++		if (r32 == 1) {
++			writel(1, rb + CT2_LPU1_HOSTFN_CMD_STAT);
++			readl(rb + CT2_LPU1_HOSTFN_CMD_STAT);
++		}
++	}
++
+ 	bfa_ioc_ct2_mem_init(rb);
+ 
+-	writel(BFI_IOC_UNINIT, (rb + CT2_BFA_IOC0_STATE_REG));
+-	writel(BFI_IOC_UNINIT, (rb + CT2_BFA_IOC1_STATE_REG));
++	writel(BFI_IOC_UNINIT, rb + CT2_BFA_IOC0_STATE_REG);
++	writel(BFI_IOC_UNINIT, rb + CT2_BFA_IOC1_STATE_REG);
++
+ 	return BFA_STATUS_OK;
+ }
+diff --git a/drivers/scsi/bfa/bfi_reg.h b/drivers/scsi/bfa/bfi_reg.h
+index d892064..ed5f159 100644
+--- a/drivers/scsi/bfa/bfi_reg.h
++++ b/drivers/scsi/bfa/bfi_reg.h
+@@ -335,11 +335,17 @@ enum {
+ #define __PMM_1T_PNDB_P			0x00000002
+ #define CT2_PMM_1T_CONTROL_REG_P1	0x00023c1c
+ #define CT2_WGN_STATUS			0x00014990
++#define __A2T_AHB_LOAD			0x00000800
+ #define __WGN_READY			0x00000400
+ #define __GLBL_PF_VF_CFG_RDY		0x00000200
++#define CT2_NFC_CSR_CLR_REG		0x00027420
+ #define CT2_NFC_CSR_SET_REG		0x00027424
+ #define __HALT_NFC_CONTROLLER		0x00000002
+ #define __NFC_CONTROLLER_HALTED		0x00001000
++#define CT2_RSC_GPR15_REG		0x0002765c
++#define CT2_CSI_FW_CTL_REG		0x00027080
++#define CT2_CSI_FW_CTL_SET_REG		0x00027088
++#define __RESET_AND_START_SCLK_LCLK_PLLS 0x00010000
+ 
+ #define CT2_CSI_MAC0_CONTROL_REG	0x000270d0
+ #define __CSI_MAC_RESET			0x00000010
+-- 
+1.7.3.rc1
 
