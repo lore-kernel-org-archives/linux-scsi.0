@@ -1,53 +1,41 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: WARNING: at block/genhd.c:1474 __disk_unblock_events+0xe1/0xf0()
- -- should I be concerned?
-Date: Wed, 14 Mar 2012 18:59:58 +0000
-Message-ID: <4F60EAAE.3070803@acm.org>
-References: <4F5379F5.6010604@msgid.tls.msk.ru> <4F545EB5.1070700@msgid.tls.msk.ru> <4F54FE51.1010401@acm.org> <4F5F6E34.6070208@msgid.tls.msk.ru>
+From: chetan loke <loke.chetan@gmail.com>
+Subject: Re: [Lsf-pc] [Topic] Bcache
+Date: Wed, 14 Mar 2012 15:04:52 -0400
+Message-ID: <CAAsGZS5ODjG9EmfnYdkEejqptVa9u4EL32cb_mZB5oJ3Dfi=vg@mail.gmail.com>
+References: <20120314133228.GA2284@dhcp-172-18-216-138.mtv.corp.google.com>
+	<20120314155339.GC30235@redhat.com>
+	<CAAsGZS6Jw8xCdu3Wuve=iaKpd_UNdm72kbTbiQtypAfrZ46PWw@mail.gmail.com>
+	<CAH+dOx+Vgv12w=Q=8hCQggLg+kq6TnT2i3ZtnpZ=bNVyMgk31Q@mail.gmail.com>
+	<CAAsGZS5UTrYTbncAjk1Vor6R_-KWDboTw3sh+jXCbXm5q_o-TA@mail.gmail.com>
+	<CAH+dOx+M5so=YOx=O2vUjpdHsG+oiGsJh3GouoVq+twL+tO3Yw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01ant.iops.be ([212.53.4.34]:58970 "EHLO
-	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758815Ab2CNTAI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Mar 2012 15:00:08 -0400
-In-Reply-To: <4F5F6E34.6070208@msgid.tls.msk.ru>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:38430 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757383Ab2CNTEw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Mar 2012 15:04:52 -0400
+Received: by yenl12 with SMTP id l12so2154666yen.19
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Mar 2012 12:04:52 -0700 (PDT)
+In-Reply-To: <CAH+dOx+M5so=YOx=O2vUjpdHsG+oiGsJh3GouoVq+twL+tO3Yw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Kent Overstreet <koverstreet@google.com>
+Cc: Vivek Goyal <vgoyal@redhat.com>, lsf-pc@lists.linux-foundation.org, nauman@google.com, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-On 03/13/12 15:56, Michael Tokarev wrote:
-> WARNING: at block/genhd.c:1474 __disk_unblock_events+0x123/0x130()
+On Wed, Mar 14, 2012 at 2:41 PM, Kent Overstreet <koverstreet@google.com> wrote:
+> If you want me to implement bcache differently, shouldn't you explain why
 
-Does the patch below help ? This patch prevents that sd_probe_async()
-races with scsi_host_remove().
+relax. I explained it already but you are defensive about your code.
+flash-cache works, period. And I may be wrong but it is GPL'd. If perf
+is an issue then atleast let everyone know how it can be improved
+rather than saying my way or the highway. aren't you saying in your
+patches - support for thin prov etc. but if dm provides it then why
+are you duplicating code?
 
----
- drivers/scsi/sd.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> why? I'm not sure why I _have_ to justify my decisions to you.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c691fb5..7161fc1 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2544,6 +2544,7 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
- 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
- 		  sdp->removable ? "removable " : "");
- 	scsi_autopm_put_device(sdp);
-+	scsi_host_put(sdp->host);
- 	put_device(&sdkp->dev);
- }
- 
-@@ -2635,6 +2636,7 @@ static int sd_probe(struct device *dev)
- 	dev_set_drvdata(dev, sdkp);
- 
- 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
-+	scsi_host_get(sdp->host);
- 	async_schedule(sd_probe_async, sdkp);
- 
- 	return 0;
--- 
-1.7.7
-
+Others might want to contribute to it and not just consume it. This
+ain't your local sandbox. So it's quite common to get such questions
+when you are trying to add new functionality. May be I missed some of
+your emails. If so point me to them.
