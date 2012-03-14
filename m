@@ -1,76 +1,106 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [isci PATCH v3 3/4] libsas: suspend / resume support
-Date: Wed, 14 Mar 2012 14:33:05 -0700
-Message-ID: <1331760786.17334.18.camel@ultramagnus.opencreations.com>
-References: <Pine.LNX.4.44L0.1203141654460.1644-100000@iolanthe.rowland.org>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: Bcache
+Date: Wed, 14 Mar 2012 18:01:50 -0400
+Message-ID: <20120314220150.GA15464@redhat.com>
+References: <20120314133228.GA2284@dhcp-172-18-216-138.mtv.corp.google.com>
+ <20120314155339.GC30235@redhat.com>
+ <CAH+dOxKxZYSdZfewt5mHsvOk68VfNKzMQveibGLM+qunV6mOMw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:14075 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757051Ab2CNVdK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Mar 2012 17:33:10 -0400
-Received: by iage36 with SMTP id e36so3187138iag.25
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Mar 2012 14:33:07 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.44L0.1203141654460.1644-100000@iolanthe.rowland.org>
+Received: from mx1.redhat.com ([209.132.183.28]:17092 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031096Ab2CNWCG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Mar 2012 18:02:06 -0400
+Content-Disposition: inline
+In-Reply-To: <CAH+dOxKxZYSdZfewt5mHsvOk68VfNKzMQveibGLM+qunV6mOMw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
+To: Kent Overstreet <koverstreet@google.com>
+Cc: Vivek Goyal <vgoyal@redhat.com>, lsf-pc@lists.linux-foundation.org, nauman@google.com, linux-scsi@vger.kernel.org, dm-devel@redhat.com, Christoph Hellwig <hch@infradead.org>
 
-On Wed, 2012-03-14 at 17:11 -0400, Alan Stern wrote:
-> I see.  It's a nasty situation; I guess the best way to describe it is 
-> a conflict between the requirements of the PM and SCSI subsystems:
+On Wed, Mar 14 2012 at  1:24pm -0400,
+Kent Overstreet <koverstreet@google.com> wrote:
+
+> On Wed, Mar 14, 2012 at 11:53 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
+> > On Wed, Mar 14, 2012 at 09:32:28AM -0400, Kent Overstreet wrote:
+> >> I'm already registered to attend, but would it be too late in the
+> >> process to give a talk? I'd like to give a short talk about bcache, what
+> >> it does and where it's going (more than just caching).
+> >
+> > [CCing dm-devel list]
+> >
+> > I am curious if you considered writing a device mapper driver for this? If
+> > yes, why that is not a good choice. It seems to be stacked device and device
+> > mapper should be good at that. All the configuration through sysfs seems
+> > little odd to me.
 > 
-> 	The PM core runs suspend and resume operations in async 
-> 	threads, and these threads need to acquire the device lock;
-> 
-> 	The sd driver needs to insure that async probing is finished
-> 	when starting its remove routine, and it is called with the
-> 	device lock held.
-> 
-> The best solution might be to use a workqueue for sd's async probing 
-> instead of the "async" threads.  Then the work routine could be 
-> cancelled without doing async_synchronize_full().
+> Everyone asks this. Yeah, I considered it, I tried to make it work for
+> a couple weeks but it was far more trouble than it was worth. I'm not
+> opposed to someone else working on it but I'm not going to spend any
+> more time on it myself.
 
-Hmm... I was wondering why we needed a kernel global sync.  If this is
-just for probe work what about just doing something like the following?
-Keep the sync operation local to probe-work and not entangle with the
-resume-work?  I'll give this a shot when I get back to my test system.
+I really wish you'd have worked with dm-devel more persistently, you did
+post twice to dm-devel (at an awkward time of year but whatever):
+http://www.redhat.com/archives/dm-devel/2010-December/msg00204.html
+http://www.redhat.com/archives/dm-devel/2010-December/msg00232.html
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index bd17cf8..ec69e35 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2629,6 +2629,8 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
- 	put_device(&sdkp->dev);
- }
- 
-+static LIST_HEAD(sd_probe_domain);
-+
- /**
-  *	sd_probe - called during driver initialization and whenever a
-  *	new scsi device is attached to the system. It is called once
-@@ -2717,7 +2719,7 @@ static int sd_probe(struct device *dev)
- 	dev_set_drvdata(dev, sdkp);
- 
- 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
--	async_schedule(sd_probe_async, sdkp);
-+	async_schedule_domain(sd_probe_async, sdkp, &sd_probe_domain);
- 
- 	return 0;
- 
-@@ -2751,7 +2753,7 @@ static int sd_remove(struct device *dev)
- 	sdkp = dev_get_drvdata(dev);
- 	scsi_autopm_get_device(sdkp->device);
- 
--	async_synchronize_full();
-+	async_synchronize_full_domain(&sd_probe_domain);
- 	blk_queue_prep_rq(sdkp->device->request_queue, scsi_prep_fn);
- 	blk_queue_unprep_rq(sdkp->device->request_queue, NULL);
- 	device_del(&sdkp->dev);
+But somewhere along the way you privately gave up on DM... and have
+since repeatedly talked critically of DM.  Yet you have _never_
+substantiated _why_ DM is "far more trouble than it was worth", etc.
 
+Reading between the lines on a previous LKML bcache threads where the
+questions of "why not use DM or MD?" came up:
+https://lkml.org/lkml/2011/9/11/117
+https://lkml.org/lkml/2011/9/15/376
 
+It seemed your primary focus was on getting into the details of the SSD
+caching ASAP -- because that is what interested you.  Both DM and MD
+have a learning curve, maybe it was too frustrating and/or
+distracting to tackle.
 
+Anyway, I don't fault you for initially doing your own thing for a
+virtual device framework -- it allowed you to get to the stuff you
+really cared about sooner.
 
+That said, it is frustrating that you are content to continue doing your
+own thing because I'm now tasked with implementing a DM target for
+caching/HSM, as I touched on here:
+http://www.redhat.com/archives/linux-lvm/2012-March/msg00007.html
+
+I have little upfront incentive to make use of bcache because it doesn't
+use DM.  Not to mention DM already has its own b-tree implementation
+(granted bcache is much more than it's b+tree).  I obviously won't
+ignore bcache (or flashcache) but I'm setting out to build on DM
+infrastructure as effectively as possible.
+
+My initial take on how to factor things is to split into 2 DM targets:
+"hsm-cache" and "hsm".  These targets reuse the infrastructure that was
+recently introduced for dm-thinp: drivers/md/persistent-data/ and
+dm-bufio.
+
+Like the "thin-pool" target, the "hsm-cache" target provides a central
+resource (cache) that "hsm" target device(s) will attach to.  The
+"hsm-cache" target, like thin-pool, will have a data and metadata
+device, constructor:
+hsm-cache <metadata dev> <data dev> <data block size (sectors)> 
+
+The "hsm" target will pair an hsm-cache device with a backing device,
+constructor:
+hsm <dev_id> <cache_dev> <backing_dev>
+
+The same hsm-cache device may be used by multiple hsm devices.  So I
+mean this is the same high-level architecture as bcache (shared SSD
+cache).
+
+Where things get interesting is the mechanics of the caching and the
+metadata.  I'm coming to terms with the metadata now (based on desired
+features and cache replacement policies), once it is nailed down I
+expect things to fall into place pretty quickly.
+
+I'm very early in the design but hope to have an initial functional
+version of the code together in time for LSF -- ~2 weeks may be too
+ambitious but it's my goal (could be more doable if I confine the
+initial code to writethrough with LRU).
+
+Mike
