@@ -1,93 +1,47 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH] fcoe: Don't hold rtnl_mutex in fcoe_update_src_mac
-Date: Tue, 13 Mar 2012 15:52:54 -0700
-Message-ID: <20120313225254.5473.92174.stgit@localhost6.localdomain6>
-References: <bug-42918-11613@https.bugzilla.kernel.org>
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Re: linux-next: Tree for Mar 13 (ata)
+Date: Tue, 13 Mar 2012 17:36:50 -0700
+Message-ID: <CAA9_cmf=WzQkDpahv73yBbe1NHTrxV7=K1PToH80K9EY_rzUgg@mail.gmail.com>
+References: <20120313204114.e160849af7dbe5a4b4e5c0ad@canb.auug.org.au>
+	<4F5FB6F0.6050300@xenotime.net>
+	<4F5FBAA3.3080508@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52370 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753813Ab2CMWxH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Mar 2012 18:53:07 -0400
-In-Reply-To: <bug-42918-11613@https.bugzilla.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4F5FBAA3.3080508@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Randy Dunlap <rdunlap@xenotime.net>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: bvanassche@acm.org, linux-scsi@vger.kernel.org
-Cc: devel@open-fcoe.org, yi.zou@intel.com
 
-The rtnl_mutex was held to protect calls to dev_uc_add
-and dev_uc_del. Holding rtnl is not required as those
-functions make use of the netif_addr_lock* API to
-protect the MAC changing.
+On Tue, Mar 13, 2012 at 2:22 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
+> On 03/13/2012 05:06 PM, Randy Dunlap wrote:
+>>
+>> On 03/13/2012 02:41 AM, Stephen Rothwell wrote:
+>>
+>>> Hi all,
+>>>
+>>> Changes since 20120309:
+>>
+>>
+>>
+>> on x86_64:
+>>
+>> ERROR: "ata_sas_port_async_resume" [drivers/scsi/libsas/libsas.ko]
+>> undefined!
+>> ERROR: "ata_sas_port_async_suspend" [drivers/scsi/libsas/libsas.ko]
+>> undefined!
+>>
+>>
+>> # CONFIG_SUSPEND is not set
+>> # CONFIG_PM_RUNTIME is not set
+>> # CONFIG_ACPI is not set
+>
+>
+> That sounds like the scsi tree (linux-scsi CC added).
 
-This change fixes the following regression by removing
-the rtnl usage when fcoe_update_src_mac is called.
+That's on me, new suspend/resume support for libsas.  Looks like I
+need stubs for the CONFIG_PM=n case.  Revised patches coming up.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42918
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (&fip->ctlr_mutex){+.+...}:
-       [<c1091f70>] lock_acquire+0x80/0x1b0
-       [<c147655d>] mutex_lock_nested+0x6d/0x340
-       [<f8970c32>] fcoe_ctlr_link_up+0x22/0x180 [libfcoe]
-       [<f894620e>] fcoe_create+0x47e/0x6e0 [fcoe]
-       [<f8973dd3>] fcoe_transport_create+0x143/0x250 [libfcoe]
-       [<c10527e0>] param_attr_store+0x30/0x60
-       [<c1052696>] module_attr_store+0x26/0x40
-       [<c11a201e>] sysfs_write_file+0xae/0x100
-       [<c11449df>] vfs_write+0x8f/0x160
-       [<c1144cbd>] sys_write+0x3d/0x70
-       [<c147a0c4>] syscall_call+0x7/0xb
-
--> #0 (rtnl_mutex){+.+.+.}:
-       [<c109164b>] __lock_acquire+0x140b/0x1720
-       [<c1091f70>] lock_acquire+0x80/0x1b0
-       [<c147655d>] mutex_lock_nested+0x6d/0x340
-       [<c13a10c4>] rtnl_lock+0x14/0x20
-       [<f89445ac>] fcoe_update_src_mac+0x2c/0xb0 [fcoe]
-       [<f8971712>] fcoe_ctlr_timer_work+0x712/0xb60 [libfcoe]
-       [<c104fb69>] process_one_work+0x179/0x5d0
-       [<c10502f1>] worker_thread+0x121/0x2d0
-       [<c10550ed>] kthread+0x7d/0x90
-       [<c1481a82>] kernel_thread_helper+0x6/0x10
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(&fip->ctlr_mutex);
-                               lock(rtnl_mutex);
-                               lock(&fip->ctlr_mutex);
-  lock(rtnl_mutex);
-
- *** DEADLOCK ***
-
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
- drivers/scsi/fcoe/fcoe.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index e959960..85b8203 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -539,13 +539,11 @@ static void fcoe_update_src_mac(struct fc_lport *lport, u8 *addr)
- 	struct fcoe_port *port = lport_priv(lport);
- 	struct fcoe_interface *fcoe = port->priv;
- 
--	rtnl_lock();
- 	if (!is_zero_ether_addr(port->data_src_addr))
- 		dev_uc_del(fcoe->netdev, port->data_src_addr);
- 	if (!is_zero_ether_addr(addr))
- 		dev_uc_add(fcoe->netdev, addr);
- 	memcpy(port->data_src_addr, addr, ETH_ALEN);
--	rtnl_unlock();
- }
- 
- /**
-
+--
+Dan
