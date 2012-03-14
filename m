@@ -1,65 +1,281 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [libsas PATCH v11 0/2] libsas error handling + discovery v11
-Date: Tue, 13 Mar 2012 23:30:13 -0700
-Message-ID: <20120314062643.6772.79462.stgit@dwillia2-linux.jf.intel.com>
+Subject: [libsas PATCH v11 1/2] libsas: enforce eh strategy handlers only in
+ eh context
+Date: Tue, 13 Mar 2012 23:30:18 -0700
+Message-ID: <20120314063018.6772.58856.stgit@dwillia2-linux.jf.intel.com>
+References: <20120314062643.6772.79462.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120314062643.6772.79462.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Changes since v10: http://marc.info/?l=linux-scsi&m=133143989626340&0w=2
+The strategy handlers may be called in places that are problematic for
+libsas (i.e. sata resets outside of domain revalidation filtering /
+libata link recovery), or problematic for userspace (non-blocking ioctl
+to sleeping reset functions).  However, these routines are also called
+for eh escalations and recovery of scsi_eh_prep_cmnd(), so permit them
+as long as we are running in the host's error handler, otherwise arrange
+for them to be triggered in eh_context.
 
-Rebase the tree on the scsi-misc to drop the accepted patches and
-resolve the conflicts in -next.  Only "libsas: enforce eh strategy
-handlers only in eh context" had to be fixed up (collision in
-sas_init_dev).
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/libsas/sas_discover.c  |   11 +++
+ drivers/scsi/libsas/sas_init.c      |    2 +
+ drivers/scsi/libsas/sas_scsi_host.c |  121 ++++++++++++++++++++++++++++++++++-
+ include/scsi/libsas.h               |   10 +++
+ 4 files changed, 140 insertions(+), 4 deletions(-)
 
-Add a new fix for a regression in sas_get_port_device().
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index b82949c..c140355 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -39,6 +39,7 @@ void sas_init_dev(struct domain_device *dev)
+ {
+ 	switch (dev->dev_type) {
+ 	case SAS_END_DEV:
++		INIT_LIST_HEAD(&dev->ssp_dev.eh_list_node);
+ 		break;
+ 	case EDGE_DEV:
+ 	case FANOUT_DEV:
+@@ -274,6 +275,8 @@ void sas_free_device(struct kref *kref)
+ 
+ static void sas_unregister_common_dev(struct asd_sas_port *port, struct domain_device *dev)
+ {
++	struct sas_ha_struct *ha = port->ha;
++
+ 	sas_notify_lldd_dev_gone(dev);
+ 	if (!dev->parent)
+ 		dev->port->port_dev = NULL;
+@@ -286,6 +289,14 @@ static void sas_unregister_common_dev(struct asd_sas_port *port, struct domain_d
+ 		sas_ata_end_eh(dev->sata_dev.ap);
+ 	spin_unlock_irq(&port->dev_list_lock);
+ 
++	spin_lock_irq(&ha->lock);
++	if (dev->dev_type == SAS_END_DEV &&
++	    !list_empty(&dev->ssp_dev.eh_list_node)) {
++		list_del_init(&dev->ssp_dev.eh_list_node);
++		ha->eh_active--;
++	}
++	spin_unlock_irq(&ha->lock);
++
+ 	sas_put_device(dev);
+ }
+ 
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index 6909fef..1bbab3d 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -116,7 +116,9 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
+ 	set_bit(SAS_HA_REGISTERED, &sas_ha->state);
+ 	spin_lock_init(&sas_ha->lock);
+ 	mutex_init(&sas_ha->drain_mutex);
++	init_waitqueue_head(&sas_ha->eh_wait_q);
+ 	INIT_LIST_HEAD(&sas_ha->defer_q);
++	INIT_LIST_HEAD(&sas_ha->eh_dev_q);
+ 
+ 	error = sas_register_phys(sas_ha);
+ 	if (error) {
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index cd63d80..50a18a6 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -460,14 +460,88 @@ struct sas_phy *sas_get_local_phy(struct domain_device *dev)
+ }
+ EXPORT_SYMBOL_GPL(sas_get_local_phy);
+ 
++static void sas_wait_eh(struct domain_device *dev)
++{
++	struct sas_ha_struct *ha = dev->port->ha;
++	DEFINE_WAIT(wait);
++
++	if (dev_is_sata(dev)) {
++		ata_port_wait_eh(dev->sata_dev.ap);
++		return;
++	}
++ retry:
++	spin_lock_irq(&ha->lock);
++
++	while (test_bit(SAS_DEV_EH_PENDING, &dev->state)) {
++		prepare_to_wait(&ha->eh_wait_q, &wait, TASK_UNINTERRUPTIBLE);
++		spin_unlock_irq(&ha->lock);
++		schedule();
++		spin_lock_irq(&ha->lock);
++	}
++	finish_wait(&ha->eh_wait_q, &wait);
++
++	spin_unlock_irq(&ha->lock);
++
++	/* make sure SCSI EH is complete */
++	if (scsi_host_in_recovery(ha->core.shost)) {
++		msleep(10);
++		goto retry;
++	}
++}
++EXPORT_SYMBOL(sas_wait_eh);
++
++static int sas_queue_reset(struct domain_device *dev, int reset_type, int lun, int wait)
++{
++	struct sas_ha_struct *ha = dev->port->ha;
++	int scheduled = 0, tries = 100;
++
++	/* ata: promote lun reset to bus reset */
++	if (dev_is_sata(dev)) {
++		sas_ata_schedule_reset(dev);
++		if (wait)
++			sas_ata_wait_eh(dev);
++		return SUCCESS;
++	}
++
++	while (!scheduled && tries--) {
++		spin_lock_irq(&ha->lock);
++		if (!test_bit(SAS_DEV_EH_PENDING, &dev->state) &&
++		    !test_bit(reset_type, &dev->state)) {
++			scheduled = 1;
++			ha->eh_active++;
++			list_add_tail(&dev->ssp_dev.eh_list_node, &ha->eh_dev_q);
++			set_bit(SAS_DEV_EH_PENDING, &dev->state);
++			set_bit(reset_type, &dev->state);
++			int_to_scsilun(lun, &dev->ssp_dev.reset_lun);
++			scsi_schedule_eh(ha->core.shost);
++		}
++		spin_unlock_irq(&ha->lock);
++
++		if (wait)
++			sas_wait_eh(dev);
++
++		if (scheduled)
++			return SUCCESS;
++	}
++
++	SAS_DPRINTK("%s reset of %s failed\n",
++		    reset_type == SAS_DEV_LU_RESET ? "LUN" : "Bus",
++		    dev_name(&dev->rphy->dev));
++
++	return FAILED;
++}
++
+ /* Attempt to send a LUN reset message to a device */
+ int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ {
+-	struct domain_device *dev = cmd_to_domain_dev(cmd);
+-	struct sas_internal *i =
+-		to_sas_internal(dev->port->ha->core.shost->transportt);
+-	struct scsi_lun lun;
+ 	int res;
++	struct scsi_lun lun;
++	struct Scsi_Host *host = cmd->device->host;
++	struct domain_device *dev = cmd_to_domain_dev(cmd);
++	struct sas_internal *i = to_sas_internal(host->transportt);
++
++	if (current != host->ehandler)
++		return sas_queue_reset(dev, SAS_DEV_LU_RESET, cmd->device->lun, 0);
+ 
+ 	int_to_scsilun(cmd->device->lun, &lun);
+ 
+@@ -486,8 +560,12 @@ int sas_eh_bus_reset_handler(struct scsi_cmnd *cmd)
+ {
+ 	struct domain_device *dev = cmd_to_domain_dev(cmd);
+ 	struct sas_phy *phy = sas_get_local_phy(dev);
++	struct Scsi_Host *host = cmd->device->host;
+ 	int res;
+ 
++	if (current != host->ehandler)
++		return sas_queue_reset(dev, SAS_DEV_RESET, 0, 0);
++
+ 	res = sas_phy_reset(phy, 1);
+ 	if (res)
+ 		SAS_DPRINTK("Bus reset of %s failed 0x%x\n",
+@@ -667,6 +745,39 @@ static void sas_eh_handle_sas_errors(struct Scsi_Host *shost, struct list_head *
+ 	goto out;
+ }
+ 
++static void sas_eh_handle_resets(struct Scsi_Host *shost)
++{
++	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
++	struct sas_internal *i = to_sas_internal(shost->transportt);
++
++	/* handle directed resets to sas devices */
++	spin_lock_irq(&ha->lock);
++	while (!list_empty(&ha->eh_dev_q)) {
++		struct domain_device *dev;
++		struct ssp_device *ssp;
++
++		ssp = list_entry(ha->eh_dev_q.next, typeof(*ssp), eh_list_node);
++		list_del_init(&ssp->eh_list_node);
++		dev = container_of(ssp, typeof(*dev), ssp_dev);
++		kref_get(&dev->kref);
++		WARN_ONCE(dev_is_sata(dev), "ssp reset to ata device?\n");
++
++		spin_unlock_irq(&ha->lock);
++
++		if (test_and_clear_bit(SAS_DEV_LU_RESET, &dev->state))
++			i->dft->lldd_lu_reset(dev, ssp->reset_lun.scsi_lun);
++
++		if (test_and_clear_bit(SAS_DEV_RESET, &dev->state))
++			i->dft->lldd_I_T_nexus_reset(dev);
++
++		sas_put_device(dev);
++		spin_lock_irq(&ha->lock);
++		clear_bit(SAS_DEV_EH_PENDING, &dev->state);
++		ha->eh_active--;
++	}
++	spin_unlock_irq(&ha->lock);
++}
++
+ 
+ void sas_scsi_recover_host(struct Scsi_Host *shost)
+ {
+@@ -709,6 +820,8 @@ out:
+ 	if (ha->lldd_max_execute_num > 1)
+ 		wake_up_process(ha->core.queue_thread);
+ 
++	sas_eh_handle_resets(shost);
++
+ 	/* now link into libata eh --- if we have any ata devices */
+ 	sas_ata_strategy_handler(shost);
+ 
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index c0c94b3..1b14d80 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -174,10 +174,17 @@ struct sata_device {
+ 	struct ata_taskfile tf;
+ };
+ 
++struct ssp_device {
++	struct list_head eh_list_node; /* pending a user requested eh action */
++	struct scsi_lun reset_lun;
++};
++
+ enum {
+ 	SAS_DEV_GONE,
+ 	SAS_DEV_DESTROY,
+ 	SAS_DEV_EH_PENDING,
++	SAS_DEV_LU_RESET,
++	SAS_DEV_RESET,
+ };
+ 
+ struct domain_device {
+@@ -211,6 +218,7 @@ struct domain_device {
+         union {
+                 struct expander_device ex_dev;
+                 struct sata_device     sata_dev; /* STP & directly attached */
++		struct ssp_device      ssp_dev;
+         };
+ 
+         void *lldd_dev;
+@@ -387,6 +395,8 @@ struct sas_ha_struct {
+ 	unsigned long	  state;
+ 	spinlock_t 	  lock;
+ 	int		  eh_active;
++	wait_queue_head_t eh_wait_q;
++	struct list_head  eh_dev_q;
+ 
+ 	struct mutex disco_mutex;
+ 
 
- [libsas PATCH 1/2 v11] libsas: enforce eh strategy handlers only in eh context
- [libsas PATCH 2/2 v11] libsas: fix sas_get_port_device regression
-
-The delta vs scsi-misc is now (cd8df93..libsas-eh-reworks-v11):
-
-Dan Carpenter (1):
-      mvsas: remove unused variable in mvs_task_exec()
-
-Dan Williams (9):
-      libsas: introduce sas_work to fix sas_drain_work vs sas_queue_work
-      libsas: cleanup spurious calls to scsi_schedule_eh
-      libata, libsas: introduce sched_eh and end_eh port ops
-      libsas: enforce eh strategy handlers only in eh context
-      libsas: add sas_eh_abort_handler
-      libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_handler
-      isci: use sas eh strategy handlers
-      libsas: trim sas_task of slow path infrastructure
-      libsas: fix sas_get_port_device regression
-
-Jeff Skirvin (1):
-      libsas: sas_rediscover_dev did not look at the SMP exec status.
-
-Thomas Jackson (1):
-      libsas: fix sas_find_bcast_phy() in the presence of 'vacant' phys
-
- drivers/ata/libata-core.c           |    4 +
- drivers/ata/libata-eh.c             |   57 ++++++++--
- drivers/scsi/isci/init.c            |    3 +
- drivers/scsi/libsas/sas_ata.c       |   63 ++++++-----
- drivers/scsi/libsas/sas_discover.c  |   54 ++++++----
- drivers/scsi/libsas/sas_event.c     |   36 ++++---
- drivers/scsi/libsas/sas_expander.c  |   44 +++++---
- drivers/scsi/libsas/sas_init.c      |   50 ++++++---
- drivers/scsi/libsas/sas_internal.h  |    6 +-
- drivers/scsi/libsas/sas_phy.c       |   21 ++---
- drivers/scsi/libsas/sas_port.c      |   15 +--
- drivers/scsi/libsas/sas_scsi_host.c |  199 ++++++++++++++++++++++++++++++-----
- drivers/scsi/mvsas/mv_sas.c         |   21 ++--
- drivers/scsi/pm8001/pm8001_sas.c    |   37 ++++---
- include/linux/libata.h              |    4 +
- include/scsi/libsas.h               |   69 ++++++++++--
- include/scsi/sas_ata.h              |    9 +-
- 17 files changed, 487 insertions(+), 205 deletions(-)
