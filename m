@@ -1,77 +1,158 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: Re: [PATCH] fcoe: Don't hold rtnl_mutex in fcoe_update_src_mac
-Date: Wed, 14 Mar 2012 00:42:05 +0000
-Message-ID: <4F5FE95D.8040408@intel.com>
-References: <bug-42918-11613@https.bugzilla.kernel.org>
- <20120313225254.5473.92174.stgit@localhost6.localdomain6>
+From: <kgudipat@brocade.com>
+Subject: [PATCH 8/9] bfa: BSG and User interface fixes.
+Date: Tue, 13 Mar 2012 17:41:02 -0700
+Message-ID: <1331685662-22269-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:16756 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757646Ab2CNApR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Mar 2012 20:45:17 -0400
-In-Reply-To: <20120313225254.5473.92174.stgit@localhost6.localdomain6>
-Content-Language: en-US
-Content-ID: <900869DFF3A7324EA0F50D751DF0F245@intel.com>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:52163 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964778Ab2CNBOd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Mar 2012 21:14:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "bvanassche@acm.org" <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "Zou, Yi" <yi.zou@intel.com>
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
 
-T24gMDMvMTMvMjAxMiAwMzo1MiBQTSwgUm9iZXJ0IExvdmUgd3JvdGU6DQo+IFRoZSBydG5sX211
-dGV4IHdhcyBoZWxkIHRvIHByb3RlY3QgY2FsbHMgdG8gZGV2X3VjX2FkZA0KPiBhbmQgZGV2X3Vj
-X2RlbC4gSG9sZGluZyBydG5sIGlzIG5vdCByZXF1aXJlZCBhcyB0aG9zZQ0KPiBmdW5jdGlvbnMg
-bWFrZSB1c2Ugb2YgdGhlIG5ldGlmX2FkZHJfbG9jayogQVBJIHRvDQo+IHByb3RlY3QgdGhlIE1B
-QyBjaGFuZ2luZy4NCj4NCj4gVGhpcyBjaGFuZ2UgZml4ZXMgdGhlIGZvbGxvd2luZyByZWdyZXNz
-aW9uIGJ5IHJlbW92aW5nDQo+IHRoZSBydG5sIHVzYWdlIHdoZW4gZmNvZV91cGRhdGVfc3JjX21h
-YyBpcyBjYWxsZWQuDQo+DQo+IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5j
-Z2k/aWQ9NDI5MTgNCj4NCj4gdGhlIGV4aXN0aW5nIGRlcGVuZGVuY3kgY2hhaW4gKGluIHJldmVy
-c2Ugb3JkZXIpIGlzOg0KPg0KPiAtPiAgIzEgKCZmaXAtPmN0bHJfbXV0ZXgpeysuKy4uLn06DQo+
-ICAgICAgICAgWzxjMTA5MWY3MD5dIGxvY2tfYWNxdWlyZSsweDgwLzB4MWIwDQo+ICAgICAgICAg
-WzxjMTQ3NjU1ZD5dIG11dGV4X2xvY2tfbmVzdGVkKzB4NmQvMHgzNDANCj4gICAgICAgICBbPGY4
-OTcwYzMyPl0gZmNvZV9jdGxyX2xpbmtfdXArMHgyMi8weDE4MCBbbGliZmNvZV0NCj4gICAgICAg
-ICBbPGY4OTQ2MjBlPl0gZmNvZV9jcmVhdGUrMHg0N2UvMHg2ZTAgW2Zjb2VdDQo+ICAgICAgICAg
-WzxmODk3M2RkMz5dIGZjb2VfdHJhbnNwb3J0X2NyZWF0ZSsweDE0My8weDI1MCBbbGliZmNvZV0N
-Cj4gICAgICAgICBbPGMxMDUyN2UwPl0gcGFyYW1fYXR0cl9zdG9yZSsweDMwLzB4NjANCj4gICAg
-ICAgICBbPGMxMDUyNjk2Pl0gbW9kdWxlX2F0dHJfc3RvcmUrMHgyNi8weDQwDQo+ICAgICAgICAg
-WzxjMTFhMjAxZT5dIHN5c2ZzX3dyaXRlX2ZpbGUrMHhhZS8weDEwMA0KPiAgICAgICAgIFs8YzEx
-NDQ5ZGY+XSB2ZnNfd3JpdGUrMHg4Zi8weDE2MA0KPiAgICAgICAgIFs8YzExNDRjYmQ+XSBzeXNf
-d3JpdGUrMHgzZC8weDcwDQo+ICAgICAgICAgWzxjMTQ3YTBjND5dIHN5c2NhbGxfY2FsbCsweDcv
-MHhiDQo+DQo+IC0+ICAjMCAocnRubF9tdXRleCl7Ky4rLisufToNCj4gICAgICAgICBbPGMxMDkx
-NjRiPl0gX19sb2NrX2FjcXVpcmUrMHgxNDBiLzB4MTcyMA0KPiAgICAgICAgIFs8YzEwOTFmNzA+
-XSBsb2NrX2FjcXVpcmUrMHg4MC8weDFiMA0KPiAgICAgICAgIFs8YzE0NzY1NWQ+XSBtdXRleF9s
-b2NrX25lc3RlZCsweDZkLzB4MzQwDQo+ICAgICAgICAgWzxjMTNhMTBjND5dIHJ0bmxfbG9jaysw
-eDE0LzB4MjANCj4gICAgICAgICBbPGY4OTQ0NWFjPl0gZmNvZV91cGRhdGVfc3JjX21hYysweDJj
-LzB4YjAgW2Zjb2VdDQo+ICAgICAgICAgWzxmODk3MTcxMj5dIGZjb2VfY3Rscl90aW1lcl93b3Jr
-KzB4NzEyLzB4YjYwIFtsaWJmY29lXQ0KPiAgICAgICAgIFs8YzEwNGZiNjk+XSBwcm9jZXNzX29u
-ZV93b3JrKzB4MTc5LzB4NWQwDQo+ICAgICAgICAgWzxjMTA1MDJmMT5dIHdvcmtlcl90aHJlYWQr
-MHgxMjEvMHgyZDANCj4gICAgICAgICBbPGMxMDU1MGVkPl0ga3RocmVhZCsweDdkLzB4OTANCj4g
-ICAgICAgICBbPGMxNDgxYTgyPl0ga2VybmVsX3RocmVhZF9oZWxwZXIrMHg2LzB4MTANCj4NCj4g
-b3RoZXIgaW5mbyB0aGF0IG1pZ2h0IGhlbHAgdXMgZGVidWcgdGhpczoNCj4NCj4gICBQb3NzaWJs
-ZSB1bnNhZmUgbG9ja2luZyBzY2VuYXJpbzoNCj4NCj4gICAgICAgICBDUFUwICAgICAgICAgICAg
-ICAgICAgICBDUFUxDQo+ICAgICAgICAgLS0tLSAgICAgICAgICAgICAgICAgICAgLS0tLQ0KPiAg
-ICBsb2NrKCZmaXAtPmN0bHJfbXV0ZXgpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIGxvY2socnRubF9tdXRleCk7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-bG9jaygmZmlwLT5jdGxyX211dGV4KTsNCj4gICAgbG9jayhydG5sX211dGV4KTsNCj4NCj4gICAq
-KiogREVBRExPQ0sgKioqDQo+DQo+IFNpZ25lZC1vZmYtYnk6IFJvYmVydCBMb3ZlPHJvYmVydC53
-LmxvdmVAaW50ZWwuY29tPg0KPiAtLS0NCj4gICBkcml2ZXJzL3Njc2kvZmNvZS9mY29lLmMgfCAg
-ICAyIC0tDQo+ICAgMSBmaWxlcyBjaGFuZ2VkLCAwIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25z
-KC0pDQo+DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvZmNvZS9mY29lLmMgYi9kcml2ZXJz
-L3Njc2kvZmNvZS9mY29lLmMNCj4gaW5kZXggZTk1OTk2MC4uODViODIwMyAxMDA2NDQNCj4gLS0t
-IGEvZHJpdmVycy9zY3NpL2Zjb2UvZmNvZS5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9mY29lL2Zj
-b2UuYw0KPiBAQCAtNTM5LDEzICs1MzksMTEgQEAgc3RhdGljIHZvaWQgZmNvZV91cGRhdGVfc3Jj
-X21hYyhzdHJ1Y3QgZmNfbHBvcnQgKmxwb3J0LCB1OCAqYWRkcikNCj4gICAJc3RydWN0IGZjb2Vf
-cG9ydCAqcG9ydCA9IGxwb3J0X3ByaXYobHBvcnQpOw0KPiAgIAlzdHJ1Y3QgZmNvZV9pbnRlcmZh
-Y2UgKmZjb2UgPSBwb3J0LT5wcml2Ow0KPg0KPiAtCXJ0bmxfbG9jaygpOw0KPiAgIAlpZiAoIWlz
-X3plcm9fZXRoZXJfYWRkcihwb3J0LT5kYXRhX3NyY19hZGRyKSkNCj4gICAJCWRldl91Y19kZWwo
-ZmNvZS0+bmV0ZGV2LCBwb3J0LT5kYXRhX3NyY19hZGRyKTsNCj4gICAJaWYgKCFpc196ZXJvX2V0
-aGVyX2FkZHIoYWRkcikpDQo+ICAgCQlkZXZfdWNfYWRkKGZjb2UtPm5ldGRldiwgYWRkcik7DQo+
-ICAgCW1lbWNweShwb3J0LT5kYXRhX3NyY19hZGRyLCBhZGRyLCBFVEhfQUxFTik7DQo+IC0JcnRu
-bF91bmxvY2soKTsNCj4gICB9DQo+DQo+ICAgLyoqDQo+DQpUaGlzIGlzbid0IGdvaW5nIHRvIHdv
-cmsuIFdlIGRvIG5lZWQgcnRubF9sb2NrIHdoZW4gY2FsbGluZyANCmRldl91Y19hZGQvZGVsIHRv
-IGVuc3VyZSB0aGUgZHJpdmVyIGlzbid0IHJlbW92ZWQgd2hpbGUgbWFraW5nIHRoZSANCmNoYW5n
-ZS4gSSBoYXZlIGFuIGFsdGVybmF0aXZlIHBhdGNoIHRoYXQgSSdsbCBwb3N0IGFzIHNvb24gYXMg
-SSBjbGVhbiBpdCANCnVwIGEgYml0Lg0KDQpOYWNrZWQtYnk6IFJvYmVydCBMb3ZlIDxyb2JlcnQu
-dy5sb3ZlQGludGVsLmNvbT4=
+From: Krishna Gudipati <kgudipat@brocade.com>
+
+Change details:
+	- Made changes to set the rport maxfrsize param to use a value that is
+	  equal to or less than the Buffer-to-Buffer Receive Data_Field size
+	  specified in the Common Service Parameters.
+	- Increased the diag memtest timeout for the Brocade-1860 adapters.
+	- Made changes to enable valid port speed configuration check for all adapters.
+	- Made changes to increase the max hw segments in a request, in order to
+	  support larger data transfers from user space.
+
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfa_fcs_rport.c |    5 ++++-
+ drivers/scsi/bfa/bfa_ioc.c       |    8 ++++++--
+ drivers/scsi/bfa/bfa_svc.c       |   38 ++++++++++++++++++--------------------
+ drivers/scsi/bfa/bfad_bsg.c      |    7 +++++++
+ 4 files changed, 35 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
+index 52628d5..fe0463a 100644
+--- a/drivers/scsi/bfa/bfa_fcs_rport.c
++++ b/drivers/scsi/bfa/bfa_fcs_rport.c
+@@ -2169,7 +2169,10 @@ bfa_fcs_rport_update(struct bfa_fcs_rport_s *rport, struct fc_logi_s *plogi)
+ 	 * - MAX receive frame size
+ 	 */
+ 	rport->cisc = plogi->csp.cisc;
+-	rport->maxfrsize = be16_to_cpu(plogi->class3.rxsz);
++	if (be16_to_cpu(plogi->class3.rxsz) < be16_to_cpu(plogi->csp.rxsz))
++		rport->maxfrsize = be16_to_cpu(plogi->class3.rxsz);
++	else
++		rport->maxfrsize = be16_to_cpu(plogi->csp.rxsz);
+ 
+ 	bfa_trc(port->fcs, be16_to_cpu(plogi->csp.bbcred));
+ 	bfa_trc(port->fcs, port->fabric->bb_credit);
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 56cf3f6..14e6284 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -4449,7 +4449,7 @@ bfa_flash_read_part(struct bfa_flash_s *flash, enum bfa_flash_part_type type,
+  */
+ 
+ #define BFA_DIAG_MEMTEST_TOV	50000	/* memtest timeout in msec */
+-#define BFA_DIAG_FWPING_TOV	1000	/* msec */
++#define CT2_BFA_DIAG_MEMTEST_TOV	(9*30*1000)  /* 4.5 min */
+ 
+ /* IOC event handler */
+ static void
+@@ -4804,6 +4804,8 @@ bfa_diag_memtest(struct bfa_diag_s *diag, struct bfa_diag_memtest_s *memtest,
+ 		u32 pattern, struct bfa_diag_memtest_result *result,
+ 		bfa_cb_diag_t cbfn, void *cbarg)
+ {
++	u32	memtest_tov;
++
+ 	bfa_trc(diag, pattern);
+ 
+ 	if (!bfa_ioc_adapter_is_disabled(diag->ioc))
+@@ -4823,8 +4825,10 @@ bfa_diag_memtest(struct bfa_diag_s *diag, struct bfa_diag_memtest_s *memtest,
+ 	/* download memtest code and take LPU0 out of reset */
+ 	bfa_ioc_boot(diag->ioc, BFI_FWBOOT_TYPE_MEMTEST, BFI_FWBOOT_ENV_OS);
+ 
++	memtest_tov = (bfa_ioc_asic_gen(diag->ioc) == BFI_ASIC_GEN_CT2) ?
++		       CT2_BFA_DIAG_MEMTEST_TOV : BFA_DIAG_MEMTEST_TOV;
+ 	bfa_timer_begin(diag->ioc->timer_mod, &diag->timer,
+-			bfa_diag_memtest_done, diag, BFA_DIAG_MEMTEST_TOV);
++			bfa_diag_memtest_done, diag, memtest_tov);
+ 	diag->timer_active = 1;
+ 	return BFA_STATUS_OK;
+ }
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 6583b2d..2e856e6 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -3576,26 +3576,24 @@ bfa_fcport_cfg_speed(struct bfa_s *bfa, enum bfa_port_speed speed)
+ 		return BFA_STATUS_UNSUPP_SPEED;
+ 	}
+ 
+-	/* For Mezz card, port speed entered needs to be checked */
+-	if (bfa_mfg_is_mezz(fcport->bfa->ioc.attr->card_type)) {
+-		if (bfa_ioc_get_type(&fcport->bfa->ioc) == BFA_IOC_TYPE_FC) {
+-			/* For CT2, 1G is not supported */
+-			if ((speed == BFA_PORT_SPEED_1GBPS) &&
+-			    (bfa_asic_id_ct2(bfa->ioc.pcidev.device_id)))
+-				return BFA_STATUS_UNSUPP_SPEED;
++	/* Port speed entered needs to be checked */
++	if (bfa_ioc_get_type(&fcport->bfa->ioc) == BFA_IOC_TYPE_FC) {
++		/* For CT2, 1G is not supported */
++		if ((speed == BFA_PORT_SPEED_1GBPS) &&
++		    (bfa_asic_id_ct2(bfa->ioc.pcidev.device_id)))
++			return BFA_STATUS_UNSUPP_SPEED;
+ 
+-			/* Already checked for Auto Speed and Max Speed supp */
+-			if (!(speed == BFA_PORT_SPEED_1GBPS ||
+-			      speed == BFA_PORT_SPEED_2GBPS ||
+-			      speed == BFA_PORT_SPEED_4GBPS ||
+-			      speed == BFA_PORT_SPEED_8GBPS ||
+-			      speed == BFA_PORT_SPEED_16GBPS ||
+-			      speed == BFA_PORT_SPEED_AUTO))
+-				return BFA_STATUS_UNSUPP_SPEED;
+-		} else {
+-			if (speed != BFA_PORT_SPEED_10GBPS)
+-				return BFA_STATUS_UNSUPP_SPEED;
+-		}
++		/* Already checked for Auto Speed and Max Speed supp */
++		if (!(speed == BFA_PORT_SPEED_1GBPS ||
++		      speed == BFA_PORT_SPEED_2GBPS ||
++		      speed == BFA_PORT_SPEED_4GBPS ||
++		      speed == BFA_PORT_SPEED_8GBPS ||
++		      speed == BFA_PORT_SPEED_16GBPS ||
++		      speed == BFA_PORT_SPEED_AUTO))
++			return BFA_STATUS_UNSUPP_SPEED;
++	} else {
++		if (speed != BFA_PORT_SPEED_10GBPS)
++			return BFA_STATUS_UNSUPP_SPEED;
+ 	}
+ 
+ 	fcport->cfg.speed = speed;
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 31a1d8a..e1f4b10 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -2762,9 +2762,16 @@ bfad_im_bsg_vendor_request(struct fc_bsg_job *job)
+ 	struct bfad_im_port_s *im_port =
+ 			(struct bfad_im_port_s *) job->shost->hostdata[0];
+ 	struct bfad_s *bfad = im_port->bfad;
++	struct request_queue *request_q = job->req->q;
+ 	void *payload_kbuf;
+ 	int rc = -EINVAL;
+ 
++	/*
++	 * Set the BSG device request_queue size to 256 to support
++	 * payloads larger than 512*1024K bytes.
++	 */
++	blk_queue_max_segments(request_q, 256);
++
+ 	/* Allocate a temp buffer to hold the passed in user space command */
+ 	payload_kbuf = kzalloc(job->request_payload.payload_len, GFP_KERNEL);
+ 	if (!payload_kbuf) {
+-- 
+1.7.3.rc1
+
