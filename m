@@ -1,50 +1,53 @@
-From: Ted Ts'o <tytso@mit.edu>
-Subject: Re: [Lsf-pc] [Topic] Bcache
-Date: Wed, 14 Mar 2012 14:54:56 -0400
-Message-ID: <20120314185455.GD28042@thunk.org>
-References: <20120314133228.GA2284@dhcp-172-18-216-138.mtv.corp.google.com>
- <20120314155339.GC30235@redhat.com>
- <CAAsGZS6Jw8xCdu3Wuve=iaKpd_UNdm72kbTbiQtypAfrZ46PWw@mail.gmail.com>
- <CAH+dOx+Vgv12w=Q=8hCQggLg+kq6TnT2i3ZtnpZ=bNVyMgk31Q@mail.gmail.com>
- <CAAsGZS5UTrYTbncAjk1Vor6R_-KWDboTw3sh+jXCbXm5q_o-TA@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: WARNING: at block/genhd.c:1474 __disk_unblock_events+0xe1/0xf0()
+ -- should I be concerned?
+Date: Wed, 14 Mar 2012 18:59:58 +0000
+Message-ID: <4F60EAAE.3070803@acm.org>
+References: <4F5379F5.6010604@msgid.tls.msk.ru> <4F545EB5.1070700@msgid.tls.msk.ru> <4F54FE51.1010401@acm.org> <4F5F6E34.6070208@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from li9-11.members.linode.com ([67.18.176.11]:58401 "EHLO
-	test.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755142Ab2CNSzC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Mar 2012 14:55:02 -0400
-Content-Disposition: inline
-In-Reply-To: <CAAsGZS5UTrYTbncAjk1Vor6R_-KWDboTw3sh+jXCbXm5q_o-TA@mail.gmail.com>
+Received: from relay01ant.iops.be ([212.53.4.34]:58970 "EHLO
+	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758815Ab2CNTAI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Mar 2012 15:00:08 -0400
+In-Reply-To: <4F5F6E34.6070208@msgid.tls.msk.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: chetan loke <loke.chetan@gmail.com>
-Cc: Kent Overstreet <koverstreet@google.com>, Vivek Goyal <vgoyal@redhat.com>, lsf-pc@lists.linux-foundation.org, nauman@google.com, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 14, 2012 at 02:33:25PM -0400, chetan loke wrote:
-> But you are not explaining why dm is not the right stack. Just because
-> it crashed when you tried doesn't mean it's not the right place.
-> flash-cache works, doesn't it? flash-cache's limitation is because
-> it's a dm-target or because it is using hashing or something else?
-> There are start-ups who are doing quite great with SSD-cache+dm. So
-> please stop kidding yourself.
+On 03/13/12 15:56, Michael Tokarev wrote:
+> WARNING: at block/genhd.c:1474 __disk_unblock_events+0x123/0x130()
 
-SATA-attached flash is not the only kind of flash out there you know.
-There is also PCIe-attached flash which is a wee bit faster (where wee
-is defined as multiple orders of magnitude --- SATA-attached SSD's
-typically have thousands of IOPS; Fusion I/O is shipping product today
-with hundreds of thousands of IOPS, and has demonstrated a billion
-IOPS early this year).  And Fusion I/O isn't the only company shipping
-PCIe-attached flash products.
+Does the patch below help ? This patch prevents that sd_probe_async()
+races with scsi_host_remove().
 
-Startups may be doing great on SSD's; you may want to accept the fact
-that there is stuff which is way, way, way better out there than
-SSD's which are available on the market *today*.
+---
+ drivers/scsi/sd.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-And it's not like bache which is a new project.  It's working code,
-just like flash cache is today.  So it's not like it needs to justify
-its existence.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index c691fb5..7161fc1 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2544,6 +2544,7 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
+ 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+ 		  sdp->removable ? "removable " : "");
+ 	scsi_autopm_put_device(sdp);
++	scsi_host_put(sdp->host);
+ 	put_device(&sdkp->dev);
+ }
+ 
+@@ -2635,6 +2636,7 @@ static int sd_probe(struct device *dev)
+ 	dev_set_drvdata(dev, sdkp);
+ 
+ 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
++	scsi_host_get(sdp->host);
+ 	async_schedule(sd_probe_async, sdkp);
+ 
+ 	return 0;
+-- 
+1.7.7
 
-Best regards,
-
-					- Ted
