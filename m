@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 2/9] bfa: Modify ISR to process pending completions
-Date: Tue, 13 Mar 2012 17:38:15 -0700
-Message-ID: <1331685495-21139-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 7/9] bfa: Fix to avoid vport delete hang on request queue full scenario.
+Date: Tue, 13 Mar 2012 17:40:31 -0700
+Message-ID: <1331685631-21993-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:34860 "EHLO
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:34993 "EHLO
 	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759598Ab2CNAi4 (ORCPT
+	by vger.kernel.org with ESMTP id S1759598Ab2CNAlC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Mar 2012 20:38:56 -0400
+	Tue, 13 Mar 2012 20:41:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
@@ -18,71 +18,79 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, Krishna Gudipat
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Made changes to the driver ISR to process any pending completions even if
-	  the RME bit is not set in the interrupt status register.
+	- Fixed the LPS (Logical Port Services) state machine to send a
+	  FDISC/FLOGI to the FW from the request queue wait state, when
+	  there is space available again on the request queue.
+	- Made changes to free the vport on LOGO/cleanup complete instead
+	  of free'ing it from vport_delete_handler in the module unload scenario.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_core.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/bfa/bfa_fcs_lport.c |    2 ++
+ drivers/scsi/bfa/bfa_svc.c       |    3 ++-
+ drivers/scsi/bfa/bfad_attr.c     |    8 +++++---
+ 3 files changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 4bd546b..035c9d5 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -231,16 +231,19 @@ bfa_reqq_resume(struct bfa_s *bfa, int qid)
- 	}
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index d4f951f..5d2a130 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -5717,6 +5717,8 @@ bfa_fcs_vport_free(struct bfa_fcs_vport_s *vport)
+ 
+ 	if (vport_drv->comp_del)
+ 		complete(vport_drv->comp_del);
++	else
++		kfree(vport_drv);
+ 
+ 	bfa_lps_delete(vport->lps);
  }
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 3abe2be..6583b2d 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -1280,6 +1280,7 @@ bfa_lps_sm_loginwait(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ 	switch (event) {
+ 	case BFA_LPS_SM_RESUME:
+ 		bfa_sm_set_state(lps, bfa_lps_sm_login);
++		bfa_lps_send_login(lps);
+ 		break;
  
--static inline void
-+bfa_boolean_t
- bfa_isr_rspq(struct bfa_s *bfa, int qid)
- {
- 	struct bfi_msg_s *m;
- 	u32	pi, ci;
- 	struct list_head *waitq;
-+	bfa_boolean_t ret;
+ 	case BFA_LPS_SM_OFFLINE:
+@@ -1578,7 +1579,7 @@ bfa_lps_login_rsp(struct bfa_s *bfa, struct bfi_lps_login_rsp_s *rsp)
+ 		break;
  
- 	ci = bfa_rspq_ci(bfa, qid);
- 	pi = bfa_rspq_pi(bfa, qid);
+ 	case BFA_STATUS_VPORT_MAX:
+-		if (!rsp->ext_status)
++		if (rsp->ext_status)
+ 			bfa_lps_no_res(lps, rsp->ext_status);
+ 		break;
  
-+	ret = (ci != pi);
-+
- 	while (ci != pi) {
- 		m = bfa_rspq_elem(bfa, qid, ci);
- 		WARN_ON(m->mhdr.msg_class >= BFI_MC_MAX);
-@@ -260,6 +263,8 @@ bfa_isr_rspq(struct bfa_s *bfa, int qid)
- 	waitq = bfa_reqq(bfa, qid);
- 	if (!list_empty(waitq))
- 		bfa_reqq_resume(bfa, qid);
-+
-+	return ret;
- }
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index 06310b8..7b1ecd2 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -494,8 +494,11 @@ bfad_im_vport_delete(struct fc_vport *fc_vport)
+ 	unsigned long flags;
+ 	struct completion fcomp;
  
- static inline void
-@@ -320,6 +325,7 @@ bfa_intx(struct bfa_s *bfa)
- {
- 	u32 intr, qintr;
- 	int queue;
-+	bfa_boolean_t rspq_comp = BFA_FALSE;
+-	if (im_port->flags & BFAD_PORT_DELETE)
+-		goto free_scsi_host;
++	if (im_port->flags & BFAD_PORT_DELETE) {
++		bfad_scsi_host_free(bfad, im_port);
++		list_del(&vport->list_entry);
++		return 0;
++	}
  
- 	intr = readl(bfa->iocfc.bfa_regs.intr_status);
+ 	port = im_port->port;
  
-@@ -332,11 +338,12 @@ bfa_intx(struct bfa_s *bfa)
- 	 */
- 	if (bfa->queue_process) {
- 		for (queue = 0; queue < BFI_IOC_MAX_CQS; queue++)
--			bfa_isr_rspq(bfa, queue);
-+			if (bfa_isr_rspq(bfa, queue))
-+				rspq_comp = BFA_TRUE;
- 	}
+@@ -526,7 +529,6 @@ bfad_im_vport_delete(struct fc_vport *fc_vport)
  
- 	if (!intr)
--		return BFA_TRUE;
-+		return (qintr | rspq_comp) ? BFA_TRUE : BFA_FALSE;
+ 	wait_for_completion(vport->comp_del);
  
- 	/*
- 	 * CPE completion queue interrupt
+-free_scsi_host:
+ 	bfad_scsi_host_free(bfad, im_port);
+ 	list_del(&vport->list_entry);
+ 	kfree(vport);
 -- 
 1.7.3.rc1
 
