@@ -1,29 +1,93 @@
-From: "Nanjappa, Sathisha (MCXS, Cupertino)" <sathisha.nanjappa@hp.com>
-Subject: RE: [PATCH] mpt2sas: Corrected the constant in comparison to a
- hexadecimal.
-Date: Wed, 14 Mar 2012 23:36:51 +0000
-Message-ID: <C8A4A375313D4E4DA64F2CB1D0490B0A44730306@G9W0735.americas.hpqcorp.net>
-References: <1331665168-22561-1-git-send-email-sathisha.nanjappa@hp.com>
-	 <1331665168-22561-2-git-send-email-sathisha.nanjappa@hp.com>
- <1331714014.8688.3.camel@dabdike>
+From: "Eddie Wai" <eddie.wai@broadcom.com>
+Subject: [PATCH] LIBISCSI: Alleviate NOP transmission request upon xmit
+ failure
+Date: Wed, 14 Mar 2012 16:50:05 -0700
+Message-ID: <1331769005-1767-1-git-send-email-eddie.wai@broadcom.com>
+References: <eddie.wai@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1331714014.8688.3.camel@dabdike>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:2664 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758999Ab2CNXtd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Mar 2012 19:49:33 -0400
+In-Reply-To: <eddie.wai@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-PiANCj4gT24gVHVlLCAyMDEyLTAzLTEzIGF0IDExOjU5IC0wNzAwLCBTYXRoaXNoYSBOYW5qYXBw
-YSB3cm90ZToNCj4gPiBCdWd6aWxsYSA0MjE0MiAtIG1wdDJzYXM6IE51bWJlciBzcGVjaWZpZWQg
-aW4gd3JvbmcgYmFzZQ0KPiA+ICAgICBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19i
-dWcuY2dpP2lkPTQyMTQyDQo+IA0KPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkNCj4gU2VudDogV2Vk
-bmVzZGF5LCBNYXJjaCAxNCwgMjAxMiAxOjM0IEFNDQo+IERvIHlvdSBoYXZlIGEgYmV0dGVyIGRl
-c2NyaXB0aW9uIC4uLiBsaWtlIHdoYXQgaXMgdGhlIHVzZXINCj4gdmlzaWJsZSBlZmZlY3Qgb2Yg
-Y29ycmVjdGluZyB0aGUgY29uc3RhbnQ/DQo+DQoNCkRvZXMgdGhpcyBsb29rIGJldHRlcjoNCg0K
-IlRoaXMgZml4IGVuc3VyZXMgdGhhdCB0aGUgSU9QX0xPR0lORk9fQ09ERV9UQVNLX1RFUk1JTkFU
-RUQNCm1lc3NhZ2VzIGRvIG5vdCBjbHV0dGVyIHRoZSBzYXNfbG9nX2luZm8gbWVzc2FnZXMuIg0K
-DQpUaGFua3MsDQotU2F0aXNoLg0KDQoNCg==
+During heavy I/O transmission, it was observed that network packets
+can get dropped when no link flow control is enabled.  When this happens,
+I/O completions can exceed the default NOP transmission of 5s while the
+hw send queue resource backs up.  When the queue gets full, NOP
+transmission requests will also get blocked.  It was observed that
+the NOP transmission requests will keep repeatedly try to send out
+the NOP while holding the session lock.  This is very intrusive as the
+requests are being called on every timer execution since the last_ping
+parameter doesn't get updated upon transmission failure.  This creates a
+tremendous bottleneck especially when the connection is about to get torn down.
+
+This patch alleviates the pounding of the NOP transmission in the
+iscsi_check_transport_timeouts routine by injecting an artifical 1s delay
+in between each NOP transmission requests due to failures upon timeout.
+
+There is no need to keep pounding on to request this data provoking NOP
+transmission continuously when the transmit queue is full.
+
+Please review and comment.  Thanks.
+
+
+Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
+---
+ drivers/scsi/libiscsi.c |   13 +++++++++----
+ 1 files changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 82c3fd4..f1141a8 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -940,13 +940,14 @@ static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 	wake_up(&conn->ehwait);
+ }
+ 
+-static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
++static struct iscsi_task *iscsi_send_nopout(struct iscsi_conn *conn,
++					    struct iscsi_nopin *rhdr)
+ {
+         struct iscsi_nopout hdr;
+ 	struct iscsi_task *task;
+ 
+ 	if (!rhdr && conn->ping_task)
+-		return;
++		return NULL;
+ 
+ 	memset(&hdr, 0, sizeof(struct iscsi_nopout));
+ 	hdr.opcode = ISCSI_OP_NOOP_OUT | ISCSI_OP_IMMEDIATE;
+@@ -967,6 +968,7 @@ static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+ 		conn->ping_task = task;
+ 		conn->last_ping = jiffies;
+ 	}
++	return task;
+ }
+ 
+ static int iscsi_nop_out_rsp(struct iscsi_task *task,
+@@ -2059,8 +2061,11 @@ static void iscsi_check_transport_timeouts(unsigned long data)
+ 	if (time_before_eq(last_recv + recv_timeout, jiffies)) {
+ 		/* send a ping to try to provoke some traffic */
+ 		ISCSI_DBG_CONN(conn, "Sending nopout as ping\n");
+-		iscsi_send_nopout(conn, NULL);
+-		next_timeout = conn->last_ping + (conn->ping_timeout * HZ);
++		if (iscsi_send_nopout(conn, NULL))
++			next_timeout = conn->last_ping +
++				       (conn->ping_timeout * HZ);
++		else
++			next_timeout = jiffies + HZ;
+ 	} else
+ 		next_timeout = last_recv + recv_timeout;
+ 
+-- 
+1.7.7.4
+
+
