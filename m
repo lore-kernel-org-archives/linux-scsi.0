@@ -1,75 +1,89 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/3 v5] mpt2sas: use pci_dev->revision
-Date: Wed, 14 Mar 2012 22:04:30 +0300
-Message-ID: <201203142204.31032.sshtylyov@ru.mvista.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [LSF/MM TOPIC] [ATTEND] SR-IOV Management
+Date: Wed, 14 Mar 2012 14:07:34 -0400
+Message-ID: <alpine.WNT.2.00.1203141337330.3968@N5102REMCQXM4BS.qlogic.org>
+References: <alpine.WNT.2.00.1201311356390.3392@N5102REMCQXM4BS.qlogic.org> <4F29058B.6020904@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, JBottomley@parallels.com, linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:29318
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755831Ab2CNSHm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Mar 2012 14:07:42 -0400
+In-Reply-To: <4F29058B.6020904@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The driver reads PCI revision ID from the PCI configuration register while it's
-already stored by PCI subsystem in the 'revision' field of 'struct pci_dev'...
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
----
-The patch is refreshed against the recent Linus' tree.
+On Wed, 1 Feb 2012, Hannes Reinecke wrote:
 
- drivers/scsi/mpt2sas/mpt2sas_base.c |    4 +---
- drivers/scsi/mpt2sas/mpt2sas_ctl.c  |    4 +---
- 2 files changed, 2 insertions(+), 6 deletions(-)
+> On 01/31/2012 08:02 PM, Chad Dupuis wrote:
+>> With more and more storage controller hardware supporting SR-IOV in
+>> next
+>> couple of years it seems to make sense at this point to discuss, from a
+>> storage stack perspective, managing how we instantiate and manage
+>> SR-IOV
+>> virtual functions (VFs).  Currently for hardware that does support
+>> SR-IOV,
+>> the management of that functionality is managed entirely by the
+>> hardware
+>> device driver.  However, a more dynamic management to how VFs are
+>> created
+>> and destroyed (assuming the hardware supports it) may be more desirable
+>> since the most common use case, assigning VFs to virtual guests, also
+>> tends to be very dynamic and fluid.  We also need to consider how VFs
+>> interact with complimentary technology such as NPIV in Fibre Channel.
+>>
+>> I'd like to propose that we discuss the following issues to see if a
+>> consensus can be reached about how to deal with them:
+>>
+>> * VF instantiation
+>> * VF/NPIV port pairing
+>> * Namespace management
+>> * LUN presentation
+>>
+> Actually, SR-IOV on FC should be easy to handle; it maps quite
+> easily on NPIV (which probably was the intention :-).
 
-Index: linux-2.6/drivers/scsi/mpt2sas/mpt2sas_base.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ linux-2.6/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -2060,12 +2060,10 @@ _base_display_ioc_capabilities(struct MP
- {
- 	int i = 0;
- 	char desc[16];
--	u8 revision;
- 	u32 iounit_pg1_flags;
- 	u32 bios_version;
- 
- 	bios_version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
--	pci_read_config_byte(ioc->pdev, PCI_CLASS_REVISION, &revision);
- 	strncpy(desc, ioc->manu_pg0.ChipName, 16);
- 	printk(MPT2SAS_INFO_FMT "%s: FWVersion(%02d.%02d.%02d.%02d), "
- 	   "ChipRevision(0x%02x), BiosVersion(%02d.%02d.%02d.%02d)\n",
-@@ -2074,7 +2072,7 @@ _base_display_ioc_capabilities(struct MP
- 	   (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
- 	   (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
- 	   ioc->facts.FWVersion.Word & 0x000000FF,
--	   revision,
-+	   ioc->pdev->revision,
- 	   (bios_version & 0xFF000000) >> 24,
- 	   (bios_version & 0x00FF0000) >> 16,
- 	   (bios_version & 0x0000FF00) >> 8,
-Index: linux-2.6/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-+++ linux-2.6/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -1026,7 +1026,6 @@ _ctl_getiocinfo(void __user *arg)
- {
- 	struct mpt2_ioctl_iocinfo karg;
- 	struct MPT2SAS_ADAPTER *ioc;
--	u8 revision;
- 
- 	if (copy_from_user(&karg, arg, sizeof(karg))) {
- 		printk(KERN_ERR "failure at %s:%d/%s()!\n",
-@@ -1046,8 +1045,7 @@ _ctl_getiocinfo(void __user *arg)
- 		karg.adapter_type = MPT2_IOCTL_INTERFACE_SAS2;
- 	if (ioc->pfacts)
- 		karg.port_number = ioc->pfacts[0].PortNumber;
--	pci_read_config_byte(ioc->pdev, PCI_CLASS_REVISION, &revision);
--	karg.hw_rev = revision;
-+	karg.hw_rev = ioc->pdev->revision;
- 	karg.pci_id = ioc->pdev->device;
- 	karg.subsystem_device = ioc->pdev->subsystem_device;
- 	karg.subsystem_vendor = ioc->pdev->subsystem_vendor;
+I would bet it's not a coincidence ;-)  The question I had was do we
+represent this relationship at the transport level, such as the FC
+transport in this case, or do we let the low-leve driver take care of the
+mapping? In other words, do we have a low level driver create the vport when
+it is instantiating a VF or do we add an option to say fc_vport_create so
+that a VF is created along with a vport.
+
+Given that a lot of drivers reserve resources for their VFs during
+initialization that the pendulum  it would fall on letting the low-level
+driver manage the creation and mapping of the NPIV<->VF relationship.
+
+>
+> However, for SAS things get really tricky, as we don't have virtual
+> SAS IDs. Some vendor was actually planning on doing ACLs in firmware
+> (shudder).
+
+Each protocol will be different which means if there is any common
+encapsulation is would probably be at the transport level (FC, iSCSI, SAS,
+etc.)
+
+>
+> And then there is the pci-stub mess.
+
+I presume you'd want to get rid of pci-stub?  What would be the
+alternative; just directly unbinding the assignment of the device from
+the hypervisor to the virtual guest as it is coming up?
+
+>
+> So yes, definitely something to discuss here.
+>
+> Cheers,
+>
+> Hannes
+>
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
