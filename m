@@ -1,40 +1,41 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 42918] fcoe: Enabling VN2VN mode triggers a circular locking
- complaint
-Date: Thu, 15 Mar 2012 01:21:49 GMT
-Message-ID: <201203150121.q2F1Ln8l003505@bugzilla.kernel.org>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Re: [Bug 42918] fcoe: Enabling VN2VN mode triggers a circular
+ locking complaint
+Date: Thu, 15 Mar 2012 01:28:18 +0000
+Message-ID: <4F6145B1.30604@intel.com>
 References: <bug-42918-11613@https.bugzilla.kernel.org/>
+ <201203150121.q2F1Ln8l003505@bugzilla.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:56773 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760721Ab2COBVu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Mar 2012 21:21:50 -0400
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q2F1Ln0s003506
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Mar 2012 01:21:49 GMT
-In-Reply-To: <bug-42918-11613@https.bugzilla.kernel.org/>
+Received: from mga09.intel.com ([134.134.136.24]:49918 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760704Ab2COB3U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Mar 2012 21:29:20 -0400
+In-Reply-To: <201203150121.q2F1Ln8l003505@bugzilla.kernel.org>
+Content-Language: en-US
+Content-ID: <2559BD11B8DD2D469FD14CDAD6DCA8B6@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42918
-
-
-
-
-
---- Comment #1 from Robert Love <robert.w.love@intel.com>  2012-03-15 01:21:48 ---
-Fix was posted to linux-scsi here:
-http://www.spinics.net/lists/linux-scsi/msg58027.html
-
-Note that I Nacked my own patch but that others commented that the patch is
-correct. Please ignore the Nack; the patch is good.
-
-Can the submitted please verify that this fixes their issue?
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+T24gMDMvMTQvMjAxMiAwNjoyMSBQTSwgYnVnemlsbGEtZGFlbW9uQGJ1Z3ppbGxhLmtlcm5lbC5v
+cmcgd3JvdGU6DQo+IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9
+NDI5MTgNCj4NCj4NCj4NCj4NCj4NCj4gLS0tIENvbW1lbnQgIzEgZnJvbSBSb2JlcnQgTG92ZTxy
+b2JlcnQudy5sb3ZlQGludGVsLmNvbT4gICAyMDEyLTAzLTE1IDAxOjIxOjQ4IC0tLQ0KPiBGaXgg
+d2FzIHBvc3RlZCB0byBsaW51eC1zY3NpIGhlcmU6DQo+IGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQv
+bGlzdHMvbGludXgtc2NzaS9tc2c1ODAyNy5odG1sDQo+DQo+IE5vdGUgdGhhdCBJIE5hY2tlZCBt
+eSBvd24gcGF0Y2ggYnV0IHRoYXQgb3RoZXJzIGNvbW1lbnRlZCB0aGF0IHRoZSBwYXRjaCBpcw0K
+PiBjb3JyZWN0LiBQbGVhc2UgaWdub3JlIHRoZSBOYWNrOyB0aGUgcGF0Y2ggaXMgZ29vZC4NCj4N
+Cj4gQ2FuIHRoZSBzdWJtaXR0ZWQgcGxlYXNlIHZlcmlmeSB0aGF0IHRoaXMgZml4ZXMgdGhlaXIg
+aXNzdWU/DQo+DQoNCkkgd2FzIHVuYWJsZSB0byBjaGFuZ2UgdGhlIG93bmVyIGluIHRoZSBCWi4g
+QmFydCwgZG9lcyB0aGlzIGZpeCB5b3VyIA0KcHJvYmxlbT8NCg0KSSd2ZSBuZXZlciB3b3JrZWQg
+d2l0aCB0aGUga2VybmVsLm9yZyBCWiwgc28gSSdtIG5vdCBzdXJlIGlmIEkgbmVlZCB0byANCmZv
+bGxvdyB1cCBvbiB0aGlzIGFueW1vcmUuLi4NCg0KSSdtIG5vdCBjb252aW5jZWQgdGhhdCB0aGlz
+IG5lZWRzIHRvIGJlIHJ1c2hlZCBpbiBmb3IgMy4zIHNpbmNlIHdlJ3JlIGF0IA0KcmM3LiBJdCdz
+IGEgd2FybmluZyBpbiBmY29lIGluIHBvaW50LXRvLW11bHRpcG9pbnQgbW9kZSBhbmQgYXMgbXVj
+aCBhcyANCkknZCBsaWtlIGV2ZXJ5dGhpbmcgaW4gZmNvZSB3b3JraW5nIGluIGV2ZXJ5IHJlbGVh
+c2UgSSBkb24ndCB0aGluayB0aGlzIA0Kd2lsbCBib3RoZXIgdG9vIG1hbnkgdXNlcnMuDQoNClRo
+YW5rcywgLy9Sb2I=
