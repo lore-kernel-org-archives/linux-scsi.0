@@ -1,79 +1,117 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] Drivers: scsi: storvsc: Don't pass ATA_16 command
- to the host
-Date: Thu, 15 Mar 2012 23:03:45 +0000
-Message-ID: <6E21E5352C11B742B20C142EB499E0481B76631A@TK5EX14MBXC126.redmond.corp.microsoft.com>
-References: <1330721347-26781-1-git-send-email-kys@microsoft.com>
-	 <20120304091225.GA27297@infradead.org>
-	 <6E21E5352C11B742B20C142EB499E0481B74886F@TK5EX14MBXC126.redmond.corp.microsoft.com>
- <1330872513.2858.14.camel@dabdike.int.hansenpartnership.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: re: qla2xxx: Add LLD target-mode infrastructure for >= 24xx series
+Date: Thu, 15 Mar 2012 16:10:15 -0700
+Message-ID: <1331853015.10203.128.camel@haakon2.linux-iscsi.org>
+References: <20120313172044.GD31808@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1330872513.2858.14.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20120313172044.GD31808@elgon.mountain>
+Sender: target-devel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-driver@qlogic.com, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-U3VuZGF5LCBNYXJjaCAwNCwgMjAxMiA5OjQ5IEFNDQo+IFRvOiBLWSBTcmluaXZhc2FuDQo+IENj
-OiBDaHJpc3RvcGggSGVsbHdpZzsgZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IGxpbnV4LQ0K
-PiBrZXJuZWxAdmdlci5rZXJuZWwub3JnOyBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOw0K
-PiB2aXJ0dWFsaXphdGlvbkBsaXN0cy5vc2RsLm9yZzsgb2hlcmluZ0BzdXNlLmNvbTsgbGludXgt
-c2NzaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IEhhaXlhbmcgWmhhbmcNCj4gU3ViamVjdDogUkU6IFtQ
-QVRDSCAxLzFdIERyaXZlcnM6IHNjc2k6IHN0b3J2c2M6IERvbid0IHBhc3MgQVRBXzE2IGNvbW1h
-bmQgdG8NCj4gdGhlIGhvc3QNCj4gDQo+IE9uIFN1biwgMjAxMi0wMy0wNCBhdCAxNDoyMyArMDAw
-MCwgS1kgU3Jpbml2YXNhbiB3cm90ZToNCj4gPg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdl
-LS0tLS0NCj4gPiA+IEZyb206IENocmlzdG9waCBIZWxsd2lnIFttYWlsdG86aGNoQGluZnJhZGVh
-ZC5vcmddDQo+ID4gPiBTZW50OiBTdW5kYXksIE1hcmNoIDA0LCAyMDEyIDQ6MTIgQU0NCj4gPiA+
-IFRvOiBLWSBTcmluaXZhc2FuDQo+ID4gPiBDYzogZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7
-IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4gPiBkZXZlbEBsaW51eGRyaXZlcnBy
-b2plY3Qub3JnOyB2aXJ0dWFsaXphdGlvbkBsaXN0cy5vc2RsLm9yZzsNCj4gb2hlcmluZ0BzdXNl
-LmNvbTsNCj4gPiA+IGpib3R0b21sZXlAcGFyYWxsZWxzLmNvbTsgaGNoQGluZnJhZGVhZC5vcmc7
-IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOw0KPiA+ID4gSGFpeWFuZyBaaGFuZw0KPiA+ID4g
-U3ViamVjdDogUmU6IFtQQVRDSCAxLzFdIERyaXZlcnM6IHNjc2k6IHN0b3J2c2M6IERvbid0IHBh
-c3MgQVRBXzE2IGNvbW1hbmQgdG8NCj4gPiA+IHRoZSBob3N0DQo+ID4gPg0KPiA+ID4gT24gRnJp
-LCBNYXIgMDIsIDIwMTIgYXQgMTI6NDk6MDdQTSAtMDgwMCwgSy4gWS4gU3Jpbml2YXNhbiB3cm90
-ZToNCj4gPiA+ID4gV2luZG93cyBob3N0cyBkb24ndCBoYW5kbGUgdGhlIEFUQV8xNiBjb21tYW5k
-OyBkb24ndCBwYXNzIGl0IHRvIHRoZQ0KPiBob3N0Lg0KPiA+ID4NCj4gPiA+IE1vc3QgZGV2aWNl
-cyBkb24ndCBoYW5kbGUgaXQsIGFuZCBhbnN3ZXIgd2l0aCBhbmQgdW5zdXBwb3J0ZWQgb3Bjb2Rl
-DQo+ID4gPiBzZW5zZSByZWFzb24uICBJZiBoeXBlcnYgaWlzIGJ1Z2d5IGVub3VnaCB0byBjcmFw
-IG91dCBvbiBpdCBwbGVhc2UgYWRkDQo+ID4gPiBhIGNvbW1lbnQgZXhwbGFpbmluZyB0aGF0Lg0K
-PiA+DQo+ID4gVGhlIGhvc3QgZG9lcyBub3QgImNyYXAgb3V0IiwgaXQgZG9lcyByZXR1cm4gYW4g
-ZXJyb3IgY29kZSBidXQgaXQgaXMgbm90DQo+ICJ1bnN1cHBvcnRlZCBvcGNvZGUiLg0KPiA+IFRo
-ZSBzZW5zZSByZWFzb24gdGhhdCBjb21lcyBiYWNrIGlzIGEgZ2VuZXJpYyBlcnJvciBTUkJfU1RB
-VFVTIGNvZGUuIEl0IGlzDQo+IGVhc2llciBmb3IgbWUgdG8gZmlsdGVyIHRoZQ0KPiA+IGNvbW1h
-bmQgb24gdGhlIG91dGdvaW5nIHNpZGUgYXMgb3Bwb3NlZCB0byBkZWFsaW5nIHdpdGggYSBnZW5l
-cmljIGVycm9yIGNvZGUNCj4gdGhhdCBpcyBjb21pbmcgYmFjayBmcm9tDQo+ID4gdGhlIGhvc3Qu
-DQo+IA0KPiBUaGF0J3MgdGhlIHdyb25nIHRoaW5nIHRvIGRvIC4uLiB5b3UgbmVlZCB0byB1bndy
-YXAgdGhlIGVycm9yIGNvZGUuDQo+IFRoZSByZWFzb24gYmVpbmcgSSBwcmVzdW1lIGl0J3Mgbm90
-IGltcG9zc2libGUgZm9yIFdpbmRvd3MgdG8gaG9zdCBhDQo+IGRldmljZSBzdXBwb3J0aW5nIEFU
-QV8xNiBhbmQgdGhlcmUgYXJlIHNpZ25zIHRoYXQgdGhpcyBpcyBnb2luZyB0byBiZQ0KPiBuZWNl
-c3NhcnkgdG8gcHJldmVudCBkYXRhIGNvcnJ1cHRpb24gb24gc29tZSBVU0IgZGV2aWNlcyAuLi4g
-aWYgeW91IGp1c3QNCj4gZmlsdGVyIHRoZSBjb21tYW5kIHdpdGhvdXQgY2hlY2tpbmcgaWYgdGhl
-IGhvc3Qgc3VwcG9ydHMgaXQsIHlvdSdyZQ0KPiBnb2luZyB0byBlbmQgdXAgcGVycGV0dWF0aW5n
-IHRoZSBjb3JydXB0aW9uIHByb2JsZW0uDQoNCkphbWVzLA0KDQpDdXJyZW50bHksIHRoZSBXaW5k
-b3dzIGhvc3QgZG9lcyBub3QgcHJvdmlkZSBtZSB3aXRoIGdyYW51bGFyIGVycm9yIGNvZGVzIHRv
-IA0KZGlzdGluZ3Vpc2ggYmV0d2VlbiB0aGUgY2FzZSB3aGVyZSB0aGUgb3BlcmF0aW9uIGZhaWxl
-ZCBhbmQgdGhlIGNhc2Ugd2hlcmUgaXQgaXMNCmFuIGlsbGVnYWwgb3IgdW5zdXBwb3J0ZWQgb3Bl
-cmF0aW9uLiBJIGhhdmUgYXNrZWQgdGhlIHdpbmRvd3MgdGVhbSB0byByZXR1cm4gbW9yZQ0KYXBw
-cm9wcmlhdGUgZXJyb3IgY29kZXMgYW5kIHRoZXkgbWF5IGRvIHRoYXQgc29tZXRpbWUgc29vbi4g
-SW4gdGhlIGludGVyaW0sIGZpbHRlcmluZw0KdGhlIGNvbW1hbmQgb24gdGhlIG91dGdvaW5nIHBh
-dGggaXMgdGhlIGJlc3Qgd2F5IEkgY2FuIGRlYWwgd2l0aCB0aGlzIGlzc3VlLiBDdXJyZW50bHks
-DQpldmVuIG9uIHRoZSBob3N0IHNpZGUgdGhleSBhcmUgZmlsdGVyaW5nIHRoaXMgY29tbWFuZCwg
-ZXhjZXB0IHRoZXkgYXJlIHJldHVybmluZyBhIGZhaWx1cmUNCnRvIHRoZSBndWVzdCBpbnN0ZWFk
-IG9mIGEgbW9yZSBhcHByb3ByaWF0ZSBlcnJvciBjb2RlLg0KV2hpbGUgbXkgcHJvcG9zYWwgaGFz
-IGJlZW4gYWNjZXB0ZWQgZm9yIHdpbmRvd3MgOCwgSSBkb24ndCBrbm93IHdoZW4gdGhpcyBjaGFu
-Z2Ugd2lsbCBzaGlwLg0KQWxzbywgaXQgaXMgbm90IGNsZWFyIHdoZW4gcHJpb3IgdmVyc2lvbnMg
-b2YgV2luZG93cyBob3N0cyB0aGF0IHdlIGNhcmUgYWJvdXQgd2lsbCBwaWNrIHVwIHRoaXMNCmNo
-YW5nZS4gVGhpcyBwYXRjaCBpcyB0aGUgb25seSB3YXkgSSBrbm93IGhvdyB0byBkZWFsIHdpdGgg
-dGhpcyBwcm9ibGVtcyB3aXRoaW4gbXkgY3VycmVudA0KY29uc3RyYWludHMuDQoNClJlZ2FyZHMs
-DQoNCksuIFkNCg0KDQo+IA0KPiBUaGUgZ2VuZXJhbCBydWxlIG9mIHRodW1iIGZvciBhdm9pZGlu
-ZyB0aGlzIGlzIHRvIGxldCB0aGUgbG93ZXIgbGF5ZXJzDQo+IGhhbmRsZSBhcyBtdWNoIGFzIHBv
-c3NpYmxlLCBhbmQgb25seSBiZWdpbiBiZWhhdmlvdXIgYWx0ZXJhdGlvbnMgaW4gdGhlDQo+IHVw
-cGVyIGxheWVycyBpZiB0aGUgbG93ZXIgbGF5ZXJzIGhhdmUgYSBwcm92YWJsZSBhbmQgdXN1YWxs
-eSBmYXRhbA0KPiBmYWlsdXJlLg0KPiANCj4gSmFtZXMNCj4gDQo+IA0KDQo=
+On Tue, 2012-03-13 at 20:20 +0300, Dan Carpenter wrote:
+> Hello Nicholas,
+> 
+> The patch 962f988d031f: "qla2xxx: Add LLD target-mode infrastructure 
+> for >= 24xx series" from Mar 8, 2012, leads to the following Smatch
+> warning:
+> 
+> drivers/scsi/qla2xxx/qla_target.c:3207 qla_tgt_handle_srr_work()
+> 	 error: potential null derefence 'vha'.
+> 
+> 
+> drivers/scsi/qla2xxx/qla_target.c
+>   3198                  imm = NULL;
+>   3199                  list_for_each_entry_safe(i, ti, &tgt->srr_imm_list,
+>   3200                                                  srr_list_entry) {
+>   3201                          if (i->srr_id == sctio->srr_id) {
+>   3202                                  list_del(&i->srr_list_entry);
+>   3203                                  if (imm) {
+>   3204                                          printk(KERN_ERR "qla_target(%d): There must "
+>   3205                                            "be only one IMM SRR per CTIO SRR "
+>   3206                                            "(IMM SRR %p, id %d, CTIO %p\n",
+>   3207                                            vha->vp_idx, i, i->srr_id, sctio);
+>                                                   ^^^
+> It looks like "vha" might not be initialized yet.
+> 
+>   3208                                          qla_tgt_reject_free_srr_imm(vha, i, 0);
+>   3209                                  } else
+>   3210                                          imm = i;
+>   3211                          }
+>   3212                  }
+>   3213  
+>   3214                  ql_dbg(ql_dbg_tgt_mgt, tgt->vha, 0xe12f, "IMM SRR %p, CTIO SRR %p (id %d)\n",
+>   3215                          imm, sctio, sctio->srr_id);
+>   3216  
+>   3217                  if (imm == NULL) {
+>   3218                          ql_dbg(ql_dbg_tgt_mgt, tgt->vha, 0xe130, "Not found matching IMM"
+>   3219                                  " for SRR CTIO (id %d)\n", sctio->srr_id);
+>   3220                          continue;
+>   3221                  } else
+>   3222                          list_del(&sctio->srr_list_entry);
+>   3223  
+>   3224                  spin_unlock_irqrestore(&tgt->srr_lock, flags);
+>   3225  
+>   3226                  cmd = sctio->cmd;
+>   3227                  vha = cmd->vha;
+>                         ^^^
+> It gets set here.
+> 
+
+It looks like this should be using qla_tgt->vha everywhere.  Applying
+the following patch.
+
+--nab
+
+
+iff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index e415d1e..2af075b 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -3169,11 +3169,11 @@ static void qla_tgt_reject_free_srr_imm(struct scsi_qla_host *vha, struct qla_tg
+ static void qla_tgt_handle_srr_work(struct work_struct *work)
+ {
+        struct qla_tgt *tgt = container_of(work, struct qla_tgt, srr_work);
+-       struct scsi_qla_host *vha = NULL;
++       struct scsi_qla_host *vha = tgt->vha;
+        struct qla_tgt_srr_ctio *sctio;
+        unsigned long flags;
+ 
+-       ql_dbg(ql_dbg_tgt_mgt, tgt->vha, 0xe12e, "Entering SRR work (tgt %p)\n", tgt);
++       ql_dbg(ql_dbg_tgt_mgt, vha, 0xe12e, "Entering SRR work (tgt %p)\n", tgt);
+ 
+ restart:
+        spin_lock_irqsave(&tgt->srr_lock, flags);
+@@ -3192,17 +3192,17 @@ restart:
+                                          "be only one IMM SRR per CTIO SRR "
+                                          "(IMM SRR %p, id %d, CTIO %p\n",
+                                          vha->vp_idx, i, i->srr_id, sctio);
+-                                       qla_tgt_reject_free_srr_imm(vha, i, 0);
++                                       qla_tgt_reject_free_srr_imm(tgt->vha, i, 0);
+                                } else
+                                        imm = i;
+                        }
+                }
+ 
+-               ql_dbg(ql_dbg_tgt_mgt, tgt->vha, 0xe12f, "IMM SRR %p, CTIO SRR %p (id %d)\n",
++               ql_dbg(ql_dbg_tgt_mgt, vha, 0xe12f, "IMM SRR %p, CTIO SRR %p (id %d)\n",
+                        imm, sctio, sctio->srr_id);
+ 
+                if (imm == NULL) {
+-                       ql_dbg(ql_dbg_tgt_mgt, tgt->vha, 0xe130, "Not found matching IMM"
++                       ql_dbg(ql_dbg_tgt_mgt, vha, 0xe130, "Not found matching IMM"
+                                " for SRR CTIO (id %d)\n", sctio->srr_id);
+                        continue;
+                } else
+@@ -3211,7 +3211,6 @@ restart:
+                spin_unlock_irqrestore(&tgt->srr_lock, flags);
+ 
+                cmd = sctio->cmd;
+-               vha = cmd->vha;
+                /*
+                 * Reset qla_tgt_cmd SRR values and SGL pointer+count to follow
+                 * tcm_qla2xxx_write_pending() and tcm_qla2xxx_queue_data_in()
