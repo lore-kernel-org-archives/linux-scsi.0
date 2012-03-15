@@ -1,93 +1,40 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH] LIBISCSI: Alleviate NOP transmission request upon xmit
- failure
-Date: Wed, 14 Mar 2012 16:50:05 -0700
-Message-ID: <1331769005-1767-1-git-send-email-eddie.wai@broadcom.com>
-References: <eddie.wai@broadcom.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 42918] fcoe: Enabling VN2VN mode triggers a circular locking
+ complaint
+Date: Thu, 15 Mar 2012 01:21:49 GMT
+Message-ID: <201203150121.q2F1Ln8l003505@bugzilla.kernel.org>
+References: <bug-42918-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2664 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758999Ab2CNXtd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Mar 2012 19:49:33 -0400
-In-Reply-To: <eddie.wai@broadcom.com>
+Received: from bugzilla.kernel.org ([198.145.19.204]:56773 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760721Ab2COBVu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Mar 2012 21:21:50 -0400
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q2F1Ln0s003506
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Mar 2012 01:21:49 GMT
+In-Reply-To: <bug-42918-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
+To: linux-scsi@vger.kernel.org
 
-During heavy I/O transmission, it was observed that network packets
-can get dropped when no link flow control is enabled.  When this happens,
-I/O completions can exceed the default NOP transmission of 5s while the
-hw send queue resource backs up.  When the queue gets full, NOP
-transmission requests will also get blocked.  It was observed that
-the NOP transmission requests will keep repeatedly try to send out
-the NOP while holding the session lock.  This is very intrusive as the
-requests are being called on every timer execution since the last_ping
-parameter doesn't get updated upon transmission failure.  This creates a
-tremendous bottleneck especially when the connection is about to get torn down.
-
-This patch alleviates the pounding of the NOP transmission in the
-iscsi_check_transport_timeouts routine by injecting an artifical 1s delay
-in between each NOP transmission requests due to failures upon timeout.
-
-There is no need to keep pounding on to request this data provoking NOP
-transmission continuously when the transmit queue is full.
-
-Please review and comment.  Thanks.
+https://bugzilla.kernel.org/show_bug.cgi?id=42918
 
 
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
----
- drivers/scsi/libiscsi.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 82c3fd4..f1141a8 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -940,13 +940,14 @@ static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
- 	wake_up(&conn->ehwait);
- }
- 
--static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
-+static struct iscsi_task *iscsi_send_nopout(struct iscsi_conn *conn,
-+					    struct iscsi_nopin *rhdr)
- {
-         struct iscsi_nopout hdr;
- 	struct iscsi_task *task;
- 
- 	if (!rhdr && conn->ping_task)
--		return;
-+		return NULL;
- 
- 	memset(&hdr, 0, sizeof(struct iscsi_nopout));
- 	hdr.opcode = ISCSI_OP_NOOP_OUT | ISCSI_OP_IMMEDIATE;
-@@ -967,6 +968,7 @@ static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
- 		conn->ping_task = task;
- 		conn->last_ping = jiffies;
- 	}
-+	return task;
- }
- 
- static int iscsi_nop_out_rsp(struct iscsi_task *task,
-@@ -2059,8 +2061,11 @@ static void iscsi_check_transport_timeouts(unsigned long data)
- 	if (time_before_eq(last_recv + recv_timeout, jiffies)) {
- 		/* send a ping to try to provoke some traffic */
- 		ISCSI_DBG_CONN(conn, "Sending nopout as ping\n");
--		iscsi_send_nopout(conn, NULL);
--		next_timeout = conn->last_ping + (conn->ping_timeout * HZ);
-+		if (iscsi_send_nopout(conn, NULL))
-+			next_timeout = conn->last_ping +
-+				       (conn->ping_timeout * HZ);
-+		else
-+			next_timeout = jiffies + HZ;
- 	} else
- 		next_timeout = last_recv + recv_timeout;
- 
+
+
+--- Comment #1 from Robert Love <robert.w.love@intel.com>  2012-03-15 01:21:48 ---
+Fix was posted to linux-scsi here:
+http://www.spinics.net/lists/linux-scsi/msg58027.html
+
+Note that I Nacked my own patch but that others commented that the patch is
+correct. Please ignore the Nack; the patch is good.
+
+Can the submitted please verify that this fixes their issue?
+
 -- 
-1.7.7.4
-
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
