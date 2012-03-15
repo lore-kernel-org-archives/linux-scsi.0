@@ -1,97 +1,86 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: Re: [isci PATCH v3 3/4] libsas: suspend / resume support
-Date: Thu, 15 Mar 2012 15:16:04 -0700
-Message-ID: <CABE8wwuuM8XoTUy_+1nXMt9WvieWgmt-NHS=ybN_ndOdwk+gjQ@mail.gmail.com>
-References: <CABE8wwvmCnVEhW8yKVua9Zt+jPCK6kzyjm7poE_7D4ihDhZrHg@mail.gmail.com>
-	<Pine.LNX.4.44L0.1203151544450.1366-100000@iolanthe.rowland.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: re: tcm_qla2xxx: Add >= 24xx series fabric module for target-core
+Date: Thu, 15 Mar 2012 15:43:52 -0700
+Message-ID: <1331851432.10203.106.camel@haakon2.linux-iscsi.org>
+References: <20120313171948.GB31808@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1203151544450.1366-100000@iolanthe.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20120313171948.GB31808@elgon.mountain>
+Sender: target-devel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-driver@qlogic.com, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Mar 15, 2012 at 12:54 PM, Alan Stern <stern@rowland.harvard.edu=
-> wrote:
-> On Thu, 15 Mar 2012, Williams, Dan J wrote:
->
->> > Hmm... I was wondering why we needed a kernel global sync. =A0If t=
-his is
->> > just for probe work what about just doing something like the follo=
-wing?
->> > Keep the sync operation local to probe-work and not entangle with =
-the
->> > resume-work? =A0I'll give this a shot when I get back to my test s=
-ystem.
->> >
->> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->> > index bd17cf8..ec69e35 100644
->> > --- a/drivers/scsi/sd.c
->> > +++ b/drivers/scsi/sd.c
->> > @@ -2629,6 +2629,8 @@ static void sd_probe_async(void *data, async=
-_cookie_t cookie)
->> > =A0 =A0 =A0 =A0put_device(&sdkp->dev);
->> > =A0}
->> >
->> > +static LIST_HEAD(sd_probe_domain);
->
-> Take a look at fea6d607e154cf96ab22254ccb48addfd43d4cb5; it might be =
-a
-> good idea to make this domain available to scsi_bus_prepare(). =A0For
-> example, it could made into a SCSI-wide domain, defined in the SCSI
-> core and exported for use by sd.
+On Tue, 2012-03-13 at 20:19 +0300, Dan Carpenter wrote:
+> Hello Nicholas,
+> 
+> The patch b3fd3cce29bb: "tcm_qla2xxx: Add >= 24xx series fabric 
+> module for target-core" from Mar 8, 2012, leads to the following Sparse
+> warning:
+> 
+> drivers/scsi/qla2xxx/tcm_qla2xxx.c:843:37: warning: right shift by
+> 	bigger than source value
+> 
+> +       domain = (nacl->nport_id >> 16) & 0xff;
+>                         ^^^^^^^^
+> nport_id is a u16 so this is always zero.
+> 
+> +       area = (nacl->nport_id >> 8) & 0xff;
+> +       al_pa = nacl->nport_id & 0xff;
+> 
+> [snip]
+> 
+> +struct tcm_qla2xxx_nacl {
+> +       /* From libfc struct fc_rport->port_id */
+> +       u16 nport_id;
+> 
+> fc_rport->port_id is a u32.
+> 
+> 
 
-Nice, thanks for the pointer.  Yes, I'll up-level this.
+Hi Dan,
 
->
->> This works fine for me for resolving the deadlock, but I found I als=
-o
->> needed the following to fix a spurious:
->>
->> =A0 =A0scsi 6:0:1:0: Illegal state transition deleted->running
->>
->> ...in the resume path.
->>
->> @@ -2348,10 +2349,11 @@ EXPORT_SYMBOL(scsi_device_quiesce);
->> =A0 *
->> =A0 * =A0 =A0 Must be called with user context, may sleep.
->> =A0 */
->> -void
->> -scsi_device_resume(struct scsi_device *sdev)
->> +void scsi_device_resume(struct scsi_device *sdev)
->> =A0{
->> - =A0 =A0 =A0 if(scsi_device_set_state(sdev, SDEV_RUNNING))
->> + =A0 =A0 =A0 /* check if the device was deleted during suspend */
->> + =A0 =A0 =A0 if (sdev->sdev_state =3D=3D SDEV_DEL ||
->> + =A0 =A0 =A0 =A0 =A0 scsi_device_set_state(sdev, SDEV_RUNNING))
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
->> =A0 =A0 =A0 =A0 scsi_run_queue(sdev->request_queue);
->> =A0}
->>
->> Unless someone can point out something I'm missing I'll go ahead and
->> roll this into it's own patch and rebase/drop the hack out of the
->> libsas resume code.
->
-> The device might be in some other state. =A0Perhaps it would be bette=
-r to
-> do
->
-> =A0 =A0 =A0 =A0if (sdev->sdev_state !=3D SDEV_QUIESCE ||
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0scsi_device_set_state(=
-sdev, SDEV_RUNNING))
->
-> I'm not sure what guarantees this function is supposed to provide, bu=
-t
-> the comment indicates that it's meant just to handle quiesced devices=
-=2E
->
+Thanks for reporting.  Applying the following to lio-core, and will get
+this squashed into for-next-merge soon.
 
-I'm not sure either, but I can get on board with this change to say
-"the world changed when you weren't looking, assume whomever changed
-the state is taking care of the device".
+Thanks!
 
---
-Dan
+--nab
+
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index c6acb80..df5374e 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -812,7 +812,7 @@ static int tcm_qla2xxx_setup_nacl_from_rport(
+ 
+                p->se_nacl = se_nacl;
+                pr_debug("Setting p->se_nacl to se_nacl: %p for WWNN: 0x%016LX,"
+-                       " port_id: 0x%04x\n", se_nacl, rport_wwnn,
++                       " port_id: 0x%08x\n", se_nacl, rport_wwnn,
+                        nacl->nport_id);
+                spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+ 
+@@ -856,7 +856,7 @@ void tcm_qla2xxx_clear_nacl_from_fcport_map(struct qla_tgt_sess *sess)
+ 
+        p->se_nacl = NULL;
+        pr_debug("Clearing p->se_nacl to se_nacl: %p for WWNN: 0x%016LX,"
+-               " port_id: 0x%04x\n", se_nacl, nacl->nport_wwnn,
++               " port_id: 0x%08x\n", se_nacl, nacl->nport_wwnn,
+                nacl->nport_id);
+ }
+ 
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+index e700c15..41730ed 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+@@ -10,7 +10,7 @@
+ 
+ struct tcm_qla2xxx_nacl {
+        /* From libfc struct fc_rport->port_id */
+-       u16 nport_id;
++       u32 nport_id;
+        /* Binary World Wide unique Node Name for remote FC Initiator Nport */
+        u64 nport_wwnn;
+        /* ASCII formatted WWPN for FC Initiator Nport */
