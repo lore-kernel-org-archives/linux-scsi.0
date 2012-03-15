@@ -1,48 +1,64 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch] tcm_qla2xxx: checking for NULL instead of IS_ERR()
-Date: Thu, 15 Mar 2012 16:13:05 -0700
-Message-ID: <1331853185.10203.129.camel@haakon2.linux-iscsi.org>
-References: <20120313172119.GE31808@elgon.mountain>
+Subject: Re: qla2xxx: NULL deref in qla_tgt_abort_task()
+Date: Thu, 15 Mar 2012 16:24:35 -0700
+Message-ID: <1331853875.10203.140.camel@haakon2.linux-iscsi.org>
+References: <20120313172140.GF31808@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:43074 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031229Ab2COXNI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Mar 2012 19:13:08 -0400
-In-Reply-To: <20120313172119.GE31808@elgon.mountain>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20120313172140.GF31808@elgon.mountain>
+Sender: target-devel-owner@vger.kernel.org
 To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-driver@qlogic.com, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, target-devel <target-devel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
 On Tue, 2012-03-13 at 20:21 +0300, Dan Carpenter wrote:
-> target_fabric_configfs_init() never returns NULLs, only ERR_PTRs.
+> Hello Nicholas,
 > 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> This is a semi-automatic email about new static checker warnings.
 > 
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> index dcbcedc..08cf507 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> @@ -1885,9 +1885,9 @@ static int tcm_qla2xxx_register_configfs(void)
->  	 * Register the top level struct config_item_type for NPIV with TCM core
->  	 */
->  	npiv_fabric = target_fabric_configfs_init(THIS_MODULE, "qla2xxx_npiv");
-> -	if (!npiv_fabric) {
-> +	if (IS_ERR(npiv_fabric)) {
->  		pr_err("target_fabric_configfs_init() failed\n");
-> -		ret = -ENOMEM;
-> +		ret = PTR_ERR(npiv_fabric);
->  		goto out_fabric;
->  	}
->  	/*
+> The patch 962f988d031f: "qla2xxx: Add LLD target-mode infrastructure 
+> for >= 24xx series" from Mar 8, 2012, leads to the following Smatch 
+> complaint:
+> 
+> drivers/scsi/qla2xxx/qla_target.c:2873 qla_tgt_abort_task()
+> 	 error: we previously assumed 'sess' could be null (see line 2870)
+> 
+> drivers/scsi/qla2xxx/qla_target.c
+>   2869		sess = ha->tgt_ops->find_sess_by_loop_id(vha, loop_id);
+>   2870		if (sess == NULL) {
+>                     ^^^^^^^^^^^^
+> Test.
+> 
+>   2871			ql_dbg(ql_dbg_tgt_mgt, vha, 0xe129, "qla_target(%d): task abort for unexisting "
+>   2872				"session\n", vha->vp_idx);
+>   2873			res = qla_tgt_sched_sess_work(sess->tgt, QLA_TGT_SESS_WORK_ABORT,
+>                                                       ^^^^^^^^^
+> NULL dereference.
+> 
+>   2874						iocb, sizeof(*iocb));
+>   2875			if (res != 0)
+> 
 
-Doh, missed this fix for the qla2xxx_npiv fabric_ops allocation..
-Applied to lio-core and will get fixed up for-next-merge.
+Should be using qla_hw_data->qla_tgt instead of sess->tgt..
 
-Thanks Dan!
+Applying the following patch.
+
+Thanks again DanC!
 
 --nab
 
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 2af075b..7210b28 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2857,7 +2857,7 @@ static int qla_tgt_abort_task(struct scsi_qla_host *vha, imm_ntfy_from_isp_t *io
+        if (sess == NULL) {
+                ql_dbg(ql_dbg_tgt_mgt, vha, 0xe129, "qla_target(%d): task abort for unexisting "
+                        "session\n", vha->vp_idx);
+-               res = qla_tgt_sched_sess_work(sess->tgt, QLA_TGT_SESS_WORK_ABORT,
++               res = qla_tgt_sched_sess_work(ha->qla_tgt, QLA_TGT_SESS_WORK_ABORT,
+                                        iocb, sizeof(*iocb));
+                if (res != 0)
+                        sess->tgt->tm_to_unknown = 1;
