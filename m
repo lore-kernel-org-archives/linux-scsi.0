@@ -1,104 +1,80 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] LIBISCSI: Alleviate NOP transmission request upon xmit
- failure
-Date: Wed, 14 Mar 2012 21:00:09 -0500
-Message-ID: <4F614D29.3090108@cs.wisc.edu>
-References: <eddie.wai@broadcom.com> <1331769005-1767-1-git-send-email-eddie.wai@broadcom.com> <4F614AC1.2080906@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/6] ipr: Fix target id allocation re-use problem
+Date: Wed, 14 Mar 2012 21:20:06 -0500
+Message-ID: <201203150220.q2F2K3Ux002767@d03av03.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:44729 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759659Ab2COCAU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Mar 2012 22:00:20 -0400
-In-Reply-To: <4F614AC1.2080906@cs.wisc.edu>
+Received: from e37.co.us.ibm.com ([32.97.110.158]:39366 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757642Ab2COCUK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Mar 2012 22:20:10 -0400
+Received: from /spool/local
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Wed, 14 Mar 2012 20:20:09 -0600
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com [9.17.195.226])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 833A01FF0038
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Mar 2012 20:20:05 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q2F2K5gw130940
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Mar 2012 20:20:05 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q2F2K4BB002802
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Mar 2012 20:20:05 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: James Bottomley <jbottomley@parallels.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
-On 03/14/2012 08:49 PM, Mike Christie wrote:
-> On 03/14/2012 06:50 PM, Eddie Wai wrote:
->> During heavy I/O transmission, it was observed that network packets
->> can get dropped when no link flow control is enabled.  When this happens,
->> I/O completions can exceed the default NOP transmission of 5s while the
->> hw send queue resource backs up.  When the queue gets full, NOP
->> transmission requests will also get blocked.  It was observed that
->> the NOP transmission requests will keep repeatedly try to send out
->> the NOP while holding the session lock.  This is very intrusive as the
->> requests are being called on every timer execution since the last_ping
->> parameter doesn't get updated upon transmission failure.  This creates a
->> tremendous bottleneck especially when the connection is about to get torn down.
->>
->> This patch alleviates the pounding of the NOP transmission in the
->> iscsi_check_transport_timeouts routine by injecting an artifical 1s delay
->> in between each NOP transmission requests due to failures upon timeout.
->>
->> There is no need to keep pounding on to request this data provoking NOP
->> transmission continuously when the transmit queue is full.
->>
->> Please review and comment.  Thanks.
->>
->>
->> Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
->> ---
->>  drivers/scsi/libiscsi.c |   13 +++++++++----
->>  1 files changed, 9 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
->> index 82c3fd4..f1141a8 100644
->> --- a/drivers/scsi/libiscsi.c
->> +++ b/drivers/scsi/libiscsi.c
->> @@ -940,13 +940,14 @@ static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
->>  	wake_up(&conn->ehwait);
->>  }
->>  
->> -static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
->> +static struct iscsi_task *iscsi_send_nopout(struct iscsi_conn *conn,
->> +					    struct iscsi_nopin *rhdr)
->>  {
->>          struct iscsi_nopout hdr;
->>  	struct iscsi_task *task;
->>  
->>  	if (!rhdr && conn->ping_task)
->> -		return;
->> +		return NULL;
->>  
->>  	memset(&hdr, 0, sizeof(struct iscsi_nopout));
->>  	hdr.opcode = ISCSI_OP_NOOP_OUT | ISCSI_OP_IMMEDIATE;
->> @@ -967,6 +968,7 @@ static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
->>  		conn->ping_task = task;
->>  		conn->last_ping = jiffies;
->>  	}
->> +	return task;
->>  }
->>  
->>  static int iscsi_nop_out_rsp(struct iscsi_task *task,
->> @@ -2059,8 +2061,11 @@ static void iscsi_check_transport_timeouts(unsigned long data)
->>  	if (time_before_eq(last_recv + recv_timeout, jiffies)) {
->>  		/* send a ping to try to provoke some traffic */
->>  		ISCSI_DBG_CONN(conn, "Sending nopout as ping\n");
->> -		iscsi_send_nopout(conn, NULL);
->> -		next_timeout = conn->last_ping + (conn->ping_timeout * HZ);
->> +		if (iscsi_send_nopout(conn, NULL))
->> +			next_timeout = conn->last_ping +
->> +				       (conn->ping_timeout * HZ);
-> 
-> Once we send a ping, we should not run this timer again until it has
-> timed out Why is the ping not timing out and then why are not hitting
-> the check above this that just returns?
-> 
-> Is the timer firing early, so we keep hitting the iscsi_send_nopout path?
 
-One other side issue, when we get any completion we update the
-conn->last_recv field, so we should not try another ping for another
-recv_timeout seconds. If the above code is getting called to send a
-ping, then we are not getting any completion for recv_timeout seconds.
+For the latest ipr SAS adapters, target id's are a completely
+logical construct that are managed in the ipr driver. This fixes
+an issue that can arise if a device is deleted via sysfs. If
+a new device is then physically added, it will use the previous
+device's target id. If the host is then rescanned, the device
+that had been deleted, since it is using the same target id as
+the new device is using, will never be found, resulting in
+a missing device. Fix this by only freeing the target id
+only if the resource is actually gone.
 
-Is there a way to tell if the card is making progress? For example if we
-were doing a lot of big writes, then the card could be making progress
-on them and handling R2Ts and sending data, but the libiscsi layer does
-not know, so it could fail the connection thinking that we did not get a
-response when the card was really busy handling R2Ts.
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/ipr.c |   17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff -puN drivers/scsi/ipr.c~ipr_fix_target_id_alloc drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_fix_target_id_alloc	2012-03-09 17:19:28.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2012-03-10 07:23:10.000000000 -0600
+@@ -4339,8 +4339,7 @@ static struct ipr_resource_entry *ipr_fi
+ 
+ 	list_for_each_entry(res, &ioa_cfg->used_res_q, queue) {
+ 		if ((res->bus == starget->channel) &&
+-		    (res->target == starget->id) &&
+-		    (res->lun == 0)) {
++		    (res->target == starget->id)) {
+ 			return res;
+ 		}
+ 	}
+@@ -4414,12 +4413,14 @@ static void ipr_target_destroy(struct sc
+ 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *) shost->hostdata;
+ 
+ 	if (ioa_cfg->sis64) {
+-		if (starget->channel == IPR_ARRAY_VIRTUAL_BUS)
+-			clear_bit(starget->id, ioa_cfg->array_ids);
+-		else if (starget->channel == IPR_VSET_VIRTUAL_BUS)
+-			clear_bit(starget->id, ioa_cfg->vset_ids);
+-		else if (starget->channel == 0)
+-			clear_bit(starget->id, ioa_cfg->target_ids);
++		if (!ipr_find_starget(starget)) {
++			if (starget->channel == IPR_ARRAY_VIRTUAL_BUS)
++				clear_bit(starget->id, ioa_cfg->array_ids);
++			else if (starget->channel == IPR_VSET_VIRTUAL_BUS)
++				clear_bit(starget->id, ioa_cfg->vset_ids);
++			else if (starget->channel == 0)
++				clear_bit(starget->id, ioa_cfg->target_ids);
++		}
+ 	}
+ 
+ 	if (sata_port) {
+_
 
