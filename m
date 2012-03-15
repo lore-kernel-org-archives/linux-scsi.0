@@ -1,64 +1,61 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: qla2xxx: NULL deref in qla_tgt_abort_task()
-Date: Thu, 15 Mar 2012 16:24:35 -0700
-Message-ID: <1331853875.10203.140.camel@haakon2.linux-iscsi.org>
-References: <20120313172140.GF31808@elgon.mountain>
+Subject: Re: [PATCH] scsi: qla2xxx: fix section mismatch in linux-next
+Date: Thu, 15 Mar 2012 16:31:16 -0700
+Message-ID: <1331854276.10203.143.camel@haakon2.linux-iscsi.org>
+References: <1331847626-11141-1-git-send-email-dev@snitselaar.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20120313172140.GF31808@elgon.mountain>
-Sender: target-devel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-driver@qlogic.com, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, target-devel <target-devel@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1331847626-11141-1-git-send-email-dev@snitselaar.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gerard Snitselaar <dev@snitselaar.org>
+Cc: andrew.vasquez@qlogic.com, linux-driver@qlogic.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2012-03-13 at 20:21 +0300, Dan Carpenter wrote:
-> Hello Nicholas,
+On Thu, 2012-03-15 at 14:40 -0700, Gerard Snitselaar wrote:
+> qla_tgt_exit() is annotated __exit , but called in
+> qla2x00_module_init().
 > 
-> This is a semi-automatic email about new static checker warnings.
-> 
-> The patch 962f988d031f: "qla2xxx: Add LLD target-mode infrastructure 
-> for >= 24xx series" from Mar 8, 2012, leads to the following Smatch 
-> complaint:
-> 
-> drivers/scsi/qla2xxx/qla_target.c:2873 qla_tgt_abort_task()
-> 	 error: we previously assumed 'sess' could be null (see line 2870)
-> 
-> drivers/scsi/qla2xxx/qla_target.c
->   2869		sess = ha->tgt_ops->find_sess_by_loop_id(vha, loop_id);
->   2870		if (sess == NULL) {
->                     ^^^^^^^^^^^^
-> Test.
-> 
->   2871			ql_dbg(ql_dbg_tgt_mgt, vha, 0xe129, "qla_target(%d): task abort for unexisting "
->   2872				"session\n", vha->vp_idx);
->   2873			res = qla_tgt_sched_sess_work(sess->tgt, QLA_TGT_SESS_WORK_ABORT,
->                                                       ^^^^^^^^^
-> NULL dereference.
-> 
->   2874						iocb, sizeof(*iocb));
->   2875			if (res != 0)
+> Signed-off-by: Gerard Snitselaar <dev@snitselaar.org>
+> ---
+>  drivers/scsi/qla2xxx/qla_target.c |    2 +-
+>  drivers/scsi/qla2xxx/qla_target.h |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 > 
 
-Should be using qla_hw_data->qla_tgt instead of sess->tgt..
+Hi Gerard,
 
-Applying the following patch.
+> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+> index 6d6f1cf..699d16e 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.c
+> +++ b/drivers/scsi/qla2xxx/qla_target.c
+> @@ -4730,7 +4730,7 @@ out:
+>  	return ret;
+>  }
+>  
+> -void __exit qla_tgt_exit(void)
+> +void qla_tgt_exit(void)
+>  {
+>  	destroy_workqueue(qla_tgt_wq);
+>  	mempool_destroy(qla_tgt_mgmt_cmd_mempool);
+> diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+> index db6b399..b9d0aa1 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.h
+> +++ b/drivers/scsi/qla2xxx/qla_target.h
+> @@ -934,7 +934,7 @@ extern void qla_tgt_fc_port_deleted(struct scsi_qla_host *, fc_port_t *);
+>  extern void qla_tgt_set_mode(struct scsi_qla_host *ha);
+>  extern void qla_tgt_clear_mode(struct scsi_qla_host *ha);
+>  extern int __init qla_tgt_init(void);
+> -extern void __exit qla_tgt_exit(void);
+> +extern void qla_tgt_exit(void);
+>  
+>  static inline bool qla_tgt_mode_enabled(struct scsi_qla_host *ha)
+>  {
 
-Thanks again DanC!
+This looks fine.  Applied to lio-core, and will get this fixed up in
+target-pending/for-next-merge shortly.
+
+Thanks for your patch!
 
 --nab
-
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 2af075b..7210b28 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2857,7 +2857,7 @@ static int qla_tgt_abort_task(struct scsi_qla_host *vha, imm_ntfy_from_isp_t *io
-        if (sess == NULL) {
-                ql_dbg(ql_dbg_tgt_mgt, vha, 0xe129, "qla_target(%d): task abort for unexisting "
-                        "session\n", vha->vp_idx);
--               res = qla_tgt_sched_sess_work(sess->tgt, QLA_TGT_SESS_WORK_ABORT,
-+               res = qla_tgt_sched_sess_work(ha->qla_tgt, QLA_TGT_SESS_WORK_ABORT,
-                                        iocb, sizeof(*iocb));
-                if (res != 0)
-                        sess->tgt->tm_to_unknown = 1;
