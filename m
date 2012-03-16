@@ -1,67 +1,60 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [libsas PATCH v10 2/9] libsas: cleanup spurious calls to scsi_schedule_eh
-Date: Fri, 16 Mar 2012 08:25:56 -0700
-Message-ID: <CAA9_cmfL2=Z4Wmoq-GNYr9wSyvvbCFXoP4p6oF1_OJ01UO+UUQ@mail.gmail.com>
-References: <20120311043722.27797.97791.stgit@dwillia2-linux.jf.intel.com>
-	<20120311043906.27797.28938.stgit@dwillia2-linux.jf.intel.com>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: qla2xxx: Add LLD target-mode infrastructure for >= 24xx series
+Date: Fri, 16 Mar 2012 09:59:07 -0400
+Message-ID: <20120316135907.GA9037@logfs.org>
+References: <20120313172044.GD31808@elgon.mountain>
+ <1331853015.10203.128.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120311043906.27797.28938.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1331853015.10203.128.camel@haakon2.linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Mar 10, 2012 at 8:39 PM, Dan Williams <dan.j.williams@intel.com=
-> wrote:
-> eh is woken up automatically by the presence of failed commands,
-> scsi_schedule_eh is reserved for cases where there are no failed
-> commands. =A0This guarantees that host_eh_sceduled is only incremente=
-d
-> when an explicit eh request is made.
->
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
-> =A0drivers/scsi/libsas/sas_ata.c =A0 =A0 =A0 | =A0 25 ---------------=
-----------
-> =A0drivers/scsi/libsas/sas_scsi_host.c | =A0 =A05 -----
-> =A0include/scsi/sas_ata.h =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A04 ----
-> =A03 files changed, 0 insertions(+), 34 deletions(-)
->
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_=
-ata.c
-> index bc0cecc..729a7b6 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -574,31 +574,6 @@ int sas_ata_init_host_and_port(struct domain_dev=
-ice *found_dev)
-> =A0 =A0 =A0 =A0return 0;
-> =A0}
->
-> -void sas_ata_task_abort(struct sas_task *task)
-> -{
-> - =A0 =A0 =A0 struct ata_queued_cmd *qc =3D task->uldd_task;
-> - =A0 =A0 =A0 struct completion *waiting;
-> -
-> - =A0 =A0 =A0 /* Bounce SCSI-initiated commands to the SCSI EH */
-> - =A0 =A0 =A0 if (qc->scsicmd) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct request_queue *q =3D qc->scsicmd=
-->device->request_queue;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned long flags;
-> -
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irqsave(q->queue_lock, flags)=
-;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 blk_abort_request(qc->scsicmd->request)=
-;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irqrestore(q->queue_lock, f=
-lags);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 scsi_schedule_eh(qc->scsicmd->device->h=
-ost);
+Hello Nick!
 
-Although we don't need this call to scsi_schedule_eh, we certainly
-need to handle task->uldd_task differently for ata tasks, will resend.
+On Thu, 15 March 2012 16:10:15 -0700, Nicholas A. Bellinger wrote:
+>=20
+> iff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/=
+qla_target.c
+> index e415d1e..2af075b 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.c
+> +++ b/drivers/scsi/qla2xxx/qla_target.c
+> @@ -3169,11 +3169,11 @@ static void qla_tgt_reject_free_srr_imm(struc=
+t scsi_qla_host *vha, struct qla_tg
+>  static void qla_tgt_handle_srr_work(struct work_struct *work)
+>  {
+>         struct qla_tgt *tgt =3D container_of(work, struct qla_tgt, sr=
+r_work);
+> -       struct scsi_qla_host *vha =3D NULL;
+> +       struct scsi_qla_host *vha =3D tgt->vha;
+>         struct qla_tgt_srr_ctio *sctio;
+>         unsigned long flags;
+> =20
+> -       ql_dbg(ql_dbg_tgt_mgt, tgt->vha, 0xe12e, "Entering SRR work (=
+tgt %p)\n", tgt);
+> +       ql_dbg(ql_dbg_tgt_mgt, vha, 0xe12e, "Entering SRR work (tgt %=
+p)\n", tgt);
+> =20
+>  restart:
+>         spin_lock_irqsave(&tgt->srr_lock, flags);
+> @@ -3192,17 +3192,17 @@ restart:
+>                                           "be only one IMM SRR per CT=
+IO SRR "
+>                                           "(IMM SRR %p, id %d, CTIO %=
+p\n",
+>                                           vha->vp_idx, i, i->srr_id, =
+sctio);
+> -                                       qla_tgt_reject_free_srr_imm(v=
+ha, i, 0);
+> +                                       qla_tgt_reject_free_srr_imm(t=
+gt->vha, i, 0);
 
---
-Dan
+Everywhere else you move from tgt->vha to vha.  Is there a reason for
+doing the reverse here?
+
+J=C3=B6rn
