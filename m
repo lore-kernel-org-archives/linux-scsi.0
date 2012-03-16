@@ -1,120 +1,86 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] qla_target: Convert to qlini_mode='enabled' by default
-Date: Fri, 16 Mar 2012 22:40:52 +0000
-Message-ID: <1331937652-21243-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:39832 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945935Ab2CPWuH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Mar 2012 18:50:07 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH 0/3] qla2xxx: Add target mode LLD and TCM fabric support
+Date: Fri, 16 Mar 2012 23:23:19 +0000
+Message-ID: <1331940202-22305-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: target-devel <target-devel@vger.kernel.org>, Qlogic Linux Team <linux-driver@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@Parallels.com>, Roland Dreier <roland@purestorage.com>, Joern Engel <joern@logfs.org>, Madhuranath Iyengar <mni@risingtidesystems.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: target-devel <target-devel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Roland Dreier <roland@purestorage.com>, Christoph Hellwig <hch@lst.de>, Joern Engel <joern@logfs.org>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch for lio-core/target-pending changes the qlini_mode
-module parameter in qla_target.c to by default enable initiator mode
-operation in qla2xxx.ko LLD.  This means that target mode cannot not
-be enabled with tcm_qla2xxx.ko code unless qlini_mode='disabled' is
-explictly set at modprobe qla2xxx time.
+Hello Qlogic Linux and SCSI/target folks,
 
-It also changes struct qla_tgt setup from qla2x00_probe_one() to now
-be skipped in initiator mode, and will set the following bit at runtime
-if necessary in qla_tgt_add_target():
+This updated patch series for an initial v3.4 mainline merge of qla2xxx
+target mode has been cut against jejb's scsi-misc/master branch to include
+for-3.4 changes to current qla2xxx LLD code.
 
-+       if (!(base_vha->host->hostt->supported_mode & MODE_TARGET))
-+               base_vha->host->hostt->supported_mode |= MODE_TARGET;
-+
+It's available now in the latest target-pending/for-next-merge HEAD:
 
-in order for tcm_qla2xxx_make_lport() -> qla_tgt_lport_register()
-to pickup MODE_TARGET when walking qla_tgt_glist for a matching
-entry during /sys/kernel/config/target/qla2xxx/$LPORT_WWPN/ ->
-scsi_qla_host registration.
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next-merge
 
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Arun Easi <arun.easi@qlogic.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Cc: Roland Dreier <roland@purestorage.com>
-Cc: James Bottomley <JBottomley@Parallels.com
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Joern Engel <joern@logfs.org>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/scsi/qla2xxx/qla_os.c     |    2 +-
- drivers/scsi/qla2xxx/qla_target.c |   17 ++++++++++-------
- 2 files changed, 11 insertions(+), 8 deletions(-)
+Updating to v3.4-rc0 bound scsi-misc qla2xxx patches from RFC-v5 was mostly
+straight forward, and also included dropping a few minor bits that have been
+merged in upstream qla2xxx LLD code.
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index f6c86a9..9759682 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -263,7 +263,7 @@ struct scsi_host_template qla2xxx_driver_template = {
- 	.max_sectors		= 0xFFFF,
- 	.shost_attrs		= qla2x00_host_attrs,
- 
--	.supported_mode		= MODE_INITIATOR | MODE_TARGET,
-+	.supported_mode		= MODE_INITIATOR,
- };
- 
- static struct scsi_transport_template *qla2xxx_transport_template = NULL;
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 72b2fc4..cbbb627 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -43,15 +43,15 @@
- #include "qla_def.h"
- #include "qla_target.h"
- 
--static char *qlini_mode = QLA2XXX_INI_MODE_STR_DISABLED;
-+static char *qlini_mode = QLA2XXX_INI_MODE_STR_ENABLED;
- module_param(qlini_mode, charp, S_IRUGO);
- MODULE_PARM_DESC(qlini_mode,
- 	"Determines when initiator mode will be enabled. Possible values: "
- 	"\"exclusive\" - initiator mode will be enabled on load, "
- 	"disabled on enabling target mode and then on disabling target mode "
- 	"enabled back; "
--	"\"disabled\" (default) - initiator mode will never be enabled; "
--	"\"enabled\" - initiator mode will always stay enabled.");
-+	"\"disabled\" - initiator mode will never be enabled; "
-+	"\"enabled\" (default) - initiator mode will always stay enabled.");
- 
- static int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
- 
-@@ -4113,6 +4113,9 @@ int qla_tgt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
- {
- 	struct qla_tgt *tgt;
- 
-+	if (ql2x_ini_mode == QLA2XXX_INI_MODE_ENABLED)
-+		return 0;
-+
- 	ql_dbg(ql_dbg_tgt, base_vha, 0xe036, "Registering target for host %ld(%p)",
- 			base_vha->host_no, ha);
- 
-@@ -4124,6 +4127,9 @@ int qla_tgt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
- 		return -ENOMEM;
- 	}
- 
-+	if (!(base_vha->host->hostt->supported_mode & MODE_TARGET))
-+		base_vha->host->hostt->supported_mode |= MODE_TARGET;
-+
- 	tgt->ha = ha;
- 	tgt->vha = base_vha;
- 	init_waitqueue_head(&tgt->waitQ);
-@@ -4160,11 +4166,8 @@ int qla_tgt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
- /* Must be called under tgt_host_action_mutex */
- int qla_tgt_remove_target(struct qla_hw_data *ha, struct scsi_qla_host *vha)
- {
--	if (!ha->qla_tgt) {
--		printk(KERN_ERR "qla_target(%d): Can't remove "
--			"existing target", vha->vp_idx);
-+	if (!ha->qla_tgt)
- 		return 0;
--	}
- 
- 	mutex_lock(&qla_tgt_mutex);
- 	list_del(&ha->qla_tgt->tgt_list_entry);
+As discussed during RFC-v5, patch #1 in this series now includes:
+
+commit 45348067c9a8b911ec6f09829b4c91bd310eb6ef
+Author: Nicholas Bellinger <nab@linux-iscsi.org>
+Date:   Fri Mar 16 15:20:34 2012 -0700
+
+    qla_target: Convert to qlini_mode='enabled' by default
+
+to disable target mode operation so that existing qla2xxx.ko initiator mode
+is *always* enabled by default.  As we don't have a resolution yet for interaction
+between scsi-core <-> target-core subsystems for 'hot' transition between
+different mixed mode operation, the initial merge of this code will require:
+
+    modprobe qla2xxx qlini_mode="disabled"
+
+in order to access and register scsi_qla_host ports for target mode ops via
+normal tcm_qla2xxx WWPN group registration.
+
+So at this point, patch #2 is the most imporant to ensure the changes required
+for qla_target.c infrstructure in existing LLD code to not cause regressions
+for existing SCSI initiator mode operation.  Andrew & Co, it would be great if
+you could have a look and let us know if you have any immediate concerns here.
+
+This update also includes changes from this week's round of linux-next feedback.
+Thanks again to DanC, Joern, and all those who has been contributing to improve
+this code!
+
+--nab
+
+Nicholas Bellinger (3):
+  qla2xxx: Add LLD target-mode infrastructure for >= 24xx series
+  qla2xxx: Enable >= 24xx target-mode support in SCSI LLD
+  tcm_qla2xxx: Add >= 24xx series fabric module for target-core
+
+ drivers/scsi/qla2xxx/Kconfig       |    8 +
+ drivers/scsi/qla2xxx/Makefile      |    3 +-
+ drivers/scsi/qla2xxx/qla_attr.c    |    5 +-
+ drivers/scsi/qla2xxx/qla_dbg.c     |    5 +
+ drivers/scsi/qla2xxx/qla_dbg.h     |    5 +
+ drivers/scsi/qla2xxx/qla_def.h     |   69 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |    7 +
+ drivers/scsi/qla2xxx/qla_gs.c      |    4 +-
+ drivers/scsi/qla2xxx/qla_init.c    |   82 +-
+ drivers/scsi/qla2xxx/qla_iocb.c    |  102 +-
+ drivers/scsi/qla2xxx/qla_isr.c     |   83 +-
+ drivers/scsi/qla2xxx/qla_mbx.c     |  101 +
+ drivers/scsi/qla2xxx/qla_mid.c     |   17 +-
+ drivers/scsi/qla2xxx/qla_os.c      |  133 +-
+ drivers/scsi/qla2xxx/qla_target.c  | 4724 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_target.h  |  986 ++++++++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 1981 +++++++++++++++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h |  149 ++
+ 18 files changed, 8429 insertions(+), 35 deletions(-)
+ create mode 100644 drivers/scsi/qla2xxx/qla_target.c
+ create mode 100644 drivers/scsi/qla2xxx/qla_target.h
+ create mode 100644 drivers/scsi/qla2xxx/tcm_qla2xxx.c
+ create mode 100644 drivers/scsi/qla2xxx/tcm_qla2xxx.h
+
 -- 
 1.7.2.5
-
