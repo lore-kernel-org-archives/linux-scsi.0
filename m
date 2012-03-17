@@ -1,68 +1,55 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: qla2xxx: Add LLD target-mode infrastructure for >= 24xx series
-Date: Fri, 16 Mar 2012 18:22:30 -0700
-Message-ID: <1331947350.10203.288.camel@haakon2.linux-iscsi.org>
-References: <20120313172044.GD31808@elgon.mountain>
-	 <1331853015.10203.128.camel@haakon2.linux-iscsi.org>
-	 <20120316135907.GA9037@logfs.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Burning multiple DVDs at one time
+Date: Sat, 17 Mar 2012 09:56:44 +0100
+Message-ID: <20120317095644.145d0588@stein>
+References: <20120315225310.GB3152@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20120316135907.GA9037@logfs.org>
-Sender: target-devel-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120315225310.GB3152@animx.eu.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Wakko Warner <wakko@animx.eu.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2012-03-16 at 09:59 -0400, J=C3=B6rn Engel wrote:
-> Hello Nick!
->=20
-> On Thu, 15 March 2012 16:10:15 -0700, Nicholas A. Bellinger wrote:
-> >=20
-> > iff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xx=
-x/qla_target.c
-> > index e415d1e..2af075b 100644
-> > --- a/drivers/scsi/qla2xxx/qla_target.c
-> > +++ b/drivers/scsi/qla2xxx/qla_target.c
-> > @@ -3169,11 +3169,11 @@ static void qla_tgt_reject_free_srr_imm(str=
-uct scsi_qla_host *vha, struct qla_tg
-> >  static void qla_tgt_handle_srr_work(struct work_struct *work)
-> >  {
-> >         struct qla_tgt *tgt =3D container_of(work, struct qla_tgt, =
-srr_work);
-> > -       struct scsi_qla_host *vha =3D NULL;
-> > +       struct scsi_qla_host *vha =3D tgt->vha;
-> >         struct qla_tgt_srr_ctio *sctio;
-> >         unsigned long flags;
-> > =20
-> > -       ql_dbg(ql_dbg_tgt_mgt, tgt->vha, 0xe12e, "Entering SRR work=
- (tgt %p)\n", tgt);
-> > +       ql_dbg(ql_dbg_tgt_mgt, vha, 0xe12e, "Entering SRR work (tgt=
- %p)\n", tgt);
-> > =20
-> >  restart:
-> >         spin_lock_irqsave(&tgt->srr_lock, flags);
-> > @@ -3192,17 +3192,17 @@ restart:
-> >                                           "be only one IMM SRR per =
-CTIO SRR "
-> >                                           "(IMM SRR %p, id %d, CTIO=
- %p\n",
-> >                                           vha->vp_idx, i, i->srr_id=
-, sctio);
-> > -                                       qla_tgt_reject_free_srr_imm=
-(vha, i, 0);
-> > +                                       qla_tgt_reject_free_srr_imm=
-(tgt->vha, i, 0);
->=20
-> Everywhere else you move from tgt->vha to vha.  Is there a reason for
-> doing the reverse here?
->=20
+On Mar 15 Wakko Warner wrote:
+> I'm having problems doing this.
+> 
+> When I burn a single disk, wodim shows the drive buf @ 99% consistently. 
+> The instant that a 2nd disk is being burned, the drive buf on the first one
+> starts to drop and data stops when the 2nd wodim is performing OPC.
+> 
+> During the burn of both discs, the drive buf will drop on both until one of
+> them finishes.  Both drives see under runs.
+> 
+> When one starts fixating, the other will hang until the fixation is
+> completed.
+> 
+> During the burns, the fifo of both never drop below 99%
+> 
+> There are no logs that are produced.
+> 
+> My burners are:
+> [6:0:0:0]    cd/dvd  ATAPI    iHAS422   8      4L11  /dev/sr7
+> [7:0:0:0]    cd/dvd  ATAPI    iHAS224   B      GL05  /dev/sr8
+> 
+> Both are SATA drives attached to the onboard sata controller
+> 00:1f.2 SATA controller: Intel Corporation 631xESB/632xESB SATA AHCI Controller (rev 09)
+> 00:1f.2 0106: 8086:2681 (rev 09)
+> 
+> The kernel is a vanilla kernel v3.0.0.  (This also happened with 2.6.35)
+> 
+> I don't believe it matters, but the data is coming over NFS via gigabit
+> ethernet.  Each burn process uses a 768M host buffer.  As I stated, the host
+> fifo on wodim never goes below 99%
+> 
+> The system motherboard is a SuperMicro X7DA8
 
-Hi Joern,
-
-Non-critical typo here..  Fixing this up now.
-
-Thanks!
-
---nab
+This is likely due to serialization by a global mutex in the sr driver.
+Have a look at thread "[PATCH] [SCSI] sr: fix multi-drive performance,
+remove BKL replacement" from February. https://lkml.org/lkml/2012/2/28/230
+-- 
+Stefan Richter
+-=====-===-- --== =---=
+http://arcgraph.de/sr/
