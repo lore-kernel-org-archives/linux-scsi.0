@@ -1,65 +1,73 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: Re: Burning multiple DVDs at one time
-Date: Sat, 17 Mar 2012 10:22:56 -0400
-Message-ID: <20120317142255.GB26403@animx.eu.org>
-References: <20120315225310.GB3152@animx.eu.org>
- <20120317095644.145d0588@stein>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 2/2] Drivers: scsi: storvsc: Don't pass ATA_16 command
+ to the host
+Date: Sat, 17 Mar 2012 11:04:44 -0400
+Message-ID: <4F64A80C.6040206@garzik.org>
+References: <1331929448-6838-1-git-send-email-kys@microsoft.com> <1331929472-6877-1-git-send-email-kys@microsoft.com> <1331929472-6877-2-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120317095644.145d0588@stein>
+In-Reply-To: <1331929472-6877-2-git-send-email-kys@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Stefan Richter wrote:
-> On Mar 15 Wakko Warner wrote:
-> > I'm having problems doing this.
-> > 
-> > When I burn a single disk, wodim shows the drive buf @ 99% consistently. 
-> > The instant that a 2nd disk is being burned, the drive buf on the first one
-> > starts to drop and data stops when the 2nd wodim is performing OPC.
-> > 
-> > During the burn of both discs, the drive buf will drop on both until one of
-> > them finishes.  Both drives see under runs.
-> > 
-> > When one starts fixating, the other will hang until the fixation is
-> > completed.
-> > 
-> > During the burns, the fifo of both never drop below 99%
-> > 
-> > There are no logs that are produced.
-> > 
-> > My burners are:
-> > [6:0:0:0]    cd/dvd  ATAPI    iHAS422   8      4L11  /dev/sr7
-> > [7:0:0:0]    cd/dvd  ATAPI    iHAS224   B      GL05  /dev/sr8
-> > 
-> > Both are SATA drives attached to the onboard sata controller
-> > 00:1f.2 SATA controller: Intel Corporation 631xESB/632xESB SATA AHCI Controller (rev 09)
-> > 00:1f.2 0106: 8086:2681 (rev 09)
-> > 
-> > The kernel is a vanilla kernel v3.0.0.  (This also happened with 2.6.35)
-> > 
-> > I don't believe it matters, but the data is coming over NFS via gigabit
-> > ethernet.  Each burn process uses a 768M host buffer.  As I stated, the host
-> > fifo on wodim never goes below 99%
-> > 
-> > The system motherboard is a SuperMicro X7DA8
-> 
-> This is likely due to serialization by a global mutex in the sr driver.
-> Have a look at thread "[PATCH] [SCSI] sr: fix multi-drive performance,
-> remove BKL replacement" from February. https://lkml.org/lkml/2012/2/28/230
+On 03/16/2012 04:24 PM, K. Y. Srinivasan wrote:
+> The current Windows hosts don't handle the ATA_16 command and furthermore
+> return a generic error code after filtering the command on the host side.
+> For now filter the command on the guest side until the host is modified to
+> properly handle unsupported commands.
+>
+> Signed-off-by: K. Y. Srinivasan<kys@microsoft.com>
+> Reviewed-by: Haiyang Zhang<haiyangz@microsoft.com>
+> ---
+>   drivers/scsi/storvsc_drv.c |    9 +++++++++
+>   1 files changed, 9 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 8b967c9..783bab8 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1229,8 +1229,17 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
+>   	/*
+>   	 * smartd sends this command and the host does not handle
+>   	 * this. So, don't send it.
+> +	 * The current Windows hosts implement a subset of scsi commands
+> +	 * and for the commands that are not implemented, the host filters
+> +	 * them and returns a generic failure SRB status. I have been in
+> +	 * discussions with the Windows team to return the appropriate SRB
+> +	 * status code for unsupported scsi commands and while they have
+> +	 * agreed to implement this, it is not clear when this change will be
+> +	 * available. Consequently, filtering the command before submitting it
+> +	 * to the host is a resonable interim solution.
+>   	 */
+>   	case SET_WINDOW:
+> +	case ATA_16:
+>   		scmnd->result = ILLEGAL_REQUEST<<  16;
+>   		allowed = false;
 
-Thanks.  I looked at the patch.  I would just like to confirm that I can
-patch my 3.0.0 vanilla kernel, compile the sr module, unload the current and
-load the patched one without the need to reboot.
+It would be even nicer to fill out a nice SCSI status for this.  For an 
+illegal request such as this, the libata SCSI simulator 
+(drivers/ata/libata-scsi.c) uses a more complete sense buffer setup,
 
-I do not use udisks.
+	static void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk,
+					u8 asc, u8 ascq)
+	{
+         cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
 
-Thanks for the responce, I'll try this when I have more discs to burn.
+         scsi_build_sense_buffer(0, cmd->sense_buffer, sk, asc, ascq);
+	}
 
--- 
- Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
- million bugs.
+and calls this function for invalid/unknown/unsupported command ops thusly,
+
+         ata_scsi_set_sense(cmd, ILLEGAL_REQUEST, 0x20, 0x0);
+         /* "Invalid command operation code" */
+
+Supplying asc/ascq provides additional information that may be useful in 
+determining whether or not to retry, provide better error diagnostics, etc.
+
+The asc/ascq values are found in the SCSI standards documents.
+
+	Jeff
