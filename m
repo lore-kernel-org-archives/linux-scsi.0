@@ -1,55 +1,39 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Burning multiple DVDs at one time
-Date: Sat, 17 Mar 2012 09:56:44 +0100
-Message-ID: <20120317095644.145d0588@stein>
-References: <20120315225310.GB3152@animx.eu.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 3/4] libfcoe: Add fcoe_sysfs
+Date: Sat, 17 Mar 2012 09:07:07 +0000
+Message-ID: <1331975227.2855.8.camel@dabdike>
+References: <20120316193640.5369.56932.stgit@localhost6.localdomain6>
+	 <20120316193656.5369.47569.stgit@localhost6.localdomain6>
+	 <20120317002517.GA22430@kroah.com> <4F63E4E9.2010504@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120315225310.GB3152@animx.eu.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36330 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756305Ab2CQJHO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Mar 2012 05:07:14 -0400
+In-Reply-To: <4F63E4E9.2010504@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Love, Robert W" <robert.w.love@intel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>, "james.smart@emulex.com" <james.smart@emulex.com>, "bprakash@broadcom.com" <bprakash@broadcom.com>
 
-On Mar 15 Wakko Warner wrote:
-> I'm having problems doing this.
+On Sat, 2012-03-17 at 01:12 +0000, Love, Robert W wrote:
+> >> +    ctlr->id = atomic_inc_return(&ctlr_num) - 1;
+> > Does this work properly over the long run?  Shouldn't you use the
+> idr
+> > interface instead, to keep holes from showing up?
 > 
-> When I burn a single disk, wodim shows the drive buf @ 99% consistently. 
-> The instant that a 2nd disk is being burned, the drive buf on the first one
-> starts to drop and data stops when the 2nd wodim is performing OPC.
+> I'm not familiar wit the idr interface. I'll ask around and fix this.
 > 
-> During the burn of both discs, the drive buf will drop on both until one of
-> them finishes.  Both drives see under runs.
-> 
-> When one starts fixating, the other will hang until the fixation is
-> completed.
-> 
-> During the burns, the fifo of both never drop below 99%
-> 
-> There are no logs that are produced.
-> 
-> My burners are:
-> [6:0:0:0]    cd/dvd  ATAPI    iHAS422   8      4L11  /dev/sr7
-> [7:0:0:0]    cd/dvd  ATAPI    iHAS224   B      GL05  /dev/sr8
-> 
-> Both are SATA drives attached to the onboard sata controller
-> 00:1f.2 SATA controller: Intel Corporation 631xESB/632xESB SATA AHCI Controller (rev 09)
-> 00:1f.2 0106: 8086:2681 (rev 09)
-> 
-> The kernel is a vanilla kernel v3.0.0.  (This also happened with 2.6.35)
-> 
-> I don't believe it matters, but the data is coming over NFS via gigabit
-> ethernet.  Each burn process uses a 768M host buffer.  As I stated, the host
-> fifo on wodim never goes below 99%
-> 
-> The system motherboard is a SuperMicro X7DA8
+The rule of thumb we've been using for idr in SCSI is that we don't
+bother with it unless the name space is constrained.  So for sd<x> we
+use it because we have a limited device space to fill (constrained by
+minor numbers) for target<n> we just use an incrementing counter because
+<n> is unconstrained.
 
-This is likely due to serialization by a global mutex in the sr driver.
-Have a look at thread "[PATCH] [SCSI] sr: fix multi-drive performance,
-remove BKL replacement" from February. https://lkml.org/lkml/2012/2/28/230
--- 
-Stefan Richter
--=====-===-- --== =---=
-http://arcgraph.de/sr/
+James
+
+
