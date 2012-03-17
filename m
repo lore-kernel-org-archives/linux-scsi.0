@@ -1,70 +1,84 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Burning multiple DVDs at one time
-Date: Sat, 17 Mar 2012 16:28:53 +0100
-Message-ID: <20120317162853.13afa28b@stein>
-References: <20120315225310.GB3152@animx.eu.org>
-	<20120317095644.145d0588@stein>
-	<20120317142255.GB26403@animx.eu.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 2/2] Drivers: scsi: storvsc: Don't pass ATA_16 command
+ to the host
+Date: Sat, 17 Mar 2012 19:55:40 +0100
+Message-ID: <4F64DE2C.1030809@interlog.com>
+References: <1331929448-6838-1-git-send-email-kys@microsoft.com> <1331929472-6877-1-git-send-email-kys@microsoft.com> <1331929472-6877-2-git-send-email-kys@microsoft.com> <4F64A80C.6040206@garzik.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:57552 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754254Ab2CQP3b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Mar 2012 11:29:31 -0400
-In-Reply-To: <20120317142255.GB26403@animx.eu.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4F64A80C.6040206@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mar 17 Wakko Warner wrote:
-> Stefan Richter wrote:
-> > On Mar 15 Wakko Warner wrote:
-> > > I'm having problems doing this.
-> > > 
-> > > When I burn a single disk, wodim shows the drive buf @ 99% consistently. 
-> > > The instant that a 2nd disk is being burned, the drive buf on the first one
-> > > starts to drop and data stops when the 2nd wodim is performing OPC.
-> > > 
-> > > During the burn of both discs, the drive buf will drop on both until one of
-> > > them finishes.  Both drives see under runs.
-> > > 
-> > > When one starts fixating, the other will hang until the fixation is
-> > > completed.
-> > > 
-> > > During the burns, the fifo of both never drop below 99%
-> > > 
-> > > There are no logs that are produced.
-> > > 
-> > > My burners are:
-> > > [6:0:0:0]    cd/dvd  ATAPI    iHAS422   8      4L11  /dev/sr7
-> > > [7:0:0:0]    cd/dvd  ATAPI    iHAS224   B      GL05  /dev/sr8
-> > > 
-> > > Both are SATA drives attached to the onboard sata controller
-> > > 00:1f.2 SATA controller: Intel Corporation 631xESB/632xESB SATA AHCI Controller (rev 09)
-> > > 00:1f.2 0106: 8086:2681 (rev 09)
-[...]
-> > This is likely due to serialization by a global mutex in the sr driver.
-> > Have a look at thread "[PATCH] [SCSI] sr: fix multi-drive performance,
-> > remove BKL replacement" from February. https://lkml.org/lkml/2012/2/28/230
-> 
-> Thanks.  I looked at the patch.  I would just like to confirm that I can
-> patch my 3.0.0 vanilla kernel, compile the sr module, unload the current and
-> load the patched one without the need to reboot.
+On 12-03-17 04:04 PM, Jeff Garzik wrote:
+> On 03/16/2012 04:24 PM, K. Y. Srinivasan wrote:
+>> The current Windows hosts don't handle the ATA_16 command and furthermore
+>> return a generic error code after filtering the command on the host side.
+>> For now filter the command on the guest side until the host is modified to
+>> properly handle unsupported commands.
+>>
+>> Signed-off-by: K. Y. Srinivasan<kys@microsoft.com>
+>> Reviewed-by: Haiyang Zhang<haiyangz@microsoft.com>
+>> ---
+>> drivers/scsi/storvsc_drv.c | 9 +++++++++
+>> 1 files changed, 9 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+>> index 8b967c9..783bab8 100644
+>> --- a/drivers/scsi/storvsc_drv.c
+>> +++ b/drivers/scsi/storvsc_drv.c
+>> @@ -1229,8 +1229,17 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
+>> /*
+>> * smartd sends this command and the host does not handle
+>> * this. So, don't send it.
+>> + * The current Windows hosts implement a subset of scsi commands
+>> + * and for the commands that are not implemented, the host filters
+>> + * them and returns a generic failure SRB status. I have been in
+>> + * discussions with the Windows team to return the appropriate SRB
+>> + * status code for unsupported scsi commands and while they have
+>> + * agreed to implement this, it is not clear when this change will be
+>> + * available. Consequently, filtering the command before submitting it
+>> + * to the host is a resonable interim solution.
+>> */
+>> case SET_WINDOW:
+>> + case ATA_16:
+>> scmnd->result = ILLEGAL_REQUEST<< 16;
+>> allowed = false;
+>
+> It would be even nicer to fill out a nice SCSI status for this. For an illegal
+> request such as this, the libata SCSI simulator (drivers/ata/libata-scsi.c) uses
+> a more complete sense buffer setup,
+>
+> static void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk,
+> u8 asc, u8 ascq)
+> {
+> cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
+>
+> scsi_build_sense_buffer(0, cmd->sense_buffer, sk, asc, ascq);
+> }
+>
+> and calls this function for invalid/unknown/unsupported command ops thusly,
+>
+> ata_scsi_set_sense(cmd, ILLEGAL_REQUEST, 0x20, 0x0);
+> /* "Invalid command operation code" */
+>
+> Supplying asc/ascq provides additional information that may be useful in
+> determining whether or not to retry, provide better error diagnostics, etc.
+>
+> The asc/ascq values are found in the SCSI standards documents.
 
-Yes, this should be possible.
+Jeff,
+I agree with your suggestion and would point out that the
+originally proposed:
+     scmnd->result = ILLEGAL_REQUEST<<  16;
 
-Oh, I only noticed just know that you also wrote:
+is just plain wrong. result[23:16] is a Linux invented host byte
+code (they typically start with "DID_") while ILLEGAL_REQUEST is
+a SCSI sense key.
 
-> > > The kernel is a vanilla kernel v3.0.0.  (This also happened with 2.6.35)
-
-In 2.6.35, the Big Kernel Lock was still in place there.  That lock
-behaved differently from a plain mutex --- notably it was released when a
-thread went to sleep --- so maybe there is more to your problem than just
-sr_mutex blocking unrelated sr accesses.
--- 
-Stefan Richter
--=====-===-- --== =---=
-http://arcgraph.de/sr/
+Doug Gilbert
