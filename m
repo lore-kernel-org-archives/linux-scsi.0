@@ -1,50 +1,97 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Burning multiple DVDs at one time
-Date: Sat, 17 Mar 2012 13:47:56 +0100
-Message-ID: <20120317134756.7a9ea99c@stein>
-References: <20120315225310.GB3152@animx.eu.org>
-	<20120317095644.145d0588@stein>
-	<20120317115324.10b39bb7@galadriel.home>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] target: remove improper externs
+Date: Sat, 17 Mar 2012 16:11:52 +0300
+Message-ID: <20120317131152.GA23316@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:56552 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752061Ab2CQMsb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Mar 2012 08:48:31 -0400
-In-Reply-To: <20120317115324.10b39bb7@galadriel.home>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Joern Engel <joern@logfs.org>, Roland Dreier <roland@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mar 17 Emmanuel Florac wrote:
-> Le Sat, 17 Mar 2012 09:56:44 +0100 vous =C3=A9criviez:
->=20
-> > This is likely due to serialization by a global mutex in the sr
-> > driver. Have a look at thread "[PATCH] [SCSI] sr: fix multi-drive
-> > performance, remove BKL replacement" from February.
-> > https://lkml.org/lkml/2012/2/28/230=20
->=20
-> When was this regression introduced? I have a dedicated cd burning
-> machine running 2.6.35.x, and it works great with 4 drives at a time.
+These externs aren't needed and Sparse complains about them.
 
-BKL was replaced by sr_mutex in 2.6.37-rc1.
+drivers/target/iscsi/iscsi_target_nodeattrib.c:52:12: warning:
+	function 'iscsit_na_dataout_timeout' with external linkage has
+	definition
 
-Wakko, you could try the patch from the mentioned thread and see whethe=
-r
-it fixes your problem.  But be aware that the patch opens possible race
-conditions between processes that access the same optical drive, e.g.
-applications vs. udisks-daemon.  (I haven't noticed anything bad during=
- the
-period of using the patch though.)
---=20
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D=3D=3D-- --=3D=3D =3D---=3D
-http://arcgraph.de/sr/
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+diff --git a/drivers/target/iscsi/iscsi_target_nodeattrib.c b/drivers/target/iscsi/iscsi_target_nodeattrib.c
+index b3c699c..11dc293 100644
+--- a/drivers/target/iscsi/iscsi_target_nodeattrib.c
++++ b/drivers/target/iscsi/iscsi_target_nodeattrib.c
+@@ -49,7 +49,7 @@ void iscsit_set_default_node_attribues(
+ 	a->default_erl = NA_DEFAULT_ERL;
+ }
+ 
+-extern int iscsit_na_dataout_timeout(
++int iscsit_na_dataout_timeout(
+ 	struct iscsi_node_acl *acl,
+ 	u32 dataout_timeout)
+ {
+@@ -74,7 +74,7 @@ extern int iscsit_na_dataout_timeout(
+ 	return 0;
+ }
+ 
+-extern int iscsit_na_dataout_timeout_retries(
++int iscsit_na_dataout_timeout_retries(
+ 	struct iscsi_node_acl *acl,
+ 	u32 dataout_timeout_retries)
+ {
+@@ -100,7 +100,7 @@ extern int iscsit_na_dataout_timeout_retries(
+ 	return 0;
+ }
+ 
+-extern int iscsit_na_nopin_timeout(
++int iscsit_na_nopin_timeout(
+ 	struct iscsi_node_acl *acl,
+ 	u32 nopin_timeout)
+ {
+@@ -155,7 +155,7 @@ extern int iscsit_na_nopin_timeout(
+ 	return 0;
+ }
+ 
+-extern int iscsit_na_nopin_response_timeout(
++int iscsit_na_nopin_response_timeout(
+ 	struct iscsi_node_acl *acl,
+ 	u32 nopin_response_timeout)
+ {
+@@ -181,7 +181,7 @@ extern int iscsit_na_nopin_response_timeout(
+ 	return 0;
+ }
+ 
+-extern int iscsit_na_random_datain_pdu_offsets(
++int iscsit_na_random_datain_pdu_offsets(
+ 	struct iscsi_node_acl *acl,
+ 	u32 random_datain_pdu_offsets)
+ {
+@@ -201,7 +201,7 @@ extern int iscsit_na_random_datain_pdu_offsets(
+ 	return 0;
+ }
+ 
+-extern int iscsit_na_random_datain_seq_offsets(
++int iscsit_na_random_datain_seq_offsets(
+ 	struct iscsi_node_acl *acl,
+ 	u32 random_datain_seq_offsets)
+ {
+@@ -221,7 +221,7 @@ extern int iscsit_na_random_datain_seq_offsets(
+ 	return 0;
+ }
+ 
+-extern int iscsit_na_random_r2t_offsets(
++int iscsit_na_random_r2t_offsets(
+ 	struct iscsi_node_acl *acl,
+ 	u32 random_r2t_offsets)
+ {
+@@ -241,7 +241,7 @@ extern int iscsit_na_random_r2t_offsets(
+ 	return 0;
+ }
+ 
+-extern int iscsit_na_default_erl(
++int iscsit_na_default_erl(
+ 	struct iscsi_node_acl *acl,
+ 	u32 default_erl)
+ {
