@@ -1,97 +1,55 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH] sd: Fix device removal NULL pointer dereference
-Date: Sun, 18 Mar 2012 13:26:28 +0000
-Message-ID: <4F65E284.2050208@acm.org>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: Burning multiple DVDs at one time
+Date: Sun, 18 Mar 2012 09:30:59 -0400
+Message-ID: <20120318133059.GB10172@animx.eu.org>
+References: <20120315225310.GB3152@animx.eu.org>
+ <20120317095644.145d0588@stein>
+ <20120317142255.GB26403@animx.eu.org>
+ <20120317162853.13afa28b@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01ant.iops.be ([212.53.4.34]:49056 "EHLO
-	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752794Ab2CRN0b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Mar 2012 09:26:31 -0400
+Received: from tn-76-7-162-101.sta.embarqhsd.net ([76.7.162.101]:44367 "EHLO
+	animx.eu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752848Ab2CRNbC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Mar 2012 09:31:02 -0400
+Content-Disposition: inline
+In-Reply-To: <20120317162853.13afa28b@stein>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Keep sdev->request_queue->queuedata even after scsi_remove_device()
-finished. Functions like sd_pref_fn() may access the SCSI device
-request queue after scsi_remove_device() finished and before the
-final put on the SCSI device.
+Stefan Richter wrote:
+> On Mar 17 Wakko Warner wrote:
+> > Thanks.  I looked at the patch.  I would just like to confirm that I can
+> > patch my 3.0.0 vanilla kernel, compile the sr module, unload the current and
+> > load the patched one without the need to reboot.
+> 
+> Yes, this should be possible.
+> 
+> Oh, I only noticed just know that you also wrote:
+> 
+> > > > The kernel is a vanilla kernel v3.0.0.  (This also happened with 2.6.35)
+> 
+> In 2.6.35, the Big Kernel Lock was still in place there.  That lock
+> behaved differently from a plain mutex --- notably it was released when a
+> thread went to sleep --- so maybe there is more to your problem than just
+> sr_mutex blocking unrelated sr accesses.
 
-See also http://www.spinics.net/lists/linux-scsi/msg56254.html.
+There is a good possibility that I was mistaken on the 2.6.35.
 
-Reported-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: stable@vger.kernel.org
----
- drivers/scsi/hosts.c      |    6 ++++++
- drivers/scsi/scsi_lib.c   |   13 +++----------
- drivers/scsi/scsi_sysfs.c |    3 ---
- 3 files changed, 9 insertions(+), 13 deletions(-)
+I manually applied your patch to 3.0.0, compiled, removed sr-mod module and
+inserted the newly compiled one.
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 351dc0b..5cf3a92 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -296,6 +296,12 @@ static void scsi_host_dev_release(struct device *dev)
- 		destroy_workqueue(shost->work_q);
- 	q = shost->uspace_req_q;
- 	if (q) {
-+		/*
-+		 * Note: freeing queuedata before invoking scsi_free_queue()
-+		 * is safe here because no request function is associated with
-+		 * uspace_req_q. See also the __scsi_alloc_queue() call in
-+		 * drivers/scsi/scsi_tgt_lib.c.
-+		 */
- 		kfree(q->queuedata);
- 		q->queuedata = NULL;
- 		scsi_free_queue(q);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b2c95db..c974032 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1486,7 +1486,9 @@ static void scsi_request_fn(struct request_queue *q)
- 	struct scsi_cmnd *cmd;
- 	struct request *req;
--	if (!sdev) {
-+	BUG_ON(!sdev);
-+
-+	if (unlikely(blk_queue_dead(q))) {
- 		while ((req = blk_peek_request(q)) != NULL)
- 			scsi_kill_request(req, q);
- 		return;
-@@ -1695,15 +1697,6 @@ struct request_queue *scsi_alloc_queue(struct
-scsi_device *sdev)
-  void scsi_free_queue(struct request_queue *q)
- {
--	unsigned long flags;
--
--	WARN_ON(q->queuedata);
--
--	/* cause scsi_request_fn() to kill all non-finished requests */
--	spin_lock_irqsave(q->queue_lock, flags);
--	q->request_fn(q);
--	spin_unlock_irqrestore(q->queue_lock, flags);
--
- 	blk_cleanup_queue(q);
- }
- diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 04c2a27..65801e9 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -971,9 +971,6 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		sdev->host->hostt->slave_destroy(sdev);
- 	transport_destroy_device(dev);
--	/* cause the request function to reject all I/O requests */
--	sdev->request_queue->queuedata = NULL;
--
- 	/* Freeing the queue signals to block that we're done */
- 	scsi_free_queue(sdev->request_queue);
- 	put_device(dev);
+With the vanilla one, I would see the buf % in wodim drop while the fifo was
+full.  With the patch (removing the mutex), buf stayed above 98% and the
+burn speed was 16x at the end (10x avg).
+
+Seems to have fixed my problem.
+
+Thanks.
+
 -- 
-1.7.7
-
-
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
