@@ -1,55 +1,49 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Burning multiple DVDs at one time
-Date: Sun, 18 Mar 2012 15:01:27 +0100
-Message-ID: <20120318150127.5f8db40c@stein>
-References: <20120315225310.GB3152@animx.eu.org>
-	<20120317095644.145d0588@stein>
-	<20120317142255.GB26403@animx.eu.org>
-	<20120317162853.13afa28b@stein>
-	<20120318133059.GB10172@animx.eu.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] block: Make blk_drain_queue() work for stopped queues
+Date: Sun, 18 Mar 2012 08:57:03 -0700
+Message-ID: <20120318155703.GB8045@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <4F65E09D.6010600@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120318133059.GB10172@animx.eu.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:37935 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754658Ab2CRP5I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Mar 2012 11:57:08 -0400
+Received: by pbcun15 with SMTP id un15so712850pbc.19
+        for <linux-scsi@vger.kernel.org>; Sun, 18 Mar 2012 08:57:08 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <4F65E09D.6010600@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Stanislaw Gruszka <sgruszka@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mar 18 Wakko Warner wrote:
-> Stefan Richter wrote:
-> > On Mar 17 Wakko Warner wrote:
-> > > Thanks.  I looked at the patch.  I would just like to confirm that I can
-> > > patch my 3.0.0 vanilla kernel, compile the sr module, unload the current and
-> > > load the patched one without the need to reboot.
-> > 
-> > Yes, this should be possible.
-> > 
-> > Oh, I only noticed just know that you also wrote:
-> > 
-> > > > > The kernel is a vanilla kernel v3.0.0.  (This also happened with 2.6.35)
-> > 
-> > In 2.6.35, the Big Kernel Lock was still in place there.  That lock
-> > behaved differently from a plain mutex --- notably it was released when a
-> > thread went to sleep --- so maybe there is more to your problem than just
-> > sr_mutex blocking unrelated sr accesses.
-> 
-> There is a good possibility that I was mistaken on the 2.6.35.
-> 
-> I manually applied your patch to 3.0.0, compiled, removed sr-mod module and
-> inserted the newly compiled one.
-> 
-> With the vanilla one, I would see the buf % in wodim drop while the fifo was
-> full.  With the patch (removing the mutex), buf stayed above 98% and the
-> burn speed was 16x at the end (10x avg).
-> 
-> Seems to have fixed my problem.
+On Sun, Mar 18, 2012 at 01:18:21PM +0000, Bart Van Assche wrote:
+> All queued requests must be processed eventually. Hence make sure
+> that blk_drain_queue() drains the queue even if the queue is in the
+> stopped state. This patch makes it safe to invoke blk_cleanup_queue()
+> on a stopped queue.
+...
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 3a78b00..bdcec86 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -300,10 +300,8 @@ EXPORT_SYMBOL(blk_sync_queue);
+>   */
+>  void __blk_run_queue(struct request_queue *q)
+>  {
+> -	if (unlikely(blk_queue_stopped(q)))
+> -		return;
+> -
+> -	q->request_fn(q);
+> +	if (!blk_queue_stopped(q) || blk_queue_dead(q))
+> +		q->request_fn(q);
 
-Very nice; so there is an almost easy fix.  Now I or somebody else need to
-work out the required cdrom_device_info protection on which Arnd and James
-commented.
+So, this allows calling request_fn for dead && stopped queue.  Have
+you seen something which requires this?
+
+Thanks.
+
 -- 
-Stefan Richter
--=====-===-- --== =--=-
-http://arcgraph.de/sr/
+tejun
