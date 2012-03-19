@@ -1,63 +1,64 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH RESEND 2/2] Drivers: scsi: storvsc: Don't pass ATA_16 command to the host
-Date: Sun, 18 Mar 2012 13:00:17 -0700
-Message-ID: <1332100817-25646-2-git-send-email-kys@microsoft.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH RESEND  0000/0002] drivers: scsi: storvsc
+Date: Mon, 19 Mar 2012 00:01:17 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481B767CB5@TK5EX14MBXC126.redmond.corp.microsoft.com>
 References: <1332100789-25594-1-git-send-email-kys@microsoft.com>
- <1332100817-25646-1-git-send-email-kys@microsoft.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p3plsmtps2ded01.prod.phx3.secureserver.net ([208.109.80.58]:33239
-	"HELO p3plsmtps2ded01-01.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756474Ab2CRTxU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Mar 2012 15:53:20 -0400
-In-Reply-To: <1332100817-25646-1-git-send-email-kys@microsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1332100789-25594-1-git-send-email-kys@microsoft.com>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
+List-Post: <mailto:devel@linuxdriverproject.org>
+List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: devel-bounces@linuxdriverproject.org
+Sender: devel-bounces@linuxdriverproject.org
+To: KY Srinivasan <kys@microsoft.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 
-The current Windows hosts don't handle the ATA_16 command and furthermore
-return a generic error code after filtering the command on the host side.
-For now filter the command on the guest side until the host is modified to
-properly handle unsupported commands.
+Please drop these two patches. It looks like I sent out the wrong set of patches.
+I will send the ones I wanted to send shortly.
 
-I would like to thank Jeff Garzik <jgpobox@gmail.com> and
-Douglas Gilbert <dgilbert@interlog.com> for suggesting the correct approach
-here.
+Regards,
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
----
- drivers/scsi/storvsc_drv.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
+K. Y
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index d5448e8..e9e37dd 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1233,9 +1233,21 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
- 	/*
- 	 * smartd sends this command and the host does not handle
- 	 * this. So, don't send it.
-+	 * The current Windows hosts implement a subset of scsi commands
-+	 * and for the commands that are not implemented, the host filters
-+	 * them and returns a generic failure SRB status. I have been in
-+	 * discussions with the Windows team to return the appropriate SRB
-+	 * status code for unsupported scsi commands and while they have
-+	 * agreed to implement this, it is not clear when this change will be
-+	 * available. Consequently, filtering the command before submitting it
-+	 * to the host is a resonable interim solution.
- 	 */
- 	case SET_WINDOW:
--		scmnd->result = ILLEGAL_REQUEST << 16;
-+	case ATA_16:
-+		scmnd->result = ((DRIVER_SENSE << 24) |
-+                                 SAM_STAT_CHECK_CONDITION);
-+		scsi_build_sense_buffer(0, scmnd->sense_buffer,
-+					ILLEGAL_REQUEST, 0x20, 0);
- 		allowed = false;
- 		break;
- 	default:
--- 
-1.7.4.1
-
+> -----Original Message-----
+> From: K. Y. Srinivasan [mailto:kys@microsoft.com]
+> Sent: Sunday, March 18, 2012 4:00 PM
+> To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
+> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org
+> Cc: KY Srinivasan
+> Subject: [PATCH RESEND 0000/0002] drivers: scsi: storvsc
+> 
+> 
+> The current Windows hosts only handle a subset of scsi commands
+> sent from the guest and for commands that are not supported, they are
+> filtered on the host side a generic failure is returned to the guest
+> as SRB status. The returned error code does not permit the guest to
+> figure out if there was an error or if the command was not supported.
+> 
+> Based on the input I got from the community, I have convinced the windows
+> developers to return an error code that allows the guest to distinguish between
+> unsupported command and true failures. However, it is not clear when this fix
+> will
+> be shipped.
+> 
+> This patch set addresses this issue by filtering the ATA_16 command on the guest
+> (note that currently the host is filtering this command as it is not supported).
+> I also have a patch here the correctly handles SRB_STATUS_INVALID_REQUEST
+> error returns - note that the current windows hosts don't return this today.
+> 
+> This is a resend of the patches sent earlier based on suggestions from
+> Jeff Garzik <jgpobox@gmail.com> and Douglas Gilbert <dgilbert@interlog.com>.
+> 
+> 
+> Regards,
+> 
+> K. Y
