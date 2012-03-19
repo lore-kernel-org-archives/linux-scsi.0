@@ -1,34 +1,60 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH RESEND  0000/0002] drivers: scsi: storvsc
-Date: Sun, 18 Mar 2012 17:11:55 -0700
-Message-ID: <1332115915-26805-1-git-send-email-kys@microsoft.com>
+Subject: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result correctly when SRB status is INVALID
+Date: Sun, 18 Mar 2012 17:12:42 -0700
+Message-ID: <1332115963-26855-1-git-send-email-kys@microsoft.com>
+References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1332115915-26805-1-git-send-email-kys@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Currently Windows hosts only support a subset of scsi commands and for commands
+that are not supported, the host returns a generic SRB failure status.
+However, they have agreed to change the return value to indicate that
+the command is not supported. In preparation for that, handle the
+SRB_STATUS_INVALID_REQUEST return value correctly.
 
-The current Windows hosts only handle a subset of scsi commands
-sent from the guest and for commands that are not supported, they are
-filtered on the host side a generic failure is returned to the guest
-as SRB status. The returned error code does not permit the guest to
-figure out if there was an error or if the command was not supported.
+I would like to thank Jeff Garzik <jgpobox@gmail.com> and
+Douglas Gilbert <dgilbert@interlog.com> for suggesting the correct approach
+here.
 
-Based on the input I got from the community, I have convinced the windows
-developers to return an error code that allows the guest to distinguish between
-unsupported command and true failures. However, it is not clear when this fix will
-be shipped.
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-This patch set addresses this issue by filtering the ATA_16 command on the guest
-(note that currently the host is filtering this command as it is not supported).
-I also have a patch here the correctly handles SRB_STATUS_INVALID_REQUEST
-error returns - note that the current windows hosts don't return this today.
-
-This is a resend of the patches sent earlier based on suggestions from
-Jeff Garzik <jgpobox@gmail.com> and Douglas Gilbert <dgilbert@interlog.com>. 
-
-
-Regards,
-
-K. Y
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 44c7a48..018c363 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -202,6 +202,7 @@ enum storvsc_request_type {
+ #define SRB_STATUS_INVALID_LUN	0x20
+ #define SRB_STATUS_SUCCESS	0x01
+ #define SRB_STATUS_ERROR	0x04
++#define SRB_STATUS_INVALID_REQUEST 0x06
+ 
+ /*
+  * This is the end of Protocol specific defines.
+@@ -779,6 +780,17 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
+ 	}
+ 
+ 	/*
++	 * If the host returns with an invalid request, set
++	 * the scsi command result correctly.
++	 */
++	if (vm_srb->srb_status == SRB_STATUS_INVALID_REQUEST) {
++		scmnd->result = ((DRIVER_SENSE << 24) |
++				SAM_STAT_CHECK_CONDITION);
++		scsi_build_sense_buffer(0, scmnd->sense_buffer,
++					ILLEGAL_REQUEST, 0x20, 0);
++	}
++
++	/*
+ 	 * If there is an error; offline the device since all
+ 	 * error recovery strategies would have already been
+ 	 * deployed on the host side.
+-- 
+1.7.4.1
