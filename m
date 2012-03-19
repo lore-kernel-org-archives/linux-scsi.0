@@ -1,56 +1,82 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
  correctly when SRB status is INVALID
-Date: Mon, 19 Mar 2012 16:12:40 +0000
-Message-ID: <1332173560.3152.65.camel@dabdike>
+Date: Mon, 19 Mar 2012 16:50:36 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
 References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
 	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
+ <1332173560.3152.65.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1332115963-26855-1-git-send-email-kys@microsoft.com>
+In-Reply-To: <1332173560.3152.65.camel@dabdike>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, hch@infradead.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2012-03-18 at 17:12 -0700, K. Y. Srinivasan wrote:
-> Currently Windows hosts only support a subset of scsi commands and for commands
-> that are not supported, the host returns a generic SRB failure status.
-> However, they have agreed to change the return value to indicate that
-> the command is not supported. In preparation for that, handle the
-> SRB_STATUS_INVALID_REQUEST return value correctly.
-> 
-> I would like to thank Jeff Garzik <jgpobox@gmail.com> and
-> Douglas Gilbert <dgilbert@interlog.com> for suggesting the correct approach
-> here.
-> 
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c |   12 ++++++++++++
->  1 files changed, 12 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 44c7a48..018c363 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -202,6 +202,7 @@ enum storvsc_request_type {
->  #define SRB_STATUS_INVALID_LUN	0x20
->  #define SRB_STATUS_SUCCESS	0x01
->  #define SRB_STATUS_ERROR	0x04
-> +#define SRB_STATUS_INVALID_REQUEST 0x06
-
-I don't really think this is the correct approach.  We already have a
-SCSI error return for this, which you're now translating in the driver
-and hypervisor.  Rather than have a special byte return of
-SRB_STATUS_INVALID_REQUEST, why not have the hypervisor do the right
-thing and fill in the ILLEGAL_REQUEST sense return.  That way you don't
-need a special error code and you don't need to construct the sense
-buffer in the driver.  Now HyperV will be correctly set up for both pass
-through and emulated responses.  It's surely not much work and you
-already process sense data correctly in storvsc_command_completion(), so
-you wouldn't need any patches to the driver for this approach.
-
-James
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+TW9uZGF5LCBNYXJjaCAxOSwgMjAxMiAxMjoxMyBQTQ0KPiBUbzogS1kgU3Jpbml2YXNhbg0KPiBD
+YzogZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5v
+cmc7DQo+IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IG9oZXJpbmdAc3VzZS5jb207IGhj
+aEBpbmZyYWRlYWQub3JnOyBsaW51eC0NCj4gc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVj
+dDogUmU6IFtQQVRDSCBSRVNFTkQgMS8yXSBEcml2ZXJzOiBzY3NpOiBzdG9ydnNjOiBTZXQgdGhl
+IHNjc2kgcmVzdWx0IGNvcnJlY3RseQ0KPiB3aGVuIFNSQiBzdGF0dXMgaXMgSU5WQUxJRA0KPiAN
+Cj4gT24gU3VuLCAyMDEyLTAzLTE4IGF0IDE3OjEyIC0wNzAwLCBLLiBZLiBTcmluaXZhc2FuIHdy
+b3RlOg0KPiA+IEN1cnJlbnRseSBXaW5kb3dzIGhvc3RzIG9ubHkgc3VwcG9ydCBhIHN1YnNldCBv
+ZiBzY3NpIGNvbW1hbmRzIGFuZCBmb3INCj4gY29tbWFuZHMNCj4gPiB0aGF0IGFyZSBub3Qgc3Vw
+cG9ydGVkLCB0aGUgaG9zdCByZXR1cm5zIGEgZ2VuZXJpYyBTUkIgZmFpbHVyZSBzdGF0dXMuDQo+
+ID4gSG93ZXZlciwgdGhleSBoYXZlIGFncmVlZCB0byBjaGFuZ2UgdGhlIHJldHVybiB2YWx1ZSB0
+byBpbmRpY2F0ZSB0aGF0DQo+ID4gdGhlIGNvbW1hbmQgaXMgbm90IHN1cHBvcnRlZC4gSW4gcHJl
+cGFyYXRpb24gZm9yIHRoYXQsIGhhbmRsZSB0aGUNCj4gPiBTUkJfU1RBVFVTX0lOVkFMSURfUkVR
+VUVTVCByZXR1cm4gdmFsdWUgY29ycmVjdGx5Lg0KPiA+DQo+ID4gSSB3b3VsZCBsaWtlIHRvIHRo
+YW5rIEplZmYgR2FyemlrIDxqZ3BvYm94QGdtYWlsLmNvbT4gYW5kDQo+ID4gRG91Z2xhcyBHaWxi
+ZXJ0IDxkZ2lsYmVydEBpbnRlcmxvZy5jb20+IGZvciBzdWdnZXN0aW5nIHRoZSBjb3JyZWN0IGFw
+cHJvYWNoDQo+ID4gaGVyZS4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEsuIFkuIFNyaW5pdmFz
+YW4gPGt5c0BtaWNyb3NvZnQuY29tPg0KPiA+IFJldmlld2VkLWJ5OiBIYWl5YW5nIFpoYW5nIDxo
+YWl5YW5nekBtaWNyb3NvZnQuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvc3RvcnZz
+Y19kcnYuYyB8ICAgMTIgKysrKysrKysrKysrDQo+ID4gIDEgZmlsZXMgY2hhbmdlZCwgMTIgaW5z
+ZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJz
+L3Njc2kvc3RvcnZzY19kcnYuYyBiL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+ID4gaW5k
+ZXggNDRjN2E0OC4uMDE4YzM2MyAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvc3RvcnZz
+Y19kcnYuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+ID4gQEAgLTIw
+Miw2ICsyMDIsNyBAQCBlbnVtIHN0b3J2c2NfcmVxdWVzdF90eXBlIHsNCj4gPiAgI2RlZmluZSBT
+UkJfU1RBVFVTX0lOVkFMSURfTFVOCTB4MjANCj4gPiAgI2RlZmluZSBTUkJfU1RBVFVTX1NVQ0NF
+U1MJMHgwMQ0KPiA+ICAjZGVmaW5lIFNSQl9TVEFUVVNfRVJST1IJMHgwNA0KPiA+ICsjZGVmaW5l
+IFNSQl9TVEFUVVNfSU5WQUxJRF9SRVFVRVNUIDB4MDYNCj4gDQo+IEkgZG9uJ3QgcmVhbGx5IHRo
+aW5rIHRoaXMgaXMgdGhlIGNvcnJlY3QgYXBwcm9hY2guICBXZSBhbHJlYWR5IGhhdmUgYQ0KPiBT
+Q1NJIGVycm9yIHJldHVybiBmb3IgdGhpcywgd2hpY2ggeW91J3JlIG5vdyB0cmFuc2xhdGluZyBp
+biB0aGUgZHJpdmVyDQo+IGFuZCBoeXBlcnZpc29yLiAgUmF0aGVyIHRoYW4gaGF2ZSBhIHNwZWNp
+YWwgYnl0ZSByZXR1cm4gb2YNCj4gU1JCX1NUQVRVU19JTlZBTElEX1JFUVVFU1QsIHdoeSBub3Qg
+aGF2ZSB0aGUgaHlwZXJ2aXNvciBkbyB0aGUgcmlnaHQNCj4gdGhpbmcgYW5kIGZpbGwgaW4gdGhl
+IElMTEVHQUxfUkVRVUVTVCBzZW5zZSByZXR1cm4uICBUaGF0IHdheSB5b3UgZG9uJ3QNCj4gbmVl
+ZCBhIHNwZWNpYWwgZXJyb3IgY29kZSBhbmQgeW91IGRvbid0IG5lZWQgdG8gY29uc3RydWN0IHRo
+ZSBzZW5zZQ0KPiBidWZmZXIgaW4gdGhlIGRyaXZlci4gIE5vdyBIeXBlclYgd2lsbCBiZSBjb3Jy
+ZWN0bHkgc2V0IHVwIGZvciBib3RoIHBhc3MNCj4gdGhyb3VnaCBhbmQgZW11bGF0ZWQgcmVzcG9u
+c2VzLiAgSXQncyBzdXJlbHkgbm90IG11Y2ggd29yayBhbmQgeW91DQo+IGFscmVhZHkgcHJvY2Vz
+cyBzZW5zZSBkYXRhIGNvcnJlY3RseSBpbiBzdG9ydnNjX2NvbW1hbmRfY29tcGxldGlvbigpLCBz
+bw0KPiB5b3Ugd291bGRuJ3QgbmVlZCBhbnkgcGF0Y2hlcyB0byB0aGUgZHJpdmVyIGZvciB0aGlz
+IGFwcHJvYWNoLg0KDQpKYW1lcywgdGhlIGlzc3VlIGhlcmUgaXMgdGhhdCBjdXJyZW50bHkgc2hp
+cHBpbmcgV2luZG93cyBob3N0cyBkb24ndCBldmVuIGRvDQp3aGF0IEkgYW0gaGFuZGxpbmcgaGVy
+ZS4gQmFzZWQgb24gdGhlIGlucHV0IEkgZ290IGZyb20geW91IGFuZCBDaHJpc3RvcGgsDQpJIGNv
+bnZpbmNlZCB0aGUgd2luZG93cyB0ZWFtIHRvIGF0IGxlYXN0IHJldHVybiB0aGUgU1JCIHN0YXR1
+cyB0aGF0IGluZGljYXRlcw0KYW4gaWxsZWdhbCByZXF1ZXN0LiBJIHdpbGwgc3VnZ2VzdCB0byB0
+aGVtIHRoYXQgcGVyaGFwcyB0aGV5IHNob3VsZCBhbHNvIHNldCB0aGUNCmNvcnJlY3Qgc2Vuc2Ug
+Y29kZSBhbmQgc28gSSB3b3VsZCBub3QgbmVlZCB0aGlzIHBhdGNoLiBIb3dldmVyLCBrZWVwIGlu
+IG1pbmQNCnRoYXQgdGhlcmUgaXMgbm8gY3VycmVudCBFVEEgb24gd2hlbiBXaW5kb3dzIHdpbGwg
+c2hpcCB3aXRoIHRoZXNlIGNoYW5nZXMgLSBXaW5kb3dzIDgNCm1heSBzaGlwIHdpdGggY29kZSB3
+aGVyZSB0aGV5IHdvdWxkIHJldHVybiBhbiBpbnZhbGlkIFNSQiBzdGF0dXMsIGJ1dCB0aGV5IGFy
+ZSBub3QgDQpzZXR0aW5nIHRoZSBzZW5zZSBjb2RlLCBoZW5jZSB0aGlzIHBhdGNoLiBXaGVuIHRo
+ZSBXaW5kb3cgaG9zdCBkb2VzIHRoZSAicmlnaHQgdGhpbmciDQpJIHdpbGwgY2xlYW4gdGhpcyB1
+cCwgYnV0IEkgZG9uJ3Qga25vdyB3aGVuIHRoYXQgd2lsbCBiZS4NCg0KTW9yZSBpbXBvcnRhbnRs
+eSwgdGhlIHNlY29uZCBwYXRjaCAgaW4gdGhpcyBzZXJpZXMgd2hlcmUgSSBmaWx0ZXIgb3V0IHRo
+ZSBBVEFfMTYgY29tbWFuZA0Kb24gdGhlIGd1ZXN0IGlzIHJlYWxseSBpbXBvcnRhbnQgZm9yIHVz
+LiBXaXRob3V0IHRoYXQgcGF0Y2ggb24gYSByYW5nZSBvbiB3aW5kb3dzIGhvc3RzDQppbmNsdWRp
+bmcgdGhlIGN1cnJlbnQgYmV0YSB2ZXJzaW9uIG9mIHdpbmRvd3M4IHdoZXJlIHRoZSBob3N0IGlz
+IHJldHVybmluZyBhIGdlbmVyaWMgDQplcnJvciBpbiByZXNwb25zZSB0byBBVEFfMTYgY29tbWFu
+ZCwgd2UgY2Fubm90IGJvb3QgbWFueSBMaW51eCBkaXN0cm9zLiBJZiB5b3UNCnByZWZlciwgSSBj
+YW4gZHJvcCB0aGUgZmlyc3QgcGF0Y2ggYW5kIHJlLXN1Ym1pdCB0aGUgc2Vjb25kIHBhdGNoIGZv
+ciBjb25zaWRlcmF0aW9uIG5vdy4NCg0KUmVnYXJkcywNCg0KSy4gWQ0KDQoNCg==
