@@ -1,81 +1,56 @@
-From: Mark Salyzyn <mark_salyzyn@xyratex.com>
-Subject: Re: [PATCH v3] [SCSI] pm8001: fix endian issue with code optimization.
-Date: Mon, 19 Mar 2012 12:05:14 -0400
-Message-ID: <4562F560-1885-417E-B0CF-3B7CFFCD62A8@xyratex.com>
-References: <1332172587-11805-1-git-send-email-santoshprasadnayak@gmail.com>
-Mime-Version: 1.0 (Apple Message framework v1257)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratex195.xyratex.com ([194.131.166.195]:48718 "EHLO
-	XY01EX21.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753309Ab2CSQFd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Mar 2012 12:05:33 -0400
-In-Reply-To: <1332172587-11805-1-git-send-email-santoshprasadnayak@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
+ correctly when SRB status is INVALID
+Date: Mon, 19 Mar 2012 16:12:40 +0000
+Message-ID: <1332173560.3152.65.camel@dabdike>
+References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
+	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1332115963-26855-1-git-send-email-kys@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: santosh nayak <santoshprasadnayak@gmail.com>
-Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, jack_wang@usish.com, lindar_liu@usish.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, dan.carpenter@oracle.com
 
-ACK
-
-Sincerely -- Mark Salyzyn
-
-On Mar 19, 2012, at 11:56 AM, santosh nayak wrote:
-
-> From: Santosh Nayak <santoshprasadnayak@gmail.com>
+On Sun, 2012-03-18 at 17:12 -0700, K. Y. Srinivasan wrote:
+> Currently Windows hosts only support a subset of scsi commands and for commands
+> that are not supported, the host returns a generic SRB failure status.
+> However, they have agreed to change the return value to indicate that
+> the command is not supported. In preparation for that, handle the
+> SRB_STATUS_INVALID_REQUEST return value correctly.
 > 
-> Data type of the 'tag' field of 'fw_flash_Update_resp' should be
-> __le32.
+> I would like to thank Jeff Garzik <jgpobox@gmail.com> and
+> Douglas Gilbert <dgilbert@interlog.com> for suggesting the correct approach
+> here.
 > 
-> Data type of  'pHeader' should be __le32.
-> Remove 2nd cast to 'piomb'.
-> 
-> Signed-off-by: Santosh Nayak <santoshprasadnayak@gmail.com>
+> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
 > ---
-> drivers/scsi/pm8001/pm8001_hwi.c |    6 +++---
-> drivers/scsi/pm8001/pm8001_hwi.h |    2 +-
-> 2 files changed, 4 insertions(+), 4 deletions(-)
+>  drivers/scsi/storvsc_drv.c |   12 ++++++++++++
+>  1 files changed, 12 insertions(+), 0 deletions(-)
 > 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 3619f6e..6d83236 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -3355,7 +3355,7 @@ mpi_fw_flash_update_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
-> 	struct fw_control_ex	fw_control_context;
-> 	struct fw_flash_Update_resp *ppayload =
-> 		(struct fw_flash_Update_resp *)(piomb + 4);
-> -	u32 tag = ppayload->tag;
-> +	u32 tag = le32_to_cpu(ppayload->tag);
-> 	struct pm8001_ccb_info *ccb = &pm8001_ha->ccb_info[tag];
-> 	status = le32_to_cpu(ppayload->status);
-> 	memcpy(&fw_control_context,
-> @@ -3701,8 +3701,8 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void* piomb)
->  */
-> static void process_one_iomb(struct pm8001_hba_info *pm8001_ha, void *piomb)
-> {
-> -	u32 pHeader = (u32)*(u32 *)piomb;
-> -	u8 opc = (u8)(pHeader & 0xFFF);
-> +	__le32 pHeader = *(__le32 *)piomb;
-> +	u8 opc = (u8)((le32_to_cpu(pHeader)) & 0xFFF);
-> 
-> 	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("process_one_iomb:"));
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
-> index 1a4611e..d437309 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.h
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.h
-> @@ -599,7 +599,7 @@ struct fw_flash_Update_req {
->  *
->  */
-> struct fw_flash_Update_resp {
-> -	dma_addr_t	tag;
-> +	__le32	tag;
-> 	__le32	status;
-> 	u32	reserved[13];
-> } __attribute__((packed, aligned(4)));
-> -- 
-> 1.7.4.4
-> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 44c7a48..018c363 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -202,6 +202,7 @@ enum storvsc_request_type {
+>  #define SRB_STATUS_INVALID_LUN	0x20
+>  #define SRB_STATUS_SUCCESS	0x01
+>  #define SRB_STATUS_ERROR	0x04
+> +#define SRB_STATUS_INVALID_REQUEST 0x06
 
+I don't really think this is the correct approach.  We already have a
+SCSI error return for this, which you're now translating in the driver
+and hypervisor.  Rather than have a special byte return of
+SRB_STATUS_INVALID_REQUEST, why not have the hypervisor do the right
+thing and fill in the ILLEGAL_REQUEST sense return.  That way you don't
+need a special error code and you don't need to construct the sense
+buffer in the driver.  Now HyperV will be correctly set up for both pass
+through and emulated responses.  It's surely not much work and you
+already process sense data correctly in storvsc_command_completion(), so
+you wouldn't need any patches to the driver for this approach.
+
+James
