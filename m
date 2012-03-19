@@ -1,8 +1,8 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
  correctly when SRB status is INVALID
-Date: Mon, 19 Mar 2012 22:40:19 +0000
-Message-ID: <1332196819.3152.77.camel@dabdike>
+Date: Mon, 19 Mar 2012 22:41:58 +0000
+Message-ID: <1332196918.3152.78.camel@dabdike>
 References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
 	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
 	 <1332173560.3152.65.camel@dabdike>
@@ -10,12 +10,17 @@ References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50699 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932168Ab2CSWmC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Mar 2012 18:42:02 -0400
 In-Reply-To: <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: KY Srinivasan <kys@microsoft.com>
 Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
 On Mon, 2012-03-19 at 16:50 +0000, KY Srinivasan wrote:
 > 
@@ -109,3 +114,5 @@ ILLEGAL_REQUEST sense code would (minus the useful error information),
 so what's causing the boot failure?
 
 James
+
+
