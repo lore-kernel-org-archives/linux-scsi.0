@@ -1,57 +1,62 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH RESEND 2/2] Drivers: scsi: storvsc: Don't pass ATA_16 command to the host
-Date: Sun, 18 Mar 2012 17:12:43 -0700
-Message-ID: <1332115963-26855-2-git-send-email-kys@microsoft.com>
-References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
- <1332115963-26855-1-git-send-email-kys@microsoft.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1332115963-26855-1-git-send-email-kys@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] qla2xxx FC target mode
+Date: Sun, 18 Mar 2012 17:22:21 -0700
+Message-ID: <1332116541.1612.118.camel@haakon2.linux-iscsi.org>
+References: <1327796869.18763.211.camel@haakon2.linux-iscsi.org>
+	 <1331941253.10203.280.camel@haakon2.linux-iscsi.org>
+	 <1332062541.2855.27.camel@dabdike>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1332062541.2855.27.camel@dabdike>
+Sender: target-devel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: lsf-pc <lsf-pc@lists.linux-foundation.org>, Roland Dreier <roland@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <mail@hannes-reinecke.de>, Madhu Iyengar <madhu.iyengar@qlogic.com>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Christoph Hellwig <hch@lst.de>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>, Arun Easi <arun.easi@qlogic.com>, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The current Windows hosts don't handle the ATA_16 command and furthermore
-return a generic error code after filtering the command on the host side.
-For now filter the command on the guest side until the host is modified to
-properly handle unsupported commands.
+On Sun, 2012-03-18 at 09:22 +0000, James Bottomley wrote:
+> On Fri, 2012-03-16 at 16:40 -0700, Nicholas A. Bellinger wrote:
+> > James & Co,
+> > 
+> > Ping..?  Any thoughts on this topic yet..?
+> 
+> Not really ... we're trying to get the participants to plan the topics
+> this year.
+> 
 
-I would like to thank Jeff Garzik <jgpobox@gmail.com> and
-Douglas Gilbert <dgilbert@interlog.com> for suggesting the correct approach
-here.
+Hi James,
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
----
- drivers/scsi/storvsc_drv.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
+I'm asking because the invites for an LSF slot this year to discuss this
+topic with the development community has not materialized, and you've
+been completely silent to qla2xxx target RFCs + patches that involve the
+subject thus far..
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 018c363..66e9bdd 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1233,9 +1233,21 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
- 	/*
- 	 * smartd sends this command and the host does not handle
- 	 * this. So, don't send it.
-+	 * The current Windows hosts implement a subset of scsi commands
-+	 * and for the commands that are not implemented, the host filters
-+	 * them and returns a generic failure SRB status. I have been in
-+	 * discussions with the Windows team to return the appropriate SRB
-+	 * status code for unsupported scsi commands and while they have
-+	 * agreed to implement this, it is not clear when this change will be
-+	 * available. Consequently, filtering the command before submitting it
-+	 * to the host is a resonable interim solution.
- 	 */
- 	case SET_WINDOW:
--		scmnd->result = ILLEGAL_REQUEST << 16;
-+	case ATA_16:
-+		scmnd->result = ((DRIVER_SENSE << 24) |
-+				SAM_STAT_CHECK_CONDITION);
-+		scsi_build_sense_buffer(0, scmnd->sense_buffer,
-+					ILLEGAL_REQUEST, 0x20, 0);
- 		allowed = false;
- 		break;
- 	default:
--- 
-1.7.4.1
+The reasons why a face to face discussion at LSF would be useful:
+
+*) It effects existing qla2xxx LLD mainline code
+*) It effects future SCSI LLDs + target fabric modules that also want to
+   run in mixed mode operation with scsi-core <-> target-core
+*) Other subsystem + filesystem maintainers, and key developers have 
+   been helping push the code forward for an initial merge
+*) Qlogic is supporting us in the mainline effort
+
+So aside from LSF discussion material, I'm really more interested in
+determining a plan at how interaction between scsi-core and target-core
+subsystems for mixed mode is really going to operate outside of LLD HW
+specifics.  Without starting to get some form of feedback from you and
+other SCSI core folks, it's difficult to get moving on for-3.5
+integration work that I'd like to get started on soon.
+
+So that said, I'll be collecting ACKs for what has been posted last week
+in target-pending/for-next-merge that makes qla2xxx by default run with
+target mode explicitly disabled, and requires qlini_mode="disabled" in
+order to access qla2xxx WWPNs within the TFO->fabric_make_wwn() handler
+for tcm_qla2xx.ko code.
+
+Please have a look and let me know if you have objections to the
+existing code changes with a for-3.4 merge.
+
+Thanks,
+
+--nab
