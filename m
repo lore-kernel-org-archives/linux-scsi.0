@@ -1,20 +1,20 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result correctly when SRB status is INVALID
-Date: Sun, 18 Mar 2012 17:12:42 -0700
-Message-ID: <1332115963-26855-1-git-send-email-kys@microsoft.com>
+Subject: [PATCH RESEND 2/2] Drivers: scsi: storvsc: Don't pass ATA_16 command to the host
+Date: Sun, 18 Mar 2012 17:12:43 -0700
+Message-ID: <1332115963-26855-2-git-send-email-kys@microsoft.com>
 References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
+ <1332115963-26855-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1332115915-26805-1-git-send-email-kys@microsoft.com>
+In-Reply-To: <1332115963-26855-1-git-send-email-kys@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Currently Windows hosts only support a subset of scsi commands and for commands
-that are not supported, the host returns a generic SRB failure status.
-However, they have agreed to change the return value to indicate that
-the command is not supported. In preparation for that, handle the
-SRB_STATUS_INVALID_REQUEST return value correctly.
+The current Windows hosts don't handle the ATA_16 command and furthermore
+return a generic error code after filtering the command on the host side.
+For now filter the command on the guest side until the host is modified to
+properly handle unsupported commands.
 
 I would like to thank Jeff Garzik <jgpobox@gmail.com> and
 Douglas Gilbert <dgilbert@interlog.com> for suggesting the correct approach
@@ -23,38 +23,35 @@ here.
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
 ---
- drivers/scsi/storvsc_drv.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/scsi/storvsc_drv.c |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 44c7a48..018c363 100644
+index 018c363..66e9bdd 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -202,6 +202,7 @@ enum storvsc_request_type {
- #define SRB_STATUS_INVALID_LUN	0x20
- #define SRB_STATUS_SUCCESS	0x01
- #define SRB_STATUS_ERROR	0x04
-+#define SRB_STATUS_INVALID_REQUEST 0x06
- 
- /*
-  * This is the end of Protocol specific defines.
-@@ -779,6 +780,17 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
- 	}
- 
+@@ -1233,9 +1233,21 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
  	/*
-+	 * If the host returns with an invalid request, set
-+	 * the scsi command result correctly.
-+	 */
-+	if (vm_srb->srb_status == SRB_STATUS_INVALID_REQUEST) {
+ 	 * smartd sends this command and the host does not handle
+ 	 * this. So, don't send it.
++	 * The current Windows hosts implement a subset of scsi commands
++	 * and for the commands that are not implemented, the host filters
++	 * them and returns a generic failure SRB status. I have been in
++	 * discussions with the Windows team to return the appropriate SRB
++	 * status code for unsupported scsi commands and while they have
++	 * agreed to implement this, it is not clear when this change will be
++	 * available. Consequently, filtering the command before submitting it
++	 * to the host is a resonable interim solution.
+ 	 */
+ 	case SET_WINDOW:
+-		scmnd->result = ILLEGAL_REQUEST << 16;
++	case ATA_16:
 +		scmnd->result = ((DRIVER_SENSE << 24) |
 +				SAM_STAT_CHECK_CONDITION);
 +		scsi_build_sense_buffer(0, scmnd->sense_buffer,
 +					ILLEGAL_REQUEST, 0x20, 0);
-+	}
-+
-+	/*
- 	 * If there is an error; offline the device since all
- 	 * error recovery strategies would have already been
- 	 * deployed on the host side.
+ 		allowed = false;
+ 		break;
+ 	default:
 -- 
 1.7.4.1
