@@ -1,196 +1,111 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target-pending updates for v3.4-rc1 (round 1)
-Date: Mon, 19 Mar 2012 15:09:02 -0700
-Message-ID: <1332194942.1612.177.camel@haakon2.linux-iscsi.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
+ correctly when SRB status is INVALID
+Date: Mon, 19 Mar 2012 22:40:19 +0000
+Message-ID: <1332196819.3152.77.camel@dabdike>
+References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
+	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
+	 <1332173560.3152.65.camel@dabdike>
+	 <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>, Roland Dreier <roland@kernel.org>, James Bottomley <jbottomley@parallels.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Linus,
+On Mon, 2012-03-19 at 16:50 +0000, KY Srinivasan wrote:
+> 
+> > -----Original Message-----
+> > From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+> > Sent: Monday, March 19, 2012 12:13 PM
+> > To: KY Srinivasan
+> > Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> > devel@linuxdriverproject.org; ohering@suse.com; hch@infradead.org; linux-
+> > scsi@vger.kernel.org
+> > Subject: Re: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result correctly
+> > when SRB status is INVALID
+> > 
+> > On Sun, 2012-03-18 at 17:12 -0700, K. Y. Srinivasan wrote:
+> > > Currently Windows hosts only support a subset of scsi commands and for
+> > commands
+> > > that are not supported, the host returns a generic SRB failure status.
+> > > However, they have agreed to change the return value to indicate that
+> > > the command is not supported. In preparation for that, handle the
+> > > SRB_STATUS_INVALID_REQUEST return value correctly.
+> > >
+> > > I would like to thank Jeff Garzik <jgpobox@gmail.com> and
+> > > Douglas Gilbert <dgilbert@interlog.com> for suggesting the correct approach
+> > > here.
+> > >
+> > > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> > > Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+> > > ---
+> > >  drivers/scsi/storvsc_drv.c |   12 ++++++++++++
+> > >  1 files changed, 12 insertions(+), 0 deletions(-)
+> > >
+> > > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> > > index 44c7a48..018c363 100644
+> > > --- a/drivers/scsi/storvsc_drv.c
+> > > +++ b/drivers/scsi/storvsc_drv.c
+> > > @@ -202,6 +202,7 @@ enum storvsc_request_type {
+> > >  #define SRB_STATUS_INVALID_LUN	0x20
+> > >  #define SRB_STATUS_SUCCESS	0x01
+> > >  #define SRB_STATUS_ERROR	0x04
+> > > +#define SRB_STATUS_INVALID_REQUEST 0x06
+> > 
+> > I don't really think this is the correct approach.  We already have a
+> > SCSI error return for this, which you're now translating in the driver
+> > and hypervisor.  Rather than have a special byte return of
+> > SRB_STATUS_INVALID_REQUEST, why not have the hypervisor do the right
+> > thing and fill in the ILLEGAL_REQUEST sense return.  That way you don't
+> > need a special error code and you don't need to construct the sense
+> > buffer in the driver.  Now HyperV will be correctly set up for both pass
+> > through and emulated responses.  It's surely not much work and you
+> > already process sense data correctly in storvsc_command_completion(), so
+> > you wouldn't need any patches to the driver for this approach.
+> 
+> James, the issue here is that currently shipping Windows hosts don't even do
+> what I am handling here.
 
-The following pull request contains the first series of target-pending
-patches destined for v3.4-rc1.  It contains the usual set of updates an=
-d
-bugfixes to target-core + existing fabric module code, along with a
-handful of the patches destined for v3.3 stable.=20
+Right, I understand that.
 
-Please go ahead and pull from:
+>  Based on the input I got from you and Christoph,
+> I convinced the windows team to at least return the SRB status that indicates
+> an illegal request. I will suggest to them that perhaps they should also set the
+> correct sense code and so I would not need this patch.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git =
-for-next
+Not also; instead of.  There's no need for an extra SRB status.  Just
+return the standard check condition sense data.
 
-It also contains the necessary target-core infrastructure pieces
-required to run using tcm_qla2xxx.ko WWPNs with the new Qlogic Fibre
-Channel fabric module currently queued in target-pending/for-next-merge=
-,
-and coming for round 2.
+>  However, keep in mind
+> that there is no current ETA on when Windows will ship with these changes - Windows 8
+> may ship with code where they would return an invalid SRB status, but they are not 
+> setting the sense code, hence this patch. When the Window host does the "right thing"
+> I will clean this up, but I don't know when that will be.
 
-The highlights for this series include:
+I thought you just said you'd only just asked them if they could
+implemented it, in which case no version of windows currently ships with
+this, correct?
 
-*) Add target_submit_tmr() helper function for fabric task management (=
-andy)
-*) Convert tcm_fc to use target_submit_tmr() (andy)
-*) Replace target core various cmd flags with a transport state (hch)
-*) Convert loopback to use workqueue submission (hch)
-*) Convert target core to use array_zalloc for tpg_lun_list (joern)
-*) Convert target core to use array_zalloc for device_list (joern)
-*) Add target core support for TMR_ABORT_TASK (nab)
-*) Add target core se_sess->sess_kref + get/put helpers (nab)
-*) Add target core se_node_acl->acl_kref for ->acl_free_comp usage (nab=
-)
-*) Convert iscsi-target to use target_put_session + sess_kref (nab)
-*) Fix tcm_fc fc_exch memory leak in ft_send_resp_status (nab)
-*) Fix ib_srpt srpt_handle_cmd send_ioctx->ioctx_kref leak on exception=
- (nab)
-*) Fix target core up handling of short INQUIRY buffers (roland)
-*) Untangle target-core front-end and back-end meanings of max_sectors
-   attribute (roland)
-*) Set loopback residual field for SCSI commands (roland)
-*) Fix target-core 16-bit target ports for SET TARGET PORT GROUPS emula=
-tion (roland)
+> More importantly, the second patch  in this series where I filter out
+> the ATA_16 command
+> on the guest is really important for us. Without that patch on a range
+> on windows hosts
+> including the current beta version of windows8 where the host is
+> returning a generic 
+> error in response to ATA_16 command, we cannot boot many Linux
+> distros. If you
+> prefer, I can drop the first patch and re-submit the second patch for
+> consideration now.
 
-Thanks again to Andy, Christoph, Joern, Roland, and everyone who has co=
-ntributed
-this round!
+I'm not sure about that either.  You presumably translate
+SRB_STATUS_ERROR into DID_TARGET_FAILURE.  That should cause the
+termination of the command with prejudice in exactly the same way as an
+ILLEGAL_REQUEST sense code would (minus the useful error information),
+so what's causing the boot failure?
 
---nab+
-
-Andy Grover (15):
-  scsi: update scsi.h with SYNCHRONIZE_CACHE_16
-  target: Use #define for SYNCHRONIZE_CACHE_16
-  scsi: Use struct scsi_lun in fc/fcp.h
-  target: fix comment typos
-  target: Remove unused struct se_queue_req
-  target/iscsi: Remove unneeded wrapper functions
-  tcm_fc: Simplify ft_send_work for tmr path
-  tcm_fc: Remove cmd->cdb data member
-  target: Add SCF_SCSI_TMR_CDB usage and drop se_tmr_req_cache
-  tcm_fc: Move core->fc code conversion earlier in ft_send_tm()
-  tcm_fc: Call lookup_tmr_lun() for all TM types
-  tcm_fc: Use transport_generic_free_cmd for ft_sess_put in ft_send_tm
-  target: Add target_submit_tmr helper function
-  tcm_fc: Convert ft_send_tm to use target_submit_tmr
-  target: Cleanup transport_kunmap_data_sg()
-
-Christoph Hellwig (7):
-  target: replace various cmd flags with a transport state
-  target: remove the transport_lun_active field in struct se_cmd
-  target: remove the unused struct iblock_hba
-  target: increase iblock task sizes
-  tcm_loop: kill tcm_loop_allocate_core_cmd
-  tcm_loop: defer all command submissions to workqueue
-  tcm_loop: switch to using transport_handle_cdb_direct
-
-Dan Carpenter (1):
-  iscsi-target: remove improper externs
-
-J=C3=B6rn Engel (7):
-  target: fix use after free in target_report_luns
-  target: prevent NULL pointer dereference in target_report_luns
-  target: Fix off-by-seven in target_report_luns
-  target: Use array_zalloc for tpg_lun_list
-  target: Use array_zalloc for device_list
-  target: remove obvious warnings
-  iscsi-target: Remove unused variables in iscsi_target_parameters.c
-
-Masanari Iida (1):
-  target: Fix typo in drivers/target
-
-Nicholas Bellinger (22):
-  target: Export transport_generic_request_failure symbol
-  target: Add SCF_ACK_KREF flag for acknowledgement kref
-  target: Make target_release_cmd_kref release on empty list
-  target: Add TMR_ABORT_TASK task management support
-  iscsi-target: Fix iscsit_alloc_buffs() failure cases
-  target: Fix target_submit_tmr LUN lookup failures
-  target: Fix target_submit_tmr se_tmr_req allocation failures
-  tcm_fc: Handle target_submit_tmr allocation failure
-  target: Push target_submit_tmr LUN lookup failure to system_wq
-    context
-  target: Allow target_submit_tmr interrupt context + pass ABORT_TASK
-    tag
-  iscsi-target: Fix dynamic -> explict NodeACL pointer reference
-  target: Convert session_lock to irqsave
-  target: Add se_sess->sess_kref + get/put helpers
-  target: Add se_node_acl->acl_free_comp for NodeACL release path
-  target: Add se_node_acl->acl_kref for ->acl_free_comp usage
-  target: Convert se_node_acl->acl_group removal to use ->acl_kref
-  iscsi-target: Convert to use target_put_session + sess_kref
-  target: Drop unused legacy target_core_fabric_ops API callers
-  tcm_fc: Fix fc_exch memory leak in ft_send_resp_status
-  target: Bump core version to v4.1.0-rc2-ml + fabric versions
-  loopback: Fix transport_generic_allocate_tasks error handling
-  ib_srpt: Fix srpt_handle_cmd send_ioctx->ioctx_kref leak on exception
-
-Roland Dreier (9):
-  target: Use LIST_HEAD()/DEFINE_MUTEX() for static objects
-  target: Fix up handling of short INQUIRY buffers
-  target: Set peripheral device type consistently in INQUIRY response
-  target: Don't set WBUS16 or SYNC bits in INQUIRY response
-  target: Untangle front-end and back-end meanings of max_sectors
-    attribute
-  tcm_loop: Set residual field for SCSI commands
-  target: Fix 16-bit target ports for SET TARGET PORT GROUPS emulation
-  target: Remove hack to make READ CAPACITY(10) lie if thin
-    provisioning is enabled
-  target: Fix sense code for unsupported SERVICE ACTION IN
-
-Spencer O Krum (1):
-  Documentation/target: Minor spelling typo
-
-Stefan Hajnoczi (1):
-  target/pscsi: fix PHV_VIRUTAL_HOST_ID typo
-
- Documentation/target/tcm_mod_builder.py        |    2 +-
- drivers/infiniband/ulp/srpt/ib_srpt.c          |   64 ++---
- drivers/scsi/bnx2fc/bnx2fc_io.c                |    4 +-
- drivers/scsi/libfc/fc_fcp.c                    |    5 +-
- drivers/target/iscsi/iscsi_target.c            |   41 +--
- drivers/target/iscsi/iscsi_target_configfs.c   |   53 +----
- drivers/target/iscsi/iscsi_target_core.h       |    2 +-
- drivers/target/iscsi/iscsi_target_device.c     |   19 --
- drivers/target/iscsi/iscsi_target_device.h     |    2 -
- drivers/target/iscsi/iscsi_target_erl0.c       |    2 +-
- drivers/target/iscsi/iscsi_target_erl1.c       |    2 +-
- drivers/target/iscsi/iscsi_target_login.c      |   10 +-
- drivers/target/iscsi/iscsi_target_nego.c       |   10 +-
- drivers/target/iscsi/iscsi_target_nodeattrib.c |   16 +-
- drivers/target/iscsi/iscsi_target_parameters.c |   19 +-
- drivers/target/iscsi/iscsi_target_tmr.c        |    6 +-
- drivers/target/iscsi/iscsi_target_tq.c         |    6 -
- drivers/target/iscsi/iscsi_target_util.c       |    7 +-
- drivers/target/loopback/tcm_loop.c             |  363 ++++++++++------=
--------
- drivers/target/loopback/tcm_loop.h             |    4 +-
- drivers/target/target_core_alua.c              |    7 +-
- drivers/target/target_core_cdb.c               |  177 +++---------
- drivers/target/target_core_configfs.c          |   30 +--
- drivers/target/target_core_device.c            |  107 +++++--
- drivers/target/target_core_fabric_configfs.c   |    6 +-
- drivers/target/target_core_iblock.c            |   78 +++---
- drivers/target/target_core_iblock.h            |    7 +-
- drivers/target/target_core_internal.h          |    3 +
- drivers/target/target_core_pr.c                |   23 +-
- drivers/target/target_core_pscsi.c             |   18 +-
- drivers/target/target_core_pscsi.h             |    2 +-
- drivers/target/target_core_stat.c              |   48 ++--
- drivers/target/target_core_tmr.c               |  103 ++++++--
- drivers/target/target_core_tpg.c               |  115 +++++---
- drivers/target/target_core_transport.c         |  367 +++++++++++++++-=
---------
- drivers/target/target_core_ua.c                |    8 +-
- drivers/target/tcm_fc/tcm_fc.h                 |    8 +-
- drivers/target/tcm_fc/tfc_cmd.c                |  147 +++-------
- drivers/target/tcm_fc/tfc_conf.c               |    4 -
- drivers/target/tcm_fc/tfc_sess.c               |   21 --
- include/scsi/fc/fc_fcp.h                       |    6 +-
- include/scsi/scsi.h                            |    1 +
- include/target/target_core_backend.h           |    2 +
- include/target/target_core_base.h              |   85 +++---
- include/target/target_core_fabric.h            |   14 +-
- 45 files changed, 962 insertions(+), 1062 deletions(-)
+James
