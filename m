@@ -1,46 +1,56 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] block: Make blk_drain_queue() work for stopped queues
-Date: Mon, 19 Mar 2012 17:22:58 +0000
-Message-ID: <4F676B72.4080804@acm.org>
-References: <4F65E09D.6010600@acm.org> <20120318155703.GB8045@dhcp-172-17-108-109.mtv.corp.google.com> <4F663BE3.4000503@acm.org> <20120319170435.GH11069@google.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 42939] hv_storvsc - write cache enabled by default and cannot
+ be disabled
+Date: Mon, 19 Mar 2012 19:33:30 GMT
+Message-ID: <201203191933.q2JJXU7i027495@bugzilla.kernel.org>
+References: <bug-42939-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay02ant.iops.be ([212.53.4.35]:45552 "EHLO
-	relay02ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932291Ab2CSRXE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Mar 2012 13:23:04 -0400
-In-Reply-To: <20120319170435.GH11069@google.com>
+Received: from bugzilla.kernel.org ([198.145.19.204]:45123 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965127Ab2CSTdb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Mar 2012 15:33:31 -0400
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q2JJXUcs027496
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Mar 2012 19:33:30 GMT
+In-Reply-To: <bug-42939-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Stanislaw Gruszka <sgruszka@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 03/19/12 17:04, Tejun Heo wrote:
-> Thanks for the pointer. It would be great if you can describe / link
-> the actual case the patch is trying to solve.
+https://bugzilla.kernel.org/show_bug.cgi?id=42939
 
-Another example is the sd scanning code (sd_probe_async()) which can
-queue SCSI commands concurrently with the blk_cleanup_queue() call
-called (indirectly) from scsi_remove_host().
 
->
->> there is still a tiny race window left by that patch - new
->> requests can get queued after the SCSI request function has been invoked
->> by scsi_free_queue() and before blk_cleanup_queue() gets invoked. Hence
->> the proposal to change the block layer to make sure that all queued
->> requests get processed eventually.
-> I don't think it's a good idea to push requests out to stopped queue.
-> Wouldn't aborting all pending requests be better?
 
-Sure, but is that possible from inside the block layer ? With patch
-http://marc.info/?l=linux-scsi&m=133207725114386 applied, the following
-code is present at the start of scsi_request_fn():
 
-	if (unlikely(blk_queue_dead(q))) {
- 		while ((req = blk_peek_request(q)) != NULL)
- 			scsi_kill_request(req, q);
 
-Bart.
+--- Comment #1 from Mark <bugzilla-kernel-org-sux2k0@mstier.de>  2012-03-19 19:33:29 ---
+Additional information:
 
+trying to disable the writecache leads to the partition on the SCSI device
+getting remounted read-only due to device errors.
+
+Additional information (2):
+
+I get 5.000 to 6.000 random reads per second even when manually creating the
+fiometer file using random data from /dev/urandom (ie. fio doesn't access
+zeroes in that case).
+
+Additional information (3):
+
+The host doesn't seem to cache anything: "dd iflag=direct if=/dev/sda bs=1M
+of=/dev/null count=10" always and repeatedly gives me around 30-60 MB/s.
+
+Additional information (4):
+
+I did a simple MySQL InnoDB ACID transaction test where subsequent transactions
+are done via a remote mysql client as fast as possible. I crashed the host
+hardware and checked if all transactions reported as completed had been
+committed to disk: no obvious problems there -- seemingly the reported
+writecache has no writecache-effects at all...??
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
