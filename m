@@ -1,133 +1,307 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
-	correctly when SRB status is INVALID
-Date: Tue, 20 Mar 2012 14:42:26 +0000
-Message-ID: <6E21E5352C11B742B20C142EB499E0481B76A3D3@TK5EX14MBXC126.redmond.corp.microsoft.com>
-References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
-	<1332115963-26855-1-git-send-email-kys@microsoft.com>
-	<1332173560.3152.65.camel@dabdike>
-	<6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
-	<1332196819.3152.77.camel@dabdike>
-	<6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
-	<1332233502.14019.14.camel@dabdike.int.hansenpartnership.com>
+From: Arvind Kumar <arvindkumar@vmware.com>
+Subject: Re: [Pv-drivers] [PATCH] VMW_PVSCSI: Try setting host->max_id as
+ suggested by the device.
+Date: Tue, 20 Mar 2012 10:24:26 -0700 (PDT)
+Message-ID: <2101338054.675616.1332264266001.JavaMail.root@zimbra-prod-mbox-2.vmware.com>
+References: <1331202733.5943.18.camel@arvind-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1332233502.14019.14.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
-List-Post: <mailto:devel@linuxdriverproject.org>
-List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: devel-bounces@linuxdriverproject.org
-Sender: devel-bounces@linuxdriverproject.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "ohering@suse.com" <ohering@suse.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-outbound-1.vmware.com ([208.91.2.12]:53702 "EHLO
+	smtp-outbound-1.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752111Ab2CTRY0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Mar 2012 13:24:26 -0400
+In-Reply-To: <1331202733.5943.18.camel@arvind-laptop>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+Cc: pv-drivers@vmware.com, skekre@vmware.com
+
+Hi James/Andrew,
+
+Could one of you please help in getting this patch in?
+
+Thanks!
+Arvind
+
+----- Original Message -----
+From: "Arvind Kumar" <arvindkumar@vmware.com>
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: pv-drivers@vmware.com, skekre@vmware.com
+Sent: Thursday, March 8, 2012 2:32:13 AM
+Subject: [Pv-drivers] [PATCH] VMW_PVSCSI: Try setting host->max_id as suggested by the device.
+
+Oops! Mis-spelled JBottomley@parallels.com in To field. Sending again with the right email id.
+
+Try setting host->max_id as suggested by the device.
+
+Fetch the config page from the device to learn max target id to set host->max_id.
+
+Also, fix some indentation issues and update the 'Maintained by' field.
+
+Re-sending after addressing Dmitry's, Alok's and John's feedback.
+
+From: Arvind Kumar <arvindkumar@vmware.com>
+
+Signed-off-by: Arvind Kumar <arvindkumar@vmware.com>
+Cc: Alok N Kataria <akataria@vmware.com>
+---
+ drivers/scsi/vmw_pvscsi.c |   65 ++++++++++++++++++++++++++-
+ drivers/scsi/vmw_pvscsi.h |  109 +++++++++++++++++++++++++++++++++++----------
+ 2 files changed, 149 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 7264116..4411d42 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -17,7 +17,7 @@
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+  *
+- * Maintained by: Alok N Kataria <akataria@vmware.com>
++ * Maintained by: Arvind Kumar <arvindkumar@vmware.com>
+  *
+  */
+ 
+@@ -1178,11 +1178,67 @@ static int __devinit pvscsi_allocate_sg(struct pvscsi_adapter *adapter)
+ 	return 0;
+ }
+ 
++/*
++ * Query the device, fetch the config info and return the
++ * maximum number of targets on the adapter. In case of
++ * failure due to any reason return default i.e. 16.
++ */
++static u32 pvscsi_get_max_targets(struct pvscsi_adapter *adapter)
++{
++	struct PVSCSICmdDescConfigCmd cmd;
++	struct PVSCSIConfigPageHeader *header;
++	struct device *dev;
++	dma_addr_t configPagePA;
++	void *config_page;
++	u32 numPhys = 16;
++
++	dev = pvscsi_dev(adapter);
++	config_page = pci_alloc_consistent(adapter->dev, PAGE_SIZE,
++					   &configPagePA);
++	if (!config_page) {
++		dev_warn(dev, "vmw_pvscsi: failed to allocate memory for config page\n");
++		goto exit;
++	}
++	BUG_ON(configPagePA & ~PAGE_MASK);
++
++	/* Fetch config info from the device. */
++	cmd.configPageAddress = ((u64)PVSCSI_CONFIG_CONTROLLER_ADDRESS) << 32;
++	cmd.configPageNum = PVSCSI_CONFIG_PAGE_CONTROLLER;
++	cmd.cmpAddr = configPagePA;
++	cmd._pad = 0;
++
++	/*
++	 * Mark the completion page header with error values. If the device
++	 * completes the command successfully, it sets the status values to
++	 * indicate success.
++	 */
++	header = config_page;
++	memset(header, 0, sizeof *header);
++	header->hostStatus = BTSTAT_INVPARAM;
++	header->scsiStatus = SDSTAT_CHECK;
++
++	pvscsi_write_cmd_desc(adapter, PVSCSI_CMD_CONFIG, &cmd, sizeof cmd);
++
++	if (header->hostStatus == BTSTAT_SUCCESS &&
++	    header->scsiStatus == SDSTAT_GOOD) {
++		struct PVSCSIConfigPageController *config;
++
++		config = config_page;
++		numPhys = config->numPhys;
++	} else
++		dev_warn(dev, "vmw_pvscsi: PVSCSI_CMD_CONFIG failed. hostStatus = 0x%x, scsiStatus = 0x%x\n",
++			 header->hostStatus, header->scsiStatus);
++	pci_free_consistent(adapter->dev, PAGE_SIZE, config_page, configPagePA);
++exit:
++	return numPhys;
++}
++
+ static int __devinit pvscsi_probe(struct pci_dev *pdev,
+ 				  const struct pci_device_id *id)
+ {
+ 	struct pvscsi_adapter *adapter;
+ 	struct Scsi_Host *host;
++	struct device *dev;
+ 	unsigned int i;
+ 	unsigned long flags = 0;
+ 	int error;
+@@ -1272,6 +1328,13 @@ static int __devinit pvscsi_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	/*
++	 * Ask the device for max number of targets.
++	 */
++	host->max_id = pvscsi_get_max_targets(adapter);
++	dev = pvscsi_dev(adapter);
++	dev_info(dev, "vmw_pvscsi: host->max_id: %u\n", host->max_id);
++
++	/*
+ 	 * From this point on we should reset the adapter if anything goes
+ 	 * wrong.
+ 	 */
+diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
+index 62e36e7..3546e86 100644
+--- a/drivers/scsi/vmw_pvscsi.h
++++ b/drivers/scsi/vmw_pvscsi.h
+@@ -17,7 +17,7 @@
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+  *
+- * Maintained by: Alok N Kataria <akataria@vmware.com>
++ * Maintained by: Arvind Kumar <arvindkumar@vmware.com>
+  *
+  */
+ 
+@@ -26,7 +26,7 @@
+ 
+ #include <linux/types.h>
+ 
+-#define PVSCSI_DRIVER_VERSION_STRING   "1.0.1.0-k"
++#define PVSCSI_DRIVER_VERSION_STRING   "1.0.2.0-k"
+ 
+ #define PVSCSI_MAX_NUM_SG_ENTRIES_PER_SEGMENT 128
+ 
+@@ -39,28 +39,45 @@
+  * host adapter status/error codes
+  */
+ enum HostBusAdapterStatus {
+-   BTSTAT_SUCCESS       = 0x00,  /* CCB complete normally with no errors */
+-   BTSTAT_LINKED_COMMAND_COMPLETED           = 0x0a,
+-   BTSTAT_LINKED_COMMAND_COMPLETED_WITH_FLAG = 0x0b,
+-   BTSTAT_DATA_UNDERRUN = 0x0c,
+-   BTSTAT_SELTIMEO      = 0x11,  /* SCSI selection timeout */
+-   BTSTAT_DATARUN       = 0x12,  /* data overrun/underrun */
+-   BTSTAT_BUSFREE       = 0x13,  /* unexpected bus free */
+-   BTSTAT_INVPHASE      = 0x14,  /* invalid bus phase or sequence requested by target */
+-   BTSTAT_LUNMISMATCH   = 0x17,  /* linked CCB has different LUN from first CCB */
+-   BTSTAT_SENSFAILED    = 0x1b,  /* auto request sense failed */
+-   BTSTAT_TAGREJECT     = 0x1c,  /* SCSI II tagged queueing message rejected by target */
+-   BTSTAT_BADMSG        = 0x1d,  /* unsupported message received by the host adapter */
+-   BTSTAT_HAHARDWARE    = 0x20,  /* host adapter hardware failed */
+-   BTSTAT_NORESPONSE    = 0x21,  /* target did not respond to SCSI ATN, sent a SCSI RST */
+-   BTSTAT_SENTRST       = 0x22,  /* host adapter asserted a SCSI RST */
+-   BTSTAT_RECVRST       = 0x23,  /* other SCSI devices asserted a SCSI RST */
+-   BTSTAT_DISCONNECT    = 0x24,  /* target device reconnected improperly (w/o tag) */
+-   BTSTAT_BUSRESET      = 0x25,  /* host adapter issued BUS device reset */
+-   BTSTAT_ABORTQUEUE    = 0x26,  /* abort queue generated */
+-   BTSTAT_HASOFTWARE    = 0x27,  /* host adapter software error */
+-   BTSTAT_HATIMEOUT     = 0x30,  /* host adapter hardware timeout error */
+-   BTSTAT_SCSIPARITY    = 0x34,  /* SCSI parity error detected */
++	BTSTAT_SUCCESS       = 0x00,  /* CCB complete normally with no errors */
++	BTSTAT_LINKED_COMMAND_COMPLETED           = 0x0a,
++	BTSTAT_LINKED_COMMAND_COMPLETED_WITH_FLAG = 0x0b,
++	BTSTAT_DATA_UNDERRUN = 0x0c,
++	BTSTAT_SELTIMEO      = 0x11,  /* SCSI selection timeout */
++	BTSTAT_DATARUN       = 0x12,  /* data overrun/underrun */
++	BTSTAT_BUSFREE       = 0x13,  /* unexpected bus free */
++	BTSTAT_INVPHASE      = 0x14,  /* invalid bus phase or sequence
++				       * requested by target */
++	BTSTAT_LUNMISMATCH   = 0x17,  /* linked CCB has different LUN from
++				       * first CCB */
++	BTSTAT_INVPARAM      = 0x1a,  /* invalid parameter in CCB or segment
++				       * list */
++	BTSTAT_SENSFAILED    = 0x1b,  /* auto request sense failed */
++	BTSTAT_TAGREJECT     = 0x1c,  /* SCSI II tagged queueing message
++				       * rejected by target */
++	BTSTAT_BADMSG        = 0x1d,  /* unsupported message received by the
++				       * host adapter */
++	BTSTAT_HAHARDWARE    = 0x20,  /* host adapter hardware failed */
++	BTSTAT_NORESPONSE    = 0x21,  /* target did not respond to SCSI ATN,
++				       * sent a SCSI RST */
++	BTSTAT_SENTRST       = 0x22,  /* host adapter asserted a SCSI RST */
++	BTSTAT_RECVRST       = 0x23,  /* other SCSI devices asserted a SCSI
++				       * RST */
++	BTSTAT_DISCONNECT    = 0x24,  /* target device reconnected improperly
++				       * (w/o tag) */
++	BTSTAT_BUSRESET      = 0x25,  /* host adapter issued BUS device reset */
++	BTSTAT_ABORTQUEUE    = 0x26,  /* abort queue generated */
++	BTSTAT_HASOFTWARE    = 0x27,  /* host adapter software error */
++	BTSTAT_HATIMEOUT     = 0x30,  /* host adapter hardware timeout error */
++	BTSTAT_SCSIPARITY    = 0x34,  /* SCSI parity error detected */
++};
++
++/*
++ * SCSI device status values.
++ */
++enum ScsiDeviceStatus {
++	SDSTAT_GOOD  = 0x00, /* No errors. */
++	SDSTAT_CHECK = 0x02, /* Check condition. */
+ };
+ 
+ /*
+@@ -114,6 +131,29 @@ struct PVSCSICmdDescResetDevice {
+ } __packed;
+ 
+ /*
++ * Command descriptor for PVSCSI_CMD_CONFIG --
++ */
++
++struct PVSCSICmdDescConfigCmd {
++	u64 cmpAddr;
++	u64 configPageAddress;
++	u32 configPageNum;
++	u32 _pad;
++} __packed;
++
++enum PVSCSIConfigPageType {
++	PVSCSI_CONFIG_PAGE_CONTROLLER = 0x1958,
++	PVSCSI_CONFIG_PAGE_PHY        = 0x1959,
++	PVSCSI_CONFIG_PAGE_DEVICE     = 0x195a,
++};
++
++enum PVSCSIConfigPageAddressType {
++	PVSCSI_CONFIG_CONTROLLER_ADDRESS = 0x2120,
++	PVSCSI_CONFIG_BUSTARGET_ADDRESS  = 0x2121,
++	PVSCSI_CONFIG_PHY_ADDRESS        = 0x2122,
++};
++
++/*
+  * Command descriptor for PVSCSI_CMD_ABORT_CMD --
+  *
+  * - currently does not support specifying the LUN.
+@@ -332,6 +372,27 @@ struct PVSCSIRingCmpDesc {
+ 	u32	_pad[2];
+ } __packed;
+ 
++struct PVSCSIConfigPageHeader {
++	u32 pageNum;
++	u16 numDwords;
++	u16 hostStatus;
++	u16 scsiStatus;
++	u16 reserved[3];
++} __packed;
++
++struct PVSCSIConfigPageController {
++	struct PVSCSIConfigPageHeader header;
++	u64 nodeWWN; /* Device name as defined in the SAS spec. */
++	u16 manufacturer[64];
++	u16 serialNumber[64];
++	u16 opromVersion[32];
++	u16 hwVersion[32];
++	u16 firmwareVersion[32];
++	u32 numPhys;
++	u8  useConsecutivePhyWWNs;
++	u8  reserved[3];
++} __packed;
++
+ /*
+  * Interrupt status / IRQ bits.
+  */
+-- 
+1.7.1
 
 
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-> Sent: Tuesday, March 20, 2012 4:52 AM
-> To: KY Srinivasan
-> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com; hch@infradead.org; linux-
-> scsi@vger.kernel.org
-> Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result correctly
-> when SRB status is INVALID
-> 
-> On Mon, 2012-03-19 at 22:52 +0000, KY Srinivasan wrote:
-> > > >  However, keep in mind
-> > > > that there is no current ETA on when Windows will ship with these changes
-> -
-> > > Windows 8
-> > > > may ship with code where they would return an invalid SRB status, but they
-> are
-> > > not
-> > > > setting the sense code, hence this patch. When the Window host does the
-> > > "right thing"
-> > > > I will clean this up, but I don't know when that will be.
-> > >
-> > > I thought you just said you'd only just asked them if they could
-> > > implemented it, in which case no version of windows currently ships with
-> > > this, correct?
-> >
-> > There are some private builds of windows 8 floating around with this change,
-> where
-> > they are returning ILLEGAL_REQUEST SRB status  without any sense data.
-> 
-> Sure, but they're not shipped, right ... it's like the test builds we do
-> for large companies like IBM and HP to try out certain things before
-> deciding they don't work.
 
-They are close to shipping and it is very difficult to get any changes in
-presently. Furthermore, this is only on windows8; none of the prior 
-versions of windows servers of interest support this. I am starting an effort to
-get this change into prior windows servers. Once again, it is not clear when
-these changes will be pushed out.
-
-  
-> 
-> > > > More importantly, the second patch  in this series where I filter out
-> > > > the ATA_16 command
-> > > > on the guest is really important for us. Without that patch on a range
-> > > > on windows hosts
-> > > > including the current beta version of windows8 where the host is
-> > > > returning a generic
-> > > > error in response to ATA_16 command, we cannot boot many Linux
-> > > > distros. If you
-> > > > prefer, I can drop the first patch and re-submit the second patch for
-> > > > consideration now.
-> > >
-> > > I'm not sure about that either.  You presumably translate
-> > > SRB_STATUS_ERROR into DID_TARGET_FAILURE.  That should cause the
-> > > termination of the command with prejudice in exactly the same way as an
-> > > ILLEGAL_REQUEST sense code would (minus the useful error information),
-> > > so what's causing the boot failure?
-> >
-> > You are right, currently without a proper SRB code, I do a DID_TARGET_FAILURE
-> and
-> > this results in the device being offlined and if the device happens to be the root
-> device,
-> > we obviously cannot boot. I have seen this problem with sles11 sp2 on a win8
-> box.
-> 
-> OK, so this may be the root cause of the problem.  DID_TARGET_FAILURE
-> returns FAILED from scsi_decide_disposition().  This wakes up the error
-> handler to retry the command and, since the command is never going to
-> work, this ends up offlining the device.  The same thing will happen for
-> every command with no recovery.
-> 
-> The question now is, what else returns SRB_STATUS_ERROR?  If it's always
-> for stuff that's unretryable, then the DID_ error is wrong and you
-> should be returning DID_PASSTHROUGH with an error code and the problem
-> will be solved.  If we can get SRB_STATUS_ERROR on retryable commands,
-> then you discriminate at the point of failure, not at the point of input
-> and return DID_TARGET_FAILURE for the ones that should be retried and
-> DID_PASSTHROUGH + error for the ones that shouldn't.  This will ensure
-> the driver is completely backwards compatible and that it will work
-> if/when windows properly handles the commands.
-
-James, unfortunately based on the current SRB codes I get back from the
-host, I don't know which commands that failed ought to be retried and which
-ones should not be; I simply get a single SRB error code for cases where the 
-host filtered the unsupported commands as well as the case where the host 
-supported the command and something failed in the command execution.
-If there is something I can try in this driver to fix this problem, I am more than
-happy to try it. If it involves getting changes into  the host (win8, win2k8 etc.),
-I am willing to start a conversation with the relevant teams, but I cannot 
-obviously determine when such changes will ship. However, I do need
-solution for the problem now.
-
-I appreciate your taking the time to help me gravitate towards the 
-correct solution here. Given my constraints, let me know what is the
-best way forward here.
-
-Regards,
-
-K. Y   
+_______________________________________________
+Pv-drivers mailing list
+Pv-drivers@vmware.com
+http://mailman2.vmware.com/mailman/listinfo/pv-drivers
