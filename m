@@ -1,46 +1,37 @@
 From: <nagalakshmi.nandigama@lsi.com>
-Subject: [PATCH] [SCSI] mpt2sas : Description Patch
-Date: Tue, 20 Mar 2012 11:50:05 +0530
-Message-ID: <201203200619.q2K6JXTF029313@milmhbs0.lsil.com>
+Subject: [RESEND] [PATCH] [SCSI] mpt2sas : Description Patch
+Date: Tue, 20 Mar 2012 11:57:05 +0530
+Message-ID: <201203200626.q2K6QYJQ030362@milmhbs0.lsil.com>
 Mime-Version: 1.0
-Content-Type: application/octet-stream
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:59492 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030262Ab2CTGTh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Mar 2012 02:19:37 -0400
+Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:41614 "EHLO
+	psmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754546Ab2CTG0h convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2012 02:26:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
 Cc: jejb@kernel.org
 
-UGxlYXNlIGNvbnNpZGVyIHRoaXMgcGF0Y2ggc2V0IGZvciBuZXh0IGtlcm5lbCByZWxlYXNl
-Lg0KDQpTaWduZWQtb2ZmLWJ5OiBOYWdhbGFrc2htaSBOYW5kaWdhbWEgPG5hZ2FsYWtzaG1p
-Lm5hbmRpZ2FtYUBsc2kuY29tPg0KLS0tDQoNCltQQVRDSCAwMS8xMl0gW1NDU0ldIG1wdDJz
-YXMgOiBNUEkgbmV4dCByZXZpc2lvbiBoZWFkZXIgdXBkYXRlDQpbUEFUQ0ggMDIvMTJdIFtT
-Q1NJXSBtcHQyc2FzIDogUmVtb3ZlZCByZWR1bmRhbnQgZ2xvYmFsIG11dGV4IGZvciBJT0NU
-THMuDQpbUEFUQ0ggMDMvMTJdIFtTQ1NJXSBtcHQyc2FzIDogQWRkZWQgbXVsdGlzZWdtZW50
-IG1vZGUgc3VwcG9ydCBmb3IgTGludXggQlNHIERyaXZlci4NCltQQVRDSCAwNC8xMl0gW1ND
-U0ldIG1wdDJzYXMgOiBQZXJmb3JtIFRhcmdldCBSZXNldCBpbnN0ZWFkIG9mIEhCQSByZXNl
-dCB3aGVuIGEgU0FUQV9QQVNTVEhST1VHSCBjbWQgdGltZW91dCBoYXBwZW5zLg0KW1BBVENI
-IDA1LzEyXSBbU0NTSV0gbXB0MnNhcyA6IEltcHJvdmVtZW50IHdlcmUgbWFkZSB0byBiZXR0
-ZXIgcHJvdGVjdCB0aGUgc2FzX2RldmljZSwgcmFpZF9kZXZpY2UsIGFuZCBleHBhbmRlcl9k
-ZXZpY2UgbGlzdHMuDQpbUEFUQ0ggMDYvMTJdIFtTQ1NJXSBtcHQyc2FzIDogRml4IHNlY3Vy
-aXR5IHNjYW4gaXNzdWVzIHJlcG9ydGVkIGJ5IHNvdXJjZSBjb2RlIGFuYWx5c2lzIHRvb2wN
-CltQQVRDSCAwNy8xMl0gW1NDU0ldIG1wdDJzYXMgOiBGaXggbGludXggZHJpdmVyIHNwYXJz
-ZSBlcnJvcnMgDQpbUEFUQ0ggMDgvMTJdIFtTQ1NJXSBtcHQyc2FzIDogV2hpbGUgZW5hYmxp
-bmcgcGh5LCByZWFkIHRoZSBjdXJyZW50IHBvcnQgbnVtYmVyIGZyb20gc2FzIGlvdW5pdCBw
-YWdlIDAgaW5zdGVhZCBvZiBwYWdlIDEuDQpbUEFUQ0ggMDkvMTJdIFtTQ1NJXSBtcHQyc2Fz
-IDogU2V0IHRoZSBwaHkgaWRlbnRpZmllciBvZiB0aGUgZW5kIGRldmljZSB0byB0aGUgcGh5
-IG51bWJlciBvZiB0aGUgcGFyZW50IGRldmljZSBpdCBpcyBsaW5rZWQgdG8uIA0KW1BBVENI
-IDEwLzEyXSBbU0NTSV0gbXB0MnNhcyA6IEZpeCBmb3IgaGFyZCBkcml2ZSBnb2luZyBPRkZM
-SU5FIHdoZW4gaGFyZCByZXNldCBpc3N1ZWQgYW5kIHNpbXVsdGFuZW91c2x5IGFub3RoZXIg
-aGFyZCBkcml2ZSBpcyBob3QgdW5wbHVnZ2VkLg0KW1BBVENIIDExLzEyXSBbU0NTSV0gbXB0
-MnNhcyA6IEZpeCBmb3IgcGFuaWMgaGFwcGVuaW5nIGJlY2F1c2Ugb2YgaW1wcm9wZXIgbWVt
-b3J5IGFsbG9jYXRpb24NCltQQVRDSCAxMi8xMl0gW1NDU0ldIG1wdDJzYXMgOiBCdW1wIGRy
-aXZlciB2ZXNpb24gdG8gMTMuMTAwLjAwLjAwDQoNClRoZSBhYm92ZSBwYXRjaGVzIGFyZSBi
-dWlsdCBieSBhcHBseWluZyB0aGUgZm9sbG93aW5nIHBhdGNoZXMgDQoxKSBbUEFUQ0hdIG1w
-dDJzYXM6IENvcnJlY3RlZCB0aGUgY29uc3RhbnQgaW4gY29tcGFyaXNvbiB0byBhIGhleGFk
-ZWNpbWFsIA==
+Please consider this patch set for next kernel release.
+
+Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+---
+
+[PATCH 01/12] [SCSI] mpt2sas : MPI next revision header update
+[PATCH 02/12] [SCSI] mpt2sas : Removed redundant global mutex for IOCTLs.
+[PATCH 03/12] [SCSI] mpt2sas : Added multisegment mode support for Linux BSG Driver.
+[PATCH 04/12] [SCSI] mpt2sas : Perform Target Reset instead of HBA reset when a SATA_PASSTHROUGH cmd timeout happens.
+[PATCH 05/12] [SCSI] mpt2sas : Improvement were made to better protect the sas_device, raid_device, and expander_device lists.
+[PATCH 06/12] [SCSI] mpt2sas : Fix security scan issues reported by source code analysis tool
+[PATCH 07/12] [SCSI] mpt2sas : Fix linux driver sparse errors 
+[PATCH 08/12] [SCSI] mpt2sas : While enabling phy, read the current port number from sas iounit page 0 instead of page 1.
+[PATCH 09/12] [SCSI] mpt2sas : Set the phy identifier of the end device to the phy number of the parent device it is linked to. 
+[PATCH 10/12] [SCSI] mpt2sas : Fix for hard drive going OFFLINE when hard reset issued and simultaneously another hard drive is hot unplugged.
+[PATCH 11/12] [SCSI] mpt2sas : Fix for panic happening because of improper memory allocation
+[PATCH 12/12] [SCSI] mpt2sas : Bump driver vesion to 13.100.00.00
+
+The above patches are built by applying the following patches 
+1) [PATCH] mpt2sas: Corrected the constant in comparison to a hexadecimal
