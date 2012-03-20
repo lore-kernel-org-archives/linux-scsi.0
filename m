@@ -1,86 +1,80 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re [PATCH v3] [SCSI] pm8001: fix endian issue with code optimization.
-Date: Tue, 20 Mar 2012 14:41:29 +0800
-Message-ID: <857EB40E526B4CC2A2D9140110216FE2@usish.com.cn>
-References: <1332172587-11805-1-git-send-email-santoshprasadnayak@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
+ correctly when SRB status is INVALID
+Date: Tue, 20 Mar 2012 08:51:42 +0000
+Message-ID: <1332233502.14019.14.camel@dabdike.int.hansenpartnership.com>
+References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
+	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
+	 <1332173560.3152.65.camel@dabdike>
+	 <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
+	 <1332196819.3152.77.camel@dabdike>
+	 <6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:41283 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754704Ab2CTGls (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2012 02:41:48 -0400
-In-Reply-To: <1332172587-11805-1-git-send-email-santoshprasadnayak@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'santosh nayak' <santoshprasadnayak@gmail.com>, mark_salyzyn@xyratex.com
-Cc: lindar_liu@usish.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, dan.carpenter@oracle.com
 
-Acked-by: Jack Wang <jack_wang@usish.com>
+On Mon, 2012-03-19 at 22:52 +0000, KY Srinivasan wrote:
+> > >  However, keep in mind
+> > > that there is no current ETA on when Windows will ship with these changes -
+> > Windows 8
+> > > may ship with code where they would return an invalid SRB status, but they are
+> > not
+> > > setting the sense code, hence this patch. When the Window host does the
+> > "right thing"
+> > > I will clean this up, but I don't know when that will be.
+> > 
+> > I thought you just said you'd only just asked them if they could
+> > implemented it, in which case no version of windows currently ships with
+> > this, correct?
+> 
+> There are some private builds of windows 8 floating around with this change, where
+> they are returning ILLEGAL_REQUEST SRB status  without any sense data.
 
-> From: Santosh Nayak <santoshprasadnayak@gmail.com>
-> 
-> Data type of the 'tag' field of 'fw_flash_Update_resp' should be
-> __le32.
-> 
-> Data type of  'pHeader' should be __le32.
-> Remove 2nd cast to 'piomb'.
-> 
-> Signed-off-by: Santosh Nayak <santoshprasadnayak@gmail.com>
-> ---
->  drivers/scsi/pm8001/pm8001_hwi.c |    6 +++---
->  drivers/scsi/pm8001/pm8001_hwi.h |    2 +-
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
-> b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 3619f6e..6d83236 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -3355,7 +3355,7 @@ mpi_fw_flash_update_resp(struct pm8001_hba_info
-> *pm8001_ha, void *piomb)
->  	struct fw_control_ex	fw_control_context;
->  	struct fw_flash_Update_resp *ppayload =
->  		(struct fw_flash_Update_resp *)(piomb + 4);
-> -	u32 tag = ppayload->tag;
-> +	u32 tag = le32_to_cpu(ppayload->tag);
->  	struct pm8001_ccb_info *ccb = &pm8001_ha->ccb_info[tag];
->  	status = le32_to_cpu(ppayload->status);
->  	memcpy(&fw_control_context,
-> @@ -3701,8 +3701,8 @@ static int mpi_hw_event(struct pm8001_hba_info
-> *pm8001_ha, void* piomb)
->   */
->  static void process_one_iomb(struct pm8001_hba_info *pm8001_ha, void
-*piomb)
->  {
-> -	u32 pHeader = (u32)*(u32 *)piomb;
-> -	u8 opc = (u8)(pHeader & 0xFFF);
-> +	__le32 pHeader = *(__le32 *)piomb;
-> +	u8 opc = (u8)((le32_to_cpu(pHeader)) & 0xFFF);
-> 
->  	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("process_one_iomb:"));
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.h
-> b/drivers/scsi/pm8001/pm8001_hwi.h
-> index 1a4611e..d437309 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.h
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.h
-> @@ -599,7 +599,7 @@ struct fw_flash_Update_req {
->   *
->   */
->  struct fw_flash_Update_resp {
-> -	dma_addr_t	tag;
-> +	__le32	tag;
->  	__le32	status;
->  	u32	reserved[13];
->  } __attribute__((packed, aligned(4)));
-> --
-> 1.7.4.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sure, but they're not shipped, right ... it's like the test builds we do
+for large companies like IBM and HP to try out certain things before
+deciding they don't work.
 
+> > > More importantly, the second patch  in this series where I filter out
+> > > the ATA_16 command
+> > > on the guest is really important for us. Without that patch on a range
+> > > on windows hosts
+> > > including the current beta version of windows8 where the host is
+> > > returning a generic
+> > > error in response to ATA_16 command, we cannot boot many Linux
+> > > distros. If you
+> > > prefer, I can drop the first patch and re-submit the second patch for
+> > > consideration now.
+> > 
+> > I'm not sure about that either.  You presumably translate
+> > SRB_STATUS_ERROR into DID_TARGET_FAILURE.  That should cause the
+> > termination of the command with prejudice in exactly the same way as an
+> > ILLEGAL_REQUEST sense code would (minus the useful error information),
+> > so what's causing the boot failure?
+> 
+> You are right, currently without a proper SRB code, I do a DID_TARGET_FAILURE and
+> this results in the device being offlined and if the device happens to be the root device,
+> we obviously cannot boot. I have seen this problem with sles11 sp2 on a win8 box.
+
+OK, so this may be the root cause of the problem.  DID_TARGET_FAILURE
+returns FAILED from scsi_decide_disposition().  This wakes up the error
+handler to retry the command and, since the command is never going to
+work, this ends up offlining the device.  The same thing will happen for
+every command with no recovery.
+
+The question now is, what else returns SRB_STATUS_ERROR?  If it's always
+for stuff that's unretryable, then the DID_ error is wrong and you
+should be returning DID_PASSTHROUGH with an error code and the problem
+will be solved.  If we can get SRB_STATUS_ERROR on retryable commands,
+then you discriminate at the point of failure, not at the point of input
+and return DID_TARGET_FAILURE for the ones that should be retried and
+DID_PASSTHROUGH + error for the ones that shouldn't.  This will ensure
+the driver is completely backwards compatible and that it will work
+if/when windows properly handles the commands.
+
+James
