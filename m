@@ -1,116 +1,138 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: need help solving mpt2sas target unplug can hang worker thread
-Date: Tue, 20 Mar 2012 17:24:20 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6067E7324D5@inbmail02.lsi.com>
-References: <20120214131541.GA28005@crust.elkhashab.com>
- <A6888A6805518E4EA4AF7072A28264A6067E49FF7F@inbmail02.lsi.com>
- <20120222001650.GA16640@crust.elkhashab.com>
- <A6888A6805518E4EA4AF7072A28264A6067E672DE4@inbmail02.lsi.com>
- <20120309005440.GA28098@crust.elkhashab.com>
+From: Ayman El-Khashab <ayman@elkhashab.com>
+Subject: Re: mpt2sas: BUG? corrupted nvram after using linkrate in sysfs
+Date: Tue, 20 Mar 2012 08:57:54 -0500
+Message-ID: <20120320135754.GA9339@crust.elkhashab.com>
+References: <20120318182916.GA16862@crust.elkhashab.com>
+ <A6888A6805518E4EA4AF7072A28264A6067E732484@inbmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_A6888A6805518E4EA4AF7072A28264A6067E7324D5inbmail02lsic_"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:46253 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757346Ab2CTLy0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Mar 2012 07:54:26 -0400
-In-Reply-To: <20120309005440.GA28098@crust.elkhashab.com>
-Content-Language: en-US
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:14702 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759462Ab2CTN54 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2012 09:57:56 -0400
+Content-Disposition: inline
+In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6067E732484@inbmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ayman El-Khashab <ayman@elkhashab.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---_002_A6888A6805518E4EA4AF7072A28264A6067E7324D5inbmail02lsic_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Tue, Mar 20, 2012 at 03:20:48PM +0530, Nandigama, Nagalakshmi wrote:
+> Hi,
+> I verified on SAS2008 B1 the max/min changing value for link rate.
+> I set the max link speed of the NVRAM value to 1.5 Gbps and rebooted. After reboot I read the current and NVRAM value of the max link speed for the phy that I set before. It shown value 1.5 Gbps.
+> 
+> I dint face any issue. 
+> 
+> Are you facing problem in this scenario only?
+> 
 
-Can you try this patch and test?
+BTW, I am on V9.0 of the firmware -- there was an email that
+said this was fixed in 11.0, but I don't see it mentioned in
+the errata unless I missed it.  Also flashing already
+deployed systems isn't always easy.
 
-Regards,
-Nagalakshmi
+So I did some more experiments, and the problem seems to be
+both intermittent and relies on a particular drive
+configuration.  I start with a brand new system (i.e.
+never been run) and put 4 SAS drives in, each with 2 ports
+(so I use all 8 phys of the controller).  These drives can
+run at 6G and work fine.  Now I can power down, pull 2
+drives, start again and it is still good.  I can change the
+drive setup many times and all is fine.  Now if I go back to
+the original setup (4 SAS drives) and change the link rate
+to 6G then everything works.  Now, if I power down and pull
+a drive or 2, then some phys will come up at 6G, some will
+indicate Unknown, but accessing the drives won't work
+correctly.  One drive *might* work, but the other usually
+will give an error with "Read Capacity Fail" or something
+different.  If I use lsiutil to reset the Pg1 configuration
+to the defaults and reboot, then the drives will work again
+at 6G. 
 
+In fails, each drive is dual-ports so I'd expect both phys 
+to come up at 6G.  What happens is that 1 phy will come up 
+at 6G the other at Unknown and nothing works right. (i..e
+we get drive errors as seen in Linux).
 
------Original Message-----
-From: Ayman El-Khashab [mailto:ayman@elkhashab.com]=20
-Sent: Friday, March 09, 2012 6:25 AM
-To: Nandigama, Nagalakshmi; linux-scsi@vger.kernel.org
-Subject: Re: need help solving mpt2sas target unplug can hang worker thread
+Upon first boot, our Pg1 current config looks like this.
+0014 : a8000100
+0018 : 00000071
+001c : 00000000
 
-On Tue, Feb 28, 2012 at 05:18:53PM +0530, Nandigama, Nagalakshmi wrote:
-> It seems like you are using older version of mpt2sas driver. Current vers=
-ion of mpt2sas driver is 12.100.00.00. Will it be possible to you to test w=
-ith the latest or any stable driver? Also can you take update the latest fi=
-rmware?
->=20
+The dynamic port group is 0, the autoconfig is enabled for
+each of the 8 ports. (just showing 1 here).
 
-Ok, I've got now 12.0.0 that I pulled from git.  While it
-compiles clean, I can't get far with it b/c it hangs my
-system when I insmod the driver.  In the past, I have had to
-apply this patch that I submitted long ago and never got
-used.
+After we attach drives and set the link rate, the port group
+gets set to something [0:7].  Then when the data is written
+back to the flash during the NVRAM update, the dynamic port
+group is now an ordinal from 0,7 instead of port group 0.
+It appears to us that this is the only difference but I
+can't verify that other than when I restore defaults it
+works.
 
-* http://lkml.indiana.edu/hypermail/linux/kernel/1107.1/02101.html
+In another test, I subverted the writes to NVRAM in the
+driver.  In this case, I can make it run and fail, but at
+least upon reboot it works again.
 
-* Changed the type of chip_phys from a u64 to a phys_addr_t.
-* Changed ifdef from BITS_PER_LONG to CONFIG_ARCH_DMA_ADDR_T_64BIT so that
-* it works on 32 bit systems that have pci address spaces larger than 32
-* bits.
-
-I am doing this on a powerpc 460SX with a sas 2008 part,=20
-firmware v 9.0
-
-In any case, it doesn't appear that the I need the #ifdef
-anymore, but replacing the u64 with phys_addr_t might still
-be required. =20
-
-After trying to load the code against 2.6.37, the code
-spins infinately in the loop around line 2613 in the
-mpt2sas_base.c -- this code specifically.  I added prints in
-the loop, so I observed it never got out of this for loop.
-It spun until I got this message: ttyS0: 1 input overrun(s)
-Without any printks it just sits here for ever with this
-being the last printk reached.
-
-    printk("chain_depth =3D %d\n", ioc->chain_depth);
-    for (i =3D 0; i < ioc->chain_depth; i++) {
-        ioc->chain_lookup[i].chain_buffer =3D pci_pool_alloc(
-            ioc->chain_dma_pool , GFP_KERNEL,
-            &ioc->chain_lookup[i].chain_buffer_dma);
-        if (!ioc->chain_lookup[i].chain_buffer) {
-            ioc->chain_depth =3D i;
-            goto chain_done;
-        }
-        total_sz +=3D ioc->request_sz;
-    }
-
-Not really sure why it is stuck in this loop and don't know
-the best way to debug this.
-
-Thanks
+Thanks,
 Ayman
 
---_002_A6888A6805518E4EA4AF7072A28264A6067E7324D5inbmail02lsic_
-Content-Type: application/octet-stream; name="chain_lookup_err.patch"
-Content-Description: chain_lookup_err.patch
-Content-Disposition: attachment; filename="chain_lookup_err.patch"; size=695;
-	creation-date="Tue, 20 Mar 2012 11:50:01 GMT";
-	modification-date="Tue, 20 Mar 2012 11:51:42 GMT"
-Content-Transfer-Encoding: base64
 
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tcHQyc2FzL21wdDJzYXNfYmFzZS5jIGIvZHJpdmVy
-cy9zY3NpL21wdDJzYXMvbXB0MnNhc19iYXNlLmMKaW5kZXggZTgxY2QwNy4uMGU1OWMzOCAxMDA2
-NDQKLS0tIGEvZHJpdmVycy9zY3NpL21wdDJzYXMvbXB0MnNhc19iYXNlLmMKKysrIGIvZHJpdmVy
-cy9zY3NpL21wdDJzYXMvbXB0MnNhc19iYXNlLmMKQEAgLTI3NTEsNiArMjc1MSwxMSBAQCBfYmFz
-ZV9hbGxvY2F0ZV9tZW1vcnlfcG9vbHMoc3RydWN0IE1QVDJTQVNfQURBUFRFUiAqaW9jLCAgaW50
-IHNsZWVwX2ZsYWcpCiAJaW9jLT5jaGFpbl9wYWdlcyA9IGdldF9vcmRlcihzeik7CiAJaW9jLT5j
-aGFpbl9sb29rdXAgPSAoc3RydWN0IGNoYWluX3RyYWNrZXIgKilfX2dldF9mcmVlX3BhZ2VzKAog
-CSAgICBHRlBfS0VSTkVMLCBpb2MtPmNoYWluX3BhZ2VzKTsKKwlpZiAoIWlvYy0+Y2hhaW5fbG9v
-a3VwKSB7CisJCXByaW50ayhNUFQyU0FTX0VSUl9GTVQgImNoYWluX2xvb2t1cDogX19nZXRfZnJl
-ZV9wYWdlcyAiCisJCQkiZmFpbGVkXG4iLCBpb2MtPm5hbWUpOworCQlnb3RvIG91dDsKKwl9CiAJ
-aW9jLT5jaGFpbl9kbWFfcG9vbCA9IHBjaV9wb29sX2NyZWF0ZSgiY2hhaW4gcG9vbCIsIGlvYy0+
-cGRldiwKIAkgICAgaW9jLT5yZXF1ZXN0X3N6LCAxNiwgMCk7CiAJaWYgKCFpb2MtPmNoYWluX2Rt
-YV9wb29sKSB7Cgo=
 
---_002_A6888A6805518E4EA4AF7072A28264A6067E7324D5inbmail02lsic_--
+
+
+
+
+
+> 
+> 
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Ayman El-Khashab
+> Sent: Sunday, March 18, 2012 11:59 PM
+> To: linux-scsi@vger.kernel.org
+> Subject: mpt2sas: BUG? corrupted nvram after using linkrate in sysfs
+> 
+> We have the SAS2008 on our board but we don't have the NVRAM
+> populated.  We do have a flash on the board that holds the
+> firmware and so on.  What we found (by experimentation) is
+> that the firmware detects or knows there isn't an NVRAM and
+> stores some of the NVRAM settings somewhere in the flash
+> (we've dumped the flash and confirmed there are things in
+> it).  
+> 
+> We've seen a problem where we use the max/min linkrate in
+> sysfs -- it looks like the linkrates get set correctly in
+> page1, we also copy the port/port flags/phy flags per some
+> errata.  The problem shows up when it updates pg1.  At that
+> point, the following code is executed ... I guess this would
+> be ok, except what we see happen is that whatever gets
+> written to the NVRAM fails to make anything work and since
+> it is in the NVRAM, even rebooting doesn't help.  We have
+> figured out that using restore defaults in lsiutil fixes the
+> problem, but we would rather figure out why the linkrate
+> doesn't work.  
+> 
+>  mpt2sas_config_set_sas_iounit_pg1(struct MPT2SAS_ADAPTER
+> *ioc, Mpi2ConfigReply_t
+>      *mpi_reply, Mpi2SasIOUnitPage1_t *config_page, u16
+> ...
+> MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
+>          r = _config_request(ioc, &mpi_request, mpi_reply,
+>             MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT,
+> config_page, sz);
+> 
+> 
+> What it looks like is that Pg1 has the autoconfig set, but
+> rather than having "0" in the dynamic port group, it how has
+> many phy numbers so it seems that on the next reboot, the
+> dynamic setup doesn't work -- however, I don't know that for
+> sure since I don't really know what the f/w does with it.
+> 
+> Thanks
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
