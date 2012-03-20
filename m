@@ -1,80 +1,85 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
- correctly when SRB status is INVALID
-Date: Tue, 20 Mar 2012 08:51:42 +0000
-Message-ID: <1332233502.14019.14.camel@dabdike.int.hansenpartnership.com>
-References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
-	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
-	 <1332173560.3152.65.camel@dabdike>
-	 <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
-	 <1332196819.3152.77.camel@dabdike>
-	 <6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] qla2xxx FC target mode
+Date: Tue, 20 Mar 2012 09:03:09 +0000
+Message-ID: <1332234189.14019.19.camel@dabdike.int.hansenpartnership.com>
+References: <1327796869.18763.211.camel@haakon2.linux-iscsi.org>
+	 <1331941253.10203.280.camel@haakon2.linux-iscsi.org>
+	 <1332062541.2855.27.camel@dabdike>
+	 <1332116541.1612.118.camel@haakon2.linux-iscsi.org>
+	 <1332147259.3152.3.camel@dabdike>
+	 <1332202524.1612.299.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51649 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752558Ab2CTJDO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Mar 2012 05:03:14 -0400
+In-Reply-To: <1332202524.1612.299.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: lsf-pc <lsf-pc@lists.linux-foundation.org>, Roland Dreier <roland@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <mail@hannes-reinecke.de>, Madhu Iyengar <madhu.iyengar@qlogic.com>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Christoph Hellwig <hch@lst.de>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>, Arun Easi <arun.easi@qlogic.com>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Mon, 2012-03-19 at 22:52 +0000, KY Srinivasan wrote:
-> > >  However, keep in mind
-> > > that there is no current ETA on when Windows will ship with these changes -
-> > Windows 8
-> > > may ship with code where they would return an invalid SRB status, but they are
-> > not
-> > > setting the sense code, hence this patch. When the Window host does the
-> > "right thing"
-> > > I will clean this up, but I don't know when that will be.
+On Mon, 2012-03-19 at 17:15 -0700, Nicholas A. Bellinger wrote:
+> On Mon, 2012-03-19 at 08:54 +0000, James Bottomley wrote:
+> > On Sun, 2012-03-18 at 17:22 -0700, Nicholas A. Bellinger wrote:
+> > > On Sun, 2012-03-18 at 09:22 +0000, James Bottomley wrote:
+> > > > On Fri, 2012-03-16 at 16:40 -0700, Nicholas A. Bellinger wrote:
+> > > > > James & Co,
+> > > > > 
+> > > > > Ping..?  Any thoughts on this topic yet..?
+> > > > 
+> > > > Not really ... we're trying to get the participants to plan the topics
+> > > > this year.
+> > > > 
+> > > 
+> > > Hi James,
+> > > 
+> > > I'm asking because the invites for an LSF slot this year to discuss this
+> > > topic with the development community has not materialized, and you've
+> > > been completely silent to qla2xxx target RFCs + patches that involve the
+> > > subject thus far..
 > > 
-> > I thought you just said you'd only just asked them if they could
-> > implemented it, in which case no version of windows currently ships with
-> > this, correct?
+> > It's not my driver, it's qlogic's ... I'm not really going to say
+> > anything until they do.
 > 
-> There are some private builds of windows 8 floating around with this change, where
-> they are returning ILLEGAL_REQUEST SRB status  without any sense data.
+> Well, I think most of the questions unresolved around mixed mode that
+> need to be addressed between scsi-core and target-core for-3.5 are
+> really quite generic in nature to the individual scsi LLD.
 
-Sure, but they're not shipped, right ... it's like the test builds we do
-for large companies like IBM and HP to try out certain things before
-deciding they don't work.
+They are?  I understood it was highly firmware (and even hardware)
+dependent from conversations with various manufacturers.
 
-> > > More importantly, the second patch  in this series where I filter out
-> > > the ATA_16 command
-> > > on the guest is really important for us. Without that patch on a range
-> > > on windows hosts
-> > > including the current beta version of windows8 where the host is
-> > > returning a generic
-> > > error in response to ATA_16 command, we cannot boot many Linux
-> > > distros. If you
-> > > prefer, I can drop the first patch and re-submit the second patch for
-> > > consideration now.
-> > 
-> > I'm not sure about that either.  You presumably translate
-> > SRB_STATUS_ERROR into DID_TARGET_FAILURE.  That should cause the
-> > termination of the command with prejudice in exactly the same way as an
-> > ILLEGAL_REQUEST sense code would (minus the useful error information),
-> > so what's causing the boot failure?
+> Currently where we run into difficultly with a storage stack that is
+> made to allow 'hot' transition between different modes of operation, is
+> how to relinquish initiator mode operation w/o having to unload the
+> whole SCSI LLD, and also how to re-enable initiator mode when an
+> individual TCM fabric port have been released by a generic wwn_group
+> object under /sys/kernel/config/target/$FABRIC/$FABRIC_WWPN
 > 
-> You are right, currently without a proper SRB code, I do a DID_TARGET_FAILURE and
-> this results in the device being offlined and if the device happens to be the root device,
-> we obviously cannot boot. I have seen this problem with sles11 sp2 on a win8 box.
+> So considering these current limitations here between subsystems for the
+> initial for-3.4 merge of qla_target.c logic, we now enforce the use of a
+> qla2xxx specific module parameter to enable/disable different modes
+> globally for all qla_hw_data ports at LLD load time.
+> 
+> I've asked Andrew V. and Co. to take another look at today's linux-next
+> tree to verify the changes for existing code in patch #2 for >= qla24xx
+> series target mode support do not negatively effect the existing
+> initiator mode operation of qla2xxx in any way.
+> 
+> Please let us know if you have any concerns.
 
-OK, so this may be the root cause of the problem.  DID_TARGET_FAILURE
-returns FAILED from scsi_decide_disposition().  This wakes up the error
-handler to retry the command and, since the command is never going to
-work, this ends up offlining the device.  The same thing will happen for
-every command with no recovery.
-
-The question now is, what else returns SRB_STATUS_ERROR?  If it's always
-for stuff that's unretryable, then the DID_ error is wrong and you
-should be returning DID_PASSTHROUGH with an error code and the problem
-will be solved.  If we can get SRB_STATUS_ERROR on retryable commands,
-then you discriminate at the point of failure, not at the point of input
-and return DID_TARGET_FAILURE for the ones that should be retried and
-DID_PASSTHROUGH + error for the ones that shouldn't.  This will ensure
-the driver is completely backwards compatible and that it will work
-if/when windows properly handles the commands.
+Why can't it just work like scsi_tgt?  That has a separate queue for
+target.  The two queue model is then mediated inside the LLD.  If the
+LLD can't switch at all, it only accepts one queue attachment at init
+time (either target or initiator).  If there's some pain to switching,
+you still have to unload one before switching to the other (effectingely
+this means quiescing and stopping the unloaded queue), and if it can
+autoswitch, you just run two queues and let it sort out the ordering.
 
 James
+
+
