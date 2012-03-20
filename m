@@ -1,60 +1,49 @@
-From: Ayman El-Khashab <ayman@elkhashab.com>
-Subject: Re: need help solving mpt2sas target unplug can hang worker thread
-Date: Tue, 20 Mar 2012 15:14:23 -0500
-Message-ID: <20120320201423.GA15563@crust.elkhashab.com>
-References: <20120214131541.GA28005@crust.elkhashab.com>
- <A6888A6805518E4EA4AF7072A28264A6067E49FF7F@inbmail02.lsi.com>
- <20120222001650.GA16640@crust.elkhashab.com>
- <A6888A6805518E4EA4AF7072A28264A6067E672DE4@inbmail02.lsi.com>
- <20120309005440.GA28098@crust.elkhashab.com>
- <A6888A6805518E4EA4AF7072A28264A6067E7324D5@inbmail02.lsi.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2 3/4] libfcoe: Add fcoe_sysfs
+Date: Tue, 20 Mar 2012 14:01:50 -0700
+Message-ID: <20120320210150.GA18136@kroah.com>
+References: <20120316193640.5369.56932.stgit@localhost6.localdomain6>
+ <20120316193656.5369.47569.stgit@localhost6.localdomain6>
+ <20120317002517.GA22430@kroah.com>
+ <4F63E4E9.2010504@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:29703 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752835Ab2CTUO0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2012 16:14:26 -0400
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:62362 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189Ab2CTVB4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2012 17:01:56 -0400
+Received: by dajr28 with SMTP id r28so511879daj.19
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Mar 2012 14:01:55 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6067E7324D5@inbmail02.lsi.com>
+In-Reply-To: <4F63E4E9.2010504@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Love, Robert W" <robert.w.love@intel.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>, "james.smart@emulex.com" <james.smart@emulex.com>, "bprakash@broadcom.com" <bprakash@broadcom.com>
 
-
-
-On Tue, Mar 20, 2012 at 05:24:20PM +0530, Nandigama, Nagalakshmi wrote:
-> Can you try this patch and test?
+On Sat, Mar 17, 2012 at 01:12:10AM +0000, Love, Robert W wrote:
+> >> +	ctlr->f = f;
+> >> +	INIT_LIST_HEAD(&ctlr->fcfs);
+> >> +	mutex_init(&ctlr->lock);
+> >> +	device_initialize(&ctlr->dev);
+> >> +	ctlr->dev.parent = get_device(parent);
+> > I thought you dropped these get_device() calls on the parent?  The
+> > driver core handles this for you, please don't do it here, it's not
+> > needed.
 > 
-> On Tue, Feb 28, 2012 at 05:18:53PM +0530, Nandigama, Nagalakshmi wrote:
-> > It seems like you are using older version of mpt2sas driver. Current version of mpt2sas driver is 12.100.00.00. Will it be possible to you to test with the latest or any stable driver? Also can you take update the latest firmware?
-> > 
-> 
-> Ok, I've got now 12.0.0 that I pulled from git.  While it
-> compiles clean, I can't get far with it b/c it hangs my
-> system when I insmod the driver.  In the past, I have had to
-> apply this patch that I submitted long ago and never got
-> used.
+> How would the driver core know what this device's parent is? This is the 
+> only place I do that assignment.
 
-No luck with that patch.  I applied it, but it did not hit
-that condition.  It made it all the way to the code just
-before the label "chain_done:".  I insert printks all over
-the place to figure out where it goes.  It failed somewhere
-in here because I got a printk just before it, but I did not
-get the printk immediately at chain_done.  I applied it to
-12.0.0.  The print just before the for loop was the last I
-saw and then it hung.
+I'm not saying that assigning the parent is wrong, I'm saying you don't
+need to grab the reference to the parent here.
 
-    for (i = 0; i < ioc->chain_depth; i++) {
-        ioc->chain_lookup[i].chain_buffer = pci_pool_alloc(
-            ioc->chain_dma_pool , GFP_KERNEL,
-            &ioc->chain_lookup[i].chain_buffer_dma);
-        if (!ioc->chain_lookup[i].chain_buffer) {
-            ioc->chain_depth = i;
-            goto chain_done;
-        }
-        total_sz += ioc->request_sz;
-    }
-chain_done:
+The code should just be:
+	ctrl->dev.parent = parent;
 
+When you register the device, the parent will be properly reference
+counted.
+
+thanks,
+
+greg k-h
