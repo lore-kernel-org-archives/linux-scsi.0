@@ -1,117 +1,67 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
- correctly when SRB status is INVALID
-Date: Mon, 19 Mar 2012 22:52:01 +0000
-Message-ID: <6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
-References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
-	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
-	 <1332173560.3152.65.camel@dabdike>
-	 <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
- <1332196819.3152.77.camel@dabdike>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [ATTEND] qla2xxx FC target mode
+Date: Mon, 19 Mar 2012 17:15:24 -0700
+Message-ID: <1332202524.1612.299.camel@haakon2.linux-iscsi.org>
+References: <1327796869.18763.211.camel@haakon2.linux-iscsi.org>
+	 <1331941253.10203.280.camel@haakon2.linux-iscsi.org>
+	 <1332062541.2855.27.camel@dabdike>
+	 <1332116541.1612.118.camel@haakon2.linux-iscsi.org>
+	 <1332147259.3152.3.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1332196819.3152.77.camel@dabdike>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1332147259.3152.3.camel@dabdike>
+Sender: target-devel-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: lsf-pc <lsf-pc@lists.linux-foundation.org>, Roland Dreier <roland@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <mail@hannes-reinecke.de>, Madhu Iyengar <madhu.iyengar@qlogic.com>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Christoph Hellwig <hch@lst.de>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>, Arun Easi <arun.easi@qlogic.com>, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-TW9uZGF5LCBNYXJjaCAxOSwgMjAxMiA2OjQwIFBNDQo+IFRvOiBLWSBTcmluaXZhc2FuDQo+IENj
-OiBncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9y
-ZzsNCj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgb2hlcmluZ0BzdXNlLmNvbTsgaGNo
-QGluZnJhZGVhZC5vcmc7IGxpbnV4LQ0KPiBzY3NpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0
-OiBSRTogW1BBVENIIFJFU0VORCAxLzJdIERyaXZlcnM6IHNjc2k6IHN0b3J2c2M6IFNldCB0aGUg
-c2NzaSByZXN1bHQgY29ycmVjdGx5DQo+IHdoZW4gU1JCIHN0YXR1cyBpcyBJTlZBTElEDQo+IA0K
-PiBPbiBNb24sIDIwMTItMDMtMTkgYXQgMTY6NTAgKzAwMDAsIEtZIFNyaW5pdmFzYW4gd3JvdGU6
-DQo+ID4NCj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBKYW1l
-cyBCb3R0b21sZXkgW21haWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29t
-XQ0KPiA+ID4gU2VudDogTW9uZGF5LCBNYXJjaCAxOSwgMjAxMiAxMjoxMyBQTQ0KPiA+ID4gVG86
-IEtZIFNyaW5pdmFzYW4NCj4gPiA+IENjOiBncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZzsgbGlu
-dXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+IGRldmVsQGxpbnV4ZHJpdmVycHJvamVj
-dC5vcmc7IG9oZXJpbmdAc3VzZS5jb207IGhjaEBpbmZyYWRlYWQub3JnOyBsaW51eC0NCj4gPiA+
-IHNjc2lAdmdlci5rZXJuZWwub3JnDQo+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIFJFU0VORCAx
-LzJdIERyaXZlcnM6IHNjc2k6IHN0b3J2c2M6IFNldCB0aGUgc2NzaSByZXN1bHQNCj4gY29ycmVj
-dGx5DQo+ID4gPiB3aGVuIFNSQiBzdGF0dXMgaXMgSU5WQUxJRA0KPiA+ID4NCj4gPiA+IE9uIFN1
-biwgMjAxMi0wMy0xOCBhdCAxNzoxMiAtMDcwMCwgSy4gWS4gU3Jpbml2YXNhbiB3cm90ZToNCj4g
-PiA+ID4gQ3VycmVudGx5IFdpbmRvd3MgaG9zdHMgb25seSBzdXBwb3J0IGEgc3Vic2V0IG9mIHNj
-c2kgY29tbWFuZHMgYW5kIGZvcg0KPiA+ID4gY29tbWFuZHMNCj4gPiA+ID4gdGhhdCBhcmUgbm90
-IHN1cHBvcnRlZCwgdGhlIGhvc3QgcmV0dXJucyBhIGdlbmVyaWMgU1JCIGZhaWx1cmUgc3RhdHVz
-Lg0KPiA+ID4gPiBIb3dldmVyLCB0aGV5IGhhdmUgYWdyZWVkIHRvIGNoYW5nZSB0aGUgcmV0dXJu
-IHZhbHVlIHRvIGluZGljYXRlIHRoYXQNCj4gPiA+ID4gdGhlIGNvbW1hbmQgaXMgbm90IHN1cHBv
-cnRlZC4gSW4gcHJlcGFyYXRpb24gZm9yIHRoYXQsIGhhbmRsZSB0aGUNCj4gPiA+ID4gU1JCX1NU
-QVRVU19JTlZBTElEX1JFUVVFU1QgcmV0dXJuIHZhbHVlIGNvcnJlY3RseS4NCj4gPiA+ID4NCj4g
-PiA+ID4gSSB3b3VsZCBsaWtlIHRvIHRoYW5rIEplZmYgR2FyemlrIDxqZ3BvYm94QGdtYWlsLmNv
-bT4gYW5kDQo+ID4gPiA+IERvdWdsYXMgR2lsYmVydCA8ZGdpbGJlcnRAaW50ZXJsb2cuY29tPiBm
-b3Igc3VnZ2VzdGluZyB0aGUgY29ycmVjdA0KPiBhcHByb2FjaA0KPiA+ID4gPiBoZXJlLg0KPiA+
-ID4gPg0KPiA+ID4gPiBTaWduZWQtb2ZmLWJ5OiBLLiBZLiBTcmluaXZhc2FuIDxreXNAbWljcm9z
-b2Z0LmNvbT4NCj4gPiA+ID4gUmV2aWV3ZWQtYnk6IEhhaXlhbmcgWmhhbmcgPGhhaXlhbmd6QG1p
-Y3Jvc29mdC5jb20+DQo+ID4gPiA+IC0tLQ0KPiA+ID4gPiAgZHJpdmVycy9zY3NpL3N0b3J2c2Nf
-ZHJ2LmMgfCAgIDEyICsrKysrKysrKysrKw0KPiA+ID4gPiAgMSBmaWxlcyBjaGFuZ2VkLCAxMiBp
-bnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KPiA+ID4gPg0KPiA+ID4gPiBkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgYi9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYu
-Yw0KPiA+ID4gPiBpbmRleCA0NGM3YTQ4Li4wMThjMzYzIDEwMDY0NA0KPiA+ID4gPiAtLS0gYS9k
-cml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KPiA+ID4gPiArKysgYi9kcml2ZXJzL3Njc2kvc3Rv
-cnZzY19kcnYuYw0KPiA+ID4gPiBAQCAtMjAyLDYgKzIwMiw3IEBAIGVudW0gc3RvcnZzY19yZXF1
-ZXN0X3R5cGUgew0KPiA+ID4gPiAgI2RlZmluZSBTUkJfU1RBVFVTX0lOVkFMSURfTFVOCTB4MjAN
-Cj4gPiA+ID4gICNkZWZpbmUgU1JCX1NUQVRVU19TVUNDRVNTCTB4MDENCj4gPiA+ID4gICNkZWZp
-bmUgU1JCX1NUQVRVU19FUlJPUgkweDA0DQo+ID4gPiA+ICsjZGVmaW5lIFNSQl9TVEFUVVNfSU5W
-QUxJRF9SRVFVRVNUIDB4MDYNCj4gPiA+DQo+ID4gPiBJIGRvbid0IHJlYWxseSB0aGluayB0aGlz
-IGlzIHRoZSBjb3JyZWN0IGFwcHJvYWNoLiAgV2UgYWxyZWFkeSBoYXZlIGENCj4gPiA+IFNDU0kg
-ZXJyb3IgcmV0dXJuIGZvciB0aGlzLCB3aGljaCB5b3UncmUgbm93IHRyYW5zbGF0aW5nIGluIHRo
-ZSBkcml2ZXINCj4gPiA+IGFuZCBoeXBlcnZpc29yLiAgUmF0aGVyIHRoYW4gaGF2ZSBhIHNwZWNp
-YWwgYnl0ZSByZXR1cm4gb2YNCj4gPiA+IFNSQl9TVEFUVVNfSU5WQUxJRF9SRVFVRVNULCB3aHkg
-bm90IGhhdmUgdGhlIGh5cGVydmlzb3IgZG8gdGhlIHJpZ2h0DQo+ID4gPiB0aGluZyBhbmQgZmls
-bCBpbiB0aGUgSUxMRUdBTF9SRVFVRVNUIHNlbnNlIHJldHVybi4gIFRoYXQgd2F5IHlvdSBkb24n
-dA0KPiA+ID4gbmVlZCBhIHNwZWNpYWwgZXJyb3IgY29kZSBhbmQgeW91IGRvbid0IG5lZWQgdG8g
-Y29uc3RydWN0IHRoZSBzZW5zZQ0KPiA+ID4gYnVmZmVyIGluIHRoZSBkcml2ZXIuICBOb3cgSHlw
-ZXJWIHdpbGwgYmUgY29ycmVjdGx5IHNldCB1cCBmb3IgYm90aCBwYXNzDQo+ID4gPiB0aHJvdWdo
-IGFuZCBlbXVsYXRlZCByZXNwb25zZXMuICBJdCdzIHN1cmVseSBub3QgbXVjaCB3b3JrIGFuZCB5
-b3UNCj4gPiA+IGFscmVhZHkgcHJvY2VzcyBzZW5zZSBkYXRhIGNvcnJlY3RseSBpbiBzdG9ydnNj
-X2NvbW1hbmRfY29tcGxldGlvbigpLCBzbw0KPiA+ID4geW91IHdvdWxkbid0IG5lZWQgYW55IHBh
-dGNoZXMgdG8gdGhlIGRyaXZlciBmb3IgdGhpcyBhcHByb2FjaC4NCj4gPg0KPiA+IEphbWVzLCB0
-aGUgaXNzdWUgaGVyZSBpcyB0aGF0IGN1cnJlbnRseSBzaGlwcGluZyBXaW5kb3dzIGhvc3RzIGRv
-bid0IGV2ZW4gZG8NCj4gPiB3aGF0IEkgYW0gaGFuZGxpbmcgaGVyZS4NCj4gDQo+IFJpZ2h0LCBJ
-IHVuZGVyc3RhbmQgdGhhdC4NCj4gDQo+ID4gIEJhc2VkIG9uIHRoZSBpbnB1dCBJIGdvdCBmcm9t
-IHlvdSBhbmQgQ2hyaXN0b3BoLA0KPiA+IEkgY29udmluY2VkIHRoZSB3aW5kb3dzIHRlYW0gdG8g
-YXQgbGVhc3QgcmV0dXJuIHRoZSBTUkIgc3RhdHVzIHRoYXQgaW5kaWNhdGVzDQo+ID4gYW4gaWxs
-ZWdhbCByZXF1ZXN0LiBJIHdpbGwgc3VnZ2VzdCB0byB0aGVtIHRoYXQgcGVyaGFwcyB0aGV5IHNo
-b3VsZCBhbHNvIHNldCB0aGUNCj4gPiBjb3JyZWN0IHNlbnNlIGNvZGUgYW5kIHNvIEkgd291bGQg
-bm90IG5lZWQgdGhpcyBwYXRjaC4NCj4gDQo+IE5vdCBhbHNvOyBpbnN0ZWFkIG9mLiAgVGhlcmUn
-cyBubyBuZWVkIGZvciBhbiBleHRyYSBTUkIgc3RhdHVzLiAgSnVzdA0KPiByZXR1cm4gdGhlIHN0
-YW5kYXJkIGNoZWNrIGNvbmRpdGlvbiBzZW5zZSBkYXRhLg0KPiANCj4gPiAgSG93ZXZlciwga2Vl
-cCBpbiBtaW5kDQo+ID4gdGhhdCB0aGVyZSBpcyBubyBjdXJyZW50IEVUQSBvbiB3aGVuIFdpbmRv
-d3Mgd2lsbCBzaGlwIHdpdGggdGhlc2UgY2hhbmdlcyAtDQo+IFdpbmRvd3MgOA0KPiA+IG1heSBz
-aGlwIHdpdGggY29kZSB3aGVyZSB0aGV5IHdvdWxkIHJldHVybiBhbiBpbnZhbGlkIFNSQiBzdGF0
-dXMsIGJ1dCB0aGV5IGFyZQ0KPiBub3QNCj4gPiBzZXR0aW5nIHRoZSBzZW5zZSBjb2RlLCBoZW5j
-ZSB0aGlzIHBhdGNoLiBXaGVuIHRoZSBXaW5kb3cgaG9zdCBkb2VzIHRoZQ0KPiAicmlnaHQgdGhp
-bmciDQo+ID4gSSB3aWxsIGNsZWFuIHRoaXMgdXAsIGJ1dCBJIGRvbid0IGtub3cgd2hlbiB0aGF0
-IHdpbGwgYmUuDQo+IA0KPiBJIHRob3VnaHQgeW91IGp1c3Qgc2FpZCB5b3UnZCBvbmx5IGp1c3Qg
-YXNrZWQgdGhlbSBpZiB0aGV5IGNvdWxkDQo+IGltcGxlbWVudGVkIGl0LCBpbiB3aGljaCBjYXNl
-IG5vIHZlcnNpb24gb2Ygd2luZG93cyBjdXJyZW50bHkgc2hpcHMgd2l0aA0KPiB0aGlzLCBjb3Jy
-ZWN0Pw0KDQpUaGVyZSBhcmUgc29tZSBwcml2YXRlIGJ1aWxkcyBvZiB3aW5kb3dzIDggZmxvYXRp
-bmcgYXJvdW5kIHdpdGggdGhpcyBjaGFuZ2UsIHdoZXJlDQp0aGV5IGFyZSByZXR1cm5pbmcgSUxM
-RUdBTF9SRVFVRVNUIFNSQiBzdGF0dXMgIHdpdGhvdXQgYW55IHNlbnNlIGRhdGEuDQoNCj4gDQo+
-ID4gTW9yZSBpbXBvcnRhbnRseSwgdGhlIHNlY29uZCBwYXRjaCAgaW4gdGhpcyBzZXJpZXMgd2hl
-cmUgSSBmaWx0ZXIgb3V0DQo+ID4gdGhlIEFUQV8xNiBjb21tYW5kDQo+ID4gb24gdGhlIGd1ZXN0
-IGlzIHJlYWxseSBpbXBvcnRhbnQgZm9yIHVzLiBXaXRob3V0IHRoYXQgcGF0Y2ggb24gYSByYW5n
-ZQ0KPiA+IG9uIHdpbmRvd3MgaG9zdHMNCj4gPiBpbmNsdWRpbmcgdGhlIGN1cnJlbnQgYmV0YSB2
-ZXJzaW9uIG9mIHdpbmRvd3M4IHdoZXJlIHRoZSBob3N0IGlzDQo+ID4gcmV0dXJuaW5nIGEgZ2Vu
-ZXJpYw0KPiA+IGVycm9yIGluIHJlc3BvbnNlIHRvIEFUQV8xNiBjb21tYW5kLCB3ZSBjYW5ub3Qg
-Ym9vdCBtYW55IExpbnV4DQo+ID4gZGlzdHJvcy4gSWYgeW91DQo+ID4gcHJlZmVyLCBJIGNhbiBk
-cm9wIHRoZSBmaXJzdCBwYXRjaCBhbmQgcmUtc3VibWl0IHRoZSBzZWNvbmQgcGF0Y2ggZm9yDQo+
-ID4gY29uc2lkZXJhdGlvbiBub3cuDQo+IA0KPiBJJ20gbm90IHN1cmUgYWJvdXQgdGhhdCBlaXRo
-ZXIuICBZb3UgcHJlc3VtYWJseSB0cmFuc2xhdGUNCj4gU1JCX1NUQVRVU19FUlJPUiBpbnRvIERJ
-RF9UQVJHRVRfRkFJTFVSRS4gIFRoYXQgc2hvdWxkIGNhdXNlIHRoZQ0KPiB0ZXJtaW5hdGlvbiBv
-ZiB0aGUgY29tbWFuZCB3aXRoIHByZWp1ZGljZSBpbiBleGFjdGx5IHRoZSBzYW1lIHdheSBhcyBh
-bg0KPiBJTExFR0FMX1JFUVVFU1Qgc2Vuc2UgY29kZSB3b3VsZCAobWludXMgdGhlIHVzZWZ1bCBl
-cnJvciBpbmZvcm1hdGlvbiksDQo+IHNvIHdoYXQncyBjYXVzaW5nIHRoZSBib290IGZhaWx1cmU/
-DQoNCllvdSBhcmUgcmlnaHQsIGN1cnJlbnRseSB3aXRob3V0IGEgcHJvcGVyIFNSQiBjb2RlLCBJ
-IGRvIGEgRElEX1RBUkdFVF9GQUlMVVJFIGFuZA0KdGhpcyByZXN1bHRzIGluIHRoZSBkZXZpY2Ug
-YmVpbmcgb2ZmbGluZWQgYW5kIGlmIHRoZSBkZXZpY2UgaGFwcGVucyB0byBiZSB0aGUgcm9vdCBk
-ZXZpY2UsDQp3ZSBvYnZpb3VzbHkgY2Fubm90IGJvb3QuIEkgaGF2ZSBzZWVuIHRoaXMgcHJvYmxl
-bSB3aXRoIHNsZXMxMSBzcDIgb24gYSB3aW44IGJveC4NCg0KUmVnYXJkcywNCg0KSy4gWQ0K
+On Mon, 2012-03-19 at 08:54 +0000, James Bottomley wrote:
+> On Sun, 2012-03-18 at 17:22 -0700, Nicholas A. Bellinger wrote:
+> > On Sun, 2012-03-18 at 09:22 +0000, James Bottomley wrote:
+> > > On Fri, 2012-03-16 at 16:40 -0700, Nicholas A. Bellinger wrote:
+> > > > James & Co,
+> > > > 
+> > > > Ping..?  Any thoughts on this topic yet..?
+> > > 
+> > > Not really ... we're trying to get the participants to plan the topics
+> > > this year.
+> > > 
+> > 
+> > Hi James,
+> > 
+> > I'm asking because the invites for an LSF slot this year to discuss this
+> > topic with the development community has not materialized, and you've
+> > been completely silent to qla2xxx target RFCs + patches that involve the
+> > subject thus far..
+> 
+> It's not my driver, it's qlogic's ... I'm not really going to say
+> anything until they do.
+
+Well, I think most of the questions unresolved around mixed mode that
+need to be addressed between scsi-core and target-core for-3.5 are
+really quite generic in nature to the individual scsi LLD.
+
+Currently where we run into difficultly with a storage stack that is
+made to allow 'hot' transition between different modes of operation, is
+how to relinquish initiator mode operation w/o having to unload the
+whole SCSI LLD, and also how to re-enable initiator mode when an
+individual TCM fabric port have been released by a generic wwn_group
+object under /sys/kernel/config/target/$FABRIC/$FABRIC_WWPN
+
+So considering these current limitations here between subsystems for the
+initial for-3.4 merge of qla_target.c logic, we now enforce the use of a
+qla2xxx specific module parameter to enable/disable different modes
+globally for all qla_hw_data ports at LLD load time.
+
+I've asked Andrew V. and Co. to take another look at today's linux-next
+tree to verify the changes for existing code in patch #2 for >= qla24xx
+series target mode support do not negatively effect the existing
+initiator mode operation of qla2xxx in any way.
+
+Please let us know if you have any concerns.
+
+Thanks,
+
+--nab
