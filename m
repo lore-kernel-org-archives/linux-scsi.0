@@ -1,138 +1,83 @@
-From: Ayman El-Khashab <ayman@elkhashab.com>
-Subject: Re: mpt2sas: BUG? corrupted nvram after using linkrate in sysfs
-Date: Tue, 20 Mar 2012 08:57:54 -0500
-Message-ID: <20120320135754.GA9339@crust.elkhashab.com>
-References: <20120318182916.GA16862@crust.elkhashab.com>
- <A6888A6805518E4EA4AF7072A28264A6067E732484@inbmail02.lsi.com>
+From: Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] block: Make blk_drain_queue() work for stopped queues
+Date: Tue, 20 Mar 2012 15:21:10 +0100
+Message-ID: <20120320142109.GA3693@redhat.com>
+References: <4F65E09D.6010600@acm.org>
+ <20120318155703.GB8045@dhcp-172-17-108-109.mtv.corp.google.com>
+ <4F663BE3.4000503@acm.org>
+ <20120319072656.GB2251@redhat.com>
+ <4F6766F0.1070805@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:14702 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759462Ab2CTN54 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2012 09:57:56 -0400
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6067E732484@inbmail02.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <4F6766F0.1070805-HInyCGIudOg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Mar 20, 2012 at 03:20:48PM +0530, Nandigama, Nagalakshmi wrote:
-> Hi,
-> I verified on SAS2008 B1 the max/min changing value for link rate.
-> I set the max link speed of the NVRAM value to 1.5 Gbps and rebooted. After reboot I read the current and NVRAM value of the max link speed for the phy that I set before. It shown value 1.5 Gbps.
+On Mon, Mar 19, 2012 at 05:03:44PM +0000, Bart Van Assche wrote:
+> On 03/19/12 07:26, Stanislaw Gruszka wrote:
+> > On Sun, Mar 18, 2012 at 07:47:47PM +0000, Bart Van Assche wrote:
+> >> On 03/18/12 15:57, Tejun Heo wrote:
+> >>> On Sun, Mar 18, 2012 at 01:18:21PM +0000, Bart Van Assche wrote:
+> >>>> All queued requests must be processed eventually. Hence make sure
+> >>>> that blk_drain_queue() drains the queue even if the queue is in the
+> >>>> stopped state. This patch makes it safe to invoke blk_cleanup_queue()
+> >>>> on a stopped queue.
+> >>> ...
+> >>>> diff --git a/block/blk-core.c b/block/blk-core.c
+> >>>> index 3a78b00..bdcec86 100644
+> >>>> --- a/block/blk-core.c
+> >>>> +++ b/block/blk-core.c
+> >>>> @@ -300,10 +300,8 @@ EXPORT_SYMBOL(blk_sync_queue);
+> >>>>   */
+> >>>>  void __blk_run_queue(struct request_queue *q)
+> >>>>  {
+> >>>> -	if (unlikely(blk_queue_stopped(q)))
+> >>>> -		return;
+> >>>> -
+> >>>> -	q->request_fn(q);
+> >>>> +	if (!blk_queue_stopped(q) || blk_queue_dead(q))
+> >>>> +		q->request_fn(q);
+> > I'm not sure if that behaviour is correct, i.e. we can call q->request_fn(q)
+> > if someone stoped queue, but if it is why not just call q->request_fn(q)
+> > from blk_drain_queue() instead?
 > 
-> I dint face any issue. 
+> As far as I can see invoking q->request_fn(q) directly from
+> blk_drain_queue() would be a valid alternative.
 > 
-> Are you facing problem in this scenario only?
+> >
+> >>> So, this allows calling request_fn for dead && stopped queue.  Have
+> >>> you seen something which requires this?
+> >> Not servicing queued SCSI requests can e.g. cause user space processes
+> >> to hang. See also http://lkml.org/lkml/2011/8/27/6 for an example. Hence
+> >> commit 3308511c93e6ad0d3c58984ecd6e5e57f96b12c8 which causes pending
+> >> SCSI commands to be killed just before blk_cleanup_queue() is invoked.
+> >> However, there is still a tiny race window left by that patch - new
+> >> requests can get queued after the SCSI request function has been invoked
+> >> by scsi_free_queue() and before blk_cleanup_queue() gets invoked. Hence
+> >> the proposal to change the block layer to make sure that all queued
+> >> requests get processed eventually.
+> > That behaviour I can confirm using this script [1] running with usb
+> > dongle. I applied this patch and second one:
+> > http://marc.info/?l=linux-scsi&m=133207725114386&w=2
+> > (BTW: second one patch is mangled). My impression is, that the script run
+> > much longer before it finally hung at infinite loop in blk_drain_queue().
 > 
+> I'm not an USB expert but I've had a quick look at
+> usb_stor_release_resources() in drivers/usb/storage/usb.c. As far as I
+> can see that function will only stop the usb_stor_control_thread() if
+> that thread has been scheduled after the last complete() call by the USB
+> queuecommand() function and before the complete() call in
+> usb_stor_release_resources() is executed. That looks like a race
+> condition to me.
 
-BTW, I am on V9.0 of the firmware -- there was an email that
-said this was fixed in 11.0, but I don't see it mentioned in
-the errata unless I missed it.  Also flashing already
-deployed systems isn't always easy.
+CCing linux-usb, perhaps usb developers would like to take a look.
 
-So I did some more experiments, and the problem seems to be
-both intermittent and relies on a particular drive
-configuration.  I start with a brand new system (i.e.
-never been run) and put 4 SAS drives in, each with 2 ports
-(so I use all 8 phys of the controller).  These drives can
-run at 6G and work fine.  Now I can power down, pull 2
-drives, start again and it is still good.  I can change the
-drive setup many times and all is fine.  Now if I go back to
-the original setup (4 SAS drives) and change the link rate
-to 6G then everything works.  Now, if I power down and pull
-a drive or 2, then some phys will come up at 6G, some will
-indicate Unknown, but accessing the drives won't work
-correctly.  One drive *might* work, but the other usually
-will give an error with "Read Capacity Fail" or something
-different.  If I use lsiutil to reset the Pg1 configuration
-to the defaults and reboot, then the drives will work again
-at 6G. 
-
-In fails, each drive is dual-ports so I'd expect both phys 
-to come up at 6G.  What happens is that 1 phy will come up 
-at 6G the other at Unknown and nothing works right. (i..e
-we get drive errors as seen in Linux).
-
-Upon first boot, our Pg1 current config looks like this.
-0014 : a8000100
-0018 : 00000071
-001c : 00000000
-
-The dynamic port group is 0, the autoconfig is enabled for
-each of the 8 ports. (just showing 1 here).
-
-After we attach drives and set the link rate, the port group
-gets set to something [0:7].  Then when the data is written
-back to the flash during the NVRAM update, the dynamic port
-group is now an ordinal from 0,7 instead of port group 0.
-It appears to us that this is the only difference but I
-can't verify that other than when I restore defaults it
-works.
-
-In another test, I subverted the writes to NVRAM in the
-driver.  In this case, I can make it run and fail, but at
-least upon reboot it works again.
-
-Thanks,
-Ayman
-
-
-
-
-
-
-
-
-> 
-> 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Ayman El-Khashab
-> Sent: Sunday, March 18, 2012 11:59 PM
-> To: linux-scsi@vger.kernel.org
-> Subject: mpt2sas: BUG? corrupted nvram after using linkrate in sysfs
-> 
-> We have the SAS2008 on our board but we don't have the NVRAM
-> populated.  We do have a flash on the board that holds the
-> firmware and so on.  What we found (by experimentation) is
-> that the firmware detects or knows there isn't an NVRAM and
-> stores some of the NVRAM settings somewhere in the flash
-> (we've dumped the flash and confirmed there are things in
-> it).  
-> 
-> We've seen a problem where we use the max/min linkrate in
-> sysfs -- it looks like the linkrates get set correctly in
-> page1, we also copy the port/port flags/phy flags per some
-> errata.  The problem shows up when it updates pg1.  At that
-> point, the following code is executed ... I guess this would
-> be ok, except what we see happen is that whatever gets
-> written to the NVRAM fails to make anything work and since
-> it is in the NVRAM, even rebooting doesn't help.  We have
-> figured out that using restore defaults in lsiutil fixes the
-> problem, but we would rather figure out why the linkrate
-> doesn't work.  
-> 
->  mpt2sas_config_set_sas_iounit_pg1(struct MPT2SAS_ADAPTER
-> *ioc, Mpi2ConfigReply_t
->      *mpi_reply, Mpi2SasIOUnitPage1_t *config_page, u16
-> ...
-> MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
->          r = _config_request(ioc, &mpi_request, mpi_reply,
->             MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT,
-> config_page, sz);
-> 
-> 
-> What it looks like is that Pg1 has the autoconfig set, but
-> rather than having "0" in the dynamic port group, it how has
-> many phy numbers so it seems that on the next reboot, the
-> dynamic setup doesn't work -- however, I don't know that for
-> sure since I don't really know what the f/w does with it.
-> 
-> Thanks
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Stanislaw
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
