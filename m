@@ -1,35 +1,43 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 42969] Softlockup during boot during init_sd
-Date: Wed, 21 Mar 2012 06:53:10 GMT
-Message-ID: <201203210653.q2L6rAT6020148@bugzilla.kernel.org>
-References: <bug-42969-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: santosh nayak <santoshprasadnayak@gmail.com>
+Subject: [PATCH] [SCSI] pm8001: Add error handler in pm8001_init_sas_add() if kzalloc fails.
+Date: Wed, 21 Mar 2012 14:08:14 +0530
+Message-ID: <1332319094-11864-1-git-send-email-santoshprasadnayak@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:50163 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752291Ab2CUGxL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Mar 2012 02:53:11 -0400
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q2L6rABF020149
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Mar 2012 06:53:10 GMT
-In-Reply-To: <bug-42969-11613@https.bugzilla.kernel.org/>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:63613 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754471Ab2CUIjp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Mar 2012 04:39:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jack_wang@usish.com
+Cc: mark_salyzyn@xyratex.com, lindar_liu@usish.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Santosh Nayak <santoshprasadnayak@gmail.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42969
+From: Santosh Nayak <santoshprasadnayak@gmail.com>
 
+We need to add error handler if kzalloc fails to allocate and initialize.
+Otherwise it may lead to Null derefernce error in 
+'pm8001_chip_get_nvmd_req()'.
 
+Signed-off-by: Santosh Nayak <santoshprasadnayak@gmail.com>
+---
+ drivers/scsi/pm8001/pm8001_init.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-
-
---- Comment #5 from Eric Sesterhenn <eric.sesterhenn@lsexperts.de>  2012-03-21 06:53:10 ---
-Created an attachment (id=72667)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=72667)
-dmidecode output
-
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 36efaa7..fdce28e 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -519,6 +519,10 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+ 	payload.minor_function = 0;
+ 	payload.length = 128;
+ 	payload.func_specific = kzalloc(128, GFP_KERNEL);
++	if (unlikely(!payload.func_specific)) {
++		printk(KERN_ERR "%s: failed to alloc memory\n", __func__);
++		return;
++	}
+ 	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
+ 	wait_for_completion(&completion);
+ 	for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.7.4.4
+
