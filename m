@@ -1,45 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [SCSI] pm8001: Add error handler in
- pm8001_init_sas_add() if kzalloc fails.
-Date: Wed, 21 Mar 2012 10:11:32 +0000
-Message-ID: <1332324692.2909.39.camel@dabdike.int.hansenpartnership.com>
-References: <1332319094-11864-1-git-send-email-santoshprasadnayak@gmail.com>
-	 <1332319785.2909.11.camel@dabdike.int.hansenpartnership.com>
-	 <20120321085846.GB3967@mwanda>
+From: "Mrs Laora Fernandez" <vgorritti@cgtp.org.pe>
+Subject: Easter Bonanza Award.(Congratulations)
+Date: Wed, 21 Mar 2012 12:47:27 +0100
+Message-ID: <20120321112017.2980B2549ABD__22092.5481910401$1332331779$gmane$org@mail.cgtp.org.pe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54907 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964854Ab2CUKLf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Mar 2012 06:11:35 -0400
-In-Reply-To: <20120321085846.GB3967@mwanda>
+Received: from mail.cgtp.org.pe ([190.187.25.94]:58554 "EHLO mail.cgtp.org.pe"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755314Ab2CUMJO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Mar 2012 08:09:14 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: santosh nayak <santoshprasadnayak@gmail.com>, jack_wang@usish.com, mark_salyzyn@xyratex.com, lindar_liu@usish.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Respected Recipient <vgorritti@cgtp.org.pe>
 
-On Wed, 2012-03-21 at 11:58 +0300, Dan Carpenter wrote:
-> On Wed, Mar 21, 2012 at 08:49:45AM +0000, James Bottomley wrote:
-> > On Wed, 2012-03-21 at 14:08 +0530, santosh nayak wrote:
-> > > From: Santosh Nayak <santoshprasadnayak@gmail.com>
-> > > 
-> > > We need to add error handler if kzalloc fails to allocate and initialize.
-> > > Otherwise it may lead to Null derefernce error in 
-> > > 'pm8001_chip_get_nvmd_req()'.
-> > 
-> > It's a GFP_KERNEL allocation.  They sleep until memory is available
-> > (__GFP_WAIT).  It's GFP_ATOMIC that can return NULL.
-> > 
-> 
-> That's not right at all.  Only __GFP_NOFAIL allocations don't need
-> to be checked.
+Sorteo 12, domingo, 18/03/2012
 
-Ah, right, that's the option I was thinking of.  __GFP_WAIT may fail if
-we're in direct reclaim or the oom killer gets activated.
-
-James
-
-
+ELGR/idsorteo.793205012
+=20
+ATTN: Lucky Winner,
+=20
+This is to announce to you that your email attached to Elgordo De La Pr=
+imitiva ticket number 1-13-26-29-54, Clave 4 won in the 2nd category ba=
+lloting held 18/03/2012. Your category payout is =E2=82=AC295.436,09 Eu=
+ro. A copy of the ticket would be forwarded to you as evidence of play.
+=20
+View results here: http://www.loteriasyapuestas.es/index.php/mod.sorteo=
+s/mem.sorteos/juego.ELGR/idsorteo.793205012
+=20
+Contact your Claims Officer:
+Name: Mr. David Santiago
+Email: elgordo_processing@aol.com
+Tel: +34-686-902-277
+=20
+Congratulations.
+=20
+Regards,
+Mrs Laora Fernandez
+Coordinator.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
