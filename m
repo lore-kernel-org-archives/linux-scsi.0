@@ -1,50 +1,192 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 07/17] be2iscsi:Fix double free of MCCQ info memory.
-Date: Tue, 20 Mar 2012 20:47:58 -0500
-Message-ID: <1332294488-13684-8-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 14/17] be2iscsi: Get Initiator Name for the iSCSI_Host
+Date: Tue, 20 Mar 2012 20:48:05 -0500
+Message-ID: <1332294488-13684-15-git-send-email-michaelc@cs.wisc.edu>
 References: <1332294488-13684-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3229 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:15591 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030413Ab2CUBsd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Mar 2012 21:48:33 -0400
+	id S1030413Ab2CUBsm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Mar 2012 21:48:42 -0400
 In-Reply-To: <1332294488-13684-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+From: John Soni Jose <sony.john-n@emulex.com>
 
- In case of MCC_Q creation failed, the MCCQ info memory is freed
- from be_mcc_queues_destroy and be_mcc_queues_create. This caused
- kernel to panic because of double free.
+ Implement the ISCSI_HOST_PARAM_INITIATOR_NAME for .get_host_param
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
-dd
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/be2iscsi/be_main.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c  |    2 +
+ drivers/scsi/be2iscsi/be_cmds.h  |   12 +++++++++
+ drivers/scsi/be2iscsi/be_iscsi.c |   50 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_mgmt.c  |   26 +++++++++++++++++++
+ include/scsi/iscsi_proto.h       |    2 +
+ 5 files changed, 92 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index ce7ce79..3a0fc74 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2908,9 +2908,11 @@ beiscsi_post_pages(struct beiscsi_hba *phba)
- static void be_queue_free(struct beiscsi_hba *phba, struct be_queue_info *q)
- {
- 	struct be_dma_mem *mem = &q->dma_mem;
--	if (mem->va)
-+	if (mem->va) {
- 		pci_free_consistent(phba->pcidev, mem->size,
- 			mem->va, mem->dma);
-+		mem->va = NULL;
-+	}
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index cdb1536..d2e9e93 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -15,6 +15,8 @@
+  * Costa Mesa, CA 92626
+  */
+ 
++#include <scsi/iscsi_proto.h>
++
+ #include "be.h"
+ #include "be_mgmt.h"
+ #include "be_main.h"
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index c85d73c..f343ed6 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -513,6 +513,17 @@ struct be_cmd_resp_get_mac_addr {
+ 	u32 rsvd[23];
+ };
+ 
++#define BEISCSI_ALIAS_LEN 32
++
++struct be_cmd_hba_name {
++	struct be_cmd_req_hdr hdr;
++	u16 flags;
++	u16 rsvd0;
++	u8 initiator_name[ISCSI_NAME_LEN];
++	u8 initiator_alias[BEISCSI_ALIAS_LEN];
++} __packed;
++
++
+ int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
+ 			  struct be_queue_info *eq, int eq_delay);
+ 
+@@ -531,6 +542,7 @@ int be_poll_mcc(struct be_ctrl_info *ctrl);
+ int mgmt_check_supported_fw(struct be_ctrl_info *ctrl,
+ 				      struct beiscsi_hba *phba);
+ unsigned int be_cmd_get_mac_addr(struct beiscsi_hba *phba);
++unsigned int be_cmd_get_initname(struct beiscsi_hba *phba);
+ unsigned int beiscsi_get_boot_target(struct beiscsi_hba *phba);
+ unsigned int beiscsi_get_session_info(struct beiscsi_hba *phba,
+ 				  u32 boot_session_handle,
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 2bb681e..1af7774 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -279,6 +279,48 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
  }
  
- static int be_queue_alloc(struct beiscsi_hba *phba, struct be_queue_info *q,
+ /**
++ * beiscsi_get_initname - Read Initiator Name from flash
++ * @buf: buffer bointer
++ * @phba: The device priv structure instance
++ *
++ * returns number of bytes
++ */
++static int beiscsi_get_initname(char *buf, struct beiscsi_hba *phba)
++{
++	int rc;
++	unsigned int tag, wrb_num;
++	unsigned short status, extd_status;
++	struct be_mcc_wrb *wrb;
++	struct be_cmd_hba_name *resp;
++	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
++
++	tag = be_cmd_get_initname(phba);
++	if (!tag) {
++		SE_DEBUG(DBG_LVL_1, "Getting Initiator Name Failed\n");
++		return -EBUSY;
++	} else
++		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
++				phba->ctrl.mcc_numtag[tag]);
++
++	wrb_num = (phba->ctrl.mcc_numtag[tag] & 0x00FF0000) >> 16;
++	extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
++	status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
++
++	if (status || extd_status) {
++		SE_DEBUG(DBG_LVL_1, "MailBox Command Failed with "
++				"status = %d extd_status = %d\n",
++				status, extd_status);
++		free_mcc_tag(&phba->ctrl, tag);
++		return -EAGAIN;
++	}
++	wrb = queue_get_wrb(mccq, wrb_num);
++	free_mcc_tag(&phba->ctrl, tag);
++	resp = embedded_payload(wrb);
++	rc = sprintf(buf, "%s\n", resp->initiator_name);
++	return rc;
++}
++
++/**
+  * beiscsi_get_host_param - get the iscsi parameter
+  * @shost: pointer to scsi_host structure
+  * @param: parameter type identifier
+@@ -301,6 +343,14 @@ int beiscsi_get_host_param(struct Scsi_Host *shost,
+ 			return status;
+ 		}
+ 		break;
++	case ISCSI_HOST_PARAM_INITIATOR_NAME:
++		status = beiscsi_get_initname(buf, phba);
++		if (status < 0) {
++			SE_DEBUG(DBG_LVL_1,
++					"Retreiving Initiator Name Failed\n");
++			return status;
++		}
++		break;
+ 	default:
+ 		return iscsi_host_get_param(shost, param, buf);
+ 	}
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 44762cf..f7d27e9 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -447,3 +447,29 @@ unsigned int be_cmd_get_mac_addr(struct beiscsi_hba *phba)
+ 	return tag;
+ }
+ 
++unsigned int be_cmd_get_initname(struct beiscsi_hba *phba)
++{
++	unsigned int tag = 0;
++	struct be_mcc_wrb *wrb;
++	struct be_cmd_hba_name *req;
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++
++	spin_lock(&ctrl->mbox_lock);
++	tag = alloc_mcc_tag(phba);
++	if (!tag) {
++		spin_unlock(&ctrl->mbox_lock);
++		return tag;
++	}
++
++	wrb = wrb_from_mccq(phba);
++	req = embedded_payload(wrb);
++	wrb->tag0 |= tag;
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI_INI,
++			OPCODE_ISCSI_INI_CFG_GET_HBA_NAME,
++			sizeof(*req));
++
++	be_mcc_notify(phba);
++	spin_unlock(&ctrl->mbox_lock);
++	return tag;
++}
+diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
+index 988ba06..c1260d8 100644
+--- a/include/scsi/iscsi_proto.h
++++ b/include/scsi/iscsi_proto.h
+@@ -661,6 +661,8 @@ struct iscsi_reject {
+ 
+ #define ISCSI_DEF_TIME2WAIT			2
+ 
++#define ISCSI_NAME_LEN				224
++
+ /************************* RFC 3720 End *****************************/
+ 
+ #endif /* ISCSI_PROTO_H */
 -- 
 1.7.7.6
 
