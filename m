@@ -1,55 +1,50 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 11/17] be2iscsi:Bump the driver Version
-Date: Tue, 20 Mar 2012 20:48:02 -0500
-Message-ID: <1332294488-13684-12-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 07/17] be2iscsi:Fix double free of MCCQ info memory.
+Date: Tue, 20 Mar 2012 20:47:58 -0500
+Message-ID: <1332294488-13684-8-git-send-email-michaelc@cs.wisc.edu>
 References: <1332294488-13684-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37679 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:3229 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030413Ab2CUBsg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Mar 2012 21:48:36 -0400
+	id S1030413Ab2CUBsd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Mar 2012 21:48:33 -0400
 In-Reply-To: <1332294488-13684-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <MinhDuc.Tran@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>
 
 From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-	This patch bumps the driver version
-Signed-off-by: Minh Tran <MinhDuc.Tran@Emulex.Com>
+ In case of MCC_Q creation failed, the MCCQ info memory is freed
+ from be_mcc_queues_destroy and be_mcc_queues_create. This caused
+ kernel to panic because of double free.
+
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+dd
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/be2iscsi/be_main.c |    1 +
- drivers/scsi/be2iscsi/be_main.h |    2 +-
- 2 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index e38d694..5b34f41 100644
+index ce7ce79..3a0fc74 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -48,6 +48,7 @@ static unsigned int num_hba = 0;
+@@ -2908,9 +2908,11 @@ beiscsi_post_pages(struct beiscsi_hba *phba)
+ static void be_queue_free(struct beiscsi_hba *phba, struct be_queue_info *q)
+ {
+ 	struct be_dma_mem *mem = &q->dma_mem;
+-	if (mem->va)
++	if (mem->va) {
+ 		pci_free_consistent(phba->pcidev, mem->size,
+ 			mem->va, mem->dma);
++		mem->va = NULL;
++	}
+ }
  
- MODULE_DEVICE_TABLE(pci, beiscsi_pci_id_table);
- MODULE_DESCRIPTION(DRV_DESC " " BUILD_STR);
-+MODULE_VERSION(BUILD_STR);
- MODULE_AUTHOR("Emulex Corporation");
- MODULE_LICENSE("GPL");
- module_param(be_iopoll_budget, int, 0);
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 49289ef..13e3bef 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -34,7 +34,7 @@
- 
- #include "be.h"
- #define DRV_NAME		"be2iscsi"
--#define BUILD_STR		"4.1.239.0"
-+#define BUILD_STR		"4.2.162.0"
- #define BE_NAME			"Emulex OneConnect" \
- 				"Open-iSCSI Driver version" BUILD_STR
- #define DRV_DESC		BE_NAME " " "Driver"
+ static int be_queue_alloc(struct beiscsi_hba *phba, struct be_queue_info *q,
 -- 
 1.7.7.6
 
