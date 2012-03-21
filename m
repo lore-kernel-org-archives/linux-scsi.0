@@ -1,80 +1,51 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 12/17] be2iscsi: Check ASYNC PDU Handle corresponds to HDR/DATA Handle
-Date: Tue, 20 Mar 2012 20:48:03 -0500
-Message-ID: <1332294488-13684-13-git-send-email-michaelc@cs.wisc.edu>
-References: <1332294488-13684-1-git-send-email-michaelc@cs.wisc.edu>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] block: Make blk_drain_queue() work for stopped queues
+Date: Tue, 20 Mar 2012 20:37:55 -0700
+Message-ID: <CAA9_cmdp7Ov7ZrCv+NEuxs9WXAk0ts7uOo2UDxBAd_feT6gPLQ@mail.gmail.com>
+References: <4F65E09D.6010600@acm.org>
+	<20120318155703.GB8045@dhcp-172-17-108-109.mtv.corp.google.com>
+	<4F663BE3.4000503@acm.org>
+	<20120319170435.GH11069@google.com>
+	<4F68E34F.1060502@acm.org>
+	<CAA9_cmcZUueDCc2dZXayWDqAoggXo1+pqqjpk8VLEbk5wrtdDA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42788 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030472Ab2CUBsp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Mar 2012 21:48:45 -0400
-In-Reply-To: <1332294488-13684-1-git-send-email-michaelc@cs.wisc.edu>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:43082 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756617Ab2CUDh4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2012 23:37:56 -0400
+Received: by vbbff1 with SMTP id ff1so311900vbb.19
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Mar 2012 20:37:55 -0700 (PDT)
+In-Reply-To: <CAA9_cmcZUueDCc2dZXayWDqAoggXo1+pqqjpk8VLEbk5wrtdDA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Stanislaw Gruszka <sgruszka@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Bartek Nowakowski <bartek.nowakowski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>
 
-From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+On Tue, Mar 20, 2012 at 2:01 PM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> On Tue, Mar 20, 2012 at 1:06 PM, Bart Van Assche <bvanassche@acm.org>=
+ wrote:
+> [..]
+>> - Fix a null pointer dereference triggered by sd during device remov=
+al.
+>
+> Hi Bart,
+>
+> Do you have a log of the backtrace in this case? =A0I'm going to put
+> this patch into our libsas/isci test environment.
 
- For each ASYNC PDU received there is an HDR and DATA handle for it.
- There will be only 1 HDR ASYNC Handle, but DATA Handle can be more
- than 1 for each ASYNC PDU received. Checking if the ASYNC Handle
- correspongs to HDR or DATA while returning the Handle to the free list.
- hwi_free_async_msg just return the handles to the free list. No return
- values are needed so changing the return type to void.
+We beat on this patch pretty severely in our environment and appeared
+to only trigger a hung_task timeout when our driver / libata took too
+long to recovery for a 15 device unplug. So...
 
-Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
-Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/be2iscsi/be_main.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 5b34f41..97a08f3 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -1471,14 +1471,13 @@ hwi_update_async_writables(struct hwi_async_pdu_context *pasync_ctx,
- 	return 0;
- }
- 
--static unsigned int hwi_free_async_msg(struct beiscsi_hba *phba,
-+static void hwi_free_async_msg(struct beiscsi_hba *phba,
- 				       unsigned int cri)
- {
- 	struct hwi_controller *phwi_ctrlr;
- 	struct hwi_async_pdu_context *pasync_ctx;
- 	struct async_pdu_handle *pasync_handle, *tmp_handle;
- 	struct list_head *plist;
--	unsigned int i = 0;
- 
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	pasync_ctx = HWI_GET_ASYNC_PDU_CTX(phwi_ctrlr);
-@@ -1488,23 +1487,20 @@ static unsigned int hwi_free_async_msg(struct beiscsi_hba *phba,
- 	list_for_each_entry_safe(pasync_handle, tmp_handle, plist, link) {
- 		list_del(&pasync_handle->link);
- 
--		if (i == 0) {
-+		if (pasync_handle->is_header) {
- 			list_add_tail(&pasync_handle->link,
- 				      &pasync_ctx->async_header.free_list);
- 			pasync_ctx->async_header.free_entries++;
--			i++;
- 		} else {
- 			list_add_tail(&pasync_handle->link,
- 				      &pasync_ctx->async_data.free_list);
- 			pasync_ctx->async_data.free_entries++;
--			i++;
- 		}
- 	}
- 
- 	INIT_LIST_HEAD(&pasync_ctx->async_entry[cri].wait_queue.list);
- 	pasync_ctx->async_entry[cri].wait_queue.hdr_received = 0;
- 	pasync_ctx->async_entry[cri].wait_queue.bytes_received = 0;
--	return 0;
- }
- 
- static struct phys_addr *
--- 
-1.7.7.6
-
+Acked-by: Dan Williams <dan.j.williams@intel.com>
+Tested-by: Jacek Danecki <jacek.danecki@intel.com>
+Tested-by: Bartek Nowakowski <bartek.nowakowski@intel.com>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
