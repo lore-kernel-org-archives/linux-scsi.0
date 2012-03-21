@@ -1,174 +1,70 @@
-From: =?iso-8859-1?Q?J=F6rg?= Sommer <joerg@alea.gnuu.de>
-Subject: Re: DMA doesn't work since "make ata port as parent device of scsi
- host"
-Date: Wed, 21 Mar 2012 20:40:43 +0100
-Message-ID: <20120321194042.GA16112@alea.gnuu.de>
-References: <20120315014807.GA3051@alea.gnuu.de>
- <1331776741.3436.33.camel@minggr>
- <1331781968.3436.43.camel@minggr>
- <20120315074835.GA18295@alea.gnuu.de>
- <1331799598.3436.46.camel@minggr>
- <20120315155924.GA6738@alea.gnuu.de>
- <1332293133.17160.12.camel@minggr>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 05/17] be2iscsi:Fix typo function name mismatch
+Date: Wed, 21 Mar 2012 23:21:11 +0100
+Message-ID: <5978796.vmDf5npbmM@eto>
+References: <1332294488-13684-1-git-send-email-michaelc@cs.wisc.edu> <1332294488-13684-6-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="SUOF0GtieIMvvwua"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1332293133.17160.12.camel@minggr>
-Sender: linux-ide-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
-List-Id: linux-scsi@vger.kernel.org
-
-
---SUOF0GtieIMvvwua
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+Content-Type: multipart/signed; boundary="nextPart5464576.XJfzxjozH1"; micalg="pgp-sha1"; protocol="application/pgp-signature"
 Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.sf-mail.de ([62.27.20.61]:47095 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964796Ab2CUWVu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Mar 2012 18:21:50 -0400
+In-Reply-To: <1332294488-13684-6-git-send-email-michaelc@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <MinhDuc.Tran@emulex.com>
 
-Lin Ming hat am Wed 21. Mar, 09:25 (+0800) geschrieben:
-> On Thu, 2012-03-15 at 16:59 +0100, J=F6rg Sommer wrote:
-> > Lin Ming hat am Thu 15. Mar, 16:19 (+0800) geschrieben:
-> > > On Thu, 2012-03-15 at 08:48 +0100, J=F6rg Sommer wrote:
-> > > > Lin Ming hat am Thu 15. Mar, 11:26 (+0800) geschrieben:
-> > > > > On Thu, 2012-03-15 at 09:59 +0800, Lin Ming wrote:
-> > > > > > On Thu, 2012-03-15 at 02:48 +0100, J=F6rg Sommer wrote:
-> > > > > > > Hi,
-> > > > > > >=20
-> > > > > > > I'm getting these messages in a KVM virtualized host and the =
-access to
-> > > > > > > the disks is very slow. Using libata.dma=3D0 suppresses the w=
-arnings, but
-> > > > > > > the disks are still slow.
-> > > > > >=20
-> > > > > > Hi J=F6rg,
-> > > > > >=20
-> > > > > > Let me try to reproduce this issue first.
-> > > > >=20
-> > > > > I tried below commands on x86_32, but can't reproduce it.
-> > > > >=20
-> > > > > qemu-system-i386 -kernel /root/vmlinuz-3.3.0-rc7 -append "root=3D=
-/dev/sda1
-> > > > > zcache" -hda /root/debian-32.img -hdb /root/data.img
-> > > > >=20
-> > > > > Maybe because i386 uses different ata controller than ppc(ata_pii=
-x vs
-> > > > > pata-macio).
-> > > > >=20
-> > > > > I'll try qemu-system-ppc.
-> > > > >=20
-> > > > > Did you need to run some workload to trigger these warings?
-> > > > > Or did you get these warnings right after booting the VM?
-> > > >=20
-> > > > These warnings come up before =BBINIT started=AB. I don't have to do
-> > > > anything, just wait and see.
-> > > >=20
-> > > > # truncate -s100M /mnt/data/new
-> > > > # mke2fs -Fq /mnt/data/new
-> > > > # mount -o loop /mnt/data/new /mnt/other
-> > > > # cp --parents /bin/zsh-static /mnt/other/zsh
-> > > > # umount /mnt/other
-> > > > # qemu-system-ppc -enable-kvm -M mac99 -cpu G4 -k de -kernel /boot/=
-vmlinuz-3.3.0-rc5-04520-g8d233c0 -append 'root=3D/dev/sda ro console=3DttyP=
-Z0 init=3D/zsh' -hda /mnt/data/new
-> > > >=20
-> > > > I've uploaded my config and the kernel:
-> > > > http://alioth.debian.org/~jo-guest/config-3.3.0-rc5-04520-g8d233c0
-> > > > http://alioth.debian.org/~jo-guest/vmlinuz-3.3.0-rc5-04520-g8d233c0
-> > > >=20
-> > > > You have to switch to the serial console (Ctrl-Alt-3 or with -nogra=
-phic
-> > > > Ctrl-a c). All kernel messages arrive there.
-> > > >=20
 
-> Hi,=20
->=20
-> Below patch should fix the problem.
->=20
-> Could you help to test it?
+--nextPart5464576.XJfzxjozH1
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
 
-Yes, it does. The kernel doesn't hang at bootup. Thanks for you
-investigation.
-
-> >From a36022015c97c9a9f80e71b4283f0ff5f481ffc3 Mon Sep 17 00:00:00 2001
-> From: Lin Ming <ming.m.lin@intel.com>
-> Date: Tue, 20 Mar 2012 14:35:10 +0800
-> Subject: [PATCH] [SCSI] scsi_lib: use correct DMA device in __scsi_alloc_=
-queue
+Am Dienstag 20 M=E4rz 2012, 20:47:56 schrieb michaelc@cs.wisc.edu:
+> From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 >=20
-> Currently, __scsi_alloc_queue uses SCSI host's parent device
-> as DMA device to set segment boundary. But the parent device may not
-> refer to the DMA device. For example, for ATA disk, SCSI host's parent
-> device now refers to ATA port.
->=20
-> Since commit d139b9b([SCSI] scsi_lib_dma: fix bug with dma maps on
-> nested scsi objects), a new field Scsi_Host->dma_device was introduced
-> to refer to the real DMA device.
->=20
-> Use ->dma_device in __scsi_alloc_queue to correctly set segment
-> boundary.
->=20
-> And use scsi_add_host_with_dma in ata_scsi_add_hosts to pass in the
-> correct DMA device.
->=20
-> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-
-Tested-by: J=F6rg Sommer <joerg@alea.gnuu.de>
-
+> Signed-off-by: Minh Tran <MinhDuc.Tran@Emulex.Com>
+> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 > ---
->  drivers/ata/libata-scsi.c |    3 ++-
->  drivers/scsi/scsi_lib.c   |    2 +-
->  2 files changed, 3 insertions(+), 2 deletions(-)
+>  drivers/scsi/be2iscsi/be_iscsi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >=20
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 7ae1e77..e47f889 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3398,7 +3398,8 @@ int ata_scsi_add_hosts(struct ata_host *host, struc=
-t scsi_host_template *sht)
->  		 */
->  		shost->max_host_blocked =3D 1;
-> =20
-> -		rc =3D scsi_add_host(ap->scsi_host, &ap->tdev);
-> +		rc =3D scsi_add_host_with_dma(ap->scsi_host,
-> +						&ap->tdev, ap->host->dev);
->  		if (rc)
->  			goto err_add;
->  	}
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index f85cfa6..486088b 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1642,7 +1642,7 @@ struct request_queue *__scsi_alloc_queue(struct Scs=
-i_Host *shost,
->  					 request_fn_proc *request_fn)
->  {
->  	struct request_queue *q;
-> -	struct device *dev =3D shost->shost_gendev.parent;
-> +	struct device *dev =3D shost->dma_dev;
-> =20
->  	q =3D blk_init_queue(request_fn, NULL);
->  	if (!q)
-> --=20
-> 1.7.2.5
+> diff --git a/drivers/scsi/be2iscsi/be_iscsi.c
+> b/drivers/scsi/be2iscsi/be_iscsi.c index 33c8f09..2bb681e 100644
+> --- a/drivers/scsi/be2iscsi/be_iscsi.c
+> +++ b/drivers/scsi/be2iscsi/be_iscsi.c
+> @@ -221,7 +221,7 @@ int beiscsi_ep_get_param(struct iscsi_endpoint *e=
+p,
+>  =09struct beiscsi_endpoint *beiscsi_ep =3D ep->dd_data;
+>  =09int len =3D 0;
 >=20
+> -=09SE_DEBUG(DBG_LVL_8, "In beiscsi_conn_get_param, param=3D %d\n", p=
+aram);
+> +=09SE_DEBUG(DBG_LVL_8, "In beiscsi_ep_get_param, param=3D %d\n", par=
+am);
 >=20
+>  =09switch (param) {
+>  =09case ISCSI_PARAM_CONN_PORT:
 
-Regards, J=F6rg.
---=20
-Dein Gesicht wird dir geschenkt. L=E4cheln musst du selber! (Inga Hermann)
+What about:
 
---SUOF0GtieIMvvwua
+SE_DEBUG(DBG_LVL_8, "In %s, param=3D %d\n", __func__, param);
+
+Eike
+--nextPart5464576.XJfzxjozH1
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature http://en.wikipedia.org/wiki/OpenPGP
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-iEYEARECAAYFAk9qLroACgkQwe0mZwH1VICSVwCfZd66Qmj86U7SOtEGlPTJhLrP
-L24An2DOPF6ctF6i3vZ1LA7tAdImuC/V
-=oPZi
+iEYEABECAAYFAk9qVF0ACgkQXKSJPmm5/E5wbQCdFQT6mpCtyOFQk30fY/AkpjDb
+JPAAn01jh8XxizyztMaQc5TViRxEam5Q
+=ArMJ
 -----END PGP SIGNATURE-----
 
---SUOF0GtieIMvvwua--
+--nextPart5464576.XJfzxjozH1--
+
