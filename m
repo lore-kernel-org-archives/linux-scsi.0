@@ -1,68 +1,30 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 10/11] scsi/atari: Revive "atascsi=" setup option
-Date: Wed, 21 Mar 2012 10:51:54 +0100
-Message-ID: <1332323515-7314-10-git-send-email-geert@linux-m68k.org>
-References: <1332323515-7314-1-git-send-email-geert@linux-m68k.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] st: fix race in st_scsi_execute_end
+Date: Wed, 21 Mar 2012 10:09:41 +0000
+Message-ID: <1332324581.2909.38.camel@dabdike.int.hansenpartnership.com>
+References: <20111021113108.GA26181@foxbat.suse.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1332323515-7314-1-git-send-email-geert@linux-m68k.org>
+In-Reply-To: <20111021113108.GA26181@foxbat.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-m68k@lists.linux-m68k.org
-Cc: linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitzmic@googlemail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Petr Uzel <petr.uzel@suse.cz>
+Cc: linux-kernel@vger.kernel.org, Willem Riede <osst@riede.org>, jack@suse.cz, linux-scsi@vger.kernel.org, juergen.gross@ts.fujitsu.com
 List-Id: linux-scsi@vger.kernel.org
 
-It was documented in Documentation/m68k/kernel-options.txt and
-Documentation/scsi/scsi-parameters.txt, but the implementation was
-missing.
+On Fri, 2011-10-21 at 13:31 +0200, Petr Uzel wrote:
+> The call to complete() in st_scsi_execute_end() wakes up sleeping thread
+> in write_behind_check(), which frees the st_request, thus invalidating
+> the pointer to the associated bio structure, which is then passed to the
+> blk_rq_unmap_user(). Fix by storing pointer to bio structure into
+> temporary local variable.
+> 
+> This bug is present since at least linux-2.6.32.
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Michael Schmitz <schmitzmic@googlemail.com>
-Cc: James E.J. Bottomley <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/atari_scsi.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+This patch isn't applyable.  That's because gpg has mangled it.  You
+either need to turn it off or do detached signatures.
 
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index 04a154f..3102ce5 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -734,17 +734,21 @@ int atari_scsi_release(struct Scsi_Host *sh)
- 	return 1;
- }
- 
--void __init atari_scsi_setup(char *str, int *ints)
-+#ifndef MODULE
-+static int __init atari_scsi_setup(char *str)
- {
- 	/* Format of atascsi parameter is:
- 	 *   atascsi=<can_queue>,<cmd_per_lun>,<sg_tablesize>,<hostid>,<use_tags>
- 	 * Defaults depend on TT or Falcon, hostid determined at run time.
- 	 * Negative values mean don't change.
- 	 */
-+	int ints[6];
-+
-+	get_options(str, ARRAY_SIZE(ints), ints);
- 
- 	if (ints[0] < 1) {
- 		printk("atari_scsi_setup: no arguments!\n");
--		return;
-+		return 0;
- 	}
- 
- 	if (ints[0] >= 1) {
-@@ -777,8 +781,13 @@ void __init atari_scsi_setup(char *str, int *ints)
- 			setup_use_tagged_queuing = !!ints[5];
- 	}
- #endif
-+
-+	return 1;
- }
- 
-+__setup("atascsi=", atari_scsi_setup);
-+#endif /* !MODULE */
-+
- int atari_scsi_bus_reset(Scsi_Cmnd *cmd)
- {
- 	int rv;
--- 
-1.7.0.4
+Thanks,
+
+James
