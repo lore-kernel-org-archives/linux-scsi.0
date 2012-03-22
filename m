@@ -1,51 +1,71 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [isci PATCH v3 3/4] libsas: suspend / resume support
-Date: Thu, 22 Mar 2012 15:44:33 +0800
-Message-ID: <A9DB323E20454953A88CC43F4AE6CC68@usish.com.cn>
-References: <CABE8wwvmCnVEhW8yKVua9Zt+jPCK6kzyjm7poE_7D4ihDhZrHg@mail.gmail.com><Pine.LNX.4.44L0.1203151544450.1366-100000@iolanthe.rowland.org><CABE8wwuuM8XoTUy_+1nXMt9WvieWgmt-NHS=ybN_ndOdwk+gjQ@mail.gmail.com><F0261F814D3E413599630A3442934059@usish.com.cn> <CABE8wwu=6Hco6kg_VGP0mtpgfHdF9Uxw1wMXLX5mcJ0J=i6u5g@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 05/17] be2iscsi:Fix typo function name mismatch
+Date: Thu, 22 Mar 2012 07:52:36 +0000
+Message-ID: <1332402756.2946.5.camel@dabdike.int.hansenpartnership.com>
+References: <1332294488-13684-1-git-send-email-michaelc@cs.wisc.edu>
+	 <1332294488-13684-6-git-send-email-michaelc@cs.wisc.edu>
+	 <5978796.vmDf5npbmM@eto>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwu=6Hco6kg_VGP0mtpgfHdF9Uxw1wMXLX5mcJ0J=i6u5g@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "'Williams, Dan J'" <dan.j.williams@intel.com>
-Cc: 'Alan Stern' <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, 'Jacek Danecki' <jacek.danecki@intel.com>, 'lindar_liu' <lindar_liu@usish.com>, =?UTF-8?B?J+S6jueIseWNjic=?= <crystal_yu@usish.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57659 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753276Ab2CVHwn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 03:52:43 -0400
+In-Reply-To: <5978796.vmDf5npbmM@eto>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <MinhDuc.Tran@emulex.com>
+
+On Wed, 2012-03-21 at 23:21 +0100, Rolf Eike Beer wrote:
+> Am Dienstag 20 M=C3=A4rz 2012, 20:47:56 schrieb michaelc@cs.wisc.edu:
+> > From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> >=20
+> > Signed-off-by: Minh Tran <MinhDuc.Tran@Emulex.Com>
+> > Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> > ---
+> >  drivers/scsi/be2iscsi/be_iscsi.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> >=20
+> > diff --git a/drivers/scsi/be2iscsi/be_iscsi.c
+> > b/drivers/scsi/be2iscsi/be_iscsi.c index 33c8f09..2bb681e 100644
+> > --- a/drivers/scsi/be2iscsi/be_iscsi.c
+> > +++ b/drivers/scsi/be2iscsi/be_iscsi.c
+> > @@ -221,7 +221,7 @@ int beiscsi_ep_get_param(struct iscsi_endpoint =
+*ep,
+> >  	struct beiscsi_endpoint *beiscsi_ep =3D ep->dd_data;
+> >  	int len =3D 0;
+> >=20
+> > -	SE_DEBUG(DBG_LVL_8, "In beiscsi_conn_get_param, param=3D %d\n", p=
+aram);
+> > +	SE_DEBUG(DBG_LVL_8, "In beiscsi_ep_get_param, param=3D %d\n", par=
+am);
+> >=20
+> >  	switch (param) {
+> >  	case ISCSI_PARAM_CONN_PORT:
+>=20
+> What about:
+>=20
+> SE_DEBUG(DBG_LVL_8, "In %s, param=3D %d\n", __func__, param);
+
+It's a matter of taste which I defer to the driver writer, but
+personally I dislike the style you propose.  The reason being when I se=
+e
+a message I want to investigate in the kernel logs I tend to git grep
+the kernel for it.  In your case, I won't find it.  It's far more usefu=
+l
+that the message be greppable than it be accurate about what function
+it's actually in.
+
+James
 
 
-
-> 
-> 2012/3/16 Jack Wang <jack_wang@usish.com>:
-> > Dan,
-> >
-> > I found problem about SATA error handle and this also led to panic when run
-> suspend/resume test. Thanks again for your share debug method and patch of
-> testing suspend/resume problem.
-> >
-> > The problem is:
-> >
-> > When probe libata probe sata will try to reset device and send IDENTIFY DEVICE..
-> commands when 3 times fail will give up but never tell libsas and lldd to clean
-> up the resource. And if some time later the device came up report BROADCAST
-> CHANGE and libsas found device try to  tell lldd, but lldd is not forget the
-> original one will reject this.
-> > Should we export sas_unregister_devs_sas_addr let ata call this when give
-> up.
-> 
-> Have a look at "libsas: fix ata_eh clobbering ex_phys via
-> smp_ata_check_ready" [1], this fixed up cases where libsas failed to
-> handle ata device unplug in our environment.
-> 
-> --
-> Dan
-> 
-> [1]: http://marc.info/?l=linux-scsi&m=133239709603452&w=2
-[Jack Wang] 
-Thanks Dan, we are testing your new patchset in our test environment, will report back result.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
