@@ -1,102 +1,108 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH] [SCSI] scsi_lib: use correct DMA device in __scsi_alloc_queue
-Date: Thu, 22 Mar 2012 23:28:52 +0800
-Message-ID: <CAF1ivSbT2dCaOwcpRXS4AjJCu1y-iApNHtUepof30pk5d=KKFA@mail.gmail.com>
-References: <1332395550.3793.58.camel@minggr>
-	<4F6B0BE7.8050707@mvista.com>
+From: "Williams, Dan J" <dan.j.williams@intel.com>
+Subject: Re: [libsas PATCH v12 04/11] sysfs: handle 'parent deleted before
+ child added'
+Date: Thu, 22 Mar 2012 09:27:01 -0700
+Message-ID: <CABE8wwtyxJaSfZREKRLDTZEef3nk=b+RFSe9i_UmV9knbQJ-tg@mail.gmail.com>
+References: <20120322063127.22036.23206.stgit@dwillia2-linux.jf.intel.com>
+	<20120322063214.22036.77957.stgit@dwillia2-linux.jf.intel.com>
+	<20120322143959.GF19835@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:60530 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964892Ab2CVP2x convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Mar 2012 11:28:53 -0400
-In-Reply-To: <4F6B0BE7.8050707@mvista.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120322143959.GF19835@kroah.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, =?ISO-8859-1?Q?J=F6rg_Sommer?= <joerg@alea.gnuu.de>, Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Mar 22, 2012 at 7:24 PM, Sergei Shtylyov <sshtylyov@mvista.com>=
- wrote:
-> Hello.
->
->
-> On 22-03-2012 9:52, Lin Ming wrote:
->
->> Currently, __scsi_alloc_queue uses SCSI host's parent device
->> as DMA device to set segment boundary. But the parent device may not
->> refer to the DMA device. For example, for ATA disk, SCSI host's pare=
-nt
->> device now refers to ATA port.
->
->
->> Since commit d139b9b([SCSI] scsi_lib_dma: fix bug with dma maps on
->> nested scsi objects), a new field Scsi_Host->dma_device was introduc=
-ed
->
->
-> =A0 Only the field is named 'dma_dev', isn't it?
-
-Yes, my typo.
-
->
->
->> to refer to the real DMA device.
->
->
->> Use ->dma_device in __scsi_alloc_queue to correctly set segment
->> boundary.
->
->
->> And use scsi_add_host_with_dma in ata_scsi_add_hosts to pass in the
->> correct DMA device.
->
->
-> =A0 Perhaps this should be split into two patches.
-
-Good idea.
-
-Will split and resend.
-
-Thanks,
-Lin Ming
-
->
->
->> Bug report: http://marc.info/?l=3Dlinux-ide&m=3D133177818318187&w=3D=
-2
->
->
->> Reported-and-tested-by: J=F6rg Sommer<joerg@alea.gnuu.de>
->> Signed-off-by: Lin Ming<ming.m.lin@intel.com>
->
-> [...]
->
->
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index f85cfa6..486088b 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -1642,7 +1642,7 @@ struct request_queue *__scsi_alloc_queue(struc=
-t
->> Scsi_Host *shost,
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 request_fn_proc *request_fn)
->> =A0{
->> =A0 =A0 =A0 =A0struct request_queue *q;
->> - =A0 =A0 =A0 struct device *dev =3D shost->shost_gendev.parent;
->> + =A0 =A0 =A0 struct device *dev =3D shost->dma_dev;
+On Thu, Mar 22, 2012 at 7:39 AM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Wed, Mar 21, 2012 at 11:32:14PM -0700, Dan Williams wrote:
+[..]
+>> diff --git a/fs/sysfs/dir.c b/fs/sysfs/dir.c
+>> index 7fdf6a7..86521ee 100644
+>> --- a/fs/sysfs/dir.c
+>> +++ b/fs/sysfs/dir.c
+>> @@ -714,6 +714,9 @@ int sysfs_create_dir(struct kobject * kobj)
+>> =A0 =A0 =A0 else
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 parent_sd =3D &sysfs_root;
 >>
->> =A0 =A0 =A0 =A0q =3D blk_init_queue(request_fn, NULL);
->> =A0 =A0 =A0 =A0if (!q)
+>> + =A0 =A0 if (!parent_sd)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 return -ENOENT;
+>> +
+>> =A0 =A0 =A0 if (sysfs_ns_type(parent_sd))
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 ns =3D kobj->ktype->namespace(kobj);
+>> =A0 =A0 =A0 type =3D sysfs_read_ns_type(kobj);
 >
+> So what happens if this is true? =A0Does this patch fix the oops?
+
+This patch downgrades the oops by turning it into a device_add()
+failure, but the patches that *fix* this warning are here [1] and here
+[2].
+
+> What kernels should this be applied to where this problem has been se=
+en?
+
+I assume this has been a latent problem ever since scsi async scanning
+was added (2.6.20-rc2), but it's a rare corner case to unplug devices
+during the initial scan.
+
+>> diff --git a/lib/kobject.c b/lib/kobject.c
+>> index c33d7a1..e5f86c0 100644
+>> --- a/lib/kobject.c
+>> +++ b/lib/kobject.c
+>> @@ -192,13 +192,14 @@ static int kobject_add_internal(struct kobject=
+ *kobj)
+>>
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* be noisy on error issues */
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (error =3D=3D -EEXIST)
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_ERR "%s failed=
+ for %s with "
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pr_err("%s failed for %s w=
+ith "
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"-EEXIST,=
+ don't try to register things with "
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"the same=
+ name in the same directory.\n",
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__func__,=
+ kobject_name(kobj));
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 else
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_ERR "%s failed=
+ for %s (%d)\n",
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__func__, k=
+object_name(kobj), error);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pr_err("%s failed for %s (=
+error: %d parent: %s)\n",
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__func__, k=
+object_name(kobj), error,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0parent ? ko=
+bject_name(parent) : "'none'");
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 dump_stack();
+>> =A0 =A0 =A0 } else
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 kobj->state_in_sysfs =3D 1;
 >
-> WBR, Sergei
->
+> These changes have nothing to do with the above fix, so why include t=
+hem
+> here?
+
+It wasn't until I realized which 'parent' and which 'child' were
+interacting that I was able to identify the real fixes.  Since it was
+helpful for the scsi/sas case, I decided to leave the more informative
+warning for the next person that gets to debug a similar failure.
+
+> And note, I hate pr_err(), what's wrong with printk() in this instanc=
+e?
+
+This is a bit circuitous, but extending the warning to include the
+'parent' and 'child' pushed up against 80 columns and since this
+routine has a pr_debug() a few lines up I thought a pr_ conversion was
+acceptable.  The pr_err() conversion of the EEXIST case just came
+along for the ride to keep the print style consistent (at least in
+this routine).
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
+
+[1]: http://marc.info/?l=3Dlinux-scsi&m=3D133239707903443&w=3D2
+[2]: http://marc.info/?l=3Dlinux-scsi&m=3D133239709603452&w=3D2
