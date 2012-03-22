@@ -1,59 +1,38 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: "Williams, Dan J" <dan.j.williams@intel.com>
 Subject: Re: [libsas PATCH v12 04/11] sysfs: handle 'parent deleted before
  child added'
-Date: Thu, 22 Mar 2012 23:51:33 +0100
-Message-ID: <20120322235133.269b74b8@stein>
+Date: Thu, 22 Mar 2012 16:11:18 -0700
+Message-ID: <CABE8wwskNT7C65rsSiS_9bVf9+-ep6EyviBit7+y3hnt5c8Omw@mail.gmail.com>
 References: <20120322063127.22036.23206.stgit@dwillia2-linux.jf.intel.com>
 	<20120322063214.22036.77957.stgit@dwillia2-linux.jf.intel.com>
 	<20120322143959.GF19835@kroah.com>
 	<CABE8wwtyxJaSfZREKRLDTZEef3nk=b+RFSe9i_UmV9knbQJ-tg@mail.gmail.com>
+	<20120322235133.269b74b8@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwtyxJaSfZREKRLDTZEef3nk=b+RFSe9i_UmV9knbQJ-tg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.21]:37454 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753753Ab2CVXLT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Mar 2012 19:11:19 -0400
+Received: by iage36 with SMTP id e36so4335023iag.25
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Mar 2012 16:11:18 -0700 (PDT)
+In-Reply-To: <20120322235133.269b74b8@stein>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mar 22 Williams, Dan J wrote:
-> On Thu, Mar 22, 2012 at 7:39 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Wed, Mar 21, 2012 at 11:32:14PM -0700, Dan Williams wrote:
-> [..]
-> >> diff --git a/fs/sysfs/dir.c b/fs/sysfs/dir.c
-> >> index 7fdf6a7..86521ee 100644
-> >> --- a/fs/sysfs/dir.c
-> >> +++ b/fs/sysfs/dir.c
-> >> @@ -714,6 +714,9 @@ int sysfs_create_dir(struct kobject * kobj)
-> >> =C2=A0 =C2=A0 =C2=A0 else
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 parent_sd =3D &sy=
-sfs_root;
-> >>
-> >> + =C2=A0 =C2=A0 if (!parent_sd)
-> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return -ENOENT;
-> >> +
-> >> =C2=A0 =C2=A0 =C2=A0 if (sysfs_ns_type(parent_sd))
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ns =3D kobj->ktyp=
-e->namespace(kobj);
-> >> =C2=A0 =C2=A0 =C2=A0 type =3D sysfs_read_ns_type(kobj);
-> >
-> > So what happens if this is true? =C2=A0Does this patch fix the oops=
-?
->=20
-> This patch downgrades the oops by turning it into a device_add()
-> failure, but the patches that *fix* this warning are here [1] and her=
-e
-> [2].
-[...]
-> [1]: http://marc.info/?l=3Dlinux-scsi&m=3D133239707903443&w=3D2
-> [2]: http://marc.info/?l=3Dlinux-scsi&m=3D133239709603452&w=3D2
+On Thu, Mar 22, 2012 at 3:51 PM, Stefan Richter
+<stefanr@s5r6.in-berlin.de> wrote:
+> Isn't this something which is to be accomplished by counting references to
+> the parent device?
 
-Isn't this something which is to be accomplished by counting references=
- to
-the parent device?
---=20
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D=3D=3D-- --=3D=3D =3D-=3D=3D-
-http://arcgraph.de/sr/
+As I mentioned to James [1] the reference count keeps the parent from
+being kfree()'d but not device_del()'d where kobj->sd gets sets to
+NULL.
+
+--
+Dan
+
+[1]: http://marc.info/?l=linux-scsi&m=133243414518064&w=2
