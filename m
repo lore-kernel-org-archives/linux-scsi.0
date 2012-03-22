@@ -1,118 +1,181 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [libsas PATCH v12 04/11] sysfs: handle 'parent deleted before
- child added'
-Date: Thu, 22 Mar 2012 07:39:59 -0700
-Message-ID: <20120322143959.GF19835@kroah.com>
-References: <20120322063127.22036.23206.stgit@dwillia2-linux.jf.intel.com>
- <20120322063214.22036.77957.stgit@dwillia2-linux.jf.intel.com>
+From: Ayman El-Khashab <ayman@elkhashab.com>
+Subject: Re: mpt2sas: BUG? corrupted nvram after using linkrate in sysfs
+Date: Thu, 22 Mar 2012 09:44:22 -0500
+Message-ID: <20120322144422.GA17451@crust.elkhashab.com>
+References: <20120318182916.GA16862@crust.elkhashab.com>
+ <A6888A6805518E4EA4AF7072A28264A6067E732484@inbmail02.lsi.com>
+ <20120320135754.GA9339@crust.elkhashab.com>
+ <A6888A6805518E4EA4AF7072A28264A6067E732788@inbmail02.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:47038 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753512Ab2CVOkE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Mar 2012 10:40:04 -0400
-Received: by ghrr11 with SMTP id r11so1791852ghr.19
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Mar 2012 07:40:03 -0700 (PDT)
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:3939 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752593Ab2CVOoY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Mar 2012 10:44:24 -0400
 Content-Disposition: inline
-In-Reply-To: <20120322063214.22036.77957.stgit@dwillia2-linux.jf.intel.com>
+In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6067E732788@inbmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 21, 2012 at 11:32:14PM -0700, Dan Williams wrote:
-> In scsi at least two cases of the parent device being deleted before the
-> child is added have been observed.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Ayman El-Khashab
+> Sent: Tuesday, March 20, 2012 7:28 PM
+> To: Nandigama, Nagalakshmi
+> Cc: linux-scsi@vger.kernel.org
+> Subject: Re: mpt2sas: BUG? corrupted nvram after using linkrate in sysfs
 > 
-> 1/ scsi is performing async scans and the device is removed prior to the
->    async can thread running.
+> On Tue, Mar 20, 2012 at 03:20:48PM +0530, Nandigama, Nagalakshmi wrote:
+> > Hi,
+> > I verified on SAS2008 B1 the max/min changing value for link rate.
+> > I set the max link speed of the NVRAM value to 1.5 Gbps and rebooted. After reboot I read the current and NVRAM value of the max link speed for the phy that I set before. It shown value 1.5 Gbps.
+> > 
+> > I dint face any issue. 
+> > 
+> > Are you facing problem in this scenario only?
+> > 
 > 
-> 2/ libsas discovery event running after the parent port has been torn
->    down.
+> BTW, I am on V9.0 of the firmware -- there was an email that
+> said this was fixed in 11.0, but I don't see it mentioned in
+> the errata unless I missed it.  Also flashing already
+> deployed systems isn't always easy.
 > 
-> Result in crash signatures like:
->  BUG: unable to handle kernel NULL pointer dereference at 0000000000000098
->  IP: [<ffffffff8115e100>] sysfs_create_dir+0x32/0xb6
->  ...
->  Process scsi_scan_8 (pid: 5417, threadinfo ffff88080bd16000, task ffff880801b8a0b0)
->  Stack:
->   00000000fffffffe ffff880813470628 ffff88080bd17cd0 ffff88080614b7e8
->   ffff88080b45c108 00000000fffffffe ffff88080bd17d20 ffffffff8125e4a8
->   ffff88080bd17cf0 ffffffff81075149 ffff88080bd17d30 ffff88080614b7e8
->  Call Trace:
->   [<ffffffff8125e4a8>] kobject_add_internal+0x120/0x1e3
->   [<ffffffff81075149>] ? trace_hardirqs_on+0xd/0xf
->   [<ffffffff8125e641>] kobject_add_varg+0x41/0x50
->   [<ffffffff8125e70b>] kobject_add+0x64/0x66
->   [<ffffffff8131122b>] device_add+0x12d/0x63a
+On Thu, Mar 22, 2012 at 12:45:27PM +0530, Nandigama, Nagalakshmi wrote:
+> Which version of mpt2sas are you testing? If it is older version can you try it on latest version of mpt2sas 12.100.00.00 updated on main stream.
 > 
-> These scenarios need to be cleaned up, but in the meantime the system
-> need not crash if this ordering occurs.  Instead report:
-> 
->  kobject_add_internal failed for target8:0:16 (error: -2 parent: end_device-8:0:24)
->  Pid: 2942, comm: scsi_scan_8 Not tainted 3.3.0-rc7-isci+ #2
->  Call Trace:
->   [<ffffffff8125e551>] kobject_add_internal+0x1c1/0x1f3
->   [<ffffffff81075149>] ? trace_hardirqs_on+0xd/0xf
->   [<ffffffff8125e659>] kobject_add_varg+0x41/0x50
->   [<ffffffff8125e723>] kobject_add+0x64/0x66
->   [<ffffffff8131124b>] device_add+0x12d/0x63a
->   [<ffffffff8125e0ef>] ? kobject_put+0x4c/0x50
->   [<ffffffff8132f370>] scsi_sysfs_add_sdev+0x4e/0x28a
->   [<ffffffff8132dce3>] do_scan_async+0x9c/0x145
-> 
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  fs/sysfs/dir.c |    3 +++
->  lib/kobject.c  |    7 ++++---
->  2 files changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/sysfs/dir.c b/fs/sysfs/dir.c
-> index 7fdf6a7..86521ee 100644
-> --- a/fs/sysfs/dir.c
-> +++ b/fs/sysfs/dir.c
-> @@ -714,6 +714,9 @@ int sysfs_create_dir(struct kobject * kobj)
->  	else
->  		parent_sd = &sysfs_root;
->  
-> +	if (!parent_sd)
-> +		return -ENOENT;
-> +
->  	if (sysfs_ns_type(parent_sd))
->  		ns = kobj->ktype->namespace(kobj);
->  	type = sysfs_read_ns_type(kobj);
 
-So what happens if this is true?  Does this patch fix the oops?  What
-kernels should this be applied to where this problem has been seen?
 
-> diff --git a/lib/kobject.c b/lib/kobject.c
-> index c33d7a1..e5f86c0 100644
-> --- a/lib/kobject.c
-> +++ b/lib/kobject.c
-> @@ -192,13 +192,14 @@ static int kobject_add_internal(struct kobject *kobj)
->  
->  		/* be noisy on error issues */
->  		if (error == -EEXIST)
-> -			printk(KERN_ERR "%s failed for %s with "
-> +			pr_err("%s failed for %s with "
->  			       "-EEXIST, don't try to register things with "
->  			       "the same name in the same directory.\n",
->  			       __func__, kobject_name(kobj));
->  		else
-> -			printk(KERN_ERR "%s failed for %s (%d)\n",
-> -			       __func__, kobject_name(kobj), error);
-> +			pr_err("%s failed for %s (error: %d parent: %s)\n",
-> +			       __func__, kobject_name(kobj), error,
-> +			       parent ? kobject_name(parent) : "'none'");
->  		dump_stack();
->  	} else
->  		kobj->state_in_sysfs = 1;
+It is v6.0.0 of the driver.  The mpt2sas drivers do not work
+out of the box on PowerPC.  In the past, I've made changes
+and submitted a patch, but it was never commented on or
+applied.  I have recently tried the 9,11,12 versions of the
+driver and none of them will run.  They will all hang.  You
+sent me a patch to try a few days ago.  I tried that on 12
+and it still hangs.
 
-These changes have nothing to do with the above fix, so why include them
-here?
+I would really like to be able to use the v12 of the driver
+and newest firmware.  So if we can figure out how to make
+this work that would be ideal. The driver changes needed in
+the past were to accomodate the 36 bit bus of the powerpc
+44x while it is a 32 bit cpu.
 
-And note, I hate pr_err(), what's wrong with printk() in this instance?
+FYI, I moved your top-post to be inline to make all this
+more readable.
 
-greg k-h
+Thank,
+Ayman
+
+
+
+> 
+> 
+> So I did some more experiments, and the problem seems to be
+> both intermittent and relies on a particular drive
+> configuration.  I start with a brand new system (i.e.
+> never been run) and put 4 SAS drives in, each with 2 ports
+> (so I use all 8 phys of the controller).  These drives can
+> run at 6G and work fine.  Now I can power down, pull 2
+> drives, start again and it is still good.  I can change the
+> drive setup many times and all is fine.  Now if I go back to
+> the original setup (4 SAS drives) and change the link rate
+> to 6G then everything works.  Now, if I power down and pull
+> a drive or 2, then some phys will come up at 6G, some will
+> indicate Unknown, but accessing the drives won't work
+> correctly.  One drive *might* work, but the other usually
+> will give an error with "Read Capacity Fail" or something
+> different.  If I use lsiutil to reset the Pg1 configuration
+> to the defaults and reboot, then the drives will work again
+> at 6G. 
+> 
+> In fails, each drive is dual-ports so I'd expect both phys 
+> to come up at 6G.  What happens is that 1 phy will come up 
+> at 6G the other at Unknown and nothing works right. (i..e
+> we get drive errors as seen in Linux).
+> 
+> Upon first boot, our Pg1 current config looks like this.
+> 0014 : a8000100
+> 0018 : 00000071
+> 001c : 00000000
+> 
+> The dynamic port group is 0, the autoconfig is enabled for
+> each of the 8 ports. (just showing 1 here).
+> 
+> After we attach drives and set the link rate, the port group
+> gets set to something [0:7].  Then when the data is written
+> back to the flash during the NVRAM update, the dynamic port
+> group is now an ordinal from 0,7 instead of port group 0.
+> It appears to us that this is the only difference but I
+> can't verify that other than when I restore defaults it
+> works.
+> 
+> In another test, I subverted the writes to NVRAM in the
+> driver.  In this case, I can make it run and fail, but at
+> least upon reboot it works again.
+> 
+> Thanks,
+> Ayman
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> > 
+> > 
+> > -----Original Message-----
+> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Ayman El-Khashab
+> > Sent: Sunday, March 18, 2012 11:59 PM
+> > To: linux-scsi@vger.kernel.org
+> > Subject: mpt2sas: BUG? corrupted nvram after using linkrate in sysfs
+> > 
+> > We have the SAS2008 on our board but we don't have the NVRAM
+> > populated.  We do have a flash on the board that holds the
+> > firmware and so on.  What we found (by experimentation) is
+> > that the firmware detects or knows there isn't an NVRAM and
+> > stores some of the NVRAM settings somewhere in the flash
+> > (we've dumped the flash and confirmed there are things in
+> > it).  
+> > 
+> > We've seen a problem where we use the max/min linkrate in
+> > sysfs -- it looks like the linkrates get set correctly in
+> > page1, we also copy the port/port flags/phy flags per some
+> > errata.  The problem shows up when it updates pg1.  At that
+> > point, the following code is executed ... I guess this would
+> > be ok, except what we see happen is that whatever gets
+> > written to the NVRAM fails to make anything work and since
+> > it is in the NVRAM, even rebooting doesn't help.  We have
+> > figured out that using restore defaults in lsiutil fixes the
+> > problem, but we would rather figure out why the linkrate
+> > doesn't work.  
+> > 
+> >  mpt2sas_config_set_sas_iounit_pg1(struct MPT2SAS_ADAPTER
+> > *ioc, Mpi2ConfigReply_t
+> >      *mpi_reply, Mpi2SasIOUnitPage1_t *config_page, u16
+> > ...
+> > MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
+> >          r = _config_request(ioc, &mpi_request, mpi_reply,
+> >             MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT,
+> > config_page, sz);
+> > 
+> > 
+> > What it looks like is that Pg1 has the autoconfig set, but
+> > rather than having "0" in the dynamic port group, it how has
+> > many phy numbers so it seems that on the next reboot, the
+> > dynamic setup doesn't work -- however, I don't know that for
+> > sure since I don't really know what the f/w does with it.
+> > 
+> > Thanks
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
