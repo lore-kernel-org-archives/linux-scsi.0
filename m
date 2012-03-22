@@ -1,8 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [libsas PATCH v12 06/11] libsas: unify domain_device sas_rphy
- lifetimes
-Date: Wed, 21 Mar 2012 23:32:24 -0700
-Message-ID: <20120322063224.22036.97391.stgit@dwillia2-linux.jf.intel.com>
+Subject: [libsas PATCH v12 08/11] libsas: fix ata_eh clobbering ex_phys via
+ smp_ata_check_ready
+Date: Wed, 21 Mar 2012 23:32:35 -0700
+Message-ID: <20120322063235.22036.79665.stgit@dwillia2-linux.jf.intel.com>
 References: <20120322063127.22036.23206.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,146 +11,80 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120322063127.22036.23206.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Tom Jackson <thomas.p.jackson@intel.com>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>, Maciej Patelczyk <maciej.patelczyk@intel.com>, Bartek Nowakowski <bartek.nowakowski@intel.com>, Jack Wang <jack_wang@usish.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Since the domain_device can out live the scsi_target we need the rphy to
-follow suit otherwise we run into issues like:
+The check_ready implementation in the expander-attached ata device case
+polls on sas_ex_phy_discover().  The effect is that the ex_phy fields
+(critically ->attached_sas_addr) can change.  When ata_eh ends and
+libsas comes along to revalidate the domain
+sas_unregister_devs_sas_addr() can fail to lookup devices to remove, or
+fail to re-add an ata device that ata_eh marked as disabled.  So change
+the code to skip the sas_address and change count updates when ata_eh is
+active.
 
-  BUG: unable to handle kernel NULL pointer dereference at 0000000000000050
-  IP: [<ffffffffa011561b>] sas_ata_printk+0x43/0x6f [libsas]
-  PGD 0
-  Oops: 0000 [#1] SMP
-  CPU 1
-  Modules linked in: ses enclosure isci libsas scsi_transport_sas fuse sunrpc cpufreq_ondemand acpi_cpufreq freq_table mperf microcode pcspkr igb joydev iTCO_wdt ioatdma iTCO_vendor_support i2c_i801 i2c_core dca wmi hed ipv6 pata_acpi ata_generic [last unloaded: scsi_wait_scan]
-
-  Pid: 129, comm: kworker/u:3 Not tainted 3.3.0-rc5-isci+ #1 Intel Corporation SandyBridge Platform/To be filled by O.E.M.
-  RIP: 0010:[<ffffffffa011561b>] [<ffffffffa011561b>] sas_ata_printk+0x43/0x6f [libsas]
-  RSP: 0018:ffff88042232dd70 EFLAGS: 00010282
-  RAX: 0000000000000000 RBX: ffff8804283165b8 RCX: ffff88042232dda0
-  RDX: ffff88042232dd78 RSI: ffff8804283165b8 RDI: ffffffffa01188d7
-  RBP: ffff88042232ddd0 R08: ffff880388454000 R09: ffff8803edfde1f8
-  R10: ffff8803edfde1f8 R11: ffff8803edfde1f8 R12: ffff880428316750
-  R13: ffff880388454000 R14: ffff8803f88b31d0 R15: ffff8803f8b21d50
-  FS: 0000000000000000(0000) GS:ffff88042ee20000(0000) knlGS:0000000000000000
-  CS: 0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-  CR2: 0000000000000050 CR3: 0000000001a05000 CR4: 00000000000406e0
-  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-  DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-  Process kworker/u:3 (pid: 129, threadinfo ffff88042232c000, task ffff88042230c920)
-  Stack:
-  0000000000000000 ffff880400000018 ffff88042232dde0 ffff88042232dda0
-  ffffffffa01188c4 ffff88042ee93af0 ffff88042232ddb0 ffffffff8100e047
-  ffff88042232de10 ffff880420e5a2c8 ffff8803f8b21d50 ffff8803edfde1f8
-  Call Trace:
-  [<ffffffff8100e047>] ? load_TLS+0xb/0xf
-  [<ffffffffa01156ad>] async_sas_ata_eh+0x66/0x95 [libsas]
-  [<ffffffff810655e1>] async_run_entry_fn+0x9e/0x131
-
-Reported-by: Tom Jackson <thomas.p.jackson@intel.com>
-Tested-by: Tom Jackson <thomas.p.jackson@intel.com>
+Cc: Jack Wang <jack_wang@usish.com>
+Tested-by: Maciej Patelczyk <maciej.patelczyk@intel.com>
+Tested-by: Bartek Nowakowski <bartek.nowakowski@intel.com>
+Tested-by: Jacek Danecki <jacek.danecki@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_discover.c |   11 ++++++-----
- drivers/scsi/libsas/sas_expander.c |    6 ++++--
- 2 files changed, 10 insertions(+), 7 deletions(-)
+ drivers/scsi/libsas/sas_expander.c |   16 +++++++++++++++-
+ 1 files changed, 15 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 8ab1de6..57c5100 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -152,6 +152,7 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 	sas_device_set_phy(dev, port->port);
- 
- 	dev->rphy = rphy;
-+	get_device(&dev->rphy->dev);
- 
- 	if (dev_is_sata(dev) || dev->dev_type == SAS_END_DEV)
- 		list_add_tail(&dev->disco_list_node, &port->disco_list);
-@@ -256,6 +257,9 @@ void sas_free_device(struct kref *kref)
- {
- 	struct domain_device *dev = container_of(kref, typeof(*dev), kref);
- 
-+	put_device(&dev->rphy->dev);
-+	dev->rphy = NULL;
-+
- 	if (dev->parent)
- 		sas_put_device(dev->parent);
- 
-@@ -314,7 +318,6 @@ static void sas_destruct_devices(struct work_struct *work)
- 
- 		sas_remove_children(&dev->rphy->dev);
- 		sas_rphy_delete(dev->rphy);
--		dev->rphy = NULL;
- 		sas_unregister_common_dev(port, dev);
- 	}
- }
-@@ -326,11 +329,11 @@ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
- 		/* this rphy never saw sas_rphy_add */
- 		list_del_init(&dev->disco_list_node);
- 		sas_rphy_free(dev->rphy);
--		dev->rphy = NULL;
- 		sas_unregister_common_dev(port, dev);
-+		return;
- 	}
- 
--	if (dev->rphy && !test_and_set_bit(SAS_DEV_DESTROY, &dev->state)) {
-+	if (!test_and_set_bit(SAS_DEV_DESTROY, &dev->state)) {
- 		sas_rphy_unlink(dev->rphy);
- 		list_move_tail(&dev->disco_list_node, &port->destroy_list);
- 		sas_discover_event(dev->port, DISCE_DESTRUCT);
-@@ -430,8 +433,6 @@ static void sas_discover_domain(struct work_struct *work)
- 
- 	if (error) {
- 		sas_rphy_free(dev->rphy);
--		dev->rphy = NULL;
--
- 		list_del_init(&dev->disco_list_node);
- 		spin_lock_irq(&port->dev_list_lock);
- 		list_del_init(&dev->dev_list_node);
 diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index e9423f3..5874c7be 100644
+index 48d7ce9..b5fbfaa 100644
 --- a/drivers/scsi/libsas/sas_expander.c
 +++ b/drivers/scsi/libsas/sas_expander.c
-@@ -783,6 +783,7 @@ static struct domain_device *sas_ex_discover_end_dev(
- 		sas_init_dev(child);
+@@ -202,6 +202,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 	u8 sas_addr[SAS_ADDR_SIZE];
+ 	struct smp_resp *resp = rsp;
+ 	struct discover_resp *dr = &resp->disc;
++	struct sas_ha_struct *ha = dev->port->ha;
+ 	struct expander_device *ex = &dev->ex_dev;
+ 	struct ex_phy *phy = &ex->ex_phy[phy_id];
+ 	struct sas_rphy *rphy = dev->rphy;
+@@ -209,6 +210,8 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 	char *type;
  
- 		child->rphy = rphy;
-+		get_device(&rphy->dev);
+ 	if (new_phy) {
++		if (WARN_ON_ONCE(test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)))
++			return;
+ 		phy->phy = sas_phy_alloc(&rphy->dev, phy_id);
  
- 		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
+ 		/* FIXME: error_handling */
+@@ -233,6 +236,8 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 	memcpy(sas_addr, phy->attached_sas_addr, SAS_ADDR_SIZE);
  
-@@ -806,6 +807,7 @@ static struct domain_device *sas_ex_discover_end_dev(
- 		sas_init_dev(child);
+ 	phy->attached_dev_type = to_dev_type(dr);
++	if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state))
++		goto out;
+ 	phy->phy_id = phy_id;
+ 	phy->linkrate = dr->linkrate;
+ 	phy->attached_sata_host = dr->attached_sata_host;
+@@ -273,6 +278,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 			return;
+ 		}
  
- 		child->rphy = rphy;
-+		get_device(&rphy->dev);
- 		sas_fill_in_rphy(child, rphy);
++ out:
+ 	switch (phy->attached_dev_type) {
+ 	case SATA_PENDING:
+ 		type = "stp pending";
+@@ -311,7 +317,15 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 	else
+ 		return;
  
- 		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
-@@ -830,8 +832,6 @@ static struct domain_device *sas_ex_discover_end_dev(
- 
-  out_list_del:
- 	sas_rphy_free(child->rphy);
--	child->rphy = NULL;
--
- 	list_del(&child->disco_list_node);
- 	spin_lock_irq(&parent->port->dev_list_lock);
- 	list_del(&child->dev_list_node);
-@@ -911,6 +911,7 @@ static struct domain_device *sas_ex_discover_expander(
- 	}
- 	port = parent->port;
- 	child->rphy = rphy;
-+	get_device(&rphy->dev);
- 	edev = rphy_to_expander_device(rphy);
- 	child->dev_type = phy->attached_dev_type;
- 	kref_get(&parent->kref);
-@@ -934,6 +935,7 @@ static struct domain_device *sas_ex_discover_expander(
- 
- 	res = sas_discover_expander(child);
- 	if (res) {
-+		sas_rphy_delete(rphy);
- 		spin_lock_irq(&parent->port->dev_list_lock);
- 		list_del(&child->dev_list_node);
- 		spin_unlock_irq(&parent->port->dev_list_lock);
+-	SAS_DPRINTK("ex %016llx phy%02d:%c:%X attached: %016llx (%s)\n",
++	/* if the attached device type changed and ata_eh is active,
++	 * make sure we run revalidation when eh completes (see:
++	 * sas_enable_revalidation)
++	 */
++	if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state))
++		set_bit(DISCE_REVALIDATE_DOMAIN, &dev->port->disc.pending);
++
++	SAS_DPRINTK("%sex %016llx phy%02d:%c:%X attached: %016llx (%s)\n",
++		    test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state) ? "ata: " : "",
+ 		    SAS_ADDR(dev->sas_addr), phy->phy_id,
+ 		    sas_route_char(dev, phy), phy->linkrate,
+ 		    SAS_ADDR(phy->attached_sas_addr), type);
 
