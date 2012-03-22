@@ -1,70 +1,56 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [libsas PATCH v12 05/11] scsi_transport_sas: fix delete vs scan race
-Date: Wed, 21 Mar 2012 23:32:19 -0700
-Message-ID: <20120322063219.22036.74949.stgit@dwillia2-linux.jf.intel.com>
+Subject: [libsas PATCH v12 07/11] libsas: fix false positive 'device
+ attached' conditions
+Date: Wed, 21 Mar 2012 23:32:29 -0700
+Message-ID: <20120322063229.22036.39829.stgit@dwillia2-linux.jf.intel.com>
 References: <20120322063127.22036.23206.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:14542 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030862Ab2CVGRD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 02:17:03 -0400
 In-Reply-To: <20120322063127.22036.23206.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Andrzej Jakowski <andrzej.jakowski@intel.com>
 
-The following crash results from cases where the end_device has been
-removed before scsi_sysfs_add_sdev has had a chance to run.
+Normalize phy->attached_sas_addr to return a zero-address in the case
+when device-type == NO_DEVICE or the linkrate is invalid to handle
+expanders that put non-zero sas addresses in the discovery response:
 
- BUG: unable to handle kernel NULL pointer dereference at 0000000000000098
- IP: [<ffffffff8115e100>] sysfs_create_dir+0x32/0xb6
- ...
- Call Trace:
-  [<ffffffff8125e4a8>] kobject_add_internal+0x120/0x1e3
-  [<ffffffff81075149>] ? trace_hardirqs_on+0xd/0xf
-  [<ffffffff8125e641>] kobject_add_varg+0x41/0x50
-  [<ffffffff8125e70b>] kobject_add+0x64/0x66
-  [<ffffffff8131122b>] device_add+0x12d/0x63a
-  [<ffffffff814b65ea>] ? _raw_spin_unlock_irqrestore+0x47/0x56
-  [<ffffffff8107de15>] ? module_refcount+0x89/0xa0
-  [<ffffffff8132f348>] scsi_sysfs_add_sdev+0x4e/0x28a
-  [<ffffffff8132dcbb>] do_scan_async+0x9c/0x145
+ sas: ex 5001b4da000f903f phy02:U:0 attached: 0100000000000000 (no device)
+ sas: ex 5001b4da000f903f phy01:U:0 attached: 0100000000000000 (no device)
+ sas: ex 5001b4da000f903f phy03:U:0 attached: 0100000000000000 (no device)
+ sas: ex 5001b4da000f903f phy00:U:0 attached: 0100000000000000 (no device)
 
-...teach sas_rphy_remove to wait for async scanning to quiesce before
-removing the end_device.  It seems this is a more general problem [1],
-but this patch only addresses sas transport.
-
-[1]: 23edb6e [SCSI] mpt2sas: Do not set sas_device->starget to NULL from
-the slave_destroy callback when all the LUNS have been deleted
-
+Reported-by: Andrzej Jakowski <andrzej.jakowski@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/scsi_transport_sas.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ drivers/scsi/libsas/sas_expander.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index f7565fc..47abb90 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -33,8 +33,9 @@
- #include <linux/bsg.h>
- 
- #include <scsi/scsi.h>
--#include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_scan.h>
-+#include <scsi/scsi_device.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_sas.h>
- 
-@@ -1667,6 +1668,9 @@ sas_rphy_remove(struct sas_rphy *rphy)
- {
- 	struct device *dev = &rphy->dev;
- 
-+	/* prevent device_del() while child device_add() may be in-flight */
-+	scsi_complete_async_scans();
-+
- 	switch (rphy->identify.device_type) {
- 	case SAS_END_DEVICE:
- 		scsi_remove_target(dev);
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 5874c7be..48d7ce9 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -240,7 +240,14 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 	phy->attached_sata_ps   = dr->attached_sata_ps;
+ 	phy->attached_iproto = dr->iproto << 1;
+ 	phy->attached_tproto = dr->tproto << 1;
+-	memcpy(phy->attached_sas_addr, dr->attached_sas_addr, SAS_ADDR_SIZE);
++	/* help some expanders that fail to zero sas_address in the 'no
++	 * device' case
++	 */
++	if (phy->attached_dev_type == NO_DEVICE ||
++	    phy->linkrate < SAS_LINK_RATE_1_5_GBPS)
++		memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
++	else
++		memcpy(phy->attached_sas_addr, dr->attached_sas_addr, SAS_ADDR_SIZE);
+ 	phy->attached_phy_id = dr->attached_phy_id;
+ 	phy->phy_change_count = dr->change_count;
+ 	phy->routing_attr = dr->routing_attr;
 
