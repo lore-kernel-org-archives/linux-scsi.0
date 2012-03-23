@@ -1,147 +1,118 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci-rnc PATCH v1 37/37] isci: End the RNC resumption wait when
- the RNC is destroyed.
-Date: Thu, 22 Mar 2012 17:31:15 -0700
-Message-ID: <20120323003115.18065.89007.stgit@dwillia2-linux.jf.intel.com>
-References: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
+ correctly when SRB status is INVALID
+Date: Fri, 23 Mar 2012 15:50:04 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481B76AF70@TK5EX14MBXC126.redmond.corp.microsoft.com>
+References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
+	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
+	 <1332173560.3152.65.camel@dabdike>
+	 <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
+	 <1332196819.3152.77.camel@dabdike>
+	 <6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
+ <1332233502.14019.14.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1926 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031572Ab2CWAPs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:15:48 -0400
-In-Reply-To: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
-
-While the RNC is suspended for I/O cleanup, the remote device can be
-stopped and the RNC setup for destruction.  These changes accomodate that
-case in the abort path.
-
-Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/isci/host.h                |    5 +++++
- drivers/scsi/isci/remote_device.c       |   29 +++++++++++++++++++++--------
- drivers/scsi/isci/remote_node_context.c |    4 ++++
- drivers/scsi/isci/remote_node_context.h |    6 +++---
- 4 files changed, 33 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 81d96f3..a8cc280 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -333,6 +333,11 @@ static inline struct isci_host *dev_to_ihost(struct domain_device *dev)
- 	return dev->port->ha->lldd_ha;
- }
- 
-+static inline struct isci_host *idev_to_ihost(struct isci_remote_device *idev)
-+{
-+	return dev_to_ihost(idev->domain_dev);
-+}
-+
- /* we always use protocol engine group zero */
- #define ISCI_PEG 0
- 
-diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index a3a6487..c3aa6c5 100644
---- a/drivers/scsi/isci/remote_device.c
-+++ b/drivers/scsi/isci/remote_device.c
-@@ -1368,27 +1368,40 @@ static void isci_remote_device_resume_from_abort_complete(void *cbparam)
- 	wake_up(&ihost->eventq);
- }
- 
-+static bool isci_remote_device_test_resume_done(
-+	struct isci_host *ihost,
-+	struct isci_remote_device *idev)
-+{
-+	unsigned long flags;
-+	bool done;
-+
-+	spin_lock_irqsave(&ihost->scic_lock, flags);
-+	done = !test_bit(IDEV_ABORT_PATH_RESUME_PENDING, &idev->flags)
-+		|| test_bit(IDEV_STOP_PENDING, &idev->flags)
-+		|| sci_remote_node_context_is_being_destroyed(&idev->rnc);
-+	spin_unlock_irqrestore(&ihost->scic_lock, flags);
-+
-+	return done;
-+}
- 
- void isci_remote_device_wait_for_resume_from_abort(
- 	struct isci_host *ihost,
- 	struct isci_remote_device *idev)
- {
--	dev_dbg(scirdev_to_dev(idev), "%s: starting resume wait: %p\n",
-+	dev_dbg(&ihost->pdev->dev, "%s: starting resume wait: %p\n",
- 		 __func__, idev);
- 
- 	#define MAX_RESUME_MSECS 10000
- 	if (!wait_event_timeout(ihost->eventq,
--			       (!test_bit(IDEV_ABORT_PATH_RESUME_PENDING,
--					  &idev->flags)
--				|| test_bit(IDEV_STOP_PENDING, &idev->flags)),
--			       msecs_to_jiffies(MAX_RESUME_MSECS))) {
-+				isci_remote_device_test_resume_done(ihost, idev),
-+				msecs_to_jiffies(MAX_RESUME_MSECS))) {
- 
--		dev_warn(scirdev_to_dev(idev), "%s: #### Timeout waiting for "
-+		dev_warn(&ihost->pdev->dev, "%s: #### Timeout waiting for "
- 			 "resume: %p\n", __func__, idev);
- 	}
- 	clear_bit(IDEV_ABORT_PATH_RESUME_PENDING, &idev->flags);
- 
--	dev_dbg(scirdev_to_dev(idev), "%s: resume wait done: %p\n",
-+	dev_dbg(&ihost->pdev->dev, "%s: resume wait done: %p\n",
- 		 __func__, idev);
- }
- 
-@@ -1414,7 +1427,7 @@ enum sci_status isci_remote_device_resume_from_abort(
- 			idev, isci_remote_device_resume_from_abort_complete,
- 			idev);
- 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
--	if (!destroyed)
-+	if (!destroyed && (status == SCI_SUCCESS))
- 		isci_remote_device_wait_for_resume_from_abort(ihost, idev);
- 	else
- 		clear_bit(IDEV_ABORT_PATH_RESUME_PENDING, &idev->flags);
-diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
-index f5792a9..1910100 100644
---- a/drivers/scsi/isci/remote_node_context.c
-+++ b/drivers/scsi/isci/remote_node_context.c
-@@ -190,9 +190,13 @@ static void sci_remote_node_context_setup_to_destroy(
- 	scics_sds_remote_node_context_callback callback,
- 	void *callback_parameter)
- {
-+	struct isci_host *ihost = idev_to_ihost(rnc_to_dev(sci_rnc));
-+
- 	sci_rnc->destination_state = RNC_DEST_FINAL;
- 	sci_rnc->user_callback     = callback;
- 	sci_rnc->user_cookie       = callback_parameter;
-+
-+	wake_up(&ihost->eventq);
- }
- 
- /**
-diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
-index 0d4a24d..a703b9c 100644
---- a/drivers/scsi/isci/remote_node_context.h
-+++ b/drivers/scsi/isci/remote_node_context.h
-@@ -229,8 +229,8 @@ int sci_remote_node_context_is_safe_to_abort(
- static inline bool sci_remote_node_context_is_being_destroyed(
- 	struct sci_remote_node_context *sci_rnc)
- {
--	return ((sci_rnc->sm.current_state_id == SCI_RNC_INVALIDATING)
--		&& (sci_rnc->destination_state == RNC_DEST_FINAL))
--		|| (sci_rnc->sm.current_state_id == SCI_RNC_INITIAL);
-+	return (sci_rnc->destination_state == RNC_DEST_FINAL)
-+		|| ((sci_rnc->sm.current_state_id == SCI_RNC_INITIAL)
-+		    && (sci_rnc->destination_state == RNC_DEST_UNSPECIFIED));
- }
- #endif  /* _SCIC_SDS_REMOTE_NODE_CONTEXT_H_ */
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS1kgU3Jpbml2YXNhbg0K
+PiBTZW50OiBUdWVzZGF5LCBNYXJjaCAyMCwgMjAxMiAxMDo0MiBBTQ0KPiBUbzogJ0phbWVzIEJv
+dHRvbWxleScNCj4gQ2M6IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBsaW51eC1rZXJuZWxA
+dmdlci5rZXJuZWwub3JnOw0KPiBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBvaGVyaW5n
+QHN1c2UuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJuZWwu
+b3JnDQo+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggUkVTRU5EIDEvMl0gRHJpdmVyczogc2NzaTogc3Rv
+cnZzYzogU2V0IHRoZSBzY3NpIHJlc3VsdCBjb3JyZWN0bHkNCj4gd2hlbiBTUkIgc3RhdHVzIGlz
+IElOVkFMSUQNCj4gDQo+IA0KPiANCj4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+
+IEZyb206IEphbWVzIEJvdHRvbWxleSBbbWFpbHRvOkphbWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0
+bmVyc2hpcC5jb21dDQo+ID4gU2VudDogVHVlc2RheSwgTWFyY2ggMjAsIDIwMTIgNDo1MiBBTQ0K
+PiA+IFRvOiBLWSBTcmluaXZhc2FuDQo+ID4gQ2M6IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3Jn
+OyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiA+IGRldmVsQGxpbnV4ZHJpdmVycHJv
+amVjdC5vcmc7IG9oZXJpbmdAc3VzZS5jb207IGhjaEBpbmZyYWRlYWQub3JnOyBsaW51eC0NCj4g
+PiBzY3NpQHZnZXIua2VybmVsLm9yZw0KPiA+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggUkVTRU5EIDEv
+Ml0gRHJpdmVyczogc2NzaTogc3RvcnZzYzogU2V0IHRoZSBzY3NpIHJlc3VsdA0KPiBjb3JyZWN0
+bHkNCj4gPiB3aGVuIFNSQiBzdGF0dXMgaXMgSU5WQUxJRA0KPiA+DQo+ID4gT24gTW9uLCAyMDEy
+LTAzLTE5IGF0IDIyOjUyICswMDAwLCBLWSBTcmluaXZhc2FuIHdyb3RlOg0KPiA+ID4gPiA+ICBI
+b3dldmVyLCBrZWVwIGluIG1pbmQNCj4gPiA+ID4gPiB0aGF0IHRoZXJlIGlzIG5vIGN1cnJlbnQg
+RVRBIG9uIHdoZW4gV2luZG93cyB3aWxsIHNoaXAgd2l0aCB0aGVzZQ0KPiBjaGFuZ2VzDQo+ID4g
+LQ0KPiA+ID4gPiBXaW5kb3dzIDgNCj4gPiA+ID4gPiBtYXkgc2hpcCB3aXRoIGNvZGUgd2hlcmUg
+dGhleSB3b3VsZCByZXR1cm4gYW4gaW52YWxpZCBTUkIgc3RhdHVzLCBidXQNCj4gdGhleQ0KPiA+
+IGFyZQ0KPiA+ID4gPiBub3QNCj4gPiA+ID4gPiBzZXR0aW5nIHRoZSBzZW5zZSBjb2RlLCBoZW5j
+ZSB0aGlzIHBhdGNoLiBXaGVuIHRoZSBXaW5kb3cgaG9zdCBkb2VzDQo+IHRoZQ0KPiA+ID4gPiAi
+cmlnaHQgdGhpbmciDQo+ID4gPiA+ID4gSSB3aWxsIGNsZWFuIHRoaXMgdXAsIGJ1dCBJIGRvbid0
+IGtub3cgd2hlbiB0aGF0IHdpbGwgYmUuDQo+ID4gPiA+DQo+ID4gPiA+IEkgdGhvdWdodCB5b3Ug
+anVzdCBzYWlkIHlvdSdkIG9ubHkganVzdCBhc2tlZCB0aGVtIGlmIHRoZXkgY291bGQNCj4gPiA+
+ID4gaW1wbGVtZW50ZWQgaXQsIGluIHdoaWNoIGNhc2Ugbm8gdmVyc2lvbiBvZiB3aW5kb3dzIGN1
+cnJlbnRseSBzaGlwcyB3aXRoDQo+ID4gPiA+IHRoaXMsIGNvcnJlY3Q/DQo+ID4gPg0KPiA+ID4g
+VGhlcmUgYXJlIHNvbWUgcHJpdmF0ZSBidWlsZHMgb2Ygd2luZG93cyA4IGZsb2F0aW5nIGFyb3Vu
+ZCB3aXRoIHRoaXMgY2hhbmdlLA0KPiA+IHdoZXJlDQo+ID4gPiB0aGV5IGFyZSByZXR1cm5pbmcg
+SUxMRUdBTF9SRVFVRVNUIFNSQiBzdGF0dXMgIHdpdGhvdXQgYW55IHNlbnNlIGRhdGEuDQo+ID4N
+Cj4gPiBTdXJlLCBidXQgdGhleSdyZSBub3Qgc2hpcHBlZCwgcmlnaHQgLi4uIGl0J3MgbGlrZSB0
+aGUgdGVzdCBidWlsZHMgd2UgZG8NCj4gPiBmb3IgbGFyZ2UgY29tcGFuaWVzIGxpa2UgSUJNIGFu
+ZCBIUCB0byB0cnkgb3V0IGNlcnRhaW4gdGhpbmdzIGJlZm9yZQ0KPiA+IGRlY2lkaW5nIHRoZXkg
+ZG9uJ3Qgd29yay4NCj4gDQo+IFRoZXkgYXJlIGNsb3NlIHRvIHNoaXBwaW5nIGFuZCBpdCBpcyB2
+ZXJ5IGRpZmZpY3VsdCB0byBnZXQgYW55IGNoYW5nZXMgaW4NCj4gcHJlc2VudGx5LiBGdXJ0aGVy
+bW9yZSwgdGhpcyBpcyBvbmx5IG9uIHdpbmRvd3M4OyBub25lIG9mIHRoZSBwcmlvcg0KPiB2ZXJz
+aW9ucyBvZiB3aW5kb3dzIHNlcnZlcnMgb2YgaW50ZXJlc3Qgc3VwcG9ydCB0aGlzLiBJIGFtIHN0
+YXJ0aW5nIGFuIGVmZm9ydCB0bw0KPiBnZXQgdGhpcyBjaGFuZ2UgaW50byBwcmlvciB3aW5kb3dz
+IHNlcnZlcnMuIE9uY2UgYWdhaW4sIGl0IGlzIG5vdCBjbGVhciB3aGVuDQo+IHRoZXNlIGNoYW5n
+ZXMgd2lsbCBiZSBwdXNoZWQgb3V0Lg0KPiANCj4gDQo+ID4NCj4gPiA+ID4gPiBNb3JlIGltcG9y
+dGFudGx5LCB0aGUgc2Vjb25kIHBhdGNoICBpbiB0aGlzIHNlcmllcyB3aGVyZSBJIGZpbHRlciBv
+dXQNCj4gPiA+ID4gPiB0aGUgQVRBXzE2IGNvbW1hbmQNCj4gPiA+ID4gPiBvbiB0aGUgZ3Vlc3Qg
+aXMgcmVhbGx5IGltcG9ydGFudCBmb3IgdXMuIFdpdGhvdXQgdGhhdCBwYXRjaCBvbiBhIHJhbmdl
+DQo+ID4gPiA+ID4gb24gd2luZG93cyBob3N0cw0KPiA+ID4gPiA+IGluY2x1ZGluZyB0aGUgY3Vy
+cmVudCBiZXRhIHZlcnNpb24gb2Ygd2luZG93czggd2hlcmUgdGhlIGhvc3QgaXMNCj4gPiA+ID4g
+PiByZXR1cm5pbmcgYSBnZW5lcmljDQo+ID4gPiA+ID4gZXJyb3IgaW4gcmVzcG9uc2UgdG8gQVRB
+XzE2IGNvbW1hbmQsIHdlIGNhbm5vdCBib290IG1hbnkgTGludXgNCj4gPiA+ID4gPiBkaXN0cm9z
+LiBJZiB5b3UNCj4gPiA+ID4gPiBwcmVmZXIsIEkgY2FuIGRyb3AgdGhlIGZpcnN0IHBhdGNoIGFu
+ZCByZS1zdWJtaXQgdGhlIHNlY29uZCBwYXRjaCBmb3INCj4gPiA+ID4gPiBjb25zaWRlcmF0aW9u
+IG5vdy4NCj4gPiA+ID4NCj4gPiA+ID4gSSdtIG5vdCBzdXJlIGFib3V0IHRoYXQgZWl0aGVyLiAg
+WW91IHByZXN1bWFibHkgdHJhbnNsYXRlDQo+ID4gPiA+IFNSQl9TVEFUVVNfRVJST1IgaW50byBE
+SURfVEFSR0VUX0ZBSUxVUkUuICBUaGF0IHNob3VsZCBjYXVzZSB0aGUNCj4gPiA+ID4gdGVybWlu
+YXRpb24gb2YgdGhlIGNvbW1hbmQgd2l0aCBwcmVqdWRpY2UgaW4gZXhhY3RseSB0aGUgc2FtZSB3
+YXkgYXMgYW4NCj4gPiA+ID4gSUxMRUdBTF9SRVFVRVNUIHNlbnNlIGNvZGUgd291bGQgKG1pbnVz
+IHRoZSB1c2VmdWwgZXJyb3IgaW5mb3JtYXRpb24pLA0KPiA+ID4gPiBzbyB3aGF0J3MgY2F1c2lu
+ZyB0aGUgYm9vdCBmYWlsdXJlPw0KPiA+ID4NCj4gPiA+IFlvdSBhcmUgcmlnaHQsIGN1cnJlbnRs
+eSB3aXRob3V0IGEgcHJvcGVyIFNSQiBjb2RlLCBJIGRvIGENCj4gRElEX1RBUkdFVF9GQUlMVVJF
+DQo+ID4gYW5kDQo+ID4gPiB0aGlzIHJlc3VsdHMgaW4gdGhlIGRldmljZSBiZWluZyBvZmZsaW5l
+ZCBhbmQgaWYgdGhlIGRldmljZSBoYXBwZW5zIHRvIGJlIHRoZQ0KPiByb290DQo+ID4gZGV2aWNl
+LA0KPiA+ID4gd2Ugb2J2aW91c2x5IGNhbm5vdCBib290LiBJIGhhdmUgc2VlbiB0aGlzIHByb2Js
+ZW0gd2l0aCBzbGVzMTEgc3AyIG9uIGEgd2luOA0KPiA+IGJveC4NCj4gPg0KPiA+IE9LLCBzbyB0
+aGlzIG1heSBiZSB0aGUgcm9vdCBjYXVzZSBvZiB0aGUgcHJvYmxlbS4gIERJRF9UQVJHRVRfRkFJ
+TFVSRQ0KPiA+IHJldHVybnMgRkFJTEVEIGZyb20gc2NzaV9kZWNpZGVfZGlzcG9zaXRpb24oKS4g
+IFRoaXMgd2FrZXMgdXAgdGhlIGVycm9yDQo+ID4gaGFuZGxlciB0byByZXRyeSB0aGUgY29tbWFu
+ZCBhbmQsIHNpbmNlIHRoZSBjb21tYW5kIGlzIG5ldmVyIGdvaW5nIHRvDQo+ID4gd29yaywgdGhp
+cyBlbmRzIHVwIG9mZmxpbmluZyB0aGUgZGV2aWNlLiAgVGhlIHNhbWUgdGhpbmcgd2lsbCBoYXBw
+ZW4gZm9yDQo+ID4gZXZlcnkgY29tbWFuZCB3aXRoIG5vIHJlY292ZXJ5Lg0KPiA+DQo+ID4gVGhl
+IHF1ZXN0aW9uIG5vdyBpcywgd2hhdCBlbHNlIHJldHVybnMgU1JCX1NUQVRVU19FUlJPUj8gIElm
+IGl0J3MgYWx3YXlzDQo+ID4gZm9yIHN0dWZmIHRoYXQncyB1bnJldHJ5YWJsZSwgdGhlbiB0aGUg
+RElEXyBlcnJvciBpcyB3cm9uZyBhbmQgeW91DQo+ID4gc2hvdWxkIGJlIHJldHVybmluZyBESURf
+UEFTU1RIUk9VR0ggd2l0aCBhbiBlcnJvciBjb2RlIGFuZCB0aGUgcHJvYmxlbQ0KPiA+IHdpbGwg
+YmUgc29sdmVkLiAgSWYgd2UgY2FuIGdldCBTUkJfU1RBVFVTX0VSUk9SIG9uIHJldHJ5YWJsZSBj
+b21tYW5kcywNCj4gPiB0aGVuIHlvdSBkaXNjcmltaW5hdGUgYXQgdGhlIHBvaW50IG9mIGZhaWx1
+cmUsIG5vdCBhdCB0aGUgcG9pbnQgb2YgaW5wdXQNCj4gPiBhbmQgcmV0dXJuIERJRF9UQVJHRVRf
+RkFJTFVSRSBmb3IgdGhlIG9uZXMgdGhhdCBzaG91bGQgYmUgcmV0cmllZCBhbmQNCj4gPiBESURf
+UEFTU1RIUk9VR0ggKyBlcnJvciBmb3IgdGhlIG9uZXMgdGhhdCBzaG91bGRuJ3QuICBUaGlzIHdp
+bGwgZW5zdXJlDQo+ID4gdGhlIGRyaXZlciBpcyBjb21wbGV0ZWx5IGJhY2t3YXJkcyBjb21wYXRp
+YmxlIGFuZCB0aGF0IGl0IHdpbGwgd29yaw0KPiA+IGlmL3doZW4gd2luZG93cyBwcm9wZXJseSBo
+YW5kbGVzIHRoZSBjb21tYW5kcy4NCj4gDQo+IEphbWVzLCB1bmZvcnR1bmF0ZWx5IGJhc2VkIG9u
+IHRoZSBjdXJyZW50IFNSQiBjb2RlcyBJIGdldCBiYWNrIGZyb20gdGhlDQo+IGhvc3QsIEkgZG9u
+J3Qga25vdyB3aGljaCBjb21tYW5kcyB0aGF0IGZhaWxlZCBvdWdodCB0byBiZSByZXRyaWVkIGFu
+ZCB3aGljaA0KPiBvbmVzIHNob3VsZCBub3QgYmU7IEkgc2ltcGx5IGdldCBhIHNpbmdsZSBTUkIg
+ZXJyb3IgY29kZSBmb3IgY2FzZXMgd2hlcmUgdGhlDQo+IGhvc3QgZmlsdGVyZWQgdGhlIHVuc3Vw
+cG9ydGVkIGNvbW1hbmRzIGFzIHdlbGwgYXMgdGhlIGNhc2Ugd2hlcmUgdGhlIGhvc3QNCj4gc3Vw
+cG9ydGVkIHRoZSBjb21tYW5kIGFuZCBzb21ldGhpbmcgZmFpbGVkIGluIHRoZSBjb21tYW5kIGV4
+ZWN1dGlvbi4NCj4gSWYgdGhlcmUgaXMgc29tZXRoaW5nIEkgY2FuIHRyeSBpbiB0aGlzIGRyaXZl
+ciB0byBmaXggdGhpcyBwcm9ibGVtLCBJIGFtIG1vcmUgdGhhbg0KPiBoYXBweSB0byB0cnkgaXQu
+IElmIGl0IGludm9sdmVzIGdldHRpbmcgY2hhbmdlcyBpbnRvICB0aGUgaG9zdCAod2luOCwgd2lu
+Mms4IGV0Yy4pLA0KPiBJIGFtIHdpbGxpbmcgdG8gc3RhcnQgYSBjb252ZXJzYXRpb24gd2l0aCB0
+aGUgcmVsZXZhbnQgdGVhbXMsIGJ1dCBJIGNhbm5vdA0KPiBvYnZpb3VzbHkgZGV0ZXJtaW5lIHdo
+ZW4gc3VjaCBjaGFuZ2VzIHdpbGwgc2hpcC4gSG93ZXZlciwgSSBkbyBuZWVkDQo+IHNvbHV0aW9u
+IGZvciB0aGUgcHJvYmxlbSBub3cuDQo+IA0KPiBJIGFwcHJlY2lhdGUgeW91ciB0YWtpbmcgdGhl
+IHRpbWUgdG8gaGVscCBtZSBncmF2aXRhdGUgdG93YXJkcyB0aGUNCj4gY29ycmVjdCBzb2x1dGlv
+biBoZXJlLiBHaXZlbiBteSBjb25zdHJhaW50cywgbGV0IG1lIGtub3cgd2hhdCBpcyB0aGUNCj4g
+YmVzdCB3YXkgZm9yd2FyZCBoZXJlLg0KDQpQaW5nLg0KDQpSZWdhcmRzLA0KDQpLLiBZDQo=
