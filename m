@@ -1,17 +1,17 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci-rnc PATCH v1 18/37] isci: Manage the LLHANG timer
- enable/disable per-device.
-Date: Thu, 22 Mar 2012 17:29:26 -0700
-Message-ID: <20120323002926.18065.4024.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci-rnc PATCH v1 19/37] isci: Make sure all TCs are terminated
+ and cleaned in LUN reset.
+Date: Thu, 22 Mar 2012 17:29:31 -0700
+Message-ID: <20120323002931.18065.66771.stgit@dwillia2-linux.jf.intel.com>
 References: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41216 "EHLO mga01.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:21881 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031470Ab2CWAN6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:13:58 -0400
+	id S1031470Ab2CWAOE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 20:14:04 -0400
 In-Reply-To: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,80 +20,46 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-The LLHANG timer should be enabled once per device.  This patch corrects
-both the timer enable and the timer disable for the remote device.
+In the libsas error path, SATA disks require extra handling in
+libata to recover operation.  However, libsas expects to be able
+to immediately recover all outstanding I/O once the error handler
+escalation stops.  This patch fixes the condition where the libata
+error handler is scheduled for operation but libsas has already
+deleted the outstanding sas_tasks.
 
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/remote_device.c       |   17 +++++++++++++++++
- drivers/scsi/isci/remote_device.h       |    8 ++------
- drivers/scsi/isci/remote_node_context.c |    3 +--
- 3 files changed, 20 insertions(+), 8 deletions(-)
+ drivers/scsi/isci/task.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index 1a85e9e..86aca11 100644
---- a/drivers/scsi/isci/remote_device.c
-+++ b/drivers/scsi/isci/remote_device.c
-@@ -1520,3 +1520,20 @@ enum sci_status isci_remote_device_reset_complete(
- 	return status;
- }
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index 222fb0d..5d738fd 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -439,16 +439,18 @@ int isci_task_lu_reset(struct domain_device *dev, u8 *lun)
+ 		goto out;
+ 	}
  
-+void isci_dev_set_hang_detection_timeout(
-+	struct isci_remote_device *idev,
-+	u32 timeout)
-+{
-+	if (dev_is_sata(idev->domain_dev)) {
-+		if (timeout) {
-+			if (test_and_set_bit(IDEV_RNC_LLHANG_ENABLED,
-+					     &idev->flags))
-+				return;  /* Already enabled. */
-+		} else if (!test_and_clear_bit(IDEV_RNC_LLHANG_ENABLED,
-+					       &idev->flags))
-+			return;  /* Not enabled. */
-+
-+		sci_port_set_hang_detection_timeout(idev->owning_port,
-+						    timeout);
++	/* Suspend the RNC, kill all TCs */
++	if (isci_remote_device_suspend_terminate(ihost, idev, NULL)
++	    != SCI_SUCCESS) {
++		/* The suspend/terminate only fails if isci_get_device fails */
++		ret = TMF_RESP_FUNC_FAILED;
++		goto out;
 +	}
-+}
-diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
-index 8b7817c..ef563e5 100644
---- a/drivers/scsi/isci/remote_device.h
-+++ b/drivers/scsi/isci/remote_device.h
-@@ -85,6 +85,7 @@ struct isci_remote_device {
- 	#define IDEV_GONE 3
- 	#define IDEV_IO_READY 4
- 	#define IDEV_IO_NCQERROR 5
-+	#define IDEV_RNC_LLHANG_ENABLED 6
- 	unsigned long flags;
- 	struct kref kref;
- 	struct isci_port *isci_port;
-@@ -308,12 +309,7 @@ static inline void sci_remote_device_decrement_request_count(struct isci_remote_
- 		idev->started_request_count--;
- }
- 
--static inline void isci_dev_set_hang_detection_timeout(
--	struct isci_remote_device *idev,
--	u32 timeout)
--{
--	sci_port_set_hang_detection_timeout(idev->owning_port, timeout);
--}
-+void isci_dev_set_hang_detection_timeout(struct isci_remote_device *idev, u32 timeout);
- 
- enum sci_status sci_remote_device_frame_handler(
- 	struct isci_remote_device *idev,
-diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
-index 2ac9260..48565de 100644
---- a/drivers/scsi/isci/remote_node_context.c
-+++ b/drivers/scsi/isci/remote_node_context.c
-@@ -615,8 +615,7 @@ enum sci_status sci_remote_node_context_suspend(
- 	if ((suspend_reason == SCI_SW_SUSPEND_NORMAL) ||
- 	    (suspend_reason == SCI_SW_SUSPEND_LINKHANG_DETECT)) {
- 
--		if ((suspend_reason == SCI_SW_SUSPEND_LINKHANG_DETECT)
--		 && dev_is_sata(idev->domain_dev))
-+		if (suspend_reason == SCI_SW_SUSPEND_LINKHANG_DETECT)
- 			isci_dev_set_hang_detection_timeout(idev, 0x00000001);
- 
- 		sci_remote_device_post_request(
++	/* All pending I/Os have been terminated and cleaned up. */
+ 	if (dev_is_sata(dev)) {
+ 		sas_ata_schedule_reset(dev);
+ 		ret = TMF_RESP_FUNC_COMPLETE;
+ 	} else {
+-		/* Suspend the RNC, kill all TCs */
+-		if (isci_remote_device_suspend_terminate(ihost, idev, NULL)
+-		    != SCI_SUCCESS) {
+-			ret = TMF_RESP_FUNC_FAILED;
+-			goto out;
+-		}
+ 		/* Send the task management part of the reset. */
+ 		ret = isci_task_send_lu_reset_sas(ihost, idev, lun);
+ 	}
 
