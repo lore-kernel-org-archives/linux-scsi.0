@@ -1,17 +1,17 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci-rnc PATCH v1 16/37] isci: Fix the terminated I/O to not call
- sas_task_abort().
-Date: Thu, 22 Mar 2012 17:29:15 -0700
-Message-ID: <20120323002915.18065.42155.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci-rnc PATCH v1 17/37] isci: Save the suspension hint for
+ upcoming suspensions.
+Date: Thu, 22 Mar 2012 17:29:21 -0700
+Message-ID: <20120323002921.18065.53449.stgit@dwillia2-linux.jf.intel.com>
 References: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:28581 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:45640 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031470Ab2CWANt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:13:49 -0400
+	id S1031470Ab2CWANx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 20:13:53 -0400
 In-Reply-To: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,29 +20,124 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-This addresses a regression from the commit "isci: Redesign
-device suspension, abort, cleanup." in which the sas_task end
-condition for terminated I/Os was made to call back on
-sas_task_abort()".
-This commit will be rolled into the original.
+In the case of a suspend call while in SCI_RNC_POSTING or INVALIDATING
+states, the LLHANG detect needed to be saved so the upcoming suspension
+would enable it correctly.  The unused suspend callback parameters were
+removed.
 
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/request.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/isci/remote_device.c       |    6 ++----
+ drivers/scsi/isci/remote_node_context.c |   16 +++++++---------
+ drivers/scsi/isci/remote_node_context.h |    5 ++---
+ drivers/scsi/isci/request.c             |    3 +--
+ 4 files changed, 12 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index cc8ab69..1a85e9e 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -75,10 +75,8 @@ const char *dev_state_name(enum sci_remote_device_states state)
+ static enum sci_status sci_remote_device_suspend(struct isci_remote_device *idev,
+ 						 enum sci_remote_node_suspension_reasons reason)
+ {
+-	return sci_remote_node_context_suspend(&idev->rnc,
+-					       reason,
+-					       SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT,
+-					       NULL, NULL);
++	return sci_remote_node_context_suspend(&idev->rnc, reason,
++					       SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
+index 85bf5ec..2ac9260 100644
+--- a/drivers/scsi/isci/remote_node_context.c
++++ b/drivers/scsi/isci/remote_node_context.c
+@@ -315,8 +315,8 @@ static void sci_remote_node_context_ready_state_enter(struct sci_base_state_mach
+ 	if ((dest_select == RNC_DEST_SUSPENDED) ||
+ 	    (dest_select == RNC_DEST_SUSPENDED_RESUME)) {
+ 		sci_remote_node_context_suspend(
+-			rnc, SCI_SW_SUSPEND_NORMAL,
+-			SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT, NULL, NULL);
++			rnc, rnc->suspend_reason,
++			SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT);
+ 
+ 		if (dest_select == RNC_DEST_SUSPENDED_RESUME) {
+ 			sci_remote_node_context_resume(rnc, usr_cb, usr_param);
+@@ -539,9 +539,7 @@ enum sci_status sci_remote_node_context_destruct(struct sci_remote_node_context
+ enum sci_status sci_remote_node_context_suspend(
+ 			struct sci_remote_node_context *sci_rnc,
+ 			enum sci_remote_node_suspension_reasons suspend_reason,
+-			u32 suspend_type,
+-			scics_sds_remote_node_context_callback cb_fn,
+-			void *cb_p)
++			u32 suspend_type)
+ {
+ 	enum scis_sds_remote_node_context_states state
+ 		= sci_rnc->sm.current_state_id;
+@@ -581,6 +579,8 @@ enum sci_status sci_remote_node_context_suspend(
+ 		 * needs to be done immediately.
+ 		 */
+ 		sci_rnc->destination_state = RNC_DEST_SUSPENDED;
++		sci_rnc->suspend_type = suspend_type;
++		sci_rnc->suspend_reason = suspend_reason;
+ 		return SCI_SUCCESS;
+ 
+ 	case SCI_RNC_TX_SUSPENDED:
+@@ -603,14 +603,12 @@ enum sci_status sci_remote_node_context_suspend(
+ 		return SCI_FAILURE_INVALID_STATE;
+ 	}
+ 	sci_rnc->destination_state = dest_param;
+-	sci_rnc->user_callback = cb_fn;
+-	sci_rnc->user_cookie   = cb_p;
+-	sci_rnc->suspend_type  = suspend_type;
++	sci_rnc->suspend_type = suspend_type;
++	sci_rnc->suspend_reason = suspend_reason;
+ 
+ 	if (status == SCI_SUCCESS) { /* Already in the destination state? */
+ 		struct isci_host *ihost = idev->owning_port->owning_controller;
+ 
+-		sci_remote_node_context_notify_user(sci_rnc);
+ 		wake_up_all(&ihost->eventq); /* Let observers look. */
+ 		return SCI_SUCCESS;
+ 	}
+diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
+index 364da37..9eee304 100644
+--- a/drivers/scsi/isci/remote_node_context.h
++++ b/drivers/scsi/isci/remote_node_context.h
+@@ -169,6 +169,7 @@ struct sci_remote_node_context {
+ 	 * context suspension.
+ 	 */
+ 	u32 suspend_type;
++	enum sci_remote_node_suspension_reasons suspend_reason;
+ 
+ 	/**
+ 	 * This field is true if the remote node context is resuming from its current
+@@ -209,9 +210,7 @@ enum sci_status sci_remote_node_context_destruct(struct sci_remote_node_context
+ 						      void *callback_parameter);
+ enum sci_status sci_remote_node_context_suspend(struct sci_remote_node_context *sci_rnc,
+ 						     u32 suspend_type,
+-						     u32 suspension_code,
+-						     scics_sds_remote_node_context_callback cb_fn,
+-						     void *cb_p);
++						     u32 suspension_code);
+ enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *sci_rnc,
+ 						    scics_sds_remote_node_context_callback cb_fn,
+ 						    void *cb_p);
 diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index d240f6d..78ca516 100644
+index 78ca516..df713d5 100644
 --- a/drivers/scsi/isci/request.c
 +++ b/drivers/scsi/isci/request.c
-@@ -2832,7 +2832,7 @@ static void isci_request_io_request_complete(struct isci_host *ihost,
- 			__func__, request, task);
+@@ -2382,8 +2382,7 @@ static void sci_request_handle_suspending_completions(
+ 			&ireq->target_device->rnc,
+ 			SCI_HW_SUSPEND,
+ 			(is_tx_rx) ? SCU_EVENT_TL_RNC_SUSPEND_TX_RX
+-				   : SCU_EVENT_TL_RNC_SUSPEND_TX,
+-			NULL, NULL);
++				   : SCU_EVENT_TL_RNC_SUSPEND_TX);
+ 	}
+ }
  
- 		/* The request was terminated explicitly. */
--		clear_bit(IREQ_COMPLETE_IN_TARGET, &request->flags);
-+		set_bit(IREQ_COMPLETE_IN_TARGET, &request->flags);
- 		response = SAS_TASK_UNDELIVERED;
- 
- 		/* See if the device has been/is being stopped. Note
 
