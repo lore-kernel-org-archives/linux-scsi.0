@@ -1,118 +1,320 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
- correctly when SRB status is INVALID
-Date: Fri, 23 Mar 2012 15:50:04 +0000
-Message-ID: <6E21E5352C11B742B20C142EB499E0481B76AF70@TK5EX14MBXC126.redmond.corp.microsoft.com>
-References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
-	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
-	 <1332173560.3152.65.camel@dabdike>
-	 <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
-	 <1332196819.3152.77.camel@dabdike>
-	 <6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
- <1332233502.14019.14.camel@dabdike.int.hansenpartnership.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [libsas PATCH v14] libsas,
+ libata: fix start of life for a sas ata_port
+Date: Fri, 23 Mar 2012 10:22:30 -0700
+Message-ID: <20120323171718.19645.5620.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: brking@linux.vnet.ibm.com, linux-ide@vger.kernel.org, wayneb@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS1kgU3Jpbml2YXNhbg0K
-PiBTZW50OiBUdWVzZGF5LCBNYXJjaCAyMCwgMjAxMiAxMDo0MiBBTQ0KPiBUbzogJ0phbWVzIEJv
-dHRvbWxleScNCj4gQ2M6IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBsaW51eC1rZXJuZWxA
-dmdlci5rZXJuZWwub3JnOw0KPiBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBvaGVyaW5n
-QHN1c2UuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJuZWwu
-b3JnDQo+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggUkVTRU5EIDEvMl0gRHJpdmVyczogc2NzaTogc3Rv
-cnZzYzogU2V0IHRoZSBzY3NpIHJlc3VsdCBjb3JyZWN0bHkNCj4gd2hlbiBTUkIgc3RhdHVzIGlz
-IElOVkFMSUQNCj4gDQo+IA0KPiANCj4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+
-IEZyb206IEphbWVzIEJvdHRvbWxleSBbbWFpbHRvOkphbWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0
-bmVyc2hpcC5jb21dDQo+ID4gU2VudDogVHVlc2RheSwgTWFyY2ggMjAsIDIwMTIgNDo1MiBBTQ0K
-PiA+IFRvOiBLWSBTcmluaXZhc2FuDQo+ID4gQ2M6IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3Jn
-OyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiA+IGRldmVsQGxpbnV4ZHJpdmVycHJv
-amVjdC5vcmc7IG9oZXJpbmdAc3VzZS5jb207IGhjaEBpbmZyYWRlYWQub3JnOyBsaW51eC0NCj4g
-PiBzY3NpQHZnZXIua2VybmVsLm9yZw0KPiA+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggUkVTRU5EIDEv
-Ml0gRHJpdmVyczogc2NzaTogc3RvcnZzYzogU2V0IHRoZSBzY3NpIHJlc3VsdA0KPiBjb3JyZWN0
-bHkNCj4gPiB3aGVuIFNSQiBzdGF0dXMgaXMgSU5WQUxJRA0KPiA+DQo+ID4gT24gTW9uLCAyMDEy
-LTAzLTE5IGF0IDIyOjUyICswMDAwLCBLWSBTcmluaXZhc2FuIHdyb3RlOg0KPiA+ID4gPiA+ICBI
-b3dldmVyLCBrZWVwIGluIG1pbmQNCj4gPiA+ID4gPiB0aGF0IHRoZXJlIGlzIG5vIGN1cnJlbnQg
-RVRBIG9uIHdoZW4gV2luZG93cyB3aWxsIHNoaXAgd2l0aCB0aGVzZQ0KPiBjaGFuZ2VzDQo+ID4g
-LQ0KPiA+ID4gPiBXaW5kb3dzIDgNCj4gPiA+ID4gPiBtYXkgc2hpcCB3aXRoIGNvZGUgd2hlcmUg
-dGhleSB3b3VsZCByZXR1cm4gYW4gaW52YWxpZCBTUkIgc3RhdHVzLCBidXQNCj4gdGhleQ0KPiA+
-IGFyZQ0KPiA+ID4gPiBub3QNCj4gPiA+ID4gPiBzZXR0aW5nIHRoZSBzZW5zZSBjb2RlLCBoZW5j
-ZSB0aGlzIHBhdGNoLiBXaGVuIHRoZSBXaW5kb3cgaG9zdCBkb2VzDQo+IHRoZQ0KPiA+ID4gPiAi
-cmlnaHQgdGhpbmciDQo+ID4gPiA+ID4gSSB3aWxsIGNsZWFuIHRoaXMgdXAsIGJ1dCBJIGRvbid0
-IGtub3cgd2hlbiB0aGF0IHdpbGwgYmUuDQo+ID4gPiA+DQo+ID4gPiA+IEkgdGhvdWdodCB5b3Ug
-anVzdCBzYWlkIHlvdSdkIG9ubHkganVzdCBhc2tlZCB0aGVtIGlmIHRoZXkgY291bGQNCj4gPiA+
-ID4gaW1wbGVtZW50ZWQgaXQsIGluIHdoaWNoIGNhc2Ugbm8gdmVyc2lvbiBvZiB3aW5kb3dzIGN1
-cnJlbnRseSBzaGlwcyB3aXRoDQo+ID4gPiA+IHRoaXMsIGNvcnJlY3Q/DQo+ID4gPg0KPiA+ID4g
-VGhlcmUgYXJlIHNvbWUgcHJpdmF0ZSBidWlsZHMgb2Ygd2luZG93cyA4IGZsb2F0aW5nIGFyb3Vu
-ZCB3aXRoIHRoaXMgY2hhbmdlLA0KPiA+IHdoZXJlDQo+ID4gPiB0aGV5IGFyZSByZXR1cm5pbmcg
-SUxMRUdBTF9SRVFVRVNUIFNSQiBzdGF0dXMgIHdpdGhvdXQgYW55IHNlbnNlIGRhdGEuDQo+ID4N
-Cj4gPiBTdXJlLCBidXQgdGhleSdyZSBub3Qgc2hpcHBlZCwgcmlnaHQgLi4uIGl0J3MgbGlrZSB0
-aGUgdGVzdCBidWlsZHMgd2UgZG8NCj4gPiBmb3IgbGFyZ2UgY29tcGFuaWVzIGxpa2UgSUJNIGFu
-ZCBIUCB0byB0cnkgb3V0IGNlcnRhaW4gdGhpbmdzIGJlZm9yZQ0KPiA+IGRlY2lkaW5nIHRoZXkg
-ZG9uJ3Qgd29yay4NCj4gDQo+IFRoZXkgYXJlIGNsb3NlIHRvIHNoaXBwaW5nIGFuZCBpdCBpcyB2
-ZXJ5IGRpZmZpY3VsdCB0byBnZXQgYW55IGNoYW5nZXMgaW4NCj4gcHJlc2VudGx5LiBGdXJ0aGVy
-bW9yZSwgdGhpcyBpcyBvbmx5IG9uIHdpbmRvd3M4OyBub25lIG9mIHRoZSBwcmlvcg0KPiB2ZXJz
-aW9ucyBvZiB3aW5kb3dzIHNlcnZlcnMgb2YgaW50ZXJlc3Qgc3VwcG9ydCB0aGlzLiBJIGFtIHN0
-YXJ0aW5nIGFuIGVmZm9ydCB0bw0KPiBnZXQgdGhpcyBjaGFuZ2UgaW50byBwcmlvciB3aW5kb3dz
-IHNlcnZlcnMuIE9uY2UgYWdhaW4sIGl0IGlzIG5vdCBjbGVhciB3aGVuDQo+IHRoZXNlIGNoYW5n
-ZXMgd2lsbCBiZSBwdXNoZWQgb3V0Lg0KPiANCj4gDQo+ID4NCj4gPiA+ID4gPiBNb3JlIGltcG9y
-dGFudGx5LCB0aGUgc2Vjb25kIHBhdGNoICBpbiB0aGlzIHNlcmllcyB3aGVyZSBJIGZpbHRlciBv
-dXQNCj4gPiA+ID4gPiB0aGUgQVRBXzE2IGNvbW1hbmQNCj4gPiA+ID4gPiBvbiB0aGUgZ3Vlc3Qg
-aXMgcmVhbGx5IGltcG9ydGFudCBmb3IgdXMuIFdpdGhvdXQgdGhhdCBwYXRjaCBvbiBhIHJhbmdl
-DQo+ID4gPiA+ID4gb24gd2luZG93cyBob3N0cw0KPiA+ID4gPiA+IGluY2x1ZGluZyB0aGUgY3Vy
-cmVudCBiZXRhIHZlcnNpb24gb2Ygd2luZG93czggd2hlcmUgdGhlIGhvc3QgaXMNCj4gPiA+ID4g
-PiByZXR1cm5pbmcgYSBnZW5lcmljDQo+ID4gPiA+ID4gZXJyb3IgaW4gcmVzcG9uc2UgdG8gQVRB
-XzE2IGNvbW1hbmQsIHdlIGNhbm5vdCBib290IG1hbnkgTGludXgNCj4gPiA+ID4gPiBkaXN0cm9z
-LiBJZiB5b3UNCj4gPiA+ID4gPiBwcmVmZXIsIEkgY2FuIGRyb3AgdGhlIGZpcnN0IHBhdGNoIGFu
-ZCByZS1zdWJtaXQgdGhlIHNlY29uZCBwYXRjaCBmb3INCj4gPiA+ID4gPiBjb25zaWRlcmF0aW9u
-IG5vdy4NCj4gPiA+ID4NCj4gPiA+ID4gSSdtIG5vdCBzdXJlIGFib3V0IHRoYXQgZWl0aGVyLiAg
-WW91IHByZXN1bWFibHkgdHJhbnNsYXRlDQo+ID4gPiA+IFNSQl9TVEFUVVNfRVJST1IgaW50byBE
-SURfVEFSR0VUX0ZBSUxVUkUuICBUaGF0IHNob3VsZCBjYXVzZSB0aGUNCj4gPiA+ID4gdGVybWlu
-YXRpb24gb2YgdGhlIGNvbW1hbmQgd2l0aCBwcmVqdWRpY2UgaW4gZXhhY3RseSB0aGUgc2FtZSB3
-YXkgYXMgYW4NCj4gPiA+ID4gSUxMRUdBTF9SRVFVRVNUIHNlbnNlIGNvZGUgd291bGQgKG1pbnVz
-IHRoZSB1c2VmdWwgZXJyb3IgaW5mb3JtYXRpb24pLA0KPiA+ID4gPiBzbyB3aGF0J3MgY2F1c2lu
-ZyB0aGUgYm9vdCBmYWlsdXJlPw0KPiA+ID4NCj4gPiA+IFlvdSBhcmUgcmlnaHQsIGN1cnJlbnRs
-eSB3aXRob3V0IGEgcHJvcGVyIFNSQiBjb2RlLCBJIGRvIGENCj4gRElEX1RBUkdFVF9GQUlMVVJF
-DQo+ID4gYW5kDQo+ID4gPiB0aGlzIHJlc3VsdHMgaW4gdGhlIGRldmljZSBiZWluZyBvZmZsaW5l
-ZCBhbmQgaWYgdGhlIGRldmljZSBoYXBwZW5zIHRvIGJlIHRoZQ0KPiByb290DQo+ID4gZGV2aWNl
-LA0KPiA+ID4gd2Ugb2J2aW91c2x5IGNhbm5vdCBib290LiBJIGhhdmUgc2VlbiB0aGlzIHByb2Js
-ZW0gd2l0aCBzbGVzMTEgc3AyIG9uIGEgd2luOA0KPiA+IGJveC4NCj4gPg0KPiA+IE9LLCBzbyB0
-aGlzIG1heSBiZSB0aGUgcm9vdCBjYXVzZSBvZiB0aGUgcHJvYmxlbS4gIERJRF9UQVJHRVRfRkFJ
-TFVSRQ0KPiA+IHJldHVybnMgRkFJTEVEIGZyb20gc2NzaV9kZWNpZGVfZGlzcG9zaXRpb24oKS4g
-IFRoaXMgd2FrZXMgdXAgdGhlIGVycm9yDQo+ID4gaGFuZGxlciB0byByZXRyeSB0aGUgY29tbWFu
-ZCBhbmQsIHNpbmNlIHRoZSBjb21tYW5kIGlzIG5ldmVyIGdvaW5nIHRvDQo+ID4gd29yaywgdGhp
-cyBlbmRzIHVwIG9mZmxpbmluZyB0aGUgZGV2aWNlLiAgVGhlIHNhbWUgdGhpbmcgd2lsbCBoYXBw
-ZW4gZm9yDQo+ID4gZXZlcnkgY29tbWFuZCB3aXRoIG5vIHJlY292ZXJ5Lg0KPiA+DQo+ID4gVGhl
-IHF1ZXN0aW9uIG5vdyBpcywgd2hhdCBlbHNlIHJldHVybnMgU1JCX1NUQVRVU19FUlJPUj8gIElm
-IGl0J3MgYWx3YXlzDQo+ID4gZm9yIHN0dWZmIHRoYXQncyB1bnJldHJ5YWJsZSwgdGhlbiB0aGUg
-RElEXyBlcnJvciBpcyB3cm9uZyBhbmQgeW91DQo+ID4gc2hvdWxkIGJlIHJldHVybmluZyBESURf
-UEFTU1RIUk9VR0ggd2l0aCBhbiBlcnJvciBjb2RlIGFuZCB0aGUgcHJvYmxlbQ0KPiA+IHdpbGwg
-YmUgc29sdmVkLiAgSWYgd2UgY2FuIGdldCBTUkJfU1RBVFVTX0VSUk9SIG9uIHJldHJ5YWJsZSBj
-b21tYW5kcywNCj4gPiB0aGVuIHlvdSBkaXNjcmltaW5hdGUgYXQgdGhlIHBvaW50IG9mIGZhaWx1
-cmUsIG5vdCBhdCB0aGUgcG9pbnQgb2YgaW5wdXQNCj4gPiBhbmQgcmV0dXJuIERJRF9UQVJHRVRf
-RkFJTFVSRSBmb3IgdGhlIG9uZXMgdGhhdCBzaG91bGQgYmUgcmV0cmllZCBhbmQNCj4gPiBESURf
-UEFTU1RIUk9VR0ggKyBlcnJvciBmb3IgdGhlIG9uZXMgdGhhdCBzaG91bGRuJ3QuICBUaGlzIHdp
-bGwgZW5zdXJlDQo+ID4gdGhlIGRyaXZlciBpcyBjb21wbGV0ZWx5IGJhY2t3YXJkcyBjb21wYXRp
-YmxlIGFuZCB0aGF0IGl0IHdpbGwgd29yaw0KPiA+IGlmL3doZW4gd2luZG93cyBwcm9wZXJseSBo
-YW5kbGVzIHRoZSBjb21tYW5kcy4NCj4gDQo+IEphbWVzLCB1bmZvcnR1bmF0ZWx5IGJhc2VkIG9u
-IHRoZSBjdXJyZW50IFNSQiBjb2RlcyBJIGdldCBiYWNrIGZyb20gdGhlDQo+IGhvc3QsIEkgZG9u
-J3Qga25vdyB3aGljaCBjb21tYW5kcyB0aGF0IGZhaWxlZCBvdWdodCB0byBiZSByZXRyaWVkIGFu
-ZCB3aGljaA0KPiBvbmVzIHNob3VsZCBub3QgYmU7IEkgc2ltcGx5IGdldCBhIHNpbmdsZSBTUkIg
-ZXJyb3IgY29kZSBmb3IgY2FzZXMgd2hlcmUgdGhlDQo+IGhvc3QgZmlsdGVyZWQgdGhlIHVuc3Vw
-cG9ydGVkIGNvbW1hbmRzIGFzIHdlbGwgYXMgdGhlIGNhc2Ugd2hlcmUgdGhlIGhvc3QNCj4gc3Vw
-cG9ydGVkIHRoZSBjb21tYW5kIGFuZCBzb21ldGhpbmcgZmFpbGVkIGluIHRoZSBjb21tYW5kIGV4
-ZWN1dGlvbi4NCj4gSWYgdGhlcmUgaXMgc29tZXRoaW5nIEkgY2FuIHRyeSBpbiB0aGlzIGRyaXZl
-ciB0byBmaXggdGhpcyBwcm9ibGVtLCBJIGFtIG1vcmUgdGhhbg0KPiBoYXBweSB0byB0cnkgaXQu
-IElmIGl0IGludm9sdmVzIGdldHRpbmcgY2hhbmdlcyBpbnRvICB0aGUgaG9zdCAod2luOCwgd2lu
-Mms4IGV0Yy4pLA0KPiBJIGFtIHdpbGxpbmcgdG8gc3RhcnQgYSBjb252ZXJzYXRpb24gd2l0aCB0
-aGUgcmVsZXZhbnQgdGVhbXMsIGJ1dCBJIGNhbm5vdA0KPiBvYnZpb3VzbHkgZGV0ZXJtaW5lIHdo
-ZW4gc3VjaCBjaGFuZ2VzIHdpbGwgc2hpcC4gSG93ZXZlciwgSSBkbyBuZWVkDQo+IHNvbHV0aW9u
-IGZvciB0aGUgcHJvYmxlbSBub3cuDQo+IA0KPiBJIGFwcHJlY2lhdGUgeW91ciB0YWtpbmcgdGhl
-IHRpbWUgdG8gaGVscCBtZSBncmF2aXRhdGUgdG93YXJkcyB0aGUNCj4gY29ycmVjdCBzb2x1dGlv
-biBoZXJlLiBHaXZlbiBteSBjb25zdHJhaW50cywgbGV0IG1lIGtub3cgd2hhdCBpcyB0aGUNCj4g
-YmVzdCB3YXkgZm9yd2FyZCBoZXJlLg0KDQpQaW5nLg0KDQpSZWdhcmRzLA0KDQpLLiBZDQo=
+This changes the ordering of initialization and probing events from:
+  1/ allocate rphy in PORTE_BYTES_DMAED, DISCE_REVALIDATE_DOMAIN
+  2/ allocate ata_port and schedule port probe in DISCE_PROBE
+...to:
+  1/ allocate ata_port in PORTE_BYTES_DMAED, DISCE_REVALIDATE_DOMAIN
+  2/ allocate rphy in PORTE_BYTES_DMAED, DISCE_REVALIDATE_DOMAIN
+  3/ schedule port probe in DISCE_PROBE
+
+This ordering prevents PHYE_SIGNAL_LOSS_EVENTS from sneaking in to
+destrory ata devices before they have been fully initialized:
+
+  BUG: unable to handle kernel paging request at 0000000000003b10
+  IP: [<ffffffffa0053d7e>] sas_ata_end_eh+0x12/0x5e [libsas]
+  ...
+  [<ffffffffa004d1af>] sas_unregister_common_dev+0x78/0xc9 [libsas]
+  [<ffffffffa004d4d4>] sas_unregister_dev+0x4f/0xad [libsas]
+  [<ffffffffa004d5b1>] sas_unregister_domain_devices+0x7f/0xbf [libsas]
+  [<ffffffffa004c487>] sas_deform_port+0x61/0x1b8 [libsas]
+  [<ffffffffa004bed0>] sas_phye_loss_of_signal+0x29/0x2b [libsas]
+
+...and kills the awkward "sata domain_device briefly existing in the
+domain without an ata_port" state.
+
+Reported-by: Michal Kosciowski <michal.kosciowski@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ Changes since v13: http://marc.info/?l=linux-scsi&m=133246025329616&w=2
+
+ Another fixlet for this topic, compile breakage in ipr:
+
+ drivers/scsi/ipr.c: In function 'ipr_ata_slave_alloc':
+ drivers/scsi/ipr.c:4552:28: error: 'ap' undeclared (first use in this function)
+
+ --
+ Dan
+
+ drivers/ata/libata-scsi.c          |   35 ++++++++++++++++++++---------------
+ drivers/scsi/ipr.c                 |    6 +++++-
+ drivers/scsi/libsas/sas_ata.c      |   33 ++++++++++-----------------------
+ drivers/scsi/libsas/sas_discover.c |   13 ++++++++++---
+ drivers/scsi/libsas/sas_expander.c |    8 +++++---
+ include/linux/libata.h             |    3 ++-
+ include/scsi/sas_ata.h             |    4 ++--
+ 7 files changed, 54 insertions(+), 48 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 93dabdc..cde63f2 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3838,18 +3838,25 @@ void ata_sas_port_stop(struct ata_port *ap)
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_port_stop);
+ 
+-int ata_sas_async_port_init(struct ata_port *ap)
++/**
++ * ata_sas_async_probe - simply schedule probing and return
++ * @ap: Port to probe
++ *
++ * For batch scheduling of probe for sas attached ata devices, assumes
++ * the port has already been through ata_sas_port_init()
++ */
++void ata_sas_async_probe(struct ata_port *ap)
+ {
+-	int rc = ap->ops->port_start(ap);
+-
+-	if (!rc) {
+-		ap->print_id = atomic_inc_return(&ata_print_id);
+-		__ata_port_probe(ap);
+-	}
++	__ata_port_probe(ap);
++}
++EXPORT_SYMBOL_GPL(ata_sas_async_probe);
+ 
+-	return rc;
++int ata_sas_sync_probe(struct ata_port *ap)
++{
++	return ata_port_probe(ap);
+ }
+-EXPORT_SYMBOL_GPL(ata_sas_async_port_init);
++EXPORT_SYMBOL_GPL(ata_sas_sync_probe);
++
+ 
+ /**
+  *	ata_sas_port_init - Initialize a SATA device
+@@ -3866,12 +3873,10 @@ int ata_sas_port_init(struct ata_port *ap)
+ {
+ 	int rc = ap->ops->port_start(ap);
+ 
+-	if (!rc) {
+-		ap->print_id = atomic_inc_return(&ata_print_id);
+-		rc = ata_port_probe(ap);
+-	}
+-
+-	return rc;
++	if (rc)
++		return rc;
++	ap->print_id = atomic_inc_return(&ata_print_id);
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_port_init);
+ 
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index cdfe5a1..4c49769 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4546,8 +4546,12 @@ static int ipr_ata_slave_alloc(struct scsi_device *sdev)
+ 	ENTER;
+ 	if (sdev->sdev_target)
+ 		sata_port = sdev->sdev_target->hostdata;
+-	if (sata_port)
++	if (sata_port) {
+ 		rc = ata_sas_port_init(sata_port->ap);
++		if (rc == 0)
++			rc = ata_sas_sync_probe(sata_port->ap);
++	}
++
+ 	if (rc)
+ 		ipr_slave_destroy(sdev);
+ 
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 545b78d..6a6c80f 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -573,11 +573,12 @@ static struct ata_port_info sata_port_info = {
+ 	.port_ops = &sas_sata_ops
+ };
+ 
+-int sas_ata_init_host_and_port(struct domain_device *found_dev)
++int sas_ata_init(struct domain_device *found_dev)
+ {
+ 	struct sas_ha_struct *ha = found_dev->port->ha;
+ 	struct Scsi_Host *shost = ha->core.shost;
+ 	struct ata_port *ap;
++	int rc;
+ 
+ 	ata_host_init(&found_dev->sata_dev.ata_host,
+ 		      ha->dev,
+@@ -594,8 +595,11 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev)
+ 	ap->private_data = found_dev;
+ 	ap->cbl = ATA_CBL_SATA;
+ 	ap->scsi_host = shost;
+-	/* publish initialized ata port */
+-	smp_wmb();
++	rc = ata_sas_port_init(ap);
++	if (rc) {
++		ata_sas_port_destroy(ap);
++		return rc;
++	}
+ 	found_dev->sata_dev.ap = ap;
+ 
+ 	return 0;
+@@ -674,18 +678,13 @@ static void sas_get_ata_command_set(struct domain_device *dev)
+ void sas_probe_sata(struct asd_sas_port *port)
+ {
+ 	struct domain_device *dev, *n;
+-	int err;
+ 
+ 	mutex_lock(&port->ha->disco_mutex);
+-	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
++	list_for_each_entry(dev, &port->disco_list, disco_list_node) {
+ 		if (!dev_is_sata(dev))
+ 			continue;
+ 
+-		err = sas_ata_init_host_and_port(dev);
+-		if (err)
+-			sas_fail_probe(dev, __func__, err);
+-		else
+-			ata_sas_async_port_init(dev->sata_dev.ap);
++		ata_sas_async_probe(dev->sata_dev.ap);
+ 	}
+ 	mutex_unlock(&port->ha->disco_mutex);
+ 
+@@ -740,18 +739,6 @@ static void async_sas_ata_eh(void *data, async_cookie_t cookie)
+ 	sas_put_device(dev);
+ }
+ 
+-static bool sas_ata_dev_eh_valid(struct domain_device *dev)
+-{
+-	struct ata_port *ap;
+-
+-	if (!dev_is_sata(dev))
+-		return false;
+-	ap = dev->sata_dev.ap;
+-	/* consume fully initialized ata ports */
+-	smp_rmb();
+-	return !!ap;
+-}
+-
+ void sas_ata_strategy_handler(struct Scsi_Host *shost)
+ {
+ 	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(shost);
+@@ -775,7 +762,7 @@ void sas_ata_strategy_handler(struct Scsi_Host *shost)
+ 
+ 		spin_lock(&port->dev_list_lock);
+ 		list_for_each_entry(dev, &port->dev_list, dev_list_node) {
+-			if (!sas_ata_dev_eh_valid(dev))
++			if (!dev_is_sata(dev))
+ 				continue;
+ 
+ 			/* hold a reference over eh since we may be
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 57c5100..b031d23 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -73,6 +73,7 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 	struct asd_sas_phy *phy;
+ 	struct sas_rphy *rphy;
+ 	struct domain_device *dev;
++	int rc = -ENODEV;
+ 
+ 	dev = sas_alloc_device();
+ 	if (!dev)
+@@ -111,9 +112,16 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 
+ 	sas_init_dev(dev);
+ 
++	dev->port = port;
+ 	switch (dev->dev_type) {
+-	case SAS_END_DEV:
+ 	case SATA_DEV:
++		rc = sas_ata_init(dev);
++		if (rc) {
++			rphy = NULL;
++			break;
++		}
++		/* fall through */
++	case SAS_END_DEV:
+ 		rphy = sas_end_device_alloc(port->port);
+ 		break;
+ 	case EDGE_DEV:
+@@ -132,7 +140,7 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 
+ 	if (!rphy) {
+ 		sas_put_device(dev);
+-		return -ENODEV;
++		return rc;
+ 	}
+ 
+ 	rphy->identify.phy_identifier = phy->phy->identify.phy_identifier;
+@@ -140,7 +148,6 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 	sas_fill_in_rphy(dev, rphy);
+ 	sas_hash_addr(dev->hashed_sas_addr, dev->sas_addr);
+ 	port->port_dev = dev;
+-	dev->port = port;
+ 	dev->linkrate = port->linkrate;
+ 	dev->min_linkrate = port->linkrate;
+ 	dev->max_linkrate = port->linkrate;
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 62fd06b..a4b15c1 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -797,12 +797,14 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 		if (res)
+ 			goto out_free;
+ 
++		sas_init_dev(child);
++		res = sas_ata_init(child);
++		if (res)
++			goto out_free;
+ 		rphy = sas_end_device_alloc(phy->port);
+-		if (unlikely(!rphy))
++		if (!rphy)
+ 			goto out_free;
+ 
+-		sas_init_dev(child);
+-
+ 		child->rphy = rphy;
+ 		get_device(&rphy->dev);
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index ad2ea33..0a3c99a 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -999,7 +999,8 @@ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
+ extern void ata_sas_port_destroy(struct ata_port *);
+ extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+ 					   struct ata_port_info *, struct Scsi_Host *);
+-extern int ata_sas_async_port_init(struct ata_port *);
++extern void ata_sas_async_probe(struct ata_port *ap);
++extern int ata_sas_sync_probe(struct ata_port *ap);
+ extern int ata_sas_port_init(struct ata_port *);
+ extern int ata_sas_port_start(struct ata_port *ap);
+ extern void ata_sas_port_stop(struct ata_port *ap);
+diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
+index cae55b6..2dfbdaa 100644
+--- a/include/scsi/sas_ata.h
++++ b/include/scsi/sas_ata.h
+@@ -37,7 +37,7 @@ static inline int dev_is_sata(struct domain_device *dev)
+ }
+ 
+ int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy);
+-int sas_ata_init_host_and_port(struct domain_device *found_dev);
++int sas_ata_init(struct domain_device *dev);
+ void sas_ata_task_abort(struct sas_task *task);
+ void sas_ata_strategy_handler(struct Scsi_Host *shost);
+ void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+@@ -53,7 +53,7 @@ static inline int dev_is_sata(struct domain_device *dev)
+ {
+ 	return 0;
+ }
+-static inline int sas_ata_init_host_and_port(struct domain_device *found_dev)
++static inline int sas_ata_init(struct domain_device *dev)
+ {
+ 	return 0;
+ }
+
