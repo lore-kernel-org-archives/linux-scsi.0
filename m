@@ -1,8 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci-rnc PATCH v1 14/37] isci: Remove isci_device reqs_in_process
- and dev_node from isci_device.
-Date: Thu, 22 Mar 2012 17:29:05 -0700
-Message-ID: <20120323002905.18065.48849.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci-rnc PATCH v1 15/37] isci: Distinguish between remote device
+ suspension cases
+Date: Thu, 22 Mar 2012 17:29:10 -0700
+Message-ID: <20120323002910.18065.29388.stgit@dwillia2-linux.jf.intel.com>
 References: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,8 +10,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga01.intel.com ([192.55.52.88]:61883 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031470Ab2CWANh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:13:37 -0400
+	id S1031470Ab2CWANm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 20:13:42 -0400
 In-Reply-To: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,138 +20,186 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
+For NCQ error conditions among others, there is no need to enable
+the link layer hang detect timer.
+
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/init.c          |    1 -
- drivers/scsi/isci/remote_device.c |    6 +-----
- drivers/scsi/isci/remote_device.h |    1 -
- drivers/scsi/isci/request.c       |   12 ------------
- drivers/scsi/isci/request.h       |    2 --
- drivers/scsi/isci/task.c          |    4 ----
- 6 files changed, 1 insertions(+), 25 deletions(-)
+ drivers/scsi/isci/remote_device.c       |   27 +++++++++++----------------
+ drivers/scsi/isci/remote_node_context.c |   19 +++++++++++++------
+ drivers/scsi/isci/remote_node_context.h |    5 +++--
+ drivers/scsi/isci/request.c             |    2 +-
+ 4 files changed, 28 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 6fc72d8..2a781c2 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -573,7 +573,6 @@ static struct isci_host *isci_host_alloc(struct pci_dev *pdev, int id)
- 	for (i = 0; i < SCI_MAX_REMOTE_DEVICES; i++) {
- 		struct isci_remote_device *idev = &ihost->devices[i];
- 
--		INIT_LIST_HEAD(&idev->reqs_in_process);
- 		INIT_LIST_HEAD(&idev->node);
- 	}
- 
 diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index b26ab05..b14eff3 100644
+index b14eff3..cc8ab69 100644
 --- a/drivers/scsi/isci/remote_device.c
 +++ b/drivers/scsi/isci/remote_device.c
-@@ -919,7 +919,7 @@ static void isci_remote_device_deconstruct(struct isci_host *ihost, struct isci_
- 	 * here should go through isci_remote_device_nuke_requests.
- 	 * If we hit this condition, we will need a way to complete
- 	 * io requests in process */
--	BUG_ON(!list_empty(&idev->reqs_in_process));
-+	BUG_ON(idev->started_request_count > 0);
+@@ -72,10 +72,11 @@ const char *dev_state_name(enum sci_remote_device_states state)
+ }
+ #undef C
  
- 	sci_remote_device_destruct(idev);
- 	list_del_init(&idev->node);
-@@ -1345,10 +1345,6 @@ isci_remote_device_alloc(struct isci_host *ihost, struct isci_port *iport)
- 		dev_warn(&ihost->pdev->dev, "%s: failed\n", __func__);
- 		return NULL;
+-static enum sci_status sci_remote_device_suspend(struct isci_remote_device *idev)
++static enum sci_status sci_remote_device_suspend(struct isci_remote_device *idev,
++						 enum sci_remote_node_suspension_reasons reason)
+ {
+ 	return sci_remote_node_context_suspend(&idev->rnc,
+-					       SCI_SOFTWARE_SUSPENSION,
++					       reason,
+ 					       SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT,
+ 					       NULL, NULL);
+ }
+@@ -199,7 +200,7 @@ static void isci_remote_device_not_ready(struct isci_host *ihost,
+ 		set_bit(IDEV_IO_NCQERROR, &idev->flags);
+ 
+ 		/* Suspend the remote device so the I/O can be terminated. */
+-		sci_remote_device_suspend(idev);
++		sci_remote_device_suspend(idev, SCI_SW_SUSPEND_NORMAL);
+ 
+ 		/* Kill all outstanding requests for the device. */
+ 		sci_remote_device_terminate_requests(idev);
+@@ -268,7 +269,8 @@ enum sci_status sci_remote_device_stop(struct isci_remote_device *idev,
+ 							 rnc_destruct_done,
+ 							 idev);
+ 		else {
+-			sci_remote_device_suspend(idev);
++			sci_remote_device_suspend(
++				idev, SCI_SW_SUSPEND_LINKHANG_DETECT);
+ 			sci_remote_device_terminate_requests(idev);
+ 		}
+ 		return SCI_SUCCESS;
+@@ -473,11 +475,7 @@ enum sci_status sci_remote_device_event_handler(struct isci_remote_device *idev,
+ 			status = SCI_SUCCESS;
+ 
+ 			/* Suspend the associated RNC */
+-			sci_remote_node_context_suspend(
+-				&idev->rnc,
+-				SCI_SOFTWARE_SUSPENSION,
+-				SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT,
+-				NULL, NULL);
++			sci_remote_device_suspend(idev, SCI_SW_SUSPEND_NORMAL);
+ 
+ 			dev_dbg(scirdev_to_dev(idev),
+ 				"%s: device: %p event code: %x: %s\n",
+@@ -789,9 +787,8 @@ enum sci_status sci_remote_device_start_task(struct isci_host *ihost,
+ 		 * the correct action when the remote node context is suspended
+ 		 * and later resumed.
+ 		 */
+-		sci_remote_node_context_suspend(
+-			&idev->rnc, SCI_SOFTWARE_SUSPENSION,
+-			SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT, NULL, NULL);
++		sci_remote_device_suspend(idev,
++					  SCI_SW_SUSPEND_LINKHANG_DETECT);
+ 
+ 		status = sci_remote_node_context_start_task(&idev->rnc, ireq,
+ 				sci_remote_device_continue_request, idev);
+@@ -986,9 +983,7 @@ static void sci_remote_device_resetting_state_enter(struct sci_base_state_machin
+ 	dev_dbg(&ihost->pdev->dev,
+ 		"%s: isci_device = %p\n", __func__, idev);
+ 
+-	sci_remote_node_context_suspend(
+-		&idev->rnc, SCI_SOFTWARE_SUSPENSION,
+-		SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT, NULL, NULL);
++	sci_remote_device_suspend(idev, SCI_SW_SUSPEND_LINKHANG_DETECT);
+ }
+ 
+ static void sci_remote_device_resetting_state_exit(struct sci_base_state_machine *sm)
+@@ -1486,7 +1481,7 @@ enum sci_status isci_remote_device_suspend_terminate(
+ 
+ 	/* Put the device into suspension. */
+ 	spin_lock_irqsave(&ihost->scic_lock, flags);
+-	sci_remote_device_suspend(idev);
++	sci_remote_device_suspend(idev, SCI_SW_SUSPEND_LINKHANG_DETECT);
+ 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
+ 
+ 	/* Terminate and wait for the completions. */
+diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
+index adbb4b8..85bf5ec 100644
+--- a/drivers/scsi/isci/remote_node_context.c
++++ b/drivers/scsi/isci/remote_node_context.c
+@@ -52,7 +52,7 @@
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+-
++#include <scsi/sas_ata.h>
+ #include "host.h"
+ #include "isci.h"
+ #include "remote_device.h"
+@@ -315,7 +315,7 @@ static void sci_remote_node_context_ready_state_enter(struct sci_base_state_mach
+ 	if ((dest_select == RNC_DEST_SUSPENDED) ||
+ 	    (dest_select == RNC_DEST_SUSPENDED_RESUME)) {
+ 		sci_remote_node_context_suspend(
+-			rnc, SCI_SOFTWARE_SUSPENSION,
++			rnc, SCI_SW_SUSPEND_NORMAL,
+ 			SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT, NULL, NULL);
+ 
+ 		if (dest_select == RNC_DEST_SUSPENDED_RESUME) {
+@@ -352,8 +352,10 @@ static void sci_remote_node_context_await_suspend_state_exit(
+ {
+ 	struct sci_remote_node_context *rnc
+ 		= container_of(sm, typeof(*rnc), sm);
++	struct isci_remote_device *idev = rnc_to_dev(rnc);
+ 
+-	isci_dev_set_hang_detection_timeout(rnc_to_dev(rnc), 0);
++	if (dev_is_sata(idev->domain_dev))
++		isci_dev_set_hang_detection_timeout(idev, 0);
+ }
+ 
+ static const struct sci_base_state sci_remote_node_context_state_table[] = {
+@@ -556,7 +558,7 @@ enum sci_status sci_remote_node_context_suspend(
+ 		suspend_type);
+ 
+ 	/* Disable automatic state continuations if explicitly suspending. */
+-	if ((suspend_reason != SCI_SOFTWARE_SUSPENSION) ||
++	if ((suspend_reason == SCI_HW_SUSPEND) ||
+ 	    (sci_rnc->destination_state == RNC_DEST_FINAL))
+ 		dest_param = sci_rnc->destination_state;
+ 
+@@ -612,8 +614,13 @@ enum sci_status sci_remote_node_context_suspend(
+ 		wake_up_all(&ihost->eventq); /* Let observers look. */
+ 		return SCI_SUCCESS;
  	}
--
--	if (WARN_ONCE(!list_empty(&idev->reqs_in_process), "found requests in process\n"))
--		return NULL;
--
- 	if (WARN_ONCE(!list_empty(&idev->node), "found non-idle remote device\n"))
- 		return NULL;
+-	if (suspend_reason == SCI_SOFTWARE_SUSPENSION) {
+-		isci_dev_set_hang_detection_timeout(idev, 0x00000001);
++	if ((suspend_reason == SCI_SW_SUSPEND_NORMAL) ||
++	    (suspend_reason == SCI_SW_SUSPEND_LINKHANG_DETECT)) {
++
++		if ((suspend_reason == SCI_SW_SUSPEND_LINKHANG_DETECT)
++		 && dev_is_sata(idev->domain_dev))
++			isci_dev_set_hang_detection_timeout(idev, 0x00000001);
++
+ 		sci_remote_device_post_request(
+ 			idev, SCI_SOFTWARE_SUSPEND_CMD);
+ 	}
+diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
+index 4831906..364da37 100644
+--- a/drivers/scsi/isci/remote_node_context.h
++++ b/drivers/scsi/isci/remote_node_context.h
+@@ -76,8 +76,9 @@
+ #define SCIC_SDS_REMOTE_NODE_CONTEXT_INVALID_INDEX    0x0FFF
  
-diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
-index da43698..8b7817c 100644
---- a/drivers/scsi/isci/remote_device.h
-+++ b/drivers/scsi/isci/remote_device.h
-@@ -90,7 +90,6 @@ struct isci_remote_device {
- 	struct isci_port *isci_port;
- 	struct domain_device *domain_dev;
- 	struct list_head node;
--	struct list_head reqs_in_process;
- 	struct sci_base_state_machine sm;
- 	u32 device_port_width;
- 	enum sas_linkrate connection_rate;
+ enum sci_remote_node_suspension_reasons {
+-	SCU_HARDWARE_SUSPENSION,
+-	SCI_SOFTWARE_SUSPENSION
++	SCI_HW_SUSPEND,
++	SCI_SW_SUSPEND_NORMAL,
++	SCI_SW_SUSPEND_LINKHANG_DETECT
+ };
+ #define SCI_SOFTWARE_SUSPEND_CMD SCU_CONTEXT_COMMAND_POST_RNC_SUSPEND_TX_RX
+ #define SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT SCU_EVENT_TL_RNC_SUSPEND_TX_RX
 diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 2d27ebd..c6a522c 100644
+index c6a522c..d240f6d 100644
 --- a/drivers/scsi/isci/request.c
 +++ b/drivers/scsi/isci/request.c
-@@ -2956,9 +2956,6 @@ static void isci_request_io_request_complete(struct isci_host *ihost,
- 	/* Add to the completed list. */
- 	list_add(&request->completed_node, &ihost->requests_to_complete);
+@@ -2380,7 +2380,7 @@ static void sci_request_handle_suspending_completions(
  
--	/* Take the request off the device's pending request list. */
--	list_del_init(&request->dev_node);
--
- 	/* complete the io request to the core. */
- 	sci_controller_complete_io(ihost, request->target_device, request);
- 
-@@ -3412,7 +3409,6 @@ static struct isci_request *isci_request_from_tag(struct isci_host *ihost, u16 t
- 	ireq->flags = 0;
- 	ireq->num_sg_entries = 0;
- 	INIT_LIST_HEAD(&ireq->completed_node);
--	INIT_LIST_HEAD(&ireq->dev_node);
- 
- 	return ireq;
- }
-@@ -3496,17 +3492,9 @@ int isci_request_execute(struct isci_host *ihost, struct isci_remote_device *ide
- 		spin_unlock_irqrestore(&ihost->scic_lock, flags);
- 		return status;
- 	}
--
- 	/* Either I/O started OK, or the core has signaled that
- 	 * the device needs a target reset.
--	 *
--	 * In either case, hold onto the I/O for later.
--	 *
--	 * Update it's status and add it to the list in the
--	 * remote device object.
- 	 */
--	list_add(&ireq->dev_node, &idev->reqs_in_process);
--
- 	if (status != SCI_SUCCESS) {
- 		/* The request did not really start in the
- 		 * hardware, so clear the request handle
-diff --git a/drivers/scsi/isci/request.h b/drivers/scsi/isci/request.h
-index f3116a5..d12e975 100644
---- a/drivers/scsi/isci/request.h
-+++ b/drivers/scsi/isci/request.h
-@@ -96,8 +96,6 @@ struct isci_request {
- 	struct isci_host *isci_host;
- 	/* For use in the requests_to_{complete|abort} lists: */
- 	struct list_head completed_node;
--	/* For use in the reqs_in_process list: */
--	struct list_head dev_node;
- 	dma_addr_t request_daddr;
- 	dma_addr_t zero_scatter_daddr;
- 	unsigned int num_sg_entries;
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 9d8720d..222fb0d 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -317,9 +317,6 @@ static int isci_task_execute_tmf(struct isci_host *ihost,
- 		spin_unlock_irqrestore(&ihost->scic_lock, flags);
- 		goto err_tci;
- 	}
--	/* add the request to the remote device request list. */
--	list_add(&ireq->dev_node, &idev->reqs_in_process);
--
- 	/* The RNC must be unsuspended before the TMF can get a response. */
- 	sci_remote_device_resume(idev, NULL, NULL);
- 
-@@ -721,7 +718,6 @@ isci_task_request_complete(struct isci_host *ihost,
- 	set_bit(IREQ_TERMINATED, &ireq->flags);
- 
- 	isci_free_tag(ihost, ireq->io_tag);
--	list_del_init(&ireq->dev_node);
- 
- 	/* The task management part completes last. */
- 	if (tmf_complete)
+ 		sci_remote_node_context_suspend(
+ 			&ireq->target_device->rnc,
+-			SCU_HARDWARE_SUSPENSION,
++			SCI_HW_SUSPEND,
+ 			(is_tx_rx) ? SCU_EVENT_TL_RNC_SUSPEND_TX_RX
+ 				   : SCU_EVENT_TL_RNC_SUSPEND_TX,
+ 			NULL, NULL);
 
