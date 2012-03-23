@@ -1,17 +1,17 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci-rnc PATCH v1 30/37] isci: Don't wait for an RNC suspend if
- it's being destroyed.
-Date: Thu, 22 Mar 2012 17:30:34 -0700
-Message-ID: <20120323003033.18065.63047.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci-rnc PATCH v1 31/37] isci: Restore the ATAPI device RNC
+ management code.
+Date: Thu, 22 Mar 2012 17:30:44 -0700
+Message-ID: <20120323003044.18065.65223.stgit@dwillia2-linux.jf.intel.com>
 References: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55701 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:4521 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031572Ab2CWAPL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:15:11 -0400
+	id S1031572Ab2CWAPQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 20:15:16 -0400
 In-Reply-To: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,101 +20,128 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-Make sure that the wait for suspend can handle the RNC destruction case.
+The ATAPI specific and STP general RNC suspension code had been
+incorrectly removed from the remote device code.
 
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/remote_device.c       |   20 ++++++++++++++++----
- drivers/scsi/isci/remote_node_context.c |    5 +++++
- drivers/scsi/isci/remote_node_context.h |    7 +++++++
- 3 files changed, 28 insertions(+), 4 deletions(-)
+ drivers/scsi/isci/remote_device.c |   49 ++++++++++++++++++++++---------------
+ drivers/scsi/isci/remote_device.h |    2 ++
+ drivers/scsi/isci/request.c       |    3 ++
+ 3 files changed, 34 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index be9f0e0..68ab4fb 100644
+index 68ab4fb..48765aa 100644
 --- a/drivers/scsi/isci/remote_device.c
 +++ b/drivers/scsi/isci/remote_device.c
-@@ -142,7 +142,12 @@ static bool isci_compare_suspendcount(
- 	u32 localcount)
- {
- 	smp_rmb();
--	return localcount != idev->rnc.suspend_count;
-+
-+	/* Check for a change in the suspend count, or the RNC
-+	 * being destroyed.
-+	 */
-+	return (localcount != idev->rnc.suspend_count)
-+	    || sci_remote_node_context_is_being_destroyed(&idev->rnc);
+@@ -72,8 +72,8 @@ const char *dev_state_name(enum sci_remote_device_states state)
  }
+ #undef C
  
- static bool isci_check_reqterm(
-@@ -1380,7 +1385,8 @@ enum sci_status isci_remote_device_resume_from_abort(
- 	struct isci_remote_device *idev)
+-static enum sci_status sci_remote_device_suspend(struct isci_remote_device *idev,
+-						 enum sci_remote_node_suspension_reasons reason)
++enum sci_status sci_remote_device_suspend(struct isci_remote_device *idev,
++					  enum sci_remote_node_suspension_reasons reason)
  {
- 	unsigned long flags;
--	enum sci_status status;
-+	enum sci_status status = SCI_SUCCESS;
-+	int destroyed;
+ 	return sci_remote_node_context_suspend(&idev->rnc, reason,
+ 					       SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT);
+@@ -565,6 +565,8 @@ enum sci_status sci_remote_device_event_handler(struct isci_remote_device *idev,
+ 						     u32 event_code)
+ {
+ 	enum sci_status status;
++	struct sci_base_state_machine *sm = &idev->sm;
++	enum sci_remote_device_states state = sm->current_state_id;
  
- 	spin_lock_irqsave(&ihost->scic_lock, flags);
- 	/* Preserve any current resume callbacks, for instance from other
-@@ -1390,11 +1396,17 @@ enum sci_status isci_remote_device_resume_from_abort(
- 	idev->abort_resume_cbparam = idev->rnc.user_cookie;
- 	set_bit(IDEV_ABORT_PATH_RESUME_PENDING, &idev->flags);
- 	clear_bit(IDEV_ABORT_PATH_ACTIVE, &idev->flags);
--	status = sci_remote_device_resume(
-+	destroyed = sci_remote_node_context_is_being_destroyed(&idev->rnc);
-+	if (!destroyed)
-+		status = sci_remote_device_resume(
- 			idev, isci_remote_device_resume_from_abort_complete,
- 			idev);
- 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
--	isci_remote_device_wait_for_resume_from_abort(ihost, idev);
-+	if (!destroyed)
-+		isci_remote_device_wait_for_resume_from_abort(ihost, idev);
-+	else
-+		clear_bit(IDEV_ABORT_PATH_RESUME_PENDING, &idev->flags);
+ 	switch (scu_get_event_type(event_code)) {
+ 	case SCU_EVENT_TYPE_RNC_OPS_MISC:
+@@ -603,6 +605,30 @@ enum sci_status sci_remote_device_event_handler(struct isci_remote_device *idev,
+ 	if (status != SCI_SUCCESS)
+ 		return status;
+ 
++	/* Decode device-specific states that may require an RNC resume during
++	 * normal operation.  When the abort path is active, these resumes are
++	 * managed when the abort path exits.
++	 */
++	if (state == SCI_STP_DEV_ATAPI_ERROR) {
++		/* For ATAPI error state resume the RNC right away. */
++		if (scu_get_event_type(event_code) == SCU_EVENT_TYPE_RNC_SUSPEND_TX ||
++		    scu_get_event_type(event_code) == SCU_EVENT_TYPE_RNC_SUSPEND_TX_RX) {
++			return sci_remote_node_context_resume(&idev->rnc,
++							      atapi_remote_device_resume_done,
++							      idev);
++		}
++	}
++
++	if (state == SCI_STP_DEV_IDLE) {
++
++		/* We pick up suspension events to handle specifically to this
++		 * state. We resume the RNC right away.
++		 */
++		if (scu_get_event_type(event_code) == SCU_EVENT_TYPE_RNC_SUSPEND_TX ||
++		    scu_get_event_type(event_code) == SCU_EVENT_TYPE_RNC_SUSPEND_TX_RX)
++			status = sci_remote_node_context_resume(&idev->rnc, NULL, NULL);
++	}
 +
  	return status;
  }
  
-diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
-index a0a62e3..920c2bb 100644
---- a/drivers/scsi/isci/remote_node_context.c
-+++ b/drivers/scsi/isci/remote_node_context.c
-@@ -270,6 +270,8 @@ static void sci_remote_node_context_invalidate_context_buffer(struct sci_remote_
- static void sci_remote_node_context_initial_state_enter(struct sci_base_state_machine *sm)
- {
- 	struct sci_remote_node_context *rnc = container_of(sm, typeof(*rnc), sm);
-+	struct isci_remote_device *idev = rnc_to_dev(rnc);
-+	struct isci_host *ihost = idev->owning_port->owning_controller;
- 
- 	/* Check to see if we have gotten back to the initial state because
- 	 * someone requested to destroy the remote node context object.
-@@ -277,6 +279,9 @@ static void sci_remote_node_context_initial_state_enter(struct sci_base_state_ma
- 	if (sm->previous_state_id == SCI_RNC_INVALIDATING) {
- 		rnc->destination_state = RNC_DEST_UNSPECIFIED;
- 		sci_remote_node_context_notify_user(rnc);
-+
-+		smp_wmb();
-+		wake_up(&ihost->eventq);
- 	}
+@@ -1137,21 +1163,6 @@ static void sci_stp_remote_device_ready_ncq_error_substate_enter(struct sci_base
+ 					     idev->not_ready_reason);
  }
  
-diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
-index c61c02e..0d4a24d 100644
---- a/drivers/scsi/isci/remote_node_context.h
-+++ b/drivers/scsi/isci/remote_node_context.h
-@@ -226,4 +226,11 @@ enum sci_status sci_remote_node_context_start_io(struct sci_remote_node_context
- int sci_remote_node_context_is_safe_to_abort(
- 	struct sci_remote_node_context *sci_rnc);
- 
-+static inline bool sci_remote_node_context_is_being_destroyed(
-+	struct sci_remote_node_context *sci_rnc)
-+{
-+	return ((sci_rnc->sm.current_state_id == SCI_RNC_INVALIDATING)
-+		&& (sci_rnc->destination_state == RNC_DEST_FINAL))
-+		|| (sci_rnc->sm.current_state_id == SCI_RNC_INITIAL);
-+}
- #endif  /* _SCIC_SDS_REMOTE_NODE_CONTEXT_H_ */
+-static void sci_stp_remote_device_atapi_error_substate_enter(
+-	struct sci_base_state_machine *sm)
+-{
+-	struct isci_remote_device *idev = container_of(sm, typeof(*idev), sm);
+-
+-	/* This state is entered when an I/O is decoded with an error
+-	 * condition.  By this point the RNC expected suspension state is set.
+-	 * The error conditions suspend the device, so unsuspend here if
+-	 * possible.
+-	 */
+-	sci_remote_node_context_resume(&idev->rnc,
+-				       atapi_remote_device_resume_done,
+-				       idev);
+-}
+-
+ static void sci_smp_remote_device_ready_idle_substate_enter(struct sci_base_state_machine *sm)
+ {
+ 	struct isci_remote_device *idev = container_of(sm, typeof(*idev), sm);
+@@ -1202,9 +1213,7 @@ static const struct sci_base_state sci_remote_device_state_table[] = {
+ 	[SCI_STP_DEV_NCQ_ERROR] = {
+ 		.enter_state = sci_stp_remote_device_ready_ncq_error_substate_enter,
+ 	},
+-	[SCI_STP_DEV_ATAPI_ERROR] = {
+-		.enter_state = sci_stp_remote_device_atapi_error_substate_enter,
+-	},
++	[SCI_STP_DEV_ATAPI_ERROR] = { },
+ 	[SCI_STP_DEV_AWAIT_RESET] = { },
+ 	[SCI_SMP_DEV_IDLE] = {
+ 		.enter_state = sci_smp_remote_device_ready_idle_substate_enter,
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index ff34c4e..7674caa 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -382,4 +382,6 @@ enum sci_status isci_remote_device_terminate_requests(
+ 	struct isci_host *ihost,
+ 	struct isci_remote_device *idev,
+ 	struct isci_request *ireq);
++enum sci_status sci_remote_device_suspend(struct isci_remote_device *idev,
++					  enum sci_remote_node_suspension_reasons reason);
+ #endif /* !defined(_ISCI_REMOTE_DEVICE_H_) */
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index 5c97102..6584ef0 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -2118,6 +2118,9 @@ static enum sci_status stp_request_udma_await_tc_event(struct isci_request *ireq
+ 		 * completion.
+ 		 */
+ 		if (ireq->stp.rsp.fis_type == FIS_REGD2H) {
++			sci_remote_device_suspend(ireq->target_device,
++						  SCI_SW_SUSPEND_NORMAL);
++
+ 			ireq->scu_status = SCU_TASK_DONE_CHECK_RESPONSE;
+ 			ireq->sci_status = SCI_FAILURE_IO_RESPONSE_VALID;
+ 			sci_change_state(&ireq->sm, SCI_REQ_COMPLETED);
 
