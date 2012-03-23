@@ -1,17 +1,17 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci-rnc PATCH v1 32/37] isci: Check IDEV_GONE before performing
- abort path operations.
-Date: Thu, 22 Mar 2012 17:30:49 -0700
-Message-ID: <20120323003049.18065.13988.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci-rnc PATCH v1 34/37] isci: Manage the IREQ_NO_AUTO_FREE_TAG
+ under scic_lock.
+Date: Thu, 22 Mar 2012 17:30:59 -0700
+Message-ID: <20120323003059.18065.87507.stgit@dwillia2-linux.jf.intel.com>
 References: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:35751 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:31694 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031572Ab2CWAPW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:15:22 -0400
+	id S1031572Ab2CWAPc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 20:15:32 -0400
 In-Reply-To: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,176 +20,31 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-In the link fail path, set IDEV_GONE for every device on the domain
-when the last link in the port fails.
-
-In the abort path functions like isci_reset_device, make sure that
-there has not already been a detected domain failure with the device
-by checking IDEV_GONE, before performing any kind of hard reset, SMP
-phy control, or TMF operation.
-
-The check for IDEV_GONE makes sure that the device in the abort path
-really has control of the port with which it is associated.  This
-prevents starting hard resets at incorrect times and scheduling
-unnecessary LUN resets for SATA devices.
+Since there is a possibilty of a timeout waiting for the RNC suspension,
+handle the exit case from the task termination under scic_lock, and leave
+the tag allocated if the termination timed-out.
 
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/port.c |   23 +++++++++++++++++++
- drivers/scsi/isci/task.c |   55 ++++++++++++++++++++++++++++------------------
- 2 files changed, 57 insertions(+), 21 deletions(-)
+ drivers/scsi/isci/remote_device.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
-index 87944c8..bab07c8 100644
---- a/drivers/scsi/isci/port.c
-+++ b/drivers/scsi/isci/port.c
-@@ -240,9 +240,32 @@ static void isci_port_link_down(struct isci_host *isci_host,
- 				struct isci_phy *isci_phy,
- 				struct isci_port *isci_port)
- {
-+	struct isci_remote_device *isci_device;
-+
- 	dev_dbg(&isci_host->pdev->dev,
- 		"%s: isci_port = %p\n", __func__, isci_port);
- 
-+	if (isci_port) {
-+
-+		/* check to see if this is the last phy on this port. */
-+		if (isci_phy->sas_phy.port &&
-+		    isci_phy->sas_phy.port->num_phys == 1) {
-+			/* change the state for all devices on this port.  The
-+			* next task sent to this device will be returned as
-+			* SAS_TASK_UNDELIVERED, and the scsi mid layer will
-+			* remove the target
-+			*/
-+			list_for_each_entry(isci_device,
-+					    &isci_port->remote_dev_list,
-+					    node) {
-+				dev_dbg(&isci_host->pdev->dev,
-+					"%s: isci_device = %p\n",
-+					__func__, isci_device);
-+				set_bit(IDEV_GONE, &isci_device->flags);
-+			}
-+		}
-+	}
-+
- 	/* Notify libsas of the borken link, this will trigger calls to our
- 	 * isci_port_deformed and isci_dev_gone functions.
- 	 */
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 084f8f7..6bc74eb 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -421,7 +421,7 @@ int isci_task_lu_reset(struct domain_device *dev, u8 *lun)
- 	struct isci_host *ihost = dev_to_ihost(dev);
- 	struct isci_remote_device *idev;
- 	unsigned long flags;
--	int ret;
-+	int ret = TMF_RESP_FUNC_COMPLETE;
- 
- 	spin_lock_irqsave(&ihost->scic_lock, flags);
- 	idev = isci_get_device(dev->lldd_dev);
-@@ -447,12 +447,12 @@ int isci_task_lu_reset(struct domain_device *dev, u8 *lun)
- 		goto out;
- 	}
- 	/* All pending I/Os have been terminated and cleaned up. */
--	if (dev_is_sata(dev)) {
--		sas_ata_schedule_reset(dev);
--		ret = TMF_RESP_FUNC_COMPLETE;
--	} else {
--		/* Send the task management part of the reset. */
--		ret = isci_task_send_lu_reset_sas(ihost, idev, lun);
-+	if (!test_bit(IDEV_GONE, &idev->flags)) {
-+		if (dev_is_sata(dev))
-+			sas_ata_schedule_reset(dev);
-+		else
-+			/* Send the task management part of the reset. */
-+			ret = isci_task_send_lu_reset_sas(ihost, idev, lun);
- 	}
-  out:
- 	isci_put_device(idev);
-@@ -512,8 +512,17 @@ int isci_task_abort_task(struct sas_task *task)
- 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
- 
- 	dev_warn(&ihost->pdev->dev,
--		 "%s: dev = %p, task = %p, old_request == %p\n",
--		 __func__, idev, task, old_request);
-+		 "%s: dev = %p (%s%s), task = %p, old_request == %p\n",
-+		 __func__, idev,
-+		 (dev_is_sata(task->dev) ? "STP/SATA"
-+					 : ((dev_is_expander(task->dev))
-+						? "SMP"
-+						: "SSP")),
-+		 ((idev) ? ((test_bit(IDEV_GONE, &idev->flags))
-+			   ? " IDEV_GONE"
-+			   : "")
-+			 : " <NULL>"),
-+		 task, old_request);
- 
- 	/* Device reset conditions signalled in task_state_flags are the
- 	 * responsbility of libsas to observe at the start of the error
-@@ -552,7 +561,8 @@ int isci_task_abort_task(struct sas_task *task)
- 
- 	if (task->task_proto == SAS_PROTOCOL_SMP ||
- 	    sas_protocol_ata(task->task_proto) ||
--	    test_bit(IREQ_COMPLETE_IN_TARGET, &old_request->flags)) {
-+	    test_bit(IREQ_COMPLETE_IN_TARGET, &old_request->flags) ||
-+	    test_bit(IDEV_GONE, &idev->flags)) {
- 
- 		spin_unlock_irqrestore(&ihost->scic_lock, flags);
- 
-@@ -561,7 +571,8 @@ int isci_task_abort_task(struct sas_task *task)
- 
- 		dev_warn(&ihost->pdev->dev,
- 			 "%s: %s request"
--				 " or complete_in_target (%d), thus no TMF\n",
-+				 " or complete_in_target (%d), "
-+				 "or IDEV_GONE (%d), thus no TMF\n",
- 			 __func__,
- 			 ((task->task_proto == SAS_PROTOCOL_SMP)
- 			  ? "SMP"
-@@ -570,7 +581,8 @@ int isci_task_abort_task(struct sas_task *task)
- 				: "<other>")
- 			  ),
- 			 test_bit(IREQ_COMPLETE_IN_TARGET,
--				  &old_request->flags));
-+				  &old_request->flags),
-+			 test_bit(IDEV_GONE, &idev->flags));
- 
- 		spin_lock_irqsave(&task->task_state_lock, flags);
- 		task->task_state_flags &= ~(SAS_TASK_AT_INITIATOR |
-@@ -734,7 +746,7 @@ static int isci_reset_device(struct isci_host *ihost,
- 			     struct domain_device *dev,
- 			     struct isci_remote_device *idev)
- {
--	int rc = TMF_RESP_FUNC_COMPLETE, reset_stat;
-+	int rc = TMF_RESP_FUNC_COMPLETE, reset_stat = -1;
- 	struct sas_phy *phy = sas_get_local_phy(dev);
- 	struct isci_port *iport = dev->port->lldd_port;
- 
-@@ -752,14 +764,15 @@ static int isci_reset_device(struct isci_host *ihost,
- 	 * primary duty of this function is to cleanup tasks, so that is the
- 	 * relevant status.
- 	 */
--
--	if (scsi_is_sas_phy_local(phy)) {
--		struct isci_phy *iphy = &ihost->phys[phy->number];
--
--		reset_stat = isci_port_perform_hard_reset(ihost, iport, iphy);
--	} else
--		reset_stat = sas_phy_reset(phy, !dev_is_sata(dev));
--
-+	if (!test_bit(IDEV_GONE, &idev->flags)) {
-+		if (scsi_is_sas_phy_local(phy)) {
-+			struct isci_phy *iphy = &ihost->phys[phy->number];
-+
-+			reset_stat = isci_port_perform_hard_reset(ihost, iport,
-+								  iphy);
-+		} else
-+			reset_stat = sas_phy_reset(phy, !dev_is_sata(dev));
-+	}
- 	/* Explicitly resume the RNC here, since there was no task sent. */
- 	isci_remote_device_resume_from_abort(ihost, idev);
- 
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index 48765aa..a3a6487 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -243,8 +243,11 @@ enum sci_status isci_remote_device_terminate_requests(
+ 					 idev->rnc.destination_state,
+ 					 ireq, ireq->flags);
+ 			}
++			spin_lock_irqsave(&ihost->scic_lock, flags);
+ 			clear_bit(IREQ_NO_AUTO_FREE_TAG, &ireq->flags);
+-			isci_free_tag(ihost, ireq->io_tag);
++			if (!test_bit(IREQ_ABORT_PATH_ACTIVE, &ireq->flags))
++				isci_free_tag(ihost, ireq->io_tag);
++			spin_unlock_irqrestore(&ihost->scic_lock, flags);
+ 		} else {
+ 			/* Terminate all TCs. */
+ 			sci_remote_device_terminate_requests(idev);
 
