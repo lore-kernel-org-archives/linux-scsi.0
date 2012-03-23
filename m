@@ -1,174 +1,151 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [libsas PATCH v13] scsi,
- sd: limit the scope of the async probe domain
-Date: Thu, 22 Mar 2012 17:05:11 -0700
-Message-ID: <20120323000201.17750.18754.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci-rnc PATCH v1 00/37] remote node context rework
+Date: Thu, 22 Mar 2012 17:27:48 -0700
+Message-ID: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:63086 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751972Ab2CWAMV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 20:12:21 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-sd injects and synchronizes probe work on the global kernel-wide domain.
-This runs into conflict with PM that wants to perform resume actions in
-async context:
+This series is unfortunately being posted during the merge window but has
+been in development since the beginning of February.  Part of the delay
+in getting it posted was due to waiting for the libsas error-handling
+and hotplug work to stabilize, and waiting for the full test results to
+come back showing that this development topic was effective.
 
-[  494.237079] INFO: task kworker/u:3:554 blocked for more than 120 seconds.
-[  494.294396] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  494.360809] kworker/u:3     D 0000000000000000     0   554      2 0x00000000
-[  494.420739]  ffff88012e4d3af0 0000000000000046 ffff88013200c160 ffff88012e4d3fd8
-[  494.484392]  ffff88012e4d3fd8 0000000000012500 ffff8801394ea0b0 ffff88013200c160
-[  494.548038]  ffff88012e4d3ae0 00000000000001e3 ffffffff81a249e0 ffff8801321c5398
-[  494.611685] Call Trace:
-[  494.632649]  [<ffffffff8149dd25>] schedule+0x5a/0x5c
-[  494.674687]  [<ffffffff8104b968>] async_synchronize_cookie_domain+0xb6/0x112
-[  494.734177]  [<ffffffff810461ff>] ? __init_waitqueue_head+0x50/0x50
-[  494.787134]  [<ffffffff8131a224>] ? scsi_remove_target+0x48/0x48
-[  494.837900]  [<ffffffff8104b9d9>] async_synchronize_cookie+0x15/0x17
-[  494.891567]  [<ffffffff8104ba49>] async_synchronize_full+0x54/0x70  <-- here we wait for async contexts to complete
-[  494.943783]  [<ffffffff8104b9f5>] ? async_synchronize_full_domain+0x1a/0x1a
-[  495.002547]  [<ffffffffa00114b1>] sd_remove+0x2c/0xa2 [sd_mod]
-[  495.051861]  [<ffffffff812fe94f>] __device_release_driver+0x86/0xcf
-[  495.104807]  [<ffffffff812fe9bd>] device_release_driver+0x25/0x32  <-- here we take device_lock()
+With these patches, on top of the libsas changes, our hotplug /
+exception handling tests are now passing.  Previously we were seeing
+frequent system crashes and sometimes locking up the silicon.  I will
+let Jeff describe the technical changes in more detail, but it bears
+pointing out that this comes with a modest but welcome cleanup of the
+code complexity:
 
-[  853.511341] INFO: task kworker/u:4:549 blocked for more than 120 seconds.
-[  853.568693] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  853.635119] kworker/u:4     D ffff88013097b5d0     0   549      2 0x00000000
-[  853.695129]  ffff880132773c40 0000000000000046 ffff880130790000 ffff880132773fd8
-[  853.758990]  ffff880132773fd8 0000000000012500 ffff88013288a0b0 ffff880130790000
-[  853.822796]  0000000000000246 0000000000000040 ffff88013097b5c8 ffff880130790000
-[  853.886633] Call Trace:
-[  853.907631]  [<ffffffff8149dd25>] schedule+0x5a/0x5c
-[  853.949670]  [<ffffffff8149cc44>] __mutex_lock_common+0x220/0x351
-[  854.001225]  [<ffffffff81304bd7>] ? device_resume+0x58/0x1c4
-[  854.049082]  [<ffffffff81304bd7>] ? device_resume+0x58/0x1c4
-[  854.097011]  [<ffffffff8149ce48>] mutex_lock_nested+0x2f/0x36   <-- here we wait for device_lock()
-[  854.145591]  [<ffffffff81304bd7>] device_resume+0x58/0x1c4
-[  854.192066]  [<ffffffff81304d61>] async_resume+0x1e/0x45
-[  854.237019]  [<ffffffff8104bc93>] async_run_entry_fn+0xc6/0x173  <-- ...while running in async context
+ 15 files changed, 1316 insertions(+), 1633 deletions(-)
 
-Provide a 'scsi_sd_probe_domain' so that async probe actions actions can
-be flushed without regard for the state of PM, and allow for the resume
-path to handle devices that have transitioned from SDEV_QUIESCE to
-SDEV_DEL prior to resume.
+Also available via:
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-[alan: uplevel scsi_sd_probe_domain, clarify scsi_device_resume]
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git isci-rnc-v1
+
+...this topic builds on top of isci-for-3.4-v4.
+
+--
+Dan
+
+From: Jeff Skirvin
+
+In the controller, devices as they appear on a SAS domain (or
+direct-attached SATA devices) are represented by memory structures known
+as "Remote Node Contexts" (RNCs).  These structures are transferred from
+main memory to the controller using a set of register commands; these
+commands include setting up the context ("posting"), removing the
+context ("invalidating"), and commands to control the scheduling of
+commands and connections to that remote device ("suspensions" and
+"resumptions").  There is a similar path to control RNC scheduling from
+the protocol engine, which interprets the results of command and data
+transmission and reception.
+
+In general, the controller chooses among non-suspended RNCs to find one
+that has work requiring scheduling the transmission of command and data
+frames to a target.  Likewise, when a target tries to return data back
+to the initiator, the state of the RNC is used by the controller to
+determine how to treat the incoming request. As an example, if the RNC
+is in the state "TX/RX Suspended", incoming SSP connection requests from
+the target will be rejected by the controller hardware.  When an RNC is
+"TX Suspended", it will not be selected by the controller hardware to
+start outgoing command or data operations (with certain priority-based
+exceptions).
+
+As mentioned above, there are two sources for management of the RNC
+states: commands from driver software, and the result of transmission
+and reception conditions of commands and data signaled by the controller
+hardware.  As an example of the latter, if an outgoing SSP command ends
+with a OPEN_REJECT(BAD_DESTINATION) status, the RNC state will
+transition to the "TX Suspended" state, and this is signaled by the
+controller hardware in the status to the completion of the pending
+command as well as signaled in a controller hardware event.  Examples of
+the former are included in the patch changelogs.
+
+Driver software is required to suspend the RNC in a "TX/RX Suspended"
+condition before any outstanding commands can be terminated.  Failure to
+guarantee this can lead to a complete hardware hang condition.  Earlier
+versions of the driver software did not guarantee that an RNC was
+correctly managed before I/O termination, and so operated in an unsafe
+way.
+
+Further, the driver performed unnecessary contortions to preserve the
+remote device command state and so was more complicated than it needed
+to be.  A simplifying driver assumption is that once an I/O has entered
+the error handler path without having completed in the target, the
+requirement on the driver is that all use of the sas_task must end.
+Beyond that, recovery of operation is dependent on libsas and other
+components to reset, rediscover and reconfigure the device before normal
+operation can restart.  In the driver, this simplifying assumption meant
+that the RNC management could be reduced to entry into the suspended
+state, terminating the targeted I/O request, and resuming the RNC as
+needed for device-specific management such as an SSP Abort Task or LUN
+Reset Management request.
+
 ---
 
-Changes since v12: http://marc.info/?l=linux-scsi&m=133239705303419&w=2
+Jeff Skirvin (37):
+      isci: Manage the link layer hang detect timer for RNC suspensions.
+      isci: Fixed bug in resumption from RNC Tx/Rx suspend state.
+      isci: Handle all suspending TC completions
+      isci: Terminate outstanding TCs on TX/RX RNC suspensions.
+      isci: Manage device suspensions during TC terminations.
+      isci: Remote device must be suspended for NCQ cleanup.
+      isci: Remote device stop also suspends the RNC and terminates I/O.
+      isci: Escalate to I_T_Nexus_Reset when the device is gone.
+      isci: Redesign device suspension, abort, cleanup.
+      isci: Add suspension cases for RNC INVALIDATING, POSTING states.
+      isci: Device access in the error path does not depend on IDEV_GONE.
+      isci: All pending TCs are terminated when the RNC is invalidated.
+      isci: Only set IDEV_GONE in the device stop path.
+      isci: Remove isci_device reqs_in_process and dev_node from isci_device.
+      isci: Distinguish between remote device suspension cases
+      isci: Fix the terminated I/O to not call sas_task_abort().
+      isci: Save the suspension hint for upcoming suspensions.
+      isci: Manage the LLHANG timer enable/disable per-device.
+      isci: Make sure all TCs are terminated and cleaned in LUN reset.
+      isci: Implement waiting for suspend in the abort path.
+      isci: When in the abort path, defeat other resume calls until done.
+      isci: Callbacks to libsas occur under scic_lock and are synchronized.
+      isci: Manage tag releases differently when aborting tasks.
+      isci: Fix RNC suspend call for SCI_RESUMING state.
+      isci: Wait for RNC resumption before leaving the abort path.
+      isci: Directly control IREQ_ABORT_PATH_ACTIVE when completing TMFs.
+      isci: Add protocol indicator for TMF requests.
+      isci: Added timeouts to RNC suspensions in the abort path.
+      isci: Change the phy control and link reset interface for HW reasons.
+      isci: Don't wait for an RNC suspend if it's being destroyed.
+      isci: Restore the ATAPI device RNC management code.
+      isci: Check IDEV_GONE before performing abort path operations.
+      isci: Remove obviated host callback list.
+      isci: Manage the IREQ_NO_AUTO_FREE_TAG under scic_lock.
+      isci: Fix RNC AWAIT_SUSPENSION->INVALIDATING transition.
+      isci: Fixed RNC bug that lost the suspension or resumption during destroy
+      isci: End the RNC resumption wait when the RNC is destroyed.
 
-Just update this one patch with Alan's feedback to move the declaration
-scsi_sd_probe_domain into scsi_priv.h.
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas-eh-reworks-v13
-
- drivers/scsi/scsi.c      |    6 ++++++
- drivers/scsi/scsi_lib.c  |   10 +++++++---
- drivers/scsi/scsi_pm.c   |    2 +-
- drivers/scsi/scsi_priv.h |    4 ++++
- drivers/scsi/sd.c        |    5 +++--
- 5 files changed, 21 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 07322ec..61c82a3 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -90,6 +90,12 @@ unsigned int scsi_logging_level;
- EXPORT_SYMBOL(scsi_logging_level);
- #endif
- 
-+#if IS_ENABLED(CONFIG_PM) || IS_ENABLED(CONFIG_BLK_DEV_SD)
-+/* sd and scsi_pm need to coordinate flushing async actions */
-+LIST_HEAD(scsi_sd_probe_domain);
-+EXPORT_SYMBOL(scsi_sd_probe_domain);
-+#endif
-+
- /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
-  * You may not alter any existing entry (although adding new ones is
-  * encouraged once assigned by ANSI/INCITS T10
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b4833de..992ff63 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2348,10 +2348,14 @@ EXPORT_SYMBOL(scsi_device_quiesce);
-  *
-  *	Must be called with user context, may sleep.
-  */
--void
--scsi_device_resume(struct scsi_device *sdev)
-+void scsi_device_resume(struct scsi_device *sdev)
- {
--	if(scsi_device_set_state(sdev, SDEV_RUNNING))
-+	/* check if the device state was mutated prior to resume, and if
-+	 * so assume the state is being managed elsewhere (for example
-+	 * device deleted during suspend)
-+	 */
-+	if (sdev->sdev_state != SDEV_QUIESCE ||
-+	    scsi_device_set_state(sdev, SDEV_RUNNING))
- 		return;
- 	scsi_run_queue(sdev->request_queue);
- }
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index c467064..f661a41 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -97,7 +97,7 @@ static int scsi_bus_prepare(struct device *dev)
- {
- 	if (scsi_is_sdev_device(dev)) {
- 		/* sd probing uses async_schedule.  Wait until it finishes. */
--		async_synchronize_full();
-+		async_synchronize_full_domain(&scsi_sd_probe_domain);
- 
- 	} else if (scsi_is_host_device(dev)) {
- 		/* Wait until async scanning is finished */
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index be4fa6d..bec061d 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -163,6 +163,10 @@ static inline int scsi_autopm_get_host(struct Scsi_Host *h) { return 0; }
- static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
- #endif /* CONFIG_PM_RUNTIME */
- 
-+#if IS_ENABLED(CONFIG_PM) || IS_ENABLED(CONFIG_BLK_DEV_SD)
-+extern struct list_head scsi_sd_probe_domain;
-+#endif
-+
- /* 
-  * internal scsi timeout functions: for use by mid-layer and transport
-  * classes.
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index bd17cf8..19e27d8 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -65,6 +65,7 @@
- #include <scsi/scsicam.h>
- 
- #include "sd.h"
-+#include "scsi_priv.h"
- #include "scsi_logging.h"
- 
- MODULE_AUTHOR("Eric Youngdale");
-@@ -2717,7 +2718,7 @@ static int sd_probe(struct device *dev)
- 	dev_set_drvdata(dev, sdkp);
- 
- 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
--	async_schedule(sd_probe_async, sdkp);
-+	async_schedule_domain(sd_probe_async, sdkp, &scsi_sd_probe_domain);
- 
- 	return 0;
- 
-@@ -2751,7 +2752,7 @@ static int sd_remove(struct device *dev)
- 	sdkp = dev_get_drvdata(dev);
- 	scsi_autopm_get_device(sdkp->device);
- 
--	async_synchronize_full();
-+	async_synchronize_full_domain(&scsi_sd_probe_domain);
- 	blk_queue_prep_rq(sdkp->device->request_queue, scsi_prep_fn);
- 	blk_queue_unprep_rq(sdkp->device->request_queue, NULL);
- 	device_del(&sdkp->dev);
-
+ drivers/scsi/isci/host.c                 |  143 ++---
+ drivers/scsi/isci/host.h                 |    8 
+ drivers/scsi/isci/init.c                 |    3 
+ drivers/scsi/isci/phy.c                  |    2 
+ drivers/scsi/isci/port.c                 |   45 +-
+ drivers/scsi/isci/port.h                 |    5 
+ drivers/scsi/isci/remote_device.c        |  547 ++++++++++++++++-----
+ drivers/scsi/isci/remote_device.h        |   62 ++
+ drivers/scsi/isci/remote_node_context.c  |  345 ++++++++++---
+ drivers/scsi/isci/remote_node_context.h  |   43 +-
+ drivers/scsi/isci/request.c              |  696 +++++++++++---------------
+ drivers/scsi/isci/request.h              |  116 ----
+ drivers/scsi/isci/scu_completion_codes.h |    2 
+ drivers/scsi/isci/task.c                 |  800 +++++-------------------------
+ drivers/scsi/isci/task.h                 |  132 -----
+ 15 files changed, 1316 insertions(+), 1633 deletions(-)
