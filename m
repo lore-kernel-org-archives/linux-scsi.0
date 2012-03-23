@@ -1,17 +1,17 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci-rnc PATCH v1 31/37] isci: Restore the ATAPI device RNC
- management code.
-Date: Thu, 22 Mar 2012 17:30:44 -0700
-Message-ID: <20120323003044.18065.65223.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci-rnc PATCH v1 32/37] isci: Check IDEV_GONE before performing
+ abort path operations.
+Date: Thu, 22 Mar 2012 17:30:49 -0700
+Message-ID: <20120323003049.18065.13988.stgit@dwillia2-linux.jf.intel.com>
 References: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4521 "EHLO mga02.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:35751 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031572Ab2CWAPQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:15:16 -0400
+	id S1031572Ab2CWAPW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 20:15:22 -0400
 In-Reply-To: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,128 +20,176 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-The ATAPI specific and STP general RNC suspension code had been
-incorrectly removed from the remote device code.
+In the link fail path, set IDEV_GONE for every device on the domain
+when the last link in the port fails.
+
+In the abort path functions like isci_reset_device, make sure that
+there has not already been a detected domain failure with the device
+by checking IDEV_GONE, before performing any kind of hard reset, SMP
+phy control, or TMF operation.
+
+The check for IDEV_GONE makes sure that the device in the abort path
+really has control of the port with which it is associated.  This
+prevents starting hard resets at incorrect times and scheduling
+unnecessary LUN resets for SATA devices.
 
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/remote_device.c |   49 ++++++++++++++++++++++---------------
- drivers/scsi/isci/remote_device.h |    2 ++
- drivers/scsi/isci/request.c       |    3 ++
- 3 files changed, 34 insertions(+), 20 deletions(-)
+ drivers/scsi/isci/port.c |   23 +++++++++++++++++++
+ drivers/scsi/isci/task.c |   55 ++++++++++++++++++++++++++++------------------
+ 2 files changed, 57 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index 68ab4fb..48765aa 100644
---- a/drivers/scsi/isci/remote_device.c
-+++ b/drivers/scsi/isci/remote_device.c
-@@ -72,8 +72,8 @@ const char *dev_state_name(enum sci_remote_device_states state)
- }
- #undef C
- 
--static enum sci_status sci_remote_device_suspend(struct isci_remote_device *idev,
--						 enum sci_remote_node_suspension_reasons reason)
-+enum sci_status sci_remote_device_suspend(struct isci_remote_device *idev,
-+					  enum sci_remote_node_suspension_reasons reason)
+diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
+index 87944c8..bab07c8 100644
+--- a/drivers/scsi/isci/port.c
++++ b/drivers/scsi/isci/port.c
+@@ -240,9 +240,32 @@ static void isci_port_link_down(struct isci_host *isci_host,
+ 				struct isci_phy *isci_phy,
+ 				struct isci_port *isci_port)
  {
- 	return sci_remote_node_context_suspend(&idev->rnc, reason,
- 					       SCI_SOFTWARE_SUSPEND_EXPECTED_EVENT);
-@@ -565,6 +565,8 @@ enum sci_status sci_remote_device_event_handler(struct isci_remote_device *idev,
- 						     u32 event_code)
- {
- 	enum sci_status status;
-+	struct sci_base_state_machine *sm = &idev->sm;
-+	enum sci_remote_device_states state = sm->current_state_id;
++	struct isci_remote_device *isci_device;
++
+ 	dev_dbg(&isci_host->pdev->dev,
+ 		"%s: isci_port = %p\n", __func__, isci_port);
  
- 	switch (scu_get_event_type(event_code)) {
- 	case SCU_EVENT_TYPE_RNC_OPS_MISC:
-@@ -603,6 +605,30 @@ enum sci_status sci_remote_device_event_handler(struct isci_remote_device *idev,
- 	if (status != SCI_SUCCESS)
- 		return status;
- 
-+	/* Decode device-specific states that may require an RNC resume during
-+	 * normal operation.  When the abort path is active, these resumes are
-+	 * managed when the abort path exits.
-+	 */
-+	if (state == SCI_STP_DEV_ATAPI_ERROR) {
-+		/* For ATAPI error state resume the RNC right away. */
-+		if (scu_get_event_type(event_code) == SCU_EVENT_TYPE_RNC_SUSPEND_TX ||
-+		    scu_get_event_type(event_code) == SCU_EVENT_TYPE_RNC_SUSPEND_TX_RX) {
-+			return sci_remote_node_context_resume(&idev->rnc,
-+							      atapi_remote_device_resume_done,
-+							      idev);
++	if (isci_port) {
++
++		/* check to see if this is the last phy on this port. */
++		if (isci_phy->sas_phy.port &&
++		    isci_phy->sas_phy.port->num_phys == 1) {
++			/* change the state for all devices on this port.  The
++			* next task sent to this device will be returned as
++			* SAS_TASK_UNDELIVERED, and the scsi mid layer will
++			* remove the target
++			*/
++			list_for_each_entry(isci_device,
++					    &isci_port->remote_dev_list,
++					    node) {
++				dev_dbg(&isci_host->pdev->dev,
++					"%s: isci_device = %p\n",
++					__func__, isci_device);
++				set_bit(IDEV_GONE, &isci_device->flags);
++			}
 +		}
 +	}
 +
-+	if (state == SCI_STP_DEV_IDLE) {
-+
-+		/* We pick up suspension events to handle specifically to this
-+		 * state. We resume the RNC right away.
-+		 */
-+		if (scu_get_event_type(event_code) == SCU_EVENT_TYPE_RNC_SUSPEND_TX ||
-+		    scu_get_event_type(event_code) == SCU_EVENT_TYPE_RNC_SUSPEND_TX_RX)
-+			status = sci_remote_node_context_resume(&idev->rnc, NULL, NULL);
-+	}
-+
- 	return status;
- }
+ 	/* Notify libsas of the borken link, this will trigger calls to our
+ 	 * isci_port_deformed and isci_dev_gone functions.
+ 	 */
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index 084f8f7..6bc74eb 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -421,7 +421,7 @@ int isci_task_lu_reset(struct domain_device *dev, u8 *lun)
+ 	struct isci_host *ihost = dev_to_ihost(dev);
+ 	struct isci_remote_device *idev;
+ 	unsigned long flags;
+-	int ret;
++	int ret = TMF_RESP_FUNC_COMPLETE;
  
-@@ -1137,21 +1163,6 @@ static void sci_stp_remote_device_ready_ncq_error_substate_enter(struct sci_base
- 					     idev->not_ready_reason);
- }
+ 	spin_lock_irqsave(&ihost->scic_lock, flags);
+ 	idev = isci_get_device(dev->lldd_dev);
+@@ -447,12 +447,12 @@ int isci_task_lu_reset(struct domain_device *dev, u8 *lun)
+ 		goto out;
+ 	}
+ 	/* All pending I/Os have been terminated and cleaned up. */
+-	if (dev_is_sata(dev)) {
+-		sas_ata_schedule_reset(dev);
+-		ret = TMF_RESP_FUNC_COMPLETE;
+-	} else {
+-		/* Send the task management part of the reset. */
+-		ret = isci_task_send_lu_reset_sas(ihost, idev, lun);
++	if (!test_bit(IDEV_GONE, &idev->flags)) {
++		if (dev_is_sata(dev))
++			sas_ata_schedule_reset(dev);
++		else
++			/* Send the task management part of the reset. */
++			ret = isci_task_send_lu_reset_sas(ihost, idev, lun);
+ 	}
+  out:
+ 	isci_put_device(idev);
+@@ -512,8 +512,17 @@ int isci_task_abort_task(struct sas_task *task)
+ 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
  
--static void sci_stp_remote_device_atapi_error_substate_enter(
--	struct sci_base_state_machine *sm)
--{
--	struct isci_remote_device *idev = container_of(sm, typeof(*idev), sm);
--
--	/* This state is entered when an I/O is decoded with an error
--	 * condition.  By this point the RNC expected suspension state is set.
--	 * The error conditions suspend the device, so unsuspend here if
--	 * possible.
--	 */
--	sci_remote_node_context_resume(&idev->rnc,
--				       atapi_remote_device_resume_done,
--				       idev);
--}
--
- static void sci_smp_remote_device_ready_idle_substate_enter(struct sci_base_state_machine *sm)
+ 	dev_warn(&ihost->pdev->dev,
+-		 "%s: dev = %p, task = %p, old_request == %p\n",
+-		 __func__, idev, task, old_request);
++		 "%s: dev = %p (%s%s), task = %p, old_request == %p\n",
++		 __func__, idev,
++		 (dev_is_sata(task->dev) ? "STP/SATA"
++					 : ((dev_is_expander(task->dev))
++						? "SMP"
++						: "SSP")),
++		 ((idev) ? ((test_bit(IDEV_GONE, &idev->flags))
++			   ? " IDEV_GONE"
++			   : "")
++			 : " <NULL>"),
++		 task, old_request);
+ 
+ 	/* Device reset conditions signalled in task_state_flags are the
+ 	 * responsbility of libsas to observe at the start of the error
+@@ -552,7 +561,8 @@ int isci_task_abort_task(struct sas_task *task)
+ 
+ 	if (task->task_proto == SAS_PROTOCOL_SMP ||
+ 	    sas_protocol_ata(task->task_proto) ||
+-	    test_bit(IREQ_COMPLETE_IN_TARGET, &old_request->flags)) {
++	    test_bit(IREQ_COMPLETE_IN_TARGET, &old_request->flags) ||
++	    test_bit(IDEV_GONE, &idev->flags)) {
+ 
+ 		spin_unlock_irqrestore(&ihost->scic_lock, flags);
+ 
+@@ -561,7 +571,8 @@ int isci_task_abort_task(struct sas_task *task)
+ 
+ 		dev_warn(&ihost->pdev->dev,
+ 			 "%s: %s request"
+-				 " or complete_in_target (%d), thus no TMF\n",
++				 " or complete_in_target (%d), "
++				 "or IDEV_GONE (%d), thus no TMF\n",
+ 			 __func__,
+ 			 ((task->task_proto == SAS_PROTOCOL_SMP)
+ 			  ? "SMP"
+@@ -570,7 +581,8 @@ int isci_task_abort_task(struct sas_task *task)
+ 				: "<other>")
+ 			  ),
+ 			 test_bit(IREQ_COMPLETE_IN_TARGET,
+-				  &old_request->flags));
++				  &old_request->flags),
++			 test_bit(IDEV_GONE, &idev->flags));
+ 
+ 		spin_lock_irqsave(&task->task_state_lock, flags);
+ 		task->task_state_flags &= ~(SAS_TASK_AT_INITIATOR |
+@@ -734,7 +746,7 @@ static int isci_reset_device(struct isci_host *ihost,
+ 			     struct domain_device *dev,
+ 			     struct isci_remote_device *idev)
  {
- 	struct isci_remote_device *idev = container_of(sm, typeof(*idev), sm);
-@@ -1202,9 +1213,7 @@ static const struct sci_base_state sci_remote_device_state_table[] = {
- 	[SCI_STP_DEV_NCQ_ERROR] = {
- 		.enter_state = sci_stp_remote_device_ready_ncq_error_substate_enter,
- 	},
--	[SCI_STP_DEV_ATAPI_ERROR] = {
--		.enter_state = sci_stp_remote_device_atapi_error_substate_enter,
--	},
-+	[SCI_STP_DEV_ATAPI_ERROR] = { },
- 	[SCI_STP_DEV_AWAIT_RESET] = { },
- 	[SCI_SMP_DEV_IDLE] = {
- 		.enter_state = sci_smp_remote_device_ready_idle_substate_enter,
-diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
-index ff34c4e..7674caa 100644
---- a/drivers/scsi/isci/remote_device.h
-+++ b/drivers/scsi/isci/remote_device.h
-@@ -382,4 +382,6 @@ enum sci_status isci_remote_device_terminate_requests(
- 	struct isci_host *ihost,
- 	struct isci_remote_device *idev,
- 	struct isci_request *ireq);
-+enum sci_status sci_remote_device_suspend(struct isci_remote_device *idev,
-+					  enum sci_remote_node_suspension_reasons reason);
- #endif /* !defined(_ISCI_REMOTE_DEVICE_H_) */
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 5c97102..6584ef0 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -2118,6 +2118,9 @@ static enum sci_status stp_request_udma_await_tc_event(struct isci_request *ireq
- 		 * completion.
- 		 */
- 		if (ireq->stp.rsp.fis_type == FIS_REGD2H) {
-+			sci_remote_device_suspend(ireq->target_device,
-+						  SCI_SW_SUSPEND_NORMAL);
+-	int rc = TMF_RESP_FUNC_COMPLETE, reset_stat;
++	int rc = TMF_RESP_FUNC_COMPLETE, reset_stat = -1;
+ 	struct sas_phy *phy = sas_get_local_phy(dev);
+ 	struct isci_port *iport = dev->port->lldd_port;
+ 
+@@ -752,14 +764,15 @@ static int isci_reset_device(struct isci_host *ihost,
+ 	 * primary duty of this function is to cleanup tasks, so that is the
+ 	 * relevant status.
+ 	 */
+-
+-	if (scsi_is_sas_phy_local(phy)) {
+-		struct isci_phy *iphy = &ihost->phys[phy->number];
+-
+-		reset_stat = isci_port_perform_hard_reset(ihost, iport, iphy);
+-	} else
+-		reset_stat = sas_phy_reset(phy, !dev_is_sata(dev));
+-
++	if (!test_bit(IDEV_GONE, &idev->flags)) {
++		if (scsi_is_sas_phy_local(phy)) {
++			struct isci_phy *iphy = &ihost->phys[phy->number];
 +
- 			ireq->scu_status = SCU_TASK_DONE_CHECK_RESPONSE;
- 			ireq->sci_status = SCI_FAILURE_IO_RESPONSE_VALID;
- 			sci_change_state(&ireq->sm, SCI_REQ_COMPLETED);
++			reset_stat = isci_port_perform_hard_reset(ihost, iport,
++								  iphy);
++		} else
++			reset_stat = sas_phy_reset(phy, !dev_is_sata(dev));
++	}
+ 	/* Explicitly resume the RNC here, since there was no task sent. */
+ 	isci_remote_device_resume_from_abort(ihost, idev);
+ 
 
