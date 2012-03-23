@@ -1,151 +1,179 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci-rnc PATCH v1 00/37] remote node context rework
-Date: Thu, 22 Mar 2012 17:27:48 -0700
-Message-ID: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci-rnc PATCH v1 01/37] isci: Manage the link layer hang detect
+ timer for RNC suspensions.
+Date: Thu, 22 Mar 2012 17:27:53 -0700
+Message-ID: <20120323002753.18065.97958.stgit@dwillia2-linux.jf.intel.com>
+References: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:63086 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:18094 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751972Ab2CWAMV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:12:21 -0400
+	id S1760166Ab2CWAM0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 20:12:26 -0400
+In-Reply-To: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-This series is unfortunately being posted during the merge window but has
-been in development since the beginning of February.  Part of the delay
-in getting it posted was due to waiting for the libsas error-handling
-and hotplug work to stabilize, and waiting for the full test results to
-come back showing that this development topic was effective.
+From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-With these patches, on top of the libsas changes, our hotplug /
-exception handling tests are now passing.  Previously we were seeing
-frequent system crashes and sometimes locking up the silicon.  I will
-let Jeff describe the technical changes in more detail, but it bears
-pointing out that this comes with a modest but welcome cleanup of the
-code complexity:
+For STP devices under certain protocol conditions, an RNC will not
+suspend until the current transfer state is broken with a SYNC/ESC
+sequence from the SCU.  The SYNC/ESC driven by expiration of the
+SCU link layer hang detect timer, which has too small a dynamic
+range to support slow SATA devices, so normally it is disabled.
 
- 15 files changed, 1316 insertions(+), 1633 deletions(-)
+This change enables the timer with the minimum period at the point
+when the suspension is requested.
 
-Also available via:
+Note that there is potential collateral damage to other open
+connections to slow SATA devices on the same port, since there
+is no alternative but to enable the LLHANG timer on every phy in
+the port for the current suspension request - there is no way to
+tell on which phy the RNC in question is currently active.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git isci-rnc-v1
-
-...this topic builds on top of isci-for-3.4-v4.
-
---
-Dan
-
-From: Jeff Skirvin
-
-In the controller, devices as they appear on a SAS domain (or
-direct-attached SATA devices) are represented by memory structures known
-as "Remote Node Contexts" (RNCs).  These structures are transferred from
-main memory to the controller using a set of register commands; these
-commands include setting up the context ("posting"), removing the
-context ("invalidating"), and commands to control the scheduling of
-commands and connections to that remote device ("suspensions" and
-"resumptions").  There is a similar path to control RNC scheduling from
-the protocol engine, which interprets the results of command and data
-transmission and reception.
-
-In general, the controller chooses among non-suspended RNCs to find one
-that has work requiring scheduling the transmission of command and data
-frames to a target.  Likewise, when a target tries to return data back
-to the initiator, the state of the RNC is used by the controller to
-determine how to treat the incoming request. As an example, if the RNC
-is in the state "TX/RX Suspended", incoming SSP connection requests from
-the target will be rejected by the controller hardware.  When an RNC is
-"TX Suspended", it will not be selected by the controller hardware to
-start outgoing command or data operations (with certain priority-based
-exceptions).
-
-As mentioned above, there are two sources for management of the RNC
-states: commands from driver software, and the result of transmission
-and reception conditions of commands and data signaled by the controller
-hardware.  As an example of the latter, if an outgoing SSP command ends
-with a OPEN_REJECT(BAD_DESTINATION) status, the RNC state will
-transition to the "TX Suspended" state, and this is signaled by the
-controller hardware in the status to the completion of the pending
-command as well as signaled in a controller hardware event.  Examples of
-the former are included in the patch changelogs.
-
-Driver software is required to suspend the RNC in a "TX/RX Suspended"
-condition before any outstanding commands can be terminated.  Failure to
-guarantee this can lead to a complete hardware hang condition.  Earlier
-versions of the driver software did not guarantee that an RNC was
-correctly managed before I/O termination, and so operated in an unsafe
-way.
-
-Further, the driver performed unnecessary contortions to preserve the
-remote device command state and so was more complicated than it needed
-to be.  A simplifying driver assumption is that once an I/O has entered
-the error handler path without having completed in the target, the
-requirement on the driver is that all use of the sas_task must end.
-Beyond that, recovery of operation is dependent on libsas and other
-components to reset, rediscover and reconfigure the device before normal
-operation can restart.  In the driver, this simplifying assumption meant
-that the RNC management could be reduced to entry into the suspended
-state, terminating the targeted I/O request, and resuming the RNC as
-needed for device-specific management such as an SSP Abort Task or LUN
-Reset Management request.
-
+Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/scsi/isci/port.c                |   26 +++++++++++++++++++++++++-
+ drivers/scsi/isci/port.h                |    5 +++++
+ drivers/scsi/isci/remote_device.h       |    7 +++++++
+ drivers/scsi/isci/remote_node_context.c |   15 ++++++++++++++-
+ 4 files changed, 51 insertions(+), 2 deletions(-)
 
-Jeff Skirvin (37):
-      isci: Manage the link layer hang detect timer for RNC suspensions.
-      isci: Fixed bug in resumption from RNC Tx/Rx suspend state.
-      isci: Handle all suspending TC completions
-      isci: Terminate outstanding TCs on TX/RX RNC suspensions.
-      isci: Manage device suspensions during TC terminations.
-      isci: Remote device must be suspended for NCQ cleanup.
-      isci: Remote device stop also suspends the RNC and terminates I/O.
-      isci: Escalate to I_T_Nexus_Reset when the device is gone.
-      isci: Redesign device suspension, abort, cleanup.
-      isci: Add suspension cases for RNC INVALIDATING, POSTING states.
-      isci: Device access in the error path does not depend on IDEV_GONE.
-      isci: All pending TCs are terminated when the RNC is invalidated.
-      isci: Only set IDEV_GONE in the device stop path.
-      isci: Remove isci_device reqs_in_process and dev_node from isci_device.
-      isci: Distinguish between remote device suspension cases
-      isci: Fix the terminated I/O to not call sas_task_abort().
-      isci: Save the suspension hint for upcoming suspensions.
-      isci: Manage the LLHANG timer enable/disable per-device.
-      isci: Make sure all TCs are terminated and cleaned in LUN reset.
-      isci: Implement waiting for suspend in the abort path.
-      isci: When in the abort path, defeat other resume calls until done.
-      isci: Callbacks to libsas occur under scic_lock and are synchronized.
-      isci: Manage tag releases differently when aborting tasks.
-      isci: Fix RNC suspend call for SCI_RESUMING state.
-      isci: Wait for RNC resumption before leaving the abort path.
-      isci: Directly control IREQ_ABORT_PATH_ACTIVE when completing TMFs.
-      isci: Add protocol indicator for TMF requests.
-      isci: Added timeouts to RNC suspensions in the abort path.
-      isci: Change the phy control and link reset interface for HW reasons.
-      isci: Don't wait for an RNC suspend if it's being destroyed.
-      isci: Restore the ATAPI device RNC management code.
-      isci: Check IDEV_GONE before performing abort path operations.
-      isci: Remove obviated host callback list.
-      isci: Manage the IREQ_NO_AUTO_FREE_TAG under scic_lock.
-      isci: Fix RNC AWAIT_SUSPENSION->INVALIDATING transition.
-      isci: Fixed RNC bug that lost the suspension or resumption during destroy
-      isci: End the RNC resumption wait when the RNC is destroyed.
+diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
+index 6ef4bd9..00666f7 100644
+--- a/drivers/scsi/isci/port.c
++++ b/drivers/scsi/isci/port.c
+@@ -1546,6 +1546,29 @@ static void sci_port_failed_state_enter(struct sci_base_state_machine *sm)
+ 	isci_port_hard_reset_complete(iport, SCI_FAILURE_TIMEOUT);
+ }
+ 
++void sci_port_set_hang_detection_timeout(struct isci_port *iport, u32 timeout)
++{
++	int phy_index;
++	u32 phy_mask = iport->active_phy_mask;
++
++	if (timeout)
++		++iport->hang_detect_users;
++	else if (iport->hang_detect_users > 1)
++		--iport->hang_detect_users;
++	else
++		iport->hang_detect_users = 0;
++
++	if (timeout || (iport->hang_detect_users == 0)) {
++		for (phy_index = 0; phy_index < SCI_MAX_PHYS; phy_index++) {
++			if ((phy_mask >> phy_index) & 1) {
++				writel(timeout,
++				       &iport->phy_table[phy_index]
++					  ->link_layer_registers
++					  ->link_layer_hang_detection_timeout);
++			}
++		}
++	}
++}
+ /* --------------------------------------------------------------------------- */
+ 
+ static const struct sci_base_state sci_port_state_table[] = {
+@@ -1594,6 +1617,7 @@ void sci_port_construct(struct isci_port *iport, u8 index,
+ 
+ 	iport->started_request_count = 0;
+ 	iport->assigned_device_count = 0;
++	iport->hang_detect_users = 0;
+ 
+ 	iport->reserved_rni = SCU_DUMMY_INDEX;
+ 	iport->reserved_tag = SCI_CONTROLLER_INVALID_IO_TAG;
+@@ -1731,7 +1755,7 @@ void isci_port_formed(struct asd_sas_phy *phy)
+ 	struct isci_host *ihost = phy->ha->lldd_ha;
+ 	struct isci_phy *iphy = to_iphy(phy);
+ 	struct asd_sas_port *port = phy->port;
+-	struct isci_port *iport;
++	struct isci_port *iport = NULL;
+ 	unsigned long flags;
+ 	int i;
+ 
+diff --git a/drivers/scsi/isci/port.h b/drivers/scsi/isci/port.h
+index f8bd1e8..861e8f7 100644
+--- a/drivers/scsi/isci/port.h
++++ b/drivers/scsi/isci/port.h
+@@ -111,6 +111,7 @@ struct isci_port {
+ 	u16 reserved_tag;
+ 	u32 started_request_count;
+ 	u32 assigned_device_count;
++	u32 hang_detect_users;
+ 	u32 not_ready_reason;
+ 	struct isci_phy *phy_table[SCI_MAX_PHYS];
+ 	struct isci_host *owning_controller;
+@@ -269,6 +270,10 @@ void sci_port_get_attached_sas_address(
+ 	struct isci_port *iport,
+ 	struct sci_sas_address *sas_address);
+ 
++void sci_port_set_hang_detection_timeout(
++	struct isci_port *isci_port,
++	u32 timeout);
++
+ void isci_port_formed(struct asd_sas_phy *);
+ void isci_port_deformed(struct asd_sas_phy *);
+ 
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index 4a67ff0..4850b58 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -301,6 +301,13 @@ static inline void sci_remote_device_decrement_request_count(struct isci_remote_
+ 		idev->started_request_count--;
+ }
+ 
++static inline void isci_dev_set_hang_detection_timeout(
++	struct isci_remote_device *idev,
++	u32 timeout)
++{
++	sci_port_set_hang_detection_timeout(idev->owning_port, timeout);
++}
++
+ enum sci_status sci_remote_device_frame_handler(
+ 	struct isci_remote_device *idev,
+ 	u32 frame_index);
+diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
+index 8ce5a35..3a55ba6 100644
+--- a/drivers/scsi/isci/remote_node_context.c
++++ b/drivers/scsi/isci/remote_node_context.c
+@@ -316,6 +316,15 @@ static void sci_remote_node_context_tx_rx_suspended_state_enter(struct sci_base_
+ 	sci_remote_node_context_continue_state_transitions(rnc);
+ }
+ 
++static void sci_remote_node_context_await_suspend_state_exit(
++	struct sci_base_state_machine *sm)
++{
++	struct sci_remote_node_context *rnc
++		= container_of(sm, typeof(*rnc), sm);
++
++	isci_dev_set_hang_detection_timeout(rnc_to_dev(rnc), 0);
++}
++
+ static const struct sci_base_state sci_remote_node_context_state_table[] = {
+ 	[SCI_RNC_INITIAL] = {
+ 		.enter_state = sci_remote_node_context_initial_state_enter,
+@@ -338,7 +347,9 @@ static const struct sci_base_state sci_remote_node_context_state_table[] = {
+ 	[SCI_RNC_TX_RX_SUSPENDED] = {
+ 		.enter_state = sci_remote_node_context_tx_rx_suspended_state_enter,
+ 	},
+-	[SCI_RNC_AWAIT_SUSPENSION] = { },
++	[SCI_RNC_AWAIT_SUSPENSION] = {
++		.exit_state = sci_remote_node_context_await_suspend_state_exit,
++	},
+ };
+ 
+ void sci_remote_node_context_construct(struct sci_remote_node_context *rnc,
+@@ -513,6 +524,8 @@ enum sci_status sci_remote_node_context_suspend(struct sci_remote_node_context *
+ 	if (suspend_type == SCI_SOFTWARE_SUSPENSION) {
+ 		sci_remote_device_post_request(rnc_to_dev(sci_rnc),
+ 						    SCU_CONTEXT_COMMAND_POST_RNC_SUSPEND_TX);
++		isci_dev_set_hang_detection_timeout(rnc_to_dev(sci_rnc),
++						    0x00000001);
+ 	}
+ 
+ 	sci_change_state(&sci_rnc->sm, SCI_RNC_AWAIT_SUSPENSION);
 
- drivers/scsi/isci/host.c                 |  143 ++---
- drivers/scsi/isci/host.h                 |    8 
- drivers/scsi/isci/init.c                 |    3 
- drivers/scsi/isci/phy.c                  |    2 
- drivers/scsi/isci/port.c                 |   45 +-
- drivers/scsi/isci/port.h                 |    5 
- drivers/scsi/isci/remote_device.c        |  547 ++++++++++++++++-----
- drivers/scsi/isci/remote_device.h        |   62 ++
- drivers/scsi/isci/remote_node_context.c  |  345 ++++++++++---
- drivers/scsi/isci/remote_node_context.h  |   43 +-
- drivers/scsi/isci/request.c              |  696 +++++++++++---------------
- drivers/scsi/isci/request.h              |  116 ----
- drivers/scsi/isci/scu_completion_codes.h |    2 
- drivers/scsi/isci/task.c                 |  800 +++++-------------------------
- drivers/scsi/isci/task.h                 |  132 -----
- 15 files changed, 1316 insertions(+), 1633 deletions(-)
