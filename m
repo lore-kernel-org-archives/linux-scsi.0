@@ -1,17 +1,17 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci-rnc PATCH v1 36/37] isci: Fixed RNC bug that lost the
- suspension or resumption during destroy
-Date: Thu, 22 Mar 2012 17:31:10 -0700
-Message-ID: <20120323003110.18065.9940.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci-rnc PATCH v1 37/37] isci: End the RNC resumption wait when
+ the RNC is destroyed.
+Date: Thu, 22 Mar 2012 17:31:15 -0700
+Message-ID: <20120323003115.18065.89007.stgit@dwillia2-linux.jf.intel.com>
 References: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52057 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:1926 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031572Ab2CWAPm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:15:42 -0400
+	id S1031572Ab2CWAPs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 20:15:48 -0400
 In-Reply-To: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,166 +20,128 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-This fix corrects the saving of resume parameters when the destruction
-of the RNC has already been directed, and makes sure not to overwrite
-the RNC destruction callbacks.
+While the RNC is suspended for I/O cleanup, the remote device can be
+stopped and the RNC setup for destruction.  These changes accomodate that
+case in the abort path.
 
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/remote_node_context.c |   96 ++++++++++++-------------------
- 1 files changed, 38 insertions(+), 58 deletions(-)
+ drivers/scsi/isci/host.h                |    5 +++++
+ drivers/scsi/isci/remote_device.c       |   29 +++++++++++++++++++++--------
+ drivers/scsi/isci/remote_node_context.c |    4 ++++
+ drivers/scsi/isci/remote_node_context.h |    6 +++---
+ 4 files changed, 33 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+index 81d96f3..a8cc280 100644
+--- a/drivers/scsi/isci/host.h
++++ b/drivers/scsi/isci/host.h
+@@ -333,6 +333,11 @@ static inline struct isci_host *dev_to_ihost(struct domain_device *dev)
+ 	return dev->port->ha->lldd_ha;
+ }
+ 
++static inline struct isci_host *idev_to_ihost(struct isci_remote_device *idev)
++{
++	return dev_to_ihost(idev->domain_dev);
++}
++
+ /* we always use protocol engine group zero */
+ #define ISCI_PEG 0
+ 
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index a3a6487..c3aa6c5 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -1368,27 +1368,40 @@ static void isci_remote_device_resume_from_abort_complete(void *cbparam)
+ 	wake_up(&ihost->eventq);
+ }
+ 
++static bool isci_remote_device_test_resume_done(
++	struct isci_host *ihost,
++	struct isci_remote_device *idev)
++{
++	unsigned long flags;
++	bool done;
++
++	spin_lock_irqsave(&ihost->scic_lock, flags);
++	done = !test_bit(IDEV_ABORT_PATH_RESUME_PENDING, &idev->flags)
++		|| test_bit(IDEV_STOP_PENDING, &idev->flags)
++		|| sci_remote_node_context_is_being_destroyed(&idev->rnc);
++	spin_unlock_irqrestore(&ihost->scic_lock, flags);
++
++	return done;
++}
+ 
+ void isci_remote_device_wait_for_resume_from_abort(
+ 	struct isci_host *ihost,
+ 	struct isci_remote_device *idev)
+ {
+-	dev_dbg(scirdev_to_dev(idev), "%s: starting resume wait: %p\n",
++	dev_dbg(&ihost->pdev->dev, "%s: starting resume wait: %p\n",
+ 		 __func__, idev);
+ 
+ 	#define MAX_RESUME_MSECS 10000
+ 	if (!wait_event_timeout(ihost->eventq,
+-			       (!test_bit(IDEV_ABORT_PATH_RESUME_PENDING,
+-					  &idev->flags)
+-				|| test_bit(IDEV_STOP_PENDING, &idev->flags)),
+-			       msecs_to_jiffies(MAX_RESUME_MSECS))) {
++				isci_remote_device_test_resume_done(ihost, idev),
++				msecs_to_jiffies(MAX_RESUME_MSECS))) {
+ 
+-		dev_warn(scirdev_to_dev(idev), "%s: #### Timeout waiting for "
++		dev_warn(&ihost->pdev->dev, "%s: #### Timeout waiting for "
+ 			 "resume: %p\n", __func__, idev);
+ 	}
+ 	clear_bit(IDEV_ABORT_PATH_RESUME_PENDING, &idev->flags);
+ 
+-	dev_dbg(scirdev_to_dev(idev), "%s: resume wait done: %p\n",
++	dev_dbg(&ihost->pdev->dev, "%s: resume wait done: %p\n",
+ 		 __func__, idev);
+ }
+ 
+@@ -1414,7 +1427,7 @@ enum sci_status isci_remote_device_resume_from_abort(
+ 			idev, isci_remote_device_resume_from_abort_complete,
+ 			idev);
+ 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
+-	if (!destroyed)
++	if (!destroyed && (status == SCI_SUCCESS))
+ 		isci_remote_device_wait_for_resume_from_abort(ihost, idev);
+ 	else
+ 		clear_bit(IDEV_ABORT_PATH_RESUME_PENDING, &idev->flags);
 diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
-index 6f0b61b..f5792a9 100644
+index f5792a9..1910100 100644
 --- a/drivers/scsi/isci/remote_node_context.c
 +++ b/drivers/scsi/isci/remote_node_context.c
-@@ -160,15 +160,6 @@ static void sci_remote_node_context_construct_buffer(struct sci_remote_node_cont
- 	rnc->ssp.oaf_source_zone_group = 0;
- 	rnc->ssp.oaf_more_compatibility_features = 0;
- }
--
--static void sci_remote_node_context_save_cbparams(
--	struct sci_remote_node_context *sci_rnc,
--	scics_sds_remote_node_context_callback callback,
--	void *callback_parameter)
--{
--	sci_rnc->user_callback = callback;
--	sci_rnc->user_cookie   = callback_parameter;
--}
- /**
-  *
-  * @sci_rnc:
-@@ -187,9 +178,10 @@ static void sci_remote_node_context_setup_to_resume(
+@@ -190,9 +190,13 @@ static void sci_remote_node_context_setup_to_destroy(
+ 	scics_sds_remote_node_context_callback callback,
+ 	void *callback_parameter)
  {
- 	if (sci_rnc->destination_state != RNC_DEST_FINAL) {
- 		sci_rnc->destination_state = dest_param;
--		if (callback != NULL)
--			sci_remote_node_context_save_cbparams(
--				sci_rnc, callback, callback_parameter);
-+		if (callback != NULL) {
-+			sci_rnc->user_callback = callback;
-+			sci_rnc->user_cookie   = callback_parameter;
-+		}
- 	}
++	struct isci_host *ihost = idev_to_ihost(rnc_to_dev(sci_rnc));
++
+ 	sci_rnc->destination_state = RNC_DEST_FINAL;
+ 	sci_rnc->user_callback     = callback;
+ 	sci_rnc->user_cookie       = callback_parameter;
++
++	wake_up(&ihost->eventq);
  }
  
-@@ -610,7 +602,8 @@ enum sci_status sci_remote_node_context_suspend(
- 		 * entry into the SCI_RNC_READY state that a suspension
- 		 * needs to be done immediately.
- 		 */
--		sci_rnc->destination_state = RNC_DEST_SUSPENDED;
-+		if (sci_rnc->destination_state != RNC_DEST_FINAL)
-+			sci_rnc->destination_state = RNC_DEST_SUSPENDED;
- 		sci_rnc->suspend_type = suspend_type;
- 		sci_rnc->suspend_reason = suspend_reason;
- 		return SCI_SUCCESS;
-@@ -680,12 +673,9 @@ enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *s
- 		if (sci_rnc->remote_node_index == SCIC_SDS_REMOTE_NODE_CONTEXT_INVALID_INDEX)
- 			return SCI_FAILURE_INVALID_STATE;
- 
--		if (test_bit(IDEV_ABORT_PATH_ACTIVE, &idev->flags))
--			sci_remote_node_context_save_cbparams(sci_rnc, cb_fn,
--							      cb_p);
--		else {
--			sci_remote_node_context_setup_to_resume(sci_rnc, cb_fn,
--							cb_p, RNC_DEST_READY);
-+		sci_remote_node_context_setup_to_resume(sci_rnc, cb_fn,	cb_p,
-+							RNC_DEST_READY);
-+		if (!test_bit(IDEV_ABORT_PATH_ACTIVE, &idev->flags)) {
- 			sci_remote_node_context_construct_buffer(sci_rnc);
- 			sci_change_state(&sci_rnc->sm, SCI_RNC_POSTING);
- 		}
-@@ -694,38 +684,30 @@ enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *s
- 	case SCI_RNC_POSTING:
- 	case SCI_RNC_INVALIDATING:
- 	case SCI_RNC_RESUMING:
--		if (test_bit(IDEV_ABORT_PATH_ACTIVE, &idev->flags))
--			sci_remote_node_context_save_cbparams(sci_rnc, cb_fn,
--							      cb_p);
--		else {
--			/* We are still waiting to post when a resume was
--			 * requested.
-+		/* We are still waiting to post when a resume was
-+		 * requested.
-+		 */
-+		switch (sci_rnc->destination_state) {
-+		case RNC_DEST_SUSPENDED:
-+		case RNC_DEST_SUSPENDED_RESUME:
-+			/* Previously waiting to suspend after posting.
-+			 * Now continue onto resumption.
- 			 */
--			switch (sci_rnc->destination_state) {
--			case RNC_DEST_SUSPENDED:
--			case RNC_DEST_SUSPENDED_RESUME:
--				/* Previously waiting to suspend after posting.
--				 * Now continue onto resumption.
--				 */
--				sci_remote_node_context_setup_to_resume(
--					sci_rnc, cb_fn, cb_p,
--					RNC_DEST_SUSPENDED_RESUME);
--				break;
--			default:
--				sci_remote_node_context_setup_to_resume(
--					sci_rnc, cb_fn, cb_p,
--					RNC_DEST_READY);
--				break;
--			}
-+			sci_remote_node_context_setup_to_resume(
-+				sci_rnc, cb_fn, cb_p,
-+				RNC_DEST_SUSPENDED_RESUME);
-+			break;
-+		default:
-+			sci_remote_node_context_setup_to_resume(
-+				sci_rnc, cb_fn, cb_p,
-+				RNC_DEST_READY);
-+			break;
- 		}
- 		return SCI_SUCCESS;
- 
- 	case SCI_RNC_TX_SUSPENDED:
- 	case SCI_RNC_TX_RX_SUSPENDED:
--		if (test_bit(IDEV_ABORT_PATH_ACTIVE, &idev->flags))
--			sci_remote_node_context_save_cbparams(sci_rnc, cb_fn,
--							      cb_p);
--		else {
-+		{
- 			struct domain_device *dev = idev->domain_dev;
- 			/* If this is an expander attached SATA device we must
- 			 * invalidate and repost the RNC since this is the only
-@@ -735,23 +717,21 @@ enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *s
- 			sci_remote_node_context_setup_to_resume(
- 				sci_rnc, cb_fn, cb_p, RNC_DEST_READY);
- 
--			if (dev_is_sata(dev) && dev->parent)
--				sci_change_state(&sci_rnc->sm,
--						 SCI_RNC_INVALIDATING);
--			else
--				sci_change_state(&sci_rnc->sm,
--						 SCI_RNC_RESUMING);
-+			if (!test_bit(IDEV_ABORT_PATH_ACTIVE, &idev->flags)) {
-+				if ((dev_is_sata(dev) && dev->parent) ||
-+				    (sci_rnc->destination_state == RNC_DEST_FINAL))
-+					sci_change_state(&sci_rnc->sm,
-+							 SCI_RNC_INVALIDATING);
-+				else
-+					sci_change_state(&sci_rnc->sm,
-+							 SCI_RNC_RESUMING);
-+			}
- 		}
- 		return SCI_SUCCESS;
- 
- 	case SCI_RNC_AWAIT_SUSPENSION:
--		if (test_bit(IDEV_ABORT_PATH_ACTIVE, &idev->flags))
--			sci_remote_node_context_save_cbparams(sci_rnc, cb_fn,
--							      cb_p);
--		else
--			sci_remote_node_context_setup_to_resume(
--				sci_rnc, cb_fn,	cb_p,
--				RNC_DEST_SUSPENDED_RESUME);
-+		sci_remote_node_context_setup_to_resume(
-+			sci_rnc, cb_fn, cb_p, RNC_DEST_SUSPENDED_RESUME);
- 		return SCI_SUCCESS;
- 	default:
- 		dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
+ /**
+diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
+index 0d4a24d..a703b9c 100644
+--- a/drivers/scsi/isci/remote_node_context.h
++++ b/drivers/scsi/isci/remote_node_context.h
+@@ -229,8 +229,8 @@ int sci_remote_node_context_is_safe_to_abort(
+ static inline bool sci_remote_node_context_is_being_destroyed(
+ 	struct sci_remote_node_context *sci_rnc)
+ {
+-	return ((sci_rnc->sm.current_state_id == SCI_RNC_INVALIDATING)
+-		&& (sci_rnc->destination_state == RNC_DEST_FINAL))
+-		|| (sci_rnc->sm.current_state_id == SCI_RNC_INITIAL);
++	return (sci_rnc->destination_state == RNC_DEST_FINAL)
++		|| ((sci_rnc->sm.current_state_id == SCI_RNC_INITIAL)
++		    && (sci_rnc->destination_state == RNC_DEST_UNSPECIFIED));
+ }
+ #endif  /* _SCIC_SDS_REMOTE_NODE_CONTEXT_H_ */
 
