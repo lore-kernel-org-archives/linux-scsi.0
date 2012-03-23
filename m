@@ -1,17 +1,17 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [isci-rnc PATCH v1 01/37] isci: Manage the link layer hang detect
- timer for RNC suspensions.
-Date: Thu, 22 Mar 2012 17:27:53 -0700
-Message-ID: <20120323002753.18065.97958.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci-rnc PATCH v1 02/37] isci: Fixed bug in resumption from RNC
+ Tx/Rx suspend state.
+Date: Thu, 22 Mar 2012 17:27:59 -0700
+Message-ID: <20120323002759.18065.25535.stgit@dwillia2-linux.jf.intel.com>
 References: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18094 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:12366 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760166Ab2CWAM0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:12:26 -0400
+	id S1760166Ab2CWAMb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2012 20:12:31 -0400
 In-Reply-To: <20120323002504.18065.45709.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,160 +20,46 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-For STP devices under certain protocol conditions, an RNC will not
-suspend until the current transfer state is broken with a SYNC/ESC
-sequence from the SCU.  The SYNC/ESC driven by expiration of the
-SCU link layer hang detect timer, which has too small a dynamic
-range to support slow SATA devices, so normally it is disabled.
-
-This change enables the timer with the minimum period at the point
-when the suspension is requested.
-
-Note that there is potential collateral damage to other open
-connections to slow SATA devices on the same port, since there
-is no alternative but to enable the LLHANG timer on every phy in
-the port for the current suspension request - there is no way to
-tell on which phy the RNC in question is currently active.
+The resumption from the Tx/Rx suspended state should work the same
+as the Tx suspended state.
 
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/port.c                |   26 +++++++++++++++++++++++++-
- drivers/scsi/isci/port.h                |    5 +++++
- drivers/scsi/isci/remote_device.h       |    7 +++++++
- drivers/scsi/isci/remote_node_context.c |   15 ++++++++++++++-
- 4 files changed, 51 insertions(+), 2 deletions(-)
+ drivers/scsi/isci/remote_node_context.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
-index 6ef4bd9..00666f7 100644
---- a/drivers/scsi/isci/port.c
-+++ b/drivers/scsi/isci/port.c
-@@ -1546,6 +1546,29 @@ static void sci_port_failed_state_enter(struct sci_base_state_machine *sm)
- 	isci_port_hard_reset_complete(iport, SCI_FAILURE_TIMEOUT);
- }
- 
-+void sci_port_set_hang_detection_timeout(struct isci_port *iport, u32 timeout)
-+{
-+	int phy_index;
-+	u32 phy_mask = iport->active_phy_mask;
-+
-+	if (timeout)
-+		++iport->hang_detect_users;
-+	else if (iport->hang_detect_users > 1)
-+		--iport->hang_detect_users;
-+	else
-+		iport->hang_detect_users = 0;
-+
-+	if (timeout || (iport->hang_detect_users == 0)) {
-+		for (phy_index = 0; phy_index < SCI_MAX_PHYS; phy_index++) {
-+			if ((phy_mask >> phy_index) & 1) {
-+				writel(timeout,
-+				       &iport->phy_table[phy_index]
-+					  ->link_layer_registers
-+					  ->link_layer_hang_detection_timeout);
-+			}
-+		}
-+	}
-+}
- /* --------------------------------------------------------------------------- */
- 
- static const struct sci_base_state sci_port_state_table[] = {
-@@ -1594,6 +1617,7 @@ void sci_port_construct(struct isci_port *iport, u8 index,
- 
- 	iport->started_request_count = 0;
- 	iport->assigned_device_count = 0;
-+	iport->hang_detect_users = 0;
- 
- 	iport->reserved_rni = SCU_DUMMY_INDEX;
- 	iport->reserved_tag = SCI_CONTROLLER_INVALID_IO_TAG;
-@@ -1731,7 +1755,7 @@ void isci_port_formed(struct asd_sas_phy *phy)
- 	struct isci_host *ihost = phy->ha->lldd_ha;
- 	struct isci_phy *iphy = to_iphy(phy);
- 	struct asd_sas_port *port = phy->port;
--	struct isci_port *iport;
-+	struct isci_port *iport = NULL;
- 	unsigned long flags;
- 	int i;
- 
-diff --git a/drivers/scsi/isci/port.h b/drivers/scsi/isci/port.h
-index f8bd1e8..861e8f7 100644
---- a/drivers/scsi/isci/port.h
-+++ b/drivers/scsi/isci/port.h
-@@ -111,6 +111,7 @@ struct isci_port {
- 	u16 reserved_tag;
- 	u32 started_request_count;
- 	u32 assigned_device_count;
-+	u32 hang_detect_users;
- 	u32 not_ready_reason;
- 	struct isci_phy *phy_table[SCI_MAX_PHYS];
- 	struct isci_host *owning_controller;
-@@ -269,6 +270,10 @@ void sci_port_get_attached_sas_address(
- 	struct isci_port *iport,
- 	struct sci_sas_address *sas_address);
- 
-+void sci_port_set_hang_detection_timeout(
-+	struct isci_port *isci_port,
-+	u32 timeout);
-+
- void isci_port_formed(struct asd_sas_phy *);
- void isci_port_deformed(struct asd_sas_phy *);
- 
-diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
-index 4a67ff0..4850b58 100644
---- a/drivers/scsi/isci/remote_device.h
-+++ b/drivers/scsi/isci/remote_device.h
-@@ -301,6 +301,13 @@ static inline void sci_remote_device_decrement_request_count(struct isci_remote_
- 		idev->started_request_count--;
- }
- 
-+static inline void isci_dev_set_hang_detection_timeout(
-+	struct isci_remote_device *idev,
-+	u32 timeout)
-+{
-+	sci_port_set_hang_detection_timeout(idev->owning_port, timeout);
-+}
-+
- enum sci_status sci_remote_device_frame_handler(
- 	struct isci_remote_device *idev,
- 	u32 frame_index);
 diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
-index 8ce5a35..3a55ba6 100644
+index 3a55ba6..3e84975 100644
 --- a/drivers/scsi/isci/remote_node_context.c
 +++ b/drivers/scsi/isci/remote_node_context.c
-@@ -316,6 +316,15 @@ static void sci_remote_node_context_tx_rx_suspended_state_enter(struct sci_base_
- 	sci_remote_node_context_continue_state_transitions(rnc);
- }
+@@ -557,10 +557,16 @@ enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *s
+ 		sci_rnc->user_callback = cb_fn;
+ 		sci_rnc->user_cookie   = cb_p;
+ 		return SCI_SUCCESS;
+-	case SCI_RNC_TX_SUSPENDED: {
++	case SCI_RNC_TX_SUSPENDED:
++	case SCI_RNC_TX_RX_SUSPENDED: {
+ 		struct isci_remote_device *idev = rnc_to_dev(sci_rnc);
+ 		struct domain_device *dev = idev->domain_dev;
  
-+static void sci_remote_node_context_await_suspend_state_exit(
-+	struct sci_base_state_machine *sm)
-+{
-+	struct sci_remote_node_context *rnc
-+		= container_of(sm, typeof(*rnc), sm);
-+
-+	isci_dev_set_hang_detection_timeout(rnc_to_dev(rnc), 0);
-+}
-+
- static const struct sci_base_state sci_remote_node_context_state_table[] = {
- 	[SCI_RNC_INITIAL] = {
- 		.enter_state = sci_remote_node_context_initial_state_enter,
-@@ -338,7 +347,9 @@ static const struct sci_base_state sci_remote_node_context_state_table[] = {
- 	[SCI_RNC_TX_RX_SUSPENDED] = {
- 		.enter_state = sci_remote_node_context_tx_rx_suspended_state_enter,
- 	},
--	[SCI_RNC_AWAIT_SUSPENSION] = { },
-+	[SCI_RNC_AWAIT_SUSPENSION] = {
-+		.exit_state = sci_remote_node_context_await_suspend_state_exit,
-+	},
- };
++		/* If this is an expander attached SATA device we must
++		 * invalidate and repost the RNC since this is the only way
++		 * to clear the TCi to NCQ tag mapping table for the RNi.
++		 * All other device types we can just resume.
++		 */
+ 		sci_remote_node_context_setup_to_resume(sci_rnc, cb_fn, cb_p);
  
- void sci_remote_node_context_construct(struct sci_remote_node_context *rnc,
-@@ -513,6 +524,8 @@ enum sci_status sci_remote_node_context_suspend(struct sci_remote_node_context *
- 	if (suspend_type == SCI_SOFTWARE_SUSPENSION) {
- 		sci_remote_device_post_request(rnc_to_dev(sci_rnc),
- 						    SCU_CONTEXT_COMMAND_POST_RNC_SUSPEND_TX);
-+		isci_dev_set_hang_detection_timeout(rnc_to_dev(sci_rnc),
-+						    0x00000001);
+ 		if (dev_is_sata(dev) && dev->parent)
+@@ -569,10 +575,6 @@ enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *s
+ 			sci_change_state(&sci_rnc->sm, SCI_RNC_RESUMING);
+ 		return SCI_SUCCESS;
  	}
- 
- 	sci_change_state(&sci_rnc->sm, SCI_RNC_AWAIT_SUSPENSION);
+-	case SCI_RNC_TX_RX_SUSPENDED:
+-		sci_remote_node_context_setup_to_resume(sci_rnc, cb_fn, cb_p);
+-		sci_change_state(&sci_rnc->sm, SCI_RNC_RESUMING);
+-		return SCI_FAILURE_INVALID_STATE;
+ 	case SCI_RNC_AWAIT_SUSPENSION:
+ 		sci_remote_node_context_setup_to_resume(sci_rnc, cb_fn, cb_p);
+ 		return SCI_SUCCESS;
 
