@@ -1,25 +1,41 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH 00/15, v3] Make ib_srp better suited for H.A. purposes
-Date: Sun, 25 Mar 2012 15:18:09 +0000
-Message-ID: <2758264.LCH3RCDGs4@asus>
-References: <5207288.nSt5MkVMpO@asus>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 42783] Kernel ooops when disconnecting the USB flash disk, in
+ which I've just modified partition table
+Date: Sun, 25 Mar 2012 18:38:21 GMT
+Message-ID: <201203251838.q2PIcLPO018226@bugzilla.kernel.org>
+References: <bug-42783-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5207288.nSt5MkVMpO@asus>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: dillowda-1Heg1YXhbW8@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org, vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bugzilla.kernel.org ([198.145.19.204]:39027 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756198Ab2CYSiW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Mar 2012 14:38:22 -0400
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q2PIcLKw018227
+	for <linux-scsi@vger.kernel.org>; Sun, 25 Mar 2012 18:38:21 GMT
+In-Reply-To: <bug-42783-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sunday 25 March 2012 15:17, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> wrote:
-> This patch series makes the ib_srp driver better suited for use in a H.A. setup because [ ... ]
+https://bugzilla.kernel.org/show_bug.cgi?id=42783
 
-The patch series is also available here: http://github.com/bvanassche/linux/commits/srp-ha/.
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+mlambda@gmail.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |mlambda@gmail.com
+
+
+
+
+--- Comment #7 from mlambda@gmail.com  2012-03-25 18:38:19 ---
+I hit the same (?) bug, but without modifying the partition table:
+https://bugzilla.kernel.org/show_bug.cgi?id=42951
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
