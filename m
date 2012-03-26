@@ -1,34 +1,35 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 42783] Kernel ooops when disconnecting the USB flash disk, in
- which I've just modified partition table
-Date: Sun, 25 Mar 2012 20:26:25 GMT
-Message-ID: <201203252026.q2PKQPM2029671@bugzilla.kernel.org>
-References: <bug-42783-11613@https.bugzilla.kernel.org/>
+From: KOBAYASHI Yoshitake <yoshitake.kobayashi@toshiba.co.jp>
+Subject: Re: [PATCH v3 1/5] [SCSI] ufshcd: UFS Host controller driver
+Date: Mon, 26 Mar 2012 13:32:57 +0900
+Message-ID: <4F6FF179.5090600@toshiba.co.jp>
+References: <1330497714-26504-2-git-send-email-santoshsy@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:39442 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756975Ab2CYU0Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Mar 2012 16:26:25 -0400
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q2PKQPL8029672
-	for <linux-scsi@vger.kernel.org>; Sun, 25 Mar 2012 20:26:25 GMT
-In-Reply-To: <bug-42783-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1330497714-26504-2-git-send-email-santoshsy@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Santosh Y <santoshsy@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, arnd.bergmann@linaro.org, saugata.das@linaro.org, dsaxena@linaro.org, stephen.doel@linaro.org, venkat@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, girish.shivananjappa@linaro.org, vishak.g@samsung.com, k.rajesh@samsung.com, yejin.moon@samsung.com, sreekumar.c@samsung.com, vinholikatti@gmail.com, linkinjeon@gmail.com, michaelc@cs.wisc.edu
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42783
+> > +        utrdlp[i].response_upiu_length =
+> > +                cpu_to_le16(ALIGNED_UPIU_SIZE);
 
+Response UPIU Length(RUL) shows the response UPIU length in Dword.
+(JEDEC Standard No.223 6.2.1 UTP Transfer Request Descriptor)
+The following will be correct.
 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 07ec973..feffe65 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -836,7 +836,7 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+                 utrdlp[i].prd_table_offset =
+                                 cpu_to_le16((prdt_offset >> 2));
+                 utrdlp[i].response_upiu_length =
+-                               cpu_to_le16(ALIGNED_UPIU_SIZE);
++                               cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
 
-
-
---- Comment #11 from Stefan Richter <stefanr@s5r6.in-berlin.de>  2012-03-25 20:26:24 ---
-PS, the two patches were also backmerged into v3.2.12 and v3.0.25.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+                 hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
+                 hba->lrb[i].ucd_cmd_ptr =
