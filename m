@@ -1,162 +1,35 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
- correctly when SRB status is INVALID
-Date: Mon, 26 Mar 2012 09:16:16 +0100
-Message-ID: <1332749776.2836.15.camel@dabdike>
-References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
-	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
-	 <1332173560.3152.65.camel@dabdike>
-	 <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
-	 <1332196819.3152.77.camel@dabdike>
-	 <6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
-	 <1332233502.14019.14.camel@dabdike.int.hansenpartnership.com>
-	  <6E21E5352C11B742B20C142EB499E0481B76AF70@TK5EX14MBXC126.redmond.corp.microsoft.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] iscsi-target: Fix memory leak if iscsit_alloc_buffs()
+ fails
+Date: Mon, 26 Mar 2012 05:25:06 -0400
+Message-ID: <20120326092506.GA27806@infradead.org>
+References: <1330046923-4034-1-git-send-email-roland@kernel.org>
+ <20120225092455.GA23775@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35828 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754401Ab2CZIQV (ORCPT
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:60520
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755197Ab2CZJZJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Mar 2012 04:16:21 -0400
-In-Reply-To: <6E21E5352C11B742B20C142EB499E0481B76AF70@TK5EX14MBXC126.redmond.corp.microsoft.com>
+	Mon, 26 Mar 2012 05:25:09 -0400
+Content-Disposition: inline
+In-Reply-To: <20120225092455.GA23775@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Roland Dreier <roland@kernel.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-On Fri, 2012-03-23 at 15:50 +0000, KY Srinivasan wrote:
+On Sat, Feb 25, 2012 at 04:24:55AM -0500, Christoph Hellwig wrote:
+> On Thu, Feb 23, 2012 at 05:28:43PM -0800, Roland Dreier wrote:
+> > From: Roland Dreier <roland@purestorage.com>
+> > 
+> > The function kzalloc()s sgl, but if page allocation fails, it never
+> > frees sgl on the page_alloc_failed path.
 > 
-> > -----Original Message-----
-> > From: KY Srinivasan
-> > Sent: Tuesday, March 20, 2012 10:42 AM
-> > To: 'James Bottomley'
-> > Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> > devel@linuxdriverproject.org; ohering@suse.com; hch@infradead.org; linux-
-> > scsi@vger.kernel.org
-> > Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result correctly
-> > when SRB status is INVALID
-> > 
-> > 
-> > 
-> > > -----Original Message-----
-> > > From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-> > > Sent: Tuesday, March 20, 2012 4:52 AM
-> > > To: KY Srinivasan
-> > > Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> > > devel@linuxdriverproject.org; ohering@suse.com; hch@infradead.org; linux-
-> > > scsi@vger.kernel.org
-> > > Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
-> > correctly
-> > > when SRB status is INVALID
-> > >
-> > > On Mon, 2012-03-19 at 22:52 +0000, KY Srinivasan wrote:
-> > > > > >  However, keep in mind
-> > > > > > that there is no current ETA on when Windows will ship with these
-> > changes
-> > > -
-> > > > > Windows 8
-> > > > > > may ship with code where they would return an invalid SRB status, but
-> > they
-> > > are
-> > > > > not
-> > > > > > setting the sense code, hence this patch. When the Window host does
-> > the
-> > > > > "right thing"
-> > > > > > I will clean this up, but I don't know when that will be.
-> > > > >
-> > > > > I thought you just said you'd only just asked them if they could
-> > > > > implemented it, in which case no version of windows currently ships with
-> > > > > this, correct?
-> > > >
-> > > > There are some private builds of windows 8 floating around with this change,
-> > > where
-> > > > they are returning ILLEGAL_REQUEST SRB status  without any sense data.
-> > >
-> > > Sure, but they're not shipped, right ... it's like the test builds we do
-> > > for large companies like IBM and HP to try out certain things before
-> > > deciding they don't work.
-> > 
-> > They are close to shipping and it is very difficult to get any changes in
-> > presently. Furthermore, this is only on windows8; none of the prior
-> > versions of windows servers of interest support this. I am starting an effort to
-> > get this change into prior windows servers. Once again, it is not clear when
-> > these changes will be pushed out.
-> > 
-> > 
-> > >
-> > > > > > More importantly, the second patch  in this series where I filter out
-> > > > > > the ATA_16 command
-> > > > > > on the guest is really important for us. Without that patch on a range
-> > > > > > on windows hosts
-> > > > > > including the current beta version of windows8 where the host is
-> > > > > > returning a generic
-> > > > > > error in response to ATA_16 command, we cannot boot many Linux
-> > > > > > distros. If you
-> > > > > > prefer, I can drop the first patch and re-submit the second patch for
-> > > > > > consideration now.
-> > > > >
-> > > > > I'm not sure about that either.  You presumably translate
-> > > > > SRB_STATUS_ERROR into DID_TARGET_FAILURE.  That should cause the
-> > > > > termination of the command with prejudice in exactly the same way as an
-> > > > > ILLEGAL_REQUEST sense code would (minus the useful error information),
-> > > > > so what's causing the boot failure?
-> > > >
-> > > > You are right, currently without a proper SRB code, I do a
-> > DID_TARGET_FAILURE
-> > > and
-> > > > this results in the device being offlined and if the device happens to be the
-> > root
-> > > device,
-> > > > we obviously cannot boot. I have seen this problem with sles11 sp2 on a win8
-> > > box.
-> > >
-> > > OK, so this may be the root cause of the problem.  DID_TARGET_FAILURE
-> > > returns FAILED from scsi_decide_disposition().  This wakes up the error
-> > > handler to retry the command and, since the command is never going to
-> > > work, this ends up offlining the device.  The same thing will happen for
-> > > every command with no recovery.
-> > >
-> > > The question now is, what else returns SRB_STATUS_ERROR?  If it's always
-> > > for stuff that's unretryable, then the DID_ error is wrong and you
-> > > should be returning DID_PASSTHROUGH with an error code and the problem
-> > > will be solved.  If we can get SRB_STATUS_ERROR on retryable commands,
-> > > then you discriminate at the point of failure, not at the point of input
-> > > and return DID_TARGET_FAILURE for the ones that should be retried and
-> > > DID_PASSTHROUGH + error for the ones that shouldn't.  This will ensure
-> > > the driver is completely backwards compatible and that it will work
-> > > if/when windows properly handles the commands.
-> > 
-> > James, unfortunately based on the current SRB codes I get back from the
-> > host, I don't know which commands that failed ought to be retried and which
-> > ones should not be; I simply get a single SRB error code for cases where the
-> > host filtered the unsupported commands as well as the case where the host
-> > supported the command and something failed in the command execution.
-> > If there is something I can try in this driver to fix this problem, I am more than
-> > happy to try it. If it involves getting changes into  the host (win8, win2k8 etc.),
-> > I am willing to start a conversation with the relevant teams, but I cannot
-> > obviously determine when such changes will ship. However, I do need
-> > solution for the problem now.
-> > 
-> > I appreciate your taking the time to help me gravitate towards the
-> > correct solution here. Given my constraints, let me know what is the
-> > best way forward here.
-> 
-> Ping.
+> Can we fix this properly by killing the code?  After the last round
+> of cleanups there is no reason why iscsi can't use the generic page
+> allocation code in transport_generic_get_mem().
 
-On what? What don't you understand about the above?
-
-The failure path needs to look like the following metacode
-
-case SRB_whatever
-
-if (retryable command)
-	return DID_TARGET_FAILURE
-else
-	setup sense and error
-	return DID_PASSTHROUGH
-
-James
-
+Nic?  Looks like the original version got in instead.
 
