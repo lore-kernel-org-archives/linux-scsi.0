@@ -1,40 +1,73 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH 07/13] target: Inline struct se_tmr_req into se_cmd
-Date: Mon, 26 Mar 2012 09:08:44 -0700
-Message-ID: <4F70948C.9030505@redhat.com>
-References: <1327009163-10177-1-git-send-email-agrover@redhat.com> <1327009163-10177-8-git-send-email-agrover@redhat.com> <20120120161209.GA22481@infradead.org> <4F19A80B.6000902@redhat.com> <20120326092559.GB27806@infradead.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [-next] m68k proc_ops breakage
+Date: Mon, 26 Mar 2012 22:06:14 +0200
+Message-ID: <CAMuHMdVQ9pxfRz899KVdAHhcspnhYU_H5DRCwRcsQY8cpZUqZw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35586 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932809Ab2CZQNv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Mar 2012 12:13:51 -0400
-In-Reply-To: <20120326092559.GB27806@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-next-owner@vger.kernel.org>
+Sender: linux-next-owner@vger.kernel.org
+To: Alexey Dobriyan <adobriyan@gmail.com>, James Bottomley <JBottomley@Parallels.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, Linux-Next <linux-next@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, kiran.patil@intel.com
 
-On 03/26/2012 02:25 AM, Christoph Hellwig wrote:
-> On Fri, Jan 20, 2012 at 09:44:43AM -0800, Andy Grover wrote:
->> On 01/20/2012 08:12 AM, Christoph Hellwig wrote:
->>> On Thu, Jan 19, 2012 at 01:39:17PM -0800, Andy Grover wrote:
->>>> This saves all fabrics from calling core_tmr_alloc_req() and
->>>> having to check the result. The downside is se_cmd gets bigger for all
->>>> requests, but hopefully later patches will reduce it.
->>>
->>> Without patches to void the overhead it's not acceptable. Fortunately
->>> it should be doable fairly simply by using an union for command vs
->>> TMR fields.
->>
->> This was my thought too. We should be able to move cmd variables into a
->> union w/tmr struct very soon, with a low risk of introducing bugs.
-> 
-> Any plans on going back to this?
+m68k/defconfig:
 
-I'm working on a cleanup patch series that keeps getting bigger, and
-this will either end up in it, or I'll get to it right afterwards.
+In file included from drivers/scsi/atari_scsi.c:1091:
+drivers/scsi/atari_NCR5380.c: In function =E2=80=98NCR5380_print_status=
+=E2=80=99:
+drivers/scsi/atari_NCR5380.c:736: error: implicit declaration of
+function =E2=80=98NCR5380_proc_info=E2=80=99
+drivers/scsi/atari_NCR5380.c: At top level:
+drivers/scsi/atari_NCR5380.c:767: error: static declaration of
+=E2=80=98NCR5380_proc_info=E2=80=99 follows non-static declaration
+drivers/scsi/atari_NCR5380.c:736: error: previous implicit declaration
+of =E2=80=98NCR5380_proc_info=E2=80=99 was here
+make[1]: *** [drivers/scsi/atari_scsi.o] Error 1
 
--- Andy
+
+m68k/sun3_defconfig:
+
+In file included from drivers/scsi/sun3_scsi.c:628:
+drivers/scsi/sun3_NCR5380.c: In function =E2=80=98NCR5380_print_status=E2=
+=80=99:
+drivers/scsi/sun3_NCR5380.c:678: error: implicit declaration of
+function =E2=80=98sun3scsi_proc_info=E2=80=99
+drivers/scsi/sun3_NCR5380.c: At top level:
+drivers/scsi/sun3_NCR5380.c:709: error: static declaration of
+=E2=80=98sun3scsi_proc_info=E2=80=99 follows non-static declaration
+drivers/scsi/sun3_NCR5380.c:678: error: previous implicit declaration
+of =E2=80=98sun3scsi_proc_info=E2=80=99 was here
+make[1]: *** [drivers/scsi/sun3_scsi.o] Error 1
+
+In file included from drivers/scsi/sun3_scsi_vme.c:571:
+drivers/scsi/sun3_NCR5380.c: In function =E2=80=98NCR5380_print_status=E2=
+=80=99:
+drivers/scsi/sun3_NCR5380.c:678: error: implicit declaration of
+function =E2=80=98sun3scsi_proc_info=E2=80=99
+drivers/scsi/sun3_NCR5380.c: At top level:
+drivers/scsi/sun3_NCR5380.c:709: error: static declaration of
+=E2=80=98sun3scsi_proc_info=E2=80=99 follows non-static declaration
+drivers/scsi/sun3_NCR5380.c:678: error: previous implicit declaration
+of =E2=80=98sun3scsi_proc_info=E2=80=99 was here
+make[1]: *** [drivers/scsi/sun3_scsi_vme.o] Error 1
+
+
+http://kisskb.ellerman.id.au/kisskb/buildresult/5967959/
+http://kisskb.ellerman.id.au/kisskb/buildresult/5967969/
+
+Gr{oetje,eeting}s,
+
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
+m68k.org
+
+In personal conversations with technical people, I call myself a hacker=
+=2E But
+when I'm talking to journalists I just say "programmer" or something li=
+ke that.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
