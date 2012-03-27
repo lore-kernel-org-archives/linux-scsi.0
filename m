@@ -1,50 +1,85 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] [SCSI] be2iscsi: Remove unused OFFSET_IN_PAGE() macro
-Date: Tue, 27 Mar 2012 12:28:51 -0500
-Message-ID: <4F71F8D3.3080002@cs.wisc.edu>
-References: <1330584109-4001-1-git-send-email-roland@kernel.org> <CAL1RGDX=hd=PX=VD_xjWWau01GcG8Ox_fj-FkMV5Exom_zQ++w@mail.gmail.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH] scsi: arm: fix compilation
+Date: Tue, 27 Mar 2012 23:05:21 +0300
+Message-ID: <20120327200521.GA4284@p183.telecom.by>
+References: <20120327025100.GD26825@windriver.com>
+ <1332838284.2883.22.camel@dabdike>
+ <20120328014900.4ac23b9c65831393cae1eb1b@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:46311 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751862Ab2C0RcV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2012 13:32:21 -0400
-In-Reply-To: <CAL1RGDX=hd=PX=VD_xjWWau01GcG8Ox_fj-FkMV5Exom_zQ++w@mail.gmail.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:55125 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524Ab2C0UF1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Mar 2012 16:05:27 -0400
+Content-Disposition: inline
+In-Reply-To: <20120328014900.4ac23b9c65831393cae1eb1b@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: James Bottomley <jbottomley@parallels.com>, Paul Gortmaker <paul.gortmaker@windriver.com>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 03/27/2012 11:38 AM, Roland Dreier wrote:
-> On Wed, Feb 29, 2012 at 10:41 PM, Roland Dreier <roland@kernel.org> wrote:
->> From: Roland Dreier <roland@purestorage.com>
->>
->> Signed-off-by: Roland Dreier <roland@purestorage.com>
->> ---
->>  drivers/scsi/be2iscsi/be.h |    4 ----
->>  1 files changed, 0 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
->> index 1d7b976..a50b6a9 100644
->> --- a/drivers/scsi/be2iscsi/be.h
->> +++ b/drivers/scsi/be2iscsi/be.h
->> @@ -132,10 +132,6 @@ struct be_ctrl_info {
->>                ((u32)((((size_t)(_address) & (PAGE_SIZE_4K - 1)) +     \
->>                        (size) + (PAGE_SIZE_4K - 1)) >> PAGE_SHIFT_4K))
->>
->> -/* Byte offset into the page corresponding to given address */
->> -#define OFFSET_IN_PAGE(addr)                                           \
->> -               ((size_t)(addr) & (PAGE_SIZE_4K-1))
->> -
->>  /* Returns bit offset within a DWORD of a bitfield */
->>  #define AMAP_BIT_OFFSET(_struct, field)                                        \
->>                (((size_t)&(((_struct *)0)->field))%32)
-> 
-> ping?  the corresponding be2net patch is upstream as 97767a87f3be.
-> 
+Add seq_file.h for seq_file stuff.
+Broken by commit bb6c20445c1bdd1c49ac5e76801211116694e3b9
+"[SCSI] arm: convert drivers to scsi proc_ops"
 
-Jay probably missed it, because he has been sick. Looks good to me.
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+---
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+ drivers/scsi/arm/arxescsi.c |    1 +
+ drivers/scsi/arm/cumana_2.c |    1 +
+ drivers/scsi/arm/eesox.c    |    1 +
+ drivers/scsi/arm/fas216.c   |    1 +
+ drivers/scsi/arm/powertec.c |    1 +
+ 5 files changed, 5 insertions(+)
+
+--- a/drivers/scsi/arm/arxescsi.c
++++ b/drivers/scsi/arm/arxescsi.c
+@@ -25,6 +25,7 @@
+ #include <linux/ioport.h>
+ #include <linux/proc_fs.h>
+ #include <linux/unistd.h>
++#include <linux/seq_file.h>
+ #include <linux/stat.h>
+ #include <linux/delay.h>
+ #include <linux/init.h>
+--- a/drivers/scsi/arm/cumana_2.c
++++ b/drivers/scsi/arm/cumana_2.c
+@@ -19,6 +19,7 @@
+ #include <linux/module.h>
+ #include <linux/blkdev.h>
+ #include <linux/kernel.h>
++#include <linux/seq_file.h>
+ #include <linux/string.h>
+ #include <linux/ioport.h>
+ #include <linux/proc_fs.h>
+--- a/drivers/scsi/arm/eesox.c
++++ b/drivers/scsi/arm/eesox.c
+@@ -25,6 +25,7 @@
+ #include <linux/module.h>
+ #include <linux/blkdev.h>
+ #include <linux/kernel.h>
++#include <linux/seq_file.h>
+ #include <linux/string.h>
+ #include <linux/ioport.h>
+ #include <linux/proc_fs.h>
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -40,6 +40,7 @@
+ #include <linux/string.h>
+ #include <linux/ioport.h>
+ #include <linux/proc_fs.h>
++#include <linux/seq_file.h>
+ #include <linux/delay.h>
+ #include <linux/bitops.h>
+ #include <linux/init.h>
+--- a/drivers/scsi/arm/powertec.c
++++ b/drivers/scsi/arm/powertec.c
+@@ -10,6 +10,7 @@
+ #include <linux/module.h>
+ #include <linux/blkdev.h>
+ #include <linux/kernel.h>
++#include <linux/seq_file.h>
+ #include <linux/string.h>
+ #include <linux/ioport.h>
+ #include <linux/proc_fs.h>
