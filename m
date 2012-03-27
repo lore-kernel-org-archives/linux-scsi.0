@@ -1,60 +1,38 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: Re: [PATCH] [SCSI] be2iscsi: Remove unused OFFSET_IN_PAGE() macro
-Date: Tue, 27 Mar 2012 09:38:32 -0700
-Message-ID: <CAL1RGDX=hd=PX=VD_xjWWau01GcG8Ox_fj-FkMV5Exom_zQ++w@mail.gmail.com>
-References: <1330584109-4001-1-git-send-email-roland@kernel.org>
+From: Dave Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Subject: Re: [PATCH 00/15, v3] Make ib_srp better suited for H.A. purposes
+Date: Tue, 27 Mar 2012 12:37:24 -0400
+Message-ID: <20120327163724.GA22205@ornl.gov>
+References: <5207288.nSt5MkVMpO@asus>
+ <2758264.LCH3RCDGs4@asus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog101.obsmtp.com ([74.125.245.70]:59805 "HELO
-	na3sys010aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752432Ab2C0QjH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2012 12:39:07 -0400
-Received: by obbun3 with SMTP id un3so91374obb.10
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Mar 2012 09:38:52 -0700 (PDT)
-In-Reply-To: <1330584109-4001-1-git-send-email-roland@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <2758264.LCH3RCDGs4@asus>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org" <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, "vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Wed, Feb 29, 2012 at 10:41 PM, Roland Dreier <roland@kernel.org> wro=
-te:
-> From: Roland Dreier <roland@purestorage.com>
->
-> Signed-off-by: Roland Dreier <roland@purestorage.com>
-> ---
-> =A0drivers/scsi/be2iscsi/be.h | =A0 =A04 ----
-> =A01 files changed, 0 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
-> index 1d7b976..a50b6a9 100644
-> --- a/drivers/scsi/be2iscsi/be.h
-> +++ b/drivers/scsi/be2iscsi/be.h
-> @@ -132,10 +132,6 @@ struct be_ctrl_info {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0((u32)((((size_t)(_address) & (PAGE_SI=
-ZE_4K - 1)) + =A0 =A0 \
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0(size) + (PAGE_SIZE_4K=
- - 1)) >> PAGE_SHIFT_4K))
->
-> -/* Byte offset into the page corresponding to given address */
-> -#define OFFSET_IN_PAGE(addr) =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 \
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ((size_t)(addr) & (PAGE_SIZE_4K-1))
-> -
-> =A0/* Returns bit offset within a DWORD of a bitfield */
-> =A0#define AMAP_BIT_OFFSET(_struct, field) =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0\
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0(((size_t)&(((_struct *)0)->field))%32=
-)
+On Sun, Mar 25, 2012 at 11:18:09AM -0400, Bart Van Assche wrote:
+> On Sunday 25 March 2012 15:17, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+> wrote:
+> > This patch series makes the ib_srp driver better suited for use in a
+> > H.A. setup because [ ... ]
+> 
+> The patch series is also available here:
+> http://github.com/bvanassche/linux/commits/srp-ha/.
 
-ping?  the corresponding be2net patch is upstream as 97767a87f3be.
+Thanks Bart, seems the work mail server is still mangling whitespace, so
+the repo link is much appreciated. I'll try to review these tomorrow
+afternoon.
 
- - R.
+-- 
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
