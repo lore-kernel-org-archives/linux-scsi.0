@@ -1,91 +1,80 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCHv2 0/7] acpi/libata: Express dependencies for devices on
- dock stations and bays
-Date: Tue, 27 Mar 2012 16:11:52 +0800
-Message-ID: <CAF1ivSY52ESfF02QywCFdf68_hSkOMg1R=0KwojeGJx2ALWCYg@mail.gmail.com>
-References: <20120120001817.GA27706@homac.suse.de>
-	<CAF1ivSYhOTitPctsJOTKWN9HDt0VZpQe_-_a0LnLefVGxOJtXg@mail.gmail.com>
-	<20120209073345.GA11121@homac.suse.de>
-	<4F33E615.6070607@garzik.org>
+From: Norman Diamond <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was: ehci_hcd fails to read a single good block)
+Date: Tue, 27 Mar 2012 17:48:39 +0900 (JST)
+Message-ID: <245059.32791.qm@web100011.mail.kks.yahoo.co.jp>
+References: <1332834045.2883.13.camel@dabdike>
+Reply-To: n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <4F33E615.6070607@garzik.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Holger Macht <holger@homac.de>, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Garrett <mjg@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@redhat.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1332834045.2883.13.camel@dabdike>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 9, 2012 at 11:28 PM, Jeff Garzik <jeff@garzik.org> wrote:
-> On 02/09/2012 02:33 AM, Holger Macht wrote:
->>
->> On Do 09. Feb - 14:46:11, Lin Ming wrote:
->>>
->>> On Fri, Jan 20, 2012 at 8:18 AM, Holger Macht<holger@homac.de> =A0w=
-rote:
->>>>
->>>> Patches 2 through 5 are just a refresh of the patches from Matthew
->>>> Garrett sent to this list in September 2010 [1]:
->>>>
->>>> Patch 1 is a new patch incorporating the corrections from James
->>>> Bottomley. Patch 6, 7 and 8 make the whole patch set actually work=
- on my
->>>> test hardware (Thinkpad x60/Thinkpad T60) by fixing minor issues a=
-nd
->>>> compensating changes after the first submission.
->>>>
->>>> All patches now contain the correct Signed-off-by instead of Acked=
--by
->>>> tags.
->>>>
->>>> =A0[PATCH 1/8] scsi: Add wrapper to access and set scsi_bus_type i=
-n struct
->>>> acpi_bus_type
->>>> =A0[PATCH 2/8] libata: Bind the Linux device tree to the ACPI devi=
-ce tree
->>>> =A0[PATCH 3/8] libata: Migrate ACPI code over to new bindings
->>>> =A0[PATCH 4/8] acpi: Add support for linking docks to the objects =
-they
->>>> contain
->>>> =A0[PATCH 5/8] libata: Add links between removable devices and doc=
-ks
->>>> =A0[PATCH 6/8] libata: Generate and pass correct acpi handles
->>>> =A0[PATCH 7/8] acpi: Prevent duplicate hotplug device registration=
- on dock
->>>> stations
->>>> =A0[PATCH 8/8] libata: Use correct PCI devices
->>>
->>>
->>> Hi Holger,
->>>
->>> What's the status of these patches?
->>
->>
->> They've been ACKed by both ACPI (Len Brown) and libata (James Bottom=
-ley)
->> people, so I guess they are good to go and I'm waiting for someone (=
-Jeff
->> Garzik?) to pick them up.
+James Bottomley corrected one of the experts who corrected me yesterday=
+:
+>>> So, the problem is that sd_mod is turning your request for a single=
+ block into a request for several blocks.
+>=20
+> No, it won't be this.=A0 Everything below block does exactly what blo=
+ck says.=A0 If readahead is the problem, then you need to turn it off i=
+n block:
+> echo 0 > /sys/block/<dev>/queue/read_ahead_kb
+
+Thank you.  But...
+
+James Bottomley corrected me too.
+>> I originally wrote (blaming the wrong component):
+>>>> dd if=3D/dev/sdb of=3D/dev/zero bs=3D512 count=3D1 skip=3D551563
+>>>> should succeed because block 551563 has no problem.=A0 But it fail=
+s because ehci_hcd insists on reading blocks 551560 through 551567, and=
+ block 551562 does have a problem.  (Of course I should have been outpu=
+tting to /dev/null instead of /dev/zero but that should not matter.)
 >
->
-> I ACK'd for libata. =A0It's queued in libata-dev... =A0but looks like=
- that did
-> not get pushed out. =A0Should show up in the next linux-next.
->
-> =A0 =A0 =A0 =A0Jeff
+> this is not fixable using dd which goes through the page cache (and t=
+hus had a minimum read of a page at a time). If you want exact 512 byte=
+ sector reads, use sg_dd instead.
 
-Hi,
+Then writing a 0 to /sys/block/sdb/queue/read_ahead_kb is useless in th=
+is particular case, right?  But it might be useful in further testing, =
+because of more oddities.
 
-I didn't find these patches in libata-dev tree.
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+The USB-to-IDE bridge is vendor 067b, product 2507, Prolific Technology=
+ Inc., and usb-storage matches it for quirk 110.
 
-Are they removed for some reason?
+Digression:  Someone adjusts the number of blocks from the reported 390=
+70080 (which I think is correct) to 39070079 (which I think is wrong). =
+ I'll have to install the drive in an old notebook to check if the repo=
+rted number of blocks is really correct.
 
-Regards,
-Lin Ming
+Today I created a FAT12 partition in approximately 8 megabytes surround=
+ing known bad block number 551562.
+
+Windows XP could write a bunch of files to fill the partition (0 blocks=
+ free).  Windows XP could copy all the files from the partition to a di=
+rectory on an internal SATA drive.  I guess there is some amount of luc=
+k that the bad block is not in use in any of the files, despite there b=
+eing 0 blocks free.
+
+Linux (cp -pr) could not copy all the files from the partition to a dir=
+ectory on an internal SATA drive.  Even when it should only copy blocks=
+ near the bad block, it stubbornly tried to readahead the bad block and=
+ it bombed out.  I had to unplug and replug the USB cable to read the d=
+rive again.
+
+Back to Windows XP.  When I told it to run CHKDSK and try to verify eve=
+ry block, then it bombed out.  I had to unplug and replug the USB cable=
+=2E  Again, just copying the files, they all copied.
+
+So the need to unplug and replug seems to be the bridge's fault.
+
+I think readahead is not a bad thing to do, and I can see why it is too=
+ late for Linux to recover after getting the error from trying to read =
+ahead.  But I'm sure I've seen Windows XP do readahead too.  How come W=
+indows XP survived where Linux didn't?
 --
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
