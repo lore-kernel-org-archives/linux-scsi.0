@@ -1,84 +1,51 @@
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: Commit "arm: convert drivers to scsi proc_ops" breaks linux-next
-Date: Mon, 26 Mar 2012 22:51:00 -0400
-Message-ID: <20120327025100.GD26825@windriver.com>
+From: Santosh Y <santoshsy@gmail.com>
+Subject: Re: [PATCH v3 1/5] [SCSI] ufshcd: UFS Host controller driver
+Date: Tue, 27 Mar 2012 09:31:37 +0530
+Message-ID: <CALMYJDu5+=wQSkR9SGMFqOSRARPeSK0XzmG8sfjuj2qUn9jOLA@mail.gmail.com>
+References: <1330497714-26504-2-git-send-email-santoshsy@gmail.com> <4F6FF179.5090600@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-next-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-next-owner@vger.kernel.org
-To: adobriyan@gmail.com
-Cc: JBottomley@parallels.com, linux-next@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4F6FF179.5090600@toshiba.co.jp>
+Sender: linux-kernel-owner@vger.kernel.org
+To: KOBAYASHI Yoshitake <yoshitake.kobayashi@toshiba.co.jp>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, arnd.bergmann@linaro.org, saugata.das@linaro.org, dsaxena@linaro.org, stephen.doel@linaro.org, venkat@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, girish.shivananjappa@linaro.org, vishak.g@samsung.com, k.rajesh@samsung.com, yejin.moon@samsung.com, sreekumar.c@samsung.com, vinholikatti@gmail.com, linkinjeon@gmail.com, michaelc@cs.wisc.edu
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Alexey,
+On Mon, Mar 26, 2012 at 10:02 AM, KOBAYASHI Yoshitake
+<yoshitake.kobayashi@toshiba.co.jp> wrote:
+>> > + =A0 =A0 =A0 =A0utrdlp[i].response_upiu_length =3D
+>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0cpu_to_le16(ALIGNED_UPIU_SIZE);
+>
+>
+> Response UPIU Length(RUL) shows the response UPIU length in Dword.
+> (JEDEC Standard No.223 6.2.1 UTP Transfer Request Descriptor)
+> The following will be correct.
+>
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 07ec973..feffe65 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -836,7 +836,7 @@ static void ufshcd_host_memory_configure(struct u=
+fs_hba
+> *hba)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0utrdlp[i].prd_table_offset =3D
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0cpu_to=
+_le16((prdt_offset >> 2));
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0utrdlp[i].response_upiu_length =3D
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 cpu_to_=
+le16(ALIGNED_UPIU_SIZE);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 cpu_to_=
+le16(ALIGNED_UPIU_SIZE >> 2);
+>
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0hba->lrb[i].utr_descriptor_ptr =3D (ut=
+rdlp + i);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0hba->lrb[i].ucd_cmd_ptr =3D
+>
 
-This error showed up in linux-next today:
+Thanks, i'll update it.
 
- CC      drivers/scsi/arm/powertec.o
-drivers/scsi/arm/powertec.c: In function 'powertecscsi_proc_show':
-drivers/scsi/arm/powertec.c:199: error: dereferencing pointer to incomplete type
-drivers/scsi/arm/powertec.c:202: error: implicit declaration of function 'seq_printf'
-drivers/scsi/arm/powertec.c: In function 'powertecscsi_proc_open':
-drivers/scsi/arm/powertec.c:214: error: implicit declaration of function 'single_open'
-drivers/scsi/arm/powertec.c: At top level:
-drivers/scsi/arm/powertec.c:250: error: 'seq_read' undeclared here (not in a function)
-drivers/scsi/arm/powertec.c:251: error: 'seq_lseek' undeclared here (not in a function)
-drivers/scsi/arm/powertec.c:252: error: 'single_release' undeclared here (not in a function)
-
-and a bisect leads to this:
-
---------------
-commit bb6c20445c1bdd1c49ac5e76801211116694e3b9
-Author: Alexey Dobriyan <adobriyan@gmail.com>
-Date:   Wed Feb 22 22:46:23 2012 +0300
-
-    [SCSI] arm: convert drivers to scsi proc_ops
-    
-    Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
-    Signed-off-by: James Bottomley <JBottomley@Parallels.com>
---------------
-
-I'm not sure why "new" commits are only showing up in linux-next with
-just days left in the merge window, but can you have a look ASAP?
-
-THanks,
-Paul.
-
-----------
-
-git bisect start
-# bad: [88b5d261d52f81806577e939c1744395b9f4edf9] Add linux-next specific files for 20120326
-git bisect bad 88b5d261d52f81806577e939c1744395b9f4edf9
-# good: [c16fa4f2ad19908a47c63d8fa436a1178438c7e7] Linux 3.3
-git bisect good c16fa4f2ad19908a47c63d8fa436a1178438c7e7
-# good: [f37ab0fba271e43edab0e3ae9fe644fcda455402] Merge branch 'hwmon-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/jdelvare/staging
-git bisect good f37ab0fba271e43edab0e3ae9fe644fcda455402
-# bad: [03797c27f6c50cd92e396cc31271bd73224239e0] Merge remote-tracking branch 'sound/for-next'
-git bisect bad 03797c27f6c50cd92e396cc31271bd73224239e0
-# bad: [9f9aa50fe5d555b356bfc34f135bc66d611fe573] Merge remote-tracking branch 'scsi/master'
-git bisect bad 9f9aa50fe5d555b356bfc34f135bc66d611fe573
-# good: [0cd69e8184c4242ca15494829d675606183e8c78] Merge remote-tracking branch 'arm/for-next'
-git bisect good 0cd69e8184c4242ca15494829d675606183e8c78
-# good: [8e52333b697339063e338b80560dec7e4396ce42] Merge remote-tracking branch 'fuse/for-next'
-git bisect good 8e52333b697339063e338b80560dec7e4396ce42
-# good: [21ea2bf9d8a875d79cbf1d70625a4a3cacfa9a64] Merge branch 'kbuild/kconfig' into kbuild/for-next
-git bisect good 21ea2bf9d8a875d79cbf1d70625a4a3cacfa9a64
-# good: [cf53892ca8c08d2ca7a553258d204c588d37ac87] Merge remote-tracking branch 'infiniband/for-next'
-git bisect good cf53892ca8c08d2ca7a553258d204c588d37ac87
-# bad: [7ef79ae61a1f5dbfcfda4b4fb01434692e283e3b] [SCSI] vmw_pvscsi: Try setting host->max_id as suggested by the device.
-git bisect bad 7ef79ae61a1f5dbfcfda4b4fb01434692e283e3b
-# bad: [104c4fe25dc9bde823ba4591e910a77071b98ab5] [SCSI] remove scsi_host_template::proc_info
-git bisect bad 104c4fe25dc9bde823ba4591e910a77071b98ab5
-# good: [2f97c74b58d2c2b3e0fd67ea1188f73b17f22c93] [SCSI] aha1740: convert to scsi proc_ops
-git bisect good 2f97c74b58d2c2b3e0fd67ea1188f73b17f22c93
-# good: [6852cc964c8a068d2a9ebe8b9dc922f6c0e29feb] [SCSI] usbstorage: convert to scsi proc_ops
-git bisect good 6852cc964c8a068d2a9ebe8b9dc922f6c0e29feb
-# good: [d11ea639a11b70ba8f88676af8df329481a701db] [SCSI] eata: convert to scsi proc_ops
-git bisect good d11ea639a11b70ba8f88676af8df329481a701db
-# good: [64d7ba67031f12b44a99978a2b108ed7d2f074dc] [SCSI] NCR5380: convert to scsi proc_ops
-git bisect good 64d7ba67031f12b44a99978a2b108ed7d2f074dc
-# bad: [d089e2cb5dffc1160b19a4e48d68cc583cf249ba] [SCSI] wd33c93: convert to scsi proc_ops
-git bisect bad d089e2cb5dffc1160b19a4e48d68cc583cf249ba
-# bad: [bb6c20445c1bdd1c49ac5e76801211116694e3b9] [SCSI] arm: convert drivers to scsi proc_ops
-git bisect bad bb6c20445c1bdd1c49ac5e76801211116694e3b9
+--=20
+~Santosh
