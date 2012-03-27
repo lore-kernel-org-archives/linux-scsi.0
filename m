@@ -1,41 +1,149 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: scsi_check_sense() interfering with pass-through SCSI calls
-Date: Tue, 27 Mar 2012 17:13:10 -0400
-Message-ID: <4F722D66.8070702@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH v4 0/4] FCoE Sysfs
+Date: Tue, 27 Mar 2012 15:22:24 -0700
+Message-ID: <20120327222224.7144.6324.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:56812 "EHLO smtp.infotech.no"
+Received: from mga09.intel.com ([134.134.136.24]:42568 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753905Ab2C0VNU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2012 17:13:20 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.infotech.no (Postfix) with ESMTP id 9AAD9204170
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Mar 2012 23:13:16 +0200 (CEST)
-Received: from smtp.infotech.no ([127.0.0.1])
-	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id MsFzD5HWVuQI for <linux-scsi@vger.kernel.org>;
-	Tue, 27 Mar 2012 23:13:15 +0200 (CEST)
-Received: from [192.168.48.66] (host-208-72-125-5.dyn.295.ca [208.72.125.5])
-	by smtp.infotech.no (Postfix) with ESMTPA id 4D714204119
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Mar 2012 23:13:15 +0200 (CEST)
+	id S1756451Ab2C0WWZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2012 18:22:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, giridhar.malavali@qlogic.com, james.smart@emulex.com, bprakash@broadcom.com
 
-I have been sent an example of sg_verify giving strange results
-in BYTCHK mode. A bus analyzer is showing a properly formed
-sense buffer with a sense_key of MISCOMPARE. In lk 3.3.0
-scsi_check_sense() is detecting this case and setting
-DID_TARGET_ERROR. For a pass-through call originating from
-the sg or bsg driver that is unwelcome interference.
+v4: Minor fixes and cleanups
 
-Since users of a SCSI command pass-through should be
-checking the SCSI status and sense buffer, then commands
-issued by the bsg and sg driver (probably st as well)
-should not be calling scsi_check_sense() IMO.
+* Changed device_initialize/device_add to device_register
+  and device_del to device_unregister. There was an imbalance
+  because device_initialize was getting a reference that
+  was not being released. With this update both fcoe_fcfs
+  as well as fcoe_ctlrs are correctly released/free'd when
+  they are to be removed from the system.
 
-Doug Gilbert
+* Minor updates to commit messages so there are no
+  references to 'fcoe_ctlr_attrs' and 'fcoe_fcf_attrs'
+  which were both renamed in v3 of this series.
 
+v3: Addressed Greg KH's second set of review comments
+
+* Created a 'fcoe bus' with the fcoe_ctlr and fcoe_fcf
+  instances as devices on the bus. Created bus_type(s)
+  for both device types, with default attribute group
+  sets for each. Now sysfs core adds/removes attributes
+  which allowed the removal of sysfs_create_group calls
+  before device_add. Updated Documentation/ accordingly.
+  
+* Renamed structures and APIs to make them less confusing.
+
+   structs:
+    fcoe_ctlr_attrs -> fcoe_ctlr_device
+    fcoe_fcf_attrs -> fcoe_fcf_device
+
+   functions:
+    fcoe_ctlr_attrs_add -> fcoe_ctlr_device_add
+    fcoe_ctlr_attrs_delete -> fcoe_ctlr_device_delete
+    fcoe_fcf_attrs_add -> fcoe_fcf_device_add
+    fcoe_fcf_attrs_delete -> fcoe_fcf_device_delete
+
+* Removed extra get_device(parent) for both the
+  fcoe_ctlr_device and fcoe_fcf_device.
+
+* fixed 'unused variable' compilation warning that
+  existed in v2.
+
+* API symbols now exported with EXPORT_SYMBOL_GPL
+
+* NOT ADDRESSED - idr usage vs. atomic incremeting of
+  fcoe_ctlr and fcoe_fcf id enumeration. It was indicated
+  that idr has not traditionally been used in drivers/scsi/.
+  I will re-examine this if there is still heartburn.
+
+---
+
+v2: Addressed Greg KH's review comments
+
+* moved fcoe_ctlr_attrs and fcoe_fcf_attrs attribute
+  helper macros from fcoe_sysfs.h to fcoe_sysfs.c so
+  that they don't temp developers to use them. They're
+  intended to be used in attribute show/store routine
+  generating macros, but not by drivers.
+
+* Removed unnecessary put_device calls on parent devices.
+  Also removed unnecessary de-initialization of pointers
+  to parent and removed unnecessary zero'ing of memory
+  before freeing it.
+
+* Added Documentation/ABI/testing/sysfs-class-fcoe
+  document.
+
+* Changed simple_strtoul usage to kstrtoul to avoid
+  checkpatch.pl warning that I missed before. There's
+  a bunch of noise in checkpatch.pl due to an odd macro
+  usage, but I think any remaining checkpatch.pl warnings
+  are OK.
+
+---
+
+This patch series adds a sysfs layer to libfcoe. It adds
+a sysfs instance for FIP controllers (a SW entity) and
+discovered Fibre Channel Forwarders (FCFs), which are
+simply FCoE switches.
+
+The new sysfs code is used by any driver that currently
+uses libfcoe, namely fcoe.ko and bnx2fc_fcoe.ko. Any other
+FCoE capable device that wishes to use the high-level APIs
+defined in fcoe_syfs.h may, without having to use the
+the protocol processing portions of libfcoe.
+
+The code borrows heavily from the FC Transport, but is
+less complicated because it does not need to interact
+with the SCSI layer directly.
+
+I think one thing to consider with this series is that
+drivers, such as traditional HBAs, which wish to use
+this infrastructure will now need to depend on libfcoe.ko.
+It was either this or create a superfluous kernel module;
+I think libfcoe is an appropriate place for this code.
+
+This series was created against scsi-misc + 9 patches
+mailed by me to linux-scsi on 03/09/12. (Note that 10
+patches were mailed, but that patch 01/10 will be dropped)
+
+I'm not sure if there's somewhere I should cross-post
+this for general sysfs review. I don't think I'm doing
+anything odd; I added Greg K-H to the CC list to try and
+get some sysfs eyes on this code.
+
+---
+
+Robert Love (4):
+      fcoe: Allocate fcoe_ctlr with fcoe_interface, not as a member
+      bnx2fc: Allocate fcoe_ctlr with bnx2fc_interface, not as a member
+      libfcoe: Add fcoe_sysfs
+      fcoe, bnx2fc, libfcoe: SW FCoE and bnx2fc use FCoE Syfs
+
+
+ Documentation/ABI/testing/sysfs-bus-fcoe |   77 +++
+ drivers/scsi/bnx2fc/bnx2fc.h             |    7 
+ drivers/scsi/bnx2fc/bnx2fc_els.c         |    2 
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c        |  171 +++++-
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c         |   39 +
+ drivers/scsi/fcoe/Makefile               |    2 
+ drivers/scsi/fcoe/fcoe.c                 |  196 +++++--
+ drivers/scsi/fcoe/fcoe.h                 |    8 
+ drivers/scsi/fcoe/fcoe_ctlr.c            |  159 +++++-
+ drivers/scsi/fcoe/fcoe_sysfs.c           |  832 ++++++++++++++++++++++++++++++
+ drivers/scsi/fcoe/fcoe_transport.c       |   13 
+ include/scsi/fcoe_sysfs.h                |  124 ++++
+ include/scsi/libfcoe.h                   |   27 +
+ 13 files changed, 1524 insertions(+), 133 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-bus-fcoe
+ create mode 100644 drivers/scsi/fcoe/fcoe_sysfs.c
+ create mode 100644 include/scsi/fcoe_sysfs.h
+
+-- 
+Thanks, //Rob
