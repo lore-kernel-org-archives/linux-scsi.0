@@ -1,306 +1,84 @@
 From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: linux-next: triage for March 26th, 2012
-Date: Mon, 26 Mar 2012 20:53:07 -0400
-Message-ID: <20120327005307.GB26825@windriver.com>
+Subject: Commit "arm: convert drivers to scsi proc_ops" breaks linux-next
+Date: Mon, 26 Mar 2012 22:51:00 -0400
+Message-ID: <20120327025100.GD26825@windriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-next-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-next-owner@vger.kernel.org
-To: linux-next@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: adobriyan@gmail.com
+Cc: JBottomley@parallels.com, linux-next@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Looks like some SCSI fallout today. (don't forget the builds lag
-the tree creation by up to 24h.)
+Hi Alexey,
 
-New breakage since last report:
-	ARM:rpc_defconfig (scsi/arm/powertec.c: implicit 'seq_printf')
-	ARM:omap2plus_defconfig (board-omap4panda.c: 'btwilink_device' undecl)
-	m68k:sun3_defconfig,m68k_defconfig (sun3_NCR5380.c: static decl of
-				 'sun3scsi_proc_info' follows non-static)
-	ia64:defconfig (asm-offsets.c:322: unterm arg list invoking macro "DEFINE")
+This error showed up in linux-next today:
 
-Randconfig fails that may or may not be new (by their very nature):
-	powerpc: mpc512x_shared.c: (fsl_diu_monitor_port declared in param list)
+ CC      drivers/scsi/arm/powertec.o
+drivers/scsi/arm/powertec.c: In function 'powertecscsi_proc_show':
+drivers/scsi/arm/powertec.c:199: error: dereferencing pointer to incomplete type
+drivers/scsi/arm/powertec.c:202: error: implicit declaration of function 'seq_printf'
+drivers/scsi/arm/powertec.c: In function 'powertecscsi_proc_open':
+drivers/scsi/arm/powertec.c:214: error: implicit declaration of function 'single_open'
+drivers/scsi/arm/powertec.c: At top level:
+drivers/scsi/arm/powertec.c:250: error: 'seq_read' undeclared here (not in a function)
+drivers/scsi/arm/powertec.c:251: error: 'seq_lseek' undeclared here (not in a function)
+drivers/scsi/arm/powertec.c:252: error: 'single_release' undeclared here (not in a function)
 
-Builds that are fixed since last report:
-	ARM:cam60_defconfig
-	ARM:ap4evb_defconfig
-	ARM:mxs_defconfig (kallsyms bug, so probably not "fixed").
-	ARM:at91x40_defconfig
+and a bisect leads to this:
 
-The following have fixes posted for quite some time now, but the fixes
-haven't yet been integrated.  Please have a look at these, as it would
-be nice to have them in tree before wk2 of the merge window closes.
-	ARM:magician_defconfig
-	ARM:collie_defconfig
-	ARM:iop32x_defconfig,iop33x_defconfig
-	ARM:em_x270_defconfig
-	AVR32:defconfig
+--------------
+commit bb6c20445c1bdd1c49ac5e76801211116694e3b9
+Author: Alexey Dobriyan <adobriyan@gmail.com>
+Date:   Wed Feb 22 22:46:23 2012 +0300
 
+    [SCSI] arm: convert drivers to scsi proc_ops
+    
+    Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+    Signed-off-by: James Bottomley <JBottomley@Parallels.com>
+--------------
 
-Note: The randconfig fails are only listed once and not tracked
-in the below listing.
+I'm not sure why "new" commits are only showing up in linux-next with
+just days left in the merge window, but can you have a look ASAP?
 
-            ------------------------------------------------
+THanks,
+Paul.
 
-Latest results at:
-	http://kisskb.ellerman.id.au/kisskb/branch/9/
+----------
 
-Failures as of March 26th, 2012:
-================================
-
-AM33:asb2303_defconfig,asb2364_defconfig
-	when:	Mar 15
-	why:	cc1: error: unrecognized command line option '-mmem-funcs'
-	status:	Possible fix from TonyB sent for review.
-	fix:	http://marc.info/?l=linux-kernel&m=133185020313818&w=2
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5878400/
-----------------
-
-ARM:omap2plus_defconfig
-	when:	Mar 26
-	why:	board-omap4panda.c: 'btwilink_device' undeclared
-	status:
-	fix:
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5968352/
-
-ARM:rpc_defconfig
-	when:	Mar 26
-	why:	scsi/arm/powertec.c: implicit declaration 'seq_printf'
-	status:	
-	fix:	
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5967948/
-
-ARM:u300_defconfig
-	when:	Mar 24
-	why:	coh901327_wdt.c: 'struct watchdog_device' has no member named 'timout'
-	status:	reported (PaulG)
-	fix:
-	ref:	http://marc.info/?l=linux-next&m=133259959823119&w=2
-
-ARM:cm_x2xx_defconfig
-	when:	Mar 19
-	why:	it8152.c: redefinition of 'dma_set_coherent_mask'
-	status:	bisected and reported (PaulG)
-	fix:
-	ref:	http://marc.info/?l=linux-next&m=133226851818586&w=2
-
-ARM:netx_defconfig,pnx4008_defconfig 
-	when:	Mar 14
-	why:	net/core/pktgen.c: can't find a register in class 'GENERAL_REGS'
-	status:	
-	fix:	
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5869486/
-	ref:	https://lkml.org/lkml/2012/3/13/670
-
-ARM:collie_defconfig
-	when:	Feb 14
-	why:	locomolcd.c: error: 'sa1100fb_lcd_power' undeclared
-	status:	fixed (PaulG) - pending integration
-	fix:	http://marc.info/?l=linux-next&m=133105157730749&w=2
-	ref:
-
-ARM:iop32x_defconfig,iop33x_defconfig
-	when:	Nov 23
-	why:	restart.c: implicit declaration of function 'soft_restart'
-	status:	fixed (PaulG) - pending integration
-	fix:	http://lists.infradead.org/pipermail/linux-arm-kernel/2012-January/081461.html
-	fix:	https://lkml.org/lkml/2012/3/14/253
-	ref:
-
-ARM:ixp4xx_defconfig
-	when:	Oct 26
-	why:	gpio.h: implicit declaration of function '__gpio_get_value'
-	status:	fixed (Imre Kaloz) - but possibly needs rework?
-	fix:	https://lkml.org/lkml/2012/2/8/288
-	ref:	https://lkml.org/lkml/2012/2/8/287
-
-ARM:magician_defconfig
-	when:	Feb 13
-	why:	magician.c: unknown field 'dev' specified in initializer
-	status:	fixed (PaulG) - pending integration
-	fix:	http://marc.info/?l=linux-arm-kernel&m=133124258707457&w=2
-	ref:	http://marc.info/?l=linux-next&m=133106325903524&w=2
-
-ARM:em_x270_defconfig
-	when:	Feb 14
-	why:	em-x270.c: unknown field 'dev' specified in initializer
-	status:	 fixed (PaulG) - pending integration
-	fix:	http://www.spinics.net/lists/arm-kernel/msg164012.html
-	ref:	http://www.spinics.net/lists/arm-kernel/msg163135.html
-
-ARM:raumfeld_defconfig
-	when:	Nov 23
-	why:	eeti_ts.c: implicit declaration of function 'irq_to_gpio'
-	status:	perhaps broken since 2010?  See ref below.
-	fix:	
-	ref:	http://www.gossamer-threads.com/lists/linux/kernel/1291618?do=post_view_threaded#1291618
-
-ARM:arm-allnoconfig
-	when:	forever
-	why:	not supported
-	status:	nothing pending, but patches accepted
-	fix:	n/a
-	ref:	https://lkml.org/lkml/2009/4/30/105
-	ref:	http://lists.infradead.org/pipermail/linux-arm-kernel/2012-January/081218.html
-----------------
-
-AVR32:defconfig
-	when:	Mar 18
-	why:	board.h: atmel_nand.h: No such file or directory
-	status:	reported/fixed (PaulG)
-	fix:	http://marc.info/?l=linux-arm-kernel&m=133239363802517&w=2
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5917107/
-
-AVR32:allnoconfig
-	when:	May 26 2010, 20:49
-	why:	at32_map_usart: undefined reference to `atmel_default_console_device'
-	status:
-	fix:
-	ref:
----------------
-
-bfin:***all-builds***
-	when:	Jan 20, 22:13
-	why:	undefined reference to [now multiple definition of] `vm_is_stack'
-	status:	WIP, fix from Siddhesh Poyarekar
-	fix:
-	ref:	http://marc.info/?l=linux-next&m=133269881015828&w=2
-	ref:	http://marc.info/?l=linux-next&m=133104723928617&w=2
----------------
-
-cris:***all-builds***
-	when:	Mar 25, 22:05
-	why:	include/linux/types.h:25: error expected ... before 'ino_t'
-	status:	
-	fix:	
-	ref:	
-----------------
-
-crisv32:***all-builds***
-	when:	Mar 25, 22:05
-	why:	include/linux/types.h:25: error expected ... before 'ino_t'
-	status:	
-	fix:	
-	ref:	
-----------------
-
-frv:defconfig
-	when:	Mar 15
-	why:	arch/frv/kernel/head.S operand out of range
-	status:
-	fix:
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5884666/
-----------------
-
-h8300:defconfig
-	when:	Mar 15
-	why:	time.c: implicit declaration of function 'get_irq_regs'
-	why:	also seems gcc suffers an ICE
-	status:	ICE bug lodged with gcc folks (TonyB)
-	fix:
-	ref:	http://gcc.gnu.org/bugzilla/show_bug.cgi?id=52598
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5884668/
-----------------
-
-ia64:defconfig
-	when:	Mar 26
-	why:	asm-offsets.c:322: unterminated arg list invoking macro "DEFINE"
-	status:
-	fix:
-	ref:
-----------------
-
-i386:allmodconfig
-	when:	Mar 8, 20:41
-	why:	ERROR: "mdfld_set_brightness" [drivers/gpu/drm/gma500/gma500_gfx.ko] undefined!
-	status:	
-	fix:
-	ref:	https://lkml.org/lkml/2012/3/24/122
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5878506/
-----------------
-
-m32r:m32700ut.smp_defconfig
-	when:	Mar 15
-	why:	No rule to make target `arch/m32r/boot/compressed/vmlinux.bin
-	status:
-	fix:
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5884670/
-----------------
-
-m68k:sun3_defconfig,m68k_defconfig
-	when:	Mar 26
-	why:	sun3_NCR5380.c: static decl of 'sun3scsi_proc_info' follows non-static
-	status:	
-	fix:	
-	ref:	http://marc.info/?l=linux-next&m=133279244817422&w=2
-
-m68k:allmodconfig
-	when:	Mar 16
-	why:	persistent_ram.c: implicit declaration of 'memblock_reserve'
-	status:	
-	fix:	
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5884324/
-	ref:	http://www.spinics.net/lists/linux-next/msg19343.html
-----------------
-
-mips:allmodconfig
-	when:
-	why:	driver_pci_host.c: implicit declaration of function 'pcibios_enable_device'
-	status: one of many fixes mips needs...
-	fix:	http://marc.info/?l=linux-wireless&m=133272031621916&w=2
-	ref:	http://patchwork.ozlabs.org/patch/148614/
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5807000/
-----------------
-
-parisc:allmodconfig
-	when:
-	why:	include/linux/log2.h: implicit declaration of function 'fls'
-	status:	reported by PaulG, WIP by David Howells 
-	fix:
-	ref:	https://lkml.org/lkml/2012/2/29/409
-	ref:	https://lkml.org/lkml/2012/3/6/228
-
-parisc64:a500_defconfig 
-	when:
-	why:	include/linux/log2.h: implicit declaration of function 'fls'
-	status:	reported by PaulG, WIP by David Howells 
-	fix:
-	ref:	https://lkml.org/lkml/2012/2/29/409
-	ref:	https://lkml.org/lkml/2012/3/6/228
-------------------
-
-powerpc:allyesconfig
-	when:	May 18 2009, 22:11
-	why:	fat ass kernel with everything simply won't link
-	status:	need to fix build config to ignore the final link
-	fix:	
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5806793/
-------------------
-
-sh4:***all-builds***
-	when:	Feb 24, 17:38
-	why:	include/linux/log2.h: implicit declaration of function 'fls'
-	status:	reported by PaulG, WIP by David Howells 
-	fix:
-	ref:	https://lkml.org/lkml/2012/2/29/409
-	ref:	https://lkml.org/lkml/2012/3/6/228
-------------------
-
-tilegx:defconfig
-	when:	Mar 19
-	why:	`xfs_qm_exit' defined in discarded section `.exit.text' of fs/built-in.o
-	status:	
-	fix:
-	ref:	http://marc.info/?l=linux-next&m=133269971616104&w=2
-	ref:	http://kisskb.ellerman.id.au/kisskb/buildresult/5924094/
-------------------
-
-um:um-defconfig
-	when:	Sep 16 2010, 01:28
-	why:	os-Linux/start_up.c: error: 'PTRACE_SETOPTIONS' undeclared
-	status:	clearly broken forever, so does anyone care?
-	fix:	
-	ref:	http://kisskb.ellerman.id.au/kisskb/target/2979/
+git bisect start
+# bad: [88b5d261d52f81806577e939c1744395b9f4edf9] Add linux-next specific files for 20120326
+git bisect bad 88b5d261d52f81806577e939c1744395b9f4edf9
+# good: [c16fa4f2ad19908a47c63d8fa436a1178438c7e7] Linux 3.3
+git bisect good c16fa4f2ad19908a47c63d8fa436a1178438c7e7
+# good: [f37ab0fba271e43edab0e3ae9fe644fcda455402] Merge branch 'hwmon-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/jdelvare/staging
+git bisect good f37ab0fba271e43edab0e3ae9fe644fcda455402
+# bad: [03797c27f6c50cd92e396cc31271bd73224239e0] Merge remote-tracking branch 'sound/for-next'
+git bisect bad 03797c27f6c50cd92e396cc31271bd73224239e0
+# bad: [9f9aa50fe5d555b356bfc34f135bc66d611fe573] Merge remote-tracking branch 'scsi/master'
+git bisect bad 9f9aa50fe5d555b356bfc34f135bc66d611fe573
+# good: [0cd69e8184c4242ca15494829d675606183e8c78] Merge remote-tracking branch 'arm/for-next'
+git bisect good 0cd69e8184c4242ca15494829d675606183e8c78
+# good: [8e52333b697339063e338b80560dec7e4396ce42] Merge remote-tracking branch 'fuse/for-next'
+git bisect good 8e52333b697339063e338b80560dec7e4396ce42
+# good: [21ea2bf9d8a875d79cbf1d70625a4a3cacfa9a64] Merge branch 'kbuild/kconfig' into kbuild/for-next
+git bisect good 21ea2bf9d8a875d79cbf1d70625a4a3cacfa9a64
+# good: [cf53892ca8c08d2ca7a553258d204c588d37ac87] Merge remote-tracking branch 'infiniband/for-next'
+git bisect good cf53892ca8c08d2ca7a553258d204c588d37ac87
+# bad: [7ef79ae61a1f5dbfcfda4b4fb01434692e283e3b] [SCSI] vmw_pvscsi: Try setting host->max_id as suggested by the device.
+git bisect bad 7ef79ae61a1f5dbfcfda4b4fb01434692e283e3b
+# bad: [104c4fe25dc9bde823ba4591e910a77071b98ab5] [SCSI] remove scsi_host_template::proc_info
+git bisect bad 104c4fe25dc9bde823ba4591e910a77071b98ab5
+# good: [2f97c74b58d2c2b3e0fd67ea1188f73b17f22c93] [SCSI] aha1740: convert to scsi proc_ops
+git bisect good 2f97c74b58d2c2b3e0fd67ea1188f73b17f22c93
+# good: [6852cc964c8a068d2a9ebe8b9dc922f6c0e29feb] [SCSI] usbstorage: convert to scsi proc_ops
+git bisect good 6852cc964c8a068d2a9ebe8b9dc922f6c0e29feb
+# good: [d11ea639a11b70ba8f88676af8df329481a701db] [SCSI] eata: convert to scsi proc_ops
+git bisect good d11ea639a11b70ba8f88676af8df329481a701db
+# good: [64d7ba67031f12b44a99978a2b108ed7d2f074dc] [SCSI] NCR5380: convert to scsi proc_ops
+git bisect good 64d7ba67031f12b44a99978a2b108ed7d2f074dc
+# bad: [d089e2cb5dffc1160b19a4e48d68cc583cf249ba] [SCSI] wd33c93: convert to scsi proc_ops
+git bisect bad d089e2cb5dffc1160b19a4e48d68cc583cf249ba
+# bad: [bb6c20445c1bdd1c49ac5e76801211116694e3b9] [SCSI] arm: convert drivers to scsi proc_ops
+git bisect bad bb6c20445c1bdd1c49ac5e76801211116694e3b9
