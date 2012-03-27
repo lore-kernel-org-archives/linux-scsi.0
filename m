@@ -1,36 +1,56 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] isci: make function declaration match implementation
-Date: Tue, 27 Mar 2012 10:16:14 +0300
-Message-ID: <20120327071614.GB19008@elgon.mountain>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [-next] m68k proc_ops breakage
+Date: Tue, 27 Mar 2012 07:22:26 +0000
+Message-ID: <1332832945.2883.5.camel@dabdike>
+References: <CAMuHMdVQ9pxfRz899KVdAHhcspnhYU_H5DRCwRcsQY8cpZUqZw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:44894 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784Ab2C0HQ0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Mar 2012 03:16:26 -0400
-Content-Disposition: inline
+Received: from mx2.parallels.com ([64.131.90.16]:53882 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751244Ab2C0HW3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2012 03:22:29 -0400
+In-Reply-To: <CAMuHMdVQ9pxfRz899KVdAHhcspnhYU_H5DRCwRcsQY8cpZUqZw@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <66E0E34C9A795140993F57872D23A0A5@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Intel SCU Linux support <intel-linux-scu@intel.com>, Jeff Skirvin <jeffrey.d.skirvin@intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Dave Jiang <dave.jiang@intel.com>, Ed Nadolski <edmund.nadolski@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Alexey Dobriyan <adobriyan@gmail.com>, scsi <linux-scsi@vger.kernel.org>, Linux-Next <linux-next@vger.kernel.org>
 
-Sparse complains that we redeclare this with a different type, because
-in the .c file we use an enum and in the .h file we declare the
-parameter as a u32.  Probably it's best to use an enum in both places.
-
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
-index a703b9c..1177204 100644
---- a/drivers/scsi/isci/remote_node_context.h
-+++ b/drivers/scsi/isci/remote_node_context.h
-@@ -212,7 +212,7 @@ enum sci_status sci_remote_node_context_destruct(struct sci_remote_node_context
- 						      scics_sds_remote_node_context_callback callback,
- 						      void *callback_parameter);
- enum sci_status sci_remote_node_context_suspend(struct sci_remote_node_context *sci_rnc,
--						     u32 suspend_type,
-+						     enum sci_remote_node_suspension_reasons reason,
- 						     u32 suspension_code);
- enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *sci_rnc,
- 						    scics_sds_remote_node_context_callback cb_fn,
+IE9uIE1vbiwgMjAxMi0wMy0yNiBhdCAyMjowNiArMDIwMCwgR2VlcnQgVXl0dGVyaG9ldmVuIHdy
+b3RlOg0KPiBtNjhrL2RlZmNvbmZpZzoNCj4gDQo+IEluIGZpbGUgaW5jbHVkZWQgZnJvbSBkcml2
+ZXJzL3Njc2kvYXRhcmlfc2NzaS5jOjEwOTE6DQo+IGRyaXZlcnMvc2NzaS9hdGFyaV9OQ1I1Mzgw
+LmM6IEluIGZ1bmN0aW9uIOKAmE5DUjUzODBfcHJpbnRfc3RhdHVz4oCZOg0KPiBkcml2ZXJzL3Nj
+c2kvYXRhcmlfTkNSNTM4MC5jOjczNjogZXJyb3I6IGltcGxpY2l0IGRlY2xhcmF0aW9uIG9mDQo+
+IGZ1bmN0aW9uIOKAmE5DUjUzODBfcHJvY19pbmZv4oCZDQo+IGRyaXZlcnMvc2NzaS9hdGFyaV9O
+Q1I1MzgwLmM6IEF0IHRvcCBsZXZlbDoNCj4gZHJpdmVycy9zY3NpL2F0YXJpX05DUjUzODAuYzo3
+Njc6IGVycm9yOiBzdGF0aWMgZGVjbGFyYXRpb24gb2YNCj4g4oCYTkNSNTM4MF9wcm9jX2luZm/i
+gJkgZm9sbG93cyBub24tc3RhdGljIGRlY2xhcmF0aW9uDQo+IGRyaXZlcnMvc2NzaS9hdGFyaV9O
+Q1I1MzgwLmM6NzM2OiBlcnJvcjogcHJldmlvdXMgaW1wbGljaXQgZGVjbGFyYXRpb24NCj4gb2Yg
+4oCYTkNSNTM4MF9wcm9jX2luZm/igJkgd2FzIGhlcmUNCj4gbWFrZVsxXTogKioqIFtkcml2ZXJz
+L3Njc2kvYXRhcmlfc2NzaS5vXSBFcnJvciAxDQo+IA0KPiANCj4gbTY4ay9zdW4zX2RlZmNvbmZp
+ZzoNCj4gDQo+IEluIGZpbGUgaW5jbHVkZWQgZnJvbSBkcml2ZXJzL3Njc2kvc3VuM19zY3NpLmM6
+NjI4Og0KPiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6IEluIGZ1bmN0aW9uIOKAmE5DUjUz
+ODBfcHJpbnRfc3RhdHVz4oCZOg0KPiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6Njc4OiBl
+cnJvcjogaW1wbGljaXQgZGVjbGFyYXRpb24gb2YNCj4gZnVuY3Rpb24g4oCYc3VuM3Njc2lfcHJv
+Y19pbmZv4oCZDQo+IGRyaXZlcnMvc2NzaS9zdW4zX05DUjUzODAuYzogQXQgdG9wIGxldmVsOg0K
+PiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6NzA5OiBlcnJvcjogc3RhdGljIGRlY2xhcmF0
+aW9uIG9mDQo+IOKAmHN1bjNzY3NpX3Byb2NfaW5mb+KAmSBmb2xsb3dzIG5vbi1zdGF0aWMgZGVj
+bGFyYXRpb24NCj4gZHJpdmVycy9zY3NpL3N1bjNfTkNSNTM4MC5jOjY3ODogZXJyb3I6IHByZXZp
+b3VzIGltcGxpY2l0IGRlY2xhcmF0aW9uDQo+IG9mIOKAmHN1bjNzY3NpX3Byb2NfaW5mb+KAmSB3
+YXMgaGVyZQ0KPiBtYWtlWzFdOiAqKiogW2RyaXZlcnMvc2NzaS9zdW4zX3Njc2kub10gRXJyb3Ig
+MQ0KPiANCj4gSW4gZmlsZSBpbmNsdWRlZCBmcm9tIGRyaXZlcnMvc2NzaS9zdW4zX3Njc2lfdm1l
+LmM6NTcxOg0KPiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6IEluIGZ1bmN0aW9uIOKAmE5D
+UjUzODBfcHJpbnRfc3RhdHVz4oCZOg0KPiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6Njc4
+OiBlcnJvcjogaW1wbGljaXQgZGVjbGFyYXRpb24gb2YNCj4gZnVuY3Rpb24g4oCYc3VuM3Njc2lf
+cHJvY19pbmZv4oCZDQo+IGRyaXZlcnMvc2NzaS9zdW4zX05DUjUzODAuYzogQXQgdG9wIGxldmVs
+Og0KPiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6NzA5OiBlcnJvcjogc3RhdGljIGRlY2xh
+cmF0aW9uIG9mDQo+IOKAmHN1bjNzY3NpX3Byb2NfaW5mb+KAmSBmb2xsb3dzIG5vbi1zdGF0aWMg
+ZGVjbGFyYXRpb24NCj4gZHJpdmVycy9zY3NpL3N1bjNfTkNSNTM4MC5jOjY3ODogZXJyb3I6IHBy
+ZXZpb3VzIGltcGxpY2l0IGRlY2xhcmF0aW9uDQo+IG9mIOKAmHN1bjNzY3NpX3Byb2NfaW5mb+KA
+mSB3YXMgaGVyZQ0KPiBtYWtlWzFdOiAqKiogW2RyaXZlcnMvc2NzaS9zdW4zX3Njc2lfdm1lLm9d
+IEVycm9yIDENCg0KWWVzLCB0aGUgcHJvY19vcHMgY29udmVyc2lvbiBpc24ndCBxdWl0ZSByZWFk
+eS4gIEknbGwgaG9sZCBpdCBvdmVyIHRvDQp0aGUgbmV4dCBtZXJnZSB3aW5kb3cgc28gd2UgY2Fu
+IGZpeCBzdHVmZiBsaWtlIHRoaXMuDQoNCkphbWVzDQoNCg==
