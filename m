@@ -1,38 +1,50 @@
-From: Dave Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: Re: [PATCH 00/15, v3] Make ib_srp better suited for H.A. purposes
-Date: Tue, 27 Mar 2012 12:37:24 -0400
-Message-ID: <20120327163724.GA22205@ornl.gov>
-References: <5207288.nSt5MkVMpO@asus>
- <2758264.LCH3RCDGs4@asus>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] [SCSI] be2iscsi: Remove unused OFFSET_IN_PAGE() macro
+Date: Tue, 27 Mar 2012 12:28:51 -0500
+Message-ID: <4F71F8D3.3080002@cs.wisc.edu>
+References: <1330584109-4001-1-git-send-email-roland@kernel.org> <CAL1RGDX=hd=PX=VD_xjWWau01GcG8Ox_fj-FkMV5Exom_zQ++w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <2758264.LCH3RCDGs4@asus>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org" <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, "vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:46311 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751862Ab2C0RcV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2012 13:32:21 -0400
+In-Reply-To: <CAL1RGDX=hd=PX=VD_xjWWau01GcG8Ox_fj-FkMV5Exom_zQ++w@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On Sun, Mar 25, 2012 at 11:18:09AM -0400, Bart Van Assche wrote:
-> On Sunday 25 March 2012 15:17, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-> wrote:
-> > This patch series makes the ib_srp driver better suited for use in a
-> > H.A. setup because [ ... ]
+On 03/27/2012 11:38 AM, Roland Dreier wrote:
+> On Wed, Feb 29, 2012 at 10:41 PM, Roland Dreier <roland@kernel.org> wrote:
+>> From: Roland Dreier <roland@purestorage.com>
+>>
+>> Signed-off-by: Roland Dreier <roland@purestorage.com>
+>> ---
+>>  drivers/scsi/be2iscsi/be.h |    4 ----
+>>  1 files changed, 0 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+>> index 1d7b976..a50b6a9 100644
+>> --- a/drivers/scsi/be2iscsi/be.h
+>> +++ b/drivers/scsi/be2iscsi/be.h
+>> @@ -132,10 +132,6 @@ struct be_ctrl_info {
+>>                ((u32)((((size_t)(_address) & (PAGE_SIZE_4K - 1)) +     \
+>>                        (size) + (PAGE_SIZE_4K - 1)) >> PAGE_SHIFT_4K))
+>>
+>> -/* Byte offset into the page corresponding to given address */
+>> -#define OFFSET_IN_PAGE(addr)                                           \
+>> -               ((size_t)(addr) & (PAGE_SIZE_4K-1))
+>> -
+>>  /* Returns bit offset within a DWORD of a bitfield */
+>>  #define AMAP_BIT_OFFSET(_struct, field)                                        \
+>>                (((size_t)&(((_struct *)0)->field))%32)
 > 
-> The patch series is also available here:
-> http://github.com/bvanassche/linux/commits/srp-ha/.
+> ping?  the corresponding be2net patch is upstream as 97767a87f3be.
+> 
 
-Thanks Bart, seems the work mail server is still mangling whitespace, so
-the repo link is much appreciated. I'll try to review these tomorrow
-afternoon.
+Jay probably missed it, because he has been sick. Looks good to me.
 
--- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
