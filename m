@@ -1,56 +1,128 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [-next] m68k proc_ops breakage
-Date: Tue, 27 Mar 2012 07:22:26 +0000
-Message-ID: <1332832945.2883.5.camel@dabdike>
-References: <CAMuHMdVQ9pxfRz899KVdAHhcspnhYU_H5DRCwRcsQY8cpZUqZw@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Tue, 27 Mar 2012 08:40:45 +0100
+Message-ID: <1332834045.2883.13.camel@dabdike>
+References: <224002.28941.qm@web100019.mail.kks.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:53882 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751244Ab2C0HW3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2012 03:22:29 -0400
-In-Reply-To: <CAMuHMdVQ9pxfRz899KVdAHhcspnhYU_H5DRCwRcsQY8cpZUqZw@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <66E0E34C9A795140993F57872D23A0A5@sw.swsoft.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38497 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753020Ab2C0Hkt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2012 03:40:49 -0400
+In-Reply-To: <224002.28941.qm@web100019.mail.kks.yahoo.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Alexey Dobriyan <adobriyan@gmail.com>, scsi <linux-scsi@vger.kernel.org>, Linux-Next <linux-next@vger.kernel.org>
+To: n0diamond@yahoo.co.jp
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-IE9uIE1vbiwgMjAxMi0wMy0yNiBhdCAyMjowNiArMDIwMCwgR2VlcnQgVXl0dGVyaG9ldmVuIHdy
-b3RlOg0KPiBtNjhrL2RlZmNvbmZpZzoNCj4gDQo+IEluIGZpbGUgaW5jbHVkZWQgZnJvbSBkcml2
-ZXJzL3Njc2kvYXRhcmlfc2NzaS5jOjEwOTE6DQo+IGRyaXZlcnMvc2NzaS9hdGFyaV9OQ1I1Mzgw
-LmM6IEluIGZ1bmN0aW9uIOKAmE5DUjUzODBfcHJpbnRfc3RhdHVz4oCZOg0KPiBkcml2ZXJzL3Nj
-c2kvYXRhcmlfTkNSNTM4MC5jOjczNjogZXJyb3I6IGltcGxpY2l0IGRlY2xhcmF0aW9uIG9mDQo+
-IGZ1bmN0aW9uIOKAmE5DUjUzODBfcHJvY19pbmZv4oCZDQo+IGRyaXZlcnMvc2NzaS9hdGFyaV9O
-Q1I1MzgwLmM6IEF0IHRvcCBsZXZlbDoNCj4gZHJpdmVycy9zY3NpL2F0YXJpX05DUjUzODAuYzo3
-Njc6IGVycm9yOiBzdGF0aWMgZGVjbGFyYXRpb24gb2YNCj4g4oCYTkNSNTM4MF9wcm9jX2luZm/i
-gJkgZm9sbG93cyBub24tc3RhdGljIGRlY2xhcmF0aW9uDQo+IGRyaXZlcnMvc2NzaS9hdGFyaV9O
-Q1I1MzgwLmM6NzM2OiBlcnJvcjogcHJldmlvdXMgaW1wbGljaXQgZGVjbGFyYXRpb24NCj4gb2Yg
-4oCYTkNSNTM4MF9wcm9jX2luZm/igJkgd2FzIGhlcmUNCj4gbWFrZVsxXTogKioqIFtkcml2ZXJz
-L3Njc2kvYXRhcmlfc2NzaS5vXSBFcnJvciAxDQo+IA0KPiANCj4gbTY4ay9zdW4zX2RlZmNvbmZp
-ZzoNCj4gDQo+IEluIGZpbGUgaW5jbHVkZWQgZnJvbSBkcml2ZXJzL3Njc2kvc3VuM19zY3NpLmM6
-NjI4Og0KPiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6IEluIGZ1bmN0aW9uIOKAmE5DUjUz
-ODBfcHJpbnRfc3RhdHVz4oCZOg0KPiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6Njc4OiBl
-cnJvcjogaW1wbGljaXQgZGVjbGFyYXRpb24gb2YNCj4gZnVuY3Rpb24g4oCYc3VuM3Njc2lfcHJv
-Y19pbmZv4oCZDQo+IGRyaXZlcnMvc2NzaS9zdW4zX05DUjUzODAuYzogQXQgdG9wIGxldmVsOg0K
-PiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6NzA5OiBlcnJvcjogc3RhdGljIGRlY2xhcmF0
-aW9uIG9mDQo+IOKAmHN1bjNzY3NpX3Byb2NfaW5mb+KAmSBmb2xsb3dzIG5vbi1zdGF0aWMgZGVj
-bGFyYXRpb24NCj4gZHJpdmVycy9zY3NpL3N1bjNfTkNSNTM4MC5jOjY3ODogZXJyb3I6IHByZXZp
-b3VzIGltcGxpY2l0IGRlY2xhcmF0aW9uDQo+IG9mIOKAmHN1bjNzY3NpX3Byb2NfaW5mb+KAmSB3
-YXMgaGVyZQ0KPiBtYWtlWzFdOiAqKiogW2RyaXZlcnMvc2NzaS9zdW4zX3Njc2kub10gRXJyb3Ig
-MQ0KPiANCj4gSW4gZmlsZSBpbmNsdWRlZCBmcm9tIGRyaXZlcnMvc2NzaS9zdW4zX3Njc2lfdm1l
-LmM6NTcxOg0KPiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6IEluIGZ1bmN0aW9uIOKAmE5D
-UjUzODBfcHJpbnRfc3RhdHVz4oCZOg0KPiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6Njc4
-OiBlcnJvcjogaW1wbGljaXQgZGVjbGFyYXRpb24gb2YNCj4gZnVuY3Rpb24g4oCYc3VuM3Njc2lf
-cHJvY19pbmZv4oCZDQo+IGRyaXZlcnMvc2NzaS9zdW4zX05DUjUzODAuYzogQXQgdG9wIGxldmVs
-Og0KPiBkcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6NzA5OiBlcnJvcjogc3RhdGljIGRlY2xh
-cmF0aW9uIG9mDQo+IOKAmHN1bjNzY3NpX3Byb2NfaW5mb+KAmSBmb2xsb3dzIG5vbi1zdGF0aWMg
-ZGVjbGFyYXRpb24NCj4gZHJpdmVycy9zY3NpL3N1bjNfTkNSNTM4MC5jOjY3ODogZXJyb3I6IHBy
-ZXZpb3VzIGltcGxpY2l0IGRlY2xhcmF0aW9uDQo+IG9mIOKAmHN1bjNzY3NpX3Byb2NfaW5mb+KA
-mSB3YXMgaGVyZQ0KPiBtYWtlWzFdOiAqKiogW2RyaXZlcnMvc2NzaS9zdW4zX3Njc2lfdm1lLm9d
-IEVycm9yIDENCg0KWWVzLCB0aGUgcHJvY19vcHMgY29udmVyc2lvbiBpc24ndCBxdWl0ZSByZWFk
-eS4gIEknbGwgaG9sZCBpdCBvdmVyIHRvDQp0aGUgbmV4dCBtZXJnZSB3aW5kb3cgc28gd2UgY2Fu
-IGZpeCBzdHVmZiBsaWtlIHRoaXMuDQoNCkphbWVzDQoNCg==
+On Tue, 2012-03-27 at 08:30 +0900, Norman Diamond wrote:
+> Executive summary:
+> It is probably sd_mod which is too aggressive in failing reads, and
+> which needs the same fix that libata and linux-ide received a few
+> years ago.  Now adding the linux-scsi mailing list and quoting my
+> original (faulty) report at the bottom of this message.
+> 
+> Matthew Dharm corrected me:
+> > Actually, ehci_hcd has nothing to do with this.  The problem in
+> likely in sd_mod or the scsi core.  Those are the modules that
+> translate your userspace request for a single block into a scsi
+> request, which is then processed by usb-storage and passed to the usb
+> core
+> 
+> OK.  Since libata and linux-ide had been fixed some years ago, and I
+> saw ehci_hcd assigned to the interface I was using yesterday, I blamed
+> the wrong victim.  I understand it's likely to be sd_mod or
+> usb-storage.
+> 
+> > So, the problem is that sd_mod is turning your request for a single
+> block into a request for several blocks.
+
+No, it won't be this.  Everything below block does exactly what block
+says.  If readahead is the problem, then you need to turn it off in
+block:
+
+echo 0 > /sys/block/<dev>/queue/read_ahead_kb
+
+> That's part of the problem.  Readahead is not a bad thing to do.  The
+> problem is that sd_mod or whoever is too aggressive.  Instead of
+> marking buffers for nearby blocks as not having valid data available,
+> it further refuses to supply valid data for the good block and errors
+> out a call that should have succeeded.  libata and linux-ide used to
+> have the same defect before they were fixed.
+> 
+> > As for needing unplug and replug, likely the firmware in your device
+> is crashing when it encounters a bad block. So there is nothing which
+> can be done to recover aside from resetting the device with an
+> unplug/replug cycle.
+> 
+> The disk's firmware correctly reports a read error when reading the
+> bad block and correctly proceeds to obey later commands to read good
+> blocks if so ordered.  This is the same drive that I mounted on a
+> motherboard's IDE connector a few years ago when testing linux-ide and
+> libata.  However, if you blame the usb-to-ide bridge's firmware, I'll
+> try to find a way to test it.
+> 
+> Alan Stern also corrected me:
+> > It is the block layer which insists on reading an entire page at a time.
+> 
+> Understood.
+> 
+> > This has nothing at all to do with ehci-hcd.  You can prove this
+> (assuming your computer has a UHCI or OHCI controller) by unloading
+> ehci-hcd and running the test again.
+> 
+> I understand that ehci-hcd can be unloaded and reloaded (well,
+> sometimes I can't rmmod some other drivers, but I understand how to
+> try).  I don't see how that would prove anything though.
+> 
+> > ehci_hcd does not try to reassign anything.  Rather, it is
+> usb-storage which resets the non-working device.
+> 
+> OK.  I have a feeling that usb-storage is overly aggressive in
+> resetting a device and trying to assign a new address.  The drive does
+> not need resetting; I mentioned above that it correctly reports a bad
+> block and correctly continues operating.  Though if the USB-to-IDE
+> bridge is to blame, I'll try to find a way to test it.
+> 
+> > If the device were working properly, unplugging and replugging it
+> wouldn't be necessary.  The failure is entirely the device's fault.
+> 
+> I do not believe that.  The drive's report of failure to read a bad
+> block is correct operation by the drive.  Mishandling of a correct
+> error report is the fault of the driver that mishandles the report.
+> 
+> I originally wrote (blaming the wrong component):
+> >> dd if=/dev/sdb of=/dev/zero bs=512 count=1 skip=551563
+> >> should succeed because block 551563 has no problem.  But it fails
+> because ehci_hcd insists on reading blocks 551560 through 551567, and
+> block 551562 does have a problem.
+
+this is not fixable using dd which goes through the page cache (and thus
+had a minimum read of a page at a time).
+
+If you want exact 512 byte sector reads, use sg_dd instead.
+
+James
+
+> >>
+> >> Some years ago similar problems in linux-ide and libata were fixed.
+> ehci_hcd would also benefit from fixing.
+> >>
+> >> ehci_hcd has further problems.  After failing to read block 551562,
+> it tries to reassign device addresses on the USB bus, fails
+> repeatedly, and gives up.  Unplugging and replugging the USB cable
+> fixes this, so that block numbers far enough away from bad blocks can
+> be read again.  I think that unplugging should not be necessary.
+> >>
+> >> (Of course I should have been outputting to /dev/null instead
+> of /dev/zero but that should not matter.)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
