@@ -1,67 +1,107 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH 1/2] [SCSI] scsi_lib: use correct DMA device in __scsi_alloc_queue
-Date: Tue, 27 Mar 2012 12:56:18 +0800
-Message-ID: <CAF1ivSaCcfJqoQFOcDhL3qNrm5S7_rhuwxkZxPH26+5t=W+9TA@mail.gmail.com>
-References: <1332433926-9132-1-git-send-email-mlin@ss.pku.edu.cn>
-	<1332433926-9132-2-git-send-email-mlin@ss.pku.edu.cn>
+From: Santosh Y <santoshsy@gmail.com>
+Subject: Re: [PATCH v3 2/5] [SCSI] ufshcd: UFS UTP Transfer requests handling
+Date: Tue, 27 Mar 2012 11:22:45 +0530
+Message-ID: <CALMYJDvvY_7FpiVGuguK8i1C_n9ogJhrgsH+KerDc62Omn35aA@mail.gmail.com>
+References: <1330497714-26504-3-git-send-email-santoshsy@gmail.com> <4F6FF1E3.7080908@toshiba.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1332433926-9132-2-git-send-email-mlin@ss.pku.edu.cn>
-Sender: linux-ide-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: =?ISO-8859-1?Q?J=F6rg_Sommer?= <joerg@alea.gnuu.de>, Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sshtylyov@mvista.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-Reply-To: <4F6FF1E3.7080908@toshiba.co.jp>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: KOBAYASHI Yoshitake <yoshitake.kobayashi@toshiba.co.jp>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, arnd.bergmann@linaro.org, saugata.das@linaro.org, dsaxena@linaro.org, stephen.doel@linaro.org, venkat@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, girish.shivananjappa@linaro.org, vishak.g@samsung.com, k.rajesh@samsung.com, yejin.moon@samsung.com, sreekumar.c@samsung.com, vinholikatti@gmail.com, linkinjeon@gmail.com, michaelc@cs.wisc.edu
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 23, 2012 at 12:32 AM, Lin Ming <mlin@ss.pku.edu.cn> wrote:
-> From: Lin Ming <ming.m.lin@intel.com>
+On Mon, Mar 26, 2012 at 10:04 AM, KOBAYASHI Yoshitake
+<yoshitake.kobayashi@toshiba.co.jp> wrote:
+> Santosh Y wrote:
+>>
+>> + =A0 =A0 =A0 =A0ucd_cmd_ptr->exp_data_transfer_len =3D
+>> + =A0 =A0 =A0 =A0 =A0 =A0cpu_to_be32(lrbp->cmd->transfersize);
+>> +
+>> + =A0 =A0 =A0 =A0memcpy(ucd_cmd_ptr->cdb,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 lrbp->cmd->cmnd,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 (min_t(unsigned short,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0lrbp->cmd->cmd_len,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0MAX_CDB_SIZE)));
 >
-> Currently, __scsi_alloc_queue uses SCSI host's parent device
-> as DMA device to set segment boundary. But the parent device may not
-> refer to the DMA device. For example, for ATA disk, SCSI host's paren=
-t
-> device now refers to ATA port.
 >
-> Since commit d139b9b([SCSI] scsi_lib_dma: fix bug with dma maps on
-> nested scsi objects), a new field Scsi_Host->dma_dev was introduced
-> to refer to the real DMA device.
+> "Exptected Data Transfer Length" field contains a value that
+> represents the number of bytes that are required to complete the
+> SCSI command request and the number of bytes that the Initiator
+> expects to be transferred to/from the Target.
+> (JEDEC Standard 220 Table7-7)
+> On the other hand, "transfersize" in a scsi_cmnd struct is trimmed
+> to the sector size when requested transfer length exceeds it.
+> You may derive the actual transfer length from SCSI command itself li=
+ke
+> following.
 >
-> Use ->dma_dev in __scsi_alloc_queue to correctly set segment
-> boundary.
->
-> Bug report: http://marc.info/?l=3Dlinux-ide&m=3D133177818318187&w=3D2
->
-> Reported-and-tested-by: J=F6rg Sommer <joerg@alea.gnuu.de>
-> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index feffe65..e63fecb 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -647,6 +647,34 @@ static void ufshcd_compose_upiu(struct ufshcd_lr=
+b
+> *lrbp)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (min_t(unsigned short,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0lrbp->cmd-=
+>cmd_len,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0MAX_CDB_SI=
+ZE)));
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Overwrite exptected transfer length =
+by using
+> TRANSFER_LENGTH in SCSI commands */
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 switch(ucd_cmd_ptr->cdb[0]) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 case READ_6:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 case WRITE_6:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ucd_cmd_ptr->exp_data_t=
+ransfer_len =3D
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 cpu_to_=
+be32(lrbp->cmd->transfersize *
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 ucd_cmd_ptr->cdb[4]);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 case READ_10:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 case WRITE_10:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ucd_cmd_ptr->exp_data_t=
+ransfer_len =3D
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 cpu_to_=
+be32(lrbp->cmd->transfersize *
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 ((ucd_cmd_ptr->cdb[7] << 8) |
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0ucd_cmd_ptr->cdb[8]));
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 case READ_12:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 case WRITE_12:
 
-Hi James,
+Just a minor change, this will be READ_16 and WRITE_16.
 
-Jeff has acked patch 2.
-
-Will you apply these 2 patches?
-
-Thanks,
-Lin Ming
-
-> ---
-> =A0drivers/scsi/scsi_lib.c | =A0 =A02 +-
-> =A01 files changed, 1 insertions(+), 1 deletions(-)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ucd_cmd_ptr->exp_data_t=
+ransfer_len =3D
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 cpu_to_=
+be32(lrbp->cmd->transfersize *
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 ((ucd_cmd_ptr->cdb[10] << 24) |
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0(ucd_cmd_ptr->cdb[11] << 16) |
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0(ucd_cmd_ptr->cdb[12] << 8) |
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0ucd_cmd_ptr->cdb[13]));
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 default:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> =A0 =A0 =A0 =A0case UTP_CMD_TYPE_DEV_MANAGE:
 >
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index a33b2b6..fa2636e2 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1637,7 +1637,7 @@ struct request_queue *__scsi_alloc_queue(struct=
- Scsi_Host *shost,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 request_fn_proc *request_fn)
-> =A0{
-> =A0 =A0 =A0 =A0struct request_queue *q;
-> - =A0 =A0 =A0 struct device *dev =3D shost->shost_gendev.parent;
-> + =A0 =A0 =A0 struct device *dev =3D shost->dma_dev;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* For query function implementation *=
+/
 >
-> =A0 =A0 =A0 =A0q =3D blk_init_queue(request_fn, NULL);
-> =A0 =A0 =A0 =A0if (!q)
-> --
-> 1.7.2.5
+
+--=20
+~Santosh
