@@ -1,205 +1,201 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v3 2/7] libata-acpi: add ata port runtime D3Cold support
-Date: Wed, 28 Mar 2012 14:21:57 +0800
-Message-ID: <1332915722-15963-3-git-send-email-ming.m.lin@intel.com>
+Subject: [PATCH v3 7/7] [SCSI] sr: adds Zero-power ODD support
+Date: Wed, 28 Mar 2012 14:22:02 +0800
+Message-ID: <1332915722-15963-8-git-send-email-ming.m.lin@intel.com>
 References: <1332915722-15963-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29776 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751580Ab2C1GWu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Mar 2012 02:22:50 -0400
+Return-path: <linux-acpi-owner@vger.kernel.org>
 In-Reply-To: <1332915722-15963-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 To: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lu@amd.com>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-ATA port may support runtime D3Cold state, for example, Zero-power ODD case.
-This patch adds wakeup notifier and enable/disable run_wake during
-supend/resume.
+ZPODD(Zero Power Optical Disk Drive) is a new feature in
+SATA 3.1 specification. It provides a way to power off unused ODD.
+
+ZPODD support is checked in in sr_probe().
+can_power_off flag is set during suspend if ZPODD is supported.
+
+ATA port's runtime suspend callback will actually power off the ODD
+and its runtime resume callback will actually power on the ODD.
+
+When ODD is powered off(D3Cold state), inserting disk will trigger a
+wakeup event(GPE). GPE AML handler notifies the associated device. Then
+ODD is resumed in the notify handler.
 
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/ata/libata-acpi.c |   82 +++++++++++++++++++++++++++++++++++++++++---
- drivers/ata/libata-scsi.c |    6 ++--
- drivers/ata/libata.h      |    8 ++--
- 3 files changed, 83 insertions(+), 13 deletions(-)
+ drivers/ata/libata-acpi.c  |    8 +++++++-
+ drivers/scsi/scsi_pm.c     |    8 ++++++++
+ drivers/scsi/sr.c          |   44 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sr.h          |    2 ++
+ include/scsi/scsi_device.h |    2 ++
+ 5 files changed, 63 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 104c1d0..ba9382a 100644
+index 81ef0f5..3744761 100644
 --- a/drivers/ata/libata-acpi.c
 +++ b/drivers/ata/libata-acpi.c
-@@ -16,6 +16,7 @@
- #include <linux/libata.h>
- #include <linux/pci.h>
+@@ -859,8 +859,14 @@ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
+ 		if (state.event != PM_EVENT_ON) {
+ 			acpi_state = acpi_pm_device_sleep_state(
+ 				&dev->sdev->sdev_gendev, NULL);
+-			if (acpi_state > 0)
++			if (acpi_state > 0) {
++				/* Check if the device is ready for power off */
++				if (acpi_state == ACPI_STATE_D3_COLD &&
++					!scsi_device_can_power_off(dev->sdev))
++					acpi_state = ACPI_STATE_D3;
++
+ 				acpi_bus_set_power(handle, acpi_state);
++			}
+ 			if (ap->tdev.power.request == RPM_REQ_SUSPEND)
+ 				acpi_pm_device_run_wake(
+ 					&dev->sdev->sdev_gendev, true);
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index c467064..0dc7e74 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -224,6 +224,14 @@ void scsi_autopm_put_host(struct Scsi_Host *shost)
+ 	pm_runtime_put_sync(&shost->shost_gendev);
+ }
+ 
++bool scsi_device_can_power_off(struct scsi_device *sdev)
++{
++	struct device *dev = &sdev->sdev_gendev;
++
++	return !dev->power.subsys_data ? false :
++		dev->power.subsys_data->can_power_off;
++}
++
+ #else
+ 
+ #define scsi_runtime_suspend	NULL
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 5fc97d2..265a8ea 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -45,6 +45,8 @@
+ #include <linux/blkdev.h>
+ #include <linux/mutex.h>
  #include <linux/slab.h>
 +#include <linux/pm_runtime.h>
- #include <scsi/scsi_device.h>
- #include "libata.h"
++#include <linux/acpi.h>
+ #include <asm/uaccess.h>
  
-@@ -852,10 +853,23 @@ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
+ #include <scsi/scsi.h>
+@@ -80,12 +82,38 @@ static int sr_probe(struct device *);
+ static int sr_remove(struct device *);
+ static int sr_done(struct scsi_cmnd *);
  
- 	ata_for_each_dev(dev, &ap->link, ENABLED) {
- 		handle = ata_dev_acpi_handle(dev);
--		if (handle)
--			acpi_bus_set_power(handle,
--				state.event == PM_EVENT_ON ?
--					ACPI_STATE_D0 : ACPI_STATE_D3);
-+		if (!handle)
-+			continue;
-+
-+		if (state.event != PM_EVENT_ON) {
-+			acpi_state = acpi_pm_device_sleep_state(
-+				&dev->sdev->sdev_gendev, NULL);
-+			if (acpi_state > 0)
-+				acpi_bus_set_power(handle, acpi_state);
-+			if (ap->tdev.power.request == RPM_REQ_SUSPEND)
-+				acpi_pm_device_run_wake(
-+					&dev->sdev->sdev_gendev, true);
-+		} else {
-+			if (ap->tdev.power.request == RPM_REQ_RESUME)
-+				acpi_pm_device_run_wake(
-+					&dev->sdev->sdev_gendev, false);
-+			acpi_bus_set_power(handle, ACPI_STATE_D0);
-+		}
- 	}
- 
- 	handle = ata_ap_acpi_handle(ap);
-@@ -955,7 +969,7 @@ void ata_acpi_on_disable(struct ata_device *dev)
- 	ata_acpi_clear_gtf(dev);
- }
- 
--void ata_acpi_bind_dock(struct ata_device *dev)
-+static void ata_acpi_bind_dock(struct ata_device *dev)
- {
- 	struct device **docks;
- 
-@@ -965,7 +979,7 @@ void ata_acpi_bind_dock(struct ata_device *dev)
- 	kfree(docks);
- }
- 
--void ata_acpi_unbind_dock(struct ata_device *dev)
-+static void ata_acpi_unbind_dock(struct ata_device *dev)
- {
- 	struct device **docks;
- 
-@@ -975,6 +989,62 @@ void ata_acpi_unbind_dock(struct ata_device *dev)
- 	kfree(docks);
- }
- 
-+static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
++static int sr_suspend(struct device *dev, pm_message_t mesg)
 +{
-+	struct ata_device *ata_dev = context;
++	struct scsi_cd *cd;
 +
-+	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev)
-+		scsi_autopm_get_device(ata_dev->sdev);
++	cd = dev_get_drvdata(dev);
++	if (cd->device->power_off)
++		dev->power.subsys_data->can_power_off = true;
++
++	return 0;
 +}
 +
-+static void ata_acpi_add_pm_notifier(struct ata_device *dev)
++static int sr_resume(struct device *dev)
 +{
-+	struct acpi_device *acpi_dev;
-+	acpi_handle handle;
-+	acpi_status status;
++	struct scsi_cd *cd;
 +
-+	handle = ata_dev_acpi_handle(dev);
-+	if (!handle)
-+		return;
-+
-+	status = acpi_bus_get_device(handle, &acpi_dev);
-+	if (ACPI_SUCCESS(status)) {
-+		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+			ata_acpi_wake_dev, dev);
-+		device_set_run_wake(&dev->sdev->sdev_gendev, true);
++	cd = dev_get_drvdata(dev);
++	if (cd->device->power_off) {
++		dev->power.subsys_data->can_power_off = false;
++		cd->poweroff_event = 0;
 +	}
++
++	return 0;
 +}
 +
-+static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
-+{
-+	struct acpi_device *acpi_dev;
-+	acpi_handle handle;
-+	acpi_status status;
+ static struct scsi_driver sr_template = {
+ 	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name   	= "sr",
+ 		.probe		= sr_probe,
+ 		.remove		= sr_remove,
++		.suspend	= sr_suspend,
++		.resume		= sr_resume,
+ 	},
+ 	.done			= sr_done,
+ };
+@@ -216,6 +244,11 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	unsigned int events;
+ 	int ret;
+ 
++	/* Not necessary to check events if enter ZPODD state */
++	if (cd->device->power_off &&
++			pm_runtime_suspended(&cd->device->sdev_gendev))
++		return 0;
 +
-+	handle = ata_dev_acpi_handle(dev);
-+	if (!handle)
-+		return;
-+
-+	status = acpi_bus_get_device(handle, &acpi_dev);
-+	if (ACPI_SUCCESS(status)) {
-+		device_set_run_wake(&dev->sdev->sdev_gendev, false);
-+		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+			ata_acpi_wake_dev);
+ 	/* no changer support */
+ 	if (CDSL_CURRENT != slot)
+ 		return 0;
+@@ -260,6 +293,11 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	cd->media_present = scsi_status_is_good(ret) ||
+ 		(scsi_sense_valid(&sshdr) && sshdr.asc != 0x3a);
+ 
++	if (!cd->media_present && cd->device->power_off && !cd->poweroff_event) {
++		scsi_autopm_put_device(cd->device);
++		cd->poweroff_event = 1;
 +	}
-+}
 +
-+void ata_acpi_bind(struct ata_device *dev)
-+{
-+	ata_acpi_bind_dock(dev);
-+	ata_acpi_add_pm_notifier(dev);
-+}
-+
-+void ata_acpi_unbind(struct ata_device *dev)
-+{
-+	ata_acpi_unbind_dock(dev);
-+	ata_acpi_remove_pm_notifier(dev);
-+}
-+
- static int is_pci_ata(struct device *dev)
- {
- 	struct pci_dev *pdev;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index f08c447..231c3ec 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3444,7 +3444,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 			if (!IS_ERR(sdev)) {
- 				dev->sdev = sdev;
- 				scsi_device_put(sdev);
--				ata_acpi_bind_dock(dev);
-+				ata_acpi_bind(dev);
- 			} else {
- 				dev->sdev = NULL;
- 			}
-@@ -3541,12 +3541,12 @@ static void ata_scsi_remove_dev(struct ata_device *dev)
- 	mutex_lock(&ap->scsi_host->scan_mutex);
- 	spin_lock_irqsave(ap->lock, flags);
+ 	if (last_present != cd->media_present)
+ 		cd->device->changed = 1;
  
-+	ata_acpi_unbind(dev);
-+
- 	/* clearing dev->sdev is protected by host lock */
- 	sdev = dev->sdev;
- 	dev->sdev = NULL;
+@@ -716,6 +754,9 @@ static int sr_probe(struct device *dev)
+ 	disk->flags |= GENHD_FL_REMOVABLE;
+ 	add_disk(disk);
  
--	ata_acpi_unbind_dock(dev);
--
- 	if (sdev) {
- 		/* If user initiated unplug races with us, sdev can go
- 		 * away underneath us after the host lock and
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index e61ba10..2ec7c38 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -117,8 +117,8 @@ extern void ata_acpi_on_disable(struct ata_device *dev);
- extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
- extern int ata_acpi_register(void);
- extern void ata_acpi_unregister(void);
--extern void ata_acpi_bind_dock(struct ata_device *dev);
--extern void ata_acpi_unbind_dock(struct ata_device *dev);
-+extern void ata_acpi_bind(struct ata_device *dev);
-+extern void ata_acpi_unbind(struct ata_device *dev);
++	if (sdev->power_off)
++		dev_pm_get_subsys_data(dev);
++
+ 	sdev_printk(KERN_DEBUG, sdev,
+ 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
+ 	return 0;
+@@ -972,6 +1013,9 @@ static int sr_remove(struct device *dev)
+ 	kref_put(&cd->kref, sr_kref_release);
+ 	mutex_unlock(&sr_ref_mutex);
+ 
++	if (cd->device->power_off)
++		dev_pm_put_subsys_data(dev);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
+index 37c8f6b..8b2840b 100644
+--- a/drivers/scsi/sr.h
++++ b/drivers/scsi/sr.h
+@@ -42,6 +42,8 @@ typedef struct scsi_cd {
+ 	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
+ 	unsigned media_present:1;	/* media is present */
+ 
++	unsigned poweroff_event:1;
++
+ 	/* GET_EVENT spurious event handling, blk layer guarantees exclusion */
+ 	int tur_mismatch;		/* nr of get_event TUR mismatches */
+ 	bool tur_changed:1;		/* changed according to TUR */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 0f69612..4805d5a 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -389,9 +389,11 @@ extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
+ #ifdef CONFIG_PM_RUNTIME
+ extern int scsi_autopm_get_device(struct scsi_device *);
+ extern void scsi_autopm_put_device(struct scsi_device *);
++extern bool scsi_device_can_power_off(struct scsi_device *);
  #else
- static inline void ata_acpi_dissociate(struct ata_host *host) { }
- static inline int ata_acpi_on_suspend(struct ata_port *ap) { return 0; }
-@@ -129,8 +129,8 @@ static inline void ata_acpi_set_state(struct ata_port *ap,
- 				      pm_message_t state) { }
- static inline int ata_acpi_register(void) { return 0; }
- static void ata_acpi_unregister(void) { }
--static void ata_acpi_bind_dock(struct ata_device *dev) { }
--static void ata_acpi_unbind_dock(struct ata_device *dev) { }
-+static void ata_acpi_bind(struct ata_device *dev) { }
-+static void ata_acpi_unbind(struct ata_device *dev) { }
- #endif
+ static inline int scsi_autopm_get_device(struct scsi_device *d) { return 0; }
+ static inline void scsi_autopm_put_device(struct scsi_device *d) {}
++static inline bool scsi_device_can_power_off(struct scsi_device *d) { return false; };
+ #endif /* CONFIG_PM_RUNTIME */
  
- /* libata-scsi.c */
+ static inline int __must_check scsi_device_reprobe(struct scsi_device *sdev)
 -- 
 1.7.2.5
 
