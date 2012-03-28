@@ -1,180 +1,106 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [libsas PATCH v15] scsi,
- sd: limit the scope of the async probe domain
-Date: Wed, 28 Mar 2012 02:56:12 -0700
-Message-ID: <20120328095447.18410.69741.stgit@dwillia2-linux.jf.intel.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH] virtio_blk: add helper function to support mass of disks
+	naming
+Date: Wed, 28 Mar 2012 12:58:21 +0200
+Message-ID: <20120328105819.GD6194@redhat.com>
+References: <4F72B5B3.6020602@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12724 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752423Ab2C1Jkl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Mar 2012 05:40:41 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <4F72B5B3.6020602@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Ren Mingxin <renmx@cn.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, jens.axboe@oracle.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Alan Stern <stern@rowland.harvard.edu>
 
-sd injects and synchronizes probe work on the global kernel-wide domain.
-This runs into conflict with PM that wants to perform resume actions in
-async context:
+On Wed, Mar 28, 2012 at 02:54:43PM +0800, Ren Mingxin wrote:
+>  Hi,
+> 
+> The current virtblk's naming algorithm just supports 26^3
+> disks. If there are mass of virtblks(exceeding 26^3), there
+> will be disks with the same name.
+> 
+> According to "sd_format_disk_name()", I add function
+> "virtblk_name_format()" for virtblk to support mass of
+> disks.
+> 
+> Signed-off-by: Ren Mingxin <renmx@cn.fujitsu.com>
 
-[  494.237079] INFO: task kworker/u:3:554 blocked for more than 120 seconds.
-[  494.294396] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  494.360809] kworker/u:3     D 0000000000000000     0   554      2 0x00000000
-[  494.420739]  ffff88012e4d3af0 0000000000000046 ffff88013200c160 ffff88012e4d3fd8
-[  494.484392]  ffff88012e4d3fd8 0000000000012500 ffff8801394ea0b0 ffff88013200c160
-[  494.548038]  ffff88012e4d3ae0 00000000000001e3 ffffffff81a249e0 ffff8801321c5398
-[  494.611685] Call Trace:
-[  494.632649]  [<ffffffff8149dd25>] schedule+0x5a/0x5c
-[  494.674687]  [<ffffffff8104b968>] async_synchronize_cookie_domain+0xb6/0x112
-[  494.734177]  [<ffffffff810461ff>] ? __init_waitqueue_head+0x50/0x50
-[  494.787134]  [<ffffffff8131a224>] ? scsi_remove_target+0x48/0x48
-[  494.837900]  [<ffffffff8104b9d9>] async_synchronize_cookie+0x15/0x17
-[  494.891567]  [<ffffffff8104ba49>] async_synchronize_full+0x54/0x70  <-- here we wait for async contexts to complete
-[  494.943783]  [<ffffffff8104b9f5>] ? async_synchronize_full_domain+0x1a/0x1a
-[  495.002547]  [<ffffffffa00114b1>] sd_remove+0x2c/0xa2 [sd_mod]
-[  495.051861]  [<ffffffff812fe94f>] __device_release_driver+0x86/0xcf
-[  495.104807]  [<ffffffff812fe9bd>] device_release_driver+0x25/0x32  <-- here we take device_lock()
+Nod. This is basically what 3e1a7ff8a0a7b948f2684930166954f9e8e776fe
+did. Except, maybe we should move this function into block core
+instead of duplicating it? Where would be a good place to put it?
+Jens, care to comment?
 
-[  853.511341] INFO: task kworker/u:4:549 blocked for more than 120 seconds.
-[  853.568693] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  853.635119] kworker/u:4     D ffff88013097b5d0     0   549      2 0x00000000
-[  853.695129]  ffff880132773c40 0000000000000046 ffff880130790000 ffff880132773fd8
-[  853.758990]  ffff880132773fd8 0000000000012500 ffff88013288a0b0 ffff880130790000
-[  853.822796]  0000000000000246 0000000000000040 ffff88013097b5c8 ffff880130790000
-[  853.886633] Call Trace:
-[  853.907631]  [<ffffffff8149dd25>] schedule+0x5a/0x5c
-[  853.949670]  [<ffffffff8149cc44>] __mutex_lock_common+0x220/0x351
-[  854.001225]  [<ffffffff81304bd7>] ? device_resume+0x58/0x1c4
-[  854.049082]  [<ffffffff81304bd7>] ? device_resume+0x58/0x1c4
-[  854.097011]  [<ffffffff8149ce48>] mutex_lock_nested+0x2f/0x36   <-- here we wait for device_lock()
-[  854.145591]  [<ffffffff81304bd7>] device_resume+0x58/0x1c4
-[  854.192066]  [<ffffffff81304d61>] async_resume+0x1e/0x45
-[  854.237019]  [<ffffffff8104bc93>] async_run_entry_fn+0xc6/0x173  <-- ...while running in async context
-
-Provide a 'scsi_sd_probe_domain' so that async probe actions actions can
-be flushed without regard for the state of PM, and allow for the resume
-path to handle devices that have transitioned from SDEV_QUIESCE to
-SDEV_DEL prior to resume.
-
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-[alan: uplevel scsi_sd_probe_domain, clarify scsi_device_resume]
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
- Changes since v14: http://marc.info/?l=linux-scsi&m=133252249201847&w=2
-
- linux-next reports:
- In file included from drivers/scsi/hosts.c:41:0:
- drivers/scsi/scsi_priv.h:166:1: warning: "__enabled_CONFIG_PM" is not defined [-Wundef]
- drivers/scsi/scsi_priv.h:166:1: warning: "__enabled_CONFIG_PM_MODULE" is not defined [-Wundef]
-
- ...so just drop IS_ENABLED() and unconditionally provide
-scsi_sd_probe_domain as a part of the scsi core.  This version of the
-topic also drops the sysfs change since Greg asked the printk change to
-be separated from the crash workaround.
-
-
- drivers/scsi/scsi.c      |    4 ++++
- drivers/scsi/scsi_lib.c  |   10 +++++++---
- drivers/scsi/scsi_pm.c   |    2 +-
- drivers/scsi/scsi_priv.h |    2 ++
- drivers/scsi/sd.c        |    5 +++--
- 5 files changed, 17 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 07322ec..2ecdb01 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -90,6 +90,10 @@ unsigned int scsi_logging_level;
- EXPORT_SYMBOL(scsi_logging_level);
- #endif
- 
-+/* sd and scsi_pm need to coordinate flushing async actions */
-+LIST_HEAD(scsi_sd_probe_domain);
-+EXPORT_SYMBOL(scsi_sd_probe_domain);
-+
- /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
-  * You may not alter any existing entry (although adding new ones is
-  * encouraged once assigned by ANSI/INCITS T10
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b4833de..992ff63 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2348,10 +2348,14 @@ EXPORT_SYMBOL(scsi_device_quiesce);
-  *
-  *	Must be called with user context, may sleep.
-  */
--void
--scsi_device_resume(struct scsi_device *sdev)
-+void scsi_device_resume(struct scsi_device *sdev)
- {
--	if(scsi_device_set_state(sdev, SDEV_RUNNING))
-+	/* check if the device state was mutated prior to resume, and if
-+	 * so assume the state is being managed elsewhere (for example
-+	 * device deleted during suspend)
-+	 */
-+	if (sdev->sdev_state != SDEV_QUIESCE ||
-+	    scsi_device_set_state(sdev, SDEV_RUNNING))
- 		return;
- 	scsi_run_queue(sdev->request_queue);
- }
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index c467064..f661a41 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -97,7 +97,7 @@ static int scsi_bus_prepare(struct device *dev)
- {
- 	if (scsi_is_sdev_device(dev)) {
- 		/* sd probing uses async_schedule.  Wait until it finishes. */
--		async_synchronize_full();
-+		async_synchronize_full_domain(&scsi_sd_probe_domain);
- 
- 	} else if (scsi_is_host_device(dev)) {
- 		/* Wait until async scanning is finished */
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index be4fa6d..07ce3f5 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -163,6 +163,8 @@ static inline int scsi_autopm_get_host(struct Scsi_Host *h) { return 0; }
- static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
- #endif /* CONFIG_PM_RUNTIME */
- 
-+extern struct list_head scsi_sd_probe_domain;
-+
- /* 
-  * internal scsi timeout functions: for use by mid-layer and transport
-  * classes.
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index bd17cf8..19e27d8 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -65,6 +65,7 @@
- #include <scsi/scsicam.h>
- 
- #include "sd.h"
-+#include "scsi_priv.h"
- #include "scsi_logging.h"
- 
- MODULE_AUTHOR("Eric Youngdale");
-@@ -2717,7 +2718,7 @@ static int sd_probe(struct device *dev)
- 	dev_set_drvdata(dev, sdkp);
- 
- 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
--	async_schedule(sd_probe_async, sdkp);
-+	async_schedule_domain(sd_probe_async, sdkp, &scsi_sd_probe_domain);
- 
- 	return 0;
- 
-@@ -2751,7 +2752,7 @@ static int sd_remove(struct device *dev)
- 	sdkp = dev_get_drvdata(dev);
- 	scsi_autopm_get_device(sdkp->device);
- 
--	async_synchronize_full();
-+	async_synchronize_full_domain(&scsi_sd_probe_domain);
- 	blk_queue_prep_rq(sdkp->device->request_queue, scsi_prep_fn);
- 	blk_queue_unprep_rq(sdkp->device->request_queue, NULL);
- 	device_del(&sdkp->dev);
-
+> ---
+>  virtio_blk.c |   37 +++++++++++++++++++++++++------------
+>  1 file changed, 25 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+> index c4a60ba..07b8bf9 100644
+> --- a/drivers/block/virtio_blk.c
+> +++ b/drivers/block/virtio_blk.c
+> @@ -374,6 +374,30 @@ static int init_vq(struct virtio_blk *vblk)
+>         return err;
+>  }
+> 
+> +static int virtblk_name_format(char *prefix, int index, char *buf,
+> int buflen)
+> +{
+> +       const int base = 'z' - 'a' + 1;
+> +       char *begin = buf + strlen(prefix);
+> +       char *begin = buf + strlen(prefix);
+> +       char *end = buf + buflen;
+> +       char *p;
+> +       int unit;
+> +
+> +       p = end - 1;
+> +       *p = '\0';
+> +       unit = base;
+> +       do {
+> +               if (p == begin)
+> +                       return -EINVAL;
+> +               *--p = 'a' + (index % unit);
+> +               index = (index / unit) - 1;
+> +       } while (index >= 0);
+> +
+> +       memmove(begin, p, end - p);
+> +       memcpy(buf, prefix, strlen(prefix));
+> +
+> +       return 0;
+> +}
+> +
+>  static int __devinit virtblk_probe(struct virtio_device *vdev)
+>  {
+>         struct virtio_blk *vblk;
+> @@ -442,18 +466,7 @@ static int __devinit virtblk_probe(struct
+> virtio_device *vdev)
+> 
+>         q->queuedata = vblk;
+> 
+> -       if (index < 26) {
+> -               sprintf(vblk->disk->disk_name, "vd%c", 'a' + index % 26);
+> -       } else if (index < (26 + 1) * 26) {
+> -               sprintf(vblk->disk->disk_name, "vd%c%c",
+> -                       'a' + index / 26 - 1, 'a' + index % 26);
+> -       } else {
+> -               const unsigned int m1 = (index / 26 - 1) / 26 - 1;
+> -               const unsigned int m2 = (index / 26 - 1) % 26;
+> -               const unsigned int m3 =  index % 26;
+> -               sprintf(vblk->disk->disk_name, "vd%c%c%c",
+> -                       'a' + m1, 'a' + m2, 'a' + m3);
+> -       }
+> +       virtblk_name_format("vd", index, vblk->disk->disk_name,
+> DISK_NAME_LEN);
+> 
+>         vblk->disk->major = major;
+>         vblk->disk->first_minor = index_to_minor(index);
