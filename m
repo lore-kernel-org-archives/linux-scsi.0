@@ -1,106 +1,41 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH] virtio_blk: add helper function to support mass of disks
-	naming
-Date: Wed, 28 Mar 2012 12:58:21 +0200
-Message-ID: <20120328105819.GD6194@redhat.com>
-References: <4F72B5B3.6020602@cn.fujitsu.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH v3 4/7] libata: detech Device Attention support
+Date: Wed, 28 Mar 2012 15:22:05 +0400
+Message-ID: <4F72F45D.7090800@mvista.com>
+References: <1332915722-15963-1-git-send-email-ming.m.lin@intel.com> <1332915722-15963-5-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <4F72B5B3.6020602@cn.fujitsu.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Ren Mingxin <renmx@cn.fujitsu.com>
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, jens.axboe@oracle.com, Tejun Heo <tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1332915722-15963-5-git-send-email-ming.m.lin@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lu@amd.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Mar 28, 2012 at 02:54:43PM +0800, Ren Mingxin wrote:
->  Hi,
-> 
-> The current virtblk's naming algorithm just supports 26^3
-> disks. If there are mass of virtblks(exceeding 26^3), there
-> will be disks with the same name.
-> 
-> According to "sd_format_disk_name()", I add function
-> "virtblk_name_format()" for virtblk to support mass of
-> disks.
-> 
-> Signed-off-by: Ren Mingxin <renmx@cn.fujitsu.com>
+Hello.
 
-Nod. This is basically what 3e1a7ff8a0a7b948f2684930166954f9e8e776fe
-did. Except, maybe we should move this function into block core
-instead of duplicating it? Where would be a good place to put it?
-Jens, care to comment?
+On 28-03-2012 10:21, Lin Ming wrote:
 
-> ---
->  virtio_blk.c |   37 +++++++++++++++++++++++++------------
->  1 file changed, 25 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-> index c4a60ba..07b8bf9 100644
-> --- a/drivers/block/virtio_blk.c
-> +++ b/drivers/block/virtio_blk.c
-> @@ -374,6 +374,30 @@ static int init_vq(struct virtio_blk *vblk)
->         return err;
->  }
-> 
-> +static int virtblk_name_format(char *prefix, int index, char *buf,
-> int buflen)
-> +{
-> +       const int base = 'z' - 'a' + 1;
-> +       char *begin = buf + strlen(prefix);
-> +       char *begin = buf + strlen(prefix);
-> +       char *end = buf + buflen;
-> +       char *p;
-> +       int unit;
-> +
-> +       p = end - 1;
-> +       *p = '\0';
-> +       unit = base;
-> +       do {
-> +               if (p == begin)
-> +                       return -EINVAL;
-> +               *--p = 'a' + (index % unit);
-> +               index = (index / unit) - 1;
-> +       } while (index >= 0);
-> +
-> +       memmove(begin, p, end - p);
-> +       memcpy(buf, prefix, strlen(prefix));
-> +
-> +       return 0;
-> +}
-> +
->  static int __devinit virtblk_probe(struct virtio_device *vdev)
->  {
->         struct virtio_blk *vblk;
-> @@ -442,18 +466,7 @@ static int __devinit virtblk_probe(struct
-> virtio_device *vdev)
-> 
->         q->queuedata = vblk;
-> 
-> -       if (index < 26) {
-> -               sprintf(vblk->disk->disk_name, "vd%c", 'a' + index % 26);
-> -       } else if (index < (26 + 1) * 26) {
-> -               sprintf(vblk->disk->disk_name, "vd%c%c",
-> -                       'a' + index / 26 - 1, 'a' + index % 26);
-> -       } else {
-> -               const unsigned int m1 = (index / 26 - 1) / 26 - 1;
-> -               const unsigned int m2 = (index / 26 - 1) % 26;
-> -               const unsigned int m3 =  index % 26;
-> -               sprintf(vblk->disk->disk_name, "vd%c%c%c",
-> -                       'a' + m1, 'a' + m2, 'a' + m3);
-> -       }
-> +       virtblk_name_format("vd", index, vblk->disk->disk_name,
-> DISK_NAME_LEN);
-> 
->         vblk->disk->major = major;
->         vblk->disk->first_minor = index_to_minor(index);
+> Add a new flag ATA_DFLAG_DA to indicate that device supports "Device
+> Attention".
+
+> Acked-by: Aaron Lu<aaron.lu@amd.com>
+> Signed-off-by: Lin Ming<ming.m.lin@intel.com>
+[...]
+
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index 32df2b6..6ee41cc 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -578,6 +578,7 @@ static inline int ata_is_data(u8 prot)
+>   	  ((u64) (id)[(n) + 0]) )
+>
+>   #define ata_id_cdb_intr(id)	(((id)[ATA_ID_CONFIG]&  0x60) == 0x20)
+> +#define atapi_id_has_da(id)	((id)[77]&  (1<<  4))
+
+    We prefix these macros with 'ata_' despite them being applied to IDENTIFY 
+DEVICE data or IDENTIFY PAKCET DEVICE data. ata_id_cdb_intr(), for example, 
+applies only to IDENTIFY PAKCET DEVICE data.
+
+MBR, Sergei
