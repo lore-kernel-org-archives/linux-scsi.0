@@ -1,67 +1,75 @@
-From: <Jayamohan.Kallickal@Emulex.Com>
-Subject: RE: [PATCH] [SCSI] be2iscsi: Remove unused OFFSET_IN_PAGE() macro
-Date: Wed, 28 Mar 2012 14:30:33 -0700
-Message-ID: <50725EF61B96174EB1803401F1A2E3733CE646B85C@EXMAIL.ad.emulex.com>
-References: <1330584109-4001-1-git-send-email-roland@kernel.org>
- <CAL1RGDX=hd=PX=VD_xjWWau01GcG8Ox_fj-FkMV5Exom_zQ++w@mail.gmail.com>
- <4F71F8D3.3080002@cs.wisc.edu>
+From: Norman Diamond <n0diamond@yahoo.co.jp>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was: ehci_hcd fails to read a single good block)
+Date: Thu, 29 Mar 2012 08:43:52 +0900 (JST)
+Message-ID: <886259.81235.qm@web100012.mail.kks.yahoo.co.jp>
+References: <Pine.LNX.4.44L0.1203281033520.1599-100000@iolanthe.rowland.org>
+Reply-To: n0diamond@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:57370 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932249Ab2C1Vaz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Mar 2012 17:30:55 -0400
-In-Reply-To: <4F71F8D3.3080002@cs.wisc.edu>
-Content-Language: en-US
+Received: from web100012.mail.kks.yahoo.co.jp ([114.111.98.186]:41501 "HELO
+	web100012.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758501Ab2C1Xnz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Mar 2012 19:43:55 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1203281033520.1599-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu, roland@kernel.org
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+To: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
+Alan Stern wrote:
+> On Wed, 28 Mar 2012, Norman Diamond wrote:
+>=20
+>> I don't want to manhandle that old notebook's fragile vendor proprie=
+tary IDE cable again, but I'll try to find another way to test that dri=
+ve again without going though USB.
+>=20
+> You don't have to worry about that.=A0 sg_dd works fine over USB.
+>=20
+>>> The USB-to-IDE bridge is vendor 067b, product 2507, Prolific Techno=
+logy Inc., and usb-storage matches it for quirk 110.
+>=20
+> What is the bcdDevice value?
 
+Is that different from 2507?
 
------Original Message-----
-From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
-Sent: Tuesday, March 27, 2012 10:29 AM
-To: Roland Dreier
-Cc: Kallickal, Jayamohan; James E.J. Bottomley; linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] [SCSI] be2iscsi: Remove unused OFFSET_IN_PAGE() macro
+Now, if a combination of zeroing the readahead and proper user input of=
+ an sg_dd command will succeed in reading a single valid block next doo=
+r to the bad block, then it won't even be necessary to unplug and replu=
+g the USB bridge.  That will be good news.
 
-On 03/27/2012 11:38 AM, Roland Dreier wrote:
-> On Wed, Feb 29, 2012 at 10:41 PM, Roland Dreier <roland@kernel.org> wrote:
->> From: Roland Dreier <roland@purestorage.com>
->>
->> Signed-off-by: Roland Dreier <roland@purestorage.com>
->> ---
->>  drivers/scsi/be2iscsi/be.h |    4 ----
->>  1 files changed, 0 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h 
->> index 1d7b976..a50b6a9 100644
->> --- a/drivers/scsi/be2iscsi/be.h
->> +++ b/drivers/scsi/be2iscsi/be.h
->> @@ -132,10 +132,6 @@ struct be_ctrl_info {
->>                ((u32)((((size_t)(_address) & (PAGE_SIZE_4K - 1)) +     \
->>                        (size) + (PAGE_SIZE_4K - 1)) >> 
->> PAGE_SHIFT_4K))
->>
->> -/* Byte offset into the page corresponding to given address */
->> -#define OFFSET_IN_PAGE(addr)                                           \
->> -               ((size_t)(addr) & (PAGE_SIZE_4K-1))
->> -
->>  /* Returns bit offset within a DWORD of a bitfield */
->>  #define AMAP_BIT_OFFSET(_struct, field)                                        \
->>                (((size_t)&(((_struct *)0)->field))%32)
-> 
-> ping?  the corresponding be2net patch is upstream as 97767a87f3be.
-> 
+>>> Digression:  Someone adjusts the number of blocks from the reported=
+ 39070080 (which I think is correct) to 39070079 (which I think is wron=
+g).  I'll have to install the drive in an old notebook to check if the =
+reported number of blocks is really correct.
+>>=20
+>> Further on this digression:=A0 The number of blocks really is 390700=
+80.=A0 Today libata made no adjustment and the number of blocks was cor=
+rect.=A0 So some USB component makes a misadjustment to screw up the nu=
+mber of blocks.
+>=20
+> usb-storage does this, because in the past Prolific's bridges have re=
+ported the wrong number of blocks.=A0 In fact, I'm surprised that it se=
+ems to work correctly with your drive.
 
-Jay probably missed it, because he has been sick. Looks good to me.
+It is hard to imagine a USB bridge adding 1 to the number of blocks.  D=
+id that really happen?
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
-
-Thanks Mike for taking care of this 
-
-Acked-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Of course there are some USB bridges that f**k up the number of blocks =
+differently, mapping each range of the drive's eight 512-byte sectors o=
+nto one 4096-byte sector that the bridge presents to the host (coincide=
+ntally the exact opposite of the mapping that modern SATA drives do int=
+ernally in their firmware), and then proceeding further to conk out at =
+the 2TB limit anyway so their f**king of the sector size and count acco=
+mplishes no benefit while still causing their damage.  I can imagine a =
+theoretical partial benefit to a Linux driver adjusting those sector si=
+zes and counts by a factor of 8 in order to partly overcome some braind=
+ead bridges.  But it's really hard to imagine a bridge adding 1 to a nu=
+mber of blocks and benefiting by a driver subtracting 1.  (Maybe I'm ju=
+st not imaginative enough.)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
