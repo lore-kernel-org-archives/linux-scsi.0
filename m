@@ -1,94 +1,180 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v3 1/7] libata-acpi: set acpi state for SATA port
-Date: Wed, 28 Mar 2012 15:57:59 +0800
-Message-ID: <1332921479.3793.115.camel@minggr>
-References: <1332915722-15963-1-git-send-email-ming.m.lin@intel.com>
-	 <1332915722-15963-2-git-send-email-ming.m.lin@intel.com>
-	 <20120328195509.GA1965@localhost.amd.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [libsas PATCH v15] scsi,
+ sd: limit the scope of the async probe domain
+Date: Wed, 28 Mar 2012 02:56:12 -0700
+Message-ID: <20120328095447.18410.69741.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20120328195509.GA1965@localhost.amd.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:12724 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752423Ab2C1Jkl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Mar 2012 05:40:41 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Alan Stern <stern@rowland.harvard.edu>
 
-On Thu, 2012-03-29 at 03:55 +0800, Aaron Lu wrote:
-> Hi,
-> 
-> The patch does not apply, are you using libata-devel/ALL branch?
+sd injects and synchronizes probe work on the global kernel-wide domain.
+This runs into conflict with PM that wants to perform resume actions in
+async context:
 
-This patch set depends on below patches,
+[  494.237079] INFO: task kworker/u:3:554 blocked for more than 120 seconds.
+[  494.294396] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  494.360809] kworker/u:3     D 0000000000000000     0   554      2 0x00000000
+[  494.420739]  ffff88012e4d3af0 0000000000000046 ffff88013200c160 ffff88012e4d3fd8
+[  494.484392]  ffff88012e4d3fd8 0000000000012500 ffff8801394ea0b0 ffff88013200c160
+[  494.548038]  ffff88012e4d3ae0 00000000000001e3 ffffffff81a249e0 ffff8801321c5398
+[  494.611685] Call Trace:
+[  494.632649]  [<ffffffff8149dd25>] schedule+0x5a/0x5c
+[  494.674687]  [<ffffffff8104b968>] async_synchronize_cookie_domain+0xb6/0x112
+[  494.734177]  [<ffffffff810461ff>] ? __init_waitqueue_head+0x50/0x50
+[  494.787134]  [<ffffffff8131a224>] ? scsi_remove_target+0x48/0x48
+[  494.837900]  [<ffffffff8104b9d9>] async_synchronize_cookie+0x15/0x17
+[  494.891567]  [<ffffffff8104ba49>] async_synchronize_full+0x54/0x70  <-- here we wait for async contexts to complete
+[  494.943783]  [<ffffffff8104b9f5>] ? async_synchronize_full_domain+0x1a/0x1a
+[  495.002547]  [<ffffffffa00114b1>] sd_remove+0x2c/0xa2 [sd_mod]
+[  495.051861]  [<ffffffff812fe94f>] __device_release_driver+0x86/0xcf
+[  495.104807]  [<ffffffff812fe9bd>] device_release_driver+0x25/0x32  <-- here we take device_lock()
 
-[PATCHv2 0/7] acpi/libata: Express dependencies for devices on dock
-stations and bays
+[  853.511341] INFO: task kworker/u:4:549 blocked for more than 120 seconds.
+[  853.568693] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  853.635119] kworker/u:4     D ffff88013097b5d0     0   549      2 0x00000000
+[  853.695129]  ffff880132773c40 0000000000000046 ffff880130790000 ffff880132773fd8
+[  853.758990]  ffff880132773fd8 0000000000012500 ffff88013288a0b0 ffff880130790000
+[  853.822796]  0000000000000246 0000000000000040 ffff88013097b5c8 ffff880130790000
+[  853.886633] Call Trace:
+[  853.907631]  [<ffffffff8149dd25>] schedule+0x5a/0x5c
+[  853.949670]  [<ffffffff8149cc44>] __mutex_lock_common+0x220/0x351
+[  854.001225]  [<ffffffff81304bd7>] ? device_resume+0x58/0x1c4
+[  854.049082]  [<ffffffff81304bd7>] ? device_resume+0x58/0x1c4
+[  854.097011]  [<ffffffff8149ce48>] mutex_lock_nested+0x2f/0x36   <-- here we wait for device_lock()
+[  854.145591]  [<ffffffff81304bd7>] device_resume+0x58/0x1c4
+[  854.192066]  [<ffffffff81304d61>] async_resume+0x1e/0x45
+[  854.237019]  [<ffffffff8104bc93>] async_run_entry_fn+0xc6/0x173  <-- ...while running in async context
 
-which were in github.com libata-dev tree.
+Provide a 'scsi_sd_probe_domain' so that async probe actions actions can
+be flushed without regard for the state of PM, and allow for the resume
+path to handle devices that have transitioned from SDEV_QUIESCE to
+SDEV_DEL prior to resume.
 
-But I didn't find these patches in git.kernel.org libata-dev tree.
-http://marc.info/?l=linux-scsi&m=133283600431697&w=2
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
+[alan: uplevel scsi_sd_probe_domain, clarify scsi_device_resume]
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
 
-Lin Ming
+ Changes since v14: http://marc.info/?l=linux-scsi&m=133252249201847&w=2
 
-> 
-> -Aaron
-> 
-> On Wed, Mar 28, 2012 at 02:21:56PM +0800, Lin Ming wrote:
-> > Currently, ata_acpi_set_state() only sets acpi sate for IDE port.
-> > Remove this limitation.
-> > 
-> > Acked-by: Aaron Lu <aaron.lu@amd.com>
-> > Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-> > ---
-> >  drivers/ata/libata-acpi.c |   21 ++++++++++++---------
-> >  1 files changed, 12 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> > index b03e468..104c1d0 100644
-> > --- a/drivers/ata/libata-acpi.c
-> > +++ b/drivers/ata/libata-acpi.c
-> > @@ -841,23 +841,26 @@ void ata_acpi_on_resume(struct ata_port *ap)
-> >  void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
-> >  {
-> >  	struct ata_device *dev;
-> > -
-> > -	if (!ata_ap_acpi_handle(ap) || (ap->flags & ATA_FLAG_ACPI_SATA))
-> > -		return;
-> > +	acpi_handle handle;
-> > +	int acpi_state;
-> >  
-> >  	/* channel first and then drives for power on and vica versa
-> >  	   for power off */
-> > -	if (state.event == PM_EVENT_ON)
-> > -		acpi_bus_set_power(ata_ap_acpi_handle(ap), ACPI_STATE_D0);
-> > +	handle = ata_ap_acpi_handle(ap);
-> > +	if (handle && state.event == PM_EVENT_ON)
-> > +		acpi_bus_set_power(handle, ACPI_STATE_D0);
-> >  
-> >  	ata_for_each_dev(dev, &ap->link, ENABLED) {
-> > -		if (ata_dev_acpi_handle(dev))
-> > -			acpi_bus_set_power(ata_dev_acpi_handle(dev),
-> > +		handle = ata_dev_acpi_handle(dev);
-> > +		if (handle)
-> > +			acpi_bus_set_power(handle,
-> >  				state.event == PM_EVENT_ON ?
-> >  					ACPI_STATE_D0 : ACPI_STATE_D3);
-> >  	}
-> > -	if (state.event != PM_EVENT_ON)
-> > -		acpi_bus_set_power(ata_ap_acpi_handle(ap), ACPI_STATE_D3);
-> > +
-> > +	handle = ata_ap_acpi_handle(ap);
-> > +	if (handle && state.event != PM_EVENT_ON)
-> > +		acpi_bus_set_power(handle, ACPI_STATE_D3);
-> >  }
-> >  
-> >  /**
-> > -- 
-> > 1.7.2.5
-> > 
-> > 
-> 
+ linux-next reports:
+ In file included from drivers/scsi/hosts.c:41:0:
+ drivers/scsi/scsi_priv.h:166:1: warning: "__enabled_CONFIG_PM" is not defined [-Wundef]
+ drivers/scsi/scsi_priv.h:166:1: warning: "__enabled_CONFIG_PM_MODULE" is not defined [-Wundef]
 
+ ...so just drop IS_ENABLED() and unconditionally provide
+scsi_sd_probe_domain as a part of the scsi core.  This version of the
+topic also drops the sysfs change since Greg asked the printk change to
+be separated from the crash workaround.
+
+
+ drivers/scsi/scsi.c      |    4 ++++
+ drivers/scsi/scsi_lib.c  |   10 +++++++---
+ drivers/scsi/scsi_pm.c   |    2 +-
+ drivers/scsi/scsi_priv.h |    2 ++
+ drivers/scsi/sd.c        |    5 +++--
+ 5 files changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 07322ec..2ecdb01 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -90,6 +90,10 @@ unsigned int scsi_logging_level;
+ EXPORT_SYMBOL(scsi_logging_level);
+ #endif
+ 
++/* sd and scsi_pm need to coordinate flushing async actions */
++LIST_HEAD(scsi_sd_probe_domain);
++EXPORT_SYMBOL(scsi_sd_probe_domain);
++
+ /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
+  * You may not alter any existing entry (although adding new ones is
+  * encouraged once assigned by ANSI/INCITS T10
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b4833de..992ff63 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2348,10 +2348,14 @@ EXPORT_SYMBOL(scsi_device_quiesce);
+  *
+  *	Must be called with user context, may sleep.
+  */
+-void
+-scsi_device_resume(struct scsi_device *sdev)
++void scsi_device_resume(struct scsi_device *sdev)
+ {
+-	if(scsi_device_set_state(sdev, SDEV_RUNNING))
++	/* check if the device state was mutated prior to resume, and if
++	 * so assume the state is being managed elsewhere (for example
++	 * device deleted during suspend)
++	 */
++	if (sdev->sdev_state != SDEV_QUIESCE ||
++	    scsi_device_set_state(sdev, SDEV_RUNNING))
+ 		return;
+ 	scsi_run_queue(sdev->request_queue);
+ }
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index c467064..f661a41 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -97,7 +97,7 @@ static int scsi_bus_prepare(struct device *dev)
+ {
+ 	if (scsi_is_sdev_device(dev)) {
+ 		/* sd probing uses async_schedule.  Wait until it finishes. */
+-		async_synchronize_full();
++		async_synchronize_full_domain(&scsi_sd_probe_domain);
+ 
+ 	} else if (scsi_is_host_device(dev)) {
+ 		/* Wait until async scanning is finished */
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index be4fa6d..07ce3f5 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -163,6 +163,8 @@ static inline int scsi_autopm_get_host(struct Scsi_Host *h) { return 0; }
+ static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
+ #endif /* CONFIG_PM_RUNTIME */
+ 
++extern struct list_head scsi_sd_probe_domain;
++
+ /* 
+  * internal scsi timeout functions: for use by mid-layer and transport
+  * classes.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index bd17cf8..19e27d8 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -65,6 +65,7 @@
+ #include <scsi/scsicam.h>
+ 
+ #include "sd.h"
++#include "scsi_priv.h"
+ #include "scsi_logging.h"
+ 
+ MODULE_AUTHOR("Eric Youngdale");
+@@ -2717,7 +2718,7 @@ static int sd_probe(struct device *dev)
+ 	dev_set_drvdata(dev, sdkp);
+ 
+ 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
+-	async_schedule(sd_probe_async, sdkp);
++	async_schedule_domain(sd_probe_async, sdkp, &scsi_sd_probe_domain);
+ 
+ 	return 0;
+ 
+@@ -2751,7 +2752,7 @@ static int sd_remove(struct device *dev)
+ 	sdkp = dev_get_drvdata(dev);
+ 	scsi_autopm_get_device(sdkp->device);
+ 
+-	async_synchronize_full();
++	async_synchronize_full_domain(&scsi_sd_probe_domain);
+ 	blk_queue_prep_rq(sdkp->device->request_queue, scsi_prep_fn);
+ 	blk_queue_unprep_rq(sdkp->device->request_queue, NULL);
+ 	device_del(&sdkp->dev);
 
