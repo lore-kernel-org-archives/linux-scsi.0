@@ -1,66 +1,39 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 1/1] Drivers: scsi: storvsc: Properly handle errors from the
-	host
-Date: Thu, 29 Mar 2012 16:54:43 -0700
-Message-ID: <1333065283-30484-1-git-send-email-kys@microsoft.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Properly handle errors from
+ the host
+Date: Thu, 29 Mar 2012 16:51:11 -0700
+Message-ID: <20120329235111.GA19924@kroah.com>
+References: <1333065283-30484-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces@linuxdriverproject.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
-List-Post: <mailto:devel@linuxdriverproject.org>
-List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: devel-bounces@linuxdriverproject.org
-Sender: devel-bounces@linuxdriverproject.org
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:44668 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933200Ab2C2XvQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2012 19:51:16 -0400
+Received: by pbcun15 with SMTP id un15so814696pbc.19
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2012 16:51:15 -0700 (PDT)
+In-Reply-To: <1333065283-30484-1-git-send-email-kys@microsoft.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 
-If the host returns error for pass through commands, deal with
-appropriately. I would like to thank James for patiently helping
-me with this patch.
+On Thu, Mar 29, 2012 at 04:54:43PM -0700, K. Y. Srinivasan wrote:
+> If the host returns error for pass through commands, deal with
+> appropriately. I would like to thank James for patiently helping
+> me with this patch.
+> 
+> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c |   20 ++++++++++++++++----
+>  1 files changed, 16 insertions(+), 4 deletions(-)
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
----
- drivers/scsi/storvsc_drv.c |   20 ++++++++++++++++----
- 1 files changed, 16 insertions(+), 4 deletions(-)
+As this driver is now in Linus's tree, and drivers/scsi/ is James's
+area, he is the one to take them, not me.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 83a1972..5053769 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -785,12 +785,24 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
- 	/*
- 	 * If there is an error; offline the device since all
- 	 * error recovery strategies would have already been
--	 * deployed on the host side.
-+	 * deployed on the host side. However, if the command
-+	 * were a pass-through command deal with it appropriately.
- 	 */
--	if (vm_srb->srb_status == SRB_STATUS_ERROR)
--		scmnd->result = DID_TARGET_FAILURE << 16;
--	else
-+	switch (vm_srb->srb_status) {
-+	case SRB_STATUS_ERROR:
-+		switch (scmnd->cmnd[0]) {
-+		case ATA_16:
-+		case ATA_12:
-+			scmnd->result = DID_PASSTHROUGH << 16;
-+			break;
-+		default:
-+			scmnd->result = DID_TARGET_FAILURE << 16;
-+		}
-+		break;
-+	default:
- 		scmnd->result = vm_srb->scsi_status;
-+	}
-+
- 
- 	/*
- 	 * If the LUN is invalid; remove the device.
--- 
-1.7.4.1
+thanks,
+
+greg k-h
