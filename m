@@ -1,76 +1,97 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
- ehci_hcd fails to read a single good block)
-Date: Thu, 29 Mar 2012 10:44:02 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1203291029190.1417-100000@iolanthe.rowland.org>
-References: <886259.81235.qm@web100012.mail.kks.yahoo.co.jp>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
+ correctly when SRB status is INVALID
+Date: Thu, 29 Mar 2012 14:50:25 +0000
+Message-ID: <426367E2313C2449837CD2DE46E7EAF902244A@BY2PRD0310MB378.namprd03.prod.outlook.com>
+References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
+	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
+	 <1332173560.3152.65.camel@dabdike>
+	 <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
+	 <1332196819.3152.77.camel@dabdike>
+	 <6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
+	 <1332233502.14019.14.camel@dabdike.int.hansenpartnership.com>
+	 <6E21E5352C11B742B20C142EB499E0481B76AF70@TK5EX14MBXC126.redmond.corp.microsoft.com>
+	 <1332749776.2836.15.camel@dabdike>
+	 <6E21E5352C11B742B20C142EB499E0481B775A8A@TK5EX14MBXC124.redmond.corp.microsoft.com>
+ <1333008134.2823.15.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:34103 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933409Ab2C2OoD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2012 10:44:03 -0400
-In-Reply-To: <886259.81235.qm@web100012.mail.kks.yahoo.co.jp>
+Received: from db3ehsobe001.messaging.microsoft.com ([213.199.154.139]:56234
+	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758417Ab2C2Ous (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Mar 2012 10:50:48 -0400
+In-Reply-To: <1333008134.2823.15.camel@dabdike>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Norman Diamond <n0diamond@yahoo.co.jp>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 29 Mar 2012, Norman Diamond wrote:
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+VGh1cnNkYXksIE1hcmNoIDI5LCAyMDEyIDQ6MDIgQU0NCj4gVG86IEtZIFNyaW5pdmFzYW4NCj4g
+Q2M6IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
+b3JnOw0KPiBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBvaGVyaW5nQHN1c2UuY29tOyBo
+Y2hAaW5mcmFkZWFkLm9yZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJuZWwub3JnDQo+IFN1Ympl
+Y3Q6IFJFOiBbUEFUQ0ggUkVTRU5EIDEvMl0gRHJpdmVyczogc2NzaTogc3RvcnZzYzogU2V0IHRo
+ZSBzY3NpIHJlc3VsdCBjb3JyZWN0bHkNCj4gd2hlbiBTUkIgc3RhdHVzIGlzIElOVkFMSUQNCj4g
+DQo+IE9uIFR1ZSwgMjAxMi0wMy0yNyBhdCAxNTozMiArMDAwMCwgS1kgU3Jpbml2YXNhbiB3cm90
+ZToNCj4gPiA+ID4gPiBKYW1lcywgdW5mb3J0dW5hdGVseSBiYXNlZCBvbiB0aGUgY3VycmVudCBT
+UkIgY29kZXMgSSBnZXQgYmFjayBmcm9tIHRoZQ0KPiA+ID4gPiA+IGhvc3QsIEkgZG9uJ3Qga25v
+dyB3aGljaCBjb21tYW5kcyB0aGF0IGZhaWxlZCBvdWdodCB0byBiZSByZXRyaWVkIGFuZA0KPiB3
+aGljaA0KPiA+ID4gPiA+IG9uZXMgc2hvdWxkIG5vdCBiZTsgSSBzaW1wbHkgZ2V0IGEgc2luZ2xl
+IFNSQiBlcnJvciBjb2RlIGZvciBjYXNlcyB3aGVyZQ0KPiB0aGUNCj4gPiA+ID4gPiBob3N0IGZp
+bHRlcmVkIHRoZSB1bnN1cHBvcnRlZCBjb21tYW5kcyBhcyB3ZWxsIGFzIHRoZSBjYXNlIHdoZXJl
+IHRoZQ0KPiBob3N0DQo+ID4gPiA+ID4gc3VwcG9ydGVkIHRoZSBjb21tYW5kIGFuZCBzb21ldGhp
+bmcgZmFpbGVkIGluIHRoZSBjb21tYW5kDQo+IGV4ZWN1dGlvbi4NCj4gPiA+ID4gPiBJZiB0aGVy
+ZSBpcyBzb21ldGhpbmcgSSBjYW4gdHJ5IGluIHRoaXMgZHJpdmVyIHRvIGZpeCB0aGlzIHByb2Js
+ZW0sIEkgYW0gbW9yZQ0KPiB0aGFuDQo+ID4gPiA+ID4gaGFwcHkgdG8gdHJ5IGl0LiBJZiBpdCBp
+bnZvbHZlcyBnZXR0aW5nIGNoYW5nZXMgaW50byAgdGhlIGhvc3QgKHdpbjgsIHdpbjJrOA0KPiBl
+dGMuKSwNCj4gPiA+ID4gPiBJIGFtIHdpbGxpbmcgdG8gc3RhcnQgYSBjb252ZXJzYXRpb24gd2l0
+aCB0aGUgcmVsZXZhbnQgdGVhbXMsIGJ1dCBJIGNhbm5vdA0KPiA+ID4gPiA+IG9idmlvdXNseSBk
+ZXRlcm1pbmUgd2hlbiBzdWNoIGNoYW5nZXMgd2lsbCBzaGlwLiBIb3dldmVyLCBJIGRvIG5lZWQN
+Cj4gPiA+ID4gPiBzb2x1dGlvbiBmb3IgdGhlIHByb2JsZW0gbm93Lg0KPiA+ID4gPiA+DQo+ID4g
+PiA+ID4gSSBhcHByZWNpYXRlIHlvdXIgdGFraW5nIHRoZSB0aW1lIHRvIGhlbHAgbWUgZ3Jhdml0
+YXRlIHRvd2FyZHMgdGhlDQo+ID4gPiA+ID4gY29ycmVjdCBzb2x1dGlvbiBoZXJlLiBHaXZlbiBt
+eSBjb25zdHJhaW50cywgbGV0IG1lIGtub3cgd2hhdCBpcyB0aGUNCj4gPiA+ID4gPiBiZXN0IHdh
+eSBmb3J3YXJkIGhlcmUuDQo+ID4gPiA+DQo+ID4gPiA+IFBpbmcuDQo+ID4gPg0KPiA+ID4gT24g
+d2hhdD8gV2hhdCBkb24ndCB5b3UgdW5kZXJzdGFuZCBhYm91dCB0aGUgYWJvdmU/DQo+ID4gPg0K
+PiA+ID4gVGhlIGZhaWx1cmUgcGF0aCBuZWVkcyB0byBsb29rIGxpa2UgdGhlIGZvbGxvd2luZyBt
+ZXRhY29kZQ0KPiA+ID4NCj4gPiA+IGNhc2UgU1JCX3doYXRldmVyDQo+ID4gPg0KPiA+ID4gaWYg
+KHJldHJ5YWJsZSBjb21tYW5kKQ0KPiA+ID4gCXJldHVybiBESURfVEFSR0VUX0ZBSUxVUkUNCj4g
+PiA+IGVsc2UNCj4gPiA+IAlzZXR1cCBzZW5zZSBhbmQgZXJyb3INCj4gPiA+IAlyZXR1cm4gRElE
+X1BBU1NUSFJPVUdIDQo+ID4gPg0KPiA+DQo+ID4gVGhhbmtzIEphbWVzIGFuZCBJIGFtIHNvcnJ5
+IGZvciB0YWtpbmcgc28gbXVjaCBvZiB5b3VyIHRpbWUuIEkgc3VzcGVjdCB0aGUNCj4gY2hlY2sg
+Zm9yDQo+ID4gcmV0cnlhYmxlIGNvbW1hbmRzIGlzIHRvIGJlIGJhc2VkIG9uIHRoZSBzZW5zZSBk
+YXRhIHRoYXQgbWlnaHQgYmUgYXZhaWxhYmxlLg0KPiBBc3N1bWluZw0KPiA+IHRoaXMgaXMgd2hh
+dCB5b3UgaGFkIGluIG1pbmQsIGFzIEkgbG9vayB0aGUgIHNjc2lfZXJyb3IuYywgc2NzaV9jaGVj
+a19zZW5zZSgpDQo+IGFwcGVhcnMgdG8NCj4gPiBkbyB3aGF0IEkgd291bGQgbmVlZCBoZXJlLiBX
+b3VsZCB5b3UgYmUgd2lsbGluZyB0byB0YWtlIHBhdGNoIHRoYXQgZXhwb3J0cyB0aGlzDQo+IGZ1
+bmN0aW9uLg0KPiA+IE9yLCBpcyB0aGVyZSBhIGJldHRlciB3YXkgdG8gaWRlbnRpZnkgY29tbWFu
+ZHMgdGhhdCB3b3VsZCBiZSByZS10cmllZC4NCj4gDQo+IEVybSwgbm8sIEkgd2FzIHRoaW5raW5n
+IG9mIHNvbWV0aGluZyBtdWNoIG1vcmUgc2ltcGxlLiAgUmlnaHQgYXQgdGhlDQo+IG1vbWVudCBp
+ZiAocmV0cnlhYmxlX2NvbW1hbmQpIGlzIGlmIChzY21uZC0+Y21uZFswXSAhPSBBVEFfMTYpDQo+
+IA0KPiBBbHRob3VnaCBJJ20gc3VyZSB0aGVyZSBhcmUgb3RoZXIgY29tbWFuZHMgdGhhdCBhcmUg
+bm90IHJldHJ5YWJsZSAuLi4gSQ0KPiBkb24ndCByZWFsbHkga25vdyBzaW5jZSBJJ20gbm90IHN1
+cmUgd2hhdCBlbHNlIHlvdXIgaHlwZXJ2aXNvciB3aWxsDQo+IGNob2tlIG9uLiAgSXQgbWlnaHQg
+YmUgc2ltcGxlciB0byBoYXZlIGEgbGlzdCBvZiBrbm93biBnb29kIHJldHJ5YWJsZQ0KPiBjb21t
+YW5kcyAoUkVBRF8gV1JJVEVfIEdFVF9DQVBBQ0lUWV8gSU5RVUlSWSBldGMuIGkuZS4gdGhlIGNv
+bW1hbmRzIHNkDQo+IG5vcm1hbGx5IHVzZXMpIGFuZCBhc3N1bWUgYW55dGhpbmcgb3V0c2lkZSB0
+aGF0IHJhbmdlIGlzbid0IHJldHJ5YWJsZQ0KPiBidXQgc29tZW9uZSB3aG8ga25vd3Mgd2hhdCdz
+IGdvaW5nIG9uIGluIHRoZSBoeXBlcnZpc29yIG5lZWRzIHRvIGRlY2lkZQ0KPiB0aGlzLg0KPiAN
+Cj4gVGhlIHBvaW50IGlzIHRoYXQgeW91IGRvbid0IHByZS1maWx0ZXIuICBZb3Ugc2VuZCB0aGUg
+Y29tbWFuZCBhbmQgdGhlbg0KPiB0cnkgYW5kIHdvcmsgb3V0IGZyb20gdGhlIGdlbmVyaWMgZXJy
+b3IgYW5kIHRoZSB0eXBlIG9mIGNvbW1hbmQgeW91IHNlbnQNCj4gd2hhdCBoYXBwZW5lZC4gIFRo
+YXQgd2F5LCBpZiB0aGUgaHlwZXJ2aXNvciBldmVyIHdvcmtzIHByb3Blcmx5IChvcg0KPiBzaW1w
+bHkgcGFzc2VzIGNvbW1hbmRzIHRocm91Z2ggdG8gcmVhbCBkZXZpY2VzKSBpdCB3aWxsICJqdXN0
+IHdvcmsiDQo+IHJhdGhlciB0aGFuIGZhaWxpbmcgYmVjYXVzZSBvZiB0aGUgcHJlLWZpbHRlci4N
+Cj4gDQo+IFdlIHNob3VsZCBvbmx5IHVzZSB0aGUgcHJlLWZpbHRlciBpZiB0aGUgZWZmZWN0cyBv
+ZiB0aGUgY29tbWFuZCBhcmUNCj4gZmF0YWwgKGxpa2Ugd2UgaGF2ZSB0byBhIGxvdCBpbiBVU0Ig
+YmVjYXVzZSB0aGUgZmlybXdhcmUgY3Jhc2hlcyBhbmQNCj4gaGFuZ3MpLg0KDQpUaGFua3MgZm9y
+IHRoZSBjbGFyaWZpY2F0aW9uLiBJIHdpbGwgaGF2ZSB0aGUgcGF0Y2ggb3V0IHNob3J0bHkuDQoN
+CksuIFkNCg==
 
-> Alan Stern wrote:
-> > On Wed, 28 Mar 2012, Norman Diamond wrote:
-> >=20
-> >> I don't want to manhandle that old notebook's fragile vendor propr=
-ietary IDE cable again, but I'll try to find another way to test that d=
-rive again without going though USB.
-> >=20
-> > You don't have to worry about that.=A0 sg_dd works fine over USB.
-> >=20
-> >>> The USB-to-IDE bridge is vendor 067b, product 2507, Prolific Tech=
-nology Inc., and usb-storage matches it for quirk 110.
-> >=20
-> > What is the bcdDevice value?
->=20
-> Is that different from 2507?
 
-It is a separate value from the product ID.  It appears in the output=20
-from "lsusb -v" or in /sys/kernel/debug/usb/devices (where it is=20
-labelled "Rev=3D").
-
-> Now, if a combination of zeroing the readahead and proper user input =
-of an sg_dd command will succeed in reading a single valid block next d=
-oor to the bad block, then it won't even be necessary to unplug and rep=
-lug the USB bridge.  That will be good news.
->=20
-> >>> Digression:  Someone adjusts the number of blocks from the report=
-ed 39070080 (which I think is correct) to 39070079 (which I think is wr=
-ong).  I'll have to install the drive in an old notebook to check if th=
-e reported number of blocks is really correct.
-> >>=20
-> >> Further on this digression:=A0 The number of blocks really is 3907=
-0080.=A0 Today libata made no adjustment and the number of blocks was c=
-orrect.=A0 So some USB component makes a misadjustment to screw up the =
-number of blocks.
-> >=20
-> > usb-storage does this, because in the past Prolific's bridges have =
-reported the wrong number of blocks.=A0 In fact, I'm surprised that it =
-seems to work correctly with your drive.
->=20
-> It is hard to imagine a USB bridge adding 1 to the number of blocks. =
- Did that really happen?
-
-No.  What happened was that the bridge reported the number of blocks,
-but SCSI's READ CAPACITY command requires the device to report the
-highest available block number (which is one smaller since blocks are
-numbered starting from 0).
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
