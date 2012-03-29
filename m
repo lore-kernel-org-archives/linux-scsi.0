@@ -1,39 +1,66 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] fcoe: remove a stray unlock
-Date: Thu, 29 Mar 2012 21:53:26 +0300
-Message-ID: <20120329185326.GD21812@elgon.mountain>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] Drivers: scsi: storvsc: Properly handle errors from the
+	host
+Date: Thu, 29 Mar 2012 16:54:43 -0700
+Message-ID: <1333065283-30484-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:17283 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933650Ab2C2SyE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2012 14:54:04 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
+List-Post: <mailto:devel@linuxdriverproject.org>
+List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: devel-bounces@linuxdriverproject.org
+Sender: devel-bounces@linuxdriverproject.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>, Neil Horman <nhorman@tuxdriver.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, devel@open-fcoe.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Vasu Dev <vasu.dev@intel.com>
 
-We moved the locking in dd060e74fb "[SCSI] fcoe: remove frame dropping
-code from fcoe_percpu_clean" but this unlock was missed.
+If the host returns error for pass through commands, deal with
+appropriately. I would like to thank James for patiently helping
+me with this patch.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |   20 ++++++++++++++++----
+ 1 files changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 335e851..c2d8a8c 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2274,10 +2274,9 @@ static void fcoe_percpu_clean(struct fc_lport *lport)
- 			continue;
- 
- 		skb = dev_alloc_skb(0);
--		if (!skb) {
--			spin_unlock_bh(&pp->fcoe_rx_list.lock);
-+		if (!skb)
- 			continue;
--		}
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 83a1972..5053769 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -785,12 +785,24 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
+ 	/*
+ 	 * If there is an error; offline the device since all
+ 	 * error recovery strategies would have already been
+-	 * deployed on the host side.
++	 * deployed on the host side. However, if the command
++	 * were a pass-through command deal with it appropriately.
+ 	 */
+-	if (vm_srb->srb_status == SRB_STATUS_ERROR)
+-		scmnd->result = DID_TARGET_FAILURE << 16;
+-	else
++	switch (vm_srb->srb_status) {
++	case SRB_STATUS_ERROR:
++		switch (scmnd->cmnd[0]) {
++		case ATA_16:
++		case ATA_12:
++			scmnd->result = DID_PASSTHROUGH << 16;
++			break;
++		default:
++			scmnd->result = DID_TARGET_FAILURE << 16;
++		}
++		break;
++	default:
+ 		scmnd->result = vm_srb->scsi_status;
++	}
 +
- 		skb->destructor = fcoe_percpu_flush_done;
  
- 		spin_lock_bh(&pp->fcoe_rx_list.lock);
+ 	/*
+ 	 * If the LUN is invalid; remove the device.
+-- 
+1.7.4.1
