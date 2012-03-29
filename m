@@ -1,49 +1,50 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v3 4/7] libata: detech Device Attention support
-Date: Thu, 29 Mar 2012 13:06:34 +0800
-Message-ID: <1332997594.3793.118.camel@minggr>
-References: <1332915722-15963-1-git-send-email-ming.m.lin@intel.com>
-	 <1332915722-15963-5-git-send-email-ming.m.lin@intel.com>
-	 <4F72F45D.7090800@mvista.com>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH] virtio_blk: add helper function to support mass of disks
+	naming
+Date: Thu, 29 Mar 2012 15:10:01 +1030
+Message-ID: <87ehscyq8u.fsf@rustcorp.com.au>
+References: <4F72B5B3.6020602@cn.fujitsu.com>
+	<20120328105819.GD6194@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4F72F45D.7090800@mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lu@amd.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20120328105819.GD6194@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, jens.axboe@oracle.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-03-28 at 15:22 +0400, Sergei Shtylyov wrote:
-> Hello.
+On Wed, 28 Mar 2012 12:58:21 +0200, "Michael S. Tsirkin" <mst@redhat.com> wrote:
+> On Wed, Mar 28, 2012 at 02:54:43PM +0800, Ren Mingxin wrote:
+> >  Hi,
+> > 
+> > The current virtblk's naming algorithm just supports 26^3
+> > disks. If there are mass of virtblks(exceeding 26^3), there
+> > will be disks with the same name.
+> > 
+> > According to "sd_format_disk_name()", I add function
+> > "virtblk_name_format()" for virtblk to support mass of
+> > disks.
+> > 
+> > Signed-off-by: Ren Mingxin <renmx@cn.fujitsu.com>
 > 
-> On 28-03-2012 10:21, Lin Ming wrote:
-> 
-> > Add a new flag ATA_DFLAG_DA to indicate that device supports "Device
-> > Attention".
-> 
-> > Acked-by: Aaron Lu<aaron.lu@amd.com>
-> > Signed-off-by: Lin Ming<ming.m.lin@intel.com>
-> [...]
-> 
-> > diff --git a/include/linux/ata.h b/include/linux/ata.h
-> > index 32df2b6..6ee41cc 100644
-> > --- a/include/linux/ata.h
-> > +++ b/include/linux/ata.h
-> > @@ -578,6 +578,7 @@ static inline int ata_is_data(u8 prot)
-> >   	  ((u64) (id)[(n) + 0]) )
-> >
-> >   #define ata_id_cdb_intr(id)	(((id)[ATA_ID_CONFIG]&  0x60) == 0x20)
-> > +#define atapi_id_has_da(id)	((id)[77]&  (1<<  4))
-> 
->     We prefix these macros with 'ata_' despite them being applied to IDENTIFY 
-> DEVICE data or IDENTIFY PAKCET DEVICE data. ata_id_cdb_intr(), for example, 
-> applies only to IDENTIFY PAKCET DEVICE data.
+> Nod. This is basically what 3e1a7ff8a0a7b948f2684930166954f9e8e776fe
+> did. Except, maybe we should move this function into block core
+> instead of duplicating it? Where would be a good place to put it?
+> Jens, care to comment?
 
-OK, will change it.
+Indeed.
 
-> 
-> MBR, Sergei
-
-
+Cheers,
+Rusty.
+-- 
+  How could I marry someone with more hair than me?  http://baldalex.org
