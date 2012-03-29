@@ -1,97 +1,147 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH RESEND 1/2] Drivers: scsi: storvsc: Set the scsi result
- correctly when SRB status is INVALID
-Date: Thu, 29 Mar 2012 14:50:25 +0000
-Message-ID: <426367E2313C2449837CD2DE46E7EAF902244A@BY2PRD0310MB378.namprd03.prod.outlook.com>
-References: <1332115915-26805-1-git-send-email-kys@microsoft.com>
-	 <1332115963-26855-1-git-send-email-kys@microsoft.com>
-	 <1332173560.3152.65.camel@dabdike>
-	 <6E21E5352C11B742B20C142EB499E0481B769E88@TK5EX14MBXC126.redmond.corp.microsoft.com>
-	 <1332196819.3152.77.camel@dabdike>
-	 <6E21E5352C11B742B20C142EB499E0481B76A16D@TK5EX14MBXC126.redmond.corp.microsoft.com>
-	 <1332233502.14019.14.camel@dabdike.int.hansenpartnership.com>
-	 <6E21E5352C11B742B20C142EB499E0481B76AF70@TK5EX14MBXC126.redmond.corp.microsoft.com>
-	 <1332749776.2836.15.camel@dabdike>
-	 <6E21E5352C11B742B20C142EB499E0481B775A8A@TK5EX14MBXC124.redmond.corp.microsoft.com>
- <1333008134.2823.15.camel@dabdike>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v3 7/7] [SCSI] sr: adds Zero-power ODD support
+Date: Thu, 29 Mar 2012 11:00:18 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1203291050580.1417-100000@iolanthe.rowland.org>
+References: <CAOzJMDRajsjHwCC66XB6Mv-Deuy-wD4GiZbeuEqCQePSLw-Xxw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from db3ehsobe001.messaging.microsoft.com ([213.199.154.139]:56234
-	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758417Ab2C2Ous (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Mar 2012 10:50:48 -0400
-In-Reply-To: <1333008134.2823.15.camel@dabdike>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <CAOzJMDRajsjHwCC66XB6Mv-Deuy-wD4GiZbeuEqCQePSLw-Xxw@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@amd.com>
+Cc: Lin Ming <ming.m.lin@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-VGh1cnNkYXksIE1hcmNoIDI5LCAyMDEyIDQ6MDIgQU0NCj4gVG86IEtZIFNyaW5pdmFzYW4NCj4g
-Q2M6IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
-b3JnOw0KPiBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBvaGVyaW5nQHN1c2UuY29tOyBo
-Y2hAaW5mcmFkZWFkLm9yZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJuZWwub3JnDQo+IFN1Ympl
-Y3Q6IFJFOiBbUEFUQ0ggUkVTRU5EIDEvMl0gRHJpdmVyczogc2NzaTogc3RvcnZzYzogU2V0IHRo
-ZSBzY3NpIHJlc3VsdCBjb3JyZWN0bHkNCj4gd2hlbiBTUkIgc3RhdHVzIGlzIElOVkFMSUQNCj4g
-DQo+IE9uIFR1ZSwgMjAxMi0wMy0yNyBhdCAxNTozMiArMDAwMCwgS1kgU3Jpbml2YXNhbiB3cm90
-ZToNCj4gPiA+ID4gPiBKYW1lcywgdW5mb3J0dW5hdGVseSBiYXNlZCBvbiB0aGUgY3VycmVudCBT
-UkIgY29kZXMgSSBnZXQgYmFjayBmcm9tIHRoZQ0KPiA+ID4gPiA+IGhvc3QsIEkgZG9uJ3Qga25v
-dyB3aGljaCBjb21tYW5kcyB0aGF0IGZhaWxlZCBvdWdodCB0byBiZSByZXRyaWVkIGFuZA0KPiB3
-aGljaA0KPiA+ID4gPiA+IG9uZXMgc2hvdWxkIG5vdCBiZTsgSSBzaW1wbHkgZ2V0IGEgc2luZ2xl
-IFNSQiBlcnJvciBjb2RlIGZvciBjYXNlcyB3aGVyZQ0KPiB0aGUNCj4gPiA+ID4gPiBob3N0IGZp
-bHRlcmVkIHRoZSB1bnN1cHBvcnRlZCBjb21tYW5kcyBhcyB3ZWxsIGFzIHRoZSBjYXNlIHdoZXJl
-IHRoZQ0KPiBob3N0DQo+ID4gPiA+ID4gc3VwcG9ydGVkIHRoZSBjb21tYW5kIGFuZCBzb21ldGhp
-bmcgZmFpbGVkIGluIHRoZSBjb21tYW5kDQo+IGV4ZWN1dGlvbi4NCj4gPiA+ID4gPiBJZiB0aGVy
-ZSBpcyBzb21ldGhpbmcgSSBjYW4gdHJ5IGluIHRoaXMgZHJpdmVyIHRvIGZpeCB0aGlzIHByb2Js
-ZW0sIEkgYW0gbW9yZQ0KPiB0aGFuDQo+ID4gPiA+ID4gaGFwcHkgdG8gdHJ5IGl0LiBJZiBpdCBp
-bnZvbHZlcyBnZXR0aW5nIGNoYW5nZXMgaW50byAgdGhlIGhvc3QgKHdpbjgsIHdpbjJrOA0KPiBl
-dGMuKSwNCj4gPiA+ID4gPiBJIGFtIHdpbGxpbmcgdG8gc3RhcnQgYSBjb252ZXJzYXRpb24gd2l0
-aCB0aGUgcmVsZXZhbnQgdGVhbXMsIGJ1dCBJIGNhbm5vdA0KPiA+ID4gPiA+IG9idmlvdXNseSBk
-ZXRlcm1pbmUgd2hlbiBzdWNoIGNoYW5nZXMgd2lsbCBzaGlwLiBIb3dldmVyLCBJIGRvIG5lZWQN
-Cj4gPiA+ID4gPiBzb2x1dGlvbiBmb3IgdGhlIHByb2JsZW0gbm93Lg0KPiA+ID4gPiA+DQo+ID4g
-PiA+ID4gSSBhcHByZWNpYXRlIHlvdXIgdGFraW5nIHRoZSB0aW1lIHRvIGhlbHAgbWUgZ3Jhdml0
-YXRlIHRvd2FyZHMgdGhlDQo+ID4gPiA+ID4gY29ycmVjdCBzb2x1dGlvbiBoZXJlLiBHaXZlbiBt
-eSBjb25zdHJhaW50cywgbGV0IG1lIGtub3cgd2hhdCBpcyB0aGUNCj4gPiA+ID4gPiBiZXN0IHdh
-eSBmb3J3YXJkIGhlcmUuDQo+ID4gPiA+DQo+ID4gPiA+IFBpbmcuDQo+ID4gPg0KPiA+ID4gT24g
-d2hhdD8gV2hhdCBkb24ndCB5b3UgdW5kZXJzdGFuZCBhYm91dCB0aGUgYWJvdmU/DQo+ID4gPg0K
-PiA+ID4gVGhlIGZhaWx1cmUgcGF0aCBuZWVkcyB0byBsb29rIGxpa2UgdGhlIGZvbGxvd2luZyBt
-ZXRhY29kZQ0KPiA+ID4NCj4gPiA+IGNhc2UgU1JCX3doYXRldmVyDQo+ID4gPg0KPiA+ID4gaWYg
-KHJldHJ5YWJsZSBjb21tYW5kKQ0KPiA+ID4gCXJldHVybiBESURfVEFSR0VUX0ZBSUxVUkUNCj4g
-PiA+IGVsc2UNCj4gPiA+IAlzZXR1cCBzZW5zZSBhbmQgZXJyb3INCj4gPiA+IAlyZXR1cm4gRElE
-X1BBU1NUSFJPVUdIDQo+ID4gPg0KPiA+DQo+ID4gVGhhbmtzIEphbWVzIGFuZCBJIGFtIHNvcnJ5
-IGZvciB0YWtpbmcgc28gbXVjaCBvZiB5b3VyIHRpbWUuIEkgc3VzcGVjdCB0aGUNCj4gY2hlY2sg
-Zm9yDQo+ID4gcmV0cnlhYmxlIGNvbW1hbmRzIGlzIHRvIGJlIGJhc2VkIG9uIHRoZSBzZW5zZSBk
-YXRhIHRoYXQgbWlnaHQgYmUgYXZhaWxhYmxlLg0KPiBBc3N1bWluZw0KPiA+IHRoaXMgaXMgd2hh
-dCB5b3UgaGFkIGluIG1pbmQsIGFzIEkgbG9vayB0aGUgIHNjc2lfZXJyb3IuYywgc2NzaV9jaGVj
-a19zZW5zZSgpDQo+IGFwcGVhcnMgdG8NCj4gPiBkbyB3aGF0IEkgd291bGQgbmVlZCBoZXJlLiBX
-b3VsZCB5b3UgYmUgd2lsbGluZyB0byB0YWtlIHBhdGNoIHRoYXQgZXhwb3J0cyB0aGlzDQo+IGZ1
-bmN0aW9uLg0KPiA+IE9yLCBpcyB0aGVyZSBhIGJldHRlciB3YXkgdG8gaWRlbnRpZnkgY29tbWFu
-ZHMgdGhhdCB3b3VsZCBiZSByZS10cmllZC4NCj4gDQo+IEVybSwgbm8sIEkgd2FzIHRoaW5raW5n
-IG9mIHNvbWV0aGluZyBtdWNoIG1vcmUgc2ltcGxlLiAgUmlnaHQgYXQgdGhlDQo+IG1vbWVudCBp
-ZiAocmV0cnlhYmxlX2NvbW1hbmQpIGlzIGlmIChzY21uZC0+Y21uZFswXSAhPSBBVEFfMTYpDQo+
-IA0KPiBBbHRob3VnaCBJJ20gc3VyZSB0aGVyZSBhcmUgb3RoZXIgY29tbWFuZHMgdGhhdCBhcmUg
-bm90IHJldHJ5YWJsZSAuLi4gSQ0KPiBkb24ndCByZWFsbHkga25vdyBzaW5jZSBJJ20gbm90IHN1
-cmUgd2hhdCBlbHNlIHlvdXIgaHlwZXJ2aXNvciB3aWxsDQo+IGNob2tlIG9uLiAgSXQgbWlnaHQg
-YmUgc2ltcGxlciB0byBoYXZlIGEgbGlzdCBvZiBrbm93biBnb29kIHJldHJ5YWJsZQ0KPiBjb21t
-YW5kcyAoUkVBRF8gV1JJVEVfIEdFVF9DQVBBQ0lUWV8gSU5RVUlSWSBldGMuIGkuZS4gdGhlIGNv
-bW1hbmRzIHNkDQo+IG5vcm1hbGx5IHVzZXMpIGFuZCBhc3N1bWUgYW55dGhpbmcgb3V0c2lkZSB0
-aGF0IHJhbmdlIGlzbid0IHJldHJ5YWJsZQ0KPiBidXQgc29tZW9uZSB3aG8ga25vd3Mgd2hhdCdz
-IGdvaW5nIG9uIGluIHRoZSBoeXBlcnZpc29yIG5lZWRzIHRvIGRlY2lkZQ0KPiB0aGlzLg0KPiAN
-Cj4gVGhlIHBvaW50IGlzIHRoYXQgeW91IGRvbid0IHByZS1maWx0ZXIuICBZb3Ugc2VuZCB0aGUg
-Y29tbWFuZCBhbmQgdGhlbg0KPiB0cnkgYW5kIHdvcmsgb3V0IGZyb20gdGhlIGdlbmVyaWMgZXJy
-b3IgYW5kIHRoZSB0eXBlIG9mIGNvbW1hbmQgeW91IHNlbnQNCj4gd2hhdCBoYXBwZW5lZC4gIFRo
-YXQgd2F5LCBpZiB0aGUgaHlwZXJ2aXNvciBldmVyIHdvcmtzIHByb3Blcmx5IChvcg0KPiBzaW1w
-bHkgcGFzc2VzIGNvbW1hbmRzIHRocm91Z2ggdG8gcmVhbCBkZXZpY2VzKSBpdCB3aWxsICJqdXN0
-IHdvcmsiDQo+IHJhdGhlciB0aGFuIGZhaWxpbmcgYmVjYXVzZSBvZiB0aGUgcHJlLWZpbHRlci4N
-Cj4gDQo+IFdlIHNob3VsZCBvbmx5IHVzZSB0aGUgcHJlLWZpbHRlciBpZiB0aGUgZWZmZWN0cyBv
-ZiB0aGUgY29tbWFuZCBhcmUNCj4gZmF0YWwgKGxpa2Ugd2UgaGF2ZSB0byBhIGxvdCBpbiBVU0Ig
-YmVjYXVzZSB0aGUgZmlybXdhcmUgY3Jhc2hlcyBhbmQNCj4gaGFuZ3MpLg0KDQpUaGFua3MgZm9y
-IHRoZSBjbGFyaWZpY2F0aW9uLiBJIHdpbGwgaGF2ZSB0aGUgcGF0Y2ggb3V0IHNob3J0bHkuDQoN
-CksuIFkNCg==
+On Thu, 29 Mar 2012, Aaron Lu wrote:
 
+> >>> @@ -216,6 +244,11 @@ static unsigned int sr_check_events(struct c=
+drom_device_info *cdi,
+> >>> =A0 =A0 =A0 unsigned int events;
+> >>> =A0 =A0 =A0 int ret;
+> >>>
+> >>> + =A0 =A0 /* Not necessary to check events if enter ZPODD state *=
+/
+> >>> + =A0 =A0 if (cd->device->power_off &&
+> >>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pm_runtime_suspended(&c=
+d->device->sdev_gendev))
+> >>> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> >>
+> >> The comment is wrong and the new code does the wrong thing. =A0You=
+ _do_
+> >> have to check for events even in the ZPODD state, which means
+> >> sr_check_events must power-up the device if necessary.
+> >> sd_check_events in James Bottomley's scsi-misc tree now does the r=
+ight
+> >> thing; see commit 4e2247b2bd289f079349d6c69755f8cff4e31f2b.
+> >
+> > The problem is userspace(GNOME, for example) will check for events
+> > every seconds.
+> > If sr is power up so frequently then we lost the expected power
+> > savings from ZPODD.
 
+That's true.  There's nothing you can do about it in the kernel; it's=20
+up to userspace to change the frequency of event polling.
+
+> Agreed.
+> BTW, it's udevd on my Linux box that changed the default poll msecs k=
+ernel param
+> which caused sr_check_events being called every 2 seconds.
+
+Indeed.
+
+> > There are 2 events:
+> >
+> > DISK_EVENT_MEDIA_CHANGE
+> > DISK_EVENT_EJECT_REQUEST
+> >
+> > In current implementation, if sr is in ZPODD state, then it means
+> > there is no disk in the CDROM.
+> > So if sr is in ZPODD state, MEDIA_CHANGE would never happen.
+
+Sure it will: when the user inserts a disc.
+
+> > EJECT_REQUEST seems can be ignored, since there is no disk in the C=
+DROM at all.
+> >
+>=20
+> For the ODD to be put into suspend state, the conditions should be:
+> 1 tray closed
+> 2 no media inside
+> I think we missed the condition 1 check now.
+>=20
+> And if we follow the two conditions, the events can be safely ignored=
+=2E
+
+No, they can't.  Otherwise the device won't power back up when the user=
+=20
+inserts a new disc.
+
+> What do you think of blocking events for it when going to suspend and=
+ unblocking
+> when resume? This could erase the unnecessary calls of the check even=
+ts function
+> when ODD is suspended.
+> But disk_(un)block_events are not exported and can't be used in sr
+> module. So I'm
+> not sure how to do this.
+>=20
+> Another thing to consider is, user might want to eject the tray by
+> software like the
+> eject /dev/sr0 command or some UI mouse clicks against the cdrom icon=
+=2E I'm still
+> thinking how to do this correctly.
+
+What's the problem?  Can't the user already eject the tray via=20
+software?
+
+> >>> @@ -260,6 +293,11 @@ static unsigned int sr_check_events(struct c=
+drom_device_info *cdi,
+> >>> =A0 =A0 =A0 cd->media_present =3D scsi_status_is_good(ret) ||
+> >>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 (scsi_sense_valid(&sshdr) && sshdr.as=
+c !=3D 0x3a);
+> >>>
+> >>> + =A0 =A0 if (!cd->media_present && cd->device->power_off && !cd-=
+>poweroff_event) {
+> >>> + =A0 =A0 =A0 =A0 =A0 =A0 scsi_autopm_put_device(cd->device);
+> >>
+> >> You can see your mistake here. =A0You call scsi_autopm_put_device =
+here
+> >> without calling scsi_autopm_get_device earlier.
+> >
+> > Let me check this.
+>=20
+> I guess the earlier call of get device is this?
+>=20
+>  869 int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+> ... ...
+>  891
+>  892        /* The following call will keep sdev active indefinitely,=
+ until
+>  893         * its driver does a corresponding scsi_autopm_pm_device(=
+).  Only
+>  894         * drivers supporting autosuspend will do this.
+>  895         */
+>  896        scsi_autopm_get_device(sdev);
+>  897
+
+You have to do this correctly.  Currently sr doesn't support runtime PM=
+=20
+at all.  If you do want to support it, then the driver should call=20
+scsi_autopm_put_device at the end of the probe routine (or whenever it=20
+is ready to allow runtime suspends) and scsi_autopm_get_device at the=20
+start of the remove routine (or whenever it wants to prevent runtime=20
+suspends).
+
+The idea is that the driver is probed with the PM usage counter set to
+1, so a runtime suspend won't occur until you do a put.  Similarly, in
+the remove routine, you must make sure that your gets and puts balance
+out.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
