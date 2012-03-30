@@ -1,40 +1,64 @@
-From: Ren Mingxin <renmx@cn.fujitsu.com>
-Subject: Re: [PATCH 0/4] block: move sd_format_disk_name() into block core
- as disk_name_format()
-Date: Fri, 30 Mar 2012 18:10:57 +0800
-Message-ID: <4F7586B1.9040709@cn.fujitsu.com>
-References: <4F7581D4.4040301@cn.fujitsu.com> <1333101375.2833.34.camel@dabdike>
+From: Asias He <asias.hejun@gmail.com>
+Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass of
+	disks naming
+Date: Fri, 30 Mar 2012 19:22:39 +0800
+Message-ID: <CAFO3S427vWXHBDaRmfwqZrGZ2Y8RPUn7CQswQou9EGMh43jU8Q@mail.gmail.com>
+References: <4F7581D4.4040301@cn.fujitsu.com> <4F7582B0.5010609@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <kvm-owner@vger.kernel.org>
-In-Reply-To: <1333101375.2833.34.camel@dabdike>
-Sender: kvm-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Michael S. Tsirkin" <mst@redhat.com>, Rusty Russell <rusty@rustcorp.com.au>, Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, KVM <kvm@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <4F7582B0.5010609@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Ren Mingxin <renmx@cn.fujitsu.com>
+Cc: Jens Axboe <axboe@kernel.dk>, KVM <kvm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-  Hi, James:
-
-On 03/30/2012 05:56 PM, James Bottomley wrote:
-> On Fri, 2012-03-30 at 17:50 +0800, Ren Mingxin wrote:
->> This patch series renames "sd_format_disk_name()" to
->> "disk_name_format()" and moves it into block core. So
->> that who needs formatting disk name can use it, instead
->> of duplicating these similar help functions.
->>
->> Ren Mingxin (4):
->>     block: add function disk_name_format() into block core
->>     scsi: replace sd_format_disk_name() to disk_name_format()
-> These two should be a single patch so it makes it obvious to anyone
-> looking through the change sets that the code is merely being moved.
-
-Thank you very much for so quick checking. I'll merge these
-two patches into one in the next version.
-
-> Other than that, everything looks fine to me.
->
->
-
-Thanks,
-Ren
+SGksICBSZW4KCk9uIEZyaSwgTWFyIDMwLCAyMDEyIGF0IDU6NTMgUE0sIFJlbiBNaW5neGluIDxy
+ZW5teEBjbi5mdWppdHN1LmNvbT4gd3JvdGU6Cj4gwqBUaGUgY3VycmVudCB2aXJ0YmxrJ3MgbmFt
+aW5nIGFsZ29yaXRobSBvbmx5IHN1cHBvcnRzIDI2MyDCoGRpc2tzLgo+IElmIHRoZXJlIGFyZSBt
+YXNzIG9mIHZpcnRibGtzKGV4Y2VlZGluZyAyNjMpLCB0aGVyZSB3aWxsIGJlIGRpc2tzCj4gd2l0
+aCB0aGUgc2FtZSBuYW1lLgoKVGhpcyBmaXggaXMgcHJldHR5IG5pY2UuIEhvd2V2ZXIsIGN1cnJl
+bnQgdmlydGJsaydzIG5hbWluZyBzdGlsbApzdXBwb3J0cyB1cCB0byAxODI3OCBkaXNrcywgbm8/
+CiggaW5kZXggMCAgLT4gdmRhLCBpbmRleCAxODI3NyAtPiB2ZHp6eiApLgoKPiBCeSByZW5hbWlu
+ZyAic2RfZm9ybWF0X2Rpc2tfbmFtZSgpIiB0byAiZGlza19uYW1lX2Zvcm1hdCgpIgo+IGFuZCBt
+b3ZpbmcgaXQgaW50byBibG9jayBjb3JlLCB2aXJ0aW9fYmxrIGNhbiB1c2UgdGhpcyBmdW5jdGlv
+biB0bwo+IHN1cHBvcnQgbWFzcyBvZiBkaXNrcy4KPgo+IFNpZ25lZC1vZmYtYnk6IFJlbiBNaW5n
+eGluIDxyZW5teEBjbi5mdWppdHN1LmNvbT4KPiAtLS0KPiDCoHZpcnRpb19ibGsuYyB8IMKgIDEz
+ICstLS0tLS0tLS0tLS0KPiDCoDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMTIgZGVs
+ZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ibG9jay92aXJ0aW9fYmxrLmMgYi9k
+cml2ZXJzL2Jsb2NrL3ZpcnRpb19ibGsuYwo+IGluZGV4IGM0YTYwYmEuLjU0NjEyYzIgMTAwNjQ0
+Cj4gLS0tIGEvZHJpdmVycy9ibG9jay92aXJ0aW9fYmxrLmMKPiArKysgYi9kcml2ZXJzL2Jsb2Nr
+L3ZpcnRpb19ibGsuYwo+IEBAIC00NDIsMTggKzQ0Miw3IEBAIHN0YXRpYyBpbnQgX19kZXZpbml0
+IHZpcnRibGtfcHJvYmUoc3RydWN0IHZpcnRpb19kZXZpY2UKPiAqdmRldikKPgo+IMKgIMKgIMKg
+IMKgcS0+cXVldWVkYXRhID0gdmJsazsKPgo+IC0gwqAgwqAgwqAgaWYgKGluZGV4IDwgMjYpIHsK
+PiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNwcmludGYodmJsay0+ZGlzay0+ZGlza19uYW1lLCAi
+dmQlYyIsICdhJyArIGluZGV4ICUgMjYpOwo+IC0gwqAgwqAgwqAgfSBlbHNlIGlmIChpbmRleCA8
+ICgyNiArIDEpICogMjYpIHsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNwcmludGYodmJsay0+
+ZGlzay0+ZGlza19uYW1lLCAidmQlYyVjIiwKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgICdhJyArIGluZGV4IC8gMjYgLSAxLCAnYScgKyBpbmRleCAlIDI2KTsKPiAtIMKgIMKg
+IMKgIH0gZWxzZSB7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjb25zdCB1bnNpZ25lZCBpbnQg
+bTEgPSAoaW5kZXggLyAyNiAtIDEpIC8gMjYgLSAxOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+Y29uc3QgdW5zaWduZWQgaW50IG0yID0gKGluZGV4IC8gMjYgLSAxKSAlIDI2Owo+IC0gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgY29uc3QgdW5zaWduZWQgaW50IG0zID0gwqBpbmRleCAlIDI2Owo+IC0g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgc3ByaW50Zih2YmxrLT5kaXNrLT5kaXNrX25hbWUsICJ2ZCVj
+JWMlYyIsCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAnYScgKyBtMSwgJ2En
+ICsgbTIsICdhJyArIG0zKTsKPiAtIMKgIMKgIMKgIH0KPiArIMKgIMKgIMKgIGRpc2tfbmFtZV9m
+b3JtYXQoInZkIiwgaW5kZXgsIHZibGstPmRpc2stPmRpc2tfbmFtZSwgRElTS19OQU1FX0xFTik7
+Cj4KPiDCoCDCoCDCoCDCoHZibGstPmRpc2stPm1ham9yID0gbWFqb3I7Cj4gwqAgwqAgwqAgwqB2
+YmxrLT5kaXNrLT5maXJzdF9taW5vciA9IGluZGV4X3RvX21pbm9yKGluZGV4KTsKPgo+IC0tCj4g
+VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJl
+IGxpbnV4LXNjc2kiIGluCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2Vy
+Lmtlcm5lbC5vcmcKPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0IMKgaHR0cDovL3ZnZXIua2VybmVs
+Lm9yZy9tYWpvcmRvbW8taW5mby5odG1sCgoKCi0tIApBc2lhcyBIZQpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpWaXJ0dWFsaXphdGlvbiBtYWlsaW5nIGxp
+c3QKVmlydHVhbGl6YXRpb25AbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmcKaHR0cHM6Ly9saXN0
+cy5saW51eGZvdW5kYXRpb24ub3JnL21haWxtYW4vbGlzdGluZm8vdmlydHVhbGl6YXRpb24=
