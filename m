@@ -1,64 +1,80 @@
-From: Asias He <asias.hejun@gmail.com>
-Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass of
-	disks naming
-Date: Fri, 30 Mar 2012 19:22:39 +0800
-Message-ID: <CAFO3S427vWXHBDaRmfwqZrGZ2Y8RPUn7CQswQou9EGMh43jU8Q@mail.gmail.com>
-References: <4F7581D4.4040301@cn.fujitsu.com> <4F7582B0.5010609@cn.fujitsu.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Fri, 30 Mar 2012 10:20:52 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1203301011050.1280-100000@iolanthe.rowland.org>
+References: <662659.4715.qm@web100001.mail.kks.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <4F7582B0.5010609@cn.fujitsu.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Ren Mingxin <renmx@cn.fujitsu.com>
-Cc: Jens Axboe <axboe@kernel.dk>, KVM <kvm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <662659.4715.qm-303aDswoEIb1/UedTyKF90yFvBl6snHEEwWAM/ix52Y@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Norman Diamond <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGksICBSZW4KCk9uIEZyaSwgTWFyIDMwLCAyMDEyIGF0IDU6NTMgUE0sIFJlbiBNaW5neGluIDxy
-ZW5teEBjbi5mdWppdHN1LmNvbT4gd3JvdGU6Cj4gwqBUaGUgY3VycmVudCB2aXJ0YmxrJ3MgbmFt
-aW5nIGFsZ29yaXRobSBvbmx5IHN1cHBvcnRzIDI2MyDCoGRpc2tzLgo+IElmIHRoZXJlIGFyZSBt
-YXNzIG9mIHZpcnRibGtzKGV4Y2VlZGluZyAyNjMpLCB0aGVyZSB3aWxsIGJlIGRpc2tzCj4gd2l0
-aCB0aGUgc2FtZSBuYW1lLgoKVGhpcyBmaXggaXMgcHJldHR5IG5pY2UuIEhvd2V2ZXIsIGN1cnJl
-bnQgdmlydGJsaydzIG5hbWluZyBzdGlsbApzdXBwb3J0cyB1cCB0byAxODI3OCBkaXNrcywgbm8/
-CiggaW5kZXggMCAgLT4gdmRhLCBpbmRleCAxODI3NyAtPiB2ZHp6eiApLgoKPiBCeSByZW5hbWlu
-ZyAic2RfZm9ybWF0X2Rpc2tfbmFtZSgpIiB0byAiZGlza19uYW1lX2Zvcm1hdCgpIgo+IGFuZCBt
-b3ZpbmcgaXQgaW50byBibG9jayBjb3JlLCB2aXJ0aW9fYmxrIGNhbiB1c2UgdGhpcyBmdW5jdGlv
-biB0bwo+IHN1cHBvcnQgbWFzcyBvZiBkaXNrcy4KPgo+IFNpZ25lZC1vZmYtYnk6IFJlbiBNaW5n
-eGluIDxyZW5teEBjbi5mdWppdHN1LmNvbT4KPiAtLS0KPiDCoHZpcnRpb19ibGsuYyB8IMKgIDEz
-ICstLS0tLS0tLS0tLS0KPiDCoDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMTIgZGVs
-ZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ibG9jay92aXJ0aW9fYmxrLmMgYi9k
-cml2ZXJzL2Jsb2NrL3ZpcnRpb19ibGsuYwo+IGluZGV4IGM0YTYwYmEuLjU0NjEyYzIgMTAwNjQ0
-Cj4gLS0tIGEvZHJpdmVycy9ibG9jay92aXJ0aW9fYmxrLmMKPiArKysgYi9kcml2ZXJzL2Jsb2Nr
-L3ZpcnRpb19ibGsuYwo+IEBAIC00NDIsMTggKzQ0Miw3IEBAIHN0YXRpYyBpbnQgX19kZXZpbml0
-IHZpcnRibGtfcHJvYmUoc3RydWN0IHZpcnRpb19kZXZpY2UKPiAqdmRldikKPgo+IMKgIMKgIMKg
-IMKgcS0+cXVldWVkYXRhID0gdmJsazsKPgo+IC0gwqAgwqAgwqAgaWYgKGluZGV4IDwgMjYpIHsK
-PiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNwcmludGYodmJsay0+ZGlzay0+ZGlza19uYW1lLCAi
-dmQlYyIsICdhJyArIGluZGV4ICUgMjYpOwo+IC0gwqAgwqAgwqAgfSBlbHNlIGlmIChpbmRleCA8
-ICgyNiArIDEpICogMjYpIHsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNwcmludGYodmJsay0+
-ZGlzay0+ZGlza19uYW1lLCAidmQlYyVjIiwKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgICdhJyArIGluZGV4IC8gMjYgLSAxLCAnYScgKyBpbmRleCAlIDI2KTsKPiAtIMKgIMKg
-IMKgIH0gZWxzZSB7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjb25zdCB1bnNpZ25lZCBpbnQg
-bTEgPSAoaW5kZXggLyAyNiAtIDEpIC8gMjYgLSAxOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-Y29uc3QgdW5zaWduZWQgaW50IG0yID0gKGluZGV4IC8gMjYgLSAxKSAlIDI2Owo+IC0gwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgY29uc3QgdW5zaWduZWQgaW50IG0zID0gwqBpbmRleCAlIDI2Owo+IC0g
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgc3ByaW50Zih2YmxrLT5kaXNrLT5kaXNrX25hbWUsICJ2ZCVj
-JWMlYyIsCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAnYScgKyBtMSwgJ2En
-ICsgbTIsICdhJyArIG0zKTsKPiAtIMKgIMKgIMKgIH0KPiArIMKgIMKgIMKgIGRpc2tfbmFtZV9m
-b3JtYXQoInZkIiwgaW5kZXgsIHZibGstPmRpc2stPmRpc2tfbmFtZSwgRElTS19OQU1FX0xFTik7
-Cj4KPiDCoCDCoCDCoCDCoHZibGstPmRpc2stPm1ham9yID0gbWFqb3I7Cj4gwqAgwqAgwqAgwqB2
-YmxrLT5kaXNrLT5maXJzdF9taW5vciA9IGluZGV4X3RvX21pbm9yKGluZGV4KTsKPgo+IC0tCj4g
-VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJl
-IGxpbnV4LXNjc2kiIGluCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2Vy
-Lmtlcm5lbC5vcmcKPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0IMKgaHR0cDovL3ZnZXIua2VybmVs
-Lm9yZy9tYWpvcmRvbW8taW5mby5odG1sCgoKCi0tIApBc2lhcyBIZQpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpWaXJ0dWFsaXphdGlvbiBtYWlsaW5nIGxp
-c3QKVmlydHVhbGl6YXRpb25AbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmcKaHR0cHM6Ly9saXN0
-cy5saW51eGZvdW5kYXRpb24ub3JnL21haWxtYW4vbGlzdGluZm8vdmlydHVhbGl6YXRpb24=
+On Fri, 30 Mar 2012, Norman Diamond wrote:
+
+> > It is a separate value from the product ID.=C2=A0 It appears in the=
+ output from "lsusb -v" or in /sys/kernel/debug/usb/devices (where it i=
+s labelled "Rev=3D").
+>=20
+> bcdDevice is 1.00
+
+That's the same as a bridge that was reported non-working.  Which means=
+=20
+the OS has no way to tell them apart.
+
+> >> It is hard to imagine a USB bridge adding 1 to the number of block=
+s.=C2=A0 Did that really happen?
+> >=20
+> > No.=C2=A0 What happened was that the bridge reported the number of =
+blocks, but SCSI's READ CAPACITY command requires the device to report =
+the highest available block number (which is one smaller since blocks a=
+re numbered starting from 0).
+>=20
+> I guess you mean that some USB bridges screw up the result of the REA=
+D CAPACITY command, so you have to subtract 1 in those cases.  This par=
+ticular bridge isn't one of them, and the subtraction of 1 was wrong in=
+ this case.
+
+True, but the computer has no way to know.  However you can tell
+usb-storage not to manipulate the capacity of your drive by specifying
+a module parameter:
+
+	modprobe usb-storage quirks=3D067b:2507:
+
+> hdparm reports the bugged capacity after the incorrect subtraction of=
+ 1.  HDIO_GETGEO_BIG also gets the bugged capacity.  I don't see an opt=
+ion to sdparm to get the device capacity (real SCSI devices probably ha=
+ve it in a VPD page but this USB bridge doesn't provide any VPD pages).
+
+I don't know if the information would be in a VPD page or not. =20
+There's not much point in putting it there, since it's already
+available via READ CAPACITY.
+
+> sg_dd with correct parameters successfully read the actual last block=
+!  That must be because sg_dd accessed /dev/sgsomething instead of /dev=
+/sdmumble.
+>=20
+> My program doesn't know if a USB bridge is defective and/or if a driv=
+er defectively manipulated a block count.  So I have to open a /dev/sgs=
+omething, try to read 1 sector past the last sector that we think is va=
+lid.  If it fails then I have to find out if the error was due to nonex=
+istence or other reason.  If it succeeds then I have to execute more pa=
+inful hacks that I have to add.
+
+It's not as simple as that.  With many bridges, if you test to see=20
+whether the block count is too small by trying to read "the block=20
+beyond the end", you will hang the bridge -- requiring an unplug to=20
+fix.
+
+There is no good solution to this problem.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
