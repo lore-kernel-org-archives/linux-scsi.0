@@ -1,51 +1,51 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v3 7/7] [SCSI] sr: adds Zero-power ODD support
-Date: Fri, 30 Mar 2012 10:28:23 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1203301021140.1280-100000@iolanthe.rowland.org>
-References: <20120330010730.GA27346@ladygaga>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass
+	of disks naming
+Date: Fri, 30 Mar 2012 08:26:06 -0700
+Message-ID: <20120330152606.GB28934@google.com>
+References: <4F7581D4.4040301@cn.fujitsu.com> <4F7582B0.5010609@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20120330010730.GA27346@ladygaga>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Lin Ming <ming.m.lin@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <4F7582B0.5010609@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Ren Mingxin <renmx@cn.fujitsu.com>
+Cc: Jens Axboe <axboe@kernel.dk>, SCSI <linux-scsi@vger.kernel.org>, KVM <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 30 Mar 2012, Aaron Lu wrote:
-
-> > > For the ODD to be put into suspend state, the conditions should be:
-> > > 1 tray closed
-> > > 2 no media inside
-> > > I think we missed the condition 1 check now.
-> > > 
-> > > And if we follow the two conditions, the events can be safely ignored.
-> > 
-> > No, they can't.  Otherwise the device won't power back up when the user 
-> > inserts a new disc.
-> > 
+On Fri, Mar 30, 2012 at 05:53:52PM +0800, Ren Mingxin wrote:
+>  The current virtblk's naming algorithm only supports 263  disks.
+> If there are mass of virtblks(exceeding 263), there will be disks
+> with the same name.
 > 
-> The ODD is put to zero power state, so it can't react to the eject
-> button without being powered up back first ;-)
-> On current implementation, ACPI is used to power back up the ODD like this:
-> 1 User press the eject button;
-> 2 A gpe event fired, and ACPI interrupt, and the corresponding gpe
-> handler runs and the ODD's ACPI handle is notified about DEVICE_WAKE_UP;
-> 3 In ODD's acpi notify handler, we power back up it by scsi_autopm_get_device.
-> This is handled in the following Lin Ming's patch:
-> [PATCH v3 2/7] libata-acpi: add ata port runtime D3Cold support
+> By renaming "sd_format_disk_name()" to "disk_name_format()"
+> and moving it into block core, virtio_blk can use this function to
+> support mass of disks.
+> 
+> Signed-off-by: Ren Mingxin <renmx@cn.fujitsu.com>
 
-I see.  Then you are right; it's not necessary to check for events 
-while the drive is at zero power.
+I guess it's already way too late but why couldn't they have been
+named vdD-P where both D and P are integers denoting disk number and
+partition number?  [sh]dX's were created when there weren't supposed
+to be too many disks, so we had to come up with the horrible alphabet
+based numbering scheme but vd is new enough.  I mean, naming is one
+thing but who wants to figure out which sequence is or guess what
+comes next vdzz9?  :(
 
-> When the ODD is put to zero power state, it will not be able to handle
-> commands like CDROMEJECT. We have to power it up first and then handle
-> the ioctl request. Currently, we only power back up the ODD when user
-> press the eject button as explained above.
+If we're gonna move it to block layer, let's add big blinking red
+comment saying "don't ever use it for any new driver".
 
-Then you may want to avoid going to zero-power while a program is
-holding the device file open.  After all, the program might issue a
-CDROMEJECT ioctl.
+Thanks.
 
-Alan Stern
-
+-- 
+tejun
