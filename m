@@ -1,28 +1,24 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass
-	of disks naming
-Date: Fri, 30 Mar 2012 08:28:08 -0700
-Message-ID: <20120330152808.GC28934@google.com>
-References: <4F7581D4.4040301@cn.fujitsu.com> <4F7582B0.5010609@cn.fujitsu.com>
-	<20120330152606.GB28934@google.com>
+ of disks naming
+Date: Fri, 30 Mar 2012 08:38:28 -0700
+Message-ID: <20120330153828.GD28934@google.com>
+References: <4F7581D4.4040301@cn.fujitsu.com>
+ <4F7582B0.5010609@cn.fujitsu.com>
+ <20120330152606.GB28934@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:54041 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753350Ab2C3Pie (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Mar 2012 11:38:34 -0400
 Content-Disposition: inline
 In-Reply-To: <20120330152606.GB28934@google.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Ren Mingxin <renmx@cn.fujitsu.com>
-Cc: Jens Axboe <axboe@kernel.dk>, SCSI <linux-scsi@vger.kernel.org>, KVM <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ren Mingxin <renmx@cn.fujitsu.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Michael S. Tsirkin" <mst@redhat.com>, Rusty Russell <rusty@rustcorp.com.au>, LKML <linux-kernel@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, KVM <kvm@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>
 
 On Fri, Mar 30, 2012 at 08:26:06AM -0700, Tejun Heo wrote:
 > On Fri, Mar 30, 2012 at 05:53:52PM +0800, Ren Mingxin wrote:
@@ -38,17 +34,13 @@ On Fri, Mar 30, 2012 at 08:26:06AM -0700, Tejun Heo wrote:
 > 
 > I guess it's already way too late but why couldn't they have been
 > named vdD-P where both D and P are integers denoting disk number and
-> partition number?  [sh]dX's were created when there weren't supposed
-> to be too many disks, so we had to come up with the horrible alphabet
-> based numbering scheme but vd is new enough.  I mean, naming is one
-> thing but who wants to figure out which sequence is or guess what
-> comes next vdzz9?  :(
-> 
-> If we're gonna move it to block layer, let's add big blinking red
-> comment saying "don't ever use it for any new driver".
 
-And also let's make that clear in the function name - say,
-format_legacy_disk_name() or something.
+So, if a device name ends in digit the partition code adds delimiter
+'p' automatically and this is already in use by md.  So, partitioned
+md devices are named mdDpP where D and P are base 10 number indicating
+the sequence like md12p4.  So, let's please add comment that new
+drivers should name their devices PREFIX%d where the sequence number
+can be allocated by ida.
 
 Thanks.
 
