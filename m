@@ -1,42 +1,100 @@
-From: Asias He <asias.hejun@gmail.com>
-Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass of
-	disks naming
-Date: Sat, 31 Mar 2012 11:03:47 +0800
-Message-ID: <CAFO3S41ag8wih8941qmpUGM=JbY_MsF28pNom-SRxW3M67_k3A@mail.gmail.com>
-References: <4F7581D4.4040301@cn.fujitsu.com> <4F7582B0.5010609@cn.fujitsu.com>
-	<CAFO3S427vWXHBDaRmfwqZrGZ2Y8RPUn7CQswQou9EGMh43jU8Q@mail.gmail.com>
-	<4F765A72.6090006@cn.fujitsu.com>
+From: "Norman Diamond" <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was: ehci_hcd fails to read a single good block)
+Date: Sat, 31 Mar 2012 12:36:50 +0900
+Message-ID: <BA1D046C8A454166BF330A4A89630D1F@diamond1720>
+References: <Pine.LNX.4.44L0.1203301011050.1280-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <4F765A72.6090006@cn.fujitsu.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Ren Mingxin <renmx@cn.fujitsu.com>
-Cc: Jens Axboe <axboe@kernel.dk>, KVM <kvm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain;
+	format=flowed;
+	charset="UTF-8";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gU2F0LCBNYXIgMzEsIDIwMTIgYXQgOToxNCBBTSwgUmVuIE1pbmd4aW4gPHJlbm14QGNuLmZ1
-aml0c3UuY29tPiB3cm90ZToKPiDCoEhpLCBIZToKPgo+Cj4gT24gMDMvMzAvMjAxMiAwNzoyMiBQ
-TSwgQXNpYXMgSGUgd3JvdGU6Cj4+Cj4+IE9uIEZyaSwgTWFyIDMwLCAyMDEyIGF0IDU6NTMgUE0s
-IFJlbiBNaW5neGluPHJlbm14QGNuLmZ1aml0c3UuY29tPiDCoHdyb3RlOgo+Pj4KPj4+IMKgVGhl
-IGN1cnJlbnQgdmlydGJsaydzIG5hbWluZyBhbGdvcml0aG0gb25seSBzdXBwb3J0cyAyNjMgwqBk
-aXNrcy4KPj4+IElmIHRoZXJlIGFyZSBtYXNzIG9mIHZpcnRibGtzKGV4Y2VlZGluZyAyNjMpLCB0
-aGVyZSB3aWxsIGJlIGRpc2tzCj4+PiB3aXRoIHRoZSBzYW1lIG5hbWUuCj4+Cj4+IFRoaXMgZml4
-IGlzIHByZXR0eSBuaWNlLiBIb3dldmVyLCBjdXJyZW50IHZpcnRibGsncyBuYW1pbmcgc3RpbGwK
-Pj4gc3VwcG9ydHMgdXAgdG8gMTgyNzggZGlza3MsIG5vPwo+PiAoIGluZGV4IDAgwqAtPiDCoHZk
-YSwgaW5kZXggMTgyNzcgLT4gwqB2ZHp6eiApLgo+Cj4KPiBTb3JyeSwgSSBpbnRlbmRlZCB0byB0
-eXBlIDI2XjMrICgyNl4yKzI2KS4uLgo+IEl0IG1heSBzdGlsbCBiZSBhIHJlc3RyaWN0aW9uIHdo
-aWNoIHNob3VsZCBiZSBpbXByb3ZlZCB0aG91Z2guCgpPSy4KCi0tIApBc2lhcyBIZQpfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpWaXJ0dWFsaXphdGlvbiBt
-YWlsaW5nIGxpc3QKVmlydHVhbGl6YXRpb25AbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmcKaHR0
-cHM6Ly9saXN0cy5saW51eGZvdW5kYXRpb24ub3JnL21haWxtYW4vbGlzdGluZm8vdmlydHVhbGl6
-YXRpb24=
+Alan Stern wrote:
+> On Fri, 30 Mar 2012, Norman Diamond wrote:
+[Attribution lost:]
+>>> It is a separate value from the product ID. It appears in the output 
+>>> from "lsusb -v" or in /sys/kernel/debug/usb/devices (where it is 
+>>> labelled "Rev=").
+>>
+>> bcdDevice is 1.00
+>
+> That's the same as a bridge that was reported non-working.  Which means 
+> the OS has no way to tell them apart.
+
+There's still something wrong here.  When the bridge is connected to Windows 
+XP, Windows accesses the correct number of blocks.  We need to find someone 
+who has a non-working but indistinguishable bridge, ask them to connect it 
+to Windows XP, and see if Windows XP gets a number of blocks that is too 
+large by 1.
+
+>>>> It is hard to imagine a USB bridge adding 1 to the number of blocks. 
+>>>> Did that really happen?
+>>>
+>>> No. What happened was that the bridge reported the number of blocks, but 
+>>> SCSI's READ CAPACITY command requires the device to report the highest 
+>>> available block number (which is one smaller since blocks are numbered 
+>>> starting from 0).
+>>
+>> I guess you mean that some USB bridges screw up the result of the READ 
+>> CAPACITY command, so you have to subtract 1 in those cases.  This 
+>> particular bridge isn't one of them, and the subtraction of 1 was wrong 
+>> in this case.
+>
+> True, but the computer has no way to know.  However you can tell 
+> usb-storage not to manipulate the capacity of your drive by specifying a 
+> module parameter:
+> modprobe usb-storage quirks=067b:2507:
+
+I have to find the appropriate file to modify under /etc/modsomething.d. 
+It's been a while but I'll find it again.
+
+>> hdparm reports the bugged capacity after the incorrect subtraction of 1. 
+>> HDIO_GETGEO_BIG also gets the bugged capacity.  I don't see an option to 
+>> sdparm to get the device capacity (real SCSI devices probably have it in 
+>> a VPD page but this USB bridge doesn't provide any VPD pages).
+>
+> I don't know if the information would be in a VPD page or not.  There's 
+> not much point in putting it there, since it's already available via READ 
+> CAPACITY.
+
+OK.  Anyway VPD pages seem to be irrelevant to discussions of USB-to-ATA 
+bridges.
+
+>> sg_dd with correct parameters successfully read the actual last block! 
+>> That must be because sg_dd accessed /dev/sgsomething instead of 
+>> /dev/sdmumble.
+>>
+>> My program doesn't know if a USB bridge is defective and/or if a driver 
+>> defectively manipulated a block count.  So I have to open a 
+>> /dev/sgsomething, try to read 1 sector past the last sector that we think 
+>> is valid.  If it fails then I have to find out if the error was due to 
+>> nonexistence or other reason.  If it succeeds then I have to execute more 
+>> painful hacks that I have to add.
+>
+> It's not as simple as that.  With many bridges, if you test to see whether 
+> the block count is too small by trying to read "the block beyond the end", 
+> you will hang the bridge -- requiring an unplug to fix.
+
+Hey, just like my bridge hanged when reading an existing but defective block 
+(for which the drive reported its own error).  Actually in yesterday's test, 
+I also tried to read 1 sector past the actual last block and got the error 
+that I was expecting for that.  I forgot to check if the bridge hanged at 
+that point.  I'll have to test that again.
+
+> There is no good solution to this problem.
+
+Agreed.  But in my case I think I need to disable that quirk entirely for 
+all USB bridges, so that my uses of Linux will always believe what the USB 
+bridge reports.  At least then my program will work correctly when working 
+bridges are attached.  Then if a user complains, we can tell them to use a 
+different bridge. 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
