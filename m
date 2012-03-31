@@ -1,30 +1,53 @@
-From: Jan Ceuleers <jan.ceuleers@computer.org>
-Subject: Re: [PATCH v3 7/7] [SCSI] sr: adds Zero-power ODD support
-Date: Sat, 31 Mar 2012 12:45:40 +0200
-Message-ID: <4F76E054.8010301@computer.org>
-References: <CAOzJMDRajsjHwCC66XB6Mv-Deuy-wD4GiZbeuEqCQePSLw-Xxw@mail.gmail.com> <Pine.LNX.4.44L0.1203291050580.1417-100000@iolanthe.rowland.org> <20120330010730.GA27346@ladygaga>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Sat, 31 Mar 2012 11:31:49 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1203311121560.27759-100000@netrider.rowland.org>
+References: <BA1D046C8A454166BF330A4A89630D1F@diamond1720>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailrelay010.isp.belgacom.be ([195.238.6.177]:39971 "EHLO
-	mailrelay010.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753778Ab2CaKrG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 31 Mar 2012 06:47:06 -0400
-In-Reply-To: <20120330010730.GA27346@ladygaga>
+Received: from netrider.rowland.org ([192.131.102.5]:48233 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1760309Ab2CaPbv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Mar 2012 11:31:51 -0400
+In-Reply-To: <BA1D046C8A454166BF330A4A89630D1F@diamond1720>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Lin Ming <ming.m.lin@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
+To: Norman Diamond <n0diamond@yahoo.co.jp>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 30/03/12 03:07, Aaron Lu wrote:
-> When the ODD is put to zero power state, it will not be able to handle
-> commands like CDROMEJECT. We have to power it up first and then handle
-> the ioctl request. Currently, we only power back up the ODD when user
-> press the eject button as explained above.
+On Sat, 31 Mar 2012, Norman Diamond wrote:
 
-What about slot-loading optical drives, where the user does not first 
-have to press a button to open the tray (due to a lack of tray)?
+> >> bcdDevice is 1.00
+> >
+> > That's the same as a bridge that was reported non-working.  Which means 
+> > the OS has no way to tell them apart.
+> 
+> There's still something wrong here.  When the bridge is connected to Windows 
+> XP, Windows accesses the correct number of blocks.  We need to find someone 
+> who has a non-working but indistinguishable bridge, ask them to connect it 
+> to Windows XP, and see if Windows XP gets a number of blocks that is too 
+> large by 1.
 
-Jan
+How would you tell?  And what's so special about XP?  Why not Vista or 
+Windows 7?
+
+> > There is no good solution to this problem.
+> 
+> Agreed.  But in my case I think I need to disable that quirk entirely for 
+> all USB bridges, so that my uses of Linux will always believe what the USB 
+> bridge reports.  At least then my program will work correctly when working 
+> bridges are attached.  Then if a user complains, we can tell them to use a 
+> different bridge. 
+
+Well, if you want to disable the quirk entirely, it's not hard to do.  
+In drivers/usb/storage/scsiglue.c, just get rid of the lines that set 
+sdev->fix_capacity and sdev->guess_capacity.
+
+If you want to find out who reported the problems with the bridge chip, 
+look in the unusual_devs.h file for the entry with vendor ID 0x067b and 
+product ID 0x2507.
+
+Alan Stern
+
