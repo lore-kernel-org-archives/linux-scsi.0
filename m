@@ -1,40 +1,59 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: Re: [PATCH v3 7/7] [SCSI] sr: adds Zero-power ODD support
-Date: Sun, 1 Apr 2012 18:34:09 +0800
-Message-ID: <20120401103408.GA2815@localhost.amd.com>
-References: <CAOzJMDRajsjHwCC66XB6Mv-Deuy-wD4GiZbeuEqCQePSLw-Xxw@mail.gmail.com>
- <Pine.LNX.4.44L0.1203291050580.1417-100000@iolanthe.rowland.org>
- <20120330010730.GA27346@ladygaga>
- <4F76E054.8010301@computer.org>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH 0/4] block: move sd_format_disk_name() into block core as
+	disk_name_format()
+Date: Sun, 1 Apr 2012 14:20:26 +0300
+Message-ID: <20120401112025.GB23773@redhat.com>
+References: <4F7581D4.4040301@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:6482 "EHLO
-	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754056Ab2DACe3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 31 Mar 2012 22:34:29 -0400
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <4F76E054.8010301@computer.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <4F7581D4.4040301@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Ren Mingxin <renmx@cn.fujitsu.com>
+Cc: Jens Axboe <axboe@kernel.dk>, KVM <kvm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Ceuleers <jan.ceuleers@computer.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Lin Ming <ming.m.lin@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
 
-On Sat, Mar 31, 2012 at 12:45:40PM +0200, Jan Ceuleers wrote:
+On Fri, Mar 30, 2012 at 05:50:12PM +0800, Ren Mingxin wrote:
 > 
-> What about slot-loading optical drives, where the user does not
-> first have to press a button to open the tray (due to a lack of
-> tray)?
+> 
+> This patch series renames "sd_format_disk_name()" to
+> "disk_name_format()" and moves it into block core. So
+> that who needs formatting disk name can use it, instead
+> of duplicating these similar help functions.
 
-For slot type ODD, the insert of a disk will fire the gpe event by
-means of the sata slimline connector's device attention pin.
+I see there are some responses about naming and comments,
+so that would need to be fixed.
+Besides this, Jens, would you like to take the patchset
+through your tree or prefer for me to merge it through virtio tree? 
+Block tree seems more appropriate, right?
+Also this is a bugfix technically since it fixes setups
+with a ton of disks, so 3.4 material?
 
-That means, the insert of a disk into a slot type ODD and the
-press of the eject button of a tray type ODD has the same effect to
-trigger the resume process.
-
-Thanks,
-Aaron
-
-
+> Ren Mingxin (4):
+>   block: add function disk_name_format() into block core
+>   scsi: replace sd_format_disk_name() to disk_name_format()
+>   block: replace rssd_disk_name_format() to disk_name_format()
+>   virtio_blk: use disk_name_format() to support mass of disks naming
+> 
+>  block/genhd.c                     |   49 ++++++++++++++++++++++++++++++++++++++
+>  drivers/block/mtip32xx/mtip32xx.c |   33 -------------------------
+>  drivers/block/virtio_blk.c        |   13 ----------
+>  drivers/scsi/sd.c                 |   48 -------------------------------------
+>  include/linux/genhd.h             |    2 +
+>  5 files changed, 54 insertions(+), 91 deletions(-)
+> 
+> Any comment will be appreciated.
+> 
+> Thanks,
+> Ren
+> 
