@@ -1,114 +1,77 @@
-From: Holger Macht <holger@homac.de>
-Subject: Re: [PATCHv2 0/7] acpi/libata: Express dependencies for devices on
- dock stations and bays
-Date: Mon, 02 Apr 2012 20:39:39 +0200
-Message-ID: <4F79F26B.5070307@homac.de>
-References: <20120120001817.GA27706@homac.suse.de> <CAF1ivSYhOTitPctsJOTKWN9HDt0VZpQe_-_a0LnLefVGxOJtXg@mail.gmail.com> <20120209073345.GA11121@homac.suse.de> <4F33E615.6070607@garzik.org> <CAF1ivSY52ESfF02QywCFdf68_hSkOMg1R=0KwojeGJx2ALWCYg@mail.gmail.com> <4F796FD9.2010901@homac.de> <4F79C98B.6020201@garzik.org> <4F79D720.7040607@homac.de> <4F79E477.5050201@garzik.org>
-Reply-To: holger@homac.de
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Mon, 2 Apr 2012 14:40:38 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1204021430130.12349-100000@netrider.rowland.org>
+References: <307043.7654.qm@web100016.mail.kks.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wp050.webpack.hosteurope.de ([80.237.132.57]:49210 "EHLO
-	wp050.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752229Ab2DBSjp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2012 14:39:45 -0400
-In-Reply-To: <4F79E477.5050201@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <307043.7654.qm-W9a5FxB6bg95hgrKqgaBcEyFvBl6snHEEwWAM/ix52Y@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Norman Diamond <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Lin Ming <ming.m.lin@intel.com>, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Garrett <mjg@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@redhat.com>, sfr@canb.auug.org.au
 
-On 02.04.2012 19:40, Jeff Garzik wrote:
-> On 04/02/2012 12:43 PM, Holger Macht wrote:
->> On 02.04.2012 17:45, Jeff Garzik wrote:
->>> On 04/02/2012 05:22 AM, Holger Macht wrote:
->>>> On 27.03.2012 10:11, Lin Ming wrote:
->>>>> On Thu, Feb 9, 2012 at 11:28 PM, Jeff Garzik<jeff@garzik.org>  wrote:
->>>>>> On 02/09/2012 02:33 AM, Holger Macht wrote:
->>>>>>>
->>>>>>> On Do 09. Feb - 14:46:11, Lin Ming wrote:
->>>>>>>>
->>>>>>>> On Fri, Jan 20, 2012 at 8:18 AM, Holger Macht<holger@homac.de>
->>>>>>>> wrote:
->>>>>>>>>
->>>>>>>>> Patches 2 through 5 are just a refresh of the patches from Matthew
->>>>>>>>> Garrett sent to this list in September 2010 [1]:
->>>>>>>>>
->>>>>>>>> Patch 1 is a new patch incorporating the corrections from James
->>>>>>>>> Bottomley. Patch 6, 7 and 8 make the whole patch set actually work
->>>>>>>>> on my
->>>>>>>>> test hardware (Thinkpad x60/Thinkpad T60) by fixing minor issues
->>>>>>>>> and
->>>>>>>>> compensating changes after the first submission.
->>>>>>>>>
->>>>>>>>> All patches now contain the correct Signed-off-by instead of
->>>>>>>>> Acked-by
->>>>>>>>> tags.
->>>>>>>>>
->>>>>>>>> [PATCH 1/8] scsi: Add wrapper to access and set scsi_bus_type in
->>>>>>>>> struct
->>>>>>>>> acpi_bus_type
->>>>>>>>> [PATCH 2/8] libata: Bind the Linux device tree to the ACPI device
->>>>>>>>> tree
->>>>>>>>> [PATCH 3/8] libata: Migrate ACPI code over to new bindings
->>>>>>>>> [PATCH 4/8] acpi: Add support for linking docks to the objects they
->>>>>>>>> contain
->>>>>>>>> [PATCH 5/8] libata: Add links between removable devices and docks
->>>>>>>>> [PATCH 6/8] libata: Generate and pass correct acpi handles
->>>>>>>>> [PATCH 7/8] acpi: Prevent duplicate hotplug device registration on
->>>>>>>>> dock
->>>>>>>>> stations
->>>>>>>>> [PATCH 8/8] libata: Use correct PCI devices
->>>>>>>>
->>>>>>>>
->>>>>>>> Hi Holger,
->>>>>>>>
->>>>>>>> What's the status of these patches?
->>>>>>>
->>>>>>>
->>>>>>> They've been ACKed by both ACPI (Len Brown) and libata (James
->>>>>>> Bottomley)
->>>>>>> people, so I guess they are good to go and I'm waiting for someone
->>>>>>> (Jeff
->>>>>>> Garzik?) to pick them up.
->>>>>>
->>>>>>
->>>>>> I ACK'd for libata. It's queued in libata-dev... but looks like
->>>>>> that did
->>>>>> not get pushed out. Should show up in the next linux-next.
->>>>>>
->>>>>> Jeff
->>>>>
->>>>> Hi,
->>>>>
->>>>> I didn't find these patches in libata-dev tree.
->>>>> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->>>>
->>>> They've been there, also in linux-next. But now I'm not able to find a
->>>> trace of them. Maybe the two fixes from the thread labeled "linux-next:
->>>> dock_link_device is oopsy" on linux-kernel@ didn't find their way into
->>>> the trees and so the patches were removed. Just guessing...
->>>>
->>>> Regards,
->>>> Holger
->>>>
->>>>> Are they removed for some reason?
->>>
->>> They were removed because people had problems with them, and the patch
->>> authors did not engage and fix the problem(s). Matthew Garrett spoke up
->>> and said he didn't have time to investigate, so the patches were dropped.
->>
->> Do you have a pointer for the problems?
->
-> You were CC'd...
+On Mon, 2 Apr 2012, Norman Diamond wrote:
 
-Ok, found them. However, wouldn't have made a difference because the 
-solution doesn't seem to be easy. And I currently also don't have the 
-time to do massive investigations. What a pity, but maybe a future time...
+> First, more big news:
+> My USB-to-IDE bridge DOES NOT CRASH when reading a bad block.  When a=
+ Linux driver tries to reassign a new USB address and crashes the bridg=
+e, the fault is a Linux driver.  (And when Windows forgets about the ex=
+istence of the drive, the fault is Windows.)
 
-Thanks,
-  Holger
+You really should capture a usbmon trace while running the dd test. =20
+That will show exactly what is happening.  See
+Documentation/usb/usbmon.txt.
 
+> >> There's still something wrong here.=A0 When the bridge is connecte=
+d to Windows XP, Windows accesses the correct number of blocks.=A0 We n=
+eed to find someone who has a non-working but indistinguishable bridge,=
+ ask them to connect it to Windows XP, and see if Windows XP gets a num=
+ber of blocks that is too large by 1.
+> >=20
+> > How would you tell?
+>=20
+> http://hdparm-win32.dyndns.org/hdparm/
+>=20
+> D:\hdparm for Windows\binary\hdparm-6.9-20070516.win32\bin>hdparm /de=
+v/sdg
+>=20
+> /dev/sdg:
+>  geometry     =3D 2432/255/63, sectors =3D 39070080, start =3D 0
+>=20
+> Windows did not get a number of blocks that was too large by 1.  The =
+bridge provided the correct answer for READ CAPACITY, Windows accepted =
+it, and Linux improperly subtracted 1.
 
+How do you know?  That is, how do you know that the number printed by=20
+hdparm above is the value used by Windows and not a value obtained=20
+directly from the bridge by the hdparm program itself?
 
+Not that I have any reason to doubt this result -- I have no way of=20
+knowing whether or not Windows subtracts 1 from the value reported by=20
+any USB-(S)ATA bridge.
+
+By the way, just out of curiosity, why does it matter so much for your=20
+program to know the exact number of blocks a drive contains?
+
+> >>> There is no good solution to this problem.
+> >>=20
+> >> Agreed.
+>=20
+> Wrong.  We CAN try to read the last block that the bridge says exists=
+, to see if it really exists or not.  (Well, only partly wrong.  Maybe =
+there really are some bridges that crash in that situation, but mine do=
+esn't, and a broken driver still needs fixing.)
+
+Yes, there really are such bridges.  You can find reports from people=20
+complaining about them in the email archives.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
