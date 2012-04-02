@@ -1,41 +1,118 @@
-From: Ren Mingxin <renmx@cn.fujitsu.com>
-Subject: Re: [PATCH 3/4] block: replace rssd_disk_name_format() to disk_name_format()
-Date: Mon, 02 Apr 2012 09:21:04 +0800
-Message-ID: <4F78FF00.5060804@cn.fujitsu.com>
-References: <4F7581D4.4040301@cn.fujitsu.com> <4F758297.5020600@cn.fujitsu.com> <4F764778.1030406@micron.com>
+From: Norman Diamond <n0diamond@yahoo.co.jp>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was: ehci_hcd fails to read a single good block)
+Date: Mon, 2 Apr 2012 13:25:05 +0900 (JST)
+Message-ID: <307043.7654.qm@web100016.mail.kks.yahoo.co.jp>
+References: <Pine.LNX.4.44L0.1203311121560.27759-100000@netrider.rowland.org>
+Reply-To: n0diamond@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4F764778.1030406@micron.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) [CONT - Type 2]" <asamymuthupa@micron.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Michael S. Tsirkin" <mst@redhat.com>, Rusty Russell <rusty@rustcorp.com.au>, Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, KVM <kvm@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web100016.mail.kks.yahoo.co.jp ([114.111.98.190]:23076 "HELO
+	web100016.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750846Ab2DBEZI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Apr 2012 00:25:08 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1203311121560.27759-100000@netrider.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-  On 03/31/2012 07:54 AM, Asai Thambi Samymuthu Pattrayasamy 
-(asamymuthupa) [CONT - Type 2] wrote:
-> On 3/30/2012 2:53 AM, Ren Mingxin wrote:
->
->>   Currently, block core has been supplied "disk_name_format()", so
->> we should remove duplicate function "rssd_disk_name_format()"
->> and use the new function to format rssd disk names.
->>
->> Signed-off-by: Ren Mingxin<renmx@cn.fujitsu.com>
->> ---
->>   mtip32xx.c |   33 +--------------------------------
->>   1 file changed, 1 insertion(+), 32 deletions(-)
->
-> Looks fine.
->
-> Should the subject be "mtip32xx: ..." instead of "block: ..."? I
-> understand "block:" as relating to block core. I am fairly new here. If
-> "block:" can be used for block drivers too, that is fine too.
->
->
+=46irst, more big news:
+My USB-to-IDE bridge DOES NOT CRASH when reading a bad block.  When a L=
+inux driver tries to reassign a new USB address and crashes the bridge,=
+ the fault is a Linux driver.  (And when Windows forgets about the exis=
+tence of the drive, the fault is Windows.)
 
-Good idea! Will be fixed in the next version.
+echo 0 >/sys/block/sdc/queue/read_ahead_kb
+might or might not be necessary; I haven't tried sg_dd without it.
 
--- 
-Thanks,
-Ren
+sg_dd if=3D/dev/sdc bs=3D512 count=3D1 bpt=3D1 blk_sgio=3D1 skip=3D3907=
+0080 | od
+gets the error that I expected because the block doesn't exist.  dmesg =
+does not show the error; sg_dd detected the error and displayed it on t=
+he terminal.  Next I can do this:
+sg_dd if=3D/dev/sdc bs=3D512 count=3D1 bpt=3D1 blk_sgio=3D1 skip=3D3907=
+0079 | od
+and get the contents of the last block.
+
+sg_dd if=3D/dev/sdc bs=3D512 count=3D1 bpt=3D1 blk_sgio=3D1 skip=3D5515=
+62 | od
+gets the error that I expected because the block is bad.  dmesg does no=
+t show the error; sg_dd detected the error and displayed it on the term=
+inal.  Next I can do this:
+sg_dd if=3D/dev/sdc bs=3D512 count=3D1 bpt=3D1 blk_sgio=3D1 skip=3D5515=
+63 | od
+and get the contents of the block after the bad block.
+
+The USB cable did not need to be unplugged and replugged.
+
+Therefore when an ordinary dd fails and a USB driver tries to assign a =
+new address but fails, and the USB cable has to be unplugged and replug=
+ged, the fault is a driver.
+
+Alan Stern wrote:
+> On Sat, 31 Mar 2012, Norman Diamond wrote:
+>=20
+>>>> bcdDevice is 1.00
+>>>
+>>> That's the same as a bridge that was reported non-working.=A0 Which=
+ means the OS has no way to tell them apart.
+>>=20
+>> There's still something wrong here.=A0 When the bridge is connected =
+to Windows XP, Windows accesses the correct number of blocks.=A0 We nee=
+d to find someone who has a non-working but indistinguishable bridge, a=
+sk them to connect it to Windows XP, and see if Windows XP gets a numbe=
+r of blocks that is too large by 1.
+>=20
+> How would you tell?
+
+http://hdparm-win32.dyndns.org/hdparm/
+
+D:\hdparm for Windows\binary\hdparm-6.9-20070516.win32\bin>hdparm /dev/=
+sdg
+
+/dev/sdg:
+ geometry     =3D 2432/255/63, sectors =3D 39070080, start =3D 0
+
+Windows did not get a number of blocks that was too large by 1.  The br=
+idge provided the correct answer for READ CAPACITY, Windows accepted it=
+, and Linux improperly subtracted 1.
+
+> And what's so special about XP?=A0 Why not Vista or Windows 7?
+
+OK, I have Windows 7 installed in two computers (64 bit and 32 bit) and=
+ should try the Windows port of the obsolete version of hdparm.
+
+>>> There is no good solution to this problem.
+>>=20
+>> Agreed.
+
+Wrong.  We CAN try to read the last block that the bridge says exists, =
+to see if it really exists or not.  (Well, only partly wrong.  Maybe th=
+ere really are some bridges that crash in that situation, but mine does=
+n't, and a broken driver still needs fixing.)
+
+>>=A0 But in my case I think I need to disable that quirk entirely for =
+all USB bridges, so that my uses of Linux will always believe what the =
+USB bridge reports.=A0 At least then my program will work correctly whe=
+n working bridges are attached.=A0 Then if a user complains, we can tel=
+l them to use a different bridge.
+>
+> Well, if you want to disable the quirk entirely, it's not hard to do.=
+=A0=20
+> In drivers/usb/storage/scsiglue.c, just get rid of the lines that set=
+=20
+> sdev->fix_capacity and sdev->guess_capacity.
+>=20
+> If you want to find out who reported the problems with the bridge chi=
+p, look in the unusual_devs.h file for the entry with vendor ID 0x067b =
+and product ID 0x2507.
+
+Uh, then feel free to credit me in that file for reporting that the sam=
+e bridge works  ^_^
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
