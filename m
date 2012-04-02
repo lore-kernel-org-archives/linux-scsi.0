@@ -1,77 +1,52 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
- ehci_hcd fails to read a single good block)
-Date: Mon, 2 Apr 2012 14:40:38 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1204021430130.12349-100000@netrider.rowland.org>
-References: <307043.7654.qm@web100016.mail.kks.yahoo.co.jp>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass
+	of disks naming
+Date: Mon, 2 Apr 2012 11:52:59 -0700
+Message-ID: <20120402185259.GA16226@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <4F7581D4.4040301@cn.fujitsu.com> <4F7582B0.5010609@cn.fujitsu.com>
+	<20120330152606.GB28934@google.com>
+	<20120330152808.GC28934@google.com>
+	<4F78FE89.2070707@cn.fujitsu.com>
+	<20120402072009.GF30360@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <307043.7654.qm-W9a5FxB6bg95hgrKqgaBcEyFvBl6snHEEwWAM/ix52Y@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Norman Diamond <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <20120402072009.GF30360@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, KVM <kvm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>, Ren Mingxin <renmx@cn.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2 Apr 2012, Norman Diamond wrote:
+Hello,
 
-> First, more big news:
-> My USB-to-IDE bridge DOES NOT CRASH when reading a bad block.  When a=
- Linux driver tries to reassign a new USB address and crashes the bridg=
-e, the fault is a Linux driver.  (And when Windows forgets about the ex=
-istence of the drive, the fault is Windows.)
+On Mon, Apr 02, 2012 at 10:20:09AM +0300, Michael S. Tsirkin wrote:
+> Pleae don't rename virtio disks, it is way too late for that:
+> virtio block driver was merged around 2007, it is not new by
+> any measure, and there are many systems out there using
+> the current naming scheme.
 
-You really should capture a usbmon trace while running the dd test. =20
-That will show exactly what is happening.  See
-Documentation/usb/usbmon.txt.
+There's no point in renaming device nodes of already deployed drivers.
+It'll cause a lot of pain.
 
-> >> There's still something wrong here.=A0 When the bridge is connecte=
-d to Windows XP, Windows accesses the correct number of blocks.=A0 We n=
-eed to find someone who has a non-working but indistinguishable bridge,=
- ask them to connect it to Windows XP, and see if Windows XP gets a num=
-ber of blocks that is too large by 1.
-> >=20
-> > How would you tell?
->=20
-> http://hdparm-win32.dyndns.org/hdparm/
->=20
-> D:\hdparm for Windows\binary\hdparm-6.9-20070516.win32\bin>hdparm /de=
-v/sdg
->=20
-> /dev/sdg:
->  geometry     =3D 2432/255/63, sectors =3D 39070080, start =3D 0
->=20
-> Windows did not get a number of blocks that was too large by 1.  The =
-bridge provided the correct answer for READ CAPACITY, Windows accepted =
-it, and Linux improperly subtracted 1.
+> > And how about the rssd in the patch 3 then?
+> 
+> Probably same. Renaming existing devices will break setups.
+> I think the idea is to avoid using the
+> legacy naming in new drivers *that will be added from now on*.
 
-How do you know?  That is, how do you know that the number printed by=20
-hdparm above is the value used by Windows and not a value obtained=20
-directly from the bridge by the hdparm program itself?
+Yeap.
 
-Not that I have any reason to doubt this result -- I have no way of=20
-knowing whether or not Windows subtracts 1 from the value reported by=20
-any USB-(S)ATA bridge.
+Thanks.
 
-By the way, just out of curiosity, why does it matter so much for your=20
-program to know the exact number of blocks a drive contains?
-
-> >>> There is no good solution to this problem.
-> >>=20
-> >> Agreed.
->=20
-> Wrong.  We CAN try to read the last block that the bridge says exists=
-, to see if it really exists or not.  (Well, only partly wrong.  Maybe =
-there really are some bridges that crash in that situation, but mine do=
-esn't, and a broken driver still needs fixing.)
-
-Yes, there really are such bridges.  You can find reports from people=20
-complaining about them in the email archives.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
