@@ -1,74 +1,79 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass
-	of disks naming
-Date: Mon, 2 Apr 2012 10:20:09 +0300
-Message-ID: <20120402072009.GF30360@redhat.com>
-References: <4F7581D4.4040301@cn.fujitsu.com> <4F7582B0.5010609@cn.fujitsu.com>
-	<20120330152606.GB28934@google.com>
-	<20120330152808.GC28934@google.com>
-	<4F78FE89.2070707@cn.fujitsu.com>
+From: Holger Macht <holger@homac.de>
+Subject: Re: [PATCHv2 0/7] acpi/libata: Express dependencies for devices on
+ dock stations and bays
+Date: Mon, 02 Apr 2012 11:22:33 +0200
+Message-ID: <4F796FD9.2010901@homac.de>
+References: <20120120001817.GA27706@homac.suse.de> <CAF1ivSYhOTitPctsJOTKWN9HDt0VZpQe_-_a0LnLefVGxOJtXg@mail.gmail.com> <20120209073345.GA11121@homac.suse.de> <4F33E615.6070607@garzik.org> <CAF1ivSY52ESfF02QywCFdf68_hSkOMg1R=0KwojeGJx2ALWCYg@mail.gmail.com>
+Reply-To: holger@homac.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <4F78FE89.2070707@cn.fujitsu.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Ren Mingxin <renmx@cn.fujitsu.com>
-Cc: Jens Axboe <axboe@kernel.dk>, KVM <kvm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <CAF1ivSY52ESfF02QywCFdf68_hSkOMg1R=0KwojeGJx2ALWCYg@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Garrett <mjg@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@redhat.com>, sfr@canb.auug.org.au
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Apr 02, 2012 at 09:19:05AM +0800, Ren Mingxin wrote:
->  On 03/30/2012 11:28 PM, Tejun Heo wrote:
-> >On Fri, Mar 30, 2012 at 08:26:06AM -0700, Tejun Heo wrote:
-> >>On Fri, Mar 30, 2012 at 05:53:52PM +0800, Ren Mingxin wrote:
-> >>>  The current virtblk's naming algorithm only supports 263  disks.
-> >>>If there are mass of virtblks(exceeding 263), there will be disks
-> >>>with the same name.
-> >>>
-> >>>By renaming "sd_format_disk_name()" to "disk_name_format()"
-> >>>and moving it into block core, virtio_blk can use this function to
-> >>>support mass of disks.
-> >>>
-> >>>Signed-off-by: Ren Mingxin<renmx@cn.fujitsu.com>
-> >>I guess it's already way too late but why couldn't they have been
-> >>named vdD-P where both D and P are integers denoting disk number and
-> >>partition number?  [sh]dX's were created when there weren't supposed
-> >>to be too many disks, so we had to come up with the horrible alphabet
-> >>based numbering scheme but vd is new enough.  I mean, naming is one
-> >>thing but who wants to figure out which sequence is or guess what
-> >>comes next vdzz9?  :(
-> >>
-> >>If we're gonna move it to block layer, let's add big blinking red
-> >>comment saying "don't ever use it for any new driver".
-> >And also let's make that clear in the function name - say,
-> >format_legacy_disk_name() or something.
-> 
-> So, to legacy disks [sh]d, we'd name them as [sh]d[a-z]{1,}. To new devices
-> like vd, we'd name them as vd<index>(vd<index>p<partno> as partitions)?
+On 27.03.2012 10:11, Lin Ming wrote:
+> On Thu, Feb 9, 2012 at 11:28 PM, Jeff Garzik<jeff@garzik.org>  wrote:
+>> On 02/09/2012 02:33 AM, Holger Macht wrote:
+>>>
+>>> On Do 09. Feb - 14:46:11, Lin Ming wrote:
+>>>>
+>>>> On Fri, Jan 20, 2012 at 8:18 AM, Holger Macht<holger@homac.de>    wrote:
+>>>>>
+>>>>> Patches 2 through 5 are just a refresh of the patches from Matthew
+>>>>> Garrett sent to this list in September 2010 [1]:
+>>>>>
+>>>>> Patch 1 is a new patch incorporating the corrections from James
+>>>>> Bottomley. Patch 6, 7 and 8 make the whole patch set actually work on my
+>>>>> test hardware (Thinkpad x60/Thinkpad T60) by fixing minor issues and
+>>>>> compensating changes after the first submission.
+>>>>>
+>>>>> All patches now contain the correct Signed-off-by instead of Acked-by
+>>>>> tags.
+>>>>>
+>>>>>   [PATCH 1/8] scsi: Add wrapper to access and set scsi_bus_type in struct
+>>>>> acpi_bus_type
+>>>>>   [PATCH 2/8] libata: Bind the Linux device tree to the ACPI device tree
+>>>>>   [PATCH 3/8] libata: Migrate ACPI code over to new bindings
+>>>>>   [PATCH 4/8] acpi: Add support for linking docks to the objects they
+>>>>> contain
+>>>>>   [PATCH 5/8] libata: Add links between removable devices and docks
+>>>>>   [PATCH 6/8] libata: Generate and pass correct acpi handles
+>>>>>   [PATCH 7/8] acpi: Prevent duplicate hotplug device registration on dock
+>>>>> stations
+>>>>>   [PATCH 8/8] libata: Use correct PCI devices
+>>>>
+>>>>
+>>>> Hi Holger,
+>>>>
+>>>> What's the status of these patches?
+>>>
+>>>
+>>> They've been ACKed by both ACPI (Len Brown) and libata (James Bottomley)
+>>> people, so I guess they are good to go and I'm waiting for someone (Jeff
+>>> Garzik?) to pick them up.
+>>
+>>
+>> I ACK'd for libata.  It's queued in libata-dev...  but looks like that did
+>> not get pushed out.  Should show up in the next linux-next.
+>>
+>>         Jeff
+>
+> Hi,
+>
+> I didn't find these patches in libata-dev tree.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-Pleae don't rename virtio disks, it is way too late for that:
-virtio block driver was merged around 2007, it is not new by
-any measure, and there are many systems out there using
-the current naming scheme.
+They've been there, also in linux-next. But now I'm not able to find a 
+trace of them. Maybe the two fixes from the thread labeled "linux-next: 
+dock_link_device is oopsy" on linux-kernel@ didn't find their way into 
+the trees and so the patches were removed. Just guessing...
 
-> And how about the rssd in the patch 3 then?
+Regards,
+  Holger
 
-Probably same. Renaming existing devices will break setups.
-I think the idea is to avoid using the
-legacy naming in new drivers *that will be added from now on*.
+> Are they removed for some reason?
 
-> Besides, does anybody have comments?
-> Looking forward to your replies ;-)
-> 
-> -- 
-> Thanks,
-> Ren
