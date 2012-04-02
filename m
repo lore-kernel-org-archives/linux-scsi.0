@@ -1,59 +1,44 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH 0/4] block: move sd_format_disk_name() into block core as
-	disk_name_format()
-Date: Sun, 1 Apr 2012 14:20:26 +0300
-Message-ID: <20120401112025.GB23773@redhat.com>
-References: <4F7581D4.4040301@cn.fujitsu.com>
+From: Ren Mingxin <renmx@cn.fujitsu.com>
+Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass
+ of disks naming
+Date: Mon, 02 Apr 2012 09:18:55 +0800
+Message-ID: <4F78FE7F.7070403@cn.fujitsu.com>
+References: <4F7581D4.4040301@cn.fujitsu.com> <4F7582B0.5010609@cn.fujitsu.com> <20120330152606.GB28934@google.com> <20120330153828.GD28934@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <4F7581D4.4040301@cn.fujitsu.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Ren Mingxin <renmx@cn.fujitsu.com>
-Cc: Jens Axboe <axboe@kernel.dk>, KVM <kvm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120330153828.GD28934@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, "Michael S. Tsirkin" <mst@redhat.com>, Rusty Russell <rusty@rustcorp.com.au>, LKML <linux-kernel@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, KVM <kvm@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 30, 2012 at 05:50:12PM +0800, Ren Mingxin wrote:
-> 
-> 
-> This patch series renames "sd_format_disk_name()" to
-> "disk_name_format()" and moves it into block core. So
-> that who needs formatting disk name can use it, instead
-> of duplicating these similar help functions.
+  On 03/30/2012 11:38 PM, Tejun Heo wrote:
+> On Fri, Mar 30, 2012 at 08:26:06AM -0700, Tejun Heo wrote:
+>> On Fri, Mar 30, 2012 at 05:53:52PM +0800, Ren Mingxin wrote:
+>>>   The current virtblk's naming algorithm only supports 263  disks.
+>>> If there are mass of virtblks(exceeding 263), there will be disks
+>>> with the same name.
+>>>
+>>> By renaming "sd_format_disk_name()" to "disk_name_format()"
+>>> and moving it into block core, virtio_blk can use this function to
+>>> support mass of disks.
+>>>
+>>> Signed-off-by: Ren Mingxin<renmx@cn.fujitsu.com>
+>> I guess it's already way too late but why couldn't they have been
+>> named vdD-P where both D and P are integers denoting disk number and
+> So, if a device name ends in digit the partition code adds delimiter
+> 'p' automatically and this is already in use by md.  So, partitioned
+> md devices are named mdDpP where D and P are base 10 number indicating
+> the sequence like md12p4.  So, let's please add comment that new
+> drivers should name their devices PREFIX%d where the sequence number
+> can be allocated by ida.
+>
+>
 
-I see there are some responses about naming and comments,
-so that would need to be fixed.
-Besides this, Jens, would you like to take the patchset
-through your tree or prefer for me to merge it through virtio tree? 
-Block tree seems more appropriate, right?
-Also this is a bugfix technically since it fixes setups
-with a ton of disks, so 3.4 material?
+Oh, got it. Just like md devices' names.
 
-> Ren Mingxin (4):
->   block: add function disk_name_format() into block core
->   scsi: replace sd_format_disk_name() to disk_name_format()
->   block: replace rssd_disk_name_format() to disk_name_format()
->   virtio_blk: use disk_name_format() to support mass of disks naming
-> 
->  block/genhd.c                     |   49 ++++++++++++++++++++++++++++++++++++++
->  drivers/block/mtip32xx/mtip32xx.c |   33 -------------------------
->  drivers/block/virtio_blk.c        |   13 ----------
->  drivers/scsi/sd.c                 |   48 -------------------------------------
->  include/linux/genhd.h             |    2 +
->  5 files changed, 54 insertions(+), 91 deletions(-)
-> 
-> Any comment will be appreciated.
-> 
-> Thanks,
-> Ren
-> 
+-- 
+Thanks,
+Ren
