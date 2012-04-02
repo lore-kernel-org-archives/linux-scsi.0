@@ -1,50 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass
-	of disks naming
-Date: Mon, 2 Apr 2012 12:00:45 -0700
-Message-ID: <20120402190045.GC16226@dhcp-172-17-108-109.mtv.corp.google.com>
-References: <4F7581D4.4040301@cn.fujitsu.com> <4F7582B0.5010609@cn.fujitsu.com>
-	<20120330152606.GB28934@google.com>
-	<20120330152808.GC28934@google.com>
-	<4F78FE89.2070707@cn.fujitsu.com>
-	<20120402072009.GF30360@redhat.com>
-	<20120402185259.GA16226@dhcp-172-17-108-109.mtv.corp.google.com>
-	<1333392978.2971.25.camel@dabdike>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Drivers: scsi: storvsc: Properly handle errors from
+ the host
+Date: Mon, 2 Apr 2012 23:09:54 +0000
+Message-ID: <426367E2313C2449837CD2DE46E7EAF90238C1@BY2PRD0310MB378.namprd03.prod.outlook.com>
+References: <1333065283-30484-1-git-send-email-kys@microsoft.com>
+ <20120329235111.GA19924@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1333392978.2971.25.camel@dabdike>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <axboe@kernel.dk>, KVM <kvm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>, Ren Mingxin <renmx@cn.fujitsu.com>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120329235111.GA19924@kroah.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello, James.
 
-On Mon, Apr 02, 2012 at 11:56:18AM -0700, James Bottomley wrote:
-> So if we're agreed no other devices going forwards should ever use this
-> interface, is there any point unifying the interface?  No matter how
-> many caveats you hedge it round with, putting the API in a central place
-> will be a bit like a honey trap for careless bears.   It might be safer
-> just to leave it buried in the three current drivers.
 
-Yeah, that was my hope but I think it would be easier to enforce to
-have a common function which is clearly marked legacy so that new
-driver writers can go look for the naming code in the existing ones,
-find out they're all using the same function which is marked legacy
-and explains what to do for newer drivers.
+> -----Original Message-----
+> From: Greg KH [mailto:gregkh@linuxfoundation.org]
+> Sent: Thursday, March 29, 2012 7:51 PM
+> To: KY Srinivasan
+> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> virtualization@lists.osdl.org; ohering@suse.com; jbottomley@parallels.com;
+> hch@infradead.org; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Properly handle errors from the
+> host
+> 
+> On Thu, Mar 29, 2012 at 04:54:43PM -0700, K. Y. Srinivasan wrote:
+> > If the host returns error for pass through commands, deal with
+> > appropriately. I would like to thank James for patiently helping
+> > me with this patch.
+> >
+> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> > Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+> > ---
+> >  drivers/scsi/storvsc_drv.c |   20 ++++++++++++++++----
+> >  1 files changed, 16 insertions(+), 4 deletions(-)
+> 
+> As this driver is now in Linus's tree, and drivers/scsi/ is James's
+> area, he is the one to take them, not me.
 
-Thanks.
+Thanks Greg; I understand James would be responsible for deciding if
+this patch is the correct way to fix this issue and to check this patch in, if it is.
 
--- 
-tejun
+Regards,
+
+K. Y
