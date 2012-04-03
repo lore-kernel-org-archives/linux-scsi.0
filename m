@@ -1,50 +1,68 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] Drivers: scsi: storvsc: Properly handle errors from
- the host
-Date: Mon, 2 Apr 2012 23:09:54 +0000
-Message-ID: <426367E2313C2449837CD2DE46E7EAF90238C1@BY2PRD0310MB378.namprd03.prod.outlook.com>
-References: <1333065283-30484-1-git-send-email-kys@microsoft.com>
- <20120329235111.GA19924@kroah.com>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [dm-devel] [PATCH 2/2] dm-mpath: Allow 'default' hardware handler
+Date: Tue, 03 Apr 2012 10:45:03 +0900
+Message-ID: <4F7A561F.8020809@ce.jp.nec.com>
+References: <1333385035-6663-1-git-send-email-hare@suse.de> <1333385035-6663-3-git-send-email-hare@suse.de> <20120402170426.GA28901@redhat.com> <4F79DCE4.9050804@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120329235111.GA19924@kroah.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from TYO202.gate.nec.co.jp ([202.32.8.206]:41755 "EHLO
+	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751740Ab2DCBqi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2012 21:46:38 -0400
+In-Reply-To: <4F79DCE4.9050804@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: device-mapper development <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org
 
+Hi Hannes,
 
-
-> -----Original Message-----
-> From: Greg KH [mailto:gregkh@linuxfoundation.org]
-> Sent: Thursday, March 29, 2012 7:51 PM
-> To: KY Srinivasan
-> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
-> virtualization@lists.osdl.org; ohering@suse.com; jbottomley@parallels.com;
-> hch@infradead.org; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Properly handle errors from the
-> host
+On 04/03/12 02:07, Hannes Reinecke wrote:
+> On 04/02/2012 07:04 PM, Mike Snitzer wrote:
+>> On Mon, Apr 02 2012 at 12:43pm -0400,
+>> Hannes Reinecke <hare@suse.de> wrote:
+>>
+>>> This patch introduces a 'default' hardware handler for dm-mpath.
+>>> When specifying '1 default' dm-multipath will be using the currently
+>>> attached hardware handler.
+>>>
+>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>> ---
+>>>  drivers/md/dm-mpath.c |    8 ++++++--
+>>>  1 files changed, 6 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+>>> index 922a338..bbf950f 100644
+>>> --- a/drivers/md/dm-mpath.c
+>>> +++ b/drivers/md/dm-mpath.c
+>>> @@ -586,15 +586,19 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+>>>  
+>>>  	if (m->hw_handler_name) {
+>>>  		struct request_queue *q = bdev_get_queue(p->path.dev->bdev);
+>>> +		char *hw_handler = NULL;
+>>>  
+>>> -		r = scsi_dh_attach(q, m->hw_handler_name);
+>>> +		if (strncmp(m->hw_handler_name, "default", 6))
+>>> +			hw_handler = m->hw_handler_name;
+>>
+>> Should be: if (strncmp(m->hw_handler_name, "default", 7))
+> A-hem.
 > 
-> On Thu, Mar 29, 2012 at 04:54:43PM -0700, K. Y. Srinivasan wrote:
-> > If the host returns error for pass through commands, deal with
-> > appropriately. I would like to thank James for patiently helping
-> > me with this patch.
-> >
-> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> > Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
-> > ---
-> >  drivers/scsi/storvsc_drv.c |   20 ++++++++++++++++----
-> >  1 files changed, 16 insertions(+), 4 deletions(-)
-> 
-> As this driver is now in Linus's tree, and drivers/scsi/ is James's
-> area, he is the one to take them, not me.
+> Counting by hand is at times tricky.
+> I'll be sending an updated patchset.
 
-Thanks Greg; I understand James would be responsible for deciding if
-this patch is the correct way to fix this issue and to check this patch in, if it is.
+It seems you will hit the following error in parse_hw_handler().
+Or is it avoided somehow?
 
-Regards,
+        request_module("scsi_dh_%s", m->hw_handler_name);
+        if (scsi_dh_handler_exist(m->hw_handler_name) == 0) {
+                ti->error = "unknown hardware handler type";
+                ret = -EINVAL;
+                goto fail;
+        }
 
-K. Y
+Thanks,
+-- 
+Jun'ichi Nomura, NEC Corporation
