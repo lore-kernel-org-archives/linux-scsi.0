@@ -1,59 +1,61 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: [dm-devel] [PATCH 1/2] scsi_dh: Allow NULL hardware handler name
- in scsi_dh_attach()
-Date: Tue, 03 Apr 2012 10:46:02 +0900
-Message-ID: <4F7A565A.7060201@ce.jp.nec.com>
-References: <1333385035-6663-1-git-send-email-hare@suse.de> <1333385035-6663-2-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO201.gate.nec.co.jp ([202.32.8.193]:35239 "EHLO
-	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615Ab2DCBrP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2012 21:47:15 -0400
-In-Reply-To: <1333385035-6663-2-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH] hpsa: cleanup bitops usage
+Date: Tue,  3 Apr 2012 14:38:53 +0900
+Message-ID: <1333431534-4595-3-git-send-email-akinobu.mita@gmail.com>
+References: <1333431534-4595-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1333431534-4595-1-git-send-email-akinobu.mita@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, iss_storagedev@hp.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 
-Hi Hannes,
+- Remove unnecessary correction of bit and address
+- Use BITS_TO_LONGS macro to calculate bitmap size
 
-On 04/03/12 01:43, Hannes Reinecke wrote:
-> This patch allows to pass in a NULL hardware handler to
-> scsi_dh_attach(), causing the reference count of the existing
-> hardware handler to be increased.
-> An error will be returned if no hardware handler is attached.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/device_handler/scsi_dh.c |    8 ++++++--
->  1 files changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-> index 48e46f5..77fa67e 100644
-> --- a/drivers/scsi/device_handler/scsi_dh.c
-> +++ b/drivers/scsi/device_handler/scsi_dh.c
-> @@ -475,10 +475,14 @@ int scsi_dh_attach(struct request_queue *q, const char *name)
->  {
->  	unsigned long flags;
->  	struct scsi_device *sdev;
-> -	struct scsi_device_handler *scsi_dh;
-> +	struct scsi_device_handler *scsi_dh = NULL;
->  	int err = 0;
->  
-> -	scsi_dh = get_device_handler(name);
-> +	if (name) {
-> +		scsi_dh = get_device_handler(name);
-> +	} else if (sdev->scsi_dh_data) {
-> +		scsi_dh = sdev->scsi_dh_data->scsi_dh;
-> +	}
->  	if (!scsi_dh)
->  		return -EINVAL;
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Cc: iss_storagedev@hp.com
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/hpsa.c |   10 +++-------
+ 1 files changed, 3 insertions(+), 7 deletions(-)
 
-It won't work. sdev is not initialized...
-
-Thanks,
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 500e20d..ddbf5fe 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -2351,9 +2351,7 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+ 		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+ 		if (i == h->nr_cmds)
+ 			return NULL;
+-	} while (test_and_set_bit
+-		 (i & (BITS_PER_LONG - 1),
+-		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
++	} while (test_and_set_bit(i, h->cmd_pool_bits) != 0);
+ 	c = h->cmd_pool + i;
+ 	memset(c, 0, sizeof(*c));
+ 	cmd_dma_handle = h->cmd_pool_dhandle
+@@ -2420,8 +2418,7 @@ static void cmd_free(struct ctlr_info *h, struct CommandList *c)
+ 	int i;
+ 
+ 	i = c - h->cmd_pool;
+-	clear_bit(i & (BITS_PER_LONG - 1),
+-		  h->cmd_pool_bits + (i / BITS_PER_LONG));
++	clear_bit(i, h->cmd_pool_bits);
+ 	h->nr_frees++;
+ }
+ 
+@@ -4045,8 +4042,7 @@ static __devinit int hpsa_init_reset_devices(struct pci_dev *pdev)
+ 
+ static __devinit int hpsa_allocate_cmd_pool(struct ctlr_info *h)
+ {
+-	h->cmd_pool_bits = kzalloc(
+-		DIV_ROUND_UP(h->nr_cmds, BITS_PER_LONG) *
++	h->cmd_pool_bits = kzalloc(BITS_TO_LONGS(h->nr_cmds) *
+ 		sizeof(unsigned long), GFP_KERNEL);
+ 	h->cmd_pool = pci_alloc_consistent(h->pdev,
+ 		    h->nr_cmds * sizeof(*h->cmd_pool),
 -- 
-Jun'ichi Nomura, NEC Corporation
+1.7.4.4
