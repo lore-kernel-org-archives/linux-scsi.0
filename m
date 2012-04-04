@@ -1,231 +1,1344 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 17/17] be2iscsi: Get Port State and Speed of the Adapter
-Date: Tue,  3 Apr 2012 23:41:52 -0500
-Message-ID: <1333514512-21799-18-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 16/17] be2iscsi: adding functionality to change network settings using iscsiadm
+Date: Tue,  3 Apr 2012 23:41:51 -0500
+Message-ID: <1333514512-21799-17-git-send-email-michaelc@cs.wisc.edu>
 References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64727 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42927 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752227Ab2DDEmT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Apr 2012 00:42:19 -0400
+	id S1752212Ab2DDEmP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Apr 2012 00:42:15 -0400
 In-Reply-To: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-From: John Soni Jose <sony.john-n@emulex.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 
- Implement ISCSI_HOST_PARAM_PORT_STATE and ISCSI_HOST_PARAM_PORT_SPEED
- to get the Adapter port state and port name
+This patch allows iscsiadm to set/ delete static IP and enable /disable
+DHCP.
 
-Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
-Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.h  |   24 ++++++++++
- drivers/scsi/be2iscsi/be_iscsi.c |   89 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/be2iscsi/be_mgmt.c  |   27 +++++++++++
- 3 files changed, 140 insertions(+), 0 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.h  |  114 +++++++++--
+ drivers/scsi/be2iscsi/be_iscsi.c |  354 +++++++++++++++++++++++++++++----
+ drivers/scsi/be2iscsi/be_iscsi.h |   15 ++
+ drivers/scsi/be2iscsi/be_main.c  |   33 ++--
+ drivers/scsi/be2iscsi/be_main.h  |    4 +-
+ drivers/scsi/be2iscsi/be_mgmt.c  |  413 +++++++++++++++++++++++++++++++++++---
+ drivers/scsi/be2iscsi/be_mgmt.h  |   31 +++-
+ 7 files changed, 858 insertions(+), 106 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index 60d1445..b0b36c6 100644
+index b15de3e..60d1445 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.h
 +++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -596,6 +596,28 @@ struct be_cmd_hba_name {
- 	u8 initiator_alias[BEISCSI_ALIAS_LEN];
+@@ -163,7 +163,8 @@ struct be_mcc_mailbox {
+ #define OPCODE_COMMON_ISCSI_CFG_REMOVE_SGL_PAGES        3
+ #define OPCODE_COMMON_ISCSI_NTWK_GET_NIC_CONFIG		7
+ #define OPCODE_COMMON_ISCSI_NTWK_SET_VLAN		14
+-#define OPCODE_COMMON_ISCSI_NTWK_CONFIGURE_STATELESS_IP_ADDR	17
++#define OPCODE_COMMON_ISCSI_NTWK_CONFIG_STATELESS_IP_ADDR	17
++#define OPCODE_COMMON_ISCSI_NTWK_REL_STATELESS_IP_ADDR	18
+ #define OPCODE_COMMON_ISCSI_NTWK_MODIFY_IP_ADDR		21
+ #define OPCODE_COMMON_ISCSI_NTWK_GET_DEFAULT_GATEWAY	22
+ #define OPCODE_COMMON_ISCSI_NTWK_MODIFY_DEFAULT_GATEWAY 23
+@@ -274,15 +275,15 @@ struct mgmt_conn_login_options {
+ 	struct	mgmt_auth_method_format auth_data;
  } __packed;
  
-+struct be_cmd_ntwk_link_status_req {
-+	struct be_cmd_req_hdr hdr;
+-struct ip_address_format {
++struct ip_addr_format {
+ 	u16 size_of_structure;
+ 	u8 reserved;
+ 	u8 ip_type;
+-	u8 ip_address[16];
++	u8 addr[16];
+ 	u32 rsvd0;
+ } __packed;
+ 
+-struct	mgmt_conn_info {
++struct mgmt_conn_info {
+ 	u32	connection_handle;
+ 	u32	connection_status;
+ 	u16	src_port;
+@@ -290,9 +291,9 @@ struct	mgmt_conn_info {
+ 	u16	dest_port_redirected;
+ 	u16	cid;
+ 	u32	estimated_throughput;
+-	struct	ip_address_format	src_ipaddr;
+-	struct	ip_address_format	dest_ipaddr;
+-	struct	ip_address_format	dest_ipaddr_redirected;
++	struct	ip_addr_format	src_ipaddr;
++	struct	ip_addr_format	dest_ipaddr;
++	struct	ip_addr_format	dest_ipaddr_redirected;
+ 	struct	mgmt_conn_login_options	negotiated_login_options;
+ } __packed;
+ 
+@@ -322,43 +323,115 @@ struct mgmt_session_info {
+ 	struct	mgmt_conn_info	conn_list[1];
+ } __packed;
+ 
+-struct  be_cmd_req_get_session {
++struct be_cmd_get_session_req {
+ 	struct be_cmd_req_hdr hdr;
+ 	u32 session_handle;
+ } __packed;
+ 
+-struct  be_cmd_resp_get_session {
++struct be_cmd_get_session_resp {
+ 	struct be_cmd_resp_hdr hdr;
+ 	struct mgmt_session_info session_info;
+ } __packed;
+ 
+ struct mac_addr {
+-	u16 size_of_struct;
++	u16 size_of_structure;
+ 	u8 addr[ETH_ALEN];
+ } __packed;
+ 
+-struct be_cmd_req_get_boot_target {
++struct be_cmd_get_boot_target_req {
+ 	struct be_cmd_req_hdr hdr;
+ } __packed;
+ 
+-struct be_cmd_resp_get_boot_target {
++struct be_cmd_get_boot_target_resp {
+ 	struct be_cmd_resp_hdr hdr;
+ 	u32  boot_session_count;
+ 	int  boot_session_handle;
+ };
+ 
+-struct be_cmd_req_mac_query {
++struct be_cmd_mac_query_req {
+ 	struct be_cmd_req_hdr hdr;
+ 	u8 type;
+ 	u8 permanent;
+ 	u16 if_id;
+ } __packed;
+ 
+-struct be_cmd_resp_mac_query {
++struct be_cmd_get_mac_resp {
+ 	struct be_cmd_resp_hdr hdr;
+ 	struct mac_addr mac;
+ };
+ 
++struct be_ip_addr_subnet_format {
++	u16 size_of_structure;
++	u8 ip_type;
++	u8 ipv6_prefix_length;
++	u8 addr[16];
++	u8 subnet_mask[16];
 +	u32 rsvd0;
 +} __packed;
 +
-+/*** Port Speed Values ***/
-+#define BE2ISCSI_LINK_SPEED_ZERO	0x00
-+#define BE2ISCSI_LINK_SPEED_10MBPS	0x01
-+#define BE2ISCSI_LINK_SPEED_100MBPS	0x02
-+#define BE2ISCSI_LINK_SPEED_1GBPS	0x03
-+#define BE2ISCSI_LINK_SPEED_10GBPS	0x04
-+struct be_cmd_ntwk_link_status_resp {
-+	struct be_cmd_resp_hdr hdr;
-+	u8 phys_port;
-+	u8 mac_duplex;
-+	u8 mac_speed;
-+	u8 mac_fault;
-+	u8 mgmt_mac_duplex;
-+	u8 mgmt_mac_speed;
-+	u16 qos_link_speed;
-+	u32 logical_link_speed;
++struct be_cmd_get_if_info_req {
++	struct be_cmd_req_hdr hdr;
++	u32 interface_hndl;
++	u32 ip_type;
 +} __packed;
++
++struct be_cmd_get_if_info_resp {
++	struct be_cmd_req_hdr hdr;
++	u32 interface_hndl;
++	u32 vlan_priority;
++	u32 ip_addr_count;
++	u32 dhcp_state;
++	struct be_ip_addr_subnet_format ip_addr;
++} __packed;
++
++struct be_ip_addr_record {
++	u32 action;
++	u32 interface_hndl;
++	struct be_ip_addr_subnet_format ip_addr;
++	u32 status;
++} __packed;
++
++struct be_ip_addr_record_params {
++	u32 record_entry_count;
++	struct be_ip_addr_record ip_record;
++} __packed;
++
++struct be_cmd_set_ip_addr_req {
++	struct be_cmd_req_hdr hdr;
++	struct be_ip_addr_record_params ip_params;
++} __packed;
++
++
++struct be_cmd_set_dhcp_req {
++	struct be_cmd_req_hdr hdr;
++	u32 interface_hndl;
++	u32 ip_type;
++	u32 flags;
++	u32 retry_count;
++} __packed;
++
++struct be_cmd_rel_dhcp_req {
++	struct be_cmd_req_hdr hdr;
++	u32 interface_hndl;
++	u32 ip_type;
++} __packed;
++
++struct be_cmd_set_def_gateway_req {
++	struct be_cmd_req_hdr hdr;
++	u32 action;
++	struct ip_addr_format ip_addr;
++} __packed;
++
++struct be_cmd_get_def_gateway_req {
++	struct be_cmd_req_hdr hdr;
++	u32 ip_type;
++} __packed;
++
++struct be_cmd_get_def_gateway_resp {
++	struct be_cmd_req_hdr hdr;
++	struct ip_addr_format ip_addr;
++} __packed;
++
+ /******************** Create CQ ***************************/
+ /**
+  * Pseudo amap definition in which each bit of the actual structure is defined
+@@ -489,7 +562,7 @@ struct be_cmd_req_modify_eq_delay {
  
- int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
- 			  struct be_queue_info *eq, int eq_delay);
-@@ -615,6 +637,7 @@ int be_poll_mcc(struct be_ctrl_info *ctrl);
+ #define ETH_ALEN	6
+ 
+-struct be_cmd_req_get_mac_addr {
++struct be_cmd_get_nic_conf_req {
+ 	struct be_cmd_req_hdr hdr;
+ 	u32 nic_port_count;
+ 	u32 speed;
+@@ -501,7 +574,7 @@ struct be_cmd_req_get_mac_addr {
+ 	u32 rsvd[23];
+ };
+ 
+-struct be_cmd_resp_get_mac_addr {
++struct be_cmd_get_nic_conf_resp {
+ 	struct be_cmd_resp_hdr hdr;
+ 	u32 nic_port_count;
+ 	u32 speed;
+@@ -541,12 +614,7 @@ int beiscsi_cmd_mccq_create(struct beiscsi_hba *phba,
+ int be_poll_mcc(struct be_ctrl_info *ctrl);
  int mgmt_check_supported_fw(struct be_ctrl_info *ctrl,
  				      struct beiscsi_hba *phba);
+-unsigned int be_cmd_get_mac_addr(struct beiscsi_hba *phba);
  unsigned int be_cmd_get_initname(struct beiscsi_hba *phba);
-+unsigned int be_cmd_get_port_speed(struct beiscsi_hba *phba);
+-unsigned int beiscsi_get_boot_target(struct beiscsi_hba *phba);
+-unsigned int beiscsi_get_session_info(struct beiscsi_hba *phba,
+-				  u32 boot_session_handle,
+-				  struct be_dma_mem *nonemb_cmd);
  
  void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag);
  /*ISCSI Functuions */
-@@ -879,6 +902,7 @@ struct be_cmd_get_all_if_id_req {
+@@ -727,7 +795,7 @@ struct be_eq_delay_params_in {
+ 
+ struct tcp_connect_and_offload_in {
+ 	struct be_cmd_req_hdr hdr;
+-	struct ip_address_format ip_address;
++	struct ip_addr_format ip_address;
+ 	u16 tcp_port;
+ 	u16 cid;
+ 	u16 cq_id;
+@@ -804,7 +872,7 @@ struct be_fw_cfg {
+ 	u32 function_caps;
  } __packed;
  
- #define ISCSI_OPCODE_SCSI_DATA_OUT		5
-+#define OPCODE_COMMON_NTWK_LINK_STATUS_QUERY 5
- #define OPCODE_COMMON_MODIFY_EQ_DELAY		41
- #define OPCODE_COMMON_ISCSI_CLEANUP		59
- #define	OPCODE_COMMON_TCP_UPLOAD		56
+-struct be_all_if_id {
++struct be_cmd_get_all_if_id_req {
+ 	struct be_cmd_req_hdr hdr;
+ 	u32 if_count;
+ 	u32 if_hndl_list[1];
 diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 46cc40e..43f3503 100644
+index 1af7774..46cc40e 100644
 --- a/drivers/scsi/be2iscsi/be_iscsi.c
 +++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -618,6 +618,79 @@ static int beiscsi_get_initname(char *buf, struct beiscsi_hba *phba)
+@@ -23,6 +23,8 @@
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
++#include <scsi/scsi_netlink.h>
++#include <net/netlink.h>
+ #include <scsi/scsi.h>
+ 
+ #include "be_iscsi.h"
+@@ -207,6 +209,301 @@ int beiscsi_conn_bind(struct iscsi_cls_session *cls_session,
+ 	return beiscsi_bindconn_cid(phba, beiscsi_conn, beiscsi_ep->ep_cid);
  }
  
- /**
-+ * beiscsi_get_port_state - Get the Port State
-+ * @shost : pointer to scsi_host structure
-+ *
-+ * returns number of bytes
-+ */
-+static void beiscsi_get_port_state(struct Scsi_Host *shost)
++static int beiscsi_create_ipv4_iface(struct beiscsi_hba *phba)
 +{
-+	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-+	struct iscsi_cls_host *ihost = shost->shost_data;
++	if (phba->ipv4_iface)
++		return 0;
 +
-+	ihost->port_state = (phba->state == BE_ADAPTER_UP) ?
-+		ISCSI_PORT_STATE_UP : ISCSI_PORT_STATE_DOWN;
-+}
-+
-+/**
-+ * beiscsi_get_port_speed  - Get the Port Speed from Adapter
-+ * @shost : pointer to scsi_host structure
-+ *
-+ * returns Success/Failure
-+ */
-+static int beiscsi_get_port_speed(struct Scsi_Host *shost)
-+{
-+	unsigned int tag, wrb_num;
-+	unsigned short status, extd_status;
-+	struct be_mcc_wrb *wrb;
-+	struct be_cmd_ntwk_link_status_resp *resp;
-+	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-+	struct iscsi_cls_host *ihost = shost->shost_data;
-+	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
-+
-+	tag = be_cmd_get_port_speed(phba);
-+	if (!tag) {
-+		SE_DEBUG(DBG_LVL_1, "Getting Port Speed Failed\n");
-+		 return -EBUSY;
-+	 } else
-+		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
-+				phba->ctrl.mcc_numtag[tag]);
-+
-+	wrb_num = (phba->ctrl.mcc_numtag[tag] & 0x00FF0000) >> 16;
-+	extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
-+	status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
-+
-+	if (status || extd_status) {
-+		SE_DEBUG(DBG_LVL_1, "MailBox Command Failed with "
-+				"status = %d extd_status = %d\n",
-+				status, extd_status);
-+		free_mcc_tag(&phba->ctrl, tag);
-+		return -EAGAIN;
++	phba->ipv4_iface = iscsi_create_iface(phba->shost,
++					      &beiscsi_iscsi_transport,
++					      ISCSI_IFACE_TYPE_IPV4,
++					      0, 0);
++	if (!phba->ipv4_iface) {
++		shost_printk(KERN_ERR, phba->shost, "Could not "
++			     "create default IPv4 address.\n");
++		return -ENODEV;
 +	}
-+	wrb = queue_get_wrb(mccq, wrb_num);
-+	free_mcc_tag(&phba->ctrl, tag);
-+	resp = embedded_payload(wrb);
 +
-+	switch (resp->mac_speed) {
-+	case BE2ISCSI_LINK_SPEED_10MBPS:
-+		ihost->port_speed = ISCSI_PORT_SPEED_10MBPS;
-+		break;
-+	case BE2ISCSI_LINK_SPEED_100MBPS:
-+		ihost->port_speed = BE2ISCSI_LINK_SPEED_100MBPS;
-+		break;
-+	case BE2ISCSI_LINK_SPEED_1GBPS:
-+		ihost->port_speed = ISCSI_PORT_SPEED_1GBPS;
-+		break;
-+	case BE2ISCSI_LINK_SPEED_10GBPS:
-+		ihost->port_speed = ISCSI_PORT_SPEED_10GBPS;
-+		break;
-+	default:
-+		ihost->port_speed = ISCSI_PORT_SPEED_UNKNOWN;
-+	}
 +	return 0;
 +}
 +
-+/**
-  * beiscsi_get_host_param - get the iscsi parameter
-  * @shost: pointer to scsi_host structure
-  * @param: parameter type identifier
-@@ -648,6 +721,19 @@ int beiscsi_get_host_param(struct Scsi_Host *shost,
- 			return status;
- 		}
- 		break;
-+	case ISCSI_HOST_PARAM_PORT_STATE:
-+		beiscsi_get_port_state(shost);
-+		status = sprintf(buf, "%s\n", iscsi_get_port_state_name(shost));
++static int beiscsi_create_ipv6_iface(struct beiscsi_hba *phba)
++{
++	if (phba->ipv6_iface)
++		return 0;
++
++	phba->ipv6_iface = iscsi_create_iface(phba->shost,
++					      &beiscsi_iscsi_transport,
++					      ISCSI_IFACE_TYPE_IPV6,
++					      0, 0);
++	if (!phba->ipv6_iface) {
++		shost_printk(KERN_ERR, phba->shost, "Could not "
++			     "create default IPv6 address.\n");
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
++void beiscsi_create_def_ifaces(struct beiscsi_hba *phba)
++{
++	struct be_cmd_get_if_info_resp if_info;
++
++	if (!mgmt_get_if_info(phba, BE2_IPV4, &if_info))
++		beiscsi_create_ipv4_iface(phba);
++
++	if (!mgmt_get_if_info(phba, BE2_IPV6, &if_info))
++		beiscsi_create_ipv6_iface(phba);
++}
++
++void beiscsi_destroy_def_ifaces(struct beiscsi_hba *phba)
++{
++	if (phba->ipv6_iface)
++		iscsi_destroy_iface(phba->ipv6_iface);
++	if (phba->ipv4_iface)
++		iscsi_destroy_iface(phba->ipv4_iface);
++}
++
++static int
++beiscsi_set_static_ip(struct Scsi_Host *shost,
++		struct iscsi_iface_param_info *iface_param,
++		void *data, uint32_t dt_len)
++{
++	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++	struct iscsi_iface_param_info *iface_ip = NULL;
++	struct iscsi_iface_param_info *iface_subnet = NULL;
++	struct nlattr *nla;
++	int ret;
++
++
++	switch (iface_param->param) {
++	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
++		nla = nla_find(data, dt_len, ISCSI_NET_PARAM_IPV4_ADDR);
++		if (nla)
++			iface_ip = nla_data(nla);
++
++		nla = nla_find(data, dt_len, ISCSI_NET_PARAM_IPV4_SUBNET);
++		if (nla)
++			iface_subnet = nla_data(nla);
 +		break;
-+	case ISCSI_HOST_PARAM_PORT_SPEED:
-+		status = beiscsi_get_port_speed(shost);
-+		if (status) {
-+			SE_DEBUG(DBG_LVL_1,
-+					"Retreiving Port Speed Failed\n");
-+			return status;
++	case ISCSI_NET_PARAM_IPV4_ADDR:
++		iface_ip = iface_param;
++		nla = nla_find(data, dt_len, ISCSI_NET_PARAM_IPV4_SUBNET);
++		if (nla)
++			iface_subnet = nla_data(nla);
++		break;
++	case ISCSI_NET_PARAM_IPV4_SUBNET:
++		iface_subnet = iface_param;
++		nla = nla_find(data, dt_len, ISCSI_NET_PARAM_IPV4_ADDR);
++		if (nla)
++			iface_ip = nla_data(nla);
++		break;
++	default:
++		shost_printk(KERN_ERR, shost, "Unsupported param %d\n",
++			     iface_param->param);
++	}
++
++	if (!iface_ip || !iface_subnet) {
++		shost_printk(KERN_ERR, shost, "IP and Subnet Mask required\n");
++		return -EINVAL;
++	}
++
++	ret = mgmt_set_ip(phba, iface_ip, iface_subnet,
++			ISCSI_BOOTPROTO_STATIC);
++
++	return ret;
++}
++
++static int
++beiscsi_set_ipv4(struct Scsi_Host *shost,
++		struct iscsi_iface_param_info *iface_param,
++		void *data, uint32_t dt_len)
++{
++	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++	int ret = 0;
++
++	/* Check the param */
++	switch (iface_param->param) {
++	case ISCSI_NET_PARAM_IPV4_GW:
++		ret = mgmt_set_gateway(phba, iface_param);
++		break;
++	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
++		if (iface_param->value[0] == ISCSI_BOOTPROTO_DHCP)
++			ret = mgmt_set_ip(phba, iface_param,
++					NULL, ISCSI_BOOTPROTO_DHCP);
++		else if (iface_param->value[0] == ISCSI_BOOTPROTO_STATIC)
++			ret = beiscsi_set_static_ip(shost, iface_param,
++						    data, dt_len);
++		else
++			shost_printk(KERN_ERR, shost, "Invalid BOOTPROTO: %d\n",
++					iface_param->value[0]);
++		break;
++	case ISCSI_NET_PARAM_IFACE_ENABLE:
++		if (iface_param->value[0] == ISCSI_IFACE_ENABLE)
++			ret = beiscsi_create_ipv4_iface(phba);
++		else
++			iscsi_destroy_iface(phba->ipv4_iface);
++		break;
++	case ISCSI_NET_PARAM_IPV4_SUBNET:
++	case ISCSI_NET_PARAM_IPV4_ADDR:
++		ret = beiscsi_set_static_ip(shost, iface_param,
++					    data, dt_len);
++		break;
++	default:
++		shost_printk(KERN_ERR, shost, "Param %d not supported\n",
++			     iface_param->param);
++	}
++
++	return ret;
++}
++
++static int
++beiscsi_set_ipv6(struct Scsi_Host *shost,
++		struct iscsi_iface_param_info *iface_param,
++		void *data, uint32_t dt_len)
++{
++	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++	int ret = 0;
++
++	switch (iface_param->param) {
++	case ISCSI_NET_PARAM_IFACE_ENABLE:
++		if (iface_param->value[0] == ISCSI_IFACE_ENABLE)
++			ret = beiscsi_create_ipv6_iface(phba);
++		else {
++			iscsi_destroy_iface(phba->ipv6_iface);
++			ret = 0;
 +		}
-+		status = sprintf(buf, "%s\n", iscsi_get_port_speed_name(shost));
 +		break;
- 	default:
- 		return iscsi_host_get_param(shost, param, buf);
- 	}
-@@ -1073,6 +1159,9 @@ umode_t be2iscsi_attr_is_visible(int param_type, int param)
++	case ISCSI_NET_PARAM_IPV6_ADDR:
++		ret = mgmt_set_ip(phba, iface_param, NULL,
++				  ISCSI_BOOTPROTO_STATIC);
++		break;
++	default:
++		shost_printk(KERN_ERR, shost, "Param %d not supported\n",
++			     iface_param->param);
++	}
++
++	return ret;
++}
++
++int be2iscsi_iface_set_param(struct Scsi_Host *shost,
++		void *data, uint32_t dt_len)
++{
++	struct iscsi_iface_param_info *iface_param = NULL;
++	struct nlattr *attrib;
++	uint32_t rm_len = dt_len;
++	int ret = 0 ;
++
++	nla_for_each_attr(attrib, data, dt_len, rm_len) {
++		iface_param = nla_data(attrib);
++
++		if (iface_param->param_type != ISCSI_NET_PARAM)
++			continue;
++
++		/*
++		 * BE2ISCSI only supports 1 interface
++		 */
++		if (iface_param->iface_num) {
++			shost_printk(KERN_ERR, shost, "Invalid iface_num %d."
++				     "Only iface_num 0 is supported.\n",
++				     iface_param->iface_num);
++			return -EINVAL;
++		}
++
++		switch (iface_param->iface_type) {
++		case ISCSI_IFACE_TYPE_IPV4:
++			ret = beiscsi_set_ipv4(shost, iface_param,
++					       data, dt_len);
++			break;
++		case ISCSI_IFACE_TYPE_IPV6:
++			ret = beiscsi_set_ipv6(shost, iface_param,
++					       data, dt_len);
++			break;
++		default:
++			shost_printk(KERN_ERR, shost,
++				     "Invalid iface type :%d passed\n",
++				     iface_param->iface_type);
++			break;
++		}
++
++		if (ret)
++			return ret;
++	}
++
++	return ret;
++}
++
++static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
++		struct iscsi_iface *iface, int param,
++		char *buf)
++{
++	struct be_cmd_get_if_info_resp if_info;
++	int len, ip_type = BE2_IPV4;
++
++	memset(&if_info, 0, sizeof(if_info));
++
++	if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++		ip_type = BE2_IPV6;
++
++	len = mgmt_get_if_info(phba, ip_type, &if_info);
++	if (len)
++		return len;
++
++	switch (param) {
++	case ISCSI_NET_PARAM_IPV4_ADDR:
++		len = sprintf(buf, "%pI4\n", &if_info.ip_addr.addr);
++		break;
++	case ISCSI_NET_PARAM_IPV6_ADDR:
++		len = sprintf(buf, "%pI6\n", &if_info.ip_addr.addr);
++		break;
++	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
++		if (!if_info.dhcp_state)
++			len = sprintf(buf, "static");
++		else
++			len = sprintf(buf, "dhcp");
++		break;
++	case ISCSI_NET_PARAM_IPV4_SUBNET:
++		len = sprintf(buf, "%pI4\n", &if_info.ip_addr.subnet_mask);
++		break;
++	default:
++		WARN_ON(1);
++	}
++
++	return len;
++}
++
++int be2iscsi_iface_get_param(struct iscsi_iface *iface,
++		enum iscsi_param_type param_type,
++		int param, char *buf)
++{
++	struct Scsi_Host *shost = iscsi_iface_to_shost(iface);
++	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++	struct be_cmd_get_def_gateway_resp gateway;
++	int len = -ENOSYS;
++
++	switch (param) {
++	case ISCSI_NET_PARAM_IPV4_ADDR:
++	case ISCSI_NET_PARAM_IPV4_SUBNET:
++	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
++	case ISCSI_NET_PARAM_IPV6_ADDR:
++		len = be2iscsi_get_if_param(phba, iface, param, buf);
++		break;
++	case ISCSI_NET_PARAM_IFACE_ENABLE:
++		len = sprintf(buf, "enabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_GW:
++		memset(&gateway, 0, sizeof(gateway));
++		len = mgmt_get_gateway(phba, BE2_IPV4, &gateway);
++		if (!len)
++			len = sprintf(buf, "%pI4\n", &gateway.ip_addr.addr);
++		break;
++	default:
++		len = -ENOSYS;
++	}
++
++	return len;
++}
++
+ /**
+  * beiscsi_ep_get_param - get the iscsi parameter
+  * @ep: pointer to iscsi ep
+@@ -359,46 +656,21 @@ int beiscsi_get_host_param(struct Scsi_Host *shost,
+ 
+ int beiscsi_get_macaddr(char *buf, struct beiscsi_hba *phba)
+ {
+-	struct be_cmd_resp_get_mac_addr *resp;
+-	struct be_mcc_wrb *wrb;
+-	unsigned int tag, wrb_num;
+-	unsigned short status, extd_status;
+-	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
++	struct be_cmd_get_nic_conf_resp resp;
+ 	int rc;
+ 
+-	if (phba->read_mac_address)
+-		return sysfs_format_mac(buf, phba->mac_address,
+-					ETH_ALEN);
++	if (strlen(phba->mac_address))
++		return strlcpy(buf, phba->mac_address, PAGE_SIZE);
+ 
+-	tag = be_cmd_get_mac_addr(phba);
+-	if (!tag) {
+-		SE_DEBUG(DBG_LVL_1, "be_cmd_get_mac_addr Failed\n");
+-		return -EBUSY;
+-	} else
+-		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
+-					 phba->ctrl.mcc_numtag[tag]);
++	memset(&resp, 0, sizeof(resp));
++	rc = mgmt_get_nic_conf(phba, &resp);
++	if (rc)
++		return rc;
+ 
+-	wrb_num = (phba->ctrl.mcc_numtag[tag] & 0x00FF0000) >> 16;
+-	extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
+-	status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
+-	if (status || extd_status) {
+-		SE_DEBUG(DBG_LVL_1, "Failed to get be_cmd_get_mac_addr"
+-				    " status = %d extd_status = %d\n",
+-				    status, extd_status);
+-		free_mcc_tag(&phba->ctrl, tag);
+-		return -EAGAIN;
+-	}
+-	wrb = queue_get_wrb(mccq, wrb_num);
+-	free_mcc_tag(&phba->ctrl, tag);
+-	resp = embedded_payload(wrb);
+-	memcpy(phba->mac_address, resp->mac_address, ETH_ALEN);
+-	rc = sysfs_format_mac(buf, phba->mac_address,
+-			       ETH_ALEN);
+-	phba->read_mac_address = 1;
+-	return rc;
++	memcpy(phba->mac_address, resp.mac_address, ETH_ALEN);
++	return sysfs_format_mac(buf, phba->mac_address, ETH_ALEN);
+ }
+ 
+-
+ /**
+  * beiscsi_conn_get_stats - get the iscsi stats
+  * @cls_conn: pointer to iscsi cls conn
+@@ -786,11 +1058,21 @@ void beiscsi_ep_disconnect(struct iscsi_endpoint *ep)
+ umode_t be2iscsi_attr_is_visible(int param_type, int param)
+ {
+ 	switch (param_type) {
++	case ISCSI_NET_PARAM:
++		switch (param) {
++		case ISCSI_NET_PARAM_IFACE_ENABLE:
++		case ISCSI_NET_PARAM_IPV4_ADDR:
++		case ISCSI_NET_PARAM_IPV4_SUBNET:
++		case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
++		case ISCSI_NET_PARAM_IPV4_GW:
++		case ISCSI_NET_PARAM_IPV6_ADDR:
++			return S_IRUGO;
++		default:
++			return 0;
++		}
  	case ISCSI_HOST_PARAM:
  		switch (param) {
  		case ISCSI_HOST_PARAM_HWADDRESS:
-+		case ISCSI_HOST_PARAM_INITIATOR_NAME:
-+		case ISCSI_HOST_PARAM_PORT_STATE:
-+		case ISCSI_HOST_PARAM_PORT_SPEED:
+-		case ISCSI_HOST_PARAM_IPADDRESS:
+-		case ISCSI_HOST_PARAM_INITIATOR_NAME:
  			return S_IRUGO;
  		default:
  			return 0;
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.h b/drivers/scsi/be2iscsi/be_iscsi.h
+index 2f6ada8..1111780 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.h
++++ b/drivers/scsi/be2iscsi/be_iscsi.h
+@@ -25,6 +25,21 @@
+ 
+ #define BE2_IPV4  0x1
+ #define BE2_IPV6  0x10
++#define BE2_DHCP_V4 0x05
++
++#define NON_BLOCKING 0x0
++#define BLOCKING 0x1
++
++void beiscsi_create_def_ifaces(struct beiscsi_hba *phba);
++
++void beiscsi_destroy_def_ifaces(struct beiscsi_hba *phba);
++
++int be2iscsi_iface_get_param(struct iscsi_iface *iface,
++			     enum iscsi_param_type param_type,
++			     int param, char *buf);
++
++int be2iscsi_iface_set_param(struct Scsi_Host *shost,
++			     void *data, uint32_t count);
+ 
+ umode_t be2iscsi_attr_is_visible(int param_type, int param);
+ 
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index d27d8b5..0c9ba59 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -231,10 +231,10 @@ static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
+ 	case ISCSI_BOOT_TGT_IP_ADDR:
+ 		if (boot_conn->dest_ipaddr.ip_type == 0x1)
+ 			rc = sprintf(buf, "%pI4\n",
+-				(char *)&boot_conn->dest_ipaddr.ip_address);
++				(char *)&boot_conn->dest_ipaddr.addr);
+ 		else
+ 			rc = sprintf(str, "%pI6\n",
+-				(char *)&boot_conn->dest_ipaddr.ip_address);
++				(char *)&boot_conn->dest_ipaddr.addr);
+ 		break;
+ 	case ISCSI_BOOT_TGT_PORT:
+ 		rc = sprintf(str, "%d\n", boot_conn->dest_port);
+@@ -312,12 +312,8 @@ static ssize_t beiscsi_show_boot_eth_info(void *data, int type, char *buf)
+ 		rc = sprintf(str, "0\n");
+ 		break;
+ 	case ISCSI_BOOT_ETH_MAC:
+-		rc  = beiscsi_get_macaddr(buf, phba);
+-		if (rc < 0) {
+-			SE_DEBUG(DBG_LVL_1, "beiscsi_get_macaddr Failed\n");
+-			return rc;
+-		}
+-	break;
++		rc  = beiscsi_get_macaddr(str, phba);
++		break;
+ 	default:
+ 		rc = -ENOSYS;
+ 		break;
+@@ -438,6 +434,7 @@ static struct beiscsi_hba *beiscsi_hba_alloc(struct pci_dev *pcidev)
+ 	phba->shost = shost;
+ 	phba->pcidev = pci_dev_get(pcidev);
+ 	pci_set_drvdata(pcidev, phba);
++	phba->interface_handle = 0xFFFFFFFF;
+ 
+ 	if (iscsi_host_add(shost, &phba->pcidev->dev))
+ 		goto free_devices;
+@@ -3471,8 +3468,8 @@ static void hwi_disable_intr(struct beiscsi_hba *phba)
+ 
+ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ {
+-	struct be_cmd_resp_get_boot_target *boot_resp;
+-	struct be_cmd_resp_get_session *session_resp;
++	struct be_cmd_get_boot_target_resp *boot_resp;
++	struct be_cmd_get_session_resp *session_resp;
+ 	struct be_mcc_wrb *wrb;
+ 	struct be_dma_mem nonemb_cmd;
+ 	unsigned int tag, wrb_num;
+@@ -3480,9 +3477,9 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
+ 	int ret = -ENOMEM;
+ 
+-	tag = beiscsi_get_boot_target(phba);
++	tag = mgmt_get_boot_target(phba);
+ 	if (!tag) {
+-		SE_DEBUG(DBG_LVL_1, "be_cmd_get_mac_addr Failed\n");
++		SE_DEBUG(DBG_LVL_1, "beiscsi_get_boot_info Failed\n");
+ 		return -EAGAIN;
+ 	} else
+ 		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
+@@ -3492,7 +3489,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 	extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
+ 	status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
+ 	if (status || extd_status) {
+-		SE_DEBUG(DBG_LVL_1, "be_cmd_get_mac_addr Failed"
++		SE_DEBUG(DBG_LVL_1, "beiscsi_get_boot_info Failed"
+ 				    " status = %d extd_status = %d\n",
+ 				    status, extd_status);
+ 		free_mcc_tag(&phba->ctrl, tag);
+@@ -3518,8 +3515,8 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 	}
+ 
+ 	memset(nonemb_cmd.va, 0, sizeof(*session_resp));
+-	tag = beiscsi_get_session_info(phba,
+-		boot_resp->boot_session_handle, &nonemb_cmd);
++	tag = mgmt_get_session_info(phba, boot_resp->boot_session_handle,
++				    &nonemb_cmd);
+ 	if (!tag) {
+ 		SE_DEBUG(DBG_LVL_1, "beiscsi_get_session_info"
+ 			" Failed\n");
+@@ -4264,6 +4261,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
+ 		return;
+ 	}
+ 
++	beiscsi_destroy_def_ifaces(phba);
+ 	beiscsi_quiesce(phba);
+ 	iscsi_boot_destroy_kset(phba->boot_kset);
+ 	iscsi_host_remove(phba->shost);
+@@ -4450,8 +4448,9 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
+ 		 * iscsi boot.
+ 		 */
+ 		shost_printk(KERN_ERR, phba->shost, "Could not set up "
+-			     "iSCSI boot info.");
++			     "iSCSI boot info.\n");
+ 
++	beiscsi_create_def_ifaces(phba);
+ 	SE_DEBUG(DBG_LVL_8, "\n\n\n SUCCESS - DRIVER LOADED\n\n\n");
+ 	return 0;
+ 
+@@ -4502,6 +4501,8 @@ struct iscsi_transport beiscsi_iscsi_transport = {
+ 	.bind_conn = beiscsi_conn_bind,
+ 	.destroy_conn = iscsi_conn_teardown,
+ 	.attr_is_visible = be2iscsi_attr_is_visible,
++	.set_iface_param = be2iscsi_iface_set_param,
++	.get_iface_param = be2iscsi_iface_get_param,
+ 	.set_param = beiscsi_set_param,
+ 	.get_conn_param = iscsi_conn_get_param,
+ 	.get_session_param = iscsi_session_get_param,
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 13e3bef..40fea6e 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -316,6 +316,8 @@ struct beiscsi_hba {
+ 	struct iscsi_endpoint **ep_array;
+ 	struct iscsi_boot_kset *boot_kset;
+ 	struct Scsi_Host *shost;
++	struct iscsi_iface *ipv4_iface;
++	struct iscsi_iface *ipv6_iface;
+ 	struct {
+ 		/**
+ 		 * group together since they are used most frequently
+@@ -345,7 +347,7 @@ struct beiscsi_hba {
+ 	struct work_struct work_cqs;	/* The work being queued */
+ 	struct be_ctrl_info ctrl;
+ 	unsigned int generation;
+-	unsigned int read_mac_address;
++	unsigned int interface_handle;
+ 	struct mgmt_session_info boot_sess;
+ 	struct invalidate_command_table inv_tbl[128];
+ 
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index e6cb10d..01bb04c 100644
+index ccc3852..e6cb10d 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.c
 +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -898,3 +898,30 @@ unsigned int be_cmd_get_initname(struct beiscsi_hba *phba)
+@@ -23,11 +23,11 @@
+ #include "be_mgmt.h"
+ #include "be_iscsi.h"
+ 
+-unsigned int beiscsi_get_boot_target(struct beiscsi_hba *phba)
++unsigned int mgmt_get_boot_target(struct beiscsi_hba *phba)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 	struct be_mcc_wrb *wrb;
+-	struct be_cmd_req_get_mac_addr *req;
++	struct be_cmd_get_boot_target_req *req;
+ 	unsigned int tag = 0;
+ 
+ 	SE_DEBUG(DBG_LVL_8, "In bescsi_get_boot_target\n");
+@@ -44,22 +44,22 @@ unsigned int beiscsi_get_boot_target(struct beiscsi_hba *phba)
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI_INI,
+ 			   OPCODE_ISCSI_INI_BOOT_GET_BOOT_TARGET,
+-			   sizeof(*req));
++			   sizeof(struct be_cmd_get_boot_target_resp));
+ 
+ 	be_mcc_notify(phba);
  	spin_unlock(&ctrl->mbox_lock);
  	return tag;
  }
+ 
+-unsigned int beiscsi_get_session_info(struct beiscsi_hba *phba,
+-				  u32 boot_session_handle,
+-				  struct be_dma_mem *nonemb_cmd)
++unsigned int mgmt_get_session_info(struct beiscsi_hba *phba,
++				   u32 boot_session_handle,
++				   struct be_dma_mem *nonemb_cmd)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 	struct be_mcc_wrb *wrb;
+ 	unsigned int tag = 0;
+-	struct  be_cmd_req_get_session *req;
+-	struct be_cmd_resp_get_session *resp;
++	struct  be_cmd_get_session_req *req;
++	struct be_cmd_get_session_resp *resp;
+ 	struct be_sge *sge;
+ 
+ 	SE_DEBUG(DBG_LVL_8, "In beiscsi_get_session_info\n");
+@@ -396,7 +396,6 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 			 struct sockaddr *dst_addr,
+ 			 struct beiscsi_endpoint *beiscsi_ep,
+ 			 struct be_dma_mem *nonemb_cmd)
+-
+ {
+ 	struct hwi_controller *phwi_ctrlr;
+ 	struct hwi_context_memory *phwi_context;
+@@ -442,17 +441,17 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	if (dst_addr->sa_family == PF_INET) {
+ 		__be32 s_addr = daddr_in->sin_addr.s_addr;
+ 		req->ip_address.ip_type = BE2_IPV4;
+-		req->ip_address.ip_address[0] = s_addr & 0x000000ff;
+-		req->ip_address.ip_address[1] = (s_addr & 0x0000ff00) >> 8;
+-		req->ip_address.ip_address[2] = (s_addr & 0x00ff0000) >> 16;
+-		req->ip_address.ip_address[3] = (s_addr & 0xff000000) >> 24;
++		req->ip_address.addr[0] = s_addr & 0x000000ff;
++		req->ip_address.addr[1] = (s_addr & 0x0000ff00) >> 8;
++		req->ip_address.addr[2] = (s_addr & 0x00ff0000) >> 16;
++		req->ip_address.addr[3] = (s_addr & 0xff000000) >> 24;
+ 		req->tcp_port = ntohs(daddr_in->sin_port);
+ 		beiscsi_ep->dst_addr = daddr_in->sin_addr.s_addr;
+ 		beiscsi_ep->dst_tcpport = ntohs(daddr_in->sin_port);
+ 		beiscsi_ep->ip_type = BE2_IPV4;
+ 	} else if (dst_addr->sa_family == PF_INET6) {
+ 		req->ip_address.ip_type = BE2_IPV6;
+-		memcpy(&req->ip_address.ip_address,
++		memcpy(&req->ip_address.addr,
+ 		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
+ 		req->tcp_port = ntohs(daddr_in6->sin6_port);
+ 		beiscsi_ep->dst_tcpport = ntohs(daddr_in6->sin6_port);
+@@ -487,34 +486,392 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	return tag;
+ }
+ 
+-unsigned int be_cmd_get_mac_addr(struct beiscsi_hba *phba)
++unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+-	struct be_mcc_wrb *wrb;
+-	struct be_cmd_req_get_mac_addr *req;
+-	unsigned int tag = 0;
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct be_cmd_get_all_if_id_req *req = embedded_payload(wrb);
++	struct be_cmd_get_all_if_id_req *pbe_allid = req;
++	int status = 0;
 +
-+unsigned int be_cmd_get_port_speed(struct beiscsi_hba *phba)
-+{
-+	unsigned int tag = 0;
-+	struct be_mcc_wrb *wrb;
-+	struct be_cmd_ntwk_link_status_req *req;
-+	struct be_ctrl_info *ctrl = &phba->ctrl;
++	memset(wrb, 0, sizeof(*wrb));
 +
 +	spin_lock(&ctrl->mbox_lock);
-+	tag = alloc_mcc_tag(phba);
-+	if (!tag) {
-+		spin_unlock(&ctrl->mbox_lock);
-+		return tag;
++
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
++			   OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID,
++			   sizeof(*req));
++	status = be_mbox_notify(ctrl);
++	if (!status)
++		phba->interface_handle = pbe_allid->if_hndl_list[0];
++	else {
++		shost_printk(KERN_WARNING, phba->shost,
++			     "Failed in mgmt_get_all_if_id\n");
++	}
++	spin_unlock(&ctrl->mbox_lock);
++
++	return status;
++}
++
++static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
++				struct be_dma_mem *nonemb_cmd, void *resp_buf,
++				int resp_buf_len)
++{
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
++	unsigned short status, extd_status;
++	struct be_sge *sge;
++	unsigned int tag;
++	int rc = 0;
+ 
+-	SE_DEBUG(DBG_LVL_8, "In be_cmd_get_mac_addr\n");
+ 	spin_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+ 		spin_unlock(&ctrl->mbox_lock);
+-		return tag;
++		rc = -ENOMEM;
++		goto free_cmd;
+ 	}
+-
+-	wrb = wrb_from_mccq(phba);
+-	req = embedded_payload(wrb);
++	memset(wrb, 0, sizeof(*wrb));
+ 	wrb->tag0 |= tag;
+-	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+-	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+-			   OPCODE_COMMON_ISCSI_NTWK_GET_NIC_CONFIG,
+-			   sizeof(*req));
++	sge = nonembedded_sgl(wrb);
++
++	be_wrb_hdr_prepare(wrb, nonemb_cmd->size, false, 1);
++	sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
++	sge->pa_lo = cpu_to_le32(nonemb_cmd->dma & 0xFFFFFFFF);
++	sge->len = cpu_to_le32(nonemb_cmd->size);
+ 
+ 	be_mcc_notify(phba);
+ 	spin_unlock(&ctrl->mbox_lock);
+-	return tag;
++
++	wait_event_interruptible(phba->ctrl.mcc_wait[tag],
++				 phba->ctrl.mcc_numtag[tag]);
++
++	extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
++	status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
++	if (status || extd_status) {
++		SE_DEBUG(DBG_LVL_1,
++			 "mgmt_exec_nonemb_cmd Failed status = %d"
++			 "extd_status = %d\n", status, extd_status);
++		rc = -EIO;
++		goto free_tag;
 +	}
 +
-+	wrb = wrb_from_mccq(phba);
-+	req = embedded_payload(wrb);
-+	wrb->tag0 |= tag;
-+	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
-+	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
-+			OPCODE_COMMON_NTWK_LINK_STATUS_QUERY,
-+			sizeof(*req));
++	if (resp_buf)
++		memcpy(resp_buf, nonemb_cmd->va, resp_buf_len);
 +
-+	be_mcc_notify(phba);
-+	spin_unlock(&ctrl->mbox_lock);
-+	return tag;
++free_tag:
++	free_mcc_tag(&phba->ctrl, tag);
++free_cmd:
++	pci_free_consistent(ctrl->pdev, nonemb_cmd->size,
++			    nonemb_cmd->va, nonemb_cmd->dma);
++	return rc;
 +}
++
++static int mgmt_alloc_cmd_data(struct beiscsi_hba *phba, struct be_dma_mem *cmd,
++			       int iscsi_cmd, int size)
++{
++	cmd->va = pci_alloc_consistent(phba->ctrl.pdev, sizeof(size),
++				       &cmd->dma);
++	if (!cmd->va) {
++		SE_DEBUG(DBG_LVL_1, "Failed to allocate memory for if info\n");
++		return -ENOMEM;
++	}
++	memset(cmd->va, 0, sizeof(size));
++	cmd->size = size;
++	be_cmd_hdr_prepare(cmd->va, CMD_SUBSYSTEM_ISCSI, iscsi_cmd, size);
++	return 0;
+ }
+ 
++static int
++mgmt_static_ip_modify(struct beiscsi_hba *phba,
++		      struct be_cmd_get_if_info_resp *if_info,
++		      struct iscsi_iface_param_info *ip_param,
++		      struct iscsi_iface_param_info *subnet_param,
++		      uint32_t ip_action)
++{
++	struct be_cmd_set_ip_addr_req *req;
++	struct be_dma_mem nonemb_cmd;
++	uint32_t ip_type;
++	int rc;
++
++	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++				 OPCODE_COMMON_ISCSI_NTWK_MODIFY_IP_ADDR,
++				 sizeof(*req));
++	if (rc)
++		return rc;
++
++	ip_type = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
++		BE2_IPV6 : BE2_IPV4 ;
++
++	req = nonemb_cmd.va;
++	req->ip_params.record_entry_count = 1;
++	req->ip_params.ip_record.action = ip_action;
++	req->ip_params.ip_record.interface_hndl =
++		phba->interface_handle;
++	req->ip_params.ip_record.ip_addr.size_of_structure =
++		sizeof(struct be_ip_addr_subnet_format);
++	req->ip_params.ip_record.ip_addr.ip_type = ip_type;
++
++	if (ip_action == IP_ACTION_ADD) {
++		memcpy(req->ip_params.ip_record.ip_addr.addr, ip_param->value,
++		       ip_param->len);
++
++		if (subnet_param)
++			memcpy(req->ip_params.ip_record.ip_addr.subnet_mask,
++			       subnet_param->value, subnet_param->len);
++	} else {
++		memcpy(req->ip_params.ip_record.ip_addr.addr,
++		       if_info->ip_addr.addr, ip_param->len);
++
++		memcpy(req->ip_params.ip_record.ip_addr.subnet_mask,
++		       if_info->ip_addr.subnet_mask, ip_param->len);
++	}
++
++	rc = mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
++	if (rc < 0)
++		shost_printk(KERN_WARNING, phba->shost,
++			     "Failed to Modify existing IP Address\n");
++	return rc;
++}
++
++static int mgmt_modify_gateway(struct beiscsi_hba *phba, uint8_t *gt_addr,
++			       uint32_t gtway_action, uint32_t param_len)
++{
++	struct be_cmd_set_def_gateway_req *req;
++	struct be_dma_mem nonemb_cmd;
++	int rt_val;
++
++
++	rt_val = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++				OPCODE_COMMON_ISCSI_NTWK_MODIFY_DEFAULT_GATEWAY,
++				sizeof(*req));
++	if (rt_val)
++		return rt_val;
++
++	req = nonemb_cmd.va;
++	req->action = gtway_action;
++	req->ip_addr.ip_type = BE2_IPV4;
++
++	memcpy(req->ip_addr.addr, gt_addr, param_len);
++
++	return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
++}
++
++int mgmt_set_ip(struct beiscsi_hba *phba,
++		struct iscsi_iface_param_info *ip_param,
++		struct iscsi_iface_param_info *subnet_param,
++		uint32_t boot_proto)
++{
++	struct be_cmd_get_def_gateway_resp gtway_addr_set;
++	struct be_cmd_get_if_info_resp if_info;
++	struct be_cmd_set_dhcp_req *dhcpreq;
++	struct be_cmd_rel_dhcp_req *reldhcp;
++	struct be_dma_mem nonemb_cmd;
++	uint8_t *gtway_addr;
++	uint32_t ip_type;
++	int rc;
++
++	if (mgmt_get_all_if_id(phba))
++		return -EIO;
++
++	memset(&if_info, 0, sizeof(if_info));
++	ip_type = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
++		BE2_IPV6 : BE2_IPV4 ;
++
++	rc = mgmt_get_if_info(phba, ip_type, &if_info);
++	if (rc)
++		return rc;
++
++	if (boot_proto == ISCSI_BOOTPROTO_DHCP) {
++		if (if_info.dhcp_state) {
++			shost_printk(KERN_WARNING, phba->shost,
++				     "DHCP Already Enabled\n");
++			return 0;
++		}
++		/* The ip_param->len is 1 in DHCP case. Setting
++		   proper IP len as this it is used while
++		   freeing the Static IP.
++		 */
++		ip_param->len = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
++				IP_V6_LEN : IP_V4_LEN;
++
++	} else {
++		if (if_info.dhcp_state) {
++
++			memset(&if_info, 0, sizeof(if_info));
++			rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++				OPCODE_COMMON_ISCSI_NTWK_REL_STATELESS_IP_ADDR,
++				sizeof(*reldhcp));
++
++			if (rc)
++				return rc;
++
++			reldhcp = nonemb_cmd.va;
++			reldhcp->interface_hndl = phba->interface_handle;
++			reldhcp->ip_type = ip_type;
++
++			rc = mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
++			if (rc < 0) {
++				shost_printk(KERN_WARNING, phba->shost,
++					     "Failed to Delete existing dhcp\n");
++				return rc;
++			}
++		}
++	}
++
++	/* Delete the Static IP Set */
++	if (if_info.ip_addr.addr[0]) {
++		rc = mgmt_static_ip_modify(phba, &if_info, ip_param, NULL,
++					   IP_ACTION_DEL);
++		if (rc)
++			return rc;
++	}
++
++	/* Delete the Gateway settings if mode change is to DHCP */
++	if (boot_proto == ISCSI_BOOTPROTO_DHCP) {
++		memset(&gtway_addr_set, 0, sizeof(gtway_addr_set));
++		rc = mgmt_get_gateway(phba, BE2_IPV4, &gtway_addr_set);
++		if (rc) {
++			shost_printk(KERN_WARNING, phba->shost,
++				     "Failed to Get Gateway Addr\n");
++			return rc;
++		}
++
++		if (gtway_addr_set.ip_addr.addr[0]) {
++			gtway_addr = (uint8_t *)&gtway_addr_set.ip_addr.addr;
++			rc = mgmt_modify_gateway(phba, gtway_addr,
++						 IP_ACTION_DEL, IP_V4_LEN);
++
++			if (rc) {
++				shost_printk(KERN_WARNING, phba->shost,
++					     "Failed to clear Gateway Addr Set\n");
++				return rc;
++			}
++		}
++	}
++
++	/* Set Adapter to DHCP/Static Mode */
++	if (boot_proto == ISCSI_BOOTPROTO_DHCP) {
++		rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++			OPCODE_COMMON_ISCSI_NTWK_CONFIG_STATELESS_IP_ADDR,
++			sizeof(*dhcpreq));
++		if (rc)
++			return rc;
++
++		dhcpreq = nonemb_cmd.va;
++		dhcpreq->flags = BLOCKING;
++		dhcpreq->retry_count = 1;
++		dhcpreq->interface_hndl = phba->interface_handle;
++		dhcpreq->ip_type = BE2_DHCP_V4;
++
++		return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
++	} else {
++		return mgmt_static_ip_modify(phba, &if_info, ip_param,
++					     subnet_param, IP_ACTION_ADD);
++	}
++
++	return rc;
++}
++
++int mgmt_set_gateway(struct beiscsi_hba *phba,
++		     struct iscsi_iface_param_info *gateway_param)
++{
++	struct be_cmd_get_def_gateway_resp gtway_addr_set;
++	uint8_t *gtway_addr;
++	int rt_val;
++
++	memset(&gtway_addr_set, 0, sizeof(gtway_addr_set));
++	rt_val = mgmt_get_gateway(phba, BE2_IPV4, &gtway_addr_set);
++	if (rt_val) {
++		shost_printk(KERN_WARNING, phba->shost,
++			     "Failed to Get Gateway Addr\n");
++		return rt_val;
++	}
++
++	if (gtway_addr_set.ip_addr.addr[0]) {
++		gtway_addr = (uint8_t *)&gtway_addr_set.ip_addr.addr;
++		rt_val = mgmt_modify_gateway(phba, gtway_addr, IP_ACTION_DEL,
++					     gateway_param->len);
++		if (rt_val) {
++			shost_printk(KERN_WARNING, phba->shost,
++				     "Failed to clear Gateway Addr Set\n");
++			return rt_val;
++		}
++	}
++
++	gtway_addr = (uint8_t *)&gateway_param->value;
++	rt_val = mgmt_modify_gateway(phba, gtway_addr, IP_ACTION_ADD,
++				     gateway_param->len);
++
++	if (rt_val)
++		shost_printk(KERN_WARNING, phba->shost,
++			     "Failed to Set Gateway Addr\n");
++
++	return rt_val;
++}
++
++int mgmt_get_gateway(struct beiscsi_hba *phba, int ip_type,
++		     struct be_cmd_get_def_gateway_resp *gateway)
++{
++	struct be_cmd_get_def_gateway_req *req;
++	struct be_dma_mem nonemb_cmd;
++	int rc;
++
++	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++				 OPCODE_COMMON_ISCSI_NTWK_GET_DEFAULT_GATEWAY,
++				 sizeof(*gateway));
++	if (rc)
++		return rc;
++
++	req = nonemb_cmd.va;
++	req->ip_type = ip_type;
++
++	return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, gateway,
++				    sizeof(*gateway));
++}
++
++int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
++		     struct be_cmd_get_if_info_resp *if_info)
++{
++	struct be_cmd_get_if_info_req *req;
++	struct be_dma_mem nonemb_cmd;
++	int rc;
++
++	if (mgmt_get_all_if_id(phba))
++		return -EIO;
++
++	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++				 OPCODE_COMMON_ISCSI_NTWK_GET_IF_INFO,
++				 sizeof(*if_info));
++	if (rc)
++		return rc;
++
++	req = nonemb_cmd.va;
++	req->interface_hndl = phba->interface_handle;
++	req->ip_type = ip_type;
++
++	return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, if_info,
++				    sizeof(*if_info));
++}
++
++int mgmt_get_nic_conf(struct beiscsi_hba *phba,
++		      struct be_cmd_get_nic_conf_resp *nic)
++{
++	struct be_dma_mem nonemb_cmd;
++	int rc;
++
++	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++				 OPCODE_COMMON_ISCSI_NTWK_GET_NIC_CONFIG,
++				 sizeof(*nic));
++	if (rc)
++		return rc;
++
++	return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, nic, sizeof(*nic));
++}
++
++
++
+ unsigned int be_cmd_get_initname(struct beiscsi_hba *phba)
+ {
+ 	unsigned int tag = 0;
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index 03400f3..5c2e376 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -20,12 +20,16 @@
+ #ifndef _BEISCSI_MGMT_
+ #define _BEISCSI_MGMT_
+ 
+-#include <linux/types.h>
+-#include <linux/list.h>
+ #include <scsi/scsi_bsg_iscsi.h>
+ #include "be_iscsi.h"
+ #include "be_main.h"
+ 
++#define IP_ACTION_ADD	0x01
++#define IP_ACTION_DEL	0x02
++
++#define IP_V6_LEN	16
++#define IP_V4_LEN	4
++
+ /**
+  * Pseudo amap definition in which each bit of the actual structure is defined
+  * as a byte: used to calculate offset/shift/mask of each field
+@@ -263,4 +267,27 @@ unsigned int mgmt_invalidate_connection(struct beiscsi_hba *phba,
+ 					 unsigned short issue_reset,
+ 					 unsigned short savecfg_flag);
+ 
++int mgmt_set_ip(struct beiscsi_hba *phba,
++		struct iscsi_iface_param_info *ip_param,
++		struct iscsi_iface_param_info *subnet_param,
++		uint32_t boot_proto);
++
++unsigned int mgmt_get_boot_target(struct beiscsi_hba *phba);
++
++unsigned int mgmt_get_session_info(struct beiscsi_hba *phba,
++				   u32 boot_session_handle,
++				   struct be_dma_mem *nonemb_cmd);
++
++int mgmt_get_nic_conf(struct beiscsi_hba *phba,
++		      struct be_cmd_get_nic_conf_resp *mac);
++
++int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
++		     struct be_cmd_get_if_info_resp *if_info);
++
++int mgmt_get_gateway(struct beiscsi_hba *phba, int ip_type,
++		     struct be_cmd_get_def_gateway_resp *gateway);
++
++int mgmt_set_gateway(struct beiscsi_hba *phba,
++		     struct iscsi_iface_param_info *gateway_param);
++
+ #endif
 -- 
 1.7.7.6
 
