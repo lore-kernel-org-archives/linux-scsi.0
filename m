@@ -1,13 +1,13 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 01/17] be2iscsi: Fix in the Asynchronous Code Path
-Date: Tue,  3 Apr 2012 23:41:36 -0500
-Message-ID: <1333514512-21799-2-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 06/17] be2iscsi:Set num_cpu = 1 if pci_enable_msix fails
+Date: Tue,  3 Apr 2012 23:41:41 -0500
+Message-ID: <1333514512-21799-7-git-send-email-michaelc@cs.wisc.edu>
 References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6626 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:22586 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751212Ab2DDEl7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Apr 2012 00:41:59 -0400
+	id S1751212Ab2DDEmB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Apr 2012 00:42:01 -0400
 In-Reply-To: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,241 +16,30 @@ Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Mike Christie <michael
 
 From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- Set the ASYNC PDU Handle pBuffer for Data ring with the VA/PA
- of the allocated memory for it.
- To get the correct ASYNC PDY Handle iterate the list and compare
- the PA set during initialization with the passed PHY Address.
- The buffer_size and num_enteries are common for HDR and Data ring
-
+	This patch sets the num_cpu to 1 if  msix not supported
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/be2iscsi/be_main.c |   86 ++++++++++++++++++++-------------------
- drivers/scsi/be2iscsi/be_main.h |    7 +--
- 2 files changed, 47 insertions(+), 46 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 375756f..4765f47 100644
+index 4e20213..f761924 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -1370,8 +1370,6 @@ hwi_get_async_handle(struct beiscsi_hba *phba,
- 	struct be_bus_address phys_addr;
- 	struct list_head *pbusy_list;
- 	struct async_pdu_handle *pasync_handle = NULL;
--	int buffer_len = 0;
--	unsigned char buffer_index = -1;
- 	unsigned char is_header = 0;
+@@ -4279,8 +4279,11 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
+ 	phba->num_cpus = num_cpus;
+ 	SE_DEBUG(DBG_LVL_8, "num_cpus = %d\n", phba->num_cpus);
  
- 	phys_addr.u.a32.address_lo =
-@@ -1392,22 +1390,11 @@ hwi_get_async_handle(struct beiscsi_hba *phba,
- 		pbusy_list = hwi_get_async_busy_list(pasync_ctx, 1,
- 			(pdpdu_cqe->dw[offsetof(struct amap_i_t_dpdu_cqe,
- 			index) / 32] & PDUCQE_INDEX_MASK));
--
--		buffer_len = (unsigned int)(phys_addr.u.a64.address -
--				pasync_ctx->async_header.pa_base.u.a64.address);
--
--		buffer_index = buffer_len /
--				pasync_ctx->async_header.buffer_size;
--
- 		break;
- 	case UNSOL_DATA_NOTIFY:
- 		pbusy_list = hwi_get_async_busy_list(pasync_ctx, 0, (pdpdu_cqe->
- 					dw[offsetof(struct amap_i_t_dpdu_cqe,
- 					index) / 32] & PDUCQE_INDEX_MASK));
--		buffer_len = (unsigned long)(phys_addr.u.a64.address -
--					pasync_ctx->async_data.pa_base.u.
--					a64.address);
--		buffer_index = buffer_len / pasync_ctx->async_data.buffer_size;
- 		break;
- 	default:
- 		pbusy_list = NULL;
-@@ -1418,11 +1405,9 @@ hwi_get_async_handle(struct beiscsi_hba *phba,
- 		return NULL;
- 	}
- 
--	WARN_ON(!(buffer_index <= pasync_ctx->async_data.num_entries));
- 	WARN_ON(list_empty(pbusy_list));
- 	list_for_each_entry(pasync_handle, pbusy_list, link) {
--		WARN_ON(pasync_handle->consumed);
--		if (pasync_handle->index == buffer_index)
-+		if (pasync_handle->pa.u.a64.address == phys_addr.u.a64.address)
- 			break;
- 	}
- 
-@@ -1449,15 +1434,13 @@ hwi_update_async_writables(struct hwi_async_pdu_context *pasync_ctx,
- 	unsigned int num_entries, writables = 0;
- 	unsigned int *pep_read_ptr, *pwritables;
- 
--
-+	num_entries = pasync_ctx->num_entries;
- 	if (is_header) {
- 		pep_read_ptr = &pasync_ctx->async_header.ep_read_ptr;
- 		pwritables = &pasync_ctx->async_header.writables;
--		num_entries = pasync_ctx->async_header.num_entries;
- 	} else {
- 		pep_read_ptr = &pasync_ctx->async_data.ep_read_ptr;
- 		pwritables = &pasync_ctx->async_data.writables;
--		num_entries = pasync_ctx->async_data.num_entries;
- 	}
- 
- 	while ((*pep_read_ptr) != cq_index) {
-@@ -1557,16 +1540,15 @@ static void hwi_post_async_buffers(struct beiscsi_hba *phba,
- 
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	pasync_ctx = HWI_GET_ASYNC_PDU_CTX(phwi_ctrlr);
-+	num_entries = pasync_ctx->num_entries;
- 
- 	if (is_header) {
--		num_entries = pasync_ctx->async_header.num_entries;
- 		writables = min(pasync_ctx->async_header.writables,
- 				pasync_ctx->async_header.free_entries);
- 		pfree_link = pasync_ctx->async_header.free_list.next;
- 		host_write_num = pasync_ctx->async_header.host_write_ptr;
- 		ring_id = phwi_ctrlr->default_pdu_hdr.id;
- 	} else {
--		num_entries = pasync_ctx->async_data.num_entries;
- 		writables = min(pasync_ctx->async_data.writables,
- 				pasync_ctx->async_data.free_entries);
- 		pfree_link = pasync_ctx->async_data.free_list.next;
-@@ -2450,7 +2432,7 @@ static void hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
- 	struct hba_parameters *p = &phba->params;
- 	struct hwi_async_pdu_context *pasync_ctx;
- 	struct async_pdu_handle *pasync_header_h, *pasync_data_h;
--	unsigned int index;
-+	unsigned int index, idx, num_per_mem, num_async_data;
- 	struct be_mem_descriptor *mem_descr;
- 
- 	mem_descr = (struct be_mem_descriptor *)phba->init_mem;
-@@ -2462,10 +2444,8 @@ static void hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
- 	pasync_ctx = phwi_ctrlr->phwi_ctxt->pasync_ctx;
- 	memset(pasync_ctx, 0, sizeof(*pasync_ctx));
- 
--	pasync_ctx->async_header.num_entries = p->asyncpdus_per_ctrl;
--	pasync_ctx->async_header.buffer_size = p->defpdu_hdr_sz;
--	pasync_ctx->async_data.buffer_size = p->defpdu_data_sz;
--	pasync_ctx->async_data.num_entries = p->asyncpdus_per_ctrl;
-+	pasync_ctx->num_entries = p->asyncpdus_per_ctrl;
-+	pasync_ctx->buffer_size = p->defpdu_hdr_sz;
- 
- 	mem_descr = (struct be_mem_descriptor *)phba->init_mem;
- 	mem_descr += HWI_MEM_ASYNC_HEADER_BUF;
-@@ -2510,19 +2490,6 @@ static void hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
- 	pasync_ctx->async_header.writables = 0;
- 	INIT_LIST_HEAD(&pasync_ctx->async_header.free_list);
- 
--	mem_descr = (struct be_mem_descriptor *)phba->init_mem;
--	mem_descr += HWI_MEM_ASYNC_DATA_BUF;
--	if (mem_descr->mem_array[0].virtual_address) {
--		SE_DEBUG(DBG_LVL_8,
--			 "hwi_init_async_pdu_ctx HWI_MEM_ASYNC_DATA_BUF"
--			 "va=%p\n", mem_descr->mem_array[0].virtual_address);
--	} else
--		shost_printk(KERN_WARNING, phba->shost,
--			    "No Virtual address\n");
--	pasync_ctx->async_data.va_base =
--			mem_descr->mem_array[0].virtual_address;
--	pasync_ctx->async_data.pa_base.u.a64.address =
--			mem_descr->mem_array[0].bus_address.u.a64.address;
- 
- 	mem_descr = (struct be_mem_descriptor *)phba->init_mem;
- 	mem_descr += HWI_MEM_ASYNC_DATA_RING;
-@@ -2553,6 +2520,25 @@ static void hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
- 	pasync_data_h =
- 		(struct async_pdu_handle *)pasync_ctx->async_data.handle_base;
- 
-+	mem_descr = (struct be_mem_descriptor *)phba->init_mem;
-+	mem_descr += HWI_MEM_ASYNC_DATA_BUF;
-+	if (mem_descr->mem_array[0].virtual_address) {
-+		SE_DEBUG(DBG_LVL_8,
-+			 "hwi_init_async_pdu_ctx HWI_MEM_ASYNC_DATA_BUF"
-+			 "va=%p\n", mem_descr->mem_array[0].virtual_address);
-+	} else
-+		shost_printk(KERN_WARNING, phba->shost,
-+			    "No Virtual address\n");
-+	idx = 0;
-+	pasync_ctx->async_data.va_base =
-+			mem_descr->mem_array[idx].virtual_address;
-+	pasync_ctx->async_data.pa_base.u.a64.address =
-+			mem_descr->mem_array[idx].bus_address.u.a64.address;
-+
-+	num_async_data = ((mem_descr->mem_array[idx].size) /
-+				phba->params.defpdu_data_sz);
-+	num_per_mem = 0;
-+
- 	for (index = 0; index < p->asyncpdus_per_ctrl; index++) {
- 		pasync_header_h->cri = -1;
- 		pasync_header_h->index = (char)index;
-@@ -2578,14 +2564,29 @@ static void hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
- 		pasync_data_h->cri = -1;
- 		pasync_data_h->index = (char)index;
- 		INIT_LIST_HEAD(&pasync_data_h->link);
-+
-+		if (!num_async_data) {
-+			num_per_mem = 0;
-+			idx++;
-+			pasync_ctx->async_data.va_base =
-+				mem_descr->mem_array[idx].virtual_address;
-+			pasync_ctx->async_data.pa_base.u.a64.address =
-+				mem_descr->mem_array[idx].
-+				bus_address.u.a64.address;
-+
-+			num_async_data = ((mem_descr->mem_array[idx].size) /
-+					phba->params.defpdu_data_sz);
-+		}
- 		pasync_data_h->pbuffer =
- 			(void *)((unsigned long)
- 			(pasync_ctx->async_data.va_base) +
--			(p->defpdu_data_sz * index));
-+			(p->defpdu_data_sz * num_per_mem));
- 
- 		pasync_data_h->pa.u.a64.address =
- 		    pasync_ctx->async_data.pa_base.u.a64.address +
--		    (p->defpdu_data_sz * index);
-+		    (p->defpdu_data_sz * num_per_mem);
-+		num_per_mem++;
-+		num_async_data--;
- 
- 		list_add_tail(&pasync_data_h->link,
- 			      &pasync_ctx->async_data.free_list);
-@@ -3993,7 +3994,8 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
- 	       &io_task->cmd_bhs->iscsi_hdr.lun, sizeof(struct scsi_lun));
- 
- 	AMAP_SET_BITS(struct amap_iscsi_wrb, lun, pwrb,
--		      cpu_to_be16(*(unsigned short *)&io_task->cmd_bhs->iscsi_hdr.lun));
-+		      cpu_to_be16(*(unsigned short *)
-+				  &io_task->cmd_bhs->iscsi_hdr.lun));
- 	AMAP_SET_BITS(struct amap_iscsi_wrb, r2t_exp_dtl, pwrb, xferlen);
- 	AMAP_SET_BITS(struct amap_iscsi_wrb, wrb_idx, pwrb,
- 		      io_task->pwrb_handle->wrb_index);
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index b4a06d5..50f231f 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -525,8 +525,6 @@ struct hwi_async_pdu_context {
- 
- 		unsigned int free_entries;
- 		unsigned int busy_entries;
--		unsigned int buffer_size;
--		unsigned int num_entries;
- 
- 		struct list_head free_list;
- 	} async_header;
-@@ -543,11 +541,12 @@ struct hwi_async_pdu_context {
- 
- 		unsigned int free_entries;
- 		unsigned int busy_entries;
--		unsigned int buffer_size;
- 		struct list_head free_list;
--		unsigned int num_entries;
- 	} async_data;
- 
-+	unsigned int buffer_size;
-+	unsigned int num_entries;
-+
- 	/**
- 	 * This is a varying size list! Do not add anything
- 	 * after this entry!!
+-	if (enable_msix)
++	if (enable_msix) {
+ 		beiscsi_msix_enable(phba);
++		if (!phba->msix_enabled)
++			phba->num_cpus = 1;
++	}
+ 	ret = be_ctrl_init(phba, pcidev);
+ 	if (ret) {
+ 		shost_printk(KERN_ERR, phba->shost, "beiscsi_dev_probe-"
 -- 
 1.7.7.6
 
