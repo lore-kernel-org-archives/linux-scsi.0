@@ -1,62 +1,55 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 08/17] be2iscsi:Code cleanup, removing the goto statement
-Date: Tue,  3 Apr 2012 23:41:43 -0500
-Message-ID: <1333514512-21799-9-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 11/17] be2iscsi:Bump the driver Version
+Date: Tue,  3 Apr 2012 23:41:46 -0500
+Message-ID: <1333514512-21799-12-git-send-email-michaelc@cs.wisc.edu>
 References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60638 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59303 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752002Ab2DDEmF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Apr 2012 00:42:05 -0400
+	id S1752081Ab2DDEmM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Apr 2012 00:42:12 -0400
 In-Reply-To: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <MinhDuc.Tran@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>
 
 From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+	This patch bumps the driver version
+Signed-off-by: Minh Tran <MinhDuc.Tran@Emulex.Com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/be2iscsi/be_main.c |   11 ++++-------
- 1 files changed, 4 insertions(+), 7 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |    1 +
+ drivers/scsi/be2iscsi/be_main.h |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 7291d6e..7138f59 100644
+index 82d933c..595dea5 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -147,15 +147,15 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
- 	struct invalidate_command_table *inv_tbl;
- 	struct be_dma_mem nonemb_cmd;
- 	unsigned int cid, tag, i, num_invalidate;
--	int rc = FAILED;
+@@ -48,6 +48,7 @@ static unsigned int num_hba = 0;
  
- 	/* invalidate iocbs */
- 	cls_session = starget_to_session(scsi_target(sc->device));
- 	session = cls_session->dd_data;
- 	spin_lock_bh(&session->lock);
--	if (!session->leadconn || session->state != ISCSI_STATE_LOGGED_IN)
--		goto unlock;
--
-+	if (!session->leadconn || session->state != ISCSI_STATE_LOGGED_IN) {
-+		spin_unlock_bh(&session->lock);
-+		return FAILED;
-+	}
- 	conn = session->leadconn;
- 	beiscsi_conn = conn->dd_data;
- 	phba = beiscsi_conn->phba;
-@@ -208,9 +208,6 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
- 	pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
- 			    nonemb_cmd.va, nonemb_cmd.dma);
- 	return iscsi_eh_device_reset(sc);
--unlock:
--	spin_unlock_bh(&session->lock);
--	return rc;
- }
+ MODULE_DEVICE_TABLE(pci, beiscsi_pci_id_table);
+ MODULE_DESCRIPTION(DRV_DESC " " BUILD_STR);
++MODULE_VERSION(BUILD_STR);
+ MODULE_AUTHOR("Emulex Corporation");
+ MODULE_LICENSE("GPL");
+ module_param(be_iopoll_budget, int, 0);
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 49289ef..13e3bef 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -34,7 +34,7 @@
  
- static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
+ #include "be.h"
+ #define DRV_NAME		"be2iscsi"
+-#define BUILD_STR		"4.1.239.0"
++#define BUILD_STR		"4.2.162.0"
+ #define BE_NAME			"Emulex OneConnect" \
+ 				"Open-iSCSI Driver version" BUILD_STR
+ #define DRV_DESC		BE_NAME " " "Driver"
 -- 
 1.7.7.6
 
