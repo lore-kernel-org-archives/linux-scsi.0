@@ -1,56 +1,46 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2] hpsa: use check_signature
-Date: Wed,  4 Apr 2012 22:14:59 +0900
-Message-ID: <1333545299-13040-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Mike Miller <mike.miller@hp.com>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, iss_storagedev@hp.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 42918] fcoe: Enabling VN2VN mode triggers a circular locking
+ complaint
+Date: Wed, 4 Apr 2012 14:56:52 GMT
+Message-ID: <201204041456.q34EuqDM007555@bugzilla.kernel.org>
+References: <bug-42918-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bugzilla.kernel.org ([198.145.19.204]:41416 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756354Ab2DDO4w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Apr 2012 10:56:52 -0400
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q34Euq1h007556
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Apr 2012 14:56:52 GMT
+In-Reply-To: <bug-42918-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Use check_signature to find a signature in the mmio address.
+https://bugzilla.kernel.org/show_bug.cgi?id=42918
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Acked-by: Mike Miller <mike.miller@hp.com>
-Cc: Mike Miller <mike.miller@hp.com>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: iss_storagedev@hp.com
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
-v2: select CHECK_SIGNATURE in Kconfig
 
- drivers/scsi/Kconfig |    1 +
- drivers/scsi/hpsa.c  |    5 +----
- 2 files changed, 2 insertions(+), 4 deletions(-)
+Florian Mickler <florian@mickler.org> changed:
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 29684c8..bea04e5 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -408,6 +408,7 @@ config BLK_DEV_3W_XXXX_RAID
- config SCSI_HPSA
- 	tristate "HP Smart Array SCSI driver"
- 	depends on PCI && SCSI
-+	select CHECK_SIGNATURE
- 	help
- 	  This driver supports HP Smart Array Controllers (circa 2009).
- 	  It is a SCSI alternative to the cciss driver, which is a block
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ddbf5fe..c867eeb 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3839,10 +3839,7 @@ static void __devinit hpsa_find_board_params(struct ctlr_info *h)
- 
- static inline bool hpsa_CISS_signature_present(struct ctlr_info *h)
- {
--	if ((readb(&h->cfgtable->Signature[0]) != 'C') ||
--	    (readb(&h->cfgtable->Signature[1]) != 'I') ||
--	    (readb(&h->cfgtable->Signature[2]) != 'S') ||
--	    (readb(&h->cfgtable->Signature[3]) != 'S')) {
-+	if (!check_signature(h->cfgtable->Signature, "CISS", 4)) {
- 		dev_warn(&h->pdev->dev, "not a valid CISS config table\n");
- 		return false;
- 	}
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |florian@mickler.org
+
+
+
+
+--- Comment #2 from Florian Mickler <florian@mickler.org>  2012-04-04 14:56:51 ---
+A patch referencing this bug report has been merged in Linux v3.4-rc1:
+
+commit 2280512342ead9a2858b1490b21e5bcaf4f4cfc7
+Author: Robert Love <robert.w.love@intel.com>
+Date:   Tue Mar 13 18:22:12 2012 -0700
+
+    [SCSI] fcoe: Drop the rtnl_mutex before calling fcoe_ctlr_link_up
+
 -- 
-1.7.4.4
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
