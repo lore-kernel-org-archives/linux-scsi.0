@@ -1,192 +1,294 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 14/17] be2iscsi: Get Initiator Name for the iSCSI_Host
-Date: Tue,  3 Apr 2012 23:41:49 -0500
-Message-ID: <1333514512-21799-15-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 15/17] be2iscsi: Adding bsg interface for be2iscsi
+Date: Tue,  3 Apr 2012 23:41:50 -0500
+Message-ID: <1333514512-21799-16-git-send-email-michaelc@cs.wisc.edu>
 References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50937 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50781 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752081Ab2DDEmO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Apr 2012 00:42:14 -0400
+	id S1752198Ab2DDEmP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Apr 2012 00:42:15 -0400
 In-Reply-To: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-From: John Soni Jose <sony.john-n@emulex.com>
+From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- Implement the ISCSI_HOST_PARAM_INITIATOR_NAME for .get_host_param
+From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+   This patch enables bsg interface for the be2iscsi driver
+
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/be2iscsi/be_cmds.c  |    2 +
- drivers/scsi/be2iscsi/be_cmds.h  |   12 +++++++++
- drivers/scsi/be2iscsi/be_iscsi.c |   50 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/be2iscsi/be_mgmt.c  |   26 +++++++++++++++++++
- include/scsi/iscsi_proto.h       |    2 +
- 5 files changed, 92 insertions(+), 0 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.h |    2 +
+ drivers/scsi/be2iscsi/be_main.c |   76 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_mgmt.c |   70 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/be2iscsi/be_mgmt.h |   15 ++++++++
+ 4 files changed, 162 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index cdb1536..d2e9e93 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -15,6 +15,8 @@
-  * Costa Mesa, CA 92626
-  */
- 
-+#include <scsi/iscsi_proto.h>
-+
- #include "be.h"
- #include "be_mgmt.h"
- #include "be_main.h"
 diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index c85d73c..f343ed6 100644
+index f343ed6..b15de3e 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.h
 +++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -513,6 +513,17 @@ struct be_cmd_resp_get_mac_addr {
- 	u32 rsvd[23];
+@@ -822,6 +822,8 @@ struct be_all_if_id {
+ #define OPCODE_ISCSI_INI_DRIVER_OFFLOAD_SESSION 41
+ #define OPCODE_ISCSI_INI_DRIVER_INVALIDATE_CONNECTION 42
+ #define OPCODE_ISCSI_INI_BOOT_GET_BOOT_TARGET	52
++#define OPCODE_COMMON_WRITE_FLASH		96
++#define OPCODE_COMMON_READ_FLASH		97
+ 
+ /* --- CMD_ISCSI_INVALIDATE_CONNECTION_TYPE --- */
+ #define CMD_ISCSI_COMMAND_INVALIDATE		1
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index e4ad4d1..d27d8b5 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -28,8 +28,11 @@
+ #include <linux/semaphore.h>
+ #include <linux/iscsi_boot_sysfs.h>
+ #include <linux/module.h>
++#include <linux/bsg-lib.h>
+ 
+ #include <scsi/libiscsi.h>
++#include <scsi/scsi_bsg_iscsi.h>
++#include <scsi/scsi_netlink.h>
+ #include <scsi/scsi_transport_iscsi.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -407,6 +410,8 @@ static struct scsi_host_template beiscsi_sht = {
+ 	.max_sectors = BEISCSI_MAX_SECTORS,
+ 	.cmd_per_lun = BEISCSI_CMD_PER_LUN,
+ 	.use_clustering = ENABLE_CLUSTERING,
++	.vendor_id = SCSI_NL_VID_TYPE_PCI | BE_VENDOR_ID,
++
  };
  
-+#define BEISCSI_ALIAS_LEN 32
-+
-+struct be_cmd_hba_name {
-+	struct be_cmd_req_hdr hdr;
-+	u16 flags;
-+	u16 rsvd0;
-+	u8 initiator_name[ISCSI_NAME_LEN];
-+	u8 initiator_alias[BEISCSI_ALIAS_LEN];
-+} __packed;
-+
-+
- int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
- 			  struct be_queue_info *eq, int eq_delay);
- 
-@@ -531,6 +542,7 @@ int be_poll_mcc(struct be_ctrl_info *ctrl);
- int mgmt_check_supported_fw(struct be_ctrl_info *ctrl,
- 				      struct beiscsi_hba *phba);
- unsigned int be_cmd_get_mac_addr(struct beiscsi_hba *phba);
-+unsigned int be_cmd_get_initname(struct beiscsi_hba *phba);
- unsigned int beiscsi_get_boot_target(struct beiscsi_hba *phba);
- unsigned int beiscsi_get_session_info(struct beiscsi_hba *phba,
- 				  u32 boot_session_handle,
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 2bb681e..1af7774 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -279,6 +279,48 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
+ static struct scsi_transport_template *beiscsi_scsi_transport;
+@@ -4132,6 +4137,76 @@ static int beiscsi_task_xmit(struct iscsi_task *task)
+ 	return beiscsi_iotask(task, sg, num_sg, xferlen, writedir);
  }
  
- /**
-+ * beiscsi_get_initname - Read Initiator Name from flash
-+ * @buf: buffer bointer
-+ * @phba: The device priv structure instance
-+ *
-+ * returns number of bytes
++/**
++ * beiscsi_bsg_request - handle bsg request from ISCSI transport
++ * @job: job to handle
 + */
-+static int beiscsi_get_initname(char *buf, struct beiscsi_hba *phba)
++static int beiscsi_bsg_request(struct bsg_job *job)
 +{
-+	int rc;
-+	unsigned int tag, wrb_num;
++	struct Scsi_Host *shost;
++	struct beiscsi_hba *phba;
++	struct iscsi_bsg_request *bsg_req = job->request;
++	int rc = -EINVAL;
++	unsigned int tag;
++	struct be_dma_mem nonemb_cmd;
++	struct be_cmd_resp_hdr *resp;
++	struct iscsi_bsg_reply *bsg_reply = job->reply;
 +	unsigned short status, extd_status;
-+	struct be_mcc_wrb *wrb;
-+	struct be_cmd_hba_name *resp;
-+	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
 +
-+	tag = be_cmd_get_initname(phba);
-+	if (!tag) {
-+		SE_DEBUG(DBG_LVL_1, "Getting Initiator Name Failed\n");
-+		return -EBUSY;
-+	} else
-+		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
-+				phba->ctrl.mcc_numtag[tag]);
++	shost = iscsi_job_to_shost(job);
++	phba = iscsi_host_priv(shost);
 +
-+	wrb_num = (phba->ctrl.mcc_numtag[tag] & 0x00FF0000) >> 16;
-+	extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
-+	status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
-+
-+	if (status || extd_status) {
-+		SE_DEBUG(DBG_LVL_1, "MailBox Command Failed with "
-+				"status = %d extd_status = %d\n",
-+				status, extd_status);
++	switch (bsg_req->msgcode) {
++	case ISCSI_BSG_HST_VENDOR:
++		nonemb_cmd.va = pci_alloc_consistent(phba->ctrl.pdev,
++					job->request_payload.payload_len,
++					&nonemb_cmd.dma);
++		if (nonemb_cmd.va == NULL) {
++			SE_DEBUG(DBG_LVL_1, "Failed to allocate memory for "
++				 "beiscsi_bsg_request\n");
++			return -EIO;
++		}
++		tag = mgmt_vendor_specific_fw_cmd(&phba->ctrl, phba, job,
++						  &nonemb_cmd);
++		if (!tag) {
++			SE_DEBUG(DBG_LVL_1, "be_cmd_get_mac_addr Failed\n");
++			pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
++					    nonemb_cmd.va, nonemb_cmd.dma);
++			return -EAGAIN;
++		} else
++			wait_event_interruptible(phba->ctrl.mcc_wait[tag],
++						 phba->ctrl.mcc_numtag[tag]);
++		extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
++		status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
 +		free_mcc_tag(&phba->ctrl, tag);
-+		return -EAGAIN;
++		resp = (struct be_cmd_resp_hdr *)nonemb_cmd.va;
++		sg_copy_from_buffer(job->reply_payload.sg_list,
++				    job->reply_payload.sg_cnt,
++				    nonemb_cmd.va, (resp->response_length
++				    + sizeof(*resp)));
++		bsg_reply->reply_payload_rcv_len = resp->response_length;
++		bsg_reply->result = status;
++		bsg_job_done(job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
++		pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
++				    nonemb_cmd.va, nonemb_cmd.dma);
++		if (status || extd_status) {
++			SE_DEBUG(DBG_LVL_1, "be_cmd_get_mac_addr Failed"
++				 " status = %d extd_status = %d\n",
++				 status, extd_status);
++			return -EIO;
++		}
++		break;
++
++	default:
++		SE_DEBUG(DBG_LVL_1, "Unsupported bsg command: 0x%x\n",
++			 bsg_req->msgcode);
++		break;
 +	}
-+	wrb = queue_get_wrb(mccq, wrb_num);
-+	free_mcc_tag(&phba->ctrl, tag);
-+	resp = embedded_payload(wrb);
-+	rc = sprintf(buf, "%s\n", resp->initiator_name);
++
 +	return rc;
 +}
 +
-+/**
-  * beiscsi_get_host_param - get the iscsi parameter
-  * @shost: pointer to scsi_host structure
-  * @param: parameter type identifier
-@@ -301,6 +343,14 @@ int beiscsi_get_host_param(struct Scsi_Host *shost,
- 			return status;
- 		}
- 		break;
-+	case ISCSI_HOST_PARAM_INITIATOR_NAME:
-+		status = beiscsi_get_initname(buf, phba);
-+		if (status < 0) {
-+			SE_DEBUG(DBG_LVL_1,
-+					"Retreiving Initiator Name Failed\n");
-+			return status;
-+		}
-+		break;
- 	default:
- 		return iscsi_host_get_param(shost, param, buf);
- 	}
+ static void beiscsi_quiesce(struct beiscsi_hba *phba)
+ {
+ 	struct hwi_controller *phwi_ctrlr;
+@@ -4444,6 +4519,7 @@ struct iscsi_transport beiscsi_iscsi_transport = {
+ 	.ep_poll = beiscsi_ep_poll,
+ 	.ep_disconnect = beiscsi_ep_disconnect,
+ 	.session_recovery_timedout = iscsi_session_recovery_timedout,
++	.bsg_request = beiscsi_bsg_request,
+ };
+ 
+ static struct pci_driver beiscsi_pci_driver = {
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 44762cf..f7d27e9 100644
+index f7d27e9..ccc3852 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.c
 +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -447,3 +447,29 @@ unsigned int be_cmd_get_mac_addr(struct beiscsi_hba *phba)
- 	return tag;
+@@ -17,9 +17,11 @@
+  * Costa Mesa, CA 92626
+  */
+ 
++#include <linux/bsg-lib.h>
++#include <scsi/scsi_transport_iscsi.h>
++#include <scsi/scsi_bsg_iscsi.h>
+ #include "be_mgmt.h"
+ #include "be_iscsi.h"
+-#include <scsi/scsi_transport_iscsi.h>
+ 
+ unsigned int beiscsi_get_boot_target(struct beiscsi_hba *phba)
+ {
+@@ -187,6 +189,72 @@ int mgmt_check_supported_fw(struct be_ctrl_info *ctrl,
+ 	return status;
  }
  
-+unsigned int be_cmd_get_initname(struct beiscsi_hba *phba)
++unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
++					 struct beiscsi_hba *phba,
++					 struct bsg_job *job,
++					 struct be_dma_mem *nonemb_cmd)
 +{
++	struct be_cmd_resp_hdr *resp;
++	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
++	struct be_sge *mcc_sge = nonembedded_sgl(wrb);
 +	unsigned int tag = 0;
-+	struct be_mcc_wrb *wrb;
-+	struct be_cmd_hba_name *req;
-+	struct be_ctrl_info *ctrl = &phba->ctrl;
++	struct iscsi_bsg_request *bsg_req = job->request;
++	struct be_bsg_vendor_cmd *req = nonemb_cmd->va;
++	unsigned short region, sector_size, sector, offset;
 +
++	nonemb_cmd->size = job->request_payload.payload_len;
++	memset(nonemb_cmd->va, 0, nonemb_cmd->size);
++	resp = nonemb_cmd->va;
++	region =  bsg_req->rqst_data.h_vendor.vendor_cmd[1];
++	sector_size =  bsg_req->rqst_data.h_vendor.vendor_cmd[2];
++	sector =  bsg_req->rqst_data.h_vendor.vendor_cmd[3];
++	offset =  bsg_req->rqst_data.h_vendor.vendor_cmd[4];
++	req->region = region;
++	req->sector = sector;
++	req->offset = offset;
 +	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	switch (bsg_req->rqst_data.h_vendor.vendor_cmd[0]) {
++	case BEISCSI_WRITE_FLASH:
++		offset = sector * sector_size + offset;
++		be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
++				   OPCODE_COMMON_WRITE_FLASH, sizeof(*req));
++		sg_copy_to_buffer(job->request_payload.sg_list,
++				  job->request_payload.sg_cnt,
++				  nonemb_cmd->va + offset, job->request_len);
++		break;
++	case BEISCSI_READ_FLASH:
++		be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
++			   OPCODE_COMMON_READ_FLASH, sizeof(*req));
++		break;
++	default:
++		shost_printk(KERN_WARNING, phba->shost,
++			     "Unsupported cmd = 0x%x\n\n", bsg_req->rqst_data.
++			     h_vendor.vendor_cmd[0]);
++		spin_unlock(&ctrl->mbox_lock);
++		return -ENOSYS;
++	}
++
 +	tag = alloc_mcc_tag(phba);
 +	if (!tag) {
 +		spin_unlock(&ctrl->mbox_lock);
 +		return tag;
 +	}
 +
-+	wrb = wrb_from_mccq(phba);
-+	req = embedded_payload(wrb);
++	be_wrb_hdr_prepare(wrb, nonemb_cmd->size, false,
++			   job->request_payload.sg_cnt);
++	mcc_sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
++	mcc_sge->pa_lo = cpu_to_le32(nonemb_cmd->dma & 0xFFFFFFFF);
++	mcc_sge->len = cpu_to_le32(nonemb_cmd->size);
 +	wrb->tag0 |= tag;
-+	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
-+	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI_INI,
-+			OPCODE_ISCSI_INI_CFG_GET_HBA_NAME,
-+			sizeof(*req));
 +
 +	be_mcc_notify(phba);
++
 +	spin_unlock(&ctrl->mbox_lock);
 +	return tag;
 +}
-diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-index 988ba06..c1260d8 100644
---- a/include/scsi/iscsi_proto.h
-+++ b/include/scsi/iscsi_proto.h
-@@ -661,6 +661,8 @@ struct iscsi_reject {
- 
- #define ISCSI_DEF_TIME2WAIT			2
- 
-+#define ISCSI_NAME_LEN				224
 +
- /************************* RFC 3720 End *****************************/
+ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short chute)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index d7fdfce..03400f3 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -22,6 +22,7 @@
  
- #endif /* ISCSI_PROTO_H */
+ #include <linux/types.h>
+ #include <linux/list.h>
++#include <scsi/scsi_bsg_iscsi.h>
+ #include "be_iscsi.h"
+ #include "be_main.h"
+ 
+@@ -98,6 +99,10 @@ unsigned int mgmt_invalidate_icds(struct beiscsi_hba *phba,
+ 				struct invalidate_command_table *inv_tbl,
+ 				unsigned int num_invalidate, unsigned int cid,
+ 				struct be_dma_mem *nonemb_cmd);
++unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
++					 struct beiscsi_hba *phba,
++					 struct bsg_job *job,
++					 struct be_dma_mem *nonemb_cmd);
+ 
+ struct iscsi_invalidate_connection_params_in {
+ 	struct be_cmd_req_hdr hdr;
+@@ -204,6 +209,13 @@ struct be_mgmt_controller_attributes_resp {
+ 	struct mgmt_controller_attributes params;
+ } __packed;
+ 
++struct be_bsg_vendor_cmd {
++	struct be_cmd_req_hdr hdr;
++	unsigned short region;
++	unsigned short offset;
++	unsigned short sector;
++} __packed;
++
+ /* configuration management */
+ 
+ #define GET_MGMT_CONTROLLER_WS(phba)    (phba->pmgmt_ws)
+@@ -225,6 +237,9 @@ struct be_mgmt_controller_attributes_resp {
+ 					bus_address.u.a32.address_hi;  \
+ }
+ 
++#define BEISCSI_WRITE_FLASH 0
++#define BEISCSI_READ_FLASH 1
++
+ struct beiscsi_endpoint {
+ 	struct beiscsi_hba *phba;
+ 	struct beiscsi_sess *sess;
 -- 
 1.7.7.6
 
