@@ -1,12 +1,12 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 07/17] be2iscsi:Fix double free of MCCQ info memory.
-Date: Tue,  3 Apr 2012 23:41:42 -0500
-Message-ID: <1333514512-21799-8-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 09/17] be2iscsi:Fix the function return values.
+Date: Tue,  3 Apr 2012 23:41:44 -0500
+Message-ID: <1333514512-21799-10-git-send-email-michaelc@cs.wisc.edu>
 References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40303 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49667 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751964Ab2DDEmF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751481Ab2DDEmF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 4 Apr 2012 00:42:05 -0400
 In-Reply-To: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,35 +16,47 @@ Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.j
 
 From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- In case of MCC_Q creation failed, the MCCQ info memory is freed
- from be_mcc_queues_destroy and be_mcc_queues_create. This caused
- kernel to panic because of double free.
+	This patch fixes the return value
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
-dd
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/be2iscsi/be_main.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index f761924..7291d6e 100644
+index 7138f59..2d76cb5 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2908,9 +2908,11 @@ beiscsi_post_pages(struct beiscsi_hba *phba)
- static void be_queue_free(struct beiscsi_hba *phba, struct be_queue_info *q)
- {
- 	struct be_dma_mem *mem = &q->dma_mem;
--	if (mem->va)
-+	if (mem->va) {
- 		pci_free_consistent(phba->pcidev, mem->size,
- 			mem->va, mem->dma);
-+		mem->va = NULL;
-+	}
+@@ -541,8 +541,7 @@ static int be_ctrl_init(struct beiscsi_hba *phba, struct pci_dev *pdev)
+ 						  &mbox_mem_alloc->dma);
+ 	if (!mbox_mem_alloc->va) {
+ 		beiscsi_unmap_pci_function(phba);
+-		status = -ENOMEM;
+-		return status;
++		return -ENOMEM;
+ 	}
+ 
+ 	mbox_mem_align->size = sizeof(struct be_mcc_mailbox);
+@@ -3209,7 +3208,7 @@ static int hwi_init_port(struct beiscsi_hba *phba)
+ error:
+ 	shost_printk(KERN_ERR, phba->shost, "hwi_init_port failed");
+ 	hwi_cleanup(phba);
+-	return -ENOMEM;
++	return status;
  }
  
- static int be_queue_alloc(struct beiscsi_hba *phba, struct be_queue_info *q,
+ static int hwi_init_controller(struct beiscsi_hba *phba)
+@@ -3284,7 +3283,7 @@ static int beiscsi_init_controller(struct beiscsi_hba *phba)
+ 
+ free_init:
+ 	beiscsi_free_mem(phba);
+-	return -ENOMEM;
++	return ret;
+ }
+ 
+ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
 -- 
 1.7.7.6
 
