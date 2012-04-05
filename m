@@ -1,137 +1,94 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
- ehci_hcd fails to read a single good block)
-Date: Wed, 4 Apr 2012 11:48:31 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1204041128160.1543-100000@iolanthe.rowland.org>
-References: <388819.38189.qm@web100008.mail.kks.yahoo.co.jp>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: Patch adding to scsi-misc-2.6: [SCSI] pm8001: Add support for PM8008/8009/8018/8019 SAS/SATA HBA.
+Date: Thu, 5 Apr 2012 09:07:40 +0800
+Message-ID: <4635AA101B044B22AEB5C6C0AD84D307@usish.com.cn>
+References: <FEB196E0808DE0408A6E24DF8A0BB09326B32C6173@CHN-HCLT-EVS09.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Type: text/plain; charset=gb2312
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <388819.38189.qm-303aDswoEIaf2IT/n6niikyFvBl6snHEEwWAM/ix52Y@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Norman Diamond <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:50359 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912Ab2DEBH4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Apr 2012 21:07:56 -0400
+In-Reply-To: <FEB196E0808DE0408A6E24DF8A0BB09326B32C6173@CHN-HCLT-EVS09.HCLT.CORP.HCL.IN>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Sakthivel Saravanan Kamal Raju' <sakthivel.sk@hcl.com>, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, jejb@kernel.org
+Cc: "'Anand Kumar S - ERS, HCL Tech'" <sanandkumar@hcl.com>, "'Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech'" <satyasrinivasp@hcl.com>
 
-On Wed, 4 Apr 2012, Norman Diamond wrote:
 
-> Alan Stern wrote:
-> > On Tue, 3 Apr 2012, Norman Diamond wrote:
-> >>>> Wrong.  We CAN try to read the last block that the bridge says e=
-xists, to see if it really exists or not.  (Well, only partly wrong.  M=
-aybe there really are some bridges that crash in that situation, but mi=
-ne doesn't, and a broken driver still needs fixing.)
-> >>>=20
-> >>> Yes, there really are such bridges.  You can find reports from pe=
-ople complaining about them in the email archives.
-> >>=20
-> >> Wait.=A0 Is there a bridge which overreports the last sector numbe=
-r by 1, and which ALSO crashes when the host PC tries to read that supp=
-osed last sector number?
-> >=20
-> > Yes.=A0 Like I said before, you can find complaints about these thi=
-ngs in the mailing list archives.=A0 However it's not clear whether the=
- crashing is the fault of the bridge itself or the drive it is attached=
- to.
->=20
-> Or the driver.
+Hi Sakthivel Saravanan K,
 
-No, it is not the fault of the driver.
+Glad to see more people working on pm8001 module, your work is very wel=
+come.
+I think changes should only needed for files works for all 8001/8008...=
+,we
+should leave 8001 specific as it is. Detailed comments need
+Patchset show up in the list. Let's see if James has more comments.
 
-> I think it is not the fault of the drive.  If a drive crashed when a =
-driver tried to access a nonexistent sector, then the drive would crash=
- when mounted internally on an ATA or SATA cable not only when connecte=
-d to a USB cable.
->=20
-> It might be the fault of the bridge, BUT, does a single bridge really=
- suffer from BOTH faults as I asked?  You seem to be saying yes, but th=
-en you cloud it up by saying it's unclear if it might be the drive inst=
-ead of the bridge.  I still wonder if it's the driver instead of the br=
-idge, but surely not the drive.
+Best regards!
 
-I wanted to hedge because all the computer sees is what it gets from=20
-the bridge.  It has no way to tell whether a problem was caused by the=20
-bridge or the drive.  If you want to exonerate the drive, that's fine=20
-with me.  Certainly the bridge has enough other problems that we=20
-shouldn't be surprised to find it was solely responsible.
+Jack
+________________________________________
+=B7=A2=BC=FE=C8=CB: Sakthivel Saravanan Kamal Raju [mailto:sakthivel.sk=
+@hcl.com]=20
+=B7=A2=CB=CD=CA=B1=BC=E4: 2012=C4=EA4=D4=C23=C8=D5 23:21
+=CA=D5=BC=FE=C8=CB: linux-scsi@vger.kernel.org; James.Bottomley@suse.de=
+; jejb@kernel.org
+=B3=AD=CB=CD: jack_wang@usish.com; Anand Kumar S - ERS, HCL Tech; Srini=
+vas Naga
+Venkatasatya Pasagadugula - ERS, HCL Tech
+=D6=F7=CC=E2: Patch adding to scsi-misc-2.6: [SCSI] pm8001: Add support=
+ for
+PM8008/8009/8018/8019 SAS/SATA HBA.=20
 
-And I repeat, the driver did everything exactly as it should have.
+Hi James,
 
-> >>=A0 If so then we need a quirk for that doubly broken bridge.
-> >=20
-> > That's what the existing quirk entries are there for.
->=20
-> Surely that's not what the quirk is for on my bridge.
+We are going to provide support for 8018/19/08/09 other than 8001
+controllers on pm8001 driver. So we would like to change the existing n=
+aming
+conventions of pm8001 to pm80xx. I hope this is fine and there will not=
+ be
+any concerns on this. Any inputs are highly appreciated.=20
 
-Yes, it is.  Or rather, it probably is -- to be absolutely certain I'd=20
-have to look through the email archives to find the bug reports that=20
-caused the quirk entry to be added.
 
-However there's no question that other bridges having the same vendor,
-product, and revision ID values as yours _did_ report the drive
-capacity incorrectly; otherwise the quirk entry would not be there. =20
-What I'm not sure of is whether those bridges went on to crash as
-dramatically as yours.
+Thanks & Regards,
 
-> >> But otherwise, we can try to read the supposedly last sector numbe=
-r and figure out whether we have to subtract 1.
-> >=20
-> > True enough, but we don't have any way to know which bridges do cra=
-sh and which don't other than trying it.=A0 And you'll probably agree t=
-hat trial and error is not such a good idea in the cases where the brid=
-ge does crash.
->=20
-> This still makes me wonder why Windows is able to handle the same bri=
-dges.
+Sakthivel Saravanan K=20
+HCL Technologies Ltd.
+Chennai (T.N.), India
 
-Probably because Windows does not try to read the last block, unless it
-is occupied by a file.  If it did, it probably would crash the bridges
-too.
 
-It would be interesting to know the details of what your Windows system
-does when trying to read a file that occupies the faulty sector. =20
-There are programs around that are roughly equivalent to usbmon for
-Windows; you could try one of them.
+________________________________________
+::DISCLAIMER::
+-----------------------------------------------------------------------=
+-----
+-------------------------------------------
 
-> Now, as far as I can tell, I have found a WTF of a standard.  I only =
-have drafts of old T10 documents but it sure looks like a WTF unless so=
-mething was fixed later.
->=20
-> In SCSI Block Commands, it seems to me that the READ CAPACITY (10) co=
-mmand (opcode 0x25) returns the number of blocks.
+The contents of this e-mail and any attachment(s) are confidential and
+intended for the named recipient(s) only.
+It shall not attach any liability on the originator or HCL or its
+affiliates. Any views or opinions presented in
+this email are solely those of the author and may not necessarily refle=
+ct
+the opinions of HCL or its affiliates.
+Any form of reproduction, dissemination, copying, disclosure, modificat=
+ion,
+distribution and / or publication of
+this message without the prior written consent of the author of this e-=
+mail
+is strictly prohibited. If you have
+received this email in error please delete it and notify the sender
+immediately. Before opening any mail and
+attachments please check them for viruses and defect.
 
-I'm not sure how you reached that conclusion.  In my rather old copy of
-the SCSI-2 standard, section 9.2.7 (the READ CAPACITY command in the
-chapter on Direct-access devices) says:
-
-	A partial medium indicator (PMI) bit of zero indicates that the=20
-	returned logical block address and the block length in bytes
-	are those of the last logical block on the logical unit.
-
-And of course, the PMI bit _is_ zero for the commands we are talking
-about.
-
-> In Reduced Block Commands, it says explicitly that the READ CAPACITY =
-command (opcode 0x25) returns the LBA of the last logical block of the =
-media contained in the device.  So a USB-to-ATA bridge is required to s=
-ubtract 1 from the number of blocks reported by ATA IDENTIFY, and a USB=
--to-SCSI bridge has to subtract 1 from the result of READ CAPACITY (10)=
-=2E  (Our present discussion involves the fact that a defective bridge =
-might not subtract that 1, whereupon the next step gets spindled and mu=
-tilated.)
->=20
-> If a driver wants the last block number then it has to subtract 1 in =
-the case of SCSI, and it wants the number of blocks then it has to add =
-1 in the case of USB.  Did I really read this right?
-
-No.  The READ CAPACITY command should always return the last block
-number for any form of SCSI, including SCSI over USB, and to get the
-number of blocks that value should be incremented.
-
-Alan Stern
+-----------------------------------------------------------------------=
+-----
+-------------------------------------------
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
