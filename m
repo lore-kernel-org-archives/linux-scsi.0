@@ -1,35 +1,65 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [RFC] How to fix an async scan - rmmod race?
-Date: Thu, 05 Apr 2012 18:00:44 +0000
-Message-ID: <4F7DDDCC.1070506@acm.org>
-References: <4F7DA4F8.90104@redhat.com>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors
+	from the host
+Date: Thu,  5 Apr 2012 12:26:52 -0700
+Message-ID: <1333654012-23850-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay02ant.iops.be ([212.53.4.35]:48514 "EHLO
-	relay02ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882Ab2DESAv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Apr 2012 14:00:51 -0400
-In-Reply-To: <4F7DA4F8.90104@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
+List-Post: <mailto:devel@linuxdriverproject.org>
+List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: devel-bounces@linuxdriverproject.org
+Sender: devel-bounces@linuxdriverproject.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>, michaelc@cs.wisc.edu
 
-On 04/05/12 13:58, Tomas Henzl wrote:
+If the host returns error for pass through commands, deal with them
+appropriately. I would like to thank James for patiently helping
+me with this patch.
 
-> When a rmmod is tried then in some cases the kernel is not able to handle a paging request:
-> [  727.154296] BUG: unable to handle kernel paging request at ffffffffa01874b8
-> From what I observerved it happens when when we call the rmmod only a while after a modprobe
-> (in this case it is the mpt2sas driver). More accurately said, it happens when rmmod is called
-> while scsi async is still at work. The driver is removed but the scsi_host_template is still filled
-> with now invalid pointers, in this case it is most likely the hostt->scan_finished which causes the BUG.
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |   20 +++++++++++++++-----
+ 1 files changed, 15 insertions(+), 5 deletions(-)
 
-
-Are you sure the above analysis is correct ? I've triggered several
-million device removal events with ib_srp but I haven't ever seen the
-above crash. Maybe your patch for the SCSI core is hiding a race in the
-mpt2sas device removal code.
-
-Bart.
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 83a1972..528d52b 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -785,12 +785,22 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
+ 	/*
+ 	 * If there is an error; offline the device since all
+ 	 * error recovery strategies would have already been
+-	 * deployed on the host side.
++	 * deployed on the host side. However, if the command
++	 * were a pass-through command deal with it appropriately.
+ 	 */
+-	if (vm_srb->srb_status == SRB_STATUS_ERROR)
+-		scmnd->result = DID_TARGET_FAILURE << 16;
+-	else
+-		scmnd->result = vm_srb->scsi_status;
++	scmnd->result = vm_srb->scsi_status;
++
++	if (vm_srb->srb_status == SRB_STATUS_ERROR) {
++		switch (scmnd->cmnd[0]) {
++		case ATA_16:
++		case ATA_12:
++			set_host_byte(scmnd, DID_PASSTHROUGH);
++			break;
++		default:
++			set_host_byte(scmnd, DID_TARGET_FAILURE);
++		}
++	}
++
+ 
+ 	/*
+ 	 * If the LUN is invalid; remove the device.
+-- 
+1.7.4.1
