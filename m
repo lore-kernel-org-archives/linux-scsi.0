@@ -1,94 +1,78 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: Patch adding to scsi-misc-2.6: [SCSI] pm8001: Add support for PM8008/8009/8018/8019 SAS/SATA HBA.
-Date: Thu, 5 Apr 2012 09:07:40 +0800
-Message-ID: <4635AA101B044B22AEB5C6C0AD84D307@usish.com.cn>
-References: <FEB196E0808DE0408A6E24DF8A0BB09326B32C6173@CHN-HCLT-EVS09.HCLT.CORP.HCL.IN>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=gb2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:50359 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912Ab2DEBH4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Apr 2012 21:07:56 -0400
-In-Reply-To: <FEB196E0808DE0408A6E24DF8A0BB09326B32C6173@CHN-HCLT-EVS09.HCLT.CORP.HCL.IN>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Subject: [PATCH] [SCSI] mpt2sas: fix double mutex lock in NON_BLOCKING state
+Date: Wed,  4 Apr 2012 20:50:05 -0700
+Message-ID: <1333597805-22540-1-git-send-email-khoroshilov@ispras.ru>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
 List-Id: linux-scsi@vger.kernel.org
-To: 'Sakthivel Saravanan Kamal Raju' <sakthivel.sk@hcl.com>, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, jejb@kernel.org
-Cc: "'Anand Kumar S - ERS, HCL Tech'" <sanandkumar@hcl.com>, "'Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech'" <satyasrinivasp@hcl.com>
 
+If state is NON_BLOCKING and mutex_trylock is succeed, 
+the control flow goes to mutex_lock_interruptible() that is a deadlock.
 
-Hi Sakthivel Saravanan K,
+Found by Linux Driver Verification project (linuxtesting.org).
 
-Glad to see more people working on pm8001 module, your work is very wel=
-come.
-I think changes should only needed for files works for all 8001/8008...=
-,we
-should leave 8001 specific as it is. Detailed comments need
-Patchset show up in the list. Let's see if James has more comments.
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c |   24 ++++++++++++++++--------
+ 1 files changed, 16 insertions(+), 8 deletions(-)
 
-Best regards!
-
-Jack
-________________________________________
-=B7=A2=BC=FE=C8=CB: Sakthivel Saravanan Kamal Raju [mailto:sakthivel.sk=
-@hcl.com]=20
-=B7=A2=CB=CD=CA=B1=BC=E4: 2012=C4=EA4=D4=C23=C8=D5 23:21
-=CA=D5=BC=FE=C8=CB: linux-scsi@vger.kernel.org; James.Bottomley@suse.de=
-; jejb@kernel.org
-=B3=AD=CB=CD: jack_wang@usish.com; Anand Kumar S - ERS, HCL Tech; Srini=
-vas Naga
-Venkatasatya Pasagadugula - ERS, HCL Tech
-=D6=F7=CC=E2: Patch adding to scsi-misc-2.6: [SCSI] pm8001: Add support=
- for
-PM8008/8009/8018/8019 SAS/SATA HBA.=20
-
-Hi James,
-
-We are going to provide support for 8018/19/08/09 other than 8001
-controllers on pm8001 driver. So we would like to change the existing n=
-aming
-conventions of pm8001 to pm80xx. I hope this is fine and there will not=
- be
-any concerns on this. Any inputs are highly appreciated.=20
-
-
-Thanks & Regards,
-
-Sakthivel Saravanan K=20
-HCL Technologies Ltd.
-Chennai (T.N.), India
-
-
-________________________________________
-::DISCLAIMER::
------------------------------------------------------------------------=
------
--------------------------------------------
-
-The contents of this e-mail and any attachment(s) are confidential and
-intended for the named recipient(s) only.
-It shall not attach any liability on the originator or HCL or its
-affiliates. Any views or opinions presented in
-this email are solely those of the author and may not necessarily refle=
-ct
-the opinions of HCL or its affiliates.
-Any form of reproduction, dissemination, copying, disclosure, modificat=
-ion,
-distribution and / or publication of
-this message without the prior written consent of the author of this e-=
-mail
-is strictly prohibited. If you have
-received this email in error please delete it and notify the sender
-immediately. Before opening any mail and
-attachments please check them for viruses and defect.
-
------------------------------------------------------------------------=
------
--------------------------------------------
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 1c6d2b4..9bd7ffc 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -648,8 +648,10 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 
+ 	issue_reset = 0;
+ 
+-	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
+-		return -EAGAIN;
++	if (state == NON_BLOCKING) {
++		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
++			return -EAGAIN;
++	}
+ 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
+ 		return -ERESTARTSYS;
+ 
+@@ -1587,8 +1589,10 @@ _ctl_diag_register(void __user *arg, enum block_state state)
+ 	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
+ 		return -ENODEV;
+ 
+-	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
+-		return -EAGAIN;
++	if (state == NON_BLOCKING) {
++		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
++			return -EAGAIN;
++	}
+ 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
+ 		return -ERESTARTSYS;
+ 	rc = _ctl_diag_register_2(ioc, &karg);
+@@ -1932,8 +1936,10 @@ _ctl_diag_release(void __user *arg, enum block_state state)
+ 		return 0;
+ 	}
+ 
+-	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
+-		return -EAGAIN;
++	if (state == NON_BLOCKING) {
++		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
++			return -EAGAIN;
++	}
+ 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
+ 		return -ERESTARTSYS;
+ 
+@@ -2033,8 +2039,10 @@ _ctl_diag_read_buffer(void __user *arg, enum block_state state)
+ 	}
+ 	/* Get a free request frame and save the message context.
+ 	*/
+-	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
+-		return -EAGAIN;
++	if (state == NON_BLOCKING) {
++		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
++			return -EAGAIN;
++	}
+ 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
+ 		return -ERESTARTSYS;
+ 
+-- 
+1.7.1
