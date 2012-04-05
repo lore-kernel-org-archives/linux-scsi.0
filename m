@@ -1,78 +1,56 @@
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: [PATCH] [SCSI] mpt2sas: fix double mutex lock in NON_BLOCKING state
-Date: Wed,  4 Apr 2012 20:50:05 -0700
-Message-ID: <1333597805-22540-1-git-send-email-khoroshilov@ispras.ru>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v3 7/7] [SCSI] sr: adds Zero-power ODD support
+Date: Thu, 5 Apr 2012 14:00:57 +0800
+Message-ID: <CAF1ivSZ6cZ0G9uYSRsz=h0iTYarb1kx=k6_UOqCuBX+0OMOXSw@mail.gmail.com>
+References: <1332915722-15963-8-git-send-email-ming.m.lin@intel.com>
+	<Pine.LNX.4.44L0.1203281023380.1599-100000@iolanthe.rowland.org>
+	<CAF1ivSahEvZ9+5gcNHiJGaJtwO94fT9XYEOkT2YH-Ej11==h+w@mail.gmail.com>
+	<CAOzJMDRajsjHwCC66XB6Mv-Deuy-wD4GiZbeuEqCQePSLw-Xxw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAOzJMDRajsjHwCC66XB6Mv-Deuy-wD4GiZbeuEqCQePSLw-Xxw@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@amd.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-If state is NON_BLOCKING and mutex_trylock is succeed, 
-the control flow goes to mutex_lock_interruptible() that is a deadlock.
+On Thu, Mar 29, 2012 at 9:50 PM, Aaron Lu <aaron.lu@amd.com> wrote:
 
-Found by Linux Driver Verification project (linuxtesting.org).
+[.....]
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/scsi/mpt2sas/mpt2sas_ctl.c |   24 ++++++++++++++++--------
- 1 files changed, 16 insertions(+), 8 deletions(-)
+> For the ODD to be put into suspend state, the conditions should be:
+> 1 tray closed
+> 2 no media inside
+> I think we missed the condition 1 check now.
+>
+> And if we follow the two conditions, the events can be safely ignored.
+>
+> What do you think of blocking events for it when going to suspend and unblocking
+> when resume? This could erase the unnecessary calls of the check events function
+> when ODD is suspended.
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index 1c6d2b4..9bd7ffc 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -648,8 +648,10 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
- 
- 	issue_reset = 0;
- 
--	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
--		return -EAGAIN;
-+	if (state == NON_BLOCKING) {
-+		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
-+			return -EAGAIN;
-+	}
- 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
- 		return -ERESTARTSYS;
- 
-@@ -1587,8 +1589,10 @@ _ctl_diag_register(void __user *arg, enum block_state state)
- 	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
- 		return -ENODEV;
- 
--	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
--		return -EAGAIN;
-+	if (state == NON_BLOCKING) {
-+		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
-+			return -EAGAIN;
-+	}
- 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
- 		return -ERESTARTSYS;
- 	rc = _ctl_diag_register_2(ioc, &karg);
-@@ -1932,8 +1936,10 @@ _ctl_diag_release(void __user *arg, enum block_state state)
- 		return 0;
- 	}
- 
--	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
--		return -EAGAIN;
-+	if (state == NON_BLOCKING) {
-+		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
-+			return -EAGAIN;
-+	}
- 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
- 		return -ERESTARTSYS;
- 
-@@ -2033,8 +2039,10 @@ _ctl_diag_read_buffer(void __user *arg, enum block_state state)
- 	}
- 	/* Get a free request frame and save the message context.
- 	*/
--	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
--		return -EAGAIN;
-+	if (state == NON_BLOCKING) {
-+		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
-+			return -EAGAIN;
-+	}
- 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
- 		return -ERESTARTSYS;
- 
--- 
-1.7.1
+Good idea.
+Will try this.
+
+> But disk_(un)block_events are not exported and can't be used in sr
+> module. So I'm
+> not sure how to do this.
+
+We can simply export it.
+
+>
+> Another thing to consider is, user might want to eject the tray by
+> software like the
+> eject /dev/sr0 command or some UI mouse clicks against the cdrom icon. I'm still
+> thinking how to do this correctly.
+
+Assume eject /dev/sr0 is implemented as:
+
+int fd = open("/dev/sr0", ...)
+ioctl(fd, CDROMEJECT)
+
+We may need to resume ODD in the ioctl handler(scsi_cmd_ioctl).
+
+Thanks,
+Lin Ming
