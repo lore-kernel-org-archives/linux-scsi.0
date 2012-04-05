@@ -1,34 +1,35 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Bart Van Assche <bvanassche@acm.org>
 Subject: Re: [RFC] How to fix an async scan - rmmod race?
-Date: Thu, 05 Apr 2012 11:05:34 -0500
-Message-ID: <4F7DC2CE.3040608@cs.wisc.edu>
-References: <4F7DA4F8.90104@redhat.com> <4F7DC0D2.6070301@cs.wisc.edu>
+Date: Thu, 05 Apr 2012 18:00:44 +0000
+Message-ID: <4F7DDDCC.1070506@acm.org>
+References: <4F7DA4F8.90104@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:33789 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754978Ab2DEQFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Apr 2012 12:05:43 -0400
-In-Reply-To: <4F7DC0D2.6070301@cs.wisc.edu>
+Received: from relay02ant.iops.be ([212.53.4.35]:48514 "EHLO
+	relay02ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750882Ab2DESAv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Apr 2012 14:00:51 -0400
+In-Reply-To: <4F7DA4F8.90104@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tomas Henzl <thenzl@redhat.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>, michaelc@cs.wisc.edu
 
-On 04/05/2012 10:57 AM, Mike Christie wrote:
-> The only problem I could think of is if the scan_finished times out,
-> then do_scsi_scan_host will return and do_scan_async will call
-> scsi_finish_async_scan and scsi_remove_host will continue to run.
-> However, if scsi_scan.c was still running something like the sequential
-> scan/report luns scanning code or if the scsi eh was running and that is
+On 04/05/12 13:58, Tomas Henzl wrote:
 
-Ignore the eh comment. The ehhandler is stopped in scsi_host_dev_release.
+> When a rmmod is tried then in some cases the kernel is not able to handle a paging request:
+> [  727.154296] BUG: unable to handle kernel paging request at ffffffffa01874b8
+> From what I observerved it happens when when we call the rmmod only a while after a modprobe
+> (in this case it is the mpt2sas driver). More accurately said, it happens when rmmod is called
+> while scsi async is still at work. The driver is removed but the scsi_host_template is still filled
+> with now invalid pointers, in this case it is most likely the hostt->scan_finished which causes the BUG.
 
-> what caused the scan_finished to timeout then that could be accessing
-> the scsi_host_template and other structs.
-> 
-> I did not look at all the scan_finished callouts to see what they do.
 
-I looked at the iscsi and fc classes and they should be ok.
+Are you sure the above analysis is correct ? I've triggered several
+million device removal events with ib_srp but I haven't ever seen the
+above crash. Maybe your patch for the SCSI core is hiding a race in the
+mpt2sas device removal code.
+
+Bart.
