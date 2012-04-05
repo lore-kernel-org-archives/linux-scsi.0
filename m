@@ -1,65 +1,45 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors
-	from the host
-Date: Thu,  5 Apr 2012 12:26:52 -0700
-Message-ID: <1333654012-23850-1-git-send-email-kys@microsoft.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC] How to fix an async scan - rmmod race?
+Date: Thu, 05 Apr 2012 16:29:35 -0500
+Message-ID: <4F7E0EBF.80407@cs.wisc.edu>
+References: <4F7DA4F8.90104@redhat.com> <4F7DDDCC.1070506@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces@linuxdriverproject.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
-List-Post: <mailto:devel@linuxdriverproject.org>
-List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: devel-bounces@linuxdriverproject.org
-Sender: devel-bounces@linuxdriverproject.org
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:34482 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755252Ab2DEV3d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Apr 2012 17:29:33 -0400
+In-Reply-To: <4F7DDDCC.1070506@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Tomas Henzl <thenzl@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>
 
-If the host returns error for pass through commands, deal with them
-appropriately. I would like to thank James for patiently helping
-me with this patch.
+On 04/05/2012 01:00 PM, Bart Van Assche wrote:
+> On 04/05/12 13:58, Tomas Henzl wrote:
+> 
+>> When a rmmod is tried then in some cases the kernel is not able to handle a paging request:
+>> [  727.154296] BUG: unable to handle kernel paging request at ffffffffa01874b8
+>> From what I observerved it happens when when we call the rmmod only a while after a modprobe
+>> (in this case it is the mpt2sas driver). More accurately said, it happens when rmmod is called
+>> while scsi async is still at work. The driver is removed but the scsi_host_template is still filled
+>> with now invalid pointers, in this case it is most likely the hostt->scan_finished which causes the BUG.
+> 
+> 
+> Are you sure the above analysis is correct ? I've triggered several
+> million device removal events with ib_srp but I haven't ever seen the
+> above crash.
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
----
- drivers/scsi/storvsc_drv.c |   20 +++++++++++++++-----
- 1 files changed, 15 insertions(+), 5 deletions(-)
+ib_srp uses scsi_scan_target when the target is added so you are going
+down a different code path. If you are rmmoding ib_srp while the driver
+is calling scsi_scan_target() that would be a similar problem.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 83a1972..528d52b 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -785,12 +785,22 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
- 	/*
- 	 * If there is an error; offline the device since all
- 	 * error recovery strategies would have already been
--	 * deployed on the host side.
-+	 * deployed on the host side. However, if the command
-+	 * were a pass-through command deal with it appropriately.
- 	 */
--	if (vm_srb->srb_status == SRB_STATUS_ERROR)
--		scmnd->result = DID_TARGET_FAILURE << 16;
--	else
--		scmnd->result = vm_srb->scsi_status;
-+	scmnd->result = vm_srb->scsi_status;
-+
-+	if (vm_srb->srb_status == SRB_STATUS_ERROR) {
-+		switch (scmnd->cmnd[0]) {
-+		case ATA_16:
-+		case ATA_12:
-+			set_host_byte(scmnd, DID_PASSTHROUGH);
-+			break;
-+		default:
-+			set_host_byte(scmnd, DID_TARGET_FAILURE);
-+		}
-+	}
-+
- 
- 	/*
- 	 * If the LUN is invalid; remove the device.
--- 
-1.7.4.1
+Tomas's bug occurs when drivers use scsi_scan_host, use the async scsi
+device scanning, and then rmmod the LLD while the scan is still in progress.
+
+I think a general problem that we might hit similar to Tomas's issue is
+when scanning from userspace then rmmoding the driver. Maybe that means
+we need a more generic fix? Or, maybe that could be handled by having
+scsi_scan() do a try_module_get before scanning.
