@@ -1,52 +1,69 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
  ehci_hcd fails to read a single good block)
-Date: Fri, 6 Apr 2012 12:21:24 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1204061213010.1392-100000@iolanthe.rowland.org>
-References: <578492.36106.qm@web100003.mail.kks.yahoo.co.jp>
+Date: Fri, 6 Apr 2012 12:31:37 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1204061221530.1392-100000@iolanthe.rowland.org>
+References: <124887.42544.qm@web100003.mail.kks.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:48890 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752439Ab2DFQVZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Apr 2012 12:21:25 -0400
-In-Reply-To: <578492.36106.qm@web100003.mail.kks.yahoo.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <124887.42544.qm-303aDswoEIYQKk/ZIwh3tkyFvBl6snHEEwWAM/ix52Y@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Norman Diamond <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Norman Diamond <n0diamond@yahoo.co.jp>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
 On Fri, 6 Apr 2012, Norman Diamond wrote:
 
-> When sg_dd tries to read the bad block, it fails, but the bridge does not crash.
-> 
-> When ordinary dd tries to read a Linux-length page of 8 blocks, the bridge crashes.
-> 
-> I'm pretty sure Windows is reading a cluster of 4 blocks in the file and the bridge crashes at that time.  (The partition is a little under 8MB, formatted FAT12, with clusters of 4 sectors.)
+> > However there's no question that other bridges having the same vend=
+or, product, and revision ID values as yours _did_ report the drive cap=
+acity incorrectly; otherwise the quirk entry would not be there.=A0 Wha=
+t I'm not sure of is whether those bridges went on to crash as dramatic=
+ally as yours.
+>=20
+> Except that mine doesn't crash when trying to read a nonexistent bloc=
+k, so the quirk handling still looks overly aggressive.
 
-What happens if you use sg_dd to try reading four or eight blocks
-including the bad block?
+You're not thinking about it the right way.  If the quirk handling were=
+=20
+any less agressive, it would fail to work entirely on some devices=20
+(those that crash when trying to access a nonexistent block).  Such=20
+devices would not usable at all.
 
-> Nonetheless, trying to read a nonexistent sector after the last existing sector does not crash my bridge.  sg_dd reports the error correctly.  Ordinary dd doesn't try to do the read because the sector address is 2 past where Linux thinks the drive ends (which is 1 past where the drive really ends).  Existing non-defective blocks on the drive can still be accessed.  The USB cable does not beed to be unplugged and replugged.
+Besides, suppose this quirk entry were removed.  What would happen with
+the other bridges with the same ID numbers that do not decrement the
+block count properly?  Linux would try to access the nonexistent last
+block, and the access would fail.  Perhaps no unplug and replug would
+be needed, but any data destined for that block would be lost.
 
-What happens if you use sg_dd to try reading four or eight blocks
-including the first nonexistent block?
+> >> This still makes me wonder why Windows is able to handle the same =
+bridges.
+> >=20
+> > Probably because Windows does not try to read the last block, unles=
+s it is occupied by a file.
+>=20
+> I think Windows does.  At least in some cases the last block of a par=
+tition contains structural information and can't be used for files.  At=
+ least in some cases Windows reports a file system error if that block =
+can't be accessed when trying to mount the partition.
 
-By the way, Linux's SCSI disk driver no longer does this.  It is more
-cautious; accesses near the end of a USB device are broken up into
-single-block reads or writes.  However at the time the quirk entry was
-added, the driver wasn't so careful.  If you want to see the discussion 
-that led to the quirk being added, look here:
+Not in any of the cases I have seen or heard of, but that isn't a very=20
+large sampling.
 
-	http://marc.info/?l=linux-usb-users&m=110219110306073&w=2
+>  Now, Windows won't have this trouble with my bridge because Windows =
+saw the correct drive size through my bridge.  Only Linux will have tro=
+uble.  I'll have to see if I can create a suitable partition in Windows=
+ and then get a Linux error when trying to mount the partition without =
+its last sector.
 
-Unfortunately the critical message that had the logs attached never got 
-into the mailing list archive.
-
-> With a different bridge, a Linux driver hangs for a few minutes after trying to read the bad block.  Then it resets the bridge, the reset succeeds, and good blocks on the drive can still be accessed.  Also with that different bridge, Linux knows the real size of the drive.
-
-The firmware on a lot of these bridges is pretty buggy.
+You'll get an error right away; the partition-table-reading code
+doesn't accept partitions that appear to extend past the end of the=20
+device.
 
 Alan Stern
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
