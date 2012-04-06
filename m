@@ -1,42 +1,52 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [RFC] How to fix an async scan - rmmod race?
-Date: Fri, 06 Apr 2012 16:15:03 +0000
-Message-ID: <4F7F1687.9000309@acm.org>
-References: <4F7DA4F8.90104@redhat.com> <4F7DDDCC.1070506@acm.org>  <4F7E0EBF.80407@cs.wisc.edu> <4F7EBD3A.8070509@redhat.com> <1333725609.2953.12.camel@dabdike>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Fri, 6 Apr 2012 12:21:24 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1204061213010.1392-100000@iolanthe.rowland.org>
+References: <578492.36106.qm@web100003.mail.kks.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay04ant.iops.be ([212.53.5.219]:45208 "EHLO
-	relay04ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439Ab2DFQPH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Apr 2012 12:15:07 -0400
-In-Reply-To: <1333725609.2953.12.camel@dabdike>
+Received: from iolanthe.rowland.org ([192.131.102.54]:48890 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752439Ab2DFQVZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Apr 2012 12:21:25 -0400
+In-Reply-To: <578492.36106.qm@web100003.mail.kks.yahoo.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tomas Henzl <thenzl@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>
+To: Norman Diamond <n0diamond@yahoo.co.jp>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 04/06/12 15:20, James Bottomley wrote:
+On Fri, 6 Apr 2012, Norman Diamond wrote:
 
-> On Fri, 2012-04-06 at 11:54 +0200, Tomas Henzl wrote:
->> I like this idea(try_module_get) it is easy/elegant and it is used in scsi_rescan_device,
->> but a scan can take a lot of time and during that time the driver couldn't be removed.
->> When a flag in scsi_remove_host is set then the scan can be cancelled, if the user 
->> rmmods the driver.
+> When sg_dd tries to read the bad block, it fails, but the bridge does not crash.
 > 
-> This is my preferred solution too.  The rule for async stuff is either
-> cancel or wait and since we can't cancel, we need to ensure the wait by
-> holding the module until the async event has finished.
+> When ordinary dd tries to read a Linux-length page of 8 blocks, the bridge crashes.
 > 
-> Since the whole of the host scan must complete, we need to hold the
-> module across that, but I bet we also need to hold it across user
-> triggered target scans as well.
+> I'm pretty sure Windows is reading a cluster of 4 blocks in the file and the bridge crashes at that time.  (The partition is a little under 8MB, formatted FAT12, with clusters of 4 sectors.)
 
+What happens if you use sg_dd to try reading four or eight blocks
+including the bad block?
 
-As far as I can see the queuecommand call in scsi_dispatch_cmd() can
-race with module removal - that call can be triggered while the host
-template is being unloaded. I'm not sure though what the best approach
-is to fix that race.
+> Nonetheless, trying to read a nonexistent sector after the last existing sector does not crash my bridge.  sg_dd reports the error correctly.  Ordinary dd doesn't try to do the read because the sector address is 2 past where Linux thinks the drive ends (which is 1 past where the drive really ends).  Existing non-defective blocks on the drive can still be accessed.  The USB cable does not beed to be unplugged and replugged.
 
-Bart.
+What happens if you use sg_dd to try reading four or eight blocks
+including the first nonexistent block?
+
+By the way, Linux's SCSI disk driver no longer does this.  It is more
+cautious; accesses near the end of a USB device are broken up into
+single-block reads or writes.  However at the time the quirk entry was
+added, the driver wasn't so careful.  If you want to see the discussion 
+that led to the quirk being added, look here:
+
+	http://marc.info/?l=linux-usb-users&m=110219110306073&w=2
+
+Unfortunately the critical message that had the logs attached never got 
+into the mailing list archive.
+
+> With a different bridge, a Linux driver hangs for a few minutes after trying to read the bad block.  Then it resets the bridge, the reset succeeds, and good blocks on the drive can still be accessed.  Also with that different bridge, Linux knows the real size of the drive.
+
+The firmware on a lot of these bridges is pretty buggy.
+
+Alan Stern
+
