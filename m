@@ -1,37 +1,41 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Problems with sr_get_events
-Date: Sun, 8 Apr 2012 09:24:32 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1204080858300.11397-100000@netrider.rowland.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [RFC] How to fix an async scan - rmmod race?
+Date: Sun, 08 Apr 2012 17:38:01 +0000
+Message-ID: <4F81CCF9.8010408@acm.org>
+References: <4F7DA4F8.90104@redhat.com> <4F7DDDCC.1070506@acm.org>    <4F7E0EBF.80407@cs.wisc.edu> <4F7EBD3A.8070509@redhat.com>   <1333725609.2953.12.camel@dabdike> <4F7F1687.9000309@acm.org>  <1333730146.2953.13.camel@dabdike> <4F7F214D.20500@acm.org> <1333732525.2953.16.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:58056 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755350Ab2DHNYd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Apr 2012 09:24:33 -0400
+Received: from relay01ant.iops.be ([212.53.4.34]:59788 "EHLO
+	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752997Ab2DHRiJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Apr 2012 13:38:09 -0400
+In-Reply-To: <1333732525.2953.16.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tomas Henzl <thenzl@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>
 
-Tejun:
+On 04/06/12 17:15, James Bottomley wrote:
 
-There are several closely related issues involving sr_get_events().
+> Consider where the command came from: either it's come from startup (the
+> current problem), operation (in which case the device must be open to
+> send and receive it) or teardown (which is synchronous).
 
-The first may just be confusion on my part.  You've got a 
-cd->ignore_get_event flag, whose name seems to mean that the result 
-from sr_get_events() should be ignored.  But the result isn't ignored 
-entirely; only the DISK_EVENT_MEDIA_CHANGE bit is cleared.
 
-Furthermore, if you really do intend to ignore the result from 
-sr_get_events() then why call it in the first place?  Or does the flag 
-actually mean that you want to ignore the media-change bit from 
-get_events while still using the other bits?
+And what about e.g. sd_check_events() or sr_check_events() ?
 
-Finally, the GET_EVENT_STATUS_NOTIFICATION command is not present in 
-all versions of SCSI, and not all drives support it.  sr_get_events() 
-should check for an ILLEGAL_REQUEST sense key and stop sending the 
-command if it is found.  Maybe a new flag will be needed for this.
+Maybe I should explain why I started looking at the SCSI error handler
+in so much detail. While running disk removal tests against ib_srp I
+found out that the SCSI error handler thread can invoke the LLD's abort
+and reset handlers long after scsi_remove_host() finished. That's why I
+came up with this patch: "[PATCH 05/15] ib_srp: Avoid that SCSI error
+handling triggers a crash"
+(http://www.mail-archive.com/linux-rdma@vger.kernel.org/msg11234.html).
+But I'm still wondering whether that's the right approach. Should this
+issue be addressed in each LLD or in the SCSI core ?
 
-Alan Stern
+Thanks,
 
+Bart.
