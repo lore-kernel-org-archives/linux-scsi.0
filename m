@@ -1,8 +1,8 @@
 From: "Michael S. Tsirkin" <mst@redhat.com>
 Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass
 	of disks naming
-Date: Mon, 9 Apr 2012 10:33:50 +0300
-Message-ID: <20120409073350.GC12014@redhat.com>
+Date: Mon, 9 Apr 2012 10:50:01 +0300
+Message-ID: <20120409075001.GA27771@redhat.com>
 References: <4F7582B0.5010609@cn.fujitsu.com>
 	<20120330152606.GB28934@google.com>
 	<20120330152808.GC28934@google.com>
@@ -57,12 +57,20 @@ On Mon, Apr 09, 2012 at 11:47:51AM +0800, Ren Mingxin wrote:
 > Sorry, about only affects virtio, I'm not very clear here:
 > 1) Just duplicate the disk name format function in virtio_blk
 >     like the original patch: https://lkml.org/lkml/2012/3/28/45
+
+So I'd like to apply this, and we can discuss the
+deduplication for 3.5. Please post a version of this that
+1. isn't line-wrapped and doesn't have damaged whitespace
+   so I can run git am on it
+2. lists the # of duspported disks correctly as 26^3+(26^2+26)
+   in the description
+
+Thanks!
+
 > 2) Move the disk name format function into block core like
 >     this patch series but only affects virtio(not affect mtip32xx).
 > Do you mean the 2) one or something else?
-
-I mean 1) - I'll apply the original patch.
-
+> 
 > >- Ren will repost the refactoring patch on top, and we can
 > >   keep up the discussion
 > >
