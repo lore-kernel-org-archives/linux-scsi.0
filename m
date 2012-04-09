@@ -1,78 +1,39 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
- ehci_hcd fails to read a single good block)
-Date: Mon, 9 Apr 2012 10:40:16 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1204091030260.1429-100000@iolanthe.rowland.org>
-References: <582586.38117.qm@web100016.mail.kks.yahoo.co.jp>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Santosh Y <santoshsy@gmail.com>
+Subject: [PATCH 2/2] [SCSI] ufs: Add missing UFS_MASK macro definition
+Date: Mon,  9 Apr 2012 21:43:13 +0530
+Message-ID: <1333987993-32219-1-git-send-email-santoshsy@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:40204 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756461Ab2DIOkR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Apr 2012 10:40:17 -0400
-In-Reply-To: <582586.38117.qm@web100016.mail.kks.yahoo.co.jp>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:35900 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932069Ab2DIQNp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Apr 2012 12:13:45 -0400
+Received: by dake40 with SMTP id e40so5447104dak.11
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Apr 2012 09:13:44 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Norman Diamond <n0diamond@yahoo.co.jp>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Santosh Y <santoshsy@gmail.com>
 
-On Mon, 9 Apr 2012, Norman Diamond wrote:
+Reported-by: Venkatraman S <venkat@linaro.org>
+Reviewed-by: Vinayak Holikatti <vinholikatti@gmail.com>
+Signed-off-by: Santosh Y <santoshsy@gmail.com>
+---
+ drivers/scsi/ufs/ufshci.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> > You're not thinking about it the right way.=A0 If the quirk handlin=
-g were any less agressive, it would fail to work entirely on some devic=
-es (those that crash when trying to access a nonexistent block).
->=20
-> I see your point, regarding devices which differ from mine, and which=
- possibly differ from the other user in 2004 since we don't really know=
- the reason for his crash (he might have had a bad block at or near the=
- end of his drive).
->=20
-> > Such devices would not usable at all.
->=20
-> We are already in that situation because of the decrement.
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 6e3510f..f5b9af1 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -93,6 +93,8 @@ enum {
+ 	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
+ };
+ 
++#define UFS_MASK(mask, offset)		((mask) << (offset))
++
+ /* UFS Version 08h */
+ #define MINOR_VERSION_NUM_MASK		UFS_MASK(0xFFFF, 0)
+ #define MAJOR_VERSION_NUM_MASK		UFS_MASK(0xFFFF, 16)
+-- 
+1.7.5.4
 
-No.  That statement is simply wrong.  Such devices are quite usable.
-
->  If the drive was partitioned while the drive was internally installe=
-d on an ATA cable, then the decrement now interferes with the usability=
- of the drive regardless of whether the USB bridge really does or doesn=
-'t have a bug.
-
-What are you talking about?  If the bridge does have the capacity bug=20
-then the decrement allows the bridge to be used correctly.
-
->  Also, if the drive was partitioned when using a known non-buggy brid=
-ge, then the same situation happens when using a bridge whose status is=
- ambiguous because the driver does a decrement.
-
-It is true that the current situation sometimes denies access to a
-block which might work perfectly well.  But we don't have any better
-solutions.  And don't forget, in any individual case it is always
-possible to disable the quirk by means of a module parameter.
-
-> > Besides, suppose this quirk entry were removed.=A0 What would happe=
-n with the other bridges with the same ID numbers that do not decrement=
- the block count properly?=A0 Linux would try to access the nonexistent=
- last block, and the access would fail.=A0 Perhaps no unplug and replug=
- would be needed, but any data destined for that block would be lost.
->=20
-> The present situation loses reads and writes of the last block when
-> the last block DOES exist.
-
-No, it doesn't; it prevents those reads and writes from being
-attempted in the first place.  You probably don't care about this
-distinction, however.
-
-If you're trying to make a point in this discussion, I can't tell what
-it is.  I already know that decrementing the capacity is not always the
-right thing to do.  But I don't know of any better alternative.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
