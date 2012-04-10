@@ -1,86 +1,63 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH] virtio_blk: Add help function to format mass of disks
-Date: Tue, 10 Apr 2012 16:34:06 +0300
-Message-ID: <20120410133406.GA18899@redhat.com>
-References: <1334042885-8330-1-git-send-email-renmx@cn.fujitsu.com>
-	<4F84329A.60703@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Tue, 10 Apr 2012 10:31:32 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1204101024420.1605-100000@iolanthe.rowland.org>
+References: <595777.3176.qm@web100001.mail.kks.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <4F84329A.60703@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Avi Kivity <avi@redhat.com>
-Cc: axboe@kernel.dk, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, asamymuthupa@micron.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, James.Bottomley@HansenPartnership.com, Ren Mingxin <renmx@cn.fujitsu.com>, tj@kernel.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:35545 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755311Ab2DJObe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Apr 2012 10:31:34 -0400
+In-Reply-To: <595777.3176.qm@web100001.mail.kks.yahoo.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Norman Diamond <n0diamond@yahoo.co.jp>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Apr 10, 2012 at 04:16:10PM +0300, Avi Kivity wrote:
-> On 04/10/2012 10:28 AM, Ren Mingxin wrote:
-> > The current virtio block's naming algorithm just supports 18278
-> > (26^3 + 26^2 + 26) disks. If there are mass of virtio blocks,
-> > there will be disks with the same name.
-> >
-> > Based on commit 3e1a7ff8a0a7b948f2684930166954f9e8e776fe, I add
-> > function "virtblk_name_format()" for virtio block to support mass
-> > of disks naming.
-> >
-> > Signed-off-by: Ren Mingxin <renmx@cn.fujitsu.com>
-> > ---
-> >  drivers/block/virtio_blk.c |   38 ++++++++++++++++++++++++++------------
-> >  1 files changed, 26 insertions(+), 12 deletions(-)
-> >
-> > diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-> > index c4a60ba..86516c8 100644
-> > --- a/drivers/block/virtio_blk.c
-> > +++ b/drivers/block/virtio_blk.c
-> > @@ -374,6 +374,31 @@ static int init_vq(struct virtio_blk *vblk)
-> >  	return err;
-> >  }
-> >  
-> > +static int virtblk_name_format(char *prefix, int index, char *buf, int buflen)
-> > +{
-> > +	const int base = 'z' - 'a' + 1;
-> > +	char *begin = buf + strlen(prefix);
-> > +	char *begin = buf + strlen(prefix);
-> 
-> Duplicate line.
-> 
-> > +	char *end = buf + buflen;
-> > +	char *p;
-> > +	int unit;
-> > +
-> > +	p = end - 1;
-> > +	*p = '\0';
-> > +	unit = base;
-> 
-> Why not use 'base' below?  neither unit nor base change.
+On Tue, 10 Apr 2012, Norman Diamond wrote:
 
-Yes it's a bit strange, it was the same in Tejun's patch.
-Tejun, any idea?
+> Alan Stern wrote:
+> > On Mon, 9 Apr 2012, Norman Diamond wrote:
+> >> I suggest that quirk processing should only try to read 1 block, t=
+he last block which is asserted to exist, and decrement if the read fai=
+ls due to non-existence.=A0 If the read fails for a different reason th=
+en the block exists and the count should not be decremented.
+> >=20
+> > I have tried to explain before that this is a very bad idea.=A0 Bri=
+dges that crash when attempting to read beyond the end of the device wo=
+uld become totally unusable.
+>=20
+> In cases where a bridge has been observed to crash when trying to rea=
+d a SINGLE block which the bridge asserted to exist but which didn't ac=
+tually exist, I agree that an aggressive quirk is needed.
+>=20
+> In cases where a bridge has been observed to crash when trying to rea=
+d MULTIPLE blocks among which one block had a problem, there is no evid=
+ence yet to judge that my idea is very bad.  Those bridges need to be t=
+ested again with single block reads, and need to be tested on reading t=
+he last block number which the bridge asserts to exist rather than atte=
+mpting to read an existing bad block (by coincidence the two might be t=
+he same block, but not usually).
 
-> > +	do {
-> > +		if (p == begin)
-> > +			return -EINVAL;
-> > +		*--p = 'a' + (index % unit);
-> > +		index = (index / unit) - 1;
-> > +	} while (index >= 0);
-> > +
-> > +	memmove(begin, p, end - p);
-> > +	memcpy(buf, prefix, strlen(prefix));
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >
-> 
-> -- 
-> error compiling committee.c: too many arguments to function
+It sounds like you are suggesting that we have a new quirk, something=20
+like TEST_CAPACITY.  When this quirk is present, we could attempt to=20
+read the last block when the drive (or media) is first detected,=20
+thereby determining whether the reported capacity needs to be adjusted.
+
+The existing FIX_CAPACITY and CAPACITY_HEURISTICS quirk entries could
+be changed to TEST_CAPACITY as people report the results of their
+testing.  However this would be a very slow process.
+
+Is that what you want?
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
