@@ -1,72 +1,83 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [RFC PATCH] block: Change default IO scheduler to deadline
- except SATA
-Date: Tue, 10 Apr 2012 16:12:34 -0400
-Message-ID: <20120410201234.GA8265@redhat.com>
-References: <4F843C17.5050004@kernel.dk>
- <20120410142148.GG21801@redhat.com>
- <20120410151042.GH21801@redhat.com>
- <4F847EC4.7040604@kernel.dk>
- <20120410185318.GL21801@redhat.com>
- <4F848253.6060303@kernel.dk>
- <20120410191121.GM21801@redhat.com>
- <4F8487D0.3010503@kernel.dk>
- <CAMM=eLeQzLM3MMHkKk=mVE4O8V+w8vvPbau8A1Z3mme-G4KiLA@mail.gmail.com>
- <4F849045.9070806@kernel.dk>
+From: Norman Diamond <n0diamond@yahoo.co.jp>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was: ehci_hcd fails to read a single good block)
+Date: Wed, 11 Apr 2012 08:24:08 +0900 (JST)
+Message-ID: <870556.54475.qm@web100005.mail.kks.yahoo.co.jp>
+References: <Pine.LNX.4.44L0.1204101024420.1605-100000@iolanthe.rowland.org>
+Reply-To: n0diamond@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4F849045.9070806@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Vivek Goyal <vgoyal@redhat.com>, linux kernel mailing list <linux-kernel@vger.kernel.org>, Moyer Jeff Moyer <jmoyer@redhat.com>, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web100005.mail.kks.yahoo.co.jp ([114.111.98.179]:25345 "HELO
+	web100005.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755735Ab2DJXYL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Apr 2012 19:24:11 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1204101024420.1605-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Apr 10 2012 at  3:55pm -0400,
-Jens Axboe <axboe@kernel.dk> wrote:
+Alan Stern wrote:
+> On Tue, 10 Apr 2012, Norman Diamond wrote:
+> > Alan Stern wrote:
+>>> On Mon, 9 Apr 2012, Norman Diamond wrote:
+>>>> I suggest that quirk processing should only try to read 1 block, t=
+he last block which is asserted to exist, and decrement if the read fai=
+ls due to non-existence.  If the read fails for a different reason then=
+ the block exists and the count should not be decremented.
+>>>=20
+>>> I have tried to explain before that this is a very bad idea.  Bridg=
+es that crash when attempting to read beyond the end of the device woul=
+d become totally unusable.
+>>=20
+>> In cases where a bridge has been observed to crash when trying to re=
+ad a SINGLE block which the bridge asserted to exist but which didn't a=
+ctually exist, I agree that an aggressive quirk is needed.
+>>=20
+>> In cases where a bridge has been observed to crash when trying to re=
+ad MULTIPLE blocks among which one block had a problem, there is no evi=
+dence yet to judge that my idea is very bad.=A0 Those bridges need to b=
+e tested again with single block reads, and need to be tested on readin=
+g the last block number which the bridge asserts to exist rather than a=
+ttempting to read an existing bad block (by coincidence the two might b=
+e the same block, but not usually).
+>=20
+> It sounds like you are suggesting that we have a new quirk, something=
+ like TEST_CAPACITY.=A0 When this quirk is present, we could attempt to=
+ read the last block when the drive (or media) is first detected, there=
+by determining whether the reported capacity needs to be adjusted.
 
-> On 2012-04-10 21:43, Mike Snitzer wrote:
-> > I'm still missing your position (other than you now wanting to make it
-> > a userspace concern).
-> > 
-> > Put differently: why should CFQ still be the default?
-> > 
-> > It is pretty widely held that deadline is the more sane default
-> > (multiple distros are now using it, deadline is default for guests,
-> > etc).  CFQ has become more niche.  The Linux default really should
-> > reflect this.
-> > 
-> > The only case where defaulting to CFQ seems to make sense is
-> > rotational SATA (and USB).
-> 
-> That's the precisely the reason it should still be the default. The
-> default settings should reflect a good user experience out of the box.
-> Most desktop machines are still using SATA drives. And even those that
-> made the leap to SSD, lots of those are still pretty sucky at high queue
-> depths or without read/write separation. So I'm quite sure the default
-> still makes a lot of sense.
+Yes, that is what I've been suggesting for a while.  But at this moment=
+ I might have a better suggestion, discussed below.  Or it might be bet=
+ter to combine the two ideas.
 
-I agree that a default of CFQ still makes sense for SATA and USB.
+> The existing FIX_CAPACITY and CAPACITY_HEURISTICS quirk entries could=
+ be changed to TEST_CAPACITY as people report the results of their test=
+ing.=A0 However this would be a very slow process.
 
-But why can't there be multiple defaults?
+=46IX_CAPACITY will still be necessary in cases where a bridge is known=
+ to have both problems, always overreporting and crashing when tested f=
+or overreporting.  I think these cases will be a small minority though.
 
-default: deadline
-SATA and USB default: cfq
+Now, I think that most of the existing FIX_CAPACITY cases probably shou=
+ld be changed to CAPACITY_HEURISTICS.  This will be simpler and quicker=
+, though not maximally accurate by itself.
 
-> Punt tuning to the server side. If you absolutely want the best
-> performance out of your _particular_ workload, you are expecting and
-> required to tune things anyway. Not just the IO scheduler, but in
-> general. You can't make the same requirements for the desktop.
+In drivers/scsi/sd.c, fix_capacity always causes a decrement but guess_=
+capacity guesses an even number.
 
-Just because server admins are more used to tuning doesn't mean all
-server admins do it -- especially not on first evaluation.
+So one thing to do for the Prolific bridge in unusual_devs.h is to use =
+US_FL_CAPACITY_HEURISTICS instead of US_FL_FIX_CAPACITY.
 
-> As to kernel vs user, I just see little reason for doing it in the
-> kernel if we can put that policy in user space.
-
-There are distro packages that are shipped to control such knobs,
-e.g. tuned.
-
-They don't help _at all_ if the user doesn't know about them.  Knob
-tuning is tedious on multiple levels.  Much like this thread ;)
+I also think that if the reported capacity is a multiple of 63 then it =
+is very likely to be accurate and should not be decremented.  Furthermo=
+re if the capacity is a multiple of 126 (i.e. even as in the current he=
+uristic, and a multiple of 63) then US_FL_FIX_CAPACITY is almost certai=
+nly wrong.  Of course that 63 is artificial but it is very common and t=
+he reason is well known.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
