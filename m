@@ -1,93 +1,44 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle
- errors from the host
-Date: Tue, 10 Apr 2012 15:13:39 +0000
-Message-ID: <426367E2313C2449837CD2DE46E7EAF90250E2@BY2PRD0310MB378.namprd03.prod.outlook.com>
-References: <1333654012-23850-1-git-send-email-kys@microsoft.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] virtio_blk: Add help function to format mass of disks
+Date: Tue, 10 Apr 2012 08:49:43 -0700
+Message-ID: <20120410154943.GB11614@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <1334042885-8330-1-git-send-email-renmx@cn.fujitsu.com>
+	<4F84329A.60703@redhat.com> <20120410133406.GA18899@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from db3ehsobe003.messaging.microsoft.com ([213.199.154.141]:23387
-	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758995Ab2DJPQU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Apr 2012 11:16:20 -0400
-In-Reply-To: <1333654012-23850-1-git-send-email-kys@microsoft.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <20120410133406.GA18899@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: axboe@kernel.dk, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, asamymuthupa@micron.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, James.Bottomley@HansenPartnership.com, Ren Mingxin <renmx@cn.fujitsu.com>, Avi Kivity <avi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>
 
+Hello, guys.
 
-
-> -----Original Message-----
-> From: K. Y. Srinivasan [mailto:kys@microsoft.com]
-> Sent: Thursday, April 05, 2012 3:27 PM
-> To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
-> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
-> apw@canonical.com
-> Cc: KY Srinivasan
-> Subject: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors from
-> the host
+On Tue, Apr 10, 2012 at 04:34:06PM +0300, Michael S. Tsirkin wrote:
+> > Why not use 'base' below?  neither unit nor base change.
 > 
-> If the host returns error for pass through commands, deal with them
-> appropriately. I would like to thank James for patiently helping
-> me with this patch.
+> Yes it's a bit strange, it was the same in Tejun's patch.
+> Tejun, any idea?
 
-James,
+It was years ago, so I don't recall much.  I think I wanted to use a
+variable name which signifies its role - I worked out the rather
+convoluted base number logic on paper first and I probably wanted to
+keep the distinctions.  I don't think it really matters at this point
+tho.  Just make sure those functions are marked deprecated so that no
+one else copies them.
 
-Thank you for suggesting the fix here. I hope this is what you were looking for.
+Thanks.
 
-Regards,
-
-K. Y
-> 
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c |   20 +++++++++++++++-----
->  1 files changed, 15 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 83a1972..528d52b 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -785,12 +785,22 @@ static void storvsc_command_completion(struct
-> storvsc_cmd_request *cmd_request)
->  	/*
->  	 * If there is an error; offline the device since all
->  	 * error recovery strategies would have already been
-> -	 * deployed on the host side.
-> +	 * deployed on the host side. However, if the command
-> +	 * were a pass-through command deal with it appropriately.
->  	 */
-> -	if (vm_srb->srb_status == SRB_STATUS_ERROR)
-> -		scmnd->result = DID_TARGET_FAILURE << 16;
-> -	else
-> -		scmnd->result = vm_srb->scsi_status;
-> +	scmnd->result = vm_srb->scsi_status;
-> +
-> +	if (vm_srb->srb_status == SRB_STATUS_ERROR) {
-> +		switch (scmnd->cmnd[0]) {
-> +		case ATA_16:
-> +		case ATA_12:
-> +			set_host_byte(scmnd, DID_PASSTHROUGH);
-> +			break;
-> +		default:
-> +			set_host_byte(scmnd, DID_TARGET_FAILURE);
-> +		}
-> +	}
-> +
-> 
->  	/*
->  	 * If the LUN is invalid; remove the device.
-> --
-> 1.7.4.1
-> 
-> 
-> 
-
-
-
+-- 
+tejun
