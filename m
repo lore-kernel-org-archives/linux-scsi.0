@@ -1,64 +1,77 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: An oops will occur while SCSI core is being used in 3.4-rc1
-Date: Tue, 10 Apr 2012 11:51:18 -0500
-Message-ID: <4F846506.4060801@cs.wisc.edu>
-References: <CAAxnys5O7PfWYv0q+BvhK2CP7X-_pNRa4j-Z1gSWHqLm8D8XmA@mail.gmail.com> <4F83EC71.90904@acm.org> <4F8461E3.3050808@cs.wisc.edu> <4F846398.5030609@cs.wisc.edu>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: [PATCH] scsi_dh_rdac: Add dynamic match functionality to rdac
+ handler
+Date: Tue, 10 Apr 2012 17:06:42 +0000
+Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B0574C6@SACEXCMBX02-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:42447 "EHLO sabe.cs.wisc.edu"
+Received: from mx2.netapp.com ([216.240.18.37]:37097 "EHLO mx2.netapp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750863Ab2DJQx3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Apr 2012 12:53:29 -0400
-In-Reply-To: <4F846398.5030609@cs.wisc.edu>
+	id S1751913Ab2DJRGn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Apr 2012 13:06:43 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Elric Fu <elricfu1@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Felipe Balbi <balbi@ti.com>, Alex He <alex.he@amd.com>, Andiry Xu <andiry.xu@amd.com>, Greg KH <gregkh@linuxfoundation.org>, Linux USB Mailing List <linux-usb@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>, "Krishnasamy, Somasundaram" <Somasundaram.Krishnasamy@netapp.com>, "Stankey, Robert" <Robert.Stankey@netapp.com>
 
-On 04/10/2012 11:45 AM, Mike Christie wrote:
-> On 04/10/2012 11:37 AM, Mike Christie wrote:
->> On 04/10/2012 03:16 AM, Bart Van Assche wrote:
->>> On 04/10/12 01:22, Elric Fu wrote:
->>>
->>>> After debugging the code, I found the issue happened while the driver ran to
->>>> line 782 in scsi_send_eh_cmnd().
->>>>
->>>>  778 static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->>>>  779                              int cmnd_size, int timeout, unsigned
->>>> sense_bytes)
->>>>  780 {
->>>>  781         struct scsi_device *sdev = scmd->device;
->>>>  782         struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->>>>  783         struct Scsi_Host *shost = sdev->host;
->>>>  784         DECLARE_COMPLETION_ONSTACK(done);
->>>>  785         unsigned long timeleft;
->>>>  786         struct scsi_eh_save ses;
->>>>  787         int rtn;
->>>>
->>>> I know the code is submitted by you. I don't familiar with the scsi core.
->>>> It seems like the conversion process from scsi command to scsi driver
->>>> encounter a NULL pointer. Any idea?
->>>
->>>
->>> I have observed crashes at the same point while testing device removal
->>> with the ib_srp driver. As far as I can see that code was added through
->>> commit 18a4d0a22ed6c54b67af7718c305cd010f09ddf8 (February 9, 2012). The
->>> approach of that patch looks questionable to me: what guarantees that
->>> the struct scsi_driver will be available at the time the SCSI error
->>> handler needs it ?
->>
->> If a scsi scan IO timesout then the driver will not be set yet. It is ok
->> to use scsi_cmd_to_driver in scsi_finish_cmd because of the req block pc
->> check (scsi scan IO set that flag and so do not hit that path).
-> 
-> I meant to say that all REQ_TYPE_BLOCK_PC will have a NULL driver, so at
+This patch adds the dynamic match functionality to scsi_dh_rdac driver.
+New vendor and product strings are normally not there in the kernel. Whenever
+the new product is tested with this driver we see failures during the disco-
+very. Without the handler attached, the default scsi mid-level retries would
+take effect for certain check-conditions. Default retries(5) are not enough in
+some cases(especially with large configuration or huge lun cases).
 
-That is wrong. I guess REQ_DISCARD and REQ_FLUSH will, so I guess we
-just have to check for a NULL sdrv above.
+This patch will send an inquiry if the vendor/product strings are not in the
+device list and match with vendor signature.
+
+Signed-off-by: Babu Moger <babu.moger@netapp.com>
+Reviewed-by: Somasundaram Krishnasamy <Somasundaram.Krishnasamy@netapp.com>
+---
+
+--- linux-3.4-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2012-04-07 20:30:41.000000000 -0500
++++ linux-3.4-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c	2012-04-10 10:48:40.000000000 -0500
+@@ -818,7 +818,10 @@ static const struct scsi_dh_devlist rdac
+ 
+ static bool rdac_match(struct scsi_device *sdev)
+ {
+-	int i;
++	int i, err;
++	struct c8_inquiry inqp;
++	struct request *rq;
++	struct request_queue *q = sdev->request_queue;
+ 
+ 	if (scsi_device_tpgs(sdev))
+ 		return false;
+@@ -831,6 +834,27 @@ static bool rdac_match(struct scsi_devic
+ 			return true;
+ 		}
+ 	}
++
++	/* Now lets try to match the signature on 0xC8 page */
++	memset(&inqp, 0, sizeof(struct c8_inquiry));
++	rq = get_rdac_req(sdev, &inqp, sizeof(struct c8_inquiry), READ);
++	if (!rq)
++		return false;
++
++	rq->cmd[0] = INQUIRY;
++	rq->cmd[1] = 1;
++	rq->cmd[2] = 0xC8;
++	rq->cmd[4] = sizeof(struct c8_inquiry);
++	rq->cmd_len = COMMAND_SIZE(INQUIRY);
++
++	err = blk_execute_rq(q, NULL, rq, 1);
++	blk_put_request(rq);
++	if (err != -EIO) {
++		if (inqp.page_id[0] == 'e' && inqp.page_id[1] == 'd' &&
++		    inqp.page_id[2] == 'i' && inqp.page_id[3] == 'd')
++			return true;
++	}
++
+ 	return false;
+ }
+ 
 
 
-> the very least there should be a check in scsi_send_eh_cmnd for NULL
-> sdrv or for the IO being a REQ_TYPE_BLOCK_PC like is done in
-> scsi_finish_command.
