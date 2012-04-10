@@ -1,77 +1,80 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: [PATCH] scsi_dh_rdac: Add dynamic match functionality to rdac
- handler
-Date: Tue, 10 Apr 2012 17:06:42 +0000
-Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B0574C6@SACEXCMBX02-PRD.hq.netapp.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [RFC PATCH] block: Change default IO scheduler to deadline
+ except SATA
+Date: Tue, 10 Apr 2012 15:11:21 -0400
+Message-ID: <20120410191121.GM21801@redhat.com>
+References: <20120410133708.GE21801@redhat.com>
+ <4F843C17.5050004@kernel.dk>
+ <20120410142148.GG21801@redhat.com>
+ <20120410151042.GH21801@redhat.com>
+ <4F847EC4.7040604@kernel.dk>
+ <20120410185318.GL21801@redhat.com>
+ <4F848253.6060303@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:37097 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751913Ab2DJRGn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Apr 2012 13:06:43 -0400
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4F848253.6060303@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux kernel mailing list <linux-kernel@vger.kernel.org>, Moyer Jeff Moyer <jmoyer@redhat.com>, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>, "Krishnasamy, Somasundaram" <Somasundaram.Krishnasamy@netapp.com>, "Stankey, Robert" <Robert.Stankey@netapp.com>
 
-This patch adds the dynamic match functionality to scsi_dh_rdac driver.
-New vendor and product strings are normally not there in the kernel. Whenever
-the new product is tested with this driver we see failures during the disco-
-very. Without the handler attached, the default scsi mid-level retries would
-take effect for certain check-conditions. Default retries(5) are not enough in
-some cases(especially with large configuration or huge lun cases).
+On Tue, Apr 10, 2012 at 08:56:19PM +0200, Jens Axboe wrote:
+> On 2012-04-10 20:53, Vivek Goyal wrote:
+> > On Tue, Apr 10, 2012 at 08:41:08PM +0200, Jens Axboe wrote:
+> > 
+> > [..]
+> >>> So we are back to the question of can scsi devices find out if a Lun
+> >>> is backed by single disk or multiple disks.
+> >>
+> >> The cleanest would be to have the driver signal these attributes at
+> >> probe time. You could even adjust CFQ properties based on this, driving
+> >> the queue depth harder etc. Realistically, going forward, most fast
+> >> flash devices will be driven by a noop-like scheduler on multiqueue. So
+> >> CPU cost of the IO scheduler can mostly be ignored, since CFQ cost on
+> >> even big RAIDs isn't an issue due to the low IOPS rates.
+> > 
+> > Agreed that on RAID CPU cost is not a problem. Just that idling and low
+> > queue depth kills the performance.
+> 
+> Exactly, and both of these are trivially adjustable as long as we know
+> when to do it.
+> 
+> > So apart from "rotational" if driver can give some hints about underlying
+> > devices being RAID (or multi device), it will help. Just that it looks
+> > like scsi does not have a way to determine that.
+> 
+> This sort of thing should be done with a udev rule.
 
-This patch will send an inquiry if the vendor/product strings are not in the
-device list and match with vendor signature.
+[CCing kay]
 
-Signed-off-by: Babu Moger <babu.moger@netapp.com>
-Reviewed-by: Somasundaram Krishnasamy <Somasundaram.Krishnasamy@netapp.com>
----
+Kay does not like the idea of doing something along this line in udev.
+He thinks that kernel changes over a period of time making udev rules
+stale and hence it should be done in kernel. :-) I think he has had
+some not so good experiences in the past.
 
---- linux-3.4-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2012-04-07 20:30:41.000000000 -0500
-+++ linux-3.4-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c	2012-04-10 10:48:40.000000000 -0500
-@@ -818,7 +818,10 @@ static const struct scsi_dh_devlist rdac
- 
- static bool rdac_match(struct scsi_device *sdev)
- {
--	int i;
-+	int i, err;
-+	struct c8_inquiry inqp;
-+	struct request *rq;
-+	struct request_queue *q = sdev->request_queue;
- 
- 	if (scsi_device_tpgs(sdev))
- 		return false;
-@@ -831,6 +834,27 @@ static bool rdac_match(struct scsi_devic
- 			return true;
- 		}
- 	}
-+
-+	/* Now lets try to match the signature on 0xC8 page */
-+	memset(&inqp, 0, sizeof(struct c8_inquiry));
-+	rq = get_rdac_req(sdev, &inqp, sizeof(struct c8_inquiry), READ);
-+	if (!rq)
-+		return false;
-+
-+	rq->cmd[0] = INQUIRY;
-+	rq->cmd[1] = 1;
-+	rq->cmd[2] = 0xC8;
-+	rq->cmd[4] = sizeof(struct c8_inquiry);
-+	rq->cmd_len = COMMAND_SIZE(INQUIRY);
-+
-+	err = blk_execute_rq(q, NULL, rq, 1);
-+	blk_put_request(rq);
-+	if (err != -EIO) {
-+		if (inqp.page_id[0] == 'e' && inqp.page_id[1] == 'd' &&
-+		    inqp.page_id[2] == 'i' && inqp.page_id[3] == 'd')
-+			return true;
-+	}
-+
- 	return false;
- }
- 
+Though personally I think that anything which is not set in stone should
+go to udev. It atleast allows for easy change if user does not like the
+setting. (disable the rule, modify the rule etc). And then rules evolve
+as things change in kernel.
+
+Anyway, this point can be detabted later once we figure out what's the
+set of atrributes to look at.
 
 
+> It should not be too
+> hard to match for the most popular arrays, catching the majority of the
+> setups by default. Or you could ask the SCSI folks for some heuristics,
+> it's not unlikely that a few different attributes could make that bullet
+> proof, pretty much.
+
+I am wondering what will happen to request based multipath targets in
+this scheme. There will have to be I guess additional rules to look for
+underlying paths and then change the io scheduler accordingly.
+
+CCing linux-scsi, if scsi guys have some ideas on what can we look at to 
+determine what scheduler to use.
+
+Thanks
+Vivek
