@@ -1,47 +1,38 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH 19/26] [SCSI] qla2xxx: Remove redundant NULL check before
- release_firmware() call.
-Date: Tue, 10 Apr 2012 08:22:29 -0400
-Message-ID: <alpine.WNT.2.00.1204100821500.5072@N5102REMCQXM4BS.qlogic.org>
-References: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net> <alpine.LNX.2.00.1204092229370.13925@swampdragon.chaosbits.net>
+From: James Hogan <james.hogan@imgtec.com>
+Subject: [PATCH] scsi: make struct scsi_varlen_cdb_hdr packed
+Date: Tue, 10 Apr 2012 13:38:53 +0100
+Message-ID: <4F8429DD.3010700@imgtec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1204092229370.13925@swampdragon.chaosbits.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, "trivial@kernel.org" <trivial@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+The struct scsi_varlen_cdb_hdr is expected to be exactly 10 bytes when
+used in struct osd_cdb_head, but it isn't marked as packed. Some
+architectures will round the struct size up which triggers BUILD_BUG_ON
+compile errors in osd_initiator.c when the outer structs are unexpected
+sizes. This is fixed by marking struct scsi_varlen_cdb_hdr as __packed.
 
+Signed-off-by: James Hogan <james.hogan@imgtec.com>
+---
+ include/scsi/scsi.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Mon, 9 Apr 2012, Jesper Juhl wrote:
-
-> release_firmware() checks for NULL pointers internally so checking
-> before calling it is redundant.
->
-> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-> ---
-> drivers/scsi/qla2xxx/qla_os.c |    3 +--
-> 1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index a2f9992..91b6fe6 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -4106,8 +4106,7 @@ qla2x00_release_firmware(void)
->
->       mutex_lock(&qla_fw_lock);
->       for (idx = 0; idx < FW_BLOBS; idx++)
-> -             if (qla_fw_blobs[idx].fw)
-> -                     release_firmware(qla_fw_blobs[idx].fw);
-> +             release_firmware(qla_fw_blobs[idx].fw);
->       mutex_unlock(&qla_fw_lock);
-> }
->
->
-
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index f34a5a8..c75c8c8 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -196,7 +196,7 @@ struct scsi_varlen_cdb_hdr {
+ 	__u8 additional_cdb_length;         /* total cdb length - 8 */
+ 	__be16 service_action;
+ 	/* service specific data follows */
+-};
++} __packed;
+ 
+ static inline unsigned
+ scsi_varlen_cdb_length(const void *hdr)
+-- 
+1.7.7.6
