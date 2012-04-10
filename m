@@ -1,49 +1,52 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH] virtio_blk: Add help function to format mass of disks
-Date: Tue, 10 Apr 2012 18:53:08 +0300
-Message-ID: <20120410155308.GB20551@redhat.com>
-References: <1334042885-8330-1-git-send-email-renmx@cn.fujitsu.com>
-	<4F84329A.60703@redhat.com> <20120410133406.GA18899@redhat.com>
-	<20120410154943.GB11614@dhcp-172-17-108-109.mtv.corp.google.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: An oops will occur while SCSI core is being used in 3.4-rc1
+Date: Tue, 10 Apr 2012 11:37:55 -0500
+Message-ID: <4F8461E3.3050808@cs.wisc.edu>
+References: <CAAxnys5O7PfWYv0q+BvhK2CP7X-_pNRa4j-Z1gSWHqLm8D8XmA@mail.gmail.com> <4F83EC71.90904@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <20120410154943.GB11614@dhcp-172-17-108-109.mtv.corp.google.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, asamymuthupa@micron.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, James.Bottomley@HansenPartnership.com, Ren Mingxin <renmx@cn.fujitsu.com>, Avi Kivity <avi@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42399 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751422Ab2DJQiZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Apr 2012 12:38:25 -0400
+In-Reply-To: <4F83EC71.90904@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Elric Fu <elricfu1@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Felipe Balbi <balbi@ti.com>, Alex He <alex.he@amd.com>, Andiry Xu <andiry.xu@amd.com>, Greg KH <gregkh@linuxfoundation.org>, Linux USB Mailing List <linux-usb@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 
-On Tue, Apr 10, 2012 at 08:49:43AM -0700, Tejun Heo wrote:
-> Hello, guys.
+On 04/10/2012 03:16 AM, Bart Van Assche wrote:
+> On 04/10/12 01:22, Elric Fu wrote:
 > 
-> On Tue, Apr 10, 2012 at 04:34:06PM +0300, Michael S. Tsirkin wrote:
-> > > Why not use 'base' below?  neither unit nor base change.
-> > 
-> > Yes it's a bit strange, it was the same in Tejun's patch.
-> > Tejun, any idea?
+>> After debugging the code, I found the issue happened while the driver ran to
+>> line 782 in scsi_send_eh_cmnd().
+>>
+>>  778 static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+>>  779                              int cmnd_size, int timeout, unsigned
+>> sense_bytes)
+>>  780 {
+>>  781         struct scsi_device *sdev = scmd->device;
+>>  782         struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+>>  783         struct Scsi_Host *shost = sdev->host;
+>>  784         DECLARE_COMPLETION_ONSTACK(done);
+>>  785         unsigned long timeleft;
+>>  786         struct scsi_eh_save ses;
+>>  787         int rtn;
+>>
+>> I know the code is submitted by you. I don't familiar with the scsi core.
+>> It seems like the conversion process from scsi command to scsi driver
+>> encounter a NULL pointer. Any idea?
 > 
-> It was years ago, so I don't recall much.  I think I wanted to use a
-> variable name which signifies its role - I worked out the rather
-> convoluted base number logic on paper first and I probably wanted to
-> keep the distinctions.  I don't think it really matters at this point
-> tho.  Just make sure those functions are marked deprecated so that no
-> one else copies them.
 > 
-> Thanks.
+> I have observed crashes at the same point while testing device removal
+> with the ib_srp driver. As far as I can see that code was added through
+> commit 18a4d0a22ed6c54b67af7718c305cd010f09ddf8 (February 9, 2012). The
+> approach of that patch looks questionable to me: what guarantees that
+> the struct scsi_driver will be available at the time the SCSI error
+> handler needs it ?
 
-I guess I'll keep it same so it's easier to deduplicate
-if someon wants to.
-
-> -- 
-> tejun
+If a scsi scan IO timesout then the driver will not be set yet. It is ok
+to use scsi_cmd_to_driver in scsi_finish_cmd because of the req block pc
+check (scsi scan IO set that flag and so do not hit that path).
