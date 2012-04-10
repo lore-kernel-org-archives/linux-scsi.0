@@ -1,52 +1,67 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: An oops will occur while SCSI core is being used in 3.4-rc1
-Date: Tue, 10 Apr 2012 08:16:49 +0000
-Message-ID: <4F83EC71.90904@acm.org>
-References: <CAAxnys5O7PfWYv0q+BvhK2CP7X-_pNRa4j-Z1gSWHqLm8D8XmA@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 43085] New: BUG: unable to handle kernel NULL pointer
+ dereference (in scsi_send_eh_cmnd)
+Date: Tue, 10 Apr 2012 09:53:44 GMT
+Message-ID: <bug-43085-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01ant.iops.be ([212.53.4.34]:40513 "EHLO
-	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754661Ab2DJIRA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Apr 2012 04:17:00 -0400
-In-Reply-To: <CAAxnys5O7PfWYv0q+BvhK2CP7X-_pNRa4j-Z1gSWHqLm8D8XmA@mail.gmail.com>
+Received: from bugzilla.kernel.org ([198.145.19.204]:33507 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754304Ab2DJJxp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Apr 2012 05:53:45 -0400
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q3A9riax017219
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Apr 2012 09:53:44 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Elric Fu <elricfu1@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Felipe Balbi <balbi@ti.com>, Alex He <alex.he@amd.com>, Andiry Xu <andiry.xu@amd.com>, Greg KH <gregkh@linuxfoundation.org>, Linux USB Mailing List <linux-usb@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
+To: linux-scsi@vger.kernel.org
 
-On 04/10/12 01:22, Elric Fu wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=43085
 
-> After debugging the code, I found the issue happened while the driver ran to
-> line 782 in scsi_send_eh_cmnd().
-> 
->  778 static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->  779                              int cmnd_size, int timeout, unsigned
-> sense_bytes)
->  780 {
->  781         struct scsi_device *sdev = scmd->device;
->  782         struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->  783         struct Scsi_Host *shost = sdev->host;
->  784         DECLARE_COMPLETION_ONSTACK(done);
->  785         unsigned long timeleft;
->  786         struct scsi_eh_save ses;
->  787         int rtn;
-> 
-> I know the code is submitted by you. I don't familiar with the scsi core.
-> It seems like the conversion process from scsi command to scsi driver
-> encounter a NULL pointer. Any idea?
+           Summary: BUG: unable to handle kernel NULL pointer dereference
+                    (in scsi_send_eh_cmnd)
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.4-rc2
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: rockorequin@hotmail.com
+        Regression: Yes
 
 
-I have observed crashes at the same point while testing device removal
-with the ib_srp driver. As far as I can see that code was added through
-commit 18a4d0a22ed6c54b67af7718c305cd010f09ddf8 (February 9, 2012). The
-approach of that patch looks questionable to me: what guarantees that
-the struct scsi_driver will be available at the time the SCSI error
-handler needs it ? At least the sd driver explicitly resets that pointer
-in its scsi_disk_release() function.
+Created an attachment (id=72868)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=72868)
+BUG - unable to handle kernel NULL pointer dereference (scsi_send_eh_cmnd)
 
-Thanks,
+Whenever I plug my USB3 hub into the PC, I encounter this bug (log attached).
+It stops the PC from booting if the hub is inserted at the time, and crashes
+USB if I encounter it once the desktop is running.
 
-Bart.
+The line where it crashes is in scsi_error.c at line 782:
+
+struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+
+which expands to:
+
+struct scsi_driver *sdrv *(struct scsi_driver
+**)scmd->request->rq_disk->private_data
+
+The issue is that rq_disk is NULL (possibly because it's a USB hub and there
+isn't necessarily an underlying hard drive?).
+
+If I make it check for rq_disk being null before trying to assign sdrv and set
+sdrv to null accordingly, and then later in the function I check for sdrv being
+null before looking at sdrv->eh_action, the error goes away and drives on the
+hub seem to mount and function OK (mostly anyway).
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
