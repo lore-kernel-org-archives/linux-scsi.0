@@ -1,104 +1,93 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [isci PATCH v2 12/18] libata: make ata_print_id atomic
-Date: Tue, 10 Apr 2012 19:21:41 -0700
-Message-ID: <CAA9_cmdc3kxJCqwiqpXXqWXUQHJ1SSpbK3u9bDSsgSc0p93Wuw@mail.gmail.com>
-References: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
-	<20120311072845.6320.68461.stgit@dwillia2-linux.jf.intel.com>
+From: Ren Mingxin <renmx@cn.fujitsu.com>
+Subject: [PATCH v2] virtio_blk: Add help function to format mass of disks
+Date: Wed, 11 Apr 2012 10:38:11 +0800
+Message-ID: <1334111891-18891-1-git-send-email-renmx@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120311072845.6320.68461.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>, Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: mst@redhat.com, rusty@rustcorp.com.au
+Cc: axboe@kernel.dk, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, asamymuthupa@micron.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, James.Bottomley@HansenPartnership.com, Ren Mingxin <renmx@cn.fujitsu.com>, avi@redhat.com, tj@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Ping? I assume this fairly uncontroversial and can be 3.4-rc material.
+The current virtio block's naming algorithm just supports 18278
+(26^3 + 26^2 + 26) disks. If there are mass of virtio blocks,
+there will be disks with the same name.
 
-On Sat, Mar 10, 2012 at 11:28 PM, Dan Williams <dan.j.williams@intel.co=
-m> wrote:
-> This variable is incremented from multiple contexts (module_init via
-> libata-lldds and the libsas discovery thread). =A0Make it atomic to h=
-ead
-> off any chance of libsas and libata creating duplicate ids.
->
-> Acked-by: Jacek Danecki <jacek.danecki@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
-> =A0drivers/ata/libata-core.c | =A0 =A04 ++--
-> =A0drivers/ata/libata-scsi.c | =A0 =A04 ++--
-> =A0drivers/ata/libata.h =A0 =A0 =A0| =A0 =A02 +-
-> =A03 files changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index ea8444e..bd79c8b 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -97,7 +97,7 @@ static unsigned int ata_dev_set_xfermode(struct ata=
-_device *dev);
-> =A0static void ata_dev_xfermask(struct ata_device *dev);
-> =A0static unsigned long ata_dev_blacklisted(const struct ata_device *=
-dev);
->
-> -unsigned int ata_print_id =3D 1;
-> +atomic_t ata_print_id =3D ATOMIC_INIT(1);
->
-> =A0struct ata_force_param {
-> =A0 =A0 =A0 =A0const char =A0 =A0 =A0*name;
-> @@ -6031,7 +6031,7 @@ int ata_host_register(struct ata_host *host, st=
-ruct scsi_host_template *sht)
->
-> =A0 =A0 =A0 =A0/* give ports names and add SCSI hosts */
-> =A0 =A0 =A0 =A0for (i =3D 0; i < host->n_ports; i++)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 host->ports[i]->print_id =3D ata_print_=
-id++;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 host->ports[i]->print_id =3D atomic_inc=
-_return(&ata_print_id);
->
->
-> =A0 =A0 =A0 =A0/* Create associated sysfs transport objects =A0*/
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 1ee00c8..93dabdc 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3843,7 +3843,7 @@ int ata_sas_async_port_init(struct ata_port *ap=
-)
-> =A0 =A0 =A0 =A0int rc =3D ap->ops->port_start(ap);
->
-> =A0 =A0 =A0 =A0if (!rc) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->print_id =3D ata_print_id++;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->print_id =3D atomic_inc_return(&ata=
-_print_id);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__ata_port_probe(ap);
-> =A0 =A0 =A0 =A0}
->
-> @@ -3867,7 +3867,7 @@ int ata_sas_port_init(struct ata_port *ap)
-> =A0 =A0 =A0 =A0int rc =3D ap->ops->port_start(ap);
->
-> =A0 =A0 =A0 =A0if (!rc) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->print_id =3D ata_print_id++;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->print_id =3D atomic_inc_return(&ata=
-_print_id);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rc =3D ata_port_probe(ap);
-> =A0 =A0 =A0 =A0}
->
-> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-> index 2e26fca..9d0fd0b 100644
-> --- a/drivers/ata/libata.h
-> +++ b/drivers/ata/libata.h
-> @@ -53,7 +53,7 @@ enum {
-> =A0 =A0 =A0 =A0ATA_DNXFER_QUIET =A0 =A0 =A0 =A0=3D (1 << 31),
-> =A0};
->
-> -extern unsigned int ata_print_id;
-> +extern atomic_t ata_print_id;
-> =A0extern int atapi_passthru16;
-> =A0extern int libata_fua;
-> =A0extern int libata_noacpi;
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+Based on commit 3e1a7ff8a0a7b948f2684930166954f9e8e776fe, I add
+function "virtblk_name_format()" for virtio block to support mass
+of disks naming.
+
+Signed-off-by: Ren Mingxin <renmx@cn.fujitsu.com>
+---
+v1->v2: wipe off the duplicate line
+---
+ drivers/block/virtio_blk.c |   37 +++++++++++++++++++++++++------------
+ 1 files changed, 25 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index c4a60ba..07b8bf9 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -374,6 +374,30 @@ static int init_vq(struct virtio_blk *vblk)
+ 	return err;
+ }
+ 
++static int virtblk_name_format(char *prefix, int index, char *buf, int buflen)
++{
++	const int base = 'z' - 'a' + 1;
++	char *begin = buf + strlen(prefix);
++	char *end = buf + buflen;
++	char *p;
++	int unit;
++
++	p = end - 1;
++	*p = '\0';
++	unit = base;
++	do {
++		if (p == begin)
++			return -EINVAL;
++		*--p = 'a' + (index % unit);
++		index = (index / unit) - 1;
++	} while (index >= 0);
++
++	memmove(begin, p, end - p);
++	memcpy(buf, prefix, strlen(prefix));
++
++	return 0;
++}
++
+ static int __devinit virtblk_probe(struct virtio_device *vdev)
+ {
+ 	struct virtio_blk *vblk;
+@@ -442,18 +466,7 @@ static int __devinit virtblk_probe(struct virtio_device *vdev)
+ 
+ 	q->queuedata = vblk;
+ 
+-	if (index < 26) {
+-		sprintf(vblk->disk->disk_name, "vd%c", 'a' + index % 26);
+-	} else if (index < (26 + 1) * 26) {
+-		sprintf(vblk->disk->disk_name, "vd%c%c",
+-			'a' + index / 26 - 1, 'a' + index % 26);
+-	} else {
+-		const unsigned int m1 = (index / 26 - 1) / 26 - 1;
+-		const unsigned int m2 = (index / 26 - 1) % 26;
+-		const unsigned int m3 =  index % 26;
+-		sprintf(vblk->disk->disk_name, "vd%c%c%c",
+-			'a' + m1, 'a' + m2, 'a' + m3);
+-	}
++	virtblk_name_format("vd", index, vblk->disk->disk_name, DISK_NAME_LEN);
+ 
+ 	vblk->disk->major = major;
+ 	vblk->disk->first_minor = index_to_minor(index);
+-- 
+1.7.1
