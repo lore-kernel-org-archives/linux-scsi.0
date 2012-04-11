@@ -1,61 +1,127 @@
-From: Ren Mingxin <renmx@cn.fujitsu.com>
-Subject: Re: [PATCH] virtio_blk: Add help function to format mass of disks
-Date: Wed, 11 Apr 2012 09:31:04 +0800
-Message-ID: <4F84DED8.1080800@cn.fujitsu.com>
-References: <1334042885-8330-1-git-send-email-renmx@cn.fujitsu.com>
-	<4F84329A.60703@redhat.com> <20120410133406.GA18899@redhat.com>
-	<20120410154943.GB11614@dhcp-172-17-108-109.mtv.corp.google.com>
-	<20120410155308.GB20551@redhat.com> <4F84DCA3.3000805@redhat.com>
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: Re: Cannot detect SATA disk's FUA/DPO feature
+Date: Wed, 11 Apr 2012 10:08:57 +0800
+Message-ID: <20120411020857.GC18945@gmail.com>
+References: <20120409083412.GA4927@gmail.com>
+ <4F8486BB.2000701@stud.tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <4F84DCA3.3000805@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Asias He <asias@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>
-Cc: axboe@kernel.dk, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, asamymuthupa@micron.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, James.Bottomley@HansenPartnership.com, Avi Kivity <avi@redhat.com>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4F8486BB.2000701@stud.tu-ilmenau.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Stefan /*St0fF*/ =?utf-8?Q?H=C3=BCbner?= <stefan.huebner@stud.tu-ilmenau.de>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-  On 04/11/2012 09:21 AM, Asias He wrote:
-> On 04/10/2012 11:53 PM, Michael S. Tsirkin wrote:
->> On Tue, Apr 10, 2012 at 08:49:43AM -0700, Tejun Heo wrote:
->>> Hello, guys.
->>>
->>> On Tue, Apr 10, 2012 at 04:34:06PM +0300, Michael S. Tsirkin wrote:
->>>>> Why not use 'base' below?  neither unit nor base change.
->>>>
->>>> Yes it's a bit strange, it was the same in Tejun's patch.
->>>> Tejun, any idea?
->>>
->>> It was years ago, so I don't recall much.  I think I wanted to use a
->>> variable name which signifies its role - I worked out the rather
->>> convoluted base number logic on paper first and I probably wanted to
->>> keep the distinctions.  I don't think it really matters at this point
->>> tho.  Just make sure those functions are marked deprecated so that no
->>> one else copies them.
->>>
->>> Thanks.
->>
->> I guess I'll keep it same so it's easier to deduplicate
->> if someon wants to.
+On Tue, Apr 10, 2012 at 09:15:07PM +0200, Stefan /*St0fF*/ H=C3=BCbner =
+wrote:
+> Am 09.04.2012 10:34, schrieb Zheng Liu:
+> > Hi list,
+> >=20
+> > Recently I meet a problem in upstream kernel, which the problem is =
+that
+> > disk driver can not detect FUA/DPO feature of SATA disk.  This mach=
+ine
+> > has two SATA disks, one is C400-MTFDDAK256M and another is WDC
+> > WD1002FAEX-0, both of them are plugged into mainboard.  I read the =
+data
+> > sheet and both of them support FUA feature.  I am not sure whether =
+this
+> > is a bug or not in kernel.  Meanwhile, I have tested in SAS disk an=
+d
+> > kernel displays that the disk supports FUA feature in dmesg.
+> >=20
+> > When we detect FUA feature for SAS disk in kernel, we will use SCSI
+> > command set to detect FUA feature.  Namely, in current kernel, we u=
+se
+> > FUA bit to check whether this SAS disk supports FUA feature or not.
+> > However, SATA disk uses ATA command set.  So in current kernel, thi=
+s
+> > method doesn't detect whether or not SATA disk supports FUA feature=
+=2E  Am
+> > I missing something?
+> >=20
+> > I put dmesg file in attachment.  Hopefully it is useful.
+> >=20
+> > Regards,
+> > Zheng
+>=20
+> Hi Zheng,
+>=20
+> as far as I read specs, libata should translate FUA stuff as describe=
+d
+> in the SAT spec:
+> --------snip-->
+> 9.17.2 WRITE commands with FUA
+> This subclause applies to the translation of the WRITE (10) command,
+> WRITE (12) command, and WRITE (16) command.
+> If the FUA bit is set to zero in the SCSI write command CDB, then the
+> SATL shall process this command as described in 9.17.1.
+> If the FUA bit is set to one in the SCSI write command CDB, then the
+> SATL shall send the following, in accordance with the constraints
+> described in 9.1:
+> a) the following ATA commands:
+> 1) an ATA write command (see 3.1.26) excluding WRITE DMA FUA EXT, WRI=
+TE
+> DMA QUEUED
+> FUA EXT, WRITE MULTIPLE FUA EXT, and WRITE FPDMA QUEUE; and
+> 2) an ATA verify command (see 3.1.24);
+> b) one of the following ATA commands (see ATA8-ACS):
+> A) WRITE DMA FUA EXT;
+> B) WRITE DMA QUEUED FUA EXT; or
+> C) WRITE MULTIPLE FUA EXT;
+> or
+> c) an ATA WRITE FPDMA QUEUED command (see SATA-2.6) with the FUA bit =
+in
+> the Device field set to
+> one.
+> <--snap-----------
+>=20
+> so if the disks supported FUA according to their ATA_IDENTIFY_DEVICE
+> data, I'd guess someone wanted to care about that part of the SATL in
+> the near future ;)
+>=20
+> Greets,
+> Stefan
 
-So, I'd keep this in the next version.
+Hi Stefan,
 
->
-> Why not fix it both in sd_format_disk_name() and virtblk_name_format().
-> Ren, mind to send v2 to drop the duplicate line?
->
+Cc to linux-ide mailing list for finding more suggestions.
 
-I'll send v2 soon.
+Thank you for your reply.  I use sa_sat_identity command to read disk
+information.  The result shows that SATA disk supports WRITE DMA FUA
+EXT, WRITE DMA QUEUE FUA EXT, WRITE MULTIPLE FUA EXT and WRITE FPDMA
+QUEUE commands in my machine.  So, IMHO, maybe there is a defect in
+upstream kernel.  I read the stuff of scsi disk driver and the calling
+stack is as following:
 
--- 
-Thanks,
-Ren
+sd_probe()
+|
+->sd_probe_async()
+  |
+  ->sd_revalidate_disk()
+    |
+    ->sd_read_cache_type()
+      |
+      ->sd_do_mode_sense()
+        |
+        ->scsi_mode_sense()
+          |
+          ->scsi_execute_req()
+            |
+            ->blk_execute_rq()
+              |
+              ->blk_execute_rq_nowait()
+                |
+                ->ata_scsi_queuecmd()
+                  |
+                  ->ata_scsi_simulate()
+
+Until now, I don't have a conclusion about whether it is a defect in
+kernel.  I will go on tracing this problem.  Have you some suggestions?
+Please let me know.  Thank you.
+
+Regards,
+Zheng
