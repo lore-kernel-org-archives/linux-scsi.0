@@ -1,208 +1,36 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 2/4] bnx2fc: Decrememnt io ref count when abort times
- out
-Date: Wed, 11 Apr 2012 15:54:50 -0700
-Message-ID: <1334184892-18419-3-git-send-email-bprakash@broadcom.com>
-References: <1334184892-18419-1-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 0/4] bnx2fc version 1.0.11
+Date: Wed, 11 Apr 2012 15:54:48 -0700
+Message-ID: <1334184892-18419-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3501 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3313 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759447Ab2DKWzE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Apr 2012 18:55:04 -0400
-In-Reply-To: <1334184892-18419-1-git-send-email-bprakash@broadcom.com>
+	id S1761376Ab2DKWzG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Apr 2012 18:55:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-When IO abort times out during eh_abort or a flush operation is performed while
-abort is pending, the driver is not cleaning up the IO and thus not reducing
-the IO reference count. With this change, as part of explicit logout, the IO is
-cleaned up.
+James, please consider merging the following bug fixes for 3.5.
 
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
----
- drivers/scsi/bnx2fc/bnx2fc_io.c  |   99 ++++++++++++++++++++-----------------
- drivers/scsi/bnx2fc/bnx2fc_tgt.c |   11 ++++-
- 2 files changed, 63 insertions(+), 47 deletions(-)
+Thanks,
+Bhanu
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 84a78af..7322ee1 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -1089,6 +1089,43 @@ int bnx2fc_eh_device_reset(struct scsi_cmnd *sc_cmd)
- 	return bnx2fc_initiate_tmf(sc_cmd, FCP_TMF_LUN_RESET);
- }
- 
-+int bnx2fc_expl_logo(struct fc_lport *lport, struct bnx2fc_cmd *io_req)
-+{
-+	struct bnx2fc_rport *tgt = io_req->tgt;
-+	struct fc_rport_priv *rdata = tgt->rdata;
-+	int logo_issued;
-+	int rc = SUCCESS;
-+	int wait_cnt = 0;
-+
-+	BNX2FC_IO_DBG(io_req, "Expl logo - tgt flags = 0x%lx\n",
-+		      tgt->flags);
-+	logo_issued = test_and_set_bit(BNX2FC_FLAG_EXPL_LOGO,
-+				       &tgt->flags);
-+	io_req->wait_for_comp = 1;
-+	bnx2fc_initiate_cleanup(io_req);
-+
-+	spin_unlock_bh(&tgt->tgt_lock);
-+
-+	wait_for_completion(&io_req->tm_done);
-+
-+
-+	if (!logo_issued) {
-+		clear_bit(BNX2FC_FLAG_SESSION_READY, &tgt->flags);
-+		mutex_lock(&lport->disc.disc_mutex);
-+		lport->tt.rport_logoff(rdata);
-+		mutex_unlock(&lport->disc.disc_mutex);
-+		do {
-+			msleep(BNX2FC_RELOGIN_WAIT_TIME);
-+			if (wait_cnt++ > BNX2FC_RELOGIN_WAIT_CNT) {
-+				rc = FAILED;
-+				break;
-+			}
-+		} while (!test_bit(BNX2FC_FLAG_SESSION_READY, &tgt->flags));
-+	}
-+	spin_lock_bh(&tgt->tgt_lock);
-+	io_req->wait_for_comp = 0;
-+	return rc;
-+}
- /**
-  * bnx2fc_eh_abort - eh_abort_handler api to abort an outstanding
-  *			SCSI command
-@@ -1103,10 +1140,7 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
- 	struct fc_rport_libfc_priv *rp = rport->dd_data;
- 	struct bnx2fc_cmd *io_req;
- 	struct fc_lport *lport;
--	struct fc_rport_priv *rdata;
- 	struct bnx2fc_rport *tgt;
--	int logo_issued;
--	int wait_cnt = 0;
- 	int rc = FAILED;
- 
- 
-@@ -1183,58 +1217,31 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
- 	list_add_tail(&io_req->link, &tgt->io_retire_queue);
- 
- 	init_completion(&io_req->tm_done);
--	io_req->wait_for_comp = 1;
- 
--	if (!test_and_set_bit(BNX2FC_FLAG_ISSUE_ABTS, &io_req->req_flags)) {
--		/* Cancel the current timer running on this io_req */
--		if (cancel_delayed_work(&io_req->timeout_work))
--			kref_put(&io_req->refcount,
--				 bnx2fc_cmd_release); /* drop timer hold */
--		set_bit(BNX2FC_FLAG_EH_ABORT, &io_req->req_flags);
--		rc = bnx2fc_initiate_abts(io_req);
--	} else {
-+	if (test_and_set_bit(BNX2FC_FLAG_ISSUE_ABTS, &io_req->req_flags)) {
- 		printk(KERN_ERR PFX "eh_abort: io_req (xid = 0x%x) "
- 				"already in abts processing\n", io_req->xid);
- 		if (cancel_delayed_work(&io_req->timeout_work))
- 			kref_put(&io_req->refcount,
- 				 bnx2fc_cmd_release); /* drop timer hold */
--		bnx2fc_initiate_cleanup(io_req);
-+		rc = bnx2fc_expl_logo(lport, io_req);
-+		goto done;
-+	}
- 
-+	/* Cancel the current timer running on this io_req */
-+	if (cancel_delayed_work(&io_req->timeout_work))
-+		kref_put(&io_req->refcount,
-+			 bnx2fc_cmd_release); /* drop timer hold */
-+	set_bit(BNX2FC_FLAG_EH_ABORT, &io_req->req_flags);
-+	io_req->wait_for_comp = 1;
-+	rc = bnx2fc_initiate_abts(io_req);
-+	if (rc == FAILED) {
-+		bnx2fc_initiate_cleanup(io_req);
- 		spin_unlock_bh(&tgt->tgt_lock);
--
- 		wait_for_completion(&io_req->tm_done);
--
- 		spin_lock_bh(&tgt->tgt_lock);
- 		io_req->wait_for_comp = 0;
--		rdata = io_req->tgt->rdata;
--		logo_issued = test_and_set_bit(BNX2FC_FLAG_EXPL_LOGO,
--					       &tgt->flags);
--		kref_put(&io_req->refcount, bnx2fc_cmd_release);
--		spin_unlock_bh(&tgt->tgt_lock);
--
--		if (!logo_issued) {
--			BNX2FC_IO_DBG(io_req, "Expl logo - tgt flags = 0x%lx\n",
--				      tgt->flags);
--			mutex_lock(&lport->disc.disc_mutex);
--			lport->tt.rport_logoff(rdata);
--			mutex_unlock(&lport->disc.disc_mutex);
--			do {
--				msleep(BNX2FC_RELOGIN_WAIT_TIME);
--				/*
--				 * If session not recovered, let SCSI-ml
--				 * escalate error recovery.
--				 */
--				if (wait_cnt++ > BNX2FC_RELOGIN_WAIT_CNT)
--					return FAILED;
--			} while (!test_bit(BNX2FC_FLAG_SESSION_READY,
--					   &tgt->flags));
--		}
--		return SUCCESS;
--	}
--	if (rc == FAILED) {
--		kref_put(&io_req->refcount, bnx2fc_cmd_release);
--		spin_unlock_bh(&tgt->tgt_lock);
--		return rc;
-+		goto done;
- 	}
- 	spin_unlock_bh(&tgt->tgt_lock);
- 
-@@ -1247,7 +1254,7 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
- 		/* Let the scsi-ml try to recover this command */
- 		printk(KERN_ERR PFX "abort failed, xid = 0x%x\n",
- 		       io_req->xid);
--		rc = FAILED;
-+		rc = bnx2fc_expl_logo(lport, io_req);
- 	} else {
- 		/*
- 		 * We come here even when there was a race condition
-@@ -1259,7 +1266,7 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
- 		bnx2fc_scsi_done(io_req, DID_ABORT);
- 		kref_put(&io_req->refcount, bnx2fc_cmd_release);
- 	}
--
-+done:
- 	/* release the reference taken in eh_abort */
- 	kref_put(&io_req->refcount, bnx2fc_cmd_release);
- 	spin_unlock_bh(&tgt->tgt_lock);
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-index c1800b5..d3ee231 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-@@ -213,8 +213,17 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
- 
- 		BNX2FC_IO_DBG(io_req, "retire_queue flush\n");
- 
--		if (cancel_delayed_work(&io_req->timeout_work))
-+		if (cancel_delayed_work(&io_req->timeout_work)) {
-+			if (test_and_clear_bit(BNX2FC_FLAG_EH_ABORT,
-+						&io_req->req_flags)) {
-+				/* Handle eh_abort timeout */
-+				BNX2FC_IO_DBG(io_req, "eh_abort for IO "
-+					      "in retire_q\n");
-+				if (io_req->wait_for_comp)
-+					complete(&io_req->tm_done);
-+			}
- 			kref_put(&io_req->refcount, bnx2fc_cmd_release);
-+		}
- 
- 		clear_bit(BNX2FC_FLAG_ISSUE_RRQ, &io_req->req_flags);
- 	}
--- 
-1.7.0.6
+Bhanu Prakash Gollapudi (4):
+  bnx2fc: Allow FLOGI to be retried when receiving bad responses.
+  bnx2fc: Decrememnt io ref count when abort times out
+  bnx2fc: cleanup task management IO when it times out.
+  Bumped version to 1.0.11
+
+ drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
+ drivers/scsi/bnx2fc/bnx2fc_els.c  |   16 +----
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+ drivers/scsi/bnx2fc/bnx2fc_io.c   |  115 ++++++++++++++++++++++---------------
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c  |   21 +++++++-
+ 5 files changed, 93 insertions(+), 63 deletions(-)
 
 
