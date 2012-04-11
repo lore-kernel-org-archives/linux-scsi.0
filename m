@@ -1,46 +1,47 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [RFC] How to fix an async scan - rmmod race?
-Date: Wed, 11 Apr 2012 19:47:55 +0000
-Message-ID: <4F85DFEB.5080000@acm.org>
-References: <4F7DA4F8.90104@redhat.com> <4F7DDDCC.1070506@acm.org>    <4F7E0EBF.80407@cs.wisc.edu> <4F7EBD3A.8070509@redhat.com>   <1333725609.2953.12.camel@dabdike> <4F7F1687.9000309@acm.org>  <1333730146.2953.13.camel@dabdike> <4F7F214D.20500@acm.org> <1333732525.2953.16.camel@dabdike> <4F81CCF9.8010408@acm.org> <4F85CACA.8060803@cs.wisc.edu>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: An oops will occur while SCSI core is being used in 3.4-rc1
+Date: Wed, 11 Apr 2012 20:01:22 +0000
+Message-ID: <4F85E312.6070205@acm.org>
+References: <CAAxnys5O7PfWYv0q+BvhK2CP7X-_pNRa4j-Z1gSWHqLm8D8XmA@mail.gmail.com> <4F83EC71.90904@acm.org> <4F8461E3.3050808@cs.wisc.edu> <4F846398.5030609@cs.wisc.edu> <4F846506.4060801@cs.wisc.edu> <yq18vi2ckrj.fsf@sermon.lab.mkp.net> <4F85B3E8.7040704@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay03ant.iops.be ([212.53.5.218]:45498 "EHLO
-	relay03ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761109Ab2DKTsF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Apr 2012 15:48:05 -0400
-In-Reply-To: <4F85CACA.8060803@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F85B3E8.7040704-HInyCGIudOg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, Elric Fu <elricfu1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>, Alex He <alex.he-5C7GfCeVMHo@public.gmane.org>, Andiry Xu <andiry.xu-5C7GfCeVMHo@public.gmane.org>, Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Linux USB Mailing List <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tomas Henzl <thenzl@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>
 
-On 04/11/12 18:17, Mike Christie wrote:
+On 04/11/12 16:40, Bart Van Assche wrote:
 
-> I would like scsi core to handle this, but I think right now drivers are
-> doing work arounds like your patch.
+> On 04/11/12 16:10, Martin K. Petersen wrote:
+>> index 377df4a..1e11985 100644
+>> --- a/include/scsi/scsi_cmnd.h
+>> +++ b/include/scsi/scsi_cmnd.h
+>> @@ -134,6 +134,9 @@ struct scsi_cmnd {
+>>  
+>>  static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+>>  {
+>> +	if (!cmd->request->rq_disk)
+>> +		return NULL;
+>> +
+>>  	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
+>>  }
+> 
+> What if the rq_disk pointer is cleared by another kernel thread after it
+> has been checked but before it is used ?
 
 
-I've been wondering whether the following approach would make sense
-(haven't tested this yet):
-- Let scsi_remove_host() stop the SCSI error handler thread instead of
-  keeping the error handler thread around until scsi_host_dev_release()
-  gets invoked.
-- After blk_cleanup_queue() finished, kill all outstanding SCSI
-  requests from inside scsi_remove_device() (those requests that have
-  already been passed to the LLD via queuecommand) instead of waiting
-  until the SCSI error handler detects a timeout.
+(replying to my own e-mail)
 
-An advantage of that approach would be that independent of the context
-from which an I/O request is submitted (scanning / user space / ...)
-that no new requests would be passed to the SCSI LLD after
-scsi_remove_host() has finished. So this approach could be an
-alternative for Tomas' patch at the start of this thread. However, a
-disadvantage is that this approach will only work fine if the LLD stops
-I/O completion notifications before invoking scsi_remove_host(). Several
-LLDs seem to do that, but not ib_srp. But that's something Dave and I
-can take care of.
+That comment didn't make sense - request.rq_disk is not modified after
+it has been initialized. Yet it would make me more happy if
+scsi_send_eh_cmnd() could be modified such that it doesn't have to
+access struct scsi_driver.
 
 Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
