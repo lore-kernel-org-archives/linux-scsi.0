@@ -1,60 +1,66 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC] How to fix an async scan - rmmod race?
-Date: Wed, 11 Apr 2012 13:17:46 -0500
-Message-ID: <4F85CACA.8060803@cs.wisc.edu>
-References: <4F7DA4F8.90104@redhat.com> <4F7DDDCC.1070506@acm.org>    <4F7E0EBF.80407@cs.wisc.edu> <4F7EBD3A.8070509@redhat.com>   <1333725609.2953.12.camel@dabdike> <4F7F1687.9000309@acm.org>  <1333730146.2953.13.camel@dabdike> <4F7F214D.20500@acm.org> <1333732525.2953.16.camel@dabdike> <4F81CCF9.8010408@acm.org>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: dramatic I/O slowdown after upgrading 2.6.38->3.0+
+Date: Wed, 11 Apr 2012 20:28:22 +0200
+Message-ID: <20120411182822.GD16008@quack.suse.cz>
+References: <4F75E46E.2000503@msgid.tls.msk.ru>
+ <20120405232913.GA6640@quack.suse.cz>
+ <4F7E74F4.90604@msgid.tls.msk.ru>
+ <20120410022628.GN18323@dastard>
+ <4F83CC86.2010805@msgid.tls.msk.ru>
+ <20120410151326.GA4936@quack.suse.cz>
+ <4F855173.40902@msgid.tls.msk.ru>
+ <4F85BD2F.80905@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:45115 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755908Ab2DKSR7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Apr 2012 14:17:59 -0400
-In-Reply-To: <4F81CCF9.8010408@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4F85BD2F.80905@cs.wisc.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tomas Henzl <thenzl@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>
 
-On 04/08/2012 12:38 PM, Bart Van Assche wrote:
-> On 04/06/12 17:15, James Bottomley wrote:
+On Wed 11-04-12 12:19:43, Mike Christie wrote:
+> On 04/11/2012 04:40 AM, Michael Tokarev wrote:
+> > On 10.04.2012 19:13, Jan Kara wrote:
+> >> > On Tue 10-04-12 10:00:38, Michael Tokarev wrote:
+> > []
+> >>> >>   2.6.38:
+> >>> >>   # dd if=/dev/sdb of=/dev/null bs=1M iflag=direct count=100
+> >>> >>   100+0 records in
+> >>> >>   100+0 records out
+> >>> >>   104857600 bytes (105 MB) copied, 1.73126 s, 60.6 MB/s
+> >>> >>
+> >>> >>   3.0:
+> >>> >>   # dd if=/dev/sdb of=/dev/null bs=1M iflag=direct count=100
+> >>> >>   100+0 records in
+> >>> >>   100+0 records out
+> >>> >>   104857600 bytes (105 MB) copied, 29.4508 s, 3.6 MB/s
+> >>> >>
+> >>> >> That's about 20 times difference on direct read from the
+> >>> >> same - idle - device!!
+> >> >   Huh, that's a huge difference for such a trivial load. So we can rule out
+> >> > filesystems, writeback, mm. I also wouldn't think it's IO scheduler but
+> >> > you can always check by comparing dd numbers after
+> >> >   echo none >/sys/block/sdb/queue/scheduler
 > 
->> Consider where the command came from: either it's come from startup (the
->> current problem), operation (in which case the device must be open to
->> send and receive it) or teardown (which is synchronous).
+> Did you try newer 3.X kernels or just 3.0?
 > 
+> We were hitting a similar problem with iscsi. Same workload and it
+> started with 2.6.38. I think it turned out to be this issue:
 > 
-> And what about e.g. sd_check_events() or sr_check_events() ?
-
-Are those setup to run from the open functions, so we will have done a
-get on the module (sd_open() -> check_disk_change()) for those.
-
+> // thread with issue like what we hit:
+> http://thread.gmane.org/gmane.linux.kernel/1244680
 > 
-> Maybe I should explain why I started looking at the SCSI error handler
-> in so much detail. While running disk removal tests against ib_srp I
-> found out that the SCSI error handler thread can invoke the LLD's abort
-> and reset handlers long after scsi_remove_host() finished. That's why I
-> came up with this patch: "[PATCH 05/15] ib_srp: Avoid that SCSI error
-> handling triggers a crash"
-> (http://www.mail-archive.com/linux-rdma@vger.kernel.org/msg11234.html).
-> But I'm still wondering whether that's the right approach. Should this
-> issue be addressed in each LLD or in the SCSI core ?
+> // Patch that I think fixed issue:
+> commit 3deaa7190a8da38453c4fabd9dec7f66d17fff67
+> Author: Shaohua Li <shaohua.li@intel.com>
+> Date:   Fri Feb 3 15:37:17 2012 -0800
 > 
+>     readahead: fix pipeline break caused by block plug
+  I already asked about this but that doesn't seem to be the cause.
 
-I would like scsi core to handle this, but I think right now drivers are
-doing work arounds like your patch.
-
-For example FC drivers will call fc_remove_host which sets things up so
-no new IO can be sent to the device after that function has completed
-and will call some callouts like dev_loss_tmo_callbk to cleanup
-outstanding IO. The problem is that when it calls scsi_remove_host that
-could cause commands like cache sync from sd.c's shutdown to get failed
-(the queuecommand function will call the fc check ready function which
-will fail the IO immediately).
-
-iSCSI drivers will call scsi_remove_target, do a iscsi logout and
-cleanup outstanding commands if needed, set things up so new IO is
-failed (I do not think there should be new IO because scsi_remove_target
-should have removed the devices and the iscsi logout/shutdown code made
-sure the iscsi queues were empty), then call scsi_remove_host.
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
