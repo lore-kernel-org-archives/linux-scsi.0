@@ -1,73 +1,104 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] scsi: fix eh wakeup (scsi_schedule_eh vs
- scsi_restart_operations)
-Date: Tue, 10 Apr 2012 19:34:19 -0700
-Message-ID: <20120411023054.791.37365.stgit@dwillia2-linux.jf.intel.com>
+Subject: Re: [isci PATCH v2 12/18] libata: make ata_print_id atomic
+Date: Tue, 10 Apr 2012 19:21:41 -0700
+Message-ID: <CAA9_cmdc3kxJCqwiqpXXqWXUQHJ1SSpbK3u9bDSsgSc0p93Wuw@mail.gmail.com>
+References: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
+	<20120311072845.6320.68461.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120311072845.6320.68461.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Tom Jackson <thomas.p.jackson@intel.com>
+Cc: linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Rapid ata hotplug on a libsas controller results in cases where libsas
-is waiting indefinitely on eh to perform an ata probe.
+Ping? I assume this fairly uncontroversial and can be 3.4-rc material.
 
-A race exists between scsi_schedule_eh() and scsi_restart_operations()
-in the case when scsi_restart_operations() issues i/o to other devices
-in the sas domain.  When this happens the host state transitions from
-SHOST_RECOVERY (set by scsi_schedule_eh) back to SHOST_RUNNING and
-->host_busy is non-zero so we put the eh thread to sleep even though
-->host_eh_scheduled is active.
-
-Before putting the error handler to sleep we need to check if the
-host_state needs to return to SHOST_RECOVERY for another trip through
-eh.
-
-Cc: Tejun Heo <tj@kernel.org>
-Reported-by: Tom Jackson <thomas.p.jackson@intel.com>
-Tested-by: Tom Jackson <thomas.p.jackson@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
- More host_eh_scheduled fallout that I would like to roll into a
- libsas-fixes pull request along with the other fixes that were pending
- when the merge window closed.
-
- I'll resend the entire patch series when posting the branch, but wanted
- to call this fix out separately since it is new.
-
- --
- Dan
-
- drivers/scsi/scsi_error.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 2cfcbff..0945d47 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1687,6 +1687,20 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
- 	 * requests are started.
- 	 */
- 	scsi_run_host_queues(shost);
-+
-+	/*
-+	 * if eh is active and host_eh_scheduled is pending we need to re-run
-+	 * recovery.  we do this check after scsi_run_host_queues() to allow
-+	 * everything pent up since the last eh run a chance to make forward
-+	 * progress before we sync again.  Either we'll immediately re-run
-+	 * recovery or scsi_device_unbusy() will wake us again when these
-+	 * pending commands complete.
-+	 */
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	if (shost->host_eh_scheduled)
-+		if (scsi_host_set_state(shost, SHOST_RECOVERY))
-+			WARN_ON(scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY));
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- }
- 
- /**
-
+On Sat, Mar 10, 2012 at 11:28 PM, Dan Williams <dan.j.williams@intel.co=
+m> wrote:
+> This variable is incremented from multiple contexts (module_init via
+> libata-lldds and the libsas discovery thread). =A0Make it atomic to h=
+ead
+> off any chance of libsas and libata creating duplicate ids.
+>
+> Acked-by: Jacek Danecki <jacek.danecki@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+> =A0drivers/ata/libata-core.c | =A0 =A04 ++--
+> =A0drivers/ata/libata-scsi.c | =A0 =A04 ++--
+> =A0drivers/ata/libata.h =A0 =A0 =A0| =A0 =A02 +-
+> =A03 files changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index ea8444e..bd79c8b 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -97,7 +97,7 @@ static unsigned int ata_dev_set_xfermode(struct ata=
+_device *dev);
+> =A0static void ata_dev_xfermask(struct ata_device *dev);
+> =A0static unsigned long ata_dev_blacklisted(const struct ata_device *=
+dev);
+>
+> -unsigned int ata_print_id =3D 1;
+> +atomic_t ata_print_id =3D ATOMIC_INIT(1);
+>
+> =A0struct ata_force_param {
+> =A0 =A0 =A0 =A0const char =A0 =A0 =A0*name;
+> @@ -6031,7 +6031,7 @@ int ata_host_register(struct ata_host *host, st=
+ruct scsi_host_template *sht)
+>
+> =A0 =A0 =A0 =A0/* give ports names and add SCSI hosts */
+> =A0 =A0 =A0 =A0for (i =3D 0; i < host->n_ports; i++)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 host->ports[i]->print_id =3D ata_print_=
+id++;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 host->ports[i]->print_id =3D atomic_inc=
+_return(&ata_print_id);
+>
+>
+> =A0 =A0 =A0 =A0/* Create associated sysfs transport objects =A0*/
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 1ee00c8..93dabdc 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3843,7 +3843,7 @@ int ata_sas_async_port_init(struct ata_port *ap=
+)
+> =A0 =A0 =A0 =A0int rc =3D ap->ops->port_start(ap);
+>
+> =A0 =A0 =A0 =A0if (!rc) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->print_id =3D ata_print_id++;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->print_id =3D atomic_inc_return(&ata=
+_print_id);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__ata_port_probe(ap);
+> =A0 =A0 =A0 =A0}
+>
+> @@ -3867,7 +3867,7 @@ int ata_sas_port_init(struct ata_port *ap)
+> =A0 =A0 =A0 =A0int rc =3D ap->ops->port_start(ap);
+>
+> =A0 =A0 =A0 =A0if (!rc) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->print_id =3D ata_print_id++;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->print_id =3D atomic_inc_return(&ata=
+_print_id);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rc =3D ata_port_probe(ap);
+> =A0 =A0 =A0 =A0}
+>
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index 2e26fca..9d0fd0b 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -53,7 +53,7 @@ enum {
+> =A0 =A0 =A0 =A0ATA_DNXFER_QUIET =A0 =A0 =A0 =A0=3D (1 << 31),
+> =A0};
+>
+> -extern unsigned int ata_print_id;
+> +extern atomic_t ata_print_id;
+> =A0extern int atapi_passthru16;
+> =A0extern int libata_fua;
+> =A0extern int libata_noacpi;
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
