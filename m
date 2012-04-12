@@ -1,80 +1,101 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [RFC] How to fix an async scan - rmmod race? try_module_get
-Date: Thu, 12 Apr 2012 14:48:52 +0200
-Message-ID: <4F86CF34.2000906@redhat.com>
-References: <4F7DA4F8.90104@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Thu, 12 Apr 2012 10:53:52 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1204121030050.1496-100000@iolanthe.rowland.org>
+References: <870556.54475.qm@web100005.mail.kks.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55947 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933732Ab2DLMs4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Apr 2012 08:48:56 -0400
-In-Reply-To: <4F7DA4F8.90104@redhat.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:42527 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S964944Ab2DLOxx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Apr 2012 10:53:53 -0400
+In-Reply-To: <870556.54475.qm@web100005.mail.kks.yahoo.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>, Mike Christie <mchristi@redhat.com>, Bart Van Assche <bvanassche@acm.org>
+To: Norman Diamond <n0diamond@yahoo.co.jp>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+On Wed, 11 Apr 2012, Norman Diamond wrote:
 
-the first patch waited in scsi_remove_host was until the scan thread ends, some flags were set
-so the thread could be aborted prematurely. 
+> > It sounds like you are suggesting that we have a new quirk,
+> > something like TEST_CAPACITY.=A0 When this quirk is present, we cou=
+ld
+> > attempt to read the last block when the drive (or media) is first
+> > detected, thereby determining whether the reported capacity needs
+> > to be adjusted.
+>=20
+> Yes, that is what I've been suggesting for a while.  But at this
+> moment I might have a better suggestion, discussed below.  Or it
+> might be better to combine the two ideas.
+>=20
+> > The existing FIX_CAPACITY and CAPACITY_HEURISTICS quirk entries
+> > could be changed to TEST_CAPACITY as people report the results of
+> > their testing.=A0 However this would be a very slow process.
+>=20
+> FIX_CAPACITY will still be necessary in cases where a bridge is known
+> to have both problems, always overreporting and crashing when tested
+> for overreporting.  I think these cases will be a small minority
+> though.
 
-This patch uses a try_module_get to lock the module and prevents a rmmod while it's locked.
-The disadvantage is that in the protection we use again the same host template (shost->hostt->module;),
-and when this were not valid I think and oops in try_module_get will follow. It seems to me
-that the LLDs use scsi_scan_host only in the initial attach function so this is safe now, but ..
+Your naive faith in the high quality of the firmware in low-cost=20
+consumer electronic devices is touching, but sadly misplaced.
 
-This, and the fact that the initial patch can ends the scan thread in the middle (I hope this is safe?),
-makes me prefer the original patch.
+Besides, your initial conclusion is wrong.  FIX_CAPACITY will apply
+well in cases where a bridge is known to have the overreporting bug. =20
+Even if the bridge doesn't crash when asked to read beyond the end of
+the drive, there's no reason to do such a test if we know in advance
+what the answer will be.
 
-A potential fix for a scan invoked from a different location, eg. a user via syfs is maybe also needed, but
-can be handled separately. 
+The only real reason for the new TEST_CAPACITY flag would be to handle
+cases where some devices get the capacity wrong and others with the
+same IDs get it right.  This means that initially only two quirk
+entries would require the TEST_CAPACITY flag: the one for your device
+and the single entry that currently uses CAPACITY_HEURISTICS.
 
-Tomas
+> Now, I think that most of the existing FIX_CAPACITY cases probably
+> should be changed to CAPACITY_HEURISTICS.  This will be simpler and
+> quicker, though not maximally accurate by itself.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 29c4c04..6cf8df3 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1839,9 +1839,13 @@ static int do_scan_async(void *_data)
- {
- 	struct async_scan_data *data = _data;
- 	struct Scsi_Host *shost = data->shost;
-+	struct module *mod = shost->hostt->module;
- 
- 	do_scsi_scan_host(shost);
- 	scsi_finish_async_scan(data);
-+
-+	module_put(mod);
-+
- 	return 0;
- }
- 
-@@ -1853,16 +1857,22 @@ void scsi_scan_host(struct Scsi_Host *shost)
- {
- 	struct task_struct *p;
- 	struct async_scan_data *data;
-+	struct module *mod;
- 
- 	if (strncmp(scsi_scan_type, "none", 4) == 0)
- 		return;
- 	if (scsi_autopm_get_host(shost) < 0)
- 		return;
- 
-+	mod = shost->hostt->module;
-+	if (!try_module_get(mod)) /* module_put is called from do_scan_async */
-+		return;
-+
- 	data = scsi_prep_async_scan(shost);
- 	if (!data) {
- 		do_scsi_scan_host(shost);
- 		scsi_autopm_put_host(shost);
-+		module_put(mod);
- 		return;
- 	}
- 
+Definitely NOT!  One of the most important rules we have in kernel
+development is that we do not break existing systems.  It is known that
+there are devices which overreport and for which the actual number of
+blocks is odd; we cannot take the chance of changing any existing
+entries without positive evidence that it is safe to do so.
 
+> In drivers/scsi/sd.c, fix_capacity always causes a decrement but
+> guess_capacity guesses an even number.
+>=20
+> So one thing to do for the Prolific bridge in unusual_devs.h is to
+> use US_FL_CAPACITY_HEURISTICS instead of US_FL_FIX_CAPACITY.
 
+Not all disks have an even number of blocks.  That heuristic really
+isn't a very good one -- its only benefit is that it works okay for the
+one case where it is currently used.
+
+> I also think that if the reported capacity is a multiple of 63 then
+> it is very likely to be accurate and should not be decremented. =20
+> Furthermore if the capacity is a multiple of 126 (i.e. even as in the
+> current heuristic, and a multiple of 63) then US_FL_FIX_CAPACITY is
+> almost certainly wrong.  Of course that 63 is artificial but it is
+> very common and the reason is well known.
+
+You seem to be ignoring the fact that we aren't just talking about=20
+USB-(S)ATA bridges.  The same driver also handles things like flash=20
+drives and card readers.
+
+=46or example, I just plugged in my music player.  It has both an
+internal flash memory and a memory card slot, and it reports their
+capacities correctly.  But the flash memory has 7683072 blocks and the
+memory card has 3842048 blocks; neither of these numbers is divisible
+by 63.  Therefore relying on it isn't particularly safe.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
