@@ -1,15 +1,15 @@
 From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: [PATCH 08/10] sg: completely protect sfds
-Date: Thu, 12 Apr 2012 17:34:46 -0400
-Message-ID: <20120412213445.GH17388@logfs.org>
+Subject: [PATCH 09/10] sg: remove sg_mutex
+Date: Thu, 12 Apr 2012 17:35:05 -0400
+Message-ID: <20120412213505.GI17388@logfs.org>
 References: <20120412213217.GA17388@logfs.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from longford.logfs.org ([213.229.74.203]:48503 "EHLO
+Received: from longford.logfs.org ([213.229.74.203]:48506 "EHLO
 	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966235Ab2DLXbV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Apr 2012 19:31:21 -0400
+	with ESMTP id S966272Ab2DLXbl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Apr 2012 19:31:41 -0400
 Content-Disposition: inline
 In-Reply-To: <20120412213217.GA17388@logfs.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,76 +17,84 @@ List-Id: linux-scsi@vger.kernel.org
 To: Doug Gilbert <dgilbert@interlog.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-sfds is protected by sg_index_lock - except for sg_open(), where it
-isn't.  Change that and add some documentation.
+With the exception of the detached field, sg_mutex no longer adds any
+locking.  detached handling has been broken before and is still broken
+and this patch does not seem to make things worse than they were to
+begin with.
+
+However, I have observed cases of tasks being blocked for >200s waiting
+for sg_mutex.  So the removal clearly adds value for very little cost.
 
 Signed-off-by: Joern Engel <joern@logfs.org>
 ---
- drivers/scsi/sg.c |   19 ++++++++++++++++---
- 1 files changed, 16 insertions(+), 3 deletions(-)
+ drivers/scsi/sg.c |   19 ++-----------------
+ 1 files changed, 2 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index a70018e..a40b814 100644
+index a40b814..0c646f2 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -146,6 +146,7 @@ typedef struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
- } Sg_request;
+@@ -104,7 +104,6 @@ static int scatter_elem_sz_prev = SG_SCATTER_SZ;
+ static int sg_add(struct device *, struct class_interface *);
+ static void sg_remove(struct device *, struct class_interface *);
  
- typedef struct sg_fd {		/* holds the state of a file descriptor */
-+	/* sfd_siblings is protected by sg_index_lock */
- 	struct list_head sfd_siblings;
- 	struct sg_device *parentdp;	/* owning device */
- 	wait_queue_head_t read_wait;	/* queue read until command done */
-@@ -172,6 +173,7 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
- 	wait_queue_head_t o_excl_wait;	/* queue open() when O_EXCL in use */
- 	int sg_tablesize;	/* adapter's max scatter-gather table size */
- 	u32 index;		/* device index number */
-+	/* sfds is protected by sg_index_lock */
- 	struct list_head sfds;
- 	volatile char detached;	/* 0->attached, 1->detached pending removal */
- 	/* exclude protected by sg_open_exclusive_lock */
-@@ -243,6 +245,17 @@ static void set_exclude(Sg_device *sdp, char val)
- 	spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
+-static DEFINE_MUTEX(sg_mutex);
+ static DEFINE_SPINLOCK(sg_open_exclusive_lock);
+ 
+ static DEFINE_IDR(sg_index_idr);
+@@ -267,7 +266,6 @@ sg_open(struct inode *inode, struct file *filp)
+ 	int res;
+ 	int retval;
+ 
+-	mutex_lock(&sg_mutex);
+ 	nonseekable_open(inode, filp);
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_open: dev=%d, flags=0x%x\n", dev, flags));
+ 	sdp = sg_get_dev(dev);
+@@ -349,7 +347,6 @@ sdp_put:
+ sg_put:
+ 	if (sdp)
+ 		sg_put_dev(sdp);
+-	mutex_unlock(&sg_mutex);
+ 	return retval;
  }
  
-+static int sfds_list_empty(Sg_device *sdp)
-+{
-+	unsigned long flags;
-+	int ret;
-+
-+	read_lock_irqsave(&sg_index_lock, flags);
-+	ret = list_empty(&sdp->sfds);
-+	read_unlock_irqrestore(&sg_index_lock, flags);
-+	return ret;
-+}
-+
- static int
- sg_open(struct inode *inode, struct file *filp)
+@@ -807,7 +804,7 @@ static int srp_done(Sg_fd *sfp, Sg_request *srp)
+ 	return ret;
+ }
+ 
+-static int
++static long
+ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
  {
-@@ -286,12 +299,12 @@ sg_open(struct inode *inode, struct file *filp)
- 			retval = -EPERM; /* Can't lock it with read only access */
- 			goto error_out;
- 		}
--		if (!list_empty(&sdp->sfds) && (flags & O_NONBLOCK)) {
-+		if (!sfds_list_empty(sdp) && (flags & O_NONBLOCK)) {
- 			retval = -EBUSY;
- 			goto error_out;
- 		}
- 		res = wait_event_interruptible(sdp->o_excl_wait,
--					   ((!list_empty(&sdp->sfds) || get_exclude(sdp)) ? 0 : set_exclude(sdp, 1), 1));
-+					   ((!sfds_list_empty(sdp) || get_exclude(sdp)) ? 0 : set_exclude(sdp, 1), 1));
- 		if (res) {
- 			retval = res;	/* -ERESTARTSYS because signal hit process */
- 			goto error_out;
-@@ -311,7 +324,7 @@ sg_open(struct inode *inode, struct file *filp)
- 		retval = -ENODEV;
- 		goto error_out;
+ 	void __user *p = (void __user *)arg;
+@@ -1117,18 +1114,6 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
  	}
--	if (list_empty(&sdp->sfds)) {	/* no existing opens on this device */
-+	if (sfds_list_empty(sdp)) {	/* no existing opens on this device */
- 		sdp->sgdebug = 0;
- 		q = sdp->device->request_queue;
- 		sdp->sg_tablesize = queue_max_segments(q);
+ }
+ 
+-static long
+-sg_unlocked_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+-{
+-	int ret;
+-
+-	mutex_lock(&sg_mutex);
+-	ret = sg_ioctl(filp, cmd_in, arg);
+-	mutex_unlock(&sg_mutex);
+-
+-	return ret;
+-}
+-
+ #ifdef CONFIG_COMPAT
+ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ {
+@@ -1372,7 +1357,7 @@ static const struct file_operations sg_fops = {
+ 	.read = sg_read,
+ 	.write = sg_write,
+ 	.poll = sg_poll,
+-	.unlocked_ioctl = sg_unlocked_ioctl,
++	.unlocked_ioctl = sg_ioctl,
+ #ifdef CONFIG_COMPAT
+ 	.compat_ioctl = sg_compat_ioctl,
+ #endif
 -- 
 1.7.9.1
 
