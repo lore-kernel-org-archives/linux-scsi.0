@@ -1,75 +1,46 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 1/4] bnx2fc: Allow FLOGI to be retried when receiving
- bad responses.
-Date: Wed, 11 Apr 2012 15:54:49 -0700
-Message-ID: <1334184892-18419-2-git-send-email-bprakash@broadcom.com>
-References: <1334184892-18419-1-git-send-email-bprakash@broadcom.com>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: An oops will occur while SCSI core is being used in 3.4-rc1
+Date: Wed, 11 Apr 2012 20:48:59 -0400
+Message-ID: <yq1y5q1ai6c.fsf@sermon.lab.mkp.net>
+References: <CAAxnys5O7PfWYv0q+BvhK2CP7X-_pNRa4j-Z1gSWHqLm8D8XmA@mail.gmail.com>
+	<4F83EC71.90904@acm.org> <4F8461E3.3050808@cs.wisc.edu>
+	<4F846398.5030609@cs.wisc.edu> <4F846506.4060801@cs.wisc.edu>
+	<yq18vi2ckrj.fsf@sermon.lab.mkp.net> <4F85B3E8.7040704@acm.org>
+	<4F85E312.6070205@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3318 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761387Ab2DKWzG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Apr 2012 18:55:06 -0400
-In-Reply-To: <1334184892-18419-1-git-send-email-bprakash@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F85E312.6070205-HInyCGIudOg@public.gmane.org> (Bart Van Assche's message of "Wed, 11
+	Apr 2012 20:01:22 +0000")
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, Elric Fu <elricfu1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>, Alex He <alex.he-5C7GfCeVMHo@public.gmane.org>, Andiry Xu <andiry.xu-5C7GfCeVMHo@public.gmane.org>, Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Linux USB Mailing List <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Commit 907c07d45199f954ddcf66c2c9763c87d012cb15 added more cases to do FLOGI
-retry on receiving bad response. Remove the code that drops the packet and
-allow the stack to handle bad FLOGI response.
+>>>>> "Bart" == Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> writes:
 
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
----
- drivers/scsi/bnx2fc/bnx2fc_els.c |   16 +++-------------
- 1 files changed, 3 insertions(+), 13 deletions(-)
+Bart> That comment didn't make sense - request.rq_disk is not modified
+Bart> after it has been initialized. 
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
-index ce0ce3e..cf3bdcd 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_els.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
-@@ -854,7 +854,6 @@ static void bnx2fc_flogi_resp(struct fc_seq *seq, struct fc_frame *fp,
- 	struct fc_exch *exch = fc_seq_exch(seq);
- 	struct fc_lport *lport = exch->lp;
- 	u8 *mac;
--	struct fc_frame_header *fh;
- 	u8 op;
- 
- 	if (IS_ERR(fp))
-@@ -862,13 +861,6 @@ static void bnx2fc_flogi_resp(struct fc_seq *seq, struct fc_frame *fp,
- 
- 	mac = fr_cb(fp)->granted_mac;
- 	if (is_zero_ether_addr(mac)) {
--		fh = fc_frame_header_get(fp);
--		if (fh->fh_type != FC_TYPE_ELS) {
--			printk(KERN_ERR PFX "bnx2fc_flogi_resp:"
--				"fh_type != FC_TYPE_ELS\n");
--			fc_frame_free(fp);
--			return;
--		}
- 		op = fc_frame_payload_op(fp);
- 		if (lport->vport) {
- 			if (op == ELS_LS_RJT) {
-@@ -878,12 +870,10 @@ static void bnx2fc_flogi_resp(struct fc_seq *seq, struct fc_frame *fp,
- 				return;
- 			}
- 		}
--		if (fcoe_ctlr_recv_flogi(fip, lport, fp)) {
--			fc_frame_free(fp);
--			return;
--		}
-+		fcoe_ctlr_recv_flogi(fip, lport, fp);
- 	}
--	fip->update_mac(lport, mac);
-+	if (!is_zero_ether_addr(mac))
-+		fip->update_mac(lport, mac);
- done:
- 	fc_lport_flogi_resp(seq, fp, lport);
- }
+Correct.
+
+
+Bart> Yet it would make me more happy if scsi_send_eh_cmnd() could be
+Bart> modified such that it doesn't have to access struct scsi_driver.
+
+Well, the whole point of the original patch was that we wanted to enable
+upper level drivers to interact with the current (SPC-centric) error
+handling.
+
+I understand your concern given the recent flurry of device lifetime
+issues. But I think the issues my patch tries to tackle are important
+enough to warrant the change. And we definitely don't want to start
+mucking with block device-specific commands in the generic error
+handling path.
+
 -- 
-1.7.0.6
-
-
+Martin K. Petersen	Oracle Linux Engineering
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
