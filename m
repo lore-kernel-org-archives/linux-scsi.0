@@ -1,45 +1,28 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [RESEND PATCH 2/2] libata: Pass correct DMA device to scsi host
-Date: Thu, 12 Apr 2012 13:50:39 +0800
-Message-ID: <1334209839-21978-3-git-send-email-ming.m.lin@intel.com>
-References: <1334209839-21978-1-git-send-email-ming.m.lin@intel.com>
+From: adam radford <aradford@gmail.com>
+Subject: Re: stuck in megaraid_sas.c megasas_adp_reset_gen2
+Date: Thu, 12 Apr 2012 01:11:32 -0700
+Message-ID: <CAHtARFHayv68BASrfCLYHQ0zZ1R8fvzfB-_fkBeG8H4g3OBZvg@mail.gmail.com>
+References: <201203211716.45418.thomas@fjellstrom.ca>
+	<201204111417.28893.thomas@fjellstrom.ca>
+	<CAHtARFERLPA345Qsp=-_+5BGAdOrLaJ+HLGzqENBFNRXNJMDhg@mail.gmail.com>
+	<201204111544.27866.thomas@fjellstrom.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1334209839-21978-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: =?UTF-8?q?J=C3=B6rg=20Sommer?= <joerg@alea.gnuu.de>, Jeff Garzik <jgarzik@redhat.com>, Sergei Shtylyov <sshtylyov@mvista.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201204111544.27866.thomas@fjellstrom.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: thomas@fjellstrom.ca
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use scsi_add_host_with_dma in ata_scsi_add_hosts to pass in the
-correct DMA device(ATA host).
+On Wed, Apr 11, 2012 at 2:44 PM, Thomas Fjellstrom <thomas@fjellstrom.ca> wrote:
+> megasas: [55] waiting for 1 commands to complete
+> ....
+> megasas: [175] waiting for 1 commands to complete
 
-Bug report: http://marc.info/?l=3Dlinux-ide&m=3D133177818318187&w=3D2
+You still aren't getting interrupts from the card.  Can you re-try
+with megaraid_sas module parameter msix_disable ?
+If that doesn't work, contact LSI support and tell them which
+motherboard, any PCIe bridges, risers, etc you have.
 
-Reported-and-tested-by: J=F6rg Sommer <joerg@alea.gnuu.de>
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
- drivers/ata/libata-scsi.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 1ee00c8..dae08a6 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3399,7 +3399,8 @@ int ata_scsi_add_hosts(struct ata_host *host, str=
-uct scsi_host_template *sht)
- 		 */
- 		shost->max_host_blocked =3D 1;
-=20
--		rc =3D scsi_add_host(ap->scsi_host, &ap->tdev);
-+		rc =3D scsi_add_host_with_dma(ap->scsi_host,
-+						&ap->tdev, ap->host->dev);
- 		if (rc)
- 			goto err_add;
- 	}
---=20
-1.7.2.5
-
+-Adam
