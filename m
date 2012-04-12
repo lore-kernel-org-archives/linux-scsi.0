@@ -1,32 +1,30 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [isci PATCH v2 12/18] libata: make ata_print_id atomic
-Date: Thu, 12 Apr 2012 15:58:44 -0400
-Message-ID: <4F8733F4.5040501@garzik.org>
-References: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com> <20120311072845.6320.68461.stgit@dwillia2-linux.jf.intel.com>
+Subject: Re: [PATCH 4/4] virtio_blk: use disk_name_format() to support mass
+	of disks naming
+Date: Thu, 12 Apr 2012 16:17:58 -0400
+Message-ID: <4F873876.4010505@garzik.org>
+References: <4F7581D4.4040301@cn.fujitsu.com> <4F7582B0.5010609@cn.fujitsu.com>
+	<20120330152606.GB28934@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120311072845.6320.68461.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20120330152606.GB28934@google.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, KVM <kvm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, LKML <linux-kernel@vger.kernel.org>, VIRTUAL <virtualization@lists.linux-foundation.org>, Ren Mingxin <renmx@cn.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/11/2012 03:28 AM, Dan Williams wrote:
-> This variable is incremented from multiple contexts (module_init via
-> libata-lldds and the libsas discovery thread).  Make it atomic to head
-> off any chance of libsas and libata creating duplicate ids.
->
-> Acked-by: Jacek Danecki<jacek.danecki@intel.com>
-> Signed-off-by: Dan Williams<dan.j.williams@intel.com>
-> ---
->   drivers/ata/libata-core.c |    4 ++--
->   drivers/ata/libata-scsi.c |    4 ++--
->   drivers/ata/libata.h      |    2 +-
->   3 files changed, 5 insertions(+), 5 deletions(-)
+On 03/30/2012 11:26 AM, Tejun Heo wrote:
+> If we're gonna move it to block layer, let's add big blinking red
+> comment saying "don't ever use it for any new driver".
 
-applied
-
-
-
+Big ACK to that...
