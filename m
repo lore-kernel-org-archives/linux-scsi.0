@@ -1,7 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 09/12] libsas, libata: fix start of life for a sas ata_port
-Date: Fri, 13 Apr 2012 16:37:37 -0700
-Message-ID: <20120413233737.8025.24108.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH 10/12] scsi: fix eh wakeup (scsi_schedule_eh vs
+ scsi_restart_operations)
+Date: Fri, 13 Apr 2012 16:37:42 -0700
+Message-ID: <20120413233742.8025.99073.stgit@dwillia2-linux.jf.intel.com>
 References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,302 +11,54 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: JBottomley@parallels.com
-Cc: linux-ide@vger.kernel.org, Michal Kosciowski <michal.kosciowski@intel.com>, linux-scsi@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Tom Jackson <thomas.p.jackson@intel.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This changes the ordering of initialization and probing events from:
-  1/ allocate rphy in PORTE_BYTES_DMAED, DISCE_REVALIDATE_DOMAIN
-  2/ allocate ata_port and schedule port probe in DISCE_PROBE
-...to:
-  1/ allocate ata_port in PORTE_BYTES_DMAED, DISCE_REVALIDATE_DOMAIN
-  2/ allocate rphy in PORTE_BYTES_DMAED, DISCE_REVALIDATE_DOMAIN
-  3/ schedule port probe in DISCE_PROBE
+Rapid ata hotplug on a libsas controller results in cases where libsas
+is waiting indefinitely on eh to perform an ata probe.
 
-This ordering prevents PHYE_SIGNAL_LOSS_EVENTS from sneaking in to
-destrory ata devices before they have been fully initialized:
+A race exists between scsi_schedule_eh() and scsi_restart_operations()
+in the case when scsi_restart_operations() issues i/o to other devices
+in the sas domain.  When this happens the host state transitions from
+SHOST_RECOVERY (set by scsi_schedule_eh) back to SHOST_RUNNING and
+->host_busy is non-zero so we put the eh thread to sleep even though
+->host_eh_scheduled is active.
 
-  BUG: unable to handle kernel paging request at 0000000000003b10
-  IP: [<ffffffffa0053d7e>] sas_ata_end_eh+0x12/0x5e [libsas]
-  ...
-  [<ffffffffa004d1af>] sas_unregister_common_dev+0x78/0xc9 [libsas]
-  [<ffffffffa004d4d4>] sas_unregister_dev+0x4f/0xad [libsas]
-  [<ffffffffa004d5b1>] sas_unregister_domain_devices+0x7f/0xbf [libsas]
-  [<ffffffffa004c487>] sas_deform_port+0x61/0x1b8 [libsas]
-  [<ffffffffa004bed0>] sas_phye_loss_of_signal+0x29/0x2b [libsas]
+Before putting the error handler to sleep we need to check if the
+host_state needs to return to SHOST_RECOVERY for another trip through
+eh.
 
-...and kills the awkward "sata domain_device briefly existing in the
-domain without an ata_port" state.
-
-Reported-by: Michal Kosciowski <michal.kosciowski@intel.com>
+Cc: Tejun Heo <tj@kernel.org>
+Reported-by: Tom Jackson <thomas.p.jackson@intel.com>
+Tested-by: Tom Jackson <thomas.p.jackson@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/ata/libata-scsi.c          |   35 ++++++++++++++++++++---------------
- drivers/scsi/ipr.c                 |    6 +++++-
- drivers/scsi/libsas/sas_ata.c      |   33 ++++++++++-----------------------
- drivers/scsi/libsas/sas_discover.c |   13 ++++++++++---
- drivers/scsi/libsas/sas_expander.c |    8 +++++---
- include/linux/libata.h             |    3 ++-
- include/scsi/sas_ata.h             |    4 ++--
- 7 files changed, 54 insertions(+), 48 deletions(-)
+ drivers/scsi/scsi_error.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 93dabdc..cde63f2 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3838,18 +3838,25 @@ void ata_sas_port_stop(struct ata_port *ap)
- }
- EXPORT_SYMBOL_GPL(ata_sas_port_stop);
- 
--int ata_sas_async_port_init(struct ata_port *ap)
-+/**
-+ * ata_sas_async_probe - simply schedule probing and return
-+ * @ap: Port to probe
-+ *
-+ * For batch scheduling of probe for sas attached ata devices, assumes
-+ * the port has already been through ata_sas_port_init()
-+ */
-+void ata_sas_async_probe(struct ata_port *ap)
- {
--	int rc = ap->ops->port_start(ap);
--
--	if (!rc) {
--		ap->print_id = atomic_inc_return(&ata_print_id);
--		__ata_port_probe(ap);
--	}
-+	__ata_port_probe(ap);
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_async_probe);
- 
--	return rc;
-+int ata_sas_sync_probe(struct ata_port *ap)
-+{
-+	return ata_port_probe(ap);
- }
--EXPORT_SYMBOL_GPL(ata_sas_async_port_init);
-+EXPORT_SYMBOL_GPL(ata_sas_sync_probe);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 2cfcbff..0945d47 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1687,6 +1687,20 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
+ 	 * requests are started.
+ 	 */
+ 	scsi_run_host_queues(shost);
 +
++	/*
++	 * if eh is active and host_eh_scheduled is pending we need to re-run
++	 * recovery.  we do this check after scsi_run_host_queues() to allow
++	 * everything pent up since the last eh run a chance to make forward
++	 * progress before we sync again.  Either we'll immediately re-run
++	 * recovery or scsi_device_unbusy() will wake us again when these
++	 * pending commands complete.
++	 */
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (shost->host_eh_scheduled)
++		if (scsi_host_set_state(shost, SHOST_RECOVERY))
++			WARN_ON(scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY));
++	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
  
  /**
-  *	ata_sas_port_init - Initialize a SATA device
-@@ -3866,12 +3873,10 @@ int ata_sas_port_init(struct ata_port *ap)
- {
- 	int rc = ap->ops->port_start(ap);
- 
--	if (!rc) {
--		ap->print_id = atomic_inc_return(&ata_print_id);
--		rc = ata_port_probe(ap);
--	}
--
--	return rc;
-+	if (rc)
-+		return rc;
-+	ap->print_id = atomic_inc_return(&ata_print_id);
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(ata_sas_port_init);
- 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index cdfe5a1..4c49769 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -4546,8 +4546,12 @@ static int ipr_ata_slave_alloc(struct scsi_device *sdev)
- 	ENTER;
- 	if (sdev->sdev_target)
- 		sata_port = sdev->sdev_target->hostdata;
--	if (sata_port)
-+	if (sata_port) {
- 		rc = ata_sas_port_init(sata_port->ap);
-+		if (rc == 0)
-+			rc = ata_sas_sync_probe(sata_port->ap);
-+	}
-+
- 	if (rc)
- 		ipr_slave_destroy(sdev);
- 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 545b78d..6a6c80f 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -573,11 +573,12 @@ static struct ata_port_info sata_port_info = {
- 	.port_ops = &sas_sata_ops
- };
- 
--int sas_ata_init_host_and_port(struct domain_device *found_dev)
-+int sas_ata_init(struct domain_device *found_dev)
- {
- 	struct sas_ha_struct *ha = found_dev->port->ha;
- 	struct Scsi_Host *shost = ha->core.shost;
- 	struct ata_port *ap;
-+	int rc;
- 
- 	ata_host_init(&found_dev->sata_dev.ata_host,
- 		      ha->dev,
-@@ -594,8 +595,11 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev)
- 	ap->private_data = found_dev;
- 	ap->cbl = ATA_CBL_SATA;
- 	ap->scsi_host = shost;
--	/* publish initialized ata port */
--	smp_wmb();
-+	rc = ata_sas_port_init(ap);
-+	if (rc) {
-+		ata_sas_port_destroy(ap);
-+		return rc;
-+	}
- 	found_dev->sata_dev.ap = ap;
- 
- 	return 0;
-@@ -674,18 +678,13 @@ static void sas_get_ata_command_set(struct domain_device *dev)
- void sas_probe_sata(struct asd_sas_port *port)
- {
- 	struct domain_device *dev, *n;
--	int err;
- 
- 	mutex_lock(&port->ha->disco_mutex);
--	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
-+	list_for_each_entry(dev, &port->disco_list, disco_list_node) {
- 		if (!dev_is_sata(dev))
- 			continue;
- 
--		err = sas_ata_init_host_and_port(dev);
--		if (err)
--			sas_fail_probe(dev, __func__, err);
--		else
--			ata_sas_async_port_init(dev->sata_dev.ap);
-+		ata_sas_async_probe(dev->sata_dev.ap);
- 	}
- 	mutex_unlock(&port->ha->disco_mutex);
- 
-@@ -740,18 +739,6 @@ static void async_sas_ata_eh(void *data, async_cookie_t cookie)
- 	sas_put_device(dev);
- }
- 
--static bool sas_ata_dev_eh_valid(struct domain_device *dev)
--{
--	struct ata_port *ap;
--
--	if (!dev_is_sata(dev))
--		return false;
--	ap = dev->sata_dev.ap;
--	/* consume fully initialized ata ports */
--	smp_rmb();
--	return !!ap;
--}
--
- void sas_ata_strategy_handler(struct Scsi_Host *shost)
- {
- 	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(shost);
-@@ -775,7 +762,7 @@ void sas_ata_strategy_handler(struct Scsi_Host *shost)
- 
- 		spin_lock(&port->dev_list_lock);
- 		list_for_each_entry(dev, &port->dev_list, dev_list_node) {
--			if (!sas_ata_dev_eh_valid(dev))
-+			if (!dev_is_sata(dev))
- 				continue;
- 
- 			/* hold a reference over eh since we may be
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 128160d..ff497ac 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -72,6 +72,7 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 	struct asd_sas_phy *phy;
- 	struct sas_rphy *rphy;
- 	struct domain_device *dev;
-+	int rc = -ENODEV;
- 
- 	dev = sas_alloc_device();
- 	if (!dev)
-@@ -110,9 +111,16 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 
- 	sas_init_dev(dev);
- 
-+	dev->port = port;
- 	switch (dev->dev_type) {
--	case SAS_END_DEV:
- 	case SATA_DEV:
-+		rc = sas_ata_init(dev);
-+		if (rc) {
-+			rphy = NULL;
-+			break;
-+		}
-+		/* fall through */
-+	case SAS_END_DEV:
- 		rphy = sas_end_device_alloc(port->port);
- 		break;
- 	case EDGE_DEV:
-@@ -131,7 +139,7 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 
- 	if (!rphy) {
- 		sas_put_device(dev);
--		return -ENODEV;
-+		return rc;
- 	}
- 
- 	rphy->identify.phy_identifier = phy->phy->identify.phy_identifier;
-@@ -139,7 +147,6 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 	sas_fill_in_rphy(dev, rphy);
- 	sas_hash_addr(dev->hashed_sas_addr, dev->sas_addr);
- 	port->port_dev = dev;
--	dev->port = port;
- 	dev->linkrate = port->linkrate;
- 	dev->min_linkrate = port->linkrate;
- 	dev->max_linkrate = port->linkrate;
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index c1f91b1..75247a1 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -790,12 +790,14 @@ static struct domain_device *sas_ex_discover_end_dev(
- 		if (res)
- 			goto out_free;
- 
-+		sas_init_dev(child);
-+		res = sas_ata_init(child);
-+		if (res)
-+			goto out_free;
- 		rphy = sas_end_device_alloc(phy->port);
--		if (unlikely(!rphy))
-+		if (!rphy)
- 			goto out_free;
- 
--		sas_init_dev(child);
--
- 		child->rphy = rphy;
- 		get_device(&rphy->dev);
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 83ff256..a868bbc 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -998,7 +998,8 @@ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
- extern void ata_sas_port_destroy(struct ata_port *);
- extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
- 					   struct ata_port_info *, struct Scsi_Host *);
--extern int ata_sas_async_port_init(struct ata_port *);
-+extern void ata_sas_async_probe(struct ata_port *ap);
-+extern int ata_sas_sync_probe(struct ata_port *ap);
- extern int ata_sas_port_init(struct ata_port *);
- extern int ata_sas_port_start(struct ata_port *ap);
- extern void ata_sas_port_stop(struct ata_port *ap);
-diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-index cae55b6..2dfbdaa 100644
---- a/include/scsi/sas_ata.h
-+++ b/include/scsi/sas_ata.h
-@@ -37,7 +37,7 @@ static inline int dev_is_sata(struct domain_device *dev)
- }
- 
- int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy);
--int sas_ata_init_host_and_port(struct domain_device *found_dev);
-+int sas_ata_init(struct domain_device *dev);
- void sas_ata_task_abort(struct sas_task *task);
- void sas_ata_strategy_handler(struct Scsi_Host *shost);
- void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
-@@ -53,7 +53,7 @@ static inline int dev_is_sata(struct domain_device *dev)
- {
- 	return 0;
- }
--static inline int sas_ata_init_host_and_port(struct domain_device *found_dev)
-+static inline int sas_ata_init(struct domain_device *dev)
- {
- 	return 0;
- }
 
