@@ -1,30 +1,30 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC] enable FUA support in libata
-Date: Fri, 13 Apr 2012 10:18:32 -0400
-Message-ID: <4F8835B8.2060400@garzik.org>
-References: <20120413081104.GA4953@gmail.com>
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Subject: scsi: require help for one issue about INQUIRY?
+Date: Fri, 13 Apr 2012 22:30:32 +0800
+Message-ID: <CAEH94LiE6-QqJowDm+nAT3-g_JOFKBfZ=AW5Thibq5AP93DVAg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120413081104.GA4953@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:63918 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773Ab2DMOac (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Apr 2012 10:30:32 -0400
+Received: by pbcun15 with SMTP id un15so3696096pbc.19
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Apr 2012 07:30:32 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 04/13/2012 04:11 AM, Zheng Liu wrote:
-> Hi Jeff and list,
->
-> Recently I met a problem about FUA support of SATA disk.  In my machine,
-> it has a SATA disk that supports FUA feature.  But after system starts
-> up, it displays that the disk cannot support FUA from dmesg.
->
-> I notice this commit (c3c013a2).  It disables FUA support in all of SATA
-> disk.  But the commit log is too simple to know why we should disable
-> FUA support in libata.  Could you please explain it?  Thank you.
+HI,
 
-FUA support in the block layer wanted speed and guarantees that early 
-FUA drives were simply not providing.
+When one machine was started with one scsi device,the information
+below was showed. Does anyone know how to fix this issue?
+
+"scsi scan: INQUIRY result too short (5), using 36"
+"Scsi 2:0:292:0: Direct-Access"
 
 
+-- 
+Regards,
 
+Zhi Yong Wu
