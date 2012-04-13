@@ -1,459 +1,61 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 01/12] libsas: introduce sas_work to fix sas_drain_work vs
- sas_queue_work
-Date: Fri, 13 Apr 2012 16:36:56 -0700
-Message-ID: <20120413233656.8025.45943.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH 02/12] libsas: cleanup spurious calls to scsi_schedule_eh
+Date: Fri, 13 Apr 2012 16:37:01 -0700
+Message-ID: <20120413233701.8025.9699.stgit@dwillia2-linux.jf.intel.com>
 References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:48293 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932121Ab2DMXVV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Apr 2012 19:21:21 -0400
 In-Reply-To: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: Maciej Trela <maciej.trela@intel.com>, linux-ide@vger.kernel.org, Artur Wojcik <artur.wojcik@intel.com>, linux-scsi@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
 
-When requeuing work to a draining workqueue the last work instance may
-not be idle, so sas_queue_work() must not touch work->entry.  Introduce
-sas_work with a drain_node list_head to have a private list for
-collecting work deferred due to drain collision.
+From: Maciej Trela <maciej.trela@intel.com>
 
-Fixes reports like:
-  BUG: unable to handle kernel NULL pointer dereference at           (null)
-  IP: [<ffffffff810410d4>] process_one_work+0x2e/0x338
+eh is woken up automatically by the presence of failed commands,
+scsi_schedule_eh is reserved for cases where there are no failed
+commands.  This guarantees that host_eh_sceduled is only incremented
+when an explicit eh request is made.
 
+Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
+Signed-off-by: Maciej Trela <maciej.trela@intel.com>
+[fixed spurious delete of sas_ata_task_abort]
+Signed-off-by: Artur Wojcik <artur.wojcik@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_discover.c |   28 +++++++++++++------------
- drivers/scsi/libsas/sas_event.c    |   24 ++++++++++++----------
- drivers/scsi/libsas/sas_init.c     |   11 +++++-----
- drivers/scsi/libsas/sas_internal.h |    6 +++--
- drivers/scsi/libsas/sas_phy.c      |   21 ++++++-------------
- drivers/scsi/libsas/sas_port.c     |   15 +++++---------
- include/scsi/libsas.h              |   40 ++++++++++++++++++++++++++++++++----
- 7 files changed, 83 insertions(+), 62 deletions(-)
+ drivers/scsi/libsas/sas_ata.c       |    1 -
+ drivers/scsi/libsas/sas_scsi_host.c |    1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 3646796..c7ac882 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -205,8 +205,7 @@ void sas_notify_lldd_dev_gone(struct domain_device *dev)
- static void sas_probe_devices(struct work_struct *work)
- {
- 	struct domain_device *dev, *n;
--	struct sas_discovery_event *ev =
--		container_of(work, struct sas_discovery_event, work);
-+	struct sas_discovery_event *ev = to_sas_discovery_event(work);
- 	struct asd_sas_port *port = ev->port;
- 
- 	clear_bit(DISCE_PROBE, &port->disc.pending);
-@@ -291,8 +290,7 @@ static void sas_unregister_common_dev(struct asd_sas_port *port, struct domain_d
- static void sas_destruct_devices(struct work_struct *work)
- {
- 	struct domain_device *dev, *n;
--	struct sas_discovery_event *ev =
--		container_of(work, struct sas_discovery_event, work);
-+	struct sas_discovery_event *ev = to_sas_discovery_event(work);
- 	struct asd_sas_port *port = ev->port;
- 
- 	clear_bit(DISCE_DESTRUCT, &port->disc.pending);
-@@ -377,8 +375,7 @@ static void sas_discover_domain(struct work_struct *work)
- {
- 	struct domain_device *dev;
- 	int error = 0;
--	struct sas_discovery_event *ev =
--		container_of(work, struct sas_discovery_event, work);
-+	struct sas_discovery_event *ev = to_sas_discovery_event(work);
- 	struct asd_sas_port *port = ev->port;
- 
- 	clear_bit(DISCE_DISCOVER_DOMAIN, &port->disc.pending);
-@@ -437,8 +434,7 @@ static void sas_discover_domain(struct work_struct *work)
- static void sas_revalidate_domain(struct work_struct *work)
- {
- 	int res = 0;
--	struct sas_discovery_event *ev =
--		container_of(work, struct sas_discovery_event, work);
-+	struct sas_discovery_event *ev = to_sas_discovery_event(work);
- 	struct asd_sas_port *port = ev->port;
- 	struct sas_ha_struct *ha = port->ha;
- 
-@@ -466,21 +462,25 @@ static void sas_revalidate_domain(struct work_struct *work)
- 
- /* ---------- Events ---------- */
- 
--static void sas_chain_work(struct sas_ha_struct *ha, struct work_struct *work)
-+static void sas_chain_work(struct sas_ha_struct *ha, struct sas_work *sw)
- {
--	/* chained work is not subject to SA_HA_DRAINING or SAS_HA_REGISTERED */
--	scsi_queue_work(ha->core.shost, work);
-+	/* chained work is not subject to SA_HA_DRAINING or
-+	 * SAS_HA_REGISTERED, because it is either submitted in the
-+	 * workqueue, or known to be submitted from a context that is
-+	 * not racing against draining
-+	 */
-+	scsi_queue_work(ha->core.shost, &sw->work);
- }
- 
- static void sas_chain_event(int event, unsigned long *pending,
--			    struct work_struct *work,
-+			    struct sas_work *sw,
- 			    struct sas_ha_struct *ha)
- {
- 	if (!test_and_set_bit(event, pending)) {
- 		unsigned long flags;
- 
- 		spin_lock_irqsave(&ha->state_lock, flags);
--		sas_chain_work(ha, work);
-+		sas_chain_work(ha, sw);
- 		spin_unlock_irqrestore(&ha->state_lock, flags);
- 	}
- }
-@@ -519,7 +519,7 @@ void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *port)
- 
- 	disc->pending = 0;
- 	for (i = 0; i < DISC_NUM_EVENTS; i++) {
--		INIT_WORK(&disc->disc_work[i].work, sas_event_fns[i]);
-+		INIT_SAS_WORK(&disc->disc_work[i].work, sas_event_fns[i]);
- 		disc->disc_work[i].port = port;
- 	}
- }
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 16639bb..4e4292d 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -27,19 +27,21 @@
- #include "sas_internal.h"
- #include "sas_dump.h"
- 
--void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work)
-+void sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
- {
- 	if (!test_bit(SAS_HA_REGISTERED, &ha->state))
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index bc0cecc..bc83704 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -587,7 +587,6 @@ void sas_ata_task_abort(struct sas_task *task)
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_abort_request(qc->scsicmd->request);
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
+-		scsi_schedule_eh(qc->scsicmd->device->host);
  		return;
- 
--	if (test_bit(SAS_HA_DRAINING, &ha->state))
--		list_add(&work->entry, &ha->defer_q);
--	else
--		scsi_queue_work(ha->core.shost, work);
-+	if (test_bit(SAS_HA_DRAINING, &ha->state)) {
-+		/* add it to the defer list, if not already pending */
-+		if (list_empty(&sw->drain_node))
-+			list_add(&sw->drain_node, &ha->defer_q);
-+	} else
-+		scsi_queue_work(ha->core.shost, &sw->work);
- }
- 
- static void sas_queue_event(int event, unsigned long *pending,
--			    struct work_struct *work,
-+			    struct sas_work *work,
- 			    struct sas_ha_struct *ha)
- {
- 	if (!test_and_set_bit(event, pending)) {
-@@ -55,7 +57,7 @@ static void sas_queue_event(int event, unsigned long *pending,
- void __sas_drain_work(struct sas_ha_struct *ha)
- {
- 	struct workqueue_struct *wq = ha->core.shost->work_q;
--	struct work_struct *w, *_w;
-+	struct sas_work *sw, *_sw;
- 
- 	set_bit(SAS_HA_DRAINING, &ha->state);
- 	/* flush submitters */
-@@ -66,9 +68,9 @@ void __sas_drain_work(struct sas_ha_struct *ha)
- 
- 	spin_lock_irq(&ha->state_lock);
- 	clear_bit(SAS_HA_DRAINING, &ha->state);
--	list_for_each_entry_safe(w, _w, &ha->defer_q, entry) {
--		list_del_init(&w->entry);
--		sas_queue_work(ha, w);
-+	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
-+		list_del_init(&sw->drain_node);
-+		sas_queue_work(ha, sw);
- 	}
- 	spin_unlock_irq(&ha->state_lock);
- }
-@@ -151,7 +153,7 @@ int sas_init_events(struct sas_ha_struct *sas_ha)
- 	int i;
- 
- 	for (i = 0; i < HA_NUM_EVENTS; i++) {
--		INIT_WORK(&sas_ha->ha_events[i].work, sas_ha_event_fns[i]);
-+		INIT_SAS_WORK(&sas_ha->ha_events[i].work, sas_ha_event_fns[i]);
- 		sas_ha->ha_events[i].ha = sas_ha;
  	}
  
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 120bff6..10cb5ae 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -94,8 +94,7 @@ void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
- 
- void sas_hae_reset(struct work_struct *work)
- {
--	struct sas_ha_event *ev =
--		container_of(work, struct sas_ha_event, work);
-+	struct sas_ha_event *ev = to_sas_ha_event(work);
- 	struct sas_ha_struct *ha = ev->ha;
- 
- 	clear_bit(HAE_RESET, &ha->pending);
-@@ -369,14 +368,14 @@ static void sas_phy_release(struct sas_phy *phy)
- 
- static void phy_reset_work(struct work_struct *work)
- {
--	struct sas_phy_data *d = container_of(work, typeof(*d), reset_work);
-+	struct sas_phy_data *d = container_of(work, typeof(*d), reset_work.work);
- 
- 	d->reset_result = transport_sas_phy_reset(d->phy, d->hard_reset);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index f0b9b7b..17339e5 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -1003,7 +1003,6 @@ void sas_task_abort(struct sas_task *task)
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_abort_request(sc->request);
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
+-		scsi_schedule_eh(sc->device->host);
+ 	}
  }
  
- static void phy_enable_work(struct work_struct *work)
- {
--	struct sas_phy_data *d = container_of(work, typeof(*d), enable_work);
-+	struct sas_phy_data *d = container_of(work, typeof(*d), enable_work.work);
- 
- 	d->enable_result = sas_phy_enable(d->phy, d->enable);
- }
-@@ -389,8 +388,8 @@ static int sas_phy_setup(struct sas_phy *phy)
- 		return -ENOMEM;
- 
- 	mutex_init(&d->event_lock);
--	INIT_WORK(&d->reset_work, phy_reset_work);
--	INIT_WORK(&d->enable_work, phy_enable_work);
-+	INIT_SAS_WORK(&d->reset_work, phy_reset_work);
-+	INIT_SAS_WORK(&d->enable_work, phy_enable_work);
- 	d->phy = phy;
- 	phy->hostdata = d;
- 
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index f05c638..507e4cf 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -45,10 +45,10 @@ struct sas_phy_data {
- 	struct mutex event_lock;
- 	int hard_reset;
- 	int reset_result;
--	struct work_struct reset_work;
-+	struct sas_work reset_work;
- 	int enable;
- 	int enable_result;
--	struct work_struct enable_work;
-+	struct sas_work enable_work;
- };
- 
- void sas_scsi_recover_host(struct Scsi_Host *shost);
-@@ -80,7 +80,7 @@ void sas_porte_broadcast_rcvd(struct work_struct *work);
- void sas_porte_link_reset_err(struct work_struct *work);
- void sas_porte_timer_event(struct work_struct *work);
- void sas_porte_hard_reset(struct work_struct *work);
--void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work);
-+void sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw);
- 
- int sas_notify_lldd_dev_found(struct domain_device *);
- void sas_notify_lldd_dev_gone(struct domain_device *);
-diff --git a/drivers/scsi/libsas/sas_phy.c b/drivers/scsi/libsas/sas_phy.c
-index dcfd4a9..521422e 100644
---- a/drivers/scsi/libsas/sas_phy.c
-+++ b/drivers/scsi/libsas/sas_phy.c
-@@ -32,8 +32,7 @@
- 
- static void sas_phye_loss_of_signal(struct work_struct *work)
- {
--	struct asd_sas_event *ev =
--		container_of(work, struct asd_sas_event, work);
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
- 	clear_bit(PHYE_LOSS_OF_SIGNAL, &phy->phy_events_pending);
-@@ -43,8 +42,7 @@ static void sas_phye_loss_of_signal(struct work_struct *work)
- 
- static void sas_phye_oob_done(struct work_struct *work)
- {
--	struct asd_sas_event *ev =
--		container_of(work, struct asd_sas_event, work);
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
- 	clear_bit(PHYE_OOB_DONE, &phy->phy_events_pending);
-@@ -53,8 +51,7 @@ static void sas_phye_oob_done(struct work_struct *work)
- 
- static void sas_phye_oob_error(struct work_struct *work)
- {
--	struct asd_sas_event *ev =
--		container_of(work, struct asd_sas_event, work);
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 	struct sas_ha_struct *sas_ha = phy->ha;
- 	struct asd_sas_port *port = phy->port;
-@@ -85,8 +82,7 @@ static void sas_phye_oob_error(struct work_struct *work)
- 
- static void sas_phye_spinup_hold(struct work_struct *work)
- {
--	struct asd_sas_event *ev =
--		container_of(work, struct asd_sas_event, work);
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 	struct sas_ha_struct *sas_ha = phy->ha;
- 	struct sas_internal *i =
-@@ -127,14 +123,12 @@ int sas_register_phys(struct sas_ha_struct *sas_ha)
- 		phy->error = 0;
- 		INIT_LIST_HEAD(&phy->port_phy_el);
- 		for (k = 0; k < PORT_NUM_EVENTS; k++) {
--			INIT_WORK(&phy->port_events[k].work,
--				  sas_port_event_fns[k]);
-+			INIT_SAS_WORK(&phy->port_events[k].work, sas_port_event_fns[k]);
- 			phy->port_events[k].phy = phy;
- 		}
- 
- 		for (k = 0; k < PHY_NUM_EVENTS; k++) {
--			INIT_WORK(&phy->phy_events[k].work,
--				  sas_phy_event_fns[k]);
-+			INIT_SAS_WORK(&phy->phy_events[k].work, sas_phy_event_fns[k]);
- 			phy->phy_events[k].phy = phy;
- 		}
- 
-@@ -144,8 +138,7 @@ int sas_register_phys(struct sas_ha_struct *sas_ha)
- 		spin_lock_init(&phy->sas_prim_lock);
- 		phy->frame_rcvd_size = 0;
- 
--		phy->phy = sas_phy_alloc(&sas_ha->core.shost->shost_gendev,
--					 i);
-+		phy->phy = sas_phy_alloc(&sas_ha->core.shost->shost_gendev, i);
- 		if (!phy->phy)
- 			return -ENOMEM;
- 
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index eb19c01..1cf7d75 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -208,8 +208,7 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
- 
- void sas_porte_bytes_dmaed(struct work_struct *work)
- {
--	struct asd_sas_event *ev =
--		container_of(work, struct asd_sas_event, work);
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
- 	clear_bit(PORTE_BYTES_DMAED, &phy->port_events_pending);
-@@ -219,8 +218,7 @@ void sas_porte_bytes_dmaed(struct work_struct *work)
- 
- void sas_porte_broadcast_rcvd(struct work_struct *work)
- {
--	struct asd_sas_event *ev =
--		container_of(work, struct asd_sas_event, work);
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 	unsigned long flags;
- 	u32 prim;
-@@ -237,8 +235,7 @@ void sas_porte_broadcast_rcvd(struct work_struct *work)
- 
- void sas_porte_link_reset_err(struct work_struct *work)
- {
--	struct asd_sas_event *ev =
--		container_of(work, struct asd_sas_event, work);
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
- 	clear_bit(PORTE_LINK_RESET_ERR, &phy->port_events_pending);
-@@ -248,8 +245,7 @@ void sas_porte_link_reset_err(struct work_struct *work)
- 
- void sas_porte_timer_event(struct work_struct *work)
- {
--	struct asd_sas_event *ev =
--		container_of(work, struct asd_sas_event, work);
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
- 	clear_bit(PORTE_TIMER_EVENT, &phy->port_events_pending);
-@@ -259,8 +255,7 @@ void sas_porte_timer_event(struct work_struct *work)
- 
- void sas_porte_hard_reset(struct work_struct *work)
- {
--	struct asd_sas_event *ev =
--		container_of(work, struct asd_sas_event, work);
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
- 	clear_bit(PORTE_HARD_RESET, &phy->port_events_pending);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 5f5ed1b..f4f1c96 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -217,11 +217,29 @@ struct domain_device {
- 	struct kref kref;
- };
- 
--struct sas_discovery_event {
-+struct sas_work {
-+	struct list_head drain_node;
- 	struct work_struct work;
-+};
-+
-+static inline void INIT_SAS_WORK(struct sas_work *sw, void (*fn)(struct work_struct *))
-+{
-+	INIT_WORK(&sw->work, fn);
-+	INIT_LIST_HEAD(&sw->drain_node);
-+}
-+
-+struct sas_discovery_event {
-+	struct sas_work work;
- 	struct asd_sas_port *port;
- };
- 
-+static inline struct sas_discovery_event *to_sas_discovery_event(struct work_struct *work)
-+{
-+	struct sas_discovery_event *ev = container_of(work, typeof(*ev), work.work);
-+
-+	return ev;
-+}
-+
- struct sas_discovery {
- 	struct sas_discovery_event disc_work[DISC_NUM_EVENTS];
- 	unsigned long    pending;
-@@ -244,7 +262,7 @@ struct asd_sas_port {
- 	struct list_head destroy_list;
- 	enum   sas_linkrate linkrate;
- 
--	struct work_struct work;
-+	struct sas_work work;
- 
- /* public: */
- 	int id;
-@@ -270,10 +288,17 @@ struct asd_sas_port {
- };
- 
- struct asd_sas_event {
--	struct work_struct work;
-+	struct sas_work work;
- 	struct asd_sas_phy *phy;
- };
- 
-+static inline struct asd_sas_event *to_asd_sas_event(struct work_struct *work)
-+{
-+	struct asd_sas_event *ev = container_of(work, typeof(*ev), work.work);
-+
-+	return ev;
-+}
-+
- /* The phy pretty much is controlled by the LLDD.
-  * The class only reads those fields.
-  */
-@@ -333,10 +358,17 @@ struct scsi_core {
- };
- 
- struct sas_ha_event {
--	struct work_struct work;
-+	struct sas_work work;
- 	struct sas_ha_struct *ha;
- };
- 
-+static inline struct sas_ha_event *to_sas_ha_event(struct work_struct *work)
-+{
-+	struct sas_ha_event *ev = container_of(work, typeof(*ev), work.work);
-+
-+	return ev;
-+}
-+
- enum sas_ha_state {
- 	SAS_HA_REGISTERED,
- 	SAS_HA_DRAINING,
 
