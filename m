@@ -1,109 +1,459 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [GIT PATCH 00/12] libsas fixes for 3.4
-Date: Fri, 13 Apr 2012 16:36:51 -0700
-Message-ID: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH 01/12] libsas: introduce sas_work to fix sas_drain_work vs
+ sas_queue_work
+Date: Fri, 13 Apr 2012 16:36:56 -0700
+Message-ID: <20120413233656.8025.45943.stgit@dwillia2-linux.jf.intel.com>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: JBottomley@parallels.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The following changes since commit cd8df932d894f3128c884e3ae1b2b484540513db:
+When requeuing work to a draining workqueue the last work instance may
+not be idle, so sas_queue_work() must not touch work->entry.  Introduce
+sas_work with a drain_node list_head to have a private list for
+collecting work deferred due to drain collision.
 
-  [SCSI] qla4xxx: Update driver version to 5.02.00-k15 (2012-02-29 17:03:03 -0600)
+Fixes reports like:
+  BUG: unable to handle kernel NULL pointer dereference at           (null)
+  IP: [<ffffffff810410d4>] process_one_work+0x2e/0x338
 
-are available in the git repository at:
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/libsas/sas_discover.c |   28 +++++++++++++------------
+ drivers/scsi/libsas/sas_event.c    |   24 ++++++++++++----------
+ drivers/scsi/libsas/sas_init.c     |   11 +++++-----
+ drivers/scsi/libsas/sas_internal.h |    6 +++--
+ drivers/scsi/libsas/sas_phy.c      |   21 ++++++-------------
+ drivers/scsi/libsas/sas_port.c     |   15 +++++---------
+ include/scsi/libsas.h              |   40 ++++++++++++++++++++++++++++++++----
+ 7 files changed, 83 insertions(+), 62 deletions(-)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git tags/libsas-fixes
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 3646796..c7ac882 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -205,8 +205,7 @@ void sas_notify_lldd_dev_gone(struct domain_device *dev)
+ static void sas_probe_devices(struct work_struct *work)
+ {
+ 	struct domain_device *dev, *n;
+-	struct sas_discovery_event *ev =
+-		container_of(work, struct sas_discovery_event, work);
++	struct sas_discovery_event *ev = to_sas_discovery_event(work);
+ 	struct asd_sas_port *port = ev->port;
+ 
+ 	clear_bit(DISCE_PROBE, &port->disc.pending);
+@@ -291,8 +290,7 @@ static void sas_unregister_common_dev(struct asd_sas_port *port, struct domain_d
+ static void sas_destruct_devices(struct work_struct *work)
+ {
+ 	struct domain_device *dev, *n;
+-	struct sas_discovery_event *ev =
+-		container_of(work, struct sas_discovery_event, work);
++	struct sas_discovery_event *ev = to_sas_discovery_event(work);
+ 	struct asd_sas_port *port = ev->port;
+ 
+ 	clear_bit(DISCE_DESTRUCT, &port->disc.pending);
+@@ -377,8 +375,7 @@ static void sas_discover_domain(struct work_struct *work)
+ {
+ 	struct domain_device *dev;
+ 	int error = 0;
+-	struct sas_discovery_event *ev =
+-		container_of(work, struct sas_discovery_event, work);
++	struct sas_discovery_event *ev = to_sas_discovery_event(work);
+ 	struct asd_sas_port *port = ev->port;
+ 
+ 	clear_bit(DISCE_DISCOVER_DOMAIN, &port->disc.pending);
+@@ -437,8 +434,7 @@ static void sas_discover_domain(struct work_struct *work)
+ static void sas_revalidate_domain(struct work_struct *work)
+ {
+ 	int res = 0;
+-	struct sas_discovery_event *ev =
+-		container_of(work, struct sas_discovery_event, work);
++	struct sas_discovery_event *ev = to_sas_discovery_event(work);
+ 	struct asd_sas_port *port = ev->port;
+ 	struct sas_ha_struct *ha = port->ha;
+ 
+@@ -466,21 +462,25 @@ static void sas_revalidate_domain(struct work_struct *work)
+ 
+ /* ---------- Events ---------- */
+ 
+-static void sas_chain_work(struct sas_ha_struct *ha, struct work_struct *work)
++static void sas_chain_work(struct sas_ha_struct *ha, struct sas_work *sw)
+ {
+-	/* chained work is not subject to SA_HA_DRAINING or SAS_HA_REGISTERED */
+-	scsi_queue_work(ha->core.shost, work);
++	/* chained work is not subject to SA_HA_DRAINING or
++	 * SAS_HA_REGISTERED, because it is either submitted in the
++	 * workqueue, or known to be submitted from a context that is
++	 * not racing against draining
++	 */
++	scsi_queue_work(ha->core.shost, &sw->work);
+ }
+ 
+ static void sas_chain_event(int event, unsigned long *pending,
+-			    struct work_struct *work,
++			    struct sas_work *sw,
+ 			    struct sas_ha_struct *ha)
+ {
+ 	if (!test_and_set_bit(event, pending)) {
+ 		unsigned long flags;
+ 
+ 		spin_lock_irqsave(&ha->state_lock, flags);
+-		sas_chain_work(ha, work);
++		sas_chain_work(ha, sw);
+ 		spin_unlock_irqrestore(&ha->state_lock, flags);
+ 	}
+ }
+@@ -519,7 +519,7 @@ void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *port)
+ 
+ 	disc->pending = 0;
+ 	for (i = 0; i < DISC_NUM_EVENTS; i++) {
+-		INIT_WORK(&disc->disc_work[i].work, sas_event_fns[i]);
++		INIT_SAS_WORK(&disc->disc_work[i].work, sas_event_fns[i]);
+ 		disc->disc_work[i].port = port;
+ 	}
+ }
+diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
+index 16639bb..4e4292d 100644
+--- a/drivers/scsi/libsas/sas_event.c
++++ b/drivers/scsi/libsas/sas_event.c
+@@ -27,19 +27,21 @@
+ #include "sas_internal.h"
+ #include "sas_dump.h"
+ 
+-void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work)
++void sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
+ {
+ 	if (!test_bit(SAS_HA_REGISTERED, &ha->state))
+ 		return;
+ 
+-	if (test_bit(SAS_HA_DRAINING, &ha->state))
+-		list_add(&work->entry, &ha->defer_q);
+-	else
+-		scsi_queue_work(ha->core.shost, work);
++	if (test_bit(SAS_HA_DRAINING, &ha->state)) {
++		/* add it to the defer list, if not already pending */
++		if (list_empty(&sw->drain_node))
++			list_add(&sw->drain_node, &ha->defer_q);
++	} else
++		scsi_queue_work(ha->core.shost, &sw->work);
+ }
+ 
+ static void sas_queue_event(int event, unsigned long *pending,
+-			    struct work_struct *work,
++			    struct sas_work *work,
+ 			    struct sas_ha_struct *ha)
+ {
+ 	if (!test_and_set_bit(event, pending)) {
+@@ -55,7 +57,7 @@ static void sas_queue_event(int event, unsigned long *pending,
+ void __sas_drain_work(struct sas_ha_struct *ha)
+ {
+ 	struct workqueue_struct *wq = ha->core.shost->work_q;
+-	struct work_struct *w, *_w;
++	struct sas_work *sw, *_sw;
+ 
+ 	set_bit(SAS_HA_DRAINING, &ha->state);
+ 	/* flush submitters */
+@@ -66,9 +68,9 @@ void __sas_drain_work(struct sas_ha_struct *ha)
+ 
+ 	spin_lock_irq(&ha->state_lock);
+ 	clear_bit(SAS_HA_DRAINING, &ha->state);
+-	list_for_each_entry_safe(w, _w, &ha->defer_q, entry) {
+-		list_del_init(&w->entry);
+-		sas_queue_work(ha, w);
++	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
++		list_del_init(&sw->drain_node);
++		sas_queue_work(ha, sw);
+ 	}
+ 	spin_unlock_irq(&ha->state_lock);
+ }
+@@ -151,7 +153,7 @@ int sas_init_events(struct sas_ha_struct *sas_ha)
+ 	int i;
+ 
+ 	for (i = 0; i < HA_NUM_EVENTS; i++) {
+-		INIT_WORK(&sas_ha->ha_events[i].work, sas_ha_event_fns[i]);
++		INIT_SAS_WORK(&sas_ha->ha_events[i].work, sas_ha_event_fns[i]);
+ 		sas_ha->ha_events[i].ha = sas_ha;
+ 	}
+ 
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index 120bff6..10cb5ae 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -94,8 +94,7 @@ void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
+ 
+ void sas_hae_reset(struct work_struct *work)
+ {
+-	struct sas_ha_event *ev =
+-		container_of(work, struct sas_ha_event, work);
++	struct sas_ha_event *ev = to_sas_ha_event(work);
+ 	struct sas_ha_struct *ha = ev->ha;
+ 
+ 	clear_bit(HAE_RESET, &ha->pending);
+@@ -369,14 +368,14 @@ static void sas_phy_release(struct sas_phy *phy)
+ 
+ static void phy_reset_work(struct work_struct *work)
+ {
+-	struct sas_phy_data *d = container_of(work, typeof(*d), reset_work);
++	struct sas_phy_data *d = container_of(work, typeof(*d), reset_work.work);
+ 
+ 	d->reset_result = transport_sas_phy_reset(d->phy, d->hard_reset);
+ }
+ 
+ static void phy_enable_work(struct work_struct *work)
+ {
+-	struct sas_phy_data *d = container_of(work, typeof(*d), enable_work);
++	struct sas_phy_data *d = container_of(work, typeof(*d), enable_work.work);
+ 
+ 	d->enable_result = sas_phy_enable(d->phy, d->enable);
+ }
+@@ -389,8 +388,8 @@ static int sas_phy_setup(struct sas_phy *phy)
+ 		return -ENOMEM;
+ 
+ 	mutex_init(&d->event_lock);
+-	INIT_WORK(&d->reset_work, phy_reset_work);
+-	INIT_WORK(&d->enable_work, phy_enable_work);
++	INIT_SAS_WORK(&d->reset_work, phy_reset_work);
++	INIT_SAS_WORK(&d->enable_work, phy_enable_work);
+ 	d->phy = phy;
+ 	phy->hostdata = d;
+ 
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index f05c638..507e4cf 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -45,10 +45,10 @@ struct sas_phy_data {
+ 	struct mutex event_lock;
+ 	int hard_reset;
+ 	int reset_result;
+-	struct work_struct reset_work;
++	struct sas_work reset_work;
+ 	int enable;
+ 	int enable_result;
+-	struct work_struct enable_work;
++	struct sas_work enable_work;
+ };
+ 
+ void sas_scsi_recover_host(struct Scsi_Host *shost);
+@@ -80,7 +80,7 @@ void sas_porte_broadcast_rcvd(struct work_struct *work);
+ void sas_porte_link_reset_err(struct work_struct *work);
+ void sas_porte_timer_event(struct work_struct *work);
+ void sas_porte_hard_reset(struct work_struct *work);
+-void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work);
++void sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw);
+ 
+ int sas_notify_lldd_dev_found(struct domain_device *);
+ void sas_notify_lldd_dev_gone(struct domain_device *);
+diff --git a/drivers/scsi/libsas/sas_phy.c b/drivers/scsi/libsas/sas_phy.c
+index dcfd4a9..521422e 100644
+--- a/drivers/scsi/libsas/sas_phy.c
++++ b/drivers/scsi/libsas/sas_phy.c
+@@ -32,8 +32,7 @@
+ 
+ static void sas_phye_loss_of_signal(struct work_struct *work)
+ {
+-	struct asd_sas_event *ev =
+-		container_of(work, struct asd_sas_event, work);
++	struct asd_sas_event *ev = to_asd_sas_event(work);
+ 	struct asd_sas_phy *phy = ev->phy;
+ 
+ 	clear_bit(PHYE_LOSS_OF_SIGNAL, &phy->phy_events_pending);
+@@ -43,8 +42,7 @@ static void sas_phye_loss_of_signal(struct work_struct *work)
+ 
+ static void sas_phye_oob_done(struct work_struct *work)
+ {
+-	struct asd_sas_event *ev =
+-		container_of(work, struct asd_sas_event, work);
++	struct asd_sas_event *ev = to_asd_sas_event(work);
+ 	struct asd_sas_phy *phy = ev->phy;
+ 
+ 	clear_bit(PHYE_OOB_DONE, &phy->phy_events_pending);
+@@ -53,8 +51,7 @@ static void sas_phye_oob_done(struct work_struct *work)
+ 
+ static void sas_phye_oob_error(struct work_struct *work)
+ {
+-	struct asd_sas_event *ev =
+-		container_of(work, struct asd_sas_event, work);
++	struct asd_sas_event *ev = to_asd_sas_event(work);
+ 	struct asd_sas_phy *phy = ev->phy;
+ 	struct sas_ha_struct *sas_ha = phy->ha;
+ 	struct asd_sas_port *port = phy->port;
+@@ -85,8 +82,7 @@ static void sas_phye_oob_error(struct work_struct *work)
+ 
+ static void sas_phye_spinup_hold(struct work_struct *work)
+ {
+-	struct asd_sas_event *ev =
+-		container_of(work, struct asd_sas_event, work);
++	struct asd_sas_event *ev = to_asd_sas_event(work);
+ 	struct asd_sas_phy *phy = ev->phy;
+ 	struct sas_ha_struct *sas_ha = phy->ha;
+ 	struct sas_internal *i =
+@@ -127,14 +123,12 @@ int sas_register_phys(struct sas_ha_struct *sas_ha)
+ 		phy->error = 0;
+ 		INIT_LIST_HEAD(&phy->port_phy_el);
+ 		for (k = 0; k < PORT_NUM_EVENTS; k++) {
+-			INIT_WORK(&phy->port_events[k].work,
+-				  sas_port_event_fns[k]);
++			INIT_SAS_WORK(&phy->port_events[k].work, sas_port_event_fns[k]);
+ 			phy->port_events[k].phy = phy;
+ 		}
+ 
+ 		for (k = 0; k < PHY_NUM_EVENTS; k++) {
+-			INIT_WORK(&phy->phy_events[k].work,
+-				  sas_phy_event_fns[k]);
++			INIT_SAS_WORK(&phy->phy_events[k].work, sas_phy_event_fns[k]);
+ 			phy->phy_events[k].phy = phy;
+ 		}
+ 
+@@ -144,8 +138,7 @@ int sas_register_phys(struct sas_ha_struct *sas_ha)
+ 		spin_lock_init(&phy->sas_prim_lock);
+ 		phy->frame_rcvd_size = 0;
+ 
+-		phy->phy = sas_phy_alloc(&sas_ha->core.shost->shost_gendev,
+-					 i);
++		phy->phy = sas_phy_alloc(&sas_ha->core.shost->shost_gendev, i);
+ 		if (!phy->phy)
+ 			return -ENOMEM;
+ 
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index eb19c01..1cf7d75 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -208,8 +208,7 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
+ 
+ void sas_porte_bytes_dmaed(struct work_struct *work)
+ {
+-	struct asd_sas_event *ev =
+-		container_of(work, struct asd_sas_event, work);
++	struct asd_sas_event *ev = to_asd_sas_event(work);
+ 	struct asd_sas_phy *phy = ev->phy;
+ 
+ 	clear_bit(PORTE_BYTES_DMAED, &phy->port_events_pending);
+@@ -219,8 +218,7 @@ void sas_porte_bytes_dmaed(struct work_struct *work)
+ 
+ void sas_porte_broadcast_rcvd(struct work_struct *work)
+ {
+-	struct asd_sas_event *ev =
+-		container_of(work, struct asd_sas_event, work);
++	struct asd_sas_event *ev = to_asd_sas_event(work);
+ 	struct asd_sas_phy *phy = ev->phy;
+ 	unsigned long flags;
+ 	u32 prim;
+@@ -237,8 +235,7 @@ void sas_porte_broadcast_rcvd(struct work_struct *work)
+ 
+ void sas_porte_link_reset_err(struct work_struct *work)
+ {
+-	struct asd_sas_event *ev =
+-		container_of(work, struct asd_sas_event, work);
++	struct asd_sas_event *ev = to_asd_sas_event(work);
+ 	struct asd_sas_phy *phy = ev->phy;
+ 
+ 	clear_bit(PORTE_LINK_RESET_ERR, &phy->port_events_pending);
+@@ -248,8 +245,7 @@ void sas_porte_link_reset_err(struct work_struct *work)
+ 
+ void sas_porte_timer_event(struct work_struct *work)
+ {
+-	struct asd_sas_event *ev =
+-		container_of(work, struct asd_sas_event, work);
++	struct asd_sas_event *ev = to_asd_sas_event(work);
+ 	struct asd_sas_phy *phy = ev->phy;
+ 
+ 	clear_bit(PORTE_TIMER_EVENT, &phy->port_events_pending);
+@@ -259,8 +255,7 @@ void sas_porte_timer_event(struct work_struct *work)
+ 
+ void sas_porte_hard_reset(struct work_struct *work)
+ {
+-	struct asd_sas_event *ev =
+-		container_of(work, struct asd_sas_event, work);
++	struct asd_sas_event *ev = to_asd_sas_event(work);
+ 	struct asd_sas_phy *phy = ev->phy;
+ 
+ 	clear_bit(PORTE_HARD_RESET, &phy->port_events_pending);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 5f5ed1b..f4f1c96 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -217,11 +217,29 @@ struct domain_device {
+ 	struct kref kref;
+ };
+ 
+-struct sas_discovery_event {
++struct sas_work {
++	struct list_head drain_node;
+ 	struct work_struct work;
++};
++
++static inline void INIT_SAS_WORK(struct sas_work *sw, void (*fn)(struct work_struct *))
++{
++	INIT_WORK(&sw->work, fn);
++	INIT_LIST_HEAD(&sw->drain_node);
++}
++
++struct sas_discovery_event {
++	struct sas_work work;
+ 	struct asd_sas_port *port;
+ };
+ 
++static inline struct sas_discovery_event *to_sas_discovery_event(struct work_struct *work)
++{
++	struct sas_discovery_event *ev = container_of(work, typeof(*ev), work.work);
++
++	return ev;
++}
++
+ struct sas_discovery {
+ 	struct sas_discovery_event disc_work[DISC_NUM_EVENTS];
+ 	unsigned long    pending;
+@@ -244,7 +262,7 @@ struct asd_sas_port {
+ 	struct list_head destroy_list;
+ 	enum   sas_linkrate linkrate;
+ 
+-	struct work_struct work;
++	struct sas_work work;
+ 
+ /* public: */
+ 	int id;
+@@ -270,10 +288,17 @@ struct asd_sas_port {
+ };
+ 
+ struct asd_sas_event {
+-	struct work_struct work;
++	struct sas_work work;
+ 	struct asd_sas_phy *phy;
+ };
+ 
++static inline struct asd_sas_event *to_asd_sas_event(struct work_struct *work)
++{
++	struct asd_sas_event *ev = container_of(work, typeof(*ev), work.work);
++
++	return ev;
++}
++
+ /* The phy pretty much is controlled by the LLDD.
+  * The class only reads those fields.
+  */
+@@ -333,10 +358,17 @@ struct scsi_core {
+ };
+ 
+ struct sas_ha_event {
+-	struct work_struct work;
++	struct sas_work work;
+ 	struct sas_ha_struct *ha;
+ };
+ 
++static inline struct sas_ha_event *to_sas_ha_event(struct work_struct *work)
++{
++	struct sas_ha_event *ev = container_of(work, typeof(*ev), work.work);
++
++	return ev;
++}
++
+ enum sas_ha_state {
+ 	SAS_HA_REGISTERED,
+ 	SAS_HA_DRAINING,
 
-for you to fetch changes up to e81dcce46fdbb2c968d7314c2f19da3c2bba24d1:
-
-  scsi_transport_sas: fix delete vs scan race (2012-04-10 19:15:23 -0700)
-
-----------------------------------------------------------------
-libsas-fixes for 3.4-rc4
-
-Regression fixes to stabilize the new workqueue and ata asynchronous
-error handling implementations that were merged for v3.4-rc1.
-
-1/ fix sas_drain_work() which was stomping on 'work' entries while the
-   workqueue was manipulating them.  user would see random crashes when
-   trying to use scsi_transport_sas attributes for resets, or during
-   discovery
-
-2/ (2) longstanding bugs related to the fact that libata (inventor and
-   primary host_eh_scheduled user) had built-in assumptions of 1:1
-   Scsi_Host-to-ata_port relationship.  The libsas 1:N arrangement
-   magnified these problems when it gained async eh and began scheduling
-   eh in more scenarios (sas-transports resets) in 3.4-rc1.
-
-3/ lifetime fixes for the rphy since code that has a domain_device
-   reference expected to be able to de-reference rphy parameters.
-
-4/ (3) fixes for expander discovery bugs, one a recent regression with
-   ata-eh clobbering expander-phy data as it polled leading to system
-   crashes, a long standing bug that caused libsas to be
-   incompatible with expanders that advertised "PHY_VACANT" in low order
-   phy indexes, and a quirk for expanders that sometimes fail to zero
-   the sas address when no device is attached.
-
-5/ fix for a long-standing bug whereby hotunplug events during initial
-   host scan can cause a system crash
-
-----------------------------------------------------------------
-
-This is a reflow of the 26 patches in the libsas-eh-reworks-v15 branch
-to separate out the 12 fixes from the other feature development.  These
-patches, save for the new "scsi: fix eh wakeup (scsi_schedule_eh vs
-scsi_restart_operations)", were all originally posted before the merge
-window opened, and have also appeared in -next for the same timeframe.
-
-There is a mix of pure regression fixes and fixes for long-standing bugs
-in libsas.  Some of the long-standing bug fixes are made worse / easier
-to trigger by the new async error handling scheme.
-
-The largest patch in the series is "libata, libsas: introduce sched_eh
-and end_eh port ops" wants an ack from the ata folks, it has been on the
-list since March 10th.
-
-Dan Williams (10):
-      libsas: introduce sas_work to fix sas_drain_work vs sas_queue_work
-      libata, libsas: introduce sched_eh and end_eh port ops
-      libsas: fix sas_get_port_device regression
-      libsas: unify domain_device sas_rphy lifetimes
-      libsas: fix ata_eh clobbering ex_phys via smp_ata_check_ready
-      libata: make ata_print_id atomic
-      libsas, libata: fix start of life for a sas ata_port
-      scsi: fix eh wakeup (scsi_schedule_eh vs scsi_restart_operations)
-      libsas: fix false positive 'device attached' conditions
-      scsi_transport_sas: fix delete vs scan race
-
-Maciej Trela (1):
-      libsas: cleanup spurious calls to scsi_schedule_eh
-
-Thomas Jackson (1):
-      libsas: fix sas_find_bcast_phy() in the presence of 'vacant' phys
-
- drivers/ata/libata-core.c           |    8 +++-
- drivers/ata/libata-eh.c             |   57 +++++++++++++++++++++------
- drivers/ata/libata-scsi.c           |   35 +++++++++--------
- drivers/ata/libata.h                |    2 +-
- drivers/scsi/ipr.c                  |    6 ++-
- drivers/scsi/libsas/sas_ata.c       |   72 +++++++++++++++++++++--------------
- drivers/scsi/libsas/sas_discover.c  |   67 ++++++++++++++++++--------------
- drivers/scsi/libsas/sas_event.c     |   36 +++++++++---------
- drivers/scsi/libsas/sas_expander.c  |   56 +++++++++++++++++++++------
- drivers/scsi/libsas/sas_init.c      |   25 ++++++------
- drivers/scsi/libsas/sas_internal.h  |    6 +--
- drivers/scsi/libsas/sas_phy.c       |   21 ++++------
- drivers/scsi/libsas/sas_port.c      |   15 +++-----
- drivers/scsi/libsas/sas_scsi_host.c |   28 ++++++++++----
- drivers/scsi/scsi_error.c           |   14 +++++++
- drivers/scsi/scsi_transport_sas.c   |    6 ++-
- include/linux/libata.h              |    7 +++-
- include/scsi/libsas.h               |   44 ++++++++++++++++++---
- include/scsi/sas_ata.h              |    9 ++++-
- 19 files changed, 343 insertions(+), 171 deletions(-)
