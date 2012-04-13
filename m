@@ -1,30 +1,36 @@
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
-Subject: scsi: require help for one issue about INQUIRY?
-Date: Fri, 13 Apr 2012 22:30:32 +0800
-Message-ID: <CAEH94LiE6-QqJowDm+nAT3-g_JOFKBfZ=AW5Thibq5AP93DVAg@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: scsi: require help for one issue about INQUIRY?
+Date: Fri, 13 Apr 2012 16:40:12 +0200
+Message-ID: <1334328012.3028.37.camel@dabdike>
+References: <CAEH94LiE6-QqJowDm+nAT3-g_JOFKBfZ=AW5Thibq5AP93DVAg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:63918 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750773Ab2DMOac (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Apr 2012 10:30:32 -0400
-Received: by pbcun15 with SMTP id un15so3696096pbc.19
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Apr 2012 07:30:32 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48933 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752133Ab2DMOkR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Apr 2012 10:40:17 -0400
+In-Reply-To: <CAEH94LiE6-QqJowDm+nAT3-g_JOFKBfZ=AW5Thibq5AP93DVAg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Zhi Yong Wu <zwu.kernel@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-HI,
+On Fri, 2012-04-13 at 22:30 +0800, Zhi Yong Wu wrote:
+> HI,
+> 
+> When one machine was started with one scsi device,the information
+> below was showed. Does anyone know how to fix this issue?
+> 
+> "scsi scan: INQUIRY result too short (5), using 36"
+> "Scsi 2:0:292:0: Direct-Access"
 
-When one machine was started with one scsi device,the information
-below was showed. Does anyone know how to fix this issue?
+Well, it means what it says: the device wrongly returned only 5 bytes
+for the INQUIRY command.  Why it did this is a hardware issue.
 
-"scsi scan: INQUIRY result too short (5), using 36"
-"Scsi 2:0:292:0: Direct-Access"
+James
 
 
--- 
-Regards,
 
-Zhi Yong Wu
