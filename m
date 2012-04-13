@@ -1,8 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 07/12] libsas: fix ata_eh clobbering ex_phys via
- smp_ata_check_ready
-Date: Fri, 13 Apr 2012 16:37:27 -0700
-Message-ID: <20120413233727.8025.82428.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH 04/12] libsas: fix sas_find_bcast_phy() in the presence of
+ 'vacant' phys
+Date: Fri, 13 Apr 2012 16:37:12 -0700
+Message-ID: <20120413233711.8025.3819.stgit@dwillia2-linux.jf.intel.com>
 References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,80 +11,56 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: JBottomley@parallels.com
-Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>, linux-scsi@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>, Jack Wang <jack_wang@usish.com>, linux-ide@vger.kernel.org, Bartek Nowakowski <bartek.nowakowski@intel.com>
+Cc: Thomas Jackson <thomas.p.jackson@intel.com>, linux-ide@vger.kernel.org, stable@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The check_ready implementation in the expander-attached ata device case
-polls on sas_ex_phy_discover().  The effect is that the ex_phy fields
-(critically ->attached_sas_addr) can change.  When ata_eh ends and
-libsas comes along to revalidate the domain
-sas_unregister_devs_sas_addr() can fail to lookup devices to remove, or
-fail to re-add an ata device that ata_eh marked as disabled.  So change
-the code to skip the sas_address and change count updates when ata_eh is
-active.
+From: Thomas Jackson <thomas.p.jackson@intel.com>
 
-Cc: Jack Wang <jack_wang@usish.com>
-Tested-by: Maciej Patelczyk <maciej.patelczyk@intel.com>
-Tested-by: Bartek Nowakowski <bartek.nowakowski@intel.com>
-Tested-by: Jacek Danecki <jacek.danecki@intel.com>
+If an expander reports 'PHY VACANT' for a phy index prior to the one
+that generated a BCN libsas fails rediscovery.  Since a vacant phy is
+defined as a valid phy index that will never have an attached device
+just continue the search.
+
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Thomas Jackson <thomas.p.jackson@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_expander.c |   16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/scsi/libsas/sas_expander.c |   17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 37c3c3f..c1f91b1 100644
+index 05acd9e..833bea0 100644
 --- a/drivers/scsi/libsas/sas_expander.c
 +++ b/drivers/scsi/libsas/sas_expander.c
-@@ -202,6 +202,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
- 	u8 sas_addr[SAS_ADDR_SIZE];
- 	struct smp_resp *resp = rsp;
- 	struct discover_resp *dr = &resp->disc;
-+	struct sas_ha_struct *ha = dev->port->ha;
- 	struct expander_device *ex = &dev->ex_dev;
- 	struct ex_phy *phy = &ex->ex_phy[phy_id];
- 	struct sas_rphy *rphy = dev->rphy;
-@@ -209,6 +210,8 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
- 	char *type;
+@@ -1718,9 +1718,17 @@ static int sas_find_bcast_phy(struct domain_device *dev, int *phy_id,
+ 		int phy_change_count = 0;
  
- 	if (new_phy) {
-+		if (WARN_ON_ONCE(test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)))
-+			return;
- 		phy->phy = sas_phy_alloc(&rphy->dev, phy_id);
- 
- 		/* FIXME: error_handling */
-@@ -233,6 +236,8 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
- 	memcpy(sas_addr, phy->attached_sas_addr, SAS_ADDR_SIZE);
- 
- 	phy->attached_dev_type = to_dev_type(dr);
-+	if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state))
-+		goto out;
- 	phy->phy_id = phy_id;
- 	phy->linkrate = dr->linkrate;
- 	phy->attached_sata_host = dr->attached_sata_host;
-@@ -266,6 +271,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
- 			return;
- 		}
- 
-+ out:
- 	switch (phy->attached_dev_type) {
- 	case SATA_PENDING:
- 		type = "stp pending";
-@@ -304,7 +310,15 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
- 	else
- 		return;
- 
--	SAS_DPRINTK("ex %016llx phy%02d:%c:%X attached: %016llx (%s)\n",
-+	/* if the attached device type changed and ata_eh is active,
-+	 * make sure we run revalidation when eh completes (see:
-+	 * sas_enable_revalidation)
-+	 */
-+	if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state))
-+		set_bit(DISCE_REVALIDATE_DOMAIN, &dev->port->disc.pending);
+ 		res = sas_get_phy_change_count(dev, i, &phy_change_count);
+-		if (res)
+-			goto out;
+-		else if (phy_change_count != ex->ex_phy[i].phy_change_count) {
++		switch (res) {
++		case SMP_RESP_PHY_VACANT:
++		case SMP_RESP_NO_PHY:
++			continue;
++		case SMP_RESP_FUNC_ACC:
++			break;
++		default:
++			return res;
++		}
 +
-+	SAS_DPRINTK("%sex %016llx phy%02d:%c:%X attached: %016llx (%s)\n",
-+		    test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state) ? "ata: " : "",
- 		    SAS_ADDR(dev->sas_addr), phy->phy_id,
- 		    sas_route_char(dev, phy), phy->linkrate,
- 		    SAS_ADDR(phy->attached_sas_addr), type);
++		if (phy_change_count != ex->ex_phy[i].phy_change_count) {
+ 			if (update)
+ 				ex->ex_phy[i].phy_change_count =
+ 					phy_change_count;
+@@ -1728,8 +1736,7 @@ static int sas_find_bcast_phy(struct domain_device *dev, int *phy_id,
+ 			return 0;
+ 		}
+ 	}
+-out:
+-	return res;
++	return 0;
+ }
+ 
+ static int sas_get_ex_change_count(struct domain_device *dev, int *ecc)
 
