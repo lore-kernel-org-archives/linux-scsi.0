@@ -1,58 +1,84 @@
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-Subject: Re: An oops will occur while SCSI core is being used in 3.4-rc1
-Date: Fri, 13 Apr 2012 00:30:28 +0000
-Message-ID: <A9180604-6CE7-401D-933D-D3487BD10996@intel.com>
-References: <CAAxnys5O7PfWYv0q+BvhK2CP7X-_pNRa4j-Z1gSWHqLm8D8XmA@mail.gmail.com>
- <4F83EC71.90904@acm.org>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Thu, 12 Apr 2012 20:59:34 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1204122044390.10558-100000@netrider.rowland.org>
+References: <14684.87111.qm@web100019.mail.kks.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58899 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754590Ab2DMAaa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Apr 2012 20:30:30 -0400
-In-Reply-To: <4F83EC71.90904@acm.org>
-Content-Language: en-US
-Content-ID: <835E112E9992194FAD2FBE52DC3AEB23@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <14684.87111.qm-W9a5FxB6bg+O4BqzrDeqF0yFvBl6snHEEwWAM/ix52Y@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Norman Diamond <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Elric Fu <elricfu1@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <JBottomley@Parallels.com>, "<linux-scsi@vger.kernel.org>" <linux-scsi@vger.kernel.org>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Felipe Balbi <balbi@ti.com>, Alex He <alex.he@amd.com>, Andiry Xu <andiry.xu@amd.com>, Greg KH <gregkh@linuxfoundation.org>, Linux USB Mailing List <linux-usb@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 
-On Apr 10, 2012, at 1:16 AM, Bart Van Assche wrote:
+On Fri, 13 Apr 2012, Norman Diamond wrote:
 
-> On 04/10/12 01:22, Elric Fu wrote:
-> 
->> After debugging the code, I found the issue happened while the driver ran to
->> line 782 in scsi_send_eh_cmnd().
->> 
->> 778 static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->> 779                              int cmnd_size, int timeout, unsigned
->> sense_bytes)
->> 780 {
->> 781         struct scsi_device *sdev = scmd->device;
->> 782         struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->> 783         struct Scsi_Host *shost = sdev->host;
->> 784         DECLARE_COMPLETION_ONSTACK(done);
->> 785         unsigned long timeleft;
->> 786         struct scsi_eh_save ses;
->> 787         int rtn;
->> 
->> I know the code is submitted by you. I don't familiar with the scsi core.
->> It seems like the conversion process from scsi command to scsi driver
->> encounter a NULL pointer. Any idea?
-> 
-> I have observed crashes at the same point while testing device removal
-> with the ib_srp driver. As far as I can see that code was added through
-> commit 18a4d0a22ed6c54b67af7718c305cd010f09ddf8 (February 9, 2012). The
-> approach of that patch looks questionable to me: what guarantees that
-> the struct scsi_driver will be available at the time the SCSI error
-> handler needs it ? At least the sd driver explicitly resets that pointer
-> in its scsi_disk_release() function.
+> Now you're the one being naive  ^_^
+> You THOUGHT you knew in advance that a particular bridge is known to
+> have the overreporting but, where in fact in some secret revisions it
+> doesn't and in some secret revisions we're not quite sure, missing a
+> log and missing a test sample for further testing.  How can we be
+> sure that other bridge manufacturers don't also make secret
+> revisions?
 
-I am looking into a similar crash with FCoE, though in my case it is the private_data field that is NULL instead of rq_disk. The backtraces are very much like what has been reported here. I will try adding some NULL checks similar to what has been proposed on the list, but until I know more than I do now, I won't let myself believe that NULL checks are the real fix for this issue.
+In fact we don't know.  But that's not a good enough reason to risk=20
+breaking existing systems.  When we encounter bridges whose behavior=20
+has changed, we can update the quirk entries.
 
--- 
-Mark Rustad, LAN Access Division, Intel Corporation
+(Even that isn't as cautious as I'd like.  If the device behavior has=20
+changed then maybe the old devices won't handle reading beyond the end=20
+of the drive.  But I can't think of anything safer.)
 
+> OK.  Then we still need something more than the new TEST_CAPACITY
+> flag trying to read the last reported block to see if the block
+> exists or not.  In cases marked as FIX_CAPACITY we ought to see if an
+> existing partition ends in the last reported block -- if it doesn't
+> then we can truncate the drive and no partition gets truncated, but
+> if it does then maybe we should consider changing the device's flag
+> to TEST_CAPACITY.
+
+This is getting too complicated.  Not all storage devices have
+partition tables.  Not all partition tables use the conventional DOS
+format.  And by the time the partition-table parsing code runs, it may
+be too late to change the recorded capacity -- I'm not sure about that.
+
+> > Not all disks have an even number of blocks.=A0 That heuristic real=
+ly
+> > isn't a very good one -- its only benefit is that it works okay for
+> > the one case where it is currently used.
+>=20
+> If you do mean disks, then we can improve that heuristic.  Forget
+> about the 126 that I mentioned last time, but go with the 63 because
+> we know why that factor is very common in drives that had physical
+> 512 byte sectors.  For drives being made these days with physical
+> 4096 byte sectors, obviously the number of logical 512 byte sectors
+> is going to be even just as it is with the one device that presently
+> has the HEURISTICS flag.
+
+Don't modern disks have some arbitrary numbers of blocks reserved by
+the manufacturer?  I forget the acronym for this, but it seems
+reasonable that it could cause the capacity not to be a multiple of 63.
+
+> If you mean other USB devices that emulate disks, then of course
+> there's a wider range of possibilities.  The ATA identification might
+> assert any number of emulated sectors per emulated track, etc.  And
+> even when the device states its correct number of LBA blocks (not
+> having been altered by fraudsters to sell a fake high capacity device
+> in eBay), the vendor might have preformatted it with a partition
+> extending past the end of the device.  So yeah, I have no suggestion
+> for devices other than actual disks being connected through USB to
+> [S]ATA bridges.
+
+The problem is that we don't always know which devices are USB-(S)ATA
+bridges and which aren't.  The quirk entries may not record that
+information.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
