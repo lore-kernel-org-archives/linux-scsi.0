@@ -1,65 +1,51 @@
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
-Subject: Re: scsi: require help for one issue about INQUIRY?
-Date: Fri, 13 Apr 2012 22:52:06 +0800
-Message-ID: <CAEH94Li-gsZE1GsXMhLJwJ8R4n-WJ1OkkdAP=w_6L7HLveMTRA@mail.gmail.com>
-References: <CAEH94LiE6-QqJowDm+nAT3-g_JOFKBfZ=AW5Thibq5AP93DVAg@mail.gmail.com>
-	<1334328012.3028.37.camel@dabdike>
-	<CAEH94LgkT03amAG3GD-wcfEg+q6S0=h97JkJFwBgdhDTnj1yYg@mail.gmail.com>
-	<1334328435.3028.39.camel@dabdike>
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: Re: [RFC] enable FUA support in libata
+Date: Fri, 13 Apr 2012 23:25:25 +0800
+Message-ID: <CANWLp01_fUhc72XUBcORGwh0s7r7g8CE5S7aqC+e2Sj4vf_DJA@mail.gmail.com>
+References: <20120413081104.GA4953@gmail.com>
+	<4F8835B8.2060400@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:40260 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752819Ab2DMOwH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Apr 2012 10:52:07 -0400
-Received: by pbcun15 with SMTP id un15so3716265pbc.19
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Apr 2012 07:52:06 -0700 (PDT)
-In-Reply-To: <1334328435.3028.39.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4F8835B8.2060400@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Fri, Apr 13, 2012 at 10:47 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Fri, 2012-04-13 at 22:42 +0800, Zhi Yong Wu wrote:
->> On Fri, Apr 13, 2012 at 10:40 PM, James Bottomley
->> <James.Bottomley@hansenpartnership.com> wrote:
->> > On Fri, 2012-04-13 at 22:30 +0800, Zhi Yong Wu wrote:
->> >> HI,
->> >>
->> >> When one machine was started with one scsi device,the information
->> >> below was showed. Does anyone know how to fix this issue?
->> >>
->> >> "scsi scan: INQUIRY result too short (5), using 36"
->> >> "Scsi 2:0:292:0: Direct-Access"
->> >
->> > Well, it means what it says: the device wrongly returned only 5 by=
-tes
->> "using 36" mean that device should return 36 bytes?
->
-> The SCSI standard (SPC3) says
->
-> =A0 =A0 =A0 =A06.4.2 Standard INQUIRY data
-> =A0 =A0 =A0 =A0The standard INQUIRY data (see table 81) shall contain=
- at least
-> =A0 =A0 =A0 =A036 bytes.
-wow, thanks.
->
-> James
+On Fri, Apr 13, 2012 at 10:18 PM, Jeff Garzik <jeff@garzik.org> wrote:
+> On 04/13/2012 04:11 AM, Zheng Liu wrote:
+>>
+>> Hi Jeff and list,
+>>
+>> Recently I met a problem about FUA support of SATA disk. =A0In my ma=
+chine,
+>> it has a SATA disk that supports FUA feature. =A0But after system st=
+arts
+>> up, it displays that the disk cannot support FUA from dmesg.
+>>
+>> I notice this commit (c3c013a2). =A0It disables FUA support in all o=
+f SATA
+>> disk. =A0But the commit log is too simple to know why we should disa=
+ble
+>> FUA support in libata. =A0Could you please explain it? =A0Thank you.
 >
 >
+> FUA support in the block layer wanted speed and guarantees that early=
+ FUA
+> drives were simply not providing.
 
+Hi Jeff,
 
+Thank you for your reply.  I notice that this patch is merged in 2006.
+ I don't know whether we can enable it now by default or not.  I read
+some specifications of SATA disks.  They support FUA feature.
+Although libata_fua variable is a kernel module parameter and we can
+enable it when this module is loaded,  it is too complicated because
+it needs to be loaded before kernel is loaded.  Thus, we need to set
+libata_fua in initrd.  Maybe we can change it into a sysctl parameter.
+ Then we can enable it dynamically.  Do you have any suggestions?
+Thank you.
 
---=20
 Regards,
-
-Zhi Yong Wu
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Zheng
