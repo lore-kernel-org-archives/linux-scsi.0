@@ -1,56 +1,62 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 11/12] libsas: fix false positive 'device attached'
- conditions
-Date: Fri, 13 Apr 2012 16:37:47 -0700
-Message-ID: <20120413233747.8025.13302.stgit@dwillia2-linux.jf.intel.com>
-References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH for 3.4] isci: fix oem parameter validation on single
+ controller skus
+Date: Fri, 13 Apr 2012 17:41:57 -0700
+Message-ID: <20120414003835.8490.48501.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:64401 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:46936 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932474Ab2DMXWH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Apr 2012 19:22:07 -0400
-In-Reply-To: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
+	id S1756847Ab2DNA0R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Apr 2012 20:26:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
-Cc: linux-ide@vger.kernel.org, Andrzej Jakowski <andrzej.jakowski@intel.com>, linux-scsi@vger.kernel.org
+Cc: Dave Jiang <dave.jiang@intel.com>, stable@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Normalize phy->attached_sas_addr to return a zero-address in the case
-when device-type == NO_DEVICE or the linkrate is invalid to handle
-expanders that put non-zero sas addresses in the discovery response:
+OEM parameters [1] are parsed from the platform option-rom / efi
+driver.  By default the driver was validating the parameters for the
+dual-controller case, but in single-controller case only the first set
+of parameters may be valid.
 
- sas: ex 5001b4da000f903f phy02:U:0 attached: 0100000000000000 (no device)
- sas: ex 5001b4da000f903f phy01:U:0 attached: 0100000000000000 (no device)
- sas: ex 5001b4da000f903f phy03:U:0 attached: 0100000000000000 (no device)
- sas: ex 5001b4da000f903f phy00:U:0 attached: 0100000000000000 (no device)
+Limit the validation to the number of actual controllers detected
+otherwise the driver may fail to parse the valid parameters leading to
+driver-load or runtime failures.
 
-Reported-by: Andrzej Jakowski <andrzej.jakowski@intel.com>
+[1] the platform specific set of phy address, configuration,and analog
+    tuning values
+
+[stable v3.0+]
+Cc: <stable@vger.kernel.org>
+Reported-by: Dave Jiang <dave.jiang@intel.com>
+Tested-by: Dave Jiang <dave.jiang@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_expander.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 75247a1..caa0525 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -245,7 +245,14 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
- 	phy->attached_sata_ps   = dr->attached_sata_ps;
- 	phy->attached_iproto = dr->iproto << 1;
- 	phy->attached_tproto = dr->tproto << 1;
--	memcpy(phy->attached_sas_addr, dr->attached_sas_addr, SAS_ADDR_SIZE);
-+	/* help some expanders that fail to zero sas_address in the 'no
-+	 * device' case
-+	 */
-+	if (phy->attached_dev_type == NO_DEVICE ||
-+	    phy->linkrate < SAS_LINK_RATE_1_5_GBPS)
-+		memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
-+	else
-+		memcpy(phy->attached_sas_addr, dr->attached_sas_addr, SAS_ADDR_SIZE);
- 	phy->attached_phy_id = dr->attached_phy_id;
- 	phy->phy_change_count = dr->change_count;
- 	phy->routing_attr = dr->routing_attr;
+ James,
+
+ Since this is a one liner and no other isci regression fixes pending
+ I'm just sending the patch and not creating a signed tag for it.
+
+ --
+ Dan
+
+ drivers/scsi/isci/init.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 5137db5..bc6cf88 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -476,7 +476,7 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
+ 	if (!orom)
+ 		orom = isci_request_oprom(pdev);
+ 
+-	for (i = 0; orom && i < ARRAY_SIZE(orom->ctrl); i++) {
++	for (i = 0; orom && i < num_controllers(pdev); i++) {
+ 		if (sci_oem_parameters_validate(&orom->ctrl[i],
+ 						orom->hdr.version)) {
+ 			dev_warn(&pdev->dev,
 
