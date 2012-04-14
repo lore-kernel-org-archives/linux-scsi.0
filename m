@@ -1,62 +1,112 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH for 3.4] isci: fix oem parameter validation on single
- controller skus
-Date: Fri, 13 Apr 2012 17:41:57 -0700
-Message-ID: <20120414003835.8490.48501.stgit@dwillia2-linux.jf.intel.com>
+From: jack_wang <jack_wang@usish.com>
+Subject: Re: [GIT PATCH 00/12] libsas fixes for 3.4
+Date: Sat, 14 Apr 2012 16:19:55 +0800
+Message-ID: <201204141619552035051@usish.com>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
+Reply-To: jack_wang <jack_wang@usish.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46936 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756847Ab2DNA0R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Apr 2012 20:26:17 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, James Bottomley <JBottomley@parallels.com>
+Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: Dave Jiang <dave.jiang@intel.com>, stable@vger.kernel.org, linux-scsi@vger.kernel.org
 
-OEM parameters [1] are parsed from the platform option-rom / efi
-driver.  By default the driver was validating the parameters for the
-dual-controller case, but in single-controller case only the first set
-of parameters may be valid.
-
-Limit the validation to the number of actual controllers detected
-otherwise the driver may fail to parse the valid parameters leading to
-driver-load or runtime failures.
-
-[1] the platform specific set of phy address, configuration,and analog
-    tuning values
-
-[stable v3.0+]
-Cc: <stable@vger.kernel.org>
-Reported-by: Dave Jiang <dave.jiang@intel.com>
-Tested-by: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
- James,
-
- Since this is a one liner and no other isci regression fixes pending
- I'm just sending the patch and not creating a signed tag for it.
-
- --
- Dan
-
- drivers/scsi/isci/init.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 5137db5..bc6cf88 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -476,7 +476,7 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
- 	if (!orom)
- 		orom = isci_request_oprom(pdev);
- 
--	for (i = 0; orom && i < ARRAY_SIZE(orom->ctrl); i++) {
-+	for (i = 0; orom && i < num_controllers(pdev); i++) {
- 		if (sci_oem_parameters_validate(&orom->ctrl[i],
- 						orom->hdr.version)) {
- 			dev_warn(&pdev->dev,
+SGkgRGFuLA0KDQpUaGFua3MgZm9yIGRvaW5nIHRoaXMuIEkndmUgdGVzdGVkIHRoaXMgcGF0Y2hz
+ZXQgZm9yIGEgd2hpbGUgYW5kIGl0IHdvcmtzIGdvb2QuDQoNCllvdSBjYW4gYWRkIG15IHRlc3Qt
+Ynkgb3IgYWNrZWQtYnkgaWYgbmVlZGVkLg0KDQpCZXN0IHJlZ2FyZHMhIA0KDQoNCi0tLS0tLS0t
+LS0tLS0tDQpqYWNrX3dhbmcNCj5UaGUgZm9sbG93aW5nIGNoYW5nZXMgc2luY2UgY29tbWl0IGNk
+OGRmOTMyZDg5NGYzMTI4Yzg4NGUzYWUxYjJiNDg0NTQwNTEzZGI6DQo+DQo+ICBbU0NTSV0gcWxh
+NHh4eDogVXBkYXRlIGRyaXZlciB2ZXJzaW9uIHRvIDUuMDIuMDAtazE1ICgyMDEyLTAyLTI5IDE3
+OjAzOjAzIC0wNjAwKQ0KPg0KPmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0
+Og0KPg0KPiAgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2Rq
+YncvaXNjaS5naXQgdGFncy9saWJzYXMtZml4ZXMNCj4NCj5mb3IgeW91IHRvIGZldGNoIGNoYW5n
+ZXMgdXAgdG8gZTgxZGNjZTQ2ZmRiYjJjOTY4ZDczMTRjMmYxOWRhM2MyYmJhMjRkMToNCj4NCj4g
+IHNjc2lfdHJhbnNwb3J0X3NhczogZml4IGRlbGV0ZSB2cyBzY2FuIHJhY2UgKDIwMTItMDQtMTAg
+MTk6MTU6MjMgLTA3MDApDQo+DQo+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPmxpYnNhcy1maXhlcyBmb3IgMy40LXJjNA0K
+Pg0KPlJlZ3Jlc3Npb24gZml4ZXMgdG8gc3RhYmlsaXplIHRoZSBuZXcgd29ya3F1ZXVlIGFuZCBh
+dGEgYXN5bmNocm9ub3VzDQo+ZXJyb3IgaGFuZGxpbmcgaW1wbGVtZW50YXRpb25zIHRoYXQgd2Vy
+ZSBtZXJnZWQgZm9yIHYzLjQtcmMxLg0KPg0KPjEvIGZpeCBzYXNfZHJhaW5fd29yaygpIHdoaWNo
+IHdhcyBzdG9tcGluZyBvbiAnd29yaycgZW50cmllcyB3aGlsZSB0aGUNCj4gICB3b3JrcXVldWUg
+d2FzIG1hbmlwdWxhdGluZyB0aGVtLiAgdXNlciB3b3VsZCBzZWUgcmFuZG9tIGNyYXNoZXMgd2hl
+bg0KPiAgIHRyeWluZyB0byB1c2Ugc2NzaV90cmFuc3BvcnRfc2FzIGF0dHJpYnV0ZXMgZm9yIHJl
+c2V0cywgb3IgZHVyaW5nDQo+ICAgZGlzY292ZXJ5DQo+DQo+Mi8gKDIpIGxvbmdzdGFuZGluZyBi
+dWdzIHJlbGF0ZWQgdG8gdGhlIGZhY3QgdGhhdCBsaWJhdGEgKGludmVudG9yIGFuZA0KPiAgIHBy
+aW1hcnkgaG9zdF9laF9zY2hlZHVsZWQgdXNlcikgaGFkIGJ1aWx0LWluIGFzc3VtcHRpb25zIG9m
+IDE6MQ0KPiAgIFNjc2lfSG9zdC10by1hdGFfcG9ydCByZWxhdGlvbnNoaXAuICBUaGUgbGlic2Fz
+IDE6TiBhcnJhbmdlbWVudA0KPiAgIG1hZ25pZmllZCB0aGVzZSBwcm9ibGVtcyB3aGVuIGl0IGdh
+aW5lZCBhc3luYyBlaCBhbmQgYmVnYW4gc2NoZWR1bGluZw0KPiAgIGVoIGluIG1vcmUgc2NlbmFy
+aW9zIChzYXMtdHJhbnNwb3J0cyByZXNldHMpIGluIDMuNC1yYzEuDQo+DQo+My8gbGlmZXRpbWUg
+Zml4ZXMgZm9yIHRoZSBycGh5IHNpbmNlIGNvZGUgdGhhdCBoYXMgYSBkb21haW5fZGV2aWNlDQo+
+ICAgcmVmZXJlbmNlIGV4cGVjdGVkIHRvIGJlIGFibGUgdG8gZGUtcmVmZXJlbmNlIHJwaHkgcGFy
+YW1ldGVycy4NCj4NCj40LyAoMykgZml4ZXMgZm9yIGV4cGFuZGVyIGRpc2NvdmVyeSBidWdzLCBv
+bmUgYSByZWNlbnQgcmVncmVzc2lvbiB3aXRoDQo+ICAgYXRhLWVoIGNsb2JiZXJpbmcgZXhwYW5k
+ZXItcGh5IGRhdGEgYXMgaXQgcG9sbGVkIGxlYWRpbmcgdG8gc3lzdGVtDQo+ICAgY3Jhc2hlcywg
+YSBsb25nIHN0YW5kaW5nIGJ1ZyB0aGF0IGNhdXNlZCBsaWJzYXMgdG8gYmUNCj4gICBpbmNvbXBh
+dGlibGUgd2l0aCBleHBhbmRlcnMgdGhhdCBhZHZlcnRpc2VkICJQSFlfVkFDQU5UIiBpbiBsb3cg
+b3JkZXINCj4gICBwaHkgaW5kZXhlcywgYW5kIGEgcXVpcmsgZm9yIGV4cGFuZGVycyB0aGF0IHNv
+bWV0aW1lcyBmYWlsIHRvIHplcm8NCj4gICB0aGUgc2FzIGFkZHJlc3Mgd2hlbiBubyBkZXZpY2Ug
+aXMgYXR0YWNoZWQuDQo+DQo+NS8gZml4IGZvciBhIGxvbmctc3RhbmRpbmcgYnVnIHdoZXJlYnkg
+aG90dW5wbHVnIGV2ZW50cyBkdXJpbmcgaW5pdGlhbA0KPiAgIGhvc3Qgc2NhbiBjYW4gY2F1c2Ug
+YSBzeXN0ZW0gY3Jhc2gNCj4NCj4tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+DQo+VGhpcyBpcyBhIHJlZmxvdyBvZiB0aGUg
+MjYgcGF0Y2hlcyBpbiB0aGUgbGlic2FzLWVoLXJld29ya3MtdjE1IGJyYW5jaA0KPnRvIHNlcGFy
+YXRlIG91dCB0aGUgMTIgZml4ZXMgZnJvbSB0aGUgb3RoZXIgZmVhdHVyZSBkZXZlbG9wbWVudC4g
+IFRoZXNlDQo+cGF0Y2hlcywgc2F2ZSBmb3IgdGhlIG5ldyAic2NzaTogZml4IGVoIHdha2V1cCAo
+c2NzaV9zY2hlZHVsZV9laCB2cw0KPnNjc2lfcmVzdGFydF9vcGVyYXRpb25zKSIsIHdlcmUgYWxs
+IG9yaWdpbmFsbHkgcG9zdGVkIGJlZm9yZSB0aGUgbWVyZ2UNCj53aW5kb3cgb3BlbmVkLCBhbmQg
+aGF2ZSBhbHNvIGFwcGVhcmVkIGluIC1uZXh0IGZvciB0aGUgc2FtZSB0aW1lZnJhbWUuDQo+DQo+
+VGhlcmUgaXMgYSBtaXggb2YgcHVyZSByZWdyZXNzaW9uIGZpeGVzIGFuZCBmaXhlcyBmb3IgbG9u
+Zy1zdGFuZGluZyBidWdzDQo+aW4gbGlic2FzLiAgU29tZSBvZiB0aGUgbG9uZy1zdGFuZGluZyBi
+dWcgZml4ZXMgYXJlIG1hZGUgd29yc2UgLyBlYXNpZXINCj50byB0cmlnZ2VyIGJ5IHRoZSBuZXcg
+YXN5bmMgZXJyb3IgaGFuZGxpbmcgc2NoZW1lLg0KPg0KPlRoZSBsYXJnZXN0IHBhdGNoIGluIHRo
+ZSBzZXJpZXMgaXMgImxpYmF0YSwgbGlic2FzOiBpbnRyb2R1Y2Ugc2NoZWRfZWgNCj5hbmQgZW5k
+X2VoIHBvcnQgb3BzIiB3YW50cyBhbiBhY2sgZnJvbSB0aGUgYXRhIGZvbGtzLCBpdCBoYXMgYmVl
+biBvbiB0aGUNCj5saXN0IHNpbmNlIE1hcmNoIDEwdGguDQo+DQo+RGFuIFdpbGxpYW1zICgxMCk6
+DQo+ICAgICAgbGlic2FzOiBpbnRyb2R1Y2Ugc2FzX3dvcmsgdG8gZml4IHNhc19kcmFpbl93b3Jr
+IHZzIHNhc19xdWV1ZV93b3JrDQo+ICAgICAgbGliYXRhLCBsaWJzYXM6IGludHJvZHVjZSBzY2hl
+ZF9laCBhbmQgZW5kX2VoIHBvcnQgb3BzDQo+ICAgICAgbGlic2FzOiBmaXggc2FzX2dldF9wb3J0
+X2RldmljZSByZWdyZXNzaW9uDQo+ICAgICAgbGlic2FzOiB1bmlmeSBkb21haW5fZGV2aWNlIHNh
+c19ycGh5IGxpZmV0aW1lcw0KPiAgICAgIGxpYnNhczogZml4IGF0YV9laCBjbG9iYmVyaW5nIGV4
+X3BoeXMgdmlhIHNtcF9hdGFfY2hlY2tfcmVhZHkNCj4gICAgICBsaWJhdGE6IG1ha2UgYXRhX3By
+aW50X2lkIGF0b21pYw0KPiAgICAgIGxpYnNhcywgbGliYXRhOiBmaXggc3RhcnQgb2YgbGlmZSBm
+b3IgYSBzYXMgYXRhX3BvcnQNCj4gICAgICBzY3NpOiBmaXggZWggd2FrZXVwIChzY3NpX3NjaGVk
+dWxlX2VoIHZzIHNjc2lfcmVzdGFydF9vcGVyYXRpb25zKQ0KPiAgICAgIGxpYnNhczogZml4IGZh
+bHNlIHBvc2l0aXZlICdkZXZpY2UgYXR0YWNoZWQnIGNvbmRpdGlvbnMNCj4gICAgICBzY3NpX3Ry
+YW5zcG9ydF9zYXM6IGZpeCBkZWxldGUgdnMgc2NhbiByYWNlDQo+DQo+TWFjaWVqIFRyZWxhICgx
+KToNCj4gICAgICBsaWJzYXM6IGNsZWFudXAgc3B1cmlvdXMgY2FsbHMgdG8gc2NzaV9zY2hlZHVs
+ZV9laA0KPg0KPlRob21hcyBKYWNrc29uICgxKToNCj4gICAgICBsaWJzYXM6IGZpeCBzYXNfZmlu
+ZF9iY2FzdF9waHkoKSBpbiB0aGUgcHJlc2VuY2Ugb2YgJ3ZhY2FudCcgcGh5cw0KPg0KPiBkcml2
+ZXJzL2F0YS9saWJhdGEtY29yZS5jICAgICAgICAgICB8ICAgIDggKysrLQ0KPiBkcml2ZXJzL2F0
+YS9saWJhdGEtZWguYyAgICAgICAgICAgICB8ICAgNTcgKysrKysrKysrKysrKysrKysrKysrLS0t
+LS0tDQo+IGRyaXZlcnMvYXRhL2xpYmF0YS1zY3NpLmMgICAgICAgICAgIHwgICAzNSArKysrKysr
+KystLS0tLS0tLQ0KPiBkcml2ZXJzL2F0YS9saWJhdGEuaCAgICAgICAgICAgICAgICB8ICAgIDIg
+Ky0NCj4gZHJpdmVycy9zY3NpL2lwci5jICAgICAgICAgICAgICAgICAgfCAgICA2ICsrLQ0KPiBk
+cml2ZXJzL3Njc2kvbGlic2FzL3Nhc19hdGEuYyAgICAgICB8ICAgNzIgKysrKysrKysrKysrKysr
+KysrKysrLS0tLS0tLS0tLS0tLS0NCj4gZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNfZGlzY292ZXIu
+YyAgfCAgIDY3ICsrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tDQo+IGRyaXZlcnMvc2Nz
+aS9saWJzYXMvc2FzX2V2ZW50LmMgICAgIHwgICAzNiArKysrKysrKystLS0tLS0tLS0NCj4gZHJp
+dmVycy9zY3NpL2xpYnNhcy9zYXNfZXhwYW5kZXIuYyAgfCAgIDU2ICsrKysrKysrKysrKysrKysr
+KysrKy0tLS0tLQ0KPiBkcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19pbml0LmMgICAgICB8ICAgMjUg
+KysrKysrLS0tLS0tDQo+IGRyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2ludGVybmFsLmggIHwgICAg
+NiArLS0NCj4gZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNfcGh5LmMgICAgICAgfCAgIDIxICsrKyst
+LS0tLS0NCj4gZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNfcG9ydC5jICAgICAgfCAgIDE1ICsrKy0t
+LS0tDQo+IGRyaXZlcnMvc2NzaS9saWJzYXMvc2FzX3Njc2lfaG9zdC5jIHwgICAyOCArKysrKysr
+KysrLS0tLQ0KPiBkcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5jICAgICAgICAgICB8ICAgMTQgKysr
+KysrKw0KPiBkcml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfc2FzLmMgICB8ICAgIDYgKystDQo+
+IGluY2x1ZGUvbGludXgvbGliYXRhLmggICAgICAgICAgICAgIHwgICAgNyArKystDQo+IGluY2x1
+ZGUvc2NzaS9saWJzYXMuaCAgICAgICAgICAgICAgIHwgICA0NCArKysrKysrKysrKysrKysrKyst
+LS0NCj4gaW5jbHVkZS9zY3NpL3Nhc19hdGEuaCAgICAgICAgICAgICAgfCAgICA5ICsrKystDQo+
+IDE5IGZpbGVzIGNoYW5nZWQsIDM0MyBpbnNlcnRpb25zKCspLCAxNzEgZGVsZXRpb25zKC0pDQo+
+LS0NCj5UbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJz
+Y3JpYmUgbGludXgtc2NzaSIgaW4NCj50aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21v
+QHZnZXIua2VybmVsLm9yZw0KPk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtl
+cm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPg0KPl9fX19fX19fX18gSW5mb3JtYXRpb24g
+ZnJvbSBFU0VUIE5PRDMyIEFudGl2aXJ1cywgdmVyc2lvbiBvZiB2aXJ1cyBzaWduYXR1cmUgZGF0
+YWJhc2UgNTY1OSAoMjAxMDExMjkpIF9fX19fX19fX18NCj4NCj5UaGUgbWVzc2FnZSB3YXMgY2hl
+Y2tlZCBieSBFU0VUIE5PRDMyIEFudGl2aXJ1cy4NCj4NCj5odHRwOi8vd3d3LmVzZXQuY29tDQo+
+DQo+DQo+
 
