@@ -1,102 +1,96 @@
-From: Norman Diamond <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
-Subject: Re: sd_mod or usb-storage fails to read a single good block (was: ehci_hcd fails to read a single good block)
-Date: Mon, 16 Apr 2012 11:13:02 +0900 (JST)
-Message-ID: <344714.25777.qm@web100012.mail.kks.yahoo.co.jp>
-References: <Pine.LNX.4.44L0.1204122044390.10558-100000@netrider.rowland.org>
-Reply-To: n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1204122044390.10558-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/1] fc class: fix scanning when devs are offline
+Date: Sun, 15 Apr 2012 21:47:50 -0500
+Message-ID: <1334544470-2300-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:31070 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751249Ab2DPCrv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 15 Apr 2012 22:47:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-Alan Stern wrote:
-> On Fri, 13 Apr 2012, Norman Diamond wrote:
->> You THOUGHT you knew in advance that a particular bridge is known to=
- have the overreporting but, where in fact in some secret revisions it =
-doesn't and in some secret revisions we're not quite sure, missing a lo=
-g and missing a test sample for further testing.=A0 How can we be sure =
-that other bridge manufacturers don't also make secret revisions?
->=20
-> In fact we don't know.=A0 But that's not a good enough reason to risk=
- breaking existing systems.=A0 When we encounter bridges whose behavior=
- has changed, we can update the quirk entries.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-That's not a good enough reason to cause known breakage in newer existi=
-ng systems, but I agree that updating the quirk entries helps solve it.
+When a rport is added back or the role is changed the fc class
+will queue a scan and then call scsi_target_unblock. The problem
+with this is if the devices are in the SDEV_OFFLINE state and
+the scan is run before the scsi_target_unblock, then the scan
+will see LUN0 as offline and the scan will fail. This patch moves
+the unblock call to before the scan, so we know the device state
+will be set correctly when the scan is run.
+---
+ drivers/scsi/scsi_transport_fc.c |   24 ++++++++++++++----------
+ 1 files changed, 14 insertions(+), 10 deletions(-)
 
-> (Even that isn't as cautious as I'd like.=A0 If the device behavior h=
-as changed then maybe the old devices won't handle reading beyond the e=
-nd of the drive.=A0 But I can't think of anything safer.)
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 80fbe2a..5797604 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -2808,17 +2808,20 @@ fc_remote_port_add(struct Scsi_Host *shost, int channel,
+ 						  FC_RPORT_DEVLOSS_PENDING |
+ 						  FC_RPORT_DEVLOSS_CALLBK_DONE);
+ 
++				spin_unlock_irqrestore(shost->host_lock, flags);
++
+ 				/* if target, initiate a scan */
+ 				if (rport->scsi_target_id != -1) {
++					scsi_target_unblock(&rport->dev);
++
++					spin_lock_irqsave(shost->host_lock,
++							  flags);
+ 					rport->flags |= FC_RPORT_SCAN_PENDING;
+ 					scsi_queue_work(shost,
+ 							&rport->scan_work);
+ 					spin_unlock_irqrestore(shost->host_lock,
+ 							flags);
+-					scsi_target_unblock(&rport->dev);
+-				} else
+-					spin_unlock_irqrestore(shost->host_lock,
+-							flags);
++				}
+ 
+ 				fc_bsg_goose_queue(rport);
+ 
+@@ -2876,16 +2879,17 @@ fc_remote_port_add(struct Scsi_Host *shost, int channel,
+ 			if (fci->f->dd_fcrport_size)
+ 				memset(rport->dd_data, 0,
+ 						fci->f->dd_fcrport_size);
++			spin_unlock_irqrestore(shost->host_lock, flags);
++
++			if (ids->roles & FC_PORT_ROLE_FCP_TARGET) {
++				scsi_target_unblock(&rport->dev);
+ 
+-			if (rport->roles & FC_PORT_ROLE_FCP_TARGET) {
+ 				/* initiate a scan of the target */
++				spin_lock_irqsave(shost->host_lock, flags);
+ 				rport->flags |= FC_RPORT_SCAN_PENDING;
+ 				scsi_queue_work(shost, &rport->scan_work);
+ 				spin_unlock_irqrestore(shost->host_lock, flags);
+-				scsi_target_unblock(&rport->dev);
+-			} else
+-				spin_unlock_irqrestore(shost->host_lock, flags);
+-
++			}
+ 			return rport;
+ 		}
+ 	}
+@@ -3083,12 +3087,12 @@ fc_remote_port_rolechg(struct fc_rport  *rport, u32 roles)
+ 		/* ensure any stgt delete functions are done */
+ 		fc_flush_work(shost);
+ 
++		scsi_target_unblock(&rport->dev);
+ 		/* initiate a scan of the target */
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 		rport->flags |= FC_RPORT_SCAN_PENDING;
+ 		scsi_queue_work(shost, &rport->scan_work);
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+-		scsi_target_unblock(&rport->dev);
+ 	}
+ }
+ EXPORT_SYMBOL(fc_remote_port_rolechg);
+-- 
+1.7.7.6
 
-Well, if the reported capacity isn't a multiple of 63 and if no existin=
-g partition includes the last reported block then it seems comparativel=
-y safe to decrement the reported size, but as you pointed out, we can't=
- really be sure what the existing partitions are (non-DOS tables etc.).=
-  But a multiple of 63 still seems like a relatively safe heuristic, co=
-mparatively speaking.  But not always, as you pointed out, and as I'll =
-detail below.
-
->>> Not all disks have an even number of blocks.  That heuristic really=
- isn't a very good one -- its only benefit is that it works okay for th=
-e one case where it is currently used.
->>=20
->> If you do mean disks, then we can improve that heuristic.=A0 Forget =
-about the 126 that I mentioned last time, but go with the 63 because we=
- know why that factor is very common in drives that had physical 512 by=
-te sectors.=A0 For drives being made these days with physical 4096 byte=
- sectors, obviously the number of logical 512 byte sectors is going to =
-be even just as it is with the one device that presently has the HEURIS=
-TICS flag.
->=20
-> Don't modern disks have some arbitrary numbers of blocks reserved by =
-the manufacturer?
-
-Of course, for relocations of bad blocks and for some other purposes to=
-o.  They don't have LBAs.  They aren't included in the reported capacit=
-y.  They aren't relevant to this discussion.
-
-(I assume that my drive with bad blocks has already used all of its blo=
-cks that had been reserved for relocations.)
-
-> I forget the acronym for this, but it seems reasonable that it could =
-cause the capacity not to be a multiple of 63.
-
-No need to worry about that  ^_^
-
-I have a drive made in 1992, with no currently observed bad blocks, wit=
-h the following identifications:
-C*H*S =3D 1579*16*63 =3D 1591632
-LBA capacity =3D 1592568
-(Today I only have to manhandle a fragile SATA-to-PATA adapter, plus eS=
-ATA-to-SATA cable and SATA power supply, to get genuine ATA identificat=
-ions.)
-
-So yes indeed the capacity might not be a multiple of 63.  63 is very c=
-ommon for obvious reasons, but not universal.  Also of course 63 isn't =
-likely on current drives with 4096 byte physical sectors, which emulate=
- a capacity in 512 byte sectors that will obviously be a multiple of 8.=
-  But in all of these cases the current heuristic for even numbers stil=
-l succeeds.  So respecting a report of a multiple of 63, and if it isn'=
-t a multiple of 63 then falling back to respecting a report of a multip=
-le of 2, seems like a good bet for doing a test read of the last report=
-ed sector.
-
->> If you mean other USB devices that emulate disks, then of course the=
-re's a wider range of possibilities. [...]  So yeah, I have no suggesti=
-on for devices other than actual disks being connected through USB to [=
-S]ATA bridges.
->=20
-> The problem is that we don't always know which devices are USB-(S)ATA=
- bridges and which aren't.=A0 The quirk entries may not record that inf=
-ormation.
-
-usb.ids records a bunch of them.  Though of course that's not an "alway=
-s".
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
