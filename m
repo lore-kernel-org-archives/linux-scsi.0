@@ -1,136 +1,78 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: linux-next 20120416 + target for-next/for-next-merge
-Date: Mon, 16 Apr 2012 19:29:52 -0700
-Message-ID: <1334629792.12540.160.camel@haakon2.linux-iscsi.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Commit a692b0e broke my mvsas card
+Date: Mon, 16 Apr 2012 20:25:57 -0700
+Message-ID: <1334633159.13899.4.camel@dwillia2-mobl>
+References: <20120416224250.GA1983@bill-the-cat>
+		 <CABE8wwvbSsc02U_m+20-DQgsZ2gQCi_A6susCrmfyx_scQkccw@mail.gmail.com>
+		 <4F8CAC6F.6070907@ti.com>
+	 <1334620782.23541.2.camel@ultramagnus.opencreations.com>
+	 <4F8CCD0C.5060900@ti.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-usb <linux-usb@vger.kernel.org>, linux1394-devel <linux1394-devel@lists.sourceforge.net>, LKML <linux-kernel@vger.kernel.org>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Chris Boot <bootc@bootc.net>, Arun Easi <arun.easi@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, Greg KH <gregkh@linuxfoundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andy Grover <agrover@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga07.intel.com ([143.182.124.22]:18878 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753945Ab2DQD0E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Apr 2012 23:26:04 -0400
+Received: by iage36 with SMTP id e36so10211302iag.25
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Apr 2012 20:26:02 -0700 (PDT)
+In-Reply-To: <4F8CCD0C.5060900@ti.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tom Rini <trini@ti.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <JBottomley@parallels.com>, Xiangliang Yu <yuxiangl@marvell.com>
 
-Hi folks,
+On Mon, 2012-04-16 at 18:53 -0700, Tom Rini wrote:
+> > Thanks, yes it looks like a new regression.  Can you tell me if the
+> > following fixes it?
+> 
+> No joy, oopses.  http://alnk.org/43youngkirby for the dmesg and oops.
+> 
 
-Just a brief post-mortem on today's linux-next 20120416 build with
-the current set of v3.5-rc target updates, the current qla2xxx target
-merge candidate, and the new usb-gadget + sbp target code that's now
-pending in for-next-merge.
+Agh, sorry, I rushed that one.  The phy array is initialized later, here
+is another run at it:
 
-Here is how the for-next branch is taking shape:
+----
+mvsas: fix local port name regression
 
-*) Changes from hch that begin to stop splitting commands into multiple 
-   tasks + make pSCSI backends enforce physical SCSI max_sectors
-*) Changes from roland to drop legacy transport_do_task_sg_chain() usage
-   in core + upstream tcm_fc/ib_srpt code
-*) Cleanups + refactoring from agrover for iscsi-target towards an 
-   eventual target_submit_cmd() conversion
+From: Dan Williams <dan.j.williams@intel.com>
 
-and the diffstat from Next/merge.log:
+Commit a692b0e "[SCSI] libsas: fix sas port naming" added a dependency
+on lldds filling out the id field of registered phys.  Add this for
+mvsas.
 
-$ git merge target-updates/for-next
-Auto-merging drivers/infiniband/ulp/srpt/ib_srpt.c
-Merge made by the 'recursive' strategy.
- drivers/infiniband/ulp/srpt/ib_srpt.c             |   10 +-
- drivers/target/iscsi/iscsi_target.c               |  821 ++++++++++-----------
- drivers/target/iscsi/iscsi_target.h               |    3 +-
- drivers/target/iscsi/iscsi_target_configfs.c      |    2 +-
- drivers/target/iscsi/iscsi_target_core.h          |   12 +-
- drivers/target/iscsi/iscsi_target_datain_values.c |   35 +-
- drivers/target/iscsi/iscsi_target_erl0.c          |   31 +-
- drivers/target/iscsi/iscsi_target_erl1.c          |   23 +-
- drivers/target/iscsi/iscsi_target_erl2.c          |   28 +-
- drivers/target/iscsi/iscsi_target_parameters.c    |    8 -
- drivers/target/iscsi/iscsi_target_seq_pdu_list.c  |  125 ++--
- drivers/target/iscsi/iscsi_target_seq_pdu_list.h  |    2 +-
- drivers/target/iscsi/iscsi_target_tmr.c           |   15 +-
- drivers/target/iscsi/iscsi_target_util.c          |  192 +----
- drivers/target/iscsi/iscsi_target_util.h          |    3 -
- drivers/target/loopback/tcm_loop.c                |    4 +-
- drivers/target/target_core_cdb.c                  |    5 +-
- drivers/target/target_core_device.c               |    9 +-
- drivers/target/target_core_file.c                 |   11 +-
- drivers/target/target_core_pr.c                   |   31 +-
- drivers/target/target_core_rd.c                   |  154 ++--
- drivers/target/target_core_rd.h                   |   20 -
- drivers/target/target_core_tpg.c                  |    5 +-
- drivers/target/target_core_transport.c            |  242 ++----
- drivers/target/tcm_fc/tfc_cmd.c                   |   18 +-
- drivers/target/tcm_fc/tfc_conf.c                  |    3 -
- drivers/target/tcm_fc/tfc_io.c                    |    2 +-
- include/target/target_core_base.h                 |    9 +-
- include/target/target_core_fabric.h               |    9 +-
- 29 files changed, 693 insertions(+), 1139 deletions(-)
+Note we do this in the lldd rather than the core to allow it the control
+of mappping physical phy id to the libsas phy index.
 
---
-With the new set of v3.5-rc1 target fabric merge candidates thus far we've
-not gotten any reported next build issues for archs supporting allmod
-configs.  Great work by new target fabric maintainers Sebastian + Chris
-to make their code go smoothly into next !
+Reported-by: Tom Rini <trini@ti.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/mvsas/mv_init.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Also, the current qla2xxx/tcm_qla2xxx merge candidate has been updated
-to drop legacy usage of transport_do_task_sg_chain() within for-next
-(roland), while testing continues with qla2xxx LLD target specific
-changes in initiator mode function to avoid any potential regression
-issues for an initial v3.5-rc1 merge. (arun + Co.)
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index cc59dff..0c9af72 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -497,10 +497,12 @@ static void  __devinit mvs_post_sas_ha_init(struct Scsi_Host *shost,
+ 	for (j = 0; j < nr_core; j++) {
+ 		mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[j];
+ 		for (i = 0; i < chip_info->n_phy; i++) {
+-			sha->sas_phy[j * chip_info->n_phy  + i] =
+-				&mvi->phy[i].sas_phy;
+-			sha->sas_port[j * chip_info->n_phy + i] =
+-				&mvi->port[i].sas_port;
++			struct asd_sas_phy *phy = &mvi->phy[i].sas_phy;
++			int id = j * chip_info->n_phy  + i;
++
++			phy->id = id;
++			sha->sas_phy[id] = phy;
++			sha->sas_port[id] = &mvi->port[i].sas_port;
+ 		}
+ 	}
+ 
 
-Here is how the diffstat is looking:
 
-Merging target-merge/for-next-merge (3e6e9e9 sbp-target: Initial merge of firewire/ieee-1394 target mode support)
-$ git merge target-merge/for-next-merge
-Merge made by the 'recursive' strategy.
- drivers/firewire/core-card.c           |    1 +
- drivers/firewire/core-transaction.c    |    9 +
- drivers/firewire/core.h                |   15 -
- drivers/scsi/qla2xxx/Kconfig           |    8 +
- drivers/scsi/qla2xxx/Makefile          |    3 +-
- drivers/scsi/qla2xxx/qla_attr.c        |    5 +-
- drivers/scsi/qla2xxx/qla_dbg.c         |    5 +
- drivers/scsi/qla2xxx/qla_dbg.h         |    5 +
- drivers/scsi/qla2xxx/qla_def.h         |   69 +-
- drivers/scsi/qla2xxx/qla_gbl.h         |    7 +
- drivers/scsi/qla2xxx/qla_gs.c          |    4 +-
- drivers/scsi/qla2xxx/qla_init.c        |   82 +-
- drivers/scsi/qla2xxx/qla_iocb.c        |  102 +-
- drivers/scsi/qla2xxx/qla_isr.c         |   83 +-
- drivers/scsi/qla2xxx/qla_mbx.c         |  101 +
- drivers/scsi/qla2xxx/qla_mid.c         |   17 +-
- drivers/scsi/qla2xxx/qla_os.c          |  133 +-
- drivers/scsi/qla2xxx/qla_target.c      | 4724 ++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_target.h      |  986 +++++++
- drivers/scsi/qla2xxx/tcm_qla2xxx.c     | 1969 +++++++++++++
- drivers/scsi/qla2xxx/tcm_qla2xxx.h     |  149 +
- drivers/target/Kconfig                 |    2 +
- drivers/target/Makefile                |    2 +
- drivers/target/sbp/Kconfig             |   11 +
- drivers/target/sbp/Makefile            |    1 +
- drivers/target/sbp/sbp_target.c        | 2621 ++++++++++++++++++
- drivers/target/sbp/sbp_target.h        |  251 ++
- drivers/target/usb-gadget/Kconfig      |    9 +
- drivers/target/usb-gadget/Makefile     |    3 +
- drivers/target/usb-gadget/usb_gadget.c | 2480 +++++++++++++++++
- drivers/target/usb-gadget/usb_gadget.h |  146 +
- include/linux/firewire.h               |   15 +
- 32 files changed, 13968 insertions(+), 50 deletions(-)
- create mode 100644 drivers/scsi/qla2xxx/qla_target.c
- create mode 100644 drivers/scsi/qla2xxx/qla_target.h
- create mode 100644 drivers/scsi/qla2xxx/tcm_qla2xxx.c
- create mode 100644 drivers/scsi/qla2xxx/tcm_qla2xxx.h
- create mode 100644 drivers/target/sbp/Kconfig
- create mode 100644 drivers/target/sbp/Makefile
- create mode 100644 drivers/target/sbp/sbp_target.c
- create mode 100644 drivers/target/sbp/sbp_target.h
- create mode 100644 drivers/target/usb-gadget/Kconfig
- create mode 100644 drivers/target/usb-gadget/Makefile
- create mode 100644 drivers/target/usb-gadget/usb_gadget.c
- create mode 100644 drivers/target/usb-gadget/usb_gadget.h
 
---
-As usual, please let myself and/or individual fabric maintainers know if
-anyone has any additional review comments+feedback on this new fabric
-code.
 
-Thanks!
-
---nab
