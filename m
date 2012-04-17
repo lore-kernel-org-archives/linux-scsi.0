@@ -1,61 +1,78 @@
-From: Tom Rini <trini@ti.com>
-Subject: Re: Commit a692b0e broke my mvsas card
-Date: Tue, 17 Apr 2012 10:21:21 -0700
-Message-ID: <4F8DA691.5070907@ti.com>
-References: <20120416224250.GA1983@bill-the-cat>	<CABE8wwvbSsc02U_m+20-DQgsZ2gQCi_A6susCrmfyx_scQkccw@mail.gmail.com>	<4F8CAC6F.6070907@ti.com>	<1334620782.23541.2.camel@ultramagnus.opencreations.com>	<4F8CCD0C.5060900@ti.com>	<1334633159.13899.4.camel@dwillia2-mobl>	<4F8D81B6.3080604@ti.com> <CABE8wwuze+VwCy3fmA8hsGWpo=HQjPZjhEwgKrb7nvBC_rMwHg@mail.gmail.com>
+From: Norman Diamond <n0diamond@yahoo.co.jp>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was: ehci_hcd fails to read a single good block)
+Date: Wed, 18 Apr 2012 07:54:47 +0900 (JST)
+Message-ID: <545679.82050.qm@web100009.mail.kks.yahoo.co.jp>
+References: <Pine.LNX.4.44L0.1204171114460.1364-100000@iolanthe.rowland.org>
+Reply-To: n0diamond@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:60282 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756215Ab2DQRWM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Apr 2012 13:22:12 -0400
-In-Reply-To: <CABE8wwuze+VwCy3fmA8hsGWpo=HQjPZjhEwgKrb7nvBC_rMwHg@mail.gmail.com>
+Received: from web100009.mail.kks.yahoo.co.jp ([114.111.98.183]:38226 "HELO
+	web100009.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751519Ab2DQWyt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Apr 2012 18:54:49 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1204171114460.1364-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <JBottomley@parallels.com>, Xiangliang Yu <yuxiangl@marvell.com>
+To: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 04/17/2012 09:50 AM, Dan Williams wrote:
-> On Tue, Apr 17, 2012 at 7:44 AM, Tom Rini<trini@ti.com>  wrote:
->> On 04/16/2012 08:25 PM, Dan Williams wrote:
->>>
->>> On Mon, 2012-04-16 at 18:53 -0700, Tom Rini wrote:
->>>>>
->>>>> Thanks, yes it looks like a new regression.  Can you tell me if the
->>>>> following fixes it?
->>>>
->>>>
->>>> No joy, oopses.  http://alnk.org/43youngkirby for the dmesg and oops.
->>>>
->>>
->>> Agh, sorry, I rushed that one.  The phy array is initialized later, here
->>> is another run at it:
->>
->>
->> No crash, but 2 out of 4 SSDs still: http://pastebin.com/PCUGTBqG
->
-> Ok, this looks like a different issue around the changes to ata reset.
->   The intent was to leave mvsas with its old behavior (of not waiting
-> for resets to complete) until it could be updated to the new reset
-> scheme.  Can you send a log from a good run on 3.3?
->
-> I want to see if the timings are different, because:
->
-> [   10.039490] sas: ata10: end_device-6:4: dev error handler
-> [..]
-> [   10.198842] ata10.00: failed to IDENTIFY (INIT_DEV_PARAMS failed,
-> err_mask=0x80)
->
-> [   25.684822] sas: ata11: end_device-6:5: dev error handler
-> [..]
-> [   25.844299] ata11.00: failed to IDENTIFY (INIT_DEV_PARAMS failed,
-> err_mask=0x80)
->
-> Is shorter than I would expect.
+Alan Stern wrote:
+> On Tue, 17 Apr 2012, Norman Diamond wrote:
+>> Yes it does look like changing this bridge to CAPACITY_HEURISTICS fr=
+om FIX_CAPACITY is likely to help a bit.
+>=20
+> That's easy enough.
 
-The 3.3.0 dmesg is up at http://pastebin.com/cVTmpH1M
+Yeah I know, even I could do that one  ^_^
 
--- 
-Tom
+>> I think that heuristics should also accept multiples of 63 even if t=
+he total is odd.=A0 This doesn't solve everything but will probably hel=
+p more.
+>=20
+> Okay, if nobody objects.
+
+I'm nobody and I don't object  ^_^
+(Of course we have to wait to see if anyone knows a real reason that th=
+is would be a problem.)
+
+>> I think that handling of FIX_CAPACITY should check for multiples of =
+63 and report the apparent likelihood that FIX_CAPACITY probably wasn't=
+ the right setting for the bridge (if it's a bridge).=A0 This doesn't s=
+olve everything but will probably help more.
+>=20
+> The FIX_CAPACITY code runs in a different module.=A0 It has no way to=
+ know whether the device is a bridge or not.
+
+The quirks table could be made available, but values stored in the tabl=
+e don't say if the device is a bridge.  OK, then I still think this:  I=
+ think that handling of FIX_CAPACITY should check for multiples of 63 a=
+nd report the apparent likelihood that FIX_CAPACITY probably wasn't the=
+ right setting for the device.
+
+In addition, I have a feeling that if a device has FIX_CAPACITY but the=
+ number of reported blocks is even then I doubt the accuracy of FIX_CAP=
+ACITY.  The reason is that flash memory devices tend to have physical s=
+ectors that are even multiples of logical sectors.
+
+I do think the handling of FIX_CAPACITY should report when devices repo=
+rt capacities that are either multiples of 63 or 2 (or both), so that f=
+urther testing can be done.  The existing code to do the decrement anyw=
+ay can remain the same until further testing is done.
+
+>> The addition of TEST_CAPACITY doesn't solve everything but will prob=
+ably help more.
+>=20
+> That will require a certain amount of work, with the possibility of b=
+reaking some systems.=A0 I'd rather not do it if there's no clear and p=
+ressing need.
+
+Two indistinguishable versions of the Prolific bridge show that there i=
+s a need.  One version needs the decrement (probably) and the other ver=
+sion doesn't (definitely).
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
