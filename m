@@ -1,40 +1,44 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Problems with sr_get_events
-Date: Tue, 17 Apr 2012 11:46:26 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1204171145140.1364-100000@iolanthe.rowland.org>
-References: <20120417153822.GD32402@google.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Commit a692b0e broke my mvsas card
+Date: Tue, 17 Apr 2012 19:47:17 +0400
+Message-ID: <1334677637.3766.66.camel@dabdike>
+References: <20120416224250.GA1983@bill-the-cat>
+	 <CABE8wwvbSsc02U_m+20-DQgsZ2gQCi_A6susCrmfyx_scQkccw@mail.gmail.com>
+	 <4F8CAC6F.6070907@ti.com>
+	 <1334620782.23541.2.camel@ultramagnus.opencreations.com>
+	 <4F8CCD0C.5060900@ti.com> <1334633159.13899.4.camel@dwillia2-mobl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:53021 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754536Ab2DQPq1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Apr 2012 11:46:27 -0400
-In-Reply-To: <20120417153822.GD32402@google.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37875 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756267Ab2DQPrX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Apr 2012 11:47:23 -0400
+In-Reply-To: <1334633159.13899.4.camel@dwillia2-mobl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Tom Rini <trini@ti.com>, linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>
 
-On Tue, 17 Apr 2012, Tejun Heo wrote:
-
-> On Tue, Apr 17, 2012 at 11:33:27AM -0400, Alan Stern wrote:
-> > > Hmmm... Maybe but we've been sending GET_EVENT without such provision
-> > > for very long time now.  I feel reluctant to change something which
-> > > seems to work in this area even if that something is technically
-> > > wrong.  It's not like cheap USB devices tend to be technically correct
-> > > anyway.
+On Mon, 2012-04-16 at 20:25 -0700, Dan Williams wrote:
+> On Mon, 2012-04-16 at 18:53 -0700, Tom Rini wrote:
+> > > Thanks, yes it looks like a new regression.  Can you tell me if the
+> > > following fixes it?
 > > 
-> > All right, then how do you feel about this patch?  It makes minimal
-> > changes, to avoid the inefficiency of sending repeated commands that
-> > can never work.
+> > No joy, oopses.  http://alnk.org/43youngkirby for the dmesg and oops.
+> > 
 > 
-> Hmmm... while I don't object to the patch per-se, I'm not sure what
-> benefit it brings.  Do you have any specific case where this is
-> necessary / beneficial?  What are we gaining by not issuing GET_EVENT?
+> Agh, sorry, I rushed that one.  The phy array is initialized later, here
+> is another run at it:
 
-We save a little bit of time.  It's not necessary; it's just a small 
-optimization.
+Are we sure it's initialised correctly in all the other SAS drivers that
+use (well, one other: aic94xx)?
 
-Alan Stern
+Given the oops issue, perhaps revert this for now and get a working
+patch in for the next merge window?
+
+James
+
 
