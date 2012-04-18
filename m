@@ -1,79 +1,87 @@
-From: Tom Rini <trini@ti.com>
+From: Dan Williams <dan.j.williams@intel.com>
 Subject: Re: Commit a692b0e broke my mvsas card
-Date: Wed, 18 Apr 2012 08:23:11 -0700
-Message-ID: <4F8EDC5F.9090600@ti.com>
-References: <20120416224250.GA1983@bill-the-cat>	<CABE8wwvbSsc02U_m+20-DQgsZ2gQCi_A6susCrmfyx_scQkccw@mail.gmail.com>	<4F8CAC6F.6070907@ti.com>	<1334620782.23541.2.camel@ultramagnus.opencreations.com>	<4F8CCD0C.5060900@ti.com>	<1334633159.13899.4.camel@dwillia2-mobl>	<1334677637.3766.66.camel@dabdike>	<CABE8wwvThcO4B+qQUMBg+OMdTbF5VMZ0THD9SftSocj+oBOARw@mail.gmail.com> <CAA9_cmeY0VaRqgfjqZbFbqP8u+wvkJ8=dJUNk9kkBabAF15t1w@mail.gmail.com>
+Date: Wed, 18 Apr 2012 08:46:51 -0700
+Message-ID: <CABE8wwscnUrh62L5Z1sNKDS4BLucZz2fVUqMVK3znhHbFp1XEA@mail.gmail.com>
+References: <20120416224250.GA1983@bill-the-cat>
+	<CABE8wwvbSsc02U_m+20-DQgsZ2gQCi_A6susCrmfyx_scQkccw@mail.gmail.com>
+	<4F8CAC6F.6070907@ti.com>
+	<1334620782.23541.2.camel@ultramagnus.opencreations.com>
+	<4F8CCD0C.5060900@ti.com>
+	<1334633159.13899.4.camel@dwillia2-mobl>
+	<1334677637.3766.66.camel@dabdike>
+	<CABE8wwvThcO4B+qQUMBg+OMdTbF5VMZ0THD9SftSocj+oBOARw@mail.gmail.com>
+	<CAA9_cmeY0VaRqgfjqZbFbqP8u+wvkJ8=dJUNk9kkBabAF15t1w@mail.gmail.com>
+	<4F8EDC5F.9090600@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:45188 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751532Ab2DRPXS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2012 11:23:18 -0400
-In-Reply-To: <CAA9_cmeY0VaRqgfjqZbFbqP8u+wvkJ8=dJUNk9kkBabAF15t1w@mail.gmail.com>
+Received: from mga07.intel.com ([143.182.124.22]:21367 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751320Ab2DRPq7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2012 11:46:59 -0400
+Received: by bkcjm19 with SMTP id jm19so5656432bkc.25
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Apr 2012 08:46:51 -0700 (PDT)
+In-Reply-To: <4F8EDC5F.9090600@ti.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
+To: Tom Rini <trini@ti.com>
 Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>
 
-On 04/17/2012 10:11 PM, Dan Williams wrote:
-> On Tue, Apr 17, 2012 at 10:17 AM, Dan Williams<dan.j.williams@intel.com>  wrote:
->> On Tue, Apr 17, 2012 at 8:47 AM, James Bottomley
->> <James.Bottomley@hansenpartnership.com>  wrote:
->>> On Mon, 2012-04-16 at 20:25 -0700, Dan Williams wrote:
->>>> Agh, sorry, I rushed that one.  The phy array is initialized later, here
->>>> is another run at it:
->>>
->>> Are we sure it's initialised correctly in all the other SAS drivers that
->>> use (well, one other: aic94xx)?
->>
->> Looks like we need:
->>
->> diff --git a/drivers/scsi/aic94xx/aic94xx_init.c
->> b/drivers/scsi/aic94xx/aic94xx_init.c
->> index ff80552..830f438 100644
->> --- a/drivers/scsi/aic94xx/aic94xx_init.c
->> +++ b/drivers/scsi/aic94xx/aic94xx_init.c
->> @@ -250,6 +250,7 @@ static int __devinit asd_common_setup(struct
->> asd_ha_struct *asd_ha)
->>                         SAS_LINK_RATE_1_5_GBPS;
->>                 asd_ha->hw_prof.phy_desc[i].min_sata_lrate =
->>                         SAS_LINK_RATE_1_5_GBPS;
->> +               asd_ha->phys[i].sas_phy.id = i;
->>         }
->>
->>         return 0;
->>
->>> Given the oops issue, perhaps revert this for now and get a working
->>> patch in for the next merge window?
->>
->> I have no strong feelings either way, but aic94xx and mvsas
->> maintainers have been hard to reach and I'm not encouraged more time
->> will yield a different result versus just moving ahead with these
->> fixes.
->>
->> That said we still have Tom's discovery regression which is a separate issue.
+On Wed, Apr 18, 2012 at 8:23 AM, Tom Rini <trini@ti.com> wrote:
+> Performance isn't in-line with what I would expect (in playing with f=
+io), so
+> if you want to whip something up, or point me some changesets / other
+> drivers I can take a stab here. =A0Thanks!
 >
-> I take it back.
->
-> I overlooked what Tom said at the very beginning.  Everything is fixed
-> by the revert, and I now see why my later "fix" made it worse.  The
-> fix overlooked that mvsas is indeed initializing the phy ids, but in
-> the "multi-chip" case it does a rather annoying duplication of phy ids
-> in the array passed to libsas.  So, for example, chip0 has phy0-3 at
-> ha phy index 0-3 and chip1 has its phy0-3 at ha phy index 4-7.  So the
-> "fix" was breaking mvsas's ability to lookup phys by id and the
-> original commit is tripped up by mvsas's scheme of putting non-unique
-> ids in the sas_ha_struct.
->
-> Question for a later day, but why isn't mvsas creating a scsi_host per
-> chip??  That can only help performance and is more in line with
-> reality.
 
-Performance isn't in-line with what I would expect (in playing with 
-fio), so if you want to whip something up, or point me some changesets / 
-other drivers I can take a stab here.  Thanks!
+The thrust is to change this loop in mvs_pci_init:
 
--- 
-Tom
+        do {
+                mvi =3D mvs_pci_alloc(pdev, ent, shost, nhost);
+                if (!mvi) {
+                        rc =3D -ENOMEM;
+                        goto err_out_regions;
+                }
+
+                memset(&mvi->hba_info_param, 0xFF,
+                        sizeof(struct hba_info_page));
+
+                mvs_init_sas_add(mvi);
+
+                mvi->instance =3D nhost;
+                rc =3D MVS_CHIP_DISP->chip_init(mvi);
+                if (rc) {
+                        mvs_free(mvi);
+                        goto err_out_regions;
+                }
+                nhost++;
+        } while (nhost < chip->n_host);
+
+=2E..to assume that mvs_pci_alloc will do the allocation of a scsi_host
+per chip, rather than passing in a global host.
+
+Then would need to clean up warts like the following in mvs_phy_control=
+:
+
+        while (sha->sas_phy[i]) {
+                if (sha->sas_phy[i] =3D=3D sas_phy)
+                        break;
+                i++;
+        }
+
+=2E..since this model means that the sas_phy->id can be used directly t=
+o
+look up the local mvsas phy.
+
+I might circle back to this once 3.4 finalizes (since the random ids
+libsas uses for identifying local ports is onerous), but if someone
+else beats me to it I wouldn't mind ;-).
+
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
