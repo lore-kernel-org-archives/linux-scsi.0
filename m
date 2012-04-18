@@ -1,115 +1,154 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: RE: [dm-devel] [PATCH 0/2] 'default' hardware handler for multipath
-Date: Wed, 18 Apr 2012 16:25:24 +0000
-Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B059160@SACEXCMBX02-PRD.hq.netapp.com>
-References: <1333385035-6663-1-git-send-email-hare@suse.de>
- <77471C95FAFD844C8CA02DD4F4C5FE2B03A484@SACEXCMBX02-PRD.hq.netapp.com>
- <4F8ECAB5.1020806@suse.de>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [RFC] How to fix an async scan - 'rmmod --wait' race?
+Date: Wed, 18 Apr 2012 18:48:31 +0200
+Message-ID: <4F8EF05F.8080307@redhat.com>
+References: <4F7DA4F8.90104@redhat.com> <4F86CF34.2000906@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:56501 "EHLO mx2.netapp.com"
+Received: from mx1.redhat.com ([209.132.183.28]:17108 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751083Ab2DRQZs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2012 12:25:48 -0400
-In-Reply-To: <4F8ECAB5.1020806@suse.de>
-Content-Language: en-US
+	id S1751064Ab2DRROh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Apr 2012 13:14:37 -0400
+In-Reply-To: <4F86CF34.2000906@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>, Mike Christie <mchristi@redhat.com>, Bart Van Assche <bvanassche@acm.org>, stefanr@s5r6.in-berlin.de
 
-Hannes,
+On 04/12/2012 02:48 PM, Tomas Henzl wrote:
+> Hi,
+>
+> the first patch waited in scsi_remove_host was until the scan thread ends, some flags were set
+> so the thread could be aborted prematurely. 
+>
+> This patch uses a try_module_get to lock the module and prevents a rmmod while it's locked.
+> The disadvantage is that in the protection we use again the same host template (shost->hostt->module;),
+> and when this were not valid I think and oops in try_module_get will follow. It seems to me
+> that the LLDs use scsi_scan_host only in the initial attach function so this is safe now, but ..
+Actually I did some testing and it is not so stable as it should be - after 'modprobe mpt2sas && rmmod --wait mpt2sas'
+I sometimes see:
 
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Wednesday, April 18, 2012 9:08 AM
-> To: Moger, Babu
-> Cc: device-mapper development; linux-scsi@vger.kernel.org; Mike Snitz=
-er
-> Subject: Re: [dm-devel] [PATCH 0/2] 'default' hardware handler for mu=
-ltipath
->=20
-> On 04/03/2012 11:12 PM, Moger, Babu wrote:
-> > Thanks Hannes. We appreciate your work on this.
-> >
-> >> -----Original Message-----
-> >> From: dm-devel-bounces@redhat.com [mailto:dm-devel-
-> >> bounces@redhat.com] On Behalf Of Hannes Reinecke
-> >> Sent: Monday, April 02, 2012 11:44 AM
-> >> To: linux-scsi@vger.kernel.org
-> >> Cc: dm-devel@redhat.com; Mike Snitzer
-> >> Subject: [dm-devel] [PATCH 0/2] 'default' hardware handler for mul=
-tipath
-> >>
-> >> This patchset introduces a 'default' hardware handler for dm-multi=
-path.
-> >> Modern storage arrays typically support two failover methods, the =
-original
-> >> proprietary and the modern ALUA-based one.
-> >> The device_handler implementation will currently select the ALUA
-> handler,
-> >> and falling back to the proprietary one if ALUA isn't supported.
-> >> However, in the built-in hardware table for multipath one can spec=
-ify only
-> >> one hardware handler, causing the original hardware handler to be
-> >> overwritten.
-> >> By specifying a 'default' hardware handler multipath will not try =
-to attach a
-> >> specific hardware handler, but rather using the currently attached=
- on.
-> >
-> > I think we still have some issues here. Right now we load the drive=
-r
-> > either by adding it in initrd or by using request_module call from =
-device
-> mapper.
-> > If the user passes, hardware_handler   "1 default"  from multipath =
-then
-> request_module will fail.
-> > How are we going to load the driver if these handlers are not loade=
-d.
-> >
-> The idea of the 'default' hardware handler is to avoid multipath
-> overriding the kernel matchine algorithm. To make this work we
-> obviously have to load the modules prior to start multipathing.
->=20
-> Given that we (ie RH and us) are already loading the device-handler
-> modules from the initrd independent from multipathing we should be fi=
-ne.
->=20
-> But thinking a bit more about it, it might be better to handle this
-> via features.
-> Implementing a feature like 'default_hw_handler' would not override
-> the default hardware handler from the hardware table.
-> So the requested hardware handler would still be loaded, but the
-> actual initialisation would be controlled via the feature.
+[  215.126197] mpt2sas version 12.100.00.00 loaded                                                                                                                                         
+[  215.127509] scsi8 : Fusion MPT SAS Host                                                                                                                                                 
+[  215.128058] mpt2sas0: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (6096496 kB)                                                                                                   
+[  215.128167] mpt2sas 0000:03:00.0: irq 69 for MSI/MSI-X
+[  215.128190] mpt2sas0-msix0: PCI-MSI-X enabled: IRQ 69
+[  215.128192] mpt2sas0: iomem(0x00000000f7040000), mapped(0xffffc90006010000), size(16384)
+[  215.128194] mpt2sas0: ioport(0x000000000000d000), size(256)
+[  215.241249] mpt2sas0: Allocated physical memory: size(3988 kB)
+[  215.241253] mpt2sas0: Current Controller Queue Depth(1753), Max Controller Queue Depth(2000)
+[  215.241256] mpt2sas0: Scatter Gather Elements per IO(128)
+[  215.300281] mpt2sas0: LSISAS2008: FWVersion(11.00.00.00), ChipRevision(0x01), BiosVersion(07.23.01.00)
+[  215.300284] mpt2sas0: Protocol=(Initiator), Capabilities=(Raid,TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task Set Full,NCQ)
+[  215.300602] mpt2sas0: sending port enable !!
+[  216.854720] mpt2sas0: host_add: handle(0x0001), sas_addr(0x500605b0006b8530), phys(8)
+[  222.978469] mpt2sas0: port enable: SUCCESS
+[  222.980104] scsi 8:0:0:0: Direct-Access     SEAGATE  ST9146852SS      0005 PQ: 0 ANSI: 5
+[  222.980113] scsi 8:0:0:0: SSP: handle(0x0009), sas_addr(0x5000c5001ac10319), phy(2), device_name(0x5000c5001ac10318)
+[  222.980117] scsi 8:0:0:0: SSP: enclosure_logical_id(0x500605b0006b8530), slot(2)
+[  222.980121] scsi 8:0:0:0: qdepth(254), tagged(1), simple(0), ordered(0), scsi_level(6), cmd_que(1)
+[  222.981149] mpt2sas version 12.100.00.00 unloading
+[  222.981467] BUG: unable to handle kernel NULL pointer dereference at 0000000000000079
+[  222.981483] IP: [<ffffffff811f0c45>] sysfs_create_dir+0x35/0xc0
+[  222.981499] PGD 0 
+[  222.981507] Oops: 0000 [#1] SMP 
+[  222.981518] CPU 0 
+[  222.981522] Modules linked in: mpt2sas(-) lockd bnep bluetooth be2iscsi iscsi_boot_sysfs bnx2i cnic uio ip6t_REJECT cxgb4i cxgb4 cxgb3i
+[  222.981571] mpt2sas0: removing handle(0x0009), sas_addr(0x5000c5001ac10319)
+[  222.981583]  libcxgbi cxgb3 nf_conntrack_ipv6 nf_defrag_ipv6 mdio nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ib_iser rdma_cm ib_cm iw_cm ib_sa ib_mad ib_core ib_addr iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi ip6table_filter ip6_tables snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep i7core_edac edac_core snd_seq snd_seq_device hp_wmi iTCO_wdt iTCO_vendor_support snd_pcm snd_timer snd microcode soundcore snd_page_alloc sparse_keymap serio_raw tg3 rfkill uinput sunrpc firewire_ohci firewire_core crc_itu_t scsi_transport_sas raid_class nouveau ttm drm_kms_helper drm i2c_core mxm_wmi video wmi [last unloaded: mpt2sas]
+[  222.981790] 
+[  222.981796] Pid: 1311, comm: scsi_scan_8 Not tainted 3.3.0 #21 Hewlett-Packard HP Z400 Workstation/0B4Ch
+[  222.981815] RIP: 0010:[<ffffffff811f0c45>]  [<ffffffff811f0c45>] sysfs_create_dir+0x35/0xc0
+[  222.981829] RSP: 0018:ffff8801929a7ce0  EFLAGS: 00010246
+[  222.981837] RAX: ffff880190c65810 RBX: ffff880190d5a438 RCX: 0000000000000000
+[  222.981846] RDX: ffff880199034c60 RSI: ffff880192a81018 RDI: ffff880190d5a438
+[  222.981854] RBP: ffff8801929a7d10 R08: ffff880199034c60 R09: ffff880195516d80
+[  222.981863] R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000000
+[  222.981872] R13: 0000000000000000 R14: 0000000000000000 R15: ffff880190d5a400
+[  222.981881] FS:  0000000000000000(0000) GS:ffff88019fc00000(0000) knlGS:0000000000000000
+[  222.981891] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  222.981899] CR2: 0000000000000079 CR3: 0000000001c05000 CR4: 00000000000006f0
+[  222.981913] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  222.981922] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  222.981932] Process scsi_scan_8 (pid: 1311, threadinfo ffff8801929a6000, task ffff88018b6e8000)
+[  222.981941] Stack:
+[  222.981946]  ffff8801929a7d30 ffffffff810583a5 ffff8801929a7d10 ffff880190d5a438
+[  222.981965] mpt2sas0: sending diag reset !!
+[  222.983072]  ffff880190c65810 0000000000000000 ffff8801929a7d60 ffffffff812c2e6e
+[  222.983644]  ffff8801929a7d66 0044b82fa09b5a53 ffff8801929a7dd0 ffff880190d5a438
+[  222.984215] Call Trace:
+[  222.984776]  [<ffffffff810583a5>] ? console_unlock+0x1f5/0x270
+[  222.985334]  [<ffffffff812c2e6e>] kobject_add_internal+0xae/0x250
+[  222.985888]  [<ffffffff812c3417>] kobject_add+0x67/0xc0
+[  222.986461]  [<ffffffff8139eb32>] device_add+0x102/0x6c0
+[  222.987050]  [<ffffffff813c8288>] scsi_sysfs_add_sdev+0x198/0x340
+[  222.987643]  [<ffffffff813c6b24>] do_scan_async+0x84/0x170
+[  222.988241]  [<ffffffff813c6aa0>] ? do_scsi_scan_host+0xa0/0xa0
+[  222.988845]  [<ffffffff81079c63>] kthread+0x93/0xa0
+[  222.989443]  [<ffffffff815fd1e4>] kernel_thread_helper+0x4/0x10
+[  222.990046]  [<ffffffff81079bd0>] ? kthread_freezable_should_stop+0x70/0x70
+[  222.990655]  [<ffffffff815fd1e0>] ? gs_change+0x13/0x13
+[  222.991256] Code: 83 ec 18 66 66 66 66 90 48 85 ff 48 89 fb 0f 84 98 00 00 00 48 8b 47 18 49 c7 c4 20 0e c5 81 48 85 c0 74 04 4c 8b 60 30 45 31 ed <41> 80 7c 24 79 00 75 5b 48 89 df e8 8b 2c 0d 00 48 85 c0 74 66 
+[  222.992012] RIP  [<ffffffff811f0c45>] sysfs_create_dir+0x35/0xc0
+[  222.992626]  RSP <ffff8801929a7ce0>
+[  222.993265] CR2: 0000000000000079
+[  222.993943] ---[ end trace 024b7be18310b205 ]---
+[  224.049467] mpt2sas0: diag reset: SUCCESS
 
-hardware_handler is also used to pass on the arguments to handler. Like=
-=2E
-	hardware_handler        "2 emc 1"
-We have to make sure that this feature does not break here. Considering=
- all this=20
-don't you think it may be better if we make this decision in multipath =
-tools itself.
-Common factor here is alua. It is always between alua or some other han=
-dler.
-Does it make sense to check TPGS in tools?=20
+This means that the module protection with try_module_get doesn't work, the driver removal starts again
+in the middle of a scan.
+>From man rmmod the parameter wait means
+"Normally, rmmod will refuse to unload modules which are in use. With this option, rmmod will isolate the module, and wait until the module is no  longer  used.
+Nothing new will be able to use the module, but it's up to you to make sure the current users eventually finish with it."
+This^ means that try_module_get will fail after a 'rmmod --wait' is invoked.
 
-> Yep, that sound better.
-> I'll be preparing a patch.
->=20
-> Cheers,
->=20
-> Hannes
-> --
-> Dr. Hannes Reinecke		      zSeries & Storage
-> hare@suse.de			      +49 911 74053 688
-> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And in scsi.c actually is code which ignores the return value of try_module_get, it has been added here:
+
+85b6c720b0931101c8bcc3a5abdc2b8514b0fb4b [SCSI] sd: fix cache flushing on module removal (and individual device removal)
++       /* We can fail this if we're doing SCSI operations
++        * from module exit (like cache flush) */
++       try_module_get(sdev->host->hostt->module);
+
+
+I verified this theory with this debug patch
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c                                                                                                                                     
+index 07322ec..9c3827c 100644                                                                                                                                                              
+--- a/drivers/scsi/scsi.c                                                                                                                                                                  
++++ b/drivers/scsi/scsi.c                                                                                                                                                                  
+@@ -1070,9 +1070,9 @@ int scsi_device_get(struct scsi_device *sdev)                                                                                                                        
+                return -ENXIO;
+        if (!get_device(&sdev->sdev_gendev))
+                return -ENXIO;
+-       /* We can fail this if we're doing SCSI operations
+-        * from module exit (like cache flush) */
+-       try_module_get(sdev->host->hostt->module);
++
++        if (!try_module_get(sdev->host->hostt->module))
++                sdev->mod_counter++;
+ 
+        return 0;
+ }
+@@ -1091,10 +1091,10 @@ void scsi_device_put(struct scsi_device *sdev)
+ #ifdef CONFIG_MODULE_UNLOAD
+        struct module *module = sdev->host->hostt->module;
+ 
+-       /* The module refcount will be zero if scsi_device_get()
+-        * was called from a module removal routine */
+-       if (module && module_refcount(module) != 0)
+-               module_put(module);
++        if (sdev->mod_counter)
++                sdev->mod_counter--;
++        else
++                module_put(module);
+ #endif
+        put_device(&sdev->sdev_gendev);
+ }
+
+This patch^ can't solve all problems associated with this problem, I have invented a few more approaches, all of them
+are ugly. Probably adding a comment 'This  option  can be extremely dangerous:' to the rmmod man is the easiest for now.
+And long term goal were not to use try_module_get in scsi_device_get ?
+
+
