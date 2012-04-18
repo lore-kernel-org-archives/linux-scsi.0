@@ -1,99 +1,70 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle
- errors from the host
-Date: Wed, 18 Apr 2012 12:38:05 +0000
-Message-ID: <426367E2313C2449837CD2DE46E7EAF92CE74A@CH1PRD0310MB381.namprd03.prod.outlook.com>
-References: <1333654012-23850-1-git-send-email-kys@microsoft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH for 3.4] virtio-scsi: fix TMF use-after-free
+Date: Wed, 18 Apr 2012 15:46:01 +0200
+Message-ID: <1334756761-12312-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>
+To: linux-kernel@vger.kernel.org
+Cc: James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Hu Tao <hutao@cn.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Fix a race in TMF path, where cmd may have been already freed
+by virtscsi_complete_free after waking up from the completion.
 
+Cc: James Bottomley <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Hu Tao <hutao@cn.fujitsu.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+ drivers/scsi/virtio_scsi.c |   24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
-> -----Original Message-----
-> From: KY Srinivasan
-> Sent: Tuesday, April 10, 2012 11:14 AM
-> To: KY Srinivasan; gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
-> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
-> apw@canonical.com
-> Subject: RE: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors
-> from the host
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: K. Y. Srinivasan [mailto:kys@microsoft.com]
-> > Sent: Thursday, April 05, 2012 3:27 PM
-> > To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> > devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
-> > jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
-> > apw@canonical.com
-> > Cc: KY Srinivasan
-> > Subject: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors from
-> > the host
-> >
-> > If the host returns error for pass through commands, deal with them
-> > appropriately. I would like to thank James for patiently helping
-> > me with this patch.
-> 
-> James,
-> 
-> Thank you for suggesting the fix here. I hope this is what you were looking for.
-> 
-> Regards,
-> 
-> K. Y
-
-Ping.
-
-> >
-> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> > Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
-> > ---
-> >  drivers/scsi/storvsc_drv.c |   20 +++++++++++++++-----
-> >  1 files changed, 15 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> > index 83a1972..528d52b 100644
-> > --- a/drivers/scsi/storvsc_drv.c
-> > +++ b/drivers/scsi/storvsc_drv.c
-> > @@ -785,12 +785,22 @@ static void storvsc_command_completion(struct
-> > storvsc_cmd_request *cmd_request)
-> >  	/*
-> >  	 * If there is an error; offline the device since all
-> >  	 * error recovery strategies would have already been
-> > -	 * deployed on the host side.
-> > +	 * deployed on the host side. However, if the command
-> > +	 * were a pass-through command deal with it appropriately.
-> >  	 */
-> > -	if (vm_srb->srb_status == SRB_STATUS_ERROR)
-> > -		scmnd->result = DID_TARGET_FAILURE << 16;
-> > -	else
-> > -		scmnd->result = vm_srb->scsi_status;
-> > +	scmnd->result = vm_srb->scsi_status;
-> > +
-> > +	if (vm_srb->srb_status == SRB_STATUS_ERROR) {
-> > +		switch (scmnd->cmnd[0]) {
-> > +		case ATA_16:
-> > +		case ATA_12:
-> > +			set_host_byte(scmnd, DID_PASSTHROUGH);
-> > +			break;
-> > +		default:
-> > +			set_host_byte(scmnd, DID_TARGET_FAILURE);
-> > +		}
-> > +	}
-> > +
-> >
-> >  	/*
-> >  	 * If the LUN is invalid; remove the device.
-> > --
-> > 1.7.4.1
-> >
-> >
-> >
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index efccd72..1b38431 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -175,7 +175,8 @@ static void virtscsi_complete_free(void *buf)
+ 
+ 	if (cmd->comp)
+ 		complete_all(cmd->comp);
+-	mempool_free(cmd, virtscsi_cmd_pool);
++	else
++		mempool_free(cmd, virtscsi_cmd_pool);
+ }
+ 
+ static void virtscsi_ctrl_done(struct virtqueue *vq)
+@@ -311,21 +312,22 @@ out:
+ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+ {
+ 	DECLARE_COMPLETION_ONSTACK(comp);
+-	int ret;
++	int ret = FAILED;
+ 
+ 	cmd->comp = &comp;
+-	ret = virtscsi_kick_cmd(vscsi, vscsi->ctrl_vq, cmd,
+-			       sizeof cmd->req.tmf, sizeof cmd->resp.tmf,
+-			       GFP_NOIO);
+-	if (ret < 0)
+-		return FAILED;
++	if (virtscsi_kick_cmd(vscsi, vscsi->ctrl_vq, cmd,
++			      sizeof cmd->req.tmf, sizeof cmd->resp.tmf,
++			      GFP_NOIO) < 0)
++		goto out;
+ 
+ 	wait_for_completion(&comp);
+-	if (cmd->resp.tmf.response != VIRTIO_SCSI_S_OK &&
+-	    cmd->resp.tmf.response != VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
+-		return FAILED;
++	if (cmd->resp.tmf.response == VIRTIO_SCSI_S_OK ||
++	    cmd->resp.tmf.response == VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
++		ret = SUCCESS;
+ 
+-	return SUCCESS;
++out:
++	mempool_free(cmd, virtscsi_cmd_pool);
++	return ret;
+ }
+ 
+ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+-- 
+1.7.9.3
