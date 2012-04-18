@@ -1,100 +1,87 @@
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
-Subject: Re: [PATCH for 3.4] virtio-scsi: fix TMF use-after-free
-Date: Wed, 18 Apr 2012 22:01:57 +0800
-Message-ID: <CAEH94LjBG8R5Jr=Foqg1a9Zw4GUBth7S1ZvbXvQoisWm8McGFA@mail.gmail.com>
-References: <1334756761-12312-1-git-send-email-pbonzini@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [dm-devel] [PATCH 0/2] 'default' hardware handler for multipath
+Date: Wed, 18 Apr 2012 16:07:49 +0200
+Message-ID: <4F8ECAB5.1020806@suse.de>
+References: <1333385035-6663-1-git-send-email-hare@suse.de> <77471C95FAFD844C8CA02DD4F4C5FE2B03A484@SACEXCMBX02-PRD.hq.netapp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1334756761-12312-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Hu Tao <hutao@cn.fujitsu.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:37461 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750839Ab2DROHx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Apr 2012 10:07:53 -0400
+In-Reply-To: <77471C95FAFD844C8CA02DD4F4C5FE2B03A484@SACEXCMBX02-PRD.hq.netapp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Moger, Babu" <Babu.Moger@netapp.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>
 
-On Wed, Apr 18, 2012 at 9:46 PM, Paolo Bonzini <pbonzini@redhat.com> wr=
-ote:
-> Fix a race in TMF path, where cmd may have been already freed
-> by virtscsi_complete_free after waking up from the completion.
->
-> Cc: James Bottomley <JBottomley@parallels.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Hu Tao <hutao@cn.fujitsu.com>
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-> ---
-> =A0drivers/scsi/virtio_scsi.c | =A0 24 +++++++++++++-----------
-> =A01 file changed, 13 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index efccd72..1b38431 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -175,7 +175,8 @@ static void virtscsi_complete_free(void *buf)
->
-> =A0 =A0 =A0 =A0if (cmd->comp)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0complete_all(cmd->comp);
-> - =A0 =A0 =A0 mempool_free(cmd, virtscsi_cmd_pool);
-> + =A0 =A0 =A0 else
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mempool_free(cmd, virtscsi_cmd_pool);
-good catch
-> =A0}
->
-> =A0static void virtscsi_ctrl_done(struct virtqueue *vq)
-> @@ -311,21 +312,22 @@ out:
-> =A0static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_s=
-csi_cmd *cmd)
-> =A0{
-> =A0 =A0 =A0 =A0DECLARE_COMPLETION_ONSTACK(comp);
-> - =A0 =A0 =A0 int ret;
-> + =A0 =A0 =A0 int ret =3D FAILED;
->
-> =A0 =A0 =A0 =A0cmd->comp =3D &comp;
-> - =A0 =A0 =A0 ret =3D virtscsi_kick_cmd(vscsi, vscsi->ctrl_vq, cmd,
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0sizeof c=
-md->req.tmf, sizeof cmd->resp.tmf,
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0GFP_NOIO=
-);
-> - =A0 =A0 =A0 if (ret < 0)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return FAILED;
-> + =A0 =A0 =A0 if (virtscsi_kick_cmd(vscsi, vscsi->ctrl_vq, cmd,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sizeof cmd-=
->req.tmf, sizeof cmd->resp.tmf,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 GFP_NOIO) <=
- 0)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
->
-> =A0 =A0 =A0 =A0wait_for_completion(&comp);
-> - =A0 =A0 =A0 if (cmd->resp.tmf.response !=3D VIRTIO_SCSI_S_OK &&
-> - =A0 =A0 =A0 =A0 =A0 cmd->resp.tmf.response !=3D VIRTIO_SCSI_S_FUNCT=
-ION_SUCCEEDED)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return FAILED;
-> + =A0 =A0 =A0 if (cmd->resp.tmf.response =3D=3D VIRTIO_SCSI_S_OK ||
-> + =A0 =A0 =A0 =A0 =A0 cmd->resp.tmf.response =3D=3D VIRTIO_SCSI_S_FUN=
-CTION_SUCCEEDED)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D SUCCESS;
->
-> - =A0 =A0 =A0 return SUCCESS;
-> +out:
-> + =A0 =A0 =A0 mempool_free(cmd, virtscsi_cmd_pool);
-> + =A0 =A0 =A0 return ret;
-> =A0}
->
-> =A0static int virtscsi_device_reset(struct scsi_cmnd *sc)
-> --
-> 1.7.9.3
+On 04/03/2012 11:12 PM, Moger, Babu wrote:
+> Thanks Hannes. We appreciate your work on this.
+>=20
+>> -----Original Message-----
+>> From: dm-devel-bounces@redhat.com [mailto:dm-devel-
+>> bounces@redhat.com] On Behalf Of Hannes Reinecke
+>> Sent: Monday, April 02, 2012 11:44 AM
+>> To: linux-scsi@vger.kernel.org
+>> Cc: dm-devel@redhat.com; Mike Snitzer
+>> Subject: [dm-devel] [PATCH 0/2] 'default' hardware handler for multi=
+path
+>>
+>> This patchset introduces a 'default' hardware handler for dm-multipa=
+th.
+>> Modern storage arrays typically support two failover methods, the or=
+iginal
+>> proprietary and the modern ALUA-based one.
+>> The device_handler implementation will currently select the ALUA han=
+dler,
+>> and falling back to the proprietary one if ALUA isn't supported.
+>> However, in the built-in hardware table for multipath one can specif=
+y only
+>> one hardware handler, causing the original hardware handler to be
+>> overwritten.
+>> By specifying a 'default' hardware handler multipath will not try to=
+ attach a
+>> specific hardware handler, but rather using the currently attached o=
+n.
+>=20
+> I think we still have some issues here. Right now we load the driver
+> either by adding it in initrd or by using request_module call from de=
+vice mapper.
+> If the user passes, hardware_handler   "1 default"  from multipath th=
+en request_module will fail.=20
+> How are we going to load the driver if these handlers are not loaded.=
+=20
+>=20
+The idea of the 'default' hardware handler is to avoid multipath
+overriding the kernel matchine algorithm. To make this work we
+obviously have to load the modules prior to start multipathing.
 
-Reviewed-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+Given that we (ie RH and us) are already loading the device-handler
+modules from the initrd independent from multipathing we should be fine=
+=2E
 
+But thinking a bit more about it, it might be better to handle this
+via features.
+Implementing a feature like 'default_hw_handler' would not override
+the default hardware handler from the hardware table.
+So the requested hardware handler would still be loaded, but the
+actual initialisation would be controlled via the feature.
 
+Yep, that sound better.
+I'll be preparing a patch.
 
+Cheers,
+
+Hannes
 --=20
-Regards,
-
-Zhi Yong Wu
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
