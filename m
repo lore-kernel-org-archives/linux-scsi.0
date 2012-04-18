@@ -1,85 +1,79 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH for 3.4] virtio-scsi: fix TMF use-after-free
-Date: Wed, 18 Apr 2012 18:09:08 +0400
-Message-ID: <1334758148.4410.51.camel@dabdike>
-References: <1334756761-12312-1-git-send-email-pbonzini@redhat.com>
+From: Tom Rini <trini@ti.com>
+Subject: Re: Commit a692b0e broke my mvsas card
+Date: Wed, 18 Apr 2012 08:23:11 -0700
+Message-ID: <4F8EDC5F.9090600@ti.com>
+References: <20120416224250.GA1983@bill-the-cat>	<CABE8wwvbSsc02U_m+20-DQgsZ2gQCi_A6susCrmfyx_scQkccw@mail.gmail.com>	<4F8CAC6F.6070907@ti.com>	<1334620782.23541.2.camel@ultramagnus.opencreations.com>	<4F8CCD0C.5060900@ti.com>	<1334633159.13899.4.camel@dwillia2-mobl>	<1334677637.3766.66.camel@dabdike>	<CABE8wwvThcO4B+qQUMBg+OMdTbF5VMZ0THD9SftSocj+oBOARw@mail.gmail.com> <CAA9_cmeY0VaRqgfjqZbFbqP8u+wvkJ8=dJUNk9kkBabAF15t1w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1334756761-12312-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hu Tao <hutao@cn.fujitsu.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:45188 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751532Ab2DRPXS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2012 11:23:18 -0400
+In-Reply-To: <CAA9_cmeY0VaRqgfjqZbFbqP8u+wvkJ8=dJUNk9kkBabAF15t1w@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>
 
-On Wed, 2012-04-18 at 15:46 +0200, Paolo Bonzini wrote:
-> Fix a race in TMF path, where cmd may have been already freed
-> by virtscsi_complete_free after waking up from the completion.
+On 04/17/2012 10:11 PM, Dan Williams wrote:
+> On Tue, Apr 17, 2012 at 10:17 AM, Dan Williams<dan.j.williams@intel.com>  wrote:
+>> On Tue, Apr 17, 2012 at 8:47 AM, James Bottomley
+>> <James.Bottomley@hansenpartnership.com>  wrote:
+>>> On Mon, 2012-04-16 at 20:25 -0700, Dan Williams wrote:
+>>>> Agh, sorry, I rushed that one.  The phy array is initialized later, here
+>>>> is another run at it:
+>>>
+>>> Are we sure it's initialised correctly in all the other SAS drivers that
+>>> use (well, one other: aic94xx)?
+>>
+>> Looks like we need:
+>>
+>> diff --git a/drivers/scsi/aic94xx/aic94xx_init.c
+>> b/drivers/scsi/aic94xx/aic94xx_init.c
+>> index ff80552..830f438 100644
+>> --- a/drivers/scsi/aic94xx/aic94xx_init.c
+>> +++ b/drivers/scsi/aic94xx/aic94xx_init.c
+>> @@ -250,6 +250,7 @@ static int __devinit asd_common_setup(struct
+>> asd_ha_struct *asd_ha)
+>>                         SAS_LINK_RATE_1_5_GBPS;
+>>                 asd_ha->hw_prof.phy_desc[i].min_sata_lrate =
+>>                         SAS_LINK_RATE_1_5_GBPS;
+>> +               asd_ha->phys[i].sas_phy.id = i;
+>>         }
+>>
+>>         return 0;
+>>
+>>> Given the oops issue, perhaps revert this for now and get a working
+>>> patch in for the next merge window?
+>>
+>> I have no strong feelings either way, but aic94xx and mvsas
+>> maintainers have been hard to reach and I'm not encouraged more time
+>> will yield a different result versus just moving ahead with these
+>> fixes.
+>>
+>> That said we still have Tom's discovery regression which is a separate issue.
+>
+> I take it back.
+>
+> I overlooked what Tom said at the very beginning.  Everything is fixed
+> by the revert, and I now see why my later "fix" made it worse.  The
+> fix overlooked that mvsas is indeed initializing the phy ids, but in
+> the "multi-chip" case it does a rather annoying duplication of phy ids
+> in the array passed to libsas.  So, for example, chip0 has phy0-3 at
+> ha phy index 0-3 and chip1 has its phy0-3 at ha phy index 4-7.  So the
+> "fix" was breaking mvsas's ability to lookup phys by id and the
+> original commit is tripped up by mvsas's scheme of putting non-unique
+> ids in the sas_ha_struct.
+>
+> Question for a later day, but why isn't mvsas creating a scsi_host per
+> chip??  That can only help performance and is more in line with
+> reality.
 
-There's no may about this; the command will be freed long before the
-completion waiter is awoken.  The description could be clearer.
+Performance isn't in-line with what I would expect (in playing with 
+fio), so if you want to whip something up, or point me some changesets / 
+other drivers I can take a stab here.  Thanks!
 
-The problem is a use after free in virtscsi_tmf because the
-virtio_scsi_command is freed before the completion returns.
-
-The fix is to make callers specifying a completion responsible for
-freeing the command in all cases.
-
-James
-
-> Cc: James Bottomley <JBottomley@parallels.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Hu Tao <hutao@cn.fujitsu.com>
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-> ---
->  drivers/scsi/virtio_scsi.c |   24 +++++++++++++-----------
->  1 file changed, 13 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index efccd72..1b38431 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -175,7 +175,8 @@ static void virtscsi_complete_free(void *buf)
->  
->  	if (cmd->comp)
->  		complete_all(cmd->comp);
-> -	mempool_free(cmd, virtscsi_cmd_pool);
-> +	else
-> +		mempool_free(cmd, virtscsi_cmd_pool);
->  }
->  
->  static void virtscsi_ctrl_done(struct virtqueue *vq)
-> @@ -311,21 +312,22 @@ out:
->  static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
->  {
->  	DECLARE_COMPLETION_ONSTACK(comp);
-> -	int ret;
-> +	int ret = FAILED;
->  
->  	cmd->comp = &comp;
-> -	ret = virtscsi_kick_cmd(vscsi, vscsi->ctrl_vq, cmd,
-> -			       sizeof cmd->req.tmf, sizeof cmd->resp.tmf,
-> -			       GFP_NOIO);
-> -	if (ret < 0)
-> -		return FAILED;
-> +	if (virtscsi_kick_cmd(vscsi, vscsi->ctrl_vq, cmd,
-> +			      sizeof cmd->req.tmf, sizeof cmd->resp.tmf,
-> +			      GFP_NOIO) < 0)
-> +		goto out;
->  
->  	wait_for_completion(&comp);
-> -	if (cmd->resp.tmf.response != VIRTIO_SCSI_S_OK &&
-> -	    cmd->resp.tmf.response != VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
-> -		return FAILED;
-> +	if (cmd->resp.tmf.response == VIRTIO_SCSI_S_OK ||
-> +	    cmd->resp.tmf.response == VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
-> +		ret = SUCCESS;
->  
-> -	return SUCCESS;
-> +out:
-> +	mempool_free(cmd, virtscsi_cmd_pool);
-> +	return ret;
->  }
->  
->  static int virtscsi_device_reset(struct scsi_cmnd *sc)
+-- 
+Tom
