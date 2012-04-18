@@ -1,102 +1,66 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Commit a692b0e broke my mvsas card
-Date: Wed, 18 Apr 2012 09:37:38 +0400
-Message-ID: <1334727458.4410.8.camel@dabdike>
-References: <20120416224250.GA1983@bill-the-cat>
-	 <CABE8wwvbSsc02U_m+20-DQgsZ2gQCi_A6susCrmfyx_scQkccw@mail.gmail.com>
-	 <4F8CAC6F.6070907@ti.com>
-	 <1334620782.23541.2.camel@ultramagnus.opencreations.com>
-	 <4F8CCD0C.5060900@ti.com> <1334633159.13899.4.camel@dwillia2-mobl>
-	 <1334677637.3766.66.camel@dabdike>
-	 <CABE8wwvThcO4B+qQUMBg+OMdTbF5VMZ0THD9SftSocj+oBOARw@mail.gmail.com>
-	 <CAA9_cmeY0VaRqgfjqZbFbqP8u+wvkJ8=dJUNk9kkBabAF15t1w@mail.gmail.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: An oops will occur while SCSI core is being used in 3.4-rc1
+Date: Wed, 18 Apr 2012 07:53:17 +0000
+Message-ID: <1334735594.4410.15.camel@dabdike>
+References: <CAAxnys5O7PfWYv0q+BvhK2CP7X-_pNRa4j-Z1gSWHqLm8D8XmA@mail.gmail.com>
+	 <4F83EC71.90904@acm.org> <4F8461E3.3050808@cs.wisc.edu>
+	 <4F846398.5030609@cs.wisc.edu> <4F846506.4060801@cs.wisc.edu>
+	 <yq18vi2ckrj.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39511 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750792Ab2DRFho (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Apr 2012 01:37:44 -0400
-In-Reply-To: <CAA9_cmeY0VaRqgfjqZbFbqP8u+wvkJ8=dJUNk9kkBabAF15t1w@mail.gmail.com>
+Received: from mx2.parallels.com ([64.131.90.16]:54876 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751393Ab2DRHxY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Apr 2012 03:53:24 -0400
+In-Reply-To: <yq18vi2ckrj.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
+Content-ID: <E990DAFA5FBD1E488DED035CC2499A59@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Tom Rini <trini@ti.com>, linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Bart Van Assche <bvanassche@acm.org>, Elric Fu <elricfu1@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Felipe Balbi <balbi@ti.com>, Alex He <alex.he@amd.com>, Andiry Xu <andiry.xu@amd.com>, Greg KH <gregkh@linuxfoundation.org>, Linux USB Mailing List <linux-usb@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 
-On Tue, 2012-04-17 at 22:11 -0700, Dan Williams wrote:
-> On Tue, Apr 17, 2012 at 10:17 AM, Dan Williams <dan.j.williams@intel.com> wrote:
-> > On Tue, Apr 17, 2012 at 8:47 AM, James Bottomley
-> > <James.Bottomley@hansenpartnership.com> wrote:
-> >> On Mon, 2012-04-16 at 20:25 -0700, Dan Williams wrote:
-> >>> Agh, sorry, I rushed that one.  The phy array is initialized later, here
-> >>> is another run at it:
-> >>
-> >> Are we sure it's initialised correctly in all the other SAS drivers that
-> >> use (well, one other: aic94xx)?
-> >
-> > Looks like we need:
-> >
-> > diff --git a/drivers/scsi/aic94xx/aic94xx_init.c
-> > b/drivers/scsi/aic94xx/aic94xx_init.c
-> > index ff80552..830f438 100644
-> > --- a/drivers/scsi/aic94xx/aic94xx_init.c
-> > +++ b/drivers/scsi/aic94xx/aic94xx_init.c
-> > @@ -250,6 +250,7 @@ static int __devinit asd_common_setup(struct
-> > asd_ha_struct *asd_ha)
-> >                        SAS_LINK_RATE_1_5_GBPS;
-> >                asd_ha->hw_prof.phy_desc[i].min_sata_lrate =
-> >                        SAS_LINK_RATE_1_5_GBPS;
-> > +               asd_ha->phys[i].sas_phy.id = i;
-> >        }
-> >
-> >        return 0;
-> >
-> >> Given the oops issue, perhaps revert this for now and get a working
-> >> patch in for the next merge window?
-> >
-> > I have no strong feelings either way, but aic94xx and mvsas
-> > maintainers have been hard to reach and I'm not encouraged more time
-> > will yield a different result versus just moving ahead with these
-> > fixes.
-> >
-> > That said we still have Tom's discovery regression which is a separate issue.
-> 
-> I take it back.
-> 
-> I overlooked what Tom said at the very beginning.  Everything is fixed
-> by the revert, and I now see why my later "fix" made it worse.  The
-> fix overlooked that mvsas is indeed initializing the phy ids, but in
-> the "multi-chip" case it does a rather annoying duplication of phy ids
-> in the array passed to libsas.  So, for example, chip0 has phy0-3 at
-> ha phy index 0-3 and chip1 has its phy0-3 at ha phy index 4-7.  So the
-> "fix" was breaking mvsas's ability to lookup phys by id and the
-> original commit is tripped up by mvsas's scheme of putting non-unique
-> ids in the sas_ha_struct.
-> 
-> Question for a later day, but why isn't mvsas creating a scsi_host per
-> chip??  That can only help performance and is more in line with
-> reality.
-> 
-> To properly support commit a692b0e mvsas would either need to convert
-> to a shost-per-chip or use a helper like:
-> 
-> static inline struct mvs_phy *to_mvs_phy(struct mvs_info *mvi, int phy_id)
-> {
->         return mvi->phy[phy_id - mvi->chip->n_phy * mvi->id];
-> }
-> 
-> ...everywhere it converts from a libsas phy id back to a local phy structure.
-> 
-> Both of these options are way too big for 3.4-rc4, so I'll queue up
-> the revert with a Reported-by and Tested-by from Tom.
-> 
-> Thanks again for the report and help Tom.
-
-Actually, no need ... I can add a revert to the fixes branch (when I
-manage to get it built).
-
-James
-
-
+T24gV2VkLCAyMDEyLTA0LTExIGF0IDEyOjEwIC0wNDAwLCBNYXJ0aW4gSy4gUGV0ZXJzZW4gd3Jv
+dGU6DQo+ID4+Pj4+ICJNaWtlIiA9PSBNaWtlIENocmlzdGllIDxtaWNoYWVsY0Bjcy53aXNjLmVk
+dT4gd3JpdGVzOg0KPiANCj4gPj4+PiBJIGhhdmUgb2JzZXJ2ZWQgY3Jhc2hlcyBhdCB0aGUgc2Ft
+ZSBwb2ludCB3aGlsZSB0ZXN0aW5nIGRldmljZQ0KPiA+Pj4+IHJlbW92YWwgd2l0aCB0aGUgaWJf
+c3JwIGRyaXZlci4gQXMgZmFyIGFzIEkgY2FuIHNlZSB0aGF0IGNvZGUgd2FzDQo+ID4+Pj4gYWRk
+ZWQgdGhyb3VnaCBjb21taXQgMThhNGQwYTIyZWQ2YzU0YjY3YWY3NzE4YzMwNWNkMDEwZjA5ZGRm
+OA0KPiA+Pj4+IChGZWJydWFyeSA5LCAyMDEyKS4gVGhlIGFwcHJvYWNoIG9mIHRoYXQgcGF0Y2gg
+bG9va3MgcXVlc3Rpb25hYmxlDQo+ID4+Pj4gdG8gbWU6IHdoYXQgZ3VhcmFudGVlcyB0aGF0IHRo
+ZSBzdHJ1Y3Qgc2NzaV9kcml2ZXIgd2lsbCBiZQ0KPiA+Pj4+IGF2YWlsYWJsZSBhdCB0aGUgdGlt
+ZSB0aGUgU0NTSSBlcnJvciBoYW5kbGVyIG5lZWRzIGl0ID8NCj4gDQo+IFNvcnJ5IGFib3V0IHRo
+YXQhDQo+IA0KPiANCj4gTWlrZT4gVGhhdCBpcyB3cm9uZy4gSSBndWVzcyBSRVFfRElTQ0FSRCBh
+bmQgUkVRX0ZMVVNIIHdpbGwsIHNvIEkgZ3Vlc3MNCj4gTWlrZT4gd2UganVzdCBoYXZlIHRvIGNo
+ZWNrIGZvciBhIE5VTEwgc2RydiBhYm92ZS4NCj4gDQo+IEhvdyBhYm91dCB3ZSBkbyB0aGlzPw0K
+PiANCj4gDQo+IFNDU0k6IEZpeCBlcnJvciBoYW5kbGluZyB3aGVuIG5vIFVMRCBpcyBhdHRhY2hl
+ZA0KPiANCj4gQ29tbWl0IDE4YTRkMGEyIGludHJvZHVjZWQgYSBidWcgaW4gd2hpY2ggd2Ugd291
+bGQgYXR0ZW1wdCB0bw0KPiBkZXJlZmVyZW5jZSB0aGUgc2NzaSBkcml2ZXIgZXZlbiB3aGVuIHRo
+ZSBkZXZpY2UgaGFkIG5vIFVMRCBhdHRhY2hlZC4NCj4gDQo+IEVuc3VyZSB0aGF0IGEgZHJpdmVy
+IGlzIHJlZ2lzdGVyZWQgYW5kIG1ha2UgdGhlIGRyaXZlciBhY2Nlc3NvciBmdW5jdGlvbg0KPiBt
+b3JlIHJlc2lsaWVudCB0byBlcnJvcnMgZHVyaW5nIGRldmljZSBkaXNjb3ZlcnkuDQo+IA0KPiBS
+ZXBvcnRlZC1ieTogRWxyaWMgRnUgPGVscmljZnUxQGdtYWlsLmNvbT4NCj4gUmVwb3J0ZWQtYnk6
+IEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPg0KPiBTaWduZWQtb2ZmLWJ5OiBN
+YXJ0aW4gSy4gUGV0ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPg0KPiANCj4gZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zY3NpX2Vycm9yLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9l
+cnJvci5jDQo+IGluZGV4IDJjZmNiZmYuLjM4NmYwYzUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMv
+c2NzaS9zY3NpX2Vycm9yLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfZXJyb3IuYw0KPiBA
+QCAtODM1LDcgKzgzNSw3IEBAIHN0YXRpYyBpbnQgc2NzaV9zZW5kX2VoX2NtbmQoc3RydWN0IHNj
+c2lfY21uZCAqc2NtZCwgdW5zaWduZWQgY2hhciAqY21uZCwNCj4gIA0KPiAgCXNjc2lfZWhfcmVz
+dG9yZV9jbW5kKHNjbWQsICZzZXMpOw0KPiAgDQo+IC0JaWYgKHNkcnYtPmVoX2FjdGlvbikNCj4g
+KwlpZiAoc2RydiAmJiBzZHJ2LT5laF9hY3Rpb24pDQo+ICAJCXJ0biA9IHNkcnYtPmVoX2FjdGlv
+bihzY21kLCBjbW5kLCBjbW5kX3NpemUsIHJ0bik7DQo+ICANCj4gIAlyZXR1cm4gcnRuOw0KPiBk
+aWZmIC0tZ2l0IGEvaW5jbHVkZS9zY3NpL3Njc2lfY21uZC5oIGIvaW5jbHVkZS9zY3NpL3Njc2lf
+Y21uZC5oDQo+IGluZGV4IDM3N2RmNGEuLjFlMTE5ODUgMTAwNjQ0DQo+IC0tLSBhL2luY2x1ZGUv
+c2NzaS9zY3NpX2NtbmQuaA0KPiArKysgYi9pbmNsdWRlL3Njc2kvc2NzaV9jbW5kLmgNCj4gQEAg
+LTEzNCw2ICsxMzQsOSBAQCBzdHJ1Y3Qgc2NzaV9jbW5kIHsNCj4gIA0KPiAgc3RhdGljIGlubGlu
+ZSBzdHJ1Y3Qgc2NzaV9kcml2ZXIgKnNjc2lfY21kX3RvX2RyaXZlcihzdHJ1Y3Qgc2NzaV9jbW5k
+ICpjbWQpDQo+ICB7DQo+ICsJaWYgKCFjbWQtPnJlcXVlc3QtPnJxX2Rpc2spDQo+ICsJCXJldHVy
+biBOVUxMOw0KPiArDQo+ICAJcmV0dXJuICooc3RydWN0IHNjc2lfZHJpdmVyICoqKWNtZC0+cmVx
+dWVzdC0+cnFfZGlzay0+cHJpdmF0ZV9kYXRhOw0KPiAgfQ0KDQpJJ20gbm90IGVudGlyZWx5IGNv
+bnZpbmNlZCBieSB0aGlzLiAgSWYgbWVkaXVtIGFjY2VzcyB0aW1lb3V0IHByb2Nlc3NpbmcNCmlz
+IHNvIGltcG9ydGFudCwgc2hvdWxkbid0IGl0IGJlIGRvbmUgYWxsIHRoZSB0aW1lIHJhdGhlciB0
+aGFuIG9ubHkgd2hlbg0KdGhlIFVMRCBpcyBib3VuZD8gIEluIHdoaWNoIGNhc2UgaXQgc2hvdWxk
+IGJlIHBhcnQgb2YgdGhlIGVycm9yIGhhbmRsZXINCmNvcmU/DQoNCkphbWVzDQoNCg0K
