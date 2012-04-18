@@ -1,85 +1,113 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Commit a692b0e broke my mvsas card
-Date: Wed, 18 Apr 2012 08:46:51 -0700
-Message-ID: <CABE8wwscnUrh62L5Z1sNKDS4BLucZz2fVUqMVK3znhHbFp1XEA@mail.gmail.com>
-References: <20120416224250.GA1983@bill-the-cat>
-	<CABE8wwvbSsc02U_m+20-DQgsZ2gQCi_A6susCrmfyx_scQkccw@mail.gmail.com>
-	<4F8CAC6F.6070907@ti.com>
-	<1334620782.23541.2.camel@ultramagnus.opencreations.com>
-	<4F8CCD0C.5060900@ti.com>
-	<1334633159.13899.4.camel@dwillia2-mobl>
-	<1334677637.3766.66.camel@dabdike>
-	<CABE8wwvThcO4B+qQUMBg+OMdTbF5VMZ0THD9SftSocj+oBOARw@mail.gmail.com>
-	<CAA9_cmeY0VaRqgfjqZbFbqP8u+wvkJ8=dJUNk9kkBabAF15t1w@mail.gmail.com>
-	<4F8EDC5F.9090600@ti.com>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: RE: [dm-devel] [PATCH 0/2] 'default' hardware handler for multipath
+Date: Wed, 18 Apr 2012 16:25:24 +0000
+Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B059160@SACEXCMBX02-PRD.hq.netapp.com>
+References: <1333385035-6663-1-git-send-email-hare@suse.de>
+ <77471C95FAFD844C8CA02DD4F4C5FE2B03A484@SACEXCMBX02-PRD.hq.netapp.com>
+ <4F8ECAB5.1020806@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:21367 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751320Ab2DRPq7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2012 11:46:59 -0400
-Received: by bkcjm19 with SMTP id jm19so5656432bkc.25
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Apr 2012 08:46:51 -0700 (PDT)
-In-Reply-To: <4F8EDC5F.9090600@ti.com>
+Received: from mx2.netapp.com ([216.240.18.37]:56501 "EHLO mx2.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751083Ab2DRQZs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2012 12:25:48 -0400
+In-Reply-To: <4F8ECAB5.1020806@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Rini <trini@ti.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>
 
-On Wed, Apr 18, 2012 at 8:23 AM, Tom Rini <trini@ti.com> wrote:
-> Performance isn't in-line with what I would expect (in playing with f=
-io), so
-> if you want to whip something up, or point me some changesets / other
-> drivers I can take a stab here. =A0Thanks!
->
+Hannes,
 
-The thrust is to change this loop in mvs_pci_init:
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Wednesday, April 18, 2012 9:08 AM
+> To: Moger, Babu
+> Cc: device-mapper development; linux-scsi@vger.kernel.org; Mike Snitz=
+er
+> Subject: Re: [dm-devel] [PATCH 0/2] 'default' hardware handler for mu=
+ltipath
+>=20
+> On 04/03/2012 11:12 PM, Moger, Babu wrote:
+> > Thanks Hannes. We appreciate your work on this.
+> >
+> >> -----Original Message-----
+> >> From: dm-devel-bounces@redhat.com [mailto:dm-devel-
+> >> bounces@redhat.com] On Behalf Of Hannes Reinecke
+> >> Sent: Monday, April 02, 2012 11:44 AM
+> >> To: linux-scsi@vger.kernel.org
+> >> Cc: dm-devel@redhat.com; Mike Snitzer
+> >> Subject: [dm-devel] [PATCH 0/2] 'default' hardware handler for mul=
+tipath
+> >>
+> >> This patchset introduces a 'default' hardware handler for dm-multi=
+path.
+> >> Modern storage arrays typically support two failover methods, the =
+original
+> >> proprietary and the modern ALUA-based one.
+> >> The device_handler implementation will currently select the ALUA
+> handler,
+> >> and falling back to the proprietary one if ALUA isn't supported.
+> >> However, in the built-in hardware table for multipath one can spec=
+ify only
+> >> one hardware handler, causing the original hardware handler to be
+> >> overwritten.
+> >> By specifying a 'default' hardware handler multipath will not try =
+to attach a
+> >> specific hardware handler, but rather using the currently attached=
+ on.
+> >
+> > I think we still have some issues here. Right now we load the drive=
+r
+> > either by adding it in initrd or by using request_module call from =
+device
+> mapper.
+> > If the user passes, hardware_handler   "1 default"  from multipath =
+then
+> request_module will fail.
+> > How are we going to load the driver if these handlers are not loade=
+d.
+> >
+> The idea of the 'default' hardware handler is to avoid multipath
+> overriding the kernel matchine algorithm. To make this work we
+> obviously have to load the modules prior to start multipathing.
+>=20
+> Given that we (ie RH and us) are already loading the device-handler
+> modules from the initrd independent from multipathing we should be fi=
+ne.
+>=20
+> But thinking a bit more about it, it might be better to handle this
+> via features.
+> Implementing a feature like 'default_hw_handler' would not override
+> the default hardware handler from the hardware table.
+> So the requested hardware handler would still be loaded, but the
+> actual initialisation would be controlled via the feature.
 
-        do {
-                mvi =3D mvs_pci_alloc(pdev, ent, shost, nhost);
-                if (!mvi) {
-                        rc =3D -ENOMEM;
-                        goto err_out_regions;
-                }
+hardware_handler is also used to pass on the arguments to handler. Like=
+=2E
+	hardware_handler        "2 emc 1"
+We have to make sure that this feature does not break here. Considering=
+ all this=20
+don't you think it may be better if we make this decision in multipath =
+tools itself.
+Common factor here is alua. It is always between alua or some other han=
+dler.
+Does it make sense to check TPGS in tools?=20
 
-                memset(&mvi->hba_info_param, 0xFF,
-                        sizeof(struct hba_info_page));
-
-                mvs_init_sas_add(mvi);
-
-                mvi->instance =3D nhost;
-                rc =3D MVS_CHIP_DISP->chip_init(mvi);
-                if (rc) {
-                        mvs_free(mvi);
-                        goto err_out_regions;
-                }
-                nhost++;
-        } while (nhost < chip->n_host);
-
-=2E..to assume that mvs_pci_alloc will do the allocation of a scsi_host
-per chip, rather than passing in a global host.
-
-Then would need to clean up warts like the following in mvs_phy_control=
-:
-
-        while (sha->sas_phy[i]) {
-                if (sha->sas_phy[i] =3D=3D sas_phy)
-                        break;
-                i++;
-        }
-
-=2E..since this model means that the sas_phy->id can be used directly t=
-o
-look up the local mvsas phy.
-
-I might circle back to this once 3.4 finalizes (since the random ids
-libsas uses for identifying local ports is onerous), but if someone
-else beats me to it I wouldn't mind ;-).
-
---
-Dan
+> Yep, that sound better.
+> I'll be preparing a patch.
+>=20
+> Cheers,
+>=20
+> Hannes
+> --
+> Dr. Hannes Reinecke		      zSeries & Storage
+> hare@suse.de			      +49 911 74053 688
+> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
