@@ -1,49 +1,99 @@
-From: "." <desire@gmail.com>
-Subject: increasing scsi command timeout vs implementing ERC for drives
- performing deep error recovery in an array
-Date: Wed, 18 Apr 2012 19:05:04 +0800
-Message-ID: <CAAevFRR1gbvgS0=5jq5c-6Lw9a3TDFNmq7T95XT=SNV-E4gs6Q@mail.gmail.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle
+ errors from the host
+Date: Wed, 18 Apr 2012 12:38:05 +0000
+Message-ID: <426367E2313C2449837CD2DE46E7EAF92CE74A@CH1PRD0310MB381.namprd03.prod.outlook.com>
+References: <1333654012-23850-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56567 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752533Ab2DRLFZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2012 07:05:25 -0400
-Received: by iagz16 with SMTP id z16so10285206iag.19
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Apr 2012 04:05:24 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-I'm trying to understand what causes a drive performing a deep
-recovery cycle to get kicked out of a linux software raid array, and
-whether setting an ERC limit is the only option, or whether increasing
-the scsi command timeout is a reasonable alternative.
 
-As I understand it, if the deep recovery goes on for long enough, the
-scsi command timeout would be exceeded. This causes the SCSI error
-handler to attempt to abort the command and reset the device/bus/host.
-If these error handlers fail, the drive is set offline (which I assume
-is what kicks the drive out).
 
-ERC helps in this scenario as the drive will return an error before
-the timeout is exceeded.  The scsi layer will return an error to the
-md/raid layer, which can take the appropriate action (retry operation
-/ recover data from redundant source and rewrite it / kick disk or
-whatever).
+> -----Original Message-----
+> From: KY Srinivasan
+> Sent: Tuesday, April 10, 2012 11:14 AM
+> To: KY Srinivasan; gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
+> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
+> apw@canonical.com
+> Subject: RE: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors
+> from the host
+> 
+> 
+> 
+> > -----Original Message-----
+> > From: K. Y. Srinivasan [mailto:kys@microsoft.com]
+> > Sent: Thursday, April 05, 2012 3:27 PM
+> > To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> > devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
+> > jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
+> > apw@canonical.com
+> > Cc: KY Srinivasan
+> > Subject: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors from
+> > the host
+> >
+> > If the host returns error for pass through commands, deal with them
+> > appropriately. I would like to thank James for patiently helping
+> > me with this patch.
+> 
+> James,
+> 
+> Thank you for suggesting the fix here. I hope this is what you were looking for.
+> 
+> Regards,
+> 
+> K. Y
 
-I have also read that the SCSI command timeout can be tuned via
-/sys/block/.../device/timeout, and defaults to 30 seconds.  Would
-raising this timeout to a large value likewise prevent deep recovery
-cycles from causing the SCSI layer to set the drive offline?  Does
-anyone know what is the maximum time taken for a deep recovery cycle?
+Ping.
 
-Or, might it be a situation where there will be lots of commands
-queued behind the access to the bad sector, and increasing the scsi
-command timeout would only help with the first command, and the rest
-of the queued commands will be exponentially delayed such that it is
-not feasible to avoid this by increasing the timeout value?
-
-Appreciate your comments and corrections if I've made mistaken
-assumptions above.  Thanks!
+> >
+> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> > Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+> > ---
+> >  drivers/scsi/storvsc_drv.c |   20 +++++++++++++++-----
+> >  1 files changed, 15 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> > index 83a1972..528d52b 100644
+> > --- a/drivers/scsi/storvsc_drv.c
+> > +++ b/drivers/scsi/storvsc_drv.c
+> > @@ -785,12 +785,22 @@ static void storvsc_command_completion(struct
+> > storvsc_cmd_request *cmd_request)
+> >  	/*
+> >  	 * If there is an error; offline the device since all
+> >  	 * error recovery strategies would have already been
+> > -	 * deployed on the host side.
+> > +	 * deployed on the host side. However, if the command
+> > +	 * were a pass-through command deal with it appropriately.
+> >  	 */
+> > -	if (vm_srb->srb_status == SRB_STATUS_ERROR)
+> > -		scmnd->result = DID_TARGET_FAILURE << 16;
+> > -	else
+> > -		scmnd->result = vm_srb->scsi_status;
+> > +	scmnd->result = vm_srb->scsi_status;
+> > +
+> > +	if (vm_srb->srb_status == SRB_STATUS_ERROR) {
+> > +		switch (scmnd->cmnd[0]) {
+> > +		case ATA_16:
+> > +		case ATA_12:
+> > +			set_host_byte(scmnd, DID_PASSTHROUGH);
+> > +			break;
+> > +		default:
+> > +			set_host_byte(scmnd, DID_TARGET_FAILURE);
+> > +		}
+> > +	}
+> > +
+> >
+> >  	/*
+> >  	 * If the LUN is invalid; remove the device.
+> > --
+> > 1.7.4.1
+> >
+> >
+> >
