@@ -1,225 +1,49 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 04/17] be2iscsi:Freeing of WRB and SGL Handle in cleanup
- task
-Date: Wed, 18 Apr 2012 03:06:00 -0500
-Message-ID: <4F8E75E8.6010309@cs.wisc.edu>
-References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu> <1333514512-21799-5-git-send-email-michaelc@cs.wisc.edu>
+From: "." <desire@gmail.com>
+Subject: increasing scsi command timeout vs implementing ERC for drives
+ performing deep error recovery in an array
+Date: Wed, 18 Apr 2012 19:05:04 +0800
+Message-ID: <CAAevFRR1gbvgS0=5jq5c-6Lw9a3TDFNmq7T95XT=SNV-E4gs6Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090801090102010308000309"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:58274 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751396Ab2DRIGJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Apr 2012 04:06:09 -0400
-In-Reply-To: <1333514512-21799-5-git-send-email-michaelc@cs.wisc.edu>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56567 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752533Ab2DRLFZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2012 07:05:25 -0400
+Received: by iagz16 with SMTP id z16so10285206iag.19
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Apr 2012 04:05:24 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090801090102010308000309
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+I'm trying to understand what causes a drive performing a deep
+recovery cycle to get kicked out of a linux software raid array, and
+whether setting an ERC limit is the only option, or whether increasing
+the scsi command timeout is a reasonable alternative.
 
-On 04/03/2012 11:41 PM, michaelc@cs.wisc.edu wrote:
-> From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-> 
->  The WRB and SGL Handle allocated for Login task were not freed
->  back to the pool after the login process was done. This code
->  releases the WRB and SGL Handle after the login process.
-> 
+As I understand it, if the deep recovery goes on for long enough, the
+scsi command timeout would be exceeded. This causes the SCSI error
+handler to attempt to abort the command and reset the device/bus/host.
+If these error handlers fail, the drive is set offline (which I assume
+is what kicks the drive out).
 
-This patch had some issues. Please use the attached version instead.
+ERC helps in this scenario as the drive will return an error before
+the timeout is exceeded.  The scsi layer will return an error to the
+md/raid layer, which can take the appropriate action (retry operation
+/ recover data from redundant source and rewrite it / kick disk or
+whatever).
 
---------------090801090102010308000309
-Content-Type: text/x-patch;
- name="0004-be2iscsi-Freeing-of-WRB-and-SGL-Handle-in-cleanup-ta.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0004-be2iscsi-Freeing-of-WRB-and-SGL-Handle-in-cleanup-ta.pa";
- filename*1="tch"
+I have also read that the SCSI command timeout can be tuned via
+/sys/block/.../device/timeout, and defaults to 30 seconds.  Would
+raising this timeout to a large value likewise prevent deep recovery
+cycles from causing the SCSI layer to set the drive offline?  Does
+anyone know what is the maximum time taken for a deep recovery cycle?
 
->From aaa195e9ff55abdcc9b785262b3d5932ad5d7439 Mon Sep 17 00:00:00 2001
-From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-Date: Wed, 18 Apr 2012 02:48:19 -0400
-Subject: [PATCH 04/17] be2iscsi: Freeing of WRB and SGL Handle in cleanup task v2
+Or, might it be a situation where there will be lots of commands
+queued behind the access to the bad sector, and increasing the scsi
+command timeout would only help with the first command, and the rest
+of the queued commands will be exponentially delayed such that it is
+not feasible to avoid this by increasing the timeout value?
 
- The WRB and SGL Handle allocated for Login task were not freed
- back to the pool after the login process was done. This code
- releases the WRB and SGL Handle after the login process.
-
-v2:
-- Fix up locking so bh calls are not done when not needed.
-- Make beiscsi_cleanup_task static.
-
-Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-[various fixes]
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/be2iscsi/be_main.c |  107 ++++++++++++++++++++++----------------
- 1 files changed, 62 insertions(+), 45 deletions(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 23344c8..185cf39 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -1252,9 +1252,9 @@ hwi_complete_drvr_msgs(struct beiscsi_conn *beiscsi_conn,
- 	task = pwrb_handle->pio_handle;
- 
- 	io_task = task->dd_data;
--	spin_lock(&phba->mgmt_sgl_lock);
-+	spin_lock_bh(&phba->mgmt_sgl_lock);
- 	free_mgmt_sgl_handle(phba, io_task->psgl_handle);
--	spin_unlock(&phba->mgmt_sgl_lock);
-+	spin_unlock_bh(&phba->mgmt_sgl_lock);
- 	spin_lock_bh(&session->lock);
- 	free_wrb_handle(phba, pwrb_context, pwrb_handle);
- 	spin_unlock_bh(&session->lock);
-@@ -3693,6 +3693,57 @@ static void beiscsi_clean_port(struct beiscsi_hba *phba)
- 	kfree(phba->ep_array);
- }
- 
-+static void beiscsi_cleanup_task(struct iscsi_task *task)
-+{
-+	struct beiscsi_io_task *io_task = task->dd_data;
-+	struct iscsi_conn *conn = task->conn;
-+	struct beiscsi_conn *beiscsi_conn = conn->dd_data;
-+	struct beiscsi_hba *phba = beiscsi_conn->phba;
-+	struct beiscsi_session *beiscsi_sess = beiscsi_conn->beiscsi_sess;
-+	struct hwi_wrb_context *pwrb_context;
-+	struct hwi_controller *phwi_ctrlr;
-+
-+	phwi_ctrlr = phba->phwi_ctrlr;
-+	pwrb_context = &phwi_ctrlr->wrb_context[beiscsi_conn->beiscsi_conn_cid
-+			- phba->fw_config.iscsi_cid_start];
-+
-+	if (io_task->cmd_bhs) {
-+		pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
-+			      io_task->bhs_pa.u.a64.address);
-+		io_task->cmd_bhs = NULL;
-+	}
-+
-+	if (task->sc) {
-+		if (io_task->pwrb_handle) {
-+			free_wrb_handle(phba, pwrb_context,
-+					io_task->pwrb_handle);
-+			io_task->pwrb_handle = NULL;
-+		}
-+
-+		if (io_task->psgl_handle) {
-+			spin_lock(&phba->io_sgl_lock);
-+			free_io_sgl_handle(phba, io_task->psgl_handle);
-+			spin_unlock(&phba->io_sgl_lock);
-+			io_task->psgl_handle = NULL;
-+		}
-+	} else {
-+		if (!beiscsi_conn->login_in_progress) {
-+			if (io_task->pwrb_handle) {
-+				free_wrb_handle(phba, pwrb_context,
-+						io_task->pwrb_handle);
-+				io_task->pwrb_handle = NULL;
-+			}
-+			if (io_task->psgl_handle) {
-+				spin_lock(&phba->mgmt_sgl_lock);
-+				free_mgmt_sgl_handle(phba,
-+						     io_task->psgl_handle);
-+				spin_unlock(&phba->mgmt_sgl_lock);
-+				io_task->psgl_handle = NULL;
-+			}
-+		}
-+	}
-+}
-+
- void
- beiscsi_offload_connection(struct beiscsi_conn *beiscsi_conn,
- 			   struct beiscsi_offload_params *params)
-@@ -3701,12 +3752,19 @@ beiscsi_offload_connection(struct beiscsi_conn *beiscsi_conn,
- 	struct iscsi_target_context_update_wrb *pwrb = NULL;
- 	struct be_mem_descriptor *mem_descr;
- 	struct beiscsi_hba *phba = beiscsi_conn->phba;
-+	struct iscsi_task *task = beiscsi_conn->task;
-+	struct iscsi_session *session = task->conn->session;
- 	u32 doorbell = 0;
- 
- 	/*
- 	 * We can always use 0 here because it is reserved by libiscsi for
- 	 * login/startup related tasks.
- 	 */
-+	beiscsi_conn->login_in_progress = 0;
-+	spin_lock_bh(&session->lock);
-+	beiscsi_cleanup_task(task);
-+	spin_unlock_bh(&session->lock);
-+
- 	pwrb_handle = alloc_wrb_handle(phba, (beiscsi_conn->beiscsi_conn_cid -
- 				       phba->fw_config.iscsi_cid_start));
- 	pwrb = (struct iscsi_target_context_update_wrb *)pwrb_handle->pwrb;
-@@ -3862,6 +3920,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 				io_task->pwrb_handle =
- 						beiscsi_conn->plogin_wrb_handle;
- 			}
-+			beiscsi_conn->task = task;
- 		} else {
- 			spin_lock(&phba->mgmt_sgl_lock);
- 			io_task->psgl_handle = alloc_mgmt_sgl_handle(phba);
-@@ -3904,53 +3963,11 @@ free_hndls:
- 	io_task->pwrb_handle = NULL;
- 	pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
- 		      io_task->bhs_pa.u.a64.address);
-+	io_task->cmd_bhs = NULL;
- 	SE_DEBUG(DBG_LVL_1, "Alloc of SGL_ICD Failed\n");
- 	return -ENOMEM;
- }
- 
--static void beiscsi_cleanup_task(struct iscsi_task *task)
--{
--	struct beiscsi_io_task *io_task = task->dd_data;
--	struct iscsi_conn *conn = task->conn;
--	struct beiscsi_conn *beiscsi_conn = conn->dd_data;
--	struct beiscsi_hba *phba = beiscsi_conn->phba;
--	struct beiscsi_session *beiscsi_sess = beiscsi_conn->beiscsi_sess;
--	struct hwi_wrb_context *pwrb_context;
--	struct hwi_controller *phwi_ctrlr;
--
--	phwi_ctrlr = phba->phwi_ctrlr;
--	pwrb_context = &phwi_ctrlr->wrb_context[beiscsi_conn->beiscsi_conn_cid
--			- phba->fw_config.iscsi_cid_start];
--	if (io_task->pwrb_handle) {
--		free_wrb_handle(phba, pwrb_context, io_task->pwrb_handle);
--		io_task->pwrb_handle = NULL;
--	}
--
--	if (io_task->cmd_bhs) {
--		pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
--			      io_task->bhs_pa.u.a64.address);
--	}
--
--	if (task->sc) {
--		if (io_task->psgl_handle) {
--			spin_lock(&phba->io_sgl_lock);
--			free_io_sgl_handle(phba, io_task->psgl_handle);
--			spin_unlock(&phba->io_sgl_lock);
--			io_task->psgl_handle = NULL;
--		}
--	} else {
--		if (task->hdr &&
--		   ((task->hdr->opcode & ISCSI_OPCODE_MASK) == ISCSI_OP_LOGIN))
--			return;
--		if (io_task->psgl_handle) {
--			spin_lock(&phba->mgmt_sgl_lock);
--			free_mgmt_sgl_handle(phba, io_task->psgl_handle);
--			spin_unlock(&phba->mgmt_sgl_lock);
--			io_task->psgl_handle = NULL;
--		}
--	}
--}
--
- static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
- 			  unsigned int num_sg, unsigned int xferlen,
- 			  unsigned int writedir)
--- 
-1.7.1
-
-
---------------090801090102010308000309--
+Appreciate your comments and corrections if I've made mistaken
+assumptions above.  Thanks!
