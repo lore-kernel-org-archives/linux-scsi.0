@@ -1,61 +1,94 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 3/6] libfc: defer releasing master lport until complete fcoe
- interface cleanuped up
-Date: Fri, 20 Apr 2012 12:16:38 -0700
-Message-ID: <20120420191638.4634.43311.stgit@localhost6.localdomain6>
+Subject: [PATCH 4/6] fcoe: Don't hold rtnl_mutex in fcoe_update_src_mac
+Date: Fri, 20 Apr 2012 12:16:43 -0700
+Message-ID: <20120420191643.4634.91026.stgit@localhost6.localdomain6>
 References: <20120420191620.4634.94869.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:44294 "EHLO mga03.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:12043 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751756Ab2DTTQk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Apr 2012 15:16:40 -0400
+	id S1752665Ab2DTTQo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Apr 2012 15:16:44 -0400
 In-Reply-To: <20120420191620.4634.94869.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>, Neil Horman <nhorman@tuxdriver.com>, Vasu Dev <vasu.dev@intel.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
 
-From: Vasu Dev <vasu.dev@intel.com>
+The rtnl_mutex was held to protect calls to dev_uc_add
+and dev_uc_del. Holding rtnl is not required as those
+functions make use of the netif_addr_lock* API to
+protect the MAC changing.
 
-The fcoe controller has back references, therefore defer
-releasing master lport which gets freed along scsi_host_put
-and then free it once fcoe interface is fully cleaned.
+This change fixes the following regression by removing
+the rtnl usage when fcoe_update_src_mac is called.
 
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
-Acked-by: Neil Horman <nhorman@tuxdriver.com>
-Tested-by: Ross Brattain <ross.b.brattain@intel.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=42918
+
+the existing dependency chain (in reverse order) is:
+
+-> #1 (&fip->ctlr_mutex){+.+...}:
+       [<c1091f70>] lock_acquire+0x80/0x1b0
+       [<c147655d>] mutex_lock_nested+0x6d/0x340
+       [<f8970c32>] fcoe_ctlr_link_up+0x22/0x180 [libfcoe]
+       [<f894620e>] fcoe_create+0x47e/0x6e0 [fcoe]
+       [<f8973dd3>] fcoe_transport_create+0x143/0x250 [libfcoe]
+       [<c10527e0>] param_attr_store+0x30/0x60
+       [<c1052696>] module_attr_store+0x26/0x40
+       [<c11a201e>] sysfs_write_file+0xae/0x100
+       [<c11449df>] vfs_write+0x8f/0x160
+       [<c1144cbd>] sys_write+0x3d/0x70
+       [<c147a0c4>] syscall_call+0x7/0xb
+
+-> #0 (rtnl_mutex){+.+.+.}:
+       [<c109164b>] __lock_acquire+0x140b/0x1720
+       [<c1091f70>] lock_acquire+0x80/0x1b0
+       [<c147655d>] mutex_lock_nested+0x6d/0x340
+       [<c13a10c4>] rtnl_lock+0x14/0x20
+       [<f89445ac>] fcoe_update_src_mac+0x2c/0xb0 [fcoe]
+       [<f8971712>] fcoe_ctlr_timer_work+0x712/0xb60 [libfcoe]
+       [<c104fb69>] process_one_work+0x179/0x5d0
+       [<c10502f1>] worker_thread+0x121/0x2d0
+       [<c10550ed>] kthread+0x7d/0x90
+       [<c1481a82>] kernel_thread_helper+0x6/0x10
+
+other info that might help us debug this:
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&fip->ctlr_mutex);
+                               lock(rtnl_mutex);
+                               lock(&fip->ctlr_mutex);
+  lock(rtnl_mutex);
+
+ *** DEADLOCK ***
+
 Signed-off-by: Robert Love <robert.w.love@intel.com>
+Nacked-by: Robert Love <robert.w.love@intel.com>
+Tested-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/fcoe/fcoe.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 09a6a26..481ba6f 100644
+index 481ba6f..ac1df93 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -472,6 +472,7 @@ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 	/* Release the self-reference taken during fcoe_interface_create() */
- 	/* tear-down the FCoE controller */
- 	fcoe_ctlr_destroy(fip);
-+	scsi_host_put(fcoe->ctlr.lp->host);
- 	kfree(fcoe);
- 	dev_put(netdev);
- 	module_put(THIS_MODULE);
-@@ -976,8 +977,12 @@ static void fcoe_if_destroy(struct fc_lport *lport)
- 	/* Free memory used by statistical counters */
- 	fc_lport_free_stats(lport);
+@@ -536,13 +536,11 @@ static void fcoe_update_src_mac(struct fc_lport *lport, u8 *addr)
+ 	struct fcoe_port *port = lport_priv(lport);
+ 	struct fcoe_interface *fcoe = port->priv;
  
--	/* Release the Scsi_Host */
--	scsi_host_put(lport->host);
-+	/*
-+	 * Release the Scsi_Host for vport but hold on to
-+	 * master lport until it fcoe interface fully cleaned-up.
-+	 */
-+	if (lport->vport)
-+		scsi_host_put(lport->host);
+-	rtnl_lock();
+ 	if (!is_zero_ether_addr(port->data_src_addr))
+ 		dev_uc_del(fcoe->netdev, port->data_src_addr);
+ 	if (!is_zero_ether_addr(addr))
+ 		dev_uc_add(fcoe->netdev, addr);
+ 	memcpy(port->data_src_addr, addr, ETH_ALEN);
+-	rtnl_unlock();
  }
  
  /**
