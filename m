@@ -1,8 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 05/17] hpsa: do not read from controller unnecessarily in
-	completion code
-Date: Fri, 20 Apr 2012 10:06:40 -0500
-Message-ID: <20120420150640.10596.43679.stgit@beardog.cce.hp.com>
+Subject: [PATCH 03/17] hpsa: enable bus master bit after pci_enable_device
+Date: Fri, 20 Apr 2012 10:06:29 -0500
+Message-ID: <20120420150629.10596.51923.stgit@beardog.cce.hp.com>
 References: <20120420150349.10596.73732.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,33 +15,35 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-MSI/MSI-X interrupts can't race the DMA completion they are communicating
-so no need to read from controller to flush the DMA to the host if
-MSI or MSI-X interrupts are being used.
+pci_disable_device() disables the bus master bit and pci_enable_device does
+not re-enable it.  It needs to be enabled.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/hpsa.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 7b28d54..48f7812 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -258,12 +258,12 @@ static unsigned long SA5_performant_completed(struct ctlr_info *h)
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 5119ce6..363619d 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3917,6 +3917,7 @@ static int __devinit hpsa_enter_simple_mode(struct ctlr_info *h)
+ static int __devinit hpsa_pci_init(struct ctlr_info *h)
  {
- 	unsigned long register_value = FIFO_EMPTY;
+ 	int prod_index, err;
++	u16 command_register;
  
--	/* flush the controller write of the reply queue by reading
--	 * outbound doorbell status register.
--	 */
--	register_value = readl(h->vaddr + SA5_OUTDB_STATUS);
- 	/* msi auto clears the interrupt pending bit. */
- 	if (!(h->msi_vector || h->msix_vector)) {
-+		/* flush the controller write of the reply queue by reading
-+		 * outbound doorbell status register.
-+		 */
-+		register_value = readl(h->vaddr + SA5_OUTDB_STATUS);
- 		writel(SA5_OUTDB_CLEAR_PERF_BIT, h->vaddr + SA5_OUTDB_CLEAR);
- 		/* Do a read in order to flush the write to the controller
- 		 * (as per spec.)
+ 	prod_index = hpsa_lookup_board_id(h->pdev, &h->board_id);
+ 	if (prod_index < 0)
+@@ -3933,6 +3934,11 @@ static int __devinit hpsa_pci_init(struct ctlr_info *h)
+ 		return err;
+ 	}
+ 
++	/* Enable bus mastering (pci_disable_device may disable this) */
++	pci_read_config_word(h->pdev, PCI_COMMAND, &command_register);
++	command_register |= PCI_COMMAND_MASTER;
++	pci_write_config_word(h->pdev, PCI_COMMAND, command_register);
++
+ 	err = pci_request_regions(h->pdev, HPSA);
+ 	if (err) {
+ 		dev_err(&h->pdev->dev,
