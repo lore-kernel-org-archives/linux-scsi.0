@@ -1,59 +1,53 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [SCSI] mpt2sas : Fix unsafe using smp_processor_id() in
- preemptible
-Date: Fri, 20 Apr 2012 15:07:57 +0400
-Message-ID: <1334920077.5879.28.camel@dabdike>
-References: <20120418031441.GA10862@parisc-linux.org>
-	 <4565AEA676113A449269C2F3A549520FB5AE22E7@cosmail03.lsi.com>
-	 <20120418041359.GB10862@parisc-linux.org>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH] mpt2sas:  move the scsi_host_put to the right place
+Date: Fri, 20 Apr 2012 17:35:45 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6067E89B22F@inbmail02.lsi.com>
+References: <4F8D6F20.4040301@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45347 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753586Ab2DTLIC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Apr 2012 07:08:02 -0400
-In-Reply-To: <20120418041359.GB10862@parisc-linux.org>
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:48656 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752594Ab2DTMFv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Apr 2012 08:05:51 -0400
+In-Reply-To: <4F8D6F20.4040301@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "jejb@kernel.org" <jejb@kernel.org>
+To: Tomas Henzl <thenzl@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Tue, 2012-04-17 at 22:13 -0600, Matthew Wilcox wrote:
-> On Tue, Apr 17, 2012 at 09:35:49PM -0600, Moore, Eric wrote:
-> >  Jan Schmidt suggested using raw_smp_processor_id()  back in February, see this: http://marc.info/?t=132974687100003&r=1&w=2
-> > 
-> > Alex Shi recently suggested using preempt_disable() and preempt_enable() to solve the same issue, see this: http://marc.info/?t=133274303900003&r=1&w=2
-> > 
-> > I believe the stack traces are there in both email discussion, they occur when CONFIG_DEBUG_PREEMPT is enabled.
-> > 
-> > I would rather go with the solution giving the best performance.   James Bottomley is there on the discussion with  Jan Schmidt, he suggested using get_cpu() and put_cpu().
-> 
-> I use get_cpu() / put_cpu() in the NVMe driver in similar circumstances.
-> It's not noticable in the profiles :-)
-> 
-> Where my usage differs from the patch for mpt2sas is that I hold a
-> reference to the CPU over the submission.  This works out well for
-> me because I have per-CPU state.  Might be worth considering for your
-> driver ...
+This patch seem to be fine. Please consider this patch as Acked-by: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
 
-Right, so in this case mpt2sas doesn't care.  It literally only needs a
-notion of the current CPU for cache hotness of MSI queue return.  It
-doesn't need pinning or anything else.  I think the use of
-raw_smp_processor_id() in this instance is ideal, because it actually is
-a "need to think about how to do this better" flag, which may mean
-actually doing it in a more per-CPU state type way.
+Regards,
+Nagalakshmi
 
-Mind you, something like
 
-cpu = get_cpu(); put_cpu();
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com] 
+Sent: Tuesday, April 17, 2012 6:55 PM
+To: 'linux-scsi@vger.kernel.org'
+Cc: Nandigama, Nagalakshmi
+Subject: [PATCH] mpt2sas: move the scsi_host_put to the right place
 
-Is also an instant smack in the eyeballs too because it looks so daft,
-so I'm not incredibly bothered.  I lean towards raw_smp_processor_id()
-because it's what's actually wanted, but not strongly.
+When scsi_add_host fails the scsi_host_put should be called.
 
-James
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index d953a57..0a256a3 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -8061,8 +8061,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+  out_thread_fail:
+ 	list_del(&ioc->list);
+ 	scsi_remove_host(shost);
+-	scsi_host_put(shost);
+  out_add_shost_fail:
++	scsi_host_put(shost);
+ 	return -ENODEV;
+ }
+ 
 
 
