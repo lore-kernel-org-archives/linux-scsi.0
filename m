@@ -1,8 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 12/17] hpsa: refine interrupt handler locking for greater
-	concurrency
-Date: Fri, 20 Apr 2012 10:07:22 -0500
-Message-ID: <20120420150722.10596.54013.stgit@beardog.cce.hp.com>
+Subject: [PATCH 09/17] hpsa: do aborts two ways
+Date: Fri, 20 Apr 2012 10:07:06 -0500
+Message-ID: <20120420150706.10596.71457.stgit@beardog.cce.hp.com>
 References: <20120420150349.10596.73732.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,306 +13,127 @@ To: james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, matthew.gates@hp.com, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Matt Gates <matthew.gates@hp.com>
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Use spinlocks with finer granularity in the submission and
-completion paths to allow concurrent execution for multiple
-reply queues.  In particular, do not hold a spin lock while
-submitting a request to the device, nor during most of the
-interrupt handler.
+When aborting a command, the tag is supposed to be
+specified as 64-bit little endian.  However, some smart
+arrays expect the tag of the command to be aborted to be
+specified in a strange byte order.  How to tell which sort
+of Smart Array firmware we're dealing with is not obvious.
+However, because of the way we construct our tags, the values
+of any outstanding tag when specified with the "strange" byte
+order will not collide with the value specified in the correct
+order.  That means we can safely attempt the abort both ways.
 
-Signed-off-by: Matt Gates <matthew.gates@hp.com>
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Signed-off-by: Stephen M. Cameron <stephenmcameron@gmail.com>
 ---
- drivers/scsi/hpsa.c |   61 +++++++++++++++++++++++++++++++++------------------
- drivers/scsi/hpsa.h |   13 +++++++----
- 2 files changed, 48 insertions(+), 26 deletions(-)
+ drivers/scsi/hpsa.c |   74 ++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 72 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 29bbf35..1ec912b 100644
+index 9882ef4..c657642 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -532,6 +532,7 @@ static inline u32 next_command(struct ctlr_info *h, u8 q)
- {
- 	u32 a;
- 	struct reply_pool *rq = &h->reply_queue[q];
-+	unsigned long flags;
- 
- 	if (unlikely(!(h->transMethod & CFGTBL_Trans_Performant)))
- 		return h->access.command_completed(h, q);
-@@ -539,7 +540,9 @@ static inline u32 next_command(struct ctlr_info *h, u8 q)
- 	if ((rq->head[rq->current_entry] & 1) == rq->wraparound) {
- 		a = rq->head[rq->current_entry];
- 		rq->current_entry++;
-+		spin_lock_irqsave(&h->lock, flags);
- 		h->commands_outstanding--;
-+		spin_unlock_irqrestore(&h->lock, flags);
- 	} else {
- 		a = FIFO_EMPTY;
- 	}
-@@ -574,8 +577,8 @@ static void enqueue_cmd_and_start_io(struct ctlr_info *h,
- 	spin_lock_irqsave(&h->lock, flags);
- 	addQ(&h->reqQ, c);
- 	h->Qdepth++;
--	start_io(h);
- 	spin_unlock_irqrestore(&h->lock, flags);
-+	start_io(h);
+@@ -2347,8 +2347,23 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 	return FAILED;
  }
  
- static inline void removeQ(struct CommandList *c)
-@@ -2083,9 +2086,8 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
- 		done(cmd);
- 		return 0;
- 	}
--	/* Need a lock as this is being allocated from the pool */
--	c = cmd_alloc(h);
- 	spin_unlock_irqrestore(&h->lock, flags);
-+	c = cmd_alloc(h);
- 	if (c == NULL) {			/* trouble... */
- 		dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
- 		return SCSI_MLQUEUE_HOST_BUSY;
-@@ -2619,14 +2621,21 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
- 	int i;
- 	union u64bit temp64;
- 	dma_addr_t cmd_dma_handle, err_dma_handle;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(&h->lock, flags);
- 	do {
- 		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
--		if (i == h->nr_cmds)
-+		if (i == h->nr_cmds) {
-+			spin_unlock_irqrestore(&h->lock, flags);
- 			return NULL;
-+		}
- 	} while (test_and_set_bit
- 		 (i & (BITS_PER_LONG - 1),
- 		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
-+	h->nr_allocs++;
-+	spin_unlock_irqrestore(&h->lock, flags);
++static void swizzle_abort_tag(u8 *tag)
++{
++	u8 original_tag[8];
 +
- 	c = h->cmd_pool + i;
- 	memset(c, 0, sizeof(*c));
- 	cmd_dma_handle = h->cmd_pool_dhandle
-@@ -2635,7 +2644,6 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
- 	memset(c->err_info, 0, sizeof(*c->err_info));
- 	err_dma_handle = h->errinfo_pool_dhandle
- 	    + i * sizeof(*c->err_info);
--	h->nr_allocs++;
- 
- 	c->cmdindex = i;
- 
-@@ -2691,11 +2699,14 @@ static struct CommandList *cmd_special_alloc(struct ctlr_info *h)
- static void cmd_free(struct ctlr_info *h, struct CommandList *c)
++	memcpy(original_tag, tag, 8);
++	tag[0] = original_tag[3];
++	tag[1] = original_tag[2];
++	tag[2] = original_tag[1];
++	tag[3] = original_tag[0];
++	tag[4] = original_tag[7];
++	tag[5] = original_tag[6];
++	tag[6] = original_tag[5];
++	tag[7] = original_tag[4];
++}
++
+ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+-	struct CommandList *abort)
++	struct CommandList *abort, int swizzle)
  {
- 	int i;
-+	unsigned long flags;
- 
- 	i = c - h->cmd_pool;
-+	spin_lock_irqsave(&h->lock, flags);
- 	clear_bit(i & (BITS_PER_LONG - 1),
- 		  h->cmd_pool_bits + (i / BITS_PER_LONG));
- 	h->nr_frees++;
-+	spin_unlock_irqrestore(&h->lock, flags);
- }
- 
- static void cmd_special_free(struct ctlr_info *h, struct CommandList *c)
-@@ -3299,7 +3310,9 @@ static void __iomem *remap_pci_mem(ulong base, ulong size)
- static void start_io(struct ctlr_info *h)
- {
+ 	int rc = IO_OK;
  	struct CommandList *c;
-+	unsigned long flags;
+@@ -2361,6 +2376,8 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	}
  
+ 	fill_cmd(c, HPSA_ABORT_MSG, h, abort, 0, 0, scsi3addr, TYPE_MSG);
++	if (swizzle)
++		swizzle_abort_tag(&c->Request.CDB[4]);
+ 	hpsa_scsi_do_simple_cmd_core(h, c);
+ 	dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: do_simple_cmd_core completed.\n",
+ 		__func__, abort->Header.Tag.upper, abort->Header.Tag.lower);
+@@ -2420,6 +2437,59 @@ static struct CommandList *hpsa_find_cmd_in_queue(struct ctlr_info *h,
+ 	return NULL;
+ }
+ 
++static struct CommandList *hpsa_find_cmd_in_queue_by_tag(struct ctlr_info *h,
++					u8 *tag, struct list_head *queue_head)
++{
++	unsigned long flags;
++	struct CommandList *c;
++
 +	spin_lock_irqsave(&h->lock, flags);
- 	while (!list_empty(&h->reqQ)) {
- 		c = list_entry(h->reqQ.next, struct CommandList, list);
- 		/* can't do anything if fifo is full */
-@@ -3312,12 +3325,23 @@ static void start_io(struct ctlr_info *h)
- 		removeQ(c);
- 		h->Qdepth--;
- 
--		/* Tell the controller execute command */
--		h->access.submit_command(h, c);
--
- 		/* Put job onto the completed Q */
- 		addQ(&h->cmpQ, c);
-+
-+		/* Must increment commands_outstanding before unlocking
-+		 * and submitting to avoid race checking for fifo full
-+		 * condition.
-+		 */
-+		h->commands_outstanding++;
-+		if (h->commands_outstanding > h->max_outstanding)
-+			h->max_outstanding = h->commands_outstanding;
-+
-+		/* Tell the controller execute command */
++	list_for_each_entry(c, queue_head, list) {
++		if (memcmp(&c->Header.Tag, tag, 8) != 0)
++			continue;
 +		spin_unlock_irqrestore(&h->lock, flags);
-+		h->access.submit_command(h, c);
-+		spin_lock_irqsave(&h->lock, flags);
- 	}
-+	spin_unlock_irqrestore(&h->lock, flags);
- }
- 
- static inline unsigned long get_next_completion(struct ctlr_info *h, u8 q)
-@@ -3348,7 +3372,11 @@ static inline int bad_tag(struct ctlr_info *h, u32 tag_index,
- 
- static inline void finish_cmd(struct CommandList *c)
- {
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&c->h->lock, flags);
- 	removeQ(c);
-+	spin_unlock_irqrestore(&c->h->lock, flags);
- 	if (likely(c->cmd_type == CMD_SCSI))
- 		complete_scsi_command(c);
- 	else if (c->cmd_type == CMD_IOCTL_PEND)
-@@ -3395,14 +3423,18 @@ static inline void process_nonindexed_cmd(struct ctlr_info *h,
- {
- 	u32 tag;
- 	struct CommandList *c = NULL;
-+	unsigned long flags;
- 
- 	tag = hpsa_tag_discard_error_bits(h, raw_tag);
-+	spin_lock_irqsave(&h->lock, flags);
- 	list_for_each_entry(c, &h->cmpQ, list) {
- 		if ((c->busaddr & 0xFFFFFFE0) == (tag & 0xFFFFFFE0)) {
-+			spin_unlock_irqrestore(&h->lock, flags);
- 			finish_cmd(c);
- 			return;
- 		}
- 	}
-+	spin_unlock_irqrestore(&h->lock, flags);
- 	bad_tag(h, h->nr_cmds + 1, raw_tag);
- }
- 
-@@ -3439,7 +3471,6 @@ static irqreturn_t hpsa_intx_discard_completions(int irq, void *queue)
- {
- 	struct ctlr_info *h = queue_to_hba(queue);
- 	u8 q = *(u8 *) queue;
--	unsigned long flags;
- 	u32 raw_tag;
- 
- 	if (ignore_bogus_interrupt(h))
-@@ -3447,47 +3478,39 @@ static irqreturn_t hpsa_intx_discard_completions(int irq, void *queue)
- 
- 	if (interrupt_not_for_us(h))
- 		return IRQ_NONE;
--	spin_lock_irqsave(&h->lock, flags);
- 	h->last_intr_timestamp = get_jiffies_64();
- 	while (interrupt_pending(h)) {
- 		raw_tag = get_next_completion(h, q);
- 		while (raw_tag != FIFO_EMPTY)
- 			raw_tag = next_command(h, q);
- 	}
--	spin_unlock_irqrestore(&h->lock, flags);
- 	return IRQ_HANDLED;
- }
- 
- static irqreturn_t hpsa_msix_discard_completions(int irq, void *queue)
- {
- 	struct ctlr_info *h = queue_to_hba(queue);
--	unsigned long flags;
- 	u32 raw_tag;
- 	u8 q = *(u8 *) queue;
- 
- 	if (ignore_bogus_interrupt(h))
- 		return IRQ_NONE;
- 
--	spin_lock_irqsave(&h->lock, flags);
--
- 	h->last_intr_timestamp = get_jiffies_64();
- 	raw_tag = get_next_completion(h, q);
- 	while (raw_tag != FIFO_EMPTY)
- 		raw_tag = next_command(h, q);
--	spin_unlock_irqrestore(&h->lock, flags);
- 	return IRQ_HANDLED;
- }
- 
- static irqreturn_t do_hpsa_intr_intx(int irq, void *queue)
- {
- 	struct ctlr_info *h = queue_to_hba((u8 *) queue);
--	unsigned long flags;
- 	u32 raw_tag;
- 	u8 q = *(u8 *) queue;
- 
- 	if (interrupt_not_for_us(h))
- 		return IRQ_NONE;
--	spin_lock_irqsave(&h->lock, flags);
- 	h->last_intr_timestamp = get_jiffies_64();
- 	while (interrupt_pending(h)) {
- 		raw_tag = get_next_completion(h, q);
-@@ -3499,18 +3522,15 @@ static irqreturn_t do_hpsa_intr_intx(int irq, void *queue)
- 			raw_tag = next_command(h, q);
- 		}
- 	}
--	spin_unlock_irqrestore(&h->lock, flags);
- 	return IRQ_HANDLED;
- }
- 
- static irqreturn_t do_hpsa_intr_msi(int irq, void *queue)
- {
- 	struct ctlr_info *h = queue_to_hba(queue);
--	unsigned long flags;
- 	u32 raw_tag;
- 	u8 q = *(u8 *) queue;
- 
--	spin_lock_irqsave(&h->lock, flags);
- 	h->last_intr_timestamp = get_jiffies_64();
- 	raw_tag = get_next_completion(h, q);
- 	while (raw_tag != FIFO_EMPTY) {
-@@ -3520,7 +3540,6 @@ static irqreturn_t do_hpsa_intr_msi(int irq, void *queue)
- 			process_nonindexed_cmd(h, raw_tag);
- 		raw_tag = next_command(h, q);
- 	}
--	spin_unlock_irqrestore(&h->lock, flags);
- 	return IRQ_HANDLED;
- }
- 
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 486a7c0..79c36aa 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -246,9 +246,6 @@ static void SA5_submit_command(struct ctlr_info *h,
- 		c->Header.Tag.lower);
- 	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
- 	(void) readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
--	h->commands_outstanding++;
--	if (h->commands_outstanding > h->max_outstanding)
--		h->max_outstanding = h->commands_outstanding;
- }
- 
- /*
-@@ -287,7 +284,7 @@ static void SA5_performant_intr_mask(struct ctlr_info *h, unsigned long val)
- static unsigned long SA5_performant_completed(struct ctlr_info *h, u8 q)
- {
- 	struct reply_pool *rq = &h->reply_queue[q];
--	unsigned long register_value = FIFO_EMPTY;
-+	unsigned long flags, register_value = FIFO_EMPTY;
- 
- 	/* msi auto clears the interrupt pending bit. */
- 	if (!(h->msi_vector || h->msix_vector)) {
-@@ -305,7 +302,9 @@ static unsigned long SA5_performant_completed(struct ctlr_info *h, u8 q)
- 	if ((rq->head[rq->current_entry] & 1) == rq->wraparound) {
- 		register_value = rq->head[rq->current_entry];
- 		rq->current_entry++;
-+		spin_lock_irqsave(&h->lock, flags);
- 		h->commands_outstanding--;
-+		spin_unlock_irqrestore(&h->lock, flags);
- 	} else {
- 		register_value = FIFO_EMPTY;
- 	}
-@@ -338,9 +337,13 @@ static unsigned long SA5_completed(struct ctlr_info *h,
- {
- 	unsigned long register_value
- 		= readl(h->vaddr + SA5_REPLY_PORT_OFFSET);
-+	unsigned long flags;
- 
--	if (register_value != FIFO_EMPTY)
-+	if (register_value != FIFO_EMPTY) {
-+		spin_lock_irqsave(&h->lock, flags);
- 		h->commands_outstanding--;
-+		spin_unlock_irqrestore(&h->lock, flags);
++		return c;
 +	}
- 
- #ifdef HPSA_DEBUG
- 	if (register_value != FIFO_EMPTY)
++	spin_unlock_irqrestore(&h->lock, flags);
++	return NULL;
++}
++
++/* Some Smart Arrays need the abort tag swizzled, and some don't.  It's hard to
++ * tell which kind we're dealing with, so we send the abort both ways.  There
++ * shouldn't be any collisions between swizzled and unswizzled tags due to the
++ * way we construct our tags but we check anyway in case the assumptions which
++ * make this true someday become false.
++ */
++static int hpsa_send_abort_both_ways(struct ctlr_info *h,
++	unsigned char *scsi3addr, struct CommandList *abort)
++{
++	u8 swizzled_tag[8];
++	struct CommandList *c;
++	int rc = 0, rc2 = 0;
++
++	/* we do not expect to find the swizzled tag in our queue, but
++	 * check anyway just to be sure the assumptions which make this
++	 * the case haven't become wrong.
++	 */
++	memcpy(swizzled_tag, &abort->Request.CDB[4], 8);
++	swizzle_abort_tag(swizzled_tag);
++	c = hpsa_find_cmd_in_queue_by_tag(h, swizzled_tag, &h->cmpQ);
++	if (c != NULL) {
++		dev_warn(&h->pdev->dev, "Unexpectedly found byte-swapped tag in completion queue.\n");
++		return hpsa_send_abort(h, scsi3addr, abort, 0);
++	}
++	rc = hpsa_send_abort(h, scsi3addr, abort, 0);
++
++	/* if the command is still in our queue, we can't conclude that it was
++	 * aborted (it might have just completed normally) but in any case
++	 * we don't need to try to abort it another way.
++	 */
++	c = hpsa_find_cmd_in_queue(h, abort->scsi_cmd, &h->cmpQ);
++	if (c)
++		rc2 = hpsa_send_abort(h, scsi3addr, abort, 1);
++	return rc && rc2;
++}
++
+ /* Send an abort for the specified command.
+  *	If the device and controller support it,
+  *		send a task abort request.
+@@ -2504,7 +2574,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+ 	 * by the firmware (but not to the scsi mid layer) but we can't
+ 	 * distinguish which.  Send the abort down.
+ 	 */
+-	rc = hpsa_send_abort(h, dev->scsi3addr, abort);
++	rc = hpsa_send_abort_both_ways(h, dev->scsi3addr, abort);
+ 	if (rc != 0) {
+ 		dev_dbg(&h->pdev->dev, "%s Request FAILED.\n", msg);
+ 		dev_warn(&h->pdev->dev, "FAILED abort on device C%d:B%d:T%d:L%d\n",
