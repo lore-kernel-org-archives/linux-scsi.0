@@ -1,51 +1,31 @@
-From: Venkatraman S <svenkatr@ti.com>
-Subject: [PATCH v2] scsi/ufs: Fix evaluation of UTP task completion code
-Date: Thu, 19 Apr 2012 11:46:22 +0530
-Message-ID: <1334816182-16268-1-git-send-email-svenkatr@ti.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: michaelc@cs.wisc.edu
+Subject: [RFC 0/4]: offlined device changes
+Date: Thu, 19 Apr 2012 20:08:52 -0500
+Message-ID: <1334884136-3689-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:53204 "EHLO arroyo.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:14877 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752608Ab2DSGK0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Apr 2012 02:10:26 -0400
+	id S1751113Ab2DTBI6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Apr 2012 21:08:58 -0400
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3K18v3b025100
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Apr 2012 21:08:57 -0400
+Received: from meanminna.corp.redhat.com (vpn-9-38.rdu.redhat.com [10.11.9.38])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id q3K18uoc029763
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Apr 2012 21:08:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Venkatraman S <svenkatr@ti.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: linux-scsi@vger.kernel.org
 
-While interpreting the result of UTP task completion status,
-by using boolean &&, the evaluation would fail when the
-UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED was received.
+The following patches were made over scsi-misc.
 
-Either UPIU_TASK_MANAGEMENT_FUNC_COMPL or
-UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED should be
-considered as a success result.
+The first 3 patches add a new state, SDEV_TRANSPORT_OFFLINE, which
+can be used by transport classes to offline devices. This replaces
+the behavior where they set some value in their check ready functions
+then set the devices to running to fail IO.
 
-Reported-by: Joe Perches <joe@perches.com>
-Signed-off-by: Venkatraman S <svenkatr@ti.com>
-Reviewed-by: Namjae Jeon <linkinjeon@gmail.com>
-Acked-by: Santosh Y <santoshsy@gmail.com>
-CC: Andrew Morton <akpm@linux-foundation.org>
-CC: James Bottomley <James.Bottomley@hansenpartnership.com>
----
-	v1 -> v2: Update subject, description as suggested by Andrew Morton
- drivers/scsi/ufs/ufshcd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+The last patch has scsi-ml send a KOBJ_CHANGE event when transitioning
+from SDEV_TRANSPORT_OFFLINE or SDEV_OFFLINE to SDEV_RUNNING.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index aa97200..cd59f6f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1160,7 +1160,7 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
- 		task_result = be32_to_cpu(task_rsp_upiup->header.dword_1);
- 		task_result = ((task_result & MASK_TASK_RESPONSE) >> 8);
- 
--		if (task_result != UPIU_TASK_MANAGEMENT_FUNC_COMPL ||
-+		if (task_result != UPIU_TASK_MANAGEMENT_FUNC_COMPL &&
- 		    task_result != UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED)
- 			task_result = FAILED;
- 	} else {
--- 
-1.7.5.4
 
