@@ -1,95 +1,56 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 4/6] fcoe: Don't hold rtnl_mutex in fcoe_update_src_mac
-Date: Fri, 20 Apr 2012 12:16:43 -0700
-Message-ID: <20120420191643.4634.91026.stgit@localhost6.localdomain6>
+Subject: [PATCH 5/6] libfcoe: fix VN2VN N_Port_ID Beacon source MAC
+Date: Fri, 20 Apr 2012 12:16:49 -0700
+Message-ID: <20120420191649.4634.26012.stgit@localhost6.localdomain6>
 References: <20120420191620.4634.94869.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12043 "EHLO mga01.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:44406 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752665Ab2DTTQo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Apr 2012 15:16:44 -0400
+	id S1751375Ab2DTTQt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Apr 2012 15:16:49 -0400
 In-Reply-To: <20120420191620.4634.94869.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Yi Zou <yi.zou@intel.com>
 
-The rtnl_mutex was held to protect calls to dev_uc_add
-and dev_uc_del. Holding rtnl is not required as those
-functions make use of the netif_addr_lock* API to
-protect the MAC changing.
+From: Yi Zou <yi.zou@intel.com>
 
-This change fixes the following regression by removing
-the rtnl usage when fcoe_update_src_mac is called.
+FC-BB-6 v1.04 7.9.8.14 N_Port_ID Beacon:
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42918
+"A N_Port_ID Beacon is multicast and uses the VN_Port MAC address as source
+address."
 
-the existing dependency chain (in reverse order) is:
+Currently, libfcoe is using ENode MAC, this seems ok and functionality wise
+not a problem in my back to back testing setup, however, just fix this to
+make libfcoe VN2VN support more spec compliant.
 
--> #1 (&fip->ctlr_mutex){+.+...}:
-       [<c1091f70>] lock_acquire+0x80/0x1b0
-       [<c147655d>] mutex_lock_nested+0x6d/0x340
-       [<f8970c32>] fcoe_ctlr_link_up+0x22/0x180 [libfcoe]
-       [<f894620e>] fcoe_create+0x47e/0x6e0 [fcoe]
-       [<f8973dd3>] fcoe_transport_create+0x143/0x250 [libfcoe]
-       [<c10527e0>] param_attr_store+0x30/0x60
-       [<c1052696>] module_attr_store+0x26/0x40
-       [<c11a201e>] sysfs_write_file+0xae/0x100
-       [<c11449df>] vfs_write+0x8f/0x160
-       [<c1144cbd>] sys_write+0x3d/0x70
-       [<c147a0c4>] syscall_call+0x7/0xb
-
--> #0 (rtnl_mutex){+.+.+.}:
-       [<c109164b>] __lock_acquire+0x140b/0x1720
-       [<c1091f70>] lock_acquire+0x80/0x1b0
-       [<c147655d>] mutex_lock_nested+0x6d/0x340
-       [<c13a10c4>] rtnl_lock+0x14/0x20
-       [<f89445ac>] fcoe_update_src_mac+0x2c/0xb0 [fcoe]
-       [<f8971712>] fcoe_ctlr_timer_work+0x712/0xb60 [libfcoe]
-       [<c104fb69>] process_one_work+0x179/0x5d0
-       [<c10502f1>] worker_thread+0x121/0x2d0
-       [<c10550ed>] kthread+0x7d/0x90
-       [<c1481a82>] kernel_thread_helper+0x6/0x10
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(&fip->ctlr_mutex);
-                               lock(rtnl_mutex);
-                               lock(&fip->ctlr_mutex);
-  lock(rtnl_mutex);
-
- *** DEADLOCK ***
-
+Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
-Nacked-by: Robert Love <robert.w.love@intel.com>
-Tested-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/fcoe/fcoe.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe_ctlr.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 481ba6f..ac1df93 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -536,13 +536,11 @@ static void fcoe_update_src_mac(struct fc_lport *lport, u8 *addr)
- 	struct fcoe_port *port = lport_priv(lport);
- 	struct fcoe_interface *fcoe = port->priv;
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 249a106..5a4c725 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -1883,7 +1883,13 @@ static void fcoe_ctlr_vn_send(struct fcoe_ctlr *fip,
+ 	frame = (struct fip_frame *)skb->data;
+ 	memset(frame, 0, len);
+ 	memcpy(frame->eth.h_dest, dest, ETH_ALEN);
+-	memcpy(frame->eth.h_source, fip->ctl_src_addr, ETH_ALEN);
++
++	if (sub == FIP_SC_VN_BEACON) {
++		hton24(frame->eth.h_source, FIP_VN_FC_MAP);
++		hton24(frame->eth.h_source + 3, fip->port_id);
++	} else {
++		memcpy(frame->eth.h_source, fip->ctl_src_addr, ETH_ALEN);
++	}
+ 	frame->eth.h_proto = htons(ETH_P_FIP);
  
--	rtnl_lock();
- 	if (!is_zero_ether_addr(port->data_src_addr))
- 		dev_uc_del(fcoe->netdev, port->data_src_addr);
- 	if (!is_zero_ether_addr(addr))
- 		dev_uc_add(fcoe->netdev, addr);
- 	memcpy(port->data_src_addr, addr, ETH_ALEN);
--	rtnl_unlock();
- }
- 
- /**
+ 	frame->fip.fip_ver = FIP_VER_ENCAPS(FIP_VER);
 
