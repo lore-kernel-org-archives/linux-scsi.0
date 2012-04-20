@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 06/17] hpsa: retry driver initiated commands on busy status
-Date: Fri, 20 Apr 2012 10:06:46 -0500
-Message-ID: <20120420150646.10596.37875.stgit@beardog.cce.hp.com>
+Subject: [PATCH 07/17] hpsa: remove unused parameter from finish_cmd
+Date: Fri, 20 Apr 2012 10:06:56 -0500
+Message-ID: <20120420150656.10596.49932.stgit@beardog.cce.hp.com>
 References: <20120420150349.10596.73732.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,46 +13,50 @@ To: james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, matthew.gates@hp.com, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Matt Bondurant <Matthew.dav.bondurant@hp.com>
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-In shared SAS configurations we might get a busy status
-during driver initiated commands (e.g. during rescan for
-devices).  We should retry the command in such cases rather
-than giving up.
-
-Signed-off-by: Matt Bondurant <Matthew.dav.bondurant@hp.com>
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index fcb9fb2..7355891 100644
+index 7355891..e45bfda 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -234,6 +234,15 @@ static int check_for_unit_attention(struct ctlr_info *h,
- 	return 1;
+@@ -3055,7 +3055,7 @@ static inline int bad_tag(struct ctlr_info *h, u32 tag_index,
+ 	return 0;
  }
  
-+static int check_for_busy(struct ctlr_info *h, struct CommandList *c)
-+{
-+	if (c->err_info->CommandStatus != CMD_TARGET_STATUS ||
-+		c->err_info->ScsiStatus != SAM_STAT_BUSY)
-+		return 0;
-+	dev_warn(&h->pdev->dev, HPSA "device busy");
-+	return 1;
-+}
-+
- static ssize_t host_store_rescan(struct device *dev,
- 				 struct device_attribute *attr,
- 				 const char *buf, size_t count)
-@@ -1379,7 +1388,8 @@ static void hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
- 		memset(c->err_info, 0, sizeof(*c->err_info));
- 		hpsa_scsi_do_simple_cmd_core(h, c);
- 		retry_count++;
--	} while (check_for_unit_attention(h, c) && retry_count <= 3);
-+	} while ((check_for_unit_attention(h, c) ||
-+			check_for_busy(h, c)) && retry_count <= 3);
- 	hpsa_pci_unmap(h->pdev, c, 1, data_direction);
+-static inline void finish_cmd(struct CommandList *c, u32 raw_tag)
++static inline void finish_cmd(struct CommandList *c)
+ {
+ 	removeQ(c);
+ 	if (likely(c->cmd_type == CMD_SCSI))
+@@ -3095,7 +3095,7 @@ static inline u32 process_indexed_cmd(struct ctlr_info *h,
+ 	if (bad_tag(h, tag_index, raw_tag))
+ 		return next_command(h);
+ 	c = h->cmd_pool + tag_index;
+-	finish_cmd(c, raw_tag);
++	finish_cmd(c);
+ 	return next_command(h);
+ }
+ 
+@@ -3109,7 +3109,7 @@ static inline u32 process_nonindexed_cmd(struct ctlr_info *h,
+ 	tag = hpsa_tag_discard_error_bits(h, raw_tag);
+ 	list_for_each_entry(c, &h->cmpQ, list) {
+ 		if ((c->busaddr & 0xFFFFFFE0) == (tag & 0xFFFFFFE0)) {
+-			finish_cmd(c, raw_tag);
++			finish_cmd(c);
+ 			return next_command(h);
+ 		}
+ 	}
+@@ -4165,7 +4165,7 @@ static void fail_all_cmds_on_list(struct ctlr_info *h, struct list_head *list)
+ 	while (!list_empty(list)) {
+ 		c = list_entry(list->next, struct CommandList, list);
+ 		c->err_info->CommandStatus = CMD_HARDWARE_ERR;
+-		finish_cmd(c, c->Header.Tag.lower);
++		finish_cmd(c);
+ 	}
  }
  
