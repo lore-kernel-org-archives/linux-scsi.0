@@ -1,7 +1,8 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 09/17] hpsa: do aborts two ways
-Date: Fri, 20 Apr 2012 10:07:06 -0500
-Message-ID: <20120420150706.10596.71457.stgit@beardog.cce.hp.com>
+Subject: [PATCH 10/17] hpsa: factor out tail calls to next_command() in
+	process_(non)indexed_cmd()
+Date: Fri, 20 Apr 2012 10:07:11 -0500
+Message-ID: <20120420150711.10596.96628.stgit@beardog.cce.hp.com>
 References: <20120420150349.10596.73732.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,125 +16,88 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-When aborting a command, the tag is supposed to be
-specified as 64-bit little endian.  However, some smart
-arrays expect the tag of the command to be aborted to be
-specified in a strange byte order.  How to tell which sort
-of Smart Array firmware we're dealing with is not obvious.
-However, because of the way we construct our tags, the values
-of any outstanding tag when specified with the "strange" byte
-order will not collide with the value specified in the correct
-order.  That means we can safely attempt the abort both ways.
+This is in order to smooth the way for upcoming changes to allow use of
+multiple reply queues for command completions.
 
-Signed-off-by: Stephen M. Cameron <stephenmcameron@gmail.com>
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Signed-off-by: Matt Gates <matthew.gates@hp.com>
 ---
- drivers/scsi/hpsa.c |   74 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 72 insertions(+), 2 deletions(-)
+ drivers/scsi/hpsa.c |   30 +++++++++++++++---------------
+ 1 files changed, 15 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9882ef4..c657642 100644
+index c657642..96d07d4 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2347,8 +2347,23 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	return FAILED;
+@@ -3371,22 +3371,21 @@ static inline u32 hpsa_tag_discard_error_bits(struct ctlr_info *h, u32 tag)
  }
  
-+static void swizzle_abort_tag(u8 *tag)
-+{
-+	u8 original_tag[8];
-+
-+	memcpy(original_tag, tag, 8);
-+	tag[0] = original_tag[3];
-+	tag[1] = original_tag[2];
-+	tag[2] = original_tag[1];
-+	tag[3] = original_tag[0];
-+	tag[4] = original_tag[7];
-+	tag[5] = original_tag[6];
-+	tag[6] = original_tag[5];
-+	tag[7] = original_tag[4];
-+}
-+
- static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
--	struct CommandList *abort)
-+	struct CommandList *abort, int swizzle)
+ /* process completion of an indexed ("direct lookup") command */
+-static inline u32 process_indexed_cmd(struct ctlr_info *h,
++static inline void process_indexed_cmd(struct ctlr_info *h,
+ 	u32 raw_tag)
  {
- 	int rc = IO_OK;
+ 	u32 tag_index;
  	struct CommandList *c;
-@@ -2361,6 +2376,8 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
- 	}
  
- 	fill_cmd(c, HPSA_ABORT_MSG, h, abort, 0, 0, scsi3addr, TYPE_MSG);
-+	if (swizzle)
-+		swizzle_abort_tag(&c->Request.CDB[4]);
- 	hpsa_scsi_do_simple_cmd_core(h, c);
- 	dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: do_simple_cmd_core completed.\n",
- 		__func__, abort->Header.Tag.upper, abort->Header.Tag.lower);
-@@ -2420,6 +2437,59 @@ static struct CommandList *hpsa_find_cmd_in_queue(struct ctlr_info *h,
- 	return NULL;
+ 	tag_index = hpsa_tag_to_index(raw_tag);
+-	if (bad_tag(h, tag_index, raw_tag))
+-		return next_command(h);
+-	c = h->cmd_pool + tag_index;
+-	finish_cmd(c);
+-	return next_command(h);
++	if (!bad_tag(h, tag_index, raw_tag)) {
++		c = h->cmd_pool + tag_index;
++		finish_cmd(c);
++	}
  }
  
-+static struct CommandList *hpsa_find_cmd_in_queue_by_tag(struct ctlr_info *h,
-+					u8 *tag, struct list_head *queue_head)
-+{
-+	unsigned long flags;
-+	struct CommandList *c;
-+
-+	spin_lock_irqsave(&h->lock, flags);
-+	list_for_each_entry(c, queue_head, list) {
-+		if (memcmp(&c->Header.Tag, tag, 8) != 0)
-+			continue;
-+		spin_unlock_irqrestore(&h->lock, flags);
-+		return c;
-+	}
-+	spin_unlock_irqrestore(&h->lock, flags);
-+	return NULL;
-+}
-+
-+/* Some Smart Arrays need the abort tag swizzled, and some don't.  It's hard to
-+ * tell which kind we're dealing with, so we send the abort both ways.  There
-+ * shouldn't be any collisions between swizzled and unswizzled tags due to the
-+ * way we construct our tags but we check anyway in case the assumptions which
-+ * make this true someday become false.
-+ */
-+static int hpsa_send_abort_both_ways(struct ctlr_info *h,
-+	unsigned char *scsi3addr, struct CommandList *abort)
-+{
-+	u8 swizzled_tag[8];
-+	struct CommandList *c;
-+	int rc = 0, rc2 = 0;
-+
-+	/* we do not expect to find the swizzled tag in our queue, but
-+	 * check anyway just to be sure the assumptions which make this
-+	 * the case haven't become wrong.
-+	 */
-+	memcpy(swizzled_tag, &abort->Request.CDB[4], 8);
-+	swizzle_abort_tag(swizzled_tag);
-+	c = hpsa_find_cmd_in_queue_by_tag(h, swizzled_tag, &h->cmpQ);
-+	if (c != NULL) {
-+		dev_warn(&h->pdev->dev, "Unexpectedly found byte-swapped tag in completion queue.\n");
-+		return hpsa_send_abort(h, scsi3addr, abort, 0);
-+	}
-+	rc = hpsa_send_abort(h, scsi3addr, abort, 0);
-+
-+	/* if the command is still in our queue, we can't conclude that it was
-+	 * aborted (it might have just completed normally) but in any case
-+	 * we don't need to try to abort it another way.
-+	 */
-+	c = hpsa_find_cmd_in_queue(h, abort->scsi_cmd, &h->cmpQ);
-+	if (c)
-+		rc2 = hpsa_send_abort(h, scsi3addr, abort, 1);
-+	return rc && rc2;
-+}
-+
- /* Send an abort for the specified command.
-  *	If the device and controller support it,
-  *		send a task abort request.
-@@ -2504,7 +2574,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
- 	 * by the firmware (but not to the scsi mid layer) but we can't
- 	 * distinguish which.  Send the abort down.
- 	 */
--	rc = hpsa_send_abort(h, dev->scsi3addr, abort);
-+	rc = hpsa_send_abort_both_ways(h, dev->scsi3addr, abort);
- 	if (rc != 0) {
- 		dev_dbg(&h->pdev->dev, "%s Request FAILED.\n", msg);
- 		dev_warn(&h->pdev->dev, "FAILED abort on device C%d:B%d:T%d:L%d\n",
+ /* process completion of a non-indexed command */
+-static inline u32 process_nonindexed_cmd(struct ctlr_info *h,
++static inline void process_nonindexed_cmd(struct ctlr_info *h,
+ 	u32 raw_tag)
+ {
+ 	u32 tag;
+@@ -3396,11 +3395,10 @@ static inline u32 process_nonindexed_cmd(struct ctlr_info *h,
+ 	list_for_each_entry(c, &h->cmpQ, list) {
+ 		if ((c->busaddr & 0xFFFFFFE0) == (tag & 0xFFFFFFE0)) {
+ 			finish_cmd(c);
+-			return next_command(h);
++			return;
+ 		}
+ 	}
+ 	bad_tag(h, h->nr_cmds + 1, raw_tag);
+-	return next_command(h);
+ }
+ 
+ /* Some controllers, like p400, will give us one interrupt
+@@ -3475,10 +3473,11 @@ static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id)
+ 	while (interrupt_pending(h)) {
+ 		raw_tag = get_next_completion(h);
+ 		while (raw_tag != FIFO_EMPTY) {
+-			if (hpsa_tag_contains_index(raw_tag))
+-				raw_tag = process_indexed_cmd(h, raw_tag);
++			if (likely(hpsa_tag_contains_index(raw_tag)))
++				process_indexed_cmd(h, raw_tag);
+ 			else
+-				raw_tag = process_nonindexed_cmd(h, raw_tag);
++				process_nonindexed_cmd(h, raw_tag);
++			raw_tag = next_command(h);
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&h->lock, flags);
+@@ -3495,10 +3494,11 @@ static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id)
+ 	h->last_intr_timestamp = get_jiffies_64();
+ 	raw_tag = get_next_completion(h);
+ 	while (raw_tag != FIFO_EMPTY) {
+-		if (hpsa_tag_contains_index(raw_tag))
+-			raw_tag = process_indexed_cmd(h, raw_tag);
++		if (likely(hpsa_tag_contains_index(raw_tag)))
++			process_indexed_cmd(h, raw_tag);
+ 		else
+-			raw_tag = process_nonindexed_cmd(h, raw_tag);
++			process_nonindexed_cmd(h, raw_tag);
++		raw_tag = next_command(h);
+ 	}
+ 	spin_unlock_irqrestore(&h->lock, flags);
+ 	return IRQ_HANDLED;
