@@ -1,57 +1,50 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [RESEND][PATCH] [SCSI] scsi_dh: allow 3rd party multipath drivers to
- use scsi_dh_detach
-Date: Fri, 20 Apr 2012 10:45:38 -0400
-Message-ID: <20120420144538.GB8155@redhat.com>
-References: <20111215214440.GA17677@redhat.com>
- <4EF039D5.5010201@suse.de>
- <20120405144721.GA18437@redhat.com>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 00/17] hpsa updates for April, 2012
+Date: Fri, 20 Apr 2012 10:06:11 -0500
+Message-ID: <20120420150349.10596.73732.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120405144721.GA18437@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Chandra Seetharaman <sekharan@us.ibm.com>, linux-kernel@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, matthew.gates@hp.com, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
 
-Allow 3rd party multipath drivers to programatically detach a scsi_dh
-using the scsi_dh_detach() interface.  This is as improvement over
-requiring them to write 'detach' to /sys/block/sdX/queue/dh_state
+The two big changes here are adding an abort handler, and using multiple
+reply queues for command completions.  
 
-End result is both Linux and 3rd party multipath drivers can coexist
-without compromising Linux's default handling of multipath LUNs.
+Matt Bondurant (1):
+      hpsa: retry driver initiated commands on busy status
 
-Linux has suffered from races associated with attaching a scsi_dh to a
-device too late (after an HBA driver has started the SCSI device scan).
-Attaching a scsi_dh too late results in default sense handling that does
-not silently fail IO to passive paths, which creates excessive delays
-and IO errors during normal boot on a system with hundreds of LUNs.
+Matt Gates (2):
+      hpsa: use multiple reply queues
+      hpsa: refine interrupt handler locking for greater concurrency
 
-To fix this the appropriate scsi_dh must be attached before the HBA
-driver(s) are even loaded.  But some scsi_dh are known to conflict with
-3rd party multipath drivers (e.g. both scsi_dh_alua and scsi_dh_emc
-conflict with EMC PowerPath).  This patch allows 3rd party drivers to
-resolve the conflict by detaching an attached scsi_dh.
+Mike Miller (1):
+      hpsa: add new RAID level "1(ADM)"
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-Acked-by: Hannes Reinecke <hare@suse.de>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>
----
- drivers/scsi/device_handler/scsi_dh.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Stephen M. Cameron (13):
+      hpsa: call pci_disable_device on driver unload
+      hpsa: do not skip disabled devices
+      hpsa: enable bus master bit after pci_enable_device
+      hpsa: suppress excessively chatty error messages
+      hpsa: do not read from controller unnecessarily in completion code
+      hpsa: remove unused parameter from finish_cmd
+      hpsa: add abort error handler function
+      hpsa: do aborts two ways
+      hpsa: factor out tail calls to next_command() in process_(non)indexed_cmd()
+      hpsa: factor out hpsa_free_irqs_and_disable_msix
+      hpsa: use new IS_ENABLED macro
+      hpsa: removed unused member maxQsinceinit
+      hpsa: dial down lockup detection during firmware flash
 
-diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-index 23149b9..a550de1 100644
---- a/drivers/scsi/device_handler/scsi_dh.c
-+++ b/drivers/scsi/device_handler/scsi_dh.c
-@@ -578,7 +578,7 @@ void scsi_dh_detach(struct request_queue *q)
- 	}
- 	put_device(&sdev->sdev_gendev);
- }
--EXPORT_SYMBOL_GPL(scsi_dh_detach);
-+EXPORT_SYMBOL(scsi_dh_detach);
- 
- static struct notifier_block scsi_dh_nb = {
- 	.notifier_call = scsi_dh_notifier
+
+ drivers/block/cciss.c   |    2 
+ drivers/scsi/hpsa.c     |  689 +++++++++++++++++++++++++++++++++++++----------
+ drivers/scsi/hpsa.h     |   85 ++++--
+ drivers/scsi/hpsa_cmd.h |   37 ++-
+ 4 files changed, 643 insertions(+), 170 deletions(-)
+
+-- 
+-- steve
