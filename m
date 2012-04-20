@@ -1,16 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 2/6] libfc: flush lport worker after its disabled
-Date: Fri, 20 Apr 2012 12:16:32 -0700
-Message-ID: <20120420191632.4634.60327.stgit@localhost6.localdomain6>
+Subject: [PATCH 3/6] libfc: defer releasing master lport until complete fcoe
+ interface cleanuped up
+Date: Fri, 20 Apr 2012 12:16:38 -0700
+Message-ID: <20120420191638.4634.43311.stgit@localhost6.localdomain6>
 References: <20120420191620.4634.94869.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58774 "EHLO mga01.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:44294 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751731Ab2DTTQd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Apr 2012 15:16:33 -0400
+	id S1751756Ab2DTTQk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Apr 2012 15:16:40 -0400
 In-Reply-To: <20120420191620.4634.94869.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,56 +20,43 @@ Cc: Ross Brattain <ross.b.brattain@intel.com>, Neil Horman <nhorman@tuxdriver.co
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-The lport could get timeout armed while its getting disabled,
-so flush lport worker after its disabled and ignore lport
-retry in that case instead of WARN_ON.
-
- [13192.936858] WARNING: at drivers/scsi/libfc/fc_lport.c:1573 fc_lport_timeout+0x53/0xa9 [libfc]()
- [13192.938026] Hardware name: Bochs
- [13192.938620] Modules linked in: fcoe libfcoe libfc scsi_transport_fc scsi_tgt fuse 8021q garp stp llc sunrpc ipv6 uinput microcode joydev pcspkr ixgbe e1000 i2c_piix4 i2c_core virtio_balloon dca mdio virtio_blk virtio_pci virtio_ring virtio floppy [last unloaded: speedstep_lib]
- [13192.942589] Pid: 23605, comm: kworker/0:6 Tainted: G        W    3.2.0+ #71
- [13192.943587] Call Trace:
- [13192.944052]  [<ffffffff810403f4>] warn_slowpath_common+0x85/0x9d
- [13192.944940]  [<ffffffff81040426>] warn_slowpath_null+0x1a/0x1c
- [13192.945734]  [<ffffffffa02746eb>] fc_lport_timeout+0x53/0xa9 [libfc]
- [13192.946665]  [<ffffffff81058d88>] process_one_work+0x20c/0x3ad
- [13192.947541]  [<ffffffff81058cbe>] ? process_one_work+0x142/0x3ad
- [13192.948423]  [<ffffffffa0274698>] ? fc_lport_enter_ns+0x178/0x178 [libfc]
- [13192.949363]  [<ffffffff8105a313>] worker_thread+0xfd/0x181
- [13192.950191]  [<ffffffff8105a216>] ? manage_workers.clone.15+0x173/0x173
- [13192.951100]  [<ffffffff8105e19b>] kthread+0xa4/0xac
- [13192.951755]  [<ffffffff814edbb4>] kernel_thread_helper+0x4/0x10
- [13192.952520]  [<ffffffff814e5cb4>] ? retint_restore_args+0x13/0x13
- [13192.953398]  [<ffffffff8105e0f7>] ? __init_kthread_worker+0x5b/0x5b
- [13192.954278]  [<ffffffff814edbb0>] ? gs_change+0x13/0x13
- [13192.954911] ---[ end trace 9763213b95bbd803 ]---
+The fcoe controller has back references, therefore defer
+releasing master lport which gets freed along scsi_host_put
+and then free it once fcoe interface is fully cleaned.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Acked-by: Neil Horman <nhorman@tuxdriver.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_lport.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index cc83b66..c1402fb 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -648,6 +648,7 @@ int fc_lport_destroy(struct fc_lport *lport)
- 	lport->tt.fcp_abort_io(lport);
- 	lport->tt.disc_stop_final(lport);
- 	lport->tt.exch_mgr_reset(lport, 0, 0);
-+	cancel_delayed_work_sync(&lport->retry_work);
- 	fc_fc4_del_lport(lport);
- 	return 0;
- }
-@@ -1564,7 +1565,6 @@ static void fc_lport_timeout(struct work_struct *work)
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 09a6a26..481ba6f 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -472,6 +472,7 @@ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
+ 	/* Release the self-reference taken during fcoe_interface_create() */
+ 	/* tear-down the FCoE controller */
+ 	fcoe_ctlr_destroy(fip);
++	scsi_host_put(fcoe->ctlr.lp->host);
+ 	kfree(fcoe);
+ 	dev_put(netdev);
+ 	module_put(THIS_MODULE);
+@@ -976,8 +977,12 @@ static void fcoe_if_destroy(struct fc_lport *lport)
+ 	/* Free memory used by statistical counters */
+ 	fc_lport_free_stats(lport);
  
- 	switch (lport->state) {
- 	case LPORT_ST_DISABLED:
--		WARN_ON(1);
- 		break;
- 	case LPORT_ST_READY:
- 		break;
+-	/* Release the Scsi_Host */
+-	scsi_host_put(lport->host);
++	/*
++	 * Release the Scsi_Host for vport but hold on to
++	 * master lport until it fcoe interface fully cleaned-up.
++	 */
++	if (lport->vport)
++		scsi_host_put(lport->host);
+ }
+ 
+ /**
 
