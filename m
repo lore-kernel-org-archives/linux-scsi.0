@@ -1,61 +1,120 @@
-From: "Shergill, Gurinder" <gurinder.shergill@hp.com>
-Subject: RE: [PATCH 04/17] hpsa: suppress excessively chatty error messages
-Date: Fri, 20 Apr 2012 23:49:25 +0100
-Message-ID: <C508F8684F59FF47960D08B35B998FFE6563003D67@GVW1341EXA.americas.hpqcorp.net>
-References: <20120420150349.10596.73732.stgit@beardog.cce.hp.com>
- <20120420150634.10596.30524.stgit@beardog.cce.hp.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v2] [SCSI] scsi_dh: change scsi_dh_detach export to
+ EXPORT_SYMBOL
+Date: Fri, 20 Apr 2012 18:58:23 -0400
+Message-ID: <20120420225822.GA10769@redhat.com>
+References: <20111215214440.GA17677@redhat.com>
+ <4EF039D5.5010201@suse.de>
+ <20120405144721.GA18437@redhat.com>
+ <20120420144538.GB8155@redhat.com>
+ <20120420173405.GA8846@redhat.com>
+ <20120420214120.159e2690@pyramind.ukuu.org.uk>
+ <20120420215825.GA10406@redhat.com>
+ <20120420232043.40ddc3c4@pyramind.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:38263 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932182Ab2DTWwK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Apr 2012 18:52:10 -0400
-In-Reply-To: <20120420150634.10596.30524.stgit@beardog.cce.hp.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120420232043.40ddc3c4@pyramind.ukuu.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Chandra Seetharaman <sekharan@us.ibm.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Gates, Matt" <matthew.gates@hp.com>, "stephenmcameron@gmail.com" <stephenmcameron@gmail.com>, "thenzl@redhat.com" <thenzl@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "mikem@beardog.cce.hp.com" <mikem@beardog.cce.hp.com>
 
-fCAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KfCBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQp8IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIFN0ZXBoZW4gTS4gQ2FtZXJvbg0KfCBTZW50OiBGcmlkYXksIEFwcmls
-IDIwLCAyMDEyIDg6MDcgQU0NCnwgVG86IGphbWVzLmJvdHRvbWxleUBoYW5zZW5wYXJ0bmVyc2hp
-cC5jb20NCnwgQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdl
-ci5rZXJuZWwub3JnOyBHYXRlcywgTWF0dDsNCnwgc3RlcGhlbm1jYW1lcm9uQGdtYWlsLmNvbTsg
-dGhlbnpsQHJlZGhhdC5jb207IGFrcG1AbGludXgtZm91bmRhdGlvbi5vcmc7DQp8IG1pa2VtQGJl
-YXJkb2cuY2NlLmhwLmNvbQ0KfCBTdWJqZWN0OiBbUEFUQ0ggMDQvMTddIGhwc2E6IHN1cHByZXNz
-IGV4Y2Vzc2l2ZWx5IGNoYXR0eSBlcnJvciBtZXNzYWdlcw0KfCANCnwgRnJvbTogU3RlcGhlbiBN
-LiBDYW1lcm9uIDxzY2FtZXJvbkBiZWFyZG9nLmNjZS5ocC5jb20+DQp8IA0KfCBEZWZhdWx0IGJl
-aGF2aW9yIGZvciBhbnkgQ0hFQ0sgQ09ORElUSU9OIGV4Y2VwdGluZyBhIGZldyBzcGVjaWFsIGNh
-c2VzIGlzDQp8IHRvIHByaW50IG91dCBjZXJ0YWluIHBhcnRzIG9mIHRoZSBzZW5zZSBidWZmZXIg
-YW5kIHRoZSBDREIuICBEZWZhdWx0DQp8IGJlaGF2aW9yIHNob3VsZCBiZSB0byBwcmludCBub3Ro
-aW5nIGFuZCBsZXQgdGhlIHVwcGVyIGxheWVycyBvcg0KfCBhcHBsaWNhdGlvbnMgZGVjaWRlIHdo
-YXQgdG8gZG8gYWJvdXQgdGhlc2UuICBUaGUgc2FtZSBpbmZvcm1hdGlvbiBpcw0KfCBhbHJlYWR5
-IGF2YWlsYWJsZSBieSBzZXR0aW5nIHRoZSBhcHByb3ByaWF0ZSBiaXRzIG9mIHRoZQ0KfCBzY3Np
-X2xvZ2dpbmdfbGV2ZWwga2VybmVsIHBhcmFtZXRlciBvciB2aWENCnwgL3Byb2Mvc3lzL2Rldi9z
-Y3NpL2xvZ2dpbmdfbGV2ZWwuDQoNCk1ha2VzIHNlbnNlLg0KDQp8IA0KfCBTaWduZWQtb2ZmLWJ5
-OiBTdGVwaGVuIE0uIENhbWVyb24gPHNjYW1lcm9uQGJlYXJkb2cuY2NlLmhwLmNvbT4NCnwgLS0t
-DQp8ICBkcml2ZXJzL3Njc2kvaHBzYS5jIHwgICAgMiArLQ0KfCAgMSBmaWxlcyBjaGFuZ2VkLCAx
-IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0pDQp8IA0KfCBkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9zY3NpL2hwc2EuYyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMgaW5kZXgNCnwgOTA2NjcyYi4uZmNi
-OWZiMiAxMDA2NDQNCnwgLS0tIGEvZHJpdmVycy9zY3NpL2hwc2EuYw0KfCArKysgYi9kcml2ZXJz
-L3Njc2kvaHBzYS5jDQp8IEBAIC0xMTkzLDcgKzExOTMsNyBAQCBzdGF0aWMgdm9pZCBjb21wbGV0
-ZV9zY3NpX2NvbW1hbmQoc3RydWN0IENvbW1hbmRMaXN0DQp8ICpjcCkNCnwgIAkJCQlicmVhazsN
-CnwgIAkJCX0NCnwgIAkJCS8qIE11c3QgYmUgc29tZSBvdGhlciB0eXBlIG9mIGNoZWNrIGNvbmRp
-dGlvbiAqLw0KfCAtCQkJZGV2X3dhcm4oJmgtPnBkZXYtPmRldiwgImNwICVwIGhhcyBjaGVjayBj
-b25kaXRpb246ICINCnwgKwkJCWRldl9kYmcoJmgtPnBkZXYtPmRldiwgImNwICVwIGhhcyBjaGVj
-ayBjb25kaXRpb246ICINCnwgIAkJCQkJInVua25vd24gdHlwZTogIg0KfCAgCQkJCQkiU2Vuc2U6
-IDB4JXgsIEFTQzogMHgleCwgQVNDUTogMHgleCwgIg0KfCAgCQkJCQkiUmV0dXJuaW5nIHJlc3Vs
-dDogMHgleCwgIg0KfCANCg0KRmV3IGxpbmVzIGZ1cnRoZXIgZG93biBpbiB0aGUgc2FtZSBmdW5j
-dGlvbiwgdGhlcmUgaXMgYW5vdGhlciBkZXZfd2FybigpIGZvciBTQ1NJIGVycm9ycy4NCg0KICAg
-ICAgIC8qIFByb2JsZW0gd2FzIG5vdCBhIGNoZWNrIGNvbmRpdGlvbg0KICAgICAgICAgKiBQYXNz
-IGl0IHVwIHRvIHRoZSB1cHBlciBsYXllcnMuLi4NCiAgICAgICAgICovDQogICAgICAgIGlmIChl
-aS0+U2NzaVN0YXR1cykgew0KICAgICAgICAgICAgZGV2X3dhcm4oJmgtPnBkZXYtPmRldiwgImNw
-ICVwIGhhcyBzdGF0dXMgMHgleCAiDQogICAgICAgICAgICAgICAgIlNlbnNlOiAweCV4LCBBU0M6
-IDB4JXgsIEFTQ1E6IDB4JXgsICINCg0KDQpJIGFtIHdvbmRlcmluZyB3aGV0aGVyIGl0IG1ha2Ug
-c2Vuc2UgdG8gbWFrZSB0aGUgc2FtZSBjaGFuZ2UgaGVyZSBhcyB3ZWxsIGFzLiBUaGlzIHdpbGwg
-c3VwcHJlc3MgbG9nZ2luZyBmb3Igb3RoZXIgU0NTSSBzdGF0dXMsIGZvciBleGFtcGxlIEJVU1ks
-IFRBU0sgU0VUIEZVTEwsIGV0Yy4NCg0KU3VubnkgDQoNCg==
+On Fri, Apr 20 2012 at  6:20pm -0400,
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+
+> > > The kernel is GPL, all derived works of a GPL codebase are required to be
+> > > GPL. There is no magic rule about modules. I've stated that repeatedly
+> > > for anything containing a line of code I own. GregKH has made it very
+> > > clear for his code, and so it goes on.
+> > 
+> > This isn't about adding Linux functionality to a proprietary driver.
+> 
+> Let me quote back your previous message
+> 
+> 	"Allow a proprietary non-GPL multipath driver, like EMC
+> 	PowerPath, to detach a scsi_dh using scsi_dh_detach."
+> 
+> what part of that isn't about proprietary drivers.
+
+Sure Alan, seize on "proprietary" and "EXPORT_SYMBOL_GPL".. and gloss
+right over the fact that what is being proposed is reasonable.
+
+Any multipath driver should be able to detach a scsi_dh module.  As is
+evidenced by the fact that they can already make use of sysfs to do so.
+
+Relaxing the scsi_dh_detach interface makes it easier for a long
+standing proprietary driver to get out of Linux's way.
+
+But yeah, I'm sure you'll gloss over that too.
+ 
+> > If Linux is masking SCSI sense that Powerpath needs to see in order to
+> > function then they need a way to shut off that conflicting functionality
+> > in Linux.  What they have enjoyed until now is that Linux has treated
+> > them with kid gloves -- by not always attaching scsi_dh to each SCSI
+> > device during SCSI device scan.
+> 
+> They can submit the powerpath code to the GPL kernel and it can get dealt
+> with nicely.
+> 
+> > > I'm dying to see anyone make the moral argument for it too.
+> > 
+> > I think you're blinded by some innate violent pain reaction to seeing
+> > s/EXPORT_SYMBOL_GPL/EXPORT_SYMBOL/
+> 
+> No. I'm just reminding you and Red Hat that the kernel is subject to the
+> GPLv2 licence and that adding/removing _GPL from a symbol doesn't
+> magically allow you to use proprietary modules as you claim.
+> 
+> > As I said in the header, Linux's ability to properly support scanning
+> > LUNs with multiple paths has been fragile for _years_ purely because we
+> > never had the balls to always attach the scsi_dh which enables Linux to
+> > work well.  We didn't because of fear that we'd break PowerPath.
+> 
+> Thats unfortunate. You mean your company has been intentionally
+> leaving the Linux kernel poorer for the sake of dubious proprietary
+> code ?
+> 
+> You might want to stop digging, or at least use a spade not an excavator.
+
+_Upstream_ has kept it that way because we've been concerned about
+breaking PowerPath in enterprises where Linux is deployed.  Upstream has
+been good citizens to the fault of Linux.
+
+Please stop being a drama queen and stop putting words in my mouth.
+
+> > As a result, Linux has suffered (in the form of reduced functionality).
+> > Now your arguing that the because scsi_dh_detach() will become
+> > EXPORT_SYMBOL it somehow makes PowerPath a derived work if they were to
+> 
+> I suspect it is already a derived work, but right now that's their
+> problem. You are making it yours as well.
+> 
+> > The two other people (scsi_dh maintainers) that Acked-by this change
+> > work for companies other than EMC.  James is the SCSI maintainer and
+> > understands what is going on here.  Like me, they are domain experts.
+> > 
+> > What are you?
+> 
+> I'm a rights holder. Domain expertise isn't relevant here. The code I
+> provided is licensed under the GPL. Whether the symbol is EXPORT_SYMBOL
+> or EXPORT_SYMBOL_GPL any derivative code (eg code that requires the
+> kernel be modified to match it) cannot call it.
+
+Remind me again when you ever developed anything to do with scsi_dh?
+
+To be clear: PowerPath doesn't _need_ this.  Not even close.
+
+Linux is improved by not having to walk on egg shells that attaching a
+helpful linux-only layer in kernel will somehow screw up some 3rd party
+software that a customer values.
+
+You still don't get it... yet you'll saber rattle behind generic GPL
+lawyer-up nonsense.
+
+It is sad that you didn't even read the important technical aspects of
+my previous reply that prove you're being a troll.
+
+I implore you to defer to the domain experts and refrain from continued
+late Friday night geek melo-drama.
