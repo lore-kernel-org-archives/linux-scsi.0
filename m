@@ -1,81 +1,107 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [RESEND][PATCH] [SCSI] scsi_dh: allow 3rd party multipath
- drivers to use scsi_dh_detach
-Date: Fri, 20 Apr 2012 10:49:51 -0500
-Message-ID: <1334936991.3420.21.camel@chandra-lucid.austin.ibm.com>
-References: <20111215214440.GA17677@redhat.com> <4EF039D5.5010201@suse.de>
-	 <20120405144721.GA18437@redhat.com> <20120420144538.GB8155@redhat.com>
-	 <1334935036.13001.27.camel@dabdike>
+Subject: Re: [PATCH] scsi_dh_rdac: Add dynamic match functionality to rdac
+ handler
+Date: Fri, 20 Apr 2012 11:27:12 -0500
+Message-ID: <1334939232.3420.30.camel@chandra-lucid.austin.ibm.com>
+References: <77471C95FAFD844C8CA02DD4F4C5FE2B0574C6@SACEXCMBX02-PRD.hq.netapp.com>
 Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1334935036.13001.27.camel@dabdike>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e37.co.us.ibm.com ([32.97.110.158]:59361 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753855Ab2DTQ1m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Apr 2012 12:27:42 -0400
+Received: from /spool/local
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <sekharan@us.ibm.com>;
+	Fri, 20 Apr 2012 10:27:41 -0600
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 0405419D805F
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Apr 2012 10:27:24 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q3KGRHXm182138
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Apr 2012 10:27:26 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q3KGRF0a029968
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Apr 2012 10:27:16 -0600
+In-Reply-To: <77471C95FAFD844C8CA02DD4F4C5FE2B0574C6@SACEXCMBX02-PRD.hq.netapp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Moger, Babu" <Babu.Moger@netapp.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, "Krishnasamy, Somasundaram" <Somasundaram.Krishnasamy@netapp.com>
 
-Mike,
+Babu,
 
-First off, sorry for not responding on this earlier. When I saw the
-original patch, I was thinking it is a generic policy issue, and James
-would be a better person to make decision on this, and forgot about it.
+So, in effect, any SCSI devices with INQ C8 page with "edid" would be
+treated as a rdac device, right ?
 
-Now only realized that James was waiting on me.
+Is that enough to identify _any_ SCSI device as a rdac device (even in
+future) ?
 
-I am not very religious either, and agree with James on changing the
-Changelog.
-
-With that change,
-
-Acked-by: Chandra Seetharaman <sekharan@us.ibm.com>
-
-Regards,
+Also, instead of repeating the code, can you use submit_inquiry() ?
 
 Chandra
-On Fri, 2012-04-20 at 19:17 +0400, James Bottomley wrote:
-> On Fri, 2012-04-20 at 10:45 -0400, Mike Snitzer wrote:
-> > Allow 3rd party multipath drivers to programatically detach a scsi_dh
-> > using the scsi_dh_detach() interface.  This is as improvement over
-> > requiring them to write 'detach' to /sys/block/sdX/queue/dh_state
-> > 
-> > End result is both Linux and 3rd party multipath drivers can coexist
-> > without compromising Linux's default handling of multipath LUNs.
-> > 
-> > Linux has suffered from races associated with attaching a scsi_dh to a
-> > device too late (after an HBA driver has started the SCSI device scan).
-> > Attaching a scsi_dh too late results in default sense handling that does
-> > not silently fail IO to passive paths, which creates excessive delays
-> > and IO errors during normal boot on a system with hundreds of LUNs.
-> > 
-> > To fix this the appropriate scsi_dh must be attached before the HBA
-> > driver(s) are even loaded.  But some scsi_dh are known to conflict with
-> > 3rd party multipath drivers (e.g. both scsi_dh_alua and scsi_dh_emc
-> > conflict with EMC PowerPath).  This patch allows 3rd party drivers to
-> > resolve the conflict by detaching an attached scsi_dh.
+
+
+On Tue, 2012-04-10 at 17:06 +0000, Moger, Babu wrote:
+> This patch adds the dynamic match functionality to scsi_dh_rdac driver.
+> New vendor and product strings are normally not there in the kernel. Whenever
+> the new product is tested with this driver we see failures during the disco-
+> very. Without the handler attached, the default scsi mid-level retries would
+> take effect for certain check-conditions. Default retries(5) are not enough in
+> some cases(especially with large configuration or huge lun cases).
 > 
-> This changelog is a bit misleading, isn't it?
+> This patch will send an inquiry if the vendor/product strings are not in the
+> device list and match with vendor signature.
 > 
-> The basic problem is that binary only third party drivers can't use the
-> scsi_dh_detach callback because it's GPL only.  The only module I know
-> which suffers this problem is powerpath, is that right?
+> Signed-off-by: Babu Moger <babu.moger@netapp.com>
+> Reviewed-by: Somasundaram Krishnasamy <Somasundaram.Krishnasamy@netapp.com>
+> ---
 > 
-> So this patch actually relaxes our GPL only policy to allow powerpath to
-> detach correctly. I really don't like the characterisation in the
-> current proposed changelog of this being a "third party" problem because
-> quite a few third party modules actually provide source and are thus GPL
-> compliant.
+> --- linux-3.4-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2012-04-07 20:30:41.000000000 -0500
+> +++ linux-3.4-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c	2012-04-10 10:48:40.000000000 -0500
+> @@ -818,7 +818,10 @@ static const struct scsi_dh_devlist rdac
 > 
-> The whole point of GPL only symbols is to make life difficult for binary
-> modules, so I could just say this might be indicative of the success of
-> that policy.  On the other hand, I'm not going to be religious about
-> this.  If you get the ack of the dh handler maintainer (Chandra
-> Seetharaman) I'll apply this policy relaxation with a proper changelog
-> that says what we're doing (allowing powerpath to bind to the symbol).
+>  static bool rdac_match(struct scsi_device *sdev)
+>  {
+> -	int i;
+> +	int i, err;
+> +	struct c8_inquiry inqp;
+> +	struct request *rq;
+> +	struct request_queue *q = sdev->request_queue;
 > 
-> James
+>  	if (scsi_device_tpgs(sdev))
+>  		return false;
+> @@ -831,6 +834,27 @@ static bool rdac_match(struct scsi_devic
+>  			return true;
+>  		}
+>  	}
+> +
+> +	/* Now lets try to match the signature on 0xC8 page */
+> +	memset(&inqp, 0, sizeof(struct c8_inquiry));
+> +	rq = get_rdac_req(sdev, &inqp, sizeof(struct c8_inquiry), READ);
+> +	if (!rq)
+> +		return false;
+> +
+> +	rq->cmd[0] = INQUIRY;
+> +	rq->cmd[1] = 1;
+> +	rq->cmd[2] = 0xC8;
+> +	rq->cmd[4] = sizeof(struct c8_inquiry);
+> +	rq->cmd_len = COMMAND_SIZE(INQUIRY);
+> +
+> +	err = blk_execute_rq(q, NULL, rq, 1);
+> +	blk_put_request(rq);
+> +	if (err != -EIO) {
+> +		if (inqp.page_id[0] == 'e' && inqp.page_id[1] == 'd' &&
+> +		    inqp.page_id[2] == 'i' && inqp.page_id[3] == 'd')
+> +			return true;
+> +	}
+> +
+>  	return false;
+>  }
+> 
 > 
 > 
 > --
@@ -83,3 +109,5 @@ On Fri, 2012-04-20 at 19:17 +0400, James Bottomley wrote:
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+
+
