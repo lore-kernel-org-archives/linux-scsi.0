@@ -1,69 +1,50 @@
-From: michaelc@cs.wisc.edu
-Subject: [RFC 4/4] SCSI: send KOBJ_CHANGE when device is set to running
-Date: Thu, 19 Apr 2012 20:08:56 -0500
-Message-ID: <1334884136-3689-5-git-send-email-michaelc@cs.wisc.edu>
-References: <1334884136-3689-1-git-send-email-michaelc@cs.wisc.edu>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [RESEND PATCH 0/2]: Use correct DMA device in SCSI/libata
+Date: Fri, 20 Apr 2012 13:17:47 +0800
+Message-ID: <CAF1ivSaCKUdp6cswhwG0qsWe=0Qo+7rtY07Ynr8VmC_gPmXdUA@mail.gmail.com>
+References: <1334209839-21978-1-git-send-email-ming.m.lin@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36464 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756613Ab2DTBJL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Apr 2012 21:09:11 -0400
-In-Reply-To: <1334884136-3689-1-git-send-email-michaelc@cs.wisc.edu>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:47459 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751641Ab2DTFRs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Apr 2012 01:17:48 -0400
+In-Reply-To: <1334209839-21978-1-git-send-email-ming.m.lin@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: =?ISO-8859-1?Q?J=F6rg_Sommer?= <joerg@alea.gnuu.de>, Jeff Garzik <jgarzik@redhat.com>, Sergei Shtylyov <sshtylyov@mvista.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On Thu, Apr 12, 2012 at 1:50 PM, Lin Ming <ming.m.lin@intel.com> wrote:
+> Hi,
+>
+> RESEND: add Jeff's ACK.
 
-If a device goes offline while the device is opened then closed
-while it is still offline, udev will remove the /dev/disk/by-id
-link. If the device comes back and is set to running, userspace
-is not notified, and the by-id link will not get remade.
+James, ping?
 
-This patch has scsi-ml send a KOBJ_CHANGE event so tools like udev
-will know that it can being to use the device again. With this patch
-udev see the KOBJ_CHANGE event and will reprobe the device and recreate a
-/dev/disk/by-id link.
+Lin Ming
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/scsi_lib.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1a67302..237932f 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2061,6 +2061,7 @@ int
- scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- {
- 	enum scsi_device_state oldstate = sdev->sdev_state;
-+	int change_evt = 0;
- 
- 	if (state == oldstate)
- 		return 0;
-@@ -2079,6 +2080,11 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- 		switch (oldstate) {
- 		case SDEV_OFFLINE:
- 		case SDEV_TRANSPORT_OFFLINE:
-+			/*
-+			 * Notify userspace we can accept IO by sending
-+			 * change event.
-+			 */
-+			change_evt = 1;
- 		case SDEV_QUIESCE:
- 		case SDEV_BLOCK:
- 		case SDEV_CREATED:
-@@ -2160,6 +2166,8 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- 
- 	}
- 	sdev->sdev_state = state;
-+	if (change_evt)
-+		sdev_evt_send_simple(sdev, 0, GFP_ATOMIC);
- 	return 0;
- 
-  illegal:
--- 
-1.7.7.6
-
+>
+> These 2 patches fix bug report at:
+>
+> http://marc.info/?l=3Dlinux-ide&m=3D133177818318187&w=3D2
+>
+> Please see the patches for more detail.
+>
+> [PATCH 1/2] [SCSI] scsi_lib: use correct DMA device in __scsi_alloc_q=
+ueue
+> [PATCH 2/2] libata: Pass correct DMA device to scsi host
+>
+> =A0drivers/ata/libata-scsi.c | =A0 =A03 ++-
+> =A0drivers/scsi/scsi_lib.c =A0 | =A0 =A02 +-
+> =A02 files changed, 3 insertions(+), 2 deletions(-)
+>
+> Thanks,
+> Lin Ming
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
