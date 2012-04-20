@@ -1,59 +1,61 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH] scsi_dh_rdac: Add dynamic match functionality to rdac
- handler
-Date: Fri, 20 Apr 2012 13:05:30 -0500
-Message-ID: <1334945131.3420.33.camel@chandra-lucid.austin.ibm.com>
-References: <77471C95FAFD844C8CA02DD4F4C5FE2B0574C6@SACEXCMBX02-PRD.hq.netapp.com>
-	 <1334939232.3420.30.camel@chandra-lucid.austin.ibm.com>
-	 <4F919351.3050000@cs.wisc.edu>
-Reply-To: sekharan@us.ibm.com
+From: Khalid Aziz <khalid.aziz@hp.com>
+Subject: Re: [PATCH 03/17] hpsa: enable bus master bit after
+ pci_enable_device
+Date: Fri, 20 Apr 2012 12:41:50 -0600
+Message-ID: <1334947310.10129.124.camel@lyra>
+References: <20120420150349.10596.73732.stgit@beardog.cce.hp.com>
+	 <20120420150629.10596.51923.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:53459 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756818Ab2DTSGn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Apr 2012 14:06:43 -0400
-Received: from /spool/local
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <sekharan@us.ibm.com>;
-	Fri, 20 Apr 2012 12:06:41 -0600
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id B8980C90060
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Apr 2012 14:06:09 -0400 (EDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q3KI6AGH266156
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Apr 2012 14:06:11 -0400
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q3KI5WQQ024192
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Apr 2012 12:05:32 -0600
-In-Reply-To: <4F919351.3050000@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120420150629.10596.51923.stgit@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, matthew.gates@hp.com, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "Moger, Babu" <Babu.Moger@netapp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, "Krishnasamy, Somasundaram" <Somasundaram.Krishnasamy@netapp.com>
 
-On Fri, 2012-04-20 at 11:48 -0500, Mike Christie wrote:
-> On 04/20/2012 11:27 AM, Chandra Seetharaman wrote:
-> > Babu,
-> > 
-> > So, in effect, any SCSI devices with INQ C8 page with "edid" would be
-> > treated as a rdac device, right ?
-> > 
-> > Is that enough to identify _any_ SCSI device as a rdac device (even in
-> > future) ?
-> > 
-> > Also, instead of repeating the code, can you use submit_inquiry() ?
-> > 
+On Fri, 2012-04-20 at 10:06 -0500, Stephen M. Cameron wrote:
+> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 > 
-> Yeah you are right, I think we should modify submit_inquiry to take in
-> the sense and data buffers instead of taking in the rdac_dh_data struct.
-> At the time the match function is run rdac_dh_data might not be allocated.
-
-oh yeah,
-
-I did not not realize that...
+> pci_disable_device() disables the bus master bit and pci_enable_device does
+> not re-enable it.  It needs to be enabled.
 > 
+> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> ---
+>  drivers/scsi/hpsa.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 5119ce6..363619d 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -3917,6 +3917,7 @@ static int __devinit hpsa_enter_simple_mode(struct ctlr_info *h)
+>  static int __devinit hpsa_pci_init(struct ctlr_info *h)
+>  {
+>  	int prod_index, err;
+> +	u16 command_register;
+>  
+>  	prod_index = hpsa_lookup_board_id(h->pdev, &h->board_id);
+>  	if (prod_index < 0)
+> @@ -3933,6 +3934,11 @@ static int __devinit hpsa_pci_init(struct ctlr_info *h)
+>  		return err;
+>  	}
+>  
+> +	/* Enable bus mastering (pci_disable_device may disable this) */
+> +	pci_read_config_word(h->pdev, PCI_COMMAND, &command_register);
+> +	command_register |= PCI_COMMAND_MASTER;
+> +	pci_write_config_word(h->pdev, PCI_COMMAND, command_register);
+> +
+>  	err = pci_request_regions(h->pdev, HPSA);
+>  	if (err) {
+>  		dev_err(&h->pdev->dev,
 
+Wouldn't it be better to use pci_set_master(h->pdev) to enable bus
+mastering?
 
+-- 
+====================================================================
+Khalid Aziz                                         Unix Systems Lab
+(970)898-9214                                        Hewlett-Packard
+khalid.aziz@hp.com                                  Fort Collins, CO
