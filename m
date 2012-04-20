@@ -1,48 +1,58 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 6/6] fcoe: remove a stray unlock
-Date: Fri, 20 Apr 2012 12:16:54 -0700
-Message-ID: <20120420191654.4634.16631.stgit@localhost6.localdomain6>
-References: <20120420191620.4634.94869.stgit@localhost6.localdomain6>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH 03/17] hpsa: enable bus master bit after pci_enable_device
+Date: Fri, 20 Apr 2012 15:06:52 -0500
+Message-ID: <20120420200652.GA11802@beardog.cce.hp.com>
+References: <20120420150349.10596.73732.stgit@beardog.cce.hp.com> <20120420150629.10596.51923.stgit@beardog.cce.hp.com> <1334947310.10129.124.camel@lyra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1438 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752665Ab2DTTQz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Apr 2012 15:16:55 -0400
-In-Reply-To: <20120420191620.4634.94869.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1334947310.10129.124.camel@lyra>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Khalid Aziz <khalid.aziz@hp.com>
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, matthew.gates@hp.com, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com, scameron@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+On Fri, Apr 20, 2012 at 12:41:50PM -0600, Khalid Aziz wrote:
+> On Fri, 2012-04-20 at 10:06 -0500, Stephen M. Cameron wrote:
+> > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > 
+> > pci_disable_device() disables the bus master bit and pci_enable_device does
+> > not re-enable it.  It needs to be enabled.
+> > 
+> > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > ---
+> >  drivers/scsi/hpsa.c |    6 ++++++
+> >  1 files changed, 6 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > index 5119ce6..363619d 100644
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -3917,6 +3917,7 @@ static int __devinit hpsa_enter_simple_mode(struct ctlr_info *h)
+> >  static int __devinit hpsa_pci_init(struct ctlr_info *h)
+> >  {
+> >  	int prod_index, err;
+> > +	u16 command_register;
+> >  
+> >  	prod_index = hpsa_lookup_board_id(h->pdev, &h->board_id);
+> >  	if (prod_index < 0)
+> > @@ -3933,6 +3934,11 @@ static int __devinit hpsa_pci_init(struct ctlr_info *h)
+> >  		return err;
+> >  	}
+> >  
+> > +	/* Enable bus mastering (pci_disable_device may disable this) */
+> > +	pci_read_config_word(h->pdev, PCI_COMMAND, &command_register);
+> > +	command_register |= PCI_COMMAND_MASTER;
+> > +	pci_write_config_word(h->pdev, PCI_COMMAND, command_register);
+> > +
+> >  	err = pci_request_regions(h->pdev, HPSA);
+> >  	if (err) {
+> >  		dev_err(&h->pdev->dev,
+> 
+> Wouldn't it be better to use pci_set_master(h->pdev) to enable bus
+> mastering?
 
-We moved the locking in dd060e74fb "[SCSI] fcoe: remove frame dropping
-code from fcoe_percpu_clean" but this unlock was missed.
+Yes.  Thanks.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
- drivers/scsi/fcoe/fcoe.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index ac1df93..76e3d0b 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2294,10 +2294,9 @@ static void fcoe_percpu_clean(struct fc_lport *lport)
- 			continue;
- 
- 		skb = dev_alloc_skb(0);
--		if (!skb) {
--			spin_unlock_bh(&pp->fcoe_rx_list.lock);
-+		if (!skb)
- 			continue;
--		}
-+
- 		skb->destructor = fcoe_percpu_flush_done;
- 
- 		spin_lock_bh(&pp->fcoe_rx_list.lock);
-
+-- steve
