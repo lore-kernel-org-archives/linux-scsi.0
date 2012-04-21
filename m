@@ -1,54 +1,63 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 1/3] [SCSI] ufs: Remove unused member sense_bufflen
-Date: Sat, 21 Apr 2012 14:39:17 +0530
-Message-ID: <1334999359-3181-1-git-send-email-santoshsy@gmail.com>
+Subject: [PATCH 2/3] [SCSI] ufs: Limit sense data size to 18 bytes
+Date: Sat, 21 Apr 2012 14:39:18 +0530
+Message-ID: <1334999359-3181-2-git-send-email-santoshsy@gmail.com>
+References: <1334999359-3181-1-git-send-email-santoshsy@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-pb0-f46.google.com ([209.85.160.46]:47865 "EHLO
 	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217Ab2DUJJd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Apr 2012 05:09:33 -0400
-Received: by pbcun15 with SMTP id un15so1948683pbc.19
-        for <linux-scsi@vger.kernel.org>; Sat, 21 Apr 2012 02:09:33 -0700 (PDT)
+	with ESMTP id S1751217Ab2DUJJg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Apr 2012 05:09:36 -0400
+Received: by mail-pb0-f46.google.com with SMTP id un15so1948683pbc.19
+        for <linux-scsi@vger.kernel.org>; Sat, 21 Apr 2012 02:09:36 -0700 (PDT)
+In-Reply-To: <1334999359-3181-1-git-send-email-santoshsy@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Santosh Y <santoshsy@gmail.com>
 
-Remove unused member sense_bufflen from struct ufshcd_lrb.
+As per the UFS specification a UFS device server should return upto
+18 bytes of sense data. Currently, if a SCSI command completes with
+a check condition, min_t(sense_data_length, SCSI_SENSE_BUFFERSIZE)
+bytes of sense data is being copied to sense_buffer.
+
+Correct sense_data_length(<= 18 bytes), from a UFS device will not
+cause any problem. If a UFS device returns wrong sense_data_length
+( > 18 bytes), then the wrong sense data will be copied to
+sense_buffer.
 
 Signed-off-by: Santosh Y <santoshsy@gmail.com>
+Reviewed-by: Vinayak Holikatti <vinholikatti@gmail.com>
 ---
- drivers/scsi/ufs/ufshcd.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufs.h    |    1 +
+ drivers/scsi/ufs/ufshcd.c |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index b207529..0af1aac 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -47,6 +47,7 @@
+ #define _UFS_H
+ 
+ #define MAX_CDB_SIZE	16
++#define MAX_SENSE_SIZE	18
+ 
+ #define UPIU_HEADER_DWORD(byte3, byte2, byte1, byte0)\
+ 			((byte3 << 24) | (byte2 << 16) |\
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 52b96e8..3e4e102 100644
+index 3e4e102..662d00f 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -194,7 +194,6 @@ struct ufs_hba {
-  * @ucd_prdt_ptr: PRDT address of the command
-  * @cmd: pointer to SCSI command
-  * @sense_buffer: pointer to sense buffer address of the SCSI command
-- * @sense_bufflen: Length of the sense buffer
-  * @scsi_status: SCSI status of the command
-  * @command_type: SCSI, UFS, Query.
-  * @task_tag: Task tag of the command
-@@ -208,7 +207,6 @@ struct ufshcd_lrb {
+@@ -479,7 +479,7 @@ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
+ 		len = be16_to_cpu(lrbp->ucd_rsp_ptr->sense_data_len);
+ 		memcpy(lrbp->sense_buffer,
+ 			lrbp->ucd_rsp_ptr->sense_data,
+-			min_t(int, len, SCSI_SENSE_BUFFERSIZE));
++			min_t(int, len, MAX_SENSE_SIZE));
+ 	}
+ }
  
- 	struct scsi_cmnd *cmd;
- 	u8 *sense_buffer;
--	unsigned int sense_bufflen;
- 	int scsi_status;
- 
- 	int command_type;
-@@ -684,7 +682,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	lrbp = &hba->lrb[tag];
- 
- 	lrbp->cmd = cmd;
--	lrbp->sense_bufflen = SCSI_SENSE_BUFFERSIZE;
- 	lrbp->sense_buffer = cmd->sense_buffer;
- 	lrbp->task_tag = tag;
- 	lrbp->lun = cmd->device->lun;
 -- 
 1.7.5.4
 
