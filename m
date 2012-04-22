@@ -1,68 +1,73 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [GIT PULL] libsas fixes for 3.4-rc4
-Date: Sat, 21 Apr 2012 19:39:23 -0400
-Message-ID: <4F93452B.6020506@garzik.org>
-References: <1334960945.21447.19.camel@ultramagnus.opencreations.com> <1335011336.3081.12.camel@dabdike.lan> <CABE8wwvQ5_4DnOOce8PVcuR=k0RpzcXN5qbNhQ-=+Cq+Zqv6Dg@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [isci PATCH v3 1/4] libata: export ata_port suspend/resume
+ infrastructure for sas
+Date: Sat, 21 Apr 2012 18:06:57 -0700
+Message-ID: <CABE8wwu-E0qAf1EyH=wToG6nguvph6OEJbAqv3S1nCrty9pLwA@mail.gmail.com>
+References: <20120314071312.7223.10946.stgit@dwillia2-linux.jf.intel.com>
+	<20120314071353.7223.5361.stgit@dwillia2-linux.jf.intel.com>
+	<4F9252FC.9020706@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwvQ5_4DnOOce8PVcuR=k0RpzcXN5qbNhQ-=+Cq+Zqv6Dg@mail.gmail.com>
+In-Reply-To: <4F9252FC.9020706@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, jack_wang <jack_wang@usish.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/21/2012 03:57 PM, Dan Williams wrote:
-> On Sat, Apr 21, 2012 at 5:28 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com>  wrote:
->> On Fri, 2012-04-20 at 15:29 -0700, Dan Williams wrote:
->>> These patches, save for the new "scsi: fix eh wakeup (scsi_schedule_eh
->>> vs scsi_restart_operations)" and "Revert "[SCSI] libsas: fix sas port
->>> naming", were all originally posted before the merge
->>> window opened, and have also appeared in -next for the same timeframe.
->>>
->>> The commit dates are not that aged (9 days old) because they were
->>> rebased out of larger set of updates that were pending for 3.4.
->>>
->>> There is a mix of pure regression fixes and fixes for long-standing bugs
->>> in libsas.  Some of the long-standing bug fixes are made worse / easier
->>> to trigger by the new async error handling scheme.
->>>
->>> The largest patch in the series is "libata, libsas: introduce sched_eh
->>> and end_eh port ops" it has been on the list since March 10th.
->>>
->>> Jack Wang has independently tested this set with pm8001 and reports
->>> success. [1]
->>>
->>> Apologies if scsi-rc-fixes was in the process of picking these up.  With
->>> -rc4 looming I lost my nerve and pulled the trigger.
+On Fri, Apr 20, 2012 at 11:26 PM, Jeff Garzik <jeff@garzik.org> wrote:
+> On 03/14/2012 03:13 AM, Dan Williams wrote:
 >>
->> Right, so as a point of process, these are SCSI fixes and are supposed
->> to be going through the SCSI tree.  The only urgent one is the revert; I
->> still have outstanding questions about some of the others.
+>> Reuse ata_port_{suspend|resume}_common for sas. =A0This path is chos=
+en
+>> over adding coordination between ata-tranport and sas-transport beca=
+use
+>> libsas wants to revalidate the domain at resume-time at the host lev=
+el.
+>> It can not validate links have resumed properly until libata has had=
+ a
+>> chance to perform its revalidation, and any sane placing of an ata_p=
+ort
+>> in the sas-transport model would delay it's resumption until after t=
+he
+>> host.
+>>
+>> Export the common portion of port suspend/resume (bypass pm_runtime)=
+,
+>> and allow sas to perform these operations asynchronously (similar to=
+ the
+>> libsas async-ata probe implmentation). =A0Async operation is determi=
+ned by
+>> having an external, rather than stack based, location for storing th=
+e
+>> result of the operation.
+>>
+>> Reviewed-by: Jacek Danecki<jacek.danecki@intel.com>
+>> Signed-off-by: Dan Williams<dan.j.williams@intel.com>
+>> ---
+>> =A0drivers/ata/libata-core.c | =A0 58
+>> ++++++++++++++++++++++++++++++++++++---------
+>> =A0include/linux/libata.h =A0 =A0| =A0 11 +++++++++
+>> =A02 files changed, 57 insertions(+), 12 deletions(-)
 >
-> Up until this feedback I thought the branch was going to be pulled
-> intact.  So, not trying to subvert process, just thought this request
-> would be seen as helpful since you seem to have been rather busy of
-> late.  Yes, I'd much rather these go through the SCSI tree.
+>
+> Now that libata's runtime PM problems seem to be fixed for the moment=
+, we
+> can revisit port PM here. =A0Just checking... =A0Is this patch still =
+needed?
 
-[thread semi-hijacking]
+Yeah, this one is still needed.  libsas wants to validate links at the
+host level.  I tried letting these routines be called "naturally" by
+registering libsas-ata_ports with the ata-transport class, but it
+hangs / got messy in cases where the link needed recovery
+(SATA_PENDING), but the ata_port was still suspended.  Also, I think
+the ata_port pm_runtime bits need a review for suitability for the
+libsas case.
 
-Busy-ness++  :/   I'm a bit disappointed that these one-liner bug fixes 
-for SCSI have not been applied, despite repeated pings:
+So, with this approach libsas does not register libsas-ata_ports with
+the ata transport class and instead calls the core routines directly
+(similar to how libata did before the dev_pm_ops rework).
 
-	http://www.spinics.net/lists/linux-scsi/msg58712.html
-
-Over a month has passed with zero comments (or objections), and we've 
-now missed -rc4.
-
-Unless I hear soon, I'll throw them into libata-dev (thus, linux-next) 
-and kick them upstairs.
-
-James has been replying to other stuff on the lists, so I'm not really 
-sure how these basic, one-liner fixes keep slipping by.
-
-	Jeff
-
-
+--
+Dan
