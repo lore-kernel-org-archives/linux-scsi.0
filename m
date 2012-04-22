@@ -1,106 +1,108 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 10/12] scsi: fix eh wakeup (scsi_schedule_eh vs scsi_restart_operations)
-Date: Sun, 22 Apr 2012 08:24:43 -0700
-Message-ID: <CABE8wwvJgS9iGchsOLzrJ7b5+coLoU9mof7m3oVSBM8Ae0-y=g@mail.gmail.com>
+Subject: Re: [PATCH 12/12] scsi_transport_sas: fix delete vs scan race
+Date: Sun, 22 Apr 2012 08:43:22 -0700
+Message-ID: <CABE8wwssa-_MsCTe0FJeCLY5KTk1sRcsmUjF8Sb-5sofc=zuFQ@mail.gmail.com>
 References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
-	<20120413233742.8025.99073.stgit@dwillia2-linux.jf.intel.com>
-	<1335010949.3081.8.camel@dabdike.lan>
+	<20120413233752.8025.97983.stgit@dwillia2-linux.jf.intel.com>
+	<1335091115.13208.14.camel@dabdike.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1335010949.3081.8.camel@dabdike.lan>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Tom Jackson <thomas.p.jackson@intel.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:42173 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752146Ab2DVPnZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Apr 2012 11:43:25 -0400
+Received: by bkcji2 with SMTP id ji2so291364bkc.25
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Apr 2012 08:43:23 -0700 (PDT)
+In-Reply-To: <1335091115.13208.14.camel@dabdike.lan>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Apr 21, 2012 at 5:22 AM, James Bottomley
+On Sun, Apr 22, 2012 at 3:38 AM, James Bottomley
 <James.Bottomley@hansenpartnership.com> wrote:
 > On Fri, 2012-04-13 at 16:37 -0700, Dan Williams wrote:
->> Rapid ata hotplug on a libsas controller results in cases where libs=
-as
->> is waiting indefinitely on eh to perform an ata probe.
+>> The following crash results from cases where the end_device has been
+>> removed before scsi_sysfs_add_sdev has had a chance to run.
 >>
->> A race exists between scsi_schedule_eh() and scsi_restart_operations=
-()
->> in the case when scsi_restart_operations() issues i/o to other devic=
-es
->> in the sas domain. =A0When this happens the host state transitions f=
-rom
->> SHOST_RECOVERY (set by scsi_schedule_eh) back to SHOST_RUNNING and
->> ->host_busy is non-zero so we put the eh thread to sleep even though
->> ->host_eh_scheduled is active.
+>> =A0BUG: unable to handle kernel NULL pointer dereference at 00000000=
+00000098
+>> =A0IP: [<ffffffff8115e100>] sysfs_create_dir+0x32/0xb6
+>> =A0...
+>> =A0Call Trace:
+>> =A0 [<ffffffff8125e4a8>] kobject_add_internal+0x120/0x1e3
+>> =A0 [<ffffffff81075149>] ? trace_hardirqs_on+0xd/0xf
+>> =A0 [<ffffffff8125e641>] kobject_add_varg+0x41/0x50
+>> =A0 [<ffffffff8125e70b>] kobject_add+0x64/0x66
+>> =A0 [<ffffffff8131122b>] device_add+0x12d/0x63a
+>> =A0 [<ffffffff814b65ea>] ? _raw_spin_unlock_irqrestore+0x47/0x56
+>> =A0 [<ffffffff8107de15>] ? module_refcount+0x89/0xa0
+>> =A0 [<ffffffff8132f348>] scsi_sysfs_add_sdev+0x4e/0x28a
+>> =A0 [<ffffffff8132dcbb>] do_scan_async+0x9c/0x145
 >>
->> Before putting the error handler to sleep we need to check if the
->> host_state needs to return to SHOST_RECOVERY for another trip throug=
-h
->> eh.
+>> ...teach sas_rphy_remove to wait for async scanning to quiesce befor=
+e
+>> removing the end_device. =A0It seems this is a more general problem =
+[1],
+>> but this patch only addresses sas transport.
 >>
->> Cc: Tejun Heo <tj@kernel.org>
->> Reported-by: Tom Jackson <thomas.p.jackson@intel.com>
->> Tested-by: Tom Jackson <thomas.p.jackson@intel.com>
+>> [1]: 23edb6e [SCSI] mpt2sas: Do not set sas_device->starget to NULL =
+from
+>> the slave_destroy callback when all the LUNS have been deleted
+>>
 >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 >> ---
->> =A0drivers/scsi/scsi_error.c | =A0 14 ++++++++++++++
->> =A01 file changed, 14 insertions(+)
+>> =A0drivers/scsi/scsi_transport_sas.c | =A0 =A06 +++++-
+>> =A01 file changed, 5 insertions(+), 1 deletion(-)
 >>
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index 2cfcbff..0945d47 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -1687,6 +1687,20 @@ static void scsi_restart_operations(struct Sc=
-si_Host *shost)
->> =A0 =A0 =A0 =A0* requests are started.
->> =A0 =A0 =A0 =A0*/
->> =A0 =A0 =A0 scsi_run_host_queues(shost);
+>> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_t=
+ransport_sas.c
+>> index f7565fc..47abb90 100644
+>> --- a/drivers/scsi/scsi_transport_sas.c
+>> +++ b/drivers/scsi/scsi_transport_sas.c
+>> @@ -33,8 +33,9 @@
+>> =A0#include <linux/bsg.h>
+>>
+>> =A0#include <scsi/scsi.h>
+>> -#include <scsi/scsi_device.h>
+>> =A0#include <scsi/scsi_host.h>
+>> +#include <scsi/scsi_scan.h>
+>> +#include <scsi/scsi_device.h>
+>> =A0#include <scsi/scsi_transport.h>
+>> =A0#include <scsi/scsi_transport_sas.h>
+>>
+>> @@ -1667,6 +1668,9 @@ sas_rphy_remove(struct sas_rphy *rphy)
+>> =A0{
+>> =A0 =A0 =A0 struct device *dev =3D &rphy->dev;
+>>
+>> + =A0 =A0 /* prevent device_del() while child device_add() may be in=
+-flight */
+>> + =A0 =A0 scsi_complete_async_scans();
 >> +
->> + =A0 =A0 /*
->> + =A0 =A0 =A0* if eh is active and host_eh_scheduled is pending we n=
-eed to re-run
->> + =A0 =A0 =A0* recovery. =A0we do this check after scsi_run_host_que=
-ues() to allow
->> + =A0 =A0 =A0* everything pent up since the last eh run a chance to =
-make forward
->> + =A0 =A0 =A0* progress before we sync again. =A0Either we'll immedi=
-ately re-run
->> + =A0 =A0 =A0* recovery or scsi_device_unbusy() will wake us again w=
-hen these
->> + =A0 =A0 =A0* pending commands complete.
->> + =A0 =A0 =A0*/
->> + =A0 =A0 spin_lock_irqsave(shost->host_lock, flags);
->> + =A0 =A0 if (shost->host_eh_scheduled)
->> + =A0 =A0 =A0 =A0 =A0 =A0 if (scsi_host_set_state(shost, SHOST_RECOV=
-ERY))
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 WARN_ON(scsi_host_set_stat=
-e(shost, SHOST_CANCEL_RECOVERY));
->> + =A0 =A0 spin_unlock_irqrestore(shost->host_lock, flags);
+>> =A0 =A0 =A0 switch (rphy->identify.device_type) {
 >
-> This doesn't really look to be the way to fix the race, because we'll
-> start up the host again before closing it down.
+> This doesn't really fix the problem, it merely narrows the window (we
+> still crash in the much shorter window if another async scan starts
+> after you check for completion).
 
-That's part of the intent.  Any command that has been waiting to be
-restarted has been potentially waiting up to a minute for recovery to
-complete, so the idea is that we trickle the blocked commands through
-and then come back for another pass.  This is close to what "late"
-callers sto csi_schedule_eh() experience anyways.
+Oh, I was under the impression that async scanning was only the
+initial scan and everything was sync thereafter since
+scsi_finish_async_scan() clears the host ->async_scan flag?
 
-> Isn't the correct way to put
->
-> if (shost->host_eh_scheduled)
-> =A0 =A0 =A0 =A0continue;
->
-> into the scsi_error_handler() loop just *before*
-> scsi_restart_operations()?
+> Isn't the fix that will prevent all of
+> this to hold the scan mutex across scsi_remove_device() ... in which
+> case it should probably be part of scsi_remove_device()?
 
-I think that only narrows the window...  The hole is
-scsi_schedule_eh() called anytime after the last run completes and
-before the change of the host state, so host_eh_scheduled can go
-active immediately after that check right?
-
-We could move the check into scsi_restart_operations() under the lock
-before we change the state back to running, but I figure if we got
-that far just let the queue run again.
+I thought along these lines initially, but in this case we're crashing
+because the sas rphy is removed before the starget is added, so
+scsi_remove_device() is out of the picture.
 
 --
 Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
