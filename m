@@ -1,55 +1,53 @@
-From: Stephen Cameron <stephenmcameron@gmail.com>
-Subject: Re: [PATCH 14/17] hpsa: use new IS_ENABLED macro
-Date: Sun, 22 Apr 2012 21:20:35 -0500
-Message-ID: <CADzpL0S04XTYoe4u7_WNgA6cw11uNw9uxiyyYCQ=cY-p-Z+sww@mail.gmail.com>
-References: <20120420150349.10596.73732.stgit@beardog.cce.hp.com>
-	<20120420150732.10596.9085.stgit@beardog.cce.hp.com>
-	<CAP=VYLpOyBuvZ3+Nfw1u0dojOX8kt-1TDJA+v-EWQuKPdh0A1w@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 03/12] libata, libsas: introduce sched_eh and end_eh port
+ ops
+Date: Sun, 22 Apr 2012 22:33:52 -0400
+Message-ID: <4F94BF90.4090001@garzik.org>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com> <20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com> <1335115828.13208.31.camel@dabdike.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:59316 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753220Ab2DWCUg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Apr 2012 22:20:36 -0400
-In-Reply-To: <CAP=VYLpOyBuvZ3+Nfw1u0dojOX8kt-1TDJA+v-EWQuKPdh0A1w@mail.gmail.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:55945 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753220Ab2DWCd4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Apr 2012 22:33:56 -0400
+In-Reply-To: <1335115828.13208.31.camel@dabdike.lan>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, matthew.gates@hp.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
 
-On Sun, Apr 22, 2012 at 1:12 PM, Paul Gortmaker
-<paul.gortmaker@windriver.com> wrote:
-> On Fri, Apr 20, 2012 at 11:07 AM, Stephen M. Cameron
-> <scameron@beardog.cce.hp.com> wrote:
->> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+On 04/22/2012 01:30 PM, James Bottomley wrote:
+> On Fri, 2012-04-13 at 16:37 -0700, Dan Williams wrote:
+>> When managing shost->host_eh_scheduled libata assumes that there is a
+>> 1:1 shost-to-ata_port relationship.  libsas creates a 1:N relationship
+>> so it needs to manage host_eh_scheduled cumulatively at the host level.
+>> The sched_eh and end_eh port port ops allow libsas to track when domain
+>> devices enter/leave the "eh-pending" state under ha->lock (previously
+>> named ha->state_lock, but it is no longer just a lock for ha->state
+>> changes).
 >>
->> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+>> Since host_eh_scheduled indicates eh without backing commands pinning
+>> the device it can be deallocated at any time.  Move the taking of the
+>> domain_device reference under the port_lock to guarantee that the
+>> ata_port stays around for the duration of eh.
 >
-> You've not written a commit log, so I'm left guessing what the
-> intended rationale is here. =A0COMPAT, X86 and PCI_MSI are
-> I believe all bool, so why make this change? =A0To me it gives
-> a misleading message that some level of modular awareness
-> is needed here, when there really isn't any such need.
+>> Cc: Tejun Heo<tj@kernel.org>
+>> Acked-by: Jacek Danecki<jacek.danecki@intel.com>
+>
+> Could we standardise on Acked-by, please.  In my book it means the
+> maintainer of a piece of code agrees with the change and lets me take it
+> through my tree.  I'm aware that not everyone uses this definition, so
+> we can use a different standard from my current one, but what does it
+> mean in this case?
 
-Well, I saw this commit go by: 69349c2dc01c489eccaa4c472542c08e370c6d7e
+The above, IMO, should be s/Acked-by/Signed-off-by/
 
-   Using IS_ENABLED() within C (vs.  within CPP #if statements) in its
-   current form requires us to actually define every possible bool/tris=
-tate
-   Kconfig option twice (__enabled_* and __enabled_*_MODULE variants).
-   [...]
+FWIW this also has
 
-and so I kind of thought IS_ENABLED is the new way to do that sort of t=
-hing.
+	Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
-Perhaps I'm wrong about that.  Obviously the patch is not _needed_ for
-things to work.
+as noted days ago in another thread.
 
--- steve
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
