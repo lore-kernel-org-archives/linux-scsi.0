@@ -1,51 +1,55 @@
-From: Alex Shi <alex.shi@intel.com>
-Subject: Re: [PATCH] [SCSI] mpt2sas : Fix unsafe using smp_processor_id()
- inpreemptible
-Date: Mon, 23 Apr 2012 09:29:42 +0800
-Message-ID: <4F94B086.4000502@intel.com>
-References: <20120418031441.GA10862@parisc-linux.org> <4565AEA676113A449269C2F3A549520FB5AE22E7@cosmail03.lsi.com> <20120418041359.GB10862@parisc-linux.org> <A6888A6805518E4EA4AF7072A28264A6067E89B20C@inbmail02.lsi.com>
+From: Stephen Cameron <stephenmcameron@gmail.com>
+Subject: Re: [PATCH 14/17] hpsa: use new IS_ENABLED macro
+Date: Sun, 22 Apr 2012 21:20:35 -0500
+Message-ID: <CADzpL0S04XTYoe4u7_WNgA6cw11uNw9uxiyyYCQ=cY-p-Z+sww@mail.gmail.com>
+References: <20120420150349.10596.73732.stgit@beardog.cce.hp.com>
+	<20120420150732.10596.9085.stgit@beardog.cce.hp.com>
+	<CAP=VYLpOyBuvZ3+Nfw1u0dojOX8kt-1TDJA+v-EWQuKPdh0A1w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64442 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753074Ab2DWBap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Apr 2012 21:30:45 -0400
-In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6067E89B20C@inbmail02.lsi.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:59316 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753220Ab2DWCUg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Apr 2012 22:20:36 -0400
+In-Reply-To: <CAP=VYLpOyBuvZ3+Nfw1u0dojOX8kt-1TDJA+v-EWQuKPdh0A1w@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, "Moore, Eric" <Eric.Moore@lsi.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "jejb@kernel.org" <jejb@kernel.org>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, matthew.gates@hp.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 
-On 04/20/2012 07:00 PM, Nandigama, Nagalakshmi wrote:
+On Sun, Apr 22, 2012 at 1:12 PM, Paul Gortmaker
+<paul.gortmaker@windriver.com> wrote:
+> On Fri, Apr 20, 2012 at 11:07 AM, Stephen M. Cameron
+> <scameron@beardog.cce.hp.com> wrote:
+>> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+>>
+>> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+>
+> You've not written a commit log, so I'm left guessing what the
+> intended rationale is here. =A0COMPAT, X86 and PCI_MSI are
+> I believe all bool, so why make this change? =A0To me it gives
+> a misleading message that some level of modular awareness
+> is needed here, when there really isn't any such need.
 
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index 272fab7..0f47f56 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -1792,7 +1792,10 @@ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
->  static inline u8
->  _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
->  {
-> -       return ioc->cpu_msix_table[smp_processor_id()];
-> +       int cpu = get_cpu();
-> +       put_cpu();
-> +       return ioc->cpu_msix_table[cpu];
-> +
->  }
+Well, I saw this commit go by: 69349c2dc01c489eccaa4c472542c08e370c6d7e
 
+   Using IS_ENABLED() within C (vs.  within CPP #if statements) in its
+   current form requires us to actually define every possible bool/tris=
+tate
+   Kconfig option twice (__enabled_* and __enabled_*_MODULE variants).
+   [...]
 
-If we don't care the correctness interrupt CPU. Do
-preempt_enable/preempt_disable is just waste of time.
-A patch like following is enough, :)
+and so I kind of thought IS_ENABLED is the new way to do that sort of t=
+hing.
 
- _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
- {
--       return ioc->cpu_msix_table[smp_processor_id()];
-+       return ioc->cpu_msix_table[raw_smp_processor_id()];
- }
+Perhaps I'm wrong about that.  Obviously the patch is not _needed_ for
+things to work.
 
-
-BTW, I didn't subscribe linux-scsi mailing list, so cc to me is
-appreciated.
+-- steve
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
