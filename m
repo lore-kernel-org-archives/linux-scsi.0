@@ -1,67 +1,45 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH 3/3] [SCSI] ufs: Process SCSI command for UFS device
-Date: Mon, 23 Apr 2012 10:44:12 +0530
-Message-ID: <CALMYJDtBrh6G3=Aq6grV5O3s1VmH33FzinS2uX_Wfiw3d4Xszw@mail.gmail.com>
-References: <1334999359-3181-1-git-send-email-santoshsy@gmail.com>
- <1334999359-3181-3-git-send-email-santoshsy@gmail.com> <1335005949.3081.6.camel@dabdike.lan>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: Is it possible for Realtek card reader driver to reside in SCSI
+ subsystem?
+Date: Mon, 23 Apr 2012 07:39:28 +0000
+Message-ID: <1335166767.3051.4.camel@dabdike.lan>
+References: <4F94D132.7070109@realsil.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36012 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751892Ab2DWFOg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Apr 2012 01:14:36 -0400
-Received: by iadi9 with SMTP id i9so1518140iad.19
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Apr 2012 22:14:36 -0700 (PDT)
-In-Reply-To: <1335005949.3081.6.camel@dabdike.lan>
+Received: from mx2.parallels.com ([64.131.90.16]:44968 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751685Ab2DWHjb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Apr 2012 03:39:31 -0400
+In-Reply-To: <4F94D132.7070109@realsil.com.cn>
+Content-Language: en-US
+Content-ID: <6545B8E44B4FCE4889C19F00C521D8DD@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com
+To: edwin_rong <edwin_rong@realsil.com.cn>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@suse.de" <gregkh@suse.de>, =?utf-8?B?546L54Kc?= <wei_wang@realsil.com.cn>
 
-On Sat, Apr 21, 2012 at 4:29 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Sat, 2012-04-21 at 14:39 +0530, Santosh Y wrote:
->> UFS Spec specifies that the SCSI CDB fields, that are not
->> supported by UFS should be set to zero. It also mentions
->> that some of the CDB fields should be set to default
->> values before issuing the command to a UFS device.
->> Ex: Mode Select - Page Format bit should be set to 1.
->>
->> If the fields are not set to values mentioned in UFS spec,
->> strict CDB checking UFS device may complete the commands
->> with a check condition.
->
-> Altering CDB field values in the driver is a bad idea. =A0If you tamp=
-er
-> with commands in the driver unexpected things will be returned to
-> userspace. =A0The general principle is that the mid layer tries to be=
- as
-> correct and conservative as possible, but we don't forbid users from
-> sending out of spec commands because sometimes that's required.
->
-> Are you actually trying to fix a bug, or is this just theoretical? =A0=
-If
-
-At this point it is theoretical, since the UFS spec mentions it.
-But I guess soon enough I'll run into this problem when I'll start
-testing with updated firmwares. Which may strictly follow UFS spec
-and expect some of the SCSI CDB fields must be set to UFS specific
-default values.
-
-> the former, the way to fix it is to get the mid layer to be more
-> conservative about what it does (or possibly add a quirk flag).
-
-As you suggested, will try to find a better approach.
-
-> James
->
-
---=20
-~Santosh
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gTW9uLCAyMDEyLTA0LTIzIGF0IDExOjQ5ICswODAwLCBlZHdpbl9yb25nIHdyb3RlOg0KPiBE
+ZWFyIEphbWVzIGFuZCBhbGwgOg0KPiANCj4gU29ycnkgdG8gZGlzdHVyYiB5b3UgYWdhaW4hDQo+
+IA0KPiBJJ20gYW4gc29mdHdhcmUgZW5naW5lZXIgb2YgUmVhbHRlayBjb3Jwb3JhdGlvbiwgcmVz
+cG9uc2libGUgZm9yIHdyaXRpbmcgDQo+IGRyaXZlciBmb3IgUmVhbHRlayBDYXJkIFJlYWRlciBj
+aGlwcy4NCj4gDQo+IE91ciBkZXZpY2Ugc3VwcG9ydHMgU0QvTU1DL01TL01TcHJvL3hEIHNlcmll
+cyBvZiBjYXJkcywgZXRjLiwgd2hpY2ggaXMgDQo+IGltcGxlbWVudGVkIGFzIGFuIFNDU0kgZGV2
+aWNlIGluIG91ciBkcml2ZXIsDQo+IGFuZCBub3cgb3VyIGRyaXZlciBydHNfcHN0b3IgaXMgdW5k
+ZXIgc3RhZ2luZyBmb2xkZXIgb2YgbGludXgga2VybmVsLCBzbyANCj4gSSB3YW50IHRvIGtub3cg
+d2hldGhlciBpdCBpcyBwb3NzaWJsZSB0byBtb3ZlIGl0IG91dCBvZiBzdGFnaW5nIGZvbGRlciwN
+Cj4gYW5kIHJlc2lkZSBpbiBTQ1NJIHN1YnN5c3RlbT8NCj4gDQo+IEkgYWxzbyBrbm93IHRoYXQg
+Ym90aCAibW1jIiBhbmQgIm1lbXN0aWNrIiBzdWJzeXN0ZW0gZXhpc3QgaW4ga2VybmVsIA0KPiBu
+b3csIGJ1dCBvdXIgZGV2aWNlIGlzIGEgY29tcG9zaXRpb24gb2YgdGhlc2UgdHlwZXMgb2YgY2Fy
+ZHMsDQo+IHNvIGl0IHNlZW1zIG5vdCBzdWl0YWJsZSBmb3Iga2VlcGluZyBvdXIgZHJpdmVyIHRo
+ZXJlLg0KPiANCj4gQWxsIHJlcGxpZXMgYXJlIGFwcHJlY2lhdGVkLg0KDQpUaGUgZ2VuZXJhbCBy
+dWxlIGlzIHRoYXQgaWYgdGhlIGRldmljZSBpdHNlbGYgc3BlYWtzIFNDU0kgLi4uIGFzIGluDQpl
+aXRoZXIgdGhlIGZpcm13YXJlIG9yIHRoZSB1bmRlcmx5aW5nIGRpc2sgZG9lcywgdGhlbiB5b3Ug
+c2hvdWxkIGJlDQp1c2luZyBTQ1NJIChUaGlzIGRvZXNuJ3QgbWVhbiB5b3UgaGF2ZSB0byBoYXZl
+IGFuIGFjdHVhbCBTQ1NJIGRldmljZQ0KYW55d2hlcmUgLi4uIGxvdHMgb2YgVVNCIGRldmljZXMg
+YXJlIHNvbWUgd2llcmQgZmxhc2ggb3IgSURFIGRldmljZQ0KZnJvbnRlZCBieSBhIGNoaXAgdGhh
+dCBkb2VzIFNDU0k8LT53aGF0ZXZlciB0cmFuc2xhdGlvbiBbdXN1YWxseQ0KYmFkbHldKS4gIENv
+bnZlcnNlbHkgaWYgeW91IHdvdWxkIGJlIHdyaXRpbmcgeW91ciBTQ1NJIGNvbW1hbmQgZW11bGF0
+aW9uDQppbiB0aGUgZHJpdmVyLCBkb24ndCAuLi4geW91IHNob3VsZCBiZSB1c2luZyBhbm90aGVy
+IHN1YnN5c3RlbS4NCg0KSmFtZXMNCg0K
