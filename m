@@ -1,114 +1,91 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 07/10] sg: protect sdp->exclude
-Date: Mon, 23 Apr 2012 18:13:58 -0400
-Message-ID: <4F95D426.7000406@interlog.com>
-References: <20120412213217.GA17388@logfs.org> <20120412213418.GG17388@logfs.org>
-Reply-To: dgilbert@interlog.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 03/12] libata, libsas: introduce sched_eh and end_eh
+ port ops
+Date: Mon, 23 Apr 2012 23:22:57 +0100
+Message-ID: <1335219777.2749.11.camel@dabdike.lan>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
+	 <20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com>
+	 <1335115828.13208.31.camel@dabdike.lan> <4F94BF90.4090001@garzik.org>
+	 <1335168621.3051.8.camel@dabdike.lan>
+	 <CABE8wwtd2c14dq8vWCtO_rEvk8i8Q8GzJ3NtS_YQVmpTUaF3=w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:54660 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754102Ab2DWWOL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Apr 2012 18:14:11 -0400
-In-Reply-To: <20120412213418.GG17388@logfs.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CABE8wwtd2c14dq8vWCtO_rEvk8i8Q8GzJ3NtS_YQVmpTUaF3=w@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On 12-04-12 05:34 PM, J=C3=B6rn Engel wrote:
-> sdp->exclude was previously protected by the BKL.  The sg_mutex, whic=
-h
-> replaced the BKL, only semi-protected it, as it was missing from
-> sg_release() and sg_proc_seq_show_debug().  Take an explicit spinlock
-> for it.
->
-> Signed-off-by: Joern Engel<joern@logfs.org>
-> ---
->   drivers/scsi/sg.c |   36 +++++++++++++++++++++++++++++-------
->   1 files changed, 29 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 758e7b4..a70018e 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -105,6 +105,7 @@ static int sg_add(struct device *, struct class_i=
-nterface *);
->   static void sg_remove(struct device *, struct class_interface *);
->
->   static DEFINE_MUTEX(sg_mutex);
-> +static DEFINE_SPINLOCK(sg_open_exclusive_lock);
->
->   static DEFINE_IDR(sg_index_idr);
->   static DEFINE_RWLOCK(sg_index_lock);	/* Also used to lock
-> @@ -173,7 +174,8 @@ typedef struct sg_device { /* holds the state of =
-each scsi generic device */
->   	u32 index;		/* device index number */
->   	struct list_head sfds;
->   	volatile char detached;	/* 0->attached, 1->detached pending remova=
-l */
-> -	volatile char exclude;	/* opened for exclusive access */
-> +	/* exclude protected by sg_open_exclusive_lock */
-> +	char exclude;		/* opened for exclusive access */
->   	char sgdebug;		/* 0->off, 1->sense, 9->dump dev, 10->  all devs */
->   	struct gendisk *disk;
->   	struct cdev * cdev;	/* char_dev [sysfs: /sys/cdev/major/sg<n>] */
-> @@ -221,6 +223,26 @@ static int sg_allow_access(struct file *filp, un=
-signed char *cmd)
->   	return blk_verify_command(cmd, filp->f_mode&  FMODE_WRITE);
->   }
->
-> +static int get_exclude(Sg_device *sdp)
-> +{
-> +	unsigned long flags;
-> +	int ret;
-> +
-> +	spin_lock_irqsave(&sg_open_exclusive_lock, flags);
-> +	ret =3D sdp->exclude;
-> +	spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
-> +	return ret;
-> +}
-> +
-> +static void set_exclude(Sg_device *sdp, char val)
-> +{
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&sg_open_exclusive_lock, flags);
-> +	sdp->exclude =3D val;
-> +	spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
-> +}
-> +
->   static int
->   sg_open(struct inode *inode, struct file *filp)
->   {
-> @@ -269,17 +291,17 @@ sg_open(struct inode *inode, struct file *filp)
->   			goto error_out;
->   		}
->   		res =3D wait_event_interruptible(sdp->o_excl_wait,
-> -					   ((!list_empty(&sdp->sfds) || sdp->exclude) ? 0 : (sdp->exclu=
-de =3D 1)));
-> +					   ((!list_empty(&sdp->sfds) || get_exclude(sdp)) ? 0 : set_exc=
-lude(sdp, 1), 1));
+On Mon, 2012-04-23 at 12:13 -0700, Dan Williams wrote:
+> On Mon, Apr 23, 2012 at 1:10 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > On Sun, 2012-04-22 at 22:33 -0400, Jeff Garzik wrote:
+> >> On 04/22/2012 01:30 PM, James Bottomley wrote:
+> >> > On Fri, 2012-04-13 at 16:37 -0700, Dan Williams wrote:
+> >> >> When managing shost->host_eh_scheduled libata assumes that there is a
+> >> >> 1:1 shost-to-ata_port relationship.  libsas creates a 1:N relationship
+> >> >> so it needs to manage host_eh_scheduled cumulatively at the host level.
+> >> >> The sched_eh and end_eh port port ops allow libsas to track when domain
+> >> >> devices enter/leave the "eh-pending" state under ha->lock (previously
+> >> >> named ha->state_lock, but it is no longer just a lock for ha->state
+> >> >> changes).
+> >> >>
+> >> >> Since host_eh_scheduled indicates eh without backing commands pinning
+> >> >> the device it can be deallocated at any time.  Move the taking of the
+> >> >> domain_device reference under the port_lock to guarantee that the
+> >> >> ata_port stays around for the duration of eh.
+> >> >
+> >> >> Cc: Tejun Heo<tj@kernel.org>
+> >> >> Acked-by: Jacek Danecki<jacek.danecki@intel.com>
+> >> >
+> >> > Could we standardise on Acked-by, please.  In my book it means the
+> >> > maintainer of a piece of code agrees with the change and lets me take it
+> >> > through my tree.  I'm aware that not everyone uses this definition, so
+> >> > we can use a different standard from my current one, but what does it
+> >> > mean in this case?
+> >>
+> >> The above, IMO, should be s/Acked-by/Signed-off-by/
+> >
+> > Yes, I suspect this too.
+> 
+> No, it means:
+> 
+> "If a person was not directly involved in the preparation or handling of a
+> patch but wishes to signify and record their approval of it then they can
+> arrange to have an Acked-by: line added to the patch's changelog."
 
-I have gone through the rest of this series of patches (10 of
-them posted 12 April) and they look fine. The above line worries
-me and I raised it with the author but have received no response.
+Isn't that tested-by or reviewed-by?
 
-A small test program suggests that the second argument to
-wait_event_interruptible [a condition] will always be true
-due to the trailing comma operator (i.e. the ", 1"). I suspect
-another set of parentheses is needed:
-   res =3D wait_event_interruptible(sdp->o_excl_wait,
-              ((!list_empty(&sdp->sfds) || get_exclude(sdp)) ?
-		      0 : (set_exclude(sdp, 1), 1)));
+> "Acked-by: is not as formal as Signed-off-by:.  It is a record that the acker
+> has at least reviewed the patch and has indicated acceptance.  Hence patch
+> mergers will sometimes manually convert an acker's "yep, looks good to me"
+> into an Acked-by:"
 
-Doug Gilbert
+Reviewed-by is the appropriate one for that then.  Acked-by usually
+means the person has more involvement in the particular subsystem than
+would be implied by reviewed-by.  Like I said, I tend to reserve
+acked-by for maintainers of the various elements that have to go through
+different trees.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> What's wrong with Acked-by?  Signed-off-by involves co-authorship or
+> handled the patch, Reviewed-by is probably better, but maybe not
+> everyone is comfortable asserting the "Reviewer's statement of
+> oversight".  I'll certainly continue to take Jack's "looks ok to me "
+> as Acked-by the pm8001 maintainer for libsas changes that don't touch
+> drivers/scsi/pm8001.
+
+Right, so reviewed by or approved by the maintainer == acked-by.
+
+> For internal acks we should probably aim for promoting to Reviewed-by
+> or Tested-by... if Acked-by is unwelcome in scsi.
+
+We're just struggling to understand why it's there.  If it's read and
+approved the patch, then reviewed-by is the more appropriate.  If it's
+actually booted and ran through a set of unit/QA tests, then it should
+be tested-by.
+
+James
+
+
