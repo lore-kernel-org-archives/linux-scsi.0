@@ -1,73 +1,51 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH v2] [SCSI] scsi_dh: change scsi_dh_detach export to
- EXPORT_SYMBOL
-Date: Mon, 23 Apr 2012 00:13:06 +0100
-Message-ID: <20120423001306.040c512b@pyramind.ukuu.org.uk>
-References: <20120405144721.GA18437@redhat.com>
-	<20120420144538.GB8155@redhat.com>
-	<20120420173405.GA8846@redhat.com>
-	<20120420214120.159e2690@pyramind.ukuu.org.uk>
-	<20120420215825.GA10406@redhat.com>
-	<20120420232043.40ddc3c4@pyramind.ukuu.org.uk>
-	<20120420225822.GA10769@redhat.com>
-	<20120421001433.2955abd4@pyramind.ukuu.org.uk>
-	<20120422221329.GB24109@redhat.com>
-	<20120422233454.7cdd0f35@pyramind.ukuu.org.uk>
-	<20120422230156.GA25181@redhat.com>
+From: Alex Shi <alex.shi@intel.com>
+Subject: Re: [PATCH] [SCSI] mpt2sas : Fix unsafe using smp_processor_id()
+ inpreemptible
+Date: Mon, 23 Apr 2012 09:29:42 +0800
+Message-ID: <4F94B086.4000502@intel.com>
+References: <20120418031441.GA10862@parisc-linux.org> <4565AEA676113A449269C2F3A549520FB5AE22E7@cosmail03.lsi.com> <20120418041359.GB10862@parisc-linux.org> <A6888A6805518E4EA4AF7072A28264A6067E89B20C@inbmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:44753 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752752Ab2DVXKe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Apr 2012 19:10:34 -0400
-In-Reply-To: <20120422230156.GA25181@redhat.com>
+Received: from mga11.intel.com ([192.55.52.93]:64442 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753074Ab2DWBap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Apr 2012 21:30:45 -0400
+In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6067E89B20C@inbmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Chandra Seetharaman <sekharan@us.ibm.com>, linux-kernel@vger.kernel.org
+To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, "Moore, Eric" <Eric.Moore@lsi.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "jejb@kernel.org" <jejb@kernel.org>
 
-> Anyway, your no compromises approach is admirable but it doesn't erase
-> the fact that all proprietary Linux drivers use EXPORT_SYMBOL code.
+On 04/20/2012 07:00 PM, Nandigama, Nagalakshmi wrote:
 
-People still steal from shops. It doesn't mean we should abolish the idea
-of theft.
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> index 272fab7..0f47f56 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -1792,7 +1792,10 @@ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
+>  static inline u8
+>  _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
+>  {
+> -       return ioc->cpu_msix_table[smp_processor_id()];
+> +       int cpu = get_cpu();
+> +       put_cpu();
+> +       return ioc->cpu_msix_table[cpu];
+> +
+>  }
 
-> So what you're really saying is no proprietary drivers are allowed to be
-> loaded into a Linux kernel.
 
-The GPL defines the boundary. Whether it is possible for a work to be
-non-derivative and a kernel module is a matter for the lawyers to debate.
-If it is derivative however I don't think there is quite so much doubt.
+If we don't care the correctness interrupt CPU. Do
+preempt_enable/preempt_disable is just waste of time.
+A patch like following is enough, :)
 
-Linus wrote the following
+ _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
+ {
+-       return ioc->cpu_msix_table[smp_processor_id()];
++       return ioc->cpu_msix_table[raw_smp_processor_id()];
+ }
 
-|>"On Wed, 3 Dec 2003, Kendall Bennett wrote:
-|>
-|> I have heard many people reference the fact that the although the Linux
-|> Kernel is under the GNU GPL license, that the code is licensed with an
-|> exception clause that says binary loadable modules do not have to be
-|> under the GPL.
-|
-|Nope. No such exception exists.
-|
-|There's a clarification that user-space programs that use the standard
-|system call interfaces aren't considered derived works, but even that
-|isn't an "exception" - it's just a statement of a border of what is
-|clearly considered a "derived work". User programs are _clearly_ not
-|derived works of the kernel, and as such whatever the kernel license is
-|just doesn't matter.
-|
-|And in fact, when it comes to modules, the GPL issue is exactly the same.
-|The kernel _is_ GPL. No ifs, buts and maybe's about it. As a result,
-|anything that is a derived work has to be GPL'd. It's that simple.
 
-(and then goes on to discuss further his own personal opinion)
-
-http://kerneltrap.org/node/1735
-
-But you still misunderstand the fundamental problem, and this really
-needs to be discussed with Red Hat legal.
-
-Alan
+BTW, I didn't subscribe linux-scsi mailing list, so cc to me is
+appreciated.
