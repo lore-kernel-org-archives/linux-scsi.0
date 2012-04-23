@@ -1,105 +1,86 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 14/17] hpsa: use new IS_ENABLED macro
-Date: Mon, 23 Apr 2012 15:56:23 +0100
-Message-ID: <1335192983.4191.25.camel@dabdike.lan>
-References: <20120420150349.10596.73732.stgit@beardog.cce.hp.com>
-		<20120420150732.10596.9085.stgit@beardog.cce.hp.com>
-		<CAP=VYLpOyBuvZ3+Nfw1u0dojOX8kt-1TDJA+v-EWQuKPdh0A1w@mail.gmail.com>
-	 <CADzpL0S04XTYoe4u7_WNgA6cw11uNw9uxiyyYCQ=cY-p-Z+sww@mail.gmail.com>
-	 <4F955F78.8070604@windriver.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: Is it possible for Realtek card reader driver to reside
+ inSCSIsubsystem?
+Date: Mon, 23 Apr 2012 08:48:10 -0700
+Message-ID: <20120423154810.GC23990@kroah.com>
+References: <4F94D132.7070109@realsil.com.cn>
+ <1335166767.3051.4.camel@dabdike.lan>
+ <4F950C0B.10804@realsil.com.cn>
+ <1335168679.3051.9.camel@dabdike.lan>
+ <4F9511D1.2030003@realsil.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52414 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754013Ab2DWO4b (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:35957 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752235Ab2DWPsM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Apr 2012 10:56:31 -0400
-In-Reply-To: <4F955F78.8070604@windriver.com>
+	Mon, 23 Apr 2012 11:48:12 -0400
+Content-Disposition: inline
+In-Reply-To: <4F9511D1.2030003@realsil.com.cn>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Stephen Cameron <stephenmcameron@gmail.com>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, matthew.gates@hp.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
+To: edwin_rong <edwin_rong@realsil.com.cn>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, =?utf-8?B?546L54Kc?= <wei_wang@realsil.com.cn>
 
-On Mon, 2012-04-23 at 09:56 -0400, Paul Gortmaker wrote:
-> On 12-04-22 10:20 PM, Stephen Cameron wrote:
-> > On Sun, Apr 22, 2012 at 1:12 PM, Paul Gortmaker
-> > <paul.gortmaker@windriver.com> wrote:
-> >> On Fri, Apr 20, 2012 at 11:07 AM, Stephen M. Cameron
-> >> <scameron@beardog.cce.hp.com> wrote:
-> >>> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+On Mon, Apr 23, 2012 at 04:24:49PM +0800, edwin_rong wrote:
+> On 04/23/2012 04:11 PM, James Bottomley wrote:
+> >[updated Greg to non-SUSE address]
+> >On Mon, 2012-04-23 at 16:00 +0800, edwin_rong wrote:
+> >>On 04/23/2012 03:39 PM, James Bottomley wrote:
+> >>>On Mon, 2012-04-23 at 11:49 +0800, edwin_rong wrote:
+> >>>>Dear James and all :
+> >>>>
+> >>>>Sorry to disturb you again!
+> >>>>
+> >>>>I'm an software engineer of Realtek corporation, responsible for writing
+> >>>>driver for Realtek Card Reader chips.
+> >>>>
+> >>>>Our device supports SD/MMC/MS/MSpro/xD series of cards, etc., which is
+> >>>>implemented as an SCSI device in our driver,
+> >>>>and now our driver rts_pstor is under staging folder of linux kernel, so
+> >>>>I want to know whether it is possible to move it out of staging folder,
+> >>>>and reside in SCSI subsystem?
+> >>>>
+> >>>>I also know that both "mmc" and "memstick" subsystem exist in kernel
+> >>>>now, but our device is a composition of these types of cards,
+> >>>>so it seems not suitable for keeping our driver there.
+> >>>>
+> >>>>All replies are appreciated.
+> >>>The general rule is that if the device itself speaks SCSI ... as in
+> >>>either the firmware or the underlying disk does, then you should be
+> >>>using SCSI (This doesn't mean you have to have an actual SCSI device
+> >>>anywhere ... lots of USB devices are some wierd flash or IDE device
+> >>>fronted by a chip that does SCSI<->whatever translation [usually
+> >>>badly]).  Conversely if you would be writing your SCSI command emulation
+> >>>in the driver, don't ... you should be using another subsystem.
 > >>>
-> >>> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> >>>James
+> >>>
+> >>Dear James,
 > >>
-> >> You've not written a commit log, so I'm left guessing what the
-> >> intended rationale is here.  COMPAT, X86 and PCI_MSI are
-> >> I believe all bool, so why make this change?  To me it gives
-> >> a misleading message that some level of modular awareness
-> >> is needed here, when there really isn't any such need.
-> > 
-> > Well, I saw this commit go by: 69349c2dc01c489eccaa4c472542c08e370c6d7e
-> > 
-> >    Using IS_ENABLED() within C (vs.  within CPP #if statements) in its
-> >    current form requires us to actually define every possible bool/tristate
-> >    Kconfig option twice (__enabled_* and __enabled_*_MODULE variants).
-> >    [...]
-> > 
-> > and so I kind of thought IS_ENABLED is the new way to do that sort of thing.
+> >>Got it, thanks for your response, sincerely.
+> >>
+> >>As to my case, which subsystem do you think is fit for our driver to
+> >>stay, could you give me some suggestions?
+> >Well, you said it's a combination of mmc and memstick.  If it can be
+> >bound as two separate drivers, I'd say one in each.  If there's magic
+> >that has to be done in the binding (as in you need a single bind driver
+> >that activates each component), I'd say be guided by the maintainers of
+> >those components.  My instinct would be to put it in one and use the
+> >other via Kconfig, but whatever they find most appropriate.
+> >
+> >James
+> >
+> >
+> Gotcha!
+> 
+> Thanks for your suggestion, James.
 
-I don't think you need to change the driver unless there's a good
-reason.  In kernel terms, it's usually better to wait a bit to see if
-the wheels fall off any particular bandwagon before leaping on it ...
+Also, at the least, you have a lot of basic coding style issues to clean
+up in the drivers/staging/rts_pstor/ directory before your code can move
+out of there.  Please start working on that as soon as possible.
 
-> In my opinion, IS_ENABLED can/should be used when you have:
-> 
-> #if defined(CONFIG_FOO) || defined(CONFIG_FOO_MODULE)
-> 
-> i.e. "is this driver built in, or can it be loaded as a module?"
-> The CONFIG_FOO_MODULE doesn't appear in your .config -- it is auto
-> generated by Kbuild infrastructure.
-> 
-> It will do the Right Thing even for cases where CONFIG_FOO_MODULE
-> is impossible, but it does as I've said, give the wrong impression
-> that there is some possibility of modular presence.  At least to
-> those who are familiar with the implementation and why it exists.
-> [I'll grant you that the name doesn't convey the use case too well.]
-> 
-> > 
-> > Perhaps I'm wrong about that.  Obviously the patch is not _needed_ for
-> > things to work.
-> 
-> I don't think we want to go and mass replace all existing cases of
-> 
->    #ifdef CONFIG_SOME_BOOL
-> 
-> with:
-> 
->    #if IS_ENABLED(CONFIG_SOME_BOOL)
-> 
-> There is no value add.  However, replacing instances of:
-> 
->    #if defined(CONFIG_FOO) || defined(CONFIG_FOO_MODULE)
-> 
-> with:
-> 
->    #if IS_ENABLED(CONFIG_FOO)
-> 
-> is in my opinion, a reasonable thing to do.  It is shorter, and
-> it does hide the internally generated _MODULE suffixed "shadow"
-> variables from appearing directly in the main source files.  And
-> it tells you that the author was thinking about both the built
-> in and the modular cases when they wrote it.
+thanks,
 
-To be honest, I think we want to use #if IS_ENABLED() for all cases
-going forwards, including the boolean case.
-
-The reason is that it's an easier design pattern.  If we have the #ifdef
-CONFIG_X vs #if IS_ENABLED(CONFIG_X) depending on whether CONFIG_X can
-be modular or not it's just creating pointless rules that someone will
-annoy us all by enforcing in a checkpatch or some other script.  Whereas
-#if IS_ENABLED(CONFIG_X) is obvious and simple.
-
-James
-
-
+greg k-h
