@@ -1,55 +1,114 @@
-From: Pierre Beck <mail@pierre-beck.de>
-Subject: Tunables for timeout behaviour?
-Date: Mon, 23 Apr 2012 23:12:00 +0200
-Message-ID: <4F95C59A.7010706@pierre-beck.de>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 07/10] sg: protect sdp->exclude
+Date: Mon, 23 Apr 2012 18:13:58 -0400
+Message-ID: <4F95D426.7000406@interlog.com>
+References: <20120412213217.GA17388@logfs.org> <20120412213418.GG17388@logfs.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozy.pierre-beck.de ([178.63.78.113]:37269 "EHLO
-	ozy.pierre-beck.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752901Ab2DWVrp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Apr 2012 17:47:45 -0400
-Received: from p4ff4ac5c.dip.t-dialin.net ([79.244.172.92] helo=[192.168.1.102])
-	by ozy.pierre-beck.de with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <mail@pierre-beck.de>)
-	id 1SMQYC-0002op-H7
-	for linux-scsi@vger.kernel.org; Mon, 23 Apr 2012 23:12:00 +0200
+Received: from smtp.infotech.no ([82.134.31.41]:54660 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754102Ab2DWWOL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Apr 2012 18:14:11 -0400
+In-Reply-To: <20120412213418.GG17388@logfs.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-Hi,
+On 12-04-12 05:34 PM, J=C3=B6rn Engel wrote:
+> sdp->exclude was previously protected by the BKL.  The sg_mutex, whic=
+h
+> replaced the BKL, only semi-protected it, as it was missing from
+> sg_release() and sg_proc_seq_show_debug().  Take an explicit spinlock
+> for it.
+>
+> Signed-off-by: Joern Engel<joern@logfs.org>
+> ---
+>   drivers/scsi/sg.c |   36 +++++++++++++++++++++++++++++-------
+>   1 files changed, 29 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 758e7b4..a70018e 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -105,6 +105,7 @@ static int sg_add(struct device *, struct class_i=
+nterface *);
+>   static void sg_remove(struct device *, struct class_interface *);
+>
+>   static DEFINE_MUTEX(sg_mutex);
+> +static DEFINE_SPINLOCK(sg_open_exclusive_lock);
+>
+>   static DEFINE_IDR(sg_index_idr);
+>   static DEFINE_RWLOCK(sg_index_lock);	/* Also used to lock
+> @@ -173,7 +174,8 @@ typedef struct sg_device { /* holds the state of =
+each scsi generic device */
+>   	u32 index;		/* device index number */
+>   	struct list_head sfds;
+>   	volatile char detached;	/* 0->attached, 1->detached pending remova=
+l */
+> -	volatile char exclude;	/* opened for exclusive access */
+> +	/* exclude protected by sg_open_exclusive_lock */
+> +	char exclude;		/* opened for exclusive access */
+>   	char sgdebug;		/* 0->off, 1->sense, 9->dump dev, 10->  all devs */
+>   	struct gendisk *disk;
+>   	struct cdev * cdev;	/* char_dev [sysfs: /sys/cdev/major/sg<n>] */
+> @@ -221,6 +223,26 @@ static int sg_allow_access(struct file *filp, un=
+signed char *cmd)
+>   	return blk_verify_command(cmd, filp->f_mode&  FMODE_WRITE);
+>   }
+>
+> +static int get_exclude(Sg_device *sdp)
+> +{
+> +	unsigned long flags;
+> +	int ret;
+> +
+> +	spin_lock_irqsave(&sg_open_exclusive_lock, flags);
+> +	ret =3D sdp->exclude;
+> +	spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
+> +	return ret;
+> +}
+> +
+> +static void set_exclude(Sg_device *sdp, char val)
+> +{
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&sg_open_exclusive_lock, flags);
+> +	sdp->exclude =3D val;
+> +	spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
+> +}
+> +
+>   static int
+>   sg_open(struct inode *inode, struct file *filp)
+>   {
+> @@ -269,17 +291,17 @@ sg_open(struct inode *inode, struct file *filp)
+>   			goto error_out;
+>   		}
+>   		res =3D wait_event_interruptible(sdp->o_excl_wait,
+> -					   ((!list_empty(&sdp->sfds) || sdp->exclude) ? 0 : (sdp->exclu=
+de =3D 1)));
+> +					   ((!list_empty(&sdp->sfds) || get_exclude(sdp)) ? 0 : set_exc=
+lude(sdp, 1), 1));
 
-asking on the linux-raid list about implementing timeouts in mdraid, 
-Neil Brown answered with a quite definitive "no" and said the next lower 
-level should take care of timeouts. So here I am :-)
+I have gone through the rest of this series of patches (10 of
+them posted 12 April) and they look fine. The above line worries
+me and I raised it with the author but have received no response.
 
-SCSI timeouts currently reset device, then bus, then host adapter. I 
-currently experience bus and / or host adapter resets as several minutes 
-of zero I/O on HW RAID cards. Can't speak for simple HBAs, but HW RAID 
-cards seem to search for logical volumes on all attached disks or 
-something and take ages to "reset" even in JBOD mode.
+A small test program suggests that the second argument to
+wait_event_interruptible [a condition] will always be true
+due to the trailing comma operator (i.e. the ", 1"). I suspect
+another set of parentheses is needed:
+   res =3D wait_event_interruptible(sdp->o_excl_wait,
+              ((!list_empty(&sdp->sfds) || get_exclude(sdp)) ?
+		      0 : (set_exclude(sdp, 1), 1)));
 
-In other words, a bad sector may escalate to unnecessary long 
-unavailability of a whole array of disks, despite mdraid in place. Yes, 
-drives with TLER / SCTERC management should not spend much time on bad 
-sectors, but not every drive supports that and a *failing* drive with 
-crashed firmware won't be cooperative anyways.
+Doug Gilbert
 
-So is there any way to influence this behaviour? I think the mdraid 
-layer could profit alot from stopping retries at the device level. 
-mdraid can simply fail the device and keep working. Neil mentioned 
-"FAILFAST" flags that can be added to requests issued by mdraid, but 
-reading a few patches I suspect these are meant for multipath only 
-(there's zero documentation on FAILFAST?).
-
-What I'd wish for was a tunable that goes along with 
-/sys/bus/scsi/devices/.../timeout to limit escalation to a specific 
-level and / or some way for mdraid to flag requests.
-
-Greetings,
-
-Pierre Beck
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
