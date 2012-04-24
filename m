@@ -1,49 +1,28 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH] [SCSI] ufs: Assign UTRLBAU = upper_32_ bits(UTRLD base address)
-Date: Tue, 24 Apr 2012 15:38:16 +0530
-Message-ID: <CALMYJDu+cGb4NCoZRnvdXMQOhNDsJxE38yY_FVqxcqTvZzCd6w@mail.gmail.com>
-References: <1335187331-2672-1-git-send-email-santoshsy@gmail.com> <CAKYAXd-aLSBvAGGRYmVDSBunBd8diAhzJ_PHmg7j+XbVbtde0g@mail.gmail.com>
+From: Jacek Danecki <Jacek.Danecki@intel.com>
+Subject: Re: [PATCH 03/12] libata, libsas: introduce sched_eh and end_eh port
+ ops
+Date: Tue, 24 Apr 2012 12:11:28 +0200
+Message-ID: <4F967C50.8030305@intel.com>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com> <20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com> <1335115828.13208.31.camel@dabdike.lan> <4F94BF90.4090001@garzik.org> <1335168621.3051.8.camel@dabdike.lan> <CABE8wwtd2c14dq8vWCtO_rEvk8i8Q8GzJ3NtS_YQVmpTUaF3=w@mail.gmail.com> <1335219777.2749.11.camel@dabdike.lan> <CABE8wwsmuRqzW7yiR=jWriEnxsH+koxSooQ18cqDP2ver54mCg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46426 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756635Ab2DXKIh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Apr 2012 06:08:37 -0400
-Received: by iadi9 with SMTP id i9so778041iad.19
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Apr 2012 03:08:37 -0700 (PDT)
-In-Reply-To: <CAKYAXd-aLSBvAGGRYmVDSBunBd8diAhzJ_PHmg7j+XbVbtde0g@mail.gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:31696 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756637Ab2DXKJO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Apr 2012 06:09:14 -0400
+In-Reply-To: <CABE8wwsmuRqzW7yiR=jWriEnxsH+koxSooQ18cqDP2ver54mCg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, rene.dejong@arm.com, vinholikatti@gmail.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Apr 24, 2012 at 10:26 AM, Namjae Jeon <linkinjeon@gmail.com> wrote:
-> 2012/4/23 Santosh Y <santoshsy@gmail.com>:
->> From: Santosh Yaraganavi <santoshsy@gmail.com>
->>
->> UTP Transfer request list base registers UTRLBA and UTRLBAU
->> must be assigned, lower-32 and upper-32 bits of UTRLD list
->> physical base addresses respectively.
->>
->> Currently UTRLBAU is being assigned lower-32 bits of UTRLD
->> physical base address. This will cause an issue with
->> controllers that can support 64-bit addressing.
->>
->> This patch correctly assigns upper-32 bits of UTRLD physical
->> base address to UTRLBAU.
-> Hi. Santosh.
-> 0 : 9 bits are reserved in UTRLBA of specification. is it considered also ?
-> Thanks.
->
+On 04/24/12 00:49, Dan Williams wrote:
+> Ok, reviewed-by is what we'll aim to do for Intel-internal "acks" for
+> isci / libsas going forward.
 
-Hi Namjae,
-
-During memory allocation for UTRDL, it is made sure that the UTRDL
-physical base address is aligned to 1K by checking if the address is
-aligned to PAGE_SIZE. If the address is PAGE_SIZE aligned, then it is
-aligned to 1K. So we don't have to worry about the first 10 bits while
-assigning the base address to UTRLBA.
+Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
 
 -- 
-~Santosh
+Jacek
