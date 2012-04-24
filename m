@@ -1,16 +1,16 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [v2 PATCH 3/4] bnx2fc: cleanup task management IO when it times
- out.
-Date: Tue, 24 Apr 2012 15:26:03 -0700
-Message-ID: <1335306364-31449-4-git-send-email-bprakash@broadcom.com>
+Subject: [v2 PATCH 1/4] bnx2fc: Allow FLOGI to be retried when receiving
+ bad responses.
+Date: Tue, 24 Apr 2012 15:26:01 -0700
+Message-ID: <1335306364-31449-2-git-send-email-bprakash@broadcom.com>
 References: <1335306364-31449-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2105 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4426 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757338Ab2DXW0Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1757405Ab2DXW0Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 24 Apr 2012 18:26:16 -0400
 In-Reply-To: <1335306364-31449-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,65 +18,57 @@ List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-When the task management IO times out, or a flush operation is performed while
-task management IO is pending, driver is not cleaning up the IO. This patch
-cleans up the IO for the above cases.
+Commit 907c07d45199f954ddcf66c2c9763c87d012cb15 added more cases to do FLOGI
+retry on receiving bad response. Remove the code that drops the packet and
+allow the stack to handle bad FLOGI response.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_io.c  |   16 +++++++++++++++-
- drivers/scsi/bnx2fc/bnx2fc_tgt.c |   10 ++++++++++
- 2 files changed, 25 insertions(+), 1 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_els.c |   16 +++-------------
+ 1 files changed, 3 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 4843b42..27074ee 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -810,8 +810,22 @@ retry_tmf:
- 	spin_lock_bh(&tgt->tgt_lock);
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
+index ce0ce3e..cf3bdcd 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_els.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
+@@ -854,7 +854,6 @@ static void bnx2fc_flogi_resp(struct fc_seq *seq, struct fc_frame *fp,
+ 	struct fc_exch *exch = fc_seq_exch(seq);
+ 	struct fc_lport *lport = exch->lp;
+ 	u8 *mac;
+-	struct fc_frame_header *fh;
+ 	u8 op;
  
- 	io_req->wait_for_comp = 0;
--	if (!(test_bit(BNX2FC_FLAG_TM_COMPL, &io_req->req_flags)))
-+	if (!(test_bit(BNX2FC_FLAG_TM_COMPL, &io_req->req_flags))) {
- 		set_bit(BNX2FC_FLAG_TM_TIMEOUT, &io_req->req_flags);
-+		if (io_req->on_tmf_queue) {
-+			list_del_init(&io_req->link);
-+			io_req->on_tmf_queue = 0;
-+		}
-+		io_req->wait_for_comp = 1;
-+		bnx2fc_initiate_cleanup(io_req);
-+		spin_unlock_bh(&tgt->tgt_lock);
-+		rc = wait_for_completion_timeout(&io_req->tm_done,
-+						 BNX2FC_FW_TIMEOUT);
-+		spin_lock_bh(&tgt->tgt_lock);
-+		io_req->wait_for_comp = 0;
-+		if (!rc)
-+			kref_put(&io_req->refcount, bnx2fc_cmd_release);
-+	}
+ 	if (IS_ERR(fp))
+@@ -862,13 +861,6 @@ static void bnx2fc_flogi_resp(struct fc_seq *seq, struct fc_frame *fp,
  
- 	spin_unlock_bh(&tgt->tgt_lock);
- 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-index d3ee231..082a25c 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-@@ -185,6 +185,16 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
- 		BUG_ON(rc);
+ 	mac = fr_cb(fp)->granted_mac;
+ 	if (is_zero_ether_addr(mac)) {
+-		fh = fc_frame_header_get(fp);
+-		if (fh->fh_type != FC_TYPE_ELS) {
+-			printk(KERN_ERR PFX "bnx2fc_flogi_resp:"
+-				"fh_type != FC_TYPE_ELS\n");
+-			fc_frame_free(fp);
+-			return;
+-		}
+ 		op = fc_frame_payload_op(fp);
+ 		if (lport->vport) {
+ 			if (op == ELS_LS_RJT) {
+@@ -878,12 +870,10 @@ static void bnx2fc_flogi_resp(struct fc_seq *seq, struct fc_frame *fp,
+ 				return;
+ 			}
+ 		}
+-		if (fcoe_ctlr_recv_flogi(fip, lport, fp)) {
+-			fc_frame_free(fp);
+-			return;
+-		}
++		fcoe_ctlr_recv_flogi(fip, lport, fp);
  	}
- 
-+	list_for_each_safe(list, tmp, &tgt->active_tm_queue) {
-+		i++;
-+		io_req = (struct bnx2fc_cmd *)list;
-+		list_del_init(&io_req->link);
-+		io_req->on_tmf_queue = 0;
-+		BNX2FC_IO_DBG(io_req, "tm_queue cleanup\n");
-+		if (io_req->wait_for_comp)
-+			complete(&io_req->tm_done);
-+	}
-+
- 	list_for_each_safe(list, tmp, &tgt->els_queue) {
- 		i++;
- 		io_req = (struct bnx2fc_cmd *)list;
+-	fip->update_mac(lport, mac);
++	if (!is_zero_ether_addr(mac))
++		fip->update_mac(lport, mac);
+ done:
+ 	fc_lport_flogi_resp(seq, fp, lport);
+ }
 -- 
 1.7.0.6
 
