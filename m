@@ -1,94 +1,91 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 3/6] qla4xxx: Fix clear ddb mbx command failure issue.
-Date: Mon, 23 Apr 2012 22:32:34 -0700
-Message-ID: <1335245557-17169-4-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 1/6] qla4xxx: Correct early completion of pending mbox.
+Date: Mon, 23 Apr 2012 22:32:32 -0700
+Message-ID: <1335245557-17169-2-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1335245557-17169-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:35334
+Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:38525
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751939Ab2DXFsJ (ORCPT
+	by vger.kernel.org with ESMTP id S1752154Ab2DXFsJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 24 Apr 2012 01:48:09 -0400
 In-Reply-To: <1335245557-17169-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Manish Rangankar <manish.rangankar@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Manish Rangankar <manish.rangankar@qlogic.com>
+From: Lalit Chandivade <lalit.chandivade@qlogic.com>
 
-Allow ddb state to change to DDB_DS_NO_CONNECTION_ACTIVE or
-DDB_DS_SESSION_FAILED before issuing clear ddb mailbox cmd,
-because clear ddb mailbox cmd fails if the ddb state is not
-equal to DDB_DS_NO_CONNECTION_ACTIVE or DDB_DS_SESSION_FAILED.
+Check for Firmware Hang (AF_FW_RECOVERY) after mailbox command
+has gained access to ensure that the mailbox command does not
+wait un-necessarily during a firmware recovery and prevent
+premature mailbox timeout which will lead to back to back reset's.
 
-Signed-off-by: Manish Rangankar <manish.rangankar@qlogic.com>
+Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_os.c |   36 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 35 insertions(+), 1 deletion(-)
+ drivers/scsi/qla4xxx/ql4_mbx.c |   38 +++++++++++++++++++-------------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index ee47820..45144aa 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -1555,19 +1555,53 @@ static void qla4xxx_session_destroy(struct iscsi_cls_session *cls_sess)
- 	struct iscsi_session *sess;
- 	struct ddb_entry *ddb_entry;
- 	struct scsi_qla_host *ha;
--	unsigned long flags;
-+	unsigned long flags, wtime;
-+	struct dev_db_entry *fw_ddb_entry = NULL;
-+	dma_addr_t fw_ddb_entry_dma;
-+	uint32_t ddb_state;
-+	int ret;
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 7ac21da..c7d101e 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -51,25 +51,6 @@ int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
+ 		}
+ 	}
  
- 	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
- 	sess = cls_sess->dd_data;
- 	ddb_entry = sess->dd_data;
- 	ha = ddb_entry->ha;
+-	if (is_qla8022(ha)) {
+-		if (test_bit(AF_FW_RECOVERY, &ha->flags)) {
+-			DEBUG2(ql4_printk(KERN_WARNING, ha, "scsi%ld: %s: "
+-			    "prematurely completing mbx cmd as firmware "
+-			    "recovery detected\n", ha->host_no, __func__));
+-			return status;
+-		}
+-		/* Do not send any mbx cmd if h/w is in failed state*/
+-		qla4_8xxx_idc_lock(ha);
+-		dev_state = qla4_8xxx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+-		qla4_8xxx_idc_unlock(ha);
+-		if (dev_state == QLA82XX_DEV_FAILED) {
+-			ql4_printk(KERN_WARNING, ha, "scsi%ld: %s: H/W is in "
+-			    "failed state, do not send any mailbox commands\n",
+-			    ha->host_no, __func__);
+-			return status;
+-		}
+-	}
+-
+ 	if ((is_aer_supported(ha)) &&
+ 	    (test_bit(AF_PCI_CHANNEL_IO_PERM_FAILURE, &ha->flags))) {
+ 		DEBUG2(printk(KERN_WARNING "scsi%ld: %s: Perm failure on EEH, "
+@@ -96,6 +77,25 @@ int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
+ 		msleep(10);
+ 	}
  
-+	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
-+					  &fw_ddb_entry_dma, GFP_KERNEL);
-+	if (!fw_ddb_entry) {
-+		ql4_printk(KERN_ERR, ha,
-+			   "%s: Unable to allocate dma buffer\n", __func__);
-+		goto destroy_session;
++	if (is_qla8022(ha)) {
++		if (test_bit(AF_FW_RECOVERY, &ha->flags)) {
++			DEBUG2(ql4_printk(KERN_WARNING, ha,
++					  "scsi%ld: %s: prematurely completing mbx cmd as firmware recovery detected\n",
++					  ha->host_no, __func__));
++			goto mbox_exit;
++		}
++		/* Do not send any mbx cmd if h/w is in failed state*/
++		qla4_8xxx_idc_lock(ha);
++		dev_state = qla4_8xxx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
++		qla4_8xxx_idc_unlock(ha);
++		if (dev_state == QLA82XX_DEV_FAILED) {
++			ql4_printk(KERN_WARNING, ha,
++				   "scsi%ld: %s: H/W is in failed state, do not send any mailbox commands\n",
++				   ha->host_no, __func__);
++			goto mbox_exit;
++		}
 +	}
 +
-+	wtime = jiffies + (HZ * LOGOUT_TOV);
-+	do {
-+		ret = qla4xxx_get_fwddb_entry(ha, ddb_entry->fw_ddb_index,
-+					      fw_ddb_entry, fw_ddb_entry_dma,
-+					      NULL, NULL, &ddb_state, NULL,
-+					      NULL, NULL);
-+		if (ret == QLA_ERROR)
-+			goto destroy_session;
-+
-+		if ((ddb_state == DDB_DS_NO_CONNECTION_ACTIVE) ||
-+		    (ddb_state == DDB_DS_SESSION_FAILED))
-+			goto destroy_session;
-+
-+		schedule_timeout_uninterruptible(HZ);
-+	} while ((time_after(wtime, jiffies)));
-+
-+destroy_session:
- 	qla4xxx_clear_ddb_entry(ha, ddb_entry->fw_ddb_index);
- 
  	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	qla4xxx_free_ddb(ha, ddb_entry);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
- 	iscsi_session_teardown(cls_sess);
-+
-+	if (fw_ddb_entry)
-+		dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
-+				  fw_ddb_entry, fw_ddb_entry_dma);
- }
  
- static struct iscsi_cls_conn *
+ 	ha->mbox_status_count = outCount;
 -- 
 1.7.9.1.265.gb3a76
 
