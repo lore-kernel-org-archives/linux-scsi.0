@@ -1,94 +1,66 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 10/17] be2iscsi: Update in Copyright information
-Date: Wed, 25 Apr 2012 09:23:01 +0100
-Message-ID: <1335342181.3075.8.camel@dabdike.lan>
-References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
-	 <1333514512-21799-11-git-send-email-michaelc@cs.wisc.edu>
+Subject: RE: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle
+ errors from the host
+Date: Wed, 25 Apr 2012 09:53:19 +0100
+Message-ID: <1335343999.3075.12.camel@dabdike.lan>
+References: <1333654012-23850-1-git-send-email-kys@microsoft.com>
+	  <426367E2313C2449837CD2DE46E7EAF92CE74A@CH1PRD0310MB381.namprd03.prod.outlook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57542 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754781Ab2DYIXI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Apr 2012 04:23:08 -0400
-In-Reply-To: <1333514512-21799-11-git-send-email-michaelc@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <426367E2313C2449837CD2DE46E7EAF92CE74A@CH1PRD0310MB381.namprd03.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <MinhDuc.Tran@emulex.com>
 
-On Tue, 2012-04-03 at 23:41 -0500, michaelc@cs.wisc.edu wrote:
-> From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+On Wed, 2012-04-18 at 12:38 +0000, KY Srinivasan wrote:
 > 
-> 	change from Serverengines to Emulex
+> > -----Original Message-----
+> > From: KY Srinivasan
+> > Sent: Tuesday, April 10, 2012 11:14 AM
+> > To: KY Srinivasan; gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> > devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
+> > jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
+> > apw@canonical.com
+> > Subject: RE: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors
+> > from the host
+> > 
+> > 
+> > 
+> > > -----Original Message-----
+> > > From: K. Y. Srinivasan [mailto:kys@microsoft.com]
+> > > Sent: Thursday, April 05, 2012 3:27 PM
+> > > To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> > > devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
+> > > jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
+> > > apw@canonical.com
+> > > Cc: KY Srinivasan
+> > > Subject: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors from
+> > > the host
+> > >
+> > > If the host returns error for pass through commands, deal with them
+> > > appropriately. I would like to thank James for patiently helping
+> > > me with this patch.
+> > 
+> > James,
+> > 
+> > Thank you for suggesting the fix here. I hope this is what you were looking for.
+> > 
+> > Regards,
+> > 
+> > K. Y
 
-Slightly confused by the description.  The patch has nothing to do with
-copyrights.  It updates the module author driver name and scsi host
-template to show Emulex, but doesn't touch any copyrights (which all
-show Emulex anyway thanks to a prior patch).
+OK, I have the patch, but the change log is a bit rubbish.  I changed it
+to
+
+Hyper-V cannot process some commands like ATA_12 and ATA_16. It also returns a
+very generic error when this happens (SRB_STATUS_ERROR).  Most of the time we
+treat SRB_STATUS_ERROR as DID_TARGET_FAILURE which causes error handler retry,
+but in the case of pass through commands, they'll never succeed (and the error
+handler will offline the device), so put a discriminating block in the command
+completion routing and send the SRB_STATUS_ERROR upwards with DID_PASSTHROUGH
+for commands we know should not be retried.
 
 James
-
-> Signed-off-by: Minh Tran <MinhDuc.Tran@Emulex.Com>
-> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> ---
->  drivers/scsi/be2iscsi/be_cmds.h |    2 +-
->  drivers/scsi/be2iscsi/be_main.c |    4 ++--
->  drivers/scsi/be2iscsi/be_main.h |    4 ++--
->  3 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-> index 8b40a5b..c85d73c 100644
-> --- a/drivers/scsi/be2iscsi/be_cmds.h
-> +++ b/drivers/scsi/be2iscsi/be_cmds.h
-> @@ -23,7 +23,7 @@
->   * firmware in the BE. These requests are communicated to the processor
->   * using Work Request Blocks (WRBs) submitted to the MCC-WRB ring or via one
->   * WRB inside a MAILBOX.
-> - * The commands are serviced by the ARM processor in the BladeEngine's MPU.
-> + * The commands are serviced by the ARM processor in the OneConnect's MPU.
->   */
->  struct be_sge {
->  	u32 pa_lo;
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index 2d76cb5..82d933c 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -48,7 +48,7 @@ static unsigned int num_hba = 0;
->  
->  MODULE_DEVICE_TABLE(pci, beiscsi_pci_id_table);
->  MODULE_DESCRIPTION(DRV_DESC " " BUILD_STR);
-> -MODULE_AUTHOR("ServerEngines Corporation");
-> +MODULE_AUTHOR("Emulex Corporation");
->  MODULE_LICENSE("GPL");
->  module_param(be_iopoll_budget, int, 0);
->  module_param(enable_msix, int, 0);
-> @@ -391,7 +391,7 @@ MODULE_DEVICE_TABLE(pci, beiscsi_pci_id_table);
->  
->  static struct scsi_host_template beiscsi_sht = {
->  	.module = THIS_MODULE,
-> -	.name = "ServerEngines 10Gbe open-iscsi Initiator Driver",
-> +	.name = "Emulex 10Gbe open-iscsi Initiator Driver",
->  	.proc_name = DRV_NAME,
->  	.queuecommand = iscsi_queuecommand,
->  	.change_queue_depth = iscsi_change_queue_depth,
-> diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-> index 50f231f..49289ef 100644
-> --- a/drivers/scsi/be2iscsi/be_main.h
-> +++ b/drivers/scsi/be2iscsi/be_main.h
-> @@ -35,8 +35,8 @@
->  #include "be.h"
->  #define DRV_NAME		"be2iscsi"
->  #define BUILD_STR		"4.1.239.0"
-> -#define BE_NAME			"ServerEngines BladeEngine2" \
-> -				"Linux iSCSI Driver version" BUILD_STR
-> +#define BE_NAME			"Emulex OneConnect" \
-> +				"Open-iSCSI Driver version" BUILD_STR
->  #define DRV_DESC		BE_NAME " " "Driver"
->  
->  #define BE_VENDOR_ID		0x19A2
-
-
