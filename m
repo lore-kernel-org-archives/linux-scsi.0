@@ -1,99 +1,39 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle
-	errors from the host
-Date: Wed, 25 Apr 2012 12:50:24 +0000
-Message-ID: <426367E2313C2449837CD2DE46E7EAF92D7187@SN2PRD0310MB382.namprd03.prod.outlook.com>
-References: <1333654012-23850-1-git-send-email-kys@microsoft.com>
-	<426367E2313C2449837CD2DE46E7EAF92CE74A@CH1PRD0310MB381.namprd03.prod.outlook.com>
-	<1335343999.3075.12.camel@dabdike.lan>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 42969] Softlockup during boot during init_sd
+Date: Wed, 25 Apr 2012 14:39:10 GMT
+Message-ID: <201204251439.q3PEdA7s017211@bugzilla.kernel.org>
+References: <bug-42969-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1335343999.3075.12.camel@dabdike.lan>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
-List-Post: <mailto:devel@linuxdriverproject.org>
-List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: devel-bounces@linuxdriverproject.org
-Sender: devel-bounces@linuxdriverproject.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "ohering@suse.com" <ohering@suse.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bugzilla.kernel.org ([198.145.19.204]:58275 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798Ab2DYOjL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2012 10:39:11 -0400
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q3PEdAtU017212
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Apr 2012 14:39:10 GMT
+In-Reply-To: <bug-42969-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=42969
 
 
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-> Sent: Wednesday, April 25, 2012 4:53 AM
-> To: KY Srinivasan
-> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
-> hch@infradead.org; linux-scsi@vger.kernel.org; apw@canonical.com
-> Subject: RE: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors
-> from the host
-> 
-> On Wed, 2012-04-18 at 12:38 +0000, KY Srinivasan wrote:
-> >
-> > > -----Original Message-----
-> > > From: KY Srinivasan
-> > > Sent: Tuesday, April 10, 2012 11:14 AM
-> > > To: KY Srinivasan; gregkh@linuxfoundation.org; linux-
-> kernel@vger.kernel.org;
-> > > devel@linuxdriverproject.org; virtualization@lists.osdl.org;
-> ohering@suse.com;
-> > > jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
-> > > apw@canonical.com
-> > > Subject: RE: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors
-> > > from the host
-> > >
-> > >
-> > >
-> > > > -----Original Message-----
-> > > > From: K. Y. Srinivasan [mailto:kys@microsoft.com]
-> > > > Sent: Thursday, April 05, 2012 3:27 PM
-> > > > To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> > > > devel@linuxdriverproject.org; virtualization@lists.osdl.org;
-> ohering@suse.com;
-> > > > jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
-> > > > apw@canonical.com
-> > > > Cc: KY Srinivasan
-> > > > Subject: [PATCH RESEND 1/1] Drivers: scsi: storvsc: Properly handle errors
-> from
-> > > > the host
-> > > >
-> > > > If the host returns error for pass through commands, deal with them
-> > > > appropriately. I would like to thank James for patiently helping
-> > > > me with this patch.
-> > >
-> > > James,
-> > >
-> > > Thank you for suggesting the fix here. I hope this is what you were looking
-> for.
-> > >
-> > > Regards,
-> > >
-> > > K. Y
-> 
-> OK, I have the patch, but the change log is a bit rubbish.  I changed it
-> to
-> 
-> Hyper-V cannot process some commands like ATA_12 and ATA_16. It also returns
-> a
-> very generic error when this happens (SRB_STATUS_ERROR).  Most of the time
-> we
-> treat SRB_STATUS_ERROR as DID_TARGET_FAILURE which causes error handler
-> retry,
-> but in the case of pass through commands, they'll never succeed (and the error
-> handler will offline the device), so put a discriminating block in the command
-> completion routing and send the SRB_STATUS_ERROR upwards with
-> DID_PASSTHROUGH
-> for commands we know should not be retried.
 
-Looks good; thanks James.
 
-K. Y
+--- Comment #6 from Eric Sesterhenn <eric.sesterhenn@lsexperts.de>  2012-04-25 14:39:09 ---
+Hi,
+
+is there any additional information I can provide here? This really troubles
+us, since this means that only one of four boots succeed and the other three
+need a manual restart.
+
+Regards, Eric
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
