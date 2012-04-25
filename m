@@ -1,19 +1,19 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 43164] FC card not detected/mounted via external multicard
  reader
-Date: Wed, 25 Apr 2012 19:52:52 GMT
-Message-ID: <201204251952.q3PJqqIp024291@bugzilla.kernel.org>
+Date: Wed, 25 Apr 2012 19:53:45 GMT
+Message-ID: <201204251953.q3PJrjnB024328@bugzilla.kernel.org>
 References: <bug-43164-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:59096 "EHLO
+Received: from bugzilla.kernel.org ([198.145.19.204]:59106 "EHLO
 	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758199Ab2DYTww (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2012 15:52:52 -0400
+	with ESMTP id S1758093Ab2DYTxp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2012 15:53:45 -0400
 Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q3PJqqxw024292
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Apr 2012 19:52:52 GMT
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q3PJrj1I024329
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Apr 2012 19:53:45 GMT
 In-Reply-To: <bug-43164-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,10 +25,10 @@ https://bugzilla.kernel.org/show_bug.cgi?id=43164
 
 
 
---- Comment #5 from Damjan <damjan.zemljic@gmail.com>  2012-04-25 19:52:51 ---
-Created an attachment (id=73089)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=73089)
-lspci
+--- Comment #6 from Damjan <damjan.zemljic@gmail.com>  2012-04-25 19:53:45 ---
+Created an attachment (id=73090)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=73090)
+scsi
 
 -- 
 Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
