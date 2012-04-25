@@ -1,93 +1,50 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: [PATCH v2 08/10] sg: completely protect sfds
-Date: Wed, 25 Apr 2012 11:17:29 -0400
-Message-ID: <20120425151729.GB23492@logfs.org>
-References: <20120412213217.GA17388@logfs.org>
- <20120412213445.GH17388@logfs.org>
+From: <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [PATCH 07/17] be2iscsi:Fix double free of MCCQ info memory.
+Date: Wed, 25 Apr 2012 12:27:01 -0700
+Message-ID: <8d9a259c-bdce-459d-8aaa-fa3f388512eb@exht2.ad.emulex.com>
+References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
+	 <1333514512-21799-8-git-send-email-michaelc@cs.wisc.edu>
+ <1335341601.3075.6.camel@dabdike.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from longford.logfs.org ([213.229.74.203]:37685 "EHLO
-	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753789Ab2DYRRJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2012 13:17:09 -0400
-Content-Disposition: inline
-In-Reply-To: <20120412213445.GH17388@logfs.org>
+Received: from exht2.emulex.com ([138.239.113.184]:30899 "EHLO
+	exht2.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758217Ab2DYT1X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2012 15:27:23 -0400
+In-Reply-To: <1335341601.3075.6.camel@dabdike.lan>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, Sony.John-N@Emulex.Com
 
-sfds is protected by sg_index_lock - except for sg_open(), where it
-isn't.  Change that and add some documentation.
-
-Signed-off-by: Joern Engel <joern@logfs.org>
----
- drivers/scsi/sg.c |   19 ++++++++++++++++---
- 1 files changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index e04b2a5..bb0514d 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -146,6 +146,7 @@ typedef struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
- } Sg_request;
- 
- typedef struct sg_fd {		/* holds the state of a file descriptor */
-+	/* sfd_siblings is protected by sg_index_lock */
- 	struct list_head sfd_siblings;
- 	struct sg_device *parentdp;	/* owning device */
- 	wait_queue_head_t read_wait;	/* queue read until command done */
-@@ -172,6 +173,7 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
- 	wait_queue_head_t o_excl_wait;	/* queue open() when O_EXCL in use */
- 	int sg_tablesize;	/* adapter's max scatter-gather table size */
- 	u32 index;		/* device index number */
-+	/* sfds is protected by sg_index_lock */
- 	struct list_head sfds;
- 	volatile char detached;	/* 0->attached, 1->detached pending removal */
- 	/* exclude protected by sg_open_exclusive_lock */
-@@ -244,6 +246,17 @@ static int set_exclude(Sg_device *sdp, char val)
- 	return val;
- }
- 
-+static int sfds_list_empty(Sg_device *sdp)
-+{
-+	unsigned long flags;
-+	int ret;
-+
-+	read_lock_irqsave(&sg_index_lock, flags);
-+	ret = list_empty(&sdp->sfds);
-+	read_unlock_irqrestore(&sg_index_lock, flags);
-+	return ret;
-+}
-+
- static int
- sg_open(struct inode *inode, struct file *filp)
- {
-@@ -287,12 +300,12 @@ sg_open(struct inode *inode, struct file *filp)
- 			retval = -EPERM; /* Can't lock it with read only access */
- 			goto error_out;
- 		}
--		if (!list_empty(&sdp->sfds) && (flags & O_NONBLOCK)) {
-+		if (!sfds_list_empty(sdp) && (flags & O_NONBLOCK)) {
- 			retval = -EBUSY;
- 			goto error_out;
- 		}
- 		res = wait_event_interruptible(sdp->o_excl_wait,
--					   ((!list_empty(&sdp->sfds) || get_exclude(sdp)) ? 0 : set_exclude(sdp, 1)));
-+					   ((!sfds_list_empty(sdp) || get_exclude(sdp)) ? 0 : set_exclude(sdp, 1)));
- 		if (res) {
- 			retval = res;	/* -ERESTARTSYS because signal hit process */
- 			goto error_out;
-@@ -312,7 +325,7 @@ sg_open(struct inode *inode, struct file *filp)
- 		retval = -ENODEV;
- 		goto error_out;
- 	}
--	if (list_empty(&sdp->sfds)) {	/* no existing opens on this device */
-+	if (sfds_list_empty(sdp)) {	/* no existing opens on this device */
- 		sdp->sgdebug = 0;
- 		q = sdp->device->request_queue;
- 		sdp->sg_tablesize = queue_max_segments(q);
--- 
-1.7.9.1
-
+DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogSmFtZXMgQm90dG9tbGV5IFtt
+YWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0gDQo+U2VudDogV2Vk
+bmVzZGF5LCBBcHJpbCAyNSwgMjAxMiAxOjEzIEFNDQo+VG86IG1pY2hhZWxjQGNzLndpc2MuZWR1
+DQo+Q2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBLYWxsaWNrYWwsIEpheWFtb2hhbjsg
+Sm9obiwgU29ueQ0KPlN1YmplY3Q6IFJlOiBbUEFUQ0ggMDcvMTddIGJlMmlzY3NpOkZpeCBkb3Vi
+bGUgZnJlZSBvZiBNQ0NRIGluZm8gbWVtb3J5Lg0KDQo+T24gVHVlLCAyMDEyLTA0LTAzIGF0IDIz
+OjQxIC0wNTAwLCBtaWNoYWVsY0Bjcy53aXNjLmVkdSB3cm90ZToNCj4gU3ViamVjdDogW1BBVENI
+IDA3LzE3XSBiZTJpc2NzaTpGaXggZG91YmxlIGZyZWUgb2YgTUNDUSBpbmZvIG1lbW9yeS4NCg0K
+Pk5lZWRzIGEgc3BhY2UgYWZ0ZXIgdGhlIGNvbG9uLiAgSSd2ZSBiZWVuIGZpeGluZyBpdCB1cCBv
+biBpbXBvcnQsIHNvIHRoaXMgaXMgZm9yIGZ1dHVyZSByZWZlcmVuY2UuDQoNCj4gRnJvbTogSmF5
+YW1vaGFuIEthbGxpY2thbCA8amF5YW1vaGFuLmthbGxpY2thbEBlbXVsZXguY29tPg0KDQo+VGhp
+cyBmcm9tIGRvZXNuJ3QgbWF0Y2ggdGhlIGZpcnN0IHNpZ25vZmYgLi4uIGlzIHRoaXMgdGhlIHJp
+Z2h0IGZyb20gZmllbGQ/DQoNCj4gIEluIGNhc2Ugb2YgTUNDX1EgY3JlYXRpb24gZmFpbGVkLCB0
+aGUgTUNDUSBpbmZvIG1lbW9yeSBpcyBmcmVlZCAgZnJvbSANCj4gYmVfbWNjX3F1ZXVlc19kZXN0
+cm95IGFuZCBiZV9tY2NfcXVldWVzX2NyZWF0ZS4gVGhpcyBjYXVzZWQgIGtlcm5lbCB0byANCj4g
+cGFuaWMgYmVjYXVzZSBvZiBkb3VibGUgZnJlZS4NCg0KPlRoZSBleHRyYSBzcGFjZSBoZXJlIG5l
+ZWRzIHJlbW92aW5nIChJJ3ZlIGJlZW4gZG9pbmcgaXQgb24gaW1wb3J0KQ0KDQo+IFNpZ25lZC1v
+ZmYtYnk6IEpvaG4gU29uaSBKb3NlIDxzb255LmpvaG4tbkBlbXVsZXguY29tPiBkZA0KDQo+ZGQ/
+ICBJcyB0aGlzIGp1c3QgYSBzcHVyaW91cyBhZGRpdGlvbiBvciBzaG91bGQgdGhlcmUgYmUgc29t
+ZXRoaW5nIGVsc2UgaGVyZT8NCg0KPiBTaWduZWQtb2ZmLWJ5OiBKYXlhbW9oYW4gS2FsbGlja2Fs
+IDxqYXlhbW9oYW4ua2FsbGlja2FsQGVtdWxleC5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IE1pa2Ug
+Q2hyaXN0aWUgPG1pY2hhZWxjQGNzLndpc2MuZWR1Pg0KDQo+SmFtZXMNCg0KVGhlIEZyb206IHNo
+b3VsZCBoYXZlIGJlZW4gSm9obiBTb25pIEpvc2UgPHNvbnkuam9obi1uQGVtdWxleC5jb20+IGFz
+IHRoZSBwYXRjaCBpcyBvcmlnaW5hbGx5IHByZXBhcmVkIGJ5IFNvbnkuIA0KVGhlIHNpZ25lZC1v
+ZmYgb3JkZXIgaXMgcmlnaHQgIGFuZCB0aGUgZGQgbXVzdCBoYXZlIGNyZWVwZWQgaW4gd2hpbGUg
+ZXllYmFsbGluZyB0aGUgcGF0Y2ggYW5kIG11bHRpdGFza2luZy4NCg0KVGhhbmtzIGZvciB0YWtp
+bmcgY2FyZSBvZiB0aGUgc3BhY2UgaXNzdWVzLiBXaWxsIHZlcmlmeSB0aGF0IGZvciB0aGUgbmV4
+dCByb3VuZCBvZiBwYXRjaGVzDQoNCkpheQ0KDQoNCg==
