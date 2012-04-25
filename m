@@ -1,39 +1,65 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 42969] Softlockup during boot during init_sd
-Date: Wed, 25 Apr 2012 14:39:10 GMT
-Message-ID: <201204251439.q3PEdA7s017211@bugzilla.kernel.org>
-References: <bug-42969-11613@https.bugzilla.kernel.org/>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: [PATCH 4/5] qla2xxx: Properly check for current state after the fabric-login request.
+Date: Wed, 25 Apr 2012 07:26:16 -0700
+Message-ID: <1335363977-6816-5-git-send-email-chad.dupuis@qlogic.com>
+References: <1335363977-6816-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:58275 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798Ab2DYOjL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2012 10:39:11 -0400
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q3PEdAtU017212
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Apr 2012 14:39:10 GMT
-In-Reply-To: <bug-42969-11613@https.bugzilla.kernel.org/>
+Received: from db3ehsobe004.messaging.microsoft.com ([213.199.154.142]:37519
+	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752808Ab2DYOl5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Apr 2012 10:41:57 -0400
+Received: from mail107-db3 (localhost [127.0.0.1])	by
+ mail107-db3-R.bigfish.com (Postfix) with ESMTP id B6B0B4038C	for
+ <linux-scsi@vger.kernel.org>; Wed, 25 Apr 2012 14:41:55 +0000 (UTC)
+In-Reply-To: <1335363977-6816-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42969
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c |   18 +++++++++++++++++-
+ 1 files changed, 17 insertions(+), 1 deletions(-)
 
-
-
-
---- Comment #6 from Eric Sesterhenn <eric.sesterhenn@lsexperts.de>  2012-04-25 14:39:09 ---
-Hi,
-
-is there any additional information I can provide here? This really troubles
-us, since this means that only one of four boots succeed and the other three
-need a manual restart.
-
-Regards, Eric
-
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index a2f9992..39430c3 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3577,9 +3577,25 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
+ 						continue;
+ 					/* Attempt a retry. */
+ 					status = 1;
+-				} else
++				} else {
+ 					status = qla2x00_fabric_login(vha,
+ 					    fcport, &next_loopid);
++					if (status ==  QLA_SUCCESS) {
++						int status2;
++						uint8_t opts;
++
++						opts = 0;
++						if (fcport->flags &
++						    FCF_FCP2_DEVICE)
++							opts |= BIT_1;
++							status2 =
++							    qla2x00_get_port_database(
++							        vha, fcport,
++							        opts);
++						if (status2 != QLA_SUCCESS)
++							status = 1;
++					}
++				}
+ 			} else
+ 				status = qla2x00_local_device_login(vha,
+ 								fcport);
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.6.0.2
+
+
