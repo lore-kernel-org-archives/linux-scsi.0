@@ -1,50 +1,69 @@
-From: <Jayamohan.Kallickal@Emulex.Com>
-Subject: RE: [PATCH 07/17] be2iscsi:Fix double free of MCCQ info memory.
-Date: Wed, 25 Apr 2012 12:27:01 -0700
-Message-ID: <8d9a259c-bdce-459d-8aaa-fa3f388512eb@exht2.ad.emulex.com>
-References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
-	 <1333514512-21799-8-git-send-email-michaelc@cs.wisc.edu>
- <1335341601.3075.6.camel@dabdike.lan>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 43164] New: FC card not detected/mounted via external multicard
+ reader
+Date: Wed, 25 Apr 2012 19:48:10 GMT
+Message-ID: <bug-43164-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht2.emulex.com ([138.239.113.184]:30899 "EHLO
-	exht2.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758217Ab2DYT1X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2012 15:27:23 -0400
-In-Reply-To: <1335341601.3075.6.camel@dabdike.lan>
-Content-Language: en-US
+Received: from bugzilla.kernel.org ([198.145.19.204]:59046 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757829Ab2DYTsL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2012 15:48:11 -0400
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q3PJmAZU024147
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Apr 2012 19:48:10 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, Sony.John-N@Emulex.Com
+To: linux-scsi@vger.kernel.org
 
-DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogSmFtZXMgQm90dG9tbGV5IFtt
-YWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0gDQo+U2VudDogV2Vk
-bmVzZGF5LCBBcHJpbCAyNSwgMjAxMiAxOjEzIEFNDQo+VG86IG1pY2hhZWxjQGNzLndpc2MuZWR1
-DQo+Q2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBLYWxsaWNrYWwsIEpheWFtb2hhbjsg
-Sm9obiwgU29ueQ0KPlN1YmplY3Q6IFJlOiBbUEFUQ0ggMDcvMTddIGJlMmlzY3NpOkZpeCBkb3Vi
-bGUgZnJlZSBvZiBNQ0NRIGluZm8gbWVtb3J5Lg0KDQo+T24gVHVlLCAyMDEyLTA0LTAzIGF0IDIz
-OjQxIC0wNTAwLCBtaWNoYWVsY0Bjcy53aXNjLmVkdSB3cm90ZToNCj4gU3ViamVjdDogW1BBVENI
-IDA3LzE3XSBiZTJpc2NzaTpGaXggZG91YmxlIGZyZWUgb2YgTUNDUSBpbmZvIG1lbW9yeS4NCg0K
-Pk5lZWRzIGEgc3BhY2UgYWZ0ZXIgdGhlIGNvbG9uLiAgSSd2ZSBiZWVuIGZpeGluZyBpdCB1cCBv
-biBpbXBvcnQsIHNvIHRoaXMgaXMgZm9yIGZ1dHVyZSByZWZlcmVuY2UuDQoNCj4gRnJvbTogSmF5
-YW1vaGFuIEthbGxpY2thbCA8amF5YW1vaGFuLmthbGxpY2thbEBlbXVsZXguY29tPg0KDQo+VGhp
-cyBmcm9tIGRvZXNuJ3QgbWF0Y2ggdGhlIGZpcnN0IHNpZ25vZmYgLi4uIGlzIHRoaXMgdGhlIHJp
-Z2h0IGZyb20gZmllbGQ/DQoNCj4gIEluIGNhc2Ugb2YgTUNDX1EgY3JlYXRpb24gZmFpbGVkLCB0
-aGUgTUNDUSBpbmZvIG1lbW9yeSBpcyBmcmVlZCAgZnJvbSANCj4gYmVfbWNjX3F1ZXVlc19kZXN0
-cm95IGFuZCBiZV9tY2NfcXVldWVzX2NyZWF0ZS4gVGhpcyBjYXVzZWQgIGtlcm5lbCB0byANCj4g
-cGFuaWMgYmVjYXVzZSBvZiBkb3VibGUgZnJlZS4NCg0KPlRoZSBleHRyYSBzcGFjZSBoZXJlIG5l
-ZWRzIHJlbW92aW5nIChJJ3ZlIGJlZW4gZG9pbmcgaXQgb24gaW1wb3J0KQ0KDQo+IFNpZ25lZC1v
-ZmYtYnk6IEpvaG4gU29uaSBKb3NlIDxzb255LmpvaG4tbkBlbXVsZXguY29tPiBkZA0KDQo+ZGQ/
-ICBJcyB0aGlzIGp1c3QgYSBzcHVyaW91cyBhZGRpdGlvbiBvciBzaG91bGQgdGhlcmUgYmUgc29t
-ZXRoaW5nIGVsc2UgaGVyZT8NCg0KPiBTaWduZWQtb2ZmLWJ5OiBKYXlhbW9oYW4gS2FsbGlja2Fs
-IDxqYXlhbW9oYW4ua2FsbGlja2FsQGVtdWxleC5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IE1pa2Ug
-Q2hyaXN0aWUgPG1pY2hhZWxjQGNzLndpc2MuZWR1Pg0KDQo+SmFtZXMNCg0KVGhlIEZyb206IHNo
-b3VsZCBoYXZlIGJlZW4gSm9obiBTb25pIEpvc2UgPHNvbnkuam9obi1uQGVtdWxleC5jb20+IGFz
-IHRoZSBwYXRjaCBpcyBvcmlnaW5hbGx5IHByZXBhcmVkIGJ5IFNvbnkuIA0KVGhlIHNpZ25lZC1v
-ZmYgb3JkZXIgaXMgcmlnaHQgIGFuZCB0aGUgZGQgbXVzdCBoYXZlIGNyZWVwZWQgaW4gd2hpbGUg
-ZXllYmFsbGluZyB0aGUgcGF0Y2ggYW5kIG11bHRpdGFza2luZy4NCg0KVGhhbmtzIGZvciB0YWtp
-bmcgY2FyZSBvZiB0aGUgc3BhY2UgaXNzdWVzLiBXaWxsIHZlcmlmeSB0aGF0IGZvciB0aGUgbmV4
-dCByb3VuZCBvZiBwYXRjaGVzDQoNCkpheQ0KDQoNCg==
+https://bugzilla.kernel.org/show_bug.cgi?id=43164
+
+           Summary: FC card not detected/mounted via external multicard
+                    reader
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 3.0.0-17-generic
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: damjan.zemljic@gmail.com
+        Regression: No
+
+
+Hi,
+trying to mount compact flash card via external multicard reader gives
+different results on different ports, but it fails in all cases to detect and
+mount the card.
+
+If reader is attached directly to the laptop (Thinkpad W510) to the ports on
+the left side of it, the reader is recognized, but not CF card insterted
+afterwards (...xhci_hcd 0000:0f:00.0: xHCI xhci_drop_endpoint called with
+disabled ep...)
+
+In case reader is attached via ports on docking station, it fails to accept
+even the reader itself (kernel loops trying to accept it: ... READ CAPACITY
+failed ...)
+
+
+Kernel version:
+Linux version 3.0.0-17-generic (buildd@yellow) (gcc version 4.6.1
+(Ubuntu/Linaro 4.6.1-9ubuntu3) ) #30-Ubuntu SMP Thu Mar 8 20:45:39 UTC 2012
+
+No Oopses...
+
+TIA,
+Damjan
+
+P.S.: it seems only one file can be attached at the bug report time. I expect
+the rest can be uploaded afterwards.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
