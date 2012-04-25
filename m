@@ -1,84 +1,324 @@
-From: <Jayamohan.Kallickal@Emulex.Com>
-Subject: RE: [PATCH 10/17] be2iscsi: Update in Copyright information
-Date: Wed, 25 Apr 2012 09:49:49 -0700
-Message-ID: <8cb570bc-a3d0-4a20-88a8-4e1624dafa7f@exht2.ad.emulex.com>
-References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
-	 <1333514512-21799-11-git-send-email-michaelc@cs.wisc.edu>
- <1335342181.3075.8.camel@dabdike.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Subject: Re: [PATCH] pm8001: raise host can queue (take 2)
+Date: Wed, 25 Apr 2012 13:02:04 -0400
+Message-ID: <E6F01B7B-808E-4EA9-9BC5-BEB7F2C8FA32@xyratex.com>
+References: <CE155251DF87469DA8F1A8290EDCF361@usish.com.cn>
+Mime-Version: 1.0 (Apple Message framework v1257)
+Content-Type: multipart/mixed; boundary="Apple-Mail=_94424F98-F877-4C6E-89B5-2ADCA8854CBD"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht2.emulex.com ([138.239.113.184]:28328 "EHLO
-	exht2.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754942Ab2DYQuR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2012 12:50:17 -0400
-In-Reply-To: <1335342181.3075.8.camel@dabdike.lan>
-Content-Language: en-US
+Received: from xyratex198.xyratex.com ([194.131.166.198]:60241 "EHLO
+	XY01EX22.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756161Ab2DYRCK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Apr 2012 13:02:10 -0400
+In-Reply-To: <CE155251DF87469DA8F1A8290EDCF361@usish.com.cn>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, MinhDuc.Tran@Emulex.Com
+To: linux-scsi@vger.kernel.org
+Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, James Bottomley <JBottomley@parallels.com>, lindar_liu <lindar_liu@usish.com>, =?utf-8?B?5LqO54ix5Y2O?= <crystal_yu@usish.com>, john_gong <john_gong@usish.com>, Jack Wang <jack_wang@usish.com>
 
-DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogSmFtZXMgQm90dG9tbGV5IFtt
-YWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0gDQo+U2VudDogV2Vk
-bmVzZGF5LCBBcHJpbCAyNSwgMjAxMiAxOjIzIEFNDQo+VG86IG1pY2hhZWxjQGNzLndpc2MuZWR1
-DQo+Q2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBLYWxsaWNrYWwsIEpheWFtb2hhbjsg
-VHJhbiwgTWluaA0KPlN1YmplY3Q6IFJlOiBbUEFUQ0ggMTAvMTddIGJlMmlzY3NpOiBVcGRhdGUg
-aW4gQ29weXJpZ2h0IGluZm9ybWF0aW9uDQoNCj5PbiBUdWUsIDIwMTItMDQtMDMgYXQgMjM6NDEg
-LTA1MDAsIG1pY2hhZWxjQGNzLndpc2MuZWR1IHdyb3RlOg0KPiBGcm9tOiBKYXlhbW9oYW4gS2Fs
-bGlja2FsIDxqYXlhbW9oYW4ua2FsbGlja2FsQGVtdWxleC5jb20+DQo+IA0KPiAJY2hhbmdlIGZy
-b20gU2VydmVyZW5naW5lcyB0byBFbXVsZXgNCg0KPlNsaWdodGx5IGNvbmZ1c2VkIGJ5IHRoZSBk
-ZXNjcmlwdGlvbi4gIFRoZSBwYXRjaCBoYXMgbm90aGluZyB0byBkbyB3aXRoIGNvcHlyaWdodHMu
-ICBJdCB1cGRhdGVzIHRoZSBtb2R1bGUgYXV0aG9yIGRyaXZlciBuYW1lIGFuZCBzY3NpIGhvc3Qg
-dGVtcGxhdGUgdG8gc2hvdyBFbXVsZXgsIGJ1dCBkb2Vzbid0ID50b3VjaCBhbnkgY29weXJpZ2h0
-cyAod2hpY2ggYWxsIHNob3cgRW11bGV4IGFueXdheSB0aGFua3MgdG8gYSBwcmlvciBwYXRjaCku
-DQoNCj5KYW1lcw0KDQpZZXMsIHRoZSBzdWJqZWN0IGluIHRoZSBwYXRjaCBzaG91bGQgbm90IGhh
-dmUgbWVudGlvbmVkIGNvcHlyaWdodC4gQWN0dWFsbHksIHRoZSBwYXRjaCBtb2RpZmllcyBzb21l
-IGZpZWxkcyB0aGF0IHdlcmUgbWlzc2VkIG91dCB3aGVuIHVwZGF0aW5nIGZyb20gc2VydmVyZW5n
-aW5lcyB0byBFbXVsZXggQ29ycG9yYXRpb24NCg0KSmF5DQoNCg0KDQo+IFNpZ25lZC1vZmYtYnk6
-IE1pbmggVHJhbiA8TWluaER1Yy5UcmFuQEVtdWxleC5Db20+DQo+IFNpZ25lZC1vZmYtYnk6IEph
-eWFtb2hhbiBLYWxsaWNrYWwgPGpheWFtb2hhbi5rYWxsaWNrYWxAZW11bGV4LmNvbT4NCj4gU2ln
-bmVkLW9mZi1ieTogTWlrZSBDaHJpc3RpZSA8bWljaGFlbGNAY3Mud2lzYy5lZHU+DQo+IC0tLQ0K
-PiAgZHJpdmVycy9zY3NpL2JlMmlzY3NpL2JlX2NtZHMuaCB8ICAgIDIgKy0NCj4gIGRyaXZlcnMv
-c2NzaS9iZTJpc2NzaS9iZV9tYWluLmMgfCAgICA0ICsrLS0NCj4gIGRyaXZlcnMvc2NzaS9iZTJp
-c2NzaS9iZV9tYWluLmggfCAgICA0ICsrLS0NCj4gIDMgZmlsZXMgY2hhbmdlZCwgNSBpbnNlcnRp
-b25zKCspLCA1IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9i
-ZTJpc2NzaS9iZV9jbWRzLmggDQo+IGIvZHJpdmVycy9zY3NpL2JlMmlzY3NpL2JlX2NtZHMuaCBp
-bmRleCA4YjQwYTViLi5jODVkNzNjIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvYmUyaXNj
-c2kvYmVfY21kcy5oDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9jbWRzLmgNCj4g
-QEAgLTIzLDcgKzIzLDcgQEANCj4gICAqIGZpcm13YXJlIGluIHRoZSBCRS4gVGhlc2UgcmVxdWVz
-dHMgYXJlIGNvbW11bmljYXRlZCB0byB0aGUgcHJvY2Vzc29yDQo+ICAgKiB1c2luZyBXb3JrIFJl
-cXVlc3QgQmxvY2tzIChXUkJzKSBzdWJtaXR0ZWQgdG8gdGhlIE1DQy1XUkIgcmluZyBvciB2aWEg
-b25lDQo+ICAgKiBXUkIgaW5zaWRlIGEgTUFJTEJPWC4NCj4gLSAqIFRoZSBjb21tYW5kcyBhcmUg
-c2VydmljZWQgYnkgdGhlIEFSTSBwcm9jZXNzb3IgaW4gdGhlIEJsYWRlRW5naW5lJ3MgTVBVLg0K
-PiArICogVGhlIGNvbW1hbmRzIGFyZSBzZXJ2aWNlZCBieSB0aGUgQVJNIHByb2Nlc3NvciBpbiB0
-aGUgT25lQ29ubmVjdCdzIE1QVS4NCj4gICAqLw0KPiAgc3RydWN0IGJlX3NnZSB7DQo+ICAJdTMy
-IHBhX2xvOw0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2JlMmlzY3NpL2JlX21haW4uYyAN
-Cj4gYi9kcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfbWFpbi5jIGluZGV4IDJkNzZjYjUuLjgyZDkz
-M2MgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9tYWluLmMNCj4gKysr
-IGIvZHJpdmVycy9zY3NpL2JlMmlzY3NpL2JlX21haW4uYw0KPiBAQCAtNDgsNyArNDgsNyBAQCBz
-dGF0aWMgdW5zaWduZWQgaW50IG51bV9oYmEgPSAwOw0KPiAgDQo+ICBNT0RVTEVfREVWSUNFX1RB
-QkxFKHBjaSwgYmVpc2NzaV9wY2lfaWRfdGFibGUpOyAgDQo+IE1PRFVMRV9ERVNDUklQVElPTihE
-UlZfREVTQyAiICIgQlVJTERfU1RSKTsgDQo+IC1NT0RVTEVfQVVUSE9SKCJTZXJ2ZXJFbmdpbmVz
-IENvcnBvcmF0aW9uIik7DQo+ICtNT0RVTEVfQVVUSE9SKCJFbXVsZXggQ29ycG9yYXRpb24iKTsN
-Cj4gIE1PRFVMRV9MSUNFTlNFKCJHUEwiKTsNCj4gIG1vZHVsZV9wYXJhbShiZV9pb3BvbGxfYnVk
-Z2V0LCBpbnQsIDApOyAgbW9kdWxlX3BhcmFtKGVuYWJsZV9tc2l4LCANCj4gaW50LCAwKTsgQEAg
-LTM5MSw3ICszOTEsNyBAQCBNT0RVTEVfREVWSUNFX1RBQkxFKHBjaSwgDQo+IGJlaXNjc2lfcGNp
-X2lkX3RhYmxlKTsNCj4gIA0KPiAgc3RhdGljIHN0cnVjdCBzY3NpX2hvc3RfdGVtcGxhdGUgYmVp
-c2NzaV9zaHQgPSB7DQo+ICAJLm1vZHVsZSA9IFRISVNfTU9EVUxFLA0KPiAtCS5uYW1lID0gIlNl
-cnZlckVuZ2luZXMgMTBHYmUgb3Blbi1pc2NzaSBJbml0aWF0b3IgRHJpdmVyIiwNCj4gKwkubmFt
-ZSA9ICJFbXVsZXggMTBHYmUgb3Blbi1pc2NzaSBJbml0aWF0b3IgRHJpdmVyIiwNCj4gIAkucHJv
-Y19uYW1lID0gRFJWX05BTUUsDQo+ICAJLnF1ZXVlY29tbWFuZCA9IGlzY3NpX3F1ZXVlY29tbWFu
-ZCwNCj4gIAkuY2hhbmdlX3F1ZXVlX2RlcHRoID0gaXNjc2lfY2hhbmdlX3F1ZXVlX2RlcHRoLCBk
-aWZmIC0tZ2l0IA0KPiBhL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9tYWluLmggYi9kcml2ZXJz
-L3Njc2kvYmUyaXNjc2kvYmVfbWFpbi5oIA0KPiBpbmRleCA1MGYyMzFmLi40OTI4OWVmIDEwMDY0
-NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfbWFpbi5oDQo+ICsrKyBiL2RyaXZl
-cnMvc2NzaS9iZTJpc2NzaS9iZV9tYWluLmgNCj4gQEAgLTM1LDggKzM1LDggQEANCj4gICNpbmNs
-dWRlICJiZS5oIg0KPiAgI2RlZmluZSBEUlZfTkFNRQkJImJlMmlzY3NpIg0KPiAgI2RlZmluZSBC
-VUlMRF9TVFIJCSI0LjEuMjM5LjAiDQo+IC0jZGVmaW5lIEJFX05BTUUJCQkiU2VydmVyRW5naW5l
-cyBCbGFkZUVuZ2luZTIiIFwNCj4gLQkJCQkiTGludXggaVNDU0kgRHJpdmVyIHZlcnNpb24iIEJV
-SUxEX1NUUg0KPiArI2RlZmluZSBCRV9OQU1FCQkJIkVtdWxleCBPbmVDb25uZWN0IiBcDQo+ICsJ
-CQkJIk9wZW4taVNDU0kgRHJpdmVyIHZlcnNpb24iIEJVSUxEX1NUUg0KPiAgI2RlZmluZSBEUlZf
-REVTQwkJQkVfTkFNRSAiICIgIkRyaXZlciINCj4gIA0KPiAgI2RlZmluZSBCRV9WRU5ET1JfSUQJ
-CTB4MTlBMg0KDQoNCg==
+
+--Apple-Mail=_94424F98-F877-4C6E-89B5-2ADCA8854CBD
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=iso-8859-1
+
+This is a followup to a patch provided by Jack Wang on September 21 =
+2011.
+
+After increasing the CAN_QUEUE to 510 in pm8001 we discovered some =
+performance
+degredation from time to time. We needed to increase the MPI queue to
+compensate and ensure we never hit that limit. We also needed to double
+the margin to support event and administrivial commands that take from
+the pool resulting in an occasional largely unproductive command =
+completion
+with soft error to the caller when the command pool is overloaded =
+temporarily.
+
+Signed-off-by: Mark Salyzyn <mark_salyzyn@xyratex.com>
+
+ drivers/scsi/pm8001/pm8001_defs.h |    3 ++-
+ drivers/scsi/pm8001/pm8001_hwi.c  |   17 ++++++++++-------
+ drivers/scsi/pm8001/pm8001_init.c |   10 +++++-----
+ 3 files changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_defs.h =
+b/drivers/scsi/pm8001/pm8001_defs.h
+index 944afad..c3d20c8 100644
+--- a/drivers/scsi/pm8001/pm8001_defs.h
++++ b/drivers/scsi/pm8001/pm8001_defs.h
+@@ -66,9 +66,10 @@ enum port_type {
+=20
+ /* driver compile-time configuration */
+ #define	PM8001_MAX_CCB		 512	/* max ccbs supported */
++#define PM8001_MPI_QUEUE         1024   /* maximum mpi queue entries */
+ #define	PM8001_MAX_INB_NUM	 1
+ #define	PM8001_MAX_OUTB_NUM	 1
+-#define	PM8001_CAN_QUEUE	 128	/* SCSI Queue depth */
++#define	PM8001_CAN_QUEUE	 508	/* SCSI Queue depth */
+=20
+ /* unchangeable hardware details */
+ #define	PM8001_MAX_PHYS		 8	/* max. possible phys */
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c =
+b/drivers/scsi/pm8001/pm8001_hwi.c
+index 8477df4..0d6c8b9 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -192,7 +192,7 @@ init_default_table_values(struct pm8001_hba_info =
+*pm8001_ha)
+ 	pm8001_ha->main_cfg_tbl.fatal_err_interrupt		=3D =
+0x01;
+ 	for (i =3D 0; i < qn; i++) {
+ 		pm8001_ha->inbnd_q_tbl[i].element_pri_size_cnt	=3D
+-			0x00000100 | (0x00000040 << 16) | (0x00<<30);
++			PM8001_MPI_QUEUE | (64 << 16) | (0x00<<30);
+ 		pm8001_ha->inbnd_q_tbl[i].upper_base_addr	=3D
+ 			pm8001_ha->memoryMap.region[IB].phys_addr_hi;
+ 		pm8001_ha->inbnd_q_tbl[i].lower_base_addr	=3D
+@@ -218,7 +218,7 @@ init_default_table_values(struct pm8001_hba_info =
+*pm8001_ha)
+ 	}
+ 	for (i =3D 0; i < qn; i++) {
+ 		pm8001_ha->outbnd_q_tbl[i].element_size_cnt	=3D
+-			256 | (64 << 16) | (1<<30);
++			PM8001_MPI_QUEUE | (64 << 16) | (0x01<<30);
+ 		pm8001_ha->outbnd_q_tbl[i].upper_base_addr	=3D
+ 			pm8001_ha->memoryMap.region[OB].phys_addr_hi;
+ 		pm8001_ha->outbnd_q_tbl[i].lower_base_addr	=3D
+@@ -1245,7 +1245,7 @@ static int mpi_msg_free_get(struct =
+inbound_queue_table *circularQ,
+ 	/* Stores the new consumer index */
+ 	consumer_index =3D pm8001_read_32(circularQ->ci_virt);
+ 	circularQ->consumer_index =3D cpu_to_le32(consumer_index);
+-	if (((circularQ->producer_idx + bcCount) % 256) =3D=3D
++	if (((circularQ->producer_idx + bcCount) % PM8001_MPI_QUEUE) =3D=3D=
+
+ 		le32_to_cpu(circularQ->consumer_index)) {
+ 		*messagePtr =3D NULL;
+ 		return -1;
+@@ -1253,7 +1253,8 @@ static int mpi_msg_free_get(struct =
+inbound_queue_table *circularQ,
+ 	/* get memory IOMB buffer address */
+ 	offset =3D circularQ->producer_idx * 64;
+ 	/* increment to next bcCount element */
+-	circularQ->producer_idx =3D (circularQ->producer_idx + bcCount) =
+% 256;
++	circularQ->producer_idx =3D (circularQ->producer_idx + bcCount)
++				% PM8001_MPI_QUEUE;
+ 	/* Adds that distance to the base of the region virtual address =
+plus
+ 	the message header size*/
+ 	msgHeader =3D (struct mpi_msg_hdr *)(circularQ->base_virt	=
++ offset);
+@@ -1326,7 +1327,8 @@ static u32 mpi_msg_free_set(struct pm8001_hba_info =
+*pm8001_ha, void *pMsg,
+ 		return 0;
+ 	}
+ 	/* free the circular queue buffer elements associated with the =
+message*/
+-	circularQ->consumer_idx =3D (circularQ->consumer_idx + bc) % =
+256;
++	circularQ->consumer_idx =3D (circularQ->consumer_idx + bc)
++				% PM8001_MPI_QUEUE;
+ 	/* update the CI of outbound queue */
+ 	pm8001_cw32(pm8001_ha, circularQ->ci_pci_bar, =
+circularQ->ci_offset,
+ 		circularQ->consumer_idx);
+@@ -1383,7 +1385,8 @@ static u32 mpi_msg_consume(struct pm8001_hba_info =
+*pm8001_ha,
+ 					circularQ->consumer_idx =3D
+ 						(circularQ->consumer_idx =
++
+ 						=
+((le32_to_cpu(msgHeader_tmp)
+-						>> 24) & 0x1f)) % 256;
++						 >> 24) & 0x1f))
++							% =
+PM8001_MPI_QUEUE;
+ 					msgHeader_tmp =3D 0;
+ 					pm8001_write_32(msgHeader, 0, =
+0);
+ 					/* update the CI of outbound =
+queue */
+@@ -1396,7 +1399,7 @@ static u32 mpi_msg_consume(struct pm8001_hba_info =
+*pm8001_ha,
+ 				circularQ->consumer_idx =3D
+ 					(circularQ->consumer_idx +
+ 					((le32_to_cpu(msgHeader_tmp) >> =
+24) &
+-					0x1f)) % 256;
++					0x1f)) % PM8001_MPI_QUEUE;
+ 				msgHeader_tmp =3D 0;
+ 				pm8001_write_32(msgHeader, 0, 0);
+ 				/* update the CI of outbound queue */
+diff --git a/drivers/scsi/pm8001/pm8001_init.c =
+b/drivers/scsi/pm8001/pm8001_init.c
+index 36efaa7..0267c22 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -235,15 +235,15 @@ static int __devinit pm8001_alloc(struct =
+pm8001_hba_info *pm8001_ha)
+ 	pm8001_ha->memoryMap.region[PI].alignment =3D 4;
+=20
+ 	/* MPI Memory region 5 inbound queues */
+-	pm8001_ha->memoryMap.region[IB].num_elements =3D 256;
++	pm8001_ha->memoryMap.region[IB].num_elements =3D =
+PM8001_MPI_QUEUE;
+ 	pm8001_ha->memoryMap.region[IB].element_size =3D 64;
+-	pm8001_ha->memoryMap.region[IB].total_len =3D 256 * 64;
++	pm8001_ha->memoryMap.region[IB].total_len =3D PM8001_MPI_QUEUE * =
+64;
+ 	pm8001_ha->memoryMap.region[IB].alignment =3D 64;
+=20
+-	/* MPI Memory region 6 inbound queues */
+-	pm8001_ha->memoryMap.region[OB].num_elements =3D 256;
++	/* MPI Memory region 6 outbound queues */
++	pm8001_ha->memoryMap.region[OB].num_elements =3D =
+PM8001_MPI_QUEUE;
+ 	pm8001_ha->memoryMap.region[OB].element_size =3D 64;
+-	pm8001_ha->memoryMap.region[OB].total_len =3D 256 * 64;
++	pm8001_ha->memoryMap.region[OB].total_len =3D PM8001_MPI_QUEUE * =
+64;
+ 	pm8001_ha->memoryMap.region[OB].alignment =3D 64;
+=20
+ 	/* Memory region write DMA*/
+
+
+
+--Apple-Mail=_94424F98-F877-4C6E-89B5-2ADCA8854CBD
+Content-Disposition: attachment;
+	filename=mpi-queue-2.patch
+Content-Type: application/octet-stream;
+	name="mpi-queue-2.patch"
+Content-Transfer-Encoding: 7bit
+
+Subject: [PATCH] pm8001: rais host can queue (take 2)
+
+After increasing the CAN_QUEUE to 510 in pm8001 we discovered some performance
+degredation from time to time. We needed to increase the MPI queue to
+compensate and ensure we never hit that limit. We also needed to double
+the margin to support event and administrivial commands that take from
+the pool resulting in an occasional largely unproductive command completion
+with soft error to the caller when the command pool is overloaded temporarily.
+
+Signed-off-by: Mark Salyzyn <mark_salyzyn@xyratex.com>
+
+ drivers/scsi/pm8001/pm8001_defs.h |    3 ++-
+ drivers/scsi/pm8001/pm8001_hwi.c  |   17 ++++++++++-------
+ drivers/scsi/pm8001/pm8001_init.c |   10 +++++-----
+ 3 files changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
+index 944afad..c3d20c8 100644
+--- a/drivers/scsi/pm8001/pm8001_defs.h
++++ b/drivers/scsi/pm8001/pm8001_defs.h
+@@ -66,9 +66,10 @@ enum port_type {
+ 
+ /* driver compile-time configuration */
+ #define	PM8001_MAX_CCB		 512	/* max ccbs supported */
++#define PM8001_MPI_QUEUE         1024   /* maximum mpi queue entries */
+ #define	PM8001_MAX_INB_NUM	 1
+ #define	PM8001_MAX_OUTB_NUM	 1
+-#define	PM8001_CAN_QUEUE	 128	/* SCSI Queue depth */
++#define	PM8001_CAN_QUEUE	 508	/* SCSI Queue depth */
+ 
+ /* unchangeable hardware details */
+ #define	PM8001_MAX_PHYS		 8	/* max. possible phys */
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 8477df4..0d6c8b9 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -192,7 +192,7 @@ init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+ 	pm8001_ha->main_cfg_tbl.fatal_err_interrupt		= 0x01;
+ 	for (i = 0; i < qn; i++) {
+ 		pm8001_ha->inbnd_q_tbl[i].element_pri_size_cnt	=
+-			0x00000100 | (0x00000040 << 16) | (0x00<<30);
++			PM8001_MPI_QUEUE | (64 << 16) | (0x00<<30);
+ 		pm8001_ha->inbnd_q_tbl[i].upper_base_addr	=
+ 			pm8001_ha->memoryMap.region[IB].phys_addr_hi;
+ 		pm8001_ha->inbnd_q_tbl[i].lower_base_addr	=
+@@ -218,7 +218,7 @@ init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+ 	}
+ 	for (i = 0; i < qn; i++) {
+ 		pm8001_ha->outbnd_q_tbl[i].element_size_cnt	=
+-			256 | (64 << 16) | (1<<30);
++			PM8001_MPI_QUEUE | (64 << 16) | (0x01<<30);
+ 		pm8001_ha->outbnd_q_tbl[i].upper_base_addr	=
+ 			pm8001_ha->memoryMap.region[OB].phys_addr_hi;
+ 		pm8001_ha->outbnd_q_tbl[i].lower_base_addr	=
+@@ -1245,7 +1245,7 @@ static int mpi_msg_free_get(struct inbound_queue_table *circularQ,
+ 	/* Stores the new consumer index */
+ 	consumer_index = pm8001_read_32(circularQ->ci_virt);
+ 	circularQ->consumer_index = cpu_to_le32(consumer_index);
+-	if (((circularQ->producer_idx + bcCount) % 256) ==
++	if (((circularQ->producer_idx + bcCount) % PM8001_MPI_QUEUE) ==
+ 		le32_to_cpu(circularQ->consumer_index)) {
+ 		*messagePtr = NULL;
+ 		return -1;
+@@ -1253,7 +1253,8 @@ static int mpi_msg_free_get(struct inbound_queue_table *circularQ,
+ 	/* get memory IOMB buffer address */
+ 	offset = circularQ->producer_idx * 64;
+ 	/* increment to next bcCount element */
+-	circularQ->producer_idx = (circularQ->producer_idx + bcCount) % 256;
++	circularQ->producer_idx = (circularQ->producer_idx + bcCount)
++				% PM8001_MPI_QUEUE;
+ 	/* Adds that distance to the base of the region virtual address plus
+ 	the message header size*/
+ 	msgHeader = (struct mpi_msg_hdr *)(circularQ->base_virt	+ offset);
+@@ -1326,7 +1327,8 @@ static u32 mpi_msg_free_set(struct pm8001_hba_info *pm8001_ha, void *pMsg,
+ 		return 0;
+ 	}
+ 	/* free the circular queue buffer elements associated with the message*/
+-	circularQ->consumer_idx = (circularQ->consumer_idx + bc) % 256;
++	circularQ->consumer_idx = (circularQ->consumer_idx + bc)
++				% PM8001_MPI_QUEUE;
+ 	/* update the CI of outbound queue */
+ 	pm8001_cw32(pm8001_ha, circularQ->ci_pci_bar, circularQ->ci_offset,
+ 		circularQ->consumer_idx);
+@@ -1383,7 +1385,8 @@ static u32 mpi_msg_consume(struct pm8001_hba_info *pm8001_ha,
+ 					circularQ->consumer_idx =
+ 						(circularQ->consumer_idx +
+ 						((le32_to_cpu(msgHeader_tmp)
+-						>> 24) & 0x1f)) % 256;
++						 >> 24) & 0x1f))
++							% PM8001_MPI_QUEUE;
+ 					msgHeader_tmp = 0;
+ 					pm8001_write_32(msgHeader, 0, 0);
+ 					/* update the CI of outbound queue */
+@@ -1396,7 +1399,7 @@ static u32 mpi_msg_consume(struct pm8001_hba_info *pm8001_ha,
+ 				circularQ->consumer_idx =
+ 					(circularQ->consumer_idx +
+ 					((le32_to_cpu(msgHeader_tmp) >> 24) &
+-					0x1f)) % 256;
++					0x1f)) % PM8001_MPI_QUEUE;
+ 				msgHeader_tmp = 0;
+ 				pm8001_write_32(msgHeader, 0, 0);
+ 				/* update the CI of outbound queue */
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 36efaa7..0267c22 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -235,15 +235,15 @@ static int __devinit pm8001_alloc(struct pm8001_hba_info *pm8001_ha)
+ 	pm8001_ha->memoryMap.region[PI].alignment = 4;
+ 
+ 	/* MPI Memory region 5 inbound queues */
+-	pm8001_ha->memoryMap.region[IB].num_elements = 256;
++	pm8001_ha->memoryMap.region[IB].num_elements = PM8001_MPI_QUEUE;
+ 	pm8001_ha->memoryMap.region[IB].element_size = 64;
+-	pm8001_ha->memoryMap.region[IB].total_len = 256 * 64;
++	pm8001_ha->memoryMap.region[IB].total_len = PM8001_MPI_QUEUE * 64;
+ 	pm8001_ha->memoryMap.region[IB].alignment = 64;
+ 
+-	/* MPI Memory region 6 inbound queues */
+-	pm8001_ha->memoryMap.region[OB].num_elements = 256;
++	/* MPI Memory region 6 outbound queues */
++	pm8001_ha->memoryMap.region[OB].num_elements = PM8001_MPI_QUEUE;
+ 	pm8001_ha->memoryMap.region[OB].element_size = 64;
+-	pm8001_ha->memoryMap.region[OB].total_len = 256 * 64;
++	pm8001_ha->memoryMap.region[OB].total_len = PM8001_MPI_QUEUE * 64;
+ 	pm8001_ha->memoryMap.region[OB].alignment = 64;
+ 
+ 	/* Memory region write DMA*/
+
+--Apple-Mail=_94424F98-F877-4C6E-89B5-2ADCA8854CBD--
