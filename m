@@ -1,19 +1,49 @@
-From: =?GB2312?B?zfXP/tXc?= <sjzxschem@gmail.com>
-Subject: qa76
-Date: Tue, 24 Apr 2012 18:05:44 -0700
-Message-ID: <CAGBreYtck4TDoPz3FpQJOU3+obA06dfLS5SzybRGUutiSeHepg__14379.4890180745$1335315961$gmane$org@mail.gmail.com>
-Reply-To: victorredell@gmail.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 07/17] be2iscsi:Fix double free of MCCQ info memory.
+Date: Wed, 25 Apr 2012 09:13:21 +0100
+Message-ID: <1335341601.3075.6.camel@dabdike.lan>
+References: <1333514512-21799-1-git-send-email-michaelc@cs.wisc.edu>
+	 <1333514512-21799-8-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f194.google.com ([209.85.212.194]:56623 "EHLO
-	mail-wi0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757725Ab2DYBFt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Apr 2012 21:05:49 -0400
-Received: by wibhn6 with SMTP id hn6so290089wib.1
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Apr 2012 18:05:48 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57509 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751254Ab2DYIN2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Apr 2012 04:13:28 -0400
+In-Reply-To: <1333514512-21799-8-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-JCA2MDAsMDAwLjAwIMTBzs7ZyiDP1M7P09HU09EgyyAodG9tLnJlZGVsbEB5YWhvby5jb20pCg==
+On Tue, 2012-04-03 at 23:41 -0500, michaelc@cs.wisc.edu wrote:
+> Subject: [PATCH 07/17] be2iscsi:Fix double free of MCCQ info memory.
+
+Needs a space after the colon.  I've been fixing it up on import, so
+this is for future reference.
+
+> From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+
+This from doesn't match the first signoff ... is this the right from
+field?
+
+>  In case of MCC_Q creation failed, the MCCQ info memory is freed
+>  from be_mcc_queues_destroy and be_mcc_queues_create. This caused
+>  kernel to panic because of double free.
+
+The extra space here needs removing (I've been doing it on import)
+
+> Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+> dd
+
+dd?  Is this just a spurious addition or should there be something else
+here?
+
+> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+James
+
