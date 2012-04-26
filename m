@@ -1,136 +1,125 @@
-From: Norman Diamond <n0diamond@yahoo.co.jp>
-Subject: Re: sd_mod or usb-storage fails to read a single good block (was: ehci_hcd fails to read a single good block)
-Date: Thu, 26 Apr 2012 08:44:23 +0900 (JST)
-Message-ID: <83362.45763.qm@web100010.mail.kks.yahoo.co.jp>
-References: <Pine.LNX.4.44L0.1204251126320.1471-100000@iolanthe.rowland.org>
-Reply-To: n0diamond@yahoo.co.jp
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [Bug 43161] New: kernel panic upon inserting a USB harddisk
+Date: Thu, 26 Apr 2012 08:41:07 +0800
+Message-ID: <9DA4851FE28547B1ACF6A971E63E04C7@usish.com.cn>
+References: <bug-43161-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web100010.mail.kks.yahoo.co.jp ([114.111.98.184]:45504 "HELO
-	web100010.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932482Ab2DYXo0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Apr 2012 19:44:26 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1204251126320.1471-100000@iolanthe.rowland.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:51020 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932688Ab2DZAkz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2012 20:40:55 -0400
+In-Reply-To: <bug-43161-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-Alan Stern wrote:
-> On Wed, 18 Apr 2012, Norman Diamond wrote:
->> Alan Stern wrote:
->>> On Tue, 17 Apr 2012, Norman Diamond wrote:
->>>> Yes it does look like changing this bridge to CAPACITY_HEURISTICS =
-from FIX_CAPACITY is likely to help a bit.
->>>=20
->>> That's easy enough.
->>=20
->> Yeah I know, even I could do that one=A0 ^_^
->>=20
->>>> I think that heuristics should also accept multiples of 63 even if=
- the total is odd.  This doesn't solve everything but will probably hel=
-p more.
->>>=20
->>> Okay, if nobody objects.
->>=20
->> I'm nobody and I don't object=A0 ^_^
->> (Of course we have to wait to see if anyone knows a real reason that=
- this would be a problem.)
->>=20
->>>> I think that handling of FIX_CAPACITY should check for multiples o=
-f 63 and report the apparent likelihood that FIX_CAPACITY probably wasn=
-'t the right setting for the bridge (if it's a bridge).  This doesn't s=
-olve everything but will probably help more.
->>>=20
->>> The FIX_CAPACITY code runs in a different module.  It has no way to=
- know whether the device is a bridge or not.
->>=20
->> The quirks table could be made available, but values stored in the t=
-able don't say if the device is a bridge.=A0 OK, then I still think thi=
-s:=A0 I think that handling of FIX_CAPACITY should check for multiples =
-of 63 and report the apparent likelihood that FIX_CAPACITY probably was=
-n't the right setting for the device.
->>=20
->> In addition, I have a feeling that if a device has FIX_CAPACITY but =
-the number of reported blocks is even then I doubt the accuracy of FIX_=
-CAPACITY.=A0 The reason is that flash memory devices tend to have physi=
-cal sectors that are even multiples of logical sectors.
->=20
-> FIX_CAPACITY applies to all kinds of devices, not just those using fl=
-ash memory.=A0 There have been examples posted in the archives of devic=
-es which really do have an odd number of blocks.=A0 (I don't remember w=
-hether any of these devices needs the FIX_CAPACITY flag, though.)
+I've seen this panic once too with a broken SAS disk
+ 
 
-Actually I now recall jumpering a hard drive in or around 1998.  When t=
-he drive reported its full capacity, the PC's BIOS hanged and would not=
- boot.  I jumpered the drive to report 15 heads instead of 16, reducing=
- the capacity of the drive so that the PC's BIOS would boot.  I don't r=
-ecall the number of reported cylinders, but if that was also odd then t=
-he total number of reported blocks would be odd.
+Jack 
+> https://bugzilla.kernel.org/show_bug.cgi?id=43161
+> 
+>            Summary: kernel panic upon inserting a USB harddisk
+>            Product: SCSI Drivers
+>            Version: 2.5
+>     Kernel Version: 3.4.0-rc1+ (linus git tree)
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: blocking
+>           Priority: P1
+>          Component: Other
+>         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+>         ReportedBy: htmldeveloper@gmail.com
+>         Regression: No
+> 
+> 
+> I got a kernel crash upon inserting USB harddisk:
+> 
+> 
+> [100023.229073] BUG: unable to handle kernel NULL pointer dereference at
+> 000001fc
+> [100023.229150] IP: [<c0465e9d>] scsi_send_eh_cmnd+0x2d/0x300
+> [100023.229193] *pde = 00000000
+> [100023.229214] Oops: 0000 [#1] SMP
+> [100023.229239] Modules linked in: aes_i586 aes_generic des_generic md4
+cifs
+> btrfs zlib_deflate crc32c libcrc32c bfs isofs nls_iso8859_1 nls_cp437 vfat
+fat
+> usb_storage snd_hrtimer binfmt_misc pci_stub vboxpci(O) vboxnetadp(O)
+> vboxnetflt(O) vboxdrv(O) nfsd kvm_intel kvm nfs lockd parport_pc ppdev
+fscache
+> auth_rpcgss nfs_acl sunrpc xfs exportfs arc4 iwlwifi i915 mac80211
+> snd_hda_codec_conexant drm_kms_helper drm snd_hda_intel snd_hda_codec
+> snd_hwdep
+> snd_pcm snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq tpm_tis pcmcia
+> snd_timer snd_seq_device intel_agp i2c_algo_bit psmouse tpm coretemp
+tpm_bios
+> intel_gtt yenta_socket pcmcia_rsrc lp agpgart thinkpad_acpi video
+serio_raw
+> pcmcia_core nvram snd microcode soundcore parport cfg80211 snd_page_alloc
+> reiserfs usbhid hid firewire_ohci e1000e firewire_core crc_itu_t ahci
+libahci
+> [100023.229826]
+> [100023.229837] Pid: 24117, comm: scsi_eh_15 Tainted: G           O
+> 3.4.0-rc1+
+> #15 LENOVO 7440A82/7440A82
+> [100023.229895] EIP: 0060:[<c0465e9d>] EFLAGS: 00010246 CPU: 1
+> [100023.229928] EIP is at scsi_send_eh_cmnd+0x2d/0x300
+> [100023.229955] EAX: 00000000 EBX: eece20c0 ECX: 00000006 EDX: f0c95ea0
+> [100023.229991] ESI: 00000001 EDI: f0c95e90 EBP: f0c95f00 ESP: f0c95e74
+> [100023.230027]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+> [100023.230045] CR0: 8005003b CR2: 000001fc CR3: 31abd000 CR4: 000407d0
+> [100023.230045] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+> [100023.230045] DR6: ffff0ff0 DR7: 00000400
+> [100023.230045] Process scsi_eh_15 (pid: 24117, ti=f0c94000 task=f4b9a5b0
+> task.ti=f0c94000)
+> [100023.230045] Stack:
+> [100023.230045]  f0c95e8c c014095c f35184bc 7fffffff f35184c0 00000006
+> c0a38248
+> f0c95ef4
+> [100023.230045]  c0627d4d c0997600 05f1a70a 00000092 f42a8c80 f48ea500
+> 00010061
+> f0c95ec4
+> [100023.230045]  c04ca1f4 f48ea500 f42a8c80 f48ea510 f0c95ed4 f0c95ed4
+> 00000092
+> 00000000
+> [100023.230045] Call Trace:
+> [100023.230045]  [<c014095c>] ? lock_timer_base+0x2c/0x60
+> [100023.230045]  [<c0627d4d>] ? schedule_timeout+0x19d/0x260
+> [100023.230045]  [<c04ca1f4>] ? start_unlink_async+0x94/0x100
+> [100023.230045]  [<c04ca61a>] ? ehci_urb_dequeue+0x7a/0xe0
+> [100023.230045]  [<c062a448>] ? _raw_spin_lock_irq+0x18/0x20
+> [100023.230045]  [<c046621b>] scsi_eh_tur+0x3b/0xa0
+> [100023.230045]  [<c04662e4>] scsi_eh_test_devices+0x64/0x140
+> [100023.230045]  [<fa01a901>] ? device_reset+0x31/0x50 [usb_storage]
+> [100023.230045]  [<c0467228>] scsi_error_handler+0x458/0x610
+> [100023.230045]  [<c0466dd0>] ? scsi_eh_get_sense+0x1d0/0x1d0
+> [100023.230045]  [<c0151a0c>] kthread+0x7c/0x90
+> [100023.230045]  [<c0151990>] ? kthread_freezable_should_stop+0x60/0x60
+> [100023.230045]  [<c063167e>] kernel_thread_helper+0x6/0x10
+> [100023.230045] Code: e5 57 56 53 83 c4 80 3e 8d 74 26 00 89 c3 65 a1 14
+00
+> 00
+> 00 89 45 f0 31 c0 8b 43 54 8d 7d 90 89 55 8c 8d 55 a0 89 4d 88 8b 40 68
+<8b>
+> 80
+> fc 01 00 00 8b 00 89 45 84 8b 03 8b 30 8d 45 98 89 45 98
+> [100023.230045] EIP: [<c0465e9d>] scsi_send_eh_cmnd+0x2d/0x300 SS:ESP
+> 0068:f0c95e74
+> [100023.230045] CR2: 00000000000001fc
+> 
+> --
+> Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+> ------- You are receiving this mail because: -------
+> You are watching the assignee of the bug.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-If the drive were connected to a USB cable then jumpering would not be =
-necessary.  However, if the drive already contained data and we wanted =
-to use a USB cable to retrieve the data, then the jumper would have to =
-remain in place.
-
-I no longer have that drive, but I'm going to report a bug later in thi=
-s message.
-
->> I do think the handling of FIX_CAPACITY should report when devices r=
-eport capacities that are either multiples of 63 or 2 (or both), so tha=
-t further testing can be done.=A0 The existing code to do the decrement=
- anyway can remain the same until further testing is done.
->>=20
->>>> The addition of TEST_CAPACITY doesn't solve everything but will pr=
-obably help more.
->>>=20
->>> That will require a certain amount of work, with the possibility of=
- breaking some systems.  I'd rather not do it if there's no clear and p=
-ressing need.
->>=20
->> Two indistinguishable versions of the Prolific bridge show that ther=
-e is a need.=A0 One version needs the decrement (probably) and the othe=
-r version doesn't (definitely).
->=20
-> No, the two indistinguishable versions show there is a need to change=
- the existing FIX_CAPACITY flag to CAPACITY_HEURISTICS.
-
-OK, the new code for heuristics makes it PROBABLY good enough to change=
- the Prolific bridge from FIX_CAPACITY to CAPACITY_HEURISTICS.
-
-> Below are two patches that do pretty much what you are asking for.  P=
-lease test just the first and then both together.
-
-Ouch.  Yeah I should expect it to be my responsibility to test, but reb=
-uilding the live Linux system that I use is particularly painful.  (Of =
-course I have to be grateful that it is even possible in the first plac=
-e, regardless of being painful.)
-
-Would it be acceptable for me to donate my USB-to-ATA cable to you?
-
-> +        (sdp->guess_capacity && (n % 2 =3D=3D 1 || n % 63 =3D=3D 1))=
-) {
-
-Imagine a device with 63 blocks.  guess_capacity is true and n % 2 =3D=3D=
- 1 so this is going to truncate when we don't want to.
-
-How is one of these, either in my style:
-(sdp->guess_capacity && (n % 2 !=3D 0) && (n % 63 !=3D 0))) {
-
-or a popular coding style:
-(sdp->guess_capacity && n % 2 n % 63)) {
-
-> +            sd_printk(KERN_INFO, sdkp, "(This adjustment may be inco=
-rrect)\n");
-
-I'd like to suggest:
-"(This adjustment may be incorrect.  If this adjustment truncates your =
-drive when it should not, please report the error and your device's det=
-ails to linux-usb@vger.kernel.org)"
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
