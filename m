@@ -1,45 +1,44 @@
 From: "majianpeng" <majianpeng@gmail.com>
-Subject: [PATCH] mvsas:Fix compile warning.
-Date: Fri, 27 Apr 2012 13:31:16 +0800
-Message-ID: <201204271331071715586@gmail.com>
+Subject: [PATCH] mvsas:Fix two misuse enum type.
+Date: Fri, 27 Apr 2012 13:56:59 +0800
+Message-ID: <201204271356563122719@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:65464 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753139Ab2D0Fat (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Apr 2012 01:30:49 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so122417pbb.19
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2012 22:30:49 -0700 (PDT)
+Received: from mail-pz0-f51.google.com ([209.85.210.51]:39691 "EHLO
+	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753885Ab2D0F4T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Apr 2012 01:56:19 -0400
+Received: by dadz8 with SMTP id z8so534991dad.10
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2012 22:56:18 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley <JBottomley@parallels.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/scsi/mvsas/mv_sas.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index fd3b283..3006ec9 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -885,7 +885,6 @@ static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags,
- 				struct completion *completion, int is_tmf,
- 				struct mvs_tmf_task *tmf)
- {
--	struct domain_device *dev = task->dev;
- 	struct mvs_info *mvi = NULL;
- 	u32 rc = 0;
- 	u32 pass = 0;
--- 
-1.7.5.4
-
- 				
---------------
-majianpeng
-2012-04-27
+ZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jOiBJbiBmdW5jdGlvbiCRbXZzX3VwZGF0ZV9waHlp
+bmZvkjoNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYzoxMTU3OjM0OiB3YXJuaW5nOiBjb21w
+YXJpc29uIGJldHdlZW4gkWVudW0NCnNhc19kZXZpY2VfdHlwZZIgYW5kIJFlbnVtIHNhc19kZXZf
+dHlwZSBbLVdlbnVtLWNvbXBhcmVdDQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmM6MTE2MDoz
+OTogd2FybmluZzogY29tcGFyaXNvbiBiZXR3ZWVuIJFlbnVtDQpzYXNfZGV2aWNlX3R5cGWSIGFu
+ZCCRZW51bSBzYXNfZGV2X3R5cGUgWy1XZW51bS1jb21wYXJlXQ0KDQpTaWduZWQtb2ZmLWJ5OiBt
+YWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCi0tLQ0KIGRyaXZlcnMvc2NzaS9tdnNh
+cy9tdl9zYXMuYyB8ICAgIDQgKystLQ0KIDEgZmlsZXMgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCsp
+LCAyIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL212c2FzL212X3Nh
+cy5jIGIvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jDQppbmRleCBmZDNiMjgzLi41OWRkMDY5
+IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jDQorKysgYi9kcml2ZXJz
+L3Njc2kvbXZzYXMvbXZfc2FzLmMNCkBAIC0xMTU0LDEwICsxMTU0LDEwIEBAIHZvaWQgbXZzX3Vw
+ZGF0ZV9waHlpbmZvKHN0cnVjdCBtdnNfaW5mbyAqbXZpLCBpbnQgaSwgaW50IGdldF9zdCkNCiAJ
+CQlwaHktPmlkZW50aWZ5LmRldmljZV90eXBlID0NCiAJCQkJcGh5LT5hdHRfZGV2X2luZm8gJiBQ
+T1JUX0RFVl9UWVBFX01BU0s7DQogDQotCQkJaWYgKHBoeS0+aWRlbnRpZnkuZGV2aWNlX3R5cGUg
+PT0gU0FTX0VORF9ERVYpDQorCQkJaWYgKHBoeS0+aWRlbnRpZnkuZGV2aWNlX3R5cGUgPT0gU0FT
+X0VORF9ERVZJQ0UpDQogCQkJCXBoeS0+aWRlbnRpZnkudGFyZ2V0X3BvcnRfcHJvdG9jb2xzID0N
+CiAJCQkJCQkJU0FTX1BST1RPQ09MX1NTUDsNCi0JCQllbHNlIGlmIChwaHktPmlkZW50aWZ5LmRl
+dmljZV90eXBlICE9IE5PX0RFVklDRSkNCisJCQllbHNlIGlmIChwaHktPmlkZW50aWZ5LmRldmlj
+ZV90eXBlICE9IFNBU19QSFlfVU5VU0VEKQ0KIAkJCQlwaHktPmlkZW50aWZ5LnRhcmdldF9wb3J0
+X3Byb3RvY29scyA9DQogCQkJCQkJCVNBU19QUk9UT0NPTF9TTVA7DQogCQkJaWYgKG9vYl9kb25l
+KQ0KLS0gDQoxLjcuNS40DQoNCiAJCQkJDQotLS0tLS0tLS0tLS0tLQ0KbWFqaWFucGVuZw0KMjAx
+Mi0wNC0yNw0K
 
