@@ -1,57 +1,99 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [PATCH] [SCSI] mpt2sas : Fix unsafe using smp_processor_id() in
- preemptible
-Date: Fri, 27 Apr 2012 16:09:16 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6067E92E962@inbmail02.lsi.com>
-References: <201204170553.q3H5rgCl016528@milmhbs0.lsil.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Fri, 27 Apr 2012 10:51:59 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1204271036480.1690-100000@iolanthe.rowland.org>
+References: <918221.71348.qm@web100013.mail.kks.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:35657 "EHLO
-	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759818Ab2D0Kjh convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Apr 2012 06:39:37 -0400
-In-Reply-To: <201204170553.q3H5rgCl016528@milmhbs0.lsil.com>
-Content-Language: en-US
+Received: from iolanthe.rowland.org ([192.131.102.54]:34917 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759972Ab2D0OwA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Apr 2012 10:52:00 -0400
+In-Reply-To: <918221.71348.qm@web100013.mail.kks.yahoo.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: "jejb@kernel.org" <jejb@kernel.org>
+To: Norman Diamond <n0diamond@yahoo.co.jp>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-James, this patch is not picked up for 3.5. Request you to push this patch for next release.
+On Fri, 27 Apr 2012, Norman Diamond wrote:
 
-Regards,
-Nagalakshmi
+> > Let's just not worry about it.=A0 It seems pretty clear that the pa=
+tches=20
+> > will fix your immediate problem.
+>=20
+> Only partly, because an odd multiple of 63 is possible.
 
+Look, I didn't say the changes would help with every possible disk. =20
+Just that they would fix your immediate problem, i.e., the problem with
+your current disk.
 
------Original Message-----
-From: nagalakshmi.nandigama@lsi.com [mailto:nagalakshmi.nandigama@lsi.com] 
-Sent: Tuesday, April 17, 2012 11:25 AM
-To: stable@vger.kernel.org; linux-scsi@vger.kernel.org; Nandigama, Nagalakshmi; Prakash, Sathya; Moore, Eric
-Cc: jejb@kernel.org
-Subject: [PATCH] [SCSI] mpt2sas : Fix unsafe using smp_processor_id() in preemptible
+> > What about a device that has 6362 sectors but reports 6363?=A0 Then=
+ your=20
+> > test would fail to decrement the value when we do want to.
+>=20
+> But we can't distinguish two versions of the device, one where 6363
+> is correct and one where 6363 is wrong.  I prefer to take the
+> device's word for it unless we know for sure that it is wrong. =20
+> TEST_CAPACITY would still be a good idea.  FIX_CAPACITY (where we
+> know for sure that the device is wrong) will not suffer from this
+> ambiguity and will always get a decrement.
 
-When CONFIG_DEBUG_PREEMPT is enabled, bug is observed in the smp_processor_id().
-This is because smp_processor_id() is not called in preempt safe condition.
+That's the whole point of CAPACITY_HEURISTICS -- we have two versions=20
+of the device, of which one is buggy and the other isn't, and we can't=20
+tell them apart.  If we preferred to take the device's word for it=20
+whenever we didn't know for sure, there would be no need for=20
+CAPACITY_HEURISTICS at all.
 
-To fix this issue, use raw_smp_processor_id instead of smp_processor_id.
+=46or example, consider all those cameras sold by Nikon, Pentax, and so
+on.  They probably all used Symbian's firmware, which some years ago =20
+had the capacity bug.  Maybe the firmware has been fixed since then; I
+don't know.  But under the reasonable assumption that the
+SD/CF/whatever memories used in these cameras will always have an even=20
+number of blocks, the existing CAPACITY_HEURISTICS solution is=20
+appropriate.
 
-Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
-CC: stable@vger.kernel.org
----
+> > Anyway, why do you want to test for n % 63 !=3D 0?=A0 You have no
+> > justification for decrementing the block count if the result would
+> > not be divisible by 63.
+>=20
+> I sure do.  You know as well as I do that for decades a lot of ATA
+> disks reported capacities that were multiples of 63 and they had a
+> reason for it.
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 272fab7..b010be0 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1792,7 +1792,7 @@ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
- static inline u8
- _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
- {
--	return ioc->cpu_msix_table[smp_processor_id()];
-+	return ioc->cpu_msix_table[raw_smp_processor_id()];
- }
- 
- /**
+?  That makes no sense.  Go back and reread what I wrote.  In=20
+particular, I was asking why you changed the test from (n % 63 =3D=3D 1=
+) to=20
+(n % 63 !=3D 0).
+
+You know that for decades, ATA disks have reported capacities that were
+multiples of 63.  So if a drive reports a capacity that is 5 larger
+than a multiple of 63, why would you want to decrement the value?  The
+result still would not be a multiple of 63.  Didn't you say that you=20
+preferred to take the device's word for it?
+
+> > Bear in mind that if anybody reports a problem caused by the new
+> > "divisible by 63" criterion, we will have to revert the changed tes=
+t
+> > (the updated message could remain, since it doesn't affect
+> > functionality).
+>=20
+> Mostly I agree.  But if reversion causes a different known problem to
+> be reinstated, then TEST_CAPACITY is really needed.
+
+The same caveat applies to TEST_CAPACITY.
+
+Also, the amount of effort required to write the TEST_CAPACITY code and=
+=20
+get it accepted into the kernel would be non-trivial.  I prefer not to=20
+do it unless it turns out to be clearly necessary.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
