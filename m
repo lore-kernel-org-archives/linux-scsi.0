@@ -1,173 +1,57 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re: [PATCH] pm8001: raise host can queue (take 2)
-Date: Fri, 27 Apr 2012 16:14:24 +0800
-Message-ID: <720631ABACAF4F178703939959273832@usish.com.cn>
-References: <CE155251DF87469DA8F1A8290EDCF361@usish.com.cn> <E6F01B7B-808E-4EA9-9BC5-BEB7F2C8FA32@xyratex.com>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH] [SCSI] mpt2sas : Fix unsafe using smp_processor_id() in
+ preemptible
+Date: Fri, 27 Apr 2012 16:09:16 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6067E92E962@inbmail02.lsi.com>
+References: <201204170553.q3H5rgCl016528@milmhbs0.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:35321 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759818Ab2D0IOJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Apr 2012 04:14:09 -0400
-In-Reply-To: <E6F01B7B-808E-4EA9-9BC5-BEB7F2C8FA32@xyratex.com>
+Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:35657 "EHLO
+	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759818Ab2D0Kjh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Apr 2012 06:39:37 -0400
+In-Reply-To: <201204170553.q3H5rgCl016528@milmhbs0.lsil.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Mark Salyzyn' <mark_salyzyn@xyratex.com>, linux-scsi@vger.kernel.org
-Cc: 'James Bottomley' <JBottomley@parallels.com>, 'lindar_liu' <lindar_liu@usish.com>, =?gb2312?B?J9PasK67qic=?= <crystal_yu@usish.com>, 'john_gong' <john_gong@usish.com>
+To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: "jejb@kernel.org" <jejb@kernel.org>
 
-Looks OK to me. Thanks.
-Acked-by: Jack Wang@usish.com
-> 
-> This is a followup to a patch provided by Jack Wang on September 21 2011.
-> 
-> After increasing the CAN_QUEUE to 510 in pm8001 we discovered some
-performance
-> degredation from time to time. We needed to increase the MPI queue to
-> compensate and ensure we never hit that limit. We also needed to double
-> the margin to support event and administrivial commands that take from
-> the pool resulting in an occasional largely unproductive command
-completion
-> with soft error to the caller when the command pool is overloaded
-temporarily.
-> 
-> Signed-off-by: Mark Salyzyn <mark_salyzyn@xyratex.com>
-> 
->  drivers/scsi/pm8001/pm8001_defs.h |    3 ++-
->  drivers/scsi/pm8001/pm8001_hwi.c  |   17 ++++++++++-------
->  drivers/scsi/pm8001/pm8001_init.c |   10 +++++-----
->  3 files changed, 17 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_defs.h
-> b/drivers/scsi/pm8001/pm8001_defs.h
-> index 944afad..c3d20c8 100644
-> --- a/drivers/scsi/pm8001/pm8001_defs.h
-> +++ b/drivers/scsi/pm8001/pm8001_defs.h
-> @@ -66,9 +66,10 @@ enum port_type {
-> 
->  /* driver compile-time configuration */
->  #define	PM8001_MAX_CCB		 512	/* max ccbs supported */
-> +#define PM8001_MPI_QUEUE         1024   /* maximum mpi queue entries */
->  #define	PM8001_MAX_INB_NUM	 1
->  #define	PM8001_MAX_OUTB_NUM	 1
-> -#define	PM8001_CAN_QUEUE	 128	/* SCSI Queue depth */
-> +#define	PM8001_CAN_QUEUE	 508	/* SCSI Queue depth */
-> 
->  /* unchangeable hardware details */
->  #define	PM8001_MAX_PHYS		 8	/* max. possible phys */
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
-> b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 8477df4..0d6c8b9 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -192,7 +192,7 @@ init_default_table_values(struct pm8001_hba_info
-> *pm8001_ha)
->  	pm8001_ha->main_cfg_tbl.fatal_err_interrupt		= 0x01;
->  	for (i = 0; i < qn; i++) {
->  		pm8001_ha->inbnd_q_tbl[i].element_pri_size_cnt
-> -			0x00000100 | (0x00000040 << 16) | (0x00<<30);
-> +			PM8001_MPI_QUEUE | (64 << 16) | (0x00<<30);
->  		pm8001_ha->inbnd_q_tbl[i].upper_base_addr
->  			pm8001_ha->memoryMap.region[IB].phys_addr_hi;
->  		pm8001_ha->inbnd_q_tbl[i].lower_base_addr
-> @@ -218,7 +218,7 @@ init_default_table_values(struct pm8001_hba_info
-> *pm8001_ha)
->  	}
->  	for (i = 0; i < qn; i++) {
->  		pm8001_ha->outbnd_q_tbl[i].element_size_cnt
-> -			256 | (64 << 16) | (1<<30);
-> +			PM8001_MPI_QUEUE | (64 << 16) | (0x01<<30);
->  		pm8001_ha->outbnd_q_tbl[i].upper_base_addr
->  			pm8001_ha->memoryMap.region[OB].phys_addr_hi;
->  		pm8001_ha->outbnd_q_tbl[i].lower_base_addr
-> @@ -1245,7 +1245,7 @@ static int mpi_msg_free_get(struct
-inbound_queue_table
-> *circularQ,
->  	/* Stores the new consumer index */
->  	consumer_index = pm8001_read_32(circularQ->ci_virt);
->  	circularQ->consumer_index = cpu_to_le32(consumer_index);
-> -	if (((circularQ->producer_idx + bcCount) % 256) =
-> +	if (((circularQ->producer_idx + bcCount) % PM8001_MPI_QUEUE) =
->  		le32_to_cpu(circularQ->consumer_index)) {
->  		*messagePtr = NULL;
->  		return -1;
-> @@ -1253,7 +1253,8 @@ static int mpi_msg_free_get(struct
-inbound_queue_table
-> *circularQ,
->  	/* get memory IOMB buffer address */
->  	offset = circularQ->producer_idx * 64;
->  	/* increment to next bcCount element */
-> -	circularQ->producer_idx = (circularQ->producer_idx + bcCount) % 256;
-> +	circularQ->producer_idx = (circularQ->producer_idx + bcCount)
-> +				% PM8001_MPI_QUEUE;
->  	/* Adds that distance to the base of the region virtual address plus
->  	the message header size*/
->  	msgHeader = (struct mpi_msg_hdr *)(circularQ->base_virt	+ offset);
-> @@ -1326,7 +1327,8 @@ static u32 mpi_msg_free_set(struct pm8001_hba_info
-> *pm8001_ha, void *pMsg,
->  		return 0;
->  	}
->  	/* free the circular queue buffer elements associated with the
-message*/
-> -	circularQ->consumer_idx = (circularQ->consumer_idx + bc) % 256;
-> +	circularQ->consumer_idx = (circularQ->consumer_idx + bc)
-> +				% PM8001_MPI_QUEUE;
->  	/* update the CI of outbound queue */
->  	pm8001_cw32(pm8001_ha, circularQ->ci_pci_bar, circularQ->ci_offset,
->  		circularQ->consumer_idx);
-> @@ -1383,7 +1385,8 @@ static u32 mpi_msg_consume(struct pm8001_hba_info
-> *pm8001_ha,
->  					circularQ->consumer_idx
->  						(circularQ->consumer_idx +
->  						((le32_to_cpu(msgHeader_tmp)
-> -						>> 24) & 0x1f)) % 256;
-> +						 >> 24) & 0x1f))
-> +							% PM8001_MPI_QUEUE;
->  					msgHeader_tmp = 0;
->  					pm8001_write_32(msgHeader, 0, 0);
->  					/* update the CI of outbound queue
-*/
-> @@ -1396,7 +1399,7 @@ static u32 mpi_msg_consume(struct pm8001_hba_info
-> *pm8001_ha,
->  				circularQ->consumer_idx
->  					(circularQ->consumer_idx +
->  					((le32_to_cpu(msgHeader_tmp) >> 24)
-&
-> -					0x1f)) % 256;
-> +					0x1f)) % PM8001_MPI_QUEUE;
->  				msgHeader_tmp = 0;
->  				pm8001_write_32(msgHeader, 0, 0);
->  				/* update the CI of outbound queue */
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c
-> b/drivers/scsi/pm8001/pm8001_init.c
-> index 36efaa7..0267c22 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -235,15 +235,15 @@ static int __devinit pm8001_alloc(struct
-pm8001_hba_info
-> *pm8001_ha)
->  	pm8001_ha->memoryMap.region[PI].alignment = 4;
-> 
->  	/* MPI Memory region 5 inbound queues */
-> -	pm8001_ha->memoryMap.region[IB].num_elements = 256;
-> +	pm8001_ha->memoryMap.region[IB].num_elements = PM8001_MPI_QUEUE;
->  	pm8001_ha->memoryMap.region[IB].element_size = 64;
-> -	pm8001_ha->memoryMap.region[IB].total_len = 256 * 64;
-> +	pm8001_ha->memoryMap.region[IB].total_len = PM8001_MPI_QUEUE * 64;
->  	pm8001_ha->memoryMap.region[IB].alignment = 64;
-> 
-> -	/* MPI Memory region 6 inbound queues */
-> -	pm8001_ha->memoryMap.region[OB].num_elements = 256;
-> +	/* MPI Memory region 6 outbound queues */
-> +	pm8001_ha->memoryMap.region[OB].num_elements = PM8001_MPI_QUEUE;
->  	pm8001_ha->memoryMap.region[OB].element_size = 64;
-> -	pm8001_ha->memoryMap.region[OB].total_len = 256 * 64;
-> +	pm8001_ha->memoryMap.region[OB].total_len = PM8001_MPI_QUEUE * 64;
->  	pm8001_ha->memoryMap.region[OB].alignment = 64;
-> 
->  	/* Memory region write DMA*/
-> 
+James, this patch is not picked up for 3.5. Request you to push this patch for next release.
+
+Regards,
+Nagalakshmi
 
 
+-----Original Message-----
+From: nagalakshmi.nandigama@lsi.com [mailto:nagalakshmi.nandigama@lsi.com] 
+Sent: Tuesday, April 17, 2012 11:25 AM
+To: stable@vger.kernel.org; linux-scsi@vger.kernel.org; Nandigama, Nagalakshmi; Prakash, Sathya; Moore, Eric
+Cc: jejb@kernel.org
+Subject: [PATCH] [SCSI] mpt2sas : Fix unsafe using smp_processor_id() in preemptible
+
+When CONFIG_DEBUG_PREEMPT is enabled, bug is observed in the smp_processor_id().
+This is because smp_processor_id() is not called in preempt safe condition.
+
+To fix this issue, use raw_smp_processor_id instead of smp_processor_id.
+
+Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+CC: stable@vger.kernel.org
+---
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 272fab7..b010be0 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1792,7 +1792,7 @@ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
+ static inline u8
+ _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
+ {
+-	return ioc->cpu_msix_table[smp_processor_id()];
++	return ioc->cpu_msix_table[raw_smp_processor_id()];
+ }
+ 
+ /**
