@@ -1,20 +1,59 @@
-From: "Western.Union" <gdthg43@cox.net>
-Subject: Claim Your Prize.
-Date: Sat, 28 Apr 2012 3:23:51 -0700
-Message-ID: <20120428062351.IQ0QE.529848.imail__20599.3490330458$1335609189$gmane$org@eastrmwml207>
-Reply-To: wumt-payout-dept13@teman.zikri.com
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: Burning multiple DVDs at one time
+Date: Sat, 28 Apr 2012 12:02:27 -0400
+Message-ID: <20120428160226.GA9811@animx.eu.org>
+References: <20120315225310.GB3152@animx.eu.org>
+ <20120317095644.145d0588@stein>
+ <20120317142255.GB26403@animx.eu.org>
+ <20120317162853.13afa28b@stein>
+ <20120318133059.GB10172@animx.eu.org>
+ <20120318150127.5f8db40c@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eastrmfepi103.cox.net ([68.230.241.199]:54546 "EHLO
-	eastrmfepi103.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842Ab2D1Kcf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Apr 2012 06:32:35 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120318150127.5f8db40c@stein>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-How are you Today,
+Stefan Richter wrote:
+> On Mar 18 Wakko Warner wrote:
+> > Stefan Richter wrote:
+> > > On Mar 17 Wakko Warner wrote:
+> > > > Thanks.  I looked at the patch.  I would just like to confirm that I can
+> > > > patch my 3.0.0 vanilla kernel, compile the sr module, unload the current and
+> > > > load the patched one without the need to reboot.
+> > > 
+> > > Yes, this should be possible.
+> > > 
+> > > Oh, I only noticed just know that you also wrote:
+> > > 
+> > > > > > The kernel is a vanilla kernel v3.0.0.  (This also happened with 2.6.35)
+> > > 
+> > > In 2.6.35, the Big Kernel Lock was still in place there.  That lock
+> > > behaved differently from a plain mutex --- notably it was released when a
+> > > thread went to sleep --- so maybe there is more to your problem than just
+> > > sr_mutex blocking unrelated sr accesses.
+> > 
+> > There is a good possibility that I was mistaken on the 2.6.35.
+> > 
+> > I manually applied your patch to 3.0.0, compiled, removed sr-mod module and
+> > inserted the newly compiled one.
+> > 
+> > With the vanilla one, I would see the buf % in wodim drop while the fifo was
+> > full.  With the patch (removing the mutex), buf stayed above 98% and the
+> > burn speed was 16x at the end (10x avg).
+> > 
+> > Seems to have fixed my problem.
+> 
+> Very nice; so there is an almost easy fix.  Now I or somebody else need to
+> work out the required cdrom_device_info protection on which Arnd and James
+> commented.
 
-be informed that  $1.800.000.00 Million US Dollars is been deposited in our Western Union office and we are 
-instructed to transfer to you $1.800.000.00 Million US Dollars by the Commonwealth Lottery Board as compesation Prize,Contact your claims agent Mr Roy Charlton via email:  mr_roy_charlton_dept15@teman.zikri.com
+Has anything come of this as far as the fix going into the kernel?
+
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
