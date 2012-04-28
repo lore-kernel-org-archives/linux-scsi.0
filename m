@@ -1,40 +1,20 @@
-From: Alex Shi <alex.shi@intel.com>
-Subject: [PATCH] scsi/mpt2sas: remove unnecesscary preempt requirement for MSIX
-Date: Sat, 28 Apr 2012 14:27:33 +0800
-Message-ID: <1335594453-30679-1-git-send-email-alex.shi@intel.com>
+From: "Western.Union" <gdthg43@cox.net>
+Subject: Claim Your Prize.
+Date: Sat, 28 Apr 2012 3:23:51 -0700
+Message-ID: <20120428062351.IQ0QE.529848.imail__20599.3490330458$1335609189$gmane$org@eastrmwml207>
+Reply-To: wumt-payout-dept13@teman.zikri.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2653 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752252Ab2D1G2m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Apr 2012 02:28:42 -0400
+Received: from eastrmfepi103.cox.net ([68.230.241.199]:54546 "EHLO
+	eastrmfepi103.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842Ab2D1Kcf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Apr 2012 06:32:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alex.shi@intel.com
 
-smp_processor_id() need used in preempt safe ENV. Otherwise, the
-cpu may be preempted and run on other cpus. But here, we don't care much
-the specific CPU which handler the MSI, so just replace it by
-raw_smp_processor_id() to avoid preempt debug warning.
+How are you Today,
 
-Signed-off-by: Alex Shi <alex.shi@intel.com>
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 8a59a77..3f518ba 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1785,7 +1785,7 @@ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
- static inline u8
- _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
- {
--	return ioc->cpu_msix_table[smp_processor_id()];
-+	return ioc->cpu_msix_table[raw_smp_processor_id()];
- }
- 
- /**
--- 
-1.7.5.4
-
+be informed that  $1.800.000.00 Million US Dollars is been deposited in our Western Union office and we are 
+instructed to transfer to you $1.800.000.00 Million US Dollars by the Commonwealth Lottery Board as compesation Prize,Contact your claims agent Mr Roy Charlton via email:  mr_roy_charlton_dept15@teman.zikri.com
