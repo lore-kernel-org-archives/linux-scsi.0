@@ -1,82 +1,43 @@
 From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH] drivers/scsi/lpfc/lpfc_sli.c: add missing jumps to mempool_free
-Date: Sun, 29 Apr 2012 21:44:03 +0200
-Message-ID: <1335728643-19970-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:51742 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752524Ab2D2ToM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Apr 2012 15:44:12 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH] drivers/scsi/aic94xx/aic94xx_hwi.c: add missing kfree
+Date: Sun, 29 Apr 2012 22:03:17 +0200
+Message-ID: <1335729797-20604-1-git-send-email-Julia.Lawall@lip6.fr>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-It appears that mempool_free should be performed on these failures as on
-the other exits from the containing functions.
+The free is not strictly necessary, because as long as the tc_index_array
+field is not NULL, the free will performed by the calling context, in the
+function asd_destroy_ha_caches.  But doing it here in this case, makes this
+case consistent with the rest of the function.
 
 Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
 ---
- drivers/scsi/lpfc/lpfc_sli.c |   24 ++++++++++++++++--------
- 1 file changed, 16 insertions(+), 8 deletions(-)
+Alternatively, the frees could be dropped from the subsequent block of
+error-handling code.
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index dbaf5b9..7284e9e 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -12046,8 +12046,10 @@ lpfc_cq_create(struct lpfc_hba *phba, struct lpfc_queue *cq,
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 				"0361 Unsupported CQ count. (%d)\n",
- 				cq->entry_count);
--		if (cq->entry_count < 256)
--			return -EINVAL;
-+		if (cq->entry_count < 256) {
-+			status = -EINVAL;
-+			goto out;
-+		}
- 		/* otherwise default to smallest count (drop through) */
- 	case 256:
- 		bf_set(lpfc_cq_context_count, &cq_create->u.request.context,
-@@ -12238,8 +12240,10 @@ lpfc_mq_create(struct lpfc_hba *phba, struct lpfc_queue *mq,
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 				"0362 Unsupported MQ count. (%d)\n",
- 				mq->entry_count);
--		if (mq->entry_count < 16)
--			return -EINVAL;
-+		if (mq->entry_count < 16) {
-+			status = -EINVAL;
-+			goto out;
-+		}
- 		/* otherwise default to smallest count (drop through) */
- 	case 16:
- 		bf_set(lpfc_mq_context_ring_size,
-@@ -12528,8 +12532,10 @@ lpfc_rq_create(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 					"2535 Unsupported RQ count. (%d)\n",
- 					hrq->entry_count);
--			if (hrq->entry_count < 512)
--				return -EINVAL;
-+			if (hrq->entry_count < 512) {
-+				status = -EINVAL;
-+				goto out;
-+			}
- 			/* otherwise default to smallest count (drop through) */
- 		case 512:
- 			bf_set(lpfc_rq_context_rqe_count,
-@@ -12609,8 +12615,10 @@ lpfc_rq_create(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 					"2536 Unsupported RQ count. (%d)\n",
- 					drq->entry_count);
--			if (drq->entry_count < 512)
--				return -EINVAL;
-+			if (drq->entry_count < 512) {
-+				status = -EINVAL;
-+				goto out;
-+			}
- 			/* otherwise default to smallest count (drop through) */
- 		case 512:
- 			bf_set(lpfc_rq_context_rqe_count,
+ drivers/scsi/aic94xx/aic94xx_hwi.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.c b/drivers/scsi/aic94xx/aic94xx_hwi.c
+index 81b736c..f7c093c 100644
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.c
++++ b/drivers/scsi/aic94xx/aic94xx_hwi.c
+@@ -228,8 +228,11 @@ static int asd_init_scbs(struct asd_ha_struct *asd_ha)
+ 	bitmap_bytes = (asd_ha->seq.tc_index_bitmap_bits+7)/8;
+ 	bitmap_bytes = BITS_TO_LONGS(bitmap_bytes*8)*sizeof(unsigned long);
+ 	asd_ha->seq.tc_index_bitmap = kzalloc(bitmap_bytes, GFP_KERNEL);
+-	if (!asd_ha->seq.tc_index_bitmap)
++	if (!asd_ha->seq.tc_index_bitmap) {
++		kfree(asd_ha->seq.tc_index_array);
++		asd_ha->seq.tc_index_array = NULL;
+ 		return -ENOMEM;
++	}
+ 
+ 	spin_lock_init(&seq->tc_index_lock);
+ 
