@@ -1,122 +1,150 @@
-From: Norman Diamond <n0diamond@yahoo.co.jp>
-Subject: Re: sd_mod or usb-storage fails to read a single good block (was: ehci_hcd fails to read a single good block)
-Date: Mon, 30 Apr 2012 11:25:14 +0900 (JST)
-Message-ID: <518968.75200.qm@web100005.mail.kks.yahoo.co.jp>
-References: <Pine.LNX.4.44L0.1204291052310.16623-100000@netrider.rowland.org>
-Reply-To: n0diamond@yahoo.co.jp
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH] scsi/mpt2sas: remove unnecesscary preempt requirement
+ for MSIX
+Date: Mon, 30 Apr 2012 10:59:24 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6067E92EA43@inbmail02.lsi.com>
+References: <1335594453-30679-1-git-send-email-alex.shi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="_002_A6888A6805518E4EA4AF7072A28264A6067E92EA43inbmail02lsic_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web100005.mail.kks.yahoo.co.jp ([114.111.98.179]:38887 "HELO
-	web100005.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754787Ab2D3CZR convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Apr 2012 22:25:17 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1204291052310.16623-100000@netrider.rowland.org>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:50051 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751309Ab2D3F3b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Apr 2012 01:29:31 -0400
+In-Reply-To: <1335594453-30679-1-git-send-email-alex.shi@intel.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Alex Shi <alex.shi@intel.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Alan Stern wrote:
-> On Sat, 28 Apr 2012, Norman Diamond wrote:
->> That is not a fix for what really is my immediate problem, which is
->> that my users can have any kind of bridge and any kind of disk, and
->> in an emergency I can tell them to add a kernel boot parameter, or
->> see if they can use a different bridge, etc., but it's really better
->> if we can avoid such emergencies.
->=20
-> I have told you several times during this conversation: What you're=20
-> asking for is not completely feasible.=A0 But maybe we can do better =
-than=20
-> we are doing now.
+--_002_A6888A6805518E4EA4AF7072A28264A6067E92EA43inbmail02lsic_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Right, but in your statement where you quoted my rebuttal you started w=
-ith "Look..." and claimed that you were fixing my immediate problem.  I=
- trust that you usually do try to make better general solutions and it =
-was probably a lapse that you went off on that tangent, but it looked l=
-ike a reminder might be useful.
+Alex,=20
+I submitted this patch already.=20
 
->> A preference for taking the device's word (in cases where we don't
->> have a more reliable heuristic) is different from always taking the
->> device's word (in all cases even when we have a more reliable
->> heuristic).=A0 CAPACITY_HEURISTICS will remain meaningful and will
->> become more meaningful.
->=20
-> How could you tell whether the heuristic is more reliable than the
-> device?=A0 The idea behind CAPACITY_HEURSTICS is that someone has alr=
-eady
-> considered the problem, and decided that the heuristic is more
-> reliable.=A0 Otherwise the quirk entry would simply have no
-> capacity-related flag at all.
+James, request you to pick up the patch that I previously submitted for fix=
+ing this issue. Attaching the patch that I submitted previously.
 
-The intended meaning behind CAPACITY_HEURISTICS is that someone already=
- saw some degree of ambiguity in one device.  In our discussion we have=
- learned that more devices have ambiguities and we've been trying (at l=
-east sometimes) to improve the heuristic.
 
-The existing heuristic, as invented for one device, prefers to believe =
-the device when the device reports an even number and to disbelieve the=
- device when the device reports on odd number.
+Regards,
+Nagalakshmi
 
-My proposal, a modification for one other device which might also help =
-some other incompletely known devices, prefers to believe the device wh=
-en the device reports either an even number (as at present) or a multip=
-le of 63 (for a reason which I think is obvious) and to disbelieve the =
-device when the device reports a number which is neither.
 
-Your proposed patch implied a proposal different from mine.
+-----Original Message-----
+From: Alex Shi [mailto:alex.shi@intel.com]=20
+Sent: Saturday, April 28, 2012 11:58 AM
+To: JBottomley@parallels.com; Nandigama, Nagalakshmi
+Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; alex.shi@inte=
+l.com
+Subject: [PATCH] scsi/mpt2sas: remove unnecesscary preempt requirement for =
+MSIX
 
-My proposed modification to your proposed patch would implement my prop=
-osal.  (But I made a typo in one version, and later corrected it.)
+smp_processor_id() need used in preempt safe ENV. Otherwise, the
+cpu may be preempted and run on other cpus. But here, we don't care much
+the specific CPU which handler the MSI, so just replace it by
+raw_smp_processor_id() to avoid preempt debug warning.
 
-You asked why.  I answered.  Now we're going around in circles.
+Signed-off-by: Alex Shi <alex.shi@intel.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> The impression I get is that you want two different heuristics: one
-> that aims for an even number of blocks, and one that aims for a numbe=
-r
-> divisible by 63.=A0 All devices known to be USB-(S)ATA bridges could =
-use=20
-> the second heuristic.=A0 Maybe that's what you meant.
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt=
+2sas_base.c
+index 8a59a77..3f518ba 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1785,7 +1785,7 @@ static inline void _base_writeq(__u64 b, volatile voi=
+d __iomem *addr,
+ static inline u8
+ _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
+ {
+-	return ioc->cpu_msix_table[smp_processor_id()];
++	return ioc->cpu_msix_table[raw_smp_processor_id()];
+ }
+=20
+ /**
+--=20
+1.7.5.4
 
-Here you are modifying my proposal.  It is no problem to discuss your i=
-dea.  At first I thought your idea was better than mine, but on second =
-thought, sorry, here's a problem.  Again it is because the broken and u=
-nbroken Prolific bridges are indistinguishable.  A Prolific bridge coul=
-d be connected to a drive whose actual usable capacity is a multiple of=
- 63, or it could be connected to a modern drive with emulated capacity =
-that is even (in fact a multiple of 8) and not usually a multiple of 63=
-=2E
 
-Therefore I still favour my version.  If the bridge reports an even num=
-ber then I want to believe it, if the bridge reports a multiple of 63 t=
-hen I want to believe it, and if neither then I want to fall back on th=
-e existing heuristic which performs a decrement.
+--_002_A6888A6805518E4EA4AF7072A28264A6067E92EA43inbmail02lsic_
+Content-Type: message/rfc822
 
-> As for whether we need TEST_CAPACITY...=A0 That is still highly
-> debatable.=A0 If we did have it, which quirk entries would use it?=A0=
- So
-> far the only candidate we have is your Prolific bridge, and even ther=
-e
-> it seems that the divisible-by-63 heuristic would work just as well.
+Received: from inbmail02.lsi.com ([135.36.98.34]) by inbexch02.lsi.com
+ ([135.36.98.40]) with mapi; Fri, 27 Apr 2012 16:09:31 +0530
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya"
+	<Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>
+CC: "jejb@kernel.org" <jejb@kernel.org>
+Date: Fri, 27 Apr 2012 16:09:16 +0530
+Subject: RE: [PATCH] [SCSI] mpt2sas : Fix unsafe using smp_processor_id() in
+ preemptible
+Thread-Topic: [PATCH] [SCSI] mpt2sas : Fix unsafe using smp_processor_id()
+ in preemptible
+Thread-Index: Ac0cXnM8pd70QzkTSlG9iySK5/0NiAIAyAzA
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6067E92E962@inbmail02.lsi.com>
+References: <201204170553.q3H5rgCl016528@milmhbs0.lsil.com>
+In-Reply-To: <201204170553.q3H5rgCl016528@milmhbs0.lsil.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Exchange-Organization-AuthAs: Internal
+X-MS-Exchange-Organization-AuthMechanism: 04
+X-MS-Exchange-Organization-AuthSource: inbexch02.lsi.com
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+acceptlanguage: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
 
-I wish I could get a broken Prolific bridge to test together with mine.=
-  Anyway the divisible-by-63 heuristic would work better than the exist=
-ing heuristic but it would not work as well as TEST_CAPACITY.  My propo=
-sed modified heursitic would usually work better than the existing heur=
-istic but not as well as TEST_CAPACITY.
+James, this patch is not picked up for 3.5. Request you to push this patch =
+for next release.
 
-By the way, a while back you asked what happens if I use sg_dd to try r=
-eading multiple blocks including the last existing block and some non-e=
-xisting ones.  The answer seems to depend on the drive as well as the m=
-ethod of connection (USB-to-PATA vs. eSATA plus SATA-to-PATA).  With th=
-e drive that I've usually been using I think the drive hangs so we can'=
-t really figure out whether to blame the bridge.  With a different driv=
-e the drive reports the error but sg_dd and Linux drivers do something =
-to retry so many times that after 30 minutes I lost patience waiting fo=
-r sg_dd to finish and report its error.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Nagalakshmi
+
+
+-----Original Message-----
+From: nagalakshmi.nandigama@lsi.com [mailto:nagalakshmi.nandigama@lsi.com]
+Sent: Tuesday, April 17, 2012 11:25 AM
+To: stable@vger.kernel.org; linux-scsi@vger.kernel.org; Nandigama, Nagalaks=
+hmi; Prakash, Sathya; Moore, Eric
+Cc: jejb@kernel.org
+Subject: [PATCH] [SCSI] mpt2sas : Fix unsafe using smp_processor_id() in pr=
+eemptible
+
+When CONFIG_DEBUG_PREEMPT is enabled, bug is observed in the smp_processor_=
+id().
+This is because smp_processor_id() is not called in preempt safe condition.
+
+To fix this issue, use raw_smp_processor_id instead of smp_processor_id.
+
+Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+CC: stable@vger.kernel.org
+---
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt=
+2sas_base.c
+index 272fab7..b010be0 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1792,7 +1792,7 @@ static inline void _base_writeq(__u64 b, volatile voi=
+d __iomem *addr,
+ static inline u8
+ _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
+ {
+-       return ioc->cpu_msix_table[smp_processor_id()];
++       return ioc->cpu_msix_table[raw_smp_processor_id()];
+ }
+
+ /**
+
+--_002_A6888A6805518E4EA4AF7072A28264A6067E92EA43inbmail02lsic_--
