@@ -1,41 +1,43 @@
 From: Mark Salyzyn <mark_salyzyn@xyratex.com>
 Subject: Re: [PATCH] pm8001: support HDA (flashless) mode
-Date: Mon, 30 Apr 2012 09:49:58 -0400
-Message-ID: <73464C75-47D9-4409-87C2-8DDD0CBD5C67@xyratex.com>
-References: <420864BE-8542-4BD8-B3DB-FDA403D193F9@xyratex.com> <A60D2B04CB1E487D9D0371139484E1C2@usish.com.cn>
+Date: Mon, 30 Apr 2012 10:00:44 -0400
+Message-ID: <B52541CD-797A-4BD7-9730-5F240C40C34C@xyratex.com>
+References: <420864BE-8542-4BD8-B3DB-FDA403D193F9@xyratex.com> <5ADF3694BDC14FC2BF986C45DFBDD819@usish.com.cn>
 Mime-Version: 1.0 (Apple Message framework v1257)
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratex197.xyratex.com ([194.131.166.197]:32261 "EHLO
+Received: from xyratex197.xyratex.com ([194.131.166.197]:60327 "EHLO
 	XY01EX21.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752432Ab2D3NuE convert rfc822-to-8bit
+	by vger.kernel.org with ESMTP id S1752432Ab2D3OAt convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Apr 2012 09:50:04 -0400
-In-Reply-To: <A60D2B04CB1E487D9D0371139484E1C2@usish.com.cn>
+	Mon, 30 Apr 2012 10:00:49 -0400
+In-Reply-To: <5ADF3694BDC14FC2BF986C45DFBDD819@usish.com.cn>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jack Wang <jack_wang@usish.com>
 Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi@vger.kernel.org, 'James Bottomley' <JBottomley@parallels.com>, 'lindar_liu' <lindar_liu@usish.com>, =?utf-8?B?J+S6jueIseWNjic=?= <crystal_yu@usish.com>, 'john_gong' <john_gong@usish.com>
 
-You are right ... however this code is 'never reached' since mpi_uninit_check() generally fails before this in the chip_in_hda_mode set of tests.
+PMC still does not like the images or firmware header files getting out willy-nilly, have not got free redistribution rights or approvals (in effect, as their agent). And they won't take the action to submit them to the Linux archives. As an OEM customer we are bound to follow their NDA requirements and approvals. Someone not bound by the NDA, on the other hand, can do so <hint hint>.
 
-I instrumented up, on our HDA mode chip, we are seeing a value of ZERO in MAIN_HDA_FLAGS_OFFSET ... Ahh, the world of initializing hardware that is in an indeterminate (code not running) state ...
+Conversion from their header format to binary is as follows:
 
--- Mark
+	for i in aap1img.h ilaimg.h iopimg.h istrimg.h ; do
+		gcc -x c -c -o ${i%.h}.bin ${i}
+		objcopy -O binary ${i%h}.bin
+	done
 
-On Apr 28, 2012, at 2:07 AM, Jack Wang wrote:
+Sincerely -- Mark Salyzyn
 
+On Apr 27, 2012, at 9:06 PM, Jack Wang wrote:
+
+> Thanks Mark,
 > 
-> +	data = pm8001_mr32(
-> +		pm8001_ha->main_cfg_tbl_addr,
-> +		pm8001_ha->main_cfg_tbl.hda_mode_flag);
-> +	PM8001_INIT_DBG(pm8001_ha,
-> +		pm8001_printk("*MAIN_HDA_FLAGS = 0x%x\n", data));
-> +	return data & 0x4;
+> So how we get the bin images? PMCS only offer the converted c Header file
+> for this, we need users who want to use this function convert the header
+> file to bin file.
 > 
-> Here seems wrong, you may want to check the force hda bit? So you need to
-> read offset #define MAIN_HDA_FLAGS_OFFSET		0x84/* DWORD 0x21 */
+> Patch need a little more time to look into, will comment back soon.
 > 
 > Jack
 > 
@@ -80,6 +82,41 @@ On Apr 28, 2012, at 2:07 AM, Jack Wang wrote:
 >> 4 files changed, 613 insertions(+), 41 deletions(-)
 >> 
 >> Please see enclosed attachment
+>> 
+>> 
+>> ______________________________________________________________________
+>> This email may contain privileged or confidential information, which
+> should
+>> only be used for the purpose for which it was sent by Xyratex. No further
+> rights
+>> or licenses are granted to use such information. If you are not the
+> intended
+>> recipient of this message, please notify the sender by return and delete
+> it.
+>> You may not use, copy, disclose or rely on the information contained in
+> it.
+>> 
+>> Internet email is susceptible to data corruption, interception and
+>> unauthorised amendment for which Xyratex does not accept liability. While
+> we
+>> have taken reasonable precautions to ensure that this email is free of
+> viruses,
+>> Xyratex does not accept liability for the presence of any computer viruses
+> in
+>> this email, nor for any losses caused as a result of viruses.
+>> 
+>> Xyratex Technology Limited (03134912), Registered in England & Wales,
+>> Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
+>> 
+>> The Xyratex group of companies also includes, Xyratex Ltd, registered in
+>> Bermuda, Xyratex International Inc, registered in California, Xyratex
+>> (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co
+> Ltd
+>> registered in The People's Republic of China and Xyratex Japan Limited
+>> registered in Japan.
+>> ______________________________________________________________________
+>> 
+>> 
 > 
 > 
 
