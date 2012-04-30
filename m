@@ -1,51 +1,102 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: Re: [patch 2/2] [SCSI] pmcraid: cpu_to_le32() => cpu_to_le64()
-Date: Mon, 30 Apr 2012 19:03:46 +0300
-Message-ID: <CA+_b7DK0SogSMQVKP0KoBwOpCoidO=U__AaUr4YuEd4DJV4k=g@mail.gmail.com>
-References: <20111216102137.GB4287@elgon.mountain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Subject: Re: [PATCH] pm8001: support HDA (flashless) mode
+Date: Mon, 30 Apr 2012 12:56:30 -0400
+Message-ID: <E53424C2-2CAE-43AA-81EE-0E7B44586C6F@xyratex.com>
+References: <420864BE-8542-4BD8-B3DB-FDA403D193F9@xyratex.com> <A60D2B04CB1E487D9D0371139484E1C2@usish.com.cn> <73464C75-47D9-4409-87C2-8DDD0CBD5C67@xyratex.com>
+Mime-Version: 1.0 (Apple Message framework v1257)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:35779 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756148Ab2D3QDr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Apr 2012 12:03:47 -0400
-In-Reply-To: <20111216102137.GB4287@elgon.mountain>
+Received: from xyratex197.xyratex.com ([194.131.166.197]:45284 "EHLO
+	XY01EX21.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755517Ab2D3Q4f convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Apr 2012 12:56:35 -0400
+In-Reply-To: <73464C75-47D9-4409-87C2-8DDD0CBD5C67@xyratex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Jack Wang <jack_wang@usish.com>
+Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi@vger.kernel.org, 'James Bottomley' <JBottomley@parallels.com>, 'lindar_liu' <lindar_liu@usish.com>, =?utf-8?B?J+S6jueIseWNjic=?= <crystal_yu@usish.com>, 'john_gong' <john_gong@usish.com>
 
-ping?
+Upon further investigation of the documentation, bit [2] (0x04) is the Force HDA mode, but the flashless operations are bit [3] (0x08) meaning Firmware to be loaded in HDA mode. I expect either SEEPROM bit set is enough.
 
-regards,
-dan carpenter
+Xyratex is NOT setting the SEEPROM bits so the flags are 'incorrect' and a value of Zero, yet the hardware is in-fact in HDA-mode because of the lack of flash, so the mpi_uninit_check() still makes loads of sense to capture this state and engineer ourselves out of that problem.
 
-On 12/16/11, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> The cpu_to_le32() truncates the address to 32 bits.  All the other
-> places that set .address use cpu_to_le64().
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> What about if dma_addr_t is 32 bits on a big endian system?  Can that
-> happen?
->
-> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-> index d6bc4e6..8a239ea 100644
-> --- a/drivers/scsi/pmcraid.c
-> +++ b/drivers/scsi/pmcraid.c
-> @@ -1242,7 +1242,7 @@ static struct pmcraid_cmd *pmcraid_init_hcam
->
->  	ioadl[0].flags |= IOADL_FLAGS_READ_LAST;
->  	ioadl[0].data_len = cpu_to_le32(rcb_size);
-> -	ioadl[0].address = cpu_to_le32(dma);
-> +	ioadl[0].address = cpu_to_le64(dma);
->
->  	cmd->cmd_done = cmd_done;
->  	return cmd;
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Jack, would the following trailing fragment to replace the six lines of the one you noted below resolve your concern? :
+
++	return pm8001_ha->main_cfg_tbl.hda_mode_flag & 0xC;
+
+If so, I will 'take2' the patch with this change as I have not seen any other reviews.
+
+Thanks for the excellent catch.
+
+Sincerely -- Mark Salyzyn
+
+On Apr 30, 2012, at 9:49 AM, Mark Salyzyn wrote:
+
+> You are right ... however this code is 'never reached' since mpi_uninit_check() generally fails before this in the chip_in_hda_mode set of tests.
+> 
+> I instrumented up, on our HDA mode chip, we are seeing a value of ZERO in MAIN_HDA_FLAGS_OFFSET ... Ahh, the world of initializing hardware that is in an indeterminate (code not running) state ...
+> 
+> -- Mark
+> 
+> On Apr 28, 2012, at 2:07 AM, Jack Wang wrote:
+> 
+>> 
+>> +	data = pm8001_mr32(
+>> +		pm8001_ha->main_cfg_tbl_addr,
+>> +		pm8001_ha->main_cfg_tbl.hda_mode_flag);
+>> +	PM8001_INIT_DBG(pm8001_ha,
+>> +		pm8001_printk("*MAIN_HDA_FLAGS = 0x%x\n", data));
+>> +	return data & 0x4;
+>> 
+>> Here seems wrong, you may want to check the force hda bit? So you need to
+>> read offset #define MAIN_HDA_FLAGS_OFFSET		0x84/* DWORD 0x21 */
+>> 
+>> Jack
+>> 
+>> 
+>>> 
+>>> The pm8001 can be delivered as a standalone product with flash-programmed
+>>> firmware images, or without the flash present requiring the driver to
+>> upload
+>>> the images into the chip's RAM and then run. This is called HDA mode.
+>>> 
+>>> We add support for this firmware upload in the enclosed patch. We try some
+>>> basic initialization checks of the Firmware, and if it appears dead, we
+>> make
+>>> the assumption the adapter must in-fact be halted in this HDA mode. The
+>>> Firmware images themselves have not been cleared for open-release by PMC,
+>> but
+>>> they are available in OpenSolaris <hint hint>. PMC's rationalization for
+>> not
+>>> wanting an open-release of the Firmware Images is that they do not want to
+>>> take support calls except from paying OEMs (such as Xyratex) that are
+>> embedding
+>>> PMC product into the motherboards and thus may have a tested combination
+>> of
+>>> Firmware and Hardware. Please respect this sentiment. Images are expected
+>> in:
+>>> 
+>>> /lib/firmware/aap1img.bin
+>>> /lib/firmware/ilaimg.bin
+>>> /lib/firmware/iopimg.bin
+>>> /lib/firmware/istrimg.bin
+>>> 
+>>> using the exact same naming convention as PMC and in OpenSolaris (and its
+>>> followon children) for these image files.
+>>> 
+>>> Signed-off-by: Mark Salyzyn <mark_salyzyn@xyratex.com>
+>>> 
+>>> drivers/scsi/pm8001/pm8001_hwi.c  |  584
+>>> +++++++++++++++++++++++++++++++++++---
+>>> drivers/scsi/pm8001/pm8001_hwi.h  |   37 ++
+>>> drivers/scsi/pm8001/pm8001_init.c |   30 +
+>>> drivers/scsi/pm8001/pm8001_sas.h  |    3
+>>> 4 files changed, 613 insertions(+), 41 deletions(-)
+>>> 
+>>> Please see enclosed attachment
+>> 
+>> 
+> 
+
