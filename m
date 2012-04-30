@@ -1,102 +1,93 @@
-From: Mark Salyzyn <mark_salyzyn@xyratex.com>
-Subject: Re: [PATCH] pm8001: support HDA (flashless) mode
-Date: Mon, 30 Apr 2012 12:56:30 -0400
-Message-ID: <E53424C2-2CAE-43AA-81EE-0E7B44586C6F@xyratex.com>
-References: <420864BE-8542-4BD8-B3DB-FDA403D193F9@xyratex.com> <A60D2B04CB1E487D9D0371139484E1C2@usish.com.cn> <73464C75-47D9-4409-87C2-8DDD0CBD5C67@xyratex.com>
-Mime-Version: 1.0 (Apple Message framework v1257)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Mon, 30 Apr 2012 15:42:42 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1204301523120.1558-100000@iolanthe.rowland.org>
+References: <518968.75200.qm@web100005.mail.kks.yahoo.co.jp>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratex197.xyratex.com ([194.131.166.197]:45284 "EHLO
-	XY01EX21.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755517Ab2D3Q4f convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Apr 2012 12:56:35 -0400
-In-Reply-To: <73464C75-47D9-4409-87C2-8DDD0CBD5C67@xyratex.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:60438 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756578Ab2D3Tmn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Apr 2012 15:42:43 -0400
+In-Reply-To: <518968.75200.qm@web100005.mail.kks.yahoo.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>
-Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi@vger.kernel.org, 'James Bottomley' <JBottomley@parallels.com>, 'lindar_liu' <lindar_liu@usish.com>, =?utf-8?B?J+S6jueIseWNjic=?= <crystal_yu@usish.com>, 'john_gong' <john_gong@usish.com>
+To: Norman Diamond <n0diamond@yahoo.co.jp>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Upon further investigation of the documentation, bit [2] (0x04) is the Force HDA mode, but the flashless operations are bit [3] (0x08) meaning Firmware to be loaded in HDA mode. I expect either SEEPROM bit set is enough.
+On Mon, 30 Apr 2012, Norman Diamond wrote:
 
-Xyratex is NOT setting the SEEPROM bits so the flags are 'incorrect' and a value of Zero, yet the hardware is in-fact in HDA-mode because of the lack of flash, so the mpi_uninit_check() still makes loads of sense to capture this state and engineer ourselves out of that problem.
+> Here you are modifying my proposal.  It is no problem to discuss your
+> idea.  At first I thought your idea was better than mine, but on
+> second thought, sorry, here's a problem.  Again it is because the
+> broken and unbroken Prolific bridges are indistinguishable.  A
+> Prolific bridge could be connected to a drive whose actual usable
+> capacity is a multiple of 63, or it could be connected to a modern
+> drive with emulated capacity that is even (in fact a multiple of 8)
+> and not usually a multiple of 63.
+>=20
+> Therefore I still favour my version.  If the bridge reports an even
+> number then I want to believe it, if the bridge reports a multiple of
+> 63 then I want to believe it, and if neither then I want to fall back
+> on the existing heuristic which performs a decrement.
 
-Jack, would the following trailing fragment to replace the six lines of the one you noted below resolve your concern? :
+Hmmm.  What about when one of the broken bridges with an older drive
+reports a number which is 1 larger than a multiple of 63 but also
+happens to be even?  In that case your proposed heuristic would fail --
+but then so would the existing heuristic, so we'd be no worse off than
+we are now.
 
-+	return pm8001_ha->main_cfg_tbl.hda_mode_flag & 0xC;
+I still think your proposed heuristic should be handled separately from=
+=20
+the existing one, so that it would not be applied in situations where=20
+we know the device is not a USB-(S)ATA bridge.
 
-If so, I will 'take2' the patch with this change as I have not seen any other reviews.
+> > As for whether we need TEST_CAPACITY...=A0 That is still highly
+> > debatable.=A0 If we did have it, which quirk entries would use it?=A0=
+ So
+> > far the only candidate we have is your Prolific bridge, and even th=
+ere
+> > it seems that the divisible-by-63 heuristic would work just as well=
+=2E
+>=20
+> I wish I could get a broken Prolific bridge to test together with
+> mine.  Anyway the divisible-by-63 heuristic would work better than
+> the existing heuristic but it would not work as well as
+> TEST_CAPACITY.  My proposed modified heursitic would usually work
+> better than the existing heuristic but not as well as TEST_CAPACITY.
 
-Thanks for the excellent catch.
+How do you know?  You haven't read through ten years' worth of email=20
+messages on this subject, have you?  You're going on the basis of your=20
+experience with _one_ bridge and a couple of drives.
 
-Sincerely -- Mark Salyzyn
+By the way, have you tried connecting your bridge to a CD/DVD drive? =20
+I believe that some bridges are supposed to work with both regular
+disks and optical drives, but I don't know if any of them mess up the
+capacity of an optical disc.  Quite possibly not.
 
-On Apr 30, 2012, at 9:49 AM, Mark Salyzyn wrote:
+> By the way, a while back you asked what happens if I use sg_dd to try
+> reading multiple blocks including the last existing block and some
+> non-existing ones.  The answer seems to depend on the drive as well
+> as the method of connection (USB-to-PATA vs. eSATA plus
+> SATA-to-PATA).  With the drive that I've usually been using I think
+> the drive hangs so we can't really figure out whether to blame the
+> bridge.  With a different drive the drive reports the error but sg_dd
+> and Linux drivers do something to retry so many times that after 30
+> minutes I lost patience waiting for sg_dd to finish and report its
+> error.
 
-> You are right ... however this code is 'never reached' since mpi_uninit_check() generally fails before this in the chip_in_hda_mode set of tests.
-> 
-> I instrumented up, on our HDA mode chip, we are seeing a value of ZERO in MAIN_HDA_FLAGS_OFFSET ... Ahh, the world of initializing hardware that is in an indeterminate (code not running) state ...
-> 
-> -- Mark
-> 
-> On Apr 28, 2012, at 2:07 AM, Jack Wang wrote:
-> 
->> 
->> +	data = pm8001_mr32(
->> +		pm8001_ha->main_cfg_tbl_addr,
->> +		pm8001_ha->main_cfg_tbl.hda_mode_flag);
->> +	PM8001_INIT_DBG(pm8001_ha,
->> +		pm8001_printk("*MAIN_HDA_FLAGS = 0x%x\n", data));
->> +	return data & 0x4;
->> 
->> Here seems wrong, you may want to check the force hda bit? So you need to
->> read offset #define MAIN_HDA_FLAGS_OFFSET		0x84/* DWORD 0x21 */
->> 
->> Jack
->> 
->> 
->>> 
->>> The pm8001 can be delivered as a standalone product with flash-programmed
->>> firmware images, or without the flash present requiring the driver to
->> upload
->>> the images into the chip's RAM and then run. This is called HDA mode.
->>> 
->>> We add support for this firmware upload in the enclosed patch. We try some
->>> basic initialization checks of the Firmware, and if it appears dead, we
->> make
->>> the assumption the adapter must in-fact be halted in this HDA mode. The
->>> Firmware images themselves have not been cleared for open-release by PMC,
->> but
->>> they are available in OpenSolaris <hint hint>. PMC's rationalization for
->> not
->>> wanting an open-release of the Firmware Images is that they do not want to
->>> take support calls except from paying OEMs (such as Xyratex) that are
->> embedding
->>> PMC product into the motherboards and thus may have a tested combination
->> of
->>> Firmware and Hardware. Please respect this sentiment. Images are expected
->> in:
->>> 
->>> /lib/firmware/aap1img.bin
->>> /lib/firmware/ilaimg.bin
->>> /lib/firmware/iopimg.bin
->>> /lib/firmware/istrimg.bin
->>> 
->>> using the exact same naming convention as PMC and in OpenSolaris (and its
->>> followon children) for these image files.
->>> 
->>> Signed-off-by: Mark Salyzyn <mark_salyzyn@xyratex.com>
->>> 
->>> drivers/scsi/pm8001/pm8001_hwi.c  |  584
->>> +++++++++++++++++++++++++++++++++++---
->>> drivers/scsi/pm8001/pm8001_hwi.h  |   37 ++
->>> drivers/scsi/pm8001/pm8001_init.c |   30 +
->>> drivers/scsi/pm8001/pm8001_sas.h  |    3
->>> 4 files changed, 613 insertions(+), 41 deletions(-)
->>> 
->>> Please see enclosed attachment
->> 
->> 
-> 
+Indeed -- that's exactly the sort of thing which could happen with
+TEST_CAPACITY.  It's one of the reasons I'm cautious about adding
+TEST_CAPACITY and an example of why TEST_CAPACITY might not work as=20
+well as you think.
 
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
