@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 01/17] hpsa: call pci_disable_device on driver unload
-Date: Tue, 01 May 2012 11:42:09 -0500
-Message-ID: <20120501164209.11705.3671.stgit@beardog.cce.hp.com>
+Subject: [PATCH 03/17] hpsa: enable bus master bit after pci_enable_device
+Date: Tue, 01 May 2012 11:42:20 -0500
+Message-ID: <20120501164220.11705.95002.stgit@beardog.cce.hp.com>
 References: <20120501163819.11705.10299.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,48 +15,25 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-As Jenx Axboe explained to me: "In earlier times (2.6.18 and pre, iirc), Linux
-disabled IO and mem bars on pci_disable_device(). Now in newer kernel it does
-not. And in the newer kernels you run into problems if you DON'T disable the
-device on exit, since when it later loads the device is already in the enabled
-state - and pci_enable_device() then does nothing. This typically screws
-MSI/MSI-X." This is what the big scary comment that says pci_disable_device
-does "something nasty" to smart arrays was evidently referring to.
-
-If pci_disable_device is not called on driver rmmod, subsequently insmod'ing
-the driver may in result in some cases fail to be able to receive interrupts,
-esp.  if other drivers are loaded between unloading and loading hpsa.
+pci_disable_device() disables the bus master bit and pci_enable_device does
+not re-enable it.  It needs to be enabled.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   10 ++--------
- 1 files changed, 2 insertions(+), 8 deletions(-)
+ drivers/scsi/hpsa.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 500e20d..1a6c319 100644
+index 5119ce6..de9c8f3 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3987,10 +3987,7 @@ err_out_free_res:
- 		iounmap(h->cfgtable);
- 	if (h->vaddr)
- 		iounmap(h->vaddr);
--	/*
--	 * Deliberately omit pci_disable_device(): it does something nasty to
--	 * Smart Array controllers that pci_enable_device does not undo
--	 */
-+	pci_disable_device(h->pdev);
- 	pci_release_regions(h->pdev);
- 	return err;
- }
-@@ -4529,10 +4526,7 @@ static void __devexit hpsa_remove_one(struct pci_dev *pdev)
- 	kfree(h->cmd_pool_bits);
- 	kfree(h->blockFetchTable);
- 	kfree(h->hba_inquiry_data);
--	/*
--	 * Deliberately omit pci_disable_device(): it does something nasty to
--	 * Smart Array controllers that pci_enable_device does not undo
--	 */
-+	pci_disable_device(pdev);
- 	pci_release_regions(pdev);
- 	pci_set_drvdata(pdev, NULL);
- 	kfree(h);
+@@ -3933,6 +3933,9 @@ static int __devinit hpsa_pci_init(struct ctlr_info *h)
+ 		return err;
+ 	}
+ 
++	/* Enable bus mastering (pci_disable_device may disable this) */
++	pci_set_master(h->pdev);
++
+ 	err = pci_request_regions(h->pdev, HPSA);
+ 	if (err) {
+ 		dev_err(&h->pdev->dev,
