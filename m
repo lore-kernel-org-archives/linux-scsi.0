@@ -1,77 +1,91 @@
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH 1/2] [SCSI] ufs: fix incorrect return value about SUCCESS and FAILED.
-Date: Tue,  1 May 2012 10:30:35 -0400
-Message-ID: <1335882635-16034-1-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH 2/2] [SCSI] ufs: add SCSI host lock push-down for ufs.
+Date: Tue,  1 May 2012 10:31:26 -0400
+Message-ID: <1335882686-16071-1-git-send-email-linkinjeon@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:58178 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753045Ab2EAObP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2012 10:31:15 -0400
-Received: by ghrr11 with SMTP id r11so1978161ghr.19
-        for <linux-scsi@vger.kernel.org>; Tue, 01 May 2012 07:31:14 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46675 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753045Ab2EAObl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2012 10:31:41 -0400
+Received: by pbbrp8 with SMTP id rp8so4465184pbb.19
+        for <linux-scsi@vger.kernel.org>; Tue, 01 May 2012 07:31:41 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, jBottomley@parallels.com, akpm@linux-foundation.org
 Cc: linux-scsi@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>
 
-Currently UFS host driver have returned incorrect return value about SUCCESS and FAILED.
-this patch fix them to return correct value to upper layer.
+SCSI host lock push-down patch is not applied in ufs host driver yet.
+After adding it, I tried to remove unneeded spin lock in queuecommand also.
 
 Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
-Acked-by: Santosh Y <santoshsy@gmail.com>
 ---
- drivers/scsi/ufs/ufshcd.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |   20 ++++++++++----------
+ 1 files changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5ab9b3f..3cb7a08 100644
+index 3cb7a08..a134738 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1163,6 +1163,8 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
- 		if (task_result != UPIU_TASK_MANAGEMENT_FUNC_COMPL &&
- 		    task_result != UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED)
- 			task_result = FAILED;
-+		else
-+			task_result = SUCCESS;
- 	} else {
- 		task_result = FAILED;
- 		dev_err(&hba->pdev->dev,
-@@ -1556,7 +1558,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 		goto out;
- 	}
- 	clear_bit(free_slot, &hba->tm_condition);
--	return ufshcd_task_req_compl(hba, free_slot);
-+	err = ufshcd_task_req_compl(hba, free_slot);
- out:
- 	return err;
- }
-@@ -1580,7 +1582,7 @@ static int ufshcd_device_reset(struct scsi_cmnd *cmd)
- 	tag = cmd->request->tag;
- 
- 	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_LOGICAL_RESET);
--	if (err)
-+	if (err == FAILED)
- 		goto out;
- 
- 	for (pos = 0; pos < hba->nutrs; pos++) {
-@@ -1620,7 +1622,7 @@ static int ufshcd_host_reset(struct scsi_cmnd *cmd)
- 	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
- 		return SUCCESS;
- 
--	return (ufshcd_do_reset(hba) == SUCCESS) ? SUCCESS : FAILED;
-+	return ufshcd_do_reset(hba);
+@@ -658,23 +658,23 @@ static void ufshcd_compose_upiu(struct ufshcd_lrb *lrbp)
  }
  
  /**
-@@ -1652,7 +1654,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	spin_unlock_irqrestore(host->host_lock, flags);
+- * ufshcd_queuecommand - main entry point for SCSI requests
++ * ufshcd_queuecommand_lck - main entry point for SCSI requests
+  * @cmd: command from SCSI Midlayer
+  * @done: call back function
+  *
+  * Returns 0 for success, non-zero in case of failure
+  */
+-static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
++static int
++ufshcd_queuecommand_lck(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
+ {
+ 	struct ufshcd_lrb *lrbp;
+ 	struct ufs_hba *hba;
+-	unsigned long flags;
+ 	int tag;
+ 	int err = 0;
  
- 	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_ABORT_TASK);
--	if (err)
-+	if (err == FAILED)
+-	hba = shost_priv(host);
++	hba = shost_priv(scp->device->host);
+ 
+-	tag = cmd->request->tag;
++	tag = scp->request->tag;
+ 
+ 	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
+ 		err = SCSI_MLQUEUE_HOST_BUSY;
+@@ -683,11 +683,11 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 
+ 	lrbp = &hba->lrb[tag];
+ 
+-	lrbp->cmd = cmd;
++	lrbp->cmd = scp;
+ 	lrbp->sense_bufflen = SCSI_SENSE_BUFFERSIZE;
+-	lrbp->sense_buffer = cmd->sense_buffer;
++	lrbp->sense_buffer = scp->sense_buffer;
+ 	lrbp->task_tag = tag;
+-	lrbp->lun = cmd->device->lun;
++	lrbp->lun = scp->device->lun;
+ 
+ 	lrbp->command_type = UTP_CMD_TYPE_SCSI;
+ 
+@@ -698,13 +698,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
  		goto out;
  
- 	scsi_dma_unmap(cmd);
+ 	/* issue command to the controller */
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	ufshcd_send_command(hba, tag);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ out:
+ 	return err;
+ }
+ 
++static DEF_SCSI_QCMD(ufshcd_queuecommand);
++
+ /**
+  * ufshcd_memory_alloc - allocate memory for host memory space data structures
+  * @hba: per adapter instance
 -- 
 1.7.5.4
 
