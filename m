@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 04/17] hpsa: suppress excessively chatty error messages
-Date: Tue, 01 May 2012 11:42:25 -0500
-Message-ID: <20120501164225.11705.57383.stgit@beardog.cce.hp.com>
+Subject: [PATCH 08/17] hpsa: remove unused parameter from finish_cmd
+Date: Tue, 01 May 2012 11:42:46 -0500
+Message-ID: <20120501164246.11705.81064.stgit@beardog.cce.hp.com>
 References: <20120501163819.11705.10299.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,28 +15,48 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Default behavior for any CHECK CONDITION excepting a few special cases is to
-print out certain parts of the sense buffer and the CDB.  Default behavior
-should be to print nothing and let the upper layers or applications decide what
-to do about these.  The same information is already available by setting the
-appropriate bits of the scsi_logging_level kernel parameter or via
-/proc/sys/dev/scsi/logging_level.
-
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ab16c16..9e09717 100644
+index cb9d619..49b31ad 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1193,7 +1193,7 @@ static void complete_scsi_command(struct CommandList *cp)
- 				break;
- 			}
- 			/* Must be some other type of check condition */
--			dev_warn(&h->pdev->dev, "cp %p has check condition: "
-+			dev_dbg(&h->pdev->dev, "cp %p has check condition: "
- 					"unknown type: "
- 					"Sense: 0x%x, ASC: 0x%x, ASCQ: 0x%x, "
- 					"Returning result: 0x%x, "
+@@ -3063,7 +3063,7 @@ static inline int bad_tag(struct ctlr_info *h, u32 tag_index,
+ 	return 0;
+ }
+ 
+-static inline void finish_cmd(struct CommandList *c, u32 raw_tag)
++static inline void finish_cmd(struct CommandList *c)
+ {
+ 	removeQ(c);
+ 	if (likely(c->cmd_type == CMD_SCSI))
+@@ -3103,7 +3103,7 @@ static inline u32 process_indexed_cmd(struct ctlr_info *h,
+ 	if (bad_tag(h, tag_index, raw_tag))
+ 		return next_command(h);
+ 	c = h->cmd_pool + tag_index;
+-	finish_cmd(c, raw_tag);
++	finish_cmd(c);
+ 	return next_command(h);
+ }
+ 
+@@ -3117,7 +3117,7 @@ static inline u32 process_nonindexed_cmd(struct ctlr_info *h,
+ 	tag = hpsa_tag_discard_error_bits(h, raw_tag);
+ 	list_for_each_entry(c, &h->cmpQ, list) {
+ 		if ((c->busaddr & 0xFFFFFFE0) == (tag & 0xFFFFFFE0)) {
+-			finish_cmd(c, raw_tag);
++			finish_cmd(c);
+ 			return next_command(h);
+ 		}
+ 	}
+@@ -4170,7 +4170,7 @@ static void fail_all_cmds_on_list(struct ctlr_info *h, struct list_head *list)
+ 	while (!list_empty(list)) {
+ 		c = list_entry(list->next, struct CommandList, list);
+ 		c->err_info->CommandStatus = CMD_HARDWARE_ERR;
+-		finish_cmd(c, c->Header.Tag.lower);
++		finish_cmd(c);
+ 	}
+ }
+ 
