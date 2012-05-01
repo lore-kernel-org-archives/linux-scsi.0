@@ -1,82 +1,110 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: [PATCH -next] scsi: fix qla2xxx printk format warnings
-Date: Tue, 01 May 2012 08:18:47 -0700
-Message-ID: <4F9FFED7.4060000@xenotime.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: sd_mod or usb-storage fails to read a single good block (was:
+ ehci_hcd fails to read a single good block)
+Date: Tue, 1 May 2012 12:05:53 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1205011025131.1499-100000@iolanthe.rowland.org>
+References: <909120.88778.qm@web100007.mail.kks.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:34208 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756601Ab2EAPS1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2012 11:18:27 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:34252 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757458Ab2EAQFy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2012 12:05:54 -0400
+In-Reply-To: <909120.88778.qm@web100007.mail.kks.yahoo.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com
+To: Norman Diamond <n0diamond@yahoo.co.jp>
+Cc: USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+On Tue, 1 May 2012, Norman Diamond wrote:
 
-Fix printk format warnings (from i386 build) by using %zu
-format specifier.  No warnings on i386 or x86_64.
+> >> I wish I could get a broken Prolific bridge to test together with
+> > > mine.=C2=A0 Anyway the divisible-by-63 heuristic would work bette=
+r than
+> > > the existing heuristic but it would not work as well as
+> > > TEST_CAPACITY.=C2=A0 My proposed modified heursitic would usually=
+ work
+> > > better than the existing heuristic but not as well as TEST_CAPACI=
+TY.
+> >=20
+> > How do you know?=C2=A0 You haven't read through ten years' worth of=
+ email=20
+> > messages on this subject, have you?=C2=A0 You're going on the basis=
+ of your=20
+> > experience with _one_ bridge and a couple of drives.
+>=20
+> Because we do know there are a lot of multiples of 63 out there, and
+> because if the bridge reports a capacity that is a multiple of 63
+> (i.e. maximum LBA one less than a multiple of 63) and we try reading
+> that last block then it should be read successfully.  The only time
+> we have to worry about TEST_CAPACITY is a pretty rare case -- and
+> even in such rare cases, we don't know if the bridge will always hang
+> in those cases.
 
-drivers/scsi/qla2xxx/qla_target.c:2951:5: warning: format '%lu' expects type 'long unsigned int', but argument 7 has type 'size_t'
-drivers/scsi/qla2xxx/tcm_qla2xxx.c:1564:3: warning: format '%lu' expects type 'long unsigned int', but argument 2 has type 'unsigned int'
-drivers/scsi/qla2xxx/tcm_qla2xxx.c:1570:2: warning: format '%lu' expects type 'long unsigned int', but argument 2 has type 'unsigned int'
-drivers/scsi/qla2xxx/tcm_qla2xxx.c:1576:3: warning: format '%lu' expects type 'long unsigned int', but argument 2 has type 'unsigned int'
-drivers/scsi/qla2xxx/tcm_qla2xxx.c:1584:2: warning: format '%lu' expects type 'long unsigned int', but argument 2 has type 'unsigned int'
+We don't know, but our experience has not been good.  Even if the=20
+bridge doesn't hang, it is quite possible the kernel will get stuck in=20
+a very long, very slow retry loop.  Maybe not as bad as the loop you=20
+experienced while testing a different scenario, but still bad.
 
+> >> By the way, a while back you asked what happens if I use sg_dd to =
+try
+> >> reading multiple blocks including the last existing block and some
+> >> non-existing ones.=C2=A0 The answer seems to depend on the drive a=
+s well
+> >> as the method of connection (USB-to-PATA vs. eSATA plus
+> >> SATA-to-PATA).=C2=A0 With the drive that I've usually been using I=
+ think
+> >> the drive hangs so we can't really figure out whether to blame the
+> >> bridge.=C2=A0 With a different drive the drive reports the error b=
+ut sg_dd
+> >> and Linux drivers do something to retry so many times that after 3=
+0
+> >> minutes I lost patience waiting for sg_dd to finish and report its
+> >> error.
+> >=20
+> > Indeed -- that's exactly the sort of thing which could happen with
+> > TEST_CAPACITY.=C2=A0 It's one of the reasons I'm cautious about add=
+ing
+> > TEST_CAPACITY and an example of why TEST_CAPACITY might not work as=
+=20
+> > well as you think.
+>=20
+> Correction:  Therefore TEST_CAPACITY should not try to read multiple
+> blocks in one read.
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-Cc:	Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc:	linux-driver@qlogic.com
----
- drivers/scsi/qla2xxx/qla_target.c  |    2 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+To repeat: You have no way of knowing whether reading a single block=20
+will avoid this problem when other bridges are used.
 
---- linux-next-20120430.orig/drivers/scsi/qla2xxx/qla_target.c
-+++ linux-next-20120430/drivers/scsi/qla2xxx/qla_target.c
-@@ -2948,7 +2948,7 @@ static int qla_tgt_set_data_offset(struc
- 			sg_srr_start = sg;
- 			ql_dbg(ql_dbg_tgt_sgl, cmd->vha, 0xe307, "Found matching sg[%d],"
- 				" using %p as sg_srr_start, and using first_offset:"
--				" %lu\n", i, sg, first_offset);
-+				" %zu\n", i, sg, first_offset);
- 			break;
- 		}
- 		tmp += sg->length;
---- linux-next-20120430.orig/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ linux-next-20120430/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -1561,27 +1561,27 @@ static int tcm_qla2xxx_init_lport(struct
- 	lport->lport_fcport_map = vmalloc(
- 			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
- 	if (!lport->lport_fcport_map) {
--		pr_err("Unable to allocate lport_fcport_map of %lu"
-+		pr_err("Unable to allocate lport_fcport_map of %zu"
- 			" bytes\n", sizeof(struct tcm_qla2xxx_fc_domain) * 256);
- 		return -ENOMEM;
- 	}
- 	memset(lport->lport_fcport_map, 0,
- 			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
--	pr_debug("qla2xxx: Allocated lport_fcport_map of %lu bytes\n",
-+	pr_debug("qla2xxx: Allocated lport_fcport_map of %zu bytes\n",
- 			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
- 
- 	lport->lport_loopid_map = vmalloc(sizeof(struct tcm_qla2xxx_fc_loopid) *
- 				65536);
- 	if (!lport->lport_loopid_map) {
- 		pr_err("Unable to allocate lport->lport_loopid_map"
--			" of %lu bytes\n", sizeof(struct tcm_qla2xxx_fc_loopid)
-+			" of %zu bytes\n", sizeof(struct tcm_qla2xxx_fc_loopid)
- 			* 65536);
- 		vfree(lport->lport_fcport_map);
- 		return -ENOMEM;
- 	}
- 	memset(lport->lport_loopid_map, 0, sizeof(struct tcm_qla2xxx_fc_loopid)
- 			* 65536);
--	pr_debug("qla2xxx: Allocated lport_loopid_map of %lu bytes\n",
-+	pr_debug("qla2xxx: Allocated lport_loopid_map of %zu bytes\n",
- 			sizeof(struct tcm_qla2xxx_fc_loopid) * 65536);
- 	return 0;
- }
+> Your other message says you have a different model of Prolific bridge
+> which has the capacity bug but which is (sadly at this moment)
+> distinguishable from mine.  Anyway, what happens if you try to read
+> the last block that the bridge asserted to exist?
+
+It behaves the same way yours does: immediate failure with no error=20
+information.
+
+>  Also for curiosity
+> what happens if you try to read multiple nonexistent blocks, but that
+> curiosity is irrelevant to the single block that TEST_CAPACITY would
+> try to read.
+
+I tried multiple experiments, reading 8 blocks starting at different=20
+positions relative to the end.  In each case, if any of the blocks were=
+=20
+after the physical end of the drive, the bridge returned immediately=20
+with no data and no error information.
+
+I also have another bridge to test, a very buggy device made by
+JMicron.  I don't remember whether it has the capacity bug, and I don't
+have time to work on it today.  I'll let you know how it behaves later
+on.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
