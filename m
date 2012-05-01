@@ -1,83 +1,89 @@
-From: Andi Shyti <andi.shyti@gmail.com>
-Subject: Re: [PATCH 07/17] hpsa: do not give up retry of driver cmds after
- only 3 retries
-Date: Tue, 1 May 2012 23:39:34 +0200
-Message-ID: <20120501213934.GD11302@andi>
-References: <20120501163819.11705.10299.stgit@beardog.cce.hp.com>
- <20120501164240.11705.10308.stgit@beardog.cce.hp.com>
- <20120501172634.GA11302@andi>
- <20120501182011.GS11802@beardog.cce.hp.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 43191] New: Syslog fills with messages about assuming drive
+ cache when SD card not present
+Date: Tue, 1 May 2012 22:21:48 GMT
+Message-ID: <bug-43191-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120501182011.GS11802@beardog.cce.hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bugzilla.kernel.org ([198.145.19.204]:49449 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754282Ab2EAWVt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2012 18:21:49 -0400
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q41MLmo3019431
+	for <linux-scsi@vger.kernel.org>; Tue, 1 May 2012 22:21:48 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Steve,
+https://bugzilla.kernel.org/show_bug.cgi?id=43191
 
-Thanks for the walk-through, but still some doubts...
+           Summary: Syslog fills with messages about assuming drive cache
+                    when SD card not present
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.4.0
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: DC390
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: sriharshatotakura+kernelbugs@gmail.com
+        Regression: No
 
-On Tue, May 01, 2012 at 01:20:11PM -0500, scameron@beardog.cce.hp.com wrote:
-> On Tue, May 01, 2012 at 07:26:34PM +0200, Andi Shyti wrote:
-> > >  
-> > >  	do {
-> > >  		memset(c->err_info, 0, sizeof(*c->err_info));
-> > >  		hpsa_scsi_do_simple_cmd_core(h, c);
-> > >  		retry_count++;
-> > > +		if (retry_count > 3) {
-> > > +			msleep(backoff_time);
-> > 
-> > for 10ms isn't it better to avoid using msleep?
-> 
-> [...] 
-> > > +			if (backoff_time < 1000)
-> > > +				backoff_time *= 2;
-> 
-> Eh, maybe.  from Documentation/timers-howto.txt
-> 
->                         msleep(1~20) may not do what the caller intends, and
->                         will often sleep longer (~20 ms actual sleep for any
->                         value given in the 1~20ms range). In many cases this
->                         is not the desired behavior.
-> 
-> Sleeping longer (~20ms instead of 10ms) in this instance is fine, as I don't
-> really care too much exactly how long it sleeps, and it backs off to up to
-> 1280ms eventually anyway.  The idea is, "wait a bit, and retry, and then if
-> that doesn't work, wait twice as long, and retry, etc."  *exactly* how long
-> "a bit" is is not super important.  I could change the initial back_off time
-> to 20 or 30 to satisfy the letter of the advice in Documentation/timers-howto.txt,
-> if doing so is important.
 
-No, you're right, it should not really matter, but here in the
-worst case you put the driver on sleep for almost 22 seconds,
-that is a huge difference compared to the original
-implementation.
- 
-> This is kind of a corner case of a corner case, I don't expect
-> things will ordinarily end up waiting that long, because normally
-> one of the 1st 3 retries will succeed.  I just wanted to make it 
-> a little more robust and not just give up immediately if the 3
-> initial retries don't succeed, the specific number of retries,
-> wait times, etc, I just made up.
+Created an attachment (id=73153)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=73153)
+list of currently loaded modules
 
-Premising that I don't know the device, therefore I could be
-totally wrong, if you don't expect things to wait so long, why not
-to decrease the MAX_DRIVER_CMD_RETRIES and sleep increasingly (as
-you did) but for shorter period?
+I'm observing the issue discussed in this bug report:
+https://bugzilla.kernel.org/show_bug.cgi?id=43190
+I'm reporting it here since the original reporter didn't seem to have reported
+here:
 
-Andi
 
-> It still does eventually give up
-> though, and then probably doesn't do anything good after that
-> (same as current behavior, just somewhat less likely to get to
-> that point.)  I'm not actually aware of any complaints of the 
-> retries failing though (apart from the complaint that prompted
-> the patch prior to this one, that we didn't retry on getting
-> SAM_STAT_BUSY.)
-> 
-> -- steve
-> 
+I get this output repeatedly after every minute or so:
+
+[  465.435298] sd 6:0:0:0: [sdb] Test WP failed, assume Write Enabled
+[  465.438295] sd 6:0:0:0: [sdb] Asking for cache data failed
+[  465.438303] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[  517.147818] sd 6:0:0:0: [sdb] Test WP failed, assume Write Enabled
+[  517.150811] sd 6:0:0:0: [sdb] Asking for cache data failed
+[  517.150822] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[  568.859459] sd 6:0:0:0: [sdb] Test WP failed, assume Write Enabled
+[  568.862330] sd 6:0:0:0: [sdb] Asking for cache data failed
+[  568.862339] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[  620.571790] sd 6:0:0:0: [sdb] Test WP failed, assume Write Enabled
+[  620.574659] sd 6:0:0:0: [sdb] Asking for cache data failed
+
+However, when I put in a memory card it stops after outputting this:
+
+[ 1543.770351] sd 6:0:0:0: [sdb] 3970048 512-byte logical blocks: (2.03 GB/1.89
+GiB)
+[ 1543.775577] sd 6:0:0:0: [sdb] No Caching mode page present
+[ 1543.775586] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[ 1543.780604] sd 6:0:0:0: [sdb] No Caching mode page present
+[ 1543.780611] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[ 1543.807961]  sdb: sdb1
+
+and once I eject the memory card it continues:
+
+[ 4980.766490] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[ 5032.474959] sd 6:0:0:0: [sdb] Test WP failed, assume Write Enabled
+[ 5032.477961] sd 6:0:0:0: [sdb] Asking for cache data failed
+[ 5032.477970] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[ 5084.187541] sd 6:0:0:0: [sdb] Test WP failed, assume Write Enabled
+[ 5084.190546] sd 6:0:0:0: [sdb] Asking for cache data failed
+[ 5084.190554] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[ 5135.899244] sd 6:0:0:0: [sdb] Test WP failed, assume Write Enabled
+[ 5135.902369] sd 6:0:0:0: [sdb] Asking for cache data failed
+[ 5135.902378] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
