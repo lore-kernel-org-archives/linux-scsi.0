@@ -1,140 +1,92 @@
-From: Norman Diamond <n0diamond@yahoo.co.jp>
-Subject: Re: sd_mod or usb-storage fails to read a single good block (was: ehci_hcd fails to read a single good block)
-Date: Tue, 1 May 2012 08:07:21 +0900 (JST)
-Message-ID: <909120.88778.qm@web100007.mail.kks.yahoo.co.jp>
-References: <Pine.LNX.4.44L0.1204301523120.1558-100000@iolanthe.rowland.org>
-Reply-To: n0diamond@yahoo.co.jp
+From: jack_wang <jack_wang@usish.com>
+Subject: Re: Re: [PATCH] pm8001: support HDA (flashless) mode
+Date: Tue, 1 May 2012 09:10:29 +0800
+Message-ID: <201205010910286561490@usish.com>
+References: <420864BE-8542-4BD8-B3DB-FDA403D193F9@xyratex.com> <A60D2B04CB1E487D9D0371139484E1C2@usish.com.cn> <73464C75-47D9-4409-87C2-8DDD0CBD5C67@xyratex.com>,
+	<E53424C2-2CAE-43AA-81EE-0E7B44586C6F@xyratex.com>
+Reply-To: jack_wang <jack_wang@usish.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web100007.mail.kks.yahoo.co.jp ([114.111.98.181]:47620 "HELO
-	web100007.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756283Ab2D3XHY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Apr 2012 19:07:24 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1204301523120.1558-100000@iolanthe.rowland.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:57434 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751755Ab2EABK3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Apr 2012 21:10:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, lindar_liu <lindar_liu@usish.com>, crystal_yu <crystal_yu@usish.com>, john_gong <john_gong@usish.com>
 
-Alan Stern wrote:
-> On Mon, 30 Apr 2012, Norman Diamond wrote:
->=20
->> Here you are modifying my proposal.=C2=A0 It is no problem to discus=
-s your
->> idea.=C2=A0 At first I thought your idea was better than mine, but o=
-n
->> second thought, sorry, here's a problem.=C2=A0 Again it is because t=
-he
->> broken and unbroken Prolific bridges are indistinguishable.=C2=A0 A
->> Prolific bridge could be connected to a drive whose actual usable
->> capacity is a multiple of 63, or it could be connected to a modern
->> drive with emulated capacity that is even (in fact a multiple of 8)
->> and not usually a multiple of 63.
->>=20
->> Therefore I still favour my version.=C2=A0 If the bridge reports an =
-even
->> number then I want to believe it, if the bridge reports a multiple o=
-f
->> 63 then I want to believe it, and if neither then I want to fall bac=
-k
->> on the existing heuristic which performs a decrement.
->=20
-> Hmmm.=C2=A0 What about when one of the broken bridges with an older d=
-rive
-> reports a number which is 1 larger than a multiple of 63 but also
-> happens to be even?=C2=A0 In that case your proposed heuristic would =
-fail --
-> but then so would the existing heuristic, so we'd be no worse off tha=
-n
-> we are now.
+SGkgTWFyaywNCg0KWWVzLCBJIHRoaW5rIHRoaXMgc2hvdWxkIGJlIGZpbmUsIHlvdSBjYW4gYWRk
+IGJ5IHJldmlld2VkLWJ5IGF0IHRoZSB0YWtlMi4NCg0KVGhhbmtzIGFuZCByZWdhcmRzIQ0KDQoN
+Cg0KLS0tLS0tLS0tLS0tLS0NCmphY2tfd2FuZw0KPlVwb24gZnVydGhlciBpbnZlc3RpZ2F0aW9u
+IG9mIHRoZSBkb2N1bWVudGF0aW9uLCBiaXQgWzJdICgweDA0KSBpcyB0aGUgRm9yY2UgSERBIG1v
+ZGUsIGJ1dCB0aGUgZmxhc2hsZXNzIG9wZXJhdGlvbnMgYXJlIGJpdCBbM10gKDB4MDgpIG1lYW5p
+bmcgRmlybXdhcmUgdG8gYmUgbG9hZGVkIGluIEhEQSBtb2RlLiBJIGV4cGVjdCBlaXRoZXIgU0VF
+UFJPTSBiaXQgc2V0IGlzIGVub3VnaC4NCj4NCj5YeXJhdGV4IGlzIE5PVCBzZXR0aW5nIHRoZSBT
+RUVQUk9NIGJpdHMgc28gdGhlIGZsYWdzIGFyZSAnaW5jb3JyZWN0JyBhbmQgYSB2YWx1ZSBvZiBa
+ZXJvLCB5ZXQgdGhlIGhhcmR3YXJlIGlzIGluLWZhY3QgaW4gSERBLW1vZGUgYmVjYXVzZSBvZiB0
+aGUgbGFjayBvZiBmbGFzaCwgc28gdGhlIG1waV91bmluaXRfY2hlY2soKSBzdGlsbCBtYWtlcyBs
+b2FkcyBvZiBzZW5zZSB0byBjYXB0dXJlIHRoaXMgc3RhdGUgYW5kIGVuZ2luZWVyIG91cnNlbHZl
+cyBvdXQgb2YgdGhhdCBwcm9ibGVtLg0KPg0KPkphY2ssIHdvdWxkIHRoZSBmb2xsb3dpbmcgdHJh
+aWxpbmcgZnJhZ21lbnQgdG8gcmVwbGFjZSB0aGUgc2l4IGxpbmVzIG9mIHRoZSBvbmUgeW91IG5v
+dGVkIGJlbG93IHJlc29sdmUgeW91ciBjb25jZXJuPyA6DQo+DQo+KwlyZXR1cm4gcG04MDAxX2hh
+LT5tYWluX2NmZ190YmwuaGRhX21vZGVfZmxhZyAmIDB4QzsNCj4NCj5JZiBzbywgSSB3aWxsICd0
+YWtlMicgdGhlIHBhdGNoIHdpdGggdGhpcyBjaGFuZ2UgYXMgSSBoYXZlIG5vdCBzZWVuIGFueSBv
+dGhlciByZXZpZXdzLg0KPg0KPlRoYW5rcyBmb3IgdGhlIGV4Y2VsbGVudCBjYXRjaC4NCj4NCj5T
+aW5jZXJlbHkgLS0gTWFyayBTYWx5enluDQo+DQo+T24gQXByIDMwLCAyMDEyLCBhdCA5OjQ5IEFN
+LCBNYXJrIFNhbHl6eW4gd3JvdGU6DQo+DQo+PiBZb3UgYXJlIHJpZ2h0IC4uLiBob3dldmVyIHRo
+aXMgY29kZSBpcyAnbmV2ZXIgcmVhY2hlZCcgc2luY2UgbXBpX3VuaW5pdF9jaGVjaygpIGdlbmVy
+YWxseSBmYWlscyBiZWZvcmUgdGhpcyBpbiB0aGUgY2hpcF9pbl9oZGFfbW9kZSBzZXQgb2YgdGVz
+dHMuDQo+PiANCj4+IEkgaW5zdHJ1bWVudGVkIHVwLCBvbiBvdXIgSERBIG1vZGUgY2hpcCwgd2Ug
+YXJlIHNlZWluZyBhIHZhbHVlIG9mIFpFUk8gaW4gTUFJTl9IREFfRkxBR1NfT0ZGU0VUIC4uLiBB
+aGgsIHRoZSB3b3JsZCBvZiBpbml0aWFsaXppbmcgaGFyZHdhcmUgdGhhdCBpcyBpbiBhbiBpbmRl
+dGVybWluYXRlIChjb2RlIG5vdCBydW5uaW5nKSBzdGF0ZSAuLi4NCj4+IA0KPj4gLS0gTWFyaw0K
+Pj4gDQo+PiBPbiBBcHIgMjgsIDIwMTIsIGF0IDI6MDcgQU0sIEphY2sgV2FuZyB3cm90ZToNCj4+
+IA0KPj4+IA0KPj4+ICsJZGF0YSA9IHBtODAwMV9tcjMyKA0KPj4+ICsJCXBtODAwMV9oYS0+bWFp
+bl9jZmdfdGJsX2FkZHIsDQo+Pj4gKwkJcG04MDAxX2hhLT5tYWluX2NmZ190YmwuaGRhX21vZGVf
+ZmxhZyk7DQo+Pj4gKwlQTTgwMDFfSU5JVF9EQkcocG04MDAxX2hhLA0KPj4+ICsJCXBtODAwMV9w
+cmludGsoIipNQUlOX0hEQV9GTEFHUyA9IDB4JXhcbiIsIGRhdGEpKTsNCj4+PiArCXJldHVybiBk
+YXRhICYgMHg0Ow0KPj4+IA0KPj4+IEhlcmUgc2VlbXMgd3JvbmcsIHlvdSBtYXkgd2FudCB0byBj
+aGVjayB0aGUgZm9yY2UgaGRhIGJpdD8gU28geW91IG5lZWQgdG8NCj4+PiByZWFkIG9mZnNldCAj
+ZGVmaW5lIE1BSU5fSERBX0ZMQUdTX09GRlNFVAkJMHg4NC8qIERXT1JEIDB4MjEgKi8NCj4+PiAN
+Cj4+PiBKYWNrDQo+Pj4gDQo+Pj4gDQo+Pj4+IA0KPj4+PiBUaGUgcG04MDAxIGNhbiBiZSBkZWxp
+dmVyZWQgYXMgYSBzdGFuZGFsb25lIHByb2R1Y3Qgd2l0aCBmbGFzaC1wcm9ncmFtbWVkDQo+Pj4+
+IGZpcm13YXJlIGltYWdlcywgb3Igd2l0aG91dCB0aGUgZmxhc2ggcHJlc2VudCByZXF1aXJpbmcg
+dGhlIGRyaXZlciB0bw0KPj4+IHVwbG9hZA0KPj4+PiB0aGUgaW1hZ2VzIGludG8gdGhlIGNoaXAn
+cyBSQU0gYW5kIHRoZW4gcnVuLiBUaGlzIGlzIGNhbGxlZCBIREEgbW9kZS4NCj4+Pj4gDQo+Pj4+
+IFdlIGFkZCBzdXBwb3J0IGZvciB0aGlzIGZpcm13YXJlIHVwbG9hZCBpbiB0aGUgZW5jbG9zZWQg
+cGF0Y2guIFdlIHRyeSBzb21lDQo+Pj4+IGJhc2ljIGluaXRpYWxpemF0aW9uIGNoZWNrcyBvZiB0
+aGUgRmlybXdhcmUsIGFuZCBpZiBpdCBhcHBlYXJzIGRlYWQsIHdlDQo+Pj4gbWFrZQ0KPj4+PiB0
+aGUgYXNzdW1wdGlvbiB0aGUgYWRhcHRlciBtdXN0IGluLWZhY3QgYmUgaGFsdGVkIGluIHRoaXMg
+SERBIG1vZGUuIFRoZQ0KPj4+PiBGaXJtd2FyZSBpbWFnZXMgdGhlbXNlbHZlcyBoYXZlIG5vdCBi
+ZWVuIGNsZWFyZWQgZm9yIG9wZW4tcmVsZWFzZSBieSBQTUMsDQo+Pj4gYnV0DQo+Pj4+IHRoZXkg
+YXJlIGF2YWlsYWJsZSBpbiBPcGVuU29sYXJpcyA8aGludCBoaW50Pi4gUE1DJ3MgcmF0aW9uYWxp
+emF0aW9uIGZvcg0KPj4+IG5vdA0KPj4+PiB3YW50aW5nIGFuIG9wZW4tcmVsZWFzZSBvZiB0aGUg
+RmlybXdhcmUgSW1hZ2VzIGlzIHRoYXQgdGhleSBkbyBub3Qgd2FudCB0bw0KPj4+PiB0YWtlIHN1
+cHBvcnQgY2FsbHMgZXhjZXB0IGZyb20gcGF5aW5nIE9FTXMgKHN1Y2ggYXMgWHlyYXRleCkgdGhh
+dCBhcmUNCj4+PiBlbWJlZGRpbmcNCj4+Pj4gUE1DIHByb2R1Y3QgaW50byB0aGUgbW90aGVyYm9h
+cmRzIGFuZCB0aHVzIG1heSBoYXZlIGEgdGVzdGVkIGNvbWJpbmF0aW9uDQo+Pj4gb2YNCj4+Pj4g
+RmlybXdhcmUgYW5kIEhhcmR3YXJlLiBQbGVhc2UgcmVzcGVjdCB0aGlzIHNlbnRpbWVudC4gSW1h
+Z2VzIGFyZSBleHBlY3RlZA0KPj4+IGluOg0KPj4+PiANCj4+Pj4gL2xpYi9maXJtd2FyZS9hYXAx
+aW1nLmJpbg0KPj4+PiAvbGliL2Zpcm13YXJlL2lsYWltZy5iaW4NCj4+Pj4gL2xpYi9maXJtd2Fy
+ZS9pb3BpbWcuYmluDQo+Pj4+IC9saWIvZmlybXdhcmUvaXN0cmltZy5iaW4NCj4+Pj4gDQo+Pj4+
+IHVzaW5nIHRoZSBleGFjdCBzYW1lIG5hbWluZyBjb252ZW50aW9uIGFzIFBNQyBhbmQgaW4gT3Bl
+blNvbGFyaXMgKGFuZCBpdHMNCj4+Pj4gZm9sbG93b24gY2hpbGRyZW4pIGZvciB0aGVzZSBpbWFn
+ZSBmaWxlcy4NCj4+Pj4gDQo+Pj4+IFNpZ25lZC1vZmYtYnk6IE1hcmsgU2FseXp5biA8bWFya19z
+YWx5enluQHh5cmF0ZXguY29tPg0KPj4+PiANCj4+Pj4gZHJpdmVycy9zY3NpL3BtODAwMS9wbTgw
+MDFfaHdpLmMgIHwgIDU4NA0KPj4+PiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+Ky0tLQ0KPj4+PiBkcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9od2kuaCAgfCAgIDM3ICsrDQo+
+Pj4+IGRyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2luaXQuYyB8ICAgMzAgKw0KPj4+PiBkcml2
+ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMuaCAgfCAgICAzDQo+Pj4+IDQgZmlsZXMgY2hhbmdl
+ZCwgNjEzIGluc2VydGlvbnMoKyksIDQxIGRlbGV0aW9ucygtKQ0KPj4+PiANCj4+Pj4gUGxlYXNl
+IHNlZSBlbmNsb3NlZCBhdHRhY2htZW50DQo+Pj4gDQo+Pj4gDQo+PiANCj4NCj4tLQ0KPlRvIHVu
+c3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51
+eC1zY3NpIiBpbg0KPnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJu
+ZWwub3JnDQo+TW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9t
+YWpvcmRvbW8taW5mby5odG1sDQo+DQo+X19fX19fX19fXyBJbmZvcm1hdGlvbiBmcm9tIEVTRVQg
+Tk9EMzIgQW50aXZpcnVzLCB2ZXJzaW9uIG9mIHZpcnVzIHNpZ25hdHVyZSBkYXRhYmFzZSA1NjU5
+ICgyMDEwMTEyOSkgX19fX19fX19fXw0KPg0KPlRoZSBtZXNzYWdlIHdhcyBjaGVja2VkIGJ5IEVT
+RVQgTk9EMzIgQW50aXZpcnVzLg0KPg0KPmh0dHA6Ly93d3cuZXNldC5jb20NCj4NCj4NCj4=
 
-Exactly.  It's not perfect but the improvements far outweigh the downsi=
-de.
-
-> I still think your proposed heuristic should be handled separately fr=
-om=20
-> the existing one, so that it would not be applied in situations where=
-=20
-> we know the device is not a USB-(S)ATA bridge.
-
-OK.  One quirk for bridges (accept even numbers, accept multiples of 63=
-, and otherwise decrement) and one quirk for other kinds of devices (ac=
-cept even numbers and otherwise decrement, i.e. the present heuristic).
-
->>> As for whether we need TEST_CAPACITY...=EF=BF=BD That is still high=
-ly
->>> debatable.=EF=BF=BD If we did have it, which quirk entries would us=
-e it?=EF=BF=BD So
->>> far the only candidate we have is your Prolific bridge, and even th=
-ere
->>> it seems that the divisible-by-63 heuristic would work just as well=
-=2E
->>=20
->> I wish I could get a broken Prolific bridge to test together with
-> > mine.=C2=A0 Anyway the divisible-by-63 heuristic would work better =
-than
-> > the existing heuristic but it would not work as well as
-> > TEST_CAPACITY.=C2=A0 My proposed modified heursitic would usually w=
-ork
-> > better than the existing heuristic but not as well as TEST_CAPACITY=
-=2E
->=20
-> How do you know?=C2=A0 You haven't read through ten years' worth of e=
-mail=20
-> messages on this subject, have you?=C2=A0 You're going on the basis o=
-f your=20
-> experience with _one_ bridge and a couple of drives.
-
-Because we do know there are a lot of multiples of 63 out there, and be=
-cause if the bridge reports a capacity that is a multiple of 63 (i.e. m=
-aximum LBA one less than a multiple of 63) and we try reading that last=
- block then it should be read successfully.  The only time we have to w=
-orry about TEST_CAPACITY is a pretty rare case -- and even in such rare=
- cases, we don't know if the bridge will always hang in those cases.=20
-
-My bridge appeared to hang on reading multiple nonexistent blocks but n=
-ot on reading a single nonexistent block, and at this moment it looks l=
-ike it might not even be the bridge's fault (I have to test it on more =
-drives).
-
-> By the way, have you tried connecting your bridge to a CD/DVD drive?
-
-I have read CDs through it.  I never thought of inquring the capacity.
-
->> By the way, a while back you asked what happens if I use sg_dd to tr=
-y
->> reading multiple blocks including the last existing block and some
->> non-existing ones.=C2=A0 The answer seems to depend on the drive as =
-well
->> as the method of connection (USB-to-PATA vs. eSATA plus
->> SATA-to-PATA).=C2=A0 With the drive that I've usually been using I t=
-hink
->> the drive hangs so we can't really figure out whether to blame the
->> bridge.=C2=A0 With a different drive the drive reports the error but=
- sg_dd
->> and Linux drivers do something to retry so many times that after 30
->> minutes I lost patience waiting for sg_dd to finish and report its
->> error.
->=20
-> Indeed -- that's exactly the sort of thing which could happen with
-> TEST_CAPACITY.=C2=A0 It's one of the reasons I'm cautious about addin=
-g
-> TEST_CAPACITY and an example of why TEST_CAPACITY might not work as=20
-> well as you think.
-
-Correction:  Therefore TEST_CAPACITY should not try to read multiple bl=
-ocks in one read.
-
-Your other message says you have a different model of Prolific bridge w=
-hich has the capacity bug but which is (sadly at this moment) distingui=
-shable from mine.  Anyway, what happens if you try to read the last blo=
-ck that the bridge asserted to exist?  Also for curiosity what happens =
-if you try to read multiple nonexistent blocks, but that curiosity is i=
-rrelevant to the single block that TEST_CAPACITY would try to read.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
