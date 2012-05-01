@@ -1,37 +1,125 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 43191] Syslog fills with messages about assuming drive cache
- when SD card not present
-Date: Tue, 1 May 2012 22:26:42 GMT
-Message-ID: <201205012226.q41MQgYL019540@bugzilla.kernel.org>
-References: <bug-43191-11613@https.bugzilla.kernel.org/>
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: Re: [PATCH 2/2] [SCSI] ufs: add SCSI host lock push-down for ufs.
+Date: Wed, 2 May 2012 08:39:02 +0900
+Message-ID: <CAKYAXd_37MjUnQyvA=h7+M6XAzfvRRpLsZ140TazZVZPakL_-A@mail.gmail.com>
+References: <1335882686-16071-1-git-send-email-linkinjeon@gmail.com>
+	<1335905984.2996.20.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:49485 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754037Ab2EAW0m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2012 18:26:42 -0400
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q41MQgZL019541
-	for <linux-scsi@vger.kernel.org>; Tue, 1 May 2012 22:26:42 GMT
-In-Reply-To: <bug-43191-11613@https.bugzilla.kernel.org/>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:53521 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751881Ab2EAXjE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2012 19:39:04 -0400
+Received: by wgbdr13 with SMTP id dr13so47461wgb.1
+        for <linux-scsi@vger.kernel.org>; Tue, 01 May 2012 16:39:02 -0700 (PDT)
+In-Reply-To: <1335905984.2996.20.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=43191
-
-
-Sree Harsha Totakura <sriharshatotakura+kernelbugs@gmail.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-           Platform|All                         |i386
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+2012/5/2, James Bottomley <James.Bottomley@hansenpartnership.com>:
+> On Tue, 2012-05-01 at 10:31 -0400, Namjae Jeon wrote:
+>> SCSI host lock push-down patch is not applied in ufs host driver yet.
+>> After adding it, I tried to remove unneeded spin lock in queuecommand
+>> also.
+>
+> This really isn't the correct thing: you're increasing the lock coverage
+> not decreasing it.
+>
+> In the old way, ->queuecommand() was called locked.  DEF_SCSI_QCMD() was
+> a macro we use to avoid converting all the previous methods from locked
+> to unlocked (it simply acts as a bridge between the new way and the old
+> way).
+>
+> In the new way we call ->queuecommand() unlocked and try only to take
+> the lock when it's needed, if at all.  The current ufshcd_queuecommand()
+> is correct because it only takes the lock when it needs it in
+> ufshcd_send_command().  A lock push down into that routine might be
+> possible, but since it's only a couple of bytes, probably not worth it.
+>
+> James
+Hi James.
+I agree your comment.
+Thanks for your explanation.
+>
+>
+>> Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
+>> ---
+>>  drivers/scsi/ufs/ufshcd.c |   20 ++++++++++----------
+>>  1 files changed, 10 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 3cb7a08..a134738 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -658,23 +658,23 @@ static void ufshcd_compose_upiu(struct ufshcd_lrb
+>> *lrbp)
+>>  }
+>>
+>>  /**
+>> - * ufshcd_queuecommand - main entry point for SCSI requests
+>> + * ufshcd_queuecommand_lck - main entry point for SCSI requests
+>>   * @cmd: command from SCSI Midlayer
+>>   * @done: call back function
+>>   *
+>>   * Returns 0 for success, non-zero in case of failure
+>>   */
+>> -static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd
+>> *cmd)
+>> +static int
+>> +ufshcd_queuecommand_lck(struct scsi_cmnd *scp, void (*done)(struct
+>> scsi_cmnd *))
+>>  {
+>>  	struct ufshcd_lrb *lrbp;
+>>  	struct ufs_hba *hba;
+>> -	unsigned long flags;
+>>  	int tag;
+>>  	int err = 0;
+>>
+>> -	hba = shost_priv(host);
+>> +	hba = shost_priv(scp->device->host);
+>>
+>> -	tag = cmd->request->tag;
+>> +	tag = scp->request->tag;
+>>
+>>  	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
+>>  		err = SCSI_MLQUEUE_HOST_BUSY;
+>> @@ -683,11 +683,11 @@ static int ufshcd_queuecommand(struct Scsi_Host
+>> *host, struct scsi_cmnd *cmd)
+>>
+>>  	lrbp = &hba->lrb[tag];
+>>
+>> -	lrbp->cmd = cmd;
+>> +	lrbp->cmd = scp;
+>>  	lrbp->sense_bufflen = SCSI_SENSE_BUFFERSIZE;
+>> -	lrbp->sense_buffer = cmd->sense_buffer;
+>> +	lrbp->sense_buffer = scp->sense_buffer;
+>>  	lrbp->task_tag = tag;
+>> -	lrbp->lun = cmd->device->lun;
+>> +	lrbp->lun = scp->device->lun;
+>>
+>>  	lrbp->command_type = UTP_CMD_TYPE_SCSI;
+>>
+>> @@ -698,13 +698,13 @@ static int ufshcd_queuecommand(struct Scsi_Host
+>> *host, struct scsi_cmnd *cmd)
+>>  		goto out;
+>>
+>>  	/* issue command to the controller */
+>> -	spin_lock_irqsave(hba->host->host_lock, flags);
+>>  	ufshcd_send_command(hba, tag);
+>> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>  out:
+>>  	return err;
+>>  }
+>>
+>> +static DEF_SCSI_QCMD(ufshcd_queuecommand);
+>> +
+>>  /**
+>>   * ufshcd_memory_alloc - allocate memory for host memory space data
+>> structures
+>>   * @hba: per adapter instance
+>
+>
+>
