@@ -1,8 +1,8 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 11/17] hpsa: factor out tail calls to next_command() in
-	process_(non)indexed_cmd()
-Date: Tue, 01 May 2012 11:43:01 -0500
-Message-ID: <20120501164301.11705.23182.stgit@beardog.cce.hp.com>
+Subject: [PATCH 05/17] hpsa: do not read from controller unnecessarily in
+	completion code
+Date: Tue, 01 May 2012 11:42:30 -0500
+Message-ID: <20120501164230.11705.50818.stgit@beardog.cce.hp.com>
 References: <20120501163819.11705.10299.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,88 +16,33 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-This is in order to smooth the way for upcoming changes to allow use of
-multiple reply queues for command completions.
+MSI/MSI-X interrupts can't race the DMA completion they are communicating
+so no need to read from controller to flush the DMA to the host if
+MSI or MSI-X interrupts are being used.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-Signed-off-by: Matt Gates <matthew.gates@hp.com>
 ---
- drivers/scsi/hpsa.c |   30 +++++++++++++++---------------
- 1 files changed, 15 insertions(+), 15 deletions(-)
+ drivers/scsi/hpsa.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3eda5f7..7bf0327 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3379,22 +3379,21 @@ static inline u32 hpsa_tag_discard_error_bits(struct ctlr_info *h, u32 tag)
- }
- 
- /* process completion of an indexed ("direct lookup") command */
--static inline u32 process_indexed_cmd(struct ctlr_info *h,
-+static inline void process_indexed_cmd(struct ctlr_info *h,
- 	u32 raw_tag)
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 7b28d54..48f7812 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -258,12 +258,12 @@ static unsigned long SA5_performant_completed(struct ctlr_info *h)
  {
- 	u32 tag_index;
- 	struct CommandList *c;
+ 	unsigned long register_value = FIFO_EMPTY;
  
- 	tag_index = hpsa_tag_to_index(raw_tag);
--	if (bad_tag(h, tag_index, raw_tag))
--		return next_command(h);
--	c = h->cmd_pool + tag_index;
--	finish_cmd(c);
--	return next_command(h);
-+	if (!bad_tag(h, tag_index, raw_tag)) {
-+		c = h->cmd_pool + tag_index;
-+		finish_cmd(c);
-+	}
- }
- 
- /* process completion of a non-indexed command */
--static inline u32 process_nonindexed_cmd(struct ctlr_info *h,
-+static inline void process_nonindexed_cmd(struct ctlr_info *h,
- 	u32 raw_tag)
- {
- 	u32 tag;
-@@ -3404,11 +3403,10 @@ static inline u32 process_nonindexed_cmd(struct ctlr_info *h,
- 	list_for_each_entry(c, &h->cmpQ, list) {
- 		if ((c->busaddr & 0xFFFFFFE0) == (tag & 0xFFFFFFE0)) {
- 			finish_cmd(c);
--			return next_command(h);
-+			return;
- 		}
- 	}
- 	bad_tag(h, h->nr_cmds + 1, raw_tag);
--	return next_command(h);
- }
- 
- /* Some controllers, like p400, will give us one interrupt
-@@ -3483,10 +3481,11 @@ static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id)
- 	while (interrupt_pending(h)) {
- 		raw_tag = get_next_completion(h);
- 		while (raw_tag != FIFO_EMPTY) {
--			if (hpsa_tag_contains_index(raw_tag))
--				raw_tag = process_indexed_cmd(h, raw_tag);
-+			if (likely(hpsa_tag_contains_index(raw_tag)))
-+				process_indexed_cmd(h, raw_tag);
- 			else
--				raw_tag = process_nonindexed_cmd(h, raw_tag);
-+				process_nonindexed_cmd(h, raw_tag);
-+			raw_tag = next_command(h);
- 		}
- 	}
- 	spin_unlock_irqrestore(&h->lock, flags);
-@@ -3503,10 +3502,11 @@ static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id)
- 	h->last_intr_timestamp = get_jiffies_64();
- 	raw_tag = get_next_completion(h);
- 	while (raw_tag != FIFO_EMPTY) {
--		if (hpsa_tag_contains_index(raw_tag))
--			raw_tag = process_indexed_cmd(h, raw_tag);
-+		if (likely(hpsa_tag_contains_index(raw_tag)))
-+			process_indexed_cmd(h, raw_tag);
- 		else
--			raw_tag = process_nonindexed_cmd(h, raw_tag);
-+			process_nonindexed_cmd(h, raw_tag);
-+		raw_tag = next_command(h);
- 	}
- 	spin_unlock_irqrestore(&h->lock, flags);
- 	return IRQ_HANDLED;
+-	/* flush the controller write of the reply queue by reading
+-	 * outbound doorbell status register.
+-	 */
+-	register_value = readl(h->vaddr + SA5_OUTDB_STATUS);
+ 	/* msi auto clears the interrupt pending bit. */
+ 	if (!(h->msi_vector || h->msix_vector)) {
++		/* flush the controller write of the reply queue by reading
++		 * outbound doorbell status register.
++		 */
++		register_value = readl(h->vaddr + SA5_OUTDB_STATUS);
+ 		writel(SA5_OUTDB_CLEAR_PERF_BIT, h->vaddr + SA5_OUTDB_CLEAR);
+ 		/* Do a read in order to flush the write to the controller
+ 		 * (as per spec.)
