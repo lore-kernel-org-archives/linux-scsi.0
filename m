@@ -1,92 +1,90 @@
-From: jack_wang <jack_wang@usish.com>
-Subject: Re: Re: [PATCH] pm8001: support HDA (flashless) mode
-Date: Tue, 1 May 2012 09:10:29 +0800
-Message-ID: <201205010910286561490@usish.com>
-References: <420864BE-8542-4BD8-B3DB-FDA403D193F9@xyratex.com> <A60D2B04CB1E487D9D0371139484E1C2@usish.com.cn> <73464C75-47D9-4409-87C2-8DDD0CBD5C67@xyratex.com>,
-	<E53424C2-2CAE-43AA-81EE-0E7B44586C6F@xyratex.com>
-Reply-To: jack_wang <jack_wang@usish.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: pull request: linux-firmware: Update qla2xxx firmware files.
+Date: Tue, 01 May 2012 02:48:36 +0100
+Message-ID: <1335836916.8274.50.camel@deadeye>
+References: <alpine.WNT.2.00.1204271521300.1704@N5102REMCQXM4BS.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-JzWXQgJpq9gaE4wlFE3B"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:57434 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751755Ab2EABK3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Apr 2012 21:10:29 -0400
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:45912 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757762Ab2EABsq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Apr 2012 21:48:46 -0400
+In-Reply-To: <alpine.WNT.2.00.1204271521300.1704@N5102REMCQXM4BS.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, lindar_liu <lindar_liu@usish.com>, crystal_yu <crystal_yu@usish.com>, john_gong <john_gong@usish.com>
+To: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: dwmw2@infradead.org, andrew.vasquez@qlogic.com, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-SGkgTWFyaywNCg0KWWVzLCBJIHRoaW5rIHRoaXMgc2hvdWxkIGJlIGZpbmUsIHlvdSBjYW4gYWRk
-IGJ5IHJldmlld2VkLWJ5IGF0IHRoZSB0YWtlMi4NCg0KVGhhbmtzIGFuZCByZWdhcmRzIQ0KDQoN
-Cg0KLS0tLS0tLS0tLS0tLS0NCmphY2tfd2FuZw0KPlVwb24gZnVydGhlciBpbnZlc3RpZ2F0aW9u
-IG9mIHRoZSBkb2N1bWVudGF0aW9uLCBiaXQgWzJdICgweDA0KSBpcyB0aGUgRm9yY2UgSERBIG1v
-ZGUsIGJ1dCB0aGUgZmxhc2hsZXNzIG9wZXJhdGlvbnMgYXJlIGJpdCBbM10gKDB4MDgpIG1lYW5p
-bmcgRmlybXdhcmUgdG8gYmUgbG9hZGVkIGluIEhEQSBtb2RlLiBJIGV4cGVjdCBlaXRoZXIgU0VF
-UFJPTSBiaXQgc2V0IGlzIGVub3VnaC4NCj4NCj5YeXJhdGV4IGlzIE5PVCBzZXR0aW5nIHRoZSBT
-RUVQUk9NIGJpdHMgc28gdGhlIGZsYWdzIGFyZSAnaW5jb3JyZWN0JyBhbmQgYSB2YWx1ZSBvZiBa
-ZXJvLCB5ZXQgdGhlIGhhcmR3YXJlIGlzIGluLWZhY3QgaW4gSERBLW1vZGUgYmVjYXVzZSBvZiB0
-aGUgbGFjayBvZiBmbGFzaCwgc28gdGhlIG1waV91bmluaXRfY2hlY2soKSBzdGlsbCBtYWtlcyBs
-b2FkcyBvZiBzZW5zZSB0byBjYXB0dXJlIHRoaXMgc3RhdGUgYW5kIGVuZ2luZWVyIG91cnNlbHZl
-cyBvdXQgb2YgdGhhdCBwcm9ibGVtLg0KPg0KPkphY2ssIHdvdWxkIHRoZSBmb2xsb3dpbmcgdHJh
-aWxpbmcgZnJhZ21lbnQgdG8gcmVwbGFjZSB0aGUgc2l4IGxpbmVzIG9mIHRoZSBvbmUgeW91IG5v
-dGVkIGJlbG93IHJlc29sdmUgeW91ciBjb25jZXJuPyA6DQo+DQo+KwlyZXR1cm4gcG04MDAxX2hh
-LT5tYWluX2NmZ190YmwuaGRhX21vZGVfZmxhZyAmIDB4QzsNCj4NCj5JZiBzbywgSSB3aWxsICd0
-YWtlMicgdGhlIHBhdGNoIHdpdGggdGhpcyBjaGFuZ2UgYXMgSSBoYXZlIG5vdCBzZWVuIGFueSBv
-dGhlciByZXZpZXdzLg0KPg0KPlRoYW5rcyBmb3IgdGhlIGV4Y2VsbGVudCBjYXRjaC4NCj4NCj5T
-aW5jZXJlbHkgLS0gTWFyayBTYWx5enluDQo+DQo+T24gQXByIDMwLCAyMDEyLCBhdCA5OjQ5IEFN
-LCBNYXJrIFNhbHl6eW4gd3JvdGU6DQo+DQo+PiBZb3UgYXJlIHJpZ2h0IC4uLiBob3dldmVyIHRo
-aXMgY29kZSBpcyAnbmV2ZXIgcmVhY2hlZCcgc2luY2UgbXBpX3VuaW5pdF9jaGVjaygpIGdlbmVy
-YWxseSBmYWlscyBiZWZvcmUgdGhpcyBpbiB0aGUgY2hpcF9pbl9oZGFfbW9kZSBzZXQgb2YgdGVz
-dHMuDQo+PiANCj4+IEkgaW5zdHJ1bWVudGVkIHVwLCBvbiBvdXIgSERBIG1vZGUgY2hpcCwgd2Ug
-YXJlIHNlZWluZyBhIHZhbHVlIG9mIFpFUk8gaW4gTUFJTl9IREFfRkxBR1NfT0ZGU0VUIC4uLiBB
-aGgsIHRoZSB3b3JsZCBvZiBpbml0aWFsaXppbmcgaGFyZHdhcmUgdGhhdCBpcyBpbiBhbiBpbmRl
-dGVybWluYXRlIChjb2RlIG5vdCBydW5uaW5nKSBzdGF0ZSAuLi4NCj4+IA0KPj4gLS0gTWFyaw0K
-Pj4gDQo+PiBPbiBBcHIgMjgsIDIwMTIsIGF0IDI6MDcgQU0sIEphY2sgV2FuZyB3cm90ZToNCj4+
-IA0KPj4+IA0KPj4+ICsJZGF0YSA9IHBtODAwMV9tcjMyKA0KPj4+ICsJCXBtODAwMV9oYS0+bWFp
-bl9jZmdfdGJsX2FkZHIsDQo+Pj4gKwkJcG04MDAxX2hhLT5tYWluX2NmZ190YmwuaGRhX21vZGVf
-ZmxhZyk7DQo+Pj4gKwlQTTgwMDFfSU5JVF9EQkcocG04MDAxX2hhLA0KPj4+ICsJCXBtODAwMV9w
-cmludGsoIipNQUlOX0hEQV9GTEFHUyA9IDB4JXhcbiIsIGRhdGEpKTsNCj4+PiArCXJldHVybiBk
-YXRhICYgMHg0Ow0KPj4+IA0KPj4+IEhlcmUgc2VlbXMgd3JvbmcsIHlvdSBtYXkgd2FudCB0byBj
-aGVjayB0aGUgZm9yY2UgaGRhIGJpdD8gU28geW91IG5lZWQgdG8NCj4+PiByZWFkIG9mZnNldCAj
-ZGVmaW5lIE1BSU5fSERBX0ZMQUdTX09GRlNFVAkJMHg4NC8qIERXT1JEIDB4MjEgKi8NCj4+PiAN
-Cj4+PiBKYWNrDQo+Pj4gDQo+Pj4gDQo+Pj4+IA0KPj4+PiBUaGUgcG04MDAxIGNhbiBiZSBkZWxp
-dmVyZWQgYXMgYSBzdGFuZGFsb25lIHByb2R1Y3Qgd2l0aCBmbGFzaC1wcm9ncmFtbWVkDQo+Pj4+
-IGZpcm13YXJlIGltYWdlcywgb3Igd2l0aG91dCB0aGUgZmxhc2ggcHJlc2VudCByZXF1aXJpbmcg
-dGhlIGRyaXZlciB0bw0KPj4+IHVwbG9hZA0KPj4+PiB0aGUgaW1hZ2VzIGludG8gdGhlIGNoaXAn
-cyBSQU0gYW5kIHRoZW4gcnVuLiBUaGlzIGlzIGNhbGxlZCBIREEgbW9kZS4NCj4+Pj4gDQo+Pj4+
-IFdlIGFkZCBzdXBwb3J0IGZvciB0aGlzIGZpcm13YXJlIHVwbG9hZCBpbiB0aGUgZW5jbG9zZWQg
-cGF0Y2guIFdlIHRyeSBzb21lDQo+Pj4+IGJhc2ljIGluaXRpYWxpemF0aW9uIGNoZWNrcyBvZiB0
-aGUgRmlybXdhcmUsIGFuZCBpZiBpdCBhcHBlYXJzIGRlYWQsIHdlDQo+Pj4gbWFrZQ0KPj4+PiB0
-aGUgYXNzdW1wdGlvbiB0aGUgYWRhcHRlciBtdXN0IGluLWZhY3QgYmUgaGFsdGVkIGluIHRoaXMg
-SERBIG1vZGUuIFRoZQ0KPj4+PiBGaXJtd2FyZSBpbWFnZXMgdGhlbXNlbHZlcyBoYXZlIG5vdCBi
-ZWVuIGNsZWFyZWQgZm9yIG9wZW4tcmVsZWFzZSBieSBQTUMsDQo+Pj4gYnV0DQo+Pj4+IHRoZXkg
-YXJlIGF2YWlsYWJsZSBpbiBPcGVuU29sYXJpcyA8aGludCBoaW50Pi4gUE1DJ3MgcmF0aW9uYWxp
-emF0aW9uIGZvcg0KPj4+IG5vdA0KPj4+PiB3YW50aW5nIGFuIG9wZW4tcmVsZWFzZSBvZiB0aGUg
-RmlybXdhcmUgSW1hZ2VzIGlzIHRoYXQgdGhleSBkbyBub3Qgd2FudCB0bw0KPj4+PiB0YWtlIHN1
-cHBvcnQgY2FsbHMgZXhjZXB0IGZyb20gcGF5aW5nIE9FTXMgKHN1Y2ggYXMgWHlyYXRleCkgdGhh
-dCBhcmUNCj4+PiBlbWJlZGRpbmcNCj4+Pj4gUE1DIHByb2R1Y3QgaW50byB0aGUgbW90aGVyYm9h
-cmRzIGFuZCB0aHVzIG1heSBoYXZlIGEgdGVzdGVkIGNvbWJpbmF0aW9uDQo+Pj4gb2YNCj4+Pj4g
-RmlybXdhcmUgYW5kIEhhcmR3YXJlLiBQbGVhc2UgcmVzcGVjdCB0aGlzIHNlbnRpbWVudC4gSW1h
-Z2VzIGFyZSBleHBlY3RlZA0KPj4+IGluOg0KPj4+PiANCj4+Pj4gL2xpYi9maXJtd2FyZS9hYXAx
-aW1nLmJpbg0KPj4+PiAvbGliL2Zpcm13YXJlL2lsYWltZy5iaW4NCj4+Pj4gL2xpYi9maXJtd2Fy
-ZS9pb3BpbWcuYmluDQo+Pj4+IC9saWIvZmlybXdhcmUvaXN0cmltZy5iaW4NCj4+Pj4gDQo+Pj4+
-IHVzaW5nIHRoZSBleGFjdCBzYW1lIG5hbWluZyBjb252ZW50aW9uIGFzIFBNQyBhbmQgaW4gT3Bl
-blNvbGFyaXMgKGFuZCBpdHMNCj4+Pj4gZm9sbG93b24gY2hpbGRyZW4pIGZvciB0aGVzZSBpbWFn
-ZSBmaWxlcy4NCj4+Pj4gDQo+Pj4+IFNpZ25lZC1vZmYtYnk6IE1hcmsgU2FseXp5biA8bWFya19z
-YWx5enluQHh5cmF0ZXguY29tPg0KPj4+PiANCj4+Pj4gZHJpdmVycy9zY3NpL3BtODAwMS9wbTgw
-MDFfaHdpLmMgIHwgIDU4NA0KPj4+PiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-Ky0tLQ0KPj4+PiBkcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9od2kuaCAgfCAgIDM3ICsrDQo+
-Pj4+IGRyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2luaXQuYyB8ICAgMzAgKw0KPj4+PiBkcml2
-ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMuaCAgfCAgICAzDQo+Pj4+IDQgZmlsZXMgY2hhbmdl
-ZCwgNjEzIGluc2VydGlvbnMoKyksIDQxIGRlbGV0aW9ucygtKQ0KPj4+PiANCj4+Pj4gUGxlYXNl
-IHNlZSBlbmNsb3NlZCBhdHRhY2htZW50DQo+Pj4gDQo+Pj4gDQo+PiANCj4NCj4tLQ0KPlRvIHVu
-c3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51
-eC1zY3NpIiBpbg0KPnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJu
-ZWwub3JnDQo+TW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9t
-YWpvcmRvbW8taW5mby5odG1sDQo+DQo+X19fX19fX19fXyBJbmZvcm1hdGlvbiBmcm9tIEVTRVQg
-Tk9EMzIgQW50aXZpcnVzLCB2ZXJzaW9uIG9mIHZpcnVzIHNpZ25hdHVyZSBkYXRhYmFzZSA1NjU5
-ICgyMDEwMTEyOSkgX19fX19fX19fXw0KPg0KPlRoZSBtZXNzYWdlIHdhcyBjaGVja2VkIGJ5IEVT
-RVQgTk9EMzIgQW50aXZpcnVzLg0KPg0KPmh0dHA6Ly93d3cuZXNldC5jb20NCj4NCj4NCj4=
 
+--=-JzWXQgJpq9gaE4wlFE3B
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2012-04-27 at 15:41 -0400, Chad Dupuis wrote:
+> Hi Ben, David,
+>=20
+> Can you please pull the following patches from the "for_upstream" branch
+> of the repo below to update the ql2300_fw.bin, ql2322_fw.bin,
+> ql2400_fw.bin and ql2500_fw.bin files?
+>=20
+> git://avgit01.qlogic.org/linux-firmware for_upstream
+
+That hostname isn't resolvable here and now.
+
+Ben.
+
+> Chad Dupuis (4):
+>    qla2xxx: Update ql2300_fw.bin to version 3.03.28.
+>    qla2xxx: Update ql2322_fw.bin to version 3.03.28.
+>    qla2xxx: Update ql2400_fw.bin to version 5.06.05.
+>    qla2xxx: Update ql2500_fw.bin to version 5.06.05.
+>=20
+>   WHENCE        |    8 ++++----
+>   ql2300_fw.bin |  Bin 123170 -> 125252 bytes
+>   ql2322_fw.bin |  Bin 132978 -> 136038 bytes
+>   ql2400_fw.bin |  Bin 228056 -> 255320 bytes
+>   ql2500_fw.bin |  Bin 199776 -> 252636 bytes
+>   5 files changed, 4 insertions(+), 4 deletions(-)
+>=20
+> Thanks,
+> Chad
+>=20
+> This message and any attached documents contain information from QLogic C=
+orporation or its wholly-owned subsidiaries that may be confidential. If yo=
+u are not the intended recipient, you may not read, copy, distribute, or us=
+e this information. If you have received this transmission in error, please=
+ notify the sender immediately by reply e-mail and then delete this message=
+.
+>=20
+>=20
+
+--=20
+Ben Hutchings
+Design a system any fool can use, and only a fool will want to use it.
+
+--=-JzWXQgJpq9gaE4wlFE3B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAT59A9Oe/yOyVhhEJAQrDqg/+OATiOHZZwspqYlrjlfvEn/IdbRE33pT1
+WNDp0R0s7jqzKliyPO+drNX7nNIttZbKKXDwg96aCQN3LXIyp4laXqb6/nfIs4gA
+ubM6GCk9pH6DljbYpsfw5doj5QnzzHJkmCDwP6ulKp0x3cqcNPxd63OwZ2PYoTLp
+AWybPjAcN0Po7Lv/sE8CQWAE2hH4xvv9SE1wlGjZFovyN1ypgQ4OJDMe37ItHnSs
+vp55Qo1ekKQDqg4xNL1HzLyWbbvI4AxfVNRsoBAa2DvnTpf2vq2So5Vg2CRdCt7V
+nuEsR963QmsQQ+u3pmmjytDwmrvuLUCz8cidhAdWx3Sg6txCXyP0czhTnHL8TXIj
+DOv4vewZnAD6AEn8PnweYMA+znh3xIOv2AVDfeqWAMQO1GleFLCvatyzR/5yngFf
+yLSDejIuUajdPlslCVwtxNliPSKiFxWS+Q337LhJw3hBH0RzqpPWpnWFwjNZdrVu
+Hmbrxi9rrNPQLesJ3ZWf0U+reg4+G1sLymadiT7C4Q9N5lvPemNBhfcWP3yJCUSU
+R1pgX6Ps7sVJh+VShRs6PVenWcD+ynNsjOba0i6VQuTG3dxm6DxF1553HsQjsmQe
+K04NqQG0JTKYul731H+ar0vgDa0Nqa5SpvFQgsm1q7PTTt2tFMpqIqaxGqqgYGL8
+EJiIwujbB9s=
+=9Vbn
+-----END PGP SIGNATURE-----
+
+--=-JzWXQgJpq9gaE4wlFE3B--
