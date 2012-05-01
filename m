@@ -1,73 +1,68 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: pull request: linux-firmware: Update qla2xxx firmware files.
-Date: Mon, 30 Apr 2012 19:05:26 -0700
-Message-ID: <20120501020525.GE67085@plapa.qlogic.org>
-References: <alpine.WNT.2.00.1204271521300.1704@N5102REMCQXM4BS.qlogic.org>
- <1335836916.8274.50.camel@deadeye>
+From: Alex Shi <alex.shi@intel.com>
+Subject: Re: [PATCH] scsi/mpt2sas: remove unnecesscary preempt requirement
+ for MSIX
+Date: Tue, 01 May 2012 11:36:27 +0800
+Message-ID: <4F9F5A3B.3090905@intel.com>
+References: <1335594453-30679-1-git-send-email-alex.shi@intel.com> <A6888A6805518E4EA4AF7072A28264A6067E92EA43@inbmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from am1ehsobe005.messaging.microsoft.com ([213.199.154.208]:6812
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752588Ab2EACHi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Apr 2012 22:07:38 -0400
-Content-Disposition: inline
-In-Reply-To: <1335836916.8274.50.camel@deadeye>
+Received: from mga03.intel.com ([143.182.124.21]:57305 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751755Ab2EADgf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Apr 2012 23:36:35 -0400
+In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6067E92EA43@inbmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Chad Dupuis <chad.dupuis@qlogic.com>, "dwmw2@infradead.org" <dwmw2@infradead.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Mon, 30 Apr 2012, Ben Hutchings wrote:
+On 04/30/2012 01:29 PM, Nandigama, Nagalakshmi wrote:
 
-> On Fri, 2012-04-27 at 15:41 -0400, Chad Dupuis wrote:
-> > Hi Ben, David,
-> > 
-> > Can you please pull the following patches from the "for_upstream" branch
-> > of the repo below to update the ql2300_fw.bin, ql2322_fw.bin,
-> > ql2400_fw.bin and ql2500_fw.bin files?
-> > 
-> > git://avgit01.qlogic.org/linux-firmware for_upstream
+> Alex, 
+> I submitted this patch already. 
+
+
+Ok. that's fine.
+
 > 
-> That hostname isn't resolvable here and now.
-
-Ben,
-
-Actually, the forward-facing URL is actually:
-
-	git://git.qlogic.com/linux-firmware
-
-But...there seems to be a problem, as there's no A record for that
-server.
-
-We will let you know when we get that issue resolved.
-
-Thanks, AV
-
-> > Chad Dupuis (4):
-> >    qla2xxx: Update ql2300_fw.bin to version 3.03.28.
-> >    qla2xxx: Update ql2322_fw.bin to version 3.03.28.
-> >    qla2xxx: Update ql2400_fw.bin to version 5.06.05.
-> >    qla2xxx: Update ql2500_fw.bin to version 5.06.05.
-> > 
-> >   WHENCE        |    8 ++++----
-> >   ql2300_fw.bin |  Bin 123170 -> 125252 bytes
-> >   ql2322_fw.bin |  Bin 132978 -> 136038 bytes
-> >   ql2400_fw.bin |  Bin 228056 -> 255320 bytes
-> >   ql2500_fw.bin |  Bin 199776 -> 252636 bytes
-> >   5 files changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > Thanks,
-> > Chad
-> > 
-> > This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
-> > 
-> > 
+> James, request you to pick up the patch that I previously submitted for fixing this issue. Attaching the patch that I submitted previously.
 > 
-> -- 
-> Ben Hutchings
-> Design a system any fool can use, and only a fool will want to use it.
-
+> 
+> Regards,
+> Nagalakshmi
+> 
+> 
+> -----Original Message-----
+> From: Alex Shi [mailto:alex.shi@intel.com] 
+> Sent: Saturday, April 28, 2012 11:58 AM
+> To: JBottomley@parallels.com; Nandigama, Nagalakshmi
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; alex.shi@intel.com
+> Subject: [PATCH] scsi/mpt2sas: remove unnecesscary preempt requirement for MSIX
+> 
+> smp_processor_id() need used in preempt safe ENV. Otherwise, the
+> cpu may be preempted and run on other cpus. But here, we don't care much
+> the specific CPU which handler the MSI, so just replace it by
+> raw_smp_processor_id() to avoid preempt debug warning.
+> 
+> Signed-off-by: Alex Shi <alex.shi@intel.com>
+> ---
+>  drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> index 8a59a77..3f518ba 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -1785,7 +1785,7 @@ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
+>  static inline u8
+>  _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
+>  {
+> -	return ioc->cpu_msix_table[smp_processor_id()];
+> +	return ioc->cpu_msix_table[raw_smp_processor_id()];
+>  }
+>  
+>  /**
 
 
