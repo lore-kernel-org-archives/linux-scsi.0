@@ -1,111 +1,83 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/2] [SCSI] ufs: add SCSI host lock push-down for ufs.
-Date: Tue, 01 May 2012 21:59:44 +0100
-Message-ID: <1335905984.2996.20.camel@dabdike>
-References: <1335882686-16071-1-git-send-email-linkinjeon@gmail.com>
+From: Andi Shyti <andi.shyti@gmail.com>
+Subject: Re: [PATCH 07/17] hpsa: do not give up retry of driver cmds after
+ only 3 retries
+Date: Tue, 1 May 2012 23:39:34 +0200
+Message-ID: <20120501213934.GD11302@andi>
+References: <20120501163819.11705.10299.stgit@beardog.cce.hp.com>
+ <20120501164240.11705.10308.stgit@beardog.cce.hp.com>
+ <20120501172634.GA11302@andi>
+ <20120501182011.GS11802@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34568 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751868Ab2EAU7y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2012 16:59:54 -0400
-In-Reply-To: <1335882686-16071-1-git-send-email-linkinjeon@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120501182011.GS11802@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: scameron@beardog.cce.hp.com
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org
 
-On Tue, 2012-05-01 at 10:31 -0400, Namjae Jeon wrote:
-> SCSI host lock push-down patch is not applied in ufs host driver yet.
-> After adding it, I tried to remove unneeded spin lock in queuecommand also.
+Hi Steve,
 
-This really isn't the correct thing: you're increasing the lock coverage
-not decreasing it.
+Thanks for the walk-through, but still some doubts...
 
-In the old way, ->queuecommand() was called locked.  DEF_SCSI_QCMD() was
-a macro we use to avoid converting all the previous methods from locked
-to unlocked (it simply acts as a bridge between the new way and the old
-way).
-
-In the new way we call ->queuecommand() unlocked and try only to take
-the lock when it's needed, if at all.  The current ufshcd_queuecommand()
-is correct because it only takes the lock when it needs it in
-ufshcd_send_command().  A lock push down into that routine might be
-possible, but since it's only a couple of bytes, probably not worth it.
-
-James
-
-
-> Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c |   20 ++++++++++----------
->  1 files changed, 10 insertions(+), 10 deletions(-)
+On Tue, May 01, 2012 at 01:20:11PM -0500, scameron@beardog.cce.hp.com wrote:
+> On Tue, May 01, 2012 at 07:26:34PM +0200, Andi Shyti wrote:
+> > >  
+> > >  	do {
+> > >  		memset(c->err_info, 0, sizeof(*c->err_info));
+> > >  		hpsa_scsi_do_simple_cmd_core(h, c);
+> > >  		retry_count++;
+> > > +		if (retry_count > 3) {
+> > > +			msleep(backoff_time);
+> > 
+> > for 10ms isn't it better to avoid using msleep?
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 3cb7a08..a134738 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -658,23 +658,23 @@ static void ufshcd_compose_upiu(struct ufshcd_lrb *lrbp)
->  }
->  
->  /**
-> - * ufshcd_queuecommand - main entry point for SCSI requests
-> + * ufshcd_queuecommand_lck - main entry point for SCSI requests
->   * @cmd: command from SCSI Midlayer
->   * @done: call back function
->   *
->   * Returns 0 for success, non-zero in case of failure
->   */
-> -static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
-> +static int
-> +ufshcd_queuecommand_lck(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
->  {
->  	struct ufshcd_lrb *lrbp;
->  	struct ufs_hba *hba;
-> -	unsigned long flags;
->  	int tag;
->  	int err = 0;
->  
-> -	hba = shost_priv(host);
-> +	hba = shost_priv(scp->device->host);
->  
-> -	tag = cmd->request->tag;
-> +	tag = scp->request->tag;
->  
->  	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
->  		err = SCSI_MLQUEUE_HOST_BUSY;
-> @@ -683,11 +683,11 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
->  
->  	lrbp = &hba->lrb[tag];
->  
-> -	lrbp->cmd = cmd;
-> +	lrbp->cmd = scp;
->  	lrbp->sense_bufflen = SCSI_SENSE_BUFFERSIZE;
-> -	lrbp->sense_buffer = cmd->sense_buffer;
-> +	lrbp->sense_buffer = scp->sense_buffer;
->  	lrbp->task_tag = tag;
-> -	lrbp->lun = cmd->device->lun;
-> +	lrbp->lun = scp->device->lun;
->  
->  	lrbp->command_type = UTP_CMD_TYPE_SCSI;
->  
-> @@ -698,13 +698,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
->  		goto out;
->  
->  	/* issue command to the controller */
-> -	spin_lock_irqsave(hba->host->host_lock, flags);
->  	ufshcd_send_command(hba, tag);
-> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
->  out:
->  	return err;
->  }
->  
-> +static DEF_SCSI_QCMD(ufshcd_queuecommand);
-> +
->  /**
->   * ufshcd_memory_alloc - allocate memory for host memory space data structures
->   * @hba: per adapter instance
+> [...] 
+> > > +			if (backoff_time < 1000)
+> > > +				backoff_time *= 2;
+> 
+> Eh, maybe.  from Documentation/timers-howto.txt
+> 
+>                         msleep(1~20) may not do what the caller intends, and
+>                         will often sleep longer (~20 ms actual sleep for any
+>                         value given in the 1~20ms range). In many cases this
+>                         is not the desired behavior.
+> 
+> Sleeping longer (~20ms instead of 10ms) in this instance is fine, as I don't
+> really care too much exactly how long it sleeps, and it backs off to up to
+> 1280ms eventually anyway.  The idea is, "wait a bit, and retry, and then if
+> that doesn't work, wait twice as long, and retry, etc."  *exactly* how long
+> "a bit" is is not super important.  I could change the initial back_off time
+> to 20 or 30 to satisfy the letter of the advice in Documentation/timers-howto.txt,
+> if doing so is important.
 
+No, you're right, it should not really matter, but here in the
+worst case you put the driver on sleep for almost 22 seconds,
+that is a huge difference compared to the original
+implementation.
+ 
+> This is kind of a corner case of a corner case, I don't expect
+> things will ordinarily end up waiting that long, because normally
+> one of the 1st 3 retries will succeed.  I just wanted to make it 
+> a little more robust and not just give up immediately if the 3
+> initial retries don't succeed, the specific number of retries,
+> wait times, etc, I just made up.
 
+Premising that I don't know the device, therefore I could be
+totally wrong, if you don't expect things to wait so long, why not
+to decrease the MAX_DRIVER_CMD_RETRIES and sleep increasingly (as
+you did) but for shorter period?
+
+Andi
+
+> It still does eventually give up
+> though, and then probably doesn't do anything good after that
+> (same as current behavior, just somewhat less likely to get to
+> that point.)  I'm not actually aware of any complaints of the 
+> retries failing though (apart from the complaint that prompted
+> the patch prior to this one, that we didn't retry on getting
+> SAM_STAT_BUSY.)
+> 
+> -- steve
+> 
