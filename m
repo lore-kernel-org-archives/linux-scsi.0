@@ -1,91 +1,82 @@
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH 2/2] [SCSI] ufs: add SCSI host lock push-down for ufs.
-Date: Tue,  1 May 2012 10:31:26 -0400
-Message-ID: <1335882686-16071-1-git-send-email-linkinjeon@gmail.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: [PATCH -next] scsi: fix qla2xxx printk format warnings
+Date: Tue, 01 May 2012 08:18:47 -0700
+Message-ID: <4F9FFED7.4060000@xenotime.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46675 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753045Ab2EAObl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2012 10:31:41 -0400
-Received: by pbbrp8 with SMTP id rp8so4465184pbb.19
-        for <linux-scsi@vger.kernel.org>; Tue, 01 May 2012 07:31:41 -0700 (PDT)
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:34208 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756601Ab2EAPS1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2012 11:18:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, jBottomley@parallels.com, akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com
 
-SCSI host lock push-down patch is not applied in ufs host driver yet.
-After adding it, I tried to remove unneeded spin lock in queuecommand also.
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
+Fix printk format warnings (from i386 build) by using %zu
+format specifier.  No warnings on i386 or x86_64.
+
+drivers/scsi/qla2xxx/qla_target.c:2951:5: warning: format '%lu' expects type 'long unsigned int', but argument 7 has type 'size_t'
+drivers/scsi/qla2xxx/tcm_qla2xxx.c:1564:3: warning: format '%lu' expects type 'long unsigned int', but argument 2 has type 'unsigned int'
+drivers/scsi/qla2xxx/tcm_qla2xxx.c:1570:2: warning: format '%lu' expects type 'long unsigned int', but argument 2 has type 'unsigned int'
+drivers/scsi/qla2xxx/tcm_qla2xxx.c:1576:3: warning: format '%lu' expects type 'long unsigned int', but argument 2 has type 'unsigned int'
+drivers/scsi/qla2xxx/tcm_qla2xxx.c:1584:2: warning: format '%lu' expects type 'long unsigned int', but argument 2 has type 'unsigned int'
+
+
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Cc:	Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc:	linux-driver@qlogic.com
 ---
- drivers/scsi/ufs/ufshcd.c |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c  |    2 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3cb7a08..a134738 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -658,23 +658,23 @@ static void ufshcd_compose_upiu(struct ufshcd_lrb *lrbp)
+--- linux-next-20120430.orig/drivers/scsi/qla2xxx/qla_target.c
++++ linux-next-20120430/drivers/scsi/qla2xxx/qla_target.c
+@@ -2948,7 +2948,7 @@ static int qla_tgt_set_data_offset(struc
+ 			sg_srr_start = sg;
+ 			ql_dbg(ql_dbg_tgt_sgl, cmd->vha, 0xe307, "Found matching sg[%d],"
+ 				" using %p as sg_srr_start, and using first_offset:"
+-				" %lu\n", i, sg, first_offset);
++				" %zu\n", i, sg, first_offset);
+ 			break;
+ 		}
+ 		tmp += sg->length;
+--- linux-next-20120430.orig/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ linux-next-20120430/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1561,27 +1561,27 @@ static int tcm_qla2xxx_init_lport(struct
+ 	lport->lport_fcport_map = vmalloc(
+ 			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
+ 	if (!lport->lport_fcport_map) {
+-		pr_err("Unable to allocate lport_fcport_map of %lu"
++		pr_err("Unable to allocate lport_fcport_map of %zu"
+ 			" bytes\n", sizeof(struct tcm_qla2xxx_fc_domain) * 256);
+ 		return -ENOMEM;
+ 	}
+ 	memset(lport->lport_fcport_map, 0,
+ 			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
+-	pr_debug("qla2xxx: Allocated lport_fcport_map of %lu bytes\n",
++	pr_debug("qla2xxx: Allocated lport_fcport_map of %zu bytes\n",
+ 			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
+ 
+ 	lport->lport_loopid_map = vmalloc(sizeof(struct tcm_qla2xxx_fc_loopid) *
+ 				65536);
+ 	if (!lport->lport_loopid_map) {
+ 		pr_err("Unable to allocate lport->lport_loopid_map"
+-			" of %lu bytes\n", sizeof(struct tcm_qla2xxx_fc_loopid)
++			" of %zu bytes\n", sizeof(struct tcm_qla2xxx_fc_loopid)
+ 			* 65536);
+ 		vfree(lport->lport_fcport_map);
+ 		return -ENOMEM;
+ 	}
+ 	memset(lport->lport_loopid_map, 0, sizeof(struct tcm_qla2xxx_fc_loopid)
+ 			* 65536);
+-	pr_debug("qla2xxx: Allocated lport_loopid_map of %lu bytes\n",
++	pr_debug("qla2xxx: Allocated lport_loopid_map of %zu bytes\n",
+ 			sizeof(struct tcm_qla2xxx_fc_loopid) * 65536);
+ 	return 0;
  }
- 
- /**
-- * ufshcd_queuecommand - main entry point for SCSI requests
-+ * ufshcd_queuecommand_lck - main entry point for SCSI requests
-  * @cmd: command from SCSI Midlayer
-  * @done: call back function
-  *
-  * Returns 0 for success, non-zero in case of failure
-  */
--static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
-+static int
-+ufshcd_queuecommand_lck(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
- {
- 	struct ufshcd_lrb *lrbp;
- 	struct ufs_hba *hba;
--	unsigned long flags;
- 	int tag;
- 	int err = 0;
- 
--	hba = shost_priv(host);
-+	hba = shost_priv(scp->device->host);
- 
--	tag = cmd->request->tag;
-+	tag = scp->request->tag;
- 
- 	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
- 		err = SCSI_MLQUEUE_HOST_BUSY;
-@@ -683,11 +683,11 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 
- 	lrbp = &hba->lrb[tag];
- 
--	lrbp->cmd = cmd;
-+	lrbp->cmd = scp;
- 	lrbp->sense_bufflen = SCSI_SENSE_BUFFERSIZE;
--	lrbp->sense_buffer = cmd->sense_buffer;
-+	lrbp->sense_buffer = scp->sense_buffer;
- 	lrbp->task_tag = tag;
--	lrbp->lun = cmd->device->lun;
-+	lrbp->lun = scp->device->lun;
- 
- 	lrbp->command_type = UTP_CMD_TYPE_SCSI;
- 
-@@ -698,13 +698,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		goto out;
- 
- 	/* issue command to the controller */
--	spin_lock_irqsave(hba->host->host_lock, flags);
- 	ufshcd_send_command(hba, tag);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
- out:
- 	return err;
- }
- 
-+static DEF_SCSI_QCMD(ufshcd_queuecommand);
-+
- /**
-  * ufshcd_memory_alloc - allocate memory for host memory space data structures
-  * @hba: per adapter instance
--- 
-1.7.5.4
-
