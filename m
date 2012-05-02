@@ -1,67 +1,51 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] scsi: Silence unnecessary warnings about ioctl to partition
-Date: Wed, 02 May 2012 08:23:43 -0400 (EDT)
-Message-ID: <0fa65eaa-cdb1-42ed-ab00-aa491402ec5a@zmail13.collab.prod.int.phx2.redhat.com>
-References: <20120502130531.4b7d98fa@pyramind.ukuu.org.uk>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] scsi: Silence unnecessary warnings about ioctl to
+ partition
+Date: Wed, 2 May 2012 15:51:23 +0200
+Message-ID: <20120502135123.GF16976@quack.suse.cz>
+References: <1335953452-10460-1-git-send-email-jack@suse.cz>
+ <4FA1092E.9090603@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120502130531.4b7d98fa@pyramind.ukuu.org.uk>
+Content-Disposition: inline
+In-Reply-To: <4FA1092E.9090603@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Paolo Bonzini <pbonzini@redhat.com>
 Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-> > not inventing anything, the old ATA subsystem is already blocking
-> > most
-> > "dangerous" ioctls for partitions, even if you have CAP_SYS_RAWIO.
-> 
-> It blocked a few by default to protect hardware. It's a tricky
-> tradeoff, which is quite different to this.
-
-I agree it's tricky.
-
-> > Now of course CAP_SYS_RAWIO lets you use ioperm or iopl, but that's
-> > a separate issue and only limited to x86.
-> 
-> Ie only 99.99% of the systems running desktop/server Linux OS
-> designs.
-
-You can still block those in other ways, seccompv2 could be one.
-
-> > Almost any capability can be abused to bypass checks.  True,
-> > CAP_SYS_RAWIO is especially good at that, but still you can try.
-> 
-> Why try - you are seeking to arbitarily impose your own worldview on
-> the interface (and in doing so break back compatibility). The whole basis
-> of the Unix philosophy is that the OS shouldn't try and micromanage the
-> priviledged apps because that just leads to crap code.
-
-The whole point of capabilities, SELinux, etc. is micromanaging privileged
-apps.  Linux has gone beyond the Unix philosophy, it seems.
-
-Besides, privileged apps can and do use capabilities to micromanage
-themselves.  Sure, ioperm/iopl do mean that a compromised CAP_SYS_RAWIO app
-has free reins.  However, until that app is compromised, it may like to get
-help from the OS in making effective use of access control.
-
-> > > A process with CAP_SYS_RAWIO has total power. It's assumed to
-> > > know what it is doing. Trying to block it doing stuff like that simply
-> > > makes authors do them via different more crass methods.
+On Wed 02-05-12 12:15:10, Paolo Bonzini wrote:
+> Il 02/05/2012 12:10, Jan Kara ha scritto:
+> > Sometimes, warnings about ioctls to partition happen often enough that they
+> > form majority of the warnings in the kernel log and users complain. In some
+> > cases warnings are about ioctls such as SG_IO so it's not good to get rid of
+> > the warnings completely as they can ease debugging of userspace problems
+> > when ioctl is refused.
 > > 
-> > Getting appropriate permission on device nodes is less crass than
-> > abusing partition device nodes.
+> > Since I have seen warnings from lots of commands, including some proprietary
+> > userspace applications, I don't think disallowing the ioctls for processes
+> > with CAP_SYS_RAWIO will happen in the near future if ever. So lets just
+> > stop warning for processes with CAP_SYS_RAWIO for which ioctl is allowed.
 > 
-> Given a passed file handle how do you do that securely. Remember that
-> open /dev/foo while you have a handle on /dev/foo1 could open a
-> different disk if a hotplug has occurred.
+> NACK.  I would bet that all the warnings you've seen are for ioctl that
+> would have failed anyway with ENOTTY.
+  Actually, you would loose the bet ;) The customer was complaining about
+warning about SG_IO ioctl. Apparently some Veritas filesystem thread generates
+a *lot* of these (I don't know if they happen to do all the filesystem IO
+with SG_IO and I'm not sure I want to know ;). Given this I don't think we
+want to block SG_IO for CAP_SYS_RAWIO threads in the near future if ever...
 
-What is the exact use case for this, where you wouldn't have gotten an
-fd for /dev/foo in the first place?  And what command do you want to
-send to the disk?  The only "valid" case found in the wild was using
-SG_IO to send "SYNCHRONIZE CACHE", which is wrong anyway (does not
-flush the OS cache).  fdatasync could and should have been used instead.
+> The right fix has already been posted, we've been carrying it in RHEL
+> for over six months and not a single bug has been seen.
+  Your patch won't work for our customer because you still generate
+messages for SG_IO. Also I tend to side with Alan that I don't quite see
+the point in trying to restrict CAP_SYS_RAWIO threads and thus breaking the
+compatibility (if ioctls would be restricted for partitions from the
+beginning, then sure it seems like a cleaner choice). But I don't feel that
+strongly about it.
 
-Paolo
+									Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
