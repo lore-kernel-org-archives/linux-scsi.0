@@ -1,36 +1,26 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 43191] Syslog fills with messages about assuming drive cache
- when SD card not present
-Date: Thu, 3 May 2012 07:10:39 GMT
-Message-ID: <201205030710.q437AdMU009333@bugzilla.kernel.org>
-References: <bug-43191-11613@https.bugzilla.kernel.org/>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] scsi: Silence unnecessary warnings about ioctl to partition
+Date: Thu, 03 May 2012 09:47:21 +0200
+Message-ID: <4FA23809.2090905@redhat.com>
+References: <1335953452-10460-1-git-send-email-jack@suse.cz> <4FA1092E.9090603@redhat.com> <20120502115447.7dcc3a54@pyramind.ukuu.org.uk> <4FA11454.2010103@redhat.com> <20120502121208.3c19a9bc@pyramind.ukuu.org.uk> <4FA11963.3040007@redhat.com> <4FA18D33.3060607@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:53962 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755229Ab2ECHKj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2012 03:10:39 -0400
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q437AdRp009334
-	for <linux-scsi@vger.kernel.org>; Thu, 3 May 2012 07:10:39 GMT
-In-Reply-To: <bug-43191-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4FA18D33.3060607@teksavvy.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=43191
+Il 02/05/2012 21:38, Mark Lord ha scritto:
+>> >
+>> > Indeed, RHEL doesn't have the warning at all and blocks all ioctls
+>> > including SG_IO (and in the past six months nobody has complained that
+>> > something stopped working for them).  Never said the patch is perfect...
+> hdparm.
+> 
 
+Breaking "hdparm --write-sector /dev/sda1"?  I call it a security fix.
 
-
-
-
---- Comment #5 from Christian Kujau <lists@nerdbynature.de>  2012-05-03 07:10:38 ---
-Created an attachment (id=73164)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=73164)
-dmesg; lspci; lspci -v; lspci -vvv; cat /proc/scsi/scsi; lsmod
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Paolo
