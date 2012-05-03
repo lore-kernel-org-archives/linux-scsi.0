@@ -1,71 +1,40 @@
-From: "=?iso-8859-9?B?Qvz+cmEgQUxUQd4=?=" <busra@alternatifmedya.org>
-Subject: Haber Paketi Reklam Teklifi...
-Date: Wed, 2 May 2012 16:28:47 +0300
-Message-ID: <65661888d894210fed1092bc2f62a1ba@alternatifmedya.org>
-Reply-To: busra.alternatifmedya@gmail.com
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: [PATCH] scsi: Silence unnecessary warnings about ioctl to partition
+Date: Thu, 03 May 2012 08:40:59 -0400
+Message-ID: <4FA27CDB.2080103@teksavvy.com>
+References: <1335953452-10460-1-git-send-email-jack@suse.cz> <4FA1092E.9090603@redhat.com> <20120502115447.7dcc3a54@pyramind.ukuu.org.uk> <4FA11454.2010103@redhat.com> <20120502121208.3c19a9bc@pyramind.ukuu.org.uk> <4FA11963.3040007@redhat.com> <4FA18D33.3060607@teksavvy.com> <4FA23809.2090905@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-9
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 89-19-18-106.cizgi.net.tr ([89.19.18.106]:4890 "EHLO
-	mail.localhost.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753775Ab2ECMdT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2012 08:33:19 -0400
+Received: from ironport-out.teksavvy.com ([206.248.143.162]:23697 "EHLO
+	ironport-out.teksavvy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754983Ab2ECMlC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2012 08:41:02 -0400
+In-Reply-To: <4FA23809.2090905@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-Say=FDn Yetkili;
+On 12-05-03 03:47 AM, Paolo Bonzini wrote:
+> Il 02/05/2012 21:38, Mark Lord ha scritto:
+>>>>
+>>>> Indeed, RHEL doesn't have the warning at all and blocks all ioctls
+>>>> including SG_IO (and in the past six months nobody has complained that
+>>>> something stopped working for them).  Never said the patch is perfect...
+>> hdparm.
+>>
+> 
+> Breaking "hdparm --write-sector /dev/sda1"?  I call it a security fix.
 
-G=FCn=FCm=FCzde reklam t=FCm sekt=F6rler i=E7in vazge=E7ilmez bir unsur=
- olmu=FEtur.
-=46irmalar=FDn markala=FEma ve rakip firmalarla rekabet avantaj=FD sa=F0=
-lamas=FDnda =F6zellikle televizyon reklamlar=FDn=FDn faydalar=FD tart=FD=
-=FE=FDlmaz.
-Uygun fiyat avantaj=FDm=FDz=FD firman=FDzla payla=FEarak size, b=FCt=E7=
-enize uygun reklam ve tan=FDt=FDm se=E7enekleri sunuyorum.
+No, that would plain stupid on both our parts.  :)
+The --write-sector flag is allowed only for non-partitions by hdparm itself.
 
-1.HABERT=DCRK OPT(g=FCnd=FCz) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
-2.SAMANYOLU HABER PT(ak=FEam) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
-3.CNNTURK OPT(g=FCnd=FCz) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
-4.SKYTURK PT(ak=FEam) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
-5.NTV SPOR OPT(g=FCnd=FCz) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
-6.TGRT HABER PT(ak=FEam) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
-7.KANAL24 OPT(g=FCnd=FCz) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
-8.TRT HABER PT(ak=FEam) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
+But other flags commonly used by distros at boot time
+seem to be triggering the current in-kernel noise.
+Dunno which flags, I'm just ignoring them and waiting
+for the noise message to get reverted.
 
-Toplam Spot: 40 adet ku=FEak reklam.
-Toplam S=FCre: 320sn.
-Toplam B=FCt=E7e : 3.650 TL+KDV
+Cheers
 
-Prod=FCksiyon ve seslendirme firmam=FDz taraf=FDndan =FCcretsiz haz=FDr=
-lanmaktad=FDr.
-=DDstedi=F0iniz kanal ve b=FCt=E7eye g=F6re de size =F6zel planlamalar =
-olu=FEturabilirim.
-
-De=F0erlendirmelerinizi bekler, =DDyi =E7al=FD=FEmalar dilerim.
-
-Sayg=FDlar=FDmla...
-
-ALTERNAT=DDF MEDYA
-B=FC=FEra ALTA=DE
-Reklam Sat=FD=FE M=FCd=FCr=FC
-T:0216 459 0 444
-=46:0216 459 0 555
-busra@alternatifmedya.tv & busra.alternatifmedya@gmail.com
-
-Not: Mail almak istemiyorsan=FDz bu maili 'listenizden =E7=FDkmak istiy=
-orum' diye cevaplaman=FDz yeterlidir.
-
-
-
-
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
