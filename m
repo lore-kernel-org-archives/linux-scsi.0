@@ -1,209 +1,141 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH 3/3] qla2xxx: Don't create duplicate target sessions
-Date: Thu,  3 May 2012 12:43:00 -0700
-Message-ID: <1336074180-20577-4-git-send-email-roland@kernel.org>
-References: <1336074180-20577-1-git-send-email-roland@kernel.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1336074180-20577-1-git-send-email-roland@kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Arun Easi <arun.easi@qlogic.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Steve Hodgson <steve@purestorage.com>
+From: Joe Lawrence <jdl1291@gmail.com>
+Subject: NULL ptr in =?utf-8?b?c2NzaV9wcmVwX3N0YXRlX2NoZWNr?=
+Date: Thu, 3 May 2012 20:22:34 +0000 (UTC)
+Message-ID: <loom.20120503T220528-617@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from plane.gmane.org ([80.91.229.3]:40385 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754023Ab2ECUuG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 May 2012 16:50:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1SQ2yR-0006yy-5M
+	for linux-scsi@vger.kernel.org; Thu, 03 May 2012 22:50:03 +0200
+Received: from rigel.stratus.com ([rigel.stratus.com])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 03 May 2012 22:50:03 +0200
+Received: from jdl1291 by rigel.stratus.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 03 May 2012 22:50:03 +0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Roland Dreier <roland@purestorage.com>
+I've been debugging a NULL pointer crash on USB device removal in 
+scsi_prep_state_check() with the following call trace:
 
-We run into problems when tearing down ACLs with IO in flight from the
-initiator with current code.  What happens is that when removing an ACL,
-we tear down the associated session; then when more commands come in, we
-queue them up and create a new session in qla_tgt_do_work() for each
-command.  If multiple commands get queued up, we create multiple
-sessions, each with its own associated dynamic ACL.
+PID: 10274  TASK: ffff88024d97f540  CPU: 2   COMMAND: "udisks-daemon"
+ #0 [ffff88024d9815b0] machine_kexec at ffffffff8103287b
+ #1 [ffff88024d981610] crash_kexec at ffffffff810ba4f2
+ #2 [ffff88024d9816e0] oops_end at ffffffff814fe310
+ #3 [ffff88024d981710] no_context at ffffffff81043bbb
+ #4 [ffff88024d981760] __bad_area_nosemaphore at ffffffff81043e45
+ #5 [ffff88024d9817b0] bad_area at ffffffff81043f6e
+ #6 [ffff88024d9817e0] __do_page_fault at ffffffff81044673
+ #7 [ffff88024d981900] do_page_fault at ffffffff815002ee
+ #8 [ffff88024d981930] page_fault at ffffffff814fd6a5
+    [exception RIP: scsi_prep_state_check+0xd]
+    RIP: ffffffff813686bd  RSP: ffff88024d9819e8  RFLAGS: 00010086
+    RAX: ffffffff81369e20  RBX: ffff88027681aa00  RCX: 0000000000000000
+    RDX: 0000000000000001  RSI: ffff88027681aa00  RDI: 0000000000000000
+    RBP: ffff88024d9819f8   R8: 00000000fffffffe   R9: 0000000000000001
+    R10: 0000000000000000  R11: 0000000000000001  R12: ffff8802706c2f20
+    R13: ffff8802706c2f20  R14: 0000000000000000  R15: ffffffff8125b430
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+ #9 [ffff88024d981a00] scsi_setup_blk_pc_cmnd at ffffffff81369ccb
+#10 [ffff88024d981a30] scsi_prep_fn at ffffffff81369e6d
+#11 [ffff88024d981a50] blk_peek_request at ffffffff812569f7
+#12 [ffff88024d981a80] scsi_request_fn at ffffffff81369023
+#13 [ffff88024d981ae0] __generic_unplug_device at ffffffff812543d2
+#14 [ffff88024d981b00] blk_execute_rq_nowait at ffffffff8125b4fe
+#15 [ffff88024d981b40] blk_execute_rq at ffffffff8125b614
+#16 [ffff88024d981bf0] scsi_execute at ffffffff8136aa98
+#17 [ffff88024d981c40] scsi_execute_req at ffffffff8136ad28
+#18 [ffff88024d981cd0] ioctl_internal_command.clone.0 at ffffffff813637c8
+#19 [ffff88024d981d40] scsi_set_medium_removal at ffffffff8136398e
+#20 [ffff88024d981d80] sr_lock_door at ffffffffa01156c0 [sr_mod]
+#21 [ffff88024d981d90] cdrom_release at ffffffffa027237c [cdrom]
+#22 [ffff88024d981e10] sr_block_release at ffffffffa011450e [sr_mod]
+#23 [ffff88024d981e30] __blkdev_put at ffffffff811b40a6
+#24 [ffff88024d981e80] blkdev_put at ffffffff811b40c0
+#25 [ffff88024d981e90] blkdev_close at ffffffff811b4103
+#26 [ffff88024d981ec0] __fput at ffffffff8117c205
+#27 [ffff88024d981f10] fput at ffffffff8117c345
+#28 [ffff88024d981f20] filp_close at ffffffff81177d7d
+#29 [ffff88024d981f50] sys_close at ffffffff81177e55
+#30 [ffff88024d981f80] tracesys at ffffffff8100b308 (via system_call)
+    RIP: 0000003cb180e590  RSP: 00007fff2fe82b98  RFLAGS: 00000246
+    RAX: ffffffffffffffda  RBX: ffffffff8100b308  RCX: ffffffffffffffff
+    RDX: 0000000000000007  RSI: 0000000000000880  RDI: 0000000000000005
+    RBP: 0000000000000000   R8: 0000000000434589   R9: 0000000000000000
+    R10: 0000000000000001  R11: 0000000000000246  R12: 0000000001796230
+    R13: 0000000000000001  R14: 00000000017976b0  R15: 00000000017957d0
+    ORIG_RAX: 0000000000000003  CS: 0033  SS: 002b
 
-Then when we reestablish the ACL, we find the wrong dynamic ACL and
-convert it back to a normal ACL -- unfortunately the session in the
-session table that points to the normal ACL has already been overwritten
-and so all future commands find a session that still points to a dynamic
-ACL (which rejects all commands except INQUIRY / REPORT LUNS).
+It looks like sdev (RDI) is NULL on the call to scsi_prep_state_check():
 
-Fix this by just always looking up the session in qla_tgt_do_work() and
-avoiding creating duplicate sessions.  This also simplifies the code
-(since we don't have two places to look up sessions) and moves more
-work out of the interrupt handler and into the work queue.
+int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+{
+        struct scsi_cmnd *cmd;
+        int ret = scsi_prep_state_check(sdev, req);
+        ...
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
----
- drivers/scsi/qla2xxx/qla_target.c |   95 ++++++++++++++++---------------------
- 1 file changed, 40 insertions(+), 55 deletions(-)
+I've been able to trace a possible cause to another thread that is removing this 
+device from its bus:
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 6542da4..58dfbd8 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -720,9 +720,8 @@ static struct qla_tgt_sess *qlt_create_sess(
- 	unsigned char be_sid[3];
- 
- 	/* Check to avoid double sessions */
--#if 0
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
--	list_for_each_entry(sess, &tgt->sess_list, sess_list_entry) {
-+	list_for_each_entry(sess, &ha->tgt.qla_tgt->sess_list, sess_list_entry) {
- 		if (!memcmp(sess->port_name, fcport->port_name, WWN_SIZE)) {
- 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf005,
- 			    "Double sess %p found (s_id %x:%x:%x, "
-@@ -731,12 +730,12 @@ static struct qla_tgt_sess *qlt_create_sess(
- 			    sess->s_id.b.al_pa, sess->s_id.b.area,
- 			    sess->loop_id, fcport->d_id.b.domain,
- 			    fcport->d_id.b.al_pa, fcport->d_id.b.area,
--			    fcport->loop_id)
-+			    fcport->loop_id);
- 
- 			if (sess->deleted)
- 				qlt_undelete_sess(sess);
- 
--			qlt_sess_get(sess);
-+			kref_get(&sess->se_sess->sess_kref);
- 			sess->s_id = fcport->d_id;
- 			sess->loop_id = fcport->loop_id;
- 			sess->conf_compl_supported = !!(fcport->flags &
-@@ -744,12 +743,11 @@ static struct qla_tgt_sess *qlt_create_sess(
- 			if (sess->local && !local)
- 				sess->local = 0;
- 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
--			goto out;
-+
-+			return sess;
- 		}
- 	}
--	spin_unlock_irq_restore(&ha->hardware_lock, flags);
--#endif
--	/* We are under tgt_mutex, so a new sess can't be added behind us */
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	sess = kzalloc(sizeof(*sess), GFP_KERNEL);
- 	if (!sess) {
-@@ -2634,7 +2632,7 @@ static void qlt_do_work(struct work_struct *work)
- 	scsi_qla_host_t *vha = cmd->vha;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt *tgt = ha->tgt.qla_tgt;
--	struct qla_tgt_sess *sess = cmd->sess;
-+	struct qla_tgt_sess *sess = NULL;
- 	atio_from_isp_t *atio = &cmd->atio;
- 	unsigned char *cdb;
- 	unsigned long flags;
-@@ -2642,25 +2640,49 @@ static void qlt_do_work(struct work_struct *work)
- 	int ret, fcp_task_attr, data_dir, bidi = 0;;
- 
- 	if (tgt->tgt_stop)
--		goto out_term;	
-+		goto out_term;
- 
--	if (!sess) {
--		uint8_t *s_id = NULL;
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha,
-+	    atio->u.isp24.fcp_hdr.s_id);
-+	if (sess) {
-+		if (unlikely(sess->tearing_down)) {
-+			sess = NULL;
-+			spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+			goto out_term;
-+		} else {
-+			/* Do the extra kref_get() before dropping qla_hw_data->hardware_lock. */
-+			kref_get(&sess->se_sess->sess_kref);
-+		}
-+	}
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	if (unlikely(!sess)) {
-+		uint8_t *s_id =	atio->u.isp24.fcp_hdr.s_id;
- 
--		s_id = atio->u.isp24.fcp_hdr.s_id;
-+		ql_dbg(ql_dbg_tgt_mgt, vha, 0xe125, "qla_target(%d):"
-+		       " Unable to find wwn login (s_id %x:%x:%x),"
-+		       " trying to create it manually\n", vha->vp_idx,
-+		       s_id[0], s_id[1], s_id[2]);
-+
-+		if (atio->u.raw.entry_count > 1) {
-+			ql_dbg(ql_dbg_tgt_mgt, vha, 0xe127, "Dropping multy entry"
-+					" cmd %p\n", cmd);
-+			goto out_term;
-+		}
- 
- 		mutex_lock(&ha->tgt.tgt_mutex);
--		cmd->sess = sess = qlt_make_local_sess(vha, s_id);
--		/* sess has got an extra creation ref */
-+		sess = qlt_make_local_sess(vha, s_id);
-+		/* sess has an extra creation ref. */
- 		mutex_unlock(&ha->tgt.tgt_mutex);
- 
- 		if (!sess)
- 			goto out_term;
--		cmd->loop_id = sess->loop_id;
- 	}
- 
--	if (tgt->tgt_stop)
--		goto out_term;
-+	cmd->sess = sess;
-+	cmd->loop_id = sess->loop_id;
-+	cmd->conf_compl_supported = sess->conf_compl_supported;
- 
- 	cdb = &atio->u.isp24.fcp_cmnd.cdb[0];
- 	cmd->tag = atio->u.isp24.exchange_addr;
-@@ -2716,9 +2738,7 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
- {
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt *tgt = ha->tgt.qla_tgt;
--	struct qla_tgt_sess *sess;
- 	struct qla_tgt_cmd *cmd;
--	int res = 0;
- 
- 	if (unlikely(tgt->tgt_stop)) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf021,
-@@ -2740,45 +2760,10 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
- 	cmd->tgt = ha->tgt.qla_tgt;
- 	cmd->vha = vha;
- 
--	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha,
--	    atio->u.isp24.fcp_hdr.s_id);
--	if (unlikely(!sess)) {
--		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf022,
--		    "qla_target(%d): Unable to find wwn login (s_id %x:%x:%x),"
--		    " trying to create it manually\n", vha->vp_idx,
--		    atio->u.isp24.fcp_hdr.s_id[0],
--		    atio->u.isp24.fcp_hdr.s_id[1],
--		    atio->u.isp24.fcp_hdr.s_id[2]);
--
--		if (atio->u.raw.entry_count > 1) {
--			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf023,
--			    "Dropping multy entry cmd %p\n", cmd);
--			goto out_free_cmd;
--		}
--		goto out_sched;
--	}
--
--	if (sess->tearing_down || tgt->tgt_stop)
--		goto out_free_cmd;
--
--	cmd->sess = sess;
--	cmd->loop_id = sess->loop_id;
--	cmd->conf_compl_supported = sess->conf_compl_supported;
--	/*
--	 * Get the extra kref_get() before dropping qla_hw_data->hardware_lock,
--	 * and call kref_put() in qlt_do_work() process context to drop the
--	 * extra reference.
--	*/
--	kref_get(&sess->se_sess->sess_kref);
--
--out_sched:
- 	INIT_WORK(&cmd->work, qlt_do_work);
- 	queue_work(qla_tgt_wq, &cmd->work);
- 	return 0;
- 
--out_free_cmd:
--	qlt_free_cmd(cmd);
--	return res;
- }
- 
- /* ha->hardware_lock supposed to be held on entry */
--- 
-1.7.9.5
+PID: 43     TASK: ffff88027a7b2ae0  CPU: 0   COMMAND: "khubd"
+    [exception RIP: _spin_lock_irq+0x25]
+    RIP: ffffffff814fd0c5  RSP: ffff88027a7b9ab0  RFLAGS: 00000097
+    RAX: 0000000000000cac  RBX: ffff8802706c2f20  RCX: 0000000000000082
+    RDX: 0000000000000cab  RSI: ffff880278973540  RDI: ffff8802706c3238
+    RBP: ffff88027a7b9ab0   R8: ffff88027a7b8000   R9: 00000000ffffffff
+    R10: 0000000000000000  R11: 0000000000000001  R12: ffff8802706c37d8
+    R13: ffff8802706c3238  R14: ffffffffa0223f08  R15: 0000000000000000
+    CS: 0010  SS: 0018
+ #0 [ffff88027a7b9ab8] blk_cleanup_queue at ffffffff8125621b
+ #1 [ffff88027a7b9ae8] scsi_free_queue at ffffffff81368caf
+ #2 [ffff88027a7b9b08] __scsi_remove_device at ffffffff8136f32c
+ #3 [ffff88027a7b9b28] scsi_forget_host at ffffffff8136b6d4
+ #4 [ffff88027a7b9b48] scsi_remove_host at ffffffff81363227
+ #5 [ffff88027a7b9b78] quiesce_and_remove_host at ffffffffa022037b [usb_storage]
+ #6 [ffff88027a7b9ba8] usb_stor_disconnect at ffffffffa02204b2 [usb_storage]
+ #7 [ffff88027a7b9bc8] usb_unbind_interface at ffffffff813abb0d
+ #8 [ffff88027a7b9c18] __device_release_driver at ffffffff8134e25f
+ #9 [ffff88027a7b9c38] device_release_driver at ffffffff8134e3cd
+#10 [ffff88027a7b9c58] bus_remove_device at ffffffff8134d263
+#11 [ffff88027a7b9c88] device_del at ffffffff8134aead
+#12 [ffff88027a7b9cb8] usb_disable_device at ffffffff813a79f0
+#13 [ffff88027a7b9d18] usb_disconnect at ffffffff8139ed78
+#14 [ffff88027a7b9d68] hub_thread at ffffffff813a04ec
+#15 [ffff88027a7b9ee8] kthread at ffffffff81091c26
+#16 [ffff88027a7b9f48] kernel_thread at ffffffff8100c14a
+
+Interestingly, PID 43 has asynchronously set the request_queue's QUEUE_FLAG_DEAD 
+(and other possible consequences) outside the queue lock.  PID 10274 and all the 
+callers of blk_queue_dead() do not guard against this scenario, even if they 
+grab the lock.
+
+This bug looks like the one(s) Bart Van Assche has been hunting down recently:
+
+http://thread.gmane.org/gmane.linux.scsi/74525
+http://thread.gmane.org/gmane.linux.scsi/71496
+
+I have kdump vmcore files and a fairly reproducible test scenario that 
+reproduces this on RHEL 6.3 Beta 1.  From looking at the crash, I can verify 
+that the request queue in question has been marked QUEUE_FLAG_DEAD and that 
+blk_cleanup_queue() is waiting on the queue lock to continue.
+
+If patches have been committed (or still need testing), I can give them a spin 
+on our config.  If any additional debug or info from the crash would help, I 
+would be happy to provide.
+
+Regards,
+
+-- Joe Lawrence
+   Stratus Technologies
+
+
