@@ -1,41 +1,38 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH] scsi: Silence unnecessary warnings about ioctl to partition
-Date: Thu, 03 May 2012 13:36:05 -0400
-Message-ID: <4FA2C205.3030801@teksavvy.com>
-References: <1335953452-10460-1-git-send-email-jack@suse.cz> <4FA1092E.9090603@redhat.com> <20120502115447.7dcc3a54@pyramind.ukuu.org.uk> <4FA11454.2010103@redhat.com> <20120502121208.3c19a9bc@pyramind.ukuu.org.uk> <4FA11963.3040007@redhat.com> <4FA18D33.3060607@teksavvy.com> <4FA23809.2090905@redhat.com> <4FA27CDB.2080103@teksavvy.com> <4FA27E7C.6070802@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4FA27E7C.6070802@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH 0/3] qla2xxx target fixes
+Date: Thu,  3 May 2012 12:42:57 -0700
+Message-ID: <1336074180-20577-1-git-send-email-roland@kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Arun Easi <arun.easi@qlogic.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Steve Hodgson <steve@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12-05-03 08:47 AM, Paolo Bonzini wrote:
-> Il 03/05/2012 14:40, Mark Lord ha scritto:
->>>>
->>>> Breaking "hdparm --write-sector /dev/sda1"?  I call it a security fix.
->> No, that would plain stupid on both our parts.  :)
->> The --write-sector flag is allowed only for non-partitions by hdparm itself.
-> 
-> Excuse my laziness--how does it check?
+From: Roland Dreier <roland@purestorage.com>
 
-I don't know if there's a feasible fool-proof method or not.
-But what hdparm does is look at the sector offset of the device.
-Partitions normally have a non-zero offset.
+Hi Nic / Arun:
 
->> But other flags commonly used by distros at boot time
->> seem to be triggering the current in-kernel noise.
->> Dunno which flags, I'm just ignoring them and waiting
->> for the noise message to get reverted.
-> 
-> That's exactly the behavior I hoped to get when I added the warnings.
-> Or maybe not. :)  What are the messages?
-> i.e. what ioctl do they complain about?
+Here are a few pretty major fixes that I hope can get into the 3.5
+merge of this stuff (Steve's patch that saves 128MB of memory per port
+is maybe not strictly a fix but is pretty major).
 
-As above:
+Please review / apply.
 
->> Dunno which flags, I'm just ignoring them and waiting
->> for the noise message to get reverted.
+Thanks!
+
+Roland Dreier (2):
+  tcm_qla2xxx: Add hook so qla_target code can shutdown sessions
+  qla2xxx: Don't create duplicate target sessions
+
+Steve Hodgson (1):
+  tcm_qla2xxx: Convert FC address map from flat array to btree
+
+ drivers/scsi/qla2xxx/Kconfig       |    1 +
+ drivers/scsi/qla2xxx/qla_target.c  |   96 ++++++++---------
+ drivers/scsi/qla2xxx/qla_target.h  |    1 +
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |  201 ++++++++++++++++--------------------
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h |   22 +---
+ 5 files changed, 138 insertions(+), 183 deletions(-)
+
+-- 
+1.7.9.5
