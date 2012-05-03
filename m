@@ -1,35 +1,69 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] scsi: Silence unnecessary warnings about ioctl to partition
-Date: Thu, 03 May 2012 14:47:56 +0200
-Message-ID: <4FA27E7C.6070802@redhat.com>
-References: <1335953452-10460-1-git-send-email-jack@suse.cz> <4FA1092E.9090603@redhat.com> <20120502115447.7dcc3a54@pyramind.ukuu.org.uk> <4FA11454.2010103@redhat.com> <20120502121208.3c19a9bc@pyramind.ukuu.org.uk> <4FA11963.3040007@redhat.com> <4FA18D33.3060607@teksavvy.com> <4FA23809.2090905@redhat.com> <4FA27CDB.2080103@teksavvy.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Kernel oops in sym_int_sir
+Date: Thu, 03 May 2012 17:05:02 +0200
+Message-ID: <4FA29E9E.8090401@suse.de>
+References: <4FA143BC.2010702@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4FA27CDB.2080103@teksavvy.com>
+In-Reply-To: <4FA143BC.2010702@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Stefan Bader <stefan.bader@canonical.com>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
 List-Id: linux-scsi@vger.kernel.org
 
-Il 03/05/2012 14:40, Mark Lord ha scritto:
->> > 
->> > Breaking "hdparm --write-sector /dev/sda1"?  I call it a security fix.
-> No, that would plain stupid on both our parts.  :)
-> The --write-sector flag is allowed only for non-partitions by hdparm itself.
+On 05/02/2012 04:25 PM, Stefan Bader wrote:
+> While looking at a bug report [1] I found that the immediate cause of=
+ the crash
+> was in that specific case the reference cp->cmd for a printk:
+>=20
+> /*
+>   * The device didn't switch to MSG IN phase after
+>   * having reselected the initiator.
+>   */
+>  case SIR_RESEL_NO_MSG_IN:
+>          scmd_printk(KERN_WARNING, cp->cmd,
+>                          "No MSG IN phase after reselection\n");
+>          goto out_stuck;
+>=20
+> Unfortunately cp (that is returned by sym_ccb_from_dsa()) is NULL. Th=
+is probably
+> is as old as 2.6.24 when this patch added the scmd_printk:
+>=20
+> commit 3fb364e089e05c35ead55a08d56d3004193681f6
+> Author: Matthew Wilcox <matthew@wil.cx>
+> Date: Fri Oct 5 15:55:10 2007 -0400
+>=20
+>     [SCSI] sym53c8xx: Use scmd_printk where appropriate
+>=20
+> A quick research looks like it might be other cases where this happen=
+ed[2].
+> Maybe more often (or solely?) when running in a VM (KVM). I even foun=
+d some post
+> that looks like it tries to fix just this problem[3].
+>=20
+> However without more knowledge about that driver it could also be a p=
+roblem in
+> the hardware emulation so that normally cp =3D=3D NULL should never h=
+appen. Or it
+> might be that the emulation is just running sufficiently "different" =
+to cause
+> races to happen which never would be observed on real hardware.
+>=20
+> Would [3] still make sense?
+>=20
+cp->cmd =3D=3D NULL would point to a race with SCSI command completion,
+basically the same issue USB is facing right now.
+So yes, it can happen (as you've seen), so I would got for [3].
+And if only to avoid the Oops and figure out what _really_ went
+wrong here.
 
-Excuse my laziness--how does it check?  Most programs I looked at check
-at the shape of the file and some are even fooled by "ln -sf /dev/sda1
-./sda".
+Cheers,
 
-> But other flags commonly used by distros at boot time
-> seem to be triggering the current in-kernel noise.
-> Dunno which flags, I'm just ignoring them and waiting
-> for the noise message to get reverted.
-
-That's exactly the behavior I hoped to get when I added the warnings.
-Or maybe not. :)  What are the messages?  i.e. what ioctl do they
-complain about?
-
-Paolo
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
