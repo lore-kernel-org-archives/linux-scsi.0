@@ -1,89 +1,51 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: pull request: linux-firmware: Update qla2xxx firmware files.
-Date: Wed, 2 May 2012 21:16:01 -0700
-Message-ID: <20120503041600.GJ1440@plapa.qlogic.org>
-References: <alpine.WNT.2.00.1204271521300.1704@N5102REMCQXM4BS.qlogic.org>
- <1335836916.8274.50.camel@deadeye>
- <20120501020525.GE67085@plapa.qlogic.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Subject: Re: RE [PATCH] pm8001: support HDA (flashless) mode (take 2)
+Date: Thu, 3 May 2012 13:18:08 -0400
+Message-ID: <4300E2A0-D9C8-44AB-B0F0-CD1945A6D2E6@xyratex.com>
+References: <420864BE-8542-4BD8-B3DB-FDA403D193F9@xyratex.com> <C1F230B3-E151-495B-99A0-88739ACBBFCF@xyratex.com> <2275E35DFBB74B10B6049A728D6F46E3@usish.com.cn>
+Mime-Version: 1.0 (Apple Message framework v1257)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:29213 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754312Ab2ECPkz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2012 11:40:55 -0400
-Content-Disposition: inline
-In-Reply-To: <20120501020525.GE67085@plapa.qlogic.org>
+Received: from xyratex198.xyratex.com ([194.131.166.198]:43461 "EHLO
+	XY01EX22.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752313Ab2ECRSP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 May 2012 13:18:15 -0400
+In-Reply-To: <2275E35DFBB74B10B6049A728D6F46E3@usish.com.cn>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Chad Dupuis <chad.dupuis@qlogic.com>, "dwmw2@infradead.org" <dwmw2@infradead.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Jack Wang <jack_wang@usish.com>
+Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi@vger.kernel.org, 'James Bottomley' <JBottomley@parallels.com>, 'lindar_liu' <lindar_liu@usish.com>, =?utf-8?B?J+S6jueIseWNjic=?= <crystal_yu@usish.com>, 'john_gong' <john_gong@usish.com>
 
-On Mon, 30 Apr 2012, Andrew Vasquez wrote:
+I had viewed the hot-plug changes as separate (I see now that was a bogus distinction), I will merge them in.
 
-> On Mon, 30 Apr 2012, Ben Hutchings wrote:
+Yes, the check_fw_ready is not needed, but was left in as an attempt to not touch the 'good path' for the other modes, I saw it as it could not hurt. I will test without it, and ensure operation in both our upstream code (?) and the kernel.org patch to be 100% sure. I was admittedly paranoid about removing that one. I had been experimenting and thinking about this one ever since Take-2 left the gate and am not yet satisfied.
+
+I appreciate the comments, a sign of a deep dive into this one! Thanks!
+
+Take-3 will arrive after testing, I will send you a PM preview to confirm ...
+
+Sincerely -- Mark Salyzyn
+
+On May 2, 2012, at 8:35 PM, Jack Wang wrote:
+
+> Hi Mark,
 > 
-> > On Fri, 2012-04-27 at 15:41 -0400, Chad Dupuis wrote:
-> > > Hi Ben, David,
-> > > 
-> > > Can you please pull the following patches from the "for_upstream" branch
-> > > of the repo below to update the ql2300_fw.bin, ql2322_fw.bin,
-> > > ql2400_fw.bin and ql2500_fw.bin files?
-> > > 
-> > > git://avgit01.qlogic.org/linux-firmware for_upstream
-> > 
-> > That hostname isn't resolvable here and now.
+> I found other issue in this patch need to be addressed. when HDA mode is
+> enable, we need also change the soft reset signature to HDA signature in
+> pci_remove/suspend/resume function.
 > 
-> Ben,
-> 
-> Actually, the forward-facing URL is actually:
-> 
-> 	git://git.qlogic.com/linux-firmware
-> 
-> But...there seems to be a problem, as there's no A record for that
-> server.
-> 
-> We will let you know when we get that issue resolved.
-
-
-Ben,
-
-Thanks for your patience here, you should now be able to pull from the
-URL above:
-
-	$ git clone git://git.qlogic.com/linux-firmware 
-	Cloning into 'linux-firmware'...
-	remote: Counting objects: 1628, done.
-	remote: Compressing objects: 100% (768/768), done.
-	remote: Total 1628 (delta 833), reused 1628 (delta 833)
-	Receiving objects: 100% (1628/1628), 29.86 MiB | 1.16 MiB/s, done.
-	Resolving deltas: 100% (833/833), done.
-
--- av
-
-> > > Chad Dupuis (4):
-> > >    qla2xxx: Update ql2300_fw.bin to version 3.03.28.
-> > >    qla2xxx: Update ql2322_fw.bin to version 3.03.28.
-> > >    qla2xxx: Update ql2400_fw.bin to version 5.06.05.
-> > >    qla2xxx: Update ql2500_fw.bin to version 5.06.05.
-> > > 
-> > >   WHENCE        |    8 ++++----
-> > >   ql2300_fw.bin |  Bin 123170 -> 125252 bytes
-> > >   ql2322_fw.bin |  Bin 132978 -> 136038 bytes
-> > >   ql2400_fw.bin |  Bin 228056 -> 255320 bytes
-> > >   ql2500_fw.bin |  Bin 199776 -> 252636 bytes
-> > >   5 files changed, 4 insertions(+), 4 deletions(-)
-> > > 
-> > > Thanks,
-> > > Chad
-> > > 
-> > > This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
-> > > 
-> > > 
-> > 
-> > -- 
-> > Ben Hutchings
-> > Design a system any fool can use, and only a fool will want to use it.
+> and in pm8001_chip_init, check fw ready is not need for HDA mode.
 > 
 > 
+> Best regards
+> 
+> Jack
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
