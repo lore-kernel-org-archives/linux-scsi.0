@@ -1,69 +1,89 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Kernel oops in sym_int_sir
-Date: Thu, 03 May 2012 17:05:02 +0200
-Message-ID: <4FA29E9E.8090401@suse.de>
-References: <4FA143BC.2010702@canonical.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: pull request: linux-firmware: Update qla2xxx firmware files.
+Date: Wed, 2 May 2012 21:16:01 -0700
+Message-ID: <20120503041600.GJ1440@plapa.qlogic.org>
+References: <alpine.WNT.2.00.1204271521300.1704@N5102REMCQXM4BS.qlogic.org>
+ <1335836916.8274.50.camel@deadeye>
+ <20120501020525.GE67085@plapa.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4FA143BC.2010702@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stefan Bader <stefan.bader@canonical.com>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:29213 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754312Ab2ECPkz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2012 11:40:55 -0400
+Content-Disposition: inline
+In-Reply-To: <20120501020525.GE67085@plapa.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>, "dwmw2@infradead.org" <dwmw2@infradead.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 05/02/2012 04:25 PM, Stefan Bader wrote:
-> While looking at a bug report [1] I found that the immediate cause of=
- the crash
-> was in that specific case the reference cp->cmd for a printk:
->=20
-> /*
->   * The device didn't switch to MSG IN phase after
->   * having reselected the initiator.
->   */
->  case SIR_RESEL_NO_MSG_IN:
->          scmd_printk(KERN_WARNING, cp->cmd,
->                          "No MSG IN phase after reselection\n");
->          goto out_stuck;
->=20
-> Unfortunately cp (that is returned by sym_ccb_from_dsa()) is NULL. Th=
-is probably
-> is as old as 2.6.24 when this patch added the scmd_printk:
->=20
-> commit 3fb364e089e05c35ead55a08d56d3004193681f6
-> Author: Matthew Wilcox <matthew@wil.cx>
-> Date: Fri Oct 5 15:55:10 2007 -0400
->=20
->     [SCSI] sym53c8xx: Use scmd_printk where appropriate
->=20
-> A quick research looks like it might be other cases where this happen=
-ed[2].
-> Maybe more often (or solely?) when running in a VM (KVM). I even foun=
-d some post
-> that looks like it tries to fix just this problem[3].
->=20
-> However without more knowledge about that driver it could also be a p=
-roblem in
-> the hardware emulation so that normally cp =3D=3D NULL should never h=
-appen. Or it
-> might be that the emulation is just running sufficiently "different" =
-to cause
-> races to happen which never would be observed on real hardware.
->=20
-> Would [3] still make sense?
->=20
-cp->cmd =3D=3D NULL would point to a race with SCSI command completion,
-basically the same issue USB is facing right now.
-So yes, it can happen (as you've seen), so I would got for [3].
-And if only to avoid the Oops and figure out what _really_ went
-wrong here.
+On Mon, 30 Apr 2012, Andrew Vasquez wrote:
 
-Cheers,
+> On Mon, 30 Apr 2012, Ben Hutchings wrote:
+> 
+> > On Fri, 2012-04-27 at 15:41 -0400, Chad Dupuis wrote:
+> > > Hi Ben, David,
+> > > 
+> > > Can you please pull the following patches from the "for_upstream" branch
+> > > of the repo below to update the ql2300_fw.bin, ql2322_fw.bin,
+> > > ql2400_fw.bin and ql2500_fw.bin files?
+> > > 
+> > > git://avgit01.qlogic.org/linux-firmware for_upstream
+> > 
+> > That hostname isn't resolvable here and now.
+> 
+> Ben,
+> 
+> Actually, the forward-facing URL is actually:
+> 
+> 	git://git.qlogic.com/linux-firmware
+> 
+> But...there seems to be a problem, as there's no A record for that
+> server.
+> 
+> We will let you know when we get that issue resolved.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+
+Ben,
+
+Thanks for your patience here, you should now be able to pull from the
+URL above:
+
+	$ git clone git://git.qlogic.com/linux-firmware 
+	Cloning into 'linux-firmware'...
+	remote: Counting objects: 1628, done.
+	remote: Compressing objects: 100% (768/768), done.
+	remote: Total 1628 (delta 833), reused 1628 (delta 833)
+	Receiving objects: 100% (1628/1628), 29.86 MiB | 1.16 MiB/s, done.
+	Resolving deltas: 100% (833/833), done.
+
+-- av
+
+> > > Chad Dupuis (4):
+> > >    qla2xxx: Update ql2300_fw.bin to version 3.03.28.
+> > >    qla2xxx: Update ql2322_fw.bin to version 3.03.28.
+> > >    qla2xxx: Update ql2400_fw.bin to version 5.06.05.
+> > >    qla2xxx: Update ql2500_fw.bin to version 5.06.05.
+> > > 
+> > >   WHENCE        |    8 ++++----
+> > >   ql2300_fw.bin |  Bin 123170 -> 125252 bytes
+> > >   ql2322_fw.bin |  Bin 132978 -> 136038 bytes
+> > >   ql2400_fw.bin |  Bin 228056 -> 255320 bytes
+> > >   ql2500_fw.bin |  Bin 199776 -> 252636 bytes
+> > >   5 files changed, 4 insertions(+), 4 deletions(-)
+> > > 
+> > > Thanks,
+> > > Chad
+> > > 
+> > > This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+> > > 
+> > > 
+> > 
+> > -- 
+> > Ben Hutchings
+> > Design a system any fool can use, and only a fool will want to use it.
+> 
+> 
+
