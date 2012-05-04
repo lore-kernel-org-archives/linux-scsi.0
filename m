@@ -1,43 +1,49 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] scsi: Silence unnecessary warnings about ioctl to partition
-Date: Fri, 04 May 2012 08:39:22 +0200
-Message-ID: <4FA3799A.6010908@redhat.com>
-References: <1335953452-10460-1-git-send-email-jack@suse.cz> <4FA1092E.9090603@redhat.com> <20120502115447.7dcc3a54@pyramind.ukuu.org.uk> <4FA11454.2010103@redhat.com> <20120502121208.3c19a9bc@pyramind.ukuu.org.uk> <4FA11963.3040007@redhat.com> <4FA18D33.3060607@teksavvy.com> <4FA23809.2090905@redhat.com> <4FA27CDB.2080103@teksavvy.com> <4FA27E7C.6070802@redhat.com> <4FA2C205.3030801@teksavvy.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [v2 PATCH 3/4] bnx2fc: cleanup task management IO when it times
+ out.
+Date: Fri, 04 May 2012 03:49:58 -0500
+Message-ID: <4FA39836.3070907@cs.wisc.edu>
+References: <1335306364-31449-1-git-send-email-bprakash@broadcom.com> <1335306364-31449-4-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:65353 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026Ab2EDGj1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2012 02:39:27 -0400
-In-Reply-To: <4FA2C205.3030801@teksavvy.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36359 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753784Ab2EDIuI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 May 2012 04:50:08 -0400
+In-Reply-To: <1335306364-31449-4-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 
-Il 03/05/2012 19:36, Mark Lord ha scritto:
->> > Excuse my laziness--how does it check?
-> I don't know if there's a feasible fool-proof method or not.
-> But what hdparm does is look at the sector offset of the device.
-> Partitions normally have a non-zero offset.
+On 04/24/2012 05:26 PM, Bhanu Prakash Gollapudi wrote:
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+> index d3ee231..082a25c 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+> @@ -185,6 +185,16 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+>  		BUG_ON(rc);
+>  	}
+>  
+> +	list_for_each_safe(list, tmp, &tgt->active_tm_queue) {
+> +		i++;
+> +		io_req = (struct bnx2fc_cmd *)list;
 
-Yeah, that should work.
+Why didn't you use list_for_each_entry_safe()? Or, when using
+list_for_each_safe, instead of the cast are we supposed to be using
+list_entry()?
 
->>> >> But other flags commonly used by distros at boot time
->>> >> seem to be triggering the current in-kernel noise.
->>> >> Dunno which flags, I'm just ignoring them and waiting
->>> >> for the noise message to get reverted.
->> > 
->> > That's exactly the behavior I hoped to get when I added the warnings.
->> > Or maybe not. :)  What are the messages?
->> > i.e. what ioctl do they complain about?
-> As above:
-> 
->>> >> Dunno which flags, I'm just ignoring them and waiting
->>> >> for the noise message to get reverted.
 
-I said which ioctls, not which options.  I.e. cut-and-paste from dmesg.
+> +		list_del_init(&io_req->link);
+> +		io_req->on_tmf_queue = 0;
+> +		BNX2FC_IO_DBG(io_req, "tm_queue cleanup\n");
+> +		if (io_req->wait_for_comp)
+> +			complete(&io_req->tm_done);
+> +	}
+> +
+>  	list_for_each_safe(list, tmp, &tgt->els_queue) {
+>  		i++;
+>  		io_req = (struct bnx2fc_cmd *)list;
 
-Paolo
