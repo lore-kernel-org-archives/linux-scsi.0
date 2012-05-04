@@ -1,57 +1,43 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: [PATCH] simscsi breakage in __scsi_alloc_queue()
-Date: Fri, 4 May 2012 04:53:13 +0100
-Message-ID: <20120504035313.GR6871@ZenIV.linux.org.uk>
-References: <f570e9ebfaf5eb31a83808ce7c71e574fa716443.1335913478.git.tony.luck@intel.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] scsi: Silence unnecessary warnings about ioctl to partition
+Date: Fri, 04 May 2012 08:39:22 +0200
+Message-ID: <4FA3799A.6010908@redhat.com>
+References: <1335953452-10460-1-git-send-email-jack@suse.cz> <4FA1092E.9090603@redhat.com> <20120502115447.7dcc3a54@pyramind.ukuu.org.uk> <4FA11454.2010103@redhat.com> <20120502121208.3c19a9bc@pyramind.ukuu.org.uk> <4FA11963.3040007@redhat.com> <4FA18D33.3060607@teksavvy.com> <4FA23809.2090905@redhat.com> <4FA27CDB.2080103@teksavvy.com> <4FA27E7C.6070802@redhat.com> <4FA2C205.3030801@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:45392 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753044Ab2EDDxR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2012 23:53:17 -0400
-Content-Disposition: inline
-In-Reply-To: <f570e9ebfaf5eb31a83808ce7c71e574fa716443.1335913478.git.tony.luck@intel.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:65353 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752026Ab2EDGj1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2012 02:39:27 -0400
+In-Reply-To: <4FA2C205.3030801@teksavvy.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Luck <tony.luck@intel.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>, Lin Ming <ming.m.lin@intel.com>
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-With the current mainline we end up oopsing in __scsi_alloc_queue(), since
-host->dma_dev is left NULL.  I'm not sure if this is the right fix, but
-it gives the behaviour equivalent to what we used to have before
-commit 6f381fa344911d5a234b13574433cf23036f9467 ([SCSI] scsi_lib: use
-correct DMA device in __scsi_alloc_queue).  And with that applied the
-damn thing appears to work correctly...
+Il 03/05/2012 19:36, Mark Lord ha scritto:
+>> > Excuse my laziness--how does it check?
+> I don't know if there's a feasible fool-proof method or not.
+> But what hdparm does is look at the sector offset of the device.
+> Partitions normally have a non-zero offset.
 
-Current mainline barfs on dma_set_seg_boundary(dev, shost->dma_boundary),
-since dev ends up being NULL.  AFAICS, the same problem affects any
-driver that does scsi_add_host(host, NULL) and there are other such
-beasts as well, so they probably also need fixing...
+Yeah, that should work.
 
-Again, I'm not sure that this is the right way to deal with that and I'd
-prefer to have it reviewed by SCSI folks before it goes into the tree.
+>>> >> But other flags commonly used by distros at boot time
+>>> >> seem to be triggering the current in-kernel noise.
+>>> >> Dunno which flags, I'm just ignoring them and waiting
+>>> >> for the noise message to get reverted.
+>> > 
+>> > That's exactly the behavior I hoped to get when I added the warnings.
+>> > Or maybe not. :)  What are the messages?
+>> > i.e. what ioctl do they complain about?
+> As above:
+> 
+>>> >> Dunno which flags, I'm just ignoring them and waiting
+>>> >> for the noise message to get reverted.
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
----
-diff --git a/arch/ia64/hp/sim/simscsi.c b/arch/ia64/hp/sim/simscsi.c
-index 331de72..fe2b4d0 100644
---- a/arch/ia64/hp/sim/simscsi.c
-+++ b/arch/ia64/hp/sim/simscsi.c
-@@ -13,6 +13,7 @@
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
- #include <linux/timer.h>
-+#include <linux/platform_device.h>
- #include <asm/irq.h>
- #include "hpsim_ssc.h"
- 
-@@ -358,7 +359,7 @@ simscsi_init(void)
- 	if (!host)
- 		return -ENOMEM;
- 
--	error = scsi_add_host(host, NULL);
-+	error = scsi_add_host_with_dma(host, NULL, &platform_bus);
- 	if (error)
- 		goto free_host;
- 	scsi_scan_host(host);
+I said which ioctls, not which options.  I.e. cut-and-paste from dmesg.
+
+Paolo
