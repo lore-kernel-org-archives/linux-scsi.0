@@ -1,73 +1,68 @@
-From: "Kamaljit Singh" <Kamaljit_Singh@pmc-sierra.com>
-Subject: RE: [PATCH] pm8001: support HDA (flashless) mode (take 3)
-Date: Fri, 4 May 2012 11:16:34 -0700
-Message-ID: <405BE55790F03349A85344435F25B01C06D80942@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-References: <9D3C8933-99C4-45AD-A046-C393A2071F3A@xyratex.com> <6C34E1B4-8631-4CB3-8A8A-B075968F65E6@xyratex.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 2/3] Stop accepting SCSI requests before removing a device
+Date: Fri, 04 May 2012 15:16:18 -0500
+Message-ID: <4FA43912.2060706@cs.wisc.edu>
+References: <4FA3EF10.3040104@acm.org> <4FA3F059.6020004@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:39987 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753407Ab2EDSqI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2012 14:46:08 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <6C34E1B4-8631-4CB3-8A8A-B075968F65E6@xyratex.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37913 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754325Ab2EDUQn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 May 2012 16:16:43 -0400
+In-Reply-To: <4FA3F059.6020004@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi@vger.kernel.org
-Cc: Jack Wang <jack_wang@usish.com>, James Bottomley <JBottomley@parallels.com>, lindar_liu <lindar_liu@usish.com>, =?utf-8?B?5LqO54ix5Y2O?= <crystal_yu@usish.com>, john_gong <john_gong@usish.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tomas Henzl <thenzl@redhat.com>, Mike Snitzer <snitzer@redhat.com>
 
-TWFyaywNCg0KTXkgY29tbWVudHMgYXJlIGF0IGEgdGVjaG5pY2FsIGxldmVsIG9ubHkuICBGb3Ig
-SVAgaXNzdWVzIHBsZWFzZSBjb25zaWRlciB0YWxraW5nIHRvIHRoZSBQTUMgTWFya2V0aW5nIHRl
-YW0uDQoNClRvIGF2b2lkIHBvdGVudGlhbCBjb25mbGljdHMgYWNyb3NzIGZpcm13YXJlIGZpbGVz
-IG9mIG90aGVyIFBNQyBwcm9kdWN0cyB5b3UgbWF5IHdhbnQgdG8gY3JlYXRlIGEgZHJpdmVyIHNw
-ZWNpZmljIGRpcmVjdG9yeSB1bmRlciAvbGliL2Zpcm13YXJlLiAgDQpBZGRpdGlvbmFsbHksIEkg
-bm90aWNlZCB0aGF0IC9saWIvZmlybXdhcmUgaGFzIGNvbXBhbnkgc3BlY2lmaWMgZGlyZWN0b3Jp
-ZXMuICBTbyBoZXJlIGFyZSBzb21lIHN1Z2dlc3Rpb25zLg0KDQojMTogL2xpYi9maXJtd2FyZS9w
-bWNzL3BtODAwMS8qLmJpbi4NCiMyOiAvbGliL2Zpcm13YXJlL3BtODAwMS8qLmJpbi4NCg0KDQpU
-aGFua3MsDQoNCkthbWFsaml0IFNpbmdoDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpG
-cm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2kt
-b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgTWFyayBTYWx5enluDQpTZW50OiBG
-cmlkYXksIE1heSAwNCwgMjAxMiA0OjMzIEFNDQpUbzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5v
-cmcNCkNjOiBNYXJrIFNhbHl6eW47IEphY2sgV2FuZzsgSmFtZXMgQm90dG9tbGV5OyBsaW5kYXJf
-bGl1OyDkuo7niLHljY47IGpvaG5fZ29uZw0KU3ViamVjdDogW1BBVENIXSBwbTgwMDE6IHN1cHBv
-cnQgSERBIChmbGFzaGxlc3MpIG1vZGUgKHRha2UgMykNCg0KVGhpcmQgdGltZSBJUyB0aGUgY2hh
-cm0gOi0pDQoNClRoZSBwbTgwMDEgY2FuIGJlIGRlbGl2ZXJlZCBhcyBhIHN0YW5kYWxvbmUgcHJv
-ZHVjdCB3aXRoIGZsYXNoLXByb2dyYW1tZWQNCmZpcm13YXJlIGltYWdlcywgb3Igd2l0aG91dCB0
-aGUgZmxhc2ggcHJlc2VudCByZXF1aXJpbmcgdGhlIGRyaXZlciB0byB1cGxvYWQNCnRoZSBpbWFn
-ZXMgaW50byB0aGUgY2hpcCdzIFJBTSBhbmQgdGhlbiBydW4uIFRoaXMgaXMgY2FsbGVkIGZsYXNo
-bGVzcyBIREEgbW9kZS4NCg0KV2UgYWRkIHN1cHBvcnQgZm9yIHRoaXMgZmlybXdhcmUgdXBsb2Fk
-IGluIHRoZSBlbmNsb3NlZCBwYXRjaC4gV2UgdHJ5IHNvbWUNCmJhc2ljIGluaXRpYWxpemF0aW9u
-IGNoZWNrcyBvZiB0aGUgRmlybXdhcmUsIGFuZCBpZiBpdCBhcHBlYXJzIGRlYWQsIHdlIG1ha2UN
-CnRoZSBhc3N1bXB0aW9uIHRoZSBhZGFwdGVyIG11c3QgaW4tZmFjdCBiZSBoYWx0ZWQgaW4gdGhp
-cyBIREEgbW9kZS4gVGhlDQpGaXJtd2FyZSBpbWFnZXMgdGhlbXNlbHZlcyBoYXZlIG5vdCBiZWVu
-IGNsZWFyZWQgZm9yIG9wZW4tcmVsZWFzZSBieSBQTUMsIGJ1dA0KdGhleSBhcmUgYXZhaWxhYmxl
-IGluIE9wZW5Tb2xhcmlzIDxoaW50IGhpbnQ+LiBQTUMncyByYXRpb25hbGl6YXRpb24gZm9yIG5v
-dA0Kd2FudGluZyBhbiBvcGVuLXJlbGVhc2Ugb2YgdGhlIEZpcm13YXJlIEltYWdlcyBpcyB0aGF0
-IHRoZXkgZG8gbm90IHdhbnQgdG8NCnRha2Ugc3VwcG9ydCBjYWxscyBleGNlcHQgZnJvbSBwYXlp
-bmcgT0VNcyAoc3VjaCBhcyBYeXJhdGV4KSB0aGF0IGFyZSBlbWJlZGRpbmcNClBNQyBwcm9kdWN0
-IGludG8gdGhlIG1vdGhlcmJvYXJkcyBhbmQgdGh1cyBtYXkgaGF2ZSBhIHRlc3RlZCBjb21iaW5h
-dGlvbiBvZg0KRmlybXdhcmUgYW5kIEhhcmR3YXJlLiBQbGVhc2UgcmVzcGVjdCB0aGlzIHNlbnRp
-bWVudC4gSW1hZ2VzIGFyZSBleHBlY3RlZCBpbjoNCg0KL2xpYi9maXJtd2FyZS9hYXAxaW1nLmJp
-bg0KL2xpYi9maXJtd2FyZS9pbGFpbWcuYmluDQovbGliL2Zpcm13YXJlL2lvcGltZy5iaW4NCi9s
-aWIvZmlybXdhcmUvaXN0cmltZy5iaW4NCg0KdXNpbmcgdGhlIGV4YWN0IHNhbWUgbmFtaW5nIGNv
-bnZlbnRpb24gYXMgUE1DIGFuZCBpbiBPcGVuU29sYXJpcyAoYW5kIGl0cw0KZm9sbG93b24gY2hp
-bGRyZW4pIGZvciB0aGVzZSBpbWFnZSBmaWxlcy4NCg0KVGFrZSAyIG9mIHRoZSBwYXRjaCwgYWRk
-ZWQgbWFuaWZlc3RzIE1BSU5fSERBX0ZMQUdTX0ZPUkNFX0hEQSBhbmQNCk1BSU5fSERBX0ZMQUdT
-X0hEQV9GVyB0byBjaGVjayBhZ2FpbnN0IHRoZSBiaXQgdmFsdWUgb2YgLmhkYV9tb2RlX2ZsYWcN
-CmlmIHRoZSBTRUVQUk9NIGlzIGZvcmNpbmcgSERBIGZsYXNobGVzcyBtb2RlLg0KDQpUYWtlIDMg
-b2YgdGhlIHBhdGNoLCBhZGRlZCBob3QtcGx1ZyByZXNldCBvcGVyYXRpb25zLCBkcm9wcGVkIHNv
-bWUNCnVubmVjZXNzYXJ5IGJ1dCBpbmVydCBkdXBsaWNhdGVkIG9wZXJhdGlvbnMgYW5kIGRyb3Bw
-ZWQgdGhlIGZpcm13YXJlDQppbWFnZXMgZG93biBvbmUgbGV2ZWwgaW50byAvbGliL2Zpcm13YXJl
-L3BtODAwMS8gZGlyZWN0b3J5Lg0KDQpTaWduZWQtb2ZmLWJ5OiBNYXJrIFNhbHl6eW4gPG1hcmtf
-c2FseXp5bkB4eXJhdGV4LmNvbT4NClJldmlldy1ieTogSmFjayBXYW5nIDxqYWNrX3dhbmdAdXNp
-c2guY29tPg0KQ2M6IEphbWVzIEJvdHRvbWxleSA8SkJvdHRvbWxleUBwYXJhbGxlbHMuY29tPg0K
-Q2M6IGxpbmRhcl9saXVAdXNpc2guY29tDQpDYzogY3J5c3RhbF95dUB1c2lzaC5jb20NCkNjOiBq
-b2huX2dvbmdAdXNpc2guY29tDQoNCiBkcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9od2kuYyAg
-fCAgNTgyICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tDQogZHJpdmVycy9z
-Y3NpL3BtODAwMS9wbTgwMDFfaHdpLmggIHwgICA0MCArKw0KIGRyaXZlcnMvc2NzaS9wbTgwMDEv
-cG04MDAxX2luaXQuYyB8ICAgMzYgKysNCiBkcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMu
-aCAgfCAgICAzIA0KIDQgZmlsZXMgY2hhbmdlZCwgNjE2IGluc2VydGlvbnMoKyksIDQ1IGRlbGV0
-aW9ucygtKQ0KDQo=
+On 05/04/2012 10:06 AM, Bart Van Assche wrote:
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 42c35ff..f8fc240 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -955,12 +955,20 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+>  void __scsi_remove_device(struct scsi_device *sdev)
+>  {
+>  	struct device *dev = &sdev->sdev_gendev;
+> +	struct request_queue *q = sdev->request_queue;
+> +
+> +	/*
+> +	 * Stop accepting new requests before tearing down the
+> +	 * device. Note: the actual queue deallocation happens in
+> +	 * scsi_device_dev_release_usercontext().
+> +	 */
+> +	blk_cleanup_queue(q);
+>  
+>  	if (sdev->is_visible) {
+>  		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+>  			return;
+>  
+> -		bsg_unregister_queue(sdev->request_queue);
+> +		bsg_unregister_queue(q);
+>  		device_unregister(&sdev->sdev_dev);
+>  		transport_remove_device(dev);
+>  		device_del(dev);
+> @@ -971,8 +979,6 @@ void __scsi_remove_device(struct scsi_device *sdev)
+
+My fault. The blk_cleanup_queue call should be right before the
+scsi_device_set_state(sdev, SDEV_DEL); call in this function.
+
+It needs to be after the device_del call, because that triggers the SCSI
+ULD removal which can send IO.
+
+
+>  		sdev->host->hostt->slave_destroy(sdev);
+>  	transport_destroy_device(dev);
+>  
+> -	/* Freeing the queue signals to block that we're done */
+> -	blk_cleanup_queue(sdev->request_queue);
+>  	put_device(dev);
+>  }
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
