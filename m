@@ -1,49 +1,60 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [v2 PATCH 3/4] bnx2fc: cleanup task management IO when it times
- out.
-Date: Fri, 04 May 2012 03:49:58 -0500
-Message-ID: <4FA39836.3070907@cs.wisc.edu>
-References: <1335306364-31449-1-git-send-email-bprakash@broadcom.com> <1335306364-31449-4-git-send-email-bprakash@broadcom.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] simscsi breakage in __scsi_alloc_queue()
+Date: Fri, 4 May 2012 09:40:04 +0000
+Message-ID: <1336123207.3015.8.camel@dabdike>
+References: <f570e9ebfaf5eb31a83808ce7c71e574fa716443.1335913478.git.tony.luck@intel.com>
+	 <20120504035313.GR6871@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36359 "EHLO sabe.cs.wisc.edu"
+Received: from mx2.parallels.com ([64.131.90.16]:53510 "EHLO mx2.parallels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753784Ab2EDIuI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 May 2012 04:50:08 -0400
-In-Reply-To: <1335306364-31449-4-git-send-email-bprakash@broadcom.com>
+	id S1753676Ab2EDJkO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 May 2012 05:40:14 -0400
+In-Reply-To: <20120504035313.GR6871@ZenIV.linux.org.uk>
+Content-Language: en-US
+Content-ID: <D94F56FCF9D7CA4BB3F04419905E3DD1@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Tony Luck <tony.luck@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lin Ming <ming.m.lin@intel.com>
 
-On 04/24/2012 05:26 PM, Bhanu Prakash Gollapudi wrote:
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-> index d3ee231..082a25c 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-> @@ -185,6 +185,16 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
->  		BUG_ON(rc);
->  	}
->  
-> +	list_for_each_safe(list, tmp, &tgt->active_tm_queue) {
-> +		i++;
-> +		io_req = (struct bnx2fc_cmd *)list;
-
-Why didn't you use list_for_each_entry_safe()? Or, when using
-list_for_each_safe, instead of the cast are we supposed to be using
-list_entry()?
-
-
-> +		list_del_init(&io_req->link);
-> +		io_req->on_tmf_queue = 0;
-> +		BNX2FC_IO_DBG(io_req, "tm_queue cleanup\n");
-> +		if (io_req->wait_for_comp)
-> +			complete(&io_req->tm_done);
-> +	}
-> +
->  	list_for_each_safe(list, tmp, &tgt->els_queue) {
->  		i++;
->  		io_req = (struct bnx2fc_cmd *)list;
-
+T24gRnJpLCAyMDEyLTA1LTA0IGF0IDA0OjUzICswMTAwLCBBbCBWaXJvIHdyb3RlOg0KPiBXaXRo
+IHRoZSBjdXJyZW50IG1haW5saW5lIHdlIGVuZCB1cCBvb3BzaW5nIGluIF9fc2NzaV9hbGxvY19x
+dWV1ZSgpLCBzaW5jZQ0KPiBob3N0LT5kbWFfZGV2IGlzIGxlZnQgTlVMTC4gIEknbSBub3Qgc3Vy
+ZSBpZiB0aGlzIGlzIHRoZSByaWdodCBmaXgsIGJ1dA0KPiBpdCBnaXZlcyB0aGUgYmVoYXZpb3Vy
+IGVxdWl2YWxlbnQgdG8gd2hhdCB3ZSB1c2VkIHRvIGhhdmUgYmVmb3JlDQo+IGNvbW1pdCA2ZjM4
+MWZhMzQ0OTExZDVhMjM0YjEzNTc0NDMzY2YyMzAzNmY5NDY3IChbU0NTSV0gc2NzaV9saWI6IHVz
+ZQ0KPiBjb3JyZWN0IERNQSBkZXZpY2UgaW4gX19zY3NpX2FsbG9jX3F1ZXVlKS4gIEFuZCB3aXRo
+IHRoYXQgYXBwbGllZCB0aGUNCj4gZGFtbiB0aGluZyBhcHBlYXJzIHRvIHdvcmsgY29ycmVjdGx5
+Li4uDQo+IA0KPiBDdXJyZW50IG1haW5saW5lIGJhcmZzIG9uIGRtYV9zZXRfc2VnX2JvdW5kYXJ5
+KGRldiwgc2hvc3QtPmRtYV9ib3VuZGFyeSksDQo+IHNpbmNlIGRldiBlbmRzIHVwIGJlaW5nIE5V
+TEwuICBBRkFJQ1MsIHRoZSBzYW1lIHByb2JsZW0gYWZmZWN0cyBhbnkNCj4gZHJpdmVyIHRoYXQg
+ZG9lcyBzY3NpX2FkZF9ob3N0KGhvc3QsIE5VTEwpIGFuZCB0aGVyZSBhcmUgb3RoZXIgc3VjaA0K
+PiBiZWFzdHMgYXMgd2VsbCwgc28gdGhleSBwcm9iYWJseSBhbHNvIG5lZWQgZml4aW5nLi4uDQo+
+IA0KPiBBZ2FpbiwgSSdtIG5vdCBzdXJlIHRoYXQgdGhpcyBpcyB0aGUgcmlnaHQgd2F5IHRvIGRl
+YWwgd2l0aCB0aGF0IGFuZCBJJ2QNCj4gcHJlZmVyIHRvIGhhdmUgaXQgcmV2aWV3ZWQgYnkgU0NT
+SSBmb2xrcyBiZWZvcmUgaXQgZ29lcyBpbnRvIHRoZSB0cmVlLg0KPiANCj4gU2lnbmVkLW9mZi1i
+eTogQWwgVmlybyA8dmlyb0B6ZW5pdi5saW51eC5vcmcudWs+DQo+IC0tLQ0KPiBkaWZmIC0tZ2l0
+IGEvYXJjaC9pYTY0L2hwL3NpbS9zaW1zY3NpLmMgYi9hcmNoL2lhNjQvaHAvc2ltL3NpbXNjc2ku
+Yw0KPiBpbmRleCAzMzFkZTcyLi5mZTJiNGQwIDEwMDY0NA0KPiAtLS0gYS9hcmNoL2lhNjQvaHAv
+c2ltL3NpbXNjc2kuYw0KPiArKysgYi9hcmNoL2lhNjQvaHAvc2ltL3NpbXNjc2kuYw0KPiBAQCAt
+MTMsNiArMTMsNyBAQA0KPiAgI2luY2x1ZGUgPGxpbnV4L2ludGVycnVwdC5oPg0KPiAgI2luY2x1
+ZGUgPGxpbnV4L2tlcm5lbC5oPg0KPiAgI2luY2x1ZGUgPGxpbnV4L3RpbWVyLmg+DQo+ICsjaW5j
+bHVkZSA8bGludXgvcGxhdGZvcm1fZGV2aWNlLmg+DQo+ICAjaW5jbHVkZSA8YXNtL2lycS5oPg0K
+PiAgI2luY2x1ZGUgImhwc2ltX3NzYy5oIg0KPiAgDQo+IEBAIC0zNTgsNyArMzU5LDcgQEAgc2lt
+c2NzaV9pbml0KHZvaWQpDQo+ICAJaWYgKCFob3N0KQ0KPiAgCQlyZXR1cm4gLUVOT01FTTsNCj4g
+IA0KPiAtCWVycm9yID0gc2NzaV9hZGRfaG9zdChob3N0LCBOVUxMKTsNCj4gKwllcnJvciA9IHNj
+c2lfYWRkX2hvc3Rfd2l0aF9kbWEoaG9zdCwgTlVMTCwgJnBsYXRmb3JtX2J1cyk7DQoNCkl0J3Mg
+dGhlIHJpZ2h0IGZpeCwgYnV0IGl0J3Mgbm90IGdlbmVyYWwgZW5vdWdoLiAgVGhpcyBzaG91bGQg
+bWFrZSBzdXJlDQpub25lIG9mIHRoZSBsZWdhY3kgYnVzIGRldmljZXMgb29wczoNCg0KSmFtZXMN
+Cg0KLS0tDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvaG9zdHMuYyBiL2RyaXZlcnMvc2Nz
+aS9ob3N0cy5jDQppbmRleCAzNTFkYzBiLi5hM2EwNTZhIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9z
+Y3NpL2hvc3RzLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9ob3N0cy5jDQpAQCAtMjE4LDYgKzIxOCw5
+IEBAIGludCBzY3NpX2FkZF9ob3N0X3dpdGhfZG1hKHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0LCBz
+dHJ1Y3QgZGV2aWNlICpkZXYsDQogDQogCWlmICghc2hvc3QtPnNob3N0X2dlbmRldi5wYXJlbnQp
+DQogCQlzaG9zdC0+c2hvc3RfZ2VuZGV2LnBhcmVudCA9IGRldiA/IGRldiA6ICZwbGF0Zm9ybV9i
+dXM7DQorCWlmICghZG1hX2RldikNCisJCWRtYV9kZXYgPSBzaG9zdC0+c2hvc3RfZ2VuZGV2LnBh
+cmVudDsNCisNCiAJc2hvc3QtPmRtYV9kZXYgPSBkbWFfZGV2Ow0KIA0KIAllcnJvciA9IGRldmlj
+ZV9hZGQoJnNob3N0LT5zaG9zdF9nZW5kZXYpOw0KDQo=
