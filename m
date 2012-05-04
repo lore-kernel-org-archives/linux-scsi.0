@@ -1,50 +1,71 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 3/3] Make scsi_free_queue() abort pending requests
-Date: Fri, 04 May 2012 15:32:03 -0500
-Message-ID: <4FA43CC3.6040507@cs.wisc.edu>
-References: <4FA3EF10.3040104@acm.org> <4FA3F0B1.9040207@acm.org> <4FA43B21.2060906@cs.wisc.edu>
+From: akpm@linux-foundation.org
+Subject: [patch 5/5] drivers/scsi/atp870u.c: fix bad use of udelay
+Date: Fri, 04 May 2012 14:35:10 -0700
+Message-ID: <20120504213510.DBFADA04FA@akpm.mtv.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ASCII
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:37981 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754334Ab2EDUcX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 May 2012 16:32:23 -0400
-In-Reply-To: <4FA43B21.2060906@cs.wisc.edu>
+Received: from mail-yw0-f74.google.com ([209.85.213.74]:41639 "EHLO
+	mail-yw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759832Ab2EDVfL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2012 17:35:11 -0400
+Received: by yhgm50 with SMTP id m50so368794yhg.1
+        for <linux-scsi@vger.kernel.org>; Fri, 04 May 2012 14:35:11 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tomas Henzl <thenzl@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, tbm@cyrius.com, jrnieder@gmail.com, stable@vger.kernel.org
 
-On 05/04/2012 03:25 PM, Mike Christie wrote:
-> On 05/04/2012 10:07 AM, Bart Van Assche wrote:
->> It is possible that a SCSI LLD invokes scsi_remove_host() after a
->> request has been queued via scsi_host_template.queuecommand() but
->> before scsi_done() has been invoked for that request. This may
-> 
-> If that happens won't we wait in blk_cleanup_queue->blk_drain_queue for
-> that IO to be completed (completed normally or timed out and processed
-> through that path)?
-> 
-> Is the point that once we call scsi_remove_host that the LLD is not
-> going to process any more IO so IO will timeout, so just call
-> blk_abort_queue to speed up that cleanup? If so I can see where you are
-> coming from.
-> 
+From: Martin Michlmayr <tbm@cyrius.com>
+Subject: drivers/scsi/atp870u.c: fix bad use of udelay
 
-Oh not wait. I do not get the patch. After blk_cleanup_queue runs then
-no IO should be running and no new IO can be queued can it?
+The ACARD driver calls udelay() with a value > 2000, which leads to
+to the following compilation error on ARM:
+  ERROR: "__bad_udelay" [drivers/scsi/atp870u.ko] undefined!
+  make[1]: *** [__modpost] Error 1
 
->>  	 */
->>  	blk_cleanup_queue(q);
->> +	blk_abort_queue(q);
->>  
->>  	if (sdev->is_visible) {
->>  		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is because udelay is defined on ARM, roughly speaking, as
 
+	#define udelay(n) ((n) > 2000 ? __bad_udelay() : \
+		__const_udelay((n) * ((2199023U*HZ)>>11)))
+
+The argument to __const_udelay is the number of jiffies to wait divided by
+4, but this does not work unless the multiplication does not overflow, and
+that is what the build error is designed to prevent.  The intended
+behavior can be achieved by using mdelay to call udelay multiple times in
+a loop.
+
+[jn: adding context]
+Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
+Signed-off-by: Jonathan Nieder <jrnieder@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/atp870u.c |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff -puN drivers/scsi/atp870u.c~drivers-scsi-atp870uc-fix-bad-use-of-udelay drivers/scsi/atp870u.c
+--- a/drivers/scsi/atp870u.c~drivers-scsi-atp870uc-fix-bad-use-of-udelay
++++ a/drivers/scsi/atp870u.c
+@@ -1173,7 +1173,16 @@ wait_io1:
+ 	outw(val, tmport);
+ 	outb(2, 0x80);
+ TCM_SYNC:
+-	udelay(0x800);
++	/*
++	 * The funny division into multiple delays is to accomodate
++	 * arches like ARM where udelay() multiplies its argument by
++	 * a large number to initialize a loop counter.  To avoid
++	 * overflow, the maximum supported udelay is 2000 microseconds.
++	 *
++	 * XXX it would be more polite to find a way to use msleep()
++	 */
++	mdelay(2);
++	udelay(48);
+ 	if ((inb(tmport) & 0x80) == 0x00) {	/* bsy ? */
+ 		outw(0, tmport--);
+ 		outb(0, tmport);
+_
