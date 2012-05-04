@@ -1,178 +1,130 @@
-From: Bart Van Assche <bvasbe@bartvanassche.be>
-Subject: [PATCH 1/3] sd: Fix device removal NULL pointer dereference
-Date: Fri, 04 May 2012 15:03:43 +0000
-Message-ID: <4FA3EFCF.3020601@bartvanassche.be>
-References: <4FA3EF10.3040104@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Subject: Re: [PATCH] pm8001: support HDA (flashless) mode (take 3)
+Date: Fri, 4 May 2012 14:27:50 -0400
+Message-ID: <64D0B2A6-A27A-4651-A6F5-CBEC924FB1D2@xyratex.com>
+References: <9D3C8933-99C4-45AD-A046-C393A2071F3A@xyratex.com> <6C34E1B4-8631-4CB3-8A8A-B075968F65E6@xyratex.com> <405BE55790F03349A85344435F25B01C06D80942@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+Mime-Version: 1.0 (Apple Message framework v1257)
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay04ant.iops.be ([212.53.5.219]:54749 "EHLO
-	relay04ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753768Ab2EDPKE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2012 11:10:04 -0400
-In-Reply-To: <4FA3EF10.3040104@acm.org>
+Received: from xyratex198.xyratex.com ([194.131.166.198]:33017 "EHLO
+	XY01EX22.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752952Ab2EDS15 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 May 2012 14:27:57 -0400
+In-Reply-To: <405BE55790F03349A85344435F25B01C06D80942@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Mike Christie <michaelc@cs.wisc.edu>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tomas Henzl <thenzl@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+To: Kamaljit Singh <Kamaljit_Singh@pmc-sierra.com>
+Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi@vger.kernel.org, Jack Wang <jack_wang@usish.com>, James Bottomley <JBottomley@parallels.com>, lindar_liu <lindar_liu@usish.com>, =?utf-8?B?5LqO54ix5Y2O?= <crystal_yu@usish.com>, john_gong <john_gong@usish.com>
 
-Since scsi_prep_fn() may be invoked concurrently with
-__scsi_remove_device(), keep the queuedata pointer in
-__scsi_remove_device(). This patch fixes a kernel oops that
-can be triggered by USB device removal. See also
-http://www.spinics.net/lists/linux-scsi/msg56254.html.
+- Take 3 actually moved the file references to /lib/firmware/pm8001/*im=
+g.bin :-)
+- I have contacted PMC, eventually driven to marketing last year, after=
+ a few conference calls, crickets (they said they would get back to me)=
+ after they understood we wanted these files to be placed on the Linux =
+=46irmware Repository. We (Xyratex) were willing to act as PMC's agent =
+for deployment; their concern was getting technical support requests re=
+garding the Firmware directly from the un-washed Customers rather than =
+through the OEMs deploying the chips on their platforms. I countered wi=
+th a suggestion of a carefully worded License File in association with =
+the images. I will 'ping' them and see if we can escalate this today.
 
-This patch has been tested as follows:
-- Verified that repeated removal (100.000 times) of a
-  SCSI disk (sd) device went fine:
-    $ target='id_ext=0002c9030005f34e,ioc_guid=0002c9030005f34e,dgid=fe800000000000000002c9030005f34f,pkey=ffff,service_id=0002c9030005f34e'; \
-      for ((i=0;i<100000;i++)); do \
-        echo "$target" >/sys/class/infiniband_srp/srp-mlx4_0-1/add_target; \
-      done
-- Verified that a fio data integrity test on a dm device ran
-  fine. The dm device was configured to communicate via two
-  different paths (iSCSI + SRP). The SRP initiator device node
-  was removed and recreated repeatedly.
+-- Mark
 
-Reported-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: James Bottomley <JBottomley@parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: <stable@vger.kernel.org>
----
- drivers/scsi/hosts.c      |    8 +++++++-
- drivers/scsi/scsi_lib.c   |   34 +++++++---------------------------
- drivers/scsi/scsi_priv.h  |    1 -
- drivers/scsi/scsi_sysfs.c |    5 +----
- 4 files changed, 15 insertions(+), 33 deletions(-)
+On May 4, 2012, at 2:16 PM, Kamaljit Singh wrote:
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 351dc0b..ff1a0be 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -296,9 +296,15 @@ static void scsi_host_dev_release(struct device *dev)
- 		destroy_workqueue(shost->work_q);
- 	q = shost->uspace_req_q;
- 	if (q) {
-+		/*
-+		 * Note: freeing queuedata before invoking blk_cleanup_queue()
-+		 * is safe here because no request function is associated with
-+		 * uspace_req_q. See also the __scsi_alloc_queue() call in
-+		 * drivers/scsi/scsi_tgt_lib.c.
-+		 */
- 		kfree(q->queuedata);
- 		q->queuedata = NULL;
--		scsi_free_queue(q);
-+		blk_cleanup_queue(q);
- 	}
- 
- 	scsi_destroy_command_freelist(shost);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5dfd749..3d11485 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -406,10 +406,7 @@ static void scsi_run_queue(struct request_queue *q)
- 	LIST_HEAD(starved_list);
- 	unsigned long flags;
- 
--	/* if the device is dead, sdev will be NULL, so no queue to run */
--	if (!sdev)
--		return;
--
-+	BUG_ON(!sdev);
- 	shost = sdev->host;
- 	if (scsi_target(sdev)->single_lun)
- 		scsi_single_lun_run(sdev);
-@@ -1370,9 +1367,9 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
-  * may be changed after request stacking drivers call the function,
-  * regardless of taking lock or not.
-  *
-- * When scsi can't dispatch I/Os anymore and needs to kill I/Os
-- * (e.g. !sdev), scsi needs to return 'not busy'.
-- * Otherwise, request stacking drivers may hold requests forever.
-+ * When scsi can't dispatch I/Os anymore and needs to kill I/Os scsi
-+ * needs to return 'not busy'. Otherwise, request stacking drivers
-+ * may hold requests forever.
-  */
- static int scsi_lld_busy(struct request_queue *q)
- {
-@@ -1380,9 +1377,10 @@ static int scsi_lld_busy(struct request_queue *q)
- 	struct Scsi_Host *shost;
- 	struct scsi_target *starget;
- 
--	if (!sdev)
-+	if (blk_queue_dead(q))
- 		return 0;
- 
-+	BUG_ON(!sdev);
- 	shost = sdev->host;
- 	starget = scsi_target(sdev);
- 
-@@ -1487,11 +1485,7 @@ static void scsi_request_fn(struct request_queue *q)
- 	struct scsi_cmnd *cmd;
- 	struct request *req;
- 
--	if (!sdev) {
--		while ((req = blk_peek_request(q)) != NULL)
--			scsi_kill_request(req, q);
--		return;
--	}
-+	BUG_ON(!sdev);
- 
- 	if(!get_device(&sdev->sdev_gendev))
- 		/* We must be tearing the block queue down already */
-@@ -1694,20 +1688,6 @@ struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
- 	return q;
- }
- 
--void scsi_free_queue(struct request_queue *q)
--{
--	unsigned long flags;
--
--	WARN_ON(q->queuedata);
--
--	/* cause scsi_request_fn() to kill all non-finished requests */
--	spin_lock_irqsave(q->queue_lock, flags);
--	q->request_fn(q);
--	spin_unlock_irqrestore(q->queue_lock, flags);
--
--	blk_cleanup_queue(q);
--}
--
- /*
-  * Function:    scsi_block_requests()
-  *
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index be4fa6d..fd9f57f 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -84,7 +84,6 @@ extern void scsi_next_command(struct scsi_cmnd *cmd);
- extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
- extern void scsi_run_host_queues(struct Scsi_Host *shost);
- extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
--extern void scsi_free_queue(struct request_queue *q);
- extern int scsi_init_queue(void);
- extern void scsi_exit_queue(void);
- struct request_queue;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 04c2a27..42c35ff 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -971,11 +971,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		sdev->host->hostt->slave_destroy(sdev);
- 	transport_destroy_device(dev);
- 
--	/* cause the request function to reject all I/O requests */
--	sdev->request_queue->queuedata = NULL;
--
- 	/* Freeing the queue signals to block that we're done */
--	scsi_free_queue(sdev->request_queue);
-+	blk_cleanup_queue(sdev->request_queue);
- 	put_device(dev);
- }
- 
--- 
-1.7.7
+> Mark,
+>=20
+> My comments are at a technical level only.  For IP issues please cons=
+ider talking to the PMC Marketing team.
+>=20
+> To avoid potential conflicts across firmware files of other PMC produ=
+cts you may want to create a driver specific directory under /lib/firmw=
+are. =20
+> Additionally, I noticed that /lib/firmware has company specific direc=
+tories.  So here are some suggestions.
+>=20
+> #1: /lib/firmware/pmcs/pm8001/*.bin.
+> #2: /lib/firmware/pm8001/*.bin.
+>=20
+>=20
+> Thanks,
+>=20
+> Kamaljit Singh
+>=20
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.=
+kernel.org] On Behalf Of Mark Salyzyn
+> Sent: Friday, May 04, 2012 4:33 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: Mark Salyzyn; Jack Wang; James Bottomley; lindar_liu; =E4=BA=8E=E7=
+=88=B1=E5=8D=8E; john_gong
+> Subject: [PATCH] pm8001: support HDA (flashless) mode (take 3)
+>=20
+> Third time IS the charm :-)
+>=20
+> The pm8001 can be delivered as a standalone product with flash-progra=
+mmed
+> firmware images, or without the flash present requiring the driver to=
+ upload
+> the images into the chip's RAM and then run. This is called flashless=
+ HDA mode.
+>=20
+> We add support for this firmware upload in the enclosed patch. We try=
+ some
+> basic initialization checks of the Firmware, and if it appears dead, =
+we make
+> the assumption the adapter must in-fact be halted in this HDA mode. T=
+he
+> Firmware images themselves have not been cleared for open-release by =
+PMC, but
+> they are available in OpenSolaris <hint hint>. PMC's rationalization =
+for not
+> wanting an open-release of the Firmware Images is that they do not wa=
+nt to
+> take support calls except from paying OEMs (such as Xyratex) that are=
+ embedding
+> PMC product into the motherboards and thus may have a tested combinat=
+ion of
+> Firmware and Hardware. Please respect this sentiment. Images are expe=
+cted in:
+>=20
+> /lib/firmware/aap1img.bin
+> /lib/firmware/ilaimg.bin
+> /lib/firmware/iopimg.bin
+> /lib/firmware/istrimg.bin
+>=20
+> using the exact same naming convention as PMC and in OpenSolaris (and=
+ its
+> followon children) for these image files.
+>=20
+> Take 2 of the patch, added manifests MAIN_HDA_FLAGS_FORCE_HDA and
+> MAIN_HDA_FLAGS_HDA_FW to check against the bit value of .hda_mode_fla=
+g
+> if the SEEPROM is forcing HDA flashless mode.
+>=20
+> Take 3 of the patch, added hot-plug reset operations, dropped some
+> unnecessary but inert duplicated operations and dropped the firmware
+> images down one level into /lib/firmware/pm8001/ directory.
+>=20
+> Signed-off-by: Mark Salyzyn <mark_salyzyn@xyratex.com>
+> Review-by: Jack Wang <jack_wang@usish.com>
+> Cc: James Bottomley <JBottomley@parallels.com>
+> Cc: lindar_liu@usish.com
+> Cc: crystal_yu@usish.com
+> Cc: john_gong@usish.com
+>=20
+> drivers/scsi/pm8001/pm8001_hwi.c  |  582 ++++++++++++++++++++++++++++=
++++++++---
+> drivers/scsi/pm8001/pm8001_hwi.h  |   40 ++
+> drivers/scsi/pm8001/pm8001_init.c |   36 ++
+> drivers/scsi/pm8001/pm8001_sas.h  |    3=20
+> 4 files changed, 616 insertions(+), 45 deletions(-)
+>=20
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
