@@ -1,31 +1,31 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 5/6] qla4xxx: Capture minidump for ISP82XX on firmware
- failure
-Date: Fri, 04 May 2012 05:17:36 -0500
-Message-ID: <4FA3ACC0.7000106@cs.wisc.edu>
-References: <CBC9A645.E8BA%vikas.chaudhary@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 0/4] notify userspace of offline->running transitions
+Date: Fri,  4 May 2012 05:23:20 -0500
+Message-ID: <1336127004-2358-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36445 "EHLO sabe.cs.wisc.edu"
+Received: from mx1.redhat.com ([209.132.183.28]:29611 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754488Ab2EDKRt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 May 2012 06:17:49 -0400
-In-Reply-To: <CBC9A645.E8BA%vikas.chaudhary@qlogic.com>
+	id S1753754Ab2EDKX2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 May 2012 06:23:28 -0400
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q44ANSmU022419
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Fri, 4 May 2012 06:23:28 -0400
+Received: from meanminna.corp.redhat.com (vpn-11-171.rdu.redhat.com [10.11.11.171])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id q44ANR9f013949
+	for <linux-scsi@vger.kernel.org>; Fri, 4 May 2012 06:23:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Tej Parkash <tej.parkash@qlogic.com>, Shyam Sundar <shyam.sundar@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
-On 05/04/2012 05:00 AM, Vikas Chaudhary wrote:
->> # echo 6 > /sys/class/scsi_host/host7/device/fw_dump
+The following patches were made over the misc branch of the scsi tree.
 
-echo adds a newline by default. If you do echo -n it does not.
+The patches fix a issue where if the device is offlined or IO is
+failed due to fast_io_fail (fc) /recovery_tmo (iscsi) then comes
+back, apps do not have a way a nice way to figure out the state
+has transitioned to running. Apps have to either poll the sysfs state
+file or send a SG IO to figure it out. With the patch apps can listen
+for the KOBJ CHANGE event like some of them (at least udev does) do
+already.
 
-Does simple_strtol handle that but kstrol not handle it?
 
->>From above logs looks like sysfs attribute reading some extra garbage
->> >characters because of which
->> >'kstrtol()' fails but in same case 'simple_strtol()' works fine.
->> >
