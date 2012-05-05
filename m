@@ -1,38 +1,55 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 3/3] Make scsi_free_queue() abort pending requests
-Date: Sat, 05 May 2012 13:41:41 +0000
-Message-ID: <4FA52E15.7020609@acm.org>
-References: <4FA3EF10.3040104@acm.org> <4FA3F0B1.9040207@acm.org> <4FA43B21.2060906@cs.wisc.edu>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 12/12] scsi_transport_sas: fix delete vs scan race
+Date: Sat, 5 May 2012 14:52:38 -0700
+Message-ID: <CAA9_cmcCQtyRBEt-c8EP6wuSukqZn0Mswxi3nDG7R-88L57BjA@mail.gmail.com>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
+	<20120413233752.8025.97983.stgit@dwillia2-linux.jf.intel.com>
+	<1335091115.13208.14.camel@dabdike.lan>
+	<CABE8wwssa-_MsCTe0FJeCLY5KTk1sRcsmUjF8Sb-5sofc=zuFQ@mail.gmail.com>
+	<1335114924.13208.27.camel@dabdike.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay03ant.iops.be ([212.53.5.218]:35402 "EHLO
-	relay03ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751630Ab2EENls (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 May 2012 09:41:48 -0400
-In-Reply-To: <4FA43B21.2060906@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1335114924.13208.27.camel@dabdike.lan>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tomas Henzl <thenzl@redhat.com>, Mike Snitzer <snitzer@redhat.com>
 
-On 05/04/12 20:25, Mike Christie wrote:
+On Sun, Apr 22, 2012 at 10:15 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> Async scan here means any scan in a different thread, right ... it ju=
+st
+> has to be asynchronous relative to us? =A0So that includes the manual=
+ly
+> initiated ones and hotplug ones, doesn't it?
 
-> On 05/04/2012 10:07 AM, Bart Van Assche wrote:
->> It is possible that a SCSI LLD invokes scsi_remove_host() after a
->> request has been queued via scsi_host_template.queuecommand() but
->> before scsi_done() has been invoked for that request. This may
-> 
-> If that happens won't we wait in blk_cleanup_queue->blk_drain_queue for
-> that IO to be completed (completed normally or timed out and processed
-> through that path)?
+[ resend since I notice this never hit the lists ]
 
-As far as I understand the block layer requests that have been queued
-but for which scsi_request_fn() has not yet been invoked are on the
-request_queue.queue_head list. Requests that have been passed to the
-SCSI LLD but for which scsi_done() has not yet been invoked are on the
-request_queue.timeout_list list. blk_drain_queue() works on the former
-list while blk_abort_queue() processes the latter.
+Hmm, well no I don't think so.  This literally means the initial async
+scan, and the
+failure window is between when we skip the call to
+scsi_sysfs_add_sdev() (in scsi_add_lun() under the scan_mutex) and
+finally call scsi_sysfs_add_sdev() again via scsi_finish_async_scan().
+I don't see how that fixes it because when we fail the sequence goes:
 
-Bart.
+mutex_lock(scan_mutex)
+starget->parent =3D end_device;
+scsi_add_lun()
+mutex_unlock(scan_mutex)
+
+device_del(end_device)
+
+mutex_lock(scan_mutex)
+device_add(starget)
+<crash>
+
+As far as I can see taking the scan_mutex in sas_rphy_remove() does
+not change this failure window.  Unless I missed something?
+
+I am going to re-submit this patch as is with the proposed libsas batch=
+ for 3.5.
+
+--
+Dan
