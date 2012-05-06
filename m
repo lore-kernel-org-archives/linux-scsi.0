@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 04/18] scsi_transport_sas: fix delete vs scan race
-Date: Sun, 06 May 2012 11:18:17 -0700
-Message-ID: <20120506181817.17912.17194.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH 01/18] libsas: cleanup spurious calls to scsi_schedule_eh
+Date: Sun, 06 May 2012 11:18:02 -0700
+Message-ID: <20120506181802.17912.33174.stgit@dwillia2-linux.jf.intel.com>
 References: <20120506181611.17912.3798.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,61 +10,48 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120506181611.17912.3798.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Cc: Maciej Trela <maciej.trela@intel.com>, linux-ide@vger.kernel.org, Artur Wojcik <artur.wojcik@intel.com>, Jacek Danecki <jacek.danecki@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The following crash results from cases where the end_device has been
-removed before scsi_sysfs_add_sdev has had a chance to run.
+From: Maciej Trela <maciej.trela@intel.com>
 
- BUG: unable to handle kernel NULL pointer dereference at 0000000000000098
- IP: [<ffffffff8115e100>] sysfs_create_dir+0x32/0xb6
- ...
- Call Trace:
-  [<ffffffff8125e4a8>] kobject_add_internal+0x120/0x1e3
-  [<ffffffff81075149>] ? trace_hardirqs_on+0xd/0xf
-  [<ffffffff8125e641>] kobject_add_varg+0x41/0x50
-  [<ffffffff8125e70b>] kobject_add+0x64/0x66
-  [<ffffffff8131122b>] device_add+0x12d/0x63a
-  [<ffffffff814b65ea>] ? _raw_spin_unlock_irqrestore+0x47/0x56
-  [<ffffffff8107de15>] ? module_refcount+0x89/0xa0
-  [<ffffffff8132f348>] scsi_sysfs_add_sdev+0x4e/0x28a
-  [<ffffffff8132dcbb>] do_scan_async+0x9c/0x145
+eh is woken up automatically by the presence of failed commands,
+scsi_schedule_eh is reserved for cases where there are no failed
+commands.  This guarantees that host_eh_sceduled is only incremented
+when an explicit eh request is made.
 
-...teach sas_rphy_remove to wait for async scanning to quiesce before
-removing the end_device.  It seems this is a more general problem [1],
-but this patch only addresses sas transport.
-
-[1]: 23edb6e [SCSI] mpt2sas: Do not set sas_device->starget to NULL from
-the slave_destroy callback when all the LUNS have been deleted
-
+Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
+Signed-off-by: Maciej Trela <maciej.trela@intel.com>
+[fixed spurious delete of sas_ata_task_abort]
+Signed-off-by: Artur Wojcik <artur.wojcik@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/scsi_transport_sas.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/libsas/sas_ata.c       |    1 -
+ drivers/scsi/libsas/sas_scsi_host.c |    1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index f7565fc..47abb90 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -33,8 +33,9 @@
- #include <linux/bsg.h>
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 441d88a..6c31329 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -591,7 +591,6 @@ void sas_ata_task_abort(struct sas_task *task)
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_abort_request(qc->scsicmd->request);
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
+-		scsi_schedule_eh(qc->scsicmd->device->host);
+ 		return;
+ 	}
  
- #include <scsi/scsi.h>
--#include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_scan.h>
-+#include <scsi/scsi_device.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_sas.h>
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index f0b9b7b..17339e5 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -1003,7 +1003,6 @@ void sas_task_abort(struct sas_task *task)
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_abort_request(sc->request);
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
+-		scsi_schedule_eh(sc->device->host);
+ 	}
+ }
  
-@@ -1667,6 +1668,9 @@ sas_rphy_remove(struct sas_rphy *rphy)
- {
- 	struct device *dev = &rphy->dev;
- 
-+	/* prevent device_del() while child device_add() may be in-flight */
-+	scsi_complete_async_scans();
-+
- 	switch (rphy->identify.device_type) {
- 	case SAS_END_DEVICE:
- 		scsi_remove_target(dev);
 
