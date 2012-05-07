@@ -1,46 +1,61 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: Re: [PATCH 01/10] sg: remove unnecessary indentation
-Date: Mon, 7 May 2012 15:44:50 -0400
-Message-ID: <20120507194450.GC6553@logfs.org>
-References: <20120412213217.GA17388@logfs.org>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [v2 PATCH 3/4] bnx2fc: cleanup task management IO when it
+ times out.
+Date: Mon, 7 May 2012 16:31:15 -0700
+Message-ID: <4FA85B43.2000909@broadcom.com>
+References: <4FA85912.2030800@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from longford.logfs.org ([213.229.74.203]:60108 "EHLO
-	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751062Ab2EGVr1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2012 17:47:27 -0400
-Content-Disposition: inline
-In-Reply-To: <20120412213217.GA17388@logfs.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:3503 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757066Ab2EGXba (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 May 2012 19:31:30 -0400
+In-Reply-To: <4FA85912.2030800@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-On Thu, 12 April 2012 17:32:17 -0400, J=C3=B6rn Engel wrote:
->=20
-> blocking is de-facto a constant and the now-removed comment wasn't al=
-l
-> that useful either.  Without them and the resulting indentation the c=
-ode
-> is a bit nicer to read.
+On  05/04/2012 08:49 AM, Mike Christie wrote:
+> On 04/24/2012 05:26 PM, Bhanu Prakash Gollapudi wrote:
+>  > diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+> b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+>  > index d3ee231..082a25c 100644
+>  > --- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+>  > +++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+>  > @@ -185,6 +185,16 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport
+> *tgt)
+>  > BUG_ON(rc);
+>  > }
+>  >
+>  > + list_for_each_safe(list, tmp, &tgt->active_tm_queue) {
+>  > + i++;
+>  > + io_req = (struct bnx2fc_cmd *)list;
+>
+> Why didn't you use list_for_each_entry_safe()? Or, when using
+> list_for_each_safe, instead of the cast are we supposed to be using
+> list_entry()?
 
-Ping.
+Mike, the list is the first field in the structure, so the cast here is 
+right.
 
-This patchset, amongst other things, solves the issue of tasks hanging
-for >200s.  Strictly those hung tasks were a regression introduced
-when Arnd removed the BKL.  So someone should merge them.
+Thanks,
+Bhanu
+>
+>
+>  > + list_del_init(&io_req->link);
+>  > + io_req->on_tmf_queue = 0;
+>  > + BNX2FC_IO_DBG(io_req, "tm_queue cleanup\n");
+>  > + if (io_req->wait_for_comp)
+>  > + complete(&io_req->tm_done);
+>  > + }
+>  > +
+>  > list_for_each_safe(list, tmp, &tgt->els_queue) {
+>  > i++;
+>  > io_req = (struct bnx2fc_cmd *)list;
 
-James, would that someone be you?
 
-J=C3=B6rn
-
---
-tglx1 thinks that joern should get a (TM) for "Thinking Is Hard"
--- Thomas Gleixner
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
