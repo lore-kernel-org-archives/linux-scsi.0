@@ -1,36 +1,46 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target-pending updates for v3.4-rc1 (round 1)
-Date: Mon, 07 May 2012 14:15:25 -0700
-Message-ID: <1336425325.14368.66.camel@haakon2.linux-iscsi.org>
-References: <1332194942.1612.177.camel@haakon2.linux-iscsi.org>
-	 <4FA83910.9010704@xenotime.net>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCH 01/10] sg: remove unnecessary indentation
+Date: Mon, 7 May 2012 15:44:50 -0400
+Message-ID: <20120507194450.GC6553@logfs.org>
+References: <20120412213217.GA17388@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <4FA83910.9010704@xenotime.net>
-Sender: target-devel-owner@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Roland Dreier <roland@kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Arun Easi <arun.easi@qlogic.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from longford.logfs.org ([213.229.74.203]:60108 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062Ab2EGVr1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2012 17:47:27 -0400
+Content-Disposition: inline
+In-Reply-To: <20120412213217.GA17388@logfs.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On Mon, 2012-05-07 at 14:05 -0700, Randy Dunlap wrote:
-> Hi Nicholas,
-> 
+On Thu, 12 April 2012 17:32:17 -0400, J=C3=B6rn Engel wrote:
+>=20
+> blocking is de-facto a constant and the now-removed comment wasn't al=
+l
+> that useful either.  Without them and the resulting indentation the c=
+ode
+> is a bit nicer to read.
 
-Hi Randy,
+Ping.
 
-> Should I have copied you on this patch to
-> drivers/scsi/qla2xxx/qla_target.c and tcm_qla2xxx.c ?
-> 
-> http://marc.info/?l=linux-scsi&m=133588563814844&w=2
-> 
+This patchset, amongst other things, solves the issue of tasks hanging
+for >200s.  Strictly those hung tasks were a regression introduced
+when Arnd removed the BKL.  So someone should merge them.
 
-Aapplied to lio-core.git, and will fold into for-next-merge shortly..
+James, would that someone be you?
 
-Qlogic folks, please also fold into your linux-scsi submission for v3.5,
-or let me know if you'd like an updated series from for-next-merge.
+J=C3=B6rn
 
-Thanks!
-
---nab
+--
+tglx1 thinks that joern should get a (TM) for "Thinking Is Hard"
+-- Thomas Gleixner
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
