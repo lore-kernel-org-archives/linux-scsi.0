@@ -1,38 +1,73 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 43191] Syslog fills with messages about assuming drive cache
- when SD card not present
-Date: Mon, 7 May 2012 14:33:29 GMT
-Message-ID: <201205071433.q47EXTHo011420@bugzilla.kernel.org>
-References: <bug-43191-11613@https.bugzilla.kernel.org/>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: Regression introduced by 6f381fa344911d5a234b13574433cf23036f9467
+ [[SCSI] scsi_lib: use correct DMA device in __scsi_alloc_queue]
+Date: Mon, 7 May 2012 20:36:26 +0200
+Message-ID: <CAMuHMdWJAkS2_DuLdfZQA6ZQGAycrr5w5egfaeaQsMJsTVEWRQ@mail.gmail.com>
+References: <20120507135238.GC361@phenom.dumpdata.com>
+	<CAF1ivSZNH3R-U=d=yBW4m9PO8TQSbSP=dHR3okdsO7EkOm2RMQ@mail.gmail.com>
+	<20120507175039.GA6423@phenom.dumpdata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:41512 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756099Ab2EGOda (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2012 10:33:30 -0400
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q47EXTbc011421
-	for <linux-scsi@vger.kernel.org>; Mon, 7 May 2012 14:33:29 GMT
-In-Reply-To: <bug-43191-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120507175039.GA6423@phenom.dumpdata.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Lin Ming <ming.m.lin@intel.com>, JBottomley@parallels.com, joerg@alea.gnuu.de, linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=43191
+On Mon, May 7, 2012 at 7:50 PM, Konrad Rzeszutek Wilk
+<konrad.wilk@oracle.com> wrote:
+>> > reverting above mentioned git commit fixes the issue.
+>>
+>> Does Jame's below patch help?
+>>
+>> http://www.spinics.net/lists/linux-scsi/msg59106.html
+>
+> Yes. =C2=A0please add Tested-by: Konrad Rzeszutek Wilk <konrad.wilk@o=
+racle.com>
+> on the latter part of that patch:
 
+Same issue here with Atari NCR5380 SCSI on ARAnyM.
+After the fix below, v3.4-rc6 boots, so
 
+Tested-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
+BTW, any git tree that has the original patch, so I don't have to commi=
+t the
+HTML-mangled version from spinics to the m68k tree?
 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 351dc0b..a3a056a 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -218,6 +218,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shos=
+t, struct device *dev,
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!shost->shost_gendev.parent)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0shost->shost_g=
+endev.parent =3D dev ? dev : &platform_bus;
+> + =C2=A0 =C2=A0 =C2=A0 if (!dma_dev)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 dma_dev =3D shost-=
+>shost_gendev.parent;
+> +
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0shost->dma_dev =3D dma_dev;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0error =3D device_add(&shost->shost_gendev)=
+;
 
---- Comment #7 from Daniel Mehrmann <daniel.mehrmann@gmx.de>  2012-05-07 14:33:29 ---
-Created an attachment (id=73217)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=73217)
-dmesg output
+Gr{oetje,eeting}s,
 
-dmesg output of Netbook LG x110
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 Geert
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
+m68k.org
+
+In personal conversations with technical people, I call myself a hacker=
+=2E But
+when I'm talking to journalists I just say "programmer" or something li=
+ke that.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
