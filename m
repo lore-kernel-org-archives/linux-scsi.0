@@ -1,50 +1,41 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: qla2xxx: Add LLD target-mode infrastructure for >= 24xx series
-Date: Mon, 7 May 2012 16:59:24 +0300
-Message-ID: <20120507135924.GA32419@elgon.mountain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 43191] Syslog fills with messages about assuming drive cache
+ when SD card not present
+Date: Mon, 7 May 2012 14:32:15 GMT
+Message-ID: <201205071432.q47EWFH8011354@bugzilla.kernel.org>
+References: <bug-43191-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:47839 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756729Ab2EGN7e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2012 09:59:34 -0400
-Content-Disposition: inline
+Received: from bugzilla.kernel.org ([198.145.19.204]:41492 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756099Ab2EGOcQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2012 10:32:16 -0400
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q47EWFux011355
+	for <linux-scsi@vger.kernel.org>; Mon, 7 May 2012 14:32:16 GMT
+In-Reply-To: <bug-43191-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hello Nicholas Bellinger,
+https://bugzilla.kernel.org/show_bug.cgi?id=43191
 
-This is a semi-automatic email about new static checker warnings.
 
-The patch 2c0532cbbbb5: "qla2xxx: Add LLD target-mode infrastructure 
-for >= 24xx series" from May 3, 2012, leads to the following Smatch 
-complaint:
+Daniel Mehrmann <daniel.mehrmann@gmx.de> changed:
 
-drivers/scsi/qla2xxx/qla_target.c:2965 qlt_abort_task()
-	 error: we previously assumed 'sess' could be null (see line 2958)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |daniel.mehrmann@gmx.de
 
-drivers/scsi/qla2xxx/qla_target.c
-  2957		sess = ha->tgt.tgt_ops->find_sess_by_loop_id(vha, loop_id);
-  2958		if (sess == NULL) {
-                    ^^^^^^^^^^^^
-New check.
 
-  2959			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf025,
-  2960			    "qla_target(%d): task abort for unexisting "
-  2961			    "session\n", vha->vp_idx);
-  2962			res = qlt_sched_sess_work(ha->tgt.qla_tgt,
-  2963			    QLA_TGT_SESS_WORK_ABORT, iocb, sizeof(*iocb));
-  2964			if (res != 0)
-  2965				sess->tgt->tm_to_unknown = 1;
-                                ^^^^^^^^^
-New dereference.
 
-  2966	
-  2967			return res;
 
-regards,
-dan carpenter
+--- Comment #6 from Daniel Mehrmann <daniel.mehrmann@gmx.de>  2012-05-07 14:32:14 ---
+I can confirm it happens with my Netbook LG x110 as well.
+I attach a boot.log
 
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
