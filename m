@@ -1,47 +1,99 @@
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: [RFC][PATCH] libata: enable SATA disk fua detection on default
-Date: Tue,  8 May 2012 11:24:03 +0800
-Message-ID: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jeff Garzik <jeff@garzik.org>, Zheng Liu <wenqing.lz@taobao.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH 3/3] dm mpath: add support for using previously attached scsi_dh
+Date: Mon,  7 May 2012 23:19:07 -0400
+Message-ID: <1336447147-3830-2-git-send-email-snitzer@redhat.com>
+References: <1336447147-3830-1-git-send-email-snitzer@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:1031 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751053Ab2EHDTY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 May 2012 23:19:24 -0400
+In-Reply-To: <1336447147-3830-1-git-send-email-snitzer@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dm-devel@redhat.com
+Cc: agk@redhat.com, hare@suse.de, babu.moger@netapp.com, sekharan@us.ibm.com, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 
-From: Zheng Liu <wenqing.lz@taobao.com>
+Use the previously attached scsi_dh if "default" is provided as the
+hardware handler name (the new 'use_default_hw_handler' flag is set in
+the multipath structure).
 
-Currently, SATA disk fua detection is disabled on default because most of
-devices don't support this feature at that time.  With the development of
-technology, more and more SATA disks support this feature.  So now we can enable
-this detection on default.
+Leverage scsi_dh_attach's ability to increment the scsi_dh's reference
+count if the same scsi_dh name is provided when attaching -- currently
+attached scsi_dh name is determined with scsi_dh_attached_handler_name.
 
-Although fua detection is defined as a kernel module parameter, it is too hard
-to set its value because it must be loaded and set before system starts up.
-That needs to modify initrd file.  So it is inconvenient for administrator who
-needs to manage a huge number of servers.
-
-CC: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 ---
- drivers/ata/libata-core.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/md/dm-mpath.c |   23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 23763a1..3627251 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -133,9 +133,9 @@ int atapi_passthru16 = 1;
- module_param(atapi_passthru16, int, 0444);
- MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+Index: linux-2.6/drivers/md/dm-mpath.c
+===================================================================
+--- linux-2.6.orig/drivers/md/dm-mpath.c
++++ linux-2.6/drivers/md/dm-mpath.c
+@@ -63,6 +63,7 @@ struct multipath {
  
--int libata_fua = 0;
-+int libata_fua = 1;
- module_param_named(fua, libata_fua, int, 0444);
--MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
-+MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on [default])");
+ 	spinlock_t lock;
  
- static int ata_ignore_hpa;
- module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
--- 
-1.7.4.1
-
++	unsigned use_default_hw_handler:1;
+ 	const char *hw_handler_name;
+ 	char *hw_handler_params;
+ 
+@@ -566,6 +567,7 @@ static struct pgpath *parse_path(struct 
+ 	int r;
+ 	struct pgpath *p;
+ 	struct multipath *m = ti->private;
++	struct request_queue *q = NULL;
+ 
+ 	/* we need at least a path arg */
+ 	if (as->argc < 1) {
+@@ -584,9 +586,16 @@ static struct pgpath *parse_path(struct 
+ 		goto bad;
+ 	}
+ 
+-	if (m->hw_handler_name) {
+-		struct request_queue *q = bdev_get_queue(p->path.dev->bdev);
++	if (m->use_default_hw_handler || m->hw_handler_name)
++		q = bdev_get_queue(p->path.dev->bdev);
++
++	if (m->use_default_hw_handler) {
++		const char *attached_handler_name = scsi_dh_attached_handler_name(q);
++		if (attached_handler_name)
++			m->hw_handler_name = kstrdup(attached_handler_name, GFP_KERNEL);
++	}
+ 
++	if (m->hw_handler_name) {
+ 		r = scsi_dh_attach(q, m->hw_handler_name);
+ 		if (r == -EBUSY) {
+ 			/*
+@@ -706,6 +715,7 @@ static int parse_hw_handler(struct dm_ar
+ 	unsigned hw_argc;
+ 	int ret;
+ 	struct dm_target *ti = m->ti;
++	const char *hw_handler_name;
+ 
+ 	static struct dm_arg _args[] = {
+ 		{0, 1024, "invalid number of hardware handler args"},
+@@ -717,7 +727,13 @@ static int parse_hw_handler(struct dm_ar
+ 	if (!hw_argc)
+ 		return 0;
+ 
+-	m->hw_handler_name = kstrdup(dm_shift_arg(as), GFP_KERNEL);
++	hw_handler_name = dm_shift_arg(as);
++	if (!strncmp(hw_handler_name, "default", 8)) {
++		m->use_default_hw_handler = 1;
++		goto parse_hw_handler_params;
++	}
++
++	m->hw_handler_name = kstrdup(hw_handler_name, GFP_KERNEL);
+ 	if (!try_then_request_module(scsi_dh_handler_exist(m->hw_handler_name),
+ 				     "scsi_dh_%s", m->hw_handler_name)) {
+ 		ti->error = "unknown hardware handler type";
+@@ -725,6 +741,7 @@ static int parse_hw_handler(struct dm_ar
+ 		goto fail;
+ 	}
+ 
++parse_hw_handler_params:
+ 	if (hw_argc > 1) {
+ 		char *p;
+ 		int i, j, len = 4;
