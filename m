@@ -1,49 +1,54 @@
-From: Paul Bolle <pebolle@tiscali.nl>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH 0/3] scsi: usb-storage: hide errors for five devices
-Date: Tue, 08 May 2012 17:37:33 +0200
-Message-ID: <1336491453.1933.67.camel@x61.thuisdomein>
-References: <Pine.LNX.4.44L0.1205081000250.1479-100000@iolanthe.rowland.org>
+Date: Tue, 8 May 2012 13:03:17 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1205081240450.1479-100000@iolanthe.rowland.org>
+References: <1336491453.1933.67.camel@x61.thuisdomein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:3366 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756106Ab2EHPhi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2012 11:37:38 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1205081000250.1479-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1336491453.1933.67.camel@x61.thuisdomein>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paul Bolle <pebolle@tiscali.nl>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2012-05-08 at 10:02 -0400, Alan Stern wrote:
-> On Tue, 8 May 2012, Paul Bolle wrote: 
-> > 1) These patches try to hide those errors by:
-> > - downgrading one error to a notice; and
+On Tue, 8 May 2012, Paul Bolle wrote:
+
+> On Tue, 2012-05-08 at 10:02 -0400, Alan Stern wrote:
+> > On Tue, 8 May 2012, Paul Bolle wrote: 
+> > > 1) These patches try to hide those errors by:
+> > > - downgrading one error to a notice; and
+> > 
+> > That's a reasonable thing to do, IMO.
+> > 
+> > > - setting the NO_WP_DETECT quirk for these five devices.
+> > 
+> > But that isn't.  These quirks are intended for devices that crash when
+> > they receive the command in question.
 > 
-> That's a reasonable thing to do, IMO.
+> Yes, these USB memory sticks don't crash. (They actually seem to work
+> just fine, something that I perhaps should have emphasized in the commit
+> descriptions.)
 > 
-> > - setting the NO_WP_DETECT quirk for these five devices.
+> > They aren't meant to suppress sending commands to devices that can
+> > properly reject them.
 > 
-> But that isn't.  These quirks are intended for devices that crash when
-> they receive the command in question.
+> Even the sticks that hit "bad_sense" (in sd_read_cache_type(), which I
+> forgot to mention in the comment descriptions)? Is that not as severe as
+> it suggests?
 
-Yes, these USB memory sticks don't crash. (They actually seem to work
-just fine, something that I perhaps should have emphasized in the commit
-descriptions.)
+It means that the device either doesn't support the MODE SENSE command
+or it returned useless data.  As a result, we will assume it has a
+write-through cache when it might not.
 
-> They aren't meant to suppress sending commands to devices that can
-> properly reject them.
+For memory sticks this doesn't matter.  For other devices it might be 
+more important (although anything with a working cache should not hit 
+this error case).
 
-Even the sticks that hit "bad_sense" (in sd_read_cache_type(), which I
-forgot to mention in the comment descriptions)? Is that not as severe as
-it suggests?
+> Of course, an easy way out would be to downgrade both the "Asking for
+> cache data failed" and the "No Caching mode page present" errors to
+> notices. But the SCSI people might disagree with that approach.
 
-Of course, an easy way out would be to downgrade both the "Asking for
-cache data failed" and the "No Caching mode page present" errors to
-notices. But the SCSI people might disagree with that approach.
+Well, let's see what they say.
 
-
-Paul Bolle
-
+Alan Stern
