@@ -1,99 +1,111 @@
 From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH 3/3] dm mpath: add support for using previously attached scsi_dh
-Date: Mon,  7 May 2012 23:19:07 -0400
-Message-ID: <1336447147-3830-2-git-send-email-snitzer@redhat.com>
-References: <1336447147-3830-1-git-send-email-snitzer@redhat.com>
+Subject: [PATCH 2/3] scsi_dh: add scsi_dh_attached_handler_name
+Date: Mon,  7 May 2012 23:19:06 -0400
+Message-ID: <1336447147-3830-1-git-send-email-snitzer@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1031 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:19221 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751053Ab2EHDTY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 May 2012 23:19:24 -0400
-In-Reply-To: <1336447147-3830-1-git-send-email-snitzer@redhat.com>
+	id S1751796Ab2EHDTt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 May 2012 23:19:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: dm-devel@redhat.com
 Cc: agk@redhat.com, hare@suse.de, babu.moger@netapp.com, sekharan@us.ibm.com, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 
-Use the previously attached scsi_dh if "default" is provided as the
-hardware handler name (the new 'use_default_hw_handler' flag is set in
-the multipath structure).
+The following dm-mpath patch may be considered PATCH 1/3 of this series:
+http://www.redhat.com/archives/dm-devel/2012-May/msg00006.html
 
-Leverage scsi_dh_attach's ability to increment the scsi_dh's reference
-count if the same scsi_dh name is provided when attaching -- currently
-attached scsi_dh name is determined with scsi_dh_attached_handler_name.
+----8<---------
+
+Introduce scsi_dh_attached_handler_name() to retrieve the name of the
+scsi_dh that is attached to the scsi_device associated with the provided
+request queue.  Returns NULL if a scsi_dh is not attached.
+
+Also, fix scsi_dh_{attach,detach} function header comments to document
+@q rather than @sdev.
 
 Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 ---
- drivers/md/dm-mpath.c |   23 ++++++++++++++++++++---
- 1 file changed, 20 insertions(+), 3 deletions(-)
+ drivers/scsi/device_handler/scsi_dh.c |   31 +++++++++++++++++++++++++++++--
+ include/scsi/scsi_dh.h                |    5 +++++
+ 2 files changed, 34 insertions(+), 2 deletions(-)
 
-Index: linux-2.6/drivers/md/dm-mpath.c
+Index: linux-2.6/drivers/scsi/device_handler/scsi_dh.c
 ===================================================================
---- linux-2.6.orig/drivers/md/dm-mpath.c
-+++ linux-2.6/drivers/md/dm-mpath.c
-@@ -63,6 +63,7 @@ struct multipath {
+--- linux-2.6.orig/drivers/scsi/device_handler/scsi_dh.c
++++ linux-2.6/drivers/scsi/device_handler/scsi_dh.c
+@@ -468,7 +468,8 @@ EXPORT_SYMBOL_GPL(scsi_dh_handler_exist)
  
- 	spinlock_t lock;
+ /*
+  * scsi_dh_attach - Attach device handler
+- * @sdev - sdev the handler should be attached to
++ * @q - Request queue that is associated with the scsi_device
++ *      the handler should be attached to
+  * @name - name of the handler to attach
+  */
+ int scsi_dh_attach(struct request_queue *q, const char *name)
+@@ -498,7 +499,8 @@ EXPORT_SYMBOL_GPL(scsi_dh_attach);
  
-+	unsigned use_default_hw_handler:1;
- 	const char *hw_handler_name;
- 	char *hw_handler_params;
+ /*
+  * scsi_dh_detach - Detach device handler
+- * @sdev - sdev the handler should be detached from
++ * @q - Request queue that is associated with the scsi_device
++ *      the handler should be detached from
+  *
+  * This function will detach the device handler only
+  * if the sdev is not part of the internal list, ie
+@@ -527,6 +529,31 @@ void scsi_dh_detach(struct request_queue
+ }
+ EXPORT_SYMBOL_GPL(scsi_dh_detach);
  
-@@ -566,6 +567,7 @@ static struct pgpath *parse_path(struct 
- 	int r;
- 	struct pgpath *p;
- 	struct multipath *m = ti->private;
-+	struct request_queue *q = NULL;
- 
- 	/* we need at least a path arg */
- 	if (as->argc < 1) {
-@@ -584,9 +586,16 @@ static struct pgpath *parse_path(struct 
- 		goto bad;
- 	}
- 
--	if (m->hw_handler_name) {
--		struct request_queue *q = bdev_get_queue(p->path.dev->bdev);
-+	if (m->use_default_hw_handler || m->hw_handler_name)
-+		q = bdev_get_queue(p->path.dev->bdev);
++/*
++ * scsi_dh_attached_handler_name - Get attached device handler's name
++ * @q - Request queue that is associated with the scsi_device
++ *      that may have a device handler attached
++ *
++ * Returns name of attached scsi_dh, NULL if no handler is attached.
++ */
++const char *scsi_dh_attached_handler_name(struct request_queue *q)
++{
++	unsigned long flags;
++	struct scsi_device *sdev;
 +
-+	if (m->use_default_hw_handler) {
-+		const char *attached_handler_name = scsi_dh_attached_handler_name(q);
-+		if (attached_handler_name)
-+			m->hw_handler_name = kstrdup(attached_handler_name, GFP_KERNEL);
-+	}
- 
-+	if (m->hw_handler_name) {
- 		r = scsi_dh_attach(q, m->hw_handler_name);
- 		if (r == -EBUSY) {
- 			/*
-@@ -706,6 +715,7 @@ static int parse_hw_handler(struct dm_ar
- 	unsigned hw_argc;
- 	int ret;
- 	struct dm_target *ti = m->ti;
-+	const char *hw_handler_name;
- 
- 	static struct dm_arg _args[] = {
- 		{0, 1024, "invalid number of hardware handler args"},
-@@ -717,7 +727,13 @@ static int parse_hw_handler(struct dm_ar
- 	if (!hw_argc)
- 		return 0;
- 
--	m->hw_handler_name = kstrdup(dm_shift_arg(as), GFP_KERNEL);
-+	hw_handler_name = dm_shift_arg(as);
-+	if (!strncmp(hw_handler_name, "default", 8)) {
-+		m->use_default_hw_handler = 1;
-+		goto parse_hw_handler_params;
-+	}
++	spin_lock_irqsave(q->queue_lock, flags);
++	sdev = q->queuedata;
++	if (!sdev || !get_device(&sdev->sdev_gendev))
++		sdev = NULL;
++	spin_unlock_irqrestore(q->queue_lock, flags);
 +
-+	m->hw_handler_name = kstrdup(hw_handler_name, GFP_KERNEL);
- 	if (!try_then_request_module(scsi_dh_handler_exist(m->hw_handler_name),
- 				     "scsi_dh_%s", m->hw_handler_name)) {
- 		ti->error = "unknown hardware handler type";
-@@ -725,6 +741,7 @@ static int parse_hw_handler(struct dm_ar
- 		goto fail;
- 	}
- 
-+parse_hw_handler_params:
- 	if (hw_argc > 1) {
- 		char *p;
- 		int i, j, len = 4;
++	if (!sdev || !sdev->scsi_dh_data)
++		return NULL;
++
++	return sdev->scsi_dh_data->scsi_dh->name;
++}
++EXPORT_SYMBOL_GPL(scsi_dh_attached_handler_name);
++
+ static struct notifier_block scsi_dh_nb = {
+ 	.notifier_call = scsi_dh_notifier
+ };
+Index: linux-2.6/include/scsi/scsi_dh.h
+===================================================================
+--- linux-2.6.orig/include/scsi/scsi_dh.h
++++ linux-2.6/include/scsi/scsi_dh.h
+@@ -60,6 +60,7 @@ extern int scsi_dh_activate(struct reque
+ extern int scsi_dh_handler_exist(const char *);
+ extern int scsi_dh_attach(struct request_queue *, const char *);
+ extern void scsi_dh_detach(struct request_queue *);
++extern const char *scsi_dh_attached_handler_name(struct request_queue *q);
+ extern int scsi_dh_set_params(struct request_queue *, const char *);
+ #else
+ static inline int scsi_dh_activate(struct request_queue *req,
+@@ -80,6 +81,10 @@ static inline void scsi_dh_detach(struct
+ {
+ 	return;
+ }
++static inline const char *scsi_dh_attached_handler_name(struct request_queue *q)
++{
++	return NULL;
++}
+ static inline int scsi_dh_set_params(struct request_queue *req, const char *params)
+ {
+ 	return -SCSI_DH_NOSYS;
