@@ -1,27 +1,30 @@
 From: Mark Salyzyn <mark_salyzyn@xyratex.com>
-Subject: [PATCH][SCSI] panic within ses.ko during insmod
-Date: Thu, 10 May 2012 16:48:00 -0400
-Message-ID: <8A8902EE-82F3-4CBA-82D6-D689B49C28BC@xyratex.com>
-References: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com> <1321028069.21400.24.camel@nebulus.xyus.xyratex.com> <4EBD948E.9000104@interlog.com> <FC1F9E38C0703341A1A750524E2525A9018F9648@XYUS-EX22.xyus.xyratex.com> <3789993A-8AA9-4FBF-BBC0-3DD1CF1898D0@xyratex.com> <1329667370.2806.6.camel@dabdike.int.hansenpartnership.com>
+Subject: [PATCH][SCSI] panic within ses.ko during insmod (take 2)
+Date: Thu, 10 May 2012 17:02:24 -0400
+Message-ID: <C6B93B91-261D-4AAB-8CA6-D7AF2C8CFF98@xyratex.com>
+References: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com> <1321028069.21400.24.camel@nebulus.xyus.xyratex.com> <4EBD948E.9000104@interlog.com> <FC1F9E38C0703341A1A750524E2525A9018F9648@XYUS-EX22.xyus.xyratex.com> <3789993A-8AA9-4FBF-BBC0-3DD1CF1898D0@xyratex.com> <1329667370.2806.6.camel@dabdike.int.hansenpartnership.com> <8A8902EE-82F3-4CBA-82D6-D689B49C28BC@xyratex.com>
 Mime-Version: 1.0 (Apple Message framework v1257)
-Content-Type: multipart/mixed; boundary="Apple-Mail=_7003268C-1A94-4F47-89C8-DB7C5A011DA5"
+Content-Type: multipart/mixed; boundary="Apple-Mail=_88387398-CB69-4F72-ADC7-139DDE8BB86C"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratex198.xyratex.com ([194.131.166.198]:36641 "EHLO
+Received: from xyratex198.xyratex.com ([194.131.166.198]:29296 "EHLO
 	XY01EX22.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756938Ab2EJUsI (ORCPT
+	by vger.kernel.org with ESMTP id S1757505Ab2EJVCa (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 May 2012 16:48:08 -0400
-In-Reply-To: <1329667370.2806.6.camel@dabdike.int.hansenpartnership.com>
+	Thu, 10 May 2012 17:02:30 -0400
+In-Reply-To: <8A8902EE-82F3-4CBA-82D6-D689B49C28BC@xyratex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, dgilbert@interlog.com, James Bottomley <James.Bottomley@HansenPartnership.com>
 
 
---Apple-Mail=_7003268C-1A94-4F47-89C8-DB7C5A011DA5
+--Apple-Mail=_88387398-CB69-4F72-ADC7-139DDE8BB86C
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain;
 	charset=us-ascii
+
+Ooops, condition check was wrong, had to reverse <sigh> thanks for a =
+fellow Xyratex Employee pointing this out.
 
 Rarely, ses.ko load while scanning was taking place resulted in a panic. =
 Discovered that the panic occurred while the inquiry field for a scsi =
@@ -125,26 +128,25 @@ index eba183c..0e69cf9 100644
 -		if (tmp_sdev->lun !=3D 0 || =
 scsi_device_enclosure(tmp_sdev))
 +		if (tmp_sdev->lun !=3D 0
-+		 || tmp_sdev->inquiry !=3D NULL
++		 || tmp_sdev->inquiry =3D=3D NULL
 +		 || scsi_device_enclosure(tmp_sdev))
  			continue;
  		ses_match_to_enclosure(edev, tmp_sdev);
  	}
 
-
---Apple-Mail=_7003268C-1A94-4F47-89C8-DB7C5A011DA5
+--Apple-Mail=_88387398-CB69-4F72-ADC7-139DDE8BB86C
 Content-Disposition: attachment;
-	filename=ses-panic.patch
+	filename=ses-panic-2.patch
 Content-Type: application/octet-stream;
-	name="ses-panic.patch"
+	name="ses-panic-2.patch"
 Content-Transfer-Encoding: 7bit
 
-ses.ko load while scanning was taking place resulted in a panic. Discovered
-that the panic occurred while the inquiry field for a scsi device was NULL
-and an unprotected call to scsi_device_enclosure() occurred. Suggest that
-the inline function scsi_device_enclosure be modified, but for this panic, we
-can address this specific issue as outlined at the bottom of this
-patch submission.
+Rarely, ses.ko load while scanning was taking place resulted in a panic.
+Discovered that the panic occurred while the inquiry field for a scsi device
+was NULL and an unprotected call to scsi_device_enclosure() occurred. Suggest
+that the inline function scsi_device_enclosure be modified, but for this panic,
+we can address this specific issue as outlined at the bottom of this patch
+submission.
 
 device BUG: unable to handle kernel NULL pointer dereference at 0000000000000006
 IP: [<ffffffffa00230f1>] ses_intf_add+0x2f1/0x5e0 [ses]
@@ -230,10 +232,10 @@ index eba183c..0e69cf9 100644
  	shost_for_each_device(tmp_sdev, sdev->host) {
 -		if (tmp_sdev->lun != 0 || scsi_device_enclosure(tmp_sdev))
 +		if (tmp_sdev->lun != 0
-+		 || tmp_sdev->inquiry != NULL
++		 || tmp_sdev->inquiry == NULL
 +		 || scsi_device_enclosure(tmp_sdev))
  			continue;
  		ses_match_to_enclosure(edev, tmp_sdev);
  	}
 
---Apple-Mail=_7003268C-1A94-4F47-89C8-DB7C5A011DA5--
+--Apple-Mail=_88387398-CB69-4F72-ADC7-139DDE8BB86C--
