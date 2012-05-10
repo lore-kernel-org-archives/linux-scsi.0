@@ -1,170 +1,175 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: RE: [PATCH v3 2/5] scsi_dh: add scsi_dh_attached_handler_name
-Date: Thu, 10 May 2012 18:14:07 +0000
-Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B05D779@SACEXCMBX02-PRD.hq.netapp.com>
-References: <1336612366-30794-1-git-send-email-snitzer@redhat.com>
- <20120510065548.GA5728@infradead.org> <20120510141057.GA1983@redhat.com>
+From: scameron@beardog.cce.hp.com
+Subject: Question about seemingly extraneous i/o's
+Date: Thu, 10 May 2012 13:56:14 -0500
+Message-ID: <20120510185614.GY11309@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:30346 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755433Ab2EJSOM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2012 14:14:12 -0400
-In-Reply-To: <20120510141057.GA1983@redhat.com>
-Content-Language: en-US
+Received: from g6t0186.atlanta.hp.com ([15.193.32.63]:1706 "EHLO
+	g6t0186.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755221Ab2EJS4Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2012 14:56:16 -0400
+Received: from g5t0029.atlanta.hp.com (g5t0029.atlanta.hp.com [16.228.8.141])
+	by g6t0186.atlanta.hp.com (Postfix) with ESMTP id 41D012C380
+	for <linux-scsi@vger.kernel.org>; Thu, 10 May 2012 18:56:15 +0000 (UTC)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "agk@redhat.com" <agk@redhat.com>, "hare@suse.de" <hare@suse.de>, "sekharan@us.ibm.com" <sekharan@us.ibm.com>, "device-mapper development (dm-devel@redhat.com)" <dm-devel@redhat.com>
-
-I have tested these patches(1 to 5) with scsi_dh_rdac and scsi_dh_alua. These modules
-are loaded as part of initrd image. For some devices scsi_dh_rdac is the default and 
-for some scsi_dh_alua is default.  Everything worked as expected.
-
-Output of dmsetup table
-
-3600a0b8000501df0000008134b432748: 0 41943040 multipath 2 queue_if_no_path default_hw_handler 1 rdac 2 1 round-robin 0 1 1 66:0 6 round-robin 0 1 1 8:64 1
-360080e50001b098200008f054f63c73c: 0 20971520 multipath 2 queue_if_no_path default_hw_handler 1 alua 2 1 round-robin 0 1 1 67:80 14 round-robin 0 1 1 67:160 9
+To: linux-scsi@vger.kernel.org
+Cc: mike.miller@hp.com
 
 
-> -----Original Message-----
-> From: Mike Snitzer [mailto:snitzer@redhat.com]
-> Sent: Thursday, May 10, 2012 9:11 AM
-> To: Christoph Hellwig
-> Cc: linux-scsi@vger.kernel.org; agk@redhat.com; hare@suse.de; Moger,
-> Babu; sekharan@us.ibm.com
-> Subject: Re: [PATCH v3 2/5] scsi_dh: add scsi_dh_attached_handler_name
-> 
-> On Thu, May 10 2012 at  2:55am -0400,
-> Christoph Hellwig <hch@infradead.org> wrote:
-> 
-> > On Wed, May 09, 2012 at 09:12:46PM -0400, Mike Snitzer wrote:
-> > > Originally posted to dm-devel but Chandra reminded me to post to
-> > > linux-scsi for James to pick it up.
-> > >
-> > > -------8<-------
-> > >
-> > > Introduce scsi_dh_attached_handler_name() to retrieve the name of the
-> > > scsi_dh that is attached to the scsi_device associated with the provided
-> > > request queue.  Returns NULL if a scsi_dh is not attached.
-> > >
-> > > Also, fix scsi_dh_{attach,detach} function header comments to
-> document
-> > > @q rather than @sdev.
-> >
-> > Wha'ts the use case for this?
-> 
-> See this patch:
-> http://www.redhat.com/archives/dm-devel/2012-May/msg00046.html
-> 
-> (I attributed this change to Hannes because it was based on his earlier
-> patch... I should probably change that given that in the end I
-> re-wrote/merged his patch with my earlier patch...)
-> 
-> Anyway, DM mpath doesn't want to know about the "scsi_dh" structure, but
-> we need the name of the attached handler (to adjust the multipath
-> device's 'hw_handler_name' and to get an additional ref on the attached
-> scsi_dh via dm-mapth.c:parse_path's scsi_dh_attach).
-> 
-> BTW, only reason I split the scsi_dh change from the above dm-mpath
-> patch is because I'm patching SCSI and DM and need to send the changes
-> through different trees.
-> 
-> > The name is stale as soon as the function returns.
-> 
-> Yeah, I have since wondered about that myself.  In practice the attached
-> handler should remain attached so the name really won't be stale.
-> 
-> But in theory there could be a race with scsi_dh_detach.  So I think the
-> following should address your concern?
-> 
-> If so I'll refresh and repost the appropriate patches.
-> 
-> Thanks.
-> 
-> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> index 1039e7f..6f11956 100644
-> --- a/drivers/md/dm-mpath.c
-> +++ b/drivers/md/dm-mpath.c
-> @@ -592,10 +592,11 @@ static struct pgpath *parse_path(struct dm_arg_set
-> *as, struct path_selector *ps
->  		q = bdev_get_queue(p->path.dev->bdev);
-> 
->  	if (m->use_default_hw_handler) {
-> -		const char *attached_handler_name =
-> scsi_dh_attached_handler_name(q);
-> +		const char *attached_handler_name =
-> +			scsi_dh_attached_handler_name(q, GFP_KERNEL);
->  		if (attached_handler_name) {
->  			kfree(m->hw_handler_name);
-> -			m->hw_handler_name =
-> kstrdup(attached_handler_name, GFP_KERNEL);
-> +			m->hw_handler_name = attached_handler_name;
->  		}
->  	}
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh.c
-> b/drivers/scsi/device_handler/scsi_dh.c
-> index 83071e4..33e422e 100644
-> --- a/drivers/scsi/device_handler/scsi_dh.c
-> +++ b/drivers/scsi/device_handler/scsi_dh.c
-> @@ -533,10 +533,12 @@ EXPORT_SYMBOL_GPL(scsi_dh_detach);
->   * scsi_dh_attached_handler_name - Get attached device handler's name
->   * @q - Request queue that is associated with the scsi_device
->   *      that may have a device handler attached
-> + * @gfp - the GFP mask used in the kmalloc() call when allocating memory
->   *
->   * Returns name of attached handler, NULL if no handler is attached.
-> + * Caller must take care to free the returned string.
->   */
-> -const char *scsi_dh_attached_handler_name(struct request_queue *q)
-> +const char *scsi_dh_attached_handler_name(struct request_queue *q,
-> gfp_t gfp)
->  {
->  	unsigned long flags;
->  	struct scsi_device *sdev;
-> @@ -552,7 +554,7 @@ const char *scsi_dh_attached_handler_name(struct
-> request_queue *q)
->  		return NULL;
-> 
->  	if (sdev->scsi_dh_data)
-> -		handler_name = sdev->scsi_dh_data->scsi_dh->name;
-> +		handler_name = kstrdup(sdev->scsi_dh_data->scsi_dh-
-> >name, gfp);
-> 
->  	put_device(&sdev->sdev_gendev);
->  	return handler_name;
-> diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
-> index 94f502b..620c723 100644
-> --- a/include/scsi/scsi_dh.h
-> +++ b/include/scsi/scsi_dh.h
-> @@ -60,7 +60,7 @@ extern int scsi_dh_activate(struct request_queue *,
-> activate_complete, void *);
->  extern int scsi_dh_handler_exist(const char *);
->  extern int scsi_dh_attach(struct request_queue *, const char *);
->  extern void scsi_dh_detach(struct request_queue *);
-> -extern const char *scsi_dh_attached_handler_name(struct request_queue
-> *q);
-> +extern const char *scsi_dh_attached_handler_name(struct request_queue
-> *, gfp_t);
->  extern int scsi_dh_set_params(struct request_queue *, const char *);
->  #else
->  static inline int scsi_dh_activate(struct request_queue *req,
-> @@ -81,7 +81,8 @@ static inline void scsi_dh_detach(struct request_queue
-> *q)
->  {
->  	return;
->  }
-> -static inline const char *scsi_dh_attached_handler_name(struct
-> request_queue *q)
-> +static inline const char *scsi_dh_attached_handler_name(struct
-> request_queue *q,
-> +							gfp_t gfp)
->  {
->  	return NULL;
->  }
-> 
-> 
+I have this script, which just cranks up the scsi logging level
+a bit, then writes 1 block out to a disk, sleeps a bit, then 
+cranks the logging back down.  There's no other i/o going
+to the disk (not mounted, no filesystem)
 
+-----8<---- -----8<---- -----8<---- -----8<---- -----8<----
+#!/bin/sh
+
+logger vvvvvv==============================================================vvvvvv
+LOGGING_LEVEL=14683648
+
+sysctl -w dev.scsi.logging_level=$LOGGING_LEVEL
+dd if=/dev/zero of=/dev/sdb count=1 bs=512 seek=5000 oflag=direct
+sleep 1
+sysctl -w dev.scsi.logging_level=0
+logger ^^^^^^==============================================================^^^^^^
+-----8<---- -----8<---- -----8<---- -----8<---- -----8<----
+
+
+This script produces the log below.  It does the write, as
+expected, but then it also does a test unit ready, then inquiries and a bunch of reads.
+
+Where are these coming from?
+
+Changing the readahead doesn't seem to affect it, and it happens
+each time I run the dd.
+
+Doing the same thing with a block driver (e.g. cciss) results in
+the single write i/o and nothing more (we observed this from the
+hardware side -- from within HP smart array firmware -- and initially
+noticed the "extra" i/o's from the hardware side as well, but found
+we can see them with linux scsi logging as well.
+
+Just wondering where they're coming from and under what circumstances
+they are elicited and what can be done to avoid this behavior.  Initially
+I suspected readahead, but a) when I turn it off, the mystery i/o's are
+still present, and b) if it were read-ahead, I'd expect it would do the
+read ahead once and then subsequent trials would not do the readahead 
+since those blocks should be in the buffer cache except for c) I'm using
+direct i/o, so no buffer cache involved.
+
+-- steve
+
+
+May 10 13:49:47 localhost scameron: vvvvvv==============================================================vvvvvv
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_open
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_prep_fn: block=5000, count=1
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] block=5000
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] writing 1/1 512 byte blocks.
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] Send: 0xffff88013c3ed0c0 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] CDB: Write(10): 2a 00 00 00 13 88 00 00 01 00
+May 10 13:49:47 localhost kernel: buffer = 0xffff88019644fb80, bufflen = 512, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_check_events
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_release
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: Send: 0xffff88013c3ed3c0 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: CDB: Test Unit Ready: 00 00 00 00 00 00
+May 10 13:49:47 localhost kernel: buffer = 0x          (null), bufflen = 0, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_open
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] Send: 0xffff88013b55eec0 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] CDB: Inquiry: 12 00 00 00 fe 00
+May 10 13:49:47 localhost kernel: buffer = 0xffff88013b51eec0, bufflen = 254, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_check_events
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_release
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: Send: 0xffff88013b55edc0 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: CDB: Test Unit Ready: 00 00 00 00 00 00
+May 10 13:49:47 localhost kernel: buffer = 0x          (null), bufflen = 0, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_open
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] Send: 0xffff88013c3edbc0 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] CDB: Inquiry: 12 01 00 00 fe 00
+May 10 13:49:47 localhost kernel: buffer = 0xffff88019644f480, bufflen = 254, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] Send: 0xffff88013c3edcc0 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] CDB: Inquiry: 12 01 80 00 fe 00
+May 10 13:49:47 localhost kernel: buffer = 0xffff88019644fc80, bufflen = 254, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] Send: 0xffff88013c3eddc0 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] CDB: Inquiry: 12 01 83 00 fe 00
+May 10 13:49:47 localhost kernel: buffer = 0xffff88019644f680, bufflen = 254, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_check_events
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_release
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: Send: 0xffff880193ef81c0 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: CDB: Test Unit Ready: 00 00 00 00 00 00
+May 10 13:49:47 localhost kernel: buffer = 0x          (null), bufflen = 0, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_open
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_prep_fn: block=879032192, count=8
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] block=879032192
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] reading 8/8 512 byte blocks.
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] Send: 0xffff880101213e80 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] CDB: Read(10): 28 00 34 64 f7 80 00 00 08 00
+May 10 13:49:47 localhost kernel: buffer = 0xffff88014ce86e80, bufflen = 4096, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_prep_fn: block=879032304, count=8
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] block=879032304
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] reading 8/8 512 byte blocks.
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] Send: 0xffff880101213e80 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] CDB: Read(10): 28 00 34 64 f7 f0 00 00 08 00
+May 10 13:49:47 localhost kernel: buffer = 0xffff88014ce86e80, bufflen = 4096, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_prep_fn: block=0, count=8
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] block=0
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] reading 8/8 512 byte blocks.
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] Send: 0xffff8801012baec0 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] CDB: Read(10): 28 00 00 00 00 00 00 00 08 00
+May 10 13:49:47 localhost kernel: buffer = 0xffff8801012bbec0, bufflen = 4096, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] sd_prep_fn: block=8, count=8
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] block=8
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] reading 8/8 512 byte blocks.
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] Send: 0xffff8801012baec0 
+May 10 13:49:47 localhost kernel: sd 1:0:0:0: [sdb] CDB: Read(10): 28 00 00 00 00 08 00 00 08 00
+May 10 13:49:47 localhost kernel: buffer = 0xffff8801012bbec0, bufflen = 4096, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:47 localhost kernel: sd 0:0:0:0: [sda] sd_prep_fn: block=185752968, count=8
+May 10 13:49:47 localhost kernel: sd 0:0:0:0: [sda] block=185752968
+May 10 13:49:47 localhost kernel: sd 0:0:0:0: [sda] writing 8/8 512 byte blocks.
+May 10 13:49:47 localhost kernel: sd 0:0:0:0: [sda] Send: 0xffff880101213d80 
+May 10 13:49:47 localhost kernel: sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 0b 12 5d 88 00 00 08 00
+May 10 13:49:47 localhost kernel: buffer = 0xffff88014ce86d80, bufflen = 4096, queuecommand 0xffffffffa0058160
+May 10 13:49:47 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] sd_prep_fn: block=185752960, count=8
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] block=185752960
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] writing 8/8 512 byte blocks.
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] Send: 0xffff880101213c80 
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 0b 12 5d 80 00 00 08 00
+May 10 13:49:48 localhost kernel: buffer = 0xffff88014ce86c80, bufflen = 4096, queuecommand 0xffffffffa0058160
+May 10 13:49:48 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] sd_prep_fn: block=2193216, count=8
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] block=2193216
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] writing 8/8 512 byte blocks.
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] Send: 0xffff880101213b80 
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 00 21 77 40 00 00 08 00
+May 10 13:49:48 localhost kernel: buffer = 0xffff88014ce86b80, bufflen = 4096, queuecommand 0xffffffffa0058160
+May 10 13:49:48 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] sd_prep_fn: block=140890712, count=80
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] block=140890712
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] writing 80/80 512 byte blocks.
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] Send: 0xffff880101213a80 
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 08 65 d2 58 00 00 50 00
+May 10 13:49:48 localhost kernel: buffer = 0xffff880196451800, bufflen = 40960, queuecommand 0xffffffffa0058160
+May 10 13:49:48 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] sd_prep_fn: block=140890792, count=8
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] block=140890792
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] writing 8/8 512 byte blocks.
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] Send: 0xffff880101213a80 
+May 10 13:49:48 localhost kernel: sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 08 65 d2 a8 00 00 08 00
+May 10 13:49:48 localhost kernel: buffer = 0xffff88014ce86b80, bufflen = 4096, queuecommand 0xffffffffa0058160
+May 10 13:49:48 localhost kernel: leaving scsi_dispatch_cmnd()
+May 10 13:49:48 localhost scameron: ^^^^^^==============================================================^^^^^^
