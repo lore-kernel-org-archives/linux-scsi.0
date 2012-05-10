@@ -1,22 +1,22 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 15/20] lpfc 8.3.31: Correct point-to-point mode discovery
- errors on LPe16xxx (CR: 130446)
-Date: Wed, 9 May 2012 21:19:03 -0400
-Message-ID: <1336612744.1996.44.camel@ogier>
+Subject: [PATCH 18/20] lpfc 8.3.31: Fix bug with driver using the wrong
+ xritag when sending an els echo
+Date: Wed, 9 May 2012 21:19:34 -0400
+Message-ID: <1336612775.1996.47.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:27899 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:27901 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755165Ab2EJBTT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 May 2012 21:19:19 -0400
+	with ESMTP id S1757239Ab2EJBTq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 May 2012 21:19:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Correct point-to-point mode discovery errors on LPe16xxx (CR: 130446)
+Fix bug with driver using the wrong xritag when sending an els echo.
 
 
 Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -24,427 +24,47 @@ Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_els.c       |   93 +++++++++++++++++++++++++++++++++++++++++++++----------
- lpfc_hbadisc.c   |   15 +++++---
- lpfc_hw.h        |    3 +
- lpfc_hw4.h       |    8 ++++
- lpfc_nportdisc.c |    9 +++++
- lpfc_sli.c       |   70 ++++++++++++++++++++++++++++++++++++-----
- lpfc_sli4.h      |    8 ++++
- 7 files changed, 175 insertions(+), 31 deletions(-)
+ lpfc_bsg.c |    1 +
+ lpfc_sli.c |    8 +++++++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2012-05-07 10:01:20.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2012-05-07 10:01:22.000000000 -0400
-@@ -230,27 +230,43 @@ lpfc_prep_els_iocb(struct lpfc_vport *vp
+diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+--- a/drivers/scsi/lpfc/lpfc_bsg.c	2012-05-07 10:01:00.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_bsg.c	2012-05-07 10:06:59.000000000 -0400
+@@ -599,6 +599,7 @@ lpfc_bsg_rport_els(struct fc_bsg_job *jo
  
- 	INIT_LIST_HEAD(&pbuflist->list);
- 
--	icmd->un.elsreq64.bdl.addrHigh = putPaddrHigh(pbuflist->phys);
--	icmd->un.elsreq64.bdl.addrLow = putPaddrLow(pbuflist->phys);
--	icmd->un.elsreq64.bdl.bdeFlags = BUFF_TYPE_BLP_64;
--	icmd->un.elsreq64.remoteID = did;	/* DID */
- 	if (expectRsp) {
-+		icmd->un.elsreq64.bdl.addrHigh = putPaddrHigh(pbuflist->phys);
-+		icmd->un.elsreq64.bdl.addrLow = putPaddrLow(pbuflist->phys);
-+		icmd->un.elsreq64.bdl.bdeFlags = BUFF_TYPE_BLP_64;
- 		icmd->un.elsreq64.bdl.bdeSize = (2 * sizeof(struct ulp_bde64));
-+
-+		icmd->un.elsreq64.remoteID = did;		/* DID */
- 		icmd->ulpCommand = CMD_ELS_REQUEST64_CR;
- 		icmd->ulpTimeout = phba->fc_ratov * 2;
- 	} else {
--		icmd->un.elsreq64.bdl.bdeSize = sizeof(struct ulp_bde64);
-+		icmd->un.xseq64.bdl.addrHigh = putPaddrHigh(pbuflist->phys);
-+		icmd->un.xseq64.bdl.addrLow = putPaddrLow(pbuflist->phys);
-+		icmd->un.xseq64.bdl.bdeFlags = BUFF_TYPE_BLP_64;
-+		icmd->un.xseq64.bdl.bdeSize = sizeof(struct ulp_bde64);
-+		icmd->un.xseq64.xmit_els_remoteID = did;	/* DID */
- 		icmd->ulpCommand = CMD_XMIT_ELS_RSP64_CX;
- 	}
- 	icmd->ulpBdeCount = 1;
- 	icmd->ulpLe = 1;
- 	icmd->ulpClass = CLASS3;
- 
--	if (phba->sli3_options & LPFC_SLI3_NPIV_ENABLED) {
--		icmd->un.elsreq64.myID = vport->fc_myDID;
-+	/*
-+	 * If we have NPIV enabled, we want to send ELS traffic by VPI.
-+	 * For SLI4, since the driver controls VPIs we also want to include
-+	 * all ELS pt2pt protocol traffic as well.
-+	 */
-+	if ((phba->sli3_options & LPFC_SLI3_NPIV_ENABLED) ||
-+		((phba->sli_rev == LPFC_SLI_REV4) &&
-+		    (vport->fc_flag & FC_PT2PT))) {
-+
-+		if (expectRsp) {
-+			icmd->un.elsreq64.myID = vport->fc_myDID;
-+
-+			/* For ELS_REQUEST64_CR, use the VPI by default */
-+			icmd->ulpContext = phba->vpi_ids[vport->vpi];
-+		}
- 
--		/* For ELS_REQUEST64_CR, use the VPI by default */
--		icmd->ulpContext = phba->vpi_ids[vport->vpi];
- 		icmd->ulpCt_h = 0;
- 		/* The CT field must be 0=INVALID_RPI for the ECHO cmd */
- 		if (elscmd == ELS_CMD_ECHO)
-@@ -438,9 +454,10 @@ lpfc_issue_reg_vfi(struct lpfc_vport *vp
- 	int rc = 0;
- 
- 	sp = &phba->fc_fabparam;
--	/* move forward in case of SLI4 FC port loopback test */
-+	/* move forward in case of SLI4 FC port loopback test and pt2pt mode */
- 	if ((phba->sli_rev == LPFC_SLI_REV4) &&
--	    !(phba->link_flag & LS_LOOPBACK_MODE)) {
-+	    !(phba->link_flag & LS_LOOPBACK_MODE) &&
-+	    !(vport->fc_flag & FC_PT2PT)) {
- 		ndlp = lpfc_findnode_did(vport, Fabric_DID);
- 		if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
- 			rc = -ENODEV;
-@@ -820,6 +837,17 @@ lpfc_cmpl_els_flogi_nport(struct lpfc_vp
- 			mempool_free(mbox, phba->mbox_mem_pool);
- 			goto fail;
- 		}
-+
-+		/*
-+		 * For SLI4, the VFI/VPI are registered AFTER the
-+		 * Nport with the higher WWPN sends the PLOGI with
-+		 * an assigned NPortId.
-+		 */
-+
-+		/* not equal */
-+		if ((phba->sli_rev == LPFC_SLI_REV4) && rc)
-+			lpfc_issue_reg_vfi(vport);
-+
- 		/* Decrement ndlp reference count indicating that ndlp can be
- 		 * safely released when other references to it are done.
- 		 */
-@@ -4940,8 +4968,6 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vp
- 		return 1;
- 	}
- 
--	did = Fabric_DID;
--
- 	if ((lpfc_check_sparm(vport, ndlp, sp, CLASS3, 1))) {
- 		/* For a FLOGI we accept, then if our portname is greater
- 		 * then the remote portname we initiate Nport login.
-@@ -4980,29 +5006,64 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vp
- 			spin_lock_irq(shost->host_lock);
- 			vport->fc_flag |= FC_PT2PT_PLOGI;
- 			spin_unlock_irq(shost->host_lock);
-+
-+			/* If we have the high WWPN we can assign our own
-+			 * myDID; otherwise, we have to WAIT for a PLOGI
-+			 * from the remote NPort to find out what it
-+			 * will be.
-+			 */
- 			vport->fc_myDID = PT2PT_LocalID;
--		} else
--			vport->fc_myDID = PT2PT_RemoteID;
--		vport->port_state = LPFC_FLOGI;
-+		}
-+
-+		/*
-+		 * The vport state should go to LPFC_FLOGI only
-+		 * AFTER we issue a FLOGI, not receive one.
-+		 */
- 		spin_lock_irq(shost->host_lock);
- 		vport->fc_flag |= FC_PT2PT;
- 		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
- 		spin_unlock_irq(shost->host_lock);
-+
-+		/*
-+		 * We temporarily set fc_myDID to make it look like we are
-+		 * a Fabric. This is done just so we end up with the right
-+		 * did / sid on the FLOGI ACC rsp.
-+		 */
-+		did = vport->fc_myDID;
-+		vport->fc_myDID = Fabric_DID;
-+
- 	} else {
- 		/* Reject this request because invalid parameters */
- 		stat.un.b.lsRjtRsvd0 = 0;
- 		stat.un.b.lsRjtRsnCode = LSRJT_UNABLE_TPC;
- 		stat.un.b.lsRjtRsnCodeExp = LSEXP_SPARM_OPTIONS;
- 		stat.un.b.vendorUnique = 0;
-+
-+		/*
-+		 * We temporarily set fc_myDID to make it look like we are
-+		 * a Fabric. This is done just so we end up with the right
-+		 * did / sid on the FLOGI LS_RJT rsp.
-+		 */
-+		did = vport->fc_myDID;
-+		vport->fc_myDID = Fabric_DID;
-+
- 		lpfc_els_rsp_reject(vport, stat.un.lsRjtError, cmdiocb, ndlp,
- 			NULL);
-+
-+		/* Now lets put fc_myDID back to what its supposed to be */
-+		vport->fc_myDID = did;
-+
- 		return 1;
- 	}
- 
- 	/* Send back ACC */
- 	lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, cmdiocb, ndlp, NULL);
- 
-+	/* Now lets put fc_myDID back to what its supposed to be */
-+	vport->fc_myDID = did;
-+
- 	if (!(vport->fc_flag & FC_PT2PT_PLOGI)) {
-+
- 		mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
- 		if (!mbox)
- 			goto fail;
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2012-05-07 10:01:13.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2012-05-07 10:01:22.000000000 -0400
-@@ -2882,9 +2882,14 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
- 	}
- 
- 	if (vport->port_state == LPFC_FABRIC_CFG_LINK) {
--		/* For private loop just start discovery and we are done. */
--		if ((phba->fc_topology == LPFC_TOPOLOGY_LOOP) &&
--		    !(vport->fc_flag & FC_PUBLIC_LOOP)) {
-+		/*
-+		 * For private loop or for NPort pt2pt,
-+		 * just start discovery and we are done.
-+		 */
-+		if ((vport->fc_flag & FC_PT2PT) ||
-+		    ((phba->fc_topology == LPFC_TOPOLOGY_LOOP) &&
-+		    !(vport->fc_flag & FC_PUBLIC_LOOP))) {
-+
- 			/* Use loop map to make discovery list */
- 			lpfc_disc_list_loopmap(vport);
- 			/* Start discovery */
-@@ -5491,9 +5496,9 @@ lpfc_nlp_release(struct kref *kref)
- 		ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_type);
- 
- 	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
--			"0279 lpfc_nlp_release: ndlp:x%p "
-+			"0279 lpfc_nlp_release: ndlp:x%p did %x "
- 			"usgmap:x%x refcnt:%d\n",
--			(void *)ndlp, ndlp->nlp_usg_map,
-+			(void *)ndlp, ndlp->nlp_DID, ndlp->nlp_usg_map,
- 			atomic_read(&ndlp->kref.refcount));
- 
- 	/* remove ndlp from action. */
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
---- a/drivers/scsi/lpfc/lpfc_hw4.h	2012-05-07 10:00:55.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h	2012-05-07 10:01:22.000000000 -0400
-@@ -3295,7 +3295,13 @@ struct els_request64_wqe {
- struct xmit_els_rsp64_wqe {
- 	struct ulp_bde64 bde;
- 	uint32_t response_payload_len;
--	uint32_t rsvd4;
-+	uint32_t word4;
-+#define els_rsp64_sid_SHIFT         0
-+#define els_rsp64_sid_MASK          0x00FFFFFF
-+#define els_rsp64_sid_WORD          word4
-+#define els_rsp64_sp_SHIFT          24
-+#define els_rsp64_sp_MASK           0x00000001
-+#define els_rsp64_sp_WORD           word4
- 	struct wqe_did wqe_dest;
- 	struct wqe_common wqe_com; /* words 6-11 */
- 	uint32_t word12;
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
---- a/drivers/scsi/lpfc/lpfc_hw.h	2012-05-06 13:15:39.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw.h	2012-05-07 10:01:22.000000000 -0400
-@@ -3374,6 +3374,9 @@ typedef struct {
- 	WORD5 w5;		/* Header control/status word */
- } XMT_SEQ_FIELDS64;
- 
-+/* This word is remote ports D_ID for XMIT_ELS_RSP64 */
-+#define xmit_els_remoteID xrsqRo
-+
- /* IOCB Command template for 64 bit RCV_SEQUENCE64 */
- typedef struct {
- 	struct ulp_bde64 rcvBde;
-diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2012-05-06 13:15:39.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2012-05-07 10:01:22.000000000 -0400
-@@ -367,8 +367,10 @@ lpfc_rcv_plogi(struct lpfc_vport *vport,
- 		return 1;
- 	}
- 
-+	/* Check for Nport to NPort pt2pt protocol */
- 	if ((vport->fc_flag & FC_PT2PT) &&
- 	    !(vport->fc_flag & FC_PT2PT_PLOGI)) {
-+
- 		/* rcv'ed PLOGI decides what our NPortId will be */
- 		vport->fc_myDID = icmd->un.rcvels.parmRo;
- 		mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-@@ -382,6 +384,13 @@ lpfc_rcv_plogi(struct lpfc_vport *vport,
- 			mempool_free(mbox, phba->mbox_mem_pool);
- 			goto out;
- 		}
-+		/*
-+		 * For SLI4, the VFI/VPI are registered AFTER the
-+		 * Nport with the higher WWPN sends us a PLOGI with
-+		 * our assigned NPortId.
-+		 */
-+		if (phba->sli_rev == LPFC_SLI_REV4)
-+			lpfc_issue_reg_vfi(vport);
- 
- 		lpfc_can_disctmo(vport);
- 	}
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2012-05-07 10:00:55.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2012-05-07 10:01:22.000000000 -0400
-@@ -75,11 +75,19 @@
- 	 (fc_hdr)->fh_s_id[1] <<  8 | \
- 	 (fc_hdr)->fh_s_id[2])
- 
-+#define sli4_did_from_fc_hdr(fc_hdr)  \
-+	((fc_hdr)->fh_d_id[0] << 16 | \
-+	 (fc_hdr)->fh_d_id[1] <<  8 | \
-+	 (fc_hdr)->fh_d_id[2])
-+
- #define sli4_fctl_from_fc_hdr(fc_hdr)  \
- 	((fc_hdr)->fh_f_ctl[0] << 16 | \
- 	 (fc_hdr)->fh_f_ctl[1] <<  8 | \
- 	 (fc_hdr)->fh_f_ctl[2])
- 
-+#define sli4_type_from_fc_hdr(fc_hdr)  \
-+	((fc_hdr)->fh_type)
-+
- #define LPFC_FW_RESET_MAXIMUM_WAIT_10MS_CNT 12000
- 
- enum lpfc_sli4_queue_type {
+ 	cmdiocbq->iocb_cmpl = lpfc_bsg_rport_els_cmp;
+ 	cmdiocbq->context1 = dd_data;
++	cmdiocbq->context_un.ndlp = ndlp;
+ 	cmdiocbq->context2 = rspiocbq;
+ 	dd_data->type = TYPE_IOCB;
+ 	dd_data->context_un.iocb.cmdiocbq = cmdiocbq;
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2012-05-07 10:01:17.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-05-07 10:01:22.000000000 -0400
-@@ -7907,6 +7907,10 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 				bf_set(els_req64_sp, &wqe->els_req, 1);
- 				bf_set(els_req64_sid, &wqe->els_req,
- 					iocbq->vport->fc_myDID);
-+				if ((*pcmd == ELS_CMD_FLOGI) &&
-+					!(phba->fc_topology ==
-+						LPFC_TOPOLOGY_LOOP))
-+					bf_set(els_req64_sid, &wqe->els_req, 0);
- 				bf_set(wqe_ct, &wqe->els_req.wqe_com, 1);
- 				bf_set(wqe_ctxt_tag, &wqe->els_req.wqe_com,
- 					phba->vpi_ids[iocbq->vport->vpi]);
-@@ -8064,11 +8068,25 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 		/* words0-2 BDE memcpy */
- 		/* word3 iocb=iotag32 wqe=response_payload_len */
- 		wqe->xmit_els_rsp.response_payload_len = xmit_len;
--		/* word4 iocb=did wge=rsvd. */
--		wqe->xmit_els_rsp.rsvd4 = 0;
-+		/* word4 */
-+		wqe->xmit_els_rsp.word4 = 0;
- 		/* word5 iocb=rsvd wge=did */
- 		bf_set(wqe_els_did, &wqe->xmit_els_rsp.wqe_dest,
--			 iocbq->iocb.un.elsreq64.remoteID);
-+			 iocbq->iocb.un.xseq64.xmit_els_remoteID);
-+
-+		if_type = bf_get(lpfc_sli_intf_if_type,
-+					&phba->sli4_hba.sli_intf);
-+		if (if_type == LPFC_SLI_INTF_IF_TYPE_2) {
-+			if (iocbq->vport->fc_flag & FC_PT2PT) {
-+				bf_set(els_rsp64_sp, &wqe->xmit_els_rsp, 1);
-+				bf_set(els_rsp64_sid, &wqe->xmit_els_rsp,
-+					iocbq->vport->fc_myDID);
-+				if (iocbq->vport->fc_myDID == Fabric_DID) {
-+					bf_set(wqe_els_did,
-+						&wqe->xmit_els_rsp.wqe_dest, 0);
-+				}
-+			}
-+		}
- 		bf_set(wqe_ct, &wqe->xmit_els_rsp.wqe_com,
- 		       ((iocbq->iocb.ulpCt_h << 1) | iocbq->iocb.ulpCt_l));
- 		bf_set(wqe_pu, &wqe->xmit_els_rsp.wqe_com, iocbq->iocb.ulpPU);
-@@ -8088,11 +8106,11 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 		pcmd = (uint32_t *) (((struct lpfc_dmabuf *)
- 					iocbq->context2)->virt);
- 		if (phba->fc_topology == LPFC_TOPOLOGY_LOOP) {
--				bf_set(els_req64_sp, &wqe->els_req, 1);
--				bf_set(els_req64_sid, &wqe->els_req,
-+				bf_set(els_rsp64_sp, &wqe->xmit_els_rsp, 1);
-+				bf_set(els_rsp64_sid, &wqe->xmit_els_rsp,
- 					iocbq->vport->fc_myDID);
--				bf_set(wqe_ct, &wqe->els_req.wqe_com, 1);
--				bf_set(wqe_ctxt_tag, &wqe->els_req.wqe_com,
-+				bf_set(wqe_ct, &wqe->xmit_els_rsp.wqe_com, 1);
-+				bf_set(wqe_ctxt_tag, &wqe->xmit_els_rsp.wqe_com,
- 					phba->vpi_ids[phba->pport->vpi]);
- 		}
- 		command_type = OTHER_COMMAND;
-@@ -13636,8 +13654,13 @@ lpfc_fc_frame_to_vport(struct lpfc_hba *
- 	uint32_t did = (fc_hdr->fh_d_id[0] << 16 |
- 			fc_hdr->fh_d_id[1] << 8 |
- 			fc_hdr->fh_d_id[2]);
-+
- 	if (did == Fabric_DID)
- 		return phba->pport;
-+	if ((phba->pport->fc_flag & FC_PT2PT) &&
-+		!(phba->link_state == LPFC_HBA_READY))
-+		return phba->pport;
-+
- 	vports = lpfc_create_vport_work_array(phba);
- 	if (vports != NULL)
- 		for (i = 0; i <= phba->max_vpi && vports[i] != NULL; i++) {
-@@ -14174,7 +14197,15 @@ lpfc_prep_seq(struct lpfc_vport *vport, 
- 		/* Initialize the first IOCB. */
- 		first_iocbq->iocb.unsli3.rcvsli3.acc_len = 0;
- 		first_iocbq->iocb.ulpStatus = IOSTAT_SUCCESS;
--		first_iocbq->iocb.ulpCommand = CMD_IOCB_RCV_SEQ64_CX;
-+
-+		/* Check FC Header to see what TYPE of frame we are rcv'ing */
-+		if (sli4_type_from_fc_hdr(fc_hdr) == FC_TYPE_ELS) {
-+			first_iocbq->iocb.ulpCommand = CMD_IOCB_RCV_ELS64_CX;
-+			first_iocbq->iocb.un.rcvels.parmRo =
-+				sli4_did_from_fc_hdr(fc_hdr);
-+			first_iocbq->iocb.ulpPU = PARM_NPIV_DID;
-+		} else
-+			first_iocbq->iocb.ulpCommand = CMD_IOCB_RCV_SEQ64_CX;
- 		first_iocbq->iocb.ulpContext = NO_XRI;
- 		first_iocbq->iocb.unsli3.rcvsli3.ox_id =
- 			be16_to_cpu(fc_hdr->fh_ox_id);
-@@ -14304,6 +14335,7 @@ lpfc_sli4_handle_received_buffer(struct 
- 	struct fc_frame_header *fc_hdr;
- 	struct lpfc_vport *vport;
- 	uint32_t fcfi;
-+	uint32_t did;
- 
- 	/* Process each received buffer */
- 	fc_hdr = (struct fc_frame_header *)dmabuf->hbuf.virt;
-@@ -14319,12 +14351,32 @@ lpfc_sli4_handle_received_buffer(struct 
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-05-07 10:01:26.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-05-07 10:06:59.000000000 -0400
+@@ -877,6 +877,9 @@ __lpfc_sli_get_sglq(struct lpfc_hba *phb
+ 	} else  if ((piocbq->iocb.ulpCommand == CMD_GEN_REQUEST64_CR) &&
+ 			!(piocbq->iocb_flag & LPFC_IO_LIBDFC))
+ 		ndlp = piocbq->context_un.ndlp;
++	else  if ((piocbq->iocb.ulpCommand == CMD_ELS_REQUEST64_CR) &&
++			(piocbq->iocb_flag & LPFC_IO_LIBDFC))
++		ndlp = piocbq->context_un.ndlp;
  	else
- 		fcfi = bf_get(lpfc_rcqe_fcf_id,
- 			      &dmabuf->cq_event.cqe.rcqe_cmpl);
-+
- 	vport = lpfc_fc_frame_to_vport(phba, fc_hdr, fcfi);
--	if (!vport || !(vport->vpi_state & LPFC_VPI_REGISTERED)) {
-+	if (!vport) {
- 		/* throw out the frame */
- 		lpfc_in_buf_free(phba, &dmabuf->dbuf);
- 		return;
- 	}
-+
-+	/* d_id this frame is directed to */
-+	did = sli4_did_from_fc_hdr(fc_hdr);
-+
-+	/* vport is registered unless we rcv a FLOGI directed to Fabric_DID */
-+	if (!(vport->vpi_state & LPFC_VPI_REGISTERED) &&
-+		(did != Fabric_DID)) {
-+		/*
-+		 * Throw out the frame if we are not pt2pt.
-+		 * The pt2pt protocol allows for discovery frames
-+		 * to be received without a registered VPI.
-+		 */
-+		if (!(vport->fc_flag & FC_PT2PT) ||
-+			(phba->link_state == LPFC_HBA_READY)) {
-+			lpfc_in_buf_free(phba, &dmabuf->dbuf);
-+			return;
-+		}
-+	}
-+
- 	/* Handle the basic abort sequence (BA_ABTS) event */
- 	if (fc_hdr->fh_r_ctl == FC_RCTL_BA_ABTS) {
- 		lpfc_sli4_handle_unsol_abort(vport, dmabuf);
+ 		ndlp = piocbq->context1;
+ 
+@@ -7868,7 +7871,10 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
+ 
+ 	switch (iocbq->iocb.ulpCommand) {
+ 	case CMD_ELS_REQUEST64_CR:
+-		ndlp = (struct lpfc_nodelist *)iocbq->context1;
++		if (iocbq->iocb_flag & LPFC_IO_LIBDFC)
++			ndlp = iocbq->context_un.ndlp;
++		else
++			ndlp = (struct lpfc_nodelist *)iocbq->context1;
+ 		if (!iocbq->iocb.ulpLe) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 				"2007 Only Limited Edition cmd Format"
 
 
 
