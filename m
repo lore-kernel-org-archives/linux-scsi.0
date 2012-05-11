@@ -1,61 +1,42 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target fixes for v3.4-rc7
-Date: Fri, 11 May 2012 14:58:54 -0700
-Message-ID: <1336773534.25759.170.camel@haakon2.linux-iscsi.org>
-References: <1336773136.25759.167.camel@haakon2.linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1336773136.25759.167.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+From: mathieu.poirier@linaro.org
+Subject: [PATCH 0/7] drivers/scsi: randconfig patches for kernel 3.4.patch
+Date: Fri, 11 May 2012 16:09:21 -0600
+Message-ID: <1336774168-26577-1-git-send-email-mathieu.poirier@linaro.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, mathieu.poirier@linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2012-05-11 at 14:52 -0700, Nicholas A. Bellinger wrote:
-> Hi Linus !
-> 
-> This time around for -rc7, there is only a single outstanding target
-> pending bugfix ready to be merged..
-> 
-> Please go ahead and pull from:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git 3.4-urgent
-> 
-> This patch removes some incorrect legacy code to free se_lun_acl memory
-> in the NodeACL release path that could potentially trigger an OOPs
-> during shutdown once dynamic -> explicit initiator NodeACL conversion
-> has occurred.
-> 
-> That said, we've been able to trigger an OOPs in v4.0 code for this
-> special case when the associated MappedLUNs had not also been made
-> explicit based on active TPG LUN layout during the conversion, so it
-> really makes senses to go ahead and drop this extra cruft to avoid any
-> possible issues here.
-> 
-> This ends up only effecting iscsi-target module code (it's the only
-> user) and is CC'ed to stable.
-> 
-> Thanks!
-> 
-> --nab
-> 
-> Nicholas Bellinger (1):
->   target: Drop incorrect se_lun_acl release for dynamic -> explict ACL
->     conversion
-> 
->  drivers/target/target_core_tpg.c |   21 ---------------------
->  1 files changed, 0 insertions(+), 21 deletions(-)
-> 
+From: Arnd Bergmann <arnd@arndb.de>
 
-Whoops sorry, missed the now unused variables in this patch..
+These patches fix miscellaneous problems when working
+with make randconfig.  They were discovered on kernel
+3.1-rc4 and have been reformatted for 3.4.
 
-Here is the updated diff-stat for target-pending/3.4-urgent
+Arnd Bergmann (7):
+  scsi: mark SCSI_SRP as experimental
+  scsi/nsp32: don't pass large values into udelay
+  drivers/scsi: use correct __devexit_p annotation
+  scsi/advansys: do not build on ARM
+  scsi/atp870u: use mdelay instead of large udelay
+  scsi/megaraid: fix sparse warnings
+  drivers/scsi: some ISA drivers need ISA_DMA_API
 
- drivers/target/target_core_tpg.c |   22 ----------------------
- 1 files changed, 0 insertions(+), 22 deletions(-)
+ drivers/scsi/Kconfig                        |   10 ++-
+ drivers/scsi/atp870u.c                      |    2 +-
+ drivers/scsi/megaraid/megaraid_sas.h        |   39 ++++++++++
+ drivers/scsi/megaraid/megaraid_sas_base.c   |   46 +++---------
+ drivers/scsi/megaraid/megaraid_sas_fp.c     |  105 ++++++++++++++-------------
+ drivers/scsi/megaraid/megaraid_sas_fp.h     |   22 ++++++
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |   87 +++++++----------------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |    9 +++
+ drivers/scsi/nsp32.c                        |    3 +-
+ drivers/scsi/nsp32.h                        |    2 +-
+ drivers/scsi/pmcraid.c                      |    2 +-
+ drivers/scsi/qla4xxx/ql4_os.c               |    2 +-
+ 12 files changed, 171 insertions(+), 158 deletions(-)
+ create mode 100644 drivers/scsi/megaraid/megaraid_sas_fp.h
 
-Thanks,
-
---nab
+-- 
+1.7.5.4
