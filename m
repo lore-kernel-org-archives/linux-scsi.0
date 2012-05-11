@@ -1,38 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 42969] Softlockup during boot during init_sd
-Date: Thu, 10 May 2012 21:55:55 +0000 (UTC)
-Message-ID: <20120510215555.1BAFE11FCE0@bugzilla.kernel.org>
-References: <bug-42969-11613@https.bugzilla.kernel.org/>
+From: Aaron Lu <Aaron.Lu@amd.com>
+Subject: [RFC PATCH]scsi: pm: resume device if suspend failed
+Date: Fri, 11 May 2012 14:54:54 +0800
+Message-ID: <1336719294-25598-1-git-send-email-Aaron.Lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:40198 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756890Ab2EJVz5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 May 2012 17:55:57 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A08A92026B
-	for <linux-scsi@vger.kernel.org>; Thu, 10 May 2012 21:55:56 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id A61F820255
-	for <linux-scsi@vger.kernel.org>; Thu, 10 May 2012 21:55:55 +0000 (UTC)
-In-Reply-To: <bug-42969-11613@https.bugzilla.kernel.org/>
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:8895
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754114Ab2EKGzs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 May 2012 02:55:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <Aaron.Lu@amd.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42969
+For scsi devices which use scsi bus runtime callback, runtime suspend
+will call scsi_dev_type_suspend, and if the drv->suspend failed, the
+device will still be in active state. But since scsi_device_quiesce is
+called, the device will not be able to respond any more commands.
+So add a check here to see if err occured, if so, bring the device back
+to normal state with scsi_device_resume.
 
+Signed-off-by: Aaron Lu <Aaron.Lu@amd.com>
+---
+ drivers/scsi/scsi_pm.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-
-
-
---- Comment #8 from Stefan Pietsch <stefan.pietsch@lsexperts.de>  2012-05-10 21:55:54 ---
-Created an attachment (id=73245)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=73245)
-Kernel 3.4-rc6 log file
-
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index c467064..33b8bf9 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -24,8 +24,11 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
+ 	err = scsi_device_quiesce(to_scsi_device(dev));
+ 	if (err == 0) {
+ 		drv = dev->driver;
+-		if (drv && drv->suspend)
++		if (drv && drv->suspend) {
+ 			err = drv->suspend(dev, msg);
++			if (err)
++				scsi_device_resume(dev);
++		}
+ 	}
+ 	dev_dbg(dev, "scsi suspend: %d\n", err);
+ 	return err;
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.7.9.6
+
+
