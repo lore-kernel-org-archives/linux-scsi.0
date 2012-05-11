@@ -1,45 +1,75 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: Re: [PATCH 01/10] sg: remove unnecessary indentation
-Date: Fri, 11 May 2012 10:43:59 -0400
-Message-ID: <20120511144358.GD18753@logfs.org>
-References: <20120412213217.GA17388@logfs.org>
- <20120507194450.GC6553@logfs.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH][SCSI] panic within ses.ko during insmod
+Date: Fri, 11 May 2012 12:08:09 -0700
+Message-ID: <CAA9_cmf-r4iQ=CeAWS0AwrtdmvbDbsWuyA5s7ujnp-C274r-Yg@mail.gmail.com>
+References: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com>
+	<1321028069.21400.24.camel@nebulus.xyus.xyratex.com>
+	<4EBD948E.9000104@interlog.com>
+	<FC1F9E38C0703341A1A750524E2525A9018F9648@XYUS-EX22.xyus.xyratex.com>
+	<3789993A-8AA9-4FBF-BBC0-3DD1CF1898D0@xyratex.com>
+	<1329667370.2806.6.camel@dabdike.int.hansenpartnership.com>
+	<8A8902EE-82F3-4CBA-82D6-D689B49C28BC@xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from longford.logfs.org ([213.229.74.203]:38177 "EHLO
-	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756006Ab2EKQra (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2012 12:47:30 -0400
-Content-Disposition: inline
-In-Reply-To: <20120507194450.GC6553@logfs.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:58601 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932215Ab2EKTIK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2012 15:08:10 -0400
+Received: by yenm10 with SMTP id m10so2967009yen.19
+        for <linux-scsi@vger.kernel.org>; Fri, 11 May 2012 12:08:09 -0700 (PDT)
+In-Reply-To: <8A8902EE-82F3-4CBA-82D6-D689B49C28BC@xyratex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
+To: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, dgilbert@interlog.com, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-On Mon, 7 May 2012 15:44:50 -0400, J=C3=B6rn Engel wrote:
-> On Thu, 12 April 2012 17:32:17 -0400, J=C3=B6rn Engel wrote:
->=20
-> Ping.
+On Thu, May 10, 2012 at 1:48 PM, Mark Salyzyn <mark_salyzyn@xyratex.com> wrote:
+> Rarely, ses.ko load while scanning was taking place resulted in a panic. Discovered that the panic occurred while the inquiry field for a scsi device was NULL and an unprotected call to scsi_device_enclosure() occurred. Suggest that the inline function scsi_device_enclosure be modified, but for this panic, we can address this specific issue as outlined at the bottom of this patch submission.
+>
+> device BUG: unable to handle kernel NULL pointer dereference at 0000000000000006
+> IP: [<ffffffffa00230f1>] ses_intf_add+0x2f1/0x5e0 [ses]
 
-Ping^2
+Wasn't this fixed by:
 
-The patchset has been acked (in private mail, sadly) by Doug and fixes
-a regression introduced in c45d15d24e.  I would really like this to go
-in through whatever path.
+commit d1e12de804f9d8ad114786ca7c2ce593cba79891
+Author: Krishnasamy, Somasundaram <Somasundaram.Krishnasamy@lsi.com>
+Date:   Mon Feb 28 18:13:22 2011 -0500
 
-James, are you interested in this?  Should I resend directly to Linus?
+    [SCSI] ses: Avoid kernel panic when lun 0 is not mapped
 
-J=C3=B6rn
+    During device discovery, scsi mid layer sends INQUIRY command to LUN
+    0. If the LUN 0 is not mapped to host, it creates a temporary
+    scsi_device with LUN id 0 and sends REPORT_LUNS command to it. After
+    the REPORT_LUNS succeeds, it walks through the LUN table and adds each
+    LUN found to sysfs. At the end of REPORT_LUNS lun table scan, it will
+    delete the temporary scsi_device of LUN 0.
 
---
-If you're willing to restrict the flexibility of your approach,
-you can almost always do something better.
--- John Carmack
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    When scsi devices are added to sysfs, it calls add_dev function of all
+    the registered class interfaces. If ses driver has been registered,
+    ses_intf_add() of ses module will be called. This function calls
+    scsi_device_enclosure() to check the inquiry data for EncServ
+    bit. Since inquiry was not allocated for temporary LUN 0 scsi_device,
+    it will cause NULL pointer exception.
+
+    To fix the problem, sdev->inquiry is checked for NULL before reading it.
+
+    Signed-off-by: Somasundaram Krishnasamy <Somasundaram.Krishnasamy@lsi.com>
+    Signed-off-by: Babu Moger <babu.moger@lsi.com>
+    Cc: stable@kernel.org
+    Signed-off-by: James Bottomley <James.Bottomley@suse.de>
+
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index f171c65..2d3ec50 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -462,7 +462,7 @@ static inline int scsi_device_qas(struct scsi_device *sdev)
+ }
+ static inline int scsi_device_enclosure(struct scsi_device *sdev)
+ {
+-       return sdev->inquiry[6] & (1<<6);
++       return sdev->inquiry ? (sdev->inquiry[6] & (1<<6)) : 1;
+ }
+
+ static inline int scsi_device_protection(struct scsi_device *sdev)
