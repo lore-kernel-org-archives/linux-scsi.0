@@ -1,75 +1,52 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH][SCSI] panic within ses.ko during insmod
-Date: Fri, 11 May 2012 12:08:09 -0700
-Message-ID: <CAA9_cmf-r4iQ=CeAWS0AwrtdmvbDbsWuyA5s7ujnp-C274r-Yg@mail.gmail.com>
-References: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com>
-	<1321028069.21400.24.camel@nebulus.xyus.xyratex.com>
-	<4EBD948E.9000104@interlog.com>
-	<FC1F9E38C0703341A1A750524E2525A9018F9648@XYUS-EX22.xyus.xyratex.com>
-	<3789993A-8AA9-4FBF-BBC0-3DD1CF1898D0@xyratex.com>
-	<1329667370.2806.6.camel@dabdike.int.hansenpartnership.com>
-	<8A8902EE-82F3-4CBA-82D6-D689B49C28BC@xyratex.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v3.4-rc7
+Date: Fri, 11 May 2012 14:52:16 -0700
+Message-ID: <1336773136.25759.167.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:58601 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932215Ab2EKTIK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2012 15:08:10 -0400
-Received: by yenm10 with SMTP id m10so2967009yen.19
-        for <linux-scsi@vger.kernel.org>; Fri, 11 May 2012 12:08:09 -0700 (PDT)
-In-Reply-To: <8A8902EE-82F3-4CBA-82D6-D689B49C28BC@xyratex.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:41711 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422632Ab2EKVwS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2012 17:52:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <mark_salyzyn@xyratex.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, dgilbert@interlog.com, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Thu, May 10, 2012 at 1:48 PM, Mark Salyzyn <mark_salyzyn@xyratex.com> wrote:
-> Rarely, ses.ko load while scanning was taking place resulted in a panic. Discovered that the panic occurred while the inquiry field for a scsi device was NULL and an unprotected call to scsi_device_enclosure() occurred. Suggest that the inline function scsi_device_enclosure be modified, but for this panic, we can address this specific issue as outlined at the bottom of this patch submission.
->
-> device BUG: unable to handle kernel NULL pointer dereference at 0000000000000006
-> IP: [<ffffffffa00230f1>] ses_intf_add+0x2f1/0x5e0 [ses]
+Hi Linus !
 
-Wasn't this fixed by:
+This time around for -rc7, there is only a single outstanding target
+pending bugfix ready to be merged..
 
-commit d1e12de804f9d8ad114786ca7c2ce593cba79891
-Author: Krishnasamy, Somasundaram <Somasundaram.Krishnasamy@lsi.com>
-Date:   Mon Feb 28 18:13:22 2011 -0500
+Please go ahead and pull from:
 
-    [SCSI] ses: Avoid kernel panic when lun 0 is not mapped
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git 3.4-urgent
 
-    During device discovery, scsi mid layer sends INQUIRY command to LUN
-    0. If the LUN 0 is not mapped to host, it creates a temporary
-    scsi_device with LUN id 0 and sends REPORT_LUNS command to it. After
-    the REPORT_LUNS succeeds, it walks through the LUN table and adds each
-    LUN found to sysfs. At the end of REPORT_LUNS lun table scan, it will
-    delete the temporary scsi_device of LUN 0.
+This patch removes some incorrect legacy code to free se_lun_acl memory
+in the NodeACL release path that could potentially trigger an OOPs
+during shutdown once dynamic -> explicit initiator NodeACL conversion
+has occurred.
 
-    When scsi devices are added to sysfs, it calls add_dev function of all
-    the registered class interfaces. If ses driver has been registered,
-    ses_intf_add() of ses module will be called. This function calls
-    scsi_device_enclosure() to check the inquiry data for EncServ
-    bit. Since inquiry was not allocated for temporary LUN 0 scsi_device,
-    it will cause NULL pointer exception.
+That said, we've been able to trigger an OOPs in v4.0 code for this
+special case when the associated MappedLUNs had not also been made
+explicit based on active TPG LUN layout during the conversion, so it
+really makes senses to go ahead and drop this extra cruft to avoid any
+possible issues here.
 
-    To fix the problem, sdev->inquiry is checked for NULL before reading it.
+This ends up only effecting iscsi-target module code (it's the only
+user) and is CC'ed to stable.
 
-    Signed-off-by: Somasundaram Krishnasamy <Somasundaram.Krishnasamy@lsi.com>
-    Signed-off-by: Babu Moger <babu.moger@lsi.com>
-    Cc: stable@kernel.org
-    Signed-off-by: James Bottomley <James.Bottomley@suse.de>
+Thanks!
 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f171c65..2d3ec50 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -462,7 +462,7 @@ static inline int scsi_device_qas(struct scsi_device *sdev)
- }
- static inline int scsi_device_enclosure(struct scsi_device *sdev)
- {
--       return sdev->inquiry[6] & (1<<6);
-+       return sdev->inquiry ? (sdev->inquiry[6] & (1<<6)) : 1;
- }
+--nab
 
- static inline int scsi_device_protection(struct scsi_device *sdev)
+Nicholas Bellinger (1):
+  target: Drop incorrect se_lun_acl release for dynamic -> explict ACL
+    conversion
+
+ drivers/target/target_core_tpg.c |   21 ---------------------
+ 1 files changed, 0 insertions(+), 21 deletions(-)
+
+
