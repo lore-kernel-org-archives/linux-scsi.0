@@ -1,55 +1,45 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC PATCH]scsi: pm: resume device if suspend failed
-Date: Fri, 11 May 2012 10:23:32 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1205111022450.1865-100000@iolanthe.rowland.org>
-References: <1336719294-25598-1-git-send-email-Aaron.Lu@amd.com>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCH 01/10] sg: remove unnecessary indentation
+Date: Fri, 11 May 2012 10:43:59 -0400
+Message-ID: <20120511144358.GD18753@logfs.org>
+References: <20120412213217.GA17388@logfs.org>
+ <20120507194450.GC6553@logfs.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:47412 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755382Ab2EKOXd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2012 10:23:33 -0400
-In-Reply-To: <1336719294-25598-1-git-send-email-Aaron.Lu@amd.com>
+Received: from longford.logfs.org ([213.229.74.203]:38177 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756006Ab2EKQra (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2012 12:47:30 -0400
+Content-Disposition: inline
+In-Reply-To: <20120507194450.GC6553@logfs.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <Aaron.Lu@amd.com>
-Cc: linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Fri, 11 May 2012, Aaron Lu wrote:
+On Mon, 7 May 2012 15:44:50 -0400, J=C3=B6rn Engel wrote:
+> On Thu, 12 April 2012 17:32:17 -0400, J=C3=B6rn Engel wrote:
+>=20
+> Ping.
 
-> For scsi devices which use scsi bus runtime callback, runtime suspend
-> will call scsi_dev_type_suspend, and if the drv->suspend failed, the
-> device will still be in active state. But since scsi_device_quiesce is
-> called, the device will not be able to respond any more commands.
-> So add a check here to see if err occured, if so, bring the device back
-> to normal state with scsi_device_resume.
-> 
-> Signed-off-by: Aaron Lu <Aaron.Lu@amd.com>
+Ping^2
 
-Good catch.
-        
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+The patchset has been acked (in private mail, sadly) by Doug and fixes
+a regression introduced in c45d15d24e.  I would really like this to go
+in through whatever path.
 
-> ---
->  drivers/scsi/scsi_pm.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-> index c467064..33b8bf9 100644
-> --- a/drivers/scsi/scsi_pm.c
-> +++ b/drivers/scsi/scsi_pm.c
-> @@ -24,8 +24,11 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
->  	err = scsi_device_quiesce(to_scsi_device(dev));
->  	if (err == 0) {
->  		drv = dev->driver;
-> -		if (drv && drv->suspend)
-> +		if (drv && drv->suspend) {
->  			err = drv->suspend(dev, msg);
-> +			if (err)
-> +				scsi_device_resume(dev);
-> +		}
->  	}
->  	dev_dbg(dev, "scsi suspend: %d\n", err);
->  	return err;
+James, are you interested in this?  Should I resend directly to Linus?
 
+J=C3=B6rn
+
+--
+If you're willing to restrict the flexibility of your approach,
+you can almost always do something better.
+-- John Carmack
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
