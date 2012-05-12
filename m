@@ -1,45 +1,50 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH 6/7] scsi/megaraid: fix sparse warnings
-Date: Fri, 11 May 2012 15:29:56 -0700
-Message-ID: <CAHtARFFnLrk0zQ7GeoiPX3Cyso9zq-05q+RyyeGN0v7q=Dm1gQ@mail.gmail.com>
-References: <1336774168-26577-1-git-send-email-mathieu.poirier@linaro.org>
-	<1336774168-26577-7-git-send-email-mathieu.poirier@linaro.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 20112] dmesg spam: "scsi host5: __pm_runtime_resume() returns
+ 1" (DVD writer)
+Date: Sat, 12 May 2012 00:04:17 +0000 (UTC)
+Message-ID: <20120512000417.50BEB11FCE4@bugzilla.kernel.org>
+References: <bug-20112-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:49878 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946334Ab2EKW35 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2012 18:29:57 -0400
-In-Reply-To: <1336774168-26577-7-git-send-email-mathieu.poirier@linaro.org>
+Received: from mail.kernel.org ([198.145.19.201]:47597 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759049Ab2ELAEU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 May 2012 20:04:20 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D329220275
+	for <linux-scsi@vger.kernel.org>; Sat, 12 May 2012 00:04:19 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id E527220265
+	for <linux-scsi@vger.kernel.org>; Sat, 12 May 2012 00:04:17 +0000 (UTC)
+In-Reply-To: <bug-20112-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mathieu.poirier@linaro.org
-Cc: JBottomley@parallels.com, megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de
+To: linux-scsi@vger.kernel.org
 
-On Fri, May 11, 2012 at 3:09 PM,  <mathieu.poirier@linaro.org> wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
->
-=2E..
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/sc=
-si/megaraid/megaraid_sas_fusion.c
-> index bfd87fa..234ad74 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -51,55 +51,16 @@
-> =A0#include <scsi/scsi_device.h>
-> =A0#include <scsi/scsi_host.h>
->
-> +#include "mega_common.h"
+https://bugzilla.kernel.org/show_bug.cgi?id=20112
 
-Do not include mega_common.h in the megaraid_sas driver.  It has
-nothing to do with this driver.  It is for the older Parallel SCSI
-megaraid drivers.
 
--Adam
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+     Kernel Version|Linux version               |2.6.36-rc7- ubuntu i686
+                   |2.6.36-rc7-blueyed-00145-g5 |
+                   |0c6dc9 (root@base) (gcc     |
+                   |version 4.4.5               |
+                   |(Ubuntu/Linaro              |
+                   |4.4.4-14ubuntu5) ) #2 SMP   |
+                   |PREEMPT Mon Oct 11 21:53:45 |
+                   |CEST 2010                   |
+         Resolution|                            |OBSOLETE
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
