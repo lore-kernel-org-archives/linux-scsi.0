@@ -1,41 +1,21 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 9215] When trying to get the drive status via ioctl
- CDROM_DRIVE_STATUS, with no disk  it gives CDS_TRAY_OPEN even if the tray is
- closed on SATA/SCSI devices
-Date: Sat, 12 May 2012 16:21:33 +0000 (UTC)
-Message-ID: <20120512162133.8978611FCE2@bugzilla.kernel.org>
-References: <bug-9215-11613@https.bugzilla.kernel.org/>
+From: abi <abiokom88@yahoo.com>
+Subject: haalloo,
+Date: Sat, 12 May 2012 18:54:45 +0200 (CEST)
+Message-ID: <9970802.8670301336841685289.JavaMail.defaultUser__38835.3919647217$1336841760$gmane$org@defaultHost>
+Reply-To: abi <abiokom88@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:59852 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754106Ab2ELQVf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 May 2012 12:21:35 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id E4B2B203C2
-	for <linux-scsi@vger.kernel.org>; Sat, 12 May 2012 16:21:34 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id 8C03C203B8
-	for <linux-scsi@vger.kernel.org>; Sat, 12 May 2012 16:21:33 +0000 (UTC)
-In-Reply-To: <bug-9215-11613@https.bugzilla.kernel.org/>
+Received: from outrelay02.libero.it ([212.52.84.102]:34302 "EHLO
+	outrelay02.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752521Ab2ELQz4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2012 12:55:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=9215
-
-
-Alan <alan@lxorguk.ukuu.org.uk> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+haalloo,
+how are you doing,i hope you are fine,my name is miss abi okom i got your
+contact and want us to be a good friend,
+please try and write back to me so that i will give you my pictures and tell
+you more about me,
