@@ -1,43 +1,87 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 43191] Syslog fills with messages about assuming drive cache
- when SD card not present
-Date: Sat, 12 May 2012 00:31:09 +0000 (UTC)
-Message-ID: <20120512003109.4C11611F96F@bugzilla.kernel.org>
-References: <bug-43191-11613@https.bugzilla.kernel.org/>
+From: <kgudipat@brocade.com>
+Subject: [PATCH] bfa: Fix to set vport FC host sysfs entries
+Date: Fri, 11 May 2012 17:49:59 -0700
+Message-ID: <1336783799-26286-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:49575 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761439Ab2ELAbN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 May 2012 20:31:13 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 4E9E320293
-	for <linux-scsi@vger.kernel.org>; Sat, 12 May 2012 00:31:11 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id 19F1920283
-	for <linux-scsi@vger.kernel.org>; Sat, 12 May 2012 00:31:10 +0000 (UTC)
-In-Reply-To: <bug-43191-11613@https.bugzilla.kernel.org/>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:51930 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755040Ab2ELAuH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 May 2012 20:50:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=43191
+From: Krishna Gudipati <kgudipat@brocade.com>
 
+Change details:
+	- Made changes to set the fc_host sysfs entries supported_speeds,
+	  supported_classes etc., during the vport creation from the
+	  FC transport template.
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfad_attr.c |   17 +++++++++++++++++
+ drivers/scsi/bfa/bfad_im.c   |    2 +-
+ drivers/scsi/bfa/bfad_im.h   |    1 +
+ 3 files changed, 19 insertions(+), 1 deletions(-)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-          Component|DC390                       |Serial ATA
-         AssignedTo|linux-scsi@vger.kernel.org  |jgarzik@pobox.com
-            Product|SCSI Drivers                |IO/Storage
-
-
-
-
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index 8b6c6bf..b839274 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -426,6 +426,23 @@ bfad_im_vport_create(struct fc_vport *fc_vport, bool disable)
+ 		vshost = vport->drv_port.im_port->shost;
+ 		fc_host_node_name(vshost) = wwn_to_u64((u8 *)&port_cfg.nwwn);
+ 		fc_host_port_name(vshost) = wwn_to_u64((u8 *)&port_cfg.pwwn);
++		fc_host_supported_classes(vshost) = FC_COS_CLASS3;
++
++		memset(fc_host_supported_fc4s(vshost), 0,
++			sizeof(fc_host_supported_fc4s(vshost)));
++
++		/* For FCP type 0x08 */
++		if (supported_fc4s & BFA_LPORT_ROLE_FCP_IM)
++			fc_host_supported_fc4s(vshost)[2] = 1;
++
++		/* For fibre channel services type 0x20 */
++		fc_host_supported_fc4s(vshost)[7] = 1;
++
++		fc_host_supported_speeds(vshost) =
++				bfad_im_supported_speeds(&bfad->bfa);
++		fc_host_maxframe_size(vshost) =
++				bfa_fcport_get_maxfrsize(&bfad->bfa);
++
+ 		fc_vport->dd_data = vport;
+ 		vport->drv_port.im_port->fc_vport = fc_vport;
+ 	} else if (rc == BFA_STATUS_INVALID_WWN)
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 3153923..1ac09af 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -987,7 +987,7 @@ done:
+ 	return 0;
+ }
+ 
+-static u32
++u32
+ bfad_im_supported_speeds(struct bfa_s *bfa)
+ {
+ 	struct bfa_ioc_attr_s *ioc_attr;
+diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
+index 0814367..f6c1023 100644
+--- a/drivers/scsi/bfa/bfad_im.h
++++ b/drivers/scsi/bfa/bfad_im.h
+@@ -37,6 +37,7 @@ int  bfad_im_scsi_host_alloc(struct bfad_s *bfad,
+ 		struct bfad_im_port_s *im_port, struct device *dev);
+ void bfad_im_scsi_host_free(struct bfad_s *bfad,
+ 				struct bfad_im_port_s *im_port);
++u32 bfad_im_supported_speeds(struct bfa_s *bfa);
+ 
+ #define MAX_FCP_TARGET 1024
+ #define MAX_FCP_LUN 16384
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.7.3.rc1
+
