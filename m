@@ -1,54 +1,27 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 43234] New: kernel crashes whenever the thumbdrive or USB
- devices are remove
-Date: Sat, 12 May 2012 06:07:38 +0000 (UTC)
-Message-ID: <bug-43234-11613@https.bugzilla.kernel.org/>
+From: =?utf-8?B?5bqe6aaN5p+w?= <huamaxin@21cn.com>
+Subject: =?utf-8?B?6I6x6KW/6K6+6K6hd3p0OGs5?=
+Date: Sat, 12 May 2012 15:12:02 +0800
+Message-ID: <6CC3A38C37C33DC4B658FF220CD18DC5@wtrxprefui>
+Reply-To: xtay131415@163.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:35996 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751474Ab2ELGHk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 May 2012 02:07:40 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id BCC5320331
-	for <linux-scsi@vger.kernel.org>; Sat, 12 May 2012 06:07:39 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id D1F9C20328
-	for <linux-scsi@vger.kernel.org>; Sat, 12 May 2012 06:07:38 +0000 (UTC)
+Received: from smtpfree.forptr.21cn.com ([59.36.102.42]:24454 "EHLO 21cn.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752724Ab2ELHMQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 May 2012 03:12:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linuxmail@tom.com, linux-scsi@vger.kernel.org, linuxservices@hotmail.com, linuxsky@yahoo.cn
 
-https://bugzilla.kernel.org/show_bug.cgi?id=43234
+ICBmZ2FmZA0KICAgICAgIA0KDQoNCiAgICAzMzUyNyAgIOaIkeWFrOWPuOS4ky3kuJot5LujLeeQ
+hi3lhagt5Zu9LeWQhC3nnIEt5biCe+aZri3pgJot56iOLeWYjH0NCg0KICAs6aqM6K+B5peg6Zeu
+6aKY5ZCO5LuY5qy+Lg0KIA0KICDlvKDlhYjnlJ8l4pKI4pKK4pKP4pKJ4pKL4pKK4pKO4pKI4pKK
+4pKL4pKQDQogUVE6OS45LjMtMy43LjUtMC41LjkNCg0KDQogICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICANCiDkuqxJQ1Dor4EwMTAwNDLlj7cgfCDkuqzlhaznvZHlronlpIfv
+vJoxMTAwMDAwMDAwMTXlj7cgfCDnvZHkuIrkvKDmkq3op4blkKzoioLnm67orrjlj6/or4HvvIgw
+MTAzMDIw77yJIHwg5Lit5Zu95LqS6IGU572R6KeG5ZCs6IqC55uu5pyN5Yqh6Ieq5b6L5YWs57qm
+DQo=
 
-           Summary: kernel crashes whenever the thumbdrive or USB devices
-                    are remove
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 3.2.11 stable
-          Platform: All
-        OS/Version: Linux
-              Tree: -mm
-            Status: NEW
-          Severity: blocking
-          Priority: P1
-         Component: SCSI
-        AssignedTo: linux-scsi@vger.kernel.org
-        ReportedBy: htmldeveloper@gmail.com
-        Regression: No
-
-
-The laptop crashed whenever the USB devices are not gracefully unmounted:
-
-http://www.flickr.com/photos/29072599@N08/7180142770/in/photostream
-
-(or perhaps crashed due to some other unknown reasons).
-
-Configuration:   3.2.11 kernel on Ubuntu 10.04 LTS 64-bit version.   LENOVO
-V570 laptop (i4-2450M).
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
