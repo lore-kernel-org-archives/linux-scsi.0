@@ -1,45 +1,52 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [RFC-v4 0/3] qla2xxx: v3.4 target mode LLD changes + tcm_qla2xxx
- fabric module
-Date: Sun, 13 May 2012 15:55:34 +0000
-Message-ID: <4FAFD976.8090409@acm.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] lpfc 8.3.19: Added support for ELS RRQ command
+Date: Sun, 13 May 2012 21:50:06 +0300
+Message-ID: <20120513185005.GD16541@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01ant.iops.be ([212.53.4.34]:51210 "EHLO
-	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753415Ab2EMP4A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 May 2012 11:56:00 -0400
+Received: from rcsinet15.oracle.com ([148.87.113.117]:38619 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752072Ab2EMSuP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 May 2012 14:50:15 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Roland Dreier <roland@purestorage.com>, target-devel@vger.kernel.org, James Bottomley <jbottomley@parallels.com>
+To: james.smart@emulex.com
+Cc: linux-scsi@vger.kernel.org
 
-On Sunday December 18, 2011 Nicholas Bellinger wrote:
-> So to get the ball rolling on remaining items, one question is still how to
-> resolve mixed target/initiator mode operation on a HW per port context basis..?
-> 
-> This is currently done with a qla2xxx module parameter, but to do mixed mode
-> properly we will need something smarter between scsi-core and target-core ports.
-> Note we currently set qlini_mode = QLA2XXX_INI_MODE_STR_DISABLED, so by default
-> patch #1 will effectively disable initiator mode by skipping scsi_scan_host()
-> from being called in to avoid scsi-core timeouts when performing immediate
-> transition from initiator mode -> target mode via ISP reset.
-> 
-> What we would like to eventually do is run qla2xxx LLD to allow both initiator
-> and target mode access based on the physical HW port.  We tried some simple
-> qla_target.c changes this make this work, but to really do it properly
-> and address current qlini_mode = QLA2XXX_INI_MODE_STR_DISABLED usage it will
-> need to involve scsi-core so that individual HW port can be configured and
-> dynamically changed across different access modes.
+[ Hi, I've made some changes to Smatch so I'm sending bug reports for
+  some old bugs.  Hope nobody minds and all. ]
 
-(sorry for the late reply)
+Hello James Smart,
 
-Dynamically switching between initiator mode, target mode or even using both
-modes simultaneously is already possible for iSCSI over Ethernet and for SRP
-over InfiniBand with the current SCSI core. Why would the SCSI core have to be
-modified in order to make the same possible for FCP ? Am I missing something ?
-If SCSI initiator timeouts during initiator-to-target mode transitions are an
-issue, why not to abort pending SCSI commands before performing the transition ?
+This is a semi-automatic email about new static checker warnings.
 
-Bart.
+The patch 19ca760979e4: "[SCSI] lpfc 8.3.19: Added support for ELS 
+RRQ command" from Nov 20, 2010, leads to the following Smatch 
+complaint:
+
+drivers/scsi/lpfc/lpfc_sli.c:15999 lpfc_drain_txq()
+	 warn: variable dereferenced before check 'piocbq' (see line 15993)
+
+drivers/scsi/lpfc/lpfc_sli.c
+ 15992			piocbq = lpfc_sli_ringtx_get(phba, pring);
+ 15993			sglq = __lpfc_sli_get_sglq(phba, piocbq);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+New call to __lpfc_sli_get_sglq() dereferences "piocbq".
+
+ 15994			if (!sglq) {
+ 15995				__lpfc_sli_ringtx_put(phba, pring, piocbq);
+ 15996				spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 15997				break;
+ 15998			} else {
+ 15999				if (!piocbq) {
+                                    ^^^^^^^
+Old check.
+
+ 16000					/* The txq_cnt out of sync. This should
+ 16001					 * never happen
+
+regards,
+dan carpenter
+
