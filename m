@@ -1,43 +1,47 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 18362] Possible kernel memory corruption due to wrong usage of
- CDROM_SEND_PACKET
-Date: Mon, 14 May 2012 14:51:23 +0000 (UTC)
-Message-ID: <20120514145123.02D3011FCE5@bugzilla.kernel.org>
-References: <bug-18362-11613@https.bugzilla.kernel.org/>
+From: dan rhodes <n0_reply@e-mailusa.org>
+Subject: HP  TONERS  Cartridge
+Date: Sun, 13 May 2012 23:40:29 -0500
+Message-ID: <E1STn5B-0000KY-Nk@webbusinessacademy.webbusinessacademy.com>
+Reply-To: danstationeryproductsupply@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:57066 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752402Ab2ENOv0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 May 2012 10:51:26 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id EBBBC2042F
-	for <linux-scsi@vger.kernel.org>; Mon, 14 May 2012 14:51:24 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id 95DF420426
-	for <linux-scsi@vger.kernel.org>; Mon, 14 May 2012 14:51:23 +0000 (UTC)
-In-Reply-To: <bug-18362-11613@https.bugzilla.kernel.org/>
+Received: from 82.e7.7bae.static.theplanet.com ([174.123.231.130]:33605 "EHLO
+	webbusinessacademy.webbusinessacademy.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756257Ab2ENPB5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 May 2012 11:01:57 -0400
+Received: from adversit by webbusinessacademy.webbusinessacademy.com with local (Exim 4.77)
+	(envelope-from <adversit@webbusinessacademy.webbusinessacademy.com>)
+	id 1STn5B-0000KY-Nk
+	for linux-scsi@vger.kernel.org; Sun, 13 May 2012 23:40:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=18362
 
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+Can  you  send  me  the pricing  and  availablity  of this  product
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-          Component|Other                       |SCSI
-         AssignedTo|io_other@kernel-bugs.osdl.o |linux-scsi@vger.kernel.org
-                   |rg                          |
+ LASER JET PRINT CARTRIDGE, (OEM ONLY)
+ HP LASER JET PRINT CARTRIDGE
+ 1Q6000A (OEM ONLY)
+ 2. HEWC9730A (30A) (OEM ONLY)
+ 3. HEWC9731A (31A) (OEM ONLY)
+ 4. Q5942A (42A)(OEM ONLY)
+ 5. HP Q7551A (51A)(OEM ONLY)
+ 6. HP Q3964A (64A) BLACK  COULOUR ONLY (OEM ONLY)
+ 7  HP    Q7553A 53A)  OEM ONLY
+ 8 NEW & USED, COMPUTERS  NOTEBOOK
+9 USB  FLASH  DRIVES
+
+ The mode of our  payment  is   with  our visa, master
+ cards
 
 
+Hope  to  read  from  you  asap
+DAN RHODES
+CA 90703
 
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
