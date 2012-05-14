@@ -1,34 +1,47 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/4] SCSI, classes, mpt2sas: have scsi_internal_device_unblock
- take new state
-Date: Thu, 17 May 2012 10:15:33 -0500
-Message-ID: <4FB51615.9060705@cs.wisc.edu>
-References: <1336127004-2358-1-git-send-email-michaelc@cs.wisc.edu>  <1336127004-2358-3-git-send-email-michaelc@cs.wisc.edu> <1337246479.30498.8.camel@dabdike.int.hansenpartnership.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH 1/5] st: Use static class attributes
+Date: Mon, 14 May 2012 16:27:07 -0700
+Message-ID: <4FB194CB.70106@suse.com>
+References: <4FB476DD.4020107@suse.com> <4FB4782F.9080907@suse.com> <1337239966.2926.1.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:40558 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932274Ab2EQPPm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 May 2012 11:15:42 -0400
-In-Reply-To: <1337246479.30498.8.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1337239966.2926.1.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kai.makisara@kolumbus.fi, jeffm@suse.com
+List-Id: linux-scsi@vger.kernel.org
 
-On 05/17/2012 04:21 AM, James Bottomley wrote:
-> patching file drivers/scsi/scsi_transport_fc.c
-> Hunk #2 FAILED at 2813.
-> Hunk #3 FAILED at 2880.
-> Hunk #4 FAILED at 3086.
-> Hunk #5 succeeded at 3129 (offset 4 lines).
-> 3 out of 5 hunks FAILED -- saving rejects to file
-> drivers/scsi/scsi_transport_fc.c.rej
-> 
-> Could you rebase?
-> 
+Thanks. I will resend.
 
-Will do. My other scsi_transport_fc patch that got merged conflicted.
-will fix up.
+On 05/17/2012 12:32 AM, James Bottomley wrote:
+> On Wed, 2012-05-16 at 21:01 -0700, Lee Duncan wrote:
+>> Sorry. This is actually
+>>
+>> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+>> Reviewed-by: Lee Duncan <lduncan@suse.com>
+>>
+>> Apologies. The other patches in the set are labeled correctly.
+> 
+> Actually, no, in this case, I need a From: field at the top as well for
+> the author.
+> 
+> You obviously used git to generate them, so either
+> 
+> git show --pretty=email
+> 
+> or
+> 
+> git format-patch -k
+> 
+> Will produce the right form
+> 
+> James
+> 
+> 
+> .
+
+-- 
+Lee Duncan
+SUSE Labs
