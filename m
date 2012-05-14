@@ -1,121 +1,34 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH v3 resend] fusion: use pci_dev->revision
-Date: Mon, 14 May 2012 17:50:41 +0400
-Message-ID: <201205141750.41522.sshtylyov@ru.mvista.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC]pass pm related information from ata to scsi
+Date: Mon, 14 May 2012 10:20:47 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1205141019330.1699-100000@iolanthe.rowland.org>
+References: <20120514100206.GA3006@localhost.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:49101 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756728Ab2ENN6f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 May 2012 09:58:35 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120514100206.GA3006@localhost.amd.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@amd.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux pm mailing list <linux-pm@vger.kernel.org>, linux scsi mailing list <linux-scsi@vger.kernel.org>, linux ide mailing list <linux-ide@vger.kernel.org>, Lin Ming <ming.m.lin@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsi.com, akpm@linux-foundation.org
-Cc: DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, support@lsi.com, linux-kernel@vger.kernel.org
 
-This driver uses PCI_CLASS_REVISION instead of PCI_REVISION_ID, so it wasn't
-converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65 (PCI: Change all
-drivers to use pci_device->revision).
+On Mon, 14 May 2012, Aaron Lu wrote:
 
-In one case, it even reads PCI revision ID without using it -- that code is now
-removed...
+> Hi,
+> 
+> ATA ODD has a new feature called device attention, which means it can
+> notify sata host that it needs power when in powered off state.
+> 
+> In libata, we can set a flag(ATA_DFLAG_DA) to represent this when
+> identifying the ata device. And when we are going to create the scsi
+> device(in ata_scsi_scan_host by __scsi_add_device), I hope the scsi
+> driver(sr) knows that this ODD supports device attention in its probe
+> function(sr_probe).
+> 
+> I didn't find a proper way to do this, any suggestions?
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Acked-by: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Add a corresponding flag to the scsi_cd structure, and set the flag in 
+libata's slave_configure routine.
 
----
-This patch is refreshed against the recent Linus' tree.
+Alan Stern
 
-This patch hasn't been applied to 3.1, 3.2, 3.3, or 3.4. Hopefully it can be
-applied to 3.5 at last...
-
-Andrew M., maybe you can take it if the maintainers don't seem to be bothered?
-
- drivers/message/fusion/mptbase.c |   12 ++++--------
- drivers/message/fusion/mptctl.c  |    4 +---
- 2 files changed, 5 insertions(+), 11 deletions(-)
-
-Index: linux-2.6/drivers/message/fusion/mptbase.c
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptbase.c
-+++ linux-2.6/drivers/message/fusion/mptbase.c
-@@ -1652,7 +1652,6 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 	unsigned long	 port;
- 	u32		 msize;
- 	u32		 psize;
--	u8		 revision;
- 	int		 r = -ENODEV;
- 	struct pci_dev *pdev;
- 
-@@ -1669,8 +1668,6 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 		return r;
- 	}
- 
--	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
--
- 	if (sizeof(dma_addr_t) > 4) {
- 		const uint64_t required_mask = dma_get_required_mask
- 		    (&pdev->dev);
-@@ -1778,7 +1775,6 @@ mpt_attach(struct pci_dev *pdev, const s
- 	MPT_ADAPTER	*ioc;
- 	u8		 cb_idx;
- 	int		 r = -ENODEV;
--	u8		 revision;
- 	u8		 pcixcmd;
- 	static int	 mpt_ids = 0;
- #ifdef CONFIG_PROC_FS
-@@ -1886,8 +1882,8 @@ mpt_attach(struct pci_dev *pdev, const s
- 	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "facts @ %p, pfacts[0] @ %p\n",
- 	    ioc->name, &ioc->facts, &ioc->pfacts[0]));
- 
--	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
--	mpt_get_product_name(pdev->vendor, pdev->device, revision, ioc->prod_name);
-+	mpt_get_product_name(pdev->vendor, pdev->device, pdev->revision,
-+			     ioc->prod_name);
- 
- 	switch (pdev->device)
- 	{
-@@ -1902,7 +1898,7 @@ mpt_attach(struct pci_dev *pdev, const s
- 		break;
- 
- 	case MPI_MANUFACTPAGE_DEVICEID_FC929X:
--		if (revision < XL_929) {
-+		if (pdev->revision < XL_929) {
- 			/* 929X Chip Fix. Set Split transactions level
- 		 	* for PCIX. Set MOST bits to zero.
- 		 	*/
-@@ -1933,7 +1929,7 @@ mpt_attach(struct pci_dev *pdev, const s
- 		/* 1030 Chip Fix. Disable Split transactions
- 		 * for PCIX. Set MOST bits to zero if Rev < C0( = 8).
- 		 */
--		if (revision < C0_1030) {
-+		if (pdev->revision < C0_1030) {
- 			pci_read_config_byte(pdev, 0x6a, &pcixcmd);
- 			pcixcmd &= 0x8F;
- 			pci_write_config_byte(pdev, 0x6a, pcixcmd);
-Index: linux-2.6/drivers/message/fusion/mptctl.c
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptctl.c
-+++ linux-2.6/drivers/message/fusion/mptctl.c
-@@ -1250,7 +1250,6 @@ mptctl_getiocinfo (unsigned long arg, un
- 	int			iocnum;
- 	unsigned int		port;
- 	int			cim_rev;
--	u8			revision;
- 	struct scsi_device 	*sdev;
- 	VirtDevice		*vdevice;
- 
-@@ -1324,8 +1323,7 @@ mptctl_getiocinfo (unsigned long arg, un
- 	pdev = (struct pci_dev *) ioc->pcidev;
- 
- 	karg->pciId = pdev->device;
--	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
--	karg->hwRev = revision;
-+	karg->hwRev = pdev->revision;
- 	karg->subSystemDevice = pdev->subsystem_device;
- 	karg->subSystemVendor = pdev->subsystem_vendor;
- 
