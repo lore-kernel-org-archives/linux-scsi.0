@@ -1,36 +1,121 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [RFC-v4 0/3] qla2xxx: v3.4 target mode LLD changes + tcm_qla2xxx
- fabric module
-Date: Mon, 14 May 2012 12:50:33 +0000
-Message-ID: <4FB0FF99.8060307@acm.org>
-References: <4FAFD976.8090409@acm.org> <1336966168.25759.293.camel@haakon2.linux-iscsi.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH v3 resend] fusion: use pci_dev->revision
+Date: Mon, 14 May 2012 17:50:41 +0400
+Message-ID: <201205141750.41522.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1336966168.25759.293.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, target-devel@vger.kernel.org, James Bottomley <jbottomley@parallels.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:49101 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756728Ab2ENN6f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 May 2012 09:58:35 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eric.Moore@lsi.com, akpm@linux-foundation.org
+Cc: DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, support@lsi.com, linux-kernel@vger.kernel.org
 
-On 05/14/12 03:29, Nicholas A. Bellinger wrote:
+This driver uses PCI_CLASS_REVISION instead of PCI_REVISION_ID, so it wasn't
+converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65 (PCI: Change all
+drivers to use pci_device->revision).
 
-> That would probably work, but I think it's still just a band-aid on the
-> underlying issue of SCSI LLDs always kicking off initiator mode enable /
-> disable operations from within PCI *_probe_one() / *_remove_code() code.
+In one case, it even reads PCI revision ID without using it -- that code is now
+removed...
 
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Acked-by: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
 
-Maybe the following makes sense (I'm not familiar with the qla2xxx
-driver nor with FC): split the qla2xxx driver in three kernel modules -
-a kernel module with the code that is shared by initiator and target
-mode, a kernel module with the initiator functionality and a kernel
-module with the target functionality. This will allow users to choose
-which functionality to enable by loading the proper kernel module(s).
-Note: in the kernel module with the shared code an interface will have
-to be added that allows the initiator and the target module to enumerate
-qla2xxx HBA ports. Maybe it's a good idea to add an interface similar to
-the add_one() / remove_one() callback functions present in the Linux
-InfiniBand stack.
+---
+This patch is refreshed against the recent Linus' tree.
 
-Bart.
+This patch hasn't been applied to 3.1, 3.2, 3.3, or 3.4. Hopefully it can be
+applied to 3.5 at last...
+
+Andrew M., maybe you can take it if the maintainers don't seem to be bothered?
+
+ drivers/message/fusion/mptbase.c |   12 ++++--------
+ drivers/message/fusion/mptctl.c  |    4 +---
+ 2 files changed, 5 insertions(+), 11 deletions(-)
+
+Index: linux-2.6/drivers/message/fusion/mptbase.c
+===================================================================
+--- linux-2.6.orig/drivers/message/fusion/mptbase.c
++++ linux-2.6/drivers/message/fusion/mptbase.c
+@@ -1652,7 +1652,6 @@ mpt_mapresources(MPT_ADAPTER *ioc)
+ 	unsigned long	 port;
+ 	u32		 msize;
+ 	u32		 psize;
+-	u8		 revision;
+ 	int		 r = -ENODEV;
+ 	struct pci_dev *pdev;
+ 
+@@ -1669,8 +1668,6 @@ mpt_mapresources(MPT_ADAPTER *ioc)
+ 		return r;
+ 	}
+ 
+-	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
+-
+ 	if (sizeof(dma_addr_t) > 4) {
+ 		const uint64_t required_mask = dma_get_required_mask
+ 		    (&pdev->dev);
+@@ -1778,7 +1775,6 @@ mpt_attach(struct pci_dev *pdev, const s
+ 	MPT_ADAPTER	*ioc;
+ 	u8		 cb_idx;
+ 	int		 r = -ENODEV;
+-	u8		 revision;
+ 	u8		 pcixcmd;
+ 	static int	 mpt_ids = 0;
+ #ifdef CONFIG_PROC_FS
+@@ -1886,8 +1882,8 @@ mpt_attach(struct pci_dev *pdev, const s
+ 	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "facts @ %p, pfacts[0] @ %p\n",
+ 	    ioc->name, &ioc->facts, &ioc->pfacts[0]));
+ 
+-	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
+-	mpt_get_product_name(pdev->vendor, pdev->device, revision, ioc->prod_name);
++	mpt_get_product_name(pdev->vendor, pdev->device, pdev->revision,
++			     ioc->prod_name);
+ 
+ 	switch (pdev->device)
+ 	{
+@@ -1902,7 +1898,7 @@ mpt_attach(struct pci_dev *pdev, const s
+ 		break;
+ 
+ 	case MPI_MANUFACTPAGE_DEVICEID_FC929X:
+-		if (revision < XL_929) {
++		if (pdev->revision < XL_929) {
+ 			/* 929X Chip Fix. Set Split transactions level
+ 		 	* for PCIX. Set MOST bits to zero.
+ 		 	*/
+@@ -1933,7 +1929,7 @@ mpt_attach(struct pci_dev *pdev, const s
+ 		/* 1030 Chip Fix. Disable Split transactions
+ 		 * for PCIX. Set MOST bits to zero if Rev < C0( = 8).
+ 		 */
+-		if (revision < C0_1030) {
++		if (pdev->revision < C0_1030) {
+ 			pci_read_config_byte(pdev, 0x6a, &pcixcmd);
+ 			pcixcmd &= 0x8F;
+ 			pci_write_config_byte(pdev, 0x6a, pcixcmd);
+Index: linux-2.6/drivers/message/fusion/mptctl.c
+===================================================================
+--- linux-2.6.orig/drivers/message/fusion/mptctl.c
++++ linux-2.6/drivers/message/fusion/mptctl.c
+@@ -1250,7 +1250,6 @@ mptctl_getiocinfo (unsigned long arg, un
+ 	int			iocnum;
+ 	unsigned int		port;
+ 	int			cim_rev;
+-	u8			revision;
+ 	struct scsi_device 	*sdev;
+ 	VirtDevice		*vdevice;
+ 
+@@ -1324,8 +1323,7 @@ mptctl_getiocinfo (unsigned long arg, un
+ 	pdev = (struct pci_dev *) ioc->pcidev;
+ 
+ 	karg->pciId = pdev->device;
+-	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
+-	karg->hwRev = revision;
++	karg->hwRev = pdev->revision;
+ 	karg->subSystemDevice = pdev->subsystem_device;
+ 	karg->subSystemVendor = pdev->subsystem_vendor;
+ 
