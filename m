@@ -1,34 +1,45 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC]pass pm related information from ata to scsi
-Date: Mon, 14 May 2012 10:20:47 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1205141019330.1699-100000@iolanthe.rowland.org>
-References: <20120514100206.GA3006@localhost.amd.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 36822] Slow boot with dc395x compiled into the kernel.
+Date: Mon, 14 May 2012 14:23:23 +0000 (UTC)
+Message-ID: <20120514142323.CBE8C11FCE3@bugzilla.kernel.org>
+References: <bug-36822-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120514100206.GA3006@localhost.amd.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux pm mailing list <linux-pm@vger.kernel.org>, linux scsi mailing list <linux-scsi@vger.kernel.org>, linux ide mailing list <linux-ide@vger.kernel.org>, Lin Ming <ming.m.lin@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:55571 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756628Ab2ENOX2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 May 2012 10:23:28 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D39FA20247
+	for <linux-scsi@vger.kernel.org>; Mon, 14 May 2012 14:23:26 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id CE12F20407
+	for <linux-scsi@vger.kernel.org>; Mon, 14 May 2012 14:23:23 +0000 (UTC)
+In-Reply-To: <bug-36822-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, 14 May 2012, Aaron Lu wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=36822
 
-> Hi,
-> 
-> ATA ODD has a new feature called device attention, which means it can
-> notify sata host that it needs power when in powered off state.
-> 
-> In libata, we can set a flag(ATA_DFLAG_DA) to represent this when
-> identifying the ata device. And when we are going to create the scsi
-> device(in ata_scsi_scan_host by __scsi_add_device), I hope the scsi
-> driver(sr) knows that this ODD supports device attention in its probe
-> function(sr_probe).
-> 
-> I didn't find a proper way to do this, any suggestions?
 
-Add a corresponding flag to the scsi_cd structure, and set the flag in 
-libata's slave_configure routine.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-Alan Stern
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |DOCUMENTED
 
+
+
+
+--- Comment #1 from Alan <alan@lxorguk.ukuu.org.uk>  2012-05-14 14:23:23 ---
+Not unusual - the card reader has had more time to get itself ready before the
+kernel waits for it
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
