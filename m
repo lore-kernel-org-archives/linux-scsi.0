@@ -1,7 +1,7 @@
 From: Girish K S <girish.shivananjappa@linaro.org>
 Subject: Re: [RFC PATCH 0/4] Add support for pci/non-pci probing for UFS
-Date: Tue, 15 May 2012 09:54:00 +0530
-Message-ID: <CAGxe1ZFm1npnpTydJ1kyua5xxfpPjd88_8Lc+s+As1TsBtB7Sg@mail.gmail.com>
+Date: Tue, 15 May 2012 10:21:17 +0530
+Message-ID: <CAGxe1ZENHPdEgx_XEQWkbG1MePAa-rT7esEcG-COtOk8+tT0WQ@mail.gmail.com>
 References: <1336993712-9111-1-git-send-email-girish.shivananjappa@linaro.org>
 	<CAKYAXd-bng9OzQUVgrWXTkvdAMPXgHK6copKaAYwMCXFokhEWA@mail.gmail.com>
 	<CAGxe1ZFbkRRuz93v5qfU7Am1N3briUMOxzxFybmv7k79cVp21Q@mail.gmail.com>
@@ -10,12 +10,12 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:33757 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753076Ab2EOEYD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 00:24:03 -0400
-Received: by qcro28 with SMTP id o28so3883875qcr.19
-        for <linux-scsi@vger.kernel.org>; Mon, 14 May 2012 21:24:01 -0700 (PDT)
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:50519 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751337Ab2EOEvT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 00:51:19 -0400
+Received: by qadb17 with SMTP id b17so3328708qad.19
+        for <linux-scsi@vger.kernel.org>; Mon, 14 May 2012 21:51:18 -0700 (PDT)
 In-Reply-To: <CAKYAXd-B1ejaY_NX+hPwiC9s5yC-0zvsbcAzuVnxNNt6m2UUsQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -37,9 +37,10 @@ ayak).
 > plz try to check like this. maybe you can see your name instread
 > original author.
 > /sbin/modinfo ufshcd.ko
-Ok Thanks Namjae.
-I will have a check of this and talk to the original authors
-
+If i build ufshcd.ko ufshcd-pci.ko ufshcd-pltfm.ko, then i can see
+only my name in the ufshcd-*.ko which is added by me. But not in
+ufshcd.ko
+Is it a problem?
 >
 > Thanks.
 >>
