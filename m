@@ -1,50 +1,44 @@
-From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v4 0/4] FCoE Sysfs
-Date: Tue, 15 May 2012 10:47:29 -0700
-Message-ID: <20120515174729.GC31576@kroah.com>
-References: <20120327222224.7144.6324.stgit@localhost6.localdomain6>
- <4FB29507.2060104@intel.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC PATCH 1/3] block: add a flag to identify PM request
+Date: Tue, 15 May 2012 14:30:00 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1205151424450.1796-100000@iolanthe.rowland.org>
+References: <1337097533.3515.17.camel@chief-river-32>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:37006 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932207Ab2EORrf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 13:47:35 -0400
-Received: by dady13 with SMTP id y13so7614223dad.19
-        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 10:47:34 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4FB29507.2060104@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1337097533.3515.17.camel@chief-river-32>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@kernel.dk>, Kernel development list <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Love, Robert W" <robert.w.love@intel.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>, "james.smart@emulex.com" <james.smart@emulex.com>, "bprakash@broadcom.com" <bprakash@broadcom.com>
 
-On Tue, May 15, 2012 at 05:40:24PM +0000, Love, Robert W wrote:
-> On 03/27/2012 03:22 PM, Robert Love wrote:
-> > v4: Minor fixes and cleanups
-> >
-> > * Changed device_initialize/device_add to device_register
-> >   and device_del to device_unregister. There was an imbalance
-> >   because device_initialize was getting a reference that
-> >   was not being released. With this update both fcoe_fcfs
-> >   as well as fcoe_ctlrs are correctly released/free'd when
-> >   they are to be removed from the system.
-> >
-> > * Minor updates to commit messages so there are no
-> >   references to 'fcoe_ctlr_attrs' and 'fcoe_fcf_attrs'
-> >   which were both renamed in v3 of this series.
+On Tue, 15 May 2012, Lin Ming wrote:
+
+> > > IDE code still uses both types and they are used for system
+> > > suspend/resume. See generic_ide_suspend and generic_ide_resume.
+> > 
+> > drivers/ide is obsolete code though so we shouldn't be forcing its needs
+> > on the future
 > 
-> Hi James,
+> Do you mean we don't care about breaking ide code?
+
+As far as I can tell, Alan means that you shouldn't hesitate to change
+the IDE code in order to make things easier for more up-to-date
+systems.  But don't _break_ the IDE driver!
+
+> struct request {
+>         ....
+>         unsigned int cmd_flags;
+>         enum rq_cmd_type_bits cmd_type;
 > 
->    Any thoughts on whether this series will make it for the upcoming
-> merge window? Greg KH Ack-ed it about two months ago and my impression
-> was that everyone agreed to the change at LSF a month ago. What do you
-> think?
+> Another reason I didn't reuse REQ_TYPE_PM_SUSPEND/REQ_TYPE_PM_RESUME is
+> because all scsi requests set the cmd_type to REQ_TYPE_BLOCK_PC.
+> 
+> So I think we should add a new cmd_flags(REQ_PM) to tell if it's a
+> runtime pm request.
 
-Again, if it helps, there was no objection from me, it looked good to
-merge for 3.5.
+Yes, that does make more sense, even though it seems silly to have both
+a flag and a type code for the same thing.  Maybe the IDE driver could
+be changed to use the new flag.
 
-thanks,
-
-greg k-h
+Alan Stern
