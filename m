@@ -1,59 +1,36 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [RFC PATCH 3/3] block: add queue idle timer
-Date: Tue, 15 May 2012 15:19:11 -0400
-Message-ID: <x49mx59b6c0.fsf@segfault.boston.devel.redhat.com>
-References: <1337071697-30920-1-git-send-email-ming.m.lin@intel.com>
-	<1337071697-30920-4-git-send-email-ming.m.lin@intel.com>
+From: =?windows-1251?Q?=C0=ED=F4=E8=F1=EE=ED=FC=EA=E0_=C2=FB=F0=FB=EF=E0=E5=E2=E0?=
+	<motya1967@permonline.ru>
+Subject: =?windows-1251?Q?=EC=E0=F1=FE=ED=FF=21_?=
+Date: Tue, 15 May 2012 15:35:17 +0500
+Message-ID: <2255077761.20120515153517@permonline.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25436 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966416Ab2EOTTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 May 2012 15:19:18 -0400
-In-Reply-To: <1337071697-30920-4-git-send-email-ming.m.lin@intel.com> (Lin
-	Ming's message of "Tue, 15 May 2012 16:48:17 +0800")
+Received: from post.permonline.ru ([212.220.127.246]:52172 "EHLO
+	post.permonline.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966104Ab2EOUY2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 16:24:28 -0400
+Received: from mailsrv01 (mailsrv01 [127.0.0.1])
+	by mailsrv01 (Postfix) with ESMTP id 5F6B4223AEFB
+	for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 22:03:28 +0600 (YEKST)
+Received: from u-start.ru (mailsrv02 [10.62.226.26])
+	by post.permonline.ru (Postfix) with ESMTP id 0063A1E5F9F7
+	for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 21:57:37 +0600 (YEKST)
+Received: from [176.57.209.123] (account motya1967@permonline.ru HELO [192.168.0.11])
+  by u-start.ru (CommuniGate Pro SMTP 5.2.8)
+  with ESMTPA id 951702027 for linux-scsi@vger.kernel.org; Tue, 15 May 2012 17:35:24 +0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Lin Ming <ming.m.lin@intel.com> writes:
-
-> Add an idle timer that is set to some suitable timeout and would be
-> added when the queue first goes empty. If nothing has happened during
-> the timeout interval, then the queue is suspended.
->
-> Queueing a new request could check the state and resume queue if it is
-> supended.
->
-
-[snip]
-
-> @@ -1129,6 +1141,13 @@ void __blk_put_request(struct request_queue *q, struct request *req)
->  	if (unlikely(--req->ref_count))
->  		return;
->  
-> +	/* PM request is not accounted */
-> +	if (!(req->cmd_flags & REQ_PM)) {
-> +		if (!(--q->nr_pending))
-> +			/* Hard code to 20secs, will move to sysfs */
-> +			mod_timer(&q->idle, jiffies + 20*HZ);
-> +	}
-> +
-
-I'm pretty sure Jens wanted to avoid doing a mod_timer, here, given that
-the queue can transition between empty and non-empty fairly rapidly for
-dependent I/O.
-
-> @@ -587,6 +590,13 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
->  {
->  	trace_block_rq_insert(q, rq);
->  
-> +	if (!(rq->cmd_flags & REQ_PM)) {
-> +		if (!(q->pm_status != RPM_ACTIVE) &&
-
-Uhh, re-read that line.  Not not equal?
-
-Cheers,
-Jeff
+=C4=EE=E1=F0=FB=E9 =E2=E5=F7=E5=F0 =EC=EE=E9 =F5=EE=F0=EE=F8=E8=E9!!!=20
+=E5=F1=EB=E8 =F1=EA=F3=F7=ED=EE =E8 =ED=E5 =EF=F0=EE=F2=E8=E2 =EF=EE=E7=
+=ED=E0=EA=EE=EC=E8=F2=FC=F1=FF O=EB=FC=F7=E8=EA=CBoce=E2c=EAa=FF_xsxjvm=
+pxkfnv.pochtamt.ru =ED=E0=E9=E4=B8=F8=FC =F7=E5=F0=E5=E7 =EF=EE=E8=F1=EA=
+=2E.!)))=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
