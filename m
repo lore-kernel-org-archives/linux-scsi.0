@@ -1,54 +1,35 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH v2] scsi: pm: resume device if suspend failed
-Date: Tue, 15 May 2012 14:43:00 +0800
-Message-ID: <1337064180-26907-1-git-send-email-aaron.lu@amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:38679 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754661Ab2EOGoL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 May 2012 02:44:11 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [RFC PATCH 0/3] block layer runtime pm
+Date: Tue, 15 May 2012 16:48:14 +0800
+Message-ID: <1337071697-30920-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>, Aaron Lu <aaron.lu@amd.com>
 
-V2: use scsi_device instead of device in scsi_device_resume
+Hi,
 
-V1:
-For scsi devices which use scsi bus runtime callback, runtime suspend
-will call scsi_dev_type_suspend, and if the drv->suspend failed, the
-device will still be in active state. But since scsi_device_quiesce is
-called, the device will not be able to respond any more commands.
-So add a check here to see if err occured, if so, bring the device back
-to normal state with scsi_device_resume.
+In August 2010, Jens and Alan discussed about "Runtime PM and the block
+layer". http://marc.info/?t=128259108400001&r=1&w=2
 
-Signed-off-by: Aaron Lu <aaron.lu@amd.com>
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
----
- drivers/scsi/scsi_pm.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Here are the very draft, compile tested only patches that try to
+implement the ideas discussed.
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index c467064..a06dd56 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -24,8 +24,11 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
- 	err = scsi_device_quiesce(to_scsi_device(dev));
- 	if (err == 0) {
- 		drv = dev->driver;
--		if (drv && drv->suspend)
-+		if (drv && drv->suspend) {
- 			err = drv->suspend(dev, msg);
-+			if (err)
-+				scsi_device_resume(to_scsi_device(dev));
-+		}
- 	}
- 	dev_dbg(dev, "scsi suspend: %d\n", err);
- 	return err;
--- 
-1.7.9.6
+I throw it out early to get feedbacks and see if I'm on the right
+direction.
 
+Lin Ming (3):
+      block: add a flag to identify PM request
+      block: add queue runtime pm callback
+      block: add queue idle timer
 
+ block/blk-core.c           |   25 +++++++++++++++++++++++
+ block/blk-settings.c       |    6 +++++
+ block/elevator.c           |   10 +++++++++
+ drivers/scsi/scsi_lib.c    |   25 ++++++++++++++++++++--
+ drivers/scsi/sd.c          |   47 +++++++++++++++++++++++++++++++++++++------
+ include/linux/blk_types.h  |    2 +
+ include/linux/blkdev.h     |    8 +++++++
+ include/scsi/scsi_device.h |    4 +++
+ 8 files changed, 117 insertions(+), 10 deletions(-)
