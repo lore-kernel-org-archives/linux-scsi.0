@@ -1,105 +1,145 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 18/22] qla2xxx: Don't capture minidump for ISP82xx on flash update from application.
-Date: Tue, 15 May 2012 14:34:25 -0400
-Message-ID: <1337106869-14191-19-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 07/22] qla2xxx: Handle interrupt registration failures more gracefully.
+Date: Tue, 15 May 2012 14:34:14 -0400
+Message-ID: <1337106869-14191-8-git-send-email-chad.dupuis@qlogic.com>
 References: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:32804 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:20335 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S966438Ab2EOS5r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 May 2012 14:57:47 -0400
+	id S966397Ab2EOS5s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 May 2012 14:57:48 -0400
 In-Reply-To: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+If interrupt registration failed we could crash the machine as we were trying
+to deference some pointers which weren't allocated yet.  Move the allocation
+a little earlier and make some checks to the free resource code to make sure
+that we don't try to free a resource that was never allocated.
 
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |    1 +
- drivers/scsi/qla2xxx/qla_bsg.c  |    3 +++
- drivers/scsi/qla2xxx/qla_def.h  |    1 +
- drivers/scsi/qla2xxx/qla_nx.c   |   12 ++++++++++--
- 4 files changed, 15 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |   10 ++++++++-
+ drivers/scsi/qla2xxx/qla_os.c  |   44 ++++++++++++++++++++++++++++-----------
+ 2 files changed, 40 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 5b3b594..00df96b 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -576,6 +576,7 @@ qla2x00_sysfs_write_reset(struct file *filp, struct kobject *kobj,
- 		scsi_block_requests(vha->host);
- 		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
- 		if (IS_QLA82XX(ha)) {
-+			ha->flags.isp82xx_no_md_cap = 1;
- 			qla82xx_idc_lock(ha);
- 			qla82xx_set_reset_owner(vha);
- 			qla82xx_idc_unlock(ha);
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index f709e66..449ac9c 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -1400,6 +1400,9 @@ qla2x00_update_optrom(struct fc_bsg_job *bsg_job)
- 	if (rval)
- 		return rval;
- 
-+	/* Set the isp82xx_no_md_cap not to capture minidump */
-+	ha->flags.isp82xx_no_md_cap = 1;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index ce42288..f4b8a5f 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2564,7 +2564,15 @@ void
+ qla2x00_free_irqs(scsi_qla_host_t *vha)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+-	struct rsp_que *rsp = ha->rsp_q_map[0];
++	struct rsp_que *rsp;
 +
- 	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
- 	    bsg_job->request_payload.sg_cnt, ha->optrom_buffer,
- 	    ha->optrom_region_size);
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 7aedd90..13c3fe1 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2462,6 +2462,7 @@ struct qla_hw_data {
- 		uint32_t	thermal_supported:1;
- 		uint32_t	isp82xx_reset_hdlr_active:1;
- 		uint32_t	isp82xx_reset_owner:1;
-+		uint32_t	isp82xx_no_md_cap:1;
- 		/* 28 bits */
- 	} flags;
++	/*
++	 * We need to check that ha->rsp_q_map is valid in case we are called
++	 * from a probe failure context.
++	 */
++	if (!ha->rsp_q_map || !ha->rsp_q_map[0])
++		return;
++	rsp = ha->rsp_q_map[0];
  
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index f88eb83..e957487 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -2050,7 +2050,7 @@ qla82xx_intr_handler(int irq, void *dev_id)
+ 	if (ha->flags.msix_enabled)
+ 		qla24xx_disable_msix(ha);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 7db8033..2e6dd88 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -306,7 +306,8 @@ static void qla2x00_free_fw_dump(struct qla_hw_data *);
+ static void qla2x00_mem_free(struct qla_hw_data *);
  
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
--		ql_log(ql_log_info, NULL, 0xb054,
-+		ql_log(ql_log_info, NULL, 0xb053,
- 		    "%s: NULL response queue pointer.\n", __func__);
- 		return IRQ_NONE;
+ /* -------------------------------------------------------------------------- */
+-static int qla2x00_alloc_queues(struct qla_hw_data *ha)
++static int qla2x00_alloc_queues(struct qla_hw_data *ha, struct req_que *req,
++				struct rsp_que *rsp)
+ {
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
+ 	ha->req_q_map = kzalloc(sizeof(struct req_que *) * ha->max_req_queues,
+@@ -324,6 +325,12 @@ static int qla2x00_alloc_queues(struct qla_hw_data *ha)
+ 		    "Unable to allocate memory for response queue ptrs.\n");
+ 		goto fail_rsp_map;
  	}
-@@ -3128,7 +3128,7 @@ qla82xx_need_reset_handler(scsi_qla_host_t *vha)
- 		if (ql2xmdenable) {
- 			if (qla82xx_md_collect(vha))
- 				ql_log(ql_log_warn, vha, 0xb02c,
--				    "Not able to collect minidump.\n");
-+				    "Minidump not collected.\n");
- 		} else
- 			ql_log(ql_log_warn, vha, 0xb04f,
- 			    "Minidump disabled.\n");
-@@ -4137,6 +4137,14 @@ qla82xx_md_collect(scsi_qla_host_t *vha)
- 		goto md_failed;
- 	}
++	/*
++	 * Make sure we record at least the request and response queue zero in
++	 * case we need to free them if part of the probe fails.
++	 */
++	ha->rsp_q_map[0] = rsp;
++	ha->req_q_map[0] = req;
+ 	set_bit(0, ha->rsp_qid_map);
+ 	set_bit(0, ha->req_qid_map);
+ 	return 1;
+@@ -2417,6 +2424,16 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	    host->max_cmd_len, host->max_channel, host->max_lun,
+ 	    host->transportt, sht->vendor_id);
  
-+	if (ha->flags.isp82xx_no_md_cap) {
-+		ql_log(ql_log_warn, vha, 0xb054,
-+		    "Forced reset from application, "
-+		    "ignore minidump capture\n");
-+		ha->flags.isp82xx_no_md_cap = 0;
-+		goto md_failed;
++que_init:
++	/* Alloc arrays of request and response ring ptrs */
++	if (!qla2x00_alloc_queues(ha, req, rsp)) {
++		ql_log(ql_log_fatal, base_vha, 0x003d,
++		    "Failed to allocate memory for queue pointers..."
++		    "aborting.\n");
++		goto probe_init_failed;
 +	}
 +
- 	if (qla82xx_validate_template_chksum(vha)) {
- 		ql_log(ql_log_info, vha, 0xb039,
- 		    "Template checksum validation error\n");
++
+ 	/* Set up the irqs */
+ 	ret = qla2x00_request_irqs(ha, rsp);
+ 	if (ret)
+@@ -2424,20 +2441,10 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	pci_save_state(pdev);
+ 
+-	/* Alloc arrays of request and response ring ptrs */
+-que_init:
+-	if (!qla2x00_alloc_queues(ha)) {
+-		ql_log(ql_log_fatal, base_vha, 0x003d,
+-		    "Failed to allocate memory for queue pointers.. aborting.\n");
+-		goto probe_init_failed;
+-	}
+-
+-	ha->rsp_q_map[0] = rsp;
+-	ha->req_q_map[0] = req;
++	/* Assign back pointers */
+ 	rsp->req = req;
+ 	req->rsp = rsp;
+-	set_bit(0, ha->req_qid_map);
+-	set_bit(0, ha->rsp_qid_map);
++
+ 	/* FWI2-capable only. */
+ 	req->req_q_in = &ha->iobase->isp24.req_q_in;
+ 	req->req_q_out = &ha->iobase->isp24.req_q_out;
+@@ -2581,7 +2588,11 @@ skip_dpc:
+ 
+ probe_init_failed:
+ 	qla2x00_free_req_que(ha, req);
++	ha->req_q_map[0] = NULL;
++	clear_bit(0, ha->req_qid_map);
+ 	qla2x00_free_rsp_que(ha, rsp);
++	ha->rsp_q_map[0] = NULL;
++	clear_bit(0, ha->rsp_qid_map);
+ 	ha->max_req_queues = ha->max_rsp_queues = 0;
+ 
+ probe_failed:
+@@ -2663,6 +2674,13 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	struct qla_hw_data  *ha;
+ 	unsigned long flags;
+ 
++	/*
++	 * If the PCI device is disabled that means that probe failed and any
++	 * resources should be have cleaned up on probe exit.
++	 */
++	if (!atomic_read(&pdev->enable_cnt))
++		return;
++
+ 	base_vha = pci_get_drvdata(pdev);
+ 	ha = base_vha->hw;
+ 
 -- 
 1.7.7
 
