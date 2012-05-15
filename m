@@ -1,35 +1,36 @@
 From: Girish K S <girish.shivananjappa@linaro.org>
-Subject: [RFC RESEND 2/4] SCSI: UFS: Add support for pci probe
-Date: Tue, 15 May 2012 15:06:25 +0530
-Message-ID: <1337074587-29021-3-git-send-email-girish.shivananjappa@linaro.org>
+Subject: [RFC RESEND 3/4] SCSI: UFS: Add platform support for ufs host controller
+Date: Tue, 15 May 2012 15:06:26 +0530
+Message-ID: <1337074587-29021-4-git-send-email-girish.shivananjappa@linaro.org>
 References: <1337074587-29021-1-git-send-email-girish.shivananjappa@linaro.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-pb0-f46.google.com ([209.85.160.46]:55186 "EHLO
 	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756705Ab2EOJhR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 05:37:17 -0400
+	with ESMTP id S1756705Ab2EOJhd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 05:37:33 -0400
 Received: by mail-pb0-f46.google.com with SMTP id rp8so7292170pbb.19
-        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 02:37:16 -0700 (PDT)
+        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 02:37:33 -0700 (PDT)
 In-Reply-To: <1337074587-29021-1-git-send-email-girish.shivananjappa@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: james.bottomley@hansenpartnership.com, vinholikatti@gmail.com, santoshsy@gmail.com, patches@linaro.org, Girish K S <girish.shivananjappa@linaro.org>
 
-This patch adds support for pci probing of UFS driver
+This patch adds platform support for ufs host controller
+The SoC's that use non-pci probing should use this option.
 
 Signed-off-by: Girish K S <girish.shivananjappa@linaro.org>
 ---
- drivers/scsi/ufs/ufshcd-pci.c |  218 +++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 218 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
+ drivers/scsi/ufs/ufshcd-pltfm.c |  191 +++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 191 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
 
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+diff --git a/drivers/scsi/ufs/ufshcd-pltfm.c b/drivers/scsi/ufs/ufshcd-pltfm.c
 new file mode 100644
-index 0000000..7ae2b29
+index 0000000..3bf6312
 --- /dev/null
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -0,0 +1,218 @@
++++ b/drivers/scsi/ufs/ufshcd-pltfm.c
+@@ -0,0 +1,191 @@
 +/*
 + * Universal Flash Storage Host controller driver
 + *
@@ -75,82 +76,67 @@ index 0000000..7ae2b29
 +#include <linux/interrupt.h>
 +#include <linux/module.h>
 +#include <linux/io.h>
-+#include <linux/pci.h>
++#include <linux/irq.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++#include <linux/dma-mapping.h>
 +#include <scsi/scsi_host.h>
 +
 +#include "ufs.h"
 +#include "ufshci.h"
 +
 +/**
-+ * ufshcd_pci_set_dma_mask - Set dma mask based on the controller
++ * ufshcd_pltfmset_dma_mask - Set dma mask based on the controller
 + *			 addressing capability
 + * @ihba: pointer to host platform data
 + *
 + * Returns 0 for success, non-zero for failure
 + */
-+static int ufshcd_pci_set_dma_mask(struct pci_dev *pdev)
++static int ufshcd_pltfm_set_dma_mask(struct platform_device *pdev)
 +{
 +	int err;
 +	u64 dma_mask;
 +
-+	/*
-+	 * If controller supports 64 bit addressing mode, then set the DMA
-+	 * mask to 64-bit, else set the DMA mask to 32-bit
-+	 */
 +	dma_mask = DMA_BIT_MASK(64);
-+	err = pci_set_dma_mask(pdev, dma_mask);
++	err = dma_set_coherent_mask(&pdev->dev, dma_mask);
 +	if (err) {
 +		dma_mask = DMA_BIT_MASK(32);
-+		err = pci_set_dma_mask(pdev, dma_mask);
++		err = dma_set_coherent_mask(&pdev->dev, dma_mask);
 +	}
-+
-+	if (err)
-+		return err;
-+
-+	err = pci_set_consistent_dma_mask(pdev, dma_mask);
 +
 +	return err;
 +}
 +
-+static int __devinit ufshcd_pci_probe(struct pci_dev *pdev,
-+				  const struct pci_device_id *entries)
++static int ufshcd_pltfm_probe(struct platform_device *pdev)
 +{
 +	struct ufs_hba *uninitialized_var(hba);
-+	int err;
++	struct resource	*regs;
++	int err, irq;
 +	void __iomem *mmio_base;
 +
-+	err = pci_enable_device(pdev);
-+	if (err) {
-+		dev_err(&pdev->dev, "pci_enable_device failed\n");
-+		goto err_return;
-+	}
++	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!regs)
++		return -ENXIO;
 +
-+	pci_set_master(pdev);
++	irq = platform_get_irq(pdev, 0);
++	if (irq < 0)
++		return irq;
 +
-+	err = pci_request_regions(pdev, "ufshcd_pci");
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "request regions failed\n");
-+		goto err_disable;
-+	}
++	mmio_base = ioremap(regs->start, resource_size(regs));
++	if (!mmio_base)
++		return -ENOMEM;
 +
-+	mmio_base = pci_ioremap_bar(pdev, 0);
-+	if (!mmio_base) {
-+		dev_err(&pdev->dev, "memory map failed\n");
-+		err = -ENOMEM;
-+		goto err_release;
-+	}
-+
-+	err = ufshcd_pci_set_dma_mask(pdev);
++	err = ufshcd_pltfm_set_dma_mask(pdev);
 +	if (err) {
 +		dev_err(&pdev->dev, "set dma mask failed\n");
-+		goto err_iounmap;
++		goto  err_iounmap;
 +	}
 +
-+	err = ufshcd_probe(&hba, &pdev->dev, pdev->irq, mmio_base);
++	err = ufshcd_probe(&hba, &pdev->dev, irq, mmio_base);
 +	if (err)
 +		goto err_iounmap;
 +
-+	pci_set_drvdata(pdev, hba);
++	platform_set_drvdata(pdev, hba);
 +
 +	/* Initialization routine */
 +	err = ufshcd_initialize_hba(hba);
@@ -165,88 +151,76 @@ index 0000000..7ae2b29
 +	ufshcd_remove(hba);
 +err_iounmap:
 +	iounmap(hba->mmio_base);
-+err_release:
-+	pci_release_regions(pdev);
-+err_disable:
-+	pci_clear_master(pdev);
-+	pci_disable_device(pdev);
-+err_return:
 +	return err;
 +}
 +
-+static void __devexit ufshcd_pci_remove(struct pci_dev *pdev)
++static int __exit ufshcd_pltfm_remove(struct platform_device *pdev)
 +{
-+	struct ufs_hba *hba = pci_get_drvdata(pdev);
++	struct ufs_hba *hba = platform_get_drvdata(pdev);
 +
 +	ufshcd_remove(hba);
 +	iounmap(hba->mmio_base);
-+	pci_set_drvdata(pdev, NULL);
-+	pci_clear_master(pdev);
-+	pci_release_regions(pdev);
-+	pci_disable_device(pdev);
++	platform_set_drvdata(pdev, NULL);
++	return 0;
 +}
 +
 +#ifdef CONFIG_PM_SLEEP
-+static int ufshcd_pci_suspend(struct device *dev)
++static int ufshcd_pltfm_suspend(struct device *dev)
 +{
 +	int ret;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct ufs_hba *hba = pci_get_drvdata(pdev);
++	struct ufs_hba *hba = dev_get_drvdata(dev);
 +
 +	ret = ufshcd_suspend(hba);
-+	return ret;
++	if (ret)
++		return ret;
++
++	return 0;
 +}
 +
-+static int ufshcd_pci_resume(struct device *dev)
++static int ufshcd_pltfm_resume(struct device *dev)
 +{
 +	int ret;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct ufs_hba *hba = pci_get_drvdata(pdev);
++	struct ufs_hba *hba = dev_get_drvdata(dev);
 +
 +	ret = ufshcd_resume(hba);
-+	return ret;
++	if (ret)
++		return ret;
++
++	return 0;
 +}
 +#else
-+#define ufshcd_pci_suspend	NULL
-+#define ufshcd_pci_resume	NULL
++#define ufshcd_pltfm_suspend	NULL
++#define ufshcd_pltfm_resume	NULL
 +#endif /* CONFIG_PM_SLEEP */
 +
-+static SIMPLE_DEV_PM_OPS(ufshcd_pci_pmops,
-+			 ufshcd_pci_suspend,
-+			 ufshcd_pci_resume);
++static SIMPLE_DEV_PM_OPS(ufshcd_pltfm_pmops,
++			 ufshcd_pltfm_suspend,
++			 ufshcd_pltfm_resume);
 +
-+static DEFINE_PCI_DEVICE_TABLE(ufshcd_pci_id) = {
-+	{ PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+	{}
-+};
-+MODULE_DEVICE_TABLE(pci, ufshcd_pci_id);
-+
-+static struct pci_driver ufshcd_pci_driver = {
-+	.name		= "ufshcd_pci",
-+	.id_table	= ufshcd_pci_id,
-+	.probe		= ufshcd_pci_probe,
-+	.remove		= ufshcd_pci_remove,
-+	.driver		=	{
-+		.pm =   &ufshcd_pci_pmops
++static struct platform_driver ufshcd_pltfm_driver = {
++	.probe		= ufshcd_pltfm_probe,
++	.remove		= __exit_p(ufshcd_pltfm_remove),
++	.driver		= {
++		.name		= "ufshcd",
++		.pm		= &ufshcd_pltfm_pmops,
 +	},
 +};
 +
 +static int __init ufshcd_init(void)
 +{
-+	return pci_register_driver(&ufshcd_pci_driver);
++	return platform_driver_register(&ufshcd_pltfm_driver);
 +}
 +
 +static void __exit ufshcd_exit(void)
 +{
-+	pci_unregister_driver(&ufshcd_pci_driver);
++	platform_driver_unregister(&ufshcd_pltfm_driver);
 +}
 +
 +module_init(ufshcd_init);
 +module_exit(ufshcd_exit);
 +
-+MODULE_DESCRIPTION("UFS Host Controller PCI Interface driver");
-+MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
-+MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
++MODULE_DESCRIPTION("UFS Host Controller platform Interface driver");
++MODULE_AUTHOR("Girish K S <ks.giri@samsung.com>");
 +MODULE_LICENSE("GPL");
 -- 
 1.7.4.1
