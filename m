@@ -1,50 +1,32 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [RFC-v4 0/3] qla2xxx: v3.4 target mode LLD changes + tcm_qla2xxx
- fabric module
-Date: Tue, 15 May 2012 14:21:57 +0000
-Message-ID: <4FB26685.4050200@acm.org>
-References: <4FAFD976.8090409@acm.org>  <1336966168.25759.293.camel@haakon2.linux-iscsi.org>  <4FB0FF99.8060307@acm.org> <1337037165.25759.393.camel@haakon2.linux-iscsi.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC PATCH 1/3] block: add a flag to identify PM request
+Date: Tue, 15 May 2012 10:35:51 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1205151028020.1796-100000@iolanthe.rowland.org>
+References: <1337071697-30920-2-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1337037165.25759.393.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, target-devel@vger.kernel.org, James Bottomley <jbottomley@parallels.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1337071697-30920-2-git-send-email-ming.m.lin@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Kernel development list <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/14/12 23:12, Nicholas A. Bellinger wrote:
+On Tue, 15 May 2012, Lin Ming wrote:
 
-> On Mon, 2012-05-14 at 12:50 +0000, Bart Van Assche wrote:
->> Note: in the kernel module with the shared code an interface will have
->> to be added that allows the initiator and the target module to enumerate
->> qla2xxx HBA ports. Maybe it's a good idea to add an interface similar to
->> the add_one() / remove_one() callback functions present in the Linux
->> InfiniBand stack.
-> 
-> Considering the time scales involved with doing this type of testing
-> (esp the latter, which can take months) plus given the amount of LLD
-> code involved (40K LOC), a large re-org that effects existing FC
-> initiator mode operation is something we'd like to avoid for now.
+> Add a flag REQ_PM to identify the request is PM related.
+> As an example, modify scsi code to use this flag.
 
+There already is such a flag; you don't need to add one.  In fact, 
+there already are _two_ such flags, and it would be best to remove one 
+of them.  In include/linux/blkdev.h:
 
-Let me summarize what I've noticed after I had a (very) short look at
-the proposed qla2xxx driver changes:
-- The proposed changes do not allow to enable initiator and target mode
-  simultaneously on a single FC port.
-- Most of the initiator-mode SCSI host sysfs attributes are relevant in
-  target mode too (e.g. NV-RAM access) and hence should be moved from
-  the SCSI host to somewhere else. A good example is e.g. the Linux IB
-  stack - in the IB stack there is a clean separation between
-  HCA-specific sysfs attributes and sysfs attributes associated with
-  higher-level services.
-- The posted patch does not allow to add more FC functionality in a
-  clean way, e.g. IP over FC or FC-VI. (Note: IP over FC has been
-  standardized through RFC 4338 - http://tools.ietf.org/html/rfc4338.)
+	REQ_TYPE_PM_SUSPEND,		/* suspend request */
+	REQ_TYPE_PM_RESUME,		/* resume request */
 
-So I'm not sure whether the proposed approach is acceptable for a
-mainline kernel driver. However, I'm not a SCSI maintainer and hence I
-do not have a decisive voice in this matter.
+Apparently they had been used by the old ide driver, but they don't
+seem to be used anywhere now.
 
-Bart.
+Aside from that, this patch seems to be going in the right direction.
+
+Alan Stern
