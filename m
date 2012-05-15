@@ -1,52 +1,51 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 03/22] qla2xxx: Fix typo in qla_mbx.c
-Date: Tue, 15 May 2012 14:34:10 -0400
-Message-ID: <1337106869-14191-4-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 04/22] qla2xxx: Remove unneeded DPC wakeups from qla82xx_watchdog.
+Date: Tue, 15 May 2012 14:34:11 -0400
+Message-ID: <1337106869-14191-5-git-send-email-chad.dupuis@qlogic.com>
 References: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:12520 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:62842 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S966430Ab2EOS52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 May 2012 14:57:28 -0400
+	id S966144Ab2EOS50 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 May 2012 14:57:26 -0400
 In-Reply-To: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Masanari Iida <standby24x7@gmail.com>
-
-Correct spelling "occured" to "occurred" in
-drivers/scsi/qla2xxx/qla_mbx.c
-
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_nx.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index b4a2339..54eba10 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -320,7 +320,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 					    CRB_NIU_XG_PAUSE_CTL_P1);
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index de722a9..6f8850c 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -3352,13 +3352,11 @@ void qla82xx_watchdog(scsi_qla_host_t *vha)
+ 			ql_log(ql_log_warn, vha, 0x6001,
+ 			    "Adapter reset needed.\n");
+ 			set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+-			qla2xxx_wake_dpc(vha);
+ 		} else if (dev_state == QLA82XX_DEV_NEED_QUIESCENT &&
+ 			!test_bit(ISP_QUIESCE_NEEDED, &vha->dpc_flags)) {
+ 			ql_log(ql_log_warn, vha, 0x6002,
+ 			    "Quiescent needed.\n");
+ 			set_bit(ISP_QUIESCE_NEEDED, &vha->dpc_flags);
+-			qla2xxx_wake_dpc(vha);
+ 		} else {
+ 			if (qla82xx_check_fw_alive(vha)) {
+ 				ql_dbg(ql_dbg_timer, vha, 0x6011,
+@@ -3398,7 +3396,6 @@ void qla82xx_watchdog(scsi_qla_host_t *vha)
+ 					set_bit(ISP_ABORT_NEEDED,
+ 					    &vha->dpc_flags);
  				}
- 				ql_log(ql_log_info, base_vha, 0x101c,
--				    "Mailbox cmd timeout occured, cmd=0x%x, "
-+				    "Mailbox cmd timeout occurred, cmd=0x%x, "
- 				    "mb[0]=0x%x, eeh_busy=0x%x. Scheduling ISP "
- 				    "abort.\n", command, mcp->mb[0],
- 				    ha->flags.eeh_busy);
-@@ -345,7 +345,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 					    CRB_NIU_XG_PAUSE_CTL_P1);
- 				}
- 				ql_log(ql_log_info, base_vha, 0x101e,
--				    "Mailbox cmd timeout occured, cmd=0x%x, "
-+				    "Mailbox cmd timeout occurred, cmd=0x%x, "
- 				    "mb[0]=0x%x. Scheduling ISP abort ",
- 				    command, mcp->mb[0]);
- 				set_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags);
+-				qla2xxx_wake_dpc(vha);
+ 				ha->flags.isp82xx_fw_hung = 1;
+ 				ql_log(ql_log_warn, vha, 0x6007, "Firmware hung.\n");
+ 				qla82xx_clear_pending_mbx(vha);
 -- 
 1.7.7
 
