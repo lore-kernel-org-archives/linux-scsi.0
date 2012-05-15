@@ -1,83 +1,50 @@
-From: Girish K S <girish.shivananjappa@linaro.org>
-Subject: [RFC V1 4/4] SCSI: UFS: Added support of PCI/PLTFM for UFS
-Date: Tue, 15 May 2012 17:33:56 +0530
-Message-ID: <1337083436-4204-5-git-send-email-girish.shivananjappa@linaro.org>
-References: <1337083436-4204-1-git-send-email-girish.shivananjappa@linaro.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:44688 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932074Ab2EOMGl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 08:06:41 -0400
-Received: by pbbrp8 with SMTP id rp8so7445179pbb.19
-        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 05:06:41 -0700 (PDT)
-In-Reply-To: <1337083436-4204-1-git-send-email-girish.shivananjappa@linaro.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [RFC-v4 0/3] qla2xxx: v3.4 target mode LLD changes + tcm_qla2xxx
+ fabric module
+Date: Tue, 15 May 2012 14:21:57 +0000
+Message-ID: <4FB26685.4050200@acm.org>
+References: <4FAFD976.8090409@acm.org>  <1336966168.25759.293.camel@haakon2.linux-iscsi.org>  <4FB0FF99.8060307@acm.org> <1337037165.25759.393.camel@haakon2.linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1337037165.25759.393.camel@haakon2.linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, target-devel@vger.kernel.org, James Bottomley <jbottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: james.bottomley@hansenpartnership.com, vinholikatti@gmail.com, santoshsy@gmail.com, patches@linaro.org, Girish K S <girish.shivananjappa@linaro.org>
 
-This patch modifies the Kconfig and the Makefile to
-add support for PCI and Platform config options to the
-UFS core driver. If the device is attached to the core
-throught pci,then PCI option has to be selected in the
-menuconfig. For more information read the help section
-of Kconfig file.
+On 05/14/12 23:12, Nicholas A. Bellinger wrote:
 
-Signed-off-by: Girish K S <girish.shivananjappa@linaro.org>
----
- drivers/scsi/ufs/Kconfig  |   32 +++++++++++++++++++++++++++++---
- drivers/scsi/ufs/Makefile |    2 ++
- 2 files changed, 31 insertions(+), 3 deletions(-)
+> On Mon, 2012-05-14 at 12:50 +0000, Bart Van Assche wrote:
+>> Note: in the kernel module with the shared code an interface will have
+>> to be added that allows the initiator and the target module to enumerate
+>> qla2xxx HBA ports. Maybe it's a good idea to add an interface similar to
+>> the add_one() / remove_one() callback functions present in the Linux
+>> InfiniBand stack.
+> 
+> Considering the time scales involved with doing this type of testing
+> (esp the latter, which can take months) plus given the amount of LLD
+> code involved (40K LOC), a large re-org that effects existing FC
+> initiator mode operation is something we'd like to avoid for now.
 
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 8f27f9d..70f3a71 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -44,6 +44,32 @@
- 
- config SCSI_UFSHCD
- 	tristate "Universal Flash Storage host controller driver"
--	depends on PCI && SCSI
--	---help---
--	This is a generic driver which supports PCIe UFS Host controllers.
-+	depends on SCSI
-+	help
-+	This is a generic driver which supports UFS Host controllers.
-+	This option is selected automatically if the SCSI option is
-+	selected. This is a core ufs driver.
-+
-+config SCSI_UFSHCD_PCI
-+	tristate "Universal Flash Storage host support on PCI bus"
-+	depends on SCSI_UFSHCD && PCI
-+	help
-+	  This selects the PCI bus for the Universal Flash Storage IP.
-+	  Select this option if the IP is present on PCI platform.
-+
-+	  If you have a controller with this interface, say Y or M here.
-+
-+	  If unsure, say N.
-+
-+config SCSI_UFSHCD_PLTFM
-+	tristate "Universal Flash Storage host support as platform device"
-+	depends on SCSI_UFSHCD
-+	help
-+	  This selects the common helper functions support for Host Controller
-+	  Interface based platform driver. Please select this option if the IP
-+	  is present as a platform device. This is the common interface for the
-+	  UFS Host Controller IP.
-+
-+	  If you have a controller with this interface, say Y or M here.
-+
-+	  If unsure, say N.
-diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index adf7895..fc56471 100644
---- a/drivers/scsi/ufs/Makefile
-+++ b/drivers/scsi/ufs/Makefile
-@@ -1,2 +1,4 @@
- # UFSHCD makefile
- obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
-+obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
-+obj-$(CONFIG_SCSI_UFSHCD_PLTFM) += ufshcd-pltfm.o
--- 
-1.7.4.1
 
+Let me summarize what I've noticed after I had a (very) short look at
+the proposed qla2xxx driver changes:
+- The proposed changes do not allow to enable initiator and target mode
+  simultaneously on a single FC port.
+- Most of the initiator-mode SCSI host sysfs attributes are relevant in
+  target mode too (e.g. NV-RAM access) and hence should be moved from
+  the SCSI host to somewhere else. A good example is e.g. the Linux IB
+  stack - in the IB stack there is a clean separation between
+  HCA-specific sysfs attributes and sysfs attributes associated with
+  higher-level services.
+- The posted patch does not allow to add more FC functionality in a
+  clean way, e.g. IP over FC or FC-VI. (Note: IP over FC has been
+  standardized through RFC 4338 - http://tools.ietf.org/html/rfc4338.)
+
+So I'm not sure whether the proposed approach is acceptable for a
+mainline kernel driver. However, I'm not a SCSI maintainer and hence I
+do not have a decisive voice in this matter.
+
+Bart.
