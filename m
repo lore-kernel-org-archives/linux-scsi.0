@@ -1,42 +1,300 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 10/22] qla2xxx: Fix typo in bus-reset handler.
-Date: Tue, 15 May 2012 14:34:17 -0400
-Message-ID: <1337106869-14191-11-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 13/22] qla2xxx: Remove mirrored field vp_idx from struct fc_port.
+Date: Tue, 15 May 2012 14:34:20 -0400
+Message-ID: <1337106869-14191-14-git-send-email-chad.dupuis@qlogic.com>
 References: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:13327 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:7294 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S966392Ab2EOS5e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 May 2012 14:57:34 -0400
+	id S966282Ab2EOS5q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 May 2012 14:57:46 -0400
 In-Reply-To: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Both the target-id and LUN are munged in the original printk().
+The field vp_idx in struct fc_port is a redundant/mirror copy of
+the same field in struct scsi_qla_host;
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+struct fc_port has a pointer vha to scsi_qla_host which allows
+the original copy of vp_idx to be readily accessed.
+
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_bsg.c  |    2 --
+ drivers/scsi/qla2xxx/qla_def.h  |    1 -
+ drivers/scsi/qla2xxx/qla_init.c |   10 ----------
+ drivers/scsi/qla2xxx/qla_iocb.c |   26 +++++++++++++-------------
+ drivers/scsi/qla2xxx/qla_mbx.c  |    4 ++--
+ drivers/scsi/qla2xxx/qla_mid.c  |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c   |    6 +++---
+ 7 files changed, 19 insertions(+), 32 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 26d34cb..f709e66 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -297,7 +297,6 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
+ 
+ 		/* Initialize all required  fields of fcport */
+ 		fcport->vha = vha;
+-		fcport->vp_idx = vha->vp_idx;
+ 		fcport->d_id.b.al_pa =
+ 			bsg_job->request->rqst_data.h_els.port_id[0];
+ 		fcport->d_id.b.area =
+@@ -483,7 +482,6 @@ qla2x00_process_ct(struct fc_bsg_job *bsg_job)
+ 
+ 	/* Initialize all required  fields of fcport */
+ 	fcport->vha = vha;
+-	fcport->vp_idx = vha->vp_idx;
+ 	fcport->d_id.b.al_pa = bsg_job->request->rqst_data.h_ct.port_id[0];
+ 	fcport->d_id.b.area = bsg_job->request->rqst_data.h_ct.port_id[1];
+ 	fcport->d_id.b.domain = bsg_job->request->rqst_data.h_ct.port_id[2];
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 7f7ebec..f601a93 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -1719,7 +1719,6 @@ typedef struct fc_port {
+ 	struct fc_rport *rport, *drport;
+ 	u32 supported_classes;
+ 
+-	uint16_t vp_idx;
+ 	uint8_t fc4_type;
+ 	uint8_t scan_state;
+ } fc_port_t;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 14f4aeb..6c26e04 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2495,7 +2495,6 @@ qla2x00_alloc_fcport(scsi_qla_host_t *vha, gfp_t flags)
+ 
+ 	/* Setup fcport template structure. */
+ 	fcport->vha = vha;
+-	fcport->vp_idx = vha->vp_idx;
+ 	fcport->port_type = FCT_UNKNOWN;
+ 	fcport->loop_id = FC_NO_LOOP_ID;
+ 	qla2x00_set_fcport_state(fcport, FCS_UNCONFIGURED);
+@@ -2726,7 +2725,6 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+ 		new_fcport->d_id.b.area = area;
+ 		new_fcport->d_id.b.al_pa = al_pa;
+ 		new_fcport->loop_id = loop_id;
+-		new_fcport->vp_idx = vha->vp_idx;
+ 		rval2 = qla2x00_get_port_database(vha, new_fcport, 0);
+ 		if (rval2 != QLA_SUCCESS) {
+ 			ql_dbg(ql_dbg_disc, vha, 0x201a,
+@@ -2760,10 +2758,6 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+ 
+ 		if (!found) {
+ 			/* New device, add to fcports list. */
+-			if (vha->vp_idx) {
+-				new_fcport->vha = vha;
+-				new_fcport->vp_idx = vha->vp_idx;
+-			}
+ 			list_add_tail(&new_fcport->list, &vha->vp_fcports);
+ 
+ 			/* Allocate a new replacement fcport. */
+@@ -3084,10 +3078,6 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
+ 			/* Login and update database */
+ 			qla2x00_fabric_dev_login(vha, fcport, &next_loopid);
+ 
+-			if (vha->vp_idx) {
+-				fcport->vha = vha;
+-				fcport->vp_idx = vha->vp_idx;
+-			}
+ 			list_move_tail(&fcport->list, &vha->vp_fcports);
+ 		}
+ 	} while (0);
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 7404c6e..6bf6c08 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -1243,7 +1243,7 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
+ 		return QLA_SUCCESS;
+ 	}
+ 
+-	cmd_pkt->vp_index = sp->fcport->vp_idx;
++	cmd_pkt->vp_index = sp->fcport->vha->vp_idx;
+ 
+ 	/* Set transfer direction */
+ 	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
+@@ -1525,7 +1525,7 @@ qla24xx_start_scsi(srb_t *sp)
+ 	cmd_pkt->port_id[0] = sp->fcport->d_id.b.al_pa;
+ 	cmd_pkt->port_id[1] = sp->fcport->d_id.b.area;
+ 	cmd_pkt->port_id[2] = sp->fcport->d_id.b.domain;
+-	cmd_pkt->vp_index = sp->fcport->vp_idx;
++	cmd_pkt->vp_index = sp->fcport->vha->vp_idx;
+ 
+ 	int_to_scsilun(cmd->device->lun, &cmd_pkt->lun);
+ 	host_to_fcp_swap((uint8_t *)&cmd_pkt->lun, sizeof(cmd_pkt->lun));
+@@ -1895,7 +1895,7 @@ qla24xx_login_iocb(srb_t *sp, struct logio_entry_24xx *logio)
+ 	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
+ 	logio->port_id[1] = sp->fcport->d_id.b.area;
+ 	logio->port_id[2] = sp->fcport->d_id.b.domain;
+-	logio->vp_index = sp->fcport->vp_idx;
++	logio->vp_index = sp->fcport->vha->vp_idx;
+ }
+ 
+ static void
+@@ -1919,7 +1919,7 @@ qla2x00_login_iocb(srb_t *sp, struct mbx_entry *mbx)
+ 	mbx->mb2 = cpu_to_le16(sp->fcport->d_id.b.domain);
+ 	mbx->mb3 = cpu_to_le16(sp->fcport->d_id.b.area << 8 |
+ 	    sp->fcport->d_id.b.al_pa);
+-	mbx->mb9 = cpu_to_le16(sp->fcport->vp_idx);
++	mbx->mb9 = cpu_to_le16(sp->fcport->vha->vp_idx);
+ }
+ 
+ static void
+@@ -1932,7 +1932,7 @@ qla24xx_logout_iocb(srb_t *sp, struct logio_entry_24xx *logio)
+ 	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
+ 	logio->port_id[1] = sp->fcport->d_id.b.area;
+ 	logio->port_id[2] = sp->fcport->d_id.b.domain;
+-	logio->vp_index = sp->fcport->vp_idx;
++	logio->vp_index = sp->fcport->vha->vp_idx;
+ }
+ 
+ static void
+@@ -1949,7 +1949,7 @@ qla2x00_logout_iocb(srb_t *sp, struct mbx_entry *mbx)
+ 	mbx->mb2 = cpu_to_le16(sp->fcport->d_id.b.domain);
+ 	mbx->mb3 = cpu_to_le16(sp->fcport->d_id.b.area << 8 |
+ 	    sp->fcport->d_id.b.al_pa);
+-	mbx->mb9 = cpu_to_le16(sp->fcport->vp_idx);
++	mbx->mb9 = cpu_to_le16(sp->fcport->vha->vp_idx);
+ 	/* Implicit: mbx->mbx10 = 0. */
+ }
+ 
+@@ -1959,7 +1959,7 @@ qla24xx_adisc_iocb(srb_t *sp, struct logio_entry_24xx *logio)
+ 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
+ 	logio->control_flags = cpu_to_le16(LCF_COMMAND_ADISC);
+ 	logio->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+-	logio->vp_index = sp->fcport->vp_idx;
++	logio->vp_index = sp->fcport->vha->vp_idx;
+ }
+ 
+ static void
+@@ -1980,7 +1980,7 @@ qla2x00_adisc_iocb(srb_t *sp, struct mbx_entry *mbx)
+ 	mbx->mb3 = cpu_to_le16(LSW(ha->async_pd_dma));
+ 	mbx->mb6 = cpu_to_le16(MSW(MSD(ha->async_pd_dma)));
+ 	mbx->mb7 = cpu_to_le16(LSW(MSD(ha->async_pd_dma)));
+-	mbx->mb9 = cpu_to_le16(sp->fcport->vp_idx);
++	mbx->mb9 = cpu_to_le16(sp->fcport->vha->vp_idx);
+ }
+ 
+ static void
+@@ -2006,7 +2006,7 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *tsk)
+ 	tsk->port_id[0] = fcport->d_id.b.al_pa;
+ 	tsk->port_id[1] = fcport->d_id.b.area;
+ 	tsk->port_id[2] = fcport->d_id.b.domain;
+-	tsk->vp_index = fcport->vp_idx;
++	tsk->vp_index = fcport->vha->vp_idx;
+ 
+ 	if (flags == TCF_LUN_RESET) {
+ 		int_to_scsilun(lun, &tsk->lun);
+@@ -2027,7 +2027,7 @@ qla24xx_els_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+         els_iocb->handle = sp->handle;
+         els_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+         els_iocb->tx_dsd_count = __constant_cpu_to_le16(bsg_job->request_payload.sg_cnt);
+-        els_iocb->vp_index = sp->fcport->vp_idx;
++	els_iocb->vp_index = sp->fcport->vha->vp_idx;
+         els_iocb->sof_type = EST_SOFI3;
+         els_iocb->rx_dsd_count = __constant_cpu_to_le16(bsg_job->reply_payload.sg_cnt);
+ 
+@@ -2157,7 +2157,7 @@ qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
+         ct_iocb->handle = sp->handle;
+ 
+ 	ct_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+-	ct_iocb->vp_index = sp->fcport->vp_idx;
++	ct_iocb->vp_index = sp->fcport->vha->vp_idx;
+         ct_iocb->comp_status = __constant_cpu_to_le16(0);
+ 
+ 	ct_iocb->cmd_dsd_count =
+@@ -2396,7 +2396,7 @@ sufficient_dsds:
+ 		cmd_pkt->port_id[0] = sp->fcport->d_id.b.al_pa;
+ 		cmd_pkt->port_id[1] = sp->fcport->d_id.b.area;
+ 		cmd_pkt->port_id[2] = sp->fcport->d_id.b.domain;
+-		cmd_pkt->vp_index = sp->fcport->vp_idx;
++		cmd_pkt->vp_index = sp->fcport->vha->vp_idx;
+ 
+ 		/* Build IOCB segments */
+ 		if (qla24xx_build_scsi_type_6_iocbs(sp, cmd_pkt, tot_dsds))
+@@ -2485,7 +2485,7 @@ sufficient_dsds:
+ 		cmd_pkt->port_id[0] = sp->fcport->d_id.b.al_pa;
+ 		cmd_pkt->port_id[1] = sp->fcport->d_id.b.area;
+ 		cmd_pkt->port_id[2] = sp->fcport->d_id.b.domain;
+-		cmd_pkt->vp_index = sp->fcport->vp_idx;
++		cmd_pkt->vp_index = sp->fcport->vha->vp_idx;
+ 
+ 		int_to_scsilun(cmd->device->lun, &cmd_pkt->lun);
+ 		host_to_fcp_swap((uint8_t *)&cmd_pkt->lun,
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index c7fcc30..07f4d3c 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -2461,7 +2461,7 @@ qla24xx_abort_command(srb_t *sp)
+ 	abt->port_id[0] = fcport->d_id.b.al_pa;
+ 	abt->port_id[1] = fcport->d_id.b.area;
+ 	abt->port_id[2] = fcport->d_id.b.domain;
+-	abt->vp_index = fcport->vp_idx;
++	abt->vp_index = fcport->vha->vp_idx;
+ 
+ 	abt->req_que_no = cpu_to_le16(req->id);
+ 
+@@ -2537,7 +2537,7 @@ __qla24xx_issue_tmf(char *name, uint32_t type, struct fc_port *fcport,
+ 	tsk->p.tsk.port_id[0] = fcport->d_id.b.al_pa;
+ 	tsk->p.tsk.port_id[1] = fcport->d_id.b.area;
+ 	tsk->p.tsk.port_id[2] = fcport->d_id.b.domain;
+-	tsk->p.tsk.vp_index = fcport->vp_idx;
++	tsk->p.tsk.vp_index = fcport->vha->vp_idx;
+ 	if (type == TCF_LUN_RESET) {
+ 		int_to_scsilun(l, &tsk->p.tsk.lun);
+ 		host_to_fcp_swap((uint8_t *)&tsk->p.tsk.lun,
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 6230ba9..efb3cc3 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -134,7 +134,7 @@ qla2x00_mark_vp_devices_dead(scsi_qla_host_t *vha)
+ 	list_for_each_entry(fcport, &vha->vp_fcports, list) {
+ 		ql_dbg(ql_dbg_vport, vha, 0xa001,
+ 		    "Marking port dead, loop_id=0x%04x : %x.\n",
+-		    fcport->loop_id, fcport->vp_idx);
++		    fcport->loop_id, fcport->vha->vp_idx);
+ 
+ 		qla2x00_mark_device_lost(vha, fcport, 0, 0);
+ 		qla2x00_set_fcport_state(fcport, FCS_UNCONFIGURED);
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 00bebdf..71a39c7 100644
+index 71a39c7..9387f79 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1143,7 +1143,7 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
- 	ret = FAILED;
+@@ -2877,7 +2877,7 @@ void qla2x00_mark_device_lost(scsi_qla_host_t *vha, fc_port_t *fcport,
+     int do_login, int defer)
+ {
+ 	if (atomic_read(&fcport->state) == FCS_ONLINE &&
+-	    vha->vp_idx == fcport->vp_idx) {
++	    vha->vp_idx == fcport->vha->vp_idx) {
+ 		qla2x00_set_fcport_state(fcport, FCS_DEVICE_LOST);
+ 		qla2x00_schedule_rport_del(vha, fcport, defer);
+ 	}
+@@ -2926,7 +2926,7 @@ qla2x00_mark_all_devices_lost(scsi_qla_host_t *vha, int defer)
+ 	fc_port_t *fcport;
  
- 	ql_log(ql_log_info, vha, 0x8012,
--	    "BUS RESET ISSUED nexus=%ld:%d%d.\n", vha->host_no, id, lun);
-+	    "BUS RESET ISSUED nexus=%ld:%d:%d.\n", vha->host_no, id, lun);
+ 	list_for_each_entry(fcport, &vha->vp_fcports, list) {
+-		if (vha->vp_idx != 0 && vha->vp_idx != fcport->vp_idx)
++		if (vha->vp_idx != 0 && vha->vp_idx != fcport->vha->vp_idx)
+ 			continue;
  
- 	if (qla2x00_wait_for_hba_online(vha) != QLA_SUCCESS) {
- 		ql_log(ql_log_fatal, vha, 0x8013,
+ 		/*
+@@ -2939,7 +2939,7 @@ qla2x00_mark_all_devices_lost(scsi_qla_host_t *vha, int defer)
+ 			qla2x00_set_fcport_state(fcport, FCS_DEVICE_LOST);
+ 			if (defer)
+ 				qla2x00_schedule_rport_del(vha, fcport, defer);
+-			else if (vha->vp_idx == fcport->vp_idx)
++			else if (vha->vp_idx == fcport->vha->vp_idx)
+ 				qla2x00_schedule_rport_del(vha, fcport, defer);
+ 		}
+ 	}
 -- 
 1.7.7
 
