@@ -1,68 +1,52 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 0/3] scsi: usb-storage: hide errors for five devices
-Date: Tue, 15 May 2012 08:35:39 -0700
-Message-ID: <20120515153539.GA25206@kroah.com>
-References: <1336491453.1933.67.camel@x61.thuisdomein>
- <Pine.LNX.4.44L0.1205081240450.1479-100000@iolanthe.rowland.org>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [RFC PATCH 2/3] block: add queue runtime pm callback
+Date: Tue, 15 May 2012 23:36:28 +0800
+Message-ID: <1337096188.3515.3.camel@chief-river-32>
+References: <Pine.LNX.4.44L0.1205151036510.1796-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:65135 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965262Ab2EOPfp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 11:35:45 -0400
-Received: by pbbrp8 with SMTP id rp8so7673875pbb.19
-        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 08:35:45 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1205081240450.1479-100000@iolanthe.rowland.org>
+Received: from mga01.intel.com ([192.55.52.88]:3815 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965242Ab2EOPg0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 May 2012 11:36:26 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1205151036510.1796-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Paul Bolle <pebolle@tiscali.nl>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, May 08, 2012 at 01:03:17PM -0400, Alan Stern wrote:
-> On Tue, 8 May 2012, Paul Bolle wrote:
+On Tue, 2012-05-15 at 10:37 -0400, Alan Stern wrote:
+> On Tue, 15 May 2012, Lin Ming wrote:
 > 
-> > On Tue, 2012-05-08 at 10:02 -0400, Alan Stern wrote:
-> > > On Tue, 8 May 2012, Paul Bolle wrote: 
-> > > > 1) These patches try to hide those errors by:
-> > > > - downgrading one error to a notice; and
-> > > 
-> > > That's a reasonable thing to do, IMO.
-> > > 
-> > > > - setting the NO_WP_DETECT quirk for these five devices.
-> > > 
-> > > But that isn't.  These quirks are intended for devices that crash when
-> > > they receive the command in question.
-> > 
-> > Yes, these USB memory sticks don't crash. (They actually seem to work
-> > just fine, something that I perhaps should have emphasized in the commit
-> > descriptions.)
-> > 
-> > > They aren't meant to suppress sending commands to devices that can
-> > > properly reject them.
-> > 
-> > Even the sticks that hit "bad_sense" (in sd_read_cache_type(), which I
-> > forgot to mention in the comment descriptions)? Is that not as severe as
-> > it suggests?
+> > Add ->runtime_pm callback and ->pm_status to request queue.
+> > As an example, implement a simple queue runtime_pm callback
+> > in sd driver.
 > 
-> It means that the device either doesn't support the MODE SENSE command
-> or it returned useless data.  As a result, we will assume it has a
-> write-through cache when it might not.
+> > +static int sd_runtime_pm_fn(struct request_queue *q, pm_message_t mesg)
+> > +{
+> > +	struct scsi_device *sdp = q->queuedata;
+> > +
+> > +	if (mesg.event == PM_EVENT_SUSPEND) {
+> > +		q->pm_status = RPM_SUSPENDING;
+> > +		pm_runtime_put(&sdp->sdev_gendev);
+> > +	}
+> > +	else if (mesg.event == PM_EVENT_RESUME) {
+> > +		q->pm_status = RPM_RESUMING;
+> > +		pm_runtime_get(&sdp->sdev_gendev);
+> > +	}
 > 
-> For memory sticks this doesn't matter.  For other devices it might be 
-> more important (although anything with a working cache should not hit 
-> this error case).
-> 
-> > Of course, an easy way out would be to downgrade both the "Asking for
-> > cache data failed" and the "No Caching mode page present" errors to
-> > notices. But the SCSI people might disagree with that approach.
-> 
-> Well, let's see what they say.
+> Don't use pm_message_t arguments for runtime PM.  Implement separate 
+> routines for suspend and resume.
 
-What ever happened here, are these 3 patches acceptable, or do they need
-to be reworked or something else?
+OK, I'll add 2 callbacks to request_queue.
 
-thanks,
+runtime_pm_fn runtime_suspend;
+runtime_pm_fn runtime_resume;
 
-greg k-h
+> 
+> Alan Stern
+> 
+
+
