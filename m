@@ -1,12 +1,12 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 15/22] qla2xxx: Corrections to log messages.
-Date: Tue, 15 May 2012 14:34:22 -0400
-Message-ID: <1337106869-14191-16-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 16/22] qla2xxx: Log link up and link down messages to track link flops.
+Date: Tue, 15 May 2012 14:34:23 -0400
+Message-ID: <1337106869-14191-17-git-send-email-chad.dupuis@qlogic.com>
 References: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:24581 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:12597 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S966390Ab2EOS5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S966392Ab2EOS5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 15 May 2012 14:57:25 -0400
 In-Reply-To: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,73 +14,154 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_nx.c |   10 +++++-----
- drivers/scsi/qla2xxx/qla_nx.h |    1 -
- 2 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h  |    2 +
+ drivers/scsi/qla2xxx/qla_init.c |    8 +------
+ drivers/scsi/qla2xxx/qla_isr.c  |   44 +++++++++++++++++++++++++++-----------
+ 4 files changed, 35 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 195528a..f88eb83 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -1190,12 +1190,12 @@ qla82xx_pinit_from_rom(scsi_qla_host_t *vha)
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 8e39f8a..1457186 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -19,7 +19,7 @@
+  * | Queue Command and IO tracing |       0x3030       | 0x3006,0x3008  |
+  * |                              |                    | 0x302d-0x302e  |
+  * | DPC Thread                   |       0x401c       | 0x4002,0x4013  |
+- * | Async Events                 |       0x505d       | 0x502b-0x502f  |
++ * | Async Events                 |       0x505f       | 0x502b-0x502f  |
+  * |                              |                    | 0x5047,0x5052  |
+  * | Timer Routines               |       0x6011       |                |
+  * | User Space Interactions      |       0x709f       | 0x7018,0x702e, |
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 9f06580..c089699 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -383,6 +383,8 @@ extern int qla2x00_request_irqs(struct qla_hw_data *, struct rsp_que *);
+ extern void qla2x00_free_irqs(scsi_qla_host_t *);
  
- 	/* Offset in flash = lower 16 bits
--	 * Number of enteries = upper 16 bits
-+	 * Number of entries = upper 16 bits
- 	 */
- 	offset = n & 0xffffU;
- 	n = (n >> 16) & 0xffffU;
- 
--	/* number of addr/value pair should not exceed 1024 enteries */
-+	/* number of addr/value pair should not exceed 1024 entries */
- 	if (n  >= 1024) {
- 		ql_log(ql_log_fatal, vha, 0x0071,
- 		    "Card flash not initialized:n=0x%x.\n", n);
-@@ -2446,7 +2446,7 @@ qla82xx_load_fw(scsi_qla_host_t *vha)
- 
- 	if (qla82xx_fw_load_from_flash(ha) == QLA_SUCCESS) {
- 		ql_log(ql_log_info, vha, 0x00a1,
--		    "Firmware loaded successully from flash.\n");
-+		    "Firmware loaded successfully from flash.\n");
- 		return QLA_SUCCESS;
+ extern int qla2x00_get_data_rate(scsi_qla_host_t *);
++extern char *qla2x00_get_link_speed_str(struct qla_hw_data *);
++
+ /*
+  * Global Function Prototypes in qla_sup.c source file.
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 33a23eb..34fca3e 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2795,8 +2795,6 @@ cleanup_allocation:
+ static void
+ qla2x00_iidma_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+ {
+-#define LS_UNKNOWN      2
+-	static char *link_speeds[] = { "1", "2", "?", "4", "8", "10" };
+ 	char *link_speed;
+ 	int rval;
+ 	uint16_t mb[4];
+@@ -2824,11 +2822,7 @@ qla2x00_iidma_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 		    fcport->port_name[6], fcport->port_name[7], rval,
+ 		    fcport->fp_speed, mb[0], mb[1]);
  	} else {
- 		ql_log(ql_log_warn, vha, 0x0108,
-@@ -2461,7 +2461,7 @@ try_blob_fw:
- 	blob = ha->hablob = qla2x00_request_firmware(vha);
- 	if (!blob) {
- 		ql_log(ql_log_fatal, vha, 0x00a3,
--		    "Firmware image not preset.\n");
-+		    "Firmware image not present.\n");
- 		goto fw_load_failed;
- 	}
+-		link_speed = link_speeds[LS_UNKNOWN];
+-		if (fcport->fp_speed < 5)
+-			link_speed = link_speeds[fcport->fp_speed];
+-		else if (fcport->fp_speed == 0x13)
+-			link_speed = link_speeds[5];
++		link_speed = qla2x00_get_link_speed_str(ha);
+ 		ql_dbg(ql_dbg_disc, vha, 0x2005,
+ 		    "iIDMA adjusted to %s GB/s "
+ 		    "on %02x%02x%02x%02x%02x%02x%02x%02x.\n", link_speed,
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index f4b8a5f..0e716dc 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -309,6 +309,28 @@ qla81xx_idc_event(scsi_qla_host_t *vha, uint16_t aen, uint16_t descr)
+ 		    "IDC failed to post ACK.\n");
+ }
  
-@@ -2689,7 +2689,7 @@ qla82xx_write_flash_data(struct scsi_qla_host *vha, uint32_t *dwptr,
- 		if (!optrom) {
- 			ql_log(ql_log_warn, vha, 0xb01b,
- 			    "Unable to allocate memory "
--			    "for optron burst write (%x KB).\n",
-+			    "for optrom burst write (%x KB).\n",
- 			    OPTROM_BURST_SIZE / 1024);
- 		}
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
-index 3933198..6eb210e 100644
---- a/drivers/scsi/qla2xxx/qla_nx.h
-+++ b/drivers/scsi/qla2xxx/qla_nx.h
-@@ -562,7 +562,6 @@
- #define QLA82XX_FW_VERSION_SUB		(QLA82XX_CAM_RAM(0x158))
- #define QLA82XX_PCIE_REG(reg)		(QLA82XX_CRB_PCIE + (reg))
++#define LS_UNKNOWN	2
++char *
++qla2x00_get_link_speed_str(struct qla_hw_data *ha)
++{
++	static char *link_speeds[] = {"1", "2", "?", "4", "8", "16", "10"};
++	char *link_speed;
++	int fw_speed = ha->link_data_rate;
++
++	if (IS_QLA2100(ha) || IS_QLA2200(ha))
++		link_speed = link_speeds[0];
++	else if (fw_speed == 0x13)
++		link_speed = link_speeds[6];
++	else {
++		link_speed = link_speeds[LS_UNKNOWN];
++		if (fw_speed < 6)
++			link_speed =
++			    link_speeds[fw_speed];
++	}
++
++	return link_speed;
++}
++
+ /**
+  * qla2x00_async_event() - Process aynchronous events.
+  * @ha: SCSI driver HA context
+@@ -317,9 +339,6 @@ qla81xx_idc_event(scsi_qla_host_t *vha, uint16_t aen, uint16_t descr)
+ void
+ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ {
+-#define LS_UNKNOWN	2
+-	static char *link_speeds[] = { "1", "2", "?", "4", "8", "16", "10" };
+-	char		*link_speed;
+ 	uint16_t	handle_cnt;
+ 	uint16_t	cnt, mbx;
+ 	uint32_t	handles[5];
+@@ -479,20 +498,14 @@ skip_rio:
+ 		break;
  
--#define PCIE_CHICKEN3			(0x120c8)
- #define PCIE_SETUP_FUNCTION		(0x12040)
- #define PCIE_SETUP_FUNCTION2		(0x12048)
+ 	case MBA_LOOP_UP:		/* Loop Up Event */
+-		if (IS_QLA2100(ha) || IS_QLA2200(ha)) {
+-			link_speed = link_speeds[0];
++		if (IS_QLA2100(ha) || IS_QLA2200(ha))
+ 			ha->link_data_rate = PORT_SPEED_1GB;
+-		} else {
+-			link_speed = link_speeds[LS_UNKNOWN];
+-			if (mb[1] < 6)
+-				link_speed = link_speeds[mb[1]];
+-			else if (mb[1] == 0x13)
+-				link_speed = link_speeds[6];
++		else
+ 			ha->link_data_rate = mb[1];
+-		}
  
+ 		ql_dbg(ql_dbg_async, vha, 0x500a,
+-		    "LOOP UP detected (%s Gbps).\n", link_speed);
++		    "LOOP UP detected (%s Gbps).\n",
++		    qla2x00_get_link_speed_str(ha));
+ 
+ 		vha->flags.management_server_logged_in = 0;
+ 		qla2x00_post_aen_work(vha, FCH_EVT_LINKUP, ha->link_data_rate);
+@@ -638,6 +651,8 @@ skip_rio:
+ 			ql_dbg(ql_dbg_async, vha, 0x5010,
+ 			    "Port unavailable %04x %04x %04x.\n",
+ 			    mb[1], mb[2], mb[3]);
++			ql_log(ql_log_warn, vha, 0x505e,
++			    "Link is offline.\n");
+ 
+ 			if (atomic_read(&vha->loop_state) != LOOP_DOWN) {
+ 				atomic_set(&vha->loop_state, LOOP_DOWN);
+@@ -676,6 +691,9 @@ skip_rio:
+ 		ql_dbg(ql_dbg_async, vha, 0x5012,
+ 		    "Port database changed %04x %04x %04x.\n",
+ 		    mb[1], mb[2], mb[3]);
++		ql_log(ql_log_warn, vha, 0x505f,
++		    "Link is operational (%s Gbps).\n",
++		    qla2x00_get_link_speed_str(ha));
+ 
+ 		/*
+ 		 * Mark all devices as missing so we will login again.
 -- 
 1.7.7
 
