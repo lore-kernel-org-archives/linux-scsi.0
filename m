@@ -1,49 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 0/3] scsi: usb-storage: hide errors for five devices
-Date: Tue, 15 May 2012 17:36:13 +0100
-Message-ID: <20120515173613.3c8c2f1f@pyramind.ukuu.org.uk>
-References: <1336491453.1933.67.camel@x61.thuisdomein>
-	<Pine.LNX.4.44L0.1205081240450.1479-100000@iolanthe.rowland.org>
-	<20120515153539.GA25206@kroah.com>
-	<1337099344.13455.9.camel@x61.thuisdomein>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Re: [PATCH v4 0/4] FCoE Sysfs
+Date: Tue, 15 May 2012 17:40:24 +0000
+Message-ID: <4FB29507.2060104@intel.com>
+References: <20120327222224.7144.6324.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:45485 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965661Ab2EOQd0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 12:33:26 -0400
-In-Reply-To: <1337099344.13455.9.camel@x61.thuisdomein>
+Received: from mga01.intel.com ([192.55.52.88]:60360 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966101Ab2EORlO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 May 2012 13:41:14 -0400
+In-Reply-To: <20120327222224.7144.6324.stgit@localhost6.localdomain6>
+Content-Language: en-US
+Content-ID: <CEE4C8B0CB97D945B229F8F77B6E8E54@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>, "james.smart@emulex.com" <james.smart@emulex.com>, "bprakash@broadcom.com" <bprakash@broadcom.com>
 
-On Tue, 15 May 2012 18:29:04 +0200
-Paul Bolle <pebolle@tiscali.nl> wrote:
-
-> On Tue, 2012-05-15 at 08:35 -0700, Greg Kroah-Hartman wrote:
-> > > > Of course, an easy way out would be to downgrade both the "Asking for
-> > > > cache data failed" and the "No Caching mode page present" errors to
-> > > > notices. But the SCSI people might disagree with that approach.
-> > > 
-> > > Well, let's see what they say.
-> > 
-> > What ever happened here, are these 3 patches acceptable, or do they need
-> > to be reworked or something else?
-> 
-> Nothing happened after Alan's message.
-> 
-> So, currently only the first patch was acceptable (to Alan, that is, but
-> it touched the SCSI code).
-> 
-> At least, I haven't seen a reply from the SCSI people. Perhaps the best
-> thing to do is to submit a series of one or two trivial patches that
-> just downgrade the errors involved to notices. That should lead to
-> feedback by the SCSI people.
-
-Possibly we should have a hostadapter flag indicating if the cache noise
-is expected nuisance or not. That way if hardcore SCSI on real cables
-wants to keeep it then it can still be shut up for USB where its the
-norm and just irrelevant noise.
+T24gMDMvMjcvMjAxMiAwMzoyMiBQTSwgUm9iZXJ0IExvdmUgd3JvdGU6DQo+IHY0OiBNaW5vciBm
+aXhlcyBhbmQgY2xlYW51cHMNCj4NCj4gKiBDaGFuZ2VkIGRldmljZV9pbml0aWFsaXplL2Rldmlj
+ZV9hZGQgdG8gZGV2aWNlX3JlZ2lzdGVyDQo+ICAgYW5kIGRldmljZV9kZWwgdG8gZGV2aWNlX3Vu
+cmVnaXN0ZXIuIFRoZXJlIHdhcyBhbiBpbWJhbGFuY2UNCj4gICBiZWNhdXNlIGRldmljZV9pbml0
+aWFsaXplIHdhcyBnZXR0aW5nIGEgcmVmZXJlbmNlIHRoYXQNCj4gICB3YXMgbm90IGJlaW5nIHJl
+bGVhc2VkLiBXaXRoIHRoaXMgdXBkYXRlIGJvdGggZmNvZV9mY2ZzDQo+ICAgYXMgd2VsbCBhcyBm
+Y29lX2N0bHJzIGFyZSBjb3JyZWN0bHkgcmVsZWFzZWQvZnJlZSdkIHdoZW4NCj4gICB0aGV5IGFy
+ZSB0byBiZSByZW1vdmVkIGZyb20gdGhlIHN5c3RlbS4NCj4NCj4gKiBNaW5vciB1cGRhdGVzIHRv
+IGNvbW1pdCBtZXNzYWdlcyBzbyB0aGVyZSBhcmUgbm8NCj4gICByZWZlcmVuY2VzIHRvICdmY29l
+X2N0bHJfYXR0cnMnIGFuZCAnZmNvZV9mY2ZfYXR0cnMnDQo+ICAgd2hpY2ggd2VyZSBib3RoIHJl
+bmFtZWQgaW4gdjMgb2YgdGhpcyBzZXJpZXMuDQoNCkhpIEphbWVzLA0KDQogICBBbnkgdGhvdWdo
+dHMgb24gd2hldGhlciB0aGlzIHNlcmllcyB3aWxsIG1ha2UgaXQgZm9yIHRoZSB1cGNvbWluZw0K
+bWVyZ2Ugd2luZG93PyBHcmVnIEtIIEFjay1lZCBpdCBhYm91dCB0d28gbW9udGhzIGFnbyBhbmQg
+bXkgaW1wcmVzc2lvbg0Kd2FzIHRoYXQgZXZlcnlvbmUgYWdyZWVkIHRvIHRoZSBjaGFuZ2UgYXQg
+TFNGIGEgbW9udGggYWdvLiBXaGF0IGRvIHlvdQ0KdGhpbms/DQoNCi8vUm9i
