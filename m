@@ -1,47 +1,45 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC PATCH 1/3] block: add a flag to identify PM request
-Date: Tue, 15 May 2012 12:03:56 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1205151159462.1796-100000@iolanthe.rowland.org>
-References: <1337095985.3515.1.camel@chief-river-32>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH 0/3] scsi: usb-storage: hide errors for five devices
+Date: Tue, 15 May 2012 18:29:04 +0200
+Message-ID: <1337099344.13455.9.camel@x61.thuisdomein>
+References: <1336491453.1933.67.camel@x61.thuisdomein>
+	 <Pine.LNX.4.44L0.1205081240450.1479-100000@iolanthe.rowland.org>
+	 <20120515153539.GA25206@kroah.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1337095985.3515.1.camel@chief-river-32>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Kernel development list <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4608 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965661Ab2EOQ3L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 May 2012 12:29:11 -0400
+In-Reply-To: <20120515153539.GA25206@kroah.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 15 May 2012, Lin Ming wrote:
-
-> On Tue, 2012-05-15 at 10:35 -0400, Alan Stern wrote:
-> > On Tue, 15 May 2012, Lin Ming wrote:
+On Tue, 2012-05-15 at 08:35 -0700, Greg Kroah-Hartman wrote:
+> > > Of course, an easy way out would be to downgrade both the "Asking for
+> > > cache data failed" and the "No Caching mode page present" errors to
+> > > notices. But the SCSI people might disagree with that approach.
 > > 
-> > > Add a flag REQ_PM to identify the request is PM related.
-> > > As an example, modify scsi code to use this flag.
-> > 
-> > There already is such a flag; you don't need to add one.  In fact, 
-> > there already are _two_ such flags, and it would be best to remove one 
-> > of them.  In include/linux/blkdev.h:
-> > 
-> > 	REQ_TYPE_PM_SUSPEND,		/* suspend request */
-> > 	REQ_TYPE_PM_RESUME,		/* resume request */
-> > 
-> > Apparently they had been used by the old ide driver, but they don't
-> > seem to be used anywhere now.
+> > Well, let's see what they say.
 > 
-> IDE code still uses both types and they are used for system
-> suspend/resume. See generic_ide_suspend and generic_ide_resume.
+> What ever happened here, are these 3 patches acceptable, or do they need
+> to be reworked or something else?
 
-You're right, of course.  I searched for "BLK_TYPE_PM_" instead of 
-"REQ_TYPE_PM_".  :-(
+Nothing happened after Alan's message.
 
-> But we need a flag to check whether it is runtime suspend/resume
-> request.
+So, currently only the first patch was acceptable (to Alan, that is, but
+it touched the SCSI code).
 
-It should be possible to fix up the IDE code so that it uses the same
-flag for both suspend and resume.  After all, there's no real danger of
-confusion -- you never get into a situation where you're not sure
-whether the current PM action is a suspend or a resume.
+At least, I haven't seen a reply from the SCSI people. Perhaps the best
+thing to do is to submit a series of one or two trivial patches that
+just downgrade the errors involved to notices. That should lead to
+feedback by the SCSI people.
 
-Alan Stern
+
+Paul Bolle
+
