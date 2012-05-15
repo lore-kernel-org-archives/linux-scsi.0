@@ -1,12 +1,12 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 01/22] qla2xxx: Fix typo in qla_init.c
-Date: Tue, 15 May 2012 14:34:08 -0400
-Message-ID: <1337106869-14191-2-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 09/22] qla2xxx: Stats should be different from physical and virtual ports
+Date: Tue, 15 May 2012 14:34:16 -0400
+Message-ID: <1337106869-14191-10-git-send-email-chad.dupuis@qlogic.com>
 References: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:46989 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:20335 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S966427Ab2EOS50 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S966426Ab2EOS50 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 15 May 2012 14:57:26 -0400
 In-Reply-To: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,47 +14,153 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Raul Porcel <armin76@gentoo.org>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-Replace "Inconisistent" with "Inconsistent" in drivers/scsi/qla2xxx/qla_init.c
+Currently stats is part of ha data structure, common for physical and virtual
+ports. Moved the stats to vha, each port will have its own stat.
 
-Signed-off-by: Raul Porcel <armin76@gentoo.org>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |    9 ++++-----
+ drivers/scsi/qla2xxx/qla_def.h  |    4 ++--
+ drivers/scsi/qla2xxx/qla_init.c |    2 +-
+ drivers/scsi/qla2xxx/qla_iocb.c |   17 +++++++----------
+ 4 files changed, 14 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 5926f5a..6464518 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1105,9 +1105,8 @@ qla2x00_total_isp_aborts_show(struct device *dev,
+ 			      struct device_attribute *attr, char *buf)
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+-	struct qla_hw_data *ha = vha->hw;
+ 	return snprintf(buf, PAGE_SIZE, "%d\n",
+-	    ha->qla_stats.total_isp_aborts);
++	    vha->qla_stats.total_isp_aborts);
+ }
+ 
+ static ssize_t
+@@ -1537,7 +1536,7 @@ qla2x00_get_fc_host_stats(struct Scsi_Host *shost)
+ 	dma_addr_t stats_dma;
+ 	struct fc_host_statistics *pfc_host_stat;
+ 
+-	pfc_host_stat = &ha->fc_host_stat;
++	pfc_host_stat = &vha->fc_host_stat;
+ 	memset(pfc_host_stat, -1, sizeof(struct fc_host_statistics));
+ 
+ 	if (test_bit(UNLOADING, &vha->dpc_flags))
+@@ -1580,8 +1579,8 @@ qla2x00_get_fc_host_stats(struct Scsi_Host *shost)
+ 		pfc_host_stat->dumped_frames = stats->dumped_frames;
+ 		pfc_host_stat->nos_count = stats->nos_rcvd;
+ 	}
+-	pfc_host_stat->fcp_input_megabytes = ha->qla_stats.input_bytes >> 20;
+-	pfc_host_stat->fcp_output_megabytes = ha->qla_stats.output_bytes >> 20;
++	pfc_host_stat->fcp_input_megabytes = vha->qla_stats.input_bytes >> 20;
++	pfc_host_stat->fcp_output_megabytes = vha->qla_stats.output_bytes >> 20;
+ 
+ done_free:
+         dma_pool_free(ha->s_dma_pool, stats, stats_dma);
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index a244303..7f7ebec 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2804,7 +2804,6 @@ struct qla_hw_data {
+ 					/* ISP2322: red, green, amber. */
+ 	uint16_t        zio_mode;
+ 	uint16_t        zio_timer;
+-	struct fc_host_statistics fc_host_stat;
+ 
+ 	struct qla_msix_entry *msix_entries;
+ 
+@@ -2817,7 +2816,6 @@ struct qla_hw_data {
+ 	int             cur_vport_count;
+ 
+ 	struct qla_chip_state_84xx *cs84xx;
+-	struct qla_statistics qla_stats;
+ 	struct isp_operations *isp_ops;
+ 	struct workqueue_struct *wq;
+ 	struct qlfc_fw fw_buf;
+@@ -2979,6 +2977,8 @@ typedef struct scsi_qla_host {
+ 	struct req_que *req;
+ 	int		fw_heartbeat_counter;
+ 	int		seconds_since_last_heartbeat;
++	struct fc_host_statistics fc_host_stat;
++	struct qla_statistics qla_stats;
+ 
+ 	atomic_t	vref_count;
+ } scsi_qla_host_t;
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index b946564..7428143 100644
+index 7428143..14f4aeb 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2185,7 +2185,7 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
- 	    nv->id[2] != 'P' || nv->id[3] != ' ' || nv->nvram_version < 1) {
- 		/* Reset NVRAM data. */
- 		ql_log(ql_log_warn, vha, 0x0064,
--		    "Inconisistent NVRAM "
-+		    "Inconsistent NVRAM "
- 		    "detected: checksum=0x%x id=%c version=0x%x.\n",
- 		    chksum, nv->id[0], nv->nvram_version);
- 		ql_log(ql_log_warn, vha, 0x0065,
-@@ -4279,7 +4279,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
- 	    nv->nvram_version < __constant_cpu_to_le16(ICB_VERSION)) {
- 		/* Reset NVRAM data. */
- 		ql_log(ql_log_warn, vha, 0x006b,
--		    "Inconisistent NVRAM detected: checksum=0x%x id=%c "
-+		    "Inconsistent NVRAM detected: checksum=0x%x id=%c "
- 		    "version=0x%x.\n", chksum, nv->id[0], nv->nvram_version);
- 		ql_log(ql_log_warn, vha, 0x006c,
- 		    "Falling back to functioning (yet invalid -- WWPN) "
-@@ -5029,7 +5029,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
- 	    nv->nvram_version < __constant_cpu_to_le16(ICB_VERSION)) {
- 		/* Reset NVRAM data. */
- 		ql_log(ql_log_info, vha, 0x0073,
--		    "Inconisistent NVRAM detected: checksum=0x%x id=%c "
-+		    "Inconsistent NVRAM detected: checksum=0x%x id=%c "
- 		    "version=0x%x.\n", chksum, nv->id[0],
- 		    le16_to_cpu(nv->nvram_version));
- 		ql_log(ql_log_info, vha, 0x0074,
+@@ -3841,7 +3841,7 @@ qla2x00_abort_isp_cleanup(scsi_qla_host_t *vha)
+ 		vha->flags.online = 0;
+ 	ha->flags.chip_reset_done = 0;
+ 	clear_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+-	ha->qla_stats.total_isp_aborts++;
++	vha->qla_stats.total_isp_aborts++;
+ 
+ 	ql_log(ql_log_info, vha, 0x00af,
+ 	    "Performing ISP error recovery - ha=%p.\n", ha);
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 1ae0d1d..7404c6e 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -23,18 +23,17 @@ qla2x00_get_cmd_direction(srb_t *sp)
+ {
+ 	uint16_t cflags;
+ 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
++	struct scsi_qla_host *vha = sp->fcport->vha;
+ 
+ 	cflags = 0;
+ 
+ 	/* Set transfer direction */
+ 	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
+ 		cflags = CF_WRITE;
+-		sp->fcport->vha->hw->qla_stats.output_bytes +=
+-		    scsi_bufflen(cmd);
++		vha->qla_stats.output_bytes += scsi_bufflen(cmd);
+ 	} else if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
+ 		cflags = CF_READ;
+-		sp->fcport->vha->hw->qla_stats.input_bytes +=
+-		    scsi_bufflen(cmd);
++		vha->qla_stats.input_bytes += scsi_bufflen(cmd);
+ 	}
+ 	return (cflags);
+ }
+@@ -630,11 +629,11 @@ qla24xx_build_scsi_type_6_iocbs(srb_t *sp, struct cmd_type_6 *cmd_pkt,
+ 	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
+ 		cmd_pkt->control_flags =
+ 		    __constant_cpu_to_le16(CF_WRITE_DATA);
+-		ha->qla_stats.output_bytes += scsi_bufflen(cmd);
++		vha->qla_stats.output_bytes += scsi_bufflen(cmd);
+ 	} else if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
+ 		cmd_pkt->control_flags =
+ 		    __constant_cpu_to_le16(CF_READ_DATA);
+-		ha->qla_stats.input_bytes += scsi_bufflen(cmd);
++		vha->qla_stats.input_bytes += scsi_bufflen(cmd);
+ 	}
+ 
+ 	cur_seg = scsi_sglist(cmd);
+@@ -746,13 +745,11 @@ qla24xx_build_scsi_iocbs(srb_t *sp, struct cmd_type_7 *cmd_pkt,
+ 	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
+ 		cmd_pkt->task_mgmt_flags =
+ 		    __constant_cpu_to_le16(TMF_WRITE_DATA);
+-		sp->fcport->vha->hw->qla_stats.output_bytes +=
+-		    scsi_bufflen(cmd);
++		vha->qla_stats.output_bytes += scsi_bufflen(cmd);
+ 	} else if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
+ 		cmd_pkt->task_mgmt_flags =
+ 		    __constant_cpu_to_le16(TMF_READ_DATA);
+-		sp->fcport->vha->hw->qla_stats.input_bytes +=
+-		    scsi_bufflen(cmd);
++		vha->qla_stats.input_bytes += scsi_bufflen(cmd);
+ 	}
+ 
+ 	/* One DSD is available in the Command Type 3 IOCB */
 -- 
 1.7.7
 
