@@ -1,119 +1,52 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 05/22] qla2xxx: Detect PEG errors.
-Date: Tue, 15 May 2012 14:34:12 -0400
-Message-ID: <1337106869-14191-6-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 03/22] qla2xxx: Fix typo in qla_mbx.c
+Date: Tue, 15 May 2012 14:34:10 -0400
+Message-ID: <1337106869-14191-4-git-send-email-chad.dupuis@qlogic.com>
 References: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:17544 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:12520 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S966431Ab2EOS51 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 May 2012 14:57:27 -0400
+	id S966430Ab2EOS52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 May 2012 14:57:28 -0400
 In-Reply-To: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Masanari Iida <standby24x7@gmail.com>
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Correct spelling "occured" to "occurred" in
+drivers/scsi/qla2xxx/qla_mbx.c
+
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |    2 +-
- drivers/scsi/qla2xxx/qla_nx.c  |   30 +++++++++++++++++++++++++++++-
- drivers/scsi/qla2xxx/qla_nx.h  |   13 +++++++++++++
- 3 files changed, 43 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 62324a1..ec1b925 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -20,7 +20,7 @@
-  * | DPC Thread                   |       0x401c       |		|
-  * | Async Events                 |       0x505d       | 0x502b-0x502f  |
-  * |                              |                    | 0x5047,0x5052  |
-- * | Timer Routines               |       0x6011       | 0x600e-0x600f  |
-+ * | Timer Routines               |       0x6011       |                |
-  * | User Space Interactions      |       0x709f       | 0x7018,0x702e, |
-  * |                              |                    | 0x7039,0x7045, |
-  * |                              |                    | 0x7073-0x7075, |
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 6f8850c..954e2c2 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -3325,6 +3325,30 @@ exit:
- 	return rval;
- }
- 
-+static int qla82xx_check_temp(scsi_qla_host_t *vha)
-+{
-+	uint32_t temp, temp_state, temp_val;
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	temp = qla82xx_rd_32(ha, CRB_TEMP_STATE);
-+	temp_state = qla82xx_get_temp_state(temp);
-+	temp_val = qla82xx_get_temp_val(temp);
-+
-+	if (temp_state == QLA82XX_TEMP_PANIC) {
-+		ql_log(ql_log_warn, vha, 0x600e,
-+		    "Device temperature %d degrees C exceeds "
-+		    " maximum allowed. Hardware has been shut down.\n",
-+		    temp_val);
-+		return 1;
-+	} else if (temp_state == QLA82XX_TEMP_WARN) {
-+		ql_log(ql_log_warn, vha, 0x600f,
-+		    "Device temperature %d degrees C exceeds "
-+		    "operating range. Immediate action needed.\n",
-+		    temp_val);
-+	}
-+	return 0;
-+}
-+
- void qla82xx_clear_pending_mbx(scsi_qla_host_t *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
-@@ -3347,7 +3371,11 @@ void qla82xx_watchdog(scsi_qla_host_t *vha)
- 	/* don't poll if reset is going on */
- 	if (!ha->flags.isp82xx_reset_hdlr_active) {
- 		dev_state = qla82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
--		if (dev_state == QLA82XX_DEV_NEED_RESET &&
-+		if (qla82xx_check_temp(vha)) {
-+			set_bit(ISP_UNRECOVERABLE, &vha->dpc_flags);
-+			ha->flags.isp82xx_fw_hung = 1;
-+			qla82xx_clear_pending_mbx(vha);
-+		} else if (dev_state == QLA82XX_DEV_NEED_RESET &&
- 		    !test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags)) {
- 			ql_log(ql_log_warn, vha, 0x6001,
- 			    "Adapter reset needed.\n");
-diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
-index 4ac50e2..3933198 100644
---- a/drivers/scsi/qla2xxx/qla_nx.h
-+++ b/drivers/scsi/qla2xxx/qla_nx.h
-@@ -26,6 +26,7 @@
- #define CRB_RCVPEG_STATE		QLA82XX_REG(0x13c)
- #define BOOT_LOADER_DIMM_STATUS		QLA82XX_REG(0x54)
- #define CRB_DMA_SHIFT			QLA82XX_REG(0xcc)
-+#define CRB_TEMP_STATE			QLA82XX_REG(0x1b4)
- #define QLA82XX_DMA_SHIFT_VALUE		0x55555555
- 
- #define QLA82XX_HW_H0_CH_HUB_ADR    0x05
-@@ -1178,4 +1179,16 @@ static const int MD_MIU_TEST_AGT_RDDATA[] = { 0x410000A8, 0x410000AC,
- #define CRB_NIU_XG_PAUSE_CTL_P0        0x1
- #define CRB_NIU_XG_PAUSE_CTL_P1        0x8
- 
-+#define qla82xx_get_temp_val(x)          ((x) >> 16)
-+#define qla82xx_get_temp_state(x)        ((x) & 0xffff)
-+#define qla82xx_encode_temp(val, state)  (((val) << 16) | (state))
-+
-+/*
-+ * Temperature control.
-+ */
-+enum {
-+	QLA82XX_TEMP_NORMAL = 0x1, /* Normal operating range */
-+	QLA82XX_TEMP_WARN,	   /* Sound alert, temperature getting high */
-+	QLA82XX_TEMP_PANIC	   /* Fatal error, hardware has shut down. */
-+};
- #endif
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index b4a2339..54eba10 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -320,7 +320,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 					    CRB_NIU_XG_PAUSE_CTL_P1);
+ 				}
+ 				ql_log(ql_log_info, base_vha, 0x101c,
+-				    "Mailbox cmd timeout occured, cmd=0x%x, "
++				    "Mailbox cmd timeout occurred, cmd=0x%x, "
+ 				    "mb[0]=0x%x, eeh_busy=0x%x. Scheduling ISP "
+ 				    "abort.\n", command, mcp->mb[0],
+ 				    ha->flags.eeh_busy);
+@@ -345,7 +345,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 					    CRB_NIU_XG_PAUSE_CTL_P1);
+ 				}
+ 				ql_log(ql_log_info, base_vha, 0x101e,
+-				    "Mailbox cmd timeout occured, cmd=0x%x, "
++				    "Mailbox cmd timeout occurred, cmd=0x%x, "
+ 				    "mb[0]=0x%x. Scheduling ISP abort ",
+ 				    command, mcp->mb[0]);
+ 				set_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags);
 -- 
 1.7.7
 
