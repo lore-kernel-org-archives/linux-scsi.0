@@ -1,46 +1,86 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 19/22] qla2xxx: Display proper firmware version when new minidump template is gathered for ISP82xx.
-Date: Tue, 15 May 2012 14:34:26 -0400
-Message-ID: <1337106869-14191-20-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 15/22] qla2xxx: Corrections to log messages.
+Date: Tue, 15 May 2012 14:34:22 -0400
+Message-ID: <1337106869-14191-16-git-send-email-chad.dupuis@qlogic.com>
 References: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:51161 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:24581 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S966209Ab2EOS5Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 May 2012 14:57:24 -0400
+	id S966390Ab2EOS5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 May 2012 14:57:25 -0400
 In-Reply-To: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_nx.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_nx.c |   10 +++++-----
+ drivers/scsi/qla2xxx/qla_nx.h |    1 -
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index e957487..caf627b 100644
+index 195528a..f88eb83 100644
 --- a/drivers/scsi/qla2xxx/qla_nx.c
 +++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -3159,11 +3159,11 @@ qla82xx_check_md_needed(scsi_qla_host_t *vha)
- 				    "Firmware version differs "
- 				    "Previous version: %d:%d:%d - "
- 				    "New version: %d:%d:%d\n",
-+				    fw_major_version, fw_minor_version,
-+				    fw_subminor_version,
- 				    ha->fw_major_version,
- 				    ha->fw_minor_version,
--				    ha->fw_subminor_version,
--				    fw_major_version, fw_minor_version,
--				    fw_subminor_version);
-+				    ha->fw_subminor_version);
- 				/* Release MiniDump resources */
- 				qla82xx_md_free(vha);
- 				/* ALlocate MiniDump resources */
+@@ -1190,12 +1190,12 @@ qla82xx_pinit_from_rom(scsi_qla_host_t *vha)
+ 	}
+ 
+ 	/* Offset in flash = lower 16 bits
+-	 * Number of enteries = upper 16 bits
++	 * Number of entries = upper 16 bits
+ 	 */
+ 	offset = n & 0xffffU;
+ 	n = (n >> 16) & 0xffffU;
+ 
+-	/* number of addr/value pair should not exceed 1024 enteries */
++	/* number of addr/value pair should not exceed 1024 entries */
+ 	if (n  >= 1024) {
+ 		ql_log(ql_log_fatal, vha, 0x0071,
+ 		    "Card flash not initialized:n=0x%x.\n", n);
+@@ -2446,7 +2446,7 @@ qla82xx_load_fw(scsi_qla_host_t *vha)
+ 
+ 	if (qla82xx_fw_load_from_flash(ha) == QLA_SUCCESS) {
+ 		ql_log(ql_log_info, vha, 0x00a1,
+-		    "Firmware loaded successully from flash.\n");
++		    "Firmware loaded successfully from flash.\n");
+ 		return QLA_SUCCESS;
+ 	} else {
+ 		ql_log(ql_log_warn, vha, 0x0108,
+@@ -2461,7 +2461,7 @@ try_blob_fw:
+ 	blob = ha->hablob = qla2x00_request_firmware(vha);
+ 	if (!blob) {
+ 		ql_log(ql_log_fatal, vha, 0x00a3,
+-		    "Firmware image not preset.\n");
++		    "Firmware image not present.\n");
+ 		goto fw_load_failed;
+ 	}
+ 
+@@ -2689,7 +2689,7 @@ qla82xx_write_flash_data(struct scsi_qla_host *vha, uint32_t *dwptr,
+ 		if (!optrom) {
+ 			ql_log(ql_log_warn, vha, 0xb01b,
+ 			    "Unable to allocate memory "
+-			    "for optron burst write (%x KB).\n",
++			    "for optrom burst write (%x KB).\n",
+ 			    OPTROM_BURST_SIZE / 1024);
+ 		}
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
+index 3933198..6eb210e 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.h
++++ b/drivers/scsi/qla2xxx/qla_nx.h
+@@ -562,7 +562,6 @@
+ #define QLA82XX_FW_VERSION_SUB		(QLA82XX_CAM_RAM(0x158))
+ #define QLA82XX_PCIE_REG(reg)		(QLA82XX_CRB_PCIE + (reg))
+ 
+-#define PCIE_CHICKEN3			(0x120c8)
+ #define PCIE_SETUP_FUNCTION		(0x12040)
+ #define PCIE_SETUP_FUNCTION2		(0x12048)
+ 
 -- 
 1.7.7
 
