@@ -1,83 +1,67 @@
-From: Girish K S <girish.shivananjappa@linaro.org>
-Subject: [RFC RESEND 4/4] SCSI: UFS: Added support of PCI/PLTFM for UFS
-Date: Tue, 15 May 2012 15:06:27 +0530
-Message-ID: <1337074587-29021-5-git-send-email-girish.shivananjappa@linaro.org>
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: Re: [RFC RESEND 0/4] Add support for pci/non-pci probing for UFS
+Date: Tue, 15 May 2012 19:38:36 +0900
+Message-ID: <CAKYAXd-BSeryh7KRTVdOrt+othr7ioB6RbjHcJQ2e14YDoVrEw@mail.gmail.com>
 References: <1337074587-29021-1-git-send-email-girish.shivananjappa@linaro.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:55186 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755934Ab2EOJho (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 05:37:44 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so7292170pbb.19
-        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 02:37:43 -0700 (PDT)
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:51791 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751705Ab2EOKii (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 06:38:38 -0400
+Received: by wgbdr13 with SMTP id dr13so5624545wgb.1
+        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 03:38:36 -0700 (PDT)
 In-Reply-To: <1337074587-29021-1-git-send-email-girish.shivananjappa@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: james.bottomley@hansenpartnership.com, vinholikatti@gmail.com, santoshsy@gmail.com, patches@linaro.org, Girish K S <girish.shivananjappa@linaro.org>
+To: Girish K S <girish.shivananjappa@linaro.org>
+Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, vinholikatti@gmail.com, santoshsy@gmail.com, patches@linaro.org
 
-This patch modifies the Kconfig and the Makefile to
-add support for PCI and Platform config options to the
-UFS core driver. If the device is attached to the core
-throught pci,then PCI option has to be selected in the
-menuconfig. For more information read the help section
-of Kconfig file.
+Hi. Girish.
 
-Signed-off-by: Girish K S <girish.shivananjappa@linaro.org>
----
- drivers/scsi/ufs/Kconfig  |   32 +++++++++++++++++++++++++++++---
- drivers/scsi/ufs/Makefile |    2 ++
- 2 files changed, 31 insertions(+), 3 deletions(-)
+Why have you not separated 3 modules ?
 
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 8f27f9d..70f3a71 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -44,6 +44,32 @@
- 
- config SCSI_UFSHCD
- 	tristate "Universal Flash Storage host controller driver"
--	depends on PCI && SCSI
--	---help---
--	This is a generic driver which supports PCIe UFS Host controllers.
-+	depends on SCSI
-+	help
-+	This is a generic driver which supports UFS Host controllers.
-+	This option is selected automatically if the SCSI option is
-+	selected. This is a core ufs driver.
-+
-+config SCSI_UFSHCD_PCI
-+	tristate "Universal Flash Storage host support on PCI bus"
-+	depends on SCSI_UFSHCD && PCI
-+	help
-+	  This selects the PCI bus for the Universal Flash Storage IP.
-+	  Select this option if the IP is present on PCI platform.
-+
-+	  If you have a controller with this interface, say Y or M here.
-+
-+	  If unsure, say N.
-+
-+config SCSI_UFSHCD_PLTFM
-+	tristate "Universal Flash Storage host support as platform device"
-+	depends on SCSI_UFSHCD
-+	help
-+	  This selects the common helper functions support for Host Controller
-+	  Interface based platform driver. Please select this option if the IP
-+	  is present as a platform device. This is the common interface for the
-+	  UFS Host Controller IP.
-+
-+	  If you have a controller with this interface, say Y or M here.
-+
-+	  If unsure, say N.
-diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index adf7895..fc56471 100644
---- a/drivers/scsi/ufs/Makefile
-+++ b/drivers/scsi/ufs/Makefile
-@@ -1,2 +1,4 @@
- # UFSHCD makefile
- obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
-+obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
-+obj-$(CONFIG_SCSI_UFSHCD_PLTFM) += ufshcd-pltfm.o
--- 
-1.7.4.1
+Thanks.
 
+2012/5/15, Girish K S <girish.shivananjappa@linaro.org>:
+> The existing UFS driver is tightly bound to only pci specific devices.
+> It cannot work for non-pci devices.
+>
+> "SCSI: UFS: remove all pci code from core driver" patch removes all the
+> pci specific code from the core driver to make it generic
+>
+> "SCSI: UFS: Add support for pci probe" patch adds a new file to support
+> pci probing.
+>
+> "SCSI: UFS: Add platform support for ufs host controller" patch adds a new
+> file to support platform device probe
+>
+> "SCSI: UFS: Added support of PCI/PLTFM for UFS" patch adds the menu option
+> in Kconfig and Makefile to enable/disable the specific option
+>
+> Girish K S (4):
+>   SCSI: UFS: remove all pci code from core driver
+>   SCSI: UFS: Add support for pci probe
+>   SCSI: UFS: Add platform support for ufs host controller
+>   SCSI: UFS: Added support of PCI/PLTFM for UFS
+>
+>  drivers/scsi/ufs/Kconfig        |   32 +++-
+>  drivers/scsi/ufs/Makefile       |    2 +
+>  drivers/scsi/ufs/ufs.h          |  103 +++++++++++
+>  drivers/scsi/ufs/ufshcd-pci.c   |  218 ++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd-pltfm.c |  191 ++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.c       |  377
+> +++++++++------------------------------
+>  6 files changed, 624 insertions(+), 299 deletions(-)
+>  create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
+>  create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
+>
+> --
+> 1.7.4.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
