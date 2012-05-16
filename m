@@ -1,73 +1,63 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: SCSI RAM driver ported to 3.3 kernel for file system and I/O
- testing
-Date: Wed, 16 May 2012 17:41:12 +0000
-Message-ID: <4FB3E6B8.7050909@acm.org>
-References: <1337188023.3796.130.camel@schen9-DESK>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [RFC PATCH 3/3] block: add queue idle timer
+Date: Wed, 16 May 2012 20:29:27 +0200
+Message-ID: <4FB3F207.7020308@kernel.dk>
+References: <Pine.LNX.4.44L0.1205161156480.1852-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01ant.iops.be ([212.53.4.34]:46325 "EHLO
-	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754127Ab2EPRlS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 May 2012 13:41:18 -0400
-In-Reply-To: <1337188023.3796.130.camel@schen9-DESK>
+Received: from casper.infradead.org ([85.118.1.10]:50892 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760076Ab2EPS3c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 May 2012 14:29:32 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1205161156480.1852-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tim Chen <tim.c.chen@linux.intel.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Andi Kleen <ak@linux.intel.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Lin Ming <ming.m.lin@intel.com>, Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 05/16/12 17:07, Tim Chen wrote:
+On 2012-05-16 17:59, Alan Stern wrote:
+> On Wed, 16 May 2012, Lin Ming wrote:
+> 
+>>> Lin, you should have more slack timer handling. Look at the blk-timeout
+>>> handling of request timeouts for inspiration, and/or the thread that
+>>> Jeff also references. Doing a timer add/del for each request put is a no
+>>> go.
+>>
+>> You mentioned how to detect queue idle in the referenced thread:
+>> 	
+>> ===
+>> So we could probably add an idle timer that is set to some suitable
+>> timeout for this and would be added when the queue first goes empty. If
+>> new requests come in, just let it simmer and defer checking the state to
+>> when it actually fires.
+> 
+> That is basically how the runtime PM timer works, if you use it as I 
+> described earlier.
+> 
+>> ===
+>>
+>> What do you mean of "the queue first goes empty"?
+> 
+> When the queue is first created, the timer is started.
+> 
+> Whenever the timer expires, the code checks to see if any requests have 
+> been processed since the previous expiration.  If they have, the timer 
+> is restarted.  If they haven't, you suspend the device.
 
-> +/*
-> + * SCSI requires quantities to be written MSB.  They're frequently misaligned,
-> + * so don't mess about with cpu_to_beN, just access it byte-wise
-> + */
-> +static void scsi_ram_put_u32(unsigned char *addr, unsigned int data)
-> +{
-> +	addr[0] = data >> 24;
-> +	addr[1] = data >> 16;
-> +	addr[2] = data >> 8;
-> +	addr[3] = data;
-> +}
-> +
-> +static unsigned int scsi_ram_get_u16(unsigned char *addr)
-> +{
-> +	unsigned int data;
-> +	data = addr[0] << 8;
-> +	data |= addr[1];
-> +
-> +	return data;
-> +}
-> +
-> +static unsigned int scsi_ram_get_u24(unsigned char *addr)
-> +{
-> +	unsigned int data;
-> +	data = addr[0] << 16;
-> +	data |= addr[1] << 8;
-> +	data |= addr[2];
-> +
-> +	return data;
-> +}
-> +
-> +static unsigned int scsi_ram_get_u32(unsigned char *addr)
-> +{
-> +	unsigned int data;
-> +	data = addr[0] << 24;
-> +	data |= addr[1] << 16;
-> +	data |= addr[2] << 8;
-> +	data |= addr[3];
-> +
-> +	return data;
-> +}
+That sounds ideal, since you don't have to manage it in the block layer
+then.
 
+Lin, you should just use that. My suggestion was that you add the timer
+when the queue first goes idle, IFF it isn't already running. When it
+expires, you check last activity and decide whether to suspend it or
+reset the timer. This is a more optimal than continually adding and
+deleting timers, or even just moving it forwards 20s all the time. But
+if pm already has support for this type of functionality (and it does,
+Alan says, which makes sense since this mechanism would be useful for
+other edvices), then you should indeed just use that.
 
-Please drop these functions and use get/put_unaligned_be*() instead.
-Maybe it's a good idea to add get/put_unaligned_be24() helper functions
-in the appropriate <linux/unaligned/...> header file - there is more
-SCSI code that stores and retrieves 24-bit numbers.
+-- 
+Jens Axboe
 
-Thanks,
-
-Bart.
