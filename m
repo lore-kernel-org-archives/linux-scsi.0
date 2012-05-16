@@ -1,57 +1,73 @@
-From: Joe Perches <joe@perches.com>
+From: Bart Van Assche <bvanassche@acm.org>
 Subject: Re: SCSI RAM driver ported to 3.3 kernel for file system and I/O
  testing
-Date: Wed, 16 May 2012 10:18:27 -0700
-Message-ID: <1337188707.6903.4.camel@joe2Laptop>
+Date: Wed, 16 May 2012 17:41:12 +0000
+Message-ID: <4FB3E6B8.7050909@acm.org>
 References: <1337188023.3796.130.camel@schen9-DESK>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay01ant.iops.be ([212.53.4.34]:46325 "EHLO
+	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754127Ab2EPRlS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 May 2012 13:41:18 -0400
 In-Reply-To: <1337188023.3796.130.camel@schen9-DESK>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Tim Chen <tim.c.chen@linux.intel.com>
 Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Andi Kleen <ak@linux.intel.com>
-List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-05-16 at 10:07 -0700, Tim Chen wrote:
-> I've ported Matthew's scsi RAM driver (originally posted in
-> http://marc.info/?l=linux-scsi&m=120331663227540&w=2) to the 3.3 kernel.
+On 05/16/12 17:07, Tim Chen wrote:
 
-just trivia:
-
-> diff --git a/drivers/scsi/scsi_ram.c b/drivers/scsi/scsi_ram.c
-[]
-> +static void scsi_ram_too_big(struct scsi_cmnd *cmnd, unsigned int start,
-> +				unsigned int len)
+> +/*
+> + * SCSI requires quantities to be written MSB.  They're frequently misaligned,
+> + * so don't mess about with cpu_to_beN, just access it byte-wise
+> + */
+> +static void scsi_ram_put_u32(unsigned char *addr, unsigned int data)
 > +{
-> +	printk(KERN_WARNING, "Request exceeded device capacity! %u %u\n", start, len);
-
-Probably ignored a warning here. No comma after KERN_WARNING.
-
-I'd add #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt before
-any include and use pr_<level> instead.
-
-[]
-
-> +static int scsi_ram_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
-> +{
-> +	struct scsi_ram_cmnd *ram_cmnd = (void *)&cmnd->SCp;
-> +	struct scsi_ram_device *ram_device = scsi_ram_devices[cmnd->device->id];
-> +	unsigned long flags;
+> +	addr[0] = data >> 24;
+> +	addr[1] = data >> 16;
+> +	addr[2] = data >> 8;
+> +	addr[3] = data;
+> +}
 > +
-> +	pr_debug("%s: Queueing command\n", DRV_NAME);
-
-No need for DRV_NAME when using pr_fmt
-
-[]
-
-> +static int scsi_ram_slave_alloc(struct scsi_device *sdev)
+> +static unsigned int scsi_ram_get_u16(unsigned char *addr)
 > +{
-> +	struct scsi_ram_device *ram_device;
+> +	unsigned int data;
+> +	data = addr[0] << 8;
+> +	data |= addr[1];
 > +
-> +	pr_debug("%s: slave_alloc %d:%d\n", DRV_NAME, sdev->id, sdev->lun);
+> +	return data;
+> +}
+> +
+> +static unsigned int scsi_ram_get_u24(unsigned char *addr)
+> +{
+> +	unsigned int data;
+> +	data = addr[0] << 16;
+> +	data |= addr[1] << 8;
+> +	data |= addr[2];
+> +
+> +	return data;
+> +}
+> +
+> +static unsigned int scsi_ram_get_u32(unsigned char *addr)
+> +{
+> +	unsigned int data;
+> +	data = addr[0] << 24;
+> +	data |= addr[1] << 16;
+> +	data |= addr[2] << 8;
+> +	data |= addr[3];
+> +
+> +	return data;
+> +}
 
-here too, etc...
 
+Please drop these functions and use get/put_unaligned_be*() instead.
+Maybe it's a good idea to add get/put_unaligned_be24() helper functions
+in the appropriate <linux/unaligned/...> header file - there is more
+SCSI code that stores and retrieves 24-bit numbers.
 
+Thanks,
+
+Bart.
