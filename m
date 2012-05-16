@@ -1,80 +1,97 @@
-From: Namjae Jeon <linkinjeon@gmail.com>
+From: Girish K S <girish.shivananjappa@linaro.org>
 Subject: Re: [RFC V1 0/4] Add support for pci/non-pci probing for UFS
-Date: Wed, 16 May 2012 10:48:18 +0900
-Message-ID: <CAKYAXd91z1obe+QjEsp8Bzjore-7jMCdMg-K4DgO8c6a7=8j8A@mail.gmail.com>
+Date: Wed, 16 May 2012 10:06:27 +0530
+Message-ID: <CAGxe1ZGhmM65KKyPQR12ZpZ4KHzb8NPTrJk9vQTaX8TN_idiBQ@mail.gmail.com>
 References: <1337083436-4204-1-git-send-email-girish.shivananjappa@linaro.org>
+	<CAKYAXd91z1obe+QjEsp8Bzjore-7jMCdMg-K4DgO8c6a7=8j8A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:46207 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752128Ab2EPBsU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 21:48:20 -0400
-Received: by wibhj8 with SMTP id hj8so3419328wib.1
-        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 18:48:19 -0700 (PDT)
-In-Reply-To: <1337083436-4204-1-git-send-email-girish.shivananjappa@linaro.org>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:45930 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750838Ab2EPEga convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 May 2012 00:36:30 -0400
+Received: by qcro28 with SMTP id o28so197188qcr.19
+        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 21:36:29 -0700 (PDT)
+In-Reply-To: <CAKYAXd91z1obe+QjEsp8Bzjore-7jMCdMg-K4DgO8c6a7=8j8A@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Girish K S <girish.shivananjappa@linaro.org>
+To: Namjae Jeon <linkinjeon@gmail.com>
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, vinholikatti@gmail.com, santoshsy@gmail.com, patches@linaro.org
 
-Hi. Girish.
-
-There still are hunks on james git.
-
-patching file drivers/scsi/ufs/ufs.h
-patching file drivers/scsi/ufs/ufshcd.c
-Hunk #13 FAILED at 929.
-Hunk #25 succeeded at 1724 with fuzz 2.
-1 out of 25 hunks FAILED -- saving rejects to file drivers/scsi/ufs/ufshcd.c.rej
-
-There are new ufs 3 patches pushed by andrew on linux-next.
-I think that you should make patch-set on linux-next again.
-
-Thanks.
-
-2012/5/15, Girish K S <girish.shivananjappa@linaro.org>:
-> The existing UFS driver is tightly bound to only pci specific devices.
-> It cannot work for non-pci devices.
+On 16 May 2012 07:18, Namjae Jeon <linkinjeon@gmail.com> wrote:
+> Hi. Girish.
 >
-> "SCSI: UFS: remove all pci code from core driver" patch removes all the
-> pci specific code from the core driver to make it generic
+> There still are hunks on james git.
 >
-> "SCSI: UFS: Add support for pci probe" patch adds a new file to support
-> pci probing.
+> patching file drivers/scsi/ufs/ufs.h
+> patching file drivers/scsi/ufs/ufshcd.c
+> Hunk #13 FAILED at 929.
+> Hunk #25 succeeded at 1724 with fuzz 2.
+> 1 out of 25 hunks FAILED -- saving rejects to file drivers/scsi/ufs/u=
+fshcd.c.rej
 >
-> "SCSI: UFS: Add platform support for ufs host controller" patch adds a new
-> file to support platform device probe
+> There are new ufs 3 patches pushed by andrew on linux-next.
+> I think that you should make patch-set on linux-next again.
+Ok i Will make patches on linux-next.
 >
-> "SCSI: UFS: Added support of PCI/PLTFM for UFS" patch adds the menu option
-> in Kconfig and Makefile to enable/disable the specific option
+> Thanks.
 >
-> changes in v1:
-> 		Changes suggested by Namjae to split the existing driver as 3 independent
-> modules and retain the author's name in the files created by me.
->
-> Girish K S (4):
->   SCSI: UFS: remove all pci code from core driver
->   SCSI: UFS: Add support for pci probe
->   SCSI: UFS: Add platform support for ufs host controller
->   SCSI: UFS: Added support of PCI/PLTFM for UFS
->
->  drivers/scsi/ufs/Kconfig        |   32 +++-
->  drivers/scsi/ufs/Makefile       |    2 +
->  drivers/scsi/ufs/ufs.h          |  103 +++++++++++
->  drivers/scsi/ufs/ufshcd-pci.c   |  217 ++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd-pltfm.c |  191 +++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.c       |  383
-> ++++++++++-----------------------------
->  6 files changed, 637 insertions(+), 291 deletions(-)
->  create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
->  create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
->
-> --
-> 1.7.4.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> 2012/5/15, Girish K S <girish.shivananjappa@linaro.org>:
+>> The existing UFS driver is tightly bound to only pci specific device=
+s.
+>> It cannot work for non-pci devices.
+>>
+>> "SCSI: UFS: remove all pci code from core driver" patch removes all =
+the
+>> pci specific code from the core driver to make it generic
+>>
+>> "SCSI: UFS: Add support for pci probe" patch adds a new file to supp=
+ort
+>> pci probing.
+>>
+>> "SCSI: UFS: Add platform support for ufs host controller" patch adds=
+ a new
+>> file to support platform device probe
+>>
+>> "SCSI: UFS: Added support of PCI/PLTFM for UFS" patch adds the menu =
+option
+>> in Kconfig and Makefile to enable/disable the specific option
+>>
+>> changes in v1:
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 Changes suggested by Namjae to split the=
+ existing driver as 3 independent
+>> modules and retain the author's name in the files created by me.
+>>
+>> Girish K S (4):
+>> =A0 SCSI: UFS: remove all pci code from core driver
+>> =A0 SCSI: UFS: Add support for pci probe
+>> =A0 SCSI: UFS: Add platform support for ufs host controller
+>> =A0 SCSI: UFS: Added support of PCI/PLTFM for UFS
+>>
+>> =A0drivers/scsi/ufs/Kconfig =A0 =A0 =A0 =A0| =A0 32 +++-
+>> =A0drivers/scsi/ufs/Makefile =A0 =A0 =A0 | =A0 =A02 +
+>> =A0drivers/scsi/ufs/ufs.h =A0 =A0 =A0 =A0 =A0| =A0103 +++++++++++
+>> =A0drivers/scsi/ufs/ufshcd-pci.c =A0 | =A0217 ++++++++++++++++++++++
+>> =A0drivers/scsi/ufs/ufshcd-pltfm.c | =A0191 +++++++++++++++++++
+>> =A0drivers/scsi/ufs/ufshcd.c =A0 =A0 =A0 | =A0383
+>> ++++++++++-----------------------------
+>> =A06 files changed, 637 insertions(+), 291 deletions(-)
+>> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
+>> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
+>>
+>> --
+>> 1.7.4.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
