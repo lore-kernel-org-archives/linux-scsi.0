@@ -1,78 +1,59 @@
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Subject: multipath_busy() stalls IO due to scsi_host_is_busy()
-Date: Wed, 16 May 2012 14:28:40 +0200
-Message-ID: <4FB39D78.9020300@itwm.fraunhofer.de>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [RFC PATCH 3/3] block: add queue idle timer
+Date: Wed, 16 May 2012 09:04:58 -0400
+Message-ID: <x49r4uke0p1.fsf@segfault.boston.devel.redhat.com>
+References: <1337071697-30920-1-git-send-email-ming.m.lin@intel.com>
+	<1337071697-30920-4-git-send-email-ming.m.lin@intel.com>
+	<x49mx59b6c0.fsf@segfault.boston.devel.redhat.com>
+	<1337131643.22243.2.camel@minggr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailgw1.uni-kl.de ([131.246.120.220]:44233 "EHLO
-	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758995Ab2EPM2p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 May 2012 08:28:45 -0400
-Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
-	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-5+lenny1) with ESMTP id q4GCSgDX025895
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 16 May 2012 14:28:42 +0200
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1337131643.22243.2.camel@minggr> (Lin Ming's message of "Wed, 16
+	May 2012 09:27:23 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hello,
+Lin Ming <ming.m.lin@intel.com> writes:
 
-while I actually want to benchmark FhGFS on a NetApp system, I'm somehow 
-running from one kernel problem to another.
-Yesterday we had to recable and while we are now still using multipath, 
-each priority group now only has one underlying devices (we don't have 
-sufficient IB srp ports on our test systems, but still want to benchmark 
-a system as close as possible to a production system).
-So after recabling actually all failover paths disappeared, which 
-*shouldn't* have any influence on the performance. However, unexpectedly 
-performance is now by less than 50% when I'm doing buffered IO. With 
-direct IO it also still fine and reducing nr_requests of the multipath 
-device to 8 also 'fixes' the problem. I then guessed it right and simply 
-made multipath_busy() always to return 0, which also fixes the issue.
-
-
-- problem:
-	- iostat -x -m 1 shows that alternating one multipath devices starts to 
-stall IO for several minutes
-	- the other multipath device then does IO during that time with about 
-600 to 700 MB/s, until it starts to stall IO
-	- the active NetApp controller could server both multipath devices with 
-about 600 to 700 MB/s
-
-problem solutions:
-	- add another passive sdX device to the multipath group
-	- use direct IO
-	- reduce /sys/block/dm-X/queue/nr_requests to 8
-		- /sys/block/sdX does not need to be updated
-	- disbable multipath_busy() by letting it return 0
-
-Looking through the call chain, I see the underlying problem seems to be 
-in scsi_host_is_busy().
-
-> static inline int scsi_host_is_busy(struct Scsi_Host *shost)
-> {
-> 	if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
-> 	    shost->host_blocked || shost->host_self_blocked)
-> 		return 1;
+> On Tue, 2012-05-15 at 15:19 -0400, Jeff Moyer wrote:
+>> Lin Ming <ming.m.lin@intel.com> writes:
+>> 
+>> > Add an idle timer that is set to some suitable timeout and would be
+>> > added when the queue first goes empty. If nothing has happened during
+>> > the timeout interval, then the queue is suspended.
+>> >
+>> > Queueing a new request could check the state and resume queue if it is
+>> > supended.
+>> >
+>> 
+>> [snip]
+>> 
+>> > @@ -1129,6 +1141,13 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+>> >  	if (unlikely(--req->ref_count))
+>> >  		return;
+>> >  
+>> > +	/* PM request is not accounted */
+>> > +	if (!(req->cmd_flags & REQ_PM)) {
+>> > +		if (!(--q->nr_pending))
+>> > +			/* Hard code to 20secs, will move to sysfs */
+>> > +			mod_timer(&q->idle, jiffies + 20*HZ);
+>> > +	}
+>> > +
+>> 
+>> I'm pretty sure Jens wanted to avoid doing a mod_timer, here, given that
+>> the queue can transition between empty and non-empty fairly rapidly for
+>> dependent I/O.
 >
-> 	return 0;
-> }
->
+> I'll remove this idle timer and use runtime pm core's timer.
 
-shost->can_queue -> 62 here
-shost->host_busy -> 62 when one of the multipath groups does IO, further 
-multipath groups then seem to get stalled.
+This issues isn't which timer to use, it's when to modify it.  Since the
+queue can cycle between empty and non-empty very quickly, you should try
+to avoid calling mod_timer for every non-empty to empty transition.
+Jens had described one way to do this in the thread you referenced in
+your 0/3 email.
 
-I'm not sure yet why multipath_busy() does not stall IO when there is a 
-passive path in the prio group.
-
-Any idea how to properly address this problem?
-
-
-Thanks,
-Bernd
-
+Cheers,
+Jeff
