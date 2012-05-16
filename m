@@ -1,44 +1,67 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: [PATCH] scsi/mvsas: Fix the memleak of struct sas_ha_struct:lldd_ha.
-Date: Wed, 16 May 2012 09:05:55 +0800
-Message-ID: <201205160905484539991@gmail.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [RFC PATCH 3/3] block: add queue idle timer
+Date: Wed, 16 May 2012 09:27:23 +0800
+Message-ID: <1337131643.22243.2.camel@minggr>
+References: <1337071697-30920-1-git-send-email-ming.m.lin@intel.com>
+	 <1337071697-30920-4-git-send-email-ming.m.lin@intel.com>
+	 <x49mx59b6c0.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:53595 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965036Ab2EPBFM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2012 21:05:12 -0400
-Received: by dady13 with SMTP id y13so246574dad.19
-        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 18:05:12 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <x49mx59b6c0.fsf@segfault.boston.devel.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi maintainers <JBottomley@Parallels.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/scsi/mvsas/mv_init.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On Tue, 2012-05-15 at 15:19 -0400, Jeff Moyer wrote:
+> Lin Ming <ming.m.lin@intel.com> writes:
+> 
+> > Add an idle timer that is set to some suitable timeout and would be
+> > added when the queue first goes empty. If nothing has happened during
+> > the timeout interval, then the queue is suspended.
+> >
+> > Queueing a new request could check the state and resume queue if it is
+> > supended.
+> >
+> 
+> [snip]
+> 
+> > @@ -1129,6 +1141,13 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+> >  	if (unlikely(--req->ref_count))
+> >  		return;
+> >  
+> > +	/* PM request is not accounted */
+> > +	if (!(req->cmd_flags & REQ_PM)) {
+> > +		if (!(--q->nr_pending))
+> > +			/* Hard code to 20secs, will move to sysfs */
+> > +			mod_timer(&q->idle, jiffies + 20*HZ);
+> > +	}
+> > +
+> 
+> I'm pretty sure Jens wanted to avoid doing a mod_timer, here, given that
+> the queue can transition between empty and non-empty fairly rapidly for
+> dependent I/O.
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index cc59dff..cd9fc36 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -671,6 +671,7 @@ static void __devexit mvs_pci_remove(struct pci_dev *pdev)
- 	}
- 	kfree(sha->sas_phy);
- 	kfree(sha->sas_port);
-+	kfree(sha->lldd_ha);
- 	kfree(sha);
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
--- 
-1.7.5.4
- 				
---------------
-majianpeng
-2012-05-16
+I'll remove this idle timer and use runtime pm core's timer.
 
+> 
+> > @@ -587,6 +590,13 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
+> >  {
+> >  	trace_block_rq_insert(q, rq);
+> >  
+> > +	if (!(rq->cmd_flags & REQ_PM)) {
+> > +		if (!(q->pm_status != RPM_ACTIVE) &&
+> 
+> Uhh, re-read that line.  Not not equal?
+
+Ah, it should be:
+
+if (q->pm_status != RPM_ACTIVE &&
+
+My mistake.
+
+> 
+> Cheers,
+> Jeff
