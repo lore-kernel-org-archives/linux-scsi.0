@@ -1,104 +1,68 @@
-From: Rob Evers <revers@redhat.com>
-Subject: [PATCH 2/3] alua: retry alua rtpg extended header for illegal request response
-Date: Wed, 16 May 2012 10:15:04 -0400
-Message-ID: <1337177705-17114-2-git-send-email-revers@redhat.com>
-References: <1337177705-17114-1-git-send-email-revers@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54541 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751754Ab2EPOPG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 May 2012 10:15:06 -0400
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4GEF6KF015502
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Wed, 16 May 2012 10:15:06 -0400
-Received: from localhost (dhcp-185-85.bos.redhat.com [10.16.185.85])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id q4GEF6Wt005616
-	for <linux-scsi@vger.kernel.org>; Wed, 16 May 2012 10:15:06 -0400
-In-Reply-To: <1337177705-17114-1-git-send-email-revers@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC PATCH 3/3] block: add queue idle timer
+Date: Wed, 16 May 2012 10:28:36 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1205161026520.1852-100000@iolanthe.rowland.org>
+References: <4FB3B14E.2040306@kernel.dk>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4FB3B14E.2040306@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Jeff Moyer <jmoyer@redhat.com>, Lin Ming <ming.m.lin@intel.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-From: Rob Evers <revers@redhat.com>
+On Wed, 16 May 2012, Jens Axboe wrote:
 
-Some storage arrays are known to return 'illegal request'
-when an rtpg extended header request is made.  T10 says the
-array should ignore the bit, and return the non-extended
-rtpg as the array doesn't support the request.  Working
-around this by retrying the rtpg request without the extended
-header bit set when the extended rtpg request results in
-illegal request.
+> On 05/16/2012 03:04 PM, Jeff Moyer wrote:
+> > Lin Ming <ming.m.lin@intel.com> writes:
+> > 
+> >> On Tue, 2012-05-15 at 15:19 -0400, Jeff Moyer wrote:
+> >>> Lin Ming <ming.m.lin@intel.com> writes:
+> >>>
+> >>>> Add an idle timer that is set to some suitable timeout and would be
+> >>>> added when the queue first goes empty. If nothing has happened during
+> >>>> the timeout interval, then the queue is suspended.
+> >>>>
+> >>>> Queueing a new request could check the state and resume queue if it is
+> >>>> supended.
+> >>>>
+> >>>
+> >>> [snip]
+> >>>
+> >>>> @@ -1129,6 +1141,13 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+> >>>>  	if (unlikely(--req->ref_count))
+> >>>>  		return;
+> >>>>  
+> >>>> +	/* PM request is not accounted */
+> >>>> +	if (!(req->cmd_flags & REQ_PM)) {
+> >>>> +		if (!(--q->nr_pending))
+> >>>> +			/* Hard code to 20secs, will move to sysfs */
+> >>>> +			mod_timer(&q->idle, jiffies + 20*HZ);
+> >>>> +	}
+> >>>> +
+> >>>
+> >>> I'm pretty sure Jens wanted to avoid doing a mod_timer, here, given that
+> >>> the queue can transition between empty and non-empty fairly rapidly for
+> >>> dependent I/O.
+> >>
+> >> I'll remove this idle timer and use runtime pm core's timer.
+> > 
+> > This issues isn't which timer to use, it's when to modify it.  Since the
+> > queue can cycle between empty and non-empty very quickly, you should try
+> > to avoid calling mod_timer for every non-empty to empty transition.
+> > Jens had described one way to do this in the thread you referenced in
+> > your 0/3 email.
+> 
+> That's exactly right, thanks Jeff.
+> 
+> Lin, you should have more slack timer handling. Look at the blk-timeout
+> handling of request timeouts for inspiration, and/or the thread that
+> Jeff also references. Doing a timer add/del for each request put is a no
+> go.
 
-Signed-off-by: Rob Evers <revers@redhat.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c |   25 ++++++++++++++++++++++---
- 1 files changed, 22 insertions(+), 3 deletions(-)
+Lin, note that if you use the API properly, the runtime PM timer does
+not have to get updated every time an I/O event occurs.  Look up 
+pm_runtime_mark_last_busy() in the runtime PM documentation.
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 6a7efd3..ca414ae 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -173,7 +173,8 @@ done:
-  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
-  * @sdev: sdev the command should be sent to
-  */
--static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
-+static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h,
-+			    bool rtpg_ext_hdr_req)
- {
- 	struct request *rq;
- 	int err = SCSI_DH_RES_TEMP_UNAVAIL;
-@@ -184,7 +185,10 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
- 
- 	/* Prepare the command. */
- 	rq->cmd[0] = MAINTENANCE_IN;
--	rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
-+	if (rtpg_ext_hdr_req)
-+		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
-+	else
-+		rq->cmd[1] = MI_REPORT_TARGET_PGS;
- 	rq->cmd[6] = (h->bufflen >> 24) & 0xff;
- 	rq->cmd[7] = (h->bufflen >> 16) & 0xff;
- 	rq->cmd[8] = (h->bufflen >>  8) & 0xff;
-@@ -517,6 +521,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
- 	int len, k, off, valid_states = 0;
- 	unsigned char *ucp;
- 	unsigned err;
-+	bool rtpg_ext_hdr_req = 1;
- 	unsigned long expiry, interval = 1000;
- 	unsigned int tpg_desc_tbl_off;
- 	unsigned char orig_transition_tmo;
-@@ -527,7 +532,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
- 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
- 
-  retry:
--	err = submit_rtpg(sdev, h);
-+	err = submit_rtpg(sdev, h, rtpg_ext_hdr_req);
- 
- 	if (err == SCSI_DH_IO && h->senselen > 0) {
- 		err = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
-@@ -535,6 +540,20 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
- 		if (!err)
- 			return SCSI_DH_IO;
- 
-+		/*
-+		 * submit_rtpb() has failed on existing arrays
-+		 * when requesting extended header info, and
-+		 * the array doesn't support extended headers,
-+		 * even though it shouldn't according to T10.
-+		 * The retry without the ALUA_RTPG_EXT_HDR_REQ
-+		 * handles this.
-+		 */
-+		if (sense_hdr.sense_key == ILLEGAL_REQUEST &&
-+		    sense_hdr.asc == 0x24 && sense_hdr.ascq == 0) {
-+			rtpg_ext_hdr_req = 0;
-+			goto retry;
-+		}
-+
- 		err = alua_check_sense(sdev, &sense_hdr);
- 		if (err == ADD_TO_MLQUEUE && time_before(jiffies, expiry))
- 			goto retry;
--- 
-1.7.7.2
-
+Alan Stern
