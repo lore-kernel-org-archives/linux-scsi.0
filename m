@@ -1,40 +1,83 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [dm-devel] multipath_busy() stalls IO due to scsi_host_is_busy()
-Date: Wed, 16 May 2012 10:27:27 -0500
-Message-ID: <4FB3C75F.3070903@cs.wisc.edu>
-References: <4FB39D78.9020300@itwm.fraunhofer.de> <1337177200.2985.71.camel@dabdike.int.hansenpartnership.com> <4FB3B9DE.1050903@itwm.fraunhofer.de>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [RFC PATCH 3/3] block: add queue idle timer
+Date: Wed, 16 May 2012 23:40:20 +0800
+Message-ID: <1337182820.4047.18.camel@hp6530s>
+References: <1337071697-30920-1-git-send-email-ming.m.lin@intel.com>
+	 <1337071697-30920-4-git-send-email-ming.m.lin@intel.com>
+	 <x49mx59b6c0.fsf@segfault.boston.devel.redhat.com>
+	 <1337131643.22243.2.camel@minggr>
+	 <x49r4uke0p1.fsf@segfault.boston.devel.redhat.com>
+	 <4FB3B14E.2040306@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:37952 "EHLO sabe.cs.wisc.edu"
+Received: from mga02.intel.com ([134.134.136.20]:51845 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753950Ab2EPP1l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 May 2012 11:27:41 -0400
-In-Reply-To: <4FB3B9DE.1050903@itwm.fraunhofer.de>
+	id S1755330Ab2EPPlJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 May 2012 11:41:09 -0400
+In-Reply-To: <4FB3B14E.2040306@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Jeff Moyer <jmoyer@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 05/16/2012 09:29 AM, Bernd Schubert wrote:
-> On 05/16/2012 04:06 PM, James Bottomley wrote:
->> On Wed, 2012-05-16 at 14:28 +0200, Bernd Schubert wrote:
->>> shost->can_queue ->  62 here
->>> shost->host_busy ->  62 when one of the multipath groups does IO,
->>> further
->>> multipath groups then seem to get stalled.
->>>
->>> I'm not sure yet why multipath_busy() does not stall IO when there is a
->>> passive path in the prio group.
->>>
->>> Any idea how to properly address this problem?
->>
->> shost->can_queue is supposed to represent the maximum number of possible
->> outstanding commands per HBA (i.e. the HBA hardware limit).  Assuming
->> the driver got it right, the only way of increasing this is to buy a
->> better HBA.
+On Wed, 2012-05-16 at 15:53 +0200, Jens Axboe wrote:
+> On 05/16/2012 03:04 PM, Jeff Moyer wrote:
+> > Lin Ming <ming.m.lin@intel.com> writes:
+> > 
+> >> On Tue, 2012-05-15 at 15:19 -0400, Jeff Moyer wrote:
+> >>> Lin Ming <ming.m.lin@intel.com> writes:
+> >>>
+> >>>> Add an idle timer that is set to some suitable timeout and would be
+> >>>> added when the queue first goes empty. If nothing has happened during
+> >>>> the timeout interval, then the queue is suspended.
+> >>>>
+> >>>> Queueing a new request could check the state and resume queue if it is
+> >>>> supended.
+> >>>>
+> >>>
+> >>> [snip]
+> >>>
+> >>>> @@ -1129,6 +1141,13 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+> >>>>  	if (unlikely(--req->ref_count))
+> >>>>  		return;
+> >>>>  
+> >>>> +	/* PM request is not accounted */
+> >>>> +	if (!(req->cmd_flags & REQ_PM)) {
+> >>>> +		if (!(--q->nr_pending))
+> >>>> +			/* Hard code to 20secs, will move to sysfs */
+> >>>> +			mod_timer(&q->idle, jiffies + 20*HZ);
+> >>>> +	}
+> >>>> +
+> >>>
+> >>> I'm pretty sure Jens wanted to avoid doing a mod_timer, here, given that
+> >>> the queue can transition between empty and non-empty fairly rapidly for
+> >>> dependent I/O.
+> >>
+> >> I'll remove this idle timer and use runtime pm core's timer.
+> > 
+> > This issues isn't which timer to use, it's when to modify it.  Since the
+> > queue can cycle between empty and non-empty very quickly, you should try
+> > to avoid calling mod_timer for every non-empty to empty transition.
+> > Jens had described one way to do this in the thread you referenced in
+> > your 0/3 email.
 > 
-> HBA is a mellanox IB adapter. I have not checked yet where the limit of
+> That's exactly right, thanks Jeff.
+> 
+> Lin, you should have more slack timer handling. Look at the blk-timeout
+> handling of request timeouts for inspiration, and/or the thread that
+> Jeff also references. Doing a timer add/del for each request put is a no
+> go.
 
-What driver is this with? SRP or iSER or something else?
+You mentioned how to detect queue idle in the referenced thread:
+	
+===
+So we could probably add an idle timer that is set to some suitable
+timeout for this and would be added when the queue first goes empty. If
+new requests come in, just let it simmer and defer checking the state to
+when it actually fires.
+===
+
+What do you mean of "the queue first goes empty"?
+
