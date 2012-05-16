@@ -1,109 +1,89 @@
-From: Girish K S <girish.shivananjappa@linaro.org>
-Subject: Re: [RFC V1 0/4] Add support for pci/non-pci probing for UFS
-Date: Wed, 16 May 2012 11:40:56 +0530
-Message-ID: <CAGxe1ZGo-i2pNNteTh-Eo7G-9dmqF2tPwND3DHvpw7Se6_CTOg@mail.gmail.com>
-References: <1337083436-4204-1-git-send-email-girish.shivananjappa@linaro.org>
-	<CAKYAXd91z1obe+QjEsp8Bzjore-7jMCdMg-K4DgO8c6a7=8j8A@mail.gmail.com>
-	<CAGxe1ZGhmM65KKyPQR12ZpZ4KHzb8NPTrJk9vQTaX8TN_idiBQ@mail.gmail.com>
+From: mengcong <mc@linux.vnet.ibm.com>
+Subject: [PATCH] target: Handle ATA_PASS_THROUGH_16 passthrough
+Date: Wed, 16 May 2012 13:33:29 +0800
+Message-ID: <1337146409.18429.11.camel@mengcong>
+Reply-To: mc@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:62927 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882Ab2EPGLA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 May 2012 02:11:00 -0400
-Received: by qabj40 with SMTP id j40so528757qab.1
-        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2012 23:10:59 -0700 (PDT)
-In-Reply-To: <CAGxe1ZGhmM65KKyPQR12ZpZ4KHzb8NPTrJk9vQTaX8TN_idiBQ@mail.gmail.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:57155 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755542Ab2EPG1g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 May 2012 02:27:36 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mc@linux.vnet.ibm.com>;
+	Wed, 16 May 2012 05:28:20 +1000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, vinholikatti@gmail.com, santoshsy@gmail.com, patches@linaro.org
+To: target-devel@vger.kernel.org
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, meng cong <mc@linux.vnet.ibm.com>
 
-Hi James / maintainers,
-can you please confirm whether the patches have to be rebased to
-James's for-next / Linux-next branch.
+The cdrecord uses ATA_PASS_THROUGH_16 command while burning CDs
+with a SATA CD-ROM. This patch adds support to it so that PSCSI 
+CD-ROM passthrough works with the cdrecord.
 
-regards
-Girish K S
+Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
+---
+ drivers/target/target_core_transport.c |   30 ++++++++++++++++++++++++++++++
+ include/scsi/scsi.h                    |    1 +
+ 2 files changed, 31 insertions(+), 0 deletions(-)
 
-On 16 May 2012 10:06, Girish K S <girish.shivananjappa@linaro.org> wrot=
-e:
-> On 16 May 2012 07:18, Namjae Jeon <linkinjeon@gmail.com> wrote:
->> Hi. Girish.
->>
->> There still are hunks on james git.
->>
->> patching file drivers/scsi/ufs/ufs.h
->> patching file drivers/scsi/ufs/ufshcd.c
->> Hunk #13 FAILED at 929.
->> Hunk #25 succeeded at 1724 with fuzz 2.
->> 1 out of 25 hunks FAILED -- saving rejects to file drivers/scsi/ufs/=
-ufshcd.c.rej
->>
->> There are new ufs 3 patches pushed by andrew on linux-next.
->> I think that you should make patch-set on linux-next again.
-> Ok i Will make patches on linux-next.
->>
->> Thanks.
->>
->> 2012/5/15, Girish K S <girish.shivananjappa@linaro.org>:
->>> The existing UFS driver is tightly bound to only pci specific devic=
-es.
->>> It cannot work for non-pci devices.
->>>
->>> "SCSI: UFS: remove all pci code from core driver" patch removes all=
- the
->>> pci specific code from the core driver to make it generic
->>>
->>> "SCSI: UFS: Add support for pci probe" patch adds a new file to sup=
-port
->>> pci probing.
->>>
->>> "SCSI: UFS: Add platform support for ufs host controller" patch add=
-s a new
->>> file to support platform device probe
->>>
->>> "SCSI: UFS: Added support of PCI/PLTFM for UFS" patch adds the menu=
- option
->>> in Kconfig and Makefile to enable/disable the specific option
->>>
->>> changes in v1:
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 Changes suggested by Namjae to split th=
-e existing driver as 3 independent
->>> modules and retain the author's name in the files created by me.
->>>
->>> Girish K S (4):
->>> =A0 SCSI: UFS: remove all pci code from core driver
->>> =A0 SCSI: UFS: Add support for pci probe
->>> =A0 SCSI: UFS: Add platform support for ufs host controller
->>> =A0 SCSI: UFS: Added support of PCI/PLTFM for UFS
->>>
->>> =A0drivers/scsi/ufs/Kconfig =A0 =A0 =A0 =A0| =A0 32 +++-
->>> =A0drivers/scsi/ufs/Makefile =A0 =A0 =A0 | =A0 =A02 +
->>> =A0drivers/scsi/ufs/ufs.h =A0 =A0 =A0 =A0 =A0| =A0103 +++++++++++
->>> =A0drivers/scsi/ufs/ufshcd-pci.c =A0 | =A0217 +++++++++++++++++++++=
-+
->>> =A0drivers/scsi/ufs/ufshcd-pltfm.c | =A0191 +++++++++++++++++++
->>> =A0drivers/scsi/ufs/ufshcd.c =A0 =A0 =A0 | =A0383
->>> ++++++++++-----------------------------
->>> =A06 files changed, 637 insertions(+), 291 deletions(-)
->>> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
->>> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
->>>
->>> --
->>> 1.7.4.1
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-scs=
-i" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
->>>
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 2d75c29..41439b3 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2926,6 +2926,36 @@ static int transport_generic_cmd_sequencer(
+ 		size = (cdb[7] << 8) | cdb[8];
+ 		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
+ 		break;
++	case ATA_PASS_THROUGH_16:
++		// T_LENGTH
++		switch (cdb[2] & 0x3) {
++		case 0x0:
++			sectors = 0;
++			break;
++		case 0x1:
++			sectors = (((cdb[1] & 0x1) ? cdb[3] : 0) << 8) | cdb[4];
++			break;
++		case 0x2:
++			sectors = (((cdb[1] & 0x1) ? cdb[5] : 0) << 8) | cdb[6];
++			break;
++		case 0x3:
++			pr_err("T_LENGTH=0x3 not supported\n");
++			goto out_invalid_cdb_field;
++			break;
++		}
++		
++		// BYTE_BLOCK
++		if (cdb[2] & 0x4) {
++			// BLOCK
++			// T_TYPE: 512 or sector
++			size = sectors * ((cdb[2] & 0x10) ? 
++				dev->se_sub_dev->se_dev_attrib.block_size : 512);
++		} else {
++			// BYTE
++			size = sectors;
++		}
++		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
++		break;
+ 	default:
+ 		pr_warn("TARGET_CORE[%s]: Unsupported SCSI Opcode"
+ 			" 0x%02x, sending CHECK_CONDITION.\n",
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index f34a5a8..f6dcd25 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -116,6 +116,7 @@ struct scsi_cmnd;
+ #define PERSISTENT_RESERVE_IN 0x5e
+ #define PERSISTENT_RESERVE_OUT 0x5f
+ #define VARIABLE_LENGTH_CMD   0x7f
++#define ATA_PASS_THROUGH_16   0x85
+ #define REPORT_LUNS           0xa0
+ #define SECURITY_PROTOCOL_IN  0xa2
+ #define MAINTENANCE_IN        0xa3
+-- 
+1.7.7
+
+
