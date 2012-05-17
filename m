@@ -1,53 +1,137 @@
-From: Roland Dreier <roland@purestorage.com>
-Subject: Re: [PATCH] qla_target: Check refcount in find_sess_by_*
-Date: Thu, 17 May 2012 13:49:38 -0700
-Message-ID: <CAL1RGDUmT4xOQQkAE5eq-XXZa5b64SeTZjfcWdeuMiUu=DRarg@mail.gmail.com>
-References: <20120511143341.GA18753@logfs.org> <20120517162600.GA18067@logfs.org>
- <1337283995.32217.233.camel@haakon2.linux-iscsi.org>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: RE: [PATCH 2/3] alua: retry alua rtpg extended header for illegal
+ request response
+Date: Thu, 17 May 2012 21:02:21 +0000
+Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B06775B@SACEXCMBX02-PRD.hq.netapp.com>
+References: <1337177705-17114-1-git-send-email-revers@redhat.com>
+ <1337177705-17114-2-git-send-email-revers@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog114.obsmtp.com ([74.125.245.96]:44668 "HELO
-	na3sys010aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756135Ab2EQUuA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 May 2012 16:50:00 -0400
-Received: by ggnf2 with SMTP id f2so4409358ggn.1
-        for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 13:49:58 -0700 (PDT)
-In-Reply-To: <1337283995.32217.233.camel@haakon2.linux-iscsi.org>
+Received: from mx2.netapp.com ([216.240.18.37]:9689 "EHLO mx2.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759511Ab2EQVCh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 17:02:37 -0400
+In-Reply-To: <1337177705-17114-2-git-send-email-revers@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: =?ISO-8859-1?Q?J=F6rn_Engel?= <joern@logfs.org>, target-devel@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Rob Evers <revers@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> Mmmmm, I'd still like to try to avoid (another) atomic op in the fast
-> path w/ hardware_lock held if at all possible..
+Rob, Minor comments below.
 
-atomic_read() is not an atomic op.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Rob Evers
+> Sent: Wednesday, May 16, 2012 9:15 AM
+> To: linux-scsi@vger.kernel.org
+> Subject: [PATCH 2/3] alua: retry alua rtpg extended header for illegal request
+> response
+> 
+> From: Rob Evers <revers@redhat.com>
+> 
+> Some storage arrays are known to return 'illegal request'
+> when an rtpg extended header request is made.  T10 says the
+> array should ignore the bit, and return the non-extended
+> rtpg as the array doesn't support the request.  Working
+> around this by retrying the rtpg request without the extended
+> header bit set when the extended rtpg request results in
+> illegal request.
+> 
+> Signed-off-by: Rob Evers <revers@redhat.com>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c |   25
+> ++++++++++++++++++++++---
+>  1 files changed, 22 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
+> b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index 6a7efd3..ca414ae 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -173,7 +173,8 @@ done:
+>   * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+>   * @sdev: sdev the command should be sent to
+>   */
+> -static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data
+> *h)
+> +static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data
+> *h,
+> +			    bool rtpg_ext_hdr_req)
+>  {
+>  	struct request *rq;
+>  	int err = SCSI_DH_RES_TEMP_UNAVAIL;
+> @@ -184,7 +185,10 @@ static unsigned submit_rtpg(struct scsi_device
+> *sdev, struct alua_dh_data *h)
+> 
+>  	/* Prepare the command. */
+>  	rq->cmd[0] = MAINTENANCE_IN;
+> -	rq->cmd[1] = MI_REPORT_TARGET_PGS |
+> MI_EXT_HDR_PARAM_FMT;
+> +	if (rtpg_ext_hdr_req)
+> +		rq->cmd[1] = MI_REPORT_TARGET_PGS |
+> MI_EXT_HDR_PARAM_FMT;
+> +	else
+> +		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+>  	rq->cmd[6] = (h->bufflen >> 24) & 0xff;
+>  	rq->cmd[7] = (h->bufflen >> 16) & 0xff;
+>  	rq->cmd[8] = (h->bufflen >>  8) & 0xff;
+> @@ -517,6 +521,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct
+> alua_dh_data *h)
+>  	int len, k, off, valid_states = 0;
+>  	unsigned char *ucp;
+>  	unsigned err;
+> +	bool rtpg_ext_hdr_req = 1;
+>  	unsigned long expiry, interval = 1000;
+>  	unsigned int tpg_desc_tbl_off;
+>  	unsigned char orig_transition_tmo;
+> @@ -527,7 +532,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct
+> alua_dh_data *h)
+>  		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
+> 
+>   retry:
+> -	err = submit_rtpg(sdev, h);
+> +	err = submit_rtpg(sdev, h, rtpg_ext_hdr_req);
+> 
+>  	if (err == SCSI_DH_IO && h->senselen > 0) {
+>  		err = scsi_normalize_sense(h->sense,
+> SCSI_SENSE_BUFFERSIZE,
+> @@ -535,6 +540,20 @@ static int alua_rtpg(struct scsi_device *sdev, struct
+> alua_dh_data *h)
+>  		if (!err)
+>  			return SCSI_DH_IO;
+> 
+> +		/*
+> +		 * submit_rtpb() has failed on existing arrays
 
-However this patch is not right, see below.
+There is a typo.  Should be submit_rtpg.
+ 
+> +		 * when requesting extended header info, and
+> +		 * the array doesn't support extended headers,
+> +		 * even though it shouldn't according to T10.
+> +		 * The retry without the ALUA_RTPG_EXT_HDR_REQ
+> +		 * handles this.
+> +		 */
+> +		if (sense_hdr.sense_key == ILLEGAL_REQUEST &&
+> +		    sense_hdr.asc == 0x24 && sense_hdr.ascq == 0) {
+> +			rtpg_ext_hdr_req = 0;
+> +			goto retry;
 
-> Also thinking more about the case in your comment, I'm starting to
-> wonder if tcm_qla2xxx_free_session() should be obtaining hardware_lock +
-> clearing the s_id and loop_id lookup entries earlier than currently
-> done..
->
-> That is, target_wait_for_sess_cmds() is called before clearing the
-> nodeacl pointers from s_id + loop_id in tcm_qla2xxx_free_session(),
-> which means that we still perform se_node_acl lookups in the case where
-> the individual tcm_qla2xxx endpoint was not also being shutdown as
-> well..
->
-> So that said, I think your work-around is OK to address the current BUG,
-> but the s_id + loop_id clearing order in tcm_qla2xxx_free_session()
-> would be having an effect here as well..
+We should probably have an exit criteria here.  What if target misbehaves
+(with ILLEGAL_REQUEST) even with rtpg_ext_hdr_req = 0.
 
-Yes, in fact we need to clear the session from all lookup tables
-even earlier than ->free_session.  We need to make sure that as
-soon as target_release_session() is called, that session will no
-longer be used for any new commands.
 
-So qla_tgt_unreg_sess() needs to clear the session from the
-"by loop_id" table as well as the "by fc_id" table.
-
- - R.
+> +		}
+> +
+>  		err = alua_check_sense(sdev, &sense_hdr);
+>  		if (err == ADD_TO_MLQUEUE && time_before(jiffies,
+> expiry))
+>  			goto retry;
+> --
+> 1.7.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
