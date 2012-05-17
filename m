@@ -1,48 +1,44 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [patch] [SCSI] qla2xxx: don't free pool that wasn't allocated
-Date: Thu, 17 May 2012 13:04:56 -0400
-Message-ID: <alpine.WNT.2.00.1205171303550.6448@N5102REMCQXM4BS.qlogic.org>
-References: <20120517071340.GH14660@elgon.mountain>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [patch] iscsi-target: remove some dead code
+Date: Thu, 17 May 2012 11:15:13 -0400
+Message-ID: <20120517151513.GD17575@logfs.org>
+References: <20120517070814.GD14660@elgon.mountain>
+ <4FB4CBD0.8000503@bfs.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120517071340.GH14660@elgon.mountain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from longford.logfs.org ([213.229.74.203]:60915 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754100Ab2EQRUS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 13:20:18 -0400
+Content-Disposition: inline
+In-Reply-To: <4FB4CBD0.8000503@bfs.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: walter harms <wharms@bfs.de>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>, Jesper Juhl <jj@chaosbits.net>, Roland Dreier <roland@kernel.org>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
+On Thu, 17 May 2012 11:58:40 +0200, walter harms wrote:
+>=20
+> the changes look reasonable but to be fair the code should have an ex=
+planation
+> what it is supposed to do. I do not have the feeling that i did under=
+stand the
+> purpose completely.
 
-On Thu, 17 May 2012, Dan Carpenter wrote:
+I suppose that is a decent summary for much of the target code.
+Patches are clearly welcome.
 
-> In the original code, if dma_pool_alloc() fails then we call
-> dma_pool_free().  It causes an error, possibly a NULL dereference.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-> index c17975d..44380d3 100644
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-> @@ -2386,7 +2386,7 @@ sufficient_dsds:
->               if (!ctx->fcp_cmnd) {
->                       ql_log(ql_log_fatal, vha, 0x3011,
->                           "Failed to allocate fcp_cmnd for cmd=%p.\n", cmd);
-> -                     goto queuing_error_fcp_cmnd;
-> +                     goto queuing_error;
->               }
->
->               /* Initialize the DSD list and dma handle */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+J=C3=B6rn
 
-Thanks for the patch.
-
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+--
+=46ancy algorithms are buggier than simple ones, and they're much harde=
+r
+to implement. Use simple algorithms as well as simple data structures.
+-- Rob Pike
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
