@@ -1,22 +1,22 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 9010] SCSI device is not offlined properly and tries to cache
  data from previous device
-Date: Thu, 17 May 2012 14:42:55 +0000 (UTC)
-Message-ID: <20120517144255.01CDB11FCFE@bugzilla.kernel.org>
+Date: Thu, 17 May 2012 14:43:03 +0000 (UTC)
+Message-ID: <20120517144303.8D60A11FCFE@bugzilla.kernel.org>
 References: <bug-9010-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:42441 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.19.201]:42535 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761936Ab2EQOm6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 May 2012 10:42:58 -0400
+	id S932676Ab2EQOnG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 May 2012 10:43:06 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A985520510
-	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 14:42:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48B3820510
+	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 14:43:05 +0000 (UTC)
 Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id AAE8020533
-	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 14:42:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 385AC20534
+	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 14:43:04 +0000 (UTC)
 In-Reply-To: <bug-9010-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -29,16 +29,10 @@ Alan <alan@lxorguk.ukuu.org.uk> changed:
 
            What    |Removed                     |Added
 ----------------------------------------------------------------------------
-             Status|ASSIGNED                    |RESOLVED
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-         Resolution|                            |OBSOLETE
-         Regression|---                         |No
+             Status|RESOLVED                    |CLOSED
 
 
 
-
---- Comment #32 from Alan <alan@lxorguk.ukuu.org.uk>  2012-05-17 14:42:54 ---
-Should be obsolete now, if not please reopen versus recent kernel
 
 -- 
 Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
