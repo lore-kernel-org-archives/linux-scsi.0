@@ -1,52 +1,50 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] iscsi-target: remove some dead code
-Date: Thu, 17 May 2012 13:26:23 +0300
-Message-ID: <20120517102622.GM16984@mwanda>
-References: <20120517070814.GD14660@elgon.mountain>
- <4FB4CBD0.8000503@bfs.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Girish K S <girish.shivananjappa@linaro.org>
+Subject: [RFC V2 0/2] Add support for pci/non-pci probing for UFS
+Date: Thu, 17 May 2012 16:52:04 +0530
+Message-ID: <1337253726-2666-1-git-send-email-girish.shivananjappa@linaro.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:33582 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761595Ab2EQKXF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 06:23:05 -0400
-Content-Disposition: inline
-In-Reply-To: <4FB4CBD0.8000503@bfs.de>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:39744 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932284Ab2EQLW1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 07:22:27 -0400
+Received: by dady13 with SMTP id y13so2301551dad.19
+        for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 04:22:27 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: walter harms <wharms@bfs.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>, Jesper Juhl <jj@chaosbits.net>, Joern Engel <joern@logfs.org>, Roland Dreier <roland@kernel.org>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: james.bottomley@hansenpartnership.com, vinholikatti@gmail.com, santoshsy@gmail.com, hch@infradead.org, patches@linaro.org, Girish K S <girish.shivananjappa@linaro.org>
 
-On Thu, May 17, 2012 at 11:58:40AM +0200, walter harms wrote:
-> 
-> 
-> Am 17.05.2012 09:08, schrieb Dan Carpenter:
-> > Neither "acceptor_values" nor "proposer_values" can be NULL here.
-> > Smatch complains because we are not allowed to pass NULL pointers to
-> > strchr().
-> > 
-> > Also I removed a second later check for "!acceptor_values" because it
-> > gets checked on the next line in the do while condition.
-> > 
-> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > ---
-> > Compile tested only.  Please review carefully.
-> > 
-> > diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-> > index ad3b3c1..ed5241e 100644
-> > --- a/drivers/target/iscsi/iscsi_target_parameters.c
-> > +++ b/drivers/target/iscsi/iscsi_target_parameters.c
-> > @@ -1037,13 +1037,6 @@ static char *iscsi_check_valuelist_for_support(
-> >  			tmp2 = strchr(acceptor_values, ',');
-> >  			if (tmp2)
-> >  				*tmp2 = '\0';
-> this looks like strchrnul(). I realy do not know is this supported inside the kernel ?
-> 
+The existing UFS driver is tightly bound to only pci specific devices.
+It cannot work for non-pci devices.
 
-It can't be NULL here.  Adding bogus checks is the wrong idea and
-static checkers are right to ask about needless checks.
+"SCSI: UFS: Create separate UFS core and pci modules" patch splits the
+ufs driver into core driver and pci probe driver.
 
-regards,
-dan carpenter
+"SCSI: UFS: Add platform support for ufs host controller" patch adds
+support for the platform probing for non-pci devices
+
+changes in v2:
+		Reduced the number of patches from 4 to 2. merged the core and
+pci probing modules as single patch. suggested by Christoph Hellwig.
+
+changes in v1:
+		Changes suggested by Namjae to split the existing driver as 3 independent
+modules and retain the author's name in the files created by me.
+
+Girish K S (2):
+  SCSI: UFS: Create separate UFS core and pci modules
+  SCSI: UFS: Add platform support for ufs host controller
+
+ drivers/scsi/ufs/Kconfig        |   32 +++-
+ drivers/scsi/ufs/Makefile       |    1 +
+ drivers/scsi/ufs/ufs.h          |  103 +++++++++++
+ drivers/scsi/ufs/ufshcd-pci.c   |  217 +++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd-pltfm.c |  191 ++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.c       |  374 ++++++++++----------------------------
+ 6 files changed, 640 insertions(+), 278 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
+
+-- 
+1.7.4.1
 
