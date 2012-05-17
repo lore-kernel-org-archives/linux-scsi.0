@@ -1,241 +1,87 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/2] target: Add MI_REPORT_TARGET_PGS ext. header + implict_trans_secs attribute
-Date: Thu, 17 May 2012 05:49:05 +0000
-Message-ID: <1337233745-8145-3-git-send-email-nab@linux-iscsi.org>
-References: <1337233745-8145-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1337233745-8145-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, Rob Evers <revers@redhat.com>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Subject: Re: [PATCH] V2: target: Handle ATA_PASS_THROUGH_16 passthrough
+Date: Wed, 16 May 2012 23:13:11 -0700
+Message-ID: <1337235191.32217.150.camel@haakon2.linux-iscsi.org>
+References: <1337146409.18429.11.camel@mengcong>
+	 <1337153889.2985.5.camel@dabdike.int.hansenpartnership.com>
+	 <1337224486.18429.14.camel@mengcong>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38371 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754546Ab2EQGNO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 02:13:14 -0400
+In-Reply-To: <1337224486.18429.14.camel@mengcong>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: mc@linux.vnet.ibm.com
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Thu, 2012-05-17 at 11:14 +0800, mengcong wrote:
+> The cdrecord uses ATA_PASS_THROUGH_16 command while burning CDs
+> with a SATA CD-ROM. This patch adds support to it so that PSCSI 
+> CD-ROM passthrough works with the cdrecord.
+> 
+> Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
+> ---
+>  drivers/target/target_core_transport.c |   30 ++++++++++++++++++++++++++++++
+>  1 files changed, 30 insertions(+), 0 deletions(-)
+> 
 
-This patch adds support for ALUA MI_REPORT_TARGET_PGS extended header
-format defined within SPC-4.  It changes target core ALUA emulation logic
-within target_emulate_report_target_port_groups() to support both the
-extended and original length only header formats.
+Ok, I've added the extra !passthrough check to enforce pSCSI backends
+only usage + /* ... */ style comments changes mentioned as feedback you
+missed in the last mail.  (That's OK this time, but please don't get
+into the habit of ignoring patch feedback..)
 
-It includes adding a new 'implict_trans_secs' attribute for each ALUA
-target port group to control the value returned to the application client
-for an recommended implict translation timeout in seconds.  By default
-this value is currently set to zero, and limited up to 255 by virtue of
-using a single byte in the extended header format.
+So committed into lio-core.git, and queuing shortly into
+target-pending/for-next to be picked up for tomorrow's linux-next build.
 
-This value is used by target_emulate_report_target_port_groups() within
-the extended header logic to set IMPLICIT TRANSITION TIME as defined by
-spc4r30.
+Thanks for your patch MC!
 
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Rob Evers <revers@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Roland Dreier <roland@purestorage.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_alua.c     |   82 ++++++++++++++++++++++++++++-----
- drivers/target/target_core_alua.h     |   10 ++++
- drivers/target/target_core_configfs.c |   21 ++++++++
- include/target/target_core_base.h     |    1 +
- 4 files changed, 102 insertions(+), 12 deletions(-)
+--nab
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index be7251e..e624b83 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -66,18 +66,24 @@ int target_emulate_report_target_port_groups(struct se_cmd *cmd)
- 	struct t10_alua_tg_pt_gp *tg_pt_gp;
- 	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem;
- 	unsigned char *buf;
--	u32 rd_len = 0, off = 4; /* Skip over RESERVED area to first
--				    Target port group descriptor */
-+	u32 rd_len = 0, off;
-+	int ext_hdr = (cmd->t_task_cdb[1] & 0x20);
- 	/*
--	 * Need at least 4 bytes of response data or else we can't
--	 * even fit the return data length.
-+	 * Skip over RESERVED area to first Target port group descriptor
-+	 * depending on the PARAMETER DATA FORMAT type..
- 	 */
--	if (cmd->data_length < 4) {
--		pr_warn("REPORT TARGET PORT GROUPS allocation length %u"
--			" too small\n", cmd->data_length);
-+	if (ext_hdr != 0)
-+		off = 8;
-+	else
-+		off = 4;
-+
-+	if (cmd->data_length < off) {
-+		pr_warn("REPORT TARGET PORT GROUPS allocation length %u too"
-+			" small for %s header\n", cmd->data_length,
-+			(ext_hdr) ? "extended" : "normal");
-+		cmd->scsi_sense_reason = TCM_INVALID_CDB_FIELD;
- 		return -EINVAL;
- 	}
--
- 	buf = transport_kmap_data_sg(cmd);
- 
- 	spin_lock(&su_dev->t10_alua.tg_pt_gps_lock);
-@@ -158,11 +164,31 @@ int target_emulate_report_target_port_groups(struct se_cmd *cmd)
- 	/*
- 	 * Set the RETURN DATA LENGTH set in the header of the DataIN Payload
- 	 */
--	buf[0] = ((rd_len >> 24) & 0xff);
--	buf[1] = ((rd_len >> 16) & 0xff);
--	buf[2] = ((rd_len >> 8) & 0xff);
--	buf[3] = (rd_len & 0xff);
-+	put_unaligned_be32(rd_len, &buf[0]);
- 
-+	/*
-+	 * Fill in the Extended header parameter data format if requested
-+	 */
-+	if (ext_hdr != 0) {
-+		buf[4] = 0x10;
-+		/*
-+		 * Set the implict transition time (in seconds) for the application
-+		 * client to use as a base for it's transition timeout value.
-+		 *
-+		 * Use the current tg_pt_gp_mem -> tg_pt_gp membership from the LUN
-+		 * this CDB was received upon to determine this value individually
-+		 * for ALUA target port group.
-+		 */
-+		port = cmd->se_lun->lun_sep;
-+		tg_pt_gp_mem = port->sep_alua_tg_pt_gp_mem;
-+		if (tg_pt_gp_mem) {
-+			spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
-+			tg_pt_gp = tg_pt_gp_mem->tg_pt_gp;
-+			if (tg_pt_gp)
-+				buf[5] = tg_pt_gp->tg_pt_gp_implict_trans_secs;
-+			spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
-+		}
-+	}
- 	transport_kunmap_data_sg(cmd);
- 
- 	target_complete_cmd(cmd, GOOD);
-@@ -1355,6 +1381,7 @@ struct t10_alua_tg_pt_gp *core_alua_allocate_tg_pt_gp(
- 	 */
- 	tg_pt_gp->tg_pt_gp_nonop_delay_msecs = ALUA_DEFAULT_NONOP_DELAY_MSECS;
- 	tg_pt_gp->tg_pt_gp_trans_delay_msecs = ALUA_DEFAULT_TRANS_DELAY_MSECS;
-+	tg_pt_gp->tg_pt_gp_implict_trans_secs = ALUA_DEFAULT_IMPLICT_TRANS_SECS;
- 
- 	if (def_group) {
- 		spin_lock(&su_dev->t10_alua.tg_pt_gps_lock);
-@@ -1851,6 +1878,37 @@ ssize_t core_alua_store_trans_delay_msecs(
- 	return count;
- }
- 
-+ssize_t core_alua_show_implict_trans_secs(
-+	struct t10_alua_tg_pt_gp *tg_pt_gp,
-+	char *page)
-+{
-+	return sprintf(page, "%d\n", tg_pt_gp->tg_pt_gp_implict_trans_secs);
-+}
-+
-+ssize_t core_alua_store_implict_trans_secs(
-+	struct t10_alua_tg_pt_gp *tg_pt_gp,
-+	const char *page,
-+	size_t count)
-+{
-+	unsigned long tmp;
-+	int ret;
-+
-+	ret = strict_strtoul(page, 0, &tmp);
-+	if (ret < 0) {
-+		pr_err("Unable to extract implict_trans_secs\n");
-+		return -EINVAL;
-+	}
-+	if (tmp > ALUA_MAX_IMPLICT_TRANS_SECS) {
-+		pr_err("Passed implict_trans_secs: %lu, exceeds"
-+			" ALUA_MAX_IMPLICT_TRANS_SECS: %d\n", tmp,
-+			ALUA_MAX_IMPLICT_TRANS_SECS);
-+		return  -EINVAL;
-+	}
-+	tg_pt_gp->tg_pt_gp_implict_trans_secs = (int)tmp;
-+
-+	return count;
-+}
-+
- ssize_t core_alua_show_preferred_bit(
- 	struct t10_alua_tg_pt_gp *tg_pt_gp,
- 	char *page)
-diff --git a/drivers/target/target_core_alua.h b/drivers/target/target_core_alua.h
-index e264543..f920c17 100644
---- a/drivers/target/target_core_alua.h
-+++ b/drivers/target/target_core_alua.h
-@@ -52,6 +52,12 @@
- #define ALUA_DEFAULT_TRANS_DELAY_MSECS			0
- #define ALUA_MAX_TRANS_DELAY_MSECS			30000 /* 30 seconds */
- /*
-+ * Used for the recommended application client implict transition timeout
-+ * in seconds, returned by the REPORT_TARGET_PORT_GROUPS w/ extended header.
-+ */
-+#define ALUA_DEFAULT_IMPLICT_TRANS_SECS			0
-+#define ALUA_MAX_IMPLICT_TRANS_SECS			255
-+/*
-  * Used by core_alua_update_tpg_primary_metadata() and
-  * core_alua_update_tpg_secondary_metadata()
-  */
-@@ -107,6 +113,10 @@ extern ssize_t core_alua_show_trans_delay_msecs(struct t10_alua_tg_pt_gp *,
- 					char *);
- extern ssize_t core_alua_store_trans_delay_msecs(struct t10_alua_tg_pt_gp *,
- 					const char *, size_t);
-+extern ssize_t core_alua_show_implict_trans_secs(struct t10_alua_tg_pt_gp *,
-+					char *);
-+extern ssize_t core_alua_store_implict_trans_secs(struct t10_alua_tg_pt_gp *,
-+					const char *, size_t);
- extern ssize_t core_alua_show_preferred_bit(struct t10_alua_tg_pt_gp *,
- 					char *);
- extern ssize_t core_alua_store_preferred_bit(struct t10_alua_tg_pt_gp *,
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index d13a340..11cba94 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -2447,6 +2447,26 @@ static ssize_t target_core_alua_tg_pt_gp_store_attr_trans_delay_msecs(
- SE_DEV_ALUA_TG_PT_ATTR(trans_delay_msecs, S_IRUGO | S_IWUSR);
- 
- /*
-+ * implict_trans_secs
-+ */
-+static ssize_t target_core_alua_tg_pt_gp_show_attr_implict_trans_secs(
-+	struct t10_alua_tg_pt_gp *tg_pt_gp,
-+	char *page)
-+{
-+	return core_alua_show_implict_trans_secs(tg_pt_gp, page);
-+}
-+
-+static ssize_t target_core_alua_tg_pt_gp_store_attr_implict_trans_secs(
-+	struct t10_alua_tg_pt_gp *tg_pt_gp,
-+	const char *page,
-+	size_t count)
-+{
-+	return core_alua_store_implict_trans_secs(tg_pt_gp, page, count);
-+}
-+
-+SE_DEV_ALUA_TG_PT_ATTR(implict_trans_secs, S_IRUGO | S_IWUSR);
-+
-+/*
-  * preferred
-  */
- 
-@@ -2570,6 +2590,7 @@ static struct configfs_attribute *target_core_alua_tg_pt_gp_attrs[] = {
- 	&target_core_alua_tg_pt_gp_alua_write_metadata.attr,
- 	&target_core_alua_tg_pt_gp_nonop_delay_msecs.attr,
- 	&target_core_alua_tg_pt_gp_trans_delay_msecs.attr,
-+	&target_core_alua_tg_pt_gp_implict_trans_secs.attr,
- 	&target_core_alua_tg_pt_gp_preferred.attr,
- 	&target_core_alua_tg_pt_gp_tg_pt_gp_id.attr,
- 	&target_core_alua_tg_pt_gp_members.attr,
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 847fec5..6816191 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -330,6 +330,7 @@ struct t10_alua_tg_pt_gp {
- 	int	tg_pt_gp_alua_access_type;
- 	int	tg_pt_gp_nonop_delay_msecs;
- 	int	tg_pt_gp_trans_delay_msecs;
-+	int	tg_pt_gp_implict_trans_secs;
- 	int	tg_pt_gp_pref;
- 	int	tg_pt_gp_write_metadata;
- 	/* Used by struct t10_alua_tg_pt_gp->tg_pt_gp_md_buf_len */
--- 
-1.7.2.5
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 2d75c29..25e0fc0 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -2926,6 +2926,36 @@ static int transport_generic_cmd_sequencer(
+>  		size = (cdb[7] << 8) | cdb[8];
+>  		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
+>  		break;
+> +	case ATA_16:
+> +		// T_LENGTH
+> +		switch (cdb[2] & 0x3) {
+> +		case 0x0:
+> +			sectors = 0;
+> +			break;
+> +		case 0x1:
+> +			sectors = (((cdb[1] & 0x1) ? cdb[3] : 0) << 8) | cdb[4];
+> +			break;
+> +		case 0x2:
+> +			sectors = (((cdb[1] & 0x1) ? cdb[5] : 0) << 8) | cdb[6];
+> +			break;
+> +		case 0x3:
+> +			pr_err("T_LENGTH=0x3 not supported\n");
+> +			goto out_invalid_cdb_field;
+> +			break;
+> +		}
+> +		
+> +		// BYTE_BLOCK
+> +		if (cdb[2] & 0x4) {
+> +			// BLOCK
+> +			// T_TYPE: 512 or sector
+> +			size = sectors * ((cdb[2] & 0x10) ? 
+> +				dev->se_sub_dev->se_dev_attrib.block_size : 512);
+> +		} else {
+> +			// BYTE
+> +			size = sectors;
+> +		}
+> +		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
+> +		break;
+>  	default:
+>  		pr_warn("TARGET_CORE[%s]: Unsupported SCSI Opcode"
+>  			" 0x%02x, sending CHECK_CONDITION.\n",
+
+
