@@ -1,86 +1,48 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] qla_target: Check refcount in find_sess_by_*
-Date: Thu, 17 May 2012 12:46:35 -0700
-Message-ID: <1337283995.32217.233.camel@haakon2.linux-iscsi.org>
-References: <20120511143341.GA18753@logfs.org>
-	 <20120517162600.GA18067@logfs.org>
+Subject: [GIT PULL] target urgent updates for v3.4-final
+Date: Thu, 17 May 2012 13:12:00 -0700
+Message-ID: <1337285520.32217.269.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20120517162600.GA18067@logfs.org>
-Sender: target-devel-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>
-Cc: target-devel@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Bernhard Kohl <bernhard.kohl@nsn.com>, Christoph Hellwig <hch@lst.de>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-05-17 at 12:26 -0400, J=C3=B6rn Engel wrote:
-> As the comment explains, we have a race between dropping the refcount=
- to
-> zero and actually removing the session from lookup tables.  Plug this=
- by
-> checking the refcount on lookup.
->=20
-> Signed-off-by: Joern Engel <joern@logfs.org>
-> ---
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c |   28 ++++++++++++++++++++++++++=
-++
->  1 file changed, 28 insertions(+)
->=20
+Hi Linus,
 
-Hi Joern!
+Here are two more target-core urgent updates for v3.4-final.  Please go
+ahead and pull from:
 
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xx=
-x/tcm_qla2xxx.c
-> index 09a70aa..b1bfa08 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> @@ -1300,6 +1300,20 @@ static struct qla_tgt_sess *tcm_qla2xxx_find_s=
-ess_by_s_id(
->  		return NULL;
->  	}
-> =20
-> +	/*
-> +	 * We drop the hardware_lock between dropping the reference count t=
-o
-> +	 * zero and removing the session from the btree.  Therefore it
-> +	 * is possible to successfully lookup a session after it has been
-> +	 * scheduled for removal, but before actual removal.  Result is pre=
-tty
-> +	 * good chance of dereferencing freed memory in qlt_issue_task_mgmt=
-=2E
-> +	 *
-> +	 * Proper fix would be to atomically drop the refcount and remove t=
-he
-> +	 * session from all data structures that would allow lookup.  Until
-> +	 * then this tasteless hack shall suffice.
-> +	 */
-> +	if (atomic_read(&nacl->qla_tgt_sess->se_sess->sess_kref.refcount) =3D=
-=3D 0)
-> +		return NULL;
-> +
->  	return nacl->qla_tgt_sess;
->  }
-> =20
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git 3.4-urgent
 
-Mmmmm, I'd still like to try to avoid (another) atomic op in the fast
-path w/ hardware_lock held if at all possible..
+The first patch addresses a SPC-2 reservations RELEASE bug in a special
+(iscsi specific) multi-ISID setup case that was allowing the same
+initiator to be able to incorrect release it's own reservation on a
+different SCSI path with enforce_pr_isid=1 operation.  This bug was
+caught by Bernhard Kohl.
 
-Also thinking more about the case in your comment, I'm starting to
-wonder if tcm_qla2xxx_free_session() should be obtaining hardware_lock =
-+
-clearing the s_id and loop_id lookup entries earlier than currently
-done..
+The second patch is to address a bug with FILEIO backends where the
+incorrect number of blocks for READ_CAPACITY was being reported after an
+underlying device-mapper block_device size change.  This patch uses now
+i_size_read() in fd_get_blocks() for FILEIO backends with an underlying
+block_device, instead of trying to determine this value at setup time
+during fd_create_virtdevice(). (hch CC'ed)
 
-That is, target_wait_for_sess_cmds() is called before clearing the
-nodeacl pointers from s_id + loop_id in tcm_qla2xxx_free_session(),
-which means that we still perform se_node_acl lookups in the case where
-the individual tcm_qla2xxx endpoint was not also being shutdown as
-well..
+Both are CC'ed to stable.
 
-So that said, I think your work-around is OK to address the current BUG=
-,
-but the s_id + loop_id clearing order in tcm_qla2xxx_free_session()
-would be having an effect here as well..
+Thank you,
 
 --nab
+
+Bernhard Kohl (1):
+  target: Fix SPC-2 RELEASE bug for multi-session iSCSI client setups
+
+Nicholas Bellinger (1):
+  target: Fix bug in handling of FILEIO + block_device resize ops
+
+ drivers/target/target_core_file.c |   22 ++++++++++++++++------
+ drivers/target/target_core_pr.c   |    3 +++
+ 2 files changed, 19 insertions(+), 6 deletions(-)
