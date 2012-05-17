@@ -1,44 +1,29 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: Re: [patch] iscsi-target: remove some dead code
-Date: Thu, 17 May 2012 11:15:13 -0400
-Message-ID: <20120517151513.GD17575@logfs.org>
-References: <20120517070814.GD14660@elgon.mountain>
- <4FB4CBD0.8000503@bfs.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC v2 PATCH 1/4] block: add a flag to identify PM request
+Date: Thu, 17 May 2012 13:46:04 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1205171345190.1169-100000@iolanthe.rowland.org>
+References: <1337269686-3781-2-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from longford.logfs.org ([213.229.74.203]:60915 "EHLO
-	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754100Ab2EQRUS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 13:20:18 -0400
-Content-Disposition: inline
-In-Reply-To: <4FB4CBD0.8000503@bfs.de>
+Received: from iolanthe.rowland.org ([192.131.102.54]:47509 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757016Ab2EQRqF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 13:46:05 -0400
+In-Reply-To: <1337269686-3781-2-git-send-email-ming.m.lin@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: walter harms <wharms@bfs.de>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>, Jesper Juhl <jj@chaosbits.net>, Roland Dreier <roland@kernel.org>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 17 May 2012 11:58:40 +0200, walter harms wrote:
->=20
-> the changes look reasonable but to be fair the code should have an ex=
-planation
-> what it is supposed to do. I do not have the feeling that i did under=
-stand the
-> purpose completely.
+On Thu, 17 May 2012, Lin Ming wrote:
 
-I suppose that is a decent summary for much of the target code.
-Patches are clearly welcome.
+> Add a flag REQ_PM to identify the request is PM related.
+> As an example, modify scsi code to use this flag.
 
-J=C3=B6rn
+Some systems need to use the SCSI error handler during suspend and 
+resume.  You'll need to mark every command sent by the error handler 
+with the REQ_PM flag.
 
---
-=46ancy algorithms are buggier than simple ones, and they're much harde=
-r
-to implement. Use simple algorithms as well as simple data structures.
--- Rob Pike
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alan Stern
+
