@@ -1,41 +1,33 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: Re: [PATCH] qla_target: Check refcount in find_sess_by_*
-Date: Thu, 17 May 2012 15:56:51 -0400
-Message-ID: <20120517195651.GD18067@logfs.org>
-References: <20120511143341.GA18753@logfs.org>
- <20120517162600.GA18067@logfs.org>
- <1337283995.32217.233.camel@haakon2.linux-iscsi.org>
- <CAL1RGDUmT4xOQQkAE5eq-XXZa5b64SeTZjfcWdeuMiUu=DRarg@mail.gmail.com>
- <1337289865.32217.307.camel@haakon2.linux-iscsi.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [libsas PATCH v13] scsi, sd: limit the scope of the async probe domain
+Date: Thu, 17 May 2012 15:15:14 -0700
+Message-ID: <CABE8wwuaVwPd48LmOOcOu+6rU+Jv6s+ut0c7uD3AiU0WH6eebg@mail.gmail.com>
+References: <20120323000201.17750.18754.stgit@dwillia2-linux.jf.intel.com>
+	<1337242396.2926.16.camel@dabdike.int.hansenpartnership.com>
+	<CABE8wwtNJ1C8petYHfHn0kCwNx9Qt4FC27E61atWLaJWxTGYtg@mail.gmail.com>
+	<1337264052.30498.29.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1337289865.32217.307.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Roland Dreier <roland@purestorage.com>, target-devel@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1337264052.30498.29.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 17 May 2012 14:24:25 -0700, Nicholas A. Bellinger wrote:
->=20
-> Yes, I think it should be fine to move the loop_id and by fc_id looku=
-p
-> removal after the vha->hw->tgt.tgt_ops->clear_nacl_from_fcport_map()
-> call within the call to qlt_unreg_sess() w/ hardware_lock held..
+On Thu, May 17, 2012 at 7:14 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> Lets try a pull request on the isc branch at least ... can you send me
+> one with a signed tag?
 
-Just in case it wasn't clear from my other mail: no, that will not be
-fine.  Once the refcount drops to zero it must be impossible to hold
-or obtain any new references.  My patch didn't completely plug this
-hole and neither does your proposal.
+Can do.
 
-If that means the fast path just got slower: tough luck!  Anyone can
-write fast incorrect code.  If the only way to write correct code is
-to be slow, we shall be slow.
-
-J=C3=B6rn
+To make the merge cleaner I will rebase the isci tree to have zero
+dependencies on the pending libsas update (which adds suspend/resume
+support).  Then after you have a chance to merge the libsas update [1]
+I'll send a final patch to enable suspend/resume for isci.
 
 --
-Doubt is not a pleasant condition, but certainty is an absurd one.
--- Voltaire
+Dan
+
+[1]: http://marc.info/?l=linux-scsi&m=133632746229553&w=2
