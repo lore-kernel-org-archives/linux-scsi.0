@@ -1,48 +1,46 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [patch] [SCSI] qla4xxx: don't free pool that wasn't allocated
-Date: Thu, 17 May 2012 10:55:41 -0500
-Message-ID: <4FB51F7D.9070105@cs.wisc.edu>
-References: <20120517071120.GG14660@elgon.mountain>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Reducing I/O latency
+Date: Thu, 17 May 2012 16:39:39 +0000
+Message-ID: <4FB529CB.7050507@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:40694 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757538Ab2EQPzx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 May 2012 11:55:53 -0400
-In-Reply-To: <20120517071120.GG14660@elgon.mountain>
+Received: from relay04ant.iops.be ([212.53.5.219]:47625 "EHLO
+	relay04ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967087Ab2EQQjo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 12:39:44 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by relay04ant.iops.be (Postfix) with ESMTP id D690361B90A6
+	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 18:39:42 +0200 (CEST)
+Received: from relay04ant.iops.be ([127.0.0.1])
+	by localhost (bdell029.dcn.iops.be [127.0.0.1]) (amavisd-new, port 10026)
+	with LMTP id vTq+Q3RZBebV for <linux-scsi@vger.kernel.org>;
+	Thu, 17 May 2012 18:39:41 +0200 (CEST)
+Received: from [192.168.3.246] (cust-147-89-110-94.dyn.as47377.net [94.110.89.147])
+	by relay04ant.iops.be (Postfix) with ESMTP id D993E61B90A2
+	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 18:39:39 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Ravi Anand <ravi.anand@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, iscsi-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On 05/17/2012 02:11 AM, Dan Carpenter wrote:
-> In the original code if dma_pool_alloc() fails then we call
-> dma_pool_free().  The problem is that "chap_table" is NULL and
-> "chap_dma" is uninitialized so it will cause an error.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-> index 7ac21da..21dce92 100644
-> --- a/drivers/scsi/qla4xxx/ql4_mbx.c
-> +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-> @@ -1329,10 +1329,8 @@ int qla4xxx_get_chap(struct scsi_qla_host *ha, char *username, char *password,
->  	dma_addr_t chap_dma;
->  
->  	chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
-> -	if (chap_table == NULL) {
-> -		ret = -ENOMEM;
-> -		goto exit_get_chap;
-> -	}
-> +	if (chap_table == NULL)
-> +		return -ENOMEM;
->  
->  	chap_size = sizeof(struct ql4_chap_table);
->  	memset(chap_table, 0, chap_size);
+Hello,
 
-I thought dma_pool_free checked the vaddr/chap_table like how kfree
-checks for nulls. You are right. Looks ok to me.
+Recently I have been looking for opportunities to reduce command
+processing latency in the Linux SCSI initiator stack. I've noticed the
+following:
+- In drivers/scsi/scsi.c memory for the SCSI command and the SCSI sense
+  data are allocated separately. Would it be a good idea to combine
+  scsi_host_cmd_pool.cmd_slab and scsi_host_cmd_pool.sense_slab into a
+  single kmem_cache or would this break something ?
+- While running an I/O workload that was using eight LUNs (two hosts
+  with four LUNs each) I noticed huge lock contention on the spinlock in
+  scsi_host_cmd_pool.cmd_slab. Has anyone already tried to modify the
+  code in drivers/scsi/scsi.c such that there is one pool per LUN
+  instead of one pool for all LUNs of all hosts ? Note: the
+  scsi_sg_pools array in drivers/scsi/scsi_lib.c is also shared over
+  all LUNs.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Thanks,
+
+Bart.
