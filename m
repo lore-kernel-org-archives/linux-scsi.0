@@ -1,7 +1,7 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [RFC v2 PATCH 2/4] block: add queue runtime pm callbacks
-Date: Thu, 17 May 2012 23:48:04 +0800
-Message-ID: <1337269686-3781-3-git-send-email-ming.m.lin@intel.com>
+Subject: [RFC v2 PATCH 3/4] block: implement block layer runtime pm
+Date: Thu, 17 May 2012 23:48:05 +0800
+Message-ID: <1337269686-3781-4-git-send-email-ming.m.lin@intel.com>
 References: <1337269686-3781-1-git-send-email-ming.m.lin@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1337269686-3781-1-git-send-email-ming.m.lin@intel.com>
@@ -10,104 +10,156 @@ To: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, Jeff M
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add runtime pm suspend/resume callbacks to request queue.
-As an example, implement these callbacks in sd driver.
+A new queue field "nr_pending" is added to record the nummber of
+requests pending. When queue becomes empty, an auto delayed suspend is
+requested. If the queue continue to be empty for some time then it'll be
+actually suspended. The time interval can be set via runtime pm sysfs
+interface: autosuspend_delay_ms.
+
+If new request comes and queue goes out of empty, then device is async
+resumed.
 
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- block/blk-settings.c   |    8 ++++++++
- drivers/scsi/sd.c      |   21 +++++++++++++++++++++
- include/linux/blkdev.h |    6 ++++++
- 3 files changed, 35 insertions(+), 0 deletions(-)
+ block/blk-core.c       |   12 ++++++++++++
+ block/elevator.c       |    9 +++++++++
+ drivers/scsi/sd.c      |   28 ++++++++++++++++++++++++++++
+ include/linux/blkdev.h |    1 +
+ 4 files changed, 50 insertions(+), 0 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index d3234fc..120d9fc 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -99,6 +99,14 @@ void blk_queue_lld_busy(struct request_queue *q, lld_busy_fn *fn)
- }
- EXPORT_SYMBOL_GPL(blk_queue_lld_busy);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 1f61b74..b0e381e 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1129,6 +1129,12 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+ 	if (unlikely(--req->ref_count))
+ 		return;
  
-+void blk_queue_runtime_pm(struct request_queue *q,
-+		runtime_pm_fn *suspend_fn, runtime_pm_fn *resume_fn)
-+{
-+	q->runtime_suspend = suspend_fn;
-+	q->runtime_resume = resume_fn;
-+}
-+EXPORT_SYMBOL_GPL(blk_queue_runtime_pm);
++	/* PM request is not accounted */
++	if (!(req->cmd_flags & REQ_PM)) {
++		if (!(--q->nr_pending) && q->runtime_suspend)
++			q->runtime_suspend(q);
++	}
 +
- /**
-  * blk_set_default_limits - reset limits to default values
-  * @lim:  the queue_limits structure to reset
+ 	elv_completed_request(q, req);
+ 
+ 	/* this is a bio leak */
+@@ -1917,6 +1923,12 @@ struct request *blk_peek_request(struct request_queue *q)
+ 	int ret;
+ 
+ 	while ((rq = __elv_next_request(q)) != NULL) {
++		/* Only PM request is allowed to go if the queue is suspended */
++		if (q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM)) {
++			rq = NULL;
++			break;
++		}
++
+ 		if (!(rq->cmd_flags & REQ_STARTED)) {
+ 			/*
+ 			 * This is the first time the device driver
+diff --git a/block/elevator.c b/block/elevator.c
+index f016855..ac67bff 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -546,6 +546,9 @@ void elv_requeue_request(struct request_queue *q, struct request *rq)
+ 
+ 	rq->cmd_flags &= ~REQ_STARTED;
+ 
++	/* __elv_add_request will increment the count */
++	if (!(rq->cmd_flags & REQ_PM))
++		q->nr_pending--;
+ 	__elv_add_request(q, rq, ELEVATOR_INSERT_REQUEUE);
+ }
+ 
+@@ -587,6 +590,12 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
+ {
+ 	trace_block_rq_insert(q, rq);
+ 
++	if (!(rq->cmd_flags & REQ_PM)) {
++		if (q->nr_pending++ == 0 && q->runtime_resume)
++			/* async resume */
++			q->runtime_resume(q);
++	}
++
+ 	rq->q = q;
+ 
+ 	if (rq->cmd_flags & REQ_SOFTBARRIER) {
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 1205a8b..0335cde 100644
+index 0335cde..2c3c8e7 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -938,6 +938,25 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	return scsi_prep_return(q, rq, ret);
- }
+@@ -2878,11 +2878,21 @@ static void sd_shutdown(struct device *dev)
+ static int sd_suspend(struct device *dev, pm_message_t mesg)
+ {
+ 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
++	struct request_queue *q = sdkp->disk->queue;
+ 	int ret = 0;
  
-+static int sd_block_runtime_suspend(struct request_queue *q)
-+{
-+	struct scsi_device *sdp = q->queuedata;
-+
-+	pm_runtime_mark_last_busy(&sdp->sdev_gendev);
-+	pm_runtime_put_autosuspend(&sdp->sdev_gendev);
-+
-+	return 0;
-+}
-+
-+static int sd_block_runtime_resume(struct request_queue *q)
-+{
-+	struct scsi_device *sdp = q->queuedata;
-+
-+	pm_runtime_get(&sdp->sdev_gendev);
-+
-+	return 0;
-+}
-+
- /**
-  *	sd_open - open a scsi disk device
-  *	@inode: only i_rdev member may be used
-@@ -2616,6 +2635,8 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
+ 	if (!sdkp)
+ 		return 0;	/* this can happen */
  
- 	blk_queue_prep_rq(sdp->request_queue, sd_prep_fn);
- 	blk_queue_unprep_rq(sdp->request_queue, sd_unprep_fn);
-+	blk_queue_runtime_pm(sdp->request_queue,
-+		sd_block_runtime_suspend, sd_block_runtime_resume);
++	spin_lock_irq(q->queue_lock);
++	if (q->nr_pending) {
++		spin_unlock_irq(q->queue_lock);
++		ret = -EBUSY;
++		goto done;
++	}
++	q->rpm_status = RPM_SUSPENDING;
++	spin_unlock_irq(q->queue_lock);
++
+ 	if (sdkp->WCE) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		ret = sd_sync_cache(sdkp);
+@@ -2893,6 +2903,12 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+ 	if ((mesg.event & PM_EVENT_SLEEP) && sdkp->device->manage_start_stop) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		ret = sd_start_stop_device(sdkp, 0);
++		spin_lock_irq(q->queue_lock);
++		if (!ret)
++			q->rpm_status = RPM_SUSPENDED;
++		else
++			q->rpm_status = RPM_ACTIVE;
++		spin_unlock_irq(q->queue_lock);
+ 	}
  
- 	gd->driverfs_dev = &sdp->sdev_gendev;
- 	gd->flags = GENHD_FL_EXT_DEVT;
+ done:
+@@ -2903,13 +2919,25 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+ static int sd_resume(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
++	struct request_queue *q = sdkp->disk->queue;
+ 	int ret = 0;
+ 
+ 	if (!sdkp->device->manage_start_stop)
+ 		goto done;
+ 
++	spin_lock_irq(q->queue_lock);
++	q->rpm_status = RPM_RESUMING;
++	spin_unlock_irq(q->queue_lock);
++
+ 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+ 	ret = sd_start_stop_device(sdkp, 1);
++	if (!ret) {
++		spin_lock_irq(q->queue_lock);
++		q->rpm_status = RPM_ACTIVE;
++		pm_runtime_mark_last_busy(dev);
++		__blk_run_queue(sdkp->disk->queue);
++		spin_unlock_irq(q->queue_lock);
++	}
+ 
+ done:
+ 	scsi_disk_put(sdkp);
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 2aa2466..f52f518 100644
+index f52f518..bde2021 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -216,6 +216,7 @@ typedef void (softirq_done_fn)(struct request *);
- typedef int (dma_drain_needed_fn)(struct request *);
- typedef int (lld_busy_fn) (struct request_queue *q);
- typedef int (bsg_job_fn) (struct bsg_job *);
-+typedef int (runtime_pm_fn) (struct request_queue *q);
+@@ -349,6 +349,7 @@ struct request_queue {
+ 	unsigned int		nr_congestion_on;
+ 	unsigned int		nr_congestion_off;
+ 	unsigned int		nr_batching;
++	unsigned int		nr_pending;
  
- enum blk_eh_timer_return {
- 	BLK_EH_NOT_HANDLED,
-@@ -289,6 +290,9 @@ struct request_queue {
- 	rq_timed_out_fn		*rq_timed_out_fn;
- 	dma_drain_needed_fn	*dma_drain_needed;
- 	lld_busy_fn		*lld_busy_fn;
-+	runtime_pm_fn		*runtime_suspend;
-+	runtime_pm_fn		*runtime_resume;
-+	int			rpm_status;
- 
- 	/*
- 	 * Dispatch queue sorting
-@@ -855,6 +859,8 @@ extern void blk_queue_segment_boundary(struct request_queue *, unsigned long);
- extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
- extern void blk_queue_unprep_rq(struct request_queue *, unprep_rq_fn *ufn);
- extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
-+extern void blk_queue_runtime_pm(struct request_queue *q,
-+		runtime_pm_fn *, runtime_pm_fn *);
- extern void blk_queue_dma_alignment(struct request_queue *, int);
- extern void blk_queue_update_dma_alignment(struct request_queue *, int);
- extern void blk_queue_softirq_done(struct request_queue *, softirq_done_fn *);
+ 	unsigned int		dma_drain_size;
+ 	void			*dma_drain_buffer;
 -- 
 1.7.2.5
