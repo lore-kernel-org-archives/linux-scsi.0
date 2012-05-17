@@ -1,93 +1,69 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v4 2/5] scsi_dh: add scsi_dh_attached_handler_name
-Date: Thu, 17 May 2012 17:23:34 -0400
-Message-ID: <20120517212333.GA5312@redhat.com>
-References: <1336612366-30794-1-git-send-email-snitzer@redhat.com>
- <20120510213112.GA7374@redhat.com>
- <1337289153.2825.9.camel@chandra-lucid.austin.ibm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] qla_target: Check refcount in find_sess_by_*
+Date: Thu, 17 May 2012 14:24:25 -0700
+Message-ID: <1337289865.32217.307.camel@haakon2.linux-iscsi.org>
+References: <20120511143341.GA18753@logfs.org>
+	 <20120517162600.GA18067@logfs.org>
+	 <1337283995.32217.233.camel@haakon2.linux-iscsi.org>
+	 <CAL1RGDUmT4xOQQkAE5eq-XXZa5b64SeTZjfcWdeuMiUu=DRarg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20543 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760151Ab2EQVXp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 May 2012 17:23:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1337289153.2825.9.camel@chandra-lucid.austin.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CAL1RGDUmT4xOQQkAE5eq-XXZa5b64SeTZjfcWdeuMiUu=DRarg@mail.gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Roland Dreier <roland@purestorage.com>
+Cc: =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>, target-devel@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, agk@redhat.com, hare@suse.de, babu.moger@netapp.com, dm-devel@redhat.com
 
-On Thu, May 17 2012 at  5:12pm -0400,
-Chandra Seetharaman <sekharan@us.ibm.com> wrote:
-
-> > +/*
-> > + * scsi_dh_attached_handler_name - Get attached device handler's name
-> > + * @q - Request queue that is associated with the scsi_device
-> > + *      that may have a device handler attached
-> > + * @gfp - the GFP mask used in the kmalloc() call when allocating memory
-> > + *
-> > + * Returns name of attached handler, NULL if no handler is attached.
-> > + * Caller must take care to free the returned string.
-> > + */
-> > +const char *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
-> > +{
-> > +	unsigned long flags;
-> > +	struct scsi_device *sdev;
-> > +	const char *handler_name = NULL;
-> > +
-> > +	spin_lock_irqsave(q->queue_lock, flags);
-> > +	sdev = q->queuedata;
-> > +	if (!sdev || !get_device(&sdev->sdev_gendev))
-> > +		sdev = NULL;
-> > +	spin_unlock_irqrestore(q->queue_lock, flags);
-> > +
-> > +	if (!sdev)
+On Thu, 2012-05-17 at 13:49 -0700, Roland Dreier wrote:
+> > Mmmmm, I'd still like to try to avoid (another) atomic op in the fast
+> > path w/ hardware_lock held if at all possible..
 > 
-> put_device() missing here.
-
-Not that I can see.  If sdev is NULL then get_device never succeeded.
-
-(same pattern is used in scsi_dh_detach)
-
-> > +		return NULL;
-> > +
-> > +	if (sdev->scsi_dh_data)
-> > +		handler_name = kstrdup(sdev->scsi_dh_data->scsi_dh->name, gfp);
-> > +
-> > +	put_device(&sdev->sdev_gendev);
-> > +	return handler_name;
-> > +}
-> > +EXPORT_SYMBOL_GPL(scsi_dh_attached_handler_name);
-> > +
-> >  static struct notifier_block scsi_dh_nb = {
-> >  	.notifier_call = scsi_dh_notifier
-> >  };
-> > Index: linux-2.6/include/scsi/scsi_dh.h
-> > ===================================================================
-> > --- linux-2.6.orig/include/scsi/scsi_dh.h
-> > +++ linux-2.6/include/scsi/scsi_dh.h
-> > @@ -60,6 +60,7 @@ extern int scsi_dh_activate(struct reque
-> >  extern int scsi_dh_handler_exist(const char *);
-> >  extern int scsi_dh_attach(struct request_queue *, const char *);
-> >  extern void scsi_dh_detach(struct request_queue *);
-> > +extern const char *scsi_dh_attached_handler_name(struct request_queue *, gfp_t);
-> >  extern int scsi_dh_set_params(struct request_queue *, const char *);
-> >  #else
-> >  static inline int scsi_dh_activate(struct request_queue *req,
-> > @@ -80,6 +81,11 @@ static inline void scsi_dh_detach(struct
-> >  {
-> >  	return;
-> >  }
-> > +static inline const char *scsi_dh_attached_handler_name(struct request_queue *q,
-> > +							gfp_t gfp)
-> > +{
-> > +	return NULL;
-> > +}
-> >  static inline int scsi_dh_set_params(struct request_queue *req, const char *params)
-> >  {
-> >  	return -SCSI_DH_NOSYS;
-> > 
+> atomic_read() is not an atomic op.
 > 
+
+I know.  This was referring to Joern's comment in the code:
+
+     * Proper fix would be to atomically drop the refcount and remove the
+     * session from all data structures that would allow lookup.  Until
+     * then this tasteless hack shall suffice.
+
+> However this patch is not right, see below.
 > 
+> > Also thinking more about the case in your comment, I'm starting to
+> > wonder if tcm_qla2xxx_free_session() should be obtaining hardware_lock +
+> > clearing the s_id and loop_id lookup entries earlier than currently
+> > done..
+> >
+> > That is, target_wait_for_sess_cmds() is called before clearing the
+> > nodeacl pointers from s_id + loop_id in tcm_qla2xxx_free_session(),
+> > which means that we still perform se_node_acl lookups in the case where
+> > the individual tcm_qla2xxx endpoint was not also being shutdown as
+> > well..
+> >
+> > So that said, I think your work-around is OK to address the current BUG,
+> > but the s_id + loop_id clearing order in tcm_qla2xxx_free_session()
+> > would be having an effect here as well..
+> 
+> Yes, in fact we need to clear the session from all lookup tables
+> even earlier than ->free_session.  We need to make sure that as
+> soon as target_release_session() is called, that session will no
+> longer be used for any new commands.
+> 
+> So qla_tgt_unreg_sess() needs to clear the session from the
+> "by loop_id" table as well as the "by fc_id" table.
+> 
+
+Yes, I think it should be fine to move the loop_id and by fc_id lookup
+removal after the vha->hw->tgt.tgt_ops->clear_nacl_from_fcport_map()
+call within the call to qlt_unreg_sess() w/ hardware_lock held..
+
+This will require that find_sess_by_* be added to vha->hw->tgt.tgt_ops,
+and currently needs to avoid tcm_qla2xxx.h structure usage in function
+parameters to avoid circular include dependencies..
+
+I'll take a look at making this change to test, and post a patch in a
+bit..
+
+--nab
