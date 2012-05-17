@@ -1,44 +1,40 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH 3/5] st: get rid of scsi_tapes array
-Date: Mon, 14 May 2012 16:28:12 -0700
-Message-ID: <4FB1950C.9000304@suse.com>
-References: <4FB476F3.5010404@suse.com> <1337240130.2926.4.camel@dabdike.int.hansenpartnership.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 9872] Driver 'sd' needs updating - please use bus_type methods
+Date: Thu, 17 May 2012 15:31:52 +0000 (UTC)
+Message-ID: <20120517153152.B2DBE11FCFC@bugzilla.kernel.org>
+References: <bug-9872-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1337240130.2926.4.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kai.makisara@kolumbus.fi, jeffm@suse.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:50259 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966713Ab2EQPbz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 May 2012 11:31:55 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 88C1520535
+	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 15:31:54 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id 89D9E20396
+	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 15:31:53 +0000 (UTC)
+In-Reply-To: <bug-9872-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Ok, understood.
+https://bugzilla.kernel.org/show_bug.cgi?id=9872
 
-On 05/17/2012 12:35 AM, James Bottomley wrote:
-> On Wed, 2012-05-16 at 20:56 -0700, Lee Duncan wrote:
->> st currently allocates an array to store pointers to all of the
->> scsi_tape objects. It's used to discover available indexes to use as the
->> base for the minor number selection and later to look up scsi_tape
->> devices for character devices.
->>
->> We switch to using an IDR for minor selection and a pointer from
->> st_modedef back to scsi_tape for the lookups.
->>
->> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
->> Reviewed-by: Lee Duncan <lduncan@suse.com>
-> 
-> This can't be Reviewed-by either.  The signoff chain has to follow the
-> transmission path of the patch.  If you send me Jeff's patches, you have
-> to add a signoff because you're a direct part of the transmission path.
-> If Jeff sends me them, then he can give you Reviewed-by because you're
-> not then in the direct transmission path.  (Signoff is supposed to imply
-> reviewed by anyway, so the tagging is correct in either case).
-> 
-> James
-> 
-> 
-> 
+
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|REOPENED                    |RESOLVED
+         Resolution|                            |CODE_FIX
+
+
+
 
 -- 
-Lee Duncan
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
