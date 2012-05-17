@@ -1,137 +1,147 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: RE: [PATCH 2/3] alua: retry alua rtpg extended header for illegal
- request response
-Date: Thu, 17 May 2012 21:02:21 +0000
-Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B06775B@SACEXCMBX02-PRD.hq.netapp.com>
-References: <1337177705-17114-1-git-send-email-revers@redhat.com>
- <1337177705-17114-2-git-send-email-revers@redhat.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH v4 2/5] scsi_dh: add scsi_dh_attached_handler_name
+Date: Thu, 17 May 2012 16:12:33 -0500
+Message-ID: <1337289153.2825.9.camel@chandra-lucid.austin.ibm.com>
+References: <1336612366-30794-1-git-send-email-snitzer@redhat.com>
+	 <20120510213112.GA7374@redhat.com>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:9689 "EHLO mx2.netapp.com"
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:55718 "EHLO e8.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759511Ab2EQVCh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 17:02:37 -0400
-In-Reply-To: <1337177705-17114-2-git-send-email-revers@redhat.com>
-Content-Language: en-US
+	id S1753873Ab2EQVMj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 May 2012 17:12:39 -0400
+Received: from /spool/local
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <sekharan@us.ibm.com>;
+	Thu, 17 May 2012 17:12:38 -0400
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 899EE38C8052
+	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 17:12:34 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q4HLCYEN119664
+	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 17:12:34 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q4HLCYHT007592
+	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 18:12:34 -0300
+In-Reply-To: <20120510213112.GA7374@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Evers <revers@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: linux-scsi@vger.kernel.org, agk@redhat.com, hare@suse.de, babu.moger@netapp.com, dm-devel@redhat.com
 
-Rob, Minor comments below.
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Rob Evers
-> Sent: Wednesday, May 16, 2012 9:15 AM
-> To: linux-scsi@vger.kernel.org
-> Subject: [PATCH 2/3] alua: retry alua rtpg extended header for illegal request
-> response
+On Thu, 2012-05-10 at 17:31 -0400, Mike Snitzer wrote:
+> Introduce scsi_dh_attached_handler_name() to retrieve the name of the
+> scsi_dh that is attached to the scsi_device associated with the provided
+> request queue.  Returns NULL if a scsi_dh is not attached.
 > 
-> From: Rob Evers <revers@redhat.com>
+> Also, fix scsi_dh_{attach,detach} function header comments to document
+> @q rather than @sdev.
 > 
-> Some storage arrays are known to return 'illegal request'
-> when an rtpg extended header request is made.  T10 says the
-> array should ignore the bit, and return the non-extended
-> rtpg as the array doesn't support the request.  Working
-> around this by retrying the rtpg request without the extended
-> header bit set when the extended rtpg request results in
-> illegal request.
-> 
-> Signed-off-by: Rob Evers <revers@redhat.com>
+> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+> Tested-by: Babu Moger <babu.moger@netapp.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 > ---
->  drivers/scsi/device_handler/scsi_dh_alua.c |   25
-> ++++++++++++++++++++++---
->  1 files changed, 22 insertions(+), 3 deletions(-)
+>  drivers/scsi/device_handler/scsi_dh.c |   38 ++++++++++++++++++++++++++++++++--
+>  include/scsi/scsi_dh.h                |    6 +++++
+>  2 files changed, 42 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
-> b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 6a7efd3..ca414ae 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -173,7 +173,8 @@ done:
->   * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
->   * @sdev: sdev the command should be sent to
+> v4: fixed potential for returned string to be invalid (hch)
+> v3: fixed missing put_device that Babu pointed out
+> 
+> Index: linux-2.6/drivers/scsi/device_handler/scsi_dh.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/scsi/device_handler/scsi_dh.c
+> +++ linux-2.6/drivers/scsi/device_handler/scsi_dh.c
+> @@ -468,7 +468,8 @@ EXPORT_SYMBOL_GPL(scsi_dh_handler_exist)
+> 
+>  /*
+>   * scsi_dh_attach - Attach device handler
+> - * @sdev - sdev the handler should be attached to
+> + * @q - Request queue that is associated with the scsi_device
+> + *      the handler should be attached to
+>   * @name - name of the handler to attach
 >   */
-> -static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data
-> *h)
-> +static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data
-> *h,
-> +			    bool rtpg_ext_hdr_req)
->  {
->  	struct request *rq;
->  	int err = SCSI_DH_RES_TEMP_UNAVAIL;
-> @@ -184,7 +185,10 @@ static unsigned submit_rtpg(struct scsi_device
-> *sdev, struct alua_dh_data *h)
+>  int scsi_dh_attach(struct request_queue *q, const char *name)
+> @@ -498,7 +499,8 @@ EXPORT_SYMBOL_GPL(scsi_dh_attach);
 > 
->  	/* Prepare the command. */
->  	rq->cmd[0] = MAINTENANCE_IN;
-> -	rq->cmd[1] = MI_REPORT_TARGET_PGS |
-> MI_EXT_HDR_PARAM_FMT;
-> +	if (rtpg_ext_hdr_req)
-> +		rq->cmd[1] = MI_REPORT_TARGET_PGS |
-> MI_EXT_HDR_PARAM_FMT;
-> +	else
-> +		rq->cmd[1] = MI_REPORT_TARGET_PGS;
->  	rq->cmd[6] = (h->bufflen >> 24) & 0xff;
->  	rq->cmd[7] = (h->bufflen >> 16) & 0xff;
->  	rq->cmd[8] = (h->bufflen >>  8) & 0xff;
-> @@ -517,6 +521,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct
-> alua_dh_data *h)
->  	int len, k, off, valid_states = 0;
->  	unsigned char *ucp;
->  	unsigned err;
-> +	bool rtpg_ext_hdr_req = 1;
->  	unsigned long expiry, interval = 1000;
->  	unsigned int tpg_desc_tbl_off;
->  	unsigned char orig_transition_tmo;
-> @@ -527,7 +532,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct
-> alua_dh_data *h)
->  		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
+>  /*
+>   * scsi_dh_detach - Detach device handler
+> - * @sdev - sdev the handler should be detached from
+> + * @q - Request queue that is associated with the scsi_device
+> + *      the handler should be detached from
+>   *
+>   * This function will detach the device handler only
+>   * if the sdev is not part of the internal list, ie
+> @@ -527,6 +529,38 @@ void scsi_dh_detach(struct request_queue
+>  }
+>  EXPORT_SYMBOL_GPL(scsi_dh_detach);
 > 
->   retry:
-> -	err = submit_rtpg(sdev, h);
-> +	err = submit_rtpg(sdev, h, rtpg_ext_hdr_req);
-> 
->  	if (err == SCSI_DH_IO && h->senselen > 0) {
->  		err = scsi_normalize_sense(h->sense,
-> SCSI_SENSE_BUFFERSIZE,
-> @@ -535,6 +540,20 @@ static int alua_rtpg(struct scsi_device *sdev, struct
-> alua_dh_data *h)
->  		if (!err)
->  			return SCSI_DH_IO;
-> 
-> +		/*
-> +		 * submit_rtpb() has failed on existing arrays
-
-There is a typo.  Should be submit_rtpg.
- 
-> +		 * when requesting extended header info, and
-> +		 * the array doesn't support extended headers,
-> +		 * even though it shouldn't according to T10.
-> +		 * The retry without the ALUA_RTPG_EXT_HDR_REQ
-> +		 * handles this.
-> +		 */
-> +		if (sense_hdr.sense_key == ILLEGAL_REQUEST &&
-> +		    sense_hdr.asc == 0x24 && sense_hdr.ascq == 0) {
-> +			rtpg_ext_hdr_req = 0;
-> +			goto retry;
-
-We should probably have an exit criteria here.  What if target misbehaves
-(with ILLEGAL_REQUEST) even with rtpg_ext_hdr_req = 0.
-
-
-> +		}
+> +/*
+> + * scsi_dh_attached_handler_name - Get attached device handler's name
+> + * @q - Request queue that is associated with the scsi_device
+> + *      that may have a device handler attached
+> + * @gfp - the GFP mask used in the kmalloc() call when allocating memory
+> + *
+> + * Returns name of attached handler, NULL if no handler is attached.
+> + * Caller must take care to free the returned string.
+> + */
+> +const char *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
+> +{
+> +	unsigned long flags;
+> +	struct scsi_device *sdev;
+> +	const char *handler_name = NULL;
 > +
->  		err = alua_check_sense(sdev, &sense_hdr);
->  		if (err == ADD_TO_MLQUEUE && time_before(jiffies,
-> expiry))
->  			goto retry;
-> --
-> 1.7.7.2
+> +	spin_lock_irqsave(q->queue_lock, flags);
+> +	sdev = q->queuedata;
+> +	if (!sdev || !get_device(&sdev->sdev_gendev))
+> +		sdev = NULL;
+> +	spin_unlock_irqrestore(q->queue_lock, flags);
+> +
+> +	if (!sdev)
+
+put_device() missing here.
+
+> +		return NULL;
+> +
+> +	if (sdev->scsi_dh_data)
+> +		handler_name = kstrdup(sdev->scsi_dh_data->scsi_dh->name, gfp);
+> +
+> +	put_device(&sdev->sdev_gendev);
+> +	return handler_name;
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_dh_attached_handler_name);
+> +
+>  static struct notifier_block scsi_dh_nb = {
+>  	.notifier_call = scsi_dh_notifier
+>  };
+> Index: linux-2.6/include/scsi/scsi_dh.h
+> ===================================================================
+> --- linux-2.6.orig/include/scsi/scsi_dh.h
+> +++ linux-2.6/include/scsi/scsi_dh.h
+> @@ -60,6 +60,7 @@ extern int scsi_dh_activate(struct reque
+>  extern int scsi_dh_handler_exist(const char *);
+>  extern int scsi_dh_attach(struct request_queue *, const char *);
+>  extern void scsi_dh_detach(struct request_queue *);
+> +extern const char *scsi_dh_attached_handler_name(struct request_queue *, gfp_t);
+>  extern int scsi_dh_set_params(struct request_queue *, const char *);
+>  #else
+>  static inline int scsi_dh_activate(struct request_queue *req,
+> @@ -80,6 +81,11 @@ static inline void scsi_dh_detach(struct
+>  {
+>  	return;
+>  }
+> +static inline const char *scsi_dh_attached_handler_name(struct request_queue *q,
+> +							gfp_t gfp)
+> +{
+> +	return NULL;
+> +}
+>  static inline int scsi_dh_set_params(struct request_queue *req, const char *params)
+>  {
+>  	return -SCSI_DH_NOSYS;
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
