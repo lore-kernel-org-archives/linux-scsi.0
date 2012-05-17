@@ -1,39 +1,53 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
-Date: Thu, 17 May 2012 15:32:33 +0000 (UTC)
-Message-ID: <20120517153233.B830C11FCFE@bugzilla.kernel.org>
-References: <bug-9880-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:50448 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966838Ab2EQPch (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 May 2012 11:32:37 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 9EAD72039B
-	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 15:32:36 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id 691A5205B4
-	for <linux-scsi@vger.kernel.org>; Thu, 17 May 2012 15:32:34 +0000 (UTC)
-In-Reply-To: <bug-9880-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [RFC v2 PATCH 0/4]: block layer runtime pm
+Date: Thu, 17 May 2012 23:48:02 +0800
+Message-ID: <1337269686-3781-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, Jeff Moyer <jmoyer@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=9880
+Hi,
 
+In August 2010, Jens and Alan discussed about "Runtime PM and the block
+layer". http://marc.info/?t=128259108400001&r=1&w=2
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+Here are the RFC v2 patches that try to implement the ideas discussed.
+And it's a workable version now.
+Welcome to give it a try.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
+The test steps, for example
 
+# ls -l /sys/block/sda
+/sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/block/sda
 
+# echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/power/control
+# echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/control
 
+Then you'll see sda is suspended after 10secs idle.
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+# cat /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/runtime_status
+suspended
+
+And if you do some IO, it will resume immediately.
+
+v2:
+- remove queue idle timer, use runtime pm core's auto suspend
+
+Lin Ming (4):
+      block: add a flag to identify PM request
+      block: add queue runtime pm callbacks
+      block: implement block layer runtime pm
+      [SCSI] sd: change to auto suspend mode
+
+ block/blk-core.c           |   12 +++++++
+ block/blk-settings.c       |    8 +++++
+ block/elevator.c           |    9 +++++
+ drivers/scsi/scsi_lib.c    |   25 +++++++++++++--
+ drivers/scsi/scsi_pm.c     |    7 ++--
+ drivers/scsi/sd.c          |   72 ++++++++++++++++++++++++++++++++++++--------
+ include/linux/blk_types.h  |    2 +
+ include/linux/blkdev.h     |    7 ++++
+ include/scsi/scsi_device.h |    4 ++
+ 9 files changed, 127 insertions(+), 19 deletions(-)
