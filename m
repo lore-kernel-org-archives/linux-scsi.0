@@ -1,74 +1,53 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: multipath_busy() stalls IO due to scsi_host_is_busy()
-Date: Thu, 17 May 2012 18:09:57 +0900
-Message-ID: <4FB4C065.7070804@ce.jp.nec.com>
-References: <4FB39D78.9020300@itwm.fraunhofer.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 5/6] qla4xxx: Capture minidump for ISP82XX on firmware
+ failure
+Date: Thu, 17 May 2012 10:12:49 +0100
+Message-ID: <1337245969.30498.4.camel@dabdike.int.hansenpartnership.com>
+References: <1335245557-17169-1-git-send-email-vikas.chaudhary@qlogic.com>
+	 <1335245557-17169-6-git-send-email-vikas.chaudhary@qlogic.com>
+	 <4F9AC3BB.2050708@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO202.gate.nec.co.jp ([202.32.8.206]:34612 "EHLO
-	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761385Ab2EQJLR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 05:11:17 -0400
-In-Reply-To: <4FB39D78.9020300@itwm.fraunhofer.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59819 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761404Ab2EQJMy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 May 2012 05:12:54 -0400
+In-Reply-To: <4F9AC3BB.2050708@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: dm-devel@redhat.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: vikas.chaudhary@qlogic.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Tej Parkash <tej.parkash@qlogic.com>, Shyam Sundar <shyam.sundar@qlogic.com>
 
-Hi,
-
-On 05/16/12 21:28, Bernd Schubert wrote:
-> Looking through the call chain, I see the underlying problem seems to be in scsi_host_is_busy().
+On Fri, 2012-04-27 at 11:05 -0500, Mike Christie wrote:
+> On 04/24/2012 12:32 AM, vikas.chaudhary@qlogic.com wrote:
+> > +
+> > +static ssize_t
+> > +qla4_8xxx_sysfs_write_fw_dump(struct file *filep, struct kobject *kobj,
+> > +			      struct bin_attribute *ba, char *buf, loff_t off,
+> > +			      size_t count)
+> > +{
+> > +	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
+> > +					       struct device, kobj)));
+> > +	uint32_t dev_state;
+> > +	int reading;
+> > +
+> > +	if (!is_qla8022(ha))
+> > +		return -EINVAL;
+> > +
+> > +	if (off != 0)
+> > +		return 0;
+> > +
+> > +	reading = simple_strtol(buf, NULL, 10);
 > 
->> static inline int scsi_host_is_busy(struct Scsi_Host *shost)
->> {
->>     if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
->>         shost->host_blocked || shost->host_self_blocked)
->>         return 1;
->>
->>     return 0;
->> }
+> I think we are supposed to be using kstrtol now.
 
-multipath_busy() was introduced because, without that,
-a request would be prematurely sent down to SCSI,
-lose the chance of additional merges and result in
-bad performance.
+We are.  Checkpatch even warns about this, please fix.
 
-However, when it is target/host that is busy, I think dm should
-send the request down and let SCSI, which has better knowledge
-about the shared resource, do appropriate starvation control.
+Thanks,
 
-Could you try the attached patch?
+James
 
----
-Jun'ichi Nomura, NEC Corporation
 
-If sdev is not busy but starget and/or host is busy,
-it is better to accept a request from stacking driver.
-Otherwise, the stacking device could be starved by other device
-sharing the same target/host.
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5dfd749..0eb4602 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1378,16 +1378,13 @@ static int scsi_lld_busy(struct request_queue *q)
- {
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost;
--	struct scsi_target *starget;
- 
- 	if (!sdev)
- 		return 0;
- 
- 	shost = sdev->host;
--	starget = scsi_target(sdev);
- 
--	if (scsi_host_in_recovery(shost) || scsi_host_is_busy(shost) ||
--	    scsi_target_is_busy(starget) || scsi_device_is_busy(sdev))
-+	if (scsi_host_in_recovery(shost) || scsi_device_is_busy(sdev)) 
- 		return 1;
- 
- 	return 0;
