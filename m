@@ -1,55 +1,93 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH v2 5/5] st: raise device limit
-Date: Thu, 17 May 2012 14:22:12 -0700
-Message-ID: <4FB56C04.9040708@suse.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v4 2/5] scsi_dh: add scsi_dh_attached_handler_name
+Date: Thu, 17 May 2012 17:23:34 -0400
+Message-ID: <20120517212333.GA5312@redhat.com>
+References: <1336612366-30794-1-git-send-email-snitzer@redhat.com>
+ <20120510213112.GA7374@redhat.com>
+ <1337289153.2825.9.camel@chandra-lucid.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat.nue.novell.com ([195.135.221.2]:28350 "EHLO
-	nat.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760151Ab2EQVWW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2012 17:22:22 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:20543 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760151Ab2EQVXp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 May 2012 17:23:45 -0400
+Content-Disposition: inline
+In-Reply-To: <1337289153.2825.9.camel@chandra-lucid.austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, kai.makisara@kolumbus.fi, jeffm@suse.com
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, agk@redhat.com, hare@suse.de, babu.moger@netapp.com, dm-devel@redhat.com
 
-From: Jeff Mahoney <jeffm@suse.com>
+On Thu, May 17 2012 at  5:12pm -0400,
+Chandra Seetharaman <sekharan@us.ibm.com> wrote:
 
-The device limit of 128 tape drives was established in 2003 as a
-significant increase from the 8 tape drives allowed previously.
+> > +/*
+> > + * scsi_dh_attached_handler_name - Get attached device handler's name
+> > + * @q - Request queue that is associated with the scsi_device
+> > + *      that may have a device handler attached
+> > + * @gfp - the GFP mask used in the kmalloc() call when allocating memory
+> > + *
+> > + * Returns name of attached handler, NULL if no handler is attached.
+> > + * Caller must take care to free the returned string.
+> > + */
+> > +const char *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
+> > +{
+> > +	unsigned long flags;
+> > +	struct scsi_device *sdev;
+> > +	const char *handler_name = NULL;
+> > +
+> > +	spin_lock_irqsave(q->queue_lock, flags);
+> > +	sdev = q->queuedata;
+> > +	if (!sdev || !get_device(&sdev->sdev_gendev))
+> > +		sdev = NULL;
+> > +	spin_unlock_irqrestore(q->queue_lock, flags);
+> > +
+> > +	if (!sdev)
+> 
+> put_device() missing here.
 
-We're seeing customer sites that between a large number of drives
-and multipath are discovering more than 128 devices and running
-into problems.
+Not that I can see.  If sdev is NULL then get_device never succeeded.
 
-Now that we're not stuck having to store a pointer in array
-and aren't limited by kmalloc failing on higher order allocs we can
-lift the limit to fill the entire minor range based on the number
-of modes.
+(same pattern is used in scsi_dh_detach)
 
-Based on the current code, that's 2^17 devices.
-
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-Signed-off-by: Lee Duncan <lduncan@suse.com>
----
- drivers/scsi/st.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index 4456735..2092f93 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -77,7 +77,7 @@ struct st_modedef {
- #define ST_MODE_SHIFT (7 - ST_NBR_MODE_BITS)
- #define ST_MODE_MASK ((ST_NBR_MODES - 1) << ST_MODE_SHIFT)
- 
--#define ST_MAX_TAPES 128
-+#define ST_MAX_TAPES (1 << (20 - (ST_NBR_MODE_BITS + 1)))
- #define ST_MAX_TAPE_ENTRIES  (ST_MAX_TAPES << (ST_NBR_MODE_BITS + 1))
- 
- /* The status related to each partition */
--- 
-1.7.9.2
-
+> > +		return NULL;
+> > +
+> > +	if (sdev->scsi_dh_data)
+> > +		handler_name = kstrdup(sdev->scsi_dh_data->scsi_dh->name, gfp);
+> > +
+> > +	put_device(&sdev->sdev_gendev);
+> > +	return handler_name;
+> > +}
+> > +EXPORT_SYMBOL_GPL(scsi_dh_attached_handler_name);
+> > +
+> >  static struct notifier_block scsi_dh_nb = {
+> >  	.notifier_call = scsi_dh_notifier
+> >  };
+> > Index: linux-2.6/include/scsi/scsi_dh.h
+> > ===================================================================
+> > --- linux-2.6.orig/include/scsi/scsi_dh.h
+> > +++ linux-2.6/include/scsi/scsi_dh.h
+> > @@ -60,6 +60,7 @@ extern int scsi_dh_activate(struct reque
+> >  extern int scsi_dh_handler_exist(const char *);
+> >  extern int scsi_dh_attach(struct request_queue *, const char *);
+> >  extern void scsi_dh_detach(struct request_queue *);
+> > +extern const char *scsi_dh_attached_handler_name(struct request_queue *, gfp_t);
+> >  extern int scsi_dh_set_params(struct request_queue *, const char *);
+> >  #else
+> >  static inline int scsi_dh_activate(struct request_queue *req,
+> > @@ -80,6 +81,11 @@ static inline void scsi_dh_detach(struct
+> >  {
+> >  	return;
+> >  }
+> > +static inline const char *scsi_dh_attached_handler_name(struct request_queue *q,
+> > +							gfp_t gfp)
+> > +{
+> > +	return NULL;
+> > +}
+> >  static inline int scsi_dh_set_params(struct request_queue *req, const char *params)
+> >  {
+> >  	return -SCSI_DH_NOSYS;
+> > 
+> 
+> 
