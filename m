@@ -1,54 +1,47 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 00/22] qla2xxx: Updates for scsi "misc" branch.
-Date: Fri, 18 May 2012 16:47:39 -0700
-Message-ID: <1337384859.32217.473.camel@haakon2.linux-iscsi.org>
-References: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCH] qla_target: Check refcount in find_sess_by_*
+Date: Fri, 18 May 2012 18:49:50 -0400
+Message-ID: <20120518224948.GB21634@logfs.org>
+References: <20120511143341.GA18753@logfs.org>
+ <20120517162600.GA18067@logfs.org>
+ <1337283995.32217.233.camel@haakon2.linux-iscsi.org>
+ <CAL1RGDUmT4xOQQkAE5eq-XXZa5b64SeTZjfcWdeuMiUu=DRarg@mail.gmail.com>
+ <20120517192830.GC18067@logfs.org>
+ <20120517210521.GE18067@logfs.org>
+ <1337306556.32217.365.camel@haakon2.linux-iscsi.org>
+ <20120518011528.GG18067@logfs.org>
+ <1337321367.32217.412.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:48493 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946177Ab2ERXrp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2012 19:47:45 -0400
-In-Reply-To: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
+Received: from longford.logfs.org ([213.229.74.203]:47786 "EHLO
+	longford.logfs.org" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754420Ab2ESAzp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2012 20:55:45 -0400
+Content-Disposition: inline
+In-Reply-To: <1337321367.32217.412.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: jbottomley@parallels.com, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Roland Dreier <roland@purestorage.com>, target-devel@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Steve Hodgson <steve@purestorage.com>
 
-On Tue, 2012-05-15 at 14:34 -0400, Chad Dupuis wrote:
-> Hi James,
-> 
-> Please apply the following patches to the scsi tree at your earliest
-> convenience for inclusion in the 3.5 mainline merge window.  One
-> important thing to point out is that we've included the hooks for the
-> new target infrastructure into the qla2xx driver with this patch set.
-> We've been testing extensively the initiator mode functionalities and
-> target mode components with the consolidated tree for last several
-> months and we believe that it is ready for merging.
-> 
+On Thu, 17 May 2012 23:09:27 -0700, Nicholas A. Bellinger wrote:
+>=20
+> So that means your testing with it now, right..?
 
-Hello James & Co,
+Our kernel has diverged too much from yours to easily move patches
+back and forth, so no.
 
-Just a friendly ping to ask about when we can expect tcm_qla2xxx to be
-merged into scsi.git/for-next..?
+But more importantly, we still don't have a complete patchset.
 
-Note the target team recently has been working addressing a race bug
-specific to the area of tcm_qla2xxx session shutdown logic, but so far
-the patches aren't changing any qla_target.c LLD code beyond what's
-currently in patch #21 here from Chad.
+J=C3=B6rn
 
-That said, I'll need to rebase against your scsi/for-next once this
-series is in your tree for my 3.5-rc-fixes branch for tcm_qla2xxx
-bug-fixes currently in progress.
-
-Also as mentioned, this series has no direct dependencies upon the
-current 3.5 target-pending/for-next queue, so it should be nice and
-pain-less merge into mainline for the emperor penguin.  :)
-
-Please let us know if you have any concerns.
-
-Thanks!
-
---nab
-
+--
+The only real mistake is the one from which we learn nothing.
+-- John Powell
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
