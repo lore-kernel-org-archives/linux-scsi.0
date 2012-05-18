@@ -1,20 +1,18 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: [PATCH] tcm_qla2xxx: Clear session s_id + loop_id earlier during shutdown
-Date: Fri, 18 May 2012 23:14:24 +0000
-Message-ID: <1337382864-30026-1-git-send-email-nab@linux-iscsi.org>
+Date: Fri, 18 May 2012 23:05:14 +0000
+Message-ID: <1337382314-29663-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:35036 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:46578 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946700Ab2ERXPk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2012 19:15:40 -0400
+	with ESMTP id S1946665Ab2ERXG2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2012 19:06:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Joern Engel <joern@logfs.org>, Roland Dreier <roland@purestorage.com>, Arun Easi <arun.easi@qlogic.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: target-devel <target-devel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Joern Engel <joern@logfs.org>, Roland Dreier <roland@purestorage.com>, Arun Easi <arun.easi@qlogic.com>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
-
-Mmmm, this did not make it to the lists..  Resending
 
 This patch adds a new tcm_qla2xxx_clear_sess_lookup() call to clear session
 specific s_id + loop_id entries used for se_node_acl pointer lookup ahead
