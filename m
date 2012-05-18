@@ -1,113 +1,151 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: Re: [PATCH] qla_target: Check refcount in find_sess_by_*
-Date: Thu, 17 May 2012 17:10:56 -0400
-Message-ID: <20120517211055.GF18067@logfs.org>
-References: <20120511143341.GA18753@logfs.org>
- <20120517162600.GA18067@logfs.org>
- <1337283995.32217.233.camel@haakon2.linux-iscsi.org>
- <CAL1RGDUmT4xOQQkAE5eq-XXZa5b64SeTZjfcWdeuMiUu=DRarg@mail.gmail.com>
- <20120517192830.GC18067@logfs.org>
- <20120517210521.GE18067@logfs.org>
+From: Rob Evers <revers@redhat.com>
+Subject: Re: [PATCH 2/3] alua: retry alua rtpg extended header for illegal
+ request response
+Date: Thu, 17 May 2012 22:00:36 -0400
+Message-ID: <4FB5AD44.2030705@redhat.com>
+References: <1337177705-17114-1-git-send-email-revers@redhat.com> <1337177705-17114-2-git-send-email-revers@redhat.com> <77471C95FAFD844C8CA02DD4F4C5FE2B06775B@SACEXCMBX02-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120517210521.GE18067@logfs.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Roland Dreier <roland@purestorage.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Steve Hodgson <steve@purestorage.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:32610 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966571Ab2ERCAm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 May 2012 22:00:42 -0400
+In-Reply-To: <77471C95FAFD844C8CA02DD4F4C5FE2B06775B@SACEXCMBX02-PRD.hq.netapp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Moger, Babu" <Babu.Moger@netapp.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-And below is a patch that allows speeding up the fast path a bit.
-The code in tcm_qla2xxx_put_session() would turn into this:
-	local_irq_save(flags);
-	if (kref_put_and_lock(&se_sess->sess_kref, &ha->hardware_lock,
-				target_release_session))
-		spin_unlock(&ha->hardware_lock);
-	local_irq_restore(flags);
+On 05/17/2012 05:02 PM, Moger, Babu wrote:
+> Rob, Minor comments below.
 
-I don't propose we do this yet, correct code is more important than
-fast code at this point.  But we should be able to reclaim most of the
-performance impact - if it is actually measureable.
+Thanks for looking.
 
-J=C3=B6rn
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Rob Evers
+>> Sent: Wednesday, May 16, 2012 9:15 AM
+>> To: linux-scsi@vger.kernel.org
+>> Subject: [PATCH 2/3] alua: retry alua rtpg extended header for illegal request
+>> response
+>>
+>> From: Rob Evers<revers@redhat.com>
+>>
+>> Some storage arrays are known to return 'illegal request'
+>> when an rtpg extended header request is made.  T10 says the
+>> array should ignore the bit, and return the non-extended
+>> rtpg as the array doesn't support the request.  Working
+>> around this by retrying the rtpg request without the extended
+>> header bit set when the extended rtpg request results in
+>> illegal request.
+>>
+>> Signed-off-by: Rob Evers<revers@redhat.com>
+>> ---
+>>   drivers/scsi/device_handler/scsi_dh_alua.c |   25
+>> ++++++++++++++++++++++---
+>>   1 files changed, 22 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
+>> b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> index 6a7efd3..ca414ae 100644
+>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> @@ -173,7 +173,8 @@ done:
+>>    * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+>>    * @sdev: sdev the command should be sent to
+>>    */
+>> -static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data
+>> *h)
+>> +static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data
+>> *h,
+>> +			    bool rtpg_ext_hdr_req)
+>>   {
+>>   	struct request *rq;
+>>   	int err = SCSI_DH_RES_TEMP_UNAVAIL;
+>> @@ -184,7 +185,10 @@ static unsigned submit_rtpg(struct scsi_device
+>> *sdev, struct alua_dh_data *h)
+>>
+>>   	/* Prepare the command. */
+>>   	rq->cmd[0] = MAINTENANCE_IN;
+>> -	rq->cmd[1] = MI_REPORT_TARGET_PGS |
+>> MI_EXT_HDR_PARAM_FMT;
+>> +	if (rtpg_ext_hdr_req)
+>> +		rq->cmd[1] = MI_REPORT_TARGET_PGS |
+>> MI_EXT_HDR_PARAM_FMT;
+>> +	else
+>> +		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+>>   	rq->cmd[6] = (h->bufflen>>  24)&  0xff;
+>>   	rq->cmd[7] = (h->bufflen>>  16)&  0xff;
+>>   	rq->cmd[8] = (h->bufflen>>   8)&  0xff;
+>> @@ -517,6 +521,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct
+>> alua_dh_data *h)
+>>   	int len, k, off, valid_states = 0;
+>>   	unsigned char *ucp;
+>>   	unsigned err;
+>> +	bool rtpg_ext_hdr_req = 1;
+>>   	unsigned long expiry, interval = 1000;
+>>   	unsigned int tpg_desc_tbl_off;
+>>   	unsigned char orig_transition_tmo;
+>> @@ -527,7 +532,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct
+>> alua_dh_data *h)
+>>   		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
+>>
+>>    retry:
+>> -	err = submit_rtpg(sdev, h);
+>> +	err = submit_rtpg(sdev, h, rtpg_ext_hdr_req);
+>>
+>>   	if (err == SCSI_DH_IO&&  h->senselen>  0) {
+>>   		err = scsi_normalize_sense(h->sense,
+>> SCSI_SENSE_BUFFERSIZE,
+>> @@ -535,6 +540,20 @@ static int alua_rtpg(struct scsi_device *sdev, struct
+>> alua_dh_data *h)
+>>   		if (!err)
+>>   			return SCSI_DH_IO;
+>>
+>> +		/*
+>> +		 * submit_rtpb() has failed on existing arrays
+> There is a typo.  Should be submit_rtpg.
 
---
-The grand essentials of happiness are: something to do, something to
-love, and something to hope for.
--- Allan K. Chalmers
+yes.
 
-[PATCH] kref: add kref_put_and_lock()
+>
+>> +		 * when requesting extended header info, and
+>> +		 * the array doesn't support extended headers,
+>> +		 * even though it shouldn't according to T10.
+>> +		 * The retry without the ALUA_RTPG_EXT_HDR_REQ
 
-Similar to kref_put(), but will only take a lock (and a performance hit=
-)
-if the refcount drops to zero.
+typo here too, ALUA_RTPG_EXT_HDR_REQ should be rtpg_ext_hdr_req
 
-Signed-off-by: Joern Engel <joern@logfs.org>
----
- include/linux/kref.h |    3 +++
- lib/kref.c           |   23 +++++++++++++++++++++++
- 2 files changed, 26 insertions(+)
+>> +		 * handles this.
+>> +		 */
+>> +		if (sense_hdr.sense_key == ILLEGAL_REQUEST&&
+>> +		    sense_hdr.asc == 0x24&&  sense_hdr.ascq == 0) {
+>> +			rtpg_ext_hdr_req = 0;
+>> +			goto retry;
+> We should probably have an exit criteria here.  What if target misbehaves
+> (with ILLEGAL_REQUEST) even with rtpg_ext_hdr_req = 0.
 
-diff --git a/include/linux/kref.h b/include/linux/kref.h
-index d4a62ab..9581493 100644
---- a/include/linux/kref.h
-+++ b/include/linux/kref.h
-@@ -16,6 +16,7 @@
- #define _KREF_H_
-=20
- #include <linux/types.h>
-+#include <linux/spinlock.h>
-=20
- struct kref {
- 	atomic_t refcount;
-@@ -24,6 +25,8 @@ struct kref {
- void kref_init(struct kref *kref);
- void kref_get(struct kref *kref);
- int kref_put(struct kref *kref, void (*release) (struct kref *kref));
-+int kref_put_and_lock(struct kref *kref, spinlock_t *lock,
-+		void (*release)(struct kref *kref));
- int kref_sub(struct kref *kref, unsigned int count,
- 	     void (*release) (struct kref *kref));
-=20
-diff --git a/lib/kref.c b/lib/kref.c
-index 3efb882..07a82f3 100644
---- a/lib/kref.c
-+++ b/lib/kref.c
-@@ -62,6 +62,29 @@ int kref_put(struct kref *kref, void (*release)(stru=
-ct kref *kref))
- 	return 0;
- }
-=20
-+/**
-+ * kref_put_and_lock - decrement refcount for object with locking
-+ * @kref:	object
-+ * @lock:	the lock to acquire when dropping the last refcount
-+ * @release:	pointer to the function that will clean up the object whe=
-n the
-+ *		last reference to the object is released.
-+ *
-+ * Same as kref_put(), except that it will acquire the lock before dro=
-pping the
-+ * last refcount.  If the last refcount is dropped, the lock will be h=
-eld on
-+ * return and the return value will be 1.
-+ */
-+int kref_put_and_lock(struct kref *kref, spinlock_t *lock,
-+		void (*release)(struct kref *kref))
-+{
-+	WARN_ON(release =3D=3D NULL);
-+	WARN_ON(release =3D=3D (void (*)(struct kref *))kfree);
-+
-+	if (atomic_dec_and_lock(&kref->refcount, lock)) {
-+		release(kref);
-+		return 1;
-+	}
-+	return 0;
-+}
-=20
- /**
-  * kref_sub - subtract a number of refcounts for object.
---=20
-1.7.10
+Do you have a more detailed suggestion on the
+exit criteria?
+
+What I can say is that this works for the only case I know of where
+an array doesn't work as it is supposed to according to T10 w.r.t.
+extended rtpg format request.
+
+>
+>> +		}
+>> +
+>>   		err = alua_check_sense(sdev,&sense_hdr);
+>>   		if (err == ADD_TO_MLQUEUE&&  time_before(jiffies,
+>> expiry))
+>>   			goto retry;
+>> --
+>> 1.7.7.2
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
