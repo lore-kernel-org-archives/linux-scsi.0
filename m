@@ -1,100 +1,131 @@
-From: Clemens Ladisch <clemens@ladisch.de>
-Subject: Re: [PATCH 4/4] firewire: sbp2: remove overzealous alignment constraints
-Date: Fri, 18 May 2012 22:26:21 +0200
-Message-ID: <4FB6B06D.9010204@ladisch.de>
-References: <4FB67AFC.7090402@ladisch.de>	<4FB67BDD.2030707@ladisch.de> <20120518210855.43cc7e0b@stein>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] tcm_qla2xxx: Clear session s_id + loop_id earlier during shutdown
+Date: Fri, 18 May 2012 23:14:24 +0000
+Message-ID: <1337382864-30026-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:54924 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758750Ab2ERU0n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 May 2012 16:26:43 -0400
-In-Reply-To: <20120518210855.43cc7e0b@stein>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:35036 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946700Ab2ERXPk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2012 19:15:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Joern Engel <joern@logfs.org>, Roland Dreier <roland@purestorage.com>, Arun Easi <arun.easi@qlogic.com>
 
-Stefan Richter wrote:
-> On May 18 Clemens Ladisch wrote at linux1394-devel:
->> The SBP-2/3 specifications do not require any alignment of data
->> buffers; only their own data structures need to be quadlet-aligned.
->
-> SBP-2 clause 3.1.2.24 requires that system memory accepts quadlet r/w
-> access.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Most of these definitions are just copied from IEC 13213; system
-memory is allowed to accept block R/W requests, and SBP in fact
-requires them.
+Mmmm, this did not make it to the lists..  Resending
 
-> Memory which is not aligned at quadlet boundaries is not
-> accessible by quadlet accesses per IEEE 1394 clause 6.2.5.2.2.
+This patch adds a new tcm_qla2xxx_clear_sess_lookup() call to clear session
+specific s_id + loop_id entries used for se_node_acl pointer lookup ahead
+of releasing se_session within the process context workqueue callback in
+tcm_qla2xxx_free_session().
 
-SBP-2 explicitly mentions unaligned accesses in 3.2.2, and 9.2 says:
-| When page_table_present is zero, a page_size value of zero indicates
-| that there are no alignment requirements.
+It makes the call in existing tcm_qla2xxx_clear_nacl_from_fcport_map()
+code invoked from qlt_unreg_sess() in interrupt context w/ hardware_lock
+held, ahead of the process context callback into qlt_free_session_done()
+-> tcm_qla2xxx_free_session().
 
->> This patch is perfectly safe because there is no actual change:
->> the SCSI framework uses a default block queue DMA alignment of
->> 32 bits anyway.
->
-> This code was added after recommendation to set it explicitly in the
-> driver:
-> http://marc.info/?l=linux-scsi&m=120137366708017
-> http://thread.gmane.org/gmane.linux.kernel.firewire.devel/11424
+We are doing this to address a race between incoming ATIO or TMR packets
+using stale se_node_acl pointer once session shutdown has been invoked via
+qlt_unreg_sess() in qla_target.c LLD code, and when the entire tcm_qla2xxx
+endpoint has not been forced into shutdown w/ echo 0 > ../$QLA2XXX_PORT/enable
 
-That recommendation was based on the assumption that quadlet alignment
-would be actually needed.
-
-> It is probably not going to happen that somebody decreases the SCSI
-> default.  But perhaps we should still keep this explicit...?
-
-Keeping this would be nothing more than paranoia.  But this a perfectly
-fine sentiment for a maintainer dealing with real-world firmware, so
-you might use the patch below instead.  (I'm not budging from my
-interpretation of SBP-2.  :-)
-
---8<---------------------------------------------------------------->8--
-firewire: sbp2: document the absence of alignment requirements
-
-The SBP-2/3 specifications do not require any alignment of data
-buffers; only their own data structures need to be quadlet-aligned.
-
-Fix the comments to reflect this, but leave the actual alignment at
-32 bits to avoid theoretical problems with target implementations
-that might handle this incorrectly.
-
-Signed-off-by: Clemens Ladisch <clemens@ladisch.de>
+Cc: Joern Engel <joern@logfs.org>
+Cc: Roland Dreier <roland@purestorage.com>
+Cc: Arun Easi <arun.easi@qlogic.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/firewire/sbp2.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |   48 +++++++++++++++++++++++------------
+ 1 files changed, 31 insertions(+), 17 deletions(-)
 
---- a/drivers/firewire/sbp2.c
-+++ b/drivers/firewire/sbp2.c
-@@ -207,9 +207,8 @@ static const struct device *lu_dev(const struct sbp2_logical_unit *lu)
- #define SBP2_MAX_CDB_SIZE		16
-
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 5aa8372..470969e 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -821,6 +821,8 @@ static int tcm_qla2xxx_setup_nacl_from_rport(
+ 	return 0;
+ }
+ 
++static void tcm_qla2xxx_clear_sess_lookup(struct tcm_qla2xxx_lport *,
++			struct tcm_qla2xxx_nacl *, struct qla_tgt_sess *);
  /*
-- * The default maximum s/g segment size of a FireWire controller is
-- * usually 0x10000, but SBP-2 only allows 0xffff. Since buffers have to
-- * be quadlet-aligned, we set the length limit to 0xffff & ~3.
-+ * The maximum SBP-2 data buffer size is 0xffff.  We quadlet-align this
-+ * for compatibility with earlier versions of this driver.
+  * Expected to be called with struct qla_hw_data->hardware_lock held
   */
- #define SBP2_MAX_SEG_SIZE		0xfffc
-
-@@ -1530,7 +1529,10 @@ static int sbp2_scsi_slave_alloc(struct scsi_device *sdev)
-
- 	sdev->allow_restart = 1;
-
--	/* SBP-2 requires quadlet alignment of the data buffers. */
+@@ -843,6 +845,16 @@ static void tcm_qla2xxx_clear_nacl_from_fcport_map(struct qla_tgt_sess *sess)
+ 	pr_debug("Removed from fcport_map: %p for WWNN: 0x%016LX,"
+ 			       " port_id: 0x%06x\n", se_nacl, nacl->nport_wwnn,
+ 			       nacl->nport_id);
 +	/*
-+	 * SBP-2 does not require any alignment, but we set it anyway
-+	 * for compatibility with earlier versions of this driver.
++	 * Now clear the se_nacl and session pointers from our HW lport lookup
++	 * table mapping for this initiator's fabric S_ID and LOOP_ID entries.
++	 *
++	 * This is done ahead of callbacks into tcm_qla2xxx_free_session() ->
++	 * target_wait_for_sess_cmds() before the session waits for outstanding
++	 * I/O to complete, to avoid a race between session shutdown execution
++	 * and incoming ATIOs or TMRs picking up a stale se_node_act reference.
 +	 */
- 	blk_queue_update_dma_alignment(sdev->request_queue, 4 - 1);
++	tcm_qla2xxx_clear_sess_lookup(lport, nacl, sess);
+ }
+ 
+ static void tcm_qla2xxx_release_session(struct kref *kref)
+@@ -1420,6 +1432,25 @@ static void tcm_qla2xxx_set_sess_by_loop_id(
+ 		new_se_nacl->initiatorname);
+ }
+ 
++/*
++ * Should always be called with qla_hw_data->hardware_lock held.
++ */
++static void tcm_qla2xxx_clear_sess_lookup(struct tcm_qla2xxx_lport *lport,
++		struct tcm_qla2xxx_nacl *nacl, struct qla_tgt_sess *sess)
++{
++	struct se_session *se_sess = sess->se_sess;
++	unsigned char be_sid[3];
++
++	be_sid[0] = sess->s_id.b.domain;
++	be_sid[1] = sess->s_id.b.area;
++	be_sid[2] = sess->s_id.b.al_pa;
++
++	tcm_qla2xxx_set_sess_by_s_id(lport, NULL, nacl, se_sess,
++				sess, be_sid);
++	tcm_qla2xxx_set_sess_by_loop_id(lport, NULL, nacl, se_sess,
++				sess, sess->loop_id);
++}
++
+ static void tcm_qla2xxx_free_session(struct qla_tgt_sess *sess)
+ {
+ 	struct qla_tgt *tgt = sess->tgt;
+@@ -1428,8 +1459,6 @@ static void tcm_qla2xxx_free_session(struct qla_tgt_sess *sess)
+ 	struct se_node_acl *se_nacl;
+ 	struct tcm_qla2xxx_lport *lport;
+ 	struct tcm_qla2xxx_nacl *nacl;
+-	unsigned char be_sid[3];
+-	unsigned long flags;
+ 
+ 	BUG_ON(in_interrupt());
+ 
+@@ -1449,21 +1478,6 @@ static void tcm_qla2xxx_free_session(struct qla_tgt_sess *sess)
+ 		return;
+ 	}
+ 	target_wait_for_sess_cmds(se_sess, 0);
+-	/*
+-	 * And now clear the se_nacl and session pointers from our HW lport
+-	 * mappings for fabric S_ID and LOOP_ID.
+-	 */
+-	memset(&be_sid, 0, 3);
+-	be_sid[0] = sess->s_id.b.domain;
+-	be_sid[1] = sess->s_id.b.area;
+-	be_sid[2] = sess->s_id.b.al_pa;
+-
+-	spin_lock_irqsave(&ha->hardware_lock, flags);
+-	tcm_qla2xxx_set_sess_by_s_id(lport, NULL, nacl, se_sess,
+-			sess, be_sid);
+-	tcm_qla2xxx_set_sess_by_loop_id(lport, NULL, nacl, se_sess,
+-			sess, sess->loop_id);
+-	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 	transport_deregister_session_configfs(sess->se_sess);
+ 	transport_deregister_session(sess->se_sess);
+-- 
+1.7.2.5
 
- 	if (lu->tgt->workarounds & SBP2_WORKAROUND_INQUIRY_36)
