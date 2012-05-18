@@ -1,129 +1,54 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] tcm_qla2xxx: Clear session s_id + loop_id earlier during shutdown
-Date: Fri, 18 May 2012 23:05:14 +0000
-Message-ID: <1337382314-29663-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: [PATCH 00/22] qla2xxx: Updates for scsi "misc" branch.
+Date: Fri, 18 May 2012 16:47:39 -0700
+Message-ID: <1337384859.32217.473.camel@haakon2.linux-iscsi.org>
+References: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:46578 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48493 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946665Ab2ERXG2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2012 19:06:28 -0400
+	with ESMTP id S1946177Ab2ERXrp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2012 19:47:45 -0400
+In-Reply-To: <1337106869-14191-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: target-devel <target-devel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Joern Engel <joern@logfs.org>, Roland Dreier <roland@purestorage.com>, Arun Easi <arun.easi@qlogic.com>
+Cc: jbottomley@parallels.com, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Tue, 2012-05-15 at 14:34 -0400, Chad Dupuis wrote:
+> Hi James,
+> 
+> Please apply the following patches to the scsi tree at your earliest
+> convenience for inclusion in the 3.5 mainline merge window.  One
+> important thing to point out is that we've included the hooks for the
+> new target infrastructure into the qla2xx driver with this patch set.
+> We've been testing extensively the initiator mode functionalities and
+> target mode components with the consolidated tree for last several
+> months and we believe that it is ready for merging.
+> 
 
-This patch adds a new tcm_qla2xxx_clear_sess_lookup() call to clear session
-specific s_id + loop_id entries used for se_node_acl pointer lookup ahead
-of releasing se_session within the process context workqueue callback in
-tcm_qla2xxx_free_session().
+Hello James & Co,
 
-It makes the call in existing tcm_qla2xxx_clear_nacl_from_fcport_map()
-code invoked from qlt_unreg_sess() in interrupt context w/ hardware_lock
-held, ahead of the process context callback into qlt_free_session_done()
--> tcm_qla2xxx_free_session().
+Just a friendly ping to ask about when we can expect tcm_qla2xxx to be
+merged into scsi.git/for-next..?
 
-We are doing this to address a race between incoming ATIO or TMR packets
-using stale se_node_acl pointer once session shutdown has been invoked via
-qlt_unreg_sess() in qla_target.c LLD code, and when the entire tcm_qla2xxx
-endpoint has not been forced into shutdown w/ echo 0 > ../$QLA2XXX_PORT/enable
+Note the target team recently has been working addressing a race bug
+specific to the area of tcm_qla2xxx session shutdown logic, but so far
+the patches aren't changing any qla_target.c LLD code beyond what's
+currently in patch #21 here from Chad.
 
-Cc: Joern Engel <joern@logfs.org>
-Cc: Roland Dreier <roland@purestorage.com>
-Cc: Arun Easi <arun.easi@qlogic.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |   48 +++++++++++++++++++++++------------
- 1 files changed, 31 insertions(+), 17 deletions(-)
+That said, I'll need to rebase against your scsi/for-next once this
+series is in your tree for my 3.5-rc-fixes branch for tcm_qla2xxx
+bug-fixes currently in progress.
 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 5aa8372..470969e 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -821,6 +821,8 @@ static int tcm_qla2xxx_setup_nacl_from_rport(
- 	return 0;
- }
- 
-+static void tcm_qla2xxx_clear_sess_lookup(struct tcm_qla2xxx_lport *,
-+			struct tcm_qla2xxx_nacl *, struct qla_tgt_sess *);
- /*
-  * Expected to be called with struct qla_hw_data->hardware_lock held
-  */
-@@ -843,6 +845,16 @@ static void tcm_qla2xxx_clear_nacl_from_fcport_map(struct qla_tgt_sess *sess)
- 	pr_debug("Removed from fcport_map: %p for WWNN: 0x%016LX,"
- 			       " port_id: 0x%06x\n", se_nacl, nacl->nport_wwnn,
- 			       nacl->nport_id);
-+	/*
-+	 * Now clear the se_nacl and session pointers from our HW lport lookup
-+	 * table mapping for this initiator's fabric S_ID and LOOP_ID entries.
-+	 *
-+	 * This is done ahead of callbacks into tcm_qla2xxx_free_session() ->
-+	 * target_wait_for_sess_cmds() before the session waits for outstanding
-+	 * I/O to complete, to avoid a race between session shutdown execution
-+	 * and incoming ATIOs or TMRs picking up a stale se_node_act reference.
-+	 */
-+	tcm_qla2xxx_clear_sess_lookup(lport, nacl, sess);
- }
- 
- static void tcm_qla2xxx_release_session(struct kref *kref)
-@@ -1420,6 +1432,25 @@ static void tcm_qla2xxx_set_sess_by_loop_id(
- 		new_se_nacl->initiatorname);
- }
- 
-+/*
-+ * Should always be called with qla_hw_data->hardware_lock held.
-+ */
-+static void tcm_qla2xxx_clear_sess_lookup(struct tcm_qla2xxx_lport *lport,
-+		struct tcm_qla2xxx_nacl *nacl, struct qla_tgt_sess *sess)
-+{
-+	struct se_session *se_sess = sess->se_sess;
-+	unsigned char be_sid[3];
-+
-+	be_sid[0] = sess->s_id.b.domain;
-+	be_sid[1] = sess->s_id.b.area;
-+	be_sid[2] = sess->s_id.b.al_pa;
-+
-+	tcm_qla2xxx_set_sess_by_s_id(lport, NULL, nacl, se_sess,
-+				sess, be_sid);
-+	tcm_qla2xxx_set_sess_by_loop_id(lport, NULL, nacl, se_sess,
-+				sess, sess->loop_id);
-+}
-+
- static void tcm_qla2xxx_free_session(struct qla_tgt_sess *sess)
- {
- 	struct qla_tgt *tgt = sess->tgt;
-@@ -1428,8 +1459,6 @@ static void tcm_qla2xxx_free_session(struct qla_tgt_sess *sess)
- 	struct se_node_acl *se_nacl;
- 	struct tcm_qla2xxx_lport *lport;
- 	struct tcm_qla2xxx_nacl *nacl;
--	unsigned char be_sid[3];
--	unsigned long flags;
- 
- 	BUG_ON(in_interrupt());
- 
-@@ -1449,21 +1478,6 @@ static void tcm_qla2xxx_free_session(struct qla_tgt_sess *sess)
- 		return;
- 	}
- 	target_wait_for_sess_cmds(se_sess, 0);
--	/*
--	 * And now clear the se_nacl and session pointers from our HW lport
--	 * mappings for fabric S_ID and LOOP_ID.
--	 */
--	memset(&be_sid, 0, 3);
--	be_sid[0] = sess->s_id.b.domain;
--	be_sid[1] = sess->s_id.b.area;
--	be_sid[2] = sess->s_id.b.al_pa;
--
--	spin_lock_irqsave(&ha->hardware_lock, flags);
--	tcm_qla2xxx_set_sess_by_s_id(lport, NULL, nacl, se_sess,
--			sess, be_sid);
--	tcm_qla2xxx_set_sess_by_loop_id(lport, NULL, nacl, se_sess,
--			sess, sess->loop_id);
--	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	transport_deregister_session_configfs(sess->se_sess);
- 	transport_deregister_session(sess->se_sess);
--- 
-1.7.2.5
+Also as mentioned, this series has no direct dependencies upon the
+current 3.5 target-pending/for-next queue, so it should be nice and
+pain-less merge into mainline for the emperor penguin.  :)
+
+Please let us know if you have any concerns.
+
+Thanks!
+
+--nab
 
