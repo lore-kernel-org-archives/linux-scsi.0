@@ -1,60 +1,74 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] qla_target: Check refcount in find_sess_by_*
-Date: Fri, 18 May 2012 18:26:08 -0700
-Message-ID: <1337390768.32217.508.camel@haakon2.linux-iscsi.org>
-References: <20120511143341.GA18753@logfs.org>
-	 <20120517162600.GA18067@logfs.org>
-	 <1337283995.32217.233.camel@haakon2.linux-iscsi.org>
-	 <CAL1RGDUmT4xOQQkAE5eq-XXZa5b64SeTZjfcWdeuMiUu=DRarg@mail.gmail.com>
-	 <20120517192830.GC18067@logfs.org> <20120517210521.GE18067@logfs.org>
-	 <1337306556.32217.365.camel@haakon2.linux-iscsi.org>
-	 <20120518011528.GG18067@logfs.org>
-	 <1337321367.32217.412.camel@haakon2.linux-iscsi.org>
-	 <20120518224948.GB21634@logfs.org>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: Re: [patch] [SCSI] scsi_pm: passing wrong pointer to resume()
+Date: Sat, 19 May 2012 11:38:21 +0800
+Message-ID: <20120519033821.GA2425@localhost.localdomain>
+References: <20120518140827.GA1584@elgon.mountain>
+ <2FB252790F768E479D722B6F9B6D68C4B03E50@SCYBEXDAG02.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20120518224948.GB21634@logfs.org>
-Sender: target-devel-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>
-Cc: Roland Dreier <roland@purestorage.com>, target-devel@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Steve Hodgson <steve@purestorage.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:56499 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753692Ab2ESDic (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2012 23:38:32 -0400
+Content-Disposition: inline
+In-Reply-To: <2FB252790F768E479D722B6F9B6D68C4B03E50@SCYBEXDAG02.amd.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-On Fri, 2012-05-18 at 18:49 -0400, J=C3=B6rn Engel wrote:
-> On Thu, 17 May 2012 23:09:27 -0700, Nicholas A. Bellinger wrote:
-> >=20
-> > So that means your testing with it now, right..?
+> From: Dan Carpenter [dan.carpenter@oracle.com]
+> To: James E.J. Bottomley; Lu, Aaron
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; kernel-=
+janitors@vger.kernel.org; Alan Stern
+> Subject: [patch] [SCSI] scsi_pm: passing wrong pointer to resume()
 >=20
-> Our kernel has diverged too much from yours to easily move patches
-> back and forth, so no.
+> This gets caught by GCC:
+> drivers/scsi/scsi_pm.c:30:5: warning: passing argument 1 of
+>         =E2=80=98scsi_device_resume=E2=80=99 from incompatible pointe=
+r type
+>         [enabled by default]
+
+Thanks for pointing this out.
+I've posted v2 the other day and James is aware of this already:
+http://marc.info/?l=3Dlinux-scsi&m=3D133706440112890&w=3D2
+
 >=20
-> But more importantly, we still don't have a complete patchset.
+> It probably would have been caught in testing as well, but it's on an
+> error path.
+
+I'm dealing with such error so developed this patch. But there are othe=
+r
+changes too in my code, so I prepared this patch in another clean repo
+and made the mistake, sorry for not testing it before submit.=20
+
+-Aaron
+
 >=20
-
-Ok, I've pushed into lio-core the following WIP patches based on your
-original patch + s_id + loop_id clearing patch from today:
-
-6fc162d3 tcm_qla2xxx: Clear session s_id + loop_id earlier during shutd=
-own
-dfebe3b5 tcm_qla2xxx: Convert to TFO->put_session() usage
-ec7cf009 target: Add TFO->put_session() caller for HW fabric session sh=
-utdown
-
-Today I've been testing these changes against typical active I/O during
-tcm_qla2xxx endpoint shutdown, and against explict NodeACL + MappedLUNs
-removal case.  So far with active FCP of the order of ~100K IOPs with
-random mixed mode 4K blocks, these patches are performing session
-shutdown and unloading tcm_qla2xxx references as expected.
-
-Certainly these need more testing wrt to a number of special cases for
-active I/O shutdown, but I think they look reasonable enough to put int=
-o
-lio-core for now..
-
-Please have a look and let me know if you have any problems getting it
-applied for testing into your .39 tree.
-
-Thanks,
-
---nab
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> I haven't tested this.  :/  Sorry for that.
+>=20
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index 9bd2c41..d4201de 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -27,7 +27,7 @@ static int scsi_dev_type_suspend(struct device *dev=
+, pm_message_t msg)
+>                 if (drv && drv->suspend) {
+>                         err =3D drv->suspend(dev, msg);
+>                         if (err)
+> -                               scsi_device_resume(dev);
+> +                               scsi_device_resume(to_scsi_device(dev=
+));
+>                 }
+>         }
+>         dev_dbg(dev, "scsi suspend: %d\n", err);
+>=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
