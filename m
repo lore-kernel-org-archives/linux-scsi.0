@@ -1,51 +1,37 @@
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH] [SCSI] ufs: fix potential NULL pointer dereferencing error in ufshcd_probe.
-Date: Mon, 21 May 2012 10:35:36 -0400
-Message-ID: <1337610936-2757-1-git-send-email-linkinjeon@gmail.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [RFC v2 PATCH 2/4] block: add queue runtime pm callbacks
+Date: Mon, 21 May 2012 22:41:43 +0800
+Message-ID: <CAF1ivSYmY3d8VonvsX0orsj0fLKXOXsLoG5jSwLs90MoP7=5Dw@mail.gmail.com>
+References: <1337269686-3781-3-git-send-email-ming.m.lin@intel.com>
+	<Pine.LNX.4.44L0.1205171346070.1169-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:36566 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800Ab2EUOfz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 May 2012 10:35:55 -0400
-Received: by dady13 with SMTP id y13so6888367dad.19
-        for <linux-scsi@vger.kernel.org>; Mon, 21 May 2012 07:35:55 -0700 (PDT)
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:52769 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752800Ab2EUOlo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 May 2012 10:41:44 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1205171346070.1169-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: santoshsy@gmail.com, vinholikatti@gmail.com, santosh.sy@samsung.com, James.Bottomley@HansenPartnership.com, jBottomley@parallels.com, akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Avoid dereferencing a NULL pointer if scsi_host_alloc is failed.
+On Fri, May 18, 2012 at 2:29 AM, Alan Stern <stern@rowland.harvard.edu>=
+ wrote:
+[snip]
+> I may have left some parts out from this brief description. =A0Hopefu=
+lly
+> you'll be able to figure out the general idea and get it to work.
 
-Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
-Acked-by: Santosh Y <santoshsy@gmail.com>
----
- drivers/scsi/ufs/ufshcd.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+All journal threads and flusher thread of the disk need to be freezed
+before suspend and thaw after resume.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e47a0da..58f4ba6 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1838,7 +1838,7 @@ ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	err = pci_request_regions(pdev, UFSHCD);
- 	if (err < 0) {
- 		dev_err(&pdev->dev, "request regions failed\n");
--		goto out_disable;
-+		goto out_host_put;
- 	}
- 
- 	hba->mmio_base = pci_ioremap_bar(pdev, 0);
-@@ -1927,8 +1927,9 @@ out_iounmap:
- 	iounmap(hba->mmio_base);
- out_release_regions:
- 	pci_release_regions(pdev);
--out_disable:
-+out_host_put:
- 	scsi_host_put(host);
-+out_disable:
- 	pci_clear_master(pdev);
- 	pci_disable_device(pdev);
- out_error:
--- 
-1.7.9.5
-
+>
+> Alan Stern
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
