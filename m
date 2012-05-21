@@ -1,56 +1,58 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [v2 PATCH 0/4] bnx2fc version 1.0.11
-Date: Mon, 21 May 2012 09:18:32 -0700
-Message-ID: <4FBA6AD8.5060703@broadcom.com>
-References: <1335306364-31449-1-git-send-email-bprakash@broadcom.com>
+From: Kay Sievers <kay@vrfy.org>
+Subject: Re: [PATCH 0/4] notify userspace of offline->running transitions (v2)
+Date: Mon, 21 May 2012 18:49:43 +0200
+Message-ID: <CAPXgP10t_pMCJuavrBsNcyv1XKy4WThV8CfVBz-4wD=Q_fq_=w@mail.gmail.com>
+References: <1337317019-12001-1-git-send-email-michaelc@cs.wisc.edu>
+ <4FBA2BF7.7070500@suse.de> <4FBA60C2.20007@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1170 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756063Ab2EUQR6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 May 2012 12:17:58 -0400
-In-Reply-To: <1335306364-31449-1-git-send-email-bprakash@broadcom.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:59052 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756912Ab2EUQuE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 May 2012 12:50:04 -0400
+Received: by dady13 with SMTP id y13so7042169dad.19
+        for <linux-scsi@vger.kernel.org>; Mon, 21 May 2012 09:50:04 -0700 (PDT)
+In-Reply-To: <4FBA60C2.20007@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-On 4/24/2012 3:26 PM, Bhanu Prakash Gollapudi wrote:
-
-James, can you please include this patch set in the next round of 3.4+ 
-merge window?
-
-thanks,
-Bhanu
-
-> v2 submittal:
-> Updated "0002-bnx2fc-Decrememnt-io-ref-count-when-abort-times-out"
-> patch to release the command reference before waiting for the target to
-> relogin.  Without this, the logout process will not complete and recovery
-> fails.
-> ---------------
+On Mon, May 21, 2012 at 5:35 PM, Mike Christie <michaelc@cs.wisc.edu> wrote:
+> On 05/21/2012 06:50 AM, Hannes Reinecke wrote:
+>> On 05/18/2012 06:56 AM, michaelc@cs.wisc.edu wrote:
+>>> The following patches were made over the misc branch of the scsi tree.
+>>>
+>>> The patches fix a issue where if the device is offlined or IO is
+>>> failed due to fast_io_fail (fc) /recovery_tmo (iscsi) then comes
+>>> back, apps do not have a way a nice way to figure out the state
+>>> has transitioned to running. Apps have to either poll the sysfs state
+>>> file or send a SG IO to figure it out. With the patch apps can listen
+>>> for the KOBJ CHANGE event like some of them (at least udev does) do
+>>> already.
+>>>
+>>> v2:
+>>> - Rebased to misc.
+>>>
+>> In principle, yes.
+>>
 >
-> James, please consider merging the following bug fixes for 3.5.
+> ccing Kay.
 >
-> Thanks,
-> Bhanu
+>> However, when doing this, we're now sending 'CHANGE' uevents from
+>> SCSI devices. With the potential of putting _quite_ some strain on udev.
+>> Kay explicitely debarred me from using uevents for my SCSI sense
 >
-> Bhanu Prakash Gollapudi (4):
->    bnx2fc: Allow FLOGI to be retried when receiving bad responses.
->    bnx2fc: Decrememnt io ref count when abort times out
->    bnx2fc: cleanup task management IO when it times out.
->    Bumped version to 1.0.11
->
->   drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
->   drivers/scsi/bnx2fc/bnx2fc_els.c  |   16 +----
->   drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
->   drivers/scsi/bnx2fc/bnx2fc_io.c   |  122 +++++++++++++++++++++++--------------
->   drivers/scsi/bnx2fc/bnx2fc_tgt.c  |   21 ++++++-
->   5 files changed, 100 insertions(+), 63 deletions(-)
->
+> Kay told me to do it this way :) In this case udev was the app we
+> discovered the issue with, so maybe that is the diff.
 
+Hah, I basically only told you not to use online/offline events. :)
 
+Uevents are ok to use if we can be sure there is _never_ a storm of
+events. Uevents are not meant to handle large amounts of events
+happening at the same time. They must never be used to handle things
+like reporting errors which are not limited in their rate, or where
+many devices might send similar events at the same time in a row.
+
+Kay
