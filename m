@@ -1,54 +1,45 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC v2 PATCH 2/4] block: add queue runtime pm callbacks
-Date: Mon, 21 May 2012 14:32:59 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1205211430220.1725-100000@iolanthe.rowland.org>
-References: <CAF1ivSajZb_D9nOuA5gYeDgHgbvyqbCueV8+kDyy3DSBs1AumQ@mail.gmail.com>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [v2 PATCH 0/4] bnx2fc version 1.0.11
+Date: Mon, 21 May 2012 11:35:02 -0700
+Message-ID: <4FBA8AD6.70107@broadcom.com>
+References: <1335306364-31449-1-git-send-email-bprakash@broadcom.com>
+ <4FBA6AD8.5060703@broadcom.com>
+ <1337623588.16400.5.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAF1ivSajZb_D9nOuA5gYeDgHgbvyqbCueV8+kDyy3DSBs1AumQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:1140 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756222Ab2EUSfX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 May 2012 14:35:23 -0400
+In-Reply-To: <1337623588.16400.5.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-On Mon, 21 May 2012, Lin Ming wrote:
+On 5/21/2012 11:06 AM, James Bottomley wrote:
+> On Mon, 2012-05-21 at 09:18 -0700, Bhanu Prakash Gollapudi wrote:
+>> On 4/24/2012 3:26 PM, Bhanu Prakash Gollapudi wrote:
+>>
+>> James, can you please include this patch set in the next round of 3.4+
+>> merge window?
+>
+> I was waiting for you to respond to Mike Christie's comment about using
+> list_for_each_entry_safe() or list_entry().
 
-> On Mon, May 21, 2012 at 11:00 PM, Alan Stern <stern@rowland.harvard.e=
-du> wrote:
-> > On Mon, 21 May 2012, Lin Ming wrote:
-> >
-> >> On Fri, May 18, 2012 at 2:29 AM, Alan Stern <stern@rowland.harvard=
-=2Eedu> wrote:
-> >> [snip]
-> >> > I may have left some parts out from this brief description. =A0H=
-opefully
-> >> > you'll be able to figure out the general idea and get it to work=
-=2E
-> >>
-> >> All journal threads and flusher thread of the disk need to be free=
-zed
-> >> before suspend and thaw after resume.
-> >
-> > Why? =A0If any of those threads needs to write something to the dis=
-k
-> > while the disk is suspended, the disk will simply be resumed.
->=20
-> When tested the patches, I found that kjournald and flusher thread
-> frequently resume the disk.
->=20
-> I'm not familiar with journal.
-> Are the journal threads still need to be in active state when the dis=
-k
-> is already suspended?
+James, I responded to Mike Christie's comment. Here is the link for the 
+thread - http://marc.info/?l=linux-scsi&m=133643754200805&w=2.
 
-I don't know the answers.  Maybe Jens can tell us.
+thanks,
+Bhanu
+>
+> James
+>
+>
+>
 
-Ideally, a rotating disk wouldn't be suspended unless all the dirty=20
-blocks were already flushed and the journal was up-to-date.  For an=20
-SSD, frequently suspending and resuming doesn't matter quite so much. =20
-This may come down to a matter of setting the right value for the=20
-autosuspend timeout.
 
-Alan Stern
