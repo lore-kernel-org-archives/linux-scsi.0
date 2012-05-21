@@ -1,87 +1,108 @@
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Subject: Re: multipath_busy() stalls IO due to scsi_host_is_busy()
-Date: Mon, 21 May 2012 17:42:57 +0200
-Message-ID: <4FBA6281.3040109@itwm.fraunhofer.de>
-References: <4FB39D78.9020300@itwm.fraunhofer.de> <4FB4C065.7070804@ce.jp.nec.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 4/4] SCSI: send KOBJ_CHANGE when device is set to running
+ v2
+Date: Mon, 21 May 2012 10:46:49 -0500
+Message-ID: <4FBA6369.2030804@cs.wisc.edu>
+References: <1337317019-12001-1-git-send-email-michaelc@cs.wisc.edu> <1337317019-12001-5-git-send-email-michaelc@cs.wisc.edu> <4FBA2AD8.3040909@suse.de> <4FBA6009.8040407@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailgw1.uni-kl.de ([131.246.120.220]:56088 "EHLO
-	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752971Ab2EUPnD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 May 2012 11:43:03 -0400
-Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
-	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-5+lenny1) with ESMTP id q4LFgx9h031333
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 21 May 2012 17:43:00 +0200
-In-Reply-To: <4FB4C065.7070804@ce.jp.nec.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:48536 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751508Ab2EUPq7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 May 2012 11:46:59 -0400
+In-Reply-To: <4FBA6009.8040407@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: dm-devel@redhat.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On 05/17/2012 11:09 AM, Jun'ichi Nomura wrote:
-> Hi,
->
-> On 05/16/12 21:28, Bernd Schubert wrote:
->> Looking through the call chain, I see the underlying problem seems to be in scsi_host_is_busy().
->>
->>> static inline int scsi_host_is_busy(struct Scsi_Host *shost)
->>> {
->>>      if ((shost->can_queue>  0&&  shost->host_busy>= shost->can_queue) ||
->>>          shost->host_blocked || shost->host_self_blocked)
->>>          return 1;
+On 05/21/2012 10:32 AM, Mike Christie wrote:
+> On 05/21/2012 06:45 AM, Hannes Reinecke wrote:
+>> On 05/18/2012 06:56 AM, michaelc@cs.wisc.edu wrote:
+>>> From: Mike Christie <michaelc@cs.wisc.edu>
 >>>
->>>      return 0;
->>> }
->
-> multipath_busy() was introduced because, without that,
-> a request would be prematurely sent down to SCSI,
-> lose the chance of additional merges and result in
-> bad performance.
->
-> However, when it is target/host that is busy, I think dm should
-> send the request down and let SCSI, which has better knowledge
-> about the shared resource, do appropriate starvation control.
->
-> Could you try the attached patch?
->
-> ---
-> Jun'ichi Nomura, NEC Corporation
->
-> If sdev is not busy but starget and/or host is busy,
-> it is better to accept a request from stacking driver.
-> Otherwise, the stacking device could be starved by other device
-> sharing the same target/host.
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 5dfd749..0eb4602 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1378,16 +1378,13 @@ static int scsi_lld_busy(struct request_queue *q)
->   {
->   	struct scsi_device *sdev = q->queuedata;
->   	struct Scsi_Host *shost;
-> -	struct scsi_target *starget;
->
->   	if (!sdev)
->   		return 0;
->
->   	shost = sdev->host;
-> -	starget = scsi_target(sdev);
->
-> -	if (scsi_host_in_recovery(shost) || scsi_host_is_busy(shost) ||
-> -	    scsi_target_is_busy(starget) || scsi_device_is_busy(sdev))
-> +	if (scsi_host_in_recovery(shost) || scsi_device_is_busy(sdev))
->   		return 1;
->
->   	return 0;
+>>> If a device goes offline while the device is opened then closed
+>>> while it is still offline, udev will remove the /dev/disk/by-id
+>>> link. If the device comes back and is set to running, userspace
+>>> is not notified, and the by-id link will not get remade.
+>>>
+>>> This patch has scsi-ml send a KOBJ_CHANGE event so tools like udev
+>>> will know that it can being to use the device again. With this patch
+>>> udev see the KOBJ_CHANGE event and will reprobe the device and recreate
+>>> a /dev/disk/by-id link.
+>>>
+>>> v2
+>>> - Added SDEV_EVT_STATE_RUNNING evt type.
+>>>
+>>> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+>>> ---
+>>>  drivers/scsi/scsi_lib.c    |    9 +++++++++
+>>>  include/scsi/scsi_device.h |    2 ++
+>>>  2 files changed, 11 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>>> index d15b243..b54030d 100644
+>>> --- a/drivers/scsi/scsi_lib.c
+>>> +++ b/drivers/scsi/scsi_lib.c
+>>> @@ -2061,6 +2061,7 @@ int
+>>>  scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+>>>  {
+>>>  	enum scsi_device_state oldstate = sdev->sdev_state;
+>>> +	int change_evt = 0;
+>>>  
+>>>  	if (state == oldstate)
+>>>  		return 0;
+>>> @@ -2079,6 +2080,11 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+>>>  		switch (oldstate) {
+>>>  		case SDEV_OFFLINE:
+>>>  		case SDEV_TRANSPORT_OFFLINE:
+>>> +			/*
+>>> +			 * Notify userspace we can accept IO by sending
+>>> +			 * change event.
+>>> +			 */
+>>> +			change_evt = 1;
+>>>  		case SDEV_QUIESCE:
+>>>  		case SDEV_BLOCK:
+>>>  		case SDEV_CREATED:
+>>> @@ -2160,6 +2166,8 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+>>>  
+>>>  	}
+>>>  	sdev->sdev_state = state;
+>>> +	if (change_evt)
+>>> +		sdev_evt_send_simple(sdev, SDEV_EVT_STATE_RUNNING, GFP_ATOMIC);
+>>>  	return 0;
+>>>  
+>>>   illegal:
+>>> @@ -2283,6 +2291,7 @@ struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
+>>>  	/* evt_type-specific initialization, if any */
+>>>  	switch (evt_type) {
+>>>  	case SDEV_EVT_MEDIA_CHANGE:
+>>> +	case SDEV_EVT_STATE_RUNNING:
+>>>  	default:
+>>>  		/* do nothing */
+>>>  		break;
+>> Hmm. So we're only getting notified if the device switched to OFFLINE?
+> 
+> No from one of the offlines to running.
+> 
 
-Thanks, that works fine! I had something else in my mind for multipath, 
-but if this can go into scsi we don't need the multipath patch anymore.
-Are you going to officially submit it (missing signed-off)?
+I think I know what happened. Maybe you did not reivew all the patches
+at the same time. With all patches in the set applied we have this:
 
-Thanks,
-Bernd
+
+scsi_device_set_state()
+......
+
+        case SDEV_RUNNING:	<- so we are going into running
+                switch (oldstate) {
+                case SDEV_OFFLINE:    <- we were in one of the offlines
+                case SDEV_TRANSPORT_OFFLINE:
+                        /*
+                         * Notify userspace we can accept IO by sending
+                         * change event.
+                         */
+                        change_evt = 1;   <- so we send evt for *offline
+to running transistions
 
