@@ -1,144 +1,69 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v4 2/5] scsi_dh: add scsi_dh_attached_handler_name
-Date: Mon, 21 May 2012 14:45:17 -0400
-Message-ID: <20120521184516.GA18807@redhat.com>
-References: <1336612366-30794-1-git-send-email-snitzer@redhat.com>
- <20120510213112.GA7374@redhat.com>
- <1337295520.2825.12.camel@chandra-lucid.austin.ibm.com>
+From: Kay Sievers <kay@vrfy.org>
+Subject: Re: [PATCH 0/4] notify userspace of offline->running transitions (v2)
+Date: Mon, 21 May 2012 21:15:12 +0200
+Message-ID: <CAPXgP13=W34uEaEk0kwCfh-J1=+mxisRbSd89rQ3tpARFasUOA@mail.gmail.com>
+References: <1337317019-12001-1-git-send-email-michaelc@cs.wisc.edu>
+ <4FBA2BF7.7070500@suse.de> <4FBA60C2.20007@cs.wisc.edu> <CAPXgP10t_pMCJuavrBsNcyv1XKy4WThV8CfVBz-4wD=Q_fq_=w@mail.gmail.com>
+ <4FBA7595.8020400@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22852 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758454Ab2EUSp2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 May 2012 14:45:28 -0400
-Content-Disposition: inline
-In-Reply-To: <1337295520.2825.12.camel@chandra-lucid.austin.ibm.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:57604 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753279Ab2EUTPd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 May 2012 15:15:33 -0400
+Received: by pbbrp8 with SMTP id rp8so7323596pbb.19
+        for <linux-scsi@vger.kernel.org>; Mon, 21 May 2012 12:15:33 -0700 (PDT)
+In-Reply-To: <4FBA7595.8020400@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, agk@redhat.com, hare@suse.de, babu.moger@netapp.com, dm-devel@redhat.com, Chandra Seetharaman <sekharan@us.ibm.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-Hi James,
+On Mon, May 21, 2012 at 7:04 PM, Mike Christie <michaelc@cs.wisc.edu> wrote:
+> On 05/21/2012 11:49 AM, Kay Sievers wrote:
 
-Could you please stage this scsi_dh patch for the 3.5 merge?  The other
-DM mpath patches in the patchset will go through Alasdair's DM tree.
+>>> Kay told me to do it this way :) In this case udev was the app we
+>>> discovered the issue with, so maybe that is the diff.
+>>
+>> Hah, I basically only told you not to use online/offline events. :)
+>
+> Yeah, I guess you guys got me confused :) Harold said to send an event
+> for this issue. Then later you said "please always use change". I
+> thought you and Harold were in sync :(
 
-Thanks,
-Mike
+Yeah, Harald and I think that sometimes ourselves, but we are not always. :)
 
-On Thu, May 17 2012 at  6:58pm -0400,
-Chandra Seetharaman <sekharan@us.ibm.com> wrote:
+>> Uevents are ok to use if we can be sure there is _never_ a storm of
+>> events. Uevents are not meant to handle large amounts of events
+>> happening at the same time. They must never be used to handle things
+>> like reporting errors which are not limited in their rate, or where
+>> many devices might send similar events at the same time in a row.
+>
+> In this case you can get many devices sending the same events at the
+> same time, because when the transport/connection comes back you all the
+> device accessed through that connection will be set to running at the
+> same time.
 
-> Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> 
-> On Thu, 2012-05-10 at 17:31 -0400, Mike Snitzer wrote:
-> > Introduce scsi_dh_attached_handler_name() to retrieve the name of the
-> > scsi_dh that is attached to the scsi_device associated with the provided
-> > request queue.  Returns NULL if a scsi_dh is not attached.
-> > 
-> > Also, fix scsi_dh_{attach,detach} function header comments to document
-> > @q rather than @sdev.
-> > 
-> > Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-> > Tested-by: Babu Moger <babu.moger@netapp.com>
-> > Cc: Hannes Reinecke <hare@suse.de>
-> > Cc: Chandra Seetharaman <sekharan@us.ibm.com>
-> > ---
-> >  drivers/scsi/device_handler/scsi_dh.c |   38 ++++++++++++++++++++++++++++++++--
-> >  include/scsi/scsi_dh.h                |    6 +++++
-> >  2 files changed, 42 insertions(+), 2 deletions(-)
-> > 
-> > v4: fixed potential for returned string to be invalid (hch)
-> > v3: fixed missing put_device that Babu pointed out
-> > 
-> > Index: linux-2.6/drivers/scsi/device_handler/scsi_dh.c
-> > ===================================================================
-> > --- linux-2.6.orig/drivers/scsi/device_handler/scsi_dh.c
-> > +++ linux-2.6/drivers/scsi/device_handler/scsi_dh.c
-> > @@ -468,7 +468,8 @@ EXPORT_SYMBOL_GPL(scsi_dh_handler_exist)
-> > 
-> >  /*
-> >   * scsi_dh_attach - Attach device handler
-> > - * @sdev - sdev the handler should be attached to
-> > + * @q - Request queue that is associated with the scsi_device
-> > + *      the handler should be attached to
-> >   * @name - name of the handler to attach
-> >   */
-> >  int scsi_dh_attach(struct request_queue *q, const char *name)
-> > @@ -498,7 +499,8 @@ EXPORT_SYMBOL_GPL(scsi_dh_attach);
-> > 
-> >  /*
-> >   * scsi_dh_detach - Detach device handler
-> > - * @sdev - sdev the handler should be detached from
-> > + * @q - Request queue that is associated with the scsi_device
-> > + *      the handler should be detached from
-> >   *
-> >   * This function will detach the device handler only
-> >   * if the sdev is not part of the internal list, ie
-> > @@ -527,6 +529,38 @@ void scsi_dh_detach(struct request_queue
-> >  }
-> >  EXPORT_SYMBOL_GPL(scsi_dh_detach);
-> > 
-> > +/*
-> > + * scsi_dh_attached_handler_name - Get attached device handler's name
-> > + * @q - Request queue that is associated with the scsi_device
-> > + *      that may have a device handler attached
-> > + * @gfp - the GFP mask used in the kmalloc() call when allocating memory
-> > + *
-> > + * Returns name of attached handler, NULL if no handler is attached.
-> > + * Caller must take care to free the returned string.
-> > + */
-> > +const char *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
-> > +{
-> > +	unsigned long flags;
-> > +	struct scsi_device *sdev;
-> > +	const char *handler_name = NULL;
-> > +
-> > +	spin_lock_irqsave(q->queue_lock, flags);
-> > +	sdev = q->queuedata;
-> > +	if (!sdev || !get_device(&sdev->sdev_gendev))
-> > +		sdev = NULL;
-> > +	spin_unlock_irqrestore(q->queue_lock, flags);
-> > +
-> > +	if (!sdev)
-> > +		return NULL;
-> > +
-> > +	if (sdev->scsi_dh_data)
-> > +		handler_name = kstrdup(sdev->scsi_dh_data->scsi_dh->name, gfp);
-> > +
-> > +	put_device(&sdev->sdev_gendev);
-> > +	return handler_name;
-> > +}
-> > +EXPORT_SYMBOL_GPL(scsi_dh_attached_handler_name);
-> > +
-> >  static struct notifier_block scsi_dh_nb = {
-> >  	.notifier_call = scsi_dh_notifier
-> >  };
-> > Index: linux-2.6/include/scsi/scsi_dh.h
-> > ===================================================================
-> > --- linux-2.6.orig/include/scsi/scsi_dh.h
-> > +++ linux-2.6/include/scsi/scsi_dh.h
-> > @@ -60,6 +60,7 @@ extern int scsi_dh_activate(struct reque
-> >  extern int scsi_dh_handler_exist(const char *);
-> >  extern int scsi_dh_attach(struct request_queue *, const char *);
-> >  extern void scsi_dh_detach(struct request_queue *);
-> > +extern const char *scsi_dh_attached_handler_name(struct request_queue *, gfp_t);
-> >  extern int scsi_dh_set_params(struct request_queue *, const char *);
-> >  #else
-> >  static inline int scsi_dh_activate(struct request_queue *req,
-> > @@ -80,6 +81,11 @@ static inline void scsi_dh_detach(struct
-> >  {
-> >  	return;
-> >  }
-> > +static inline const char *scsi_dh_attached_handler_name(struct request_queue *q,
-> > +							gfp_t gfp)
-> > +{
-> > +	return NULL;
-> > +}
-> >  static inline int scsi_dh_set_params(struct request_queue *req, const char *params)
-> >  {
-> >  	return -SCSI_DH_NOSYS;
-> > 
-> 
-> 
+The problem would be more the possible highest frequency of the
+change. One event per device in a longer time frame would be ok, it's
+like coldplug at boot time, where we enumerate all devices once in one
+step. That is known though, to take minutes on very large boxes with
+thousands of devices.
+
+If we get such state change for lots of devices in a row (the state
+flips forth and back for all devices), faster than we handle them (and
+they are not that fast on older versions of udev, or if people plugged
+silly things into udev rules), things will break or get lost one way
+or the other.
+
+> So what is the fix for this case? Just send one event for the host or
+> transport/connection then have udev loop over all devices accessed
+> through that object and fix things up? If so, what type of event do you
+> want? CHANGE event plus some other info to indicate to look at child
+> devices?
+
+ We do not really support such logic in udev. And it would cause
+exactly the same problem, just at a different layer.
+
+Kay
