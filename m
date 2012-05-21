@@ -1,73 +1,33 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/4] notify userspace of offline->running transitions
- (v2)
-Date: Mon, 21 May 2012 12:04:21 -0500
-Message-ID: <4FBA7595.8020400@cs.wisc.edu>
-References: <1337317019-12001-1-git-send-email-michaelc@cs.wisc.edu> <4FBA2BF7.7070500@suse.de> <4FBA60C2.20007@cs.wisc.edu> <CAPXgP10t_pMCJuavrBsNcyv1XKy4WThV8CfVBz-4wD=Q_fq_=w@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [v2 PATCH 0/4] bnx2fc version 1.0.11
+Date: Mon, 21 May 2012 19:06:28 +0100
+Message-ID: <1337623588.16400.5.camel@dabdike.int.hansenpartnership.com>
+References: <1335306364-31449-1-git-send-email-bprakash@broadcom.com>
+	 <4FBA6AD8.5060703@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48732 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752089Ab2EUREc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 May 2012 13:04:32 -0400
-In-Reply-To: <CAPXgP10t_pMCJuavrBsNcyv1XKy4WThV8CfVBz-4wD=Q_fq_=w@mail.gmail.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46224 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932550Ab2EUSGc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 May 2012 14:06:32 -0400
+In-Reply-To: <4FBA6AD8.5060703@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay@vrfy.org>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
 
-On 05/21/2012 11:49 AM, Kay Sievers wrote:
-> On Mon, May 21, 2012 at 5:35 PM, Mike Christie <michaelc@cs.wisc.edu> wrote:
->> On 05/21/2012 06:50 AM, Hannes Reinecke wrote:
->>> On 05/18/2012 06:56 AM, michaelc@cs.wisc.edu wrote:
->>>> The following patches were made over the misc branch of the scsi tree.
->>>>
->>>> The patches fix a issue where if the device is offlined or IO is
->>>> failed due to fast_io_fail (fc) /recovery_tmo (iscsi) then comes
->>>> back, apps do not have a way a nice way to figure out the state
->>>> has transitioned to running. Apps have to either poll the sysfs state
->>>> file or send a SG IO to figure it out. With the patch apps can listen
->>>> for the KOBJ CHANGE event like some of them (at least udev does) do
->>>> already.
->>>>
->>>> v2:
->>>> - Rebased to misc.
->>>>
->>> In principle, yes.
->>>
->>
->> ccing Kay.
->>
->>> However, when doing this, we're now sending 'CHANGE' uevents from
->>> SCSI devices. With the potential of putting _quite_ some strain on udev.
->>> Kay explicitely debarred me from using uevents for my SCSI sense
->>
->> Kay told me to do it this way :) In this case udev was the app we
->> discovered the issue with, so maybe that is the diff.
+On Mon, 2012-05-21 at 09:18 -0700, Bhanu Prakash Gollapudi wrote:
+> On 4/24/2012 3:26 PM, Bhanu Prakash Gollapudi wrote:
 > 
-> Hah, I basically only told you not to use online/offline events. :)
+> James, can you please include this patch set in the next round of 3.4+ 
+> merge window?
 
-Yeah, I guess you guys got me confused :) Harold said to send an event
-for this issue. Then later you said "please always use change". I
-thought you and Harold were in sync :(
+I was waiting for you to respond to Mike Christie's comment about using
+list_for_each_entry_safe() or list_entry().
 
-> 
-> Uevents are ok to use if we can be sure there is _never_ a storm of
-> events. Uevents are not meant to handle large amounts of events
-> happening at the same time. They must never be used to handle things
-> like reporting errors which are not limited in their rate, or where
-> many devices might send similar events at the same time in a row.
-> 
+James
 
-In this case you can get many devices sending the same events at the
-same time, because when the transport/connection comes back you all the
-device accessed through that connection will be set to running at the
-same time.
 
-So what is the fix for this case? Just send one event for the host or
-transport/connection then have udev loop over all devices accessed
-through that object and fix things up? If so, what type of event do you
-want? CHANGE event plus some other info to indicate to look at child
-devices?
