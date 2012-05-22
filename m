@@ -1,42 +1,64 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] First round of SCSI updates for the 3.4+ merge window
-Date: Mon, 21 May 2012 17:52:31 -0700
-Message-ID: <CA+55aFz__YrXffza1bEzwrPu+-ETswUcg3F31Gjrj3OPbRyTZw@mail.gmail.com>
-References: <1337599819.3042.7.camel@dabdike.int.hansenpartnership.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [3.0.y, 3.2.y, 3.3.y] Re: [PATCH 05/10] hpsa: Fix problem with
+ MSA2xxx devices
+Date: Tue, 22 May 2012 03:17:05 +0100
+Message-ID: <1337653025.11796.2.camel@deadeye>
+References: <20120119200042.17835.93058.stgit@beardog.cce.hp.com>
+	 <20120119200104.17835.29536.stgit@beardog.cce.hp.com>
+	 <20120520094735.GA14683@burratino>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:39189 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757409Ab2EVAwx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 May 2012 20:52:53 -0400
-In-Reply-To: <1337599819.3042.7.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-J/CWpTE1vatgI4/Vx2YS"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120520094735.GA14683@burratino>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jonathan Nieder <jrnieder@gmail.com>
+Cc: stable@vger.kernel.org, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, Steven Williamson <steven.williamson@dialogue.net>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mikem@beardog.cce.hp.com, stephenmcameron@gmail.com, thenzl@redhat.com, scott.teel@hp.com, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Mon, May 21, 2012 at 4:30 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> The patch contains the usual assortment of driver updates (be2iscsi,
-> bfa, bnx2i, fcoe, hpsa, isci, lpfc, megaraid, mpt2sas, pm8001, sg) pl=
-us
-> an assortment of other changes and fixes. =A0Also new is the fact tha=
-t the
-> isci update is delivered as a git merge (with signed tag).
 
-Interesting. For some reason the 'gpg --verify' phase says that your
-key has expired. Yet when I look at the key itself, it says it is
-valid until 2016. I don't quite know why gpg thinks the thing is
-expired when verifying the message.
+--=-J/CWpTE1vatgI4/Vx2YS
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-But everything else looks fine. Somebody with more gpg-fu than me
-might be able to clarify what is going on..
+On Sun, 2012-05-20 at 04:47 -0500, Jonathan Nieder wrote:
+> Hi Greg and Ben,
+>=20
+> Please consider
+>=20
+>   9bc3711cbb67 [SCSI] hpsa: Fix problem with MSA2xxx devices
+>=20
+> for application to next week's 3.0.y, 3.2.y, and 3.3.y trees.
+[...]
 
-                  Linus
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Added to the queue for 3.2.y, thanks.
+
+Ben.
+
+--=20
+Ben Hutchings
+You can't have everything.  Where would you put it?
+
+--=-J/CWpTE1vatgI4/Vx2YS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAT7r3Iee/yOyVhhEJAQpStA//V5ab8dHTLGGUFxokIMYLHgK+ofMmhvXi
+1IH5CHNPyITgcphXMQQAd0Lp5Vz6IMWta8vY5ikniukqIrzBM1EDS+zMUDW958EK
+nLlSNGO8Q91+psAheiWiFJTiquPuv/kEIDoHEJDv+lEDAjPqKC6bKOYRSyPtjt//
+Cy9jzoBlGEMPafnvnbwdQMq9reDZOd2jObFmnQ9kZJlb/VAmEvu9q3UPYhxboUyF
+I7xGMttxsF4+s9ErZWoTbMITXFAsxToocMhkjUhK8e3Tz9xLfql9+6Y0PbUBhuYR
+5G2ofovOJuHCuEZ0AeXTNYiZrznXOKI1MCX5CO+8JWkY8MSLdYghMA9xp5b9PKKU
+oSKciYFwzfSugBCwjOfRzRBLjpckxDy8VJd4MRj0NYY3KacgIX3Lvm2Qjs/oUELY
+RwkCsJKVLLSrlj7tEs05sACWZ//dbs/Iiw6IQSZ7K+TbueFunHOKSfvl/tbNHhVt
+WL6m7oO5o+RLn0QHYiLp4oCthTAEAixPrfUjtw7t42R1ZOBsVQn6jIKujkKbuVE0
+0mBOhJ5NUnK8zjYc0RoP/LDHZ7ZZd3O/8cqssf1EIcShbBdB8ntTedzrai2/6kRM
+au+9u2XXDIFLJt1l1b8rRz0/ngnDAdhDf/MNXZFl3kjCsYG07HNGY5TkzS9zLxN4
+HSYnkYEAYHE=
+=rDAL
+-----END PGP SIGNATURE-----
+
+--=-J/CWpTE1vatgI4/Vx2YS--
