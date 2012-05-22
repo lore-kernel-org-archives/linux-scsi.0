@@ -1,115 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v4 1/4] fcoe: Allocate fcoe_ctlr with fcoe_interface,
- not as a member
-Date: Tue, 22 May 2012 22:01:44 +0100
-Message-ID: <1337720504.2932.20.camel@dabdike.int.hansenpartnership.com>
-References: <20120327222224.7144.6324.stgit@localhost6.localdomain6>
-	 <20120327222229.7144.79107.stgit@localhost6.localdomain6>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] sbp-target merge for v3.5-rc1
+Date: Tue, 22 May 2012 15:33:49 -0700
+Message-ID: <1337726029.22481.116.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49488 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752138Ab2EVVBt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 May 2012 17:01:49 -0400
-In-Reply-To: <20120327222229.7144.79107.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux1394-devel <linux1394-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Chris Boot <bootc@bootc.net>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Clemens Ladisch <clemens@ladisch.de>, Andy Grover <agrover@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, giridhar.malavali@qlogic.com, james.smart@emulex.com, bprakash@broadcom.com
 
-On Tue, 2012-03-27 at 15:22 -0700, Robert Love wrote:
-> Currently the fcoe_ctlr associated with an interface is allocated
-> as a member of struct fcoe_interface. This causes problems when
-> attempting to use the new fcoe_sysfs APIs which allow us to allocate
-> the fcoe_interface as private data to the fcoe_ctlr_device instance.
-> The problem is that libfcoe wants to be able use pointer math to find a
-> fcoe_ctlr's fcoe_ctlr_device as well as finding a fcoe_ctlr_device's
-> assocated fcoe_ctlr. To do this we need to allocate the
-> fcoe_ctlr_device, with private data for the LLD. The private data
-> contains the fcoe_ctlr and its private data is the fcoe_interface.
-> This patch only allocates the fcoe_interface with the fcoe_ctlr, the
-> fcoe_ctlr_device will be added in a later patch, which will complete
-> the below diagram-
-> 
-> +------------------+
-> | fcoe_ctlr_device |
-> +------------------+
-> | fcoe_ctlr        |
-> +------------------+
-> | fcoe_interface   |
-> +------------------+
-> 
-> This prep work will allow us to go from a fcoe_ctlr_device instance
-> to its fcoe_ctlr as well as from a fcoe_ctlr to its fcoe_ctlr_device
-> once the fcoe_sysfs API is in use (later patches in this series).
-> 
-> Signed-off-by: Robert Love <robert.w.love@intel.com>
-> Tested-by: Ross Brattain <ross.b.brattain@intel.com>
-> ---
->  drivers/scsi/fcoe/fcoe.c |  132 ++++++++++++++++++++++++++++++----------------
->  drivers/scsi/fcoe/fcoe.h |    8 ++-
->  include/scsi/libfcoe.h   |    9 +++
->  3 files changed, 99 insertions(+), 50 deletions(-)
+Hi Linus,
 
-This isn't applying against scsi-misc:
+Here is the next pull request for Chris Boot's new Serial Block Protocol
+(sbp) target driver for IEEE-1394 (FireWire) hardware.  This code also
+has been in linux-next for a number of weeks, and is ready for an
+initial merge.
 
-patching file drivers/scsi/fcoe/fcoe.c
-Hunk #5 succeeded at 422 with fuzz 1.
-Hunk #6 FAILED at 462.
-Hunk #7 succeeded at 496 (offset 14 lines).
-Hunk #8 succeeded at 650 (offset 12 lines).
-Hunk #9 succeeded at 683 (offset 12 lines).
-Hunk #10 succeeded at 1063 (offset 20 lines).
-Hunk #11 succeeded at 1127 (offset 20 lines).
-Hunk #12 succeeded at 1394 (offset 20 lines).
-Hunk #13 succeeded at 1402 (offset 20 lines).
-Hunk #14 succeeded at 1419 (offset 20 lines).
-Hunk #15 succeeded at 1554 (offset 20 lines).
-Hunk #16 succeeded at 1570 (offset 20 lines).
-Hunk #17 succeeded at 1634 (offset 20 lines).
-Hunk #18 succeeded at 1688 (offset 20 lines).
-Hunk #19 succeeded at 1710 (offset 20 lines).
-Hunk #20 succeeded at 1890 (offset 20 lines).
-Hunk #21 succeeded at 1908 (offset 20 lines).
-Hunk #22 succeeded at 1920 (offset 20 lines).
-Hunk #23 succeeded at 1945 (offset 20 lines).
-Hunk #24 succeeded at 1955 (offset 20 lines).
-Hunk #25 succeeded at 1985 (offset 20 lines).
-Hunk #26 succeeded at 2000 (offset 20 lines).
-Hunk #27 succeeded at 2021 (offset 20 lines).
-Hunk #28 succeeded at 2032 (offset 20 lines).
-Hunk #29 succeeded at 2052 (offset 20 lines).
-Hunk #30 succeeded at 2061 (offset 20 lines).
-Hunk #31 succeeded at 2086 (offset 20 lines).
-Hunk #32 succeeded at 2099 (offset 20 lines).
-Hunk #33 succeeded at 2155 (offset 20 lines).
-Hunk #34 succeeded at 2179 (offset 20 lines).
-Hunk #35 succeeded at 2196 (offset 20 lines).
-Hunk #36 succeeded at 2215 (offset 20 lines).
-Hunk #37 succeeded at 2228 (offset 20 lines).
-Hunk #38 FAILED at 2220.
-Hunk #39 succeeded at 2353 (offset 23 lines).
-Hunk #40 succeeded at 2393 (offset 23 lines).
-Hunk #41 succeeded at 2502 (offset 23 lines).
-Hunk #42 succeeded at 2514 (offset 23 lines).
-Hunk #43 succeeded at 2611 (offset 23 lines).
-Hunk #44 succeeded at 2785 (offset 23 lines).
-2 out of 44 hunks FAILED -- saving rejects to file
-drivers/scsi/fcoe/fcoe.c.rej
-patching file drivers/scsi/fcoe/fcoe.h
-Hunk #1 succeeded at 68 with fuzz 1.
-Hunk #2 FAILED at 78.
-1 out of 2 hunks FAILED -- saving rejects to file
-drivers/scsi/fcoe/fcoe.h.rej
-patching file include/scsi/libfcoe.h
+Please pull from:
 
-Can you tell me what I'm missing or regenerate it?
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git sbp-target-merge
 
-Thanks,
+The FireWire SBP-2 Target is a driver for using an IEEE-1394 connection
+as a SCSI transport. This module uses the SCSI Target framework to
+expose LUNs to other machines attached to a FireWire bus, in effect
+acting as a FireWire hard disk similar to FireWire Target Disk mode
+on many Apple computers.
 
-James
+Also included are the two drivers/firewire/ patches required by
+sbp-target to access fw_request fabric speed needed for mgt_agent
+TCODE_WRITE_BLOCK_REQUEST ops, and exporting fw_card kref logic used
+when creating/destroying active session references to individual
+endpoints.
 
+A credit goes to Chris in being able to get this code up and running so
+quickly w/o any target core changes, and special thanks goes out to
+Stefan Richter + Clemens Ladisch + Andy Grover for their help in getting
+this driver ready for mainline.  Also, one of Chris's goals was to be
+able to connect sbp-target to a PowerPC based MacOS-X based client, that
+he accomplished along the way in this obligatory screenshot:
 
+http://linux-iscsi.org/wiki/File:Linux-fireware-target-bootc-macosx.png
+
+Great work Chris + linux-1394 team !!
+
+--nab
+
+Chris Boot (3):
+  firewire: Add function to get speed from opaque struct fw_request
+  firewire: Move fw_card kref functions into linux/firewire.h
+  sbp-target: Initial merge of firewire/ieee-1394 target mode support
+
+ MAINTAINERS                         |    9 +
+ drivers/firewire/core-card.c        |    1 +
+ drivers/firewire/core-transaction.c |    9 +
+ drivers/firewire/core.h             |   15 -
+ drivers/target/Kconfig              |    1 +
+ drivers/target/Makefile             |    1 +
+ drivers/target/sbp/Kconfig          |   11 +
+ drivers/target/sbp/Makefile         |    1 +
+ drivers/target/sbp/sbp_target.c     | 2621 +++++++++++++++++++++++++++++++++++
+ drivers/target/sbp/sbp_target.h     |  251 ++++
+ include/linux/firewire.h            |   15 +
+ 11 files changed, 2920 insertions(+), 15 deletions(-)
+ create mode 100644 drivers/target/sbp/Kconfig
+ create mode 100644 drivers/target/sbp/Makefile
+ create mode 100644 drivers/target/sbp/sbp_target.c
+ create mode 100644 drivers/target/sbp/sbp_target.h
