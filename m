@@ -1,20 +1,20 @@
 From: "S, Venkatraman" <svenkatr@ti.com>
-Subject: Re: [RFC V3 1/2] SCSI: UFS: Create separate UFS core and pci modules
-Date: Tue, 22 May 2012 10:59:40 +0530
-Message-ID: <CANfBPZ_G-jaai_qWmHu_43gGbE43Wp0Lr49O-2pQ3ozC=QHfwQ@mail.gmail.com>
-References: <1337581868-3042-1-git-send-email-girish.shivananjappa@linaro.org> <1337581868-3042-2-git-send-email-girish.shivananjappa@linaro.org>
+Subject: Re: [RFC V3 2/2] SCSI: UFS: Add platform support for ufs host controller
+Date: Tue, 22 May 2012 11:07:00 +0530
+Message-ID: <CANfBPZ-iU7_0uD0aDiczDqK=jQW1ZVOhPDEH7q27TAy4V0rVGw@mail.gmail.com>
+References: <1337581868-3042-1-git-send-email-girish.shivananjappa@linaro.org> <1337581868-3042-3-git-send-email-girish.shivananjappa@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:55461 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752867Ab2EVFaG convert rfc822-to-8bit
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:60717 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753265Ab2EVFhX convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 May 2012 01:30:06 -0400
-Received: by bkcik5 with SMTP id ik5so4906952bkc.29
-        for <linux-scsi@vger.kernel.org>; Mon, 21 May 2012 22:30:01 -0700 (PDT)
-In-Reply-To: <1337581868-3042-2-git-send-email-girish.shivananjappa@linaro.org>
+	Tue, 22 May 2012 01:37:23 -0400
+Received: by bkcjf20 with SMTP id jf20so5421230bkc.7
+        for <linux-scsi@vger.kernel.org>; Mon, 21 May 2012 22:37:20 -0700 (PDT)
+In-Reply-To: <1337581868-3042-3-git-send-email-girish.shivananjappa@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Girish K S <girish.shivananjappa@linaro.org>
@@ -22,195 +22,61 @@ Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, vinholika
 
 On Mon, May 21, 2012 at 12:01 PM, Girish K S
 <girish.shivananjappa@linaro.org> wrote:
-> The existing driver was pci specific. This patch removes the
-> pci specific code from the core driver. Irrespective of the
-> pci or non-pci probe, the same core driver can be re-used.
->
-> It also creates 2 separate modules of core and pci driver
+> This patch adds platform support for ufs host controller
+> The SoC's that use non-pci probing should use this option.
 >
 > Signed-off-by: Girish K S <girish.shivananjappa@linaro.org>
 > ---
-> =A0drivers/scsi/ufs/Kconfig =A0 =A0 =A0| =A0 19 ++-
-> =A0drivers/scsi/ufs/Makefile =A0 =A0 | =A0 =A01 +
-> =A0drivers/scsi/ufs/ufs.h =A0 =A0 =A0 =A0| =A0103 ++++++++++++
-> =A0drivers/scsi/ufs/ufshcd-pci.c | =A0206 +++++++++++++++++++++++
-> =A0drivers/scsi/ufs/ufshcd.c =A0 =A0 | =A0370 +++++++++++------------=
-------------------
-> =A05 files changed, 421 insertions(+), 278 deletions(-)
-> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
+> =A0drivers/scsi/ufs/Kconfig =A0 =A0 =A0 =A0| =A0 13 +++
+> =A0drivers/scsi/ufs/Makefile =A0 =A0 =A0 | =A0 =A01 +
+> =A0drivers/scsi/ufs/ufshcd-pltfm.c | =A0180 +++++++++++++++++++++++++=
+++++++++++++++
+> =A03 files changed, 194 insertions(+), 0 deletions(-)
+> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
 >
 > diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index 8f27f9d..2a70972 100644
+> index 2a70972..dae5428 100644
 > --- a/drivers/scsi/ufs/Kconfig
 > +++ b/drivers/scsi/ufs/Kconfig
-> @@ -44,6 +44,19 @@
+> @@ -60,3 +60,16 @@ config SCSI_UFSHCD_PCI
+> =A0 =A0 =A0 =A0If you have a controller with this interface, say Y or=
+ M here.
 >
-> =A0config SCSI_UFSHCD
-> =A0 =A0 =A0 =A0tristate "Universal Flash Storage host controller driv=
-er"
-> - =A0 =A0 =A0 depends on PCI && SCSI
-> - =A0 =A0 =A0 ---help---
-> - =A0 =A0 =A0 This is a generic driver which supports PCIe UFS Host c=
-ontrollers.
-> + =A0 =A0 =A0 depends on SCSI
-> + =A0 =A0 =A0 help
-> + =A0 =A0 =A0 This is a generic driver which supports UFS Host contro=
-llers.
-> + =A0 =A0 =A0 This option is selected automatically if the SCSI optio=
-n is
-> + =A0 =A0 =A0 selected. This is a core ufs driver.
+> =A0 =A0 =A0 =A0If unsure, say N.
 > +
-> +config SCSI_UFSHCD_PCI
-> + =A0 =A0 =A0 tristate "Universal Flash Storage host support on PCI b=
-us"
-> + =A0 =A0 =A0 depends on SCSI_UFSHCD && PCI
+> +config SCSI_UFSHCD_PLTFM
+> + =A0 =A0 =A0 tristate "Universal Flash Storage host support as platf=
+orm device"
+> + =A0 =A0 =A0 depends on SCSI_UFSHCD
 > + =A0 =A0 =A0 help
-> + =A0 =A0 =A0 This selects the PCI bus for the Universal Flash Storag=
-e IP.
-> + =A0 =A0 =A0 Select this option if the IP is present on PCI platform=
-=2E
+> + =A0 =A0 =A0 This selects the common helper functions support for Ho=
+st Controller
+> + =A0 =A0 =A0 Interface based platform driver. Please select this opt=
+ion if the IP
+> + =A0 =A0 =A0 is present as a platform device. This is the common int=
+erface for the
+> + =A0 =A0 =A0 UFS Host Controller IP.
 > +
 > + =A0 =A0 =A0 If you have a controller with this interface, say Y or =
 M here.
 > +
 > + =A0 =A0 =A0 If unsure, say N.
 > diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-> index adf7895..9eda0df 100644
+> index 9eda0df..fc56471 100644
 > --- a/drivers/scsi/ufs/Makefile
 > +++ b/drivers/scsi/ufs/Makefile
-> @@ -1,2 +1,3 @@
+> @@ -1,3 +1,4 @@
 > =A0# UFSHCD makefile
 > =A0obj-$(CONFIG_SCSI_UFSHCD) +=3D ufshcd.o
-> +obj-$(CONFIG_SCSI_UFSHCD_PCI) +=3D ufshcd-pci.o
-> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> index b207529..dc36793 100644
-> --- a/drivers/scsi/ufs/ufs.h
-> +++ b/drivers/scsi/ufs/ufs.h
-> @@ -46,6 +46,8 @@
-> =A0#ifndef _UFS_H
-> =A0#define _UFS_H
->
-> +#define ufs_hostname(x) =A0 =A0 =A0 =A0(dev_name(&(x)->dev))
-> +
-> =A0#define MAX_CDB_SIZE =A0 16
->
-> =A0#define UPIU_HEADER_DWORD(byte3, byte2, byte1, byte0)\
-> @@ -204,4 +206,105 @@ struct utp_upiu_task_rsp {
-> =A0 =A0 =A0 =A0u32 reserved[3];
-> =A0};
->
-> +/**
-> + * struct uic_command - UIC command structure
-> + * @command: UIC command
-> + * @argument1: UIC command argument 1
-> + * @argument2: UIC command argument 2
-> + * @argument3: UIC command argument 3
-> + * @cmd_active: Indicate if UIC command is outstanding
-> + * @result: UIC command result
-> + */
-> +struct uic_command {
-> + =A0 =A0 =A0 u32 command;
-> + =A0 =A0 =A0 u32 argument1;
-> + =A0 =A0 =A0 u32 argument2;
-> + =A0 =A0 =A0 u32 argument3;
-> + =A0 =A0 =A0 int cmd_active;
-> + =A0 =A0 =A0 int result;
-> +};
-> +
-> +struct ufs_pdata {
-> + =A0 =A0 =A0 /* TODO */
-> + =A0 =A0 =A0 u32 quirks; /* Quirk flags */
-> +};
-> +
-> +/**
-> + * struct ufs_hba - per adapter private structure
-> + * @mmio_base: UFSHCI base register address
-> + * @ucdl_base_addr: UFS Command Descriptor base address
-> + * @utrdl_base_addr: UTP Transfer Request Descriptor base address
-> + * @utmrdl_base_addr: UTP Task Management Descriptor base address
-> + * @ucdl_dma_addr: UFS Command Descriptor DMA address
-> + * @utrdl_dma_addr: UTRDL DMA address
-> + * @utmrdl_dma_addr: UTMRDL DMA address
-> + * @host: Scsi_Host instance of the driver
-> + * @dev: device handle
-> + * @lrb: local reference block
-> + * @outstanding_tasks: Bits representing outstanding task requests
-> + * @outstanding_reqs: Bits representing outstanding transfer request=
-s
-> + * @capabilities: UFS Controller Capabilities
-> + * @nutrs: Transfer Request Queue depth supported by controller
-> + * @nutmrs: Task Management Queue depth supported by controller
-> + * @active_uic_cmd: handle of active UIC command
-> + * @ufshcd_tm_wait_queue: wait queue for task management
-> + * @tm_condition: condition variable for task management
-> + * @ufshcd_state: UFSHCD states
-> + * @int_enable_mask: Interrupt Mask Bits
-> + * @uic_workq: Work queue for UIC completion handling
-> + * @feh_workq: Work queue for fatal controller error handling
-> + * @errors: HBA errors
-> + */
-> +struct ufs_hba {
-> + =A0 =A0 =A0 void __iomem *mmio_base;
-> +
-> + =A0 =A0 =A0 /* Virtual memory reference */
-> + =A0 =A0 =A0 struct utp_transfer_cmd_desc *ucdl_base_addr;
-> + =A0 =A0 =A0 struct utp_transfer_req_desc *utrdl_base_addr;
-> + =A0 =A0 =A0 struct utp_task_req_desc *utmrdl_base_addr;
-> +
-> + =A0 =A0 =A0 /* DMA memory reference */
-> + =A0 =A0 =A0 dma_addr_t ucdl_dma_addr;
-> + =A0 =A0 =A0 dma_addr_t utrdl_dma_addr;
-> + =A0 =A0 =A0 dma_addr_t utmrdl_dma_addr;
-> +
-> + =A0 =A0 =A0 struct Scsi_Host *host;
-> + =A0 =A0 =A0 struct device dev;
-> +
-> + =A0 =A0 =A0 struct ufshcd_lrb *lrb;
-> +
-> + =A0 =A0 =A0 unsigned long outstanding_tasks;
-> + =A0 =A0 =A0 unsigned long outstanding_reqs;
-> +
-> + =A0 =A0 =A0 u32 capabilities;
-> + =A0 =A0 =A0 int nutrs;
-> + =A0 =A0 =A0 int nutmrs;
-> + =A0 =A0 =A0 u32 ufs_version;
-> +
-> + =A0 =A0 =A0 struct uic_command active_uic_cmd;
-> + =A0 =A0 =A0 wait_queue_head_t ufshcd_tm_wait_queue;
-> + =A0 =A0 =A0 unsigned long tm_condition;
-> +
-> + =A0 =A0 =A0 u32 ufshcd_state;
-> + =A0 =A0 =A0 u32 int_enable_mask;
-> +
-> + =A0 =A0 =A0 /* Work Queues */
-> + =A0 =A0 =A0 struct work_struct uic_workq;
-> + =A0 =A0 =A0 struct work_struct feh_workq;
-> +
-> + =A0 =A0 =A0 /* HBA Errors */
-> + =A0 =A0 =A0 u32 errors;
-> +
-> + =A0 =A0 =A0 unsigned int =A0 =A0 =A0 =A0 =A0 =A0irq;
-> +};
-> +
-> +extern int ufshcd_initialize_hba(struct ufs_hba *hba);
-> +extern int ufshcd_drv_init(struct ufs_hba **hostdat, struct device *=
-dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 int irq_no, void __iome=
-m *mmio_base);
-> +extern void ufshcd_drv_exit(struct ufs_hba *hba);
-> +#ifdef CONFIG_PM
-> +extern int ufshcd_suspend(struct ufs_hba *hba);
-> +extern int ufshcd_resume(struct ufs_hba *hba);
-> +#endif /* CONFIG_PM */
-> +
-> =A0#endif /* End of Header */
-> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-=
-pci.c
+> =A0obj-$(CONFIG_SCSI_UFSHCD_PCI) +=3D ufshcd-pci.o
+> +obj-$(CONFIG_SCSI_UFSHCD_PLTFM) +=3D ufshcd-pltfm.o
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfm.c b/drivers/scsi/ufs/ufshc=
+d-pltfm.c
 > new file mode 100644
-> index 0000000..e306573
+> index 0000000..7558210
 > --- /dev/null
-> +++ b/drivers/scsi/ufs/ufshcd-pci.c
-> @@ -0,0 +1,206 @@
+> +++ b/drivers/scsi/ufs/ufshcd-pltfm.c
+> @@ -0,0 +1,180 @@
 > +/*
 > + * Universal Flash Storage Host controller driver
 > + *
@@ -271,90 +137,73 @@ GRANTED
 > +#include <linux/interrupt.h>
 > +#include <linux/module.h>
 > +#include <linux/io.h>
-> +#include <linux/pci.h>
+> +#include <linux/irq.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/slab.h>
+> +#include <linux/dma-mapping.h>
 > +#include <scsi/scsi_host.h>
 > +
 > +#include "ufs.h"
 > +#include "ufshci.h"
 > +
 > +/**
-> + * ufshcd_pci_set_dma_mask - Set dma mask based on the controller
+> + * ufshcd_pltfmset_dma_mask - Set dma mask based on the controller
 > + * =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0addressing capability
 > + * @ihba: pointer to host platform data
 > + *
 > + * Returns 0 for success, non-zero for failure
 > + */
-> +static int ufshcd_pci_set_dma_mask(struct pci_dev *pdev)
+> +static int ufshcd_pltfm_set_dma_mask(struct platform_device *pdev)
 > +{
 > + =A0 =A0 =A0 int err;
 > + =A0 =A0 =A0 u64 dma_mask;
 > +
-> + =A0 =A0 =A0 /*
-> + =A0 =A0 =A0 =A0* If controller supports 64 bit addressing mode, the=
-n set the DMA
-> + =A0 =A0 =A0 =A0* mask to 64-bit, else set the DMA mask to 32-bit
-> + =A0 =A0 =A0 =A0*/
 > + =A0 =A0 =A0 dma_mask =3D DMA_BIT_MASK(64);
-> + =A0 =A0 =A0 err =3D pci_set_dma_mask(pdev, dma_mask);
+> + =A0 =A0 =A0 err =3D dma_set_coherent_mask(&pdev->dev, dma_mask);
 > + =A0 =A0 =A0 if (err) {
 > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dma_mask =3D DMA_BIT_MASK(32);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 err =3D pci_set_dma_mask(pdev, dma_mask=
-);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 err =3D dma_set_coherent_mask(&pdev->de=
+v, dma_mask);
 > + =A0 =A0 =A0 }
-> +
-> + =A0 =A0 =A0 if (err)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return err;
-> +
-> + =A0 =A0 =A0 err =3D pci_set_consistent_dma_mask(pdev, dma_mask);
 > +
 > + =A0 =A0 =A0 return err;
 > +}
 > +
-> +static int __devinit ufshcd_pci_probe(struct pci_dev *pdev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 con=
-st struct pci_device_id *entries)
+> +static int __devinit ufshcd_pltfm_probe(struct platform_device *pdev=
+)
 > +{
 > + =A0 =A0 =A0 struct ufs_hba *uninitialized_var(hba);
-> + =A0 =A0 =A0 int err;
+> + =A0 =A0 =A0 struct resource *regs;
+> + =A0 =A0 =A0 int err, irq;
 > + =A0 =A0 =A0 void __iomem *mmio_base;
 > +
-> + =A0 =A0 =A0 err =3D pci_enable_device(pdev);
-> + =A0 =A0 =A0 if (err) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "pci_enable_device =
-failed\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto err_return;
-> + =A0 =A0 =A0 }
+> + =A0 =A0 =A0 regs =3D platform_get_resource(pdev, IORESOURCE_MEM, 0)=
+;
+> + =A0 =A0 =A0 if (!regs)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENXIO;
 > +
-> + =A0 =A0 =A0 pci_set_master(pdev);
+> + =A0 =A0 =A0 irq =3D platform_get_irq(pdev, 0);
+> + =A0 =A0 =A0 if (irq < 0)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return irq;
 > +
-> + =A0 =A0 =A0 err =3D pci_request_regions(pdev, "ufshcd-pci");
-> + =A0 =A0 =A0 if (err < 0) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "request regions fa=
-iled\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto err_disable;
-> + =A0 =A0 =A0 }
+> + =A0 =A0 =A0 mmio_base =3D ioremap(regs->start, resource_size(regs))=
+;
+> + =A0 =A0 =A0 if (!mmio_base)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENOMEM;
 > +
-> + =A0 =A0 =A0 mmio_base =3D pci_ioremap_bar(pdev, 0);
-> + =A0 =A0 =A0 if (!mmio_base) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "memory map failed\=
-n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 err =3D -ENOMEM;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto err_release;
-> + =A0 =A0 =A0 }
-> +
-> + =A0 =A0 =A0 err =3D ufshcd_pci_set_dma_mask(pdev);
+> + =A0 =A0 =A0 err =3D ufshcd_pltfm_set_dma_mask(pdev);
 > + =A0 =A0 =A0 if (err) {
 > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "set dma mask faile=
 d\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto err_iounmap;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto =A0err_iounmap;
 > + =A0 =A0 =A0 }
 > +
-> + =A0 =A0 =A0 err =3D ufshcd_drv_init(&hba, &pdev->dev, pdev->irq, mm=
-io_base);
+> + =A0 =A0 =A0 err =3D ufshcd_drv_init(&hba, &pdev->dev, irq, mmio_bas=
+e);
 > + =A0 =A0 =A0 if (err)
 > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto err_iounmap;
 > +
-> + =A0 =A0 =A0 pci_set_drvdata(pdev, hba);
+> + =A0 =A0 =A0 platform_set_drvdata(pdev, hba);
 > +
 > + =A0 =A0 =A0 /* Initialization routine */
 > + =A0 =A0 =A0 err =3D ufshcd_initialize_hba(hba);
@@ -370,856 +219,77 @@ ed\n");
 > + =A0 =A0 =A0 ufshcd_drv_exit(hba);
 > +err_iounmap:
 > + =A0 =A0 =A0 iounmap(hba->mmio_base);
-> +err_release:
-> + =A0 =A0 =A0 pci_release_regions(pdev);
-> +err_disable:
-> + =A0 =A0 =A0 pci_clear_master(pdev);
-> + =A0 =A0 =A0 pci_disable_device(pdev);
-> +err_return:
 > + =A0 =A0 =A0 return err;
 > +}
 > +
-> +static void __devexit ufshcd_pci_remove(struct pci_dev *pdev)
+> +static int __devexit ufshcd_pltfm_remove(struct platform_device *pde=
+v)
 > +{
-> + =A0 =A0 =A0 struct ufs_hba *hba =3D pci_get_drvdata(pdev);
+> + =A0 =A0 =A0 struct ufs_hba *hba =3D platform_get_drvdata(pdev);
 > +
 > + =A0 =A0 =A0 ufshcd_drv_exit(hba);
 > + =A0 =A0 =A0 iounmap(hba->mmio_base);
-> + =A0 =A0 =A0 pci_set_drvdata(pdev, NULL);
-> + =A0 =A0 =A0 pci_clear_master(pdev);
-> + =A0 =A0 =A0 pci_release_regions(pdev);
-> + =A0 =A0 =A0 pci_disable_device(pdev);
+> + =A0 =A0 =A0 platform_set_drvdata(pdev, NULL);
+> + =A0 =A0 =A0 return 0;
 > +}
 > +
 > +#ifdef CONFIG_PM
-> +static int ufshcd_pci_suspend(struct device *dev)
+> +static int ufshcd_pltfm_suspend(struct device *dev)
 > +{
 > + =A0 =A0 =A0 int ret;
-> + =A0 =A0 =A0 struct pci_dev *pdev =3D to_pci_dev(dev);
-> + =A0 =A0 =A0 struct ufs_hba *hba =3D pci_get_drvdata(pdev);
+> + =A0 =A0 =A0 struct ufs_hba *hba =3D dev_get_drvdata(dev);
 > +
 > + =A0 =A0 =A0 ret =3D ufshcd_suspend(hba);
-> + =A0 =A0 =A0 return ret;
+> + =A0 =A0 =A0 if (ret)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return ret;
+The above 2 lines are redundant...
+> +
+> + =A0 =A0 =A0 return 0;
+=2E. if you simply do a "return ret" here...
+
 > +}
 > +
-> +static int ufshcd_pci_resume(struct device *dev)
+> +static int ufshcd_pltfm_resume(struct device *dev)
 > +{
 > + =A0 =A0 =A0 int ret;
-> + =A0 =A0 =A0 struct pci_dev *pdev =3D to_pci_dev(dev);
-> + =A0 =A0 =A0 struct ufs_hba *hba =3D pci_get_drvdata(pdev);
+> + =A0 =A0 =A0 struct ufs_hba *hba =3D dev_get_drvdata(dev);
 > +
 > + =A0 =A0 =A0 ret =3D ufshcd_resume(hba);
-> + =A0 =A0 =A0 return ret;
+> + =A0 =A0 =A0 if (ret)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return ret;
+
+=2E. ditto
+> +
+> + =A0 =A0 =A0 return 0;
 > +}
 > +#else
-> +#define ufshcd_pci_suspend =A0 =A0 NULL
-> +#define ufshcd_pci_resume =A0 =A0 =A0NULL
+> +#define ufshcd_pltfm_suspend =A0 NULL
+> +#define ufshcd_pltfm_resume =A0 =A0NULL
 > +#endif /* CONFIG_PM */
 > +
-> +static SIMPLE_DEV_PM_OPS(ufshcd_pci_pmops,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ufshcd_pci_suspend,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ufshcd_pci_resume);
+> +static SIMPLE_DEV_PM_OPS(ufshcd_pltfm_pmops,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ufshcd_pltfm_suspend=
+,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ufshcd_pltfm_resume)=
+;
 > +
-> +static DEFINE_PCI_DEVICE_TABLE(ufshcd_pci_id) =3D {
-> + =A0 =A0 =A0 { PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID=
-, 0, 0, 0 },
-> + =A0 =A0 =A0 {}
-> +};
-> +MODULE_DEVICE_TABLE(pci, ufshcd_pci_id);
-> +
-> +static struct pci_driver ufshcd_pci_driver =3D {
-> + =A0 =A0 =A0 .name =A0 =A0 =A0 =A0 =A0 =3D "ufshcd-pci",
-> + =A0 =A0 =A0 .id_table =A0 =A0 =A0 =3D ufshcd_pci_id,
-> + =A0 =A0 =A0 .probe =A0 =A0 =A0 =A0 =A0=3D ufshcd_pci_probe,
-> + =A0 =A0 =A0 .remove =A0 =A0 =A0 =A0 =3D __devexit_p(ufshcd_pci_remo=
-ve),
-> + =A0 =A0 =A0 .driver =A0 =A0 =A0 =A0 =3D =A0 =A0 =A0 {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 .pm =3D =A0 &ufshcd_pci_pmops
+> +static struct platform_driver ufshcd_pltfm_driver =3D {
+> + =A0 =A0 =A0 .probe =A0 =A0 =A0 =A0 =A0=3D ufshcd_pltfm_probe,
+> + =A0 =A0 =A0 .remove =A0 =A0 =A0 =A0 =3D __devexit_p(ufshcd_pltfm_re=
+move),
+> + =A0 =A0 =A0 .driver =A0 =A0 =A0 =A0 =3D {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 .name =A0 =A0 =A0 =A0 =A0 =3D "ufshcd-p=
+ltfm",
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 .pm =A0 =A0 =A0 =A0 =A0 =A0 =3D &ufshcd=
+_pltfm_pmops,
 > + =A0 =A0 =A0 },
 > +};
 > +
-> +module_pci_driver(ufshcd_pci_driver);
+> +module_platform_driver(ufshcd_pltfm_driver);
 > +
-> +MODULE_DESCRIPTION("UFS Host Controller PCI Interface driver");
+> +MODULE_DESCRIPTION("UFS Host Controller platform Interface driver");
 > +MODULE_AUTHOR("Girish K S <ks.giri@samsung.com>");
 > +MODULE_LICENSE("GPL");
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index e47a0da..4cfbfc5 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -46,7 +46,6 @@
-> =A0#include <linux/module.h>
-> =A0#include <linux/kernel.h>
-> =A0#include <linux/init.h>
-> -#include <linux/pci.h>
-> =A0#include <linux/interrupt.h>
-> =A0#include <linux/io.h>
-> =A0#include <linux/delay.h>
-> @@ -102,91 +101,6 @@ enum {
-> =A0};
->
-> =A0/**
-> - * struct uic_command - UIC command structure
-> - * @command: UIC command
-> - * @argument1: UIC command argument 1
-> - * @argument2: UIC command argument 2
-> - * @argument3: UIC command argument 3
-> - * @cmd_active: Indicate if UIC command is outstanding
-> - * @result: UIC command result
-> - */
-> -struct uic_command {
-> - =A0 =A0 =A0 u32 command;
-> - =A0 =A0 =A0 u32 argument1;
-> - =A0 =A0 =A0 u32 argument2;
-> - =A0 =A0 =A0 u32 argument3;
-> - =A0 =A0 =A0 int cmd_active;
-> - =A0 =A0 =A0 int result;
-> -};
-> -
-> -/**
-> - * struct ufs_hba - per adapter private structure
-> - * @mmio_base: UFSHCI base register address
-> - * @ucdl_base_addr: UFS Command Descriptor base address
-> - * @utrdl_base_addr: UTP Transfer Request Descriptor base address
-> - * @utmrdl_base_addr: UTP Task Management Descriptor base address
-> - * @ucdl_dma_addr: UFS Command Descriptor DMA address
-> - * @utrdl_dma_addr: UTRDL DMA address
-> - * @utmrdl_dma_addr: UTMRDL DMA address
-> - * @host: Scsi_Host instance of the driver
-> - * @pdev: PCI device handle
-> - * @lrb: local reference block
-> - * @outstanding_tasks: Bits representing outstanding task requests
-> - * @outstanding_reqs: Bits representing outstanding transfer request=
-s
-> - * @capabilities: UFS Controller Capabilities
-> - * @nutrs: Transfer Request Queue depth supported by controller
-> - * @nutmrs: Task Management Queue depth supported by controller
-> - * @active_uic_cmd: handle of active UIC command
-> - * @ufshcd_tm_wait_queue: wait queue for task management
-> - * @tm_condition: condition variable for task management
-> - * @ufshcd_state: UFSHCD states
-> - * @int_enable_mask: Interrupt Mask Bits
-> - * @uic_workq: Work queue for UIC completion handling
-> - * @feh_workq: Work queue for fatal controller error handling
-> - * @errors: HBA errors
-> - */
-> -struct ufs_hba {
-> - =A0 =A0 =A0 void __iomem *mmio_base;
-> -
-> - =A0 =A0 =A0 /* Virtual memory reference */
-> - =A0 =A0 =A0 struct utp_transfer_cmd_desc *ucdl_base_addr;
-> - =A0 =A0 =A0 struct utp_transfer_req_desc *utrdl_base_addr;
-> - =A0 =A0 =A0 struct utp_task_req_desc *utmrdl_base_addr;
-> -
-> - =A0 =A0 =A0 /* DMA memory reference */
-> - =A0 =A0 =A0 dma_addr_t ucdl_dma_addr;
-> - =A0 =A0 =A0 dma_addr_t utrdl_dma_addr;
-> - =A0 =A0 =A0 dma_addr_t utmrdl_dma_addr;
-> -
-> - =A0 =A0 =A0 struct Scsi_Host *host;
-> - =A0 =A0 =A0 struct pci_dev *pdev;
-> -
-> - =A0 =A0 =A0 struct ufshcd_lrb *lrb;
-> -
-> - =A0 =A0 =A0 unsigned long outstanding_tasks;
-> - =A0 =A0 =A0 unsigned long outstanding_reqs;
-> -
-> - =A0 =A0 =A0 u32 capabilities;
-> - =A0 =A0 =A0 int nutrs;
-> - =A0 =A0 =A0 int nutmrs;
-> - =A0 =A0 =A0 u32 ufs_version;
-> -
-> - =A0 =A0 =A0 struct uic_command active_uic_cmd;
-> - =A0 =A0 =A0 wait_queue_head_t ufshcd_tm_wait_queue;
-> - =A0 =A0 =A0 unsigned long tm_condition;
-> -
-> - =A0 =A0 =A0 u32 ufshcd_state;
-> - =A0 =A0 =A0 u32 int_enable_mask;
-> -
-> - =A0 =A0 =A0 /* Work Queues */
-> - =A0 =A0 =A0 struct work_struct uic_workq;
-> - =A0 =A0 =A0 struct work_struct feh_workq;
-> -
-> - =A0 =A0 =A0 /* HBA Errors */
-> - =A0 =A0 =A0 u32 errors;
-> -};
-> -
-> -/**
-> =A0* struct ufshcd_lrb - local reference block
-> =A0* @utr_descriptor_ptr: UTRD address of the command
-> =A0* @ucd_cmd_ptr: UCD address of the command
-> @@ -335,21 +249,21 @@ static inline void ufshcd_free_hba_memory(struc=
-t ufs_hba *hba)
->
-> =A0 =A0 =A0 =A0if (hba->utmrdl_base_addr) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0utmrdl_size =3D sizeof(struct utp_task=
-_req_desc) * hba->nutmrs;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dma_free_coherent(&hba->pdev->dev, utmr=
-dl_size,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dma_free_coherent(&hba->dev, utmrdl_siz=
-e,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0hb=
-a->utmrdl_base_addr, hba->utmrdl_dma_addr);
-> =A0 =A0 =A0 =A0}
->
-> =A0 =A0 =A0 =A0if (hba->utrdl_base_addr) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0utrdl_size =3D
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0(sizeof(struct utp_transfer_req_desc) =
-* hba->nutrs);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dma_free_coherent(&hba->pdev->dev, utrd=
-l_size,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dma_free_coherent(&hba->dev, utrdl_size=
-,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0hb=
-a->utrdl_base_addr, hba->utrdl_dma_addr);
-> =A0 =A0 =A0 =A0}
->
-> =A0 =A0 =A0 =A0if (hba->ucdl_base_addr) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ucdl_size =3D
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0(sizeof(struct utp_transfer_cmd_desc) =
-* hba->nutrs);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dma_free_coherent(&hba->pdev->dev, ucdl=
-_size,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dma_free_coherent(&hba->dev, ucdl_size,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0hb=
-a->ucdl_base_addr, hba->ucdl_dma_addr);
-> =A0 =A0 =A0 =A0}
-> =A0}
-> @@ -724,7 +638,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hb=
-a)
->
-> =A0 =A0 =A0 =A0/* Allocate memory for UTP command descriptors */
-> =A0 =A0 =A0 =A0ucdl_size =3D (sizeof(struct utp_transfer_cmd_desc) * =
-hba->nutrs);
-> - =A0 =A0 =A0 hba->ucdl_base_addr =3D dma_alloc_coherent(&hba->pdev->=
-dev,
-> + =A0 =A0 =A0 hba->ucdl_base_addr =3D dma_alloc_coherent(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 ucdl_size,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 &hba->ucdl_dma_addr,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 GFP_KERNEL);
-> @@ -737,7 +651,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hb=
-a)
-> =A0 =A0 =A0 =A0 */
-> =A0 =A0 =A0 =A0if (!hba->ucdl_base_addr ||
-> =A0 =A0 =A0 =A0 =A0 =A0WARN_ON(hba->ucdl_dma_addr & (PAGE_SIZE - 1)))=
- {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"Command Descriptor Me=
-mory allocation failed\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> =A0 =A0 =A0 =A0}
-> @@ -747,13 +661,13 @@ static int ufshcd_memory_alloc(struct ufs_hba *=
-hba)
-> =A0 =A0 =A0 =A0 * UFSHCI requires 1024 byte alignment of UTRD
-> =A0 =A0 =A0 =A0 */
-> =A0 =A0 =A0 =A0utrdl_size =3D (sizeof(struct utp_transfer_req_desc) *=
- hba->nutrs);
-> - =A0 =A0 =A0 hba->utrdl_base_addr =3D dma_alloc_coherent(&hba->pdev-=
->dev,
-> + =A0 =A0 =A0 hba->utrdl_base_addr =3D dma_alloc_coherent(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0utrdl_size,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0&hba->utrdl_dma_addr,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0GFP_KERNEL);
-> =A0 =A0 =A0 =A0if (!hba->utrdl_base_addr ||
-> =A0 =A0 =A0 =A0 =A0 =A0WARN_ON(hba->utrdl_dma_addr & (PAGE_SIZE - 1))=
-) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"Transfer Descriptor M=
-emory allocation failed\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> =A0 =A0 =A0 =A0}
-> @@ -763,13 +677,13 @@ static int ufshcd_memory_alloc(struct ufs_hba *=
-hba)
-> =A0 =A0 =A0 =A0 * UFSHCI requires 1024 byte alignment of UTMRD
-> =A0 =A0 =A0 =A0 */
-> =A0 =A0 =A0 =A0utmrdl_size =3D sizeof(struct utp_task_req_desc) * hba=
-->nutmrs;
-> - =A0 =A0 =A0 hba->utmrdl_base_addr =3D dma_alloc_coherent(&hba->pdev=
-->dev,
-> + =A0 =A0 =A0 hba->utmrdl_base_addr =3D dma_alloc_coherent(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 utmrdl_size,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 &hba->utmrdl_dma_addr,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 GFP_KERNEL);
-> =A0 =A0 =A0 =A0if (!hba->utmrdl_base_addr ||
-> =A0 =A0 =A0 =A0 =A0 =A0WARN_ON(hba->utmrdl_dma_addr & (PAGE_SIZE - 1)=
-)) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"Task Management Descriptor Memory all=
-ocation failed\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> =A0 =A0 =A0 =A0}
-> @@ -777,7 +691,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hb=
-a)
-> =A0 =A0 =A0 =A0/* Allocate memory for local reference block */
-> =A0 =A0 =A0 =A0hba->lrb =3D kcalloc(hba->nutrs, sizeof(struct ufshcd_=
-lrb), GFP_KERNEL);
-> =A0 =A0 =A0 =A0if (!hba->lrb) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev, "LRB Memory al=
-location failed\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev, "LRB Memory allocati=
-on failed\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> =A0 =A0 =A0 =A0}
-> =A0 =A0 =A0 =A0return 0;
-> @@ -867,7 +781,7 @@ static int ufshcd_dme_link_startup(struct ufs_hba=
- *hba)
-> =A0 =A0 =A0 =A0/* check if controller is ready to accept UIC commands=
- */
-> =A0 =A0 =A0 =A0if (((readl(hba->mmio_base + REG_CONTROLLER_STATUS)) &
-> =A0 =A0 =A0 =A0 =A0 =A0UIC_COMMAND_READY) =3D=3D 0x0) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"Controller not ready"
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0" to accept UIC comman=
-ds\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EIO;
-> @@ -912,7 +826,7 @@ static int ufshcd_make_hba_operational(struct ufs=
-_hba *hba)
-> =A0 =A0 =A0 =A0/* check if device present */
-> =A0 =A0 =A0 =A0reg =3D readl((hba->mmio_base + REG_CONTROLLER_STATUS)=
-);
-> =A0 =A0 =A0 =A0if (!ufshcd_is_device_present(reg)) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev, "cc: Device no=
-t present\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev, "cc: Device not pres=
-ent\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0err =3D -ENXIO;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> =A0 =A0 =A0 =A0}
-> @@ -924,7 +838,7 @@ static int ufshcd_make_hba_operational(struct ufs=
-_hba *hba)
-> =A0 =A0 =A0 =A0if (!(ufshcd_get_lists_status(reg))) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ufshcd_enable_run_stop_reg(hba);
-> =A0 =A0 =A0 =A0} else {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"Host controller not r=
-eady to process requests");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0err =3D -EIO;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> @@ -1005,7 +919,7 @@ static int ufshcd_hba_enable(struct ufs_hba *hba=
-)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (retry) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0retry--;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0} else {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev=
-,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"Contr=
-oller enable failed\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EIO;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
-> @@ -1015,37 +929,6 @@ static int ufshcd_hba_enable(struct ufs_hba *hb=
-a)
-> =A0}
->
-> =A0/**
-> - * ufshcd_initialize_hba - start the initialization process
-> - * @hba: per adapter instance
-> - *
-> - * 1. Enable the controller via ufshcd_hba_enable.
-> - * 2. Program the Transfer Request List Address with the starting ad=
-dress of
-> - * UTRDL.
-> - * 3. Program the Task Management Request List Address with starting=
- address
-> - * of UTMRDL.
-> - *
-> - * Returns 0 on success, non-zero value on failure.
-> - */
-> -static int ufshcd_initialize_hba(struct ufs_hba *hba)
-> -{
-> - =A0 =A0 =A0 if (ufshcd_hba_enable(hba))
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EIO;
-> -
-> - =A0 =A0 =A0 /* Configure UTRL and UTMRL base address registers */
-> - =A0 =A0 =A0 writel(lower_32_bits(hba->utrdl_dma_addr),
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0(hba->mmio_base + REG_UTP_TRANSFER_REQ_L=
-IST_BASE_L));
-> - =A0 =A0 =A0 writel(upper_32_bits(hba->utrdl_dma_addr),
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0(hba->mmio_base + REG_UTP_TRANSFER_REQ_L=
-IST_BASE_H));
-> - =A0 =A0 =A0 writel(lower_32_bits(hba->utmrdl_dma_addr),
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0(hba->mmio_base + REG_UTP_TASK_REQ_LIST_=
-BASE_L));
-> - =A0 =A0 =A0 writel(upper_32_bits(hba->utmrdl_dma_addr),
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0(hba->mmio_base + REG_UTP_TASK_REQ_LIST_=
-BASE_H));
-> -
-> - =A0 =A0 =A0 /* Initialize unipro link startup procedure */
-> - =A0 =A0 =A0 return ufshcd_dme_link_startup(hba);
-> -}
-> -
-> -/**
-> =A0* ufshcd_do_reset - reset the host controller
-> =A0* @hba: per adapter instance
-> =A0*
-> @@ -1084,7 +967,7 @@ static int ufshcd_do_reset(struct ufs_hba *hba)
->
-> =A0 =A0 =A0 =A0/* start the initialization process */
-> =A0 =A0 =A0 =A0if (ufshcd_initialize_hba(hba)) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"Reset: Controller ini=
-tialization failed\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return FAILED;
-> =A0 =A0 =A0 =A0}
-> @@ -1167,7 +1050,7 @@ static int ufshcd_task_req_compl(struct ufs_hba=
- *hba, u32 index)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0task_result =3D SUCCES=
-S;
-> =A0 =A0 =A0 =A0} else {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0task_result =3D FAILED;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"trc: Invalid ocs =3D =
-%x\n", ocs_value);
-> =A0 =A0 =A0 =A0}
-> =A0 =A0 =A0 =A0spin_unlock_irqrestore(hba->host->host_lock, flags);
-> @@ -1281,7 +1164,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,=
- struct ufshcd_lrb *lrbp)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* check if the returned transfer resp=
-onse is valid */
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0result =3D ufshcd_is_valid_req_rsp(lrb=
-p->ucd_rsp_ptr);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (result) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev=
-,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"Inval=
-id response =3D %x\n", result);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
-> @@ -1310,7 +1193,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,=
- struct ufshcd_lrb *lrbp)
-> =A0 =A0 =A0 =A0case OCS_FATAL_ERROR:
-> =A0 =A0 =A0 =A0default:
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0result |=3D DID_ERROR << 16;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"OCS error from controller =3D %x\n", =
-ocs);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
-> =A0 =A0 =A0 =A0} /* end of switch */
-> @@ -1374,7 +1257,7 @@ static void ufshcd_uic_cc_handler (struct work_=
-struct *work)
-> =A0 =A0 =A0 =A0 =A0 =A0!(ufshcd_get_uic_cmd_result(hba))) {
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (ufshcd_make_hba_operational(hba))
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev=
-,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"cc: h=
-ba not operational state\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return;
-> =A0 =A0 =A0 =A0}
-> @@ -1509,7 +1392,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
-> =A0 =A0 =A0 =A0free_slot =3D ufshcd_get_tm_free_slot(hba);
-> =A0 =A0 =A0 =A0if (free_slot >=3D hba->nutmrs) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0spin_unlock_irqrestore(host->host_lock=
-, flags);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev, "Task manageme=
-nt queue full\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev, "Task management que=
-ue full\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0err =3D FAILED;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> =A0 =A0 =A0 =A0}
-> @@ -1552,7 +1435,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 &hba->tm_condition) !=3D 0),
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 60 * HZ);
-> =A0 =A0 =A0 =A0if (!err) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->pdev->dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"Task management comma=
-nd timed-out\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0err =3D FAILED;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> @@ -1688,23 +1571,46 @@ static struct scsi_host_template ufshcd_drive=
-r_template =3D {
-> =A0};
->
-> =A0/**
-> - * ufshcd_shutdown - main function to put the controller in reset st=
-ate
-> - * @pdev: pointer to PCI device handle
-> + * ufshcd_initialize_hba - start the initialization process
-> + * @hba: per adapter instance
-> + *
-> + * 1. Enable the controller via ufshcd_hba_enable.
-> + * 2. Program the Transfer Request List Address with the starting ad=
-dress of
-> + * UTRDL.
-> + * 3. Program the Task Management Request List Address with starting=
- address
-> + * of UTMRDL.
-> + *
-> + * Returns 0 on success, non-zero value on failure.
-> =A0*/
-> -static void ufshcd_shutdown(struct pci_dev *pdev)
-> +int ufshcd_initialize_hba(struct ufs_hba *hba)
-> =A0{
-> - =A0 =A0 =A0 ufshcd_hba_stop((struct ufs_hba *)pci_get_drvdata(pdev)=
-);
-> + =A0 =A0 =A0 if (ufshcd_hba_enable(hba))
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EIO;
-> +
-> + =A0 =A0 =A0 /* Configure UTRL and UTMRL base address registers */
-> + =A0 =A0 =A0 writel(hba->utrdl_dma_addr,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0(hba->mmio_base + REG_UTP_TRANSFER_REQ_L=
-IST_BASE_L));
-> + =A0 =A0 =A0 writel(lower_32_bits(hba->utrdl_dma_addr),
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0(hba->mmio_base + REG_UTP_TRANSFER_REQ_L=
-IST_BASE_H));
-> + =A0 =A0 =A0 writel(hba->utmrdl_dma_addr,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0(hba->mmio_base + REG_UTP_TASK_REQ_LIST_=
-BASE_L));
-> + =A0 =A0 =A0 writel(upper_32_bits(hba->utmrdl_dma_addr),
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0(hba->mmio_base + REG_UTP_TASK_REQ_LIST_=
-BASE_H));
-> +
-> + =A0 =A0 =A0 /* Initialize unipro link startup procedure */
-> + =A0 =A0 =A0 return ufshcd_dme_link_startup(hba);
-> =A0}
-> +EXPORT_SYMBOL(ufshcd_initialize_hba);
->
-> =A0#ifdef CONFIG_PM
-> =A0/**
-> =A0* ufshcd_suspend - suspend power management function
-> - * @pdev: pointer to PCI device handle
-> + * @hba: pointer to host controller platform data
-> =A0* @state: power state
-> =A0*
-> =A0* Returns -ENOSYS
-> =A0*/
-> -static int ufshcd_suspend(struct pci_dev *pdev, pm_message_t state)
-> +int ufshcd_suspend(struct ufs_hba *hba)
-> =A0{
-> =A0 =A0 =A0 =A0/*
-> =A0 =A0 =A0 =A0 * TODO:
-> @@ -1717,14 +1623,15 @@ static int ufshcd_suspend(struct pci_dev *pde=
-v, pm_message_t state)
->
-> =A0 =A0 =A0 =A0return -ENOSYS;
-> =A0}
-> +EXPORT_SYMBOL(ufshcd_suspend);
->
-> =A0/**
-> =A0* ufshcd_resume - resume power management function
-> - * @pdev: pointer to PCI device handle
-> + * @hba: pointer to host controller platform data
-> =A0*
-> =A0* Returns -ENOSYS
-> =A0*/
-> -static int ufshcd_resume(struct pci_dev *pdev)
-> +int ufshcd_resume(struct ufs_hba *hba)
-> =A0{
-> =A0 =A0 =A0 =A0/*
-> =A0 =A0 =A0 =A0 * TODO:
-> @@ -1737,119 +1644,55 @@ static int ufshcd_resume(struct pci_dev *pde=
-v)
->
-> =A0 =A0 =A0 =A0return -ENOSYS;
-> =A0}
-> -#endif /* CONFIG_PM */
-> +EXPORT_SYMBOL(ufshcd_resume);
->
-> -/**
-> - * ufshcd_hba_free - free allocated memory for
-> - * =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 host memory space data st=
-ructures
-> - * @hba: per adapter instance
-> - */
-> -static void ufshcd_hba_free(struct ufs_hba *hba)
-> -{
-> - =A0 =A0 =A0 iounmap(hba->mmio_base);
-> - =A0 =A0 =A0 ufshcd_free_hba_memory(hba);
-> - =A0 =A0 =A0 pci_release_regions(hba->pdev);
-> -}
-> +#endif /* CONFIG_PM */
->
-> =A0/**
-> - * ufshcd_remove - de-allocate PCI/SCSI host and host memory space
-> + * ufshcd_drv_exit - de-allocate SCSI host and host memory space
-> =A0* =A0 =A0 =A0 =A0 =A0 =A0 data structure memory
-> - * @pdev - pointer to PCI handle
-> + * @dev - pointer to host platform data
-> =A0*/
-> -static void ufshcd_remove(struct pci_dev *pdev)
-> +void ufshcd_drv_exit(struct ufs_hba *hba)
-> =A0{
-> - =A0 =A0 =A0 struct ufs_hba *hba =3D pci_get_drvdata(pdev);
-> -
-> =A0 =A0 =A0 =A0/* disable interrupts */
-> =A0 =A0 =A0 =A0ufshcd_int_config(hba, UFSHCD_INT_DISABLE);
-> - =A0 =A0 =A0 free_irq(pdev->irq, hba);
-> + =A0 =A0 =A0 free_irq(hba->irq, hba);
->
-> =A0 =A0 =A0 =A0ufshcd_hba_stop(hba);
-> - =A0 =A0 =A0 ufshcd_hba_free(hba);
-> + =A0 =A0 =A0 ufshcd_free_hba_memory(hba);
->
-> =A0 =A0 =A0 =A0scsi_remove_host(hba->host);
-> =A0 =A0 =A0 =A0scsi_host_put(hba->host);
-> - =A0 =A0 =A0 pci_set_drvdata(pdev, NULL);
-> - =A0 =A0 =A0 pci_clear_master(pdev);
-> - =A0 =A0 =A0 pci_disable_device(pdev);
-> =A0}
-> +EXPORT_SYMBOL(ufshcd_drv_exit);
->
-> =A0/**
-> - * ufshcd_set_dma_mask - Set dma mask based on the controller
-> - * =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0addressing capability
-> - * @pdev: PCI device structure
-> - *
-> - * Returns 0 for success, non-zero for failure
-> - */
-> -static int ufshcd_set_dma_mask(struct ufs_hba *hba)
-> -{
-> - =A0 =A0 =A0 int err;
-> - =A0 =A0 =A0 u64 dma_mask;
-> -
-> - =A0 =A0 =A0 /*
-> - =A0 =A0 =A0 =A0* If controller supports 64 bit addressing mode, the=
-n set the DMA
-> - =A0 =A0 =A0 =A0* mask to 64-bit, else set the DMA mask to 32-bit
-> - =A0 =A0 =A0 =A0*/
-> - =A0 =A0 =A0 if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dma_mask =3D DMA_BIT_MASK(64);
-> - =A0 =A0 =A0 else
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dma_mask =3D DMA_BIT_MASK(32);
-> -
-> - =A0 =A0 =A0 err =3D pci_set_dma_mask(hba->pdev, dma_mask);
-> - =A0 =A0 =A0 if (err)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return err;
-> -
-> - =A0 =A0 =A0 err =3D pci_set_consistent_dma_mask(hba->pdev, dma_mask=
-);
-> -
-> - =A0 =A0 =A0 return err;
-> -}
-> -
-> -/**
-> - * ufshcd_probe - probe routine of the driver
-> - * @pdev: pointer to PCI device handle
-> - * @id: PCI device id
-> + * ufshcd_drv_init - generic init routine of the driver
-> + * @hba: pointer to platform data
-> =A0*
-> =A0* Returns 0 on success, non-zero value on failure
-> =A0*/
-> -static int __devinit
-> -ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> +int ufshcd_drv_init(struct ufs_hba **hostdata, struct device *dev,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0int irq_no, void __iomem *mmio_base)
-> =A0{
-> =A0 =A0 =A0 =A0struct Scsi_Host *host;
-> - =A0 =A0 =A0 struct ufs_hba *hba;
-> =A0 =A0 =A0 =A0int err;
-> -
-> - =A0 =A0 =A0 err =3D pci_enable_device(pdev);
-> - =A0 =A0 =A0 if (err) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "pci_enable_device =
-failed\n");
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out_error;
-> - =A0 =A0 =A0 }
-> -
-> - =A0 =A0 =A0 pci_set_master(pdev);
-> + =A0 =A0 =A0 struct ufs_hba *hba;
->
-> =A0 =A0 =A0 =A0host =3D scsi_host_alloc(&ufshcd_driver_template,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0sizeof=
-(struct ufs_hba));
-> =A0 =A0 =A0 =A0if (!host) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "scsi_host_alloc fa=
-iled\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev, "scsi_host_alloc fai=
-led\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0err =3D -ENOMEM;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out_disable;
-> =A0 =A0 =A0 =A0}
-> =A0 =A0 =A0 =A0hba =3D shost_priv(host);
-> -
-> - =A0 =A0 =A0 err =3D pci_request_regions(pdev, UFSHCD);
-> - =A0 =A0 =A0 if (err < 0) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "request regions fa=
-iled\n");
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out_disable;
-> - =A0 =A0 =A0 }
-> -
-> - =A0 =A0 =A0 hba->mmio_base =3D pci_ioremap_bar(pdev, 0);
-> - =A0 =A0 =A0 if (!hba->mmio_base) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "memory map failed\=
-n");
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 err =3D -ENOMEM;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out_release_regions;
-> - =A0 =A0 =A0 }
-> -
-> + =A0 =A0 =A0 hba->dev =3D *dev;
-It doesn't look like you need to copy the entire device data into hba.
-Why isn't a reference not sufficient ?
-
-
-> =A0 =A0 =A0 =A0hba->host =3D host;
-> - =A0 =A0 =A0 hba->pdev =3D pdev;
-> + =A0 =A0 =A0 hba->irq =3D irq_no;
-> + =A0 =A0 =A0 hba->mmio_base =3D mmio_base;
-> + =A0 =A0 =A0 *hostdata =3D hba;
->
-> =A0 =A0 =A0 =A0/* Read capabilities registers */
-> =A0 =A0 =A0 =A0ufshcd_hba_capabilities(hba);
-> @@ -1857,17 +1700,11 @@ ufshcd_probe(struct pci_dev *pdev, const stru=
-ct pci_device_id *id)
-> =A0 =A0 =A0 =A0/* Get UFS version supported by the controller */
-> =A0 =A0 =A0 =A0hba->ufs_version =3D ufshcd_get_ufs_version(hba);
->
-> - =A0 =A0 =A0 err =3D ufshcd_set_dma_mask(hba);
-> - =A0 =A0 =A0 if (err) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "set dma mask faile=
-d\n");
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out_iounmap;
-> - =A0 =A0 =A0 }
-> -
-> =A0 =A0 =A0 =A0/* Allocate memory for host memory space */
-> =A0 =A0 =A0 =A0err =3D ufshcd_memory_alloc(hba);
-> =A0 =A0 =A0 =A0if (err) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "Memory allocation =
-failed\n");
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out_iounmap;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev, "Memory allocation f=
-ailed\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out_disable;
-> =A0 =A0 =A0 =A0}
->
-> =A0 =A0 =A0 =A0/* Configure LRB */
-> @@ -1889,72 +1726,55 @@ ufshcd_probe(struct pci_dev *pdev, const stru=
-ct pci_device_id *id)
-> =A0 =A0 =A0 =A0INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
->
-> =A0 =A0 =A0 =A0/* IRQ registration */
-> - =A0 =A0 =A0 err =3D request_irq(pdev->irq, ufshcd_intr, IRQF_SHARED=
-, UFSHCD, hba);
-> + =A0 =A0 =A0 err =3D request_irq(hba->irq, ufshcd_intr, IRQF_SHARED,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ufs_hostname(hba), =
-hba);
-> =A0 =A0 =A0 =A0if (err) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "request irq failed=
-\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev, "request irq failed\=
-n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out_lrb_free;
-> =A0 =A0 =A0 =A0}
->
-> =A0 =A0 =A0 =A0/* Enable SCSI tag mapping */
-> =A0 =A0 =A0 =A0err =3D scsi_init_shared_tag_map(host, host->can_queue=
-);
-> =A0 =A0 =A0 =A0if (err) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "init shared queue =
-failed\n");
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out_free_irq;
-> - =A0 =A0 =A0 }
-> -
-> - =A0 =A0 =A0 pci_set_drvdata(pdev, hba);
-> -
-> - =A0 =A0 =A0 err =3D scsi_add_host(host, &pdev->dev);
-> - =A0 =A0 =A0 if (err) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "scsi_add_host fail=
-ed\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev, "init shared queue f=
-ailed\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out_free_irq;
-> =A0 =A0 =A0 =A0}
->
-> - =A0 =A0 =A0 /* Initialization routine */
-> - =A0 =A0 =A0 err =3D ufshcd_initialize_hba(hba);
-> + =A0 =A0 =A0 err =3D scsi_add_host(host, &hba->dev);
-> =A0 =A0 =A0 =A0if (err) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&pdev->dev, "Initialization fai=
-led\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_err(&hba->dev, "scsi_add_host faile=
-d\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out_free_irq;
-> =A0 =A0 =A0 =A0}
->
-> =A0 =A0 =A0 =A0return 0;
->
-> =A0out_free_irq:
-> - =A0 =A0 =A0 free_irq(pdev->irq, hba);
-> + =A0 =A0 =A0 free_irq(hba->irq, hba);
-> =A0out_lrb_free:
-> =A0 =A0 =A0 =A0ufshcd_free_hba_memory(hba);
-> -out_iounmap:
-> - =A0 =A0 =A0 iounmap(hba->mmio_base);
-> -out_release_regions:
-> - =A0 =A0 =A0 pci_release_regions(pdev);
-> =A0out_disable:
-> =A0 =A0 =A0 =A0scsi_host_put(host);
-> - =A0 =A0 =A0 pci_clear_master(pdev);
-> - =A0 =A0 =A0 pci_disable_device(pdev);
-> -out_error:
-> =A0 =A0 =A0 =A0return err;
-> =A0}
-> +EXPORT_SYMBOL(ufshcd_drv_init);
->
-> -static DEFINE_PCI_DEVICE_TABLE(ufshcd_pci_tbl) =3D {
-> - =A0 =A0 =A0 { PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID=
-, 0, 0, 0 },
-> - =A0 =A0 =A0 { } =A0 =A0 /* terminate list */
-> -};
-> +static int __init ufshcd_probe(void)
-> +{
-> + =A0 =A0 =A0 pr_info(UFSHCD
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ": Generic UFS host controller driver\n=
-");
-> + =A0 =A0 =A0 pr_info(UFSHCD ": Copyright(c) Samsung India Software O=
-perations\n");
->
-Is it really necessary to assert the copyright on probe ? I haven't
-seen this practice anywhere..
-
-> -MODULE_DEVICE_TABLE(pci, ufshcd_pci_tbl);
-> + =A0 =A0 =A0 return 0;
-> +}
->
-> -static struct pci_driver ufshcd_pci_driver =3D {
-> - =A0 =A0 =A0 .name =3D UFSHCD,
-> - =A0 =A0 =A0 .id_table =3D ufshcd_pci_tbl,
-> - =A0 =A0 =A0 .probe =3D ufshcd_probe,
-> - =A0 =A0 =A0 .remove =3D __devexit_p(ufshcd_remove),
-> - =A0 =A0 =A0 .shutdown =3D ufshcd_shutdown,
-> -#ifdef CONFIG_PM
-> - =A0 =A0 =A0 .suspend =3D ufshcd_suspend,
-> - =A0 =A0 =A0 .resume =3D ufshcd_resume,
-> -#endif
-> -};
-> +static void __exit ufshcd_remove(void)
-> +{
-> + =A0 =A0 =A0 pr_info(UFSHCD
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ": Generic UFS host controller driver r=
-emoved\n");
-> +}
->
-> -module_pci_driver(ufshcd_pci_driver);
-> +module_init(ufshcd_probe);
-> +module_exit(ufshcd_remove);
->
-> =A0MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>, "
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0"Vinayak Holikatti <h.vinayak@samsung.com>=
-");
 > --
 > 1.7.4.1
 >
