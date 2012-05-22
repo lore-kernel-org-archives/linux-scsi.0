@@ -1,91 +1,42 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [dm-devel] [PATCH v2] scsi: Fix dm-multipath starvation when
- scsi host is busy
-Date: Tue, 22 May 2012 15:01:43 +0200
-Message-ID: <4FBB8E37.60300@suse.de>
-References: <4FBB555B.5060608@ce.jp.nec.com> <1337677994.28492.12.camel@dabdike.int.hansenpartnership.com> <4FBB62FD.5040008@ce.jp.nec.com> <20120522125445.GA26233@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 11302] I get a kernel OOPS! If I try to attach an usb card
+ reader, SD, MMC, ecc.. to my Slamd64
+Date: Tue, 22 May 2012 13:14:41 +0000 (UTC)
+Message-ID: <20120522131441.561AF11FD12@bugzilla.kernel.org>
+References: <bug-11302-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38170 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.19.201]:36496 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751752Ab2EVNBp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 May 2012 09:01:45 -0400
-In-Reply-To: <20120522125445.GA26233@redhat.com>
+	id S1754269Ab2EVNOp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 May 2012 09:14:45 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 335DC202B0
+	for <linux-scsi@vger.kernel.org>; Tue, 22 May 2012 13:14:44 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id 59BF320418
+	for <linux-scsi@vger.kernel.org>; Tue, 22 May 2012 13:14:41 +0000 (UTC)
+In-Reply-To: <bug-11302-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, Alasdair G Kergon <agk@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 05/22/2012 02:54 PM, Mike Snitzer wrote:
-> On Tue, May 22 2012 at  5:57am -0400,
-> Jun'ichi Nomura <j-nomura@ce.jp.nec.com> wrote:
->=20
->> On 05/22/12 18:13, James Bottomley wrote:
->>> Isn't a more understandable explanation:
->>
->> Thank you. That's quite elegant.
->> I replaced the description with it.
->>
->>> And please put a comment in the code as well otherwise someone will
->>> eventually send a "fix" for this because we're not paying attention=
- to
->>> host busy (and I'll have forgotten about the issue by then and migh=
-t
->>> apply it).
->>
->> Added the comment in code.
->>
->>> A final note is that this is more a band aid than a fix because thi=
-s is
->>> still a congestion situation dm-mp should be aware of.
->>
->> Yes. To do that, we have to generalize the concept of "host"
->> and share it with block layer.
->>
->> Attached below is the revised patch.
->>
->> ----------------------------------------------------------
->> [PATCH v2] scsi: Fix dm-multipath starvation when scsi host is busy
->>
->> block congestion control doesn't have any concept of fairness across
->> multiple queues.  This means that if SCSI reports the host as busy i=
-n
->> the queue congestion control it can result in an unfair starvation
->> situation in dm-mp if there are multiple multipath devices on the sa=
-me
->> host.  For example:
->> http://www.redhat.com/archives/dm-devel/2012-May/msg00123.html
->>
->> The fix for this is to report only the sdev busy state (and ignore t=
-he
->> host busy state) in the block congestion control call back.
->> The host is still congested, but the SCSI subsystem will sort out th=
-e
->> congestion in a fair way because it knows the relation between the
->> queues and the host.
->>
->> Reported-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
->> Tested-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
->> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
->> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
->> Cc: Mike Snitzer <snitzer@redhat.com>
->=20
-> Acked-by: Mike Snitzer <snitzer@redhat.com>
->=20
-Acked-by: Hannes Reinecke <hare@suse.de>
+https://bugzilla.kernel.org/show_bug.cgi?id=11302
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |OBSOLETE
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
