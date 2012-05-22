@@ -1,55 +1,42 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH v3 5/5] st: raise device limit
-Date: Mon, 21 May 2012 16:16:09 -0700
-Message-ID: <4FBACCB9.6040500@suse.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] First round of SCSI updates for the 3.4+ merge window
+Date: Mon, 21 May 2012 17:52:31 -0700
+Message-ID: <CA+55aFz__YrXffza1bEzwrPu+-ETswUcg3F31Gjrj3OPbRyTZw@mail.gmail.com>
+References: <1337599819.3042.7.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat.nue.novell.com ([195.135.221.2]:60414 "EHLO
-	nat.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754984Ab2EUXQQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 May 2012 19:16:16 -0400
+Received: from mail-we0-f174.google.com ([74.125.82.174]:39189 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757409Ab2EVAwx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 May 2012 20:52:53 -0400
+In-Reply-To: <1337599819.3042.7.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, kai.makisara@kolumbus.fi, jeffm@suse.com
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-From: Jeff Mahoney <jeffm@suse.com>
+On Mon, May 21, 2012 at 4:30 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> The patch contains the usual assortment of driver updates (be2iscsi,
+> bfa, bnx2i, fcoe, hpsa, isci, lpfc, megaraid, mpt2sas, pm8001, sg) pl=
+us
+> an assortment of other changes and fixes. =A0Also new is the fact tha=
+t the
+> isci update is delivered as a git merge (with signed tag).
 
-The device limit of 128 tape drives was established in 2003 as a
-significant increase from the 8 tape drives allowed previously.
+Interesting. For some reason the 'gpg --verify' phase says that your
+key has expired. Yet when I look at the key itself, it says it is
+valid until 2016. I don't quite know why gpg thinks the thing is
+expired when verifying the message.
 
-We're seeing customer sites that between a large number of drives
-and multipath are discovering more than 128 devices and running
-into problems.
+But everything else looks fine. Somebody with more gpg-fu than me
+might be able to clarify what is going on..
 
-Now that we're not stuck having to store a pointer in array
-and aren't limited by kmalloc failing on higher order allocs we can
-lift the limit to fill the entire minor range based on the number
-of modes.
-
-Based on the current code, that's 2^17 devices.
-
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-Signed-off-by: Lee Duncan <lduncan@suse.com>
----
- drivers/scsi/st.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index 4456735..2092f93 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -77,7 +77,7 @@ struct st_modedef {
- #define ST_MODE_SHIFT (7 - ST_NBR_MODE_BITS)
- #define ST_MODE_MASK ((ST_NBR_MODES - 1) << ST_MODE_SHIFT)
- 
--#define ST_MAX_TAPES 128
-+#define ST_MAX_TAPES (1 << (20 - (ST_NBR_MODE_BITS + 1)))
- #define ST_MAX_TAPE_ENTRIES  (ST_MAX_TAPES << (ST_NBR_MODE_BITS + 1))
- 
- /* The status related to each partition */
--- 
-1.7.9.2
-
+                  Linus
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
