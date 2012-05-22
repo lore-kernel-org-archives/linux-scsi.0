@@ -1,52 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [v2 PATCH 0/4] bnx2fc version 1.0.11
-Date: Tue, 22 May 2012 09:45:14 +0100
-Message-ID: <1337676314.28492.3.camel@dabdike.int.hansenpartnership.com>
-References: <1335306364-31449-1-git-send-email-bprakash@broadcom.com>
-	 <4FBA6AD8.5060703@broadcom.com>
-	 <1337623588.16400.5.camel@dabdike.int.hansenpartnership.com>
-	 <4FBA8AD6.70107@broadcom.com>
+From: Girish K S <girish.shivananjappa@linaro.org>
+Subject: Re: [RFC V3 1/2] SCSI: UFS: Create separate UFS core and pci modules
+Date: Tue, 22 May 2012 14:16:11 +0530
+Message-ID: <CAGxe1ZFppacqiiQL03ZZfBVadw2QsAre87wfmpK3CTARE+uBaQ@mail.gmail.com>
+References: <1337581868-3042-1-git-send-email-girish.shivananjappa@linaro.org>
+	<1337581868-3042-2-git-send-email-girish.shivananjappa@linaro.org>
+	<CANfBPZ_G-jaai_qWmHu_43gGbE43Wp0Lr49O-2pQ3ozC=QHfwQ@mail.gmail.com>
+	<1337672052.16400.17.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47769 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754756Ab2EVIpS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 May 2012 04:45:18 -0400
-In-Reply-To: <4FBA8AD6.70107@broadcom.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:36947 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755692Ab2EVIqN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2012 04:46:13 -0400
+Received: by qcro28 with SMTP id o28so3792672qcr.19
+        for <linux-scsi@vger.kernel.org>; Tue, 22 May 2012 01:46:12 -0700 (PDT)
+In-Reply-To: <1337672052.16400.17.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: "S, Venkatraman" <svenkatr@ti.com>, linux-scsi@vger.kernel.org, vinholikatti@gmail.com, santoshsy@gmail.com, hch@infradead.org, patches@linaro.org
 
-On Mon, 2012-05-21 at 11:35 -0700, Bhanu Prakash Gollapudi wrote:
-> On 5/21/2012 11:06 AM, James Bottomley wrote:
-> > On Mon, 2012-05-21 at 09:18 -0700, Bhanu Prakash Gollapudi wrote:
-> >> On 4/24/2012 3:26 PM, Bhanu Prakash Gollapudi wrote:
-> >>
-> >> James, can you please include this patch set in the next round of 3.4+
-> >> merge window?
-> >
-> > I was waiting for you to respond to Mike Christie's comment about using
-> > list_for_each_entry_safe() or list_entry().
-> 
-> James, I responded to Mike Christie's comment. Here is the link for the 
-> thread - http://marc.info/?l=linux-scsi&m=133643754200805&w=2.
-
-Ah, OK, you broke threading, which is why I didn't get this.  You need
-to reply to the message on the list.  Your reply has:
-
-References: <4FA85912.2030800@broadcom.com>
-In-reply-to: <4FA85912.2030800@broadcom.com>
-
-But the actual message is:
-
-Message-id: <4FA39836.3070907@cs.wisc.edu>
-
-Evolution matches threads by the in-reply-to fields.
-
-James
-
-
+On 22 May 2012 13:04, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Tue, 2012-05-22 at 10:59 +0530, S, Venkatraman wrote:
+> [...]
+>
+> trimming your reply to give only the relevant part would be greatly
+> appreciated so we don't have to go through hundreds of lines to find =
+the
+> useful bits.
+>
+>> > +static int __init ufshcd_probe(void)
+>> > +{
+>> > + =A0 =A0 =A0 pr_info(UFSHCD
+>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ": Generic UFS host controller drive=
+r\n");
+>> > + =A0 =A0 =A0 pr_info(UFSHCD ": Copyright(c) Samsung India Softwar=
+e Operations\n");
+>
+>> Is it really necessary to assert the copyright on probe ? I haven't
+>> seen this practice anywhere..
+>
+> It has been done before, but it's now frowned upon because if everyon=
+e
+> did it, the kernel would be more verbose than a guilty politician bef=
+ore
+> the ethics committee, so please just remove it.
+OK will remove it.
+>
+> James
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
