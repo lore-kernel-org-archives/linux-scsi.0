@@ -1,65 +1,61 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: [PATCH] scsi: Fix dm-multipath starvation when scsi host is busy
-Date: Tue, 22 May 2012 17:59:07 +0900
-Message-ID: <4FBB555B.5060608@ce.jp.nec.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: Fix dm-multipath starvation when scsi host is busy
+Date: Tue, 22 May 2012 10:13:14 +0100
+Message-ID: <1337677994.28492.12.camel@dabdike.int.hansenpartnership.com>
+References: <4FBB555B.5060608@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO201.gate.nec.co.jp ([202.32.8.193]:34810 "EHLO
-	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754944Ab2EVJAV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2012 05:00:21 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47821 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754944Ab2EVJNY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 May 2012 05:13:24 -0400
+In-Reply-To: <4FBB555B.5060608@ce.jp.nec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
-Cc: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Snitzer <snitzer@redhat.com>, Alasdair G Kergon <agk@redhat.com>
+To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, Mike Snitzer <snitzer@redhat.com>, Alasdair G Kergon <agk@redhat.com>
 
-When a scsi host is kept busy by a dm-mpath device, other dm-mpath device
-on the same host could be starved. For example:
-http://www.redhat.com/archives/dm-devel/2012-May/msg00123.html
+On Tue, 2012-05-22 at 17:59 +0900, Jun'ichi Nomura wrote:
+> When a scsi host is kept busy by a dm-mpath device, other dm-mpath device
+> on the same host could be starved. For example:
+> http://www.redhat.com/archives/dm-devel/2012-May/msg00123.html
+> 
+> It happens because dm-mpath delays request submission when the underlying
+> scsi host is busy even if sdev is not busy.
+> 
+> For case like this, it is better to send the request down and let scsi do
+> appropriate starvation control over the shared resource.
+> 
+> Though it might seem odd to change scsi's definition of a LLD being "busy",
+> it is reasonable because scsi_lld_busy (and blk_lld_busy) was introduced
+> to provide a hint for request-based stacking driver (i.e. dm-multipath)
+> and dm-multipath is the only user of this function.
 
-It happens because dm-mpath delays request submission when the underlying
-scsi host is busy even if sdev is not busy.
+This explanation is rather dense.
 
-For case like this, it is better to send the request down and let scsi do
-appropriate starvation control over the shared resource.
+Isn't a more understandable explanation:
 
-Though it might seem odd to change scsi's definition of a LLD being "busy",
-it is reasonable because scsi_lld_busy (and blk_lld_busy) was introduced
-to provide a hint for request-based stacking driver (i.e. dm-multipath)
-and dm-multipath is the only user of this function.
+block congestion control doesn't have any concept of fairness across
+multiple queues.  This means that if SCSI reports the host as busy in
+the queue congestion control it can result in an unfair starvation
+situation in dm-mp if there are multiple multipath devices on the same
+host.  The fix for this is to report only the sdev busy state (and
+ignore the host busy state) in the block congestion control call back.
+The host is still congested, but the SCSI subsystem will sort out the
+congestion in a fair way because it knows the relation between the
+queues and the host.
 
-Reported-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Tested-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Snitzer <snitzer@redhat.com>
-Cc: Alasdair G Kergon <agk@redhat.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/scsi/scsi_lib.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+And please put a comment in the code as well otherwise someone will
+eventually send a "fix" for this because we're not paying attention to
+host busy (and I'll have forgotten about the issue by then and might
+apply it).
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5dfd749..0eb4602 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1378,16 +1378,13 @@ static int scsi_lld_busy(struct request_queue *q)
- {
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost;
--	struct scsi_target *starget;
- 
- 	if (!sdev)
- 		return 0;
- 
- 	shost = sdev->host;
--	starget = scsi_target(sdev);
- 
--	if (scsi_host_in_recovery(shost) || scsi_host_is_busy(shost) ||
--	    scsi_target_is_busy(starget) || scsi_device_is_busy(sdev))
-+	if (scsi_host_in_recovery(shost) || scsi_device_is_busy(sdev)) 
- 		return 1;
- 
- 	return 0;
+A final note is that this is more a band aid than a fix because this is
+still a congestion situation dm-mp should be aware of.
+
+James
+
+
