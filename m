@@ -1,80 +1,59 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC] How to fix an async scan - 'rmmod --wait' race?
-Date: Tue, 22 May 2012 11:05:33 +0100
-Message-ID: <1337681133.2932.4.camel@dabdike.int.hansenpartnership.com>
-References: <4F7DA4F8.90104@redhat.com> <4F86CF34.2000906@redhat.com>
-	   <4F8EF05F.8080307@redhat.com>
-	  <1337244177.2926.21.camel@dabdike.int.hansenpartnership.com>
-	  <4FB4BCEB.60506@acm.org>
-	 <1337245278.30498.2.camel@dabdike.int.hansenpartnership.com>
-	 <4FB51086.3060406@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Girish K S <girish.shivananjappa@linaro.org>
+Subject: [RFC V4 0/2] Add support for pci/non-pci probing for UFS
+Date: Tue, 22 May 2012 17:03:28 +0530
+Message-ID: <1337686410-19206-1-git-send-email-girish.shivananjappa@linaro.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47899 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751570Ab2EVKFh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 May 2012 06:05:37 -0400
-In-Reply-To: <4FB51086.3060406@redhat.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:56754 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758166Ab2EVLdu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2012 07:33:50 -0400
+Received: by pbbrp8 with SMTP id rp8so8261528pbb.19
+        for <linux-scsi@vger.kernel.org>; Tue, 22 May 2012 04:33:49 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Mike Christie <mchristi@redhat.com>, stefanr@s5r6.in-berlin.de
+To: linux-scsi@vger.kernel.org
+Cc: james.bottomley@hansenpartnership.com, vinholikatti@gmail.com, santoshsy@gmail.com, hch@infradead.org, patches@linaro.org, svenkatr@ti.com, Girish K S <girish.shivananjappa@linaro.org>
 
-On Thu, 2012-05-17 at 16:51 +0200, Tomas Henzl wrote:
-> >>> diff --git a/drivers/base/driver.c b/drivers/base/driver.c
-> >>> index 3ec3896..246e652 100644
-> >>> --- a/drivers/base/driver.c
-> >>> +++ b/drivers/base/driver.c
-> >>> @@ -10,6 +10,7 @@
-> >>>   *
-> >>>   */
-> >>>  
-> >>> +#include <linux/async.h>
-> >>>  #include <linux/device.h>
-> >>>  #include <linux/module.h>
-> >>>  #include <linux/errno.h>
-> >>> @@ -199,6 +200,13 @@ EXPORT_SYMBOL_GPL(driver_register);
-> >>>   */
-> >>>  void driver_unregister(struct device_driver *drv)
-> >>>  {
-> >>> +	/*
-> >>> +	 * make sure all async bits that may be running have completed the way
-> >>> +	 * this works is that try_module_get() now fails, so new async work
-> >>> +	 * should take a reference to the module which now fails, so it should
-> >>> +	 * be safe to remove the driver.
-> >>> +	 */
-> >>> +	async_synchronize_full();
-> >>>  	if (!drv || !drv->p) {
-> >>>  		WARN(1, "Unexpected driver unregister!\n");
-> >>>  		return;
-> Is this safe? I mean, is it possible that a new scan starts after the
-> async_synchronize_full() ends?
+The existing UFS driver is tightly bound to only pci specific devices.
+It cannot work for non-pci devices.
 
-Not really, because the module is now removing, so the try module get
-guard fails
+"SCSI: UFS: Create separate UFS core and pci modules" patch splits the
+ufs driver into core driver and pci probe driver.
 
-> I wish this were fixed by fixing the real root of this problem which lies
-> in scssi_device_get:
-> int scsi_device_get(struct scsi_device *sdev)
-> {
->         if (sdev->sdev_state == SDEV_DEL)
->                 return -ENXIO;
->         if (!get_device(&sdev->sdev_gendev))
->                 return -ENXIO;
->         /* We can fail this if we're doing SCSI operations
->          * from module exit (like cache flush) */
->         try_module_get(sdev->host->hostt->module);
-> here  ^ by ignoring the return value. This is why rmmod --wait causes the problem
-> and likely every other process which calls scsi_device_get would show the same bug.
+"SCSI: UFS: Add platform support for ufs host controller" patch adds
+support for the platform probing for non-pci devices
 
-I'm not sure how ... this has to be usable in the teardown path by which
-point try_module_get will fail (as the comment says).  What do you
-propose?
+changes in v4:
+	-Rebased to the latest linux-next/master branch.
+	-Removed the Copyright string from the module probe function and
+deleted redundant code from ufshcd-pltfm.c suspend/resume functions.
 
-James
+changes in v3:
+	-Modified the ufshcd.c ufshcd-pci.c ufshcd0pltfm.c to follow the
+driver module initialization standard. suggested by venkatraman.
 
+changes in v2:
+	-Reduced the number of patches from 4 to 2. merged the core and
+pci probing modules as single patch. suggested by Christoph Hellwig.
 
+changes in v1:
+	-Changes suggested by Namjae to split the driver as 3 independent
+modules and retain the author's name in the files created by me.
+
+Girish K S (2):
+  SCSI: UFS: Create separate UFS core and pci modules
+  SCSI: UFS: Add platform support for ufs host controller
+
+ drivers/scsi/ufs/Kconfig        |   32 +++-
+ drivers/scsi/ufs/Makefile       |    2 +
+ drivers/scsi/ufs/ufs.h          |  103 +++++++++++
+ drivers/scsi/ufs/ufshcd-pci.c   |  206 ++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd-pltfm.c |  176 +++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.c       |  367 ++++++++++-----------------------------
+ 6 files changed, 608 insertions(+), 278 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
+
+-- 
+1.7.4.1
 
