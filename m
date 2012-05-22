@@ -1,40 +1,65 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [PATCH 0/3] scsi: usb-storage: hide errors for five devices
-Date: Tue, 22 May 2012 10:48:34 +0200
-Message-ID: <1337676514.7898.8.camel@x61.thuisdomein>
-References: <1336491453.1933.67.camel@x61.thuisdomein>
-	 <Pine.LNX.4.44L0.1205081240450.1479-100000@iolanthe.rowland.org>
-	 <20120515153539.GA25206@kroah.com>
-	 <1337099344.13455.9.camel@x61.thuisdomein>
-	 <20120515173613.3c8c2f1f@pyramind.ukuu.org.uk>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: [PATCH] scsi: Fix dm-multipath starvation when scsi host is busy
+Date: Tue, 22 May 2012 17:59:07 +0900
+Message-ID: <4FBB555B.5060608@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:3678 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754098Ab2EVIsk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 May 2012 04:48:40 -0400
-In-Reply-To: <20120515173613.3c8c2f1f@pyramind.ukuu.org.uk>
+Received: from TYO201.gate.nec.co.jp ([202.32.8.193]:34810 "EHLO
+	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754944Ab2EVJAV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2012 05:00:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+Cc: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Snitzer <snitzer@redhat.com>, Alasdair G Kergon <agk@redhat.com>
 
-On Tue, 2012-05-15 at 17:36 +0100, Alan Cox wrote:
-> Possibly we should have a hostadapter flag indicating if the cache noise
-> is expected nuisance or not. That way if hardcore SCSI on real cables
-> wants to keeep it then it can still be shut up for USB where its the
-> norm and just irrelevant noise.
+When a scsi host is kept busy by a dm-mpath device, other dm-mpath device
+on the same host could be starved. For example:
+http://www.redhat.com/archives/dm-devel/2012-May/msg00123.html
 
-0) Nobody suggested anything else so maybe I should try to come up with
-a patch that does that. A slight problem is that I'm not at all familiar
-with the SCSI code. And I don't think I own any actual SCSI hardware.
+It happens because dm-mpath delays request submission when the underlying
+scsi host is busy even if sdev is not busy.
 
-1) Anyhow: hostadapter flags? Are those perhaps the bitfields starting
-with "active_mode" in "struct Scsi_Host"?
+For case like this, it is better to send the request down and let scsi do
+appropriate starvation control over the shared resource.
 
+Though it might seem odd to change scsi's definition of a LLD being "busy",
+it is reasonable because scsi_lld_busy (and blk_lld_busy) was introduced
+to provide a hint for request-based stacking driver (i.e. dm-multipath)
+and dm-multipath is the only user of this function.
 
-Paul Bolle
+Reported-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Tested-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: Alasdair G Kergon <agk@redhat.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/scsi_lib.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 5dfd749..0eb4602 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1378,16 +1378,13 @@ static int scsi_lld_busy(struct request_queue *q)
+ {
+ 	struct scsi_device *sdev = q->queuedata;
+ 	struct Scsi_Host *shost;
+-	struct scsi_target *starget;
+ 
+ 	if (!sdev)
+ 		return 0;
+ 
+ 	shost = sdev->host;
+-	starget = scsi_target(sdev);
+ 
+-	if (scsi_host_in_recovery(shost) || scsi_host_is_busy(shost) ||
+-	    scsi_target_is_busy(starget) || scsi_device_is_busy(sdev))
++	if (scsi_host_in_recovery(shost) || scsi_device_is_busy(sdev)) 
+ 		return 1;
+ 
+ 	return 0;
