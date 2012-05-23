@@ -1,20 +1,23 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: James Bottomley <jejbbe@hansenpartnership.com>
 Subject: Re: 3.4.0-02580-g72c04af regression on sparc64 - partitions not
  recognized
-Date: Wed, 23 May 2012 17:00:03 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1205231657540.1248-100000@iolanthe.rowland.org>
-References: <20120523.140451.386112705611304887.davem@davemloft.net>
+Date: Wed, 23 May 2012 23:56:10 +0100
+Message-ID: <1337813770.3013.37.camel@dabdike.int.hansenpartnership.com>
+References: <alpine.SOC.1.00.1205221200050.9585@math.ut.ee>
+	 <20120522.151217.278388169416093561.davem@davemloft.net>
+	 <alpine.SOC.1.00.1205231945480.12326@math.ut.ee>
+	 <20120523.140451.386112705611304887.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20120523.140451.386112705611304887.davem@davemloft.net>
 Sender: linux-kernel-owner@vger.kernel.org
 To: David Miller <davem@davemloft.net>
-Cc: mroos@linux.ee, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dan.j.williams@intel.com, JBottomley@Parallels.com
+Cc: mroos@linux.ee, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dan.j.williams@intel.com, stern@rowland.harvard.edu
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 23 May 2012, David Miller wrote:
-
+On Wed, 2012-05-23 at 14:04 -0400, David Miller wrote:
 > From: Meelis Roos <mroos@linux.ee>
 > Date: Wed, 23 May 2012 19:46:46 +0300 (EEST)
 > 
@@ -39,22 +42,17 @@ On Wed, 23 May 2012, David Miller wrote:
 > > Date:   Thu Mar 22 17:05:11 2012 -0700
 > > 
 > >     [SCSI] sd: limit the scope of the async probe domain
-> >     
-> >     sd injects and synchronizes probe work on the global kernel-wide domain.
-> >     This runs into conflict with PM that wants to perform resume actions in
-> >     async context:
 
-...
+My theory is that this is an init problem: The assumption in a lot of
+our code is that async_synchronize_full() waits for everything ... even
+the domain specific async schedules, which isn't true.
 
-> >     Provide a 'scsi_sd_probe_domain' so that async probe actions actions can
-> >     be flushed without regard for the state of PM, and allow for the resume
-> >     path to handle devices that have transitioned from SDEV_QUIESCE to
-> >     SDEV_DEL prior to resume.
+The code in init that makes this assumption is wait_for_device_probe().
+There's also a fun async_synchronize_full() in init_post() that assumes
+it can free the init memory after, which would fail badly if anything in
+init used an async domain.
 
-Does reverting just the part of the commit that touches scsi_lib.c make 
-any difference?
+So either we fix the assumptions or we can't use domain specific async
+schedules.
 
-If not, does leaving that part in and reverting all the rest of the 
-commit make any difference?
-
-Alan Stern
+James
