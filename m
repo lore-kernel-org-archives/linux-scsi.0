@@ -1,54 +1,58 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [RFC PATCH v3 0/4]: block layer runtime pm
-Date: Wed, 23 May 2012 23:53:42 +0800
-Message-ID: <CAF1ivSa_Hz30mRXDmOAXuvOORAn8mA20XgoAouYoMysEXcwHpg@mail.gmail.com>
-References: <1337671292-15583-1-git-send-email-ming.m.lin@intel.com>
-	<Pine.LNX.4.44L0.1205221209530.2100-100000@iolanthe.rowland.org>
-	<CAF1ivSZuedC-WH1cduhLFwHnCa9d7YVFnWw_7YZ8id9v50Af7g@mail.gmail.com>
+Subject: Re: [RFC v2 PATCH 2/4] block: add queue runtime pm callbacks
+Date: Wed, 23 May 2012 23:59:07 +0800
+Message-ID: <CAF1ivSbSv+pWFxgf8LrHdamxSQZuJh5S5_0L82DWfy34Si7iLg@mail.gmail.com>
+References: <CAF1ivSa_hYFu2JXLUOv2k+AhqUZWUvY-uzmocQKh_RUJJUP5Ag@mail.gmail.com>
+	<Pine.LNX.4.44L0.1205231054150.1566-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:47127 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369Ab2EWPxn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2012 11:53:43 -0400
-In-Reply-To: <CAF1ivSZuedC-WH1cduhLFwHnCa9d7YVFnWw_7YZ8id9v50Af7g@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1205231054150.1566-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Wed, May 23, 2012 at 4:29 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> On Wed, May 23, 2012 at 12:10 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
->> On Tue, 22 May 2012, Lin Ming wrote:
->>
->>> Hi,
->>>
->>> In August 2010, Jens and Alan discussed about "Runtime PM and the block
->>> layer". http://marc.info/?t=128259108400001&r=1&w=2
->>>
->>> Here are the RFC v3 patches that try to implement the ideas discussed.
->>> Welcome to give it a try.
->>
->> Have you checked to make sure these changes won't break the IDE driver?
->> Maybe it will need to set the REQ_PM flag too.
-
-REQ_PM flag is about runtime PM, but IDE driver does not support
-runtime PM at all.
-
-# grep runtime drivers/ide/*.c
-
-This gets empty result.
-
-So I think it won't break the IDE driver.
-
-Thanks,
-Lin Ming
-
+On Wed, May 23, 2012 at 10:58 PM, Alan Stern <stern@rowland.harvard.edu=
+> wrote:
+> On Wed, 23 May 2012, Lin Ming wrote:
 >
-> Will check it.
->
-> Another thing need to check is if system suspend/resume works.
->
+>> Let's consider below code.
 >>
->> Alan Stern
+>> @@ -587,6 +591,11 @@ void __elv_add_request(struct request_queue *q,
+>> struct request *rq, int where)
+>> =A0{
+>> =A0 =A0 =A0 =A0trace_block_rq_insert(q, rq);
+>>
+>> + =A0 =A0 =A0 if (!(rq->cmd_flags & REQ_PM))
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (q->nr_pending++ =3D=3D 0 && (q->rp=
+m_status =3D=3D RPM_SUSPENDED ||
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 q->rpm=
+_status =3D=3D RPM_SUSPENDING) && q->dev)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pm_request_resume(q->d=
+ev);
+>> +
+>> =A0 =A0 =A0 =A0rq->q =3D q;
+>>
+>> =A0 =A0 =A0 =A0if (rq->cmd_flags & REQ_SOFTBARRIER) {
+>>
+>> Block layer reads runtime status and pm core writes this status.
+>> PM core uses dev->power.lock to protect this status.
+>>
+>> I was thinking will it have problem if block layer does not acquire
+>> dev->power.lock?
+>> From your explanation below, it seems does not have problem.
+>
+> I don't think it's a problem, because all you're doing is reading
+> dev->power.rpm_status -- you're not writing it.
+>
+> On the other hand, there's nothing really wrong with keeping your own
+> local copy of rpm_status. =A0You could think of it as being the queue=
+'s
+> status as opposed to the device's status. =A0(Also, some people might
+> argue that dev->power.rpm_status is supposed to be private to the
+> runtime PM core and shouldn't be used by other code.)
+
+Agree.
+So I'd like to keep local copy of rpm_status.
