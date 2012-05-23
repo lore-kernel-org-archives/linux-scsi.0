@@ -1,178 +1,583 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH v5 0/3] FCoE Sysfs
-Date: Tue, 22 May 2012 19:04:21 -0700
-Message-ID: <20120523020421.12536.278.stgit@fritz>
+Subject: [PATCH v5 1/3] fcoe: Allocate fcoe_ctlr with fcoe_interface,
+ not as a member
+Date: Tue, 22 May 2012 19:04:26 -0700
+Message-ID: <20120523020426.12536.72794.stgit@fritz>
+References: <20120523020421.12536.278.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:34451 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:51947 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932825Ab2EWCEW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 May 2012 22:04:22 -0400
+	id S932897Ab2EWCE1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 May 2012 22:04:27 -0400
+In-Reply-To: <20120523020421.12536.278.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: gregkh@linuxfoundation.org, giridhar.malavali@qlogic.com, james.smart@emulex.com, bprakash@broadcom.com
 
-v5: Resend to apply on current misc branch of scsi.git
+Currently the fcoe_ctlr associated with an interface is allocated
+as a member of struct fcoe_interface. This causes problems when
+attempting to use the new fcoe_sysfs APIs which allow us to allocate
+the fcoe_interface as private data to the fcoe_ctlr_device instance.
+The problem is that libfcoe wants to be able use pointer math to find a
+fcoe_ctlr's fcoe_ctlr_device as well as finding a fcoe_ctlr_device's
+assocated fcoe_ctlr. To do this we need to allocate the
+fcoe_ctlr_device, with private data for the LLD. The private data
+contains the fcoe_ctlr and its private data is the fcoe_interface.
+This patch only allocates the fcoe_interface with the fcoe_ctlr, the
+fcoe_ctlr_device will be added in a later patch, which will complete
+the below diagram-
 
-* checkpatch.pl complains about patch 3/4. The lack of a final
-  argument is a trick I took from scsi_transport_fc.c. I think
-  that it is fine.
++------------------+
+| fcoe_ctlr_device |
++------------------+
+| fcoe_ctlr        |
++------------------+
+| fcoe_interface   |
++------------------+
 
-  ERROR: space prohibited before that close parenthesis ')'
-  #369: FILE: drivers/scsi/fcoe/fcoe_sysfs.c:196:
-  +     fcoe_fcf_private_show_function(field, format_string, sz, )	\
+This prep work will allow us to go from a fcoe_ctlr_device instance
+to its fcoe_ctlr as well as from a fcoe_ctlr to its fcoe_ctlr_device
+once the fcoe_sysfs API is in use (later patches in this series).
 
-* checkpatch.pl complains about patch 3/4. I attempted to add
-  parenthesis around these macros, but I created more problems
-  than I resolved. I am not sure what to do about this. I belive
-  these were WARNs when this series was initially submitted.
-
-  ERROR: Macros with complex values should be enclosed in parenthesis
-  #378: FILE: drivers/scsi/fcoe/fcoe_sysfs.c:205:
-  +#define fcoe_fcf_private_rd_attr_cast(field, format_string, sz, cast)	\
-  +	 fcoe_fcf_private_show_function(field, format_string, sz, (cast)) \
-  +	 static FCOE_DEVICE_ATTR(fcf, field, S_IRUGO,	      	  	  \
-  +	 			      	     show_fcoe_fcf_device_##field, NULL)
-
-* checkpatch.pl complains about patch 4/4. This is just a WARN.
-  I would fix this if I knew how to, but I don't think it should
-  be a problem.
-
-  WARNING: quoted string split across lines
-  #502: FILE: drivers/scsi/fcoe/fcoe_ctlr.c:1021:
-  +		printk(KERN_ERR "Failed to allocate sysfs instance "
-  +					       "for FCF, fab 16.16llx mac pM\n",
-
-v4: Minor fixes and cleanups
-
-* Changed device_initialize/device_add to device_register
-  and device_del to device_unregister. There was an imbalance
-  because device_initialize was getting a reference that
-  was not being released. With this update both fcoe_fcfs
-  as well as fcoe_ctlrs are correctly released/free'd when
-  they are to be removed from the system.
-
-* Minor updates to commit messages so there are no
-  references to 'fcoe_ctlr_attrs' and 'fcoe_fcf_attrs'
-  which were both renamed in v3 of this series.
-
-v3: Addressed Greg KH's second set of review comments
-
-* Created a 'fcoe bus' with the fcoe_ctlr and fcoe_fcf
-  instances as devices on the bus. Created bus_type(s)
-  for both device types, with default attribute group
-  sets for each. Now sysfs core adds/removes attributes
-  which allowed the removal of sysfs_create_group calls
-  before device_add. Updated Documentation/ accordingly.
-  
-* Renamed structures and APIs to make them less confusing.
-
-   structs:
-    fcoe_ctlr_attrs -> fcoe_ctlr_device
-    fcoe_fcf_attrs -> fcoe_fcf_device
-
-   functions:
-    fcoe_ctlr_attrs_add -> fcoe_ctlr_device_add
-    fcoe_ctlr_attrs_delete -> fcoe_ctlr_device_delete
-    fcoe_fcf_attrs_add -> fcoe_fcf_device_add
-    fcoe_fcf_attrs_delete -> fcoe_fcf_device_delete
-
-* Removed extra get_device(parent) for both the
-  fcoe_ctlr_device and fcoe_fcf_device.
-
-* fixed 'unused variable' compilation warning that
-  existed in v2.
-
-* API symbols now exported with EXPORT_SYMBOL_GPL
-
-* NOT ADDRESSED - idr usage vs. atomic incremeting of
-  fcoe_ctlr and fcoe_fcf id enumeration. It was indicated
-  that idr has not traditionally been used in drivers/scsi/.
-  I will re-examine this if there is still heartburn.
-
+Signed-off-by: Robert Love <robert.w.love@intel.com>
+Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 ---
+ drivers/scsi/fcoe/fcoe.c |  137 ++++++++++++++++++++++++++++++----------------
+ drivers/scsi/fcoe/fcoe.h |    8 ++-
+ include/scsi/libfcoe.h   |    9 +++
+ 3 files changed, 102 insertions(+), 52 deletions(-)
 
-v2: Addressed Greg KH's review comments
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 76e3d0b..4bb42e1 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -282,7 +282,7 @@ static struct scsi_host_template fcoe_shost_template = {
+ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ 				struct net_device *netdev)
+ {
+-	struct fcoe_ctlr *fip = &fcoe->ctlr;
++	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
+ 	struct netdev_hw_addr *ha;
+ 	struct net_device *real_dev;
+ 	u8 flogi_maddr[ETH_ALEN];
+@@ -366,7 +366,9 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
+ 						    enum fip_state fip_mode)
+ {
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
++	int size;
+ 	int err;
+ 
+ 	if (!try_module_get(THIS_MODULE)) {
+@@ -376,7 +378,9 @@ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
+ 		goto out;
+ 	}
+ 
+-	fcoe = kzalloc(sizeof(*fcoe), GFP_KERNEL);
++	size = sizeof(struct fcoe_ctlr) + sizeof(struct fcoe_interface);
++	ctlr = kzalloc(size, GFP_KERNEL);
++	fcoe = fcoe_ctlr_priv(ctlr);
+ 	if (!fcoe) {
+ 		FCOE_NETDEV_DBG(netdev, "Could not allocate fcoe structure\n");
+ 		fcoe = ERR_PTR(-ENOMEM);
+@@ -388,15 +392,14 @@ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
+ 	/*
+ 	 * Initialize FIP.
+ 	 */
+-	fcoe_ctlr_init(&fcoe->ctlr, fip_mode);
+-	fcoe->ctlr.send = fcoe_fip_send;
+-	fcoe->ctlr.update_mac = fcoe_update_src_mac;
+-	fcoe->ctlr.get_src_addr = fcoe_get_src_mac;
++	fcoe_ctlr_init(ctlr, fip_mode);
++	ctlr->send = fcoe_fip_send;
++	ctlr->update_mac = fcoe_update_src_mac;
++	ctlr->get_src_addr = fcoe_get_src_mac;
+ 
+ 	err = fcoe_interface_setup(fcoe, netdev);
+ 	if (err) {
+-		fcoe_ctlr_destroy(&fcoe->ctlr);
+-		kfree(fcoe);
++		fcoe_ctlr_destroy(ctlr);
+ 		dev_put(netdev);
+ 		fcoe = ERR_PTR(err);
+ 		goto out_putmod;
+@@ -419,7 +422,7 @@ out:
+ static void fcoe_interface_remove(struct fcoe_interface *fcoe)
+ {
+ 	struct net_device *netdev = fcoe->netdev;
+-	struct fcoe_ctlr *fip = &fcoe->ctlr;
++	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
+ 	u8 flogi_maddr[ETH_ALEN];
+ 	const struct net_device_ops *ops;
+ 
+@@ -462,7 +465,7 @@ static void fcoe_interface_remove(struct fcoe_interface *fcoe)
+ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
+ {
+ 	struct net_device *netdev = fcoe->netdev;
+-	struct fcoe_ctlr *fip = &fcoe->ctlr;
++	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
+ 
+ 	rtnl_lock();
+ 	if (!fcoe->removed)
+@@ -472,8 +475,8 @@ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
+ 	/* Release the self-reference taken during fcoe_interface_create() */
+ 	/* tear-down the FCoE controller */
+ 	fcoe_ctlr_destroy(fip);
+-	scsi_host_put(fcoe->ctlr.lp->host);
+-	kfree(fcoe);
++	scsi_host_put(fip->lp->host);
++	kfree(fip);
+ 	dev_put(netdev);
+ 	module_put(THIS_MODULE);
+ }
+@@ -493,9 +496,11 @@ static int fcoe_fip_recv(struct sk_buff *skb, struct net_device *netdev,
+ 			 struct net_device *orig_dev)
+ {
+ 	struct fcoe_interface *fcoe;
++	struct fcoe_ctlr *ctlr;
+ 
+ 	fcoe = container_of(ptype, struct fcoe_interface, fip_packet_type);
+-	fcoe_ctlr_recv(&fcoe->ctlr, skb);
++	ctlr = fcoe_to_ctlr(fcoe);
++	fcoe_ctlr_recv(ctlr, skb);
+ 	return 0;
+ }
+ 
+@@ -645,11 +650,13 @@ static int fcoe_netdev_config(struct fc_lport *lport, struct net_device *netdev)
+ 	u32 mfs;
+ 	u64 wwnn, wwpn;
+ 	struct fcoe_interface *fcoe;
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_port *port;
+ 
+ 	/* Setup lport private data to point to fcoe softc */
+ 	port = lport_priv(lport);
+ 	fcoe = port->priv;
++	ctlr = fcoe_to_ctlr(fcoe);
+ 
+ 	/*
+ 	 * Determine max frame size based on underlying device and optional
+@@ -676,10 +683,10 @@ static int fcoe_netdev_config(struct fc_lport *lport, struct net_device *netdev)
+ 
+ 	if (!lport->vport) {
+ 		if (fcoe_get_wwn(netdev, &wwnn, NETDEV_FCOE_WWNN))
+-			wwnn = fcoe_wwn_from_mac(fcoe->ctlr.ctl_src_addr, 1, 0);
++			wwnn = fcoe_wwn_from_mac(ctlr->ctl_src_addr, 1, 0);
+ 		fc_set_wwnn(lport, wwnn);
+ 		if (fcoe_get_wwn(netdev, &wwpn, NETDEV_FCOE_WWPN))
+-			wwpn = fcoe_wwn_from_mac(fcoe->ctlr.ctl_src_addr,
++			wwpn = fcoe_wwn_from_mac(ctlr->ctl_src_addr,
+ 						 2, 0);
+ 		fc_set_wwpn(lport, wwpn);
+ 	}
+@@ -1056,6 +1063,7 @@ static int fcoe_ddp_done(struct fc_lport *lport, u16 xid)
+ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 				       struct device *parent, int npiv)
+ {
++	struct fcoe_ctlr *ctlr = fcoe_to_ctlr(fcoe);
+ 	struct net_device *netdev = fcoe->netdev;
+ 	struct fc_lport *lport, *n_port;
+ 	struct fcoe_port *port;
+@@ -1119,7 +1127,7 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 	}
+ 
+ 	/* Initialize the library */
+-	rc = fcoe_libfc_config(lport, &fcoe->ctlr, &fcoe_libfc_fcn_templ, 1);
++	rc = fcoe_libfc_config(lport, ctlr, &fcoe_libfc_fcn_templ, 1);
+ 	if (rc) {
+ 		FCOE_NETDEV_DBG(netdev, "Could not configure libfc for the "
+ 				"interface\n");
+@@ -1386,6 +1394,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ {
+ 	struct fc_lport *lport;
+ 	struct fcoe_rcv_info *fr;
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
+ 	struct fc_frame_header *fh;
+ 	struct fcoe_percpu_s *fps;
+@@ -1393,7 +1402,8 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 	unsigned int cpu;
+ 
+ 	fcoe = container_of(ptype, struct fcoe_interface, fcoe_packet_type);
+-	lport = fcoe->ctlr.lp;
++	ctlr = fcoe_to_ctlr(fcoe);
++	lport = ctlr->lp;
+ 	if (unlikely(!lport)) {
+ 		FCOE_NETDEV_DBG(netdev, "Cannot find hba structure");
+ 		goto err2;
+@@ -1409,8 +1419,8 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 
+ 	eh = eth_hdr(skb);
+ 
+-	if (is_fip_mode(&fcoe->ctlr) &&
+-	    compare_ether_addr(eh->h_source, fcoe->ctlr.dest_addr)) {
++	if (is_fip_mode(ctlr) &&
++	    compare_ether_addr(eh->h_source, ctlr->dest_addr)) {
+ 		FCOE_NETDEV_DBG(netdev, "wrong source mac address:%pM\n",
+ 				eh->h_source);
+ 		goto err;
+@@ -1544,6 +1554,7 @@ static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	unsigned int elen;		/* eth header, may include vlan */
+ 	struct fcoe_port *port = lport_priv(lport);
+ 	struct fcoe_interface *fcoe = port->priv;
++	struct fcoe_ctlr *ctlr = fcoe_to_ctlr(fcoe);
+ 	u8 sof, eof;
+ 	struct fcoe_hdr *hp;
+ 
+@@ -1559,7 +1570,7 @@ static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	}
+ 
+ 	if (unlikely(fh->fh_type == FC_TYPE_ELS) &&
+-	    fcoe_ctlr_els_send(&fcoe->ctlr, lport, skb))
++	    fcoe_ctlr_els_send(ctlr, lport, skb))
+ 		return 0;
+ 
+ 	sof = fr_sof(fp);
+@@ -1623,12 +1634,12 @@ static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	/* fill up mac and fcoe headers */
+ 	eh = eth_hdr(skb);
+ 	eh->h_proto = htons(ETH_P_FCOE);
+-	memcpy(eh->h_dest, fcoe->ctlr.dest_addr, ETH_ALEN);
+-	if (fcoe->ctlr.map_dest)
++	memcpy(eh->h_dest, ctlr->dest_addr, ETH_ALEN);
++	if (ctlr->map_dest)
+ 		memcpy(eh->h_dest + 3, fh->fh_d_id, 3);
+ 
+-	if (unlikely(fcoe->ctlr.flogi_oxid != FC_XID_UNKNOWN))
+-		memcpy(eh->h_source, fcoe->ctlr.ctl_src_addr, ETH_ALEN);
++	if (unlikely(ctlr->flogi_oxid != FC_XID_UNKNOWN))
++		memcpy(eh->h_source, ctlr->ctl_src_addr, ETH_ALEN);
+ 	else
+ 		memcpy(eh->h_source, port->data_src_addr, ETH_ALEN);
+ 
+@@ -1677,6 +1688,7 @@ static void fcoe_percpu_flush_done(struct sk_buff *skb)
+ static inline int fcoe_filter_frames(struct fc_lport *lport,
+ 				     struct fc_frame *fp)
+ {
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
+ 	struct fc_frame_header *fh;
+ 	struct sk_buff *skb = (struct sk_buff *)fp;
+@@ -1698,7 +1710,8 @@ static inline int fcoe_filter_frames(struct fc_lport *lport,
+ 		return 0;
+ 
+ 	fcoe = ((struct fcoe_port *)lport_priv(lport))->priv;
+-	if (is_fip_mode(&fcoe->ctlr) && fc_frame_payload_op(fp) == ELS_LOGO &&
++	ctlr = fcoe_to_ctlr(fcoe);
++	if (is_fip_mode(ctlr) && fc_frame_payload_op(fp) == ELS_LOGO &&
+ 	    ntoh24(fh->fh_s_id) == FC_FID_FLOGI) {
+ 		FCOE_DBG("fcoe: dropping FCoE lport LOGO in fip mode\n");
+ 		return -EINVAL;
+@@ -1877,6 +1890,7 @@ static int fcoe_dcb_app_notification(struct notifier_block *notifier,
+ 				     ulong event, void *ptr)
+ {
+ 	struct dcb_app_type *entry = ptr;
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
+ 	struct net_device *netdev;
+ 	struct fcoe_port *port;
+@@ -1894,6 +1908,8 @@ static int fcoe_dcb_app_notification(struct notifier_block *notifier,
+ 	if (!fcoe)
+ 		return NOTIFY_OK;
+ 
++	ctlr = fcoe_to_ctlr(fcoe);
++
+ 	if (entry->dcbx & DCB_CAP_DCBX_VER_CEE)
+ 		prio = ffs(entry->app.priority) - 1;
+ 	else
+@@ -1904,10 +1920,10 @@ static int fcoe_dcb_app_notification(struct notifier_block *notifier,
+ 
+ 	if (entry->app.protocol == ETH_P_FIP ||
+ 	    entry->app.protocol == ETH_P_FCOE)
+-		fcoe->ctlr.priority = prio;
++		ctlr->priority = prio;
+ 
+ 	if (entry->app.protocol == ETH_P_FCOE) {
+-		port = lport_priv(fcoe->ctlr.lp);
++		port = lport_priv(ctlr->lp);
+ 		port->priority = prio;
+ 	}
+ 
+@@ -1929,6 +1945,7 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ {
+ 	struct fc_lport *lport = NULL;
+ 	struct net_device *netdev = ptr;
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
+ 	struct fcoe_port *port;
+ 	struct fcoe_dev_stats *stats;
+@@ -1938,7 +1955,8 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 
+ 	list_for_each_entry(fcoe, &fcoe_hostlist, list) {
+ 		if (fcoe->netdev == netdev) {
+-			lport = fcoe->ctlr.lp;
++			ctlr = fcoe_to_ctlr(fcoe);
++			lport = ctlr->lp;
+ 			break;
+ 		}
+ 	}
+@@ -1967,7 +1985,7 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 		break;
+ 	case NETDEV_UNREGISTER:
+ 		list_del(&fcoe->list);
+-		port = lport_priv(fcoe->ctlr.lp);
++		port = lport_priv(ctlr->lp);
+ 		queue_work(fcoe_wq, &port->destroy_work);
+ 		goto out;
+ 		break;
+@@ -1982,8 +2000,8 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 	fcoe_link_speed_update(lport);
+ 
+ 	if (link_possible && !fcoe_link_ok(lport))
+-		fcoe_ctlr_link_up(&fcoe->ctlr);
+-	else if (fcoe_ctlr_link_down(&fcoe->ctlr)) {
++		fcoe_ctlr_link_up(ctlr);
++	else if (fcoe_ctlr_link_down(ctlr)) {
+ 		stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+ 		stats->LinkFailureCount++;
+ 		put_cpu();
+@@ -2003,6 +2021,7 @@ out:
+  */
+ static int fcoe_disable(struct net_device *netdev)
+ {
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
+ 	int rc = 0;
+ 
+@@ -2013,8 +2032,9 @@ static int fcoe_disable(struct net_device *netdev)
+ 	rtnl_unlock();
+ 
+ 	if (fcoe) {
+-		fcoe_ctlr_link_down(&fcoe->ctlr);
+-		fcoe_clean_pending_queue(fcoe->ctlr.lp);
++		ctlr = fcoe_to_ctlr(fcoe);
++		fcoe_ctlr_link_down(ctlr);
++		fcoe_clean_pending_queue(ctlr->lp);
+ 	} else
+ 		rc = -ENODEV;
+ 
+@@ -2032,6 +2052,7 @@ static int fcoe_disable(struct net_device *netdev)
+  */
+ static int fcoe_enable(struct net_device *netdev)
+ {
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
+ 	int rc = 0;
+ 
+@@ -2040,11 +2061,17 @@ static int fcoe_enable(struct net_device *netdev)
+ 	fcoe = fcoe_hostlist_lookup_port(netdev);
+ 	rtnl_unlock();
+ 
+-	if (!fcoe)
++	if (!fcoe) {
+ 		rc = -ENODEV;
+-	else if (!fcoe_link_ok(fcoe->ctlr.lp))
+-		fcoe_ctlr_link_up(&fcoe->ctlr);
++		goto out;
++	}
+ 
++	ctlr = fcoe_to_ctlr(fcoe);
++
++	if (!fcoe_link_ok(ctlr->lp))
++		fcoe_ctlr_link_up(ctlr);
++
++out:
+ 	mutex_unlock(&fcoe_config_mutex);
+ 	return rc;
+ }
+@@ -2059,6 +2086,7 @@ static int fcoe_enable(struct net_device *netdev)
+  */
+ static int fcoe_destroy(struct net_device *netdev)
+ {
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
+ 	struct fc_lport *lport;
+ 	struct fcoe_port *port;
+@@ -2071,7 +2099,8 @@ static int fcoe_destroy(struct net_device *netdev)
+ 		rc = -ENODEV;
+ 		goto out_nodev;
+ 	}
+-	lport = fcoe->ctlr.lp;
++	ctlr = fcoe_to_ctlr(fcoe);
++	lport = ctlr->lp;
+ 	port = lport_priv(lport);
+ 	list_del(&fcoe->list);
+ 	queue_work(fcoe_wq, &port->destroy_work);
+@@ -2126,7 +2155,8 @@ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
+ 	int dcbx;
+ 	u8 fup, up;
+ 	struct net_device *netdev = fcoe->realdev;
+-	struct fcoe_port *port = lport_priv(fcoe->ctlr.lp);
++	struct fcoe_ctlr *ctlr = fcoe_to_ctlr(fcoe);
++	struct fcoe_port *port = lport_priv(ctlr->lp);
+ 	struct dcb_app app = {
+ 				.priority = 0,
+ 				.protocol = ETH_P_FCOE
+@@ -2149,7 +2179,7 @@ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
+ 		}
+ 
+ 		port->priority = ffs(up) ? ffs(up) - 1 : 0;
+-		fcoe->ctlr.priority = ffs(fup) ? ffs(fup) - 1 : port->priority;
++		ctlr->priority = ffs(fup) ? ffs(fup) - 1 : port->priority;
+ 	}
+ #endif
+ }
+@@ -2166,6 +2196,7 @@ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
+ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
+ {
+ 	int rc = 0;
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
+ 	struct fc_lport *lport;
+ 
+@@ -2184,6 +2215,8 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
+ 		goto out_nodev;
+ 	}
+ 
++	ctlr = fcoe_to_ctlr(fcoe);
++
+ 	lport = fcoe_if_create(fcoe, &netdev->dev, 0);
+ 	if (IS_ERR(lport)) {
+ 		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
+@@ -2195,7 +2228,7 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
+ 	}
+ 
+ 	/* Make this the "master" N_Port */
+-	fcoe->ctlr.lp = lport;
++	ctlr->lp = lport;
+ 
+ 	/* setup DCB priority attributes. */
+ 	fcoe_dcb_create(fcoe);
+@@ -2208,7 +2241,7 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
+ 	fc_fabric_login(lport);
+ 	if (!fcoe_link_ok(lport)) {
+ 		rtnl_unlock();
+-		fcoe_ctlr_link_up(&fcoe->ctlr);
++		fcoe_ctlr_link_up(ctlr);
+ 		mutex_unlock(&fcoe_config_mutex);
+ 		return rc;
+ 	}
+@@ -2320,11 +2353,12 @@ static int fcoe_reset(struct Scsi_Host *shost)
+ 	struct fc_lport *lport = shost_priv(shost);
+ 	struct fcoe_port *port = lport_priv(lport);
+ 	struct fcoe_interface *fcoe = port->priv;
++	struct fcoe_ctlr *ctlr = fcoe_to_ctlr(fcoe);
+ 
+-	fcoe_ctlr_link_down(&fcoe->ctlr);
+-	fcoe_clean_pending_queue(fcoe->ctlr.lp);
+-	if (!fcoe_link_ok(fcoe->ctlr.lp))
+-		fcoe_ctlr_link_up(&fcoe->ctlr);
++	fcoe_ctlr_link_down(ctlr);
++	fcoe_clean_pending_queue(ctlr->lp);
++	if (!fcoe_link_ok(ctlr->lp))
++		fcoe_ctlr_link_up(ctlr);
+ 	return 0;
+ }
+ 
+@@ -2359,10 +2393,12 @@ fcoe_hostlist_lookup_port(const struct net_device *netdev)
+  */
+ static struct fc_lport *fcoe_hostlist_lookup(const struct net_device *netdev)
+ {
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
+ 
+ 	fcoe = fcoe_hostlist_lookup_port(netdev);
+-	return (fcoe) ? fcoe->ctlr.lp : NULL;
++	ctlr = fcoe_to_ctlr(fcoe);
++	return (fcoe) ? ctlr->lp : NULL;
+ }
+ 
+ /**
+@@ -2466,6 +2502,7 @@ module_init(fcoe_init);
+ static void __exit fcoe_exit(void)
+ {
+ 	struct fcoe_interface *fcoe, *tmp;
++	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_port *port;
+ 	unsigned int cpu;
+ 
+@@ -2477,7 +2514,8 @@ static void __exit fcoe_exit(void)
+ 	rtnl_lock();
+ 	list_for_each_entry_safe(fcoe, tmp, &fcoe_hostlist, list) {
+ 		list_del(&fcoe->list);
+-		port = lport_priv(fcoe->ctlr.lp);
++		ctlr = fcoe_to_ctlr(fcoe);
++		port = lport_priv(ctlr->lp);
+ 		queue_work(fcoe_wq, &port->destroy_work);
+ 	}
+ 	rtnl_unlock();
+@@ -2573,7 +2611,7 @@ static struct fc_seq *fcoe_elsct_send(struct fc_lport *lport, u32 did,
+ {
+ 	struct fcoe_port *port = lport_priv(lport);
+ 	struct fcoe_interface *fcoe = port->priv;
+-	struct fcoe_ctlr *fip = &fcoe->ctlr;
++	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
+ 	struct fc_frame_header *fh = fc_frame_header_get(fp);
+ 
+ 	switch (op) {
+@@ -2747,7 +2785,8 @@ static void fcoe_set_port_id(struct fc_lport *lport,
+ {
+ 	struct fcoe_port *port = lport_priv(lport);
+ 	struct fcoe_interface *fcoe = port->priv;
++	struct fcoe_ctlr *ctlr = fcoe_to_ctlr(fcoe);
+ 
+ 	if (fp && fc_frame_payload_op(fp) == ELS_FLOGI)
+-		fcoe_ctlr_recv_flogi(&fcoe->ctlr, lport, fp);
++		fcoe_ctlr_recv_flogi(ctlr, lport, fp);
+ }
+diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
+index 96ac938..a624add 100644
+--- a/drivers/scsi/fcoe/fcoe.h
++++ b/drivers/scsi/fcoe/fcoe.h
+@@ -68,7 +68,6 @@ do {                                                            	\
+  * @netdev:	      The associated net device
+  * @fcoe_packet_type: FCoE packet type
+  * @fip_packet_type:  FIP packet type
+- * @ctlr:	      The FCoE controller (for FIP)
+  * @oem:	      The offload exchange manager for all local port
+  *		      instances associated with this port
+  * @removed:	      Indicates fcoe interface removed from net device
+@@ -80,12 +79,15 @@ struct fcoe_interface {
+ 	struct net_device  *realdev;
+ 	struct packet_type fcoe_packet_type;
+ 	struct packet_type fip_packet_type;
+-	struct fcoe_ctlr   ctlr;
+ 	struct fc_exch_mgr *oem;
+ 	u8	removed;
+ };
+ 
+-#define fcoe_from_ctlr(fip) container_of(fip, struct fcoe_interface, ctlr)
++#define fcoe_to_ctlr(x)						\
++	(struct fcoe_ctlr *)(((struct fcoe_ctlr *)(x)) - 1)
++
++#define fcoe_from_ctlr(x)			\
++	((struct fcoe_interface *)((x) + 1))
+ 
+ /**
+  * fcoe_netdev() - Return the net device associated with a local port
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index cfdb55f..69eca4b 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -159,6 +159,15 @@ struct fcoe_ctlr {
+ };
+ 
+ /**
++ * fcoe_ctlr_priv() - Return the private data from a fcoe_ctlr
++ * @cltr: The fcoe_ctlr whose private data will be returned
++ */
++static inline void *fcoe_ctlr_priv(const struct fcoe_ctlr *ctlr)
++{
++	return (void *)(ctlr + 1);
++}
++
++/**
+  * struct fcoe_fcf - Fibre-Channel Forwarder
+  * @list:	 list linkage
+  * @time:	 system time (jiffies) when an advertisement was last received
 
-* moved fcoe_ctlr_attrs and fcoe_fcf_attrs attribute
-  helper macros from fcoe_sysfs.h to fcoe_sysfs.c so
-  that they don't temp developers to use them. They're
-  intended to be used in attribute show/store routine
-  generating macros, but not by drivers.
-
-* Removed unnecessary put_device calls on parent devices.
-  Also removed unnecessary de-initialization of pointers
-  to parent and removed unnecessary zero'ing of memory
-  before freeing it.
-
-* Added Documentation/ABI/testing/sysfs-class-fcoe
-  document.
-
-* Changed simple_strtoul usage to kstrtoul to avoid
-  checkpatch.pl warning that I missed before. There's
-  a bunch of noise in checkpatch.pl due to an odd macro
-  usage, but I think any remaining checkpatch.pl warnings
-  are OK.
-
----
-
-This patch series adds a sysfs layer to libfcoe. It adds
-a sysfs instance for FIP controllers (a SW entity) and
-discovered Fibre Channel Forwarders (FCFs), which are
-simply FCoE switches.
-
-The new sysfs code is used by any driver that currently
-uses libfcoe, namely fcoe.ko and bnx2fc_fcoe.ko. Any other
-FCoE capable device that wishes to use the high-level APIs
-defined in fcoe_syfs.h may, without having to use the
-the protocol processing portions of libfcoe.
-
-The code borrows heavily from the FC Transport, but is
-less complicated because it does not need to interact
-with the SCSI layer directly.
-
-I think one thing to consider with this series is that
-drivers, such as traditional HBAs, which wish to use
-this infrastructure will now need to depend on libfcoe.ko.
-It was either this or create a superfluous kernel module;
-I think libfcoe is an appropriate place for this code.
-
-This series was created against scsi-misc + 9 patches
-mailed by me to linux-scsi on 03/09/12. (Note that 10
-patches were mailed, but that patch 01/10 will be dropped)
-
-I'm not sure if there's somewhere I should cross-post
-this for general sysfs review. I don't think I'm doing
-anything odd; I added Greg K-H to the CC list to try and
-get some sysfs eyes on this code.
-
----
-
-Robert Love (3):
-      fcoe: Allocate fcoe_ctlr with fcoe_interface, not as a member
-      bnx2fc: Allocate fcoe_ctlr with bnx2fc_interface, not as a member
-      libfcoe: Add fcoe_sysfs
-
-
- Documentation/ABI/testing/sysfs-bus-fcoe |   77 +++
- drivers/scsi/bnx2fc/bnx2fc.h             |    7 
- drivers/scsi/bnx2fc/bnx2fc_els.c         |    2 
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c        |  116 +++-
- drivers/scsi/bnx2fc/bnx2fc_hwi.c         |   39 +
- drivers/scsi/fcoe/Makefile               |    2 
- drivers/scsi/fcoe/fcoe.c                 |  137 +++--
- drivers/scsi/fcoe/fcoe.h                 |    8 
- drivers/scsi/fcoe/fcoe_sysfs.c           |  832 ++++++++++++++++++++++++++++++
- drivers/scsi/fcoe/fcoe_transport.c       |   13 
- include/scsi/fcoe_sysfs.h                |  124 ++++
- include/scsi/libfcoe.h                   |   10 
- 12 files changed, 1249 insertions(+), 118 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-bus-fcoe
- create mode 100644 drivers/scsi/fcoe/fcoe_sysfs.c
- create mode 100644 include/scsi/fcoe_sysfs.h
-
--- 
-Thanks, //Rob
