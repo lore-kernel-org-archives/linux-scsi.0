@@ -1,86 +1,71 @@
-From: Girish K S <girish.shivananjappa@linaro.org>
-Subject: Re: [RFC V4 0/2] Add support for pci/non-pci probing for UFS
-Date: Wed, 23 May 2012 17:35:22 +0530
-Message-ID: <CAGxe1ZF36CqL70T61hR0rBO0CWSdoebGQQyhR6UUPNbrorMS_g@mail.gmail.com>
-References: <1337686410-19206-1-git-send-email-girish.shivananjappa@linaro.org>
-	<CANfBPZ8K-jh4L04wrMbodjBTTAtWd8FraW1QZ4NXRSdsu39AzA@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC PATCH v3 4/4] [SCSI] sd: change to auto suspend mode
+Date: Wed, 23 May 2012 10:43:30 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1205231029520.1566-100000@iolanthe.rowland.org>
+References: <1337671292-15583-5-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:39397 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752883Ab2EWMFX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2012 08:05:23 -0400
-Received: by qadb17 with SMTP id b17so3069339qad.19
-        for <linux-scsi@vger.kernel.org>; Wed, 23 May 2012 05:05:23 -0700 (PDT)
-In-Reply-To: <CANfBPZ8K-jh4L04wrMbodjBTTAtWd8FraW1QZ4NXRSdsu39AzA@mail.gmail.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:51742 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755000Ab2EWOnb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2012 10:43:31 -0400
+In-Reply-To: <1337671292-15583-5-git-send-email-ming.m.lin@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "S, Venkatraman" <svenkatr@ti.com>
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, vinholikatti@gmail.com, santoshsy@gmail.com, hch@infradead.org, patches@linaro.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 23 May 2012 14:36, S, Venkatraman <svenkatr@ti.com> wrote:
-> On Tue, May 22, 2012 at 5:03 PM, Girish K S
-> <girish.shivananjappa@linaro.org> wrote:
->> The existing UFS driver is tightly bound to only pci specific device=
-s.
->> It cannot work for non-pci devices.
->>
->> "SCSI: UFS: Create separate UFS core and pci modules" patch splits t=
-he
->> ufs driver into core driver and pci probe driver.
->>
->> "SCSI: UFS: Add platform support for ufs host controller" patch adds
->> support for the platform probing for non-pci devices
->>
->> changes in v4:
->> =A0 =A0 =A0 =A0-Rebased to the latest linux-next/master branch.
->> =A0 =A0 =A0 =A0-Removed the Copyright string from the module probe f=
-unction and
->> deleted redundant code from ufshcd-pltfm.c suspend/resume functions.
->>
->> changes in v3:
->> =A0 =A0 =A0 =A0-Modified the ufshcd.c ufshcd-pci.c ufshcd0pltfm.c to=
- follow the
->> driver module initialization standard. suggested by venkatraman.
->>
->> changes in v2:
->> =A0 =A0 =A0 =A0-Reduced the number of patches from 4 to 2. merged th=
-e core and
->> pci probing modules as single patch. suggested by Christoph Hellwig.
->>
->> changes in v1:
->> =A0 =A0 =A0 =A0-Changes suggested by Namjae to split the driver as 3=
- independent
->> modules and retain the author's name in the files created by me.
->>
->> Girish K S (2):
->> =A0SCSI: UFS: Create separate UFS core and pci modules
->> =A0SCSI: UFS: Add platform support for ufs host controller
->>
->> =A0drivers/scsi/ufs/Kconfig =A0 =A0 =A0 =A0| =A0 32 +++-
->> =A0drivers/scsi/ufs/Makefile =A0 =A0 =A0 | =A0 =A02 +
->> =A0drivers/scsi/ufs/ufs.h =A0 =A0 =A0 =A0 =A0| =A0103 +++++++++++
->> =A0drivers/scsi/ufs/ufshcd-pci.c =A0 | =A0206 ++++++++++++++++++++++
->> =A0drivers/scsi/ufs/ufshcd-pltfm.c | =A0176 +++++++++++++++++++
->> =A0drivers/scsi/ufs/ufshcd.c =A0 =A0 =A0 | =A0367 ++++++++++--------=
----------------------
->> =A06 files changed, 608 insertions(+), 278 deletions(-)
->> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
->> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
->>
->> --
->> 1.7.4.1
->>
-> Thanks Girish.
-> V4 looks ok to me. If it helps, you can add
-> Reviewed-by: Venkatraman S <svenkatr@ti.com>
-Will generate a patch including your Ack.
-If Namjae and  Christoph Hellwi agree will include their ack in the pat=
-ch
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, 22 May 2012, Lin Ming wrote:
+
+> Uses block layer runtime pm helper functions in scsi_runtime_suspend/resume.
+> Remove scsi_autopm_* from sd open/release/remove path.
+
+Sorry I didn't have time to get to this yesterday...
+
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+
+> @@ -171,9 +183,10 @@ static int scsi_runtime_idle(struct device *dev)
+>  
+>  	/* Insert hooks here for targets, hosts, and transport classes */
+>  
+> -	if (scsi_is_sdev_device(dev))
+> -		err = pm_schedule_suspend(dev, 100);
+> -	else
+> +	if (scsi_is_sdev_device(dev)) {
+> +		pm_runtime_mark_last_busy(dev);
+> +		err = pm_request_autosuspend(dev);
+
+This really should be pm_runtime_autosuspend(dev).  In practice there's
+very little difference; it's mostly a matter of style.
+
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+
+> @@ -2631,7 +2624,7 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
+>  
+>  	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+>  		  sdp->removable ? "removable " : "");
+> -	scsi_autopm_put_device(sdp);
+> +	pm_runtime_put_sync_autosuspend(&sdp->sdev_gendev);
+
+This should be left the way it was.  scsi_autopm_put_device() does 
+pm_runtime_put_sync(), which will call scsi_runtime_idle(), which will 
+now call pm_runtime_autosuspend().
+
+>  	put_device(&sdkp->dev);
+>  }
+>  
+> @@ -2755,7 +2748,6 @@ static int sd_remove(struct device *dev)
+>  	struct scsi_disk *sdkp;
+>  
+>  	sdkp = dev_get_drvdata(dev);
+> -	scsi_autopm_get_device(sdkp->device);
+
+This line should be kept as is.  The SCSI core uses the incremented 
+usage count to prevent driverless devices from being runtime-suspended.
+
+Alan Stern
+
+
