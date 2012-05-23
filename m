@@ -1,143 +1,182 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: RE: [PATCH v5 0/3] FCoE Sysfs
-Date: Wed, 23 May 2012 02:05:10 +0000
-Message-ID: <A4BC99A5F8245F4CBCD582D057D75DAF0A9676F5@ORSMSX103.amr.corp.intel.com>
-References: <20120523020421.12536.278.stgit@fritz>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH v6 0/4] FCoE Sysfs
+Date: Tue, 22 May 2012 19:06:05 -0700
+Message-ID: <20120523020605.12660.73324.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:10321 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:47797 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932978Ab2EWCFM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 May 2012 22:05:12 -0400
-In-Reply-To: <20120523020421.12536.278.stgit@fritz>
-Content-Language: en-US
+	id S933022Ab2EWCGG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 May 2012 22:06:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Love, Robert W" <robert.w.love@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>, "james.smart@emulex.com" <james.smart@emulex.com>, "bprakash@broadcom.com" <bprakash@broadcom.com>
+To: linux-scsi@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, giridhar.malavali@qlogic.com, james.smart@emulex.com, bprakash@broadcom.com
 
-SWdub3JlIHRoZXNlLi4uLiBJIGZvcmdvdCB0aGUgbGFzdCBwYXRjaCBvZiB0aGUgc2VyaWVzIQ0K
-DQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtc2NzaS1vd25lckB2Z2Vy
-Lmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZ10gT24g
-QmVoYWxmIE9mIFJvYmVydCBMb3ZlDQpTZW50OiBUdWVzZGF5LCBNYXkgMjIsIDIwMTIgNzowNCBQ
-TQ0KVG86IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpDYzogZ3JlZ2toQGxpbnV4Zm91bmRh
-dGlvbi5vcmc7IGdpcmlkaGFyLm1hbGF2YWxpQHFsb2dpYy5jb207IGphbWVzLnNtYXJ0QGVtdWxl
-eC5jb207IGJwcmFrYXNoQGJyb2FkY29tLmNvbQ0KU3ViamVjdDogW1BBVENIIHY1IDAvM10gRkNv
-RSBTeXNmcw0KDQp2NTogUmVzZW5kIHRvIGFwcGx5IG9uIGN1cnJlbnQgbWlzYyBicmFuY2ggb2Yg
-c2NzaS5naXQNCg0KKiBjaGVja3BhdGNoLnBsIGNvbXBsYWlucyBhYm91dCBwYXRjaCAzLzQuIFRo
-ZSBsYWNrIG9mIGEgZmluYWwNCiAgYXJndW1lbnQgaXMgYSB0cmljayBJIHRvb2sgZnJvbSBzY3Np
-X3RyYW5zcG9ydF9mYy5jLiBJIHRoaW5rDQogIHRoYXQgaXQgaXMgZmluZS4NCg0KICBFUlJPUjog
-c3BhY2UgcHJvaGliaXRlZCBiZWZvcmUgdGhhdCBjbG9zZSBwYXJlbnRoZXNpcyAnKScNCiAgIzM2
-OTogRklMRTogZHJpdmVycy9zY3NpL2Zjb2UvZmNvZV9zeXNmcy5jOjE5NjoNCiAgKyAgICAgZmNv
-ZV9mY2ZfcHJpdmF0ZV9zaG93X2Z1bmN0aW9uKGZpZWxkLCBmb3JtYXRfc3RyaW5nLCBzeiwgKQlc
-DQoNCiogY2hlY2twYXRjaC5wbCBjb21wbGFpbnMgYWJvdXQgcGF0Y2ggMy80LiBJIGF0dGVtcHRl
-ZCB0byBhZGQNCiAgcGFyZW50aGVzaXMgYXJvdW5kIHRoZXNlIG1hY3JvcywgYnV0IEkgY3JlYXRl
-ZCBtb3JlIHByb2JsZW1zDQogIHRoYW4gSSByZXNvbHZlZC4gSSBhbSBub3Qgc3VyZSB3aGF0IHRv
-IGRvIGFib3V0IHRoaXMuIEkgYmVsaXZlDQogIHRoZXNlIHdlcmUgV0FSTnMgd2hlbiB0aGlzIHNl
-cmllcyB3YXMgaW5pdGlhbGx5IHN1Ym1pdHRlZC4NCg0KICBFUlJPUjogTWFjcm9zIHdpdGggY29t
-cGxleCB2YWx1ZXMgc2hvdWxkIGJlIGVuY2xvc2VkIGluIHBhcmVudGhlc2lzDQogICMzNzg6IEZJ
-TEU6IGRyaXZlcnMvc2NzaS9mY29lL2Zjb2Vfc3lzZnMuYzoyMDU6DQogICsjZGVmaW5lIGZjb2Vf
-ZmNmX3ByaXZhdGVfcmRfYXR0cl9jYXN0KGZpZWxkLCBmb3JtYXRfc3RyaW5nLCBzeiwgY2FzdCkJ
-XA0KICArCSBmY29lX2ZjZl9wcml2YXRlX3Nob3dfZnVuY3Rpb24oZmllbGQsIGZvcm1hdF9zdHJp
-bmcsIHN6LCAoY2FzdCkpIFwNCiAgKwkgc3RhdGljIEZDT0VfREVWSUNFX0FUVFIoZmNmLCBmaWVs
-ZCwgU19JUlVHTywJICAgICAgCSAgCSAgXA0KICArCSAJCQkgICAgICAJICAgICBzaG93X2Zjb2Vf
-ZmNmX2RldmljZV8jI2ZpZWxkLCBOVUxMKQ0KDQoqIGNoZWNrcGF0Y2gucGwgY29tcGxhaW5zIGFi
-b3V0IHBhdGNoIDQvNC4gVGhpcyBpcyBqdXN0IGEgV0FSTi4NCiAgSSB3b3VsZCBmaXggdGhpcyBp
-ZiBJIGtuZXcgaG93IHRvLCBidXQgSSBkb24ndCB0aGluayBpdCBzaG91bGQNCiAgYmUgYSBwcm9i
-bGVtLg0KDQogIFdBUk5JTkc6IHF1b3RlZCBzdHJpbmcgc3BsaXQgYWNyb3NzIGxpbmVzDQogICM1
-MDI6IEZJTEU6IGRyaXZlcnMvc2NzaS9mY29lL2Zjb2VfY3Rsci5jOjEwMjE6DQogICsJCXByaW50
-ayhLRVJOX0VSUiAiRmFpbGVkIHRvIGFsbG9jYXRlIHN5c2ZzIGluc3RhbmNlICINCiAgKwkJCQkJ
-ICAgICAgICJmb3IgRkNGLCBmYWIgMTYuMTZsbHggbWFjIHBNXG4iLA0KDQp2NDogTWlub3IgZml4
-ZXMgYW5kIGNsZWFudXBzDQoNCiogQ2hhbmdlZCBkZXZpY2VfaW5pdGlhbGl6ZS9kZXZpY2VfYWRk
-IHRvIGRldmljZV9yZWdpc3Rlcg0KICBhbmQgZGV2aWNlX2RlbCB0byBkZXZpY2VfdW5yZWdpc3Rl
-ci4gVGhlcmUgd2FzIGFuIGltYmFsYW5jZQ0KICBiZWNhdXNlIGRldmljZV9pbml0aWFsaXplIHdh
-cyBnZXR0aW5nIGEgcmVmZXJlbmNlIHRoYXQNCiAgd2FzIG5vdCBiZWluZyByZWxlYXNlZC4gV2l0
-aCB0aGlzIHVwZGF0ZSBib3RoIGZjb2VfZmNmcw0KICBhcyB3ZWxsIGFzIGZjb2VfY3RscnMgYXJl
-IGNvcnJlY3RseSByZWxlYXNlZC9mcmVlJ2Qgd2hlbg0KICB0aGV5IGFyZSB0byBiZSByZW1vdmVk
-IGZyb20gdGhlIHN5c3RlbS4NCg0KKiBNaW5vciB1cGRhdGVzIHRvIGNvbW1pdCBtZXNzYWdlcyBz
-byB0aGVyZSBhcmUgbm8NCiAgcmVmZXJlbmNlcyB0byAnZmNvZV9jdGxyX2F0dHJzJyBhbmQgJ2Zj
-b2VfZmNmX2F0dHJzJw0KICB3aGljaCB3ZXJlIGJvdGggcmVuYW1lZCBpbiB2MyBvZiB0aGlzIHNl
-cmllcy4NCg0KdjM6IEFkZHJlc3NlZCBHcmVnIEtIJ3Mgc2Vjb25kIHNldCBvZiByZXZpZXcgY29t
-bWVudHMNCg0KKiBDcmVhdGVkIGEgJ2Zjb2UgYnVzJyB3aXRoIHRoZSBmY29lX2N0bHIgYW5kIGZj
-b2VfZmNmDQogIGluc3RhbmNlcyBhcyBkZXZpY2VzIG9uIHRoZSBidXMuIENyZWF0ZWQgYnVzX3R5
-cGUocykNCiAgZm9yIGJvdGggZGV2aWNlIHR5cGVzLCB3aXRoIGRlZmF1bHQgYXR0cmlidXRlIGdy
-b3VwDQogIHNldHMgZm9yIGVhY2guIE5vdyBzeXNmcyBjb3JlIGFkZHMvcmVtb3ZlcyBhdHRyaWJ1
-dGVzDQogIHdoaWNoIGFsbG93ZWQgdGhlIHJlbW92YWwgb2Ygc3lzZnNfY3JlYXRlX2dyb3VwIGNh
-bGxzDQogIGJlZm9yZSBkZXZpY2VfYWRkLiBVcGRhdGVkIERvY3VtZW50YXRpb24vIGFjY29yZGlu
-Z2x5Lg0KICANCiogUmVuYW1lZCBzdHJ1Y3R1cmVzIGFuZCBBUElzIHRvIG1ha2UgdGhlbSBsZXNz
-IGNvbmZ1c2luZy4NCg0KICAgc3RydWN0czoNCiAgICBmY29lX2N0bHJfYXR0cnMgLT4gZmNvZV9j
-dGxyX2RldmljZQ0KICAgIGZjb2VfZmNmX2F0dHJzIC0+IGZjb2VfZmNmX2RldmljZQ0KDQogICBm
-dW5jdGlvbnM6DQogICAgZmNvZV9jdGxyX2F0dHJzX2FkZCAtPiBmY29lX2N0bHJfZGV2aWNlX2Fk
-ZA0KICAgIGZjb2VfY3Rscl9hdHRyc19kZWxldGUgLT4gZmNvZV9jdGxyX2RldmljZV9kZWxldGUN
-CiAgICBmY29lX2ZjZl9hdHRyc19hZGQgLT4gZmNvZV9mY2ZfZGV2aWNlX2FkZA0KICAgIGZjb2Vf
-ZmNmX2F0dHJzX2RlbGV0ZSAtPiBmY29lX2ZjZl9kZXZpY2VfZGVsZXRlDQoNCiogUmVtb3ZlZCBl
-eHRyYSBnZXRfZGV2aWNlKHBhcmVudCkgZm9yIGJvdGggdGhlDQogIGZjb2VfY3Rscl9kZXZpY2Ug
-YW5kIGZjb2VfZmNmX2RldmljZS4NCg0KKiBmaXhlZCAndW51c2VkIHZhcmlhYmxlJyBjb21waWxh
-dGlvbiB3YXJuaW5nIHRoYXQNCiAgZXhpc3RlZCBpbiB2Mi4NCg0KKiBBUEkgc3ltYm9scyBub3cg
-ZXhwb3J0ZWQgd2l0aCBFWFBPUlRfU1lNQk9MX0dQTA0KDQoqIE5PVCBBRERSRVNTRUQgLSBpZHIg
-dXNhZ2UgdnMuIGF0b21pYyBpbmNyZW1ldGluZyBvZg0KICBmY29lX2N0bHIgYW5kIGZjb2VfZmNm
-IGlkIGVudW1lcmF0aW9uLiBJdCB3YXMgaW5kaWNhdGVkDQogIHRoYXQgaWRyIGhhcyBub3QgdHJh
-ZGl0aW9uYWxseSBiZWVuIHVzZWQgaW4gZHJpdmVycy9zY3NpLy4NCiAgSSB3aWxsIHJlLWV4YW1p
-bmUgdGhpcyBpZiB0aGVyZSBpcyBzdGlsbCBoZWFydGJ1cm4uDQoNCi0tLQ0KDQp2MjogQWRkcmVz
-c2VkIEdyZWcgS0gncyByZXZpZXcgY29tbWVudHMNCg0KKiBtb3ZlZCBmY29lX2N0bHJfYXR0cnMg
-YW5kIGZjb2VfZmNmX2F0dHJzIGF0dHJpYnV0ZQ0KICBoZWxwZXIgbWFjcm9zIGZyb20gZmNvZV9z
-eXNmcy5oIHRvIGZjb2Vfc3lzZnMuYyBzbw0KICB0aGF0IHRoZXkgZG9uJ3QgdGVtcCBkZXZlbG9w
-ZXJzIHRvIHVzZSB0aGVtLiBUaGV5J3JlDQogIGludGVuZGVkIHRvIGJlIHVzZWQgaW4gYXR0cmli
-dXRlIHNob3cvc3RvcmUgcm91dGluZQ0KICBnZW5lcmF0aW5nIG1hY3JvcywgYnV0IG5vdCBieSBk
-cml2ZXJzLg0KDQoqIFJlbW92ZWQgdW5uZWNlc3NhcnkgcHV0X2RldmljZSBjYWxscyBvbiBwYXJl
-bnQgZGV2aWNlcy4NCiAgQWxzbyByZW1vdmVkIHVubmVjZXNzYXJ5IGRlLWluaXRpYWxpemF0aW9u
-IG9mIHBvaW50ZXJzDQogIHRvIHBhcmVudCBhbmQgcmVtb3ZlZCB1bm5lY2Vzc2FyeSB6ZXJvJ2lu
-ZyBvZiBtZW1vcnkNCiAgYmVmb3JlIGZyZWVpbmcgaXQuDQoNCiogQWRkZWQgRG9jdW1lbnRhdGlv
-bi9BQkkvdGVzdGluZy9zeXNmcy1jbGFzcy1mY29lDQogIGRvY3VtZW50Lg0KDQoqIENoYW5nZWQg
-c2ltcGxlX3N0cnRvdWwgdXNhZ2UgdG8ga3N0cnRvdWwgdG8gYXZvaWQNCiAgY2hlY2twYXRjaC5w
-bCB3YXJuaW5nIHRoYXQgSSBtaXNzZWQgYmVmb3JlLiBUaGVyZSdzDQogIGEgYnVuY2ggb2Ygbm9p
-c2UgaW4gY2hlY2twYXRjaC5wbCBkdWUgdG8gYW4gb2RkIG1hY3JvDQogIHVzYWdlLCBidXQgSSB0
-aGluayBhbnkgcmVtYWluaW5nIGNoZWNrcGF0Y2gucGwgd2FybmluZ3MNCiAgYXJlIE9LLg0KDQot
-LS0NCg0KVGhpcyBwYXRjaCBzZXJpZXMgYWRkcyBhIHN5c2ZzIGxheWVyIHRvIGxpYmZjb2UuIEl0
-IGFkZHMgYSBzeXNmcyBpbnN0YW5jZSBmb3IgRklQIGNvbnRyb2xsZXJzIChhIFNXIGVudGl0eSkg
-YW5kIGRpc2NvdmVyZWQgRmlicmUgQ2hhbm5lbCBGb3J3YXJkZXJzIChGQ0ZzKSwgd2hpY2ggYXJl
-IHNpbXBseSBGQ29FIHN3aXRjaGVzLg0KDQpUaGUgbmV3IHN5c2ZzIGNvZGUgaXMgdXNlZCBieSBh
-bnkgZHJpdmVyIHRoYXQgY3VycmVudGx5IHVzZXMgbGliZmNvZSwgbmFtZWx5IGZjb2Uua28gYW5k
-IGJueDJmY19mY29lLmtvLiBBbnkgb3RoZXIgRkNvRSBjYXBhYmxlIGRldmljZSB0aGF0IHdpc2hl
-cyB0byB1c2UgdGhlIGhpZ2gtbGV2ZWwgQVBJcyBkZWZpbmVkIGluIGZjb2Vfc3lmcy5oIG1heSwg
-d2l0aG91dCBoYXZpbmcgdG8gdXNlIHRoZSB0aGUgcHJvdG9jb2wgcHJvY2Vzc2luZyBwb3J0aW9u
-cyBvZiBsaWJmY29lLg0KDQpUaGUgY29kZSBib3Jyb3dzIGhlYXZpbHkgZnJvbSB0aGUgRkMgVHJh
-bnNwb3J0LCBidXQgaXMgbGVzcyBjb21wbGljYXRlZCBiZWNhdXNlIGl0IGRvZXMgbm90IG5lZWQg
-dG8gaW50ZXJhY3Qgd2l0aCB0aGUgU0NTSSBsYXllciBkaXJlY3RseS4NCg0KSSB0aGluayBvbmUg
-dGhpbmcgdG8gY29uc2lkZXIgd2l0aCB0aGlzIHNlcmllcyBpcyB0aGF0IGRyaXZlcnMsIHN1Y2gg
-YXMgdHJhZGl0aW9uYWwgSEJBcywgd2hpY2ggd2lzaCB0byB1c2UgdGhpcyBpbmZyYXN0cnVjdHVy
-ZSB3aWxsIG5vdyBuZWVkIHRvIGRlcGVuZCBvbiBsaWJmY29lLmtvLg0KSXQgd2FzIGVpdGhlciB0
-aGlzIG9yIGNyZWF0ZSBhIHN1cGVyZmx1b3VzIGtlcm5lbCBtb2R1bGU7IEkgdGhpbmsgbGliZmNv
-ZSBpcyBhbiBhcHByb3ByaWF0ZSBwbGFjZSBmb3IgdGhpcyBjb2RlLg0KDQpUaGlzIHNlcmllcyB3
-YXMgY3JlYXRlZCBhZ2FpbnN0IHNjc2ktbWlzYyArIDkgcGF0Y2hlcyBtYWlsZWQgYnkgbWUgdG8g
-bGludXgtc2NzaSBvbiAwMy8wOS8xMi4gKE5vdGUgdGhhdCAxMCBwYXRjaGVzIHdlcmUgbWFpbGVk
-LCBidXQgdGhhdCBwYXRjaCAwMS8xMCB3aWxsIGJlIGRyb3BwZWQpDQoNCkknbSBub3Qgc3VyZSBp
-ZiB0aGVyZSdzIHNvbWV3aGVyZSBJIHNob3VsZCBjcm9zcy1wb3N0IHRoaXMgZm9yIGdlbmVyYWwg
-c3lzZnMgcmV2aWV3LiBJIGRvbid0IHRoaW5rIEknbSBkb2luZyBhbnl0aGluZyBvZGQ7IEkgYWRk
-ZWQgR3JlZyBLLUggdG8gdGhlIENDIGxpc3QgdG8gdHJ5IGFuZCBnZXQgc29tZSBzeXNmcyBleWVz
-IG9uIHRoaXMgY29kZS4NCg0KLS0tDQoNClJvYmVydCBMb3ZlICgzKToNCiAgICAgIGZjb2U6IEFs
-bG9jYXRlIGZjb2VfY3RsciB3aXRoIGZjb2VfaW50ZXJmYWNlLCBub3QgYXMgYSBtZW1iZXINCiAg
-ICAgIGJueDJmYzogQWxsb2NhdGUgZmNvZV9jdGxyIHdpdGggYm54MmZjX2ludGVyZmFjZSwgbm90
-IGFzIGEgbWVtYmVyDQogICAgICBsaWJmY29lOiBBZGQgZmNvZV9zeXNmcw0KDQoNCiBEb2N1bWVu
-dGF0aW9uL0FCSS90ZXN0aW5nL3N5c2ZzLWJ1cy1mY29lIHwgICA3NyArKysNCiBkcml2ZXJzL3Nj
-c2kvYm54MmZjL2JueDJmYy5oICAgICAgICAgICAgIHwgICAgNyANCiBkcml2ZXJzL3Njc2kvYm54
-MmZjL2JueDJmY19lbHMuYyAgICAgICAgIHwgICAgMiANCiBkcml2ZXJzL3Njc2kvYm54MmZjL2Ju
-eDJmY19mY29lLmMgICAgICAgIHwgIDExNiArKystDQogZHJpdmVycy9zY3NpL2JueDJmYy9ibngy
-ZmNfaHdpLmMgICAgICAgICB8ICAgMzkgKw0KIGRyaXZlcnMvc2NzaS9mY29lL01ha2VmaWxlICAg
-ICAgICAgICAgICAgfCAgICAyIA0KIGRyaXZlcnMvc2NzaS9mY29lL2Zjb2UuYyAgICAgICAgICAg
-ICAgICAgfCAgMTM3ICsrKy0tDQogZHJpdmVycy9zY3NpL2Zjb2UvZmNvZS5oICAgICAgICAgICAg
-ICAgICB8ICAgIDggDQogZHJpdmVycy9zY3NpL2Zjb2UvZmNvZV9zeXNmcy5jICAgICAgICAgICB8
-ICA4MzIgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQogZHJpdmVycy9zY3NpL2Zjb2Uv
-ZmNvZV90cmFuc3BvcnQuYyAgICAgICB8ICAgMTMgDQogaW5jbHVkZS9zY3NpL2Zjb2Vfc3lzZnMu
-aCAgICAgICAgICAgICAgICB8ICAxMjQgKysrKw0KIGluY2x1ZGUvc2NzaS9saWJmY29lLmggICAg
-ICAgICAgICAgICAgICAgfCAgIDEwIA0KIDEyIGZpbGVzIGNoYW5nZWQsIDEyNDkgaW5zZXJ0aW9u
-cygrKSwgMTE4IGRlbGV0aW9ucygtKSAgY3JlYXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24v
-QUJJL3Rlc3Rpbmcvc3lzZnMtYnVzLWZjb2UNCiBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9z
-Y3NpL2Zjb2UvZmNvZV9zeXNmcy5jICBjcmVhdGUgbW9kZSAxMDA2NDQgaW5jbHVkZS9zY3NpL2Zj
-b2Vfc3lzZnMuaA0KDQotLQ0KVGhhbmtzLCAvL1JvYg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20g
-dGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBpbiB0aGUg
-Ym9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlIG1ham9y
-ZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwN
-Cg==
+v6: Resend, v5 was missing patch 4/4
+
+v5: Resend to apply on current misc branch of scsi.git
+
+* checkpatch.pl complains about patch 3/4. The lack of a final
+  argument is a trick I took from scsi_transport_fc.c. I think
+  that it is fine.
+
+  ERROR: space prohibited before that close parenthesis ')'
+  #369: FILE: drivers/scsi/fcoe/fcoe_sysfs.c:196:
+  +     fcoe_fcf_private_show_function(field, format_string, sz, )	\
+
+* checkpatch.pl complains about patch 3/4. I attempted to add
+  parenthesis around these macros, but I created more problems
+  than I resolved. I am not sure what to do about this. I belive
+  these were WARNs when this series was initially submitted.
+
+  ERROR: Macros with complex values should be enclosed in parenthesis
+  #378: FILE: drivers/scsi/fcoe/fcoe_sysfs.c:205:
+  +#define fcoe_fcf_private_rd_attr_cast(field, format_string, sz, cast)	\
+  +	 fcoe_fcf_private_show_function(field, format_string, sz, (cast)) \
+  +	 static FCOE_DEVICE_ATTR(fcf, field, S_IRUGO,	      	  	  \
+  +	 			      	     show_fcoe_fcf_device_##field, NULL)
+
+* checkpatch.pl complains about patch 4/4. This is just a WARN.
+  I would fix this if I knew how to, but I don't think it should
+  be a problem.
+
+  WARNING: quoted string split across lines
+  #502: FILE: drivers/scsi/fcoe/fcoe_ctlr.c:1021:
+  +		printk(KERN_ERR "Failed to allocate sysfs instance "
+  +					       "for FCF, fab 16.16llx mac pM\n",
+
+v4: Minor fixes and cleanups
+
+* Changed device_initialize/device_add to device_register
+  and device_del to device_unregister. There was an imbalance
+  because device_initialize was getting a reference that
+  was not being released. With this update both fcoe_fcfs
+  as well as fcoe_ctlrs are correctly released/free'd when
+  they are to be removed from the system.
+
+* Minor updates to commit messages so there are no
+  references to 'fcoe_ctlr_attrs' and 'fcoe_fcf_attrs'
+  which were both renamed in v3 of this series.
+
+v3: Addressed Greg KH's second set of review comments
+
+* Created a 'fcoe bus' with the fcoe_ctlr and fcoe_fcf
+  instances as devices on the bus. Created bus_type(s)
+  for both device types, with default attribute group
+  sets for each. Now sysfs core adds/removes attributes
+  which allowed the removal of sysfs_create_group calls
+  before device_add. Updated Documentation/ accordingly.
+  
+* Renamed structures and APIs to make them less confusing.
+
+   structs:
+    fcoe_ctlr_attrs -> fcoe_ctlr_device
+    fcoe_fcf_attrs -> fcoe_fcf_device
+
+   functions:
+    fcoe_ctlr_attrs_add -> fcoe_ctlr_device_add
+    fcoe_ctlr_attrs_delete -> fcoe_ctlr_device_delete
+    fcoe_fcf_attrs_add -> fcoe_fcf_device_add
+    fcoe_fcf_attrs_delete -> fcoe_fcf_device_delete
+
+* Removed extra get_device(parent) for both the
+  fcoe_ctlr_device and fcoe_fcf_device.
+
+* fixed 'unused variable' compilation warning that
+  existed in v2.
+
+* API symbols now exported with EXPORT_SYMBOL_GPL
+
+* NOT ADDRESSED - idr usage vs. atomic incremeting of
+  fcoe_ctlr and fcoe_fcf id enumeration. It was indicated
+  that idr has not traditionally been used in drivers/scsi/.
+  I will re-examine this if there is still heartburn.
+
+---
+
+v2: Addressed Greg KH's review comments
+
+* moved fcoe_ctlr_attrs and fcoe_fcf_attrs attribute
+  helper macros from fcoe_sysfs.h to fcoe_sysfs.c so
+  that they don't temp developers to use them. They're
+  intended to be used in attribute show/store routine
+  generating macros, but not by drivers.
+
+* Removed unnecessary put_device calls on parent devices.
+  Also removed unnecessary de-initialization of pointers
+  to parent and removed unnecessary zero'ing of memory
+  before freeing it.
+
+* Added Documentation/ABI/testing/sysfs-class-fcoe
+  document.
+
+* Changed simple_strtoul usage to kstrtoul to avoid
+  checkpatch.pl warning that I missed before. There's
+  a bunch of noise in checkpatch.pl due to an odd macro
+  usage, but I think any remaining checkpatch.pl warnings
+  are OK.
+
+---
+
+This patch series adds a sysfs layer to libfcoe. It adds
+a sysfs instance for FIP controllers (a SW entity) and
+discovered Fibre Channel Forwarders (FCFs), which are
+simply FCoE switches.
+
+The new sysfs code is used by any driver that currently
+uses libfcoe, namely fcoe.ko and bnx2fc_fcoe.ko. Any other
+FCoE capable device that wishes to use the high-level APIs
+defined in fcoe_syfs.h may, without having to use the
+the protocol processing portions of libfcoe.
+
+The code borrows heavily from the FC Transport, but is
+less complicated because it does not need to interact
+with the SCSI layer directly.
+
+I think one thing to consider with this series is that
+drivers, such as traditional HBAs, which wish to use
+this infrastructure will now need to depend on libfcoe.ko.
+It was either this or create a superfluous kernel module;
+I think libfcoe is an appropriate place for this code.
+
+This series was created against scsi-misc + 9 patches
+mailed by me to linux-scsi on 03/09/12. (Note that 10
+patches were mailed, but that patch 01/10 will be dropped)
+
+I'm not sure if there's somewhere I should cross-post
+this for general sysfs review. I don't think I'm doing
+anything odd; I added Greg K-H to the CC list to try and
+get some sysfs eyes on this code.
+
+---
+
+Robert Love (4):
+      fcoe: Allocate fcoe_ctlr with fcoe_interface, not as a member
+      bnx2fc: Allocate fcoe_ctlr with bnx2fc_interface, not as a member
+      libfcoe: Add fcoe_sysfs
+      fcoe, bnx2fc, libfcoe: SW FCoE and bnx2fc use FCoE Syfs
+
+
+ Documentation/ABI/testing/sysfs-bus-fcoe |   77 +++
+ drivers/scsi/bnx2fc/bnx2fc.h             |    7 
+ drivers/scsi/bnx2fc/bnx2fc_els.c         |    2 
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c        |  171 +++++-
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c         |   39 +
+ drivers/scsi/fcoe/Makefile               |    2 
+ drivers/scsi/fcoe/fcoe.c                 |  200 +++++--
+ drivers/scsi/fcoe/fcoe.h                 |    8 
+ drivers/scsi/fcoe/fcoe_ctlr.c            |  159 +++++-
+ drivers/scsi/fcoe/fcoe_sysfs.c           |  832 ++++++++++++++++++++++++++++++
+ drivers/scsi/fcoe/fcoe_transport.c       |   13 
+ include/scsi/fcoe_sysfs.h                |  124 ++++
+ include/scsi/libfcoe.h                   |   27 +
+ 13 files changed, 1526 insertions(+), 135 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-bus-fcoe
+ create mode 100644 drivers/scsi/fcoe/fcoe_sysfs.c
+ create mode 100644 include/scsi/fcoe_sysfs.h
+
+-- 
+Thanks, //Rob
