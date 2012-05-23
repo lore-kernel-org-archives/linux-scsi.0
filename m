@@ -1,37 +1,47 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC PATCH v3 0/4]: block layer runtime pm
-Date: Wed, 23 May 2012 11:27:19 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1205231124460.1566-100000@iolanthe.rowland.org>
-References: <CAF1ivSYTw19AEXmhAsvXp-vVk5ZGeFPzi9omBzCtYGKixNS5xw@mail.gmail.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [RFC PATCH v3 1/4] block: add a flag to identify PM request
+Date: Wed, 23 May 2012 23:35:56 +0800
+Message-ID: <CAF1ivSbVHUgauQHBRm9Cyo_Fm3gQ0W+R_fQ6gQHAY6B=Q4WsRQ@mail.gmail.com>
+References: <1337671292-15583-2-git-send-email-ming.m.lin@intel.com>
+	<Pine.LNX.4.44L0.1205231058400.1566-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAF1ivSYTw19AEXmhAsvXp-vVk5ZGeFPzi9omBzCtYGKixNS5xw@mail.gmail.com>
+In-Reply-To: <Pine.LNX.4.44L0.1205231058400.1566-100000@iolanthe.rowland.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 23 May 2012, Lin Ming wrote:
+On Wed, May 23, 2012 at 11:02 PM, Alan Stern <stern@rowland.harvard.edu=
+> wrote:
+> On Tue, 22 May 2012, Lin Ming wrote:
+>
+>> Add a flag REQ_PM to identify the request is PM related.
+>> As an example, modify scsi code to use this flag.
+>
+> Don't forget to check up on the SCSI error handler. =A0If I'm not
+> mistaken, the libata drivers use it during suspend and resume. =A0Als=
+o,
 
-> On Wed, May 23, 2012 at 11:03 PM, Alan Stern <stern@rowland.harvard.e=
-du> wrote:
-> > On Wed, 23 May 2012, Lin Ming wrote:
-> >
-> >> Another thing need to check is if system suspend/resume works.
-> >
-> > Right! =A0Although I would hope that your work doesn't interfere at=
- all
-> > with system sleep, since it touches only the runtime PM pathways.
->=20
-> sd_sync_cache and sd_start_stop_device are changed with REQ_PM set.
-> And they are called for system suspend too.
->=20
-> So it probably will have problem.
+You are right.
 
-People have already run into problems where system suspend=20
-occurred at a time when a SCSI device was already runtime suspended. =20
-That's why scsi_bus_suspend_common() includes an appropriate check.
+ata_port_suspend_common
+  ata_port_request_pm
+    ata_port_schedule_eh
+      scsi_schedule_eh
+        scsi_error_handler ---> libata error handler
 
-Alan Stern
+I just have a quick look and it seems libata error handler does not
+send SCSI request.
+Will check more.
+
+> the error handler will run if one of the REQ_PM commands encounters a=
+n
+> error.
+>
+> Therefore it seems likely that every request submitted by the error
+> handler needs to have REQ_PM set.
+>
+> Alan Stern
