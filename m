@@ -1,1196 +1,143 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH v5 3/3] libfcoe: Add fcoe_sysfs
-Date: Tue, 22 May 2012 19:04:37 -0700
-Message-ID: <20120523020437.12536.19108.stgit@fritz>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: RE: [PATCH v5 0/3] FCoE Sysfs
+Date: Wed, 23 May 2012 02:05:10 +0000
+Message-ID: <A4BC99A5F8245F4CBCD582D057D75DAF0A9676F5@ORSMSX103.amr.corp.intel.com>
 References: <20120523020421.12536.278.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:32426 "EHLO mga03.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:10321 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932904Ab2EWCEi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 May 2012 22:04:38 -0400
+	id S932978Ab2EWCFM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 May 2012 22:05:12 -0400
 In-Reply-To: <20120523020421.12536.278.stgit@fritz>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, giridhar.malavali@qlogic.com, james.smart@emulex.com, bprakash@broadcom.com
+To: "Love, Robert W" <robert.w.love@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>, "james.smart@emulex.com" <james.smart@emulex.com>, "bprakash@broadcom.com" <bprakash@broadcom.com>
 
-This patch adds a 'fcoe bus' infrastructure to the kernel
-that is driven by changes to libfcoe which allow LLDs to
-present FIP (FCoE Initialization Protocol) discovered
-entities and their attributes to user space via sysfs.
-
-This patch adds the following APIs-
-
-fcoe_ctlr_device_add
-fcoe_ctlr_device_delete
-fcoe_fcf_device_add
-fcoe_fcf_device_delete
-
-They allow the LLD to expose the FCoE ENode Controller
-and any discovered FCFs (Fibre Channel Forwarders, e.g.
-FCoE switches) to the user. Each of these new devices
-has their own bus_type so that they are grouped together
-for easy lookup from a user space application. Each
-new class has an attribute_group to expose attributes
-for any created instances. The attributes are-
-
-fcoe_ctlr_device
-* fcf_dev_loss_tmo
-* lesb_link_fail
-* lesb_vlink_fail
-* lesb_miss_fka
-* lesb_symb_err
-* lesb_err_block
-* lesb_fcs_error
-
-fcoe_fcf_device
-* fabric_name
-* switch_name
-* priority
-* selected
-* fc_map
-* vfid
-* mac
-* fka_peroid
-* fabric_state
-* dev_loss_tmo
-
-A device loss infrastructre similar to the FC Transport's
-is also added by this patch. It is nice to have so that a
-link flapping adapter doesn't continually advance the count
-used to identify the discovered FCF. FCFs will exist in a
-"Disconnected" state until either the timer expires or the
-FCF is rediscovered and becomes "Connected."
-
-This patch generates a few checkpatch.pl WARNINGS that
-I'm not sure what to do about. They're macros modeled
-around the FC Transport attribute building macros, which
-have the same 'feature' where the caller can ommit a cast
-in the argument list and no cast occurs in the code. I'm
-not sure how to keep the code condensed while keeping the
-macros. Any advice would be appreciated.
-
-Signed-off-by: Robert Love <robert.w.love@intel.com>
-Tested-by: Ross Brattain <ross.b.brattain@intel.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- Documentation/ABI/testing/sysfs-bus-fcoe |   77 +++
- drivers/scsi/fcoe/Makefile               |    2 
- drivers/scsi/fcoe/fcoe_sysfs.c           |  832 ++++++++++++++++++++++++++++++
- drivers/scsi/fcoe/fcoe_transport.c       |   13 
- include/scsi/fcoe_sysfs.h                |  124 ++++
- include/scsi/libfcoe.h                   |    1 
- 6 files changed, 1046 insertions(+), 3 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-bus-fcoe
- create mode 100644 drivers/scsi/fcoe/fcoe_sysfs.c
- create mode 100644 include/scsi/fcoe_sysfs.h
-
-diff --git a/Documentation/ABI/testing/sysfs-bus-fcoe b/Documentation/ABI/testing/sysfs-bus-fcoe
-new file mode 100644
-index 0000000..469d09c
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-bus-fcoe
-@@ -0,0 +1,77 @@
-+What:		/sys/bus/fcoe/ctlr_X
-+Date:		March 2012
-+KernelVersion:	TBD
-+Contact:	Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org
-+Description:	'FCoE Controller' instances on the fcoe bus
-+Attributes:
-+
-+	fcf_dev_loss_tmo: Device loss timeout peroid (see below). Changing
-+			  this value will change the dev_loss_tmo for all
-+			  FCFs discovered by this controller.
-+
-+	lesb_link_fail:   Link Error Status Block (LESB) link failure count.
-+
-+	lesb_vlink_fail:  Link Error Status Block (LESB) virtual link
-+			  failure count.
-+
-+	lesb_miss_fka:    Link Error Status Block (LESB) missed FCoE
-+			  Initialization Protocol (FIP) Keep-Alives (FKA).
-+
-+	lesb_symb_err:    Link Error Status Block (LESB) symbolic error count.
-+
-+	lesb_err_block:   Link Error Status Block (LESB) block error count.
-+
-+	lesb_fcs_error:   Link Error Status Block (LESB) Fibre Channel
-+			  Serivces error count.
-+
-+Notes: ctlr_X (global increment starting at 0)
-+
-+What:		/sys/bus/fcoe/fcf_X
-+Date:		March 2012
-+KernelVersion:	TBD
-+Contact:	Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org
-+Description:	'FCoE FCF' instances on the fcoe bus. A FCF is a Fibre Channel
-+		Forwarder, which is a FCoE switch that can accept FCoE
-+		(Ethernet) packets, unpack them, and forward the embedded
-+		Fibre Channel frames into a FC fabric. It can also take
-+		outbound FC frames and pack them in Ethernet packets to
-+		be sent to their destination on the Ethernet segment.
-+Attributes:
-+
-+	fabric_name: Identifies the fabric that the FCF services.
-+
-+	switch_name: Identifies the FCF.
-+
-+	priority:    The switch's priority amongst other FCFs on the same
-+		     fabric.
-+
-+	selected:    1 indicates that the switch has been selected for use;
-+		     0 indicates that the swich will not be used.
-+
-+	fc_map:      The Fibre Channel MAP
-+
-+	vfid:	     The Virtual Fabric ID
-+
-+	mac:         The FCF's MAC address
-+
-+	fka_peroid:  The FIP Keep-Alive peroid
-+
-+	fabric_state: The internal kernel state
-+		      "Unknown" - Initialization value
-+		      "Disconnected" - No link to the FCF/fabric
-+		      "Connected" - Host is connected to the FCF
-+		      "Deleted" - FCF is being removed from the system
-+
-+	dev_loss_tmo: The device loss timeout peroid for this FCF.
-+
-+Notes: A device loss infrastructre similar to the FC Transport's
-+       is present in fcoe_sysfs. It is nice to have so that a
-+       link flapping adapter doesn't continually advance the count
-+       used to identify the discovered FCF. FCFs will exist in a
-+       "Disconnected" state until either the timer expires and the
-+       FCF becomes "Deleted" or the FCF is rediscovered and becomes
-+       "Connected."
-+
-+
-+Users: The first user of this interface will be the fcoeadm application,
-+       which is commonly packaged in the fcoe-utils package.
-diff --git a/drivers/scsi/fcoe/Makefile b/drivers/scsi/fcoe/Makefile
-index f6d37d0..aed0f5d 100644
---- a/drivers/scsi/fcoe/Makefile
-+++ b/drivers/scsi/fcoe/Makefile
-@@ -1,4 +1,4 @@
- obj-$(CONFIG_FCOE) += fcoe.o
- obj-$(CONFIG_LIBFCOE) += libfcoe.o
- 
--libfcoe-objs := fcoe_ctlr.o fcoe_transport.o
-+libfcoe-objs := fcoe_ctlr.o fcoe_transport.o fcoe_sysfs.o
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-new file mode 100644
-index 0000000..2bc1631
---- /dev/null
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -0,0 +1,832 @@
-+/*
-+ * Copyright(c) 2011 - 2012 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Maintained at www.Open-FCoE.org
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/types.h>
-+#include <linux/kernel.h>
-+#include <linux/etherdevice.h>
-+
-+#include <scsi/fcoe_sysfs.h>
-+
-+static atomic_t ctlr_num;
-+static atomic_t fcf_num;
-+
-+/*
-+ * fcoe_fcf_dev_loss_tmo: the default number of seconds that fcoe sysfs
-+ * should insulate the loss of a fcf.
-+ */
-+static unsigned int fcoe_fcf_dev_loss_tmo = 1800;  /* seconds */
-+
-+module_param_named(fcf_dev_loss_tmo, fcoe_fcf_dev_loss_tmo,
-+		   uint, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(fcf_dev_loss_tmo,
-+		 "Maximum number of seconds that libfcoe should"
-+		 " insulate the loss of a fcf. Once this value is"
-+		 " exceeded, the fcf is removed.");
-+
-+/*
-+ * These are used by the fcoe_*_show_function routines, they
-+ * are intentionally placed in the .c file as they're not intended
-+ * for use throughout the code.
-+ */
-+#define fcoe_ctlr_id(x)				\
-+	((x)->id)
-+#define fcoe_ctlr_work_q_name(x)		\
-+	((x)->work_q_name)
-+#define fcoe_ctlr_work_q(x)			\
-+	((x)->work_q)
-+#define fcoe_ctlr_devloss_work_q_name(x)	\
-+	((x)->devloss_work_q_name)
-+#define fcoe_ctlr_devloss_work_q(x)		\
-+	((x)->devloss_work_q)
-+#define fcoe_ctlr_mode(x)			\
-+	((x)->mode)
-+#define fcoe_ctlr_fcf_dev_loss_tmo(x)		\
-+	((x)->fcf_dev_loss_tmo)
-+#define fcoe_ctlr_link_fail(x)			\
-+	((x)->lesb.lesb_link_fail)
-+#define fcoe_ctlr_vlink_fail(x)			\
-+	((x)->lesb.lesb_vlink_fail)
-+#define fcoe_ctlr_miss_fka(x)			\
-+	((x)->lesb.lesb_miss_fka)
-+#define fcoe_ctlr_symb_err(x)			\
-+	((x)->lesb.lesb_symb_err)
-+#define fcoe_ctlr_err_block(x)			\
-+	((x)->lesb.lesb_err_block)
-+#define fcoe_ctlr_fcs_error(x)			\
-+	((x)->lesb.lesb_fcs_error)
-+#define fcoe_fcf_state(x)			\
-+	((x)->state)
-+#define fcoe_fcf_fabric_name(x)			\
-+	((x)->fabric_name)
-+#define fcoe_fcf_switch_name(x)			\
-+	((x)->switch_name)
-+#define fcoe_fcf_fc_map(x)			\
-+	((x)->fc_map)
-+#define fcoe_fcf_vfid(x)			\
-+	((x)->vfid)
-+#define fcoe_fcf_mac(x)				\
-+	((x)->mac)
-+#define fcoe_fcf_priority(x)			\
-+	((x)->priority)
-+#define fcoe_fcf_fka_period(x)			\
-+	((x)->fka_period)
-+#define fcoe_fcf_dev_loss_tmo(x)		\
-+	((x)->dev_loss_tmo)
-+#define fcoe_fcf_selected(x)			\
-+	((x)->selected)
-+#define fcoe_fcf_vlan_id(x)			\
-+	((x)->vlan_id)
-+
-+/*
-+ * dev_loss_tmo attribute
-+ */
-+static int fcoe_str_to_dev_loss(const char *buf, unsigned long *val)
-+{
-+	int ret;
-+
-+	ret = kstrtoul(buf, 0, val);
-+	if (ret || *val < 0)
-+		return -EINVAL;
-+	/*
-+	 * Check for overflow; dev_loss_tmo is u32
-+	 */
-+	if (*val > UINT_MAX)
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static int fcoe_fcf_set_dev_loss_tmo(struct fcoe_fcf_device *fcf,
-+				     unsigned long val)
-+{
-+	if ((fcf->state == FCOE_FCF_STATE_UNKNOWN) ||
-+	    (fcf->state == FCOE_FCF_STATE_DISCONNECTED) ||
-+	    (fcf->state == FCOE_FCF_STATE_DELETED))
-+		return -EBUSY;
-+	/*
-+	 * Check for overflow; dev_loss_tmo is u32
-+	 */
-+	if (val > UINT_MAX)
-+		return -EINVAL;
-+
-+	fcoe_fcf_dev_loss_tmo(fcf) = val;
-+	return 0;
-+}
-+
-+#define FCOE_DEVICE_ATTR(_prefix, _name, _mode, _show, _store)	\
-+struct device_attribute device_attr_fcoe_##_prefix##_##_name =	\
-+	__ATTR(_name, _mode, _show, _store)
-+
-+#define fcoe_ctlr_show_function(field, format_string, sz, cast)	\
-+static ssize_t show_fcoe_ctlr_device_##field(struct device *dev, \
-+					    struct device_attribute *attr, \
-+					    char *buf)			\
-+{									\
-+	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);		\
-+	if (ctlr->f->get_fcoe_ctlr_##field)				\
-+		ctlr->f->get_fcoe_ctlr_##field(ctlr);			\
-+	return snprintf(buf, sz, format_string,				\
-+			cast fcoe_ctlr_##field(ctlr));			\
-+}
-+
-+#define fcoe_fcf_show_function(field, format_string, sz, cast)	\
-+static ssize_t show_fcoe_fcf_device_##field(struct device *dev,	\
-+					   struct device_attribute *attr, \
-+					   char *buf)			\
-+{									\
-+	struct fcoe_fcf_device *fcf = dev_to_fcf(dev);			\
-+	struct fcoe_ctlr_device *ctlr = fcoe_fcf_dev_to_ctlr_dev(fcf);	\
-+	if (ctlr->f->get_fcoe_fcf_##field)				\
-+		ctlr->f->get_fcoe_fcf_##field(fcf);			\
-+	return snprintf(buf, sz, format_string,				\
-+			cast fcoe_fcf_##field(fcf));			\
-+}
-+
-+#define fcoe_ctlr_private_show_function(field, format_string, sz, cast)	\
-+static ssize_t show_fcoe_ctlr_device_##field(struct device *dev, \
-+					    struct device_attribute *attr, \
-+					    char *buf)			\
-+{									\
-+	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);		\
-+	return snprintf(buf, sz, format_string, cast fcoe_ctlr_##field(ctlr)); \
-+}
-+
-+#define fcoe_fcf_private_show_function(field, format_string, sz, cast)	\
-+static ssize_t show_fcoe_fcf_device_##field(struct device *dev,	\
-+					   struct device_attribute *attr, \
-+					   char *buf)			\
-+{								\
-+	struct fcoe_fcf_device *fcf = dev_to_fcf(dev);			\
-+	return snprintf(buf, sz, format_string, cast fcoe_fcf_##field(fcf)); \
-+}
-+
-+#define fcoe_ctlr_private_rd_attr(field, format_string, sz)		\
-+	fcoe_ctlr_private_show_function(field, format_string, sz, )	\
-+	static FCOE_DEVICE_ATTR(ctlr, field, S_IRUGO,			\
-+				show_fcoe_ctlr_device_##field, NULL)
-+
-+#define fcoe_ctlr_rd_attr(field, format_string, sz)			\
-+	fcoe_ctlr_show_function(field, format_string, sz, )		\
-+	static FCOE_DEVICE_ATTR(ctlr, field, S_IRUGO,			\
-+				show_fcoe_ctlr_device_##field, NULL)
-+
-+#define fcoe_fcf_rd_attr(field, format_string, sz)			\
-+	fcoe_fcf_show_function(field, format_string, sz, )		\
-+	static FCOE_DEVICE_ATTR(fcf, field, S_IRUGO,			\
-+				show_fcoe_fcf_device_##field, NULL)
-+
-+#define fcoe_fcf_private_rd_attr(field, format_string, sz)		\
-+	fcoe_fcf_private_show_function(field, format_string, sz, )	\
-+	static FCOE_DEVICE_ATTR(fcf, field, S_IRUGO,			\
-+				show_fcoe_fcf_device_##field, NULL)
-+
-+#define fcoe_ctlr_private_rd_attr_cast(field, format_string, sz, cast)	\
-+	fcoe_ctlr_private_show_function(field, format_string, sz, (cast)) \
-+	static FCOE_DEVICE_ATTR(ctlr, field, S_IRUGO,			\
-+				show_fcoe_ctlr_device_##field, NULL)
-+
-+#define fcoe_fcf_private_rd_attr_cast(field, format_string, sz, cast)	\
-+	fcoe_fcf_private_show_function(field, format_string, sz, (cast)) \
-+	static FCOE_DEVICE_ATTR(fcf, field, S_IRUGO,			\
-+				show_fcoe_fcf_device_##field, NULL)
-+
-+#define fcoe_enum_name_search(title, table_type, table)			\
-+static const char *get_fcoe_##title##_name(enum table_type table_key)	\
-+{									\
-+	int i;								\
-+	char *name = NULL;						\
-+									\
-+	for (i = 0; i < ARRAY_SIZE(table); i++) {			\
-+		if (table[i].value == table_key) {			\
-+			name = table[i].name;				\
-+			break;						\
-+		}							\
-+	}								\
-+	return name;							\
-+}
-+
-+static struct {
-+	enum fcf_state value;
-+	char           *name;
-+} fcf_state_names[] = {
-+	{ FCOE_FCF_STATE_UNKNOWN,      "Unknown" },
-+	{ FCOE_FCF_STATE_DISCONNECTED, "Disconnected" },
-+	{ FCOE_FCF_STATE_CONNECTED,    "Connected" },
-+};
-+fcoe_enum_name_search(fcf_state, fcf_state, fcf_state_names)
-+#define FCOE_FCF_STATE_MAX_NAMELEN 50
-+
-+static ssize_t show_fcf_state(struct device *dev,
-+			      struct device_attribute *attr,
-+			      char *buf)
-+{
-+	struct fcoe_fcf_device *fcf = dev_to_fcf(dev);
-+	const char *name;
-+	name = get_fcoe_fcf_state_name(fcf->state);
-+	if (!name)
-+		return -EINVAL;
-+	return snprintf(buf, FCOE_FCF_STATE_MAX_NAMELEN, "%s\n", name);
-+}
-+static FCOE_DEVICE_ATTR(fcf, state, S_IRUGO, show_fcf_state, NULL);
-+
-+static struct {
-+	enum fip_conn_type value;
-+	char               *name;
-+} fip_conn_type_names[] = {
-+	{ FIP_CONN_TYPE_UNKNOWN, "Unknown" },
-+	{ FIP_CONN_TYPE_FABRIC, "Fabric" },
-+	{ FIP_CONN_TYPE_VN2VN, "VN2VN" },
-+};
-+fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
-+#define FCOE_CTLR_MODE_MAX_NAMELEN 50
-+
-+static ssize_t show_ctlr_mode(struct device *dev,
-+			      struct device_attribute *attr,
-+			      char *buf)
-+{
-+	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
-+	const char *name;
-+
-+	if (ctlr->f->get_fcoe_ctlr_mode)
-+		ctlr->f->get_fcoe_ctlr_mode(ctlr);
-+
-+	name = get_fcoe_ctlr_mode_name(ctlr->mode);
-+	if (!name)
-+		return -EINVAL;
-+	return snprintf(buf, FCOE_CTLR_MODE_MAX_NAMELEN,
-+			"%s\n", name);
-+}
-+static FCOE_DEVICE_ATTR(ctlr, mode, S_IRUGO,
-+			show_ctlr_mode, NULL);
-+
-+static ssize_t
-+store_private_fcoe_ctlr_fcf_dev_loss_tmo(struct device *dev,
-+					 struct device_attribute *attr,
-+					 const char *buf, size_t count)
-+{
-+	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
-+	struct fcoe_fcf_device *fcf;
-+	unsigned long val;
-+	int rc;
-+
-+	rc = fcoe_str_to_dev_loss(buf, &val);
-+	if (rc)
-+		return rc;
-+
-+	fcoe_ctlr_fcf_dev_loss_tmo(ctlr) = val;
-+	mutex_lock(&ctlr->lock);
-+	list_for_each_entry(fcf, &ctlr->fcfs, peers)
-+		fcoe_fcf_set_dev_loss_tmo(fcf, val);
-+	mutex_unlock(&ctlr->lock);
-+	return count;
-+}
-+fcoe_ctlr_private_show_function(fcf_dev_loss_tmo, "%d\n", 20, );
-+static FCOE_DEVICE_ATTR(ctlr, fcf_dev_loss_tmo, S_IRUGO | S_IWUSR,
-+			show_fcoe_ctlr_device_fcf_dev_loss_tmo,
-+			store_private_fcoe_ctlr_fcf_dev_loss_tmo);
-+
-+/* Link Error Status Block (LESB) */
-+fcoe_ctlr_rd_attr(link_fail, "%u\n", 20);
-+fcoe_ctlr_rd_attr(vlink_fail, "%u\n", 20);
-+fcoe_ctlr_rd_attr(miss_fka, "%u\n", 20);
-+fcoe_ctlr_rd_attr(symb_err, "%u\n", 20);
-+fcoe_ctlr_rd_attr(err_block, "%u\n", 20);
-+fcoe_ctlr_rd_attr(fcs_error, "%u\n", 20);
-+
-+fcoe_fcf_private_rd_attr_cast(fabric_name, "0x%llx\n", 20, unsigned long long);
-+fcoe_fcf_private_rd_attr_cast(switch_name, "0x%llx\n", 20, unsigned long long);
-+fcoe_fcf_private_rd_attr(priority, "%u\n", 20);
-+fcoe_fcf_private_rd_attr(fc_map, "0x%x\n", 20);
-+fcoe_fcf_private_rd_attr(vfid, "%u\n", 20);
-+fcoe_fcf_private_rd_attr(mac, "%pM\n", 20);
-+fcoe_fcf_private_rd_attr(fka_period, "%u\n", 20);
-+fcoe_fcf_rd_attr(selected, "%u\n", 20);
-+fcoe_fcf_rd_attr(vlan_id, "%u\n", 20);
-+
-+fcoe_fcf_private_show_function(dev_loss_tmo, "%d\n", 20, )
-+static ssize_t
-+store_fcoe_fcf_dev_loss_tmo(struct device *dev, struct device_attribute *attr,
-+			    const char *buf, size_t count)
-+{
-+	struct fcoe_fcf_device *fcf = dev_to_fcf(dev);
-+	unsigned long val;
-+	int rc;
-+
-+	rc = fcoe_str_to_dev_loss(buf, &val);
-+	if (rc)
-+		return rc;
-+
-+	rc = fcoe_fcf_set_dev_loss_tmo(fcf, val);
-+	if (rc)
-+		return rc;
-+	return count;
-+}
-+static FCOE_DEVICE_ATTR(fcf, dev_loss_tmo, S_IRUGO | S_IWUSR,
-+			show_fcoe_fcf_device_dev_loss_tmo,
-+			store_fcoe_fcf_dev_loss_tmo);
-+
-+static struct attribute *fcoe_ctlr_lesb_attrs[] = {
-+	&device_attr_fcoe_ctlr_link_fail.attr,
-+	&device_attr_fcoe_ctlr_vlink_fail.attr,
-+	&device_attr_fcoe_ctlr_miss_fka.attr,
-+	&device_attr_fcoe_ctlr_symb_err.attr,
-+	&device_attr_fcoe_ctlr_err_block.attr,
-+	&device_attr_fcoe_ctlr_fcs_error.attr,
-+	NULL,
-+};
-+
-+static struct attribute_group fcoe_ctlr_lesb_attr_group = {
-+	.name = "lesb",
-+	.attrs = fcoe_ctlr_lesb_attrs,
-+};
-+
-+static struct attribute *fcoe_ctlr_attrs[] = {
-+	&device_attr_fcoe_ctlr_fcf_dev_loss_tmo.attr,
-+	&device_attr_fcoe_ctlr_mode.attr,
-+	NULL,
-+};
-+
-+static struct attribute_group fcoe_ctlr_attr_group = {
-+	.attrs = fcoe_ctlr_attrs,
-+};
-+
-+static const struct attribute_group *fcoe_ctlr_attr_groups[] = {
-+	&fcoe_ctlr_attr_group,
-+	&fcoe_ctlr_lesb_attr_group,
-+	NULL,
-+};
-+
-+static struct attribute *fcoe_fcf_attrs[] = {
-+	&device_attr_fcoe_fcf_fabric_name.attr,
-+	&device_attr_fcoe_fcf_switch_name.attr,
-+	&device_attr_fcoe_fcf_dev_loss_tmo.attr,
-+	&device_attr_fcoe_fcf_fc_map.attr,
-+	&device_attr_fcoe_fcf_vfid.attr,
-+	&device_attr_fcoe_fcf_mac.attr,
-+	&device_attr_fcoe_fcf_priority.attr,
-+	&device_attr_fcoe_fcf_fka_period.attr,
-+	&device_attr_fcoe_fcf_state.attr,
-+	&device_attr_fcoe_fcf_selected.attr,
-+	&device_attr_fcoe_fcf_vlan_id.attr,
-+	NULL
-+};
-+
-+static struct attribute_group fcoe_fcf_attr_group = {
-+	.attrs = fcoe_fcf_attrs,
-+};
-+
-+static const struct attribute_group *fcoe_fcf_attr_groups[] = {
-+	&fcoe_fcf_attr_group,
-+	NULL,
-+};
-+
-+struct bus_type fcoe_bus_type;
-+
-+static int fcoe_bus_match(struct device *dev,
-+			  struct device_driver *drv)
-+{
-+	if (dev->bus == &fcoe_bus_type)
-+		return 1;
-+	return 0;
-+}
-+
-+/**
-+ * fcoe_ctlr_device_release() - Release the FIP ctlr memory
-+ * @dev: Pointer to the FIP ctlr's embedded device
-+ *
-+ * Called when the last FIP ctlr reference is released.
-+ */
-+static void fcoe_ctlr_device_release(struct device *dev)
-+{
-+	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
-+	kfree(ctlr);
-+}
-+
-+/**
-+ * fcoe_fcf_device_release() - Release the FIP fcf memory
-+ * @dev: Pointer to the fcf's embedded device
-+ *
-+ * Called when the last FIP fcf reference is released.
-+ */
-+static void fcoe_fcf_device_release(struct device *dev)
-+{
-+	struct fcoe_fcf_device *fcf = dev_to_fcf(dev);
-+	kfree(fcf);
-+}
-+
-+struct device_type fcoe_ctlr_device_type = {
-+	.name = "fcoe_ctlr",
-+	.groups = fcoe_ctlr_attr_groups,
-+	.release = fcoe_ctlr_device_release,
-+};
-+
-+struct device_type fcoe_fcf_device_type = {
-+	.name = "fcoe_fcf",
-+	.groups = fcoe_fcf_attr_groups,
-+	.release = fcoe_fcf_device_release,
-+};
-+
-+struct bus_type fcoe_bus_type = {
-+	.name = "fcoe",
-+	.match = &fcoe_bus_match,
-+};
-+
-+/**
-+ * fcoe_ctlr_device_flush_work() - Flush a FIP ctlr's workqueue
-+ * @ctlr: Pointer to the FIP ctlr whose workqueue is to be flushed
-+ */
-+void fcoe_ctlr_device_flush_work(struct fcoe_ctlr_device *ctlr)
-+{
-+	if (!fcoe_ctlr_work_q(ctlr)) {
-+		printk(KERN_ERR
-+		       "ERROR: FIP Ctlr '%d' attempted to flush work, "
-+		       "when no workqueue created.\n", ctlr->id);
-+		dump_stack();
-+		return;
-+	}
-+
-+	flush_workqueue(fcoe_ctlr_work_q(ctlr));
-+}
-+
-+/**
-+ * fcoe_ctlr_device_queue_work() - Schedule work for a FIP ctlr's workqueue
-+ * @ctlr: Pointer to the FIP ctlr who owns the devloss workqueue
-+ * @work:   Work to queue for execution
-+ *
-+ * Return value:
-+ *	1 on success / 0 already queued / < 0 for error
-+ */
-+int fcoe_ctlr_device_queue_work(struct fcoe_ctlr_device *ctlr,
-+			       struct work_struct *work)
-+{
-+	if (unlikely(!fcoe_ctlr_work_q(ctlr))) {
-+		printk(KERN_ERR
-+		       "ERROR: FIP Ctlr '%d' attempted to queue work, "
-+		       "when no workqueue created.\n", ctlr->id);
-+		dump_stack();
-+
-+		return -EINVAL;
-+	}
-+
-+	return queue_work(fcoe_ctlr_work_q(ctlr), work);
-+}
-+
-+/**
-+ * fcoe_ctlr_device_flush_devloss() - Flush a FIP ctlr's devloss workqueue
-+ * @ctlr: Pointer to FIP ctlr whose workqueue is to be flushed
-+ */
-+void fcoe_ctlr_device_flush_devloss(struct fcoe_ctlr_device *ctlr)
-+{
-+	if (!fcoe_ctlr_devloss_work_q(ctlr)) {
-+		printk(KERN_ERR
-+		       "ERROR: FIP Ctlr '%d' attempted to flush work, "
-+		       "when no workqueue created.\n", ctlr->id);
-+		dump_stack();
-+		return;
-+	}
-+
-+	flush_workqueue(fcoe_ctlr_devloss_work_q(ctlr));
-+}
-+
-+/**
-+ * fcoe_ctlr_device_queue_devloss_work() - Schedule work for a FIP ctlr's devloss workqueue
-+ * @ctlr: Pointer to the FIP ctlr who owns the devloss workqueue
-+ * @work:   Work to queue for execution
-+ * @delay:  jiffies to delay the work queuing
-+ *
-+ * Return value:
-+ *	1 on success / 0 already queued / < 0 for error
-+ */
-+int fcoe_ctlr_device_queue_devloss_work(struct fcoe_ctlr_device *ctlr,
-+				       struct delayed_work *work,
-+				       unsigned long delay)
-+{
-+	if (unlikely(!fcoe_ctlr_devloss_work_q(ctlr))) {
-+		printk(KERN_ERR
-+		       "ERROR: FIP Ctlr '%d' attempted to queue work, "
-+		       "when no workqueue created.\n", ctlr->id);
-+		dump_stack();
-+
-+		return -EINVAL;
-+	}
-+
-+	return queue_delayed_work(fcoe_ctlr_devloss_work_q(ctlr), work, delay);
-+}
-+
-+static int fcoe_fcf_device_match(struct fcoe_fcf_device *new,
-+				 struct fcoe_fcf_device *old)
-+{
-+	if (new->switch_name == old->switch_name &&
-+	    new->fabric_name == old->fabric_name &&
-+	    new->fc_map == old->fc_map &&
-+	    compare_ether_addr(new->mac, old->mac) == 0)
-+		return 1;
-+	return 0;
-+}
-+
-+/**
-+ * fcoe_ctlr_device_add() - Add a FIP ctlr to sysfs
-+ * @parent:    The parent device to which the fcoe_ctlr instance
-+ *             should be attached
-+ * @f:         The LLD's FCoE sysfs function template pointer
-+ * @priv_size: Size to be allocated with the fcoe_ctlr_device for the LLD
-+ *
-+ * This routine allocates a FIP ctlr object with some additional memory
-+ * for the LLD. The FIP ctlr is initialized, added to sysfs and then
-+ * attributes are added to it.
-+ */
-+struct fcoe_ctlr_device *fcoe_ctlr_device_add(struct device *parent,
-+				    struct fcoe_sysfs_function_template *f,
-+				    int priv_size)
-+{
-+	struct fcoe_ctlr_device *ctlr;
-+	int error = 0;
-+
-+	ctlr = kzalloc(sizeof(struct fcoe_ctlr_device) + priv_size,
-+		       GFP_KERNEL);
-+	if (!ctlr)
-+		goto out;
-+
-+	ctlr->id = atomic_inc_return(&ctlr_num) - 1;
-+	ctlr->f = f;
-+	INIT_LIST_HEAD(&ctlr->fcfs);
-+	mutex_init(&ctlr->lock);
-+	ctlr->dev.parent = parent;
-+	ctlr->dev.bus = &fcoe_bus_type;
-+	ctlr->dev.type = &fcoe_ctlr_device_type;
-+
-+	ctlr->fcf_dev_loss_tmo = fcoe_fcf_dev_loss_tmo;
-+
-+	snprintf(ctlr->work_q_name, sizeof(ctlr->work_q_name),
-+		 "ctlr_wq_%d", ctlr->id);
-+	ctlr->work_q = create_singlethread_workqueue(
-+		ctlr->work_q_name);
-+	if (!ctlr->work_q)
-+		goto out_del;
-+
-+	snprintf(ctlr->devloss_work_q_name,
-+		 sizeof(ctlr->devloss_work_q_name),
-+		 "ctlr_dl_wq_%d", ctlr->id);
-+	ctlr->devloss_work_q = create_singlethread_workqueue(
-+		ctlr->devloss_work_q_name);
-+	if (!ctlr->devloss_work_q)
-+		goto out_del_q;
-+
-+	dev_set_name(&ctlr->dev, "ctlr_%d", ctlr->id);
-+	error = device_register(&ctlr->dev);
-+	if (error)
-+		goto out_del_q2;
-+
-+	return ctlr;
-+
-+out_del_q2:
-+	destroy_workqueue(ctlr->devloss_work_q);
-+	ctlr->devloss_work_q = NULL;
-+out_del_q:
-+	destroy_workqueue(ctlr->work_q);
-+	ctlr->work_q = NULL;
-+out_del:
-+	kfree(ctlr);
-+out:
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(fcoe_ctlr_device_add);
-+
-+/**
-+ * fcoe_ctlr_device_delete() - Delete a FIP ctlr and its subtree from sysfs
-+ * @ctlr: A pointer to the ctlr to be deleted
-+ *
-+ * Deletes a FIP ctlr and any fcfs attached
-+ * to it. Deleting fcfs will cause their childen
-+ * to be deleted as well.
-+ *
-+ * The ctlr is detached from sysfs and it's resources
-+ * are freed (work q), but the memory is not freed
-+ * until its last reference is released.
-+ *
-+ * This routine expects no locks to be held before
-+ * calling.
-+ *
-+ * TODO: Currently there are no callbacks to clean up LLD data
-+ * for a fcoe_fcf_device. LLDs must keep this in mind as they need
-+ * to clean up each of their LLD data for all fcoe_fcf_device before
-+ * calling fcoe_ctlr_device_delete.
-+ */
-+void fcoe_ctlr_device_delete(struct fcoe_ctlr_device *ctlr)
-+{
-+	struct fcoe_fcf_device *fcf, *next;
-+	/* Remove any attached fcfs */
-+	mutex_lock(&ctlr->lock);
-+	list_for_each_entry_safe(fcf, next,
-+				 &ctlr->fcfs, peers) {
-+		list_del(&fcf->peers);
-+		fcf->state = FCOE_FCF_STATE_DELETED;
-+		fcoe_ctlr_device_queue_work(ctlr, &fcf->delete_work);
-+	}
-+	mutex_unlock(&ctlr->lock);
-+
-+	fcoe_ctlr_device_flush_work(ctlr);
-+
-+	destroy_workqueue(ctlr->devloss_work_q);
-+	ctlr->devloss_work_q = NULL;
-+	destroy_workqueue(ctlr->work_q);
-+	ctlr->work_q = NULL;
-+
-+	device_unregister(&ctlr->dev);
-+}
-+EXPORT_SYMBOL_GPL(fcoe_ctlr_device_delete);
-+
-+/**
-+ * fcoe_fcf_device_final_delete() - Final delete routine
-+ * @work: The FIP fcf's embedded work struct
-+ *
-+ * It is expected that the fcf has been removed from
-+ * the FIP ctlr's list before calling this routine.
-+ */
-+static void fcoe_fcf_device_final_delete(struct work_struct *work)
-+{
-+	struct fcoe_fcf_device *fcf =
-+		container_of(work, struct fcoe_fcf_device, delete_work);
-+	struct fcoe_ctlr_device *ctlr = fcoe_fcf_dev_to_ctlr_dev(fcf);
-+
-+	/*
-+	 * Cancel any outstanding timers. These should really exist
-+	 * only when rmmod'ing the LLDD and we're asking for
-+	 * immediate termination of the rports
-+	 */
-+	if (!cancel_delayed_work(&fcf->dev_loss_work))
-+		fcoe_ctlr_device_flush_devloss(ctlr);
-+
-+	device_unregister(&fcf->dev);
-+}
-+
-+/**
-+ * fip_timeout_deleted_fcf() - Delete a fcf when the devloss timer fires
-+ * @work: The FIP fcf's embedded work struct
-+ *
-+ * Removes the fcf from the FIP ctlr's list of fcfs and
-+ * queues the final deletion.
-+ */
-+static void fip_timeout_deleted_fcf(struct work_struct *work)
-+{
-+	struct fcoe_fcf_device *fcf =
-+		container_of(work, struct fcoe_fcf_device, dev_loss_work.work);
-+	struct fcoe_ctlr_device *ctlr = fcoe_fcf_dev_to_ctlr_dev(fcf);
-+
-+	mutex_lock(&ctlr->lock);
-+
-+	/*
-+	 * If the fcf is deleted or reconnected before the timer
-+	 * fires the devloss queue will be flushed, but the state will
-+	 * either be CONNECTED or DELETED. If that is the case we
-+	 * cancel deleting the fcf.
-+	 */
-+	if (fcf->state != FCOE_FCF_STATE_DISCONNECTED)
-+		goto out;
-+
-+	dev_printk(KERN_ERR, &fcf->dev,
-+		   "FIP fcf connection time out: removing fcf\n");
-+
-+	list_del(&fcf->peers);
-+	fcf->state = FCOE_FCF_STATE_DELETED;
-+	fcoe_ctlr_device_queue_work(ctlr, &fcf->delete_work);
-+
-+out:
-+	mutex_unlock(&ctlr->lock);
-+}
-+
-+/**
-+ * fcoe_fcf_device_delete() - Delete a FIP fcf
-+ * @fcf: Pointer to the fcf which is to be deleted
-+ *
-+ * Queues the FIP fcf on the devloss workqueue
-+ *
-+ * Expects the ctlr_attrs mutex to be held for fcf
-+ * state change.
-+ */
-+void fcoe_fcf_device_delete(struct fcoe_fcf_device *fcf)
-+{
-+	struct fcoe_ctlr_device *ctlr = fcoe_fcf_dev_to_ctlr_dev(fcf);
-+	int timeout = fcf->dev_loss_tmo;
-+
-+	if (fcf->state != FCOE_FCF_STATE_CONNECTED)
-+		return;
-+
-+	fcf->state = FCOE_FCF_STATE_DISCONNECTED;
-+
-+	/*
-+	 * FCF will only be re-connected by the LLD calling
-+	 * fcoe_fcf_device_add, and it should be setting up
-+	 * priv then.
-+	 */
-+	fcf->priv = NULL;
-+
-+	fcoe_ctlr_device_queue_devloss_work(ctlr, &fcf->dev_loss_work,
-+					   timeout * HZ);
-+}
-+EXPORT_SYMBOL_GPL(fcoe_fcf_device_delete);
-+
-+/**
-+ * fcoe_fcf_device_add() - Add a FCoE sysfs fcoe_fcf_device to the system
-+ * @ctlr:    The fcoe_ctlr_device that will be the fcoe_fcf_device parent
-+ * @new_fcf: A temporary FCF used for lookups on the current list of fcfs
-+ *
-+ * Expects to be called with the ctlr->lock held
-+ */
-+struct fcoe_fcf_device *fcoe_fcf_device_add(struct fcoe_ctlr_device *ctlr,
-+					    struct fcoe_fcf_device *new_fcf)
-+{
-+	struct fcoe_fcf_device *fcf;
-+	int error = 0;
-+
-+	list_for_each_entry(fcf, &ctlr->fcfs, peers) {
-+		if (fcoe_fcf_device_match(new_fcf, fcf)) {
-+			if (fcf->state == FCOE_FCF_STATE_CONNECTED)
-+				return fcf;
-+
-+			fcf->state = FCOE_FCF_STATE_CONNECTED;
-+
-+			if (!cancel_delayed_work(&fcf->dev_loss_work))
-+				fcoe_ctlr_device_flush_devloss(ctlr);
-+
-+			return fcf;
-+		}
-+	}
-+
-+	fcf = kzalloc(sizeof(struct fcoe_fcf_device), GFP_ATOMIC);
-+	if (unlikely(!fcf))
-+		goto out;
-+
-+	INIT_WORK(&fcf->delete_work, fcoe_fcf_device_final_delete);
-+	INIT_DELAYED_WORK(&fcf->dev_loss_work, fip_timeout_deleted_fcf);
-+
-+	fcf->dev.parent = &ctlr->dev;
-+	fcf->dev.bus = &fcoe_bus_type;
-+	fcf->dev.type = &fcoe_fcf_device_type;
-+	fcf->id = atomic_inc_return(&fcf_num) - 1;
-+	fcf->state = FCOE_FCF_STATE_UNKNOWN;
-+
-+	fcf->dev_loss_tmo = ctlr->fcf_dev_loss_tmo;
-+
-+	dev_set_name(&fcf->dev, "fcf_%d", fcf->id);
-+
-+	fcf->fabric_name = new_fcf->fabric_name;
-+	fcf->switch_name = new_fcf->switch_name;
-+	fcf->fc_map = new_fcf->fc_map;
-+	fcf->vfid = new_fcf->vfid;
-+	memcpy(fcf->mac, new_fcf->mac, ETH_ALEN);
-+	fcf->priority = new_fcf->priority;
-+	fcf->fka_period = new_fcf->fka_period;
-+	fcf->selected = new_fcf->selected;
-+
-+	error = device_register(&fcf->dev);
-+	if (error)
-+		goto out_del;
-+
-+	fcf->state = FCOE_FCF_STATE_CONNECTED;
-+	list_add_tail(&fcf->peers, &ctlr->fcfs);
-+
-+	return fcf;
-+
-+out_del:
-+	kfree(fcf);
-+out:
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(fcoe_fcf_device_add);
-+
-+int __init fcoe_sysfs_setup(void)
-+{
-+	int error;
-+
-+	atomic_set(&ctlr_num, 0);
-+	atomic_set(&fcf_num, 0);
-+
-+	error = bus_register(&fcoe_bus_type);
-+	if (error)
-+		return error;
-+
-+	return 0;
-+}
-+
-+void __exit fcoe_sysfs_teardown(void)
-+{
-+	bus_unregister(&fcoe_bus_type);
-+}
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index 710e149..b46f43d 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -815,9 +815,17 @@ out_nodev:
-  */
- static int __init libfcoe_init(void)
- {
--	fcoe_transport_init();
-+	int rc = 0;
- 
--	return 0;
-+	rc = fcoe_transport_init();
-+	if (rc)
-+		return rc;
-+
-+	rc = fcoe_sysfs_setup();
-+	if (rc)
-+		fcoe_transport_exit();
-+
-+	return rc;
- }
- module_init(libfcoe_init);
- 
-@@ -826,6 +834,7 @@ module_init(libfcoe_init);
-  */
- static void __exit libfcoe_exit(void)
- {
-+	fcoe_sysfs_teardown();
- 	fcoe_transport_exit();
- }
- module_exit(libfcoe_exit);
-diff --git a/include/scsi/fcoe_sysfs.h b/include/scsi/fcoe_sysfs.h
-new file mode 100644
-index 0000000..604cb9b
---- /dev/null
-+++ b/include/scsi/fcoe_sysfs.h
-@@ -0,0 +1,124 @@
-+/*
-+ * Copyright (c) 2011-2012 Intel Corporation.  All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Maintained at www.Open-FCoE.org
-+ */
-+
-+#ifndef FCOE_SYSFS
-+#define FCOE_SYSFS
-+
-+#include <linux/if_ether.h>
-+#include <linux/device.h>
-+#include <scsi/fc/fc_fcoe.h>
-+
-+struct fcoe_ctlr_device;
-+struct fcoe_fcf_device;
-+
-+struct fcoe_sysfs_function_template {
-+	void (*get_fcoe_ctlr_link_fail)(struct fcoe_ctlr_device *);
-+	void (*get_fcoe_ctlr_vlink_fail)(struct fcoe_ctlr_device *);
-+	void (*get_fcoe_ctlr_miss_fka)(struct fcoe_ctlr_device *);
-+	void (*get_fcoe_ctlr_symb_err)(struct fcoe_ctlr_device *);
-+	void (*get_fcoe_ctlr_err_block)(struct fcoe_ctlr_device *);
-+	void (*get_fcoe_ctlr_fcs_error)(struct fcoe_ctlr_device *);
-+	void (*get_fcoe_ctlr_mode)(struct fcoe_ctlr_device *);
-+	void (*get_fcoe_fcf_selected)(struct fcoe_fcf_device *);
-+	void (*get_fcoe_fcf_vlan_id)(struct fcoe_fcf_device *);
-+};
-+
-+#define dev_to_ctlr(d)					\
-+	container_of((d), struct fcoe_ctlr_device, dev)
-+
-+enum fip_conn_type {
-+	FIP_CONN_TYPE_UNKNOWN,
-+	FIP_CONN_TYPE_FABRIC,
-+	FIP_CONN_TYPE_VN2VN,
-+};
-+
-+struct fcoe_ctlr_device {
-+	u32				id;
-+
-+	struct device			dev;
-+	struct fcoe_sysfs_function_template *f;
-+
-+	struct list_head		fcfs;
-+	char				work_q_name[20];
-+	struct workqueue_struct		*work_q;
-+	char				devloss_work_q_name[20];
-+	struct workqueue_struct		*devloss_work_q;
-+	struct mutex			lock;
-+
-+	int                             fcf_dev_loss_tmo;
-+	enum fip_conn_type              mode;
-+
-+	/* expected in host order for displaying */
-+	struct fcoe_fc_els_lesb         lesb;
-+};
-+
-+static inline void *fcoe_ctlr_device_priv(const struct fcoe_ctlr_device *ctlr)
-+{
-+	return (void *)(ctlr + 1);
-+}
-+
-+/* fcf states */
-+enum fcf_state {
-+	FCOE_FCF_STATE_UNKNOWN,
-+	FCOE_FCF_STATE_DISCONNECTED,
-+	FCOE_FCF_STATE_CONNECTED,
-+	FCOE_FCF_STATE_DELETED,
-+};
-+
-+struct fcoe_fcf_device {
-+	u32		    id;
-+	struct device	    dev;
-+	struct list_head    peers;
-+	struct work_struct  delete_work;
-+	struct delayed_work dev_loss_work;
-+	u32		    dev_loss_tmo;
-+	void                *priv;
-+	enum fcf_state      state;
-+
-+	u64                 fabric_name;
-+	u64                 switch_name;
-+	u32                 fc_map;
-+	u16                 vfid;
-+	u8                  mac[ETH_ALEN];
-+	u8                  priority;
-+	u32                 fka_period;
-+	u8                  selected;
-+	u16                 vlan_id;
-+};
-+
-+#define dev_to_fcf(d)					\
-+	container_of((d), struct fcoe_fcf_device, dev)
-+/* parentage should never be missing */
-+#define fcoe_fcf_dev_to_ctlr_dev(x)		\
-+	dev_to_ctlr((x)->dev.parent)
-+#define fcoe_fcf_device_priv(x)			\
-+	((x)->priv)
-+
-+struct fcoe_ctlr_device *fcoe_ctlr_device_add(struct device *parent,
-+			    struct fcoe_sysfs_function_template *f,
-+			    int priv_size);
-+void fcoe_ctlr_device_delete(struct fcoe_ctlr_device *);
-+struct fcoe_fcf_device *fcoe_fcf_device_add(struct fcoe_ctlr_device *,
-+					    struct fcoe_fcf_device *);
-+void fcoe_fcf_device_delete(struct fcoe_fcf_device *);
-+
-+int __init fcoe_sysfs_setup(void);
-+void __exit fcoe_sysfs_teardown(void);
-+
-+#endif /* FCOE_SYSFS */
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 69eca4b..7b93f21 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -29,6 +29,7 @@
- #include <linux/random.h>
- #include <scsi/fc/fc_fcoe.h>
- #include <scsi/libfc.h>
-+#include <scsi/fcoe_sysfs.h>
- 
- #define FCOE_MAX_CMD_LEN	16	/* Supported CDB length */
- 
-
+SWdub3JlIHRoZXNlLi4uLiBJIGZvcmdvdCB0aGUgbGFzdCBwYXRjaCBvZiB0aGUgc2VyaWVzIQ0K
+DQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtc2NzaS1vd25lckB2Z2Vy
+Lmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZ10gT24g
+QmVoYWxmIE9mIFJvYmVydCBMb3ZlDQpTZW50OiBUdWVzZGF5LCBNYXkgMjIsIDIwMTIgNzowNCBQ
+TQ0KVG86IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpDYzogZ3JlZ2toQGxpbnV4Zm91bmRh
+dGlvbi5vcmc7IGdpcmlkaGFyLm1hbGF2YWxpQHFsb2dpYy5jb207IGphbWVzLnNtYXJ0QGVtdWxl
+eC5jb207IGJwcmFrYXNoQGJyb2FkY29tLmNvbQ0KU3ViamVjdDogW1BBVENIIHY1IDAvM10gRkNv
+RSBTeXNmcw0KDQp2NTogUmVzZW5kIHRvIGFwcGx5IG9uIGN1cnJlbnQgbWlzYyBicmFuY2ggb2Yg
+c2NzaS5naXQNCg0KKiBjaGVja3BhdGNoLnBsIGNvbXBsYWlucyBhYm91dCBwYXRjaCAzLzQuIFRo
+ZSBsYWNrIG9mIGEgZmluYWwNCiAgYXJndW1lbnQgaXMgYSB0cmljayBJIHRvb2sgZnJvbSBzY3Np
+X3RyYW5zcG9ydF9mYy5jLiBJIHRoaW5rDQogIHRoYXQgaXQgaXMgZmluZS4NCg0KICBFUlJPUjog
+c3BhY2UgcHJvaGliaXRlZCBiZWZvcmUgdGhhdCBjbG9zZSBwYXJlbnRoZXNpcyAnKScNCiAgIzM2
+OTogRklMRTogZHJpdmVycy9zY3NpL2Zjb2UvZmNvZV9zeXNmcy5jOjE5NjoNCiAgKyAgICAgZmNv
+ZV9mY2ZfcHJpdmF0ZV9zaG93X2Z1bmN0aW9uKGZpZWxkLCBmb3JtYXRfc3RyaW5nLCBzeiwgKQlc
+DQoNCiogY2hlY2twYXRjaC5wbCBjb21wbGFpbnMgYWJvdXQgcGF0Y2ggMy80LiBJIGF0dGVtcHRl
+ZCB0byBhZGQNCiAgcGFyZW50aGVzaXMgYXJvdW5kIHRoZXNlIG1hY3JvcywgYnV0IEkgY3JlYXRl
+ZCBtb3JlIHByb2JsZW1zDQogIHRoYW4gSSByZXNvbHZlZC4gSSBhbSBub3Qgc3VyZSB3aGF0IHRv
+IGRvIGFib3V0IHRoaXMuIEkgYmVsaXZlDQogIHRoZXNlIHdlcmUgV0FSTnMgd2hlbiB0aGlzIHNl
+cmllcyB3YXMgaW5pdGlhbGx5IHN1Ym1pdHRlZC4NCg0KICBFUlJPUjogTWFjcm9zIHdpdGggY29t
+cGxleCB2YWx1ZXMgc2hvdWxkIGJlIGVuY2xvc2VkIGluIHBhcmVudGhlc2lzDQogICMzNzg6IEZJ
+TEU6IGRyaXZlcnMvc2NzaS9mY29lL2Zjb2Vfc3lzZnMuYzoyMDU6DQogICsjZGVmaW5lIGZjb2Vf
+ZmNmX3ByaXZhdGVfcmRfYXR0cl9jYXN0KGZpZWxkLCBmb3JtYXRfc3RyaW5nLCBzeiwgY2FzdCkJ
+XA0KICArCSBmY29lX2ZjZl9wcml2YXRlX3Nob3dfZnVuY3Rpb24oZmllbGQsIGZvcm1hdF9zdHJp
+bmcsIHN6LCAoY2FzdCkpIFwNCiAgKwkgc3RhdGljIEZDT0VfREVWSUNFX0FUVFIoZmNmLCBmaWVs
+ZCwgU19JUlVHTywJICAgICAgCSAgCSAgXA0KICArCSAJCQkgICAgICAJICAgICBzaG93X2Zjb2Vf
+ZmNmX2RldmljZV8jI2ZpZWxkLCBOVUxMKQ0KDQoqIGNoZWNrcGF0Y2gucGwgY29tcGxhaW5zIGFi
+b3V0IHBhdGNoIDQvNC4gVGhpcyBpcyBqdXN0IGEgV0FSTi4NCiAgSSB3b3VsZCBmaXggdGhpcyBp
+ZiBJIGtuZXcgaG93IHRvLCBidXQgSSBkb24ndCB0aGluayBpdCBzaG91bGQNCiAgYmUgYSBwcm9i
+bGVtLg0KDQogIFdBUk5JTkc6IHF1b3RlZCBzdHJpbmcgc3BsaXQgYWNyb3NzIGxpbmVzDQogICM1
+MDI6IEZJTEU6IGRyaXZlcnMvc2NzaS9mY29lL2Zjb2VfY3Rsci5jOjEwMjE6DQogICsJCXByaW50
+ayhLRVJOX0VSUiAiRmFpbGVkIHRvIGFsbG9jYXRlIHN5c2ZzIGluc3RhbmNlICINCiAgKwkJCQkJ
+ICAgICAgICJmb3IgRkNGLCBmYWIgMTYuMTZsbHggbWFjIHBNXG4iLA0KDQp2NDogTWlub3IgZml4
+ZXMgYW5kIGNsZWFudXBzDQoNCiogQ2hhbmdlZCBkZXZpY2VfaW5pdGlhbGl6ZS9kZXZpY2VfYWRk
+IHRvIGRldmljZV9yZWdpc3Rlcg0KICBhbmQgZGV2aWNlX2RlbCB0byBkZXZpY2VfdW5yZWdpc3Rl
+ci4gVGhlcmUgd2FzIGFuIGltYmFsYW5jZQ0KICBiZWNhdXNlIGRldmljZV9pbml0aWFsaXplIHdh
+cyBnZXR0aW5nIGEgcmVmZXJlbmNlIHRoYXQNCiAgd2FzIG5vdCBiZWluZyByZWxlYXNlZC4gV2l0
+aCB0aGlzIHVwZGF0ZSBib3RoIGZjb2VfZmNmcw0KICBhcyB3ZWxsIGFzIGZjb2VfY3RscnMgYXJl
+IGNvcnJlY3RseSByZWxlYXNlZC9mcmVlJ2Qgd2hlbg0KICB0aGV5IGFyZSB0byBiZSByZW1vdmVk
+IGZyb20gdGhlIHN5c3RlbS4NCg0KKiBNaW5vciB1cGRhdGVzIHRvIGNvbW1pdCBtZXNzYWdlcyBz
+byB0aGVyZSBhcmUgbm8NCiAgcmVmZXJlbmNlcyB0byAnZmNvZV9jdGxyX2F0dHJzJyBhbmQgJ2Zj
+b2VfZmNmX2F0dHJzJw0KICB3aGljaCB3ZXJlIGJvdGggcmVuYW1lZCBpbiB2MyBvZiB0aGlzIHNl
+cmllcy4NCg0KdjM6IEFkZHJlc3NlZCBHcmVnIEtIJ3Mgc2Vjb25kIHNldCBvZiByZXZpZXcgY29t
+bWVudHMNCg0KKiBDcmVhdGVkIGEgJ2Zjb2UgYnVzJyB3aXRoIHRoZSBmY29lX2N0bHIgYW5kIGZj
+b2VfZmNmDQogIGluc3RhbmNlcyBhcyBkZXZpY2VzIG9uIHRoZSBidXMuIENyZWF0ZWQgYnVzX3R5
+cGUocykNCiAgZm9yIGJvdGggZGV2aWNlIHR5cGVzLCB3aXRoIGRlZmF1bHQgYXR0cmlidXRlIGdy
+b3VwDQogIHNldHMgZm9yIGVhY2guIE5vdyBzeXNmcyBjb3JlIGFkZHMvcmVtb3ZlcyBhdHRyaWJ1
+dGVzDQogIHdoaWNoIGFsbG93ZWQgdGhlIHJlbW92YWwgb2Ygc3lzZnNfY3JlYXRlX2dyb3VwIGNh
+bGxzDQogIGJlZm9yZSBkZXZpY2VfYWRkLiBVcGRhdGVkIERvY3VtZW50YXRpb24vIGFjY29yZGlu
+Z2x5Lg0KICANCiogUmVuYW1lZCBzdHJ1Y3R1cmVzIGFuZCBBUElzIHRvIG1ha2UgdGhlbSBsZXNz
+IGNvbmZ1c2luZy4NCg0KICAgc3RydWN0czoNCiAgICBmY29lX2N0bHJfYXR0cnMgLT4gZmNvZV9j
+dGxyX2RldmljZQ0KICAgIGZjb2VfZmNmX2F0dHJzIC0+IGZjb2VfZmNmX2RldmljZQ0KDQogICBm
+dW5jdGlvbnM6DQogICAgZmNvZV9jdGxyX2F0dHJzX2FkZCAtPiBmY29lX2N0bHJfZGV2aWNlX2Fk
+ZA0KICAgIGZjb2VfY3Rscl9hdHRyc19kZWxldGUgLT4gZmNvZV9jdGxyX2RldmljZV9kZWxldGUN
+CiAgICBmY29lX2ZjZl9hdHRyc19hZGQgLT4gZmNvZV9mY2ZfZGV2aWNlX2FkZA0KICAgIGZjb2Vf
+ZmNmX2F0dHJzX2RlbGV0ZSAtPiBmY29lX2ZjZl9kZXZpY2VfZGVsZXRlDQoNCiogUmVtb3ZlZCBl
+eHRyYSBnZXRfZGV2aWNlKHBhcmVudCkgZm9yIGJvdGggdGhlDQogIGZjb2VfY3Rscl9kZXZpY2Ug
+YW5kIGZjb2VfZmNmX2RldmljZS4NCg0KKiBmaXhlZCAndW51c2VkIHZhcmlhYmxlJyBjb21waWxh
+dGlvbiB3YXJuaW5nIHRoYXQNCiAgZXhpc3RlZCBpbiB2Mi4NCg0KKiBBUEkgc3ltYm9scyBub3cg
+ZXhwb3J0ZWQgd2l0aCBFWFBPUlRfU1lNQk9MX0dQTA0KDQoqIE5PVCBBRERSRVNTRUQgLSBpZHIg
+dXNhZ2UgdnMuIGF0b21pYyBpbmNyZW1ldGluZyBvZg0KICBmY29lX2N0bHIgYW5kIGZjb2VfZmNm
+IGlkIGVudW1lcmF0aW9uLiBJdCB3YXMgaW5kaWNhdGVkDQogIHRoYXQgaWRyIGhhcyBub3QgdHJh
+ZGl0aW9uYWxseSBiZWVuIHVzZWQgaW4gZHJpdmVycy9zY3NpLy4NCiAgSSB3aWxsIHJlLWV4YW1p
+bmUgdGhpcyBpZiB0aGVyZSBpcyBzdGlsbCBoZWFydGJ1cm4uDQoNCi0tLQ0KDQp2MjogQWRkcmVz
+c2VkIEdyZWcgS0gncyByZXZpZXcgY29tbWVudHMNCg0KKiBtb3ZlZCBmY29lX2N0bHJfYXR0cnMg
+YW5kIGZjb2VfZmNmX2F0dHJzIGF0dHJpYnV0ZQ0KICBoZWxwZXIgbWFjcm9zIGZyb20gZmNvZV9z
+eXNmcy5oIHRvIGZjb2Vfc3lzZnMuYyBzbw0KICB0aGF0IHRoZXkgZG9uJ3QgdGVtcCBkZXZlbG9w
+ZXJzIHRvIHVzZSB0aGVtLiBUaGV5J3JlDQogIGludGVuZGVkIHRvIGJlIHVzZWQgaW4gYXR0cmli
+dXRlIHNob3cvc3RvcmUgcm91dGluZQ0KICBnZW5lcmF0aW5nIG1hY3JvcywgYnV0IG5vdCBieSBk
+cml2ZXJzLg0KDQoqIFJlbW92ZWQgdW5uZWNlc3NhcnkgcHV0X2RldmljZSBjYWxscyBvbiBwYXJl
+bnQgZGV2aWNlcy4NCiAgQWxzbyByZW1vdmVkIHVubmVjZXNzYXJ5IGRlLWluaXRpYWxpemF0aW9u
+IG9mIHBvaW50ZXJzDQogIHRvIHBhcmVudCBhbmQgcmVtb3ZlZCB1bm5lY2Vzc2FyeSB6ZXJvJ2lu
+ZyBvZiBtZW1vcnkNCiAgYmVmb3JlIGZyZWVpbmcgaXQuDQoNCiogQWRkZWQgRG9jdW1lbnRhdGlv
+bi9BQkkvdGVzdGluZy9zeXNmcy1jbGFzcy1mY29lDQogIGRvY3VtZW50Lg0KDQoqIENoYW5nZWQg
+c2ltcGxlX3N0cnRvdWwgdXNhZ2UgdG8ga3N0cnRvdWwgdG8gYXZvaWQNCiAgY2hlY2twYXRjaC5w
+bCB3YXJuaW5nIHRoYXQgSSBtaXNzZWQgYmVmb3JlLiBUaGVyZSdzDQogIGEgYnVuY2ggb2Ygbm9p
+c2UgaW4gY2hlY2twYXRjaC5wbCBkdWUgdG8gYW4gb2RkIG1hY3JvDQogIHVzYWdlLCBidXQgSSB0
+aGluayBhbnkgcmVtYWluaW5nIGNoZWNrcGF0Y2gucGwgd2FybmluZ3MNCiAgYXJlIE9LLg0KDQot
+LS0NCg0KVGhpcyBwYXRjaCBzZXJpZXMgYWRkcyBhIHN5c2ZzIGxheWVyIHRvIGxpYmZjb2UuIEl0
+IGFkZHMgYSBzeXNmcyBpbnN0YW5jZSBmb3IgRklQIGNvbnRyb2xsZXJzIChhIFNXIGVudGl0eSkg
+YW5kIGRpc2NvdmVyZWQgRmlicmUgQ2hhbm5lbCBGb3J3YXJkZXJzIChGQ0ZzKSwgd2hpY2ggYXJl
+IHNpbXBseSBGQ29FIHN3aXRjaGVzLg0KDQpUaGUgbmV3IHN5c2ZzIGNvZGUgaXMgdXNlZCBieSBh
+bnkgZHJpdmVyIHRoYXQgY3VycmVudGx5IHVzZXMgbGliZmNvZSwgbmFtZWx5IGZjb2Uua28gYW5k
+IGJueDJmY19mY29lLmtvLiBBbnkgb3RoZXIgRkNvRSBjYXBhYmxlIGRldmljZSB0aGF0IHdpc2hl
+cyB0byB1c2UgdGhlIGhpZ2gtbGV2ZWwgQVBJcyBkZWZpbmVkIGluIGZjb2Vfc3lmcy5oIG1heSwg
+d2l0aG91dCBoYXZpbmcgdG8gdXNlIHRoZSB0aGUgcHJvdG9jb2wgcHJvY2Vzc2luZyBwb3J0aW9u
+cyBvZiBsaWJmY29lLg0KDQpUaGUgY29kZSBib3Jyb3dzIGhlYXZpbHkgZnJvbSB0aGUgRkMgVHJh
+bnNwb3J0LCBidXQgaXMgbGVzcyBjb21wbGljYXRlZCBiZWNhdXNlIGl0IGRvZXMgbm90IG5lZWQg
+dG8gaW50ZXJhY3Qgd2l0aCB0aGUgU0NTSSBsYXllciBkaXJlY3RseS4NCg0KSSB0aGluayBvbmUg
+dGhpbmcgdG8gY29uc2lkZXIgd2l0aCB0aGlzIHNlcmllcyBpcyB0aGF0IGRyaXZlcnMsIHN1Y2gg
+YXMgdHJhZGl0aW9uYWwgSEJBcywgd2hpY2ggd2lzaCB0byB1c2UgdGhpcyBpbmZyYXN0cnVjdHVy
+ZSB3aWxsIG5vdyBuZWVkIHRvIGRlcGVuZCBvbiBsaWJmY29lLmtvLg0KSXQgd2FzIGVpdGhlciB0
+aGlzIG9yIGNyZWF0ZSBhIHN1cGVyZmx1b3VzIGtlcm5lbCBtb2R1bGU7IEkgdGhpbmsgbGliZmNv
+ZSBpcyBhbiBhcHByb3ByaWF0ZSBwbGFjZSBmb3IgdGhpcyBjb2RlLg0KDQpUaGlzIHNlcmllcyB3
+YXMgY3JlYXRlZCBhZ2FpbnN0IHNjc2ktbWlzYyArIDkgcGF0Y2hlcyBtYWlsZWQgYnkgbWUgdG8g
+bGludXgtc2NzaSBvbiAwMy8wOS8xMi4gKE5vdGUgdGhhdCAxMCBwYXRjaGVzIHdlcmUgbWFpbGVk
+LCBidXQgdGhhdCBwYXRjaCAwMS8xMCB3aWxsIGJlIGRyb3BwZWQpDQoNCkknbSBub3Qgc3VyZSBp
+ZiB0aGVyZSdzIHNvbWV3aGVyZSBJIHNob3VsZCBjcm9zcy1wb3N0IHRoaXMgZm9yIGdlbmVyYWwg
+c3lzZnMgcmV2aWV3LiBJIGRvbid0IHRoaW5rIEknbSBkb2luZyBhbnl0aGluZyBvZGQ7IEkgYWRk
+ZWQgR3JlZyBLLUggdG8gdGhlIENDIGxpc3QgdG8gdHJ5IGFuZCBnZXQgc29tZSBzeXNmcyBleWVz
+IG9uIHRoaXMgY29kZS4NCg0KLS0tDQoNClJvYmVydCBMb3ZlICgzKToNCiAgICAgIGZjb2U6IEFs
+bG9jYXRlIGZjb2VfY3RsciB3aXRoIGZjb2VfaW50ZXJmYWNlLCBub3QgYXMgYSBtZW1iZXINCiAg
+ICAgIGJueDJmYzogQWxsb2NhdGUgZmNvZV9jdGxyIHdpdGggYm54MmZjX2ludGVyZmFjZSwgbm90
+IGFzIGEgbWVtYmVyDQogICAgICBsaWJmY29lOiBBZGQgZmNvZV9zeXNmcw0KDQoNCiBEb2N1bWVu
+dGF0aW9uL0FCSS90ZXN0aW5nL3N5c2ZzLWJ1cy1mY29lIHwgICA3NyArKysNCiBkcml2ZXJzL3Nj
+c2kvYm54MmZjL2JueDJmYy5oICAgICAgICAgICAgIHwgICAgNyANCiBkcml2ZXJzL3Njc2kvYm54
+MmZjL2JueDJmY19lbHMuYyAgICAgICAgIHwgICAgMiANCiBkcml2ZXJzL3Njc2kvYm54MmZjL2Ju
+eDJmY19mY29lLmMgICAgICAgIHwgIDExNiArKystDQogZHJpdmVycy9zY3NpL2JueDJmYy9ibngy
+ZmNfaHdpLmMgICAgICAgICB8ICAgMzkgKw0KIGRyaXZlcnMvc2NzaS9mY29lL01ha2VmaWxlICAg
+ICAgICAgICAgICAgfCAgICAyIA0KIGRyaXZlcnMvc2NzaS9mY29lL2Zjb2UuYyAgICAgICAgICAg
+ICAgICAgfCAgMTM3ICsrKy0tDQogZHJpdmVycy9zY3NpL2Zjb2UvZmNvZS5oICAgICAgICAgICAg
+ICAgICB8ICAgIDggDQogZHJpdmVycy9zY3NpL2Zjb2UvZmNvZV9zeXNmcy5jICAgICAgICAgICB8
+ICA4MzIgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQogZHJpdmVycy9zY3NpL2Zjb2Uv
+ZmNvZV90cmFuc3BvcnQuYyAgICAgICB8ICAgMTMgDQogaW5jbHVkZS9zY3NpL2Zjb2Vfc3lzZnMu
+aCAgICAgICAgICAgICAgICB8ICAxMjQgKysrKw0KIGluY2x1ZGUvc2NzaS9saWJmY29lLmggICAg
+ICAgICAgICAgICAgICAgfCAgIDEwIA0KIDEyIGZpbGVzIGNoYW5nZWQsIDEyNDkgaW5zZXJ0aW9u
+cygrKSwgMTE4IGRlbGV0aW9ucygtKSAgY3JlYXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24v
+QUJJL3Rlc3Rpbmcvc3lzZnMtYnVzLWZjb2UNCiBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9z
+Y3NpL2Zjb2UvZmNvZV9zeXNmcy5jICBjcmVhdGUgbW9kZSAxMDA2NDQgaW5jbHVkZS9zY3NpL2Zj
+b2Vfc3lzZnMuaA0KDQotLQ0KVGhhbmtzLCAvL1JvYg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20g
+dGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBpbiB0aGUg
+Ym9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlIG1ham9y
+ZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwN
+Cg==
