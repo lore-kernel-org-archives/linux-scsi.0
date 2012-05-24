@@ -1,53 +1,131 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] be2iscsi: fix dma free size mismatch regression
-Date: Wed, 23 May 2012 20:40:54 -0500
-Message-ID: <1337823654-8826-1-git-send-email-michaelc@cs.wisc.edu>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: 3.4.0-02580-g72c04af regression on sparc64 - partitions not
+ recognized
+Date: Wed, 23 May 2012 19:22:20 -0700
+Message-ID: <1337826142.6877.7.camel@dwillia2-mobl>
+References: <alpine.SOC.1.00.1205221200050.9585@math.ut.ee>
+	 <20120522.151217.278388169416093561.davem@davemloft.net>
+	 <alpine.SOC.1.00.1205231945480.12326@math.ut.ee>
+	 <20120523.140451.386112705611304887.davem@davemloft.net>
+	 <1337813770.3013.37.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755052Ab2EXBlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 May 2012 21:41:04 -0400
+Received: from mga06.intel.com ([134.134.136.21]:30918 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755052Ab2EXCW0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2012 22:22:26 -0400
+Received: by pbbro8 with SMTP id ro8so10789209pbb.25
+        for <linux-scsi@vger.kernel.org>; Wed, 23 May 2012 19:22:25 -0700 (PDT)
+In-Reply-To: <1337813770.3013.37.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: James Bottomley <jejbbe@hansenpartnership.com>
+Cc: David Miller <davem@davemloft.net>, mroos@linux.ee, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, stern@rowland.harvard.edu
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On Wed, 2012-05-23 at 23:56 +0100, James Bottomley wrote:
+> On Wed, 2012-05-23 at 14:04 -0400, David Miller wrote:
+> > From: Meelis Roos <mroos@linux.ee>
+> > Date: Wed, 23 May 2012 19:46:46 +0300 (EEST)
+> > 
+> > CC:'ing interested parties.
+> > 
+> > >> > Just tested 3.4.0-02580-g72c04af on about 10 machines. While most of 
+> > >> > them work (including 3 different sparc64 machines with real scsi disks), 
+> > >> > Sun Netra X1 with pata_ali and IDE disk consistently fails to boot. sda 
+> > >> > is recognized but no partitions. 3.3.0 works fine, as did something 
+> > >> > around 3.4-rc7 (plain 3.4 not tested yet). No other IDE machines tested 
+> > >> > yet since I have none with remote console at the moment.
+> > >> 
+> > >> If 3.4.0-final is OK, start bisecting from v3.4.0 until 72c04af.  One
+> > >> possibility could be the sparc64 NOBOOTMEM conversion that went into
+> > >> the merge window.
+> > > 
+> > > Bisecting leads to this commit:
+> > > 
+> > > a7a20d103994fd760766e6c9d494daa569cbfe06 is the first bad commit
+> > > commit a7a20d103994fd760766e6c9d494daa569cbfe06
+> > > Author: Dan Williams <dan.j.williams@intel.com>
+> > > Date:   Thu Mar 22 17:05:11 2012 -0700
+> > > 
+> > >     [SCSI] sd: limit the scope of the async probe domain
+> 
+> My theory is that this is an init problem: The assumption in a lot of
+> our code is that async_synchronize_full() waits for everything ... even
+> the domain specific async schedules, which isn't true.
+> 
+> The code in init that makes this assumption is wait_for_device_probe().
+> There's also a fun async_synchronize_full() in init_post() that assumes
+> it can free the init memory after, which would fail badly if anything in
+> init used an async domain.
+> 
+> So either we fix the assumptions or we can't use domain specific async
+> schedules.
+> 
 
-This patch should go into 3.5 fixes. The bug was added in the
-patches for the 3.5 feature window.
+Hm, we already have cases of code not trusting the semantics of
+wait_for_device_probe(), especially as it relates to async scanning like
+in kernel/power/hibernate.c:
 
-As you can see from the patch I made a mistake. During
-development I switched from passing a struct to the size of
-the struct, but left the sizeof. This results in us allocating
-4 bytes (sizeof(int)) but then calling pci_free_consistent
-with the size of the struct.
+                /*
+                 * Some device discovery might still be in progress; we need
+                 * to wait for this to finish.
+                 */
+                wait_for_device_probe();
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/be2iscsi/be_mgmt.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+                if (resume_wait) {
+                        while ((swsusp_resume_device = name_to_dev_t(resume_file)) == 0)
+                                msleep(10);
+                        async_synchronize_full();
+                }
 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 01bb04c..2a09679 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -571,13 +571,12 @@ free_cmd:
- static int mgmt_alloc_cmd_data(struct beiscsi_hba *phba, struct be_dma_mem *cmd,
- 			       int iscsi_cmd, int size)
+                /*
+                 * We can't depend on SCSI devices being available after loading
+                 * one of their modules until scsi_complete_async_scans() is
+                 * called and the resume device usually is a SCSI one.
+                 */
+                scsi_complete_async_scans();
+
+
+...so it seems scsi_complete_async_scans() should take care to flush sd
+probe actions as well... here is a test patch:
+
+--- snip ---
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 8906557..05a92d3 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -141,13 +141,13 @@ struct async_scan_data {
+  * started scanning after this function was called may or may not have
+  * finished.
+  */
+-int scsi_complete_async_scans(void)
++static void __scsi_complete_async_scans(void)
  {
--	cmd->va = pci_alloc_consistent(phba->ctrl.pdev, sizeof(size),
--				       &cmd->dma);
-+	cmd->va = pci_alloc_consistent(phba->ctrl.pdev, size, &cmd->dma);
- 	if (!cmd->va) {
- 		SE_DEBUG(DBG_LVL_1, "Failed to allocate memory for if info\n");
- 		return -ENOMEM;
- 	}
--	memset(cmd->va, 0, sizeof(size));
-+	memset(cmd->va, 0, size);
- 	cmd->size = size;
- 	be_cmd_hdr_prepare(cmd->va, CMD_SUBSYSTEM_ISCSI, iscsi_cmd, size);
- 	return 0;
--- 
-1.7.7.6
+        struct async_scan_data *data;
+ 
+        do {
+                if (list_empty(&scanning_hosts))
+-                       return 0;
++                       return;
+                /* If we can't get memory immediately, that's OK.  Just
+                 * sleep a little.  Even if we never get memory, the async
+                 * scans will finish eventually.
+@@ -181,6 +181,13 @@ int scsi_complete_async_scans(void)
+        spin_unlock(&async_scan_lock);
+ 
+        kfree(data);
++}
++
++int scsi_complete_async_scans(void)
++{
++       __scsi_complete_async_scans();
++       async_synchronize_full_domain(&scsi_sd_probe_domain);
++
+        return 0;
+ }
+ 
+
 
