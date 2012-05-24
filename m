@@ -1,58 +1,53 @@
-From: James Bottomley <jejbbe@hansenpartnership.com>
-Subject: Re: 3.4.0-02580-g72c04af regression on sparc64 - partitions not
- recognized
-Date: Wed, 23 May 2012 23:56:10 +0100
-Message-ID: <1337813770.3013.37.camel@dabdike.int.hansenpartnership.com>
-References: <alpine.SOC.1.00.1205221200050.9585@math.ut.ee>
-	 <20120522.151217.278388169416093561.davem@davemloft.net>
-	 <alpine.SOC.1.00.1205231945480.12326@math.ut.ee>
-	 <20120523.140451.386112705611304887.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120523.140451.386112705611304887.davem@davemloft.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: mroos@linux.ee, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dan.j.williams@intel.com, stern@rowland.harvard.edu
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/1] be2iscsi: fix dma free size mismatch regression
+Date: Wed, 23 May 2012 20:40:54 -0500
+Message-ID: <1337823654-8826-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755052Ab2EXBlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 May 2012 21:41:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-On Wed, 2012-05-23 at 14:04 -0400, David Miller wrote:
-> From: Meelis Roos <mroos@linux.ee>
-> Date: Wed, 23 May 2012 19:46:46 +0300 (EEST)
-> 
-> CC:'ing interested parties.
-> 
-> >> > Just tested 3.4.0-02580-g72c04af on about 10 machines. While most of 
-> >> > them work (including 3 different sparc64 machines with real scsi disks), 
-> >> > Sun Netra X1 with pata_ali and IDE disk consistently fails to boot. sda 
-> >> > is recognized but no partitions. 3.3.0 works fine, as did something 
-> >> > around 3.4-rc7 (plain 3.4 not tested yet). No other IDE machines tested 
-> >> > yet since I have none with remote console at the moment.
-> >> 
-> >> If 3.4.0-final is OK, start bisecting from v3.4.0 until 72c04af.  One
-> >> possibility could be the sparc64 NOBOOTMEM conversion that went into
-> >> the merge window.
-> > 
-> > Bisecting leads to this commit:
-> > 
-> > a7a20d103994fd760766e6c9d494daa569cbfe06 is the first bad commit
-> > commit a7a20d103994fd760766e6c9d494daa569cbfe06
-> > Author: Dan Williams <dan.j.williams@intel.com>
-> > Date:   Thu Mar 22 17:05:11 2012 -0700
-> > 
-> >     [SCSI] sd: limit the scope of the async probe domain
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-My theory is that this is an init problem: The assumption in a lot of
-our code is that async_synchronize_full() waits for everything ... even
-the domain specific async schedules, which isn't true.
+This patch should go into 3.5 fixes. The bug was added in the
+patches for the 3.5 feature window.
 
-The code in init that makes this assumption is wait_for_device_probe().
-There's also a fun async_synchronize_full() in init_post() that assumes
-it can free the init memory after, which would fail badly if anything in
-init used an async domain.
+As you can see from the patch I made a mistake. During
+development I switched from passing a struct to the size of
+the struct, but left the sizeof. This results in us allocating
+4 bytes (sizeof(int)) but then calling pci_free_consistent
+with the size of the struct.
 
-So either we fix the assumptions or we can't use domain specific async
-schedules.
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/be2iscsi/be_mgmt.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-James
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 01bb04c..2a09679 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -571,13 +571,12 @@ free_cmd:
+ static int mgmt_alloc_cmd_data(struct beiscsi_hba *phba, struct be_dma_mem *cmd,
+ 			       int iscsi_cmd, int size)
+ {
+-	cmd->va = pci_alloc_consistent(phba->ctrl.pdev, sizeof(size),
+-				       &cmd->dma);
++	cmd->va = pci_alloc_consistent(phba->ctrl.pdev, size, &cmd->dma);
+ 	if (!cmd->va) {
+ 		SE_DEBUG(DBG_LVL_1, "Failed to allocate memory for if info\n");
+ 		return -ENOMEM;
+ 	}
+-	memset(cmd->va, 0, sizeof(size));
++	memset(cmd->va, 0, size);
+ 	cmd->size = size;
+ 	be_cmd_hdr_prepare(cmd->va, CMD_SUBSYSTEM_ISCSI, iscsi_cmd, size);
+ 	return 0;
+-- 
+1.7.7.6
+
