@@ -1,131 +1,296 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [RFC] How to fix an async scan - 'rmmod --wait' race?
-Date: Fri, 25 May 2012 17:13:18 +0200
-Message-ID: <4FBFA18E.9040904@redhat.com>
-References: <4F7DA4F8.90104@redhat.com> <4F86CF34.2000906@redhat.com>    <4F8EF05F.8080307@redhat.com>   <1337244177.2926.21.camel@dabdike.int.hansenpartnership.com>   <4FB4BCEB.60506@acm.org>  <1337245278.30498.2.camel@dabdike.int.hansenpartnership.com>  <4FB51086.3060406@redhat.com> <1337681133.2932.4.camel@dabdike.int.hansenpartnership.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC PATCH] scsi: fix hot unplug vs async scan race
+Date: Fri, 25 May 2012 08:34:03 -0700
+Message-ID: <CAA9_cme9j7n726kOxOupJLd4Tajjic8QwLA_LXk21B7YEH15BA@mail.gmail.com>
+References: <20120525075352.27883.81838.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1435 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753528Ab2EYPNg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 May 2012 11:13:36 -0400
-In-Reply-To: <1337681133.2932.4.camel@dabdike.int.hansenpartnership.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:32784 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750864Ab2EYPeE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 May 2012 11:34:04 -0400
+Received: by vcbf11 with SMTP id f11so520254vcb.19
+        for <linux-scsi@vger.kernel.org>; Fri, 25 May 2012 08:34:03 -0700 (PDT)
+In-Reply-To: <20120525075352.27883.81838.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Mike Christie <mchristi@redhat.com>, stefanr@s5r6.in-berlin.de
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, Mike Christie <michaelc@cs.wisc.edu>, Robert Love <robert.w.love@intel.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Kashyap Desai <kashyap.desai@lsi.com>, Matthew Wilcox <matthew@wil.cx>, Dariusz Majchrzak <dariusz.majchrzak@intel.com>
 
-On 05/22/2012 12:05 PM, James Bottomley wrote:
-> On Thu, 2012-05-17 at 16:51 +0200, Tomas Henzl wrote:
->>>>> diff --git a/drivers/base/driver.c b/drivers/base/driver.c
->>>>> index 3ec3896..246e652 100644
->>>>> --- a/drivers/base/driver.c
->>>>> +++ b/drivers/base/driver.c
->>>>> @@ -10,6 +10,7 @@
->>>>>   *
->>>>>   */
->>>>>  
->>>>> +#include <linux/async.h>
->>>>>  #include <linux/device.h>
->>>>>  #include <linux/module.h>
->>>>>  #include <linux/errno.h>
->>>>> @@ -199,6 +200,13 @@ EXPORT_SYMBOL_GPL(driver_register);
->>>>>   */
->>>>>  void driver_unregister(struct device_driver *drv)
->>>>>  {
->>>>> +	/*
->>>>> +	 * make sure all async bits that may be running have completed the way
->>>>> +	 * this works is that try_module_get() now fails, so new async work
->>>>> +	 * should take a reference to the module which now fails, so it should
->>>>> +	 * be safe to remove the driver.
->>>>> +	 */
->>>>> +	async_synchronize_full();
->>>>>  	if (!drv || !drv->p) {
->>>>>  		WARN(1, "Unexpected driver unregister!\n");
->>>>>  		return;
->> Is this safe? I mean, is it possible that a new scan starts after the
->> async_synchronize_full() ends?
-> Not really, because the module is now removing, so the try module get
-> guard fails
-The async_synchronize_full : "This function returns when there are no asynchronous
-function calls in the system."
-The point is that the async scan is not started with async_schedule but with kthread_run,
-so the synchronization doesn't work in this case (an error log is attached at bottom).
+[ add the folks on the cc ]
+
+On Fri, May 25, 2012 at 12:55 AM, Dan Williams <dan.j.williams@intel.co=
+m> wrote:
+> The following crash results from cases where the end_device has been
+> removed before scsi_sysfs_add_sdev has had a chance to run.
 >
->> I wish this were fixed by fixing the real root of this problem which lies
->> in scssi_device_get:
->> int scsi_device_get(struct scsi_device *sdev)
->> {
->>         if (sdev->sdev_state == SDEV_DEL)
->>                 return -ENXIO;
->>         if (!get_device(&sdev->sdev_gendev))
->>                 return -ENXIO;
->>         /* We can fail this if we're doing SCSI operations
->>          * from module exit (like cache flush) */
->>         try_module_get(sdev->host->hostt->module);
->> here  ^ by ignoring the return value. This is why rmmod --wait causes the problem
->> and likely every other process which calls scsi_device_get would show the same bug.
-> I'm not sure how ... this has to be usable in the teardown path by which
-> point try_module_get will fail (as the comment says).  What do you
-> propose?
-I wish I would knew, but everything seems to be too much complicated, one idea
-was to use in the teardown path new special functions only for this use, but...
-
-Tomas
-
+> =A0BUG: unable to handle kernel NULL pointer dereference at 000000000=
+0000098
+> =A0IP: [<ffffffff8115e100>] sysfs_create_dir+0x32/0xb6
+> =A0...
+> =A0Call Trace:
+> =A0[<ffffffff8125e4a8>] kobject_add_internal+0x120/0x1e3
+> =A0[<ffffffff81075149>] ? trace_hardirqs_on+0xd/0xf
+> =A0[<ffffffff8125e641>] kobject_add_varg+0x41/0x50
+> =A0[<ffffffff8125e70b>] kobject_add+0x64/0x66
+> =A0[<ffffffff8131122b>] device_add+0x12d/0x63a
+> =A0[<ffffffff814b65ea>] ? _raw_spin_unlock_irqrestore+0x47/0x56
+> =A0[<ffffffff8107de15>] ? module_refcount+0x89/0xa0
+> =A0[<ffffffff8132f348>] scsi_sysfs_add_sdev+0x4e/0x28a
+> =A0[<ffffffff8132dcbb>] do_scan_async+0x9c/0x145
 >
-> James
+> ...teach scsi_sysfs_add_devices to check for deleted device before
+> trying to add them.
+>
+> This teaches scsi_transport_sas to bypass scsi_remove_target() since =
+it
+> is unable to find the target from the end_device rphy since
+> device_for_each_child() relies on the target device having gone throu=
+gh
+> a device_add().
+>
+> Cc: Mike Christie <michaelc@cs.wisc.edu>
+> Cc: Robert Love <robert.w.love@intel.com>
+> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+> Cc: Kashyap Desai <kashyap.desai@lsi.com>
+> Cc: Matthew Wilcox <matthew@wil.cx>
+> Cc: <stable@vger.kernel.org>
+> [stable: v2.6.20+]
+> Reported-by: Dariusz Majchrzak <dariusz.majchrzak@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>
+> This is larger than I would like, but could not think of better way t=
+o
+> retrieve the starget from the transport device. =A0Other ideas?
+>
+> --
+> Dan
 >
 >
-
-May 25 04:25:54 localhost kernel: [  461.525209] BUG: unable to handle kernel NULL pointer dereference at 0000000000000079
-May 25 04:25:54 localhost kernel: [  461.525242] IP: [<ffffffff811f0c45>] sysfs_create_dir+0x35/0xc0
-May 25 04:25:54 localhost kernel: [  461.525259] PGD 0 
-May 25 04:25:54 localhost kernel: [  461.525267] Oops: 0000 [#1] SMP 
-May 25 04:25:54 localhost kernel: [  461.525278] CPU 0 
-May 25 04:25:54 localhost kernel: [  461.525283] Modules linked in: mpt2sas(-) lockd bnep bluetooth be2iscsi iscsi_boot_sysfs bnx2i cnic uio cxgb4i cxgb4 cxgb3i libcxgbi cxgb3 mdio ib_iser
-May 25 04:25:54 localhost kernel: [  461.525342] mpt2sas0: removing handle(0x0009), sas_addr(0x5000c5001ac10319)
-May 25 04:25:54 localhost kernel: [  461.525355]  rdma_cm ib_cm iw_cm ib_sa ib_mad ib_core ib_addr iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ip6table_filter ip6_tables i7core_edac edac_core hp_wmi iTCO_wdt snd_hda_codec_realtek tg3 iTCO_vendor_support snd_hda_intel snd_hda_codec snd_hwdep scsi_transport_sas raid_class snd_seq snd_seq_device snd_pcm snd_timer sparse_keymap rfkill serio_raw snd soundcore snd_page_alloc microcode sunrpc uinput firewire_ohci firewire_core crc_itu_t nouveau ttm drm_kms_helper drm i2c_core mxm_wmi video wmi [last unloaded: mpt2sas]
-May 25 04:25:54 localhost kernel: [  461.525640] 
-May 25 04:25:54 localhost kernel: [  461.525651] Pid: 1341, comm: scsi_scan_12 Not tainted 3.3.0 #4 Hewlett-Packard HP Z400 Workstation/0B4Ch
-May 25 04:25:54 localhost kernel: [  461.525669] RIP: 0010:[<ffffffff811f0c45>]  [<ffffffff811f0c45>] sysfs_create_dir+0x35/0xc0
-May 25 04:25:54 localhost kernel: [  461.525685] RSP: 0018:ffff88019419bce0  EFLAGS: 00010246
-May 25 04:25:54 localhost kernel: [  461.525693] RAX: ffff880192ad2010 RBX: ffff880192ad5438 RCX: 0000000000000000
-May 25 04:25:54 localhost kernel: [  461.525702] RDX: ffff880199034c60 RSI: ffff880192ad0018 RDI: ffff880192ad5438
-May 25 04:25:54 localhost kernel: [  461.525711] RBP: ffff88019419bd10 R08: ffff880199034c60 R09: ffff880187c81980
-May 25 04:25:54 localhost kernel: [  461.525720] R10: 0000000000000400 R11: 0000000000010140 R12: 0000000000000000
-May 25 04:25:54 localhost kernel: [  461.525728] R13: 0000000000000000 R14: 0000000000000000 R15: ffff880192ad5400
-May 25 04:25:54 localhost kernel: [  461.525738] FS:  0000000000000000(0000) GS:ffff88019fc00000(0000) knlGS:0000000000000000
-May 25 04:25:54 localhost kernel: [  461.525748] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-May 25 04:25:54 localhost kernel: [  461.525756] CR2: 0000000000000079 CR3: 0000000001c05000 CR4: 00000000000006f0
-May 25 04:25:54 localhost kernel: [  461.525765] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-May 25 04:25:54 localhost kernel: [  461.525774] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-May 25 04:25:54 localhost kernel: [  461.525788] Process scsi_scan_12 (pid: 1341, threadinfo ffff88019419a000, task ffff880187ca9730)
-May 25 04:25:54 localhost kernel: [  461.525796] mpt2sas0: sending diag reset !!
-May 25 04:25:54 localhost kernel: [  461.525805] Stack:
-May 25 04:25:54 localhost kernel: [  461.525810]  ffff88019419bd30 ffffffff81088c0e ffff88019419bd50 ffff880192ad5438
-May 25 04:25:54 localhost kernel: [  461.525829]  ffff880192ad2010 0000000000000000 ffff88019419bd60 ffffffff812c2e6e
-May 25 04:25:54 localhost kernel: [  461.526446]  0000000100027998 ffffffff81e487c0 ffff88019419bd40 ffff880192ad5438
-May 25 04:25:54 localhost kernel: [  461.526992] Call Trace:
-May 25 04:25:54 localhost kernel: [  461.527534]  [<ffffffff81088c0e>] ? try_to_wake_up+0x1be/0x2b0
-May 25 04:25:54 localhost kernel: [  461.528075]  [<ffffffff812c2e6e>] kobject_add_internal+0xae/0x250
-May 25 04:25:54 localhost kernel: [  461.528612]  [<ffffffff812c3417>] kobject_add+0x67/0xc0
-May 25 04:25:54 localhost kernel: [  461.529150]  [<ffffffff8139eb32>] device_add+0x102/0x6c0
-May 25 04:25:54 localhost kernel: [  461.529714]  [<ffffffff815f2a6b>] ? wait_for_common+0x3b/0x170
-May 25 04:25:54 localhost kernel: [  461.530300]  [<ffffffff813c81e8>] scsi_sysfs_add_sdev+0x198/0x340
-May 25 04:25:54 localhost kernel: [  461.530886]  [<ffffffff813c6aa4>] do_scan_async+0x84/0x160
-May 25 04:25:54 localhost kernel: [  461.531473]  [<ffffffff813c6a20>] ? do_scsi_scan_host+0xa0/0xa0
-May 25 04:25:54 localhost kernel: [  461.532063]  [<ffffffff81079c63>] kthread+0x93/0xa0
-May 25 04:25:54 localhost kernel: [  461.532647]  [<ffffffff815fd124>] kernel_thread_helper+0x4/0x10
-May 25 04:25:54 localhost kernel: [  461.533231]  [<ffffffff81079bd0>] ? kthread_freezable_should_stop+0x70/0x70
-May 25 04:25:54 localhost kernel: [  461.533822]  [<ffffffff815fd120>] ? gs_change+0x13/0x13
-May 25 04:25:54 localhost kernel: [  461.534409] Code: 83 ec 18 66 66 66 66 90 48 85 ff 48 89 fb 0f 84 98 00 00 00 48 8b 47 18 49 c7 c4 20 0e c5 81 48 85 c0 74 04 4c 8b 60 30 45 31 ed <41> 80 7c 24 79 00 75 5b 48 89 df e8 8b 2c 0d 00 48 85 c0 74 66 
-May 25 04:25:54 localhost kernel: [  461.535150] RIP  [<ffffffff811f0c45>] sysfs_create_dir+0x35/0xc0
-May 25 04:25:54 localhost kernel: [  461.535747]  RSP <ffff88019419bce0>
-May 25 04:25:54 localhost kernel: [  461.536366] CR2: 0000000000000079
-May 25 04:25:54 localhost kernel: [  461.537043] ---[ end trace 83bf7cc296e3a5d6 ]---
-May 25 04:25:55 localhost kernel: [  462.585300] mpt2sas0: diag reset: SUCCESS
-
-
+> =A0drivers/scsi/scsi_scan.c =A0 =A0 =A0 =A0 =A0| =A0 24 +++++++++++++=
++++--------
+> =A0drivers/scsi/scsi_sysfs.c =A0 =A0 =A0 =A0 | =A0 15 ++++++++++++++-
+> =A0drivers/scsi/scsi_transport_sas.c | =A0 =A05 +++--
+> =A0include/scsi/scsi_device.h =A0 =A0 =A0 =A0| =A0 =A05 +++--
+> =A0include/scsi/scsi_transport_sas.h | =A0 =A01 +
+> =A05 files changed, 37 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 01b0374..5e00e09 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1562,8 +1562,8 @@ void scsi_rescan_device(struct device *dev)
+> =A0}
+> =A0EXPORT_SYMBOL(scsi_rescan_device);
+>
+> -static void __scsi_scan_target(struct device *parent, unsigned int c=
+hannel,
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned int id, unsigned int lun, int =
+rescan)
+> +static struct scsi_target *__scsi_scan_target(struct device *parent,=
+ unsigned int channel,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 unsigned int id, unsigned int lun, int rescan)
+> =A0{
+> =A0 =A0 =A0 =A0struct Scsi_Host *shost =3D dev_to_shost(parent);
+> =A0 =A0 =A0 =A0int bflags =3D 0;
+> @@ -1574,11 +1574,11 @@ static void __scsi_scan_target(struct device =
+*parent, unsigned int channel,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/*
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * Don't scan the host adapter
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 */
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return NULL;
+>
+> =A0 =A0 =A0 =A0starget =3D scsi_alloc_target(parent, channel, id);
+> =A0 =A0 =A0 =A0if (!starget)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return NULL;
+> =A0 =A0 =A0 =A0scsi_autopm_get_target(starget);
+>
+> =A0 =A0 =A0 =A0if (lun !=3D SCAN_WILD_CARD) {
+> @@ -1611,6 +1611,8 @@ static void __scsi_scan_target(struct device *p=
+arent, unsigned int channel,
+> =A0 =A0 =A0 =A0scsi_target_reap(starget);
+>
+> =A0 =A0 =A0 =A0put_device(&starget->dev);
+> +
+> + =A0 =A0 =A0 return starget;
+> =A0}
+>
+> =A0/**
+> @@ -1628,23 +1630,26 @@ static void __scsi_scan_target(struct device =
+*parent, unsigned int channel,
+> =A0* =A0 =A0 First try a REPORT LUN scan, if that does not scan the t=
+arget, do a
+> =A0* =A0 =A0 sequential scan of LUNs on the target id.
+> =A0**/
+> -void scsi_scan_target(struct device *parent, unsigned int channel,
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned int id, unsigned i=
+nt lun, int rescan)
+> +struct scsi_target *scsi_scan_target(struct device *parent, unsigned=
+ int channel,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0unsigned int id, unsigned int lun, int rescan)
+> =A0{
+> =A0 =A0 =A0 =A0struct Scsi_Host *shost =3D dev_to_shost(parent);
+> + =A0 =A0 =A0 struct scsi_target *starget =3D NULL;
+>
+> =A0 =A0 =A0 =A0if (strncmp(scsi_scan_type, "none", 4) =3D=3D 0)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return NULL;
+>
+> =A0 =A0 =A0 =A0mutex_lock(&shost->scan_mutex);
+> =A0 =A0 =A0 =A0if (!shost->async_scan)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0scsi_complete_async_scans();
+>
+> =A0 =A0 =A0 =A0if (scsi_host_scan_allowed(shost) && scsi_autopm_get_h=
+ost(shost) =3D=3D 0) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 __scsi_scan_target(parent, channel, id,=
+ lun, rescan);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 starget =3D __scsi_scan_target(parent, =
+channel, id, lun, rescan);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0scsi_autopm_put_host(shost);
+> =A0 =A0 =A0 =A0}
+> =A0 =A0 =A0 =A0mutex_unlock(&shost->scan_mutex);
+> +
+> + =A0 =A0 =A0 return starget;
+> =A0}
+> =A0EXPORT_SYMBOL(scsi_scan_target);
+>
+> @@ -1714,6 +1719,9 @@ static void scsi_sysfs_add_devices(struct Scsi_=
+Host *shost)
+> =A0{
+> =A0 =A0 =A0 =A0struct scsi_device *sdev;
+> =A0 =A0 =A0 =A0shost_for_each_device(sdev, shost) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* target removed before the device cou=
+ld be added */
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (sdev->sdev_state =3D=3D SDEV_DEL)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 continue;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (!scsi_host_scan_allowed(shost) ||
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0scsi_sysfs_add_sdev(sdev) !=3D=
+ 0)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__scsi_remove_device(s=
+dev);
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 04c2a27..d1293b6 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -993,12 +993,24 @@ void scsi_remove_device(struct scsi_device *sde=
+v)
+> =A0}
+> =A0EXPORT_SYMBOL(scsi_remove_device);
+>
+> -static void __scsi_remove_target(struct scsi_target *starget)
+> +/**
+> + * __scsi_remove_target - explicitly remove a target
+> + * @starget: specific target to be removed
+> + *
+> + * This allows a target to be removed regardless of whether it has b=
+een
+> + * async scanned or not. =A0scsi_remove_target() depends on
+> + * device_for_each_child() and will not enumerate children that have=
+ not
+> + * been through device_add() yet.
+> + */
+> +void __scsi_remove_target(struct scsi_target *starget)
+> =A0{
+> =A0 =A0 =A0 =A0struct Scsi_Host *shost =3D dev_to_shost(starget->dev.=
+parent);
+> =A0 =A0 =A0 =A0unsigned long flags;
+> =A0 =A0 =A0 =A0struct scsi_device *sdev;
+>
+> + =A0 =A0 =A0 if (!starget)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> +
+> =A0 =A0 =A0 =A0spin_lock_irqsave(shost->host_lock, flags);
+> =A0 =A0 =A0 =A0starget->reap_ref++;
+> =A0restart:
+> @@ -1016,6 +1028,7 @@ static void __scsi_remove_target(struct scsi_ta=
+rget *starget)
+> =A0 =A0 =A0 =A0spin_unlock_irqrestore(shost->host_lock, flags);
+> =A0 =A0 =A0 =A0scsi_target_reap(starget);
+> =A0}
+> +EXPORT_SYMBOL_GPL(__scsi_remove_target);
+>
+> =A0static int __remove_child (struct device * dev, void * data)
+> =A0{
+> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_tr=
+ansport_sas.c
+> index f7565fc..3afb38d 100644
+> --- a/drivers/scsi/scsi_transport_sas.c
+> +++ b/drivers/scsi/scsi_transport_sas.c
+> @@ -1592,7 +1592,7 @@ int sas_rphy_add(struct sas_rphy *rphy)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0else
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0lun =3D 0;
+>
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 scsi_scan_target(&rphy->dev, 0, rphy->s=
+csi_target_id, lun, 0);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 rphy->starget =3D scsi_scan_target(&rph=
+y->dev, 0, rphy->scsi_target_id, lun, 0);
+> =A0 =A0 =A0 =A0}
+>
+> =A0 =A0 =A0 =A0return 0;
+> @@ -1669,7 +1669,8 @@ sas_rphy_remove(struct sas_rphy *rphy)
+>
+> =A0 =A0 =A0 =A0switch (rphy->identify.device_type) {
+> =A0 =A0 =A0 =A0case SAS_END_DEVICE:
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 scsi_remove_target(dev);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 __scsi_remove_target(rphy->starget);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 rphy->starget =3D NULL;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> =A0 =A0 =A0 =A0case SAS_EDGE_EXPANDER_DEVICE:
+> =A0 =A0 =A0 =A0case SAS_FANOUT_EXPANDER_DEVICE:
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 6efb2e1..7cd0d75 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -368,12 +368,13 @@ extern int scsi_device_quiesce(struct scsi_devi=
+ce *sdev);
+> =A0extern void scsi_device_resume(struct scsi_device *sdev);
+> =A0extern void scsi_target_quiesce(struct scsi_target *);
+> =A0extern void scsi_target_resume(struct scsi_target *);
+> -extern void scsi_scan_target(struct device *parent, unsigned int cha=
+nnel,
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0unsigned int=
+ id, unsigned int lun, int rescan);
+> +extern struct scsi_target *scsi_scan_target(struct device *parent, u=
+nsigned int channel,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 unsigned int id, unsigned int lun, int rescan);
+> =A0extern void scsi_target_reap(struct scsi_target *);
+> =A0extern void scsi_target_block(struct device *);
+> =A0extern void scsi_target_unblock(struct device *);
+> =A0extern void scsi_remove_target(struct device *);
+> +extern void __scsi_remove_target(struct scsi_target *starget);
+> =A0extern void int_to_scsilun(unsigned int, struct scsi_lun *);
+> =A0extern int scsilun_to_int(struct scsi_lun *);
+> =A0extern const char *scsi_device_state_name(enum scsi_device_state);
+> diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_tr=
+ansport_sas.h
+> index 98b3a20..d98dcef 100644
+> --- a/include/scsi/scsi_transport_sas.h
+> +++ b/include/scsi/scsi_transport_sas.h
+> @@ -93,6 +93,7 @@ struct sas_rphy {
+> =A0 =A0 =A0 =A0struct list_head =A0 =A0 =A0 =A0list;
+> =A0 =A0 =A0 =A0struct request_queue =A0 =A0*q;
+> =A0 =A0 =A0 =A0u32 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 scsi_targe=
+t_id;
+> + =A0 =A0 =A0 struct scsi_target =A0 =A0 =A0*starget;
+> =A0};
+>
+> =A0#define dev_to_rphy(d) \
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
