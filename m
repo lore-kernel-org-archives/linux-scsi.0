@@ -1,15 +1,15 @@
 From: Vasu Dev <vasu.dev@intel.com>
-Subject: [PATCH 3/4] libfc: adds  FCP failures stats
-Date: Fri, 25 May 2012 10:26:48 -0700
-Message-ID: <20120525172648.6980.98620.stgit@localhost6.localdomain6>
+Subject: [PATCH 2/4] libfc: cleanup fcoe_dev_stats
+Date: Fri, 25 May 2012 10:26:43 -0700
+Message-ID: <20120525172643.6980.27273.stgit@localhost6.localdomain6>
 References: <20120525172638.6980.40338.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:20151 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:26289 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755483Ab2EYRm2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754875Ab2EYRm2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 25 May 2012 13:42:28 -0400
 In-Reply-To: <20120525172638.6980.40338.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,73 +17,492 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <james.smart@emulex.com>, devel@open-fcoe.org
 
-Adds stats to track FCP pkt and frame alloc
-failure.
+The libfc is used by fcoe but fcoe agnostic,
+and therefore should not have any fcoe references.
+
+So renaming fcoe_dev_stats from libfc as its for fc_stats.
+After that libfc is fcoe string free except some strings for
+Open-FCoE.org.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Acked-by : Robert Love <robert.w.love@intel.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c |    8 ++++++++
- include/scsi/libfc.h        |    6 ++++++
- 2 files changed, 14 insertions(+), 0 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c  |   10 +++----
+ drivers/scsi/bnx2fc/bnx2fc_io.c    |    4 +--
+ drivers/scsi/fcoe/fcoe.c           |   18 ++++++------
+ drivers/scsi/fcoe/fcoe_ctlr.c      |   13 ++++-----
+ drivers/scsi/fcoe/fcoe_transport.c |   10 +++----
+ drivers/scsi/libfc/fc_exch.c       |    4 +--
+ drivers/scsi/libfc/fc_fcp.c        |    8 +++--
+ drivers/scsi/libfc/fc_frame.c      |    2 +
+ drivers/scsi/libfc/fc_lport.c      |   54 ++++++++++++++++++------------------
+ include/scsi/libfc.h               |   17 +++++------
+ 10 files changed, 69 insertions(+), 71 deletions(-)
 
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index f52f668f..49bd99e 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -286,7 +286,7 @@ static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	struct fcoe_port	*port;
+ 	struct fcoe_hdr		*hp;
+ 	struct bnx2fc_rport	*tgt;
+-	struct fcoe_dev_stats	*stats;
++	struct fc_stats		*stats;
+ 	u8			sof, eof;
+ 	u32			crc;
+ 	unsigned int		hlen, tlen, elen;
+@@ -412,7 +412,7 @@ static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	}
+ 
+ 	/*update tx stats */
+-	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats = per_cpu_ptr(lport->stats, get_cpu());
+ 	stats->TxFrames++;
+ 	stats->TxWords += wlen;
+ 	put_cpu();
+@@ -522,7 +522,7 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 	u32 fr_len;
+ 	struct fc_lport *lport;
+ 	struct fcoe_rcv_info *fr;
+-	struct fcoe_dev_stats *stats;
++	struct fc_stats *stats;
+ 	struct fc_frame_header *fh;
+ 	struct fcoe_crc_eof crc_eof;
+ 	struct fc_frame *fp;
+@@ -551,7 +551,7 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 	skb_pull(skb, sizeof(struct fcoe_hdr));
+ 	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
+ 
+-	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats = per_cpu_ptr(lport->stats, get_cpu());
+ 	stats->RxFrames++;
+ 	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
+ 
+@@ -942,7 +942,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 							FC_PORTTYPE_UNKNOWN;
+ 			mutex_unlock(&lport->lp_mutex);
+ 			fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
+-			per_cpu_ptr(lport->dev_stats,
++			per_cpu_ptr(lport->stats,
+ 				    get_cpu())->LinkFailureCount++;
+ 			put_cpu();
+ 			fcoe_clean_pending_queue(lport);
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 4f7453b..a4fdc3d 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1980,7 +1980,7 @@ int bnx2fc_post_io_req(struct bnx2fc_rport *tgt,
+ 	struct bnx2fc_interface *interface = port->priv;
+ 	struct bnx2fc_hba *hba = interface->hba;
+ 	struct fc_lport *lport = port->lport;
+-	struct fcoe_dev_stats *stats;
++	struct fc_stats *stats;
+ 	int task_idx, index;
+ 	u16 xid;
+ 
+@@ -1991,7 +1991,7 @@ int bnx2fc_post_io_req(struct bnx2fc_rport *tgt,
+ 	io_req->data_xfer_len = scsi_bufflen(sc_cmd);
+ 	sc_cmd->SCp.ptr = (char *)io_req;
+ 
+-	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats = per_cpu_ptr(lport->stats, get_cpu());
+ 	if (sc_cmd->sc_data_direction == DMA_FROM_DEVICE) {
+ 		io_req->io_req_flags = BNX2FC_READ;
+ 		stats->InputRequests++;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index fe30b1b..2b065d2 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1529,7 +1529,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 
+ 	return 0;
+ err:
+-	per_cpu_ptr(lport->dev_stats, get_cpu())->ErrorFrames++;
++	per_cpu_ptr(lport->stats, get_cpu())->ErrorFrames++;
+ 	put_cpu();
+ err2:
+ 	kfree_skb(skb);
+@@ -1569,7 +1569,7 @@ static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	struct ethhdr *eh;
+ 	struct fcoe_crc_eof *cp;
+ 	struct sk_buff *skb;
+-	struct fcoe_dev_stats *stats;
++	struct fc_stats *stats;
+ 	struct fc_frame_header *fh;
+ 	unsigned int hlen;		/* header length implies the version */
+ 	unsigned int tlen;		/* trailer length */
+@@ -1680,7 +1680,7 @@ static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 		skb_shinfo(skb)->gso_size = 0;
+ 	}
+ 	/* update tx stats: regardless if LLD fails */
+-	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats = per_cpu_ptr(lport->stats, get_cpu());
+ 	stats->TxFrames++;
+ 	stats->TxWords += wlen;
+ 	put_cpu();
+@@ -1714,7 +1714,7 @@ static inline int fcoe_filter_frames(struct fc_lport *lport,
+ 	struct fcoe_interface *fcoe;
+ 	struct fc_frame_header *fh;
+ 	struct sk_buff *skb = (struct sk_buff *)fp;
+-	struct fcoe_dev_stats *stats;
++	struct fc_stats *stats;
+ 
+ 	/*
+ 	 * We only check CRC if no offload is available and if it is
+@@ -1745,7 +1745,7 @@ static inline int fcoe_filter_frames(struct fc_lport *lport,
+ 		return 0;
+ 	}
+ 
+-	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats = per_cpu_ptr(lport->stats, get_cpu());
+ 	stats->InvalidCRCCount++;
+ 	if (stats->InvalidCRCCount < 5)
+ 		printk(KERN_WARNING "fcoe: dropping frame with CRC error\n");
+@@ -1762,7 +1762,7 @@ static void fcoe_recv_frame(struct sk_buff *skb)
+ 	u32 fr_len;
+ 	struct fc_lport *lport;
+ 	struct fcoe_rcv_info *fr;
+-	struct fcoe_dev_stats *stats;
++	struct fc_stats *stats;
+ 	struct fcoe_crc_eof crc_eof;
+ 	struct fc_frame *fp;
+ 	struct fcoe_port *port;
+@@ -1793,7 +1793,7 @@ static void fcoe_recv_frame(struct sk_buff *skb)
+ 	 */
+ 	hp = (struct fcoe_hdr *) skb_network_header(skb);
+ 
+-	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats = per_cpu_ptr(lport->stats, get_cpu());
+ 	if (unlikely(FC_FCOE_DECAPS_VER(hp) != FC_FCOE_VER)) {
+ 		if (stats->ErrorFrames < 5)
+ 			printk(KERN_WARNING "fcoe: FCoE version "
+@@ -1970,7 +1970,7 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_interface *fcoe;
+ 	struct fcoe_port *port;
+-	struct fcoe_dev_stats *stats;
++	struct fc_stats *stats;
+ 	u32 link_possible = 1;
+ 	u32 mfs;
+ 	int rc = NOTIFY_OK;
+@@ -2024,7 +2024,7 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 	if (link_possible && !fcoe_link_ok(lport))
+ 		fcoe_ctlr_link_up(ctlr);
+ 	else if (fcoe_ctlr_link_down(ctlr)) {
+-		stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++		stats = per_cpu_ptr(lport->stats, get_cpu());
+ 		stats->LinkFailureCount++;
+ 		put_cpu();
+ 		fcoe_clean_pending_queue(lport);
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index d68d572..2ebe03a 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -788,11 +788,11 @@ static unsigned long fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
+ 	unsigned long deadline;
+ 	unsigned long sel_time = 0;
+ 	struct list_head del_list;
+-	struct fcoe_dev_stats *stats;
++	struct fc_stats *stats;
+ 
+ 	INIT_LIST_HEAD(&del_list);
+ 
+-	stats = per_cpu_ptr(fip->lp->dev_stats, get_cpu());
++	stats = per_cpu_ptr(fip->lp->stats, get_cpu());
+ 
+ 	list_for_each_entry_safe(fcf, next, &fip->fcfs, list) {
+ 		deadline = fcf->time + fcf->fka_period + fcf->fka_period / 2;
+@@ -1104,8 +1104,8 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	struct fc_frame_header *fh = NULL;
+ 	struct fip_desc *desc;
+ 	struct fip_encaps *els;
+-	struct fcoe_dev_stats *stats;
+ 	struct fcoe_fcf *sel;
++	struct fc_stats *stats;
+ 	enum fip_desc_type els_dtype = 0;
+ 	u8 els_op;
+ 	u8 sub;
+@@ -1249,7 +1249,7 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	fr_dev(fp) = lport;
+ 	fr_encaps(fp) = els_dtype;
+ 
+-	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats = per_cpu_ptr(lport->stats, get_cpu());
+ 	stats->RxFrames++;
+ 	stats->RxWords += skb->len / FIP_BPW;
+ 	put_cpu();
+@@ -1353,7 +1353,7 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 						      ntoh24(vp->fd_fc_id));
+ 			if (vn_port && (vn_port == lport)) {
+ 				mutex_lock(&fip->ctlr_mutex);
+-				per_cpu_ptr(lport->dev_stats,
++				per_cpu_ptr(lport->stats,
+ 					    get_cpu())->VLinkFailureCount++;
+ 				put_cpu();
+ 				fcoe_ctlr_reset(fip);
+@@ -1383,8 +1383,7 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 		 * followed by physical port
+ 		 */
+ 		mutex_lock(&fip->ctlr_mutex);
+-		per_cpu_ptr(lport->dev_stats,
+-			    get_cpu())->VLinkFailureCount++;
++		per_cpu_ptr(lport->stats, get_cpu())->VLinkFailureCount++;
+ 		put_cpu();
+ 		fcoe_ctlr_reset(fip);
+ 		mutex_unlock(&fip->ctlr_mutex);
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index b46f43d..861c09f 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -89,7 +89,7 @@ void __fcoe_get_lesb(struct fc_lport *lport,
+ {
+ 	unsigned int cpu;
+ 	u32 lfc, vlfc, mdac;
+-	struct fcoe_dev_stats *devst;
++	struct fc_stats *stats;
+ 	struct fcoe_fc_els_lesb *lesb;
+ 	struct rtnl_link_stats64 temp;
+ 
+@@ -99,10 +99,10 @@ void __fcoe_get_lesb(struct fc_lport *lport,
+ 	lesb = (struct fcoe_fc_els_lesb *)fc_lesb;
+ 	memset(lesb, 0, sizeof(*lesb));
+ 	for_each_possible_cpu(cpu) {
+-		devst = per_cpu_ptr(lport->dev_stats, cpu);
+-		lfc += devst->LinkFailureCount;
+-		vlfc += devst->VLinkFailureCount;
+-		mdac += devst->MissDiscAdvCount;
++		stats = per_cpu_ptr(lport->stats, cpu);
++		lfc += stats->LinkFailureCount;
++		vlfc += stats->VLinkFailureCount;
++		mdac += stats->MissDiscAdvCount;
+ 	}
+ 	lesb->lesb_link_fail = htonl(lfc);
+ 	lesb->lesb_vlink_fail = htonl(vlfc);
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index aceffad..1d0334f 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -124,7 +124,7 @@ struct fc_exch_mgr {
+  * for each anchor to determine if that EM should be used. The last
+  * anchor in the list will always match to handle any exchanges not
+  * handled by other EMs. The non-default EMs would be added to the
+- * anchor list by HW that provides FCoE offloads.
++ * anchor list by HW that provides offloads.
+  */
+ struct fc_exch_mgr_anchor {
+ 	struct list_head ema_list;
+@@ -986,7 +986,7 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
+ 				/*
+ 				 * Update sequence_id based on incoming last
+ 				 * frame of sequence exchange. This is needed
+-				 * for FCoE target where DDP has been used
++				 * for FC target where DDP has been used
+ 				 * on target where, stack is indicated only
+ 				 * about last frame's (payload _header) header.
+ 				 * Whereas "seq_id" which is part of
 diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 5c4c504..3c96e93 100644
+index f735730..5c4c504 100644
 --- a/drivers/scsi/libfc/fc_fcp.c
 +++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -158,6 +158,9 @@ static struct fc_fcp_pkt *fc_fcp_pkt_alloc(struct fc_lport *lport, gfp_t gfp)
- 		fsp->timer.data = (unsigned long)fsp;
- 		INIT_LIST_HEAD(&fsp->list);
- 		spin_lock_init(&fsp->scsi_pkt_lock);
-+	} else {
-+		per_cpu_ptr(lport->stats, get_cpu())->FcpPktAllocFails++;
-+		put_cpu();
- 	}
- 	return fsp;
- }
-@@ -264,6 +267,9 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
- 	if (!fsp->seq_ptr)
- 		return -EINVAL;
+@@ -434,7 +434,7 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ {
+ 	struct scsi_cmnd *sc = fsp->cmd;
+ 	struct fc_lport *lport = fsp->lp;
+-	struct fcoe_dev_stats *stats;
++	struct fc_stats *stats;
+ 	struct fc_frame_header *fh;
+ 	size_t start_offset;
+ 	size_t offset;
+@@ -496,7 +496,7 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
  
-+	per_cpu_ptr(fsp->lp->stats, get_cpu())->FcpPktAborts++;
-+	put_cpu();
+ 		if (~crc != le32_to_cpu(fr_crc(fp))) {
+ crc_err:
+-			stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++			stats = per_cpu_ptr(lport->stats, get_cpu());
+ 			stats->ErrorFrames++;
+ 			/* per cpu count, not total count, but OK for limit */
+ 			if (stats->InvalidCRCCount++ < FC_MAX_ERROR_CNT)
+@@ -1786,7 +1786,7 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
+ 	struct fc_rport_libfc_priv *rpriv;
+ 	int rval;
+ 	int rc = 0;
+-	struct fcoe_dev_stats *stats;
++	struct fc_stats *stats;
+ 
+ 	rval = fc_remote_port_chkready(rport);
+ 	if (rval) {
+@@ -1835,7 +1835,7 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
+ 	/*
+ 	 * setup the data direction
+ 	 */
+-	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats = per_cpu_ptr(lport->stats, get_cpu());
+ 	if (sc_cmd->sc_data_direction == DMA_FROM_DEVICE) {
+ 		fsp->req_flags = FC_SRB_READ;
+ 		stats->InputRequests++;
+diff --git a/drivers/scsi/libfc/fc_frame.c b/drivers/scsi/libfc/fc_frame.c
+index 981329a..0382ac0 100644
+--- a/drivers/scsi/libfc/fc_frame.c
++++ b/drivers/scsi/libfc/fc_frame.c
+@@ -49,7 +49,7 @@ u32 fc_frame_crc_check(struct fc_frame *fp)
+ EXPORT_SYMBOL(fc_frame_crc_check);
+ 
+ /*
+- * Allocate a frame intended to be sent via fcoe_xmit.
++ * Allocate a frame intended to be sent.
+  * Get an sk_buff for the frame and set the length.
+  */
+ struct fc_frame *_fc_frame_alloc(size_t len)
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index c1402fb..3e8c48d 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -299,47 +299,47 @@ EXPORT_SYMBOL(fc_get_host_speed);
+  */
+ struct fc_host_statistics *fc_get_host_stats(struct Scsi_Host *shost)
+ {
+-	struct fc_host_statistics *fcoe_stats;
++	struct fc_host_statistics *fc_stats;
+ 	struct fc_lport *lport = shost_priv(shost);
+ 	struct timespec v0, v1;
+ 	unsigned int cpu;
+ 	u64 fcp_in_bytes = 0;
+ 	u64 fcp_out_bytes = 0;
+ 
+-	fcoe_stats = &lport->host_stats;
+-	memset(fcoe_stats, 0, sizeof(struct fc_host_statistics));
++	fc_stats = &lport->host_stats;
++	memset(fc_stats, 0, sizeof(struct fc_host_statistics));
+ 
+ 	jiffies_to_timespec(jiffies, &v0);
+ 	jiffies_to_timespec(lport->boot_time, &v1);
+-	fcoe_stats->seconds_since_last_reset = (v0.tv_sec - v1.tv_sec);
++	fc_stats->seconds_since_last_reset = (v0.tv_sec - v1.tv_sec);
+ 
+ 	for_each_possible_cpu(cpu) {
+-		struct fcoe_dev_stats *stats;
+-
+-		stats = per_cpu_ptr(lport->dev_stats, cpu);
+-
+-		fcoe_stats->tx_frames += stats->TxFrames;
+-		fcoe_stats->tx_words += stats->TxWords;
+-		fcoe_stats->rx_frames += stats->RxFrames;
+-		fcoe_stats->rx_words += stats->RxWords;
+-		fcoe_stats->error_frames += stats->ErrorFrames;
+-		fcoe_stats->invalid_crc_count += stats->InvalidCRCCount;
+-		fcoe_stats->fcp_input_requests += stats->InputRequests;
+-		fcoe_stats->fcp_output_requests += stats->OutputRequests;
+-		fcoe_stats->fcp_control_requests += stats->ControlRequests;
++		struct fc_stats *stats;
 +
- 	fsp->state |= FC_SRB_ABORT_PENDING;
- 	return fsp->lp->tt.seq_exch_abort(fsp->seq_ptr, 0);
++		stats = per_cpu_ptr(lport->stats, cpu);
++
++		fc_stats->tx_frames += stats->TxFrames;
++		fc_stats->tx_words += stats->TxWords;
++		fc_stats->rx_frames += stats->RxFrames;
++		fc_stats->rx_words += stats->RxWords;
++		fc_stats->error_frames += stats->ErrorFrames;
++		fc_stats->invalid_crc_count += stats->InvalidCRCCount;
++		fc_stats->fcp_input_requests += stats->InputRequests;
++		fc_stats->fcp_output_requests += stats->OutputRequests;
++		fc_stats->fcp_control_requests += stats->ControlRequests;
+ 		fcp_in_bytes += stats->InputBytes;
+ 		fcp_out_bytes += stats->OutputBytes;
+-		fcoe_stats->link_failure_count += stats->LinkFailureCount;
++		fc_stats->link_failure_count += stats->LinkFailureCount;
+ 	}
+-	fcoe_stats->fcp_input_megabytes = div_u64(fcp_in_bytes, 1000000);
+-	fcoe_stats->fcp_output_megabytes = div_u64(fcp_out_bytes, 1000000);
+-	fcoe_stats->lip_count = -1;
+-	fcoe_stats->nos_count = -1;
+-	fcoe_stats->loss_of_sync_count = -1;
+-	fcoe_stats->loss_of_signal_count = -1;
+-	fcoe_stats->prim_seq_protocol_err_count = -1;
+-	fcoe_stats->dumped_frames = -1;
+-	return fcoe_stats;
++	fc_stats->fcp_input_megabytes = div_u64(fcp_in_bytes, 1000000);
++	fc_stats->fcp_output_megabytes = div_u64(fcp_out_bytes, 1000000);
++	fc_stats->lip_count = -1;
++	fc_stats->nos_count = -1;
++	fc_stats->loss_of_sync_count = -1;
++	fc_stats->loss_of_signal_count = -1;
++	fc_stats->prim_seq_protocol_err_count = -1;
++	fc_stats->dumped_frames = -1;
++	return fc_stats;
  }
-@@ -420,6 +426,8 @@ static inline struct fc_frame *fc_fcp_frame_alloc(struct fc_lport *lport,
- 	if (likely(fp))
- 		return fp;
+ EXPORT_SYMBOL(fc_get_host_stats);
  
-+	per_cpu_ptr(lport->stats, get_cpu())->FcpFrameAllocFails++;
-+	put_cpu();
- 	/* error case */
- 	fc_fcp_can_queue_ramp_down(lport);
- 	return NULL;
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index ea52ca2..f257a74 100644
+index 8f9dfba..ea52ca2 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -232,6 +232,9 @@ struct fc_rport_priv {
-  * @RxWords:               Number of received words
-  * @ErrorFrames:           Number of received error frames
-  * @DumpedFrames:          Number of dumped frames
-+ * @FcpPktAllocFails:      Number of fcp packet allocation failures
-+ * @FcpPktAborts:          Number of fcp packet aborts
-+ * @FcpFrameAllocFails:    Number of fcp frame allocation failures
-  * @LinkFailureCount:      Number of link failures
-  * @LossOfSignalCount:     Number for signal losses
-  * @InvalidTxWordCount:    Number of invalid transmitted words
-@@ -252,6 +255,9 @@ struct fc_stats {
- 	u64		RxWords;
- 	u64		ErrorFrames;
- 	u64		DumpedFrames;
-+	u64		FcpPktAllocFails;
-+	u64		FcpPktAborts;
-+	u64		FcpFrameAllocFails;
- 	u64		LinkFailureCount;
- 	u64		LossOfSignalCount;
- 	u64		InvalidTxWordCount;
+@@ -224,7 +224,7 @@ struct fc_rport_priv {
+ };
+ 
+ /**
+- * struct fcoe_dev_stats - fcoe stats structure
++ * struct fc_stats - fc stats structure
+  * @SecondsSinceLastReset: Seconds since the last reset
+  * @TxFrames:              Number of transmitted frames
+  * @TxWords:               Number of transmitted words
+@@ -244,7 +244,7 @@ struct fc_rport_priv {
+  * @VLinkFailureCount:     Number of virtual link failures
+  * @MissDiscAdvCount:      Number of missing FIP discovery advertisement
+  */
+-struct fcoe_dev_stats {
++struct fc_stats {
+ 	u64		SecondsSinceLastReset;
+ 	u64		TxFrames;
+ 	u64		TxWords;
+@@ -510,7 +510,7 @@ struct libfc_function_template {
+ 	int (*ddp_done)(struct fc_lport *, u16);
+ 	/*
+ 	 * Sets up the DDP context for a given exchange id on the given
+-	 * scatterlist if LLD supports DDP for FCoE target.
++	 * scatterlist if LLD supports DDP for target.
+ 	 *
+ 	 * STATUS: OPTIONAL
+ 	 */
+@@ -817,8 +817,7 @@ enum fc_lport_event {
+  * @state:                 Identifies the state
+  * @boot_time:             Timestamp indicating when the local port came online
+  * @host_stats:            SCSI host statistics
+- * @dev_stats:             FCoE device stats (TODO: libfc should not be
+- *                         FCoE aware)
++ * @stats:                 FC local port stats (TODO separate libfc LLD stats)
+  * @retry_count:           Number of retries in the current state
+  * @port_id:               FC Port ID
+  * @wwpn:                  World Wide Port Name
+@@ -867,7 +866,7 @@ struct fc_lport {
+ 	enum fc_lport_state	       state;
+ 	unsigned long		       boot_time;
+ 	struct fc_host_statistics      host_stats;
+-	struct fcoe_dev_stats __percpu *dev_stats;
++	struct fc_stats	__percpu       *stats;
+ 	u8			       retry_count;
+ 
+ 	/* Fabric information */
+@@ -980,8 +979,8 @@ static inline void fc_lport_state_enter(struct fc_lport *lport,
+  */
+ static inline int fc_lport_init_stats(struct fc_lport *lport)
+ {
+-	lport->dev_stats = alloc_percpu(struct fcoe_dev_stats);
+-	if (!lport->dev_stats)
++	lport->stats = alloc_percpu(struct fc_stats);
++	if (!lport->stats)
+ 		return -ENOMEM;
+ 	return 0;
+ }
+@@ -992,7 +991,7 @@ static inline int fc_lport_init_stats(struct fc_lport *lport)
+  */
+ static inline void fc_lport_free_stats(struct fc_lport *lport)
+ {
+-	free_percpu(lport->dev_stats);
++	free_percpu(lport->stats);
+ }
+ 
+ /**
 
