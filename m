@@ -1,98 +1,44 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [Resend PATCH v2] scsi_lib: rate-limit the error message from failing
- commands
-Date: Fri, 25 May 2012 14:29:34 -0700
-Message-ID: <20120525212933.3366.51338.stgit@localhost6.localdomain6>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Re: [Resend PATCH v2] scsi_lib: rate-limit the error message from
+ failing commands
+Date: Fri, 25 May 2012 21:41:32 +0000
+Message-ID: <4FBFFC8C.3060301@intel.com>
+References: <20120525212933.3366.51338.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39661 "EHLO mga11.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:16901 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751136Ab2EYVae (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 May 2012 17:30:34 -0400
+	id S1751492Ab2EYVle (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 May 2012 17:41:34 -0400
+In-Reply-To: <20120525212933.3366.51338.stgit@localhost6.localdomain6>
+Content-Language: en-US
+Content-ID: <81BBD93711E9FA4A91C02EA020E7801B@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@kernel.dk, linux-scsi@vger.kernel.org
-Cc: Tomas Henzl <thenzl@redhat.com>, Yi Zou <yi.zou@intel.com>
+To: "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Tomas Henzl <thenzl@redhat.com>, "Zou, Yi" <yi.zou@intel.com>
 
-From: Yi Zou <yi.zou@intel.com>
-
-When performing a cable pull test w/ active stress I/O using fio over
-a dual port Intel 82599 FCoE CNA, w/ 256LUNs on one port and about 32LUNs
-on the other, it is observed that the system becomes not usable due to
-scsi-ml being busy printing the error messages for all the failing commands.
-I don't believe this problem is specific to FCoE and these commands are
-anyway failing due to link being down (DID_NO_CONNECT), just rate-limit
-the messages here to solve this issue.
-
-v2->v1: use __ratelimit() as Tomas Henzl mentioned as the proper way for
-rate-limit per function. However, in this case, the failed i/o gets to
-blk_end_request_err() and then blk_update_request(), which also has to
-be rate-limited, as added in the v2 of this patch.
-
-Signed-off-by: Yi Zou <yi.zou@intel.com>
-Acked-by: Tomas Henzl <thenzl@redhat.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
- block/blk-core.c        |    8 +++++---
- drivers/scsi/scsi_lib.c |    5 ++++-
- 2 files changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 1f61b74..c1f1c3a 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -29,6 +29,7 @@
- #include <linux/fault-inject.h>
- #include <linux/list_sort.h>
- #include <linux/delay.h>
-+#include <linux/ratelimit.h>
- 
- #define CREATE_TRACE_POINTS
- #include <trace/events/block.h>
-@@ -2133,9 +2134,10 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
- 			error_type = "I/O";
- 			break;
- 		}
--		printk(KERN_ERR "end_request: %s error, dev %s, sector %llu\n",
--		       error_type, req->rq_disk ? req->rq_disk->disk_name : "?",
--		       (unsigned long long)blk_rq_pos(req));
-+		printk_ratelimited(KERN_ERR "end_request: %s error, dev %s, "
-+				   "sector %llu\n", error_type, req->rq_disk ?
-+				   req->rq_disk->disk_name : "?",
-+				   (unsigned long long)blk_rq_pos(req));
- 	}
- 
- 	blk_account_io_completion(req, nr_bytes);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5dfd749..48ef90c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -20,6 +20,7 @@
- #include <linux/delay.h>
- #include <linux/hardirq.h>
- #include <linux/scatterlist.h>
-+#include <linux/ratelimit.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -745,6 +746,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
- 	      ACTION_DELAYED_RETRY} action;
- 	char *description = NULL;
-+	static DEFINE_RATELIMIT_STATE(rs,  DEFAULT_RATELIMIT_INTERVAL,
-+				      DEFAULT_RATELIMIT_BURST);
- 
- 	if (result) {
- 		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
-@@ -935,7 +938,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	case ACTION_FAIL:
- 		/* Give up and fail the remainder of the request */
- 		scsi_release_buffers(cmd);
--		if (!(req->cmd_flags & REQ_QUIET)) {
-+		if (!(req->cmd_flags & REQ_QUIET) && __ratelimit(&rs)) {
- 			if (description)
- 				scmd_printk(KERN_INFO, cmd, "%s\n",
- 					    description);
-
+T24gMDUvMjUvMjAxMiAwMjoyOSBQTSwgUm9iZXJ0IExvdmUgd3JvdGU6DQo+IEZyb206IFlpIFpv
+dSA8eWkuem91QGludGVsLmNvbT4NCj4NCj4gV2hlbiBwZXJmb3JtaW5nIGEgY2FibGUgcHVsbCB0
+ZXN0IHcvIGFjdGl2ZSBzdHJlc3MgSS9PIHVzaW5nIGZpbyBvdmVyDQo+IGEgZHVhbCBwb3J0IElu
+dGVsIDgyNTk5IEZDb0UgQ05BLCB3LyAyNTZMVU5zIG9uIG9uZSBwb3J0IGFuZCBhYm91dCAzMkxV
+TnMNCj4gb24gdGhlIG90aGVyLCBpdCBpcyBvYnNlcnZlZCB0aGF0IHRoZSBzeXN0ZW0gYmVjb21l
+cyBub3QgdXNhYmxlIGR1ZSB0bw0KPiBzY3NpLW1sIGJlaW5nIGJ1c3kgcHJpbnRpbmcgdGhlIGVy
+cm9yIG1lc3NhZ2VzIGZvciBhbGwgdGhlIGZhaWxpbmcgY29tbWFuZHMuDQo+IEkgZG9uJ3QgYmVs
+aWV2ZSB0aGlzIHByb2JsZW0gaXMgc3BlY2lmaWMgdG8gRkNvRSBhbmQgdGhlc2UgY29tbWFuZHMg
+YXJlDQo+IGFueXdheSBmYWlsaW5nIGR1ZSB0byBsaW5rIGJlaW5nIGRvd24gKERJRF9OT19DT05O
+RUNUKSwganVzdCByYXRlLWxpbWl0DQo+IHRoZSBtZXNzYWdlcyBoZXJlIHRvIHNvbHZlIHRoaXMg
+aXNzdWUuDQo+DQo+IHYyLT52MTogdXNlIF9fcmF0ZWxpbWl0KCkgYXMgVG9tYXMgSGVuemwgbWVu
+dGlvbmVkIGFzIHRoZSBwcm9wZXIgd2F5IGZvcg0KPiByYXRlLWxpbWl0IHBlciBmdW5jdGlvbi4g
+SG93ZXZlciwgaW4gdGhpcyBjYXNlLCB0aGUgZmFpbGVkIGkvbyBnZXRzIHRvDQo+IGJsa19lbmRf
+cmVxdWVzdF9lcnIoKSBhbmQgdGhlbiBibGtfdXBkYXRlX3JlcXVlc3QoKSwgd2hpY2ggYWxzbyBo
+YXMgdG8NCj4gYmUgcmF0ZS1saW1pdGVkLCBhcyBhZGRlZCBpbiB0aGUgdjIgb2YgdGhpcyBwYXRj
+aC4NCj4NCj4gU2lnbmVkLW9mZi1ieTogWWkgWm91IDx5aS56b3VAaW50ZWwuY29tPg0KPiBBY2tl
+ZC1ieTogVG9tYXMgSGVuemwgPHRoZW56bEByZWRoYXQuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBS
+b2JlcnQgTG92ZSA8cm9iZXJ0LncubG92ZUBpbnRlbC5jb20+DQoNCkhpIEplbnMsDQoNCiAgIEkg
+dGhpbmsgSmFtZXMgbWF5IGJlIHdhaXRpbmcgZm9yIGFuIEFjayBmcm9tIHlvdSBiZWZvcmUgY29t
+bWl0dGluZw0KdGhpcyBwYXRjaC4gVGhlIG9yaWdpbmFsIHBhdGNoIHN1Ym1pc3Npb24gd2Fzbid0
+IHNlbnQgdG8geW91LiBJJ20ganVzdA0KcmVzZW5kaW5nIHNvIHRoYXQgaXQgbWlnaHQgZ2V0IHlv
+dXIgYXR0ZW50aW9uLg0KDQpUaGFua3MsIC8vUm9i
