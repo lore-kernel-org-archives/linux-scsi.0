@@ -1,64 +1,98 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 3.4.0-02580-g72c04af regression on sparc64 - partitions not recognized
-Date: Fri, 25 May 2012 21:27:21 +0200
-Message-ID: <201205252127.21436.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1205251034190.1907-100000@iolanthe.rowland.org>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [Resend PATCH v2] scsi_lib: rate-limit the error message from failing
+ commands
+Date: Fri, 25 May 2012 14:29:34 -0700
+Message-ID: <20120525212933.3366.51338.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1205251034190.1907-100000@iolanthe.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <jejbbe@hansenpartnership.com>, Dan Williams <dan.j.williams@intel.com>, David Miller <davem@davemloft.net>, mroos@linux.ee, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Arjan van de Ven <arjan@infradead.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:39661 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751136Ab2EYVae (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 May 2012 17:30:34 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: axboe@kernel.dk, linux-scsi@vger.kernel.org
+Cc: Tomas Henzl <thenzl@redhat.com>, Yi Zou <yi.zou@intel.com>
 
-On Friday, May 25, 2012, Alan Stern wrote:
-> On Fri, 25 May 2012, James Bottomley wrote:
-> 
-> > > > This is actually looks wrong: it works if SCSI is built in, but it's a
-> > > > nop if SCSI is a module (the nop function is gated by the else clause of
-> > > > #ifdef CONFIG_SCSI)
-> > > > 
-> > > > Rafael, you added this not via the SCSI tree,
-> > > 
-> > > That's correct, it was committed directly by Linus.
-> > > 
-> > > > is that the intention?
-> > > 
-> > > Pretty much it is.
-> > > 
-> > > The code snippet is slightly out of context and it is a part of the
-> > > software_resume() routine, which is only called when the kernel's built-in
-> > > image reading code checks whether or not the image is present.  It won't
-> > > work anyway if SCSI is not built in.
-> > 
-> > I don't understand this.
-> > 
-> > Why would it make a difference whether SCSI is modular at hybernation
-> > resume time?  The reason it makes a difference at boot time is because
-> > there's no initrd to wait for the scans and mount the root if we're not
-> > modular, so the init path has to do it.  However, when resuming an
-> > image, the module is already loaded into that image, so there should be
-> > no difference at all between steps taken in the modular and non-modular
-> > cases.
-> 
-> I think Rafael is referring to the boot kernel -- the one that reads in
-> the hibernation image initially.
+From: Yi Zou <yi.zou@intel.com>
 
-That's correct.
+When performing a cable pull test w/ active stress I/O using fio over
+a dual port Intel 82599 FCoE CNA, w/ 256LUNs on one port and about 32LUNs
+on the other, it is observed that the system becomes not usable due to
+scsi-ml being busy printing the error messages for all the failing commands.
+I don't believe this problem is specific to FCoE and these commands are
+anyway failing due to link being down (DID_NO_CONNECT), just rate-limit
+the messages here to solve this issue.
 
-> Whether or not the boot kernel can have modular drivers isn't clear to me;
+v2->v1: use __ratelimit() as Tomas Henzl mentioned as the proper way for
+rate-limit per function. However, in this case, the failed i/o gets to
+blk_end_request_err() and then blk_update_request(), which also has to
+be rate-limited, as added in the v2 of this patch.
 
-It can, but then the code in question is irrelevant and the resume has to
-be triggered in a different way.  For example, by writing to
-/sys/power/resume from the initrd boot scripts.
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Acked-by: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
+---
+ block/blk-core.c        |    8 +++++---
+ drivers/scsi/scsi_lib.c |    5 ++++-
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-> I don't know when the check for a valid image in the swap area is carried
-> out in relation to starting up the initramfs task.
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 1f61b74..c1f1c3a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -29,6 +29,7 @@
+ #include <linux/fault-inject.h>
+ #include <linux/list_sort.h>
+ #include <linux/delay.h>
++#include <linux/ratelimit.h>
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/block.h>
+@@ -2133,9 +2134,10 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
+ 			error_type = "I/O";
+ 			break;
+ 		}
+-		printk(KERN_ERR "end_request: %s error, dev %s, sector %llu\n",
+-		       error_type, req->rq_disk ? req->rq_disk->disk_name : "?",
+-		       (unsigned long long)blk_rq_pos(req));
++		printk_ratelimited(KERN_ERR "end_request: %s error, dev %s, "
++				   "sector %llu\n", error_type, req->rq_disk ?
++				   req->rq_disk->disk_name : "?",
++				   (unsigned long long)blk_rq_pos(req));
+ 	}
+ 
+ 	blk_account_io_completion(req, nr_bytes);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 5dfd749..48ef90c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -20,6 +20,7 @@
+ #include <linux/delay.h>
+ #include <linux/hardirq.h>
+ #include <linux/scatterlist.h>
++#include <linux/ratelimit.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -745,6 +746,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
+ 	      ACTION_DELAYED_RETRY} action;
+ 	char *description = NULL;
++	static DEFINE_RATELIMIT_STATE(rs,  DEFAULT_RATELIMIT_INTERVAL,
++				      DEFAULT_RATELIMIT_BURST);
+ 
+ 	if (result) {
+ 		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
+@@ -935,7 +938,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	case ACTION_FAIL:
+ 		/* Give up and fail the remainder of the request */
+ 		scsi_release_buffers(cmd);
+-		if (!(req->cmd_flags & REQ_QUIET)) {
++		if (!(req->cmd_flags & REQ_QUIET) && __ratelimit(&rs)) {
+ 			if (description)
+ 				scmd_printk(KERN_INFO, cmd, "%s\n",
+ 					    description);
 
-This particular one is carried out before the initrd is loaded.
-
-Thanks,
-Rafael
