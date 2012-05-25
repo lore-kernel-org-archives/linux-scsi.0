@@ -1,63 +1,54 @@
-From: info@turerceviri.com
-Subject: Tercume edilecek metinleriniz hakkinda
-Date: 23 May 2012 16:14:22 +0300
-Message-ID: <20120523161421.BB9A34A818C4BAAB@turerceviri.com>
-Reply-To: info@turerceviri.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: fix async probe regression
+Date: Fri, 25 May 2012 18:05:07 +0100
+Message-ID: <1337965507.2932.39.camel@dabdike.int.hansenpartnership.com>
+References: <20120525163529.28315.92813.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from st.linesis.com ([89.107.229.69]:2275 "EHLO
-	mail.akademikceviri.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756553Ab2EYQxc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 May 2012 12:53:32 -0400
-Received: from turerceviri.com ([46.197.236.43])
-        by mail.akademikceviri.com (Merak 8.0.3) with ASMTP id OVS62184
-        for <linux-scsi@vger.kernel.org>; Wed, 23 May 2012 06:14:16 -0700
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120525163529.28315.92813.stgit@dwillia2-linux.jf.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Meelis Roos <mroos@linux.ee>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, David Miller <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Sayin ilgili,
-=20
-Biz 10 yili askin bir s=FCredir internet =FCzerinden profesyonel olarak
-CEVIRI / TERCUME HIZMETLERI veren bir kurulusuz. Kurulusumuzun 10. yili=
- =20
-serefine firmalara ozel, sayfasi 12 TL+KDV'lik bir kampanya hazirladik.
+On Fri, 2012-05-25 at 09:39 -0700, Dan Williams wrote:
+> Commit a7a20d1 "[SCSI] sd: limit the scope of the async probe domain"
+> moved sd probe work out of reach of wait_for_device_probe().  Allow it
+> to be synced via scsi_complete_async_scans().
+> 
+> Cc: David Miller <davem@davemloft.net>
+> Cc: Alan Stern <stern@rowland.harvard.edu>
+> Reported-by: Meelis Roos <mroos@linux.ee>
+> Tested-by: Meelis Roos <mroos@linux.ee>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+> 
+>  So this is the stop gap that allows us to keep a7a20d1 as a fix for a
+>  resume deadlock, and gives us time to figure out how to clarify
+>  async_synchronize_full() properly in the 3.6 timeframe.
+> 
+>  drivers/scsi/scsi_scan.c |   12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 01b0374..41f9192 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -141,13 +141,13 @@ struct async_scan_data {
+>   * started scanning after this function was called may or may not have
+>   * finished.
+>   */
+> -int scsi_complete_async_scans(void)
+> +static void __scsi_complete_async_scans(void)
 
-Sadece INGILIZCE - TURKCE ve TURKCE - INGILIZCE cevirilerde gecerli ola=
-n ve=20
-kisa bir sure=20
-devam edecek bu cazip fiyat avantajindan yararlanmak icin
-lutfen bizi hemen simdi arayiniz veya bir e-posta gonderiniz. Diger dil=
-ler=20
-icin lutfen fiyat sorunuz.
+Rather than wrappering the function, can we just fix it?
 
-Not: 1 sayfa =3D 1000 karakter veya 180 kelimelik dunya standardi=20
-esas alinmistir. Teknik metinlerde %25 fark alinacaktir. Diger diller i=
-cin=20
-lutfen fiyat aliniz.
+Put the async_synchronize_full_domain(&scsi_sd_probe_domain); at the
+bottom with an out: label and make the only other return in the function
+become a goto out;
 
-Saygilarimizla,
-=20
-Levent Turer, =20
-Genel Koordinator
-Turer Ceviri Hizmetleri
+Thanks,
 
-e-posta: info@turerceviri.com=20
-web: www.turerceviri.com=20
-Tel: 0232 421 13 60
-=46aks: 0232 421 13 32
-
-Bu e-mail size otomatik olarak, yani bir reklam amaciyla rastgele=20
-gonderilmemistir.  Eger bizden bu veya benzeri bir konuda=20
-bir daha e-posta almak istemiyorsaniz, lutfen bize bildiriniz. Size=20
-rahatsizlik=20
-verdiysek ozurlerimizi sunariz...
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
