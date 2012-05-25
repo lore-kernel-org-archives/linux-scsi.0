@@ -1,49 +1,74 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC] How to fix an async scan - 'rmmod --wait' race?
-Date: Fri, 25 May 2012 11:46:19 -0700
-Message-ID: <CAA9_cmd1DF_SxJOjzZj9zFEzsbOQuq+7KQAJ56SvOuRLC-QwDQ@mail.gmail.com>
-References: <4F7DA4F8.90104@redhat.com>
-	<4F86CF34.2000906@redhat.com>
-	<4F8EF05F.8080307@redhat.com>
-	<1337244177.2926.21.camel@dabdike.int.hansenpartnership.com>
-	<4FB4BCEB.60506@acm.org>
-	<1337245278.30498.2.camel@dabdike.int.hansenpartnership.com>
-	<4FB51086.3060406@redhat.com>
-	<1337681133.2932.4.camel@dabdike.int.hansenpartnership.com>
-	<4FBFA18E.9040904@redhat.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH 1/4] async: introduce 'async_domain' type
+Date: Fri, 25 May 2012 21:23:27 +0200
+Message-ID: <201205252123.27869.rjw@sisk.pl>
+References: <20120525074813.21933.91876.stgit@dwillia2-linux.jf.intel.com> <CABE8wwtfW0FusNuOEmwMxZLVMTVSj0R9HCA5xLWidrgj_7Ax+A@mail.gmail.com> <1337935700.2932.18.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:52719 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932430Ab2EYSqU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 May 2012 14:46:20 -0400
-Received: by gglu4 with SMTP id u4so1070259ggl.19
-        for <linux-scsi@vger.kernel.org>; Fri, 25 May 2012 11:46:19 -0700 (PDT)
-In-Reply-To: <4FBFA18E.9040904@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1337935700.2932.18.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, mroos@linux.ee, linux-scsi@vger.kernel.org, Mark Brown <broonie@opensource.wolfsonmicro.com>, linux-kernel@vger.kernel.org, Arjan van de Ven <arjan@linux.intel.com>, Liam Girdwood <lrg@ti.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Bart Van Assche <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Mike Christie <mchristi@redhat.com>, stefanr@s5r6.in-berlin.de
 
-On Fri, May 25, 2012 at 8:13 AM, Tomas Henzl <thenzl@redhat.com> wrote:
-> May 25 04:25:54 localhost kernel: [ =A0461.525209] BUG: unable to han=
-dle kernel NULL pointer dereference at 0000000000000079
-> May 25 04:25:54 localhost kernel: [ =A0461.525242] IP: [<ffffffff811f=
-0c45>] sysfs_create_dir+0x35/0xc0
+On Friday, May 25, 2012, James Bottomley wrote:
+> On Fri, 2012-05-25 at 01:18 -0700, Dan Williams wrote:
+> > On Fri, May 25, 2012 at 12:51 AM, James Bottomley
+> > <James.Bottomley@hansenpartnership.com> wrote:
+> > > On Fri, 2012-05-25 at 00:50 -0700, Dan Williams wrote:
+> > >> This is in preparation for teaching async_synchronize_full() to sync all
+> > >> pending async work, and not just on the async_running domain.  This
+> > >> conversion is functionally equivalent, just embedding the existing list
+> > >> in a new async_domain type.
+> > >
+> > > This looks good, but I want Arjan and others who invented the async code
+> > > to speed up boot to comment on all of this.  What was the intention of
+> > > async_synchronize_full() and if it wasn't to synchronise all domains,
+> > > should we fix the documentation and add a new primitive to do that,
+> > > since boot clearly assumes the all domains behaviour.
+> > >
+> > > In the mean time, this is probably all a bit much for a merge window, so
+> > > I'll revert
+> > >
+> > > commit a7a20d103994fd760766e6c9d494daa569cbfe06
+> > > Author: Dan Williams <dan.j.williams@intel.com>
+> > > Date:   Thu Mar 22 17:05:11 2012 -0700
+> > >
+> > >    [SCSI] sd: limit the scope of the async probe domain
+> > >
+> > > And we'll put whatever is chosen in early for the next merge window.
+> > >
+> > 
+> > Makes sense... but could also go ahead with the smaller fix I posted
+> > for 3.5.  Meelis confirms it is working.
+> 
+> OK, that's what I hadn't seen.  I can't think of another way we could
+> fail at the moment, except in suspend/resume because the
+> scsi_complete_async_scans will be a nop. Can someone test the
+> suspend/resume case?
+> 
+> 
+> There is actually one good thing to come out of this:  Rafael's commit
+> 
+> commit c751085943362143f84346d274e0011419c84202
+> Author: Rafael J. Wysocki <rjw@sisk.pl>
+> Date:   Sun Apr 12 20:06:56 2009 +0200
+> 
+>     PM/Hibernate: Wait for SCSI devices scan to complete during resume
+> 
+> Actually broke the scsi_wait_scan module, because for modular SCSI
+> (which is effectively all distributions) its scsi_complete_async_scans()
+> is also a nop.  I assume this means that no distributions rely on it any
+> more and we can remove it?
 
-Have a look at:
+Well, there still are users who build their own kernels ...
 
-http://marc.info/?l=3Dlinux-scsi&m=3D133793175125892&w=3D2
+The problem was that when we had started to do the async scan, resume from
+hibernation stopped working for the poeple who _had_ built-in SCSI and the
+commit above was meant to address that.
 
-=2E..it addresses tearing down targets before they are added which
-appears to be the signature here.
-
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Rafael
