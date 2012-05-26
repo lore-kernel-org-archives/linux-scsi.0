@@ -1,32 +1,54 @@
-From: "robothroli company" <info@cagle.com>
-Subject: (unknown)
-Date: Fri, 25 May 2012 14:45:54 +0100
-Message-ID: <1179bde6ebe1caaacb0dddb6780534c7.squirrel__40368.1772797883$1337992502$gmane$org@mail.cafconc.cd>
-Reply-To: robothroli@gmail.com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC PATCH] scsi: fix hot unplug vs async scan race
+Date: Fri, 25 May 2012 23:52:21 -0500
+Message-ID: <4FC06185.10003@cs.wisc.edu>
+References: <20120525075352.27883.81838.stgit@dwillia2-linux.jf.intel.com> <CAA9_cme9j7n726kOxOupJLd4Tajjic8QwLA_LXk21B7YEH15BA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [217.171.93.200] ([217.171.93.200]:58914 "EHLO mail.cafconc.cd"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753273Ab2EZAeo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 May 2012 20:34:44 -0400
-Subject: 
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:58472 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750868Ab2EZEwk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 26 May 2012 00:52:40 -0400
+In-Reply-To: <CAA9_cme9j7n726kOxOupJLd4Tajjic8QwLA_LXk21B7YEH15BA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, Robert Love <robert.w.love@intel.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Kashyap Desai <kashyap.desai@lsi.com>, Matthew Wilcox <matthew@wil.cx>, Dariusz Majchrzak <dariusz.majchrzak@intel.com>
 
+On 05/25/2012 10:34 AM, Dan Williams wrote:
+>> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+>> index f7565fc..3afb38d 100644
+>> --- a/drivers/scsi/scsi_transport_sas.c
+>> +++ b/drivers/scsi/scsi_transport_sas.c
+>> @@ -1592,7 +1592,7 @@ int sas_rphy_add(struct sas_rphy *rphy)
+>>                else
+>>                        lun = 0;
+>>
+>> -               scsi_scan_target(&rphy->dev, 0, rphy->scsi_target_id, lun, 0);
+>> +               rphy->starget = scsi_scan_target(&rphy->dev, 0, rphy->scsi_target_id, lun, 0);
+>>        }
+>>
+>>        return 0;
+>> @@ -1669,7 +1669,8 @@ sas_rphy_remove(struct sas_rphy *rphy)
+>>
+>>        switch (rphy->identify.device_type) {
+>>        case SAS_END_DEVICE:
+>> -               scsi_remove_target(dev);
+>> +               __scsi_remove_target(rphy->starget);
+>> +               rphy->starget = NULL;
+>>                break;
 
- i am robothroli, Purchase manager from roli Merchant Ltd. We are
-Import/export Company based in taiwan. We are interested in purchasing
-your product and I would like to make an inquiry. Please inform me on:
+I do not think it is safe to have the starget pointer on the phy and
+then pass it to scsi_remove_target. If you did
 
-Sample availability and price
-Minimum order quantity
-FOB Prices
+for each device
+	echo 1 > /sys/..../remove
 
-Sincerely
-Purchase Manager
-robothroli
+then the target would get reaped/freed from under the transport class right?
 
+It looks like the fc class needs a similar fix though too.
 
-
+iSCSI is ok since no iscsi driver does scsi_scan_host and does async
+scanning from userspace.
