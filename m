@@ -1,130 +1,125 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Remove scsi_wait_scan module
-Date: Sun, 27 May 2012 10:13:46 +0100
-Message-ID: <1338110026.2957.5.camel@dabdike.int.hansenpartnership.com>
+From: Jeff Mahoney <jeffm@suse.de>
+Subject: Re: Remove scsi_wait_scan module
+Date: Sun, 27 May 2012 10:48:31 -0400
+Message-ID: <4FC23EBF.7050709@suse.de>
+References: <1338110026.2957.5.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55261 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751959Ab2E0JNu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 May 2012 05:13:50 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:52542 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750971Ab2E0Osp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 May 2012 10:48:45 -0400
+In-Reply-To: <1338110026.2957.5.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Dave Jones <davej@redhat.com>, Jeff Mahoney <jeffm@suse.de>, Ben Hutchings <ben@decadent.org.uk>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Ben Hutchings <ben@decadent.org.uk>
 
-scsi_wait_scan was introduced with asynchronous host scanning as a hack
-for distributions that weren't using proper udev based wait for root to
-appear in their initramfs scripts.  In 2.6.30 Commit 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-c751085943362143f84346d274e0011419c84202
-Author: Rafael J. Wysocki <rjw@sisk.pl>
-Date:   Sun Apr 12 20:06:56 2009 +0200
+On 05/27/2012 05:13 AM, James Bottomley wrote:
+> scsi_wait_scan was introduced with asynchronous host scanning as a
+> hack for distributions that weren't using proper udev based wait
+> for root to appear in their initramfs scripts.  In 2.6.30 Commit
 
-    PM/Hibernate: Wait for SCSI devices scan to complete during resume
+AFIACT we don't use it.
 
-Actually broke scsi_wait_scan because it renders
-scsi_complete_async_scans() a nop for modular SCSI if you include
-scsi_scans.h (which this module does).
+- -Jeff
 
-The lack of bug reports is sufficient proof that this module is no
-longer used.
-
-James
-
----
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index bea04e5..ac6ea28 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -263,23 +263,6 @@ config SCSI_SCAN_ASYNC
- 	  You can override this choice by specifying "scsi_mod.scan=sync"
- 	  or async on the kernel's command line.
- 
--config SCSI_WAIT_SCAN
--	tristate  # No prompt here, this is an invisible symbol.
--	default m
--	depends on SCSI
--	depends on MODULES
--# scsi_wait_scan is a loadable module which waits until all the async scans are
--# complete.  The idea is to use it in initrd/ initramfs scripts.  You modprobe
--# it after all the modprobes of the root SCSI drivers and it will wait until
--# they have all finished scanning their buses before allowing the boot to
--# proceed.  (This method is not applicable if targets boot independently in
--# parallel with the initiator, or with transports with non-deterministic target
--# discovery schemes, or if a transport driver does not support scsi_wait_scan.)
--#
--# This symbol is not exposed as a prompt because little is to be gained by
--# disabling it, whereas people who accidentally switch it off may wonder why
--# their mkinitrd gets into trouble.
--
- menu "SCSI Transports"
- 	depends on SCSI
- 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 8deedea..f188509 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -161,8 +161,6 @@ obj-$(CONFIG_SCSI_OSD_INITIATOR) += osd/
- # This goes last, so that "real" scsi devices probe earlier
- obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
- 
--obj-$(CONFIG_SCSI_WAIT_SCAN)	+= scsi_wait_scan.o
--
- scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
- 				   scsicam.o scsi_error.o scsi_lib.o
- scsi_mod-$(CONFIG_SCSI_DMA)	+= scsi_lib_dma.o
-diff --git a/drivers/scsi/scsi_wait_scan.c b/drivers/scsi/scsi_wait_scan.c
-deleted file mode 100644
-index 74708fc..0000000
---- a/drivers/scsi/scsi_wait_scan.c
-+++ /dev/null
-@@ -1,42 +0,0 @@
--/*
-- * scsi_wait_scan.c
-- *
-- * Copyright (C) 2006 James Bottomley <James.Bottomley@SteelEye.com>
-- *
-- * This is a simple module to wait until all the async scans are
-- * complete.  The idea is to use it in initrd/initramfs scripts.  You
-- * modprobe it after all the modprobes of the root SCSI drivers and it
-- * will wait until they have all finished scanning their busses before
-- * allowing the boot to proceed
-- */
--
--#include <linux/module.h>
--#include <linux/device.h>
--#include <scsi/scsi_scan.h>
--
--static int __init wait_scan_init(void)
--{
--	/*
--	 * First we need to wait for device probing to finish;
--	 * the drivers we just loaded might just still be probing
--	 * and might not yet have reached the scsi async scanning
--	 */
--	wait_for_device_probe();
--	/*
--	 * and then we wait for the actual asynchronous scsi scan
--	 * to finish.
--	 */
--	scsi_complete_async_scans();
--	return 0;
--}
--
--static void __exit wait_scan_exit(void)
--{
--}
--
--MODULE_DESCRIPTION("SCSI wait for scans");
--MODULE_AUTHOR("James Bottomley");
--MODULE_LICENSE("GPL");
--
--late_initcall(wait_scan_init);
--module_exit(wait_scan_exit);
+> c751085943362143f84346d274e0011419c84202 Author: Rafael J. Wysocki
+> <rjw@sisk.pl> Date:   Sun Apr 12 20:06:56 2009 +0200
+> 
+> PM/Hibernate: Wait for SCSI devices scan to complete during resume
+> 
+> Actually broke scsi_wait_scan because it renders 
+> scsi_complete_async_scans() a nop for modular SCSI if you include 
+> scsi_scans.h (which this module does).
+> 
+> The lack of bug reports is sufficient proof that this module is no 
+> longer used.
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig index
+> bea04e5..ac6ea28 100644 --- a/drivers/scsi/Kconfig +++
+> b/drivers/scsi/Kconfig @@ -263,23 +263,6 @@ config SCSI_SCAN_ASYNC 
+> You can override this choice by specifying "scsi_mod.scan=sync" or
+> async on the kernel's command line.
+> 
+> -config SCSI_WAIT_SCAN -	tristate  # No prompt here, this is an
+> invisible symbol. -	default m -	depends on SCSI -	depends on
+> MODULES -# scsi_wait_scan is a loadable module which waits until
+> all the async scans are -# complete.  The idea is to use it in
+> initrd/ initramfs scripts.  You modprobe -# it after all the
+> modprobes of the root SCSI drivers and it will wait until -# they
+> have all finished scanning their buses before allowing the boot to 
+> -# proceed.  (This method is not applicable if targets boot
+> independently in -# parallel with the initiator, or with transports
+> with non-deterministic target -# discovery schemes, or if a
+> transport driver does not support scsi_wait_scan.) -# -# This
+> symbol is not exposed as a prompt because little is to be gained
+> by -# disabling it, whereas people who accidentally switch it off
+> may wonder why -# their mkinitrd gets into trouble. - menu "SCSI
+> Transports" depends on SCSI
+> 
+> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile index
+> 8deedea..f188509 100644 --- a/drivers/scsi/Makefile +++
+> b/drivers/scsi/Makefile @@ -161,8 +161,6 @@
+> obj-$(CONFIG_SCSI_OSD_INITIATOR) += osd/ # This goes last, so that
+> "real" scsi devices probe earlier obj-$(CONFIG_SCSI_DEBUG)	+=
+> scsi_debug.o
+> 
+> -obj-$(CONFIG_SCSI_WAIT_SCAN)	+= scsi_wait_scan.o - scsi_mod-y			+=
+> scsi.o hosts.o scsi_ioctl.o constants.o \ scsicam.o scsi_error.o
+> scsi_lib.o scsi_mod-$(CONFIG_SCSI_DMA)	+= scsi_lib_dma.o diff --git
+> a/drivers/scsi/scsi_wait_scan.c b/drivers/scsi/scsi_wait_scan.c 
+> deleted file mode 100644 index 74708fc..0000000 ---
+> a/drivers/scsi/scsi_wait_scan.c +++ /dev/null @@ -1,42 +0,0 @@ -/* 
+> - * scsi_wait_scan.c - * - * Copyright (C) 2006 James Bottomley
+> <James.Bottomley@SteelEye.com> - * - * This is a simple module to
+> wait until all the async scans are - * complete.  The idea is to
+> use it in initrd/initramfs scripts.  You - * modprobe it after all
+> the modprobes of the root SCSI drivers and it - * will wait until
+> they have all finished scanning their busses before - * allowing
+> the boot to proceed - */ - -#include <linux/module.h> -#include
+> <linux/device.h> -#include <scsi/scsi_scan.h> - -static int __init
+> wait_scan_init(void) -{ -	/* -	 * First we need to wait for device
+> probing to finish; -	 * the drivers we just loaded might just still
+> be probing -	 * and might not yet have reached the scsi async
+> scanning -	 */ -	wait_for_device_probe(); -	/* -	 * and then we
+> wait for the actual asynchronous scsi scan -	 * to finish. -	 */ -
+> scsi_complete_async_scans(); -	return 0; -} - -static void __exit
+> wait_scan_exit(void) -{ -} - -MODULE_DESCRIPTION("SCSI wait for
+> scans"); -MODULE_AUTHOR("James Bottomley"); 
+> -MODULE_LICENSE("GPL"); - -late_initcall(wait_scan_init); 
+> -module_exit(wait_scan_exit);
+> 
+> 
 
 
+- -- 
+Jeff Mahoney
+SUSE Labs
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQIcBAEBAgAGBQJPwj6+AAoJEB57S2MheeWyueEP/RgGFBw4hOnW0gRt6360Ary3
+qFIdtOzAwqhU01xGiSENAJuDpc75TpAfmzsR1gASQpel8iIFq8/GjHR+tnhZZfC8
+D7B5mEKew3KFHBwssmUjdpkXHUJ8UjSdapSKADAp6isTzd8EzJ+U7UbRRhObgpis
+wsu/IbYDS1zxTAoO9FnAqN7wkmWHIK0IzOBdu41SsV7OfFUx2DY1cpVC3XvkuYPq
+5gP3Fd0Y53omGXVvB/9ZOTQP9D7fBu2vTxhC/eNhIEBW7Ce3eQXdCQeVOHoHAwGZ
+ftvDqZYVLvENPjs6jVrG8Lp+2dx5kDoqjlE7vFmTBeu/LAvaLuOM53W3+Dq9AdJ0
+jqF7Dmp7fj2Qh3OIs9ivU/Qdlif4SCYXjVSyYbfA0rMif1U1uh1DW8PQNXwSbysF
+X+QXw/hgioQGHUBcN7qOw+Dfd2Xv0wK1clxxEYAkYkRHqazSIIbq0tbKcYYY+9Xh
+aaMqaQJC5ZHwLJCD99mVo8I//KY0BaGC+v7LAcVqAFAUj5yp4sQ0DeAsyXoGa1Ac
+GK9MCxevdqCO8d24tFeZYyL6bZTrblDJCvux/+xI06dBhA+EGibtg8CGyO9/ef7n
+gVYugO1bhiitHozQeAlufdAcfpQ135iLM8wRl4i6JegNTqMr/cZuEhD6VEwFwDn/
+J+wOc/yUuvd8j5070mWg
+=vnGS
+-----END PGP SIGNATURE-----
