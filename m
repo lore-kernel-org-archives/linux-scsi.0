@@ -1,55 +1,38 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v4 04/13] libata: use correct PCI devices
-Date: Mon, 28 May 2012 13:08:31 +0800
-Message-ID: <1338181720-4149-5-git-send-email-ming.m.lin@intel.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH v4 0/13] SATA ZPODD support
+Date: Mon, 28 May 2012 10:44:38 +0100
+Message-ID: <20120528104438.044ae385@pyramind.ukuu.org.uk>
 References: <1338181720-4149-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
 In-Reply-To: <1338181720-4149-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, David Woodhouse <David.Woodhouse@intel.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, David Woodhouse <David.Woodhouse@intel.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Holger Macht <holger@homac.de>
+On Mon, 28 May 2012 13:08:27 +0800
+Lin Ming <ming.m.lin@intel.com> wrote:
 
-Commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a made ata ports parent
-devices of scsi hosts, so we need to go yet another level up to be able
-to use the correct PCI devices.
+> Hi all,
+> 
+> This is the v4 patches to add SATA ZPODD support, to try it:
+> git pull git://git.kernel.org/pub/scm/linux/kernel/git/mlin/linux.git zpodd
+> 
+> Holger and Mathtew,
+> Patch 1 to Patch 4 are the libata acpi binding patches from you.
+> I removed dock related code from your original version.
+> Would you help to review?
+> 
+> v4:
+> - Includes libata acpi binding patches from Holger Macht and Matthew Garrett.
+> - tell scsi layer device supports runtime power off
+> - check support for device busy class events
 
-Signed-off-by: Holger Macht <holger@homac.de>
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
- drivers/ata/libata-acpi.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Have you fixed the fact that Matthews patches broke things like pata_acpi
+last time ? Until that is fixed properly I don't see that these patches
+can make any progress.
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 762e0c8..df4e21a 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -976,7 +976,7 @@ static int ata_acpi_bind_host(struct device *dev, int host, acpi_handle *handle)
- 	if (ap->flags & ATA_FLAG_ACPI_SATA)
- 		return -ENODEV;
- 
--	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), ap->port_no);
-+	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent->parent), ap->port_no);
- 
- 	if (!*handle)
- 		return -ENODEV;
-@@ -1010,13 +1010,13 @@ static int ata_acpi_find_device(struct device *dev, acpi_handle *handle)
- 	unsigned int host, channel, id, lun;
- 
- 	if (sscanf(dev_name(dev), "host%u", &host) == 1) {
--		if (!is_pci_ata(dev->parent))
-+		if (!is_pci_ata(dev->parent->parent))
- 			return -ENODEV;
- 
- 		return ata_acpi_bind_host(dev, host, handle);
- 	} else if (sscanf(dev_name(dev), "%d:%d:%d:%d",
- 			&host, &channel, &id, &lun) == 4) {
--		if (!is_pci_ata(dev->parent->parent->parent))
-+		if (!is_pci_ata(dev->parent->parent->parent->parent))
- 			return -ENODEV;
- 
- 		return ata_acpi_bind_device(dev, channel, id, handle);
--- 
-1.7.2.5
+Alan
