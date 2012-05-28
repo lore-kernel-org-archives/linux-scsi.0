@@ -1,38 +1,40 @@
-From: =?ISO-8859-1?Q?Kai_P=F6ritz?= <kai@poeritz.de>
-Subject: -Werror in CONFIG_SCSI_LPFC
-Date: Mon, 28 May 2012 17:33:49 +0200
-Message-ID: <4FC39ADD.4080003@poeritz.de>
+From: Eldad Zack <eldadzack@gmail.com>
+Subject: Re: 3.4.0-02580-g72c04af regression on sparc64 - partitions not
+ recognized
+Date: Mon, 28 May 2012 18:46:26 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1205281835400.32511@debianer>
+References: <Pine.LNX.4.44L0.1205251034190.1907-100000@iolanthe.rowland.org> <201205252127.21436.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from belug.de ([192.109.21.30]:38536 "EHLO belug.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750892Ab2E1QlH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 May 2012 12:41:07 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by belug.de (Postfix) with ESMTP id D5C0B5A7096E
-	for <linux-scsi@vger.kernel.org>; Mon, 28 May 2012 18:33:51 +0200 (CEST)
-Received: from belug.de ([127.0.0.1])
-	by localhost (belug.de [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id zEGQOz1ZmnPO for <linux-scsi@vger.kernel.org>;
-	Mon, 28 May 2012 18:33:45 +0200 (CEST)
-Received: from [192.168.4.243] (i59F77589.versanet.de [89.247.117.137])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by belug.de (Postfix) with ESMTPSA id A75E65A6ADB3
-	for <linux-scsi@vger.kernel.org>; Mon, 28 May 2012 18:33:45 +0200 (CEST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201205252127.21436.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <jejbbe@hansenpartnership.com>, Dan Williams <dan.j.williams@intel.com>, David Miller <davem@davemloft.net>, mroos@linux.ee, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Arjan van de Ven <arjan@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
 
-I don't know if this is the right email to write this to. But I feel 
-there is still a -Werror in the makefile of this scsi module.
+On Fri, 25 May 2012, Rafael J. Wysocki wrote:
+> On Friday, May 25, 2012, Alan Stern wrote:
+> > On Fri, 25 May 2012, James Bottomley wrote:
+> > 
+> > Whether or not the boot kernel can have modular drivers isn't clear to me;
+> 
+> It can, but then the code in question is irrelevant and the resume has to
+> be triggered in a different way.  For example, by writing to
+> /sys/power/resume from the initrd boot scripts.
+> 
+> > I don't know when the check for a valid image in the swap area is carried
+> > out in relation to starting up the initramfs task.
+> 
+> This particular one is carried out before the initrd is loaded.
 
-CONFIG_SCSI_LPFC
+I just got hit by this one too, but on x86 qemu. There's no initrd, and all
+the modules are built in.
 
-Thanks
+With commit a7a20d103994fd760766e6c9d494daa569cbfe06 the kernel doesn't 
+get to the point where it reads the partition table.
 
-Kai
+If it's of any help, I can provide more details.
+
+Eldad
