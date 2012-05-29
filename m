@@ -1,1564 +1,524 @@
-From: Eldad Zack <eldad@fogrefinery.com>
-Subject: Re: 3.4.0-02580-g72c04af regression on sparc64 - partitions not
- recognized
-Date: Mon, 28 May 2012 22:25:54 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1205282220160.12788@debianer>
-References: <Pine.LNX.4.44L0.1205251034190.1907-100000@iolanthe.rowland.org> <201205252127.21436.rjw@sisk.pl> <alpine.DEB.2.02.1205281835400.32511@debianer> <CABE8wwsormFTiyE8Qepq_DBZ1rcA5P1+L9xLfgA7S8VY7_t0+Q@mail.gmail.com>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH 2/4] libfc: cleanup fcoe_dev_stats
+Date: Tue, 29 May 2012 00:02:47 -0700
+Message-ID: <4FC47497.3040608@broadcom.com>
+References: <20120525172638.6980.40338.stgit@localhost6.localdomain6>
+ <20120525172643.6980.27273.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-243299472-1338236763=:12788"
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:45657 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753531Ab2E1U0G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 May 2012 16:26:06 -0400
-Received: by yenm10 with SMTP id m10so1588511yen.19
-        for <linux-scsi@vger.kernel.org>; Mon, 28 May 2012 13:26:05 -0700 (PDT)
-In-Reply-To: <CABE8wwsormFTiyE8Qepq_DBZ1rcA5P1+L9xLfgA7S8VY7_t0+Q@mail.gmail.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:2254 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751423Ab2E2HDE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 May 2012 03:03:04 -0400
+In-Reply-To: <20120525172643.6980.27273.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Eldad Zack <eldadzack@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <jejbbe@hansenpartnership.com>, David Miller <davem@davemloft.net>, mroos@linux.ee, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Arjan van de Ven <arjan@infradead.org>
+To: Vasu Dev <vasu.dev@intel.com>
+Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@emulex.com>, devel@open-fcoe.org
+
+On 5/25/2012 10:26 AM, Vasu Dev wrote:
+> The libfc is used by fcoe but fcoe agnostic,
+> and therefore should not have any fcoe references.
+>
+> So renaming fcoe_dev_stats from libfc as its for fc_stats.
+> After that libfc is fcoe string free except some strings for
+> Open-FCoE.org.
+
+Vasu, changes look good to me. Thanks.
+
+Acked-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+
+>
+> Signed-off-by: Vasu Dev<vasu.dev@intel.com>
+> Acked-by : Robert Love<robert.w.love@intel.com>
+> Tested-by: Ross Brattain<ross.b.brattain@intel.com>
+> ---
+>
+>   drivers/scsi/bnx2fc/bnx2fc_fcoe.c  |   10 +++----
+>   drivers/scsi/bnx2fc/bnx2fc_io.c    |    4 +--
+>   drivers/scsi/fcoe/fcoe.c           |   18 ++++++------
+>   drivers/scsi/fcoe/fcoe_ctlr.c      |   13 ++++-----
+>   drivers/scsi/fcoe/fcoe_transport.c |   10 +++----
+>   drivers/scsi/libfc/fc_exch.c       |    4 +--
+>   drivers/scsi/libfc/fc_fcp.c        |    8 +++--
+>   drivers/scsi/libfc/fc_frame.c      |    2 +
+>   drivers/scsi/libfc/fc_lport.c      |   54 ++++++++++++++++++------------------
+>   include/scsi/libfc.h               |   17 +++++------
+>   10 files changed, 69 insertions(+), 71 deletions(-)
+>
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> index f52f668f..49bd99e 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> @@ -286,7 +286,7 @@ static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
+>   	struct fcoe_port	*port;
+>   	struct fcoe_hdr		*hp;
+>   	struct bnx2fc_rport	*tgt;
+> -	struct fcoe_dev_stats	*stats;
+> +	struct fc_stats		*stats;
+>   	u8			sof, eof;
+>   	u32			crc;
+>   	unsigned int		hlen, tlen, elen;
+> @@ -412,7 +412,7 @@ static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
+>   	}
+>
+>   	/*update tx stats */
+> -	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+> +	stats = per_cpu_ptr(lport->stats, get_cpu());
+>   	stats->TxFrames++;
+>   	stats->TxWords += wlen;
+>   	put_cpu();
+> @@ -522,7 +522,7 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+>   	u32 fr_len;
+>   	struct fc_lport *lport;
+>   	struct fcoe_rcv_info *fr;
+> -	struct fcoe_dev_stats *stats;
+> +	struct fc_stats *stats;
+>   	struct fc_frame_header *fh;
+>   	struct fcoe_crc_eof crc_eof;
+>   	struct fc_frame *fp;
+> @@ -551,7 +551,7 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+>   	skb_pull(skb, sizeof(struct fcoe_hdr));
+>   	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
+>
+> -	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+> +	stats = per_cpu_ptr(lport->stats, get_cpu());
+>   	stats->RxFrames++;
+>   	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
+>
+> @@ -942,7 +942,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+>   							FC_PORTTYPE_UNKNOWN;
+>   			mutex_unlock(&lport->lp_mutex);
+>   			fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
+> -			per_cpu_ptr(lport->dev_stats,
+> +			per_cpu_ptr(lport->stats,
+>   				    get_cpu())->LinkFailureCount++;
+>   			put_cpu();
+>   			fcoe_clean_pending_queue(lport);
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> index 4f7453b..a4fdc3d 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> @@ -1980,7 +1980,7 @@ int bnx2fc_post_io_req(struct bnx2fc_rport *tgt,
+>   	struct bnx2fc_interface *interface = port->priv;
+>   	struct bnx2fc_hba *hba = interface->hba;
+>   	struct fc_lport *lport = port->lport;
+> -	struct fcoe_dev_stats *stats;
+> +	struct fc_stats *stats;
+>   	int task_idx, index;
+>   	u16 xid;
+>
+> @@ -1991,7 +1991,7 @@ int bnx2fc_post_io_req(struct bnx2fc_rport *tgt,
+>   	io_req->data_xfer_len = scsi_bufflen(sc_cmd);
+>   	sc_cmd->SCp.ptr = (char *)io_req;
+>
+> -	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+> +	stats = per_cpu_ptr(lport->stats, get_cpu());
+>   	if (sc_cmd->sc_data_direction == DMA_FROM_DEVICE) {
+>   		io_req->io_req_flags = BNX2FC_READ;
+>   		stats->InputRequests++;
+> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> index fe30b1b..2b065d2 100644
+> --- a/drivers/scsi/fcoe/fcoe.c
+> +++ b/drivers/scsi/fcoe/fcoe.c
+> @@ -1529,7 +1529,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+>
+>   	return 0;
+>   err:
+> -	per_cpu_ptr(lport->dev_stats, get_cpu())->ErrorFrames++;
+> +	per_cpu_ptr(lport->stats, get_cpu())->ErrorFrames++;
+>   	put_cpu();
+>   err2:
+>   	kfree_skb(skb);
+> @@ -1569,7 +1569,7 @@ static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+>   	struct ethhdr *eh;
+>   	struct fcoe_crc_eof *cp;
+>   	struct sk_buff *skb;
+> -	struct fcoe_dev_stats *stats;
+> +	struct fc_stats *stats;
+>   	struct fc_frame_header *fh;
+>   	unsigned int hlen;		/* header length implies the version */
+>   	unsigned int tlen;		/* trailer length */
+> @@ -1680,7 +1680,7 @@ static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+>   		skb_shinfo(skb)->gso_size = 0;
+>   	}
+>   	/* update tx stats: regardless if LLD fails */
+> -	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+> +	stats = per_cpu_ptr(lport->stats, get_cpu());
+>   	stats->TxFrames++;
+>   	stats->TxWords += wlen;
+>   	put_cpu();
+> @@ -1714,7 +1714,7 @@ static inline int fcoe_filter_frames(struct fc_lport *lport,
+>   	struct fcoe_interface *fcoe;
+>   	struct fc_frame_header *fh;
+>   	struct sk_buff *skb = (struct sk_buff *)fp;
+> -	struct fcoe_dev_stats *stats;
+> +	struct fc_stats *stats;
+>
+>   	/*
+>   	 * We only check CRC if no offload is available and if it is
+> @@ -1745,7 +1745,7 @@ static inline int fcoe_filter_frames(struct fc_lport *lport,
+>   		return 0;
+>   	}
+>
+> -	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+> +	stats = per_cpu_ptr(lport->stats, get_cpu());
+>   	stats->InvalidCRCCount++;
+>   	if (stats->InvalidCRCCount<  5)
+>   		printk(KERN_WARNING "fcoe: dropping frame with CRC error\n");
+> @@ -1762,7 +1762,7 @@ static void fcoe_recv_frame(struct sk_buff *skb)
+>   	u32 fr_len;
+>   	struct fc_lport *lport;
+>   	struct fcoe_rcv_info *fr;
+> -	struct fcoe_dev_stats *stats;
+> +	struct fc_stats *stats;
+>   	struct fcoe_crc_eof crc_eof;
+>   	struct fc_frame *fp;
+>   	struct fcoe_port *port;
+> @@ -1793,7 +1793,7 @@ static void fcoe_recv_frame(struct sk_buff *skb)
+>   	 */
+>   	hp = (struct fcoe_hdr *) skb_network_header(skb);
+>
+> -	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+> +	stats = per_cpu_ptr(lport->stats, get_cpu());
+>   	if (unlikely(FC_FCOE_DECAPS_VER(hp) != FC_FCOE_VER)) {
+>   		if (stats->ErrorFrames<  5)
+>   			printk(KERN_WARNING "fcoe: FCoE version "
+> @@ -1970,7 +1970,7 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+>   	struct fcoe_ctlr *ctlr;
+>   	struct fcoe_interface *fcoe;
+>   	struct fcoe_port *port;
+> -	struct fcoe_dev_stats *stats;
+> +	struct fc_stats *stats;
+>   	u32 link_possible = 1;
+>   	u32 mfs;
+>   	int rc = NOTIFY_OK;
+> @@ -2024,7 +2024,7 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+>   	if (link_possible&&  !fcoe_link_ok(lport))
+>   		fcoe_ctlr_link_up(ctlr);
+>   	else if (fcoe_ctlr_link_down(ctlr)) {
+> -		stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+> +		stats = per_cpu_ptr(lport->stats, get_cpu());
+>   		stats->LinkFailureCount++;
+>   		put_cpu();
+>   		fcoe_clean_pending_queue(lport);
+> diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+> index d68d572..2ebe03a 100644
+> --- a/drivers/scsi/fcoe/fcoe_ctlr.c
+> +++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+> @@ -788,11 +788,11 @@ static unsigned long fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
+>   	unsigned long deadline;
+>   	unsigned long sel_time = 0;
+>   	struct list_head del_list;
+> -	struct fcoe_dev_stats *stats;
+> +	struct fc_stats *stats;
+>
+>   	INIT_LIST_HEAD(&del_list);
+>
+> -	stats = per_cpu_ptr(fip->lp->dev_stats, get_cpu());
+> +	stats = per_cpu_ptr(fip->lp->stats, get_cpu());
+>
+>   	list_for_each_entry_safe(fcf, next,&fip->fcfs, list) {
+>   		deadline = fcf->time + fcf->fka_period + fcf->fka_period / 2;
+> @@ -1104,8 +1104,8 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+>   	struct fc_frame_header *fh = NULL;
+>   	struct fip_desc *desc;
+>   	struct fip_encaps *els;
+> -	struct fcoe_dev_stats *stats;
+>   	struct fcoe_fcf *sel;
+> +	struct fc_stats *stats;
+>   	enum fip_desc_type els_dtype = 0;
+>   	u8 els_op;
+>   	u8 sub;
+> @@ -1249,7 +1249,7 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+>   	fr_dev(fp) = lport;
+>   	fr_encaps(fp) = els_dtype;
+>
+> -	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+> +	stats = per_cpu_ptr(lport->stats, get_cpu());
+>   	stats->RxFrames++;
+>   	stats->RxWords += skb->len / FIP_BPW;
+>   	put_cpu();
+> @@ -1353,7 +1353,7 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+>   						      ntoh24(vp->fd_fc_id));
+>   			if (vn_port&&  (vn_port == lport)) {
+>   				mutex_lock(&fip->ctlr_mutex);
+> -				per_cpu_ptr(lport->dev_stats,
+> +				per_cpu_ptr(lport->stats,
+>   					    get_cpu())->VLinkFailureCount++;
+>   				put_cpu();
+>   				fcoe_ctlr_reset(fip);
+> @@ -1383,8 +1383,7 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+>   		 * followed by physical port
+>   		 */
+>   		mutex_lock(&fip->ctlr_mutex);
+> -		per_cpu_ptr(lport->dev_stats,
+> -			    get_cpu())->VLinkFailureCount++;
+> +		per_cpu_ptr(lport->stats, get_cpu())->VLinkFailureCount++;
+>   		put_cpu();
+>   		fcoe_ctlr_reset(fip);
+>   		mutex_unlock(&fip->ctlr_mutex);
+> diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+> index b46f43d..861c09f 100644
+> --- a/drivers/scsi/fcoe/fcoe_transport.c
+> +++ b/drivers/scsi/fcoe/fcoe_transport.c
+> @@ -89,7 +89,7 @@ void __fcoe_get_lesb(struct fc_lport *lport,
+>   {
+>   	unsigned int cpu;
+>   	u32 lfc, vlfc, mdac;
+> -	struct fcoe_dev_stats *devst;
+> +	struct fc_stats *stats;
+>   	struct fcoe_fc_els_lesb *lesb;
+>   	struct rtnl_link_stats64 temp;
+>
+> @@ -99,10 +99,10 @@ void __fcoe_get_lesb(struct fc_lport *lport,
+>   	lesb = (struct fcoe_fc_els_lesb *)fc_lesb;
+>   	memset(lesb, 0, sizeof(*lesb));
+>   	for_each_possible_cpu(cpu) {
+> -		devst = per_cpu_ptr(lport->dev_stats, cpu);
+> -		lfc += devst->LinkFailureCount;
+> -		vlfc += devst->VLinkFailureCount;
+> -		mdac += devst->MissDiscAdvCount;
+> +		stats = per_cpu_ptr(lport->stats, cpu);
+> +		lfc += stats->LinkFailureCount;
+> +		vlfc += stats->VLinkFailureCount;
+> +		mdac += stats->MissDiscAdvCount;
+>   	}
+>   	lesb->lesb_link_fail = htonl(lfc);
+>   	lesb->lesb_vlink_fail = htonl(vlfc);
+> diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+> index aceffad..1d0334f 100644
+> --- a/drivers/scsi/libfc/fc_exch.c
+> +++ b/drivers/scsi/libfc/fc_exch.c
+> @@ -124,7 +124,7 @@ struct fc_exch_mgr {
+>    * for each anchor to determine if that EM should be used. The last
+>    * anchor in the list will always match to handle any exchanges not
+>    * handled by other EMs. The non-default EMs would be added to the
+> - * anchor list by HW that provides FCoE offloads.
+> + * anchor list by HW that provides offloads.
+>    */
+>   struct fc_exch_mgr_anchor {
+>   	struct list_head ema_list;
+> @@ -986,7 +986,7 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
+>   				/*
+>   				 * Update sequence_id based on incoming last
+>   				 * frame of sequence exchange. This is needed
+> -				 * for FCoE target where DDP has been used
+> +				 * for FC target where DDP has been used
+>   				 * on target where, stack is indicated only
+>   				 * about last frame's (payload _header) header.
+>   				 * Whereas "seq_id" which is part of
+> diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+> index f735730..5c4c504 100644
+> --- a/drivers/scsi/libfc/fc_fcp.c
+> +++ b/drivers/scsi/libfc/fc_fcp.c
+> @@ -434,7 +434,7 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+>   {
+>   	struct scsi_cmnd *sc = fsp->cmd;
+>   	struct fc_lport *lport = fsp->lp;
+> -	struct fcoe_dev_stats *stats;
+> +	struct fc_stats *stats;
+>   	struct fc_frame_header *fh;
+>   	size_t start_offset;
+>   	size_t offset;
+> @@ -496,7 +496,7 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+>
+>   		if (~crc != le32_to_cpu(fr_crc(fp))) {
+>   crc_err:
+> -			stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+> +			stats = per_cpu_ptr(lport->stats, get_cpu());
+>   			stats->ErrorFrames++;
+>   			/* per cpu count, not total count, but OK for limit */
+>   			if (stats->InvalidCRCCount++<  FC_MAX_ERROR_CNT)
+> @@ -1786,7 +1786,7 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
+>   	struct fc_rport_libfc_priv *rpriv;
+>   	int rval;
+>   	int rc = 0;
+> -	struct fcoe_dev_stats *stats;
+> +	struct fc_stats *stats;
+>
+>   	rval = fc_remote_port_chkready(rport);
+>   	if (rval) {
+> @@ -1835,7 +1835,7 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
+>   	/*
+>   	 * setup the data direction
+>   	 */
+> -	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+> +	stats = per_cpu_ptr(lport->stats, get_cpu());
+>   	if (sc_cmd->sc_data_direction == DMA_FROM_DEVICE) {
+>   		fsp->req_flags = FC_SRB_READ;
+>   		stats->InputRequests++;
+> diff --git a/drivers/scsi/libfc/fc_frame.c b/drivers/scsi/libfc/fc_frame.c
+> index 981329a..0382ac0 100644
+> --- a/drivers/scsi/libfc/fc_frame.c
+> +++ b/drivers/scsi/libfc/fc_frame.c
+> @@ -49,7 +49,7 @@ u32 fc_frame_crc_check(struct fc_frame *fp)
+>   EXPORT_SYMBOL(fc_frame_crc_check);
+>
+>   /*
+> - * Allocate a frame intended to be sent via fcoe_xmit.
+> + * Allocate a frame intended to be sent.
+>    * Get an sk_buff for the frame and set the length.
+>    */
+>   struct fc_frame *_fc_frame_alloc(size_t len)
+> diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+> index c1402fb..3e8c48d 100644
+> --- a/drivers/scsi/libfc/fc_lport.c
+> +++ b/drivers/scsi/libfc/fc_lport.c
+> @@ -299,47 +299,47 @@ EXPORT_SYMBOL(fc_get_host_speed);
+>    */
+>   struct fc_host_statistics *fc_get_host_stats(struct Scsi_Host *shost)
+>   {
+> -	struct fc_host_statistics *fcoe_stats;
+> +	struct fc_host_statistics *fc_stats;
+>   	struct fc_lport *lport = shost_priv(shost);
+>   	struct timespec v0, v1;
+>   	unsigned int cpu;
+>   	u64 fcp_in_bytes = 0;
+>   	u64 fcp_out_bytes = 0;
+>
+> -	fcoe_stats =&lport->host_stats;
+> -	memset(fcoe_stats, 0, sizeof(struct fc_host_statistics));
+> +	fc_stats =&lport->host_stats;
+> +	memset(fc_stats, 0, sizeof(struct fc_host_statistics));
+>
+>   	jiffies_to_timespec(jiffies,&v0);
+>   	jiffies_to_timespec(lport->boot_time,&v1);
+> -	fcoe_stats->seconds_since_last_reset = (v0.tv_sec - v1.tv_sec);
+> +	fc_stats->seconds_since_last_reset = (v0.tv_sec - v1.tv_sec);
+>
+>   	for_each_possible_cpu(cpu) {
+> -		struct fcoe_dev_stats *stats;
+> -
+> -		stats = per_cpu_ptr(lport->dev_stats, cpu);
+> -
+> -		fcoe_stats->tx_frames += stats->TxFrames;
+> -		fcoe_stats->tx_words += stats->TxWords;
+> -		fcoe_stats->rx_frames += stats->RxFrames;
+> -		fcoe_stats->rx_words += stats->RxWords;
+> -		fcoe_stats->error_frames += stats->ErrorFrames;
+> -		fcoe_stats->invalid_crc_count += stats->InvalidCRCCount;
+> -		fcoe_stats->fcp_input_requests += stats->InputRequests;
+> -		fcoe_stats->fcp_output_requests += stats->OutputRequests;
+> -		fcoe_stats->fcp_control_requests += stats->ControlRequests;
+> +		struct fc_stats *stats;
+> +
+> +		stats = per_cpu_ptr(lport->stats, cpu);
+> +
+> +		fc_stats->tx_frames += stats->TxFrames;
+> +		fc_stats->tx_words += stats->TxWords;
+> +		fc_stats->rx_frames += stats->RxFrames;
+> +		fc_stats->rx_words += stats->RxWords;
+> +		fc_stats->error_frames += stats->ErrorFrames;
+> +		fc_stats->invalid_crc_count += stats->InvalidCRCCount;
+> +		fc_stats->fcp_input_requests += stats->InputRequests;
+> +		fc_stats->fcp_output_requests += stats->OutputRequests;
+> +		fc_stats->fcp_control_requests += stats->ControlRequests;
+>   		fcp_in_bytes += stats->InputBytes;
+>   		fcp_out_bytes += stats->OutputBytes;
+> -		fcoe_stats->link_failure_count += stats->LinkFailureCount;
+> +		fc_stats->link_failure_count += stats->LinkFailureCount;
+>   	}
+> -	fcoe_stats->fcp_input_megabytes = div_u64(fcp_in_bytes, 1000000);
+> -	fcoe_stats->fcp_output_megabytes = div_u64(fcp_out_bytes, 1000000);
+> -	fcoe_stats->lip_count = -1;
+> -	fcoe_stats->nos_count = -1;
+> -	fcoe_stats->loss_of_sync_count = -1;
+> -	fcoe_stats->loss_of_signal_count = -1;
+> -	fcoe_stats->prim_seq_protocol_err_count = -1;
+> -	fcoe_stats->dumped_frames = -1;
+> -	return fcoe_stats;
+> +	fc_stats->fcp_input_megabytes = div_u64(fcp_in_bytes, 1000000);
+> +	fc_stats->fcp_output_megabytes = div_u64(fcp_out_bytes, 1000000);
+> +	fc_stats->lip_count = -1;
+> +	fc_stats->nos_count = -1;
+> +	fc_stats->loss_of_sync_count = -1;
+> +	fc_stats->loss_of_signal_count = -1;
+> +	fc_stats->prim_seq_protocol_err_count = -1;
+> +	fc_stats->dumped_frames = -1;
+> +	return fc_stats;
+>   }
+>   EXPORT_SYMBOL(fc_get_host_stats);
+>
+> diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+> index 8f9dfba..ea52ca2 100644
+> --- a/include/scsi/libfc.h
+> +++ b/include/scsi/libfc.h
+> @@ -224,7 +224,7 @@ struct fc_rport_priv {
+>   };
+>
+>   /**
+> - * struct fcoe_dev_stats - fcoe stats structure
+> + * struct fc_stats - fc stats structure
+>    * @SecondsSinceLastReset: Seconds since the last reset
+>    * @TxFrames:              Number of transmitted frames
+>    * @TxWords:               Number of transmitted words
+> @@ -244,7 +244,7 @@ struct fc_rport_priv {
+>    * @VLinkFailureCount:     Number of virtual link failures
+>    * @MissDiscAdvCount:      Number of missing FIP discovery advertisement
+>    */
+> -struct fcoe_dev_stats {
+> +struct fc_stats {
+>   	u64		SecondsSinceLastReset;
+>   	u64		TxFrames;
+>   	u64		TxWords;
+> @@ -510,7 +510,7 @@ struct libfc_function_template {
+>   	int (*ddp_done)(struct fc_lport *, u16);
+>   	/*
+>   	 * Sets up the DDP context for a given exchange id on the given
+> -	 * scatterlist if LLD supports DDP for FCoE target.
+> +	 * scatterlist if LLD supports DDP for target.
+>   	 *
+>   	 * STATUS: OPTIONAL
+>   	 */
+> @@ -817,8 +817,7 @@ enum fc_lport_event {
+>    * @state:                 Identifies the state
+>    * @boot_time:             Timestamp indicating when the local port came online
+>    * @host_stats:            SCSI host statistics
+> - * @dev_stats:             FCoE device stats (TODO: libfc should not be
+> - *                         FCoE aware)
+> + * @stats:                 FC local port stats (TODO separate libfc LLD stats)
+>    * @retry_count:           Number of retries in the current state
+>    * @port_id:               FC Port ID
+>    * @wwpn:                  World Wide Port Name
+> @@ -867,7 +866,7 @@ struct fc_lport {
+>   	enum fc_lport_state	       state;
+>   	unsigned long		       boot_time;
+>   	struct fc_host_statistics      host_stats;
+> -	struct fcoe_dev_stats __percpu *dev_stats;
+> +	struct fc_stats	__percpu       *stats;
+>   	u8			       retry_count;
+>
+>   	/* Fabric information */
+> @@ -980,8 +979,8 @@ static inline void fc_lport_state_enter(struct fc_lport *lport,
+>    */
+>   static inline int fc_lport_init_stats(struct fc_lport *lport)
+>   {
+> -	lport->dev_stats = alloc_percpu(struct fcoe_dev_stats);
+> -	if (!lport->dev_stats)
+> +	lport->stats = alloc_percpu(struct fc_stats);
+> +	if (!lport->stats)
+>   		return -ENOMEM;
+>   	return 0;
+>   }
+> @@ -992,7 +991,7 @@ static inline int fc_lport_init_stats(struct fc_lport *lport)
+>    */
+>   static inline void fc_lport_free_stats(struct fc_lport *lport)
+>   {
+> -	free_percpu(lport->dev_stats);
+> +	free_percpu(lport->stats);
+>   }
+>
+>   /**
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
 
---8323328-243299472-1338236763=:12788
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
-
-
-On Mon, 28 May 2012, Dan Williams wrote:
-> On Mon, May 28, 2012 at 9:46 AM, Eldad Zack <eldadzack@gmail.com> wrote:
-> > On Fri, 25 May 2012, Rafael J. Wysocki wrote:
-> >> On Friday, May 25, 2012, Alan Stern wrote:
-> >> > On Fri, 25 May 2012, James Bottomley wrote:
-> >> >
-> >> > Whether or not the boot kernel can have modular drivers isn't clear to me;
-> >>
-> >> It can, but then the code in question is irrelevant and the resume has to
-> >> be triggered in a different way.  For example, by writing to
-> >> /sys/power/resume from the initrd boot scripts.
-> >>
-> >> > I don't know when the check for a valid image in the swap area is carried
-> >> > out in relation to starting up the initramfs task.
-> >>
-> >> This particular one is carried out before the initrd is loaded.
-> >
-> > I just got hit by this one too, but on x86 qemu. There's no initrd, and all
-> > the modules are built in.
-> >
-> > With commit a7a20d103994fd760766e6c9d494daa569cbfe06 the kernel doesn't
-> > get to the point where it reads the partition table.
-> >
-> > If it's of any help, I can provide more details.
-> 
-> Yes, please send the qemu config details.
-
-Inline below. I've also included some more info before that just in 
-case.
-
-> The proposed fix for 3.5 is here:
-> http://marc.info/?l=linux-scsi&m=133796775807498&w=2
-
-I can verify that it works with my setup as well, thanks for the fix!
-
-Eldad
-
----
-
-QEMU runs with:
-qemu-system-i386 -m 32 -hda output/images/rootfs.ext2 -kernel output/images/bzImage -append "root=/dev/sda console=ttyS0,115200n8" -nographic -net nic -net tap
-
-Version string:
-QEMU emulator version 1.0,1 (Debian 1.0.1+dfsg-1), Copyright (c) 2003-2008 Fabrice Bellard
-
-The whole "disk" is not partitioned, as you can guess from the filename.
-
-(bad)
-ata2.00: configured for MWDMA2
-ata1.00: ATA-7: QEMU HARDDISK, 1.0,1, max UDMA/100
-ata1.00: 8686 sectors, multi 16: LBA48 
-ata1.00: configured for MWDMA2
-scsi 0:0:0:0: Direct-Access     ATA      QEMU HARDDISK    1.0, PQ: 0 ANSI: 5
-scsi 1:0:0:0: CD-ROM            QEMU     QEMU DVD-ROM     1.0, PQ: 0 ANSI: 5
-VFS: Cannot open root device "sda" or unknown-block(0,0): error -6
-Please append a correct "root=" boot option; here are the available partitions:
-Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
-Pid: 1, comm: swapper Not tainted 3.4.0+ #1
-Call Trace:
- [<c12449f4>] panic+0x6e/0x158
- [<c12fdd8f>] mount_block_root+0x1ae/0x23b
- [<c1002930>] ? sys_rt_sigreturn+0x40/0xb0
- [<c1089678>] ? sys_mknod+0x28/0x30
- [<c12fde75>] mount_root+0x59/0x5f
- [<c12fdf8c>] prepare_namespace+0x111/0x14b
- [<c107d290>] ? sys_access+0x20/0x30
- [<c12fdb1e>] kernel_init+0x194/0x1a3
- [<c12fd369>] ? loglevel+0x2b/0x2b
- [<c12fd98a>] ? do_one_initcall+0x133/0x133
- [<c1247056>] kernel_thread_helper+0x6/0xd
-QEMU: Terminated
-
-(good)
-ata2.00: configured for MWDMA2
-ata1.00: ATA-7: QEMU HARDDISK, 1.0,1, max UDMA/100
-ata1.00: 8686 sectors, multi 16: LBA48 
-ata1.00: configured for MWDMA2
-scsi 0:0:0:0: Direct-Access     ATA      QEMU HARDDISK    1.0, PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 8686 512-byte logical blocks: (4.44 MB/4.24 MiB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
- sda: unknown partition table
-sd 0:0:0:0: [sda] Attached SCSI disk
-scsi 1:0:0:0: CD-ROM            QEMU     QEMU DVD-ROM     1.0, PQ: 0 ANSI: 5
-
----
-
-.config:
-(HEAD b48b2c3e50433ff6f7e46186daa7f986bd960215)
-
-Cross-compiled to i686.
-
-#
-# Automatically generated file; DO NOT EDIT.
-# Linux/i386 3.4.0 Kernel Configuration
-#
-# CONFIG_64BIT is not set
-CONFIG_X86_32=y
-# CONFIG_X86_64 is not set
-CONFIG_X86=y
-CONFIG_INSTRUCTION_DECODER=y
-CONFIG_OUTPUT_FORMAT="elf32-i386"
-CONFIG_ARCH_DEFCONFIG="arch/x86/configs/i386_defconfig"
-CONFIG_LOCKDEP_SUPPORT=y
-CONFIG_STACKTRACE_SUPPORT=y
-CONFIG_HAVE_LATENCYTOP_SUPPORT=y
-CONFIG_MMU=y
-# CONFIG_NEED_DMA_MAP_STATE is not set
-CONFIG_NEED_SG_DMA_LENGTH=y
-CONFIG_GENERIC_ISA_DMA=y
-CONFIG_GENERIC_BUG=y
-CONFIG_GENERIC_HWEIGHT=y
-CONFIG_ARCH_MAY_HAVE_PC_FDC=y
-# CONFIG_RWSEM_GENERIC_SPINLOCK is not set
-CONFIG_RWSEM_XCHGADD_ALGORITHM=y
-CONFIG_GENERIC_CALIBRATE_DELAY=y
-CONFIG_ARCH_HAS_CPU_RELAX=y
-CONFIG_ARCH_HAS_DEFAULT_IDLE=y
-CONFIG_ARCH_HAS_CACHE_LINE_SIZE=y
-CONFIG_ARCH_HAS_CPU_AUTOPROBE=y
-CONFIG_HAVE_SETUP_PER_CPU_AREA=y
-CONFIG_NEED_PER_CPU_EMBED_FIRST_CHUNK=y
-CONFIG_NEED_PER_CPU_PAGE_FIRST_CHUNK=y
-CONFIG_ARCH_HIBERNATION_POSSIBLE=y
-CONFIG_ARCH_SUSPEND_POSSIBLE=y
-# CONFIG_ZONE_DMA32 is not set
-# CONFIG_AUDIT_ARCH is not set
-CONFIG_ARCH_SUPPORTS_OPTIMIZED_INLINING=y
-CONFIG_ARCH_SUPPORTS_DEBUG_PAGEALLOC=y
-CONFIG_X86_32_LAZY_GS=y
-CONFIG_ARCH_HWEIGHT_CFLAGS="-fcall-saved-ecx -fcall-saved-edx"
-CONFIG_ARCH_SUPPORTS_UPROBES=y
-CONFIG_DEFCONFIG_LIST="/lib/modules/$UNAME_RELEASE/.config"
-CONFIG_HAVE_IRQ_WORK=y
-CONFIG_IRQ_WORK=y
-CONFIG_BUILDTIME_EXTABLE_SORT=y
-
-#
-# General setup
-#
-CONFIG_EXPERIMENTAL=y
-CONFIG_BROKEN_ON_SMP=y
-CONFIG_INIT_ENV_ARG_LIMIT=32
-CONFIG_CROSS_COMPILE=""
-CONFIG_LOCALVERSION=""
-# CONFIG_LOCALVERSION_AUTO is not set
-CONFIG_HAVE_KERNEL_GZIP=y
-CONFIG_HAVE_KERNEL_BZIP2=y
-CONFIG_HAVE_KERNEL_LZMA=y
-CONFIG_HAVE_KERNEL_XZ=y
-CONFIG_HAVE_KERNEL_LZO=y
-CONFIG_KERNEL_GZIP=y
-# CONFIG_KERNEL_BZIP2 is not set
-# CONFIG_KERNEL_LZMA is not set
-# CONFIG_KERNEL_XZ is not set
-# CONFIG_KERNEL_LZO is not set
-CONFIG_DEFAULT_HOSTNAME="(none)"
-# CONFIG_SWAP is not set
-# CONFIG_SYSVIPC is not set
-# CONFIG_POSIX_MQUEUE is not set
-# CONFIG_BSD_PROCESS_ACCT is not set
-# CONFIG_FHANDLE is not set
-# CONFIG_TASKSTATS is not set
-# CONFIG_AUDIT is not set
-CONFIG_HAVE_GENERIC_HARDIRQS=y
-
-#
-# IRQ subsystem
-#
-CONFIG_GENERIC_HARDIRQS=y
-CONFIG_GENERIC_IRQ_PROBE=y
-CONFIG_GENERIC_IRQ_SHOW=y
-CONFIG_IRQ_FORCED_THREADING=y
-CONFIG_SPARSE_IRQ=y
-CONFIG_CLOCKSOURCE_WATCHDOG=y
-CONFIG_KTIME_SCALAR=y
-CONFIG_GENERIC_CLOCKEVENTS=y
-CONFIG_GENERIC_CLOCKEVENTS_BUILD=y
-CONFIG_GENERIC_CLOCKEVENTS_MIN_ADJUST=y
-CONFIG_GENERIC_CMOS_UPDATE=y
-
-#
-# Timers subsystem
-#
-# CONFIG_NO_HZ is not set
-# CONFIG_HIGH_RES_TIMERS is not set
-
-#
-# RCU Subsystem
-#
-CONFIG_TINY_RCU=y
-# CONFIG_PREEMPT_RCU is not set
-# CONFIG_TREE_RCU_TRACE is not set
-# CONFIG_IKCONFIG is not set
-CONFIG_LOG_BUF_SHIFT=17
-CONFIG_HAVE_UNSTABLE_SCHED_CLOCK=y
-# CONFIG_CGROUPS is not set
-# CONFIG_CHECKPOINT_RESTORE is not set
-CONFIG_NAMESPACES=y
-CONFIG_UTS_NS=y
-CONFIG_PID_NS=y
-CONFIG_NET_NS=y
-# CONFIG_SCHED_AUTOGROUP is not set
-# CONFIG_SYSFS_DEPRECATED is not set
-# CONFIG_RELAY is not set
-# CONFIG_BLK_DEV_INITRD is not set
-# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set
-CONFIG_SYSCTL=y
-CONFIG_ANON_INODES=y
-# CONFIG_EXPERT is not set
-CONFIG_UID16=y
-# CONFIG_SYSCTL_SYSCALL is not set
-CONFIG_KALLSYMS=y
-# CONFIG_KALLSYMS_ALL is not set
-CONFIG_HOTPLUG=y
-CONFIG_PRINTK=y
-CONFIG_BUG=y
-CONFIG_ELF_CORE=y
-CONFIG_PCSPKR_PLATFORM=y
-CONFIG_HAVE_PCSPKR_PLATFORM=y
-CONFIG_BASE_FULL=y
-CONFIG_FUTEX=y
-CONFIG_EPOLL=y
-CONFIG_SIGNALFD=y
-CONFIG_TIMERFD=y
-CONFIG_EVENTFD=y
-CONFIG_SHMEM=y
-CONFIG_AIO=y
-# CONFIG_EMBEDDED is not set
-CONFIG_HAVE_PERF_EVENTS=y
-
-#
-# Kernel Performance Events And Counters
-#
-CONFIG_PERF_EVENTS=y
-# CONFIG_DEBUG_PERF_USE_VMALLOC is not set
-CONFIG_VM_EVENT_COUNTERS=y
-CONFIG_PCI_QUIRKS=y
-CONFIG_SLUB_DEBUG=y
-# CONFIG_COMPAT_BRK is not set
-# CONFIG_SLAB is not set
-CONFIG_SLUB=y
-# CONFIG_PROFILING is not set
-CONFIG_HAVE_OPROFILE=y
-CONFIG_OPROFILE_NMI_TIMER=y
-# CONFIG_JUMP_LABEL is not set
-CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS=y
-CONFIG_HAVE_IOREMAP_PROT=y
-CONFIG_HAVE_KPROBES=y
-CONFIG_HAVE_KRETPROBES=y
-CONFIG_HAVE_OPTPROBES=y
-CONFIG_HAVE_ARCH_TRACEHOOK=y
-CONFIG_HAVE_DMA_ATTRS=y
-CONFIG_HAVE_DMA_CONTIGUOUS=y
-CONFIG_GENERIC_SMP_IDLE_THREAD=y
-CONFIG_HAVE_REGS_AND_STACK_ACCESS_API=y
-CONFIG_HAVE_DMA_API_DEBUG=y
-CONFIG_HAVE_HW_BREAKPOINT=y
-CONFIG_HAVE_MIXED_BREAKPOINTS_REGS=y
-CONFIG_HAVE_USER_RETURN_NOTIFIER=y
-CONFIG_HAVE_PERF_EVENTS_NMI=y
-CONFIG_HAVE_ARCH_JUMP_LABEL=y
-CONFIG_ARCH_HAVE_NMI_SAFE_CMPXCHG=y
-CONFIG_HAVE_ALIGNED_STRUCT_PAGE=y
-CONFIG_HAVE_CMPXCHG_LOCAL=y
-CONFIG_HAVE_CMPXCHG_DOUBLE=y
-CONFIG_HAVE_ARCH_SECCOMP_FILTER=y
-
-#
-# GCOV-based kernel profiling
-#
-# CONFIG_GCOV_KERNEL is not set
-CONFIG_HAVE_GENERIC_DMA_COHERENT=y
-CONFIG_SLABINFO=y
-CONFIG_RT_MUTEXES=y
-CONFIG_BASE_SMALL=0
-# CONFIG_MODULES is not set
-CONFIG_BLOCK=y
-CONFIG_LBDAF=y
-# CONFIG_BLK_DEV_BSG is not set
-# CONFIG_BLK_DEV_BSGLIB is not set
-# CONFIG_BLK_DEV_INTEGRITY is not set
-
-#
-# Partition Types
-#
-# CONFIG_PARTITION_ADVANCED is not set
-CONFIG_MSDOS_PARTITION=y
-
-#
-# IO Schedulers
-#
-CONFIG_IOSCHED_NOOP=y
-# CONFIG_IOSCHED_DEADLINE is not set
-# CONFIG_IOSCHED_CFQ is not set
-CONFIG_DEFAULT_NOOP=y
-CONFIG_DEFAULT_IOSCHED="noop"
-# CONFIG_INLINE_SPIN_TRYLOCK is not set
-# CONFIG_INLINE_SPIN_TRYLOCK_BH is not set
-# CONFIG_INLINE_SPIN_LOCK is not set
-# CONFIG_INLINE_SPIN_LOCK_BH is not set
-# CONFIG_INLINE_SPIN_LOCK_IRQ is not set
-# CONFIG_INLINE_SPIN_LOCK_IRQSAVE is not set
-# CONFIG_INLINE_SPIN_UNLOCK_BH is not set
-CONFIG_INLINE_SPIN_UNLOCK_IRQ=y
-# CONFIG_INLINE_SPIN_UNLOCK_IRQRESTORE is not set
-# CONFIG_INLINE_READ_TRYLOCK is not set
-# CONFIG_INLINE_READ_LOCK is not set
-# CONFIG_INLINE_READ_LOCK_BH is not set
-# CONFIG_INLINE_READ_LOCK_IRQ is not set
-# CONFIG_INLINE_READ_LOCK_IRQSAVE is not set
-CONFIG_INLINE_READ_UNLOCK=y
-# CONFIG_INLINE_READ_UNLOCK_BH is not set
-CONFIG_INLINE_READ_UNLOCK_IRQ=y
-# CONFIG_INLINE_READ_UNLOCK_IRQRESTORE is not set
-# CONFIG_INLINE_WRITE_TRYLOCK is not set
-# CONFIG_INLINE_WRITE_LOCK is not set
-# CONFIG_INLINE_WRITE_LOCK_BH is not set
-# CONFIG_INLINE_WRITE_LOCK_IRQ is not set
-# CONFIG_INLINE_WRITE_LOCK_IRQSAVE is not set
-CONFIG_INLINE_WRITE_UNLOCK=y
-# CONFIG_INLINE_WRITE_UNLOCK_BH is not set
-CONFIG_INLINE_WRITE_UNLOCK_IRQ=y
-# CONFIG_INLINE_WRITE_UNLOCK_IRQRESTORE is not set
-# CONFIG_MUTEX_SPIN_ON_OWNER is not set
-CONFIG_FREEZER=y
-
-#
-# Processor type and features
-#
-CONFIG_ZONE_DMA=y
-# CONFIG_SMP is not set
-# CONFIG_X86_EXTENDED_PLATFORM is not set
-# CONFIG_X86_32_IRIS is not set
-# CONFIG_SCHED_OMIT_FRAME_POINTER is not set
-# CONFIG_PARAVIRT_GUEST is not set
-CONFIG_NO_BOOTMEM=y
-# CONFIG_MEMTEST is not set
-# CONFIG_M386 is not set
-# CONFIG_M486 is not set
-# CONFIG_M586 is not set
-# CONFIG_M586TSC is not set
-# CONFIG_M586MMX is not set
-CONFIG_M686=y
-# CONFIG_MPENTIUMII is not set
-# CONFIG_MPENTIUMIII is not set
-# CONFIG_MPENTIUMM is not set
-# CONFIG_MPENTIUM4 is not set
-# CONFIG_MK6 is not set
-# CONFIG_MK7 is not set
-# CONFIG_MK8 is not set
-# CONFIG_MCRUSOE is not set
-# CONFIG_MEFFICEON is not set
-# CONFIG_MWINCHIPC6 is not set
-# CONFIG_MWINCHIP3D is not set
-# CONFIG_MELAN is not set
-# CONFIG_MGEODEGX1 is not set
-# CONFIG_MGEODE_LX is not set
-# CONFIG_MCYRIXIII is not set
-# CONFIG_MVIAC3_2 is not set
-# CONFIG_MVIAC7 is not set
-# CONFIG_MCORE2 is not set
-# CONFIG_MATOM is not set
-# CONFIG_X86_GENERIC is not set
-CONFIG_X86_INTERNODE_CACHE_SHIFT=5
-CONFIG_X86_CMPXCHG=y
-CONFIG_X86_L1_CACHE_SHIFT=5
-CONFIG_X86_XADD=y
-# CONFIG_X86_PPRO_FENCE is not set
-CONFIG_X86_WP_WORKS_OK=y
-CONFIG_X86_INVLPG=y
-CONFIG_X86_BSWAP=y
-CONFIG_X86_POPAD_OK=y
-CONFIG_X86_USE_PPRO_CHECKSUM=y
-CONFIG_X86_TSC=y
-CONFIG_X86_CMPXCHG64=y
-CONFIG_X86_CMOV=y
-CONFIG_X86_MINIMUM_CPU_FAMILY=5
-CONFIG_X86_DEBUGCTLMSR=y
-CONFIG_CPU_SUP_INTEL=y
-CONFIG_CPU_SUP_AMD=y
-CONFIG_CPU_SUP_CENTAUR=y
-CONFIG_CPU_SUP_TRANSMETA_32=y
-# CONFIG_HPET_TIMER is not set
-CONFIG_DMI=y
-# CONFIG_IOMMU_HELPER is not set
-CONFIG_NR_CPUS=1
-# CONFIG_IRQ_TIME_ACCOUNTING is not set
-CONFIG_PREEMPT_NONE=y
-# CONFIG_PREEMPT_VOLUNTARY is not set
-# CONFIG_PREEMPT is not set
-# CONFIG_X86_UP_APIC is not set
-# CONFIG_X86_MCE is not set
-CONFIG_VM86=y
-# CONFIG_TOSHIBA is not set
-# CONFIG_I8K is not set
-# CONFIG_X86_REBOOTFIXUPS is not set
-# CONFIG_MICROCODE is not set
-# CONFIG_X86_MSR is not set
-# CONFIG_X86_CPUID is not set
-# CONFIG_NOHIGHMEM is not set
-CONFIG_HIGHMEM4G=y
-# CONFIG_HIGHMEM64G is not set
-CONFIG_PAGE_OFFSET=0xC0000000
-CONFIG_HIGHMEM=y
-# CONFIG_ARCH_PHYS_ADDR_T_64BIT is not set
-# CONFIG_ARCH_DMA_ADDR_T_64BIT is not set
-CONFIG_ARCH_FLATMEM_ENABLE=y
-CONFIG_ARCH_SPARSEMEM_ENABLE=y
-CONFIG_ARCH_SELECT_MEMORY_MODEL=y
-CONFIG_ILLEGAL_POINTER_VALUE=0
-CONFIG_SELECT_MEMORY_MODEL=y
-CONFIG_FLATMEM_MANUAL=y
-# CONFIG_SPARSEMEM_MANUAL is not set
-CONFIG_FLATMEM=y
-CONFIG_FLAT_NODE_MEM_MAP=y
-CONFIG_SPARSEMEM_STATIC=y
-CONFIG_HAVE_MEMBLOCK=y
-CONFIG_HAVE_MEMBLOCK_NODE_MAP=y
-CONFIG_ARCH_DISCARD_MEMBLOCK=y
-CONFIG_PAGEFLAGS_EXTENDED=y
-CONFIG_SPLIT_PTLOCK_CPUS=4
-# CONFIG_COMPACTION is not set
-# CONFIG_PHYS_ADDR_T_64BIT is not set
-CONFIG_ZONE_DMA_FLAG=1
-CONFIG_BOUNCE=y
-CONFIG_VIRT_TO_BUS=y
-# CONFIG_KSM is not set
-CONFIG_DEFAULT_MMAP_MIN_ADDR=4096
-# CONFIG_TRANSPARENT_HUGEPAGE is not set
-CONFIG_NEED_PER_CPU_KM=y
-# CONFIG_CLEANCACHE is not set
-# CONFIG_HIGHPTE is not set
-# CONFIG_X86_CHECK_BIOS_CORRUPTION is not set
-CONFIG_X86_RESERVE_LOW=64
-# CONFIG_MATH_EMULATION is not set
-CONFIG_MTRR=y
-# CONFIG_MTRR_SANITIZER is not set
-CONFIG_X86_PAT=y
-CONFIG_ARCH_USES_PG_UNCACHED=y
-CONFIG_ARCH_RANDOM=y
-# CONFIG_EFI is not set
-# CONFIG_SECCOMP is not set
-# CONFIG_CC_STACKPROTECTOR is not set
-# CONFIG_HZ_100 is not set
-CONFIG_HZ_250=y
-# CONFIG_HZ_300 is not set
-# CONFIG_HZ_1000 is not set
-CONFIG_HZ=250
-# CONFIG_SCHED_HRTICK is not set
-# CONFIG_KEXEC is not set
-# CONFIG_CRASH_DUMP is not set
-CONFIG_PHYSICAL_START=0x1000000
-# CONFIG_RELOCATABLE is not set
-CONFIG_PHYSICAL_ALIGN=0x1000000
-CONFIG_COMPAT_VDSO=y
-# CONFIG_CMDLINE_BOOL is not set
-CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
-
-#
-# Power management and ACPI options
-#
-CONFIG_SUSPEND=y
-CONFIG_SUSPEND_FREEZER=y
-CONFIG_PM_SLEEP=y
-# CONFIG_PM_AUTOSLEEP is not set
-# CONFIG_PM_WAKELOCKS is not set
-# CONFIG_PM_RUNTIME is not set
-CONFIG_PM=y
-# CONFIG_PM_DEBUG is not set
-CONFIG_ACPI=y
-CONFIG_ACPI_SLEEP=y
-# CONFIG_ACPI_PROCFS is not set
-# CONFIG_ACPI_PROCFS_POWER is not set
-# CONFIG_ACPI_EC_DEBUGFS is not set
-CONFIG_ACPI_PROC_EVENT=y
-CONFIG_ACPI_AC=y
-CONFIG_ACPI_BATTERY=y
-CONFIG_ACPI_BUTTON=y
-CONFIG_ACPI_FAN=y
-# CONFIG_ACPI_DOCK is not set
-CONFIG_ACPI_PROCESSOR=y
-# CONFIG_ACPI_PROCESSOR_AGGREGATOR is not set
-CONFIG_ACPI_THERMAL=y
-# CONFIG_ACPI_CUSTOM_DSDT is not set
-CONFIG_ACPI_BLACKLIST_YEAR=0
-# CONFIG_ACPI_DEBUG is not set
-# CONFIG_ACPI_PCI_SLOT is not set
-CONFIG_X86_PM_TIMER=y
-# CONFIG_ACPI_CONTAINER is not set
-# CONFIG_ACPI_SBS is not set
-# CONFIG_ACPI_HED is not set
-# CONFIG_ACPI_CUSTOM_METHOD is not set
-# CONFIG_ACPI_BGRT is not set
-# CONFIG_ACPI_APEI is not set
-# CONFIG_SFI is not set
-# CONFIG_APM is not set
-
-#
-# CPU Frequency scaling
-#
-# CONFIG_CPU_FREQ is not set
-CONFIG_CPU_IDLE=y
-CONFIG_CPU_IDLE_GOV_LADDER=y
-# CONFIG_INTEL_IDLE is not set
-
-#
-# Bus options (PCI etc.)
-#
-CONFIG_PCI=y
-# CONFIG_PCI_GOBIOS is not set
-# CONFIG_PCI_GOMMCONFIG is not set
-# CONFIG_PCI_GODIRECT is not set
-CONFIG_PCI_GOANY=y
-CONFIG_PCI_BIOS=y
-CONFIG_PCI_DIRECT=y
-CONFIG_PCI_MMCONFIG=y
-CONFIG_PCI_DOMAINS=y
-# CONFIG_PCI_CNB20LE_QUIRK is not set
-# CONFIG_PCIEPORTBUS is not set
-# CONFIG_ARCH_SUPPORTS_MSI is not set
-# CONFIG_PCI_DEBUG is not set
-# CONFIG_PCI_REALLOC_ENABLE_AUTO is not set
-# CONFIG_PCI_STUB is not set
-# CONFIG_PCI_IOV is not set
-# CONFIG_PCI_PRI is not set
-# CONFIG_PCI_PASID is not set
-# CONFIG_PCI_IOAPIC is not set
-CONFIG_PCI_LABEL=y
-CONFIG_ISA_DMA_API=y
-# CONFIG_ISA is not set
-# CONFIG_SCx200 is not set
-# CONFIG_OLPC is not set
-# CONFIG_ALIX is not set
-# CONFIG_NET5501 is not set
-# CONFIG_GEOS is not set
-CONFIG_AMD_NB=y
-# CONFIG_PCCARD is not set
-# CONFIG_HOTPLUG_PCI is not set
-# CONFIG_RAPIDIO is not set
-
-#
-# Executable file formats / Emulations
-#
-CONFIG_BINFMT_ELF=y
-CONFIG_ARCH_BINFMT_ELF_RANDOMIZE_PIE=y
-CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS=y
-CONFIG_HAVE_AOUT=y
-# CONFIG_BINFMT_AOUT is not set
-# CONFIG_BINFMT_MISC is not set
-CONFIG_HAVE_ATOMIC_IOMAP=y
-CONFIG_HAVE_TEXT_POKE_SMP=y
-CONFIG_NET=y
-
-#
-# Networking options
-#
-CONFIG_PACKET=y
-CONFIG_UNIX=y
-# CONFIG_UNIX_DIAG is not set
-# CONFIG_XFRM_USER is not set
-# CONFIG_NET_KEY is not set
-CONFIG_INET=y
-# CONFIG_IP_MULTICAST is not set
-# CONFIG_IP_ADVANCED_ROUTER is not set
-CONFIG_IP_PNP=y
-# CONFIG_IP_PNP_DHCP is not set
-# CONFIG_IP_PNP_BOOTP is not set
-# CONFIG_IP_PNP_RARP is not set
-# CONFIG_NET_IPIP is not set
-# CONFIG_NET_IPGRE_DEMUX is not set
-# CONFIG_ARPD is not set
-# CONFIG_SYN_COOKIES is not set
-# CONFIG_INET_AH is not set
-# CONFIG_INET_ESP is not set
-# CONFIG_INET_IPCOMP is not set
-# CONFIG_INET_XFRM_TUNNEL is not set
-CONFIG_INET_TUNNEL=y
-# CONFIG_INET_XFRM_MODE_TRANSPORT is not set
-# CONFIG_INET_XFRM_MODE_TUNNEL is not set
-# CONFIG_INET_XFRM_MODE_BEET is not set
-# CONFIG_INET_LRO is not set
-# CONFIG_INET_DIAG is not set
-# CONFIG_TCP_CONG_ADVANCED is not set
-CONFIG_TCP_CONG_CUBIC=y
-CONFIG_DEFAULT_TCP_CONG="cubic"
-# CONFIG_TCP_MD5SIG is not set
-CONFIG_IPV6=y
-CONFIG_IPV6_PRIVACY=y
-CONFIG_IPV6_ROUTER_PREF=y
-CONFIG_IPV6_ROUTE_INFO=y
-CONFIG_IPV6_OPTIMISTIC_DAD=y
-# CONFIG_INET6_AH is not set
-# CONFIG_INET6_ESP is not set
-# CONFIG_INET6_IPCOMP is not set
-# CONFIG_IPV6_MIP6 is not set
-# CONFIG_INET6_XFRM_TUNNEL is not set
-# CONFIG_INET6_TUNNEL is not set
-# CONFIG_INET6_XFRM_MODE_TRANSPORT is not set
-# CONFIG_INET6_XFRM_MODE_TUNNEL is not set
-# CONFIG_INET6_XFRM_MODE_BEET is not set
-# CONFIG_INET6_XFRM_MODE_ROUTEOPTIMIZATION is not set
-CONFIG_IPV6_SIT=y
-CONFIG_IPV6_SIT_6RD=y
-CONFIG_IPV6_NDISC_NODETYPE=y
-# CONFIG_IPV6_TUNNEL is not set
-# CONFIG_IPV6_MULTIPLE_TABLES is not set
-# CONFIG_IPV6_MROUTE is not set
-# CONFIG_NETWORK_SECMARK is not set
-# CONFIG_NETWORK_PHY_TIMESTAMPING is not set
-# CONFIG_NETFILTER is not set
-# CONFIG_IP_DCCP is not set
-# CONFIG_IP_SCTP is not set
-# CONFIG_RDS is not set
-# CONFIG_TIPC is not set
-# CONFIG_ATM is not set
-# CONFIG_L2TP is not set
-CONFIG_STP=y
-CONFIG_BRIDGE=y
-CONFIG_BRIDGE_IGMP_SNOOPING=y
-# CONFIG_NET_DSA is not set
-CONFIG_VLAN_8021Q=y
-# CONFIG_VLAN_8021Q_GVRP is not set
-# CONFIG_DECNET is not set
-CONFIG_LLC=y
-# CONFIG_LLC2 is not set
-# CONFIG_IPX is not set
-# CONFIG_ATALK is not set
-# CONFIG_X25 is not set
-# CONFIG_LAPB is not set
-# CONFIG_WAN_ROUTER is not set
-# CONFIG_PHONET is not set
-# CONFIG_IEEE802154 is not set
-# CONFIG_NET_SCHED is not set
-# CONFIG_DCB is not set
-# CONFIG_BATMAN_ADV is not set
-# CONFIG_OPENVSWITCH is not set
-CONFIG_BQL=y
-
-#
-# Network testing
-#
-# CONFIG_NET_PKTGEN is not set
-# CONFIG_HAMRADIO is not set
-# CONFIG_CAN is not set
-# CONFIG_IRDA is not set
-# CONFIG_BT is not set
-# CONFIG_AF_RXRPC is not set
-# CONFIG_WIRELESS is not set
-# CONFIG_WIMAX is not set
-# CONFIG_RFKILL is not set
-# CONFIG_NET_9P is not set
-# CONFIG_CAIF is not set
-# CONFIG_CEPH_LIB is not set
-# CONFIG_NFC is not set
-
-#
-# Device Drivers
-#
-
-#
-# Generic Driver Options
-#
-CONFIG_UEVENT_HELPER_PATH=""
-# CONFIG_DEVTMPFS is not set
-CONFIG_STANDALONE=y
-# CONFIG_PREVENT_FIRMWARE_BUILD is not set
-CONFIG_FW_LOADER=y
-# CONFIG_FIRMWARE_IN_KERNEL is not set
-CONFIG_EXTRA_FIRMWARE=""
-# CONFIG_DEBUG_DRIVER is not set
-# CONFIG_DEBUG_DEVRES is not set
-# CONFIG_SYS_HYPERVISOR is not set
-# CONFIG_GENERIC_CPU_DEVICES is not set
-# CONFIG_DMA_SHARED_BUFFER is not set
-# CONFIG_CMA is not set
-# CONFIG_CONNECTOR is not set
-# CONFIG_MTD is not set
-# CONFIG_PARPORT is not set
-CONFIG_PNP=y
-CONFIG_PNP_DEBUG_MESSAGES=y
-
-#
-# Protocols
-#
-CONFIG_PNPACPI=y
-# CONFIG_BLK_DEV is not set
-
-#
-# Misc devices
-#
-# CONFIG_SENSORS_LIS3LV02D is not set
-# CONFIG_IBM_ASM is not set
-# CONFIG_PHANTOM is not set
-# CONFIG_INTEL_MID_PTI is not set
-# CONFIG_SGI_IOC4 is not set
-# CONFIG_TIFM_CORE is not set
-# CONFIG_ENCLOSURE_SERVICES is not set
-# CONFIG_HP_ILO is not set
-# CONFIG_VMWARE_BALLOON is not set
-# CONFIG_PCH_PHUB is not set
-# CONFIG_C2PORT is not set
-
-#
-# EEPROM support
-#
-# CONFIG_EEPROM_93CX6 is not set
-# CONFIG_CB710_CORE is not set
-
-#
-# Texas Instruments shared transport line discipline
-#
-
-#
-# Altera FPGA firmware download module
-#
-CONFIG_HAVE_IDE=y
-# CONFIG_IDE is not set
-
-#
-# SCSI device support
-#
-CONFIG_SCSI_MOD=y
-# CONFIG_RAID_ATTRS is not set
-CONFIG_SCSI=y
-CONFIG_SCSI_DMA=y
-# CONFIG_SCSI_TGT is not set
-# CONFIG_SCSI_NETLINK is not set
-CONFIG_SCSI_PROC_FS=y
-
-#
-# SCSI support type (disk, tape, CD-ROM)
-#
-CONFIG_BLK_DEV_SD=y
-# CONFIG_CHR_DEV_ST is not set
-# CONFIG_CHR_DEV_OSST is not set
-# CONFIG_BLK_DEV_SR is not set
-# CONFIG_CHR_DEV_SG is not set
-# CONFIG_CHR_DEV_SCH is not set
-# CONFIG_SCSI_MULTI_LUN is not set
-# CONFIG_SCSI_CONSTANTS is not set
-# CONFIG_SCSI_LOGGING is not set
-# CONFIG_SCSI_SCAN_ASYNC is not set
-
-#
-# SCSI Transports
-#
-# CONFIG_SCSI_SPI_ATTRS is not set
-# CONFIG_SCSI_FC_ATTRS is not set
-# CONFIG_SCSI_ISCSI_ATTRS is not set
-# CONFIG_SCSI_SAS_ATTRS is not set
-# CONFIG_SCSI_SAS_LIBSAS is not set
-# CONFIG_SCSI_SRP_ATTRS is not set
-CONFIG_SCSI_LOWLEVEL=y
-# CONFIG_ISCSI_TCP is not set
-# CONFIG_ISCSI_BOOT_SYSFS is not set
-# CONFIG_SCSI_CXGB3_ISCSI is not set
-# CONFIG_SCSI_CXGB4_ISCSI is not set
-# CONFIG_SCSI_BNX2_ISCSI is not set
-# CONFIG_SCSI_BNX2X_FCOE is not set
-# CONFIG_BE2ISCSI is not set
-# CONFIG_BLK_DEV_3W_XXXX_RAID is not set
-# CONFIG_SCSI_HPSA is not set
-# CONFIG_SCSI_3W_9XXX is not set
-# CONFIG_SCSI_3W_SAS is not set
-# CONFIG_SCSI_ACARD is not set
-# CONFIG_SCSI_AACRAID is not set
-# CONFIG_SCSI_AIC7XXX is not set
-# CONFIG_SCSI_AIC7XXX_OLD is not set
-# CONFIG_SCSI_AIC79XX is not set
-# CONFIG_SCSI_AIC94XX is not set
-# CONFIG_SCSI_MVSAS is not set
-# CONFIG_SCSI_MVUMI is not set
-# CONFIG_SCSI_DPT_I2O is not set
-# CONFIG_SCSI_ADVANSYS is not set
-# CONFIG_SCSI_ARCMSR is not set
-# CONFIG_MEGARAID_NEWGEN is not set
-# CONFIG_MEGARAID_LEGACY is not set
-# CONFIG_MEGARAID_SAS is not set
-# CONFIG_SCSI_MPT2SAS is not set
-# CONFIG_SCSI_UFSHCD is not set
-# CONFIG_SCSI_HPTIOP is not set
-# CONFIG_SCSI_BUSLOGIC is not set
-# CONFIG_VMWARE_PVSCSI is not set
-# CONFIG_LIBFC is not set
-# CONFIG_LIBFCOE is not set
-# CONFIG_FCOE is not set
-# CONFIG_FCOE_FNIC is not set
-# CONFIG_SCSI_DMX3191D is not set
-# CONFIG_SCSI_EATA is not set
-# CONFIG_SCSI_FUTURE_DOMAIN is not set
-# CONFIG_SCSI_GDTH is not set
-# CONFIG_SCSI_ISCI is not set
-# CONFIG_SCSI_IPS is not set
-# CONFIG_SCSI_INITIO is not set
-# CONFIG_SCSI_INIA100 is not set
-# CONFIG_SCSI_STEX is not set
-# CONFIG_SCSI_SYM53C8XX_2 is not set
-# CONFIG_SCSI_IPR is not set
-# CONFIG_SCSI_QLOGIC_1280 is not set
-# CONFIG_SCSI_QLA_FC is not set
-# CONFIG_SCSI_QLA_ISCSI is not set
-# CONFIG_SCSI_LPFC is not set
-# CONFIG_SCSI_DC395x is not set
-# CONFIG_SCSI_DC390T is not set
-# CONFIG_SCSI_NSP32 is not set
-# CONFIG_SCSI_DEBUG is not set
-# CONFIG_SCSI_PMCRAID is not set
-# CONFIG_SCSI_PM8001 is not set
-# CONFIG_SCSI_SRP is not set
-# CONFIG_SCSI_BFA_FC is not set
-# CONFIG_SCSI_DH is not set
-# CONFIG_SCSI_OSD_INITIATOR is not set
-CONFIG_ATA=y
-# CONFIG_ATA_NONSTANDARD is not set
-CONFIG_ATA_VERBOSE_ERROR=y
-CONFIG_ATA_ACPI=y
-CONFIG_SATA_PMP=y
-
-#
-# Controllers with non-SFF native interface
-#
-# CONFIG_SATA_AHCI is not set
-# CONFIG_SATA_AHCI_PLATFORM is not set
-# CONFIG_SATA_INIC162X is not set
-# CONFIG_SATA_ACARD_AHCI is not set
-# CONFIG_SATA_SIL24 is not set
-CONFIG_ATA_SFF=y
-
-#
-# SFF controllers with custom DMA interface
-#
-# CONFIG_PDC_ADMA is not set
-# CONFIG_SATA_QSTOR is not set
-# CONFIG_SATA_SX4 is not set
-CONFIG_ATA_BMDMA=y
-
-#
-# SATA SFF controllers with BMDMA
-#
-CONFIG_ATA_PIIX=y
-# CONFIG_SATA_MV is not set
-# CONFIG_SATA_NV is not set
-# CONFIG_SATA_PROMISE is not set
-# CONFIG_SATA_SIL is not set
-# CONFIG_SATA_SIS is not set
-# CONFIG_SATA_SVW is not set
-# CONFIG_SATA_ULI is not set
-# CONFIG_SATA_VIA is not set
-# CONFIG_SATA_VITESSE is not set
-
-#
-# PATA SFF controllers with BMDMA
-#
-# CONFIG_PATA_ALI is not set
-# CONFIG_PATA_AMD is not set
-# CONFIG_PATA_ARTOP is not set
-# CONFIG_PATA_ATIIXP is not set
-# CONFIG_PATA_ATP867X is not set
-# CONFIG_PATA_CMD64X is not set
-# CONFIG_PATA_CS5520 is not set
-# CONFIG_PATA_CS5530 is not set
-# CONFIG_PATA_CS5535 is not set
-# CONFIG_PATA_CS5536 is not set
-# CONFIG_PATA_CYPRESS is not set
-# CONFIG_PATA_EFAR is not set
-# CONFIG_PATA_HPT366 is not set
-# CONFIG_PATA_HPT37X is not set
-# CONFIG_PATA_HPT3X2N is not set
-# CONFIG_PATA_HPT3X3 is not set
-# CONFIG_PATA_IT8213 is not set
-# CONFIG_PATA_IT821X is not set
-# CONFIG_PATA_JMICRON is not set
-# CONFIG_PATA_MARVELL is not set
-# CONFIG_PATA_NETCELL is not set
-# CONFIG_PATA_NINJA32 is not set
-# CONFIG_PATA_NS87415 is not set
-# CONFIG_PATA_OLDPIIX is not set
-# CONFIG_PATA_OPTIDMA is not set
-# CONFIG_PATA_PDC2027X is not set
-# CONFIG_PATA_PDC_OLD is not set
-# CONFIG_PATA_RADISYS is not set
-# CONFIG_PATA_RDC is not set
-# CONFIG_PATA_SC1200 is not set
-# CONFIG_PATA_SCH is not set
-# CONFIG_PATA_SERVERWORKS is not set
-# CONFIG_PATA_SIL680 is not set
-# CONFIG_PATA_SIS is not set
-# CONFIG_PATA_TOSHIBA is not set
-# CONFIG_PATA_TRIFLEX is not set
-# CONFIG_PATA_VIA is not set
-# CONFIG_PATA_WINBOND is not set
-
-#
-# PIO-only SFF controllers
-#
-# CONFIG_PATA_CMD640_PCI is not set
-# CONFIG_PATA_MPIIX is not set
-# CONFIG_PATA_NS87410 is not set
-# CONFIG_PATA_OPTI is not set
-# CONFIG_PATA_RZ1000 is not set
-
-#
-# Generic fallback / legacy drivers
-#
-# CONFIG_PATA_ACPI is not set
-# CONFIG_ATA_GENERIC is not set
-# CONFIG_PATA_LEGACY is not set
-# CONFIG_MD is not set
-# CONFIG_TARGET_CORE is not set
-# CONFIG_FUSION is not set
-
-#
-# IEEE 1394 (FireWire) support
-#
-# CONFIG_FIREWIRE is not set
-# CONFIG_FIREWIRE_NOSY is not set
-# CONFIG_I2O is not set
-# CONFIG_MACINTOSH_DRIVERS is not set
-CONFIG_NETDEVICES=y
-CONFIG_NET_CORE=y
-# CONFIG_BONDING is not set
-# CONFIG_DUMMY is not set
-# CONFIG_EQUALIZER is not set
-# CONFIG_NET_FC is not set
-# CONFIG_MII is not set
-# CONFIG_NET_TEAM is not set
-# CONFIG_MACVLAN is not set
-# CONFIG_NETCONSOLE is not set
-# CONFIG_NETPOLL is not set
-# CONFIG_NET_POLL_CONTROLLER is not set
-# CONFIG_TUN is not set
-# CONFIG_VETH is not set
-# CONFIG_ARCNET is not set
-
-#
-# CAIF transport drivers
-#
-CONFIG_ETHERNET=y
-# CONFIG_NET_VENDOR_3COM is not set
-# CONFIG_NET_VENDOR_ADAPTEC is not set
-# CONFIG_NET_VENDOR_ALTEON is not set
-# CONFIG_NET_VENDOR_AMD is not set
-# CONFIG_NET_VENDOR_ATHEROS is not set
-# CONFIG_NET_VENDOR_BROADCOM is not set
-# CONFIG_NET_VENDOR_BROCADE is not set
-# CONFIG_NET_CALXEDA_XGMAC is not set
-# CONFIG_NET_VENDOR_CHELSIO is not set
-# CONFIG_NET_VENDOR_CISCO is not set
-# CONFIG_DNET is not set
-# CONFIG_NET_VENDOR_DEC is not set
-# CONFIG_NET_VENDOR_DLINK is not set
-# CONFIG_NET_VENDOR_EMULEX is not set
-# CONFIG_NET_VENDOR_EXAR is not set
-# CONFIG_NET_VENDOR_HP is not set
-CONFIG_NET_VENDOR_INTEL=y
-# CONFIG_E100 is not set
-CONFIG_E1000=y
-# CONFIG_E1000E is not set
-# CONFIG_IGB is not set
-# CONFIG_IGBVF is not set
-# CONFIG_IXGB is not set
-# CONFIG_IXGBE is not set
-# CONFIG_NET_VENDOR_I825XX is not set
-# CONFIG_IP1000 is not set
-# CONFIG_JME is not set
-# CONFIG_NET_VENDOR_MARVELL is not set
-# CONFIG_NET_VENDOR_MELLANOX is not set
-# CONFIG_NET_VENDOR_MICREL is not set
-# CONFIG_NET_VENDOR_MYRI is not set
-# CONFIG_FEALNX is not set
-# CONFIG_NET_VENDOR_NATSEMI is not set
-# CONFIG_NET_VENDOR_NVIDIA is not set
-# CONFIG_NET_VENDOR_OKI is not set
-# CONFIG_ETHOC is not set
-# CONFIG_NET_PACKET_ENGINE is not set
-# CONFIG_NET_VENDOR_QLOGIC is not set
-# CONFIG_NET_VENDOR_REALTEK is not set
-# CONFIG_NET_VENDOR_RDC is not set
-# CONFIG_NET_VENDOR_SEEQ is not set
-# CONFIG_NET_VENDOR_SILAN is not set
-# CONFIG_NET_VENDOR_SIS is not set
-# CONFIG_SFC is not set
-# CONFIG_NET_VENDOR_SMSC is not set
-# CONFIG_NET_VENDOR_STMICRO is not set
-# CONFIG_NET_VENDOR_SUN is not set
-# CONFIG_NET_VENDOR_TEHUTI is not set
-# CONFIG_NET_VENDOR_TI is not set
-# CONFIG_NET_VENDOR_VIA is not set
-# CONFIG_NET_VENDOR_WIZNET is not set
-# CONFIG_FDDI is not set
-# CONFIG_HIPPI is not set
-# CONFIG_NET_SB1000 is not set
-# CONFIG_PHYLIB is not set
-# CONFIG_PPP is not set
-# CONFIG_SLIP is not set
-# CONFIG_WLAN is not set
-
-#
-# Enable WiMAX (Networking options) to see the WiMAX drivers
-#
-# CONFIG_WAN is not set
-# CONFIG_VMXNET3 is not set
-# CONFIG_ISDN is not set
-
-#
-# Input device support
-#
-CONFIG_INPUT=y
-# CONFIG_INPUT_FF_MEMLESS is not set
-# CONFIG_INPUT_POLLDEV is not set
-# CONFIG_INPUT_SPARSEKMAP is not set
-# CONFIG_INPUT_MATRIXKMAP is not set
-
-#
-# Userland interfaces
-#
-CONFIG_INPUT_MOUSEDEV=y
-# CONFIG_INPUT_MOUSEDEV_PSAUX is not set
-CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
-CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
-# CONFIG_INPUT_JOYDEV is not set
-# CONFIG_INPUT_EVDEV is not set
-# CONFIG_INPUT_EVBUG is not set
-
-#
-# Input Device Drivers
-#
-CONFIG_INPUT_KEYBOARD=y
-CONFIG_KEYBOARD_ATKBD=y
-# CONFIG_KEYBOARD_LKKBD is not set
-# CONFIG_KEYBOARD_NEWTON is not set
-# CONFIG_KEYBOARD_OPENCORES is not set
-# CONFIG_KEYBOARD_STOWAWAY is not set
-# CONFIG_KEYBOARD_SUNKBD is not set
-# CONFIG_KEYBOARD_OMAP4 is not set
-# CONFIG_KEYBOARD_XTKBD is not set
-# CONFIG_INPUT_MOUSE is not set
-# CONFIG_INPUT_JOYSTICK is not set
-# CONFIG_INPUT_TABLET is not set
-# CONFIG_INPUT_TOUCHSCREEN is not set
-# CONFIG_INPUT_MISC is not set
-
-#
-# Hardware I/O ports
-#
-CONFIG_SERIO=y
-CONFIG_SERIO_I8042=y
-# CONFIG_SERIO_SERPORT is not set
-# CONFIG_SERIO_CT82C710 is not set
-# CONFIG_SERIO_PCIPS2 is not set
-CONFIG_SERIO_LIBPS2=y
-# CONFIG_SERIO_RAW is not set
-# CONFIG_SERIO_ALTERA_PS2 is not set
-# CONFIG_SERIO_PS2MULT is not set
-# CONFIG_GAMEPORT is not set
-
-#
-# Character devices
-#
-CONFIG_VT=y
-CONFIG_CONSOLE_TRANSLATIONS=y
-CONFIG_VT_CONSOLE=y
-CONFIG_VT_CONSOLE_SLEEP=y
-CONFIG_HW_CONSOLE=y
-# CONFIG_VT_HW_CONSOLE_BINDING is not set
-CONFIG_UNIX98_PTYS=y
-# CONFIG_DEVPTS_MULTIPLE_INSTANCES is not set
-# CONFIG_LEGACY_PTYS is not set
-# CONFIG_SERIAL_NONSTANDARD is not set
-# CONFIG_NOZOMI is not set
-# CONFIG_N_GSM is not set
-# CONFIG_TRACE_SINK is not set
-# CONFIG_DEVKMEM is not set
-
-#
-# Serial drivers
-#
-CONFIG_SERIAL_8250=y
-CONFIG_SERIAL_8250_CONSOLE=y
-CONFIG_FIX_EARLYCON_MEM=y
-CONFIG_SERIAL_8250_PCI=y
-CONFIG_SERIAL_8250_PNP=y
-CONFIG_SERIAL_8250_NR_UARTS=4
-CONFIG_SERIAL_8250_RUNTIME_UARTS=4
-# CONFIG_SERIAL_8250_EXTENDED is not set
-
-#
-# Non-8250 serial port support
-#
-# CONFIG_SERIAL_MFD_HSU is not set
-CONFIG_SERIAL_CORE=y
-CONFIG_SERIAL_CORE_CONSOLE=y
-# CONFIG_SERIAL_JSM is not set
-# CONFIG_SERIAL_TIMBERDALE is not set
-# CONFIG_SERIAL_ALTERA_JTAGUART is not set
-# CONFIG_SERIAL_ALTERA_UART is not set
-# CONFIG_SERIAL_PCH_UART is not set
-# CONFIG_SERIAL_XILINX_PS_UART is not set
-# CONFIG_IPMI_HANDLER is not set
-# CONFIG_HW_RANDOM is not set
-# CONFIG_NVRAM is not set
-# CONFIG_RTC is not set
-# CONFIG_GEN_RTC is not set
-# CONFIG_R3964 is not set
-# CONFIG_APPLICOM is not set
-# CONFIG_SONYPI is not set
-# CONFIG_MWAVE is not set
-# CONFIG_PC8736x_GPIO is not set
-# CONFIG_NSC_GPIO is not set
-# CONFIG_RAW_DRIVER is not set
-# CONFIG_HPET is not set
-# CONFIG_HANGCHECK_TIMER is not set
-# CONFIG_TCG_TPM is not set
-# CONFIG_TELCLOCK is not set
-CONFIG_DEVPORT=y
-# CONFIG_I2C is not set
-# CONFIG_SPI is not set
-# CONFIG_HSI is not set
-
-#
-# PPS support
-#
-# CONFIG_PPS is not set
-
-#
-# PPS generators support
-#
-
-#
-# PTP clock support
-#
-
-#
-# Enable Device Drivers -> PPS to see the PTP clock options.
-#
-CONFIG_ARCH_WANT_OPTIONAL_GPIOLIB=y
-# CONFIG_GPIOLIB is not set
-# CONFIG_W1 is not set
-CONFIG_POWER_SUPPLY=y
-# CONFIG_POWER_SUPPLY_DEBUG is not set
-# CONFIG_PDA_POWER is not set
-# CONFIG_TEST_POWER is not set
-# CONFIG_BATTERY_DS2780 is not set
-# CONFIG_BATTERY_DS2781 is not set
-# CONFIG_BATTERY_BQ27x00 is not set
-# CONFIG_CHARGER_MAX8903 is not set
-# CONFIG_HWMON is not set
-CONFIG_THERMAL=y
-# CONFIG_WATCHDOG is not set
-CONFIG_SSB_POSSIBLE=y
-
-#
-# Sonics Silicon Backplane
-#
-# CONFIG_SSB is not set
-CONFIG_BCMA_POSSIBLE=y
-
-#
-# Broadcom specific AMBA
-#
-# CONFIG_BCMA is not set
-
-#
-# Multifunction device drivers
-#
-# CONFIG_MFD_CORE is not set
-# CONFIG_MFD_SM501 is not set
-# CONFIG_HTC_PASIC3 is not set
-# CONFIG_MFD_TMIO is not set
-# CONFIG_ABX500_CORE is not set
-# CONFIG_MFD_CS5535 is not set
-# CONFIG_LPC_SCH is not set
-# CONFIG_MFD_RDC321X is not set
-# CONFIG_MFD_JANZ_CMODIO is not set
-# CONFIG_MFD_VX855 is not set
-# CONFIG_REGULATOR is not set
-# CONFIG_MEDIA_SUPPORT is not set
-
-#
-# Graphics support
-#
-# CONFIG_AGP is not set
-CONFIG_VGA_ARB=y
-CONFIG_VGA_ARB_MAX_GPUS=1
-# CONFIG_VGA_SWITCHEROO is not set
-# CONFIG_DRM is not set
-# CONFIG_STUB_POULSBO is not set
-# CONFIG_VGASTATE is not set
-# CONFIG_VIDEO_OUTPUT_CONTROL is not set
-# CONFIG_FB is not set
-# CONFIG_EXYNOS_VIDEO is not set
-# CONFIG_BACKLIGHT_LCD_SUPPORT is not set
-
-#
-# Console display driver support
-#
-CONFIG_VGA_CONSOLE=y
-# CONFIG_VGACON_SOFT_SCROLLBACK is not set
-CONFIG_DUMMY_CONSOLE=y
-# CONFIG_SOUND is not set
-# CONFIG_HID_SUPPORT is not set
-CONFIG_USB_ARCH_HAS_OHCI=y
-CONFIG_USB_ARCH_HAS_EHCI=y
-CONFIG_USB_ARCH_HAS_XHCI=y
-# CONFIG_USB_SUPPORT is not set
-# CONFIG_UWB is not set
-# CONFIG_MMC is not set
-# CONFIG_MEMSTICK is not set
-# CONFIG_NEW_LEDS is not set
-# CONFIG_ACCESSIBILITY is not set
-# CONFIG_INFINIBAND is not set
-# CONFIG_EDAC is not set
-# CONFIG_RTC_CLASS is not set
-# CONFIG_DMADEVICES is not set
-# CONFIG_AUXDISPLAY is not set
-# CONFIG_UIO is not set
-
-#
-# Virtio drivers
-#
-# CONFIG_VIRTIO_PCI is not set
-# CONFIG_VIRTIO_BALLOON is not set
-# CONFIG_VIRTIO_MMIO is not set
-
-#
-# Microsoft Hyper-V guest support
-#
-# CONFIG_HYPERV is not set
-# CONFIG_STAGING is not set
-# CONFIG_X86_PLATFORM_DEVICES is not set
-
-#
-# Hardware Spinlock drivers
-#
-CONFIG_CLKSRC_I8253=y
-CONFIG_CLKEVT_I8253=y
-CONFIG_I8253_LOCK=y
-CONFIG_CLKBLD_I8253=y
-CONFIG_IOMMU_SUPPORT=y
-
-#
-# Remoteproc drivers (EXPERIMENTAL)
-#
-
-#
-# Rpmsg drivers (EXPERIMENTAL)
-#
-# CONFIG_VIRT_DRIVERS is not set
-# CONFIG_PM_DEVFREQ is not set
-# CONFIG_EXTCON is not set
-# CONFIG_MEMORY is not set
-# CONFIG_IIO is not set
-# CONFIG_VME_BUS is not set
-
-#
-# Firmware Drivers
-#
-# CONFIG_EDD is not set
-CONFIG_FIRMWARE_MEMMAP=y
-# CONFIG_DELL_RBU is not set
-# CONFIG_DCDBAS is not set
-# CONFIG_DMIID is not set
-# CONFIG_DMI_SYSFS is not set
-# CONFIG_ISCSI_IBFT_FIND is not set
-# CONFIG_GOOGLE_FIRMWARE is not set
-
-#
-# File systems
-#
-CONFIG_DCACHE_WORD_ACCESS=y
-CONFIG_EXT2_FS=y
-# CONFIG_EXT2_FS_XATTR is not set
-# CONFIG_EXT2_FS_XIP is not set
-# CONFIG_EXT3_FS is not set
-# CONFIG_EXT4_FS is not set
-# CONFIG_REISERFS_FS is not set
-# CONFIG_JFS_FS is not set
-# CONFIG_XFS_FS is not set
-# CONFIG_GFS2_FS is not set
-# CONFIG_BTRFS_FS is not set
-# CONFIG_NILFS2_FS is not set
-# CONFIG_FS_POSIX_ACL is not set
-CONFIG_FILE_LOCKING=y
-# CONFIG_FSNOTIFY is not set
-# CONFIG_DNOTIFY is not set
-# CONFIG_INOTIFY_USER is not set
-# CONFIG_FANOTIFY is not set
-# CONFIG_QUOTA is not set
-# CONFIG_QUOTACTL is not set
-# CONFIG_AUTOFS4_FS is not set
-# CONFIG_FUSE_FS is not set
-
-#
-# Caches
-#
-# CONFIG_FSCACHE is not set
-
-#
-# CD-ROM/DVD Filesystems
-#
-# CONFIG_ISO9660_FS is not set
-# CONFIG_UDF_FS is not set
-
-#
-# DOS/FAT/NT Filesystems
-#
-# CONFIG_MSDOS_FS is not set
-# CONFIG_VFAT_FS is not set
-# CONFIG_NTFS_FS is not set
-
-#
-# Pseudo filesystems
-#
-CONFIG_PROC_FS=y
-# CONFIG_PROC_KCORE is not set
-CONFIG_PROC_SYSCTL=y
-CONFIG_PROC_PAGE_MONITOR=y
-CONFIG_SYSFS=y
-# CONFIG_TMPFS is not set
-# CONFIG_HUGETLBFS is not set
-# CONFIG_HUGETLB_PAGE is not set
-# CONFIG_CONFIGFS_FS is not set
-# CONFIG_MISC_FILESYSTEMS is not set
-# CONFIG_NETWORK_FILESYSTEMS is not set
-CONFIG_NLS=y
-CONFIG_NLS_DEFAULT="utf-8"
-# CONFIG_NLS_CODEPAGE_437 is not set
-# CONFIG_NLS_CODEPAGE_737 is not set
-# CONFIG_NLS_CODEPAGE_775 is not set
-# CONFIG_NLS_CODEPAGE_850 is not set
-# CONFIG_NLS_CODEPAGE_852 is not set
-# CONFIG_NLS_CODEPAGE_855 is not set
-# CONFIG_NLS_CODEPAGE_857 is not set
-# CONFIG_NLS_CODEPAGE_860 is not set
-# CONFIG_NLS_CODEPAGE_861 is not set
-# CONFIG_NLS_CODEPAGE_862 is not set
-# CONFIG_NLS_CODEPAGE_863 is not set
-# CONFIG_NLS_CODEPAGE_864 is not set
-# CONFIG_NLS_CODEPAGE_865 is not set
-# CONFIG_NLS_CODEPAGE_866 is not set
-# CONFIG_NLS_CODEPAGE_869 is not set
-# CONFIG_NLS_CODEPAGE_936 is not set
-# CONFIG_NLS_CODEPAGE_950 is not set
-# CONFIG_NLS_CODEPAGE_932 is not set
-# CONFIG_NLS_CODEPAGE_949 is not set
-# CONFIG_NLS_CODEPAGE_874 is not set
-# CONFIG_NLS_ISO8859_8 is not set
-# CONFIG_NLS_CODEPAGE_1250 is not set
-# CONFIG_NLS_CODEPAGE_1251 is not set
-# CONFIG_NLS_ASCII is not set
-# CONFIG_NLS_ISO8859_1 is not set
-# CONFIG_NLS_ISO8859_2 is not set
-# CONFIG_NLS_ISO8859_3 is not set
-# CONFIG_NLS_ISO8859_4 is not set
-# CONFIG_NLS_ISO8859_5 is not set
-# CONFIG_NLS_ISO8859_6 is not set
-# CONFIG_NLS_ISO8859_7 is not set
-# CONFIG_NLS_ISO8859_9 is not set
-# CONFIG_NLS_ISO8859_13 is not set
-# CONFIG_NLS_ISO8859_14 is not set
-# CONFIG_NLS_ISO8859_15 is not set
-# CONFIG_NLS_KOI8_R is not set
-# CONFIG_NLS_KOI8_U is not set
-CONFIG_NLS_UTF8=y
-
-#
-# Kernel hacking
-#
-CONFIG_TRACE_IRQFLAGS_SUPPORT=y
-# CONFIG_PRINTK_TIME is not set
-CONFIG_DEFAULT_MESSAGE_LOGLEVEL=4
-# CONFIG_ENABLE_WARN_DEPRECATED is not set
-# CONFIG_ENABLE_MUST_CHECK is not set
-CONFIG_FRAME_WARN=1024
-# CONFIG_MAGIC_SYSRQ is not set
-# CONFIG_STRIP_ASM_SYMS is not set
-# CONFIG_READABLE_ASM is not set
-# CONFIG_UNUSED_SYMBOLS is not set
-CONFIG_DEBUG_FS=y
-# CONFIG_HEADERS_CHECK is not set
-# CONFIG_DEBUG_SECTION_MISMATCH is not set
-CONFIG_DEBUG_KERNEL=y
-# CONFIG_DEBUG_SHIRQ is not set
-# CONFIG_LOCKUP_DETECTOR is not set
-# CONFIG_HARDLOCKUP_DETECTOR is not set
-# CONFIG_DETECT_HUNG_TASK is not set
-CONFIG_SCHED_DEBUG=y
-# CONFIG_SCHEDSTATS is not set
-# CONFIG_TIMER_STATS is not set
-CONFIG_DEBUG_OBJECTS=y
-# CONFIG_DEBUG_OBJECTS_SELFTEST is not set
-# CONFIG_DEBUG_OBJECTS_FREE is not set
-# CONFIG_DEBUG_OBJECTS_TIMERS is not set
-# CONFIG_DEBUG_OBJECTS_WORK is not set
-# CONFIG_DEBUG_OBJECTS_RCU_HEAD is not set
-# CONFIG_DEBUG_OBJECTS_PERCPU_COUNTER is not set
-CONFIG_DEBUG_OBJECTS_ENABLE_DEFAULT=1
-# CONFIG_SLUB_DEBUG_ON is not set
-# CONFIG_SLUB_STATS is not set
-CONFIG_DEBUG_KMEMLEAK=y
-CONFIG_DEBUG_KMEMLEAK_EARLY_LOG_SIZE=400
-# CONFIG_DEBUG_KMEMLEAK_DEFAULT_OFF is not set
-# CONFIG_DEBUG_RT_MUTEXES is not set
-# CONFIG_RT_MUTEX_TESTER is not set
-# CONFIG_DEBUG_SPINLOCK is not set
-# CONFIG_DEBUG_MUTEXES is not set
-# CONFIG_DEBUG_LOCK_ALLOC is not set
-# CONFIG_PROVE_LOCKING is not set
-# CONFIG_SPARSE_RCU_POINTER is not set
-# CONFIG_LOCK_STAT is not set
-# CONFIG_DEBUG_ATOMIC_SLEEP is not set
-# CONFIG_DEBUG_LOCKING_API_SELFTESTS is not set
-CONFIG_STACKTRACE=y
-# CONFIG_DEBUG_STACK_USAGE is not set
-CONFIG_DEBUG_KOBJECT=y
-# CONFIG_DEBUG_HIGHMEM is not set
-CONFIG_DEBUG_BUGVERBOSE=y
-CONFIG_DEBUG_INFO=y
-# CONFIG_DEBUG_INFO_REDUCED is not set
-# CONFIG_DEBUG_VM is not set
-# CONFIG_DEBUG_VIRTUAL is not set
-# CONFIG_DEBUG_WRITECOUNT is not set
-CONFIG_DEBUG_MEMORY_INIT=y
-# CONFIG_DEBUG_LIST is not set
-# CONFIG_TEST_LIST_SORT is not set
-# CONFIG_DEBUG_SG is not set
-# CONFIG_DEBUG_NOTIFIERS is not set
-# CONFIG_DEBUG_CREDENTIALS is not set
-CONFIG_ARCH_WANT_FRAME_POINTERS=y
-CONFIG_FRAME_POINTER=y
-# CONFIG_BOOT_PRINTK_DELAY is not set
-# CONFIG_RCU_TORTURE_TEST is not set
-# CONFIG_RCU_TRACE is not set
-# CONFIG_BACKTRACE_SELF_TEST is not set
-# CONFIG_DEBUG_BLOCK_EXT_DEVT is not set
-# CONFIG_DEBUG_FORCE_WEAK_PER_CPU is not set
-# CONFIG_LKDTM is not set
-# CONFIG_FAULT_INJECTION is not set
-# CONFIG_LATENCYTOP is not set
-# CONFIG_DEBUG_PAGEALLOC is not set
-CONFIG_USER_STACKTRACE_SUPPORT=y
-CONFIG_HAVE_FUNCTION_TRACER=y
-CONFIG_HAVE_FUNCTION_GRAPH_TRACER=y
-CONFIG_HAVE_FUNCTION_GRAPH_FP_TEST=y
-CONFIG_HAVE_FUNCTION_TRACE_MCOUNT_TEST=y
-CONFIG_HAVE_DYNAMIC_FTRACE=y
-CONFIG_HAVE_FTRACE_MCOUNT_RECORD=y
-CONFIG_HAVE_SYSCALL_TRACEPOINTS=y
-CONFIG_HAVE_C_RECORDMCOUNT=y
-CONFIG_TRACING_SUPPORT=y
-# CONFIG_FTRACE is not set
-# CONFIG_PROVIDE_OHCI1394_DMA_INIT is not set
-# CONFIG_DYNAMIC_DEBUG is not set
-# CONFIG_DMA_API_DEBUG is not set
-# CONFIG_ATOMIC64_SELFTEST is not set
-# CONFIG_SAMPLES is not set
-CONFIG_HAVE_ARCH_KGDB=y
-# CONFIG_KGDB is not set
-CONFIG_HAVE_ARCH_KMEMCHECK=y
-# CONFIG_KMEMCHECK is not set
-# CONFIG_TEST_KSTRTOX is not set
-# CONFIG_STRICT_DEVMEM is not set
-# CONFIG_X86_VERBOSE_BOOTUP is not set
-CONFIG_EARLY_PRINTK=y
-# CONFIG_EARLY_PRINTK_DBGP is not set
-# CONFIG_DEBUG_STACKOVERFLOW is not set
-# CONFIG_X86_PTDUMP is not set
-CONFIG_DEBUG_RODATA=y
-CONFIG_DEBUG_RODATA_TEST=y
-CONFIG_DOUBLEFAULT=y
-# CONFIG_IOMMU_STRESS is not set
-CONFIG_HAVE_MMIOTRACE_SUPPORT=y
-CONFIG_IO_DELAY_TYPE_0X80=0
-CONFIG_IO_DELAY_TYPE_0XED=1
-CONFIG_IO_DELAY_TYPE_UDELAY=2
-CONFIG_IO_DELAY_TYPE_NONE=3
-CONFIG_IO_DELAY_0X80=y
-# CONFIG_IO_DELAY_0XED is not set
-# CONFIG_IO_DELAY_UDELAY is not set
-# CONFIG_IO_DELAY_NONE is not set
-CONFIG_DEFAULT_IO_DELAY_TYPE=0
-# CONFIG_DEBUG_BOOT_PARAMS is not set
-# CONFIG_CPA_DEBUG is not set
-# CONFIG_OPTIMIZE_INLINING is not set
-# CONFIG_DEBUG_STRICT_USER_COPY_CHECKS is not set
-
-#
-# Security options
-#
-# CONFIG_KEYS is not set
-# CONFIG_SECURITY_DMESG_RESTRICT is not set
-# CONFIG_SECURITY is not set
-# CONFIG_SECURITYFS is not set
-CONFIG_DEFAULT_SECURITY_DAC=y
-CONFIG_DEFAULT_SECURITY=""
-# CONFIG_CRYPTO is not set
-CONFIG_HAVE_KVM=y
-# CONFIG_VIRTUALIZATION is not set
-# CONFIG_BINARY_PRINTF is not set
-
-#
-# Library routines
-#
-CONFIG_BITREVERSE=y
-CONFIG_GENERIC_STRNCPY_FROM_USER=y
-CONFIG_GENERIC_STRNLEN_USER=y
-CONFIG_GENERIC_FIND_FIRST_BIT=y
-CONFIG_GENERIC_PCI_IOMAP=y
-CONFIG_GENERIC_IOMAP=y
-CONFIG_GENERIC_IO=y
-# CONFIG_CRC_CCITT is not set
-# CONFIG_CRC16 is not set
-# CONFIG_CRC_T10DIF is not set
-# CONFIG_CRC_ITU_T is not set
-CONFIG_CRC32=y
-# CONFIG_CRC32_SELFTEST is not set
-CONFIG_CRC32_SLICEBY8=y
-# CONFIG_CRC32_SLICEBY4 is not set
-# CONFIG_CRC32_SARWATE is not set
-# CONFIG_CRC32_BIT is not set
-# CONFIG_CRC7 is not set
-# CONFIG_LIBCRC32C is not set
-# CONFIG_CRC8 is not set
-# CONFIG_XZ_DEC is not set
-# CONFIG_XZ_DEC_BCJ is not set
-CONFIG_HAS_IOMEM=y
-CONFIG_HAS_IOPORT=y
-CONFIG_HAS_DMA=y
-CONFIG_DQL=y
-CONFIG_NLATTR=y
-# CONFIG_AVERAGE is not set
-# CONFIG_CORDIC is not set
-# CONFIG_DDR is not set
---8323328-243299472-1338236763=:12788--
