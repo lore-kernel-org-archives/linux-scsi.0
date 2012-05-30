@@ -1,30 +1,37 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC PATCH] scsi: fix hot unplug vs async scan race
-Date: Wed, 30 May 2012 13:20:32 -0500
-Message-ID: <4FC664F0.10805@cs.wisc.edu>
-References: <20120525075352.27883.81838.stgit@dwillia2-linux.jf.intel.com> <CAA9_cme9j7n726kOxOupJLd4Tajjic8QwLA_LXk21B7YEH15BA@mail.gmail.com> <4FC06185.10003@cs.wisc.edu> <CAA9_cmeuPNHQmOASVMC_9pULSJ+HXkRdYKM57GvYTQUTQE4H4A@mail.gmail.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: [PATCH v2 0/4] fix / cleanup async scsi scanning
+Date: Wed, 30 May 2012 20:22:39 +0200
+Message-ID: <20120530182239.GD15635@x1.osrc.amd.com>
+References: <20120530182016.23574.11056.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:37043 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757263Ab2E3SUr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 May 2012 14:20:47 -0400
-In-Reply-To: <CAA9_cmeuPNHQmOASVMC_9pULSJ+HXkRdYKM57GvYTQUTQE4H4A@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120530182016.23574.11056.stgit@dwillia2-linux.jf.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, Robert Love <robert.w.love@intel.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Kashyap Desai <kashyap.desai@lsi.com>, Matthew Wilcox <matthew@wil.cx>, Dariusz Majchrzak <dariusz.majchrzak@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mroos@linux.ee, JBottomley@parallels.com
+List-Id: linux-scsi@vger.kernel.org
 
-On 05/29/2012 07:48 PM, Dan Williams wrote:
->> for each device
->>        echo 1 > /sys/..../remove
->>
->> then the target would get reaped/freed from under the transport class right?
+On Wed, May 30, 2012 at 11:21:25AM -0700, Dan Williams wrote:
+> Commit a7a20d10 "[SCSI] sd: limit the scope of the async probe domain"
+> introduces a boot regression by moving sd probe work off of the global
+> async queue.  Using a local async domain hides the probe work from being
+> synchronized by wait_for_device_probe()->async_synchronize_full().
 > 
-> Where does that 'remove' attribute come from?  I can't seem to find it.
-> 
+> Fix this by teaching async_synchronize_full() to flush all async work
+> regardless of domain, and take the opportunity to convert scsi scanning
+> to async_schedule().  This enables wait_for_device_probe() to flush scsi
+> scanning work.
 
-Oops. I meant delete. /sys/block/sdX/device/delete. There is also the
-proc delete file too.
+Looks like those fix a similar boot issue I reported earlier:
+
+http://marc.info/?l=linux-kernel&m=133839683405526&w=2
+
+Should I give them a run or are they still in review?
+
+Thanks.
+
+-- 
+Regards/Gruss,
+Boris.
