@@ -1,71 +1,50 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 2/3] Stop accepting SCSI requests before removing a device
-Date: Wed, 30 May 2012 06:56:08 +0000
-Message-ID: <4FC5C488.4010307@acm.org>
-References: <4FA3EF10.3040104@acm.org> <4FA3F059.6020004@acm.org> <4FA43912.2060706@cs.wisc.edu> <4FA43C72.3000108@cs.wisc.edu> <4FA5255C.10803@acm.org> <4FC4E492.1000707@acm.org> <4FC508D2.7040606@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] bnx2fc: use kthread_create_on_node
+Date: Wed, 30 May 2012 12:30:11 +0400
+Message-ID: <1338366611.3229.8.camel@dabdike>
+References: <1311923178.7845.21.camel@edumazet-laptop>
+	 <4E33088A.80903@broadcom.com> <4FC56943.6000304@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay03ant.iops.be ([212.53.5.218]:59747 "EHLO
-	relay03ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399Ab2E3G4Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 May 2012 02:56:16 -0400
-In-Reply-To: <4FC508D2.7040606@cs.wisc.edu>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33153 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752014Ab2E3IaQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 May 2012 04:30:16 -0400
+In-Reply-To: <4FC56943.6000304@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tomas Henzl <thenzl@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Joe Perches <joe@perches.com>
 
-On 05/29/12 17:35, Mike Christie wrote:
-
-> On 05/29/2012 10:00 AM, Bart Van Assche wrote:
->> The patch below makes sure that blk_drain_queue() and blk_cleanup_queue()
->> wait until all queuecommand invocations have finished and hence fixes a
->> race between the SCSI error handler and __scsi_remove_device(). Any feedback
->> is welcome.
->>
->> ---
->>  drivers/scsi/scsi_error.c |   14 +++++++++++++-
->>  1 files changed, 13 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index 386f0c5..947f627 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -781,10 +781,17 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->>  	struct scsi_device *sdev = scmd->device;
->>  	struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->>  	struct Scsi_Host *shost = sdev->host;
->> +	struct request_queue *q = sdev->request_queue;
->>  	DECLARE_COMPLETION_ONSTACK(done);
->>  	unsigned long timeleft;
->>  	struct scsi_eh_save ses;
->> -	int rtn;
->> +	int rtn = FAILED;
->> +
->> +	spin_lock_irq(q->queue_lock);
->> +	if (blk_queue_dead(q))
->> +		goto out_unlock;
->> +	q->rq.count[BLK_RW_SYNC]++;
->> +	spin_unlock_irq(q->queue_lock);
+On Tue, 2012-05-29 at 17:26 -0700, Bhanu Prakash Gollapudi wrote:
+> On 7/29/2011 12:22 PM, Bhanu Prakash Gollapudi wrote:
+> > On 7/29/2011 12:06 AM, Eric Dumazet wrote:
+> >> Since bnx2fc_percpu_thread_create() creates percpu kthread, it makes
+> >> sense to use kthread_create_on_node() to get proper NUMA affinity for
+> >> kthread stack.
+> >>
+> >> Signed-off-by: Eric Dumazet<eric.dumazet@gmail.com>
+> >> CC: "James E.J. Bottomley"<JBottomley@parallels.com>
+> >
+> > Thanks Eric.
+> >
+> > Acked-by: Bhanu Prakash Gollapudi<bprakash@broadcom.com>
 > 
-> Are you hitting a case where a scsi_cmnd does not have a request struct
-> that was allocated through the block layer functions like
-> blk_get_request, but is getting sent through this path? What code is
-> doing this?
+> James, I found a couple of old patches that were not applied, this being 
+> one and the other - http://marc.info/?l=linux-scsi&m=132561632116410&w=2.
 > 
-> Or, are you hitting a bug where somehow the request is freed (so the
-> rq.count is decremented) but the scsi eh is still working on a scsi_cmnd
-> that had a request struct allocated for it?
- 
+> Please let me know if you want the patches to be resubmitted, as they 
+> are a bit old now.
 
-I haven't hit any such bugs. This patch is what I came up with after
-analyzing what would be necessary to make sure that queuecommand isn't
-called anymore after blk_cleanup_queue() finished and also to make sure
-that blk_drain_queue() waits until all active queuecommand calls have
-finished. The above patch was tested in combination with a patch you
-posted about three weeks ago:
-http://marc.info/?l=linux-scsi&m=133616359518771&w=2.
+Yes, please.  And for future reference, if I ever miss anything you want
+in, just fold it into your internal queue and resend for your next batch
+(with the appropriate signoffs).
 
-Bart.
+Thanks,
+
+James
+
+
