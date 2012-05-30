@@ -1,163 +1,30 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 2/4] async: make async_synchronize_full() flush all work
- regardless of domain
-Date: Wed, 30 May 2012 11:21:35 -0700
-Message-ID: <20120530182135.23574.9220.stgit@dwillia2-linux.jf.intel.com>
-References: <20120530182016.23574.11056.stgit@dwillia2-linux.jf.intel.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC PATCH] scsi: fix hot unplug vs async scan race
+Date: Wed, 30 May 2012 13:20:32 -0500
+Message-ID: <4FC664F0.10805@cs.wisc.edu>
+References: <20120525075352.27883.81838.stgit@dwillia2-linux.jf.intel.com> <CAA9_cme9j7n726kOxOupJLd4Tajjic8QwLA_LXk21B7YEH15BA@mail.gmail.com> <4FC06185.10003@cs.wisc.edu> <CAA9_cmeuPNHQmOASVMC_9pULSJ+HXkRdYKM57GvYTQUTQE4H4A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120530182016.23574.11056.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Len Brown <len.brown@intel.com>, Meelis Roos <mroos@linux.ee>, James Bottomley <JBottomley@parallels.com>, Eldad Zack <eldadzack@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Arjan van de Ven <arjan@linux.intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37043 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757263Ab2E3SUr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 May 2012 14:20:47 -0400
+In-Reply-To: <CAA9_cmeuPNHQmOASVMC_9pULSJ+HXkRdYKM57GvYTQUTQE4H4A@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, Robert Love <robert.w.love@intel.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Kashyap Desai <kashyap.desai@lsi.com>, Matthew Wilcox <matthew@wil.cx>, Dariusz Majchrzak <dariusz.majchrzak@intel.com>
 
-In response to an async related regression James noted:
+On 05/29/2012 07:48 PM, Dan Williams wrote:
+>> for each device
+>>        echo 1 > /sys/..../remove
+>>
+>> then the target would get reaped/freed from under the transport class right?
+> 
+> Where does that 'remove' attribute come from?  I can't seem to find it.
+> 
 
-  "My theory is that this is an init problem: The assumption in a lot of
-   our code is that async_synchronize_full() waits for everything ... even
-   the domain specific async schedules, which isn't true."
-
-...so make this assumption true.
-
-Each domain, including the default one, registers itself on a global domain
-list when work is scheduled.  Once all entries complete it exits that
-list.  Waiting for the list to be empty syncs all in-flight work across
-all domains.
-
-Domains can opt-out of global syncing if they are declared as exclusive
-ASYNC_DOMAIN_EXCLUSIVE().  All stack-based domains have been declared
-exclusive since the domain may go out of scope as soon as the last work
-item completes.
-
-Statically declared domains are mostly ok, but async_unregister_domain()
-is there to close any theoretical races with pending
-async_synchronize_full waiters at module removal time.
-
-Cc: Arjan van de Ven <arjan@linux.intel.com>
-Cc: Len Brown <len.brown@intel.com>
-Cc: Rafael J. Wysocki <rjw@sisk.pl>
-Cc: James Bottomley <JBottomley@parallels.com>
-Reported-by: Meelis Roos <mroos@linux.ee>
-Reported-by: Eldad Zack <eldadzack@gmail.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/scsi.c   |    1 +
- include/linux/async.h |    1 +
- kernel/async.c        |   43 +++++++++++++++++++++++++++++++++++++++++--
- 3 files changed, 43 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 2f92007..2dd3c93 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -1355,6 +1355,7 @@ static void __exit exit_scsi(void)
- 	scsi_exit_devinfo();
- 	scsi_exit_procfs();
- 	scsi_exit_queue();
-+	async_unregister_domain(&scsi_sd_probe_domain);
- }
- 
- subsys_initcall(init_scsi);
-diff --git a/include/linux/async.h b/include/linux/async.h
-index 364e7ff..7a24fe9 100644
---- a/include/linux/async.h
-+++ b/include/linux/async.h
-@@ -46,6 +46,7 @@ struct async_domain {
- extern async_cookie_t async_schedule(async_func_ptr *ptr, void *data);
- extern async_cookie_t async_schedule_domain(async_func_ptr *ptr, void *data,
- 					    struct async_domain *domain);
-+void async_unregister_domain(struct async_domain *domain);
- extern void async_synchronize_full(void);
- extern void async_synchronize_full_domain(struct async_domain *domain);
- extern void async_synchronize_cookie(async_cookie_t cookie);
-diff --git a/kernel/async.c b/kernel/async.c
-index ba5491d..9d31183 100644
---- a/kernel/async.c
-+++ b/kernel/async.c
-@@ -63,7 +63,9 @@ static async_cookie_t next_cookie = 1;
- 
- static LIST_HEAD(async_pending);
- static ASYNC_DOMAIN(async_running);
-+static LIST_HEAD(async_domains);
- static DEFINE_SPINLOCK(async_lock);
-+static DEFINE_MUTEX(async_register_mutex);
- 
- struct async_entry {
- 	struct list_head	list;
-@@ -145,6 +147,8 @@ static void async_run_entry_fn(struct work_struct *work)
- 	/* 3) remove self from the running queue */
- 	spin_lock_irqsave(&async_lock, flags);
- 	list_del(&entry->list);
-+	if (running->registered && --running->count == 0)
-+		list_del_init(&running->node);
- 
- 	/* 4) free the entry */
- 	kfree(entry);
-@@ -187,6 +191,8 @@ static async_cookie_t __async_schedule(async_func_ptr *ptr, void *data, struct a
- 	spin_lock_irqsave(&async_lock, flags);
- 	newcookie = entry->cookie = next_cookie++;
- 	list_add_tail(&entry->list, &async_pending);
-+	if (running->registered && running->count++ == 0)
-+		list_add_tail(&running->node, &async_domains);
- 	atomic_inc(&entry_count);
- 	spin_unlock_irqrestore(&async_lock, flags);
- 
-@@ -236,13 +242,43 @@ EXPORT_SYMBOL_GPL(async_schedule_domain);
-  */
- void async_synchronize_full(void)
- {
-+	mutex_lock(&async_register_mutex);
- 	do {
--		async_synchronize_cookie(next_cookie);
--	} while (!list_empty(&async_running.domain) || !list_empty(&async_pending));
-+		struct async_domain *domain = NULL;
-+
-+		spin_lock_irq(&async_lock);
-+		if (!list_empty(&async_domains))
-+			domain = list_first_entry(&async_domains, typeof(*domain), node);
-+		spin_unlock_irq(&async_lock);
-+
-+		async_synchronize_cookie_domain(next_cookie, domain);
-+	} while (!list_empty(&async_domains));
-+	mutex_unlock(&async_register_mutex);
- }
- EXPORT_SYMBOL_GPL(async_synchronize_full);
- 
- /**
-+ * async_unregister_domain - ensure no more anonymous waiters on this domain
-+ * @domain: idle domain to flush out of any async_synchronize_full instances
-+ *
-+ * async_synchronize_{cookie|full}_domain() are not flushed since callers
-+ * of these routines should know the lifetime of @domain
-+ *
-+ * Prefer ASYNC_DOMAIN_EXCLUSIVE() declarations over flushing
-+ */
-+void async_unregister_domain(struct async_domain *domain)
-+{
-+	mutex_lock(&async_register_mutex);
-+	spin_lock_irq(&async_lock);
-+	WARN_ON(!domain->registered || !list_empty(&domain->node) ||
-+		!list_empty(&domain->domain));
-+	domain->registered = 0;
-+	spin_unlock_irq(&async_lock);
-+	mutex_unlock(&async_register_mutex);
-+}
-+EXPORT_SYMBOL_GPL(async_unregister_domain);
-+
-+/**
-  * async_synchronize_full_domain - synchronize all asynchronous function within a certain domain
-  * @domain: running list to synchronize on
-  *
-@@ -268,6 +304,9 @@ void async_synchronize_cookie_domain(async_cookie_t cookie, struct async_domain
- {
- 	ktime_t uninitialized_var(starttime), delta, endtime;
- 
-+	if (!running)
-+		return;
-+
- 	if (initcall_debug && system_state == SYSTEM_BOOTING) {
- 		printk(KERN_DEBUG "async_waiting @ %i\n", task_pid_nr(current));
- 		starttime = ktime_get();
+Oops. I meant delete. /sys/block/sdX/device/delete. There is also the
+proc delete file too.
