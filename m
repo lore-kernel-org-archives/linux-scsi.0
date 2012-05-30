@@ -1,17 +1,17 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
 Subject: Re: [PATCH v2 4/4] scsi: cleanup usages of scsi_complete_async_scans
-Date: Wed, 30 May 2012 23:37:12 +0200
-Message-ID: <201205302337.13178.rjw@sisk.pl>
+Date: Wed, 30 May 2012 23:41:21 +0200
+Message-ID: <201205302341.21821.rjw@sisk.pl>
 References: <20120530182016.23574.11056.stgit@dwillia2-linux.jf.intel.com> <20120530182145.23574.5156.stgit@dwillia2-linux.jf.intel.com> <201205302334.12247.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:45199 "EHLO ogre.sisk.pl"
+Received: from ogre.sisk.pl ([193.178.161.156]:45209 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754550Ab2E3VcI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 May 2012 17:32:08 -0400
+	id S1754199Ab2E3VgR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 May 2012 17:36:17 -0400
 In-Reply-To: <201205302334.12247.rjw@sisk.pl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -141,35 +141,13 @@ On Wednesday, May 30, 2012, Rafael J. Wysocki wrote:
 > 
 > I believe this is wrong.  You're going to introduce a regression on systems
 > using built-in hibernation and built-in SCSI stack.
-> 
-> >  		swsusp_resume_device = name_to_dev_t(resume_file);
-> >  		if (!swsusp_resume_device) {
-> >  			error = -ENODEV;
-> > diff --git a/kernel/power/user.c b/kernel/power/user.c
-> > index 91b0fd0..4ed81e7 100644
-> > --- a/kernel/power/user.c
-> > +++ b/kernel/power/user.c
-> > @@ -24,7 +24,6 @@
-> >  #include <linux/console.h>
-> >  #include <linux/cpu.h>
-> >  #include <linux/freezer.h>
-> > -#include <scsi/scsi_scan.h>
-> >  
-> >  #include <asm/uaccess.h>
-> >  
-> > @@ -84,7 +83,6 @@ static int snapshot_open(struct inode *inode, struct file *filp)
-> >  		 * appear.
-> >  		 */
-> >  		wait_for_device_probe();
-> > -		scsi_complete_async_scans();
-> 
-> Same here.
 
-Well, not exactly.  Built-in SCSI with userspace-based hibernation.
+Ah, wait.  Do I understand correctly that wait_for_device_probe()
+is now going to do an equivalent of scsi_complete_async_scans()?
 
-> >  
-> >  		data->swap = -1;
-> >  		data->mode = O_WRONLY;
+If so, that should work, in which case please disregard my previous
+messages in this thread.
 
 Thanks,
 Rafael
+
