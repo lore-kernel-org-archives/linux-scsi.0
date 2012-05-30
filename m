@@ -1,40 +1,48 @@
-From: maximilian attems <max-U9r9yeDMy7A@public.gmane.org>
-Subject: Re: Remove scsi_wait_scan module
-Date: Wed, 30 May 2012 10:03:05 +0000
-Message-ID: <20120530100305.GE10036@vostochny.stro.at>
-References: <1338110026.2957.5.camel@dabdike.int.hansenpartnership.com>
- <20120528100015.GB10036@vostochny.stro.at>
- <1338206866.6330.22.camel@dabdike>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12190] kernel 2.6 PPC64 - IPS driver failure with IBM ServeRAID
+ 4H
+Date: Wed, 30 May 2012 11:30:52 +0000 (UTC)
+Message-ID: <20120530113052.826DB11FD1D@bugzilla.kernel.org>
+References: <bug-12190-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1338206866.6330.22.camel@dabdike>
-Sender: initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jeff Mahoney <jeffm-l3A5Bk7waGM@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>, initramfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:51490 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751891Ab2E3Laz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 May 2012 07:30:55 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 2ACF520399
+	for <linux-scsi@vger.kernel.org>; Wed, 30 May 2012 11:30:54 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id 2CDEB20391
+	for <linux-scsi@vger.kernel.org>; Wed, 30 May 2012 11:30:53 +0000 (UTC)
+In-Reply-To: <bug-12190-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, May 28, 2012 at 04:07:46PM +0400, James Bottomley wrote:
-> On Mon, 2012-05-28 at 10:00 +0000, maximilian attems wrote:
-> > 
-> > There is quite a number of bug reports moaning about having to boot with
-> > `scsi_mod.scan=sync'. I didn't pass them on, because I didn't knew that
-> > the module itself got broken, for example:
-> > http://bugs.debian.org/616689
-> 
-> OK, so what these bugs show is the breakage ... basically scsi_wait_scan
-> isn't really waiting for the scans to complete.  I can fix it in stable
-> so you can close your bug reports, but if I do, can you also transition
-> away from using it so I can remove it in 3.5?
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=12190
 
-Thank you very much for the patch, guess Ben will pick it for 3.2 via
-stable and we'll add it for 2.6.32 too.
 
-I'll have enough time for afterwards fix to have the udev wait root,
-even if right now I'm a bit unsure what it means beyond adding a specific
-rule?
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |OBSOLETE
+         Regression|---                         |No
+
+
+
+
+--- Comment #1 from Alan <alan@lxorguk.ukuu.org.uk>  2012-05-30 11:30:52 ---
+Closing as obsolete given the ancient kernel version
+
+If this is seen with a modern kernel please re-open
 
 -- 
-maks
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
