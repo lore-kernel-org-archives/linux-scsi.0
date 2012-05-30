@@ -1,71 +1,71 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: Re: [PATCH v4 0/13] SATA ZPODD support
-Date: Wed, 30 May 2012 13:43:10 +0800
-Message-ID: <20120530054310.GA11672@ladygaga>
-References: <1338181720-4149-1-git-send-email-ming.m.lin@intel.com>
- <20120528104438.044ae385@pyramind.ukuu.org.uk>
- <20120528105428.689d0102@pyramind.ukuu.org.uk>
- <CAF1ivSaYo8bcYAJ0i1b44HTarz11gndUU_pG109sGPOaupDi3w@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 2/3] Stop accepting SCSI requests before removing a device
+Date: Wed, 30 May 2012 06:56:08 +0000
+Message-ID: <4FC5C488.4010307@acm.org>
+References: <4FA3EF10.3040104@acm.org> <4FA3F059.6020004@acm.org> <4FA43912.2060706@cs.wisc.edu> <4FA43C72.3000108@cs.wisc.edu> <4FA5255C.10803@acm.org> <4FC4E492.1000707@acm.org> <4FC508D2.7040606@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAF1ivSaYo8bcYAJ0i1b44HTarz11gndUU_pG109sGPOaupDi3w@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>, Fuzhou Chen <fuzhouch@microsoft.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, David Woodhouse <David.Woodhouse@intel.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay03ant.iops.be ([212.53.5.218]:59747 "EHLO
+	relay03ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751399Ab2E3G4Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 May 2012 02:56:16 -0400
+In-Reply-To: <4FC508D2.7040606@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tomas Henzl <thenzl@redhat.com>, Mike Snitzer <snitzer@redhat.com>
 
-On Tue, May 29, 2012 at 08:32:49PM +0800, Lin Ming wrote:
-> On Mon, May 28, 2012 at 5:54 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> >> Have you fixed the fact that Matthews patches broke things like pata_acpi
-> >> last time ? Until that is fixed properly I don't see that these patches
-> >> can make any progress.
-> >
-> > https://lkml.org/lkml/2012/2/24/2
+On 05/29/12 17:35, Mike Christie wrote:
+
+> On 05/29/2012 10:00 AM, Bart Van Assche wrote:
+>> The patch below makes sure that blk_drain_queue() and blk_cleanup_queue()
+>> wait until all queuecommand invocations have finished and hence fixes a
+>> race between the SCSI error handler and __scsi_remove_device(). Any feedback
+>> is welcome.
+>>
+>> ---
+>>  drivers/scsi/scsi_error.c |   14 +++++++++++++-
+>>  1 files changed, 13 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+>> index 386f0c5..947f627 100644
+>> --- a/drivers/scsi/scsi_error.c
+>> +++ b/drivers/scsi/scsi_error.c
+>> @@ -781,10 +781,17 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+>>  	struct scsi_device *sdev = scmd->device;
+>>  	struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+>>  	struct Scsi_Host *shost = sdev->host;
+>> +	struct request_queue *q = sdev->request_queue;
+>>  	DECLARE_COMPLETION_ONSTACK(done);
+>>  	unsigned long timeleft;
+>>  	struct scsi_eh_save ses;
+>> -	int rtn;
+>> +	int rtn = FAILED;
+>> +
+>> +	spin_lock_irq(q->queue_lock);
+>> +	if (blk_queue_dead(q))
+>> +		goto out_unlock;
+>> +	q->rq.count[BLK_RW_SYNC]++;
+>> +	spin_unlock_irq(q->queue_lock);
 > 
-> Aaron has a fix.
-> We'll do more test.
-
-Here is the patch, apply on top of the ZPODD patch set.
-
-Hi Fuzhou,
-Can you please give it a test? Thanks.
-I tested on my system with a ATI IDE controller and it could work with
-pata_acpi module.
-
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 6de8f32..c53266a 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -59,7 +59,18 @@ acpi_handle ata_ap_acpi_handle(struct ata_port *ap)
- {
- 	if (ap->flags & ATA_FLAG_ACPI_SATA)
- 		return NULL;
--	return DEVICE_ACPI_HANDLE(&ap->scsi_host->shost_gendev);
-+
-+	/*
-+	 * If acpi bind operation has already happened, we can get the handle
-+	 * for the port by checking the corresponding scsi_host device's
-+	 * firmware node, otherwise we will need to find out the handle from
-+	 * its parent's acpi node.
-+	 */
-+	if (ap->scsi_host)
-+		return DEVICE_ACPI_HANDLE(&ap->scsi_host->shost_gendev);
-+	else
-+		return acpi_get_child(DEVICE_ACPI_HANDLE(ap->host->dev),
-+				ap->port_no);
- }
- EXPORT_SYMBOL(ata_ap_acpi_handle);
-
--Aaron
-
+> Are you hitting a case where a scsi_cmnd does not have a request struct
+> that was allocated through the block layer functions like
+> blk_get_request, but is getting sent through this path? What code is
+> doing this?
 > 
-> Thanks for the info.
-> Lin Ming
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Or, are you hitting a bug where somehow the request is freed (so the
+> rq.count is decremented) but the scsi eh is still working on a scsi_cmnd
+> that had a request struct allocated for it?
+ 
 
+I haven't hit any such bugs. This patch is what I came up with after
+analyzing what would be necessary to make sure that queuecommand isn't
+called anymore after blk_cleanup_queue() finished and also to make sure
+that blk_drain_queue() waits until all active queuecommand calls have
+finished. The above patch was tested in combination with a patch you
+posted about three weeks ago:
+http://marc.info/?l=linux-scsi&m=133616359518771&w=2.
+
+Bart.
