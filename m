@@ -1,39 +1,40 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: [PATCH] [SCSI] fix scsi_wait_scan
-Date: Wed, 30 May 2012 09:45:39 +0000
-Message-ID: <1338371138.3229.12.camel@dabdike>
+From: maximilian attems <max-U9r9yeDMy7A@public.gmane.org>
+Subject: Re: Remove scsi_wait_scan module
+Date: Wed, 30 May 2012 10:03:05 +0000
+Message-ID: <20120530100305.GE10036@vostochny.stro.at>
+References: <1338110026.2957.5.camel@dabdike.int.hansenpartnership.com>
+ <20120528100015.GB10036@vostochny.stro.at>
+ <1338206866.6330.22.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:60405 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751138Ab2E3Jpm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 May 2012 05:45:42 -0400
-Content-Language: en-US
-Content-ID: <1350B04A4CFEC24DB0E7BFF698A1C69A@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1338206866.6330.22.camel@dabdike>
+Sender: initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jeff Mahoney <jeffm-l3A5Bk7waGM@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>, initramfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: maximilian attems <max@stro.at>, Ben Hutchings <ben@decadent.org.uk>
 
-Q29tbWl0ICBjNzUxMDg1OTQzMzYyMTQzZjg0MzQ2ZDI3NGUwMDExNDE5Yzg0MjAyDQpBdXRob3I6
-IFJhZmFlbCBKLiBXeXNvY2tpIDxyandAc2lzay5wbD4NCkRhdGU6ICAgU3VuIEFwciAxMiAyMDow
-Njo1NiAyMDA5ICswMjAwDQoNCiAgICBQTS9IaWJlcm5hdGU6IFdhaXQgZm9yIFNDU0kgZGV2aWNl
-cyBzY2FuIHRvIGNvbXBsZXRlIGR1cmluZyByZXN1bWUNCg0KQnJva2UgdGhlIHNjc2lfd2FpdF9z
-Y2FuIG1vZHVsZSBpbiAyLjYuMzAuICBBcHBhcmVudGx5IGRlYmlhbiBzdGlsbCB1c2VzIGl0IHNv
-DQpmaXggaXQgYW5kIGJhY2twb3J0IHRvIHN0YWJsZSBiZWZvcmUgcmVtb3ZpbmcgaXQgaW4gMy42
-Lg0KDQpUaGUgYnJlYWthZ2UgaXMgY2F1c2VkIGJlY2F1c2UgdGhlIGZ1bmN0aW9uIHRlbXBsYXRl
-IGluDQppbmNsdWRlL3Njc2kvc2NzaV9zY2FuLmggaXMgZGVmaW5lZCB0byBiZSBhIG5vcCB1bmxl
-c3MgU0NTSSBpcyBidWlsdCBpbi4NClRoYXQgbWVhbnMgdGhhdCBpbiB0aGUgbW9kdWxhciBjYXNl
-ICh3aGljaCBpcyBldmVyeSBkaXN0cm8pLCB0aGUNCnNjc2lfd2FpdF9zY2FuIG1vZHVsZSBkb2Vz
-IGEgc2ltcGxlIGFzeW5jX3N5bmNocm9uaXplX2Z1bGwoKSBpbnN0ZWFkIG9mDQp3YWl0aW5nIGZv
-ciBzY2Fucy4NCg0KQ2M6IDxzdGFibGVAdmdlci5rZXJuZWwub3JnPg0KU2lnbmVkLW9mZi1ieTog
-SmFtZXMgQm90dG9tbGV5IDxKQm90dG9tbGV5QFBhcmFsbGVscy5jb20+DQoNCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL3Njc2kvc2NzaV93YWl0X3NjYW4uYyBiL2RyaXZlcnMvc2NzaS9zY3NpX3dhaXRf
-c2Nhbi5jDQppbmRleCA3NDcwOGZjLi5hZTc4MTQ4IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3Np
-L3Njc2lfd2FpdF9zY2FuLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX3dhaXRfc2Nhbi5jDQpA
-QCAtMTIsNyArMTIsNyBAQA0KIA0KICNpbmNsdWRlIDxsaW51eC9tb2R1bGUuaD4NCiAjaW5jbHVk
-ZSA8bGludXgvZGV2aWNlLmg+DQotI2luY2x1ZGUgPHNjc2kvc2NzaV9zY2FuLmg+DQorI2luY2x1
-ZGUgInNjc2lfcHJpdi5oIg0KIA0KIHN0YXRpYyBpbnQgX19pbml0IHdhaXRfc2Nhbl9pbml0KHZv
-aWQpDQogew0KDQo=
+On Mon, May 28, 2012 at 04:07:46PM +0400, James Bottomley wrote:
+> On Mon, 2012-05-28 at 10:00 +0000, maximilian attems wrote:
+> > 
+> > There is quite a number of bug reports moaning about having to boot with
+> > `scsi_mod.scan=sync'. I didn't pass them on, because I didn't knew that
+> > the module itself got broken, for example:
+> > http://bugs.debian.org/616689
+> 
+> OK, so what these bugs show is the breakage ... basically scsi_wait_scan
+> isn't really waiting for the scans to complete.  I can fix it in stable
+> so you can close your bug reports, but if I do, can you also transition
+> away from using it so I can remove it in 3.5?
+> 
+
+Thank you very much for the patch, guess Ben will pick it for 3.2 via
+stable and we'll add it for 2.6.32 too.
+
+I'll have enough time for afterwards fix to have the udev wait root,
+even if right now I'm a bit unsure what it means beyond adding a specific
+rule?
+
+-- 
+maks
