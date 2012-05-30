@@ -1,79 +1,61 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/3] Stop accepting SCSI requests before removing a device
-Date: Wed, 30 May 2012 12:27:36 -0500
-Message-ID: <4FC65888.3000907@cs.wisc.edu>
-References: <4FA3EF10.3040104@acm.org> <4FA3F059.6020004@acm.org> <4FA43912.2060706@cs.wisc.edu> <4FA43C72.3000108@cs.wisc.edu> <4FA5255C.10803@acm.org> <4FC4E492.1000707@acm.org> <4FC508D2.7040606@cs.wisc.edu> <4FC5C488.4010307@acm.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH v2 0/4] fix / cleanup async scsi scanning
+Date: Wed, 30 May 2012 11:21:25 -0700
+Message-ID: <20120530182016.23574.11056.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36953 "EHLO sabe.cs.wisc.edu"
+Received: from mga09.intel.com ([134.134.136.24]:24185 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754177Ab2E3R2C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 May 2012 13:28:02 -0400
-In-Reply-To: <4FC5C488.4010307@acm.org>
+	id S1757180Ab2E3SFD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 May 2012 14:05:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tomas Henzl <thenzl@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: mroos@linux.ee, JBottomley@parallels.com
 
-On 05/30/2012 01:56 AM, Bart Van Assche wrote:
-> On 05/29/12 17:35, Mike Christie wrote:
-> 
->> On 05/29/2012 10:00 AM, Bart Van Assche wrote:
->>> The patch below makes sure that blk_drain_queue() and blk_cleanup_queue()
->>> wait until all queuecommand invocations have finished and hence fixes a
->>> race between the SCSI error handler and __scsi_remove_device(). Any feedback
->>> is welcome.
->>>
->>> ---
->>>  drivers/scsi/scsi_error.c |   14 +++++++++++++-
->>>  1 files changed, 13 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->>> index 386f0c5..947f627 100644 
->>> --- a/drivers/scsi/scsi_error.c
->>> +++ b/drivers/scsi/scsi_error.c
->>> @@ -781,10 +781,17 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->>>  	struct scsi_device *sdev = scmd->device;
->>>  	struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->>>  	struct Scsi_Host *shost = sdev->host;
->>> +	struct request_queue *q = sdev->request_queue;
->>>  	DECLARE_COMPLETION_ONSTACK(done);
->>>  	unsigned long timeleft;
->>>  	struct scsi_eh_save ses;
->>> -	int rtn;
->>> +	int rtn = FAILED;
->>> +
->>> +	spin_lock_irq(q->queue_lock);
->>> +	if (blk_queue_dead(q))
->>> +		goto out_unlock;
->>> +	q->rq.count[BLK_RW_SYNC]++;
->>> +	spin_unlock_irq(q->queue_lock);
->>
->> Are you hitting a case where a scsi_cmnd does not have a request struct
->> that was allocated through the block layer functions like
->> blk_get_request, but is getting sent through this path? What code is
->> doing this?
->>
->> Or, are you hitting a bug where somehow the request is freed (so the
->> rq.count is decremented) but the scsi eh is still working on a scsi_cmnd
->> that had a request struct allocated for it?
->  
-> 
-> I haven't hit any such bugs. This patch is what I came up with after
-> analyzing what would be necessary to make sure that queuecommand isn't
-> called anymore after blk_cleanup_queue() finished and also to make sure
-> that blk_drain_queue() waits until all active queuecommand calls have
+Commit a7a20d10 "[SCSI] sd: limit the scope of the async probe domain"
+introduces a boot regression by moving sd probe work off of the global
+async queue.  Using a local async domain hides the probe work from being
+synchronized by wait_for_device_probe()->async_synchronize_full().
 
-It should be waiting now if the scsi_cmnd has a request backing
-shouldn't it? We will allocate a request struct with blk_get_request or
-one of the other blk helpers for each scsi_cmnd, and that will increment
-the q->rq.count. If we then go down the error path because a cmd timed
-out or because scsi_decide_disposition returned FAILED, then we will
-still have that request backing the scsi cmnd and the count should still
-be incremented for it. When we call scsi_send_eh_cmnd for eh operations
-the request is then still there and not freed yet. The request will get
-freed later when scsi_eh_flush_done_q is called. In there we will either
-retry or call scsi_finish_command which will go through the normal
-completion process and eventually call __blk_put_request and freed_request.
+Fix this by teaching async_synchronize_full() to flush all async work
+regardless of domain, and take the opportunity to convert scsi scanning
+to async_schedule().  This enables wait_for_device_probe() to flush scsi
+scanning work.
+
+Changes since v1: http://marc.info/?l=linux-scsi&m=133793153025832&w=2
+
+1/ Tested to fix the boot hang that Meelis reported with v1.  Reworked
+   async_synchronize_full() to walk through all the active domains,
+   otherwise we spin on !list_empty(async_domains) and prevent the async
+   context from running.
+
+2/ Added the ability for domains to opt-out of global syncing as
+   requested by Arjan, but also needed for domains that don't want to worry
+   about list corruption when the domain goes out of scope (stack-allocated
+   domains).
+
+---
+
+Dan Williams (4):
+      async: introduce 'async_domain' type
+      async: make async_synchronize_full() flush all work regardless of domain
+      scsi: queue async scan work to an async_schedule domain
+      scsi: cleanup usages of scsi_complete_async_scans
+
+
+ drivers/regulator/core.c      |    2 +
+ drivers/scsi/libsas/sas_ata.c |    2 +
+ drivers/scsi/scsi.c           |    4 ++
+ drivers/scsi/scsi_priv.h      |    3 +-
+ drivers/scsi/scsi_scan.c      |   24 +++----------
+ drivers/scsi/scsi_wait_scan.c |   15 +++-----
+ include/linux/async.h         |   36 +++++++++++++++++--
+ include/scsi/scsi_scan.h      |   11 ------
+ kernel/async.c                |   76 +++++++++++++++++++++++++++++++----------
+ kernel/power/hibernate.c      |    8 ----
+ kernel/power/user.c           |    2 -
+ 11 files changed, 107 insertions(+), 76 deletions(-)
+ delete mode 100644 include/scsi/scsi_scan.h
