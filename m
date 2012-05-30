@@ -1,85 +1,39 @@
-From: Fuzhou Chen <fuzhouch@microsoft.com>
-Subject: RE: [PATCH v4 0/13] SATA ZPODD support
-Date: Wed, 30 May 2012 09:06:43 +0000
-Message-ID: <6689D53B948ACF469C8E9C8CCD48EBE1166CD91A@SINEX14MBXC403.southpacific.corp.microsoft.com>
-References: <1338181720-4149-1-git-send-email-ming.m.lin@intel.com>
- <20120528104438.044ae385@pyramind.ukuu.org.uk>
- <20120528105428.689d0102@pyramind.ukuu.org.uk>
- <CAF1ivSaYo8bcYAJ0i1b44HTarz11gndUU_pG109sGPOaupDi3w@mail.gmail.com>
- <20120530054310.GA11672@ladygaga>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: [PATCH] [SCSI] fix scsi_wait_scan
+Date: Wed, 30 May 2012 09:45:39 +0000
+Message-ID: <1338371138.3229.12.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20120530054310.GA11672@ladygaga>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([64.131.90.16]:60405 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751138Ab2E3Jpm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 May 2012 05:45:42 -0400
 Content-Language: en-US
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>, Lin Ming <ming.m.lin@intel.com>, Hashir Abdi <habdi@microsoft.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, David Woodhouse <David.Woodhouse@intel.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-ID: <1350B04A4CFEC24DB0E7BFF698A1C69A@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: maximilian attems <max@stro.at>, Ben Hutchings <ben@decadent.org.uk>
 
-Sorry Aaron, but I have left Microsoft Open Source team for a while. Due to policy limitations, I can't touch Linux kernel source now. 
-
-Hi Hashir, could you help find current owner of our HDD driver to verify this fix? This is a ata-acpi module bug I reported last year. Our daily BVT in linux-next tree should be able to handle this verification
-
-Thanks,
-Fuzhou
-
------Original Message-----
-From: Aaron Lu [mailto:aaron.lu@amd.com] 
-Sent: Wednesday, May 30, 2012 1:43 PM
-To: Lin Ming; Fuzhou Chen
-Cc: Alan Cox; Jeff Garzik; David Woodhouse; Holger Macht; Matthew Garrett; linux-kernel@vger.kernel.org; linux-pm@vger.kernel.org; linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org; linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v4 0/13] SATA ZPODD support
-
-On Tue, May 29, 2012 at 08:32:49PM +0800, Lin Ming wrote:
-> On Mon, May 28, 2012 at 5:54 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> >> Have you fixed the fact that Matthews patches broke things like 
-> >> pata_acpi last time ? Until that is fixed properly I don't see that 
-> >> these patches can make any progress.
-> >
-> > https://lkml.org/lkml/2012/2/24/2
-> 
-> Aaron has a fix.
-> We'll do more test.
-
-Here is the patch, apply on top of the ZPODD patch set.
-
-Hi Fuzhou,
-Can you please give it a test? Thanks.
-I tested on my system with a ATI IDE controller and it could work with pata_acpi module.
-
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c index 6de8f32..c53266a 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -59,7 +59,18 @@ acpi_handle ata_ap_acpi_handle(struct ata_port *ap)  {
- 	if (ap->flags & ATA_FLAG_ACPI_SATA)
- 		return NULL;
--	return DEVICE_ACPI_HANDLE(&ap->scsi_host->shost_gendev);
-+
-+	/*
-+	 * If acpi bind operation has already happened, we can get the handle
-+	 * for the port by checking the corresponding scsi_host device's
-+	 * firmware node, otherwise we will need to find out the handle from
-+	 * its parent's acpi node.
-+	 */
-+	if (ap->scsi_host)
-+		return DEVICE_ACPI_HANDLE(&ap->scsi_host->shost_gendev);
-+	else
-+		return acpi_get_child(DEVICE_ACPI_HANDLE(ap->host->dev),
-+				ap->port_no);
- }
- EXPORT_SYMBOL(ata_ap_acpi_handle);
-
--Aaron
-
-> 
-> Thanks for the info.
-> Lin Ming
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
-> in the body of a message to majordomo@vger.kernel.org More majordomo 
-> info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+Q29tbWl0ICBjNzUxMDg1OTQzMzYyMTQzZjg0MzQ2ZDI3NGUwMDExNDE5Yzg0MjAyDQpBdXRob3I6
+IFJhZmFlbCBKLiBXeXNvY2tpIDxyandAc2lzay5wbD4NCkRhdGU6ICAgU3VuIEFwciAxMiAyMDow
+Njo1NiAyMDA5ICswMjAwDQoNCiAgICBQTS9IaWJlcm5hdGU6IFdhaXQgZm9yIFNDU0kgZGV2aWNl
+cyBzY2FuIHRvIGNvbXBsZXRlIGR1cmluZyByZXN1bWUNCg0KQnJva2UgdGhlIHNjc2lfd2FpdF9z
+Y2FuIG1vZHVsZSBpbiAyLjYuMzAuICBBcHBhcmVudGx5IGRlYmlhbiBzdGlsbCB1c2VzIGl0IHNv
+DQpmaXggaXQgYW5kIGJhY2twb3J0IHRvIHN0YWJsZSBiZWZvcmUgcmVtb3ZpbmcgaXQgaW4gMy42
+Lg0KDQpUaGUgYnJlYWthZ2UgaXMgY2F1c2VkIGJlY2F1c2UgdGhlIGZ1bmN0aW9uIHRlbXBsYXRl
+IGluDQppbmNsdWRlL3Njc2kvc2NzaV9zY2FuLmggaXMgZGVmaW5lZCB0byBiZSBhIG5vcCB1bmxl
+c3MgU0NTSSBpcyBidWlsdCBpbi4NClRoYXQgbWVhbnMgdGhhdCBpbiB0aGUgbW9kdWxhciBjYXNl
+ICh3aGljaCBpcyBldmVyeSBkaXN0cm8pLCB0aGUNCnNjc2lfd2FpdF9zY2FuIG1vZHVsZSBkb2Vz
+IGEgc2ltcGxlIGFzeW5jX3N5bmNocm9uaXplX2Z1bGwoKSBpbnN0ZWFkIG9mDQp3YWl0aW5nIGZv
+ciBzY2Fucy4NCg0KQ2M6IDxzdGFibGVAdmdlci5rZXJuZWwub3JnPg0KU2lnbmVkLW9mZi1ieTog
+SmFtZXMgQm90dG9tbGV5IDxKQm90dG9tbGV5QFBhcmFsbGVscy5jb20+DQoNCmRpZmYgLS1naXQg
+YS9kcml2ZXJzL3Njc2kvc2NzaV93YWl0X3NjYW4uYyBiL2RyaXZlcnMvc2NzaS9zY3NpX3dhaXRf
+c2Nhbi5jDQppbmRleCA3NDcwOGZjLi5hZTc4MTQ4IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3Np
+L3Njc2lfd2FpdF9zY2FuLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX3dhaXRfc2Nhbi5jDQpA
+QCAtMTIsNyArMTIsNyBAQA0KIA0KICNpbmNsdWRlIDxsaW51eC9tb2R1bGUuaD4NCiAjaW5jbHVk
+ZSA8bGludXgvZGV2aWNlLmg+DQotI2luY2x1ZGUgPHNjc2kvc2NzaV9zY2FuLmg+DQorI2luY2x1
+ZGUgInNjc2lfcHJpdi5oIg0KIA0KIHN0YXRpYyBpbnQgX19pbml0IHdhaXRfc2Nhbl9pbml0KHZv
+aWQpDQogew0KDQo=
