@@ -1,166 +1,116 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target/file: Drop O_SYNC in favor of implict vfs_fsync_range for writes
-Date: Wed, 30 May 2012 23:57:43 +0000
-Message-ID: <1338422263-19874-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+From: Dan Williams <dan.j.williams-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: Remove scsi_wait_scan module
+Date: Wed, 30 May 2012 19:34:14 -0700
+Message-ID: <CAA9_cmfZFm5+9ARB7tNVwNzwxJh3bPD=h7gMWhByjy00-qZvgg@mail.gmail.com>
+References: <1338110026.2957.5.camel@dabdike.int.hansenpartnership.com>
+	<20120528100015.GB10036@vostochny.stro.at>
+	<1338206866.6330.22.camel@dabdike>
+	<CAA9_cmfh9ZtepX+hjLVRM95u_pAe90kZTkBeVmFPWm8AMaqJ5g@mail.gmail.com>
+	<1338420752.3069.20.camel@dabdike>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1338420752.3069.20.camel@dabdike>
+Sender: initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: maximilian attems <max-U9r9yeDMy7A@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jeff Mahoney <jeffm-l3A5Bk7waGM@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>, initramfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Wed, May 30, 2012 at 4:32 PM, James Bottomley
+<James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
+> On Wed, 2012-05-30 at 11:26 -0700, Dan Williams wrote:
+>> On Mon, May 28, 2012 at 5:07 AM, James Bottomley
+>> <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
+>> > On Mon, 2012-05-28 at 10:00 +0000, maximilian attems wrote:
+>> >> On Sun, May 27, 2012 at 10:13:46AM +0100, James Bottomley wrote:
+>> >> > scsi_wait_scan was introduced with asynchronous host scanning a=
+s a hack
+>> >> > for distributions that weren't using proper udev based wait for=
+ root to
+>> >> > appear in their initramfs scripts. =A0In 2.6.30 Commit
+>> >>
+>> >> > c751085943362143f84346d274e0011419c84202
+>> >> > Author: Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>
+>> >> > Date: =A0 Sun Apr 12 20:06:56 2009 +0200
+>> >> >
+>> >> > =A0 =A0 PM/Hibernate: Wait for SCSI devices scan to complete du=
+ring resume
+>> >> >
+>> >> > Actually broke scsi_wait_scan because it renders
+>> >> > scsi_complete_async_scans() a nop for modular SCSI if you inclu=
+de
+>> >> > scsi_scans.h (which this module does).
+>> >> >
+>> >> > The lack of bug reports is sufficient proof that this module is=
+ no
+>> >> > longer used.
+>> >>
+>> >> We do use it in initramfs-tools.
+>> >>
+>> >> There is quite a number of bug reports moaning about having to bo=
+ot with
+>> >> `scsi_mod.scan=3Dsync'. I didn't pass them on, because I didn't k=
+new that
+>> >> the module itself got broken, for example:
+>> >> http://bugs.debian.org/616689
+>> >
+>> > OK, so what these bugs show is the breakage ... basically scsi_wai=
+t_scan
+>> > isn't really waiting for the scans to complete. =A0I can fix it in=
+ stable
+>> > so you can close your bug reports, but if I do, can you also trans=
+ition
+>> > away from using it so I can remove it in 3.5?
+>>
+>> Is there some other method whereby userspace can sync all driver
+>> probing actions?
+>
+> No, =A0but then there never really was. =A0The theory is you know all=
+ the
+> disks you need (/ /usr and so on) and you just wait for them to appea=
+r
+> before mounting them and proceeding with boot.
+>
+>> We won't need scsi_complete_async_scans() after:
+>>
+>> =A0 http://marc.info/?l=3Dlinux-scsi&m=3D133840132007532&w=3D2
+>>
+>> ...but won't initramfs environments still need a way to trigger
+>> wait_for_device_probe()? =A0Something like echo "flush" >
+>> /sys/devices/async_probe. and maybe reading that file indicates if
+>> some async probing is still in-flight?
+>
+> Why? =A0The job of an initramfs is to mount root. =A0All it has to do=
+ is
+> wait for root to appear via udev and then proceed. =A0The whole reaso=
+n for
+> doing stuff async initially was to speed boot, so probing can still b=
+e
+> ongoing even after the initrd exits.
+>
+> If you think about it, most modern fabrics are hot plug. =A0Just beca=
+use
+> the initial scan has completed there's no guarantee that all the devi=
+ces
+> have appeared yet.
 
-This patch converts fd_execute_cmd() code to drop O_SYNC usage
-(the original default) in favor of always preforming an implict
-SCSI forced unit access (FUA) operation using vfs_fsync_range()
-based on LBA + SectorCount after each completed FILEIO backend write.
+=46ine for single device root, but what about raid and degraded assembl=
+y?
 
-This conversion was inspired by Linus's thoughts on O_SYNC usage in
-the thread: http://www.spinics.net/lists/linux-fsdevel/msg55681.html
+Last time I checked scsi_wait_scan was still being used by dracut in
+the case where it decides to stop waiting for all raid members to
+appear.  It's a "last call" before proceeding with degraded assembly.
 
-  "O_SYNC is the absolutely anti-thesis of that kind of "multiple levels
-   of overlapping IO". Because it requires that the IO is _done_ by the
-   time you start more, which is against the whole point."
+If you immediately assemble and mount root as soon as the root device
+could be started it will almost always be a degraded array.  Sure the
+initramfs can just timeout arrival, but at a minimum that timeout
+should be "load module + flush scanning".  Without a flush mechanism
+it's just a shot in the dark what that minimum timeout should be.
 
-This patch also drops the now unnecessary fd_buffered_io= token usage
-at createvirtdev time.  Tested with lio-core code using fio writeverify
-to local tcm_loop + FILEIO <-> scsi_debug backed LUNs.
+If ata error recovery is kicking in and needs 10s of seconds to
+recover a drive I'd want my initramfs to wait for that process to
+quiesce before timing out and moving on.
 
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_file.c |   68 +++++++------------------------------
- drivers/target/target_core_file.h |    1 -
- 2 files changed, 13 insertions(+), 56 deletions(-)
-
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 686dba1..334b01c 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -137,13 +137,6 @@ static struct se_device *fd_create_virtdevice(
- 	/* O_DIRECT too? */
- 	flags = O_RDWR | O_CREAT | O_LARGEFILE;
- 
--	/*
--	 * If fd_buffered_io=1 has not been set explicitly (the default),
--	 * use O_SYNC to force FILEIO writes to disk.
--	 */
--	if (!(fd_dev->fbd_flags & FDBD_USE_BUFFERED_IO))
--		flags |= O_SYNC;
--
- 	file = filp_open(dev_p, flags, 0600);
- 	if (IS_ERR(file)) {
- 		pr_err("filp_open(%s) failed\n", dev_p);
-@@ -380,23 +373,6 @@ static void fd_emulate_sync_cache(struct se_cmd *cmd)
- 	}
- }
- 
--static void fd_emulate_write_fua(struct se_cmd *cmd)
--{
--	struct se_device *dev = cmd->se_dev;
--	struct fd_dev *fd_dev = dev->dev_ptr;
--	loff_t start = cmd->t_task_lba *
--		dev->se_sub_dev->se_dev_attrib.block_size;
--	loff_t end = start + cmd->data_length;
--	int ret;
--
--	pr_debug("FILEIO: FUA WRITE LBA: %llu, bytes: %u\n",
--		cmd->t_task_lba, cmd->data_length);
--
--	ret = vfs_fsync_range(fd_dev->fd_file, start, end, 1);
--	if (ret != 0)
--		pr_err("FILEIO: vfs_fsync_range() failed: %d\n", ret);
--}
--
- static int fd_execute_cmd(struct se_cmd *cmd, struct scatterlist *sgl,
- 		u32 sgl_nents, enum dma_data_direction data_direction)
- {
-@@ -410,20 +386,18 @@ static int fd_execute_cmd(struct se_cmd *cmd, struct scatterlist *sgl,
- 	if (data_direction == DMA_FROM_DEVICE) {
- 		ret = fd_do_readv(cmd, sgl, sgl_nents);
- 	} else {
--		ret = fd_do_writev(cmd, sgl, sgl_nents);
--
--		if (ret > 0 &&
--		    dev->se_sub_dev->se_dev_attrib.emulate_write_cache > 0 &&
--		    dev->se_sub_dev->se_dev_attrib.emulate_fua_write > 0 &&
--		    (cmd->se_cmd_flags & SCF_FUA)) {
--			/*
--			 * We might need to be a bit smarter here
--			 * and return some sense data to let the initiator
--			 * know the FUA WRITE cache sync failed..?
--			 */
--			fd_emulate_write_fua(cmd);
--		}
-+		struct fd_dev *fd_dev = dev->dev_ptr;
-+		loff_t start = cmd->t_task_lba *
-+			dev->se_sub_dev->se_dev_attrib.block_size;
-+		loff_t end = start + cmd->data_length;
- 
-+		ret = fd_do_writev(cmd, sgl, sgl_nents);
-+		/*
-+		 * Perform implict vfs_fsync_range() for fd_do_writev() ops
-+		 * instead of having to use O_SYNC for struct file.
-+		 */
-+		if (ret > 0)
-+			vfs_fsync_range(fd_dev->fd_file, start, end, 1);
- 	}
- 
- 	if (ret < 0) {
-@@ -442,7 +416,6 @@ enum {
- static match_table_t tokens = {
- 	{Opt_fd_dev_name, "fd_dev_name=%s"},
- 	{Opt_fd_dev_size, "fd_dev_size=%s"},
--	{Opt_fd_buffered_io, "fd_buffered_io=%d"},
- 	{Opt_err, NULL}
- };
- 
-@@ -498,19 +471,6 @@ static ssize_t fd_set_configfs_dev_params(
- 					" bytes\n", fd_dev->fd_dev_size);
- 			fd_dev->fbd_flags |= FBDF_HAS_SIZE;
- 			break;
--		case Opt_fd_buffered_io:
--			match_int(args, &arg);
--			if (arg != 1) {
--				pr_err("bogus fd_buffered_io=%d value\n", arg);
--				ret = -EINVAL;
--				goto out;
--			}
--
--			pr_debug("FILEIO: Using buffered I/O"
--				" operations for struct fd_dev\n");
--
--			fd_dev->fbd_flags |= FDBD_USE_BUFFERED_IO;
--			break;
- 		default:
- 			break;
- 		}
-@@ -542,10 +502,8 @@ static ssize_t fd_show_configfs_dev_params(
- 	ssize_t bl = 0;
- 
- 	bl = sprintf(b + bl, "TCM FILEIO ID: %u", fd_dev->fd_dev_id);
--	bl += sprintf(b + bl, "        File: %s  Size: %llu  Mode: %s\n",
--		fd_dev->fd_dev_name, fd_dev->fd_dev_size,
--		(fd_dev->fbd_flags & FDBD_USE_BUFFERED_IO) ?
--		"Buffered" : "Synchronous");
-+	bl += sprintf(b + bl, "        File: %s  Size: %llu  Mode: fsync\n",
-+		fd_dev->fd_dev_name, fd_dev->fd_dev_size);
- 	return bl;
- }
- 
-diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core_file.h
-index fbd59ef..70ce7fd 100644
---- a/drivers/target/target_core_file.h
-+++ b/drivers/target/target_core_file.h
-@@ -14,7 +14,6 @@
- 
- #define FBDF_HAS_PATH		0x01
- #define FBDF_HAS_SIZE		0x02
--#define FDBD_USE_BUFFERED_IO	0x04
- 
- struct fd_dev {
- 	u32		fbd_flags;
--- 
-1.7.2.5
-
+--
+Dan
