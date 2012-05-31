@@ -1,114 +1,80 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 00/18] libsas, sas_ata: update for 3.5
-Date: Thu, 31 May 2012 11:12:54 -0700
-Message-ID: <CAA9_cmchJKzNkHFgjTGTYxy_DYkHaJVH4s6m-jYH0whNhf-D7Q@mail.gmail.com>
-References: <20120506181611.17912.3798.stgit@dwillia2-linux.jf.intel.com>
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Re: Remove scsi_wait_scan module
+Date: Thu, 31 May 2012 11:49:44 -0700
+Message-ID: <CAA9_cmfCP_S5PYA7VgGisPgZY1cUO-q0kp6-UOuDvaZVzrQ0_A@mail.gmail.com>
+References: <1338110026.2957.5.camel@dabdike.int.hansenpartnership.com>
+	<20120528100015.GB10036@vostochny.stro.at>
+	<1338206866.6330.22.camel@dabdike>
+	<CAA9_cmfh9ZtepX+hjLVRM95u_pAe90kZTkBeVmFPWm8AMaqJ5g@mail.gmail.com>
+	<1338420752.3069.20.camel@dabdike>
+	<CAA9_cmfZFm5+9ARB7tNVwNzwxJh3bPD=h7gMWhByjy00-qZvgg@mail.gmail.com>
+	<1338452505.3073.4.camel@dabdike.int.hansenpartnership.com>
+	<CAA9_cmet6tMi6rNNv_ktRwHh3_N4rOSd+_jBW0P_gomHLpOytw@mail.gmail.com>
+	<1338486169.3156.8.camel@dabdike.sthat4.btopenzone.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120506181611.17912.3798.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:44736 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189Ab2EaStp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 May 2012 14:49:45 -0400
+In-Reply-To: <1338486169.3156.8.camel@dabdike.sthat4.btopenzone.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: maximilian attems <max@stro.at>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeff Mahoney <jeffm@suse.de>, Ben Hutchings <ben@decadent.org.uk>, initramfs@vger.kernel.org
 
-On Sun, May 6, 2012 at 11:17 AM, Dan Williams <dan.j.williams@intel.com=
-> wrote:
-> 1/ libsas suspend/resume support
->
-> 2/ finish off the conversion of the strategy handlers to enforce only
-> =A0 invoking them in eh context (to meet libata's expectations).
->
-> 3/ a collection of discovery fixes, error handling fixes, and
-> =A0 miscellaneous cleanups
->
-> All of these patches, save for patch 18, are on their 2nd or 3rd rese=
-nd.
-> These have been soaking in -next since before the 3.4 merge window
-> opened.
+On Thu, May 31, 2012 at 10:42 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> If there are errors on the bus, the chances are the devices are misse=
+d
+> by the initial discover and appear later anyway, so neither approach =
+is
+> foolproof. =A0I like the how long is the user prepared to wait approa=
+ch vs
+> how long does it take to complete error recovery simply because mostl=
+y
+> if the device doesn't appear within that time it is a bug (or a hardw=
+are
+> configuration problem).
 
-=2E..and it seems these will get to sit out another kernel
+I agree that the "how long is the user prepared to wait" approach is
+optimal.  But there is no way for the user to express "I want to be
+fast and safe" i.e. wait just the minimum time the subsystem needs to
+complete an initial scan.  Outside of building the module into the
+kernel to take advantage of the built-in wait_for_device_probe() in
+prepare_namespace().  That minimum time varies based on configuration.
+ I've watched dracut fail raid assembly even though the driver had not
+returned 'done' from ->scan_finished().  A generous timeout would fix
+that, but now you've overshot what the kernel was prepared to call the
+initial discovery window.
 
-Please comment on these, I'd like to know which are NAK'd vs just ran
-out of time to be integrated this round.  Jeff, some comments about
-patch 12 and 14 below for you.
+> Conversely, if you think of the usual case: the root device appears l=
+ong
+> before bus probing finishes, so by only waiting for root, we assist t=
+he
+> fast boot process.
 
-Can we at least get libsas suspend / resume support applied for 3.5?
-If that's agreeable I'll put together a pared down pull-request??
+Yes, it sucks to do "wait world" when you just need a subset, but I'm
+only saying to do the global wait in the case where the raid metadata
+expects all devices to be present and we are about to degrade the
+array for the first time.  So in the "all devices appear case" or the
+"array already marked degraded case" we wouldn't need to wait and boot
+would proceed soon as root is able to be assembled.
 
-> [PATCH 01/18] libsas: cleanup spurious calls to scsi_schedule_eh
-
-A misuse of scsi_schedule_eh(), part of the effort to make sure
-host_eh_scheduled is managed properly, but for now it's just cleanup
-material because I have not root caused a test failure back to this
-misuse.
-
-> [PATCH 02/18] libata, libsas: introduce sched_eh and end_eh port ops
-
-This was acked-by Jeff, not sure what the hold up is.
-
-> [PATCH 03/18] scsi: fix eh wakeup (scsi_schedule_eh vs scsi_restart_o=
-perations)
-
-You had comments about this patch, I responded and then the
-communication stopped.
-
-> [PATCH 04/18] scsi_transport_sas: fix delete vs scan race
-
-I have a new version under test after review feedback from Mike.
-
-> [PATCH 05/18] libsas: enforce eh strategy handlers only in eh context
-> [PATCH 06/18] libsas: add sas_eh_abort_handler
-> [PATCH 07/18] libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_h=
-andler
-> [PATCH 08/18] isci: use sas eh strategy handlers
-
-These are fixups to make sure the eh strategy handlers are called in
-the proper context and that tasks are not terminated outside of
-visibilty of the lldd.
-
-> [PATCH 09/18] libsas: trim sas_task of slow path infrastructure
-> [PATCH 10/18] libsas: sas_rediscover_dev did not look at the SMP exec=
- status.
-> [PATCH 11/18] mvsas: remove unused variable in mvs_task_exec()
-
-Minor clean up and fixlets.
-
-> [PATCH 12/18] libata: reset once
-
-Jeff, any objections on this one?
-
-> [PATCH 13/18] libsas: continue revalidation
-
-Discovery ends too early in some configurations, this could be -stable =
-material.
-
-> [PATCH 14/18] libata: export ata_port suspend/resume infrastructure f=
-or sas
-
-This plus patch 17 and a small enabling patch for isci and we have our
-first tested libsas suspend / resume implementation in the kernel.
-Needs an ack from Jeff.
-
-> [PATCH 15/18] libsas: drop sata port multiplier infrastructure
-
-Minor cleanup.
-
-> [PATCH 16/18] scsi, sd: limit the scope of the async probe domain
-
-Yea! 1 for 18 going upstream!  Sorry, couldn't resist :-).
-
-> [PATCH 17/18] libsas: suspend / resume support
-
-The aforementioned suspend / resume support.  I believe pm8001 is
-ready to take advantage of this because their current hack is not
-reliably working.
-
-> [PATCH 18/18] scsi: cleanup setting task state in scsi_error_handler(=
-)
-
-Just a cleanup, whenever it goes in is fine.
+=2E..but maybe that is my answer.  A generous timeout incurred only whe=
+n
+that first degraded event happens?  I don't know just makes me
+uncomfortable that userspace has no visibility into all the machinery
+that makes wait_for_device_probe() work in the built-in case.  But
+maybe that is because prepare_namespace() is not free to be as
+expressive as an initramfs and can only use the big hammer.
 
 --
 Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
