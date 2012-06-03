@@ -1,98 +1,51 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] Final round of SCSI updates for the 3.4+ merge
- window
-Date: Fri, 01 Jun 2012 17:16:02 -0700
-Message-ID: <1338596162.23917.108.camel@haakon2.linux-iscsi.org>
-References: <CBED88EA.47E61%giridhar.malavali@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CBED88EA.47E61%giridhar.malavali@qlogic.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Avik Shau <avik.shau@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, target-devel <target-devel@vger.kernel.org>, Hannes Reinecke <mail@hannes-reinecke.de>
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Subject: [PATCH] [SCSI] qla2xxx: Remove version.h header file inclusion
+Date: Sun,  3 Jun 2012 22:27:01 +0530
+Message-ID: <1338742621-11044-1-git-send-email-sachin.kamat@linaro.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:53733 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524Ab2FCQ5P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jun 2012 12:57:15 -0400
+Received: by pbbrp8 with SMTP id rp8so5006556pbb.19
+        for <linux-scsi@vger.kernel.org>; Sun, 03 Jun 2012 09:57:14 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, linux-driver@qlogic.com, andrew.vasquez@qlogic.com, sachin.kamat@linaro.org, patches@linaro.org
 
-On Thu, 2012-05-31 at 20:47 -0700, Giridhar Malavali wrote:
-> Nicholas and all others,
-> 
-> I would like to thank you very much on behalf of QLogic Linux FC/FCoE team
-> to everyone who worked with us to get QLogic >= 24xx initial target driver
-> upstream for 3.5-rc1. You responded quickly to our queries and provided
-> the support to get this functionality delivered on time. We would like to
-> work further to get other target related functionalities upstream in
-> future. 
-> 
+version.h header file is no longer required.
 
-Hi Giridhar!
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+---
+ drivers/scsi/qla2xxx/qla_target.c |    1 -
+ drivers/scsi/qla2xxx/qla_target.h |    1 -
+ 2 files changed, 0 insertions(+), 2 deletions(-)
 
-I'm really happy to hear that Qlogic would like to expand it's upstream
-target-mode support offerings based on the positive results from qla2xxx
-with the target-mode development community thus far.
-
-While it's going to be a busy ~8 weeks until 3.5 is released to resolve
-the outstanding active I/O target shutdown issues with tcm_qla2xxx, I'm
-eager to get these remaining issues get addressed for this first round.
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 04f80eb..f7a49e4 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -26,7 +26,6 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/types.h>
+-#include <linux/version.h>
+ #include <linux/blkdev.h>
+ #include <linux/interrupt.h>
+ #include <linux/pci.h>
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 9ec19bc..9f9ef16 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -919,7 +919,6 @@ struct qla_tgt_srr_ctio {
+ #define QLA_TGT_XMIT_STATUS		2
+ #define QLA_TGT_XMIT_ALL		(QLA_TGT_XMIT_STATUS|QLA_TGT_XMIT_DATA)
  
-I'm also really excited to see 83xx target mode support included as a
-for-3.6 -> for-3.7 item..
+-#include <linux/version.h>
+ 
+ extern struct qla_tgt_data qla_target;
+ /*
+-- 
+1.7.5.4
 
-:)
-
-Thank you!
-
---nab
-
-> Thanks,
-> Giridhar
-> 
-> 
-> On 5/31/12 12:57 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> 
-> >On Thu, 2012-05-31 at 13:17 +0100, James Bottomley wrote:
-> >> This is primarily another round of driver updates (bnx2fc, qla2xxx,
-> >> qla4xxx) including the target mode driver for qla2xxx.
-> >
-> >Hi everyone,
-> >
-> >With the Qlogic >= 24xx series HW target driver code now upstream for
-> >3.5-rc1, I wanted to take this brief moment to thank those who have
-> >contributed to reaching this initial milestone:
-> >
-> >Andrew Vasquez (Qlogic)
-> >Arun Easi (Qlogic)
-> >Chad Dupuis (Qlogic)
-> >Giridhar Malavali (Qlogic)
-> >Joern Engel (Pure)
-> >John 'Coz' Colgrove (Pure)
-> >Marco Sanvido (Pure)
-> >Patrick Lee (Pure)
-> >Roland Dreier (Pure)
-> >Scott Dietzen (Pure)
-> >Steve Hodgson (Pure)
-> >Jerome Martin (RisingTide)
-> >Madhu Iyengar (RisingTide)
-> >Marc Fleischmann (RisingTide)
-> >Christoph Hellwig (LSF / RTS)
-> >Andy Grover (RHAT)
-> >Dan Carpenter (Oracle)
-> >Hannes Reinecke (Suse.de)
-> >James Bottomley (Parallels)
-> >Stephen Rothwell (IBM)
-> >Vladislav Bolkhovitin (SCST / ID7)
-> >
-> >Without the help and support of these people the initial merge for
-> >v3.5-rc1 would not have been possible.
-> >
-> >Thank you!
-> >
-> >--nab
-> >
-> >
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
