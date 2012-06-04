@@ -1,246 +1,181 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 2/6] bnx2fc: Reduce object size by consolidating formats
-Date: Mon, 4 Jun 2012 16:15:43 -0700
-Message-ID: <1338851747-7240-3-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 5/6] bnx2fc: use list_entry instead of explicit cast
+Date: Mon, 4 Jun 2012 16:15:46 -0700
+Message-ID: <1338851747-7240-6-git-send-email-bprakash@broadcom.com>
 References: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3056 "EHLO MMS3.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3121 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761185Ab2FDXQB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1761200Ab2FDXQB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 4 Jun 2012 19:16:01 -0400
 In-Reply-To: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, Joe Perches <joe@perches.com>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: michaelc@cs.wisc.edu, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-From: Joe Perches <joe@perches.com>
+Use list_for_each_entry_safe() instead of explicit cast to avoid relying on
+struct layout
 
-Deduplication of formats and consolidating tests
-makes the object much smaller.
-
-Add bnx2fc_debug.c, add functions for a few logging
-functions (BNX2FC_IO_DBG, BNX2FC_TGT_DBG, BNX2FC_HBA_DBG).
-Use printf extension %pV.
-Add and use pr_fmt and pr_<level>.
-Move the debug #include below structure definitions.
-
-$ size drivers/scsi/bnx2fc/built-in.o*
-   text	   data	    bss	    dec	    hex	filename
- 101563	   1165	  24976	 127704	  1f2d8	drivers/scsi/bnx2fc/built-in.o.new
- 138473	   1109	  33400	 172982	  2a3b6	drivers/scsi/bnx2fc/built-in.o.old
-
-Signed-off-by: Joe Perches <joe@perches.com>
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/Makefile       |    3 +-
- drivers/scsi/bnx2fc/bnx2fc.h       |    6 ++-
- drivers/scsi/bnx2fc/bnx2fc_debug.c |   70 ++++++++++++++++++++++++++++++++++
- drivers/scsi/bnx2fc/bnx2fc_debug.h |   73 +++++++++---------------------------
- 4 files changed, 95 insertions(+), 57 deletions(-)
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_debug.c
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    5 +----
+ drivers/scsi/bnx2fc/bnx2fc_io.c   |   21 +++++++--------------
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c  |   17 ++++++-----------
+ 3 files changed, 14 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/Makefile b/drivers/scsi/bnx2fc/Makefile
-index a92695a..141149e 100644
---- a/drivers/scsi/bnx2fc/Makefile
-+++ b/drivers/scsi/bnx2fc/Makefile
-@@ -1,3 +1,4 @@
- obj-$(CONFIG_SCSI_BNX2X_FCOE) += bnx2fc.o
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index f75308c..2fd7c26 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2151,13 +2151,10 @@ mod_err:
+  **/
+ static struct bnx2fc_hba *bnx2fc_find_hba_for_cnic(struct cnic_dev *cnic)
+ {
+-	struct list_head *list;
+-	struct list_head *temp;
+ 	struct bnx2fc_hba *hba;
  
--bnx2fc-y := bnx2fc_els.o bnx2fc_fcoe.o bnx2fc_hwi.o bnx2fc_io.o bnx2fc_tgt.o
-+bnx2fc-y := bnx2fc_els.o bnx2fc_fcoe.o bnx2fc_hwi.o bnx2fc_io.o bnx2fc_tgt.o \
-+	    bnx2fc_debug.o
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 0578fa0..2f1bea4 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -11,6 +11,8 @@
-  * Written by: Bhanu Prakash Gollapudi (bprakash@broadcom.com)
-  */
+ 	/* Called with bnx2fc_dev_lock held */
+-	list_for_each_safe(list, temp, &adapter_list) {
+-		hba = (struct bnx2fc_hba *)list;
++	list_for_each_entry(hba, &adapter_list, list) {
+ 		if (hba->cnic == cnic)
+ 			return hba;
+ 	}
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 4f7453b..1dfe5ee 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -405,11 +405,10 @@ free_cmd_pool:
+ 		goto free_cmgr;
  
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/module.h>
- #include <linux/moduleparam.h>
- #include <linux/kernel.h>
-@@ -57,7 +59,6 @@
- #include <scsi/fc/fc_fcp.h>
+ 	for (i = 0; i < num_possible_cpus() + 1; i++)  {
+-		struct list_head *list;
+-		struct list_head *tmp;
++		struct bnx2fc_cmd *tmp, *io_req;
  
- #include "57xx_hsi_bnx2fc.h"
--#include "bnx2fc_debug.h"
- #include "../../net/ethernet/broadcom/cnic_if.h"
- #include "bnx2fc_constants.h"
+-		list_for_each_safe(list, tmp, &cmgr->free_list[i]) {
+-			struct bnx2fc_cmd *io_req = (struct bnx2fc_cmd *)list;
++		list_for_each_entry_safe(io_req, tmp,
++					 &cmgr->free_list[i], link) {
+ 			list_del(&io_req->link);
+ 			kfree(io_req);
+ 		}
+@@ -1436,9 +1435,7 @@ static void bnx2fc_lun_reset_cmpl(struct bnx2fc_cmd *io_req)
+ {
+ 	struct scsi_cmnd *sc_cmd = io_req->sc_cmd;
+ 	struct bnx2fc_rport *tgt = io_req->tgt;
+-	struct list_head *list;
+-	struct list_head *tmp;
+-	struct bnx2fc_cmd *cmd;
++	struct bnx2fc_cmd *cmd, *tmp;
+ 	int tm_lun = sc_cmd->device->lun;
+ 	int rc = 0;
+ 	int lun;
+@@ -1449,9 +1446,8 @@ static void bnx2fc_lun_reset_cmpl(struct bnx2fc_cmd *io_req)
+ 	 * Walk thru the active_ios queue and ABORT the IO
+ 	 * that matches with the LUN that was reset
+ 	 */
+-	list_for_each_safe(list, tmp, &tgt->active_cmd_queue) {
++	list_for_each_entry_safe(cmd, tmp, &tgt->active_cmd_queue, link) {
+ 		BNX2FC_TGT_DBG(tgt, "LUN RST cmpl: scan for pending IOs\n");
+-		cmd = (struct bnx2fc_cmd *)list;
+ 		lun = cmd->sc_cmd->device->lun;
+ 		if (lun == tm_lun) {
+ 			/* Initiate ABTS on this cmd */
+@@ -1476,9 +1472,7 @@ static void bnx2fc_lun_reset_cmpl(struct bnx2fc_cmd *io_req)
+ static void bnx2fc_tgt_reset_cmpl(struct bnx2fc_cmd *io_req)
+ {
+ 	struct bnx2fc_rport *tgt = io_req->tgt;
+-	struct list_head *list;
+-	struct list_head *tmp;
+-	struct bnx2fc_cmd *cmd;
++	struct bnx2fc_cmd *cmd, *tmp;
+ 	int rc = 0;
  
-@@ -554,4 +555,7 @@ void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnup_req,
- int bnx2fc_initiate_seq_cleanup(struct bnx2fc_cmd *orig_io_req, u32 offset,
- 				enum fc_rctl r_ctl);
+ 	/* called with tgt_lock held */
+@@ -1487,9 +1481,8 @@ static void bnx2fc_tgt_reset_cmpl(struct bnx2fc_cmd *io_req)
+ 	 * Walk thru the active_ios queue and ABORT the IO
+ 	 * that matches with the LUN that was reset
+ 	 */
+-	list_for_each_safe(list, tmp, &tgt->active_cmd_queue) {
++	list_for_each_entry_safe(cmd, tmp, &tgt->active_cmd_queue, link) {
+ 		BNX2FC_TGT_DBG(tgt, "TGT RST cmpl: scan for pending IOs\n");
+-		cmd = (struct bnx2fc_cmd *)list;
+ 		/* Initiate ABTS */
+ 		if (!test_and_set_bit(BNX2FC_FLAG_ISSUE_ABTS,
+ 							&cmd->req_flags)) {
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+index e71c254..43f8e42 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+@@ -150,8 +150,7 @@ tgt_init_err:
+ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+ {
+ 	struct bnx2fc_cmd *io_req;
+-	struct list_head *list;
+-	struct list_head *tmp;
++	struct bnx2fc_cmd *tmp;
+ 	int rc;
+ 	int i = 0;
+ 	BNX2FC_TGT_DBG(tgt, "Entered flush_active_ios - %d\n",
+@@ -160,9 +159,8 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+ 	spin_lock_bh(&tgt->tgt_lock);
+ 	tgt->flush_in_prog = 1;
  
-+
-+#include "bnx2fc_debug.h"
-+
- #endif
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_debug.c b/drivers/scsi/bnx2fc/bnx2fc_debug.c
-new file mode 100644
-index 0000000..0cbee1b
---- /dev/null
-+++ b/drivers/scsi/bnx2fc/bnx2fc_debug.c
-@@ -0,0 +1,70 @@
-+#include "bnx2fc.h"
-+
-+void BNX2FC_IO_DBG(const struct bnx2fc_cmd *io_req, const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+
-+	if (likely(!(bnx2fc_debug_level & LOG_IO)))
-+		return;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	if (io_req && io_req->port && io_req->port->lport &&
-+	    io_req->port->lport->host)
-+		shost_printk(KERN_INFO, io_req->port->lport->host,
-+			     PFX "xid:0x%x %pV",
-+			     io_req->xid, &vaf);
+-	list_for_each_safe(list, tmp, &tgt->active_cmd_queue) {
++	list_for_each_entry_safe(io_req, tmp, &tgt->active_cmd_queue, link) {
+ 		i++;
+-		io_req = (struct bnx2fc_cmd *)list;
+ 		list_del_init(&io_req->link);
+ 		io_req->on_active_queue = 0;
+ 		BNX2FC_IO_DBG(io_req, "cmd_queue cleanup\n");
+@@ -191,9 +189,8 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+ 		}
+ 	}
+ 
+-	list_for_each_safe(list, tmp, &tgt->active_tm_queue) {
++	list_for_each_entry_safe(io_req, tmp, &tgt->active_tm_queue, link) {
+ 		i++;
+-		io_req = (struct bnx2fc_cmd *)list;
+ 		list_del_init(&io_req->link);
+ 		io_req->on_tmf_queue = 0;
+ 		BNX2FC_IO_DBG(io_req, "tm_queue cleanup\n");
+@@ -201,9 +198,8 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+ 			complete(&io_req->tm_done);
+ 	}
+ 
+-	list_for_each_safe(list, tmp, &tgt->els_queue) {
++	list_for_each_entry_safe(io_req, tmp, &tgt->els_queue, link) {
+ 		i++;
+-		io_req = (struct bnx2fc_cmd *)list;
+ 		list_del_init(&io_req->link);
+ 		io_req->on_active_queue = 0;
+ 
+@@ -227,9 +223,8 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+ 		}
+ 	}
+ 
+-	list_for_each_safe(list, tmp, &tgt->io_retire_queue) {
++	list_for_each_entry_safe(io_req, tmp, &tgt->io_retire_queue, link) {
+ 		i++;
+-		io_req = (struct bnx2fc_cmd *)list;
+ 		list_del_init(&io_req->link);
+ 
+ 		BNX2FC_IO_DBG(io_req, "retire_queue flush\n");
+@@ -335,7 +330,7 @@ static void bnx2fc_upload_session(struct fcoe_port *port,
+ 	} else if (test_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags))
+ 		printk(KERN_ERR PFX "ERROR!! DISABLE req failed, destroy"
+ 				" not sent to FW\n");
+-	} else
 +	else
-+		pr_info("NULL %pV", &vaf);
-+
-+	va_end(args);
-+}
-+
-+void BNX2FC_TGT_DBG(const struct bnx2fc_rport *tgt, const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+
-+	if (likely(!(bnx2fc_debug_level & LOG_TGT)))
-+		return;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	if (tgt && tgt->port && tgt->port->lport && tgt->port->lport->host &&
-+	    tgt->rport)
-+		shost_printk(KERN_INFO, tgt->port->lport->host,
-+			     PFX "port:%x %pV",
-+			     tgt->rport->port_id, &vaf);
-+	else
-+		pr_info("NULL %pV", &vaf);
-+
-+	va_end(args);
-+}
-+
-+void BNX2FC_HBA_DBG(const struct fc_lport *lport, const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+
-+	if (likely(!(bnx2fc_debug_level & LOG_HBA)))
-+		return;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	if (lport && lport->host)
-+		shost_printk(KERN_INFO, lport->host, PFX "%pV", &vaf);
-+	else
-+		pr_info("NULL %pV", &vaf);
-+
-+	va_end(args);
-+}
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_debug.h b/drivers/scsi/bnx2fc/bnx2fc_debug.h
-index 3416d9a..4808ff9 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_debug.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc_debug.h
-@@ -11,60 +11,23 @@
+ 		printk(KERN_ERR PFX "ERROR!! DISABLE req timed out, destroy"
+ 				" not sent to FW\n");
  
- extern unsigned int bnx2fc_debug_level;
- 
--#define BNX2FC_CHK_LOGGING(LEVEL, CMD)					\
--	do {								\
--		if (unlikely(bnx2fc_debug_level & LEVEL))		\
--			do {						\
--				CMD;					\
--			} while (0);					\
--	} while (0)
--
--#define BNX2FC_ELS_DBG(fmt, arg...)					\
--	BNX2FC_CHK_LOGGING(LOG_ELS,					\
--			   printk(KERN_INFO PFX fmt, ##arg))
--
--#define BNX2FC_MISC_DBG(fmt, arg...)					\
--	BNX2FC_CHK_LOGGING(LOG_MISC,					\
--			   printk(KERN_INFO PFX fmt, ##arg))
--
--#define BNX2FC_IO_DBG(io_req, fmt, arg...)				\
--	do {								\
--		if (!io_req || !io_req->port || !io_req->port->lport ||	\
--		    !io_req->port->lport->host)				\
--			BNX2FC_CHK_LOGGING(LOG_IO,			\
--			   printk(KERN_INFO PFX "NULL " fmt, ##arg));	\
--		else							\
--			BNX2FC_CHK_LOGGING(LOG_IO,			\
--			   shost_printk(KERN_INFO,			\
--				   (io_req)->port->lport->host,		\
--				   PFX "xid:0x%x " fmt,			\
--				   (io_req)->xid, ##arg));		\
--	} while (0)
--
--#define BNX2FC_TGT_DBG(tgt, fmt, arg...)				\
--	do {								\
--		if (!tgt || !tgt->port || !tgt->port->lport ||		\
--		    !tgt->port->lport->host || !tgt->rport)		\
--			BNX2FC_CHK_LOGGING(LOG_TGT,			\
--			   printk(KERN_INFO PFX "NULL " fmt, ##arg));	\
--		else							\
--			BNX2FC_CHK_LOGGING(LOG_TGT,			\
--			   shost_printk(KERN_INFO,			\
--				   (tgt)->port->lport->host,		\
--				   PFX "port:%x " fmt,			\
--				   (tgt)->rport->port_id, ##arg));	\
--	} while (0)
--
--
--#define BNX2FC_HBA_DBG(lport, fmt, arg...)				\
--	do {								\
--		if (!lport || !lport->host)				\
--			BNX2FC_CHK_LOGGING(LOG_HBA,			\
--			   printk(KERN_INFO PFX "NULL " fmt, ##arg));	\
--		else							\
--			BNX2FC_CHK_LOGGING(LOG_HBA,			\
--			   shost_printk(KERN_INFO, lport->host,	\
--				   PFX fmt, ##arg));			\
--	} while (0)
-+#define BNX2FC_ELS_DBG(fmt, ...)				\
-+do {								\
-+	if (unlikely(bnx2fc_debug_level & LOG_ELS))		\
-+		pr_info(fmt, ##__VA_ARGS__);			\
-+} while (0)
-+
-+#define BNX2FC_MISC_DBG(fmt, ...)				\
-+do {								\
-+	if (unlikely(bnx2fc_debug_level & LOG_MISC))		\
-+		pr_info(fmt, ##__VA_ARGS__);			\
-+} while (0)
-+
-+__printf(2, 3)
-+void BNX2FC_IO_DBG(const struct bnx2fc_cmd *io_req, const char *fmt, ...);
-+__printf(2, 3)
-+void BNX2FC_TGT_DBG(const struct bnx2fc_rport *tgt, const char *fmt, ...);
-+__printf(2, 3)
-+void BNX2FC_HBA_DBG(const struct fc_lport *lport, const char *fmt, ...);
- 
- #endif
 -- 
 1.7.0.6
 
