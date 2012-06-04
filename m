@@ -1,74 +1,48 @@
-From: "Zou, Yi" <yi.zou@intel.com>
-Subject: RE: Different WARNING:
-	drivers/scsi/fcoe/libfcoe.o(.init.text+0x1a): Section mismatch in	reference
- from the function init_module() to the function
-	.exit.text:fcoe_transport_exit()
-Date: Mon, 4 Jun 2012 23:11:01 +0000
-Message-ID: <138EA028228D124A900F5E6746F3C216286EAA65@ORSMSX102.amr.corp.intel.com>
-References: <20120602161502.GW16584@smp.if.uj.edu.pl>
- <20120604143643.GJ32472@redhat.com>
- <20120604163556.GA12303@merkur.ravnborg.org>
- <20120604190857.GB16584@smp.if.uj.edu.pl>
- <20120604191757.GA21821@merkur.ravnborg.org>
- <138EA028228D124A900F5E6746F3C216286EA866@ORSMSX102.amr.corp.intel.com>
- <20120604223341.GA28585@merkur.ravnborg.org>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: [PATCH 0/6] bnx2fc version 1.0.12
+Date: Mon, 4 Jun 2012 16:15:41 -0700
+Message-ID: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58931 "EHLO mga02.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3056 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757546Ab2FDXLD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jun 2012 19:11:03 -0400
-In-Reply-To: <20120604223341.GA28585@merkur.ravnborg.org>
-Content-Language: en-US
+	id S1761178Ab2FDXP4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Jun 2012 19:15:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: Witold Baryluk <baryluk@smp.if.uj.edu.pl>, "Love, Robert W" <robert.w.love@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: michaelc@cs.wisc.edu, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-> 
-> > However, fcoe_transport_exit() is called only in module *exit* path by
-> the
-> > module exit func libfcoe_exit(), not in the init_module error path. Let
-> me
-> > take a objdump of the libfcoe.o to see where your above section
-> mismatch warning
-> > is from. Is this on 32bit only?
-> 
-> static int __init libfcoe_init(void)
-> {
->         int rc = 0;
-> 
->         rc = fcoe_transport_init();
->         if (rc)
->                 return rc;
-> 
->         rc = fcoe_sysfs_setup();
->         if (rc)
->                 fcoe_transport_exit();    <=============
-> 
->         return rc;
-> }
-> 
-> It is called from __init context here.
-> 
-> 
-> 
-> 
-> static void __exit libfcoe_exit(void)
-> {
->         fcoe_sysfs_teardown();
->         fcoe_transport_exit();     <==============
-> }
-> 
-> And from __exit context here.
-> This is -rc1.
-> 
-> 	Sam
-Ah...haven't pulled the rc1 yet, which was why I did not see the this.
-Anyway, yeah you are right, dropping __exit should fix the problem.
+James,
 
-thanks,
-yi
+Please consider including the following patches in the 3.5+ merge window.
+
+Thanks,
+Bhanu
+
+Bhanu Prakash Gollapudi (4):
+  bnx2fc: Support interface creation on non-VLAN interface also.
+  bnx2fc: Improve error recovery by handling parity errors
+  bnx2fc: use list_entry instead of explicit cast
+  bnx2fc: Bumped version to 1.0.12
+
+Eric Dumazet (1):
+  bnx2fc: use kthread_create_on_node
+
+Joe Perches (1):
+  bnx2fc: Reduce object size by consolidating formats
+
+ drivers/scsi/bnx2fc/Makefile       |    3 +-
+ drivers/scsi/bnx2fc/bnx2fc.h       |    9 +++-
+ drivers/scsi/bnx2fc/bnx2fc_debug.c |   70 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/bnx2fc/bnx2fc_debug.h |   73 +++++++++---------------------------
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c  |   46 +++++++++++------------
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c   |    4 +-
+ drivers/scsi/bnx2fc/bnx2fc_io.c    |   21 +++-------
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c   |   39 ++++++++++++-------
+ 8 files changed, 153 insertions(+), 112 deletions(-)
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_debug.c
+
 
