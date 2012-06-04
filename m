@@ -1,107 +1,112 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 3/6] bnx2fc: Support interface creation on non-VLAN
- interface also.
-Date: Mon, 4 Jun 2012 16:15:44 -0700
-Message-ID: <1338851747-7240-4-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 4/6] bnx2fc: Improve error recovery by handling parity
+ errors
+Date: Mon, 4 Jun 2012 16:15:45 -0700
+Message-ID: <1338851747-7240-5-git-send-email-bprakash@broadcom.com>
 References: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3116 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3575 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761187Ab2FDXQB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Jun 2012 19:16:01 -0400
+	id S1761217Ab2FDXQD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Jun 2012 19:16:03 -0400
 In-Reply-To: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-bnx2fc had an assumption that the fcoe interface will always start on the vlan
-dev. However, some switch implementations (Eg., HP virtual connect FlexFabric)
-expects the fcoe interface to be started on physical interface. Do not error
-out if the netdev is not a vlan dev.
+During parity errors, the ramrods are not issued to FW. bnx2fc waits for the
+timeout value, and proceeds with cleaning up the IOs. Since we are already
+out-of-sync with FW, cleanup commands timeout too, and do not get the
+completion.  This operation takes 36 secs for each session to upload causing
+huge delays. To fix this, bnx2fc now gets a PARITY_ERROR from cnic driver, and
+upon failure, the driver does not issue any commands to the FW and finishes the
+upload process sooner.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   33 +++++++++++++++++----------------
- 1 files changed, 17 insertions(+), 16 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc.h     |    1 +
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c |    4 +++-
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c |   22 ++++++++++++++++++----
+ 3 files changed, 22 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index dd28af7..f75308c 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2019,11 +2019,11 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
- 	struct fcoe_ctlr *ctlr;
- 	struct bnx2fc_interface *interface;
- 	struct bnx2fc_hba *hba;
--	struct net_device *phys_dev;
-+	struct net_device *phys_dev = netdev;
- 	struct fc_lport *lport;
- 	struct ethtool_drvinfo drvinfo;
- 	int rc = 0;
--	int vlan_id;
-+	int vlan_id = 0;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 2f1bea4..baac6e9 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -275,6 +275,7 @@ struct bnx2fc_rport {
+ #define BNX2FC_FLAG_CTX_ALLOC_FAILURE	0x6
+ #define BNX2FC_FLAG_UPLD_REQ_COMPL	0x7
+ #define BNX2FC_FLAG_EXPL_LOGO		0x8
++#define BNX2FC_FLAG_DISABLE_FAILED	0x9
  
- 	BNX2FC_MISC_DBG("Entered bnx2fc_create\n");
- 	if (fip_mode != FIP_MODE_FABRIC) {
-@@ -2041,14 +2041,9 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
+ 	u8 src_addr[ETH_ALEN];
+ 	u32 max_sqes;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index 2ca6bfe..6d6eee4 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -1244,7 +1244,9 @@ static void bnx2fc_process_conn_disable_cmpl(struct bnx2fc_hba *hba,
+ 	if (disable_kcqe->completion_status) {
+ 		printk(KERN_ERR PFX "Disable failed with cmpl status %d\n",
+ 			disable_kcqe->completion_status);
+-		return;
++		set_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags);
++		set_bit(BNX2FC_FLAG_UPLD_REQ_COMPL, &tgt->flags);
++		wake_up_interruptible(&tgt->upld_wait);
+ 	} else {
+ 		/* disable successful */
+ 		BNX2FC_TGT_DBG(tgt, "disable successful\n");
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+index 082a25c..e71c254 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+@@ -181,8 +181,14 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+ 
+ 		set_bit(BNX2FC_FLAG_IO_COMPL, &io_req->req_flags);
+ 		set_bit(BNX2FC_FLAG_IO_CLEANUP, &io_req->req_flags);
+-		rc = bnx2fc_initiate_cleanup(io_req);
+-		BUG_ON(rc);
++
++		/* Do not issue cleanup when disable request failed */
++		if (test_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags))
++			bnx2fc_process_cleanup_compl(io_req, io_req->task, 0);
++		else {
++			rc = bnx2fc_initiate_cleanup(io_req);
++			BUG_ON(rc);
++		}
  	}
  
- 	/* obtain physical netdev */
--	if (netdev->priv_flags & IFF_802_1Q_VLAN) {
-+	if (netdev->priv_flags & IFF_802_1Q_VLAN)
- 		phys_dev = vlan_dev_real_dev(netdev);
--		vlan_id = vlan_dev_vlan_id(netdev);
--	} else {
--		printk(KERN_ERR PFX "Not a vlan device\n");
--		rc = -EINVAL;
--		goto netdev_err;
--	}
-+
- 	/* verify if the physical device is a netxtreme2 device */
- 	if (phys_dev->ethtool_ops && phys_dev->ethtool_ops->get_drvinfo) {
- 		memset(&drvinfo, 0, sizeof(drvinfo));
-@@ -2083,9 +2078,13 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
- 		goto ifput_err;
+ 	list_for_each_safe(list, tmp, &tgt->active_tm_queue) {
+@@ -212,8 +218,13 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+ 			io_req->cb_arg = NULL;
+ 		}
+ 
+-		rc = bnx2fc_initiate_cleanup(io_req);
+-		BUG_ON(rc);
++		/* Do not issue cleanup when disable request failed */
++		if (test_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags))
++			bnx2fc_process_cleanup_compl(io_req, io_req->task, 0);
++		else {
++			rc = bnx2fc_initiate_cleanup(io_req);
++			BUG_ON(rc);
++		}
  	}
  
-+	if (netdev->priv_flags & IFF_802_1Q_VLAN) {
-+		vlan_id = vlan_dev_vlan_id(netdev);
-+		interface->vlan_enabled = 1;
-+	}
-+
- 	ctlr = bnx2fc_to_ctlr(interface);
- 	interface->vlan_id = vlan_id;
--	interface->vlan_enabled = 1;
+ 	list_for_each_safe(list, tmp, &tgt->io_retire_queue) {
+@@ -321,6 +332,9 @@ static void bnx2fc_upload_session(struct fcoe_port *port,
  
- 	interface->timer_work_queue =
- 			create_singlethread_workqueue("bnx2fc_timer_wq");
-@@ -2252,15 +2251,17 @@ static int bnx2fc_fcoe_reset(struct Scsi_Host *shost)
+ 		del_timer_sync(&tgt->upld_timer);
  
- static bool bnx2fc_match(struct net_device *netdev)
- {
-+	struct net_device *phys_dev = netdev;
-+
- 	mutex_lock(&bnx2fc_dev_lock);
--	if (netdev->priv_flags & IFF_802_1Q_VLAN) {
--		struct net_device *phys_dev = vlan_dev_real_dev(netdev);
-+	if (netdev->priv_flags & IFF_802_1Q_VLAN)
-+		phys_dev = vlan_dev_real_dev(netdev);
- 
--		if (bnx2fc_hba_lookup(phys_dev)) {
--			mutex_unlock(&bnx2fc_dev_lock);
--			return true;
--		}
-+	if (bnx2fc_hba_lookup(phys_dev)) {
-+		mutex_unlock(&bnx2fc_dev_lock);
-+		return true;
- 	}
-+
- 	mutex_unlock(&bnx2fc_dev_lock);
- 	return false;
- }
++	} else if (test_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags))
++		printk(KERN_ERR PFX "ERROR!! DISABLE req failed, destroy"
++				" not sent to FW\n");
+ 	} else
+ 		printk(KERN_ERR PFX "ERROR!! DISABLE req timed out, destroy"
+ 				" not sent to FW\n");
 -- 
 1.7.0.6
 
