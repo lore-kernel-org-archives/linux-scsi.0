@@ -1,83 +1,118 @@
-From: Girish K S <girish.shivananjappa@linaro.org>
-Subject: Re: [PATCH V4 0/2] Add support for pci/non-pci probing for UFS
-Date: Mon, 4 Jun 2012 17:15:50 +0530
-Message-ID: <CAGxe1ZGOrVaQNT=Bm9cdAoXc4vYLAaXCqV=TKOv3Oe39VhxqHg@mail.gmail.com>
-References: <1338810188-30248-1-git-send-email-girish.shivananjappa@linaro.org>
+From: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
+Subject: Different WARNING: drivers/scsi/fcoe/libfcoe.o(.init.text+0x1a):
+ Section mismatch in reference from the function init_module() to the
+ function .exit.text:fcoe_transport_exit()
+Date: Mon, 4 Jun 2012 21:08:57 +0200
+Message-ID: <20120604190857.GB16584@smp.if.uj.edu.pl>
+References: <20120602161502.GW16584@smp.if.uj.edu.pl>
+ <20120604143643.GJ32472@redhat.com>
+ <20120604163556.GA12303@merkur.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:34180 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932119Ab2FDLpv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jun 2012 07:45:51 -0400
-Received: by qabj40 with SMTP id j40so2267552qab.1
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Jun 2012 04:45:51 -0700 (PDT)
-In-Reply-To: <1338810188-30248-1-git-send-email-girish.shivananjappa@linaro.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120604163556.GA12303@merkur.ravnborg.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Robert Love <robert.w.love@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, devel@open-fcoe.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: james.bottomley@hansenpartnership.com, vinholikatti@gmail.com, santoshsy@gmail.com, hch@infradead.org, patches@linaro.org, svenkatr@ti.com, Girish K S <girish.shivananjappa@linaro.org>
 
-Hi maintainers,
-pls add
-Reviewed-by: Venkatraman S <svenkatr@ti.com>
-when you accept this patch
+On 06-04 18:35, Sam Ravnborg wrote:
+> On Mon, Jun 04, 2012 at 10:36:43AM -0400, Don Zickus wrote:
+> > On Sat, Jun 02, 2012 at 06:15:02PM +0200, Witold Baryluk wrote:
+> > > Hello everybody,
+> > > 
+> > > x86 32-bit Build just got 2 WARNINGS when building kernel on Linus' tree.
+> > 
+> > Hi Witold,
+> > 
+> > Thanks for the warnings.
+> > 
+> > > 
+> > > 
+> > >  VDSOSYM arch/x86/vdso/vdso32-syms.lds
+> > >   LD      arch/x86/vdso/built-in.o
+> > >   LD      arch/x86/built-in.o
+> > > WARNING: arch/x86/built-in.o(.data+0x5af0): Section mismatch in reference from the variable test_nmi_ipi_callback_na.10451 to the function .init.text:test_nmi_ipi_callback()
+> > > The variable test_nmi_ipi_callback_na.10451 references
+> > > the function __init test_nmi_ipi_callback()
+> > > If the reference is valid then annotate the
+> > > variable with __init* or __refdata (see linux/init.h) or name the variable:
+> > > *_template, *_timer, *_sht, *_ops, *_probe, *_probe_one, *_console
+> > > 
+> > > WARNING: arch/x86/built-in.o(.data+0x5b04): Section mismatch in reference from the variable nmi_unk_cb_na.10399 to the function .init.text:nmi_unk_cb()
+> > > The variable nmi_unk_cb_na.10399 references
+> > > the function __init nmi_unk_cb()
+> > > If the reference is valid then annotate the
+> > > variable with __init* or __refdata (see linux/init.h) or name the variable:
+> > > *_template, *_timer, *_sht, *_ops, *_probe, *_probe_one, *_console
+> > 
+> > These are intermediate variables test_nmi_ipi_callback_na.10451 and
+> > nmi_unk_cb_na.10399.  I do not know how to fix them.
+> > 
+> > Basically the test registers two nmi_handlers, run some tests, and
+> > then unregisters them.  Those handlers are what the compiler seems to be
+> > complaining about.  I do not know what magic to pass the compiler to let
+> > it know that both of the handlers will be unregistered before the init
+> > section is destroyed.
+> > 
+> > Perhaps I should tag those callbacks with __ref? I am not sure the right
+> > thing to do here.
+> 
+> Drop the __init from nmi_unk_cb() and test_nmi_ipi_callback().
+> Then the warnings are gone.
+> 
+> Trying to let register_nmi_handler() accept a function annotated __init is
+> wrong as we do not want this.
+> I someone try this in 'real' code we would be screwed.
+> 
+> 	Sam
 
-On 4 June 2012 17:13, Girish K S <girish.shivananjappa@linaro.org> wrot=
-e:
-> The existing UFS driver is tightly bound to only pci specific devices=
-=2E
-> It cannot work for non-pci devices.
->
-> "SCSI: UFS: Create separate UFS core and pci modules" patch splits th=
-e
-> ufs driver into core driver and pci probe driver.
->
-> "SCSI: UFS: Add platform support for ufs host controller" patch adds
-> support for the platform probing for non-pci devices
->
-> changes in v4:
-> =A0 =A0 =A0 =A0-Rebased to the latest linux-next/master branch.
-> =A0 =A0 =A0 =A0-Removed the Copyright string from the module probe fu=
-nction and
-> deleted redundant code from ufshcd-pltfm.c suspend/resume functions.
->
-> changes in v3:
-> =A0 =A0 =A0 =A0-Modified the ufshcd.c ufshcd-pci.c ufshcd0pltfm.c to =
-follow the
-> driver module initialization standard. suggested by venkatraman.
->
-> changes in v2:
-> =A0 =A0 =A0 =A0-Reduced the number of patches from 4 to 2. merged the=
- core and
-> pci probing modules as single patch. suggested by Christoph Hellwig.
->
-> changes in v1:
-> =A0 =A0 =A0 =A0-Changes suggested by Namjae to split the driver as 3 =
-independent
-> modules and retain the author's name in the files created by me.
->
-> Girish K S (2):
-> =A0SCSI: UFS: Create separate UFS core and pci modules
-> =A0SCSI: UFS: Add platform support for ufs host controller
->
-> =A0drivers/scsi/ufs/Kconfig =A0 =A0 =A0 =A0| =A0 32 +++-
-> =A0drivers/scsi/ufs/Makefile =A0 =A0 =A0 | =A0 =A02 +
-> =A0drivers/scsi/ufs/ufs.h =A0 =A0 =A0 =A0 =A0| =A0103 +++++++++++
-> =A0drivers/scsi/ufs/ufshcd-pci.c =A0 | =A0206 ++++++++++++++++++++++
-> =A0drivers/scsi/ufs/ufshcd-pltfm.c | =A0176 +++++++++++++++++++
-> =A0drivers/scsi/ufs/ufshcd.c =A0 =A0 =A0 | =A0370 ++++++++++---------=
---------------------
-> =A06 files changed, 609 insertions(+), 280 deletions(-)
-> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
-> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
->
-> --
-> 1.7.4.1
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+By the way when we are on topic, here is one more
+
+
+  MKPIGGY arch/x86/boot/compressed/piggy.S
+  AS      arch/x86/boot/compressed/piggy.o
+  LD      arch/x86/boot/compressed/vmlinux
+  ZOFFSET arch/x86/boot/zoffset.h
+  AS      arch/x86/boot/header.o
+  CC      arch/x86/boot/version.o
+  LD      arch/x86/boot/setup.elf
+  OBJCOPY arch/x86/boot/setup.bin
+  OBJCOPY arch/x86/boot/vmlinux.bin
+  BUILD   arch/x86/boot/bzImage
+Setup is 16288 bytes (padded to 16384 bytes).
+System is 4418 kB
+CRC 46186b65
+Kernel: arch/x86/boot/bzImage is ready  (#12)
+  Building modules, stage 2.
+  MODPOST 591 modules
+WARNING: drivers/scsi/fcoe/libfcoe.o(.init.text+0x1a): Section mismatch in reference from the function init_module() to the function .exit.text:fcoe_transport_exit()
+The function __init init_module() references
+a function __exit fcoe_transport_exit().
+This is often seen when error handling in the init function
+uses functionality in the exit path.
+The fix is often to remove the __exit annotation of
+fcoe_transport_exit() so it may be used outside an exit section.
+
+  CC      arch/x86/crypto/crc32c-intel.mod.o
+  LD [M]  arch/x86/crypto/crc32c-intel.ko
+  CC      arch/x86/crypto/salsa20-i586.mod.o
+  LD [M]  arch/x86/crypto/salsa20-i586.ko
+  CC      arch/x86/crypto/serpent-sse2-i586.mod.o
+  LD [M]  arch/x86/crypto/serpent-sse2-i586.ko
+
+
+
+(I'm dropping previous CC list, as this warning is easier to solve,
+probably just following this instructions - dropping __exit from
+fcoe_transport_exit() should be fine, especially if indeed it is needed
+from init_module in error path).
+
+
+Regards,
+Witek
+
+-- 
+Witold Baryluk
