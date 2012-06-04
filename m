@@ -1,112 +1,52 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 4/6] bnx2fc: Improve error recovery by handling parity
- errors
-Date: Mon, 4 Jun 2012 16:15:45 -0700
-Message-ID: <1338851747-7240-5-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 1/6] bnx2fc: use kthread_create_on_node
+Date: Mon, 4 Jun 2012 16:15:42 -0700
+Message-ID: <1338851747-7240-2-git-send-email-bprakash@broadcom.com>
 References: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3575 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3583 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761217Ab2FDXQD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1761185Ab2FDXQD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 4 Jun 2012 19:16:03 -0400
 In-Reply-To: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: michaelc@cs.wisc.edu, Eric Dumazet <eric.dumazet@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-During parity errors, the ramrods are not issued to FW. bnx2fc waits for the
-timeout value, and proceeds with cleaning up the IOs. Since we are already
-out-of-sync with FW, cleanup commands timeout too, and do not get the
-completion.  This operation takes 36 secs for each session to upload causing
-huge delays. To fix this, bnx2fc now gets a PARITY_ERROR from cnic driver, and
-upon failure, the driver does not issue any commands to the FW and finishes the
-upload process sooner.
+From: Eric Dumazet <eric.dumazet@gmail.com>
 
+Since bnx2fc_percpu_thread_create() creates percpu kthread, it makes
+sense to use kthread_create_on_node() to get proper NUMA affinity for
+kthread stack.
+
+Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+CC: "James E.J. Bottomley" <JBottomley@parallels.com>
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h     |    1 +
- drivers/scsi/bnx2fc/bnx2fc_hwi.c |    4 +++-
- drivers/scsi/bnx2fc/bnx2fc_tgt.c |   22 ++++++++++++++++++----
- 3 files changed, 22 insertions(+), 5 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 2f1bea4..baac6e9 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -275,6 +275,7 @@ struct bnx2fc_rport {
- #define BNX2FC_FLAG_CTX_ALLOC_FAILURE	0x6
- #define BNX2FC_FLAG_UPLD_REQ_COMPL	0x7
- #define BNX2FC_FLAG_EXPL_LOGO		0x8
-+#define BNX2FC_FLAG_DISABLE_FAILED	0x9
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index f52f668..dd28af7 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2290,9 +2290,9 @@ static void bnx2fc_percpu_thread_create(unsigned int cpu)
  
- 	u8 src_addr[ETH_ALEN];
- 	u32 max_sqes;
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 2ca6bfe..6d6eee4 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -1244,7 +1244,9 @@ static void bnx2fc_process_conn_disable_cmpl(struct bnx2fc_hba *hba,
- 	if (disable_kcqe->completion_status) {
- 		printk(KERN_ERR PFX "Disable failed with cmpl status %d\n",
- 			disable_kcqe->completion_status);
--		return;
-+		set_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags);
-+		set_bit(BNX2FC_FLAG_UPLD_REQ_COMPL, &tgt->flags);
-+		wake_up_interruptible(&tgt->upld_wait);
- 	} else {
- 		/* disable successful */
- 		BNX2FC_TGT_DBG(tgt, "disable successful\n");
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-index 082a25c..e71c254 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-@@ -181,8 +181,14 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+ 	p = &per_cpu(bnx2fc_percpu, cpu);
  
- 		set_bit(BNX2FC_FLAG_IO_COMPL, &io_req->req_flags);
- 		set_bit(BNX2FC_FLAG_IO_CLEANUP, &io_req->req_flags);
--		rc = bnx2fc_initiate_cleanup(io_req);
--		BUG_ON(rc);
-+
-+		/* Do not issue cleanup when disable request failed */
-+		if (test_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags))
-+			bnx2fc_process_cleanup_compl(io_req, io_req->task, 0);
-+		else {
-+			rc = bnx2fc_initiate_cleanup(io_req);
-+			BUG_ON(rc);
-+		}
- 	}
- 
- 	list_for_each_safe(list, tmp, &tgt->active_tm_queue) {
-@@ -212,8 +218,13 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
- 			io_req->cb_arg = NULL;
- 		}
- 
--		rc = bnx2fc_initiate_cleanup(io_req);
--		BUG_ON(rc);
-+		/* Do not issue cleanup when disable request failed */
-+		if (test_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags))
-+			bnx2fc_process_cleanup_compl(io_req, io_req->task, 0);
-+		else {
-+			rc = bnx2fc_initiate_cleanup(io_req);
-+			BUG_ON(rc);
-+		}
- 	}
- 
- 	list_for_each_safe(list, tmp, &tgt->io_retire_queue) {
-@@ -321,6 +332,9 @@ static void bnx2fc_upload_session(struct fcoe_port *port,
- 
- 		del_timer_sync(&tgt->upld_timer);
- 
-+	} else if (test_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags))
-+		printk(KERN_ERR PFX "ERROR!! DISABLE req failed, destroy"
-+				" not sent to FW\n");
- 	} else
- 		printk(KERN_ERR PFX "ERROR!! DISABLE req timed out, destroy"
- 				" not sent to FW\n");
+-	thread = kthread_create(bnx2fc_percpu_io_thread,
+-				(void *)p,
+-				"bnx2fc_thread/%d", cpu);
++	thread = kthread_create_on_node(bnx2fc_percpu_io_thread,
++					(void *)p, cpu_to_node(cpu),
++					"bnx2fc_thread/%d", cpu);
+ 	/* bind thread to the cpu */
+ 	if (likely(!IS_ERR(thread))) {
+ 		kthread_bind(thread, cpu);
 -- 
 1.7.0.6
 
