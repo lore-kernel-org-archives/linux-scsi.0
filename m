@@ -1,43 +1,56 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/4] block: Fix race on request_queue.end_io invocations
-Date: Wed, 6 Jun 2012 06:32:48 +0900
-Message-ID: <20120605213248.GB3700@mtj.dyndns.org>
-References: <4FCE3D20.4000205@acm.org>
- <4FCE3D77.8040909@acm.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
+ a device
+Date: Tue, 05 Jun 2012 16:36:09 -0500
+Message-ID: <4FCE7BC9.1010504@cs.wisc.edu>
+References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:35482 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764Ab2FEVc4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jun 2012 17:32:56 -0400
-Received: by pbbrp8 with SMTP id rp8so7997446pbb.19
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Jun 2012 14:32:55 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4FCE3D77.8040909@acm.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49059 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751879Ab2FEVgf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Jun 2012 17:36:35 -0400
+In-Reply-To: <4FCE3E63.7000002@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
-On Tue, Jun 05, 2012 at 05:10:15PM +0000, Bart Van Assche wrote:
-> Some request_queue.end_io implementations can be called safely
-> without the queue lock held while several other implementations
-> assume that the queue lock is held. So let's play it safe and
-> make sure that the queue lock is held around end_io invocations.
-> Found this through source code review.
+On 06/05/2012 12:14 PM, Bart Van Assche wrote:
+> Avoid that the code for requeueing SCSI requests triggers a
+> crash by making sure that that code isn't scheduled anymore
+> after a device has been removed.
+> 
+> Also, source code inspection of __scsi_remove_device() revealed
+> a race condition in this function: no new SCSI requests must be
+> accepted for a SCSI device after device removal started.
 > 
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Cc: Mike Christie <michaelc@cs.wisc.edu>
+> Cc: James Bottomley <JBottomley@parallels.com>
 > Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Joe Lawrence <jdl1291@gmail.com>
+> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 > Cc: <stable@kernel.org>
+> ---
+>  drivers/scsi/scsi_lib.c   |    7 ++++---
+>  drivers/scsi/scsi_sysfs.c |   11 +++++++++--
+>  2 files changed, 13 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 082c1e5..b722a8b 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -158,10 +158,11 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
+>  	 * that are already in the queue.
+>  	 */
+>  	spin_lock_irqsave(q->queue_lock, flags);
+> -	blk_requeue_request(q, cmd->request);
+> +	if (!blk_queue_dead(q)) {
+> +		blk_requeue_request(q, cmd->request);
+> +		kblockd_schedule_work(q, &device->requeue_work);
+> +	}
 
-Acked-by: Tejun Heo <tj@kernel.org>
-
-Not sure about stable@ tho.  This doesn't fix any visible issue at the
-moment and any change carries some risk.
-
-Thanks.
-
--- 
-tejun
+If we do not requeue what eventually frees the request?
