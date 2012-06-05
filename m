@@ -1,72 +1,115 @@
-From: Girish K S <girish.shivananjappa@linaro.org>
-Subject: Re: [PATCH V4 0/2] Add support for pci/non-pci probing for UFS
-Date: Tue, 5 Jun 2012 18:49:35 +0530
-Message-ID: <CAGxe1ZEwBLapzfK+2MeSqjDt55bJSLgo_7FAvicJKRmmW6X+eQ@mail.gmail.com>
-References: <1338810188-30248-1-git-send-email-girish.shivananjappa@linaro.org>
-	<CAGxe1ZGOrVaQNT=Bm9cdAoXc4vYLAaXCqV=TKOv3Oe39VhxqHg@mail.gmail.com>
-	<CANfBPZ_OV7iY4Wg9N8m50jYEh-oypbMEaS5U7WN6H9459CsJjQ@mail.gmail.com>
-	<CAGxe1ZHGW4-=PoXvYMPZfdGeoLQ5jSwUE7mZEaGDin3J98bLfg@mail.gmail.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [PATCH 1/1] [SCSI] scsi_debug: Add "removable" parameter
+Date: Tue, 05 Jun 2012 09:16:30 -0700
+Message-ID: <4FCE30DE.6090903@xenotime.net>
+References: <20120605072528.GE3043@piware.de> <20120605072737.GF3043@piware.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:63203 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934134Ab2FENTh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jun 2012 09:19:37 -0400
-Received: by qabj40 with SMTP id j40so3327655qab.1
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Jun 2012 06:19:36 -0700 (PDT)
-In-Reply-To: <CAGxe1ZHGW4-=PoXvYMPZfdGeoLQ5jSwUE7mZEaGDin3J98bLfg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120605072737.GF3043@piware.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Martin Pitt <martin.pitt@ubuntu.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, David Zeuthen <zeuthen@gmail.com>, Kay Sievers <kay@vrfy.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "S, Venkatraman" <svenkatr@ti.com>
-Cc: vinayak holikatti <vinholikatti@gmail.com>, Jej B <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, santoshsy@gmail.com, hch@infradead.org, patches@linaro.org
 
-On 5 June 2012 18:32, Girish K S <girish.shivananjappa@linaro.org> wrot=
-e:
-> On 5 June 2012 15:11, S, Venkatraman <svenkatr@ti.com> wrote:
->> On Mon, Jun 4, 2012 at 5:15 PM, Girish K S
->> <girish.shivananjappa@linaro.org> wrote:
->>> Hi maintainers,
->>> pls add
->>> Reviewed-by: Venkatraman S <svenkatr@ti.com>
->>> when you accept this patch
->>>
->> Girish,
->> Now that you have resent the patches, you could have added the
->> "Reviewed-by" tag yourself.
->> Anyway, there seems to be some problems with your mailer and the
->> patches have a lot of trailing ^M characters.
->> I also get this checkpatch warning:
->> WARNING: please write a paragraph that describes the config symbol f=
-ully
->> #29: FILE: drivers/scsi/ufs/Kconfig:45:
->> =A0config SCSI_UFSHCD
-> i checked the patch again. This line is not modified by my patch.
-> unable to understand the reason for it.
-The checkpatch mandates the Kconfig's config option's description to
-be min 4 lines.
-I added 2 more lines of description to remove the warning.
-will resend the patches
->>
->> James,
->> =A0These patched depend on some cleanups that I posted to the same
->> files a few weeks ago and now they are in Andrew Morton's queue. I'm
->> not very familiar with the process but I assumed it will get into
->> 3.5-rc1 as part of Andrew's pull request or equivalent. =A0Should I
->> resend them to you and ask it to be dropped from Andrew Morton's tre=
-e
->> ?
->>
->> Thanks,
->> Venkat.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 06/05/2012 12:27 AM, Martin Pitt wrote:
+
+> Add "removable" module parameter to set the "removable" attribute of any
+> subsequently created debug block device. It is a writable driver option, so
+> that you can switch between removable and "fixed" media block devices in
+> between the add_host calls.
+> 
+> This is useful for being able to test the different behaviour/required
+> privileges in e. g. the udisks test suite.
+> 
+> Signed-off-by: Martin Pitt <martin.pitt@ubuntu.com>
+> Signed-off-by: David Zeuthen <zeuthen@gmail.com>
+> ---
+>  drivers/scsi/scsi_debug.c |   35 ++++++++++++++++++++++++++++++++---
+>  1 files changed, 32 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 182d5a5..6eaa95e 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -109,6 +109,7 @@ static const char * scsi_debug_version_date = "20100324";
+>  #define DEF_OPT_BLKS 64
+>  #define DEF_PHYSBLK_EXP 0
+>  #define DEF_PTYPE   0
+> +#define DEF_REMOVABLE 0
+>  #define DEF_SCSI_LEVEL   5    /* INQUIRY, byte2 [5->SPC-3] */
+>  #define DEF_SECTOR_SIZE 512
+>  #define DEF_UNMAP_ALIGNMENT 0
+> @@ -180,6 +181,7 @@ static int scsi_debug_opt_blks = DEF_OPT_BLKS;
+>  static int scsi_debug_opts = DEF_OPTS;
+>  static int scsi_debug_physblk_exp = DEF_PHYSBLK_EXP;
+>  static int scsi_debug_ptype = DEF_PTYPE; /* SCSI peripheral type (0==disk) */
+> +static int scsi_debug_removable = DEF_REMOVABLE;
+>  static int scsi_debug_scsi_level = DEF_SCSI_LEVEL;
+>  static int scsi_debug_sector_size = DEF_SECTOR_SIZE;
+>  static int scsi_debug_virtual_gb = DEF_VIRTUAL_GB;
+> @@ -2754,6 +2755,7 @@ module_param_named(opt_blks, scsi_debug_opt_blks, int, S_IRUGO);
+>  module_param_named(opts, scsi_debug_opts, int, S_IRUGO | S_IWUSR);
+>  module_param_named(physblk_exp, scsi_debug_physblk_exp, int, S_IRUGO);
+>  module_param_named(ptype, scsi_debug_ptype, int, S_IRUGO | S_IWUSR);
+> +module_param_named(removable, scsi_debug_removable, int, S_IRUGO | S_IWUSR);
+>  module_param_named(scsi_level, scsi_debug_scsi_level, int, S_IRUGO);
+>  module_param_named(sector_size, scsi_debug_sector_size, int, S_IRUGO);
+>  module_param_named(unmap_alignment, scsi_debug_unmap_alignment, int, S_IRUGO);
+> @@ -2796,6 +2798,7 @@ MODULE_PARM_DESC(opt_blks, "optimal transfer length in block (def=64)");
+>  MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err... (def=0)");
+>  MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
+>  MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
+> +MODULE_PARM_DESC(removable, "claim to have removable media (def=0)");
+>  MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=5[SPC-3])");
+>  MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
+>  MODULE_PARM_DESC(unmap_alignment, "lowest aligned thin provisioning lba (def=0)");
+> @@ -3205,6 +3208,25 @@ static ssize_t sdebug_map_show(struct device_driver *ddp, char *buf)
+>  }
+>  DRIVER_ATTR(map, S_IRUGO, sdebug_map_show, NULL);
+>  
+> +static ssize_t sdebug_removable_show(struct device_driver *ddp,
+> +				     char *buf)
+> +{
+> +	return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_removable);
+> +}
+> +static ssize_t sdebug_removable_store(struct device_driver *ddp,
+> +				      const char *buf, size_t count)
+> +{
+> +	int n;
+> +
+> +	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
+> +		scsi_debug_removable = n;
+> +		return count;
+> +	}
+> +	return -EINVAL;
+> +}
+> +DRIVER_ATTR(removable, S_IRUGO | S_IWUSR, sdebug_removable_show,
+> +	    sdebug_removable_store);
+> +
+>  
+>  /* Note: The following function creates attribute files in the
+>     /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
+> @@ -3325,6 +3349,11 @@ static int __init scsi_debug_init(void)
+>  		return -EINVAL;
+>  	}
+>  
+> +	if (scsi_debug_removable > 1) {
+> +		printk(KERN_ERR "scsi_debug_init: removable must be 0 or 1\n");
+> +		return -EINVAL;
+> +	}
+> +
+
+
+so why not make it a bool instead of an int value?
+
+
+>  	if (scsi_debug_dev_size_mb < 1)
+>  		scsi_debug_dev_size_mb = 1;  /* force minimum 1 MB ramdisk */
+>  	sz = (unsigned long)scsi_debug_dev_size_mb * 1048576;
+
+
+
+-- 
+~Randy
