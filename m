@@ -1,86 +1,52 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing a
- device
-Date: Tue, 05 Jun 2012 17:14:11 +0000
-Message-ID: <4FCE3E63.7000002@acm.org>
-References: <4FCE3D20.4000205@acm.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC v2 PATCH 2/4] block: add queue runtime pm callbacks
+Date: Tue, 5 Jun 2012 13:27:42 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1206051313490.1542-100000@iolanthe.rowland.org>
+References: <CAF1ivSYVznOU43XT9_5d-EMNp1TQwBiYfG=PL6J1KPdmQx9pgw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay03ant.iops.be ([212.53.5.218]:51682 "EHLO
-	relay03ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754868Ab2FERO0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jun 2012 13:14:26 -0400
-In-Reply-To: <4FCE3D20.4000205@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAF1ivSYVznOU43XT9_5d-EMNp1TQwBiYfG=PL6J1KPdmQx9pgw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
-Avoid that the code for requeueing SCSI requests triggers a
-crash by making sure that that code isn't scheduled anymore
-after a device has been removed.
+On Tue, 22 May 2012, Lin Ming wrote:
 
-Also, source code inspection of __scsi_remove_device() revealed
-a race condition in this function: no new SCSI requests must be
-accepted for a SCSI device after device removal started.
+> > Next, you have to change the parts of the block layer responsible f=
+or
+> > taking a request from the queue and handing it to the lower-level
+> > driver (both peek and get). =A0If q->rpm_status is RPM_SUSPENDED, t=
+hey
+> > shouldn't do anything -- act as though the queue is empty. =A0If
+> > q->rpm_status is RPM_SUSPENDING or RPM_RESUMING, they should hand o=
+ver
+> > the request only if it has the REQ_PM flag set.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <JBottomley@parallels.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Joe Lawrence <jdl1291@gmail.com>
-Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: <stable@kernel.org>
----
- drivers/scsi/scsi_lib.c   |    7 ++++---
- drivers/scsi/scsi_sysfs.c |   11 +++++++++--
- 2 files changed, 13 insertions(+), 5 deletions(-)
+I just realized this isn't quite right.  In fact, when the status is
+RPM_SUSPENDING or RPM_RESUMING you need to search through the queue for
+the first request with REQ_PM set.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 082c1e5..b722a8b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -158,10 +158,11 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
- 	 * that are already in the queue.
- 	 */
- 	spin_lock_irqsave(q->queue_lock, flags);
--	blk_requeue_request(q, cmd->request);
-+	if (!blk_queue_dead(q)) {
-+		blk_requeue_request(q, cmd->request);
-+		kblockd_schedule_work(q, &device->requeue_work);
-+	}
- 	spin_unlock_irqrestore(q->queue_lock, flags);
--
--	kblockd_schedule_work(q, &device->requeue_work);
- }
- 
- /*
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 42c35ff..efffc92 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -966,13 +966,20 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		device_del(dev);
- 	} else
- 		put_device(&sdev->sdev_dev);
-+
-+	/*
-+	 * Stop accepting new requests and wait until all queuecommand() and
-+	 * scsi_run_queue() invocations have finished before tearing down the
-+	 * device.
-+	 */
- 	scsi_device_set_state(sdev, SDEV_DEL);
-+	blk_cleanup_queue(sdev->request_queue);
-+	cancel_work_sync(&sdev->requeue_work);
-+
- 	if (sdev->host->hostt->slave_destroy)
- 		sdev->host->hostt->slave_destroy(sdev);
- 	transport_destroy_device(dev);
- 
--	/* Freeing the queue signals to block that we're done */
--	blk_cleanup_queue(sdev->request_queue);
- 	put_device(dev);
- }
- 
+Otherwise you can end up in a deadlock.  For example, suppose the
+device is suspended and a normal I/O request arrives.  It gets put on
+the queue and a runtime resume is issued.  The sd resume method then
+submits a "spin-up drive" command to the queue with REQ_PM set, and it
+doesn't return until this command is finished.  But the command won't
+even start, because it isn't at the head of the queue -- the I/O
+request is, and it prevents the "spin-up" command from running.
+
+There are two other issues you also need to address.  The first is
+simple: Make sure your changes don't cause any harm if CONFIG_PM or
+CONFIG_PM_RUNTIME is set to N.
+
+Second, near the end of scsi_pm.c:scsi_bus_resume_common(), you can see
+that during resume from a system sleep, the device automatically gets
+set back to RPM_ACTIVE.  You want the queue's runtime status to remain
+in sync with the device's status; therefore you need to call
+blk_pre_runtime_resume near the start of this function and
+blk_post_runtime_resume near the end.  (This is the drawback of having
+separate rpm_status fields for the queue and the device.)
+
+Alan Stern
