@@ -1,7 +1,7 @@
 From: Girish K S <girish.shivananjappa@linaro.org>
 Subject: Re: [PATCH V4 0/2] Add support for pci/non-pci probing for UFS
-Date: Tue, 5 Jun 2012 15:35:28 +0530
-Message-ID: <CAGxe1ZHRxfz=TN91fhF62KaYGBMLXcjXCAcFWYNUgh+Ez04B2Q@mail.gmail.com>
+Date: Tue, 5 Jun 2012 18:32:59 +0530
+Message-ID: <CAGxe1ZHGW4-=PoXvYMPZfdGeoLQ5jSwUE7mZEaGDin3J98bLfg@mail.gmail.com>
 References: <1338810188-30248-1-git-send-email-girish.shivananjappa@linaro.org>
 	<CAGxe1ZGOrVaQNT=Bm9cdAoXc4vYLAaXCqV=TKOv3Oe39VhxqHg@mail.gmail.com>
 	<CANfBPZ_OV7iY4Wg9N8m50jYEh-oypbMEaS5U7WN6H9459CsJjQ@mail.gmail.com>
@@ -9,12 +9,12 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:46929 "EHLO
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:44187 "EHLO
 	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754457Ab2FEKF3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jun 2012 06:05:29 -0400
-Received: by qadb17 with SMTP id b17so1938570qad.19
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Jun 2012 03:05:28 -0700 (PDT)
+	with ESMTP id S1757929Ab2FENDA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jun 2012 09:03:00 -0400
+Received: by qadb17 with SMTP id b17so2018922qad.19
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Jun 2012 06:03:00 -0700 (PDT)
 In-Reply-To: <CANfBPZ_OV7iY4Wg9N8m50jYEh-oypbMEaS5U7WN6H9459CsJjQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -32,18 +32,15 @@ On 5 June 2012 15:11, S, Venkatraman <svenkatr@ti.com> wrote:
 > Girish,
 > Now that you have resent the patches, you could have added the
 > "Reviewed-by" tag yourself.
-Since i missed it out while generating the patch. i requested the
-maintainer. No hard feelings :)
 > Anyway, there seems to be some problems with your mailer and the
 > patches have a lot of trailing ^M characters.
-i will check from my side.
 > I also get this checkpatch warning:
 > WARNING: please write a paragraph that describes the config symbol fu=
 lly
 > #29: FILE: drivers/scsi/ufs/Kconfig:45:
 > =A0config SCSI_UFSHCD
-oh, this is because the description starts with a space.
-shall i resend with acked tag and other errors removed?
+i checked the patch again. This line is not modified by my patch.
+unable to understand the reason for it.
 >
 > James,
 > =A0These patched depend on some cleanups that I posted to the same
