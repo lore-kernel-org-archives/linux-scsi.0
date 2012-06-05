@@ -1,111 +1,84 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
- a device
-Date: Tue, 05 Jun 2012 17:08:09 -0500
-Message-ID: <4FCE8349.2000908@cs.wisc.edu>
-References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] tcm_qla2xxx: Don't insert nacls without sessions into
+ the btree
+Date: Tue, 05 Jun 2012 15:40:45 -0700
+Message-ID: <1338936045.28824.229.camel@haakon2.linux-iscsi.org>
+References: <1338878254-4145-1-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:49140 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751239Ab2FEWIc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Jun 2012 18:08:32 -0400
-In-Reply-To: <4FCE3E63.7000002@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1338878254-4145-1-git-send-email-roland@kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Arun Easi <arun.easi@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
-On 06/05/2012 12:14 PM, Bart Van Assche wrote:
-> Avoid that the code for requeueing SCSI requests triggers a
-> crash by making sure that that code isn't scheduled anymore
-> after a device has been removed.
+Hey Roland,
+
+On Mon, 2012-06-04 at 23:37 -0700, Roland Dreier wrote:
+> From: Roland Dreier <roland@purestorage.com>
 > 
-> Also, source code inspection of __scsi_remove_device() revealed
-> a race condition in this function: no new SCSI requests must be
-> accepted for a SCSI device after device removal started.
+> When we create an explicit node ACL in tcm_qla2xxx_make_nodeacl(),
+> there is a call to tcm_qla2xxx_setup_nacl_from_rport(), which puts the
+> node ACL into the lport_fcport_map even though there is no session yet
+> for the initiator.  Since the only time we remove entries from this
+> map is when we free a session, this means that if we later delete this
+> node ACL without the initiator ever creating a session, we'll leave
+> the nacl pointer in the btree pointing at freed memory.
 > 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> Cc: Mike Christie <michaelc@cs.wisc.edu>
-> Cc: James Bottomley <JBottomley@parallels.com>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Joe Lawrence <jdl1291@gmail.com>
-> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> Cc: <stable@kernel.org>
+> This is especially bad if that initiator later does send us a command
+> that would cause us to create a dynamic ACL and session: we'll find
+> the stale freed nacl pointer in the btree and end up with use-after-free.
+> 
+> We could add more code to clear the btree entry when deleting the
+> explicit nacl, but the original insertion is pointless: without a
+> session attached, we'll just have to update the entry when a session
+> appears anyway.  So we can just delete tcm_qla2xxx_setup_nacl_from_rport()
+> and the code that calls it.
+> 
+> Signed-off-by: Roland Dreier <roland@purestorage.com>
+
+Looking at this patch which removes tcm_qla2xxx_setup_nacl_from_rport()
+usage during explicit tcm_qla2xxx_make_nodeacl() creation, how does an
+explicit NodeACL get picked up in tcm_qla2xxx_check_initiator_node_acl()
+now with this change ?
+
+AFAICT this patch makes every new initiator login attempt result in a
+demo-mode se_node_acl being generated with virtual LUN=0 access, and
+ignores explicit se_node_acl + MappedLUNs groups + links to TPG_LUN in
+individual ../target/qla2xxx/$TARGET_WWPN/tpgt_1/acls/$INITIATOR_WWPN/
+
+Is there something else that I'm missing here..?
+
 > ---
->  drivers/scsi/scsi_lib.c   |    7 ++++---
->  drivers/scsi/scsi_sysfs.c |   11 +++++++++--
->  2 files changed, 13 insertions(+), 5 deletions(-)
+> Hi Nick, Chad,
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 082c1e5..b722a8b 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -158,10 +158,11 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
->  	 * that are already in the queue.
->  	 */
->  	spin_lock_irqsave(q->queue_lock, flags);
-> -	blk_requeue_request(q, cmd->request);
-> +	if (!blk_queue_dead(q)) {
-> +		blk_requeue_request(q, cmd->request);
-> +		kblockd_schedule_work(q, &device->requeue_work);
-> +	}
->  	spin_unlock_irqrestore(q->queue_lock, flags);
-> -
-> -	kblockd_schedule_work(q, &device->requeue_work);
+> Not sure how you guys want to handle merging qla2xxx target patches,
+> especially ones that only touch the tcm_qla2xxx code, so I'm just
+> sending this to both of you.
+> 
 
-If we do not have the part of the patch above, but have your other
-patches and the code below, will we  be ok?
+Just a heads up that I'm planning to soon deprecate lio-core.git and
+start using target-pending.git as the main development tree as
+recommended by hch following a branch structure similar to what
+virt/kvm/kvm.git has adopted.
 
-I think we will requeue the request, then blk_drain_queue will end up
-running the queue (blk_drain_queue will not return while req is requeued
-because the rq count is still incremented). Then scsi_request_fn will be
-run. blk_peek_request will give us the requeued request. We will hit the
-scsi_device_online check with the state being SDEV_DEL, and then call we
-call scsi_kill_request. This should then lead to the scsi_cmnd and its
-other scsi stuff, like the scatterlist, and sense bufffer, to be
-released. And then the request struct will be finished and freed and
-then the rq count decremented?
+To that end, I'm thinking that a target-pending/qla-tgt-queue branch
+that's merged into for-next makes the most sense so that Chad + Co. can
+pickup the latest qla-tgt development items ASAP for their internal
+regression testing.
 
+For tcm_qla2xxx specific patches, I'm fine with having these go via
+target-pending through the usual for-next / rc-fixes updates to Linus
+with the necessary signoffs.
 
->  }
->  
->  /*
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 42c35ff..efffc92 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -966,13 +966,20 @@ void __scsi_remove_device(struct scsi_device *sdev)
->  		device_del(dev);
->  	} else
->  		put_device(&sdev->sdev_dev);
-> +
-> +	/*
-> +	 * Stop accepting new requests and wait until all queuecommand() and
-> +	 * scsi_run_queue() invocations have finished before tearing down the
-> +	 * device.
-> +	 */
->  	scsi_device_set_state(sdev, SDEV_DEL);
-> +	blk_cleanup_queue(sdev->request_queue);
-> +	cancel_work_sync(&sdev->requeue_work);
+For qla_target.c items beyond mechanical + minor changes we'll require
+an Qlogic review + ACK, and likely end up merging via scsi.git as
+necessary if the change effects qla2xxx LLD initiator mode operation.
 
+Chad & Co, do you have any thoughts on your preferred workflow here..?
 
-I agree we do still need this part of the patch with the cancel, because
-the workstruct could still be queued but something could run the queue
-without dequeueing the workstruct. That would free the request and that
-could lead to blk_cleanup_queue running and us freeing the scsi_device
-from under the workstruct.
+Thanks,
 
-> +
->  	if (sdev->host->hostt->slave_destroy)
->  		sdev->host->hostt->slave_destroy(sdev);
->  	transport_destroy_device(dev);
->  
-> -	/* Freeing the queue signals to block that we're done */
-> -	blk_cleanup_queue(sdev->request_queue);
->  	put_device(dev);
->  }
->  
-
+--nab
