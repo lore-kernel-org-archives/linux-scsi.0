@@ -1,48 +1,34 @@
-From: Rob Evers <revers@redhat.com>
-Subject: Re: [PATCH 0/3 V2] alua updates
-Date: Tue, 05 Jun 2012 12:38:03 -0400
-Message-ID: <4FCE35EB.30109@redhat.com>
-References: <1337364536-6425-1-git-send-email-revers@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/4 v7] Fixes for SCSI device removal
+Date: Tue, 05 Jun 2012 17:08:48 +0000
+Message-ID: <4FCE3D20.4000205@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27490 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752304Ab2FEQiH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Jun 2012 12:38:07 -0400
-In-Reply-To: <1337364536-6425-1-git-send-email-revers@redhat.com>
+Received: from relay01ant.iops.be ([212.53.4.34]:55467 "EHLO
+	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753366Ab2FERIw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jun 2012 13:08:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-Hannes,
+This is version seven of the SCSI device removal patch series. This
+version of this patch series has been tested in the same way as the
+previous series: by triggering a large number of removals of a SCSI
+device controlled by the ib_srp LLD and also by checking that dm devices
+controlled by multipathd still work fine.
 
-Do you have any feedback on these patches?
+Changes compared to v6:
+- Added a fix for a race in the block layer.
+- Moved a BUG_ON(!sdev) statement up since it's a precondition check.
+- Changed return type of scsi_queue_insert() from int to void.
+- Added a cancel_work_sync(&sdev->requeue_work) call in
+  __scsi_remove_device().
 
-Thanks, Rob
-
-On 05/18/2012 02:08 PM, Rob Evers wrote:
-> A few minor updates to the previous alua patchset...
->
-> alua: retry alua rtpg extended header for illegal request response:
-> - Added entry condition to alua_rtpg ILLEGAL_REQUEST retry to avoid
->    possible infinite loop. Infinte loop could occur if an array fails
->    non-extended format rtpg request.
->
-> - Fixed a few comment typos
->
-> alua: backoff alua rtpg retry linearly vs. geometrically:
-> - Added Martin George's signoff on patch as he contributed this.
->
-> Rob Evers (3):
->    alua: implement 'implied transition timeout'
->    alua: retry alua rtpg extended header for illegal request response
->    alua: backoff alua rtpg retry linearly vs. geometrically
->
->   drivers/scsi/device_handler/scsi_dh_alua.c |   69 ++++++++++++++++++++++++----
->   include/scsi/scsi.h                        |    2 +
->   2 files changed, 62 insertions(+), 9 deletions(-)
->
+Changes compared to v5:
+- Removed the function scsi_free_queue() and inlined that function
+  in its callers.
+- Added two additional patches.
 
