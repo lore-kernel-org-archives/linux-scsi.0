@@ -1,53 +1,147 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 1/6] bnx2fc: use kthread_create_on_node
-Date: Mon, 4 Jun 2012 16:15:42 -0700
-Message-ID: <1338851747-7240-2-git-send-email-bprakash@broadcom.com>
-References: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3583 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761185Ab2FDXQD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Jun 2012 19:16:03 -0400
-In-Reply-To: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH] tcm_qla2xxx: Don't insert nacls without sessions into the btree
+Date: Mon,  4 Jun 2012 23:37:34 -0700
+Message-ID: <1338878254-4145-1-git-send-email-roland@kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, Eric Dumazet <eric.dumazet@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-From: Eric Dumazet <eric.dumazet@gmail.com>
+From: Roland Dreier <roland@purestorage.com>
 
-Since bnx2fc_percpu_thread_create() creates percpu kthread, it makes
-sense to use kthread_create_on_node() to get proper NUMA affinity for
-kthread stack.
+When we create an explicit node ACL in tcm_qla2xxx_make_nodeacl(),
+there is a call to tcm_qla2xxx_setup_nacl_from_rport(), which puts the
+node ACL into the lport_fcport_map even though there is no session yet
+for the initiator.  Since the only time we remove entries from this
+map is when we free a session, this means that if we later delete this
+node ACL without the initiator ever creating a session, we'll leave
+the nacl pointer in the btree pointing at freed memory.
 
-Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
-CC: "James E.J. Bottomley" <JBottomley@parallels.com>
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+This is especially bad if that initiator later does send us a command
+that would cause us to create a dynamic ACL and session: we'll find
+the stale freed nacl pointer in the btree and end up with use-after-free.
+
+We could add more code to clear the btree entry when deleting the
+explicit nacl, but the original insertion is pointless: without a
+session attached, we'll just have to update the entry when a session
+appears anyway.  So we can just delete tcm_qla2xxx_setup_nacl_from_rport()
+and the code that calls it.
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Hi Nick, Chad,
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index f52f668..dd28af7 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2290,9 +2290,9 @@ static void bnx2fc_percpu_thread_create(unsigned int cpu)
+Not sure how you guys want to handle merging qla2xxx target patches,
+especially ones that only touch the tcm_qla2xxx code, so I'm just
+sending this to both of you.
+
+ - R.
+
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |   73 ------------------------------------
+ 1 file changed, 73 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 436598f..8ece6fd 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -762,65 +762,6 @@ static u16 tcm_qla2xxx_set_fabric_sense_len(struct se_cmd *se_cmd,
+ struct target_fabric_configfs *tcm_qla2xxx_fabric_configfs;
+ struct target_fabric_configfs *tcm_qla2xxx_npiv_fabric_configfs;
  
- 	p = &per_cpu(bnx2fc_percpu, cpu);
+-static int tcm_qla2xxx_setup_nacl_from_rport(
+-	struct se_portal_group *se_tpg,
+-	struct se_node_acl *se_nacl,
+-	struct tcm_qla2xxx_lport *lport,
+-	struct tcm_qla2xxx_nacl *nacl,
+-	u64 rport_wwnn)
+-{
+-	struct scsi_qla_host *vha = lport->qla_vha;
+-	struct Scsi_Host *sh = vha->host;
+-	struct fc_host_attrs *fc_host = shost_to_fc_host(sh);
+-	struct fc_rport *rport;
+-	unsigned long flags;
+-	void *node;
+-	int rc;
+-
+-	/*
+-	 * Scan the existing rports, and create a session for the
+-	 * explict NodeACL is an matching rport->node_name already
+-	 * exists.
+-	 */
+-	spin_lock_irqsave(sh->host_lock, flags);
+-	list_for_each_entry(rport, &fc_host->rports, peers) {
+-		if (rport_wwnn != rport->node_name)
+-			continue;
+-
+-		pr_debug("Located existing rport_wwpn and rport->node_name: 0x%016LX, port_id: 0x%04x\n",
+-		    rport->node_name, rport->port_id);
+-		nacl->nport_id = rport->port_id;
+-
+-		spin_unlock_irqrestore(sh->host_lock, flags);
+-
+-		spin_lock_irqsave(&vha->hw->hardware_lock, flags);
+-		node = btree_lookup32(&lport->lport_fcport_map, rport->port_id);
+-		if (node) {
+-			rc = btree_update32(&lport->lport_fcport_map,
+-					    rport->port_id, se_nacl);
+-		} else {
+-			rc = btree_insert32(&lport->lport_fcport_map,
+-					    rport->port_id, se_nacl,
+-					    GFP_ATOMIC);
+-		}
+-		spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+-
+-		if (rc) {
+-			pr_err("Unable to insert se_nacl into fcport_map");
+-			WARN_ON(rc > 0);
+-			return rc;
+-		}
+-
+-		pr_debug("Inserted into fcport_map: %p for WWNN: 0x%016LX, port_id: 0x%08x\n",
+-		    se_nacl, rport_wwnn, nacl->nport_id);
+-
+-		return 1;
+-	}
+-	spin_unlock_irqrestore(sh->host_lock, flags);
+-
+-	return 0;
+-}
+-
+ /*
+  * Expected to be called with struct qla_hw_data->hardware_lock held
+  */
+@@ -859,14 +800,10 @@ static struct se_node_acl *tcm_qla2xxx_make_nodeacl(
+ 	struct config_group *group,
+ 	const char *name)
+ {
+-	struct se_wwn *se_wwn = se_tpg->se_tpg_wwn;
+-	struct tcm_qla2xxx_lport *lport = container_of(se_wwn,
+-				struct tcm_qla2xxx_lport, lport_wwn);
+ 	struct se_node_acl *se_nacl, *se_nacl_new;
+ 	struct tcm_qla2xxx_nacl *nacl;
+ 	u64 wwnn;
+ 	u32 qla2xxx_nexus_depth;
+-	int rc;
  
--	thread = kthread_create(bnx2fc_percpu_io_thread,
--				(void *)p,
--				"bnx2fc_thread/%d", cpu);
-+	thread = kthread_create_on_node(bnx2fc_percpu_io_thread,
-+					(void *)p, cpu_to_node(cpu),
-+					"bnx2fc_thread/%d", cpu);
- 	/* bind thread to the cpu */
- 	if (likely(!IS_ERR(thread))) {
- 		kthread_bind(thread, cpu);
+ 	if (tcm_qla2xxx_parse_wwn(name, &wwnn, 1) < 0)
+ 		return ERR_PTR(-EINVAL);
+@@ -893,16 +830,6 @@ static struct se_node_acl *tcm_qla2xxx_make_nodeacl(
+ 	nacl = container_of(se_nacl, struct tcm_qla2xxx_nacl, se_node_acl);
+ 	nacl->nport_wwnn = wwnn;
+ 	tcm_qla2xxx_format_wwn(&nacl->nport_name[0], TCM_QLA2XXX_NAMELEN, wwnn);
+-	/*
+-	 * Setup a se_nacl handle based on an a matching struct fc_rport setup
+-	 * via drivers/scsi/qla2xxx/qla_init.c:qla2x00_reg_remote_port()
+-	 */
+-	rc = tcm_qla2xxx_setup_nacl_from_rport(se_tpg, se_nacl, lport,
+-					nacl, wwnn);
+-	if (rc < 0) {
+-		tcm_qla2xxx_release_fabric_acl(se_tpg, se_nacl_new);
+-		return ERR_PTR(rc);
+-	}
+ 
+ 	return se_nacl;
+ }
 -- 
-1.7.0.6
-
-
+1.7.9.5
