@@ -1,155 +1,90 @@
 From: Martin Pitt <martin.pitt@ubuntu.com>
-Subject: [PATCH 1/1] [SCSI] scsi_debug: Add "removable" parameter
-Date: Tue, 5 Jun 2012 09:27:37 +0200
-Message-ID: <20120605072737.GF3043@piware.de>
-References: <20120605072528.GE3043@piware.de>
+Subject: [PATCH 0/1] Option for scsi_debug to fake removable devices
+Date: Tue, 5 Jun 2012 09:25:28 +0200
+Message-ID: <20120605072528.GE3043@piware.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="2B/JsCI69OhZNC5r"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.piware.de ([213.9.93.70]:57608 "EHLO mail.piware.de"
+Received: from www.piware.de ([213.9.93.70]:57609 "EHLO mail.piware.de"
 	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1756129Ab2FEHeU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Jun 2012 03:34:20 -0400
+	id S1752917Ab2FEHeJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Jun 2012 03:34:09 -0400
 Content-Disposition: inline
-In-Reply-To: <20120605072528.GE3043@piware.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, David Zeuthen <zeuthen@gmail.com>, Kay Sievers <kay@vrfy.org>
 
-Add "removable" module parameter to set the "removable" attribute of any
-subsequently created debug block device. It is a writable driver option, so
-that you can switch between removable and "fixed" media block devices in
-between the add_host calls.
 
-This is useful for being able to test the different behaviour/required
-privileges in e. g. the udisks test suite.
+--2B/JsCI69OhZNC5r
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Martin Pitt <martin.pitt@ubuntu.com>
-Signed-off-by: David Zeuthen <zeuthen@gmail.com>
----
- drivers/scsi/scsi_debug.c |   35 ++++++++++++++++++++++++++++++++---
- 1 files changed, 32 insertions(+), 3 deletions(-)
+Hello all,
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 182d5a5..6eaa95e 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -109,6 +109,7 @@ static const char * scsi_debug_version_date = "20100324";
- #define DEF_OPT_BLKS 64
- #define DEF_PHYSBLK_EXP 0
- #define DEF_PTYPE   0
-+#define DEF_REMOVABLE 0
- #define DEF_SCSI_LEVEL   5    /* INQUIRY, byte2 [5->SPC-3] */
- #define DEF_SECTOR_SIZE 512
- #define DEF_UNMAP_ALIGNMENT 0
-@@ -180,6 +181,7 @@ static int scsi_debug_opt_blks = DEF_OPT_BLKS;
- static int scsi_debug_opts = DEF_OPTS;
- static int scsi_debug_physblk_exp = DEF_PHYSBLK_EXP;
- static int scsi_debug_ptype = DEF_PTYPE; /* SCSI peripheral type (0==disk) */
-+static int scsi_debug_removable = DEF_REMOVABLE;
- static int scsi_debug_scsi_level = DEF_SCSI_LEVEL;
- static int scsi_debug_sector_size = DEF_SECTOR_SIZE;
- static int scsi_debug_virtual_gb = DEF_VIRTUAL_GB;
-@@ -197,7 +199,6 @@ static unsigned int scsi_debug_write_same_length = DEF_WRITESAME_LENGTH;
- static int scsi_debug_cmnd_count = 0;
- 
- #define DEV_READONLY(TGT)      (0)
--#define DEV_REMOVEABLE(TGT)    (0)
- 
- static unsigned int sdebug_store_sectors;
- static sector_t sdebug_capacity;	/* in sectors */
-@@ -919,7 +920,7 @@ static int resp_inquiry(struct scsi_cmnd * scp, int target,
- 		return ret;
- 	}
- 	/* drops through here for a standard inquiry */
--	arr[1] = DEV_REMOVEABLE(target) ? 0x80 : 0;	/* Removable disk */
-+	arr[1] = scsi_debug_removable ? 0x80 : 0;	/* Removable disk */
- 	arr[2] = scsi_debug_scsi_level;
- 	arr[3] = 2;    /* response_data_format==2 */
- 	arr[4] = SDEBUG_LONG_INQ_SZ - 5;
-@@ -1211,7 +1212,7 @@ static int resp_format_pg(unsigned char * p, int pcontrol, int target)
- 	p[11] = sdebug_sectors_per & 0xff;
- 	p[12] = (scsi_debug_sector_size >> 8) & 0xff;
- 	p[13] = scsi_debug_sector_size & 0xff;
--	if (DEV_REMOVEABLE(target))
-+	if (scsi_debug_removable)
- 		p[20] |= 0x20; /* should agree with INQUIRY */
- 	if (1 == pcontrol)
- 		memset(p + 2, 0, sizeof(format_pg) - 2);
-@@ -2754,6 +2755,7 @@ module_param_named(opt_blks, scsi_debug_opt_blks, int, S_IRUGO);
- module_param_named(opts, scsi_debug_opts, int, S_IRUGO | S_IWUSR);
- module_param_named(physblk_exp, scsi_debug_physblk_exp, int, S_IRUGO);
- module_param_named(ptype, scsi_debug_ptype, int, S_IRUGO | S_IWUSR);
-+module_param_named(removable, scsi_debug_removable, int, S_IRUGO | S_IWUSR);
- module_param_named(scsi_level, scsi_debug_scsi_level, int, S_IRUGO);
- module_param_named(sector_size, scsi_debug_sector_size, int, S_IRUGO);
- module_param_named(unmap_alignment, scsi_debug_unmap_alignment, int, S_IRUGO);
-@@ -2796,6 +2798,7 @@ MODULE_PARM_DESC(opt_blks, "optimal transfer length in block (def=64)");
- MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err... (def=0)");
- MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
- MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
-+MODULE_PARM_DESC(removable, "claim to have removable media (def=0)");
- MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=5[SPC-3])");
- MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
- MODULE_PARM_DESC(unmap_alignment, "lowest aligned thin provisioning lba (def=0)");
-@@ -3205,6 +3208,25 @@ static ssize_t sdebug_map_show(struct device_driver *ddp, char *buf)
- }
- DRIVER_ATTR(map, S_IRUGO, sdebug_map_show, NULL);
- 
-+static ssize_t sdebug_removable_show(struct device_driver *ddp,
-+				     char *buf)
-+{
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_removable);
-+}
-+static ssize_t sdebug_removable_store(struct device_driver *ddp,
-+				      const char *buf, size_t count)
-+{
-+	int n;
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-+		scsi_debug_removable = n;
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+DRIVER_ATTR(removable, S_IRUGO | S_IWUSR, sdebug_removable_show,
-+	    sdebug_removable_store);
-+
- 
- /* Note: The following function creates attribute files in the
-    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
-@@ -3230,6 +3252,7 @@ static int do_create_driverfs_files(void)
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_num_tgts);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_ptype);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_opts);
-+	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_removable);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_scsi_level);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_virtual_gb);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_vpd_use_hostno);
-@@ -3255,6 +3278,7 @@ static void do_remove_driverfs_files(void)
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_scsi_level);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_opts);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_ptype);
-+	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_removable);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_num_tgts);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_num_parts);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_no_uld);
-@@ -3325,6 +3349,11 @@ static int __init scsi_debug_init(void)
- 		return -EINVAL;
- 	}
- 
-+	if (scsi_debug_removable > 1) {
-+		printk(KERN_ERR "scsi_debug_init: removable must be 0 or 1\n");
-+		return -EINVAL;
-+	}
-+
- 	if (scsi_debug_dev_size_mb < 1)
- 		scsi_debug_dev_size_mb = 1;  /* force minimum 1 MB ramdisk */
- 	sz = (unsigned long)scsi_debug_dev_size_mb * 1048576;
--- 
-1.7.2.5
+For the purposes of automatically testing udisks and gvfs automounting
+I would like to add a parameter to scsi_debug to control the
+"removable" attribute of the created block device. With that, we can
+test system-internal and removable drives, as well as CD-ROMs (which
+scsi_debug can already emulate). udisks requires different privileges
+for mounting system-internal drives vs.  removable/hotpluggable
+drives.
 
--- 
+I wrote a simple kernel patch for this (against linux-next), and
+tested this quite thoroughly.
+
+I ran the style checker, and it reports two problems:
+
+------------ 8< --------------
+WARNING: line over 80 characters
+#109: FILE: drivers/scsi/scsi_debug.c:3255:
++       ret |=3D driver_create_file(&sdebug_driverfs_driver, &driver_attr_r=
+emovable);
+
+WARNING: Prefer pr_err(... to printk(KERN_ERR, ...
+#126: FILE: drivers/scsi/scsi_debug.c:3353:
++               printk(KERN_ERR "scsi_debug_init: removable must be 0 or 1\=
+n");
+------------ 8< --------------
+
+But as the existing code uses this style in the adjacent lines, I
+favored consistency over fixing those. If the latter is desired, I'd
+rather send a separate patch with just the style cleanup for the whole
+file.
+
+I got a signoff from David Zeuthen (the primary udisks maintainer)
+already, noted so in the patch.
+
+Thank you in advance for considering,
+
+Martin
+
+--=20
 Martin Pitt                        | http://www.piware.de
 Ubuntu Developer (www.ubuntu.com)  | Debian Developer  (www.debian.org)
+
+--2B/JsCI69OhZNC5r
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBCAAGBQJPzbRnAAoJEPmIJawmtHufj4gP/A4lX2187drcZrTnHeW15qyX
+SZArrZvpfqVOt/mtS+dHBP3iOEsbIr7M4OWTsEdNoXycV93RwPA6O/ukRIGzWp27
+3j2Lj7IXobY6lu5GaICaPXsqXYMiDzEQGCoc0cVlqzV3B1+Fv/GrVsTtRxEQGttm
+5M9spwGQHVL71RzvPYU3DcW7jeIzOwyeCx1txprRs3U6Ojc05VPI9znJj0gYU3TC
++T2U2nX4GTUQRQYv17uTno5hotgJMMjCLcNtHI7XRdzdoc+VXeRrgw2Qzj+gWMjK
+ivEu9TmIjwStOPT8UbINxIJ/Q7yzyrM+68VipXlNdZniiDJTfOoA8AKZkv8bhzOV
+GY2qIFu2FHW+k+JJrG99F8mQj8R3mck1lRBnQIdxeTdUbzV/TNpYwJCvsuRUWxO4
+wv/4N3S/qDtHgIuaW4MutIhAHJWJ89+OxH8XCaeCmkOgG+Zl/fy8wKtuvWjF14PN
+M0y+PNEdmiG95cOeKx39bItgqZ2lLjlrG79AOeNveQZ8+F9urCczMlbmVS02NW0k
+y+FfsHEgmzJZzZTVDR9SEx5A/JTWDCmXzGSkKkZbr0VYrftVJZ2Nsf/StryUiKwr
+xJAJW+c4vcAFjavdAEHR4rBFDTAC3IAmATLmUfAxqBKJv1Mmih4y+Be4u7gFWOqK
+VkwigPKzb8qNy2IID71h
+=Da9m
+-----END PGP SIGNATURE-----
+
+--2B/JsCI69OhZNC5r--
