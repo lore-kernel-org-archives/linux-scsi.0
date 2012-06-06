@@ -1,44 +1,70 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
- a device
-Date: Wed, 06 Jun 2012 16:18:06 +0000
-Message-ID: <4FCF82BE.1090505@acm.org>
-References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE8349.2000908@cs.wisc.edu> <4FCF4C1E.1080300@acm.org> <4FCF5E6B.40507@cs.wisc.edu> <4FCF654A.2080900@cs.wisc.edu> <4FCF7164.70207@acm.org> <4FCF7720.6030306@cs.wisc.edu>
+From: Stephen Hemminger <shemminger@vyatta.com>
+Subject: [PATCH] mvsas: fix warnings
+Date: Wed, 6 Jun 2012 11:36:38 -0700
+Message-ID: <20120606113638.08fbef77@nehalam.linuxnetplumber.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay04ant.iops.be ([212.53.5.219]:40048 "EHLO
-	relay04ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754113Ab2FFQSO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 12:18:14 -0400
-In-Reply-To: <4FCF7720.6030306@cs.wisc.edu>
+Received: from mail.vyatta.com ([76.74.103.46]:43434 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753826Ab2FFSgk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 14:36:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
-
-On 06/06/12 15:28, Mike Christie wrote:
-
-> On 06/06/2012 10:04 AM, Bart Van Assche wrote:
->> I'm not sure. If a requeued request times out before blk_cleanup_queue()
->> is invoked then it's possible that the requeue_work is started after the
->> struct scsi_device has already been deleted.
-> 
-> Won't the cancel_work_sync call you are adding prevent that? After
-> blk_cleanup_queue has returned we know that no IO is running or in the
-> eh, and we know no new IO will be started. And then, after the
-> cancel_work_sync call you are adding has returned we know that there
-> will not be any workstruct queued or running.
+To: James Bottomley <James.Bottomley@parallels.com>, Xiangliang Yu <yuxiangl@marvell.com>
+Cc: linux-scsi@vger.kernel.org
 
 
-We've probably each made different assumptions about whether or not the
-requeue work scheduling happens under the queue lock, so we're probably
-both right. I'll prepare, test and post a new patch set, that will make
-the discussion easier.
+This fixes a couple of warnings in the mv_sas device.
 
-Bart.
+drivers/scsi/mvsas/mv_sas.c: In function =E2=80=98mvs_task_exec=E2=80=99=
+:
+drivers/scsi/mvsas/mv_sas.c:888:24: warning: unused variable =E2=80=98d=
+ev=E2=80=99 [-Wunused-variable]
+drivers/scsi/mvsas/mv_sas.c: In function =E2=80=98mvs_update_phyinfo=E2=
+=80=99:
+drivers/scsi/mvsas/mv_sas.c:1157:34: warning: comparison between =E2=80=
+=98enum sas_device_type=E2=80=99 and =E2=80=98enum sas_dev_type=E2=80=99=
+ [-Wenum-compare]
+drivers/scsi/mvsas/mv_sas.c:1160:39: warning: comparison between =E2=80=
+=98enum sas_device_type=E2=80=99 and =E2=80=98enum sas_dev_type=E2=80=99=
+ [-Wenum-compare]
 
- 
+The first is a trivial unused variable.
+The second is a case where a comparison is being done with the incorrec=
+t enum.
+Please review the latter change since it looks like the
+original code maybe incorrect.
+
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
 
+--- a/drivers/scsi/mvsas/mv_sas.c	2012-06-06 11:09:39.300452498 -0700
++++ b/drivers/scsi/mvsas/mv_sas.c	2012-06-06 11:31:44.528574196 -0700
+@@ -885,7 +885,6 @@ static int mvs_task_exec(struct sas_task
+ 				struct completion *completion, int is_tmf,
+ 				struct mvs_tmf_task *tmf)
+ {
+-	struct domain_device *dev =3D task->dev;
+ 	struct mvs_info *mvi =3D NULL;
+ 	u32 rc =3D 0;
+ 	u32 pass =3D 0;
+@@ -1154,10 +1153,10 @@ void mvs_update_phyinfo(struct mvs_info
+ 			phy->identify.device_type =3D
+ 				phy->att_dev_info & PORT_DEV_TYPE_MASK;
+=20
+-			if (phy->identify.device_type =3D=3D SAS_END_DEV)
++			if (phy->identify.device_type =3D=3D SAS_END_DEVICE)
+ 				phy->identify.target_port_protocols =3D
+ 							SAS_PROTOCOL_SSP;
+-			else if (phy->identify.device_type !=3D NO_DEVICE)
++			else if (phy->identify.device_type !=3D SAS_PHY_UNUSED)
+ 				phy->identify.target_port_protocols =3D
+ 							SAS_PROTOCOL_SMP;
+ 			if (oob_done)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
