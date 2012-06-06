@@ -1,64 +1,29 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
- a device
-Date: Wed, 06 Jun 2012 12:17:22 +0000
-Message-ID: <4FCF4A52.20406@acm.org>
-References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE7BC9.1010504@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01ant.iops.be ([212.53.4.34]:57845 "EHLO
-	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801Ab2FFMR2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 08:17:28 -0400
-In-Reply-To: <4FCE7BC9.1010504@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: [PATCH 0/3] scsi: fix internal write cache issue on usb hdd.
+Date: Wed,  6 Jun 2012 08:19:59 -0400
+Message-ID: <1338985199-9648-1-git-send-email-linkinjeon@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
-On 06/05/12 21:36, Mike Christie wrote:
+The numbers of USB HDDs(All USB HDD I checked) does not respond correctly to scsi mode sense command for retrieving the write cache page status. Even though write cache is enabled by default, due to scsi driver assume that cache is not enabled which in turn might lead to loss of data since data still will be in cache.
+This result that all filesystems is not stable on USB HDD when the device is unplugged abruptly, even though these are having journaling feature.
+Our first trying is that scsi driver send ATA command(ATA Pass through, #58) to USB HDD after failure from normal routine to know write cache enable.
+We have known it is dangerous after testing several USB HDD. some of HDD is stalled by this command(A-DATA HDD). So we tried to make the patch James's suggestion(usb quirk) on version 2 that add product ID and verdor ID of USB HDD to USB quirk list after checking write cache.
+All filesystem will be stable on USB HDD registered in quirk list. And it will be updated continuously.
 
-> On 06/05/2012 12:14 PM, Bart Van Assche wrote:
->> Avoid that the code for requeueing SCSI requests triggers a
->> crash by making sure that that code isn't scheduled anymore
->> after a device has been removed.
->>
->> Also, source code inspection of __scsi_remove_device() revealed
->> a race condition in this function: no new SCSI requests must be
->> accepted for a SCSI device after device removal started.
->>
->> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->> Cc: Mike Christie <michaelc@cs.wisc.edu>
->> Cc: James Bottomley <JBottomley@parallels.com>
->> Cc: Jens Axboe <axboe@kernel.dk>
->> Cc: Joe Lawrence <jdl1291@gmail.com>
->> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
->> Cc: <stable@kernel.org>
->> ---
->>  drivers/scsi/scsi_lib.c   |    7 ++++---
->>  drivers/scsi/scsi_sysfs.c |   11 +++++++++--
->>  2 files changed, 13 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 082c1e5..b722a8b 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -158,10 +158,11 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
->>  	 * that are already in the queue.
->>  	 */
->>  	spin_lock_irqsave(q->queue_lock, flags);
->> -	blk_requeue_request(q, cmd->request);
->> +	if (!blk_queue_dead(q)) {
->> +		blk_requeue_request(q, cmd->request);
->> +		kblockd_schedule_work(q, &device->requeue_work);
->> +	}
-> 
-> If we do not requeue what eventually frees the request?
+	scsi: set to WCE if usb cache quirk is present.
+	usb: storage: add support write cache quirk on usb hdd.
+	usb: core: update usb devices for write cache quirk in quirk.
 
-As far as I can see any request passed to __scsi_queue_insert() has
-already been started. So if it isn't requeued it's timer remains active
-and hence will fire eventually.
-
-Bart.
+ drivers/scsi/sd.c          |    9 +++++++--
+ include/scsi/scsi_device.h |    1 +
+ drivers/usb/storage/scsiglue.c |    6 ++++++
+ drivers/usb/storage/usb.c      |    5 ++++-
+ include/linux/usb/quirks.h     |    3 +++
+ include/linux/usb_usual.h      |    4 +++-
+ drivers/usb/core/quirks.c |    6 ++++++
+-- 
+1.7.9.5
