@@ -1,17 +1,17 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
  a device
-Date: Wed, 06 Jun 2012 09:01:31 -0500
-Message-ID: <4FCF62BB.5030902@cs.wisc.edu>
+Date: Wed, 06 Jun 2012 09:12:26 -0500
+Message-ID: <4FCF654A.2080900@cs.wisc.edu>
 References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE8349.2000908@cs.wisc.edu> <4FCF4C1E.1080300@acm.org> <4FCF5E6B.40507@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50238 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50284 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754142Ab2FFOCA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Jun 2012 10:02:00 -0400
+	id S1755598Ab2FFOMv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Jun 2012 10:12:51 -0400
 In-Reply-To: <4FCF5E6B.40507@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -78,16 +78,7 @@ On 06/06/2012 08:43 AM, Mike Christie wrote:
 > flushed and drained, and it can make sure it is flushed and drained
 > before freeing the queue?
 
-Oh yeah, one clarification. With the above proposal we would do the part
-of your patch where we do the requeue and schedule under the queue lock.
-We would just do not do the blk_queue_dead check. We would just always
-requeue like before.
-
-I think no matter what blk_abort_queue is going to be a problem. I wish
-we would have removed the code so btrfs was not using it now. As you
-know from that other thread we removed it from dm-multipath use, because
-bad things can happen if things like blk_abort_queue runs at the same
-time blk_requeue_request was from the queueing path. Same goes for the
-race where a cmd times out in scsi_dispatch_cmd (so if you did something
-evil like set a timeout of 0 seconds you hit a similar problem as with
-blk_abort_queue use).
+Or, in scsi_requeue_run_queue could we just add a check for the
+scsi_device being in the SDEV_DEL state. That combined with your cancel
+call in __scsi_remove_device would prevent us from running a cleaned up
+queue, right?
