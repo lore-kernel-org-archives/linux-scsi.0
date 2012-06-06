@@ -1,62 +1,60 @@
-From: Martin Pitt <martin.pitt@ubuntu.com>
-Subject: Re: [PATCH 0/1] Option for scsi_debug to fake removable devices
-Date: Wed, 6 Jun 2012 06:08:38 +0200
-Message-ID: <20120606040838.GC3065@piware.de>
-References: <20120605072528.GE3043@piware.de>
- <1647133.Oeh9OMjxKH@donald.sf-tec.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: linux-next: Tree for Jun 1 (scsi)
+Date: Wed, 06 Jun 2012 14:54:13 +0900
+Message-ID: <1338962053.23080.7.camel@dabdike.int.hansenpartnership.com>
+References: <20120601132202.ac73b03c845299d384defeaf@canb.auug.org.au>
+	 <4FCC2BF9.7000802@xenotime.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="zYM0uCDKw75PZbzx"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1647133.Oeh9OMjxKH@donald.sf-tec.de>
+In-Reply-To: <4FCC2BF9.7000802@xenotime.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, David Zeuthen <zeuthen@gmail.com>, Kay Sievers <kay@vrfy.org>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Dan Williams <dan.j.williams@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Sun, 2012-06-03 at 20:31 -0700, Randy Dunlap wrote:
+> On 05/31/2012 08:22 PM, Stephen Rothwell wrote:
+> 
+> > Hi all,
+> > 
+> > Changes since 20120531:
+> 
+> 
+> 
+> already fixed?
+> 
+> on i386 and x86_64, loadable module or builtin:
+> 
+> 
+> ERROR: "scsi_sd_probe_domain" [drivers/scsi/scsi_mod.ko] undefined!
+> or
+> (.text+0x4f6c77): undefined reference to `scsi_sd_probe_domain'
 
---zYM0uCDKw75PZbzx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This looks to be an obvious thinko:  the symbol is conditionally
+defined, but unconditionally used in
+scsi_scan.c:scsi_complete_async_scans().  We can fix just by removing
+the wrong conditional.
 
-Hello Rolf,
+James
 
-Rolf Eike Beer [2012-06-05 20:10 +0200]:
-> This is wrong. Signed-off would mean that he takes the patch and passed i=
-t on.=20
-> So what this really is as you as the original author push this out is eit=
-her=20
-> Acked-by, Tested-by, Reviewed-by or something like that.
+---
 
-OK, sorry about that. It should be Acked-by: then.
-
-Martin
---=20
-Martin Pitt                        | http://www.piware.de
-Ubuntu Developer (www.ubuntu.com)  | Debian Developer  (www.debian.org)
-
---zYM0uCDKw75PZbzx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBCAAGBQJPztfCAAoJEPmIJawmtHufKnQP/iO5Hdhx0g0PnhKQhmQ+IQH/
-9cQxyzIx0vvBynBnm2pe2e5Pj7NabWcmbPZwPaPOTi+9DHT6VDXAk7FSus5CmR+w
-tgOxFqV5IjwUA8BdjmxvPVrca234Y2YUIiCn5RyjubsDgpMZ52NJ0nY9xUnNTTSa
-vEUoEcczZ4lStsUAogRxX2yKHYx4d5bcbIhUyCcZTaXQLWcoRUdOyulhNzz8GCsF
-stc3FJJyG9Q+kZDLYJd3ZQeZ8Gmoin3VFb8kAVPD183BkubO0Bme1FW2xQCToc8n
-sSQQtlMJAbWowoMKiTo/RmbWAfhkEDAw80qQ4fPiR3xWKVdIG0kOn1jPIQJnz43+
-hOtLWx946a+YRG9qmyKAJ+ynyXJANq/y22UHtMCGl7QzWe2VanVvNffBmvu1ONZ3
-RH2Dkl+iuRJsIL+JubUdzw8Ts8QDvhaOTtkflbZ1GAT1AfqfyUf7s/CfNn+hYcxY
-E7UHSOTaYAGdyp1ROtttdLu5lEHNzvdcbjuPOWUb09zzSz+z5Kx3Foj6/lmJjlHL
-hfzrEWENR373YEnANPjKl3wjiQrDiO8kgBVzv597itTPmlPFsDHduchXP6C3Or9N
-hCbzbALf9I/HyN9rDTWYfK91570v40C0OjEaPg+pt4Plj2F0zw+0GXLkjlTNOGdI
-b9cEBjBX7e97q3eVVQXk
-=WaHE
------END PGP SIGNATURE-----
-
---zYM0uCDKw75PZbzx--
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 61c82a3..bbbc9c9 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -90,11 +90,9 @@ unsigned int scsi_logging_level;
+ EXPORT_SYMBOL(scsi_logging_level);
+ #endif
+ 
+-#if IS_ENABLED(CONFIG_PM) || IS_ENABLED(CONFIG_BLK_DEV_SD)
+-/* sd and scsi_pm need to coordinate flushing async actions */
++/* sd, scsi core and power management need to coordinate flushing async actions */
+ LIST_HEAD(scsi_sd_probe_domain);
+ EXPORT_SYMBOL(scsi_sd_probe_domain);
+                                -#endif
+ 
+ /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
+  * You may not alter any existing entry (although adding new ones is
