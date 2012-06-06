@@ -1,31 +1,70 @@
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH] scsi: remove duplicated code in scsi_adjust_queue_depth.
-Date: Wed,  6 Jun 2012 08:23:46 -0400
-Message-ID: <1338985426-9796-1-git-send-email-linkinjeon@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
+ a device
+Date: Wed, 06 Jun 2012 12:25:02 +0000
+Message-ID: <4FCF4C1E.1080300@acm.org>
+References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE8349.2000908@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay01ant.iops.be ([212.53.4.34]:39503 "EHLO
+	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752121Ab2FFMZG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 08:25:06 -0400
+In-Reply-To: <4FCE8349.2000908@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
-Remove duplicated code in scsi_adjust_queue_depth.
+On 06/05/12 22:08, Mike Christie wrote:
 
-Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
----
- drivers/scsi/scsi.c |    1 -
- 1 file changed, 1 deletion(-)
+> On 06/05/2012 12:14 PM, Bart Van Assche wrote:
+>> Avoid that the code for requeueing SCSI requests triggers a
+>> crash by making sure that that code isn't scheduled anymore
+>> after a device has been removed.
+>>
+>> Also, source code inspection of __scsi_remove_device() revealed
+>> a race condition in this function: no new SCSI requests must be
+>> accepted for a SCSI device after device removal started.
+>>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> Cc: Mike Christie <michaelc@cs.wisc.edu>
+>> Cc: James Bottomley <JBottomley@parallels.com>
+>> Cc: Jens Axboe <axboe@kernel.dk>
+>> Cc: Joe Lawrence <jdl1291@gmail.com>
+>> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+>> Cc: <stable@kernel.org>
+>> ---
+>>  drivers/scsi/scsi_lib.c   |    7 ++++---
+>>  drivers/scsi/scsi_sysfs.c |   11 +++++++++--
+>>  2 files changed, 13 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index 082c1e5..b722a8b 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -158,10 +158,11 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
+>>  	 * that are already in the queue.
+>>  	 */
+>>  	spin_lock_irqsave(q->queue_lock, flags);
+>> -	blk_requeue_request(q, cmd->request);
+>> +	if (!blk_queue_dead(q)) {
+>> +		blk_requeue_request(q, cmd->request);
+>> +		kblockd_schedule_work(q, &device->requeue_work);
+>> +	}
+>>  	spin_unlock_irqrestore(q->queue_lock, flags);
+>> -
+>> -	kblockd_schedule_work(q, &device->requeue_work);
+> 
+> If we do not have the part of the patch above, but have your other
+> patches and the code below, will we be ok?
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 61c82a3..b570d9c 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -909,7 +909,6 @@ void scsi_adjust_queue_depth(struct scsi_device *sdev, int tagged, int tags)
- 				    "disabled\n");
- 		case 0:
- 			sdev->ordered_tags = sdev->simple_tags = 0;
--			sdev->queue_depth = tags;
- 			break;
- 	}
-  out:
--- 
-1.7.9.5
+
+I'm not sure. Without the above part the request could get killed after
+the blk_requeue_request() call finished but before the requeue_work is
+scheduled, e.g. because the request timer fired or due to a
+blk_abort_queue() call.
+
+Bart.
