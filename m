@@ -1,40 +1,50 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH] libfcoe: Fix section mismatch
-Date: Wed, 6 Jun 2012 21:58:40 +0200
-Message-ID: <20120606195840.GA31186@merkur.ravnborg.org>
-References: <138EA028228D124A900F5E6746F3C216286EAA65@ORSMSX102.amr.corp.intel.com> <20120606185948.26178.86781.stgit@fritz>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/4] notify userspace of offline->running transitions
+ (v2)
+Date: Wed, 06 Jun 2012 16:18:44 -0500
+Message-ID: <4FCFC934.8010009@cs.wisc.edu>
+References: <1337317019-12001-1-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120606185948.26178.86781.stgit@fritz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: linux-scsi@vger.kernel.org, baryluk@smp.if.uj.edu.pl, linux-kernel@vger.kernel.org, JBottomley@parallels.com, devel@open-fcoe.org, Mark Rustad <mark.d.rustad@intel.com>, yi.zou@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:51196 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754493Ab2FFVSf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Jun 2012 17:18:35 -0400
+In-Reply-To: <1337317019-12001-1-git-send-email-michaelc@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Wed, Jun 06, 2012 at 11:59:48AM -0700, Robert Love wrote:
-> From: Mark Rustad <mark.d.rustad@intel.com>
+Hey,
+
+Would it be ok to still merge patches 1 - 3? I think they are still
+useful on their own. They fix that issue where during fast io
+fail/replacement_timeout failures IO is failed, but the scsi_device
+state indicates the devices are still running.
+
+It seems Hannes was ok with them right?
+
+Drop patch 4 since we all seemed to agree we will do it a different way.
+
+
+On 05/17/2012 11:56 PM, michaelc@cs.wisc.edu wrote:
+> The following patches were made over the misc branch of the scsi tree.
 > 
-> Recent changes to add fcoe_sysfs caused libfcoe_init to call fcoe_transport_exit
-> in a module initialization routine. The change resulted in the below error. This
-> patch removes the __exit keyword from the fcoe_transport_exit definition such
-> that it may be called from an __init routine.
+> The patches fix a issue where if the device is offlined or IO is
+> failed due to fast_io_fail (fc) /recovery_tmo (iscsi) then comes
+> back, apps do not have a way a nice way to figure out the state
+> has transitioned to running. Apps have to either poll the sysfs state
+> file or send a SG IO to figure it out. With the patch apps can listen
+> for the KOBJ CHANGE event like some of them (at least udev does) do
+> already.
 > 
-> WARNING: drivers/scsi/fcoe/libfcoe.o(.init.text+0x21): Section mismatch in reference from the function init_module() to the function .exit.text:fcoe_transp
-> exit()
-> The function __init init_module() references
-> a function __exit fcoe_transport_exit().
-> This is often seen when error handling in the init function
-> uses functionality in the exit path.
-> The fix is often to remove the __exit annotation of
-> fcoe_transport_exit() so it may be used outside an exit section.
+> v2:
+> - Rebased to misc.
 > 
-> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-> Signed-off-by: Robert Love <robert.w.love@intel.com>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Looks good.
-
-Acked-by: Sam Ravnborg <sam@ravnborg.org>
-
-	Sam
