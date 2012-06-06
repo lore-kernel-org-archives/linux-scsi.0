@@ -1,25 +1,25 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
  a device
-Date: Wed, 06 Jun 2012 08:29:28 -0500
-Message-ID: <4FCF5B38.7020707@cs.wisc.edu>
-References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE7BC9.1010504@cs.wisc.edu> <4FCF4A52.20406@acm.org>
+Date: Wed, 06 Jun 2012 08:43:07 -0500
+Message-ID: <4FCF5E6B.40507@cs.wisc.edu>
+References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE8349.2000908@cs.wisc.edu> <4FCF4C1E.1080300@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50173 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50196 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752304Ab2FFN3z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Jun 2012 09:29:55 -0400
-In-Reply-To: <4FCF4A52.20406@acm.org>
+	id S1754717Ab2FFNnc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Jun 2012 09:43:32 -0400
+In-Reply-To: <4FCF4C1E.1080300@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
-On 06/06/2012 07:17 AM, Bart Van Assche wrote:
-> On 06/05/12 21:36, Mike Christie wrote:
+On 06/06/2012 07:25 AM, Bart Van Assche wrote:
+> On 06/05/12 22:08, Mike Christie wrote:
 > 
 >> On 06/05/2012 12:14 PM, Bart Van Assche wrote:
 >>> Avoid that the code for requeueing SCSI requests triggers a
@@ -55,20 +55,24 @@ On 06/06/2012 07:17 AM, Bart Van Assche wrote:
 >>> +		blk_requeue_request(q, cmd->request);
 >>> +		kblockd_schedule_work(q, &device->requeue_work);
 >>> +	}
+>>>  	spin_unlock_irqrestore(q->queue_lock, flags);
+>>> -
+>>> -	kblockd_schedule_work(q, &device->requeue_work);
 >>
->> If we do not requeue what eventually frees the request?
+>> If we do not have the part of the patch above, but have your other
+>> patches and the code below, will we be ok?
 > 
-> As far as I can see any request passed to __scsi_queue_insert() has
-> already been started. So if it isn't requeued it's timer remains active
-> and hence will fire eventually.
+> 
+> I'm not sure. Without the above part the request could get killed after
+> the blk_requeue_request() call finished but before the requeue_work is
+> scheduled, e.g. because the request timer fired or due to a
+> blk_abort_queue() call.
+> 
 
-This is true in the scsi_dispatch_cmd path, but not others.
+You are right.
 
-If we were requeueing from the error handler scsi_eh_flush_done_q then
-the timer would have been stopped because that is how we got into the eh.
-
-If we are coming from the completion path then the timer will not be
-running basically. For example if we requeue from scsi_softirq_done or
-scsi_io_completion then we will have called blk_complete_request in
-scsi_done already, so the blk_mark_rq_complete call in there would
-prevent the timer code from running on the request.
+What if we moved the requeue work struct to the request queue, then have
+blk_cleanup_queue or blk_drain_queue call cancel_work_sync before the
+queue is freed. That way that code could make sure the queue and work is
+flushed and drained, and it can make sure it is flushed and drained
+before freeing the queue?
