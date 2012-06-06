@@ -1,70 +1,74 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 1/4] block: Fix race on request_queue.end_io invocations
-Date: Wed, 06 Jun 2012 13:10:24 +0000
-Message-ID: <4FCF56C0.50104@acm.org>
-References: <4FCE3D20.4000205@acm.org> <4FCE3D77.8040909@acm.org> <4FCF50F7.2080008@kernel.dk>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
+ a device
+Date: Wed, 06 Jun 2012 08:29:28 -0500
+Message-ID: <4FCF5B38.7020707@cs.wisc.edu>
+References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE7BC9.1010504@cs.wisc.edu> <4FCF4A52.20406@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay03ant.iops.be ([212.53.5.218]:39362 "EHLO
-	relay03ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753488Ab2FFNKa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 09:10:30 -0400
-In-Reply-To: <4FCF50F7.2080008@kernel.dk>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50173 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752304Ab2FFN3z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Jun 2012 09:29:55 -0400
+In-Reply-To: <4FCF4A52.20406@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tejun Heo <tj@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
-On 06/06/12 12:45, Jens Axboe wrote:
-
-> On 06/05/2012 07:10 PM, Bart Van Assche wrote:
->> Some request_queue.end_io implementations can be called safely
->> without the queue lock held while several other implementations
->> assume that the queue lock is held. So let's play it safe and
->> make sure that the queue lock is held around end_io invocations.
->> Found this through source code review.
->>
->> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->> Cc: Jens Axboe <axboe@kernel.dk>
->> Cc: Tejun Heo <tj@kernel.org>
->> Cc: <stable@kernel.org>
->> ---
->>  block/blk-exec.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/block/blk-exec.c b/block/blk-exec.c
->> index fb2cbd5..6724fab 100644
->> --- a/block/blk-exec.c
->> +++ b/block/blk-exec.c
->> @@ -54,10 +54,10 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
->>  	spin_lock_irq(q->queue_lock);
->>  
->>  	if (unlikely(blk_queue_dead(q))) {
->> -		spin_unlock_irq(q->queue_lock);
->>  		rq->errors = -ENXIO;
->>  		if (rq->end_io)
->>  			rq->end_io(rq, rq->errors);
->> +		spin_unlock_irq(q->queue_lock);
->>  		return;
->>  	}
+On 06/06/2012 07:17 AM, Bart Van Assche wrote:
+> On 06/05/12 21:36, Mike Christie wrote:
 > 
-> I'm assuming you checked any in-kernel users of rq->end_io to ensure
-> that it is fine? If so, patch looks fine to me. And I agree, it's not
-> stable material.
+>> On 06/05/2012 12:14 PM, Bart Van Assche wrote:
+>>> Avoid that the code for requeueing SCSI requests triggers a
+>>> crash by making sure that that code isn't scheduled anymore
+>>> after a device has been removed.
+>>>
+>>> Also, source code inspection of __scsi_remove_device() revealed
+>>> a race condition in this function: no new SCSI requests must be
+>>> accepted for a SCSI device after device removal started.
+>>>
+>>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>>> Cc: Mike Christie <michaelc@cs.wisc.edu>
+>>> Cc: James Bottomley <JBottomley@parallels.com>
+>>> Cc: Jens Axboe <axboe@kernel.dk>
+>>> Cc: Joe Lawrence <jdl1291@gmail.com>
+>>> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+>>> Cc: <stable@kernel.org>
+>>> ---
+>>>  drivers/scsi/scsi_lib.c   |    7 ++++---
+>>>  drivers/scsi/scsi_sysfs.c |   11 +++++++++--
+>>>  2 files changed, 13 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>>> index 082c1e5..b722a8b 100644
+>>> --- a/drivers/scsi/scsi_lib.c
+>>> +++ b/drivers/scsi/scsi_lib.c
+>>> @@ -158,10 +158,11 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
+>>>  	 * that are already in the queue.
+>>>  	 */
+>>>  	spin_lock_irqsave(q->queue_lock, flags);
+>>> -	blk_requeue_request(q, cmd->request);
+>>> +	if (!blk_queue_dead(q)) {
+>>> +		blk_requeue_request(q, cmd->request);
+>>> +		kblockd_schedule_work(q, &device->requeue_work);
+>>> +	}
+>>
+>> If we do not requeue what eventually frees the request?
+> 
+> As far as I can see any request passed to __scsi_queue_insert() has
+> already been started. So if it isn't requeued it's timer remains active
+> and hence will fire eventually.
 
+This is true in the scsi_dispatch_cmd path, but not others.
 
-The in-tree request.end_io implementations can be found as follows:
-$ git grep -nHE 'end_io\(struct request .*[^;]$'
-block/blk-flush.c:194:static void flush_end_io(struct request *flush_rq, int error)
-block/blk-flush.c:275:static void flush_data_end_io(struct request *rq, int error)
-block/bsg.c:336:static void bsg_rq_end_io(struct request *rq, int uptodate)
-drivers/scsi/sg.c:1279:static void sg_rq_end_io(struct request *rq, int uptodate)
+If we were requeueing from the error handler scsi_eh_flush_done_q then
+the timer would have been stopped because that is how we got into the eh.
 
-To me it looks like flush_end_io() and flush_data_end_io() need to be
-called with the queue lock held since these access the queue state. For
-bsg_rq_end_io() and sg_rq_end_io() this patch will trigger nested
-locking. As far as I can see that should be fine though.
-
-Bart.
+If we are coming from the completion path then the timer will not be
+running basically. For example if we requeue from scsi_softirq_done or
+scsi_io_completion then we will have called blk_complete_request in
+scsi_done already, so the blk_mark_rq_complete call in there would
+prevent the timer code from running on the request.
