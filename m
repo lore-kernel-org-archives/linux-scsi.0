@@ -1,57 +1,50 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 1/4] block: Fix race on request_queue.end_io invocations
-Date: Wed, 06 Jun 2012 14:45:43 +0200
-Message-ID: <4FCF50F7.2080008@kernel.dk>
-References: <4FCE3D20.4000205@acm.org> <4FCE3D77.8040909@acm.org>
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: 3.3.0/3.4.1 | 53c1030 PCI-X Fusion-MPT | mptbase: ioc0:
+ LogInfo(0x11010000): F/W: bug! MID not found
+Date: Wed, 6 Jun 2012 15:05:24 +0200
+Message-ID: <20120606150524.5da58b01@harpe.intellique.com>
+References: <DE50C1A5-85F6-4B84-B77F-BCED651D2EB5@4lin.net>
+	<20120606133435.16a502b8@harpe.intellique.com>
+	<825C042F-9868-48E4-AEF1-B6FF20FA5E06@4lin.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:35326 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160Ab2FFMqK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 08:46:10 -0400
-In-Reply-To: <4FCE3D77.8040909@acm.org>
+Received: from smtp4-g21.free.fr ([212.27.42.4]:42357 "EHLO smtp4-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752568Ab2FFNFa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 09:05:30 -0400
+In-Reply-To: <825C042F-9868-48E4-AEF1-B6FF20FA5E06@4lin.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tejun Heo <tj@kernel.org>
+To: Denny Schierz <linuxmail@4lin.net>
+Cc: linux-scsi@vger.kernel.org
 
-On 06/05/2012 07:10 PM, Bart Van Assche wrote:
-> Some request_queue.end_io implementations can be called safely
-> without the queue lock held while several other implementations
-> assume that the queue lock is held. So let's play it safe and
-> make sure that the queue lock is held around end_io invocations.
-> Found this through source code review.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: <stable@kernel.org>
-> ---
->  block/blk-exec.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/block/blk-exec.c b/block/blk-exec.c
-> index fb2cbd5..6724fab 100644
-> --- a/block/blk-exec.c
-> +++ b/block/blk-exec.c
-> @@ -54,10 +54,10 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
->  	spin_lock_irq(q->queue_lock);
->  
->  	if (unlikely(blk_queue_dead(q))) {
-> -		spin_unlock_irq(q->queue_lock);
->  		rq->errors = -ENXIO;
->  		if (rq->end_io)
->  			rq->end_io(rq, rq->errors);
-> +		spin_unlock_irq(q->queue_lock);
->  		return;
->  	}
+Le Wed, 6 Jun 2012 13:42:48 +0200
+Denny Schierz <linuxmail@4lin.net> =E9crivait:
 
-I'm assuming you checked any in-kernel users of rq->end_io to ensure
-that it is fine? If so, patch looks fine to me. And I agree, it's not
-stable material.
+> Raid 5, and JBOD says, everything is O.K, no problem at all.
 
--- 
-Jens Axboe
+Apparently this is a known problem with this driver under high IO. See:
 
+https://bugzilla.novell.com/show_bug.cgi?id=3D554152
+https://bugzilla.redhat.com/show_bug.cgi?id=3D210243
+
+http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg12758.html
+
+There aren't any clear solution, unfortunately.
+
+--=20
+-----------------------------------------------------------------------=
+-
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+-----------------------------------------------------------------------=
+-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
