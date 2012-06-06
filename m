@@ -1,70 +1,43 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
- a device
-Date: Wed, 06 Jun 2012 12:25:02 +0000
-Message-ID: <4FCF4C1E.1080300@acm.org>
-References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE8349.2000908@cs.wisc.edu>
+Subject: Re: [PATCH 1/4] block: Fix race on request_queue.end_io invocations
+Date: Wed, 06 Jun 2012 12:44:36 +0000
+Message-ID: <4FCF50B4.6000701@acm.org>
+References: <4FCE3D20.4000205@acm.org> <4FCE3D77.8040909@acm.org> <20120605213248.GB3700@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01ant.iops.be ([212.53.4.34]:39503 "EHLO
-	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752121Ab2FFMZG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 08:25:06 -0400
-In-Reply-To: <4FCE8349.2000908@cs.wisc.edu>
+Received: from relay03ant.iops.be ([212.53.5.218]:57962 "EHLO
+	relay03ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751146Ab2FFMoo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 08:44:44 -0400
+In-Reply-To: <20120605213248.GB3700@mtj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>
 
-On 06/05/12 22:08, Mike Christie wrote:
+On 06/05/12 21:32, Tejun Heo wrote:
 
-> On 06/05/2012 12:14 PM, Bart Van Assche wrote:
->> Avoid that the code for requeueing SCSI requests triggers a
->> crash by making sure that that code isn't scheduled anymore
->> after a device has been removed.
->>
->> Also, source code inspection of __scsi_remove_device() revealed
->> a race condition in this function: no new SCSI requests must be
->> accepted for a SCSI device after device removal started.
+> On Tue, Jun 05, 2012 at 05:10:15PM +0000, Bart Van Assche wrote:
+>> Some request_queue.end_io implementations can be called safely
+>> without the queue lock held while several other implementations
+>> assume that the queue lock is held. So let's play it safe and
+>> make sure that the queue lock is held around end_io invocations.
+>> Found this through source code review.
 >>
 >> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->> Cc: Mike Christie <michaelc@cs.wisc.edu>
->> Cc: James Bottomley <JBottomley@parallels.com>
 >> Cc: Jens Axboe <axboe@kernel.dk>
->> Cc: Joe Lawrence <jdl1291@gmail.com>
->> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+>> Cc: Tejun Heo <tj@kernel.org>
 >> Cc: <stable@kernel.org>
->> ---
->>  drivers/scsi/scsi_lib.c   |    7 ++++---
->>  drivers/scsi/scsi_sysfs.c |   11 +++++++++--
->>  2 files changed, 13 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 082c1e5..b722a8b 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -158,10 +158,11 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
->>  	 * that are already in the queue.
->>  	 */
->>  	spin_lock_irqsave(q->queue_lock, flags);
->> -	blk_requeue_request(q, cmd->request);
->> +	if (!blk_queue_dead(q)) {
->> +		blk_requeue_request(q, cmd->request);
->> +		kblockd_schedule_work(q, &device->requeue_work);
->> +	}
->>  	spin_unlock_irqrestore(q->queue_lock, flags);
->> -
->> -	kblockd_schedule_work(q, &device->requeue_work);
 > 
-> If we do not have the part of the patch above, but have your other
-> patches and the code below, will we be ok?
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> Not sure about stable@ tho.  This doesn't fix any visible issue at the
+> moment and any change carries some risk.
 
 
-I'm not sure. Without the above part the request could get killed after
-the blk_requeue_request() call finished but before the requeue_work is
-scheduled, e.g. because the request timer fired or due to a
-blk_abort_queue() call.
+I don't have a strong opinion about cc-ing stable - leaving out that tag
+is fine for me.
 
 Bart.
