@@ -1,99 +1,43 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
- a device
-Date: Wed, 06 Jun 2012 10:28:32 -0500
-Message-ID: <4FCF7720.6030306@cs.wisc.edu>
-References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE8349.2000908@cs.wisc.edu> <4FCF4C1E.1080300@acm.org> <4FCF5E6B.40507@cs.wisc.edu> <4FCF654A.2080900@cs.wisc.edu> <4FCF7164.70207@acm.org>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [PATCH 1/3] scsi: set to WCE if usb cache quirk is present.
+Date: Wed, 6 Jun 2012 11:29:43 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1206061126280.1788-100000@iolanthe.rowland.org>
+References: <1338985224-9684-1-git-send-email-linkinjeon@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50477 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753807Ab2FFP2z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Jun 2012 11:28:55 -0400
-In-Reply-To: <4FCF7164.70207@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1338985224-9684-1-git-send-email-linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Pankaj Kumar <pankaj.km-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
-On 06/06/2012 10:04 AM, Bart Van Assche wrote:
-> On 06/06/12 14:12, Mike Christie wrote:
-> 
->> On 06/06/2012 08:43 AM, Mike Christie wrote:
->>> On 06/06/2012 07:25 AM, Bart Van Assche wrote:
->>>> On 06/05/12 22:08, Mike Christie wrote:
->>>>
->>>>> On 06/05/2012 12:14 PM, Bart Van Assche wrote:
->>>>>> Avoid that the code for requeueing SCSI requests triggers a
->>>>>> crash by making sure that that code isn't scheduled anymore
->>>>>> after a device has been removed.
->>>>>>
->>>>>> Also, source code inspection of __scsi_remove_device() revealed
->>>>>> a race condition in this function: no new SCSI requests must be
->>>>>> accepted for a SCSI device after device removal started.
->>>>>>
->>>>>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->>>>>> Cc: Mike Christie <michaelc@cs.wisc.edu>
->>>>>> Cc: James Bottomley <JBottomley@parallels.com>
->>>>>> Cc: Jens Axboe <axboe@kernel.dk>
->>>>>> Cc: Joe Lawrence <jdl1291@gmail.com>
->>>>>> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
->>>>>> Cc: <stable@kernel.org>
->>>>>> ---
->>>>>>  drivers/scsi/scsi_lib.c   |    7 ++++---
->>>>>>  drivers/scsi/scsi_sysfs.c |   11 +++++++++--
->>>>>>  2 files changed, 13 insertions(+), 5 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->>>>>> index 082c1e5..b722a8b 100644
->>>>>> --- a/drivers/scsi/scsi_lib.c
->>>>>> +++ b/drivers/scsi/scsi_lib.c
->>>>>> @@ -158,10 +158,11 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
->>>>>>  	 * that are already in the queue.
->>>>>>  	 */
->>>>>>  	spin_lock_irqsave(q->queue_lock, flags);
->>>>>> -	blk_requeue_request(q, cmd->request);
->>>>>> +	if (!blk_queue_dead(q)) {
->>>>>> +		blk_requeue_request(q, cmd->request);
->>>>>> +		kblockd_schedule_work(q, &device->requeue_work);
->>>>>> +	}
->>>>>>  	spin_unlock_irqrestore(q->queue_lock, flags);
->>>>>> -
->>>>>> -	kblockd_schedule_work(q, &device->requeue_work);
->>>>>
->>>>> If we do not have the part of the patch above, but have your other
->>>>> patches and the code below, will we be ok?
->>>>
->>>>
->>>> I'm not sure. Without the above part the request could get killed after
->>>> the blk_requeue_request() call finished but before the requeue_work is
->>>> scheduled, e.g. because the request timer fired or due to a
->>>> blk_abort_queue() call.
->>>>
->>>
->>> You are right.
->>>
->>> What if we moved the requeue work struct to the request queue, then have
->>> blk_cleanup_queue or blk_drain_queue call cancel_work_sync before the
->>> queue is freed. That way that code could make sure the queue and work is
->>> flushed and drained, and it can make sure it is flushed and drained
->>> before freeing the queue?
->>
->> Or, in scsi_requeue_run_queue could we just add a check for the
->> scsi_device being in the SDEV_DEL state. That combined with your cancel
->> call in __scsi_remove_device would prevent us from running a cleaned up
->> queue, right?
-> 
-> 
-> I'm not sure. If a requeued request times out before blk_cleanup_queue()
-> is invoked then it's possible that the requeue_work is started after the
-> struct scsi_device has already been deleted.
-> 
+On Wed, 6 Jun 2012, Namjae Jeon wrote:
 
-Won't the cancel_work_sync call you are adding prevent that? After
-blk_cleanup_queue has returned we know that no IO is running or in the
-eh, and we know no new IO will be started. And then, after the
-cancel_work_sync call you are adding has returned we know that there
-will not be any workstruct queued or running.
+> Make use of USB quirk method to identify such HDD while reading the cache status in sd_probe(). If cache quirk is present for the HDD, lets assume that cache is enabled and make WCE bit equal to 1.
+
+Your lines should be wrapped after 72 columns or so.
+
+Calling this a "quirk" sounds strange.  Really, your new flag indicates 
+that WCE should default to "on" instead of "off".  How about calling it 
+"wce_default_on" instead of "wce_quirk"?
+
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -152,6 +152,7 @@ struct scsi_device {
+>  	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
+>  	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
+>  	unsigned is_visible:1;	/* is the device visible in sysfs */
+> +	unsigned wce_quirk:1; /* cache read page is not available */
+
+The comment is wrong.  There's no need for a quirk to indicate the
+cache page is unavailable; the driver already knows when the page is
+unavailable.  Rather, the quirk indicates that WCE should default to
+"on".
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
