@@ -1,108 +1,44 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 2/3] usb: storage: add support write cache quirk on usb
- hdd
-Date: Wed, 6 Jun 2012 11:57:26 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1206061154100.1788-100000@iolanthe.rowland.org>
-References: <1338985247-9720-1-git-send-email-linkinjeon@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
+ a device
+Date: Wed, 06 Jun 2012 16:18:06 +0000
+Message-ID: <4FCF82BE.1090505@acm.org>
+References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE8349.2000908@cs.wisc.edu> <4FCF4C1E.1080300@acm.org> <4FCF5E6B.40507@cs.wisc.edu> <4FCF654A.2080900@cs.wisc.edu> <4FCF7164.70207@acm.org> <4FCF7720.6030306@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1338985247-9720-1-git-send-email-linkinjeon@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: James.Bottomley@HansenPartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Pankaj Kumar <pankaj.km@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay04ant.iops.be ([212.53.5.219]:40048 "EHLO
+	relay04ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754113Ab2FFQSO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 12:18:14 -0400
+In-Reply-To: <4FCF7720.6030306@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
-On Wed, 6 Jun 2012, Namjae Jeon wrote:
+On 06/06/12 15:28, Mike Christie wrote:
 
-> Add support write cache quirk on usb hdd. scsi driver will be set to wce by detecting write cache quirk in quirk list when plugging usb hdd.
+> On 06/06/2012 10:04 AM, Bart Van Assche wrote:
+>> I'm not sure. If a requeued request times out before blk_cleanup_queue()
+>> is invoked then it's possible that the requeue_work is started after the
+>> struct scsi_device has already been deleted.
 > 
-> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-> Signed-off-by: Pankaj Kumar <pankaj.km@samsung.com>
-> Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
-> ---
->  drivers/usb/storage/scsiglue.c |    6 ++++++
->  drivers/usb/storage/usb.c      |    5 ++++-
->  include/linux/usb/quirks.h     |    3 +++
->  include/linux/usb_usual.h      |    4 +++-
->  4 files changed, 16 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-> index a324a5d..f7d0ea5 100644
-> --- a/drivers/usb/storage/scsiglue.c
-> +++ b/drivers/usb/storage/scsiglue.c
-> @@ -51,6 +51,7 @@
->  #include <scsi/scsi_devinfo.h>
->  #include <scsi/scsi_device.h>
->  #include <scsi/scsi_eh.h>
-> +#include <linux/usb/quirks.h>
->  
->  #include "usb.h"
->  #include "scsiglue.h"
-> @@ -230,6 +231,11 @@ static int slave_configure(struct scsi_device *sdev)
->  					US_FL_SCM_MULT_TARG)) &&
->  				us->protocol == USB_PR_BULK)
->  			us->use_last_sector_hacks = 1;
-> +
-> +		/* Check for the cache quirk present or not */
-> +		if (us->pusb_dev->quirks & USB_QUIRK_WRITE_CACHE ||
-> +				us->fflags & US_FL_WRITE_CACHE)
-> +				sdev->wce_quirk = 1;
+> Won't the cancel_work_sync call you are adding prevent that? After
+> blk_cleanup_queue has returned we know that no IO is running or in the
+> eh, and we know no new IO will be started. And then, after the
+> cancel_work_sync call you are adding has returned we know that there
+> will not be any workstruct queued or running.
 
-This is very wrong.  Your new quirk should be added only to us->fflags, 
-not to us->pusb_dev->quirks.
 
-> --- a/drivers/usb/storage/usb.c
-> +++ b/drivers/usb/storage/usb.c
-> @@ -473,7 +473,7 @@ static void adjust_quirks(struct us_data *us)
->  			US_FL_CAPACITY_OK | US_FL_IGNORE_RESIDUE |
->  			US_FL_SINGLE_LUN | US_FL_NO_WP_DETECT |
->  			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
-> -			US_FL_INITIAL_READ10);
-> +			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE);
->  
->  	p = quirks;
->  	while (*p) {
-> @@ -538,6 +538,9 @@ static void adjust_quirks(struct us_data *us)
->  		case 'w':
->  			f |= US_FL_NO_WP_DETECT;
->  			break;
-> +		case 'p':
-> +			f |= US_FL_WRITE_CACHE;
-> +			break;
+We've probably each made different assumptions about whether or not the
+requeue work scheduling happens under the queue lock, so we're probably
+both right. I'll prepare, test and post a new patch set, that will make
+the discussion easier.
 
-These cases are in alphabetical order.  Please keep them that way.
+Bart.
 
-Also, if you're going to change a module parameter like this then you 
-_must_ update the description in Documentation/kernel-parameters.txt.
+ 
 
-> --- a/include/linux/usb/quirks.h
-> +++ b/include/linux/usb/quirks.h
-> @@ -30,4 +30,7 @@
->     descriptor */
->  #define USB_QUIRK_DELAY_INIT		0x00000040
->  
-> +/* Device can't handle cache status request */
-> +#define USB_QUIRK_WRITE_CACHE		0x00000080
 
-As mentioned above, this is wrong.
-
-> --- a/include/linux/usb_usual.h
-> +++ b/include/linux/usb_usual.h
-> @@ -64,7 +64,9 @@
->  	US_FLAG(NO_READ_CAPACITY_16,	0x00080000)		\
->  		/* cannot handle READ_CAPACITY_16 */		\
->  	US_FLAG(INITIAL_READ10,	0x00100000)			\
-> -		/* Initial READ(10) (and others) must be retried */
-> +		/* Initial READ(10) (and others) must be retried */	\
-> +	US_FLAG(WRITE_CACHE, 0x00200000)		\
-
-And this is right.  But please try to make your '\' characters line up 
-with the existing ones.
-
-> +	/* Cache read status is not correct */
-
-This comment, however is wrong.  The flag applies when the cache status 
-is not _available_ rather than when it is not _correct_.
-
-Alan Stern
