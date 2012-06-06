@@ -1,38 +1,80 @@
-From: Bart Van Assche <bvanassche@acm.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
  a device
-Date: Wed, 06 Jun 2012 15:07:24 +0000
-Message-ID: <4FCF722C.8030303@acm.org>
-References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE8349.2000908@cs.wisc.edu> <4FCF4C1E.1080300@acm.org> <4FCF5E6B.40507@cs.wisc.edu>
+Date: Wed, 06 Jun 2012 10:21:02 -0500
+Message-ID: <4FCF755E.6090301@cs.wisc.edu>
+References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE7BC9.1010504@cs.wisc.edu> <4FCF4A52.20406@acm.org> <4FCF5B38.7020707@cs.wisc.edu> <4FCF6EE8.7010907@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay03ant.iops.be ([212.53.5.218]:54095 "EHLO
-	relay03ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756206Ab2FFPHf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 11:07:35 -0400
-In-Reply-To: <4FCF5E6B.40507@cs.wisc.edu>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50457 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754061Ab2FFPVj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Jun 2012 11:21:39 -0400
+In-Reply-To: <4FCF6EE8.7010907@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
+To: Bart Van Assche <bvanassche@acm.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
-On 06/06/12 13:43, Mike Christie wrote:
+On 06/06/2012 09:53 AM, Bart Van Assche wrote:
+> On 06/06/12 13:29, Mike Christie wrote:
+> 
+>> On 06/06/2012 07:17 AM, Bart Van Assche wrote:
+>>> On 06/05/12 21:36, Mike Christie wrote:
+>>>
+>>>> On 06/05/2012 12:14 PM, Bart Van Assche wrote:
+>>>>> Avoid that the code for requeueing SCSI requests triggers a
+>>>>> crash by making sure that that code isn't scheduled anymore
+>>>>> after a device has been removed.
+>>>>>
+>>>>> Also, source code inspection of __scsi_remove_device() revealed
+>>>>> a race condition in this function: no new SCSI requests must be
+>>>>> accepted for a SCSI device after device removal started.
+>>>>>
+>>>>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>>>>> Cc: Mike Christie <michaelc@cs.wisc.edu>
+>>>>> Cc: James Bottomley <JBottomley@parallels.com>
+>>>>> Cc: Jens Axboe <axboe@kernel.dk>
+>>>>> Cc: Joe Lawrence <jdl1291@gmail.com>
+>>>>> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+>>>>> Cc: <stable@kernel.org>
+>>>>> ---
+>>>>>  drivers/scsi/scsi_lib.c   |    7 ++++---
+>>>>>  drivers/scsi/scsi_sysfs.c |   11 +++++++++--
+>>>>>  2 files changed, 13 insertions(+), 5 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>>>>> index 082c1e5..b722a8b 100644
+>>>>> --- a/drivers/scsi/scsi_lib.c
+>>>>> +++ b/drivers/scsi/scsi_lib.c
+>>>>> @@ -158,10 +158,11 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
+>>>>>  	 * that are already in the queue.
+>>>>>  	 */
+>>>>>  	spin_lock_irqsave(q->queue_lock, flags);
+>>>>> -	blk_requeue_request(q, cmd->request);
+>>>>> +	if (!blk_queue_dead(q)) {
+>>>>> +		blk_requeue_request(q, cmd->request);
+>>>>> +		kblockd_schedule_work(q, &device->requeue_work);
+>>>>> +	}
+>>>>
+>>>> If we do not requeue what eventually frees the request?
+>>>
+>>> As far as I can see any request passed to __scsi_queue_insert() has
+>>> already been started. So if it isn't requeued it's timer remains active
+>>> and hence will fire eventually.
+>>
+>> This is true in the scsi_dispatch_cmd path, but not others.
+>>
+>> If we were requeueing from the error handler scsi_eh_flush_done_q then
+>> the timer would have been stopped because that is how we got into the eh.
+> 
+> 
+> Given the above I propose to add a __blk_end_request_all(req, -ENXIO)
+> call if the queue is dead.
+> 
 
-> What if we moved the requeue work struct to the request queue, then have
-> blk_cleanup_queue or blk_drain_queue call cancel_work_sync before the
-> queue is freed. That way that code could make sure the queue and work is
-> flushed and drained, and it can make sure it is flushed and drained
-> before freeing the queue?
-
-
-Sounds like a good idea to me. However, personally I'd prefer with this
-patch set to focus on fixing bugs and to leave such restructuring for a
-subsequent patch.
-
-Bart.
-
- 
-
-
+Seems ok to me. Maybe a little messy. Don't forget to free the scsi
+stuff like the scatterlist, scsi_cmnd, etc. If it is REQ_TYPE_BLOCK_PC
+set req->errors.
