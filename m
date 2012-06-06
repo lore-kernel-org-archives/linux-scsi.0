@@ -1,40 +1,64 @@
-From: Denny Schierz <linuxmail@4lin.net>
-Subject: Re: 3.3.0/3.4.1 | 53c1030 PCI-X Fusion-MPT | mptbase: ioc0: LogInfo(0x11010000): F/W: bug! MID not found
-Date: Wed, 6 Jun 2012 13:42:48 +0200
-Message-ID: <825C042F-9868-48E4-AEF1-B6FF20FA5E06@4lin.net>
-References: <DE50C1A5-85F6-4B84-B77F-BCED651D2EB5@4lin.net> <20120606133435.16a502b8@harpe.intellique.com>
-Mime-Version: 1.0 (Apple Message framework v1257)
-Content-Type: text/plain; charset=iso-8859-1
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
+ a device
+Date: Wed, 06 Jun 2012 12:17:22 +0000
+Message-ID: <4FCF4A52.20406@acm.org>
+References: <4FCE3D20.4000205@acm.org> <4FCE3E63.7000002@acm.org> <4FCE7BC9.1010504@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.4lin.net ([46.4.210.97]:41367 "EHLO mail.4lin.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751326Ab2FFLmy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Jun 2012 07:42:54 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.4lin.net (Postfix) with ESMTP id B5E5D3903C
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Jun 2012 13:47:47 +0200 (CEST)
-Received: from mail.4lin.net ([127.0.0.1])
-	by localhost (mail.4lin.net [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id F3f109xfIrKo for <linux-scsi@vger.kernel.org>;
-	Wed,  6 Jun 2012 13:47:44 +0200 (CEST)
-Received: from pcdenny.rbg.informatik.tu-darmstadt.de (pcdenny.rbg.informatik.tu-darmstadt.de [130.83.160.152])
-	(using TLSv1 with cipher AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by mail.4lin.net (Postfix) with ESMTPSA id 0F52D20249
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Jun 2012 13:47:44 +0200 (CEST)
-In-Reply-To: <20120606133435.16a502b8@harpe.intellique.com>
+Received: from relay01ant.iops.be ([212.53.4.34]:57845 "EHLO
+	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801Ab2FFMR2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2012 08:17:28 -0400
+In-Reply-To: <4FCE7BC9.1010504@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
 
+On 06/05/12 21:36, Mike Christie wrote:
 
-Am 06.06.2012 um 13:34 schrieb Emmanuel Florac:
+> On 06/05/2012 12:14 PM, Bart Van Assche wrote:
+>> Avoid that the code for requeueing SCSI requests triggers a
+>> crash by making sure that that code isn't scheduled anymore
+>> after a device has been removed.
+>>
+>> Also, source code inspection of __scsi_remove_device() revealed
+>> a race condition in this function: no new SCSI requests must be
+>> accepted for a SCSI device after device removal started.
+>>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> Cc: Mike Christie <michaelc@cs.wisc.edu>
+>> Cc: James Bottomley <JBottomley@parallels.com>
+>> Cc: Jens Axboe <axboe@kernel.dk>
+>> Cc: Joe Lawrence <jdl1291@gmail.com>
+>> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+>> Cc: <stable@kernel.org>
+>> ---
+>>  drivers/scsi/scsi_lib.c   |    7 ++++---
+>>  drivers/scsi/scsi_sysfs.c |   11 +++++++++--
+>>  2 files changed, 13 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index 082c1e5..b722a8b 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -158,10 +158,11 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
+>>  	 * that are already in the queue.
+>>  	 */
+>>  	spin_lock_irqsave(q->queue_lock, flags);
+>> -	blk_requeue_request(q, cmd->request);
+>> +	if (!blk_queue_dead(q)) {
+>> +		blk_requeue_request(q, cmd->request);
+>> +		kblockd_schedule_work(q, &device->requeue_work);
+>> +	}
+> 
+> If we do not requeue what eventually frees the request?
 
-> Definitely looks like a bad disk to me. What is the RAID level used on
-> the infortrend array? If it's RAID-0, look no further. Check your array
-> messages and eventually cabling in any case.
+As far as I can see any request passed to __scsi_queue_insert() has
+already been started. So if it isn't requeued it's timer remains active
+and hence will fire eventually.
 
-Raid 5, and JBOD says, everything is O.K, no problem at all.
-
-cu denny
+Bart.
