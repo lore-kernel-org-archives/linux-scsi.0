@@ -1,67 +1,62 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] tcm_qla2xxx: Don't insert nacls without sessions into
- the btree
-Date: Tue, 05 Jun 2012 17:04:06 -0700
-Message-ID: <1338941046.28824.266.camel@haakon2.linux-iscsi.org>
-References: <1338878254-4145-1-git-send-email-roland@kernel.org>
-	 <1338936045.28824.229.camel@haakon2.linux-iscsi.org>
-	 <CAG4TOxOk4E-CCqf9sPMsBR3khSjNfE+DE5Tux7zNFS9=_1HG-g@mail.gmail.com>
+From: Martin Pitt <martin.pitt@ubuntu.com>
+Subject: Re: [PATCH 0/1] Option for scsi_debug to fake removable devices
+Date: Wed, 6 Jun 2012 06:08:38 +0200
+Message-ID: <20120606040838.GC3065@piware.de>
+References: <20120605072528.GE3043@piware.de>
+ <1647133.Oeh9OMjxKH@donald.sf-tec.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAG4TOxOk4E-CCqf9sPMsBR3khSjNfE+DE5Tux7zNFS9=_1HG-g@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: Chad Dupuis <chad.dupuis@qlogic.com>, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Arun Easi <arun.easi@qlogic.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="zYM0uCDKw75PZbzx"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1647133.Oeh9OMjxKH@donald.sf-tec.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, David Zeuthen <zeuthen@gmail.com>, Kay Sievers <kay@vrfy.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2012-06-05 at 16:41 -0700, Roland Dreier wrote:
-> > Looking at this patch which removes tcm_qla2xxx_setup_nacl_from_rport()
-> > usage during explicit tcm_qla2xxx_make_nodeacl() creation, how does an
-> > explicit NodeACL get picked up in tcm_qla2xxx_check_initiator_node_acl()
-> > now with this change ?
-> >
-> > AFAICT this patch makes every new initiator login attempt result in a
-> > demo-mode se_node_acl being generated with virtual LUN=0 access, and
-> > ignores explicit se_node_acl + MappedLUNs groups + links to TPG_LUN in
-> > individual ../target/qla2xxx/$TARGET_WWPN/tpgt_1/acls/$INITIATOR_WWPN/
-> >
-> > Is there something else that I'm missing here..?
-> 
-> [Reply to all this time]
-> 
-> We still insert the nacl into the tpg->acl_node_list so we'll find it when we
-> do the check when the session actually shows up.
-> 
 
-Err, yes of course..
+--zYM0uCDKw75PZbzx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Inserting the nacl into the btree doesn't do anything, since it would have no
-> session pointer and so tcm_qla2xxx_find_sess_by_s_id() will return NULL
-> whether or not we insert the nacl in tcm_qla2xxx_setup_nacl_from_rport().
-> (And that's the only place that does a btree lookup)
-> 
+Hello Rolf,
 
-OK, I've applied this patch to lio-core.git on top of the following
-tcm_qla2xxx patches that where not included in the initial merge:
+Rolf Eike Beer [2012-06-05 20:10 +0200]:
+> This is wrong. Signed-off would mean that he takes the patch and passed i=
+t on.=20
+> So what this really is as you as the original author push this out is eit=
+her=20
+> Acked-by, Tested-by, Reviewed-by or something like that.
 
-commit dfebe3b51dd3e263fdc6151e3f1ec9aba1716d03
-Author: Joern Engel <joern@logfs.org>
-Date:   Fri May 18 13:58:23 2012 -0700
+OK, sorry about that. It should be Acked-by: then.
 
-    tcm_qla2xxx: Convert to TFO->put_session() usage
+Martin
+--=20
+Martin Pitt                        | http://www.piware.de
+Ubuntu Developer (www.ubuntu.com)  | Debian Developer  (www.debian.org)
 
-commit 6fc162d3f4a4647576e5dad23435e505a8ef0dc3
-Author: Nicholas Bellinger <nab@linux-iscsi.org>
-Date:   Fri May 18 15:37:53 2012 -0700
+--zYM0uCDKw75PZbzx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-    tcm_qla2xxx: Clear session s_id + loop_id earlier during shutdown
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
+iQIcBAEBCAAGBQJPztfCAAoJEPmIJawmtHufKnQP/iO5Hdhx0g0PnhKQhmQ+IQH/
+9cQxyzIx0vvBynBnm2pe2e5Pj7NabWcmbPZwPaPOTi+9DHT6VDXAk7FSus5CmR+w
+tgOxFqV5IjwUA8BdjmxvPVrca234Y2YUIiCn5RyjubsDgpMZ52NJ0nY9xUnNTTSa
+vEUoEcczZ4lStsUAogRxX2yKHYx4d5bcbIhUyCcZTaXQLWcoRUdOyulhNzz8GCsF
+stc3FJJyG9Q+kZDLYJd3ZQeZ8Gmoin3VFb8kAVPD183BkubO0Bme1FW2xQCToc8n
+sSQQtlMJAbWowoMKiTo/RmbWAfhkEDAw80qQ4fPiR3xWKVdIG0kOn1jPIQJnz43+
+hOtLWx946a+YRG9qmyKAJ+ynyXJANq/y22UHtMCGl7QzWe2VanVvNffBmvu1ONZ3
+RH2Dkl+iuRJsIL+JubUdzw8Ts8QDvhaOTtkflbZ1GAT1AfqfyUf7s/CfNn+hYcxY
+E7UHSOTaYAGdyp1ROtttdLu5lEHNzvdcbjuPOWUb09zzSz+z5Kx3Foj6/lmJjlHL
+hfzrEWENR373YEnANPjKl3wjiQrDiO8kgBVzv597itTPmlPFsDHduchXP6C3Or9N
+hCbzbALf9I/HyN9rDTWYfK91570v40C0OjEaPg+pt4Plj2F0zw+0GXLkjlTNOGdI
+b9cEBjBX7e97q3eVVQXk
+=WaHE
+-----END PGP SIGNATURE-----
 
-I'll include these over the next days into target-pending as
-3.5-rc-fixes items.
-
-Thanks Roland!
-
---nab
+--zYM0uCDKw75PZbzx--
