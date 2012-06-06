@@ -1,50 +1,78 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/4] notify userspace of offline->running transitions
- (v2)
-Date: Wed, 06 Jun 2012 16:18:44 -0500
-Message-ID: <4FCFC934.8010009@cs.wisc.edu>
-References: <1337317019-12001-1-git-send-email-michaelc@cs.wisc.edu>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: linux-next: Tree for Jun 1 (scsi)
+Date: Wed, 06 Jun 2012 14:43:01 -0700
+Message-ID: <4FCFCEE5.1000200@xenotime.net>
+References: <20120601132202.ac73b03c845299d384defeaf@canb.auug.org.au>	 <4FCC2BF9.7000802@xenotime.net> <1338962053.23080.7.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:51196 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754493Ab2FFVSf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Jun 2012 17:18:35 -0400
-In-Reply-To: <1337317019-12001-1-git-send-email-michaelc@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1338962053.23080.7.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Dan Williams <dan.j.williams@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Hey,
+On 06/05/2012 10:54 PM, James Bottomley wrote:
 
-Would it be ok to still merge patches 1 - 3? I think they are still
-useful on their own. They fix that issue where during fast io
-fail/replacement_timeout failures IO is failed, but the scsi_device
-state indicates the devices are still running.
-
-It seems Hannes was ok with them right?
-
-Drop patch 4 since we all seemed to agree we will do it a different way.
-
-
-On 05/17/2012 11:56 PM, michaelc@cs.wisc.edu wrote:
-> The following patches were made over the misc branch of the scsi tree.
+> On Sun, 2012-06-03 at 20:31 -0700, Randy Dunlap wrote:
+>> On 05/31/2012 08:22 PM, Stephen Rothwell wrote:
+>>
+>>> Hi all,
+>>>
+>>> Changes since 20120531:
+>>
+>>
+>>
+>> already fixed?
+>>
+>> on i386 and x86_64, loadable module or builtin:
+>>
+>>
+>> ERROR: "scsi_sd_probe_domain" [drivers/scsi/scsi_mod.ko] undefined!
+>> or
+>> (.text+0x4f6c77): undefined reference to `scsi_sd_probe_domain'
 > 
-> The patches fix a issue where if the device is offlined or IO is
-> failed due to fast_io_fail (fc) /recovery_tmo (iscsi) then comes
-> back, apps do not have a way a nice way to figure out the state
-> has transitioned to running. Apps have to either poll the sysfs state
-> file or send a SG IO to figure it out. With the patch apps can listen
-> for the KOBJ CHANGE event like some of them (at least udev does) do
-> already.
+> This looks to be an obvious thinko:  the symbol is conditionally
+> defined, but unconditionally used in
+> scsi_scan.c:scsi_complete_async_scans().  We can fix just by removing
+> the wrong conditional.
 > 
-> v2:
-> - Rebased to misc.
+> James
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 61c82a3..bbbc9c9 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -90,11 +90,9 @@ unsigned int scsi_logging_level;
+>  EXPORT_SYMBOL(scsi_logging_level);
+>  #endif
+>  
+> -#if IS_ENABLED(CONFIG_PM) || IS_ENABLED(CONFIG_BLK_DEV_SD)
+> -/* sd and scsi_pm need to coordinate flushing async actions */
+> +/* sd, scsi core and power management need to coordinate flushing async actions */
+>  LIST_HEAD(scsi_sd_probe_domain);
+>  EXPORT_SYMBOL(scsi_sd_probe_domain);
+>                                 -#endif
 
+
+Yes, this patch works after I move that "-#endif" to column 1 (or 0).
+
+Thanks.
+
+Acked-by: Randy Dunlap <rdunlap@xenotime.net>
+
+
+>  
+
+>  /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
+>   * You may not alter any existing entry (although adding new ones is
+> 
+> 
+
+
+
+-- 
+~Randy
