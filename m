@@ -1,78 +1,49 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: linux-next: Tree for Jun 1 (scsi)
-Date: Wed, 06 Jun 2012 14:43:01 -0700
-Message-ID: <4FCFCEE5.1000200@xenotime.net>
-References: <20120601132202.ac73b03c845299d384defeaf@canb.auug.org.au>	 <4FCC2BF9.7000802@xenotime.net> <1338962053.23080.7.camel@dabdike.int.hansenpartnership.com>
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: Re: [PATCH 1/3] scsi: set to WCE if usb cache quirk is present.
+Date: Thu, 7 Jun 2012 09:40:19 +0900
+Message-ID: <CAKYAXd_T4DTB=FZFejf8hbpdRzeeXx5cybx56SNG6srCtRLRHQ@mail.gmail.com>
+References: <1338985224-9684-1-git-send-email-linkinjeon@gmail.com>
+	<Pine.LNX.4.44L0.1206061126280.1788-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1338962053.23080.7.camel@dabdike.int.hansenpartnership.com>
+In-Reply-To: <Pine.LNX.4.44L0.1206061126280.1788-100000@iolanthe.rowland.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Dan Williams <dan.j.williams@gmail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James.Bottomley@hansenpartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Pankaj Kumar <pankaj.km@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/05/2012 10:54 PM, James Bottomley wrote:
+Hi Alan.
 
-> On Sun, 2012-06-03 at 20:31 -0700, Randy Dunlap wrote:
->> On 05/31/2012 08:22 PM, Stephen Rothwell wrote:
->>
->>> Hi all,
->>>
->>> Changes since 20120531:
->>
->>
->>
->> already fixed?
->>
->> on i386 and x86_64, loadable module or builtin:
->>
->>
->> ERROR: "scsi_sd_probe_domain" [drivers/scsi/scsi_mod.ko] undefined!
->> or
->> (.text+0x4f6c77): undefined reference to `scsi_sd_probe_domain'
-> 
-> This looks to be an obvious thinko:  the symbol is conditionally
-> defined, but unconditionally used in
-> scsi_scan.c:scsi_complete_async_scans().  We can fix just by removing
-> the wrong conditional.
-> 
-> James
-> 
-> ---
-> 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 61c82a3..bbbc9c9 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -90,11 +90,9 @@ unsigned int scsi_logging_level;
->  EXPORT_SYMBOL(scsi_logging_level);
->  #endif
->  
-> -#if IS_ENABLED(CONFIG_PM) || IS_ENABLED(CONFIG_BLK_DEV_SD)
-> -/* sd and scsi_pm need to coordinate flushing async actions */
-> +/* sd, scsi core and power management need to coordinate flushing async actions */
->  LIST_HEAD(scsi_sd_probe_domain);
->  EXPORT_SYMBOL(scsi_sd_probe_domain);
->                                 -#endif
+I will send patch v2 after chaing code.
+Thanks for your review.
 
-
-Yes, this patch works after I move that "-#endif" to column 1 (or 0).
-
-Thanks.
-
-Acked-by: Randy Dunlap <rdunlap@xenotime.net>
-
-
->  
-
->  /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
->   * You may not alter any existing entry (although adding new ones is
-> 
-> 
-
-
-
--- 
-~Randy
+2012/6/7, Alan Stern <stern@rowland.harvard.edu>:
+> On Wed, 6 Jun 2012, Namjae Jeon wrote:
+>
+>> Make use of USB quirk method to identify such HDD while reading the cache
+>> status in sd_probe(). If cache quirk is present for the HDD, lets assume
+>> that cache is enabled and make WCE bit equal to 1.
+>
+> Your lines should be wrapped after 72 columns or so.
+>
+> Calling this a "quirk" sounds strange.  Really, your new flag indicates
+> that WCE should default to "on" instead of "off".  How about calling it
+> "wce_default_on" instead of "wce_quirk"?
+>
+>> --- a/include/scsi/scsi_device.h
+>> +++ b/include/scsi/scsi_device.h
+>> @@ -152,6 +152,7 @@ struct scsi_device {
+>>  	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
+>>  	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
+>>  	unsigned is_visible:1;	/* is the device visible in sysfs */
+>> +	unsigned wce_quirk:1; /* cache read page is not available */
+>
+> The comment is wrong.  There's no need for a quirk to indicate the
+> cache page is unavailable; the driver already knows when the page is
+> unavailable.  Rather, the quirk indicates that WCE should default to
+> "on".
+>
+> Alan Stern
+>
+>
