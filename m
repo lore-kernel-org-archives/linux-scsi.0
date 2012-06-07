@@ -1,44 +1,101 @@
-From: Jonathan Nieder <jrnieder@gmail.com>
-Subject: Re: scsi: lpfc_scsi: Remove unused variables
-Date: Thu, 7 Jun 2012 01:42:24 -0500
-Message-ID: <20120607064224.GD3210@burratino>
-References: <4FD0434B.7090405@gentoo.org>
- <20120607061255.GB3210@burratino>
- <4FD04854.5010304@gentoo.org>
+From: Girish K S <girish.shivananjappa@linaro.org>
+Subject: Re: [RFC PATCH 0/4] Add support for pci/non-pci probing for UFS
+Date: Thu, 7 Jun 2012 12:15:59 +0530
+Message-ID: <CAGxe1ZHPHomNk8Dw_jroqLuxKxsoJi+r--xBKptm+0YY_DSv-Q@mail.gmail.com>
+References: <1336993712-9111-1-git-send-email-girish.shivananjappa@linaro.org>
+	<CAKVbJB9Gqosh8T-vVeMgetNrmNhAYCYhG4R3JqWksFbyyqgQOw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:47679 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815Ab2FGGm2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2012 02:42:28 -0400
-Content-Disposition: inline
-In-Reply-To: <4FD04854.5010304@gentoo.org>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:33873 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630Ab2FGGqB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2012 02:46:01 -0400
+Received: by qcro28 with SMTP id o28so127334qcr.19
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Jun 2012 23:46:00 -0700 (PDT)
+In-Reply-To: <CAKVbJB9Gqosh8T-vVeMgetNrmNhAYCYhG4R3JqWksFbyyqgQOw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Richard Yao <ryao@gentoo.org>
-Cc: stable@vger.kernel.org, linux-scsi@vger.kernel.org, James Smart <james.smart@emulex.com>
+To: vinayak holikatti <vinholikatti@gmail.com>
+Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, santoshsy@gmail.com, patches@linaro.org
 
-Richard Yao wrote:
-
-> Using -Werror enables us to catch potential runtime issues before they
-> happen.
-
-You have more trust in GCC and other compilers than I do.
-
-If you'd like some entertainment, then for example see:
-
- http://gcc.gnu.org/PR52798
- http://gcc.gnu.org/PR25509
-
-Bugs and misdesigned features do not have to be involved for this to
-be a problem --- all it takes is a gcc upgrade that adds a new
-warning, and suddenly you've turned your existing potential code
-cleanliness improvements into failed builds and lots of wasted time
-for innocent sysadmins.  -Werror is great for development, but using
-it in production turns out to be pretty much always a terrible idea.
-
-Thanks for the chance to vent about this. :)  It's bad, bad, bad.
-
-Ciao,
-Jonathan
+On 7 June 2012 10:21, vinayak holikatti <vinholikatti@gmail.com> wrote:
+> On Mon, May 14, 2012 at 4:38 PM, Girish K S
+> <girish.shivananjappa@linaro.org> wrote:
+>> The existing UFS driver is tightly bound to only pci specific device=
+s.
+>> It cannot work for non-pci devices.
+>>
+>> "SCSI: UFS: remove all pci code from core driver" patch removes all =
+the
+>> pci specific code from the core driver to make it generic
+>>
+>> "SCSI: UFS: Add support for pci probe" patch adds a new file to supp=
+ort
+>> pci probing.
+>>
+>> "SCSI: UFS: Add platform support for ufs host controller" patch adds=
+ a new
+>> file to support platform device probe
+>>
+>> "SCSI: UFS: Added support of PCI/PLTFM for UFS" patch adds the menu =
+option
+>> in Kconfig and Makefile to enable/disable the specific option
+>>
+>> Girish K S (4):
+>> =A0SCSI: UFS: remove all pci code from core driver
+>> =A0SCSI: UFS: Add support for pci probe
+>> =A0SCSI: UFS: Add platform support for ufs host controller
+>> =A0SCSI: UFS: Added support of PCI/PLTFM for UFS
+>>
+>> =A0drivers/scsi/ufs/Kconfig =A0 =A0 =A0 =A0| =A0 32 +++-
+>> =A0drivers/scsi/ufs/Makefile =A0 =A0 =A0 | =A0 =A02 +
+>> =A0drivers/scsi/ufs/ufs.h =A0 =A0 =A0 =A0 =A0| =A0103 +++++++++++
+>> =A0drivers/scsi/ufs/ufshcd-pci.c =A0 | =A0217 ++++++++++++++++++++++
+>> =A0drivers/scsi/ufs/ufshcd-pltfm.c | =A0191 ++++++++++++++++++++
+>> =A0drivers/scsi/ufs/ufshcd.c =A0 =A0 =A0 | =A0377 +++++++++---------=
+---------------------
+>> =A06 files changed, 623 insertions(+), 299 deletions(-)
+>> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
+>> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
+>>
+>> --
+>> 1.7.4.1
+>>
+>
+> Hi Girish,
+>
+> It was already communicated to you internally that the the platform
+> support for UFSHCD has been implemented, PCI and Platform code has
+Only informed after i had sent the initial code internally. After
+effort has been spent
+on making the draft copy.
+> been segregated and we are in the final stages of testing. We would
+> send the code for internal review before posting the patches to SCSI
+waited for more than 2 months time. when there was no reply, i did the
+above mentioned draft and sent.
+But still i didnt get reply for that internal mail.
+Why didnt you object on the 1st RFC. Why did you wait for 4 revisions.
+> mailing list. So the reason for posting your untested patches within
+pls test this patch and then claim that it doesnt work. And the RFC
+was to push the
+pci and non pci separate framework. Hope its clear.
+> few days after you were informed is not clear. We don't want to put
+> effort reviewing and testing these patch again, since we already have
+Above statement shows the negligence of not testing the patch.
+I can post all the log messages of the test.
+> working code. Working platform patches for UFSHCD will be posted soon=
+=2E
+waiting for the same. and let experts in this list decide on that (for
+pci/non pci) framework
+>
+>
+> --
+> Regards,
+> Vinayak Holikatti
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
