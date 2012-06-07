@@ -1,35 +1,23 @@
 From: vinayak holikatti <vinholikatti@gmail.com>
 Subject: Re: [RFC PATCH 0/4] Add support for pci/non-pci probing for UFS
-Date: Thu, 7 Jun 2012 09:52:44 +0530
-Message-ID: <CAKVbJB-C1XvTBRcrU0n3KStq4JHhzqV4AhJiQsw+o8f8JBRg1g@mail.gmail.com>
+Date: Thu, 7 Jun 2012 10:21:40 +0530
+Message-ID: <CAKVbJB9Gqosh8T-vVeMgetNrmNhAYCYhG4R3JqWksFbyyqgQOw@mail.gmail.com>
 References: <1336993712-9111-1-git-send-email-girish.shivananjappa@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:63306 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933312Ab2FGEWo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2012 00:22:44 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so478700pbb.19
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Jun 2012 21:22:44 -0700 (PDT)
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:39639 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988Ab2FGEvl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2012 00:51:41 -0400
+Received: by dady13 with SMTP id y13so316301dad.19
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Jun 2012 21:51:40 -0700 (PDT)
 In-Reply-To: <1336993712-9111-1-git-send-email-girish.shivananjappa@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Girish K S <girish.shivananjappa@linaro.org>
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, santoshsy@gmail.com, patches@linaro.org
-
-Hi Girish,
-
-It was already communicated to you internally that the the platform
-support for UFSHCD has been implemented, PCI and Platform code has
-been segregated and we are in the final stages of testing. We would
-send the code for internal review before posting the patches to SCSI
-mailing list. So the reason for posting your untested patches within
-few days after you were informed is not clear. We don't want to put
-effort reviewing and testing these patch again, since we already have
-working code. Working platform patches for UFSHCD will be posted soon.
-
+Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, santoshsy@gmail.com, patches@linaro.org, vinayak holikatti <vinholikatti@gmail.com>
 
 On Mon, May 14, 2012 at 4:38 PM, Girish K S
 <girish.shivananjappa@linaro.org> wrote:
@@ -74,6 +62,16 @@ ption
 > 1.7.4.1
 >
 
+Hi Girish,
+
+It was already communicated to you internally that the the platform
+support for UFSHCD has been implemented, PCI and Platform code has
+been segregated and we are in the final stages of testing. We would
+send the code for internal review before posting the patches to SCSI
+mailing list. So the reason for posting your untested patches within
+few days after you were informed is not clear. We don't want to put
+effort reviewing and testing these patch again, since we already have
+working code. Working platform patches for UFSHCD will be posted soon.
 
 
 --=20
