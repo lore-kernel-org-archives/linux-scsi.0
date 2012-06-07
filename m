@@ -1,34 +1,86 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 4/6] bnx2fc: Improve error recovery by handling parity
- errors
-Date: Thu, 7 Jun 2012 03:03:29 +0000
-Message-ID: <1339038209.26595.2.camel@dabdike.int.hansenpartnership.com>
-References: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
-	 <1338851747-7240-5-git-send-email-bprakash@broadcom.com>
+From: vinayak holikatti <vinholikatti@gmail.com>
+Subject: Re: [RFC PATCH 0/4] Add support for pci/non-pci probing for UFS
+Date: Thu, 7 Jun 2012 09:52:44 +0530
+Message-ID: <CAKVbJB-C1XvTBRcrU0n3KStq4JHhzqV4AhJiQsw+o8f8JBRg1g@mail.gmail.com>
+References: <1336993712-9111-1-git-send-email-girish.shivananjappa@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:43173 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754024Ab2FGDDf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Jun 2012 23:03:35 -0400
-In-Reply-To: <1338851747-7240-5-git-send-email-bprakash@broadcom.com>
-Content-Language: en-US
-Content-ID: <66619340C6EB9B488E73ACE3E47B43DC@sw.swsoft.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:63306 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933312Ab2FGEWo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2012 00:22:44 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so478700pbb.19
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Jun 2012 21:22:44 -0700 (PDT)
+In-Reply-To: <1336993712-9111-1-git-send-email-girish.shivananjappa@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+To: Girish K S <girish.shivananjappa@linaro.org>
+Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, santoshsy@gmail.com, patches@linaro.org
 
-T24gTW9uLCAyMDEyLTA2LTA0IGF0IDE2OjE1IC0wNzAwLCBCaGFudSBQcmFrYXNoIEdvbGxhcHVk
-aSB3cm90ZToNCj4gQEAgLTMyMSw2ICszMzIsOSBAQCBzdGF0aWMgdm9pZCBibngyZmNfdXBsb2Fk
-X3Nlc3Npb24oc3RydWN0IGZjb2VfcG9ydCAqcG9ydCwNCj4gIA0KPiAgCQlkZWxfdGltZXJfc3lu
-YygmdGd0LT51cGxkX3RpbWVyKTsNCj4gIA0KPiArCX0gZWxzZSBpZiAodGVzdF9iaXQoQk5YMkZD
-X0ZMQUdfRElTQUJMRV9GQUlMRUQsICZ0Z3QtPmZsYWdzKSkNCj4gKwkJcHJpbnRrKEtFUk5fRVJS
-IFBGWCAiRVJST1IhISBESVNBQkxFIHJlcSBmYWlsZWQsIGRlc3Ryb3kiDQo+ICsJCQkJIiBub3Qg
-c2VudCB0byBGV1xuIik7DQo+ICAJfSBlbHNlDQo+ICAJCXByaW50ayhLRVJOX0VSUiBQRlggIkVS
-Uk9SISEgRElTQUJMRSByZXEgdGltZWQgb3V0LCBkZXN0cm95Ig0KPiAgCQkJCSIgbm90IHNlbnQg
-dG8gRldcbiIpOw0KDQpZb3UgZGlkbid0IGFjdHVhbGx5IGNvbXBpbGUgdGhpcyBkaWQgeW91PyAg
-VGhhdCBlbHNlIGlmIGhhcyB0byBoYXZlIGFuDQpvcGVuaW5nIGJyYWNlIHRvIG1hdGNoIHRoZSBj
-bG9zaW5nIG9uZSBvbiB0aGUgbmV4dCBlbHNlIC4uLg0KDQpKYW1lcw0KDQo=
+Hi Girish,
+
+It was already communicated to you internally that the the platform
+support for UFSHCD has been implemented, PCI and Platform code has
+been segregated and we are in the final stages of testing. We would
+send the code for internal review before posting the patches to SCSI
+mailing list. So the reason for posting your untested patches within
+few days after you were informed is not clear. We don't want to put
+effort reviewing and testing these patch again, since we already have
+working code. Working platform patches for UFSHCD will be posted soon.
+
+
+On Mon, May 14, 2012 at 4:38 PM, Girish K S
+<girish.shivananjappa@linaro.org> wrote:
+> The existing UFS driver is tightly bound to only pci specific devices=
+=2E
+> It cannot work for non-pci devices.
+>
+> "SCSI: UFS: remove all pci code from core driver" patch removes all t=
+he
+> pci specific code from the core driver to make it generic
+>
+> "SCSI: UFS: Add support for pci probe" patch adds a new file to suppo=
+rt
+> pci probing.
+>
+> "SCSI: UFS: Add platform support for ufs host controller" patch adds =
+a new
+> file to support platform device probe
+>
+> "SCSI: UFS: Added support of PCI/PLTFM for UFS" patch adds the menu o=
+ption
+> in Kconfig and Makefile to enable/disable the specific option
+>
+> Girish K S (4):
+> =A0SCSI: UFS: remove all pci code from core driver
+> =A0SCSI: UFS: Add support for pci probe
+> =A0SCSI: UFS: Add platform support for ufs host controller
+> =A0SCSI: UFS: Added support of PCI/PLTFM for UFS
+>
+> =A0drivers/scsi/ufs/Kconfig =A0 =A0 =A0 =A0| =A0 32 +++-
+> =A0drivers/scsi/ufs/Makefile =A0 =A0 =A0 | =A0 =A02 +
+> =A0drivers/scsi/ufs/ufs.h =A0 =A0 =A0 =A0 =A0| =A0103 +++++++++++
+> =A0drivers/scsi/ufs/ufshcd-pci.c =A0 | =A0217 ++++++++++++++++++++++
+> =A0drivers/scsi/ufs/ufshcd-pltfm.c | =A0191 ++++++++++++++++++++
+> =A0drivers/scsi/ufs/ufshcd.c =A0 =A0 =A0 | =A0377 +++++++++----------=
+--------------------
+> =A06 files changed, 623 insertions(+), 299 deletions(-)
+> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
+> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
+>
+> --
+> 1.7.4.1
+>
+
+
+
+--=20
+Regards,
+Vinayak Holikatti
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
