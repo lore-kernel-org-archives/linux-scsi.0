@@ -1,84 +1,45 @@
-From: vinayak holikatti <vinholikatti@gmail.com>
-Subject: Re: [RFC PATCH 0/4] Add support for pci/non-pci probing for UFS
-Date: Thu, 7 Jun 2012 10:21:40 +0530
-Message-ID: <CAKVbJB9Gqosh8T-vVeMgetNrmNhAYCYhG4R3JqWksFbyyqgQOw@mail.gmail.com>
-References: <1336993712-9111-1-git-send-email-girish.shivananjappa@linaro.org>
+From: Jonathan Nieder <jrnieder@gmail.com>
+Subject: Re: scsi: lpfc_scsi: Remove unused variables
+Date: Thu, 7 Jun 2012 01:12:56 -0500
+Message-ID: <20120607061255.GB3210@burratino>
+References: <4FD0434B.7090405@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:39639 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750988Ab2FGEvl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2012 00:51:41 -0400
-Received: by dady13 with SMTP id y13so316301dad.19
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Jun 2012 21:51:40 -0700 (PDT)
-In-Reply-To: <1336993712-9111-1-git-send-email-girish.shivananjappa@linaro.org>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:50931 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759954Ab2FGGNB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2012 02:13:01 -0400
+Content-Disposition: inline
+In-Reply-To: <4FD0434B.7090405@gentoo.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Girish K S <girish.shivananjappa@linaro.org>
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, santoshsy@gmail.com, patches@linaro.org, vinayak holikatti <vinholikatti@gmail.com>
+To: Richard Yao <ryao@gentoo.org>
+Cc: stable@vger.kernel.org, linux-scsi@vger.kernel.org, James Smart <james.smart@emulex.com>
 
-On Mon, May 14, 2012 at 4:38 PM, Girish K S
-<girish.shivananjappa@linaro.org> wrote:
-> The existing UFS driver is tightly bound to only pci specific devices=
-=2E
-> It cannot work for non-pci devices.
->
-> "SCSI: UFS: remove all pci code from core driver" patch removes all t=
-he
-> pci specific code from the core driver to make it generic
->
-> "SCSI: UFS: Add support for pci probe" patch adds a new file to suppo=
-rt
-> pci probing.
->
-> "SCSI: UFS: Add platform support for ufs host controller" patch adds =
-a new
-> file to support platform device probe
->
-> "SCSI: UFS: Added support of PCI/PLTFM for UFS" patch adds the menu o=
-ption
-> in Kconfig and Makefile to enable/disable the specific option
->
-> Girish K S (4):
-> =A0SCSI: UFS: remove all pci code from core driver
-> =A0SCSI: UFS: Add support for pci probe
-> =A0SCSI: UFS: Add platform support for ufs host controller
-> =A0SCSI: UFS: Added support of PCI/PLTFM for UFS
->
-> =A0drivers/scsi/ufs/Kconfig =A0 =A0 =A0 =A0| =A0 32 +++-
-> =A0drivers/scsi/ufs/Makefile =A0 =A0 =A0 | =A0 =A02 +
-> =A0drivers/scsi/ufs/ufs.h =A0 =A0 =A0 =A0 =A0| =A0103 +++++++++++
-> =A0drivers/scsi/ufs/ufshcd-pci.c =A0 | =A0217 ++++++++++++++++++++++
-> =A0drivers/scsi/ufs/ufshcd-pltfm.c | =A0191 ++++++++++++++++++++
-> =A0drivers/scsi/ufs/ufshcd.c =A0 =A0 =A0 | =A0377 +++++++++----------=
---------------------
-> =A06 files changed, 623 insertions(+), 299 deletions(-)
-> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
-> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
->
-> --
-> 1.7.4.1
->
+Hi Richard,
 
-Hi Girish,
+Richard Yao wrote:
 
-It was already communicated to you internally that the the platform
-support for UFSHCD has been implemented, PCI and Platform code has
-been segregated and we are in the final stages of testing. We would
-send the code for internal review before posting the patches to SCSI
-mailing list. So the reason for posting your untested patches within
-few days after you were informed is not clear. We don't want to put
-effort reviewing and testing these patch again, since we already have
-working code. Working platform patches for UFSHCD will be posted soon.
+> This is my first time patch submission. The commit message should
+> explain the issue.
+>
+> commit ba8c7a7a629b736fdc1abceaa3ec49f8820aec08
+> Author: Richard Yao <ryao@cs.stonybrook.edu>
+> Date:   Thu Jun 7 01:44:31 2012 -0400
+>
+>     scsi: lpfc_scsi: Remove unused variables
+>
+>     Kernels built with CONFIG_SCSI_LPFC fail to compile due to the use of
+>     -Werror=unused-variable. We solve that by removing some unused
+>     variables.
 
+Wouldn't a saner fix be to stop using -Werror=unused-variable, or am I
+missing something subtle?
 
---=20
-Regards,
-Vinayak Holikatti
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(Since v3.4-rc1~6^2~48 the makefile seems to use plain -Werror, which
+seems even worse, since it means any random compiler bug that triggers
+a new warning will break the build.)
+
+Thanks and hope that helps,
+Jonathan
