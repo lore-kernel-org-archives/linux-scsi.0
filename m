@@ -1,41 +1,58 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13307] hotplug cascaded expander will cause unpluged devices
- not remove from os
-Date: Thu,  7 Jun 2012 10:50:29 +0000 (UTC)
-Message-ID: <20120607105029.AF18F11FC41@bugzilla.kernel.org>
-References: <bug-13307-11613@https.bugzilla.kernel.org/>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 1/3] scsi: set to WCE if usb cache quirk is present.
+Date: Thu, 07 Jun 2012 16:16:18 +0400
+Message-ID: <4FD09B92.1020600@mvista.com>
+References: <1338985224-9684-1-git-send-email-linkinjeon@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:34217 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760634Ab2FGKuc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Jun 2012 06:50:32 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 3CCA8203A8
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Jun 2012 10:50:31 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id B46B62039D
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Jun 2012 10:50:29 +0000 (UTC)
-In-Reply-To: <bug-13307-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1338985224-9684-1-git-send-email-linkinjeon@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: James.Bottomley@HansenPartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Pankaj Kumar <pankaj.km@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=13307
+Hello.
 
+On 06-06-2012 16:20, Namjae Jeon wrote:
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+> Make use of USB quirk method to identify such HDD while reading the cache status in sd_probe(). If cache quirk is present for the HDD, lets assume that cache is enabled and make WCE bit equal to 1.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
+> Signed-off-by: Namjae Jeon<namjae.jeon@samsung.com>
+> Signed-off-by: Pankaj Kumar<pankaj.km@samsung.com>
+> Signed-off-by: Amit Sahrawat<a.sahrawat@samsung.com>
+> ---
+>   drivers/scsi/sd.c          |    9 +++++++--
+>   include/scsi/scsi_device.h |    1 +
+>   2 files changed, 8 insertions(+), 2 deletions(-)
 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 6f0a4c6..33faf6d 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2259,8 +2259,13 @@ bad_sense:
+>   		sd_printk(KERN_ERR, sdkp, "Asking for cache data failed\n");
+>
+>   defaults:
+> -	sd_printk(KERN_ERR, sdkp, "Assuming drive cache: write through\n");
+> -	sdkp->WCE = 0;
+> +	if (sdp->wce_quirk) {
+> +		sdkp->WCE = 1;
+> +		sd_printk(KERN_NOTICE, sdkp, "Assuming drive cache write back\n");
 
+    You forgot colon after "cache".
 
+> +	} else {
+> +		sd_printk(KERN_ERR, sdkp, "Assuming drive cache: write through\n");
+> +		sdkp->WCE = 0;
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are on the CC list for the bug.
-You are watching the assignee of the bug.
+    It makes sense to do assignments and printk() in the same order in both 
+branches.
+
+> +	}
+>   	sdkp->RCD = 0;
+>   	sdkp->DPOFUA = 0;
+>   }
+
+WBR, Sergei
