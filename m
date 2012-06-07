@@ -1,69 +1,118 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [PATCH 4/6] bnx2fc: Improve error recovery by handling
+Subject: [v2 PATCH 1/3] bnx2fc: Improve error recovery by handling
  parity errors
-Date: Thu, 7 Jun 2012 01:39:04 -0700
-Message-ID: <4FD068A8.7070305@broadcom.com>
-References: <1338851747-7240-1-git-send-email-bprakash@broadcom.com>
- <1338851747-7240-5-git-send-email-bprakash@broadcom.com>
- <1339038209.26595.2.camel@dabdike.int.hansenpartnership.com>
+Date: Thu, 7 Jun 2012 02:19:35 -0700
+Message-ID: <1339060777-10972-2-git-send-email-bprakash@broadcom.com>
+References: <1339060777-10972-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3832 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3290 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755487Ab2FGIjS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2012 04:39:18 -0400
-In-Reply-To: <1339038209.26595.2.camel@dabdike.int.hansenpartnership.com>
+	id S1754430Ab2FGJTp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Jun 2012 05:19:45 -0400
+In-Reply-To: <1339060777-10972-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: michaelc@cs.wisc.edu, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-On 6/6/2012 8:03 PM, James Bottomley wrote:
-> On Mon, 2012-06-04 at 16:15 -0700, Bhanu Prakash Gollapudi wrote:
->> @@ -321,6 +332,9 @@ static void bnx2fc_upload_session(struct fcoe_po=
-rt *port,
->>
->>   		del_timer_sync(&tgt->upld_timer);
->>
->> +	} else if (test_bit(BNX2FC_FLAG_DISABLE_FAILED,&tgt->flags))
->> +		printk(KERN_ERR PFX "ERROR!! DISABLE req failed, destroy"
->> +				" not sent to FW\n");
->>   	} else
->>   		printk(KERN_ERR PFX "ERROR!! DISABLE req timed out, destroy"
->>   				" not sent to FW\n");
->
-> You didn't actually compile this did you?  That else if has to have a=
-n
-> opening brace to match the closing one on the next else ...
+During parity errors, the ramrods are not issued to FW. bnx2fc waits for the
+timeout value, and proceeds with cleaning up the IOs. Since we are already
+out-of-sync with FW, cleanup commands timeout too, and do not get the
+completion.  This operation takes 36 secs for each session to upload causing
+huge delays. To fix this, bnx2fc now gets a PARITY_ERROR from cnic driver, and
+upon failure, the driver does not issue any commands to the FW and finishes the
+upload process sooner.
 
-My bad. I fixed this compilation error, but by mistake I applied that=20
-change to next patch. I'll correct it and submit the last three patches=
-=20
-shortly, as you've already picked up the first three.
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc.h     |    1 +
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c |    4 +++-
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c |   25 ++++++++++++++++++++-----
+ 3 files changed, 24 insertions(+), 6 deletions(-)
 
-Thanks,
-Bhanu
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 2f1bea4..baac6e9 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -275,6 +275,7 @@ struct bnx2fc_rport {
+ #define BNX2FC_FLAG_CTX_ALLOC_FAILURE	0x6
+ #define BNX2FC_FLAG_UPLD_REQ_COMPL	0x7
+ #define BNX2FC_FLAG_EXPL_LOGO		0x8
++#define BNX2FC_FLAG_DISABLE_FAILED	0x9
+ 
+ 	u8 src_addr[ETH_ALEN];
+ 	u32 max_sqes;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index 2ca6bfe..6d6eee4 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -1244,7 +1244,9 @@ static void bnx2fc_process_conn_disable_cmpl(struct bnx2fc_hba *hba,
+ 	if (disable_kcqe->completion_status) {
+ 		printk(KERN_ERR PFX "Disable failed with cmpl status %d\n",
+ 			disable_kcqe->completion_status);
+-		return;
++		set_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags);
++		set_bit(BNX2FC_FLAG_UPLD_REQ_COMPL, &tgt->flags);
++		wake_up_interruptible(&tgt->upld_wait);
+ 	} else {
+ 		/* disable successful */
+ 		BNX2FC_TGT_DBG(tgt, "disable successful\n");
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+index 082a25c..85ffdea 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+@@ -181,8 +181,14 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+ 
+ 		set_bit(BNX2FC_FLAG_IO_COMPL, &io_req->req_flags);
+ 		set_bit(BNX2FC_FLAG_IO_CLEANUP, &io_req->req_flags);
+-		rc = bnx2fc_initiate_cleanup(io_req);
+-		BUG_ON(rc);
++
++		/* Do not issue cleanup when disable request failed */
++		if (test_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags))
++			bnx2fc_process_cleanup_compl(io_req, io_req->task, 0);
++		else {
++			rc = bnx2fc_initiate_cleanup(io_req);
++			BUG_ON(rc);
++		}
+ 	}
+ 
+ 	list_for_each_safe(list, tmp, &tgt->active_tm_queue) {
+@@ -212,8 +218,13 @@ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+ 			io_req->cb_arg = NULL;
+ 		}
+ 
+-		rc = bnx2fc_initiate_cleanup(io_req);
+-		BUG_ON(rc);
++		/* Do not issue cleanup when disable request failed */
++		if (test_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags))
++			bnx2fc_process_cleanup_compl(io_req, io_req->task, 0);
++		else {
++			rc = bnx2fc_initiate_cleanup(io_req);
++			BUG_ON(rc);
++		}
+ 	}
+ 
+ 	list_for_each_safe(list, tmp, &tgt->io_retire_queue) {
+@@ -321,9 +332,13 @@ static void bnx2fc_upload_session(struct fcoe_port *port,
+ 
+ 		del_timer_sync(&tgt->upld_timer);
+ 
+-	} else
++	} else if (test_bit(BNX2FC_FLAG_DISABLE_FAILED, &tgt->flags)) {
++		printk(KERN_ERR PFX "ERROR!! DISABLE req failed, destroy"
++				" not sent to FW\n");
++	} else {
+ 		printk(KERN_ERR PFX "ERROR!! DISABLE req timed out, destroy"
+ 				" not sent to FW\n");
++	}
+ 
+ 	/* Free session resources */
+ 	bnx2fc_free_session_resc(hba, tgt);
+-- 
+1.7.0.6
 
->
-> James
->
-> =13=EF=BF=BD=EF=BF=BD=EC=B9=BB=1C=EF=BF=BD&=EF=BF=BD~=EF=BF=BD&=EF=BF=
-=BD=18=EF=BF=BD=EF=BF=BD+-=EF=BF=BD=EF=BF=BD=DD=B6=17=EF=BF=BD=EF=BF=BD=
-w=EF=BF=BD=EF=BF=BD=CB=9B=EF=BF=BD=EF=BF=BD=EF=BF=BDm=EF=BF=BDb=EF=BF=BD=
-=EF=BF=BDlr=C8=A2=EF=BF=BD=EF=BF=BD^n=EF=BF=BDr=EF=BF=BD=EF=BF=BD=EF=BF=
-=BDz=EF=BF=BD=1A=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=
-&=EF=BF=BD=EF=BF=BD=1E=EF=BF=BDG=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=03=
-(=EF=BF=BD=E9=9A=8E=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD=1A=EF=BF=BD=1Bm=EF=
-=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDz=EF=BF=BD=DE=96=EF=BF=BD=EF=BF=
-=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BD~=EF=
-=BF=BDm=EF=BF=BD
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
