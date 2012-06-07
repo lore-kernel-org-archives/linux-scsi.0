@@ -1,101 +1,113 @@
-From: Girish K S <girish.shivananjappa@linaro.org>
-Subject: Re: [RFC PATCH 0/4] Add support for pci/non-pci probing for UFS
-Date: Thu, 7 Jun 2012 12:15:59 +0530
-Message-ID: <CAGxe1ZHPHomNk8Dw_jroqLuxKxsoJi+r--xBKptm+0YY_DSv-Q@mail.gmail.com>
-References: <1336993712-9111-1-git-send-email-girish.shivananjappa@linaro.org>
-	<CAKVbJB9Gqosh8T-vVeMgetNrmNhAYCYhG4R3JqWksFbyyqgQOw@mail.gmail.com>
+From: Norman Diamond <n0diamond@yahoo.co.jp>
+Subject: How to detect if a libata ioctl SG_IO had an error?
+Date: Thu, 7 Jun 2012 15:46:57 +0900 (JST)
+Message-ID: <542808.89361.qm@web100008.mail.kks.yahoo.co.jp>
+Reply-To: n0diamond@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:33873 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630Ab2FGGqB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2012 02:46:01 -0400
-Received: by qcro28 with SMTP id o28so127334qcr.19
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Jun 2012 23:46:00 -0700 (PDT)
-In-Reply-To: <CAKVbJB9Gqosh8T-vVeMgetNrmNhAYCYhG4R3JqWksFbyyqgQOw@mail.gmail.com>
+Received: from web100008.mail.kks.yahoo.co.jp ([114.111.98.182]:28176 "HELO
+	web100008.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752676Ab2FGGq7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Jun 2012 02:46:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vinayak holikatti <vinholikatti@gmail.com>
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, santoshsy@gmail.com, patches@linaro.org
+To: linux-scsi@vger.kernel.org
 
-On 7 June 2012 10:21, vinayak holikatti <vinholikatti@gmail.com> wrote:
-> On Mon, May 14, 2012 at 4:38 PM, Girish K S
-> <girish.shivananjappa@linaro.org> wrote:
->> The existing UFS driver is tightly bound to only pci specific device=
-s.
->> It cannot work for non-pci devices.
->>
->> "SCSI: UFS: remove all pci code from core driver" patch removes all =
-the
->> pci specific code from the core driver to make it generic
->>
->> "SCSI: UFS: Add support for pci probe" patch adds a new file to supp=
-ort
->> pci probing.
->>
->> "SCSI: UFS: Add platform support for ufs host controller" patch adds=
- a new
->> file to support platform device probe
->>
->> "SCSI: UFS: Added support of PCI/PLTFM for UFS" patch adds the menu =
-option
->> in Kconfig and Makefile to enable/disable the specific option
->>
->> Girish K S (4):
->> =A0SCSI: UFS: remove all pci code from core driver
->> =A0SCSI: UFS: Add support for pci probe
->> =A0SCSI: UFS: Add platform support for ufs host controller
->> =A0SCSI: UFS: Added support of PCI/PLTFM for UFS
->>
->> =A0drivers/scsi/ufs/Kconfig =A0 =A0 =A0 =A0| =A0 32 +++-
->> =A0drivers/scsi/ufs/Makefile =A0 =A0 =A0 | =A0 =A02 +
->> =A0drivers/scsi/ufs/ufs.h =A0 =A0 =A0 =A0 =A0| =A0103 +++++++++++
->> =A0drivers/scsi/ufs/ufshcd-pci.c =A0 | =A0217 ++++++++++++++++++++++
->> =A0drivers/scsi/ufs/ufshcd-pltfm.c | =A0191 ++++++++++++++++++++
->> =A0drivers/scsi/ufs/ufshcd.c =A0 =A0 =A0 | =A0377 +++++++++---------=
----------------------
->> =A06 files changed, 623 insertions(+), 299 deletions(-)
->> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
->> =A0create mode 100644 drivers/scsi/ufs/ufshcd-pltfm.c
->>
->> --
->> 1.7.4.1
->>
->
-> Hi Girish,
->
-> It was already communicated to you internally that the the platform
-> support for UFSHCD has been implemented, PCI and Platform code has
-Only informed after i had sent the initial code internally. After
-effort has been spent
-on making the draft copy.
-> been segregated and we are in the final stages of testing. We would
-> send the code for internal review before posting the patches to SCSI
-waited for more than 2 months time. when there was no reply, i did the
-above mentioned draft and sent.
-But still i didnt get reply for that internal mail.
-Why didnt you object on the 1st RFC. Why did you wait for 4 revisions.
-> mailing list. So the reason for posting your untested patches within
-pls test this patch and then claim that it doesnt work. And the RFC
-was to push the
-pci and non pci separate framework. Hope its clear.
-> few days after you were informed is not clear. We don't want to put
-> effort reviewing and testing these patch again, since we already have
-Above statement shows the negligence of not testing the patch.
-I can post all the log messages of the test.
-> working code. Working platform patches for UFSHCD will be posted soon=
-=2E
-waiting for the same. and let experts in this list decide on that (for
-pci/non pci) framework
->
->
-> --
-> Regards,
-> Vinayak Holikatti
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+My application wants to detect if an error occured, but in struct sg_io_hdr sg_io, sg_io.driver_status != DRIVER_OK does not say if an error occured, and (sg_io.info & SG_INFO_OK_MASK) != SG_INFO_OK does not say if an error occured.
+
+In http://tldp.org/HOWTO/SCSI-Generic-HOWTO/x322.html:
+"A copy of these defines can be found in sg_err.h (see the utilities section): 
+SG_ERR_DRIVER_OK [0x00] Typically no suggestion"
+
+Where's sg_err.h?  scsi.h defines DRIVER_OK but no one defines SG_ERR_DRIVER_OK.  Anyway, the real problem is that other values besides DRIVER_OK also mean driver ok.
+
+In http://tldp.org/HOWTO/SCSI-Generic-HOWTO/x364.html:
+"SG_INFO_CHECK [0x1] something abnormal happened."
+
+Sense data is abnormal but not an error, so I don't know if an error occured.
+
+In scsi.h:
+443 #define DRIVER_OK       0x00    /* Driver status                           */
+444 
+445 /*
+446  *  These indicate the error that occurred, and what is available.
+447  */
+448 
+449 #define DRIVER_BUSY         0x01
+450 #define DRIVER_SOFT         0x02
+451 #define DRIVER_MEDIA        0x03
+452 #define DRIVER_ERROR        0x04
+453 
+454 #define DRIVER_INVALID      0x05
+455 #define DRIVER_TIMEOUT      0x06
+456 #define DRIVER_HARD         0x07
+457 #define DRIVER_SENSE        0x08
+
+Is DRIVER_SENSE a bitwise value that can be or'ed with other values?
+
+In libata-scsi.c
+523         if (driver_byte(cmd_result) == DRIVER_SENSE) {/* sense data available */
+524                 u8 *desc = sensebuf + 8;
+525                 cmd_result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
+
+Line 523 does not test driver_byte(cmd_result) & DRIVER_SENSE.  It looks like DRIVER_SENSE is a value all by itself, not bitwise.
+
+In sc.c:
+463         if ((CHECK_CONDITION & hp->masked_status) ||
+464             (DRIVER_SENSE & hp->driver_status))
+
+Line 464 does not test DRIVER_SENSE == hp->driver_status.  It looks like DRIVER_SENSE is bitwise, not a value all by itself.
+
+I sense inconsistency.
+
+In sc.c:
+546         if (hp->masked_status || hp->host_status || hp->driver_status)
+547                 hp->info |= SG_INFO_CHECK;
+
+So even though DRIVER_SENSE is not an error, the SG_INFO_CHECK bit gets set.  (The info field is undoubtedly bitwise.)
+
+How can I really test if an error occured?
+
+A bit more here.
+
+In scsi.h:
+217 /*
+218  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
+219  *  T10/1561-D Revision 4 Draft dated 7th November 2002.
+220  */
+221 #define SAM_STAT_GOOD            0x00
+222 #define SAM_STAT_CHECK_CONDITION 0x02
+223 #define SAM_STAT_CONDITION_MET   0x04
+224 #define SAM_STAT_BUSY            0x08
+225 #define SAM_STAT_INTERMEDIATE    0x10
+226 #define SAM_STAT_INTERMEDIATE_CONDITION_MET 0x14
+227 #define SAM_STAT_RESERVATION_CONFLICT 0x18
+228 #define SAM_STAT_COMMAND_TERMINATED 0x22        /* obsolete in SAM-3 */
+229 #define SAM_STAT_TASK_SET_FULL   0x28
+230 #define SAM_STAT_ACA_ACTIVE      0x30
+231 #define SAM_STAT_TASK_ABORTED    0x40
+
+Is SAM_STAT_CHECK_CONDITION a bitwise value?  It looks like the answer is mostly no.  Some of them could be, but not consistently.  Did the T10 committee say if these are bitwise?
+
+In scsi.h:
+256 /*
+257  *  Status codes. These are deprecated as they are shifted 1 bit right
+258  *  from those found in the SCSI standards. This causes confusion for
+259  *  applications that are ported to several OSes. Prefer SAM Status codes
+260  *  above.
+261  */
+262 
+263 #define GOOD                 0x00
+264 #define CHECK_CONDITION      0x01
+
+In sg.c:
+533                 if ((CHECK_CONDITION & hp->masked_status) ||
+534                     (DRIVER_SENSE & hp->driver_status)) {
+
+Why doesn't sg use SAM Status codes?
+
+Meanwhile, is CHECK_CONDITION a bitwise value?  It looks like the answer is mostly no, for the same reason as SAM_STAT_CHECK_CONDITION.  These bitwise tests look like bugs.
+
