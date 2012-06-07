@@ -1,132 +1,68 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: How to detect if a libata ioctl SG_IO had an error?
-Date: Thu, 07 Jun 2012 17:18:35 -0400
-Message-ID: <4FD11AAB.3080009@interlog.com>
-References: <542808.89361.qm@web100008.mail.kks.yahoo.co.jp>
-Reply-To: dgilbert@interlog.com
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: Re: [PATCH 1/3] scsi: set to WCE if usb cache quirk is present.
+Date: Fri, 8 Jun 2012 08:07:27 +0900
+Message-ID: <CAKYAXd-hd5QEYG41BzxUzRFO0N+rNTB0PcPRDQWFngUHQqi46g@mail.gmail.com>
+References: <1338985224-9684-1-git-send-email-linkinjeon@gmail.com>
+	<4FD09B92.1020600@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:36313 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757429Ab2FGVTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Jun 2012 17:19:18 -0400
-In-Reply-To: <542808.89361.qm@web100008.mail.kks.yahoo.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4FD09B92.1020600@mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: James.Bottomley@hansenpartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Pankaj Kumar <pankaj.km@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: n0diamond@yahoo.co.jp
-Cc: linux-scsi@vger.kernel.org
 
-On 12-06-07 02:46 AM, Norman Diamond wrote:
-> My application wants to detect if an error occured, but in struct sg_io_hdr sg_io, sg_io.driver_status != DRIVER_OK does not say if an error occured, and (sg_io.info&  SG_INFO_OK_MASK) != SG_INFO_OK does not say if an error occured.
->
-> In http://tldp.org/HOWTO/SCSI-Generic-HOWTO/x322.html:
-> "A copy of these defines can be found in sg_err.h (see the utilities section):
-> SG_ERR_DRIVER_OK [0x00] Typically no suggestion"
->
-> Where's sg_err.h?  scsi.h defines DRIVER_OK but no one defines SG_ERR_DRIVER_OK.  Anyway, the real problem is that other values besides DRIVER_OK also mean driver ok.
->
-> In http://tldp.org/HOWTO/SCSI-Generic-HOWTO/x364.html:
-> "SG_INFO_CHECK [0x1] something abnormal happened."
->
-> Sense data is abnormal but not an error, so I don't know if an error occured.
->
-> In scsi.h:
-> 443 #define DRIVER_OK       0x00    /* Driver status                           */
-> 444
-> 445 /*
-> 446  *  These indicate the error that occurred, and what is available.
-> 447  */
-> 448
-> 449 #define DRIVER_BUSY         0x01
-> 450 #define DRIVER_SOFT         0x02
-> 451 #define DRIVER_MEDIA        0x03
-> 452 #define DRIVER_ERROR        0x04
-> 453
-> 454 #define DRIVER_INVALID      0x05
-> 455 #define DRIVER_TIMEOUT      0x06
-> 456 #define DRIVER_HARD         0x07
-> 457 #define DRIVER_SENSE        0x08
->
-> Is DRIVER_SENSE a bitwise value that can be or'ed with other values?
->
-> In libata-scsi.c
-> 523         if (driver_byte(cmd_result) == DRIVER_SENSE) {/* sense data available */
-> 524                 u8 *desc = sensebuf + 8;
-> 525                 cmd_result&= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
->
-> Line 523 does not test driver_byte(cmd_result)&  DRIVER_SENSE.  It looks like DRIVER_SENSE is a value all by itself, not bitwise.
->
-> In sc.c:
-> 463         if ((CHECK_CONDITION&  hp->masked_status) ||
-> 464             (DRIVER_SENSE&  hp->driver_status))
->
-> Line 464 does not test DRIVER_SENSE == hp->driver_status.  It looks like DRIVER_SENSE is bitwise, not a value all by itself.
->
-> I sense inconsistency.
->
-> In sc.c:
-> 546         if (hp->masked_status || hp->host_status || hp->driver_status)
-> 547                 hp->info |= SG_INFO_CHECK;
->
-> So even though DRIVER_SENSE is not an error, the SG_INFO_CHECK bit gets set.  (The info field is undoubtedly bitwise.)
->
-> How can I really test if an error occured?
->
-> A bit more here.
->
-> In scsi.h:
-> 217 /*
-> 218  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
-> 219  *  T10/1561-D Revision 4 Draft dated 7th November 2002.
-> 220  */
-> 221 #define SAM_STAT_GOOD            0x00
-> 222 #define SAM_STAT_CHECK_CONDITION 0x02
-> 223 #define SAM_STAT_CONDITION_MET   0x04
-> 224 #define SAM_STAT_BUSY            0x08
-> 225 #define SAM_STAT_INTERMEDIATE    0x10
-> 226 #define SAM_STAT_INTERMEDIATE_CONDITION_MET 0x14
-> 227 #define SAM_STAT_RESERVATION_CONFLICT 0x18
-> 228 #define SAM_STAT_COMMAND_TERMINATED 0x22        /* obsolete in SAM-3 */
-> 229 #define SAM_STAT_TASK_SET_FULL   0x28
-> 230 #define SAM_STAT_ACA_ACTIVE      0x30
-> 231 #define SAM_STAT_TASK_ABORTED    0x40
->
-> Is SAM_STAT_CHECK_CONDITION a bitwise value?  It looks like the answer is mostly no.  Some of them could be, but not consistently.  Did the T10 committee say if these are bitwise?
->
-> In scsi.h:
-> 256 /*
-> 257  *  Status codes. These are deprecated as they are shifted 1 bit right
-> 258  *  from those found in the SCSI standards. This causes confusion for
-> 259  *  applications that are ported to several OSes. Prefer SAM Status codes
-> 260  *  above.
-> 261  */
-> 262
-> 263 #define GOOD                 0x00
-> 264 #define CHECK_CONDITION      0x01
->
-> In sg.c:
-> 533                 if ((CHECK_CONDITION&  hp->masked_status) ||
-> 534                     (DRIVER_SENSE&  hp->driver_status)) {
->
-> Why doesn't sg use SAM Status codes?
->
-> Meanwhile, is CHECK_CONDITION a bitwise value?  It looks like the answer is mostly no, for the same reason as SAM_STAT_CHECK_CONDITION.  These bitwise tests look like bugs.
+Hi. Sergei.
 
-Please fetch the sg3_utils package and look at some user
-space examples. If you are interested in libata then
-following src/sg_sat_identify.c might be instructive. For
-Linux, the pass-through code is in lib/sg_pt_linux.c .
-Look at the get_scsi_pt_result_category() functions which
-should answer your questions of how to check for sense
-data. BTW the presence of sense data may indicate an error
-or it may be just informative.
+Good point. I will update.
+Thanks for your review.
 
-sg_pt_linux.c handles either of two SG_IO interfaces:
-   - sg v3: as used by the sg driver and block devices
-     (e.g. /dev/sdb)
-   - sg v4: as used by the bsg driver which has device
-     names like /dev/bsg/6:0:0:2
-
-Doug Gilbert
+2012/6/7, Sergei Shtylyov <sshtylyov@mvista.com>:
+> Hello.
+>
+> On 06-06-2012 16:20, Namjae Jeon wrote:
+>
+>> Make use of USB quirk method to identify such HDD while reading the cache
+>> status in sd_probe(). If cache quirk is present for the HDD, lets assume
+>> that cache is enabled and make WCE bit equal to 1.
+>
+>> Signed-off-by: Namjae Jeon<namjae.jeon@samsung.com>
+>> Signed-off-by: Pankaj Kumar<pankaj.km@samsung.com>
+>> Signed-off-by: Amit Sahrawat<a.sahrawat@samsung.com>
+>> ---
+>>   drivers/scsi/sd.c          |    9 +++++++--
+>>   include/scsi/scsi_device.h |    1 +
+>>   2 files changed, 8 insertions(+), 2 deletions(-)
+>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index 6f0a4c6..33faf6d 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -2259,8 +2259,13 @@ bad_sense:
+>>   		sd_printk(KERN_ERR, sdkp, "Asking for cache data failed\n");
+>>
+>>   defaults:
+>> -	sd_printk(KERN_ERR, sdkp, "Assuming drive cache: write through\n");
+>> -	sdkp->WCE = 0;
+>> +	if (sdp->wce_quirk) {
+>> +		sdkp->WCE = 1;
+>> +		sd_printk(KERN_NOTICE, sdkp, "Assuming drive cache write back\n");
+>
+>     You forgot colon after "cache".
+>
+>> +	} else {
+>> +		sd_printk(KERN_ERR, sdkp, "Assuming drive cache: write through\n");
+>> +		sdkp->WCE = 0;
+>
+>     It makes sense to do assignments and printk() in the same order in both
+>
+> branches.
+>
+>> +	}
+>>   	sdkp->RCD = 0;
+>>   	sdkp->DPOFUA = 0;
+>>   }
+>
+> WBR, Sergei
+>
