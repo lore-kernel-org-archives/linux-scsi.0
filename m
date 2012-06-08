@@ -1,38 +1,42 @@
-From: Norman Diamond <n0diamond@yahoo.co.jp>
-Subject: Re: How to detect if a libata ioctl SG_IO had an error?
-Date: Fri, 8 Jun 2012 14:28:09 +0900 (JST)
-Message-ID: <376140.35021.qm@web100009.mail.kks.yahoo.co.jp>
-Reply-To: n0diamond@yahoo.co.jp
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13452] When log in a iscsi target it's fail and there is a bug
+ scsi related
+Date: Fri,  8 Jun 2012 11:35:04 +0000 (UTC)
+Message-ID: <20120608113504.257221205DB@bugzilla.kernel.org>
+References: <bug-13452-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web100009.mail.kks.yahoo.co.jp ([114.111.98.183]:47049 "HELO
-	web100009.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933493Ab2FHF2M convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Jun 2012 01:28:12 -0400
+Received: from mail.kernel.org ([198.145.19.201]:43011 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751968Ab2FHLfH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jun 2012 07:35:07 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id CBEC9203BD
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Jun 2012 11:35:05 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id CADD4203AC
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Jun 2012 11:35:04 +0000 (UTC)
+In-Reply-To: <bug-13452-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-I wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=13452
 
-> Now for today's discovery.
->=20
-> When the SG_IO ioctl times out, libata sets the ABRT bit but not the =
-ERR bit in the sense data.=A0 I was checking the ERR bit which was 0, a=
-nd then going off on a wild goose chase trying to find what level SCSI =
-driver reported the timeout error.=A0 There was none.=A0 It's all in th=
-e ABRT bit.=A0 This looks like a bug in libata.
 
-Wrong.  When the SG_IO ioctl times out, a lot of random values are stil=
-l useless, and I'm still going off on wild goose chases.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-How can the caller of ioctl detect if an error occured, where error inc=
-ludes timeout as well as other kinds of errors?
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |INSUFFICIENT_DATA
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
