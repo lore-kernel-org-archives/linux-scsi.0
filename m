@@ -1,59 +1,49 @@
 From: mathieu.poirier@linaro.org
-Subject: [PATCH RESEND 3/7] drivers/scsi: use correct __devexit_p annotation
-Date: Fri,  8 Jun 2012 15:53:32 -0600
-Message-ID: <1339192416-27026-4-git-send-email-mathieu.poirier@linaro.org>
-References: <1339192416-27026-1-git-send-email-mathieu.poirier@linaro.org>
+Subject: [PATCH RESEND 0/7] drivers/scsi: randconfig patches for kernel 3.5
+Date: Fri,  8 Jun 2012 15:53:29 -0600
+Message-ID: <1339192416-27026-1-git-send-email-mathieu.poirier@linaro.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45177 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761283Ab2FHVxq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jun 2012 17:53:46 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so3070282pbb.19
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Jun 2012 14:53:46 -0700 (PDT)
-In-Reply-To: <1339192416-27026-1-git-send-email-mathieu.poirier@linaro.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:49628 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760000Ab2FHVxn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jun 2012 17:53:43 -0400
+Received: by dady13 with SMTP id y13so2880972dad.19
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Jun 2012 14:53:43 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: JBottomley@parallels.com, linux-kernel@vger.kernel.org, arnd@arndb.de, mathieu.poirier@linaro.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+From: Mathieu Poirier <mathieu.poirier@linaro.org>
 
-__devexit functions are discarded when CONFIG_HOTPLUG
-is not set, so the symbol needs to be referenced carefully.
+These patches fix miscellaneous problems when working
+with make randconfig.  They were discovered on kernel
+3.1-rc4 and have been reformatted for 3.5.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
----
- drivers/scsi/pmcraid.c        |    2 +-
- drivers/scsi/qla4xxx/ql4_os.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Arnd Bergmann (7):
+  scsi: mark SCSI_SRP as experimental
+  scsi/nsp32: don't pass large values into udelay
+  drivers/scsi: use correct __devexit_p annotation
+  scsi/advansys: do not build on ARM
+  scsi/atp870u: use mdelay instead of large udelay
+  scsi/megaraid: fix sparse warnings
+  drivers/scsi: some ISA drivers need ISA_DMA_API
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index ea8a0b4..becc472 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -6084,7 +6084,7 @@ static struct pci_driver pmcraid_driver = {
- 	.name = PMCRAID_DRIVER_NAME,
- 	.id_table = pmcraid_pci_table,
- 	.probe = pmcraid_probe,
--	.remove = pmcraid_remove,
-+	.remove = __devexit_p(pmcraid_remove),
- 	.suspend = pmcraid_suspend,
- 	.resume = pmcraid_resume,
- 	.shutdown = pmcraid_shutdown
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index cd15678..760e8867 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -6058,7 +6058,7 @@ static struct pci_driver qla4xxx_pci_driver = {
- 	.name		= DRIVER_NAME,
- 	.id_table	= qla4xxx_pci_tbl,
- 	.probe		= qla4xxx_probe_adapter,
--	.remove		= qla4xxx_remove_adapter,
-+	.remove		= __devexit_p(qla4xxx_remove_adapter),
- 	.err_handler = &qla4xxx_err_handler,
- };
- 
+ drivers/scsi/Kconfig                        |   10 ++-
+ drivers/scsi/atp870u.c                      |    2 +-
+ drivers/scsi/megaraid/megaraid_sas.h        |   39 ++++++++++
+ drivers/scsi/megaraid/megaraid_sas_base.c   |   46 +++---------
+ drivers/scsi/megaraid/megaraid_sas_fp.c     |  105 ++++++++++++++-------------
+ drivers/scsi/megaraid/megaraid_sas_fp.h     |   22 ++++++
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |   86 ++++++----------------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |    9 +++
+ drivers/scsi/nsp32.c                        |    3 +-
+ drivers/scsi/nsp32.h                        |    2 +-
+ drivers/scsi/pmcraid.c                      |    2 +-
+ drivers/scsi/qla4xxx/ql4_os.c               |    2 +-
+ 12 files changed, 170 insertions(+), 158 deletions(-)
+ create mode 100644 drivers/scsi/megaraid/megaraid_sas_fp.h
+
 -- 
 1.7.5.4
 
