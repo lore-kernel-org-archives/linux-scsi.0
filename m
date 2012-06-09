@@ -1,47 +1,47 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 43359] LVM volumes not detected
-Date: Sat,  9 Jun 2012 07:33:50 +0000 (UTC)
-Message-ID: <20120609073350.4BFFC1205D7@bugzilla.kernel.org>
-References: <bug-43359-11613@https.bugzilla.kernel.org/>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] arcmsr: fix misuse of | instead of &
+Date: Sat, 9 Jun 2012 12:10:19 +0300
+Message-ID: <20120609091018.GC877@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:40344 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751626Ab2FIHdx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jun 2012 03:33:53 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id DA398203D3
-	for <linux-scsi@vger.kernel.org>; Sat,  9 Jun 2012 07:33:52 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id 5139A203F4
-	for <linux-scsi@vger.kernel.org>; Sat,  9 Jun 2012 07:33:50 +0000 (UTC)
-In-Reply-To: <bug-43359-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: David Howells <dhowells@redhat.com>, Nick Cheng <nick.cheng@areca.com.tw>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D43359
+ARCMSR_ARC1880_DiagWrite_ENABLE is 0x00000080 so (x | 0x00000080) is
+never zero.  The intent here was to test that loop until
+ARCMSR_ARC1880_DiagWrite_ENABLE was turned on, but because the test was
+wrong, we would do five loops regardless of whether it succeed or not.
 
+Also I simplified the condition a little by removing the unused
+assignement.
 
-=46ran=C3=A7ois Valenduc <francois.valenduc@tvcablenet.be> changed:
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Static checker stuff.  I do not own this hardware.
 
-           What    |Removed                     |Added
------------------------------------------------------------------------=
------
-     Kernel Version|                            |3.5-rc1
-         Regression|No                          |Yes
-
-
-
-
---=20
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
-l
-------- You are receiving this mail because: -------
-You are the assignee for the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index cbde1dc..def24a1 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -2821,7 +2821,7 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+ 	int i, count = 0;
+ 	struct MessageUnit_A __iomem *pmuA = acb->pmuA;
+ 	struct MessageUnit_C __iomem *pmuC = acb->pmuC;
+-	u32 temp = 0;
++
+ 	/* backup pci config data */
+ 	printk(KERN_NOTICE "arcmsr%d: executing hw bus reset .....\n", acb->host->host_no);
+ 	for (i = 0; i < 64; i++) {
+@@ -2839,7 +2839,7 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+ 			writel(0x2, &pmuC->write_sequence);
+ 			writel(0x7, &pmuC->write_sequence);
+ 			writel(0xD, &pmuC->write_sequence);
+-		} while ((((temp = readl(&pmuC->host_diagnostic)) | ARCMSR_ARC1880_DiagWrite_ENABLE) == 0) && (count < 5));
++		} while (((readl(&pmuC->host_diagnostic) & ARCMSR_ARC1880_DiagWrite_ENABLE) == 0) && (count < 5));
+ 		writel(ARCMSR_ARC1880_RESET_ADAPTER, &pmuC->host_diagnostic);
+ 	} else {
+ 		pci_write_config_byte(acb->pdev, 0x84, 0x20);
