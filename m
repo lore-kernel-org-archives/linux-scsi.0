@@ -1,78 +1,69 @@
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v3 2/4] usb: storage: add support for write cache quirk on usb hdd
-Date: Sat,  9 Jun 2012 21:30:26 -0400
-Message-ID: <1339291826-2547-1-git-send-email-linkinjeon@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, sshtylyov@mvista.com, bvanassche@acm.org
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, Pankaj Kumar <pankaj.km@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
+From: Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v3 3/3] usb: storage: update usb devices for write cache quirk in quirk list.
+Date: Sat,  9 Jun 2012 21:30:48 -0400
+Message-ID: <1339291848-2583-1-git-send-email-linkinjeon@gmail.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Pankaj Kumar <pankaj.km-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add support for write cache quirk on usb hdd. scsi driver will be set to wce
-by detecting write cache quirk in quirk list when plugging usb hdd.
+Update information of Seagate Portable HDD and WD My Passport HDD in
+quirk list.
 
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-Signed-off-by: Pankaj Kumar <pankaj.km@samsung.com>
-Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
+Signed-off-by: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Pankaj Kumar <pankaj.km-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 ---
- drivers/usb/storage/scsiglue.c |    5 +++++
- drivers/usb/storage/usb.c      |    5 ++++-
- include/linux/usb_usual.h      |    4 +++-
- 3 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/usb/storage/unusual_devs.h |   24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index a324a5d..fe42547 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -230,6 +230,11 @@ static int slave_configure(struct scsi_device *sdev)
- 					US_FL_SCM_MULT_TARG)) &&
- 				us->protocol == USB_PR_BULK)
- 			us->use_last_sector_hacks = 1;
+diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
+index 1719886..64f0369 100644
+--- a/drivers/usb/storage/unusual_devs.h
++++ b/drivers/usb/storage/unusual_devs.h
+@@ -1267,6 +1267,18 @@ UNUSUAL_DEV( 0x0af0, 0xd357, 0x0000, 0x0000,
+ 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+ 		0 ),
+ 
++/* Reported by Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
++ * Even though write cache is enabled by default,
++ * SCSI driver assume that cache is not enabled
++ * which in turn might lead to the loss of data
++ * since data still will be in cache.
++ * So this entry is needed for assuming that cache is enabled.
++ */
++UNUSUAL_DEV(0x0bc2, 0x2300, 0x0000, 0x9999,
++		"Seagate",
++		"Portable HDD",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
 +
-+		/* Check if write cache default on flag is set or not */
-+		if (us->fflags & US_FL_WRITE_CACHE)
-+			sdev->wce_default_on = 1;
+ /* Reported by Ben Efros <ben-sBIqA0PYact54TAoqtyWWQ@public.gmane.org> */
+ UNUSUAL_DEV( 0x0bc2, 0x3010, 0x0000, 0x0000,
+ 		"Seagate",
+@@ -1468,6 +1480,18 @@ UNUSUAL_DEV(  0x1058, 0x0704, 0x0000, 0x9999,
+ 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+ 		US_FL_SANE_SENSE),
+ 
++/* Reported by Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
++ * Even though write cache is enabled by default,
++ * SCSI driver assume that cache is not enabled
++ * which in turn might lead to the loss of data
++ * since data still will be in cache.
++ * So this entry is needed for assuming that cache is enabled.
++ */
++UNUSUAL_DEV(0x1058, 0x070a, 0x0000, 0x9999,
++		"Western Digital",
++		"My Passport HDD",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
 +
- 	} else {
- 
- 		/* Non-disk-type devices don't need to blacklist any pages
-diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-index e23c30a..d012fe4 100644
---- a/drivers/usb/storage/usb.c
-+++ b/drivers/usb/storage/usb.c
-@@ -473,7 +473,7 @@ static void adjust_quirks(struct us_data *us)
- 			US_FL_CAPACITY_OK | US_FL_IGNORE_RESIDUE |
- 			US_FL_SINGLE_LUN | US_FL_NO_WP_DETECT |
- 			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
--			US_FL_INITIAL_READ10);
-+			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE);
- 
- 	p = quirks;
- 	while (*p) {
-@@ -529,6 +529,9 @@ static void adjust_quirks(struct us_data *us)
- 		case 'o':
- 			f |= US_FL_CAPACITY_OK;
- 			break;
-+		case 'p':
-+			f |= US_FL_WRITE_CACHE;
-+			break;
- 		case 'r':
- 			f |= US_FL_IGNORE_RESIDUE;
- 			break;
-diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
-index 17df360..96fc152 100644
---- a/include/linux/usb_usual.h
-+++ b/include/linux/usb_usual.h
-@@ -64,7 +64,9 @@
- 	US_FLAG(NO_READ_CAPACITY_16,	0x00080000)		\
- 		/* cannot handle READ_CAPACITY_16 */		\
- 	US_FLAG(INITIAL_READ10,	0x00100000)			\
--		/* Initial READ(10) (and others) must be retried */
-+		/* Initial READ(10) (and others) must be retried */	\
-+	US_FLAG(WRITE_CACHE,	0x00200000)			\
-+		/* Write Cache status is not available */
- 
- #define US_FLAG(name, value)	US_FL_##name = value ,
- enum { US_DO_ALL_FLAGS };
+ /* Reported by Fabio Venturi <f.venturi-NTqSPVcvfic@public.gmane.org>
+  * The device reports a vendor-specific bDeviceClass.
+  */
 -- 
 1.7.9.5
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
