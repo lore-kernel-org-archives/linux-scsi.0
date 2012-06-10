@@ -1,67 +1,89 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 43359] LVM volumes not detected
-Date: Sun, 10 Jun 2012 06:12:06 +0000 (UTC)
-Message-ID: <20120610061206.E0E081205DA@bugzilla.kernel.org>
-References: <bug-43359-11613@https.bugzilla.kernel.org/>
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Subject: Re: [PATCH] [SCSI] qla2xxx: Get rid of unneeded includes of version.h
+Date: Sun, 10 Jun 2012 12:48:56 +0530
+Message-ID: <CAK9yfHysOb+FU-uppaRDYSWGJ=KEK6YhFifz9iS57ZFQDWc66Q@mail.gmail.com>
+References: <alpine.LNX.2.00.1206100258400.15651@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:33170 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750852Ab2FJGMM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jun 2012 02:12:12 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id C21DB2024E
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Jun 2012 06:12:09 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id E621C2024A
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Jun 2012 06:12:06 +0000 (UTC)
-In-Reply-To: <bug-43359-11613@https.bugzilla.kernel.org/>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:34786 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045Ab2FJHS5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jun 2012 03:18:57 -0400
+Received: by vcbf11 with SMTP id f11so1639911vcb.19
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Jun 2012 00:18:56 -0700 (PDT)
+In-Reply-To: <alpine.LNX.2.00.1206100258400.15651@swampdragon.chaosbits.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-driver@qlogic.com, Andrew Vasquez <andrew.vasquez@qlogic.com>, trivial@kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D43359
+Hi Jesper,
+
+I have already submitted a similar patch for this:
+
+http://www.spinics.net/lists/linux-scsi/msg59815.html
 
 
 
+On 10 June 2012 06:29, Jesper Juhl <jj@chaosbits.net> wrote:
+> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+> ---
+> =A0drivers/scsi/qla2xxx/qla_target.c | =A0 =A01 -
+> =A0drivers/scsi/qla2xxx/qla_target.h | =A0 =A02 --
+> =A02 files changed, 3 deletions(-)
+>
+> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx=
+/qla_target.c
+> index 04f80eb..f7a49e4 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.c
+> +++ b/drivers/scsi/qla2xxx/qla_target.c
+> @@ -26,7 +26,6 @@
+> =A0#include <linux/module.h>
+> =A0#include <linux/init.h>
+> =A0#include <linux/types.h>
+> -#include <linux/version.h>
+> =A0#include <linux/blkdev.h>
+> =A0#include <linux/interrupt.h>
+> =A0#include <linux/pci.h>
+> diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx=
+/qla_target.h
+> index 9ec19bc..7df4df5 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.h
+> +++ b/drivers/scsi/qla2xxx/qla_target.h
+> @@ -919,8 +919,6 @@ struct qla_tgt_srr_ctio {
+> =A0#define QLA_TGT_XMIT_STATUS =A0 =A0 =A0 =A0 =A0 =A02
+> =A0#define QLA_TGT_XMIT_ALL =A0 =A0 =A0 =A0 =A0 =A0 =A0 (QLA_TGT_XMIT=
+_STATUS|QLA_TGT_XMIT_DATA)
+>
+> -#include <linux/version.h>
+> -
+> =A0extern struct qla_tgt_data qla_target;
+> =A0/*
+> =A0* Internal function prototypes
+> --
+> 1.7.10.4
+>
+>
+> --
+> Jesper Juhl <jj@chaosbits.net> =A0 =A0 =A0 http://www.chaosbits.net/
+> Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+> Plain text mails only, please.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
+l" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at =A0http://www.tux.org/lkml/
 
 
---- Comment #1 from Fran=C3=A7ois Valenduc <francois.valenduc@tvcablene=
-t.be>  2012-06-10 06:12:06 ---
-This problem seems impossible to bisect. The first run (794c10fa0fa4d) =
-was the
-result of the bisection limited to drivers and fs directories. A second=
- run
-where I also added the block directory lead to a commit related to watc=
-hdog,
-which is impossible since I don't use watchdog on my computer.
-A 3rd run on the whole kernel tree leads to this commit:
-
-=46rom 4523e1458566a0e8ecfaff90f380dd23acc44d27 Mon Sep 17 00:00:00 200=
-1
-=46rom: Dave Hansen <dave@linux.vnet.ibm.com>
-Date: Wed, 30 May 2012 07:51:07 -0700
-Subject: [PATCH] mm: fix vma_resv_map() NULL pointer
-
-hugetlb_reserve_pages() can be used for either normal file-backed
-hugetlbfs mappings, or MAP_HUGETLB.  In the MAP_HUGETLB, semi-anonymous
-mode, there is not a VMA around.  The new call to resv_map_put() assume=
-d
-that there was, and resulted in a NULL pointer dereference:
-
-This is also strange because I don't use hugetlb. I can revert this com=
-mit but
-it doesn't change anything. Does anybody have an idea on what I could d=
-o to
-further investigate this problem.
 
 --=20
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
-l
-------- You are receiving this mail because: -------
-You are the assignee for the bug.--
+With warm regards,
+Sachin
+--
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
 the body of a message to majordomo@vger.kernel.org
