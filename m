@@ -1,52 +1,24 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: scsi: lpfc_scsi: Remove unused variables
-Date: Mon, 11 Jun 2012 10:02:34 -0400
-Message-ID: <4FD5FA7A.5080906@emulex.com>
-References: <4FD0434B.7090405@gentoo.org> <20120607061255.GB3210@burratino> <4FD04854.5010304@gentoo.org> <20120607064224.GD3210@burratino>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v4 2/3] usb: storage: add support for write cache quirk
+ on
+Date: Mon, 11 Jun 2012 10:17:43 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1206111017260.1607-100000@iolanthe.rowland.org>
+References: <1339421599-3173-1-git-send-email-linkinjeon@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:50786 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751842Ab2FKOC6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jun 2012 10:02:58 -0400
-In-Reply-To: <20120607064224.GD3210@burratino>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1339421599-3173-1-git-send-email-linkinjeon@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: James.Bottomley@HansenPartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, sshtylyov@mvista.com, bvanassche@acm.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Pankaj Kumar <pankaj.km@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: Richard Yao <ryao@gentoo.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Richard,
+On Mon, 11 Jun 2012, Namjae Jeon wrote:
 
-fyi - this error in lpfc was corrected in our 8.3.31 patch set - posted 
-back in May:
-http://www.spinics.net/lists/linux-scsi/msg59216.html
+> Add support for write cache quirk on usb hdd. scsi driver will be set to wce by detecting write cache quirk in quirk list when plugging usb hdd.
+> 
+> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+> Signed-off-by: Pankaj Kumar <pankaj.km@samsung.com>
+> Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
 
--- james
-
-
-On 6/7/2012 2:42 AM, Jonathan Nieder wrote:
-> Richard Yao wrote:
->
->> Using -Werror enables us to catch potential runtime issues before they
->> happen.
-> You have more trust in GCC and other compilers than I do.
->
-> If you'd like some entertainment, then for example see:
->
->   http://gcc.gnu.org/PR52798
->   http://gcc.gnu.org/PR25509
->
-> Bugs and misdesigned features do not have to be involved for this to
-> be a problem --- all it takes is a gcc upgrade that adds a new
-> warning, and suddenly you've turned your existing potential code
-> cleanliness improvements into failed builds and lots of wasted time
-> for innocent sysadmins.  -Werror is great for development, but using
-> it in production turns out to be pretty much always a terrible idea.
->
-> Thanks for the chance to vent about this. :)  It's bad, bad, bad.
->
-> Ciao,
-> Jonathan
->
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
