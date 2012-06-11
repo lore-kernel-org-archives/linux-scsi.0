@@ -1,16 +1,16 @@
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: Re: [PATCH v3 3/3] usb: storage: update usb devices for write cache
- quirk in quirk list.
-Date: Tue, 12 Jun 2012 07:47:41 +0900
-Message-ID: <CAKYAXd_79Rk3f4ft5yH_uSiKOD+gTsQr4UX-by964nEQgxhkRA@mail.gmail.com>
-References: <1339263678-4075-1-git-send-email-linkinjeon@gmail.com>
-	<4FD39998.4020903@mvista.com>
-	<CAKYAXd9Evpo6jn+_+bnyNeaX9vmPicVp5Xm-12tp_U4=wb6Pgw@mail.gmail.com>
-	<4FD62653.7060206@mvista.com>
+Subject: Re: [PATCH v3 2/4] usb: storage: add support for write cache quirk on
+ usb hdd
+Date: Tue, 12 Jun 2012 07:50:01 +0900
+Message-ID: <CAKYAXd88oU_vu4Ko4x+OAi3=w8CLSD0GEA787-3CMVfXL6CLQg@mail.gmail.com>
+References: <1339263660-4039-1-git-send-email-linkinjeon@gmail.com>
+	<4FD39904.2010808@mvista.com>
+	<CAKYAXd9EUqxUBw1YWr2FnBrg1K=uGWiaEFYtSgu-J3nZ9sLvuQ@mail.gmail.com>
+	<4FD626C1.1010507@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4FD62653.7060206@mvista.com>
+In-Reply-To: <4FD626C1.1010507@mvista.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@mvista.com>
 Cc: James.Bottomley@hansenpartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, bvanassche@acm.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Pankaj Kumar <pankaj.km@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
@@ -19,61 +19,51 @@ List-Id: linux-scsi@vger.kernel.org
 2012/6/12, Sergei Shtylyov <sshtylyov@mvista.com>:
 > Hello.
 >
-> On 10-06-2012 4:45, Namjae Jeon wrote:
+> On 10-06-2012 4:30, Namjae Jeon wrote:
 >
->>>> Update information of Seagate Portable HDD and WD My Passport HDD in
->>>> quirk list.
+>>>> Add support for write cache quirk on usb hdd. scsi driver will be set
+>>>> to
+>>>> wce
+>>>> by detecting write cache quirk in quirk list when plugging usb hdd.
 >
 >>>> Signed-off-by: Namjae Jeon<namjae.jeon@samsung.com>
 >>>> Signed-off-by: Pankaj Kumar<pankaj.km@samsung.com>
 >>>> Signed-off-by: Amit Sahrawat<a.sahrawat@samsung.com>
 >>>> ---
->>>>    drivers/usb/storage/unusual_devs.h |   24 ++++++++++++++++++++++++
->>>>    1 file changed, 24 insertions(+)
+>>>>    drivers/usb/storage/scsiglue.c |    5 +++++
+>>>>    drivers/usb/storage/usb.c      |    5 ++++-
+>>>>    include/linux/usb_usual.h      |    4 +++-
+>>>>    3 files changed, 12 insertions(+), 2 deletions(-)
 >
->>>> diff --git a/drivers/usb/storage/unusual_devs.h
->>>> b/drivers/usb/storage/unusual_devs.h
->>>> index 1719886..64f0369 100644
->>>> --- a/drivers/usb/storage/unusual_devs.h
->>>> +++ b/drivers/usb/storage/unusual_devs.h
->>>> @@ -1267,6 +1267,18 @@ UNUSUAL_DEV( 0x0af0, 0xd357, 0x0000, 0x0000,
->>>>    		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
->>>>    		0 ),
->>>>
->>>> +/* Reported by Namjae Jeon<namjae.jeon@samsung.com>
->>>> + * Even though write cache is enabled by default,
->>>> + * SCSI driver assume that cache is not enabled
->>>> + * which in turn might lead loss of data
->>>                                 ^ to the
+>>>> diff --git a/drivers/usb/storage/scsiglue.c
+>>>> b/drivers/usb/storage/scsiglue.c
+>>>> index a324a5d..fe42547 100644
+>>>> --- a/drivers/usb/storage/scsiglue.c
+>>>> +++ b/drivers/usb/storage/scsiglue.c
+>>> [...]
+>>>> @@ -529,6 +529,9 @@ static void adjust_quirks(struct us_data *us)
+>>>>    		case 'o':
+>>>>    			f |= US_FL_CAPACITY_OK;
+>>>>    			break;
+>>>> +		case 'p':
+>>>> +			f |= US_FL_WRITE_CACHE;
+>>>> +			break;
+>>>>    		case 'r':
+>>>>    			f |= US_FL_IGNORE_RESIDUE;
+>>>>    			break;
+>>>
+>>>      You probably should unite this chunk with the documentation update
+>>> patch.
 >
->>>> + * since data still will be in cache.
->>>> + * So this entry is needed for assuming that cache is enabled.
->>>> + */
->>>> +UNUSUAL_DEV(0x0bc2, 0x2300, 0x0000, 0x9999,
->>>> +		"Seagate",
->>>> +		"Portable HDD",
->>>> +		USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
->>>> +
->>>>    /* Reported by Ben Efros<ben@pc-doctor.com>   */
->>>>    UNUSUAL_DEV( 0x0bc2, 0x3010, 0x0000, 0x0000,
->>>>    		"Seagate",
->>>> @@ -1468,6 +1480,18 @@ UNUSUAL_DEV(  0x1058, 0x0704, 0x0000, 0x9999,
->>>>    		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
->>>>    		US_FL_SANE_SENSE),
->>>>
->>>> +/* Reported by Namjae Jeon<namjae.jeon@samsung.com>
->>>> + * Even though write cache is enabled by default,
->>>> + * SCSI driver assume that cache is not enabled
->>>> + * which in turn might lead loss of data
->>>                                 ^ to the
->> to the ? Sorry, I don't understand what you want to change.
->> like this ? "Even though write cache is enabled by default, SCSI
->> driver assume that cache is not enabled and it in turn might lead the
->> loss of data. "
+>> Hi Sergei.
+>> I tried to post documentation update patch(4/4) for this chunk.
+>> Do I misunderstand ?
 >
->     Lead to the loss of data.
-Okay, I changed it on the latest patch.
-Thanks a lot.
+>     I mean that the documenation should be updated in the same patch where
+> you
+> add the new value.
+Okay, I changed it on the latest patch also.
+Sergei, Thanks a lot.
 >
 > WBR, Sergei
 >
