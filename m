@@ -1,61 +1,35 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH v3 2/4] usb: storage: add support for write cache quirk
- on usb hdd
-Date: Mon, 11 Jun 2012 21:11:29 +0400
-Message-ID: <4FD626C1.1010507@mvista.com>
-References: <1339263660-4039-1-git-send-email-linkinjeon@gmail.com> <4FD39904.2010808@mvista.com> <CAKYAXd9EUqxUBw1YWr2FnBrg1K=uGWiaEFYtSgu-J3nZ9sLvuQ@mail.gmail.com>
+From: Muthu Kumar <muthu.lkml@gmail.com>
+Subject: Re: [PATCH UPDATED] block: In blk_execute_rq_nowait, init rq->end_io
+ before checking for dead queue.
+Date: Mon, 11 Jun 2012 10:33:45 -0700
+Message-ID: <CAFR8uecF0LwbV8FvYob5m34sVbKqafrNoYOrcRUQCEOymGnYRA@mail.gmail.com>
+References: <CAFR8uecFzcrAYSy2ieJM5vWjNLSO3bjg20cy+B4cimHZ4RLktA@mail.gmail.com>
+	<4FD345DC.6020405@acm.org>
+	<CAFR8ueca-MQWRipE+3OQSpqmJ40HKJEY7jWt6PQ+zTCQ9Bh=5Q@mail.gmail.com>
+	<4FD4DC26.5080902@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKYAXd9EUqxUBw1YWr2FnBrg1K=uGWiaEFYtSgu-J3nZ9sLvuQ@mail.gmail.com>
+In-Reply-To: <4FD4DC26.5080902@acm.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: James.Bottomley@hansenpartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, bvanassche@acm.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Pankaj Kumar <pankaj.km@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello.
+On Sun, Jun 10, 2012 at 10:40 AM, Bart Van Assche <bvanassche@acm.org> wrote:
+> On 06/09/12 23:57, Muthu Kumar wrote:
+>
+>> Locking change is the one you posted already (the link above). Anyway,
+>> I have the attached patch *including* the locking change. Original
+>> mail has attachment without locking change. Please use whatever you
+>> need.
+>
+>
+> While we are at it ... the rq->rq_disk and rq->end_io assignments can be
+> performed safely before the spinlock is taken, isn't it ?
+>
 
-On 10-06-2012 4:30, Namjae Jeon wrote:
+Yes.. that spinlock is to protect the q.
 
->>> Add support for write cache quirk on usb hdd. scsi driver will be set to
->>> wce
->>> by detecting write cache quirk in quirk list when plugging usb hdd.
 
->>> Signed-off-by: Namjae Jeon<namjae.jeon@samsung.com>
->>> Signed-off-by: Pankaj Kumar<pankaj.km@samsung.com>
->>> Signed-off-by: Amit Sahrawat<a.sahrawat@samsung.com>
->>> ---
->>>    drivers/usb/storage/scsiglue.c |    5 +++++
->>>    drivers/usb/storage/usb.c      |    5 ++++-
->>>    include/linux/usb_usual.h      |    4 +++-
->>>    3 files changed, 12 insertions(+), 2 deletions(-)
-
->>> diff --git a/drivers/usb/storage/scsiglue.c
->>> b/drivers/usb/storage/scsiglue.c
->>> index a324a5d..fe42547 100644
->>> --- a/drivers/usb/storage/scsiglue.c
->>> +++ b/drivers/usb/storage/scsiglue.c
->> [...]
->>> @@ -529,6 +529,9 @@ static void adjust_quirks(struct us_data *us)
->>>    		case 'o':
->>>    			f |= US_FL_CAPACITY_OK;
->>>    			break;
->>> +		case 'p':
->>> +			f |= US_FL_WRITE_CACHE;
->>> +			break;
->>>    		case 'r':
->>>    			f |= US_FL_IGNORE_RESIDUE;
->>>    			break;
->>
->>      You probably should unite this chunk with the documentation update
->> patch.
-
-> Hi Sergei.
-> I tried to post documentation update patch(4/4) for this chunk.
-> Do I misunderstand ?
-
-    I mean that the documenation should be updated in the same patch where you 
-add the new value.
-
-WBR, Sergei
+> Bart.
