@@ -1,35 +1,32 @@
-From: Muthu Kumar <muthu.lkml@gmail.com>
-Subject: Re: [PATCH UPDATED] block: In blk_execute_rq_nowait, init rq->end_io
- before checking for dead queue.
-Date: Mon, 11 Jun 2012 10:33:45 -0700
-Message-ID: <CAFR8uecF0LwbV8FvYob5m34sVbKqafrNoYOrcRUQCEOymGnYRA@mail.gmail.com>
-References: <CAFR8uecFzcrAYSy2ieJM5vWjNLSO3bjg20cy+B4cimHZ4RLktA@mail.gmail.com>
-	<4FD345DC.6020405@acm.org>
-	<CAFR8ueca-MQWRipE+3OQSpqmJ40HKJEY7jWt6PQ+zTCQ9Bh=5Q@mail.gmail.com>
-	<4FD4DC26.5080902@acm.org>
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: Re: [PATCH] [SCSI] qla2xxx: Get rid of unneeded includes of
+ version.h
+Date: Mon, 11 Jun 2012 22:39:19 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1206112238330.32000@swampdragon.chaosbits.net>
+References: <alpine.LNX.2.00.1206100258400.15651@swampdragon.chaosbits.net> <CAK9yfHysOb+FU-uppaRDYSWGJ=KEK6YhFifz9iS57ZFQDWc66Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4FD4DC26.5080902@acm.org>
+In-Reply-To: <CAK9yfHysOb+FU-uppaRDYSWGJ=KEK6YhFifz9iS57ZFQDWc66Q@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-driver@qlogic.com, Andrew Vasquez <andrew.vasquez@qlogic.com>, trivial@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Jun 10, 2012 at 10:40 AM, Bart Van Assche <bvanassche@acm.org> wrote:
-> On 06/09/12 23:57, Muthu Kumar wrote:
->
->> Locking change is the one you posted already (the link above). Anyway,
->> I have the attached patch *including* the locking change. Original
->> mail has attachment without locking change. Please use whatever you
->> need.
->
->
-> While we are at it ... the rq->rq_disk and rq->end_io assignments can be
-> performed safely before the spinlock is taken, isn't it ?
->
+On Sun, 10 Jun 2012, Sachin Kamat wrote:
 
-Yes.. that spinlock is to protect the q.
+> Hi Jesper,
+> 
+> I have already submitted a similar patch for this:
+> 
+> http://www.spinics.net/lists/linux-scsi/msg59815.html
+> 
+Ok. Cool.
+
+Please consider my patch an ACK of yours then :-)
 
 
-> Bart.
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
