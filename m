@@ -1,74 +1,30 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v4 3/3] usb: storage: update usb devices for write cache
- quirk in quirk list.
-Date: Mon, 11 Jun 2012 10:19:32 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1206111018040.1607-100000@iolanthe.rowland.org>
-References: <1339421351-2971-1-git-send-email-linkinjeon@gmail.com>
+From: Courtney Spears <sharynso16qf@yahoo.com>
+Subject: =?utf-8?B?W0Zvci4uMi02XeeghuW/qeWcmuWXguepiSBbRW5kRm9yXSE=?=
+Date: Mon, 11 Jun 2012 15:32:52 +0100 (BST)
+Message-ID: <1339425172.82087.YahooMailNeo@web29305.mail.ird.yahoo.com>
+Reply-To: Sharynso16qf <sharynso16qf@yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1339421351-2971-1-git-send-email-linkinjeon@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: James.Bottomley@HansenPartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, sshtylyov@mvista.com, bvanassche@acm.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Pankaj Kumar <pankaj.km@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nm6-vm0.bullet.mail.ird.yahoo.com ([77.238.189.210]:40439 "HELO
+	nm6-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752364Ab2FKOcy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Jun 2012 10:32:54 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "halim1977@yahoo.com" <halim1977@yahoo.com>
 
-On Mon, 11 Jun 2012, Namjae Jeon wrote:
-
-> Update information of Seagate Portable HDD and WD My Passport HDD in
-> quirk list.
-> 
-> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-> Signed-off-by: Pankaj Kumar <pankaj.km@samsung.com>
-> Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
-> ---
->  drivers/usb/storage/unusual_devs.h |   24 ++++++++++++++++++++++++
->  1 file changed, 24 insertions(+)
-> 
-> diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
-> index 1719886..64f0369 100644
-> --- a/drivers/usb/storage/unusual_devs.h
-> +++ b/drivers/usb/storage/unusual_devs.h
-> @@ -1267,6 +1267,18 @@ UNUSUAL_DEV( 0x0af0, 0xd357, 0x0000, 0x0000,
->  		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
->  		0 ),
->  
-> +/* Reported by Namjae Jeon <namjae.jeon@samsung.com>
-> + * Even though write cache is enabled by default,
-> + * SCSI driver assume that cache is not enabled
-> + * which in turn might lead to the loss of data
-> + * since data still will be in cache.
-> + * So this entry is needed for assuming that cache is enabled.
-> + */
-
-Please remove everything except the "Reported by" line.  The rest is 
-obvious when we see the US_FL_WRITE_CACHE flag.
-
-> +UNUSUAL_DEV(0x0bc2, 0x2300, 0x0000, 0x9999,
-> +		"Seagate",
-> +		"Portable HDD",
-> +		USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
-> +
->  /* Reported by Ben Efros <ben@pc-doctor.com> */
->  UNUSUAL_DEV( 0x0bc2, 0x3010, 0x0000, 0x0000,
->  		"Seagate",
-> @@ -1468,6 +1480,18 @@ UNUSUAL_DEV(  0x1058, 0x0704, 0x0000, 0x9999,
->  		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
->  		US_FL_SANE_SENSE),
->  
-> +/* Reported by Namjae Jeon <namjae.jeon@samsung.com>
-> + * Even though write cache is enabled by default,
-> + * SCSI driver assume that cache is not enabled
-> + * which in turn might lead to the loss of data
-> + * since data still will be in cache.
-> + * So this entry is needed for assuming that cache is enabled.
-> + */
-
-Same here.
-
-> +UNUSUAL_DEV(0x1058, 0x070a, 0x0000, 0x9999,
-> +		"Western Digital",
-> +		"My Passport HDD",
-> +		USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
-
-Alan Stern
+=E6=AD=BA=E5=BB=83 =E7=B4=BF=E8=A7=87=E6=8E=9C =E8=A7=90=E5=A8=83=E5=BB=
+=83=E6=BC=83=E7=89=A5 =E8=8E=91=E6=8C=9C=E6=B8=B4=E7=9E=9B=E5=BA=89 =E6=
+=9B=B8 =E9=A3=9C=E7=88=AB=E9=8D=91=E8=99=A4 =E7=9A=B5=E6=A2=A2=E6=94=A0=
+=E8=91=B4 =E8=94=89=E8=BD=A8=E5=A6=A3=E5=B1=A0 =E8=8C=99=E6=91=80=E5=97=
+=A9=E6=B9=A5=E8=A1=B3 =E6=9A=B7=E8=9C=80 =E5=BA=9C=E4=BD=8B=E9=8E=94 =E6=
+=AA=86=E7=9F=B3 =E6=A8=AC=E5=84=98=E6=B1=BF=E5=83=8C=E7=BE=84 =E7=A6=84=
+=E9=AE=A1;
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
