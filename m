@@ -1,142 +1,81 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2] scsi: fix hot unplug vs async scan race
-Date: Mon, 11 Jun 2012 15:59:52 -0700
-Message-ID: <20120611222559.7602.55539.stgit@dwillia2-linux.jf.intel.com>
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: Re: [PATCH v4 3/3] usb: storage: update usb devices for write cache
+ quirk in quirk list.
+Date: Tue, 12 Jun 2012 07:45:17 +0900
+Message-ID: <CAKYAXd_ihMbpAGP=hx_LhPdNpnjQo2--N5Bjd0BiEmB88d7Nqw@mail.gmail.com>
+References: <1339421351-2971-1-git-send-email-linkinjeon@gmail.com>
+	<Pine.LNX.4.44L0.1206111018040.1607-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46443 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750948Ab2FKWnZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Jun 2012 18:43:25 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1206111018040.1607-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James.Bottomley@hansenpartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, sshtylyov@mvista.com, bvanassche@acm.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Pankaj Kumar <pankaj.km@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Kashyap Desai <kashyap.desai@lsi.com>, Matthew Wilcox <matthew@wil.cx>, Dariusz Majchrzak <dariusz.majchrzak@intel.com>, JBottomley@parallels.com, Robert Love <robert.w.love@intel.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
 
-The following crash results from cases where the end_device has been
-removed before scsi_sysfs_add_sdev has had a chance to run.
-
- BUG: unable to handle kernel NULL pointer dereference at 0000000000000098
- IP: [<ffffffff8115e100>] sysfs_create_dir+0x32/0xb6
- ...
- Call Trace:
-  [<ffffffff8125e4a8>] kobject_add_internal+0x120/0x1e3
-  [<ffffffff81075149>] ? trace_hardirqs_on+0xd/0xf
-  [<ffffffff8125e641>] kobject_add_varg+0x41/0x50
-  [<ffffffff8125e70b>] kobject_add+0x64/0x66
-  [<ffffffff8131122b>] device_add+0x12d/0x63a
-  [<ffffffff814b65ea>] ? _raw_spin_unlock_irqrestore+0x47/0x56
-  [<ffffffff8107de15>] ? module_refcount+0x89/0xa0
-  [<ffffffff8132f348>] scsi_sysfs_add_sdev+0x4e/0x28a
-  [<ffffffff8132dcbb>] do_scan_async+0x9c/0x145
-
-...teach scsi_sysfs_add_devices() to check for deleted devices() before
-trying to add them, and teach scsi_remove_target() how to remove targets
-that have not been added via device_add().
-
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Robert Love <robert.w.love@intel.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Kashyap Desai <kashyap.desai@lsi.com>
-Cc: Matthew Wilcox <matthew@wil.cx>
-Reported-by: Dariusz Majchrzak <dariusz.majchrzak@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
-Changes since v1: http://marc.info/?l=linux-scsi&m=133793175125892&w=2
-
-Mike was right to point out that the initial version (having the
-transport remember the starget) was dangerous.  So v2 takes the approach
-of looking up the starget via scsi structures and not the driver-core
-(device_for_each_child() is unreliable prior to device_add()).
-
-
- drivers/scsi/scsi_scan.c  |    3 +++
- drivers/scsi/scsi_sysfs.c |   41 ++++++++++++++++++++++++++---------------
- 2 files changed, 29 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 03ebb37..56a9379 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1702,6 +1702,9 @@ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
- {
- 	struct scsi_device *sdev;
- 	shost_for_each_device(sdev, shost) {
-+		/* target removed before the device could be added */
-+		if (sdev->sdev_state == SDEV_DEL)
-+			continue;
- 		if (!scsi_host_scan_allowed(shost) ||
- 		    scsi_sysfs_add_sdev(sdev) != 0)
- 			__scsi_remove_device(sdev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 04c2a27..f888aad 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1000,7 +1000,6 @@ static void __scsi_remove_target(struct scsi_target *starget)
- 	struct scsi_device *sdev;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
--	starget->reap_ref++;
-  restart:
- 	list_for_each_entry(sdev, &shost->__devices, siblings) {
- 		if (sdev->channel != starget->channel ||
-@@ -1014,14 +1013,6 @@ static void __scsi_remove_target(struct scsi_target *starget)
- 		goto restart;
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--	scsi_target_reap(starget);
--}
--
--static int __remove_child (struct device * dev, void * data)
--{
--	if (scsi_is_target_device(dev))
--		__scsi_remove_target(to_scsi_target(dev));
--	return 0;
- }
- 
- /**
-@@ -1034,14 +1025,34 @@ static int __remove_child (struct device * dev, void * data)
-  */
- void scsi_remove_target(struct device *dev)
- {
--	if (scsi_is_target_device(dev)) {
--		__scsi_remove_target(to_scsi_target(dev));
--		return;
-+	struct Scsi_Host *shost = dev_to_shost(dev->parent);
-+	struct scsi_target *starget, *found;
-+	unsigned long flags;
-+
-+ restart:
-+	found = NULL;
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	list_for_each_entry(starget, &shost->__targets, siblings) {
-+		if (starget->state == STARGET_DEL)
-+			continue;
-+		if (starget->dev.parent == dev || &starget->dev == dev) {
-+			found = starget;
-+			found->reap_ref++;
-+			break;
-+		}
- 	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- 
--	get_device(dev);
--	device_for_each_child(dev, NULL, __remove_child);
--	put_device(dev);
-+	if (found) {
-+		__scsi_remove_target(found);
-+		scsi_target_reap(found);
-+		/* in the case where @dev has multiple starget children,
-+		 * continue removing.
-+		 *
-+		 * FIXME: does such a case exist?
-+		 */
-+		goto restart;
-+	}
- }
- EXPORT_SYMBOL(scsi_remove_target);
- 
-
+2012/6/11, Alan Stern <stern@rowland.harvard.edu>:
+> On Mon, 11 Jun 2012, Namjae Jeon wrote:
+>
+>> Update information of Seagate Portable HDD and WD My Passport HDD in
+>> quirk list.
+>>
+>> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+>> Signed-off-by: Pankaj Kumar <pankaj.km@samsung.com>
+>> Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
+>> ---
+>>  drivers/usb/storage/unusual_devs.h |   24 ++++++++++++++++++++++++
+>>  1 file changed, 24 insertions(+)
+>>
+>> diff --git a/drivers/usb/storage/unusual_devs.h
+>> b/drivers/usb/storage/unusual_devs.h
+>> index 1719886..64f0369 100644
+>> --- a/drivers/usb/storage/unusual_devs.h
+>> +++ b/drivers/usb/storage/unusual_devs.h
+>> @@ -1267,6 +1267,18 @@ UNUSUAL_DEV( 0x0af0, 0xd357, 0x0000, 0x0000,
+>>  		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+>>  		0 ),
+>>
+>> +/* Reported by Namjae Jeon <namjae.jeon@samsung.com>
+>> + * Even though write cache is enabled by default,
+>> + * SCSI driver assume that cache is not enabled
+>> + * which in turn might lead to the loss of data
+>> + * since data still will be in cache.
+>> + * So this entry is needed for assuming that cache is enabled.
+>> + */
+>
+> Please remove everything except the "Reported by" line.  The rest is
+> obvious when we see the US_FL_WRITE_CACHE flag.
+Okay, I will remove.
+Thanks~
+>
+>> +UNUSUAL_DEV(0x0bc2, 0x2300, 0x0000, 0x9999,
+>> +		"Seagate",
+>> +		"Portable HDD",
+>> +		USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
+>> +
+>>  /* Reported by Ben Efros <ben@pc-doctor.com> */
+>>  UNUSUAL_DEV( 0x0bc2, 0x3010, 0x0000, 0x0000,
+>>  		"Seagate",
+>> @@ -1468,6 +1480,18 @@ UNUSUAL_DEV(  0x1058, 0x0704, 0x0000, 0x9999,
+>>  		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+>>  		US_FL_SANE_SENSE),
+>>
+>> +/* Reported by Namjae Jeon <namjae.jeon@samsung.com>
+>> + * Even though write cache is enabled by default,
+>> + * SCSI driver assume that cache is not enabled
+>> + * which in turn might lead to the loss of data
+>> + * since data still will be in cache.
+>> + * So this entry is needed for assuming that cache is enabled.
+>> + */
+>
+> Same here.
+>
+>> +UNUSUAL_DEV(0x1058, 0x070a, 0x0000, 0x9999,
+>> +		"Western Digital",
+>> +		"My Passport HDD",
+>> +		USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
+>
+> Alan Stern
+>
+>
