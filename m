@@ -1,70 +1,114 @@
 From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH 2/2] tcm_qla2xxx: Handle malformed wwn strings properly
-Date: Mon, 11 Jun 2012 18:31:31 -0700
-Message-ID: <1339464691-25829-2-git-send-email-roland@kernel.org>
-References: <1339464691-25829-1-git-send-email-roland@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog113.obsmtp.com ([74.125.245.94]:52845 "HELO
-	na3sys010aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753158Ab2FLBbi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Jun 2012 21:31:38 -0400
-Received: by dadz8 with SMTP id z8so7733853dad.35
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Jun 2012 18:31:36 -0700 (PDT)
-In-Reply-To: <1339464691-25829-1-git-send-email-roland@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [NOT A REAL PATCH] deal with adapter resets in qla_target code
+Date: Mon, 11 Jun 2012 18:41:43 -0700
+Message-ID: <1339465303-26289-1-git-send-email-roland@kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
 To: Arun Easi <arun.easi@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-=46rom: Roland Dreier <roland@purestorage.com>
+Hi guys, here's one more patch (which is against our mongrel internal
+tree and so I'm sure won't apply upstream), mainly here to provoke the
+QLogic guys to tell me the right way to fix this.
 
-If we make a variable an unsigned int and then expect it to be < 0 on
-a bad character, we're going to have a bad time.  Fix the tcm_qla2xxx
-code to actually notice if hex_to_bin() returns a negative variable.
+The problem is that if we hit a FW crash or anything that causes us to
+do an ISP abort with CTIOs for target commands in flight, the target
+code will eventually wait forever for the CTIOs to complete.  And of
+course any CTIOs that are in the request ring when we reset the
+hardware will never come back.
 
-This was detected by the compiler warning:
+The symptom here will be that we'll try to free a target session and
+end up stuck waiting for the session command list to drain, and this
+will cause hung task warnings (and possibly panics if you have
+panic-on-hung-task set).
 
-    scsi/qla2xxx/tcm_qla2xxx.c: In function =E2=80=98tcm_qla2xxx_npiv_e=
-xtract_wwn=E2=80=99:
-    scsi/qla2xxx/tcm_qla2xxx.c:148:3: warning: comparison of unsigned e=
-xpression >=3D 0 is always true [-Wtype-limits]
+To fix this, I added a somewhat ugly call from the core qla2xxx code
+into the target code, just before we bring the adapter back online.
+In this hook in qla_target, I go through the set of pending target
+commands and forcibly fail them.
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
----
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+I'd be happy to merge properly upstream, but not sure if this is
+viewed as the best way forward...
 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/=
-tcm_qla2xxx.c
-index 446297a..ccef32b 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -137,13 +137,15 @@ static char *tcm_qla2xxx_get_fabric_name(void)
-  */
- static int tcm_qla2xxx_npiv_extract_wwn(const char *ns, u64 *nm)
- {
--	unsigned int i, j, value;
-+	unsigned int i, j;
- 	u8 wwn[8];
-=20
- 	memset(wwn, 0, sizeof(wwn));
-=20
- 	/* Validate and store the new name */
- 	for (i =3D 0, j =3D 0; i < 16; i++) {
-+		int value;
+NOT-Signed-off-by: Roland Dreier <roland@purestorage.com>
+
+--- linux-2.6.git.orig/drivers/scsi/qla2xxx/qla_init.c
++++ linux-2.6.git/drivers/scsi/qla2xxx/qla_init.c
+@@ -4306,15 +4306,20 @@ qla2x00_restart_isp(scsi_qla_host_t *vha
+ 			/* Issue a marker after FW becomes ready. */
+ 			qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL);
+ 
++			lock_hardware(ha, &flags);
 +
- 		value =3D hex_to_bin(*ns++);
- 		if (value >=3D 0)
- 			j =3D (j << 4) | value;
---=20
-1.7.9.5
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 			vha->flags.online = 1;
+ 
++			if (vha->hw->tgt_ops)
++				qla_tgt_flush_ctio(vha);
++
+ 			/*
+ 			 * Process any ATIO queue entries that came in
+ 			 * while we weren't online.
+ 			 */
+-			lock_hardware(ha, &flags);
+ 			if (qla_tgt_mode_enabled(vha))
+ 				qla_tgt_24xx_process_atio_queue(vha);
++
+ 			unlock_hardware(ha, &flags);
+ 
+ 			/* Wait at most MAX_TARGET RSCNs for a stable link. */
+--- linux-2.6.git.orig/drivers/scsi/qla2xxx/qla_target.c
++++ linux-2.6.git/drivers/scsi/qla2xxx/qla_target.c
+@@ -2397,6 +2397,42 @@ void qla_tgt_ctio_completion(struct scsi
+ 	tgt->irq_cmd_count--;
+ }
+ 
++void qla_tgt_flush_ctio(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	struct qla_tgt_cmd *cmd;
++	uint32_t h;
++
++	assert_hardware_locked(ha);
++
++	for (h = 0; h < MAX_OUTSTANDING_COMMANDS; ++h) {
++		cmd = ha->cmds[h];
++
++		if (cmd) {
++			if (cmd->sg_mapped)
++				qla_tgt_unmap_sg(vha, cmd);
++
++			switch (cmd->state) {
++			case QLA_TGT_STATE_PROCESSED:
++				vha->hw->tgt_ops->free_cmd(cmd);
++				break;
++
++			case QLA_TGT_STATE_NEED_DATA:
++				cmd->write_data_transferred = 0;
++				vha->hw->tgt_ops->handle_data(cmd);
++				break;
++
++			default:
++				dev_info(&ha->pdev->dev, "pending cmd %p in state %d\n",
++					 cmd, cmd->state);
++				break;
++			}
++
++			ha->cmds[h] = NULL;
++		}
++	}
++}
++
+ static inline int qla_tgt_get_fcp_task_attr(uint8_t task_codes)
+ {
+ 	int fcp_task_attr;
+--- linux-2.6.git.orig/drivers/scsi/qla2xxx/qla_target.h
++++ linux-2.6.git/drivers/scsi/qla2xxx/qla_target.h
+@@ -970,6 +970,7 @@ extern void qla_tgt_free_mcmd(struct qla
+ extern void qla_tgt_free_cmd(struct qla_tgt_cmd *cmd);
+ extern void qla_tgt_dump_error_ctio(struct scsi_qla_host *vha, uint32_t handle, void *ctio);
+ extern void qla_tgt_ctio_completion(struct scsi_qla_host *, uint32_t);
++extern void qla_tgt_flush_ctio(scsi_qla_host_t *vha);
+ extern void qla_tgt_async_event(uint16_t, struct scsi_qla_host *, uint16_t *);
+ extern void qla_tgt_enable_vha(struct scsi_qla_host *);
+ extern void qla_tgt_vport_create(struct scsi_qla_host *, struct qla_hw_data *);
