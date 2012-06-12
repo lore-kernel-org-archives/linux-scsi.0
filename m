@@ -1,28 +1,35 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: allow persistent reservations without
- CAP_SYS_RAWIO
-Date: Tue, 12 Jun 2012 17:21:09 +0100
-Message-ID: <1339518069.3050.8.camel@dabdike.int.hansenpartnership.com>
-References: <1339517312-18134-1-git-send-email-pbonzini@redhat.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] scsi: allow persistent reservations without CAP_SYS_RAWIO
+Date: Tue, 12 Jun 2012 18:24:55 +0200
+Message-ID: <4FD76D57.5020709@redhat.com>
+References: <1339517312-18134-1-git-send-email-pbonzini@redhat.com> <1339518069.3050.8.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1339517312-18134-1-git-send-email-pbonzini@redhat.com>
+In-Reply-To: <1339518069.3050.8.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2012-06-12 at 18:08 +0200, Paolo Bonzini wrote:
-> Persistent reservations commands cannot be issued right now without
-> giving CAP_SYS_RAWIO to the process who wishes to send them.  This
-> is a bit heavy-handed, allow these two commands.
+Il 12/06/2012 18:21, James Bottomley ha scritto:
+>> > Persistent reservations commands cannot be issued right now without
+>> > giving CAP_SYS_RAWIO to the process who wishes to send them.  This
+>> > is a bit heavy-handed, allow these two commands.
+>
+> Why is this heavy handed?  If you remove CAP_SYS_RAWIO, any userspace
+> process can send these, which would allow any user to completely disrupt
+> a SAN by injecting spurious reservations ... that doesn't look to be
+> terribly safe for an operating system running in a data centre.
 
-Why is this heavy handed?  If you remove CAP_SYS_RAWIO, any userspace
-process can send these, which would allow any user to completely disrupt
-a SAN by injecting spurious reservations ... that doesn't look to be
-terribly safe for an operating system running in a data centre.
+It is heavy-handed because:
 
-James
- 
+1) there are still other protections such as DAC (both Unix permissions
+and ACLs) and SELinux; CAP_SYS_RAWIO is effectively the same as root.
+
+2) if any user could disrupt the SAN by injecting spurious reservations
+just by having his laptop's root password, that data centre wouldn't be
+terribly safe to begin with.
+
+Paolo
