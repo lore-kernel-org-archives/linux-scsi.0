@@ -1,114 +1,73 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: [NOT A REAL PATCH] deal with adapter resets in qla_target code
-Date: Mon, 11 Jun 2012 18:41:43 -0700
-Message-ID: <1339465303-26289-1-git-send-email-roland@kernel.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Arun Easi <arun.easi@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Muthu Kumar <muthu.lkml-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Bug 43359] LVM volumes not detected
+Date: Mon, 11 Jun 2012 21:56:53 -0700
+Message-ID: <CAFR8uefjqTqbg545BExg1F_QR7cwyzOgF1x0WA61iH11bbMo5w@mail.gmail.com>
+References: <bug-43359-11613@https.bugzilla.kernel.org/>
+	<20120610061206.E0E081205DA@bugzilla.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120610061206.E0E081205DA-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org>
+Sender: initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, francois.valenduc-bmtTS95sd5BUM80lpFwj4w@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, initramfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi guys, here's one more patch (which is against our mongrel internal
-tree and so I'm sure won't apply upstream), mainly here to provoke the
-QLogic guys to tell me the right way to fix this.
+I am using CentOS 6.x and I hit this bug with 3.5-rc2. I tried to look
+in to the boot process and found that the initramfs generated from
+3.5.-rc2 is not good for lvm root. It was missing /lib/modules/<uname
+-r>/kernel/drivers/md/*". Also /sbin/ doesn't have lvm_scan and was
+missing a bunch of other files too.
 
-The problem is that if we hit a FW crash or anything that causes us to
-do an ISP abort with CTIOs for target commands in flight, the target
-code will eventually wait forever for the CTIOs to complete.  And of
-course any CTIOs that are in the request ring when we reset the
-hardware will never come back.
+CCing initramfs folks. Any help?
 
-The symptom here will be that we'll try to free a target session and
-end up stuck waiting for the session command list to drain, and this
-will cause hung task warnings (and possibly panics if you have
-panic-on-hung-task set).
 
-To fix this, I added a somewhat ugly call from the core qla2xxx code
-into the target code, just before we bring the adapter back online.
-In this hook in qla_target, I go through the set of pending target
-commands and forcibly fail them.
 
-I'd be happy to merge properly upstream, but not sure if this is
-viewed as the best way forward...
-
-NOT-Signed-off-by: Roland Dreier <roland@purestorage.com>
-
---- linux-2.6.git.orig/drivers/scsi/qla2xxx/qla_init.c
-+++ linux-2.6.git/drivers/scsi/qla2xxx/qla_init.c
-@@ -4306,15 +4306,20 @@ qla2x00_restart_isp(scsi_qla_host_t *vha
- 			/* Issue a marker after FW becomes ready. */
- 			qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL);
- 
-+			lock_hardware(ha, &flags);
-+
- 			vha->flags.online = 1;
- 
-+			if (vha->hw->tgt_ops)
-+				qla_tgt_flush_ctio(vha);
-+
- 			/*
- 			 * Process any ATIO queue entries that came in
- 			 * while we weren't online.
- 			 */
--			lock_hardware(ha, &flags);
- 			if (qla_tgt_mode_enabled(vha))
- 				qla_tgt_24xx_process_atio_queue(vha);
-+
- 			unlock_hardware(ha, &flags);
- 
- 			/* Wait at most MAX_TARGET RSCNs for a stable link. */
---- linux-2.6.git.orig/drivers/scsi/qla2xxx/qla_target.c
-+++ linux-2.6.git/drivers/scsi/qla2xxx/qla_target.c
-@@ -2397,6 +2397,42 @@ void qla_tgt_ctio_completion(struct scsi
- 	tgt->irq_cmd_count--;
- }
- 
-+void qla_tgt_flush_ctio(scsi_qla_host_t *vha)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct qla_tgt_cmd *cmd;
-+	uint32_t h;
-+
-+	assert_hardware_locked(ha);
-+
-+	for (h = 0; h < MAX_OUTSTANDING_COMMANDS; ++h) {
-+		cmd = ha->cmds[h];
-+
-+		if (cmd) {
-+			if (cmd->sg_mapped)
-+				qla_tgt_unmap_sg(vha, cmd);
-+
-+			switch (cmd->state) {
-+			case QLA_TGT_STATE_PROCESSED:
-+				vha->hw->tgt_ops->free_cmd(cmd);
-+				break;
-+
-+			case QLA_TGT_STATE_NEED_DATA:
-+				cmd->write_data_transferred = 0;
-+				vha->hw->tgt_ops->handle_data(cmd);
-+				break;
-+
-+			default:
-+				dev_info(&ha->pdev->dev, "pending cmd %p in state %d\n",
-+					 cmd, cmd->state);
-+				break;
-+			}
-+
-+			ha->cmds[h] = NULL;
-+		}
-+	}
-+}
-+
- static inline int qla_tgt_get_fcp_task_attr(uint8_t task_codes)
- {
- 	int fcp_task_attr;
---- linux-2.6.git.orig/drivers/scsi/qla2xxx/qla_target.h
-+++ linux-2.6.git/drivers/scsi/qla2xxx/qla_target.h
-@@ -970,6 +970,7 @@ extern void qla_tgt_free_mcmd(struct qla
- extern void qla_tgt_free_cmd(struct qla_tgt_cmd *cmd);
- extern void qla_tgt_dump_error_ctio(struct scsi_qla_host *vha, uint32_t handle, void *ctio);
- extern void qla_tgt_ctio_completion(struct scsi_qla_host *, uint32_t);
-+extern void qla_tgt_flush_ctio(scsi_qla_host_t *vha);
- extern void qla_tgt_async_event(uint16_t, struct scsi_qla_host *, uint16_t *);
- extern void qla_tgt_enable_vha(struct scsi_qla_host *);
- extern void qla_tgt_vport_create(struct scsi_qla_host *, struct qla_hw_data *);
+On Sat, Jun 9, 2012 at 11:12 PM,  <bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org>=
+ wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D43359
+>
+>
+>
+>
+>
+> --- Comment #1 from Fran=E7ois Valenduc <francois.valenduc@tvcablenet=
+=2Ebe> =A02012-06-10 06:12:06 ---
+> This problem seems impossible to bisect. The first run (794c10fa0fa4d=
+) was the
+> result of the bisection limited to drivers and fs directories. A seco=
+nd run
+> where I also added the block directory lead to a commit related to wa=
+tchdog,
+> which is impossible since I don't use watchdog on my computer.
+> A 3rd run on the whole kernel tree leads to this commit:
+>
+> From 4523e1458566a0e8ecfaff90f380dd23acc44d27 Mon Sep 17 00:00:00 200=
+1
+> From: Dave Hansen <dave-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> Date: Wed, 30 May 2012 07:51:07 -0700
+> Subject: [PATCH] mm: fix vma_resv_map() NULL pointer
+>
+> hugetlb_reserve_pages() can be used for either normal file-backed
+> hugetlbfs mappings, or MAP_HUGETLB. =A0In the MAP_HUGETLB, semi-anony=
+mous
+> mode, there is not a VMA around. =A0The new call to resv_map_put() as=
+sumed
+> that there was, and resulted in a NULL pointer dereference:
+>
+> This is also strange because I don't use hugetlb. I can revert this c=
+ommit but
+> it doesn't change anything. Does anybody have an idea on what I could=
+ do to
+> further investigate this problem.
+>
+> --
+> Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Dem=
+ail
+> ------- You are receiving this mail because: -------
+> You are the assignee for the bug.--
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
