@@ -1,8 +1,8 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 06/10] lpfc 8.3.32: Correct successful aborts returning
- error status
-Date: Tue, 12 Jun 2012 13:54:42 -0400
-Message-ID: <1339523683.2162.6.camel@ogier>
+Subject: [PATCH 07/10] lpfc 8.3.32: Fix ability to change FCP EQ delay
+ multiplier
+Date: Tue, 12 Jun 2012 13:54:50 -0400
+Message-ID: <1339523690.2162.7.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
@@ -10,13 +10,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:17659 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753441Ab2FLRy7 (ORCPT
+	with ESMTP id S1753626Ab2FLRy7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jun 2012 13:54:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix successful aborts returning incorrect status.
+Fix fcp_imax module parameter to dynamically change FCP EQ delay multiplier
 
 
 Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -24,82 +24,274 @@ Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_scsi.c |   24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ lpfc_attr.c |   93 ++++++++++++++++++++++++++++++++++++++++++++++++++++++------
+ lpfc_hw4.h  |   22 ++++++++++++++
+ lpfc_sli.c  |   77 +++++++++++++++++++++++++++++++++++++++++++++++++
+ lpfc_sli4.h |    1 
+ 4 files changed, 185 insertions(+), 8 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2012-06-08 11:55:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2012-06-08 11:55:46.000000000 -0400
-@@ -4412,12 +4412,12 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
- 	struct lpfc_iocbq *abtsiocb;
- 	struct lpfc_scsi_buf *lpfc_cmd;
- 	IOCB_t *cmd, *icmd;
--	int ret = SUCCESS;
-+	int ret = SUCCESS, status = 0;
- 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waitq);
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2012-05-06 13:15:39.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2012-06-08 11:55:47.000000000 -0400
+@@ -3617,6 +3617,91 @@ lpfc_sriov_nr_virtfn_init(struct lpfc_hb
+ static DEVICE_ATTR(lpfc_sriov_nr_virtfn, S_IRUGO | S_IWUSR,
+ 		   lpfc_sriov_nr_virtfn_show, lpfc_sriov_nr_virtfn_store);
  
--	ret = fc_block_scsi_eh(cmnd);
--	if (ret)
--		return ret;
-+	status = fc_block_scsi_eh(cmnd);
-+	if (status)
-+		return status;
++/**
++ * lpfc_fcp_imax_store
++ *
++ * @dev: class device that is converted into a Scsi_host.
++ * @attr: device attribute, not used.
++ * @buf: string with the number of fast-path FCP interrupts per second.
++ * @count: unused variable.
++ *
++ * Description:
++ * If val is in a valid range [636,651042], then set the adapter's
++ * maximum number of fast-path FCP interrupts per second.
++ *
++ * Returns:
++ * length of the buf on success if val is in range the intended mode
++ * is supported.
++ * -EINVAL if val out of range or intended mode is not supported.
++ **/
++static ssize_t
++lpfc_fcp_imax_store(struct device *dev, struct device_attribute *attr,
++			 const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct lpfc_vport *vport = (struct lpfc_vport *)shost->hostdata;
++	struct lpfc_hba *phba = vport->phba;
++	int val = 0, i;
++
++	/* Sanity check on user data */
++	if (!isdigit(buf[0]))
++		return -EINVAL;
++	if (sscanf(buf, "%i", &val) != 1)
++		return -EINVAL;
++
++	/* Value range is [636,651042] */
++	if (val < LPFC_MIM_IMAX || val > LPFC_DMULT_CONST)
++		return -EINVAL;
++
++	phba->cfg_fcp_imax = (uint32_t)val;
++	for (i = 0; i < phba->cfg_fcp_eq_count; i += LPFC_MAX_EQ_DELAY)
++		lpfc_modify_fcp_eq_delay(phba, i);
++
++	return strlen(buf);
++}
++
++/*
++# lpfc_fcp_imax: The maximum number of fast-path FCP interrupts per second
++#
++# Value range is [636,651042]. Default value is 10000.
++*/
++static int lpfc_fcp_imax = LPFC_FP_DEF_IMAX;
++module_param(lpfc_fcp_imax, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(lpfc_fcp_imax,
++	    "Set the maximum number of fast-path FCP interrupts per second");
++lpfc_param_show(fcp_imax)
++
++/**
++ * lpfc_fcp_imax_init - Set the initial sr-iov virtual function enable
++ * @phba: lpfc_hba pointer.
++ * @val: link speed value.
++ *
++ * Description:
++ * If val is in a valid range [636,651042], then initialize the adapter's
++ * maximum number of fast-path FCP interrupts per second.
++ *
++ * Returns:
++ * zero if val saved.
++ * -EINVAL val out of range
++ **/
++static int
++lpfc_fcp_imax_init(struct lpfc_hba *phba, int val)
++{
++	if (val >= LPFC_MIM_IMAX && val <= LPFC_DMULT_CONST) {
++		phba->cfg_fcp_imax = val;
++		return 0;
++	}
++
++	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++			"3016 fcp_imax: %d out of range, using default\n", val);
++	phba->cfg_fcp_imax = LPFC_FP_DEF_IMAX;
++
++	return 0;
++}
++
++static DEVICE_ATTR(lpfc_fcp_imax, S_IRUGO | S_IWUSR,
++		   lpfc_fcp_imax_show, lpfc_fcp_imax_store);
++
+ /*
+ # lpfc_fcp_class:  Determines FC class to use for the FCP protocol.
+ # Value range is [2,3]. Default value is 3.
+@@ -3758,14 +3843,6 @@ LPFC_ATTR_R(use_msi, 2, 0, 2, "Use Messa
+ 	    "MSI-X (2), if possible");
  
- 	spin_lock_irq(&phba->hbalock);
- 	/* driver queued commands are in process of being flushed */
-@@ -4435,7 +4435,7 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
- 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_FCP,
- 			 "2873 SCSI Layer I/O Abort Request IO CMPL Status "
- 			 "x%x ID %d LUN %d\n",
--			 ret, cmnd->device->id, cmnd->device->lun);
-+			 SUCCESS, cmnd->device->id, cmnd->device->lun);
- 		return SUCCESS;
- 	}
+ /*
+-# lpfc_fcp_imax: Set the maximum number of fast-path FCP interrupts per second
+-#
+-# Value range is [636,651042]. Default value is 10000.
+-*/
+-LPFC_ATTR_R(fcp_imax, LPFC_FP_DEF_IMAX, LPFC_MIM_IMAX, LPFC_DMULT_CONST,
+-	    "Set the maximum number of fast-path FCP interrupts per second");
+-
+-/*
+ # lpfc_fcp_wq_count: Set the number of fast-path FCP work queues
+ #
+ # Value range is [1,31]. Default value is 4.
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2012-06-08 10:07:43.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2012-06-08 11:55:47.000000000 -0400
+@@ -874,6 +874,7 @@ struct mbox_header {
+ #define LPFC_MBOX_OPCODE_MQ_CREATE			0x15
+ #define LPFC_MBOX_OPCODE_GET_CNTL_ATTRIBUTES		0x20
+ #define LPFC_MBOX_OPCODE_NOP				0x21
++#define LPFC_MBOX_OPCODE_MODIFY_EQ_DELAY		0x29
+ #define LPFC_MBOX_OPCODE_MQ_DESTROY			0x35
+ #define LPFC_MBOX_OPCODE_CQ_DESTROY			0x36
+ #define LPFC_MBOX_OPCODE_EQ_DESTROY			0x37
+@@ -940,6 +941,13 @@ struct eq_context {
+ 	uint32_t reserved3;
+ };
  
-@@ -4762,7 +4762,7 @@ lpfc_device_reset_handler(struct scsi_cm
- 	unsigned tgt_id = cmnd->device->id;
- 	unsigned int lun_id = cmnd->device->lun;
- 	struct lpfc_scsi_event_header scsi_event;
--	int status;
-+	int status, ret = SUCCESS;
++struct eq_delay_info {
++	uint32_t eq_id;
++	uint32_t phase;
++	uint32_t delay_multi;
++};
++#define	LPFC_MAX_EQ_DELAY	8
++
+ struct sgl_page_pairs {
+ 	uint32_t sgl_pg0_addr_lo;
+ 	uint32_t sgl_pg0_addr_hi;
+@@ -1002,6 +1010,19 @@ struct lpfc_mbx_eq_create {
+ 	} u;
+ };
  
- 	if (!rdata) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
-@@ -4803,9 +4803,9 @@ lpfc_device_reset_handler(struct scsi_cm
- 	 * So, continue on.
- 	 * We will report success if all the i/o aborts successfully.
- 	 */
--	status = lpfc_reset_flush_io_context(vport, tgt_id, lun_id,
-+	ret = lpfc_reset_flush_io_context(vport, tgt_id, lun_id,
- 						LPFC_CTX_LUN);
--	return status;
-+	return ret;
++struct lpfc_mbx_modify_eq_delay {
++	struct mbox_header header;
++	union {
++		struct {
++			uint32_t num_eq;
++			struct eq_delay_info eq[LPFC_MAX_EQ_DELAY];
++		} request;
++		struct {
++			uint32_t word0;
++		} response;
++	} u;
++};
++
+ struct lpfc_mbx_eq_destroy {
+ 	struct mbox_header header;
+ 	union {
+@@ -2875,6 +2896,7 @@ struct lpfc_mqe {
+ 		struct lpfc_mbx_mq_create mq_create;
+ 		struct lpfc_mbx_mq_create_ext mq_create_ext;
+ 		struct lpfc_mbx_eq_create eq_create;
++		struct lpfc_mbx_modify_eq_delay eq_delay;
+ 		struct lpfc_mbx_cq_create cq_create;
+ 		struct lpfc_mbx_wq_create wq_create;
+ 		struct lpfc_mbx_rq_create rq_create;
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2012-06-08 10:07:46.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2012-06-08 11:55:47.000000000 -0400
+@@ -598,6 +598,7 @@ struct lpfc_queue *lpfc_sli4_queue_alloc
+ 			uint32_t);
+ void lpfc_sli4_queue_free(struct lpfc_queue *);
+ uint32_t lpfc_eq_create(struct lpfc_hba *, struct lpfc_queue *, uint16_t);
++uint32_t lpfc_modify_fcp_eq_delay(struct lpfc_hba *, uint16_t);
+ uint32_t lpfc_cq_create(struct lpfc_hba *, struct lpfc_queue *,
+ 			struct lpfc_queue *, uint32_t, uint32_t);
+ int32_t lpfc_mq_create(struct lpfc_hba *, struct lpfc_queue *,
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-06-08 11:55:40.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-06-08 11:55:47.000000000 -0400
+@@ -12048,6 +12048,83 @@ out_fail:
  }
  
  /**
-@@ -4829,7 +4829,7 @@ lpfc_target_reset_handler(struct scsi_cm
- 	unsigned tgt_id = cmnd->device->id;
- 	unsigned int lun_id = cmnd->device->lun;
- 	struct lpfc_scsi_event_header scsi_event;
--	int status;
-+	int status, ret = SUCCESS;
- 
- 	if (!rdata) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
-@@ -4870,9 +4870,9 @@ lpfc_target_reset_handler(struct scsi_cm
- 	 * So, continue on.
- 	 * We will report success if all the i/o aborts successfully.
- 	 */
--	status = lpfc_reset_flush_io_context(vport, tgt_id, lun_id,
--					LPFC_CTX_TGT);
--	return status;
-+	ret = lpfc_reset_flush_io_context(vport, tgt_id, lun_id,
-+					  LPFC_CTX_TGT);
-+	return ret;
- }
- 
- /**
++ * lpfc_modify_fcp_eq_delay - Modify Delay Multiplier on FCP EQs
++ * @phba: HBA structure that indicates port to create a queue on.
++ * @startq: The starting FCP EQ to modify
++ *
++ * This function sends an MODIFY_EQ_DELAY mailbox command to the HBA.
++ *
++ * The @phba struct is used to send mailbox command to HBA. The @startq
++ * is used to get the starting FCP EQ to change.
++ * This function is asynchronous and will wait for the mailbox
++ * command to finish before continuing.
++ *
++ * On success this function will return a zero. If unable to allocate enough
++ * memory this function will return -ENOMEM. If the queue create mailbox command
++ * fails this function will return -ENXIO.
++ **/
++uint32_t
++lpfc_modify_fcp_eq_delay(struct lpfc_hba *phba, uint16_t startq)
++{
++	struct lpfc_mbx_modify_eq_delay *eq_delay;
++	LPFC_MBOXQ_t *mbox;
++	struct lpfc_queue *eq;
++	int cnt, rc, length, status = 0;
++	uint32_t shdr_status, shdr_add_status;
++	int fcp_eqidx;
++	union lpfc_sli4_cfg_shdr *shdr;
++	uint16_t dmult;
++
++	if (startq >= phba->cfg_fcp_eq_count)
++		return 0;
++
++	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++	if (!mbox)
++		return -ENOMEM;
++	length = (sizeof(struct lpfc_mbx_modify_eq_delay) -
++		  sizeof(struct lpfc_sli4_cfg_mhdr));
++	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_COMMON,
++			 LPFC_MBOX_OPCODE_MODIFY_EQ_DELAY,
++			 length, LPFC_SLI4_MBX_EMBED);
++	eq_delay = &mbox->u.mqe.un.eq_delay;
++
++	/* Calculate delay multiper from maximum interrupt per second */
++	dmult = LPFC_DMULT_CONST/phba->cfg_fcp_imax - 1;
++
++	cnt = 0;
++	for (fcp_eqidx = startq; fcp_eqidx < phba->cfg_fcp_eq_count;
++	    fcp_eqidx++) {
++		eq = phba->sli4_hba.fp_eq[fcp_eqidx];
++		if (!eq)
++			continue;
++		eq_delay->u.request.eq[cnt].eq_id = eq->queue_id;
++		eq_delay->u.request.eq[cnt].phase = 0;
++		eq_delay->u.request.eq[cnt].delay_multi = dmult;
++		cnt++;
++		if (cnt >= LPFC_MAX_EQ_DELAY)
++			break;
++	}
++	eq_delay->u.request.num_eq = cnt;
++
++	mbox->vport = phba->pport;
++	mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
++	mbox->context1 = NULL;
++	rc = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
++	shdr = (union lpfc_sli4_cfg_shdr *) &eq_delay->header.cfg_shdr;
++	shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
++	shdr_add_status = bf_get(lpfc_mbox_hdr_add_status, &shdr->response);
++	if (shdr_status || shdr_add_status || rc) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"2512 MODIFY_EQ_DELAY mailbox failed with "
++				"status x%x add_status x%x, mbx status x%x\n",
++				shdr_status, shdr_add_status, rc);
++		status = -ENXIO;
++	}
++	mempool_free(mbox, phba->mbox_mem_pool);
++	return status;
++}
++
++/**
+  * lpfc_eq_create - Create an Event Queue on the HBA
+  * @phba: HBA structure that indicates port to create a queue on.
+  * @eq: The queue structure to use to create the event queue.
 
 
 
