@@ -1,79 +1,53 @@
-From: Muthu Kumar <muthu.lkml-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [Bug 43359] LVM volumes not detected
-Date: Tue, 12 Jun 2012 18:22:13 -0700
-Message-ID: <CAFR8ueejs0B6GP=uHHZBynK-0mFScQUj_Cp8gSEEeCpyoD0PmQ@mail.gmail.com>
-References: <bug-43359-11613@https.bugzilla.kernel.org/>
-	<20120610061206.E0E081205DA@bugzilla.kernel.org>
-	<CAFR8uefjqTqbg545BExg1F_QR7cwyzOgF1x0WA61iH11bbMo5w@mail.gmail.com>
+From: Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v4 3/3] usb: storage: update usb devices for write cache
+ quirk in quirk list.
+Date: Wed, 13 Jun 2012 10:27:55 +0900
+Message-ID: <CAKYAXd-9VXpNwUSnsgrDbXAwzSPnBnep6kWGZhbzB623LF0grw@mail.gmail.com>
+References: <1339511190-2440-1-git-send-email-linkinjeon@gmail.com>
+	<20120613011114.GF6765@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAFR8uefjqTqbg545BExg1F_QR7cwyzOgF1x0WA61iH11bbMo5w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, francois.valenduc-bmtTS95sd5BUM80lpFwj4w@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, initramfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120613011114.GF6765-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Pankaj Kumar <pankaj.km-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks to Harald and Bryn, I narrowed it to local changes in my system.
-
-On Mon, Jun 11, 2012 at 9:56 PM, Muthu Kumar <muthu.lkml-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wro=
-te:
-> I am using CentOS 6.x and I hit this bug with 3.5-rc2. I tried to loo=
-k
-> in to the boot process and found that the initramfs generated from
-> 3.5.-rc2 is not good for lvm root. It was missing /lib/modules/<uname
-> -r>/kernel/drivers/md/*". Also /sbin/ doesn't have lvm_scan and was
-> missing a bunch of other files too.
+2012/6/13, Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>:
+> On Tue, Jun 12, 2012 at 10:26:30AM -0400, Namjae Jeon wrote:
+>> Update information of Seagate Portable HDD and WD My Passport HDD in
+>> quirk list.
+>>
+>> Signed-off-by: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+>> Signed-off-by: Pankaj Kumar <pankaj.km-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+>> Signed-off-by: Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+>> ---
+>>  drivers/usb/storage/unusual_devs.h |   12 ++++++++++++
+>>  1 file changed, 12 insertions(+)
 >
-> CCing initramfs folks. Any help?
+Dear Greg.
+> What happened to the 2 other patches in this series?
+The reason is that I tried to send patch again after making the
+mistake(Patch number).
+I will resend the patches after arranging.
 >
+> And why is your From: email address different from your Signed-off-by:
+> address?  If you are emailing from a different email account than your
+> "real" one, please put a "From: My name <email_address>" as the first
+> line in the body of the text for the patch, so git will get things
+> correct (see the file, Documentation/SubmittingPatches for details about
+> this.)
 >
+> So, care to resend these so I can apply them?
+Yes, sure, I will resend the patches after changing.
+Thanks.
 >
-> On Sat, Jun 9, 2012 at 11:12 PM, =A0<bugzilla-daemon-590EEB7GvNiWaY/ihj7yzA@public.gmane.org=
-org> wrote:
->> https://bugzilla.kernel.org/show_bug.cgi?id=3D43359
->>
->>
->>
->>
->>
->> --- Comment #1 from Fran=E7ois Valenduc <francois.valenduc@tvcablene=
-t.be> =A02012-06-10 06:12:06 ---
->> This problem seems impossible to bisect. The first run (794c10fa0fa4=
-d) was the
->> result of the bisection limited to drivers and fs directories. A sec=
-ond run
->> where I also added the block directory lead to a commit related to w=
-atchdog,
->> which is impossible since I don't use watchdog on my computer.
->> A 3rd run on the whole kernel tree leads to this commit:
->>
->> From 4523e1458566a0e8ecfaff90f380dd23acc44d27 Mon Sep 17 00:00:00 20=
-01
->> From: Dave Hansen <dave-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->> Date: Wed, 30 May 2012 07:51:07 -0700
->> Subject: [PATCH] mm: fix vma_resv_map() NULL pointer
->>
->> hugetlb_reserve_pages() can be used for either normal file-backed
->> hugetlbfs mappings, or MAP_HUGETLB. =A0In the MAP_HUGETLB, semi-anon=
-ymous
->> mode, there is not a VMA around. =A0The new call to resv_map_put() a=
-ssumed
->> that there was, and resulted in a NULL pointer dereference:
->>
->> This is also strange because I don't use hugetlb. I can revert this =
-commit but
->> it doesn't change anything. Does anybody have an idea on what I coul=
-d do to
->> further investigate this problem.
->>
->> --
->> Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3De=
-mail
->> ------- You are receiving this mail because: -------
->> You are the assignee for the bug.--
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
-" in
->> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> thanks,
+>
+> greg k-h
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
