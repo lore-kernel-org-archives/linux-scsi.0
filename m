@@ -1,40 +1,43 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 42918] fcoe: Enabling VN2VN mode triggers a circular locking
- complaint
-Date: Wed, 13 Jun 2012 15:17:30 +0000 (UTC)
-Message-ID: <20120613151730.92E5112060C@bugzilla.kernel.org>
-References: <bug-42918-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:52187 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752442Ab2FMPRg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jun 2012 11:17:36 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 09263203BF
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jun 2012 15:17:32 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id 95615203B5
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jun 2012 15:17:30 +0000 (UTC)
-In-Reply-To: <bug-42918-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: [PATCH v4 0/3] scsi: fix internal write cache issue on usb hdd.
+Date: Wed, 13 Jun 2012 11:27:27 -0400
+Message-ID: <1339601248-3251-1-git-send-email-linkinjeon@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, sshtylyov@mvista.com, bvanassche@acm.org
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42918
+From: Namjae Jeon <namjae.jeon@samsung.com>
 
+The numbers of USB HDDs(All USB HDD I checked) does not respond
+correctly to scsi mode sense command for retrieving the write cache
+page status. Even though write cache is enabled by default, due to
+scsi driver assume that cache is not enabled which in turn might lead
+to loss of data since data still will be in cache.
+This result that all filesystems is not stable on USB HDD when the
+device is unplugged abruptly, even though these are having journaling
+feature. Our first trying is that scsi driver send ATA command
+(ATA Pass through, #58) to USB HDD after failure from normal routine to
+know write cache enable.
+We have known it is dangerous after testing several USB HDD. some of
+HDD is stalled by this command(A-DATA HDD). So we tried to make the
+patch James's suggestion(usb quirk) on version 2 that add product ID
+and verdor ID of USB HDD to USB quirk list after checking write cache.
+All filesystem will be stable on USB HDD registered in quirk list.
+And it will be updated continuously.
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+	scsi: set to WCE if usb cache quirk is present.
+	usb: storage: add support for write cache quirk on usb hdd.
+	usb: storage: update usb devices for write cache quirk in quirk.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
-
-
-
-
+ drivers/scsi/sd.c          |    9 +++++++--
+ include/scsi/scsi_device.h |    1 +
+ drivers/usb/storage/scsiglue.c |    5 +++++
+ drivers/usb/storage/usb.c      |    5 ++++-
+ include/linux/usb_usual.h      |    4 +++-
+ drivers/usb/storage/unusual_devs.h |   24 ++++++++++++++++++++++++
+ Documentation/kernel-parameters.txt |    2 ++
+ 7 files changed, 46 insertions(+), 4 deletions(-)
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.7.9.5
