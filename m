@@ -1,39 +1,37 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13936] Megaraid_mbox kernel panic at initialization
-Date: Wed, 13 Jun 2012 14:44:43 +0000 (UTC)
-Message-ID: <20120613144443.819B7120609@bugzilla.kernel.org>
-References: <bug-13936-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:44445 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754049Ab2FMOoq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jun 2012 10:44:46 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id BE0BF20381
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jun 2012 14:44:45 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id 8BBAC2039E
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jun 2012 14:44:43 +0000 (UTC)
-In-Reply-To: <bug-13936-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH 0/4] virtio-scsi performance improvements
+Date: Wed, 13 Jun 2012 16:56:30 +0200
+Message-ID: <1339599394-13880-1-git-send-email-pbonzini@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=13936
+This series reorganizes the locking in virtio-scsi, introducing separate
+scatterlists for each target and "pipelining" the locks so that one
+command can be queued while the other is prepared.  This improves
+performance when there are multiple in-flight operations.
 
+For example, a simple "if=/dev/sda of=/dev/null bs=128M iflag=direct"
+(the source being a 10G disk, residing entirely in the host buffer cache)
+improve as follows.  The additional locking does not cause any penalty
+with only one dd process, while 2 simultaneous I/O operations improve
+their times by 3%:
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+               number of simultaneous dd
+                   1               2
+ ----------------------------------------
+ current        5.9958s        10.2640s
+ patched        5.9531s         9.8663s
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
+Times are best of 10, and taken on a 2-VCPU guest.
 
+ drivers/scsi/virtio_scsi.c   |  226 ++++++++++++++++++++++++++++---------------
+ 1 file changed, 151 insertions(+), 75 deletions(-)
 
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Paolo Bonzini (4):
+  virtio-scsi: unlock during kick
+  virtio-scsi: split locking per vq
+  virtio-scsi: release sg_lock after add_buf
+  virtio-scsi: split scatterlist per target
