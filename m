@@ -1,93 +1,70 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: IO performance test on the tcm-vhost scsi
-Date: Thu, 14 Jun 2012 13:41:48 -0700
-Message-ID: <1339706508.12064.31.camel@haakon2.linux-iscsi.org>
-References: <1339582392.24309.15.camel@mengcong>
-	 <1339614481.13709.354.camel@haakon2.linux-iscsi.org>
-	 <1339667854.28851.14.camel@mengcong>
+Subject: [GIT PULL] target rc-fixes for v3.5-rc3
+Date: Thu, 14 Jun 2012 16:23:09 -0700
+Message-ID: <1339716189.12064.96.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1339667854.28851.14.camel@mengcong>
 Sender: target-devel-owner@vger.kernel.org
-To: mc@linux.vnet.ibm.com
-Cc: qemu-devel@nongnu.org, target-devel@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, Anthony Liguori <anthony@codemonkey.ws>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Roland Dreier <roland@kernel.org>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Sachin Kamat <sachin.kamat@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-06-14 at 17:57 +0800, Cong Meng wrote:
-> On Wed, 2012-06-13 at 12:08 -0700, Nicholas A. Bellinger wrote:
-> > On Wed, 2012-06-13 at 18:13 +0800, mengcong wrote:
-> > > Hi folks, I did an IO performance test on the tcm-vhost scsi. I want to share 
-> > > the test result data here.
-> > > 
-> > > 
-> > >                     seq-read        seq-write       rand-read     rand-write
-> > >                     8k     256k     8k     256k     8k   256k     8k   256k
-> > > ----------------------------------------------------------------------------
-> > > bare-metal          67951  69802    67064  67075    1758 29284    1969 26360
-> > > tcm-vhost-iblock    61501  66575    51775  67872    1011 22533    1851 28216
-> > > tcm-vhost-pscsi     66479  68191    50873  67547    1008 22523    1818 28304
-> > > virtio-blk          26284  66737    23373  65735    1724 28962    1805 27774
-> > > scsi-disk           36013  60289    46222  62527    1663 12992    1804 27670
-> > > 
-> > > unit: KB/s
-> > > seq-read/write = sequential read/write
-> > > rand-read/write = random read/write
-> > > 8k,256k are blocksize of the IO
-> > > 
-> > > In tcm-vhost-iblock test, the emulate_write_cache attr was enabled.
-> > > In virtio-blk test, cache=none,aio=native were set.
-> > > In scsi-disk test, cache=none,aio=native were set, and LSI HBA was used.
-> > > 
-> > > I also tried to do the test with a scsi-generic LUN (pass through the 
-> > > physical partition /dev/sgX device). But I couldn't setup it
-> > > successfully. It's a pity.
-> > > 
-> > > Benchmark tool: fio, with ioengine=aio,direct=1,iodepth=8 set for all tests.
-> > > kvm vm: 2 cpus and 2G ram
-> > > 
-> > 
-> > These initial performance results look quite promising for virtio-scsi.
-> > 
-> > I'd be really interested to see how a raw flash block device backend
-> > that locally can do ~100K 4k mixed R/W random IOPs compares with
-> > virtio-scsi guest performance as the random small block fio workload
-> > increases..
-> flash block == Solid state disk? I have no one on hand. 
-> > 
+Hello Linus!
 
-It just so happens there is a FusionIO HBA nearby..  ;)
+Here is the outstanding series of target 3.5-rc-fixes currently pending
+for v3.5-rc3 merge.  As mentioned in the tree work-flow re-org
+announcement, target bug-fixes slated for the current release will now
+be coming via branch master following Linux/KVM's tree workflow.
 
-However, I'm quite busy with customer items the next days but am really
-looking forward to giving this a shot with some fast raw block flash
-backends soon..
+The branch master is based upon:
 
-Also, it's about time to convert tcm_vhost from using the old
-TFO->new_cmd_map() to native cmwq..  This will certainly help overall
-tcm_vhost performance, especially with shared backends across multiple
-VMs where parts of I/O backend execution can happen in separate kworker
-process context.
+commit cfaf025112d3856637ff34a767ef785ef5cf2ca9
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri Jun 8 18:40:09 2012 -0700
 
-Btw, I'll likely end up doing this conversion to realize the performance
-benefits when testing with raw flash backends, but I'm more than happy
-to take a patch ahead of that if you have the extra cycles to spare.
+    Linux 3.5-rc2
 
-> > Also note there is a bottleneck wrt to random small block I/O
-> > performance (per LUN) on the Linux/SCSI initiator side that is effecting
-> > things here.  We've run into this limitation numerous times with using
-> > SCSI LLDs as backend TCM devices, and I usually recommend using iblock
-> > export with raw block flash backends for achieving the best small block
-> > random I/O performance results.  A number of high performance flash
-> > storage folks do something similar with raw block access (Jen's CC'ed)
-> > 
-> > As per Stefan's earlier question, how does virtio-scsi to QEMU SCSI
-> > userspace compare with these results..?  Is there a reason why these
-> > where not included in the initial results..?
-> > 
-> This should be a mistake I made. I will do this pattern later.
-> 
+Please go ahead and pull:
 
-Thanks!
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+
+This series contains post merge qla_target.c / tcm_qla2xxx bugfixes from
+the past weeks, including the patch to allow target-core to use an
+optional session shutdown callback to help address an active I/O
+shutdown bug in tcm_qla2xxx code (Joern).
+
+Also included is a target regression bugfix releated to explict ALUA
+target port group CDB emulation that is CC'ed to stable (Roland).
+
+Thank you!
 
 --nab
+
+Joern Engel (2):
+  target: Add TFO->put_session() caller for HW fabric session shutdown
+  tcm_qla2xxx: Convert to TFO->put_session() usage
+
+Nicholas Bellinger (1):
+  tcm_qla2xxx: Clear session s_id + loop_id earlier during shutdown
+
+Roland Dreier (6):
+  target: Return error to initiator if SET TARGET PORT GROUPS emulation
+    fails
+  tcm_qla2xxx: Don't insert nacls without sessions into the btree
+  qla2xxx: Don't crash if we can't find cmd for failed CTIO
+  qla2xxx: Don't leak commands we give up on in qlt_do_work()
+  tcm_qla2xxx: tcm_qla2xxx_handle_tmr() can be static
+  tcm_qla2xxx: Handle malformed wwn strings properly
+
+Sachin Kamat (1):
+  qla2xxx: Remove version.h header file inclusion
+
+ drivers/scsi/qla2xxx/qla_target.c      |   11 +--
+ drivers/scsi/qla2xxx/qla_target.h      |    1 -
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  152 ++++++++++++--------------------
+ drivers/target/target_core_alua.c      |    5 +-
+ drivers/target/target_core_transport.c |    8 ++-
+ include/target/target_core_fabric.h    |    1 +
+ 6 files changed, 74 insertions(+), 104 deletions(-)
