@@ -1,42 +1,39 @@
-From: Tomas Carnecky <tomas.carnecky@gmail.com>
-Subject: Re: drivers/block/cpqarray.c:938:2: error: too many arguments to
- function lk_rq_map_sg
-Date: Thu, 14 Jun 2012 11:52:38 +0000
-Message-ID: <1339674758-ner-4999@calvin>
-References: <4fd91c3f.KAwMcygw9fFGn9Cx%wfg@linux.intel.com>
-	<4FD984F3.3070502@kernel.dk> <20120614090151.GA12013@localhost>
-	<4FD9A95D.40903@kernel.dk> <20120614100205.GA13217@localhost>
-	<4FD9C0D2.20500@kernel.dk> <20120614113142.GA13954@localhost>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/4] qla4xxx: Updates for scsi "misc" branch.
+Date: Thu, 14 Jun 2012 13:25:30 +0100
+Message-ID: <1339676730.3107.20.camel@dabdike.int.hansenpartnership.com>
+References: <1339670151-26289-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120614113142.GA13954@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Fengguang Wu <wfg@linux.intel.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, virtualization@lists.linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, "git@vger.kernel.org" <git@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35405 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755352Ab2FNMZe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jun 2012 08:25:34 -0400
+In-Reply-To: <1339670151-26289-1-git-send-email-vikas.chaudhary@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vikas.chaudhary@qlogic.com
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-On Thu, 14 Jun 2012 19:31:42 +0800, Fengguang Wu <wfg@linux.intel.com> wrote:
-> On Thu, Jun 14, 2012 at 12:45:38PM +0200, Jens Axboe wrote:
-> > On 06/14/2012 12:02 PM, Fengguang Wu wrote:
-> > > OK, I'll add a grep for "Dont-Auto-Build". If it's found in *any*
-> > > commit of the branch, the build script will skip the whole branch.
-> > > Does this make sense to you?
-> > 
-> > Yeah that'll work for me. A description or tag might be more elegant,
-> > but this is easier...
+On Thu, 2012-06-14 at 06:35 -0400, vikas.chaudhary@qlogic.com wrote:
+> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 > 
-> Great, let's settle with the in-commit tag "Dont-Auto-Build" for now :)
+> James,
 > 
-> "git branch --edit-description" could potentially be the most elegant
-> solution, unfortunately for now there seems no way for me to retrieve
-> the branch description edited by you..
+> Please apply the following patches to the scsi tree at your earliest
+> convenience for inclusion in mainline.
 > 
-> Another alternative, git tag, has the problem that it goes out of sync
-> every time you do rebase, which will sure happen a lot for early RFC
-> patches.
+> Vikas Chaudhary (4):
+>       qla4xxx: multi-session fix for flash ddbs
+>       qla4xxx: Fix a Sparse warning message
+>       qla4xxx: Fix Spell check.
+>       qla4xxx: Update driver version to 5.02.00-k18
 
-Commit notes or a special namespace for branches (refs/heads/wip/...) would
-also be an option.
+Patch 3/4 seems to be missing.
 
-tom
+James
+
+
