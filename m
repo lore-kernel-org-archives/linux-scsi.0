@@ -1,39 +1,41 @@
-From: Junio C Hamano <gitster@pobox.com>
-Subject: Re: drivers/block/cpqarray.c:938:2: error: too many arguments to
- function =?utf-8?Q?=E6=85=B4lk=5Frq=5Fmap=5Fsg=EF=BF=BD?=
-Date: Thu, 14 Jun 2012 10:26:20 -0700
-Message-ID: <7vpq91erer.fsf@alter.siamese.dyndns.org>
-References: <4fd91c3f.KAwMcygw9fFGn9Cx%wfg@linux.intel.com>
- <4FD984F3.3070502@kernel.dk> <20120614090151.GA12013@localhost>
- <4FD9A95D.40903@kernel.dk> <20120614092519.GA12482@localhost>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 22092] Kernel v2.6.36 trouble on USB disconnect
+Date: Thu, 14 Jun 2012 17:34:50 +0000 (UTC)
+Message-ID: <20120614173450.7A57011FB78@bugzilla.kernel.org>
+References: <bug-22092-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <git-owner@vger.kernel.org>
-In-Reply-To: <20120614092519.GA12482@localhost> (Fengguang Wu's message of
- "Thu, 14 Jun 2012 17:25:19 +0800")
-Sender: git-owner@vger.kernel.org
-To: Fengguang Wu <wfg@linux.intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, virtualization@lists.linux-foundation.org, "git@vger.kernel.org" <git@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:33139 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753478Ab2FNRey (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jun 2012 13:34:54 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id E27D8204EA
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 17:34:52 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 80E2E204D2
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 17:34:50 +0000 (UTC)
+In-Reply-To: <bug-22092-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Fengguang Wu <wfg@linux.intel.com> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=22092
 
-> If we can somehow tag the whole branch, it would be most convenient.
-> Git can add description to a branch with
->
->         git branch --edit-description [branch name]
->
-> However I don't know how to retrieve that description on a remote
-> branch..
 
-The branch description is designed to be a place you leave your
-temporary note locally outside the history, until you are ready to
-set the contents of the branch in more permanent storage (e.g. by
-merging it to an integration branch, or sending pull requests for
-it) at which time the information is consumed (e.g. inserted in the
-merge commit message or pull request message).  The history exchange
-via "git push" / "git fetch" is by definition about exchanging the
-history, and will not transfer branch descriptions.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-For shared and more permanent notes, "git notes" may be more
-suitable vehicle.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEEDINFO                    |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |OBSOLETE
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
