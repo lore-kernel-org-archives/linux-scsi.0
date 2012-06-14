@@ -1,71 +1,102 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 3.5-rc2
-Date: Thu, 14 Jun 2012 15:56:56 +0100
-Message-ID: <1339685816.3107.29.camel@dabdike.int.hansenpartnership.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 43359] LVM volumes not detected
+Date: Thu, 14 Jun 2012 16:16:35 +0000 (UTC)
+Message-ID: <20120614161635.D4CD311FBDE@bugzilla.kernel.org>
+References: <bug-43359-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:51680 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756478Ab2FNQQk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2012 12:16:40 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 9D83120427
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 16:16:39 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 57E7220449
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 16:16:37 +0000 (UTC)
+In-Reply-To: <bug-43359-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This is a couple of minor fixes, one for a preempt warning in the
-mpt2sas driver and one is a config failure with the new sd async domain.
-
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-James Bottomley (1):
-      Fix sd_probe_domain config problem
-
-nagalakshmi.nandigama@lsi.com (1):
-      mpt2sas: Fix unsafe using smp_processor_id() in preemptible
+https://bugzilla.kernel.org/show_bug.cgi?id=3D43359
 
 
-And the diffstat:
 
- drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
- drivers/scsi/scsi.c                 |    4 +---
- 2 files changed, 2 insertions(+), 4 deletions(-)
 
-Full diff is below.
 
-James
+--- Comment #5 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org> =
+ 2012-06-14 16:16:35 ---
+Reply-To: muthu.lkml@gmail.com
 
----
+I am using CentOS 6.x and I hit this bug with 3.5-rc2. I tried to look
+in to the boot process and found that the initramfs generated from
+3.5.-rc2 is not good for lvm root. It was missing /lib/modules/<uname
+-r>/kernel/drivers/md/*". Also /sbin/ doesn't have lvm_scan and was
+missing a bunch of other files too.
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 6102ef2..9d46fcb 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1792,7 +1792,7 @@ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
- static inline u8
- _base_get_msix_index(struct MPT2SAS_ADAPTER *ioc)
- {
--	return ioc->cpu_msix_table[smp_processor_id()];
-+	return ioc->cpu_msix_table[raw_smp_processor_id()];
- }
- 
- /**
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 61c82a3..bbbc9c9 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -90,11 +90,9 @@ unsigned int scsi_logging_level;
- EXPORT_SYMBOL(scsi_logging_level);
- #endif
- 
--#if IS_ENABLED(CONFIG_PM) || IS_ENABLED(CONFIG_BLK_DEV_SD)
--/* sd and scsi_pm need to coordinate flushing async actions */
-+/* sd, scsi core and power management need to coordinate flushing async actions */
- LIST_HEAD(scsi_sd_probe_domain);
- EXPORT_SYMBOL(scsi_sd_probe_domain);
--#endif
- 
- /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
-  * You may not alter any existing entry (although adding new ones is
+CCing initramfs folks. Any help?
+
+
+
+On Sat, Jun 9, 2012 at 11:12 PM,  <bugzilla-daemon@bugzilla.kernel.org>=
+ wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D43359
+>
+>
+>
+>
+>
+> --- Comment #1 from Fran=C3=A7ois Valenduc <francois.valenduc@tvcable=
+net.be> =C2=A02012-06-10 06:12:06 ---
+> This problem seems impossible to bisect. The first run (794c10fa0fa4d=
+) was the
+> result of the bisection limited to drivers and fs directories. A seco=
+nd run
+> where I also added the block directory lead to a commit related to wa=
+tchdog,
+> which is impossible since I don't use watchdog on my computer.
+> A 3rd run on the whole kernel tree leads to this commit:
+>
+> From 4523e1458566a0e8ecfaff90f380dd23acc44d27 Mon Sep 17 00:00:00 200=
+1
+> From: Dave Hansen <dave@linux.vnet.ibm.com>
+> Date: Wed, 30 May 2012 07:51:07 -0700
+> Subject: [PATCH] mm: fix vma_resv_map() NULL pointer
+>
+> hugetlb_reserve_pages() can be used for either normal file-backed
+> hugetlbfs mappings, or MAP_HUGETLB. =C2=A0In the MAP_HUGETLB, semi-an=
+onymous
+> mode, there is not a VMA around. =C2=A0The new call to resv_map_put()=
+ assumed
+> that there was, and resulted in a NULL pointer dereference:
+>
+> This is also strange because I don't use hugetlb. I can revert this c=
+ommit but
+> it doesn't change anything. Does anybody have an idea on what I could=
+ do to
+> further investigate this problem.
+>
+> --
+> Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Dem=
+ail
+> ------- You are receiving this mail because: -------
+> You are the assignee for the bug.--
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+
+--=20
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
+l
+------- You are receiving this mail because: -------
+You are the assignee for the bug.--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
