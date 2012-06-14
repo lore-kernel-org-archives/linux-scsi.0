@@ -1,42 +1,48 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 43359] LVM volumes not detected
-Date: Thu, 14 Jun 2012 08:58:29 +0000 (UTC)
-Message-ID: <20120614085829.6BBEA120619@bugzilla.kernel.org>
-References: <bug-43359-11613@https.bugzilla.kernel.org/>
+From: Fengguang Wu <wfg@linux.intel.com>
+Subject: Re: =?utf-8?Q?drivers=2Fblock=2Fcpqarray?=
+	=?utf-8?Q?=2Ec=3A938=3A2=3A_error=3A_too_many_arguments_to_function_?=
+	=?utf-8?B?5oW0bGtfcnFfbWFwX3Nn77+9?=
+Date: Thu, 14 Jun 2012 17:01:51 +0800
+Message-ID: <20120614090151.GA12013@localhost>
+References: <4fd91c3f.KAwMcygw9fFGn9Cx%wfg@linux.intel.com>
+	<4FD984F3.3070502@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:36432 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755189Ab2FNI6c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jun 2012 04:58:32 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id F2E0B204C1
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 08:58:30 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id 13D2E204BE
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 08:58:30 +0000 (UTC)
-In-Reply-To: <bug-43359-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <4FD984F3.3070502@kernel.dk>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=43359
+Hi Jens,
 
+On Thu, Jun 14, 2012 at 08:30:11AM +0200, Jens Axboe wrote:
+> On 06/14/2012 01:03 AM, wfg@linux.intel.com wrote:
+> > FYI, kernel build failed on
+> > 
+> > tree:   git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git multiqueue
+> > head:   e9a6aa8a0b7b93195774a9fcf551632bf3abcd97
+> > commit: 67db7275fa4325d46853a4bfcb79acf32e48eca8 [1/3] multiqueue: a hodge podge of things
+> 
+> The multiqueue branch is a private branch, it's known broken on many
+> configs at the moment.
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+OK. Sorry my script just blindly build tests every new/updated branches
+in the tree. It does try to reduce noise level by remembering all warned
+error messages. However if it still presents a problem to the private
+branches, I can either explicitly blacklist "multiqueue", or let the
+script automatically skip commits whose "^Signed-off-by:" is still missing.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
-
-
-
-
---- Comment #4 from Alan <alan@lxorguk.ukuu.org.uk>  2012-06-14 08:58:29 ---
-Thanks for trying.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Thanks,
+Fengguang
