@@ -1,46 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 43359] LVM volumes not detected
-Date: Thu, 14 Jun 2012 17:01:48 +0000 (UTC)
-Message-ID: <20120614170148.E7CFA11FBF4@bugzilla.kernel.org>
-References: <bug-43359-11613@https.bugzilla.kernel.org/>
+From: Junio C Hamano <gitster@pobox.com>
+Subject: Re: drivers/block/cpqarray.c:938:2: error: too many arguments to
+ function =?utf-8?Q?=E6=85=B4lk=5Frq=5Fmap=5Fsg=EF=BF=BD?=
+Date: Thu, 14 Jun 2012 10:26:20 -0700
+Message-ID: <7vpq91erer.fsf@alter.siamese.dyndns.org>
+References: <4fd91c3f.KAwMcygw9fFGn9Cx%wfg@linux.intel.com>
+ <4FD984F3.3070502@kernel.dk> <20120614090151.GA12013@localhost>
+ <4FD9A95D.40903@kernel.dk> <20120614092519.GA12482@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:55419 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756397Ab2FNRBz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jun 2012 13:01:55 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 689E7204BA
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 17:01:54 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id EA33D204C3
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 17:01:48 +0000 (UTC)
-In-Reply-To: <bug-43359-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <git-owner@vger.kernel.org>
+In-Reply-To: <20120614092519.GA12482@localhost> (Fengguang Wu's message of
+ "Thu, 14 Jun 2012 17:25:19 +0800")
+Sender: git-owner@vger.kernel.org
+To: Fengguang Wu <wfg@linux.intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, virtualization@lists.linux-foundation.org, "git@vger.kernel.org" <git@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=43359
+Fengguang Wu <wfg@linux.intel.com> writes:
 
+> If we can somehow tag the whole branch, it would be most convenient.
+> Git can add description to a branch with
+>
+>         git branch --edit-description [branch name]
+>
+> However I don't know how to retrieve that description on a remote
+> branch..
 
-Bryn M. Reeves <bmr@redhat.com> changed:
+The branch description is designed to be a place you leave your
+temporary note locally outside the history, until you are ready to
+set the contents of the branch in more permanent storage (e.g. by
+merging it to an integration branch, or sending pull requests for
+it) at which time the information is consumed (e.g. inserted in the
+merge commit message or pull request message).  The history exchange
+via "git push" / "git fetch" is by definition about exchanging the
+history, and will not transfer branch descriptions.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bmr@redhat.com
-
-
-
-
---- Comment #7 from Bryn M. Reeves <bmr@redhat.com>  2012-06-14 17:01:48 ---
-CentOS 6 dracut doesn't support 3.x kernels (probably easy to persuade it to
-but not sure that they'd want a bug on that).
-
-I talked to Muthu off-list and his problem turned out to be with a local blkid
-build that was breaking dracut's LVM module check script.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+For shared and more permanent notes, "git notes" may be more
+suitable vehicle.
