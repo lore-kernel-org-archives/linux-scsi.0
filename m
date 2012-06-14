@@ -1,69 +1,102 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v4 02/13] libata: bind the Linux device tree to the ACPI
- device tree
-Date: Thu, 14 Jun 2012 15:43:57 +0800
-Message-ID: <CAF1ivSZTtJ651p5WgwKde8gHvJX7KcsTDXMzhej+Chka9P5ozw@mail.gmail.com>
-References: <1338181720-4149-1-git-send-email-ming.m.lin@intel.com>
-	<1338181720-4149-3-git-send-email-ming.m.lin@intel.com>
-	<20120528105131.67d74d45@pyramind.ukuu.org.uk>
-	<CAF1ivSYBjw+UP3vP8RHaftjR8NJZEaHA1rtJ5ujDjkj-djHLTQ@mail.gmail.com>
-	<20120613120050.164c3f29@pyramind.ukuu.org.uk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] [SCSI] hptiop: fix RR312x in hosts with >12GB
+Date: Thu, 14 Jun 2012 08:47:07 +0100
+Message-ID: <1339660027.3107.1.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120613120050.164c3f29@pyramind.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, David Woodhouse <David.Woodhouse@intel.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34804 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754420Ab2FNHrK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jun 2012 03:47:10 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, HighPoint Linux Team <linux@highpoint-tech.com>
 
-On Wed, Jun 13, 2012 at 7:00 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wr=
-ote:
-> On Wed, 13 Jun 2012 16:03:23 +0800
-> Lin Ming <ming.m.lin@intel.com> wrote:
->
->> On Mon, May 28, 2012 at 5:51 PM, Alan Cox <alan@lxorguk.ukuu.org.uk>=
- wrote:
->> >> +static int is_pci_ata(struct device *dev)
->> >> +{
->> >> + =A0 =A0 struct pci_dev *pdev;
->> >> +
->> >> + =A0 =A0 if (!is_pci_dev(dev))
->> >> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
->> >> +
->> >> + =A0 =A0 pdev =3D to_pci_dev(dev);
->> >> +
->> >> + =A0 =A0 if ((pdev->class >> 8) !=3D PCI_CLASS_STORAGE_SATA &&
->> >> + =A0 =A0 =A0 =A0 (pdev->class >> 8) !=3D PCI_CLASS_STORAGE_IDE)
->> >> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
->> >
->> > This needs a better name. It doesn't check if a device is PCI ATA =
-or
->> > anything of the sort, it checks if its probably a device in compat=
-ibility
->> > mode. A lot of controllers will in fact report RAID class or simil=
-ar in
->> > native mode.
->>
->> How about compat_pci_ata?
->
-> Sounds reasonable. I'm not btw sure the test is entirely right, but I=
-'m
-> not sure quite what you are trying to figure out from it and how ACPI
-> expects this mapping to work.
+From: HighPoint Linux Team <linux@highpoint-tech.com>
 
-It's used to figure out if the dev passed in from scsi layer is a ata d=
-evice.
+As the limitation of RR312x's dma engine, the HBA can not access host memory
+over 12GB.  This fixes
 
-scsi_sysfs_add_sdev
-device_add
-acpi_platform_notify
-ata_acpi_find_device
-is_pci_ata
+https://bugzilla.kernel.org/show_bug.cgi?id=14311
 
-Thanks,
-Lin Ming
+[alan: resurrected bug from 2009 and pushed upstream]
+Reported-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
+Signed-off-by: James Bottomley <JBottomley@Parallels.com>
 
->
-> Alan
+---
+
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index 10b6555..192724e 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -42,7 +42,7 @@ MODULE_DESCRIPTION("HighPoint RocketRAID 3xxx/4xxx Controller Driver");
+ 
+ static char driver_name[] = "hptiop";
+ static const char driver_name_long[] = "RocketRAID 3xxx/4xxx Controller driver";
+-static const char driver_ver[] = "v1.6 (090910)";
++static const char driver_ver[] = "v1.6 (091225)";
+ 
+ static int iop_send_sync_msg(struct hptiop_hba *hba, u32 msg, u32 millisec);
+ static void hptiop_finish_scsi_req(struct hptiop_hba *hba, u32 tag,
+@@ -958,6 +958,7 @@ static int __devinit hptiop_probe(struct pci_dev *pcidev,
+ {
+ 	struct Scsi_Host *host = NULL;
+ 	struct hptiop_hba *hba;
++	struct hptiop_adapter_ops *iop_ops;
+ 	struct hpt_iop_request_get_config iop_config;
+ 	struct hpt_iop_request_set_config set_config;
+ 	dma_addr_t start_phy;
+@@ -978,7 +979,8 @@ static int __devinit hptiop_probe(struct pci_dev *pcidev,
+ 	pci_set_master(pcidev);
+ 
+ 	/* Enable 64bit DMA if possible */
+-	if (pci_set_dma_mask(pcidev, DMA_BIT_MASK(64))) {
++	iop_ops = (struct hptiop_adapter_ops *)id->driver_data;
++	if (pci_set_dma_mask(pcidev, DMA_BIT_MASK(iop_ops->hw_dma_bit_mask))) {
+ 		if (pci_set_dma_mask(pcidev, DMA_BIT_MASK(32))) {
+ 			printk(KERN_ERR "hptiop: fail to set dma_mask\n");
+ 			goto disable_pci_device;
+@@ -998,7 +1000,7 @@ static int __devinit hptiop_probe(struct pci_dev *pcidev,
+ 
+ 	hba = (struct hptiop_hba *)host->hostdata;
+ 
+-	hba->ops = (struct hptiop_adapter_ops *)id->driver_data;
++	hba->ops = iop_ops;
+ 	hba->pcidev = pcidev;
+ 	hba->host = host;
+ 	hba->initialized = 0;
+@@ -1239,6 +1241,7 @@ static struct hptiop_adapter_ops hptiop_itl_ops = {
+ 	.iop_intr          = iop_intr_itl,
+ 	.post_msg          = hptiop_post_msg_itl,
+ 	.post_req          = hptiop_post_req_itl,
++	.hw_dma_bit_mask   = 64,
+ };
+ 
+ static struct hptiop_adapter_ops hptiop_mv_ops = {
+@@ -1254,6 +1257,7 @@ static struct hptiop_adapter_ops hptiop_mv_ops = {
+ 	.iop_intr          = iop_intr_mv,
+ 	.post_msg          = hptiop_post_msg_mv,
+ 	.post_req          = hptiop_post_req_mv,
++	.hw_dma_bit_mask   = 33,
+ };
+ 
+ static struct pci_device_id hptiop_id_table[] = {
+diff --git a/drivers/scsi/hptiop.h b/drivers/scsi/hptiop.h
+index 0b871c0..baa648d 100644
+--- a/drivers/scsi/hptiop.h
++++ b/drivers/scsi/hptiop.h
+@@ -297,6 +297,7 @@ struct hptiop_adapter_ops {
+ 	int  (*iop_intr)(struct hptiop_hba *hba);
+ 	void (*post_msg)(struct hptiop_hba *hba, u32 msg);
+ 	void (*post_req)(struct hptiop_hba *hba, struct hptiop_request *_req);
++	int  hw_dma_bit_mask;
+ };
+ 
+ #define HPT_IOCTL_RESULT_OK         0
+
+
