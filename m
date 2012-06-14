@@ -1,102 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] [SCSI] hptiop: fix RR312x in hosts with >12GB
-Date: Thu, 14 Jun 2012 08:47:07 +0100
-Message-ID: <1339660027.3107.1.camel@dabdike.int.hansenpartnership.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 43359] LVM volumes not detected
+Date: Thu, 14 Jun 2012 08:58:29 +0000 (UTC)
+Message-ID: <20120614085829.6BBEA120619@bugzilla.kernel.org>
+References: <bug-43359-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34804 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754420Ab2FNHrK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jun 2012 03:47:10 -0400
+Received: from mail.kernel.org ([198.145.19.201]:36432 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755189Ab2FNI6c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jun 2012 04:58:32 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id F2E0B204C1
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 08:58:30 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id 13D2E204BE
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 08:58:30 +0000 (UTC)
+In-Reply-To: <bug-43359-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, HighPoint Linux Team <linux@highpoint-tech.com>
+To: linux-scsi@vger.kernel.org
 
-From: HighPoint Linux Team <linux@highpoint-tech.com>
-
-As the limitation of RR312x's dma engine, the HBA can not access host memory
-over 12GB.  This fixes
-
-https://bugzilla.kernel.org/show_bug.cgi?id=14311
-
-[alan: resurrected bug from 2009 and pushed upstream]
-Reported-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
-Signed-off-by: James Bottomley <JBottomley@Parallels.com>
-
----
-
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index 10b6555..192724e 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -42,7 +42,7 @@ MODULE_DESCRIPTION("HighPoint RocketRAID 3xxx/4xxx Controller Driver");
- 
- static char driver_name[] = "hptiop";
- static const char driver_name_long[] = "RocketRAID 3xxx/4xxx Controller driver";
--static const char driver_ver[] = "v1.6 (090910)";
-+static const char driver_ver[] = "v1.6 (091225)";
- 
- static int iop_send_sync_msg(struct hptiop_hba *hba, u32 msg, u32 millisec);
- static void hptiop_finish_scsi_req(struct hptiop_hba *hba, u32 tag,
-@@ -958,6 +958,7 @@ static int __devinit hptiop_probe(struct pci_dev *pcidev,
- {
- 	struct Scsi_Host *host = NULL;
- 	struct hptiop_hba *hba;
-+	struct hptiop_adapter_ops *iop_ops;
- 	struct hpt_iop_request_get_config iop_config;
- 	struct hpt_iop_request_set_config set_config;
- 	dma_addr_t start_phy;
-@@ -978,7 +979,8 @@ static int __devinit hptiop_probe(struct pci_dev *pcidev,
- 	pci_set_master(pcidev);
- 
- 	/* Enable 64bit DMA if possible */
--	if (pci_set_dma_mask(pcidev, DMA_BIT_MASK(64))) {
-+	iop_ops = (struct hptiop_adapter_ops *)id->driver_data;
-+	if (pci_set_dma_mask(pcidev, DMA_BIT_MASK(iop_ops->hw_dma_bit_mask))) {
- 		if (pci_set_dma_mask(pcidev, DMA_BIT_MASK(32))) {
- 			printk(KERN_ERR "hptiop: fail to set dma_mask\n");
- 			goto disable_pci_device;
-@@ -998,7 +1000,7 @@ static int __devinit hptiop_probe(struct pci_dev *pcidev,
- 
- 	hba = (struct hptiop_hba *)host->hostdata;
- 
--	hba->ops = (struct hptiop_adapter_ops *)id->driver_data;
-+	hba->ops = iop_ops;
- 	hba->pcidev = pcidev;
- 	hba->host = host;
- 	hba->initialized = 0;
-@@ -1239,6 +1241,7 @@ static struct hptiop_adapter_ops hptiop_itl_ops = {
- 	.iop_intr          = iop_intr_itl,
- 	.post_msg          = hptiop_post_msg_itl,
- 	.post_req          = hptiop_post_req_itl,
-+	.hw_dma_bit_mask   = 64,
- };
- 
- static struct hptiop_adapter_ops hptiop_mv_ops = {
-@@ -1254,6 +1257,7 @@ static struct hptiop_adapter_ops hptiop_mv_ops = {
- 	.iop_intr          = iop_intr_mv,
- 	.post_msg          = hptiop_post_msg_mv,
- 	.post_req          = hptiop_post_req_mv,
-+	.hw_dma_bit_mask   = 33,
- };
- 
- static struct pci_device_id hptiop_id_table[] = {
-diff --git a/drivers/scsi/hptiop.h b/drivers/scsi/hptiop.h
-index 0b871c0..baa648d 100644
---- a/drivers/scsi/hptiop.h
-+++ b/drivers/scsi/hptiop.h
-@@ -297,6 +297,7 @@ struct hptiop_adapter_ops {
- 	int  (*iop_intr)(struct hptiop_hba *hba);
- 	void (*post_msg)(struct hptiop_hba *hba, u32 msg);
- 	void (*post_req)(struct hptiop_hba *hba, struct hptiop_request *_req);
-+	int  hw_dma_bit_mask;
- };
- 
- #define HPT_IOCTL_RESULT_OK         0
+https://bugzilla.kernel.org/show_bug.cgi?id=43359
 
 
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|RESOLVED                    |CLOSED
+
+
+
+
+--- Comment #4 from Alan <alan@lxorguk.ukuu.org.uk>  2012-06-14 08:58:29 ---
+Thanks for trying.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
