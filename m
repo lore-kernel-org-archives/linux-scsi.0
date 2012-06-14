@@ -1,36 +1,83 @@
-From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 4/4] qla4xxx: Update driver version to 5.02.00-k18
-Date: Thu, 14 Jun 2012 06:35:51 -0400
-Message-ID: <1339670151-26289-5-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1339670151-26289-1-git-send-email-vikas.chaudhary@qlogic.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:6160 "HELO linux-zupk.site"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755618Ab2FNKwF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jun 2012 06:52:05 -0400
-In-Reply-To: <1339670151-26289-1-git-send-email-vikas.chaudhary@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Fengguang Wu <wfg@linux.intel.com>
+Subject: Re: drivers/block/cpqarray.c:938:2: error: too many arguments to
+	function lk_rq_map_sg
+Date: Thu, 14 Jun 2012 19:31:42 +0800
+Message-ID: <20120614113142.GA13954@localhost>
+References: <4fd91c3f.KAwMcygw9fFGn9Cx%wfg@linux.intel.com>
+	<4FD984F3.3070502@kernel.dk> <20120614090151.GA12013@localhost>
+	<4FD9A95D.40903@kernel.dk> <20120614100205.GA13217@localhost>
+	<4FD9C0D2.20500@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <4FD9C0D2.20500@kernel.dk>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-raid@vger.kernel.org, "git@vger.kernel.org" <git@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+On Thu, Jun 14, 2012 at 12:45:38PM +0200, Jens Axboe wrote:
+> On 06/14/2012 12:02 PM, Fengguang Wu wrote:
+> > On Thu, Jun 14, 2012 at 11:05:33AM +0200, Jens Axboe wrote:
+> >> On 06/14/2012 11:01 AM, Fengguang Wu wrote:
+> >>> Hi Jens,
+> >>>
+> >>> On Thu, Jun 14, 2012 at 08:30:11AM +0200, Jens Axboe wrote:
+> >>>> On 06/14/2012 01:03 AM, wfg@linux.intel.com wrote:
+> >>>>> FYI, kernel build failed on
+> >>>>>
+> >>>>> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git multiqueue
+> >>>>> head:   e9a6aa8a0b7b93195774a9fcf551632bf3abcd97
+> >>>>> commit: 67db7275fa4325d46853a4bfcb79acf32e48eca8 [1/3] multiqueue: a hodge podge of things
+> >>>>
+> >>>> The multiqueue branch is a private branch, it's known broken on many
+> >>>> configs at the moment.
+> >>>
+> >>> OK. Sorry my script just blindly build tests every new/updated branches
+> >>> in the tree. It does try to reduce noise level by remembering all warned
+> >>> error messages. However if it still presents a problem to the private
+> >>> branches, I can either explicitly blacklist "multiqueue", or let the
+> >>> script automatically skip commits whose "^Signed-off-by:" is still missing.
+> >>
+> >> It's not a problem that you're building various branches, as long as you
+> >> are expecting a bit of noise :-). In fact I applaud your effort on
+> >> expanding the scope of building others branches.
+> >>
+> >> But it does raise the question of how do we best signal intermediate
+> >> branches like this, so they can be avoided until they are ready. The
+> >> blacklist doesn't seem like a great choice, since then I have to
+> >> remember to remind you when it _is_ ok to build it.
+> >>
+> >> How about some arbitrary tag? Instead of checking a Signed-off-by, I
+> >> could just add a Dont-Auto-Build or something like that. What do you
+> >> think?
+> > 
+> > OK, I'll add a grep for "Dont-Auto-Build". If it's found in *any*
+> > commit of the branch, the build script will skip the whole branch.
+> > Does this make sense to you?
+> 
+> Yeah that'll work for me. A description or tag might be more elegant,
+> but this is easier...
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Great, let's settle with the in-commit tag "Dont-Auto-Build" for now :)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index cc1cc35..725034f 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,4 +5,4 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
- 
--#define QLA4XXX_DRIVER_VERSION	"5.02.00-k17"
-+#define QLA4XXX_DRIVER_VERSION	"5.02.00-k18"
--- 
-1.7.9.1.265.gb3a76
+"git branch --edit-description" could potentially be the most elegant
+solution, unfortunately for now there seems no way for me to retrieve
+the branch description edited by you..
 
+Another alternative, git tag, has the problem that it goes out of sync
+every time you do rebase, which will sure happen a lot for early RFC
+patches.
+
+Thanks,
+Fengguang
