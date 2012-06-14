@@ -1,39 +1,93 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 22092] Kernel v2.6.36 trouble on USB disconnect
-Date: Thu, 14 Jun 2012 17:34:57 +0000 (UTC)
-Message-ID: <20120614173457.54ADB11FBF6@bugzilla.kernel.org>
-References: <bug-22092-11613@https.bugzilla.kernel.org/>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: IO performance test on the tcm-vhost scsi
+Date: Thu, 14 Jun 2012 13:41:48 -0700
+Message-ID: <1339706508.12064.31.camel@haakon2.linux-iscsi.org>
+References: <1339582392.24309.15.camel@mengcong>
+	 <1339614481.13709.354.camel@haakon2.linux-iscsi.org>
+	 <1339667854.28851.14.camel@mengcong>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:33230 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755409Ab2FNRfA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jun 2012 13:35:00 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 2177D204E5
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 17:34:59 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 5AEC7204D2
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2012 17:34:57 +0000 (UTC)
-In-Reply-To: <bug-22092-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1339667854.28851.14.camel@mengcong>
+Sender: target-devel-owner@vger.kernel.org
+To: mc@linux.vnet.ibm.com
+Cc: qemu-devel@nongnu.org, target-devel@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, Anthony Liguori <anthony@codemonkey.ws>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=22092
+On Thu, 2012-06-14 at 17:57 +0800, Cong Meng wrote:
+> On Wed, 2012-06-13 at 12:08 -0700, Nicholas A. Bellinger wrote:
+> > On Wed, 2012-06-13 at 18:13 +0800, mengcong wrote:
+> > > Hi folks, I did an IO performance test on the tcm-vhost scsi. I want to share 
+> > > the test result data here.
+> > > 
+> > > 
+> > >                     seq-read        seq-write       rand-read     rand-write
+> > >                     8k     256k     8k     256k     8k   256k     8k   256k
+> > > ----------------------------------------------------------------------------
+> > > bare-metal          67951  69802    67064  67075    1758 29284    1969 26360
+> > > tcm-vhost-iblock    61501  66575    51775  67872    1011 22533    1851 28216
+> > > tcm-vhost-pscsi     66479  68191    50873  67547    1008 22523    1818 28304
+> > > virtio-blk          26284  66737    23373  65735    1724 28962    1805 27774
+> > > scsi-disk           36013  60289    46222  62527    1663 12992    1804 27670
+> > > 
+> > > unit: KB/s
+> > > seq-read/write = sequential read/write
+> > > rand-read/write = random read/write
+> > > 8k,256k are blocksize of the IO
+> > > 
+> > > In tcm-vhost-iblock test, the emulate_write_cache attr was enabled.
+> > > In virtio-blk test, cache=none,aio=native were set.
+> > > In scsi-disk test, cache=none,aio=native were set, and LSI HBA was used.
+> > > 
+> > > I also tried to do the test with a scsi-generic LUN (pass through the 
+> > > physical partition /dev/sgX device). But I couldn't setup it
+> > > successfully. It's a pity.
+> > > 
+> > > Benchmark tool: fio, with ioengine=aio,direct=1,iodepth=8 set for all tests.
+> > > kvm vm: 2 cpus and 2G ram
+> > > 
+> > 
+> > These initial performance results look quite promising for virtio-scsi.
+> > 
+> > I'd be really interested to see how a raw flash block device backend
+> > that locally can do ~100K 4k mixed R/W random IOPs compares with
+> > virtio-scsi guest performance as the random small block fio workload
+> > increases..
+> flash block == Solid state disk? I have no one on hand. 
+> > 
 
+It just so happens there is a FusionIO HBA nearby..  ;)
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+However, I'm quite busy with customer items the next days but am really
+looking forward to giving this a shot with some fast raw block flash
+backends soon..
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
+Also, it's about time to convert tcm_vhost from using the old
+TFO->new_cmd_map() to native cmwq..  This will certainly help overall
+tcm_vhost performance, especially with shared backends across multiple
+VMs where parts of I/O backend execution can happen in separate kworker
+process context.
 
+Btw, I'll likely end up doing this conversion to realize the performance
+benefits when testing with raw flash backends, but I'm more than happy
+to take a patch ahead of that if you have the extra cycles to spare.
 
+> > Also note there is a bottleneck wrt to random small block I/O
+> > performance (per LUN) on the Linux/SCSI initiator side that is effecting
+> > things here.  We've run into this limitation numerous times with using
+> > SCSI LLDs as backend TCM devices, and I usually recommend using iblock
+> > export with raw block flash backends for achieving the best small block
+> > random I/O performance results.  A number of high performance flash
+> > storage folks do something similar with raw block access (Jen's CC'ed)
+> > 
+> > As per Stefan's earlier question, how does virtio-scsi to QEMU SCSI
+> > userspace compare with these results..?  Is there a reason why these
+> > where not included in the initial results..?
+> > 
+> This should be a mistake I made. I will do this pattern later.
+> 
 
+Thanks!
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+--nab
