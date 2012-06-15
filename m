@@ -1,33 +1,54 @@
-From: Stefan Hajnoczi <stefanha@gmail.com>
-Subject: Re: IO performance test on the tcm-vhost scsi
-Date: Fri, 15 Jun 2012 11:35:03 +0100
-Message-ID: <CAJSP0QU3pCo+kj8B8WvLX-zijcOxb=JXZB7DK0K952W4M8vF7Q@mail.gmail.com>
-References: <1339582392.24309.15.camel@mengcong>
-	<1339614481.13709.354.camel@haakon2.linux-iscsi.org>
-	<1339667854.28851.14.camel@mengcong>
-	<1339706508.12064.31.camel@haakon2.linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:60928 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002Ab2FOKfF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jun 2012 06:35:05 -0400
-In-Reply-To: <1339706508.12064.31.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH] scsi: Silence unnecessary warnings about ioctl to partition
+Date: Fri, 15 Jun 2012 12:50:57 +0200
+Message-ID: <1339757457-15646-1-git-send-email-jack@suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jan Kara <jack@suse.cz>, Paolo Bonzini <pbonzini@redhat.com>, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: mc@linux.vnet.ibm.com, qemu-devel@nongnu.org, target-devel@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, Anthony Liguori <anthony@codemonkey.ws>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jun 14, 2012 at 9:41 PM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
-> Btw, I'll likely end up doing this conversion to realize the performance
-> benefits when testing with raw flash backends, but I'm more than happy
-> to take a patch ahead of that if you have the extra cycles to spare.
+Sometimes, warnings about ioctls to partition happen often enough that they
+form majority of the warnings in the kernel log and users complain. In some
+cases warnings are about ioctls such as SG_IO so it's not good to get rid of
+the warnings completely as they can ease debugging of userspace problems
+when ioctl is refused.
 
-This was mentioned on target-devel a little while ago.  Unfortunately
-I'm busy, the chance of a patch appearing from me is low, sorry.  If I
-do get some cycles to tackle it I'll let you know first so we don't
-duplicate work.
+Since I have seen warnings from lots of commands, including some proprietary
+userspace applications, I don't think disallowing the ioctls for processes
+with CAP_SYS_RAWIO will happen in the near future if ever. So lets just
+stop warning for processes with CAP_SYS_RAWIO for which ioctl is allowed.
 
-Stefan
+CC: Paolo Bonzini <pbonzini@redhat.com>
+CC: Jens Axboe <axboe@kernel.dk>
+CC: James Bottomley <JBottomley@parallels.com>
+CC: linux-scsi@vger.kernel.org
+Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ block/scsi_ioctl.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+ Resending rebased on 3.5-rc2 with and Ack from Paolo.
+
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 260fa80..9a87daa 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -721,11 +721,14 @@ int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
+ 		break;
+ 	}
+ 
++	if (capable(CAP_SYS_RAWIO))
++		return 0;
++
+ 	/* In particular, rule out all resets and host-specific ioctls.  */
+ 	printk_ratelimited(KERN_WARNING
+ 			   "%s: sending ioctl %x to a partition!\n", current->comm, cmd);
+ 
+-	return capable(CAP_SYS_RAWIO) ? 0 : -ENOIOCTLCMD;
++	return -ENOIOCTLCMD;
+ }
+ EXPORT_SYMBOL(scsi_verify_blk_ioctl);
+ 
+-- 
+1.7.1
