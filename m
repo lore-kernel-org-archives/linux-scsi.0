@@ -1,46 +1,25 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/4] qla4xxx: Updates for scsi "misc" branch.
-Date: Thu, 14 Jun 2012 23:32:37 -0500
-Message-ID: <4FDABAE5.6000307@cs.wisc.edu>
-References: <1339670151-26289-1-git-send-email-vikas.chaudhary@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: iscsi changes for scsi misc
+Date: Thu, 14 Jun 2012 23:15:44 -0500
+Message-ID: <1339733747-14731-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36528 "EHLO sabe.cs.wisc.edu"
+Received: from mx1.redhat.com ([209.132.183.28]:49704 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750915Ab2FOEcT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jun 2012 00:32:19 -0400
-In-Reply-To: <1339670151-26289-1-git-send-email-vikas.chaudhary@qlogic.com>
+	id S1751034Ab2FOFFd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jun 2012 01:05:33 -0400
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q5F55WCH032094
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Jun 2012 01:05:32 -0400
+Received: from meanminna.corp.redhat.com (vpn-10-195.rdu.redhat.com [10.11.10.195])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id q5F4FKDa012054
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Jun 2012 00:15:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
-
-On 06/14/2012 05:35 AM, vikas.chaudhary@qlogic.com wrote:
-> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> 
-> James,
-> 
-> Please apply the following patches to the scsi tree at your earliest
-> convenience for inclusion in mainline.
-> 
-> Vikas Chaudhary (4):
->       qla4xxx: multi-session fix for flash ddbs
->       qla4xxx: Fix a Sparse warning message
->       qla4xxx: Fix Spell check.
->       qla4xxx: Update driver version to 5.02.00-k18
-> 
->  drivers/scsi/qla4xxx/ql4_def.h     |    1 +
->  drivers/scsi/qla4xxx/ql4_glbl.h    |    3 +-
->  drivers/scsi/qla4xxx/ql4_init.c    |    2 +-
->  drivers/scsi/qla4xxx/ql4_os.c      |  156 +++++++++++++++++++++++++++++++++---
->  drivers/scsi/qla4xxx/ql4_version.h |    2 +-
-> 
-> Thanks,
-> Vikas.
+To: linux-scsi@vger.kernel.org
 
 
-Looks ok.
+The following patches were made over the misc branch of the
+scsi tree. They are not critical fixes.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+
