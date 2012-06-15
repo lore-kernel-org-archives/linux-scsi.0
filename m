@@ -1,70 +1,60 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target rc-fixes for v3.5-rc3
-Date: Thu, 14 Jun 2012 16:23:09 -0700
-Message-ID: <1339716189.12064.96.camel@haakon2.linux-iscsi.org>
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: Re: [PATCH v4 0/3] scsi: fix internal write cache issue on usb hdd.
+Date: Fri, 15 Jun 2012 12:51:58 +0900
+Message-ID: <CAKYAXd9sbVL9Ut4nZOg5Mt3ZuCOouUq64d-ifjtbO0TnaU1XvA@mail.gmail.com>
+References: <1339601248-3251-1-git-send-email-linkinjeon@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Roland Dreier <roland@kernel.org>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Sachin Kamat <sachin.kamat@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:58977 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752749Ab2FODv7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2012 23:51:59 -0400
+In-Reply-To: <1339601248-3251-1-git-send-email-linkinjeon@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: gregkh@linuxfoundation.org
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, James.Bottomley@hansenpartnership.com, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, sshtylyov@mvista.com, bvanassche@acm.org
 
-Hello Linus!
+Hi Greg.
 
-Here is the outstanding series of target 3.5-rc-fixes currently pending
-for v3.5-rc3 merge.  As mentioned in the tree work-flow re-org
-announcement, target bug-fixes slated for the current release will now
-be coming via branch master following Linux/KVM's tree workflow.
+Would you check this patch-set ?
 
-The branch master is based upon:
+Thanks.
 
-commit cfaf025112d3856637ff34a767ef785ef5cf2ca9
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Fri Jun 8 18:40:09 2012 -0700
-
-    Linux 3.5-rc2
-
-Please go ahead and pull:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
-
-This series contains post merge qla_target.c / tcm_qla2xxx bugfixes from
-the past weeks, including the patch to allow target-core to use an
-optional session shutdown callback to help address an active I/O
-shutdown bug in tcm_qla2xxx code (Joern).
-
-Also included is a target regression bugfix releated to explict ALUA
-target port group CDB emulation that is CC'ed to stable (Roland).
-
-Thank you!
-
---nab
-
-Joern Engel (2):
-  target: Add TFO->put_session() caller for HW fabric session shutdown
-  tcm_qla2xxx: Convert to TFO->put_session() usage
-
-Nicholas Bellinger (1):
-  tcm_qla2xxx: Clear session s_id + loop_id earlier during shutdown
-
-Roland Dreier (6):
-  target: Return error to initiator if SET TARGET PORT GROUPS emulation
-    fails
-  tcm_qla2xxx: Don't insert nacls without sessions into the btree
-  qla2xxx: Don't crash if we can't find cmd for failed CTIO
-  qla2xxx: Don't leak commands we give up on in qlt_do_work()
-  tcm_qla2xxx: tcm_qla2xxx_handle_tmr() can be static
-  tcm_qla2xxx: Handle malformed wwn strings properly
-
-Sachin Kamat (1):
-  qla2xxx: Remove version.h header file inclusion
-
- drivers/scsi/qla2xxx/qla_target.c      |   11 +--
- drivers/scsi/qla2xxx/qla_target.h      |    1 -
- drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  152 ++++++++++++--------------------
- drivers/target/target_core_alua.c      |    5 +-
- drivers/target/target_core_transport.c |    8 ++-
- include/target/target_core_fabric.h    |    1 +
- 6 files changed, 74 insertions(+), 104 deletions(-)
+2012/6/14, Namjae Jeon <linkinjeon@gmail.com>:
+> From: Namjae Jeon <namjae.jeon@samsung.com>
+>
+> The numbers of USB HDDs(All USB HDD I checked) does not respond
+> correctly to scsi mode sense command for retrieving the write cache
+> page status. Even though write cache is enabled by default, due to
+> scsi driver assume that cache is not enabled which in turn might lead
+> to loss of data since data still will be in cache.
+> This result that all filesystems is not stable on USB HDD when the
+> device is unplugged abruptly, even though these are having journaling
+> feature. Our first trying is that scsi driver send ATA command
+> (ATA Pass through, #58) to USB HDD after failure from normal routine to
+> know write cache enable.
+> We have known it is dangerous after testing several USB HDD. some of
+> HDD is stalled by this command(A-DATA HDD). So we tried to make the
+> patch James's suggestion(usb quirk) on version 2 that add product ID
+> and verdor ID of USB HDD to USB quirk list after checking write cache.
+> All filesystem will be stable on USB HDD registered in quirk list.
+> And it will be updated continuously.
+>
+> 	scsi: set to WCE if usb cache quirk is present.
+> 	usb: storage: add support for write cache quirk on usb hdd.
+> 	usb: storage: update usb devices for write cache quirk in quirk.
+>
+>  drivers/scsi/sd.c          |    9 +++++++--
+>  include/scsi/scsi_device.h |    1 +
+>  drivers/usb/storage/scsiglue.c |    5 +++++
+>  drivers/usb/storage/usb.c      |    5 ++++-
+>  include/linux/usb_usual.h      |    4 +++-
+>  drivers/usb/storage/unusual_devs.h |   24 ++++++++++++++++++++++++
+>  Documentation/kernel-parameters.txt |    2 ++
+>  7 files changed, 46 insertions(+), 4 deletions(-)
+> --
+> 1.7.9.5
+>
+>
