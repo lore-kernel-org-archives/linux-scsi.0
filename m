@@ -1,19 +1,18 @@
 From: "Allen and Violet Large" <ppgcm@ufc.br>
 Subject: Pleasant Greetings
-Date: Sun, 17 Jun 2012 07:48:08 -0300 (BRT)
-Message-ID: <dc99c4d29858382b0844e82b6152afab.squirrel@correio3.ufc.br>
+Date: Sun, 17 Jun 2012 09:35:13 -0300 (BRT)
+Message-ID: <3b449bd7b53eecd98901637f58f890e8.squirrel@correio3.ufc.br>
 Reply-To: allen_violetlarge08@yahoo.co.jp
 Mime-Version: 1.0
 Content-Type: text/plain;charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from correio5.ufc.br ([200.19.190.13]:60060 "EHLO correio5.ufc.br"
+Received: from correio5.ufc.br ([200.19.190.13]:60169 "EHLO correio5.ufc.br"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754926Ab2FQLVE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Jun 2012 07:21:04 -0400
+	id S1757045Ab2FQMo5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Jun 2012 08:44:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
 
 
 
@@ -36,4 +35,5 @@ http://www.cbc.ca/news/canada/nova-scotia/story/2010/11/04/ns-allen-violet-large
 Goodluck,
 Allen and Violet Large
 Email: allen_violetlarge08@yahoo.co.jp
+
 
