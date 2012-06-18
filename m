@@ -1,15 +1,15 @@
 From: Thomas Schwinge <thomas@codesourcery.com>
 Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
-Date: Mon, 18 Jun 2012 07:28:07 +0200
-Message-ID: <87ehpddw9k.fsf@schwinge.name>
-References: <87obojef7t.fsf@schwinge.name> <20120616181008.GB20623@liondog.tnic>
+Date: Mon, 18 Jun 2012 07:29:43 +0200
+Message-ID: <87bokhdw6w.fsf@schwinge.name>
+References: <87obojef7t.fsf@schwinge.name> <1339854034.4942.176.camel@deadeye.wl.decadent.org.uk>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha1; protocol="application/pgp-signature"
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120616181008.GB20623@liondog.tnic>
+In-Reply-To: <1339854034.4942.176.camel@deadeye.wl.decadent.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
+To: Ben Hutchings <ben@decadent.org.uk>
 Cc: debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -19,8 +19,9 @@ Content-Transfer-Encoding: quoted-printable
 
 Hi!
 
-On Sat, 16 Jun 2012 20:10:08 +0200, Borislav Petkov <bp@alien8.de> wrote:
-> On Sat, Jun 16, 2012 at 12:14:14PM +0200, Thomas Schwinge wrote:
+On Sat, 16 Jun 2012 14:40:34 +0100, Ben Hutchings <ben@decadent.org.uk> wro=
+te:
+> On Sat, 2012-06-16 at 12:14 +0200, Thomas Schwinge wrote:
 > > After many others that played with no problems, I just tried playing
 > > Guano Apes' audio CD =C2=BBProud Like a God=C2=AB (1997) in Rhythmbox, =
 on my mostly
@@ -38,35 +39,20 @@ on my mostly
 > > <http://schwinge.homeip.net/~thomas/tmp/linux-crash-audio-cd.jpeg> you
 > > can find the panic message (low resolution, sorry), pointing to the
 > > SCSI/ATA code.
+> >=20
+> > Are there any such known issues?  Does the panic message give any clue
+> > already, or would you want me to reproduce that with debugging symbols,
+> > etc.?
 >=20
-> Let me guess: AMD K8?
+> Your computer is broken; Machine Check Exception indicates a hardware
+> fault.
 
-Correct.
+Hmm, I see, thanks.  Nothing the kernel could do to catch that, I
+suppose?  (Scary that simply putting a regular audio CD into the drive
+can crash the kernel.)
 
-> Also, can I get /proc/cpuinfo please?
-
-    $ cat < /proc/cpuinfo
-    processor       : 0
-    vendor_id       : AuthenticAMD
-    cpu family      : 15
-    model           : 47
-    model name      : AMD Sempron(tm) Processor 3000+
-    stepping        : 2
-    cpu MHz         : 1000.000
-    cache size      : 128 KB
-    fpu             : yes
-    fpu_exception   : yes
-    cpuid level     : 1
-    wp              : yes
-    flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge =
-mca cmov pat pse36 clflush mmx fxsr sse sse2 syscall nx mmxext fxsr_opt lm =
-3dnowext 3dnow up rep_good nopl pni lahf_lm
-    bogomips        : 2000.16
-    TLB size        : 1024 4K pages
-    clflush size    : 64
-    cache_alignment : 64
-    address sizes   : 40 bits physical, 48 bits virtual
-    power management: ts fid vid ttp tm stc
+> The other text at the top of the screen may help to identify
+> which component is at fault.
 
 
 Gr=C3=BC=C3=9Fe,
@@ -78,12 +64,12 @@ Content-Type: application/pgp-signature
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iQEcBAEBAgAGBQJP3rxnAAoJENuKOtuXzphJQ74H/RNrzmQZwqeayvYN0w/Kbnhn
-OxBZQ/8iP7LRKalVqTFZqux0c9UBWOvJOhVTyT2g9/ii6VrdFXPBkzw0HbRrdyo3
-QivUZ/QP86I8OMZ4mTx/vv/zbKZOS7u5MT7Q0wJ/VV30T8GLp8c8qJT8ucB8s1IU
-ijJyS/c7wsb0PnjbuLnzuWbYkbYY6QwuZn1cpj/e8iwzred0nJXTYiATBYyIG5qS
-9livwcejJhCsNZ7pz4PXwWvtZe48JAbL0xwNjZYMcBolszU/Os9AZielM+knmzjf
-WjmvQa3MzgW9jw4Z4pFtHiVe2SGBlByK0GzV/Jkb/OU5paZf9JNMbca3zD7uj2U=
-=+Ci7
+iQEcBAEBAgAGBQJP3rzHAAoJENuKOtuXzphJXJwH/Azofxu5sQr1+1aS/C/JueP3
+UjGlBE21jA1AfnObL3u7o5W8FtZvbTuHG9Gdn1TjKuP/qrakR9h0atB+71ilk9St
+cgQPPcu10KmwGdZAcgxyG7Wf/NCFXuG+8UtFV23RjFccEYgbntQxTY5q9L5z9kLt
+m53tL7uejtleiydwGWBoy6BGs/OYNBVRga/0aI0pg84CrTN+4bEuYvTDiKyHUdVR
+7S1knw50fMURC5MQW4IxaFVRWTmS5NidDVRrUv+8wexu4yUMKAznb10B4XZfFslF
+VjCnRMM37Uq7y61laHzkl8tXA0DckfLDRwnC7IWcubUI58iHLXuaBdl0ibWQkYY=
+=W1jX
 -----END PGP SIGNATURE-----
 --=-=-=--
