@@ -1,28 +1,28 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14653] sysfs: cannot create duplicate filename
- '/bus/scsi/drivers/sd/2:0:1:0'
-Date: Mon, 18 Jun 2012 12:43:55 +0000 (UTC)
-Message-ID: <20120618124355.807DA11FE46@bugzilla.kernel.org>
-References: <bug-14653-11613@https.bugzilla.kernel.org/>
+Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
+ unreliable operation - drive / controller resets
+Date: Mon, 18 Jun 2012 13:20:28 +0000 (UTC)
+Message-ID: <20120618132028.586EE11FE50@bugzilla.kernel.org>
+References: <bug-14831-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:43913 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.19.201]:48018 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751111Ab2FRMn6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Jun 2012 08:43:58 -0400
+	id S1751905Ab2FRNUc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jun 2012 09:20:32 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 15357202CE
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jun 2012 12:43:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F3D220277
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Jun 2012 13:20:31 +0000 (UTC)
 Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 16FCF202C7
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jun 2012 12:43:56 +0000 (UTC)
-In-Reply-To: <bug-14653-11613@https.bugzilla.kernel.org/>
+	by mail.kernel.org (Postfix) with ESMTP id 85A47202EE
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Jun 2012 13:20:29 +0000 (UTC)
+In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14653
+https://bugzilla.kernel.org/show_bug.cgi?id=14831
 
 
 Alan <alan@lxorguk.ukuu.org.uk> changed:
