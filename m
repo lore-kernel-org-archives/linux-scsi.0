@@ -1,75 +1,87 @@
-From: Thomas Schwinge <thomas@codesourcery.com>
-Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
-Date: Mon, 18 Jun 2012 07:29:43 +0200
-Message-ID: <87bokhdw6w.fsf@schwinge.name>
-References: <87obojef7t.fsf@schwinge.name> <1339854034.4942.176.camel@deadeye.wl.decadent.org.uk>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha1; protocol="application/pgp-signature"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1339854034.4942.176.camel@deadeye.wl.decadent.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [PATCH v5 0/13] SATA ZPODD support
+Date: Mon, 18 Jun 2012 14:25:54 +0800
+Message-ID: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Hi all,
 
-Hi!
+This is the v5 patches to add SATA ZPODD support, to try it:
+git pull git://git.kernel.org/pub/scm/linux/kernel/git/mlin/linux.git zpodd
 
-On Sat, 16 Jun 2012 14:40:34 +0100, Ben Hutchings <ben@decadent.org.uk> wro=
-te:
-> On Sat, 2012-06-16 at 12:14 +0200, Thomas Schwinge wrote:
-> > After many others that played with no problems, I just tried playing
-> > Guano Apes' audio CD =C2=BBProud Like a God=C2=AB (1997) in Rhythmbox, =
-on my mostly
-> > up-to-date Debian GNU/Linux testing system.
-> >=20
-> >     $ uname -a
-> >     Linux boole 3.2.0-2-amd64 #1 SMP Mon May 21 17:45:41 UTC 2012 x86_6=
-4 GNU/Linux
-> >=20
-> > ... which specifically is =C2=BBlinux-image-3.2.0-2-amd64 3.2.18-1=C2=
-=AB.
-> >=20
-> > While "loading" the CD in Rhythmbox, after a few seconds the kernel
-> > crashed.  I rebooted, tried again, and it crashed again.  At
-> > <http://schwinge.homeip.net/~thomas/tmp/linux-crash-audio-cd.jpeg> you
-> > can find the panic message (low resolution, sorry), pointing to the
-> > SCSI/ATA code.
-> >=20
-> > Are there any such known issues?  Does the panic message give any clue
-> > already, or would you want me to reproduce that with debugging symbols,
-> > etc.?
->=20
-> Your computer is broken; Machine Check Exception indicates a hardware
-> fault.
+Holger and Mathtew,
+Patch 1 to Patch 4 are the libata acpi binding patches from you.
+I removed dock related code from your original version.
+Would you help to review?
 
-Hmm, I see, thanks.  Nothing the kernel could do to catch that, I
-suppose?  (Scary that simply putting a regular audio CD into the drive
-can crash the kernel.)
+v5:
+- rebase to v3.5-rc3
+- fixed crash reported at https://lkml.org/lkml/2012/2/24/2 (Aaron Lu)
+- rename is_pci_ata to compat_pci_ata (Alan Cox)
 
-> The other text at the top of the screen may help to identify
-> which component is at fault.
+v4:
+https://lkml.org/lkml/2012/5/28/11
+- Includes libata acpi binding patches from Holger Macht and Matthew Garrett.
+- tell scsi layer device supports runtime power off
+- check support for device busy class events
+
+v3:
+https://lkml.org/lkml/2012/3/28/20
+- Split the ACPI D3Cold state support patches out
+- Adds "Device Attention" bit check
+
+v2:
+https://lkml.org/lkml/2012/3/1/61
+- _PR3 indicates D3Cold support
+- move can_power_off flag to pm_subsys_data
+- allow all combinations of power resource and device
+- split patches into smaller ones to make review easy
+
+v1:
+https://lkml.org/lkml/2012/2/13/86
 
 
-Gr=C3=BC=C3=9Fe,
- Thomas
+Aaron Lu (4):
+      libata: tell scsi layer device supports runtime power off
+      [SCSI] sr: check support for device busy class events
+      [SCSI] sr: support zero power ODD
+      [SCSI] sr: make sure ODD is in resumed state in block ioctl
 
---=-=-=
-Content-Type: application/pgp-signature
+Holger Macht (2):
+      [SCSI]: add wrapper to access and set scsi_bus_type in struct acpi_bus_type
+      libata: use correct PCI devices
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Lin Ming (4):
+      libata-acpi: set acpi state for SATA port
+      libata-acpi: add ata port runtime D3Cold support
+      libata-acpi: register/unregister device to/from power resource
+      libata: detect Device Attention support
 
-iQEcBAEBAgAGBQJP3rzHAAoJENuKOtuXzphJXJwH/Azofxu5sQr1+1aS/C/JueP3
-UjGlBE21jA1AfnObL3u7o5W8FtZvbTuHG9Gdn1TjKuP/qrakR9h0atB+71ilk9St
-cgQPPcu10KmwGdZAcgxyG7Wf/NCFXuG+8UtFV23RjFccEYgbntQxTY5q9L5z9kLt
-m53tL7uejtleiydwGWBoy6BGs/OYNBVRga/0aI0pg84CrTN+4bEuYvTDiKyHUdVR
-7S1knw50fMURC5MQW4IxaFVRWTmS5NidDVRrUv+8wexu4yUMKAznb10B4XZfFslF
-VjCnRMM37Uq7y61laHzkl8tXA0DckfLDRwnC7IWcubUI58iHLXuaBdl0ibWQkYY=
-=W1jX
------END PGP SIGNATURE-----
---=-=-=--
+Matthew Garrett (2):
+      libata: bind the Linux device tree to the ACPI device tree
+      libata: migrate ACPI code over to new bindings
+
+
+ drivers/acpi/glue.c        |    4 +-
+ drivers/acpi/power.c       |    2 +
+ drivers/ata/libata-acpi.c  |  389 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---------------------------
+ drivers/ata/libata-core.c  |    9 ++-
+ drivers/ata/libata-pmp.c   |    4 -
+ drivers/ata/libata-scsi.c  |    3 +
+ drivers/ata/libata.h       |   13 +--
+ drivers/ata/pata_acpi.c    |    4 +-
+ drivers/scsi/scsi_lib.c    |   17 ++++
+ drivers/scsi/sr.c          |  160 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/sr.h          |    3 +
+ include/linux/ata.h        |    1 +
+ include/linux/cdrom.h      |   43 ++++++++++
+ include/linux/libata.h     |    9 +--
+ include/scsi/scsi.h        |   10 +++
+ include/scsi/scsi_device.h |    2 +
+ 16 files changed, 534 insertions(+), 139 deletions(-)
+
+
