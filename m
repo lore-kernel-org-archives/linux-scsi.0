@@ -1,104 +1,92 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v5 09/12] libata: tell scsi layer device supports runtime power off
-Date: Mon, 18 Jun 2012 14:26:03 +0800
-Message-ID: <1340000766-129148-10-git-send-email-ming.m.lin@intel.com>
+Subject: [PATCH v5 07/12] libata-acpi: register/unregister device to/from power resource
+Date: Mon, 18 Jun 2012 14:26:01 +0800
+Message-ID: <1340000766-129148-8-git-send-email-ming.m.lin@intel.com>
 References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-acpi-owner@vger.kernel.org>
 In-Reply-To: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Aaron Lu <aaron.lu@amd.com>
-
-If ATA device supports "Device Attention", then tell scsi layer that
-the device supports runtime power off.
-
-Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/ata/libata-acpi.c  |   32 ++++++++++++++++++++++++++++----
- include/scsi/scsi_device.h |    1 +
- 2 files changed, 29 insertions(+), 4 deletions(-)
+ drivers/acpi/power.c      |    2 ++
+ drivers/ata/libata-acpi.c |   32 ++++++++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
 
+diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
+index dd6d6a3..eb640874 100644
+--- a/drivers/acpi/power.c
++++ b/drivers/acpi/power.c
+@@ -390,6 +390,7 @@ void acpi_power_resource_unregister_device(struct device *dev, acpi_handle handl
+ 		__acpi_power_resource_unregister_device(dev,
+ 			list->handles[i]);
+ }
++EXPORT_SYMBOL_GPL(acpi_power_resource_unregister_device);
+ 
+ static int __acpi_power_resource_register_device(
+ 	struct acpi_power_managed_device *powered_device, acpi_handle handle)
+@@ -460,6 +461,7 @@ int acpi_power_resource_register_device(struct device *dev, acpi_handle handle)
+ 	printk(KERN_WARNING PREFIX "Invalid Power Resource to register!");
+ 	return -ENODEV;
+ }
++EXPORT_SYMBOL_GPL(acpi_power_resource_register_device);
+ 
+ /**
+  * acpi_device_sleep_wake - execute _DSW (Device Sleep Wake) or (deprecated in
 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 9287593..0c54d1e 100644
+index 3f7d376..9287593 100644
 --- a/drivers/ata/libata-acpi.c
 +++ b/drivers/ata/libata-acpi.c
-@@ -1000,7 +1000,10 @@ static void ata_acpi_add_pm_notifier(struct ata_device *dev)
- 		return;
- 
- 	status = acpi_bus_get_device(handle, &acpi_dev);
--	if (ACPI_SUCCESS(status)) {
-+	if (ACPI_FAILURE(status))
-+		return;
-+
-+	if (dev->sdev->can_power_off) {
- 		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 			ata_acpi_wake_dev, dev);
- 		device_set_run_wake(&dev->sdev->sdev_gendev, true);
-@@ -1018,7 +1021,10 @@ static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
- 		return;
- 
- 	status = acpi_bus_get_device(handle, &acpi_dev);
--	if (ACPI_SUCCESS(status)) {
-+	if (ACPI_FAILURE(status))
-+		return;
-+
-+	if (dev->sdev->can_power_off) {
- 		device_set_run_wake(&dev->sdev->sdev_gendev, false);
- 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 			ata_acpi_wake_dev);
-@@ -1102,10 +1108,13 @@ static int ata_acpi_bind_host(struct device *dev, int host, acpi_handle *handle)
- static int ata_acpi_bind_device(struct device *dev, int channel, int id,
- 				acpi_handle *handle)
- {
--	struct device *host = dev->parent->parent;
--	struct Scsi_Host *shost = dev_to_shost(host);
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct Scsi_Host *shost = sdev->host;
- 	struct ata_port *ap = ata_shost_to_port(shost);
- 	struct ata_device *ata_dev;
-+	acpi_status status;
-+	struct acpi_device *acpi_dev;
-+	struct acpi_device_power_state *states;
- 
- 	if (ap->flags & ATA_FLAG_ACPI_SATA)
- 		ata_dev = &ap->link.device[channel];
-@@ -1117,6 +1126,21 @@ static int ata_acpi_bind_device(struct device *dev, int channel, int id,
- 	if (!*handle)
- 		return -ENODEV;
- 
-+	status = acpi_bus_get_device(*handle, &acpi_dev);
-+	if (ACPI_FAILURE(status))
-+		return 0;
-+
-+	/*
-+	 * If firmware has _PS3 or _PR3 for this device,
-+	 * and this ata ODD device support device attention,
-+	 * it means this device can be powered off
-+	 */
-+	states = acpi_dev->power.states;
-+	if ((states[ACPI_STATE_D3_HOT].flags.valid ||
-+			states[ACPI_STATE_D3_COLD].flags.explicit_set) &&
-+			ata_dev->flags & ATA_DFLAG_DA)
-+		sdev->can_power_off = 1;
-+
- 	return 0;
+@@ -1025,14 +1025,46 @@ static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
+ 	}
  }
  
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 6efb2e1..1237fac 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -152,6 +152,7 @@ struct scsi_device {
- 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
- 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
-+	unsigned can_power_off:1; /* Device supports runtime power off */
++static void ata_acpi_register_power_resource(struct ata_device *dev)
++{
++	struct scsi_device *sdev = dev->sdev;
++	acpi_handle handle;
++	struct device *device;
++
++	handle = ata_dev_acpi_handle(dev);
++	if (!handle)
++		return;
++
++	device = &sdev->sdev_gendev;
++
++	acpi_power_resource_register_device(device, handle);
++}
++
++static void ata_acpi_unregister_power_resource(struct ata_device *dev)
++{
++	struct scsi_device *sdev = dev->sdev;
++	acpi_handle handle;
++	struct device *device;
++
++	handle = ata_dev_acpi_handle(dev);
++	if (!handle)
++		return;
++
++	device = &sdev->sdev_gendev;
++
++	acpi_power_resource_unregister_device(device, handle);
++}
++
+ void ata_acpi_bind(struct ata_device *dev)
+ {
+ 	ata_acpi_add_pm_notifier(dev);
++	ata_acpi_register_power_resource(dev);
+ }
  
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
+ void ata_acpi_unbind(struct ata_device *dev)
+ {
+ 	ata_acpi_remove_pm_notifier(dev);
++	ata_acpi_unregister_power_resource(dev);
+ }
+ 
+ static int compat_pci_ata(struct device *dev)
 -- 
 1.7.10
+
