@@ -1,57 +1,31 @@
-From: Account User <info@helpdesk.com>
-Subject: Scheduled Maintenance & Upgrade
-Date: Mon, 18 Jun 2012 08:18:16 +0200
-Message-ID: <20120618081816.373713s6fiyig8bk@webmail.mira.dk>
-Reply-To: it.servicecenter@tech-center.com
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH v5 04/12] libata: use correct PCI devices
+Date: Mon, 18 Jun 2012 15:37:20 +0400
+Message-ID: <4FDF12F0.6080205@mvista.com>
+References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com> <1340000766-129148-5-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from d446021b.rev.mira.dk ([212.70.2.27]:53391 "EHLO webmail.mira.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752916Ab2FRKiV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Jun 2012 06:38:21 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1340000766-129148-5-git-send-email-ming.m.lin@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On 18-06-2012 10:25, Lin Ming wrote:
 
-Help Desk
+> From: Holger Macht <holger@homac.de>
 
-Attention Account User,
+> Commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a
 
-Scheduled Maintenance & Upgrade
+    Please also specify that commit's summary in parens.
 
-Your account is in the process of being upgraded to a newest of  
-Windows-based servers and an enhanced online email interface inline  
-with internet infrastructure Maintenance. The new servers will provide  
-better anti-spam and anti-virus functions, along with IMAP Support for  
-mobile devices that Support IMAP to enhance your usage.
+> made ata ports parent
+> devices of scsi hosts, so we need to go yet another level up to be able
+> to use the correct PCI devices.
 
-To ensure that your account is not intermittently disrupted but active  
-during and after this upgrade, you are required to kindly confirm your  
-account by stating the details below:
+> Signed-off-by: Holger Macht <holger@homac.de>
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 
-* User name:
-* Password:
-
-This will prompt the upgrade of your account.
-
-Failure to acknowledge receipt of this notification, might result to a  
-temporal deactivation of your account from our database.
-
-Your account shall remain active upon your confirmation of your login details.
-
-We do apologize for any inconvenience caused.
-
-Help Desk
-
-
-Copyright 2012, All Rights Reserved.
-
-
-
-
+MBR, Sergei
