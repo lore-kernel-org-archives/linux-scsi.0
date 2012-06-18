@@ -1,52 +1,42 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v5 04/12] libata: use correct PCI devices
-Date: Mon, 18 Jun 2012 20:03:46 +0800
-Message-ID: <CAF1ivSaiVGB+TSn80QijpWJWUdkhpjuOKuu9XSTROF-kGgP_gQ@mail.gmail.com>
-References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-	<1340000766-129148-5-git-send-email-ming.m.lin@intel.com>
-	<4FDF12F0.6080205@mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14644] PROBLEM: system locking when burning dvd with an
+ externel usb dvd writer
+Date: Mon, 18 Jun 2012 12:39:46 +0000 (UTC)
+Message-ID: <20120618123946.0FB7011FE47@bugzilla.kernel.org>
+References: <bug-14644-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <4FDF12F0.6080205@mvista.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:43388 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751758Ab2FRMjt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jun 2012 08:39:49 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 2C1F9202B7
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Jun 2012 12:39:48 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 9F021202B5
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Jun 2012 12:39:46 +0000 (UTC)
+In-Reply-To: <bug-14644-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jun 18, 2012 at 7:37 PM, Sergei Shtylyov <sshtylyov@mvista.com>=
- wrote:
-> On 18-06-2012 10:25, Lin Ming wrote:
->
->> From: Holger Macht <holger@homac.de>
->
->
->> Commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a
->
->
-> =A0 Please also specify that commit's summary in parens.
+https://bugzilla.kernel.org/show_bug.cgi?id=14644
 
-OK.
 
-Thanks,
-Lin Ming
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
->
->
->> made ata ports parent
->> devices of scsi hosts, so we need to go yet another level up to be a=
-ble
->> to use the correct PCI devices.
->
->
->> Signed-off-by: Holger Macht <holger@homac.de>
->> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
->
->
-> MBR, Sergei
---
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |CODE_FIX
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
