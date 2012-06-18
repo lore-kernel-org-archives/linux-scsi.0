@@ -1,53 +1,104 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v5 12/12] [SCSI] sr: make sure ODD is in resumed state in block ioctl
-Date: Mon, 18 Jun 2012 14:26:06 +0800
-Message-ID: <1340000766-129148-13-git-send-email-ming.m.lin@intel.com>
+Subject: [PATCH v5 09/12] libata: tell scsi layer device supports runtime power off
+Date: Mon, 18 Jun 2012 14:26:03 +0800
+Message-ID: <1340000766-129148-10-git-send-email-ming.m.lin@intel.com>
 References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Aaron Lu <aaron.lu@amd.com>
 
-When application tries to access the ODD's block device by ioctl,
-make sure ODD is in an active state.
+If ATA device supports "Device Attention", then tell scsi layer that
+the device supports runtime power off.
 
 Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/scsi/sr.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/ata/libata-acpi.c  |   32 ++++++++++++++++++++++++++++----
+ include/scsi/scsi_device.h |    1 +
+ 2 files changed, 29 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 72488c2..3da0879 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -654,6 +654,13 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	void __user *argp = (void __user *)arg;
- 	int ret;
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 9287593..0c54d1e 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -1000,7 +1000,10 @@ static void ata_acpi_add_pm_notifier(struct ata_device *dev)
+ 		return;
  
-+	/* Make sure the ODD is not suspended */
-+	ret = pm_runtime_get_sync(&sdev->sdev_gendev);
-+	if (ret < 0) {
-+		pm_runtime_put_noidle(&sdev->sdev_gendev);
-+		return -EACCES;
-+	}
+ 	status = acpi_bus_get_device(handle, &acpi_dev);
+-	if (ACPI_SUCCESS(status)) {
++	if (ACPI_FAILURE(status))
++		return;
 +
- 	mutex_lock(&sr_mutex);
++	if (dev->sdev->can_power_off) {
+ 		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 			ata_acpi_wake_dev, dev);
+ 		device_set_run_wake(&dev->sdev->sdev_gendev, true);
+@@ -1018,7 +1021,10 @@ static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
+ 		return;
  
- 	/*
-@@ -685,6 +692,8 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	status = acpi_bus_get_device(handle, &acpi_dev);
+-	if (ACPI_SUCCESS(status)) {
++	if (ACPI_FAILURE(status))
++		return;
++
++	if (dev->sdev->can_power_off) {
+ 		device_set_run_wake(&dev->sdev->sdev_gendev, false);
+ 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 			ata_acpi_wake_dev);
+@@ -1102,10 +1108,13 @@ static int ata_acpi_bind_host(struct device *dev, int host, acpi_handle *handle)
+ static int ata_acpi_bind_device(struct device *dev, int channel, int id,
+ 				acpi_handle *handle)
+ {
+-	struct device *host = dev->parent->parent;
+-	struct Scsi_Host *shost = dev_to_shost(host);
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct Scsi_Host *shost = sdev->host;
+ 	struct ata_port *ap = ata_shost_to_port(shost);
+ 	struct ata_device *ata_dev;
++	acpi_status status;
++	struct acpi_device *acpi_dev;
++	struct acpi_device_power_state *states;
  
- out:
- 	mutex_unlock(&sr_mutex);
-+	pm_runtime_mark_last_busy(&cd->device->sdev_gendev);
-+	pm_runtime_put_autosuspend(&cd->device->sdev_gendev);
- 	return ret;
+ 	if (ap->flags & ATA_FLAG_ACPI_SATA)
+ 		ata_dev = &ap->link.device[channel];
+@@ -1117,6 +1126,21 @@ static int ata_acpi_bind_device(struct device *dev, int channel, int id,
+ 	if (!*handle)
+ 		return -ENODEV;
+ 
++	status = acpi_bus_get_device(*handle, &acpi_dev);
++	if (ACPI_FAILURE(status))
++		return 0;
++
++	/*
++	 * If firmware has _PS3 or _PR3 for this device,
++	 * and this ata ODD device support device attention,
++	 * it means this device can be powered off
++	 */
++	states = acpi_dev->power.states;
++	if ((states[ACPI_STATE_D3_HOT].flags.valid ||
++			states[ACPI_STATE_D3_COLD].flags.explicit_set) &&
++			ata_dev->flags & ATA_DFLAG_DA)
++		sdev->can_power_off = 1;
++
+ 	return 0;
  }
  
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 6efb2e1..1237fac 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -152,6 +152,7 @@ struct scsi_device {
+ 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
+ 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
++	unsigned can_power_off:1; /* Device supports runtime power off */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
 -- 
 1.7.10
-
