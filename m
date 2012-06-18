@@ -1,87 +1,64 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v5 0/13] SATA ZPODD support
-Date: Mon, 18 Jun 2012 14:25:54 +0800
-Message-ID: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Subject: [PATCH v5 08/12] libata: detect Device Attention support
+Date: Mon, 18 Jun 2012 14:26:02 +0800
+Message-ID: <1340000766-129148-9-git-send-email-ming.m.lin@intel.com>
+References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi all,
+Add a new flag ATA_DFLAG_DA to indicate that device supports "Device
+Attention".
 
-This is the v5 patches to add SATA ZPODD support, to try it:
-git pull git://git.kernel.org/pub/scm/linux/kernel/git/mlin/linux.git zpodd
+Acked-by: Aaron Lu <aaron.lu@amd.com>
+Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+---
+ drivers/ata/libata-core.c |    3 +++
+ include/linux/ata.h       |    1 +
+ include/linux/libata.h    |    2 ++
+ 3 files changed, 6 insertions(+)
 
-Holger and Mathtew,
-Patch 1 to Patch 4 are the libata acpi binding patches from you.
-I removed dock related code from your original version.
-Would you help to review?
-
-v5:
-- rebase to v3.5-rc3
-- fixed crash reported at https://lkml.org/lkml/2012/2/24/2 (Aaron Lu)
-- rename is_pci_ata to compat_pci_ata (Alan Cox)
-
-v4:
-https://lkml.org/lkml/2012/5/28/11
-- Includes libata acpi binding patches from Holger Macht and Matthew Garrett.
-- tell scsi layer device supports runtime power off
-- check support for device busy class events
-
-v3:
-https://lkml.org/lkml/2012/3/28/20
-- Split the ACPI D3Cold state support patches out
-- Adds "Device Attention" bit check
-
-v2:
-https://lkml.org/lkml/2012/3/1/61
-- _PR3 indicates D3Cold support
-- move can_power_off flag to pm_subsys_data
-- allow all combinations of power resource and device
-- split patches into smaller ones to make review easy
-
-v1:
-https://lkml.org/lkml/2012/2/13/86
-
-
-Aaron Lu (4):
-      libata: tell scsi layer device supports runtime power off
-      [SCSI] sr: check support for device busy class events
-      [SCSI] sr: support zero power ODD
-      [SCSI] sr: make sure ODD is in resumed state in block ioctl
-
-Holger Macht (2):
-      [SCSI]: add wrapper to access and set scsi_bus_type in struct acpi_bus_type
-      libata: use correct PCI devices
-
-Lin Ming (4):
-      libata-acpi: set acpi state for SATA port
-      libata-acpi: add ata port runtime D3Cold support
-      libata-acpi: register/unregister device to/from power resource
-      libata: detect Device Attention support
-
-Matthew Garrett (2):
-      libata: bind the Linux device tree to the ACPI device tree
-      libata: migrate ACPI code over to new bindings
-
-
- drivers/acpi/glue.c        |    4 +-
- drivers/acpi/power.c       |    2 +
- drivers/ata/libata-acpi.c  |  389 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---------------------------
- drivers/ata/libata-core.c  |    9 ++-
- drivers/ata/libata-pmp.c   |    4 -
- drivers/ata/libata-scsi.c  |    3 +
- drivers/ata/libata.h       |   13 +--
- drivers/ata/pata_acpi.c    |    4 +-
- drivers/scsi/scsi_lib.c    |   17 ++++
- drivers/scsi/sr.c          |  160 +++++++++++++++++++++++++++++++++++-
- drivers/scsi/sr.h          |    3 +
- include/linux/ata.h        |    1 +
- include/linux/cdrom.h      |   43 ++++++++++
- include/linux/libata.h     |    9 +--
- include/scsi/scsi.h        |   10 +++
- include/scsi/scsi_device.h |    2 +
- 16 files changed, 534 insertions(+), 139 deletions(-)
-
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index cebf18e..ba169c4 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2374,6 +2374,9 @@ int ata_dev_configure(struct ata_device *dev)
+ 			dma_dir_string = ", DMADIR";
+ 		}
+ 
++		if (ata_id_has_da(dev->id))
++			dev->flags |= ATA_DFLAG_DA;
++
+ 		/* print device info to dmesg */
+ 		if (ata_msg_drv(ap) && print_info)
+ 			ata_dev_info(dev,
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 32df2b6..5713d3a 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -578,6 +578,7 @@ static inline int ata_is_data(u8 prot)
+ 	  ((u64) (id)[(n) + 0]) )
+ 
+ #define ata_id_cdb_intr(id)	(((id)[ATA_ID_CONFIG] & 0x60) == 0x20)
++#define ata_id_has_da(id)	((id)[77] & (1 << 4))
+ 
+ static inline bool ata_id_has_hipm(const u16 *id)
+ {
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 888feef..cc22b943 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -161,6 +161,8 @@ enum {
+ 	ATA_DFLAG_DETACH	= (1 << 24),
+ 	ATA_DFLAG_DETACHED	= (1 << 25),
+ 
++	ATA_DFLAG_DA		= (1 << 26), /* device supports Device Attention */
++
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+ 	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
+-- 
+1.7.10
