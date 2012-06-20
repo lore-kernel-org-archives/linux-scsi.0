@@ -1,24 +1,26 @@
 From: "NickCheng" <nick.cheng@areca.com.tw>
 Subject: RE: [Fwd: [patch] [SCSI] arcmsr: fix misuse of | instead of &]
-Date: Wed, 20 Jun 2012 09:38:10 +0800
-Message-ID: <02F0C1478CF5442C9D543E3A87B82B82@arecaaebe11fae>
+Date: Wed, 20 Jun 2012 09:53:33 +0800
+Message-ID: <C52A779A1ABF49BA825804EB77570C22@arecaaebe11fae>
 References: <1340121415.3004.57.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:46897 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752044Ab2FTBlB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2012 21:41:01 -0400
-Received: by gglu4 with SMTP id u4so5262093ggl.19
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Jun 2012 18:41:00 -0700 (PDT)
-In-Reply-To: <1340121415.3004.57.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: 
+Sender: linux-kernel-owner@vger.kernel.org
 To: 'James Bottomley' <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+
+Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
+-----Original Message-----
+From: NickCheng [mailto:nick.cheng@areca.com.tw] 
+Sent: Wednesday, June 20, 2012 9:38 AM
+To: 'James Bottomley'
+Cc: 'linux-scsi@vger.kernel.org'; 'linux-kernel@vger.kernel.org'
+Subject: RE: [Fwd: [patch] [SCSI] arcmsr: fix misuse of | instead of &]
 
 Hi James,
 Sorry for be late response.
@@ -82,9 +84,3 @@ ARCMSR_ARC1880_DiagWrite_ENABLE) == 0) && (count < 5));
 &pmuC->host_diagnostic);
  	} else {
  		pci_write_config_byte(acb->pdev, 0x84, 0x20);
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
