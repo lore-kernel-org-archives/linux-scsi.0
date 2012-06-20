@@ -1,86 +1,49 @@
-From: Ben Collins <benmcollins13@gmail.com>
-Subject: Re: [scsi:pending 3/3] drivers/scsi/aacraid/src.c:425:2: warning: right shift count >= width of type
-Date: Wed, 20 Jun 2012 12:52:11 -0500
-Message-ID: <69598C04-83AA-4F1F-AFB5-666838371CEF@gmail.com>
-References: <20120620171239.GB5512@localhost> <9F0D52A8-D4E0-40C9-8619-6802A1378C16@ubuntu.com>
-Mime-Version: 1.0 (Apple Message framework v1278)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [scsi:pending 3/3] drivers/scsi/aacraid/src.c:425:2: warning:
+ right shift count >= width of type
+Date: Wed, 20 Jun 2012 18:02:42 +0000
+Message-ID: <1340215362.13180.12.camel@dabdike.int.hansenpartnership.com>
+References: <20120620171239.GB5512@localhost>
+	 <9F0D52A8-D4E0-40C9-8619-6802A1378C16@ubuntu.com>
+	 <69598C04-83AA-4F1F-AFB5-666838371CEF@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:42183 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751722Ab2FTRwP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jun 2012 13:52:15 -0400
-Received: by yhmm54 with SMTP id m54so6035782yhm.19
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Jun 2012 10:52:15 -0700 (PDT)
-In-Reply-To: <9F0D52A8-D4E0-40C9-8619-6802A1378C16@ubuntu.com>
+Received: from mx2.parallels.com ([64.131.90.16]:40014 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754126Ab2FTSCp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jun 2012 14:02:45 -0400
+In-Reply-To: <69598C04-83AA-4F1F-AFB5-666838371CEF@gmail.com>
+Content-Language: en-US
+Content-ID: <181F445FBD5AF343BF47E6103C703B31@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: wfg@linux.intel.com
-Cc: James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
+To: Ben Collins <benmcollins13@gmail.com>
+Cc: "wfg@linux.intel.com" <wfg@linux.intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-
-On Jun 20, 2012, at 12:44 PM, Ben Collins wrote:
-
-> On Jun 20, 2012, at 12:12 PM, wfg@linux.intel.com wrote:
-> 
->> Hi Ben,
->> 
->> There are new compile warnings show up in
->> 
->> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git pending
->> head:   e766db42f45c7685fce5c0d48ba74eaa97e6d715
->> commit: e766db42f45c7685fce5c0d48ba74eaa97e6d715 [3/3] [SCSI] aacraid: Fix endian issues in core and SRC portions of driver
->> 
->> All warnings:
->> 
->> drivers/scsi/aacraid/src.c: In function 'aac_src_deliver_message':
->> drivers/scsi/aacraid/src.c:425:2: warning: right shift count >= width of type [enabled by default]
-> 
-> Hrmm, pretty innocuous, but I guess it could be rewritten as:
-> 
-> #if BITS_PER_LONG > 32
->         src_writel(dev, MUnit.IQ_H, (address >> 32) & 0xffffffff);
-> #else
->         src_writel(dev, MUnit.IQ_H, 0);
-> #endif
-
-Actually, this is wrong too, since it's a dma_addr_t, not an unsigned long, so:
-
-#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
-        src_writel(dev, MUnit.IQ_H, (address >> 32) & 0xffffffff);
-#else
-        src_writel(dev, MUnit.IQ_H, 0);
-#endif
-
-
-
-> I'm assuming the compiler can optimize line 426 to skip the masking in such a case.
-> 
->> drivers/scsi/aacraid/src.c:425:
->>  422		if (address & (ALIGN32 - 1))
->>  423			return -EINVAL;
->>  424		address |= fibsize;
->>> 425		src_writel(dev, MUnit.IQ_H, (address >> 32) & 0xffffffff);
->>  426		src_writel(dev, MUnit.IQ_L, address & 0xffffffff);
->>  427	
->>  428		return 0;
->> 
->> ---
->> 0-DAY kernel build testing backend         Open Source Technology Centre
->> Fengguang Wu <wfg@linux.intel.com>                     Intel Corporation
->> <0001-SCSI-aacraid-Fix-endian-issues-in-core-and-SRC-porti.patch><src.c>
-> 
-> --
-> Bluecherry: http://www.bluecherrydvr.com/
-> SwissDisk : http://www.swissdisk.com/
-> Ubuntu    : http://www.ubuntu.com/
-> My Blog   : http://ben-collins.blogspot.com/
-> 
-
---
-Bluecherry: http://www.bluecherrydvr.com/
-SwissDisk : http://www.swissdisk.com/
-Ubuntu    : http://www.ubuntu.com/
-My Blog   : http://ben-collins.blogspot.com/
-
+T24gV2VkLCAyMDEyLTA2LTIwIGF0IDEyOjUyIC0wNTAwLCBCZW4gQ29sbGlucyB3cm90ZToNCj4g
+T24gSnVuIDIwLCAyMDEyLCBhdCAxMjo0NCBQTSwgQmVuIENvbGxpbnMgd3JvdGU6DQo+IA0KPiA+
+IE9uIEp1biAyMCwgMjAxMiwgYXQgMTI6MTIgUE0sIHdmZ0BsaW51eC5pbnRlbC5jb20gd3JvdGU6
+DQo+ID4gDQo+ID4+IEhpIEJlbiwNCj4gPj4gDQo+ID4+IFRoZXJlIGFyZSBuZXcgY29tcGlsZSB3
+YXJuaW5ncyBzaG93IHVwIGluDQo+ID4+IA0KPiA+PiB0cmVlOiAgIGdpdDovL2dpdC5rZXJuZWwu
+b3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9qZWpiL3Njc2kuZ2l0IHBlbmRpbmcNCj4gPj4g
+aGVhZDogICBlNzY2ZGI0MmY0NWM3Njg1ZmNlNWMwZDQ4YmE3NGVhYTk3ZTZkNzE1DQo+ID4+IGNv
+bW1pdDogZTc2NmRiNDJmNDVjNzY4NWZjZTVjMGQ0OGJhNzRlYWE5N2U2ZDcxNSBbMy8zXSBbU0NT
+SV0gYWFjcmFpZDogRml4IGVuZGlhbiBpc3N1ZXMgaW4gY29yZSBhbmQgU1JDIHBvcnRpb25zIG9m
+IGRyaXZlcg0KPiA+PiANCj4gPj4gQWxsIHdhcm5pbmdzOg0KPiA+PiANCj4gPj4gZHJpdmVycy9z
+Y3NpL2FhY3JhaWQvc3JjLmM6IEluIGZ1bmN0aW9uICdhYWNfc3JjX2RlbGl2ZXJfbWVzc2FnZSc6
+DQo+ID4+IGRyaXZlcnMvc2NzaS9hYWNyYWlkL3NyYy5jOjQyNToyOiB3YXJuaW5nOiByaWdodCBz
+aGlmdCBjb3VudCA+PSB3aWR0aCBvZiB0eXBlIFtlbmFibGVkIGJ5IGRlZmF1bHRdDQo+ID4gDQo+
+ID4gSHJtbSwgcHJldHR5IGlubm9jdW91cywgYnV0IEkgZ3Vlc3MgaXQgY291bGQgYmUgcmV3cml0
+dGVuIGFzOg0KPiA+IA0KPiA+ICNpZiBCSVRTX1BFUl9MT05HID4gMzINCj4gPiAgICAgICAgIHNy
+Y193cml0ZWwoZGV2LCBNVW5pdC5JUV9ILCAoYWRkcmVzcyA+PiAzMikgJiAweGZmZmZmZmZmKTsN
+Cj4gPiAjZWxzZQ0KPiA+ICAgICAgICAgc3JjX3dyaXRlbChkZXYsIE1Vbml0LklRX0gsIDApOw0K
+PiA+ICNlbmRpZg0KPiANCj4gQWN0dWFsbHksIHRoaXMgaXMgd3JvbmcgdG9vLCBzaW5jZSBpdCdz
+IGEgZG1hX2FkZHJfdCwgbm90IGFuIHVuc2lnbmVkIGxvbmcsIHNvOg0KPiANCj4gI2lmZGVmIENP
+TkZJR19BUkNIX0RNQV9BRERSX1RfNjRCSVQNCj4gICAgICAgICBzcmNfd3JpdGVsKGRldiwgTVVu
+aXQuSVFfSCwgKGFkZHJlc3MgPj4gMzIpICYgMHhmZmZmZmZmZik7DQo+ICNlbHNlDQo+ICAgICAg
+ICAgc3JjX3dyaXRlbChkZXYsIE1Vbml0LklRX0gsIDApOw0KPiAjZW5kaWYNCg0KSGVoLCB0aHJl
+ZSBzdHJpa2VzIGFuZCB5b3UncmUgb3V0LiAgVG8gZm9yZXN0YWxsIHRoaXMsIHRoZSBhY3R1YWwg
+YW5zd2VyDQppcw0KDQpzcmNfd3JpdGVsKGRldiwgTVVuaXQuSVFfSCwgdXBwZXJfMzJfYml0cyhh
+ZGRyZXNzKSk7DQoNCkphbWVzDQoNCg==
