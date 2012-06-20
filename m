@@ -1,73 +1,90 @@
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: 2012 Kernel Summit: Call for Participation
-Date: Tue, 19 Jun 2012 11:20:13 -0400
-Message-ID: <E1Sh0E1-0005Df-JV@tytso-glaptop.cam.corp.google.com>
+From: "NickCheng" <nick.cheng@areca.com.tw>
+Subject: RE: [Fwd: [patch] [SCSI] arcmsr: fix misuse of | instead of &]
+Date: Wed, 20 Jun 2012 09:38:10 +0800
+Message-ID: <02F0C1478CF5442C9D543E3A87B82B82@arecaaebe11fae>
+References: <1340121415.3004.57.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from li9-11.members.linode.com ([67.18.176.11]:51308 "EHLO
-	imap.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754448Ab2FSPUP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jun 2012 11:20:15 -0400
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:46897 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752044Ab2FTBlB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2012 21:41:01 -0400
+Received: by gglu4 with SMTP id u4so5262093ggl.19
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jun 2012 18:41:00 -0700 (PDT)
+In-Reply-To: <1340121415.3004.57.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hi James,
+Sorry for be late response.
+I am OK with it.
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Tuesday, June 19, 2012 11:57 PM
+To: Nick Cheng
+Subject: [Fwd: [patch] [SCSI] arcmsr: fix misuse of | instead of &]
 
-Please note that we are using a different way of selecting who will get
-invites this year; please read below, subscribe to the
-ksummit-2012-discuss mailing list, and send an [ATTEND] request to the
-mailing list if you are interested in attending.
+Is this OK with you?
 
-Do feel free to forward this other mailing lists (especially if there
-are internal kernel development lists at your company) if appropriate.
+James
 
-Many thanks,
+-------- Forwarded Message --------
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: James E.J. Bottomley <JBottomley@parallels.com>
+Cc: David Howells <dhowells@redhat.com>, Nick Cheng
+<nick.cheng@areca.com.tw>, , kernel-janitors@vger.kernel.org
+Subject: [patch] [SCSI] arcmsr: fix misuse of | instead of &
+Date: Sat, 9 Jun 2012 12:10:19 +0300
 
-						- Ted
+ARCMSR_ARC1880_DiagWrite_ENABLE is 0x00000080 so (x | 0x00000080) is
+never zero.  The intent here was to test that loop until
+ARCMSR_ARC1880_DiagWrite_ENABLE was turned on, but because the test was
+wrong, we would do five loops regardless of whether it succeed or not.
 
+Also I simplified the condition a little by removing the unused
+assignement.
 
-The annual Kernel Summit for 2012 will be held on the 3 days preceding the
-Linux Foundation LinuxCon and Linux Plumbers Conference at the Sheraton San
-Diego Hotel and Marina from 27-29 August:
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Static checker stuff.  I do not own this hardware.
 
-        http://www.linuxplumbersconf.org/2012/
-        https://events.linuxfoundation.org/events/linuxcon
-
-The format of the Kernel Summit will be
-
-Monday: All Kernel Developers Plenary Sessions
-Tuesday: Kernel technical working and breakout sessions
-Wednesday: Additional Technical sessions shared with Plumbers
-
-
-This year, in order to make the selection process more transparent,
-we're trying a new mechanism where we'll be selecting this year's
-attendees from amongst those who submit proposals to attend as
-described below.
-
-We'll try to cap attendance at around 80-100 for the all kernel
-developers day, so get your request in early.  To request a place to
-attend, please send an email to
-
-    ksummit-2012-discuss@lists.linuxfoundation.org
-
-Please summarize what expertise you will bring to the meeting,
-and what you'd like to discuss.  Please also tag your email with
-[ATTEND] so there's less chance of it getting lost in the large
-mail pile.
-
-Requests to attend will be looked upon more favorably if you also
-participate in the discussion of topics at
-
-    ksummit-2012-discuss@lists.linuxfoundation.org
-
-You can subscribe via mailman:
-
-    http://lists.linux-foundation.org/mailman/listinfo/ksummit-2012-discuss
-
-
-For reference, the agendas from a few prior kernel summits are here:
-
-http://ksummit2011.kernel.org/agenda
-http://ksummit2010.kernel.org/agenda
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c
+b/drivers/scsi/arcmsr/arcmsr_hba.c
+index cbde1dc..def24a1 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -2821,7 +2821,7 @@ static void arcmsr_hardware_reset(struct
+AdapterControlBlock *acb)
+ 	int i, count = 0;
+ 	struct MessageUnit_A __iomem *pmuA = acb->pmuA;
+ 	struct MessageUnit_C __iomem *pmuC = acb->pmuC;
+-	u32 temp = 0;
++
+ 	/* backup pci config data */
+ 	printk(KERN_NOTICE "arcmsr%d: executing hw bus reset .....\n",
+acb->host->host_no);
+ 	for (i = 0; i < 64; i++) {
+@@ -2839,7 +2839,7 @@ static void arcmsr_hardware_reset(struct
+AdapterControlBlock *acb)
+ 			writel(0x2, &pmuC->write_sequence);
+ 			writel(0x7, &pmuC->write_sequence);
+ 			writel(0xD, &pmuC->write_sequence);
+-		} while ((((temp = readl(&pmuC->host_diagnostic)) |
+ARCMSR_ARC1880_DiagWrite_ENABLE) == 0) && (count < 5));
++		} while (((readl(&pmuC->host_diagnostic) &
+ARCMSR_ARC1880_DiagWrite_ENABLE) == 0) && (count < 5));
+ 		writel(ARCMSR_ARC1880_RESET_ADAPTER,
+&pmuC->host_diagnostic);
+ 	} else {
+ 		pci_write_config_byte(acb->pdev, 0x84, 0x20);
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
