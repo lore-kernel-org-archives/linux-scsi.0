@@ -1,101 +1,71 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH UPDATED] block: In blk_execute_rq_nowait, init rq->end_io
- before checking for dead queue.
-Date: Wed, 20 Jun 2012 18:53:09 +0000
-Message-ID: <4FE21C15.6040409@acm.org>
-References: <CAFR8uecFzcrAYSy2ieJM5vWjNLSO3bjg20cy+B4cimHZ4RLktA@mail.gmail.com> <4FD345DC.6020405@acm.org> <CAFR8ueca-MQWRipE+3OQSpqmJ40HKJEY7jWt6PQ+zTCQ9Bh=5Q@mail.gmail.com> <4FD4DC26.5080902@acm.org> <CAFR8uecF0LwbV8FvYob5m34sVbKqafrNoYOrcRUQCEOymGnYRA@mail.gmail.com> <CAFR8uefK+nByiJ8tw5_KF1qEJs4du2mDdU36gg1_2nRNZXN5Fw@mail.gmail.com> <20120618224253.GH32733@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120618224253.GH32733@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Muthu Kumar <muthu.lkml@gmail.com>, Jens Axboe <axboe@kernel.dk>, Jej B <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Ben Collins <benmcollins13@gmail.com>
+Subject: Re: [scsi:pending 3/3] drivers/scsi/aacraid/src.c:425:2: warning: right shift count >= width of type
+Date: Wed, 20 Jun 2012 14:58:43 -0500
+Message-ID: <E1F9A14B-1D4A-4784-8C2C-A69B211C9368@gmail.com>
+References: <20120620171239.GB5512@localhost> <9F0D52A8-D4E0-40C9-8619-6802A1378C16@ubuntu.com> <69598C04-83AA-4F1F-AFB5-666838371CEF@gmail.com> <1340215362.13180.12.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:39699 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754452Ab2FTT6r convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jun 2012 15:58:47 -0400
+Received: by gglu4 with SMTP id u4so6023272ggl.19
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Jun 2012 12:58:46 -0700 (PDT)
+In-Reply-To: <1340215362.13180.12.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "wfg@linux.intel.com" <wfg@linux.intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 06/18/12 22:42, Tejun Heo wrote:
 
-> On Mon, Jun 11, 2012 at 02:23:23PM -0700, Muthu Kumar wrote:
->> On Mon, Jun 11, 2012 at 10:33 AM, Muthu Kumar <muthu.lkml@gmail.com> wrote:
->>> On Sun, Jun 10, 2012 at 10:40 AM, Bart Van Assche <bvanassche@acm.org> wrote:
->>>> On 06/09/12 23:57, Muthu Kumar wrote:
->>>>
->>>>> Locking change is the one you posted already (the link above). Anyway,
->>>>> I have the attached patch *including* the locking change. Original
->>>>> mail has attachment without locking change. Please use whatever you
->>>>> need.
->>>>
->>>> While we are at it ... the rq->rq_disk and rq->end_io assignments can be
->>>> performed safely before the spinlock is taken, isn't it ?
->>>
->>> Yes.. that spinlock is to protect the q.
->>
->> Attached patch with assignment performed before taking the spinlock.
+On Jun 20, 2012, at 1:02 PM, James Bottomley wrote:
+
+> On Wed, 2012-06-20 at 12:52 -0500, Ben Collins wrote:
+>> On Jun 20, 2012, at 12:44 PM, Ben Collins wrote:
+>> 
+>>> On Jun 20, 2012, at 12:12 PM, wfg@linux.intel.com wrote:
+>>> 
+>>>> Hi Ben,
+>>>> 
+>>>> There are new compile warnings show up in
+>>>> 
+>>>> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git pending
+>>>> head:   e766db42f45c7685fce5c0d48ba74eaa97e6d715
+>>>> commit: e766db42f45c7685fce5c0d48ba74eaa97e6d715 [3/3] [SCSI] aacraid: Fix endian issues in core and SRC portions of driver
+>>>> 
+>>>> All warnings:
+>>>> 
+>>>> drivers/scsi/aacraid/src.c: In function 'aac_src_deliver_message':
+>>>> drivers/scsi/aacraid/src.c:425:2: warning: right shift count >= width of type [enabled by default]
+>>> 
+>>> Hrmm, pretty innocuous, but I guess it could be rewritten as:
+>>> 
+>>> #if BITS_PER_LONG > 32
+>>>        src_writel(dev, MUnit.IQ_H, (address >> 32) & 0xffffffff);
+>>> #else
+>>>        src_writel(dev, MUnit.IQ_H, 0);
+>>> #endif
+>> 
+>> Actually, this is wrong too, since it's a dma_addr_t, not an unsigned long, so:
+>> 
+>> #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+>>        src_writel(dev, MUnit.IQ_H, (address >> 32) & 0xffffffff);
+>> #else
+>>        src_writel(dev, MUnit.IQ_H, 0);
+>> #endif
 > 
-> This looks correct to me.  Bart, can you please include this patch in
-> your series and repost the series?
+> Heh, three strikes and you're out.  To forestall this, the actual answer
+> is
+> 
+> src_writel(dev, MUnit.IQ_H, upper_32_bits(address));
 
+Saved by the misfortune of others it appears. Then I guess changing the next line to lower_32_bits() would be in order as well.
 
-I'll start testing the patch below:
+--
+Bluecherry: http://www.bluecherrydvr.com/
+SwissDisk : http://www.swissdisk.com/
+Ubuntu    : http://www.ubuntu.com/
+My Blog   : http://ben-collins.blogspot.com/
 
-[PATCH] block: Fix blk_execute_rq_nowait() dead queue handling
-
-Make sure that blk_execute_rq_nowait() invokes the proper end_io
-function if the queue is dead and also that this call is performed
-with the queue lock held. Found this through source code review.
-
-Notes:
-- Since blk_execute_rq_nowait() must not be invoked from interrupt
-  context it is safe to invoke end_io directly from this function.
-- blk_finish_request() already invokes request.end_io with the
-  queue lock held.
-
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Reported-by: Muthukumar Ratty <muthur@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Tejun Heo <tj@kernel.org>
----
- block/blk-exec.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/block/blk-exec.c b/block/blk-exec.c
-index fb2cbd5..c0fd83a 100644
---- a/block/blk-exec.c
-+++ b/block/blk-exec.c
-@@ -42,7 +42,8 @@ static void blk_end_sync_rq(struct request *rq, int error)
-  *
-  * Description:
-  *    Insert a fully prepared request at the back of the I/O scheduler queue
-- *    for execution.  Don't wait for completion.
-+ *    for execution.  Don't wait for completion.  This function may invoke
-+ *    rq->end_io directly.
-  */
- void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
- 			   struct request *rq, int at_head,
-@@ -51,18 +52,20 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
- 	int where = at_head ? ELEVATOR_INSERT_FRONT : ELEVATOR_INSERT_BACK;
- 
- 	WARN_ON(irqs_disabled());
-+
-+	rq->rq_disk = bd_disk;
-+	rq->end_io = done;
-+
- 	spin_lock_irq(q->queue_lock);
- 
- 	if (unlikely(blk_queue_dead(q))) {
--		spin_unlock_irq(q->queue_lock);
- 		rq->errors = -ENXIO;
- 		if (rq->end_io)
- 			rq->end_io(rq, rq->errors);
-+		spin_unlock_irq(q->queue_lock);
- 		return;
- 	}
- 
--	rq->rq_disk = bd_disk;
--	rq->end_io = done;
- 	__elv_add_request(q, rq, where);
- 	__blk_run_queue(q);
- 	/* the queue is stopped so it won't be run */
--- 
-1.7.7
