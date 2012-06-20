@@ -1,57 +1,93 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 1/2] SCSI & usb-storage: add try_rc_10_first flag
-Date: Wed, 20 Jun 2012 13:13:10 -0700
-Message-ID: <20120620201310.GA8822@kroah.com>
-References: <4FDEE8A1.5030200@redhat.com>
- <Pine.LNX.4.44L0.1206201558090.1804-100000@iolanthe.rowland.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v5 02/12] libata: bind the Linux device tree to the ACPI
+ device tree
+Date: Wed, 20 Jun 2012 16:50:50 -0700
+Message-ID: <CAA9_cmcX2pajewz1v864Ni2Z3XAy8UrCRg+mg3Y2qFEd2j=nDg@mail.gmail.com>
+References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
+	<1340000766-129148-3-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:37469 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758001Ab2FTUNP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jun 2012 16:13:15 -0400
-Received: by dady13 with SMTP id y13so10284403dad.19
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Jun 2012 13:13:14 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1206201558090.1804-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1340000766-129148-3-git-send-email-ming.m.lin@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Hans de Goede <hdegoede@redhat.com>, Torsten Wohlfarth <towo@siduction.org>, Sturm Flut <sturmflut@lieberbiber.de>, Sergey <sergeyn@gmail.com>, Philippe Valembois - Phil <lephilousophe@users.sourceforge.net>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 04:04:19PM -0400, Alan Stern wrote:
-> Several bug reports have been received recently for USB mass-storage
-> devices that don't handle READ CAPACITY(16) commands properly.  They
-> report bogus sizes, in some cases becoming unusable as a result.
-> 
-> The bugs were triggered by commit
-> 09b6b51b0b6c1b9bb61815baf205e4d74c89ff04 (SCSI & usb-storage: add
-> flags for VPD pages and REPORT LUNS), which caused usb-storage to stop
-> overriding the SCSI level reported by devices.  By default, the sd
-> driver will try READ CAPACITY(16) first for any device whose level is
-> above SCSI_SPC_2.
-> 
-> It seems likely that any device large enough to require the use of
-> READ CAPACITY(16) (i.e., 2 TB or more) would be able to handle READ
-> CAPACITY(10) commands properly.  Indeed, I don't know of any devices
-> that don't handle READ CAPACITY(10) properly.
-> 
-> Therefore this patch (as1559) adds a new flag telling the sd driver
-> to try READ CAPACITY(10) before READ CAPACITY(16), and sets this flag
-> for every USB mass-storage device.  If a device really is larger than
-> 2 TB, sd will fall back to READ CAPACITY(16) just as it used to.
-> 
-> This fixes Bugzilla #43391.
-> 
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> Acked-by: Hans de Goede <hdegoede@redhat.com>
-> CC: "James E.J. Bottomley" <JBottomley@parallels.com>
-> CC: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-> CC: <stable@vger.kernel.org>
+On Sun, Jun 17, 2012 at 11:25 PM, Lin Ming <ming.m.lin@intel.com> wrote=
+:
+> From: Matthew Garrett <mjg@redhat.com>
+>
+> Associate the ACPI device tree and libata devices.
+> This patch uses the generic ACPI glue framework to do so.
+>
+> Signed-off-by: Matthew Garrett <mjg@redhat.com>
+> Signed-off-by: Holger Macht <holger@homac.de>
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> ---
+>
+> Changelog:
+>
+> - fixed crash reported at https://lkml.org/lkml/2012/2/24/2 (Aaron Lu=
+)
+> - rename is_pci_ata to compat_pci_ata (Alan Cox)
+>
+> =A0drivers/acpi/glue.c =A0 =A0 =A0 | =A0 =A04 +-
+> =A0drivers/ata/libata-acpi.c | =A0125 +++++++++++++++++++++++++++++++=
+++++++++++++++
+> =A0drivers/ata/libata-core.c | =A0 =A03 ++
+> =A0drivers/ata/libata.h =A0 =A0 =A0| =A0 =A04 ++
+> =A04 files changed, 134 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+> index 1564e09..18d6812 100644
+> --- a/drivers/acpi/glue.c
+> +++ b/drivers/acpi/glue.c
+[..]
+> +static int ata_acpi_bind_host(struct device *dev, int host, acpi_han=
+dle *handle)
+> +{
+> + =A0 =A0 =A0 struct Scsi_Host *shost =3D dev_to_shost(dev);
+> + =A0 =A0 =A0 struct ata_port *ap =3D ata_shost_to_port(shost);
+> +
+> + =A0 =A0 =A0 if (ap->flags & ATA_FLAG_ACPI_SATA)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENODEV;
+> +
+> + =A0 =A0 =A0 *handle =3D acpi_get_child(DEVICE_ACPI_HANDLE(dev->pare=
+nt), ap->port_no);
+> +
+> + =A0 =A0 =A0 if (!*handle)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENODEV;
+> +
+> + =A0 =A0 =A0 return 0;
+> +}
 
-James, mind if I take this through my trees?
+I think this patch should be squashed with patch 4, right?  That is if
+we keep the hard-coded ->parent chasing...
 
-thanks,
+> +static int ata_acpi_find_device(struct device *dev, acpi_handle *han=
+dle)
+> +{
+> + =A0 =A0 =A0 unsigned int host, channel, id, lun;
+> +
+> + =A0 =A0 =A0 if (sscanf(dev_name(dev), "host%u", &host) =3D=3D 1) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!compat_pci_ata(dev->parent))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENODEV;
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return ata_acpi_bind_host(dev, host, ha=
+ndle);
+> + =A0 =A0 =A0 } else if (sscanf(dev_name(dev), "%d:%d:%d:%d",
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 &host, &channel, &id, &=
+lun) =3D=3D 4) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!compat_pci_ata(dev->parent->parent=
+->parent))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENODEV;
 
-greg k-h
+=2E..this looks like it should be using a dev_to_ata_port() helper whic=
+h
+like dev_to_shost() skips the need to remember just how many parents
+until we get back to our ata_port, scsi_host, etc.
+
+--
+Dan
