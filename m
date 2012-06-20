@@ -1,52 +1,42 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 1/7] Revert "usb/uas: make sure data urb is gone if we
- receive status before that"
-Date: Wed, 20 Jun 2012 16:56:26 -0700
-Message-ID: <20120620235626.GC31520@kroah.com>
+From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH 2/7] Revert "usb/uas: one only one status URB/host on
+ stream-less connection"
+Date: Wed, 20 Jun 2012 16:56:44 -0700
+Message-ID: <20120620235644.GD31520@kroah.com>
 References: <1340092494-18876-1-git-send-email-kraxel@redhat.com>
- <1340092494-18876-2-git-send-email-kraxel@redhat.com>
+ <1340092494-18876-3-git-send-email-kraxel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:40050 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758610Ab2FTX43 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jun 2012 19:56:29 -0400
-Received: by dady13 with SMTP id y13so54978dad.19
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Jun 2012 16:56:29 -0700 (PDT)
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1340092494-18876-2-git-send-email-kraxel@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1340092494-18876-3-git-send-email-kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerd Hoffmann <kraxel@redhat.com>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jun 19, 2012 at 09:54:48AM +0200, Gerd Hoffmann wrote:
-> This reverts commit e4d8318a85779b25b880187b1b1c44e797bd7d4b.
+On Tue, Jun 19, 2012 at 09:54:49AM +0200, Gerd Hoffmann wrote:
+> This reverts commit ceb3f91fd53c9fbd7b292fc2754ba4efffeeeedb.
 > 
-> This patch makes uas.c call usb_unlink_urb on data urbs.  The data urbs
-> get freed in the completion callback.  This is illegal according to the
-> usb_unlink_urb documentation.
+> IMO the real bug is assigning status urbs to scsi requests.  First there
+> is no such link in the non-stream case.  Also there isn't nessesarely a
+> scsi request in the first place, for example when submitting task
+> management requests.
 > 
-> This patch also makes the code expect the data completion callback
-> being called before the status completion callback.  This isn't
-> guaranteed to be the case, even though the actual data transfer should
-> be finished by the time the status is received.
+> This patch just papers over the real bug and introduces different status
+> urb handling in the stream/non-stream case for no good reason.
 > 
-> Background:  The ehci irq handler for example only know that there are
-> finished transfers, it then has go check the QHs & TDs to see which
-> transfers did actually finish.  It has no way to figure in which order
-> the transfers did complete.  The xhci driver can call the callbacks in
-> completion order thanks to the event queue.  This does nicely explain
-> why the driver is solid on a (usb2) xhci port whereas it goes crazy on
-> ehci in my testing.
-> 
-> Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+> Signed-off-by: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > ---
+>  drivers/usb/storage/uas.c |   70 ++++++--------------------------------------
+>  1 files changed, 10 insertions(+), 60 deletions(-)
 
-Should this revert also go into 3.4-stable so that the device will work
-properly on ehci?
+Same here, should this also be reverted in 3.4-stable?
 
 thanks,
 
 greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
