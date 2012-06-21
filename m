@@ -1,29 +1,89 @@
-From: Dan Williams <dan.j.williams@intel.com>
+From: Praveen Murali <pmurali@logicube.com>
 Subject: Re: [PATCH 3/3] Fix device detection issues with mvsas driver
-Date: Thu, 21 Jun 2012 09:48:47 -0700
-Message-ID: <CABE8wwtUE7ZvR=zYGc+HCL8tUi3QE2N+-k1UP+8ow9MYk-kWGg@mail.gmail.com>
+Date: Thu, 21 Jun 2012 10:05:38 -0700
+Message-ID: <1340298338.3712.55.camel@praveen-debian.lg.local>
 References: <1340044537.3712.23.camel@praveen-debian.lg.local>
-	<CAA9_cmeo=2Jjyp2DSwBDM=toTydMbLHJ+J7h2UXQYb2YmV+tzg@mail.gmail.com>
-	<1340296918.3712.54.camel@praveen-debian.lg.local>
+	 <CAA9_cmeo=2Jjyp2DSwBDM=toTydMbLHJ+J7h2UXQYb2YmV+tzg@mail.gmail.com>
+	 <1340296918.3712.54.camel@praveen-debian.lg.local>
+	 <CABE8wwtUE7ZvR=zYGc+HCL8tUi3QE2N+-k1UP+8ow9MYk-kWGg@mail.gmail.com>
+Reply-To: pmurali@logicube.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed; boundary="=-Ez5mhR8dt7GD67NP3ibW"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga12.intel.com ([143.182.124.36]:62962 "EHLO
-	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759775Ab2FUQsv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jun 2012 12:48:51 -0400
-Received: by bkcjc3 with SMTP id jc3so703559bkc.25
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Jun 2012 09:48:48 -0700 (PDT)
-In-Reply-To: <1340296918.3712.54.camel@praveen-debian.lg.local>
+Received: from p01c11o141.mxlogic.net ([208.65.144.64]:42232 "EHLO
+	p01c11o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759857Ab2FURGc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jun 2012 13:06:32 -0400
+In-Reply-To: <CABE8wwtUE7ZvR=zYGc+HCL8tUi3QE2N+-k1UP+8ow9MYk-kWGg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: pmurali@logicube.com
+To: Dan Williams <dan.j.williams@intel.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, Jun 21, 2012 at 9:41 AM, Praveen Murali <pmurali@logicube.com> wrote:
-> Ok, do you want me to regenerate the patch?
 
-Yes, James will be the one to ultimately apply it and would save him
-time to have a new patch.  The patch you attached had a shorter
-changelog I think it would be fine to include your entire 4 paragraph
-lead in message.
+--=-Ez5mhR8dt7GD67NP3ibW
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+here is the updated patch.
+
+On Thu, 2012-06-21 at 09:48 -0700, Dan Williams wrote:
+> On Thu, Jun 21, 2012 at 9:41 AM, Praveen Murali <pmurali@logicube.com> wr=
+ote:
+> > Ok, do you want me to regenerate the patch?
+>=20
+> Yes, James will be the one to ultimately apply it and would save him
+> time to have a new patch.  The patch you attached had a shorter
+> changelog I think it would be fine to include your entire 4 paragraph
+> lead in message.
+
+
+--=-Ez5mhR8dt7GD67NP3ibW
+Content-Disposition: attachment; filename="0002-Fix-mvsas-SATA-disk-detection-issues.patch"
+Content-Transfer-Encoding: base64
+Content-Type: text/x-patch; name="0002-Fix-mvsas-SATA-disk-detection-issues.patch";
+	charset="UTF-8"
+
+RnJvbSA2YWQ5Y2Y2OTFmOWQxMWU4YzZkZTMzMmVmYzM1YmQ5NDVjMGYyODQwIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQ0KRnJvbTogUHJhdmVlbiBNdXJhbGkgPHBtdXJhbGlAbG9naWN1YmUuY29t
+Pg0KRGF0ZTogVGh1LCAyMSBKdW4gMjAxMiAwOTo1NzowMyAtMDcwMA0KU3ViamVjdDogW1BBVENI
+IHYyXSBGaXggbXZzYXMgU0FUQSBkaXNrIGRldGVjdGlvbiBpc3N1ZXMNCg0KIEkgYW0gdXNpbmcg
+dGhlIE1hcnZlbGwgU0FTIEhCQSAoTVY2NDQ2MC82NDQ2MS82NDQ2MiBTeXN0ZW0gQ29udHJvbGxl
+ciwNClJldmlzaW9uIEIgKHJldiAwMSkpLCBvbiBhIHN5c3RlbSBydW5uaW5nIFVidW50dSAxMi4w
+NCBzdG9jayBrZXJuZWwuIEFuZA0KaSBhbSBzZWVpbmcgc29tZSBkcml2ZSBkZXRlY3Rpb24gaXNz
+dWVzIHdpdGggU0FUQSBkcml2ZXMsIG1vc3RseSBkdXJpbmcNCmhvdHBsdWdnaW5nIHRoZSBkcml2
+ZXM7IHRoZSBpc3N1ZSBnZXRzIGV4YWdnZXJhdGVkIHdoZW4gd2Uga2VlcCByZW1vdmluZw0KYW5k
+IHBsdWdnaW5nIGluIGRyaXZlcy4NCg0KRnJvbSBkbWVzZywgYWZ0ZXIgc3RhcnRpbmcgdGhlIExp
+YkFUQSBkZWJ1Z3MsIGl0IGxvb2tzIGxpa2UgdGhlDQphdGFfZWhfcmV2YWxpZGF0ZV9hbmRfYXR0
+YWNoIGZhaWxzIGJlY2F1c2UgYXRhX2Rldl9yZWFkX2lkIGZhaWxzIHRvIGdldA0KdGhlIElERU5U
+SUZZIGNvbW1hbmQgcmVzcG9uc2UuIEkgc2VlICJib3RoIElERU5USUZZcyBhYm9ydGVkLCBhc3N1
+bWluZw0KTk9ERVYiIGZvciBhbGwgdGhlc2UgZHJpdmVzIHRoYXQgZ28gdW5kZXRlY3RlZC4gQXQg
+dGhpcyBwb2ludCwgaWYgSQ0KdW5sb2FkIGFuZCByZWxvYWQgdGhlIG12c2FzIGRyaXZlciwgdGhl
+c2UgZHJpdmVzIGRldGVjdCBmaW5lLiBTbywgSQ0KaG9va2VkIHVwIGEgU0FUQSBhbmFseXplciBi
+ZXR3ZWVuIHRoZSBIQkEgYW5kIG9uZSBvZiB0aGUgZHJpdmVzLCBhbmQNCnJlc3RhcnRlZCB0aGUg
+dGVzdC4gRnJvbSB3aGF0IEkgY2FuIHNlZSwgZXZlbiB0aG91Z2ggdGhlIGRyaXZlIHJlc3BvbmRz
+DQp0byB0aGUgSURFTlRJRlkgY29tbWFuZCwgdGhlIHVwcGVyIGxheWVyIGRldGVjdHMgYW4gZXJy
+b3IgYW5kIGRpc2NhcmRzDQp0aGUgcmVzcG9uc2UuIE9uIGZ1cnRoZXIgZGVidWdnaW5nIGl0IHdh
+cyBldmlkZW50IHRoYXQgdGhlIGVycm9yIHdhcw0KYmVpbmcgZGV0ZWN0ZWQgaW4gdGhlIEZJUy4N
+Cg0KIEFmdGVyIGdvaW5nIHRocnUgdGhlIG12c2FzIGRyaXZlciwgSSBzZWUgdGhhdCBkdXJpbmcg
+aW5pdCB0aGUgZHJpdmVyIA0KYWxsb2NhdGVzIGEgRE1BIGFyZWEgZm9yIGFuIEZJUyBwb29sIChm
+b3IgYXMgbWFueSBhcyAzMyBGSVMncykgYW5kIGluaXRpYWxpemVzIA0KaXQgdG8gMC4gQW5kIGVh
+Y2ggQVRBIGNvbW1hbmQgaXMgYWxsb2NhdGVkIGEgRklTIGFyZWEgZnJvbSB0aGlzIHBvb2wgZHVy
+aW5nDQp0aGUgY29tbWFuZCBwcmVwOyBidXQgaXRzIG5ldmVyIGNsZWFyZWQuDQoNClRoZSBmaXgg
+aXMgdG8gY2xlYW51cCBhbmQgcHJlcGFyZSB0aGUgRklTIGluZGV4IGJlZm9yZSBpc3N1aW5nIHRo
+ZSBBVEENCmNvbW1hbmQgKGR1cmluZyBwcmVwOiBtdnNfdGFza19wcmVwX2F0YSkuDQotLS0NCiBk
+cml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgfCAgICA1ICsrKysrDQogMSBmaWxlIGNoYW5nZWQs
+IDUgaW5zZXJ0aW9ucygrKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL212c2FzL212X3Nh
+cy5jIGIvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jDQppbmRleCBhNDg4NGE1Li43M2Q5ODE2
+IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jDQorKysgYi9kcml2ZXJz
+L3Njc2kvbXZzYXMvbXZfc2FzLmMNCkBAIC00NTgsNiArNDU4LDExIEBAIHN0YXRpYyBpbnQgbXZz
+X3Rhc2tfcHJlcF9hdGEoc3RydWN0IG12c19pbmZvICptdmksDQogCQkJbXZpX2Rldi0+ZGV2aWNl
+X2lkKTsNCiAJCXJldHVybiAtRUJVU1k7DQogCX0NCisNCisJLyogY2xlYW51cCBhbmQgcHJlcGFy
+ZSB0aGUgYWxsb2NhdGVkIEZJUyBpbmRleCAqLw0KKwltZW1zZXQoIFNBVEFfUkVDRUlWRURfRDJI
+X0ZJUyhtdmlfZGV2LT50YXNrZmlsZXNldCksIDAsIA0KKwkJCQlzaXplb2Yoc3RydWN0IGRldl90
+b19ob3N0X2ZpcykgKTsNCisNCiAJc2xvdCA9ICZtdmktPnNsb3RfaW5mb1t0YWddOw0KIAlzbG90
+LT50eCA9IG12aS0+dHhfcHJvZDsNCiAJZGVsX3EgPSBUWFFfTU9ERV9JIHwgdGFnIHwNCi0tIA0K
+MS43LjEwDQoNCg==
+
+
+--=-Ez5mhR8dt7GD67NP3ibW--
