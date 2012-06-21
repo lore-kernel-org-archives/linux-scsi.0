@@ -1,108 +1,56 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v5 02/12] libata: bind the Linux device tree to the
- ACPI device tree
-Date: Thu, 21 Jun 2012 09:26:42 +0800
-Message-ID: <1340242002.20081.84.camel@minggr>
-References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-	 <1340000766-129148-3-git-send-email-ming.m.lin@intel.com>
-	 <CAA9_cmcX2pajewz1v864Ni2Z3XAy8UrCRg+mg3Y2qFEd2j=nDg@mail.gmail.com>
+From: Fengguang Wu <fengguang.wu@intel.com>
+Subject: lpfc: problems with -Werror
+Date: Thu, 21 Jun 2012 09:30:18 +0800
+Message-ID: <20120621013018.GA7244@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cmcX2pajewz1v864Ni2Z3XAy8UrCRg+mg3Y2qFEd2j=nDg@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:15684 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755831Ab2FUBaV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jun 2012 21:30:21 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alex Iannicelli <alex.iannicelli@emulex.com>
+Cc: James Smart <james.smart@emulex.com>, James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2012-06-20 at 16:50 -0700, Dan Williams wrote:
-> On Sun, Jun 17, 2012 at 11:25 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> > From: Matthew Garrett <mjg@redhat.com>
-> >
-> > Associate the ACPI device tree and libata devices.
-> > This patch uses the generic ACPI glue framework to do so.
-> >
-> > Signed-off-by: Matthew Garrett <mjg@redhat.com>
-> > Signed-off-by: Holger Macht <holger@homac.de>
-> > Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-> > ---
-> >
-> > Changelog:
-> >
-> > - fixed crash reported at https://lkml.org/lkml/2012/2/24/2 (Aaron Lu)
-> > - rename is_pci_ata to compat_pci_ata (Alan Cox)
-> >
-> >  drivers/acpi/glue.c       |    4 +-
-> >  drivers/ata/libata-acpi.c |  125 +++++++++++++++++++++++++++++++++++++++++++++
-> >  drivers/ata/libata-core.c |    3 ++
-> >  drivers/ata/libata.h      |    4 ++
-> >  4 files changed, 134 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-> > index 1564e09..18d6812 100644
-> > --- a/drivers/acpi/glue.c
-> > +++ b/drivers/acpi/glue.c
-> [..]
-> > +static int ata_acpi_bind_host(struct device *dev, int host, acpi_handle *handle)
-> > +{
-> > +       struct Scsi_Host *shost = dev_to_shost(dev);
-> > +       struct ata_port *ap = ata_shost_to_port(shost);
-> > +
-> > +       if (ap->flags & ATA_FLAG_ACPI_SATA)
-> > +               return -ENODEV;
-> > +
-> > +       *handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), ap->port_no);
-> > +
-> > +       if (!*handle)
-> > +               return -ENODEV;
-> > +
-> > +       return 0;
-> > +}
-> 
-> I think this patch should be squashed with patch 4, right?  That is if
-> we keep the hard-coded ->parent chasing...
+Hi Alex,
 
-Right. Will merge patch 4.
+In commit d438bd3aef ("Add -Werror compilation flag") you added this:
 
-> 
-> > +static int ata_acpi_find_device(struct device *dev, acpi_handle *handle)
-> > +{
-> > +       unsigned int host, channel, id, lun;
-> > +
-> > +       if (sscanf(dev_name(dev), "host%u", &host) == 1) {
-> > +               if (!compat_pci_ata(dev->parent))
-> > +                       return -ENODEV;
-> > +
-> > +               return ata_acpi_bind_host(dev, host, handle);
-> > +       } else if (sscanf(dev_name(dev), "%d:%d:%d:%d",
-> > +                       &host, &channel, &id, &lun) == 4) {
-> > +               if (!compat_pci_ata(dev->parent->parent->parent))
-> > +                       return -ENODEV;
-> 
-> ...this looks like it should be using a dev_to_ata_port() helper which
-> like dev_to_shost() skips the need to remember just how many parents
-> until we get back to our ata_port, scsi_host, etc.
++ccflags-y += -Werror
 
-Oh, no.
+Now I run into a number of gcc errors when running randconfig tests.
+They smell like false warnings. I don't quite understand why you made
+that "-Werror" conditional and only fail on CONFIG_SCSI_LPFC=y.  But
+if you prefer to keep that -Werror, I'll send a (perhaps silly) patch
+to quiet these error messages.
 
-compat_pci_ata checks whether the controller(rather than shost or ata
-port) is pci SATA/IDE controller.
-
-As in patch 4:
-compat_pci_ata(dev->parent->parent->parent->parent)
-
-The "dev" is ata port, and dev->parent->parent->parent->parent points to
-the controller dev.
-
-This looks ugly. How about add two helpers?
-shost_to_controller(dev) and ata_port_to_controller(dev)
+drivers/scsi/lpfc/lpfc_sli.c:3654:3: error: 'resp_data' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:3637:2: error: 'ha_copy' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+arch/x86/include/asm/io.h:63:1: error: 'hc_copy' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:3510:18: error: 'status' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:4068:17: error: 'status' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:3777:23: error: 'ha_copy' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:3742:9: error: 'status' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:6694:21: error: 'ha_copy' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:6693:18: error: 'word0' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:9718:12: error: 'creg_val' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:9872:2: error: 'ha_copy' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:10235:14: error: 'control' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:10176:9: error: 'hc_copy' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:10152:12: error: 'ha_copy' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:10447:9: error: 'ha_copy' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_sli.c:10551:8: error: 'hc_copy' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_els.c:95:2: error: 'ha_copy' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_els.c:4731:11: error: 'cmd' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_els.c:4731:11: error: 'length' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_init.c:522:9: error: 'status' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_attr.c:1491:12: error: 'creg_val' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_bsg.c:358:12: error: 'creg_val' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_bsg.c:615:12: error: 'creg_val' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/lpfc/lpfc_bsg.c:1385:12: error: 'creg_val' may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
 Thanks,
-Lin Ming
-
-> 
-> --
-> Dan
-
-
+Fengguang
