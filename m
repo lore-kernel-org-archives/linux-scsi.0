@@ -1,42 +1,33 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: lpfc: problems with -Werror
-Date: Thu, 21 Jun 2012 07:50:02 +0000
-Message-ID: <1340265001.2985.13.camel@dabdike.int.hansenpartnership.com>
-References: <20120621013018.GA7244@localhost>
+From: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/7] Revert "usb/uas: make sure data urb is gone if we
+ receive status before that"
+Date: Thu, 21 Jun 2012 10:27:43 +0200
+Message-ID: <4FE2DAFF.8040809@redhat.com>
+References: <1340092494-18876-1-git-send-email-kraxel@redhat.com> <1340092494-18876-2-git-send-email-kraxel@redhat.com> <20120620235626.GC31520@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:60908 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750998Ab2FUHuH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jun 2012 03:50:07 -0400
-In-Reply-To: <20120621013018.GA7244@localhost>
-Content-Language: en-US
-Content-ID: <0762115FE7B5C44197046D7E58626E64@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120620235626.GC31520-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: Alex Iannicelli <alex.iannicelli@emulex.com>, James Smart <james.smart@emulex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gVGh1LCAyMDEyLTA2LTIxIGF0IDA5OjMwICswODAwLCBGZW5nZ3VhbmcgV3Ugd3JvdGU6DQo+
-IEhpIEFsZXgsDQo+IA0KPiBJbiBjb21taXQgZDQzOGJkM2FlZiAoIkFkZCAtV2Vycm9yIGNvbXBp
-bGF0aW9uIGZsYWciKSB5b3UgYWRkZWQgdGhpczoNCj4gDQo+ICtjY2ZsYWdzLXkgKz0gLVdlcnJv
-cg0KPiANCj4gTm93IEkgcnVuIGludG8gYSBudW1iZXIgb2YgZ2NjIGVycm9ycyB3aGVuIHJ1bm5p
-bmcgcmFuZGNvbmZpZyB0ZXN0cy4NCj4gVGhleSBzbWVsbCBsaWtlIGZhbHNlIHdhcm5pbmdzLiBJ
-IGRvbid0IHF1aXRlIHVuZGVyc3RhbmQgd2h5IHlvdSBtYWRlDQo+IHRoYXQgIi1XZXJyb3IiIGNv
-bmRpdGlvbmFsIGFuZCBvbmx5IGZhaWwgb24gQ09ORklHX1NDU0lfTFBGQz15LiAgQnV0DQo+IGlm
-IHlvdSBwcmVmZXIgdG8ga2VlcCB0aGF0IC1XZXJyb3IsIEknbGwgc2VuZCBhIChwZXJoYXBzIHNp
-bGx5KSBwYXRjaA0KPiB0byBxdWlldCB0aGVzZSBlcnJvciBtZXNzYWdlcy4NCg0KVGhleSdyZSBh
-bGwgYm9ndXMsIGJ1dCB3ZSBjYW4ndCByZWFsbHkgaGF2ZSB0aGUgYnVpbGQgYnJlYWsgYmVjYXVz
-ZSBnY2MNCmlzIGZyYWdpbGUuDQoNCkphbWVzIGFuZCBBbGV4LCBob3cgYWJvdXQgdGhpczogSXQn
-cyB0aGUgYWljN3h4eCBzb2x1dGlvbjogaXQgYWxsb3dzIHlvdQ0KdG8gYnVpbGQgdGhlIGtlcm5l
-bCB3aXRoIG1ha2UgV0FSTklOR1NfQkVDT01FX0VSUk9SUz0xIHRvIGdldCAtV2Vycm9yDQpidXQg
-aXQncyBub3Qgb24gYnkgZGVmYXVsdD8NCg0KSmFtZXMNCg0KLS0tDQoNCmRpZmYgLS1naXQgYS9k
-cml2ZXJzL3Njc2kvbHBmYy9NYWtlZmlsZSBiL2RyaXZlcnMvc2NzaS9scGZjL01ha2VmaWxlDQpp
-bmRleCBmZTVkMzk2Li5lMjUxNmJhIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL2xwZmMvTWFr
-ZWZpbGUNCisrKyBiL2RyaXZlcnMvc2NzaS9scGZjL01ha2VmaWxlDQpAQCAtMjIsNyArMjIsOSBA
-QA0KIGNjZmxhZ3MtJChHQ09WKSA6PSAtZnByb2ZpbGUtYXJjcyAtZnRlc3QtY292ZXJhZ2UNCiBj
-Y2ZsYWdzLSQoR0NPVikgKz0gLU8wDQogDQoraWZkZWYgV0FSTklOR1NfQkVDT01FX0VSUk9SUw0K
-IGNjZmxhZ3MteSArPSAtV2Vycm9yDQorZW5kaWYNCiANCiBvYmotJChDT05GSUdfU0NTSV9MUEZD
-KSA6PSBscGZjLm8NCiANCg0K
+On 06/21/12 01:56, Greg KH wrote:
+> On Tue, Jun 19, 2012 at 09:54:48AM +0200, Gerd Hoffmann wrote:
+>> This reverts commit e4d8318a85779b25b880187b1b1c44e797bd7d4b.
+>>
+> 
+> Should this revert also go into 3.4-stable so that the device will work
+> properly on ehci?
+
+Yes.
+
+cheers,
+  Gerd
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
