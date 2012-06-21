@@ -1,42 +1,140 @@
-From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [PATCH 2/7] Revert "usb/uas: one only one status URB/host on
- stream-less connection"
-Date: Wed, 20 Jun 2012 16:56:44 -0700
-Message-ID: <20120620235644.GD31520@kroah.com>
-References: <1340092494-18876-1-git-send-email-kraxel@redhat.com>
- <1340092494-18876-3-git-send-email-kraxel@redhat.com>
+From: Muthu Kumar <muthu.lkml@gmail.com>
+Subject: Re: [PATCH UPDATED] block: In blk_execute_rq_nowait, init rq->end_io
+ before checking for dead queue.
+Date: Wed, 20 Jun 2012 17:53:34 -0700
+Message-ID: <CAFR8ueeFcnMCqG=A1im09crBNckgfPixsCz9oceQCpPeJ3wiNw@mail.gmail.com>
+References: <CAFR8uecFzcrAYSy2ieJM5vWjNLSO3bjg20cy+B4cimHZ4RLktA@mail.gmail.com>
+	<4FD345DC.6020405@acm.org>
+	<CAFR8ueca-MQWRipE+3OQSpqmJ40HKJEY7jWt6PQ+zTCQ9Bh=5Q@mail.gmail.com>
+	<4FD4DC26.5080902@acm.org>
+	<CAFR8uecF0LwbV8FvYob5m34sVbKqafrNoYOrcRUQCEOymGnYRA@mail.gmail.com>
+	<CAFR8uefK+nByiJ8tw5_KF1qEJs4du2mDdU36gg1_2nRNZXN5Fw@mail.gmail.com>
+	<20120618224253.GH32733@google.com>
+	<4FE21C15.6040409@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1340092494-18876-3-git-send-email-kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4FE21C15.6040409@acm.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Jej B <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jun 19, 2012 at 09:54:49AM +0200, Gerd Hoffmann wrote:
-> This reverts commit ceb3f91fd53c9fbd7b292fc2754ba4efffeeeedb.
-> 
-> IMO the real bug is assigning status urbs to scsi requests.  First there
-> is no such link in the non-stream case.  Also there isn't nessesarely a
-> scsi request in the first place, for example when submitting task
-> management requests.
-> 
-> This patch just papers over the real bug and introduces different status
-> urb handling in the stream/non-stream case for no good reason.
-> 
-> Signed-off-by: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On Wed, Jun 20, 2012 at 11:53 AM, Bart Van Assche <bvanassche@acm.org> =
+wrote:
+> On 06/18/12 22:42, Tejun Heo wrote:
+>
+>> On Mon, Jun 11, 2012 at 02:23:23PM -0700, Muthu Kumar wrote:
+>>> On Mon, Jun 11, 2012 at 10:33 AM, Muthu Kumar <muthu.lkml@gmail.com=
+> wrote:
+>>>> On Sun, Jun 10, 2012 at 10:40 AM, Bart Van Assche <bvanassche@acm.=
+org> wrote:
+>>>>> On 06/09/12 23:57, Muthu Kumar wrote:
+>>>>>
+>>>>>> Locking change is the one you posted already (the link above). A=
+nyway,
+>>>>>> I have the attached patch *including* the locking change. Origin=
+al
+>>>>>> mail has attachment without locking change. Please use whatever =
+you
+>>>>>> need.
+>>>>>
+>>>>> While we are at it ... the rq->rq_disk and rq->end_io assignments=
+ can be
+>>>>> performed safely before the spinlock is taken, isn't it ?
+>>>>
+>>>> Yes.. that spinlock is to protect the q.
+>>>
+>>> Attached patch with assignment performed before taking the spinlock=
+=2E
+>>
+>> This looks correct to me. =A0Bart, can you please include this patch=
+ in
+>> your series and repost the series?
+>
+>
+> I'll start testing the patch below:
+>
+> [PATCH] block: Fix blk_execute_rq_nowait() dead queue handling
+>
+> Make sure that blk_execute_rq_nowait() invokes the proper end_io
+> function if the queue is dead and also that this call is performed
+> with the queue lock held. Found this through source code review.
+>
+> Notes:
+> - Since blk_execute_rq_nowait() must not be invoked from interrupt
+> =A0context it is safe to invoke end_io directly from this function.
+> - blk_finish_request() already invokes request.end_io with the
+> =A0queue lock held.
+>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Reported-by: Muthukumar Ratty <muthur@gmail.com>
+
+Hmm... Shouldn't this be:
+
+Signed-off-by: Muthukumar Ratty <muthur@gmail.com>
+Tested-by: Bart Van Assche <bvanassche@acm.org>
+
+???
+
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Tejun Heo <tj@kernel.org>
 > ---
->  drivers/usb/storage/uas.c |   70 ++++++--------------------------------------
->  1 files changed, 10 insertions(+), 60 deletions(-)
+> =A0block/blk-exec.c | =A0 11 +++++++----
+> =A01 files changed, 7 insertions(+), 4 deletions(-)
+>
+> diff --git a/block/blk-exec.c b/block/blk-exec.c
+> index fb2cbd5..c0fd83a 100644
+> --- a/block/blk-exec.c
+> +++ b/block/blk-exec.c
+> @@ -42,7 +42,8 @@ static void blk_end_sync_rq(struct request *rq, int=
+ error)
+> =A0*
+> =A0* Description:
+> =A0* =A0 =A0Insert a fully prepared request at the back of the I/O sc=
+heduler queue
+> - * =A0 =A0for execution. =A0Don't wait for completion.
+> + * =A0 =A0for execution. =A0Don't wait for completion. =A0This funct=
+ion may invoke
+> + * =A0 =A0rq->end_io directly.
+> =A0*/
+> =A0void blk_execute_rq_nowait(struct request_queue *q, struct gendisk=
+ *bd_disk,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct request *r=
+q, int at_head,
+> @@ -51,18 +52,20 @@ void blk_execute_rq_nowait(struct request_queue *=
+q, struct gendisk *bd_disk,
+> =A0 =A0 =A0 =A0int where =3D at_head ? ELEVATOR_INSERT_FRONT : ELEVAT=
+OR_INSERT_BACK;
+>
+> =A0 =A0 =A0 =A0WARN_ON(irqs_disabled());
+> +
+> + =A0 =A0 =A0 rq->rq_disk =3D bd_disk;
+> + =A0 =A0 =A0 rq->end_io =3D done;
+> +
+> =A0 =A0 =A0 =A0spin_lock_irq(q->queue_lock);
+>
+> =A0 =A0 =A0 =A0if (unlikely(blk_queue_dead(q))) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(q->queue_lock);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rq->errors =3D -ENXIO;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (rq->end_io)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rq->end_io(rq, rq->err=
+ors);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(q->queue_lock);
 
-Same here, should this also be reverted in 3.4-stable?
+This part already went in, its here only for testing - So in the final
+patch, before applying this should be removed.
 
-thanks,
-
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return;
+> =A0 =A0 =A0 =A0}
+>
+> - =A0 =A0 =A0 rq->rq_disk =3D bd_disk;
+> - =A0 =A0 =A0 rq->end_io =3D done;
+> =A0 =A0 =A0 =A0__elv_add_request(q, rq, where);
+> =A0 =A0 =A0 =A0__blk_run_queue(q);
+> =A0 =A0 =A0 =A0/* the queue is stopped so it won't be run */
+> --
+> 1.7.7
+>
+>
