@@ -1,53 +1,55 @@
-From: Mark Rustad <mark.d.rustad@intel.com>
-Subject: [PATCH] scsi: Avoid NULL dereferences in scsi_cmd_to_driver
-Date: Thu, 21 Jun 2012 12:23:42 -0700
-Message-ID: <20120621192342.30692.9665.stgit@host1-mdrustad.localdomain>
+From: Ron Eisler <Ron.Eisler@ca.weatherford.com>
+Subject: Re: [ PATCH 0/3 ] mpt fusion enhancements
+Date: Thu, 21 Jun 2012 21:20:01 +0000 (UTC)
+Message-ID: <loom.20120621T230838-721@post.gmane.org>
+References: <200902061408.46652.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50611 "EHLO mga01.intel.com"
+Received: from plane.gmane.org ([80.91.229.3]:54239 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759970Ab2FUTYg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jun 2012 15:24:36 -0400
-Received: from host1-mdrustad.localdomain (localhost [127.0.0.1])
-	by host1-mdrustad.localdomain (8.14.5/8.14.5) with ESMTP id q5LJNg2G030722
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Jun 2012 12:23:42 -0700
+	id S1760408Ab2FUVZJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Jun 2012 17:25:09 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1ShosC-00072g-UU
+	for linux-scsi@vger.kernel.org; Thu, 21 Jun 2012 23:25:05 +0200
+Received: from a72-29-250-40.enmaxenvision.net ([a72-29-250-40.enmaxenvision.net])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Jun 2012 23:25:04 +0200
+Received: from Ron.Eisler by a72-29-250-40.enmaxenvision.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Jun 2012 23:25:04 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Avoid crashing if the private_data pointer happens to be NULL. This has
-been seen sometimes when a host reset happens, notably when there are
-many LUNs.
+Bernd Schubert <bs <at> q-leap.de> writes:
 
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-Tested-by: Marcus Dennis <marcusx.e.dennis@intel.com>
----
+> 
+> Here are 3 patches for the mpt fusion driver.
+> 
 
- include/scsi/scsi_cmnd.h |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+Hello Bernd,
 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 1e11985..ac06cc5 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -134,10 +134,16 @@ struct scsi_cmnd {
- 
- static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
- {
-+	struct scsi_driver **sdp;
-+
- 	if (!cmd->request->rq_disk)
- 		return NULL;
- 
--	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
-+	sdp = (struct scsi_driver **)cmd->request->rq_disk->private_data;
-+	if (!sdp)
-+		return NULL;
-+
-+	return *sdp;
- }
- 
- extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
+I am looking mpt fusion backport fixes for the LSI 53C1030 that will run with
+Linux kernel 2.6.27.62. Current version is 3.04.07. Our problem is that running
+on VMWare VSphere, with the SAN heavily loaded, we get SCSI timeouts.
+
+Ex. mptscsih: ioc0: attempting task abort! (sc-ffff...)
+    sd 0:0:0:0: [sda] CDB: Read (10): 28 00 ...
+    mptscsih: ioc0: task abort: Success (sc=ffff...)
+
+The system hangs for 30 seconds on each one.
+
+I see comments/patches here: http://comments.gmane.org/gmane.linux.scsi/48215
+
+Do you have source that would work for 2.6.27.62?
+
+Thank you
+Ron Eisler
+
+
 
