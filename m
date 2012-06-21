@@ -1,33 +1,52 @@
-From: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/7] Revert "usb/uas: make sure data urb is gone if we
- receive status before that"
-Date: Thu, 21 Jun 2012 10:27:43 +0200
-Message-ID: <4FE2DAFF.8040809@redhat.com>
-References: <1340092494-18876-1-git-send-email-kraxel@redhat.com> <1340092494-18876-2-git-send-email-kraxel@redhat.com> <20120620235626.GC31520@kroah.com>
+From: Gerd Hoffmann <kraxel@redhat.com>
+Subject: Re: [PATCH 2/7] Revert "usb/uas: one only one status URB/host on
+ stream-less connection"
+Date: Thu, 21 Jun 2012 10:41:21 +0200
+Message-ID: <4FE2DE31.6030006@redhat.com>
+References: <1340092494-18876-1-git-send-email-kraxel@redhat.com> <1340092494-18876-3-git-send-email-kraxel@redhat.com> <20120620235644.GD31520@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120620235626.GC31520-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37252 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758838Ab2FUIlZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Jun 2012 04:41:25 -0400
+In-Reply-To: <20120620235644.GD31520@kroah.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
 On 06/21/12 01:56, Greg KH wrote:
-> On Tue, Jun 19, 2012 at 09:54:48AM +0200, Gerd Hoffmann wrote:
->> This reverts commit e4d8318a85779b25b880187b1b1c44e797bd7d4b.
+> On Tue, Jun 19, 2012 at 09:54:49AM +0200, Gerd Hoffmann wrote:
+>> This reverts commit ceb3f91fd53c9fbd7b292fc2754ba4efffeeeedb.
 >>
+>> IMO the real bug is assigning status urbs to scsi requests.  First there
+>> is no such link in the non-stream case.  Also there isn't nessesarely a
+>> scsi request in the first place, for example when submitting task
+>> management requests.
+>>
+>> This patch just papers over the real bug and introduces different status
+>> urb handling in the stream/non-stream case for no good reason.
+>>
+>> Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+>> ---
+>>  drivers/usb/storage/uas.c |   70 ++++++--------------------------------------
+>>  1 files changed, 10 insertions(+), 60 deletions(-)
 > 
-> Should this revert also go into 3.4-stable so that the device will work
-> properly on ehci?
+> Same here, should this also be reverted in 3.4-stable?
 
-Yes.
+Well, even though the reverted patch is clumsy and takes the wrong
+direction, it actually does the job and fixes the issue at hand.
+
+When reverting in stable patch #3 of this series (which fixes the issue
+in a better way) must be cherry-picked into stable too, otherwise we'll
+get a regression.
+
+I'd tend to not revert this one in stable though.
 
 cheers,
   Gerd
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
