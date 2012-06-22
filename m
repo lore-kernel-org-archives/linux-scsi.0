@@ -1,73 +1,135 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: RE: [PATCH] scsi_dh_alua: Re-enable STPG for unavailable ports
-Date: Fri, 22 Jun 2012 17:52:14 +0000
-Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B07E504FD@SACEXCMBX02-PRD.hq.netapp.com>
-References: <4FE431A2.2050500@acm.org>
+From: Muthu Kumar <muthu.lkml@gmail.com>
+Subject: Re: [PATCH UPDATED] block: In blk_execute_rq_nowait, init rq->end_io
+ before checking for dead queue.
+Date: Fri, 22 Jun 2012 11:05:20 -0700
+Message-ID: <CAFR8ueckaeN4WjehTn4yON0c5MkcdcXj-mXDOhD_ALdVpvMWOw@mail.gmail.com>
+References: <CAFR8uecFzcrAYSy2ieJM5vWjNLSO3bjg20cy+B4cimHZ4RLktA@mail.gmail.com>
+	<4FD345DC.6020405@acm.org>
+	<CAFR8ueca-MQWRipE+3OQSpqmJ40HKJEY7jWt6PQ+zTCQ9Bh=5Q@mail.gmail.com>
+	<4FD4DC26.5080902@acm.org>
+	<CAFR8uecF0LwbV8FvYob5m34sVbKqafrNoYOrcRUQCEOymGnYRA@mail.gmail.com>
+	<CAFR8uefK+nByiJ8tw5_KF1qEJs4du2mDdU36gg1_2nRNZXN5Fw@mail.gmail.com>
+	<20120618224253.GH32733@google.com>
+	<4FE21C15.6040409@acm.org>
+	<CAFR8ueeFcnMCqG=A1im09crBNckgfPixsCz9oceQCpPeJ3wiNw@mail.gmail.com>
+	<4FE2B3D1.6070504@acm.org>
+	<CAFR8uecUUVD3Ra4ajNxMi=37LKWd7T46_xLR6C2=47MWZ6K=9Q@mail.gmail.com>
+	<4FE41CC6.4010406@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:6902 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755899Ab2FVRwQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jun 2012 13:52:16 -0400
-In-Reply-To: <4FE431A2.2050500@acm.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4FE41CC6.4010406@acm.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Jej B <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-Bart,
+On Fri, Jun 22, 2012 at 12:20 AM, Bart Van Assche <bvanassche@acm.org> =
+wrote:
+> On 06/21/12 21:40, Muthu Kumar wrote:
+>
+>> On Wed, Jun 20, 2012 at 10:40 PM, Bart Van Assche <bvanassche@acm.or=
+g> wrote:
+>>> On 06/21/12 00:53, Muthu Kumar wrote:
+>>>> This part already went in, its here only for testing - So in the f=
+inal
+>>>> patch, before applying this should be removed.
+>>>
+>>> When did it go in ? As far as I can see that patch is not yet prese=
+nt in
+>>> Linus' tree nor in James' tree.
+>>
+>> My bad. I thought Jens/James took it already... may be not.
+>
+>
+> Do you agree with combining both patches into one (see below) ?
 
-> -----Original Message-----
-> From: Bart Van Assche [mailto:bvanassche@acm.org]
-> Sent: Friday, June 22, 2012 3:50 AM
-> To: linux-scsi; Moger, Babu; Hannes Reinecke
-> Subject: [PATCH] scsi_dh_alua: Re-enable STPG for unavailable ports
-> 
-> A quote from SPC-4: "While in the unavailable primary target port
-> asymmetric access state, the device server shall support those of
-> the following commands that it supports while in the active/optimized
-> state: [ ... ] d) SET TARGET PORT GROUPS; [ ... ]". Hence re-enable
-> sending STPG to a target port group that is in the unavailable state.
 
-Patch looks good. One concern, the spec also says..
-==============================
-The unavailable target port asymmetric access state is
-intended for situations when the target port accessibility to a logical unit may be severely restricted due to SCSI
-target device limitations (e.g., hardware errors). Therefore it may not be possible to transition from this state to
-either the active/optimized, active/non-optimized or standby states.
-=====================================================
+Perfect. Thanks.
 
-What happens if we cannot transition to active/optimized, active/non-optimized or standby states.  
-Are we going to loop forever?  From kernel side it looks ok.  We are going mark the path as failed.  
-It depends on what the path checker from multipath is going to do.  Do you have any idea about it?
+Regards,
+Muthu.
 
-> 
+
+
+
+
+
+
+
+
+>
+> From: Muthukumar Ratty <muthur@gmail.com>
+> Subject: [PATCH] block: Fix blk_execute_rq_nowait() dead queue handli=
+ng
+>
+> If the queue is dead blk_execute_rq_nowait() doesn't invoke the done(=
+)
+> callback function. That will result in blk_execute_rq() being stuck
+> in wait_for_completion(). Avoid this by initializing rq->end_io to th=
+e
+> done() callback before we check the queue state. Also, make sure the
+> queue lock is held around the invocation of the done() callback. Foun=
+d
+> this through source code review.
+>
+> Signed-off-by: Muthukumar Ratty <muthur@gmail.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> Cc: Babu Moger <babu.moger@netapp.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> 
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
 > ---
-> This patch fixes a regression introduced in kernel 3.5-rc1.
-> 
-> ---
->  drivers/scsi/device_handler/scsi_dh_alua.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
-> b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 5088209..155fadc 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -691,9 +691,9 @@ static int alua_activate(struct scsi_device *sdev,
->  				stpg = 0;
->  			break;
->  		case TPGS_STATE_STANDBY:
-> +		case TPGS_STATE_UNAVAILABLE:
->  			stpg = 1;
->  			break;
-> -		case TPGS_STATE_UNAVAILABLE:
->  		case TPGS_STATE_OFFLINE:
->  			err = SCSI_DH_IO;
->  			break;
+> =A0block/blk-exec.c | =A0 11 ++++++++---
+> =A01 files changed, 8 insertions(+), 3 deletions(-)
+>
+> diff --git a/block/blk-exec.c b/block/blk-exec.c
+> index fb2cbd5..8b6dc5b 100644
+> --- a/block/blk-exec.c
+> +++ b/block/blk-exec.c
+> @@ -43,6 +43,9 @@ static void blk_end_sync_rq(struct request *rq, int=
+ error)
+> =A0* Description:
+> =A0* =A0 =A0Insert a fully prepared request at the back of the I/O sc=
+heduler queue
+> =A0* =A0 =A0for execution. =A0Don't wait for completion.
+> + *
+> + * Note:
+> + * =A0 =A0This function will invoke @done directly if the queue is d=
+ead.
+> =A0*/
+> =A0void blk_execute_rq_nowait(struct request_queue *q, struct gendisk=
+ *bd_disk,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct request *r=
+q, int at_head,
+> @@ -51,18 +54,20 @@ void blk_execute_rq_nowait(struct request_queue *=
+q, struct gendisk *bd_disk,
+> =A0 =A0 =A0 =A0int where =3D at_head ? ELEVATOR_INSERT_FRONT : ELEVAT=
+OR_INSERT_BACK;
+>
+> =A0 =A0 =A0 =A0WARN_ON(irqs_disabled());
+> +
+> + =A0 =A0 =A0 rq->rq_disk =3D bd_disk;
+> + =A0 =A0 =A0 rq->end_io =3D done;
+> +
+> =A0 =A0 =A0 =A0spin_lock_irq(q->queue_lock);
+>
+> =A0 =A0 =A0 =A0if (unlikely(blk_queue_dead(q))) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(q->queue_lock);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rq->errors =3D -ENXIO;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (rq->end_io)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rq->end_io(rq, rq->err=
+ors);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(q->queue_lock);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return;
+> =A0 =A0 =A0 =A0}
+>
+> - =A0 =A0 =A0 rq->rq_disk =3D bd_disk;
+> - =A0 =A0 =A0 rq->end_io =3D done;
+> =A0 =A0 =A0 =A0__elv_add_request(q, rq, where);
+> =A0 =A0 =A0 =A0__blk_run_queue(q);
+> =A0 =A0 =A0 =A0/* the queue is stopped so it won't be run */
+> --
+> 1.7.7
+>
+>
