@@ -1,41 +1,44 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [set2 PATCH 4/4] isci: use sas eh strategy handlers
-Date: Thu, 21 Jun 2012 23:31:04 -0700
-Message-ID: <20120622063104.21248.33183.stgit@dwillia2-linux.jf.intel.com>
-References: <20120622063043.21248.12701.stgit@dwillia2-linux.jf.intel.com>
+Subject: [set3 PATCH 0/6] libsas: domain discovery fixes + misc cleanups
+Date: Thu, 21 Jun 2012 23:36:04 -0700
+Message-ID: <20120622063604.21332.39275.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23317 "EHLO mga01.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:28560 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761324Ab2FVGOZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jun 2012 02:14:25 -0400
-In-Reply-To: <20120622063043.21248.12701.stgit@dwillia2-linux.jf.intel.com>
+	id S1757358Ab2FVGT0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jun 2012 02:19:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-...now that the strategy handlers guarantee eh context and notify
-the driver of bus reset.
+Set3 of 5 patchsets to update scsi, libsas, and libata in
+support of the isci driver.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Some fixes to domain (re-)discovery failures and some random cleanups.
+
 ---
- drivers/scsi/isci/init.c |    3 +++
- 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 47e28b5..92c1d86 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -166,6 +166,9 @@ static struct scsi_host_template isci_sht = {
- 	.sg_tablesize			= SG_ALL,
- 	.max_sectors			= SCSI_DEFAULT_MAX_SECTORS,
- 	.use_clustering			= ENABLE_CLUSTERING,
-+	.eh_abort_handler		= sas_eh_abort_handler,
-+	.eh_device_reset_handler        = sas_eh_device_reset_handler,
-+	.eh_bus_reset_handler           = sas_eh_bus_reset_handler,
- 	.target_destroy			= sas_target_destroy,
- 	.ioctl				= sas_ioctl,
- 	.shost_attrs			= isci_host_attrs,
+Dan Carpenter (1):
+      mvsas: remove unused variable in mvs_task_exec()
 
+Dan Williams (4):
+      libsas: continue revalidation
+      libsas: fix sas_discover_devices return code handling
+      libsas: drop sata port multiplier infrastructure
+      libsas: trim sas_task of slow path infrastructure
+
+Jeff Skirvin (1):
+      libsas: sas_rediscover_dev did not look at the SMP exec status.
+
+
+ drivers/scsi/libsas/sas_discover.c  |    6 ---
+ drivers/scsi/libsas/sas_expander.c  |   74 +++++++++++++++--------------------
+ drivers/scsi/libsas/sas_init.c      |   23 ++++++++++-
+ drivers/scsi/libsas/sas_scsi_host.c |    8 +++-
+ drivers/scsi/mvsas/mv_sas.c         |   21 +++++-----
+ drivers/scsi/pm8001/pm8001_sas.c    |   34 ++++++++--------
+ include/scsi/libsas.h               |   15 ++++---
+ 7 files changed, 95 insertions(+), 86 deletions(-)
