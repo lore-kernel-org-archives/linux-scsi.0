@@ -1,37 +1,90 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [set3 PATCH 3/6] libsas: fix sas_discover_devices return code handling
-Date: Fri, 22 Jun 2012 15:03:45 +0800
-Message-ID: <0A5B34181B074D459DCDB5A59168431F@usish.com.cn>
-References: <20120622063604.21332.39275.stgit@dwillia2-linux.jf.intel.com> <20120622063620.21332.68813.stgit@dwillia2-linux.jf.intel.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH UPDATED] block: In blk_execute_rq_nowait, init rq->end_io
+ before checking for dead queue.
+Date: Fri, 22 Jun 2012 07:20:38 +0000
+Message-ID: <4FE41CC6.4010406@acm.org>
+References: <CAFR8uecFzcrAYSy2ieJM5vWjNLSO3bjg20cy+B4cimHZ4RLktA@mail.gmail.com> <4FD345DC.6020405@acm.org> <CAFR8ueca-MQWRipE+3OQSpqmJ40HKJEY7jWt6PQ+zTCQ9Bh=5Q@mail.gmail.com> <4FD4DC26.5080902@acm.org> <CAFR8uecF0LwbV8FvYob5m34sVbKqafrNoYOrcRUQCEOymGnYRA@mail.gmail.com> <CAFR8uefK+nByiJ8tw5_KF1qEJs4du2mDdU36gg1_2nRNZXN5Fw@mail.gmail.com> <20120618224253.GH32733@google.com> <4FE21C15.6040409@acm.org> <CAFR8ueeFcnMCqG=A1im09crBNckgfPixsCz9oceQCpPeJ3wiNw@mail.gmail.com> <4FE2B3D1.6070504@acm.org> <CAFR8uecUUVD3Ra4ajNxMi=37LKWd7T46_xLR6C2=47MWZ6K=9Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:35270 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761418Ab2FVHEs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jun 2012 03:04:48 -0400
-In-Reply-To: <20120622063620.21332.68813.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAFR8uecUUVD3Ra4ajNxMi=37LKWd7T46_xLR6C2=47MWZ6K=9Q@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Muthu Kumar <muthu.lkml@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Jej B <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
-Cc: 'Dan Melnic' <dan.melnic@amd.com>, stable@vger.kernel.org, 'Lindar Liu' <lindar_liu@usish.com>, 'Kevin Ao' <aoqingyun@usish.com>, 'Tom Peng' <tom_peng@usish.com>
 
-> commit 198439e4 [SCSI] libsas: do not set res = 0 in sas_ex_discover_dev()
-> commit 19252de6 [SCSI] libsas: fix wide port hotplug issues
+On 06/21/12 21:40, Muthu Kumar wrote:
+
+> On Wed, Jun 20, 2012 at 10:40 PM, Bart Van Assche <bvanassche@acm.org> wrote:
+>> On 06/21/12 00:53, Muthu Kumar wrote:
+>>> This part already went in, its here only for testing - So in the final
+>>> patch, before applying this should be removed.
+>>
+>> When did it go in ? As far as I can see that patch is not yet present in
+>> Linus' tree nor in James' tree.
 > 
-> The above commits seem to have confused the return value of
-> sas_ex_discover_dev which is non-zero on failure and
-> sas_ex_join_wide_port which just indicates short circuiting discovery on
-> already established ports.  The result is random discovery failures
-> depending on configuration.
-> 
-> Calls to sas_ex_join_wide_port are the source of the trouble as its
-> return value is errantly assigned to 'res'.  Convert it to bool and stop
-> returning its result up the stack.
-[Jack Wang] 
-Thanks for fix, looks OK to me.
-Please add my Reviewed-by if needed.
+> My bad. I thought Jens/James took it already... may be not.
 
 
+Do you agree with combining both patches into one (see below) ?
+
+From: Muthukumar Ratty <muthur@gmail.com>
+Subject: [PATCH] block: Fix blk_execute_rq_nowait() dead queue handling
+
+If the queue is dead blk_execute_rq_nowait() doesn't invoke the done()
+callback function. That will result in blk_execute_rq() being stuck
+in wait_for_completion(). Avoid this by initializing rq->end_io to the
+done() callback before we check the queue state. Also, make sure the
+queue lock is held around the invocation of the done() callback. Found
+this through source code review.
+
+Signed-off-by: Muthukumar Ratty <muthur@gmail.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
+---
+ block/blk-exec.c |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/block/blk-exec.c b/block/blk-exec.c
+index fb2cbd5..8b6dc5b 100644
+--- a/block/blk-exec.c
++++ b/block/blk-exec.c
+@@ -43,6 +43,9 @@ static void blk_end_sync_rq(struct request *rq, int error)
+  * Description:
+  *    Insert a fully prepared request at the back of the I/O scheduler queue
+  *    for execution.  Don't wait for completion.
++ *
++ * Note:
++ *    This function will invoke @done directly if the queue is dead.
+  */
+ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
+ 			   struct request *rq, int at_head,
+@@ -51,18 +54,20 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
+ 	int where = at_head ? ELEVATOR_INSERT_FRONT : ELEVATOR_INSERT_BACK;
+ 
+ 	WARN_ON(irqs_disabled());
++
++	rq->rq_disk = bd_disk;
++	rq->end_io = done;
++
+ 	spin_lock_irq(q->queue_lock);
+ 
+ 	if (unlikely(blk_queue_dead(q))) {
+-		spin_unlock_irq(q->queue_lock);
+ 		rq->errors = -ENXIO;
+ 		if (rq->end_io)
+ 			rq->end_io(rq, rq->errors);
++		spin_unlock_irq(q->queue_lock);
+ 		return;
+ 	}
+ 
+-	rq->rq_disk = bd_disk;
+-	rq->end_io = done;
+ 	__elv_add_request(q, rq, where);
+ 	__blk_run_queue(q);
+ 	/* the queue is stopped so it won't be run */
+-- 
+1.7.7
