@@ -1,51 +1,68 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [set1 PATCH 0/4] scsi, libsas,
- libata: fix up host_eh_scheduled usage
-Date: Thu, 21 Jun 2012 23:25:22 -0700
-Message-ID: <20120622062521.21162.31523.stgit@dwillia2-linux.jf.intel.com>
+Subject: [set1 PATCH 2/4] scsi: fix eh wakeup (scsi_schedule_eh vs
+ scsi_restart_operations)
+Date: Thu, 21 Jun 2012 23:25:32 -0700
+Message-ID: <20120622062532.21162.59654.stgit@dwillia2-linux.jf.intel.com>
+References: <20120622062521.21162.31523.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:10249 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761300Ab2FVGIo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jun 2012 02:08:44 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120622062521.21162.31523.stgit@dwillia2-linux.jf.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Tom Jackson <thomas.p.jackson@intel.com>, stable@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Set1 of 5 patchsets to update scsi, libsas, and libata in
-support of the isci driver.
+Rapid ata hotplug on a libsas controller results in cases where libsas
+is waiting indefinitely on eh to perform an ata probe.
 
-Libsas is more dependent on proper management of host_eh_scheduled
-compared to what libata has typically exposed.  Libsas has multiple
-ata_ports per Scsi_Host, while libata enforces 1:1.  Fix cases where
-this distinction causes problems.
+A race exists between scsi_schedule_eh() and scsi_restart_operations()
+in the case when scsi_restart_operations() issues i/o to other devices
+in the sas domain.  When this happens the host state transitions from
+SHOST_RECOVERY (set by scsi_schedule_eh) back to SHOST_RUNNING and
+->host_busy is non-zero so we put the eh thread to sleep even though
+->host_eh_scheduled is active.
 
-These have been submitted previously for 3.4 and 3.5.
+Before putting the error handler to sleep we need to check if the
+host_state needs to return to SHOST_RECOVERY for another trip through
+eh.  Since i/o that is released by scsi_restart_operations has been
+blocked for at least one eh cycle, this implementation allows those
+i/o's to run before another eh cycle starts to discourage hung task
+timeouts.
 
+Cc: Tejun Heo <tj@kernel.org>
+Cc: <stable@vger.kernel.org>
+Reported-by: Tom Jackson <thomas.p.jackson@intel.com>
+Tested-by: Tom Jackson <thomas.p.jackson@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/scsi/scsi_error.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-Dan Williams (3):
-      libata, libsas: introduce sched_eh and end_eh port ops
-      scsi: fix eh wakeup (scsi_schedule_eh vs scsi_restart_operations)
-      scsi: cleanup setting task state in scsi_error_handler()
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index d0f71e5..804f632 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1687,6 +1687,20 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
+ 	 * requests are started.
+ 	 */
+ 	scsi_run_host_queues(shost);
++
++	/*
++	 * if eh is active and host_eh_scheduled is pending we need to re-run
++	 * recovery.  we do this check after scsi_run_host_queues() to allow
++	 * everything pent up since the last eh run a chance to make forward
++	 * progress before we sync again.  Either we'll immediately re-run
++	 * recovery or scsi_device_unbusy() will wake us again when these
++	 * pending commands complete.
++	 */
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (shost->host_eh_scheduled)
++		if (scsi_host_set_state(shost, SHOST_RECOVERY))
++			WARN_ON(scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY));
++	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
+ /**
 
-Maciej Trela (1):
-      libsas: cleanup spurious calls to scsi_schedule_eh
-
-
- drivers/ata/libata-core.c           |    4 ++
- drivers/ata/libata-eh.c             |   57 ++++++++++++++++++++++++++++-------
- drivers/scsi/libsas/sas_ata.c       |   39 +++++++++++++++++++++---
- drivers/scsi/libsas/sas_discover.c  |    6 ++--
- drivers/scsi/libsas/sas_event.c     |   12 ++++---
- drivers/scsi/libsas/sas_init.c      |   14 ++++-----
- drivers/scsi/libsas/sas_scsi_host.c |   28 +++++++++++++----
- drivers/scsi/scsi_error.c           |   18 +++++++++--
- include/linux/libata.h              |    4 ++
- include/scsi/libsas.h               |    4 ++
- include/scsi/sas_ata.h              |    5 +++
- 11 files changed, 149 insertions(+), 42 deletions(-)
