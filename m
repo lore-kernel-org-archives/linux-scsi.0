@@ -1,46 +1,117 @@
-From: Praveen Murali <pmurali@logicube.com>
-Subject: Re: [PATCH v1] Fix sector number translation in sense buffer for
- SATA drives
-Date: Fri, 22 Jun 2012 10:05:26 -0700
-Message-ID: <1340384726.3712.77.camel@praveen-debian.lg.local>
-References: <1340322136.3712.61.camel@praveen-debian.lg.local>
-	 <CAA9_cmf-aufpXarLc5_NNzKs-LM39hYYxP-2RP7rWTf1o0p6Mg@mail.gmail.com>
-	 <1340324637.3712.67.camel@praveen-debian.lg.local>
-	 <CABE8wws6w0uWhskDJZPuKr3S1_qwo8M1vy-q8CuvJs=C1BRs2A@mail.gmail.com>
-	 <33E83F701EA663469FEBA23868D25955026B43DA@lgsbs.lg.local>
-	 <1340338888.13003.9.camel@dwillia2-mobl>
-	 <33E83F701EA663469FEBA23868D25955026B43DB@lgsbs.lg.local>
-	 <CABE8wwvwuwi9aAc63fh-Gx9GdH45_5WTbMN8qUSEzZfyKg6EQg@mail.gmail.com>
-Reply-To: pmurali@logicube.com
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] libsas: fix taskfile corruption in sas_ata_qc_fill_rtf
+Date: Fri, 22 Jun 2012 10:52:34 -0700
+Message-ID: <20120622175126.14851.24809.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c11o148.mxlogic.net ([208.65.144.71]:50116 "EHLO
-	p01c11o148.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755442Ab2FVRGT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jun 2012 13:06:19 -0400
-In-Reply-To: <CABE8wwvwuwi9aAc63fh-Gx9GdH45_5WTbMN8qUSEzZfyKg6EQg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org, Praveen Murali <pmurali@logicube.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-06-21 at 22:41 -0700, Dan Williams wrote:
-> On Thu, Jun 21, 2012 at 10:27 PM, Praveen Murali <pmurali@logicube.com> wrote:
-> > agreed, this looks way more cleaner. can you please commit these changes?
-> >
-> 
-> Sure I can push this, can you test it out to make sure it fixes your
-> failing case?  Then I'll push it with your reported-by and tested-by.
-> 
-> Much appreciated.
-Dan,
-  I tested your change and it looks good. It fixes the problem for me.
+fill_result_tf() grabs the taskfile flags from the originating qc which
+sas_ata_qc_fill_rtf() promptly overwrites.  The presence of an
+ata_taskfile in the sata_device makes it tempting to just copy the full
+contents in sas_ata_qc_fill_rtf().  However, libata really only wants
+the fis contents and expects the other portions of the taskfile to not
+be touched by ->qc_fill_rtf.  To that end store a fis buffer in the
+sata_device and use ata_tf_from_fis() like every other ->qc_fill_rtf()
+implementation.
 
-Thanks,
-Praveen
-> 
-> --
-> Dan
+Cc: <stable@vger.kernel.org>
+Reported-by: Praveen Murali <pmurali@logicube.com>
+Tested-by: Praveen Murali <pmurali@logicube.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/aic94xx/aic94xx_task.c |    2 +-
+ drivers/scsi/libsas/sas_ata.c       |   12 ++++++------
+ include/scsi/libsas.h               |    6 ++++--
+ 3 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
+index 532d212..393e7ce 100644
+--- a/drivers/scsi/aic94xx/aic94xx_task.c
++++ b/drivers/scsi/aic94xx/aic94xx_task.c
+@@ -201,7 +201,7 @@ static void asd_get_response_tasklet(struct asd_ascb *ascb,
+ 
+ 		if (SAS_STATUS_BUF_SIZE >= sizeof(*resp)) {
+ 			resp->frame_len = le16_to_cpu(*(__le16 *)(r+6));
+-			memcpy(&resp->ending_fis[0], r+16, 24);
++			memcpy(&resp->ending_fis[0], r+16, ATA_RESP_FIS_SIZE);
+ 			ts->buf_valid_size = sizeof(*resp);
+ 		}
+ 	}
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 899d190..905ae45 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -139,12 +139,12 @@ static void sas_ata_task_done(struct sas_task *task)
+ 	if (stat->stat == SAS_PROTO_RESPONSE || stat->stat == SAM_STAT_GOOD ||
+ 	    ((stat->stat == SAM_STAT_CHECK_CONDITION &&
+ 	      dev->sata_dev.command_set == ATAPI_COMMAND_SET))) {
+-		ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
++		memcpy(dev->sata_dev.fis, resp->ending_fis, ATA_RESP_FIS_SIZE);
+ 
+ 		if (!link->sactive) {
+-			qc->err_mask |= ac_err_mask(dev->sata_dev.tf.command);
++			qc->err_mask |= ac_err_mask(dev->sata_dev.fis[2]);
+ 		} else {
+-			link->eh_info.err_mask |= ac_err_mask(dev->sata_dev.tf.command);
++			link->eh_info.err_mask |= ac_err_mask(dev->sata_dev.fis[2]);
+ 			if (unlikely(link->eh_info.err_mask))
+ 				qc->flags |= ATA_QCFLAG_FAILED;
+ 		}
+@@ -161,8 +161,8 @@ static void sas_ata_task_done(struct sas_task *task)
+ 				qc->flags |= ATA_QCFLAG_FAILED;
+ 			}
+ 
+-			dev->sata_dev.tf.feature = 0x04; /* status err */
+-			dev->sata_dev.tf.command = ATA_ERR;
++			dev->sata_dev.fis[3] = 0x04; /* status err */
++			dev->sata_dev.fis[2] = ATA_ERR;
+ 		}
+ 	}
+ 
+@@ -269,7 +269,7 @@ static bool sas_ata_qc_fill_rtf(struct ata_queued_cmd *qc)
+ {
+ 	struct domain_device *dev = qc->ap->private_data;
+ 
+-	memcpy(&qc->result_tf, &dev->sata_dev.tf, sizeof(qc->result_tf));
++	ata_tf_from_fis(dev->sata_dev.fis, &qc->result_tf);
+ 	return true;
+ }
+ 
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 5c7677f..ef937b5 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -166,6 +166,8 @@ enum ata_command_set {
+         ATAPI_COMMAND_SET = 1,
+ };
+ 
++#define ATA_RESP_FIS_SIZE 24
++
+ struct sata_device {
+         enum   ata_command_set command_set;
+         struct smp_resp        rps_resp; /* report_phy_sata_resp */
+@@ -174,7 +176,7 @@ struct sata_device {
+ 
+ 	struct ata_port *ap;
+ 	struct ata_host ata_host;
+-	struct ata_taskfile tf;
++	u8     fis[ATA_RESP_FIS_SIZE];
+ };
+ 
+ struct ssp_device {
+@@ -555,7 +557,7 @@ enum exec_status {
+  */
+ struct ata_task_resp {
+ 	u16  frame_len;
+-	u8   ending_fis[24];	  /* dev to host or data-in */
++	u8   ending_fis[ATA_RESP_FIS_SIZE];	  /* dev to host or data-in */
+ };
+ 
+ #define SAS_STATUS_BUF_SIZE 96
 
