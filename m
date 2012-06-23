@@ -1,58 +1,58 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: lpfc: problems with -Werror
-Date: Fri, 22 Jun 2012 22:58:35 +0100
-Message-ID: <1340402315.19210.14.camel@dabdike.int.hansenpartnership.com>
-References: <20120621013018.GA7244@localhost>
-	 <1340265001.2985.13.camel@dabdike.int.hansenpartnership.com>
-	 <20120622184626.GA3536@parisc-linux.org>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v5 0/13] SATA ZPODD support
+Date: Sat, 23 Jun 2012 09:05:58 +0800
+Message-ID: <1340413558.2672.8.camel@hp6530s>
+References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
+	 <4FE4BC59.20400@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39410 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753927Ab2FVV6k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jun 2012 17:58:40 -0400
-In-Reply-To: <20120622184626.GA3536@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4FE4BC59.20400@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Fengguang Wu <fengguang.wu@intel.com>, Alex Iannicelli <alex.iannicelli@emulex.com>, James Smart <james.smart@emulex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, 2012-06-22 at 12:46 -0600, Matthew Wilcox wrote:
-> On Thu, Jun 21, 2012 at 07:50:02AM +0000, James Bottomley wrote:
-> > @@ -22,7 +22,9 @@
-> >  ccflags-$(GCOV) := -fprofile-arcs -ftest-coverage
-> >  ccflags-$(GCOV) += -O0
-> >  
-> > +ifdef WARNINGS_BECOME_ERRORS
-> >  ccflags-y += -Werror
-> > +endif
-> >  
-> >  obj-$(CONFIG_SCSI_LPFC) := lpfc.o
+On Fri, 2012-06-22 at 14:41 -0400, Jeff Garzik wrote:
+> On 06/18/2012 02:25 AM, Lin Ming wrote:
+> > Hi all,
+> >
+> > This is the v5 patches to add SATA ZPODD support, to try it:
+> > git pull git://git.kernel.org/pub/scm/linux/kernel/git/mlin/linux.git zpodd
+> >
+> > Holger and Mathtew,
+> > Patch 1 to Patch 4 are the libata acpi binding patches from you.
+> > I removed dock related code from your original version.
+> > Would you help to review?
+> >
+> > v5:
+> > - rebase to v3.5-rc3
+> > - fixed crash reported at https://lkml.org/lkml/2012/2/24/2 (Aaron Lu)
+> > - rename is_pci_ata to compat_pci_ata (Alan Cox)
+> >
+> > v4:
+> > https://lkml.org/lkml/2012/5/28/11
+> > - Includes libata acpi binding patches from Holger Macht and Matthew Garrett.
+> > - tell scsi layer device supports runtime power off
+> > - check support for device busy class events
 > 
-> Why not more simply:
+> In the case of this patchset, the main worry are the crashes that were 
+> introduced by the Macht/Garrett patchset.  Finally with v5 that 
+> longstanding problem has been resolved, so we can move forward and get 
+> this into linux-next (libata-dev.git#upstream).
+
+I'm so glad to move forward.
+I have some update suggested by Dan Williams, at
+https://lkml.org/lkml/2012/6/21/26
+
+I'll send out v6 for you to apply next Monday.
+
+Thanks,
+Lin Ming
+
 > 
-> ccflags-$(WARNINGS_BECOME_ERRORS) += -Werror
-
-Because it's not a config option, it's a makefile option.  If we go with
-what you propose, the format of make has to be
-
-make WARNINGS_BECOME_ERRORS=y
-
-which is a bit non intuitive.
-
-> > N?????r??y????b?X????v?^?)??{.n?+????{???"?{ay?
-?????,j??f???h???z?
-?w???
-???j:+v???w?j?m????????zZ+???????j"??!
-> 
-> That's some nasty line noise on your modem there, James.
-
-No, it's because majordomo has some issue doing base64.
-
-James
+> 	Jeff
 
 
 
