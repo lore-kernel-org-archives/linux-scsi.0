@@ -1,58 +1,76 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v5 0/13] SATA ZPODD support
-Date: Sat, 23 Jun 2012 09:05:58 +0800
-Message-ID: <1340413558.2672.8.camel@hp6530s>
-References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-	 <4FE4BC59.20400@pobox.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/2] SCSI & usb-storage: add try_rc_10_first flag
+Date: Fri, 22 Jun 2012 22:06:52 -0700
+Message-ID: <20120623050652.GA27751@kroah.com>
+References: <4FDEE8A1.5030200@redhat.com>
+ <Pine.LNX.4.44L0.1206201558090.1804-100000@iolanthe.rowland.org>
+ <20120620201310.GA8822@kroah.com>
+ <1340372398.19210.3.camel@dabdike.int.hansenpartnership.com>
+ <1340382187.19210.9.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4FE4BC59.20400@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43267 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757239Ab2FWFG4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jun 2012 01:06:56 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so4380631pbb.19
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Jun 2012 22:06:56 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1340382187.19210.9.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Hans de Goede <hdegoede@redhat.com>, Torsten Wohlfarth <towo@siduction.org>, Sturm Flut <sturmflut@lieberbiber.de>, Sergey <sergeyn@gmail.com>, Philippe Valembois - Phil <lephilousophe@users.sourceforge.net>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, 2012-06-22 at 14:41 -0400, Jeff Garzik wrote:
-> On 06/18/2012 02:25 AM, Lin Ming wrote:
-> > Hi all,
-> >
-> > This is the v5 patches to add SATA ZPODD support, to try it:
-> > git pull git://git.kernel.org/pub/scm/linux/kernel/git/mlin/linux.git zpodd
-> >
-> > Holger and Mathtew,
-> > Patch 1 to Patch 4 are the libata acpi binding patches from you.
-> > I removed dock related code from your original version.
-> > Would you help to review?
-> >
-> > v5:
-> > - rebase to v3.5-rc3
-> > - fixed crash reported at https://lkml.org/lkml/2012/2/24/2 (Aaron Lu)
-> > - rename is_pci_ata to compat_pci_ata (Alan Cox)
-> >
-> > v4:
-> > https://lkml.org/lkml/2012/5/28/11
-> > - Includes libata acpi binding patches from Holger Macht and Matthew Garrett.
-> > - tell scsi layer device supports runtime power off
-> > - check support for device busy class events
+On Fri, Jun 22, 2012 at 05:23:07PM +0100, James Bottomley wrote:
+> On Fri, 2012-06-22 at 14:39 +0100, James Bottomley wrote:
+> > On Wed, 2012-06-20 at 13:13 -0700, Greg KH wrote:
+> > > On Wed, Jun 20, 2012 at 04:04:19PM -0400, Alan Stern wrote:
+> > > > Several bug reports have been received recently for USB mass-storage
+> > > > devices that don't handle READ CAPACITY(16) commands properly.  They
+> > > > report bogus sizes, in some cases becoming unusable as a result.
+> > > > 
+> > > > The bugs were triggered by commit
+> > > > 09b6b51b0b6c1b9bb61815baf205e4d74c89ff04 (SCSI & usb-storage: add
+> > > > flags for VPD pages and REPORT LUNS), which caused usb-storage to stop
+> > > > overriding the SCSI level reported by devices.  By default, the sd
+> > > > driver will try READ CAPACITY(16) first for any device whose level is
+> > > > above SCSI_SPC_2.
+> > > > 
+> > > > It seems likely that any device large enough to require the use of
+> > > > READ CAPACITY(16) (i.e., 2 TB or more) would be able to handle READ
+> > > > CAPACITY(10) commands properly.  Indeed, I don't know of any devices
+> > > > that don't handle READ CAPACITY(10) properly.
+> > > > 
+> > > > Therefore this patch (as1559) adds a new flag telling the sd driver
+> > > > to try READ CAPACITY(10) before READ CAPACITY(16), and sets this flag
+> > > > for every USB mass-storage device.  If a device really is larger than
+> > > > 2 TB, sd will fall back to READ CAPACITY(16) just as it used to.
+> > > > 
+> > > > This fixes Bugzilla #43391.
+> > > > 
+> > > > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> > > > Acked-by: Hans de Goede <hdegoede@redhat.com>
+> > > > CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+> > > > CC: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+> > > > CC: <stable@vger.kernel.org>
+> > > 
+> > > James, mind if I take this through my trees?
+> > 
+> > Actually, you can take 1/2 but I need to do 2/2 as a postmerge.  I
+> > foresee a conflict with another patch I'm queuing that needs resolving.
+> > 
+> > Let me know when you've got 1/2 in and I'll build the postmerge tree.
 > 
-> In the case of this patchset, the main worry are the crashes that were 
-> introduced by the Macht/Garrett patchset.  Finally with v5 that 
-> longstanding problem has been resolved, so we can move forward and get 
-> this into linux-next (libata-dev.git#upstream).
+> Actually, forget I said this ... the postmerge has to be the other way
+> around.  
 
-I'm so glad to move forward.
-I have some update suggested by Dan Williams, at
-https://lkml.org/lkml/2012/6/21/26
+As these will probably make it to Linus before 3.5 is out, why would
+that be needed?
 
-I'll send out v6 for you to apply next Monday.
+Anyway, they are in my tree now, hopefully all should be fine.
 
-Thanks,
-Lin Ming
+thanks,
 
-> 
-> 	Jeff
-
-
-
+greg k-h
