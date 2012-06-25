@@ -1,57 +1,49 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 2/7] Revert "usb/uas: one only one status URB/host on
- stream-less connection"
-Date: Mon, 25 Jun 2012 11:49:50 -0700
-Message-ID: <20120625184950.GA16794@kroah.com>
-References: <1340092494-18876-1-git-send-email-kraxel@redhat.com>
- <1340092494-18876-3-git-send-email-kraxel@redhat.com>
- <20120620235644.GD31520@kroah.com>
- <4FE2DE31.6030006@redhat.com>
+From: Muthu Kumar <muthu.lkml@gmail.com>
+Subject: Re: [PATCH 1/4] block: Fix blk_execute_rq_nowait() dead queue handling
+Date: Mon, 25 Jun 2012 12:18:23 -0700
+Message-ID: <CAFR8ueeGbwhNfF1x6KLhKn-vWL7ziMGCEBzCG0p+H8kU35CTgQ@mail.gmail.com>
+References: <4FE8A9FC.6040805@acm.org>
+	<4FE8AA77.5050005@acm.org>
+	<20120625184112.GI3869@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:42920 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754760Ab2FYSty (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jun 2012 14:49:54 -0400
-Received: by dady13 with SMTP id y13so5701168dad.19
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jun 2012 11:49:54 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4FE2DE31.6030006@redhat.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:35480 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753906Ab2FYTSX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jun 2012 15:18:23 -0400
+Received: by vbbff1 with SMTP id ff1so2174220vbb.19
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jun 2012 12:18:23 -0700 (PDT)
+In-Reply-To: <20120625184112.GI3869@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerd Hoffmann <kraxel@redhat.com>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Muthukumar Ratty <muthur@gmail.com>
 
-On Thu, Jun 21, 2012 at 10:41:21AM +0200, Gerd Hoffmann wrote:
-> On 06/21/12 01:56, Greg KH wrote:
-> > On Tue, Jun 19, 2012 at 09:54:49AM +0200, Gerd Hoffmann wrote:
-> >> This reverts commit ceb3f91fd53c9fbd7b292fc2754ba4efffeeeedb.
-> >>
-> >> IMO the real bug is assigning status urbs to scsi requests.  First there
-> >> is no such link in the non-stream case.  Also there isn't nessesarely a
-> >> scsi request in the first place, for example when submitting task
-> >> management requests.
-> >>
-> >> This patch just papers over the real bug and introduces different status
-> >> urb handling in the stream/non-stream case for no good reason.
-> >>
-> >> Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
-> >> ---
-> >>  drivers/usb/storage/uas.c |   70 ++++++--------------------------------------
-> >>  1 files changed, 10 insertions(+), 60 deletions(-)
-> > 
-> > Same here, should this also be reverted in 3.4-stable?
-> 
-> Well, even though the reverted patch is clumsy and takes the wrong
-> direction, it actually does the job and fixes the issue at hand.
-> 
-> When reverting in stable patch #3 of this series (which fixes the issue
-> in a better way) must be cherry-picked into stable too, otherwise we'll
-> get a regression.
-> 
-> I'd tend to not revert this one in stable though.
+On Mon, Jun 25, 2012 at 11:41 AM, Tejun Heo <tj@kernel.org> wrote:
+> On Mon, Jun 25, 2012 at 06:14:15PM +0000, Bart Van Assche wrote:
+>> From: Muthukumar Ratty <muthur@gmail.com>
+>>
+>> If the queue is dead blk_execute_rq_nowait() doesn't invoke the done()
+>> callback function. That will result in blk_execute_rq() being stuck
+>> in wait_for_completion(). Avoid this by initializing rq->end_io to the
+>> done() callback before we check the queue state. Also, make sure the
+>> queue lock is held around the invocation of the done() callback. Found
+>> this through source code review.
+>>
+>> Signed-off-by: Muthukumar Ratty <muthur@gmail.com>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> Cc: Tejun Heo <tj@kernel.org>
+>> Cc: Jens Axboe <axboe@kernel.dk>
+>> Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
+>
+> Acked-by: Tejun Heo <tj@kernel.org>
+>
+> Thanks a lot!
+>
 
-Ok, thanks, I'll not revert it in staging.
+Yep.. Thanks for the help Bart.
 
-greg k-h
+
+> --
+> tejun
