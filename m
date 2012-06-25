@@ -1,7 +1,7 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v6 02/11] libata: bind the Linux device tree to the ACPI device tree
-Date: Mon, 25 Jun 2012 16:13:03 +0800
-Message-ID: <1340611992-41457-3-git-send-email-ming.m.lin@intel.com>
+Subject: [PATCH v6 11/11] [SCSI] sr: make sure ODD is in resumed state in block ioctl
+Date: Mon, 25 Jun 2012 16:13:12 +0800
+Message-ID: <1340611992-41457-12-git-send-email-ming.m.lin@intel.com>
 References: <1340611992-41457-1-git-send-email-ming.m.lin@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1340611992-41457-1-git-send-email-ming.m.lin@intel.com>
@@ -10,269 +10,43 @@ To: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Matthew Garrett <mjg@redhat.com>
+From: Aaron Lu <aaron.lu@amd.com>
 
-Associate the ACPI device tree and libata devices.
-This patch uses the generic ACPI glue framework to do so.
+When application tries to access the ODD's block device by ioctl,
+make sure ODD is in an active state.
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
-Signed-off-by: Holger Macht <holger@homac.de>
+Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/acpi/glue.c       |    4 +-
- drivers/ata/libata-acpi.c |  137 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-core.c |    5 +-
- drivers/ata/libata.h      |    6 ++
- 4 files changed, 148 insertions(+), 4 deletions(-)
+ drivers/scsi/sr.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-index 1564e09..18d6812 100644
---- a/drivers/acpi/glue.c
-+++ b/drivers/acpi/glue.c
-@@ -39,6 +39,7 @@ int register_acpi_bus_type(struct acpi_bus_type *type)
- 	}
- 	return -ENODEV;
- }
-+EXPORT_SYMBOL(register_acpi_bus_type);
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 72488c2..3da0879 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -654,6 +654,13 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	void __user *argp = (void __user *)arg;
+ 	int ret;
  
- int unregister_acpi_bus_type(struct acpi_bus_type *type)
- {
-@@ -54,6 +55,7 @@ int unregister_acpi_bus_type(struct acpi_bus_type *type)
- 	}
- 	return -ENODEV;
- }
-+EXPORT_SYMBOL(unregister_acpi_bus_type);
- 
- static struct acpi_bus_type *acpi_get_bus_type(struct bus_type *type)
- {
-@@ -69,7 +71,6 @@ static struct acpi_bus_type *acpi_get_bus_type(struct bus_type *type)
- 	up_read(&bus_type_sem);
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(register_acpi_bus_type);
- 
- static int acpi_find_bridge_device(struct device *dev, acpi_handle * handle)
- {
-@@ -86,7 +87,6 @@ static int acpi_find_bridge_device(struct device *dev, acpi_handle * handle)
- 	up_read(&bus_type_sem);
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(unregister_acpi_bus_type);
- 
- /* Get device's handler per its address under its parent */
- struct acpi_find_child {
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index bb7c5f1..b3025a7 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -47,6 +47,39 @@ static void ata_acpi_clear_gtf(struct ata_device *dev)
- 	dev->gtf_cache = NULL;
- }
- 
-+static acpi_handle ap_acpi_handle(struct ata_port *ap)
-+{
-+	if (ap->flags & ATA_FLAG_ACPI_SATA)
-+		return NULL;
-+
-+	/*
-+	 * If acpi bind operation has already happened, we can get the handle
-+	 * for the port by checking the corresponding scsi_host device's
-+	 * firmware node, otherwise we will need to find out the handle from
-+	 * its parent's acpi node.
-+	 */
-+	if (ap->scsi_host)
-+		return DEVICE_ACPI_HANDLE(&ap->scsi_host->shost_gendev);
-+	else
-+		return acpi_get_child(DEVICE_ACPI_HANDLE(ap->host->dev),
-+				ap->port_no);
-+}
-+
-+static acpi_handle dev_acpi_handle(struct ata_device *dev)
-+{
-+	acpi_integer adr;
-+	struct ata_port *ap = dev->link->ap;
-+
-+	if (ap->flags & ATA_FLAG_ACPI_SATA) {
-+		if (!sata_pmp_attached(ap))
-+			adr = SATA_ADR(ap->port_no, NO_PORT_MULT);
-+		else
-+			adr = SATA_ADR(ap->port_no, dev->link->pmp);
-+		return acpi_get_child(DEVICE_ACPI_HANDLE(ap->host->dev), adr);
-+	} else
-+		return acpi_get_child(ap_acpi_handle(ap), dev->devno);
-+}
-+
- /**
-  * ata_acpi_associate_sata_port - associate SATA port with ACPI objects
-  * @ap: target SATA port
-@@ -1018,3 +1051,107 @@ void ata_acpi_on_disable(struct ata_device *dev)
- {
- 	ata_acpi_clear_gtf(dev);
- }
-+
-+static int compat_pci_ata(struct ata_port *ap)
-+{
-+	struct device *dev = ap->tdev.parent;
-+	struct pci_dev *pdev;
-+
-+	if (!is_pci_dev(dev))
-+		return 0;
-+
-+	pdev = to_pci_dev(dev);
-+
-+	if ((pdev->class >> 8) != PCI_CLASS_STORAGE_SATA &&
-+	    (pdev->class >> 8) != PCI_CLASS_STORAGE_IDE)
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static int ata_acpi_bind_host(struct ata_port *ap, acpi_handle *handle)
-+{
-+	if (ap->flags & ATA_FLAG_ACPI_SATA)
-+		return -ENODEV;
-+
-+	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(ap->tdev.parent),
-+			ap->port_no);
-+
-+	if (!*handle)
-+		return -ENODEV;
-+
-+	return 0;
-+}
-+
-+static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
-+				acpi_handle *handle)
-+{
-+	struct ata_device *ata_dev;
-+
-+	if (ap->flags & ATA_FLAG_ACPI_SATA)
-+		ata_dev = &ap->link.device[sdev->channel];
-+	else
-+		ata_dev = &ap->link.device[sdev->id];
-+
-+	*handle = dev_acpi_handle(ata_dev);
-+
-+	if (!*handle)
-+		return -ENODEV;
-+
-+	return 0;
-+}
-+
-+static int is_ata_port(const struct device *dev)
-+{
-+	return dev->type == &ata_port_type;
-+}
-+
-+static struct ata_port *dev_to_ata_port(struct device *dev)
-+{
-+	while (!is_ata_port(dev)) {
-+		if (!dev->parent)
-+			return NULL;
-+		dev = dev->parent;
++	/* Make sure the ODD is not suspended */
++	ret = pm_runtime_get_sync(&sdev->sdev_gendev);
++	if (ret < 0) {
++		pm_runtime_put_noidle(&sdev->sdev_gendev);
++		return -EACCES;
 +	}
-+	return to_ata_port(dev);
-+}
 +
-+static int ata_acpi_find_device(struct device *dev, acpi_handle *handle)
-+{
-+	struct ata_port *ap = dev_to_ata_port(dev);
-+
-+	if (!ap)
-+		return -ENODEV;
-+
-+	if (!compat_pci_ata(ap))
-+		return -ENODEV;
-+
-+	if (scsi_is_host_device(dev))
-+		return ata_acpi_bind_host(ap, handle);
-+	else if (scsi_is_sdev_device(dev)) {
-+		struct scsi_device *sdev = to_scsi_device(dev);
-+
-+		return ata_acpi_bind_device(ap, sdev, handle);
-+	} else
-+		return -ENODEV;
-+}
-+
-+static int ata_acpi_find_dummy(struct device *dev, acpi_handle *handle)
-+{
-+	return -ENODEV;
-+}
-+
-+static struct acpi_bus_type ata_acpi_bus = {
-+	.find_bridge = ata_acpi_find_dummy,
-+	.find_device = ata_acpi_find_device,
-+};
-+
-+int ata_acpi_register(void)
-+{
-+	return scsi_register_acpi_bus_type(&ata_acpi_bus);
-+}
-+
-+void ata_acpi_unregister(void)
-+{
-+	scsi_unregister_acpi_bus_type(&ata_acpi_bus);
-+}
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index cece3a4..bd33b4a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5288,8 +5288,6 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 	return rc;
+ 	mutex_lock(&sr_mutex);
+ 
+ 	/*
+@@ -685,6 +692,8 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 
+ out:
+ 	mutex_unlock(&sr_mutex);
++	pm_runtime_mark_last_busy(&cd->device->sdev_gendev);
++	pm_runtime_put_autosuspend(&cd->device->sdev_gendev);
+ 	return ret;
  }
  
--#define to_ata_port(d) container_of(d, struct ata_port, tdev)
--
- static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
- {
- 	struct ata_port *ap = to_ata_port(dev);
-@@ -6513,6 +6511,8 @@ static int __init ata_init(void)
- 
- 	ata_parse_force_param();
- 
-+	ata_acpi_register();
-+
- 	rc = ata_sff_init();
- 	if (rc) {
- 		kfree(ata_force_tbl);
-@@ -6539,6 +6539,7 @@ static void __exit ata_exit(void)
- 	ata_release_transport(ata_scsi_transport_template);
- 	libata_transport_exit();
- 	ata_sff_exit();
-+	ata_acpi_unregister();
- 	kfree(ata_force_tbl);
- }
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 9d0fd0b..7f48b60 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -107,6 +107,8 @@ extern const char *sata_spd_string(unsigned int spd);
- extern int ata_port_probe(struct ata_port *ap);
- extern void __ata_port_probe(struct ata_port *ap);
- 
-+#define to_ata_port(d) container_of(d, struct ata_port, tdev)
-+
- /* libata-acpi.c */
- #ifdef CONFIG_ATA_ACPI
- extern unsigned int ata_acpi_gtf_filter;
-@@ -119,6 +121,8 @@ extern void ata_acpi_on_resume(struct ata_port *ap);
- extern int ata_acpi_on_devcfg(struct ata_device *dev);
- extern void ata_acpi_on_disable(struct ata_device *dev);
- extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
-+extern int ata_acpi_register(void);
-+extern void ata_acpi_unregister(void);
- #else
- static inline void ata_acpi_associate_sata_port(struct ata_port *ap) { }
- static inline void ata_acpi_associate(struct ata_host *host) { }
-@@ -129,6 +133,8 @@ static inline int ata_acpi_on_devcfg(struct ata_device *dev) { return 0; }
- static inline void ata_acpi_on_disable(struct ata_device *dev) { }
- static inline void ata_acpi_set_state(struct ata_port *ap,
- 				      pm_message_t state) { }
-+static inline int ata_acpi_register(void) { return 0; }
-+static void ata_acpi_unregister(void) { }
- #endif
- 
- /* libata-scsi.c */
 -- 
 1.7.10
