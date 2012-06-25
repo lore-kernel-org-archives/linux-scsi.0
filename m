@@ -1,7 +1,7 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v6 05/11] libata-acpi: add ata port runtime D3Cold support
-Date: Mon, 25 Jun 2012 16:13:06 +0800
-Message-ID: <1340611992-41457-6-git-send-email-ming.m.lin@intel.com>
+Subject: [PATCH v6 06/11] libata-acpi: register/unregister device to/from power resource
+Date: Mon, 25 Jun 2012 16:13:07 +0800
+Message-ID: <1340611992-41457-7-git-send-email-ming.m.lin@intel.com>
 References: <1340611992-41457-1-git-send-email-ming.m.lin@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1340611992-41457-1-git-send-email-ming.m.lin@intel.com>
@@ -10,190 +10,82 @@ To: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-ATA port may support runtime D3Cold state, for example, Zero-power ODD case.
-This patch adds wakeup notifier and enable/disable run_wake during
-supend/resume.
-
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/acpi/sleep.c      |    2 ++
- drivers/ata/libata-acpi.c |   78 ++++++++++++++++++++++++++++++++++++++++++---
- drivers/ata/libata-scsi.c |    3 ++
- drivers/ata/libata.h      |    4 +++
- 4 files changed, 83 insertions(+), 4 deletions(-)
+ drivers/acpi/power.c      |    2 ++
+ drivers/ata/libata-acpi.c |   32 ++++++++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
 
-diff --git a/drivers/acpi/sleep.c b/drivers/acpi/sleep.c
-index 8856102..1784cb3 100644
---- a/drivers/acpi/sleep.c
-+++ b/drivers/acpi/sleep.c
-@@ -795,6 +795,7 @@ int acpi_pm_device_sleep_state(struct device *dev, int *d_min_p)
- 		*d_min_p = d_min;
- 	return d_max;
+diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
+index dd6d6a3..eb640874 100644
+--- a/drivers/acpi/power.c
++++ b/drivers/acpi/power.c
+@@ -390,6 +390,7 @@ void acpi_power_resource_unregister_device(struct device *dev, acpi_handle handl
+ 		__acpi_power_resource_unregister_device(dev,
+ 			list->handles[i]);
  }
-+EXPORT_SYMBOL(acpi_pm_device_sleep_state);
- #endif /* CONFIG_PM */
++EXPORT_SYMBOL_GPL(acpi_power_resource_unregister_device);
  
- #ifdef CONFIG_PM_SLEEP
-@@ -831,6 +832,7 @@ int acpi_pm_device_run_wake(struct device *phys_dev, bool enable)
- 
- 	return 0;
+ static int __acpi_power_resource_register_device(
+ 	struct acpi_power_managed_device *powered_device, acpi_handle handle)
+@@ -460,6 +461,7 @@ int acpi_power_resource_register_device(struct device *dev, acpi_handle handle)
+ 	printk(KERN_WARNING PREFIX "Invalid Power Resource to register!");
+ 	return -ENODEV;
  }
-+EXPORT_SYMBOL(acpi_pm_device_run_wake);
++EXPORT_SYMBOL_GPL(acpi_power_resource_register_device);
  
  /**
-  *	acpi_pm_device_sleep_wake - enable or disable the system wake-up
+  * acpi_device_sleep_wake - execute _DSW (Device Sleep Wake) or (deprecated in
 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index bb20fd5..e01807a 100644
+index e01807a..f36284e 100644
 --- a/drivers/ata/libata-acpi.c
 +++ b/drivers/ata/libata-acpi.c
-@@ -16,6 +16,7 @@
- #include <linux/libata.h>
- #include <linux/pci.h>
- #include <linux/slab.h>
-+#include <linux/pm_runtime.h>
- #include <scsi/scsi_device.h>
- #include "libata.h"
- 
-@@ -853,6 +854,7 @@ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
- {
- 	struct ata_device *dev;
- 	acpi_handle handle;
-+	int acpi_state;
- 
- 	/* channel first and then drives for power on and vica versa
- 	   for power off */
-@@ -862,10 +864,23 @@ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
- 
- 	ata_for_each_dev(dev, &ap->link, ENABLED) {
- 		handle = ata_dev_acpi_handle(dev);
--		if (handle)
--			acpi_bus_set_power(handle,
--				state.event == PM_EVENT_ON ?
--					ACPI_STATE_D0 : ACPI_STATE_D3);
-+		if (!handle)
-+			continue;
-+
-+		if (state.event != PM_EVENT_ON) {
-+			acpi_state = acpi_pm_device_sleep_state(
-+				&dev->sdev->sdev_gendev, NULL);
-+			if (acpi_state > 0)
-+				acpi_bus_set_power(handle, acpi_state);
-+			/* TBD: need to check if it's runtime pm request */
-+			acpi_pm_device_run_wake(
-+				&dev->sdev->sdev_gendev, true);
-+		} else {
-+			/* Ditto */
-+			acpi_pm_device_run_wake(
-+				&dev->sdev->sdev_gendev, false);
-+			acpi_bus_set_power(handle, ACPI_STATE_D0);
-+		}
+@@ -1025,14 +1025,46 @@ static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
  	}
- 
- 	handle = ata_ap_acpi_handle(ap);
-@@ -965,6 +980,61 @@ void ata_acpi_on_disable(struct ata_device *dev)
- 	ata_acpi_clear_gtf(dev);
  }
  
-+static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
++static void ata_acpi_register_power_resource(struct ata_device *dev)
 +{
-+	struct ata_device *ata_dev = context;
-+
-+	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
-+			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev))
-+		scsi_autopm_get_device(ata_dev->sdev);
-+}
-+
-+static void ata_acpi_add_pm_notifier(struct ata_device *dev)
-+{
-+	struct acpi_device *acpi_dev;
++	struct scsi_device *sdev = dev->sdev;
 +	acpi_handle handle;
-+	acpi_status status;
++	struct device *device;
 +
 +	handle = ata_dev_acpi_handle(dev);
 +	if (!handle)
 +		return;
 +
-+	status = acpi_bus_get_device(handle, &acpi_dev);
-+	if (ACPI_SUCCESS(status)) {
-+		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+			ata_acpi_wake_dev, dev);
-+		device_set_run_wake(&dev->sdev->sdev_gendev, true);
-+	}
++	device = &sdev->sdev_gendev;
++
++	acpi_power_resource_register_device(device, handle);
 +}
 +
-+static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
++static void ata_acpi_unregister_power_resource(struct ata_device *dev)
 +{
-+	struct acpi_device *acpi_dev;
++	struct scsi_device *sdev = dev->sdev;
 +	acpi_handle handle;
-+	acpi_status status;
++	struct device *device;
 +
 +	handle = ata_dev_acpi_handle(dev);
 +	if (!handle)
 +		return;
 +
-+	status = acpi_bus_get_device(handle, &acpi_dev);
-+	if (ACPI_SUCCESS(status)) {
-+		device_set_run_wake(&dev->sdev->sdev_gendev, false);
-+		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+			ata_acpi_wake_dev);
-+	}
++	device = &sdev->sdev_gendev;
++
++	acpi_power_resource_unregister_device(device, handle);
 +}
 +
-+void ata_acpi_bind(struct ata_device *dev)
-+{
-+	ata_acpi_add_pm_notifier(dev);
-+}
-+
-+void ata_acpi_unbind(struct ata_device *dev)
-+{
-+	ata_acpi_remove_pm_notifier(dev);
-+}
-+
- static int compat_pci_ata(struct ata_port *ap)
+ void ata_acpi_bind(struct ata_device *dev)
  {
- 	struct device *dev = ap->tdev.parent;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2222635..8ec81ca 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3445,6 +3445,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 			if (!IS_ERR(sdev)) {
- 				dev->sdev = sdev;
- 				scsi_device_put(sdev);
-+				ata_acpi_bind(dev);
- 			} else {
- 				dev->sdev = NULL;
- 			}
-@@ -3541,6 +3542,8 @@ static void ata_scsi_remove_dev(struct ata_device *dev)
- 	mutex_lock(&ap->scsi_host->scan_mutex);
- 	spin_lock_irqsave(ap->lock, flags);
+ 	ata_acpi_add_pm_notifier(dev);
++	ata_acpi_register_power_resource(dev);
+ }
  
-+	ata_acpi_unbind(dev);
-+
- 	/* clearing dev->sdev is protected by host lock */
- 	sdev = dev->sdev;
- 	dev->sdev = NULL;
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index b0d5294..44a7939 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -120,6 +120,8 @@ extern void ata_acpi_on_disable(struct ata_device *dev);
- extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
- extern int ata_acpi_register(void);
- extern void ata_acpi_unregister(void);
-+extern void ata_acpi_bind(struct ata_device *dev);
-+extern void ata_acpi_unbind(struct ata_device *dev);
- #else
- static inline void ata_acpi_dissociate(struct ata_host *host) { }
- static inline int ata_acpi_on_suspend(struct ata_port *ap) { return 0; }
-@@ -130,6 +132,8 @@ static inline void ata_acpi_set_state(struct ata_port *ap,
- 				      pm_message_t state) { }
- static inline int ata_acpi_register(void) { return 0; }
- static void ata_acpi_unregister(void) { }
-+static void ata_acpi_bind(struct ata_device *dev) { }
-+static void ata_acpi_unbind(struct ata_device *dev) { }
- #endif
+ void ata_acpi_unbind(struct ata_device *dev)
+ {
+ 	ata_acpi_remove_pm_notifier(dev);
++	ata_acpi_unregister_power_resource(dev);
+ }
  
- /* libata-scsi.c */
+ static int compat_pci_ata(struct ata_port *ap)
 -- 
 1.7.10
