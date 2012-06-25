@@ -1,7 +1,7 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v6 08/11] libata: tell scsi layer device supports runtime power off
-Date: Mon, 25 Jun 2012 16:13:09 +0800
-Message-ID: <1340611992-41457-9-git-send-email-ming.m.lin@intel.com>
+Subject: [PATCH v6 04/11] libata-acpi: set acpi state for SATA port
+Date: Mon, 25 Jun 2012 16:13:05 +0800
+Message-ID: <1340611992-41457-5-git-send-email-ming.m.lin@intel.com>
 References: <1340611992-41457-1-git-send-email-ming.m.lin@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1340611992-41457-1-git-send-email-ming.m.lin@intel.com>
@@ -10,89 +10,53 @@ To: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Aaron Lu <aaron.lu@amd.com>
+Currently, ata_acpi_set_state() only sets acpi sate for IDE port.
+Remove this limitation.
 
-If ATA device supports "Device Attention", then tell scsi layer that
-the device supports runtime power off.
-
-Signed-off-by: Aaron Lu <aaron.lu@amd.com>
+Acked-by: Aaron Lu <aaron.lu@amd.com>
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/ata/libata-acpi.c  |   28 ++++++++++++++++++++++++++--
- include/scsi/scsi_device.h |    1 +
- 2 files changed, 27 insertions(+), 2 deletions(-)
+ drivers/ata/libata-acpi.c |   20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index f36284e..f1d6901 100644
+index c6f0101..bb20fd5 100644
 --- a/drivers/ata/libata-acpi.c
 +++ b/drivers/ata/libata-acpi.c
-@@ -1000,7 +1000,10 @@ static void ata_acpi_add_pm_notifier(struct ata_device *dev)
- 		return;
- 
- 	status = acpi_bus_get_device(handle, &acpi_dev);
--	if (ACPI_SUCCESS(status)) {
-+	if (ACPI_FAILURE(status))
-+		return;
-+
-+	if (dev->sdev->can_power_off) {
- 		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 			ata_acpi_wake_dev, dev);
- 		device_set_run_wake(&dev->sdev->sdev_gendev, true);
-@@ -1018,7 +1021,10 @@ static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
- 		return;
- 
- 	status = acpi_bus_get_device(handle, &acpi_dev);
--	if (ACPI_SUCCESS(status)) {
-+	if (ACPI_FAILURE(status))
-+		return;
-+
-+	if (dev->sdev->can_power_off) {
- 		device_set_run_wake(&dev->sdev->sdev_gendev, false);
- 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 			ata_acpi_wake_dev);
-@@ -1102,6 +1108,9 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
- 				acpi_handle *handle)
+@@ -852,23 +852,25 @@ void ata_acpi_on_resume(struct ata_port *ap)
+ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
  {
- 	struct ata_device *ata_dev;
-+	acpi_status status;
-+	struct acpi_device *acpi_dev;
-+	struct acpi_device_power_state *states;
+ 	struct ata_device *dev;
+-
+-	if (!ata_ap_acpi_handle(ap) || (ap->flags & ATA_FLAG_ACPI_SATA))
+-		return;
++	acpi_handle handle;
  
- 	if (ap->flags & ATA_FLAG_ACPI_SATA)
- 		ata_dev = &ap->link.device[sdev->channel];
-@@ -1113,6 +1122,21 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
- 	if (!*handle)
- 		return -ENODEV;
+ 	/* channel first and then drives for power on and vica versa
+ 	   for power off */
+-	if (state.event == PM_EVENT_ON)
+-		acpi_bus_set_power(ata_ap_acpi_handle(ap), ACPI_STATE_D0);
++	handle = ata_ap_acpi_handle(ap);
++	if (handle && state.event == PM_EVENT_ON)
++		acpi_bus_set_power(handle, ACPI_STATE_D0);
  
-+	status = acpi_bus_get_device(*handle, &acpi_dev);
-+	if (ACPI_FAILURE(status))
-+		return 0;
+ 	ata_for_each_dev(dev, &ap->link, ENABLED) {
+-		if (ata_dev_acpi_handle(dev))
+-			acpi_bus_set_power(ata_dev_acpi_handle(dev),
++		handle = ata_dev_acpi_handle(dev);
++		if (handle)
++			acpi_bus_set_power(handle,
+ 				state.event == PM_EVENT_ON ?
+ 					ACPI_STATE_D0 : ACPI_STATE_D3);
+ 	}
+-	if (state.event != PM_EVENT_ON)
+-		acpi_bus_set_power(ata_ap_acpi_handle(ap), ACPI_STATE_D3);
 +
-+	/*
-+	 * If firmware has _PS3 or _PR3 for this device,
-+	 * and this ata ODD device support device attention,
-+	 * it means this device can be powered off
-+	 */
-+	states = acpi_dev->power.states;
-+	if ((states[ACPI_STATE_D3_HOT].flags.valid ||
-+			states[ACPI_STATE_D3_COLD].flags.explicit_set) &&
-+			ata_dev->flags & ATA_DFLAG_DA)
-+		sdev->can_power_off = 1;
-+
- 	return 0;
++	handle = ata_ap_acpi_handle(ap);
++	if (handle && state.event != PM_EVENT_ON)
++		acpi_bus_set_power(handle, ACPI_STATE_D3);
  }
  
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 6efb2e1..1237fac 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -152,6 +152,7 @@ struct scsi_device {
- 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
- 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
-+	unsigned can_power_off:1; /* Device supports runtime power off */
- 
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
+ /**
 -- 
 1.7.10
