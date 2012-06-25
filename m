@@ -1,88 +1,75 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/4] scsi: Fix device removal NULL pointer dereference
-Date: Mon, 25 Jun 2012 13:36:07 -0700
-Message-ID: <20120625203607.GJ3869@google.com>
+Subject: Re: [PATCH 4/4] scsi: Stop accepting SCSI requests before removing
+ a device
+Date: Mon, 25 Jun 2012 13:42:37 -0700
+Message-ID: <20120625204237.GK3869@google.com>
 References: <4FE8A9FC.6040805@acm.org>
- <4FE8AAB9.9060602@acm.org>
+ <4FE8AB2E.10400@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:64236 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756351Ab2FYUgM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jun 2012 16:36:12 -0400
-Received: by dady13 with SMTP id y13so5816714dad.19
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jun 2012 13:36:11 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:62192 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755842Ab2FYUmm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jun 2012 16:42:42 -0400
+Received: by pbbrp8 with SMTP id rp8so7050219pbb.19
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jun 2012 13:42:42 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <4FE8AAB9.9060602@acm.org>
+In-Reply-To: <4FE8AB2E.10400@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Joe Lawrence <jdl1291@gmail.com>
 
-Hello,
-
-This generally looks good to me but a couple comments.
-
-On Mon, Jun 25, 2012 at 06:15:21PM +0000, Bart Van Assche wrote:
->  	if (q) {
-> +		/*
-> +		 * Note: freeing queuedata before invoking blk_cleanup_queue()
-> +		 * is safe here because no request function is associated with
-> +		 * uspace_req_q. See also the __scsi_alloc_queue() call in
-> +		 * drivers/scsi/scsi_tgt_lib.c.
-> +		 */
->  		kfree(q->queuedata);
->  		q->queuedata = NULL;
-> -		scsi_free_queue(q);
-> +		blk_cleanup_queue(q);
-
-Why not just do blk_cleanup_queue() first and then free queuedata
-using a local variable?  It's easier to grasp and less error-prone to
-shut down the queue before destroying it.
-
->  	}
->  
->  	scsi_destroy_command_freelist(shost);
+On Mon, Jun 25, 2012 at 06:17:18PM +0000, Bart Van Assche wrote:
+> Avoid that the code for requeueing SCSI requests triggers a
+> crash by making sure that that code isn't scheduled anymore
+> after a device has been removed.
+> 
+> Also, source code inspection of __scsi_remove_device() revealed
+> a race condition in this function: no new SCSI requests must be
+> accepted for a SCSI device after device removal started.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+> Cc: James Bottomley <JBottomley@parallels.com>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Joe Lawrence <jdl1291@gmail.com>
+> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+> Cc: <stable@kernel.org>
+> ---
+>  drivers/scsi/scsi_lib.c   |    7 ++++---
+>  drivers/scsi/scsi_sysfs.c |   11 +++++++++--
+>  2 files changed, 13 insertions(+), 5 deletions(-)
+> 
 > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 6dfb978..c26ef49 100644
+> index 082c1e5..fc2b9f4 100644
 > --- a/drivers/scsi/scsi_lib.c
 > +++ b/drivers/scsi/scsi_lib.c
-> @@ -406,10 +406,7 @@ static void scsi_run_queue(struct request_queue *q)
->  	LIST_HEAD(starved_list);
->  	unsigned long flags;
+> @@ -155,13 +155,14 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
 >  
-> -	/* if the device is dead, sdev will be NULL, so no queue to run */
-> -	if (!sdev)
-> -		return;
+>  	/*
+>  	 * Requeue this command.  It will go before all other commands
+> -	 * that are already in the queue.
+> +	 * that are already in the queue. Schedule requeue work under
+> +	 * lock such that the kblockd_schedule_work() call happens
+> +	 * before blk_cleanup_queue() finishes.
+>  	 */
+>  	spin_lock_irqsave(q->queue_lock, flags);
+>  	blk_requeue_request(q, cmd->request);
+> -	spin_unlock_irqrestore(q->queue_lock, flags);
 > -
-> +	BUG_ON(!sdev);
->  	shost = sdev->host;
->  	if (scsi_target(sdev)->single_lun)
->  		scsi_single_lun_run(sdev);
-> @@ -1370,16 +1367,18 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
->   * may be changed after request stacking drivers call the function,
->   * regardless of taking lock or not.
->   *
-> - * When scsi can't dispatch I/Os anymore and needs to kill I/Os
-> - * (e.g. !sdev), scsi needs to return 'not busy'.
-> - * Otherwise, request stacking drivers may hold requests forever.
-> + * When scsi can't dispatch I/Os anymore and needs to kill I/Os scsi
-> + * needs to return 'not busy'. Otherwise, request stacking drivers
-> + * may hold requests forever.
->   */
->  static int scsi_lld_busy(struct request_queue *q)
->  {
->  	struct scsi_device *sdev = q->queuedata;
->  	struct Scsi_Host *shost;
->  
-> -	if (!sdev)
-> +	BUG_ON(!sdev);
+>  	kblockd_schedule_work(q, &device->requeue_work);
+> +	spin_unlock_irqrestore(q->queue_lock, flags);
 
-Do these BUG_ON()s actually add anything?  Kernel is gonna oops in a
-few lines on NULL sdev anyway.
+This is rather subtle but yeah it would achieve proper
+synchronization.  Can't think of a better way ATM.
 
-Thanks.
+Aside from the nits, for all patches in this series
+
+ Acked-by: Tejun Heo <tj@kernel.org>
+
+Thanks!
 
 -- 
 tejun
