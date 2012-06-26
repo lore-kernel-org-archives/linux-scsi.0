@@ -1,75 +1,95 @@
-From: Bart Van Assche <bvanassche@acm.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 2/4] scsi: Fix device removal NULL pointer dereference
-Date: Tue, 26 Jun 2012 07:02:05 +0000
-Message-ID: <4FE95E6D.8010407@acm.org>
-References: <4FE8A9FC.6040805@acm.org> <4FE8AAB9.9060602@acm.org>  <1340658889.2980.51.camel@dabdike.int.hansenpartnership.com>  <20120625212107.GM3869@google.com> <1340660139.2980.55.camel@dabdike.int.hansenpartnership.com>
+Date: Tue, 26 Jun 2012 08:19:52 +0100
+Message-ID: <1340695192.3058.1.camel@dabdike.int.hansenpartnership.com>
+References: <4FE8A9FC.6040805@acm.org> <4FE8AAB9.9060602@acm.org>
+	 <1340658889.2980.51.camel@dabdike.int.hansenpartnership.com>
+	 <4FE8E0B9.8050202@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay02ant.iops.be ([212.53.4.35]:45468 "EHLO
-	relay02ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757442Ab2FZHCK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jun 2012 03:02:10 -0400
-In-Reply-To: <1340660139.2980.55.camel@dabdike.int.hansenpartnership.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34762 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757100Ab2FZHT4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Jun 2012 03:19:56 -0400
+In-Reply-To: <4FE8E0B9.8050202@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-On 06/25/12 21:35, James Bottomley wrote:
-
-> On Mon, 2012-06-25 at 14:21 -0700, Tejun Heo wrote:
->> Hey, James.
->>
->> On Mon, Jun 25, 2012 at 10:14:49PM +0100, James Bottomley wrote:
->>>> @@ -1490,11 +1489,7 @@ static void scsi_request_fn(struct request_queue *q)
->>>>  	struct scsi_cmnd *cmd;
->>>>  	struct request *req;
->>>>  
->>>> -	if (!sdev) {
->>>> -		while ((req = blk_peek_request(q)) != NULL)
->>>> -			scsi_kill_request(req, q);
->>>> -		return;
->>>> -	}
->>>
->>> That means that this hunk of code has to stay, but needs to be gated on
->>> blk_queue_dead(q); there's still a race where this can occur.
->>
->> Wouldn't the scsi_device_online() check down below be enough?  Block
->> layer drain is gonna loop until all requests are done, so the looping
->> is handled from block layer.
+On Mon, 2012-06-25 at 17:05 -0500, Mike Christie wrote:
+> On 06/25/2012 04:14 PM, James Bottomley wrote:
+> > On Mon, 2012-06-25 at 18:15 +0000, Bart Van Assche wrote:
+> >> Since scsi_prep_fn() may be invoked concurrently with
+> >> __scsi_remove_device(), keep the queuedata pointer in
+> >> __scsi_remove_device(). This patch fixes a kernel oops that
+> >> can be triggered by USB device removal. See also
+> >> http://www.spinics.net/lists/linux-scsi/msg56254.html.
+> > 
+> > This patch causes a subtle change of semantics: you're substituting our
+> > signal for dead queue as !sdev with a check of blk_queue_dead(). 
+> > 
+> >> Reported-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+> >> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> >> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+> >> Cc: James Bottomley <JBottomley@parallels.com>
+> >> Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
+> >> Cc: <stable@kernel.org>
+> >> ---
+> >>  drivers/scsi/hosts.c      |    8 +++++++-
+> >>  drivers/scsi/scsi_lib.c   |   35 ++++++++---------------------------
+> >>  drivers/scsi/scsi_priv.h  |    1 -
+> >>  drivers/scsi/scsi_sysfs.c |    5 +----
+> >>  4 files changed, 16 insertions(+), 33 deletions(-)
+> >>
+> >> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> >> index a3a056a..6b9d89a 100644
+> >> --- a/drivers/scsi/hosts.c
+> >> +++ b/drivers/scsi/hosts.c
+> >> @@ -299,9 +299,15 @@ static void scsi_host_dev_release(struct device *dev)
+> >>  		destroy_workqueue(shost->work_q);
+> >>  	q = shost->uspace_req_q;
+> >>  	if (q) {
+> >> +		/*
+> >> +		 * Note: freeing queuedata before invoking blk_cleanup_queue()
+> >> +		 * is safe here because no request function is associated with
+> >> +		 * uspace_req_q. See also the __scsi_alloc_queue() call in
+> >> +		 * drivers/scsi/scsi_tgt_lib.c.
+> >> +		 */
+> > 
+> > This comment doesn't really make a whole lot of sense.  What I think
+> > it's saying is that it's OK for the commands executed by the drain in
+> > blk_cleanup_queue to have a NULL queuedata and by the time we reach
+> > this, there can be no concurrent racing calls to queuecommand?  Is this
+> > true, and why?
 > 
-> It might be ... in theory the teardown is supposed to happen in
-> SDEV_CANCEL and be done by SDEV_DEL.  However, I'm not sure that's
-> entirely true now.  blk_queue_dead() is safer since we know we just
-> killed the queue.  Another reason for doing it like this is that the
-> kill on queue dead isn't noisy ... the one on !online is ... and logs
-> were getting stuffed with messages about killing requests to dead
-> queues.
+> Only the scsi_tgt_lib.c code uses the uses the uspace_req_q. That code
+> does not use it in a traditional way. It passes __scsi_alloc_queue NULL
+> for the request_fn function argument, so this request queue does not
+> have a function that pulls requests off a queue like is done for the
+> initiator path.
+> 
+> That target code mostly uses the queue struct so that it can use the
+> block/scsi functions that need a request queue to build scatterlists,
+> cmds, bios, etc. When that code was made originally we were going to use
+> the queue in a more tradition way or break out the queue limits into
+> another struct and pass them around. I think we have the latter now, but
+> the target code has not been converted.
+> 
+> But so that is why we cannot hit a race like you are thinking about in
+> the initiator path.
+> 
+> It is also a weird use of the queue so it is also why it does not make
+> sense :)
+
+OK, could we encapsulate all that in the comment so I don't have to ask
+again in a year's time ... ?
+
+Thanks,
+
+James
 
 
-That log filling was fixed by commit 7457181. Without patch 2/4 of this
-series a single message is printed when a request is killed because the
-queue is dead ("killing request"). With patch 2/4 two messages are
-printed ("rejecting I/O to offline device" + "killing request"). I can
-suppress the first message by inserting an additional if statement if you
-want, e.g. as follows (compile-tested only):
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index dcef9b8..e307314 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1506,7 +1506,8 @@ static void scsi_request_fn(struct request_queue *q)
-                        break;
- 
-                if (unlikely(!scsi_device_online(sdev))) {
--                       sdev_printk(KERN_ERR, sdev,
-+                       if (!blk_queue_dead(q))
-+                               sdev_printk(KERN_ERR, sdev,
-                                    "rejecting I/O to offline device\n");
-                        scsi_kill_request(req, q);
-                        continue;
-
-
-Bart.
