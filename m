@@ -1,50 +1,43 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 2/4] scsi: Fix device removal NULL pointer dereference
-Date: Tue, 26 Jun 2012 07:26:28 +0000
-Message-ID: <4FE96424.2060405@acm.org>
-References: <4FE8A9FC.6040805@acm.org> <4FE8AAB9.9060602@acm.org>  <1340658889.2980.51.camel@dabdike.int.hansenpartnership.com>  <4FE8E0B9.8050202@cs.wisc.edu> <1340695192.3058.1.camel@dabdike.int.hansenpartnership.com>
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: Re: [PATCH v4 0/3] scsi: fix internal write cache issue on usb hdd.
+Date: Tue, 26 Jun 2012 16:40:46 +0900
+Message-ID: <CAKYAXd-njKyZozDsUJjJDVEF+6rJRnXpzxm5da1tEy_SPqq0rA@mail.gmail.com>
+References: <1339601248-3251-1-git-send-email-linkinjeon@gmail.com>
+	<CAKYAXd9sbVL9Ut4nZOg5Mt3ZuCOouUq64d-ifjtbO0TnaU1XvA@mail.gmail.com>
+	<20120615212918.GB23338@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay03ant.iops.be ([212.53.5.218]:47739 "EHLO
-	relay03ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758509Ab2FZH0f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jun 2012 03:26:35 -0400
-In-Reply-To: <1340695192.3058.1.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120615212918.GB23338@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@hansenpartnership.com
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, sshtylyov@mvista.com, bvanassche@acm.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-On 06/26/12 07:19, James Bottomley wrote:
+Hi James.
 
-> On Mon, 2012-06-25 at 17:05 -0500, Mike Christie wrote:
->> Only the scsi_tgt_lib.c code uses the uses the uspace_req_q. That code
->> does not use it in a traditional way. It passes __scsi_alloc_queue NULL
->> for the request_fn function argument, so this request queue does not
->> have a function that pulls requests off a queue like is done for the
->> initiator path.
+Would you please check these patches ?
+I am waiting for your response.
+
+Thanks.
+
+2012/6/16, Greg KH <gregkh@linuxfoundation.org>:
+>
+> A: No.
+> Q: Should I include quotations after my reply?
+>
+> http://daringfireball.net/2007/07/on_top
+>
+> On Fri, Jun 15, 2012 at 12:51:58PM +0900, Namjae Jeon wrote:
+>> Hi Greg.
 >>
->> That target code mostly uses the queue struct so that it can use the
->> block/scsi functions that need a request queue to build scatterlists,
->> cmds, bios, etc. When that code was made originally we were going to use
->> the queue in a more tradition way or break out the queue limits into
->> another struct and pass them around. I think we have the latter now, but
->> the target code has not been converted.
->>
->> But so that is why we cannot hit a race like you are thinking about in
->> the initiator path.
->>
->> It is also a weird use of the queue so it is also why it does not make
->> sense :)
-> 
-> OK, could we encapsulate all that in the comment so I don't have to ask
-> again in a year's time ... ?
-
-
-Maybe it's easier to implement Tejun's suggestion (swapping the
-blk_cleanup_queue() call and freeing the queuedata) ? That should be
-readable for everyone and shouldn't need a comment.
-
-Bart.
+>> Would you check this patch-set ?
+>
+>
+> I can't do much about scsi core patches, sorry.  If James acks them, I
+> can take them through my tree.
+>
+> thanks,
+>
+> greg k-h
+>
