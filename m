@@ -1,41 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15278] lockdep warning for iscsi in 2.6.33-rc6
-Date: Wed, 27 Jun 2012 12:26:56 +0000 (UTC)
-Message-ID: <20120627122656.AFB3311F89F@bugzilla.kernel.org>
-References: <bug-15278-11613@https.bugzilla.kernel.org/>
+From: Martin Pitt <martin.pitt@ubuntu.com>
+Subject: Re: [PATCH 1/1] [SCSI] scsi_debug: Add "removable" parameter
+Date: Wed, 27 Jun 2012 15:01:16 +0200
+Message-ID: <20120627130116.GA3307@piware.de>
+References: <1647133.Oeh9OMjxKH@donald.sf-tec.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:57415 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756774Ab2F0M1E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jun 2012 08:27:04 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 67959202BD
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jun 2012 12:26:59 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 6F396202C1
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jun 2012 12:26:58 +0000 (UTC)
-In-Reply-To: <bug-15278-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1647133.Oeh9OMjxKH@donald.sf-tec.de>
+ <4FCE30DE.6090903@xenotime.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>, Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, David Zeuthen <zeuthen@gmail.com>, Kay Sievers <kay@vrfy.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=15278
+Hello Randy, Eike,
 
+Randy Dunlap [2012-06-05  9:16 -0700]:
+> so why not make it a bool instead of an int value?
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+Rolf Eike Beer [2012-06-05 20:10 +0200]:
+> This is wrong. Signed-off would mean that he takes the patch and passed it on. 
+> So what this really is as you as the original author push this out is either 
+> Acked-by, Tested-by, Reviewed-by or something like that.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-         Resolution|                            |INSUFFICIENT_DATA
+I did not hear any other feedback, so I'm resending the patch with
+these two changes.
 
+Thanks,
+
+Martin
 
 
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Martin Pitt                        | http://www.piware.de
+Ubuntu Developer (www.ubuntu.com)  | Debian Developer  (www.debian.org)
