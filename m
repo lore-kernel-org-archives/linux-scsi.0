@@ -1,37 +1,42 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch -resend] isci: make function declaration match implementation
-Date: Wed, 27 Jun 2012 12:10:06 +0300
-Message-ID: <20120627091005.GU31212@elgon.mountain>
-References: <20120627085800.GA3007@mwanda>
+From: System Administrator <ggunes@adu.edu.tr>
+Subject: sua caixa de correio
+Date: Wed, 27 Jun 2012 12:04:14 +0300 (EEST)
+Message-ID: <33373008.6813.1340787854089.JavaMail.root__21634.7298970961$1340789841$gmane$org@zimbra>
+Reply-To: System Administrator <"upgrade..unit24"@inMail24.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120627085800.GA3007@mwanda>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Intel SCU Linux support <intel-linux-scu@intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Dave Jiang <dave.jiang@intel.com>, Ed Nadolski <edmund.nadolski@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from trendimss.adu.edu.tr ([194.27.38.11]:52156 "EHLO
+	TRENDIMSS.adu.edu.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753605Ab2F0JhQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jun 2012 05:37:16 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Sparse complains that we redeclare this with a different type, because
-in the .c file we use an enum and in the .h file we declare the
-parameter as a u32.  Probably it's best to use an enum in both places.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-I originally sent this on Tue, 27 Mar 2012, and Emil Goode sent the same
-patch on Fri, May 4, 2012.  Both were silently ignored.
+ATEN=C3=87=C3=83O;
 
-diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
-index a703b9c..c7ee81d 100644
---- a/drivers/scsi/isci/remote_node_context.h
-+++ b/drivers/scsi/isci/remote_node_context.h
-@@ -212,7 +212,7 @@ enum sci_status sci_remote_node_context_destruct(struct sci_remote_node_context
- 						      scics_sds_remote_node_context_callback callback,
- 						      void *callback_parameter);
- enum sci_status sci_remote_node_context_suspend(struct sci_remote_node_context *sci_rnc,
--						     u32 suspend_type,
-+						     enum sci_remote_node_suspension_reasons reason,
- 						     u32 suspension_code);
- enum sci_status sci_remote_node_context_resume(struct sci_remote_node_context *sci_rnc,
- 						    scics_sds_remote_node_context_callback cb_fn,
+Sua caixa de correio excedeu o limite de armazenamento que =C3=A9 de 5 =
+GB, como definido pelo administrador, que est=C3=A1 atualmente em execu=
+=C3=A7=C3=A3o no 10.9GB, voc=C3=AA pode n=C3=A3o ser capaz de enviar ou=
+ receber novas mensagens at=C3=A9 que voc=C3=AA re-validar a sua caixa =
+de correio. Para revalidar sua caixa postal, envie os seguintes dados a=
+baixo:
+
+nome:
+Nome de usu=C3=A1rio:
+senha:
+Confirme a Senha:
+E-mail:
+
+Se voc=C3=AA n=C3=A3o conseguir revalidar sua caixa de correio, o corre=
+io ser=C3=A1 desactivado!
+
+obrigado
+Administrador do Sistema
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
