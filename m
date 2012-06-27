@@ -1,38 +1,52 @@
-From: Mike Snitzer <snitzer@gmail.com>
-Subject: Re: [PATCH 0/4] notify userspace of offline->running transitions (v2)
-Date: Tue, 26 Jun 2012 17:48:48 -0400
-Message-ID: <CAMM=eLf++hxwoF9fiPU1fu4vB0KmH15h1H9gkJPbO_Q0j+GREg@mail.gmail.com>
-References: <1337317019-12001-1-git-send-email-michaelc@cs.wisc.edu> <4FCFC934.8010009@cs.wisc.edu>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [dm-devel] [RESEND PATCH 2/3] dm mpath: add 'default_hw_handler'
+ feature
+Date: Wed, 27 Jun 2012 08:16:55 +0200
+Message-ID: <4FEAA557.7050501@suse.de>
+References: <1340735525-21083-1-git-send-email-snitzer@redhat.com> <1340735525-21083-3-git-send-email-snitzer@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:59875 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752393Ab2FZVtK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jun 2012 17:49:10 -0400
-Received: by lbbgm6 with SMTP id gm6so666398lbb.19
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Jun 2012 14:49:09 -0700 (PDT)
-In-Reply-To: <4FCFC934.8010009@cs.wisc.edu>
+Received: from cantor2.suse.de ([195.135.220.15]:55303 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756262Ab2F0GQ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Jun 2012 02:16:57 -0400
+In-Reply-To: <1340735525-21083-3-git-send-email-snitzer@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On Wed, Jun 6, 2012 at 5:18 PM, Mike Christie <michaelc@cs.wisc.edu> wrote:
-> Hey,
->
-> Would it be ok to still merge patches 1 - 3? I think they are still
-> useful on their own. They fix that issue where during fast io
-> fail/replacement_timeout failures IO is failed, but the scsi_device
-> state indicates the devices are still running.
->
-> It seems Hannes was ok with them right?
->
-> Drop patch 4 since we all seemed to agree we will do it a different way.
+On 06/26/2012 08:32 PM, Mike Snitzer wrote:
+> When specifying the feature 'default_hw_handler' multipath will use
+> the currently attached hardware handler instead of trying to attach t=
+he
+> one specified during table load.  If no hardware handler is attached =
+the
+> specified hardware handler will be used.
+>=20
+> Leverages scsi_dh_attach's ability to increment the scsi_dh's referen=
+ce
+> count if the same scsi_dh name is provided when attaching -- currentl=
+y
+> attached scsi_dh name is determined with scsi_dh_attached_handler_nam=
+e.
+>=20
+> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+> Tested-by: Babu Moger <babu.moger@netapp.com>
+> Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Hannes, James,
+Looks good.
 
-Please advise on including patches 1 -> 3 during the 3.6 merge.
-
-Thanks,
-Mike
+Acked-by: Hannes Reinecke <hare@suse.de>
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
