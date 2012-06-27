@@ -1,42 +1,35 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] SCSI: Fix BLKSECTGET ioctl of sg device caculation
- mistake.
-Date: Wed, 27 Jun 2012 08:49:49 +0100
-Message-ID: <1340783389.3175.11.camel@dabdike.int.hansenpartnership.com>
-References: <1340782159-1587-1-git-send-email-mc@linux.vnet.ibm.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch -resend] [SCSI] bfa: off by one in bfa_ioc_mbox_isr()
+Date: Wed, 27 Jun 2012 11:59:36 +0300
+Message-ID: <20120627085936.GA31212@elgon.mountain>
+References: <20120627085800.GA3007@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1340782159-1587-1-git-send-email-mc@linux.vnet.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <20120627085800.GA3007@mwanda>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Cong Meng <mc@linux.vnet.ibm.com>
-Cc: stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jing Huang <huangj@brocade.com>
+Cc: Krishna C Gudipati <kgudipat@brocade.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-06-27 at 15:29 +0800, Cong Meng wrote:
-> Fix BLKSECTGET ioctl of sg device caculation mistake.
-> 
-> Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/sg.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index eacd46b..c424602 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -1070,7 +1070,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
->  			return -ENODEV;
->  		return scsi_ioctl(sdp->device, cmd_in, p);
->  	case BLKSECTGET:
-> -		return put_user(queue_max_sectors(sdp->device->request_queue) * 512,
-> +		return put_user(queue_max_sectors(sdp->device->request_queue),
+If mc == BFI_MC_MAX then we're reading past the end of the
+mod->mbhdlr[] array.
 
-Really, no.  This would break all existing user of the ioctl.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Originally sent on Wed, 6 Jul 2011.
 
-Even if you can find a document somewhere that says BLKSECTGET should
-return sectors instead of bytes, we have to go with the ABI we've been
-exporting for decades and fix up the document.
-
-James
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 14e6284..8cdb79c 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -2357,7 +2357,7 @@ bfa_ioc_mbox_isr(struct bfa_ioc_s *ioc)
+ 			return;
+ 		}
+ 
+-		if ((mc > BFI_MC_MAX) || (mod->mbhdlr[mc].cbfn == NULL))
++		if ((mc >= BFI_MC_MAX) || (mod->mbhdlr[mc].cbfn == NULL))
+ 			return;
+ 
+ 		mod->mbhdlr[mc].cbfn(mod->mbhdlr[mc].cbarg, &m);
