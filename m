@@ -1,42 +1,79 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15227] sys-kernel/gentoo-sources-2.6.30-r4 - amlabel triggers
- opcode 0000 kernel bug
-Date: Wed, 27 Jun 2012 13:18:21 +0000 (UTC)
-Message-ID: <20120627131821.4F94011F89B@bugzilla.kernel.org>
-References: <bug-15227-11613@https.bugzilla.kernel.org/>
+From: Krishna Gudipati <kgudipat@Brocade.com>
+Subject: RE: [patch -resend] [SCSI] bfa: dereferencing freed memory in
+ bfad_im_probe()
+Date: Wed, 27 Jun 2012 10:45:31 -0700
+Message-ID: <B5EE62D80D50B84BB9E5174F7FCCE80A28396BCE91@HQ1-EXCH02.corp.brocade.com>
+References: <20120627085800.GA3007@mwanda>
+ <20120627085958.GB31212@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:60296 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751824Ab2F0NSY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jun 2012 09:18:24 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 4503B20266
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jun 2012 13:18:23 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 53A77202C6
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jun 2012 13:18:21 +0000 (UTC)
-In-Reply-To: <bug-15227-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120627085958.GB31212@elgon.mountain>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: 'Dan Carpenter' <dan.carpenter@oracle.com>, Jing Huang <huangj@Brocade.COM>
+Cc: "'James E.J. Bottomley'" <JBottomley@parallels.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'kernel-janitors@vger.kernel.org'" <kernel-janitors@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-https://bugzilla.kernel.org/show_bug.cgi?id=15227
-
-
-Alan <alan@lxorguk.ukuu.org.uk> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-         Resolution|                            |INSUFFICIENT_DATA
 
 
 
+-----Original Message-----
+From: Dan Carpenter [mailto:dan.carpenter@oracle.com] 
+Sent: Wednesday, June 27, 2012 2:00 AM
+To: Jing Huang
+Cc: Krishna Gudipati; James E.J. Bottomley; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; kernel-janitors@vger.kernel.org
+Subject: [patch -resend] [SCSI] bfa: dereferencing freed memory in bfad_im_probe()
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+If bfad_thread_workq(bfad) was not BFA_STATUS_OK then we freed "im"
+and then dereferenced it.
+
+I did a little clean up because it seemed nicer to return directly
+instead of doing a superfluous goto.  I looked at other functions in
+this file and it seems like returning directly is standard.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+This is the third time I have sent this patch.  It was previously sent
+on Fri, 29 Jul 2011 and Wed, 29 Feb 2012.
+
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 1ac09af..2eebf8d 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -687,25 +687,21 @@ bfa_status_t
+ bfad_im_probe(struct bfad_s *bfad)
+ {
+ 	struct bfad_im_s      *im;
+-	bfa_status_t    rc = BFA_STATUS_OK;
+ 
+ 	im = kzalloc(sizeof(struct bfad_im_s), GFP_KERNEL);
+-	if (im == NULL) {
+-		rc = BFA_STATUS_ENOMEM;
+-		goto ext;
+-	}
++	if (im == NULL)
++		return BFA_STATUS_ENOMEM;
+ 
+ 	bfad->im = im;
+ 	im->bfad = bfad;
+ 
+ 	if (bfad_thread_workq(bfad) != BFA_STATUS_OK) {
+ 		kfree(im);
+-		rc = BFA_STATUS_FAILED;
++		return BFA_STATUS_FAILED;
+ 	}
+ 
+ 	INIT_WORK(&im->aen_im_notify_work, bfad_aen_im_notify_handler);
+-ext:
+-	return rc;
++	return BFA_STATUS_OK;
+ }
+ 
+ void
+
+-----
+
+Thanks for the patch.
+
+Acked-by: Krishna Gudipati <kgudipat@brocade.com>
