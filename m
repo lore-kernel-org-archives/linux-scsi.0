@@ -1,71 +1,43 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [set5 PATCH 0/6] scsi, async: asynchronous probing rework / fixes
-Date: Thu, 28 Jun 2012 15:22:34 -0700
-Message-ID: <CAA9_cmejubhZRXkUc_-FYhgD3B0sjR8p4YO3VkgcxWvisd-RWg@mail.gmail.com>
-References: <20120622064657.21538.61711.stgit@dwillia2-linux.jf.intel.com>
+From: kxie@chelsio.com
+Subject: [PATCH] cxgb4i: tcp push bit fix
+Date: Thu, 28 Jun 2012 16:49:07 -0700
+Message-ID: <201206282349.q5SNn7H9017422@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120622064657.21538.61711.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([67.207.112.58]:20734 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753706Ab2F1XtT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jun 2012 19:49:19 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+Cc: kxie@chelsio.com, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-On Thu, Jun 21, 2012 at 11:46 PM, Dan Williams <dan.j.williams@intel.co=
-m> wrote:
-> Set5 of 5 patchsets to update scsi, libsas, and libata in
-> support of the isci driver.
->
-> Commit 43a8d39d "[SCSI] fix async probe regression" found that
-> async_synchronize_full() was missing async work that was scheduled to
-> its own domain. =A0This led James to note:
->
-> =A0 =A0 =A0"My theory is that this is an init problem: The assumption=
- in a lot of
-> =A0 =A0 =A0 our code is that async_synchronize_full() waits for every=
-thing ... even
-> =A0 =A0 =A0 the domain specific async schedules, which isn't true."
->
-> ...and this set aims to make that assumption true, but also with the
-> ability to opt-out for "private" async work.
->
-> The other async probe fix is in the area of unplug events that occur =
-in
-> the scsi async scanning interval. =A0Essentially scsi_remove_target()=
- can
-> now see semi-initialized scsi_targets that have yet to be added via
-> device_add().
->
-> If there are no objections I'll put these in -next. =A0But I expect a=
-t
-> least patch1 and patch2 will need an ack from Arjan before the set sh=
-ows
-> up in scsi.git.
->
-> ---
+[PATCH] cxgb4i: tcp push bit fix
 
-James,
+From: Karen Xie <kxie@chelsio.com>
 
-I caught a couple conflicts with scsi.git/for-next and was able to fix
-them up without rebasing on top of your tree.  I'll resend the series
-after letting these sit in -next for a while, or I can prepare a tag
-for you to pull with the whole pending set.
+Fixed the parentheses so the tcp push bit would be sent properly.
 
->
-> Dan Williams (6):
-> =A0 =A0 =A0async: introduce 'async_domain' type
+Signed-off-by: Karen Xie <kxie@chelsio.com>
+---
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-dropped the include of async.h
-
-> =A0 =A0 =A0async: make async_synchronize_full() flush all work regard=
-less of domain
-> =A0 =A0 =A0scsi: queue async scan work to an async_schedule domain
-> =A0 =A0 =A0scsi: cleanup usages of scsi_complete_async_scans
-
-dropped the changes to scsi_wait_scan.c since that file is deleted in
-your for-next branch.
-
---
-Dan
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 5a4a3bf..9bfc348 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -438,8 +438,8 @@ static inline void make_tx_data_wr(struct cxgbi_sock *csk, struct sk_buff *skb,
+ 	if (submode)
+ 		wr_ulp_mode = FW_OFLD_TX_DATA_WR_ULPMODE(ULP2_MODE_ISCSI) |
+ 				FW_OFLD_TX_DATA_WR_ULPSUBMODE(submode);
+-	req->tunnel_to_proxy = htonl(wr_ulp_mode) |
+-		 FW_OFLD_TX_DATA_WR_SHOVE(skb_peek(&csk->write_queue) ? 0 : 1);
++	req->tunnel_to_proxy = htonl(wr_ulp_mode |
++		 FW_OFLD_TX_DATA_WR_SHOVE(skb_peek(&csk->write_queue) ? 0 : 1));
+ 	req->plen = htonl(len);
+ 	if (!cxgbi_sock_flag(csk, CTPF_TX_DATA_SENT))
+ 		cxgbi_sock_set_flag(csk, CTPF_TX_DATA_SENT);
