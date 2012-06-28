@@ -1,49 +1,49 @@
 From: adam radford <aradford@gmail.com>
-Subject: Re: [patch -resend] [SCSI] megaraid: remove a spurious IRQ enable
-Date: Wed, 27 Jun 2012 15:36:55 -0700
-Message-ID: <CAHtARFGG4HxL7J40o341gBOg8+GunYEGyP0SrBK_w3pH3v6+PA@mail.gmail.com>
-References: <20120627085800.GA3007@mwanda>
-	<20120627090030.GC31212@elgon.mountain>
+Subject: Re: megaraid_sas: which patches are needed for 2.6.32.y?
+Date: Thu, 28 Jun 2012 12:19:36 -0700
+Message-ID: <CAHtARFH=kmVO_xWs+DafPuWd+wPFnP-Cw5vTVRR-Pd3+xDxkzw@mail.gmail.com>
+References: <FB09F9AF3FE25444B277AA82BB35EE175F0260C0@LCHQEX03.lancope.local>
+	<20120328192623.GB8982@burratino>
+	<FB09F9AF3FE25444B277AA82BB35EE175F02612C@LCHQEX03.lancope.local>
+	<FB09F9AF3FE25444B277AA82BB35EE175F028482@LCHQEX03.lancope.local>
+	<20120329165806.GC3147@burratino>
+	<FB09F9AF3FE25444B277AA82BB35EE175F0284E2@LCHQEX03.lancope.local>
+	<20120329194751.GG3147@burratino>
+	<20120609164753.GA18761@burratino>
+	<20120624151318.GA18451@burratino>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120627090030.GC31212@elgon.mountain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:58227 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751399Ab2F1TTi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jun 2012 15:19:38 -0400
+Received: by werb14 with SMTP id b14so647120wer.19
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Jun 2012 12:19:36 -0700 (PDT)
+In-Reply-To: <20120624151318.GA18451@burratino>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jonathan Nieder <jrnieder@gmail.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, Buford Peek <BPeek@lancope.com>, 666108@bugs.debian.org, Gator_Yin@dell.com, linux-scsi@vger.kernel.org
 
-On Wed, Jun 27, 2012 at 2:00 AM, Dan Carpenter <dan.carpenter@oracle.co=
-m> wrote:
-> We took this lock with spin_lock() so we should unlock it with
-> spin_unlock() instead of spin_unlock_irq(). =A0This was introduced in
-> f2c8dc402b "[SCSI] megaraid_mbox: remove scsi_assign_lock usage".
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> This was originally sent on Sat, 30 Jul 2011. =A0I have cleaned up th=
-e
-> commit message a bit and added Christoph to the CC list.
->
-> diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/meg=
-araid/megaraid_mbox.c
-> index 35bd138..54b1c5b 100644
-> --- a/drivers/scsi/megaraid/megaraid_mbox.c
-> +++ b/drivers/scsi/megaraid/megaraid_mbox.c
-> @@ -2731,7 +2731,7 @@ megaraid_reset_handler(struct scsi_cmnd *scp)
-> =A0 =A0 =A0 =A0}
->
-> =A0out:
-> - =A0 =A0 =A0 spin_unlock_irq(&adapter->lock);
-> + =A0 =A0 =A0 spin_unlock(&adapter->lock);
-> =A0 =A0 =A0 =A0return rval;
-> =A0}
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+On Sun, Jun 24, 2012 at 8:13 AM, Jonathan Nieder <jrnieder@gmail.com> w=
+rote:
+=2E..
+>> Questions:
+>>
+>> 1) Are any of these important fixes that should be applied to 2.6.32=
+=2Ey
+>> =A0 =A0so everyone who uses a 2.6.32-based kernel can start benefitt=
+ing
+>> =A0 =A0from them?
 
-Acked-by: Adam Radford <aradford@gmail.com>
+If you have already backported the patches from list 2 to Debian
+2.6.32.x kernel, please also backport the patches from list 3.
+
+-Adam
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
