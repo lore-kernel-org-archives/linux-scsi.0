@@ -1,104 +1,71 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] libsas,
- ipr: cleanup ata_host flags initialization via ata_host_init
-Date: Thu, 28 Jun 2012 14:46:16 -0700
-Message-ID: <20120628214257.10918.476.stgit@dwillia2-linux.jf.intel.com>
+Subject: Re: [set5 PATCH 0/6] scsi, async: asynchronous probing rework / fixes
+Date: Thu, 28 Jun 2012 15:22:34 -0700
+Message-ID: <CAA9_cmejubhZRXkUc_-FYhgD3B0sjR8p4YO3VkgcxWvisd-RWg@mail.gmail.com>
+References: <20120622064657.21538.61711.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Brian King <brking@us.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120622064657.21538.61711.stgit@dwillia2-linux.jf.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-libsas and ipr pass flags to ata_host_init that are meant for the port.
+On Thu, Jun 21, 2012 at 11:46 PM, Dan Williams <dan.j.williams@intel.co=
+m> wrote:
+> Set5 of 5 patchsets to update scsi, libsas, and libata in
+> support of the isci driver.
+>
+> Commit 43a8d39d "[SCSI] fix async probe regression" found that
+> async_synchronize_full() was missing async work that was scheduled to
+> its own domain. =A0This led James to note:
+>
+> =A0 =A0 =A0"My theory is that this is an init problem: The assumption=
+ in a lot of
+> =A0 =A0 =A0 our code is that async_synchronize_full() waits for every=
+thing ... even
+> =A0 =A0 =A0 the domain specific async schedules, which isn't true."
+>
+> ...and this set aims to make that assumption true, but also with the
+> ability to opt-out for "private" async work.
+>
+> The other async probe fix is in the area of unplug events that occur =
+in
+> the scsi async scanning interval. =A0Essentially scsi_remove_target()=
+ can
+> now see semi-initialized scsi_targets that have yet to be added via
+> device_add().
+>
+> If there are no objections I'll put these in -next. =A0But I expect a=
+t
+> least patch1 and patch2 will need an ack from Arjan before the set sh=
+ows
+> up in scsi.git.
+>
+> ---
 
-ata_host flags:
-	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
-	ATA_HOST_STARTED	= (1 << 1),	/* Host started */
-	ATA_HOST_PARALLEL_SCAN	= (1 << 2),	/* Ports on this host can be scanned in parallel */
-	ATA_HOST_IGNORE_ATA	= (1 << 3),	/* Ignore ATA devices on this host. */
+James,
 
-flags passed by libsas:
-	ATA_FLAG_SATA		= (1 << 1),
-	ATA_FLAG_PIO_DMA	= (1 << 7), /* PIO cmds via DMA */
-	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
+I caught a couple conflicts with scsi.git/for-next and was able to fix
+them up without rebasing on top of your tree.  I'll resend the series
+after letting these sit in -next for a while, or I can prepare a tag
+for you to pull with the whole pending set.
 
-The only one that aliases is ATA_HOST_STARTED which is a 'don't care' in
-the libsas and ipr cases since ata_hosts from these sources are not
-registered with libata.
+>
+> Dan Williams (6):
+> =A0 =A0 =A0async: introduce 'async_domain' type
 
-Cc: Brian King <brking@us.ibm.com>
-Reported-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/ata/libata-core.c     |    3 +--
- drivers/scsi/ipr.c            |    3 +--
- drivers/scsi/libsas/sas_ata.c |    5 +----
- include/linux/libata.h        |    3 +--
- 4 files changed, 4 insertions(+), 10 deletions(-)
+dropped the include of async.h
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index da31691..6f1e459 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5970,12 +5970,11 @@ int ata_host_start(struct ata_host *host)
-  */
- /* KILLME - the only user left is ipr */
- void ata_host_init(struct ata_host *host, struct device *dev,
--		   unsigned long flags, struct ata_port_operations *ops)
-+		   struct ata_port_operations *ops)
- {
- 	spin_lock_init(&host->lock);
- 	mutex_init(&host->eh_mutex);
- 	host->dev = dev;
--	host->flags = flags;
- 	host->ops = ops;
- }
- 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 467dc38..dacc784 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -8775,8 +8775,7 @@ static int __devinit ipr_probe_ioa(struct pci_dev *pdev,
- 
- 	ioa_cfg = (struct ipr_ioa_cfg *)host->hostdata;
- 	memset(ioa_cfg, 0, sizeof(struct ipr_ioa_cfg));
--	ata_host_init(&ioa_cfg->ata_host, &pdev->dev,
--		      sata_port_info.flags, &ipr_sata_ops);
-+	ata_host_init(&ioa_cfg->ata_host, &pdev->dev, &ipr_sata_ops);
- 
- 	ioa_cfg->ipr_chip = ipr_get_chip_info(dev_id);
- 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 4208e16..5d10e4d 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -580,10 +580,7 @@ int sas_ata_init(struct domain_device *found_dev)
- 	struct ata_port *ap;
- 	int rc;
- 
--	ata_host_init(&found_dev->sata_dev.ata_host,
--		      ha->dev,
--		      sata_port_info.flags,
--		      &sas_sata_ops);
-+	ata_host_init(&found_dev->sata_dev.ata_host, ha->dev, &sas_sata_ops);
- 	ap = ata_sas_port_alloc(&found_dev->sata_dev.ata_host,
- 				&sata_port_info,
- 				shost);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index af467d3..baf9f82 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -990,8 +990,7 @@ extern int ata_host_activate(struct ata_host *host, int irq,
- 			     irq_handler_t irq_handler, unsigned long irq_flags,
- 			     struct scsi_host_template *sht);
- extern void ata_host_detach(struct ata_host *host);
--extern void ata_host_init(struct ata_host *, struct device *,
--			  unsigned long, struct ata_port_operations *);
-+extern void ata_host_init(struct ata_host *, struct device *, struct ata_port_operations *);
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+> =A0 =A0 =A0async: make async_synchronize_full() flush all work regard=
+less of domain
+> =A0 =A0 =A0scsi: queue async scan work to an async_schedule domain
+> =A0 =A0 =A0scsi: cleanup usages of scsi_complete_async_scans
 
+dropped the changes to scsi_wait_scan.c since that file is deleted in
+your for-next branch.
+
+--
+Dan
