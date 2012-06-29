@@ -1,63 +1,42 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 3/5] scsi: Avoid dangling pointer in scsi_requeue_command()
-Date: Fri, 29 Jun 2012 11:06:21 -0500
-Message-ID: <4FEDD27D.4010803@cs.wisc.edu>
-References: <4FEDCA26.90804@acm.org> <4FEDCB02.6070600@acm.org>
+From: adam radford <aradford@gmail.com>
+Subject: Re: megaraid_sas: which patches are needed for 2.6.32.y?
+Date: Fri, 29 Jun 2012 09:25:42 -0700
+Message-ID: <CAHtARFHafR+hrB4u=wDUSE3-J2uXOQCFHW3wRSQMiebowu-9iA@mail.gmail.com>
+References: <FB09F9AF3FE25444B277AA82BB35EE175F0260C0@LCHQEX03.lancope.local>
+	<20120328192623.GB8982@burratino>
+	<FB09F9AF3FE25444B277AA82BB35EE175F02612C@LCHQEX03.lancope.local>
+	<FB09F9AF3FE25444B277AA82BB35EE175F028482@LCHQEX03.lancope.local>
+	<20120329165806.GC3147@burratino>
+	<FB09F9AF3FE25444B277AA82BB35EE175F0284E2@LCHQEX03.lancope.local>
+	<20120329194751.GG3147@burratino>
+	<20120609164753.GA18761@burratino>
+	<20120624151318.GA18451@burratino>
+	<CAHtARFH=kmVO_xWs+DafPuWd+wPFnP-Cw5vTVRR-Pd3+xDxkzw@mail.gmail.com>
+	<20120628202743.GA7295@burratino>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:33463 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932140Ab2F2QOn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jun 2012 12:14:43 -0400
-In-Reply-To: <4FEDCB02.6070600@acm.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:60649 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932483Ab2F2QZo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jun 2012 12:25:44 -0400
+Received: by wgbdr13 with SMTP id dr13so3200871wgb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Jun 2012 09:25:42 -0700 (PDT)
+In-Reply-To: <20120628202743.GA7295@burratino>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Muthukumar Ratty <muthur@gmail.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tejun Heo <tj@kernel.org>
+To: Jonathan Nieder <jrnieder@gmail.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, Buford Peek <BPeek@lancope.com>, 666108@bugs.debian.org, Gator_Yin@dell.com, linux-scsi@vger.kernel.org
 
-On 06/29/2012 10:34 AM, Bart Van Assche wrote:
-> Reported-by: Mike Christie <michaelc@cs.wisc.edu>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: James Bottomley <JBottomley@parallels.com>
-> Cc: <stable@kernel.org>
-> ---
->   drivers/scsi/scsi_lib.c |    9 +++++++++
->   1 files changed, 9 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 7ebe167..af6357a 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -479,15 +479,24 @@ void scsi_requeue_run_queue(struct work_struct *work)
->    */
->   static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
->   {
-> +	struct scsi_device *sdev = cmd->device;
->   	struct request *req = cmd->request;
->   	unsigned long flags;
->
-> +	/*
-> +	 * We need to hold a reference on the device to avoid that the queue
-> +	 * gets killed after the unlock and before scsi_run_queue is invoked.
-> +	 */
-> +	get_device(&sdev->sdev_gendev);
-> +
->   	spin_lock_irqsave(q->queue_lock, flags);
->   	scsi_unprep_request(req);
->   	blk_requeue_request(q, req);
->   	spin_unlock_irqrestore(q->queue_lock, flags);
->
->   	scsi_run_queue(q);
-> +
-> +	put_device(&sdev->sdev_gendev);
->   }
->
->   void scsi_next_command(struct scsi_cmnd *cmd)
->
+On Thu, Jun 28, 2012 at 1:27 PM, Jonathan Nieder <jrnieder@gmail.com> wrote:
+...
+> If someone makes a backport of the patches marked [3] as well, would
+> you be able to look over or test the combination?  That would be much
+> appreciated.  If that's not possible, your advice would still be
+> welcome but we will need to use a more minimal set of changes.
 
-Looks ok to me
+Yes, I will be able to look over and/or test the combination.  If you
+apply all patches then diff vs. the scsi-misc tip, you should only see
+kernel 2.6.32.y specific changes.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+-Adam
