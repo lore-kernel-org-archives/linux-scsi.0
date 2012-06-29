@@ -1,42 +1,36 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: megaraid_sas: which patches are needed for 2.6.32.y?
-Date: Fri, 29 Jun 2012 09:25:42 -0700
-Message-ID: <CAHtARFHafR+hrB4u=wDUSE3-J2uXOQCFHW3wRSQMiebowu-9iA@mail.gmail.com>
-References: <FB09F9AF3FE25444B277AA82BB35EE175F0260C0@LCHQEX03.lancope.local>
-	<20120328192623.GB8982@burratino>
-	<FB09F9AF3FE25444B277AA82BB35EE175F02612C@LCHQEX03.lancope.local>
-	<FB09F9AF3FE25444B277AA82BB35EE175F028482@LCHQEX03.lancope.local>
-	<20120329165806.GC3147@burratino>
-	<FB09F9AF3FE25444B277AA82BB35EE175F0284E2@LCHQEX03.lancope.local>
-	<20120329194751.GG3147@burratino>
-	<20120609164753.GA18761@burratino>
-	<20120624151318.GA18451@burratino>
-	<CAHtARFH=kmVO_xWs+DafPuWd+wPFnP-Cw5vTVRR-Pd3+xDxkzw@mail.gmail.com>
-	<20120628202743.GA7295@burratino>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/5] scsi: Avoid dangling pointer in
+ scsi_requeue_command()
+Date: Fri, 29 Jun 2012 09:48:15 -0700
+Message-ID: <20120629164815.GA21048@google.com>
+References: <4FEDCA26.90804@acm.org>
+ <4FEDCB02.6070600@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:60649 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932483Ab2F2QZo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jun 2012 12:25:44 -0400
-Received: by wgbdr13 with SMTP id dr13so3200871wgb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Jun 2012 09:25:42 -0700 (PDT)
-In-Reply-To: <20120628202743.GA7295@burratino>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:58339 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932142Ab2F2QsU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jun 2012 12:48:20 -0400
+Received: by dady13 with SMTP id y13so4607749dad.19
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Jun 2012 09:48:19 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <4FEDCB02.6070600@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, Buford Peek <BPeek@lancope.com>, 666108@bugs.debian.org, Gator_Yin@dell.com, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Mike Christie <michaelc@cs.wisc.edu>, Muthukumar Ratty <muthur@gmail.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-On Thu, Jun 28, 2012 at 1:27 PM, Jonathan Nieder <jrnieder@gmail.com> wrote:
-...
-> If someone makes a backport of the patches marked [3] as well, would
-> you be able to look over or test the combination?  That would be much
-> appreciated.  If that's not possible, your advice would still be
-> welcome but we will need to use a more minimal set of changes.
+On Fri, Jun 29, 2012 at 03:34:26PM +0000, Bart Van Assche wrote:
+> Reported-by: Mike Christie <michaelc@cs.wisc.edu>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: James Bottomley <JBottomley@parallels.com>
+> Cc: <stable@kernel.org>
 
-Yes, I will be able to look over and/or test the combination.  If you
-apply all patches then diff vs. the scsi-misc tip, you should only see
-kernel 2.6.32.y specific changes.
+Acked-by: Tejun Heo <tj@kernel.org>
 
--Adam
+Thanks.
+
+-- 
+tejun
