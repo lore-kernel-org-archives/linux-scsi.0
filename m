@@ -1,176 +1,59 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 2/5] scsi: Fix device removal NULL pointer dereference
-Date: Fri, 29 Jun 2012 15:33:22 +0000
-Message-ID: <4FEDCAC2.8030407@acm.org>
+Subject: [PATCH 3/5] scsi: Avoid dangling pointer in scsi_requeue_command()
+Date: Fri, 29 Jun 2012 15:34:26 +0000
+Message-ID: <4FEDCB02.6070600@acm.org>
 References: <4FEDCA26.90804@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01ant.iops.be ([212.53.4.34]:45816 "EHLO
+Received: from relay01ant.iops.be ([212.53.4.34]:45876 "EHLO
 	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751446Ab2F2Pd0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jun 2012 11:33:26 -0400
+	with ESMTP id S1751895Ab2F2Pe3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jun 2012 11:34:29 -0400
 In-Reply-To: <4FEDCA26.90804@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Mike Christie <michaelc@cs.wisc.edu>, Muthukumar Ratty <muthur@gmail.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Tejun Heo <tj@kernel.org>
 
-Use blk_queue_dead() to test whether the queue is dead instead
-of !sdev. Since scsi_prep_fn() may be invoked concurrently with
-__scsi_remove_device(), keep the queuedata (sdev) pointer in
-__scsi_remove_device(). This patch fixes a kernel oops that
-can be triggered by USB device removal. See also
-http://www.spinics.net/lists/linux-scsi/msg56254.html.
-
-Other changes included in this patch:
-- Swap the blk_cleanup_queue() and kfree() calls in
-  scsi_host_dev_release() to make that code easier to grasp.
-- Remove the queue dead check from scsi_run_queue() since the
-  queue state can change anyway at any point in that function
-  where the queue lock is not held.
-- Remove the queue dead check from the start of scsi_request_fn()
-  since it is redundant with the scsi_device_online() check.
-
-Reported-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Reported-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
-Acked-by: Tejun Heo <tj@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>
 Cc: James Bottomley <JBottomley@parallels.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Cc: <stable@kernel.org>
 ---
- drivers/scsi/hosts.c      |    7 ++++---
- drivers/scsi/scsi_lib.c   |   32 ++++----------------------------
- drivers/scsi/scsi_priv.h  |    1 -
- drivers/scsi/scsi_sysfs.c |    5 +----
- 4 files changed, 9 insertions(+), 36 deletions(-)
+ drivers/scsi/scsi_lib.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index a3a056a..b48c24f 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -290,6 +290,7 @@ static void scsi_host_dev_release(struct device *dev)
- 	struct Scsi_Host *shost = dev_to_shost(dev);
- 	struct device *parent = dev->parent;
- 	struct request_queue *q;
-+	void *queuedata;
- 
- 	scsi_proc_hostdir_rm(shost->hostt);
- 
-@@ -299,9 +300,9 @@ static void scsi_host_dev_release(struct device *dev)
- 		destroy_workqueue(shost->work_q);
- 	q = shost->uspace_req_q;
- 	if (q) {
--		kfree(q->queuedata);
--		q->queuedata = NULL;
--		scsi_free_queue(q);
-+		queuedata = q->queuedata;
-+		blk_cleanup_queue(q);
-+		kfree(queuedata);
- 	}
- 
- 	scsi_destroy_command_freelist(shost);
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6dfb978..7ebe167 100644
+index 7ebe167..af6357a 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -406,10 +406,6 @@ static void scsi_run_queue(struct request_queue *q)
- 	LIST_HEAD(starved_list);
+@@ -479,15 +479,24 @@ void scsi_requeue_run_queue(struct work_struct *work)
+  */
+ static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
+ {
++	struct scsi_device *sdev = cmd->device;
+ 	struct request *req = cmd->request;
  	unsigned long flags;
  
--	/* if the device is dead, sdev will be NULL, so no queue to run */
--	if (!sdev)
--		return;
--
- 	shost = sdev->host;
- 	if (scsi_target(sdev)->single_lun)
- 		scsi_single_lun_run(sdev);
-@@ -1370,16 +1366,16 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
-  * may be changed after request stacking drivers call the function,
-  * regardless of taking lock or not.
-  *
-- * When scsi can't dispatch I/Os anymore and needs to kill I/Os
-- * (e.g. !sdev), scsi needs to return 'not busy'.
-- * Otherwise, request stacking drivers may hold requests forever.
-+ * When scsi can't dispatch I/Os anymore and needs to kill I/Os scsi
-+ * needs to return 'not busy'. Otherwise, request stacking drivers
-+ * may hold requests forever.
-  */
- static int scsi_lld_busy(struct request_queue *q)
- {
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost;
++	/*
++	 * We need to hold a reference on the device to avoid that the queue
++	 * gets killed after the unlock and before scsi_run_queue is invoked.
++	 */
++	get_device(&sdev->sdev_gendev);
++
+ 	spin_lock_irqsave(q->queue_lock, flags);
+ 	scsi_unprep_request(req);
+ 	blk_requeue_request(q, req);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
  
--	if (!sdev)
-+	if (blk_queue_dead(q))
- 		return 0;
- 
- 	shost = sdev->host;
-@@ -1490,12 +1486,6 @@ static void scsi_request_fn(struct request_queue *q)
- 	struct scsi_cmnd *cmd;
- 	struct request *req;
- 
--	if (!sdev) {
--		while ((req = blk_peek_request(q)) != NULL)
--			scsi_kill_request(req, q);
--		return;
--	}
--
- 	if(!get_device(&sdev->sdev_gendev))
- 		/* We must be tearing the block queue down already */
- 		return;
-@@ -1697,20 +1687,6 @@ struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
- 	return q;
+ 	scsi_run_queue(q);
++
++	put_device(&sdev->sdev_gendev);
  }
  
--void scsi_free_queue(struct request_queue *q)
--{
--	unsigned long flags;
--
--	WARN_ON(q->queuedata);
--
--	/* cause scsi_request_fn() to kill all non-finished requests */
--	spin_lock_irqsave(q->queue_lock, flags);
--	q->request_fn(q);
--	spin_unlock_irqrestore(q->queue_lock, flags);
--
--	blk_cleanup_queue(q);
--}
--
- /*
-  * Function:    scsi_block_requests()
-  *
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 07ce3f5..2b8d8b5 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -84,7 +84,6 @@ extern void scsi_next_command(struct scsi_cmnd *cmd);
- extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
- extern void scsi_run_host_queues(struct Scsi_Host *shost);
- extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
--extern void scsi_free_queue(struct request_queue *q);
- extern int scsi_init_queue(void);
- extern void scsi_exit_queue(void);
- struct request_queue;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 04c2a27..42c35ff 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -971,11 +971,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		sdev->host->hostt->slave_destroy(sdev);
- 	transport_destroy_device(dev);
- 
--	/* cause the request function to reject all I/O requests */
--	sdev->request_queue->queuedata = NULL;
--
- 	/* Freeing the queue signals to block that we're done */
--	scsi_free_queue(sdev->request_queue);
-+	blk_cleanup_queue(sdev->request_queue);
- 	put_device(dev);
- }
- 
+ void scsi_next_command(struct scsi_cmnd *cmd)
 -- 
 1.7.7
-
 
