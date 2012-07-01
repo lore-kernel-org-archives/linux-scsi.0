@@ -1,241 +1,160 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] virtio-scsi: hotplug suppot for virtio-scsi
-Date: Sun, 01 Jul 2012 15:24:09 +0200
-Message-ID: <4FF04F79.4090304@redhat.com>
-References: <1340175333-16803-1-git-send-email-mc@linux.vnet.ibm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 44111] New: pata_via: crash with VT6415 controller
+Date: Sun,  1 Jul 2012 19:22:34 +0000 (UTC)
+Message-ID: <bug-44111-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1340175333-16803-1-git-send-email-mc@linux.vnet.ibm.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Cong Meng <mc@linux.vnet.ibm.com>
-Cc: stefanha@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zwanp@cn.ibm.com, linuxram@us.ibm.com, senwang@linux.vnet.ibm.com, virtualization@lists.linux-foundation.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Anthony Liguori <anthony@codemonkey.ws>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:57215 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751176Ab2GATWo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Jul 2012 15:22:44 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 7BD6D20209
+	for <linux-scsi@vger.kernel.org>; Sun,  1 Jul 2012 19:22:40 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 83FFA20200
+	for <linux-scsi@vger.kernel.org>; Sun,  1 Jul 2012 19:22:35 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Il 20/06/2012 08:55, Cong Meng ha scritto:
-> This patch implements the hotplug support for virtio-scsi.
-> When there is a device attached/detached, the virtio-scsi driver will be
-> signaled via event virtual queue and it will add/remove the scsi device 
-> in question automatically.
-> 
-> Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
-> Signed-off-by: Sen Wang <senwang@linux.vnet.ibm.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=44111
 
-Looks good (with one nit below), but please rebase over the four patches
-at http://permalink.gmane.org/gmane.linux.kernel/1312496
-
-> ---
->  drivers/scsi/virtio_scsi.c  |  109 ++++++++++++++++++++++++++++++++++++++++++-
->  include/linux/virtio_scsi.h |    9 ++++
->  2 files changed, 116 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 1b38431..6dad625 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -25,6 +25,7 @@
->  #include <scsi/scsi_cmnd.h>
->  
->  #define VIRTIO_SCSI_MEMPOOL_SZ 64
-> +#define VIRTIO_SCSI_EVENT_LEN 8
->  
->  /* Command queue element */
->  struct virtio_scsi_cmd {
-> @@ -43,9 +44,15 @@ struct virtio_scsi_cmd {
->  	} resp;
->  } ____cacheline_aligned_in_smp;
->  
-> +struct virtio_scsi_event_node {
-> +	struct virtio_scsi *vscsi;
-> +	struct virtio_scsi_event event;
-> +	struct work_struct work;
-> +};
-> +
->  /* Driver instance state */
->  struct virtio_scsi {
-> -	/* Protects ctrl_vq, req_vq and sg[] */
-> +	/* Protects ctrl_vq, event_vq, req_vq and sg[] */
->  	spinlock_t vq_lock;
->  
->  	struct virtio_device *vdev;
-> @@ -53,6 +60,9 @@ struct virtio_scsi {
->  	struct virtqueue *event_vq;
->  	struct virtqueue *req_vq;
->  
-> +	/* Get some buffers reday for event vq */
-> +	struct virtio_scsi_event_node event_list[VIRTIO_SCSI_EVENT_LEN];
-> +
->  	/* For sglist construction when adding commands to the virtqueue.  */
->  	struct scatterlist sg[];
->  };
-> @@ -184,9 +194,93 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
->  	virtscsi_vq_done(vq, virtscsi_complete_free);
->  };
->  
-> +static int virtscsi_kick_event(struct virtio_scsi *vscsi,
-> +			       struct virtio_scsi_event_node *event_node)
-> +{
-> +	int ret;
-> +	struct scatterlist sg;
-> +	unsigned long flags;
-> +
-> +	sg_set_buf(&sg, &event_node->event, sizeof(struct virtio_scsi_event));
-> +
-> +	spin_lock_irqsave(&vscsi->vq_lock, flags);
-> +
-> +	ret = virtqueue_add_buf(vscsi->event_vq, &sg, 0, 1, event_node, GFP_ATOMIC);
-> +	if (ret >= 0)
-> +		virtqueue_kick(vscsi->event_vq);
-> +
-> +	spin_unlock_irqrestore(&vscsi->vq_lock, flags);
-> +
-> +	return ret;
-> +}
-> +
-> +static int virtscsi_kick_event_all(struct virtio_scsi *vscsi)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++) {
-> +		vscsi->event_list[i].vscsi = vscsi;
-> +		virtscsi_kick_event(vscsi, &vscsi->event_list[i]);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
-> +                                            struct virtio_scsi_event *event)
-> +{
-> +	struct scsi_device *sdev;
-> +	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
-> +	unsigned int target = event->lun[1];
-> +	unsigned int lun = (event->lun[2] << 8) | event->lun[3];
-> +
-> +	switch (event->reason) {
-> +	case VIRTIO_SCSI_EVT_RESET_RESCAN:
-> +		scsi_add_device(shost, 0, target, lun);
-> +		break;
-> +	case VIRTIO_SCSI_EVT_RESET_REMOVED:
-> +		sdev = scsi_device_lookup(shost, 0, target, lun);
-> +		if (sdev) {
-> +			scsi_remove_device(sdev);
-> +			scsi_device_put(sdev);
-> +		} else {
-> +			pr_err("SCSI device %d 0 %d %d not found\n",
-> +				shost->host_no, target, lun);
-> +		}
-> +		break;
-> +	default:
-> +		pr_info("Unsupport virtio scsi event reason %x\n", event->reason);
-> +	}
-> +}
-> +
-> +static void virtscsi_handle_event(struct work_struct *work)
-> +{
-> +	struct virtio_scsi_event_node *event_node = 
-> +		container_of(work, struct virtio_scsi_event_node, work);
-> +	struct virtio_scsi *vscsi = event_node->vscsi;
-> +	struct virtio_scsi_event *event = &event_node->event;
-> +
-> +	switch (event->event) {
-> +	case VIRTIO_SCSI_T_TRANSPORT_RESET:
-> +		virtscsi_handle_transport_reset(vscsi, event);
-> +		break;
-
-Please handle VIRTIO_SCSI_T_NO_EVENT too here, and mask out
-VIRTIO_SCSI_T_EVENTS_MISSED even if you do not handle it by triggering a
-full rescan.
-
-Paolo
-
-> +	default:
-> +		pr_err("Unsupport virtio scsi event %x\n", event->event);
+           Summary: pata_via: crash with VT6415 controller
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.0 and above
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: giuliano.procida@gmail.com
+        Regression: No
 
 
-> +	}
-> +	virtscsi_kick_event(vscsi, event_node);
-> +}
-> +
-> +static void virtscsi_complete_event(void *buf)
-> +{
-> +	struct virtio_scsi_event_node *event_node = buf;
-> +
-> +	INIT_WORK(&event_node->work, virtscsi_handle_event);
-> +	schedule_work(&event_node->work);
-> +}
-> +
->  static void virtscsi_event_done(struct virtqueue *vq)
->  {
-> -	virtscsi_vq_done(vq, virtscsi_complete_free);
-> +	virtscsi_vq_done(vq, virtscsi_complete_event);
->  };
->  
->  static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
-> @@ -435,6 +529,11 @@ static int virtscsi_init(struct virtio_device *vdev,
->  
->  	virtscsi_config_set(vdev, cdb_size, VIRTIO_SCSI_CDB_SIZE);
->  	virtscsi_config_set(vdev, sense_size, VIRTIO_SCSI_SENSE_SIZE);
-> +
-> +	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-> +		virtscsi_kick_event_all(vscsi);
-> +	}
-> +
->  	return 0;
->  }
->  
-> @@ -532,7 +631,13 @@ static struct virtio_device_id id_table[] = {
->  	{ 0 },
->  };
->  
-> +static unsigned int features[] = {
-> +	VIRTIO_SCSI_F_HOTPLUG
-> +};
-> +
->  static struct virtio_driver virtio_scsi_driver = {
-> +	.feature_table = features,
-> +	.feature_table_size = ARRAY_SIZE(features),
->  	.driver.name = KBUILD_MODNAME,
->  	.driver.owner = THIS_MODULE,
->  	.id_table = id_table,
-> diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
-> index 8ddeafd..dc8d305 100644
-> --- a/include/linux/virtio_scsi.h
-> +++ b/include/linux/virtio_scsi.h
-> @@ -69,6 +69,10 @@ struct virtio_scsi_config {
->  	u32 max_lun;
->  } __packed;
->  
-> +/* Feature Bits */
-> +#define VIRTIO_SCSI_F_INOUT                    0
-> +#define VIRTIO_SCSI_F_HOTPLUG                  1
-> +
->  /* Response codes */
->  #define VIRTIO_SCSI_S_OK                       0
->  #define VIRTIO_SCSI_S_OVERRUN                  1
-> @@ -105,6 +109,11 @@ struct virtio_scsi_config {
->  #define VIRTIO_SCSI_T_TRANSPORT_RESET          1
->  #define VIRTIO_SCSI_T_ASYNC_NOTIFY             2
->  
-> +/* Reasons of transport reset event */
-> +#define VIRTIO_SCSI_EVT_RESET_HARD             0
-> +#define VIRTIO_SCSI_EVT_RESET_RESCAN           1
-> +#define VIRTIO_SCSI_EVT_RESET_REMOVED          2
-> +
->  #define VIRTIO_SCSI_S_SIMPLE                   0
->  #define VIRTIO_SCSI_S_ORDERED                  1
->  #define VIRTIO_SCSI_S_HEAD                     2
-> 
+Original Debian bug report http://bugs.debian.org/679039 has some further
+information.
 
-Thanks,
+Hardware is an ASUS M4A88TD-M/USB3 EVO motherboard with an apparently rare
+on-board VIA VT6415 PATA controller. I have one device linked to this
+controller, a LITE-ON DVDRW SOHW-1693S. CPU is a quad-core Phenom II.
 
-Paolo
+Shortly after the pata_via module loads, the system hangs completely (no
+SysReq, no keyboard LEDs) with probability ~ 0.9. The crash is prevented with
+libata dma=1. Disabling the VIA option ROM makes no difference. The BIOS is the
+latest available version.
+
+In Debian 3.6.33 and earlier kernels, I believe a different driver was used
+that did not crash. I could boot to confirm this.
+
+The PCI device is:
+
+04:00.0 IDE interface [0101]: VIA Technologies, Inc. VT6415 PATA IDE
+Host Controller [1106:0415] (prog-if 85 [Master SecO PriO])
+    Subsystem: ASUSTeK Computer Inc. M5A88-V EVO [1043:838f]
+    Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr-
+Stepping- SERR+ FastB2B- DisINTx-
+    Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+    Interrupt: pin A routed to IRQ 17
+    Region 0: I/O ports at dc00 [size=8]
+    Region 1: I/O ports at d880 [size=4]
+    Region 2: I/O ports at d800 [size=8]
+    Region 3: I/O ports at d480 [size=4]
+    Region 4: I/O ports at d400 [size=16]
+    Expansion ROM at feaf0000 [disabled] [size=64K]
+    Capabilities: <access denied>
+
+These logs were obtained using netconsole:
+
+Crash with 3.2.0:
+
+[   65.934145] pata_via 0000:04:00.0: version 0.3.4
+[   65.934184] pata_via 0000:04:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
+17
+[   65.934297] pata_via 0000:04:00.0: setting latency timer to 64
+[   65.935274] scsi6 : pata_via
+[   65.935560] scsi7 : pata_via
+[   65.936047] ata7: PATA max UDMA/133 cmd 0xdc00 ctl 0xd880 bmdma 0xd400 irq
+17
+[   65.936059] ata8: PATA max UDMA/133 cmd 0xd800 ctl 0xd480 bmdma 0xd408 irq
+17
+[   66.224661] ata7.01: ATAPI: LITE-ON DVDRW SOHW-1693S, KS09, max UDMA/66
+[   66.240680] ata7.01: configured for UDMA/66
+[   66.243198] scsi 6:0:1:0: CD-ROM            LITE-ON  DVDRW SOHW-1693S KS09
+PQ: 0 ANSI: 5
+
+Crash with 3.4.4:
+
+[  963.751260] pata_via 0000:04:00.0: version 0.3.4
+[  963.756541] scsi6 : pata_via
+[  963.760485] scsi7 : pata_via
+[  963.764560] ata7: PATA max UDMA/133 cmd 0xdc00 ctl 0xd880 bmdma 0xd400 irq
+17
+[  963.768330] ata8: PATA max UDMA/133 cmd 0xd800 ctl 0xd480 bmdma 0xd408 irq
+17
+[  964.060046] ata7.01: ATAPI: LITE-ON DVDRW SOHW-1693S, KS09, max UDMA/66
+[  964.079984] ata7.01: configured for UDMA/66
+[  964.086377] scsi 6:0:1:0: CD-ROM            LITE-ON  DVDRW SOHW-1693S KS09
+PQ: 0 ANSI: 5
+
+A non-crash with 3.2.0:
+
+[  105.576978] pata_via 0000:04:00.0: version 0.3.4
+[  105.577016] pata_via 0000:04:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
+17
+[  105.577130] pata_via 0000:04:00.0: setting latency timer to 64
+[  105.578414] scsi6 : pata_via
+[  105.580212] scsi7 : pata_via
+[  105.580687] ata7: PATA max UDMA/133 cmd 0xdc00 ctl 0xd880 bmdma 0xd400 irq
+17
+[  105.580708] ata8: PATA max UDMA/133 cmd 0xd800 ctl 0xd480 bmdma 0xd408 irq
+17
+[  105.868656] ata7.01: ATAPI: LITE-ON DVDRW SOHW-1693S, KS09, max UDMA/66
+[  105.884670] ata7.01: configured for UDMA/66
+[  105.887152] scsi 6:0:1:0: CD-ROM            LITE-ON  DVDRW SOHW-1693S KS09
+PQ: 0 ANSI: 5
+[  106.048133] sr0: scsi3-mmc drive: 48x/48x writer cd/rw xa/form2 cdda tray
+[  106.048150] cdrom: Uniform CD-ROM driver Revision: 3.20
+[  106.048497] sr 6:0:1:0: Attached scsi CD-ROM sr0
+(no crash)
+
+(unload module)
+[  227.560172] ata7.01: disabled
+[  227.563668] pata_via 0000:04:00.0: PCI INT A disabled
+
+(reload module)
+[  260.320995] pata_via 0000:04:00.0: version 0.3.4
+[  260.321035] pata_via 0000:04:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
+17
+[  260.321142] pata_via 0000:04:00.0: setting latency timer to 64
+(different device enumeration)
+[  260.322064] scsi8 : pata_via
+[  260.322663] scsi9 : pata_via
+[  260.323093] ata9: PATA max UDMA/133 cmd 0xdc00 ctl 0xd880 bmdma 0xd400 irq
+17
+[  260.323105] ata10: PATA max UDMA/133 cmd 0xd800 ctl 0xd480 bmdma 0xd408 irq
+17
+[  260.608665] ata9.01: ATAPI: LITE-ON DVDRW SOHW-1693S, KS09, max UDMA/66
+[  260.624671] ata9.01: configured for UDMA/66
+[  260.626251] scsi 8:0:1:0: CD-ROM            LITE-ON  DVDRW SOHW-1693S KS09
+PQ: 0 ANSI: 5
+(hard crash)
+
+Let me know if there is anything further I can do to test.
+
+Is there a simple way of changing the ATA driver msg_enable bits without
+re-compiling?
+
+Regards,
+Giuliano Procida.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
