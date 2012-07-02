@@ -1,52 +1,64 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 2/4] [SCSI] ufs: Add Platform glue driver for ufshcd
-Date: Mon, 2 Jul 2012 15:27:19 +0000
-Message-ID: <201207021527.19888.arnd@arndb.de>
-References: <1341239572-7408-1-git-send-email-vinholikatti@gmail.com> <1341239572-7408-3-git-send-email-vinholikatti@gmail.com>
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+Subject: Re: [PATCH] fcoe: fix compilation warnings of section mismatch
+Date: Mon, 2 Jul 2012 16:22:03 +0000
+Message-ID: <6CFF449F-542B-44F1-AFF4-E7C335C0A790@intel.com>
+References: <1340713062-126798-1-git-send-email-antonz@parallels.com>
+  <4FEE0C55.6010704@intel.com>
+ <1341001228.2907.61.camel@dabdike.int.hansenpartnership.com>
+ <4FEE8DBC.9060809@parallels.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-samsung-soc-owner@vger.kernel.org>
-In-Reply-To: <1341239572-7408-3-git-send-email-vinholikatti@gmail.com>
-Sender: linux-samsung-soc-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, yejin.moon@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, stephen.doel@linaro.org, sreekumar.c@samsung.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:34875 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752754Ab2GBQWG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jul 2012 12:22:06 -0400
+In-Reply-To: <4FEE8DBC.9060809@parallels.com>
+Content-Language: en-US
+Content-ID: <AF7A59EB18D6A242B62A23BDB987E661@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tony Zelenoff <antonz@parallels.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Love, Robert W" <robert.w.love@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Monday 02 July 2012, Vinayak Holikatti wrote:
-> +static struct platform_driver ufshcd_pltfrm_driver = {
-> +       .probe  = ufshcd_pltfrm_probe,
-> +       .remove = __devexit_p(ufshcd_pltfrm_remove),
-> +#ifdef CONFIG_PM
-> +       .suspend = ufshcd_pltfrm_suspend,
-> +       .resume = ufshcd_pltfrm_resume,
-> +#endif
-> +       .driver = {
-> +               .name   = "ufshcd",
-> +               .owner  = THIS_MODULE,
-> +       },
-> +};
-
-Hi Vinayak,
-
-Please add a device tree match table here to allow the driver to be
-used by modern platforms that only do device tree based hardware
-detection. Just look in other drivers for existing uses of
-"of_match_table" to be used.
-
-I'm not sure what the "compatible" string should be in this case,
-because the it matches a JEDEC specification, not a particular
-vendor's implementation of it. The match table can have multiple
-entries, which is useful if you have multiple implementations
-that are slightly different or don't fully conform to the spec.
-
-Maybe a list like
-
-static const struct of_device_id ufs_of_match[] = {
-	{ .compatible = "jedec,ufs-1.1" },
-}
-
-would be enough for now.
-
-	Arnd
+T24gSnVuIDI5LCAyMDEyLCBhdCAxMDoyNSBQTSwgVG9ueSBaZWxlbm9mZiB3cm90ZToNCg0KPiAz
+MC8wNi8xMiAxMjoyMCBBTSwgSmFtZXMgQm90dG9tbGV5INC/0LjRiNC10YI6DQo+PiBPbiBGcmks
+IDIwMTItMDYtMjkgYXQgMjA6MTMgKzAwMDAsIExvdmUsIFJvYmVydCBXIHdyb3RlOg0KPj4+IE9u
+IDEyLTA2LTI2IDA1OjE3IEFNLCBUb255IFplbGVub2ZmIHdyb3RlOg0KPj4+IA0KPj4+IEZpeCB0
+aGlzIG1lc3NhZ2U6DQo+Pj4gV0FSTklORzogZHJpdmVycy9zY3NpL2Zjb2UvbGliZmNvZS5vKC5p
+bml0LnRleHQrMHgyMSk6IFNlY3Rpb24gbWlzbWF0Y2gNCj4+PiBpbiByZWZlcmVuY2UgZnJvbSB0
+aGUgZnVuY3Rpb24gaW5pdF9tb2R1bGUoKSB0byB0aGUgZnVuY3Rpb24NCj4+PiAuZXhpdC50ZXh0
+OmZjb2VfdHJhbnNwb3J0X2V4aXQoKQ0KPj4+IFRoZSBmdW5jdGlvbiBfX2luaXQgaW5pdF9tb2R1
+bGUoKSByZWZlcmVuY2VzDQo+Pj4gYSBmdW5jdGlvbiBfX2V4aXQgZmNvZV90cmFuc3BvcnRfZXhp
+dCgpLg0KPj4+IA0KPj4+IFNpZ25lZC1vZmYtYnk6IFRvbnkgWmVsZW5vZmYgPGFudG9uekBwYXJh
+bGxlbHMuY29tPjxtYWlsdG86YW50b256QHBhcmFsbGVscy5jb20+DQo+Pj4gDQo+Pj4gDQo+Pj4g
+VGhhbmsgeW91IGZvciB0aGUgcGF0Y2guIEhvd2V2ZXIsIHRoaXMgd2FzIGZpeGVkIGEgZmV3IHdl
+ZWtzIGFnby4gVGhlIHBhdGNoIGlzIGluIEphbWVzJyAnZm9yLW5leHQnIGJyYW5jaCBoZXJlOiBo
+dHRwOi8vZ2l0Lmtlcm5lbC5vcmcvP3A9bGludXgva2VybmVsL2dpdC9qZWpiL3Njc2kuZ2l0O2E9
+Y29tbWl0O2g9NDNiOGExNjEzYTFjODcwN2QwZTg2MzE2YTdkNjk5OWZkNzY3YTVjZg0KPiBNQWtl
+IHRoaXMgcGF0Y2ggZnJvbSBsaW51eCBicmFuY2ggaXMgZmFzdGVyIHRoYW4gY2xvbmluZyBzY3Np
+LW5leHQuIDopIEFueXdheSwgaWYgaXQgZml4ZWQgLSBpdCBpcyBuaWNlLg0KPiANCj4+PiBJJ20g
+bm90IHN1cmUgaWYgaXQncyBxdWV1ZSdkIHVwIGZvciB0aGUgY3VycmVudCBSQyBwaGFzZSBvciBu
+b3QuIEkgZG9uJ3Qga25vdyBob3cgdGhlIHNjc2kuZ2l0IGJyYW5jaGVzIGFyZSBtYW5hZ2VkLiBJ
+IHRoaW5rIHRoZSBwYXRjaCBzaG91bGQgZ28gZm9yIHRoZSBjdXJyZW50IFJDLg0KPj4gDQo+PiBT
+aG93IG1lIHRoZSBidWcgaXQgYWN0dWFsbHkgcHJvZHVjZXMgYW5kIEknbGwgcXVldWUgaXQgZm9y
+IC1yYyAuLi4NCj4gSXQgbW9zdGx5IGNvc21ldGljIGlzc3VlLCB0aGVyZSBpcyBubyByZWFzb24g
+dG8gcG9ydCBpdCB0byBSQyBicmFuY2hlcy4NCg0KDQpJbiBzb21lIHdheXMgaXQgaXMgY29zbWV0
+aWMsIGJ1dCB0aGUgYnVpbGQgd2FybmluZyByZXN1bHRzIGluIHBlb3BsZSBzZW5kaW5nIHBhdGNo
+ZXMgdG8gZml4IGl0LCBiZWNhdXNlIGl0IGlzIGVhc3kgdG8gZml4ICh5b3VyIHBhdGNoIGlzIHRo
+ZSB0aGlyZCkuIEl0IGFsc28gY291bGQgcmVzdWx0IGluIGEgY3Jhc2gsIGlmIHNvbWVvbmUgYnVp
+bHQgZmNvZSBpbnRvIHRoZSBrZXJuZWwgYW5kIGV4cGVyaWVuY2VkIHRoZSByaWdodCBraW5kIG9m
+IGZhaWx1cmUgZHVyaW5nIGluaXRpYWxpemF0aW9uLiBUaGF0IGlzIGJlY2F1c2UgZXhpdCBzZWN0
+aW9ucyBhcmUgZGlzY2FyZGVkIGZvciBlbnRpdGllcyBidWlsdCBpbnRvIHRoZSBrZXJuZWwgc2lu
+Y2UgdGhleSBjYW4ndCBiZSByZW1vdmVkLiBJIGdyYW50IHlvdSwgdGhhdCBpcyBtdWNoIGxlc3Mg
+bGlrZWx5IHRoYW4gc2VlaW5nIHRoZSBidWlsZCB3YXJuaW5ncyBzaW1wbHkgYmVjYXVzZSBJIGV4
+cGVjdCB0aGF0IGl0IGlzIHVzdWFsbHkgYmVpbmcgYnVpbHQgYXMgYSBtb2R1bGUuIEl0IGNvdWxk
+IGJpdGUgc29tZSBlbWJlZGRlZCBkZXZlbG9wZXIgaG93ZXZlci4NCg0KSSBhbSBtb3JlIGNvbmNl
+cm5lZCBhYm91dCB0aGUgcGF0Y2ggSSBzZW50IG9uIEp1bmUgMjFzdCB0aXRsZWQgInNjc2k6IEF2
+b2lkIE5VTEwgZGVyZWZlcmVuY2VzIGluIHNjc2lfY21kX3RvX2RyaXZlciIgc2luY2UgaXQgZG9l
+cyBmaXggYSBjcmFzaGluZyBrZXJuZWwgYnVnIHRoYXQgaXMgcG9zaXRpdmVseSBzZWVuIHdpdGgg
+YSBsYXJnZSBudW1iZXIgb2YgbHVucy4gSXQgd2FzIGFscmVhZHkgZGlzY3Vzc2VkIG9uIHRoZSBv
+cGVuLWZjb2UgbWFpbGluZyBsaXN0LCBidXQgaGFkIG5vIHJlc3BvbnNlIG9uIGxpbnV4LXNjc2kg
+c28gZmFyLg0KDQotLSANCk1hcmsgUnVzdGFkLCBMQU4gQWNjZXNzIERpdmlzaW9uLCBJbnRlbCBD
+b3Jwb3JhdGlvbg0KDQo=
