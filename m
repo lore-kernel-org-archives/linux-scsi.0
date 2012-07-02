@@ -1,56 +1,25 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] [SCSI] bnx2i: use strlcpy() instead of memcpy() for
- strings
-Date: Mon, 2 Jul 2012 13:48:43 +0300
-Message-ID: <20120702104843.GB4519@mwanda>
-References: <20120630114935.GB22767@elgon.mountain>
- <AE90C24D6B3A694183C094C60CF0A2F6026B6F6F@saturn3.aculab.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] SCSI: Add SG_GET_SG_MAX_SEGMENT_SIZE ioctl to sg device
+Date: Mon, 02 Jul 2012 12:18:17 +0100
+Message-ID: <1341227897.2987.15.camel@dabdike.int.hansenpartnership.com>
+References: <1341220857-1205-1-git-send-email-mc@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:48159 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932931Ab2GBKtE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jul 2012 06:49:04 -0400
-Content-Disposition: inline
-In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B6F6F@saturn3.aculab.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1341220857-1205-1-git-send-email-mc@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Cong Meng <mc@linux.vnet.ibm.com>
+Cc: stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, senwang@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Barak Witkowski <barak@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>, Michael Chan <mchan@broadcom.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
 
-On Mon, Jul 02, 2012 at 11:09:19AM +0100, David Laight wrote:
-> > Subject: [patch] [SCSI] bnx2i: use strlcpy() instead of memcpy() for
-> strings
-> > 
-> > DRV_MODULE_VERSION here is "2.7.2.2" which is only 8 chars but we copy
-> > 12 bytes from the stack so it's a small information leak.
-> > 
-> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > ---
-> > This was just added to linux-next yesterday, but I'm not sure 
-> > which tree it came from.
-> > 
-> > diff --git a/drivers/scsi/bnx2i/bnx2i_init.c 
-> > b/drivers/scsi/bnx2i/bnx2i_init.c
-> > index 7729a52..b17637a 100644
-> > --- a/drivers/scsi/bnx2i/bnx2i_init.c
-> > +++ b/drivers/scsi/bnx2i/bnx2i_init.c
-> > @@ -400,7 +400,7 @@ int bnx2i_get_stats(void *handle)
-> >  	if (!stats)
-> >  		return -ENOMEM;
-> >  
-> > -	memcpy(stats->version, DRV_MODULE_VERSION,
-> sizeof(stats->version));
-> > +	strlcpy(stats->version, DRV_MODULE_VERSION,
-> sizeof(stats->version));
-> >  	memcpy(stats->mac_add1 + 2, hba->cnic->mac_addr, ETH_ALEN);
-> 
-> Doesn't that leak the original contents of the last bytes of
-> stats->version instead?
+On Mon, 2012-07-02 at 17:20 +0800, Cong Meng wrote:
+> Add a new ioctl cmd to get the max segment size. It's useful in
+> virtualization environment for guest to know the queue limits, so
+> that the guest kicks off legal scsi command to a sg device.
 
-I'm pretty sure we set those to zero in bnx2x_handle_drv_info_req().
+What's wrong with simply looking in the /sys for this? Plus, if you can
+come up with a justifiable reason, this needs to be in block as well so
+we can send it to all SCSI devices regardless of what ULD people use.
 
-regards,
-dan carpenter
-
+James
