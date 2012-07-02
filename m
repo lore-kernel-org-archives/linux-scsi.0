@@ -1,73 +1,69 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: Re: [patch] [SCSI] bnx2i: use strlcpy() instead of memcpy() for
- strings
-Date: Mon, 2 Jul 2012 10:53:08 -0700
-Message-ID: <1341251589.10180.721.camel@dhcp-10-12-137-160.irv.broadcom.com>
-References: <20120630114935.GB22767@elgon.mountain>
- <AE90C24D6B3A694183C094C60CF0A2F6026B6F6F@saturn3.aculab.com>
- <20120702104843.GB4519@mwanda>
- <1341242018.7472.5.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [ 38/48] SCSI & usb-storage: add try_rc_10_first flag
+Date: Mon, 2 Jul 2012 20:39:28 +0000
+Message-ID: <1341261568.3319.7.camel@dabdike>
+References: <20120701172012.078559139@decadent.org.uk>
+	 <4FF14957.3040007@redhat.com>
+	 <CA+55aFyRTXqSvf9m08gbHCB0WhVF14Y6J2-AiFGiuTStq0Jr6Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3266 "EHLO mms3.broadcom.com"
+Received: from mx2.parallels.com ([64.131.90.16]:41308 "EHLO mx2.parallels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756025Ab2GBRxW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jul 2012 13:53:22 -0400
-In-Reply-To: <1341242018.7472.5.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+	id S1750985Ab2GBUje (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jul 2012 16:39:34 -0400
+In-Reply-To: <CA+55aFyRTXqSvf9m08gbHCB0WhVF14Y6J2-AiFGiuTStq0Jr6Q@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <4AC73CCCAC89764EBBD7F29EBA180AEA@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Chan <mchan@broadcom.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, David Laight <David.Laight@ACULAB.COM>, "James E.J. Bottomley" <JBottomley@parallels.com>, Barak Witkowski <barak@broadcom.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Ben Hutchings <ben@decadent.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-
-On Mon, 2012-07-02 at 08:13 -0700, Michael Chan wrote:
-> On Mon, 2012-07-02 at 13:48 +0300, Dan Carpenter wrote: 
-> > On Mon, Jul 02, 2012 at 11:09:19AM +0100, David Laight wrote:
-> > > > Subject: [patch] [SCSI] bnx2i: use strlcpy() instead of memcpy() for
-> > > strings
-> > > > 
-> > > > DRV_MODULE_VERSION here is "2.7.2.2" which is only 8 chars but we copy
-> > > > 12 bytes from the stack so it's a small information leak.
-> > > > 
-> > > > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > > > ---
-> > > > This was just added to linux-next yesterday, but I'm not sure 
-> > > > which tree it came from.
-> > > > 
-> > > > diff --git a/drivers/scsi/bnx2i/bnx2i_init.c 
-> > > > b/drivers/scsi/bnx2i/bnx2i_init.c
-> > > > index 7729a52..b17637a 100644
-> > > > --- a/drivers/scsi/bnx2i/bnx2i_init.c
-> > > > +++ b/drivers/scsi/bnx2i/bnx2i_init.c
-> > > > @@ -400,7 +400,7 @@ int bnx2i_get_stats(void *handle)
-> > > >  	if (!stats)
-> > > >  		return -ENOMEM;
-> > > >  
-> > > > -	memcpy(stats->version, DRV_MODULE_VERSION,
-> > > sizeof(stats->version));
-> > > > +	strlcpy(stats->version, DRV_MODULE_VERSION,
-> > > sizeof(stats->version));
-> > > >  	memcpy(stats->mac_add1 + 2, hba->cnic->mac_addr, ETH_ALEN);
-> > > 
-> > > Doesn't that leak the original contents of the last bytes of
-> > > stats->version instead?
-> > 
-> > I'm pretty sure we set those to zero in bnx2x_handle_drv_info_req().
-> > 
-> 
-> Yes, bnx2x zeros the whole stats structure, so strlcpy() is correct.
-> 
-> This came from the net-next tree, so David is the right persion to apply
-> this.  Thanks.
-> 
-> Acked-by: Michael Chan <mchan@broadcom.com>
-> 
-True.  strlcpy() is the correct routine to use (instead of strncpy) as
-this needs to be NULL terminated.  Thanks.
-
-Acked-by: Eddie Wai <eddie.wai@broadcom.com>
-
-
-
+T24gTW9uLCAyMDEyLTA3LTAyIGF0IDExOjUyIC0wNzAwLCBMaW51cyBUb3J2YWxkcyB3cm90ZToN
+Cj4gT24gTW9uLCBKdWwgMiwgMjAxMiBhdCAxMjoxMCBBTSwgSGFucyBkZSBHb2VkZSA8aGRlZ29l
+ZGVAcmVkaGF0LmNvbT4gd3JvdGU6DQo+ID4NCj4gPiBTbyBzaW5jZSAzLjIgYWxyZWFkeSB0cmll
+cyBSRUFEX0NBUEFDSVRZKDEwKSBmaXJzdCwgdGhpcyBwYXRjaCBpcw0KPiA+IG5vdCBuZWVkZWQu
+IEl0IGRvZXMgbm90IGhhcm0gZWl0aGVyLCBhbmQgaWYgdGhlIHNjc2kgbGV2ZWwgcmVwb3J0aW5n
+DQo+ID4gY2hhbmdlIGV2ZXIgZmluZHMgaXRzIHdheSBpbnRvIDMuMiBzdGFibGUgKHdoaWNoIGl0
+IHNob3VsZCBub3QNCj4gPiBJTUhPKSwgdGhlbiB0aGlzIHBhdGNoIHdpbGwgYmUgbmVlZGVkLg0K
+PiANCj4gWWVhaCwgaXQgc2hvdWxkIGRlZmluaXRlbHkgbm90IG1ha2UgaXQgaW50byBzdGFibGUu
+IEluIGZhY3QsIEknZA0KPiByYXRoZXIgcmVtb3ZlIGl0IGZyb20gbWFpbmxpbmUgdG9vLiBUaGUg
+d2hvbGUgaWRlYSB0byBkbw0KPiBSRUFEX0NBUEFDSVRZXzE2IGJ5IGRlZmF1bHQgd2FzIG1vcm9u
+aWMuDQo+IA0KPiBKYW1lcz8gV2h5IGRvZXMgdGhlIFNDU0kgc3Vic3lzdGVtIGFsd2F5cyBkbyB0
+aGVzZSBpZGlvdGljIGRlZmF1bHRzPw0KPiBXZSAqa25vdyogdGhhdCBkZXZpY2VzIGFyZSBidWdn
+eS4gU3VyZSwgVVNCIHN0b3JhZ2UgdGVuZHMgdG8gYmUNCj4gYnVnZ2llciB0aGFuIG1vc3QsIGJ1
+dCB0aGUgd2hvbGUgaWRlYSBvZiAibGV0J3MgdXNlIHRoZSBuZXcgd2F5IG9mDQo+IHJlcG9ydGlu
+ZyB0aGF0IGdldHMgYWxtb3N0IG5vIHRlc3RpbmciIGlzIGp1c3Qgd3JvbmcuDQoNCkl0J3Mgbm90
+IGlkaW90aWMuICBJdCdzLCB1bmZvcnR1bmF0ZWx5LCByZXF1aXJlZCBieSB0aGUgc3RhbmRhcmQg
+dG8NCmNoZWNrIGZvciBwcm90ZWN0aW9uIGNhcGFibGUgZGV2aWNlcy4gIEl0J3MgYmVlbiB0aGlz
+IHdheSBmb3IgdGhyZWUNCnllYXJzIG9yIHNvLiAgTWFydGluIFBldGVyc2VuIGRpZCBleHRlbnNp
+dmUgdGVzdGluZyBvZiBkZXZpY2VzIHdoZW4gd2UNCmNoYW5nZWQgaXQgYW5kIGRvaW5nIFJDMTYg
+Zmlyc3QgaXMgaGVkZ2VkIGFyb3VuZCBieSBjbGFpbWluZyBzdXBwb3J0IG5vdA0Kb25seSBmb3Ig
+U0NTSV8zIGJ1dCBhbHNvIGZvciBTQkNfMiBpbiB5b3VyIElOUVVJUlkgZGF0YS4NCg0KVGhlIHBy
+b2JsZW0gc2VlbXMgdG8gYmUgdGhhdCB3aGVuIGFsbCB0aGUgdGVzdGluZyB3YXMgZG9uZSwgVVNC
+IHdhcw0Kc3RpbGwgYWx3YXlzIHJldHVybmluZyBTQ1NJXzIgaW4gdGhlIGlucXVpcnkgZGF0YSwg
+YnV0IHRoaXMgZ290IGNoYW5nZWQNCnRvIGFsbG93IHBhc3MgdGhyb3VnaCBvZiB0aGUgYWN0dWFs
+IHZlbmRvciBpbmZvcm1hdGlvbi4NCg0KPiBJIGRvbid0IHRoaW5rIHRoZSBVU0IgbGF5ZXIgc2hv
+dWxkIGhhdmUgbmVlZGVkIHRvIHdvcmsgYXJvdW5kIHRoaXMuIEkNCj4gZG9uJ3QgdGhpbmsgdGhl
+cmUgc2hvdWxkIGJlIGEgInRyeV8xMGIiIGZsYWcgYXQgYWxsLiBJIHRoaW5rIHRoZSBTQ1NJDQo+
+IGNvZGUgc2hvdWxkIGp1c3QgKm5ldmVyKiBkbyB0aGUgMTZiIHZlcnNpb24gdW5sZXNzIGl0IGhh
+cyBkb25lIHRoZSAxMGINCj4gdmVyc2lvbiBmaXJzdCBhbmQgZGV0ZXJtaW5lZCB0aGF0IHRoZSBz
+aXplIGRvZXNuJ3QgZml0Lg0KDQpJZiB3ZSBkaWQgdGhhdCwgd2UnZCByZWdyZXNzIG9uIGFsbCB0
+aGUgZW50ZXJwcmlzZSBjbGFzcyBkcml2ZXMgd2l0aCBESUYNCmFuZCBESVguDQoNCj4gQW5kIHRo
+ZSBjb2RlIGFscmVhZHkgaGFkIHRoYXQgbG9naWMgZ290IHRoZSByZWFkXzEwYiBjYXNlLiBUaGUg
+d2hvbGUNCj4gbG9naWMgdG8gZG8gMTZiIGJ5IGRlZmF1bHQgd2FzIGNyYXAuIEl0ICp1c2VkKiB0
+byBhdCBsZWFzdCBvbmx5IGRvIGl0DQo+IGZvciBkaXNrcyB0aGF0IHdlcmUgbWFya2VkIGFzIGhh
+dmluZyAicHJvdGVjdGlvbiIsIG5vdyBpdCB3YW50cyB0byBkbw0KPiBpdCBmb3IgYW55dGhpbmcg
+dGhhdCBzaG91bGQgYmUgYWJsZSB0byBoYW5kbGUgaXQuIFdoaWNoIGlzIGJvZ3VzLiBUaGUNCj4g
+d2hvbGUgImxldCdzIGFzc3VtZSBkZXZpY2VzIGdldCBpdCByaWdodCIgbWluZHNldCBpcyBicm9r
+ZW4uDQo+IA0KPiBUaGUgbWluZHNldCBzaG91bGQgYmUgImxldCdzIGFzc3VtZSBkZXZpY2VzIGFy
+ZSBidWdneSwgYW5kIGJlIGNhcmVmdWwiLg0KDQpJdCBzdGlsbCBpcywgdGhhdCdzIHdoeSB3ZSBk
+aWQgZXh0ZW5zaXZlIHRlc3RpbmcgdGhyZWUgeWVhcnMgYWdvIGJlZm9yZQ0KY2hhbmdpbmcgaXQu
+DQoNCklmIHlvdSBoYXZlIGEgc29sdXRpb24gdGhhdCBkb2Vzbid0IGJyZWFrIGFsbCB0aGUgZW50
+ZXJwcmlzZSBkZXZpY2VzIGJ1dA0Kd29ya3MgYmV0dGVyIGZvciBVU0IsIEknbSBsaXN0ZW5pbmcu
+ICBJIHRoaW5rIHRoZSBiZXN0IHRoaW5nIG1pZ2h0IGJlIHRvDQp3aGl0ZWxpc3QgdGhlIHNjc2kg
+cmV2aXNpb24gcGFzcyB0aHJvdWdoIGluIFVTQiwgc28gb25seSB0aGUgVUFTIGRldmljZXMNCndo
+aWNoIHJlYWxseSwgcmVhbGx5IGNsYWltIHRvIGtub3cgd2hhdCB0aGV5J3JlIGRvaW5nIGFkdmVy
+dGlzZSBhZHZhbmNlZA0KZmVhdHVyZXMuDQoNCkphbWVzDQoNCg==
