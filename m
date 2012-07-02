@@ -1,62 +1,49 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] virtio-scsi: hotplug suppot for virtio-scsi
-Date: Mon, 02 Jul 2012 10:11:57 +0200
-Message-ID: <4FF157CD.7090001@redhat.com>
-References: <1340175333-16803-1-git-send-email-mc@linux.vnet.ibm.com>
-	<4FF04F79.4090304@redhat.com>
-	<20120702032057.Horde.WOVSk5ir309P8UvZ8oq3rUA@imap.linux.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20120702032057.Horde.WOVSk5ir309P8UvZ8oq3rUA@imap.linux.ibm.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: mc@linux.vnet.ibm.com
-Cc: stefanha@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zwanp@cn.ibm.com, linuxram@us.ibm.com, senwang@linux.vnet.ibm.com, virtualization@lists.linux-foundation.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Anthony Liguori <anthony@codemonkey.ws>
+From: Cong Meng <mc@linux.vnet.ibm.com>
+Subject: [PATCH] SCSI: Add SG_GET_SG_MAX_SEGMENT_SIZE ioctl to sg device
+Date: Mon,  2 Jul 2012 17:20:57 +0800
+Message-ID: <1341220857-1205-1-git-send-email-mc@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, senwang@linux.vnet.ibm.com, Cong Meng <mc@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Il 02/07/2012 09:20, mc@linux.vnet.ibm.com ha scritto:
->>> +static void virtscsi_handle_event(struct work_struct *work)
->>> +{
->>> +    struct virtio_scsi_event_node *event_node =
->>> +        container_of(work, struct virtio_scsi_event_node, work);
->>> +    struct virtio_scsi *vscsi = event_node->vscsi;
->>> +    struct virtio_scsi_event *event = &event_node->event;
->>> +
->>> +    switch (event->event) {
->>> +    case VIRTIO_SCSI_T_TRANSPORT_RESET:
->>> +        virtscsi_handle_transport_reset(vscsi, event);
->>> +        break;
->>
->> Please handle VIRTIO_SCSI_T_NO_EVENT too here, and mask out
->> VIRTIO_SCSI_T_EVENTS_MISSED even if you do not handle it by triggering a
->> full rescan.
->>
-> Paolo, what's the appropriate action to response VIRTIO_SCSI_T_NO_EVENT
-> event? An error message?
+Add a new ioctl cmd to get the max segment size. It's useful in
+virtualization environment for guest to know the queue limits, so
+that the guest kicks off legal scsi command to a sg device.
 
-No, just do nothing.
+Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
+---
+ drivers/scsi/sg.c |    2 ++
+ include/scsi/sg.h |    3 +++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-> I also have some confusion on VIRTIO_SCSI_T_EVENTS_MISSED:
-> Should VIRTIO_SCSI_T_EVENTS_MISSED always be used with other event flag?
-
-Yes.
-
-> For instanse:
-> (VIRTIO_SCSI_T_EVENTS_MISSED|VIRTIO_SCSI_T_TRANSPORT_RESET) is used to
-> report hotplug event dropped when a buffer available.
-
-The idea in the spec was that QEMU would report VIRTIO_SCSI_T_NO_EVENT |
-VIRTIO_SCSI_T_EVENTS_MISSED as soon as a buffer becomes available, but
-technically this is indeed possible.  So you need to handle
-VIRTIO_SCSI_T_EVENTS_MISSED first, and the other bits separately.
-
-Paolo
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index eacd46b..bdcdc9d 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -913,6 +913,8 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 		return put_user(val, ip);
+ 	case SG_GET_SG_TABLESIZE:
+ 		return put_user(sdp->sg_tablesize, ip);
++	case SG_GET_SG_MAX_SEGMENT_SIZE:
++		return put_user(queue_max_segment_size(sdp->device->request_queue), ip);
+ 	case SG_SET_RESERVED_SIZE:
+ 		result = get_user(val, ip);
+ 		if (result)
+diff --git a/include/scsi/sg.h b/include/scsi/sg.h
+index a9f3c6f..76d94c1 100644
+--- a/include/scsi/sg.h
++++ b/include/scsi/sg.h
+@@ -200,6 +200,9 @@ typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
+ /* Yields max scatter gather tablesize allowed by current host adapter */
+ #define SG_GET_SG_TABLESIZE 0x227F  /* 0 implies can't do scatter gather */
+ 
++/* Yidld max size of scatter gather element by current host adapter */
++#define SG_GET_SG_MAX_SEGMENT_SIZE 0x2280
++
+ #define SG_GET_VERSION_NUM 0x2282 /* Example: version 2.1.34 yields 20134 */
+ 
+ /* Returns -EBUSY if occupied. 3rd argument pointer to int (see next) */
+-- 
+1.7.7.6
