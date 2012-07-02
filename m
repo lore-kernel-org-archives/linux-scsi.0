@@ -1,49 +1,47 @@
-From: Cong Meng <mc@linux.vnet.ibm.com>
-Subject: [PATCH] SCSI: Add SG_GET_SG_MAX_SEGMENT_SIZE ioctl to sg device
-Date: Mon,  2 Jul 2012 17:20:57 +0800
-Message-ID: <1341220857-1205-1-git-send-email-mc@linux.vnet.ibm.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, senwang@linux.vnet.ibm.com, Cong Meng <mc@linux.vnet.ibm.com>
+From: "David Laight" <David.Laight@ACULAB.COM>
+Subject: RE: [patch] [SCSI] bnx2i: use strlcpy() instead of memcpy() for strings
+Date: Mon, 2 Jul 2012 11:09:19 +0100
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B6F6F@saturn3.aculab.com>
+References: <20120630114935.GB22767@elgon.mountain>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <netdev-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <20120630114935.GB22767@elgon.mountain>
+Sender: netdev-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Barak Witkowski <barak@broadcom.com>
+Cc: Eddie Wai <eddie.wai@broadcom.com>, Michael Chan <mchan@broadcom.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
 
-Add a new ioctl cmd to get the max segment size. It's useful in
-virtualization environment for guest to know the queue limits, so
-that the guest kicks off legal scsi command to a sg device.
+> Subject: [patch] [SCSI] bnx2i: use strlcpy() instead of memcpy() for
+strings
+> 
+> DRV_MODULE_VERSION here is "2.7.2.2" which is only 8 chars but we copy
+> 12 bytes from the stack so it's a small information leak.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> This was just added to linux-next yesterday, but I'm not sure 
+> which tree it came from.
+> 
+> diff --git a/drivers/scsi/bnx2i/bnx2i_init.c 
+> b/drivers/scsi/bnx2i/bnx2i_init.c
+> index 7729a52..b17637a 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_init.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_init.c
+> @@ -400,7 +400,7 @@ int bnx2i_get_stats(void *handle)
+>  	if (!stats)
+>  		return -ENOMEM;
+>  
+> -	memcpy(stats->version, DRV_MODULE_VERSION,
+sizeof(stats->version));
+> +	strlcpy(stats->version, DRV_MODULE_VERSION,
+sizeof(stats->version));
+>  	memcpy(stats->mac_add1 + 2, hba->cnic->mac_addr, ETH_ALEN);
 
-Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
----
- drivers/scsi/sg.c |    2 ++
- include/scsi/sg.h |    3 +++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+Doesn't that leak the original contents of the last bytes of
+stats->version instead?
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index eacd46b..bdcdc9d 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -913,6 +913,8 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- 		return put_user(val, ip);
- 	case SG_GET_SG_TABLESIZE:
- 		return put_user(sdp->sg_tablesize, ip);
-+	case SG_GET_SG_MAX_SEGMENT_SIZE:
-+		return put_user(queue_max_segment_size(sdp->device->request_queue), ip);
- 	case SG_SET_RESERVED_SIZE:
- 		result = get_user(val, ip);
- 		if (result)
-diff --git a/include/scsi/sg.h b/include/scsi/sg.h
-index a9f3c6f..76d94c1 100644
---- a/include/scsi/sg.h
-+++ b/include/scsi/sg.h
-@@ -200,6 +200,9 @@ typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
- /* Yields max scatter gather tablesize allowed by current host adapter */
- #define SG_GET_SG_TABLESIZE 0x227F  /* 0 implies can't do scatter gather */
- 
-+/* Yidld max size of scatter gather element by current host adapter */
-+#define SG_GET_SG_MAX_SEGMENT_SIZE 0x2280
-+
- #define SG_GET_VERSION_NUM 0x2282 /* Example: version 2.1.34 yields 20134 */
- 
- /* Returns -EBUSY if occupied. 3rd argument pointer to int (see next) */
--- 
-1.7.7.6
+	David
