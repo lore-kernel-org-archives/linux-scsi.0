@@ -1,65 +1,38 @@
-From: "Michael Chan" <mchan@broadcom.com>
-Subject: Re: [patch] [SCSI] bnx2i: use strlcpy() instead of memcpy() for
- strings
-Date: Mon, 2 Jul 2012 08:13:38 -0700
-Message-ID: <1341242018.7472.5.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-References: <20120630114935.GB22767@elgon.mountain>
- <AE90C24D6B3A694183C094C60CF0A2F6026B6F6F@saturn3.aculab.com>
- <20120702104843.GB4519@mwanda>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 1/4] [SCSI] ufs: Separate PCI glue driver for ufshcd
+Date: Mon, 2 Jul 2012 15:17:31 +0000
+Message-ID: <201207021517.31537.arnd@arndb.de>
+References: <1341239572-7408-1-git-send-email-vinholikatti@gmail.com> <1341239572-7408-2-git-send-email-vinholikatti@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=cp1252
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2592 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753726Ab2GBPNv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jul 2012 11:13:51 -0400
-In-Reply-To: <20120702104843.GB4519@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-Reply-To: <1341239572-7408-2-git-send-email-vinholikatti@gmail.com>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, yejin.moon@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, stephen.doel@linaro.org, sreekumar.c@samsung.com
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: David Laight <David.Laight@ACULAB.COM>, "James E.J. Bottomley" <JBottomley@parallels.com>, Barak Witkowski <barak@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
 
-On Mon, 2012-07-02 at 13:48 +0300, Dan Carpenter wrote: 
-> On Mon, Jul 02, 2012 at 11:09:19AM +0100, David Laight wrote:
-> > > Subject: [patch] [SCSI] bnx2i: use strlcpy() instead of memcpy() for
-> > strings
-> > > 
-> > > DRV_MODULE_VERSION here is "2.7.2.2" which is only 8 chars but we copy
-> > > 12 bytes from the stack so it's a small information leak.
-> > > 
-> > > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > > ---
-> > > This was just added to linux-next yesterday, but I'm not sure 
-> > > which tree it came from.
-> > > 
-> > > diff --git a/drivers/scsi/bnx2i/bnx2i_init.c 
-> > > b/drivers/scsi/bnx2i/bnx2i_init.c
-> > > index 7729a52..b17637a 100644
-> > > --- a/drivers/scsi/bnx2i/bnx2i_init.c
-> > > +++ b/drivers/scsi/bnx2i/bnx2i_init.c
-> > > @@ -400,7 +400,7 @@ int bnx2i_get_stats(void *handle)
-> > >  	if (!stats)
-> > >  		return -ENOMEM;
-> > >  
-> > > -	memcpy(stats->version, DRV_MODULE_VERSION,
-> > sizeof(stats->version));
-> > > +	strlcpy(stats->version, DRV_MODULE_VERSION,
-> > sizeof(stats->version));
-> > >  	memcpy(stats->mac_add1 + 2, hba->cnic->mac_addr, ETH_ALEN);
-> > 
-> > Doesn't that leak the original contents of the last bytes of
-> > stats->version instead?
+On Monday 02 July 2012, Vinayak Holikatti wrote:
 > 
-> I'm pretty sure we set those to zero in bnx2x_handle_drv_info_req().
+> This patch separates PCI and core UFS host controller driver.
+> In the current implementation PCI specific code is with ufshcd.c.
+> To provide way for adding multiple bus glue driver, this patch
+> separates PCI layer from ufshcd core. Now ufshcd compiles as separate
+> module and ufshcd-pci as separate module.
 > 
+> Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
+> Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
 
-Yes, bnx2x zeros the whole stats structure, so strlcpy() is correct.
+Hi Vinayak,
 
-This came from the net-next tree, so David is the right persion to apply
-this.  Thanks.
+This patch looks good at first sight, but it's a little hard to
+review in the form that you are posting.
 
-Acked-by: Michael Chan <mchan@broadcom.com>
+I would recommend that you split this patch into two separate
+changesets, where you do all the changes to existing code in the
+first patch, and only move but don't change code in the second one
+that creates the new file.
 
-
+	Arnd
