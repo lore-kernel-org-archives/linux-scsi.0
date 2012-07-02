@@ -1,69 +1,49 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [ 38/48] SCSI & usb-storage: add try_rc_10_first flag
-Date: Mon, 2 Jul 2012 20:39:28 +0000
-Message-ID: <1341261568.3319.7.camel@dabdike>
-References: <20120701172012.078559139@decadent.org.uk>
-	 <4FF14957.3040007@redhat.com>
-	 <CA+55aFyRTXqSvf9m08gbHCB0WhVF14Y6J2-AiFGiuTStq0Jr6Q@mail.gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [RESEND PATCH 1/3] scsi_dh: add scsi_dh_attached_handler_name
+Date: Mon, 2 Jul 2012 17:07:33 -0400
+Message-ID: <20120702210733.GA4097@redhat.com>
+References: <1340735525-21083-1-git-send-email-snitzer@redhat.com>
+ <1340735525-21083-2-git-send-email-snitzer@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:41308 "EHLO mx2.parallels.com"
+Received: from mx1.redhat.com ([209.132.183.28]:30174 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985Ab2GBUje (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jul 2012 16:39:34 -0400
-In-Reply-To: <CA+55aFyRTXqSvf9m08gbHCB0WhVF14Y6J2-AiFGiuTStq0Jr6Q@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <4AC73CCCAC89764EBBD7F29EBA180AEA@sw.swsoft.com>
+	id S932078Ab2GBVHn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jul 2012 17:07:43 -0400
+Content-Disposition: inline
+In-Reply-To: <1340735525-21083-2-git-send-email-snitzer@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, Ben Hutchings <ben@decadent.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <jbottomley@parallels.com>, James.Bottomley@hansenpartnership.com
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Alasdair G. Kergon" <agk@redhat.com>
 
-T24gTW9uLCAyMDEyLTA3LTAyIGF0IDExOjUyIC0wNzAwLCBMaW51cyBUb3J2YWxkcyB3cm90ZToN
-Cj4gT24gTW9uLCBKdWwgMiwgMjAxMiBhdCAxMjoxMCBBTSwgSGFucyBkZSBHb2VkZSA8aGRlZ29l
-ZGVAcmVkaGF0LmNvbT4gd3JvdGU6DQo+ID4NCj4gPiBTbyBzaW5jZSAzLjIgYWxyZWFkeSB0cmll
-cyBSRUFEX0NBUEFDSVRZKDEwKSBmaXJzdCwgdGhpcyBwYXRjaCBpcw0KPiA+IG5vdCBuZWVkZWQu
-IEl0IGRvZXMgbm90IGhhcm0gZWl0aGVyLCBhbmQgaWYgdGhlIHNjc2kgbGV2ZWwgcmVwb3J0aW5n
-DQo+ID4gY2hhbmdlIGV2ZXIgZmluZHMgaXRzIHdheSBpbnRvIDMuMiBzdGFibGUgKHdoaWNoIGl0
-IHNob3VsZCBub3QNCj4gPiBJTUhPKSwgdGhlbiB0aGlzIHBhdGNoIHdpbGwgYmUgbmVlZGVkLg0K
-PiANCj4gWWVhaCwgaXQgc2hvdWxkIGRlZmluaXRlbHkgbm90IG1ha2UgaXQgaW50byBzdGFibGUu
-IEluIGZhY3QsIEknZA0KPiByYXRoZXIgcmVtb3ZlIGl0IGZyb20gbWFpbmxpbmUgdG9vLiBUaGUg
-d2hvbGUgaWRlYSB0byBkbw0KPiBSRUFEX0NBUEFDSVRZXzE2IGJ5IGRlZmF1bHQgd2FzIG1vcm9u
-aWMuDQo+IA0KPiBKYW1lcz8gV2h5IGRvZXMgdGhlIFNDU0kgc3Vic3lzdGVtIGFsd2F5cyBkbyB0
-aGVzZSBpZGlvdGljIGRlZmF1bHRzPw0KPiBXZSAqa25vdyogdGhhdCBkZXZpY2VzIGFyZSBidWdn
-eS4gU3VyZSwgVVNCIHN0b3JhZ2UgdGVuZHMgdG8gYmUNCj4gYnVnZ2llciB0aGFuIG1vc3QsIGJ1
-dCB0aGUgd2hvbGUgaWRlYSBvZiAibGV0J3MgdXNlIHRoZSBuZXcgd2F5IG9mDQo+IHJlcG9ydGlu
-ZyB0aGF0IGdldHMgYWxtb3N0IG5vIHRlc3RpbmciIGlzIGp1c3Qgd3JvbmcuDQoNCkl0J3Mgbm90
-IGlkaW90aWMuICBJdCdzLCB1bmZvcnR1bmF0ZWx5LCByZXF1aXJlZCBieSB0aGUgc3RhbmRhcmQg
-dG8NCmNoZWNrIGZvciBwcm90ZWN0aW9uIGNhcGFibGUgZGV2aWNlcy4gIEl0J3MgYmVlbiB0aGlz
-IHdheSBmb3IgdGhyZWUNCnllYXJzIG9yIHNvLiAgTWFydGluIFBldGVyc2VuIGRpZCBleHRlbnNp
-dmUgdGVzdGluZyBvZiBkZXZpY2VzIHdoZW4gd2UNCmNoYW5nZWQgaXQgYW5kIGRvaW5nIFJDMTYg
-Zmlyc3QgaXMgaGVkZ2VkIGFyb3VuZCBieSBjbGFpbWluZyBzdXBwb3J0IG5vdA0Kb25seSBmb3Ig
-U0NTSV8zIGJ1dCBhbHNvIGZvciBTQkNfMiBpbiB5b3VyIElOUVVJUlkgZGF0YS4NCg0KVGhlIHBy
-b2JsZW0gc2VlbXMgdG8gYmUgdGhhdCB3aGVuIGFsbCB0aGUgdGVzdGluZyB3YXMgZG9uZSwgVVNC
-IHdhcw0Kc3RpbGwgYWx3YXlzIHJldHVybmluZyBTQ1NJXzIgaW4gdGhlIGlucXVpcnkgZGF0YSwg
-YnV0IHRoaXMgZ290IGNoYW5nZWQNCnRvIGFsbG93IHBhc3MgdGhyb3VnaCBvZiB0aGUgYWN0dWFs
-IHZlbmRvciBpbmZvcm1hdGlvbi4NCg0KPiBJIGRvbid0IHRoaW5rIHRoZSBVU0IgbGF5ZXIgc2hv
-dWxkIGhhdmUgbmVlZGVkIHRvIHdvcmsgYXJvdW5kIHRoaXMuIEkNCj4gZG9uJ3QgdGhpbmsgdGhl
-cmUgc2hvdWxkIGJlIGEgInRyeV8xMGIiIGZsYWcgYXQgYWxsLiBJIHRoaW5rIHRoZSBTQ1NJDQo+
-IGNvZGUgc2hvdWxkIGp1c3QgKm5ldmVyKiBkbyB0aGUgMTZiIHZlcnNpb24gdW5sZXNzIGl0IGhh
-cyBkb25lIHRoZSAxMGINCj4gdmVyc2lvbiBmaXJzdCBhbmQgZGV0ZXJtaW5lZCB0aGF0IHRoZSBz
-aXplIGRvZXNuJ3QgZml0Lg0KDQpJZiB3ZSBkaWQgdGhhdCwgd2UnZCByZWdyZXNzIG9uIGFsbCB0
-aGUgZW50ZXJwcmlzZSBjbGFzcyBkcml2ZXMgd2l0aCBESUYNCmFuZCBESVguDQoNCj4gQW5kIHRo
-ZSBjb2RlIGFscmVhZHkgaGFkIHRoYXQgbG9naWMgZ290IHRoZSByZWFkXzEwYiBjYXNlLiBUaGUg
-d2hvbGUNCj4gbG9naWMgdG8gZG8gMTZiIGJ5IGRlZmF1bHQgd2FzIGNyYXAuIEl0ICp1c2VkKiB0
-byBhdCBsZWFzdCBvbmx5IGRvIGl0DQo+IGZvciBkaXNrcyB0aGF0IHdlcmUgbWFya2VkIGFzIGhh
-dmluZyAicHJvdGVjdGlvbiIsIG5vdyBpdCB3YW50cyB0byBkbw0KPiBpdCBmb3IgYW55dGhpbmcg
-dGhhdCBzaG91bGQgYmUgYWJsZSB0byBoYW5kbGUgaXQuIFdoaWNoIGlzIGJvZ3VzLiBUaGUNCj4g
-d2hvbGUgImxldCdzIGFzc3VtZSBkZXZpY2VzIGdldCBpdCByaWdodCIgbWluZHNldCBpcyBicm9r
-ZW4uDQo+IA0KPiBUaGUgbWluZHNldCBzaG91bGQgYmUgImxldCdzIGFzc3VtZSBkZXZpY2VzIGFy
-ZSBidWdneSwgYW5kIGJlIGNhcmVmdWwiLg0KDQpJdCBzdGlsbCBpcywgdGhhdCdzIHdoeSB3ZSBk
-aWQgZXh0ZW5zaXZlIHRlc3RpbmcgdGhyZWUgeWVhcnMgYWdvIGJlZm9yZQ0KY2hhbmdpbmcgaXQu
-DQoNCklmIHlvdSBoYXZlIGEgc29sdXRpb24gdGhhdCBkb2Vzbid0IGJyZWFrIGFsbCB0aGUgZW50
-ZXJwcmlzZSBkZXZpY2VzIGJ1dA0Kd29ya3MgYmV0dGVyIGZvciBVU0IsIEknbSBsaXN0ZW5pbmcu
-ICBJIHRoaW5rIHRoZSBiZXN0IHRoaW5nIG1pZ2h0IGJlIHRvDQp3aGl0ZWxpc3QgdGhlIHNjc2kg
-cmV2aXNpb24gcGFzcyB0aHJvdWdoIGluIFVTQiwgc28gb25seSB0aGUgVUFTIGRldmljZXMNCndo
-aWNoIHJlYWxseSwgcmVhbGx5IGNsYWltIHRvIGtub3cgd2hhdCB0aGV5J3JlIGRvaW5nIGFkdmVy
-dGlzZSBhZHZhbmNlZA0KZmVhdHVyZXMuDQoNCkphbWVzDQoNCg==
+On Tue, Jun 26 2012 at  2:32pm -0400,
+Mike Snitzer <snitzer@redhat.com> wrote:
+
+> Introduce scsi_dh_attached_handler_name() to retrieve the name of the
+> scsi_dh that is attached to the scsi_device associated with the provided
+> request queue.  Returns NULL if a scsi_dh is not attached.
+> 
+> Also, fix scsi_dh_{attach,detach} function header comments to document
+> @q rather than @sdev.
+> 
+> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+> Tested-by: Babu Moger <babu.moger@netapp.com>
+> Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> Acked-by: Hannes Reinecke <hare@suse.de>
+
+Hi James,
+
+Any insight on staging this scsi_dh patch for 3.6?
+
+Or what about adding your Acked-by and allowing Alasdair to submit it
+for 3.6 with the corresponding dm-mpath patch?
+
+However you'd like to skin it is fine by me.  I'd just _really_
+appreciate some feedback.
+
+Thanks,
+Mike
+
+p.s. I'm nothing if not persistent ;)
