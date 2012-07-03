@@ -1,71 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [ 38/48] SCSI & usb-storage: add try_rc_10_first flag
-Date: Tue, 03 Jul 2012 10:18:46 +0400
-Message-ID: <1341296326.3319.17.camel@dabdike>
-References: <20120701172012.078559139@decadent.org.uk>
-	 <4FF14957.3040007@redhat.com>
-	 <CA+55aFyRTXqSvf9m08gbHCB0WhVF14Y6J2-AiFGiuTStq0Jr6Q@mail.gmail.com>
-	 <1341261568.3319.7.camel@dabdike>
-	 <CA+55aFymdk8Sn8CVXRZgRvR96jCZG3LQRNU3U0dMkS3Ut2CemQ@mail.gmail.com>
-	 <20120703004122.GA28804@parisc-linux.org>
+From: Cong Meng <mc@linux.vnet.ibm.com>
+Subject: Re: [PATCH] SCSI: Add SG_GET_SG_MAX_SEGMENT_SIZE ioctl to sg device
+Date: Tue, 03 Jul 2012 15:53:23 +0800
+Message-ID: <1341302003.17396.20.camel@mengcong>
+References: <1341220857-1205-1-git-send-email-mc@linux.vnet.ibm.com>
+	 <1341227897.2987.15.camel@dabdike.int.hansenpartnership.com>
+Reply-To: mc@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120703004122.GA28804@parisc-linux.org>
+In-Reply-To: <1341227897.2987.15.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Hans de Goede <hdegoede@redhat.com>, Ben Hutchings <ben@decadent.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, senwang@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2012-07-02 at 18:41 -0600, Matthew Wilcox wrote:
-> On Mon, Jul 02, 2012 at 03:23:18PM -0700, Linus Torvalds wrote:
-> > >  Martin Petersen did extensive testing of devices when we
-> > > changed it and doing RC16 first is hedged around by claiming support not
-> > > only for SCSI_3 but also for SBC_2 in your INQUIRY data.
-> > 
-> > Umm. That just smells like BS to me.
-> > 
-> > The "extensive testing" part was clearly not true, and it seems that
-> > SCSI people sometimes forget that the biggest user (by *far*) is the
-> > USB storage layer.
+On Mon, 2012-07-02 at 12:18 +0100, James Bottomley wrote:
+> On Mon, 2012-07-02 at 17:20 +0800, Cong Meng wrote:
+> > Add a new ioctl cmd to get the max segment size. It's useful in
+> > virtualization environment for guest to know the queue limits, so
+> > that the guest kicks off legal scsi command to a sg device.
 > 
-> As James said, *at the time*, USB overrode the SBC_2 claims from USB
-> devices and forced them to be SCSI_2.  So no amount of testing we did
-> would have uncovered this.
+> What's wrong with simply looking in the /sys for this? Plus, if you can
+
+Adding this ioctl is a big convenience for the programs, qemu 
+in my case, to which parameter that likes '/dev/sgX' is given. 
+With this ioctl, those programs only need to issue an ioctl to 
+get the queue limit. Otherwise, 'dev/sgX' is needed to convert 
+to /sys path, then open and read it. 
+In addition, the potential variation and exceptional situation 
+of sys FS, EX mount path, are needed to consider as well.
+Is my justification acceptable? 
+
+> come up with a justifiable reason, this needs to be in block as well so
+> we can send it to all SCSI devices regardless of what ULD people use.
+I can do it.
+
+Thanks.
+Cong.
 > 
-> > Also, your protection claim seems to be invalidated by the actual
-> > code. Yes, it checks if the device claims to support protection. But
-> > it *also* says "let's do that 16b command if "scsi_level >
-> > SCSI_SPC_2". So your claim that it hedges around it by looking at the
-> > inquiry data is pure crap. It's simply not true. Just look at the
-> > code:
+> James
 > 
-> I wrote this code ... James' memory is off.
-
-Yes, sorry about that ... should have looked in the git log instead of
-going by memory at 01:00 after a long flight ...
-
->   What happened is that T10
-> in their infinite wisdom decided to put things like "supports TRIM" and
-> "is actually a 4k block size but fakes 512 byte blocks" in the Read
-> Capacity 16 results.  So if we want to support those kinds of things
-> (and I think we do), then we need to send Read Capacity 16 to devices.
 > 
-> It's not about "enterprise features" at all, but about supporting the
-> next generation of standard consumer drives.  I'm tempted to say the
-> USB Storage driver needs to go back to the way things were, because I
-> don't see any other way to fix this.
-
-But anyway, we're stuck ... we have to send RC16 first to support these
-features.  We did protest to T10 at the time, but to no avail.
-
-> I have no idea what Windows is doing to support these features.  That
-> might be a fruitful course of investigation.
-
-Hopefully one of the USB people can do this.
-
-I still think a whitelist of USB devices sending proper SCSI level
-information in the inquiry might be the best way forward.
-
-James
