@@ -1,60 +1,72 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [ 38/48] SCSI & usb-storage: add try_rc_10_first flag
-Date: Mon, 2 Jul 2012 15:23:18 -0700
-Message-ID: <CA+55aFymdk8Sn8CVXRZgRvR96jCZG3LQRNU3U0dMkS3Ut2CemQ@mail.gmail.com>
-References: <20120701172012.078559139@decadent.org.uk> <4FF14957.3040007@redhat.com>
- <CA+55aFyRTXqSvf9m08gbHCB0WhVF14Y6J2-AiFGiuTStq0Jr6Q@mail.gmail.com> <1341261568.3319.7.camel@dabdike>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH v3 3/5] st: get rid of scsi_tapes array
+Date: Mon, 02 Jul 2012 17:16:56 -0700
+Message-ID: <4FF239F8.7030101@suse.com>
+References: <4FBACC66.80208@suse.com> <alpine.LNX.2.00.1207011147110.3650@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:51859 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751850Ab2GBWXk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jul 2012 18:23:40 -0400
-In-Reply-To: <1341261568.3319.7.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1207011147110.3650@kai.makisara.local>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jeffm@suse.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, Ben Hutchings <ben@decadent.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Jul 2, 2012 at 1:39 PM, James Bottomley
-<jbottomley@parallels.com> wrote:
->
-> It's not idiotic.  It's, unfortunately, required by the standard to
-> check for protection capable devices.
- [.. dleted ]
->  Martin Petersen did extensive testing of devices when we
-> changed it and doing RC16 first is hedged around by claiming support not
-> only for SCSI_3 but also for SBC_2 in your INQUIRY data.
 
-Umm. That just smells like BS to me.
+On 07/01/2012 01:57 AM, Kai Makisara wrote:
+> On Mon, 21 May 2012, Lee Duncan wrote:
+> 
+>> From: Jeff Mahoney <jeffm@suse.com>
+>>
+>> st currently allocates an array to store pointers to all of the
+>> scsi_tape objects. It's used to discover available indexes to use as the
+>> base for the minor number selection and later to look up scsi_tape
+>> devices for character devices.
+>>
+>> We switch to using an IDR for minor selection and a pointer from
+>> st_modedef back to scsi_tape for the lookups.
+>>
+>> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+>> Signed-off-by: Lee Duncan <lduncan@suse.com>
+>> ---
+>>  drivers/scsi/st.c |  172 ++++++++++++++++++++---------------------------------
+>>  drivers/scsi/st.h |    2 +
+>>  2 files changed, 65 insertions(+), 109 deletions(-)
+>>
+> ... patch removed
+> 
+> I have finally had time to review and test this patch set. I am sorry this 
+> has taken so long.
+> 
+> I have found one change of behaviour and a theoretical problem:
+> The new code does not re-use the tape numbers when freed and re-scanned. 
+> The current code does re-use the freed numbers. Are there any reasons for 
+> this changed behaviour? (The theoretical problem is that the new code 
+> frees the tape structure but leaves the pointer in the idr tree.)
+> 
+> The patch at the end of this message (applies after the whole series) is 
+> an attempt to implement re-use of tape numbers. I am not completely sure 
+> that the change is correctly placed but it seems to work.
 
-The "extensive testing" part was clearly not true, and it seems that
-SCSI people sometimes forget that the biggest user (by *far*) is the
-USB storage layer.
 
-Also, your protection claim seems to be invalidated by the actual
-code. Yes, it checks if the device claims to support protection. But
-it *also* says "let's do that 16b command if "scsi_level >
-SCSI_SPC_2". So your claim that it hedges around it by looking at the
-inquiry data is pure crap. It's simply not true. Just look at the
-code:
+Thanks for the review, and good catch. I'll look over your added patch
+and give feedback as soon as I can.
 
-        if (sdp->host->max_cmd_len < 16)
-                return 0;
-        if (sdp->try_rc_10_first)
-                return 0;
-        if (sdp->scsi_level > SCSI_SPC_2)
-                return 1;
-        if (scsi_device_protection(sdp))
-                return 1;
-        return 0;
+> 
+> Another minor thing is that the documentation should be updated :-)
 
-Notice how for high enough scsi_levels, it never even gets to that
-scsi_device_protection() check, which does indeed look into protection
-data.
+Of course.
 
-So no, I simply don't see the careful testing or the checking that you
-claim exists.
-
-                 Linus
+> 
+> The patch at the end also updates the version code. I am not sure if the 
+> version code is useful, but it should be either updated or removed.
+> 
+> Otherwise no problems found. I am ready to ack the patch set after the 
+> re-use thing has been resolved (one way or another).
+> 
+> Thanks,
+> Kai
+> 
+-- 
+The Lee-Man
