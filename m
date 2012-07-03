@@ -1,239 +1,51 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v2] virtio-scsi: hotplug support for virtio-scsi
-Date: Tue, 03 Jul 2012 13:50:04 +0200
-Message-ID: <4FF2DC6C.1010506@redhat.com>
-References: <1341294085-17164-1-git-send-email-mc@linux.vnet.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [ 38/48] SCSI & usb-storage: add try_rc_10_first flag
+Date: Tue, 3 Jul 2012 11:49:00 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1207031142210.17487-100000@netrider.rowland.org>
+References: <1341296326.3319.17.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1341294085-17164-1-git-send-email-mc@linux.vnet.ibm.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Cong Meng <mc@linux.vnet.ibm.com>
-Cc: stefanha@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, senwang@linux.vnet.ibm.com, zwanp@cn.ibm.com, linuxram@us.ibm.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1341296326.3319.17.camel@dabdike>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Linus Torvalds <torvalds@linux-foundation.org>, Hans de Goede <hdegoede@redhat.com>, Ben Hutchings <ben@decadent.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Il 03/07/2012 07:41, Cong Meng ha scritto:
-> This patch implements the hotplug support for virtio-scsi.
-> When there is a device attached/detached, the virtio-scsi driver will be
-> signaled via event virtual queue and it will add/remove the scsi device 
-> in question automatically.
-> 
-> v2: handle no_event event
-> 
-> Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
-> Signed-off-by: Sen Wang <senwang@linux.vnet.ibm.com>
+On Tue, 3 Jul 2012, James Bottomley wrote:
 
-The SoB lines are swapped.  Otherwise looks good.  Since you have to
-respin, please add dropped event support too, it shouldn't be hard.
-
-Paolo
-
-> ---
->  drivers/scsi/virtio_scsi.c  |  113 ++++++++++++++++++++++++++++++++++++++++++-
->  include/linux/virtio_scsi.h |    9 ++++
->  2 files changed, 121 insertions(+), 1 deletions(-)
+> >   What happened is that T10
+> > in their infinite wisdom decided to put things like "supports TRIM" and
+> > "is actually a 4k block size but fakes 512 byte blocks" in the Read
+> > Capacity 16 results.  So if we want to support those kinds of things
+> > (and I think we do), then we need to send Read Capacity 16 to devices.
+> > 
+> > It's not about "enterprise features" at all, but about supporting the
+> > next generation of standard consumer drives.  I'm tempted to say the
+> > USB Storage driver needs to go back to the way things were, because I
+> > don't see any other way to fix this.
 > 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 9fc5e67..e44b2d6 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -25,6 +25,7 @@
->  #include <scsi/scsi_cmnd.h>
->  
->  #define VIRTIO_SCSI_MEMPOOL_SZ 64
-> +#define VIRTIO_SCSI_EVENT_LEN 8
->  
->  /* Command queue element */
->  struct virtio_scsi_cmd {
-> @@ -43,6 +44,12 @@ struct virtio_scsi_cmd {
->  	} resp;
->  } ____cacheline_aligned_in_smp;
->  
-> +struct virtio_scsi_event_node {
-> +	struct virtio_scsi *vscsi;
-> +	struct virtio_scsi_event event;
-> +	struct work_struct work;
-> +};
-> +
->  struct virtio_scsi_vq {
->  	/* Protects vq */
->  	spinlock_t vq_lock;
-> @@ -67,6 +74,9 @@ struct virtio_scsi {
->  	struct virtio_scsi_vq event_vq;
->  	struct virtio_scsi_vq req_vq;
->  
-> +	/* Get some buffers reday for event vq */
-> +	struct virtio_scsi_event_node event_list[VIRTIO_SCSI_EVENT_LEN];
-> +
->  	struct virtio_scsi_target_state *tgt[];
->  };
->  
-> @@ -202,6 +212,97 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
->  	spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
->  };
->  
-> +static int virtscsi_kick_event(struct virtio_scsi *vscsi,
-> +			       struct virtio_scsi_event_node *event_node)
-> +{
-> +	int ret;
-> +	struct scatterlist sg;
-> +	unsigned long flags;
-> +
-> +	sg_set_buf(&sg, &event_node->event, sizeof(struct virtio_scsi_event));
-> +
-> +	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
-> +
-> +	ret = virtqueue_add_buf(vscsi->event_vq.vq, &sg, 0, 1, event_node, GFP_ATOMIC);
-> +	if (ret >= 0)
-> +		virtqueue_kick(vscsi->event_vq.vq);
-> +
-> +	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
-> +
-> +	return ret;
-> +}
-> +
-> +static int virtscsi_kick_event_all(struct virtio_scsi *vscsi)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++) {
-> +		vscsi->event_list[i].vscsi = vscsi;
-> +		virtscsi_kick_event(vscsi, &vscsi->event_list[i]);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
-> +                                            struct virtio_scsi_event *event)
-> +{
-> +	struct scsi_device *sdev;
-> +	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
-> +	unsigned int target = event->lun[1];
-> +	unsigned int lun = (event->lun[2] << 8) | event->lun[3];
-> +
-> +	switch (event->reason) {
-> +	case VIRTIO_SCSI_EVT_RESET_RESCAN:
-> +		scsi_add_device(shost, 0, target, lun);
-> +		break;
-> +	case VIRTIO_SCSI_EVT_RESET_REMOVED:
-> +		sdev = scsi_device_lookup(shost, 0, target, lun);
-> +		if (sdev) {
-> +			scsi_remove_device(sdev);
-> +			scsi_device_put(sdev);
-> +		} else {
-> +			pr_err("SCSI device %d 0 %d %d not found\n",
-> +				shost->host_no, target, lun);
-> +		}
-> +		break;
-> +	default:
-> +		pr_info("Unsupport virtio scsi event reason %x\n", event->reason);
-> +	}
-> +}
-> +
-> +static void virtscsi_handle_event(struct work_struct *work)
-> +{
-> +	struct virtio_scsi_event_node *event_node =
-> +		container_of(work, struct virtio_scsi_event_node, work);
-> +	struct virtio_scsi *vscsi = event_node->vscsi;
-> +	struct virtio_scsi_event *event = &event_node->event;
-> +
-> +	if (event->event & VIRTIO_SCSI_T_EVENTS_MISSED) {
-> +		event->event &= (~VIRTIO_SCSI_T_EVENTS_MISSED);
-> +		/* FIXME: handle event missed here */
-> +	}
-> +
-> +	switch (event->event) {
-> +	case VIRTIO_SCSI_T_NO_EVENT:
-> +		break;
-> +	case VIRTIO_SCSI_T_TRANSPORT_RESET:
-> +		virtscsi_handle_transport_reset(vscsi, event);
-> +		break;
-> +	default:
-> +		pr_err("Unsupport virtio scsi event %x\n", event->event);
-> +	}
-> +	virtscsi_kick_event(vscsi, event_node);
-> +}
-> +
-> +static void virtscsi_complete_event(void *buf)
-> +{
-> +	struct virtio_scsi_event_node *event_node = buf;
-> +
-> +	INIT_WORK(&event_node->work, virtscsi_handle_event);
-> +	schedule_work(&event_node->work);
-> +}
-> +
->  static void virtscsi_event_done(struct virtqueue *vq)
->  {
->  	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
-> @@ -209,7 +310,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
->  	unsigned long flags;
->  
->  	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
-> -	virtscsi_vq_done(vq, virtscsi_complete_free);
-> +	virtscsi_vq_done(vq, virtscsi_complete_event);
->  	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
->  };
->  
-> @@ -510,6 +611,10 @@ static int virtscsi_init(struct virtio_device *vdev,
->  	virtscsi_config_set(vdev, cdb_size, VIRTIO_SCSI_CDB_SIZE);
->  	virtscsi_config_set(vdev, sense_size, VIRTIO_SCSI_SENSE_SIZE);
->  
-> +	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-> +		virtscsi_kick_event_all(vscsi);
-> +	}
-> +
->  	/* We need to know how many segments before we allocate.  */
->  	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
->  
-> @@ -608,7 +713,13 @@ static struct virtio_device_id id_table[] = {
->  	{ 0 },
->  };
->  
-> +static unsigned int features[] = {
-> +	VIRTIO_SCSI_F_HOTPLUG
-> +};
-> +
->  static struct virtio_driver virtio_scsi_driver = {
-> +	.feature_table = features,
-> +	.feature_table_size = ARRAY_SIZE(features),
->  	.driver.name = KBUILD_MODNAME,
->  	.driver.owner = THIS_MODULE,
->  	.id_table = id_table,
-> diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
-> index 8ddeafd..dc8d305 100644
-> --- a/include/linux/virtio_scsi.h
-> +++ b/include/linux/virtio_scsi.h
-> @@ -69,6 +69,10 @@ struct virtio_scsi_config {
->  	u32 max_lun;
->  } __packed;
->  
-> +/* Feature Bits */
-> +#define VIRTIO_SCSI_F_INOUT                    0
-> +#define VIRTIO_SCSI_F_HOTPLUG                  1
-> +
->  /* Response codes */
->  #define VIRTIO_SCSI_S_OK                       0
->  #define VIRTIO_SCSI_S_OVERRUN                  1
-> @@ -105,6 +109,11 @@ struct virtio_scsi_config {
->  #define VIRTIO_SCSI_T_TRANSPORT_RESET          1
->  #define VIRTIO_SCSI_T_ASYNC_NOTIFY             2
->  
-> +/* Reasons of transport reset event */
-> +#define VIRTIO_SCSI_EVT_RESET_HARD             0
-> +#define VIRTIO_SCSI_EVT_RESET_RESCAN           1
-> +#define VIRTIO_SCSI_EVT_RESET_REMOVED          2
-> +
->  #define VIRTIO_SCSI_S_SIMPLE                   0
->  #define VIRTIO_SCSI_S_ORDERED                  1
->  #define VIRTIO_SCSI_S_HEAD                     2
+> But anyway, we're stuck ... we have to send RC16 first to support these
+> features.  We did protest to T10 at the time, but to no avail.
+
+Does it have to be sent _first_?
+
+Or would it be okay to send _both_ commands and believe the RC10
+capacity rather than the RC16 capacity if they differ?
+
+> > I have no idea what Windows is doing to support these features.  That
+> > might be a fruitful course of investigation.
 > 
+> Hopefully one of the USB people can do this.
+> 
+> I still think a whitelist of USB devices sending proper SCSI level
+> information in the inquiry might be the best way forward.
+
+I'm doubtful.  It wouldn't be at all surprising for devices to claim 
+they support a particular level when in fact they support some but not 
+all of the required commands.  Then what do you do?  Put them on the 
+whitelist because of the commands they support, or leave them off 
+because of the other ones?  What happens later on when you decide to 
+use more of the required commands?
+
+Alan Stern
