@@ -1,72 +1,56 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH v3 3/5] st: get rid of scsi_tapes array
-Date: Mon, 02 Jul 2012 17:16:56 -0700
-Message-ID: <4FF239F8.7030101@suse.com>
-References: <4FBACC66.80208@suse.com> <alpine.LNX.2.00.1207011147110.3650@kai.makisara.local>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [ 38/48] SCSI & usb-storage: add try_rc_10_first flag
+Date: Mon, 2 Jul 2012 18:41:22 -0600
+Message-ID: <20120703004122.GA28804@parisc-linux.org>
+References: <20120701172012.078559139@decadent.org.uk> <4FF14957.3040007@redhat.com> <CA+55aFyRTXqSvf9m08gbHCB0WhVF14Y6J2-AiFGiuTStq0Jr6Q@mail.gmail.com> <1341261568.3319.7.camel@dabdike> <CA+55aFymdk8Sn8CVXRZgRvR96jCZG3LQRNU3U0dMkS3Ut2CemQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1207011147110.3650@kai.makisara.local>
+Content-Disposition: inline
+In-Reply-To: <CA+55aFymdk8Sn8CVXRZgRvR96jCZG3LQRNU3U0dMkS3Ut2CemQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jeffm@suse.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Hans de Goede <hdegoede@redhat.com>, Ben Hutchings <ben@decadent.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, Jul 02, 2012 at 03:23:18PM -0700, Linus Torvalds wrote:
+> >  Martin Petersen did extensive testing of devices when we
+> > changed it and doing RC16 first is hedged around by claiming support not
+> > only for SCSI_3 but also for SBC_2 in your INQUIRY data.
+> 
+> Umm. That just smells like BS to me.
+> 
+> The "extensive testing" part was clearly not true, and it seems that
+> SCSI people sometimes forget that the biggest user (by *far*) is the
+> USB storage layer.
 
-On 07/01/2012 01:57 AM, Kai Makisara wrote:
-> On Mon, 21 May 2012, Lee Duncan wrote:
-> 
->> From: Jeff Mahoney <jeffm@suse.com>
->>
->> st currently allocates an array to store pointers to all of the
->> scsi_tape objects. It's used to discover available indexes to use as the
->> base for the minor number selection and later to look up scsi_tape
->> devices for character devices.
->>
->> We switch to using an IDR for minor selection and a pointer from
->> st_modedef back to scsi_tape for the lookups.
->>
->> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
->> Signed-off-by: Lee Duncan <lduncan@suse.com>
->> ---
->>  drivers/scsi/st.c |  172 ++++++++++++++++++++---------------------------------
->>  drivers/scsi/st.h |    2 +
->>  2 files changed, 65 insertions(+), 109 deletions(-)
->>
-> ... patch removed
-> 
-> I have finally had time to review and test this patch set. I am sorry this 
-> has taken so long.
-> 
-> I have found one change of behaviour and a theoretical problem:
-> The new code does not re-use the tape numbers when freed and re-scanned. 
-> The current code does re-use the freed numbers. Are there any reasons for 
-> this changed behaviour? (The theoretical problem is that the new code 
-> frees the tape structure but leaves the pointer in the idr tree.)
-> 
-> The patch at the end of this message (applies after the whole series) is 
-> an attempt to implement re-use of tape numbers. I am not completely sure 
-> that the change is correctly placed but it seems to work.
+As James said, *at the time*, USB overrode the SBC_2 claims from USB
+devices and forced them to be SCSI_2.  So no amount of testing we did
+would have uncovered this.
 
+> Also, your protection claim seems to be invalidated by the actual
+> code. Yes, it checks if the device claims to support protection. But
+> it *also* says "let's do that 16b command if "scsi_level >
+> SCSI_SPC_2". So your claim that it hedges around it by looking at the
+> inquiry data is pure crap. It's simply not true. Just look at the
+> code:
 
-Thanks for the review, and good catch. I'll look over your added patch
-and give feedback as soon as I can.
+I wrote this code ... James' memory is off.  What happened is that T10
+in their infinite wisdom decided to put things like "supports TRIM" and
+"is actually a 4k block size but fakes 512 byte blocks" in the Read
+Capacity 16 results.  So if we want to support those kinds of things
+(and I think we do), then we need to send Read Capacity 16 to devices.
 
-> 
-> Another minor thing is that the documentation should be updated :-)
+It's not about "enterprise features" at all, but about supporting the
+next generation of standard consumer drives.  I'm tempted to say the
+USB Storage driver needs to go back to the way things were, because I
+don't see any other way to fix this.
 
-Of course.
+I have no idea what Windows is doing to support these features.  That
+might be a fruitful course of investigation.
 
-> 
-> The patch at the end also updates the version code. I am not sure if the 
-> version code is useful, but it should be either updated or removed.
-> 
-> Otherwise no problems found. I am ready to ack the patch set after the 
-> re-use thing has been resolved (one way or another).
-> 
-> Thanks,
-> Kai
-> 
 -- 
-The Lee-Man
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
