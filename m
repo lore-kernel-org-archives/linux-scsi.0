@@ -1,45 +1,52 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [ 38/48] SCSI & usb-storage: add try_rc_10_first flag
-Date: Tue, 3 Jul 2012 14:35:12 -0600
-Message-ID: <20120703203512.GE28804@parisc-linux.org>
-References: <Pine.LNX.4.44L0.1207031540410.29825-100000@netrider.rowland.org> <1341346072.3076.6.camel@dabdike>
+From: "Eddie Wai" <eddie.wai@broadcom.com>
+Subject: Re: [PATCH] BNX2I: Removed the reference to the
+ netdev->base_addr
+Date: Tue, 3 Jul 2012 15:06:48 -0700
+Message-ID: <1341353208.10180.765.camel@dhcp-10-12-137-160.irv.broadcom.com>
+References: <Eddie Wai <eddie.wai@broadcom.com>
+ <1341013055-16339-1-git-send-email-eddie.wai@broadcom.com>
+ <4FEE674C.9070807@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:46930 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753541Ab2GCUfP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jul 2012 16:35:15 -0400
-Content-Disposition: inline
-In-Reply-To: <1341346072.3076.6.camel@dabdike>
+Received: from mms1.broadcom.com ([216.31.210.17]:4564 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756313Ab2GCWHC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jul 2012 18:07:02 -0400
+In-Reply-To: <4FEE674C.9070807@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Linus Torvalds <torvalds@linux-foundation.org>, Hans de Goede <hdegoede@redhat.com>, Ben Hutchings <ben@decadent.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <james.bottomley@HansenPartnership.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>
 
-On Wed, Jul 04, 2012 at 12:07:52AM +0400, James Bottomley wrote:
-> > The reason for the try_rc_10_first flag is that some devices return
-> > bogus data in response to RC16.  Like, an 800 GB device claiming to
-> > have 3 exabytes.
+Thanks, Mike.
+
+Hello James,
+
+This patch is actually a critical bug fix as the 1G bnx2 driver no
+longer supports the netdev->base_addr in the current kernel of the scsi
+tree.  This means that Broadcom's 1G Linux iSCSI offload solution would
+not work at all without this patch.  If at all possible, please consider
+including this patch into the fixes branch.
+
+Thanks,
+Eddie
+
+On Fri, 2012-06-29 at 21:41 -0500, Mike Christie wrote:
+> On 06/29/2012 06:37 PM, Eddie Wai wrote:
+> > The netdev->base_addr parameter has been deprecated in the L2 bnx2
+> > driver.  This is used by bnx2i for the BARn iomapping.
+> >
+> > This patch will directly reference the pci_resource_start instead
+> > of using the deprecated netdev->base_addr.
+> >
+> > Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
 > 
-> So we could easily send both and only believe RC10 if the device is
-> under 2TB.  However, what about all the extra flags we read out of RC16,
-> like trim, large sector size and DIF capability?  If the device lies
-> about its capacity, won't we get bogus values for those as well, which
-> is going to cause other screw ups?
+> 
+> Looks ok to me
+> 
+> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+> 
 
-I think the necessary algorithm is simpler than that:
 
-Send RC10 (unless the device supports PI, in which case it's probably
-	enterprisey and well-tested)
-Send RC16
-If RC10 capacity agrees with RC16 capacity, use extra RC16 data.
-(for values of "agrees with" that include the "-1 to use RC16" indicator)
-
-Sure, it's one extra command, but really, who cares?
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
