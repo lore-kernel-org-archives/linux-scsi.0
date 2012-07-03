@@ -1,65 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] SCSI: Add SG_GET_SG_MAX_SEGMENT_SIZE ioctl to sg device
-Date: Tue, 03 Jul 2012 12:01:12 +0400
-Message-ID: <1341302472.3319.26.camel@dabdike>
-References: <1341220857-1205-1-git-send-email-mc@linux.vnet.ibm.com>
-	 <1341227897.2987.15.camel@dabdike.int.hansenpartnership.com>
-	 <1341302003.17396.20.camel@mengcong>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] bnx2i: fix the bit manipulation when setting the error mask
+Date: Tue, 03 Jul 2012 10:08:41 +0200
+Message-ID: <4FF2A889.30102@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1341302003.17396.20.camel@mengcong>
-Sender: linux-kernel-owner@vger.kernel.org
-To: mc@linux.vnet.ibm.com
-Cc: stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, senwang@linux.vnet.ibm.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:30802 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755999Ab2GCIIp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jul 2012 04:08:45 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: eddie.wai@broadcom.com, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, mchan@broadcom.com
 
-On Tue, 2012-07-03 at 15:53 +0800, Cong Meng wrote:
-> On Mon, 2012-07-02 at 12:18 +0100, James Bottomley wrote:
-> > On Mon, 2012-07-02 at 17:20 +0800, Cong Meng wrote:
-> > > Add a new ioctl cmd to get the max segment size. It's useful in
-> > > virtualization environment for guest to know the queue limits, so
-> > > that the guest kicks off legal scsi command to a sg device.
-> > 
-> > What's wrong with simply looking in the /sys for this? Plus, if you can
-> 
-> Adding this ioctl is a big convenience for the programs, qemu 
-> in my case, to which parameter that likes '/dev/sgX' is given. 
-> With this ioctl, those programs only need to issue an ioctl to 
-> get the queue limit.
+The intention in bnx2i_send_fw_iscsi_init_msg was to zero out
+only the lower 32bits, but instead the whole mask64 is zeroed.
+This patch fixes it.
 
-I don't need to know why you need the information, I accept that it's
-useful
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index ece47e5..1cbf402 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -1314,7 +1314,7 @@ int bnx2i_send_fw_iscsi_init_msg(struct bnx2i_hba *hba)
+ 		(1ULL << ISCSI_KCQE_COMPLETION_STATUS_PROTOCOL_ERR_LUN));
+ 	if (error_mask1) {
+ 		iscsi_init2.error_bit_map[0] = error_mask1;
+-		mask64 &= (u32)(~mask64);
++		mask64 ^= (u32)(mask64);
+ 		mask64 |= error_mask1;
+ 	} else
+ 		iscsi_init2.error_bit_map[0] = (u32) mask64;
 
->  Otherwise, 'dev/sgX' is needed to convert 
-> to /sys path, then open and read it. 
 
-Well, yes, what's the problem?
-
-> In addition, the potential variation and exceptional situation 
-> of sys FS, EX mount path, are needed to consider as well.
-> Is my justification acceptable? 
-
-No. I need to know why you can't get it out of sysfs.  We put a whole
-lot of stuff into sysfs to avoid the need to add extra ioctls.  There
-need to be a really good reason why /sys doesn't work.
-
-James
-
-> > come up with a justifiable reason, this needs to be in block as well so
-> > we can send it to all SCSI devices regardless of what ULD people use.
-> I can do it.
-> 
-> Thanks.
-> Cong.
-> > 
-> > James
-> > 
-> > 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
