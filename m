@@ -1,71 +1,76 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6
-Date: Wed,  4 Jul 2012 04:24:00 +0000
-Message-ID: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
+Subject: [PATCH 1/6] vhost: Separate vhost-net features from vhost features
+Date: Wed,  4 Jul 2012 04:24:01 +0000
+Message-ID: <1341375846-27882-2-git-send-email-nab@linux-iscsi.org>
+References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 
-Hi folks,
+In order for other vhost devices to use the VHOST_FEATURES bits the
+vhost-net specific bits need to be moved to their own VHOST_NET_FEATURES
+constant.
 
-This series contains patches required to update tcm_vhost <-> virtio-scsi
-connected hosts <-> guests to run on v3.5-rc2 mainline code.  This series is
-available on top of target-pending/auto-next here:
+Signed-off-by: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Nicholas A. Bellinger <nab@risingtidesystems.com>
+---
+ drivers/vhost/net.c   |    4 ++--
+ drivers/vhost/vhost.h |    3 ++-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git tcm_vhost
-
-This includes the necessary vhost changes from Stefan to to get tcm_vhost
-functioning, along a virtio-scsi LUN scanning change to address a client bug
-with tcm_vhost I ran into..  Also, tcm_vhost driver has been merged into a single
-source + header file that is now living under /drivers/vhost/, along with latest
-tcm_vhost changes from Zhi's tcm_vhost tree.
-
-Here are a couple of screenshots of the code in action using raw IBLOCK
-backends provided by FusionIO ioDrive Duo:
-
-   http://linux-iscsi.org/images/Virtio-scsi-tcm-vhost-3.5-rc2-3.png
-   http://linux-iscsi.org/images/Virtio-scsi-tcm-vhost-3.5-rc2-4.png
-
-So the next steps on my end will be converting tcm_vhost to submit backend I/O from
-cmwq context, along with fio benchmark numbers between tcm_vhost/virtio-scsi and
-virtio-scsi-raw using raw IBLOCK iomemory_vsl flash.
-
-Please have a look vhost + virtio-scsi folks (mst + paolo CC'ed) and let us
-know if you have any concerns.
-
-Thanks!
-
---nab
-
-Nicholas Bellinger (4):
-  vhost: Add vhost_scsi specific defines
-  tcm_vhost: Initial merge for vhost level target fabric driver
-  virtio-scsi: Add vdrv->scan for post VIRTIO_CONFIG_S_DRIVER_OK LUN
-    scanning
-  virtio-scsi: Set shost->max_id=1 for tcm_vhost WWPNs
-
-Stefan Hajnoczi (2):
-  vhost: Separate vhost-net features from vhost features
-  vhost: make vhost work queue visible
-
- drivers/scsi/virtio_scsi.c |   20 +-
- drivers/vhost/Kconfig      |    6 +
- drivers/vhost/Makefile     |    1 +
- drivers/vhost/net.c        |    4 +-
- drivers/vhost/tcm_vhost.c  | 1592 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/vhost/tcm_vhost.h  |   70 ++
- drivers/vhost/vhost.c      |    5 +-
- drivers/vhost/vhost.h      |    6 +-
- drivers/virtio/virtio.c    |    5 +-
- include/linux/vhost.h      |    9 +
- include/linux/virtio.h     |    1 +
- 11 files changed, 1708 insertions(+), 11 deletions(-)
- create mode 100644 drivers/vhost/tcm_vhost.c
- create mode 100644 drivers/vhost/tcm_vhost.h
-
+diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
+index f82a739..072cbba 100644
+--- a/drivers/vhost/net.c
++++ b/drivers/vhost/net.c
+@@ -823,14 +823,14 @@ static long vhost_net_ioctl(struct file *f, unsigned int ioctl,
+ 			return -EFAULT;
+ 		return vhost_net_set_backend(n, backend.index, backend.fd);
+ 	case VHOST_GET_FEATURES:
+-		features = VHOST_FEATURES;
++		features = VHOST_NET_FEATURES;
+ 		if (copy_to_user(featurep, &features, sizeof features))
+ 			return -EFAULT;
+ 		return 0;
+ 	case VHOST_SET_FEATURES:
+ 		if (copy_from_user(&features, featurep, sizeof features))
+ 			return -EFAULT;
+-		if (features & ~VHOST_FEATURES)
++		if (features & ~VHOST_NET_FEATURES)
+ 			return -EOPNOTSUPP;
+ 		return vhost_net_set_features(n, features);
+ 	case VHOST_RESET_OWNER:
+diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
+index 8de1fd5..07b9763 100644
+--- a/drivers/vhost/vhost.h
++++ b/drivers/vhost/vhost.h
+@@ -201,7 +201,8 @@ enum {
+ 	VHOST_FEATURES = (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) |
+ 			 (1ULL << VIRTIO_RING_F_INDIRECT_DESC) |
+ 			 (1ULL << VIRTIO_RING_F_EVENT_IDX) |
+-			 (1ULL << VHOST_F_LOG_ALL) |
++			 (1ULL << VHOST_F_LOG_ALL),
++	VHOST_NET_FEATURES = VHOST_FEATURES |
+ 			 (1ULL << VHOST_NET_F_VIRTIO_NET_HDR) |
+ 			 (1ULL << VIRTIO_NET_F_MRG_RXBUF),
+ };
 -- 
 1.7.2.5
