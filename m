@@ -1,108 +1,242 @@
-From: Asias He <asias@redhat.com>
-Subject: Re: [PATCH 1/6] vhost: Separate vhost-net features from vhost features
-Date: Wed, 04 Jul 2012 12:41:41 +0800
-Message-ID: <4FF3C985.20309@redhat.com>
-References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
-	<1341375846-27882-2-git-send-email-nab@linux-iscsi.org>
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Subject: Re: [PATCH v2] virtio-scsi: hotplug support for virtio-scsi
+Date: Wed, 4 Jul 2012 14:10:15 +0800
+Message-ID: <CAEH94Liq=F5SWO4HsBbvBy-Yu15ni33qRrL4-4NDgeoqXA+QCQ@mail.gmail.com>
+References: <1341294085-17164-1-git-send-email-mc@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1341375846-27882-2-git-send-email-nab@linux-iscsi.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:61679 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150Ab2GDGKR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jul 2012 02:10:17 -0400
+In-Reply-To: <1341294085-17164-1-git-send-email-mc@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Cong Meng <mc@linux.vnet.ibm.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, stefanha@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, senwang@linux.vnet.ibm.com, zwanp@cn.ibm.com, linuxram@us.ibm.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org
 
-On 07/04/2012 12:24 PM, Nicholas A. Bellinger wrote:
-> From: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+On Tue, Jul 3, 2012 at 1:41 PM, Cong Meng <mc@linux.vnet.ibm.com> wrote:
+> This patch implements the hotplug support for virtio-scsi.
+> When there is a device attached/detached, the virtio-scsi driver will be
+> signaled via event virtual queue and it will add/remove the scsi device
+> in question automatically.
 >
-> In order for other vhost devices to use the VHOST_FEATURES bits the
-> vhost-net specific bits need to be moved to their own VHOST_NET_FEATURES
-> constant.
+> v2: handle no_event event
 >
-> Signed-off-by: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
-> Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
-> Cc: Michael S. Tsirkin <mst@redhat.com>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Signed-off-by: Nicholas A. Bellinger <nab@risingtidesystems.com>
-
-I think you need to change drivers/vhost/test.c as well.
-
-diff --git a/drivers/vhost/test.c b/drivers/vhost/test.c
-index 3de00d9..91d6f06 100644
---- a/drivers/vhost/test.c
-+++ b/drivers/vhost/test.c
-@@ -261,14 +261,14 @@ static long vhost_test_ioctl(struct file *f, 
-unsigned int ioctl,
-                         return -EFAULT;
-                 return vhost_test_run(n, test);
-         case VHOST_GET_FEATURES:
--               features = VHOST_FEATURES;
-+               features = VHOST_NET_FEATURES;
-                 if (copy_to_user(featurep, &features, sizeof features))
-                         return -EFAULT;
-                 return 0;
-         case VHOST_SET_FEATURES:
-                 if (copy_from_user(&features, featurep, sizeof features))
-                         return -EFAULT;
--               if (features & ~VHOST_FEATURES)
-+               if (features & ~VHOST_NET_FEATURES)
-                         return -EOPNOTSUPP;
-                 return vhost_test_set_features(n, features);
-         case VHOST_RESET_OWNER:
-
-
+> Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
+> Signed-off-by: Sen Wang <senwang@linux.vnet.ibm.com>
 > ---
->   drivers/vhost/net.c   |    4 ++--
->   drivers/vhost/vhost.h |    3 ++-
->   2 files changed, 4 insertions(+), 3 deletions(-)
+>  drivers/scsi/virtio_scsi.c  |  113 ++++++++++++++++++++++++++++++++++++++++++-
+>  include/linux/virtio_scsi.h |    9 ++++
+>  2 files changed, 121 insertions(+), 1 deletions(-)
 >
-> diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
-> index f82a739..072cbba 100644
-> --- a/drivers/vhost/net.c
-> +++ b/drivers/vhost/net.c
-> @@ -823,14 +823,14 @@ static long vhost_net_ioctl(struct file *f, unsigned int ioctl,
->   			return -EFAULT;
->   		return vhost_net_set_backend(n, backend.index, backend.fd);
->   	case VHOST_GET_FEATURES:
-> -		features = VHOST_FEATURES;
-> +		features = VHOST_NET_FEATURES;
->   		if (copy_to_user(featurep, &features, sizeof features))
->   			return -EFAULT;
->   		return 0;
->   	case VHOST_SET_FEATURES:
->   		if (copy_from_user(&features, featurep, sizeof features))
->   			return -EFAULT;
-> -		if (features & ~VHOST_FEATURES)
-> +		if (features & ~VHOST_NET_FEATURES)
->   			return -EOPNOTSUPP;
->   		return vhost_net_set_features(n, features);
->   	case VHOST_RESET_OWNER:
-> diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
-> index 8de1fd5..07b9763 100644
-> --- a/drivers/vhost/vhost.h
-> +++ b/drivers/vhost/vhost.h
-> @@ -201,7 +201,8 @@ enum {
->   	VHOST_FEATURES = (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) |
->   			 (1ULL << VIRTIO_RING_F_INDIRECT_DESC) |
->   			 (1ULL << VIRTIO_RING_F_EVENT_IDX) |
-> -			 (1ULL << VHOST_F_LOG_ALL) |
-> +			 (1ULL << VHOST_F_LOG_ALL),
-> +	VHOST_NET_FEATURES = VHOST_FEATURES |
->   			 (1ULL << VHOST_NET_F_VIRTIO_NET_HDR) |
->   			 (1ULL << VIRTIO_NET_F_MRG_RXBUF),
->   };
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index 9fc5e67..e44b2d6 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -25,6 +25,7 @@
+>  #include <scsi/scsi_cmnd.h>
 >
+>  #define VIRTIO_SCSI_MEMPOOL_SZ 64
+> +#define VIRTIO_SCSI_EVENT_LEN 8
+>
+>  /* Command queue element */
+>  struct virtio_scsi_cmd {
+> @@ -43,6 +44,12 @@ struct virtio_scsi_cmd {
+>         } resp;
+>  } ____cacheline_aligned_in_smp;
+>
+> +struct virtio_scsi_event_node {
+> +       struct virtio_scsi *vscsi;
+> +       struct virtio_scsi_event event;
+> +       struct work_struct work;
+> +};
+> +
+>  struct virtio_scsi_vq {
+>         /* Protects vq */
+>         spinlock_t vq_lock;
+> @@ -67,6 +74,9 @@ struct virtio_scsi {
+>         struct virtio_scsi_vq event_vq;
+>         struct virtio_scsi_vq req_vq;
+>
+> +       /* Get some buffers reday for event vq */
+s/reday/ready/   ^^^^
+> +       struct virtio_scsi_event_node event_list[VIRTIO_SCSI_EVENT_LEN];
+> +
+>         struct virtio_scsi_target_state *tgt[];
+>  };
+>
+> @@ -202,6 +212,97 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
+>         spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
+>  };
+>
+> +static int virtscsi_kick_event(struct virtio_scsi *vscsi,
+> +                              struct virtio_scsi_event_node *event_node)
+> +{
+> +       int ret;
+> +       struct scatterlist sg;
+> +       unsigned long flags;
+> +
+> +       sg_set_buf(&sg, &event_node->event, sizeof(struct virtio_scsi_event));
+> +
+> +       spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
+> +
+> +       ret = virtqueue_add_buf(vscsi->event_vq.vq, &sg, 0, 1, event_node, GFP_ATOMIC);
+> +       if (ret >= 0)
+> +               virtqueue_kick(vscsi->event_vq.vq);
+> +
+> +       spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
+> +
+> +       return ret;
+> +}
+> +
+> +static int virtscsi_kick_event_all(struct virtio_scsi *vscsi)
+> +{
+> +       int i;
+> +
+> +       for (i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++) {
+> +               vscsi->event_list[i].vscsi = vscsi;
+> +               virtscsi_kick_event(vscsi, &vscsi->event_list[i]);
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
+> +                                            struct virtio_scsi_event *event)
+> +{
+> +       struct scsi_device *sdev;
+> +       struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
+> +       unsigned int target = event->lun[1];
+> +       unsigned int lun = (event->lun[2] << 8) | event->lun[3];
+> +
+> +       switch (event->reason) {
+> +       case VIRTIO_SCSI_EVT_RESET_RESCAN:
+> +               scsi_add_device(shost, 0, target, lun);
+> +               break;
+> +       case VIRTIO_SCSI_EVT_RESET_REMOVED:
+> +               sdev = scsi_device_lookup(shost, 0, target, lun);
+> +               if (sdev) {
+> +                       scsi_remove_device(sdev);
+> +                       scsi_device_put(sdev);
+> +               } else {
+> +                       pr_err("SCSI device %d 0 %d %d not found\n",
+> +                               shost->host_no, target, lun);
+> +               }
+> +               break;
+> +       default:
+> +               pr_info("Unsupport virtio scsi event reason %x\n", event->reason);
+> +       }
+> +}
+> +
+> +static void virtscsi_handle_event(struct work_struct *work)
+> +{
+> +       struct virtio_scsi_event_node *event_node =
+> +               container_of(work, struct virtio_scsi_event_node, work);
+> +       struct virtio_scsi *vscsi = event_node->vscsi;
+> +       struct virtio_scsi_event *event = &event_node->event;
+> +
+> +       if (event->event & VIRTIO_SCSI_T_EVENTS_MISSED) {
+> +               event->event &= (~VIRTIO_SCSI_T_EVENTS_MISSED);
+> +               /* FIXME: handle event missed here */
+> +       }
+> +
+> +       switch (event->event) {
+> +       case VIRTIO_SCSI_T_NO_EVENT:
+> +               break;
+> +       case VIRTIO_SCSI_T_TRANSPORT_RESET:
+> +               virtscsi_handle_transport_reset(vscsi, event);
+> +               break;
+> +       default:
+> +               pr_err("Unsupport virtio scsi event %x\n", event->event);
+> +       }
+> +       virtscsi_kick_event(vscsi, event_node);
+> +}
+> +
+> +static void virtscsi_complete_event(void *buf)
+> +{
+> +       struct virtio_scsi_event_node *event_node = buf;
+> +
+> +       INIT_WORK(&event_node->work, virtscsi_handle_event);
+> +       schedule_work(&event_node->work);
+> +}
+> +
+>  static void virtscsi_event_done(struct virtqueue *vq)
+>  {
+>         struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
+> @@ -209,7 +310,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
+>         unsigned long flags;
+>
+>         spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
+> -       virtscsi_vq_done(vq, virtscsi_complete_free);
+> +       virtscsi_vq_done(vq, virtscsi_complete_event);
+>         spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
+>  };
+>
+> @@ -510,6 +611,10 @@ static int virtscsi_init(struct virtio_device *vdev,
+>         virtscsi_config_set(vdev, cdb_size, VIRTIO_SCSI_CDB_SIZE);
+>         virtscsi_config_set(vdev, sense_size, VIRTIO_SCSI_SENSE_SIZE);
+>
+> +       if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+> +               virtscsi_kick_event_all(vscsi);
+> +       }
+> +
+>         /* We need to know how many segments before we allocate.  */
+>         sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
+>
+> @@ -608,7 +713,13 @@ static struct virtio_device_id id_table[] = {
+>         { 0 },
+>  };
+>
+> +static unsigned int features[] = {
+> +       VIRTIO_SCSI_F_HOTPLUG
+> +};
+> +
+>  static struct virtio_driver virtio_scsi_driver = {
+> +       .feature_table = features,
+> +       .feature_table_size = ARRAY_SIZE(features),
+>         .driver.name = KBUILD_MODNAME,
+>         .driver.owner = THIS_MODULE,
+>         .id_table = id_table,
+> diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
+> index 8ddeafd..dc8d305 100644
+> --- a/include/linux/virtio_scsi.h
+> +++ b/include/linux/virtio_scsi.h
+> @@ -69,6 +69,10 @@ struct virtio_scsi_config {
+>         u32 max_lun;
+>  } __packed;
+>
+> +/* Feature Bits */
+> +#define VIRTIO_SCSI_F_INOUT                    0
+> +#define VIRTIO_SCSI_F_HOTPLUG                  1
+> +
+>  /* Response codes */
+>  #define VIRTIO_SCSI_S_OK                       0
+>  #define VIRTIO_SCSI_S_OVERRUN                  1
+> @@ -105,6 +109,11 @@ struct virtio_scsi_config {
+>  #define VIRTIO_SCSI_T_TRANSPORT_RESET          1
+>  #define VIRTIO_SCSI_T_ASYNC_NOTIFY             2
+>
+> +/* Reasons of transport reset event */
+> +#define VIRTIO_SCSI_EVT_RESET_HARD             0
+> +#define VIRTIO_SCSI_EVT_RESET_RESCAN           1
+> +#define VIRTIO_SCSI_EVT_RESET_REMOVED          2
+> +
+>  #define VIRTIO_SCSI_S_SIMPLE                   0
+>  #define VIRTIO_SCSI_S_ORDERED                  1
+>  #define VIRTIO_SCSI_S_HEAD                     2
+> --
+> 1.7.7.6
+>
+> _______________________________________________
+> Virtualization mailing list
+> Virtualization@lists.linux-foundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/virtualization
+
 
 
 -- 
-Asias
+Regards,
+
+Zhi Yong Wu
