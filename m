@@ -1,42 +1,71 @@
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: Re: [RFC][PATCH] libata: enable SATA disk fua detection on default
-Date: Wed, 4 Jul 2012 10:47:15 +0800
-Message-ID: <20120704024715.GA17095@gmail.com>
-References: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com>
- <20120703090441.GA4804@gmail.com>
- <4FF351F8.1000003@msgid.tls.msk.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4FF351F8.1000003@msgid.tls.msk.ru>
-Sender: linux-ide-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6
+Date: Wed,  4 Jul 2012 04:24:00 +0000
+Message-ID: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Michael,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Wed, Jul 04, 2012 at 12:11:36AM +0400, Michael Tokarev wrote:
-> On 03.07.2012 13:04, Zheng Liu wrote:
-> > Hi Jeff,
-> > 
-> > Sorry for bothering you.  Could you please review this patch, or give me
-> > some feedbacks.  If this patch can be applied, I can rebase it to the
-> > lastest version of mainline kernel.  Thank you.
-> []
-> >> -int libata_fua = 0;
-> >> +int libata_fua = 1;
-> 
-> I guess it can be enabled after LOTS of testing of various drives out
-> there, which shows that no current drives have issues with FUA anymore,
-> and after building a black-list of devices which misbehave.  It is quite
-> a big project, I think.  But what it gives us in return?
-> 
-> (I've no idea if this is the right answer, speaking of myself only)
+Hi folks,
 
-Thanks for the reply.  Indeed it is quite a big project but we enable
-FUA feature for SAS disk.  Is there any differences?
+This series contains patches required to update tcm_vhost <-> virtio-scsi
+connected hosts <-> guests to run on v3.5-rc2 mainline code.  This series is
+available on top of target-pending/auto-next here:
 
-Regards,
-Zheng
+   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git tcm_vhost
+
+This includes the necessary vhost changes from Stefan to to get tcm_vhost
+functioning, along a virtio-scsi LUN scanning change to address a client bug
+with tcm_vhost I ran into..  Also, tcm_vhost driver has been merged into a single
+source + header file that is now living under /drivers/vhost/, along with latest
+tcm_vhost changes from Zhi's tcm_vhost tree.
+
+Here are a couple of screenshots of the code in action using raw IBLOCK
+backends provided by FusionIO ioDrive Duo:
+
+   http://linux-iscsi.org/images/Virtio-scsi-tcm-vhost-3.5-rc2-3.png
+   http://linux-iscsi.org/images/Virtio-scsi-tcm-vhost-3.5-rc2-4.png
+
+So the next steps on my end will be converting tcm_vhost to submit backend I/O from
+cmwq context, along with fio benchmark numbers between tcm_vhost/virtio-scsi and
+virtio-scsi-raw using raw IBLOCK iomemory_vsl flash.
+
+Please have a look vhost + virtio-scsi folks (mst + paolo CC'ed) and let us
+know if you have any concerns.
+
+Thanks!
+
+--nab
+
+Nicholas Bellinger (4):
+  vhost: Add vhost_scsi specific defines
+  tcm_vhost: Initial merge for vhost level target fabric driver
+  virtio-scsi: Add vdrv->scan for post VIRTIO_CONFIG_S_DRIVER_OK LUN
+    scanning
+  virtio-scsi: Set shost->max_id=1 for tcm_vhost WWPNs
+
+Stefan Hajnoczi (2):
+  vhost: Separate vhost-net features from vhost features
+  vhost: make vhost work queue visible
+
+ drivers/scsi/virtio_scsi.c |   20 +-
+ drivers/vhost/Kconfig      |    6 +
+ drivers/vhost/Makefile     |    1 +
+ drivers/vhost/net.c        |    4 +-
+ drivers/vhost/tcm_vhost.c  | 1592 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/vhost/tcm_vhost.h  |   70 ++
+ drivers/vhost/vhost.c      |    5 +-
+ drivers/vhost/vhost.h      |    6 +-
+ drivers/virtio/virtio.c    |    5 +-
+ include/linux/vhost.h      |    9 +
+ include/linux/virtio.h     |    1 +
+ 11 files changed, 1708 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/vhost/tcm_vhost.c
+ create mode 100644 drivers/vhost/tcm_vhost.h
+
+-- 
+1.7.2.5
