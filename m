@@ -1,13 +1,17 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v4] virtio-scsi: hotplug support for virtio-scsi
-Date: Thu, 05 Jul 2012 11:19:08 +0200
-Message-ID: <4FF55C0C.4040309@redhat.com>
-References: <1341479203-12058-1-git-send-email-mc@linux.vnet.ibm.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6
+Date: Thu, 5 Jul 2012 12:31:13 +0300
+Message-ID: <20120705093113.GC29373@redhat.com>
+References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
+	<20120704140259.GB26485@redhat.com> <4FF45890.6000205@redhat.com>
+	<20120704150557.GA26951@redhat.com>
+	<1341453665.23954.224.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1341479203-12058-1-git-send-email-mc@linux.vnet.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <1341453665.23954.224.camel@haakon2.linux-iscsi.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -17,243 +21,69 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualizati
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
 Sender: virtualization-bounces@lists.linux-foundation.org
 Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Cong Meng <mc@linux.vnet.ibm.com>
-Cc: stefanha@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, senwang@linux.vnet.ibm.com, zwanp@cn.ibm.com, linuxram@us.ibm.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Il 05/07/2012 11:06, Cong Meng ha scritto:
-> This patch implements the hotplug support for virtio-scsi.
-> When there is a device attached/detached, the virtio-scsi driver will be
-> signaled via event virtual queue and it will add/remove the scsi device 
-> in question automatically.
+On Wed, Jul 04, 2012 at 07:01:05PM -0700, Nicholas A. Bellinger wrote:
+> On Wed, 2012-07-04 at 18:05 +0300, Michael S. Tsirkin wrote:
+> > On Wed, Jul 04, 2012 at 04:52:00PM +0200, Paolo Bonzini wrote:
+> > > Il 04/07/2012 16:02, Michael S. Tsirkin ha scritto:
+> > > > On Wed, Jul 04, 2012 at 04:24:00AM +0000, Nicholas A. Bellinger wrote:
+> > > >> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > >>
+> > > >> Hi folks,
+> > > >>
+> > > >> This series contains patches required to update tcm_vhost <-> virtio-scsi
+> > > >> connected hosts <-> guests to run on v3.5-rc2 mainline code.  This series is
+> > > >> available on top of target-pending/auto-next here:
+> > > >>
+> > > >>    git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git tcm_vhost
+> > > >>
+> > > >> This includes the necessary vhost changes from Stefan to to get tcm_vhost
+> > > >> functioning, along a virtio-scsi LUN scanning change to address a client bug
+> > > >> with tcm_vhost I ran into..  Also, tcm_vhost driver has been merged into a single
+> > > >> source + header file that is now living under /drivers/vhost/, along with latest
+> > > >> tcm_vhost changes from Zhi's tcm_vhost tree.
+> > > >>
+> > > >> Here are a couple of screenshots of the code in action using raw IBLOCK
+> > > >> backends provided by FusionIO ioDrive Duo:
+> > > >>
+> > > >>    http://linux-iscsi.org/images/Virtio-scsi-tcm-vhost-3.5-rc2-3.png
+> > > >>    http://linux-iscsi.org/images/Virtio-scsi-tcm-vhost-3.5-rc2-4.png
+> > > >>
+> > > >> So the next steps on my end will be converting tcm_vhost to submit backend I/O from
+> > > >> cmwq context, along with fio benchmark numbers between tcm_vhost/virtio-scsi and
+> > > >> virtio-scsi-raw using raw IBLOCK iomemory_vsl flash.
+> > > > 
+> > > > OK so this is an RFC, not for merge yet?
+> > > 
+> > > Patch 6 definitely looks RFCish, but patch 5 should go in anyway.
+> > > 
+> > > Paolo
+> > 
+> > I was talking about 4/6 first of all.
 > 
-> v2: handle no_event event
-> v3: add handle event dropped, and typo fix
-> v4: Cancel event works when exit. Coding type fix.
+> So yeah, this code is still considered RFC at this point for-3.6, but
+> I'd like to get this into target-pending/for-next in next week for more
+> feedback and start collecting signoffs for the necessary pieces that
+> effect existing vhost code.
 > 
-> Signed-off-by: Sen Wang <senwang@linux.vnet.ibm.com>
-> Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
+> By that time the cmwq conversion of tcm_vhost should be in place as
+> well..
 
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+I'll try to give some feedback but I think we do need
+to see the qemu patches - they weren't posted yet, were they?
+This driver has some userspace interface and once
+that is merged it has to be supported.
+So I think we need the buy-in from the qemu side at the principal level.
 
-> ---
->  drivers/scsi/virtio_scsi.c  |  127 ++++++++++++++++++++++++++++++++++++++++++-
->  include/linux/virtio_scsi.h |    9 +++
->  2 files changed, 135 insertions(+), 1 deletions(-)
+> > Anyway, it's best to split, not to mix RFCs and fixes.
+> > 
 > 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 9fc5e67..173cb39 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -25,6 +25,7 @@
->  #include <scsi/scsi_cmnd.h>
->  
->  #define VIRTIO_SCSI_MEMPOOL_SZ 64
-> +#define VIRTIO_SCSI_EVENT_LEN 8
->  
->  /* Command queue element */
->  struct virtio_scsi_cmd {
-> @@ -43,6 +44,12 @@ struct virtio_scsi_cmd {
->  	} resp;
->  } ____cacheline_aligned_in_smp;
->  
-> +struct virtio_scsi_event_node {
-> +	struct virtio_scsi *vscsi;
-> +	struct virtio_scsi_event event;
-> +	struct work_struct work;
-> +};
-> +
->  struct virtio_scsi_vq {
->  	/* Protects vq */
->  	spinlock_t vq_lock;
-> @@ -67,6 +74,9 @@ struct virtio_scsi {
->  	struct virtio_scsi_vq event_vq;
->  	struct virtio_scsi_vq req_vq;
->  
-> +	/* Get some buffers ready for event vq */
-> +	struct virtio_scsi_event_node event_list[VIRTIO_SCSI_EVENT_LEN];
-> +
->  	struct virtio_scsi_target_state *tgt[];
->  };
->  
-> @@ -202,6 +212,106 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
->  	spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
->  };
->  
-> +static int virtscsi_kick_event(struct virtio_scsi *vscsi,
-> +			       struct virtio_scsi_event_node *event_node)
-> +{
-> +	int ret;
-> +	struct scatterlist sg;
-> +	unsigned long flags;
-> +
-> +	sg_set_buf(&sg, &event_node->event, sizeof(struct virtio_scsi_event));
-> +
-> +	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
-> +
-> +	ret = virtqueue_add_buf(vscsi->event_vq.vq, &sg, 0, 1, event_node, GFP_ATOMIC);
-> +	if (ret >= 0)
-> +		virtqueue_kick(vscsi->event_vq.vq);
-> +
-> +	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
-> +
-> +	return ret;
-> +}
-> +
-> +static int virtscsi_kick_event_all(struct virtio_scsi *vscsi)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++) {
-> +		vscsi->event_list[i].vscsi = vscsi;
-> +		virtscsi_kick_event(vscsi, &vscsi->event_list[i]);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void virtscsi_cancel_event_work(struct virtio_scsi *vscsi)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++) {
-> +		cancel_work_sync(&vscsi->event_list[i].work);
-> +	}
-> +}
-> +
-> +static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
-> +						struct virtio_scsi_event *event)
-> +{
-> +	struct scsi_device *sdev;
-> +	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
-> +	unsigned int target = event->lun[1];
-> +	unsigned int lun = (event->lun[2] << 8) | event->lun[3];
-> +
-> +	switch (event->reason) {
-> +	case VIRTIO_SCSI_EVT_RESET_RESCAN:
-> +		scsi_add_device(shost, 0, target, lun);
-> +		break;
-> +	case VIRTIO_SCSI_EVT_RESET_REMOVED:
-> +		sdev = scsi_device_lookup(shost, 0, target, lun);
-> +		if (sdev) {
-> +			scsi_remove_device(sdev);
-> +			scsi_device_put(sdev);
-> +		} else {
-> +			pr_err("SCSI device %d 0 %d %d not found\n",
-> +				shost->host_no, target, lun);
-> +		}
-> +		break;
-> +	default:
-> +		pr_info("Unsupport virtio scsi event reason %x\n", event->reason);
-> +	}
-> +}
-> +
-> +static void virtscsi_handle_event(struct work_struct *work)
-> +{
-> +	struct virtio_scsi_event_node *event_node =
-> +		container_of(work, struct virtio_scsi_event_node, work);
-> +	struct virtio_scsi *vscsi = event_node->vscsi;
-> +	struct virtio_scsi_event *event = &event_node->event;
-> +
-> +	if (event->event & VIRTIO_SCSI_T_EVENTS_MISSED) {
-> +		event->event &= ~VIRTIO_SCSI_T_EVENTS_MISSED;
-> +		scsi_scan_host(virtio_scsi_host(vscsi->vdev));
-> +	}
-> +
-> +	switch (event->event) {
-> +	case VIRTIO_SCSI_T_NO_EVENT:
-> +		break;
-> +	case VIRTIO_SCSI_T_TRANSPORT_RESET:
-> +		virtscsi_handle_transport_reset(vscsi, event);
-> +		break;
-> +	default:
-> +		pr_err("Unsupport virtio scsi event %x\n", event->event);
-> +	}
-> +	virtscsi_kick_event(vscsi, event_node);
-> +}
-> +
-> +static void virtscsi_complete_event(void *buf)
-> +{
-> +	struct virtio_scsi_event_node *event_node = buf;
-> +
-> +	INIT_WORK(&event_node->work, virtscsi_handle_event);
-> +	schedule_work(&event_node->work);
-> +}
-> +
->  static void virtscsi_event_done(struct virtqueue *vq)
->  {
->  	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
-> @@ -209,7 +319,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
->  	unsigned long flags;
->  
->  	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
-> -	virtscsi_vq_done(vq, virtscsi_complete_free);
-> +	virtscsi_vq_done(vq, virtscsi_complete_event);
->  	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
->  };
->  
-> @@ -510,6 +620,10 @@ static int virtscsi_init(struct virtio_device *vdev,
->  	virtscsi_config_set(vdev, cdb_size, VIRTIO_SCSI_CDB_SIZE);
->  	virtscsi_config_set(vdev, sense_size, VIRTIO_SCSI_SENSE_SIZE);
->  
-> +	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-> +		virtscsi_kick_event_all(vscsi);
-> +	}
-> +
->  	/* We need to know how many segments before we allocate.  */
->  	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
->  
-> @@ -580,6 +694,11 @@ virtscsi_init_failed:
->  static void __devexit virtscsi_remove(struct virtio_device *vdev)
->  {
->  	struct Scsi_Host *shost = virtio_scsi_host(vdev);
-> +	struct virtio_scsi *vscsi = shost_priv(shost);
-> +
-> +	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-> +		virtscsi_cancel_event_work(vscsi);
-> +	}
->  
->  	scsi_remove_host(shost);
->  
-> @@ -608,7 +727,13 @@ static struct virtio_device_id id_table[] = {
->  	{ 0 },
->  };
->  
-> +static unsigned int features[] = {
-> +	VIRTIO_SCSI_F_HOTPLUG
-> +};
-> +
->  static struct virtio_driver virtio_scsi_driver = {
-> +	.feature_table = features,
-> +	.feature_table_size = ARRAY_SIZE(features),
->  	.driver.name = KBUILD_MODNAME,
->  	.driver.owner = THIS_MODULE,
->  	.id_table = id_table,
-> diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
-> index 8ddeafd..dc8d305 100644
-> --- a/include/linux/virtio_scsi.h
-> +++ b/include/linux/virtio_scsi.h
-> @@ -69,6 +69,10 @@ struct virtio_scsi_config {
->  	u32 max_lun;
->  } __packed;
->  
-> +/* Feature Bits */
-> +#define VIRTIO_SCSI_F_INOUT                    0
-> +#define VIRTIO_SCSI_F_HOTPLUG                  1
-> +
->  /* Response codes */
->  #define VIRTIO_SCSI_S_OK                       0
->  #define VIRTIO_SCSI_S_OVERRUN                  1
-> @@ -105,6 +109,11 @@ struct virtio_scsi_config {
->  #define VIRTIO_SCSI_T_TRANSPORT_RESET          1
->  #define VIRTIO_SCSI_T_ASYNC_NOTIFY             2
->  
-> +/* Reasons of transport reset event */
-> +#define VIRTIO_SCSI_EVT_RESET_HARD             0
-> +#define VIRTIO_SCSI_EVT_RESET_RESCAN           1
-> +#define VIRTIO_SCSI_EVT_RESET_REMOVED          2
-> +
->  #define VIRTIO_SCSI_S_SIMPLE                   0
->  #define VIRTIO_SCSI_S_ORDERED                  1
->  #define VIRTIO_SCSI_S_HEAD                     2
+> <nod>, I'll send patch #5 separately to linux-scsi -> James and CC
+> stable following Paolo's request.
 > 
+> Thanks!
+> 
+> --nab
