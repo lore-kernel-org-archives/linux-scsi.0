@@ -1,7 +1,7 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v4 3/4] block: implement runtime pm strategy
-Date: Thu,  5 Jul 2012 15:26:38 +0800
-Message-ID: <1341473199-3837-4-git-send-email-ming.m.lin@intel.com>
+Subject: [PATCH v4 4/4] [SCSI] sd: change to auto suspend mode
+Date: Thu,  5 Jul 2012 15:26:39 +0800
+Message-ID: <1341473199-3837-5-git-send-email-ming.m.lin@intel.com>
 References: <1341473199-3837-1-git-send-email-ming.m.lin@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1341473199-3837-1-git-send-email-ming.m.lin@intel.com>
@@ -10,98 +10,143 @@ To: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, Shaohu
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When a request is added:
-    If device is suspended or is suspending and the request is not a
-    PM request, resume the device.
-
-When a request finishes:
-    Call pm_runtime_mark_last_busy().
-
-When pick a request:
-    If device is resuming/suspending, then only PM request is allowed to go.
-    Return NULL for other cases.
+Uses block layer runtime pm helper functions in scsi_runtime_suspend/resume.
+Remove scsi_autopm_* from sd open/release path.
 
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
 
 v4:
-- Adds CONFIG_PM_RUNTIME check
+- Update queue pm status in scsi_bus_resume_common
 
- block/blk-core.c |   16 ++++++++++++++++
- block/elevator.c |   13 +++++++++++++
- 2 files changed, 29 insertions(+)
+ drivers/scsi/scsi_pm.c    |   32 +++++++++++++++++++++++++-------
+ drivers/scsi/scsi_sysfs.c |    2 ++
+ drivers/scsi/sd.c         |    7 -------
+ 3 files changed, 27 insertions(+), 14 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index b94ec5f..4720bec 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1225,6 +1225,11 @@ void __blk_put_request(struct request_queue *q, struct request *req)
- 	if (unlikely(--req->ref_count))
- 		return;
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d2a80de..aa43fa2 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -77,6 +77,9 @@ static int scsi_bus_resume_common(struct device *dev)
+ 	int err = 0;
  
-+#ifdef CONFIG_PM_RUNTIME
-+	if (!(--q->nr_pending) && q->dev)
-+		pm_runtime_mark_last_busy(q->dev);
-+#endif
+ 	if (scsi_is_sdev_device(dev)) {
++		struct scsi_device *sdev = to_scsi_device(dev);
++		struct request_queue *q = sdev->request_queue;
 +
- 	elv_completed_request(q, req);
+ 		/*
+ 		 * Parent device may have runtime suspended as soon as
+ 		 * it is woken up during the system resume.
+@@ -84,12 +87,14 @@ static int scsi_bus_resume_common(struct device *dev)
+ 		 * Resume it on behalf of child.
+ 		 */
+ 		pm_runtime_get_sync(dev->parent);
++		blk_pre_runtime_resume(q);
+ 		err = scsi_dev_type_resume(dev);
+ 		if (err == 0) {
+ 			pm_runtime_disable(dev);
+ 			pm_runtime_set_active(dev);
+ 			pm_runtime_enable(dev);
+ 		}
++		blk_post_runtime_resume(q, err);
+ 		pm_runtime_put_sync(dev->parent);
+ 	}
  
- 	/* this is a bio leak */
-@@ -2013,6 +2018,17 @@ struct request *blk_peek_request(struct request_queue *q)
- 	int ret;
+@@ -142,10 +147,16 @@ static int scsi_runtime_suspend(struct device *dev)
  
- 	while ((rq = __elv_next_request(q)) != NULL) {
+ 	dev_dbg(dev, "scsi_runtime_suspend\n");
+ 	if (scsi_is_sdev_device(dev)) {
++		struct scsi_device *sdev = to_scsi_device(dev);
++		struct request_queue *q = sdev->request_queue;
 +
-+#ifdef CONFIG_PM_RUNTIME
-+		if (q->rpm_status == RPM_SUSPENDED ||
-+			(q->rpm_status != RPM_ACTIVE
-+			    && !(rq->cmd_flags & REQ_PM))) {
++		err = blk_pre_runtime_suspend(q);
++		if (err)
++			return err;
 +
-+			rq = NULL;
-+			break;
-+		}
-+#endif
+ 		err = scsi_dev_type_suspend(dev, PMSG_AUTO_SUSPEND);
+-		if (err == -EAGAIN)
+-			pm_schedule_suspend(dev, jiffies_to_msecs(
+-				round_jiffies_up_relative(HZ/10)));
 +
- 		if (!(rq->cmd_flags & REQ_STARTED)) {
- 			/*
- 			 * This is the first time the device driver
-diff --git a/block/elevator.c b/block/elevator.c
-index 6a55d41..9f82e77 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -34,6 +34,7 @@
- #include <linux/blktrace_api.h>
- #include <linux/hash.h>
- #include <linux/uaccess.h>
-+#include <linux/pm_runtime.h>
++		blk_post_runtime_suspend(q, err);
+ 	}
  
- #include <trace/events/block.h>
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+@@ -158,8 +169,14 @@ static int scsi_runtime_resume(struct device *dev)
+ 	int err = 0;
  
-@@ -536,6 +537,11 @@ void elv_requeue_request(struct request_queue *q, struct request *rq)
+ 	dev_dbg(dev, "scsi_runtime_resume\n");
+-	if (scsi_is_sdev_device(dev))
++	if (scsi_is_sdev_device(dev)) {
++		struct scsi_device *sdev = to_scsi_device(dev);
++		struct request_queue *q = sdev->request_queue;
++
++		blk_pre_runtime_resume(q);
+ 		err = scsi_dev_type_resume(dev);
++		blk_post_runtime_resume(q, err);
++	}
  
- 	rq->cmd_flags &= ~REQ_STARTED;
+ 	/* Insert hooks here for targets, hosts, and transport classes */
  
-+#ifdef CONFIG_PM_RUNTIME
-+	/* __elv_add_request will increment the count */
-+	if (!(rq->cmd_flags & REQ_PM))
-+		q->nr_pending--;
-+#endif
- 	__elv_add_request(q, rq, ELEVATOR_INSERT_REQUEUE);
+@@ -174,9 +191,10 @@ static int scsi_runtime_idle(struct device *dev)
+ 
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+ 
+-	if (scsi_is_sdev_device(dev))
+-		err = pm_schedule_suspend(dev, 100);
+-	else
++	if (scsi_is_sdev_device(dev)) {
++		pm_runtime_mark_last_busy(dev);
++		err = pm_runtime_autosuspend(dev);
++	} else
+ 		err = pm_runtime_suspend(dev);
+ 	return err;
  }
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 04c2a27..1e8975f 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -895,6 +895,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	 */
+ 	scsi_autopm_get_device(sdev);
  
-@@ -558,6 +564,13 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
- {
- 	trace_block_rq_insert(q, rq);
- 
-+#ifdef CONFIG_PM_RUNTIME
-+	if (q->nr_pending++ == 0 && !(rq->cmd_flags & REQ_PM) &&
-+		    (q->rpm_status == RPM_SUSPENDED ||
-+		     q->rpm_status == RPM_SUSPENDING) && q->dev)
-+		pm_request_resume(q->dev);
-+#endif
++	blk_pm_runtime_init(rq, &sdev->sdev_gendev);
 +
- 	rq->q = q;
+ 	error = device_add(&sdev->sdev_gendev);
+ 	if (error) {
+ 		sdev_printk(KERN_INFO, sdev,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index bf8413a..bf9f4e8 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -967,10 +967,6 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
  
- 	if (rq->cmd_flags & REQ_SOFTBARRIER) {
+ 	sdev = sdkp->device;
+ 
+-	retval = scsi_autopm_get_device(sdev);
+-	if (retval)
+-		goto error_autopm;
+-
+ 	/*
+ 	 * If the device is in error recovery, wait until it is done.
+ 	 * If the device is offline, then disallow any access to it.
+@@ -1015,8 +1011,6 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+ 	return 0;
+ 
+ error_out:
+-	scsi_autopm_put_device(sdev);
+-error_autopm:
+ 	scsi_disk_put(sdkp);
+ 	return retval;	
+ }
+@@ -1051,7 +1045,6 @@ static int sd_release(struct gendisk *disk, fmode_t mode)
+ 	 * XXX is followed by a "rmmod sd_mod"?
+ 	 */
+ 
+-	scsi_autopm_put_device(sdev);
+ 	scsi_disk_put(sdkp);
+ 	return 0;
+ }
 -- 
 1.7.10
