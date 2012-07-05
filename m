@@ -1,168 +1,76 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v4 2/4] block: add runtime pm helpers
-Date: Thu, 5 Jul 2012 15:11:20 +0200
-Message-ID: <201207051511.20772.rjw@sisk.pl>
-References: <1341473199-3837-1-git-send-email-ming.m.lin@intel.com> <1341473199-3837-3-git-send-email-ming.m.lin@intel.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] [SCSI] scsi_pm: set device runtime state before parent
+ suspended
+Date: Thu, 5 Jul 2012 09:25:56 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1207050921310.30876-100000@netrider.rowland.org>
+References: <1341470884.3484.12.camel@chief-river-32>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1341473199-3837-3-git-send-email-ming.m.lin@intel.com>
+In-Reply-To: <1341470884.3484.12.camel@chief-river-32>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thursday, July 05, 2012, Lin Ming wrote:
-> Add runtime pm helper functions:
+On Thu, 5 Jul 2012, Lin Ming wrote:
+
+> There is a race in scsi_bus_resume_common when set device's runtime
+> state to active after pm_runtime_put_sync(dev->parent).
 > 
-> blk_pm_runtime_init()
-> blk_pre_runtime_suspend()
-> blk_post_runtime_suspend()
-> blk_pre_runtime_resume()
-> blk_post_runtime_suspend()
-
-What exactly do you need these things for?  Please be specific.
-
-Thanks,
-Rafael
-
-
+> Parent device may have been suspended so pm_runtime_set_active(dev) will
+> fail with -EBUSY.
+> 
 > Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> CC: <stable@vger.kernel.org>
 > ---
+>  drivers/scsi/scsi_pm.c |   10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
 > 
-> v4:
-> - Adds CONFIG_PM_RUNTIME check
-> 
->  block/blk-core.c       |   63 ++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/blkdev.h |   27 +++++++++++++++++++++
->  2 files changed, 90 insertions(+)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 3c923a7..b94ec5f 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -30,6 +30,7 @@
->  #include <linux/list_sort.h>
->  #include <linux/delay.h>
->  #include <linux/ratelimit.h>
-> +#include <linux/pm_runtime.h>
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index d4201de..d2a80de 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -85,14 +85,14 @@ static int scsi_bus_resume_common(struct device *dev)
+>  		 */
+>  		pm_runtime_get_sync(dev->parent);
+>  		err = scsi_dev_type_resume(dev);
+> +		if (err == 0) {
+> +			pm_runtime_disable(dev);
+> +			pm_runtime_set_active(dev);
+> +			pm_runtime_enable(dev);
+> +		}
+>  		pm_runtime_put_sync(dev->parent);
+>  	}
 >  
->  #define CREATE_TRACE_POINTS
->  #include <trace/events/block.h>
-> @@ -2982,6 +2983,68 @@ void blk_finish_plug(struct blk_plug *plug)
->  }
->  EXPORT_SYMBOL(blk_finish_plug);
->  
-> +#ifdef CONFIG_PM_RUNTIME
-> +void blk_pm_runtime_init(struct request_queue *q, struct device *dev)
-> +{
-> +	q->dev = dev;
-> +	q->rpm_status = RPM_ACTIVE;
-> +
-> +	pm_runtime_use_autosuspend(q->dev);
-> +	pm_runtime_mark_last_busy(q->dev);
-> +	pm_runtime_autosuspend(q->dev);
-> +}
-> +EXPORT_SYMBOL(blk_pm_runtime_init);
-> +
-> +int blk_pre_runtime_suspend(struct request_queue *q)
-> +{
-> +	int ret = 0;
-> +
-> +	spin_lock_irq(q->queue_lock);
-> +	if (q->nr_pending)
-> +		ret = -EBUSY;
-> +	else
-> +		q->rpm_status = RPM_SUSPENDING;
-> +	spin_unlock_irq(q->queue_lock);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(blk_pre_runtime_suspend);
-> +
-> +void blk_post_runtime_suspend(struct request_queue *q, int err)
-> +{
-> +	spin_lock_irq(q->queue_lock);
-> +	if (!err)
-> +		q->rpm_status = RPM_SUSPENDED;
-> +	else {
-> +		q->rpm_status = RPM_ACTIVE;
-> +		pm_runtime_mark_last_busy(q->dev);
-> +	}
-> +	spin_unlock_irq(q->queue_lock);
-> +}
-> +EXPORT_SYMBOL(blk_post_runtime_suspend);
-> +
-> +void blk_pre_runtime_resume(struct request_queue *q)
-> +{
-> +	spin_lock_irq(q->queue_lock);
-> +	q->rpm_status = RPM_RESUMING;
-> +	spin_unlock_irq(q->queue_lock);
-> +}
-> +EXPORT_SYMBOL(blk_pre_runtime_resume);
-> +
-> +void blk_post_runtime_resume(struct request_queue *q, int err)
-> +{
-> +	spin_lock_irq(q->queue_lock);
-> +	if (!err) {
-> +		q->rpm_status = RPM_ACTIVE;
-> +		__blk_run_queue(q);
-> +		pm_runtime_mark_last_busy(q->dev);
-> +		pm_request_autosuspend(q->dev);
-> +	} else
-> +		q->rpm_status = RPM_SUSPENDED;
-> +	spin_unlock_irq(q->queue_lock);
-> +}
-> +EXPORT_SYMBOL(blk_post_runtime_resume);
-> +#endif
-> +
->  int __init blk_dev_init(void)
->  {
->  	BUILD_BUG_ON(__REQ_NR_BITS > 8 *
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index ba43f40..a5b255e 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -346,6 +346,12 @@ struct request_queue {
->  	 */
->  	struct kobject kobj;
->  
-> +#ifdef CONFIG_PM_RUNTIME
-> +	struct device		*dev;
-> +	int			rpm_status;
-> +	unsigned int		nr_pending;
-> +#endif
-> +
->  	/*
->  	 * queue settings
->  	 */
-> @@ -893,6 +899,27 @@ struct request_queue *blk_alloc_queue_node(gfp_t, int);
->  extern void blk_put_queue(struct request_queue *);
->  
->  /*
-> + * block layer runtime pm functions
-> + */
-> +#ifdef CONFIG_PM_RUNTIME
-> +extern void blk_pm_runtime_init(struct request_queue *q, struct device *dev);
-> +extern int blk_pre_runtime_suspend(struct request_queue *q);
-> +extern void blk_post_runtime_suspend(struct request_queue *q, int err);
-> +extern void blk_pre_runtime_resume(struct request_queue *q);
-> +extern void blk_post_runtime_resume(struct request_queue *q, int err);
-> +#else
-> +static inline void blk_pm_runtime_init(struct request_queue *q,
-> +	struct device *dev) {}
-> +static inline int blk_pre_runtime_suspend(struct request_queue *q)
-> +{
-> +	return -ENOSYS;
-> +}
-> +static inline void blk_post_runtime_suspend(struct request_queue *q, int err) {}
-> +static inline void blk_pre_runtime_resume(struct request_queue *q) {}
-> +static inline void blk_post_runtime_resume(struct request_queue *q, int err) {}
-> +#endif
-> +
-> +/*
->   * blk_plug permits building a queue of related requests by holding the I/O
->   * fragments for a short period. This allows merging of sequential requests
->   * into single larger request. As the requests are moved from a per-task list to
-> 
+> -	if (err == 0) {
+> -		pm_runtime_disable(dev);
+> -		pm_runtime_set_active(dev);
+> -		pm_runtime_enable(dev);
+> -	}
+
+This isn't quite right.  We still want to execute the 
+pm_runtime_disable, _set_active, and _enable even when 
+scsi_is_sdev_device(dev) is false.
+
+I guess the revised code should look more like this:
+
+	/*
+	 * Parent device may have runtime suspended as soon as
+	 * it is woken up during the system resume.
+	 *
+	 * Resume it on behalf of child.
+	 */
+	pm_runtime_get_sync(dev->parent);
+
+	if (scsi_is_sdev_device(dev))
+		err = scsi_dev_type_resume(dev);
+	if (err == 0) {
+		pm_runtime_disable(dev);
+		pm_runtime_set_active(dev);
+		pm_runtime_enable(dev);
+	}
+
+	pm_runtime_put_sync(dev->parent);
+
+Alan Stern
