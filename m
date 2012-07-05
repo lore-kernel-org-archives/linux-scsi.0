@@ -1,158 +1,243 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v4 2/4] block: add runtime pm helpers
-Date: Thu,  5 Jul 2012 15:26:37 +0800
-Message-ID: <1341473199-3837-3-git-send-email-ming.m.lin@intel.com>
-References: <1341473199-3837-1-git-send-email-ming.m.lin@intel.com>
+From: Cong Meng <mc@linux.vnet.ibm.com>
+Subject: [PATCH v4] virtio-scsi: hotplug support for virtio-scsi
+Date: Thu,  5 Jul 2012 17:06:43 +0800
+Message-ID: <1341479203-12058-1-git-send-email-mc@linux.vnet.ibm.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1341473199-3837-1-git-send-email-ming.m.lin@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, Shaohua Li <shli@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, senwang@linux.vnet.ibm.com, zwanp@cn.ibm.com, virtualization@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Cong Meng <mc@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add runtime pm helper functions:
+This patch implements the hotplug support for virtio-scsi.
+When there is a device attached/detached, the virtio-scsi driver will be
+signaled via event virtual queue and it will add/remove the scsi device 
+in question automatically.
 
-blk_pm_runtime_init()
-blk_pre_runtime_suspend()
-blk_post_runtime_suspend()
-blk_pre_runtime_resume()
-blk_post_runtime_suspend()
+v2: handle no_event event
+v3: add handle event dropped, and typo fix
+v4: Cancel event works when exit. Coding type fix.
 
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+Signed-off-by: Sen Wang <senwang@linux.vnet.ibm.com>
+Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
 ---
+ drivers/scsi/virtio_scsi.c  |  127 ++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/virtio_scsi.h |    9 +++
+ 2 files changed, 135 insertions(+), 1 deletions(-)
 
-v4:
-- Adds CONFIG_PM_RUNTIME check
-
- block/blk-core.c       |   63 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |   27 +++++++++++++++++++++
- 2 files changed, 90 insertions(+)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 3c923a7..b94ec5f 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -30,6 +30,7 @@
- #include <linux/list_sort.h>
- #include <linux/delay.h>
- #include <linux/ratelimit.h>
-+#include <linux/pm_runtime.h>
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 9fc5e67..173cb39 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -25,6 +25,7 @@
+ #include <scsi/scsi_cmnd.h>
  
- #define CREATE_TRACE_POINTS
- #include <trace/events/block.h>
-@@ -2982,6 +2983,68 @@ void blk_finish_plug(struct blk_plug *plug)
- }
- EXPORT_SYMBOL(blk_finish_plug);
+ #define VIRTIO_SCSI_MEMPOOL_SZ 64
++#define VIRTIO_SCSI_EVENT_LEN 8
  
-+#ifdef CONFIG_PM_RUNTIME
-+void blk_pm_runtime_init(struct request_queue *q, struct device *dev)
+ /* Command queue element */
+ struct virtio_scsi_cmd {
+@@ -43,6 +44,12 @@ struct virtio_scsi_cmd {
+ 	} resp;
+ } ____cacheline_aligned_in_smp;
+ 
++struct virtio_scsi_event_node {
++	struct virtio_scsi *vscsi;
++	struct virtio_scsi_event event;
++	struct work_struct work;
++};
++
+ struct virtio_scsi_vq {
+ 	/* Protects vq */
+ 	spinlock_t vq_lock;
+@@ -67,6 +74,9 @@ struct virtio_scsi {
+ 	struct virtio_scsi_vq event_vq;
+ 	struct virtio_scsi_vq req_vq;
+ 
++	/* Get some buffers ready for event vq */
++	struct virtio_scsi_event_node event_list[VIRTIO_SCSI_EVENT_LEN];
++
+ 	struct virtio_scsi_target_state *tgt[];
+ };
+ 
+@@ -202,6 +212,106 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
+ 	spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
+ };
+ 
++static int virtscsi_kick_event(struct virtio_scsi *vscsi,
++			       struct virtio_scsi_event_node *event_node)
 +{
-+	q->dev = dev;
-+	q->rpm_status = RPM_ACTIVE;
++	int ret;
++	struct scatterlist sg;
++	unsigned long flags;
 +
-+	pm_runtime_use_autosuspend(q->dev);
-+	pm_runtime_mark_last_busy(q->dev);
-+	pm_runtime_autosuspend(q->dev);
-+}
-+EXPORT_SYMBOL(blk_pm_runtime_init);
++	sg_set_buf(&sg, &event_node->event, sizeof(struct virtio_scsi_event));
 +
-+int blk_pre_runtime_suspend(struct request_queue *q)
-+{
-+	int ret = 0;
++	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
 +
-+	spin_lock_irq(q->queue_lock);
-+	if (q->nr_pending)
-+		ret = -EBUSY;
-+	else
-+		q->rpm_status = RPM_SUSPENDING;
-+	spin_unlock_irq(q->queue_lock);
++	ret = virtqueue_add_buf(vscsi->event_vq.vq, &sg, 0, 1, event_node, GFP_ATOMIC);
++	if (ret >= 0)
++		virtqueue_kick(vscsi->event_vq.vq);
++
++	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
++
 +	return ret;
 +}
-+EXPORT_SYMBOL(blk_pre_runtime_suspend);
 +
-+void blk_post_runtime_suspend(struct request_queue *q, int err)
++static int virtscsi_kick_event_all(struct virtio_scsi *vscsi)
 +{
-+	spin_lock_irq(q->queue_lock);
-+	if (!err)
-+		q->rpm_status = RPM_SUSPENDED;
-+	else {
-+		q->rpm_status = RPM_ACTIVE;
-+		pm_runtime_mark_last_busy(q->dev);
++	int i;
++
++	for (i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++) {
++		vscsi->event_list[i].vscsi = vscsi;
++		virtscsi_kick_event(vscsi, &vscsi->event_list[i]);
 +	}
-+	spin_unlock_irq(q->queue_lock);
-+}
-+EXPORT_SYMBOL(blk_post_runtime_suspend);
 +
-+void blk_pre_runtime_resume(struct request_queue *q)
++	return 0;
++}
++
++static void virtscsi_cancel_event_work(struct virtio_scsi *vscsi)
 +{
-+	spin_lock_irq(q->queue_lock);
-+	q->rpm_status = RPM_RESUMING;
-+	spin_unlock_irq(q->queue_lock);
-+}
-+EXPORT_SYMBOL(blk_pre_runtime_resume);
++	int i;
 +
-+void blk_post_runtime_resume(struct request_queue *q, int err)
++	for (i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++) {
++		cancel_work_sync(&vscsi->event_list[i].work);
++	}
++}
++
++static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
++						struct virtio_scsi_event *event)
 +{
-+	spin_lock_irq(q->queue_lock);
-+	if (!err) {
-+		q->rpm_status = RPM_ACTIVE;
-+		__blk_run_queue(q);
-+		pm_runtime_mark_last_busy(q->dev);
-+		pm_request_autosuspend(q->dev);
-+	} else
-+		q->rpm_status = RPM_SUSPENDED;
-+	spin_unlock_irq(q->queue_lock);
-+}
-+EXPORT_SYMBOL(blk_post_runtime_resume);
-+#endif
++	struct scsi_device *sdev;
++	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
++	unsigned int target = event->lun[1];
++	unsigned int lun = (event->lun[2] << 8) | event->lun[3];
 +
- int __init blk_dev_init(void)
++	switch (event->reason) {
++	case VIRTIO_SCSI_EVT_RESET_RESCAN:
++		scsi_add_device(shost, 0, target, lun);
++		break;
++	case VIRTIO_SCSI_EVT_RESET_REMOVED:
++		sdev = scsi_device_lookup(shost, 0, target, lun);
++		if (sdev) {
++			scsi_remove_device(sdev);
++			scsi_device_put(sdev);
++		} else {
++			pr_err("SCSI device %d 0 %d %d not found\n",
++				shost->host_no, target, lun);
++		}
++		break;
++	default:
++		pr_info("Unsupport virtio scsi event reason %x\n", event->reason);
++	}
++}
++
++static void virtscsi_handle_event(struct work_struct *work)
++{
++	struct virtio_scsi_event_node *event_node =
++		container_of(work, struct virtio_scsi_event_node, work);
++	struct virtio_scsi *vscsi = event_node->vscsi;
++	struct virtio_scsi_event *event = &event_node->event;
++
++	if (event->event & VIRTIO_SCSI_T_EVENTS_MISSED) {
++		event->event &= ~VIRTIO_SCSI_T_EVENTS_MISSED;
++		scsi_scan_host(virtio_scsi_host(vscsi->vdev));
++	}
++
++	switch (event->event) {
++	case VIRTIO_SCSI_T_NO_EVENT:
++		break;
++	case VIRTIO_SCSI_T_TRANSPORT_RESET:
++		virtscsi_handle_transport_reset(vscsi, event);
++		break;
++	default:
++		pr_err("Unsupport virtio scsi event %x\n", event->event);
++	}
++	virtscsi_kick_event(vscsi, event_node);
++}
++
++static void virtscsi_complete_event(void *buf)
++{
++	struct virtio_scsi_event_node *event_node = buf;
++
++	INIT_WORK(&event_node->work, virtscsi_handle_event);
++	schedule_work(&event_node->work);
++}
++
+ static void virtscsi_event_done(struct virtqueue *vq)
  {
- 	BUILD_BUG_ON(__REQ_NR_BITS > 8 *
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index ba43f40..a5b255e 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -346,6 +346,12 @@ struct request_queue {
- 	 */
- 	struct kobject kobj;
+ 	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
+@@ -209,7 +319,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
+ 	unsigned long flags;
  
-+#ifdef CONFIG_PM_RUNTIME
-+	struct device		*dev;
-+	int			rpm_status;
-+	unsigned int		nr_pending;
-+#endif
-+
- 	/*
- 	 * queue settings
- 	 */
-@@ -893,6 +899,27 @@ struct request_queue *blk_alloc_queue_node(gfp_t, int);
- extern void blk_put_queue(struct request_queue *);
+ 	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
+-	virtscsi_vq_done(vq, virtscsi_complete_free);
++	virtscsi_vq_done(vq, virtscsi_complete_event);
+ 	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
+ };
  
- /*
-+ * block layer runtime pm functions
-+ */
-+#ifdef CONFIG_PM_RUNTIME
-+extern void blk_pm_runtime_init(struct request_queue *q, struct device *dev);
-+extern int blk_pre_runtime_suspend(struct request_queue *q);
-+extern void blk_post_runtime_suspend(struct request_queue *q, int err);
-+extern void blk_pre_runtime_resume(struct request_queue *q);
-+extern void blk_post_runtime_resume(struct request_queue *q, int err);
-+#else
-+static inline void blk_pm_runtime_init(struct request_queue *q,
-+	struct device *dev) {}
-+static inline int blk_pre_runtime_suspend(struct request_queue *q)
-+{
-+	return -ENOSYS;
-+}
-+static inline void blk_post_runtime_suspend(struct request_queue *q, int err) {}
-+static inline void blk_pre_runtime_resume(struct request_queue *q) {}
-+static inline void blk_post_runtime_resume(struct request_queue *q, int err) {}
-+#endif
+@@ -510,6 +620,10 @@ static int virtscsi_init(struct virtio_device *vdev,
+ 	virtscsi_config_set(vdev, cdb_size, VIRTIO_SCSI_CDB_SIZE);
+ 	virtscsi_config_set(vdev, sense_size, VIRTIO_SCSI_SENSE_SIZE);
+ 
++	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
++		virtscsi_kick_event_all(vscsi);
++	}
 +
-+/*
-  * blk_plug permits building a queue of related requests by holding the I/O
-  * fragments for a short period. This allows merging of sequential requests
-  * into single larger request. As the requests are moved from a per-task list to
+ 	/* We need to know how many segments before we allocate.  */
+ 	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
+ 
+@@ -580,6 +694,11 @@ virtscsi_init_failed:
+ static void __devexit virtscsi_remove(struct virtio_device *vdev)
+ {
+ 	struct Scsi_Host *shost = virtio_scsi_host(vdev);
++	struct virtio_scsi *vscsi = shost_priv(shost);
++
++	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
++		virtscsi_cancel_event_work(vscsi);
++	}
+ 
+ 	scsi_remove_host(shost);
+ 
+@@ -608,7 +727,13 @@ static struct virtio_device_id id_table[] = {
+ 	{ 0 },
+ };
+ 
++static unsigned int features[] = {
++	VIRTIO_SCSI_F_HOTPLUG
++};
++
+ static struct virtio_driver virtio_scsi_driver = {
++	.feature_table = features,
++	.feature_table_size = ARRAY_SIZE(features),
+ 	.driver.name = KBUILD_MODNAME,
+ 	.driver.owner = THIS_MODULE,
+ 	.id_table = id_table,
+diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
+index 8ddeafd..dc8d305 100644
+--- a/include/linux/virtio_scsi.h
++++ b/include/linux/virtio_scsi.h
+@@ -69,6 +69,10 @@ struct virtio_scsi_config {
+ 	u32 max_lun;
+ } __packed;
+ 
++/* Feature Bits */
++#define VIRTIO_SCSI_F_INOUT                    0
++#define VIRTIO_SCSI_F_HOTPLUG                  1
++
+ /* Response codes */
+ #define VIRTIO_SCSI_S_OK                       0
+ #define VIRTIO_SCSI_S_OVERRUN                  1
+@@ -105,6 +109,11 @@ struct virtio_scsi_config {
+ #define VIRTIO_SCSI_T_TRANSPORT_RESET          1
+ #define VIRTIO_SCSI_T_ASYNC_NOTIFY             2
+ 
++/* Reasons of transport reset event */
++#define VIRTIO_SCSI_EVT_RESET_HARD             0
++#define VIRTIO_SCSI_EVT_RESET_RESCAN           1
++#define VIRTIO_SCSI_EVT_RESET_REMOVED          2
++
+ #define VIRTIO_SCSI_S_SIMPLE                   0
+ #define VIRTIO_SCSI_S_ORDERED                  1
+ #define VIRTIO_SCSI_S_HEAD                     2
 -- 
-1.7.10
+1.7.7.6
