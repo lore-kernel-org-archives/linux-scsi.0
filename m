@@ -1,61 +1,41 @@
-From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-Subject: Re: [PATCH] tcm_vhost: Fix tv_cmd completion -> release SGL memory
- leak
-Date: Thu, 05 Jul 2012 13:24:16 +0800
-Message-ID: <1341465859.20287.66.camel@f15.cn.ibm.com>
-References: <1341461663-13434-1-git-send-email-nab@linux-iscsi.org>
-Reply-To: wuzhy@linux.vnet.ibm.com
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 6/6] virtio-scsi: Set shost->max_id=1 for tcm_vhost WWPNs
+Date: Thu, 05 Jul 2012 08:42:06 +0200
+Message-ID: <4FF5373E.8080703@redhat.com>
+References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
+	<1341375846-27882-7-git-send-email-nab@linux-iscsi.org>
+	<4FF45850.20501@redhat.com>
+	<1341453940.23954.229.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:43520 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750927Ab2GEFZB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2012 01:25:01 -0400
-Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <wuzhy@linux.vnet.ibm.com>;
-	Wed, 4 Jul 2012 23:25:00 -0600
-In-Reply-To: <1341461663-13434-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1341453940.23954.229.camel@haakon2.linux-iscsi.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-07-05 at 04:14 +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
+Il 05/07/2012 04:05, Nicholas A. Bellinger ha scritto:
+>> > But that's what the config field is for... why can't tcm_vhost (or QEMU)
+>> > set max_id to 0?
+>> > 
+> So this patch was carried forward from Stefan's original code that I
+> thought was required due to other limitations..
 > 
-> The SGL memory allocated during vhost_scsi_map_iov_to_sgl() setup was never
-> getting freed during tv_cmd completion -> release path.  Fix this up by releasing
-> tv_cmd->tvc_sgl in vhost_scsi_free_cmd() ahead of tv_cmd descriptor free.
+> If that's not the case anymore I'm happy to drop it for now and look
+> into a proper fix outside of virtio-scsi.
 > 
-> Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
-> Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
-> Cc: Michael S. Tsirkin <mst@redhat.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/vhost/tcm_vhost.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/vhost/tcm_vhost.c b/drivers/vhost/tcm_vhost.c
-> index cd86633..9692153 100644
-> --- a/drivers/vhost/tcm_vhost.c
-> +++ b/drivers/vhost/tcm_vhost.c
-> @@ -387,6 +387,8 @@ static void vhost_scsi_free_cmd(struct tcm_vhost_cmd *tv_cmd)
->  		u32 i;
->  		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
->  			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
-> +
-> +		kfree(tv_cmd->tvc_sgl);
->  	}
-> 
->  	kfree(tv_cmd);
 
-Reviewed-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+I think max_id did not exist in the virtio-scsi configuration at the
+time Stefan was working on it.
 
--- 
-Regards,
-
-Zhi Yong Wu
-
+Paolo
