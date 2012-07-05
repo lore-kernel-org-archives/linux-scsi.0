@@ -1,76 +1,87 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] [SCSI] scsi_pm: set device runtime state before parent
- suspended
-Date: Thu, 5 Jul 2012 09:25:56 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1207050921310.30876-100000@netrider.rowland.org>
-References: <1341470884.3484.12.camel@chief-river-32>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6
+Date: Thu, 5 Jul 2012 16:53:18 +0300
+Message-ID: <20120705135318.GG30572@redhat.com>
+References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
+	<20120704140259.GB26485@redhat.com> <4FF45890.6000205@redhat.com>
+	<20120704150557.GA26951@redhat.com> <4FF4BFBD.2080000@us.ibm.com>
+	<1341453135.23954.214.camel@haakon2.linux-iscsi.org>
+	<4FF56AE9.9060201@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1341470884.3484.12.camel@chief-river-32>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <4FF56AE9.9060201@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Anthony Liguori <aliguori@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 5 Jul 2012, Lin Ming wrote:
-
-> There is a race in scsi_bus_resume_common when set device's runtime
-> state to active after pm_runtime_put_sync(dev->parent).
+On Thu, Jul 05, 2012 at 12:22:33PM +0200, Paolo Bonzini wrote:
+> Il 05/07/2012 03:52, Nicholas A. Bellinger ha scritto:
+> > 
+> > fio randrw workload | virtio-scsi-raw | virtio-scsi+tcm_vhost | bare-metal raw block
+> > ------------------------------------------------------------------------------------
+> > 25 Write / 75 Read  |      ~15K       |         ~45K          |         ~70K
+> > 75 Write / 25 Read  |      ~20K       |         ~55K          |         ~60K
 > 
-> Parent device may have been suspended so pm_runtime_set_active(dev) will
-> fail with -EBUSY.
+> This is impressive, but I think it's still not enough to justify the
+> inclusion of tcm_vhost.  In my opinion, vhost-blk/vhost-scsi are mostly
+> worthwhile as drivers for improvements to QEMU performance.  We want to
+> add more fast paths to QEMU that let us move SCSI and virtio processing
+> to separate threads, we have proof of concepts that this can be done,
+> and we can use vhost-blk/vhost-scsi to find bottlenecks more effectively.
+
+A general rant below:
+
+OTOH if it works, and adds value, we really should consider including code.
+To me, it does not make sense to reject code just because in theory
+someone could write even better code. Code walks. Time to marker matters too.
+Yes I realize more options increases support. But downstreams can make
+their own decisions on whether to support some configurations:
+add a configure option to disable it and that's enough.
+
+> In fact, virtio-scsi-qemu and virtio-scsi-vhost are effectively two
+> completely different devices that happen to speak the same SCSI
+> transport.  Not only virtio-scsi-vhost must be configured outside QEMU
+
+configuration outside QEMU is OK I think - real users use
+management anyway. But maybe we can have helper scripts
+like we have for tun?
+
+> and doesn't support -device;
+
+This needs to be fixed I think.
+
+> it (obviously) presents different
+> inquiry/vpd/mode data than virtio-scsi-qemu,
+
+Why is this obvious and can't be fixed? Userspace virtio-scsi
+is pretty flexible - can't it supply matching inquiry/vpd/mode data
+so that switching is transparent to the guest?
+
+> so that it is not possible to migrate one to the other.
+
+Migration between different backend types does not seem all that useful.
+The general rule is you need identical flags on both sides to allow
+migration, and it is not clear how valuable it is to relax this
+somewhat.
+
+> I don't think vhost-scsi is particularly useful for virtualization,
+> honestly.  However, if it is useful for development, testing or
+> benchmarking of lio itself (does this make any sense? :)) that could be
+> by itself a good reason to include it.
 > 
-> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-> CC: <stable@vger.kernel.org>
-> ---
->  drivers/scsi/scsi_pm.c |   10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-> index d4201de..d2a80de 100644
-> --- a/drivers/scsi/scsi_pm.c
-> +++ b/drivers/scsi/scsi_pm.c
-> @@ -85,14 +85,14 @@ static int scsi_bus_resume_common(struct device *dev)
->  		 */
->  		pm_runtime_get_sync(dev->parent);
->  		err = scsi_dev_type_resume(dev);
-> +		if (err == 0) {
-> +			pm_runtime_disable(dev);
-> +			pm_runtime_set_active(dev);
-> +			pm_runtime_enable(dev);
-> +		}
->  		pm_runtime_put_sync(dev->parent);
->  	}
->  
-> -	if (err == 0) {
-> -		pm_runtime_disable(dev);
-> -		pm_runtime_set_active(dev);
-> -		pm_runtime_enable(dev);
-> -	}
+> Paolo
 
-This isn't quite right.  We still want to execute the 
-pm_runtime_disable, _set_active, and _enable even when 
-scsi_is_sdev_device(dev) is false.
-
-I guess the revised code should look more like this:
-
-	/*
-	 * Parent device may have runtime suspended as soon as
-	 * it is woken up during the system resume.
-	 *
-	 * Resume it on behalf of child.
-	 */
-	pm_runtime_get_sync(dev->parent);
-
-	if (scsi_is_sdev_device(dev))
-		err = scsi_dev_type_resume(dev);
-	if (err == 0) {
-		pm_runtime_disable(dev);
-		pm_runtime_set_active(dev);
-		pm_runtime_enable(dev);
-	}
-
-	pm_runtime_put_sync(dev->parent);
-
-Alan Stern
+-- 
+MST
