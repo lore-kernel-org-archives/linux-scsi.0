@@ -1,75 +1,55 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6
-Date: Thu, 05 Jul 2012 16:47:43 +0200
-Message-ID: <4FF5A90F.5050902@redhat.com>
-References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
-	<20120704140259.GB26485@redhat.com> <4FF45890.6000205@redhat.com>
-	<20120704150557.GA26951@redhat.com> <4FF4BFBD.2080000@us.ibm.com>
-	<1341453135.23954.214.camel@haakon2.linux-iscsi.org>
-	<4FF56AE9.9060201@redhat.com> <20120705135318.GG30572@redhat.com>
-	<4FF59F6B.2000101@us.ibm.com> <20120705144001.GB31257@redhat.com>
+From: Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] fcoe: Remove redundant 'less than zero' check
+Date: Thu, 05 Jul 2012 07:52:25 -0700
+Message-ID: <20120705145225.21808.62255.stgit@fritz>
+References: <20120703152739.ea7df9e6.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20120705144001.GB31257@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Anthony Liguori <aliguori@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <20120703152739.ea7df9e6.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+List-Unsubscribe: <https://lists.open-fcoe.org/mailman/options/devel>,
+ <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.open-fcoe.org/mailman/listinfo/devel>,
+ <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Il 05/07/2012 16:40, Michael S. Tsirkin ha scritto:
->> virtio-scsi is brand new.  It's not as if we've had any significant
->> time to make virtio-scsi-qemu faster.  In fact, tcm_vhost existed
->> before virtio-scsi-qemu did if I understand correctly.
+strtoul returns an 'unsigned long' so there is no
+reason to check if the value is less than zero.
 
-Yes.
+strtoul already checks for the '-' character deep
+in its bowels. It will return an error if the user
+has provided a negative value and fcoe_str_to_dev_loss
+will return that error to its caller.
 
-> Can't same can be said about virtio scsi - it seems to be
-> slower so we force a bad choice between blk and scsi at the user?
+This patch fixes the following Coverity reported warning:
 
-virtio-scsi supports multiple devices per PCI slot (or even function),
-can talk to tapes, has better passthrough support for disks, and does a
-bunch of other things that virtio-blk by design doesn't do.  This
-applies to both tcm_vhost and virtio-scsi-qemu.
+CID 703581 -  NO_EFFECT Unsigned compared against 0 - This
+less-than-zero comparison of an unsigned value is never true. "*val < 0UL".
+drivers/scsi/fcoe/fcoe_sysfs.c:105
 
-So far, all that virtio-scsi vs. virtio-blk benchmarks say is that more
-benchmarking is needed.  Some people see it faster, some people see it
-slower.  In some sense, it's consistent with the expectation that the
-two should roughly be the same. :)
+Signed-off-by: Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+---
+ drivers/scsi/fcoe/fcoe_sysfs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->> But guest/user facing decisions cannot be easily unmade and making
->> the wrong technical choices because of premature concerns of "time
->> to market" just result in a long term mess.
->>
->> There is no technical reason why tcm_vhost is going to be faster
->> than doing it in userspace.
-> 
-> But doing what in userspace exactly?
-
-Processing virtqueues in separate threads, switching the block and SCSI
-layer to fine-grained locking, adding some more fast paths.
-
->> Basically, the issue is that the kernel has more complete SCSI
->> emulation that QEMU does right now.
->>
->> There are lots of ways to try to solve this--like try to reuse the
->> kernel code in userspace or just improving the userspace code.  If
->> we were able to make the two paths identical, then I strongly
->> suspect there'd be no point in having tcm_vhost anyway.
-> 
-> However, a question we should ask ourselves is whether this will happen
-> in practice, and when.
-
-It's already happening, but it takes a substantial amount of preparatory
-work before you can actually see results.
-
-Paolo
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index 2bc1631..5e75168 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -102,7 +102,7 @@ static int fcoe_str_to_dev_loss(const char *buf, unsigned long *val)
+ 	int ret;
+ 
+ 	ret = kstrtoul(buf, 0, val);
+-	if (ret || *val < 0)
++	if (ret)
+ 		return -EINVAL;
+ 	/*
+ 	 * Check for overflow; dev_loss_tmo is u32
