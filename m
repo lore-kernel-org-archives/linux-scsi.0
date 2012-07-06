@@ -1,152 +1,109 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: SCSI Performance regression [was Re: [PATCH 0/6]
- tcm_vhost/virtio-scsi WIP code for-3.6]
-Date: Fri, 06 Jul 2012 11:21:49 -0700
-Message-ID: <1341598909.23954.405.camel@haakon2.linux-iscsi.org>
-References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
-	 <20120704140259.GB26485@redhat.com> <4FF45890.6000205@redhat.com>
-	 <20120704150557.GA26951@redhat.com> <4FF4BFBD.2080000@us.ibm.com>
-	 <1341453135.23954.214.camel@haakon2.linux-iscsi.org>
-	 <4FF56AE9.9060201@redhat.com> <20120705135318.GG30572@redhat.com>
-	 <4FF59F6B.2000101@us.ibm.com>
-	 <1341543672.23954.285.camel@haakon2.linux-iscsi.org>
-	 <1341553397.3023.16.camel@dabdike.hilton.com>
-	 <1341565997.23954.380.camel@haakon2.linux-iscsi.org>
-	 <1341582550.2941.10.camel@dabdike>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] qla2xxx: print the right array elements in qlt_async_event
+Date: Fri,  6 Jul 2012 20:12:42 +0000
+Message-ID: <1341605562-13019-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:45021 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:49634 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755814Ab2GFSVw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jul 2012 14:21:52 -0400
-In-Reply-To: <1341582550.2941.10.camel@dabdike>
+	with ESMTP id S1751112Ab2GFUPQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jul 2012 16:15:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Anthony Liguori <aliguori@us.ibm.com>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, ksummit-2012-discuss <ksummit-2012-discuss@lists.linuxfoundation.org>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alan Cox <alan@linux.intel.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-On Fri, 2012-07-06 at 17:49 +0400, James Bottomley wrote:
-> On Fri, 2012-07-06 at 02:13 -0700, Nicholas A. Bellinger wrote:
-> > On Fri, 2012-07-06 at 09:43 +0400, James Bottomley wrote:
-> > > On Thu, 2012-07-05 at 20:01 -0700, Nicholas A. Bellinger wrote:
-> > > 
+From: Alan Cox <alan@linux.intel.com>
 
-<SNIP>
+Based upon Alan's patch from Coverity scan id 793583, these debug
+messages in qlt_async_event() should be starting from byte 0, which is
+always the Asynchronous Event Status Code from the parent switch statement.
 
-> > > > This bottleneck has been mentioned by various people (including myself)
-> > > > on linux-scsi the last 18 months, and I've proposed that that it be
-> > > > discussed at KS-2012 so we can start making some forward progress:
-> > > 
-> > > Well, no, it hasn't.  You randomly drop things like this into unrelated
-> > > email (I suppose that is a mention in strict English construction) but
-> > > it's not really enough to get anyone to pay attention since they mostly
-> > > stopped reading at the top, if they got that far: most people just go by
-> > > subject when wading through threads initially.
-> > > 
-> > 
-> > It most certainly has been made clear to me, numerous times from many
-> > people in the Linux/SCSI community that there is a bottleneck for small
-> > block random I/O in SCSI core vs. raw Linux/Block, as well as vs. non
-> > Linux based SCSI subsystems.
-> > 
-> > My apologies if mentioning this issue last year at LC 2011 to you
-> > privately did not take a tone of a more serious nature, or that
-> > proposing a topic for LSF-2012 this year was not a clear enough
-> > indication of a problem with SCSI small block random I/O performance.
-> > 
-> > > But even if anyone noticed, a statement that RHEL6.2 (on a 2.6.32
-> > > kernel, which is now nearly three years old) is 25% slower than W2k8R2
-> > > on infiniband isn't really going to get anyone excited either
-> > > (particularly when you mention OFED, which usually means a stack
-> > > replacement on Linux anyway).
-> > > 
-> > 
-> > The specific issue was first raised for .38 where we where able to get
-> > most of the interesting high performance LLDs converted to using
-> > internal locking methods so that host_lock did not have to be obtained
-> > during each ->queuecommand() I/O dispatch, right..?
-> > 
-> > This has helped a good deal for large multi-lun scsi_host configs that
-> > are now running in host-lock less mode, but there is still a large
-> > discrepancy single LUN vs. raw struct block_device access even with LLD
-> > host_lock less mode enabled.
-> > 
-> > Now I think the virtio-blk client performance is demonstrating this
-> > issue pretty vividly, along with this week's tcm_vhost IBLOCK raw block
-> > flash benchmarks that is demonstrate some other yet-to-be determined
-> > limitations for virtio-scsi-raw vs. tcm_vhost for this particular fio
-> > randrw workload.
-> > 
-> > > What people might pay attention to is evidence that there's a problem in
-> > > 3.5-rc6 (without any OFED crap).  If you're not going to bother
-> > > investigating, it has to be in an environment they can reproduce (so
-> > > ordinary hardware, not infiniband) otherwise it gets ignored as an
-> > > esoteric hardware issue.
-> > > 
-> > 
-> > It's really quite simple for anyone to demonstrate the bottleneck
-> > locally on any machine using tcm_loop with raw block flash.  Take a
-> > struct block_device backend (like a Fusion IO /dev/fio*) and using
-> > IBLOCK and export locally accessible SCSI LUNs via tcm_loop..
-> > 
-> > Using FIO there is a significant drop for randrw 4k performance between
-> > tcm_loop <-> IBLOCK vs. raw struct block device backends.  And no, it's
-> > not some type of target IBLOCK or tcm_loop bottleneck, it's a per SCSI
-> > LUN limitation for small block random I/Os on the order of ~75K for each
-> > SCSI LUN.
-> 
-> Here, you're saying here that the end to end SCSI stack tops out at
-> around 75k iops, which is reasonably respectable if you don't employ any
-> mitigation like queue steering and interrupt polling ... what were the
-> mitigation techniques in the test you employed by the way?
-> 
+Also, rename reason_code -> login_code following the language used in
+2500 FW spec for Port Database Changed (0x8014) -> Port Database Changed
+Event Mailbox Register for mailbox[2].
 
-~75K per SCSI LUN in a multi-lun per host setup is being optimistic btw.
-On the other side of the coin, the same pure block device can easily go
-~200K per backend.-
+Signed-off-by: Alan Cox <alan@linux.intel.com>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/scsi/qla2xxx/qla_target.c |   35 ++++++++++++++++++-----------------
+ 1 files changed, 18 insertions(+), 17 deletions(-)
 
-For the simplest case with tcm_loop, a struct scsi_cmnd is queued via
-cmwq to execute in process context -> submit the backend I/O.  Once
-completed from IBLOCK, the I/O is run though a target completion wq, and
-completed back to SCSI.
-
-There is no fancy queue steering or interrupt polling going on (at least
-not in tcm_loop) because it's a simple virtual SCSI LLD similar to
-scsi_debug.
-
-> But previously, you ascribed a performance drop of around 75% on
-> virtio-scsi (topping out around 15-20k iops) to this same problem ...
-> that doesn't really seem likely.
-> 
-
-No.  I ascribed the performance difference between virtio-scsi+tcm_vhost
-vs. bare-metal raw block flash to this bottleneck in Linux/SCSI.
-
-It's obvious that virtio-scsi-raw going through QEMU SCSI / block is
-having some other shortcomings.
-
-> Here's the rough ranges of concern:
-> 
-> 10K iops: standard arrays
-> 100K iops: modern expensive fast flash drives on 6Gb links
-> 1M iops: PCIe NVMexpress like devices
-> 
-> SCSI should do arrays with no problem at all, so I'd be really concerned
-> that it can't make 0-20k iops.  If you push the system and fine tune it,
-> SCSI can just about get to 100k iops.  1M iops is still a stretch goal
-> for pure block drivers.
-> 
-
-1M iops is not a stretch for pure block drivers anymore on commodity
-hardwrae.  5 Fusion-IO HBAs + Romley HW can easily go 1M random 4k IOPs
-using a pure block driver.
-
-The point is that it would currently take at least 2x the amount of SCSI
-LUNs in order to even get close to 1M IOPs with an single LLD driver.
-And from the feedback from everyone I've talked to, no one has been able
-to make Linux/SCSI go 1M IOPs with any kernel.
-
---nab
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 6986552..77759c7 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -3960,7 +3960,7 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct qla_tgt *tgt = ha->tgt.qla_tgt;
+-	int reason_code;
++	int login_code;
+ 
+ 	ql_dbg(ql_dbg_tgt, vha, 0xe039,
+ 	    "scsi(%ld): ha state %d init_done %d oper_mode %d topo %d\n",
+@@ -4003,9 +4003,9 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 	{
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03b,
+ 		    "qla_target(%d): Async LOOP_UP occured "
+-		    "(m[1]=%x, m[2]=%x, m[3]=%x, m[4]=%x)", vha->vp_idx,
+-		    le16_to_cpu(mailbox[1]), le16_to_cpu(mailbox[2]),
+-		    le16_to_cpu(mailbox[3]), le16_to_cpu(mailbox[4]));
++		    "(m[0]=%x, m[1]=%x, m[2]=%x, m[3]=%x)", vha->vp_idx,
++		    le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
++		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
+ 		if (tgt->link_reinit_iocb_pending) {
+ 			qlt_send_notify_ack(vha, (void *)&tgt->link_reinit_iocb,
+ 			    0, 0, 0, 0, 0, 0);
+@@ -4020,23 +4020,24 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 	case MBA_RSCN_UPDATE:
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03c,
+ 		    "qla_target(%d): Async event %#x occured "
+-		    "(m[1]=%x, m[2]=%x, m[3]=%x, m[4]=%x)", vha->vp_idx, code,
+-		    le16_to_cpu(mailbox[1]), le16_to_cpu(mailbox[2]),
+-		    le16_to_cpu(mailbox[3]), le16_to_cpu(mailbox[4]));
++		    "(m[0]=%x, m[1]=%x, m[2]=%x, m[3]=%x)", vha->vp_idx, code,
++		    le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
++		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
+ 		break;
+ 
+ 	case MBA_PORT_UPDATE:
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03d,
+ 		    "qla_target(%d): Port update async event %#x "
+-		    "occured: updating the ports database (m[1]=%x, m[2]=%x, "
+-		    "m[3]=%x, m[4]=%x)", vha->vp_idx, code,
+-		    le16_to_cpu(mailbox[1]), le16_to_cpu(mailbox[2]),
+-		    le16_to_cpu(mailbox[3]), le16_to_cpu(mailbox[4]));
+-		reason_code = le16_to_cpu(mailbox[2]);
+-		if (reason_code == 0x4)
++		    "occured: updating the ports database (m[0]=%x, m[1]=%x, "
++		    "m[2]=%x, m[3]=%x)", vha->vp_idx, code,
++		    le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
++		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
++
++		login_code = le16_to_cpu(mailbox[2]);
++		if (login_code == 0x4)
+ 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03e,
+ 			    "Async MB 2: Got PLOGI Complete\n");
+-		else if (reason_code == 0x7)
++		else if (login_code == 0x7)
+ 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03f,
+ 			    "Async MB 2: Port Logged Out\n");
+ 		break;
+@@ -4044,9 +4045,9 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 	default:
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf040,
+ 		    "qla_target(%d): Async event %#x occured: "
+-		    "ignore (m[1]=%x, m[2]=%x, m[3]=%x, m[4]=%x)", vha->vp_idx,
+-		    code, le16_to_cpu(mailbox[1]), le16_to_cpu(mailbox[2]),
+-		    le16_to_cpu(mailbox[3]), le16_to_cpu(mailbox[4]));
++		    "ignore (m[0]=%x, m[1]=%x, m[2]=%x, m[3]=%x)", vha->vp_idx,
++		    code, le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
++		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
+ 		break;
+ 	}
+ 
+-- 
+1.7.2.5
 
