@@ -1,105 +1,158 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v4 2/4] block: add runtime pm helpers
-Date: Fri, 06 Jul 2012 09:13:36 +0800
-Message-ID: <1341537216.11117.10.camel@minggr>
-References: <1341473199-3837-1-git-send-email-ming.m.lin@intel.com>
-	 <1341473199-3837-3-git-send-email-ming.m.lin@intel.com>
-	 <201207051511.20772.rjw@sisk.pl>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6
+Date: Thu, 05 Jul 2012 20:01:12 -0700
+Message-ID: <1341543672.23954.285.camel@haakon2.linux-iscsi.org>
+References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
+	 <20120704140259.GB26485@redhat.com> <4FF45890.6000205@redhat.com>
+	 <20120704150557.GA26951@redhat.com> <4FF4BFBD.2080000@us.ibm.com>
+	 <1341453135.23954.214.camel@haakon2.linux-iscsi.org>
+	 <4FF56AE9.9060201@redhat.com> <20120705135318.GG30572@redhat.com>
+	 <4FF59F6B.2000101@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201207051511.20772.rjw@sisk.pl>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <4FF59F6B.2000101@us.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Anthony Liguori <aliguori@us.ibm.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, ksummit-2012-discuss <ksummit-2012-discuss@lists.linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-07-05 at 15:11 +0200, Rafael J. Wysocki wrote:
-> On Thursday, July 05, 2012, Lin Ming wrote:
-> > Add runtime pm helper functions:
-> > 
-> > blk_pm_runtime_init()
-> > blk_pre_runtime_suspend()
-> > blk_post_runtime_suspend()
-> > blk_pre_runtime_resume()
-> > blk_post_runtime_suspend()
+On Thu, 2012-07-05 at 09:06 -0500, Anthony Liguori wrote:
+> On 07/05/2012 08:53 AM, Michael S. Tsirkin wrote:
+> > On Thu, Jul 05, 2012 at 12:22:33PM +0200, Paolo Bonzini wrote:
+> >> Il 05/07/2012 03:52, Nicholas A. Bellinger ha scritto:
+> >>>
+> >>> fio randrw workload | virtio-scsi-raw | virtio-scsi+tcm_vhost | bare-metal raw block
+> >>> ------------------------------------------------------------------------------------
+> >>> 25 Write / 75 Read  |      ~15K       |         ~45K          |         ~70K
+> >>> 75 Write / 25 Read  |      ~20K       |         ~55K          |         ~60K
+> >>
+> >> This is impressive, but I think it's still not enough to justify the
+> >> inclusion of tcm_vhost.
 > 
-> What exactly do you need these things for?  Please be specific.
+> We have demonstrated better results at much higher IOP rates with virtio-blk in 
+> userspace so while these results are nice, there's no reason to believe we can't 
+> do this in userspace.
+> 
 
-Alan described these functions nicely, copied here.
-http://marc.info/?l=linux-kernel&m=133727953025955&w=2
+So I'm pretty sure this discrepancy is attributed to the small block
+random I/O bottleneck currently present for all Linux/SCSI core LLDs
+regardless of physical or virtual storage fabric.
 
-I'll add these function descriptions to the patch log.
+The SCSI wide host-lock less conversion that happened in .38 code back
+in 2010, and subsequently having LLDs like virtio-scsi convert to run in
+host-lock-less mode have helped to some extent..  But it's still not
+enough..
 
-====
-This is not the way to do it.  The block subsystem should not use 
-suspend/resume callbacks.
+Another example where we've been able to prove this bottleneck recently
+is with the following target setup:
 
-Instead, there should be block functions that can be called by client
-drivers: block_pre_runtime_suspend, block_post_runtime_suspend,
-bock_pre_runtime_resume, and block_post_runtime_resume.
+*) Intel Romley production machines with 128 GB of DDR-3 memory
+*) 4x FusionIO ioDrive 2 (1.5 TB @ PCI-e Gen2 x2)
+*) Mellanox PCI-exress Gen3 HCA running at 56 gb/sec 
+*) Infiniband SRP Target backported to RHEL 6.2 + latest OFED
 
-They should do something like this:
+In this setup using ib_srpt + IBLOCK w/ emulate_write_cache=1 +
+iomemory_vsl export we end up avoiding SCSI core bottleneck on the
+target machine, just as with the tcm_vhost example here for host kernel
+side processing with vhost.
 
-	block_pre_runtime_suspend:
-		If any requests are in the queue, return -EBUSY.
-		Otherwise set q->rpm_status to RPM_SUSPENDING and
-		return 0.
+Using Linux IB SRP initiator + Windows Server 2008 R2 SCSI-miniport SRP
+(OFED) Initiator connected to four ib_srpt LUNs, we've observed that
+MSFT SCSI is currently outperforming RHEL 6.2 on the order of ~285K vs.
+~215K with heavy random 4k WRITE iometer / fio tests.  Note this with an
+optimized queue_depth ib_srp client w/ noop I/O schedulering, but is
+still lacking the host_lock-less patches on RHEL 6.2 OFED..
 
-	block_post_runtime_suspend:
-		If the suspend succeeded then set q->rpm_status to 
-		RPM_SUSPENDED.  Otherwise set it to RPM_ACTIVE and
-		call pm_runtime_mark_last_busy().
+This bottleneck has been mentioned by various people (including myself)
+on linux-scsi the last 18 months, and I've proposed that that it be
+discussed at KS-2012 so we can start making some forward progress:
 
-	block_pre_runtime_resume:
-		Set q->rpm_status to RPM_RESUMING.
+http://lists.linux-foundation.org/pipermail/ksummit-2012-discuss/2012-June/000098.html,
 
-	block_post_runtime_resume:
-		If the resume succeeded then set q->rpm_status to
-		RPM_ACTIVE and call pm_runtime_mark_last_busy() and
-		pm_runtime_request_autosuspend().
-		Otherwise set q->rpm_status to RPM_SUSPENDED.
+> >> In my opinion, vhost-blk/vhost-scsi are mostly
+> >> worthwhile as drivers for improvements to QEMU performance.  We want to
+> >> add more fast paths to QEMU that let us move SCSI and virtio processing
+> >> to separate threads, we have proof of concepts that this can be done,
+> >> and we can use vhost-blk/vhost-scsi to find bottlenecks more effectively.
+> >
+> > A general rant below:
+> >
+> > OTOH if it works, and adds value, we really should consider including code.
+> 
+> Users want something that has lots of features and performs really, really well. 
+>   They want everything.
+> 
+> Having one device type that is "fast" but has no features and another that is 
+> "not fast" but has a lot of features forces the user to make a bad choice.  No 
+> one wins in the end.
+> 
+> virtio-scsi is brand new.  It's not as if we've had any significant time to make 
+> virtio-scsi-qemu faster.  In fact, tcm_vhost existed before virtio-scsi-qemu did 
+> if I understand correctly.
+> 
 
-There should also be an initialization function for client drivers to
-call.  block_runtime_pm_init() should call pm_runtime_mark_last_busy(),
-pm_runtime_use_autosuspend(), and pm_runtime_autosuspend().
+So based upon the data above, I'm going to make a prediction that MSFT
+guests connected with SCSI miniport <-> tcm_vhost will out perform Linux
+guests with virtio-scsi (w/ <= 3.5 host-lock-less) <-> tcm_vhost w/
+connected to the same raw block flash iomemory_vsl backends.
 
-Next, you have to modify the parts of the block layer that run when a 
-new request is added to the queue or a request is removed.
+Of course that depends upon how fast virtio-scsi drivers get written for
+MSFT guests vs. us fixing the long-term performance bottleneck in our
+SCSI subsystem.  ;)
 
-	When a request is added:
-		If q->rpm_status is RPM_SUSPENDED, or if q->rpm_status
-		is RPM_SUSPENDING and the REQ_PM flag isn't set, call
-		pm_runtime_request_resume().
+(Ksummit-2012 discuss CC'ed for the later)
 
-	When a request finishes:
-		Call pm_runtime_mark_last_busy().
+> > To me, it does not make sense to reject code just because in theory
+> > someone could write even better code.
+> 
+> There is no theory.  We have proof points with virtio-blk.
+> 
+> > Code walks. Time to marker matters too.
+> 
+> But guest/user facing decisions cannot be easily unmade and making the wrong 
+> technical choices because of premature concerns of "time to market" just result 
+> in a long term mess.
+> 
+> There is no technical reason why tcm_vhost is going to be faster than doing it 
+> in userspace.  We can demonstrate this with virtio-blk.  This isn't a 
+> theoretical argument.
+> 
+> > Yes I realize more options increases support. But downstreams can make
+> > their own decisions on whether to support some configurations:
+> > add a configure option to disable it and that's enough.
+> >
+> >> In fact, virtio-scsi-qemu and virtio-scsi-vhost are effectively two
+> >> completely different devices that happen to speak the same SCSI
+> >> transport.  Not only virtio-scsi-vhost must be configured outside QEMU
+> >
+> > configuration outside QEMU is OK I think - real users use
+> > management anyway. But maybe we can have helper scripts
+> > like we have for tun?
+> 
+> Asking a user to write a helper script is pretty awful...
+> 
 
-Next, you have to change the parts of the block layer responsible for
-taking a request from the queue and handing it to the lower-level
-driver (both peek and get).  If q->rpm_status is RPM_SUSPENDED, they
-shouldn't do anything -- act as though the queue is empty.  If
-q->rpm_status is RPM_SUSPENDING or RPM_RESUMING, they should hand over
-the request only if it has the REQ_PM flag set.
+It's easy for anyone with basic python knowledge to use rtslib packages
+in the downstream distros to connect to tcm_vhost endpoints LUNs right
+now.
 
-For this to work, the block layer has to know what struct device
-pointer to pass to the pm_runtime_* routines.  You'll have to add that
-information to the request_queue structure; I guess q->dev can get set
-by block_pm_runtime_init().  In fact, when that's done you won't need
-q->rpm_status any more.  You'll be able to use q->dev->power.rpm_status
-directly, and you won't have to update it because the PM core does that
-for you.
+All you need is the following vhost.spec, and tcm_vhost works out of the
+box for rtslib and targetcli/rtsadmin without any modification to
+existing userspace packages:
 
-(Or maybe it would be easier to make q->rpm_status be a pointer to 
-q->dev->power.rpm_status.  That way, if CONFIG_PM_RUNTIME isn't enabled 
-or block_runtime_pm_init() hasn't been called, you can have 
-q->rpm_status simply point to a static value that is permanently set to 
-RPM_ACTIVE.)
+root@tifa:~# cat /var/target/fabric/vhost.spec 
+# WARNING: This is a draft specfile supplied for testing only.
 
-I may have left some parts out from this brief description.  Hopefully 
-you'll be able to figure out the general idea and get it to work.
-====
+# The fabric module feature set
+features = nexus
 
-Thanks,
-Lin Ming
+# Use naa WWNs.
+wwn_type = naa
+
+# Non-standard module naming scheme
+kernel_module = tcm_vhost
+
+# The configfs group
+configfs_group = vhost
