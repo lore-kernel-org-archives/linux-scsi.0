@@ -1,53 +1,64 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [ 38/48] SCSI & usb-storage: add try_rc_10_first flag
-Date: Thu, 5 Jul 2012 21:05:26 -0600
-Message-ID: <20120706030525.GC17681@parisc-linux.org>
-References: <20120703203512.GE28804@parisc-linux.org> <Pine.LNX.4.44L0.1207051736550.13212-100000@netrider.rowland.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6
+Date: Thu, 05 Jul 2012 20:13:56 -0700
+Message-ID: <1341544436.23954.296.camel@haakon2.linux-iscsi.org>
+References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
+	<20120704140259.GB26485@redhat.com> <4FF45890.6000205@redhat.com>
+	<20120704150557.GA26951@redhat.com>
+	<1341453665.23954.224.camel@haakon2.linux-iscsi.org>
+	<20120705093113.GC29373@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1207051736550.13212-100000@netrider.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, Hans de Goede <hdegoede@redhat.com>, Ben Hutchings <ben@decadent.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20120705093113.GC29373@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jul 05, 2012 at 05:40:45PM -0400, Alan Stern wrote:
-> On Tue, 3 Jul 2012, Matthew Wilcox wrote:
-> 
-> > I think the necessary algorithm is simpler than that:
+On Thu, 2012-07-05 at 12:31 +0300, Michael S. Tsirkin wrote:
+> On Wed, Jul 04, 2012 at 07:01:05PM -0700, Nicholas A. Bellinger wrote:
+> > On Wed, 2012-07-04 at 18:05 +0300, Michael S. Tsirkin wrote:
+
+<SNIP>
+
+> > > I was talking about 4/6 first of all.
 > > 
-> > Send RC10 (unless the device supports PI, in which case it's probably
-> > 	enterprisey and well-tested)
-> > Send RC16
-> > If RC10 capacity agrees with RC16 capacity, use extra RC16 data.
-> > (for values of "agrees with" that include the "-1 to use RC16" indicator)
+> > So yeah, this code is still considered RFC at this point for-3.6, but
+> > I'd like to get this into target-pending/for-next in next week for more
+> > feedback and start collecting signoffs for the necessary pieces that
+> > effect existing vhost code.
 > > 
-> > Sure, it's one extra command, but really, who cares?
+> > By that time the cmwq conversion of tcm_vhost should be in place as
+> > well..
 > 
-> Well, some USB devices might care.  Right now we don't send RC16 to 
-> them at all because they get RC10 first and it indicates a capacity 
-> below 2 TB.
+> I'll try to give some feedback but I think we do need
+> to see the qemu patches - they weren't posted yet, were they?
+> This driver has some userspace interface and once
+> that is merged it has to be supported.
+> So I think we need the buy-in from the qemu side at the principal level.
+> 
 
-Mmm.  I think I forgot a step:
+<nod>
 
-Send RC10 (unless the device supports PI, in which case it's probably
-	enterprisey and well-tested)
-If the device indicates a level < SPC_2, stop here
-Send RC16
-If RC10 capacity agrees with RC16 capacity, use extra RC16 data.
- (for values of "agrees with" that include the "-1 to use RC16" indicator)
+Stefan posted the QEMU vhost-scsi patches a few items, but I think it's
+been awhile since the last round of review.  For the recent
+development's with tcm_vhost, I've been using Zhi's QEMU tree here:
 
-> In the end, usb-storage may be forced to use the NO_READ_CAPACITY_16 
-> flag with all devices except those we can positively identify as a 
-> USB-(S)ATA bridge.
+https://github.com/wuzhy/qemu/tree/vhost-scsi
 
-Is that really an improvement over nobbling the IDENTIFY results to
-force SCSI_2?
+Other than a few printf I added to help me understand how it works, no
+function changes have been made to work with target-pending/tcm_vhost.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Thank you,
+
+--nab
