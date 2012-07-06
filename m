@@ -1,122 +1,70 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6
-Date: Thu, 05 Jul 2012 20:38:13 -0700
-Message-ID: <1341545893.23954.325.camel@haakon2.linux-iscsi.org>
-References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
-	<20120704140259.GB26485@redhat.com> <4FF45890.6000205@redhat.com>
-	<20120704150557.GA26951@redhat.com> <4FF4BFBD.2080000@us.ibm.com>
-	<1341453135.23954.214.camel@haakon2.linux-iscsi.org>
-	<4FF56AE9.9060201@redhat.com>  <20120705135318.GG30572@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20120705135318.GG30572@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Anthony Liguori <aliguori@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [PATCH v5 0/4] block layer runtime pm
+Date: Fri,  6 Jul 2012 12:04:28 +0800
+Message-ID: <1341547472-6863-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Shaohua Li <shli@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-07-05 at 16:53 +0300, Michael S. Tsirkin wrote:
-> On Thu, Jul 05, 2012 at 12:22:33PM +0200, Paolo Bonzini wrote:
-> > Il 05/07/2012 03:52, Nicholas A. Bellinger ha scritto:
-> > > 
-> > > fio randrw workload | virtio-scsi-raw | virtio-scsi+tcm_vhost | bare-metal raw block
-> > > ------------------------------------------------------------------------------------
-> > > 25 Write / 75 Read  |      ~15K       |         ~45K          |         ~70K
-> > > 75 Write / 25 Read  |      ~20K       |         ~55K          |         ~60K
-> > 
-> > This is impressive, but I think it's still not enough to justify the
-> > inclusion of tcm_vhost.  In my opinion, vhost-blk/vhost-scsi are mostly
-> > worthwhile as drivers for improvements to QEMU performance.  We want to
-> > add more fast paths to QEMU that let us move SCSI and virtio processing
-> > to separate threads, we have proof of concepts that this can be done,
-> > and we can use vhost-blk/vhost-scsi to find bottlenecks more effectively.
-> 
-> A general rant below:
-> 
-> OTOH if it works, and adds value, we really should consider including code.
-> To me, it does not make sense to reject code just because in theory
-> someone could write even better code. Code walks. Time to marker matters too.
-> Yes I realize more options increases support. But downstreams can make
-> their own decisions on whether to support some configurations:
-> add a configure option to disable it and that's enough.
-> 
+In August 2010, Jens and Alan discussed about "Runtime PM and the block
+layer". http://marc.info/?t=128259108400001&r=1&w=2
 
-+1 for mst here.
+Here are the v5 patches to implement the ideas discussed.
+Welcome to give it a try.
 
-I think that type of sentiment deserves a toast at KS/LC in August.  ;)
+git pull git://git.kernel.org/pub/scm/linux/kernel/git/mlin/linux.git block_pm
 
-> > In fact, virtio-scsi-qemu and virtio-scsi-vhost are effectively two
-> > completely different devices that happen to speak the same SCSI
-> > transport.  Not only virtio-scsi-vhost must be configured outside QEMU
-> 
-> configuration outside QEMU is OK I think - real users use
-> management anyway. But maybe we can have helper scripts
-> like we have for tun?
-> 
-> > and doesn't support -device;
-> 
-> This needs to be fixed I think.
-> 
-> > it (obviously) presents different
-> > inquiry/vpd/mode data than virtio-scsi-qemu,
-> 
-> Why is this obvious and can't be fixed? Userspace virtio-scsi
-> is pretty flexible - can't it supply matching inquiry/vpd/mode data
-> so that switching is transparent to the guest?
-> 
+The test steps, for example
 
-So I imagine that setting inquiry/vpd/mode via configfs attribs to match
-whatever the guest wants to see (or expects to see) can be enabled
-via /sys/kernel/config/target/core/$HBA/$DEV/[wwn,attrib]/ easily to
-whatever is required.
+# ls -l /sys/block/sda
+/sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/block/sda
 
-However, beyond basic SCSI WWN related bits, I would avoid trying to
-match complex SCSI target state between the in-kernel patch and QEMU
-SCSI.  We've had this topic come up numerous times over the nears for
-other fabric modules (namely iscsi-target) and usually it end's up with
-a long email thread re-hashing history of failures until Linus starts
-yelling at the person who is pushing complex kernel <-> user split.
+# echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/power/control
+# echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/control
+# echo 10000 > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/autosuspend_delay_ms
 
-The part where I start to get nervous is where you get into the cluster
-+ multipath features.  We have methods in TCM core that rebuild the
-exact state of this bits based upon external file metadata, based upon
-the running configfs layout.  This is used by physical node failover +
-re-takeover to ensure the SCSI client sees exactly the same SCSI state.
+Then you'll see sda is suspended after 10secs idle.
 
-Trying to propagate up this type of complexity is where I think you go
-overboard.  KISS and let's let fabric independent configfs (leaning on
-vfs) do the hard work for tracking these types of SCSI relationships.
+# cat /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/runtime_status
+suspended
 
-> > so that it is not possible to migrate one to the other.
-> 
-> Migration between different backend types does not seem all that useful.
-> The general rule is you need identical flags on both sides to allow
-> migration, and it is not clear how valuable it is to relax this
-> somewhat.
-> 
+And if you do some IO, it will resume immediately.
 
-I really need to learn more about how QEMU Live migration works wrt to
-storage before saying how this may (or may not) work.
+v5:
+- rename scsi_execute_req to scsi_execute_req_flags
+  and wrap scsi_execute_req around it.
+- add detail function descriptions in patch 2 log
+- define static helper functions to do runtime pm work on block layer
+  and put the definitions inside a #ifdef block
 
-We certainly have no problems doing physical machine failover with
-target_core_mod for iscsi-target, and ATM I don't see why the QEMU
-userspace process driving the real-time configfs configuration of the
-storage fabric would not work..
+v4:
+- add CONFIG_PM_RUNTIME check
+- update queue runtime pm status after system resume
+- use pm_runtime_autosuspend instead of pm_request_autosuspend in scsi_runtime_idle
+- always count PM request
 
-> > I don't think vhost-scsi is particularly useful for virtualization,
-> > honestly.  However, if it is useful for development, testing or
-> > benchmarking of lio itself (does this make any sense? :)) that could be
-> > by itself a good reason to include it.
-> > 
-> > Paolo
-> 
+v3:
+- remove block layer suspend/resume callbacks
+- add block layer runtime pm helper functions
+
+v2:
+- remove queue idle timer, use runtime pm core's auto suspend
+
+Lin Ming (4):
+      block: add a flag to identify PM request
+      block: add runtime pm helpers
+      block: implement runtime pm strategy
+      [SCSI] sd: change to auto suspend mode
+
+ block/blk-core.c           |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ block/elevator.c           |    4 ++++
+ drivers/scsi/scsi_lib.c    |    9 ++++-----
+ drivers/scsi/scsi_pm.c     |   38 ++++++++++++++++++++++++++++++--------
+ drivers/scsi/scsi_sysfs.c  |    2 ++
+ drivers/scsi/sd.c          |   16 +++++-----------
+ include/linux/blk_types.h  |    2 ++
+ include/linux/blkdev.h     |   65 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_device.h |   17 +++++++++++++----
+ 9 files changed, 194 insertions(+), 28 deletions(-)
