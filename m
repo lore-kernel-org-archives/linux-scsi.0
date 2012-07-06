@@ -1,144 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v5 3/4] block: implement runtime pm strategy
-Date: Fri, 06 Jul 2012 09:00:12 +0400
-Message-ID: <1341550812.3023.3.camel@dabdike.hilton.com>
-References: <1341547472-6863-1-git-send-email-ming.m.lin@intel.com>
-	 <1341547472-6863-4-git-send-email-ming.m.lin@intel.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6
+Date: Fri, 06 Jul 2012 07:39:43 +0200
+Message-ID: <4FF67A1F.5080507@redhat.com>
+References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
+	<20120704140259.GB26485@redhat.com> <4FF45890.6000205@redhat.com>
+	<20120704150557.GA26951@redhat.com> <4FF4BFBD.2080000@us.ibm.com>
+	<1341453135.23954.214.camel@haakon2.linux-iscsi.org>
+	<4FF56AE9.9060201@redhat.com> <20120705135318.GG30572@redhat.com>
+	<1341545893.23954.325.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1341547472-6863-4-git-send-email-ming.m.lin@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1341545893.23954.325.camel@haakon2.linux-iscsi.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Anthony Liguori <aliguori@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2012-07-06 at 12:04 +0800, Lin Ming wrote:
-> When a request is added:
->     If device is suspended or is suspending and the request is not a
->     PM request, resume the device.
+Il 06/07/2012 05:38, Nicholas A. Bellinger ha scritto:
+> So I imagine that setting inquiry/vpd/mode via configfs attribs to match
+> whatever the guest wants to see (or expects to see) can be enabled
+> via /sys/kernel/config/target/core/$HBA/$DEV/[wwn,attrib]/ easily to
+> whatever is required.
 > 
-> When a request finishes:
->     Call pm_runtime_mark_last_busy().
+> However, beyond basic SCSI WWN related bits, I would avoid trying to
+> match complex SCSI target state between the in-kernel patch and QEMU
+> SCSI.
+
+Agreed.  It should just be the bare minimum to make stable /dev/disk
+paths, well, stable between the two backends.
+
+>>> so that it is not possible to migrate one to the other.
+>>
+>> Migration between different backend types does not seem all that useful.
+>> The general rule is you need identical flags on both sides to allow
+>> migration, and it is not clear how valuable it is to relax this
+>> somewhat.
 > 
-> When pick a request:
->     If device is resuming/suspending, then only PM request is allowed to go.
->     Return NULL for other cases.
+> I really need to learn more about how QEMU Live migration works wrt to
+> storage before saying how this may (or may not) work.
 
-This is a complete reinvention of the quiesce state, just with new names
-and moved up to block in part ... why do we have to have two separate
-systems for stopping a device and sending special commands when the
-device is suspended, why not just one?
+vhost-scsi live migration should be easy to fix.  You need some ioctl or
+eventfd mechanism to communicate to userspace that there is no pending
+I/O, but you need that anyway also for other operations (as simple as
+stopping the VM: QEMU guarantees that the "stop" monitor command returns
+only when there is no outstanding I/O).
 
-James
+What worries me most is: 1) the amount of functionality that is lost
+with vhost-scsi, especially the new live operations that we're adding to
+QEMU; 2) whether any hook we introduce in the QEMU block layer will
+cause problems down the road when we set to fix the existing
+virtio-blk/virtio-scsi-qemu performance problems.  This is the reason
+why I'm reluctant to merge the QEMU bits.  The kernel bits are
+self-contained and are much less problematic.
 
-> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-> ---
->  block/blk-core.c       |    7 +++++++
->  block/elevator.c       |    4 ++++
->  include/linux/blkdev.h |   37 +++++++++++++++++++++++++++++++++++++
->  3 files changed, 48 insertions(+)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 1cc80ae..cb93501 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -1224,6 +1224,8 @@ void __blk_put_request(struct request_queue *q, struct request *req)
->  	if (unlikely(--req->ref_count))
->  		return;
->  
-> +	blk_pm_put_request(q);
-> +
->  	elv_completed_request(q, req);
->  
->  	/* this is a bio leak */
-> @@ -2012,6 +2014,11 @@ struct request *blk_peek_request(struct request_queue *q)
->  	int ret;
->  
->  	while ((rq = __elv_next_request(q)) != NULL) {
-> +
-> +		rq = blk_pm_peek_request(q, rq);
-> +		if (!rq)
-> +			break;
-> +
->  		if (!(rq->cmd_flags & REQ_STARTED)) {
->  			/*
->  			 * This is the first time the device driver
-> diff --git a/block/elevator.c b/block/elevator.c
-> index 6a55d41..37c1a2b 100644
-> --- a/block/elevator.c
-> +++ b/block/elevator.c
-> @@ -536,6 +536,8 @@ void elv_requeue_request(struct request_queue *q, struct request *rq)
->  
->  	rq->cmd_flags &= ~REQ_STARTED;
->  
-> +	blk_pm_requeue_request(q);
-> +
->  	__elv_add_request(q, rq, ELEVATOR_INSERT_REQUEUE);
->  }
->  
-> @@ -558,6 +560,8 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
->  {
->  	trace_block_rq_insert(q, rq);
->  
-> +	blk_pm_add_request(q, rq);
-> +
->  	rq->q = q;
->  
->  	if (rq->cmd_flags & REQ_SOFTBARRIER) {
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 9395d39..c8c5951 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -908,6 +908,36 @@ extern int blk_pre_runtime_suspend(struct request_queue *q);
->  extern void blk_post_runtime_suspend(struct request_queue *q, int err);
->  extern void blk_pre_runtime_resume(struct request_queue *q);
->  extern void blk_post_runtime_resume(struct request_queue *q, int err);
-> +
-> +static inline void blk_pm_put_request(struct request_queue *q)
-> +{
-> +	if (!(--q->nr_pending) && q->dev)
-> +		 pm_runtime_mark_last_busy(q->dev);
-> +}
-> +
-> +static inline struct request *blk_pm_peek_request(
-> +	struct request_queue *q, struct request *rq)
-> +{
-> +	if (q->rpm_status == RPM_SUSPENDED ||
-> +		  (q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM)))
-> +		return NULL;
-> +	else
-> +		return rq;
-> +}
-> +
-> +static inline void blk_pm_requeue_request(struct request_queue *q)
-> +{
-> +	q->nr_pending--;
-> +}
-> +
-> +static inline void blk_pm_add_request(struct request_queue *q,
-> +	struct request *rq)
-> +{
-> +	if (q->nr_pending++ == 0 && !(rq->cmd_flags & REQ_PM) &&
-> +		    (q->rpm_status == RPM_SUSPENDED ||
-> +		     q->rpm_status == RPM_SUSPENDING) && q->dev)
-> +		pm_request_resume(q->dev);
-> +}
->  #else
->  static inline void blk_pm_runtime_init(struct request_queue *q,
->  	struct device *dev) {}
-> @@ -918,6 +948,13 @@ static inline int blk_pre_runtime_suspend(struct request_queue *q)
->  static inline void blk_post_runtime_suspend(struct request_queue *q, int err) {}
->  static inline void blk_pre_runtime_resume(struct request_queue *q) {}
->  static inline void blk_post_runtime_resume(struct request_queue *q, int err) {}
-> +
-> +static inline void blk_pm_put_request(struct request_queue *q) {}
-> +static inline struct request *blk_pm_peek_request(
-> +	struct request_queue *q, struct request *rq) { return rq; }
-> +static inline void blk_pm_requeue_request(struct request_queue *q) {}
-> +static inline void blk_pm_add_request(struct request_queue *q,
-> +	struct request *req) {}
->  #endif
->  
->  /*
+It may well be that _the same_ (or very similar) hooks will be needed by
+both tcm_vhost and high-performance userspace virtio backends.  This
+would of course remove the objection.
+
+Paolo
