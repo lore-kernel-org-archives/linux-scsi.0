@@ -1,55 +1,55 @@
-From: Lin Ming <ming.m.lin@intel.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH v5 3/4] block: implement runtime pm strategy
-Date: Fri, 6 Jul 2012 22:51:21 +0800
-Message-ID: <CAF1ivSb7_THm+ugR5D-bEA6VsDvrxeH8V-Dk5JqeWEQEgHhy2w@mail.gmail.com>
-References: <1341547472-6863-4-git-send-email-ming.m.lin@intel.com>
-	<Pine.LNX.4.44L0.1207061019170.28821-100000@netrider.rowland.org>
+Date: Fri, 6 Jul 2012 10:59:59 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1207061042550.28821-100000@netrider.rowland.org>
+References: <1341561953.3023.31.camel@dabdike.hilton.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1207061019170.28821-100000@netrider.rowland.org>
+In-Reply-To: <1341561953.3023.31.camel@dabdike.hilton.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Lin Ming <ming.m.lin@intel.com>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 6, 2012 at 10:21 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Fri, 6 Jul 2012, Lin Ming wrote:
->
->> When a request is added:
->>     If device is suspended or is suspending and the request is not a
->>     PM request, resume the device.
->>
->> When a request finishes:
->>     Call pm_runtime_mark_last_busy().
->>
->> When pick a request:
->>     If device is resuming/suspending, then only PM request is allowed to go.
->>     Return NULL for other cases.
->>
->> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
->
-> Generally okay, but...
->
->> --- a/include/linux/blkdev.h
->> +++ b/include/linux/blkdev.h
->> @@ -908,6 +908,36 @@ extern int blk_pre_runtime_suspend(struct request_queue *q);
->>  extern void blk_post_runtime_suspend(struct request_queue *q, int err);
->>  extern void blk_pre_runtime_resume(struct request_queue *q);
->>  extern void blk_post_runtime_resume(struct request_queue *q, int err);
->> +
->> +static inline void blk_pm_put_request(struct request_queue *q)
->> +{
->> +     if (!(--q->nr_pending) && q->dev)
->> +              pm_runtime_mark_last_busy(q->dev);
->> +}
-> ...
->
-> These new helper routines are private to the block layer, not intended
-> for use by clients.  Consequently they don't belong in include/linux;
-> they should go in block/blk.h.
+On Fri, 6 Jul 2012, James Bottomley wrote:
 
-OK, will move it.
+> The mechanism is pretty much identical:  For quiesce you set the sdev
+> state to SDEV_QUIESCE and then send in special requests with REQ_PREEMPT
+> to bypass the suspend.  In your additional scheme you set a queue flag
+> RPM_SUSPENDED by a pm specific set of callbacks and you only then accept
+> requests with REQ_PM.  I don't see any difference in actual effect
+> (well, except that quiesce can be done on a non-empty queue, but that's
+> a simple flag difference).
+> 
+> What I don't want to see is duplicated mechanisms.  If you want to make
+> a general quiesce mechanism in block instead of SCSI, I'm fine with
+> that, but I want to see our current quiesce mechanism moved to it first
+> since that demonstrates you got it right.  If you don't want to do that,
+> then just use the existing mechanism in SCSI.
 
->
-> Alan Stern
+Moving the whole thing to block sounds like a good suggestion.  But are
+the end results supposed to be the same?  For example, if a rotating
+disk is put into the QUIESCE state, does it get spun down (as would
+happen with a runtime suspend)?  I rather got the impression that
+QUIESCE meant carrying out existing requests and not accepting new
+ones, without the other actions needed for suspend.
+
+What is the client interface for the quiesce mechanism?  There are a
+few calls in scsi_transport_spi.c, but no other obvious entry points
+besides sysfs.
+
+Are you suggesting that writing "quiesce" to the state attribute should
+drain the request queue and then initiate a runtime suspend?
+
+> Now that I look at it, your q->nr_pending is an inexact duplicate of
+> sdev->device_busy as well.  Again, no objection to moving this to block,
+> but if you then make SCSI use it for sdev->device_busy, you'll get a
+> very fast indication of whether you got this right or not, which is an
+> excellent reason for unifying.
+
+They aren't exactly the same, because nr_pending counts requests on the
+queue whether or not they have been started at the SCSI level.  But
+obviously they are closely related.
+
+Alan Stern
