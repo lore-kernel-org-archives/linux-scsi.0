@@ -1,139 +1,67 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v5 1/4] block: add a flag to identify PM request
-Date: Fri,  6 Jul 2012 12:04:29 +0800
-Message-ID: <1341547472-6863-2-git-send-email-ming.m.lin@intel.com>
-References: <1341547472-6863-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37371 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750763Ab2GFEEh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jul 2012 00:04:37 -0400
-In-Reply-To: <1341547472-6863-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH v2] [SCSI] scsi_pm: set device runtime state before parent
+ suspended
+Date: Fri, 06 Jul 2012 12:06:57 +0800
+Message-ID: <1341547617.6401.1.camel@chief-river-32>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <JBottomley@Parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Shaohua Li <shli@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Add a flag REQ_PM to identify the request is PM related.
-As an example, modify scsi code to use this flag.
+There is a race in scsi_bus_resume_common when set device's runtime
+state to active after pm_runtime_put_sync(dev->parent).
+
+Parent device may have been suspended so pm_runtime_set_active(dev) will
+fail with -EBUSY.
 
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/scsi/scsi_lib.c    |    9 ++++-----
- drivers/scsi/sd.c          |    9 +++++----
- include/linux/blk_types.h  |    2 ++
- include/scsi/scsi_device.h |   17 +++++++++++++----
- 4 files changed, 24 insertions(+), 13 deletions(-)
+ drivers/scsi/scsi_pm.c |   23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6dfb978..98be3f1 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -255,11 +255,10 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- }
- EXPORT_SYMBOL(scsi_execute);
- 
--
--int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
-+int scsi_execute_req_flags(struct scsi_device *sdev, const unsigned char *cmd,
- 		     int data_direction, void *buffer, unsigned bufflen,
- 		     struct scsi_sense_hdr *sshdr, int timeout, int retries,
--		     int *resid)
-+		     int *resid, int flags)
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d4201de..dc0ad85 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -76,23 +76,24 @@ static int scsi_bus_resume_common(struct device *dev)
  {
- 	char *sense = NULL;
- 	int result;
-@@ -270,14 +269,14 @@ int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
- 			return DRIVER_ERROR << 24;
+ 	int err = 0;
+ 
+-	if (scsi_is_sdev_device(dev)) {
+-		/*
+-		 * Parent device may have runtime suspended as soon as
+-		 * it is woken up during the system resume.
+-		 *
+-		 * Resume it on behalf of child.
+-		 */
+-		pm_runtime_get_sync(dev->parent);
+-		err = scsi_dev_type_resume(dev);
+-		pm_runtime_put_sync(dev->parent);
+-	}
++	/*
++	 * Parent device may have runtime suspended as soon as
++	 * it is woken up during the system resume.
++	 *
++	 * Resume it on behalf of child.
++	 */
++	pm_runtime_get_sync(dev->parent);
+ 
++	if (scsi_is_sdev_device(dev))
++		err = scsi_dev_type_resume(dev);
+ 	if (err == 0) {
+ 		pm_runtime_disable(dev);
+ 		pm_runtime_set_active(dev);
+ 		pm_runtime_enable(dev);
  	}
- 	result = scsi_execute(sdev, cmd, data_direction, buffer, bufflen,
--			      sense, timeout, retries, 0, resid);
-+			      sense, timeout, retries, flags, resid);
- 	if (sshdr)
- 		scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, sshdr);
- 
- 	kfree(sense);
- 	return result;
- }
--EXPORT_SYMBOL(scsi_execute_req);
-+EXPORT_SYMBOL(scsi_execute_req_flags);
- 
- /*
-  * Function:    scsi_init_cmd_errh()
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 6f72b80..ce03a0a 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1270,8 +1270,9 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 		 * Leave the rest of the command zero to indicate
- 		 * flush everything.
- 		 */
--		res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
--				       SD_FLUSH_TIMEOUT, SD_MAX_RETRIES, NULL);
-+		res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
-+				       SD_FLUSH_TIMEOUT, SD_MAX_RETRIES, NULL,
-+				       REQ_PM);
- 		if (res == 0)
- 			break;
- 	}
-@@ -2815,8 +2816,8 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 	if (!scsi_device_online(sdp))
- 		return -ENODEV;
- 
--	res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
--			       SD_TIMEOUT, SD_MAX_RETRIES, NULL);
-+	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
-+			       SD_TIMEOUT, SD_MAX_RETRIES, NULL, REQ_PM);
- 	if (res) {
- 		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
- 		sd_print_result(sdkp, res);
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 0edb65d..ed53dca 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -160,6 +160,7 @@ enum rq_flag_bits {
- 	__REQ_FLUSH_SEQ,	/* request for flush sequence */
- 	__REQ_IO_STAT,		/* account I/O stat */
- 	__REQ_MIXED_MERGE,	/* merge of different types, fail separately */
-+	__REQ_PM,		/* runtime pm request */
- 	__REQ_NR_BITS,		/* stops here */
- };
- 
-@@ -201,5 +202,6 @@ enum rq_flag_bits {
- #define REQ_IO_STAT		(1 << __REQ_IO_STAT)
- #define REQ_MIXED_MERGE		(1 << __REQ_MIXED_MERGE)
- #define REQ_SECURE		(1 << __REQ_SECURE)
-+#define REQ_PM			(1 << __REQ_PM)
- 
- #endif /* __LINUX_BLK_TYPES_H */
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index ba96988..ea6a97f 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -384,10 +384,19 @@ extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 			int data_direction, void *buffer, unsigned bufflen,
- 			unsigned char *sense, int timeout, int retries,
- 			int flag, int *resid);
--extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
--			    int data_direction, void *buffer, unsigned bufflen,
--			    struct scsi_sense_hdr *, int timeout, int retries,
--			    int *resid);
-+extern int scsi_execute_req_flags(struct scsi_device *sdev,
-+	const unsigned char *cmd, int data_direction, void *buffer,
-+	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
-+	int retries, int *resid, int flags);
 +
-+static inline int scsi_execute_req(struct scsi_device *sdev,
-+	const unsigned char *cmd, int data_direction, void *buffer,
-+	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
-+	int retries, int *resid)
-+{
-+	return scsi_execute_req_flags(sdev, cmd, data_direction, buffer,
-+		bufflen, sshdr, timeout, retries, resid, 0);
-+}
++	pm_runtime_put_sync(dev->parent);
++
+ 	return err;
+ }
  
- #ifdef CONFIG_PM_RUNTIME
- extern int scsi_autopm_get_device(struct scsi_device *);
 -- 
 1.7.10
-
