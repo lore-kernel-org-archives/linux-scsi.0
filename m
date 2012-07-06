@@ -1,55 +1,44 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v5 3/4] block: implement runtime pm strategy
-Date: Fri, 6 Jul 2012 10:59:59 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1207061042550.28821-100000@netrider.rowland.org>
-References: <1341561953.3023.31.camel@dabdike.hilton.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 0/6] libfc, libfcoe and fcoe updates for scsi-misc
+Date: Fri, 06 Jul 2012 10:39:59 -0700
+Message-ID: <20120706173959.4102.12091.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1341561953.3023.31.camel@dabdike.hilton.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Lin Ming <ming.m.lin@intel.com>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:32270 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757652Ab2GFRkA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jul 2012 13:40:00 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 6 Jul 2012, James Bottomley wrote:
+Here are a few bug fixes across libfc, libfcoe and fcoe.
 
-> The mechanism is pretty much identical:  For quiesce you set the sdev
-> state to SDEV_QUIESCE and then send in special requests with REQ_PREEMPT
-> to bypass the suspend.  In your additional scheme you set a queue flag
-> RPM_SUSPENDED by a pm specific set of callbacks and you only then accept
-> requests with REQ_PM.  I don't see any difference in actual effect
-> (well, except that quiesce can be done on a non-empty queue, but that's
-> a simple flag difference).
-> 
-> What I don't want to see is duplicated mechanisms.  If you want to make
-> a general quiesce mechanism in block instead of SCSI, I'm fine with
-> that, but I want to see our current quiesce mechanism moved to it first
-> since that demonstrates you got it right.  If you don't want to do that,
-> then just use the existing mechanism in SCSI.
+---
 
-Moving the whole thing to block sounds like a good suggestion.  But are
-the end results supposed to be the same?  For example, if a rotating
-disk is put into the QUIESCE state, does it get spun down (as would
-happen with a runtime suspend)?  I rather got the impression that
-QUIESCE meant carrying out existing requests and not accepting new
-ones, without the other actions needed for suspend.
+Neil Horman (1):
+      fcoe: Cleanup locking on fcoe_percpu_receive_thread
 
-What is the client interface for the quiesce mechanism?  There are a
-few calls in scsi_transport_spi.c, but no other obvious entry points
-besides sysfs.
+Robert Love (1):
+      fcoe: Remove redundant 'less than zero' check
 
-Are you suggesting that writing "quiesce" to the state attribute should
-drain the request queue and then initiate a runtime suspend?
+Vasu Dev (2):
+      libfc: add exch timer debug info
+      libfc: fix retries with FDMI lport states
 
-> Now that I look at it, your q->nr_pending is an inexact duplicate of
-> sdev->device_busy as well.  Again, no objection to moving this to block,
-> but if you then make SCSI use it for sdev->device_busy, you'll get a
-> very fast indication of whether you got this right or not, which is an
-> excellent reason for unifying.
+Yi Zou (2):
+      libfc: don't exch_done() on invalid sequence ptr
+      libfc: fix sending REC after FCP_RESP is received
 
-They aren't exactly the same, because nr_pending counts requests on the
-queue whether or not they have been started at the SCSI level.  But
-obviously they are closely related.
 
-Alan Stern
+ drivers/scsi/fcoe/fcoe.c       |   18 ++++----
+ drivers/scsi/fcoe/fcoe_sysfs.c |    2 -
+ drivers/scsi/libfc/fc_exch.c   |   96 ++++++++++++++++++++++------------------
+ drivers/scsi/libfc/fc_fcp.c    |    6 +--
+ drivers/scsi/libfc/fc_lport.c  |    8 ++-
+ 5 files changed, 72 insertions(+), 58 deletions(-)
+
+-- 
+Thanks, //Rob
