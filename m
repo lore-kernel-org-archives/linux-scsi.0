@@ -1,60 +1,45 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [Ksummit-2012-discuss] SCSI Performance regression [was Re:
- [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6]
-Date: Fri, 06 Jul 2012 15:06:06 -0700
-Message-ID: <1341612366.23954.471.camel@haakon2.linux-iscsi.org>
-References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
-	 <20120704140259.GB26485@redhat.com> <4FF45890.6000205@redhat.com>
-	 <20120704150557.GA26951@redhat.com> <4FF4BFBD.2080000@us.ibm.com>
-	 <1341453135.23954.214.camel@haakon2.linux-iscsi.org>
-	 <4FF56AE9.9060201@redhat.com> <20120705135318.GG30572@redhat.com>
-	 <4FF59F6B.2000101@us.ibm.com>
-	 <1341543672.23954.285.camel@haakon2.linux-iscsi.org>
-	 <1341553397.3023.16.camel@dabdike.hilton.com>
-	 <alpine.DEB.2.00.1207061528520.2656@router.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:37634 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756771Ab2GFWGJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jul 2012 18:06:09 -0400
-In-Reply-To: <alpine.DEB.2.00.1207061528520.2656@router.home>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: [PATCH RESEND 0/3] scsi: fix internal write cache issue on usb hdd.
+Date: Sat,  7 Jul 2012 23:04:45 -0400
+Message-ID: <1341716685-6631-1-git-send-email-linkinjeon@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, sshtylyov@mvista.com, bvanassche@acm.org, akpm@linux-foundation.org
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Lameter <cl@linux.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Anthony Liguori <aliguori@us.ibm.com>, kvm-devel <kvm@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, ksummit-2012-discuss <ksummit-2012-discuss@lists.linuxfoundation.org>, Paolo Bonzini <pbonzini@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 
-On Fri, 2012-07-06 at 15:30 -0500, Christoph Lameter wrote:
-> On Fri, 6 Jul 2012, James Bottomley wrote:
-> 
-> > What people might pay attention to is evidence that there's a problem in
-> > 3.5-rc6 (without any OFED crap).  If you're not going to bother
-> > investigating, it has to be in an environment they can reproduce (so
-> > ordinary hardware, not infiniband) otherwise it gets ignored as an
-> > esoteric hardware issue.
-> 
-> The OFED stuff in the meantime is part of 3.5-rc6. Infiniband has been
-> supported for a long time and its a very important technology given the
-> problematic nature of ethernet at high network speeds.
-> 
-> OFED crap exists for those running RHEL5/6. The new enterprise distros are
-> based on the 3.2 kernel which has pretty good Infiniband support
-> out of the box.
-> 
+From: Namjae Jeon <namjae.jeon@samsung.com>
 
-So I don't think the HCAs or Infiniband fabric was the limiting factor
-for small block random I/O in the RHEL 6.2 w/ OFED vs. Windows Server
-2008 R2 w/ OFED setup mentioned earlier.
+The numbers of USB HDDs(All USB HDD I checked) does not respond
+correctly to scsi mode sense command for retrieving the write cache
+page status. Even though write cache is enabled by default, due to
+scsi driver assume that cache is not enabled which in turn might lead
+to loss of data since data still will be in cache.
+This result that all filesystems is not stable on USB HDD when the
+device is unplugged abruptly, even though these are having journaling
+feature. Our first trying is that scsi driver send ATA command
+(ATA Pass through, #85) to USB HDD after failure from normal routine to
+know write cache enable.
+We have known it is dangerous after testing several USB HDD. some of
+HDD is stalled by this command(A-DATA HDD). So we tried to make the
+patch James Bottomley's suggestion(usb quirk) on version 2 that add
+product ID and verdor ID of USB HDD to USB quirk list after checking
+write cache.
+All filesystem will be stable on USB HDD registered in quirk list.
+And it will be updated continuously.
 
-I've seen both FC and iSCSI fabrics demonstrate the same type of random
-small block I/O performance anomalies with Linux/SCSI clients too.  The
-v3.x Linux/SCSI clients are certainly better in the multi-lun per host
-small block random I/O case, but single LUN performance is (still)
-lacking compared to everything else.
+Namjae Jeon (3):
+	scsi: set to WCE if usb cache quirk is present.
+	usb: storage: add support for write cache quirk.
+	usb: storage: update usb devices for write cache quirk in quirk.
 
-Also RHEL 6.2 does have the scsi-host-lock less bits in place now, but
-it's been more a matter of converting OFED ib_srp code to run in
-host-lock less mode to realize extra gains for multi-lun per host.
-
+ drivers/scsi/sd.c          |    9 +++++++--
+ include/scsi/scsi_device.h |    1 +
+ drivers/usb/storage/scsiglue.c |    5 +++++
+ drivers/usb/storage/usb.c      |    5 ++++-
+ include/linux/usb_usual.h      |    4 +++-
+ drivers/usb/storage/unusual_devs.h |   24 ++++++++++++++++++++++++
+ Documentation/kernel-parameters.txt |    2 ++
+ 7 files changed, 46 insertions(+), 4 deletions(-)
+-- 
+1.7.9.5
