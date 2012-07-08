@@ -1,7 +1,7 @@
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 1/3] scsi: set to WCE if usb cache quirk is present.
-Date: Sat,  7 Jul 2012 23:05:08 -0400
-Message-ID: <1341716708-6665-1-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH RESEND 2/3] usb: storage: add support for write cache quirk
+Date: Sat,  7 Jul 2012 23:05:28 -0400
+Message-ID: <1341716728-6699-1-git-send-email-linkinjeon@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, gregkh@linuxfoundation.org, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, sshtylyov@mvista.com, bvanassche@acm.org, akpm@linux-foundation.org
@@ -10,50 +10,86 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-Make use of USB quirk method to identify such HDD while reading
-the cache status in sd_probe(). If cache quirk is present for
-the HDD, lets assume that cache is enabled and make WCE bit
-equal to 1.
+Add support for write cache quirk on usb hdd. scsi driver will be set to wce
+by detecting write cache quirk in quirk list when plugging usb hdd.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Pankaj Kumar <pankaj.km@samsung.com>
 Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 ---
- drivers/scsi/sd.c          |    9 +++++++--
- include/scsi/scsi_device.h |    1 +
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ Documentation/kernel-parameters.txt |    2 ++
+ drivers/usb/storage/scsiglue.c      |    5 +++++
+ drivers/usb/storage/usb.c           |    5 ++++-
+ include/linux/usb_usual.h           |    4 +++-
+ 4 files changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 6f72b80..4225064 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2261,8 +2261,13 @@ bad_sense:
- 		sd_printk(KERN_ERR, sdkp, "Asking for cache data failed\n");
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index de8d60c..7e7f3af 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2939,6 +2939,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 					initial READ(10) command);
+ 				o = CAPACITY_OK (accept the capacity
+ 					reported by the device);
++				p = WRITE_CACHE (the device cache is ON
++					by default);
+ 				r = IGNORE_RESIDUE (the device reports
+ 					bogus residue values);
+ 				s = SINGLE_LUN (the device has only one
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index 11418da..a3d5436 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -236,6 +236,11 @@ static int slave_configure(struct scsi_device *sdev)
+ 					US_FL_SCM_MULT_TARG)) &&
+ 				us->protocol == USB_PR_BULK)
+ 			us->use_last_sector_hacks = 1;
++
++		/* Check if write cache default on flag is set or not */
++		if (us->fflags & US_FL_WRITE_CACHE)
++			sdev->wce_default_on = 1;
++
+ 	} else {
  
- defaults:
--	sd_printk(KERN_ERR, sdkp, "Assuming drive cache: write through\n");
--	sdkp->WCE = 0;
-+	if (sdp->wce_default_on) {
-+		sd_printk(KERN_NOTICE, sdkp, "Assuming drive cache: write back\n");
-+		sdkp->WCE = 1;
-+	} else {
-+		sd_printk(KERN_ERR, sdkp, "Assuming drive cache: write through\n");
-+		sdkp->WCE = 0;
-+	}
- 	sdkp->RCD = 0;
- 	sdkp->DPOFUA = 0;
- }
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index b6cf0cf..61ff671 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -156,6 +156,7 @@ struct scsi_device {
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
- 	unsigned can_power_off:1; /* Device supports runtime power off */
- 	unsigned wakeup_by_user:1;	/* user wakes up the ODD */
-+	unsigned wce_default_on:1; /* Cache is ON by default */
+ 		/* Non-disk-type devices don't need to blacklist any pages
+diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+index e23c30a..d012fe4 100644
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -473,7 +473,7 @@ static void adjust_quirks(struct us_data *us)
+ 			US_FL_CAPACITY_OK | US_FL_IGNORE_RESIDUE |
+ 			US_FL_SINGLE_LUN | US_FL_NO_WP_DETECT |
+ 			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
+-			US_FL_INITIAL_READ10);
++			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE);
  
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
+ 	p = quirks;
+ 	while (*p) {
+@@ -529,6 +529,9 @@ static void adjust_quirks(struct us_data *us)
+ 		case 'o':
+ 			f |= US_FL_CAPACITY_OK;
+ 			break;
++		case 'p':
++			f |= US_FL_WRITE_CACHE;
++			break;
+ 		case 'r':
+ 			f |= US_FL_IGNORE_RESIDUE;
+ 			break;
+diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
+index 17df360..e84e769 100644
+--- a/include/linux/usb_usual.h
++++ b/include/linux/usb_usual.h
+@@ -64,7 +64,9 @@
+ 	US_FLAG(NO_READ_CAPACITY_16,	0x00080000)		\
+ 		/* cannot handle READ_CAPACITY_16 */		\
+ 	US_FLAG(INITIAL_READ10,	0x00100000)			\
+-		/* Initial READ(10) (and others) must be retried */
++		/* Initial READ(10) (and others) must be retried */	\
++	US_FLAG(WRITE_CACHE,	0x00200000)			\
++		/* Write Cache status is not available */
+ 
+ #define US_FLAG(name, value)	US_FL_##name = value ,
+ enum { US_DO_ALL_FLAGS };
 -- 
 1.7.9.5
