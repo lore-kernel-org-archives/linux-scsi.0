@@ -1,58 +1,82 @@
 From: Venkatraman S <svenkatr@ti.com>
-Subject: [PATCH RESEND 2/3] drivers/scsi/ufs: reverse the ufshcd_is_device_present logic
-Date: Tue, 10 Jul 2012 19:39:23 +0530
-Message-ID: <1341929364-9122-3-git-send-email-svenkatr@ti.com>
+Subject: [PATCH RESEND 3/3] drivers/scsi/ufs: fix incorrect return value about SUCCESS and FAILED
+Date: Tue, 10 Jul 2012 19:39:24 +0530
+Message-ID: <1341929364-9122-4-git-send-email-svenkatr@ti.com>
 References: <1341929364-9122-1-git-send-email-svenkatr@ti.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:47076 "EHLO bear.ext.ti.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:59577 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751837Ab2GJOKI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jul 2012 10:10:08 -0400
+	id S1751837Ab2GJOKM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jul 2012 10:10:12 -0400
 In-Reply-To: <1341929364-9122-1-git-send-email-svenkatr@ti.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Venkatraman S <svenkatr@ti.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Namjae Jeon <linkinjeon@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-Otherwise it counter intuitively returns 0 if device is present.
+From: Namjae Jeon <linkinjeon@gmail.com>
 
-Signed-off-by: Venkatraman S <svenkatr@ti.com>
-Reviewed-by: Namjae Jeon <linkinjeon@gmail.com>
+Currently the UFS host driver has returned incorrect values for SUCCESS
+and FAILED.  Fix it to return the correct value to the upper layer.
+
+Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
 Acked-by: Santosh Y <santoshsy@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/scsi/ufs/ufshcd.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 40c43bf..48b01fe 100644
+index 48b01fe..58f4ba6 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -232,11 +232,11 @@ static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
-  *			      the host controller
-  * @reg_hcs - host controller status register value
-  *
-- * Returns 0 if device present, non-zero if no device detected
-+ * Returns 1 if device present, 0 if no device detected
-  */
- static inline int ufshcd_is_device_present(u32 reg_hcs)
- {
--	return (DEVICE_PRESENT & reg_hcs) ? 0 : -1;
-+	return (DEVICE_PRESENT & reg_hcs) ? 1 : 0;
+@@ -1163,6 +1163,8 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
+ 		if (task_result != UPIU_TASK_MANAGEMENT_FUNC_COMPL &&
+ 		    task_result != UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED)
+ 			task_result = FAILED;
++		else
++			task_result = SUCCESS;
+ 	} else {
+ 		task_result = FAILED;
+ 		dev_err(&hba->pdev->dev,
+@@ -1556,7 +1558,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 		goto out;
+ 	}
+ 	clear_bit(free_slot, &hba->tm_condition);
+-	return ufshcd_task_req_compl(hba, free_slot);
++	err = ufshcd_task_req_compl(hba, free_slot);
+ out:
+ 	return err;
+ }
+@@ -1580,7 +1582,7 @@ static int ufshcd_device_reset(struct scsi_cmnd *cmd)
+ 	tag = cmd->request->tag;
+ 
+ 	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_LOGICAL_RESET);
+-	if (err)
++	if (err == FAILED)
+ 		goto out;
+ 
+ 	for (pos = 0; pos < hba->nutrs; pos++) {
+@@ -1620,7 +1622,7 @@ static int ufshcd_host_reset(struct scsi_cmnd *cmd)
+ 	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+ 		return SUCCESS;
+ 
+-	return (ufshcd_do_reset(hba) == SUCCESS) ? SUCCESS : FAILED;
++	return ufshcd_do_reset(hba);
  }
  
  /**
-@@ -911,7 +911,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+@@ -1652,7 +1654,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	spin_unlock_irqrestore(host->host_lock, flags);
  
- 	/* check if device present */
- 	reg = readl((hba->mmio_base + REG_CONTROLLER_STATUS));
--	if (ufshcd_is_device_present(reg)) {
-+	if (!ufshcd_is_device_present(reg)) {
- 		dev_err(&hba->pdev->dev, "cc: Device not present\n");
- 		err = -ENXIO;
+ 	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_ABORT_TASK);
+-	if (err)
++	if (err == FAILED)
  		goto out;
+ 
+ 	scsi_dma_unmap(cmd);
 -- 
 1.7.0.4
 
