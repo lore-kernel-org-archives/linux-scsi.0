@@ -1,7 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [resend PATCH 1/5] libata: reset once
-Date: Mon, 09 Jul 2012 21:05:47 -0700
-Message-ID: <20120710040547.26529.78860.stgit@dwillia2-linux.jf.intel.com>
+Subject: [resend PATCH 2/5] libata: export ata_port suspend/resume
+ infrastructure for sas
+Date: Mon, 09 Jul 2012 21:05:52 -0700
+Message-ID: <20120710040552.26529.47482.stgit@dwillia2-linux.jf.intel.com>
 References: <20120710040434.26529.86552.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,68 +14,178 @@ To: jgarzik@pobox.com, JBottomley@parallels.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hotplug testing with libsas currently encounters a 55 second wait for
-link recovery to give up.  In the case where the user trusts the
-response time of their devices permit the recovery attempts to be
-limited to one.
+Reuse ata_port_{suspend|resume}_common for sas.  This path is chosen
+over adding coordination between ata-tranport and sas-transport because
+libsas wants to revalidate the domain at resume-time at the host level.
+It can not validate links have resumed properly until libata has had a
+chance to perform its revalidation, and any sane placing of an ata_port
+in the sas-transport model would delay it's resumption until after the
+host.
 
+Export the common portion of port suspend/resume (bypass pm_runtime),
+and allow sas to perform these operations asynchronously (similar to the
+libsas async-ata probe implmentation).  Async operation is determined by
+having an external, rather than stack based, location for storing the
+result of the operation.
+
+Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- Documentation/kernel-parameters.txt |    3 +++
- drivers/ata/libata-core.c           |    1 +
- drivers/ata/libata-eh.c             |    2 ++
- include/linux/libata.h              |    1 +
- 4 files changed, 7 insertions(+)
+ drivers/ata/libata-core.c |   58 ++++++++++++++++++++++++++++++++++++---------
+ include/linux/libata.h    |   11 +++++++++
+ 2 files changed, 57 insertions(+), 12 deletions(-)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index a92c5eb..a896b25 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -1351,6 +1351,9 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 			* nohrst, nosrst, norst: suppress hard, soft
-                           and both resets.
- 
-+			* rstonce: only attempt one reset during
-+			  hot-unplug link recovery
-+
- 			* dump_id: dump IDENTIFY data.
- 
- 			If there are multiple matching configurations changing
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3fe1202..efd2c72 100644
+index efd2c72..da31691 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -6388,6 +6388,7 @@ static int __init ata_parse_force_one(char **cur,
- 		{ "nohrst",	.lflags		= ATA_LFLAG_NO_HRST },
- 		{ "nosrst",	.lflags		= ATA_LFLAG_NO_SRST },
- 		{ "norst",	.lflags		= ATA_LFLAG_NO_HRST | ATA_LFLAG_NO_SRST },
-+		{ "rstonce",	.lflags		= ATA_LFLAG_RST_ONCE },
- 	};
- 	char *start = *cur, *p = *cur;
- 	char *id, *val, *endp;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 77fc806..a5d2aba 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2623,6 +2623,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
+@@ -5248,16 +5248,20 @@ bool ata_link_offline(struct ata_link *link)
+ #ifdef CONFIG_PM
+ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 			       unsigned int action, unsigned int ehi_flags,
+-			       int wait)
++			       int *async)
+ {
+ 	struct ata_link *link;
+ 	unsigned long flags;
+-	int rc;
++	int rc = 0;
+ 
+ 	/* Previous resume operation might still be in
+ 	 * progress.  Wait for PM_PENDING to clear.
  	 */
- 	while (ata_eh_reset_timeouts[max_tries] != ULONG_MAX)
- 		max_tries++;
-+	if (link->flags & ATA_LFLAG_RST_ONCE)
-+		max_tries = 1;
- 	if (link->flags & ATA_LFLAG_NO_HRST)
- 		hardreset = NULL;
- 	if (link->flags & ATA_LFLAG_NO_SRST)
+ 	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
++		if (async) {
++			*async = -EAGAIN;
++			return 0;
++		}
+ 		ata_port_wait_eh(ap);
+ 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+ 	}
+@@ -5266,10 +5270,10 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+ 	ap->pm_mesg = mesg;
+-	if (wait) {
+-		rc = 0;
++	if (async)
++		ap->pm_result = async;
++	else
+ 		ap->pm_result = &rc;
+-	}
+ 
+ 	ap->pflags |= ATA_PFLAG_PM_PENDING;
+ 	ata_for_each_link(link, ap, HOST_FIRST) {
+@@ -5282,7 +5286,7 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 	/* wait and check result */
+-	if (wait) {
++	if (!async) {
+ 		ata_port_wait_eh(ap);
+ 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+ 	}
+@@ -5292,9 +5296,8 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 
+ #define to_ata_port(d) container_of(d, struct ata_port, tdev)
+ 
+-static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
++static int __ata_port_suspend_common(struct ata_port *ap, pm_message_t mesg, int *async)
+ {
+-	struct ata_port *ap = to_ata_port(dev);
+ 	unsigned int ehi_flags = ATA_EHI_QUIET;
+ 	int rc;
+ 
+@@ -5309,10 +5312,17 @@ static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
+ 	if (mesg.event == PM_EVENT_SUSPEND)
+ 		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
+ 
+-	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, 1);
++	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, async);
+ 	return rc;
+ }
+ 
++static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
++{
++	struct ata_port *ap = to_ata_port(dev);
++
++	return __ata_port_suspend_common(ap, mesg, NULL);
++}
++
+ static int ata_port_suspend(struct device *dev)
+ {
+ 	if (pm_runtime_suspended(dev))
+@@ -5337,16 +5347,22 @@ static int ata_port_poweroff(struct device *dev)
+ 	return ata_port_suspend_common(dev, PMSG_HIBERNATE);
+ }
+ 
+-static int ata_port_resume_common(struct device *dev)
++static int __ata_port_resume_common(struct ata_port *ap, int *async)
+ {
+-	struct ata_port *ap = to_ata_port(dev);
+ 	int rc;
+ 
+ 	rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
+-		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
++		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, async);
+ 	return rc;
+ }
+ 
++static int ata_port_resume_common(struct device *dev)
++{
++	struct ata_port *ap = to_ata_port(dev);
++
++	return __ata_port_resume_common(ap, NULL);
++}
++
+ static int ata_port_resume(struct device *dev)
+ {
+ 	int rc;
+@@ -5379,6 +5395,24 @@ static const struct dev_pm_ops ata_port_pm_ops = {
+ 	.runtime_idle = ata_port_runtime_idle,
+ };
+ 
++/* sas ports don't participate in pm runtime management of ata_ports,
++ * and need to resume ata devices at the domain level, not the per-port
++ * level. sas suspend/resume is async to allow parallel port recovery
++ * since sas has multiple ata_port instances per Scsi_Host.
++ */
++int ata_sas_port_async_suspend(struct ata_port *ap, int *async)
++{
++	return __ata_port_suspend_common(ap, PMSG_SUSPEND, async);
++}
++EXPORT_SYMBOL_GPL(ata_sas_port_async_suspend);
++
++int ata_sas_port_async_resume(struct ata_port *ap, int *async)
++{
++	return __ata_port_resume_common(ap, async);
++}
++EXPORT_SYMBOL_GPL(ata_sas_port_async_resume);
++
++
+ /**
+  *	ata_host_suspend - suspend host
+  *	@host: host to suspend
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 53da442..f777d30 100644
+index f777d30..af467d3 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -182,6 +182,7 @@ enum {
- 	ATA_LFLAG_DISABLED	= (1 << 6), /* link is disabled */
- 	ATA_LFLAG_SW_ACTIVITY	= (1 << 7), /* keep activity stats */
- 	ATA_LFLAG_NO_LPM	= (1 << 8), /* disable LPM on this link */
-+	ATA_LFLAG_RST_ONCE	= (1 << 9), /* limit recovery to one reset */
- 
- 	/* struct ata_port flags */
- 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
+@@ -1016,6 +1016,17 @@ extern bool ata_link_offline(struct ata_link *link);
+ #ifdef CONFIG_PM
+ extern int ata_host_suspend(struct ata_host *host, pm_message_t mesg);
+ extern void ata_host_resume(struct ata_host *host);
++extern int ata_sas_port_async_suspend(struct ata_port *ap, int *async);
++extern int ata_sas_port_async_resume(struct ata_port *ap, int *async);
++#else
++static inline int ata_sas_port_async_suspend(struct ata_port *ap, int *async)
++{
++	return 0;
++}
++static inline int ata_sas_port_async_resume(struct ata_port *ap, int *async)
++{
++	return 0;
++}
+ #endif
+ extern int ata_ratelimit(void);
+ extern void ata_msleep(struct ata_port *ap, unsigned int msecs);
 
