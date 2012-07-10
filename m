@@ -1,76 +1,75 @@
 From: Matthias Prager <linux@matthiasprager.de>
 Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Tue, 10 Jul 2012 02:03:55 +0200
-Message-ID: <4FFB716B.4010309@matthiasprager.de>
-References: <4FE454CA.6080007@matthiasprager.de> <4FFAED4F.3080100@matthiasprager.de> <20120710080831.1bb616fb@notabene.brown>
+Date: Tue, 10 Jul 2012 02:12:04 +0200
+Message-ID: <4FFB7354.8040809@matthiasprager.de>
+References: <4FE454CA.6080007@matthiasprager.de> <4FFAED4F.3080100@matthiasprager.de> <4FFB32E5.1050109@farcaster.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dd15408.kasserver.com ([85.13.136.168]:47665 "EHLO
-	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755080Ab2GJAEH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jul 2012 20:04:07 -0400
-In-Reply-To: <20120710080831.1bb616fb@notabene.brown>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4FFB32E5.1050109@farcaster.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Robert Trace <maillist@farcaster.org>
 Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, Matthias Prager <linux@matthiasprager.de>
+List-Id: linux-scsi@vger.kernel.org
 
-Am 10.07.2012 00:08, schrieb NeilBrown:
-> On Mon, 09 Jul 2012 16:40:15 +0200 Matthias Prager <linux@matthiasprager.de>
-> wrote:
+Am 09.07.2012 21:37, schrieb Robert Trace:
+>> I did some further research regarding my problem.
+>> It appears to me the fault does not lie with the mpt2sas driver (not
+>> that I can definitely exclude it), but with the md implementation.
 > 
->> Even though it says creating aborted it still created md127.
+> I'm actually discovering some of the same issues (LSI 9211-8i w/ SATA
+> disks), but I've come to a slightly different conclusion.
 > 
-> One of my pet peeves in when people interpret the observations wrongly and
-> then report their interpretation instead of their observation.  However
-> sometimes it is very hard to separate the two.  You comment above looks
-> perfectly reasonable and looks like a clean observation and not and
-> interpretation.  Yet it is an interpretation :-)
+> I noticed that when my SATA disks are on a SATA controller and they spin
+> down (or are spun down via hdparm -y), then they response to TUR (TEST
+> UNIT READY) commands with an OK.  Any I/O sent to these disks simply
+> wait while the disks spin up and then complete as usual.
 > 
-> The observation would be
->    "Even though it says creating abort, md127 was still created".
+> However, my SATA disks on the SAS controller respond to TUR with the
+> sense error "Not Ready/Initializing command required".  Any I/O sent to
+> these disks immediately fails.  You saw this in your logging:
 > 
-> You see, it wasn't this mdadm that created md127 - it certainly shouldn't
-> have as you asked it to create md1.
-Sry - I jumped to conclusions without knowing what was actually going on.
-
+>> [  604.838640] sd 2:0:0:0: [sda] Device not ready
+>> [  604.838645] sd 2:0:0:0: [sda]  Result: hostbyte=DID_OK
+>> driverbyte=DRIVER_SENSE
+>> [  604.838655] sd 2:0:0:0: [sda]  Sense Key : Not Ready [current]
+>> [  604.838663] sd 2:0:0:0: [sda]  Add. Sense: Logical unit not ready,
+>> initializing command required
+>> [  604.838668] sd 2:0:0:0: [sda] CDB: Read(10): 28 00 00 00 08 00 00 00
+>> 20 00
+>> [  604.838680] end_request: I/O error, dev sda, sector 2048
+>> [  604.838688] Buffer I/O error on device md127, logical block 0
+>> [  604.838695] Buffer I/O error on device md127, logical block 1
+>> [  604.838699] Buffer I/O error on device md127, logical block 2
+>> [  604.838702] Buffer I/O error on device md127, logical block 3
 > 
-> I don't know the exact sequence of events, but something - possibly relating
-> to the error messages reported below - caused udev to notice /dev/sda.
-> udev then ran "mdadm -I /dev/sda" and as it had some metadata on it, it
-> created an array with it.  As the name information in that metadata was
-> probably "test1" or similar, rather than "1", mdadm didn't know what number
-> was wanted for the array, so it chose a free high number - 127.
-> 
-> This metadata must have been left over from an earlier experiment.
-That is correct (as am just realizing now). There is metadata of an
-raid1 array left on the disk even though it was used (for a short time)
-with zfs on freebsd before doing these experiments.
-
-> 
-> So it might have been something like.
-> 
-> - you run mdadm (call this mdadm-1).
-> - mdadm tries to open sda
-> - driver notices that device is asleep, and wakes it up
-> - the waking up of the device causes a CHANGE uevent to udev
-> - this cause udev to run a new mdadm - mdadm-2
-> - mdadm-2 reads the metadata, sees old metadata, assembled sda in a new md127
-> - mdadm-1 gets scheduled again, tries to get O_EXCL access to sda and fails, 
->   because sda is now part of md127
-> 
-> Clearly undesirable behaviour.  I'm not sure which bit is "wrong".
-As it turns out mdadm is doing everything right. md127 is actually
-already present (though inactive) at boot-time. So mdadm is absolutly
-correct in saying sda is busy and refusing to do anything further.
+> Sending an explicit START UNIT command to these sleeping disks will wake
+> them up and then they behave normally.  (BTW, you can issue TURs and
+> START UNITs via the sg_turs and sg_start commands).
+Thanks for these pointers.
 
 > 
-> NeilBrown
+> I've reproduced this behavior on the raw disks themselves, no MD layer
+> involved (although the freak-out by my MD layer is what alerted me to
+> this issue too... Having your entire array punted the first time you
+> access it is a little scary :-).  I'm also on raw hardware and I've seen
+> this behavior on kernels 3.0.33 through 3.4.4.
+This is interesting - are you sure about 3.0.33? I'm running this kernel
+atm for it gives me no trouble (as opposed to >=3.1.10). The SATA disks
+are spun up when I access data on them.
+
+> 
+> So, SATA disks respond differently depending on the controller they're
+> on.  I don't know if this is a SCSI thing, a SAS thing or a
+> firmware/driver thing for the 9211.
+> 
+> Now, whether or not the MD layer should be assembling arrays from
+> "failed" disks is, I think, a separate issue.
+I realize now in my cases the MD layer behaved correctly.
+
+> 
+> -- Rob
 > 
 
-The real problem seems to be located in some layer below md, which is
-not waking up the disk for any i/o (at all - not even for fdisk -l).
 
-Matthias
