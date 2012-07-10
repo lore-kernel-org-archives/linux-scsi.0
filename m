@@ -1,8 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [set4 resend PATCH 4/5] scsi: cleanup usages of
- scsi_complete_async_scans
-Date: Mon, 09 Jul 2012 19:33:40 -0700
-Message-ID: <20120710023340.26249.88941.stgit@dwillia2-linux.jf.intel.com>
+Subject: [set4 resend PATCH 2/5] async: make async_synchronize_full() flush
+ all work regardless of domain
+Date: Mon, 09 Jul 2012 19:33:30 -0700
+Message-ID: <20120710023330.26249.5894.stgit@dwillia2-linux.jf.intel.com>
 References: <20120710023241.26249.13718.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,111 +11,155 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120710023241.26249.13718.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: jgarzik@pobox.com, JBottomley@parallels.com
-Cc: Len Brown <len.brown@intel.com>, linux-scsi@vger.kernel.org, Eldad Zack <eldad@fogrefinery.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, Arjan van de Ven <arjan@linux.intel.com>
+Cc: Len Brown <len.brown@intel.com>, linux-scsi@vger.kernel.org, Meelis Roos <mroos@linux.ee>, Eldad Zack <eldadzack@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, Arjan van de Ven <arjan@linux.intel.com>, Eldad Zack <eldad@fogrefinery.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Now that scsi registers its async scan work with the async subsystem,
-wait_for_device_probe() is sufficient for ensuring all scanning is
-complete.
+In response to an async related regression James noted:
 
-Cc: Arjan van de Ven <arjan@linux.intel.com>
+  "My theory is that this is an init problem: The assumption in a lot of
+   our code is that async_synchronize_full() waits for everything ... even
+   the domain specific async schedules, which isn't true."
+
+...so make this assumption true.
+
+Each domain, including the default one, registers itself on a global domain
+list when work is scheduled.  Once all entries complete it exits that
+list.  Waiting for the list to be empty syncs all in-flight work across
+all domains.
+
+Domains can opt-out of global syncing if they are declared as exclusive
+ASYNC_DOMAIN_EXCLUSIVE().  All stack-based domains have been declared
+exclusive since the domain may go out of scope as soon as the last work
+item completes.
+
+Statically declared domains are mostly ok, but async_unregister_domain()
+is there to close any theoretical races with pending
+async_synchronize_full waiters at module removal time.
+
 Cc: Len Brown <len.brown@intel.com>
 Cc: Rafael J. Wysocki <rjw@sisk.pl>
 Cc: James Bottomley <JBottomley@parallels.com>
+Acked-by: Arjan van de Ven <arjan@linux.intel.com>
+Reported-by: Meelis Roos <mroos@linux.ee>
+Reported-by: Eldad Zack <eldadzack@gmail.com>
 Tested-by: Eldad Zack <eldad@fogrefinery.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/scsi_scan.c |   12 ------------
- include/scsi/scsi_scan.h |   11 -----------
- kernel/power/hibernate.c |    8 --------
- kernel/power/user.c      |    2 --
- 4 files changed, 33 deletions(-)
- delete mode 100644 include/scsi/scsi_scan.h
+ drivers/scsi/scsi.c   |    1 +
+ include/linux/async.h |    1 +
+ kernel/async.c        |   43 +++++++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 43 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index dff17c1..a0bc663 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -187,18 +187,6 @@ int scsi_complete_async_scans(void)
- 	return 0;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 4cade88..2936b44 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -1355,6 +1355,7 @@ static void __exit exit_scsi(void)
+ 	scsi_exit_devinfo();
+ 	scsi_exit_procfs();
+ 	scsi_exit_queue();
++	async_unregister_domain(&scsi_sd_probe_domain);
  }
  
--/* Only exported for the benefit of scsi_wait_scan */
--EXPORT_SYMBOL_GPL(scsi_complete_async_scans);
--
--#ifndef MODULE
--/*
-- * For async scanning we need to wait for all the scans to complete before
-- * trying to mount the root fs.  Otherwise non-modular drivers may not be ready
-- * yet.
-- */
--late_initcall(scsi_complete_async_scans);
--#endif
--
+ subsys_initcall(init_scsi);
+diff --git a/include/linux/async.h b/include/linux/async.h
+index 364e7ff..7a24fe9 100644
+--- a/include/linux/async.h
++++ b/include/linux/async.h
+@@ -46,6 +46,7 @@ struct async_domain {
+ extern async_cookie_t async_schedule(async_func_ptr *ptr, void *data);
+ extern async_cookie_t async_schedule_domain(async_func_ptr *ptr, void *data,
+ 					    struct async_domain *domain);
++void async_unregister_domain(struct async_domain *domain);
+ extern void async_synchronize_full(void);
+ extern void async_synchronize_full_domain(struct async_domain *domain);
+ extern void async_synchronize_cookie(async_cookie_t cookie);
+diff --git a/kernel/async.c b/kernel/async.c
+index ba5491d..9d31183 100644
+--- a/kernel/async.c
++++ b/kernel/async.c
+@@ -63,7 +63,9 @@ static async_cookie_t next_cookie = 1;
+ 
+ static LIST_HEAD(async_pending);
+ static ASYNC_DOMAIN(async_running);
++static LIST_HEAD(async_domains);
+ static DEFINE_SPINLOCK(async_lock);
++static DEFINE_MUTEX(async_register_mutex);
+ 
+ struct async_entry {
+ 	struct list_head	list;
+@@ -145,6 +147,8 @@ static void async_run_entry_fn(struct work_struct *work)
+ 	/* 3) remove self from the running queue */
+ 	spin_lock_irqsave(&async_lock, flags);
+ 	list_del(&entry->list);
++	if (running->registered && --running->count == 0)
++		list_del_init(&running->node);
+ 
+ 	/* 4) free the entry */
+ 	kfree(entry);
+@@ -187,6 +191,8 @@ static async_cookie_t __async_schedule(async_func_ptr *ptr, void *data, struct a
+ 	spin_lock_irqsave(&async_lock, flags);
+ 	newcookie = entry->cookie = next_cookie++;
+ 	list_add_tail(&entry->list, &async_pending);
++	if (running->registered && running->count++ == 0)
++		list_add_tail(&running->node, &async_domains);
+ 	atomic_inc(&entry_count);
+ 	spin_unlock_irqrestore(&async_lock, flags);
+ 
+@@ -236,13 +242,43 @@ EXPORT_SYMBOL_GPL(async_schedule_domain);
+  */
+ void async_synchronize_full(void)
+ {
++	mutex_lock(&async_register_mutex);
+ 	do {
+-		async_synchronize_cookie(next_cookie);
+-	} while (!list_empty(&async_running.domain) || !list_empty(&async_pending));
++		struct async_domain *domain = NULL;
++
++		spin_lock_irq(&async_lock);
++		if (!list_empty(&async_domains))
++			domain = list_first_entry(&async_domains, typeof(*domain), node);
++		spin_unlock_irq(&async_lock);
++
++		async_synchronize_cookie_domain(next_cookie, domain);
++	} while (!list_empty(&async_domains));
++	mutex_unlock(&async_register_mutex);
+ }
+ EXPORT_SYMBOL_GPL(async_synchronize_full);
+ 
  /**
-  * scsi_unlock_floptical - unlock device via a special MODE SENSE command
-  * @sdev:	scsi device to send command to
-diff --git a/include/scsi/scsi_scan.h b/include/scsi/scsi_scan.h
-deleted file mode 100644
-index 7889888..0000000
---- a/include/scsi/scsi_scan.h
-+++ /dev/null
-@@ -1,11 +0,0 @@
--#ifndef _SCSI_SCSI_SCAN_H
--#define _SCSI_SCSI_SCAN_H
--
--#ifdef CONFIG_SCSI
--/* drivers/scsi/scsi_scan.c */
--extern int scsi_complete_async_scans(void);
--#else
--static inline int scsi_complete_async_scans(void) { return 0; }
--#endif
--
--#endif /* _SCSI_SCSI_SCAN_H */
-diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
-index 8b53db3..238025f 100644
---- a/kernel/power/hibernate.c
-+++ b/kernel/power/hibernate.c
-@@ -27,7 +27,6 @@
- #include <linux/syscore_ops.h>
- #include <linux/ctype.h>
- #include <linux/genhd.h>
--#include <scsi/scsi_scan.h>
++ * async_unregister_domain - ensure no more anonymous waiters on this domain
++ * @domain: idle domain to flush out of any async_synchronize_full instances
++ *
++ * async_synchronize_{cookie|full}_domain() are not flushed since callers
++ * of these routines should know the lifetime of @domain
++ *
++ * Prefer ASYNC_DOMAIN_EXCLUSIVE() declarations over flushing
++ */
++void async_unregister_domain(struct async_domain *domain)
++{
++	mutex_lock(&async_register_mutex);
++	spin_lock_irq(&async_lock);
++	WARN_ON(!domain->registered || !list_empty(&domain->node) ||
++		!list_empty(&domain->domain));
++	domain->registered = 0;
++	spin_unlock_irq(&async_lock);
++	mutex_unlock(&async_register_mutex);
++}
++EXPORT_SYMBOL_GPL(async_unregister_domain);
++
++/**
+  * async_synchronize_full_domain - synchronize all asynchronous function within a certain domain
+  * @domain: running list to synchronize on
+  *
+@@ -268,6 +304,9 @@ void async_synchronize_cookie_domain(async_cookie_t cookie, struct async_domain
+ {
+ 	ktime_t uninitialized_var(starttime), delta, endtime;
  
- #include "power.h"
- 
-@@ -748,13 +747,6 @@ static int software_resume(void)
- 			async_synchronize_full();
- 		}
- 
--		/*
--		 * We can't depend on SCSI devices being available after loading
--		 * one of their modules until scsi_complete_async_scans() is
--		 * called and the resume device usually is a SCSI one.
--		 */
--		scsi_complete_async_scans();
--
- 		swsusp_resume_device = name_to_dev_t(resume_file);
- 		if (!swsusp_resume_device) {
- 			error = -ENODEV;
-diff --git a/kernel/power/user.c b/kernel/power/user.c
-index 91b0fd0..4ed81e7 100644
---- a/kernel/power/user.c
-+++ b/kernel/power/user.c
-@@ -24,7 +24,6 @@
- #include <linux/console.h>
- #include <linux/cpu.h>
- #include <linux/freezer.h>
--#include <scsi/scsi_scan.h>
- 
- #include <asm/uaccess.h>
- 
-@@ -84,7 +83,6 @@ static int snapshot_open(struct inode *inode, struct file *filp)
- 		 * appear.
- 		 */
- 		wait_for_device_probe();
--		scsi_complete_async_scans();
- 
- 		data->swap = -1;
- 		data->mode = O_WRONLY;
++	if (!running)
++		return;
++
+ 	if (initcall_debug && system_state == SYSTEM_BOOTING) {
+ 		printk(KERN_DEBUG "async_waiting @ %i\n", task_pid_nr(current));
+ 		starttime = ktime_get();
 
