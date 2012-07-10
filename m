@@ -1,35 +1,36 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: mptscsi: BUG: unable to handle kernel NULL pointer, in
- scsi_send_eh_cmnd
-Date: Tue, 10 Jul 2012 13:24:53 +0100
-Message-ID: <1341923093.3021.67.camel@dabdike.int.hansenpartnership.com>
-References: <alpine.SOC.1.00.1207101143030.9883@math.ut.ee>
-	 <1341911745.3021.40.camel@dabdike.int.hansenpartnership.com>
-	 <alpine.SOC.1.00.1207101452270.9883@math.ut.ee>
+From: Venkatraman S <svenkatr@ti.com>
+Subject: [PATCH RESEND 0/3] drivers/scsi/ufs: Misc fixes
+Date: Tue, 10 Jul 2012 19:39:21 +0530
+Message-ID: <1341929364-9122-1-git-send-email-svenkatr@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.SOC.1.00.1207101452270.9883@math.ut.ee>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>, Eric Moore <Eric.Moore@lsi.com>, DL-MPTFusionLinux@lsi.com, support@lsi.com
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:47055 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751837Ab2GJOJ4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jul 2012 10:09:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Venkatraman S <svenkatr@ti.com>
 
-On Tue, 2012-07-10 at 14:54 +0300, Meelis Roos wrote:
-> > > I am using Linux 3.4.0 with a 53c1030 and a tape library that sometimes 
-> > > barfs for yet unknown reasons. When it happens, I get a BUG with 
-> > > backtrace and this scsi channel is dead until I reboot. Seems to be 
-> > > something with either generic scsi error handling or with mpt scsi.
-> > 
-> > I think it might actually be fixed by this:
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/jejb/scsi.git;a=commit;h=222a806af830fda34ad1f6bc991cd226916de060
-> 
-> Tested on top on 3.4.0, works - mptscsih is reset successfully, domain 
-> validation for all scsi devices succeeds, no BUG. Scsi communication 
-> works.
+Hi James,
+  These patches have been posted to lkml and have been in linux-next
+for sometime through Andrew Morton's tree.
+ I think they should be taken through your tree for next merge window.
 
-Thanks .. I'll be pushing it today.
+Can you please merge these ? 
 
-James
+Thanks and regards,
+Venkat.
+
+Namjae Jeon (1):
+  drivers/scsi/ufs: fix incorrect return value about SUCCESS and FAILED
+
+Venkatraman S (2):
+  drivers/scsi/ufs: use module_pci_driver
+  drivers/scsi/ufs: reverse the ufshcd_is_device_present logic
+
+ drivers/scsi/ufs/ufshcd.c |   35 ++++++++++-------------------------
+ 1 files changed, 10 insertions(+), 25 deletions(-)
+
