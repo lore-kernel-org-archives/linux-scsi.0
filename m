@@ -1,82 +1,93 @@
-From: Venkatraman S <svenkatr@ti.com>
-Subject: [PATCH RESEND 3/3] drivers/scsi/ufs: fix incorrect return value about SUCCESS and FAILED
-Date: Tue, 10 Jul 2012 20:41:54 +0530
-Message-ID: <1341933114-10017-1-git-send-email-svenkatr@ti.com>
-References: <1341931340.3021.70.camel@dabdike.int.hansenpartnership.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Tue, 10 Jul 2012 12:54:48 -0400
+Message-ID: <20120710165448.GE25664@kernel.stglabs.ibm.com>
+References: <4FE454CA.6080007@matthiasprager.de>
+ <4FFAED4F.3080100@matthiasprager.de>
+ <4FFB32E5.1050109@farcaster.org>
+ <20120709204513.GD25664@kernel.stglabs.ibm.com>
+ <4FFB5A0F.30400@farcaster.org>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:50910 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752118Ab2GJPMT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jul 2012 11:12:19 -0400
-In-Reply-To: <1341931340.3021.70.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4FFB5A0F.30400@farcaster.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Robert Trace <maillist@farcaster.org>
+Cc: Matthias Prager <linux@matthiasprager.de>, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Namjae Jeon <linkinjeon@gmail.com>, Venkatraman S <svenkatr@ti.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-From: Namjae Jeon <linkinjeon@gmail.com>
+On Mon, Jul 09, 2012 at 06:24:15PM -0400, Robert Trace wrote:
+> On 07/09/2012 04:45 PM, Darrick J. Wong wrote:
+> >
+> > I suspect that /sys/devices/<bunch of sas topology here>/manage_start_stop = 0
+> > for the SATA devices hanging off the SAS controller.
+> 
+> Yep, looks like you're right.  For my system:
+> 
+> # cat /sys/block/sd?/device/scsi_disk/*/manage_start_stop
+> 1
+> 1
+> 1
+> 1
+> 1
+> 0
+> 0
+> 0
+> 0
+> 0
+> 0
+> 0
+> 0
+> 
+> Those first 5 disks are SATA disks on SATA controllers.  The last 8
+> disks are SATA disks on the SAS controller.
+> 
+> > Setting that sysfs
+> > attribute to 1 is supposed to enable the SCSI layer to send TUR when it sees
+> > "LU not ready", as well as spin down the drives at suspend/poweroff time.
+> 
+> Setting it to 1 doesn't seem to have made any difference, however.
+> 
+> # cat /sys/block/sdm/device/scsi_disk/14\:0\:7\:0/manage_start_stop
+> 0
+> # echo 1 > /sys/block/sdm/device/scsi_disk/14\:0\:7\:/manage_start_stop
+> # cat /sys/block/sdm/device/scsi_disk/14\:0\:7\:0/manage_start_stop
+> 1
+> # hdparm -y /dev/sdm
+> 
+> /dev/sdm:
+>  issuing standby command
+> # hdparm -C /dev/sdm
+> 
+> /dev/sdm:
+>  drive state is:  standby
+> # dd if=/dev/sdm of=/dev/null bs=512 count=1
+> dd: reading `/dev/sdm': Input/output error
+> 0+0 records in
+> 0+0 records out
+> 0 bytes (0 B) copied, 0.00117802 s, 0.0 kB/s
+> 
+> ... and on the scsi logging side, I see the read(10) to the disk which
+> immediately returns "Not Ready" and the I/O failure bubbles up the
+> chain.  And afterwards, the disk is still asleep.
+> 
+> # hdparm -C /dev/sdm
+> 
+> /dev/sdm:
+>  drive state is:  standby
+> 
+> Also, TURs don't appear to actually wake the disk up (should they?).
+> The only thing I've found that'll wake the disk up is an explicit START
+> UNIT command.
 
-Currently the UFS host driver has returned incorrect values for SUCCESS
-and FAILED.  Fix it to return the correct value to the upper layer.
+Sorry, I misspoke, manage_start_stop=1 sends START UNIT, not TUR.  Also, it
+only manages spindown/up at suspend/resume time, hence the behavior you see.
+The relevant source code is sd_start_stop_device() in drivers/scsi/sd.c.
 
-Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
-Acked-by: Santosh Y <santoshsy@gmail.com>
-Signed-off-by: Venkatraman S <svenkatr@ti.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/ufs/ufshcd.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 48b01fe..58f4ba6 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1163,6 +1163,8 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
- 		if (task_result != UPIU_TASK_MANAGEMENT_FUNC_COMPL &&
- 		    task_result != UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED)
- 			task_result = FAILED;
-+		else
-+			task_result = SUCCESS;
- 	} else {
- 		task_result = FAILED;
- 		dev_err(&hba->pdev->dev,
-@@ -1556,7 +1558,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 		goto out;
- 	}
- 	clear_bit(free_slot, &hba->tm_condition);
--	return ufshcd_task_req_compl(hba, free_slot);
-+	err = ufshcd_task_req_compl(hba, free_slot);
- out:
- 	return err;
- }
-@@ -1580,7 +1582,7 @@ static int ufshcd_device_reset(struct scsi_cmnd *cmd)
- 	tag = cmd->request->tag;
- 
- 	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_LOGICAL_RESET);
--	if (err)
-+	if (err == FAILED)
- 		goto out;
- 
- 	for (pos = 0; pos < hba->nutrs; pos++) {
-@@ -1620,7 +1622,7 @@ static int ufshcd_host_reset(struct scsi_cmnd *cmd)
- 	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
- 		return SUCCESS;
- 
--	return (ufshcd_do_reset(hba) == SUCCESS) ? SUCCESS : FAILED;
-+	return ufshcd_do_reset(hba);
- }
- 
- /**
-@@ -1652,7 +1654,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 
- 	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_ABORT_TASK);
--	if (err)
-+	if (err == FAILED)
- 		goto out;
- 
- 	scsi_dma_unmap(cmd);
--- 
-1.7.0.4
+--D
+> 
+> -- Rob
+> 
 
