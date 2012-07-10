@@ -1,44 +1,82 @@
-From: "S, Venkatraman" <svenkatr@ti.com>
-Subject: Re: [PATCH RESEND 3/3] drivers/scsi/ufs: fix incorrect return value
- about SUCCESS and FAILED
-Date: Tue, 10 Jul 2012 20:39:16 +0530
-Message-ID: <CANfBPZ_venn6QRJUZY4bAXgGrF-RPVLrv8MAMFWoUNFy_PDHaA@mail.gmail.com>
-References: <1341929364-9122-1-git-send-email-svenkatr@ti.com>
- <1341929364-9122-4-git-send-email-svenkatr@ti.com> <1341931340.3021.70.camel@dabdike.int.hansenpartnership.com>
+From: Venkatraman S <svenkatr@ti.com>
+Subject: [PATCH RESEND 3/3] drivers/scsi/ufs: fix incorrect return value about SUCCESS and FAILED
+Date: Tue, 10 Jul 2012 20:41:54 +0530
+Message-ID: <1341933114-10017-1-git-send-email-svenkatr@ti.com>
+References: <1341931340.3021.70.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:48754 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752325Ab2GJPJj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jul 2012 11:09:39 -0400
-Received: by bkty15 with SMTP id y15so162634bkt.16
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Jul 2012 08:09:37 -0700 (PDT)
+Received: from bear.ext.ti.com ([192.94.94.41]:50910 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752118Ab2GJPMT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jul 2012 11:12:19 -0400
 In-Reply-To: <1341931340.3021.70.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Namjae Jeon <linkinjeon@gmail.com>
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Namjae Jeon <linkinjeon@gmail.com>, Venkatraman S <svenkatr@ti.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-On Tue, Jul 10, 2012 at 8:12 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Tue, 2012-07-10 at 19:39 +0530, Venkatraman S wrote:
->> From: Namjae Jeon <linkinjeon@gmail.com>
->>
->> Currently the UFS host driver has returned incorrect values for SUCCESS
->> and FAILED.  Fix it to return the correct value to the upper layer.
->>
->> Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
->> Acked-by: Santosh Y <santoshsy@gmail.com>
->> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
->> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
->
-> The signoff chain here doesn't make sense.  It needs to be signed off by
-> you, not by Andrew since you're the one sending the patches.  Signoffs
-> follow the way the patch is transmitted, so it needs author (it has)
-> followed by maintainer ack (it has) followed by signoff of the person
-> sending the patch to the list (that's you) which is missing.
->
-Apologies - I took these patches from linux-next directly.
-I'll send again with my Sign-Off.
+From: Namjae Jeon <linkinjeon@gmail.com>
+
+Currently the UFS host driver has returned incorrect values for SUCCESS
+and FAILED.  Fix it to return the correct value to the upper layer.
+
+Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
+Acked-by: Santosh Y <santoshsy@gmail.com>
+Signed-off-by: Venkatraman S <svenkatr@ti.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/ufs/ufshcd.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 48b01fe..58f4ba6 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1163,6 +1163,8 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
+ 		if (task_result != UPIU_TASK_MANAGEMENT_FUNC_COMPL &&
+ 		    task_result != UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED)
+ 			task_result = FAILED;
++		else
++			task_result = SUCCESS;
+ 	} else {
+ 		task_result = FAILED;
+ 		dev_err(&hba->pdev->dev,
+@@ -1556,7 +1558,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 		goto out;
+ 	}
+ 	clear_bit(free_slot, &hba->tm_condition);
+-	return ufshcd_task_req_compl(hba, free_slot);
++	err = ufshcd_task_req_compl(hba, free_slot);
+ out:
+ 	return err;
+ }
+@@ -1580,7 +1582,7 @@ static int ufshcd_device_reset(struct scsi_cmnd *cmd)
+ 	tag = cmd->request->tag;
+ 
+ 	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_LOGICAL_RESET);
+-	if (err)
++	if (err == FAILED)
+ 		goto out;
+ 
+ 	for (pos = 0; pos < hba->nutrs; pos++) {
+@@ -1620,7 +1622,7 @@ static int ufshcd_host_reset(struct scsi_cmnd *cmd)
+ 	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+ 		return SUCCESS;
+ 
+-	return (ufshcd_do_reset(hba) == SUCCESS) ? SUCCESS : FAILED;
++	return ufshcd_do_reset(hba);
+ }
+ 
+ /**
+@@ -1652,7 +1654,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	spin_unlock_irqrestore(host->host_lock, flags);
+ 
+ 	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_ABORT_TASK);
+-	if (err)
++	if (err == FAILED)
+ 		goto out;
+ 
+ 	scsi_dma_unmap(cmd);
+-- 
+1.7.0.4
+
