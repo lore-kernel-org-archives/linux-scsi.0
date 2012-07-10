@@ -1,67 +1,80 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [resend PATCH 0/5] libsas, libata: suspend / resume and "reset once"
-Date: Mon, 09 Jul 2012 21:05:42 -0700
-Message-ID: <20120710040434.26529.86552.stgit@dwillia2-linux.jf.intel.com>
+Subject: [resend PATCH 1/5] libata: reset once
+Date: Mon, 09 Jul 2012 21:05:47 -0700
+Message-ID: <20120710040547.26529.78860.stgit@dwillia2-linux.jf.intel.com>
+References: <20120710040434.26529.86552.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120710040434.26529.86552.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: jgarzik@pobox.com, JBottomley@parallels.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Jeff,
+Hotplug testing with libsas currently encounters a 55 second wait for
+link recovery to give up.  In the case where the user trusts the
+response time of their devices permit the recovery attempts to be
+limited to one.
 
-Let me know if any of these need reworking, otherwise I believe James is
-waiting on your ack to take them (well all except patch1) through scsi.git.
-
---
-Dan
-
-
-Original description:
-Set4 of 5 patchsets to update scsi, libsas, and libata in
-support of the isci driver.
-
-Let libsas hook into the generic suspend resume infrastructure in
-libata, and provide a common suspend/resume implementation for lldds to
-reuse.
-
-"Reset once" is not part of the suspend/resume work.  But it is relevant
-to libsas users who need to wait for domain-wide ata error recovery and
-want to limit the effort for known well-behaved devices.
-
-These have been in -next for the past couple kernel cycles.
-
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ Documentation/kernel-parameters.txt |    3 +++
+ drivers/ata/libata-core.c           |    1 +
+ drivers/ata/libata-eh.c             |    2 ++
+ include/linux/libata.h              |    1 +
+ 4 files changed, 7 insertions(+)
 
-Artur Wojcik (1):
-      isci: implement suspend/resume support
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index a92c5eb..a896b25 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -1351,6 +1351,9 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 			* nohrst, nosrst, norst: suppress hard, soft
+                           and both resets.
+ 
++			* rstonce: only attempt one reset during
++			  hot-unplug link recovery
++
+ 			* dump_id: dump IDENTIFY data.
+ 
+ 			If there are multiple matching configurations changing
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3fe1202..efd2c72 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6388,6 +6388,7 @@ static int __init ata_parse_force_one(char **cur,
+ 		{ "nohrst",	.lflags		= ATA_LFLAG_NO_HRST },
+ 		{ "nosrst",	.lflags		= ATA_LFLAG_NO_SRST },
+ 		{ "norst",	.lflags		= ATA_LFLAG_NO_HRST | ATA_LFLAG_NO_SRST },
++		{ "rstonce",	.lflags		= ATA_LFLAG_RST_ONCE },
+ 	};
+ 	char *start = *cur, *p = *cur;
+ 	char *id, *val, *endp;
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 77fc806..a5d2aba 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2623,6 +2623,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	 */
+ 	while (ata_eh_reset_timeouts[max_tries] != ULONG_MAX)
+ 		max_tries++;
++	if (link->flags & ATA_LFLAG_RST_ONCE)
++		max_tries = 1;
+ 	if (link->flags & ATA_LFLAG_NO_HRST)
+ 		hardreset = NULL;
+ 	if (link->flags & ATA_LFLAG_NO_SRST)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 53da442..f777d30 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -182,6 +182,7 @@ enum {
+ 	ATA_LFLAG_DISABLED	= (1 << 6), /* link is disabled */
+ 	ATA_LFLAG_SW_ACTIVITY	= (1 << 7), /* keep activity stats */
+ 	ATA_LFLAG_NO_LPM	= (1 << 8), /* disable LPM on this link */
++	ATA_LFLAG_RST_ONCE	= (1 << 9), /* limit recovery to one reset */
+ 
+ 	/* struct ata_port flags */
+ 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
 
-Dan Williams (4):
-      libata: reset once
-      libata: export ata_port suspend/resume infrastructure for sas
-      libsas: suspend / resume support
-      libsas, ipr: cleanup ata_host flags initialization via ata_host_init
-
-
- Documentation/kernel-parameters.txt |    3 +
- drivers/ata/libata-core.c           |   69 +++++++++++++++++++--------
- drivers/ata/libata-eh.c             |    2 +
- drivers/scsi/ipr.c                  |    3 -
- drivers/scsi/isci/host.c            |    2 -
- drivers/scsi/isci/host.h            |    2 -
- drivers/scsi/isci/init.c            |   58 ++++++++++++++++++++++
- drivers/scsi/libsas/sas_ata.c       |   91 +++++++++++++++++++++++++++++++++--
- drivers/scsi/libsas/sas_discover.c  |   69 +++++++++++++++++++++++----
- drivers/scsi/libsas/sas_dump.c      |    1 
- drivers/scsi/libsas/sas_event.c     |    4 +-
- drivers/scsi/libsas/sas_init.c      |   90 ++++++++++++++++++++++++++++++++++-
- drivers/scsi/libsas/sas_internal.h  |    1 
- drivers/scsi/libsas/sas_phy.c       |   21 ++++++++
- drivers/scsi/libsas/sas_port.c      |   52 ++++++++++++++++++++
- include/linux/libata.h              |   15 +++++-
- include/scsi/libsas.h               |   20 ++++++--
- include/scsi/sas_ata.h              |   10 ++++
- 18 files changed, 463 insertions(+), 50 deletions(-)
