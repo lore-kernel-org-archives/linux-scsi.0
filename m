@@ -1,137 +1,30 @@
-From: Martin Pitt <martin.pitt@ubuntu.com>
-Subject: [PATCH 1/1] [SCSI] scsi_debug: Add "removable" parameter
-Date: Tue, 10 Jul 2012 11:24:03 +0200
-Message-ID: <20120710092403.GF3049@piware.de>
-References: <20120710092208.GE3049@piware.de>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Re: mptscsi: BUG: unable to handle kernel NULL pointer, in
+ scsi_send_eh_cmnd
+Date: Tue, 10 Jul 2012 14:54:55 +0300 (EEST)
+Message-ID: <alpine.SOC.1.00.1207101452270.9883@math.ut.ee>
+References: <alpine.SOC.1.00.1207101143030.9883@math.ut.ee> <1341911745.3021.40.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.piware.de ([213.9.93.70]:44213 "EHLO mail.piware.de"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753960Ab2GJJYI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jul 2012 05:24:08 -0400
-Content-Disposition: inline
-In-Reply-To: <20120710092208.GE3049@piware.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1341911745.3021.40.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>, Eric Moore <Eric.Moore@lsi.com>, DL-MPTFusionLinux@lsi.com, support@lsi.com
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 
-Add "removable" module parameter to set the "removable" attribute of any
-subsequently created debug block device. It is a writable driver option, so
-that you can switch between removable and "fixed" media block devices in
-between the add_host calls.
+> > I am using Linux 3.4.0 with a 53c1030 and a tape library that sometimes 
+> > barfs for yet unknown reasons. When it happens, I get a BUG with 
+> > backtrace and this scsi channel is dead until I reboot. Seems to be 
+> > something with either generic scsi error handling or with mpt scsi.
+> 
+> I think it might actually be fixed by this:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi.git;a=commit;h=222a806af830fda34ad1f6bc991cd226916de060
 
-This is useful for being able to test the different behaviour/required
-privileges in e. g. the udisks test suite.
+Tested on top on 3.4.0, works - mptscsih is reset successfully, domain 
+validation for all scsi devices succeeds, no BUG. Scsi communication 
+works.
 
-Signed-off-by: Martin Pitt <martin.pitt@ubuntu.com>
-Acked-By: David Zeuthen <zeuthen@gmail.com>
----
- drivers/scsi/scsi_debug.c |   30 +++++++++++++++++++++++++++---
- 1 files changed, 27 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 182d5a5..57fbd5a 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -109,6 +109,7 @@ static const char * scsi_debug_version_date = "20100324";
- #define DEF_OPT_BLKS 64
- #define DEF_PHYSBLK_EXP 0
- #define DEF_PTYPE   0
-+#define DEF_REMOVABLE false
- #define DEF_SCSI_LEVEL   5    /* INQUIRY, byte2 [5->SPC-3] */
- #define DEF_SECTOR_SIZE 512
- #define DEF_UNMAP_ALIGNMENT 0
-@@ -193,11 +194,11 @@ static unsigned int scsi_debug_unmap_granularity = DEF_UNMAP_GRANULARITY;
- static unsigned int scsi_debug_unmap_max_blocks = DEF_UNMAP_MAX_BLOCKS;
- static unsigned int scsi_debug_unmap_max_desc = DEF_UNMAP_MAX_DESC;
- static unsigned int scsi_debug_write_same_length = DEF_WRITESAME_LENGTH;
-+static bool scsi_debug_removable = DEF_REMOVABLE;
- 
- static int scsi_debug_cmnd_count = 0;
- 
- #define DEV_READONLY(TGT)      (0)
--#define DEV_REMOVEABLE(TGT)    (0)
- 
- static unsigned int sdebug_store_sectors;
- static sector_t sdebug_capacity;	/* in sectors */
-@@ -919,7 +920,7 @@ static int resp_inquiry(struct scsi_cmnd * scp, int target,
- 		return ret;
- 	}
- 	/* drops through here for a standard inquiry */
--	arr[1] = DEV_REMOVEABLE(target) ? 0x80 : 0;	/* Removable disk */
-+	arr[1] = scsi_debug_removable ? 0x80 : 0;	/* Removable disk */
- 	arr[2] = scsi_debug_scsi_level;
- 	arr[3] = 2;    /* response_data_format==2 */
- 	arr[4] = SDEBUG_LONG_INQ_SZ - 5;
-@@ -1211,7 +1212,7 @@ static int resp_format_pg(unsigned char * p, int pcontrol, int target)
- 	p[11] = sdebug_sectors_per & 0xff;
- 	p[12] = (scsi_debug_sector_size >> 8) & 0xff;
- 	p[13] = scsi_debug_sector_size & 0xff;
--	if (DEV_REMOVEABLE(target))
-+	if (scsi_debug_removable)
- 		p[20] |= 0x20; /* should agree with INQUIRY */
- 	if (1 == pcontrol)
- 		memset(p + 2, 0, sizeof(format_pg) - 2);
-@@ -2754,6 +2755,7 @@ module_param_named(opt_blks, scsi_debug_opt_blks, int, S_IRUGO);
- module_param_named(opts, scsi_debug_opts, int, S_IRUGO | S_IWUSR);
- module_param_named(physblk_exp, scsi_debug_physblk_exp, int, S_IRUGO);
- module_param_named(ptype, scsi_debug_ptype, int, S_IRUGO | S_IWUSR);
-+module_param_named(removable, scsi_debug_removable, bool, S_IRUGO | S_IWUSR);
- module_param_named(scsi_level, scsi_debug_scsi_level, int, S_IRUGO);
- module_param_named(sector_size, scsi_debug_sector_size, int, S_IRUGO);
- module_param_named(unmap_alignment, scsi_debug_unmap_alignment, int, S_IRUGO);
-@@ -2796,6 +2798,7 @@ MODULE_PARM_DESC(opt_blks, "optimal transfer length in block (def=64)");
- MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err... (def=0)");
- MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
- MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
-+MODULE_PARM_DESC(removable, "claim to have removable media (def=0)");
- MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=5[SPC-3])");
- MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
- MODULE_PARM_DESC(unmap_alignment, "lowest aligned thin provisioning lba (def=0)");
-@@ -3205,6 +3208,25 @@ static ssize_t sdebug_map_show(struct device_driver *ddp, char *buf)
- }
- DRIVER_ATTR(map, S_IRUGO, sdebug_map_show, NULL);
- 
-+static ssize_t sdebug_removable_show(struct device_driver *ddp,
-+				     char *buf)
-+{
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_removable ? 1 : 0);
-+}
-+static ssize_t sdebug_removable_store(struct device_driver *ddp,
-+				      const char *buf, size_t count)
-+{
-+	int n;
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-+		scsi_debug_removable = (n > 0);
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+DRIVER_ATTR(removable, S_IRUGO | S_IWUSR, sdebug_removable_show,
-+	    sdebug_removable_store);
-+
- 
- /* Note: The following function creates attribute files in the
-    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
-@@ -3230,6 +3252,7 @@ static int do_create_driverfs_files(void)
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_num_tgts);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_ptype);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_opts);
-+	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_removable);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_scsi_level);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_virtual_gb);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_vpd_use_hostno);
-@@ -3255,6 +3278,7 @@ static void do_remove_driverfs_files(void)
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_scsi_level);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_opts);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_ptype);
-+	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_removable);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_num_tgts);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_num_parts);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_no_uld);
 -- 
-1.7.2.5
-
+Meelis Roos (mroos@linux.ee)
