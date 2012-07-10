@@ -1,145 +1,119 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [resend PATCH 4/5] isci: implement suspend/resume support
-Date: Mon, 09 Jul 2012 21:06:03 -0700
-Message-ID: <20120710040603.26529.72377.stgit@dwillia2-linux.jf.intel.com>
+Subject: [resend PATCH 5/5] libsas,
+ ipr: cleanup ata_host flags initialization via ata_host_init
+Date: Mon, 09 Jul 2012 21:06:08 -0700
+Message-ID: <20120710040608.26529.20117.stgit@dwillia2-linux.jf.intel.com>
 References: <20120710040434.26529.86552.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:38313 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753448Ab2GJDtP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jul 2012 23:49:15 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120710040434.26529.86552.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: jgarzik@pobox.com, JBottomley@parallels.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-From: Artur Wojcik <artur.wojcik@intel.com>
+libsas and ipr pass flags to ata_host_init that are meant for the port.
 
-Provide a "simple-dev-pm-ops" implementation that shuts down the domain
-and the device on suspend, and resumes the device and the domain on
-resume.  All of the mechanics of restoring domain connectivity are
-handled by libsas once isci has notified libsas that all links should be
-back up.  libsas is in charge of handling links that did not resume, or
-resumed out of order.
+ata_host flags:
+	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
+	ATA_HOST_STARTED	= (1 << 1),	/* Host started */
+	ATA_HOST_PARALLEL_SCAN	= (1 << 2),	/* Ports on this host can be scanned in parallel */
+	ATA_HOST_IGNORE_ATA	= (1 << 3),	/* Ignore ATA devices on this host. */
 
-Signed-off-by: Artur Wojcik <artur.wojcik@intel.com>
-Signed-off-by: Jacek Danecki <jacek.danecki@intel.com>
+flags passed by libsas:
+	ATA_FLAG_SATA		= (1 << 1),
+	ATA_FLAG_PIO_DMA	= (1 << 7), /* PIO cmds via DMA */
+	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
+
+The only one that aliases is ATA_HOST_STARTED which is a 'don't care' in
+the libsas and ipr cases since ata_hosts from these sources are not
+registered with libata.
+
+Cc: Brian King <brking@us.ibm.com>
+Reported-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.c |    2 +-
- drivers/scsi/isci/host.h |    2 +-
- drivers/scsi/isci/init.c |   58 +++++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 59 insertions(+), 3 deletions(-)
+ drivers/ata/libata-core.c     |   10 ++--------
+ drivers/scsi/ipr.c            |    3 +--
+ drivers/scsi/libsas/sas_ata.c |    5 +----
+ include/linux/libata.h        |    3 +--
+ 4 files changed, 5 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 45385f5..bc8981e 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -1044,7 +1044,7 @@ static enum sci_status sci_controller_start(struct isci_host *ihost,
- 	return SCI_SUCCESS;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index da31691..6aa72b8 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5958,24 +5958,18 @@ int ata_host_start(struct ata_host *host)
  }
  
--void isci_host_scan_start(struct Scsi_Host *shost)
-+void isci_host_start(struct Scsi_Host *shost)
+ /**
+- *	ata_sas_host_init - Initialize a host struct
++ *	ata_sas_host_init - Initialize a host struct for sas (ipr, libsas)
+  *	@host:	host to initialize
+  *	@dev:	device host is attached to
+- *	@flags:	host flags
+  *	@ops:	port_ops
+  *
+- *	LOCKING:
+- *	PCI/etc. bus probe sem.
+- *
+  */
+-/* KILLME - the only user left is ipr */
+ void ata_host_init(struct ata_host *host, struct device *dev,
+-		   unsigned long flags, struct ata_port_operations *ops)
++		   struct ata_port_operations *ops)
  {
- 	struct isci_host *ihost = SHOST_TO_SAS_HA(shost)->lldd_ha;
- 	unsigned long tmo = sci_controller_get_suggested_start_timeout(ihost);
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 9ab58e0..4911310 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -473,7 +473,7 @@ void sci_controller_remote_device_stopped(struct isci_host *ihost,
- 
- enum sci_status sci_controller_continue_io(struct isci_request *ireq);
- int isci_host_scan_finished(struct Scsi_Host *, unsigned long);
--void isci_host_scan_start(struct Scsi_Host *);
-+void isci_host_start(struct Scsi_Host *);
- u16 isci_alloc_tag(struct isci_host *ihost);
- enum sci_status isci_free_tag(struct isci_host *ihost, u16 io_tag);
- void isci_tci_free(struct isci_host *ihost, u16 tci);
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 92c1d86..da142a8 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -156,7 +156,7 @@ static struct scsi_host_template isci_sht = {
- 	.target_alloc			= sas_target_alloc,
- 	.slave_configure		= sas_slave_configure,
- 	.scan_finished			= isci_host_scan_finished,
--	.scan_start			= isci_host_scan_start,
-+	.scan_start			= isci_host_start,
- 	.change_queue_depth		= sas_change_queue_depth,
- 	.change_queue_type		= sas_change_queue_type,
- 	.bios_param			= sas_bios_param,
-@@ -722,11 +722,67 @@ static void __devexit isci_pci_remove(struct pci_dev *pdev)
- 	}
+ 	spin_lock_init(&host->lock);
+ 	mutex_init(&host->eh_mutex);
+ 	host->dev = dev;
+-	host->flags = flags;
+ 	host->ops = ops;
  }
  
-+#ifdef CONFIG_PM
-+static int isci_suspend(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct isci_host *ihost;
-+	int i;
-+
-+	for_each_isci_host(i, ihost, pdev) {
-+		sas_suspend_ha(&ihost->sas_ha);
-+		isci_host_deinit(ihost);
-+	}
-+
-+	pci_save_state(pdev);
-+	pci_disable_device(pdev);
-+	pci_set_power_state(pdev, PCI_D3hot);
-+
-+	return 0;
-+}
-+
-+static int isci_resume(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct isci_host *ihost;
-+	int rc, i;
-+
-+	pci_set_power_state(pdev, PCI_D0);
-+	pci_restore_state(pdev);
-+
-+	rc = pcim_enable_device(pdev);
-+	if (rc) {
-+		dev_err(&pdev->dev,
-+			"enabling device failure after resume(%d)\n", rc);
-+		return rc;
-+	}
-+
-+	pci_set_master(pdev);
-+
-+	for_each_isci_host(i, ihost, pdev) {
-+		sas_prep_resume_ha(&ihost->sas_ha);
-+
-+		isci_host_init(ihost);
-+		isci_host_start(ihost->sas_ha.core.shost);
-+		wait_for_start(ihost);
-+
-+		sas_resume_ha(&ihost->sas_ha);
-+	}
-+
-+	return 0;
-+}
-+
-+static SIMPLE_DEV_PM_OPS(isci_pm_ops, isci_suspend, isci_resume);
-+#endif
-+
- static struct pci_driver isci_pci_driver = {
- 	.name		= DRV_NAME,
- 	.id_table	= isci_id_table,
- 	.probe		= isci_pci_probe,
- 	.remove		= __devexit_p(isci_pci_remove),
-+#ifdef CONFIG_PM
-+	.driver.pm      = &isci_pm_ops,
-+#endif
- };
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 467dc38..dacc784 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -8775,8 +8775,7 @@ static int __devinit ipr_probe_ioa(struct pci_dev *pdev,
  
- static __init int isci_init(void)
+ 	ioa_cfg = (struct ipr_ioa_cfg *)host->hostdata;
+ 	memset(ioa_cfg, 0, sizeof(struct ipr_ioa_cfg));
+-	ata_host_init(&ioa_cfg->ata_host, &pdev->dev,
+-		      sata_port_info.flags, &ipr_sata_ops);
++	ata_host_init(&ioa_cfg->ata_host, &pdev->dev, &ipr_sata_ops);
+ 
+ 	ioa_cfg->ipr_chip = ipr_get_chip_info(dev_id);
+ 
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 4208e16..5d10e4d 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -580,10 +580,7 @@ int sas_ata_init(struct domain_device *found_dev)
+ 	struct ata_port *ap;
+ 	int rc;
+ 
+-	ata_host_init(&found_dev->sata_dev.ata_host,
+-		      ha->dev,
+-		      sata_port_info.flags,
+-		      &sas_sata_ops);
++	ata_host_init(&found_dev->sata_dev.ata_host, ha->dev, &sas_sata_ops);
+ 	ap = ata_sas_port_alloc(&found_dev->sata_dev.ata_host,
+ 				&sata_port_info,
+ 				shost);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index af467d3..baf9f82 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -990,8 +990,7 @@ extern int ata_host_activate(struct ata_host *host, int irq,
+ 			     irq_handler_t irq_handler, unsigned long irq_flags,
+ 			     struct scsi_host_template *sht);
+ extern void ata_host_detach(struct ata_host *host);
+-extern void ata_host_init(struct ata_host *, struct device *,
+-			  unsigned long, struct ata_port_operations *);
++extern void ata_host_init(struct ata_host *, struct device *, struct ata_port_operations *);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
+ extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
 
