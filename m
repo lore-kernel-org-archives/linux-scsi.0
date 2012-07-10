@@ -1,32 +1,68 @@
-From: Robert Trace <maillist@farcaster.org>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Mon, 09 Jul 2012 21:56:39 -0400
-Message-ID: <4FFB8BD7.4000904@farcaster.org>
-References: <4FE454CA.6080007@matthiasprager.de> <4FFAED4F.3080100@matthiasprager.de> <4FFB32E5.1050109@farcaster.org> <20120709204513.GD25664@kernel.stglabs.ibm.com> <4FFB5A0F.30400@farcaster.org> <4FFB7575.4060603@matthiasprager.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [set4 resend PATCH 0/5] libsas,
+ libata: suspend / resume and "reset once"
+Date: Mon, 09 Jul 2012 19:33:20 -0700
+Message-ID: <20120710023241.26249.13718.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eris.farcaster.org ([75.127.72.104]:42476 "EHLO
-	smtp.farcaster.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751952Ab2GJB4l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jul 2012 21:56:41 -0400
-In-Reply-To: <4FFB7575.4060603@matthiasprager.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: jgarzik@pobox.com, JBottomley@parallels.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Prager <linux@matthiasprager.de>
-Cc: djwong@us.ibm.com, linux-scsi@vger.kernel.org
 
-On 07/09/2012 08:21 PM, Matthias Prager wrote:
->
-> I haven't checked the scsi logging side, but about the only commands
-> that wake up the disks are 'smartctl -a /dev/sda' and 'sg_start'
-> (smartcl maybe issuing a START UNIT command on it's own).
+Hi Jeff,
 
-smartctl -a does appear to wake the disks.  The scsi log shows an
-IDENTIFY and then several ATA passthrough commands (one of which takes
-~10 seconds to complete).  So, I don't see an explicit START UNIT, but
-one of those ATA commands which I didn't decode could certainly trigger
-the wakeup.
+Let me know if any of these need reworking, otherwise I believe James is
+waiting on your ack to take them (well, all except patch1) through scsi.git.
 
--- Rob
+--
+Dan
+
+
+Original description:
+Set4 of 5 patchsets to update scsi, libsas, and libata in
+support of the isci driver.
+
+Let libsas hook into the generic suspend resume infrastructure in
+libata, and provide a common suspend/resume implementation for lldds to
+reuse.
+
+"Reset once" is not part of the suspend/resume work.  But it is relevant
+to libsas users who need to wait for domain-wide ata error recovery and
+want to limit the effort for known well-behaved devices.
+
+These have been in -next for the past couple kernel cycles.
+
+---
+
+Artur Wojcik (1):
+      isci: implement suspend/resume support
+
+Dan Williams (4):
+      libata: reset once
+      libata: export ata_port suspend/resume infrastructure for sas
+      libsas: suspend / resume support
+      libsas, ipr: cleanup ata_host flags initialization via ata_host_init
+
+
+ Documentation/kernel-parameters.txt |    3 +
+ drivers/ata/libata-core.c           |   69 +++++++++++++++++++--------
+ drivers/ata/libata-eh.c             |    2 +
+ drivers/scsi/ipr.c                  |    3 -
+ drivers/scsi/isci/host.c            |    2 -
+ drivers/scsi/isci/host.h            |    2 -
+ drivers/scsi/isci/init.c            |   58 ++++++++++++++++++++++
+ drivers/scsi/libsas/sas_ata.c       |   91 +++++++++++++++++++++++++++++++++--
+ drivers/scsi/libsas/sas_discover.c  |   69 +++++++++++++++++++++++----
+ drivers/scsi/libsas/sas_dump.c      |    1 
+ drivers/scsi/libsas/sas_event.c     |    4 +-
+ drivers/scsi/libsas/sas_init.c      |   90 ++++++++++++++++++++++++++++++++++-
+ drivers/scsi/libsas/sas_internal.h  |    1 
+ drivers/scsi/libsas/sas_phy.c       |   21 ++++++++
+ drivers/scsi/libsas/sas_port.c      |   52 ++++++++++++++++++++
+ include/linux/libata.h              |   15 +++++-
+ include/scsi/libsas.h               |   20 ++++++--
+ include/scsi/sas_ata.h              |   10 ++++
+ 18 files changed, 463 insertions(+), 50 deletions(-)
