@@ -1,82 +1,62 @@
 From: Venkatraman S <svenkatr@ti.com>
-Subject: [PATCH RESEND 3/3] drivers/scsi/ufs: fix incorrect return value about SUCCESS and FAILED
-Date: Tue, 10 Jul 2012 19:39:24 +0530
-Message-ID: <1341929364-9122-4-git-send-email-svenkatr@ti.com>
+Subject: [PATCH RESEND 1/3] drivers/scsi/ufs: use module_pci_driver
+Date: Tue, 10 Jul 2012 19:39:22 +0530
+Message-ID: <1341929364-9122-2-git-send-email-svenkatr@ti.com>
 References: <1341929364-9122-1-git-send-email-svenkatr@ti.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:59577 "EHLO arroyo.ext.ti.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:47120 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751837Ab2GJOKM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jul 2012 10:10:12 -0400
+	id S1752138Ab2GJOKw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jul 2012 10:10:52 -0400
 In-Reply-To: <1341929364-9122-1-git-send-email-svenkatr@ti.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Namjae Jeon <linkinjeon@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: James.Bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Venkatraman S <svenkatr@ti.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-From: Namjae Jeon <linkinjeon@gmail.com>
+Use macro module_pci_driver and get rid of boilerplate code.  No
+functional changes.
 
-Currently the UFS host driver has returned incorrect values for SUCCESS
-and FAILED.  Fix it to return the correct value to the upper layer.
-
-Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
+Signed-off-by: Venkatraman S <svenkatr@ti.com>
 Acked-by: Santosh Y <santoshsy@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/scsi/ufs/ufshcd.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |   19 +------------------
+ 1 files changed, 1 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 48b01fe..58f4ba6 100644
+index 6a4fd00..40c43bf 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1163,6 +1163,8 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
- 		if (task_result != UPIU_TASK_MANAGEMENT_FUNC_COMPL &&
- 		    task_result != UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED)
- 			task_result = FAILED;
-+		else
-+			task_result = SUCCESS;
- 	} else {
- 		task_result = FAILED;
- 		dev_err(&hba->pdev->dev,
-@@ -1556,7 +1558,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 		goto out;
- 	}
- 	clear_bit(free_slot, &hba->tm_condition);
--	return ufshcd_task_req_compl(hba, free_slot);
-+	err = ufshcd_task_req_compl(hba, free_slot);
- out:
- 	return err;
- }
-@@ -1580,7 +1582,7 @@ static int ufshcd_device_reset(struct scsi_cmnd *cmd)
- 	tag = cmd->request->tag;
+@@ -1953,24 +1953,7 @@ static struct pci_driver ufshcd_pci_driver = {
+ #endif
+ };
  
- 	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_LOGICAL_RESET);
--	if (err)
-+	if (err == FAILED)
- 		goto out;
+-/**
+- * ufshcd_init - Driver registration routine
+- */
+-static int __init ufshcd_init(void)
+-{
+-	return pci_register_driver(&ufshcd_pci_driver);
+-}
+-module_init(ufshcd_init);
+-
+-/**
+- * ufshcd_exit - Driver exit clean-up routine
+- */
+-static void __exit ufshcd_exit(void)
+-{
+-	pci_unregister_driver(&ufshcd_pci_driver);
+-}
+-module_exit(ufshcd_exit);
+-
++module_pci_driver(ufshcd_pci_driver);
  
- 	for (pos = 0; pos < hba->nutrs; pos++) {
-@@ -1620,7 +1622,7 @@ static int ufshcd_host_reset(struct scsi_cmnd *cmd)
- 	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
- 		return SUCCESS;
- 
--	return (ufshcd_do_reset(hba) == SUCCESS) ? SUCCESS : FAILED;
-+	return ufshcd_do_reset(hba);
- }
- 
- /**
-@@ -1652,7 +1654,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 
- 	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_ABORT_TASK);
--	if (err)
-+	if (err == FAILED)
- 		goto out;
- 
- 	scsi_dma_unmap(cmd);
+ MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>, "
+ 	      "Vinayak Holikatti <h.vinayak@samsung.com>");
 -- 
 1.7.0.4
 
