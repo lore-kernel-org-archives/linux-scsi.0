@@ -1,26 +1,77 @@
-From: Matthias Prager <linux@matthiasprager.de>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Tue, 10 Jul 2012 02:21:09 +0200
-Message-ID: <4FFB7575.4060603@matthiasprager.de>
-References: <4FE454CA.6080007@matthiasprager.de> <4FFAED4F.3080100@matthiasprager.de> <4FFB32E5.1050109@farcaster.org> <20120709204513.GD25664@kernel.stglabs.ibm.com> <4FFB5A0F.30400@farcaster.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/6] tcm_vhost/virtio-scsi WIP code for-3.6
+Date: Mon, 09 Jul 2012 17:29:14 -0700
+Message-ID: <1341880154.23954.608.camel@haakon2.linux-iscsi.org>
+References: <1341375846-27882-1-git-send-email-nab@linux-iscsi.org>
+	 <20120704140259.GB26485@redhat.com> <4FF45890.6000205@redhat.com>
+	 <20120704150557.GA26951@redhat.com>  <4FF4BFBD.2080000@us.ibm.com>
+	 <1341453135.23954.214.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FFB5A0F.30400@farcaster.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Robert Trace <maillist@farcaster.org>
-Cc: djwong@us.ibm.com, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, Matthias Prager <linux@matthiasprager.de>
+Return-path: <kvm-owner@vger.kernel.org>
+In-Reply-To: <1341453135.23954.214.camel@haakon2.linux-iscsi.org>
+Sender: kvm-owner@vger.kernel.org
+To: Anthony Liguori <aliguori@us.ibm.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Am 10.07.2012 00:24, schrieb Robert Trace:
+Hi folks,
+
+On Wed, 2012-07-04 at 18:52 -0700, Nicholas A. Bellinger wrote:
 > 
-> Also, TURs don't appear to actually wake the disk up (should they?).
-> The only thing I've found that'll wake the disk up is an explicit START
-> UNIT command.
+> To give an idea of how things are looking on the performance side, here
+> some initial numbers for small block (4k) mixed random IOPs using the
+> following fio test setup:
 
-I haven't checked the scsi logging side, but about the only commands
-that wake up the disks are 'smartctl -a /dev/sda' and 'sg_start'
-(smartcl maybe issuing a START UNIT command on it's own).
+<SNIP>
 
-Matthias
+> fio randrw workload | virtio-scsi-raw | virtio-scsi+tcm_vhost | bare-metal raw block
+> ------------------------------------------------------------------------------------
+> 25 Write / 75 Read  |      ~15K       |         ~45K          |         ~70K
+> 75 Write / 25 Read  |      ~20K       |         ~55K          |         ~60K
+> 
+> 
+
+After checking the original benchmarks here again, I realized that for
+virtio-scsi+tcm_vhost the results where actually switched..
+
+So this should have been: heavier READ case (25 / 75) == 55K, and
+heavier WRITE case (75 / 25) == 45K.
+
+> In the first case, virtio-scsi+tcm_vhost is out performing by 3x
+> compared to virtio-scsi-raw using QEMU SCSI emulation with the same raw
+> flash backend device.  For the second case heavier WRITE case, tcm_vhost
+> is nearing full bare-metal utilization (~55K vs. ~60K).
+> 
+> Also converting tcm_vhost to use proper cmwq process context I/O
+> submission will help to get even closer to bare metal speeds for both
+> work-loads.
+> 
+
+Here are initial follow-up virtio-scsi randrw 4k benchmarks with
+tcm_vhost recently converted to run backend I/O dispatch via modern cmwq
+primitives (kworkerd).
+
+fio randrw 4k workload | virtio-scsi+tcm_vhost+cmwq
+---------------------------------------------------
+  25 Write / 75 Read   |          ~60K
+  75 Write / 25 Read   |	  ~45K
+
+So aside from the minor performance improvement for the 25 / 75
+workload, the other main improvement is lower CPU usage using the
+iomemory_vsl backends.  This is attributed to cmwq providing process
+context on the same core as the vhost thread pulling items off vq, which
+ends up being on the order of 1/3 less host CPU usage (for both
+workloads) primarly from positive cache effects.
+
+This patch is now available in target-pending/tcm_vhost, and I'll be
+respinning the initial merge series into for-next-merge over the next
+days + another round of list review.
+
+Please let us know if you have any concerns.
+
+Thanks!
+
+--nab
+
