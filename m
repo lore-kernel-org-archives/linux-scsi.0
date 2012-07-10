@@ -1,66 +1,67 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [set4 resend PATCH 0/5] libsas, libata: suspend / resume and
- "reset once"
-Date: Mon, 9 Jul 2012 20:34:10 -0700
-Message-ID: <CAA9_cmfH8YT3U0mw_fQLYo_cBm=E=XtnsKV_RhdLLxvJsuaBYA@mail.gmail.com>
-References: <20120710023241.26249.13718.stgit@dwillia2-linux.jf.intel.com>
+Subject: [resend PATCH 0/5] libsas, libata: suspend / resume and "reset once"
+Date: Mon, 09 Jul 2012 21:05:42 -0700
+Message-ID: <20120710040434.26529.86552.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120710023241.26249.13718.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: jgarzik@pobox.com, JBottomley@parallels.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Sorry.  Sent the wrong cover letter with this patch set.
+Hi Jeff,
 
-Should be:
+Let me know if any of these need reworking, otherwise I believe James is
+waiting on your ack to take them (well all except patch1) through scsi.git.
 
-Subject: [set5 PATCH v2 0/5] scsi, async: asynchronous probing rework
+--
+Dan
 
-Changes since v1: http://marc.info/?l=linux-scsi&m=134034693629294&w=2
-1/ rebased on scsi/for-next to pick up the scsi_wait_scan module deletion
-2/ added Arjan's ack (spoke with Arjan offline)
-3/ added Eldad's tested-by
-4/ dropped the scsi async scan fix that was merged to scsi/misc
 
 Original description:
-Set5 of 5 patchsets to update scsi, libsas, and libata in
+Set4 of 5 patchsets to update scsi, libsas, and libata in
 support of the isci driver.
 
-Commit 43a8d39d "[SCSI] fix async probe regression" found that
-async_synchronize_full() was missing async work that was scheduled to
-its own domain.  This led James to note:
+Let libsas hook into the generic suspend resume infrastructure in
+libata, and provide a common suspend/resume implementation for lldds to
+reuse.
 
-      "My theory is that this is an init problem: The assumption in a lot of
-       our code is that async_synchronize_full() waits for everything ... even
-       the domain specific async schedules, which isn't true."
+"Reset once" is not part of the suspend/resume work.  But it is relevant
+to libsas users who need to wait for domain-wide ata error recovery and
+want to limit the effort for known well-behaved devices.
 
-...and this set aims to make that assumption true, but also with the
-ability to opt-out for "private" async work.
+These have been in -next for the past couple kernel cycles.
 
 ---
 
-Dan Williams (5):
-      async: introduce 'async_domain' type
-      async: make async_synchronize_full() flush all work regardless of domain
-      scsi: queue async scan work to an async_schedule domain
-      scsi: cleanup usages of scsi_complete_async_scans
-      Revert "[SCSI] fix async probe regression"
+Artur Wojcik (1):
+      isci: implement suspend/resume support
+
+Dan Williams (4):
+      libata: reset once
+      libata: export ata_port suspend/resume infrastructure for sas
+      libsas: suspend / resume support
+      libsas, ipr: cleanup ata_host flags initialization via ata_host_init
 
 
- drivers/regulator/core.c      |    2 +
- drivers/scsi/libsas/sas_ata.c |    2 +
- drivers/scsi/scsi.c           |    4 ++
- drivers/scsi/scsi_priv.h      |    2 +
- drivers/scsi/scsi_scan.c      |   31 ++++-------------
-
- include/linux/async.h         |   36 +++++++++++++++++--
- include/scsi/scsi_scan.h      |   11 ------
- kernel/async.c                |   76 +++++++++++++++++++++++++++++++----------
- kernel/power/hibernate.c      |    8 ----
- kernel/power/user.c           |    2 -
- sound/soc/soc-dapm.c          |    2 +
- 11 files changed, 104 insertions(+), 72 deletions(-)
- delete mode 100644 include/scsi/scsi_scan.h
+ Documentation/kernel-parameters.txt |    3 +
+ drivers/ata/libata-core.c           |   69 +++++++++++++++++++--------
+ drivers/ata/libata-eh.c             |    2 +
+ drivers/scsi/ipr.c                  |    3 -
+ drivers/scsi/isci/host.c            |    2 -
+ drivers/scsi/isci/host.h            |    2 -
+ drivers/scsi/isci/init.c            |   58 ++++++++++++++++++++++
+ drivers/scsi/libsas/sas_ata.c       |   91 +++++++++++++++++++++++++++++++++--
+ drivers/scsi/libsas/sas_discover.c  |   69 +++++++++++++++++++++++----
+ drivers/scsi/libsas/sas_dump.c      |    1 
+ drivers/scsi/libsas/sas_event.c     |    4 +-
+ drivers/scsi/libsas/sas_init.c      |   90 ++++++++++++++++++++++++++++++++++-
+ drivers/scsi/libsas/sas_internal.h  |    1 
+ drivers/scsi/libsas/sas_phy.c       |   21 ++++++++
+ drivers/scsi/libsas/sas_port.c      |   52 ++++++++++++++++++++
+ include/linux/libata.h              |   15 +++++-
+ include/scsi/libsas.h               |   20 ++++++--
+ include/scsi/sas_ata.h              |   10 ++++
+ 18 files changed, 463 insertions(+), 50 deletions(-)
