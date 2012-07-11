@@ -1,95 +1,72 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC-v2 1/4] vhost: Separate vhost-net features from vhost features
-Date: Wed, 11 Jul 2012 21:15:01 +0000
-Message-ID: <1342041304-29728-2-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC-v2 2/4] vhost: make vhost work queue visible
+Date: Wed, 11 Jul 2012 21:15:02 +0000
+Message-ID: <1342041304-29728-3-git-send-email-nab@linux-iscsi.org>
 References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:41260 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932387Ab2GKVRu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jul 2012 17:17:50 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Asias He <asias@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Stefan Hajnoczi <stefanha@gmail.com>
+List-Id: linux-scsi@vger.kernel.org
 
-From: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+From: Stefan Hajnoczi <stefanha@gmail.com>
 
-In order for other vhost devices to use the VHOST_FEATURES bits the
-vhost-net specific bits need to be moved to their own VHOST_NET_FEATURES
-constant.
+The vhost work queue allows processing to be done in vhost worker thread
+context, which uses the owner process mm.  Access to the vring and guest
+memory is typically only possible from vhost worker context so it is
+useful to allow work to be queued directly by users.
 
-(Asias: Update drivers/vhost/test.c to use VHOST_NET_FEATURES)
+Currently vhost_net only uses the poll wrappers which do not expose the
+work queue functions.  However, for tcm_vhost (vhost_scsi) it will be
+necessary to queue custom work.
 
 Signed-off-by: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
 Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Asias He <asias@redhat.com>
-Signed-off-by: Nicholas A. Bellinger <nab@risingtidesystems.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/vhost/net.c   |    4 ++--
- drivers/vhost/test.c  |    4 ++--
- drivers/vhost/vhost.h |    3 ++-
- 3 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/vhost/vhost.c |    5 ++---
+ drivers/vhost/vhost.h |    3 +++
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
-index f82a739..072cbba 100644
---- a/drivers/vhost/net.c
-+++ b/drivers/vhost/net.c
-@@ -823,14 +823,14 @@ static long vhost_net_ioctl(struct file *f, unsigned int ioctl,
- 			return -EFAULT;
- 		return vhost_net_set_backend(n, backend.index, backend.fd);
- 	case VHOST_GET_FEATURES:
--		features = VHOST_FEATURES;
-+		features = VHOST_NET_FEATURES;
- 		if (copy_to_user(featurep, &features, sizeof features))
- 			return -EFAULT;
- 		return 0;
- 	case VHOST_SET_FEATURES:
- 		if (copy_from_user(&features, featurep, sizeof features))
- 			return -EFAULT;
--		if (features & ~VHOST_FEATURES)
-+		if (features & ~VHOST_NET_FEATURES)
- 			return -EOPNOTSUPP;
- 		return vhost_net_set_features(n, features);
- 	case VHOST_RESET_OWNER:
-diff --git a/drivers/vhost/test.c b/drivers/vhost/test.c
-index 3de00d9..91d6f06 100644
---- a/drivers/vhost/test.c
-+++ b/drivers/vhost/test.c
-@@ -261,14 +261,14 @@ static long vhost_test_ioctl(struct file *f, unsigned int ioctl,
- 			return -EFAULT;
- 		return vhost_test_run(n, test);
- 	case VHOST_GET_FEATURES:
--		features = VHOST_FEATURES;
-+		features = VHOST_NET_FEATURES;
- 		if (copy_to_user(featurep, &features, sizeof features))
- 			return -EFAULT;
- 		return 0;
- 	case VHOST_SET_FEATURES:
- 		if (copy_from_user(&features, featurep, sizeof features))
- 			return -EFAULT;
--		if (features & ~VHOST_FEATURES)
-+		if (features & ~VHOST_NET_FEATURES)
- 			return -EOPNOTSUPP;
- 		return vhost_test_set_features(n, features);
- 	case VHOST_RESET_OWNER:
+diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
+index 94dbd25..1aab08b 100644
+--- a/drivers/vhost/vhost.c
++++ b/drivers/vhost/vhost.c
+@@ -64,7 +64,7 @@ static int vhost_poll_wakeup(wait_queue_t *wait, unsigned mode, int sync,
+ 	return 0;
+ }
+ 
+-static void vhost_work_init(struct vhost_work *work, vhost_work_fn_t fn)
++void vhost_work_init(struct vhost_work *work, vhost_work_fn_t fn)
+ {
+ 	INIT_LIST_HEAD(&work->node);
+ 	work->fn = fn;
+@@ -137,8 +137,7 @@ void vhost_poll_flush(struct vhost_poll *poll)
+ 	vhost_work_flush(poll->dev, &poll->work);
+ }
+ 
+-static inline void vhost_work_queue(struct vhost_dev *dev,
+-				    struct vhost_work *work)
++void vhost_work_queue(struct vhost_dev *dev, struct vhost_work *work)
+ {
+ 	unsigned long flags;
+ 
 diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
-index 8de1fd5..07b9763 100644
+index 07b9763..1125af3 100644
 --- a/drivers/vhost/vhost.h
 +++ b/drivers/vhost/vhost.h
-@@ -201,7 +201,8 @@ enum {
- 	VHOST_FEATURES = (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) |
- 			 (1ULL << VIRTIO_RING_F_INDIRECT_DESC) |
- 			 (1ULL << VIRTIO_RING_F_EVENT_IDX) |
--			 (1ULL << VHOST_F_LOG_ALL) |
-+			 (1ULL << VHOST_F_LOG_ALL),
-+	VHOST_NET_FEATURES = VHOST_FEATURES |
- 			 (1ULL << VHOST_NET_F_VIRTIO_NET_HDR) |
- 			 (1ULL << VIRTIO_NET_F_MRG_RXBUF),
+@@ -43,6 +43,9 @@ struct vhost_poll {
+ 	struct vhost_dev	 *dev;
  };
+ 
++void vhost_work_init(struct vhost_work *work, vhost_work_fn_t fn);
++void vhost_work_queue(struct vhost_dev *dev, struct vhost_work *work);
++
+ void vhost_poll_init(struct vhost_poll *poll, vhost_work_fn_t fn,
+ 		     unsigned long mask, struct vhost_dev *dev);
+ void vhost_poll_start(struct vhost_poll *poll, struct file *file);
 -- 
 1.7.2.5
-
