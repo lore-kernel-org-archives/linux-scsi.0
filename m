@@ -1,45 +1,72 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v4] virtio-scsi: hotplug support for virtio-scsi
-Date: Wed, 11 Jul 2012 19:34:36 +0100
-Message-ID: <1342031676.3522.39.camel@dabdike.int.hansenpartnership.com>
-References: <1341479203-12058-1-git-send-email-mc@linux.vnet.ibm.com>
-	 <4FF55C0C.4040309@redhat.com>
+From: Kyle McMartin <kmcmarti@redhat.com>
+Subject: [PATCH] bfa: squelch lockdep complaint with a spin_lock_init
+Date: Wed, 11 Jul 2012 12:42:55 -0400
+Message-ID: <20120711164255.GO2896@redacted.bos.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4FF55C0C.4040309@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Cong Meng <mc@linux.vnet.ibm.com>, stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, senwang@linux.vnet.ibm.com, zwanp@cn.ibm.com, virtualization@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:5212 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755586Ab2GKSgw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jul 2012 14:36:52 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: huangj@brocade.com, kgudipat@brocade.com
 
-On Thu, 2012-07-05 at 11:19 +0200, Paolo Bonzini wrote:
-> Il 05/07/2012 11:06, Cong Meng ha scritto:
-> > This patch implements the hotplug support for virtio-scsi.
-> > When there is a device attached/detached, the virtio-scsi driver will be
-> > signaled via event virtual queue and it will add/remove the scsi device 
-> > in question automatically.
-> > 
-> > v2: handle no_event event
-> > v3: add handle event dropped, and typo fix
-> > v4: Cancel event works when exit. Coding type fix.
-> > 
-> > Signed-off-by: Sen Wang <senwang@linux.vnet.ibm.com>
-> > Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
-> 
-> Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+Spotted this while looking at another issue...
 
-Actually, that should be Acked-by, since you're the maintainer of the
-driver (it means I reviewed it + I approve it for upstream inclusion).
+INFO: trying to register non-static key. 
+the code is fine but needs lockdep annotation. 
+turning off the locking correctness validator. 
+Pid: 298, comm: udevd Not tainted 3.3.0 #1 
+Call Trace: 
+  [<ffffffff810cee63>] __lock_acquire+0x1363/0x1bb0 
+  [<ffffffff816593d2>] ? __slab_alloc+0x4a0/0x4fd 
+  [<ffffffff81020063>] ? native_sched_clock+0x13/0x80 
+  [<ffffffff810200d9>] ? sched_clock+0x9/0x10 
+  [<ffffffff810cfd81>] lock_acquire+0xa1/0x1e0 
+  [<ffffffffa0321b83>] ? bfa_fcs_lport_aen_post+0x43/0x160 [bfa] 
+  [<ffffffff816630e5>] _raw_spin_lock_irqsave+0x65/0xb0 
+  [<ffffffffa0321b83>] ? bfa_fcs_lport_aen_post+0x43/0x160 [bfa] 
+  [<ffffffffa0321b83>] bfa_fcs_lport_aen_post+0x43/0x160 [bfa] 
+  [<ffffffffa032fa57>] bfa_fcs_lport_init+0x97/0x120 [bfa] 
+  [<ffffffffa031d4ff>] bfa_fcs_fabric_sm_uninit+0x1cf/0x250 [bfa] 
+  [<ffffffffa031c1da>] bfa_fcs_fabric_modinit+0x2a/0xb0 [bfa] 
+  [<ffffffffa031bef2>] ? bfa_fcs_fabric_attach+0xf2/0x170 [bfa] 
+  [<ffffffffa031e75a>] bfa_fcs_init+0x2a/0x40 [bfa] 
+  [<ffffffffa02facf7>] bfad_drv_init+0x107/0x1f0 [bfa] 
+  [<ffffffffa02fb057>] bfad_pci_probe+0x277/0x450 [bfa] 
+  [<ffffffff81354d4c>] local_pci_probe+0x5c/0xd0 
+  [<ffffffff81354ed1>] pci_device_probe+0x111/0x120 
+  [<ffffffff8141c0e6>] driver_probe_device+0x96/0x2f0 
+  [<ffffffff8141c3eb>] __driver_attach+0xab/0xb0 
+  [<ffffffff8141c340>] ? driver_probe_device+0x2f0/0x2f0 
+  [<ffffffff8141a2e5>] bus_for_each_dev+0x55/0x90 
+  [<ffffffffa037b000>] ? 0xffffffffa037afff 
+  [<ffffffff8141bbce>] driver_attach+0x1e/0x20 
+  [<ffffffff8141b8d8>] bus_add_driver+0x1b8/0x2b0 
+  [<ffffffffa037b000>] ? 0xffffffffa037afff 
+  [<ffffffff8141cbc7>] driver_register+0x77/0x160 
+  [<ffffffffa037b000>] ? 0xffffffffa037afff 
+  [<ffffffff81353b23>] __pci_register_driver+0x73/0xf0 
+  [<ffffffffa037b000>] ? 0xffffffffa037afff 
+  [<ffffffffa037b083>] bfad_init+0x83/0x1000 [bfa] 
+  [<ffffffff8100212a>] do_one_initcall+0x12a/0x180 
+  [<ffffffff810df0d0>] sys_init_module+0xc0/0x220 
+  [<ffffffff8166bbe9>] system_call_fastpath+0x16/0x1b 
 
-> > ---
-> >  drivers/scsi/virtio_scsi.c  |  127 ++++++++++++++++++++++++++++++++++++++++++-
-> >  include/linux/virtio_scsi.h |    9 +++
-> >  2 files changed, 135 insertions(+), 1 deletions(-)
+Signed-off-by: Kyle McMartin <kmcmarti@redhat.com>
 
-The next time, please run checkpatch on this.  You can ignore the
-warnings about lines over 80 characters, but the braces issue is worth
-paying attention to when that reflects the current style.
-
-James
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1383,6 +1383,8 @@ bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
+ 	bfa_sm_set_state(bfad, bfad_sm_uninit);
+ 
+ 	spin_lock_init(&bfad->bfad_lock);
++	spin_lock_init(&bfad->bfad_aen_spinlock);
++
+ 	pci_set_drvdata(pdev, bfad);
+ 
+ 	bfad->ref_count = 0;
