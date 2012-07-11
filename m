@@ -1,39 +1,71 @@
-From: Kapil Bhardwaj <era_kaps@yahoo.in>
-Subject: The Items are needed urgently and also in large quantity
-Date: Tue, 10 Jul 2012 23:02:51 -0400
-Message-ID: <E1SonCV-0002dO-O1@vm2.fragmentlabs.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
+Date: Wed, 11 Jul 2012 21:15:00 +0000
+Message-ID: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vm2.unraveltheweb.com ([69.166.159.3]:36385 "EHLO
-	vm2.fragmentlabs.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932352Ab2GKTw0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jul 2012 15:52:26 -0400
-Received: from nobody by vm2.fragmentlabs.com with local (Exim 4.77)
-	(envelope-from <nobody@vm2.fragmentlabs.com>)
-	id 1SonCV-0002dO-O1
-	for linux-scsi@vger.kernel.org; Tue, 10 Jul 2012 23:02:51 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Compliments of the day,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-My company is interested in a different but a similar design of your product. please confirm to us if your company can make provision for the exact product as shown on the Chinese trading firm page below. You can view the sample pictures by loggin in to the link below with your correct business email to view pictures. Please note that this items are needed urgently and also in large quantity.
+Hi folks,
 
-http://www.elcivismo.com.ar/img/viewtradeorder.htm
+The following is a RFC-v2 series of tcm_vhost target fabric driver code
+currently in-flight for-3.6 mainline code.
 
-Pls send us quote after preview immediately.
+After last week's developments along with the help of some new folks, the
+changelog v1 -> v2 so far looks like:
 
-Thanks & Regards,
-Kapil Bhardwaj
-(MANAGING PARTENER)
-M/S Shree Ganesh Tradings
-69-A, Vijay Block
-Laxmi Nagar
-Delhi-110092
-Tel.: 0091 11 47603504
-Fax.: 0091 11 47603501
+*) Fix drivers/vhost/test.c to use VHOST_NET_FEATURES in patch #1 (Asias He)
+*) Fix tv_cmd completion -> release SGL memory leak (nab)
+*) Fix sparse warnings for static variable usage (Fengguang Wu)
+*) Fix sparse warnings for min() typing + printk format specs (Fengguang Wu)
+*) Convert to cmwq submission for I/O dispatch (nab + hch)
 
+Also following Paolo's request, a patch for hw/virtio-scsi.c that sets
+scsi_host->max_target=0 that removes the need for virtio-scsi LLD to hardcode
+VirtIOSCSIConfig->max_id=1 in order to function with tcm_vhost.
 
+Note this series has been pushed into target-pending.git/for-next-merge, and
+should be getting picked up for tomorrow's linux-next build.
+
+Please let us know if you have any concerns and/or additional review feedback.
+
+Thank you!
+
+Nicholas Bellinger (2):
+  vhost: Add vhost_scsi specific defines
+  tcm_vhost: Initial merge for vhost level target fabric driver
+
+Stefan Hajnoczi (2):
+  vhost: Separate vhost-net features from vhost features
+  vhost: make vhost work queue visible
+
+ drivers/vhost/Kconfig     |    6 +
+ drivers/vhost/Makefile    |    1 +
+ drivers/vhost/net.c       |    4 +-
+ drivers/vhost/tcm_vhost.c | 1609 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/vhost/tcm_vhost.h |   74 ++
+ drivers/vhost/test.c      |    4 +-
+ drivers/vhost/vhost.c     |    5 +-
+ drivers/vhost/vhost.h     |    6 +-
+ include/linux/vhost.h     |    9 +
+ 9 files changed, 1710 insertions(+), 8 deletions(-)
+ create mode 100644 drivers/vhost/tcm_vhost.c
+ create mode 100644 drivers/vhost/tcm_vhost.h
+
+-- 
+1.7.2.5
