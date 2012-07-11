@@ -1,89 +1,39 @@
-From: Krishna Gudipati <kgudipat@Brocade.com>
-Subject: RE: [PATCH] bfa: squelch lockdep complaint with a spin_lock_init
-Date: Wed, 11 Jul 2012 11:53:40 -0700
-Message-ID: <B5EE62D80D50B84BB9E5174F7FCCE80A28398E75FD@HQ1-EXCH02.corp.brocade.com>
-References: <20120711164255.GO2896@redacted.bos.redhat.com>
+From: Kapil Bhardwaj <era_kaps@yahoo.in>
+Subject: The Items are needed urgently and also in large quantity
+Date: Tue, 10 Jul 2012 23:02:51 -0400
+Message-ID: <E1SonCV-0002dO-O1@vm2.fragmentlabs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:33073 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932191Ab2GKTRs convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jul 2012 15:17:48 -0400
-In-Reply-To: <20120711164255.GO2896@redacted.bos.redhat.com>
-Content-Language: en-US
+Received: from vm2.unraveltheweb.com ([69.166.159.3]:36385 "EHLO
+	vm2.fragmentlabs.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932352Ab2GKTw0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jul 2012 15:52:26 -0400
+Received: from nobody by vm2.fragmentlabs.com with local (Exim 4.77)
+	(envelope-from <nobody@vm2.fragmentlabs.com>)
+	id 1SonCV-0002dO-O1
+	for linux-scsi@vger.kernel.org; Tue, 10 Jul 2012 23:02:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Kyle McMartin' <kmcmarti@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: "'huangj@brocade.com'" <huangj@brocade.com>
-
------Original Message-----
-From: Kyle McMartin [mailto:kmcmarti@redhat.com] 
-Sent: Wednesday, July 11, 2012 9:43 AM
 To: linux-scsi@vger.kernel.org
-Cc: huangj@brocade.com; Krishna Gudipati
-Subject: [PATCH] bfa: squelch lockdep complaint with a spin_lock_init
 
-Spotted this while looking at another issue...
+Compliments of the day,
 
-INFO: trying to register non-static key. 
-the code is fine but needs lockdep annotation. 
-turning off the locking correctness validator. 
-Pid: 298, comm: udevd Not tainted 3.3.0 #1 
-Call Trace: 
-  [<ffffffff810cee63>] __lock_acquire+0x1363/0x1bb0 
-  [<ffffffff816593d2>] ? __slab_alloc+0x4a0/0x4fd 
-  [<ffffffff81020063>] ? native_sched_clock+0x13/0x80 
-  [<ffffffff810200d9>] ? sched_clock+0x9/0x10 
-  [<ffffffff810cfd81>] lock_acquire+0xa1/0x1e0 
-  [<ffffffffa0321b83>] ? bfa_fcs_lport_aen_post+0x43/0x160 [bfa] 
-  [<ffffffff816630e5>] _raw_spin_lock_irqsave+0x65/0xb0 
-  [<ffffffffa0321b83>] ? bfa_fcs_lport_aen_post+0x43/0x160 [bfa] 
-  [<ffffffffa0321b83>] bfa_fcs_lport_aen_post+0x43/0x160 [bfa] 
-  [<ffffffffa032fa57>] bfa_fcs_lport_init+0x97/0x120 [bfa] 
-  [<ffffffffa031d4ff>] bfa_fcs_fabric_sm_uninit+0x1cf/0x250 [bfa] 
-  [<ffffffffa031c1da>] bfa_fcs_fabric_modinit+0x2a/0xb0 [bfa] 
-  [<ffffffffa031bef2>] ? bfa_fcs_fabric_attach+0xf2/0x170 [bfa] 
-  [<ffffffffa031e75a>] bfa_fcs_init+0x2a/0x40 [bfa] 
-  [<ffffffffa02facf7>] bfad_drv_init+0x107/0x1f0 [bfa] 
-  [<ffffffffa02fb057>] bfad_pci_probe+0x277/0x450 [bfa] 
-  [<ffffffff81354d4c>] local_pci_probe+0x5c/0xd0 
-  [<ffffffff81354ed1>] pci_device_probe+0x111/0x120 
-  [<ffffffff8141c0e6>] driver_probe_device+0x96/0x2f0 
-  [<ffffffff8141c3eb>] __driver_attach+0xab/0xb0 
-  [<ffffffff8141c340>] ? driver_probe_device+0x2f0/0x2f0 
-  [<ffffffff8141a2e5>] bus_for_each_dev+0x55/0x90 
-  [<ffffffffa037b000>] ? 0xffffffffa037afff 
-  [<ffffffff8141bbce>] driver_attach+0x1e/0x20 
-  [<ffffffff8141b8d8>] bus_add_driver+0x1b8/0x2b0 
-  [<ffffffffa037b000>] ? 0xffffffffa037afff 
-  [<ffffffff8141cbc7>] driver_register+0x77/0x160 
-  [<ffffffffa037b000>] ? 0xffffffffa037afff 
-  [<ffffffff81353b23>] __pci_register_driver+0x73/0xf0 
-  [<ffffffffa037b000>] ? 0xffffffffa037afff 
-  [<ffffffffa037b083>] bfad_init+0x83/0x1000 [bfa] 
-  [<ffffffff8100212a>] do_one_initcall+0x12a/0x180 
-  [<ffffffff810df0d0>] sys_init_module+0xc0/0x220 
-  [<ffffffff8166bbe9>] system_call_fastpath+0x16/0x1b 
+My company is interested in a different but a similar design of your product. please confirm to us if your company can make provision for the exact product as shown on the Chinese trading firm page below. You can view the sample pictures by loggin in to the link below with your correct business email to view pictures. Please note that this items are needed urgently and also in large quantity.
 
-Signed-off-by: Kyle McMartin <kmcmarti@redhat.com>
+http://www.elcivismo.com.ar/img/viewtradeorder.htm
 
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1383,6 +1383,8 @@ bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	bfa_sm_set_state(bfad, bfad_sm_uninit);
- 
- 	spin_lock_init(&bfad->bfad_lock);
-+	spin_lock_init(&bfad->bfad_aen_spinlock);
-+
- 	pci_set_drvdata(pdev, bfad);
- 
- 	bfad->ref_count = 0;
+Pls send us quote after preview immediately.
 
------ 
+Thanks & Regards,
+Kapil Bhardwaj
+(MANAGING PARTENER)
+M/S Shree Ganesh Tradings
+69-A, Vijay Block
+Laxmi Nagar
+Delhi-110092
+Tel.: 0091 11 47603504
+Fax.: 0091 11 47603501
 
-Looks good, thanks for the patch Kyle.
 
-Acked-by: Krishna Gudipati <kgudipat@brocade.com>
