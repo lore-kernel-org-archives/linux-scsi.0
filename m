@@ -1,79 +1,45 @@
-From: Amit Sahrawat <amit.sahrawat83-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH RESEND 3/3] usb: storage: update usb devices for write
- cache quirk in quirk list.
-Date: Wed, 11 Jul 2012 22:54:04 +0530
-Message-ID: <CADDb1s3TM23FjoDdJCcDkPBXwhvw9M1KqPAPhKMTQRyGnF2HLg@mail.gmail.com>
-References: <1341716749-6733-1-git-send-email-linkinjeon@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v4] virtio-scsi: hotplug support for virtio-scsi
+Date: Wed, 11 Jul 2012 19:34:36 +0100
+Message-ID: <1342031676.3522.39.camel@dabdike.int.hansenpartnership.com>
+References: <1341479203-12058-1-git-send-email-mc@linux.vnet.ibm.com>
+	 <4FF55C0C.4040309@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1341716749-6733-1-git-send-email-linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jej B <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Pankaj Kumar <pankaj.km-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4FF55C0C.4040309@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Cong Meng <mc@linux.vnet.ibm.com>, stefanha@linux.vnet.ibm.com, linuxram@us.ibm.com, senwang@linux.vnet.ibm.com, zwanp@cn.ibm.com, virtualization@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi James,
-Please have a look at the patchset and share your opinion.
-If there is anything more to it - please let us know.
+On Thu, 2012-07-05 at 11:19 +0200, Paolo Bonzini wrote:
+> Il 05/07/2012 11:06, Cong Meng ha scritto:
+> > This patch implements the hotplug support for virtio-scsi.
+> > When there is a device attached/detached, the virtio-scsi driver will be
+> > signaled via event virtual queue and it will add/remove the scsi device 
+> > in question automatically.
+> > 
+> > v2: handle no_event event
+> > v3: add handle event dropped, and typo fix
+> > v4: Cancel event works when exit. Coding type fix.
+> > 
+> > Signed-off-by: Sen Wang <senwang@linux.vnet.ibm.com>
+> > Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
+> 
+> Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
 
-Thanks & Regards,
-Amit Sahrawat
+Actually, that should be Acked-by, since you're the maintainer of the
+driver (it means I reviewed it + I approve it for upstream inclusion).
 
+> > ---
+> >  drivers/scsi/virtio_scsi.c  |  127 ++++++++++++++++++++++++++++++++++++++++++-
+> >  include/linux/virtio_scsi.h |    9 +++
+> >  2 files changed, 135 insertions(+), 1 deletions(-)
 
-On Sun, Jul 8, 2012 at 8:35 AM, Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> From: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
->
-> Update information of Seagate Portable HDD and WD My Passport HDD in
-> quirk list.
->
-> Signed-off-by: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-> Signed-off-by: Pankaj Kumar <pankaj.km-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-> Signed-off-by: Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-> Acked-by: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-> ---
->  drivers/usb/storage/unusual_devs.h |   12 ++++++++++++
->  1 file changed, 12 insertions(+)
->
-> diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
-> index 1719886..62a31be 100644
-> --- a/drivers/usb/storage/unusual_devs.h
-> +++ b/drivers/usb/storage/unusual_devs.h
-> @@ -1267,6 +1267,12 @@ UNUSUAL_DEV( 0x0af0, 0xd357, 0x0000, 0x0000,
->                 USB_SC_DEVICE, USB_PR_DEVICE, NULL,
->                 0 ),
->
-> +/* Reported by Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org> */
-> +UNUSUAL_DEV(0x0bc2, 0x2300, 0x0000, 0x9999,
-> +               "Seagate",
-> +               "Portable HDD",
-> +               USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
-> +
->  /* Reported by Ben Efros <ben-sBIqA0PYact54TAoqtyWWQ@public.gmane.org> */
->  UNUSUAL_DEV( 0x0bc2, 0x3010, 0x0000, 0x0000,
->                 "Seagate",
-> @@ -1468,6 +1474,12 @@ UNUSUAL_DEV(  0x1058, 0x0704, 0x0000, 0x9999,
->                 USB_SC_DEVICE, USB_PR_DEVICE, NULL,
->                 US_FL_SANE_SENSE),
->
-> +/* Reported by Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org> */
-> +UNUSUAL_DEV(0x1058, 0x070a, 0x0000, 0x9999,
-> +               "Western Digital",
-> +               "My Passport HDD",
-> +               USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
-> +
->  /* Reported by Fabio Venturi <f.venturi-NTqSPVcvfic@public.gmane.org>
->   * The device reports a vendor-specific bDeviceClass.
->   */
-> --
-> 1.7.9.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The next time, please run checkpatch on this.  You can ignore the
+warnings about lines over 80 characters, but the braces issue is worth
+paying attention to when that reflects the current style.
+
+James
