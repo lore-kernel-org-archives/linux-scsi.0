@@ -1,57 +1,61 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2/4] isci: fix COMSAS negation timout workaround for WD SAS
- drives
-Date: Wed, 11 Jul 2012 14:59:34 -0700
-Message-ID: <20120711215934.26813.57112.stgit@dwillia2-linux.jf.intel.com>
+Subject: [PATCH 1/4] isci: fix isci_pci_probe() generates warning on efi
+ failure path
+Date: Wed, 11 Jul 2012 14:59:29 -0700
+Message-ID: <20120711215929.26813.77290.stgit@dwillia2-linux.jf.intel.com>
 References: <20120711215901.26813.19955.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:27696 "EHLO mga14.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:17532 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932415Ab2GKVmq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jul 2012 17:42:46 -0400
+	id S933272Ab2GKVml (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jul 2012 17:42:41 -0400
 In-Reply-To: <20120711215901.26813.19955.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Dave Maurer <david.c.maurer@intel.com>
+The oem parameter image embedded in the efi variable is at an offset
+from the start of the variable.  However, in the failure path we try to
+free the 'orom' pointer which is only valid when the paramaters are
+being read from the legacy option-rom space.
 
-The following patch is a fix for the WD workaround
-COMSAS negation timeout change. This patch disables the
-OOB SM when the OOB is placed in reset, which allows
-the updated COMSAS negation timeout value to take
-effect.
+Since failure to load the oem parameters is unlikely and we keep the
+memory around in the success case just defer all de-allocation to devm.
 
-Cc: Dan Thompson <daniel.j.thompson@intel.com>
-Reported-by: Dan Thompson <daniel.j.thompson@intel.com>
-Signed-off-by: Dave Maurer <david.c.maurer@intel.com>
+Cc: <stable@vger.kernel.org>
+Reported-by: Don Morris <don.morris@hp.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/phy.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/isci/init.c       |    1 -
+ drivers/scsi/isci/probe_roms.c |    1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
-index 18f43d4..ebb8f53 100644
---- a/drivers/scsi/isci/phy.c
-+++ b/drivers/scsi/isci/phy.c
-@@ -1205,6 +1205,7 @@ static void scu_link_layer_start_oob(struct isci_phy *iphy)
- 	/** Reset OOB sequence - start */
- 	val = readl(&ll->phy_configuration);
- 	val &= ~(SCU_SAS_PCFG_GEN_BIT(OOB_RESET) |
-+		 SCU_SAS_PCFG_GEN_BIT(OOB_ENABLE) |
- 		 SCU_SAS_PCFG_GEN_BIT(HARD_RESET));
- 	writel(val, &ll->phy_configuration);
- 	readl(&ll->phy_configuration); /* flush */
-@@ -1236,6 +1237,7 @@ static void scu_link_layer_tx_hard_reset(
- 	 * to the starting state. */
- 	phy_configuration_value =
- 		readl(&iphy->link_layer_registers->phy_configuration);
-+	phy_configuration_value &= ~(SCU_SAS_PCFG_GEN_BIT(OOB_ENABLE));
- 	phy_configuration_value |=
- 		(SCU_SAS_PCFG_GEN_BIT(HARD_RESET) |
- 		 SCU_SAS_PCFG_GEN_BIT(OOB_RESET));
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 47e28b5..8870bd3 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -641,7 +641,6 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
+ 						orom->hdr.version)) {
+ 			dev_warn(&pdev->dev,
+ 				 "[%d]: invalid oem parameters detected, falling back to firmware\n", i);
+-			devm_kfree(&pdev->dev, orom);
+ 			orom = NULL;
+ 			break;
+ 		}
+diff --git a/drivers/scsi/isci/probe_roms.c b/drivers/scsi/isci/probe_roms.c
+index 4d95654..8ac646e 100644
+--- a/drivers/scsi/isci/probe_roms.c
++++ b/drivers/scsi/isci/probe_roms.c
+@@ -104,7 +104,6 @@ struct isci_orom *isci_request_oprom(struct pci_dev *pdev)
+ 
+ 	if (i >= len) {
+ 		dev_err(&pdev->dev, "oprom parse error\n");
+-		devm_kfree(&pdev->dev, rom);
+ 		rom = NULL;
+ 	}
+ 	pci_unmap_biosrom(oprom);
 
