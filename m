@@ -1,70 +1,63 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] virtio-scsi: Add vdrv->scan for post
-	VIRTIO_CONFIG_S_DRIVER_OK LUN scanning
-Date: Wed, 11 Jul 2012 14:26:32 -0700
-Message-ID: <1342041992.18004.20.camel@haakon2.linux-iscsi.org>
-References: <1341605705-13114-1-git-send-email-nab@linux-iscsi.org>
-	<1342031856.3522.41.camel@dabdike.int.hansenpartnership.com>
+Subject: Re: [PATCH 1/1] [SCSI] tcm_qla2xxx: Remove duplicate header file
+ inclusion
+Date: Wed, 11 Jul 2012 14:41:26 -0700
+Message-ID: <1342042886.18004.26.camel@haakon2.linux-iscsi.org>
+References: <1340366038-12722-1-git-send-email-sachin.kamat@linaro.org>
+	 <CAK9yfHw=V3SHrAZD=wZkkG=ZgA9Dv+VWAm6uLtLBR1NZRpYt9g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1342031856.3522.41.camel@dabdike.int.hansenpartnership.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael
-	S. Tsirkin" <mst@redhat.com>, stable@vger.kernel.org, Zhi Yong Wu <wuzhy@cn.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:46938 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754177Ab2GKVl3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jul 2012 17:41:29 -0400
+In-Reply-To: <CAK9yfHw=V3SHrAZD=wZkkG=ZgA9Dv+VWAm6uLtLBR1NZRpYt9g@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, patches@linaro.org, target-devel <target-devel@vger.kernel.org>
 
-On Wed, 2012-07-11 at 19:37 +0100, James Bottomley wrote:
-> On Fri, 2012-07-06 at 20:15 +0000, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > This patch changes virtio-scsi to use a new virtio_driver->scan() callback
-> > so that scsi_scan_host() can be properly invoked once virtio_dev_probe() has
-> > set add_status(dev, VIRTIO_CONFIG_S_DRIVER_OK) to signal active virtio-ring
-> > operation, instead of from within virtscsi_probe().
-> > 
-> > This fixes a bug where SCSI LUN scanning for both virtio-scsi-raw and
-> > virtio-scsi/tcm_vhost setups was happening before VIRTIO_CONFIG_S_DRIVER_OK
-> > had been set, causing VIRTIO_SCSI_S_BAD_TARGET to occur.  This fixes a bug
-> > with virtio-scsi/tcm_vhost where LUN scan was not detecting LUNs.
-> > 
-> > Tested with virtio-scsi-raw + virtio-scsi/tcm_vhost w/ IBLOCK on 3.5-rc2 code.
-> > 
-> > Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
-> > Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
-> > Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Hannes Reinecke <hare@suse.de>
-> > Cc: <stable@vger.kernel.org>
-> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+On Wed, 2012-07-11 at 16:23 +0530, Sachin Kamat wrote:
+> Any comments about this patch?
+> 
+
+Hi Sachin,
+
+Applied to target-pending.git/for-next, + queued up for-3.6.
+
+Thanks!
+
+--nab
+
+> On 22/06/2012, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+> > ctype.h and string.h header files were included more than once.
+> >
+> > Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
 > > ---
-> >  drivers/scsi/virtio_scsi.c |   15 ++++++++++++---
-> >  drivers/virtio/virtio.c    |    5 ++++-
-> >  include/linux/virtio.h     |    1 +
-> >  3 files changed, 17 insertions(+), 4 deletions(-)
+> >  drivers/scsi/qla2xxx/tcm_qla2xxx.c |    2 --
+> >  1 files changed, 0 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> > b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> > index 6e64314..dd0a0df 100644
+> > --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> > +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> > @@ -38,8 +38,6 @@
+> >  #include <linux/string.h>
+> >  #include <linux/configfs.h>
+> >  #include <linux/ctype.h>
+> > -#include <linux/string.h>
+> > -#include <linux/ctype.h>
+> >  #include <asm/unaligned.h>
+> >  #include <scsi/scsi.h>
+> >  #include <scsi/scsi_host.h>
+> > --
+> > 1.7.4.1
+> >
+> >
 > 
-> This doesn't apply:
-> 
-> patching file drivers/scsi/virtio_scsi.c
-> Hunk #1 succeeded at 677 (offset 196 lines).
-> Hunk #2 FAILED at 494.
-> Hunk #3 succeeded at 736 (offset 198 lines).
-> 1 out of 3 hunks FAILED -- saving rejects to file
-> drivers/scsi/virtio_scsi.c.rej
-> 
-> could you respin against scsi-misc head?
 > 
 
-The updated patch is on it's way rebased against scsi.git/misc.
 
-Thanks James!
