@@ -1,72 +1,58 @@
-From: Kyle McMartin <kmcmarti@redhat.com>
-Subject: [PATCH] bfa: squelch lockdep complaint with a spin_lock_init
-Date: Wed, 11 Jul 2012 12:42:55 -0400
-Message-ID: <20120711164255.GO2896@redacted.bos.redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] virtio-scsi: Add vdrv->scan for post
+ VIRTIO_CONFIG_S_DRIVER_OK LUN scanning
+Date: Wed, 11 Jul 2012 19:37:36 +0100
+Message-ID: <1342031856.3522.41.camel@dabdike.int.hansenpartnership.com>
+References: <1341605705-13114-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5212 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755586Ab2GKSgw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jul 2012 14:36:52 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1341605705-13114-1-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: huangj@brocade.com, kgudipat@brocade.com
 
-Spotted this while looking at another issue...
+On Fri, 2012-07-06 at 20:15 +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch changes virtio-scsi to use a new virtio_driver->scan() callback
+> so that scsi_scan_host() can be properly invoked once virtio_dev_probe() has
+> set add_status(dev, VIRTIO_CONFIG_S_DRIVER_OK) to signal active virtio-ring
+> operation, instead of from within virtscsi_probe().
+> 
+> This fixes a bug where SCSI LUN scanning for both virtio-scsi-raw and
+> virtio-scsi/tcm_vhost setups was happening before VIRTIO_CONFIG_S_DRIVER_OK
+> had been set, causing VIRTIO_SCSI_S_BAD_TARGET to occur.  This fixes a bug
+> with virtio-scsi/tcm_vhost where LUN scan was not detecting LUNs.
+> 
+> Tested with virtio-scsi-raw + virtio-scsi/tcm_vhost w/ IBLOCK on 3.5-rc2 code.
+> 
+> Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+> Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/scsi/virtio_scsi.c |   15 ++++++++++++---
+>  drivers/virtio/virtio.c    |    5 ++++-
+>  include/linux/virtio.h     |    1 +
+>  3 files changed, 17 insertions(+), 4 deletions(-)
 
-INFO: trying to register non-static key. 
-the code is fine but needs lockdep annotation. 
-turning off the locking correctness validator. 
-Pid: 298, comm: udevd Not tainted 3.3.0 #1 
-Call Trace: 
-  [<ffffffff810cee63>] __lock_acquire+0x1363/0x1bb0 
-  [<ffffffff816593d2>] ? __slab_alloc+0x4a0/0x4fd 
-  [<ffffffff81020063>] ? native_sched_clock+0x13/0x80 
-  [<ffffffff810200d9>] ? sched_clock+0x9/0x10 
-  [<ffffffff810cfd81>] lock_acquire+0xa1/0x1e0 
-  [<ffffffffa0321b83>] ? bfa_fcs_lport_aen_post+0x43/0x160 [bfa] 
-  [<ffffffff816630e5>] _raw_spin_lock_irqsave+0x65/0xb0 
-  [<ffffffffa0321b83>] ? bfa_fcs_lport_aen_post+0x43/0x160 [bfa] 
-  [<ffffffffa0321b83>] bfa_fcs_lport_aen_post+0x43/0x160 [bfa] 
-  [<ffffffffa032fa57>] bfa_fcs_lport_init+0x97/0x120 [bfa] 
-  [<ffffffffa031d4ff>] bfa_fcs_fabric_sm_uninit+0x1cf/0x250 [bfa] 
-  [<ffffffffa031c1da>] bfa_fcs_fabric_modinit+0x2a/0xb0 [bfa] 
-  [<ffffffffa031bef2>] ? bfa_fcs_fabric_attach+0xf2/0x170 [bfa] 
-  [<ffffffffa031e75a>] bfa_fcs_init+0x2a/0x40 [bfa] 
-  [<ffffffffa02facf7>] bfad_drv_init+0x107/0x1f0 [bfa] 
-  [<ffffffffa02fb057>] bfad_pci_probe+0x277/0x450 [bfa] 
-  [<ffffffff81354d4c>] local_pci_probe+0x5c/0xd0 
-  [<ffffffff81354ed1>] pci_device_probe+0x111/0x120 
-  [<ffffffff8141c0e6>] driver_probe_device+0x96/0x2f0 
-  [<ffffffff8141c3eb>] __driver_attach+0xab/0xb0 
-  [<ffffffff8141c340>] ? driver_probe_device+0x2f0/0x2f0 
-  [<ffffffff8141a2e5>] bus_for_each_dev+0x55/0x90 
-  [<ffffffffa037b000>] ? 0xffffffffa037afff 
-  [<ffffffff8141bbce>] driver_attach+0x1e/0x20 
-  [<ffffffff8141b8d8>] bus_add_driver+0x1b8/0x2b0 
-  [<ffffffffa037b000>] ? 0xffffffffa037afff 
-  [<ffffffff8141cbc7>] driver_register+0x77/0x160 
-  [<ffffffffa037b000>] ? 0xffffffffa037afff 
-  [<ffffffff81353b23>] __pci_register_driver+0x73/0xf0 
-  [<ffffffffa037b000>] ? 0xffffffffa037afff 
-  [<ffffffffa037b083>] bfad_init+0x83/0x1000 [bfa] 
-  [<ffffffff8100212a>] do_one_initcall+0x12a/0x180 
-  [<ffffffff810df0d0>] sys_init_module+0xc0/0x220 
-  [<ffffffff8166bbe9>] system_call_fastpath+0x16/0x1b 
+This doesn't apply:
 
-Signed-off-by: Kyle McMartin <kmcmarti@redhat.com>
+patching file drivers/scsi/virtio_scsi.c
+Hunk #1 succeeded at 677 (offset 196 lines).
+Hunk #2 FAILED at 494.
+Hunk #3 succeeded at 736 (offset 198 lines).
+1 out of 3 hunks FAILED -- saving rejects to file
+drivers/scsi/virtio_scsi.c.rej
 
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1383,6 +1383,8 @@ bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	bfa_sm_set_state(bfad, bfad_sm_uninit);
- 
- 	spin_lock_init(&bfad->bfad_lock);
-+	spin_lock_init(&bfad->bfad_aen_spinlock);
-+
- 	pci_set_drvdata(pdev, bfad);
- 
- 	bfad->ref_count = 0;
+could you respin against scsi-misc head?
+
+Thanks,
+
+James
