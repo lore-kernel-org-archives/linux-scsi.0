@@ -1,12 +1,15 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2] virtio-scsi: Add vdrv->scan for post
+Subject: Re: [PATCH] virtio-scsi: Add vdrv->scan for post
 	VIRTIO_CONFIG_S_DRIVER_OK LUN scanning
-Date: Wed, 11 Jul 2012 21:22:16 +0000
-Message-ID: <1342041736-30043-1-git-send-email-nab@linux-iscsi.org>
+Date: Wed, 11 Jul 2012 14:26:32 -0700
+Message-ID: <1342041992.18004.20.camel@haakon2.linux-iscsi.org>
+References: <1341605705-13114-1-git-send-email-nab@linux-iscsi.org>
+	<1342031856.3522.41.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1342031856.3522.41.camel@dabdike.int.hansenpartnership.com>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -16,107 +19,52 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualizati
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
 Sender: virtualization-bounces@lists.linux-foundation.org
 Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: James Bottomley <JBottomley@Parallels.com>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael
+	S. Tsirkin" <mst@redhat.com>, stable@vger.kernel.org, Zhi Yong Wu <wuzhy@cn.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Wed, 2012-07-11 at 19:37 +0100, James Bottomley wrote:
+> On Fri, 2012-07-06 at 20:15 +0000, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch changes virtio-scsi to use a new virtio_driver->scan() callback
+> > so that scsi_scan_host() can be properly invoked once virtio_dev_probe() has
+> > set add_status(dev, VIRTIO_CONFIG_S_DRIVER_OK) to signal active virtio-ring
+> > operation, instead of from within virtscsi_probe().
+> > 
+> > This fixes a bug where SCSI LUN scanning for both virtio-scsi-raw and
+> > virtio-scsi/tcm_vhost setups was happening before VIRTIO_CONFIG_S_DRIVER_OK
+> > had been set, causing VIRTIO_SCSI_S_BAD_TARGET to occur.  This fixes a bug
+> > with virtio-scsi/tcm_vhost where LUN scan was not detecting LUNs.
+> > 
+> > Tested with virtio-scsi-raw + virtio-scsi/tcm_vhost w/ IBLOCK on 3.5-rc2 code.
+> > 
+> > Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+> > Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+> > Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Hannes Reinecke <hare@suse.de>
+> > Cc: <stable@vger.kernel.org>
+> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> > ---
+> >  drivers/scsi/virtio_scsi.c |   15 ++++++++++++---
+> >  drivers/virtio/virtio.c    |    5 ++++-
+> >  include/linux/virtio.h     |    1 +
+> >  3 files changed, 17 insertions(+), 4 deletions(-)
+> 
+> This doesn't apply:
+> 
+> patching file drivers/scsi/virtio_scsi.c
+> Hunk #1 succeeded at 677 (offset 196 lines).
+> Hunk #2 FAILED at 494.
+> Hunk #3 succeeded at 736 (offset 198 lines).
+> 1 out of 3 hunks FAILED -- saving rejects to file
+> drivers/scsi/virtio_scsi.c.rej
+> 
+> could you respin against scsi-misc head?
+> 
 
-This patch changes virtio-scsi to use a new virtio_driver->scan() callback
-so that scsi_scan_host() can be properly invoked once virtio_dev_probe() has
-set add_status(dev, VIRTIO_CONFIG_S_DRIVER_OK) to signal active virtio-ring
-operation, instead of from within virtscsi_probe().
+The updated patch is on it's way rebased against scsi.git/misc.
 
-This fixes a bug where SCSI LUN scanning for both virtio-scsi-raw and
-virtio-scsi/tcm_vhost setups was happening before VIRTIO_CONFIG_S_DRIVER_OK
-had been set, causing VIRTIO_SCSI_S_BAD_TARGET to occur.  This fixes a bug
-with virtio-scsi/tcm_vhost where LUN scan was not detecting LUNs.
-
-Tested with virtio-scsi-raw + virtio-scsi/tcm_vhost w/ IBLOCK on 3.5-rc2 code.
-
-(nab: Fix up minor apply fuzz against scsi.git/misc)
-
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
-Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/scsi/virtio_scsi.c |   15 ++++++++++++---
- drivers/virtio/virtio.c    |    5 ++++-
- include/linux/virtio.h     |    1 +
- 3 files changed, 17 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index ae3bef7..c7030fb 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -571,6 +571,13 @@ static struct virtio_scsi_target_state *virtscsi_alloc_tgt(
- 	return tgt;
- }
- 
-+static void virtscsi_scan(struct virtio_device *vdev)
-+{
-+	struct Scsi_Host *shost = (struct Scsi_Host *)vdev->priv;
-+
-+	scsi_scan_host(shost);
-+}
-+
- static void virtscsi_remove_vqs(struct virtio_device *vdev)
- {
- 	struct Scsi_Host *sh = virtio_scsi_host(vdev);
-@@ -677,9 +684,10 @@ static int __devinit virtscsi_probe(struct virtio_device *vdev)
- 	err = scsi_add_host(shost, &vdev->dev);
- 	if (err)
- 		goto scsi_add_host_failed;
--
--	scsi_scan_host(shost);
--
-+	/*
-+	 * scsi_scan_host() happens in virtscsi_scan() via virtio_driver->scan()
-+	 * after VIRTIO_CONFIG_S_DRIVER_OK has been set..
-+	 */
- 	return 0;
- 
- scsi_add_host_failed:
-@@ -735,6 +743,7 @@ static struct virtio_driver virtio_scsi_driver = {
- 	.driver.owner = THIS_MODULE,
- 	.id_table = id_table,
- 	.probe = virtscsi_probe,
-+	.scan = virtscsi_scan,
- #ifdef CONFIG_PM
- 	.freeze = virtscsi_freeze,
- 	.restore = virtscsi_restore,
-diff --git a/drivers/virtio/virtio.c b/drivers/virtio/virtio.c
-index f355807..c3b3f7f 100644
---- a/drivers/virtio/virtio.c
-+++ b/drivers/virtio/virtio.c
-@@ -141,8 +141,11 @@ static int virtio_dev_probe(struct device *_d)
- 	err = drv->probe(dev);
- 	if (err)
- 		add_status(dev, VIRTIO_CONFIG_S_FAILED);
--	else
-+	else {
- 		add_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
-+		if (drv->scan)
-+			drv->scan(dev);
-+	}
- 
- 	return err;
- }
-diff --git a/include/linux/virtio.h b/include/linux/virtio.h
-index 8efd28a..a1ba8bb 100644
---- a/include/linux/virtio.h
-+++ b/include/linux/virtio.h
-@@ -92,6 +92,7 @@ struct virtio_driver {
- 	const unsigned int *feature_table;
- 	unsigned int feature_table_size;
- 	int (*probe)(struct virtio_device *dev);
-+	void (*scan)(struct virtio_device *dev);
- 	void (*remove)(struct virtio_device *dev);
- 	void (*config_changed)(struct virtio_device *dev);
- #ifdef CONFIG_PM
--- 
-1.7.2.5
+Thanks James!
