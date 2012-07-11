@@ -1,52 +1,30 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [RESEND PATCH 2/3] dm mpath: add	'default_hw_handler' feature
-Date: Wed, 11 Jul 2012 09:20:59 -0400
-Message-ID: <20120711132059.GA9616@redhat.com>
-References: <1340735525-21083-1-git-send-email-snitzer@redhat.com>
- <1340735525-21083-3-git-send-email-snitzer@redhat.com>
- <4FEAA557.7050501@suse.de>
- <20120711102754.GA2095@agk-dp.fab.redhat.com>
+From: Matthias Prager <linux@matthiasprager.de>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Wed, 11 Jul 2012 15:48:00 +0200
+Message-ID: <4FFD8410.7050604@matthiasprager.de>
+References: <4FE454CA.6080007@matthiasprager.de> <4FFAED4F.3080100@matthiasprager.de> <4FFB32E5.1050109@farcaster.org> <4FFB7354.8040809@matthiasprager.de> <4FFB8A86.7000009@farcaster.org> <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56163 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753625Ab2GKNVL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jul 2012 09:21:11 -0400
-Content-Disposition: inline
-In-Reply-To: <20120711102754.GA2095@agk-dp.fab.redhat.com>
+Received: from dd15408.kasserver.com ([85.13.136.168]:42377 "EHLO
+	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932521Ab2GKNsI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jul 2012 09:48:08 -0400
+In-Reply-To: <4FFD6F3D.2030708@matthiasprager.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, device-mapper development <dm-devel@redhat.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Robert Trace <maillist@farcaster.org>
+Cc: Matthias Prager <linux@matthiasprager.de>, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jens Axboe <jaxboe@fusionio.com>
 
-On Wed, Jul 11 2012 at  6:27am -0400,
-Alasdair G Kergon <agk@redhat.com> wrote:
+I just tested kernel version 3.4.4 without commit
+85ef06d1d252f6a2e73b678591ab71caad4667bb and it also works fine (beware
+of commit 62d3c5439c534b0e6c653fc63e6d8c67be3a57b1 as it conflicts with
+reverting 85ef06d1d252f6a2e73b678591ab71caad4667bb).
 
-> On Wed, Jun 27, 2012 at 08:16:55AM +0200, Hannes Reinecke wrote:
-> > On 06/26/2012 08:32 PM, Mike Snitzer wrote:
-> > > When specifying the feature 'default_hw_handler' multipath will use
-> > > the currently attached hardware handler instead of trying to attach the
-> > > one specified during table load.  If no hardware handler is attached the
-> > > specified hardware handler will be used.
-> > > 
-> > > Leverages scsi_dh_attach's ability to increment the scsi_dh's reference
-> > > count if the same scsi_dh name is provided when attaching -- currently
-> > > attached scsi_dh name is determined with scsi_dh_attached_handler_name.
-> > > 
-> > > Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-> > > Tested-by: Babu Moger <babu.moger@netapp.com>
-> > > Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > Looks good.
->  
-> Maybe, but I'd like to see an inline explanation of what this confusing new
-> setting means and a better patch header that provides some motivation for this
-> change.
-> 
-> To my eyes, the word "default" is over-used here.  If I *don't* specify the new
-> "default" flag, surely I'll get default behaviour, won't I, by definition?  And
-> if I do specify it, I'm asking for default behaviour too, so isn't it
-> redundant?
+I'm trying to understand why this commit leads to the issue of i/o
+failing on spun down drives, in hopes of being able to fix it. Meanwhile
+maybe Tejun Heo (author of the commit) or Jens Axboe (the committer) are
+able to shed some light on this (I've included them in the CC list).
 
-"default" is in reference to the hardware handler that will get attached
-by the scsi_dh .match().  It has nothing to do with the userspace
-multipath-tool's desired handler.
+Matthias
