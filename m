@@ -1,63 +1,67 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/1] [SCSI] tcm_qla2xxx: Remove duplicate header file
- inclusion
-Date: Wed, 11 Jul 2012 14:41:26 -0700
-Message-ID: <1342042886.18004.26.camel@haakon2.linux-iscsi.org>
-References: <1340366038-12722-1-git-send-email-sachin.kamat@linaro.org>
-	 <CAK9yfHw=V3SHrAZD=wZkkG=ZgA9Dv+VWAm6uLtLBR1NZRpYt9g@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [GIT PATCH 0/4] isci update for 3.6
+Date: Wed, 11 Jul 2012 14:59:24 -0700
+Message-ID: <20120711215901.26813.19955.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:46938 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754177Ab2GKVl3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jul 2012 17:41:29 -0400
-In-Reply-To: <CAK9yfHw=V3SHrAZD=wZkkG=ZgA9Dv+VWAm6uLtLBR1NZRpYt9g@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:53318 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933272Ab2GKVmg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jul 2012 17:42:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sachin Kamat <sachin.kamat@linaro.org>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, patches@linaro.org, target-devel <target-devel@vger.kernel.org>
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2012-07-11 at 16:23 +0530, Sachin Kamat wrote:
-> Any comments about this patch?
-> 
+James,
 
-Hi Sachin,
+This is the backlog of the libsas indepedent driver changes for 3.6.  Just a
+small collection of fixlets.  Please pull, thanks.
 
-Applied to target-pending.git/for-next, + queued up for-3.6.
-
-Thanks!
-
---nab
-
-> On 22/06/2012, Sachin Kamat <sachin.kamat@linaro.org> wrote:
-> > ctype.h and string.h header files were included more than once.
-> >
-> > Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-> > ---
-> >  drivers/scsi/qla2xxx/tcm_qla2xxx.c |    2 --
-> >  1 files changed, 0 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> > b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> > index 6e64314..dd0a0df 100644
-> > --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> > +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> > @@ -38,8 +38,6 @@
-> >  #include <linux/string.h>
-> >  #include <linux/configfs.h>
-> >  #include <linux/ctype.h>
-> > -#include <linux/string.h>
-> > -#include <linux/ctype.h>
-> >  #include <asm/unaligned.h>
-> >  #include <scsi/scsi.h>
-> >  #include <scsi/scsi_host.h>
-> > --
-> > 1.7.4.1
-> >
-> >
-> 
-> 
+--
+Dan
 
 
+The following changes since commit f8f5701bdaf9134b1f90e5044a82c66324d2073f:
+
+  Linux 3.5-rc1 (2012-06-02 18:29:26 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git tags/isci-for-3.6
+
+for you to fetch changes up to 6734092e66011def7875bd67beef889d0fee1cc9:
+
+  isci: add a couple __iomem annotations (2012-07-03 12:09:32 -0700)
+
+
+----------------------------------------------------------------
+isci update for 3.6
+
+1/ Fix the workaround for drives that have a slow response to COMSAS.
+   Drives with this problem intermittently take a long time to be
+   identified, or fail to be identified altogether.
+
+2/ A minor fix for the efi variable code failure path
+
+3/ A handful of smatch fixups from Dan Carpenter
+
+----------------------------------------------------------------
+Dan Carpenter (2):
+      isci: make function declaration match implementation
+      isci: add a couple __iomem annotations
+
+Dan Williams (1):
+      isci: fix isci_pci_probe() generates warning on efi failure path
+
+Dave Maurer (1):
+      isci: fix COMSAS negation timout workaround for WD SAS drives
+
+ drivers/scsi/isci/host.c                | 2 +-
+ drivers/scsi/isci/init.c                | 1 -
+ drivers/scsi/isci/phy.c                 | 4 +++-
+ drivers/scsi/isci/probe_roms.c          | 1 -
+ drivers/scsi/isci/remote_node_context.h | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
