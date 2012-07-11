@@ -1,35 +1,54 @@
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: Re: [PATCH RESEND 3/3] drivers/scsi/ufs: fix incorrect return value
- about SUCCESS and FAILED
-Date: Wed, 11 Jul 2012 13:12:02 +0900
-Message-ID: <CAKYAXd8OOstW+1u=ki_+ZLhYAKQiaEGO5mR4Nd4FqevNjs_OkA@mail.gmail.com>
-References: <1341931340.3021.70.camel@dabdike.int.hansenpartnership.com>
-	<1341933114-10017-1-git-send-email-svenkatr@ti.com>
+From: vinayak holikatti <vinholikatti@gmail.com>
+Subject: Re: [PATCH 2/4] [SCSI] ufs: Add Platform glue driver for ufshcd
+Date: Wed, 11 Jul 2012 09:44:13 +0530
+Message-ID: <CAKVbJB98eQKsFHNxPtj4mryKzi-dnHCXN8XpzuVWrLRnm_gTCg@mail.gmail.com>
+References: <1341239572-7408-1-git-send-email-vinholikatti@gmail.com>
+	<1341239572-7408-3-git-send-email-vinholikatti@gmail.com>
+	<201207021527.19888.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:62978 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752322Ab2GKEMD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jul 2012 00:12:03 -0400
-Received: by wibhr14 with SMTP id hr14so669903wib.1
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Jul 2012 21:12:02 -0700 (PDT)
-In-Reply-To: <1341933114-10017-1-git-send-email-svenkatr@ti.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201207021527.19888.arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, yejin.moon@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, stephen.doel@linaro.org, sreekumar.c@samsung.com
 List-Id: linux-scsi@vger.kernel.org
-To: Venkatraman S <svenkatr@ti.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
 
-Thanks Venkat !
-
-2012/7/11, Venkatraman S <svenkatr@ti.com>:
-> From: Namjae Jeon <linkinjeon@gmail.com>
+On Mon, Jul 2, 2012 at 8:57 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 02 July 2012, Vinayak Holikatti wrote:
+>> +static struct platform_driver ufshcd_pltfrm_driver = {
+>> +       .probe  = ufshcd_pltfrm_probe,
+>> +       .remove = __devexit_p(ufshcd_pltfrm_remove),
+>> +#ifdef CONFIG_PM
+>> +       .suspend = ufshcd_pltfrm_suspend,
+>> +       .resume = ufshcd_pltfrm_resume,
+>> +#endif
+>> +       .driver = {
+>> +               .name   = "ufshcd",
+>> +               .owner  = THIS_MODULE,
+>> +       },
+>> +};
 >
-> Currently the UFS host driver has returned incorrect values for SUCCESS
-> and FAILED.  Fix it to return the correct value to the upper layer.
+> Hi Vinayak,
 >
-> Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
-> Acked-by: Santosh Y <santoshsy@gmail.com>
-> Signed-off-by: Venkatraman S <svenkatr@ti.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> ---
+> Please add a device tree match table here to allow the driver to be
+> used by modern platforms that only do device tree based hardware
+> detection. Just look in other drivers for existing uses of
+> "of_match_table" to be used.
+>
+> I'm not sure what the "compatible" string should be in this case,
+> because the it matches a JEDEC specification, not a particular
+> vendor's implementation of it. The match table can have multiple
+> entries, which is useful if you have multiple implementations
+> that are slightly different or don't fully conform to the spec.
+>
+> Maybe a list like
+>
+> static const struct of_device_id ufs_of_match[] = {
+>         { .compatible = "jedec,ufs-1.1" },
+> }
+>
+> would be enough for now.
+Ok, will implement device tree match table.
+>
+>         Arnd
