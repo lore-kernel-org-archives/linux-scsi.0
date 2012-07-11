@@ -1,40 +1,79 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [dm-devel] [RESEND PATCH 3/3] dm mpath: add ability to disable
-	partition creation
-Date: Wed, 11 Jul 2012 16:18:40 +0100
-Message-ID: <20120711151839.GC2095@agk-dp.fab.redhat.com>
-References: <1340735525-21083-1-git-send-email-snitzer@redhat.com> <1340735525-21083-4-git-send-email-snitzer@redhat.com>
+From: Amit Sahrawat <amit.sahrawat83-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH RESEND 3/3] usb: storage: update usb devices for write
+ cache quirk in quirk list.
+Date: Wed, 11 Jul 2012 22:54:04 +0530
+Message-ID: <CADDb1s3TM23FjoDdJCcDkPBXwhvw9M1KqPAPhKMTQRyGnF2HLg@mail.gmail.com>
+References: <1341716749-6733-1-git-send-email-linkinjeon@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43213 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755654Ab2GKPSs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jul 2012 11:18:48 -0400
-Content-Disposition: inline
-In-Reply-To: <1340735525-21083-4-git-send-email-snitzer@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1341716749-6733-1-git-send-email-linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jej B <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Pankaj Kumar <pankaj.km-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Peter Rajnoha <prajnoha@redhat.com>, Benjamin Marzinski <bmarzins@redhat.com>
 
-On Tue, Jun 26, 2012 at 02:32:05PM -0400, Mike Snitzer wrote:
-> The new 'no_partitions' feature serves as a notifier to kpartx to _not_
-> create partitions on these multipath devices.
- 
-This isn't really multipath-specific so doesn't belong in the target.
-It could go into dm core, but we already have flags attached to
-udev cookies that can turn udev rules on and off and thereby could
-allow userspace multipath to control whether or not kpartx creates
-partitions on any particular device.
+Hi James,
+Please have a look at the patchset and share your opinion.
+If there is anything more to it - please let us know.
 
-But first I'd like us to explore creating a config file for kpartx and
-controlling the behaviour from there.  Activation could then be
-triggered by target type, device name, scsi WWID, dm UUID etc. according
-to rules in that file.
+Thanks & Regards,
+Amit Sahrawat
 
-I think this approach of handling each layer independently gives us the
-best chance of ending up with integrated management of arbitrary device
-stacks.
 
-Alasdair
-
+On Sun, Jul 8, 2012 at 8:35 AM, Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> From: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+>
+> Update information of Seagate Portable HDD and WD My Passport HDD in
+> quirk list.
+>
+> Signed-off-by: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+> Signed-off-by: Pankaj Kumar <pankaj.km-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+> Signed-off-by: Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+> Acked-by: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+> ---
+>  drivers/usb/storage/unusual_devs.h |   12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+>
+> diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
+> index 1719886..62a31be 100644
+> --- a/drivers/usb/storage/unusual_devs.h
+> +++ b/drivers/usb/storage/unusual_devs.h
+> @@ -1267,6 +1267,12 @@ UNUSUAL_DEV( 0x0af0, 0xd357, 0x0000, 0x0000,
+>                 USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+>                 0 ),
+>
+> +/* Reported by Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org> */
+> +UNUSUAL_DEV(0x0bc2, 0x2300, 0x0000, 0x9999,
+> +               "Seagate",
+> +               "Portable HDD",
+> +               USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
+> +
+>  /* Reported by Ben Efros <ben-sBIqA0PYact54TAoqtyWWQ@public.gmane.org> */
+>  UNUSUAL_DEV( 0x0bc2, 0x3010, 0x0000, 0x0000,
+>                 "Seagate",
+> @@ -1468,6 +1474,12 @@ UNUSUAL_DEV(  0x1058, 0x0704, 0x0000, 0x9999,
+>                 USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+>                 US_FL_SANE_SENSE),
+>
+> +/* Reported by Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org> */
+> +UNUSUAL_DEV(0x1058, 0x070a, 0x0000, 0x9999,
+> +               "Western Digital",
+> +               "My Passport HDD",
+> +               USB_SC_DEVICE, USB_PR_DEVICE, NULL, US_FL_WRITE_CACHE),
+> +
+>  /* Reported by Fabio Venturi <f.venturi-NTqSPVcvfic@public.gmane.org>
+>   * The device reports a vendor-specific bDeviceClass.
+>   */
+> --
+> 1.7.9.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
