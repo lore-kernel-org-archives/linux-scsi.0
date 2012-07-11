@@ -1,71 +1,95 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
-Date: Wed, 11 Jul 2012 21:15:00 +0000
-Message-ID: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+Subject: [RFC-v2 1/4] vhost: Separate vhost-net features from vhost features
+Date: Wed, 11 Jul 2012 21:15:01 +0000
+Message-ID: <1342041304-29728-2-git-send-email-nab@linux-iscsi.org>
+References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:41260 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932387Ab2GKVRu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jul 2012 17:17:50 -0400
+In-Reply-To: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Asias He <asias@redhat.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 
-Hi folks,
+In order for other vhost devices to use the VHOST_FEATURES bits the
+vhost-net specific bits need to be moved to their own VHOST_NET_FEATURES
+constant.
 
-The following is a RFC-v2 series of tcm_vhost target fabric driver code
-currently in-flight for-3.6 mainline code.
+(Asias: Update drivers/vhost/test.c to use VHOST_NET_FEATURES)
 
-After last week's developments along with the help of some new folks, the
-changelog v1 -> v2 so far looks like:
+Signed-off-by: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Asias He <asias@redhat.com>
+Signed-off-by: Nicholas A. Bellinger <nab@risingtidesystems.com>
+---
+ drivers/vhost/net.c   |    4 ++--
+ drivers/vhost/test.c  |    4 ++--
+ drivers/vhost/vhost.h |    3 ++-
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
-*) Fix drivers/vhost/test.c to use VHOST_NET_FEATURES in patch #1 (Asias He)
-*) Fix tv_cmd completion -> release SGL memory leak (nab)
-*) Fix sparse warnings for static variable usage (Fengguang Wu)
-*) Fix sparse warnings for min() typing + printk format specs (Fengguang Wu)
-*) Convert to cmwq submission for I/O dispatch (nab + hch)
-
-Also following Paolo's request, a patch for hw/virtio-scsi.c that sets
-scsi_host->max_target=0 that removes the need for virtio-scsi LLD to hardcode
-VirtIOSCSIConfig->max_id=1 in order to function with tcm_vhost.
-
-Note this series has been pushed into target-pending.git/for-next-merge, and
-should be getting picked up for tomorrow's linux-next build.
-
-Please let us know if you have any concerns and/or additional review feedback.
-
-Thank you!
-
-Nicholas Bellinger (2):
-  vhost: Add vhost_scsi specific defines
-  tcm_vhost: Initial merge for vhost level target fabric driver
-
-Stefan Hajnoczi (2):
-  vhost: Separate vhost-net features from vhost features
-  vhost: make vhost work queue visible
-
- drivers/vhost/Kconfig     |    6 +
- drivers/vhost/Makefile    |    1 +
- drivers/vhost/net.c       |    4 +-
- drivers/vhost/tcm_vhost.c | 1609 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/vhost/tcm_vhost.h |   74 ++
- drivers/vhost/test.c      |    4 +-
- drivers/vhost/vhost.c     |    5 +-
- drivers/vhost/vhost.h     |    6 +-
- include/linux/vhost.h     |    9 +
- 9 files changed, 1710 insertions(+), 8 deletions(-)
- create mode 100644 drivers/vhost/tcm_vhost.c
- create mode 100644 drivers/vhost/tcm_vhost.h
-
+diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
+index f82a739..072cbba 100644
+--- a/drivers/vhost/net.c
++++ b/drivers/vhost/net.c
+@@ -823,14 +823,14 @@ static long vhost_net_ioctl(struct file *f, unsigned int ioctl,
+ 			return -EFAULT;
+ 		return vhost_net_set_backend(n, backend.index, backend.fd);
+ 	case VHOST_GET_FEATURES:
+-		features = VHOST_FEATURES;
++		features = VHOST_NET_FEATURES;
+ 		if (copy_to_user(featurep, &features, sizeof features))
+ 			return -EFAULT;
+ 		return 0;
+ 	case VHOST_SET_FEATURES:
+ 		if (copy_from_user(&features, featurep, sizeof features))
+ 			return -EFAULT;
+-		if (features & ~VHOST_FEATURES)
++		if (features & ~VHOST_NET_FEATURES)
+ 			return -EOPNOTSUPP;
+ 		return vhost_net_set_features(n, features);
+ 	case VHOST_RESET_OWNER:
+diff --git a/drivers/vhost/test.c b/drivers/vhost/test.c
+index 3de00d9..91d6f06 100644
+--- a/drivers/vhost/test.c
++++ b/drivers/vhost/test.c
+@@ -261,14 +261,14 @@ static long vhost_test_ioctl(struct file *f, unsigned int ioctl,
+ 			return -EFAULT;
+ 		return vhost_test_run(n, test);
+ 	case VHOST_GET_FEATURES:
+-		features = VHOST_FEATURES;
++		features = VHOST_NET_FEATURES;
+ 		if (copy_to_user(featurep, &features, sizeof features))
+ 			return -EFAULT;
+ 		return 0;
+ 	case VHOST_SET_FEATURES:
+ 		if (copy_from_user(&features, featurep, sizeof features))
+ 			return -EFAULT;
+-		if (features & ~VHOST_FEATURES)
++		if (features & ~VHOST_NET_FEATURES)
+ 			return -EOPNOTSUPP;
+ 		return vhost_test_set_features(n, features);
+ 	case VHOST_RESET_OWNER:
+diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
+index 8de1fd5..07b9763 100644
+--- a/drivers/vhost/vhost.h
++++ b/drivers/vhost/vhost.h
+@@ -201,7 +201,8 @@ enum {
+ 	VHOST_FEATURES = (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) |
+ 			 (1ULL << VIRTIO_RING_F_INDIRECT_DESC) |
+ 			 (1ULL << VIRTIO_RING_F_EVENT_IDX) |
+-			 (1ULL << VHOST_F_LOG_ALL) |
++			 (1ULL << VHOST_F_LOG_ALL),
++	VHOST_NET_FEATURES = VHOST_FEATURES |
+ 			 (1ULL << VHOST_NET_F_VIRTIO_NET_HDR) |
+ 			 (1ULL << VIRTIO_NET_F_MRG_RXBUF),
+ };
 -- 
 1.7.2.5
+
