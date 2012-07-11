@@ -1,58 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] virtio-scsi: Add vdrv->scan for post
- VIRTIO_CONFIG_S_DRIVER_OK LUN scanning
-Date: Wed, 11 Jul 2012 19:37:36 +0100
-Message-ID: <1342031856.3522.41.camel@dabdike.int.hansenpartnership.com>
-References: <1341605705-13114-1-git-send-email-nab@linux-iscsi.org>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH v3 3/5] st: get rid of scsi_tapes array
+Date: Wed, 11 Jul 2012 11:43:04 -0700
+Message-ID: <4FFDC938.4050606@suse.com>
+References: <4FBACC66.80208@suse.com> <alpine.LNX.2.00.1207011147110.3650@kai.makisara.local> <4FF239F8.7030101@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1341605705-13114-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nat.nue.novell.com ([195.135.221.2]:47939 "EHLO
+	nat.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752012Ab2GKSnM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jul 2012 14:43:12 -0400
+In-Reply-To: <4FF239F8.7030101@suse.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jeffm@suse.com
 
-On Fri, 2012-07-06 at 20:15 +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
+Kai:
+
+Your added patch looks great, and I see you fixed the documentation as
+well. Thanks for your help.
+
+
+On 07/02/2012 05:16 PM, Lee Duncan wrote:
 > 
-> This patch changes virtio-scsi to use a new virtio_driver->scan() callback
-> so that scsi_scan_host() can be properly invoked once virtio_dev_probe() has
-> set add_status(dev, VIRTIO_CONFIG_S_DRIVER_OK) to signal active virtio-ring
-> operation, instead of from within virtscsi_probe().
+> On 07/01/2012 01:57 AM, Kai Makisara wrote:
+>> On Mon, 21 May 2012, Lee Duncan wrote:
+>>
+>>> From: Jeff Mahoney <jeffm@suse.com>
+>>>
+>>> st currently allocates an array to store pointers to all of the
+>>> scsi_tape objects. It's used to discover available indexes to use as the
+>>> base for the minor number selection and later to look up scsi_tape
+>>> devices for character devices.
+>>>
+>>> We switch to using an IDR for minor selection and a pointer from
+>>> st_modedef back to scsi_tape for the lookups.
+>>>
+>>> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+>>> Signed-off-by: Lee Duncan <lduncan@suse.com>
+>>> ---
+>>>  drivers/scsi/st.c |  172 ++++++++++++++++++++---------------------------------
+>>>  drivers/scsi/st.h |    2 +
+>>>  2 files changed, 65 insertions(+), 109 deletions(-)
+>>>
+>> ... patch removed
+>>
+>> I have finally had time to review and test this patch set. I am sorry this 
+>> has taken so long.
+>>
+>> I have found one change of behaviour and a theoretical problem:
+>> The new code does not re-use the tape numbers when freed and re-scanned. 
+>> The current code does re-use the freed numbers. Are there any reasons for 
+>> this changed behaviour? (The theoretical problem is that the new code 
+>> frees the tape structure but leaves the pointer in the idr tree.)
+>>
+>> The patch at the end of this message (applies after the whole series) is 
+>> an attempt to implement re-use of tape numbers. I am not completely sure 
+>> that the change is correctly placed but it seems to work.
 > 
-> This fixes a bug where SCSI LUN scanning for both virtio-scsi-raw and
-> virtio-scsi/tcm_vhost setups was happening before VIRTIO_CONFIG_S_DRIVER_OK
-> had been set, causing VIRTIO_SCSI_S_BAD_TARGET to occur.  This fixes a bug
-> with virtio-scsi/tcm_vhost where LUN scan was not detecting LUNs.
 > 
-> Tested with virtio-scsi-raw + virtio-scsi/tcm_vhost w/ IBLOCK on 3.5-rc2 code.
+> Thanks for the review, and good catch. I'll look over your added patch
+> and give feedback as soon as I can.
 > 
-> Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
-> Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/scsi/virtio_scsi.c |   15 ++++++++++++---
->  drivers/virtio/virtio.c    |    5 ++++-
->  include/linux/virtio.h     |    1 +
->  3 files changed, 17 insertions(+), 4 deletions(-)
+>>
+>> Another minor thing is that the documentation should be updated :-)
+> 
+> Of course.
+> 
+>>
+>> The patch at the end also updates the version code. I am not sure if the 
+>> version code is useful, but it should be either updated or removed.
+>>
+>> Otherwise no problems found. I am ready to ack the patch set after the 
+>> re-use thing has been resolved (one way or another).
+>>
+>> Thanks,
+>> Kai
+>>
 
-This doesn't apply:
+- Lee
 
-patching file drivers/scsi/virtio_scsi.c
-Hunk #1 succeeded at 677 (offset 196 lines).
-Hunk #2 FAILED at 494.
-Hunk #3 succeeded at 736 (offset 198 lines).
-1 out of 3 hunks FAILED -- saving rejects to file
-drivers/scsi/virtio_scsi.c.rej
-
-could you respin against scsi-misc head?
-
-Thanks,
-
-James
