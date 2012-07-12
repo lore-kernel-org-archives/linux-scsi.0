@@ -1,45 +1,41 @@
-From: Access Financial Services <info@lone.net>
-Subject: Darlehen anbieten !!!
-Date: Thu, 12 Jul 2012 06:25:29 -0400
-Message-ID: <20120712062529.13914chm8y1ft921__30167.0047957034$1342089142$gmane$org@webmail.onecommunications.net>
-Reply-To: insurloan@aol.com
+From: Stefan Hajnoczi <stefanha@gmail.com>
+Subject: Re: [PATCH v4] virtio-scsi: hotplug support for virtio-scsi
+Date: Thu, 12 Jul 2012 11:37:27 +0100
+Message-ID: <CAJSP0QUUHC3ye0QWBGO3hBJ5RnsUVHumfVNUoMj+OZJDJEprPA@mail.gmail.com>
+References: <1341479203-12058-1-git-send-email-mc@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtphost003.onecommunications.net ([69.95.226.33]:50898 "HELO
-	smtphost003.onecommunications.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1030357Ab2GLKcL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jul 2012 06:32:11 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1341479203-12058-1-git-send-email-mc@linux.vnet.ibm.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Cong Meng <mc@linux.vnet.ibm.com>
+Cc: stefanha@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, zwanp@cn.ibm.com, linuxram@us.ibm.com, senwang@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hallo
+On Thu, Jul 5, 2012 at 10:06 AM, Cong Meng <mc@linux.vnet.ibm.com> wrote:
+> This patch implements the hotplug support for virtio-scsi.
+> When there is a device attached/detached, the virtio-scsi driver will be
+> signaled via event virtual queue and it will add/remove the scsi device
+> in question automatically.
+>
+> v2: handle no_event event
+> v3: add handle event dropped, and typo fix
+> v4: Cancel event works when exit. Coding type fix.
+>
+> Signed-off-by: Sen Wang <senwang@linux.vnet.ibm.com>
+> Signed-off-by: Cong Meng <mc@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/virtio_scsi.c  |  127 ++++++++++++++++++++++++++++++++++++++++++-
+>  include/linux/virtio_scsi.h |    9 +++
+>  2 files changed, 135 insertions(+), 1 deletions(-)
 
-Sie ben=F6tigen keine finanzielle Hilfe? Wir sind =20
-Unternehmens-Kreditgebern. Wir bieten Darlehen an die auf der ganzen =20
-Welt. Unser Angebot reicht von 10.000,00 EUR ist um 100.000.000,00 EUR =
-=20
-um 2% Zinsen pro aufzuheben.
-
-Bei Interesse bitten wir um folgende
-
-Ben=F6tigte Menge:
-Laufzeit des Kredits:
-Telefonnummer:
-Land:
-
-Viele Gr=FC=DFe
-Gesch=E4ftsf=FChrer
-Dr. Wendy Watt
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
