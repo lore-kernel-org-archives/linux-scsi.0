@@ -1,28 +1,42 @@
-From: franz <franz@msn.com>
-Subject: Darlehen
-Date: Thu, 12 Jul 2012 07:37:39 +0100
-Message-ID: <1342075059.4ffe70b3a9192@netmail.pipex.net>
-Reply-To: switzerlllandss@hotmail.com
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH-v2] virtio-scsi: Add vdrv->scan for post
+ VIRTIO_CONFIG_S_DRIVER_OK LUN scanning
+Date: Thu, 12 Jul 2012 07:23:50 +0000
+Message-ID: <1342077828.3021.1.camel@dabdike.int.hansenpartnership.com>
+References: <1342041736-30043-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mk-outboundfilter-5-a-3.mail.uk.tiscali.com ([212.74.114.9]:2971
-	"EHLO mk-outboundfilter-5-a-3.mail.uk.tiscali.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932414Ab2GLGs3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jul 2012 02:48:29 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <kvm-owner@vger.kernel.org>
+In-Reply-To: <1342041736-30043-1-git-send-email-nab@linux-iscsi.org>
+Content-Language: en-US
+Content-ID: <70DBEFFB34AC3441A72A54E8983784BA@sw.swsoft.com>
+Sender: kvm-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Wir bieten legitimen Darlehen wie pers=F6nliche Kredite & Business-Darl=
-ehen ohne Sicherheiten (nur Identifikation) mit=20
-maximaler Garantie, =80 5.000 bis =80 90.000.000, die Zinsen niedrig wi=
-e 3% in 1 Jahr bis 50 Jahre Tilgungsfrist =FCberall=20
-in der Welt
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gV2VkLCAyMDEyLTA3LTExIGF0IDIxOjIyICswMDAwLCBOaWNob2xhcyBBLiBCZWxsaW5nZXIg
+d3JvdGU6DQo+IEZyb206IE5pY2hvbGFzIEJlbGxpbmdlciA8bmFiQGxpbnV4LWlzY3NpLm9yZz4N
+Cj4gDQo+IFRoaXMgcGF0Y2ggY2hhbmdlcyB2aXJ0aW8tc2NzaSB0byB1c2UgYSBuZXcgdmlydGlv
+X2RyaXZlci0+c2NhbigpIGNhbGxiYWNrDQo+IHNvIHRoYXQgc2NzaV9zY2FuX2hvc3QoKSBjYW4g
+YmUgcHJvcGVybHkgaW52b2tlZCBvbmNlIHZpcnRpb19kZXZfcHJvYmUoKSBoYXMNCj4gc2V0IGFk
+ZF9zdGF0dXMoZGV2LCBWSVJUSU9fQ09ORklHX1NfRFJJVkVSX09LKSB0byBzaWduYWwgYWN0aXZl
+IHZpcnRpby1yaW5nDQo+IG9wZXJhdGlvbiwgaW5zdGVhZCBvZiBmcm9tIHdpdGhpbiB2aXJ0c2Nz
+aV9wcm9iZSgpLg0KPiANCj4gVGhpcyBmaXhlcyBhIGJ1ZyB3aGVyZSBTQ1NJIExVTiBzY2Fubmlu
+ZyBmb3IgYm90aCB2aXJ0aW8tc2NzaS1yYXcgYW5kDQo+IHZpcnRpby1zY3NpL3RjbV92aG9zdCBz
+ZXR1cHMgd2FzIGhhcHBlbmluZyBiZWZvcmUgVklSVElPX0NPTkZJR19TX0RSSVZFUl9PSw0KPiBo
+YWQgYmVlbiBzZXQsIGNhdXNpbmcgVklSVElPX1NDU0lfU19CQURfVEFSR0VUIHRvIG9jY3VyLiAg
+VGhpcyBmaXhlcyBhIGJ1Zw0KPiB3aXRoIHZpcnRpby1zY3NpL3RjbV92aG9zdCB3aGVyZSBMVU4g
+c2NhbiB3YXMgbm90IGRldGVjdGluZyBMVU5zLg0KPiANCj4gVGVzdGVkIHdpdGggdmlydGlvLXNj
+c2ktcmF3ICsgdmlydGlvLXNjc2kvdGNtX3Zob3N0IHcvIElCTE9DSyBvbiAzLjUtcmMyIGNvZGUu
+DQo+IA0KPiAobmFiOiBGaXggdXAgbWlub3IgYXBwbHkgZnV6eiBhZ2FpbnN0IHNjc2kuZ2l0L21p
+c2MpDQo+IA0KPiBDYzogUGFvbG8gQm9uemluaSA8cGJvbnppbmlAcmVkaGF0LmNvbT4NCj4gQ2M6
+IFN0ZWZhbiBIYWpub2N6aSA8c3RlZmFuaGFAbGludXgudm5ldC5pYm0uY29tPg0KPiBDYzogWmhp
+IFlvbmcgV3UgPHd1emh5QGNuLmlibS5jb20+DQo+IENjOiBDaHJpc3RvcGggSGVsbHdpZyA8aGNo
+QGxzdC5kZT4NCj4gQ2M6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmRlPg0KPiBDYzogSmFt
+ZXMgQm90dG9tbGV5IDxKQm90dG9tbGV5QFBhcmFsbGVscy5jb20+DQo+IFNpZ25lZC1vZmYtYnk6
+IE5pY2hvbGFzIEJlbGxpbmdlciA8bmFiQGxpbnV4LWlzY3NpLm9yZz4NCg0KV2FzIHRoZSBjaGFu
+Z2Ugc28gZ3JlYXQgdGhhdCBpdCBuZWVkcyByZSBhY2tpbmc/DQoNCkkgYXNzdW1lIGl0IGFsc28g
+bm93IG5vIGxvbmdlciBhcHBsaWVzIHRvIHN0YWJsZSBiZWNhdXNlIGl0IHdpbGwgcmVqZWN0Pw0K
+DQpKYW1lcw0KDQo=
