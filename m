@@ -1,68 +1,45 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH] fusion: print lan address via %pMR
-Date: Thu, 12 Jul 2012 10:55:27 +0300
-Message-ID: <1342079727-22040-1-git-send-email-andriy.shevchenko@linux.intel.com>
+From: Access Financial Services <info@lone.net>
+Subject: Darlehen anbieten !!!
+Date: Thu, 12 Jul 2012 06:25:29 -0400
+Message-ID: <20120712062529.13914chm8y1ft921__30167.0047957034$1342089142$gmane$org@webmail.onecommunications.net>
+Reply-To: insurloan@aol.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60302 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758327Ab2GLHzt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jul 2012 03:55:49 -0400
+Received: from smtphost003.onecommunications.net ([69.95.226.33]:50898 "HELO
+	smtphost003.onecommunications.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1030357Ab2GLKcL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jul 2012 06:32:11 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Eric Moore <Eric.Moore@lsi.com>, DL-MPTFusionLinux@lsi.com
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/message/fusion/mptbase.c |   14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+Hallo
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index d99db56..d202f25 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -2562,10 +2562,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
- 				(void) GetLanConfigPages(ioc);
- 				a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
- 				dprintk(ioc, printk(MYIOC_s_DEBUG_FMT
--					"LanAddr = %02X:%02X:%02X"
--					":%02X:%02X:%02X\n",
--					ioc->name, a[5], a[4],
--					a[3], a[2], a[1], a[0]));
-+					"LanAddr = %pMR\n", ioc->name, a));
- 			}
- 			break;
- 
-@@ -6785,8 +6782,7 @@ static int mpt_iocinfo_proc_show(struct seq_file *m, void *v)
- 		if (ioc->bus_type == FC) {
- 			if (ioc->pfacts[p].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN) {
- 				u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
--				seq_printf(m, "    LanAddr = %02X:%02X:%02X:%02X:%02X:%02X\n",
--						a[5], a[4], a[3], a[2], a[1], a[0]);
-+				seq_printf(m, "    LanAddr = %pMR\n", a);
- 			}
- 			seq_printf(m, "    WWN = %08X%08X:%08X%08X\n",
- 					ioc->fc_port_page0[p].WWNN.High,
-@@ -6863,8 +6859,7 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
- 
- 	if (showlan && (ioc->pfacts[0].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN)) {
- 		u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
--		y += sprintf(buffer+len+y, ", LanAddr=%02X:%02X:%02X:%02X:%02X:%02X",
--			a[5], a[4], a[3], a[2], a[1], a[0]);
-+		y += sprintf(buffer+len+y, ", LanAddr=%pMR", a);
- 	}
- 
- 	y += sprintf(buffer+len+y, ", IRQ=%d", ioc->pci_irq);
-@@ -6897,8 +6892,7 @@ static void seq_mpt_print_ioc_summary(MPT_ADAPTER *ioc, struct seq_file *m, int
- 
- 	if (showlan && (ioc->pfacts[0].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN)) {
- 		u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
--		seq_printf(m, ", LanAddr=%02X:%02X:%02X:%02X:%02X:%02X",
--			a[5], a[4], a[3], a[2], a[1], a[0]);
-+		seq_printf(m, ", LanAddr=%pMR", a);
- 	}
- 
- 	seq_printf(m, ", IRQ=%d", ioc->pci_irq);
--- 
-1.7.10.4
+Sie ben=F6tigen keine finanzielle Hilfe? Wir sind =20
+Unternehmens-Kreditgebern. Wir bieten Darlehen an die auf der ganzen =20
+Welt. Unser Angebot reicht von 10.000,00 EUR ist um 100.000.000,00 EUR =
+=20
+um 2% Zinsen pro aufzuheben.
 
+Bei Interesse bitten wir um folgende
+
+Ben=F6tigte Menge:
+Laufzeit des Kredits:
+Telefonnummer:
+Land:
+
+Viele Gr=FC=DFe
+Gesch=E4ftsf=FChrer
+Dr. Wendy Watt
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
