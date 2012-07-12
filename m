@@ -1,41 +1,54 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] aha152x: Allow use on 64bit systems
-Date: Thu, 12 Jul 2012 16:40:15 +0100
-Message-ID: <20120712154005.18962.59464.stgit@localhost.localdomain>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Why are DID_ABORT and TASK_ABORTED handled differently?
+Date: Thu, 12 Jul 2012 18:49:55 +0200
+Message-ID: <4FFF0033.2090902@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:59871 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932530Ab2GLPXc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jul 2012 11:23:32 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:12769 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934111Ab2GLQt5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jul 2012 12:49:57 -0400
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q6CGnvZh003317
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Jul 2012 12:49:57 -0400
+Received: from yakj.usersys.redhat.com (ovpn-112-21.ams2.redhat.com [10.36.112.21])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id q6CGnuKL021485
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Jul 2012 12:49:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Alan Cox <alan@linux.intel.com>
+Currently, DID_ABORT relays the failure to the upper layer, while TASK
+ABORTED (after the suggestion at
+http://marc.info/?l=linux-scsi&m=121932916906009&w=2 was implemented)
+retries the command.
 
-This is reported to work, known to work on PCMCIA and a code check shows no
-problems on the other bits of the code.
+Is it correct that when TAS=0 an aborted task (from TMF, persistent
+reservation or anything else) can result in DID_ABORT?  There are some
+clues of this in the drivers, but on the other hand scsi-debug has a
+very strange usage of DID_ABORT:
 
-Signed-off-by: Alan Cox <alan@linux.intel.com>
----
+static const int illegal_condition_result =
+        (DRIVER_SENSE << 24) | (DID_ABORT << 16) |
+        SAM_STAT_CHECK_CONDITION;
 
- drivers/scsi/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+...
+        /* DIX + T10 DIF */
+        if (scsi_debug_dix && scsi_prot_sg_count(SCpnt)) {
+                int prot_ret = prot_verify_read(SCpnt, lba, num, ei_lba);
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 6c810db..74bf1aa 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -444,7 +444,7 @@ config SCSI_ACARD
- 
- config SCSI_AHA152X
- 	tristate "Adaptec AHA152X/2825 support"
--	depends on ISA && SCSI && !64BIT
-+	depends on ISA && SCSI
- 	select SCSI_SPI_ATTRS
- 	select CHECK_SIGNATURE
- 	---help---
+                if (prot_ret) {
+                        mk_sense_buffer(devip, ABORTED_COMMAND, 0x10,
+prot_ret);
+                        return illegal_condition_result;
+                }
+        }
 
+
+If it is the case that they are similar, is there any reason why the two
+are handled differently?
+
+Paolo
