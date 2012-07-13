@@ -1,66 +1,64 @@
 From: Vinayak Holikatti <vinholikatti@gmail.com>
-Subject: [PATCH V2 2/4] [SCSI] drivers/scsi/ufs: Add PCI glue driver
-Date: Fri, 13 Jul 2012 19:58:16 +0530
-Message-ID: <1342189698-20393-1-git-send-email-vinholikatti@gmail.com>
+Subject: [PATCH V2 3/4] [SCSI] ufs: Add Platform glue driver for ufshcd
+Date: Fri, 13 Jul 2012 19:58:17 +0530
+Message-ID: <1342189698-20393-2-git-send-email-vinholikatti@gmail.com>
+References: <1342189698-20393-1-git-send-email-vinholikatti@gmail.com>
 Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-Reply-To: <1342189698-20393-1-git-send-email-vinholikatti@gmail.com>
 Sender: linux-samsung-soc-owner@vger.kernel.org
 To: James.Bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com, Vinayak Holikatti <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds PCI glue driver support
+This patch adds Platform glue driver for ufshcd.
 
 Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
 Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
 ---
  drivers/scsi/ufs/Kconfig         |   11 ++
  drivers/scsi/ufs/Makefile        |    1 +
- drivers/scsi/ufs/ufshcd-pci.c    |  227 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.c        |  154 +-------------------------
- drivers/scsi/ufs/ufshcd.h        |  206 ++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd_common.h |   53 +++++++++
- 6 files changed, 499 insertions(+), 153 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
- create mode 100644 drivers/scsi/ufs/ufshcd.h
- create mode 100644 drivers/scsi/ufs/ufshcd_common.h
+ drivers/scsi/ufs/ufshcd-pltfrm.c |  215 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 227 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.c
 
 diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 8c0cd22..265a8c8 100644
+index 265a8c8..8c06330 100644
 --- a/drivers/scsi/ufs/Kconfig
 +++ b/drivers/scsi/ufs/Kconfig
-@@ -56,3 +56,14 @@ config SCSI_UFSHCD
- 	  <file:Documentation/scsi/ufs.txt>.
- 	  However, do not compile this as a module if your root file system
- 	  (the one containing the directory /) is located on a UFS device.
+@@ -67,3 +67,14 @@ config SCSI_UFSHCD_PCI
+ 	  If you have a controller with this interface, say Y or M here.
+ 
+ 	  If unsure, say N.
 +
-+config SCSI_UFSHCD_PCI
-+	tristate "PCI bus based UFS Controller support"
-+	depends on SCSI_UFSHCD && PCI
++config SCSI_UFSHCD_PLATFORM
++	tristate "Platform based UFS Controller support"
++	depends on SCSI_UFSHCD
 +	---help---
-+	This selects the PCI UFS Host Controller Interface.
-+	  Most controllers found today are PCI devices.
++	This selects the UFS host controller support. If you have a
++	   platform with UFS controller, say Y or M here.
 +
-+	  If you have a controller with this interface, say Y or M here.
++	   If you have a controller with this interface, say Y or M here.
 +
 +	  If unsure, say N.
 diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index adf7895..9eda0df 100644
+index 9eda0df..1e5bd48 100644
 --- a/drivers/scsi/ufs/Makefile
 +++ b/drivers/scsi/ufs/Makefile
-@@ -1,2 +1,3 @@
+@@ -1,3 +1,4 @@
  # UFSHCD makefile
  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
-+obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
++obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
 new file mode 100644
-index 0000000..0c0cc92
+index 0000000..1d3a63f
 --- /dev/null
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -0,0 +1,227 @@
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -0,0 +1,215 @@
 +/*
 + * Universal Flash Storage Host controller driver
 + *
-+ * This code is based on drivers/scsi/ufs/ufshcd-pci.c
++ * This code is based on drivers/scsi/ufs/ufshcd-pltfm.c
 + * Copyright (C) 2011-2012 Samsung India Software Operations
 + *
 + * Santosh Yaraganavi <santosh.sy@samsung.com>
@@ -104,17 +102,18 @@ index 0000000..0c0cc92
 +
 +#include "ufshcd.h"
 +#include "ufshcd_common.h"
-+#include <linux/pci.h>
++#include <linux/platform_device.h>
 +
 +#ifdef CONFIG_PM
 +/**
 + * ufshcd_suspend - suspend power management function
-+ * @pdev: pointer to PCI device handle
-+ * @state: power state
++ * @pdev: pointer to Platform device handle
++ * @mesg: power state
 + *
 + * Returns -ENOSYS
 + */
-+static int ufshcd_pci_suspend(struct pci_dev *pdev, pm_message_t state)
++static int ufshcd_pltfrm_suspend(struct platform_device *pdev,
++				 pm_message_t mesg)
 +{
 +	/*
 +	 * TODO:
@@ -130,11 +129,11 @@ index 0000000..0c0cc92
 +
 +/**
 + * ufshcd_resume - resume power management function
-+ * @pdev: pointer to PCI device handle
++ * @pdev: pointer to Platform device handle
 + *
 + * Returns -ENOSYS
 + */
-+static int ufshcd_pci_resume(struct pci_dev *pdev)
++static int ufshcd_pltfrm_resume(struct platform_device *pdev)
 +{
 +	/*
 +	 * TODO:
@@ -147,592 +146,129 @@ index 0000000..0c0cc92
 +
 +	return -ENOSYS;
 +}
-+#endif /* CONFIG_PM */
++#endif
 +
 +/**
-+ * ufshcd_shutdown - main function to put the controller in reset state
-+ * @pdev: pointer to PCI device handle
-+ */
-+static void ufshcd_pci_shutdown(struct pci_dev *pdev)
-+{
-+	ufshcd_hba_stop((struct ufs_hba *)pci_get_drvdata(pdev));
-+}
-+
-+/**
-+ * ufshcd_pci_remove - de-allocate PCI/SCSI host and host memory space
-+ *		data structure memory
-+ * @pdev - pointer to PCI handle
-+ */
-+static void ufshcd_pci_remove(struct pci_dev *pdev)
-+{
-+	struct ufs_hba *hba = pci_get_drvdata(pdev);
-+
-+	ufshcd_remove(hba);
-+	free_irq(pdev->irq, hba);
-+	pci_set_drvdata(pdev, NULL);
-+	pci_clear_master(pdev);
-+	pci_disable_device(pdev);
-+}
-+
-+/**
-+ * ufshcd_set_dma_mask - Set dma mask based on the controller
-+ *			 addressing capability
-+ * @pdev: PCI device structure
-+ *
-+ * Returns 0 for success, non-zero for failure
-+ */
-+static int ufshcd_set_dma_mask(struct pci_dev *pdev)
-+{
-+	int err;
-+
-+	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
-+		&& !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)))
-+		return 0;
-+	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-+	if (!err)
-+		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
-+	return err;
-+}
-+
-+/**
-+ * ufshcd_pci_probe - probe routine of the driver
-+ * @pdev: pointer to PCI device handle
-+ * @id: PCI device id
++ * ufshcd_pltfrm_probe - probe routine of the driver
++ * @pdev: pointer to Platform device handle
 + *
 + * Returns 0 on success, non-zero value on failure
 + */
 +static int __devinit
-+ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++ufshcd_pltfrm_probe(struct platform_device *pdev)
 +{
 +	struct ufs_hba *hba;
 +	void __iomem *mmio_base;
++	struct resource *mem_res;
++	struct resource *irq_res;
++	resource_size_t mem_size;
 +	int err;
++	struct device *dev = &pdev->dev;
 +
-+	err = pci_enable_device(pdev);
-+	if (err) {
-+		dev_err(&pdev->dev, "pci_enable_device failed\n");
++	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!mem_res) {
++		dev_err(&pdev->dev,
++			"%s: Memory resource not available\n", __FILE__);
++		err = -ENODEV;
 +		goto out_error;
 +	}
 +
-+	pci_set_master(pdev);
-+
-+
-+	err = pci_request_regions(pdev, UFSHCD);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "request regions failed\n");
-+		goto out_disable;
++	mem_size = resource_size(mem_res);
++	if (!request_mem_region(mem_res->start, mem_size, "ufshcd")) {
++		dev_err(&pdev->dev,
++			"ufshcd: Cannot reserve the memory resource\n");
++		err = -EBUSY;
++		goto out_error;
 +	}
 +
-+	mmio_base = pci_ioremap_bar(pdev, 0);
++	mmio_base = ioremap_nocache(mem_res->start, mem_size);
 +	if (!mmio_base) {
 +		dev_err(&pdev->dev, "memory map failed\n");
 +		err = -ENOMEM;
 +		goto out_release_regions;
 +	}
 +
-+	err = ufshcd_set_dma_mask(pdev);
++	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (!irq_res) {
++		dev_err(&pdev->dev, "ufshcd: IRQ resource not available\n");
++		err = -ENODEV;
++		goto out_iounmap;
++	}
++
++	err = dma_set_coherent_mask(dev, dev->coherent_dma_mask);
 +	if (err) {
 +		dev_err(&pdev->dev, "set dma mask failed\n");
 +		goto out_iounmap;
 +	}
 +
-+	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
++	err = ufshcd_init(&pdev->dev, &hba, mmio_base, irq_res->start);
 +	if (err) {
-+		dev_err(&pdev->dev, "%s:%d %sInitialization failed\n",
-+				__FILE__, __LINE__, __func__);
++		dev_err(&pdev->dev, "%s: Intialization failed\n",
++			__FILE__);
 +		goto out_iounmap;
 +	}
 +
-+	pci_set_drvdata(pdev, hba);
++	platform_set_drvdata(pdev, hba);
 +
 +	return 0;
 +
 +out_iounmap:
 +	iounmap(mmio_base);
 +out_release_regions:
-+	pci_release_regions(pdev);
-+out_disable:
-+	pci_clear_master(pdev);
-+	pci_disable_device(pdev);
++	release_mem_region(mem_res->start, mem_size);
 +out_error:
 +	return err;
 +}
 +
-+static DEFINE_PCI_DEVICE_TABLE(ufshcd_pci_tbl) = {
-+	{ PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+	{ }	/* terminate list */
++/**
++ * ufshcd_pltfrm_remove - remove platform driver routine
++ * @pdev: pointer to platform device handle
++ *
++ * Returns 0 on success, non-zero value on failure
++ */
++static int __devexit ufshcd_pltfrm_remove(struct platform_device *pdev)
++{
++	struct resource *mem_res;
++	struct resource *irq_res;
++	resource_size_t mem_size;
++	struct ufs_hba *hba =  platform_get_drvdata(pdev);
++
++	ufshcd_remove(hba);
++	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (!irq_res)
++		dev_err(&pdev->dev, "ufshcd: IRQ resource not available\n");
++	free_irq(irq_res->start, hba);
++	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	mem_size = resource_size(mem_res);
++	release_mem_region(mem_res->start, mem_size);
++	platform_set_drvdata(pdev, NULL);
++	return 0;
++}
++
++static const struct of_device_id ufs_of_match[] = {
++	{ .compatible = "jedec,ufs-1.1"},
 +};
 +
-+MODULE_DEVICE_TABLE(pci, ufshcd_pci_tbl);
-+
-+static struct pci_driver ufshcd_pci_driver = {
-+	.name = UFSHCD,
-+	.id_table = ufshcd_pci_tbl,
-+	.probe = ufshcd_pci_probe,
-+	.remove = __devexit_p(ufshcd_pci_remove),
-+	.shutdown = ufshcd_pci_shutdown,
++static struct platform_driver ufshcd_pltfrm_driver = {
++	.probe	= ufshcd_pltfrm_probe,
++	.remove	= __devexit_p(ufshcd_pltfrm_remove),
 +#ifdef CONFIG_PM
-+	.suspend = ufshcd_pci_suspend,
-+	.resume = ufshcd_pci_resume,
++	.suspend = ufshcd_pltfrm_suspend,
++	.resume = ufshcd_pltfrm_resume,
 +#endif
++	.driver	= {
++		.name	= "ufshcd",
++		.owner	= THIS_MODULE,
++		.of_match_table = ufs_of_match,
++	},
 +};
 +
-+module_pci_driver(ufshcd_pci_driver);
++module_platform_driver(ufshcd_pltfrm_driver);
 +
 +MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
 +MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
-+MODULE_DESCRIPTION("PCI based UFS host controller driver");
++MODULE_DESCRIPTION("Platform based UFS host controller driver");
 +MODULE_LICENSE("GPL");
 +MODULE_VERSION(UFSHCD_DRIVER_VERSION);
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ef442c9..dfc3e85 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -43,35 +43,7 @@
-  * USA.
-  */
- 
--#include <linux/module.h>
--#include <linux/kernel.h>
--#include <linux/init.h>
--#include <linux/pci.h>
--#include <linux/interrupt.h>
--#include <linux/io.h>
--#include <linux/delay.h>
--#include <linux/slab.h>
--#include <linux/spinlock.h>
--#include <linux/workqueue.h>
--#include <linux/errno.h>
--#include <linux/types.h>
--#include <linux/wait.h>
--#include <linux/bitops.h>
--
--#include <asm/irq.h>
--#include <asm/byteorder.h>
--#include <scsi/scsi.h>
--#include <scsi/scsi_cmnd.h>
--#include <scsi/scsi_host.h>
--#include <scsi/scsi_tcq.h>
--#include <scsi/scsi_dbg.h>
--#include <scsi/scsi_eh.h>
--
--#include "ufs.h"
--#include "ufshci.h"
--
--#define UFSHCD "ufshcd"
--#define UFSHCD_DRIVER_VERSION "0.1"
-+#include "ufshcd.h"
- 
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
-@@ -102,121 +74,6 @@ enum {
- };
- 
- /**
-- * struct uic_command - UIC command structure
-- * @command: UIC command
-- * @argument1: UIC command argument 1
-- * @argument2: UIC command argument 2
-- * @argument3: UIC command argument 3
-- * @cmd_active: Indicate if UIC command is outstanding
-- * @result: UIC command result
-- */
--struct uic_command {
--	u32 command;
--	u32 argument1;
--	u32 argument2;
--	u32 argument3;
--	int cmd_active;
--	int result;
--};
--
--/**
-- * struct ufs_hba - per adapter private structure
-- * @mmio_base: UFSHCI base register address
-- * @ucdl_base_addr: UFS Command Descriptor base address
-- * @utrdl_base_addr: UTP Transfer Request Descriptor base address
-- * @utmrdl_base_addr: UTP Task Management Descriptor base address
-- * @ucdl_dma_addr: UFS Command Descriptor DMA address
-- * @utrdl_dma_addr: UTRDL DMA address
-- * @utmrdl_dma_addr: UTMRDL DMA address
-- * @host: Scsi_Host instance of the driver
-- * @dev: device handle
-- * @lrb: local reference block
-- * @outstanding_tasks: Bits representing outstanding task requests
-- * @outstanding_reqs: Bits representing outstanding transfer requests
-- * @capabilities: UFS Controller Capabilities
-- * @nutrs: Transfer Request Queue depth supported by controller
-- * @nutmrs: Task Management Queue depth supported by controller
-- * @active_uic_cmd: handle of active UIC command
-- * @ufshcd_tm_wait_queue: wait queue for task management
-- * @tm_condition: condition variable for task management
-- * @ufshcd_state: UFSHCD states
-- * @int_enable_mask: Interrupt Mask Bits
-- * @uic_workq: Work queue for UIC completion handling
-- * @feh_workq: Work queue for fatal controller error handling
-- * @errors: HBA errors
-- */
--struct ufs_hba {
--	void __iomem *mmio_base;
--
--	/* Virtual memory reference */
--	struct utp_transfer_cmd_desc *ucdl_base_addr;
--	struct utp_transfer_req_desc *utrdl_base_addr;
--	struct utp_task_req_desc *utmrdl_base_addr;
--
--	/* DMA memory reference */
--	dma_addr_t ucdl_dma_addr;
--	dma_addr_t utrdl_dma_addr;
--	dma_addr_t utmrdl_dma_addr;
--
--	struct Scsi_Host *host;
--	struct device *dev;
--
--	struct ufshcd_lrb *lrb;
--
--	unsigned long outstanding_tasks;
--	unsigned long outstanding_reqs;
--
--	u32 capabilities;
--	int nutrs;
--	int nutmrs;
--	u32 ufs_version;
--
--	struct uic_command active_uic_cmd;
--	wait_queue_head_t ufshcd_tm_wait_queue;
--	unsigned long tm_condition;
--
--	u32 ufshcd_state;
--	u32 int_enable_mask;
--
--	/* Work Queues */
--	struct work_struct uic_workq;
--	struct work_struct feh_workq;
--
--	/* HBA Errors */
--	u32 errors;
--};
--
--/**
-- * struct ufshcd_lrb - local reference block
-- * @utr_descriptor_ptr: UTRD address of the command
-- * @ucd_cmd_ptr: UCD address of the command
-- * @ucd_rsp_ptr: Response UPIU address for this command
-- * @ucd_prdt_ptr: PRDT address of the command
-- * @cmd: pointer to SCSI command
-- * @sense_buffer: pointer to sense buffer address of the SCSI command
-- * @sense_bufflen: Length of the sense buffer
-- * @scsi_status: SCSI status of the command
-- * @command_type: SCSI, UFS, Query.
-- * @task_tag: Task tag of the command
-- * @lun: LUN of the command
-- */
--struct ufshcd_lrb {
--	struct utp_transfer_req_desc *utr_descriptor_ptr;
--	struct utp_upiu_cmd *ucd_cmd_ptr;
--	struct utp_upiu_rsp *ucd_rsp_ptr;
--	struct ufshcd_sg_entry *ucd_prdt_ptr;
--
--	struct scsi_cmnd *cmd;
--	u8 *sense_buffer;
--	unsigned int sense_bufflen;
--	int scsi_status;
--
--	int command_type;
--	int task_tag;
--	unsigned int lun;
--};
--
--/**
-  * ufshcd_get_ufs_version - Get the UFS version supported by the HBA
-  * @hba - Pointer to adapter instance
-  *
-@@ -429,15 +286,6 @@ static void ufshcd_enable_run_stop_reg(struct ufs_hba *hba)
- }
- 
- /**
-- * ufshcd_hba_stop - Send controller to reset state
-- * @hba: per adapter instance
-- */
--static inline void ufshcd_hba_stop(struct ufs_hba *hba)
--{
--	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
--}
--
--/**
-  * ufshcd_hba_start - Start controller initialization sequence
-  * @hba: per adapter instance
-  */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-new file mode 100644
-index 0000000..40cb1f7
---- /dev/null
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -0,0 +1,206 @@
-+/*
-+ * Universal Flash Storage Host controller driver
-+ *
-+ * This code is based on drivers/scsi/ufs/ufshcd.h
-+ * Copyright (C) 2011-2012 Samsung India Software Operations
-+ *
-+ * Santosh Yaraganavi <santosh.sy@samsung.com>
-+ * Vinayak Holikatti <h.vinayak@samsung.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * NO WARRANTY
-+ * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
-+ * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
-+ * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
-+ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
-+ * solely responsible for determining the appropriateness of using and
-+ * distributing the Program and assumes all risks associated with its
-+ * exercise of rights under this Agreement, including but not limited to
-+ * the risks and costs of program errors, damage to or loss of data,
-+ * programs or equipment, and unavailability or interruption of operations.
-+
-+ * DISCLAIMER OF LIABILITY
-+ * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
-+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
-+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-+ * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
-+ * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
-+
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-+ * USA.
-+ */
-+
-+#ifndef _UFSHCD_H
-+#define _UFSHCD_H
-+
-+#include <linux/module.h>
-+#include <linux/kernel.h>
-+#include <linux/init.h>
-+#include <linux/interrupt.h>
-+#include <linux/io.h>
-+#include <linux/delay.h>
-+#include <linux/slab.h>
-+#include <linux/spinlock.h>
-+#include <linux/workqueue.h>
-+#include <linux/errno.h>
-+#include <linux/types.h>
-+#include <linux/wait.h>
-+#include <linux/bitops.h>
-+#include <linux/pm_runtime.h>
-+#include <linux/clk.h>
-+
-+#include <asm/irq.h>
-+#include <asm/byteorder.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_tcq.h>
-+#include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_eh.h>
-+
-+#include "ufs.h"
-+#include "ufshci.h"
-+
-+#define UFSHCD "ufshcd"
-+#define UFSHCD_DRIVER_VERSION "0.2"
-+
-+/**
-+ * struct uic_command - UIC command structure
-+ * @command: UIC command
-+ * @argument1: UIC command argument 1
-+ * @argument2: UIC command argument 2
-+ * @argument3: UIC command argument 3
-+ * @cmd_active: Indicate if UIC command is outstanding
-+ * @result: UIC command result
-+ */
-+struct uic_command {
-+	u32 command;
-+	u32 argument1;
-+	u32 argument2;
-+	u32 argument3;
-+	int cmd_active;
-+	int result;
-+};
-+
-+/**
-+ * struct ufshcd_lrb - local reference block
-+ * @utr_descriptor_ptr: UTRD address of the command
-+ * @ucd_cmd_ptr: UCD address of the command
-+ * @ucd_rsp_ptr: Response UPIU address for this command
-+ * @ucd_prdt_ptr: PRDT address of the command
-+ * @cmd: pointer to SCSI command
-+ * @sense_buffer: pointer to sense buffer address of the SCSI command
-+ * @sense_bufflen: Length of the sense buffer
-+ * @scsi_status: SCSI status of the command
-+ * @command_type: SCSI, UFS, Query.
-+ * @task_tag: Task tag of the command
-+ * @lun: LUN of the command
-+ */
-+struct ufshcd_lrb {
-+	struct utp_transfer_req_desc *utr_descriptor_ptr;
-+	struct utp_upiu_cmd *ucd_cmd_ptr;
-+	struct utp_upiu_rsp *ucd_rsp_ptr;
-+	struct ufshcd_sg_entry *ucd_prdt_ptr;
-+
-+	struct scsi_cmnd *cmd;
-+	u8 *sense_buffer;
-+	unsigned int sense_bufflen;
-+	int scsi_status;
-+
-+	int command_type;
-+	int task_tag;
-+	unsigned int lun;
-+};
-+
-+
-+/**
-+ * struct ufs_hba - per adapter private structure
-+ * @mmio_base: UFSHCI base register address
-+ * @ucdl_base_addr: UFS Command Descriptor base address
-+ * @utrdl_base_addr: UTP Transfer Request Descriptor base address
-+ * @utmrdl_base_addr: UTP Task Management Descriptor base address
-+ * @ucdl_dma_addr: UFS Command Descriptor DMA address
-+ * @utrdl_dma_addr: UTRDL DMA address
-+ * @utmrdl_dma_addr: UTMRDL DMA address
-+ * @host: Scsi_Host instance of the driver
-+ * @dev: device handle
-+ * @lrb: local reference block
-+ * @outstanding_tasks: Bits representing outstanding task requests
-+ * @outstanding_reqs: Bits representing outstanding transfer requests
-+ * @capabilities: UFS Controller Capabilities
-+ * @nutrs: Transfer Request Queue depth supported by controller
-+ * @nutmrs: Task Management Queue depth supported by controller
-+ * @active_uic_cmd: handle of active UIC command
-+ * @ufshcd_tm_wait_queue: wait queue for task management
-+ * @tm_condition: condition variable for task management
-+ * @ufshcd_state: UFSHCD states
-+ * @int_enable_mask: Interrupt Mask Bits
-+ * @uic_workq: Work queue for UIC completion handling
-+ * @feh_workq: Work queue for fatal controller error handling
-+ * @errors: HBA errors
-+ */
-+struct ufs_hba {
-+	void __iomem *mmio_base;
-+
-+	/* Virtual memory reference */
-+	struct utp_transfer_cmd_desc *ucdl_base_addr;
-+	struct utp_transfer_req_desc *utrdl_base_addr;
-+	struct utp_task_req_desc *utmrdl_base_addr;
-+
-+	/* DMA memory reference */
-+	dma_addr_t ucdl_dma_addr;
-+	dma_addr_t utrdl_dma_addr;
-+	dma_addr_t utmrdl_dma_addr;
-+
-+	struct Scsi_Host *host;
-+	struct device *dev;
-+
-+	struct ufshcd_lrb *lrb;
-+
-+	unsigned long outstanding_tasks;
-+	unsigned long outstanding_reqs;
-+
-+	u32 capabilities;
-+	int nutrs;
-+	int nutmrs;
-+	unsigned int irq;
-+	u32 ufs_version;
-+
-+	struct uic_command active_uic_cmd;
-+	wait_queue_head_t ufshcd_tm_wait_queue;
-+	unsigned long tm_condition;
-+
-+	u32 ufshcd_state;
-+	u32 int_enable_mask;
-+
-+	/* Work Queues */
-+	struct work_struct uic_workq;
-+	struct work_struct feh_workq;
-+
-+	/* HBA Errors */
-+	u32 errors;
-+};
-+
-+/**
-+ * ufshcd_hba_stop - Send controller to reset state
-+ * @hba: per adapter instance
-+ */
-+static inline void ufshcd_hba_stop(struct ufs_hba *hba)
-+{
-+	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
-+}
-+
-+#endif /* End of Header */
-diff --git a/drivers/scsi/ufs/ufshcd_common.h b/drivers/scsi/ufs/ufshcd_common.h
-new file mode 100644
-index 0000000..e027727
---- /dev/null
-+++ b/drivers/scsi/ufs/ufshcd_common.h
-@@ -0,0 +1,53 @@
-+/*
-+ * Universal Flash Storage Host controller driver
-+ *
-+ * This code is based on drivers/scsi/ufs/ufshcd_common.h
-+ * Copyright (C) 2011-2012 Samsung India Software Operations
-+ *
-+ * Santosh Yaraganavi <santosh.sy@samsung.com>
-+ * Vinayak Holikatti <h.vinayak@samsung.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * NO WARRANTY
-+ * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
-+ * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
-+ * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
-+ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
-+ * solely responsible for determining the appropriateness of using and
-+ * distributing the Program and assumes all risks associated with its
-+ * exercise of rights under this Agreement, including but not limited to
-+ * the risks and costs of program errors, damage to or loss of data,
-+ * programs or equipment, and unavailability or interruption of operations.
-+
-+ * DISCLAIMER OF LIABILITY
-+ * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
-+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
-+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-+ * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
-+ * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
-+
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-+ * USA.
-+ */
-+
-+#ifndef _UFSHCD_COMMON_H
-+#define _UFSHCD_COMMON_H
-+
-+extern int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
-+			int);
-+extern int ufshcd_remove(struct ufs_hba *);
-+
-+#endif /* END of Header */
 -- 
 1.7.9.5
