@@ -1,66 +1,40 @@
-From: "Mahesh Rajashekhara" <Mahesh_Rajashekhara@pmc-sierra.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: RE: [PATCH 1/1] aacraid: Series 7 Async. (performance) mode support
-Date: Fri, 13 Jul 2012 02:39:51 -0700
-Message-ID: <340C71CD25A7EB49BFA81AE8C83926671952C074@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-References: <1341993401-6205-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com> <1342167984.3039.5.camel@dabdike.int.hansenpartnership.com>
+Date: Fri, 13 Jul 2012 10:44:12 +0100
+Message-ID: <1342172652.3039.19.camel@dabdike.int.hansenpartnership.com>
+References: <1341993401-6205-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com>
+	 <1342167984.3039.5.camel@dabdike.int.hansenpartnership.com>
+	 <340C71CD25A7EB49BFA81AE8C83926671952C074@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:50652 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751552Ab2GMJjz (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56207 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754891Ab2GMJoR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jul 2012 05:39:55 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1342167984.3039.5.camel@dabdike.int.hansenpartnership.com>
+	Fri, 13 Jul 2012 05:44:17 -0400
+In-Reply-To: <340C71CD25A7EB49BFA81AE8C83926671952C074@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
+To: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>
 Cc: linux-scsi@vger.kernel.org, aacraid@pmc-sierra.com, Achim Leubner <Achim_Leubner@pmc-sierra.com>, Tony Ruiz <Tony_Ruiz@pmc-sierra.com>
 
-SGkgSmFtZXMsDQoNCldlIGRvd25sb2FkZWQgdGhlIHVwc3RyZWFtIGFhY3JhaWQgc291cmNlcyBm
-cm9tICJnaXQgY2xvbmUgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwv
-Z2l0L2plamIvc2NzaS5naXQiLiBMb29rcyBsaWtlIEVuZGlhbiBmaXggcGF0Y2hlcyBhcmUgbm90
-IGF2YWlsYWJsZS4gQ2FuIHlvdSBwbGVhc2Ugc2VuZCB1cyB0aGUgY3VycmVudCBwb2ludGVyIHRv
-IGRvd25sb2FkIHNvdXJjZXM/IFNvIHRoYXQsIHdlIHJlYnVpbGQgb3VyIFNlcmllcyA3IEFzeW5j
-IHBlcmZvcm1hbmNlIGRyaXZlciBwYXRjaCBvdmVyIHRoZW0uDQoNClRoYW5rcyAmIFJlZ2FyZHMs
-DQpNYWhlc2gNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEphbWVzIEJvdHRv
-bWxleSBbbWFpbHRvOmpib3R0b21sZXlAcGFyYWxsZWxzLmNvbV0gDQpTZW50OiBGcmlkYXksIEp1
-bHkgMTMsIDIwMTIgMTo1NiBQTQ0KVG86IE1haGVzaCBSYWphc2hla2hhcmENCkNjOiBsaW51eC1z
-Y3NpQHZnZXIua2VybmVsLm9yZzsgYWFjcmFpZEBwbWMtc2llcnJhLmNvbTsgQWNoaW0gTGV1Ym5l
-cjsgVG9ueSBSdWl6DQpTdWJqZWN0OiBSZTogW1BBVENIIDEvMV0gYWFjcmFpZDogU2VyaWVzIDcg
-QXN5bmMuIChwZXJmb3JtYW5jZSkgbW9kZSBzdXBwb3J0DQoNCk9uIFdlZCwgMjAxMi0wNy0xMSBh
-dCAxMzoyNiArMDUzMCwgTWFoZXNoIFJhamFzaGVraGFyYSB3cm90ZToNCj4gLSBTZXJpZXMgNyBB
-c3luYy4gKHBlcmZvcm1hbmNlKSBtb2RlIHN1cHBvcnQgYWRkZWQNCj4gLSBOZXcgc2NhdHRlci9n
-YXRoZXIgbGlzdCBmb3JtYXQgZm9yIFNlcmllcyA3DQo+IC0gRHJpdmVyIGNvbnZlcnRzIHMvZyBs
-aXN0IHRvIGEgZmlybXdhcmUgc3VpdGFibGUgbGlzdCBmb3IgYmVzdCBwZXJmb3JtYW5jZSBvbiBT
-ZXJpZXMgNywgdGhpcyBjYW4gYmUgZGlzYWJsZWQNCj4gICB3aXRoIGRyaXZlciBwYXJhbWV0ZXIg
-ImFhY19jb252ZXJ0X3NnbCIgZm9yIHRlc3RpbmcgcHVycG9zZXMNCj4gLSBOZXcgY29udGFpbmVy
-IHJlYWQvd3JpdGUgY29tbWFuZCBzdHJ1Y3R1cmUgZm9yIFNlcmllcyA3DQo+IC0gRmFzdCByZXNw
-b25zZSBzdXBwb3J0IGZvciB0aGUgU0NTSSBwYXNzLXRocm91Z2ggcGF0aCBhZGRlZA0KPiAtIEFz
-eW5jLiBzdGF0dXMgcmVzcG9uc2UgYnVmZmVyIGNoYW5nZXMNCj4gDQo+IFNpZ25lZC1vZmYtYnk6
-IE1haGVzaCBSYWphc2hla2hhcmEgPE1haGVzaF9SYWphc2hla2hhcmFAcG1jLXNpZXJyYS5jb20+
-DQoNClRoaXMgZG9lc24ndCBhcHBseToNCg0KcGF0Y2hpbmcgZmlsZSBkcml2ZXJzL3Njc2kvYWFj
-cmFpZC9hYWNoYmEuYw0KcGF0Y2hpbmcgZmlsZSBkcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlk
-LmgNCkh1bmsgIzggc3VjY2VlZGVkIGF0IDExMzUgKG9mZnNldCAxIGxpbmUpLg0KSHVuayAjOSBz
-dWNjZWVkZWQgYXQgMTE5NCAob2Zmc2V0IDEgbGluZSkuDQpIdW5rICMxMCBzdWNjZWVkZWQgYXQg
-MTMwMSAob2Zmc2V0IDEgbGluZSkuDQpIdW5rICMxMSBzdWNjZWVkZWQgYXQgMTM2MSAob2Zmc2V0
-IDEgbGluZSkuDQpIdW5rICMxMiBzdWNjZWVkZWQgYXQgMTM4MSAob2Zmc2V0IDEgbGluZSkuDQpw
-YXRjaGluZyBmaWxlIGRyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1jdHJsLmMNCnBhdGNoaW5nIGZp
-bGUgZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbWluaXQuYw0KSHVuayAjMyBGQUlMRUQgYXQgMTE3
-Lg0KMSBvdXQgb2YgNCBodW5rcyBGQUlMRUQgLS0gc2F2aW5nIHJlamVjdHMgdG8gZmlsZQ0KZHJp
-dmVycy9zY3NpL2FhY3JhaWQvY29tbWluaXQuYy5yZWoNCnBhdGNoaW5nIGZpbGUgZHJpdmVycy9z
-Y3NpL2FhY3JhaWQvY29tbXN1cC5jDQpIdW5rICM3IHN1Y2NlZWRlZCBhdCA3MTAgKG9mZnNldCAz
-IGxpbmVzKS4NCkh1bmsgIzggc3VjY2VlZGVkIGF0IDcyNCAob2Zmc2V0IDMgbGluZXMpLg0KSHVu
-ayAjOSBzdWNjZWVkZWQgYXQgNzg4IChvZmZzZXQgMyBsaW5lcykuDQpwYXRjaGluZyBmaWxlIGRy
-aXZlcnMvc2NzaS9hYWNyYWlkL2RwY3N1cC5jDQpwYXRjaGluZyBmaWxlIGRyaXZlcnMvc2NzaS9h
-YWNyYWlkL2xpbml0LmMNCkh1bmsgIzEgc3VjY2VlZGVkIGF0IDExNjYgKG9mZnNldCA5IGxpbmVz
-KS4NCnBhdGNoaW5nIGZpbGUgZHJpdmVycy9zY3NpL2FhY3JhaWQvc3JjLmMNCkh1bmsgIzYgRkFJ
-TEVEIGF0IDM5Ni4NCkh1bmsgIzcgc3VjY2VlZGVkIGF0IDc2NCAob2Zmc2V0IDExIGxpbmVzKS4N
-CjEgb3V0IG9mIDcgaHVua3MgRkFJTEVEIC0tIHNhdmluZyByZWplY3RzIHRvIGZpbGUNCmRyaXZl
-cnMvc2NzaS9hYWNyYWlkL3NyYy5jLnJlag0KDQpJIHRoaW5rIGl0J3MgYmVjYXVzZSBvZiB0aGUg
-ZW5kaWFuIGZpeCBwYXRjaGVzIC4uLiBidXQgeW91IGd1eXMgYWNrZWQNCnRoZW0sIHNvIEkgZXhw
-ZWN0IHlvdSB0byByZWJ1aWxkIHlvdXIgcGF0Y2hlcyBvdmVyIHRoZW0uDQoNClRoYW5rcywNCg0K
-SmFtZXMNCg0K
+On Fri, 2012-07-13 at 02:39 -0700, Mahesh Rajashekhara wrote:
+> Hi James,
+> 
+> We downloaded the upstream aacraid sources from "git clone
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git". Looks
+> like Endian fix patches are not available. Can you please send us the
+> current pointer to download sources? So that, we rebuild our Series 7
+> Async performance driver patch over them.
+
+They are in that repository on the misc branch:
+
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi.git;a=commit;h=e1d77a3a5d30f45ec3ef1be12a812171f1e64fa4
+
+et seq.
+
+James
+
+
