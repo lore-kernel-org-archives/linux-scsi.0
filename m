@@ -1,22 +1,53 @@
-From: INDIA LOAN COMPANY <india.loancompany@gmail.com>
-Subject: LOAN OFFER
-Date: Thu, 12 Jul 2012 23:41:33 -0700 (PDT)
-Message-ID: <20120713064229.3622B88C8FB9@ps16939.dreamhostps.com>
-Reply-To: india.loancompany@gmail.com
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 1/1] aacraid: Series 7 Async. (performance) mode support
+Date: Fri, 13 Jul 2012 08:26:24 +0000
+Message-ID: <1342167984.3039.5.camel@dabdike.int.hansenpartnership.com>
+References: <1341993401-6205-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ps16939.dreamhost.com ([69.163.206.146]:60540 "EHLO
-	ps16939.dreamhostps.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753990Ab2GMHKN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jul 2012 03:10:13 -0400
+Received: from mx2.parallels.com ([64.131.90.16]:43324 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755355Ab2GMI01 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jul 2012 04:26:27 -0400
+In-Reply-To: <1341993401-6205-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com>
+Content-Language: en-US
+Content-ID: <2DF5B3A2D7B3684A969F0AE23ED77C4C@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, "Achim_Leubner@pmc-sierra.com" <Achim_Leubner@pmc-sierra.com>, "Tony_Ruiz@pmc-sierra.com" <Tony_Ruiz@pmc-sierra.com>
 
-
-
-Contact Us For Loan Now
-
-
+T24gV2VkLCAyMDEyLTA3LTExIGF0IDEzOjI2ICswNTMwLCBNYWhlc2ggUmFqYXNoZWtoYXJhIHdy
+b3RlOg0KPiAtIFNlcmllcyA3IEFzeW5jLiAocGVyZm9ybWFuY2UpIG1vZGUgc3VwcG9ydCBhZGRl
+ZA0KPiAtIE5ldyBzY2F0dGVyL2dhdGhlciBsaXN0IGZvcm1hdCBmb3IgU2VyaWVzIDcNCj4gLSBE
+cml2ZXIgY29udmVydHMgcy9nIGxpc3QgdG8gYSBmaXJtd2FyZSBzdWl0YWJsZSBsaXN0IGZvciBi
+ZXN0IHBlcmZvcm1hbmNlIG9uIFNlcmllcyA3LCB0aGlzIGNhbiBiZSBkaXNhYmxlZA0KPiAgIHdp
+dGggZHJpdmVyIHBhcmFtZXRlciAiYWFjX2NvbnZlcnRfc2dsIiBmb3IgdGVzdGluZyBwdXJwb3Nl
+cw0KPiAtIE5ldyBjb250YWluZXIgcmVhZC93cml0ZSBjb21tYW5kIHN0cnVjdHVyZSBmb3IgU2Vy
+aWVzIDcNCj4gLSBGYXN0IHJlc3BvbnNlIHN1cHBvcnQgZm9yIHRoZSBTQ1NJIHBhc3MtdGhyb3Vn
+aCBwYXRoIGFkZGVkDQo+IC0gQXN5bmMuIHN0YXR1cyByZXNwb25zZSBidWZmZXIgY2hhbmdlcw0K
+PiANCj4gU2lnbmVkLW9mZi1ieTogTWFoZXNoIFJhamFzaGVraGFyYSA8TWFoZXNoX1JhamFzaGVr
+aGFyYUBwbWMtc2llcnJhLmNvbT4NCg0KVGhpcyBkb2Vzbid0IGFwcGx5Og0KDQpwYXRjaGluZyBm
+aWxlIGRyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jDQpwYXRjaGluZyBmaWxlIGRyaXZlcnMv
+c2NzaS9hYWNyYWlkL2FhY3JhaWQuaA0KSHVuayAjOCBzdWNjZWVkZWQgYXQgMTEzNSAob2Zmc2V0
+IDEgbGluZSkuDQpIdW5rICM5IHN1Y2NlZWRlZCBhdCAxMTk0IChvZmZzZXQgMSBsaW5lKS4NCkh1
+bmsgIzEwIHN1Y2NlZWRlZCBhdCAxMzAxIChvZmZzZXQgMSBsaW5lKS4NCkh1bmsgIzExIHN1Y2Nl
+ZWRlZCBhdCAxMzYxIChvZmZzZXQgMSBsaW5lKS4NCkh1bmsgIzEyIHN1Y2NlZWRlZCBhdCAxMzgx
+IChvZmZzZXQgMSBsaW5lKS4NCnBhdGNoaW5nIGZpbGUgZHJpdmVycy9zY3NpL2FhY3JhaWQvY29t
+bWN0cmwuYw0KcGF0Y2hpbmcgZmlsZSBkcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21taW5pdC5jDQpI
+dW5rICMzIEZBSUxFRCBhdCAxMTcuDQoxIG91dCBvZiA0IGh1bmtzIEZBSUxFRCAtLSBzYXZpbmcg
+cmVqZWN0cyB0byBmaWxlDQpkcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21taW5pdC5jLnJlag0KcGF0
+Y2hpbmcgZmlsZSBkcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMNCkh1bmsgIzcgc3VjY2Vl
+ZGVkIGF0IDcxMCAob2Zmc2V0IDMgbGluZXMpLg0KSHVuayAjOCBzdWNjZWVkZWQgYXQgNzI0IChv
+ZmZzZXQgMyBsaW5lcykuDQpIdW5rICM5IHN1Y2NlZWRlZCBhdCA3ODggKG9mZnNldCAzIGxpbmVz
+KS4NCnBhdGNoaW5nIGZpbGUgZHJpdmVycy9zY3NpL2FhY3JhaWQvZHBjc3VwLmMNCnBhdGNoaW5n
+IGZpbGUgZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYw0KSHVuayAjMSBzdWNjZWVkZWQgYXQg
+MTE2NiAob2Zmc2V0IDkgbGluZXMpLg0KcGF0Y2hpbmcgZmlsZSBkcml2ZXJzL3Njc2kvYWFjcmFp
+ZC9zcmMuYw0KSHVuayAjNiBGQUlMRUQgYXQgMzk2Lg0KSHVuayAjNyBzdWNjZWVkZWQgYXQgNzY0
+IChvZmZzZXQgMTEgbGluZXMpLg0KMSBvdXQgb2YgNyBodW5rcyBGQUlMRUQgLS0gc2F2aW5nIHJl
+amVjdHMgdG8gZmlsZQ0KZHJpdmVycy9zY3NpL2FhY3JhaWQvc3JjLmMucmVqDQoNCkkgdGhpbmsg
+aXQncyBiZWNhdXNlIG9mIHRoZSBlbmRpYW4gZml4IHBhdGNoZXMgLi4uIGJ1dCB5b3UgZ3V5cyBh
+Y2tlZA0KdGhlbSwgc28gSSBleHBlY3QgeW91IHRvIHJlYnVpbGQgeW91ciBwYXRjaGVzIG92ZXIg
+dGhlbS4NCg0KVGhhbmtzLA0KDQpKYW1lcw0KDQo=
