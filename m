@@ -1,57 +1,78 @@
-From: David Dillow <dillowda@ornl.gov>
-Subject: Re: [PATCH 17/18] srp_transport: Add transport layer recovery
- support
-Date: Mon, 16 Jul 2012 18:44:54 -0400
-Message-ID: <1342478694.25927.15.camel@frustration.ornl.gov>
-References: <3109536.qySrY1Ts3e@asus> <2536946.Diyz1JQnfo@asus>
-	 <500490A5.7020202@cs.wisc.edu>
-	 <1342477710.25927.10.camel@frustration.ornl.gov>
-	 <500497E3.1090109@cs.wisc.edu>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 1/7] qla2xxx: Get rid of redundant
+ qla_tgt_sess.tearing_down
+Date: Mon, 16 Jul 2012 15:52:20 -0700
+Message-ID: <1342479140.18004.294.camel@haakon2.linux-iscsi.org>
+References: <1342461882-5848-1-git-send-email-roland@kernel.org>
+	 <1342461882-5848-2-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta01.ornl.gov ([128.219.14.70]:21429 "EHLO mta01.ornl.gov"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752075Ab2GPWoz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jul 2012 18:44:55 -0400
-In-Reply-To: <500497E3.1090109@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1342461882-5848-2-git-send-email-roland@kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, Arun Easi <arun.easi@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Bart Van Assche <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>
 
-On Mon, 2012-07-16 at 18:38 -0400, Mike Christie wrote:
-> On 07/16/2012 04:28 PM, David Dillow wrote:
-> > On Mon, 2012-07-16 at 18:07 -0400, Mike Christie wrote:
-> >> For the ping code, does it use TUR because there is not a transport way
-> >> to test the path/port/transport/interconnect?
-> > 
-> > Yes, SRP does not have a way to test connectivity on a transport level
-> > ala iSCSI NOPs. I'm not at all inclined to add the ping functionality to
-> > the SRP initiator, as I see it as duplicative of the existing multipathd
-> > functionality in userspace, and it can kill the entire nexus even if
-> > only one LUN is having issues.
-> > 
+On Mon, 2012-07-16 at 11:04 -0700, Roland Dreier wrote:
+> From: Roland Dreier <roland@purestorage.com>
 > 
-> I am not in favor of a tur in the transport class too.
+> The only place that sets qla_tgt_sess.tearing_down calls
+> target_splice_sess_cmd_list() immediately afterwards, without dropping
+> the lock it holds.  That function sets se_session.sess_tearing_down,
+> so we can get rid of the qla_target-specific flag, and in the one
+> place that looks at the qla_tgt_sess.tearing_down flag just test
+> se_session.sess_tearing_down instead.
 > 
-> What about when multipath is not used or are you saying we should use it
-> for srp even when there is only one path (for iscsi we have told people
-> to do something like this if they want mpaths queue_if_no_path behavior).
 
-If they want to quickly detect and fail idle paths, then perhaps.
-Otherwise, the loss of the connection will only be noticed on the next
-command.
+Looks fine.  Applied to for-next.
 
-We can also get notifications from the fabric when a device leaves, so
-we can use that to start the dev_loss_tmo and prune the stale
-connections.
+Thanks Roland!
 
--- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
-
-
+> Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+> Cc: Arun Easi <arun.easi@qlogic.com>
+> Signed-off-by: Roland Dreier <roland@purestorage.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_target.c  |    2 +-
+>  drivers/scsi/qla2xxx/qla_target.h  |    1 -
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c |    1 -
+>  3 files changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+> index 77759c7..87b5a330 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.c
+> +++ b/drivers/scsi/qla2xxx/qla_target.c
+> @@ -2644,7 +2644,7 @@ static void qlt_do_work(struct work_struct *work)
+>  	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha,
+>  	    atio->u.isp24.fcp_hdr.s_id);
+>  	if (sess) {
+> -		if (unlikely(sess->tearing_down)) {
+> +		if (unlikely(sess->se_sess->sess_tearing_down)) {
+>  			sess = NULL;
+>  			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+>  			goto out_term;
+> diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+> index 9f9ef16..07aa265 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.h
+> +++ b/drivers/scsi/qla2xxx/qla_target.h
+> @@ -813,7 +813,6 @@ struct qla_tgt_sess {
+>  	unsigned int conf_compl_supported:1;
+>  	unsigned int deleted:1;
+>  	unsigned int local:1;
+> -	unsigned int tearing_down:1;
+>  
+>  	struct se_session *se_sess;
+>  	struct scsi_qla_host *vha;
+> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> index 6e64314..3cb2b97 100644
+> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> @@ -466,7 +466,6 @@ static int tcm_qla2xxx_shutdown_session(struct se_session *se_sess)
+>  	vha = sess->vha;
+>  
+>  	spin_lock_irqsave(&vha->hw->hardware_lock, flags);
+> -	sess->tearing_down = 1;
+>  	target_splice_sess_cmd_list(se_sess);
+>  	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+>  
