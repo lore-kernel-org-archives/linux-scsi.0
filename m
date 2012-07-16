@@ -1,46 +1,73 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: Re: [PATCH 5/7] target: Check sess_tearing_down in target_get_sess_cmd()
-Date: Mon, 16 Jul 2012 16:21:10 -0700
-Message-ID: <CAL1RGDVNouDHfvKt-WryhhxswC8a8sd+gP-eg3aVDkgB8wU_Bw@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 4/7] target: Allow for target_submit_cmd() returning
+ errors
+Date: Mon, 16 Jul 2012 16:37:53 -0700
+Message-ID: <1342481873.18004.332.camel@haakon2.linux-iscsi.org>
 References: <1342461882-5848-1-git-send-email-roland@kernel.org>
- <1342461882-5848-6-git-send-email-roland@kernel.org> <1342480139.18004.309.camel@haakon2.linux-iscsi.org>
+	 <1342461882-5848-5-git-send-email-roland@kernel.org>
+	 <1342479605.18004.302.camel@haakon2.linux-iscsi.org>
+	 <CAL1RGDVpak+0MGjDQhX_Jg9q_+6aWi6k=KRttoTr=GU6Xf_KxA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1342480139.18004.309.camel@haakon2.linux-iscsi.org>
+In-Reply-To: <CAL1RGDVpak+0MGjDQhX_Jg9q_+6aWi6k=KRttoTr=GU6Xf_KxA@mail.gmail.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Andy Grover <agrover@redhat.com>
+To: Roland Dreier <roland@kernel.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Chris Boot <bootc@bootc.net>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Mark Rustad <mark.d.rustad@intel.com>, "Signed-off-by: Sebastian Andrzej Siewior" <bigeasy@linutronix.de>, Felipe Balbi <balbi@ti.com>, Andy Grover <agrover@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jul 16, 2012 at 4:08 PM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
-> However, I'm still leaning towards a way to do this for tcm_qla2xxx that
-> does not require all fabric callers to handle target_submit_cmd()
-> exceptions directly..
->
-> How about a special target_get_sess_cmd() failure callback to free
-> se_cmd when target_get_sess_cmd() fails, but not actually send a SCSI
-> response back out to the fabric here during session shutdown..?
+On Mon, 2012-07-16 at 16:05 -0700, Roland Dreier wrote:
+> On Mon, Jul 16, 2012 at 4:00 PM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> > Mmmm.  The original target_submit_cmd() code had been propagating up a
+> > return value, but then we decided (via Agrover's patch) that it made
+> > more sense for target_submit_cmd() to always handle exceptions via
+> > normal TFO callbacks, and not have the fabric worry about the return
+> > here..
+> >
+> > Also, I'm not sure if the error paths that this patch now accesses after
+> > target_submit_cmd() failure are going to deal with different types of
+> > target_submit_cmd() failures correctly.
+> >
+> > So NACK for the moment, as I don't really see why this is necessary in
+> > the first place..?
+> 
+> Read on in the series to see why this is needed; in short, for qla2xxx
+> at least, we need a race-free way to check for sess_tearing_down
+> atomically with actually adding the command to sess_cmd_list.
+> 
 
-I guess that's OK, although I'm not sure it ends up being cleaner.  If
-you look at my 4/7 patch, you see that all target_submit_cmd callers
-have an error path where they handle terminating commands that
-fail processing just before calling submit_cmd anyway.
+<nod>
 
-eg for qla2xxx we'll need a callback to call qlt_send_term_exchange()
-in addition to the error path call that qlt_do_work() has anyway.
-Similarly tcm_fc ends up with a second call to ft_send_resp_code_and_free().
-etc.
+> I'm OK with returning failure via callback, but
+> 
+>  a) I'm not sure we can use the normal TFO callbacks in case
+>     we can't add the command to sess_cmd_list (seems like it
+>     opens the door to other use-after-frees in qla2xxx at least)
 
-But I don't really have a strong feeling about this, if the view is that
-submit_cmd() should never return failure directly then I'm OK with that.
+The TFO callback to release qla_tgt_cmd memory would be the same here,
+so it would be a internal release for target_get_sess_cmd() failures
+that is careful with items have not been setup in the passed
+fabric_tgt_cmd->se_cmd due to the session shutdown exception.
 
-> That said, I'm going to commit this patch (slightly changed to keep
-> target_submit_cmd() returning void for now) but I'd still like a better
-> way of handling this particular failure without propagating up the
-> return value.
+As commands are received during session shutdown, dispatching their
+handling to tcm_qla2xxx_free_wq to do extra HW descriptor cleanup would
+be nice if we can get away without actually sending a proper SCSI
+response during session shutdown..  
 
-OK, I'll take a look at how you handle this...
+>  b) Maybe it's OK if we say that failure to add the command to
+>     the sess_cmd_list is the only time submit cmd fails?
+> 
 
- - R.
+I'd still like to avoid (re)propagating up a return value of
+target_submit_cmd() if at all possible..
+
+> The qla2xxx race/use-after-free is definitely real, we hit it in testing
+> here with active IO across ACL changes.
+> 
+>  - R.
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
