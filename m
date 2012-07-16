@@ -1,47 +1,53 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] sd: do not set changed flag on all unit attention conditions
-Date: Mon, 16 Jul 2012 19:20:22 +0200
-Message-ID: <50044D56.6000400@redhat.com>
-References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com> <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH 0/7] series to fix qla2xxx use-after-free
+Date: Mon, 16 Jul 2012 11:04:35 -0700
+Message-ID: <1342461882-5848-1-git-send-email-roland@kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:47717 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808Ab2GPRU1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2012 13:20:27 -0400
-In-Reply-To: <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>
+Received: from na3sys010aog102.obsmtp.com ([74.125.245.72]:36328 "HELO
+	na3sys010aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753112Ab2GPSEs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2012 14:04:48 -0400
+Received: by pbbrp2 with SMTP id rp2so10492739pbb.28
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Jul 2012 11:04:47 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Il 16/07/2012 18:18, James Bottomley ha scritto:
->> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> > index b583277..6d8ca08 100644
->> > --- a/drivers/scsi/scsi_lib.c
->> > +++ b/drivers/scsi/scsi_lib.c
->> > @@ -843,8 +843,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->> >  	} else if (sense_valid && !sense_deferred) {
->> >  		switch (sshdr.sense_key) {
->> >  		case UNIT_ATTENTION:
->> > -			if (cmd->device->removable) {
->> > -				/* Detected disc change.  Set a bit
->> > +			if (cmd->device->removable &&
->> > +			    (sshdr.asc == 0x3a ||
->> > +			     (sshdr.asc == 0x28 && sshdr.ascq == 0x00))) {
->> > +				/* "No medium" or "Medium may have changed."
->> > +				 * This means a disc change.  Set a bit
-> This type of change would likely cause a huge cascade of errors in real
-> removable media devices.  Under the MMC standards, which a lot of the
-> older removable discs seem to follow, UNIT ATTENTION indicates either
-> medium change or device reset (which we check for and eat lower down);
-> we can't rely on them giving proper SBC-2 sense codes.  If you want to
-> pretend to be removable media, you have to conform to its standards.
+From: Roland Dreier <roland@purestorage.com>
 
-Would you accept a patch doing the opposite, i.e. passing some sense
-codes such as PARAMETERS CHANGED and TARGET OPERATING CONDITIONS HAVE
-CHANGED?
+Hi Nic,
 
-Paolo
+Here's a series that's fundamentally about fixing a use-after-free in
+qla_target code.  It ends up being seven patches because I wanted to
+make each step easy to review, and several of these are just cleanups
+that stand on their own.
+
+We have a few more qla2xxx-related fixes that I need to clean up and
+merge with the latest.  I'll send them soon.
+
+Roland Dreier (7):
+  qla2xxx: Get rid of redundant qla_tgt_sess.tearing_down
+  target: Un-export target_get_sess_cmd()
+  sbp-target: Consolidate duplicated error path code in
+    sbp_handle_command()
+  target: Allow for target_submit_cmd() returning errors
+  target: Check sess_tearing_down in target_get_sess_cmd()
+  qla2xxx: Remove racy, now-redundant check of sess_tearing_down
+  target: Remove se_session.sess_wait_list
+
+ drivers/scsi/qla2xxx/qla_target.c      |   16 ++--------
+ drivers/scsi/qla2xxx/qla_target.h      |    1 -
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c     |   10 +++---
+ drivers/target/sbp/sbp_target.c        |   36 ++++++++++-----------
+ drivers/target/target_core_transport.c |   55 ++++++++++++++++++++------------
+ drivers/target/tcm_fc/tfc_cmd.c        |    8 +++--
+ drivers/usb/gadget/tcm_usb_gadget.c    |   20 +++++-------
+ include/target/target_core_base.h      |    1 -
+ include/target/target_core_fabric.h    |    5 ++-
+ 9 files changed, 73 insertions(+), 79 deletions(-)
+
+-- 
+1.7.10.4
+
