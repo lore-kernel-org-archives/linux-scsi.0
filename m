@@ -1,35 +1,36 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH V2 0/4] [SCSI] ufs: Adds glue drivers to ufshcd
-Date: Mon, 16 Jul 2012 15:00:17 +0100
-Message-ID: <1342447217.3176.22.camel@dabdike.int.hansenpartnership.com>
-References: <1342188465-20239-1-git-send-email-vinholikatti@gmail.com>
-	 <201207131545.28877.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-samsung-soc-owner@vger.kernel.org>
-In-Reply-To: <201207131545.28877.arnd@arndb.de>
-Sender: linux-samsung-soc-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH 0/2] virtio-scsi event changes for 3.6
+Date: Mon, 16 Jul 2012 18:05:49 +0200
+Message-ID: <1342454751-8950-1-git-send-email-pbonzini@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:45136 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752424Ab2GPQGG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2012 12:06:06 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com
 
-On Fri, 2012-07-13 at 15:45 +0000, Arnd Bergmann wrote:
-> On Friday 13 July 2012, Vinayak Holikatti wrote:
-> > This patch set adds following features
-> >  - Seprates PCI specific code from ufshcd.c to make it as core
-> >  - Adds PCI glue driver ufshcd-pci.c
-> >  - Adds Platform glue driver ufshcd-pltfrm.c
-> >  - Update correct transfer size in Command UPIU
-> 
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
+Hi James,
 
-I need a maintainer ack for this to go upstream.
+here are two more small patches for virtio-scsi.  The first fixes a
+problem with the recently introduced hotplug/hot-unplug support
+(happens with LUNs whose number is greater than 255).  The second
+introduces support for online resizing of disks.
 
-Also, looking at this, I think this patch series isn't bisectable:
-Patch 1 removes PCI support and patch 2 adds it back in a different
-form.  However, any PCI based UFS system would stop working if the
-bisect landed at patch 1.  I think you can fix this just by combining
-patches 1 and 2.
+The host here will also send the sense code via unit attention.
+This will be discarded by the high-level driver for non-removable
+units.  I sent a separate patch to deal with it for removable
+units.
 
-James
+Paolo
+
+Paolo Bonzini (2):
+  virtio-scsi: fix parsing of hotplug/hot-unplug LUN number
+  virtio-scsi: support online resizing of disks
+
+ drivers/scsi/virtio_scsi.c  |   39 ++++++++-
+ include/linux/virtio_scsi.h |    2 +
+ 2 files changed, 38 insertions(+), 2 deletions(-)
+
