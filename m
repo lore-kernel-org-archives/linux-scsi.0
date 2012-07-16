@@ -1,52 +1,52 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH V2 0/4] [SCSI] ufs: Adds glue drivers to ufshcd
-Date: Mon, 16 Jul 2012 16:22:23 +0000
-Message-ID: <201207161622.24063.arnd@arndb.de>
-References: <1342188465-20239-1-git-send-email-vinholikatti@gmail.com> <201207131545.28877.arnd@arndb.de> <1342447217.3176.22.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-samsung-soc-owner@vger.kernel.org>
-In-Reply-To: <1342447217.3176.22.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-samsung-soc-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 3/3] ipr: Driver version 2.5.4
+Date: Mon, 16 Jul 2012 15:48:11 -0500
+Message-ID: <201207162048.q6GKmBb4018234@d03av01.boulder.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:46836 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753284Ab2GPUsX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2012 16:48:23 -0400
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Mon, 16 Jul 2012 14:48:23 -0600
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com [9.17.195.226])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 3B4E519D804E
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Jul 2012 20:48:18 +0000 (WET)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6GKmDQE215846
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Jul 2012 14:48:14 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6GKmD1X018285
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Jul 2012 14:48:13 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
-On Monday 16 July 2012, James Bottomley wrote:
-> On Fri, 2012-07-13 at 15:45 +0000, Arnd Bergmann wrote:
-> > On Friday 13 July 2012, Vinayak Holikatti wrote:
-> > > This patch set adds following features
-> > >  - Seprates PCI specific code from ufshcd.c to make it as core
-> > >  - Adds PCI glue driver ufshcd-pci.c
-> > >  - Adds Platform glue driver ufshcd-pltfrm.c
-> > >  - Update correct transfer size in Command UPIU
-> > 
-> > Acked-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> I need a maintainer ack for this to go upstream.
-> 
-> Also, looking at this, I think this patch series isn't bisectable:
-> Patch 1 removes PCI support and patch 2 adds it back in a different
-> form.  However, any PCI based UFS system would stop working if the
-> bisect landed at patch 1.  I think you can fix this just by combining
-> patches 1 and 2.
 
-I suggested to split the patch in two in a private review that we
-did on the linaro mailing list. I gave my Ack because the split
-was done, but I failed to notice that it was done differently
-from what I suggested in 
+Bump driver version.
 
-On Monday 02 July 2012, Arnd Bergmann wrote:
-> I would recommend that you split this patch into two separate
-> changesets, where you do all the changes to existing code in the
-> first patch, and only move but don't change code in the second one
-> that creates the new file.
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-I agree that breaking bisectibility by ripping out the PCI code
-first is not good. The version 2 is not actually easier to review
-at all than the first version, it just splits the changes by
-file, which is pointless.
+ drivers/scsi/ipr.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-	Arnd
+diff -puN drivers/scsi/ipr.h~ipr_version_2_5_4 drivers/scsi/ipr.h
+--- linux-2.6/drivers/scsi/ipr.h~ipr_version_2_5_4	2012-07-11 16:40:34.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.h	2012-07-11 16:40:34.000000000 -0500
+@@ -38,8 +38,8 @@
+ /*
+  * Literals
+  */
+-#define IPR_DRIVER_VERSION "2.5.3"
+-#define IPR_DRIVER_DATE "(March 10, 2012)"
++#define IPR_DRIVER_VERSION "2.5.4"
++#define IPR_DRIVER_DATE "(July 11, 2012)"
+ 
+ /*
+  * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstanding
+_
+
