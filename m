@@ -1,202 +1,132 @@
 From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH 4/7] target: Allow for target_submit_cmd() returning errors
-Date: Mon, 16 Jul 2012 11:04:39 -0700
-Message-ID: <1342461882-5848-5-git-send-email-roland@kernel.org>
+Subject: [PATCH 7/7] target: Remove se_session.sess_wait_list
+Date: Mon, 16 Jul 2012 11:04:42 -0700
+Message-ID: <1342461882-5848-8-git-send-email-roland@kernel.org>
 References: <1342461882-5848-1-git-send-email-roland@kernel.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1342461882-5848-1-git-send-email-roland@kernel.org>
 Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Chris Boot <bootc@bootc.net>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Mark Rustad <mark.d.rustad@intel.com>, "Signed-off-by: Sebastian Andrzej Siewior" <bigeasy@linutronix.de>, Felipe Balbi <balbi@ti.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Roland Dreier <roland@purestorage.com>
 
-We want it to be possible for target_submit_cmd() to return errors up
-to its fabric module callers.  For now just update the prototype to
-return an int, and update all callers to handle non-zero return values
-as an error.
+Since we set se_session.sess_tearing_down and stop new commands from
+being added to se_session.sess_cmd_list before we wait for commands to
+finish when freeing a session, there's no need for a separate
+sess_wait_list -- if we let new commands be added to sess_cmd_list
+after setting sess_tearing_down, that would be a bug that breaks the
+logic of waiting in-flight commands.
 
-Cc: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: Arun Easi <arun.easi@qlogic.com>
-Cc: Chris Boot <bootc@bootc.net>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Mark Rustad <mark.d.rustad@intel.com>
-Cc: Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Felipe Balbi <balbi@ti.com>
+Also rename target_splice_sess_cmd_list() to
+target_sess_cmd_list_set_waiting(), since we are no longer splicing
+onto a separate list.
+
 Signed-off-by: Roland Dreier <roland@purestorage.com>
 ---
- drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    7 +++----
- drivers/target/sbp/sbp_target.c        |    8 +++++---
- drivers/target/target_core_transport.c |    9 +++++----
- drivers/target/tcm_fc/tfc_cmd.c        |    8 +++++---
- drivers/usb/gadget/tcm_usb_gadget.c    |   20 ++++++++------------
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    2 +-
+ drivers/target/target_core_transport.c |   22 ++++++++++------------
+ include/target/target_core_base.h      |    1 -
  include/target/target_core_fabric.h    |    2 +-
- 6 files changed, 27 insertions(+), 27 deletions(-)
+ 4 files changed, 12 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 3cb2b97..7db7ca7 100644
+index 7db7ca7..72f3557 100644
 --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
 +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -599,10 +599,9 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
- 		return -EINVAL;
- 	}
+@@ -466,7 +466,7 @@ static int tcm_qla2xxx_shutdown_session(struct se_session *se_sess)
+ 	vha = sess->vha;
  
--	target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
--				cmd->unpacked_lun, data_length, fcp_task_attr,
--				data_dir, flags);
--	return 0;
-+	return target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
-+				 cmd->unpacked_lun, data_length, fcp_task_attr,
-+				 data_dir, flags);
- }
+ 	spin_lock_irqsave(&vha->hw->hardware_lock, flags);
+-	target_splice_sess_cmd_list(se_sess);
++	target_sess_cmd_list_set_waiting(se_sess);
+ 	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
  
- static void tcm_qla2xxx_do_rsp(struct work_struct *work)
-diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
-index 2425ca4..fb75d05 100644
---- a/drivers/target/sbp/sbp_target.c
-+++ b/drivers/target/sbp/sbp_target.c
-@@ -1235,9 +1235,11 @@ static void sbp_handle_command(struct sbp_target_request *req)
- 	pr_debug("sbp_handle_command ORB:0x%llx unpacked_lun:%d data_len:%d data_dir:%d\n",
- 			req->orb_pointer, unpacked_lun, data_length, data_dir);
- 
--	target_submit_cmd(&req->se_cmd, sess->se_sess, req->cmd_buf,
--			req->sense_buf, unpacked_lun, data_length,
--			MSG_SIMPLE_TAG, data_dir, 0);
-+	if (target_submit_cmd(&req->se_cmd, sess->se_sess, req->cmd_buf,
-+			      req->sense_buf, unpacked_lun, data_length,
-+			      MSG_SIMPLE_TAG, data_dir, 0))
-+		goto err;
-+
- 	return;
- 
- err:
+ 	return 1;
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 82e40e1..34ca821 100644
+index 23e6e2d..7b3359e 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -1544,7 +1544,7 @@ EXPORT_SYMBOL(transport_handle_cdb_direct);
-  * This may only be called from process context, and also currently
-  * assumes internal allocation of fabric payload buffer by target-core.
-  **/
--void target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
-+int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
- 		unsigned char *cdb, unsigned char *sense, u32 unpacked_lun,
- 		u32 data_length, int task_attr, int data_dir, int flags)
+@@ -244,7 +244,6 @@ struct se_session *transport_init_session(void)
+ 	INIT_LIST_HEAD(&se_sess->sess_list);
+ 	INIT_LIST_HEAD(&se_sess->sess_acl_list);
+ 	INIT_LIST_HEAD(&se_sess->sess_cmd_list);
+-	INIT_LIST_HEAD(&se_sess->sess_wait_list);
+ 	spin_lock_init(&se_sess->sess_cmd_lock);
+ 	kref_init(&se_sess->sess_kref);
+ 
+@@ -3719,28 +3718,27 @@ int target_put_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd)
+ }
+ EXPORT_SYMBOL(target_put_sess_cmd);
+ 
+-/* target_splice_sess_cmd_list - Split active cmds into sess_wait_list
+- * @se_sess:	session to split
++/* target_sess_cmd_list_set_waiting - Flag all commands in
++ *         sess_cmd_list to complete cmd_wait_comp.  Set
++ *         sess_tearing_down so no more commands are queued.
++ * @se_sess:	session to flag
+  */
+-void target_splice_sess_cmd_list(struct se_session *se_sess)
++void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
  {
-@@ -1583,7 +1583,7 @@ void target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
- 		transport_send_check_condition_and_sense(se_cmd,
- 				se_cmd->scsi_sense_reason, 0);
- 		target_put_sess_cmd(se_sess, se_cmd);
--		return;
-+		return 0;
- 	}
- 	/*
- 	 * Sanitize CDBs via transport_generic_cmd_sequencer() and
-@@ -1592,7 +1592,7 @@ void target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
- 	rc = target_setup_cmd_from_cdb(se_cmd, cdb);
- 	if (rc != 0) {
- 		transport_generic_request_failure(se_cmd);
--		return;
-+		return 0;
- 	}
+ 	struct se_cmd *se_cmd;
+ 	unsigned long flags;
  
- 	/*
-@@ -1608,7 +1608,8 @@ void target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
- 	 * when fabric has filled the incoming buffer.
- 	 */
- 	transport_handle_cdb_direct(se_cmd);
--	return;
-+
-+	return 0;
- }
- EXPORT_SYMBOL(target_submit_cmd);
- 
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index f03fb97..c7c90aa 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -541,9 +541,11 @@ static void ft_send_work(struct work_struct *work)
- 	 * Use a single se_cmd->cmd_kref as we expect to release se_cmd
- 	 * directly from ft_check_stop_free callback in response path.
- 	 */
--	target_submit_cmd(&cmd->se_cmd, cmd->sess->se_sess, fcp->fc_cdb,
--			&cmd->ft_sense_buffer[0], scsilun_to_int(&fcp->fc_lun),
--			ntohl(fcp->fc_dl), task_attr, data_dir, 0);
-+	if (target_submit_cmd(&cmd->se_cmd, cmd->sess->se_sess, fcp->fc_cdb,
-+			      &cmd->ft_sense_buffer[0], scsilun_to_int(&fcp->fc_lun),
-+			      ntohl(fcp->fc_dl), task_attr, data_dir, 0))
-+		goto err;
-+
- 	pr_debug("r_ctl %x alloc target_submit_cmd\n", fh->fh_r_ctl);
- 	return;
- 
-diff --git a/drivers/usb/gadget/tcm_usb_gadget.c b/drivers/usb/gadget/tcm_usb_gadget.c
-index c46439c..53aafd2 100644
---- a/drivers/usb/gadget/tcm_usb_gadget.c
-+++ b/drivers/usb/gadget/tcm_usb_gadget.c
-@@ -1060,7 +1060,10 @@ static void usbg_cmd_work(struct work_struct *work)
- 	tpg = cmd->fu->tpg;
- 	tv_nexus = tpg->tpg_nexus;
- 	dir = get_cmd_dir(cmd->cmd_buf);
--	if (dir < 0) {
-+	if (dir < 0 ||
-+	    target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
-+			      cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
-+			      0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE)) {
- 		transport_init_se_cmd(se_cmd,
- 				tv_nexus->tvn_se_sess->se_tpg->se_tpg_tfo,
- 				tv_nexus->tvn_se_sess, cmd->data_len, DMA_NONE,
-@@ -1069,12 +1072,7 @@ static void usbg_cmd_work(struct work_struct *work)
- 		transport_send_check_condition_and_sense(se_cmd,
- 				TCM_UNSUPPORTED_SCSI_OPCODE, 1);
- 		usbg_cleanup_cmd(cmd);
--		return;
- 	}
+-	WARN_ON(!list_empty(&se_sess->sess_wait_list));
+-	INIT_LIST_HEAD(&se_sess->sess_wait_list);
 -
--	target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
--			cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
--			0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE);
- }
+ 	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
+-	se_sess->sess_tearing_down = 1;
  
- static int usbg_submit_command(struct f_uas *fu,
-@@ -1172,7 +1170,10 @@ static void bot_cmd_work(struct work_struct *work)
- 	tpg = cmd->fu->tpg;
- 	tv_nexus = tpg->tpg_nexus;
- 	dir = get_cmd_dir(cmd->cmd_buf);
--	if (dir < 0) {
-+	if (dir < 0 ||
-+	    target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
-+			      cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
-+			      cmd->data_len, cmd->prio_attr, dir, 0)) {
- 		transport_init_se_cmd(se_cmd,
- 				tv_nexus->tvn_se_sess->se_tpg->se_tpg_tfo,
- 				tv_nexus->tvn_se_sess, cmd->data_len, DMA_NONE,
-@@ -1181,12 +1182,7 @@ static void bot_cmd_work(struct work_struct *work)
- 		transport_send_check_condition_and_sense(se_cmd,
- 				TCM_UNSUPPORTED_SCSI_OPCODE, 1);
- 		usbg_cleanup_cmd(cmd);
--		return;
- 	}
--
--	target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
--			cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
--			cmd->data_len, cmd->prio_attr, dir, 0);
- }
+-	list_splice_init(&se_sess->sess_cmd_list, &se_sess->sess_wait_list);
++	WARN_ON(se_sess->sess_tearing_down);
++	se_sess->sess_tearing_down = 1;
  
- static int bot_submit_command(struct f_uas *fu,
+-	list_for_each_entry(se_cmd, &se_sess->sess_wait_list, se_cmd_list)
++	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list)
+ 		se_cmd->cmd_wait_set = 1;
+ 
+ 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+ }
+-EXPORT_SYMBOL(target_splice_sess_cmd_list);
++EXPORT_SYMBOL(target_sess_cmd_list_set_waiting);
+ 
+ /* target_wait_for_sess_cmds - Wait for outstanding descriptors
+  * @se_sess:    session to wait for active I/O
+@@ -3754,7 +3752,7 @@ void target_wait_for_sess_cmds(
+ 	bool rc = false;
+ 
+ 	list_for_each_entry_safe(se_cmd, tmp_cmd,
+-				&se_sess->sess_wait_list, se_cmd_list) {
++				&se_sess->sess_cmd_list, se_cmd_list) {
+ 		list_del(&se_cmd->se_cmd_list);
+ 
+ 		pr_debug("Waiting for se_cmd: %p t_state: %d, fabric state:"
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index dc35d86..5d8907e 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -633,7 +633,6 @@ struct se_session {
+ 	struct list_head	sess_list;
+ 	struct list_head	sess_acl_list;
+ 	struct list_head	sess_cmd_list;
+-	struct list_head	sess_wait_list;
+ 	spinlock_t		sess_cmd_lock;
+ 	struct kref		sess_kref;
+ };
 diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index 1e68882..4f8e515 100644
+index 4f8e515..86d8a4a 100644
 --- a/include/target/target_core_fabric.h
 +++ b/include/target/target_core_fabric.h
-@@ -108,7 +108,7 @@ void	transport_init_se_cmd(struct se_cmd *, struct target_core_fabric_ops *,
- 		struct se_session *, u32, int, int, unsigned char *);
- int	transport_lookup_cmd_lun(struct se_cmd *, u32);
- int	target_setup_cmd_from_cdb(struct se_cmd *, unsigned char *);
--void	target_submit_cmd(struct se_cmd *, struct se_session *, unsigned char *,
-+int	target_submit_cmd(struct se_cmd *, struct se_session *, unsigned char *,
- 		unsigned char *, u32, u32, int, int, int);
- int	target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
- 		unsigned char *sense, u32 unpacked_lun,
+@@ -130,7 +130,7 @@ int	transport_check_aborted_status(struct se_cmd *, int);
+ int	transport_send_check_condition_and_sense(struct se_cmd *, u8, int);
+ 
+ int	target_put_sess_cmd(struct se_session *, struct se_cmd *);
+-void	target_splice_sess_cmd_list(struct se_session *);
++void	target_sess_cmd_list_set_waiting(struct se_session *);
+ void	target_wait_for_sess_cmds(struct se_session *, int);
+ 
+ int	core_alua_check_nonop_delay(struct se_cmd *);
 -- 
 1.7.10.4
