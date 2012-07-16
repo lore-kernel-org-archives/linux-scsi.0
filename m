@@ -1,139 +1,71 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 5/7] target: Check sess_tearing_down in
- target_get_sess_cmd()
-Date: Mon, 16 Jul 2012 16:08:59 -0700
-Message-ID: <1342480139.18004.309.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 6/7] qla2xxx: Remove racy, now-redundant check of
+ sess_tearing_down
+Date: Mon, 16 Jul 2012 16:10:32 -0700
+Message-ID: <1342480232.18004.310.camel@haakon2.linux-iscsi.org>
 References: <1342461882-5848-1-git-send-email-roland@kernel.org>
-	 <1342461882-5848-6-git-send-email-roland@kernel.org>
+	 <1342461882-5848-7-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1342461882-5848-6-git-send-email-roland@kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Andy Grover <agrover@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51435 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042Ab2GPXKi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2012 19:10:38 -0400
+In-Reply-To: <1342461882-5848-7-git-send-email-roland@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Christoph Hellwig <hch@lst.de>
 
 On Mon, 2012-07-16 at 11:04 -0700, Roland Dreier wrote:
 > From: Roland Dreier <roland@purestorage.com>
 > 
-> Target core code assumes that target_splice_sess_cmd_list() has set
-> sess_tearing_down and moved the list of pending commands to
-> sess_wait_list, no more commands will be added to the session; if any
-> are added, nothing keeps the se_session from being freed while the
-> command is still in flight, which e.g. leads to use-after-free of
-> se_cmd->se_sess in target_release_cmd_kref().
+> Now that target_submit_cmd() / target_get_sess_cmd() check
+> sess_tearing_down before adding commands to the list, we no longer
+> need the check in qlt_do_work().  In fact this check is racy anyway
+> (and that race is what inspired the change to add the check of
+> sess_tearing_down to the target core).
 > 
-> To enforce this invariant, put a check of sess_tearing_down inside of
-> sess_cmd_lock in target_get_sess_cmd(); any checks before this are
-> racy and can lead to the use-after-free described above.  For example,
-> the qla_target check in qlt_do_work() checks sess_tearing_down from
-> work thread context but then drops all locks before calling
-> target_submit_cmd() (as it must, since that is a sleeping function).
-> 
-> However, since no locks are held, anything can happen with respect to
-> the session it has looked up -- although it does correctly get
-> sess_kref within its lock, so the memory won't be freed while
-> target_submit_cmd() is actually running, nothing stops eg an ACL from
-> being dropped and calling ->shutdown_session() (which calls into
-> target_splice_sess_cmd_list()) before we get to target_get_sess_cmd().
-> Once this happens, the se_session memory can be freed as soon as
-> target_submit_cmd() returns and qlt_do_work() drops its reference,
-> even though we've just added a command to sess_cmd_list.
-> 
-> To prevent this use-after-free, check sess_tearing_down inside of
-> sess_cmd_lock right before target_get_sess_cmd() adds a command to
-> sess_cmd_list; this is synchronized with target_splice_sess_cmd_list()
-> so that every command is either waited for or not added to the queue.
-> 
+> Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+> Cc: Arun Easi <arun.easi@qlogic.com>
 > Signed-off-by: Roland Dreier <roland@purestorage.com>
 > ---
->  drivers/target/target_core_transport.c |   24 +++++++++++++++++++-----
->  1 file changed, 19 insertions(+), 5 deletions(-)
+>  drivers/scsi/qla2xxx/qla_target.c |   16 +++-------------
+>  1 file changed, 3 insertions(+), 13 deletions(-)
 > 
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 34ca821..23e6e2d 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -73,7 +73,7 @@ static void transport_complete_task_attr(struct se_cmd *cmd);
->  static void transport_handle_queue_full(struct se_cmd *cmd,
->  		struct se_device *dev);
->  static int transport_generic_get_mem(struct se_cmd *cmd);
-> -static void target_get_sess_cmd(struct se_session *, struct se_cmd *, bool);
-> +static int target_get_sess_cmd(struct se_session *, struct se_cmd *, bool);
->  static void transport_put_cmd(struct se_cmd *cmd);
->  static void transport_remove_cmd_from_queue(struct se_cmd *cmd);
->  static int transport_set_sense_codes(struct se_cmd *cmd, u8 asc, u8 ascq);
-> @@ -1570,7 +1570,9 @@ int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
->  	 * for fabrics using TARGET_SCF_ACK_KREF that expect a second
->  	 * kref_put() to happen during fabric packet acknowledgement.
->  	 */
-> -	target_get_sess_cmd(se_sess, se_cmd, (flags & TARGET_SCF_ACK_KREF));
-> +	rc = target_get_sess_cmd(se_sess, se_cmd, (flags & TARGET_SCF_ACK_KREF));
-> +	if (rc)
-> +		return rc;
 
-OK, I see where you where going with the target_submit_cmd() failure
-here now..
+Glad to see this one finally go.  ;)
 
-However, I'm still leaning towards a way to do this for tcm_qla2xxx that
-does not require all fabric callers to handle target_submit_cmd()
-exceptions directly..
+Applied to for-next
 
-How about a special target_get_sess_cmd() failure callback to free
-se_cmd when target_get_sess_cmd() fails, but not actually send a SCSI
-response back out to the fabric here during session shutdown..?
+> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+> index 87b5a330..5b30132 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.c
+> +++ b/drivers/scsi/qla2xxx/qla_target.c
+> @@ -2643,19 +2643,9 @@ static void qlt_do_work(struct work_struct *work)
+>  	spin_lock_irqsave(&ha->hardware_lock, flags);
+>  	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha,
+>  	    atio->u.isp24.fcp_hdr.s_id);
+> -	if (sess) {
+> -		if (unlikely(sess->se_sess->sess_tearing_down)) {
+> -			sess = NULL;
+> -			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+> -			goto out_term;
+> -		} else {
+> -			/*
+> -			 * Do the extra kref_get() before dropping
+> -			 * qla_hw_data->hardware_lock.
+> -			 */
+> -			kref_get(&sess->se_sess->sess_kref);
+> -		}
+> -	}
+> +	/* Do kref_get() before dropping qla_hw_data->hardware_lock. */
+> +	if (sess)
+> +		kref_get(&sess->se_sess->sess_kref);
+>  	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+>  
+>  	if (unlikely(!sess)) {
 
-That said, I'm going to commit this patch (slightly changed to keep
-target_submit_cmd() returning void for now) but I'd still like a better
-way of handling this particular failure without propagating up the
-return value.
 
->  	/*
->  	 * Signal bidirectional data payloads to target-core
->  	 */
-> @@ -1664,7 +1666,11 @@ int target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
->  		se_cmd->se_tmr_req->ref_task_tag = tag;
->  
->  	/* See target_submit_cmd for commentary */
-> -	target_get_sess_cmd(se_sess, se_cmd, (flags & TARGET_SCF_ACK_KREF));
-> +	ret = target_get_sess_cmd(se_sess, se_cmd, (flags & TARGET_SCF_ACK_KREF));
-> +	if (ret) {
-> +		core_tmr_release_req(se_cmd->se_tmr_req);
-> +		return ret;
-> +	}
->  
->  	ret = transport_lookup_tmr_lun(se_cmd, unpacked_lun);
->  	if (ret) {
-> @@ -3650,10 +3656,11 @@ EXPORT_SYMBOL(transport_generic_free_cmd);
->   * @se_cmd:	command descriptor to add
->   * @ack_kref:	Signal that fabric will perform an ack target_put_sess_cmd()
->   */
-> -static void target_get_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd,
-> -				bool ack_kref)
-> +static int target_get_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd,
-> +			       bool ack_kref)
->  {
->  	unsigned long flags;
-> +	int ret = 0;
->  
->  	kref_init(&se_cmd->cmd_kref);
->  	/*
-> @@ -3667,9 +3674,16 @@ static void target_get_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cm
->  	}
->  
->  	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
-> +	if (se_sess->sess_tearing_down) {
-> +		ret = -ESHUTDOWN;
-> +		goto out;
-> +	}
->  	list_add_tail(&se_cmd->se_cmd_list, &se_sess->sess_cmd_list);
->  	se_cmd->check_release = 1;
-> +
-> +out:
->  	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
-> +	return ret;
->  }
->  
->  static void target_release_cmd_kref(struct kref *kref)
