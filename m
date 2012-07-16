@@ -1,71 +1,150 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 6/7] qla2xxx: Remove racy, now-redundant check of
- sess_tearing_down
-Date: Mon, 16 Jul 2012 16:10:32 -0700
-Message-ID: <1342480232.18004.310.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 7/7] target: Remove se_session.sess_wait_list
+Date: Mon, 16 Jul 2012 16:15:11 -0700
+Message-ID: <1342480511.18004.314.camel@haakon2.linux-iscsi.org>
 References: <1342461882-5848-1-git-send-email-roland@kernel.org>
-	 <1342461882-5848-7-git-send-email-roland@kernel.org>
+	 <1342461882-5848-8-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:51435 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51440 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042Ab2GPXKi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2012 19:10:38 -0400
-In-Reply-To: <1342461882-5848-7-git-send-email-roland@kernel.org>
+	with ESMTP id S1752693Ab2GPXPN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2012 19:15:13 -0400
+In-Reply-To: <1342461882-5848-8-git-send-email-roland@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Roland Dreier <roland@kernel.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Christoph Hellwig <hch@lst.de>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 On Mon, 2012-07-16 at 11:04 -0700, Roland Dreier wrote:
 > From: Roland Dreier <roland@purestorage.com>
 > 
-> Now that target_submit_cmd() / target_get_sess_cmd() check
-> sess_tearing_down before adding commands to the list, we no longer
-> need the check in qlt_do_work().  In fact this check is racy anyway
-> (and that race is what inspired the change to add the check of
-> sess_tearing_down to the target core).
+> Since we set se_session.sess_tearing_down and stop new commands from
+> being added to se_session.sess_cmd_list before we wait for commands to
+> finish when freeing a session, there's no need for a separate
+> sess_wait_list -- if we let new commands be added to sess_cmd_list
+> after setting sess_tearing_down, that would be a bug that breaks the
+> logic of waiting in-flight commands.
 > 
-> Cc: Chad Dupuis <chad.dupuis@qlogic.com>
-> Cc: Arun Easi <arun.easi@qlogic.com>
+> Also rename target_splice_sess_cmd_list() to
+> target_sess_cmd_list_set_waiting(), since we are no longer splicing
+> onto a separate list.
+> 
+
+So it looks reasonable to drop this cruft now, aside from the
+target_get_sess_cmd() failure bit that still needs to be worked out
+for-3.6 code.
+
+Nice work Roland & Pure folks!
+
+> 
+> 
 > Signed-off-by: Roland Dreier <roland@purestorage.com>
 > ---
->  drivers/scsi/qla2xxx/qla_target.c |   16 +++-------------
->  1 file changed, 3 insertions(+), 13 deletions(-)
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    2 +-
+>  drivers/target/target_core_transport.c |   22 ++++++++++------------
+>  include/target/target_core_base.h      |    1 -
+>  include/target/target_core_fabric.h    |    2 +-
+>  4 files changed, 12 insertions(+), 15 deletions(-)
 > 
-
-Glad to see this one finally go.  ;)
-
-Applied to for-next
-
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-> index 87b5a330..5b30132 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -2643,19 +2643,9 @@ static void qlt_do_work(struct work_struct *work)
->  	spin_lock_irqsave(&ha->hardware_lock, flags);
->  	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha,
->  	    atio->u.isp24.fcp_hdr.s_id);
-> -	if (sess) {
-> -		if (unlikely(sess->se_sess->sess_tearing_down)) {
-> -			sess = NULL;
-> -			spin_unlock_irqrestore(&ha->hardware_lock, flags);
-> -			goto out_term;
-> -		} else {
-> -			/*
-> -			 * Do the extra kref_get() before dropping
-> -			 * qla_hw_data->hardware_lock.
-> -			 */
-> -			kref_get(&sess->se_sess->sess_kref);
-> -		}
-> -	}
-> +	/* Do kref_get() before dropping qla_hw_data->hardware_lock. */
-> +	if (sess)
-> +		kref_get(&sess->se_sess->sess_kref);
->  	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> index 7db7ca7..72f3557 100644
+> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> @@ -466,7 +466,7 @@ static int tcm_qla2xxx_shutdown_session(struct se_session *se_sess)
+>  	vha = sess->vha;
 >  
->  	if (unlikely(!sess)) {
+>  	spin_lock_irqsave(&vha->hw->hardware_lock, flags);
+> -	target_splice_sess_cmd_list(se_sess);
+> +	target_sess_cmd_list_set_waiting(se_sess);
+>  	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+>  
+>  	return 1;
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 23e6e2d..7b3359e 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -244,7 +244,6 @@ struct se_session *transport_init_session(void)
+>  	INIT_LIST_HEAD(&se_sess->sess_list);
+>  	INIT_LIST_HEAD(&se_sess->sess_acl_list);
+>  	INIT_LIST_HEAD(&se_sess->sess_cmd_list);
+> -	INIT_LIST_HEAD(&se_sess->sess_wait_list);
+>  	spin_lock_init(&se_sess->sess_cmd_lock);
+>  	kref_init(&se_sess->sess_kref);
+>  
+> @@ -3719,28 +3718,27 @@ int target_put_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd)
+>  }
+>  EXPORT_SYMBOL(target_put_sess_cmd);
+>  
+> -/* target_splice_sess_cmd_list - Split active cmds into sess_wait_list
+> - * @se_sess:	session to split
+> +/* target_sess_cmd_list_set_waiting - Flag all commands in
+> + *         sess_cmd_list to complete cmd_wait_comp.  Set
+> + *         sess_tearing_down so no more commands are queued.
+> + * @se_sess:	session to flag
+>   */
+> -void target_splice_sess_cmd_list(struct se_session *se_sess)
+> +void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
+>  {
+>  	struct se_cmd *se_cmd;
+>  	unsigned long flags;
+>  
+> -	WARN_ON(!list_empty(&se_sess->sess_wait_list));
+> -	INIT_LIST_HEAD(&se_sess->sess_wait_list);
+> -
+>  	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
+> -	se_sess->sess_tearing_down = 1;
+>  
+> -	list_splice_init(&se_sess->sess_cmd_list, &se_sess->sess_wait_list);
+> +	WARN_ON(se_sess->sess_tearing_down);
+> +	se_sess->sess_tearing_down = 1;
+>  
+> -	list_for_each_entry(se_cmd, &se_sess->sess_wait_list, se_cmd_list)
+> +	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list)
+>  		se_cmd->cmd_wait_set = 1;
+>  
+>  	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+>  }
+> -EXPORT_SYMBOL(target_splice_sess_cmd_list);
+> +EXPORT_SYMBOL(target_sess_cmd_list_set_waiting);
+>  
+>  /* target_wait_for_sess_cmds - Wait for outstanding descriptors
+>   * @se_sess:    session to wait for active I/O
+> @@ -3754,7 +3752,7 @@ void target_wait_for_sess_cmds(
+>  	bool rc = false;
+>  
+>  	list_for_each_entry_safe(se_cmd, tmp_cmd,
+> -				&se_sess->sess_wait_list, se_cmd_list) {
+> +				&se_sess->sess_cmd_list, se_cmd_list) {
+>  		list_del(&se_cmd->se_cmd_list);
+>  
+>  		pr_debug("Waiting for se_cmd: %p t_state: %d, fabric state:"
+> diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+> index dc35d86..5d8907e 100644
+> --- a/include/target/target_core_base.h
+> +++ b/include/target/target_core_base.h
+> @@ -633,7 +633,6 @@ struct se_session {
+>  	struct list_head	sess_list;
+>  	struct list_head	sess_acl_list;
+>  	struct list_head	sess_cmd_list;
+> -	struct list_head	sess_wait_list;
+>  	spinlock_t		sess_cmd_lock;
+>  	struct kref		sess_kref;
+>  };
+> diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+> index 4f8e515..86d8a4a 100644
+> --- a/include/target/target_core_fabric.h
+> +++ b/include/target/target_core_fabric.h
+> @@ -130,7 +130,7 @@ int	transport_check_aborted_status(struct se_cmd *, int);
+>  int	transport_send_check_condition_and_sense(struct se_cmd *, u8, int);
+>  
+>  int	target_put_sess_cmd(struct se_session *, struct se_cmd *);
+> -void	target_splice_sess_cmd_list(struct se_session *);
+> +void	target_sess_cmd_list_set_waiting(struct se_session *);
+>  void	target_wait_for_sess_cmds(struct se_session *, int);
+>  
+>  int	core_alua_check_nonop_delay(struct se_cmd *);
 
 
