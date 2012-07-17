@@ -1,61 +1,86 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] sd: do not set changed flag on all unit attention
- conditions
-Date: Tue, 17 Jul 2012 14:32:10 +0100
-Message-ID: <1342531930.3039.74.camel@dabdike.int.hansenpartnership.com>
-References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>
-	     <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>
-	     <50044D56.6000400@redhat.com>
-	    <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>
-	    <50052390.7030908@redhat.com>
-	   <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com>
-	   <5005285E.8060706@redhat.com>
-	  <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>
-	  <5005302D.6010805@redhat.com>
-	 <1342527693.3039.64.camel@dabdike.int.hansenpartnership.com>
-	 <50055B19.8090101@redhat.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
+Date: Tue, 17 Jul 2012 18:05:48 +0300
+Message-ID: <20120717150548.GA11587@redhat.com>
+References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50055B19.8090101@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2012-07-17 at 14:31 +0200, Paolo Bonzini wrote:
-> Il 17/07/2012 14:21, James Bottomley ha scritto:
-> >> Yes, I realize failing only on specific sense codes as I did it in the
-> >> patch is not going to work.  However, the other way round is not
-> >> problematic (explicitly allow some sense codes, fail on all others).
-> > 
-> > Heh, I once thought that, but there's no end to the strange ideas USB
-> > manufacturers get.
+On Wed, Jul 11, 2012 at 09:15:00PM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> :)
+> Hi folks,
 > 
-> >> > Another example is "target operating conditions have changed".  QEMU
-> >> > cannot report such changes because scsi_error prints a warning (fine)
-> >> > and then passes the unit attention upwards.  With removable drives, this
-> >> > has the same problem as resizing.
-> > Why would a removable device ever use any of the codes under this ASC
-> > when the medium hasn't changed?  They're all for arrays (well except
-> > 0x10 and 0x11 ... and they're only supposed to apply to tape changers
-> > with autoload support declared in the control mode page).
+> The following is a RFC-v2 series of tcm_vhost target fabric driver code
+> currently in-flight for-3.6 mainline code.
 > 
-> There are also a couple of generic ones such as "reported luns have
-> changed".  I also considered briefly using "inquiry data has changed" to
-> reload the unmap parameters after live snapshot or storage migration.  I
-> dropped the idea, please don't put me in the same bin as the USB
-> manufacturers.
+> After last week's developments along with the help of some new folks, the
+> changelog v1 -> v2 so far looks like:
+> 
+> *) Fix drivers/vhost/test.c to use VHOST_NET_FEATURES in patch #1 (Asias He)
+> *) Fix tv_cmd completion -> release SGL memory leak (nab)
+> *) Fix sparse warnings for static variable usage (Fengguang Wu)
+> *) Fix sparse warnings for min() typing + printk format specs (Fengguang Wu)
+> *) Convert to cmwq submission for I/O dispatch (nab + hch)
+> 
+> Also following Paolo's request, a patch for hw/virtio-scsi.c that sets
+> scsi_host->max_target=0 that removes the need for virtio-scsi LLD to hardcode
+> VirtIOSCSIConfig->max_id=1 in order to function with tcm_vhost.
+> 
+> Note this series has been pushed into target-pending.git/for-next-merge, and
+> should be getting picked up for tomorrow's linux-next build.
+> 
+> Please let us know if you have any concerns and/or additional review feedback.
+> 
+> Thank you!
 
-I'm not ... but at the same time removable functionality in sd.c is
-special cased in quite a few areas which makes it fragile but exercised.
-Its fragility is somewhat mitigated by the fact that a lot of the
-special casing separates the removable from the non-removable paths.
 
-I don't want to increase that fragility by entangling the removable and
-non-removable paths without a good reason for doing so.
+It still seems not 100% clear whether this driver will have major
+userspace using it. And if not, it would be very hard to support a driver
+when recent userspace does not use it in the end.
 
-James
+I think a good idea for 3.6 would be to make it depend on CONFIG_STAGING.
+Then we don't commit to an ABI.
+For this, you can add a separate Kconfig and source it from drivers/staging/Kconfig.
+Maybe it needs to be in a separate directory drivers/vhost/staging/Kconfig.
+
+
+> Nicholas Bellinger (2):
+>   vhost: Add vhost_scsi specific defines
+>   tcm_vhost: Initial merge for vhost level target fabric driver
+> 
+> Stefan Hajnoczi (2):
+>   vhost: Separate vhost-net features from vhost features
+>   vhost: make vhost work queue visible
+> 
+>  drivers/vhost/Kconfig     |    6 +
+>  drivers/vhost/Makefile    |    1 +
+>  drivers/vhost/net.c       |    4 +-
+>  drivers/vhost/tcm_vhost.c | 1609 +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/vhost/tcm_vhost.h |   74 ++
+>  drivers/vhost/test.c      |    4 +-
+>  drivers/vhost/vhost.c     |    5 +-
+>  drivers/vhost/vhost.h     |    6 +-
+>  include/linux/vhost.h     |    9 +
+>  9 files changed, 1710 insertions(+), 8 deletions(-)
+>  create mode 100644 drivers/vhost/tcm_vhost.c
+>  create mode 100644 drivers/vhost/tcm_vhost.h
+> 
+> -- 
+> 1.7.2.5
