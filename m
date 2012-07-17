@@ -1,40 +1,109 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] sd: do not set changed flag on all unit attention
- conditions
-Date: Tue, 17 Jul 2012 22:59:50 +0100
-Message-ID: <1342562390.3039.100.camel@dabdike.int.hansenpartnership.com>
-References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>
-	 <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>
-	 <50044D56.6000400@redhat.com>
-	 <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>
-	 <50052390.7030908@redhat.com>
-	 <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com>
-	 <5005285E.8060706@redhat.com>
-	 <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>
-	 <20120717163612.GA15995@infradead.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
+Date: Tue, 17 Jul 2012 15:02:08 -0700
+Message-ID: <1342562528.18004.480.camel@haakon2.linux-iscsi.org>
+References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
+	 <20120717150548.GA11587@redhat.com>
+	 <1342559842.18004.440.camel@haakon2.linux-iscsi.org>
+	 <20120717213437.GC1868@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120717163612.GA15995@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:46438 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756919Ab2GQWCM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 18:02:12 -0400
+In-Reply-To: <20120717213437.GC1868@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
 
-On Tue, 2012-07-17 at 12:36 -0400, Christoph Hellwig wrote:
-> On Tue, Jul 17, 2012 at 10:11:57AM +0100, James Bottomley wrote:
-> > There's no such thing in the market today as a removable disk that's
-> > resizeable.  Removable disks are for things like backup cartridges and
-> > ageing jazz drives.  Worse: most removeable devices today are USB card
-> > readers whose standards compliance varies from iffy to non existent.
-> > Resizeable disks are currently the province of storage arrays.
+On Wed, 2012-07-18 at 00:34 +0300, Michael S. Tsirkin wrote:
+> On Tue, Jul 17, 2012 at 02:17:22PM -0700, Nicholas A. Bellinger wrote:
+> > On Tue, 2012-07-17 at 18:05 +0300, Michael S. Tsirkin wrote:
+> > > On Wed, Jul 11, 2012 at 09:15:00PM +0000, Nicholas A. Bellinger wrote:
+> > > > From: Nicholas Bellinger <nab@linux-iscsi.org>
+
+<SNIP>
+
+> > I'm happy to commit to working with QEMU + kvm-tool folks to get to a
+> > series that can (eventually) see vhost-scsi support merged into upstream
+> > userspace code.
+> > 
+> > It took roughly 2 years to get the megasas HBA emulation from Dr. Hannes
+> > merged, but certainly vhost-scsi has alot less moving pieces and
+> > hopefully alot less controversial bits than the buffer -> SGL
+> > conversion..  The key word being here 'hopefully'..  ;)
+> > 
+> > > I think a good idea for 3.6 would be to make it depend on CONFIG_STAGING.
+> > > Then we don't commit to an ABI.
+> > > For this, you can add a separate Kconfig and source it from drivers/staging/Kconfig.
+> > > Maybe it needs to be in a separate directory drivers/vhost/staging/Kconfig.
+> > > 
+> > 
+> > So tcm_vhost has been marked as Experimental following virtio-scsi.
+> > 
+> > Wrt to staging, I'd like to avoid mucking with staging because:
+> > 
+> > *) The code has been posted for review
+> > *) The code has been converted to use the latest target-core primitives
+> > *) The code does not require cleanups between staging -> merge
+> > *) The code has been stable the last 7 days since RFC-v2 with heavy 
 > 
-> The virtual disks exported by aacraid are both marked removable and
-> can be resized.
+> staging is not just for code that needs cleanups.
+> It's for anything that does not guarantee ABI stability yet.
+> And I think it's a bit early to guarantee ABI stability - 7 days
+> is not all that long.
+> 
 
-So what are properties of these things? ... or is this just an instance
-of a RAID manufacturer hacking around a problem by adding a removable
-flag?
+I was talking about the new I/O path has been running for 7 days.
 
-James
+> See for example Anthony's comments that raise exactly the ABI
+> issues.
+> 
+
+As mentioned in the response to Anthony, we are using the same generic
+fabric ABI in drivers/target/target_core_fabric_configfs.c since .38.
+
+That part is not going to change, and it has not changed for any of the
+other 7 target fabric modules we've merged into mainline since then.
+
+> > Also, tcm_vhost has been marked as Experimental following virtio-scsi.
+> > I'd much rather leave it at Experimental until we merge upstream
+> > userspace support.   If userspace support never ends up materializing,
+> > I'm fine with dropping it all together.
+> 
+> Once it's in kernel you never know who will use this driver.
+> Experimental does not mean driver can be dropped, staging does.
+> 
+
+Yes, that's the point of being in mainline.  People using the code,
+right..?
+
+> > However at this point given that there is a 3x performance gap between
+> > virtio-scsi-raw + virtio-scsi+tcm_vhost for random mixed small block
+> > I/O, and we still need the latter to do proper SCSI CDB passthrough for
+> > non TYPE_DISK devices I'm hoping that we can agree on userspace bits
+> > once tcm_vhost is merged.
+> > 
+> > --nab
+> 
+> I do think upstream kernel would help you nail userspace issues too
+> but at this point it looks like either staging meterial or 3.6 is too
+> early.
+> 
+
+I think for-3.6 is just the right time for this kernel code.  Seriously,
+The basic ABI fabric layout for /sys/kernel/config/target/vhost/ is
+going to be the same now for-3.6, the same for-3.7, and the same for .38
+code. 
+
+I'd be happy to move tcm_vhost back to drivers/target/ for now, and we
+move it to drivers/vhost/ once the userspace bits are worked out..?
+
+Would that be a reasonable compromise to move forward..?
+
+--nab
+
