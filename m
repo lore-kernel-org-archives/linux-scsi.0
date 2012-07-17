@@ -1,77 +1,115 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [Bug 44771] [REGRESSION]
- a7a20d103994fd760766e6c9d494daa569cbfe06 makes kernel 3.5 unbootable on an
- Intel chipset based motherboard
-Date: Tue, 17 Jul 2012 22:03:09 +0000
-Message-ID: <1342562588.3039.104.camel@dabdike.int.hansenpartnership.com>
-References: <bug-44771-5873@https.bugzilla.kernel.org/>
-	 <20120717191546.EADE611FB44@bugzilla.kernel.org>
-	 <CA+55aFzb+_KWYRAddkBD5Mf01fOG68D+b+560Mm3cD_fhU5p7Q@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
+Date: Tue, 17 Jul 2012 15:37:20 -0700
+Message-ID: <1342564640.18004.492.camel@haakon2.linux-iscsi.org>
+References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
+	<20120717150548.GA11587@redhat.com>
+	<1342559842.18004.440.camel@haakon2.linux-iscsi.org>
+	<20120717213437.GC1868@redhat.com>
+	<1342562528.18004.480.camel@haakon2.linux-iscsi.org>
+	<20120717221814.GH1868@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:49463 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751516Ab2GQWVG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2012 18:21:06 -0400
-In-Reply-To: <CA+55aFzb+_KWYRAddkBD5Mf01fOG68D+b+560Mm3cD_fhU5p7Q@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <585ACFBFDD668E43B98FC589A388D3A8@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20120717221814.GH1868@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Dan Williams <dan.j.williams@intel.com>, Borislav Petkov <bp@amd64.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-T24gVHVlLCAyMDEyLTA3LTE3IGF0IDEyOjUxIC0wNzAwLCBMaW51cyBUb3J2YWxkcyB3cm90ZToN
-Cj4gV3JvbmcgcGVvcGxlIGNjJ2QsIGl0IGxvb2tzIGxpa2UuDQo+IA0KPiBHdXlzLCBjb21taXQg
-YTdhMjBkMTAzOTk0ICgic2Q6IGxpbWl0IHRoZSBzY29wZSBvZiB0aGUgYXN5bmMgcHJvYmUNCj4g
-ZG9tYWluIikgaXMgY2F1c2luZyBib290IHByb2JsZW1zLiBJdCdzIHRpbWluZy1kZXBlbmRlbnQg
-YW5kDQo+IGFwcGFyZW50bHkgc29tZXRpbWVzIHdvcmtzLCB3aGljaCBtYWtlcyBzZW5zZSB3aXRo
-IHRoYXQgY29tbWl0Lg0KPiANCj4gSG93ZXZlciwgaXQgKnNob3VsZCogaGF2ZSBiZWVuIGZpeGVk
-IGJ5IGNvbW1pdCA0M2E4ZDM5ZDAxMzcgKCJmaXgNCj4gYXN5bmMgcHJvYmUgcmVncmVzc2lvbiIp
-LCBidXQgQXJ0ZW0gc2VlbXMgdG8gcmVwb3J0IHRoZSBwcm9ibGVtIGV2ZW4NCj4gaW4gLXJjNy4N
-Cj4gDQo+IENvbW1lbnRzPw0KDQpBcyBmYXIgYXMgSSBjYW4gdGVsbCwgdGhlIGZpeCBzaG91bGQg
-aGF2ZSB3b3JrZWQuICBIb3dldmVyLCB0aGVyZSBhcmUgYQ0KbG90IG9mIGFzc3VtcHRpb25zIGlu
-IHRoZSBhc3luYyBzdHVmZiB0aGF0IGVuZCB1cCBub3QgYmVpbmcgdHJ1ZSBpbiB0aGUNCnByZXNl
-bmNlIG9mIHNlcGFyYXRlIGFzeW5jIGRvbWFpbnMuICAgV2Ugc2hvdWxkIGJlIGZpeGluZyBpdCBh
-bGwgaGVyZToNCg0KaHR0cDovL2dpdC5rZXJuZWwub3JnLz9wPWxpbnV4L2tlcm5lbC9naXQvamVq
-Yi9zY3NpLmdpdDthPXNob3J0bG9nO2g9cmVmcy9oZWFkcy9hc3luYw0KDQpJJ3ZlIGdvdCB0byBz
-YXksIEkgZG9uJ3QgdW5kZXJzdGFuZCB0aGUgYnVnIHJlcG9ydC4gIGFsbCBvZiB0aG9zZQ0KY29t
-bWl0cyB3ZXJlIGFib3V0IHByb2JpbmcgZm9yIGRldmljZXMuICBIb3dldmVyLCB0aGUgc2NyZWVu
-IHNob3QNCg0KaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL2F0dGFjaG1lbnQuY2dpP2lkPTc1
-MzUxDQoNCnNob3dzIHRoZSBkZXZpY2VzIHdlcmUgZm91bmQsIGl0J3MgdGhlIHBhcnRpdGlvbiB0
-YWJsZXMgdGhhdCB3ZXJlbid0Lg0KRm9yIHVzIHRvIHNlZSB0aGUgbWVzc2FnZSBhYm91dCBzZGEn
-cyBjYXBhY2l0eSwgd2UncmUgYWxyZWFkeSBpbiB0aGUNCmFzeW5jIGNvZGUgdGhlIGNvbW1pdHMg
-d2VyZSB0cnlpbmcgdG8gc3luY2hyb25pc2Ugd2l0aC4NCg0KSG93ZXZlciwgdGhlcmUgYXJlIHNv
-bWUgbWlzc2luZyBtZXNzYWdlczogdGhlcmUncyBubyBwYXJ0aXRpb24gdGFibGUNCnByaW50IGFu
-ZCBubyBmaW5hbCANCg0KCXNkX3ByaW50ayhLRVJOX05PVElDRSwgc2RrcCwgIkF0dGFjaGVkIFND
-U0kgJXNkaXNrXG4iLA0KCQkgIHNkcC0+cmVtb3ZhYmxlID8gInJlbW92YWJsZSAiIDogIiIpOw0K
-DQpTbyBzZF9wcm9iZV9hc3luYygpIGdvdCBzdHVjayBzb21ld2hlcmUgYWZ0ZXIgdGhlIGZpcnN0
-DQpzZF9yZXZhbGlkYXRhX2Rpc2soKS4NCg0KSmFtZXMNCg0KDQo+IEFydGVtLCBjYW4geW91IHB1
-dCBhIHdvcmtpbmcgZG1lc2cgZnJvbSB0aGUgbGFzdCBnb29kIGtlcm5lbCBpbiB0aGVyZQ0KPiBh
-cyBwbGFpbiB0ZXh0Pw0KPiANCj4gICAgICAgICAgICAgICAgICAgIExpbnVzDQo+IA0KPiBPbiBU
-dWUsIEp1bCAxNywgMjAxMiBhdCAxMjoxNSBQTSwgIDxidWd6aWxsYS1kYWVtb25AYnVnemlsbGEu
-a2VybmVsLm9yZz4gd3JvdGU6DQo+ID4gaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3df
-YnVnLmNnaT9pZD00NDc3MQ0KPiA+DQo+ID4NCj4gPg0KPiA+DQo+ID4NCj4gPiAtLS0gQ29tbWVu
-dCAjOSBmcm9tIEFydGVtIFMuIFRhc2hraW5vdiA8dC5hcnRlbUBtYWlsY2l0eS5jb20+ICAyMDEy
-LTA3LTE3IDE5OjE1OjQ2IC0tLQ0KPiA+IFdvdywgSSdtIG5vdCB0aGUgZmlyc3QgcGVyc29uIHRv
-IGhpdCB0aGlzIHByb2JsZW06DQo+ID4NCj4gPiBodHRwOi8vaGVscC5sb2NrZXJnbm9tZS5jb20v
-bGludXgvU0NTSS1zZC1saW1pdC1zY29wZS1hc3luYy1wcm9iZS1kb21haW4tYnJlYWtzLWJvb3Rp
-bmctLWZ0b3BpY3Q1NTU5NzYuaHRtbA0KPiA+DQo+ID4+IER1ZGVzLA0KPiA+DQo+ID4+IHNvIEkn
-dmUgYmVlbiB0ZXN0aW5nIGxhdGVzdCBsaW51cw0KPiA+PiAoNzMxYTczNzhiODFjMmY1ZmE4OGNh
-MWFlMjBiODNkNTQ4ZDU2MTNkYykgaGVyZSBhbmQgbXkgYm94IGZhaWxzIGJvb3RpbmcNCj4gPj4g
-YmVjYXVzZSBpdCBjYW4ndCBmaW5kIHRoZSByb290IHBhcnRpdGlvbiwgc2VlIG1lc3NhZ2UgYmVs
-b3cuDQo+ID4+DQo+ID4+IEkgZGlkIGEgYmlzZWN0IHJ1biAoYWxzbyBiZWxvdykgYW5kIHBvaW50
-ZWQgbWUgdG8gdGhlIGZpcnN0IGJhZCBjb21taXQNCj4gPj4gKHNlZSBiZWxvdyB0b28pLg0KPiA+
-Pg0KPiA+PiBSZXZlcnRpbmcgdGhlIGNvbW1pdCBpbiBxdWVzdGlvbiBmaXhlcyBib290aW5nLg0K
-PiA+Pg0KPiA+PiBMZXQgbWUga25vdyB3aGF0IG90aGVyIGluZm8geW91J2QgbmVlZC4NCj4gPj4N
-Cj4gPj4gUG9zdGVkOiBXZWQgTWF5IDMwLCAyMDEyIDI6MTAgcG0NCj4gPj4NCj4gPj4gQm9yaXNs
-YXYgUGV0a292DQo+ID4NCj4gPiBZZXQgYW5vdGhlciBwZXJzb246DQo+ID4NCj4gPiBodHRwczov
-L2xrbWwub3JnL2xrbWwvMjAxMi81LzI1LzI3MQ0KPiA+DQo+ID4+IERhbiBXaWxsaWFtcw0KPiA+
-Pg0KPiA+PiBPaywgSSdsbCB0YWtlIGEgbG9vay4NCj4gPj4NCj4gPj4gVGhhbmtzIGZvciB0aGUg
-aGVscCENCj4gPg0KPiA+IEFuZCBubyBmaXggd2hhdHNvZXZlci4NCj4gPg0KPiA+IC0tDQo+ID4g
-Q29uZmlndXJlIGJ1Z21haWw6IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy91c2VycHJlZnMu
-Y2dpP3RhYj1lbWFpbA0KPiA+IC0tLS0tLS0gWW91IGFyZSByZWNlaXZpbmcgdGhpcyBtYWlsIGJl
-Y2F1c2U6IC0tLS0tLS0NCj4gPiBZb3UgYXJlIG9uIHRoZSBDQyBsaXN0IGZvciB0aGUgYnVnLg0K
-DQo=
+On Wed, 2012-07-18 at 01:18 +0300, Michael S. Tsirkin wrote:
+> On Tue, Jul 17, 2012 at 03:02:08PM -0700, Nicholas A. Bellinger wrote:
+> > On Wed, 2012-07-18 at 00:34 +0300, Michael S. Tsirkin wrote:
+> > > On Tue, Jul 17, 2012 at 02:17:22PM -0700, Nicholas A. Bellinger wrote:
+> > > > On Tue, 2012-07-17 at 18:05 +0300, Michael S. Tsirkin wrote:
+> > > > > On Wed, Jul 11, 2012 at 09:15:00PM +0000, Nicholas A. Bellinger wrote:
+> > > > > > From: Nicholas Bellinger <nab@linux-iscsi.org>
+
+<SNIP>
+
+> > As mentioned in the response to Anthony, we are using the same generic
+> > fabric ABI in drivers/target/target_core_fabric_configfs.c since .38.
+> > 
+> > That part is not going to change, and it has not changed for any of the
+> > other 7 target fabric modules we've merged into mainline since then.
+> > 
+> > > > Also, tcm_vhost has been marked as Experimental following virtio-scsi.
+> > > > I'd much rather leave it at Experimental until we merge upstream
+> > > > userspace support.   If userspace support never ends up materializing,
+> > > > I'm fine with dropping it all together.
+> > > 
+> > > Once it's in kernel you never know who will use this driver.
+> > > Experimental does not mean driver can be dropped, staging does.
+> > > 
+> > 
+> > Yes, that's the point of being in mainline.  People using the code,
+> > right..?
+> 
+> Exactly. I am just worried about in the end being no major users and we
+> are being stuck with a niche driver that as a result is very hard to test.
+> And the reason for the fear is the initial negative reaction from the
+> qemu side.  And no if it's there we can't just drop it.
+> 
+
+That is certainly a reasonable concern.. 
+
+> > > > However at this point given that there is a 3x performance gap between
+> > > > virtio-scsi-raw + virtio-scsi+tcm_vhost for random mixed small block
+> > > > I/O, and we still need the latter to do proper SCSI CDB passthrough for
+> > > > non TYPE_DISK devices I'm hoping that we can agree on userspace bits
+> > > > once tcm_vhost is merged.
+> > > > 
+> > > > --nab
+> > > 
+> > > I do think upstream kernel would help you nail userspace issues too
+> > > but at this point it looks like either staging meterial or 3.6 is too
+> > > early.
+> > > 
+> > 
+> > I think for-3.6 is just the right time for this kernel code.  Seriously,
+> > The basic ABI fabric layout for /sys/kernel/config/target/vhost/ is
+> > going to be the same now for-3.6, the same for-3.7, and the same for .38
+> > code. 
+> > 
+> > I'd be happy to move tcm_vhost back to drivers/target/ for now, and we
+> > move it to drivers/vhost/ once the userspace bits are worked out..?
+> > 
+> > Would that be a reasonable compromise to move forward..?
+> > 
+> > --nab
+> 
+> I don't see how it helps.  The driver is either a guaranteed ABI or not.
+> I'd prefer not to have vhost users outside drivers/vhost/ since it is
+> harder for me to keep track of them.
+> 
+> What's the problem with staging proposal? It's just another hoop to jump
+> through to enable it?
+> 
+
+Yeah, I'm OK with just adding a CONFIG_STAGING tag is a reasonable step
+forward for-3.6.
+
+Adding the following patch into target-pending/for-next-merge now:
+
+diff --git a/drivers/vhost/Kconfig b/drivers/vhost/Kconfig
+index ccbeb6f..2cd7135 100644
+--- a/drivers/vhost/Kconfig
++++ b/drivers/vhost/Kconfig
+@@ -11,7 +11,7 @@ config VHOST_NET
+ 
+ config TCM_VHOST
+        tristate "TCM_VHOST fabric module (EXPERIMENTAL)"
+-       depends on TARGET_CORE && EVENTFD && EXPERIMENTAL && m
++       depends on TARGET_CORE && EVENTFD && EXPERIMENTAL && STAGING && m
+        default n
+        ---help---
+        Say M here to enable the TCM_VHOST fabric module for use with virtio-scsi guests
