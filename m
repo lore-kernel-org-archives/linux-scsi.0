@@ -1,41 +1,61 @@
-From: bart@bartvanassche.be
-Subject: Re: [PATCH 17/18] srp_transport: Add transport layer recovery
- support
-Date: Tue, 17 Jul 2012 14:59:51 +0200
-Message-ID: <4a60357d9f7cfd0ba691914d73dc5865.squirrel@www.bartvanassche.be>
-References: <3109536.qySrY1Ts3e@asus> <2536946.Diyz1JQnfo@asus>
-    <500490A5.7020202@cs.wisc.edu>
-    <1342477710.25927.10.camel@frustration.ornl.gov>
-Reply-To: bart@bartvanassche.be
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] sd: do not set changed flag on all unit attention
+ conditions
+Date: Tue, 17 Jul 2012 14:32:10 +0100
+Message-ID: <1342531930.3039.74.camel@dabdike.int.hansenpartnership.com>
+References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>
+	     <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>
+	     <50044D56.6000400@redhat.com>
+	    <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>
+	    <50052390.7030908@redhat.com>
+	   <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com>
+	   <5005285E.8060706@redhat.com>
+	  <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>
+	  <5005302D.6010805@redhat.com>
+	 <1342527693.3039.64.camel@dabdike.int.hansenpartnership.com>
+	 <50055B19.8090101@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [178.239.52.149] ([178.239.52.149]:50273 "EHLO wimaserver10.be"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754034Ab2GQNSV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2012 09:18:21 -0400
-In-Reply-To: <1342477710.25927.10.camel@frustration.ornl.gov>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <50055B19.8090101@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Dillow <dillowda@ornl.gov>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>
 
-> On Mon, 2012-07-16 at 18:07 -0400, Mike Christie wrote:
->> On 01/14/2012 05:56 AM, Bart Van Assche wrote:
->> > Add the necessary functions in the SRP transport module to allow
->> > an SRP initiator driver to implement transport layer recovery.
->>
->> I was updating my iscsi dev loss patch when I saw this is still not
->> merged.
->
-> Yes, I got part way into doing a rework of Bart's code before I got
-> sidetracked on another project. Cognizant of the looming merge window,
-> I'm desperately trying to get back to it.
+On Tue, 2012-07-17 at 14:31 +0200, Paolo Bonzini wrote:
+> Il 17/07/2012 14:21, James Bottomley ha scritto:
+> >> Yes, I realize failing only on specific sense codes as I did it in the
+> >> patch is not going to work.  However, the other way round is not
+> >> problematic (explicitly allow some sense codes, fail on all others).
+> > 
+> > Heh, I once thought that, but there's no end to the strange ideas USB
+> > manufacturers get.
+> 
+> :)
+> 
+> >> > Another example is "target operating conditions have changed".  QEMU
+> >> > cannot report such changes because scsi_error prints a warning (fine)
+> >> > and then passes the unit attention upwards.  With removable drives, this
+> >> > has the same problem as resizing.
+> > Why would a removable device ever use any of the codes under this ASC
+> > when the medium hasn't changed?  They're all for arrays (well except
+> > 0x10 and 0x11 ... and they're only supposed to apply to tape changers
+> > with autoload support declared in the control mode page).
+> 
+> There are also a couple of generic ones such as "reported luns have
+> changed".  I also considered briefly using "inquiry data has changed" to
+> reload the unmap parameters after live snapshot or storage migration.  I
+> dropped the idea, please don't put me in the same bin as the USB
+> manufacturers.
 
-I'll post the latest version of the patch series next Monday (I'm
-traveling now). If you have any suggestions for improvements about the
-patches themselves or the implemented algorithms, these are welcome.
+I'm not ... but at the same time removable functionality in sd.c is
+special cased in quite a few areas which makes it fragile but exercised.
+Its fragility is somewhat mitigated by the fact that a lot of the
+special casing separates the removable from the non-removable paths.
 
-Bart.
+I don't want to increase that fragility by entangling the removable and
+non-removable paths without a good reason for doing so.
 
+James
