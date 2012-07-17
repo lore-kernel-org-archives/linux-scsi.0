@@ -1,83 +1,191 @@
 From: <sreekanth.reddy@lsi.com>
-Subject: [PATCH 07/09] [SCSI] mpt2sas : Fix for staged device discovery
- functionality of driver not working
-Date: Tue, 17 Jul 2012 15:56:12 +0530
-Message-ID: <20120717102612.GA7355@localhost.localdomain>
+Subject: [PATCH 06/09] [SCSI] mpt2sas : MPI next revision header update
+Date: Tue, 17 Jul 2012 15:56:10 +0530
+Message-ID: <20120717102610.GA7352@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:46082 "EHLO
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:46058 "EHLO
 	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754735Ab2GQKZ3 (ORCPT
+	by vger.kernel.org with ESMTP id S1753999Ab2GQKZ1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2012 06:25:29 -0400
+	Tue, 17 Jul 2012 06:25:27 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com
 Cc: jejb@kernel.org
 
-This patch provides a command line option to disable "Port enable" during
-the driver load.
+MPI 2.0 Rev V(2.0.14) specification
 
-The objective of this command line option is to load the driver and do
-all the necessary initialization excluding port enable(i.e. delay
-device discovery)
+        Changeset in MPI 2.0 Rev V(2.0.14) specification
+        1) Bumped MPI2_HEADER_VERSION_UNIT.
+        2) Added a product specific range to event values.
+        3) Added clarification to Direct-Attached SAS PHY Power condition.
+        4) Updated timing requirements for performing Hard Reset.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@lsi.com>
 ---
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 3e231a7..7a69a5c 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -119,6 +119,10 @@ module_param(diag_buffer_enable, int, 0);
- MODULE_PARM_DESC(diag_buffer_enable, " post diag buffers "
- 	"(TRACE=1/SNAPSHOT=2/EXTENDED=4/default=0)");
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
+index a80f322..e960f96 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2011 LSI Corporation.
++ *  Copyright (c) 2000-2012 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2.h
+@@ -8,7 +8,7 @@
+  *                  scatter/gather formats.
+  *  Creation Date:  June 21, 2006
+  *
+- *  mpi2.h Version:  02.00.23
++ *  mpi2.h Version:  02.00.25
+  *
+  *  Version History
+  *  ---------------
+@@ -72,6 +72,9 @@
+  *  05-25-11  02.00.21  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  08-24-11  02.00.22  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  11-18-11  02.00.23  Bumped MPI2_HEADER_VERSION_UNIT.
++ *  02-06-12  02.00.24  Bumped MPI2_HEADER_VERSION_UNIT.
++ *  03-29-12  02.00.25  Bumped MPI2_HEADER_VERSION_UNIT.
++ *                      Added Hard Reset delay timings.
+  *  --------------------------------------------------------------------------
+  */
  
-+static int disable_discovery = -1;
-+module_param(disable_discovery, int, 0);
-+MODULE_PARM_DESC(disable_discovery, " disable discovery ");
+@@ -97,7 +100,7 @@
+ #define MPI2_VERSION_02_00                  (0x0200)
+ 
+ /* versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x17)
++#define MPI2_HEADER_VERSION_UNIT            (0x19)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+@@ -275,6 +278,11 @@ typedef volatile struct _MPI2_SYSTEM_INTERFACE_REGS
+ #define MPI2_REQUEST_DESCRIPTOR_POST_HIGH_OFFSET    (0x000000C4)
+ 
+ 
++/* Hard Reset delay timings */
++#define MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC     (50000)
++#define MPI2_HARD_RESET_PCIE_RESET_READ_WINDOW_MICRO_SEC    (255000)
++#define MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC    (256000)
 +
- /**
-  * struct sense_info - common structure for obtaining sense keys
-  * @skey: sense key
-@@ -5973,8 +5977,14 @@ _scsih_sas_discovery_event(struct MPT2SAS_ADAPTER *ioc,
- #endif
+ /*****************************************************************************
+ *
+ *        Message Descriptors
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
+index de90162..38c5da3 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
+@@ -1,12 +1,12 @@
+ /*
+- *  Copyright (c) 2000-2010 LSI Corporation.
++ *  Copyright (c) 2000-2012 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_init.h
+  *          Title:  MPI SCSI initiator mode messages and structures
+  *  Creation Date:  June 23, 2006
+  *
+- *    mpi2_init.h Version:  02.00.11
++ *    mpi2_init.h Version:  02.00.13
+  *
+  *  Version History
+  *  ---------------
+@@ -34,6 +34,8 @@
+  *  02-10-10  02.00.09  Removed unused structure that had "#if 0" around it.
+  *  05-12-10  02.00.10  Added optional vendor-unique region to SCSI IO Request.
+  *  11-10-10  02.00.11  Added MPI2_SCSIIO_NUM_SGLOFFSETS define.
++ *  02-06-12  02.00.13  Added alternate defines for Task Priority / Command
++ *                      Priority to match SAM-4.
+  *  --------------------------------------------------------------------------
+  */
  
- 	if (event_data->ReasonCode == MPI2_EVENT_SAS_DISC_RC_STARTED &&
--	    !ioc->sas_hba.num_phys)
-+	    !ioc->sas_hba.num_phys) {
-+		if (disable_discovery > 0 && ioc->shost_recovery) {
-+			/* Wait for the reset to complete */
-+			while (ioc->shost_recovery)
-+				ssleep(1);
-+		}
- 		_scsih_sas_host_add(ioc);
-+	}
- }
+@@ -194,6 +196,9 @@ typedef struct _MPI2_SCSI_IO_REQUEST
  
- /**
-@@ -7929,6 +7939,9 @@ _scsih_scan_start(struct Scsi_Host *shost)
- 	if (diag_buffer_enable != -1 && diag_buffer_enable != 0)
- 		mpt2sas_enable_diag_buffer(ioc, diag_buffer_enable);
+ #define MPI2_SCSIIO_CONTROL_TASKPRI_MASK        (0x00007800)
+ #define MPI2_SCSIIO_CONTROL_TASKPRI_SHIFT       (11)
++/* alternate name for the previous field; called Command Priority in SAM-4 */
++#define MPI2_SCSIIO_CONTROL_CMDPRI_MASK         (0x00007800)
++#define MPI2_SCSIIO_CONTROL_CMDPRI_SHIFT        (11)
  
-+	if (disable_discovery > 0)
-+		return;
-+
- 	ioc->start_scan = 1;
- 	rc = mpt2sas_port_enable(ioc);
+ #define MPI2_SCSIIO_CONTROL_TASKATTRIBUTE_MASK  (0x00000700)
+ #define MPI2_SCSIIO_CONTROL_SIMPLEQ             (0x00000000)
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+index 9a925c0..b0d4760 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+@@ -1,12 +1,12 @@
+ /*
+- *  Copyright (c) 2000-2011 LSI Corporation.
++ *  Copyright (c) 2000-2012 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_ioc.h
+  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  *  Creation Date:  October 11, 2006
+  *
+- *  mpi2_ioc.h Version:  02.00.19
++ *  mpi2_ioc.h Version:  02.00.21
+  *
+  *  Version History
+  *  ---------------
+@@ -117,6 +117,7 @@
+  *  08-24-11  02.00.19  Added PhysicalPort field to
+  *                      MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE structure.
+  *                      Marked MPI2_PM_CONTROL_FEATURE_PCIE_LINK as obsolete.
++ *  03-29-12  02.00.21  Added a product specific range to event values.
+  *  --------------------------------------------------------------------------
+  */
  
-@@ -7950,6 +7963,12 @@ _scsih_scan_finished(struct Scsi_Host *shost, unsigned long time)
- {
- 	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
+@@ -492,7 +493,8 @@ typedef struct _MPI2_EVENT_NOTIFICATION_REPLY
+ #define MPI2_EVENT_SAS_NOTIFY_PRIMITIVE             (0x0026)
+ #define MPI2_EVENT_TEMP_THRESHOLD                   (0x0027)
+ #define MPI2_EVENT_HOST_MESSAGE                     (0x0028)
+-
++#define MPI2_EVENT_MIN_PRODUCT_SPECIFIC             (0x006E)
++#define MPI2_EVENT_MAX_PRODUCT_SPECIFIC             (0x007F)
  
-+	if (disable_discovery > 0) {
-+		ioc->is_driver_loading = 0;
-+		ioc->wait_for_discovery_to_complete = 0;
-+		return 1;
-+	}
-+
- 	if (time >= (300 * HZ)) {
- 		ioc->base_cmds.status = MPT2_CMD_NOT_USED;
- 		printk(MPT2SAS_INFO_FMT "port enable: FAILED with timeout "
+ /* Log Entry Added Event data */
+ 
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
+index 0601612..2b38af2 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
+@@ -1,12 +1,12 @@
+ /*
+- *  Copyright (c) 2000-2010 LSI Corporation.
++ *  Copyright (c) 2000-2012 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_raid.h
+  *          Title:  MPI Integrated RAID messages and structures
+  *  Creation Date:  April 26, 2007
+  *
+- *    mpi2_raid.h Version:  02.00.06
++ *    mpi2_raid.h Version:  02.00.08
+  *
+  *  Version History
+  *  ---------------
+@@ -26,7 +26,7 @@
+  *  08-24-10  02.00.06  Added MPI2_RAID_ACTION_COMPATIBILITY_CHECK along with
+  *                      related structures and defines.
+  *                      Added product-specific range to RAID Action values.
+-
++ *  02-06-12  02.00.08  Added MPI2_RAID_ACTION_PHYSDISK_HIDDEN.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -181,6 +181,7 @@ typedef struct _MPI2_RAID_ACTION_REQUEST
+ #define MPI2_RAID_ACTION_START_RAID_FUNCTION        (0x21)
+ #define MPI2_RAID_ACTION_STOP_RAID_FUNCTION         (0x22)
+ #define MPI2_RAID_ACTION_COMPATIBILITY_CHECK        (0x23)
++#define MPI2_RAID_ACTION_PHYSDISK_HIDDEN            (0x24)
+ #define MPI2_RAID_ACTION_MIN_PRODUCT_SPECIFIC       (0x80)
+ #define MPI2_RAID_ACTION_MAX_PRODUCT_SPECIFIC       (0xFF)
+ 
