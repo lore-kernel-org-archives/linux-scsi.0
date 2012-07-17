@@ -1,191 +1,40 @@
 From: <sreekanth.reddy@lsi.com>
-Subject: [PATCH 06/09] [SCSI] mpt2sas : MPI next revision header update
-Date: Tue, 17 Jul 2012 15:56:10 +0530
-Message-ID: <20120717102610.GA7352@localhost.localdomain>
+Subject: [PATCH 05/09] [SCSI] mpt2sas : Fix for max_sectors warning message
+ is stating the incorrect range
+Date: Tue, 17 Jul 2012 15:56:09 +0530
+Message-ID: <20120717102609.GA7349@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:46058 "EHLO
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:46043 "EHLO
 	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753999Ab2GQKZ1 (ORCPT
+	by vger.kernel.org with ESMTP id S1754735Ab2GQKZ0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2012 06:25:27 -0400
+	Tue, 17 Jul 2012 06:25:26 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com
 Cc: jejb@kernel.org
 
-MPI 2.0 Rev V(2.0.14) specification
-
-        Changeset in MPI 2.0 Rev V(2.0.14) specification
-        1) Bumped MPI2_HEADER_VERSION_UNIT.
-        2) Added a product specific range to event values.
-        3) Added clarification to Direct-Attached SAS PHY Power condition.
-        4) Updated timing requirements for performing Hard Reset.
+When specifying the command line option "max_sectors" less than 64, then warning
+message should provide correct upper boundary value 32767 instead of 8192.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@lsi.com>
 ---
 
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
-index a80f322..e960f96 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2011 LSI Corporation.
-+ *  Copyright (c) 2000-2012 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2.h
-@@ -8,7 +8,7 @@
-  *                  scatter/gather formats.
-  *  Creation Date:  June 21, 2006
-  *
-- *  mpi2.h Version:  02.00.23
-+ *  mpi2.h Version:  02.00.25
-  *
-  *  Version History
-  *  ---------------
-@@ -72,6 +72,9 @@
-  *  05-25-11  02.00.21  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  08-24-11  02.00.22  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  11-18-11  02.00.23  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  02-06-12  02.00.24  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  03-29-12  02.00.25  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *                      Added Hard Reset delay timings.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -97,7 +100,7 @@
- #define MPI2_VERSION_02_00                  (0x0200)
- 
- /* versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x17)
-+#define MPI2_HEADER_VERSION_UNIT            (0x19)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-@@ -275,6 +278,11 @@ typedef volatile struct _MPI2_SYSTEM_INTERFACE_REGS
- #define MPI2_REQUEST_DESCRIPTOR_POST_HIGH_OFFSET    (0x000000C4)
- 
- 
-+/* Hard Reset delay timings */
-+#define MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC     (50000)
-+#define MPI2_HARD_RESET_PCIE_RESET_READ_WINDOW_MICRO_SEC    (255000)
-+#define MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC    (256000)
-+
- /*****************************************************************************
- *
- *        Message Descriptors
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-index de90162..38c5da3 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-@@ -1,12 +1,12 @@
- /*
-- *  Copyright (c) 2000-2010 LSI Corporation.
-+ *  Copyright (c) 2000-2012 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_init.h
-  *          Title:  MPI SCSI initiator mode messages and structures
-  *  Creation Date:  June 23, 2006
-  *
-- *    mpi2_init.h Version:  02.00.11
-+ *    mpi2_init.h Version:  02.00.13
-  *
-  *  Version History
-  *  ---------------
-@@ -34,6 +34,8 @@
-  *  02-10-10  02.00.09  Removed unused structure that had "#if 0" around it.
-  *  05-12-10  02.00.10  Added optional vendor-unique region to SCSI IO Request.
-  *  11-10-10  02.00.11  Added MPI2_SCSIIO_NUM_SGLOFFSETS define.
-+ *  02-06-12  02.00.13  Added alternate defines for Task Priority / Command
-+ *                      Priority to match SAM-4.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -194,6 +196,9 @@ typedef struct _MPI2_SCSI_IO_REQUEST
- 
- #define MPI2_SCSIIO_CONTROL_TASKPRI_MASK        (0x00007800)
- #define MPI2_SCSIIO_CONTROL_TASKPRI_SHIFT       (11)
-+/* alternate name for the previous field; called Command Priority in SAM-4 */
-+#define MPI2_SCSIIO_CONTROL_CMDPRI_MASK         (0x00007800)
-+#define MPI2_SCSIIO_CONTROL_CMDPRI_SHIFT        (11)
- 
- #define MPI2_SCSIIO_CONTROL_TASKATTRIBUTE_MASK  (0x00000700)
- #define MPI2_SCSIIO_CONTROL_SIMPLEQ             (0x00000000)
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-index 9a925c0..b0d4760 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-@@ -1,12 +1,12 @@
- /*
-- *  Copyright (c) 2000-2011 LSI Corporation.
-+ *  Copyright (c) 2000-2012 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_ioc.h
-  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
-  *  Creation Date:  October 11, 2006
-  *
-- *  mpi2_ioc.h Version:  02.00.19
-+ *  mpi2_ioc.h Version:  02.00.21
-  *
-  *  Version History
-  *  ---------------
-@@ -117,6 +117,7 @@
-  *  08-24-11  02.00.19  Added PhysicalPort field to
-  *                      MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE structure.
-  *                      Marked MPI2_PM_CONTROL_FEATURE_PCIE_LINK as obsolete.
-+ *  03-29-12  02.00.21  Added a product specific range to event values.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -492,7 +493,8 @@ typedef struct _MPI2_EVENT_NOTIFICATION_REPLY
- #define MPI2_EVENT_SAS_NOTIFY_PRIMITIVE             (0x0026)
- #define MPI2_EVENT_TEMP_THRESHOLD                   (0x0027)
- #define MPI2_EVENT_HOST_MESSAGE                     (0x0028)
--
-+#define MPI2_EVENT_MIN_PRODUCT_SPECIFIC             (0x006E)
-+#define MPI2_EVENT_MAX_PRODUCT_SPECIFIC             (0x007F)
- 
- /* Log Entry Added Event data */
- 
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-index 0601612..2b38af2 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-@@ -1,12 +1,12 @@
- /*
-- *  Copyright (c) 2000-2010 LSI Corporation.
-+ *  Copyright (c) 2000-2012 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_raid.h
-  *          Title:  MPI Integrated RAID messages and structures
-  *  Creation Date:  April 26, 2007
-  *
-- *    mpi2_raid.h Version:  02.00.06
-+ *    mpi2_raid.h Version:  02.00.08
-  *
-  *  Version History
-  *  ---------------
-@@ -26,7 +26,7 @@
-  *  08-24-10  02.00.06  Added MPI2_RAID_ACTION_COMPATIBILITY_CHECK along with
-  *                      related structures and defines.
-  *                      Added product-specific range to RAID Action values.
--
-+ *  02-06-12  02.00.08  Added MPI2_RAID_ACTION_PHYSDISK_HIDDEN.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -181,6 +181,7 @@ typedef struct _MPI2_RAID_ACTION_REQUEST
- #define MPI2_RAID_ACTION_START_RAID_FUNCTION        (0x21)
- #define MPI2_RAID_ACTION_STOP_RAID_FUNCTION         (0x22)
- #define MPI2_RAID_ACTION_COMPATIBILITY_CHECK        (0x23)
-+#define MPI2_RAID_ACTION_PHYSDISK_HIDDEN            (0x24)
- #define MPI2_RAID_ACTION_MIN_PRODUCT_SPECIFIC       (0x80)
- #define MPI2_RAID_ACTION_MAX_PRODUCT_SPECIFIC       (0xFF)
- 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 0f4f971..4a09ace 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -8055,8 +8055,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (max_sectors != 0xFFFF) {
+ 		if (max_sectors < 64) {
+ 			shost->max_sectors = 64;
+-			printk(MPT2SAS_WARN_FMT "Invalid value %d passed "
+-			    "for max_sectors, range is 64 to 8192. Assigning "
++			printk(MPT2SAS_WARN_FMT "Invalid value %d passed "\
++			    "for max_sectors, range is 64 to 32767. Assigning "\
+ 			    "value of 64.\n", ioc->name, max_sectors);
+ 		} else if (max_sectors > 32767) {
+ 			shost->max_sectors = 32767;
