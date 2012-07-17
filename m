@@ -1,45 +1,77 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] sd: do not set changed flag on all unit attention conditions
-Date: Tue, 17 Jul 2012 14:31:21 +0200
-Message-ID: <50055B19.8090101@redhat.com>
-References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>     <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>     <50044D56.6000400@redhat.com>    <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>    <50052390.7030908@redhat.com>   <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com>   <5005285E.8060706@redhat.com>  <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>  <5005302D.6010805@redhat.com> <1342527693.3039.64.camel@dabdike.int.hansenpartnership.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/3] ipr: Reduce queuecommand lock time
+Date: Tue, 17 Jul 2012 08:09:05 -0500
+Message-ID: <500563F1.8030507@linux.vnet.ibm.com>
+References: <201207162048.q6GKm8m3018046@d03av01.boulder.ibm.com> <20120717020308.GA18581@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24505 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751159Ab2GQMbY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2012 08:31:24 -0400
-In-Reply-To: <1342527693.3039.64.camel@dabdike.int.hansenpartnership.com>
+Received: from e37.co.us.ibm.com ([32.97.110.158]:53591 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753643Ab2GQNLM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 09:11:12 -0400
+Received: from /spool/local
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Tue, 17 Jul 2012 07:11:09 -0600
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 3B9C219D80FC
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 13:09:54 +0000 (WET)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6HD9lal191714
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 07:09:49 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6HD96F3027515
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 07:09:06 -0600
+In-Reply-To: <20120717020308.GA18581@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
 
-Il 17/07/2012 14:21, James Bottomley ha scritto:
->> Yes, I realize failing only on specific sense codes as I did it in the
->> patch is not going to work.  However, the other way round is not
->> problematic (explicitly allow some sense codes, fail on all others).
+On 07/16/2012 09:03 PM, Matthew Wilcox wrote:
+> On Mon, Jul 16, 2012 at 03:48:08PM -0500, Brian King wrote:
+>> +static int ipr_queuecommand(struct Scsi_Host *shost,
+>> +			    struct scsi_cmnd *scsi_cmd)
+>>  {
+>>  	struct ipr_ioa_cfg *ioa_cfg;
+>>  	struct ipr_resource_entry *res;
+>>  	struct ipr_ioarcb *ioarcb;
+>>  	struct ipr_cmnd *ipr_cmd;
+>> +	unsigned long lock_flags = 0;
 > 
-> Heh, I once thought that, but there's no end to the strange ideas USB
-> manufacturers get.
+> You don't need to initialise lock_flags.
+> 
+> Looking at the rest of the code, you drop the lock in the middle,
+> then re-acquire it.  That'll help with hold time, but I'm not convinced
+> it'll help with performance.  Have you done performance testing with
+> these changes?  I seem to remember we used an eight-socket box to show
+> host_lock problems in the past.
 
-:)
+We've done performance testing of these patches and they provided
+roughly a 25% increase in the number of IOPs we are able to push
+through an adapter on Power. This was running on an 8 socket box with
+4 way SMT, so 32 separate hardware threads.
 
->> > Another example is "target operating conditions have changed".  QEMU
->> > cannot report such changes because scsi_error prints a warning (fine)
->> > and then passes the unit attention upwards.  With removable drives, this
->> > has the same problem as resizing.
-> Why would a removable device ever use any of the codes under this ASC
-> when the medium hasn't changed?  They're all for arrays (well except
-> 0x10 and 0x11 ... and they're only supposed to apply to tape changers
-> with autoload support declared in the control mode page).
+One of the main things these patches do is to get the dma map/unmap
+call from underneath the host lock. On Power, these calls have
+more overhead than on some other platforms, since they end up
+resulting in a hypervisor call, which can significantly increase
+host lock hold times. 
 
-There are also a couple of generic ones such as "reported luns have
-changed".  I also considered briefly using "inquiry data has changed" to
-reload the unmap parameters after live snapshot or storage migration.  I
-dropped the idea, please don't put me in the same bin as the USB
-manufacturers.
+I'll resend with the change to not initialize the lock flags.
 
-Paolo
+Thanks,
+
+Brian
+
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
+
+
+
