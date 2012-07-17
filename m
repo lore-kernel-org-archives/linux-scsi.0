@@ -1,136 +1,95 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
-Date: Wed, 18 Jul 2012 02:11:13 +0300
-Message-ID: <20120717231113.GA3004@redhat.com>
-References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
-	<20120717150548.GA11587@redhat.com>
-	<1342559842.18004.440.camel@haakon2.linux-iscsi.org>
-	<20120717213437.GC1868@redhat.com>
-	<1342562528.18004.480.camel@haakon2.linux-iscsi.org>
-	<20120717221814.GH1868@redhat.com>
-	<1342564640.18004.492.camel@haakon2.linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 5/7] target: Check sess_tearing_down in
+ target_get_sess_cmd()
+Date: Tue, 17 Jul 2012 16:24:21 -0700
+Message-ID: <1342567461.18004.517.camel@haakon2.linux-iscsi.org>
+References: <1342461882-5848-1-git-send-email-roland@kernel.org>
+	 <1342461882-5848-6-git-send-email-roland@kernel.org>
+	 <1342480139.18004.309.camel@haakon2.linux-iscsi.org>
+	 <CAL1RGDVNouDHfvKt-WryhhxswC8a8sd+gP-eg3aVDkgB8wU_Bw@mail.gmail.com>
+	 <CAL1RGDWgbdsQr1=YMdFyRt=h5Mr40mtXRExUgD_88YPzOnkMkw@mail.gmail.com>
+	 <1342490218.18004.382.camel@haakon2.linux-iscsi.org>
+	 <CAL1RGDUVaF_GGwN_0nYD2X87Sa0hwiihuua9HJgK=CJ7HiFv_w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1342564640.18004.492.camel@haakon2.linux-iscsi.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CAL1RGDUVaF_GGwN_0nYD2X87Sa0hwiihuua9HJgK=CJ7HiFv_w@mail.gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Andy Grover <agrover@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 17, 2012 at 03:37:20PM -0700, Nicholas A. Bellinger wrote:
-> On Wed, 2012-07-18 at 01:18 +0300, Michael S. Tsirkin wrote:
-> > On Tue, Jul 17, 2012 at 03:02:08PM -0700, Nicholas A. Bellinger wrote:
-> > > On Wed, 2012-07-18 at 00:34 +0300, Michael S. Tsirkin wrote:
-> > > > On Tue, Jul 17, 2012 at 02:17:22PM -0700, Nicholas A. Bellinger wrote:
-> > > > > On Tue, 2012-07-17 at 18:05 +0300, Michael S. Tsirkin wrote:
-> > > > > > On Wed, Jul 11, 2012 at 09:15:00PM +0000, Nicholas A. Bellinger wrote:
-> > > > > > > From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Tue, 2012-07-17 at 09:34 -0700, Roland Dreier wrote:
+> On Mon, Jul 16, 2012 at 6:56 PM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> >> Do you have a plan for how to handle this?  Do we really want to plumb
+> >> through another callback to tell the fabric driver to free the command
+> >> in this case?
 > 
-> <SNIP>
+> > I need to think more about this ahead of changing it back again for-3.6
+> > now that other fabrics have the assumption of target_submit_cmd() would
+> > not fail.
 > 
-> > > As mentioned in the response to Anthony, we are using the same generic
-> > > fabric ABI in drivers/target/target_core_fabric_configfs.c since .38.
-> > > 
-> > > That part is not going to change, and it has not changed for any of the
-> > > other 7 target fabric modules we've merged into mainline since then.
-> > > 
-> > > > > Also, tcm_vhost has been marked as Experimental following virtio-scsi.
-> > > > > I'd much rather leave it at Experimental until we merge upstream
-> > > > > userspace support.   If userspace support never ends up materializing,
-> > > > > I'm fine with dropping it all together.
-> > > > 
-> > > > Once it's in kernel you never know who will use this driver.
-> > > > Experimental does not mean driver can be dropped, staging does.
-> > > > 
-> > > 
-> > > Yes, that's the point of being in mainline.  People using the code,
-> > > right..?
-> > 
-> > Exactly. I am just worried about in the end being no major users and we
-> > are being stuck with a niche driver that as a result is very hard to test.
-> > And the reason for the fear is the initial negative reaction from the
-> > qemu side.  And no if it's there we can't just drop it.
-> > 
+> > There is a clear case with qla2xxx for just changing it back (we might
+> > end up doing that just yet) but I wanted to get the other important bits
+> > into for-next into place first..
 > 
-> That is certainly a reasonable concern.. 
+> Sleeping on things, I now feel pretty strongly that having target_submit_cmd
+> return an error value for "immediate" errors where the command does not
+> make it into the target core is the right approach.
 > 
-> > > > > However at this point given that there is a 3x performance gap between
-> > > > > virtio-scsi-raw + virtio-scsi+tcm_vhost for random mixed small block
-> > > > > I/O, and we still need the latter to do proper SCSI CDB passthrough for
-> > > > > non TYPE_DISK devices I'm hoping that we can agree on userspace bits
-> > > > > once tcm_vhost is merged.
-> > > > > 
-> > > > > --nab
-> > > > 
-> > > > I do think upstream kernel would help you nail userspace issues too
-> > > > but at this point it looks like either staging meterial or 3.6 is too
-> > > > early.
-> > > > 
-> > > 
-> > > I think for-3.6 is just the right time for this kernel code.  Seriously,
-> > > The basic ABI fabric layout for /sys/kernel/config/target/vhost/ is
-> > > going to be the same now for-3.6, the same for-3.7, and the same for .38
-> > > code. 
-> > > 
-> > > I'd be happy to move tcm_vhost back to drivers/target/ for now, and we
-> > > move it to drivers/vhost/ once the userspace bits are worked out..?
-> > > 
-> > > Would that be a reasonable compromise to move forward..?
-> > > 
-> > > --nab
-> > 
-> > I don't see how it helps.  The driver is either a guaranteed ABI or not.
-> > I'd prefer not to have vhost users outside drivers/vhost/ since it is
-> > harder for me to keep track of them.
-> > 
-> > What's the problem with staging proposal? It's just another hoop to jump
-> > through to enable it?
-> > 
-> 
-> Yeah, I'm OK with just adding a CONFIG_STAGING tag is a reasonable step
-> forward for-3.6.
-> 
-> Adding the following patch into target-pending/for-next-merge now:
-> 
-> diff --git a/drivers/vhost/Kconfig b/drivers/vhost/Kconfig
-> index ccbeb6f..2cd7135 100644
-> --- a/drivers/vhost/Kconfig
-> +++ b/drivers/vhost/Kconfig
-> @@ -11,7 +11,7 @@ config VHOST_NET
->  
->  config TCM_VHOST
->         tristate "TCM_VHOST fabric module (EXPERIMENTAL)"
-> -       depends on TARGET_CORE && EVENTFD && EXPERIMENTAL && m
-> +       depends on TARGET_CORE && EVENTFD && EXPERIMENTAL && STAGING && m
->         default n
->         ---help---
->         Say M here to enable the TCM_VHOST fabric module for use with virtio-scsi guests
-> 
+> Freeing commands is already one of the most confusing and complex parts
+> of the target code, with "check_stop_free," "cmd_wait_comp" and
+> "SCF_ACK_KREF."  Adding another code flow back to the fabric driver
+> with yet another set of semantics around freeing a command seems like
+> it's making things even harder to maintain.
 > 
 
-Hmm that's not explicit enough, someone might enable CONFIG_STAGING for
-some other reason and won't notice the dependency.
-We need it to appear with other staging drivers in the menu,
-so there needs to be a Kconfig that is included from
-drivers/staging/Kconfig.
+I wasn't talking about adding another release path.  I was thinking more
+about a TFO call to optionally abort HW/SW exchange if we can't accept
+the command in question.
 
-For example, we can create
-drivers/vhost/staging/Kconfig or drivers/vhost/tcm/Kconfig and include
-it from drivers/staging/Kconfig.  nouveau did something like this for a
-while, see f3c93cbde7eab38671ae085cb1027b08f5f36757.
+Not to mention, this could end up being useful for other purposes beyond
+the initial target_submit_cmd() failure case due to active I/O shutdown.
+(aborts + active I/O shutdown with active SRP WRITEs with ib_srpt come
+to mind needing something like this..)
 
-No need to move the rest of the code.
+> On the other hand, every caller of target_submit_cmd() in the tree already
+> has an error path where it handles problems it detects right before calling
+> target_submit_cmd(), and so it's trivial to share that for problems detected
+> inside target_submit_cmd().  If you look at patch 4/7, pretty much the
+> only changes are like going from
+> 
+>     target_submit_cmd(...);
+> 
+> to
+> 
+>     if (target_submit_cmd(...))
+>         goto err;
+> 
+> and in fact the ->handle_cmd() wrapper that qla_target uses to call
+> target_submit_cmd via tcm_qla2xxx already has a return value that
+> qla_target handled properly!
+> 
 
--- 
-MST
+Sure, there is no doubting tcm_qla2xxx's usage of this return value back
+into qla_target.c code.. 
+
+> I guess another approach would be to split target_submit_cmd() into
+> the target_get_sess_cmd() part and the rest of it, and have fabric
+> drivers handle errors queueing commands but not have to worry about
+> the submit cmd part failing.  But I'm not sure that's any better.
+> 
+> Andy, any feelings about this one way or another?  Christoph?
+> 
+
+Ok, so for-3.6 it makes the most sense to just convert this back to
+propagate up the return code, but only for target_get_sess_cmd() failure
+case..
+
+That said, I'll go ahead and respin patch #4 on top of for-next, and
+post the updated patch shortly with the same CC's and ask for ACKs from
+the necessary folks.
+
+--nab
