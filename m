@@ -1,95 +1,220 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 5/7] target: Check sess_tearing_down in
- target_get_sess_cmd()
-Date: Tue, 17 Jul 2012 16:24:21 -0700
-Message-ID: <1342567461.18004.517.camel@haakon2.linux-iscsi.org>
-References: <1342461882-5848-1-git-send-email-roland@kernel.org>
-	 <1342461882-5848-6-git-send-email-roland@kernel.org>
-	 <1342480139.18004.309.camel@haakon2.linux-iscsi.org>
-	 <CAL1RGDVNouDHfvKt-WryhhxswC8a8sd+gP-eg3aVDkgB8wU_Bw@mail.gmail.com>
-	 <CAL1RGDWgbdsQr1=YMdFyRt=h5Mr40mtXRExUgD_88YPzOnkMkw@mail.gmail.com>
-	 <1342490218.18004.382.camel@haakon2.linux-iscsi.org>
-	 <CAL1RGDUVaF_GGwN_0nYD2X87Sa0hwiihuua9HJgK=CJ7HiFv_w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] target: Allow for target_submit_cmd() returning errors
+Date: Tue, 17 Jul 2012 23:37:41 +0000
+Message-ID: <1342568261-15616-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAL1RGDUVaF_GGwN_0nYD2X87Sa0hwiihuua9HJgK=CJ7HiFv_w@mail.gmail.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Andy Grover <agrover@redhat.com>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Chris Boot <bootc@bootc.net>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Mark Rustad <mark.d.rustad@intel.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Felipe Balbi <balbi@ti.com>, Andy Grover <agrover@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2012-07-17 at 09:34 -0700, Roland Dreier wrote:
-> On Mon, Jul 16, 2012 at 6:56 PM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> >> Do you have a plan for how to handle this?  Do we really want to plumb
-> >> through another callback to tell the fabric driver to free the command
-> >> in this case?
-> 
-> > I need to think more about this ahead of changing it back again for-3.6
-> > now that other fabrics have the assumption of target_submit_cmd() would
-> > not fail.
-> 
-> > There is a clear case with qla2xxx for just changing it back (we might
-> > end up doing that just yet) but I wanted to get the other important bits
-> > into for-next into place first..
-> 
-> Sleeping on things, I now feel pretty strongly that having target_submit_cmd
-> return an error value for "immediate" errors where the command does not
-> make it into the target core is the right approach.
-> 
-> Freeing commands is already one of the most confusing and complex parts
-> of the target code, with "check_stop_free," "cmd_wait_comp" and
-> "SCF_ACK_KREF."  Adding another code flow back to the fabric driver
-> with yet another set of semantics around freeing a command seems like
-> it's making things even harder to maintain.
-> 
+From: Roland Dreier <roland@purestorage.com>
 
-I wasn't talking about adding another release path.  I was thinking more
-about a TFO call to optionally abort HW/SW exchange if we can't accept
-the command in question.
+We want it to be possible for target_submit_cmd() to return errors up
+to its fabric module callers.  For now just update the prototype to
+return an int, and update all callers to handle non-zero return values
+as an error.
 
-Not to mention, this could end up being useful for other purposes beyond
-the initial target_submit_cmd() failure case due to active I/O shutdown.
-(aborts + active I/O shutdown with active SRP WRITEs with ib_srpt come
-to mind needing something like this..)
+This is immediately useful for tcm_qla2xxx to fix a long-standing active
+I/O session shutdown race, but tcm_fc, usb-gadget, and sbp-target the
+fabric maintainers need to check + ACK that handling a target_submit_cmd()
+failure due to session shutdown does not introduce regressions
 
-> On the other hand, every caller of target_submit_cmd() in the tree already
-> has an error path where it handles problems it detects right before calling
-> target_submit_cmd(), and so it's trivial to share that for problems detected
-> inside target_submit_cmd().  If you look at patch 4/7, pretty much the
-> only changes are like going from
-> 
->     target_submit_cmd(...);
-> 
-> to
-> 
->     if (target_submit_cmd(...))
->         goto err;
-> 
-> and in fact the ->handle_cmd() wrapper that qla_target uses to call
-> target_submit_cmd via tcm_qla2xxx already has a return value that
-> qla_target handled properly!
-> 
+(nab: Respin against for-next after initial NACK + update docbook comment)
 
-Sure, there is no doubting tcm_qla2xxx's usage of this return value back
-into qla_target.c code.. 
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: Arun Easi <arun.easi@qlogic.com>
+Cc: Chris Boot <bootc@bootc.net>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Mark Rustad <mark.d.rustad@intel.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Felipe Balbi <balbi@ti.com>
+Cc: Andy Grover <agrover@redhat.com>
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    3 +--
+ drivers/target/sbp/sbp_target.c        |    8 +++++---
+ drivers/target/target_core_transport.c |   14 +++++++++-----
+ drivers/target/tcm_fc/tfc_cmd.c        |    8 +++++---
+ drivers/usb/gadget/tcm_usb_gadget.c    |   20 ++++++++------------
+ include/target/target_core_fabric.h    |    2 +-
+ 6 files changed, 29 insertions(+), 26 deletions(-)
 
-> I guess another approach would be to split target_submit_cmd() into
-> the target_get_sess_cmd() part and the rest of it, and have fabric
-> drivers handle errors queueing commands but not have to worry about
-> the submit cmd part failing.  But I'm not sure that's any better.
-> 
-> Andy, any feelings about this one way or another?  Christoph?
-> 
-
-Ok, so for-3.6 it makes the most sense to just convert this back to
-propagate up the return code, but only for target_get_sess_cmd() failure
-case..
-
-That said, I'll go ahead and respin patch #4 on top of for-next, and
-post the updated patch shortly with the same CC's and ask for ACKs from
-the necessary folks.
-
---nab
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 65a7ed9..4752f65 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -597,10 +597,9 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
+ 		return -EINVAL;
+ 	}
+ 
+-	target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
++	return target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
+ 				cmd->unpacked_lun, data_length, fcp_task_attr,
+ 				data_dir, flags);
+-	return 0;
+ }
+ 
+ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
+diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
+index e10e622..39ddba5 100644
+--- a/drivers/target/sbp/sbp_target.c
++++ b/drivers/target/sbp/sbp_target.c
+@@ -1235,9 +1235,11 @@ static void sbp_handle_command(struct sbp_target_request *req)
+ 	pr_debug("sbp_handle_command ORB:0x%llx unpacked_lun:%d data_len:%d data_dir:%d\n",
+ 			req->orb_pointer, unpacked_lun, data_length, data_dir);
+ 
+-	target_submit_cmd(&req->se_cmd, sess->se_sess, req->cmd_buf,
+-			req->sense_buf, unpacked_lun, data_length,
+-			MSG_SIMPLE_TAG, data_dir, 0);
++	if (target_submit_cmd(&req->se_cmd, sess->se_sess, req->cmd_buf,
++			      req->sense_buf, unpacked_lun, data_length,
++			      MSG_SIMPLE_TAG, data_dir, 0))
++		goto err;
++
+ 	return;
+ 
+ err:
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 14e54b4..7647eca 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1447,10 +1447,14 @@ EXPORT_SYMBOL(transport_handle_cdb_direct);
+  * @data_dir: DMA data direction
+  * @flags: flags for command submission from target_sc_flags_tables
+  *
++ * Returns non zero to signal active I/O shutdown failure.  All other
++ * setup exceptions will be returned as a SCSI CHECK_CONDITION response,
++ * but still return zero here.
++ *
+  * This may only be called from process context, and also currently
+  * assumes internal allocation of fabric payload buffer by target-core.
+  **/
+-void target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
++int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 		unsigned char *cdb, unsigned char *sense, u32 unpacked_lun,
+ 		u32 data_length, int task_attr, int data_dir, int flags)
+ {
+@@ -1478,7 +1482,7 @@ void target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 	 */
+ 	rc = target_get_sess_cmd(se_sess, se_cmd, (flags & TARGET_SCF_ACK_KREF));
+ 	if (rc)
+-		return;
++		return rc;
+ 	/*
+ 	 * Signal bidirectional data payloads to target-core
+ 	 */
+@@ -1491,13 +1495,13 @@ void target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 		transport_send_check_condition_and_sense(se_cmd,
+ 				se_cmd->scsi_sense_reason, 0);
+ 		target_put_sess_cmd(se_sess, se_cmd);
+-		return;
++		return 0;
+ 	}
+ 
+ 	rc = target_setup_cmd_from_cdb(se_cmd, cdb);
+ 	if (rc != 0) {
+ 		transport_generic_request_failure(se_cmd);
+-		return;
++		return 0;
+ 	}
+ 
+ 	/*
+@@ -1507,7 +1511,7 @@ void target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 	core_alua_check_nonop_delay(se_cmd);
+ 
+ 	transport_handle_cdb_direct(se_cmd);
+-	return;
++	return 0;
+ }
+ EXPORT_SYMBOL(target_submit_cmd);
+ 
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 4ad58ac..b9cb500 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -543,9 +543,11 @@ static void ft_send_work(struct work_struct *work)
+ 	 * Use a single se_cmd->cmd_kref as we expect to release se_cmd
+ 	 * directly from ft_check_stop_free callback in response path.
+ 	 */
+-	target_submit_cmd(&cmd->se_cmd, cmd->sess->se_sess, fcp->fc_cdb,
+-			&cmd->ft_sense_buffer[0], scsilun_to_int(&fcp->fc_lun),
+-			ntohl(fcp->fc_dl), task_attr, data_dir, 0);
++	if (target_submit_cmd(&cmd->se_cmd, cmd->sess->se_sess, fcp->fc_cdb,
++			      &cmd->ft_sense_buffer[0], scsilun_to_int(&fcp->fc_lun),
++			      ntohl(fcp->fc_dl), task_attr, data_dir, 0))
++		goto err;
++
+ 	pr_debug("r_ctl %x alloc target_submit_cmd\n", fh->fh_r_ctl);
+ 	return;
+ 
+diff --git a/drivers/usb/gadget/tcm_usb_gadget.c b/drivers/usb/gadget/tcm_usb_gadget.c
+index 02ace18..9ddf315 100644
+--- a/drivers/usb/gadget/tcm_usb_gadget.c
++++ b/drivers/usb/gadget/tcm_usb_gadget.c
+@@ -1060,7 +1060,10 @@ static void usbg_cmd_work(struct work_struct *work)
+ 	tpg = cmd->fu->tpg;
+ 	tv_nexus = tpg->tpg_nexus;
+ 	dir = get_cmd_dir(cmd->cmd_buf);
+-	if (dir < 0) {
++	if (dir < 0 ||
++	    target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
++			      cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
++			      0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE)) {
+ 		transport_init_se_cmd(se_cmd,
+ 				tv_nexus->tvn_se_sess->se_tpg->se_tpg_tfo,
+ 				tv_nexus->tvn_se_sess, cmd->data_len, DMA_NONE,
+@@ -1069,12 +1072,7 @@ static void usbg_cmd_work(struct work_struct *work)
+ 		transport_send_check_condition_and_sense(se_cmd,
+ 				TCM_UNSUPPORTED_SCSI_OPCODE, 1);
+ 		usbg_cleanup_cmd(cmd);
+-		return;
+ 	}
+-
+-	target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
+-			cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
+-			0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE);
+ }
+ 
+ static int usbg_submit_command(struct f_uas *fu,
+@@ -1172,7 +1170,10 @@ static void bot_cmd_work(struct work_struct *work)
+ 	tpg = cmd->fu->tpg;
+ 	tv_nexus = tpg->tpg_nexus;
+ 	dir = get_cmd_dir(cmd->cmd_buf);
+-	if (dir < 0) {
++	if (dir < 0 ||
++	    target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
++			      cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
++			      cmd->data_len, cmd->prio_attr, dir, 0)) {
+ 		transport_init_se_cmd(se_cmd,
+ 				tv_nexus->tvn_se_sess->se_tpg->se_tpg_tfo,
+ 				tv_nexus->tvn_se_sess, cmd->data_len, DMA_NONE,
+@@ -1181,12 +1182,7 @@ static void bot_cmd_work(struct work_struct *work)
+ 		transport_send_check_condition_and_sense(se_cmd,
+ 				TCM_UNSUPPORTED_SCSI_OPCODE, 1);
+ 		usbg_cleanup_cmd(cmd);
+-		return;
+ 	}
+-
+-	target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
+-			cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
+-			cmd->data_len, cmd->prio_attr, dir, 0);
+ }
+ 
+ static int bot_submit_command(struct f_uas *fu,
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index 815e064..69fb3cf 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -102,7 +102,7 @@ void	transport_init_se_cmd(struct se_cmd *, struct target_core_fabric_ops *,
+ 		struct se_session *, u32, int, int, unsigned char *);
+ int	transport_lookup_cmd_lun(struct se_cmd *, u32);
+ int	target_setup_cmd_from_cdb(struct se_cmd *, unsigned char *);
+-void	target_submit_cmd(struct se_cmd *, struct se_session *, unsigned char *,
++int	target_submit_cmd(struct se_cmd *, struct se_session *, unsigned char *,
+ 		unsigned char *, u32, u32, int, int, int);
+ int	target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 		unsigned char *sense, u32 unpacked_lun,
+-- 
+1.7.2.5
