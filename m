@@ -1,46 +1,58 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH RESEND 0/5] Add vhost-blk support
-Date: Tue, 17 Jul 2012 18:09:28 +0300
-Message-ID: <20120717150928.GB11587@redhat.com>
-References: <1342169711-12386-1-git-send-email-asias@redhat.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH RESEND 0/3] scsi: fix internal write cache issue on usb
+ hdd.
+Date: Tue, 17 Jul 2012 08:46:53 -0700
+Message-ID: <20120717154653.GF16283@kroah.com>
+References: <1341716685-6631-1-git-send-email-linkinjeon@gmail.com>
+ <20120716234805.GA9875@kroah.com>
+ <1342509554.3039.4.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-aio@kvack.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:64962 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168Ab2GQPq7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 11:46:59 -0400
+Received: by ghrr11 with SMTP id r11so516148ghr.19
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 08:46:58 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <1342169711-12386-1-git-send-email-asias@redhat.com>
-Sender: owner-linux-aio@kvack.org
-To: Asias He <asias@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Benjamin LaHaise <bcrl@kvack.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Moyer <jmoyer@redhat.com>, kvm@vger.kernel.org, linux-aio@kvack.org, linux-fsdevel@vger.kernel.org, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
+In-Reply-To: <1342509554.3039.4.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Namjae Jeon <linkinjeon@gmail.com>, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, sshtylyov@mvista.com, bvanassche@acm.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>
 
-On Fri, Jul 13, 2012 at 04:55:06PM +0800, Asias He wrote:
+On Tue, Jul 17, 2012 at 08:19:14AM +0100, James Bottomley wrote:
+> On Mon, 2012-07-16 at 16:48 -0700, Greg KH wrote:
+> > On Sat, Jul 07, 2012 at 11:04:45PM -0400, Namjae Jeon wrote:
+> > > From: Namjae Jeon <namjae.jeon@samsung.com>
+> > > 
+> > > The numbers of USB HDDs(All USB HDD I checked) does not respond
+> > > correctly to scsi mode sense command for retrieving the write cache
+> > > page status. Even though write cache is enabled by default, due to
+> > > scsi driver assume that cache is not enabled which in turn might lead
+> > > to loss of data since data still will be in cache.
+> > > This result that all filesystems is not stable on USB HDD when the
+> > > device is unplugged abruptly, even though these are having journaling
+> > > feature. Our first trying is that scsi driver send ATA command
+> > > (ATA Pass through, #85) to USB HDD after failure from normal routine to
+> > > know write cache enable.
+> > > We have known it is dangerous after testing several USB HDD. some of
+> > > HDD is stalled by this command(A-DATA HDD). So we tried to make the
+> > > patch James Bottomley's suggestion(usb quirk) on version 2 that add
+> > > product ID and verdor ID of USB HDD to USB quirk list after checking
+> > > write cache.
+> > > All filesystem will be stable on USB HDD registered in quirk list.
+> > > And it will be updated continuously.
+> > 
+> > Now applied to the usb-next branch.
 > 
-> Hi folks,
-> 
-> [I am resending to fix the broken thread in the previous one.]
-> 
-> This patchset adds vhost-blk support. vhost-blk is a in kernel virito-blk
-> device accelerator. Compared to userspace virtio-blk implementation, vhost-blk
-> gives about 5% to 15% performance improvement.
+> It's been in scsi#misc for ten days with no problems.  Lets leave it
+> there rather than create merge and rebase issues.
 
-Same thing as tcm_host comment:
+No need for rebasing.  It's already in my tree, so we can handle the
+merge when this hits Linus's tree.
 
-	It seems not 100% clear whether this driver will have major
-	userspace using it. And if not, it would be very hard to support a
-	driver when recent userspace does not use it in the end.
+thanks,
 
-	I think a good idea for 3.6 would be to make it depend on
-	CONFIG_STAGING.  Then we don't commit to an ABI.  For this, you can add
-	a separate Kconfig and source it from drivers/staging/Kconfig.  Maybe it
-	needs to be in a separate directory drivers/vhost/staging/Kconfig.
-
-I Cc'd the list of tcm_host in the hope that you can cooperate on this.
-
--- 
-MST
-
---
-To unsubscribe, send a message with 'unsubscribe linux-aio' in
-the body to majordomo@kvack.org.  For more info on Linux AIO,
-see: http://www.kvack.org/aio/
-Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
+greg k-h
