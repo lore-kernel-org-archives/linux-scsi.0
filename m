@@ -1,42 +1,50 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 1/3] ipr: Reduce queuecommand lock time
-Date: Mon, 16 Jul 2012 20:03:08 -0600
-Message-ID: <20120717020308.GA18581@parisc-linux.org>
-References: <201207162048.q6GKm8m3018046@d03av01.boulder.ibm.com>
+From: vinayak holikatti <vinholikatti@gmail.com>
+Subject: Re: [PATCH V2 3/4] [SCSI] ufs: Add Platform glue driver for ufshcd
+Date: Tue, 17 Jul 2012 11:39:49 +0530
+Message-ID: <CAKVbJB8PGZqOUOjDk-2uckx4MUkgKEb-EZ_TYt6C5fGjP2k85g@mail.gmail.com>
+References: <1342189698-20393-1-git-send-email-vinholikatti@gmail.com>
+	<1342189698-20393-2-git-send-email-vinholikatti@gmail.com>
+	<CAKYAXd9cPuN-HfifDmz4M==QfjEW7CX6BF=rumSBSwRtO38_PQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:40770 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753809Ab2GQCDK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2012 22:03:10 -0400
-Content-Disposition: inline
-In-Reply-To: <201207162048.q6GKm8m3018046@d03av01.boulder.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-Reply-To: <CAKYAXd9cPuN-HfifDmz4M==QfjEW7CX6BF=rumSBSwRtO38_PQ@mail.gmail.com>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
 
-On Mon, Jul 16, 2012 at 03:48:08PM -0500, Brian King wrote:
-> +static int ipr_queuecommand(struct Scsi_Host *shost,
-> +			    struct scsi_cmnd *scsi_cmd)
->  {
->  	struct ipr_ioa_cfg *ioa_cfg;
->  	struct ipr_resource_entry *res;
->  	struct ipr_ioarcb *ioarcb;
->  	struct ipr_cmnd *ipr_cmd;
-> +	unsigned long lock_flags = 0;
-
-You don't need to initialise lock_flags.
-
-Looking at the rest of the code, you drop the lock in the middle,
-then re-acquire it.  That'll help with hold time, but I'm not convinced
-it'll help with performance.  Have you done performance testing with
-these changes?  I seem to remember we used an eight-socket box to show
-host_lock problems in the past.
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+On Mon, Jul 16, 2012 at 7:19 PM, Namjae Jeon <linkinjeon@gmail.com> wrote:
+> Hi Vinayak.
+>> + * ufshcd_pltfrm_remove - remove platform driver routine
+>> + * @pdev: pointer to platform device handle
+>> + *
+>> + * Returns 0 on success, non-zero value on failure
+>> + */
+>> +static int __devexit ufshcd_pltfrm_remove(struct platform_device *pdev)
+>> +{
+>> +     struct resource *mem_res;
+>> +     struct resource *irq_res;
+>> +     resource_size_t mem_size;
+>> +     struct ufs_hba *hba =  platform_get_drvdata(pdev);
+>> +
+>> +     ufshcd_remove(hba);
+>> +     irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+>> +     if (!irq_res)
+>> +             dev_err(&pdev->dev, "ufshcd: IRQ resource not available\n");
+>> +     free_irq(irq_res->start, hba);
+> Is there no possibility of null pointer dereferencing error ?(irq_res->start)
+> I think that free_irq should be not called if irq_res is NULL.
+I agree, I have overlooked at this logic, the free_irq should have
+been in the else
+part of this section. I will make the modification in the next version
+of patches.
+>> +     mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> Looks mem_res is also same with upper case.
+> Thanks.
+>> +     mem_size = resource_size(mem_res);
+>> +     release_mem_region(mem_res->start, mem_size);
+>> +     platform_set_drvdata(pdev, NULL);
+>> +     return 0;
+>> +}
+>> +
