@@ -1,52 +1,41 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCHv2 3/3] ipr: Driver version 2.5.4
-Date: Tue, 17 Jul 2012 08:15:33 -0500
-Message-ID: <201207171316.q6HDGjlG021108@d03av05.boulder.ibm.com>
+From: bart@bartvanassche.be
+Subject: Re: [PATCH 17/18] srp_transport: Add transport layer recovery
+ support
+Date: Tue, 17 Jul 2012 14:59:51 +0200
+Message-ID: <4a60357d9f7cfd0ba691914d73dc5865.squirrel@www.bartvanassche.be>
+References: <3109536.qySrY1Ts3e@asus> <2536946.Diyz1JQnfo@asus>
+    <500490A5.7020202@cs.wisc.edu>
+    <1342477710.25927.10.camel@frustration.ornl.gov>
+Reply-To: bart@bartvanassche.be
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:37845 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753891Ab2GQNRq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 09:17:46 -0400
-Received: from /spool/local
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Tue, 17 Jul 2012 07:17:45 -0600
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id DC5ED3E40054
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 13:17:07 +0000 (WET)
-Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6HDGt3m093442
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 07:17:00 -0600
-Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av05.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6HDGkNv021195
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 07:16:47 -0600
+Received: from [178.239.52.149] ([178.239.52.149]:50273 "EHLO wimaserver10.be"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754034Ab2GQNSV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jul 2012 09:18:21 -0400
+In-Reply-To: <1342477710.25927.10.camel@frustration.ornl.gov>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, matthew@wil.cx, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
+To: David Dillow <dillowda@ornl.gov>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>
 
+> On Mon, 2012-07-16 at 18:07 -0400, Mike Christie wrote:
+>> On 01/14/2012 05:56 AM, Bart Van Assche wrote:
+>> > Add the necessary functions in the SRP transport module to allow
+>> > an SRP initiator driver to implement transport layer recovery.
+>>
+>> I was updating my iscsi dev loss patch when I saw this is still not
+>> merged.
+>
+> Yes, I got part way into doing a rework of Bart's code before I got
+> sidetracked on another project. Cognizant of the looming merge window,
+> I'm desperately trying to get back to it.
 
-Bump driver version.
+I'll post the latest version of the patch series next Monday (I'm
+traveling now). If you have any suggestions for improvements about the
+patches themselves or the implemented algorithms, these are welcome.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- drivers/scsi/ipr.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/ipr.h~ipr_version_2_5_4 drivers/scsi/ipr.h
---- linux-2.6/drivers/scsi/ipr.h~ipr_version_2_5_4	2012-07-11 16:40:34.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.h	2012-07-11 16:40:34.000000000 -0500
-@@ -38,8 +38,8 @@
- /*
-  * Literals
-  */
--#define IPR_DRIVER_VERSION "2.5.3"
--#define IPR_DRIVER_DATE "(March 10, 2012)"
-+#define IPR_DRIVER_VERSION "2.5.4"
-+#define IPR_DRIVER_DATE "(July 11, 2012)"
- 
- /*
-  * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstanding
-_
+Bart.
 
