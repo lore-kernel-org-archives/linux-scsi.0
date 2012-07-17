@@ -1,41 +1,40 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
-Date: Wed, 18 Jul 2012 00:58:48 +0300
-Message-ID: <20120717215848.GD1868@redhat.com>
-References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
-	<20120717150548.GA11587@redhat.com>
-	<1342559842.18004.440.camel@haakon2.linux-iscsi.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] sd: do not set changed flag on all unit attention
+ conditions
+Date: Tue, 17 Jul 2012 22:59:50 +0100
+Message-ID: <1342562390.3039.100.camel@dabdike.int.hansenpartnership.com>
+References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>
+	 <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>
+	 <50044D56.6000400@redhat.com>
+	 <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>
+	 <50052390.7030908@redhat.com>
+	 <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com>
+	 <5005285E.8060706@redhat.com>
+	 <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>
+	 <20120717163612.GA15995@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1342559842.18004.440.camel@haakon2.linux-iscsi.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120717163612.GA15995@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 17, 2012 at 02:17:22PM -0700, Nicholas A. Bellinger wrote:
-> Wrt to staging, I'd like to avoid mucking with staging because:
+On Tue, 2012-07-17 at 12:36 -0400, Christoph Hellwig wrote:
+> On Tue, Jul 17, 2012 at 10:11:57AM +0100, James Bottomley wrote:
+> > There's no such thing in the market today as a removable disk that's
+> > resizeable.  Removable disks are for things like backup cartridges and
+> > ageing jazz drives.  Worse: most removeable devices today are USB card
+> > readers whose standards compliance varies from iffy to non existent.
+> > Resizeable disks are currently the province of storage arrays.
 > 
-> *) The code has been posted for review
-> *) The code has been converted to use the latest target-core primitives
-> *) The code does not require cleanups between staging -> merge
-> *) The code has been stable the last 7 days since RFC-v2 with heavy 
+> The virtual disks exported by aacraid are both marked removable and
+> can be resized.
 
-BTW I don't suggest putting code itself in staging.  Just the config
-flag to enable it.  Once we are more or less sure multiple userspaces
-are using this driver, we'll move the config hopefully already in 3.7.
-What's the downside?
+So what are properties of these things? ... or is this just an instance
+of a RAID manufacturer hacking around a problem by adding a removable
+flag?
 
--- 
-MST
+James
