@@ -1,182 +1,43 @@
 From: <sreekanth.reddy@lsi.com>
-Subject: [PATCH 04/09] [SCSI] mpt2sas : Provide sysfs attribute to report
- Backup Rail Monitor Status
-Date: Tue, 17 Jul 2012 15:56:07 +0530
-Message-ID: <20120717102607.GA7346@localhost.localdomain>
+Subject: [PATCH 08/09] [SCSI] mpt2sas : Fix for With post diag reset same set
+ of device gets added, removed and then again gets added with new target ids
+Date: Tue, 17 Jul 2012 15:56:13 +0530
+Message-ID: <20120717102613.GA7358@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:46029 "EHLO
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:46103 "EHLO
 	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753999Ab2GQKZY (ORCPT
+	by vger.kernel.org with ESMTP id S1754920Ab2GQKZb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2012 06:25:24 -0400
+	Tue, 17 Jul 2012 06:25:31 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com
 Cc: jejb@kernel.org
 
-A new sysfs shost attribute called "BMR_status" is implemented to
-report Backup Rail Monitor status.
+When device discovery is disabled during driver load time using module parameter
+"disable_discovery=1" and when diag reset is issued then from logs, it is observed
+that the devices get added, removed and then added with new target ids.
 
-This attribute is located in the path
-        /sys/class/scsi_host/host#/BMR_status
-
-when reading this adapter attribute, then driver will output the state
-of GPIO[24]. It returns "0" if BMR is healthy and it returns "1" for failure.
-
-if it returns an empty string then it means that there was an error while
-obtaining the BMR status. Then check dmesg for what error has occured.
+So, inorder to limit this turn-off the code which is deleting and devices across
+host reset when the disable_discovery module parameter is turned on.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@lsi.com>
 ---
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 401c8ac..dd05d24 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -1096,6 +1096,8 @@ int mpt2sas_config_get_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-     *mpi_reply, Mpi2IOUnitPage1_t *config_page);
- int mpt2sas_config_set_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-     *mpi_reply, Mpi2IOUnitPage1_t *config_page);
-+int mpt2sas_config_get_iounit_pg3(struct MPT2SAS_ADAPTER *ioc,
-+	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage3_t *config_page, u16 sz);
- int mpt2sas_config_get_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-     *mpi_reply, Mpi2SasIOUnitPage1_t *config_page, u16 sz);
- int mpt2sas_config_set_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc,
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_config.c b/drivers/scsi/mpt2sas/mpt2sas_config.c
-index 323309b..8637780 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_config.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_config.c
-@@ -683,6 +683,42 @@ mpt2sas_config_set_iounit_pg1(struct MPT2SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * mpt2sas_config_get_iounit_pg3 - obtain iounit page 3
-+ * @ioc: per adapter object
-+ * @mpi_reply: reply mf payload returned from firmware
-+ * @config_page: contents of the config page
-+ * @sz: size of buffer passed in config_page
-+ * Context: sleep.
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+int
-+mpt2sas_config_get_iounit_pg3(struct MPT2SAS_ADAPTER *ioc,
-+	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage3_t *config_page, u16 sz)
-+{
-+	Mpi2ConfigRequest_t mpi_request;
-+	int r;
-+
-+	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
-+	mpi_request.Function = MPI2_FUNCTION_CONFIG;
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
-+	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_IO_UNIT;
-+	mpi_request.Header.PageNumber = 3;
-+	mpi_request.Header.PageVersion = MPI2_IOUNITPAGE3_PAGEVERSION;
-+	mpt2sas_base_build_zero_len_sge(ioc, &mpi_request.PageBufferSGE);
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
-+	if (r)
-+		goto out;
-+
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page, sz);
-+ out:
-+	return r;
-+}
-+
-+/**
-  * mpt2sas_config_get_ioc_pg8 - obtain ioc page 8
-  * @ioc: per adapter object
-  * @mpi_reply: reply mf payload returned from firmware
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index 6da4a40..6425441 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -2690,6 +2690,75 @@ _ctl_ioc_reply_queue_count_show(struct device *cdev,
- static DEVICE_ATTR(reply_queue_count, S_IRUGO,
- 	 _ctl_ioc_reply_queue_count_show, NULL);
- 
-+/**
-+ * _ctl_BRM_status_show - Backup Rail Monitor Status
-+ * @cdev - pointer to embedded class device
-+ * @buf - the buffer returned
-+ *
-+ * This is number of reply queues
-+ *
-+ * A sysfs 'read-only' shost attribute.
-+ */
-+static ssize_t
-+_ctl_BRM_status_show(struct device *cdev, struct device_attribute *attr,
-+	char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(cdev);
-+	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
-+	Mpi2IOUnitPage3_t *io_unit_pg3 = NULL;
-+	Mpi2ConfigReply_t mpi_reply;
-+	u16 backup_rail_monitor_status = 0;
-+	u16 ioc_status;
-+	int sz;
-+	ssize_t rc = 0;
-+
-+	if (!ioc->is_warpdrive) {
-+		printk(MPT2SAS_ERR_FMT "%s: BRM attribute is only for"\
-+		    "warpdrive\n", ioc->name, __func__);
-+		goto out;
-+	}
-+
-+	/* allocate upto GPIOVal 36 entries */
-+	sz = offsetof(Mpi2IOUnitPage3_t, GPIOVal) + (sizeof(u16) * 36);
-+	io_unit_pg3 = kzalloc(sz, GFP_KERNEL);
-+	if (!io_unit_pg3) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed allocating memory"\
-+		    "for iounit_pg3: (%d) bytes\n", ioc->name, __func__, sz);
-+		goto out;
-+	}
-+
-+	if (mpt2sas_config_get_iounit_pg3(ioc, &mpi_reply, io_unit_pg3, sz) !=
-+	    0) {
-+		printk(MPT2SAS_ERR_FMT
-+		    "%s: failed reading iounit_pg3\n", ioc->name,
-+		    __func__);
-+		goto out;
-+	}
-+
-+	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) & MPI2_IOCSTATUS_MASK;
-+	if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
-+		printk(MPT2SAS_ERR_FMT "%s: iounit_pg3 failed with"\
-+		    "ioc_status(0x%04x)\n", ioc->name, __func__, ioc_status);
-+		goto out;
-+	}
-+
-+	if (io_unit_pg3->GPIOCount < 25) {
-+		printk(MPT2SAS_ERR_FMT "%s: iounit_pg3->GPIOCount less than"\
-+		     "25 entries, detected (%d) entries\n", ioc->name, __func__,
-+		    io_unit_pg3->GPIOCount);
-+		goto out;
-+	}
-+
-+	/* BRM status is in bit zero of GPIOVal[24] */
-+	backup_rail_monitor_status = le16_to_cpu(io_unit_pg3->GPIOVal[24]);
-+	rc = snprintf(buf, PAGE_SIZE, "%d\n", (backup_rail_monitor_status & 1));
-+
-+ out:
-+	kfree(io_unit_pg3);
-+	return rc;
-+}
-+static DEVICE_ATTR(BRM_status, S_IRUGO, _ctl_BRM_status_show, NULL);
-+
- struct DIAG_BUFFER_START {
- 	__le32 Size;
- 	__le32 DiagVersion;
-@@ -2901,6 +2970,7 @@ struct device_attribute *mpt2sas_host_attrs[] = {
- 	&dev_attr_host_trace_buffer,
- 	&dev_attr_host_trace_buffer_enable,
- 	&dev_attr_reply_queue_count,
-+	&dev_attr_BRM_status,
- 	NULL,
- };
- 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 7a69a5c..7efefb7 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -7264,7 +7264,8 @@ mpt2sas_scsih_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase)
+ 		_scsih_search_responding_sas_devices(ioc);
+ 		_scsih_search_responding_raid_devices(ioc);
+ 		_scsih_search_responding_expanders(ioc);
+-		if (!ioc->is_driver_loading) {
++		if ((!ioc->is_driver_loading) && !(disable_discovery > 0 &&
++		    !ioc->sas_hba.num_phys)) {
+ 			_scsih_prep_device_scan(ioc);
+ 			_scsih_search_responding_sas_devices(ioc);
+ 			_scsih_search_responding_raid_devices(ioc);
