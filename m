@@ -1,53 +1,62 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [PATCH RESEND 0/3] scsi: fix internal write cache issue on usb
- hdd.
-Date: Tue, 17 Jul 2012 08:19:14 +0100
-Message-ID: <1342509554.3039.4.camel@dabdike.int.hansenpartnership.com>
-References: <1341716685-6631-1-git-send-email-linkinjeon@gmail.com>
-	 <20120716234805.GA9875@kroah.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] sd: do not set changed flag on all unit attention
+ conditions
+Date: Tue, 17 Jul 2012 08:45:00 +0100
+Message-ID: <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>
+References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>
+	 <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>
+	 <50044D56.6000400@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120716234805.GA9875-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38675 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750764Ab2GQIBe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jul 2012 04:01:34 -0400
+In-Reply-To: <50044D56.6000400@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2012-07-16 at 16:48 -0700, Greg KH wrote:
-> On Sat, Jul 07, 2012 at 11:04:45PM -0400, Namjae Jeon wrote:
-> > From: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-> > 
-> > The numbers of USB HDDs(All USB HDD I checked) does not respond
-> > correctly to scsi mode sense command for retrieving the write cache
-> > page status. Even though write cache is enabled by default, due to
-> > scsi driver assume that cache is not enabled which in turn might lead
-> > to loss of data since data still will be in cache.
-> > This result that all filesystems is not stable on USB HDD when the
-> > device is unplugged abruptly, even though these are having journaling
-> > feature. Our first trying is that scsi driver send ATA command
-> > (ATA Pass through, #85) to USB HDD after failure from normal routine to
-> > know write cache enable.
-> > We have known it is dangerous after testing several USB HDD. some of
-> > HDD is stalled by this command(A-DATA HDD). So we tried to make the
-> > patch James Bottomley's suggestion(usb quirk) on version 2 that add
-> > product ID and verdor ID of USB HDD to USB quirk list after checking
-> > write cache.
-> > All filesystem will be stable on USB HDD registered in quirk list.
-> > And it will be updated continuously.
+On Mon, 2012-07-16 at 19:20 +0200, Paolo Bonzini wrote:
+> Il 16/07/2012 18:18, James Bottomley ha scritto:
+> >> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> >> > index b583277..6d8ca08 100644
+> >> > --- a/drivers/scsi/scsi_lib.c
+> >> > +++ b/drivers/scsi/scsi_lib.c
+> >> > @@ -843,8 +843,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+> >> >  	} else if (sense_valid && !sense_deferred) {
+> >> >  		switch (sshdr.sense_key) {
+> >> >  		case UNIT_ATTENTION:
+> >> > -			if (cmd->device->removable) {
+> >> > -				/* Detected disc change.  Set a bit
+> >> > +			if (cmd->device->removable &&
+> >> > +			    (sshdr.asc == 0x3a ||
+> >> > +			     (sshdr.asc == 0x28 && sshdr.ascq == 0x00))) {
+> >> > +				/* "No medium" or "Medium may have changed."
+> >> > +				 * This means a disc change.  Set a bit
+> > This type of change would likely cause a huge cascade of errors in real
+> > removable media devices.  Under the MMC standards, which a lot of the
+> > older removable discs seem to follow, UNIT ATTENTION indicates either
+> > medium change or device reset (which we check for and eat lower down);
+> > we can't rely on them giving proper SBC-2 sense codes.  If you want to
+> > pretend to be removable media, you have to conform to its standards.
 > 
-> Now applied to the usb-next branch.
+> Would you accept a patch doing the opposite, i.e. passing some sense
+> codes such as PARAMETERS CHANGED and TARGET OPERATING CONDITIONS HAVE
+> CHANGED?
 
-It's been in scsi#misc for ten days with no problems.  Lets leave it
-there rather than create merge and rebase issues.
+Could you explain what the problem actually is?  It looks like you had a
+reason to mark virtio-scsi as removable, even though it isn't, and now
+you want to add further hacks because being removable doesn't quite
+work.
 
-Thanks,
+Lets go back and see if there's a more correct way to do whatever it is
+you want to do.
 
 James
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
