@@ -1,77 +1,219 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/3] ipr: Reduce queuecommand lock time
-Date: Tue, 17 Jul 2012 08:09:05 -0500
-Message-ID: <500563F1.8030507@linux.vnet.ibm.com>
-References: <201207162048.q6GKm8m3018046@d03av01.boulder.ibm.com> <20120717020308.GA18581@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: [PATCHv2 1/3] ipr: Reduce queuecommand lock time
+Date: Tue, 17 Jul 2012 08:13:52 -0500
+Message-ID: <201207171314.q6HDEb7K013469@d03av05.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:53591 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753643Ab2GQNLM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 09:11:12 -0400
+Received: from e9.ny.us.ibm.com ([32.97.182.139]:37190 "EHLO e9.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753957Ab2GQNOs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jul 2012 09:14:48 -0400
 Received: from /spool/local
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Tue, 17 Jul 2012 07:11:09 -0600
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 3B9C219D80FC
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 13:09:54 +0000 (WET)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6HD9lal191714
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 07:09:49 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6HD96F3027515
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 07:09:06 -0600
-In-Reply-To: <20120717020308.GA18581@parisc-linux.org>
+	Tue, 17 Jul 2012 09:14:47 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 3918538C8065
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 09:14:42 -0400 (EDT)
+Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6HDEfJK352320
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 09:14:41 -0400
+Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av05.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6HDEdpN013515
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 07:14:40 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
-
-On 07/16/2012 09:03 PM, Matthew Wilcox wrote:
-> On Mon, Jul 16, 2012 at 03:48:08PM -0500, Brian King wrote:
->> +static int ipr_queuecommand(struct Scsi_Host *shost,
->> +			    struct scsi_cmnd *scsi_cmd)
->>  {
->>  	struct ipr_ioa_cfg *ioa_cfg;
->>  	struct ipr_resource_entry *res;
->>  	struct ipr_ioarcb *ioarcb;
->>  	struct ipr_cmnd *ipr_cmd;
->> +	unsigned long lock_flags = 0;
-> 
-> You don't need to initialise lock_flags.
-> 
-> Looking at the rest of the code, you drop the lock in the middle,
-> then re-acquire it.  That'll help with hold time, but I'm not convinced
-> it'll help with performance.  Have you done performance testing with
-> these changes?  I seem to remember we used an eight-socket box to show
-> host_lock problems in the past.
-
-We've done performance testing of these patches and they provided
-roughly a 25% increase in the number of IOPs we are able to push
-through an adapter on Power. This was running on an 8 socket box with
-4 way SMT, so 32 separate hardware threads.
-
-One of the main things these patches do is to get the dma map/unmap
-call from underneath the host lock. On Power, these calls have
-more overhead than on some other platforms, since they end up
-resulting in a hypervisor call, which can significantly increase
-host lock hold times. 
-
-I'll resend with the change to not initialize the lock flags.
-
-Thanks,
-
-Brian
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, matthew@wil.cx, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+Reduce the amount of time the host lock is held in queuecommand
+for improved performance.
 
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
+ drivers/scsi/ipr.c |   90 +++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 63 insertions(+), 27 deletions(-)
 
+diff -puN drivers/scsi/ipr.c~ipr_reduce_lock_contention drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_reduce_lock_contention	2012-07-16 15:33:32.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2012-07-17 08:04:57.000000000 -0500
+@@ -620,25 +620,39 @@ static void ipr_init_ipr_cmnd(struct ipr
+ }
+ 
+ /**
+- * ipr_get_free_ipr_cmnd - Get a free IPR Cmnd block
++ * __ipr_get_free_ipr_cmnd - Get a free IPR Cmnd block
+  * @ioa_cfg:	ioa config struct
+  *
+  * Return value:
+  * 	pointer to ipr command struct
+  **/
+ static
+-struct ipr_cmnd *ipr_get_free_ipr_cmnd(struct ipr_ioa_cfg *ioa_cfg)
++struct ipr_cmnd *__ipr_get_free_ipr_cmnd(struct ipr_ioa_cfg *ioa_cfg)
+ {
+ 	struct ipr_cmnd *ipr_cmd;
+ 
+ 	ipr_cmd = list_entry(ioa_cfg->free_q.next, struct ipr_cmnd, queue);
+ 	list_del(&ipr_cmd->queue);
+-	ipr_init_ipr_cmnd(ipr_cmd);
+ 
+ 	return ipr_cmd;
+ }
+ 
+ /**
++ * ipr_get_free_ipr_cmnd - Get a free IPR Cmnd block and initialize it
++ * @ioa_cfg:	ioa config struct
++ *
++ * Return value:
++ * 	pointer to ipr command struct
++ **/
++static
++struct ipr_cmnd *ipr_get_free_ipr_cmnd(struct ipr_ioa_cfg *ioa_cfg)
++{
++	struct ipr_cmnd *ipr_cmd = __ipr_get_free_ipr_cmnd(ioa_cfg);
++	ipr_init_ipr_cmnd(ipr_cmd);
++	return ipr_cmd;
++}
++
++/**
+  * ipr_mask_and_clear_interrupts - Mask all and clear specified interrupts
+  * @ioa_cfg:	ioa config struct
+  * @clr_ints:     interrupts to clear
+@@ -5783,8 +5797,8 @@ static void ipr_scsi_done(struct ipr_cmn
+ 
+ /**
+  * ipr_queuecommand - Queue a mid-layer request
++ * @shost:		scsi host struct
+  * @scsi_cmd:	scsi command struct
+- * @done:		done function
+  *
+  * This function queues a request generated by the mid-layer.
+  *
+@@ -5793,61 +5807,58 @@ static void ipr_scsi_done(struct ipr_cmn
+  *	SCSI_MLQUEUE_DEVICE_BUSY if device is busy
+  *	SCSI_MLQUEUE_HOST_BUSY if host is busy
+  **/
+-static int ipr_queuecommand_lck(struct scsi_cmnd *scsi_cmd,
+-			    void (*done) (struct scsi_cmnd *))
++static int ipr_queuecommand(struct Scsi_Host *shost,
++			    struct scsi_cmnd *scsi_cmd)
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg;
+ 	struct ipr_resource_entry *res;
+ 	struct ipr_ioarcb *ioarcb;
+ 	struct ipr_cmnd *ipr_cmd;
++	unsigned long lock_flags;
+ 	int rc = 0;
+ 
+-	scsi_cmd->scsi_done = done;
+-	ioa_cfg = (struct ipr_ioa_cfg *)scsi_cmd->device->host->hostdata;
+-	res = scsi_cmd->device->hostdata;
++	ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
++
++	spin_lock_irqsave(shost->host_lock, lock_flags);
+ 	scsi_cmd->result = (DID_OK << 16);
++	res = scsi_cmd->device->hostdata;
+ 
+ 	/*
+ 	 * We are currently blocking all devices due to a host reset
+ 	 * We have told the host to stop giving us new requests, but
+ 	 * ERP ops don't count. FIXME
+ 	 */
+-	if (unlikely(!ioa_cfg->allow_cmds && !ioa_cfg->ioa_is_dead))
++	if (unlikely(!ioa_cfg->allow_cmds && !ioa_cfg->ioa_is_dead)) {
++		spin_unlock_irqrestore(shost->host_lock, lock_flags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	/*
+ 	 * FIXME - Create scsi_set_host_offline interface
+ 	 *  and the ioa_is_dead check can be removed
+ 	 */
+ 	if (unlikely(ioa_cfg->ioa_is_dead || !res)) {
+-		memset(scsi_cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+-		scsi_cmd->result = (DID_NO_CONNECT << 16);
+-		scsi_cmd->scsi_done(scsi_cmd);
+-		return 0;
++		spin_unlock_irqrestore(shost->host_lock, lock_flags);
++		goto err_nodev;
+ 	}
+ 
+ 	if (ipr_is_gata(res) && res->sata_port)
+ 		return ata_sas_queuecmd(scsi_cmd, res->sata_port->ap);
+ 
+-	ipr_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
++	ipr_cmd = __ipr_get_free_ipr_cmnd(ioa_cfg);
++	spin_unlock_irqrestore(shost->host_lock, lock_flags);
++
++	ipr_init_ipr_cmnd(ipr_cmd);
+ 	ioarcb = &ipr_cmd->ioarcb;
+-	list_add_tail(&ipr_cmd->queue, &ioa_cfg->pending_q);
+ 
+ 	memcpy(ioarcb->cmd_pkt.cdb, scsi_cmd->cmnd, scsi_cmd->cmd_len);
+ 	ipr_cmd->scsi_cmd = scsi_cmd;
+-	ioarcb->res_handle = res->res_handle;
+ 	ipr_cmd->done = ipr_scsi_done;
+-	ipr_trc_hook(ipr_cmd, IPR_TRACE_START, IPR_GET_RES_PHYS_LOC(res));
+ 
+ 	if (ipr_is_gscsi(res) || ipr_is_vset_device(res)) {
+ 		if (scsi_cmd->underflow == 0)
+ 			ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_NO_ULEN_CHK;
+ 
+-		if (res->needs_sync_complete) {
+-			ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_SYNC_COMPLETE;
+-			res->needs_sync_complete = 0;
+-		}
+-
+ 		ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_NO_LINK_DESC;
+ 		if (ipr_is_gscsi(res))
+ 			ioarcb->cmd_pkt.flags_lo |= IPR_FLAGS_LO_DELAY_AFTER_RST;
+@@ -5866,16 +5877,41 @@ static int ipr_queuecommand_lck(struct s
+ 			rc = ipr_build_ioadl(ioa_cfg, ipr_cmd);
+ 	}
+ 
+-	if (unlikely(rc != 0)) {
+-		list_move_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
++	spin_lock_irqsave(shost->host_lock, lock_flags);
++	if (unlikely(rc || (!ioa_cfg->allow_cmds && !ioa_cfg->ioa_is_dead))) {
++		list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
++		spin_unlock_irqrestore(shost->host_lock, lock_flags);
++		if (!rc)
++			scsi_dma_unmap(scsi_cmd);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
++	if (unlikely(ioa_cfg->ioa_is_dead)) {
++		list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
++		spin_unlock_irqrestore(shost->host_lock, lock_flags);
++		scsi_dma_unmap(scsi_cmd);
++		goto err_nodev;
++	}
++
++	ioarcb->res_handle = res->res_handle;
++	if (res->needs_sync_complete) {
++		ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_SYNC_COMPLETE;
++		res->needs_sync_complete = 0;
++	}
++	list_add_tail(&ipr_cmd->queue, &ioa_cfg->pending_q);
++	ipr_trc_hook(ipr_cmd, IPR_TRACE_START, IPR_GET_RES_PHYS_LOC(res));
+ 	ipr_send_command(ipr_cmd);
++	spin_unlock_irqrestore(shost->host_lock, lock_flags);
+ 	return 0;
+-}
+ 
+-static DEF_SCSI_QCMD(ipr_queuecommand)
++err_nodev:
++	spin_lock_irqsave(shost->host_lock, lock_flags);
++	memset(scsi_cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
++	scsi_cmd->result = (DID_NO_CONNECT << 16);
++	scsi_cmd->scsi_done(scsi_cmd);
++	spin_unlock_irqrestore(shost->host_lock, lock_flags);
++	return 0;
++}
+ 
+ /**
+  * ipr_ioctl - IOCTL handler
+_
 
