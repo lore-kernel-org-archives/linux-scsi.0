@@ -1,31 +1,32 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] sd: do not set changed flag on all unit attention conditions
-Date: Tue, 17 Jul 2012 11:28:13 +0200
-Message-ID: <5005302D.6010805@redhat.com>
-References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>    <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>    <50044D56.6000400@redhat.com>   <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>   <50052390.7030908@redhat.com>  <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com>  <5005285E.8060706@redhat.com> <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>
+From: <sreekanth.reddy@lsi.com>
+Subject: [PATCH] [scsi] mpt2sas: Description Patch
+Date: Tue, 17 Jul 2012 15:54:23 +0530
+Message-ID: <20120717102423.GA7301@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:38420 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755212Ab2GQKXk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jul 2012 06:23:40 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, sreekanth.reddy@lsi.com
+Cc: jejb@kernel.org
 
-Il 17/07/2012 11:11, James Bottomley ha scritto:
-> We don't do stuff just because the standards allows it; just the
-> opposite: we try to use the smallest implementations from the standards
-> we can get away with just because the more things we do, the more
-> exceptions and broken devices we come across.
+Please consider this patch set for next kernel release.
 
-Yes, I realize failing only on specific sense codes as I did it in the
-patch is not going to work.  However, the other way round is not
-problematic (explicitly allow some sense codes, fail on all others).
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@lsi.com>
+---
 
-Another example is "target operating conditions have changed".  QEMU
-cannot report such changes because scsi_error prints a warning (fine)
-and then passes the unit attention upwards.  With removable drives, this
-has the same problem as resizing.
-
-Paolo
+[PATCH 01/09] [SCSI] mpt2sas : 2012 source code copyright.
+[PATCH 02/09] [SCSI] mpt2sas : To include more Intel Branding.
+[PATCH 03/09] [SCSI] mpt2sas : Fix for Driver oops, when loading driver with max_queue_depth command line option to a very small value.
+[PATCH 04/09] [SCSI] mpt2sas : Provide sysfs attribute to report Backup Rail Monitor Status.
+[PATCH 05/09] [SCSI] mpt2sas : Fix for max_sectors warning message is stating the incorrect range.
+[PATCH 06/09] [SCSI] mpt2sas : MPI next revision header update.
+[PATCH 07/09] [SCSI] mpt2sas : Fix for staged device discovery functionality of driver not working.
+[PATCH 08/09] [SCSI] mpt2sas : Fix for With post diag reset same set of device gets added, removed and then again gets added with new target ids. 
+[PATCH 09/09] [SCSI] mpt2sas : Bump driver vesion to 14.100.00.00.
