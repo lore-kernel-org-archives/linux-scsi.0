@@ -1,41 +1,58 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH 5/7] target: Check sess_tearing_down in target_get_sess_cmd()
-Date: Tue, 17 Jul 2012 12:28:20 -0700
-Message-ID: <5005BCD4.7080006@redhat.com>
-References: <1342461882-5848-1-git-send-email-roland@kernel.org> <1342461882-5848-6-git-send-email-roland@kernel.org> <1342480139.18004.309.camel@haakon2.linux-iscsi.org> <CAL1RGDVNouDHfvKt-WryhhxswC8a8sd+gP-eg3aVDkgB8wU_Bw@mail.gmail.com> <CAL1RGDWgbdsQr1=YMdFyRt=h5Mr40mtXRExUgD_88YPzOnkMkw@mail.gmail.com> <1342490218.18004.382.camel@haakon2.linux-iscsi.org> <CAL1RGDUVaF_GGwN_0nYD2X87Sa0hwiihuua9HJgK=CJ7HiFv_w@mail.gmail.com> <20120717163909.GB15995@infradead.org>
+From: Matthias Prager <linux@matthiasprager.de>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Tue, 17 Jul 2012 21:39:41 +0200
+Message-ID: <5005BF7D.2050703@matthiasprager.de>
+References: <4FE454CA.6080007@matthiasprager.de> <4FFAED4F.3080100@matthiasprager.de> <4FFB32E5.1050109@farcaster.org> <4FFB7354.8040809@matthiasprager.de> <4FFB8A86.7000009@farcaster.org> <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de> <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20120717163909.GB15995@infradead.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Roland Dreier <roland@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dd15408.kasserver.com ([85.13.136.168]:36323 "EHLO
+	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752167Ab2GQTjv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 15:39:51 -0400
+In-Reply-To: <20120717180932.GB2878@google.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>
 
-On 07/17/2012 09:39 AM, Christoph Hellwig wrote:
-> On Tue, Jul 17, 2012 at 09:34:49AM -0700, Roland Dreier wrote:
->> Sleeping on things, I now feel pretty strongly that having target_submit_cmd
->> return an error value for "immediate" errors where the command does not
->> make it into the target core is the right approach.
+Hello Tejun,
+
+Am 17.07.2012 20:09, schrieb Tejun Heo:
+> Hello,
 > 
-> I think it is.  When I tried to convert other drivers to
-> target_submit_cmd while doing the target processing thread removal that
-> would have simplified a lot of things.
+> On Wed, Jul 11, 2012 at 03:48:00PM +0200, Matthias Prager wrote:
+>> I'm trying to understand why this commit leads to the issue of i/o
+>> failing on spun down drives, in hopes of being able to fix it. Meanwhile
+>> maybe Tejun Heo (author of the commit) or Jens Axboe (the committer) are
+>> able to shed some light on this (I've included them in the CC list).
 > 
->> Freeing commands is already one of the most confusing and complex parts
->> of the target code, with "check_stop_free," "cmd_wait_comp" and
->> "SCF_ACK_KREF."  Adding another code flow back to the fabric driver
->> with yet another set of semantics around freeing a command seems like
->> it's making things even harder to maintain.
-> 
-> True.  And the above mess really needs to be simplified, too.
+> Nothing rings a bell for me.  How does it fail?  The only thing it
+> change is when and which media check commands are issued.
 
-I'm ok with submit_cmd returning a value for now. Maybe in the end it
-doesn't, but getting the code working comes first.
+I will try to describe the issue as best as I can (please feel free to
+point me to more helpful debugging steps or guides):
+Whenever I put a drive to sleep (either via 'hdparm -y ...' or by
+letting it run into standby timeout) and issue i/o's afterwards (like
+with the help of 'fdisk -l') I get back i/o errors (along the lines of
+'end_request: I/O error, ...' - see previous posts in this thread) and
+the drive remains in standby (instead of waking up).
 
-This is one of those areas that needs a complete rewrite, so who cares
-if there's some dirt on the floor when the whole joint is due for
-remodeling.
+Robert (who also saw these errors) bisected the issue down to your
+patch. And without it kernels 3.1.10 + 3.4.4 run smoothly for him and me.
 
--- Andy
+I could not however reproduce the issue on any other device than a LSI
+SAS controller (using SATA disks) - on a regular ICH10 using AHCI and a
+SATA drive I don't see these i/o errors. But since I'm experiencing
+these issues on two different systems (both with lsi controllers while
+running vmware-guests on them) and Robert sees them on his
+(non-virtualized) system with the same lsi controller (9211-8i), I'm
+inclined to make the following assumptions:
+Either it is an issue which is limited to this controller and possibly
+sata disks hanging off it or it is a more general issue with sas
+controllers and sata disks (again it could well affect sas disks too).
+Lacking other controllers or sas disks I can't be sure.
+
+Thank you for taking the time to look into this - it's much appreciated
+Matthias
