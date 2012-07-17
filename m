@@ -1,36 +1,42 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 5/7] target: Check sess_tearing_down in
- target_get_sess_cmd()
-Date: Mon, 16 Jul 2012 18:59:49 -0700
-Message-ID: <1342490389.18004.383.camel@haakon2.linux-iscsi.org>
-References: <1342461882-5848-1-git-send-email-roland@kernel.org>
-	 <1342461882-5848-6-git-send-email-roland@kernel.org>
-	 <1342480139.18004.309.camel@haakon2.linux-iscsi.org>
-	 <CAL1RGDVNouDHfvKt-WryhhxswC8a8sd+gP-eg3aVDkgB8wU_Bw@mail.gmail.com>
-	 <CAL1RGDWgbdsQr1=YMdFyRt=h5Mr40mtXRExUgD_88YPzOnkMkw@mail.gmail.com>
-	 <1342490218.18004.382.camel@haakon2.linux-iscsi.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 1/3] ipr: Reduce queuecommand lock time
+Date: Mon, 16 Jul 2012 20:03:08 -0600
+Message-ID: <20120717020308.GA18581@parisc-linux.org>
+References: <201207162048.q6GKm8m3018046@d03av01.boulder.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1342490218.18004.382.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Andy Grover <agrover@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:40770 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753809Ab2GQCDK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2012 22:03:10 -0400
+Content-Disposition: inline
+In-Reply-To: <201207162048.q6GKm8m3018046@d03av01.boulder.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
 
-On Mon, 2012-07-16 at 18:56 -0700, Nicholas A. Bellinger wrote:
-> On Mon, 2012-07-16 at 18:40 -0700, Roland Dreier wrote:
-> > > OK, I'll take a look at how you handle this...
-> > 
-> > So looking at commit bc187ea6c3b3 in the tree you just pushed out
-> > ("target: Check sess_tearing_down in target_get_sess_cmd()") it looks
-> > like you just return from target_submit_cmd() if we fail to add the
-> > command to sess_cmd_list -- doesn't this mean we just leak those
-> > commands and possibly leave the HW sitting there with open exchanges?
-> > 
-> 
-> With dropping patch #5 for now, I assume that would be the case..
-> 
+On Mon, Jul 16, 2012 at 03:48:08PM -0500, Brian King wrote:
+> +static int ipr_queuecommand(struct Scsi_Host *shost,
+> +			    struct scsi_cmnd *scsi_cmd)
+>  {
+>  	struct ipr_ioa_cfg *ioa_cfg;
+>  	struct ipr_resource_entry *res;
+>  	struct ipr_ioarcb *ioarcb;
+>  	struct ipr_cmnd *ipr_cmd;
+> +	unsigned long lock_flags = 0;
 
-Or with patch #4 even..
+You don't need to initialise lock_flags.
+
+Looking at the rest of the code, you drop the lock in the middle,
+then re-acquire it.  That'll help with hold time, but I'm not convinced
+it'll help with performance.  Have you done performance testing with
+these changes?  I seem to remember we used an eight-socket box to show
+host_lock problems in the past.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
