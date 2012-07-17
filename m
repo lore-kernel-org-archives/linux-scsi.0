@@ -1,57 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Tue, 17 Jul 2012 13:01:36 -0700
-Message-ID: <20120717200136.GC24336@google.com>
-References: <4FE454CA.6080007@matthiasprager.de>
- <4FFAED4F.3080100@matthiasprager.de>
- <4FFB32E5.1050109@farcaster.org>
- <4FFB7354.8040809@matthiasprager.de>
- <4FFB8A86.7000009@farcaster.org>
- <4FFCBA4C.4000502@farcaster.org>
- <4FFD6F3D.2030708@matthiasprager.de>
- <4FFD8410.7050604@matthiasprager.de>
- <20120717180932.GB2878@google.com>
- <5005BF7D.2050703@matthiasprager.de>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] sd: do not set changed flag on all unit attention conditions
+Date: Tue, 17 Jul 2012 23:12:11 +0200
+Message-ID: <5005D52B.30809@redhat.com>
+References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com> <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com> <50044D56.6000400@redhat.com> <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com> <50052390.7030908@redhat.com> <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com> <5005285E.8060706@redhat.com> <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com> <20120717163612.GA15995@infradead.org> <50059713.7090606@redhat.com> <5005B2AC.6020102@cs.wisc.edu> <5005B39D.6030905@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38560 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755072Ab2GQUBl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 16:01:41 -0400
-Received: by yhmm54 with SMTP id m54so819875yhm.19
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 13:01:41 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <5005BF7D.2050703@matthiasprager.de>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:65234 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752464Ab2GQVMR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 17:12:17 -0400
+In-Reply-To: <5005B39D.6030905@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Prager <linux@matthiasprager.de>
-Cc: Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello,
+Il 17/07/2012 20:49, Mike Christie ha scritto:
+> > Not sure if we are talking about the same thing.
+> > 
+> > So can virtio-scsi send a UA with asc/ascq that indicates the lun
+> > changed size? Other drivers do this. I updated Hannes's patches the
+> > other day to support UAs like those in userspace.
+> > 
+> > I just saw the code in the patch where virtio-scsi gets that event.
+> Was not done. I meant I saw that patch where virtio-scsi gets that
+> virtio_scsi_event and kicks of a rescan based off of that.
 
-On Tue, Jul 17, 2012 at 09:39:41PM +0200, Matthias Prager wrote:
-> I could not however reproduce the issue on any other device than a LSI
-> SAS controller (using SATA disks) - on a regular ICH10 using AHCI and a
-> SATA drive I don't see these i/o errors. But since I'm experiencing
-> these issues on two different systems (both with lsi controllers while
-> running vmware-guests on them) and Robert sees them on his
-> (non-virtualized) system with the same lsi controller (9211-8i), I'm
-> inclined to make the following assumptions:
-> Either it is an issue which is limited to this controller and possibly
-> sata disks hanging off it or it is a more general issue with sas
-> controllers and sata disks (again it could well affect sas disks too).
-> Lacking other controllers or sas disks I can't be sure.
+Yes, it sends both (event + UA).  Right now Linux ignores the UA, and I
+wanted virtio-scsi to match real hardware as much as possible so I
+copied what aacraid does.  The event also has the advantage over UA that
+it the revalidate is done immediately, not the next time the unit is
+accessed.
 
-So, nothing in the libata stack generates NOT_READY - "initializing
-command required".  I suppose it's LSI firmware / driver translating
-TUR to CHECK_POWER_MODE and generating NOT_READY.  I don't know what
-SAT says about this but this can't be correct.  An ATA device in
-standby mode is ready to process any commands.  It should be able to
-come back to full operation on demand as necessary and that's why it
-can be transparently enabled from device side.  Eric?
-
-Thanks.
-
--- 
-tejun
+Paolo
