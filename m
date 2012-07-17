@@ -1,40 +1,38 @@
 From: <sreekanth.reddy@lsi.com>
-Subject: [PATCH 05/09] [SCSI] mpt2sas : Fix for max_sectors warning message
- is stating the incorrect range
-Date: Tue, 17 Jul 2012 15:56:09 +0530
-Message-ID: <20120717102609.GA7349@localhost.localdomain>
+Subject: [PATCH 09/09] [SCSI] mpt2sas : Bump driver vesion to 14.100.00.00
+Date: Tue, 17 Jul 2012 15:56:15 +0530
+Message-ID: <20120717102615.GA7361@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:46043 "EHLO
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:46147 "EHLO
 	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754735Ab2GQKZ0 (ORCPT
+	by vger.kernel.org with ESMTP id S1754977Ab2GQKZd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2012 06:25:26 -0400
+	Tue, 17 Jul 2012 06:25:33 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com
 Cc: jejb@kernel.org
 
-When specifying the command line option "max_sectors" less than 64, then warning
-message should provide correct upper boundary value 32767 instead of 8192.
+Bump driver version to 14.100.00.00
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@lsi.com>
 ---
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 0f4f971..4a09ace 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -8055,8 +8055,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (max_sectors != 0xFFFF) {
- 		if (max_sectors < 64) {
- 			shost->max_sectors = 64;
--			printk(MPT2SAS_WARN_FMT "Invalid value %d passed "
--			    "for max_sectors, range is 64 to 8192. Assigning "
-+			printk(MPT2SAS_WARN_FMT "Invalid value %d passed "\
-+			    "for max_sectors, range is 64 to 32767. Assigning "\
- 			    "value of 64.\n", ioc->name, max_sectors);
- 		} else if (max_sectors > 32767) {
- 			shost->max_sectors = 32767;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index dd05d24..e7e517a 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -69,8 +69,8 @@
+ #define MPT2SAS_DRIVER_NAME		"mpt2sas"
+ #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
+ #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
+-#define MPT2SAS_DRIVER_VERSION		"13.100.00.00"
+-#define MPT2SAS_MAJOR_VERSION		13
++#define MPT2SAS_DRIVER_VERSION		"14.100.00.00"
++#define MPT2SAS_MAJOR_VERSION		14
+ #define MPT2SAS_MINOR_VERSION		100
+ #define MPT2SAS_BUILD_VERSION		00
+ #define MPT2SAS_RELEASE_VERSION		00
