@@ -1,11 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC-v3 0/4] tcm_vhost+cmwq fabric driver code for-3.6
-Date: Wed, 18 Jul 2012 00:59:28 +0000
-Message-ID: <1342573172-17421-1-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC-v3 1/4] vhost: Separate vhost-net features from vhost features
+Date: Wed, 18 Jul 2012 00:59:29 +0000
+Message-ID: <1342573172-17421-2-git-send-email-nab@linux-iscsi.org>
+References: <1342573172-17421-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1342573172-17421-1-git-send-email-nab@linux-iscsi.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -19,61 +21,81 @@ To: target-devel <target-devel@vger.kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 
-Hi folks,
+In order for other vhost devices to use the VHOST_FEATURES bits the
+vhost-net specific bits need to be moved to their own VHOST_NET_FEATURES
+constant.
 
-The following is the RFC-v3 series of tcm_vhost target fabric driver code
-currently in-flight for-3.6 mainline code.
+(Asias: Update drivers/vhost/test.c to use VHOST_NET_FEATURES)
 
-With the merge window opening soon, the tcm_vhost code has started seeing
-time in linux-next.  The v2 -> v3 changelog from the last week is currently
-looking like:
+Signed-off-by: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Asias He <asias@redhat.com>
+Signed-off-by: Nicholas A. Bellinger <nab@risingtidesystems.com>
+---
+ drivers/vhost/net.c   |    4 ++--
+ drivers/vhost/test.c  |    4 ++--
+ drivers/vhost/vhost.h |    3 ++-
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
- *) Unlock on error in tcm_vhost_drop_nexus() (DanC)
- *) Fix strlen() doesn't count the terminator (DanC)
- *) Call kfree() on an error path (DanC)
- *) Convert tcm_vhost_write_pending to use target_execute_cmd (hch + nab)
- *) Fix another strlen() off by one in tcm_vhost_make_tport (DanC)
- *) Add option under drivers/staging/Kconfig, and move to drivers/vhost/tcm/
-    as requested by MST (nab)
-
-Thanks to Dan Carpenter for his smatch fixes this past round.
-
-Also as requested by MST, the code has been moved to a seperate tcm/ subdirectory
-under drivers/vhost/ so that it can be included under staging's config options
-until we can settle on the necessary userspace bits for QEMU and kvm-tool.
-
-The updated series will be going out shortly to target-pending/for-next-merge.
-
-Please have another look and let us know if you have any concerned.
-
-Thanks!
-
-Nicholas Bellinger (2):
-  vhost: Add vhost_scsi specific defines
-  tcm_vhost: Initial merge for vhost level target fabric driver
-
-Stefan Hajnoczi (2):
-  vhost: Separate vhost-net features from vhost features
-  vhost: make vhost work queue visible
-
- drivers/staging/Kconfig       |    2 +
- drivers/vhost/Makefile        |    2 +
- drivers/vhost/net.c           |    4 +-
- drivers/vhost/tcm/Kconfig     |    6 +
- drivers/vhost/tcm/Makefile    |    1 +
- drivers/vhost/tcm/tcm_vhost.c | 1611 +++++++++++++++++++++++++++++++++++++++++
- drivers/vhost/tcm/tcm_vhost.h |   74 ++
- drivers/vhost/test.c          |    4 +-
- drivers/vhost/vhost.c         |    5 +-
- drivers/vhost/vhost.h         |    6 +-
- include/linux/vhost.h         |    9 +
- 11 files changed, 1716 insertions(+), 8 deletions(-)
- create mode 100644 drivers/vhost/tcm/Kconfig
- create mode 100644 drivers/vhost/tcm/Makefile
- create mode 100644 drivers/vhost/tcm/tcm_vhost.c
- create mode 100644 drivers/vhost/tcm/tcm_vhost.h
-
+diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
+index f82a739..072cbba 100644
+--- a/drivers/vhost/net.c
++++ b/drivers/vhost/net.c
+@@ -823,14 +823,14 @@ static long vhost_net_ioctl(struct file *f, unsigned int ioctl,
+ 			return -EFAULT;
+ 		return vhost_net_set_backend(n, backend.index, backend.fd);
+ 	case VHOST_GET_FEATURES:
+-		features = VHOST_FEATURES;
++		features = VHOST_NET_FEATURES;
+ 		if (copy_to_user(featurep, &features, sizeof features))
+ 			return -EFAULT;
+ 		return 0;
+ 	case VHOST_SET_FEATURES:
+ 		if (copy_from_user(&features, featurep, sizeof features))
+ 			return -EFAULT;
+-		if (features & ~VHOST_FEATURES)
++		if (features & ~VHOST_NET_FEATURES)
+ 			return -EOPNOTSUPP;
+ 		return vhost_net_set_features(n, features);
+ 	case VHOST_RESET_OWNER:
+diff --git a/drivers/vhost/test.c b/drivers/vhost/test.c
+index 3de00d9..91d6f06 100644
+--- a/drivers/vhost/test.c
++++ b/drivers/vhost/test.c
+@@ -261,14 +261,14 @@ static long vhost_test_ioctl(struct file *f, unsigned int ioctl,
+ 			return -EFAULT;
+ 		return vhost_test_run(n, test);
+ 	case VHOST_GET_FEATURES:
+-		features = VHOST_FEATURES;
++		features = VHOST_NET_FEATURES;
+ 		if (copy_to_user(featurep, &features, sizeof features))
+ 			return -EFAULT;
+ 		return 0;
+ 	case VHOST_SET_FEATURES:
+ 		if (copy_from_user(&features, featurep, sizeof features))
+ 			return -EFAULT;
+-		if (features & ~VHOST_FEATURES)
++		if (features & ~VHOST_NET_FEATURES)
+ 			return -EOPNOTSUPP;
+ 		return vhost_test_set_features(n, features);
+ 	case VHOST_RESET_OWNER:
+diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
+index 8de1fd5..07b9763 100644
+--- a/drivers/vhost/vhost.h
++++ b/drivers/vhost/vhost.h
+@@ -201,7 +201,8 @@ enum {
+ 	VHOST_FEATURES = (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) |
+ 			 (1ULL << VIRTIO_RING_F_INDIRECT_DESC) |
+ 			 (1ULL << VIRTIO_RING_F_EVENT_IDX) |
+-			 (1ULL << VHOST_F_LOG_ALL) |
++			 (1ULL << VHOST_F_LOG_ALL),
++	VHOST_NET_FEATURES = VHOST_FEATURES |
+ 			 (1ULL << VHOST_NET_F_VIRTIO_NET_HDR) |
+ 			 (1ULL << VIRTIO_NET_F_MRG_RXBUF),
+ };
 -- 
 1.7.2.5
