@@ -1,69 +1,109 @@
 From: olaf@aepfle.de
-Subject: [PATCH] scsi/ibmvscsi: add module alias for ibmvscsic
-Date: Wed, 18 Jul 2012 18:49:18 +0200
-Message-ID: <1342630158-16510-1-git-send-email-olaf@aepfle.de>
+Subject: [PATCH] scsi/ibmvscsi: /sys/class/scsi_host/hostX/config doesn't show any information
+Date: Wed, 18 Jul 2012 18:49:17 +0200
+Message-ID: <1342630157-16468-1-git-send-email-olaf@aepfle.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.161]:56726 "EHLO
+Received: from mo-p00-ob.rzone.de ([81.169.146.161]:62074 "EHLO
 	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754815Ab2GRQtX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2012 12:49:23 -0400
+	with ESMTP id S1751921Ab2GRQtU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2012 12:49:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, Olaf Hering <olaf@aepfle.de>
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, Linda Xie <lxiep@us.ibm.com>, Olaf Hering <olaf@aepfle.de>
 
-From: Olaf Hering <olaf@aepfle.de>
+From: Linda Xie <lxiep@us.ibm.com>
 
-The driver is named ibmvscsic, at runtime it its name is advertised as
-ibmvscsi. For this reason mkinitrd wont pickup the driver properly.
+Expected result:
+It should show something like this:
+x1521p4:~ # cat /sys/class/scsi_host/host1/config
+PARTITIONNAME='x1521p4'
+NWSDNAME='X1521P4'
+HOSTNAME='X1521P4'
+DOMAINNAME='RCHLAND.IBM.COM'
+NAMESERVERS='9.10.244.100 9.10.244.200'
+
+Actual result:
+x1521p4:~ # cat /sys/class/scsi_host/host0/config
+x1521p4:~ #
+
+This patch changes the size of the buffer used for transfering config
+data to 4K. It was tested against 2.6.19-rc2 tree.
+
 Reported by IBM during SLES11 beta testing:
 
-https://bugzilla.novell.com/show_bug.cgi?id=459933
-LTC50724
+https://bugzilla.novell.com/show_bug.cgi?id=439970
+LTC49349
 
 Signed-off-by: Olaf Hering <olaf@aepfle.de>
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 3a6c474..e580aa4 100644
+index e580aa4..1513ca8 100644
 --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
 +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -100,6 +100,9 @@ static struct scsi_transport_template *ibmvscsi_transport_template;
+@@ -93,6 +93,8 @@ static int max_requests = IBMVSCSI_MAX_REQUESTS_DEFAULT;
+ static int max_events = IBMVSCSI_MAX_REQUESTS_DEFAULT + 2;
+ static int fast_fail = 1;
+ static int client_reserve = 1;
++/* host data buffer size */
++#define HOST_BUFFER_SIZE 4096
  
- static struct ibmvscsi_ops *ibmvscsi_ops;
+ static struct scsi_transport_template *ibmvscsi_transport_template;
  
-+/* The driver is named ibmvscsic, map ibmvscsi to module name */
-+#define IBMVSCSI_NAME "ibmvscsi"
-+MODULE_ALIAS(IBMVSCSI_NAME);
- MODULE_DESCRIPTION("IBM Virtual SCSI");
- MODULE_AUTHOR("Dave Boutcher");
- MODULE_LICENSE("GPL");
-@@ -1796,7 +1799,7 @@ static struct device_attribute *ibmvscsi_attrs[] = {
- static struct scsi_host_template driver_template = {
- 	.module = THIS_MODULE,
- 	.name = "IBM POWER Virtual SCSI Adapter " IBMVSCSI_VERSION,
--	.proc_name = "ibmvscsi",
-+	.proc_name = IBMVSCSI_NAME,
- 	.queuecommand = ibmvscsi_queuecommand,
- 	.eh_abort_handler = ibmvscsi_eh_abort_handler,
- 	.eh_device_reset_handler = ibmvscsi_eh_device_reset_handler,
-@@ -1936,7 +1939,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
- 	}
+@@ -1666,7 +1668,7 @@ static ssize_t show_host_srp_version(struct device *dev,
+ 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	int len;
  
- 	hostdata->work_thread = kthread_run(ibmvscsi_work, hostdata, "%s_%d",
--					    "ibmvscsi", host->host_no);
-+					    IBMVSCSI_NAME, host->host_no);
+-	len = snprintf(buf, PAGE_SIZE, "%s\n",
++       len = snprintf(buf, HOST_BUFFER_SIZE, "%s\n",
+ 		       hostdata->madapter_info.srp_version);
+ 	return len;
+ }
+@@ -1687,7 +1689,7 @@ static ssize_t show_host_partition_name(struct device *dev,
+ 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	int len;
  
- 	if (IS_ERR(hostdata->work_thread)) {
- 		dev_err(&vdev->dev, "couldn't initialize kthread. rc=%ld\n",
-@@ -2061,7 +2064,7 @@ static struct vio_driver ibmvscsi_driver = {
- 	.probe = ibmvscsi_probe,
- 	.remove = ibmvscsi_remove,
- 	.get_desired_dma = ibmvscsi_get_desired_dma,
--	.name = "ibmvscsi",
-+	.name = IBMVSCSI_NAME,
- 	.pm = &ibmvscsi_pm_ops,
- };
+-	len = snprintf(buf, PAGE_SIZE, "%s\n",
++       len = snprintf(buf, HOST_BUFFER_SIZE, "%s\n",
+ 		       hostdata->madapter_info.partition_name);
+ 	return len;
+ }
+@@ -1708,7 +1710,7 @@ static ssize_t show_host_partition_number(struct device *dev,
+ 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	int len;
  
+-	len = snprintf(buf, PAGE_SIZE, "%d\n",
++       len = snprintf(buf, HOST_BUFFER_SIZE, "%d\n",
+ 		       hostdata->madapter_info.partition_number);
+ 	return len;
+ }
+@@ -1728,7 +1730,7 @@ static ssize_t show_host_mad_version(struct device *dev,
+ 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	int len;
+ 
+-	len = snprintf(buf, PAGE_SIZE, "%d\n",
++       len = snprintf(buf, HOST_BUFFER_SIZE, "%d\n",
+ 		       hostdata->madapter_info.mad_version);
+ 	return len;
+ }
+@@ -1748,7 +1750,7 @@ static ssize_t show_host_os_type(struct device *dev,
+ 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	int len;
+ 
+-	len = snprintf(buf, PAGE_SIZE, "%d\n", hostdata->madapter_info.os_type);
++       len = snprintf(buf, HOST_BUFFER_SIZE, "%d\n", hostdata->madapter_info.os_type);
+ 	return len;
+ }
+ 
+@@ -1767,7 +1769,7 @@ static ssize_t show_host_config(struct device *dev,
+ 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 
+ 	/* returns null-terminated host config data */
+-	if (ibmvscsi_do_host_config(hostdata, buf, PAGE_SIZE) == 0)
++       if (ibmvscsi_do_host_config(hostdata, buf, HOST_BUFFER_SIZE) == 0)
+ 		return strlen(buf);
+ 	else
+ 		return 0;
 -- 
 1.7.10.4
 
