@@ -1,183 +1,90 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: Allow for target_submit_cmd() returning errors
-Date: Tue, 17 Jul 2012 17:05:48 -0700
-Message-ID: <1342569948.18004.541.camel@haakon2.linux-iscsi.org>
-References: <1342568261-15616-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
+Date: Tue, 17 Jul 2012 17:17:26 -0700
+Message-ID: <1342570646.18004.549.camel@haakon2.linux-iscsi.org>
+References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
+	<20120717150548.GA11587@redhat.com>
+	<1342559842.18004.440.camel@haakon2.linux-iscsi.org>
+	<20120717213437.GC1868@redhat.com>
+	<1342562528.18004.480.camel@haakon2.linux-iscsi.org>
+	<20120717221814.GH1868@redhat.com>
+	<1342564640.18004.492.camel@haakon2.linux-iscsi.org>
+	<20120717231113.GA3004@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:41064 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757429Ab2GRAFv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 20:05:51 -0400
-In-Reply-To: <1342568261-15616-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20120717231113.GA3004@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Felipe Balbi <balbi@ti.com>, Andy Grover <agrover@redhat.com>, linux-usb <linux-usb@vger.kernel.org>
 
-On Tue, 2012-07-17 at 23:37 +0000, Nicholas A. Bellinger wrote:
-> From: Roland Dreier <roland@purestorage.com>
+On Wed, 2012-07-18 at 02:11 +0300, Michael S. Tsirkin wrote:
+> On Tue, Jul 17, 2012 at 03:37:20PM -0700, Nicholas A. Bellinger wrote:
+> > On Wed, 2012-07-18 at 01:18 +0300, Michael S. Tsirkin wrote:
+> > > On Tue, Jul 17, 2012 at 03:02:08PM -0700, Nicholas A. Bellinger wrote:
+> > > > On Wed, 2012-07-18 at 00:34 +0300, Michael S. Tsirkin wrote:
+
+<SNIP>
+
+> > > 
+> > > I don't see how it helps.  The driver is either a guaranteed ABI or not.
+> > > I'd prefer not to have vhost users outside drivers/vhost/ since it is
+> > > harder for me to keep track of them.
+> > > 
+> > > What's the problem with staging proposal? It's just another hoop to jump
+> > > through to enable it?
+> > > 
+> > 
+> > Yeah, I'm OK with just adding a CONFIG_STAGING tag is a reasonable step
+> > forward for-3.6.
+> > 
+> > Adding the following patch into target-pending/for-next-merge now:
+> > 
+> > diff --git a/drivers/vhost/Kconfig b/drivers/vhost/Kconfig
+> > index ccbeb6f..2cd7135 100644
+> > --- a/drivers/vhost/Kconfig
+> > +++ b/drivers/vhost/Kconfig
+> > @@ -11,7 +11,7 @@ config VHOST_NET
+> >  
+> >  config TCM_VHOST
+> >         tristate "TCM_VHOST fabric module (EXPERIMENTAL)"
+> > -       depends on TARGET_CORE && EVENTFD && EXPERIMENTAL && m
+> > +       depends on TARGET_CORE && EVENTFD && EXPERIMENTAL && STAGING && m
+> >         default n
+> >         ---help---
+> >         Say M here to enable the TCM_VHOST fabric module for use with virtio-scsi guests
+> > 
+> > 
 > 
-> We want it to be possible for target_submit_cmd() to return errors up
-> to its fabric module callers.  For now just update the prototype to
-> return an int, and update all callers to handle non-zero return values
-> as an error.
-> 
-> This is immediately useful for tcm_qla2xxx to fix a long-standing active
-> I/O session shutdown race, but tcm_fc, usb-gadget, and sbp-target the
-> fabric maintainers need to check + ACK that handling a target_submit_cmd()
-> failure due to session shutdown does not introduce regressions
-> 
-> (nab: Respin against for-next after initial NACK + update docbook comment)
+> Hmm that's not explicit enough, someone might enable CONFIG_STAGING for
+> some other reason and won't notice the dependency.
+> We need it to appear with other staging drivers in the menu,
+> so there needs to be a Kconfig that is included from
+> drivers/staging/Kconfig.
 > 
 
-<SNIP> + trimming CC to USB folks:
+Mmmmm, I am sensing a linux-next merge conflict with staging-next and/or
+another for-next-merge rebase coming on..
 
-> index 02ace18..9ddf315 100644
-> --- a/drivers/usb/gadget/tcm_usb_gadget.c
-> +++ b/drivers/usb/gadget/tcm_usb_gadget.c
-> @@ -1060,7 +1060,10 @@ static void usbg_cmd_work(struct work_struct *work)
->  	tpg = cmd->fu->tpg;
->  	tv_nexus = tpg->tpg_nexus;
->  	dir = get_cmd_dir(cmd->cmd_buf);
-> -	if (dir < 0) {
-> +	if (dir < 0 ||
-> +	    target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
-> +			      cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
-> +			      0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE)) {
->  		transport_init_se_cmd(se_cmd,
->  				tv_nexus->tvn_se_sess->se_tpg->se_tpg_tfo,
->  				tv_nexus->tvn_se_sess, cmd->data_len, DMA_NONE,
-> @@ -1069,12 +1072,7 @@ static void usbg_cmd_work(struct work_struct *work)
->  		transport_send_check_condition_and_sense(se_cmd,
->  				TCM_UNSUPPORTED_SCSI_OPCODE, 1);
->  		usbg_cleanup_cmd(cmd);
-> -		return;
->  	}
-> -
-> -	target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
-> -			cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
-> -			0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE);
->  }
->  
->  static int usbg_submit_command(struct f_uas *fu,
-> @@ -1172,7 +1170,10 @@ static void bot_cmd_work(struct work_struct *work)
->  	tpg = cmd->fu->tpg;
->  	tv_nexus = tpg->tpg_nexus;
->  	dir = get_cmd_dir(cmd->cmd_buf);
-> -	if (dir < 0) {
-> +	if (dir < 0 ||
-> +	    target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
-> +			      cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
-> +			      cmd->data_len, cmd->prio_attr, dir, 0)) {
->  		transport_init_se_cmd(se_cmd,
->  				tv_nexus->tvn_se_sess->se_tpg->se_tpg_tfo,
->  				tv_nexus->tvn_se_sess, cmd->data_len, DMA_NONE,
-> @@ -1181,12 +1182,7 @@ static void bot_cmd_work(struct work_struct *work)
->  		transport_send_check_condition_and_sense(se_cmd,
->  				TCM_UNSUPPORTED_SCSI_OPCODE, 1);
->  		usbg_cleanup_cmd(cmd);
-> -		return;
->  	}
-> -
-> -	target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
-> -			cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
-> -			cmd->data_len, cmd->prio_attr, dir, 0);
->  }
->  
+> For example, we can create
+> drivers/vhost/staging/Kconfig or drivers/vhost/tcm/Kconfig and include
+> it from drivers/staging/Kconfig.  nouveau did something like this for a
+> while, see f3c93cbde7eab38671ae085cb1027b08f5f36757.
+> 
+> No need to move the rest of the code.
+> 
 
-Looking at this part again target_submit_cmd() has been moved ahead of
-target_init_se_cmd() in the exception path, which ends up getting called
-twice during a target_get_sess_cmd() failure..
+OK, lets use drivers/vhost/tcm/Kconfig and I'll post a incremental patch
+to make it appear under staging it shortly.
 
-It looks like usbg_cmd_work() + bot_cmd_work() will need some work if
-they intends to use a non zero failure to signal exception here, without
-invoking a CHECK_CONDITION and sense.  Actually, I'm not even sure
-sending a CHECK_CONDITION here after the target_submit_cmd() is going to
-work for other fabrics drivers, but it appears to work with usb-gadget.
-(Sebastian..?)
-
-So for the moment, lets fix the double se_cmd init and make things a
-little easier to read..   Sebastian, please have a look and double check
-that the (dir < 0) + target_submit_cmd() failures cases are both going
-to work as expected whilst sending a CHECK_CONDITION response.
-
-Thanks!
-
---nab
-
-diff --git a/drivers/usb/gadget/tcm_usb_gadget.c b/drivers/usb/gadget/tcm_usb_gadget.c
-index 9ddf315..5444866 100644
---- a/drivers/usb/gadget/tcm_usb_gadget.c
-+++ b/drivers/usb/gadget/tcm_usb_gadget.c
-@@ -1060,19 +1060,25 @@ static void usbg_cmd_work(struct work_struct *work)
-        tpg = cmd->fu->tpg;
-        tv_nexus = tpg->tpg_nexus;
-        dir = get_cmd_dir(cmd->cmd_buf);
--       if (dir < 0 ||
--           target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
--                             cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
--                             0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE)) {
-+       if (dir < 0) {
-                transport_init_se_cmd(se_cmd,
-                                tv_nexus->tvn_se_sess->se_tpg->se_tpg_tfo,
-                                tv_nexus->tvn_se_sess, cmd->data_len, DMA_NONE,
-                                cmd->prio_attr, cmd->sense_iu.sense);
--
--               transport_send_check_condition_and_sense(se_cmd,
--                               TCM_UNSUPPORTED_SCSI_OPCODE, 1);
--               usbg_cleanup_cmd(cmd);
-+               goto out;
-        }
-+
-+       if (target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
-+                       cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
-+                       0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE) < 0)
-+               goto out;
-+
-+       return;
-+
-+out:
-+       transport_send_check_condition_and_sense(se_cmd,
-+                       TCM_UNSUPPORTED_SCSI_OPCODE, 1);
-+       usbg_cleanup_cmd(cmd);
- }
- 
- static int usbg_submit_command(struct f_uas *fu,
-@@ -1170,19 +1176,25 @@ static void bot_cmd_work(struct work_struct *work)
-        tpg = cmd->fu->tpg;
-        tv_nexus = tpg->tpg_nexus;
-        dir = get_cmd_dir(cmd->cmd_buf);
--       if (dir < 0 ||
--           target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
--                             cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
--                             cmd->data_len, cmd->prio_attr, dir, 0)) {
-+       if (dir < 0) {
-                transport_init_se_cmd(se_cmd,
-                                tv_nexus->tvn_se_sess->se_tpg->se_tpg_tfo,
-                                tv_nexus->tvn_se_sess, cmd->data_len, DMA_NONE,
-                                cmd->prio_attr, cmd->sense_iu.sense);
-+               goto out;
-+       }
-+
-+       if (target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
-+                       cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
-+                       cmd->data_len, cmd->prio_attr, dir, 0) < 0)
-+               goto out;
-+
-+       return;
- 
--               transport_send_check_condition_and_sense(se_cmd,
-+out:
-+       transport_send_check_condition_and_sense(se_cmd,
-                                TCM_UNSUPPORTED_SCSI_OPCODE, 1);
--               usbg_cleanup_cmd(cmd);
--       }
-+       usbg_cleanup_cmd(cmd);
- }
- 
- static int bot_submit_command(struct f_uas *fu,
-
-
+(CC'ing Greg-KH for good measure.)
