@@ -1,174 +1,123 @@
 From: adam radford <aradford@gmail.com>
-Subject: [PATCH 2/5] megaraid_sas: Add throttlequeuedepth module parameter
-Date: Tue, 17 Jul 2012 18:20:03 -0700
-Message-ID: <CAHtARFHiZermSVza7Zcwaxr5TpE5kY-gLeDF7_E6H74N5yOy=w@mail.gmail.com>
+Subject: [PATCH 3/5] megaraid_sas: Add resetwaittime module parameter
+Date: Tue, 17 Jul 2012 18:20:24 -0700
+Message-ID: <CAHtARFH2XDTos6E-tJG4yna-oT119Cn4Ks36Xdz52WqiWsg-pA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=14dae93412376757e004c5107693
+Content-Type: multipart/mixed; boundary=14dae934062ba9e2d904c51077e6
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:40679 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751189Ab2GRBUE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 21:20:04 -0400
-Received: by mail-yw0-f46.google.com with SMTP id m54so1074195yhm.19
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 18:20:04 -0700 (PDT)
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:60323 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751189Ab2GRBUZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2012 21:20:25 -0400
+Received: by ghrr11 with SMTP id r11so1077547ghr.19
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2012 18:20:24 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Kashyap Desai <Kashyap.Desai@lsi.com>
 
---14dae93412376757e004c5107693
+--14dae934062ba9e2d904c51077e6
 Content-Type: text/plain; charset=ISO-8859-1
 
 James/linux-scsi,
 
-The following patch for megaraid_sas adds a throttlequeuedepth module
-parameter.  This allows a user to adjust the queue depth of the
-adapter when throttled due to I/O timeout.
+The following patch for megaraid_sas adds support for a resetwaittime
+module parameter.  This allows a user to adjust the wait time in
+seconds after I/O timeout before resetting the adapter.
 
 Signed-off-by: Adam Radford <aradford@gmail.com>
 
 diff -Naur scsi/drivers/scsi/megaraid/megaraid_sas_base.c
 scsi.new/drivers/scsi/megaraid/megaraid_sas_base.c
 --- scsi/drivers/scsi/megaraid/megaraid_sas_base.c	2012-07-17
-14:33:50.681233390 -0700
+14:44:04.341294660 -0700
 +++ scsi.new/drivers/scsi/megaraid/megaraid_sas_base.c	2012-07-17
-14:40:59.507233383 -0700
-@@ -71,6 +71,11 @@
- module_param(msix_disable, int, S_IRUGO);
- MODULE_PARM_DESC(msix_disable, "Disable MSI-X interrupt handling. Default: 0");
+14:50:41.503232158 -0700
+@@ -76,6 +76,11 @@
+ MODULE_PARM_DESC(throttlequeuedepth,
+ 	"Adapter queue depth when throttled due to I/O timeout. Default: 16");
 
-+static int throttlequeuedepth = MEGASAS_THROTTLE_QUEUE_DEPTH;
-+module_param(throttlequeuedepth, int, S_IRUGO);
-+MODULE_PARM_DESC(throttlequeuedepth,
-+	"Adapter queue depth when throttled due to I/O timeout. Default: 16");
++int resetwaittime = MEGASAS_RESET_WAIT_TIME;
++module_param(resetwaittime, int, S_IRUGO);
++MODULE_PARM_DESC(resetwaittime, "Wait time in seconds after I/O timeout "
++		 "before resetting adapter. Default: 180");
 +
  MODULE_LICENSE("GPL");
  MODULE_VERSION(MEGASAS_VERSION);
  MODULE_AUTHOR("megaraidlinux@lsi.com");
-@@ -1595,8 +1600,9 @@
+@@ -1778,7 +1783,7 @@
+ 		return SUCCESS;
+ 	}
+
+-	for (i = 0; i < wait_time; i++) {
++	for (i = 0; i < resetwaittime; i++) {
+
+ 		int outstanding = atomic_read(&instance->fw_outstanding);
+
+diff -Naur scsi/drivers/scsi/megaraid/megaraid_sas_fusion.c
+scsi.new/drivers/scsi/megaraid/megaraid_sas_fusion.c
+--- scsi/drivers/scsi/megaraid/megaraid_sas_fusion.c	2012-07-17
+14:33:50.682231505 -0700
++++ scsi.new/drivers/scsi/megaraid/megaraid_sas_fusion.c	2012-07-17
+14:54:56.487358768 -0700
+@@ -94,6 +94,7 @@
+ void megaraid_sas_kill_hba(struct megasas_instance *instance);
+
+ extern u32 megasas_dbg_lvl;
++extern int resetwaittime;
+
+ /**
+  * megasas_enable_intr_fusion -	Enables interrupts
+@@ -2063,9 +2064,9 @@
+ int megasas_wait_for_outstanding_fusion(struct megasas_instance *instance)
  {
- 	unsigned long flags;
- 	if (instance->flag & MEGASAS_FW_BUSY
--		&& time_after(jiffies, instance->last_time + 5 * HZ)
--		&& atomic_read(&instance->fw_outstanding) < 17) {
-+	    && time_after(jiffies, instance->last_time + 5 * HZ)
-+	    && atomic_read(&instance->fw_outstanding) <
-+	    instance->throttlequeuedepth + 1) {
+ 	int i, outstanding, retval = 0;
+-	u32 fw_state, wait_time = MEGASAS_RESET_WAIT_TIME;
++	u32 fw_state;
 
- 		spin_lock_irqsave(instance->host->host_lock, flags);
- 		instance->flag &= ~MEGASAS_FW_BUSY;
-@@ -1914,7 +1920,7 @@
- 		/* FW is busy, throttle IO */
- 		spin_lock_irqsave(instance->host->host_lock, flags);
+-	for (i = 0; i < wait_time; i++) {
++	for (i = 0; i < resetwaittime; i++) {
+ 		/* Check if firmware is in fault state */
+ 		fw_state = instance->instancet->read_fw_status_reg(
+ 			instance->reg_set) & MFI_STATE_MASK;
 
--		instance->host->can_queue = 16;
-+		instance->host->can_queue = instance->throttlequeuedepth;
- 		instance->last_time = jiffies;
- 		instance->flag |= MEGASAS_FW_BUSY;
-
-@@ -3577,6 +3583,24 @@
-
- 	kfree(ctrl_info);
-
-+	/* Check for valid throttlequeuedepth module parameter */
-+	if (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY ||
-+	    instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY) {
-+		if (throttlequeuedepth > (instance->max_fw_cmds -
-+					  MEGASAS_SKINNY_INT_CMDS))
-+			instance->throttlequeuedepth =
-+				MEGASAS_THROTTLE_QUEUE_DEPTH;
-+		else
-+			instance->throttlequeuedepth = throttlequeuedepth;
-+	} else {
-+		if (throttlequeuedepth > (instance->max_fw_cmds -
-+					  MEGASAS_INT_CMDS))
-+			instance->throttlequeuedepth =
-+				MEGASAS_THROTTLE_QUEUE_DEPTH;
-+		else
-+			instance->throttlequeuedepth = throttlequeuedepth;
-+	}
-+
-         /*
- 	* Setup tasklet for cmd completion
- 	*/
-diff -Naur scsi/drivers/scsi/megaraid/megaraid_sas.h
-scsi.new/drivers/scsi/megaraid/megaraid_sas.h
---- scsi/drivers/scsi/megaraid/megaraid_sas.h	2012-07-17
-14:33:50.683231556 -0700
-+++ scsi.new/drivers/scsi/megaraid/megaraid_sas.h	2012-07-17
-14:42:44.066172702 -0700
-@@ -747,6 +747,7 @@
- #define	MEGASAS_RESET_NOTICE_INTERVAL		5
- #define MEGASAS_IOCTL_CMD			0
- #define MEGASAS_DEFAULT_CMD_TIMEOUT		90
-+#define MEGASAS_THROTTLE_QUEUE_DEPTH		16
-
- /*
-  * FW reports the maximum of number of commands that it can accept (maximum
-@@ -1364,6 +1365,7 @@
- 	unsigned long bar;
- 	long reset_flags;
- 	struct mutex reset_mutex;
-+	int throttlequeuedepth;
- };
-
- enum {
-
---14dae93412376757e004c5107693
-Content-Type: application/octet-stream; name="megaraid_sas.patch2"
-Content-Disposition: attachment; filename="megaraid_sas.patch2"
+--14dae934062ba9e2d904c51077e6
+Content-Type: application/octet-stream; name="megaraid_sas.patch3"
+Content-Disposition: attachment; filename="megaraid_sas.patch3"
 Content-Transfer-Encoding: base64
 X-Attachment-Id: file0
 
 ZGlmZiAtTmF1ciBzY3NpL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5j
 IHNjc2kubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jCi0tLSBz
 Y3NpL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jCTIwMTItMDctMTcg
-MTQ6MzM6NTAuNjgxMjMzMzkwIC0wNzAwCisrKyBzY3NpLm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJh
-aWQvbWVnYXJhaWRfc2FzX2Jhc2UuYwkyMDEyLTA3LTE3IDE0OjQwOjU5LjUwNzIzMzM4MyAtMDcw
-MApAQCAtNzEsNiArNzEsMTEgQEAKIG1vZHVsZV9wYXJhbShtc2l4X2Rpc2FibGUsIGludCwgU19J
-UlVHTyk7CiBNT0RVTEVfUEFSTV9ERVNDKG1zaXhfZGlzYWJsZSwgIkRpc2FibGUgTVNJLVggaW50
-ZXJydXB0IGhhbmRsaW5nLiBEZWZhdWx0OiAwIik7CiAKK3N0YXRpYyBpbnQgdGhyb3R0bGVxdWV1
-ZWRlcHRoID0gTUVHQVNBU19USFJPVFRMRV9RVUVVRV9ERVBUSDsKK21vZHVsZV9wYXJhbSh0aHJv
-dHRsZXF1ZXVlZGVwdGgsIGludCwgU19JUlVHTyk7CitNT0RVTEVfUEFSTV9ERVNDKHRocm90dGxl
-cXVldWVkZXB0aCwKKwkiQWRhcHRlciBxdWV1ZSBkZXB0aCB3aGVuIHRocm90dGxlZCBkdWUgdG8g
-SS9PIHRpbWVvdXQuIERlZmF1bHQ6IDE2Iik7CisKIE1PRFVMRV9MSUNFTlNFKCJHUEwiKTsKIE1P
-RFVMRV9WRVJTSU9OKE1FR0FTQVNfVkVSU0lPTik7CiBNT0RVTEVfQVVUSE9SKCJtZWdhcmFpZGxp
-bnV4QGxzaS5jb20iKTsKQEAgLTE1OTUsOCArMTYwMCw5IEBACiB7CiAJdW5zaWduZWQgbG9uZyBm
-bGFnczsKIAlpZiAoaW5zdGFuY2UtPmZsYWcgJiBNRUdBU0FTX0ZXX0JVU1kKLQkJJiYgdGltZV9h
-ZnRlcihqaWZmaWVzLCBpbnN0YW5jZS0+bGFzdF90aW1lICsgNSAqIEhaKQotCQkmJiBhdG9taWNf
-cmVhZCgmaW5zdGFuY2UtPmZ3X291dHN0YW5kaW5nKSA8IDE3KSB7CisJICAgICYmIHRpbWVfYWZ0
-ZXIoamlmZmllcywgaW5zdGFuY2UtPmxhc3RfdGltZSArIDUgKiBIWikKKwkgICAgJiYgYXRvbWlj
-X3JlYWQoJmluc3RhbmNlLT5md19vdXRzdGFuZGluZykgPAorCSAgICBpbnN0YW5jZS0+dGhyb3R0
-bGVxdWV1ZWRlcHRoICsgMSkgewogCiAJCXNwaW5fbG9ja19pcnFzYXZlKGluc3RhbmNlLT5ob3N0
-LT5ob3N0X2xvY2ssIGZsYWdzKTsKIAkJaW5zdGFuY2UtPmZsYWcgJj0gfk1FR0FTQVNfRldfQlVT
-WTsKQEAgLTE5MTQsNyArMTkyMCw3IEBACiAJCS8qIEZXIGlzIGJ1c3ksIHRocm90dGxlIElPICov
-CiAJCXNwaW5fbG9ja19pcnFzYXZlKGluc3RhbmNlLT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsK
-IAotCQlpbnN0YW5jZS0+aG9zdC0+Y2FuX3F1ZXVlID0gMTY7CisJCWluc3RhbmNlLT5ob3N0LT5j
-YW5fcXVldWUgPSBpbnN0YW5jZS0+dGhyb3R0bGVxdWV1ZWRlcHRoOwogCQlpbnN0YW5jZS0+bGFz
-dF90aW1lID0gamlmZmllczsKIAkJaW5zdGFuY2UtPmZsYWcgfD0gTUVHQVNBU19GV19CVVNZOwog
-CkBAIC0zNTc3LDYgKzM1ODMsMjQgQEAKIAogCWtmcmVlKGN0cmxfaW5mbyk7CiAKKwkvKiBDaGVj
-ayBmb3IgdmFsaWQgdGhyb3R0bGVxdWV1ZWRlcHRoIG1vZHVsZSBwYXJhbWV0ZXIgKi8KKwlpZiAo
-aW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX0xTSV9TQVMwMDczU0tJTk5Z
-IHx8CisJICAgIGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF9MU0lfU0FT
-MDA3MVNLSU5OWSkgeworCQlpZiAodGhyb3R0bGVxdWV1ZWRlcHRoID4gKGluc3RhbmNlLT5tYXhf
-ZndfY21kcyAtCisJCQkJCSAgTUVHQVNBU19TS0lOTllfSU5UX0NNRFMpKQorCQkJaW5zdGFuY2Ut
-PnRocm90dGxlcXVldWVkZXB0aCA9CisJCQkJTUVHQVNBU19USFJPVFRMRV9RVUVVRV9ERVBUSDsK
-KwkJZWxzZQorCQkJaW5zdGFuY2UtPnRocm90dGxlcXVldWVkZXB0aCA9IHRocm90dGxlcXVldWVk
-ZXB0aDsKKwl9IGVsc2UgeworCQlpZiAodGhyb3R0bGVxdWV1ZWRlcHRoID4gKGluc3RhbmNlLT5t
-YXhfZndfY21kcyAtCisJCQkJCSAgTUVHQVNBU19JTlRfQ01EUykpCisJCQlpbnN0YW5jZS0+dGhy
-b3R0bGVxdWV1ZWRlcHRoID0KKwkJCQlNRUdBU0FTX1RIUk9UVExFX1FVRVVFX0RFUFRIOworCQll
-bHNlCisJCQlpbnN0YW5jZS0+dGhyb3R0bGVxdWV1ZWRlcHRoID0gdGhyb3R0bGVxdWV1ZWRlcHRo
-OworCX0KKwogICAgICAgICAvKgogCSogU2V0dXAgdGFza2xldCBmb3IgY21kIGNvbXBsZXRpb24K
-IAkqLwpkaWZmIC1OYXVyIHNjc2kvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5o
-IHNjc2kubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaAotLS0gc2NzaS9k
-cml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmgJMjAxMi0wNy0xNyAxNDozMzo1MC42
-ODMyMzE1NTYgLTA3MDAKKysrIHNjc2kubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
-ZF9zYXMuaAkyMDEyLTA3LTE3IDE0OjQyOjQ0LjA2NjE3MjcwMiAtMDcwMApAQCAtNzQ3LDYgKzc0
-Nyw3IEBACiAjZGVmaW5lCU1FR0FTQVNfUkVTRVRfTk9USUNFX0lOVEVSVkFMCQk1CiAjZGVmaW5l
-IE1FR0FTQVNfSU9DVExfQ01ECQkJMAogI2RlZmluZSBNRUdBU0FTX0RFRkFVTFRfQ01EX1RJTUVP
-VVQJCTkwCisjZGVmaW5lIE1FR0FTQVNfVEhST1RUTEVfUVVFVUVfREVQVEgJCTE2CiAKIC8qCiAg
-KiBGVyByZXBvcnRzIHRoZSBtYXhpbXVtIG9mIG51bWJlciBvZiBjb21tYW5kcyB0aGF0IGl0IGNh
-biBhY2NlcHQgKG1heGltdW0KQEAgLTEzNjQsNiArMTM2NSw3IEBACiAJdW5zaWduZWQgbG9uZyBi
-YXI7CiAJbG9uZyByZXNldF9mbGFnczsKIAlzdHJ1Y3QgbXV0ZXggcmVzZXRfbXV0ZXg7CisJaW50
-IHRocm90dGxlcXVldWVkZXB0aDsKIH07CiAKIGVudW0gewo=
---14dae93412376757e004c5107693--
+MTQ6NDQ6MDQuMzQxMjk0NjYwIC0wNzAwCisrKyBzY3NpLm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJh
+aWQvbWVnYXJhaWRfc2FzX2Jhc2UuYwkyMDEyLTA3LTE3IDE0OjUwOjQxLjUwMzIzMjE1OCAtMDcw
+MApAQCAtNzYsNiArNzYsMTEgQEAKIE1PRFVMRV9QQVJNX0RFU0ModGhyb3R0bGVxdWV1ZWRlcHRo
+LAogCSJBZGFwdGVyIHF1ZXVlIGRlcHRoIHdoZW4gdGhyb3R0bGVkIGR1ZSB0byBJL08gdGltZW91
+dC4gRGVmYXVsdDogMTYiKTsKIAoraW50IHJlc2V0d2FpdHRpbWUgPSBNRUdBU0FTX1JFU0VUX1dB
+SVRfVElNRTsKK21vZHVsZV9wYXJhbShyZXNldHdhaXR0aW1lLCBpbnQsIFNfSVJVR08pOworTU9E
+VUxFX1BBUk1fREVTQyhyZXNldHdhaXR0aW1lLCAiV2FpdCB0aW1lIGluIHNlY29uZHMgYWZ0ZXIg
+SS9PIHRpbWVvdXQgIgorCQkgImJlZm9yZSByZXNldHRpbmcgYWRhcHRlci4gRGVmYXVsdDogMTgw
+Iik7CisKIE1PRFVMRV9MSUNFTlNFKCJHUEwiKTsKIE1PRFVMRV9WRVJTSU9OKE1FR0FTQVNfVkVS
+U0lPTik7CiBNT0RVTEVfQVVUSE9SKCJtZWdhcmFpZGxpbnV4QGxzaS5jb20iKTsKQEAgLTE3Nzgs
+NyArMTc4Myw3IEBACiAJCXJldHVybiBTVUNDRVNTOwogCX0KIAotCWZvciAoaSA9IDA7IGkgPCB3
+YWl0X3RpbWU7IGkrKykgeworCWZvciAoaSA9IDA7IGkgPCByZXNldHdhaXR0aW1lOyBpKyspIHsK
+IAogCQlpbnQgb3V0c3RhbmRpbmcgPSBhdG9taWNfcmVhZCgmaW5zdGFuY2UtPmZ3X291dHN0YW5k
+aW5nKTsKIApkaWZmIC1OYXVyIHNjc2kvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nh
+c19mdXNpb24uYyBzY3NpLm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1
+c2lvbi5jCi0tLSBzY3NpL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9u
+LmMJMjAxMi0wNy0xNyAxNDozMzo1MC42ODIyMzE1MDUgLTA3MDAKKysrIHNjc2kubmV3L2RyaXZl
+cnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMJMjAxMi0wNy0xNyAxNDo1NDo1
+Ni40ODczNTg3NjggLTA3MDAKQEAgLTk0LDYgKzk0LDcgQEAKIHZvaWQgbWVnYXJhaWRfc2FzX2tp
+bGxfaGJhKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSk7CiAKIGV4dGVybiB1MzIg
+bWVnYXNhc19kYmdfbHZsOworZXh0ZXJuIGludCByZXNldHdhaXR0aW1lOwogCiAvKioKICAqIG1l
+Z2FzYXNfZW5hYmxlX2ludHJfZnVzaW9uIC0JRW5hYmxlcyBpbnRlcnJ1cHRzCkBAIC0yMDYzLDkg
+KzIwNjQsOSBAQAogaW50IG1lZ2FzYXNfd2FpdF9mb3Jfb3V0c3RhbmRpbmdfZnVzaW9uKHN0cnVj
+dCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSkKIHsKIAlpbnQgaSwgb3V0c3RhbmRpbmcsIHJl
+dHZhbCA9IDA7Ci0JdTMyIGZ3X3N0YXRlLCB3YWl0X3RpbWUgPSBNRUdBU0FTX1JFU0VUX1dBSVRf
+VElNRTsKKwl1MzIgZndfc3RhdGU7CiAKLQlmb3IgKGkgPSAwOyBpIDwgd2FpdF90aW1lOyBpKysp
+IHsKKwlmb3IgKGkgPSAwOyBpIDwgcmVzZXR3YWl0dGltZTsgaSsrKSB7CiAJCS8qIENoZWNrIGlm
+IGZpcm13YXJlIGlzIGluIGZhdWx0IHN0YXRlICovCiAJCWZ3X3N0YXRlID0gaW5zdGFuY2UtPmlu
+c3RhbmNldC0+cmVhZF9md19zdGF0dXNfcmVnKAogCQkJaW5zdGFuY2UtPnJlZ19zZXQpICYgTUZJ
+X1NUQVRFX01BU0s7Cg==
+--14dae934062ba9e2d904c51077e6--
