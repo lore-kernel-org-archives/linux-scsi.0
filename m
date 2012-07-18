@@ -1,97 +1,113 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: scsi_lib: fix scsi_io_completion's SG_IO error propagation
-Date: Wed, 18 Jul 2012 19:06:14 -0400
-Message-ID: <20120718230614.GC13570@redhat.com>
-References: <1338491133-8077-1-git-send-email-snitzer@redhat.com>
- <4FC7CBCA.60707@redhat.com>
- <20120531202422.GA8731@redhat.com>
- <77471C95FAFD844C8CA02DD4F4C5FE2B07DF051A@SACEXCMBX02-PRD.hq.netapp.com>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: Re: [PATCH] target: Allow for target_submit_cmd() returning errors
+Date: Wed, 18 Jul 2012 16:38:27 -0700
+Message-ID: <1342654707.18004.711.camel@haakon2.linux-iscsi.org>
+References: <1342568261-15616-1-git-send-email-nab@linux-iscsi.org>
+	 <1342569948.18004.541.camel@haakon2.linux-iscsi.org>
+	 <50067D85.5090900@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9663 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752057Ab2GRXG0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jul 2012 19:06:26 -0400
-Content-Disposition: inline
-In-Reply-To: <77471C95FAFD844C8CA02DD4F4C5FE2B07DF051A@SACEXCMBX02-PRD.hq.netapp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <50067D85.5090900-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>, Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-usb <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com
-Cc: Paolo Bonzini <pbonzini@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Moger, Babu" <Babu.Moger@netapp.com>
 
-Hi James,
+On Wed, 2012-07-18 at 11:10 +0200, Sebastian Andrzej Siewior wrote:
+> On 07/18/2012 02:05 AM, Nicholas A. Bellinger wrote:
+> >> index 02ace18..9ddf315 100644
+> >> --- a/drivers/usb/gadget/tcm_usb_gadget.c
+> >> +++ b/drivers/usb/gadget/tcm_usb_gadget.c
+> >> @@ -1060,7 +1060,10 @@ static void usbg_cmd_work(struct work_struc=
+t *work)
+> >>   	tpg =3D cmd->fu->tpg;
+> >>   	tv_nexus =3D tpg->tpg_nexus;
+> >>   	dir =3D get_cmd_dir(cmd->cmd_buf);
+> >> -	if (dir<  0) {
+> >> +	if (dir<  0 ||
+> >> +	    target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
+> >> +			      cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
+> >> +			      0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE)) {
+> >>   		transport_init_se_cmd(se_cmd,
+> >>   				tv_nexus->tvn_se_sess->se_tpg->se_tpg_tfo,
+> >>   				tv_nexus->tvn_se_sess, cmd->data_len, DMA_NONE,
+> >> @@ -1069,12 +1072,7 @@ static void usbg_cmd_work(struct work_struc=
+t *work)
+> >>   		transport_send_check_condition_and_sense(se_cmd,
+> >>   				TCM_UNSUPPORTED_SCSI_OPCODE, 1);
+> >>   		usbg_cleanup_cmd(cmd);
+> >> -		return;
+> >>   	}
+> >> -
+> >> -	target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
+> >> -			cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
+> >> -			0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE);
+> >>   }
+> >>
+> >>   static int usbg_submit_command(struct f_uas *fu,
+> >
+> > Looking at this part again target_submit_cmd() has been moved ahead=
+ of
+> > target_init_se_cmd() in the exception path, which ends up getting c=
+alled
+> > twice during a target_get_sess_cmd() failure..
+> >
+> > It looks like usbg_cmd_work() + bot_cmd_work() will need some work =
+if
+> > they intends to use a non zero failure to signal exception here, wi=
+thout
+> > invoking a CHECK_CONDITION and sense.  Actually, I'm not even sure
+> > sending a CHECK_CONDITION here after the target_submit_cmd() is goi=
+ng to
+> > work for other fabrics drivers, but it appears to work with usb-gad=
+get.
+> > (Sebastian..?)
+>=20
+> For UAS the status/ sense URB is sent right away (without any data) a=
+nd
+> this worked the last time I tested.
 
-Seems this one slipped through the cracks.  Please review/apply.
+<nod>, thanks for the re-clarification on this..  ;)
 
-Thanks,
-Mike
+> For BOT things are a little complicated. What I do is to send empty
+> data (to fill the data pipe) and send a bad status so the other side
+> learns that the transfer failed somehow. The sense information is los=
+t.
+> What I should do is to queue this sense data for the next MODE_SENSE
+> request which will be coming soon. Right now WinXP repeats a failed
+> command thrice if MODE_SENSE returns no error. "This" is on my to-fix
+> list=E2=80=A6
+>=20
 
-On Thu, May 31 2012 at  4:33pm -0400,
-Moger, Babu <Babu.Moger@netapp.com> wrote:
+Ok, so I think the special case for usb-gadget where is able to call
+transport_send_check_condition_and_sense() should be OK for the single
+target_get_sess_cmd() -> target_submit_cmd() failure case..
 
-> Thanks Mike. Looks good.
-> 
-> > -----Original Message-----
-> > From: Mike Snitzer [mailto:snitzer@redhat.com]
-> > Sent: Thursday, May 31, 2012 3:24 PM
-> > To: Paolo Bonzini
-> > Cc: linux-scsi@vger.kernel.org; Moger, Babu; hare@suse.de;
-> > michaelc@cs.wisc.edu; James.Bottomley@hansenpartnership.com;
-> > stable@vger.kernel.org.#.3.4
-> > Subject: Re: scsi_lib: fix scsi_io_completion's SG_IO error propagation
-> > 
-> > On Thu, May 31 2012 at  3:51pm -0400,
-> > Paolo Bonzini <pbonzini@redhat.com> wrote:
-> > 
-> > > Il 31/05/2012 21:05, Mike Snitzer ha scritto:
-> > > > The following v3.4-rc1 commit unmasked an existing bug in
-> > > > scsi_io_completion's SG_IO error handling:
-> > > > 47ac56d [SCSI] scsi_error: classify some ILLEGAL_REQUEST sense as a
-> > permanent TARGET_ERROR
-> > > >
-> > > > Given that certain ILLEGAL_REQUEST are now properly categorized as
-> > > > TARGET_ERROR the host_byte is being set (before host_byte wasn't ever
-> > > > set for these ILLEGAL_REQUEST).
-> > > >
-> > > > In scsi_io_completion, initialize req->errors with cmd->result _after_
-> > > > the SG_IO block that calls __scsi_error_from_host_byte (which may
-> > > > modify the host_byte).
-> > > >
-> > > > Before this fix:
-> > > >
-> > > >     cdb to send: 12 01 01 00 00 00
-> > > > ioctl(3, SG_IO, {'S', SG_DXFER_NONE, cmd[6]=[12, 01, 01, 00, 00, 00],
-> > > >     mx_sb_len=32, iovec_count=0, dxfer_len=0, timeout=20000, flags=0,
-> > > >     status=02, masked_status=01, sb[19]=[70, 00, 05, 00, 00, 00, 00, 0b,
-> > > >     00, 00, 00, 00, 24, 00, 00, 00, 00, 00, 00], host_status=0x10,
-> > > >     driver_status=0x8, resid=0, duration=0, info=0x1}) = 0
-> > > > SCSI Status: Check Condition
-> > > >
-> > > > Sense Information:
-> > > > sense buffer empty
-> > > >
-> > > > After:
-> > > >
-> > > >     cdb to send: 12 01 01 00 00 00
-> > > > ioctl(3, SG_IO, {'S', SG_DXFER_NONE, cmd[6]=[12, 01, 01, 00, 00, 00],
-> > > >     mx_sb_len=32, iovec_count=0, dxfer_len=0, timeout=20000, flags=0,
-> > > >     status=02, masked_status=01, sb[19]=[70, 00, 05, 00, 00, 00, 00, 0b,
-> > > >     00, 00, 00, 00, 24, 00, 00, 00, 00, 00, 00], host_status=0,
-> > > >     driver_status=0x8, resid=0, duration=0, info=0x1}) = 0
-> > > > SCSI Status: Check Condition
-> > > >
-> > > > Sense Information:
-> > > >  Fixed format, current;  Sense key: Illegal Request
-> > > >  Additional sense: Invalid field in cdb
-> > > >  Raw sense data (in hex):
-> > > >         70 00 05 00 00 00 00 0b  00 00 00 00 24 00 00 00
-> > > >         00 00 00
-> > > >
-> > > > Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-> > > > Reviewed-by: Babu Moger <babu.moger@netapp.com>
-> > >
-> > > Reported-by: Paolo Bonzini <pbonzini@redhat.com>
-> > > Tested-by: Paolo Bonzini <pbonzini@redhat.com>
-> > 
-> > Yes, thanks for backfilling the Reported-by and Tested-by Paolo!
+This is not going to be safe for just about every other fabric AFAICT,
+so I think we need a comment here to describe that fact..
+
+> > So for the moment, lets fix the double se_cmd init and make things =
+a
+> > little easier to read..   Sebastian, please have a look and double =
+check
+> > that the (dir<  0) + target_submit_cmd() failures cases are both go=
+ing
+> > to work as expected whilst sending a CHECK_CONDITION response.
+>=20
+> The sense code should only be sent once and
+> transport_send_check_condition_and_sense() sets
+> SCF_SENT_CHECK_CONDITION and checks for it so doing it twice should n=
+ot
+> do any harm right? But grep does not say when this flag gets removed.
+>=20
+
+Correct.  The SCF_SENT_CHECK_CONDITION bit does not get removed ahead o=
+f
+fabric descriptor release.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
