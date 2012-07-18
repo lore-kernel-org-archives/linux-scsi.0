@@ -1,133 +1,96 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [MINI SUMMIT] SCSI core performance
-Date: Wed, 18 Jul 2012 15:34:35 -0700
-Message-ID: <1342650875.18004.690.camel@haakon2.linux-iscsi.org>
-References: <1342579190.18004.597.camel@haakon2.linux-iscsi.org>
-	 <1342598402.3022.17.camel@dabdike.int.hansenpartnership.com>
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Re: [Bug 44771] [REGRESSION] a7a20d103994fd760766e6c9d494daa569cbfe06
+ makes kernel 3.5 unbootable on an Intel chipset based motherboard
+Date: Wed, 18 Jul 2012 15:41:38 -0700
+Message-ID: <CAA9_cmf4uGuf_nuc6542MddkgWqUhvDXqBMpeGS--QU84+j2xA@mail.gmail.com>
+References: <1342562588.3039.104.camel@dabdike.int.hansenpartnership.com>
+	<Pine.LNX.4.44L0.1207181608410.1429-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1342598402.3022.17.camel@dabdike.int.hansenpartnership.com>
-Sender: target-devel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: KS-2012-discuss <ksummit-2012-discuss@lists.linux-foundation.org>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <mail@hannes-reinecke.de>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:45716 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751920Ab2GRWlj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2012 18:41:39 -0400
+Received: by obbuo13 with SMTP id uo13so2770396obb.19
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2012 15:41:39 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.44L0.1207181608410.1429-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <jbottomley@parallels.com>, "Artem S. Tashkinov" <t.artem@mailcity.com>, Linus Torvalds <torvalds@linux-foundation.org>, Borislav Petkov <bp@amd64.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2012-07-18 at 09:00 +0100, James Bottomley wrote:
-> On Tue, 2012-07-17 at 19:39 -0700, Nicholas A. Bellinger wrote:
-> > Hi KS-PCs,
-> > 
-> > I'd like to propose a SCSI performance mini-summit to see how interested
-> > folks are in helping address the long-term issues that SCSI core is
-> > currently facing wrt to multi-lun per host and heavy small block random
-> > I/O workloads.
-> > 
-> > I know this would probably be better suited for LSF (for the record it
-> > was proposed this year) but now that we've acknowledge there is a
-> > problem with SCSI LLDs vs. raw block drivers vs. other SCSI subsystems,
-> > it would be useful to get the storage folks into a single room at some
-> > point during KS/LPC to figure out what is actually going on with SCSI
-> > core.
-> 
-> You seem to have a short memory:  The last time it was discussed
-> 
-> http://marc.info/?t=134155373900003
-> 
-> It rapidly became apparent there isn't a problem.  Enabling high IOPS in
-> the SCSI stack is what I think you mean.
-> 
+On Wed, Jul 18, 2012 at 1:25 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Tue, 17 Jul 2012, James Bottomley wrote:
+>
+>> On Tue, 2012-07-17 at 12:51 -0700, Linus Torvalds wrote:
+>> > Wrong people cc'd, it looks like.
+>> >
+>> > Guys, commit a7a20d103994 ("sd: limit the scope of the async probe
+>> > domain") is causing boot problems. It's timing-dependent and
+>> > apparently sometimes works, which makes sense with that commit.
+>> >
+>> > However, it *should* have been fixed by commit 43a8d39d0137 ("fix
+>> > async probe regression"), but Artem seems to report the problem even
+>> > in -rc7.
+>> >
+>> > Comments?
+>>
+>> As far as I can tell, the fix should have worked.  However, there are a
+>> lot of assumptions in the async stuff that end up not being true in the
+>> presence of separate async domains.   We should be fixing it all here:
+>>
+>> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi.git;a=shortlog;h=refs/heads/async
+>
+> Those commits haven't been merged into 3.5-rc7, right?  So Artem isn't
+> using them.
+>
+>> I've got to say, I don't understand the bug report.  all of those
+>> commits were about probing for devices.  However, the screen shot
+>>
+>> https://bugzilla.kernel.org/attachment.cgi?id=75351
+>>
+>> shows the devices were found, it's the partition tables that weren't.
+>> For us to see the message about sda's capacity, we're already in the
+>> async code the commits were trying to synchronise with.
+>
+> That's understandable, given that those commits aren't present in
+> Artem's kernel.  Are they queued for -stable?
 
-small block random I/O == performance, that is correct.
+I did not flag them as such given the wider entanglements.
 
-The host-lock-less stuff is doing better these days for small-ish
-multi-lun setups with large block sequential I/O workloads.
+>
+>> However, there are some missing messages: there's no partition table
+>> print and no final
+>>
+>>       sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+>>                 sdp->removable ? "removable " : "");
+>>
+>> So sd_probe_async() got stuck somewhere after the first
+>> sd_revalidata_disk().
+>
+> No, it didn't get stuck.  The problem is that the scsi_wait_scan module
+> didn't wait for the async scanning to finish.
+>
+> And the reason for that is one you're already familiar with:
+> CONFIG_SCSI_MOD=y.
 
-Doing ~1 GB/sec per LUN is achievable with multi-lun per host (say up to
-6-8 LUNs dependent on your setup) using PCI-e Gen3 hardware.
+I had forgotten that additional aspect. but I don't think that is the
+root cause.  scsi_wait_scan() is a nop in Artem's config given
+CONFIG_SCSI_WAIT_SCAN=m.  From what I have seen ahci typically ensures
+that wait_for_device_probe() is all that is needed to guarantee
+scanning is complete which commit a7a20d103994 ("sd: limit the scope
+of the async probe domain") breaks, and which commit 43a8d39d0137
+("[SCSI] fix async probe regression"), does not resolve because that
+requires a call to scsi_complete_async_scans() to close the loop.
 
-> > As mentioned in the recent tcm_vhost thread, there are a number of cases
-> > where drivers/target/ code can demonstrate this limitation pretty
-> > vividly now.
-> > 
-> > This includes the following scenarios using raw block flash export with
-> > target_core_mod + target_core_iblock export and the same small block
-> > (4k) mixed random I/O workload with fio:
-> > 
-> > *) tcm_loop local SCSI LLD performance is an order of magnitude slower 
-> >    than the same local raw block flash backend.
-> > *) tcm_qla2xxx performs better using MSFT Server hosts than Linux v3.x
-> >    based hosts using 2x socket Nehalem hardware w/ PCI-e Gen2 HBAs
-> > *) ib_srpt performs better using MSFT Server host than RHEL 6.x .32 
-> >    based hosts using 2x socket Romley hardware w/ PCI-e Gen3 HCAs
-> > *) Raw block IBLOCK export into KVM guest v3.5-rc w/ virtio-scsi is 
-> >    behind in performance vs. raw local block flash.  (cmwq on the host 
-> >    is helping here, but still need to with MSFT SCSI mini-port)
-> > 
-> > Also, with 1M IOPs into a single VM guest now being done by other non
-> > Linux based hypervisors, the virtualization bit for high performance KVM
-> > SCSI based storage is quickly coming on..
-> > 
-> > So all of that said, I'd like to at least have a discussion with the key
-> > SCSI + block folks who will be present in San Diego on path forward to
-> > address these without having to wait until LSF-2013 + hope for a topic
-> > slot to materialize then.
-> > 
-> > Thank you for your consideration,
-> 
-> Well, your proposal is devoid of an actual proposal.
-> 
+> Artem, if you change all your SCSI drivers to be modular rather than
+> built-in, that ought to fix the problem.  Alternatively, you can simply
+> continue to use the "rootwait" option.
 
-Huh..?  It's a proposal for a discussion to (hopefully) identify the
-main culprit(s) and figure out an incremental way forward.
+I think setting CONFIG_SCSI_WAIT_SCAN=y would also be a workaround, or
+going forward with the pending async rework to make sd probe work once
+again visible to async_synchronize_domain_full().
 
-Due to the fact that 1M IOPs machines aren't quite the norm (yet), the
-idea is to get storage folks in the same room who do have access to 1M
-IOPs systems + have an interest in making SCSI core go faster for random
-small block I/O workloads.
-
-This can be vendors / LLD maintainers who've run into similar
-limitations with SCSI core, or folks who have an interest in KVM guest
-SCSI performance.
-
-> Enabling high IOPS involves reducing locking overhead and path length
-> through the code.  I think most of the low hanging fruit in this area is
-> already picked, but if you have an idea, please say.  There might be
-> something we can extract from the lockless queue work Jens is doing, but
-> we need that to materialise first.
-> 
-
-Would really like to hear from Jens here, but I don't know how much time
-he is spending on the SCSI layer these days..
-
-I've been more interested recently in working on a fabric that can
-demonstrate this bottleneck with raw block flash into KVM guest <->
-virtio-scsi, as I think it's a important vehicle for short-term
-diagnosis.
-
-> Without a concrete thing to discuss, shooting the breeze on high IOPS in
-> the SCSI stack is about as useful as discussing what happened in last
-> night's episode of Coronation Street which, when it happens in my house,
-> always helps me see how incredibly urgent fixing the leaky tap I've been
-> putting off for months actually is.
-> 
-
-Sorry, I've never heard of that show.  
-
-> If someone can come up with a proposal ... or even perhaps another path
-> trace showing where the reducible overhead and lock problems are we can
-> discuss it on the list and we might have a real topic by the time LSF
-> rolls around.
-> 
-
-So identifying root culprit(s) is still a WIP at this point.
-
-In the next weeks I'll be back spending time back on 1M IOPs machines
-with raw block flash + qla2xxx/srpt/vhost + Linux/MSFT SCSI clients, and
-should be getting some more data-points by then.
-
-Anyways, if it ends up taking until LSF it ends up at LSF.  I figured
-since things are heating up for virtio-scsi that KS might be a good
-venue for a discussion like this.
-
---nab
+--
+Dan
