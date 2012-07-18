@@ -1,58 +1,103 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC-v3 4/4] tcm_vhost: Initial merge for vhost level target
- fabric driver
-Date: Wed, 18 Jul 2012 14:20:58 -0700
-Message-ID: <1342646458.18004.637.camel@haakon2.linux-iscsi.org>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [RFC-v3 3/4] vhost: Add vhost_scsi specific defines
+Date: Thu, 19 Jul 2012 00:21:58 +0300
+Message-ID: <20120718212157.GA11738@redhat.com>
 References: <1342573172-17421-1-git-send-email-nab@linux-iscsi.org>
-	 <1342573172-17421-5-git-send-email-nab@linux-iscsi.org>
-	 <20120718160919.GA2152@redhat.com>
+	<1342573172-17421-4-git-send-email-nab@linux-iscsi.org>
+	<20120718130518.GB5589@redhat.com>
+	<1342646225.18004.633.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <kvm-owner@vger.kernel.org>
-In-Reply-To: <20120718160919.GA2152@redhat.com>
-Sender: kvm-owner@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <1342646225.18004.633.camel@haakon2.linux-iscsi.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-07-18 at 19:09 +0300, Michael S. Tsirkin wrote:
-> On Wed, Jul 18, 2012 at 12:59:32AM +0000, Nicholas A. Bellinger wrote:
-
-<SNIP>
-
-> > 
-> > Changelog v2 -> v3:
-> > 
-> >   Unlock on error in tcm_vhost_drop_nexus() (DanC)
-> >   Fix strlen() doesn't count the terminator (DanC)
-> >   Call kfree() on an error path (DanC)
-> >   Convert tcm_vhost_write_pending to use target_execute_cmd (hch + nab)
-> >   Fix another strlen() off by one in tcm_vhost_make_tport (DanC)
-> >   Add option under drivers/staging/Kconfig, and move to drivers/vhost/tcm/
-> >   as requested by MST (nab)
-> > 
-> > ---
-> >  drivers/staging/Kconfig       |    2 +
-> >  drivers/vhost/Makefile        |    2 +
-> >  drivers/vhost/tcm/Kconfig     |    6 +
-> >  drivers/vhost/tcm/Makefile    |    1 +
-> >  drivers/vhost/tcm/tcm_vhost.c | 1611 +++++++++++++++++++++++++++++++++++++++++
-> >  drivers/vhost/tcm/tcm_vhost.h |   74 ++
-> >  6 files changed, 1696 insertions(+), 0 deletions(-)
-> >  create mode 100644 drivers/vhost/tcm/Kconfig
-> >  create mode 100644 drivers/vhost/tcm/Makefile
-> >  create mode 100644 drivers/vhost/tcm/tcm_vhost.c
-> >  create mode 100644 drivers/vhost/tcm/tcm_vhost.h
-> > 
-> 
-> Really sorry about making you run around like that,
-> I did not mean moving all of tcm to a directory,
-> just adding tcm/Kconfig or adding drivers/vhost/Kconfig.tcm
-> because eventually it's easier to keep it all together
-> in one place.
-> 
-
-Er, apologies for the slight mis-understanding here..  Moving back now +
-fixing up the Kbuild bits.
-
+T24gV2VkLCBKdWwgMTgsIDIwMTIgYXQgMDI6MTc6MDVQTSAtMDcwMCwgTmljaG9sYXMgQS4gQmVs
+bGluZ2VyIHdyb3RlOgo+IE9uIFdlZCwgMjAxMi0wNy0xOCBhdCAxNjowNSArMDMwMCwgTWljaGFl
+bCBTLiBUc2lya2luIHdyb3RlOgo+ID4gT24gV2VkLCBKdWwgMTgsIDIwMTIgYXQgMTI6NTk6MzFB
+TSArMDAwMCwgTmljaG9sYXMgQS4gQmVsbGluZ2VyIHdyb3RlOgo+ID4gPiBGcm9tOiBOaWNob2xh
+cyBCZWxsaW5nZXIgPG5hYkByaXNpbmd0aWRlc3lzdGVtcy5jb20+Cj4gPiA+IAo+ID4gPiBUaGlz
+IHBhdGNoIGFkZHMgdGhlIGluaXRpYWwgdmhvc3Rfc2NzaV9pb2N0bCgpIGNhbGxlcnMgZm9yIFZI
+T1NUX1NDU0lfU0VUX0VORFBPSU5UCj4gPiA+IGFuZCBWSE9TVF9TQ1NJX0NMRUFSX0VORFBPSU5U
+IHJlc3BlY3RpdmVseSwgYW5kIGFsc28gYWRkcyBzdHJ1Y3Qgdmhvc3RfdnJpbmdfdGFyZ2V0Cj4g
+PiA+IHRoYXQgaXMgdXNlZCBieSB0Y21fdmhvc3QgY29kZSB3aGVuIGxvY2F0aW5nIHRhcmdldCBw
+b3J0cyBkdXJpbmcgcWVtdSBzZXR1cC4KPiA+ID4gCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFN0ZWZh
+biBIYWpub2N6aSA8c3RlZmFuaGFAbGludXgudm5ldC5pYm0uY29tPgo+ID4gPiBDYzogWmhpIFlv
+bmcgV3UgPHd1emh5QGNuLmlibS5jb20+Cj4gPiA+IENjOiBNaWNoYWVsIFMuIFRzaXJraW4gPG1z
+dEByZWRoYXQuY29tPgo+ID4gPiBDYzogUGFvbG8gQm9uemluaSA8cGJvbnppbmlAcmVkaGF0LmNv
+bT4sCj4gPiA+IFNpZ25lZC1vZmYtYnk6IE5pY2hvbGFzIEEuIEJlbGxpbmdlciA8bmFiQHJpc2lu
+Z3RpZGVzeXN0ZW1zLmNvbT4KPiA+ID4gLS0tCj4gPiA+ICBpbmNsdWRlL2xpbnV4L3Zob3N0Lmgg
+fCAgICA5ICsrKysrKysrKwo+ID4gPiAgMSBmaWxlcyBjaGFuZ2VkLCA5IGluc2VydGlvbnMoKyks
+IDAgZGVsZXRpb25zKC0pCj4gPiA+IAo+ID4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC92
+aG9zdC5oIGIvaW5jbHVkZS9saW51eC92aG9zdC5oCj4gPiA+IGluZGV4IGU4NDdmMWUuLjMzYjMx
+M2IgMTAwNjQ0Cj4gPiA+IC0tLSBhL2luY2x1ZGUvbGludXgvdmhvc3QuaAo+ID4gPiArKysgYi9p
+bmNsdWRlL2xpbnV4L3Zob3N0LmgKPiA+ID4gQEAgLTI0LDcgKzI0LDExIEBAIHN0cnVjdCB2aG9z
+dF92cmluZ19zdGF0ZSB7Cj4gPiA+ICBzdHJ1Y3Qgdmhvc3RfdnJpbmdfZmlsZSB7Cj4gPiA+ICAJ
+dW5zaWduZWQgaW50IGluZGV4Owo+ID4gPiAgCWludCBmZDsgLyogUGFzcyAtMSB0byB1bmJpbmQg
+ZnJvbSBmaWxlLiAqLwo+ID4gPiArfTsKPiA+ID4gIAo+ID4gPiArc3RydWN0IHZob3N0X3ZyaW5n
+X3RhcmdldCB7Cj4gPiAKPiA+IENhbiB0aGlzIGJlIHJlbmFtZWQgdmhvc3Rfc2NzaV90YXJnZXQ/
+Cj4gCj4gRG9uZQo+IAo+ID4gCj4gPiA+ICsJdW5zaWduZWQgY2hhciB2aG9zdF93d3BuWzIyNF07
+Cj4gPiAKPiA+IDIyND8gSSBhbSBndWVzc2luZyBJU0NTSV9OQU1FX0xFTiBmcm9tIGluY2x1ZGUv
+c2NzaS9pc2NzaV9wcm90by5oPwo+ID4gVW5mb3J0dW5hdGVseSB3ZSBjYW4ndCBpbmNsdWRlIGlz
+Y3NpX3Byb3RvLmggaGVyZSBhcyBpdAo+ID4gaXMgbm90IGV4cG9ydGVkIHRvIHVzZXJzLiBCdXQg
+bGV0J3MgYWRkIGEgY29tbWVudCBmb3Igbm93Lgo+ID4gCj4gCj4gVGhpcyBpcyBhY3R1YWxseSBm
+cm9tIHRhcmdldC90YXJnZXRfY29yZV9iYXNlLmg6VFJBTlNQT1JUX0lRTl9MRU4uCj4gCj4gRml4
+aW5nIHRoaXMgdXAgbm93Li4KPiAKPiA+ID4gKwl1bnNpZ25lZCBzaG9ydCB2aG9zdF90cGd0Owo+
+ID4gPiAgfTsKPiA+ID4gIAo+ID4gPiAgc3RydWN0IHZob3N0X3ZyaW5nX2FkZHIgewo+ID4gPiBA
+QCAtMTIxLDYgKzEyNSwxMSBAQCBzdHJ1Y3Qgdmhvc3RfbWVtb3J5IHsKPiA+ID4gICAqIGRldmlj
+ZS4gIFRoaXMgY2FuIGJlIHVzZWQgdG8gc3RvcCB0aGUgcmluZyAoZS5nLiBmb3IgbWlncmF0aW9u
+KS4gKi8KPiA+ID4gICNkZWZpbmUgVkhPU1RfTkVUX1NFVF9CQUNLRU5EIF9JT1coVkhPU1RfVklS
+VElPLCAweDMwLCBzdHJ1Y3Qgdmhvc3RfdnJpbmdfZmlsZSkKPiA+ID4gIAo+ID4gPiArLyogVkhP
+U1RfU0NTSSBzcGVjaWZpYyBkZWZpbmVzICovCj4gPiA+ICsKPiA+ID4gKyNkZWZpbmUgVkhPU1Rf
+U0NTSV9TRVRfRU5EUE9JTlQgX0lPVyhWSE9TVF9WSVJUSU8sIDB4NDAsIHN0cnVjdCB2aG9zdF92
+cmluZ190YXJnZXQpCj4gPiA+ICsjZGVmaW5lIFZIT1NUX1NDU0lfQ0xFQVJfRU5EUE9JTlQgX0lP
+VyhWSE9TVF9WSVJUSU8sIDB4NDEsIHN0cnVjdCB2aG9zdF92cmluZ190YXJnZXQpCj4gPiA+ICsK
+PiA+ID4gIC8qIEZlYXR1cmUgYml0cyAqLwo+ID4gPiAgLyogTG9nIGFsbCB3cml0ZSBkZXNjcmlw
+dG9ycy4gQ2FuIGJlIGNoYW5nZWQgd2hpbGUgZGV2aWNlIGlzIGFjdGl2ZS4gKi8KPiA+IAo+ID4g
+Q2FuIHRoZXNlIGdvIGludG8gYXBwcm9wcmlhdGUgaWZkZWYgQ09ORklHX1RDUF9WSE9TVCBwbGVh
+c2U/Cj4gPiAKPiAKPiBNbW1tbSwgSSBkb24ndCB0aGluayB3ZSBjYW4gZG8gdGhhdCB3aXRoIENP
+TkZJR19UQ01fVkhPU1Q9bSwgb3IgYXQgbGVhc3QKPiBub3Qgd2l0aCB0aGUgZm9sbG93aW5nIHBh
+dGNoCj4gCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvdmhvc3QuaCBiL2luY2x1ZGUvbGlu
+dXgvdmhvc3QuaAo+IGluZGV4IDMzYjMxM2IuLmU0YjFlZTMgMTAwNjQ0Cj4gLS0tIGEvaW5jbHVk
+ZS9saW51eC92aG9zdC5oCj4gKysrIGIvaW5jbHVkZS9saW51eC92aG9zdC5oCj4gQEAgLTEyNSwx
+MCArMTI2LDE0IEBAIHN0cnVjdCB2aG9zdF9tZW1vcnkgewo+ICAgKiBkZXZpY2UuICBUaGlzIGNh
+biBiZSB1c2VkIHRvIHN0b3AgdGhlIHJpbmcgKGUuZy4gZm9yIG1pZ3JhdGlvbikuICovCj4gICNk
+ZWZpbmUgVkhPU1RfTkVUX1NFVF9CQUNLRU5EIF9JT1coVkhPU1RfVklSVElPLCAweDMwLCBzdHJ1
+Y3Qgdmhvc3RfdnJpbmdfZmlsZSkKPiAgCj4gKyNpZmRlZiBDT05GSUdfVENNX1ZIT1NUCj4gKwo+
+ICAvKiBWSE9TVF9TQ1NJIHNwZWNpZmljIGRlZmluZXMgKi8KPiAgCj4gLSNkZWZpbmUgVkhPU1Rf
+U0NTSV9TRVRfRU5EUE9JTlQgX0lPVyhWSE9TVF9WSVJUSU8sIDB4NDAsIHN0cnVjdCB2aG9zdF92
+cmluZ190YXJnZXQpCj4gLSNkZWZpbmUgVkhPU1RfU0NTSV9DTEVBUl9FTkRQT0lOVCBfSU9XKFZI
+T1NUX1ZJUlRJTywgMHg0MSwgc3RydWN0IHZob3N0X3ZyaW5nX3RhcmdldCkKPiArIyBkZWZpbmUg
+VkhPU1RfU0NTSV9TRVRfRU5EUE9JTlQgX0lPVyhWSE9TVF9WSVJUSU8sIDB4NDAsIHN0cnVjdCB2
+aG9zdF9zY3NpX3RhcmdldCkKPiArIyBkZWZpbmUgVkhPU1RfU0NTSV9DTEVBUl9FTkRQT0lOVCBf
+SU9XKFZIT1NUX1ZJUlRJTywgMHg0MSwgc3RydWN0IHZob3N0X3Njc2lfdGFyZ2V0KQo+ICsKPiAr
+I2VuZGlmCj4gCj4gLS0KPiAKPiBkcml2ZXJzL3Zob3N0L3RjbS90Y21fdmhvc3QuYzogSW4gZnVu
+Y3Rpb24g4oCYdmhvc3Rfc2NzaV9pb2N0bOKAmToKPiBkcml2ZXJzL3Zob3N0L3RjbS90Y21fdmhv
+c3QuYzo5NzA6IGVycm9yOiDigJhWSE9TVF9TQ1NJX1NFVF9FTkRQT0lOVOKAmSB1bmRlY2xhcmVk
+IChmaXJzdCB1c2UgaW4gdGhpcyBmdW5jdGlvbikKPiBkcml2ZXJzL3Zob3N0L3RjbS90Y21fdmhv
+c3QuYzo5NzA6IGVycm9yOiAoRWFjaCB1bmRlY2xhcmVkIGlkZW50aWZpZXIgaXMgcmVwb3J0ZWQg
+b25seSBvbmNlCj4gZHJpdmVycy92aG9zdC90Y20vdGNtX3Zob3N0LmM6OTcwOiBlcnJvcjogZm9y
+IGVhY2ggZnVuY3Rpb24gaXQgYXBwZWFycyBpbi4pCj4gZHJpdmVycy92aG9zdC90Y20vdGNtX3Zo
+b3N0LmM6OTc1OiBlcnJvcjog4oCYVkhPU1RfU0NTSV9DTEVBUl9FTkRQT0lOVOKAmSB1bmRlY2xh
+cmVkIChmaXJzdCB1c2UgaW4gdGhpcyBmdW5jdGlvbikKPiBtYWtlWzNdOiAqKiogW2RyaXZlcnMv
+dmhvc3QvdGNtL3RjbV92aG9zdC5vXSBFcnJvciAxCgoKTWF5YmUgaWZkZWZzIG9ubHkgd29yayBm
+b3IgYm9vbGVhbnM/IElmIHllcyB5b3UgY2FuIHByb2JhYmx5IGFkZCBhIGJvb2xlYW4gYW5kIHNl
+bGVjdCBpdD8KV2hhdCBJIHdhbnQgdG8gcHJldmVudCBpcyBleHBvc2luZyB0Y20gc3R1ZmYgaW4g
+dGhlIGhlYWRlciBpZiBpdCBpcwpjb25maWd1cmVkIG9mZi4gSSdsbCBwbGF5IHdpdGggaXQgdG9t
+b3Jyb3cuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClZp
+cnR1YWxpemF0aW9uIG1haWxpbmcgbGlzdApWaXJ0dWFsaXphdGlvbkBsaXN0cy5saW51eC1mb3Vu
+ZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0
+aW5mby92aXJ0dWFsaXphdGlvbg==
