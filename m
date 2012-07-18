@@ -1,20 +1,11 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
-Date: Tue, 17 Jul 2012 17:17:26 -0700
-Message-ID: <1342570646.18004.549.camel@haakon2.linux-iscsi.org>
-References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
-	<20120717150548.GA11587@redhat.com>
-	<1342559842.18004.440.camel@haakon2.linux-iscsi.org>
-	<20120717213437.GC1868@redhat.com>
-	<1342562528.18004.480.camel@haakon2.linux-iscsi.org>
-	<20120717221814.GH1868@redhat.com>
-	<1342564640.18004.492.camel@haakon2.linux-iscsi.org>
-	<20120717231113.GA3004@redhat.com>
+Subject: [RFC-v3 0/4] tcm_vhost+cmwq fabric driver code for-3.6
+Date: Wed, 18 Jul 2012 00:59:28 +0000
+Message-ID: <1342573172-17421-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20120717231113.GA3004@redhat.com>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -24,67 +15,65 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualizati
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
 Sender: virtualization-bounces@lists.linux-foundation.org
 Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-07-18 at 02:11 +0300, Michael S. Tsirkin wrote:
-> On Tue, Jul 17, 2012 at 03:37:20PM -0700, Nicholas A. Bellinger wrote:
-> > On Wed, 2012-07-18 at 01:18 +0300, Michael S. Tsirkin wrote:
-> > > On Tue, Jul 17, 2012 at 03:02:08PM -0700, Nicholas A. Bellinger wrote:
-> > > > On Wed, 2012-07-18 at 00:34 +0300, Michael S. Tsirkin wrote:
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-<SNIP>
+Hi folks,
 
-> > > 
-> > > I don't see how it helps.  The driver is either a guaranteed ABI or not.
-> > > I'd prefer not to have vhost users outside drivers/vhost/ since it is
-> > > harder for me to keep track of them.
-> > > 
-> > > What's the problem with staging proposal? It's just another hoop to jump
-> > > through to enable it?
-> > > 
-> > 
-> > Yeah, I'm OK with just adding a CONFIG_STAGING tag is a reasonable step
-> > forward for-3.6.
-> > 
-> > Adding the following patch into target-pending/for-next-merge now:
-> > 
-> > diff --git a/drivers/vhost/Kconfig b/drivers/vhost/Kconfig
-> > index ccbeb6f..2cd7135 100644
-> > --- a/drivers/vhost/Kconfig
-> > +++ b/drivers/vhost/Kconfig
-> > @@ -11,7 +11,7 @@ config VHOST_NET
-> >  
-> >  config TCM_VHOST
-> >         tristate "TCM_VHOST fabric module (EXPERIMENTAL)"
-> > -       depends on TARGET_CORE && EVENTFD && EXPERIMENTAL && m
-> > +       depends on TARGET_CORE && EVENTFD && EXPERIMENTAL && STAGING && m
-> >         default n
-> >         ---help---
-> >         Say M here to enable the TCM_VHOST fabric module for use with virtio-scsi guests
-> > 
-> > 
-> 
-> Hmm that's not explicit enough, someone might enable CONFIG_STAGING for
-> some other reason and won't notice the dependency.
-> We need it to appear with other staging drivers in the menu,
-> so there needs to be a Kconfig that is included from
-> drivers/staging/Kconfig.
-> 
+The following is the RFC-v3 series of tcm_vhost target fabric driver code
+currently in-flight for-3.6 mainline code.
 
-Mmmmm, I am sensing a linux-next merge conflict with staging-next and/or
-another for-next-merge rebase coming on..
+With the merge window opening soon, the tcm_vhost code has started seeing
+time in linux-next.  The v2 -> v3 changelog from the last week is currently
+looking like:
 
-> For example, we can create
-> drivers/vhost/staging/Kconfig or drivers/vhost/tcm/Kconfig and include
-> it from drivers/staging/Kconfig.  nouveau did something like this for a
-> while, see f3c93cbde7eab38671ae085cb1027b08f5f36757.
-> 
-> No need to move the rest of the code.
-> 
+ *) Unlock on error in tcm_vhost_drop_nexus() (DanC)
+ *) Fix strlen() doesn't count the terminator (DanC)
+ *) Call kfree() on an error path (DanC)
+ *) Convert tcm_vhost_write_pending to use target_execute_cmd (hch + nab)
+ *) Fix another strlen() off by one in tcm_vhost_make_tport (DanC)
+ *) Add option under drivers/staging/Kconfig, and move to drivers/vhost/tcm/
+    as requested by MST (nab)
 
-OK, lets use drivers/vhost/tcm/Kconfig and I'll post a incremental patch
-to make it appear under staging it shortly.
+Thanks to Dan Carpenter for his smatch fixes this past round.
 
-(CC'ing Greg-KH for good measure.)
+Also as requested by MST, the code has been moved to a seperate tcm/ subdirectory
+under drivers/vhost/ so that it can be included under staging's config options
+until we can settle on the necessary userspace bits for QEMU and kvm-tool.
+
+The updated series will be going out shortly to target-pending/for-next-merge.
+
+Please have another look and let us know if you have any concerned.
+
+Thanks!
+
+Nicholas Bellinger (2):
+  vhost: Add vhost_scsi specific defines
+  tcm_vhost: Initial merge for vhost level target fabric driver
+
+Stefan Hajnoczi (2):
+  vhost: Separate vhost-net features from vhost features
+  vhost: make vhost work queue visible
+
+ drivers/staging/Kconfig       |    2 +
+ drivers/vhost/Makefile        |    2 +
+ drivers/vhost/net.c           |    4 +-
+ drivers/vhost/tcm/Kconfig     |    6 +
+ drivers/vhost/tcm/Makefile    |    1 +
+ drivers/vhost/tcm/tcm_vhost.c | 1611 +++++++++++++++++++++++++++++++++++++++++
+ drivers/vhost/tcm/tcm_vhost.h |   74 ++
+ drivers/vhost/test.c          |    4 +-
+ drivers/vhost/vhost.c         |    5 +-
+ drivers/vhost/vhost.h         |    6 +-
+ include/linux/vhost.h         |    9 +
+ 11 files changed, 1716 insertions(+), 8 deletions(-)
+ create mode 100644 drivers/vhost/tcm/Kconfig
+ create mode 100644 drivers/vhost/tcm/Makefile
+ create mode 100644 drivers/vhost/tcm/tcm_vhost.c
+ create mode 100644 drivers/vhost/tcm/tcm_vhost.h
+
+-- 
+1.7.2.5
