@@ -1,97 +1,45 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: Re: [PATCH] target: Allow for target_submit_cmd() returning errors
-Date: Wed, 18 Jul 2012 11:10:29 +0200
-Message-ID: <50067D85.5090900@linutronix.de>
-References: <1342568261-15616-1-git-send-email-nab@linux-iscsi.org> <1342569948.18004.541.camel@haakon2.linux-iscsi.org>
+From: Stefan Hajnoczi <stefanha@gmail.com>
+Subject: Re: [PATCH RESEND 0/5] Add vhost-blk support
+Date: Wed, 18 Jul 2012 12:42:09 +0100
+Message-ID: <CAJSP0QWKtsRDYB9uPPg7K8k2HHvgrQKBP9+biDwfyCmN=WmJqQ@mail.gmail.com>
+References: <1342169711-12386-1-git-send-email-asias@redhat.com>
+	<20120717150928.GB11587@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1342569948.18004.541.camel-Y1+j5t8j3WgjMeEPmliV8E/sVC8ogwMJ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Cc: target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>, Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-usb <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <kvm-owner@vger.kernel.org>
+In-Reply-To: <20120717150928.GB11587@redhat.com>
+Sender: kvm-owner@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Asias He <asias@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-aio@kvack.org, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, lf-virt <virtualization@lists.linux-foundation.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Jeff Moyer <jmoyer@redhat.com>, Benjamin LaHaise <bcrl@kvack.org>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/18/2012 02:05 AM, Nicholas A. Bellinger wrote:
->> index 02ace18..9ddf315 100644
->> --- a/drivers/usb/gadget/tcm_usb_gadget.c
->> +++ b/drivers/usb/gadget/tcm_usb_gadget.c
->> @@ -1060,7 +1060,10 @@ static void usbg_cmd_work(struct work_struct =
-*work)
->>   	tpg =3D cmd->fu->tpg;
->>   	tv_nexus =3D tpg->tpg_nexus;
->>   	dir =3D get_cmd_dir(cmd->cmd_buf);
->> -	if (dir<  0) {
->> +	if (dir<  0 ||
->> +	    target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
->> +			      cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
->> +			      0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE)) {
->>   		transport_init_se_cmd(se_cmd,
->>   				tv_nexus->tvn_se_sess->se_tpg->se_tpg_tfo,
->>   				tv_nexus->tvn_se_sess, cmd->data_len, DMA_NONE,
->> @@ -1069,12 +1072,7 @@ static void usbg_cmd_work(struct work_struct =
-*work)
->>   		transport_send_check_condition_and_sense(se_cmd,
->>   				TCM_UNSUPPORTED_SCSI_OPCODE, 1);
->>   		usbg_cleanup_cmd(cmd);
->> -		return;
->>   	}
->> -
->> -	target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
->> -			cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
->> -			0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE);
->>   }
+On Tue, Jul 17, 2012 at 4:09 PM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> On Fri, Jul 13, 2012 at 04:55:06PM +0800, Asias He wrote:
 >>
->>   static int usbg_submit_command(struct f_uas *fu,
+>> Hi folks,
+>>
+>> [I am resending to fix the broken thread in the previous one.]
+>>
+>> This patchset adds vhost-blk support. vhost-blk is a in kernel virito-blk
+>> device accelerator. Compared to userspace virtio-blk implementation, vhost-blk
+>> gives about 5% to 15% performance improvement.
 >
-> Looking at this part again target_submit_cmd() has been moved ahead o=
-f
-> target_init_se_cmd() in the exception path, which ends up getting cal=
-led
-> twice during a target_get_sess_cmd() failure..
+> Same thing as tcm_host comment:
 >
-> It looks like usbg_cmd_work() + bot_cmd_work() will need some work if
-> they intends to use a non zero failure to signal exception here, with=
-out
-> invoking a CHECK_CONDITION and sense.  Actually, I'm not even sure
-> sending a CHECK_CONDITION here after the target_submit_cmd() is going=
- to
-> work for other fabrics drivers, but it appears to work with usb-gadge=
-t.
-> (Sebastian..?)
-
-=46or UAS the status/ sense URB is sent right away (without any data) a=
-nd
-this worked the last time I tested.
-=46or BOT things are a little complicated. What I do is to send empty
-data (to fill the data pipe) and send a bad status so the other side
-learns that the transfer failed somehow. The sense information is lost.
-What I should do is to queue this sense data for the next MODE_SENSE
-request which will be coming soon. Right now WinXP repeats a failed
-command thrice if MODE_SENSE returns no error. "This" is on my to-fix
-list=E2=80=A6
-
-> So for the moment, lets fix the double se_cmd init and make things a
-> little easier to read..   Sebastian, please have a look and double ch=
-eck
-> that the (dir<  0) + target_submit_cmd() failures cases are both goin=
-g
-> to work as expected whilst sending a CHECK_CONDITION response.
-
-The sense code should only be sent once and
-transport_send_check_condition_and_sense() sets
-SCF_SENT_CHECK_CONDITION and checks for it so doing it twice should not
-do any harm right? But grep does not say when this flag gets removed.
-
+>         It seems not 100% clear whether this driver will have major
+>         userspace using it. And if not, it would be very hard to support a
+>         driver when recent userspace does not use it in the end.
 >
-> Thanks!
+>         I think a good idea for 3.6 would be to make it depend on
+>         CONFIG_STAGING.  Then we don't commit to an ABI.  For this, you can add
+>         a separate Kconfig and source it from drivers/staging/Kconfig.  Maybe it
+>         needs to be in a separate directory drivers/vhost/staging/Kconfig.
 >
-> --nab
+> I Cc'd the list of tcm_host in the hope that you can cooperate on this.
+>
 
-Sebastian
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Adding it to staging allows more people to try it out, so that's a
+good thing.  If I get a moment to play with it I'll let you know the
+results.
+
+Stefan
