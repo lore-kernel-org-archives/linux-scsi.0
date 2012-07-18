@@ -1,109 +1,75 @@
-From: olaf@aepfle.de
-Subject: [PATCH] scsi/ibmvscsi: /sys/class/scsi_host/hostX/config doesn't show any information
-Date: Wed, 18 Jul 2012 18:49:17 +0200
-Message-ID: <1342630157-16468-1-git-send-email-olaf@aepfle.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.161]:62074 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751921Ab2GRQtU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2012 12:49:20 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
+Date: Wed, 18 Jul 2012 20:17:22 +0300
+Message-ID: <20120718171722.GA2347@redhat.com>
+References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
+	<20120717150548.GA11587@redhat.com> <5005B52E.20509@us.ibm.com>
+	<1342561819.18004.470.camel@haakon2.linux-iscsi.org>
+	<5006BD3D.7090104@us.ibm.com>
+	<20120718155338.GA21817@infradead.org>
+	<20120718160015.GH1777@redhat.com>
+	<4872F2B9-F952-48C9-9724-D30239ACD989@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <4872F2B9-F952-48C9-9724-D30239ACD989@intel.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Anthony Liguori <aliguori@us.ibm.com>, kvm-devel <kvm@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, Linda Xie <lxiep@us.ibm.com>, Olaf Hering <olaf@aepfle.de>
 
-From: Linda Xie <lxiep@us.ibm.com>
+On Wed, Jul 18, 2012 at 04:42:33PM +0000, Rustad, Mark D wrote:
+> On Jul 18, 2012, at 9:00 AM, Michael S. Tsirkin wrote:
+> 
+> > On Wed, Jul 18, 2012 at 11:53:38AM -0400, Christoph Hellwig wrote:
+> >> On Wed, Jul 18, 2012 at 08:42:21AM -0500, Anthony Liguori wrote:
+> >>> 
+> >>> If you add support for a new command, you need to provide userspace
+> >>> a way to disable this command.  If you change what gets reported for
+> >>> VPD, you need to provide userspace a way to make VPD look like what
+> >>> it did in a previous version.
+> >>> 
+> >>> Basically, you need to be able to make a TCM device behave 100% the
+> >>> same as it did in an older version of the kernel.
+> >>> 
+> >>> This is unique to virtualization due to live migration.  If you
+> >>> migrate from a 3.6 kernel to a 3.8 kernel, you need to make sure
+> >>> that the 3.8 kernel's TCM device behaves exactly like the 3.6 kernel
+> >>> because the guest that is interacting with it does not realize that
+> >>> live migration happened.
+> >> 
+> >> I don't think these strict live migration rules apply to SCSI targets.
+> >> 
+> >> Real life storage systems get new features and different behaviour with
+> >> firmware upgrades all the time, and SCSI initiators deal with that just
+> >> fine.
+> >> I don't see any reason to be more picky just because we're
+> >> virtualized.
+> > 
+> > Presumably initiators are shut down for target firmware upgrades?
+> > With virtualization your host can change without guest shutdown.
+> > You can also *lose* commands when migrating to an older host.
+> 
+> 
+> Actually no. Storage vendors do not want to impose a need to take initiators down for any reason. I have worked for a storage system vendor that routinely did firmware upgrades on-the-fly. This is done by multi-pathing and taking one path down, upgrade, bring up, repeat.
 
-Expected result:
-It should show something like this:
-x1521p4:~ # cat /sys/class/scsi_host/host1/config
-PARTITIONNAME='x1521p4'
-NWSDNAME='X1521P4'
-HOSTNAME='X1521P4'
-DOMAINNAME='RCHLAND.IBM.COM'
-NAMESERVERS='9.10.244.100 9.10.244.200'
+With live migration even that does not happen.
 
-Actual result:
-x1521p4:~ # cat /sys/class/scsi_host/host0/config
-x1521p4:~ #
+> There was even one non-redundant system that I am aware of that could upgrade firmware and reboot fast enough that the initiators would not notice.
+> 
+> You do have to pay very close attention to some things however. Don't change the device identity in any way - even version information, otherwise a Windows initiator will blue-screen. I made that mistake myself, so I remember it well. It seemed like such an innocent change. I don't recall there being any issue with adding commands and we did do that on occasion.
 
-This patch changes the size of the buffer used for transfering config
-data to 4K. It was tested against 2.6.19-rc2 tree.
+How about removing commands?
 
-Reported by IBM during SLES11 beta testing:
-
-https://bugzilla.novell.com/show_bug.cgi?id=439970
-LTC49349
-
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index e580aa4..1513ca8 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -93,6 +93,8 @@ static int max_requests = IBMVSCSI_MAX_REQUESTS_DEFAULT;
- static int max_events = IBMVSCSI_MAX_REQUESTS_DEFAULT + 2;
- static int fast_fail = 1;
- static int client_reserve = 1;
-+/* host data buffer size */
-+#define HOST_BUFFER_SIZE 4096
- 
- static struct scsi_transport_template *ibmvscsi_transport_template;
- 
-@@ -1666,7 +1668,7 @@ static ssize_t show_host_srp_version(struct device *dev,
- 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
- 	int len;
- 
--	len = snprintf(buf, PAGE_SIZE, "%s\n",
-+       len = snprintf(buf, HOST_BUFFER_SIZE, "%s\n",
- 		       hostdata->madapter_info.srp_version);
- 	return len;
- }
-@@ -1687,7 +1689,7 @@ static ssize_t show_host_partition_name(struct device *dev,
- 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
- 	int len;
- 
--	len = snprintf(buf, PAGE_SIZE, "%s\n",
-+       len = snprintf(buf, HOST_BUFFER_SIZE, "%s\n",
- 		       hostdata->madapter_info.partition_name);
- 	return len;
- }
-@@ -1708,7 +1710,7 @@ static ssize_t show_host_partition_number(struct device *dev,
- 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
- 	int len;
- 
--	len = snprintf(buf, PAGE_SIZE, "%d\n",
-+       len = snprintf(buf, HOST_BUFFER_SIZE, "%d\n",
- 		       hostdata->madapter_info.partition_number);
- 	return len;
- }
-@@ -1728,7 +1730,7 @@ static ssize_t show_host_mad_version(struct device *dev,
- 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
- 	int len;
- 
--	len = snprintf(buf, PAGE_SIZE, "%d\n",
-+       len = snprintf(buf, HOST_BUFFER_SIZE, "%d\n",
- 		       hostdata->madapter_info.mad_version);
- 	return len;
- }
-@@ -1748,7 +1750,7 @@ static ssize_t show_host_os_type(struct device *dev,
- 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
- 	int len;
- 
--	len = snprintf(buf, PAGE_SIZE, "%d\n", hostdata->madapter_info.os_type);
-+       len = snprintf(buf, HOST_BUFFER_SIZE, "%d\n", hostdata->madapter_info.os_type);
- 	return len;
- }
- 
-@@ -1767,7 +1769,7 @@ static ssize_t show_host_config(struct device *dev,
- 	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
- 
- 	/* returns null-terminated host config data */
--	if (ibmvscsi_do_host_config(hostdata, buf, PAGE_SIZE) == 0)
-+       if (ibmvscsi_do_host_config(hostdata, buf, HOST_BUFFER_SIZE) == 0)
- 		return strlen(buf);
- 	else
- 		return 0;
--- 
-1.7.10.4
-
+> -- 
+> Mark Rustad, LAN Access Division, Intel Corporation
