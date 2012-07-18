@@ -1,72 +1,69 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
-Date: Wed, 18 Jul 2012 17:47:18 +0100
-Message-ID: <1342630038.3022.111.camel@dabdike.int.hansenpartnership.com>
-References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
-	 <20120717150548.GA11587@redhat.com> <5005B52E.20509@us.ibm.com>
-	 <1342561819.18004.470.camel@haakon2.linux-iscsi.org>
-	 <5006BD3D.7090104@us.ibm.com> <20120718155338.GA21817@infradead.org>
-	 <5006DDAA.6080304@us.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <5006DDAA.6080304@us.ibm.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Anthony Liguori <aliguori@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Michael S. Tsirkin" <mst@redhat.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
+From: olaf@aepfle.de
+Subject: [PATCH] scsi/ibmvscsi: add module alias for ibmvscsic
+Date: Wed, 18 Jul 2012 18:49:18 +0200
+Message-ID: <1342630158-16510-1-git-send-email-olaf@aepfle.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo-p00-ob.rzone.de ([81.169.146.161]:56726 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754815Ab2GRQtX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2012 12:49:23 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, Olaf Hering <olaf@aepfle.de>
 
-On Wed, 2012-07-18 at 11:00 -0500, Anthony Liguori wrote:
-> On 07/18/2012 10:53 AM, Christoph Hellwig wrote:
-> > On Wed, Jul 18, 2012 at 08:42:21AM -0500, Anthony Liguori wrote:
-> >>
-> >> If you add support for a new command, you need to provide userspace
-> >> a way to disable this command.  If you change what gets reported for
-> >> VPD, you need to provide userspace a way to make VPD look like what
-> >> it did in a previous version.
-> >>
-> >> Basically, you need to be able to make a TCM device behave 100% the
-> >> same as it did in an older version of the kernel.
-> >>
-> >> This is unique to virtualization due to live migration.  If you
-> >> migrate from a 3.6 kernel to a 3.8 kernel, you need to make sure
-> >> that the 3.8 kernel's TCM device behaves exactly like the 3.6 kernel
-> >> because the guest that is interacting with it does not realize that
-> >> live migration happened.
-> >
-> > I don't think these strict live migration rules apply to SCSI targets.
-> >
-> > Real life storage systems get new features and different behaviour with
-> > firmware upgrades all the time, and SCSI initiators deal with that just
-> > fine.  I don't see any reason to be more picky just because we're
-> > virtualized.
-> 
-> But would this happen while a system is running live?
+From: Olaf Hering <olaf@aepfle.de>
 
-Of course: Think about the consequences: you want to upgrade one array
-on your SAN.  You definitely don't want to shut down your entire data
-centre to achieve it.  In place upgrades on running SANs have been
-common in enterprise environments for a while.
+The driver is named ibmvscsic, at runtime it its name is advertised as
+ibmvscsi. For this reason mkinitrd wont pickup the driver properly.
+Reported by IBM during SLES11 beta testing:
 
-> I agree that in general, SCSI targets don't need this, but I'm pretty sure that 
-> if a guest probes for a command, you migrate to an old version, and that command 
-> is no longer there, badness will ensue.
+https://bugzilla.novell.com/show_bug.cgi?id=459933
+LTC50724
 
-What command are we talking about?  Operation of initiators is usually
-just READ and WRITE.  So perhaps we might have inline UNMAP ... but the
-world wouldn't come to an end even if the latter stopped working.
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
 
-Most of the complex SCSI stuff is done at start of day; it's actually
-only then we'd notice things like changes in INQUIRY strings or mode
-pages.
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 3a6c474..e580aa4 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -100,6 +100,9 @@ static struct scsi_transport_template *ibmvscsi_transport_template;
+ 
+ static struct ibmvscsi_ops *ibmvscsi_ops;
+ 
++/* The driver is named ibmvscsic, map ibmvscsi to module name */
++#define IBMVSCSI_NAME "ibmvscsi"
++MODULE_ALIAS(IBMVSCSI_NAME);
+ MODULE_DESCRIPTION("IBM Virtual SCSI");
+ MODULE_AUTHOR("Dave Boutcher");
+ MODULE_LICENSE("GPL");
+@@ -1796,7 +1799,7 @@ static struct device_attribute *ibmvscsi_attrs[] = {
+ static struct scsi_host_template driver_template = {
+ 	.module = THIS_MODULE,
+ 	.name = "IBM POWER Virtual SCSI Adapter " IBMVSCSI_VERSION,
+-	.proc_name = "ibmvscsi",
++	.proc_name = IBMVSCSI_NAME,
+ 	.queuecommand = ibmvscsi_queuecommand,
+ 	.eh_abort_handler = ibmvscsi_eh_abort_handler,
+ 	.eh_device_reset_handler = ibmvscsi_eh_device_reset_handler,
+@@ -1936,7 +1939,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	}
+ 
+ 	hostdata->work_thread = kthread_run(ibmvscsi_work, hostdata, "%s_%d",
+-					    "ibmvscsi", host->host_no);
++					    IBMVSCSI_NAME, host->host_no);
+ 
+ 	if (IS_ERR(hostdata->work_thread)) {
+ 		dev_err(&vdev->dev, "couldn't initialize kthread. rc=%ld\n",
+@@ -2061,7 +2064,7 @@ static struct vio_driver ibmvscsi_driver = {
+ 	.probe = ibmvscsi_probe,
+ 	.remove = ibmvscsi_remove,
+ 	.get_desired_dma = ibmvscsi_get_desired_dma,
+-	.name = "ibmvscsi",
++	.name = IBMVSCSI_NAME,
+ 	.pm = &ibmvscsi_pm_ops,
+ };
+ 
+-- 
+1.7.10.4
 
-Failover, which is what you're talking about, requires reinstatement of
-all the operating parameters of the source/target system, but that's not
-wholly the responsibility of the storage system ...
-
-James
-
-> It's different when you're talking about a reboot happening or a 
-> disconnect/reconnect due to firmware upgrade.  The OS would naturally be 
-> reprobing in this case.
