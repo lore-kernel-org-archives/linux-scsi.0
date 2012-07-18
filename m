@@ -1,103 +1,133 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [RFC-v3 3/4] vhost: Add vhost_scsi specific defines
-Date: Thu, 19 Jul 2012 00:21:58 +0300
-Message-ID: <20120718212157.GA11738@redhat.com>
-References: <1342573172-17421-1-git-send-email-nab@linux-iscsi.org>
-	<1342573172-17421-4-git-send-email-nab@linux-iscsi.org>
-	<20120718130518.GB5589@redhat.com>
-	<1342646225.18004.633.camel@haakon2.linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [MINI SUMMIT] SCSI core performance
+Date: Wed, 18 Jul 2012 15:34:35 -0700
+Message-ID: <1342650875.18004.690.camel@haakon2.linux-iscsi.org>
+References: <1342579190.18004.597.camel@haakon2.linux-iscsi.org>
+	 <1342598402.3022.17.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1342646225.18004.633.camel@haakon2.linux-iscsi.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1342598402.3022.17.camel@dabdike.int.hansenpartnership.com>
+Sender: target-devel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: KS-2012-discuss <ksummit-2012-discuss@lists.linux-foundation.org>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <mail@hannes-reinecke.de>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCBKdWwgMTgsIDIwMTIgYXQgMDI6MTc6MDVQTSAtMDcwMCwgTmljaG9sYXMgQS4gQmVs
-bGluZ2VyIHdyb3RlOgo+IE9uIFdlZCwgMjAxMi0wNy0xOCBhdCAxNjowNSArMDMwMCwgTWljaGFl
-bCBTLiBUc2lya2luIHdyb3RlOgo+ID4gT24gV2VkLCBKdWwgMTgsIDIwMTIgYXQgMTI6NTk6MzFB
-TSArMDAwMCwgTmljaG9sYXMgQS4gQmVsbGluZ2VyIHdyb3RlOgo+ID4gPiBGcm9tOiBOaWNob2xh
-cyBCZWxsaW5nZXIgPG5hYkByaXNpbmd0aWRlc3lzdGVtcy5jb20+Cj4gPiA+IAo+ID4gPiBUaGlz
-IHBhdGNoIGFkZHMgdGhlIGluaXRpYWwgdmhvc3Rfc2NzaV9pb2N0bCgpIGNhbGxlcnMgZm9yIFZI
-T1NUX1NDU0lfU0VUX0VORFBPSU5UCj4gPiA+IGFuZCBWSE9TVF9TQ1NJX0NMRUFSX0VORFBPSU5U
-IHJlc3BlY3RpdmVseSwgYW5kIGFsc28gYWRkcyBzdHJ1Y3Qgdmhvc3RfdnJpbmdfdGFyZ2V0Cj4g
-PiA+IHRoYXQgaXMgdXNlZCBieSB0Y21fdmhvc3QgY29kZSB3aGVuIGxvY2F0aW5nIHRhcmdldCBw
-b3J0cyBkdXJpbmcgcWVtdSBzZXR1cC4KPiA+ID4gCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFN0ZWZh
-biBIYWpub2N6aSA8c3RlZmFuaGFAbGludXgudm5ldC5pYm0uY29tPgo+ID4gPiBDYzogWmhpIFlv
-bmcgV3UgPHd1emh5QGNuLmlibS5jb20+Cj4gPiA+IENjOiBNaWNoYWVsIFMuIFRzaXJraW4gPG1z
-dEByZWRoYXQuY29tPgo+ID4gPiBDYzogUGFvbG8gQm9uemluaSA8cGJvbnppbmlAcmVkaGF0LmNv
-bT4sCj4gPiA+IFNpZ25lZC1vZmYtYnk6IE5pY2hvbGFzIEEuIEJlbGxpbmdlciA8bmFiQHJpc2lu
-Z3RpZGVzeXN0ZW1zLmNvbT4KPiA+ID4gLS0tCj4gPiA+ICBpbmNsdWRlL2xpbnV4L3Zob3N0Lmgg
-fCAgICA5ICsrKysrKysrKwo+ID4gPiAgMSBmaWxlcyBjaGFuZ2VkLCA5IGluc2VydGlvbnMoKyks
-IDAgZGVsZXRpb25zKC0pCj4gPiA+IAo+ID4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC92
-aG9zdC5oIGIvaW5jbHVkZS9saW51eC92aG9zdC5oCj4gPiA+IGluZGV4IGU4NDdmMWUuLjMzYjMx
-M2IgMTAwNjQ0Cj4gPiA+IC0tLSBhL2luY2x1ZGUvbGludXgvdmhvc3QuaAo+ID4gPiArKysgYi9p
-bmNsdWRlL2xpbnV4L3Zob3N0LmgKPiA+ID4gQEAgLTI0LDcgKzI0LDExIEBAIHN0cnVjdCB2aG9z
-dF92cmluZ19zdGF0ZSB7Cj4gPiA+ICBzdHJ1Y3Qgdmhvc3RfdnJpbmdfZmlsZSB7Cj4gPiA+ICAJ
-dW5zaWduZWQgaW50IGluZGV4Owo+ID4gPiAgCWludCBmZDsgLyogUGFzcyAtMSB0byB1bmJpbmQg
-ZnJvbSBmaWxlLiAqLwo+ID4gPiArfTsKPiA+ID4gIAo+ID4gPiArc3RydWN0IHZob3N0X3ZyaW5n
-X3RhcmdldCB7Cj4gPiAKPiA+IENhbiB0aGlzIGJlIHJlbmFtZWQgdmhvc3Rfc2NzaV90YXJnZXQ/
-Cj4gCj4gRG9uZQo+IAo+ID4gCj4gPiA+ICsJdW5zaWduZWQgY2hhciB2aG9zdF93d3BuWzIyNF07
-Cj4gPiAKPiA+IDIyND8gSSBhbSBndWVzc2luZyBJU0NTSV9OQU1FX0xFTiBmcm9tIGluY2x1ZGUv
-c2NzaS9pc2NzaV9wcm90by5oPwo+ID4gVW5mb3J0dW5hdGVseSB3ZSBjYW4ndCBpbmNsdWRlIGlz
-Y3NpX3Byb3RvLmggaGVyZSBhcyBpdAo+ID4gaXMgbm90IGV4cG9ydGVkIHRvIHVzZXJzLiBCdXQg
-bGV0J3MgYWRkIGEgY29tbWVudCBmb3Igbm93Lgo+ID4gCj4gCj4gVGhpcyBpcyBhY3R1YWxseSBm
-cm9tIHRhcmdldC90YXJnZXRfY29yZV9iYXNlLmg6VFJBTlNQT1JUX0lRTl9MRU4uCj4gCj4gRml4
-aW5nIHRoaXMgdXAgbm93Li4KPiAKPiA+ID4gKwl1bnNpZ25lZCBzaG9ydCB2aG9zdF90cGd0Owo+
-ID4gPiAgfTsKPiA+ID4gIAo+ID4gPiAgc3RydWN0IHZob3N0X3ZyaW5nX2FkZHIgewo+ID4gPiBA
-QCAtMTIxLDYgKzEyNSwxMSBAQCBzdHJ1Y3Qgdmhvc3RfbWVtb3J5IHsKPiA+ID4gICAqIGRldmlj
-ZS4gIFRoaXMgY2FuIGJlIHVzZWQgdG8gc3RvcCB0aGUgcmluZyAoZS5nLiBmb3IgbWlncmF0aW9u
-KS4gKi8KPiA+ID4gICNkZWZpbmUgVkhPU1RfTkVUX1NFVF9CQUNLRU5EIF9JT1coVkhPU1RfVklS
-VElPLCAweDMwLCBzdHJ1Y3Qgdmhvc3RfdnJpbmdfZmlsZSkKPiA+ID4gIAo+ID4gPiArLyogVkhP
-U1RfU0NTSSBzcGVjaWZpYyBkZWZpbmVzICovCj4gPiA+ICsKPiA+ID4gKyNkZWZpbmUgVkhPU1Rf
-U0NTSV9TRVRfRU5EUE9JTlQgX0lPVyhWSE9TVF9WSVJUSU8sIDB4NDAsIHN0cnVjdCB2aG9zdF92
-cmluZ190YXJnZXQpCj4gPiA+ICsjZGVmaW5lIFZIT1NUX1NDU0lfQ0xFQVJfRU5EUE9JTlQgX0lP
-VyhWSE9TVF9WSVJUSU8sIDB4NDEsIHN0cnVjdCB2aG9zdF92cmluZ190YXJnZXQpCj4gPiA+ICsK
-PiA+ID4gIC8qIEZlYXR1cmUgYml0cyAqLwo+ID4gPiAgLyogTG9nIGFsbCB3cml0ZSBkZXNjcmlw
-dG9ycy4gQ2FuIGJlIGNoYW5nZWQgd2hpbGUgZGV2aWNlIGlzIGFjdGl2ZS4gKi8KPiA+IAo+ID4g
-Q2FuIHRoZXNlIGdvIGludG8gYXBwcm9wcmlhdGUgaWZkZWYgQ09ORklHX1RDUF9WSE9TVCBwbGVh
-c2U/Cj4gPiAKPiAKPiBNbW1tbSwgSSBkb24ndCB0aGluayB3ZSBjYW4gZG8gdGhhdCB3aXRoIENP
-TkZJR19UQ01fVkhPU1Q9bSwgb3IgYXQgbGVhc3QKPiBub3Qgd2l0aCB0aGUgZm9sbG93aW5nIHBh
-dGNoCj4gCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvdmhvc3QuaCBiL2luY2x1ZGUvbGlu
-dXgvdmhvc3QuaAo+IGluZGV4IDMzYjMxM2IuLmU0YjFlZTMgMTAwNjQ0Cj4gLS0tIGEvaW5jbHVk
-ZS9saW51eC92aG9zdC5oCj4gKysrIGIvaW5jbHVkZS9saW51eC92aG9zdC5oCj4gQEAgLTEyNSwx
-MCArMTI2LDE0IEBAIHN0cnVjdCB2aG9zdF9tZW1vcnkgewo+ICAgKiBkZXZpY2UuICBUaGlzIGNh
-biBiZSB1c2VkIHRvIHN0b3AgdGhlIHJpbmcgKGUuZy4gZm9yIG1pZ3JhdGlvbikuICovCj4gICNk
-ZWZpbmUgVkhPU1RfTkVUX1NFVF9CQUNLRU5EIF9JT1coVkhPU1RfVklSVElPLCAweDMwLCBzdHJ1
-Y3Qgdmhvc3RfdnJpbmdfZmlsZSkKPiAgCj4gKyNpZmRlZiBDT05GSUdfVENNX1ZIT1NUCj4gKwo+
-ICAvKiBWSE9TVF9TQ1NJIHNwZWNpZmljIGRlZmluZXMgKi8KPiAgCj4gLSNkZWZpbmUgVkhPU1Rf
-U0NTSV9TRVRfRU5EUE9JTlQgX0lPVyhWSE9TVF9WSVJUSU8sIDB4NDAsIHN0cnVjdCB2aG9zdF92
-cmluZ190YXJnZXQpCj4gLSNkZWZpbmUgVkhPU1RfU0NTSV9DTEVBUl9FTkRQT0lOVCBfSU9XKFZI
-T1NUX1ZJUlRJTywgMHg0MSwgc3RydWN0IHZob3N0X3ZyaW5nX3RhcmdldCkKPiArIyBkZWZpbmUg
-VkhPU1RfU0NTSV9TRVRfRU5EUE9JTlQgX0lPVyhWSE9TVF9WSVJUSU8sIDB4NDAsIHN0cnVjdCB2
-aG9zdF9zY3NpX3RhcmdldCkKPiArIyBkZWZpbmUgVkhPU1RfU0NTSV9DTEVBUl9FTkRQT0lOVCBf
-SU9XKFZIT1NUX1ZJUlRJTywgMHg0MSwgc3RydWN0IHZob3N0X3Njc2lfdGFyZ2V0KQo+ICsKPiAr
-I2VuZGlmCj4gCj4gLS0KPiAKPiBkcml2ZXJzL3Zob3N0L3RjbS90Y21fdmhvc3QuYzogSW4gZnVu
-Y3Rpb24g4oCYdmhvc3Rfc2NzaV9pb2N0bOKAmToKPiBkcml2ZXJzL3Zob3N0L3RjbS90Y21fdmhv
-c3QuYzo5NzA6IGVycm9yOiDigJhWSE9TVF9TQ1NJX1NFVF9FTkRQT0lOVOKAmSB1bmRlY2xhcmVk
-IChmaXJzdCB1c2UgaW4gdGhpcyBmdW5jdGlvbikKPiBkcml2ZXJzL3Zob3N0L3RjbS90Y21fdmhv
-c3QuYzo5NzA6IGVycm9yOiAoRWFjaCB1bmRlY2xhcmVkIGlkZW50aWZpZXIgaXMgcmVwb3J0ZWQg
-b25seSBvbmNlCj4gZHJpdmVycy92aG9zdC90Y20vdGNtX3Zob3N0LmM6OTcwOiBlcnJvcjogZm9y
-IGVhY2ggZnVuY3Rpb24gaXQgYXBwZWFycyBpbi4pCj4gZHJpdmVycy92aG9zdC90Y20vdGNtX3Zo
-b3N0LmM6OTc1OiBlcnJvcjog4oCYVkhPU1RfU0NTSV9DTEVBUl9FTkRQT0lOVOKAmSB1bmRlY2xh
-cmVkIChmaXJzdCB1c2UgaW4gdGhpcyBmdW5jdGlvbikKPiBtYWtlWzNdOiAqKiogW2RyaXZlcnMv
-dmhvc3QvdGNtL3RjbV92aG9zdC5vXSBFcnJvciAxCgoKTWF5YmUgaWZkZWZzIG9ubHkgd29yayBm
-b3IgYm9vbGVhbnM/IElmIHllcyB5b3UgY2FuIHByb2JhYmx5IGFkZCBhIGJvb2xlYW4gYW5kIHNl
-bGVjdCBpdD8KV2hhdCBJIHdhbnQgdG8gcHJldmVudCBpcyBleHBvc2luZyB0Y20gc3R1ZmYgaW4g
-dGhlIGhlYWRlciBpZiBpdCBpcwpjb25maWd1cmVkIG9mZi4gSSdsbCBwbGF5IHdpdGggaXQgdG9t
-b3Jyb3cuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClZp
-cnR1YWxpemF0aW9uIG1haWxpbmcgbGlzdApWaXJ0dWFsaXphdGlvbkBsaXN0cy5saW51eC1mb3Vu
-ZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0
-aW5mby92aXJ0dWFsaXphdGlvbg==
+On Wed, 2012-07-18 at 09:00 +0100, James Bottomley wrote:
+> On Tue, 2012-07-17 at 19:39 -0700, Nicholas A. Bellinger wrote:
+> > Hi KS-PCs,
+> > 
+> > I'd like to propose a SCSI performance mini-summit to see how interested
+> > folks are in helping address the long-term issues that SCSI core is
+> > currently facing wrt to multi-lun per host and heavy small block random
+> > I/O workloads.
+> > 
+> > I know this would probably be better suited for LSF (for the record it
+> > was proposed this year) but now that we've acknowledge there is a
+> > problem with SCSI LLDs vs. raw block drivers vs. other SCSI subsystems,
+> > it would be useful to get the storage folks into a single room at some
+> > point during KS/LPC to figure out what is actually going on with SCSI
+> > core.
+> 
+> You seem to have a short memory:  The last time it was discussed
+> 
+> http://marc.info/?t=134155373900003
+> 
+> It rapidly became apparent there isn't a problem.  Enabling high IOPS in
+> the SCSI stack is what I think you mean.
+> 
+
+small block random I/O == performance, that is correct.
+
+The host-lock-less stuff is doing better these days for small-ish
+multi-lun setups with large block sequential I/O workloads.
+
+Doing ~1 GB/sec per LUN is achievable with multi-lun per host (say up to
+6-8 LUNs dependent on your setup) using PCI-e Gen3 hardware.
+
+> > As mentioned in the recent tcm_vhost thread, there are a number of cases
+> > where drivers/target/ code can demonstrate this limitation pretty
+> > vividly now.
+> > 
+> > This includes the following scenarios using raw block flash export with
+> > target_core_mod + target_core_iblock export and the same small block
+> > (4k) mixed random I/O workload with fio:
+> > 
+> > *) tcm_loop local SCSI LLD performance is an order of magnitude slower 
+> >    than the same local raw block flash backend.
+> > *) tcm_qla2xxx performs better using MSFT Server hosts than Linux v3.x
+> >    based hosts using 2x socket Nehalem hardware w/ PCI-e Gen2 HBAs
+> > *) ib_srpt performs better using MSFT Server host than RHEL 6.x .32 
+> >    based hosts using 2x socket Romley hardware w/ PCI-e Gen3 HCAs
+> > *) Raw block IBLOCK export into KVM guest v3.5-rc w/ virtio-scsi is 
+> >    behind in performance vs. raw local block flash.  (cmwq on the host 
+> >    is helping here, but still need to with MSFT SCSI mini-port)
+> > 
+> > Also, with 1M IOPs into a single VM guest now being done by other non
+> > Linux based hypervisors, the virtualization bit for high performance KVM
+> > SCSI based storage is quickly coming on..
+> > 
+> > So all of that said, I'd like to at least have a discussion with the key
+> > SCSI + block folks who will be present in San Diego on path forward to
+> > address these without having to wait until LSF-2013 + hope for a topic
+> > slot to materialize then.
+> > 
+> > Thank you for your consideration,
+> 
+> Well, your proposal is devoid of an actual proposal.
+> 
+
+Huh..?  It's a proposal for a discussion to (hopefully) identify the
+main culprit(s) and figure out an incremental way forward.
+
+Due to the fact that 1M IOPs machines aren't quite the norm (yet), the
+idea is to get storage folks in the same room who do have access to 1M
+IOPs systems + have an interest in making SCSI core go faster for random
+small block I/O workloads.
+
+This can be vendors / LLD maintainers who've run into similar
+limitations with SCSI core, or folks who have an interest in KVM guest
+SCSI performance.
+
+> Enabling high IOPS involves reducing locking overhead and path length
+> through the code.  I think most of the low hanging fruit in this area is
+> already picked, but if you have an idea, please say.  There might be
+> something we can extract from the lockless queue work Jens is doing, but
+> we need that to materialise first.
+> 
+
+Would really like to hear from Jens here, but I don't know how much time
+he is spending on the SCSI layer these days..
+
+I've been more interested recently in working on a fabric that can
+demonstrate this bottleneck with raw block flash into KVM guest <->
+virtio-scsi, as I think it's a important vehicle for short-term
+diagnosis.
+
+> Without a concrete thing to discuss, shooting the breeze on high IOPS in
+> the SCSI stack is about as useful as discussing what happened in last
+> night's episode of Coronation Street which, when it happens in my house,
+> always helps me see how incredibly urgent fixing the leaky tap I've been
+> putting off for months actually is.
+> 
+
+Sorry, I've never heard of that show.  
+
+> If someone can come up with a proposal ... or even perhaps another path
+> trace showing where the reducible overhead and lock problems are we can
+> discuss it on the list and we might have a real topic by the time LSF
+> rolls around.
+> 
+
+So identifying root culprit(s) is still a WIP at this point.
+
+In the next weeks I'll be back spending time back on 1M IOPs machines
+with raw block flash + qla2xxx/srpt/vhost + Linux/MSFT SCSI clients, and
+should be getting some more data-points by then.
+
+Anyways, if it ends up taking until LSF it ends up at LSF.  I figured
+since things are heating up for virtio-scsi that KS might be a good
+venue for a discussion like this.
+
+--nab
