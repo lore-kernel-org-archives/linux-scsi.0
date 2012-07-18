@@ -1,96 +1,140 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: [Bug 44771] [REGRESSION] a7a20d103994fd760766e6c9d494daa569cbfe06
- makes kernel 3.5 unbootable on an Intel chipset based motherboard
-Date: Wed, 18 Jul 2012 15:41:38 -0700
-Message-ID: <CAA9_cmf4uGuf_nuc6542MddkgWqUhvDXqBMpeGS--QU84+j2xA@mail.gmail.com>
-References: <1342562588.3039.104.camel@dabdike.int.hansenpartnership.com>
-	<Pine.LNX.4.44L0.1207181608410.1429-100000@iolanthe.rowland.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
+Date: Wed, 18 Jul 2012 15:45:36 -0700
+Message-ID: <1342651536.18004.702.camel@haakon2.linux-iscsi.org>
+References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
+	 <20120717150548.GA11587@redhat.com>  <5005B52E.20509@us.ibm.com>
+	 <1342561819.18004.470.camel@haakon2.linux-iscsi.org>
+	 <5006BD3D.7090104@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:45716 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751920Ab2GRWlj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2012 18:41:39 -0400
-Received: by obbuo13 with SMTP id uo13so2770396obb.19
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2012 15:41:39 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.44L0.1207181608410.1429-100000@iolanthe.rowland.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:36870 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751447Ab2GRWpj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2012 18:45:39 -0400
+In-Reply-To: <5006BD3D.7090104@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <jbottomley@parallels.com>, "Artem S. Tashkinov" <t.artem@mailcity.com>, Linus Torvalds <torvalds@linux-foundation.org>, Borislav Petkov <bp@amd64.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Anthony Liguori <aliguori@us.ibm.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
 
-On Wed, Jul 18, 2012 at 1:25 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Tue, 17 Jul 2012, James Bottomley wrote:
->
->> On Tue, 2012-07-17 at 12:51 -0700, Linus Torvalds wrote:
->> > Wrong people cc'd, it looks like.
->> >
->> > Guys, commit a7a20d103994 ("sd: limit the scope of the async probe
->> > domain") is causing boot problems. It's timing-dependent and
->> > apparently sometimes works, which makes sense with that commit.
->> >
->> > However, it *should* have been fixed by commit 43a8d39d0137 ("fix
->> > async probe regression"), but Artem seems to report the problem even
->> > in -rc7.
->> >
->> > Comments?
->>
->> As far as I can tell, the fix should have worked.  However, there are a
->> lot of assumptions in the async stuff that end up not being true in the
->> presence of separate async domains.   We should be fixing it all here:
->>
->> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi.git;a=shortlog;h=refs/heads/async
->
-> Those commits haven't been merged into 3.5-rc7, right?  So Artem isn't
-> using them.
->
->> I've got to say, I don't understand the bug report.  all of those
->> commits were about probing for devices.  However, the screen shot
->>
->> https://bugzilla.kernel.org/attachment.cgi?id=75351
->>
->> shows the devices were found, it's the partition tables that weren't.
->> For us to see the message about sda's capacity, we're already in the
->> async code the commits were trying to synchronise with.
->
-> That's understandable, given that those commits aren't present in
-> Artem's kernel.  Are they queued for -stable?
+On Wed, 2012-07-18 at 08:42 -0500, Anthony Liguori wrote:
+> On 07/17/2012 04:50 PM, Nicholas A. Bellinger wrote:
+> > On Tue, 2012-07-17 at 13:55 -0500, Anthony Liguori wrote:
+> >> On 07/17/2012 10:05 AM, Michael S. Tsirkin wrote:
+> >>> On Wed, Jul 11, 2012 at 09:15:00PM +0000, Nicholas A. Bellinger w=
+rote:
+> >
 
-I did not flag them as such given the wider entanglements.
+<SNIP>
 
->
->> However, there are some missing messages: there's no partition table
->> print and no final
->>
->>       sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
->>                 sdp->removable ? "removable " : "");
->>
->> So sd_probe_async() got stuck somewhere after the first
->> sd_revalidata_disk().
->
-> No, it didn't get stuck.  The problem is that the scsi_wait_scan module
-> didn't wait for the async scanning to finish.
->
-> And the reason for that is one you're already familiar with:
-> CONFIG_SCSI_MOD=y.
+> >
+> >> But I do think the kernel should carefully consider whether it wan=
+ts to support
+> >> an interface like this.  This an extremely complicated ABI with a =
+lot of subtle
+> >> details around state and compatibility.
+> >>
+> >> Are you absolutely confident that you can support a userspace appl=
+ication that
+> >> expects to get exactly the same response from all possible command=
+s in 20 kernel
+> >> versions from now?  Virtualization requires absolutely precise com=
+patibility in
+> >> terms of bugs and features.  This is probably not something the TC=
+M stack has
+> >> had to consider yet.
+> >>
+> >
+> > We most certainly have thought about long term userspace compatibil=
+ity
+> > with TCM.  Our userspace code (that's now available in all major
+> > distros) is completely forward-compatible with new fabric modules s=
+uch
+> > as tcm_vhost.  No update required.
+>=20
+> I'm not sure we're talking about the same thing when we say compatibi=
+lity.
+>=20
+> I'm not talking about the API.  I'm talking about the behavior of the=
+ commands=20
+> that tcm_vhost supports.
+>=20
 
-I had forgotten that additional aspect. but I don't think that is the
-root cause.  scsi_wait_scan() is a nop in Artem's config given
-CONFIG_SCSI_WAIT_SCAN=m.  From what I have seen ahci typically ensures
-that wait_for_device_probe() is all that is needed to guarantee
-scanning is complete which commit a7a20d103994 ("sd: limit the scope
-of the async probe domain") breaks, and which commit 43a8d39d0137
-("[SCSI] fix async probe regression"), does not resolve because that
-requires a call to scsi_complete_async_scans() to close the loop.
+OK, I understand what your getting at now..
 
-> Artem, if you change all your SCSI drivers to be modular rather than
-> built-in, that ought to fix the problem.  Alternatively, you can simply
-> continue to use the "rootwait" option.
+> If you add support for a new command, you need to provide userspace a=
+ way to=20
+> disable this command.  If you change what gets reported for VPD, you =
+need to=20
+> provide userspace a way to make VPD look like what it did in a previo=
+us version.
+>=20
+> Basically, you need to be able to make a TCM device behave 100% the s=
+ame as it=20
+> did in an older version of the kernel.
+>=20
+> This is unique to virtualization due to live migration.  If you migra=
+te from a=20
+> 3.6 kernel to a 3.8 kernel, you need to make sure that the 3.8 kernel=
+'s TCM=20
+> device behaves exactly like the 3.6 kernel because the guest that is =
+interacting=20
+> with it does not realize that live migration happened.
+>=20
+> Yes, you can add knobs via configfs to control this behavior, but I t=
+hink the=20
+> question is, what's the plan for this?
+>=20
 
-I think setting CONFIG_SCSI_WAIT_SCAN=y would also be a workaround, or
-going forward with the pending async rework to make sd probe work once
-again visible to async_synchronize_domain_full().
+So we already allow for some types of CDBs emulation to be toggled via
+backend device attributes:
+
+root@tifa:/usr/src/target-pending.git# tree /sys/kernel/config/target/c=
+ore/iblock_2/fioa/attrib/
+/sys/kernel/config/target/core/iblock_2/fioa/attrib/
+=E2=94=9C=E2=94=80=E2=94=80 block_size
+=E2=94=9C=E2=94=80=E2=94=80 emulate_dpo
+=E2=94=9C=E2=94=80=E2=94=80 emulate_fua_read
+=E2=94=9C=E2=94=80=E2=94=80 emulate_fua_write
+=E2=94=9C=E2=94=80=E2=94=80 emulate_rest_reord
+=E2=94=9C=E2=94=80=E2=94=80 emulate_tas
+=E2=94=9C=E2=94=80=E2=94=80 emulate_tpu
+=E2=94=9C=E2=94=80=E2=94=80 emulate_tpws
+=E2=94=9C=E2=94=80=E2=94=80 emulate_ua_intlck_ctrl
+=E2=94=9C=E2=94=80=E2=94=80 emulate_write_cache
+=E2=94=9C=E2=94=80=E2=94=80 enforce_pr_isids
+
+<SNIP>
+
+Some things like SPC-3 persistent reservations + implict/explict ALUA
+multipath currently can't be disabled, but adding two more backend
+attributes to disable/enable this logic individual is easy enough to do=
+=2E
+
+So that said, I don't have a problem with adding the necessary device
+attributes to limit what type of CDBs a backend device is capable of
+processing.
+
+Trying to limiting this per-guest (instead of per-device) is where
+things get a little more tricky..
+
+> BTW, I think this is a good thing to cover in Documentation/vhost/tcm=
+_vhost.txt.=20
+>   I think that's probably the only change that's needed here.
+>=20
+
+Sure, but I'll need to know what else that you'd like to optionally
+restrict it terms of CDB processing that's not already there..
+
+Thanks for your feedback!
+
+--nab
 
 --
-Dan
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
