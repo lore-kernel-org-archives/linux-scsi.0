@@ -2,17 +2,21 @@ From: =?utf-8?B?5pyJ5pWI5p6c5YaN5LuY5qy+?= <admin@xunyang.com.cn>
 Subject: =?utf-8?B?MjAxMuaYpeWtozExMeWxiuW5v+S6pOS8muS5sOWutu+8jOe+pOWPkei9r+S7tg==?=
 	=?utf-8?B?77yMQjJC6K+i55uY5Lmw5a6244CBdGhvbWFzbmV0IOmHhw==?=
 	=?utf-8?B?6LSt5ZWGLOa1t+WFs+aVsOaNrizlsZXkvJrkubDlrrYg5LuFMzAw5YWDIQ==?=
-Date: Thu, 19 Jul 2012 12:22:44 +0000 (UTC)
-Message-ID: <20200719201719346228@xunyang.com.cn>
+Date: Thu, 19 Jul 2012 12:22:46 +0000 (UTC)
+Message-ID: <20200719201719346228__2818.88879039816$1342700566$gmane$org@xunyang.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-omap-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [61.134.47.246] ([61.134.47.246]:1750 "HELO mail.xunyang.com.cn"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751653Ab2GSMWk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Jul 2012 08:22:40 -0400
 Date: Sun, 19 Jul 2020 20:17:11 +0800
-Sender: linux-omap-owner@vger.kernel.org
-To: linuxexperts@googlegroups.com, linuxjua@126.com, linux-mtd@lists.infradead.org, linux-omap@vger.kernel.org, linux-scsi@vger.kernel.org, linux-tape@vger.kernel.org, linux-users@it.canterbury.ac.nz, linv5800@comcast.net, lucas_instruments@live.com, linwang@wzptt.zj
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linuxexperts@googlegroups.com, linuxjua@126.com, linux-mtd@lists.infradead.org, linux-omap@vger.kernel.org, linux-scsi@vger.kernel.org, linux-tape@vger.kernel.org, linux-users@it.canterbury.ac.nz, linv5800@comcast.net, lucas_instruments@live.com, linwang@wzptt.zj
 
 MjAxMuaYpeWtozExMeWxiuW5v+S6pOS8muS5sOWutu+8jOa1t+WFs+aVsOaNruaPkOWNlXBpZXJz
 54mI77yMMjAwOC0yMDEy5bm0OeWxiuW5v+S6pOS8muaVsOaNruOAgg0KDQrkuIDlhbExMOS4quWM
