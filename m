@@ -1,100 +1,58 @@
-From: <sreekanth.reddy@lsi.com>
-Subject: [RESEND] [PATCH] [SCSI] mptfusion: Fix for issue - The device is
- removed in blocked state
-Date: Thu, 19 Jul 2012 09:13:21 +0530
-Message-ID: <20120719034321.GA3543@localhost.localdomain>
+From: vinayak holikatti <vinholikatti@gmail.com>
+Subject: Re: [PATCH V2 0/4] [SCSI] ufs: Adds glue drivers to ufshcd
+Date: Thu, 19 Jul 2012 16:59:26 +0530
+Message-ID: <CAKVbJB8HF2EdLxaEL7PMcU5ZAM70TCA0Y-AbDRz4g_TuXSRgBw@mail.gmail.com>
+References: <1342188465-20239-1-git-send-email-vinholikatti@gmail.com>
+	<201207131545.28877.arnd@arndb.de>
+	<1342447217.3176.22.camel@dabdike.int.hansenpartnership.com>
+	<201207161622.24063.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:46126 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751751Ab2GSJyr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jul 2012 05:54:47 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-Reply-To: <201207161622.24063.arnd@arndb.de>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, jejb@kernel.org, stable@vger.kernel.org
-Cc: sreekanth.reddy@lsi.com
 
-Fix for issue - The device is removed in blocked state.
-
-The device is set to blocked state when I/Os running and the cable is pulled.
-Also if the device missing delay timer is started. When the device missing
-delay timer expires, the device is removed but the device state is not set to
-unblocked state. This will cause problems  if there are commands in block
-queue.
-
-To fix this issue, added code to unblock the device before removing it.
-
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@lsi.com>
-Cc: <stable@kernel.org>
----
-
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 551262e..4d02d5d 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -1088,7 +1088,13 @@ mptsas_target_reset(MPT_ADAPTER *ioc, u8 channel, u8 id)
- static void
- mptsas_block_io_sdev(struct scsi_device *sdev, void *data)
- {
--	scsi_device_set_state(sdev, SDEV_BLOCK);
-+	scsi_internal_device_block(sdev);
-+}
-+
-+static void
-+mptsas_ublock_io_sdev(struct scsi_device *sdev, void *data)
-+{
-+	scsi_internal_device_unblock(sdev);
- }
- 
- static void
-@@ -1098,6 +1104,13 @@ mptsas_block_io_starget(struct scsi_target *starget)
- 		starget_for_each_device(starget, NULL, mptsas_block_io_sdev);
- }
- 
-+static void
-+mptsas_ublock_io_starget(struct scsi_target *starget)
-+{
-+	if (starget)
-+		starget_for_each_device(starget, NULL, mptsas_ublock_io_sdev);
-+}
-+
- /**
-  * mptsas_target_reset_queue
-  *
-@@ -1502,6 +1515,7 @@ mptsas_del_end_device(MPT_ADAPTER *ioc, struct mptsas_phyinfo *phy_info)
- 	char *ds = NULL;
- 	u8 fw_id;
- 	u64 sas_address;
-+	VirtTarget	*vtarget;
- 
- 	if (!phy_info)
- 		return;
-@@ -1545,6 +1559,13 @@ mptsas_del_end_device(MPT_ADAPTER *ioc, struct mptsas_phyinfo *phy_info)
- 	    phy_info->attached.id, phy_info->attached.phy_id,
- 	    (unsigned long long) sas_address);
- 
-+	vtarget = mptsas_find_vtarget(ioc,
-+			 phy_info->attached.channel, phy_info->attached.id);
-+	if (vtarget && vtarget->deleted == 1) {
-+		mptsas_ublock_io_starget(vtarget->starget);
-+		vtarget->deleted = 0; /* unblock IO */
-+	}
-+
- 	port = mptsas_get_port(phy_info);
- 	if (!port) {
- 		dfailprintk(ioc, printk(MYIOC_s_ERR_FMT
-diff --git a/drivers/message/fusion/mptsas.h b/drivers/message/fusion/mptsas.h
-index 57e86ab..1567f57 100644
---- a/drivers/message/fusion/mptsas.h
-+++ b/drivers/message/fusion/mptsas.h
-@@ -189,4 +189,7 @@ struct mptsas_enclosure {
- };
- 
- /*}-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-+
-+extern int scsi_internal_device_block(struct scsi_device *sdev);
-+extern int scsi_internal_device_unblock(struct scsi_device *sdev);
- #endif
+On Mon, Jul 16, 2012 at 9:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 16 July 2012, James Bottomley wrote:
+>> On Fri, 2012-07-13 at 15:45 +0000, Arnd Bergmann wrote:
+>> > On Friday 13 July 2012, Vinayak Holikatti wrote:
+>> > > This patch set adds following features
+>> > >  - Seprates PCI specific code from ufshcd.c to make it as core
+>> > >  - Adds PCI glue driver ufshcd-pci.c
+>> > >  - Adds Platform glue driver ufshcd-pltfrm.c
+>> > >  - Update correct transfer size in Command UPIU
+>> >
+>> > Acked-by: Arnd Bergmann <arnd@arndb.de>
+>>
+>> I need a maintainer ack for this to go upstream.
+>>
+>> Also, looking at this, I think this patch series isn't bisectable:
+>> Patch 1 removes PCI support and patch 2 adds it back in a different
+>> form.  However, any PCI based UFS system would stop working if the
+>> bisect landed at patch 1.  I think you can fix this just by combining
+>> patches 1 and 2.
+>
+> I suggested to split the patch in two in a private review that we
+> did on the linaro mailing list. I gave my Ack because the split
+> was done, but I failed to notice that it was done differently
+> from what I suggested in
+>
+> On Monday 02 July 2012, Arnd Bergmann wrote:
+>> I would recommend that you split this patch into two separate
+>> changesets, where you do all the changes to existing code in the
+>> first patch, and only move but don't change code in the second one
+>> that creates the new file.
+>
+> I agree that breaking bisectibility by ripping out the PCI code
+> first is not good. The version 2 is not actually easier to review
+> at all than the first version, it just splits the changes by
+> file, which is pointless.
+I will roll out another patch series which will address the current issue.
+Firstly will modify existing code with PCI code and then in the second
+move the code to new file ufshcd-pci.c
+>
+>         Arnd
+>
