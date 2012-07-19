@@ -1,44 +1,99 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [RFC-v2 0/4] tcm_vhost+cmwq fabric driver code for-3.6
-Date: Thu, 19 Jul 2012 09:30:51 +0200
-Message-ID: <5007B7AB.6060906@redhat.com>
-References: <1342041304-29728-1-git-send-email-nab@linux-iscsi.org>
-	<20120717150548.GA11587@redhat.com> <5005B52E.20509@us.ibm.com>
-	<1342561819.18004.470.camel@haakon2.linux-iscsi.org>
-	<5006BD3D.7090104@us.ibm.com>
-	<20120718155338.GA21817@infradead.org>
-	<5006DDAA.6080304@us.ibm.com>
-	<1342630038.3022.111.camel@dabdike.int.hansenpartnership.com>
-	<50070A8D.7020203@us.ibm.com> <5007A28C.602@redhat.com>
-	<1342682881.3059.3.camel@dabdike.int.hansenpartnership.com>
+From: <sreekanth.reddy@lsi.com>
+Subject: Fix for issue - The device is removed in blocked state
+Date: Thu, 19 Jul 2012 08:21:56 +0530
+Message-ID: <20120719025156.GA3075@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1342682881.3059.3.camel@dabdike.int.hansenpartnership.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Anthony Liguori <aliguori@us.ibm.com>, kvm-devel <kvm@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:34466 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753259Ab2GSJDY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Jul 2012 05:03:24 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, jejb@kernel.org, stable@vger.kernel.org
+Cc: sreekanth.reddy@lsi.com
 
-Il 19/07/2012 09:28, James Bottomley ha scritto:
->> > INQUIRY responses (at least vendor/product/type) should not change.
-> INQUIRY responses often change for arrays because a firmware upgrade
-> enables new features and new features have to declare themselves,
-> usually in the INQUIRY data.  What you mean, I think, is that previously
-> exposed features in INQUIRY data, as well as strings
-> (vendor/product/type, as you say), shouldn't change, but unexposed data
-> (read 0 in the fields) may.
+Fix for issue - The device is removed in blocked state.
 
-What I meant is that it's unlikely that Windows fingerprinting is using
-anything but vendor/product/type, because everything else can change.
+The device is set to blocked state when I/Os running and the cable is pulled.
+Also if the device missing delay timer is started. When the device missing
+delay timer expires, the device is removed but the device state is not set to
+unblocked state. This will cause problems  if there are commands in block
+queue.
 
-Paolo
+To fix this issue, added code to unblock the device before removing it.
+
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@lsi.com>
+Cc: <stable@kernel.org>
+---
+
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 551262e..4d02d5d 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -1088,7 +1088,13 @@ mptsas_target_reset(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ static void
+ mptsas_block_io_sdev(struct scsi_device *sdev, void *data)
+ {
+-	scsi_device_set_state(sdev, SDEV_BLOCK);
++	scsi_internal_device_block(sdev);
++}
++
++static void
++mptsas_ublock_io_sdev(struct scsi_device *sdev, void *data)
++{
++	scsi_internal_device_unblock(sdev);
+ }
+ 
+ static void
+@@ -1098,6 +1104,13 @@ mptsas_block_io_starget(struct scsi_target *starget)
+ 		starget_for_each_device(starget, NULL, mptsas_block_io_sdev);
+ }
+ 
++static void
++mptsas_ublock_io_starget(struct scsi_target *starget)
++{
++	if (starget)
++		starget_for_each_device(starget, NULL, mptsas_ublock_io_sdev);
++}
++
+ /**
+  * mptsas_target_reset_queue
+  *
+@@ -1502,6 +1515,7 @@ mptsas_del_end_device(MPT_ADAPTER *ioc, struct mptsas_phyinfo *phy_info)
+ 	char *ds = NULL;
+ 	u8 fw_id;
+ 	u64 sas_address;
++	VirtTarget	*vtarget;
+ 
+ 	if (!phy_info)
+ 		return;
+@@ -1545,6 +1559,13 @@ mptsas_del_end_device(MPT_ADAPTER *ioc, struct mptsas_phyinfo *phy_info)
+ 	    phy_info->attached.id, phy_info->attached.phy_id,
+ 	    (unsigned long long) sas_address);
+ 
++	vtarget = mptsas_find_vtarget(ioc,
++			 phy_info->attached.channel, phy_info->attached.id);
++	if (vtarget && vtarget->deleted == 1) {
++		mptsas_ublock_io_starget(vtarget->starget);
++		vtarget->deleted = 0; /* unblock IO */
++	}
++
+ 	port = mptsas_get_port(phy_info);
+ 	if (!port) {
+ 		dfailprintk(ioc, printk(MYIOC_s_ERR_FMT
+diff --git a/drivers/message/fusion/mptsas.h b/drivers/message/fusion/mptsas.h
+index 57e86ab..1567f57 100644
+--- a/drivers/message/fusion/mptsas.h
++++ b/drivers/message/fusion/mptsas.h
+@@ -189,4 +189,7 @@ struct mptsas_enclosure {
+ };
+ 
+ /*}-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
++
++extern int scsi_internal_device_block(struct scsi_device *sdev);
++extern int scsi_internal_device_unblock(struct scsi_device *sdev);
+ #endif
