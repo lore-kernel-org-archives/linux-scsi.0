@@ -1,15 +1,16 @@
 From: <sreekanth.reddy@lsi.com>
-Subject: Fix for issue - The device is removed in blocked state
-Date: Thu, 19 Jul 2012 08:21:56 +0530
-Message-ID: <20120719025156.GA3075@localhost.localdomain>
+Subject: [RESEND] [PATCH] [SCSI] mptfusion: Fix for issue - The device is
+ removed in blocked state
+Date: Thu, 19 Jul 2012 09:13:21 +0530
+Message-ID: <20120719034321.GA3543@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:34466 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753259Ab2GSJDY (ORCPT
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:46126 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751751Ab2GSJyr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jul 2012 05:03:24 -0400
+	Thu, 19 Jul 2012 05:54:47 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
