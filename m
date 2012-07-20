@@ -1,41 +1,31 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16070] Fail to issue Start/Stop Unit
-Date: Fri, 20 Jul 2012 12:41:26 +0000 (UTC)
-Message-ID: <20120720124126.503AA11FB39@bugzilla.kernel.org>
-References: <bug-16070-11613@https.bugzilla.kernel.org/>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [patch] [SCSI] aic79xx: NULL dereference in debug code
+Date: Fri, 20 Jul 2012 16:41:34 +0200
+Message-ID: <50096E1E.60709@suse.de>
+References: <20120720113057.GC22245@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:57265 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753352Ab2GTMla (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jul 2012 08:41:30 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 26BEB201D3
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Jul 2012 12:41:29 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 85761201E0
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Jul 2012 12:41:27 +0000 (UTC)
-In-Reply-To: <bug-16070-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120720113057.GC22245@elgon.mountain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16070
+On 07/20/2012 01:30 PM, Dan Carpenter wrote:
+> "ahd" can be NULL here and it gets dereferenced inside the call to
+> ahd_name().
+>=20
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>=20
+Acked-by: Hannes Reinecke <hare@suse.de>
 
+Cheers,
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-         Resolution|                            |DOCUMENTED
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
