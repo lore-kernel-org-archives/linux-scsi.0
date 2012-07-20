@@ -1,88 +1,71 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch] target: NULL dereference on error path
-Date: Fri, 20 Jul 2012 11:38:07 -0700
-Message-ID: <1342809487.25472.35.camel@haakon2.linux-iscsi.org>
-References: <20120720070733.GD11710@elgon.mountain>
+From: Jiri Kosina <jkosina@suse.cz>
+Subject: [PATCH] [RFC] [SCSI] mpt fusion: add support for 0x1000/0x0055
+Date: Sat, 21 Jul 2012 00:03:52 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1207210000190.21929@pobox.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:59595 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439Ab2GTSiJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jul 2012 14:38:09 -0400
-In-Reply-To: <20120720070733.GD11710@elgon.mountain>
+Received: from cantor2.suse.de ([195.135.220.15]:34051 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751173Ab2GTWEC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Jul 2012 18:04:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Eric Moore <Eric.Moore@lsi.com>, James Bottomley <JBottomley@Parallels.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Cc: DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2012-07-20 at 10:07 +0300, Dan Carpenter wrote:
-> We called destroy_workqueue(dev->tmr_wq) before ->tmr_wq was allocated
-> which leads to an oops.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
+The device identifies itself as
 
+0d:05.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068 PCI-X Fusion-MPT SAS (rev 01) Subsystem: NEC Corporation SAS1068
 
-Looks good.  Applied to for-next w/ a comment pointing to:
+and seems to be functionally compatible with 0x0054 PID.
 
-commit af8772926f019b7bddd7477b8de5f3b0f12bad21
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Sun Jul 8 15:58:49 2012 -0400
+The request for support of this device has been raised on mailinglists several
+times in the past (see [1] [2] and more), but aparently the PCI ID never made it
+to mptsas_pci_table[].
 
-    target: replace the processing thread with a TMR work queue
+[1] http://comments.gmane.org/gmane.linux.scsi/63836
+[2] http://lkml.indiana.edu/hypermail/linux/kernel/0701.2/1715.html
 
-
-Thanks DanC!
-
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 7647eca..0eaae23 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -1098,7 +1098,7 @@ struct se_device *transport_add_device_to_core_hba(
->  	 * Setup the Asymmetric Logical Unit Assignment for struct se_device
->  	 */
->  	if (core_setup_alua(dev, force_pt) < 0)
-> -		goto out;
-> +		goto err_dev_list;
->  
->  	/*
->  	 * Startup the struct se_device processing thread
-> @@ -1108,7 +1108,7 @@ struct se_device *transport_add_device_to_core_hba(
->  	if (!dev->tmr_wq) {
->  		pr_err("Unable to create tmr workqueue for %s\n",
->  			dev->transport->name);
-> -		goto out;
-> +		goto err_dev_list;
->  	}
->  	/*
->  	 * Setup work_queue for QUEUE_FULL
-> @@ -1126,7 +1126,7 @@ struct se_device *transport_add_device_to_core_hba(
->  		if (!inquiry_prod || !inquiry_rev) {
->  			pr_err("All non TCM/pSCSI plugins require"
->  				" INQUIRY consts\n");
-> -			goto out;
-> +			goto err_wq;
->  		}
->  
->  		strncpy(&dev->se_sub_dev->t10_wwn.vendor[0], "LIO-ORG", 8);
-> @@ -1136,9 +1136,10 @@ struct se_device *transport_add_device_to_core_hba(
->  	scsi_dump_inquiry(dev);
->  
->  	return dev;
-> -out:
-> -	destroy_workqueue(dev->tmr_wq);
->  
-> +err_wq:
-> +	destroy_workqueue(dev->tmr_wq);
-> +err_dev_list:
->  	spin_lock(&hba->device_lock);
->  	list_del(&dev->dev_list);
->  	hba->dev_count--;
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+---
 
 
+I guess the "Subsystem: NEC Corporation" is telling us some rebranding 
+story, including the PID change ... ?
+
+
+
+ drivers/message/fusion/lsi/mpi_cnfg.h |    1 +
+ drivers/message/fusion/mptsas.c       |    2 ++
+ 2 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
+index d9bcfba..29d54c9 100644
+--- a/drivers/message/fusion/lsi/mpi_cnfg.h
++++ b/drivers/message/fusion/lsi/mpi_cnfg.h
+@@ -582,6 +582,7 @@ typedef struct _MSG_CONFIG_REPLY
+ #define MPI_MANUFACTPAGE_DEVID_SAS1066              (0x005E)
+ #define MPI_MANUFACTPAGE_DEVID_SAS1066E             (0x005A)
+ #define MPI_MANUFACTPAGE_DEVID_SAS1068              (0x0054)
++#define MPI_MANUFACTPAGE_DEVID_SAS1068_2            (0x0055)
+ #define MPI_MANUFACTPAGE_DEVID_SAS1068E             (0x0058)
+ #define MPI_MANUFACTPAGE_DEVID_SAS1068_820XELP      (0x0059)
+ #define MPI_MANUFACTPAGE_DEVID_SAS1078              (0x0062)
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 551262e..2475f8c 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -5370,6 +5370,8 @@ static struct pci_device_id mptsas_pci_table[] = {
+ 		PCI_ANY_ID, PCI_ANY_ID },
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068,
+ 		PCI_ANY_ID, PCI_ANY_ID },
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068_2,
++		PCI_ANY_ID, PCI_ANY_ID },
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1064E,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068E,
+
+-- 
+Jiri Kosina
+SUSE Labs
