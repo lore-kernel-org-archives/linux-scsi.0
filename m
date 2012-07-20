@@ -1,38 +1,36 @@
-From: gaoqiang <gaoqiangscut@gmail.com>
-Subject: question about  path_id of scsi hard disk
-Date: Fri, 20 Jul 2012 16:24:34 +0800
-Message-ID: <op.whqka8y2n27o5l@gaoqiang-d1.corp.qihoo.net>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] aic79xx: NULL dereference in debug code
+Date: Fri, 20 Jul 2012 14:30:57 +0300
+Message-ID: <20120720113057.GC22245@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=gbk;
-	format=flowed	delsp=yes
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:60941 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751892Ab2GTIYq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jul 2012 04:24:46 -0400
-Received: by wibhm11 with SMTP id hm11so262868wib.1
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Jul 2012 01:24:44 -0700 (PDT)
+Received: from rcsinet15.oracle.com ([148.87.113.117]:26001 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106Ab2GTLbL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jul 2012 07:31:11 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-I'm using udev to manage my hard disks. but I'm confusing
-about the "PATH_ID"
+"ahd" can be NULL here and it gets dereferenced inside the call to
+ahd_name().
 
-gaoqiang@h150:~$/lib/udev/path_id  /block/sda
-ID_PATH=3Dpci-0000:01:00.0-scsi-0:0:0:0
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-the path_id is about disk or about disk slot ?
-
-many thanks.
-
-
---=20
-=CA=B9=D3=C3 Opera =B8=EF=C3=FC=D0=D4=B5=C4=B5=E7=D7=D3=D3=CA=BC=FE=BF=CD=
-=BB=A7=B3=CC=D0=F2: http://www.opera.com/mail/
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 25417d0..5db8925 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -6120,7 +6120,8 @@ ahd_alloc(void *platform_arg, char *name)
+ #ifdef AHD_DEBUG
+ 	if ((ahd_debug & AHD_SHOW_MEMORY) != 0) {
+ 		printk("%s: scb size = 0x%x, hscb size = 0x%x\n",
+-		       ahd_name(ahd), (u_int)sizeof(struct scb),
++		       ahd ? ahd_name(ahd) : "(null)",
++		       (u_int)sizeof(struct scb),
+ 		       (u_int)sizeof(struct hardware_scb));
+ 	}
+ #endif
