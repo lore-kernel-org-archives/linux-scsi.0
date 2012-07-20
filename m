@@ -1,66 +1,38 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] target: NULL dereference on error path
-Date: Fri, 20 Jul 2012 10:07:34 +0300
-Message-ID: <20120720070733.GD11710@elgon.mountain>
+From: gaoqiang <gaoqiangscut@gmail.com>
+Subject: question about  path_id of scsi hard disk
+Date: Fri, 20 Jul 2012 16:24:34 +0800
+Message-ID: <op.whqka8y2n27o5l@gaoqiang-d1.corp.qihoo.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=gbk;
+	format=flowed	delsp=yes
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:26107 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752980Ab2GTHHl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jul 2012 03:07:41 -0400
-Content-Disposition: inline
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:60941 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751892Ab2GTIYq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jul 2012 04:24:46 -0400
+Received: by wibhm11 with SMTP id hm11so262868wib.1
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Jul 2012 01:24:44 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-We called destroy_workqueue(dev->tmr_wq) before ->tmr_wq was allocated
-which leads to an oops.
+I'm using udev to manage my hard disks. but I'm confusing
+about the "PATH_ID"
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+gaoqiang@h150:~$/lib/udev/path_id  /block/sda
+ID_PATH=3Dpci-0000:01:00.0-scsi-0:0:0:0
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 7647eca..0eaae23 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1098,7 +1098,7 @@ struct se_device *transport_add_device_to_core_hba(
- 	 * Setup the Asymmetric Logical Unit Assignment for struct se_device
- 	 */
- 	if (core_setup_alua(dev, force_pt) < 0)
--		goto out;
-+		goto err_dev_list;
- 
- 	/*
- 	 * Startup the struct se_device processing thread
-@@ -1108,7 +1108,7 @@ struct se_device *transport_add_device_to_core_hba(
- 	if (!dev->tmr_wq) {
- 		pr_err("Unable to create tmr workqueue for %s\n",
- 			dev->transport->name);
--		goto out;
-+		goto err_dev_list;
- 	}
- 	/*
- 	 * Setup work_queue for QUEUE_FULL
-@@ -1126,7 +1126,7 @@ struct se_device *transport_add_device_to_core_hba(
- 		if (!inquiry_prod || !inquiry_rev) {
- 			pr_err("All non TCM/pSCSI plugins require"
- 				" INQUIRY consts\n");
--			goto out;
-+			goto err_wq;
- 		}
- 
- 		strncpy(&dev->se_sub_dev->t10_wwn.vendor[0], "LIO-ORG", 8);
-@@ -1136,9 +1136,10 @@ struct se_device *transport_add_device_to_core_hba(
- 	scsi_dump_inquiry(dev);
- 
- 	return dev;
--out:
--	destroy_workqueue(dev->tmr_wq);
- 
-+err_wq:
-+	destroy_workqueue(dev->tmr_wq);
-+err_dev_list:
- 	spin_lock(&hba->device_lock);
- 	list_del(&dev->dev_list);
- 	hba->dev_count--;
+the path_id is about disk or about disk slot ?
+
+many thanks.
+
+
+--=20
+=CA=B9=D3=C3 Opera =B8=EF=C3=FC=D0=D4=B5=C4=B5=E7=D7=D3=D3=CA=BC=FE=BF=CD=
+=BB=A7=B3=CC=D0=F2: http://www.opera.com/mail/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
