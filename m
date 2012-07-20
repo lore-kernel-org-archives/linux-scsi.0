@@ -1,31 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [patch] [SCSI] aic79xx: NULL dereference in debug code
-Date: Fri, 20 Jul 2012 16:41:34 +0200
-Message-ID: <50096E1E.60709@suse.de>
-References: <20120720113057.GC22245@elgon.mountain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH] sg_io: allow UNMAP and WRITE SAME without CAP_SYS_RAWIO
+Date: Fri, 20 Jul 2012 18:30:01 +0200
+Message-ID: <1342801801-15617-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120720113057.GC22245@elgon.mountain>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: axboe@kernel.dk, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/20/2012 01:30 PM, Dan Carpenter wrote:
-> "ahd" can be NULL here and it gets dereferenced inside the call to
-> ahd_name().
->=20
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->=20
-Acked-by: Hannes Reinecke <hare@suse.de>
+These commands cannot be issued right now without giving CAP_SYS_RAWIO to
+the process who wishes to send them.  These commands can be useful also to
+non-privileged programs who have access to the block devices.  For example
+a virtual machine monitor needs them to forward trim/discard to host disks.
 
-Cheers,
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+ block/scsi_ioctl.c |    3 ++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 260fa80..dd71f18 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -168,13 +168,16 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ 	/* Basic writing commands */
+ 	__set_bit(WRITE_6, filter->write_ok);
+ 	__set_bit(WRITE_10, filter->write_ok);
++	__set_bit(WRITE_SAME, filter->write_ok);
+ 	__set_bit(WRITE_VERIFY, filter->write_ok);
+ 	__set_bit(WRITE_12, filter->write_ok);
+ 	__set_bit(WRITE_VERIFY_12, filter->write_ok);
+ 	__set_bit(WRITE_16, filter->write_ok);
++	__set_bit(WRITE_SAME_16, filter->write_ok);
+ 	__set_bit(WRITE_LONG, filter->write_ok);
+ 	__set_bit(WRITE_LONG_2, filter->write_ok);
+ 	__set_bit(ERASE, filter->write_ok);
++	__set_bit(UNMAP, filter->write_ok);
+ 	__set_bit(GPCMD_MODE_SELECT_10, filter->write_ok);
+ 	__set_bit(MODE_SELECT, filter->write_ok);
+ 	__set_bit(LOG_SELECT, filter->write_ok);
