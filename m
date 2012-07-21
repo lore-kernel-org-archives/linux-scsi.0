@@ -1,89 +1,189 @@
-From: Matthias Prager <linux@matthiasprager.de>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Sat, 21 Jul 2012 14:15:56 +0200
-Message-ID: <500A9D7C.8080801@matthiasprager.de>
-References: <4FE454CA.6080007@matthiasprager.de> <4FFAED4F.3080100@matthiasprager.de> <4FFB32E5.1050109@farcaster.org> <4FFB7354.8040809@matthiasprager.de> <4FFB8A86.7000009@farcaster.org> <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de> <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com> <5005BF7D.2050703@matthiasprager.de> <20120717200136.GC24336@google.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target updates for v3.6-rc1 (round 1)
+Date: Sat, 21 Jul 2012 15:27:07 -0700
+Message-ID: <1342909627.25472.203.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dd15408.kasserver.com ([85.13.136.168]:58762 "EHLO
-	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999Ab2GUMQK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Jul 2012 08:16:10 -0400
-In-Reply-To: <20120717200136.GC24336@google.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:60689 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751611Ab2GUW1K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Jul 2012 18:27:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, Andy Grover <agrover@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@gmail.com>, Anthony Liguori <anthony@codemonkey.ws>, Greg KH <gregkh@linuxfoundation.org>
 
-Am 17.07.2012 22:01, schrieb Tejun Heo:
-> On Tue, Jul 17, 2012 at 09:39:41PM +0200, Matthias Prager wrote:
->> I could not however reproduce the issue on any other device than a LSI
->> SAS controller (using SATA disks) - on a regular ICH10 using AHCI and a
->> SATA drive I don't see these i/o errors. But since I'm experiencing
->> these issues on two different systems (both with lsi controllers while
->> running vmware-guests on them) and Robert sees them on his
->> (non-virtualized) system with the same lsi controller (9211-8i), I'm
->> inclined to make the following assumptions:
->> Either it is an issue which is limited to this controller and possibly
->> sata disks hanging off it or it is a more general issue with sas
->> controllers and sata disks (again it could well affect sas disks too).
->> Lacking other controllers or sas disks I can't be sure.
-> 
-> So, nothing in the libata stack generates NOT_READY - "initializing
-> command required".  I suppose it's LSI firmware / driver translating
-> TUR to CHECK_POWER_MODE and generating NOT_READY.  I don't know what
-> SAT says about this but this can't be correct.  An ATA device in
-> standby mode is ready to process any commands.  It should be able to
-> come back to full operation on demand as necessary and that's why it
-> can be transparently enabled from device side.  Eric?
-> 
+Hello Linus,
 
-While reading the linux-scsi mailing list I stumbled upon
+The following is the first round of target core + fabric driver updates
+for the freshly opened v3.6 merge window.  Please go ahead and pull
+from:
 
-'[Bug 16070] Fail to issue Start/Stop Unit'
-<http://marc.info/?l=linux-scsi&m=134278835822649&w=2>
-(bugtracker: <https://bugzilla.kernel.org/show_bug.cgi?id=16070>)
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
 
-which lead me to trying to enable the 'allow_restart' flag for my disks.
-With this workaround a vanilla kernel 3.4.5 does not exhibit the i/o
-errors on sleeping sata disks hanging off sas controllers.
+This series is based on target-pending/master commit 1765fe5edcb83f53f
 
+So I ended up needing to rebase for-next last week to pick up fixes
+in master that for-next ended up conflicting with, but the bulk of the
+series has been in linux-next a number of weeks and has getting a good
+amount of testing.
 
-I'm currently running one of my systems with a
+There have been lots of work in a number of areas this past round.  The
+highlights include:
 
-'echo 1 | tee /sys/block/sd?/device/scsi_disk/*/allow_restart >/dev/null'
+*) Break out target_core_cdb.c emulation into SPC/SBC ops (hch)
+*) Add a parse_cdb method to target backend drivers (hch)
+*) Move sync_cache + write_same + unmap into spc_ops (hch)
+*) Use target_execute_cmd for WRITEs in iscsi_target + srpt (hch)
+*) Offload WRITE I/O backend submission in tcm_qla2xxx + tcm_fc (hch + nab)
+*) Refactor core_update_device_list_for_node() into enable/disable funcs (agrover)
+*) Replace the TCM processing thread with a TMR work queue (hch)
+*) Fix regression in transport_add_device_to_core_hba from TMR conversion (DanC)
+*) Remove racy, now-redundant check of sess_tearing_down with qla2xxx (roland)
+*) Add range checking, fix reading of data len + possible underflow in UNMAP (roland)
+*) Allow for target_submit_cmd() returning errors + convert fabrics (roland + nab)
+*) Drop bogus struct file usage for iSCSI/SCTP (viro)
 
-line added to the init scripts. This way I can use the untouched kernel
-sources and still get around the i/o errors. But I reckon this is no
-solution.
+Thanks again to everyone who has contributed!
 
+On the new target fabric module front for-3.6, tcm_vhost is currently in
+RFC-v4 on the lists + queued up + waiting for ACKs from MST & Co here:
 
-I'm no expert on scsi/sas/ata internals, so please take the following
-thoughts with a grain of salt:
+http://marc.info/?l=kvm&m=134285417314176&w=2
 
-As far as I can see (and Tejun confirmed that - I think) Tejun commit
-85ef06d1d252f6a2e73b678591ab71caad4667bb somehow exposes a bug, which
-lies deeper in the sas/ata code. The 'sas_slave_configure()' function in
-'drivers/scsi/libsas/sas_scsi_host.c' sets the 'allow_restart' flag for
-sas disks hanging off sas controllers. But if it encounters a sata disk
-it calls 'ata_sas_slave_configure()' in 'drivers/ata/libata_scsi.c'
-instead and returns without enabling the 'allow_restart' flag. A simple
-fix would be to set allow_restart=1 after having called
-'ata_sas_slave_configure()' but before returning (in
-'sas_slave_configure()').
+At this point I think the vhost folks are pretty agreeable for an
+initial merge of this kernel code, but the vhost-scsi bits in upstream
+QEMU userspace code will still need to be shorted out.  So because of
+this fact, MST has requested to mark this driver as STAGING o indicate
+the userspace ABI is not (yet) set in stone.
 
-Now I'm not sure this isn't taping over another bug. Which leads me to
-my question: What is the correct behavior?
+Currently the last item being discussed for initial merge is if this
+code can just be marked as STAGING + live in drivers/vhost/, or if it
+should actually reside under drivers/staging/ and go upstream via the
+staging tree.  The last -v4 series of the code keeps the initial merge
+in drivers/vhost/, which is easier than getting staging to depending on
+vhost + target-pending..
 
-#1 Issuing a separate spin-up command (START UNIT?) prior to sending i/o
-by setting allow_restart=1 for sata disks on sas controllers
+So the current plan is to send a [GIT PULL] next weekend, in order to
+give MST a chance to review + ACK as he returns from holiday.  Otherwise
+if folks object, I'll move this code to drivers/staginig/tcm_vhost/ and
+let Greg-KH decide if he's OK to take it via staging for this round.
 
-or
+Thank you!
 
-#2 Teaching the sas drivers they do not need spin-up commands and can
-simply start issuing i/o to sata disks
+--nab
 
---
-Matthias
+Al Viro (1):
+  iscsi-target: Drop bogus struct file usage for iSCSI/SCTP
+
+Andy Grover (7):
+  target: Do not special-case loop and iscsi fabric module loads
+  target/iblock: Add parameter to specify read-only devices
+  target: Remove unneeded double parentheses
+  target: Remove hba param from core_dev_add_lun
+  target: Misc retval cleanups
+  target: Eliminate else using boolean logic
+  target: refactor core_update_device_list_for_node()
+
+Christoph Hellwig (26):
+  target: move unrelated code out of transport_generic_cmd_sequencer
+  target: remove control CDB flags
+  target: split overflow and underflow checks into a helper
+  target: split parsing of SPC commands into a separate helper
+  target: add a parse_cdb method to the backend drivers
+  target: move code for CDB emulation
+  target: move transport_generic_prepare_cdb into pscsi
+  target: remove the execute list
+  target: move ref_cmd from the generic se_tmr_req into iscsi code
+  target: remove dead SCF_ flags
+  target: add struct spc_ops + initial ->execute_rw pointer usage
+  target: move sync_cache to struct spc_ops
+  target: move write_same to struct spc_ops
+  target: move unmap to struct spc_ops
+  target: split transport_cmd_check_stop
+  target: remove transport_generic_process_write
+  target: call transport_check_aborted_status from target_execute_cmd
+  target: merge transport_generic_write_pending into
+    transport_generic_new_cmd
+  iscsit: use target_execute_cmd for WRITEs
+  srpt: use target_execute_cmd for WRITEs in srpt_handle_rdma_comp
+  tcm_qla2xxx: Offload WRITE I/O backend submission to tcm_qla2xxx wq
+  tcm_fc: Offload WRITE I/O backend submission to tpg workqueue
+  target: remove transport_generic_handle_data
+  target: simply fabric driver queue full processing
+  target: remove transport_generic_handle_cdb_map
+  target: replace the processing thread with a TMR work queue
+
+Dan Carpenter (1):
+  target: NULL dereference on error path
+
+Nicholas Bellinger (4):
+  target: Move MAINTENANCE_[IN,OUT] from pscsi_parse_cdb ->
+    spc_parse_cdb
+  target/pscsi: Only emulate REPORT_LUNS for passthrough
+  Revert "target: Do not special-case loop and iscsi fabric module
+    loads"
+  target: Make core_disable_device_list_for_node use pre-refactoring
+    lock ordering
+
+Roland Dreier (14):
+  target/iscsi: Remove dead code in lio_get_tpg_from_tpg_item()
+  qla2xxx: Get rid of redundant qla_tgt_sess.tearing_down
+  target: Un-export target_get_sess_cmd()
+  sbp-target: Consolidate duplicated error path code in
+    sbp_handle_command()
+  target: Check sess_tearing_down in target_get_sess_cmd()
+  qla2xxx: Remove racy, now-redundant check of sess_tearing_down
+  target: Remove se_session.sess_wait_list
+  target: Make unnecessarily global se_dev_align_max_sectors() static
+  target: Add generation of LOGICAL BLOCK ADDRESS OUT OF RANGE
+  target: Add range checking to UNMAP emulation
+  target: Fix reading of data length fields for UNMAP commands
+  target: Fix possible integer underflow in UNMAP emulation
+  target: Check number of unmap descriptors against our limit
+  target: Allow for target_submit_cmd() returning errors
+
+Sachin Kamat (1):
+  tcm_qla2xxx: Remove duplicate header file inclusion
+
+ drivers/infiniband/ulp/srpt/ib_srpt.c              |   15 +-
+ drivers/scsi/qla2xxx/qla_target.c                  |   16 +-
+ drivers/scsi/qla2xxx/qla_target.h                  |    3 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c                 |   55 +-
+ drivers/target/Makefile                            |    3 +-
+ drivers/target/iscsi/iscsi_target.c                |   30 +-
+ drivers/target/iscsi/iscsi_target_configfs.c       |   22 -
+ drivers/target/iscsi/iscsi_target_core.h           |    3 +-
+ drivers/target/iscsi/iscsi_target_erl1.c           |    4 +-
+ drivers/target/iscsi/iscsi_target_login.c          |   66 +-
+ drivers/target/iscsi/iscsi_target_parameters.c     |    2 +-
+ drivers/target/iscsi/iscsi_target_tmr.c            |   46 +-
+ drivers/target/iscsi/iscsi_target_tpg.c            |   27 +-
+ drivers/target/loopback/tcm_loop.c                 |   11 +-
+ drivers/target/sbp/sbp_target.c                    |   39 +-
+ drivers/target/target_core_device.c                |  170 +-
+ drivers/target/target_core_fabric_configfs.c       |    3 +-
+ drivers/target/target_core_file.c                  |   25 +-
+ drivers/target/target_core_iblock.c                |  142 ++-
+ drivers/target/target_core_iblock.h                |    1 +
+ drivers/target/target_core_internal.h              |   22 +-
+ drivers/target/target_core_pr.c                    |    6 +-
+ drivers/target/target_core_pscsi.c                 |   84 +-
+ drivers/target/target_core_rd.c                    |   17 +-
+ drivers/target/target_core_sbc.c                   |  581 ++++++
+ .../{target_core_cdb.c => target_core_spc.c}       |  434 ++---
+ drivers/target/target_core_tmr.c                   |   57 +-
+ drivers/target/target_core_tpg.c                   |   14 +-
+ drivers/target/target_core_transport.c             | 2088 ++++----------------
+ drivers/target/tcm_fc/tfc_cmd.c                    |   10 +-
+ drivers/target/tcm_fc/tfc_io.c                     |   13 +-
+ drivers/usb/gadget/tcm_usb_gadget.c                |   54 +-
+ include/target/target_core_backend.h               |   17 +-
+ include/target/target_core_base.h                  |   56 +-
+ include/target/target_core_fabric.h                |   15 +-
+ 35 files changed, 1718 insertions(+), 2433 deletions(-)
+ create mode 100644 drivers/target/target_core_sbc.c
+ rename drivers/target/{target_core_cdb.c => target_core_spc.c} (76%)
+
