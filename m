@@ -1,38 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: question about  path_id of scsi hard disk
-Date: Fri, 20 Jul 2012 23:31:54 +0100
-Message-ID: <1342823514.2984.48.camel@dabdike.int.hansenpartnership.com>
-References: <op.whqka8y2n27o5l@gaoqiang-d1.corp.qihoo.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49258 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751173Ab2GTWb6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jul 2012 18:31:58 -0400
-In-Reply-To: <op.whqka8y2n27o5l@gaoqiang-d1.corp.qihoo.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Denis Efremov <yefremov.denis@gmail.com>
+Subject: [PATCH] tmscsim: spin_unlock_irq in interrupt handler fix
+Date: Sat, 21 Jul 2012 10:48:03 +0400
+Message-ID: <1342853283-32549-1-git-send-email-yefremov.denis@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kurt Garloff <garloff@suse.de>
+Cc: Denis Efremov <yefremov.denis@gmail.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: gaoqiang <gaoqiangscut@gmail.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2012-07-20 at 16:24 +0800, gaoqiang wrote:
-> I'm using udev to manage my hard disks. but I'm confusing
-> about the "PATH_ID"
-> 
-> gaoqiang@h150:~$/lib/udev/path_id  /block/sda
-> ID_PATH=pci-0000:01:00.0-scsi-0:0:0:0
-> 
-> the path_id is about disk or about disk slot ?
+The replacement of spin_lock_irq/spin_unlock_irq pair in interrupt
+handler by spin_lock_irqsave/spin_lock_irqrestore pair.
 
-Neither: it's pci function and scsi host:channel:target:lun
+Found by Linux Driver Verification project (linuxtesting.org).
 
-As far as I can tell, path_id returns are completely useless for
-labelling disks (since host and sometimes target are scan order
-dependent).
+Signed-off-by: Denis Efremov <yefremov.denis@gmail.com>
+---
+ drivers/scsi/tmscsim.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-James
-
-
+diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+index a1baccc..0b9d68a 100644
+--- a/drivers/scsi/tmscsim.c
++++ b/drivers/scsi/tmscsim.c
+@@ -654,6 +654,7 @@ DC390_Interrupt(void *dev_id)
+     u8  phase;
+     void   (*stateV)( struct dc390_acb*, struct dc390_srb*, u8 *);
+     u8  istate, istatus;
++    unsigned long flags;
+ 
+     sstatus = DC390_read8 (Scsi_Status);
+     if( !(sstatus & INTERRUPT) )
+@@ -665,7 +666,7 @@ DC390_Interrupt(void *dev_id)
+     //dstatus = DC390_read8 (DMA_Status);
+     //DC390_write32 (DMA_ScsiBusCtrl, EN_INT_ON_PCI_ABORT);
+ 
+-    spin_lock_irq(pACB->pScsiHost->host_lock);
++    spin_lock_irqsave(pACB->pScsiHost->host_lock, flags);
+ 
+     istate = DC390_read8 (Intern_State);
+     istatus = DC390_read8 (INT_Status); /* This clears Scsi_Status, Intern_State and INT_Status ! */
+@@ -736,7 +737,7 @@ DC390_Interrupt(void *dev_id)
+     }
+ 
+  unlock:
+-    spin_unlock_irq(pACB->pScsiHost->host_lock);
++    spin_unlock_irqrestore(pACB->pScsiHost->host_lock, flags);
+     return IRQ_HANDLED;
+ }
+ 
+-- 
+1.7.7
