@@ -1,189 +1,108 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target updates for v3.6-rc1 (round 1)
-Date: Sat, 21 Jul 2012 15:27:07 -0700
-Message-ID: <1342909627.25472.203.camel@haakon2.linux-iscsi.org>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [RFC-v4 1/3] vhost: Separate vhost-net features from vhost
+	features
+Date: Sun, 22 Jul 2012 01:26:27 +0300
+Message-ID: <20120721222627.GA23153@redhat.com>
+References: <1342853738-27682-1-git-send-email-nab@linux-iscsi.org>
+	<1342853738-27682-2-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:60689 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751611Ab2GUW1K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Jul 2012 18:27:10 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <1342853738-27682-2-git-send-email-nab@linux-iscsi.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, Andy Grover <agrover@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@gmail.com>, Anthony Liguori <anthony@codemonkey.ws>, Greg KH <gregkh@linuxfoundation.org>
 
-Hello Linus,
+On Sat, Jul 21, 2012 at 06:55:36AM +0000, Nicholas A. Bellinger wrote:
+> From: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+> 
+> In order for other vhost devices to use the VHOST_FEATURES bits the
+> vhost-net specific bits need to be moved to their own VHOST_NET_FEATURES
+> constant.
+> 
+> (Asias: Update drivers/vhost/test.c to use VHOST_NET_FEATURES)
+> 
+> Signed-off-by: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+> Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Asias He <asias@redhat.com>
+> Signed-off-by: Nicholas A. Bellinger <nab@risingtidesystems.com>
 
-The following is the first round of target core + fabric driver updates
-for the freshly opened v3.6 merge window.  Please go ahead and pull
-from:
+Applied to vhost-next.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
-
-This series is based on target-pending/master commit 1765fe5edcb83f53f
-
-So I ended up needing to rebase for-next last week to pick up fixes
-in master that for-next ended up conflicting with, but the bulk of the
-series has been in linux-next a number of weeks and has getting a good
-amount of testing.
-
-There have been lots of work in a number of areas this past round.  The
-highlights include:
-
-*) Break out target_core_cdb.c emulation into SPC/SBC ops (hch)
-*) Add a parse_cdb method to target backend drivers (hch)
-*) Move sync_cache + write_same + unmap into spc_ops (hch)
-*) Use target_execute_cmd for WRITEs in iscsi_target + srpt (hch)
-*) Offload WRITE I/O backend submission in tcm_qla2xxx + tcm_fc (hch + nab)
-*) Refactor core_update_device_list_for_node() into enable/disable funcs (agrover)
-*) Replace the TCM processing thread with a TMR work queue (hch)
-*) Fix regression in transport_add_device_to_core_hba from TMR conversion (DanC)
-*) Remove racy, now-redundant check of sess_tearing_down with qla2xxx (roland)
-*) Add range checking, fix reading of data len + possible underflow in UNMAP (roland)
-*) Allow for target_submit_cmd() returning errors + convert fabrics (roland + nab)
-*) Drop bogus struct file usage for iSCSI/SCTP (viro)
-
-Thanks again to everyone who has contributed!
-
-On the new target fabric module front for-3.6, tcm_vhost is currently in
-RFC-v4 on the lists + queued up + waiting for ACKs from MST & Co here:
-
-http://marc.info/?l=kvm&m=134285417314176&w=2
-
-At this point I think the vhost folks are pretty agreeable for an
-initial merge of this kernel code, but the vhost-scsi bits in upstream
-QEMU userspace code will still need to be shorted out.  So because of
-this fact, MST has requested to mark this driver as STAGING o indicate
-the userspace ABI is not (yet) set in stone.
-
-Currently the last item being discussed for initial merge is if this
-code can just be marked as STAGING + live in drivers/vhost/, or if it
-should actually reside under drivers/staging/ and go upstream via the
-staging tree.  The last -v4 series of the code keeps the initial merge
-in drivers/vhost/, which is easier than getting staging to depending on
-vhost + target-pending..
-
-So the current plan is to send a [GIT PULL] next weekend, in order to
-give MST a chance to review + ACK as he returns from holiday.  Otherwise
-if folks object, I'll move this code to drivers/staginig/tcm_vhost/ and
-let Greg-KH decide if he's OK to take it via staging for this round.
-
-Thank you!
-
---nab
-
-Al Viro (1):
-  iscsi-target: Drop bogus struct file usage for iSCSI/SCTP
-
-Andy Grover (7):
-  target: Do not special-case loop and iscsi fabric module loads
-  target/iblock: Add parameter to specify read-only devices
-  target: Remove unneeded double parentheses
-  target: Remove hba param from core_dev_add_lun
-  target: Misc retval cleanups
-  target: Eliminate else using boolean logic
-  target: refactor core_update_device_list_for_node()
-
-Christoph Hellwig (26):
-  target: move unrelated code out of transport_generic_cmd_sequencer
-  target: remove control CDB flags
-  target: split overflow and underflow checks into a helper
-  target: split parsing of SPC commands into a separate helper
-  target: add a parse_cdb method to the backend drivers
-  target: move code for CDB emulation
-  target: move transport_generic_prepare_cdb into pscsi
-  target: remove the execute list
-  target: move ref_cmd from the generic se_tmr_req into iscsi code
-  target: remove dead SCF_ flags
-  target: add struct spc_ops + initial ->execute_rw pointer usage
-  target: move sync_cache to struct spc_ops
-  target: move write_same to struct spc_ops
-  target: move unmap to struct spc_ops
-  target: split transport_cmd_check_stop
-  target: remove transport_generic_process_write
-  target: call transport_check_aborted_status from target_execute_cmd
-  target: merge transport_generic_write_pending into
-    transport_generic_new_cmd
-  iscsit: use target_execute_cmd for WRITEs
-  srpt: use target_execute_cmd for WRITEs in srpt_handle_rdma_comp
-  tcm_qla2xxx: Offload WRITE I/O backend submission to tcm_qla2xxx wq
-  tcm_fc: Offload WRITE I/O backend submission to tpg workqueue
-  target: remove transport_generic_handle_data
-  target: simply fabric driver queue full processing
-  target: remove transport_generic_handle_cdb_map
-  target: replace the processing thread with a TMR work queue
-
-Dan Carpenter (1):
-  target: NULL dereference on error path
-
-Nicholas Bellinger (4):
-  target: Move MAINTENANCE_[IN,OUT] from pscsi_parse_cdb ->
-    spc_parse_cdb
-  target/pscsi: Only emulate REPORT_LUNS for passthrough
-  Revert "target: Do not special-case loop and iscsi fabric module
-    loads"
-  target: Make core_disable_device_list_for_node use pre-refactoring
-    lock ordering
-
-Roland Dreier (14):
-  target/iscsi: Remove dead code in lio_get_tpg_from_tpg_item()
-  qla2xxx: Get rid of redundant qla_tgt_sess.tearing_down
-  target: Un-export target_get_sess_cmd()
-  sbp-target: Consolidate duplicated error path code in
-    sbp_handle_command()
-  target: Check sess_tearing_down in target_get_sess_cmd()
-  qla2xxx: Remove racy, now-redundant check of sess_tearing_down
-  target: Remove se_session.sess_wait_list
-  target: Make unnecessarily global se_dev_align_max_sectors() static
-  target: Add generation of LOGICAL BLOCK ADDRESS OUT OF RANGE
-  target: Add range checking to UNMAP emulation
-  target: Fix reading of data length fields for UNMAP commands
-  target: Fix possible integer underflow in UNMAP emulation
-  target: Check number of unmap descriptors against our limit
-  target: Allow for target_submit_cmd() returning errors
-
-Sachin Kamat (1):
-  tcm_qla2xxx: Remove duplicate header file inclusion
-
- drivers/infiniband/ulp/srpt/ib_srpt.c              |   15 +-
- drivers/scsi/qla2xxx/qla_target.c                  |   16 +-
- drivers/scsi/qla2xxx/qla_target.h                  |    3 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c                 |   55 +-
- drivers/target/Makefile                            |    3 +-
- drivers/target/iscsi/iscsi_target.c                |   30 +-
- drivers/target/iscsi/iscsi_target_configfs.c       |   22 -
- drivers/target/iscsi/iscsi_target_core.h           |    3 +-
- drivers/target/iscsi/iscsi_target_erl1.c           |    4 +-
- drivers/target/iscsi/iscsi_target_login.c          |   66 +-
- drivers/target/iscsi/iscsi_target_parameters.c     |    2 +-
- drivers/target/iscsi/iscsi_target_tmr.c            |   46 +-
- drivers/target/iscsi/iscsi_target_tpg.c            |   27 +-
- drivers/target/loopback/tcm_loop.c                 |   11 +-
- drivers/target/sbp/sbp_target.c                    |   39 +-
- drivers/target/target_core_device.c                |  170 +-
- drivers/target/target_core_fabric_configfs.c       |    3 +-
- drivers/target/target_core_file.c                  |   25 +-
- drivers/target/target_core_iblock.c                |  142 ++-
- drivers/target/target_core_iblock.h                |    1 +
- drivers/target/target_core_internal.h              |   22 +-
- drivers/target/target_core_pr.c                    |    6 +-
- drivers/target/target_core_pscsi.c                 |   84 +-
- drivers/target/target_core_rd.c                    |   17 +-
- drivers/target/target_core_sbc.c                   |  581 ++++++
- .../{target_core_cdb.c => target_core_spc.c}       |  434 ++---
- drivers/target/target_core_tmr.c                   |   57 +-
- drivers/target/target_core_tpg.c                   |   14 +-
- drivers/target/target_core_transport.c             | 2088 ++++----------------
- drivers/target/tcm_fc/tfc_cmd.c                    |   10 +-
- drivers/target/tcm_fc/tfc_io.c                     |   13 +-
- drivers/usb/gadget/tcm_usb_gadget.c                |   54 +-
- include/target/target_core_backend.h               |   17 +-
- include/target/target_core_base.h                  |   56 +-
- include/target/target_core_fabric.h                |   15 +-
- 35 files changed, 1718 insertions(+), 2433 deletions(-)
- create mode 100644 drivers/target/target_core_sbc.c
- rename drivers/target/{target_core_cdb.c => target_core_spc.c} (76%)
-
+> ---
+>  drivers/vhost/net.c   |    4 ++--
+>  drivers/vhost/test.c  |    4 ++--
+>  drivers/vhost/vhost.h |    3 ++-
+>  3 files changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
+> index f82a739..072cbba 100644
+> --- a/drivers/vhost/net.c
+> +++ b/drivers/vhost/net.c
+> @@ -823,14 +823,14 @@ static long vhost_net_ioctl(struct file *f, unsigned int ioctl,
+>  			return -EFAULT;
+>  		return vhost_net_set_backend(n, backend.index, backend.fd);
+>  	case VHOST_GET_FEATURES:
+> -		features = VHOST_FEATURES;
+> +		features = VHOST_NET_FEATURES;
+>  		if (copy_to_user(featurep, &features, sizeof features))
+>  			return -EFAULT;
+>  		return 0;
+>  	case VHOST_SET_FEATURES:
+>  		if (copy_from_user(&features, featurep, sizeof features))
+>  			return -EFAULT;
+> -		if (features & ~VHOST_FEATURES)
+> +		if (features & ~VHOST_NET_FEATURES)
+>  			return -EOPNOTSUPP;
+>  		return vhost_net_set_features(n, features);
+>  	case VHOST_RESET_OWNER:
+> diff --git a/drivers/vhost/test.c b/drivers/vhost/test.c
+> index 3de00d9..91d6f06 100644
+> --- a/drivers/vhost/test.c
+> +++ b/drivers/vhost/test.c
+> @@ -261,14 +261,14 @@ static long vhost_test_ioctl(struct file *f, unsigned int ioctl,
+>  			return -EFAULT;
+>  		return vhost_test_run(n, test);
+>  	case VHOST_GET_FEATURES:
+> -		features = VHOST_FEATURES;
+> +		features = VHOST_NET_FEATURES;
+>  		if (copy_to_user(featurep, &features, sizeof features))
+>  			return -EFAULT;
+>  		return 0;
+>  	case VHOST_SET_FEATURES:
+>  		if (copy_from_user(&features, featurep, sizeof features))
+>  			return -EFAULT;
+> -		if (features & ~VHOST_FEATURES)
+> +		if (features & ~VHOST_NET_FEATURES)
+>  			return -EOPNOTSUPP;
+>  		return vhost_test_set_features(n, features);
+>  	case VHOST_RESET_OWNER:
+> diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
+> index 8de1fd5..07b9763 100644
+> --- a/drivers/vhost/vhost.h
+> +++ b/drivers/vhost/vhost.h
+> @@ -201,7 +201,8 @@ enum {
+>  	VHOST_FEATURES = (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) |
+>  			 (1ULL << VIRTIO_RING_F_INDIRECT_DESC) |
+>  			 (1ULL << VIRTIO_RING_F_EVENT_IDX) |
+> -			 (1ULL << VHOST_F_LOG_ALL) |
+> +			 (1ULL << VHOST_F_LOG_ALL),
+> +	VHOST_NET_FEATURES = VHOST_FEATURES |
+>  			 (1ULL << VHOST_NET_F_VIRTIO_NET_HDR) |
+>  			 (1ULL << VIRTIO_NET_F_MRG_RXBUF),
+>  };
+> -- 
+> 1.7.2.5
