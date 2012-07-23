@@ -1,57 +1,111 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Mon, 23 Jul 2012 08:26:19 -0700
-Message-ID: <20120723152619.GD6823@google.com>
-References: <4FFB8A86.7000009@farcaster.org>
- <4FFCBA4C.4000502@farcaster.org>
- <4FFD6F3D.2030708@matthiasprager.de>
- <4FFD8410.7050604@matthiasprager.de>
- <20120717180932.GB2878@google.com>
- <5005BF7D.2050703@matthiasprager.de>
- <20120717200136.GC24336@google.com>
- <500A9D7C.8080801@matthiasprager.de>
- <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
- <500C8938.2080607@matthiasprager.de>
+From: Betty Dall <betty.dall@hp.com>
+Subject: Re: [PATCH 5/5] block: genhd: add an interface to set disk's poll
+ interval
+Date: Mon, 23 Jul 2012 12:43:34 -0600
+Message-ID: <1343069014.25735.28.camel@ejdallLaptop>
+References: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
+	 <1343026180-22236-6-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:58319 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389Ab2GWP0Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jul 2012 11:26:24 -0400
-Received: by pbbrp8 with SMTP id rp8so11033754pbb.19
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Jul 2012 08:26:24 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <500C8938.2080607@matthiasprager.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1343026180-22236-6-git-send-email-aaron.lu@amd.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@amd.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Prager <linux@matthiasprager.de>
-Cc: Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, Matthias Prager <linux@matthiaspragers.de>
 
-Hello,
+Hi Aaron,
 
-On Mon, Jul 23, 2012 at 01:14:00AM +0200, Matthias Prager wrote:
-> as it turns out my workaround (setting allow_restart=1) isn't all that
-> useful after all. There are no more i/o errors because the drive just
-> never goes to standby mode anymore (at least 'hdparm -y /dev/sda' does
-> not seem to have any effect anymore). I don't really understand why - do
-> sas drives ever get to standby mode? (they have allow_restart=1 set by
-> default) And is this desired or expected behavior for sata disk on sas
-> controllers?
+On Mon, 2012-07-23 at 14:49 +0800, Aaron Lu wrote:
+> Set the ODD's in kernel poll interval to 2s for the user in case the
+> user is using an old distro on which udev will not set the system wide
+> block parameter events_dfl_poll_msecs.
+Why did you pick 2 seconds? 
+
 > 
-> For the moment the only way for me to have my sata drives sleeping
-> without i/o errors is to revert your original commit
-> (85ef06d1d252f6a2e73b678591ab71caad4667bb - tested with kernels 3.1.10,
-> 3.4.4, 3.4.5, 3.4.6 and 3.5.0)
+> Signed-off-by: Aaron Lu <aaron.lu@amd.com>
+> ---
+>  block/genhd.c         | 23 +++++++++++++++++------
+>  drivers/scsi/sr.c     |  1 +
+>  include/linux/genhd.h |  1 +
+>  3 files changed, 19 insertions(+), 6 deletions(-)
+> 
+> diff --git a/block/genhd.c b/block/genhd.c
+> index bdb3682..de9b9d9 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -1619,6 +1619,19 @@ static void disk_events_workfn(struct work_struct *work)
+>  		kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
+>  }
+>  
+> +int disk_events_set_poll_msecs(struct gendisk *disk, long intv)
+> +{
+> +	if (intv < 0 && intv != -1)
+> +		return -EINVAL;
+> +
+> +	disk_block_events(disk);
+> +	disk->ev->poll_msecs = intv;
+> +	__disk_unblock_events(disk, true);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(disk_events_set_poll_msecs);
+> +
+>  /*
+>   * A disk events enabled device has the following sysfs nodes under
+>   * its /sys/block/X/ directory.
+> @@ -1675,16 +1688,14 @@ static ssize_t disk_events_poll_msecs_store(struct device *dev,
+>  {
+>  	struct gendisk *disk = dev_to_disk(dev);
+>  	long intv;
+> +	int ret;
+>  
+>  	if (!count || !sscanf(buf, "%ld", &intv))
+>  		return -EINVAL;
+>  
+> -	if (intv < 0 && intv != -1)
+> -		return -EINVAL;
+> -
+> -	disk_block_events(disk);
+> -	disk->ev->poll_msecs = intv;
+> -	__disk_unblock_events(disk, true);
+> +	ret = disk_events_set_poll_msecs(disk, intv);
+> +	if (ret)
+> +		return ret;
+>  
+>  	return count;
+>  }
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 2f159aa..78c4226 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -869,6 +869,7 @@ static int sr_probe(struct device *dev)
+>  	dev_set_drvdata(dev, cd);
+>  	disk->flags |= GENHD_FL_REMOVABLE;
+>  	add_disk(disk);
+> +	disk_events_set_poll_msecs(disk, 2000);
 
-Hmmm... I think we definitely need help from mpt people.  Ping, guys.
+Could you check that disk event's poll_msecs is the default (-1) before
+setting it to 2s? I am thinking of a case when the probe happens after
+the call to disk_events_poll_msecs_store() and this code would overwrite
+the user specified value.
 
-> P.S. I hope I'm not getting on everybody's nerves here (especially yours
-> Tejun)
+>  
+>  	sdev_printk(KERN_DEBUG, sdev,
+>  		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
+> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+> index 017a7fb..7414fb5 100644
+> --- a/include/linux/genhd.h
+> +++ b/include/linux/genhd.h
+> @@ -418,6 +418,7 @@ extern void disk_block_events(struct gendisk *disk);
+>  extern void disk_unblock_events(struct gendisk *disk);
+>  extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
+>  extern unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask);
+> +extern int disk_events_set_poll_msecs(struct gendisk *disk, long intv);
+>  
+>  /* drivers/char/random.c */
+>  extern void add_disk_randomness(struct gendisk *disk);
 
-Not at all. :)
+-Betty
 
-Thanks.
-
--- 
-tejun
