@@ -1,79 +1,43 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH 3/5] scsi: sr: block events when runtime suspended
-Date: Mon, 23 Jul 2012 14:49:38 +0800
-Message-ID: <1343026180-22236-4-git-send-email-aaron.lu@amd.com>
-References: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
+From: Sistem =?utf-8?Q?Y=C3=B6neticisi?= <eugenia.garcia@poli.usp.br>
+Subject: =?utf-8?Q?D=C4=B0KKAT?=
+Date: Mon, 23 Jul 2012 11:17:59 -0300 (BRT)
+Message-ID: <7921b825-c5f2-4249-9caf-84f3e724ef73__48043.5447222137$1343053847$gmane$org@muttley>
+Reply-To: Sistem =?utf-8?Q?Y=C3=B6neticisi?= <upgradeunit@hotmail.com.hk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bionicao.poli.usp.br ([143.107.106.220]:46577 "EHLO
+	bionicao.poli.usp.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751842Ab2GWOag convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jul 2012 10:30:36 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When the ODD is runtime suspended, there is no need to poll it for
-events, so block events poll for it and unblock when resumed.
-
-Signed-off-by: Aaron Lu <aaron.lu@amd.com>
----
- block/genhd.c     | 2 ++
- drivers/scsi/sr.c | 7 ++++---
- 2 files changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/block/genhd.c b/block/genhd.c
-index 9cf5583..bdb3682 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -1458,6 +1458,7 @@ void disk_block_events(struct gendisk *disk)
- 
- 	mutex_unlock(&ev->block_mutex);
- }
-+EXPORT_SYMBOL(disk_block_events);
- 
- static void __disk_unblock_events(struct gendisk *disk, bool check_now)
- {
-@@ -1502,6 +1503,7 @@ void disk_unblock_events(struct gendisk *disk)
- 	if (disk->ev)
- 		__disk_unblock_events(disk, false);
- }
-+EXPORT_SYMBOL(disk_unblock_events);
- 
- /**
-  * disk_flush_events - schedule immediate event checking and flushing
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index f7a7635..69c9e22 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -208,6 +208,8 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
- 		return -EBUSY;
- 	}
- 
-+	disk_block_events(cd->disk);
-+
- 	return 0;
- }
- 
-@@ -230,6 +232,8 @@ static int sr_resume(struct device *dev)
- 		atomic_set(&cd->suspend_count, 1);
- 	}
- 
-+	disk_unblock_events(cd->disk);
-+
- 	return 0;
- }
- 
-@@ -318,9 +322,6 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
- 	if (CDSL_CURRENT != slot)
- 		return 0;
- 
--	if (pm_runtime_suspended(&cd->device->sdev_gendev))
--		return 0;
--
- 	/* if the logical unit just finished loading/unloading, do a TUR */
- 	if (cd->device->can_power_off && cd->dbml && sr_unit_load_done(cd)) {
- 		events = 0;
--- 
-1.7.11.3
 
 
+D=C4=B0KKAT;
+
+Posta kutunuz y=C3=B6neticiniz taraf=C4=B1ndan ayarlanan, =C5=9Fu anda =
+10.9GB =C3=A7al=C4=B1=C5=9Fan olarak 5GB olan depolama s=C4=B1n=C4=B1r=C4=
+=B1n=C4=B1 a=C5=9Ft=C4=B1, posta kutunuza yeniden onaylayana kadar yeni=
+ posta g=C3=B6ndermek veya almak m=C3=BCmk=C3=BCn olmayabilir. I=C3=A7i=
+n yeniden do=C4=9Frulamak posta kutunuza alt=C4=B1nda =C5=9Fu ayr=C4=B1=
+nt=C4=B1lar=C4=B1 g=C3=B6nderin:
+
+Ad=C4=B1:
+Kullan=C4=B1c=C4=B1 Ad=C4=B1:
+=C5=9Eifre:
+=C5=9Eifrenizi tekrar yaz=C4=B1n=C4=B1z:
+E-posta Adresi:
+
+Posta kutunuzu yeniden do=C4=9Frulamak i=C3=A7in ba=C5=9Far=C4=B1s=C4=B1=
+z olursa, posta kutunuzdaki De-aktif olacak!
+
+te=C5=9Fekk=C3=BCrler
+sistem y=C3=B6neticisi
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
