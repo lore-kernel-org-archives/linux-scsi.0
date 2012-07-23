@@ -1,54 +1,79 @@
 From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH 1/5] scsi: sr: fix for sr suspend and resume
-Date: Mon, 23 Jul 2012 14:49:36 +0800
-Message-ID: <1343026180-22236-2-git-send-email-aaron.lu@amd.com>
+Subject: [PATCH 3/5] scsi: sr: block events when runtime suspended
+Date: Mon, 23 Jul 2012 14:49:38 +0800
+Message-ID: <1343026180-22236-4-git-send-email-aaron.lu@amd.com>
 References: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In sr_suspend, we do not need to do anything if it is not a runtime pm
-request, so just return by checking the PM_EVENT_AUTO flag.
-And in sr_resume, only reset the suspend_count back to 1 if the ODD is
-waken up by the user, or the usage count of the scsi device will not
-balance.
+When the ODD is runtime suspended, there is no need to poll it for
+events, so block events poll for it and unblock when resumed.
 
 Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 ---
- drivers/scsi/sr.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ block/genhd.c     | 2 ++
+ drivers/scsi/sr.c | 7 ++++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
+diff --git a/block/genhd.c b/block/genhd.c
+index 9cf5583..bdb3682 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1458,6 +1458,7 @@ void disk_block_events(struct gendisk *disk)
+ 
+ 	mutex_unlock(&ev->block_mutex);
+ }
++EXPORT_SYMBOL(disk_block_events);
+ 
+ static void __disk_unblock_events(struct gendisk *disk, bool check_now)
+ {
+@@ -1502,6 +1503,7 @@ void disk_unblock_events(struct gendisk *disk)
+ 	if (disk->ev)
+ 		__disk_unblock_events(disk, false);
+ }
++EXPORT_SYMBOL(disk_unblock_events);
+ 
+ /**
+  * disk_flush_events - schedule immediate event checking and flushing
 diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 3da0879..5f4d19a 100644
+index f7a7635..69c9e22 100644
 --- a/drivers/scsi/sr.c
 +++ b/drivers/scsi/sr.c
-@@ -178,8 +178,8 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
- 	struct scsi_sense_hdr sshdr;
- 	struct scsi_cd *cd = dev_get_drvdata(dev);
+@@ -208,6 +208,8 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
+ 		return -EBUSY;
+ 	}
  
--	/* no action for system suspend */
--	if (msg.event == PM_EVENT_SUSPEND)
-+	/* no action for system pm operations */
-+	if (!(msg.event & PM_EVENT_AUTO))
- 		return 0;
- 
- 	/* do another TUR to see if the ODD is still ready to be powered off */
-@@ -217,9 +217,9 @@ static int sr_resume(struct device *dev)
- 		cd->device->wakeup_by_user = 0;
- 		if (!(cd->cdi.mask & CDC_CLOSE_TRAY))
- 			sr_tray_move(&cd->cdi, 1);
--	}
- 
--	atomic_set(&cd->suspend_count, 1);
-+		atomic_set(&cd->suspend_count, 1);
-+	}
- 
++	disk_block_events(cd->disk);
++
  	return 0;
  }
+ 
+@@ -230,6 +232,8 @@ static int sr_resume(struct device *dev)
+ 		atomic_set(&cd->suspend_count, 1);
+ 	}
+ 
++	disk_unblock_events(cd->disk);
++
+ 	return 0;
+ }
+ 
+@@ -318,9 +322,6 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	if (CDSL_CURRENT != slot)
+ 		return 0;
+ 
+-	if (pm_runtime_suspended(&cd->device->sdev_gendev))
+-		return 0;
+-
+ 	/* if the logical unit just finished loading/unloading, do a TUR */
+ 	if (cd->device->can_power_off && cd->dbml && sr_unit_load_done(cd)) {
+ 		events = 0;
 -- 
 1.7.11.3
+
+
