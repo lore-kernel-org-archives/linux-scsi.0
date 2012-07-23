@@ -1,7 +1,7 @@
 From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH 4/5] scsi: pm: use runtime resume callback if available
-Date: Mon, 23 Jul 2012 14:49:39 +0800
-Message-ID: <1343026180-22236-5-git-send-email-aaron.lu@amd.com>
+Subject: [PATCH 5/5] block: genhd: add an interface to set disk's poll interval
+Date: Mon, 23 Jul 2012 14:49:40 +0800
+Message-ID: <1343026180-22236-6-git-send-email-aaron.lu@amd.com>
 References: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,108 +12,85 @@ To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When runtime resume a scsi device, if the device's driver has
-implemented runtime resume callback, use that instead of the resume
-callback.
-
-sr driver needs this to properly do different things for system resume
-and runtime resume.
+Set the ODD's in kernel poll interval to 2s for the user in case the
+user is using an old distro on which udev will not set the system wide
+block parameter events_dfl_poll_msecs.
 
 Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 ---
- drivers/scsi/scsi_pm.c | 14 +++++++++-----
- drivers/scsi/sr.c      | 21 +++++++++++++++++++++
- 2 files changed, 30 insertions(+), 5 deletions(-)
+ block/genhd.c         | 23 +++++++++++++++++------
+ drivers/scsi/sr.c     |  1 +
+ include/linux/genhd.h |  1 +
+ 3 files changed, 19 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index d4201de..19bba47 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -34,14 +34,18 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
- 	return err;
+diff --git a/block/genhd.c b/block/genhd.c
+index bdb3682..de9b9d9 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1619,6 +1619,19 @@ static void disk_events_workfn(struct work_struct *work)
+ 		kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
  }
  
--static int scsi_dev_type_resume(struct device *dev)
-+static int scsi_dev_type_resume(struct device *dev, bool runtime)
- {
- 	struct device_driver *drv;
- 	int err = 0;
-+	int (*resume)(struct device *);
- 
- 	drv = dev->driver;
--	if (drv && drv->resume)
--		err = drv->resume(dev);
-+	if (runtime && drv && drv->pm && drv->pm->runtime_resume)
-+		resume = drv->pm->runtime_resume;
-+	else
-+		resume = drv ? drv->resume : NULL;
-+	err = resume(dev);
- 	scsi_device_resume(to_scsi_device(dev));
- 	dev_dbg(dev, "scsi resume: %d\n", err);
- 	return err;
-@@ -84,7 +88,7 @@ static int scsi_bus_resume_common(struct device *dev)
- 		 * Resume it on behalf of child.
- 		 */
- 		pm_runtime_get_sync(dev->parent);
--		err = scsi_dev_type_resume(dev);
-+		err = scsi_dev_type_resume(dev, false);
- 		pm_runtime_put_sync(dev->parent);
- 	}
- 
-@@ -159,7 +163,7 @@ static int scsi_runtime_resume(struct device *dev)
- 
- 	dev_dbg(dev, "scsi_runtime_resume\n");
- 	if (scsi_is_sdev_device(dev))
--		err = scsi_dev_type_resume(dev);
-+		err = scsi_dev_type_resume(dev, true);
- 
- 	/* Insert hooks here for targets, hosts, and transport classes */
- 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 69c9e22..2f159aa 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -82,6 +82,11 @@ static int sr_remove(struct device *);
- static int sr_done(struct scsi_cmnd *);
- static int sr_suspend(struct device *dev, pm_message_t msg);
- static int sr_resume(struct device *dev);
-+static int sr_runtime_resume(struct device *dev);
++int disk_events_set_poll_msecs(struct gendisk *disk, long intv)
++{
++	if (intv < 0 && intv != -1)
++		return -EINVAL;
 +
-+static struct dev_pm_ops sr_pm_ops = {
-+	.runtime_resume = sr_runtime_resume,
-+};
- 
- static struct scsi_driver sr_template = {
- 	.owner			= THIS_MODULE,
-@@ -91,6 +96,7 @@ static struct scsi_driver sr_template = {
- 		.remove		= sr_remove,
- 		.suspend	= sr_suspend,
- 		.resume		= sr_resume,
-+		.pm		= &sr_pm_ops,
- 	},
- 	.done			= sr_done,
- };
-@@ -215,6 +221,21 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
- 
- static int sr_resume(struct device *dev)
- {
-+	struct scsi_cd *cd = dev_get_drvdata(dev);
-+
-+	/*
-+	 * If ODD is runtime suspended before system pm, unblock disk
-+	 * events now since on system resume, we will fully resume it
-+	 * and set its rumtime status to active.
-+	 */
-+	if (pm_runtime_suspended(dev))
-+		disk_unblock_events(cd->disk);
++	disk_block_events(disk);
++	disk->ev->poll_msecs = intv;
++	__disk_unblock_events(disk, true);
 +
 +	return 0;
 +}
++EXPORT_SYMBOL(disk_events_set_poll_msecs);
 +
-+static int sr_runtime_resume(struct device *dev)
-+{
- 	struct scsi_cd *cd;
- 	struct scsi_sense_hdr sshdr;
+ /*
+  * A disk events enabled device has the following sysfs nodes under
+  * its /sys/block/X/ directory.
+@@ -1675,16 +1688,14 @@ static ssize_t disk_events_poll_msecs_store(struct device *dev,
+ {
+ 	struct gendisk *disk = dev_to_disk(dev);
+ 	long intv;
++	int ret;
  
+ 	if (!count || !sscanf(buf, "%ld", &intv))
+ 		return -EINVAL;
+ 
+-	if (intv < 0 && intv != -1)
+-		return -EINVAL;
+-
+-	disk_block_events(disk);
+-	disk->ev->poll_msecs = intv;
+-	__disk_unblock_events(disk, true);
++	ret = disk_events_set_poll_msecs(disk, intv);
++	if (ret)
++		return ret;
+ 
+ 	return count;
+ }
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 2f159aa..78c4226 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -869,6 +869,7 @@ static int sr_probe(struct device *dev)
+ 	dev_set_drvdata(dev, cd);
+ 	disk->flags |= GENHD_FL_REMOVABLE;
+ 	add_disk(disk);
++	disk_events_set_poll_msecs(disk, 2000);
+ 
+ 	sdev_printk(KERN_DEBUG, sdev,
+ 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 017a7fb..7414fb5 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -418,6 +418,7 @@ extern void disk_block_events(struct gendisk *disk);
+ extern void disk_unblock_events(struct gendisk *disk);
+ extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
+ extern unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask);
++extern int disk_events_set_poll_msecs(struct gendisk *disk, long intv);
+ 
+ /* drivers/char/random.c */
+ extern void add_disk_randomness(struct gendisk *disk);
 -- 
 1.7.11.3
