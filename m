@@ -1,58 +1,57 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 2/5] scsi: sr: runtime pm when ODD is open/closed
-Date: Mon, 23 Jul 2012 10:57:28 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1207231052010.1633-100000@iolanthe.rowland.org>
-References: <1343026180-22236-3-git-send-email-aaron.lu@amd.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Mon, 23 Jul 2012 08:26:19 -0700
+Message-ID: <20120723152619.GD6823@google.com>
+References: <4FFB8A86.7000009@farcaster.org>
+ <4FFCBA4C.4000502@farcaster.org>
+ <4FFD6F3D.2030708@matthiasprager.de>
+ <4FFD8410.7050604@matthiasprager.de>
+ <20120717180932.GB2878@google.com>
+ <5005BF7D.2050703@matthiasprager.de>
+ <20120717200136.GC24336@google.com>
+ <500A9D7C.8080801@matthiasprager.de>
+ <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
+ <500C8938.2080607@matthiasprager.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1343026180-22236-3-git-send-email-aaron.lu@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:58319 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753389Ab2GWP0Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jul 2012 11:26:24 -0400
+Received: by pbbrp8 with SMTP id rp8so11033754pbb.19
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Jul 2012 08:26:24 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <500C8938.2080607@matthiasprager.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthias Prager <linux@matthiasprager.de>
+Cc: Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, Matthias Prager <linux@matthiaspragers.de>
 
-On Mon, 23 Jul 2012, Aaron Lu wrote:
+Hello,
 
-> The ODD can either be runtime resumed by the user or by a software
-> request. And for the latter part, we only support runtime resume the ODD
-> when the eject request is received. We did this in sr's block ioctl
-> function, this looks ugly.
+On Mon, Jul 23, 2012 at 01:14:00AM +0200, Matthias Prager wrote:
+> as it turns out my workaround (setting allow_restart=1) isn't all that
+> useful after all. There are no more i/o errors because the drive just
+> never goes to standby mode anymore (at least 'hdparm -y /dev/sda' does
+> not seem to have any effect anymore). I don't really understand why - do
+> sas drives ever get to standby mode? (they have allow_restart=1 set by
+> default) And is this desired or expected behavior for sata disk on sas
+> controllers?
 > 
-> Change this by runtime resuming the ODD in its open function and runtime
-> suspending it in its release function.
-> 
-> The downside of this approach is that in old distros with old udisk
-> daemon, the ODD will be polled by udisk daemon so open/close will
-> constantly be called, which will cause the ODD frequently resume from
-> suspend state, breaking the effect of power saving. User with such a
-> distro is advised to issue a udisk command to inhibit polling of the
-> disk like this:
-> $ udisks --inhibit-polling /dev/sr0
-> And since newer kernel has in kernel polling, there is no problem
-> regarding ODD's event report.
-> 
-> Signed-off-by: Aaron Lu <aaron.lu@amd.com>
-> ---
->  drivers/scsi/sr.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index 5f4d19a..f7a7635 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -152,8 +152,15 @@ static inline struct scsi_cd *scsi_cd_get(struct gendisk *disk)
->  	kref_get(&cd->kref);
->  	if (scsi_device_get(cd->device))
->  		goto out_put;
-> +	if (pm_runtime_get_sync(&cd->device->sdev_gendev) < 0) {
-> +		pm_runtime_put_noidle(&cd->device->sdev_gendev);
-> +		goto out_pm;
-> +	}
+> For the moment the only way for me to have my sata drives sleeping
+> without i/o errors is to revert your original commit
+> (85ef06d1d252f6a2e73b678591ab71caad4667bb - tested with kernels 3.1.10,
+> 3.4.4, 3.4.5, 3.4.6 and 3.5.0)
 
-You should use scsi_autopm_get_device instead of bypassing the SCSI 
-layer.  Similarly for the _put call.
+Hmmm... I think we definitely need help from mpt people.  Ping, guys.
 
-I know the existing calls do this already.  They shouldn't.
+> P.S. I hope I'm not getting on everybody's nerves here (especially yours
+> Tejun)
 
-Alan Stern
+Not at all. :)
+
+Thanks.
+
+-- 
+tejun
