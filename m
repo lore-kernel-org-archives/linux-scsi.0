@@ -1,59 +1,32 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE question about  path_id of scsi hard disk
-Date: Mon, 23 Jul 2012 11:25:16 +0800
-Message-ID: <C49F8C68952B4B6B97FA5941E9C68CE0@usish.com.cn>
-References: <op.whqka8y2n27o5l@gaoqiang-d1.corp.qihoo.net> <1342823514.2984.48.camel@dabdike.int.hansenpartnership.com> <op.whvpuyesn27o5l@gaoqiang-d1.corp.qihoo.net>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: [PATCH 0/5] Fix for ZPODD
+Date: Mon, 23 Jul 2012 14:49:35 +0800
+Message-ID: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=gb2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:41251 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752959Ab2GWDYX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2012 23:24:23 -0400
-In-Reply-To: <op.whvpuyesn27o5l@gaoqiang-d1.corp.qihoo.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'gaoqiang' <gaoqiangscut@gmail.com>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org
 
-> =D4=DA Sat, 21 Jul 2012 06:31:54 +0800=A3=ACJames Bottomley
-> <James.Bottomley@hansenpartnership.com> =D0=B4=B5=C0:
->=20
-> > On Fri, 2012-07-20 at 16:24 +0800, gaoqiang wrote:
-> >> I'm using udev to manage my hard disks. but I'm confusing
-> >> about the "PATH_ID"
-> >>
-> >> gaoqiang@h150:~$/lib/udev/path_id  /block/sda
-> >> ID_PATH=3Dpci-0000:01:00.0-scsi-0:0:0:0
-> >>
-> >> the path_id is about disk or about disk slot ?
-> >
-> > Neither: it's pci function and scsi host:channel:target:lun
-> >
-> > As far as I can tell, path_id returns are completely useless for
-> > labelling disks (since host and sometimes target are scan order
-> > dependent).
-> >
-> > James
-> >
-> >
->=20
-> I know the host:channel:target:lun but not deeply. the "lun" is about=
- a
-> disk, or a disk slot?
-> I mean,if I take the disk on a slot and plug in a new disk,will the
-> ID_PATH change,or not ?
->=20
-> many thanks.
->=20
-[Jack Wang] It depends on driver implement. Driver base on
-scsi_transport_sas(like mpt2sas pm8001 isci..)the number always get big=
-ger,
-but some driver bind the lun number with topology like phy number.
+Here are some patches to make ZPODD easier to use for end users and
+a fix for using ZPODD with system suspend.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Aaron Lu (5):
+  scsi: sr: fix for sr suspend and resume
+  scsi: sr: runtime pm when ODD is open/closed
+  scsi: sr: block events when runtime suspended
+  scsi: pm: use runtime resume callback if available
+  block: genhd: add an interface to set disk's poll interval
+
+ block/genhd.c          | 25 ++++++++++++++++++------
+ drivers/scsi/scsi_pm.c | 14 ++++++++-----
+ drivers/scsi/sr.c      | 53 ++++++++++++++++++++++++++++++++++++--------------
+ include/linux/genhd.h  |  1 +
+ 4 files changed, 67 insertions(+), 26 deletions(-)
+
+-- 
+1.7.11.3
+
+
