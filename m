@@ -1,7 +1,7 @@
 From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH 5/5] block: genhd: add an interface to set disk's poll interval
-Date: Mon, 23 Jul 2012 14:49:40 +0800
-Message-ID: <1343026180-22236-6-git-send-email-aaron.lu@amd.com>
+Subject: [PATCH 1/5] scsi: sr: fix for sr suspend and resume
+Date: Mon, 23 Jul 2012 14:49:36 +0800
+Message-ID: <1343026180-22236-2-git-send-email-aaron.lu@amd.com>
 References: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,85 +12,43 @@ To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Set the ODD's in kernel poll interval to 2s for the user in case the
-user is using an old distro on which udev will not set the system wide
-block parameter events_dfl_poll_msecs.
+In sr_suspend, we do not need to do anything if it is not a runtime pm
+request, so just return by checking the PM_EVENT_AUTO flag.
+And in sr_resume, only reset the suspend_count back to 1 if the ODD is
+waken up by the user, or the usage count of the scsi device will not
+balance.
 
 Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 ---
- block/genhd.c         | 23 +++++++++++++++++------
- drivers/scsi/sr.c     |  1 +
- include/linux/genhd.h |  1 +
- 3 files changed, 19 insertions(+), 6 deletions(-)
+ drivers/scsi/sr.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index bdb3682..de9b9d9 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -1619,6 +1619,19 @@ static void disk_events_workfn(struct work_struct *work)
- 		kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
- }
- 
-+int disk_events_set_poll_msecs(struct gendisk *disk, long intv)
-+{
-+	if (intv < 0 && intv != -1)
-+		return -EINVAL;
-+
-+	disk_block_events(disk);
-+	disk->ev->poll_msecs = intv;
-+	__disk_unblock_events(disk, true);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(disk_events_set_poll_msecs);
-+
- /*
-  * A disk events enabled device has the following sysfs nodes under
-  * its /sys/block/X/ directory.
-@@ -1675,16 +1688,14 @@ static ssize_t disk_events_poll_msecs_store(struct device *dev,
- {
- 	struct gendisk *disk = dev_to_disk(dev);
- 	long intv;
-+	int ret;
- 
- 	if (!count || !sscanf(buf, "%ld", &intv))
- 		return -EINVAL;
- 
--	if (intv < 0 && intv != -1)
--		return -EINVAL;
--
--	disk_block_events(disk);
--	disk->ev->poll_msecs = intv;
--	__disk_unblock_events(disk, true);
-+	ret = disk_events_set_poll_msecs(disk, intv);
-+	if (ret)
-+		return ret;
- 
- 	return count;
- }
 diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 2f159aa..78c4226 100644
+index 3da0879..5f4d19a 100644
 --- a/drivers/scsi/sr.c
 +++ b/drivers/scsi/sr.c
-@@ -869,6 +869,7 @@ static int sr_probe(struct device *dev)
- 	dev_set_drvdata(dev, cd);
- 	disk->flags |= GENHD_FL_REMOVABLE;
- 	add_disk(disk);
-+	disk_events_set_poll_msecs(disk, 2000);
+@@ -178,8 +178,8 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
+ 	struct scsi_sense_hdr sshdr;
+ 	struct scsi_cd *cd = dev_get_drvdata(dev);
  
- 	sdev_printk(KERN_DEBUG, sdev,
- 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 017a7fb..7414fb5 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -418,6 +418,7 @@ extern void disk_block_events(struct gendisk *disk);
- extern void disk_unblock_events(struct gendisk *disk);
- extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
- extern unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask);
-+extern int disk_events_set_poll_msecs(struct gendisk *disk, long intv);
+-	/* no action for system suspend */
+-	if (msg.event == PM_EVENT_SUSPEND)
++	/* no action for system pm operations */
++	if (!(msg.event & PM_EVENT_AUTO))
+ 		return 0;
  
- /* drivers/char/random.c */
- extern void add_disk_randomness(struct gendisk *disk);
+ 	/* do another TUR to see if the ODD is still ready to be powered off */
+@@ -217,9 +217,9 @@ static int sr_resume(struct device *dev)
+ 		cd->device->wakeup_by_user = 0;
+ 		if (!(cd->cdi.mask & CDC_CLOSE_TRAY))
+ 			sr_tray_move(&cd->cdi, 1);
+-	}
+ 
+-	atomic_set(&cd->suspend_count, 1);
++		atomic_set(&cd->suspend_count, 1);
++	}
+ 
+ 	return 0;
+ }
 -- 
 1.7.11.3
