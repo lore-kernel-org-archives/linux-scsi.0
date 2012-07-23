@@ -1,111 +1,70 @@
-From: Betty Dall <betty.dall@hp.com>
-Subject: Re: [PATCH 5/5] block: genhd: add an interface to set disk's poll
- interval
-Date: Mon, 23 Jul 2012 12:43:34 -0600
-Message-ID: <1343069014.25735.28.camel@ejdallLaptop>
-References: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
-	 <1343026180-22236-6-git-send-email-aaron.lu@amd.com>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: [PATCH] scsi_lib: add NULL check to scsi_setup_blk_pc_cmnd
+Date: Mon, 23 Jul 2012 13:32:20 -0400
+Message-ID: <20120723173220.GA17767@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1343026180-22236-6-git-send-email-aaron.lu@amd.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from longford.logfs.org ([213.229.74.203]:50771 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754520Ab2GWTJz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jul 2012 15:09:55 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi Aaron,
+At least two slightly different paths can lead to a NULL pointer
+dereference in scsi_prep_state_check and have been hit in practice.
+1.
+Call Trace:
+ [<ffffffff812f8c4b>] scsi_setup_blk_pc_cmnd+0x2b/0x170
+ [<ffffffff81305108>] sd_prep_fn+0x568/0xdd0
+ [<ffffffff8121c594>] blk_peek_request+0xb4/0x240
+ [<ffffffff812f94fe>] scsi_request_fn+0x43e/0x4a0
+ [<ffffffff8121621b>] __blk_run_queue+0x1b/0x20
+ [<ffffffff81220638>] blk_execute_rq_nowait+0x68/0xc0
+ [<ffffffff812206fd>] blk_execute_rq+0x6d/0x100
+ [<ffffffff812f8f8c>] scsi_execute+0xfc/0x160
+ [<ffffffff812f975a>] scsi_execute_req+0xca/0x140
+ [<ffffffff81305a4e>] sd_revalidate_disk+0xde/0x1a00
+ [<ffffffff8130749b>] sd_probe_async+0x12b/0x1d0
+ ...
+2.
+Call Trace:
+ [<ffffffff8130078b>] scsi_setup_blk_pc_cmnd+0x2b/0x170
+ [<ffffffff8130091d>] scsi_prep_fn+0x4d/0x60
+ [<ffffffff81227794>] blk_peek_request+0xb4/0x240
+ [<ffffffff813010cd>] scsi_request_fn+0x47d/0x4b0
+ [<ffffffff81223bff>] __blk_run_queue+0x1f/0x80
+ [<ffffffff8122b808>] blk_execute_rq_nowait+0x68/0xc0
+ ...
 
-On Mon, 2012-07-23 at 14:49 +0800, Aaron Lu wrote:
-> Set the ODD's in kernel poll interval to 2s for the user in case the
-> user is using an old distro on which udev will not set the system wide
-> block parameter events_dfl_poll_msecs.
-Why did you pick 2 seconds? 
+This patch should fix both cases.
 
-> 
-> Signed-off-by: Aaron Lu <aaron.lu@amd.com>
-> ---
->  block/genhd.c         | 23 +++++++++++++++++------
->  drivers/scsi/sr.c     |  1 +
->  include/linux/genhd.h |  1 +
->  3 files changed, 19 insertions(+), 6 deletions(-)
-> 
-> diff --git a/block/genhd.c b/block/genhd.c
-> index bdb3682..de9b9d9 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -1619,6 +1619,19 @@ static void disk_events_workfn(struct work_struct *work)
->  		kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
->  }
->  
-> +int disk_events_set_poll_msecs(struct gendisk *disk, long intv)
-> +{
-> +	if (intv < 0 && intv != -1)
-> +		return -EINVAL;
-> +
-> +	disk_block_events(disk);
-> +	disk->ev->poll_msecs = intv;
-> +	__disk_unblock_events(disk, true);
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL(disk_events_set_poll_msecs);
-> +
->  /*
->   * A disk events enabled device has the following sysfs nodes under
->   * its /sys/block/X/ directory.
-> @@ -1675,16 +1688,14 @@ static ssize_t disk_events_poll_msecs_store(struct device *dev,
->  {
->  	struct gendisk *disk = dev_to_disk(dev);
->  	long intv;
-> +	int ret;
->  
->  	if (!count || !sscanf(buf, "%ld", &intv))
->  		return -EINVAL;
->  
-> -	if (intv < 0 && intv != -1)
-> -		return -EINVAL;
-> -
-> -	disk_block_events(disk);
-> -	disk->ev->poll_msecs = intv;
-> -	__disk_unblock_events(disk, true);
-> +	ret = disk_events_set_poll_msecs(disk, intv);
-> +	if (ret)
-> +		return ret;
->  
->  	return count;
->  }
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index 2f159aa..78c4226 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -869,6 +869,7 @@ static int sr_probe(struct device *dev)
->  	dev_set_drvdata(dev, cd);
->  	disk->flags |= GENHD_FL_REMOVABLE;
->  	add_disk(disk);
-> +	disk_events_set_poll_msecs(disk, 2000);
+Signed-off-by: Joern Engel <joern@logfs.org>
+---
+ drivers/scsi/scsi_lib.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Could you check that disk event's poll_msecs is the default (-1) before
-setting it to 2s? I am thinking of a case when the probe happens after
-the call to disk_events_poll_msecs_store() and this code would overwrite
-the user specified value.
-
->  
->  	sdev_printk(KERN_DEBUG, sdev,
->  		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 017a7fb..7414fb5 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -418,6 +418,7 @@ extern void disk_block_events(struct gendisk *disk);
->  extern void disk_unblock_events(struct gendisk *disk);
->  extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
->  extern unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask);
-> +extern int disk_events_set_poll_msecs(struct gendisk *disk, long intv);
->  
->  /* drivers/char/random.c */
->  extern void add_disk_randomness(struct gendisk *disk);
-
--Betty
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index bb216ff..5fb5a1c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1079,8 +1079,11 @@ static struct scsi_cmnd *scsi_get_cmd_from_req(struct scsi_device *sdev,
+ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+ {
+ 	struct scsi_cmnd *cmd;
+-	int ret = scsi_prep_state_check(sdev, req);
++	int ret;
+ 
++	if (!sdev)
++		return BLKPREP_KILL;
++	ret = scsi_prep_state_check(sdev, req);
+ 	if (ret != BLKPREP_OK)
+ 		return ret;
+ 
+-- 
+1.7.10.4
 
