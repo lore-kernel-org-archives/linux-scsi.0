@@ -1,321 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] First round of SCSI updates for the 3.5+ merge window
-Date: Tue, 24 Jul 2012 09:21:39 +0400
-Message-ID: <1343107299.3513.7.camel@dabdike>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: [PATCH v2 5/7] scsi: sr: block events when runtime suspended
+Date: Tue, 24 Jul 2012 17:37:43 +0800
+Message-ID: <1343122665-18711-6-git-send-email-aaron.lu@amd.com>
+References: <1343122665-18711-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from co1ehsobe001.messaging.microsoft.com ([216.32.180.184]:59852
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752791Ab2GXJjl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jul 2012 05:39:41 -0400
+In-Reply-To: <1343122665-18711-1-git-send-email-aaron.lu@amd.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Wu <jeff.wu@amd.com>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 
-The most important feature of this patch set is the new async
-infrastructure that makes sure async_synchronize_full() synchronizes all
-domains and allows us to remove all the hacks (like having
-scsi_complete_async_scans() in the device base code) and means that the
-async infrastructure will "just work" in future. The rest is assorted
-driver updates (aacraid, bnx2fc, virto-scsi, megaraid, bfa, lpfc,
-qla2xxx, qla4xxx) plus a lot of infrastructure work in sas and FC.
+When the ODD is runtime suspended, there is no need to poll it for
+events, so block events poll for it and unblock when resumed.
 
-The patch is available here:
+Signed-off-by: Aaron Lu <aaron.lu@amd.com>
+---
+ block/genhd.c     | 2 ++
+ drivers/scsi/sr.c | 7 ++++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+diff --git a/block/genhd.c b/block/genhd.c
+index 9cf5583..bdb3682 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1458,6 +1458,7 @@ void disk_block_events(struct gendisk *disk)
+ 
+ 	mutex_unlock(&ev->block_mutex);
+ }
++EXPORT_SYMBOL(disk_block_events);
+ 
+ static void __disk_unblock_events(struct gendisk *disk, bool check_now)
+ {
+@@ -1502,6 +1503,7 @@ void disk_unblock_events(struct gendisk *disk)
+ 	if (disk->ev)
+ 		__disk_unblock_events(disk, false);
+ }
++EXPORT_SYMBOL(disk_unblock_events);
+ 
+ /**
+  * disk_flush_events - schedule immediate event checking and flushing
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 2aa50c3..d6c0574 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -204,6 +204,8 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
+ 		return -EBUSY;
+ 	}
+ 
++	disk_block_events(cd->disk);
++
+ 	return 0;
+ }
+ 
+@@ -226,6 +228,8 @@ static int sr_resume(struct device *dev)
+ 		atomic_set(&cd->suspend_count, 1);
+ 	}
+ 
++	disk_unblock_events(cd->disk);
++
+ 	return 0;
+ }
+ 
+@@ -314,9 +318,6 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	if (CDSL_CURRENT != slot)
+ 		return 0;
+ 
+-	if (pm_runtime_suspended(&cd->device->sdev_gendev))
+-		return 0;
+-
+ 	/* if the logical unit just finished loading/unloading, do a TUR */
+ 	if (cd->device->can_power_off && cd->dbml && sr_unit_load_done(cd)) {
+ 		events = 0;
+-- 
+1.7.11.3
 
-The short changelog is
 
-Alan Cox (1):
-      aha152x: Allow use on 64bit systems
-
-Bart Van Assche (5):
-      Stop accepting SCSI requests before removing a device
-      Change return type of scsi_queue_insert() into void
-      Avoid dangling pointer in scsi_requeue_command()
-      Fix device removal NULL pointer dereference
-      scsi_dh_alua: Re-enable STPG for unavailable ports
-
-Ben Collins (4):
-      aacraid: Fix endian issues in core and SRC portions of driver
-      aacraid: Relax the tight timeout loop on fib commands
-      aacraid: Better handling of in-flight events on thread stop
-      aacraid: Use resource_size_t for IO mem pointers and offsets
-
-Bhanu Prakash Gollapudi (4):
-      bnx2fc: Bumped version to 1.0.12
-      bnx2fc: use list_entry instead of explicit cast
-      bnx2fc: Improve error recovery by handling parity errors
-      bnx2fc: Support interface creation on non-VLAN interface also.
-
-Cong Meng (1):
-      virtio-scsi: hotplug support for virtio-scsi
-
-Dan Carpenter (6):
-      mvsas: remove unused variable in mvs_task_exec()
-      megaraid: remove a spurious IRQ enable
-      megaraid: cleanup type issue in mega_build_cmd()
-      bfa: dereferencing freed memory in bfad_im_probe()
-      bfa: off by one in bfa_ioc_mbox_isr()
-      arcmsr: fix misuse of | instead of &
-
-Dan Williams (17):
-      Revert "[SCSI] fix async probe regression"
-      cleanup usages of scsi_complete_async_scans
-      queue async scan work to an async_schedule domain
-      async: make async_synchronize_full() flush all work regardless of
-domain
-      async: introduce 'async_domain' type
-      libsas: trim sas_task of slow path infrastructure
-      libsas: drop sata port multiplier infrastructure
-      libsas: fix sas_discover_devices return code handling
-      libsas: continue revalidation
-      isci: use sas eh strategy handlers
-      libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_handler
-      libsas: add sas_eh_abort_handler
-      libsas: enforce eh strategy handlers only in eh context
-      cleanup setting task state in scsi_error_handler()
-      fix eh wakeup (scsi_schedule_eh vs scsi_restart_operations)
-      libata, libsas: introduce sched_eh and end_eh port ops
-      fix hot unplug vs async scan race
-
-Eric Dumazet (1):
-      bnx2fc: use kthread_create_on_node
-
-HighPoint Linux Team (1):
-      hptiop: fix RR312x in hosts with >12GB
-
-James Bottomley (2):
-      lpfc: fix problems with -Werror
-      Remove scsi_wait_scan module
-
-James Smart (10):
-      lpfc 8.3.32: Update lpfc to version 8.3.32
-      lpfc 8.3.32: Fix error reporting of misconfigured ports
-      lpfc 8.3.32: Fix system panic due to node state change
-      lpfc 8.3.32: Fix ability to change FCP EQ delay multiplier
-      lpfc 8.3.32: Correct successful aborts returning error status
-      lpfc 8.3.32: Correct provisioning change failure on local function
-      lpfc 8.3.32: Correct host DIF configuration that hung system
-      lpfc 8.3.32: Fix CQ and EQ dump failure for debugfs
-      lpfc 8.3.32: Correct null pointer Error in lpfc_sli.c
-      lpfc 8.3.32: lpfc_sli.c: add missing jumps to mempool_free
-
-Jeff Skirvin (1):
-      libsas: sas_rediscover_dev did not look at the SMP exec status.
-
-Joe Perches (1):
-      bnx2fc: Reduce object size by consolidating formats
-
-Jon Mason (2):
-      qla2xxx: remove unnecessary reads of PCI_CAP_ID_EXP
-      qla4xxx: remove unnecessary read of PCI_CAP_ID_EXP
-
-Josh Hunt (1):
-      properly initialize atomic_t
-
-Karen Xie (1):
-      cxgb4i: tcp push bit fix
-
-Krishna Gudipati (1):
-      bfa: Fix to set correct return error codes and misc cleanup.
-
-Kyle McMartin (1):
-      bfa: squelch lockdep complaint with a spin_lock_init
-
-Lin Ming (1):
-      scsi_pm: set device runtime state before parent suspended
-
-Maciej Trela (1):
-      libsas: cleanup spurious calls to scsi_schedule_eh
-
-Mahesh Rajashekhara (1):
-      aacraid: Series 7 Async. (performance) mode support
-
-Mark Rustad (1):
-      libfcoe: Fix section mismatch
-
-Mike Christie (3):
-      remove old comment from block/unblock functions
-      core, classes, mpt2sas: have scsi_internal_device_unblock take new
-state
-      add new SDEV_TRANSPORT_OFFLINE state
-
-Mike Snitzer (1):
-      scsi_dh: add scsi_dh_attached_handler_name
-
-Muthukumar Ratty (1):
-      block: Fix blk_execute_rq_nowait() dead queue handling
-
-Namjae Jeon (4):
-      ufs: fix incorrect return value about SUCCESS and FAILED
-      usb-storage: update usb devices for write cache quirk in quirk
-list.
-      usb-storage: add support for write cache quirk
-      set to WCE if usb cache quirk is present.
-
-Neil Horman (1):
-      fcoe: Cleanup locking on fcoe_percpu_receive_thread
-
-Nicholas Bellinger (1):
-      virtio-scsi: Add vdrv->scan for post VIRTIO_CONFIG_S_DRIVER_OK LUN
-scanning
-
-Paolo Bonzini (4):
-      virtio-scsi: split scatterlist per target
-      virtio-scsi: release sg_lock after add_buf
-      virtio-scsi: split locking per vq
-      virtio-scsi: unlock during kick
-
-Rob Evers (3):
-      scsi_dh_alua: backoff alua rtpg retry linearly vs. geometrically
-      scsi_dh_alua: retry alua rtpg extended header for illegal request
-response
-      scsi_dh_alua: implement 'implied transition timeout'
-
-Robert Love (1):
-      fcoe: Remove redundant 'less than zero' check
-
-Vasu Dev (6):
-      libfc: fix retries with FDMI lport states
-      libfc: add exch timer debug info
-      libfc: update fcp and exch stats
-      libfc: adds FCP failures stats
-      libfc, fcoe, bnx2fc: cleanup fcoe_dev_stats
-      fc: add some more FC specific stats to fc_host
-
-Venkatraman S (2):
-      ufs: reverse the ufshcd_is_device_present logic
-      ufs: use module_pci_driver
-
-Vikas Chaudhary (4):
-      qla4xxx: Update driver version to 5.02.00-k18
-      qla4xxx: Fix Spell check.
-      qla4xxx: Fix a Sparse warning message
-      qla4xxx: multi-session fix for flash ddbs
-
-Yi Zou (2):
-      libfc: fix sending REC after FCP_RESP is received
-      libfc: don't exch_done() on invalid sequence ptr
-
-And the diffstat:
-
- Documentation/kernel-parameters.txt        |    2 +
- block/blk-exec.c                           |   11 +-
- drivers/ata/libata-core.c                  |    4 +
- drivers/ata/libata-eh.c                    |   57 ++++-
- drivers/base/dd.c                          |    2 -
- drivers/regulator/core.c                   |    2 +-
- drivers/scsi/Kconfig                       |   19 +-
- drivers/scsi/Makefile                      |    2 -
- drivers/scsi/aacraid/aachba.c              |  237 ++++++++++++++++---
- drivers/scsi/aacraid/aacraid.h             |   79 +++++--
- drivers/scsi/aacraid/commctrl.c            |    2 +
- drivers/scsi/aacraid/comminit.c            |   54 +++--
- drivers/scsi/aacraid/commsup.c             |   31 ++-
- drivers/scsi/aacraid/dpcsup.c              |    6 +-
- drivers/scsi/aacraid/linit.c               |   16 +-
- drivers/scsi/aacraid/nark.c                |    4 +-
- drivers/scsi/aacraid/rkt.c                 |    2 +-
- drivers/scsi/aacraid/rx.c                  |    4 +-
- drivers/scsi/aacraid/sa.c                  |    4 +-
- drivers/scsi/aacraid/src.c                 |   96 ++++----
- drivers/scsi/arcmsr/arcmsr_hba.c           |    4 +-
- drivers/scsi/bfa/bfa_fcs_lport.c           |    4 +-
- drivers/scsi/bfa/bfa_ioc.c                 |    2 +-
- drivers/scsi/bfa/bfad.c                    |    2 +
- drivers/scsi/bfa/bfad_bsg.c                |    5 +-
- drivers/scsi/bfa/bfad_im.c                 |   12 +-
- drivers/scsi/bnx2fc/Makefile               |    3 +-
- drivers/scsi/bnx2fc/bnx2fc.h               |    9 +-
- drivers/scsi/bnx2fc/bnx2fc_debug.c         |   70 ++++++
- drivers/scsi/bnx2fc/bnx2fc_debug.h         |   73 ++----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c          |   56 +++--
- drivers/scsi/bnx2fc/bnx2fc_hwi.c           |    4 +-
- drivers/scsi/bnx2fc/bnx2fc_io.c            |   25 +--
- drivers/scsi/bnx2fc/bnx2fc_tgt.c           |   40 ++--
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c         |    4 +-
- drivers/scsi/device_handler/scsi_dh.c      |   38 +++-
- drivers/scsi/device_handler/scsi_dh_alua.c |   71 +++++-
- drivers/scsi/fcoe/fcoe.c                   |   36 +--
- drivers/scsi/fcoe/fcoe_ctlr.c              |   13 +-
- drivers/scsi/fcoe/fcoe_sysfs.c             |    2 +-
- drivers/scsi/fcoe/fcoe_transport.c         |   12 +-
- drivers/scsi/hosts.c                       |    9 +-
- drivers/scsi/hptiop.c                      |   10 +-
- drivers/scsi/hptiop.h                      |    1 +
- drivers/scsi/isci/init.c                   |    3 +
- drivers/scsi/libfc/fc_exch.c               |  130 ++++++-----
- drivers/scsi/libfc/fc_fcp.c                |   22 +-
- drivers/scsi/libfc/fc_frame.c              |    2 +-
- drivers/scsi/libfc/fc_lport.c              |   69 +++---
- drivers/scsi/libsas/sas_ata.c              |   41 +++-
- drivers/scsi/libsas/sas_discover.c         |   23 +-
- drivers/scsi/libsas/sas_event.c            |   12 +-
- drivers/scsi/libsas/sas_expander.c         |   74 +++---
- drivers/scsi/libsas/sas_init.c             |   39 +++-
- drivers/scsi/libsas/sas_scsi_host.c        |  195 ++++++++++++++--
- drivers/scsi/lpfc/Makefile                 |    2 +
- drivers/scsi/lpfc/lpfc.h                   |    4 +
- drivers/scsi/lpfc/lpfc_attr.c              |   93 +++++++-
- drivers/scsi/lpfc/lpfc_crtn.h              |    4 +-
- drivers/scsi/lpfc/lpfc_debugfs.h           |   18 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c           |    2 +-
- drivers/scsi/lpfc/lpfc_hw4.h               |   45 ++++
- drivers/scsi/lpfc/lpfc_init.c              |  233 +++++++++++++++----
- drivers/scsi/lpfc/lpfc_scsi.c              |   32 ++-
- drivers/scsi/lpfc/lpfc_sli.c               |  131 +++++++++--
- drivers/scsi/lpfc/lpfc_sli4.h              |    1 +
- drivers/scsi/lpfc/lpfc_version.h           |    2 +-
- drivers/scsi/megaraid.c                    |    4 +-
- drivers/scsi/megaraid/megaraid_mbox.c      |    2 +-
- drivers/scsi/mpt2sas/mpt2sas_base.h        |    3 +-
- drivers/scsi/mpt2sas/mpt2sas_scsih.c       |    4 +-
- drivers/scsi/mvsas/mv_sas.c                |   21 +-
- drivers/scsi/pm8001/pm8001_sas.c           |   37 +--
- drivers/scsi/qla2xxx/qla_init.c            |    4 +-
- drivers/scsi/qla2xxx/qla_nx.c              |    4 +-
- drivers/scsi/qla2xxx/qla_os.c              |    4 +-
- drivers/scsi/qla4xxx/ql4_def.h             |    1 +
- drivers/scsi/qla4xxx/ql4_glbl.h            |    3 +-
- drivers/scsi/qla4xxx/ql4_init.c            |    2 +-
- drivers/scsi/qla4xxx/ql4_nx.c              |    2 +-
- drivers/scsi/qla4xxx/ql4_os.c              |  156 +++++++++++--
- drivers/scsi/qla4xxx/ql4_version.h         |    2 +-
- drivers/scsi/scsi.c                        |    4 +-
- drivers/scsi/scsi_error.c                  |   18 +-
- drivers/scsi/scsi_lib.c                    |  104 +++++----
- drivers/scsi/scsi_pm.c                     |   23 +-
- drivers/scsi/scsi_priv.h                   |   10 +-
- drivers/scsi/scsi_scan.c                   |   34 +--
- drivers/scsi/scsi_sysfs.c                  |   56 +++--
- drivers/scsi/scsi_transport_fc.c           |   34 ++-
- drivers/scsi/scsi_transport_iscsi.c        |    6 +-
- drivers/scsi/scsi_wait_scan.c              |   37 ---
- drivers/scsi/sd.c                          |   10 +-
- drivers/scsi/ufs/ufshcd.c                  |   35 +--
- drivers/scsi/virtio_scsi.c                 |  337 ++++++++++++++++++++++------
- drivers/usb/storage/scsiglue.c             |    5 +
- drivers/usb/storage/unusual_devs.h         |   12 +
- drivers/usb/storage/usb.c                  |    5 +-
- drivers/virtio/virtio.c                    |    5 +-
- include/linux/async.h                      |   36 ++-
- include/linux/libata.h                     |    4 +
- include/linux/usb_usual.h                  |    4 +-
- include/linux/virtio.h                     |    1 +
- include/linux/virtio_scsi.h                |    9 +
- include/scsi/libfc.h                       |   24 +-
- include/scsi/libsas.h                      |   30 ++-
- include/scsi/sas_ata.h                     |    5 +
- include/scsi/scsi.h                        |    2 +
- include/scsi/scsi_device.h                 |    5 +-
- include/scsi/scsi_dh.h                     |    6 +
- include/scsi/scsi_scan.h                   |   11 -
- include/scsi/scsi_transport_fc.h           |   12 +
- kernel/async.c                             |   76 +++++--
- sound/soc/soc-dapm.c                       |    2 +-
- 114 files changed, 2509 insertions(+), 1018 deletions(-)
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_debug.c
- delete mode 100644 drivers/scsi/scsi_wait_scan.c
- delete mode 100644 include/scsi/scsi_scan.h
-
-James
