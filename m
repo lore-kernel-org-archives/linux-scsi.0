@@ -1,64 +1,81 @@
 From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH v2 1/7] scsi: sr: fix for sr suspend and resume
-Date: Tue, 24 Jul 2012 17:37:39 +0800
-Message-ID: <1343122665-18711-2-git-send-email-aaron.lu@amd.com>
+Subject: [PATCH v2 3/7] scsi: sr: use scsi layer autopm in sr driver
+Date: Tue, 24 Jul 2012 17:37:41 +0800
+Message-ID: <1343122665-18711-4-git-send-email-aaron.lu@amd.com>
 References: <1343122665-18711-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:19972
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753402Ab2GXJju (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jul 2012 05:39:50 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1343122665-18711-1-git-send-email-aaron.lu@amd.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Wu <jeff.wu@amd.com>
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
+List-Id: linux-scsi@vger.kernel.org
 
-In sr_suspend, we do not need to do anything if it is not a runtime pm
-request, so just return by checking the PM_IS_AUTO macro.
-And in sr_resume, only reset the suspend_count back to 1 if the ODD is
-waken up by the user, or the usage count of the scsi device will not
-balance.
+Use scsi_autopm_* whenever possible instead of the pm_runtime_* in sr
+driver as suggested by Alan Stern.
+
+The reason pm_runtime_get_noresume in sr_suspend is used is that we
+can't do sync resume call in suspend callback, or rpm_resume will wait
+forever for the suspend request to finish.
 
 Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 ---
 V2:
-Use PMSG_IS_AUTO as suggested by Alan Stern.
+Use scsi_autopm_* instead of pm_runtime_* in sr driver as suggested
+by Alan Stern.
 
- drivers/scsi/sr.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/sr.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 3da0879..225848c 100644
+index 225848c..e54945a 100644
 --- a/drivers/scsi/sr.c
 +++ b/drivers/scsi/sr.c
-@@ -178,8 +178,8 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
- 	struct scsi_sense_hdr sshdr;
- 	struct scsi_cd *cd = dev_get_drvdata(dev);
+@@ -377,10 +377,8 @@ do_tur:
+ 		 * thread (in-kernel polling) and old versions of udisks,
+ 		 * to avoid put the device twice, an atomic operation is used.
+ 		 */
+-		if (poweroff && atomic_add_unless(&cd->suspend_count, -1, 0)) {
+-			pm_runtime_mark_last_busy(&cd->device->sdev_gendev);
+-			pm_runtime_put_autosuspend(&cd->device->sdev_gendev);
+-		}
++		if (poweroff && atomic_add_unless(&cd->suspend_count, -1, 0))
++			scsi_autopm_put_device(cd->device);
+ 	}
  
--	/* no action for system suspend */
--	if (msg.event == PM_EVENT_SUSPEND)
-+	/* no action for system pm operations */
-+	if (!PMSG_IS_AUTO(msg))
- 		return 0;
+ 	if (cd->ignore_get_event)
+@@ -655,11 +653,8 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	int ret;
  
- 	/* do another TUR to see if the ODD is still ready to be powered off */
-@@ -217,9 +217,9 @@ static int sr_resume(struct device *dev)
- 		cd->device->wakeup_by_user = 0;
- 		if (!(cd->cdi.mask & CDC_CLOSE_TRAY))
- 			sr_tray_move(&cd->cdi, 1);
+ 	/* Make sure the ODD is not suspended */
+-	ret = pm_runtime_get_sync(&sdev->sdev_gendev);
+-	if (ret < 0) {
+-		pm_runtime_put_noidle(&sdev->sdev_gendev);
++	if (scsi_autopm_get_device(sdev))
+ 		return -EACCES;
 -	}
  
--	atomic_set(&cd->suspend_count, 1);
-+		atomic_set(&cd->suspend_count, 1);
-+	}
+ 	mutex_lock(&sr_mutex);
  
- 	return 0;
+@@ -692,8 +687,7 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 
+ out:
+ 	mutex_unlock(&sr_mutex);
+-	pm_runtime_mark_last_busy(&cd->device->sdev_gendev);
+-	pm_runtime_put_autosuspend(&cd->device->sdev_gendev);
++	scsi_autopm_put_device(sdev);
+ 	return ret;
  }
+ 
+@@ -1121,7 +1115,7 @@ static int sr_remove(struct device *dev)
+ 
+ 	/* disable runtime pm and possibly resume the device */
+ 	if (!atomic_dec_and_test(&cd->suspend_count))
+-		pm_runtime_get_sync(dev);
++		scsi_autopm_get_device(cd->device);
+ 
+ 	blk_queue_prep_rq(cd->device->request_queue, scsi_prep_fn);
+ 	del_gendisk(cd->disk);
 -- 
 1.7.11.3
-
-
