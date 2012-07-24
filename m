@@ -1,132 +1,99 @@
-From: Betty Dall <betty.dall@hp.com>
-Subject: Re: [PATCH 5/5] block: genhd: add an interface to set disk's poll
- interval
-Date: Tue, 24 Jul 2012 12:55:06 -0600
-Message-ID: <1343156106.25735.59.camel@ejdallLaptop>
-References: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
-	 <1343026180-22236-6-git-send-email-aaron.lu@amd.com>
-	 <1343069014.25735.28.camel@ejdallLaptop>
-	 <20120723235211.GB1965@localhost.localdomain>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] tcm_vhost: Expose ABI version via
+ VHOST_SCSI_GET_ABI_VERSION
+Date: Tue, 24 Jul 2012 13:45:24 -0700
+Message-ID: <1343162724.1813.111.camel@haakon2.linux-iscsi.org>
+References: <1343093180-5598-1-git-send-email-nab@linux-iscsi.org>
+	 <20120724015634.GD4093@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:47776 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755106Ab2GXSzK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2012 14:55:10 -0400
-In-Reply-To: <20120723235211.GB1965@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20120724015634.GD4093@kroah.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, Avi Kivity <avi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-Hi Aaron,
-
-On Tue, 2012-07-24 at 07:52 +0800, Aaron Lu wrote:
-> On Mon, Jul 23, 2012 at 12:43:34PM -0600, Betty Dall wrote:
-> > Hi Aaron,
-> 
-> Hi,
-> 
+On Mon, 2012-07-23 at 18:56 -0700, Greg Kroah-Hartman wrote:
+> On Tue, Jul 24, 2012 at 01:26:20AM +0000, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > > 
-> > On Mon, 2012-07-23 at 14:49 +0800, Aaron Lu wrote:
-> > > Set the ODD's in kernel poll interval to 2s for the user in case the
-> > > user is using an old distro on which udev will not set the system wide
-> > > block parameter events_dfl_poll_msecs.
-> > Why did you pick 2 seconds? 
-> 
-> Just a random pick, no special meaning here.
-> On newer distros, udev will also pick 2s for the events_dfl_poll_msecs
-> parameter, so I just followed that :-)
-> Do you see any problem with this setting?
-
-No problem, and I was curious as to why 2s, and the fact that is it used
-in udev for events_dfl_poll_msecs is a good reason.
-
+> > As requested by Anthony, here is a patch against target-pending/for-next-merge
+> > to expose an ABI version to userspace via a new VHOST_SCSI_GET_ABI_VERSION
+> > ioctl operation.
 > > 
-> > > 
-> > > Signed-off-by: Aaron Lu <aaron.lu@amd.com>
-> > > ---
-> > >  block/genhd.c         | 23 +++++++++++++++++------
-> > >  drivers/scsi/sr.c     |  1 +
-> > >  include/linux/genhd.h |  1 +
-> > >  3 files changed, 19 insertions(+), 6 deletions(-)
-> > > 
-> > > diff --git a/block/genhd.c b/block/genhd.c
-> > > index bdb3682..de9b9d9 100644
-> > > --- a/block/genhd.c
-> > > +++ b/block/genhd.c
-> > > @@ -1619,6 +1619,19 @@ static void disk_events_workfn(struct work_struct *work)
-> > >  		kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
-> > >  }
-> > >  
-> > > +int disk_events_set_poll_msecs(struct gendisk *disk, long intv)
-> > > +{
-> > > +	if (intv < 0 && intv != -1)
-> > > +		return -EINVAL;
-> > > +
-> > > +	disk_block_events(disk);
-> > > +	disk->ev->poll_msecs = intv;
-> > > +	__disk_unblock_events(disk, true);
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +EXPORT_SYMBOL(disk_events_set_poll_msecs);
-> > > +
-> > >  /*
-> > >   * A disk events enabled device has the following sysfs nodes under
-> > >   * its /sys/block/X/ directory.
-> > > @@ -1675,16 +1688,14 @@ static ssize_t disk_events_poll_msecs_store(struct device *dev,
-> > >  {
-> > >  	struct gendisk *disk = dev_to_disk(dev);
-> > >  	long intv;
-> > > +	int ret;
-> > >  
-> > >  	if (!count || !sscanf(buf, "%ld", &intv))
-> > >  		return -EINVAL;
-> > >  
-> > > -	if (intv < 0 && intv != -1)
-> > > -		return -EINVAL;
-> > > -
-> > > -	disk_block_events(disk);
-> > > -	disk->ev->poll_msecs = intv;
-> > > -	__disk_unblock_events(disk, true);
-> > > +	ret = disk_events_set_poll_msecs(disk, intv);
-> > > +	if (ret)
-> > > +		return ret;
-> > >  
-> > >  	return count;
-> > >  }
-> > > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> > > index 2f159aa..78c4226 100644
-> > > --- a/drivers/scsi/sr.c
-> > > +++ b/drivers/scsi/sr.c
-> > > @@ -869,6 +869,7 @@ static int sr_probe(struct device *dev)
-> > >  	dev_set_drvdata(dev, cd);
-> > >  	disk->flags |= GENHD_FL_REMOVABLE;
-> > >  	add_disk(disk);
-> > > +	disk_events_set_poll_msecs(disk, 2000);
+> > As mentioned in the comment, ABI Rev 0 is for pre 2012 out-of-tree code, and
+> > ABI Rev 1 (the current rev) is for current WIP v3.6 kernel merge candiate code.
 > > 
-> > Could you check that disk event's poll_msecs is the default (-1) before
-> > setting it to 2s? I am thinking of a case when the probe happens after
-> > the call to disk_events_poll_msecs_store() and this code would overwrite
-> > the user specified value.
+> > I think this is what you had in mind, and hopefully it will make MST happy too.
+> > The incremental vhost-scsi patches against Zhi's QEMU are going out shortly ahead
+> > of cutting a new vhost-scsi RFC over the next days.
+> > 
+> > Please have a look and let me know if you have any concerns here.
+> > 
+> > Thanks!
+> > 
+> > Reported-by: Anthony Liguori <aliguori@us.ibm.com>
+> > Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+> > Cc: Michael S. Tsirkin <mst@redhat.com>
+> > Cc: Paolo Bonzini <pbonzini@redhat.com>
+> > Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> > ---
+> >  drivers/vhost/tcm_vhost.c |    9 +++++++++
+> >  drivers/vhost/tcm_vhost.h |   11 +++++++++++
+> >  2 files changed, 20 insertions(+), 0 deletions(-)
+> > 
+
+<SNIP>
+
+> > diff --git a/drivers/vhost/tcm_vhost.h b/drivers/vhost/tcm_vhost.h
+> > index e942df9..3d5378f 100644
+> > --- a/drivers/vhost/tcm_vhost.h
+> > +++ b/drivers/vhost/tcm_vhost.h
+> > @@ -80,7 +80,17 @@ struct tcm_vhost_tport {
+> >  
+> >  #include <linux/vhost.h>
+> >  
+> > +/*
+> > + * Used by QEMU userspace to ensure a consistent vhost-scsi ABI.
+> > + *
+> > + * ABI Rev 0: All pre 2012 revisions used by prototype out-of-tree code
+> > + * ABI Rev 1: 2012 version for v3.6 kernel merge candiate
+> > + */
+> > +
+> > +#define VHOST_SCSI_ABI_VERSION	1
+> > +
+> >  struct vhost_scsi_target {
+> > +	int abi_version;
+> >  	unsigned char vhost_wwpn[TRANSPORT_IQN_LEN];
+> >  	unsigned short vhost_tpgt;
+> >  };
+> > @@ -88,3 +98,4 @@ struct vhost_scsi_target {
+> >  /* VHOST_SCSI specific defines */
+> >  #define VHOST_SCSI_SET_ENDPOINT _IOW(VHOST_VIRTIO, 0x40, struct vhost_scsi_target)
+> >  #define VHOST_SCSI_CLEAR_ENDPOINT _IOW(VHOST_VIRTIO, 0x41, struct vhost_scsi_target)
+> > +#define VHOST_SCSI_GET_ABI_VERSION _IOW(VHOST_VIRTIO, 0x42, struct vhost_scsi_target)
 > 
-> The block device sr0 is created by this driver in this probe function,
-> so the user should not be able to set the poll interval before probe,
-> right?
+> No, you just broke the ABI for version "0" here, that's not how you do
+> this at all.
+> 
 
-The add_disk() call happens immediately before the new
-disk_events_set_poll_msecs() call. add_disk() is what eventually creates
-the sysfs files and calls your new disk_events_set_poll_msecs(). It
-makes more sense to me to have the new call to
-disk_events_set_poll_msecs(disk, 2000) before the call to add_disk().
-That way add_disk()could override the 2 second default based on user
-input. If a distro doesn't support udev setting events_dfl_poll_msecs,
-the add_disk() won't ever make a call to disk_events_set_poll_msecs()
-and the 2 second default will stand.
+The intention of this patch is use ABI=1 as a starting point for
+tcm_vhost moving forward, with no back-wards compat for the ABI=0
+prototype userspace code because:
 
--Betty
+- It's based on a slightly older version of QEMU (updating the QEMU series now)
+- It does not have an GET_ABI_VERSION ioctl cmd (that starts with ABI=1)
+- It has a small user-base of target + virtio-scsi developers
 
+So I did consider just starting from ABI=0, but figured this would help
+reduce the confusion for QEMU userspace wrt to the vhost-scsi code
+that's been floating around out-of-tree for the last 2 years.
 
+Stefan & Co folks, do you have a preference for a starting point..?
+
+Thanks,
+
+--nab
