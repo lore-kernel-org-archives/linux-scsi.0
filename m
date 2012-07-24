@@ -1,99 +1,29 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] tcm_vhost: Expose ABI version via
- VHOST_SCSI_GET_ABI_VERSION
-Date: Tue, 24 Jul 2012 13:45:24 -0700
-Message-ID: <1343162724.1813.111.camel@haakon2.linux-iscsi.org>
-References: <1343093180-5598-1-git-send-email-nab@linux-iscsi.org>
-	 <20120724015634.GD4093@kroah.com>
+From: Matthias Prager <linux@matthiasprager.de>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Wed, 25 Jul 2012 00:04:26 +0200
+Message-ID: <500F1BEA.8010104@matthiasprager.de>
+References: <4FFB8A86.7000009@farcaster.org> <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de> <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com> <5005BF7D.2050703@matthiasprager.de> <20120717200136.GC24336@google.com> <500A9D7C.8080801@matthiasprager.de> <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com> <500C8938.2080607@matthiasprager.de> <20120723152619.GD6823@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20120724015634.GD4093@kroah.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, Avi Kivity <avi@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dd15408.kasserver.com ([85.13.136.168]:56793 "EHLO
+	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466Ab2GXWEd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2012 18:04:33 -0400
+In-Reply-To: <20120723152619.GD6823@google.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, Matthias Prager <linux@matthiasprager.de>
 
-On Mon, 2012-07-23 at 18:56 -0700, Greg Kroah-Hartman wrote:
-> On Tue, Jul 24, 2012 at 01:26:20AM +0000, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > As requested by Anthony, here is a patch against target-pending/for-next-merge
-> > to expose an ABI version to userspace via a new VHOST_SCSI_GET_ABI_VERSION
-> > ioctl operation.
-> > 
-> > As mentioned in the comment, ABI Rev 0 is for pre 2012 out-of-tree code, and
-> > ABI Rev 1 (the current rev) is for current WIP v3.6 kernel merge candiate code.
-> > 
-> > I think this is what you had in mind, and hopefully it will make MST happy too.
-> > The incremental vhost-scsi patches against Zhi's QEMU are going out shortly ahead
-> > of cutting a new vhost-scsi RFC over the next days.
-> > 
-> > Please have a look and let me know if you have any concerns here.
-> > 
-> > Thanks!
-> > 
-> > Reported-by: Anthony Liguori <aliguori@us.ibm.com>
-> > Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
-> > Cc: Michael S. Tsirkin <mst@redhat.com>
-> > Cc: Paolo Bonzini <pbonzini@redhat.com>
-> > Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  drivers/vhost/tcm_vhost.c |    9 +++++++++
-> >  drivers/vhost/tcm_vhost.h |   11 +++++++++++
-> >  2 files changed, 20 insertions(+), 0 deletions(-)
-> > 
+Hello everyone,
 
-<SNIP>
+I retested with a new firmware (P14 - released today), since it contains
+a bunch of sata and SATL fixes (according to the changelog).
+Unfortunately the observed behavior is unchanged (tested on a 3.4.5 kernel).
 
-> > diff --git a/drivers/vhost/tcm_vhost.h b/drivers/vhost/tcm_vhost.h
-> > index e942df9..3d5378f 100644
-> > --- a/drivers/vhost/tcm_vhost.h
-> > +++ b/drivers/vhost/tcm_vhost.h
-> > @@ -80,7 +80,17 @@ struct tcm_vhost_tport {
-> >  
-> >  #include <linux/vhost.h>
-> >  
-> > +/*
-> > + * Used by QEMU userspace to ensure a consistent vhost-scsi ABI.
-> > + *
-> > + * ABI Rev 0: All pre 2012 revisions used by prototype out-of-tree code
-> > + * ABI Rev 1: 2012 version for v3.6 kernel merge candiate
-> > + */
-> > +
-> > +#define VHOST_SCSI_ABI_VERSION	1
-> > +
-> >  struct vhost_scsi_target {
-> > +	int abi_version;
-> >  	unsigned char vhost_wwpn[TRANSPORT_IQN_LEN];
-> >  	unsigned short vhost_tpgt;
-> >  };
-> > @@ -88,3 +98,4 @@ struct vhost_scsi_target {
-> >  /* VHOST_SCSI specific defines */
-> >  #define VHOST_SCSI_SET_ENDPOINT _IOW(VHOST_VIRTIO, 0x40, struct vhost_scsi_target)
-> >  #define VHOST_SCSI_CLEAR_ENDPOINT _IOW(VHOST_VIRTIO, 0x41, struct vhost_scsi_target)
-> > +#define VHOST_SCSI_GET_ABI_VERSION _IOW(VHOST_VIRTIO, 0x42, struct vhost_scsi_target)
-> 
-> No, you just broke the ABI for version "0" here, that's not how you do
-> this at all.
-> 
+Just wanted to let everyone know.
 
-The intention of this patch is use ABI=1 as a starting point for
-tcm_vhost moving forward, with no back-wards compat for the ABI=0
-prototype userspace code because:
-
-- It's based on a slightly older version of QEMU (updating the QEMU series now)
-- It does not have an GET_ABI_VERSION ioctl cmd (that starts with ABI=1)
-- It has a small user-base of target + virtio-scsi developers
-
-So I did consider just starting from ABI=0, but figured this would help
-reduce the confusion for QEMU userspace wrt to the vhost-scsi code
-that's been floating around out-of-tree for the last 2 years.
-
-Stefan & Co folks, do you have a preference for a starting point..?
-
-Thanks,
-
---nab
+Cheers
+Matthias
