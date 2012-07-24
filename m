@@ -1,35 +1,53 @@
-From: Ani Sinha <ani@aristanetworks.com>
-Subject: scsi_requeue_command and dropping reference to sdev_gendev
-Date: Mon, 23 Jul 2012 21:13:07 -0700
-Message-ID: <CAOxq_8N=t0ramZXQ2O49MbQ2KC3k7D-3Uya93nTo3PY3HhF7Ww@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi_lib: add NULL check to scsi_setup_blk_pc_cmnd
+Date: Tue, 24 Jul 2012 09:01:41 +0400
+Message-ID: <1343106101.3513.0.camel@dabdike>
+References: <20120723173220.GA17767@logfs.org>
+	 <1343072755.5865.1.camel@dabdike> <20120723192439.GB17767@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:55694 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750946Ab2GXENI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2012 00:13:08 -0400
-Received: by ghrr11 with SMTP id r11so6244220ghr.19
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Jul 2012 21:13:07 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42665 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751141Ab2GXFBs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jul 2012 01:01:48 -0400
+In-Reply-To: <20120723192439.GB17767@logfs.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Francesco Ruggeri <fruggeri@aristanetworks.com>
+To: =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>
+Cc: linux-scsi@vger.kernel.org
 
-Hi :
+On Mon, 2012-07-23 at 15:24 -0400, J=C3=B6rn Engel wrote:
+> On Mon, 23 July 2012 23:45:55 +0400, James Bottomley wrote:
+> > On Mon, 2012-07-23 at 13:32 -0400, J=C3=B6rn Engel wrote:
+> > > At least two slightly different paths can lead to a NULL pointer
+> > > dereference in scsi_prep_state_check and have been hit in practic=
+e.
+> >=20
+> > Have you checked this with the patches in scsi-misc?  There's a ser=
+ies
+> > of patches in there that alters the way sdev handling is done.
+>=20
+> I would have liked to, but the tree referenced in MAINTAINERS does no=
+t
+> appear to exist:
+>=20
+> git clone git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-mis=
+c-2.6.git
+> Cloning into 'scsi-misc-2.6'...
+> fatal: The remote end hung up unexpectedly
 
-I am looking at the latest upstream code and I see a potential issue :
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
 
-- scsi_requeue_command() drops reference to scsi_device->sdev_gendev in
-scsi_unprep_request->scsi_put_command()->__scsi_put_command(). This can
-trigger the cleanup routine scsi_device_dev_release_usercontext() that
-will deallocate the sdev->request_queue in blk_put_queue() call. This can
-cause potential problems in scsi_requeue_command() when it calls
-scsi_run_queue().
+use the misc branch
 
-Am I missing something here?
+James
 
-Any suggestion will be greatly appreciated.
 
-Thanks,
-Ani
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
