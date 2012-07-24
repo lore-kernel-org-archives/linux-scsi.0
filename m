@@ -1,7 +1,7 @@
 From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH v2 3/7] scsi: sr: use scsi layer autopm in sr driver
-Date: Tue, 24 Jul 2012 17:37:41 +0800
-Message-ID: <1343122665-18711-4-git-send-email-aaron.lu@amd.com>
+Subject: [PATCH v2 6/7] scsi: pm: use runtime resume callback if available
+Date: Tue, 24 Jul 2012 17:37:44 +0800
+Message-ID: <1343122665-18711-7-git-send-email-aaron.lu@amd.com>
 References: <1343122665-18711-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,70 +12,113 @@ To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin
 Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Use scsi_autopm_* whenever possible instead of the pm_runtime_* in sr
-driver as suggested by Alan Stern.
+When runtime resume a scsi device, if the device's driver has
+implemented runtime resume callback, use that instead of the resume
+callback.
 
-The reason pm_runtime_get_noresume in sr_suspend is used is that we
-can't do sync resume call in suspend callback, or rpm_resume will wait
-forever for the suspend request to finish.
+sr driver needs this to properly do different things for system resume
+and runtime resume.
 
 Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 ---
 V2:
-Use scsi_autopm_* instead of pm_runtime_* in sr driver as suggested
-by Alan Stern.
+Check if the resume callback is NULL before calling it as pointed by
+Sergei Shtylyov.
 
- drivers/scsi/sr.c | 16 +++++-----------
- 1 file changed, 5 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_pm.c | 15 ++++++++++-----
+ drivers/scsi/sr.c      | 21 +++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 225848c..e54945a 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -377,10 +377,8 @@ do_tur:
- 		 * thread (in-kernel polling) and old versions of udisks,
- 		 * to avoid put the device twice, an atomic operation is used.
- 		 */
--		if (poweroff && atomic_add_unless(&cd->suspend_count, -1, 0)) {
--			pm_runtime_mark_last_busy(&cd->device->sdev_gendev);
--			pm_runtime_put_autosuspend(&cd->device->sdev_gendev);
--		}
-+		if (poweroff && atomic_add_unless(&cd->suspend_count, -1, 0))
-+			scsi_autopm_put_device(cd->device);
- 	}
- 
- 	if (cd->ignore_get_event)
-@@ -655,11 +653,8 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	int ret;
- 
- 	/* Make sure the ODD is not suspended */
--	ret = pm_runtime_get_sync(&sdev->sdev_gendev);
--	if (ret < 0) {
--		pm_runtime_put_noidle(&sdev->sdev_gendev);
-+	if (scsi_autopm_get_device(sdev))
- 		return -EACCES;
--	}
- 
- 	mutex_lock(&sr_mutex);
- 
-@@ -692,8 +687,7 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 
- out:
- 	mutex_unlock(&sr_mutex);
--	pm_runtime_mark_last_busy(&cd->device->sdev_gendev);
--	pm_runtime_put_autosuspend(&cd->device->sdev_gendev);
-+	scsi_autopm_put_device(sdev);
- 	return ret;
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index a002fbf..717d2c1 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -34,14 +34,19 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
+ 	return err;
  }
  
-@@ -1121,7 +1115,7 @@ static int sr_remove(struct device *dev)
+-static int scsi_dev_type_resume(struct device *dev)
++static int scsi_dev_type_resume(struct device *dev, bool runtime)
+ {
+ 	struct device_driver *drv;
+ 	int err = 0;
++	int (*resume)(struct device *);
  
- 	/* disable runtime pm and possibly resume the device */
- 	if (!atomic_dec_and_test(&cd->suspend_count))
--		pm_runtime_get_sync(dev);
-+		scsi_autopm_get_device(cd->device);
+ 	drv = dev->driver;
+-	if (drv && drv->resume)
+-		err = drv->resume(dev);
++	if (runtime && drv && drv->pm && drv->pm->runtime_resume)
++		resume = drv->pm->runtime_resume;
++	else
++		resume = drv ? drv->resume : NULL;
++	if (resume)
++		err = resume(dev);
+ 	scsi_device_resume(to_scsi_device(dev));
+ 	dev_dbg(dev, "scsi resume: %d\n", err);
+ 	return err;
+@@ -84,7 +89,7 @@ static int scsi_bus_resume_common(struct device *dev)
+ 		 * Resume it on behalf of child.
+ 		 */
+ 		pm_runtime_get_sync(dev->parent);
+-		err = scsi_dev_type_resume(dev);
++		err = scsi_dev_type_resume(dev, false);
+ 		pm_runtime_put_sync(dev->parent);
+ 	}
  
- 	blk_queue_prep_rq(cd->device->request_queue, scsi_prep_fn);
- 	del_gendisk(cd->disk);
+@@ -159,7 +164,7 @@ static int scsi_runtime_resume(struct device *dev)
+ 
+ 	dev_dbg(dev, "scsi_runtime_resume\n");
+ 	if (scsi_is_sdev_device(dev))
+-		err = scsi_dev_type_resume(dev);
++		err = scsi_dev_type_resume(dev, true);
+ 
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+ 
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index d6c0574..466ff8e 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -82,6 +82,11 @@ static int sr_remove(struct device *);
+ static int sr_done(struct scsi_cmnd *);
+ static int sr_suspend(struct device *dev, pm_message_t msg);
+ static int sr_resume(struct device *dev);
++static int sr_runtime_resume(struct device *dev);
++
++static struct dev_pm_ops sr_pm_ops = {
++	.runtime_resume = sr_runtime_resume,
++};
+ 
+ static struct scsi_driver sr_template = {
+ 	.owner			= THIS_MODULE,
+@@ -91,6 +96,7 @@ static struct scsi_driver sr_template = {
+ 		.remove		= sr_remove,
+ 		.suspend	= sr_suspend,
+ 		.resume		= sr_resume,
++		.pm		= &sr_pm_ops,
+ 	},
+ 	.done			= sr_done,
+ };
+@@ -211,6 +217,21 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
+ 
+ static int sr_resume(struct device *dev)
+ {
++	struct scsi_cd *cd = dev_get_drvdata(dev);
++
++	/*
++	 * If ODD is runtime suspended before system pm, unblock disk
++	 * events now since on system resume, we will fully resume it
++	 * and set its rumtime status to active.
++	 */
++	if (pm_runtime_suspended(dev))
++		disk_unblock_events(cd->disk);
++
++	return 0;
++}
++
++static int sr_runtime_resume(struct device *dev)
++{
+ 	struct scsi_cd *cd;
+ 	struct scsi_sense_hdr sshdr;
+ 
 -- 
 1.7.11.3
