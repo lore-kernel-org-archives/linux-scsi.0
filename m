@@ -1,57 +1,70 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [dm-devel] [RESEND PATCH 3/3] dm mpath: add ability to disable
- partition creation
-Date: Wed, 25 Jul 2012 14:02:15 +0200
-Message-ID: <500FE047.8060009@suse.de>
-References: <1340735525-21083-1-git-send-email-snitzer@redhat.com> <1340735525-21083-4-git-send-email-snitzer@redhat.com> <20120711151839.GC2095@agk-dp.fab.redhat.com>
+Subject: Re: [PATCH] sd: do not set changed flag on all unit attention conditions
+Date: Wed, 25 Jul 2012 14:09:20 +0200
+Message-ID: <500FE1F0.3000303@suse.de>
+References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>    <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>    <50044D56.6000400@redhat.com>   <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>   <50052390.7030908@redhat.com>  <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com>  <5005285E.8060706@redhat.com> <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42960 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756558Ab2GYMCR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jul 2012 08:02:17 -0400
-In-Reply-To: <20120711151839.GC2095@agk-dp.fab.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Peter Rajnoha <prajnoha@redhat.com>, Benjamin Marzinski <bmarzins@redhat.com>
 
-On 07/11/2012 05:18 PM, Alasdair G Kergon wrote:
-> On Tue, Jun 26, 2012 at 02:32:05PM -0400, Mike Snitzer wrote:
->> The new 'no_partitions' feature serves as a notifier to kpartx to _n=
-ot_
->> create partitions on these multipath devices.
-> =20
-> This isn't really multipath-specific so doesn't belong in the target.
-> It could go into dm core, but we already have flags attached to
-> udev cookies that can turn udev rules on and off and thereby could
-> allow userspace multipath to control whether or not kpartx creates
-> partitions on any particular device.
+On 07/17/2012 11:11 AM, James Bottomley wrote:
+> On Tue, 2012-07-17 at 10:54 +0200, Paolo Bonzini wrote:
+>> Il 17/07/2012 10:40, James Bottomley ha scritto:
+>>>>>
+>>>>> It's not specific to virtio-scsi, in fact I expect that virtio-sc=
+si will
+>>>>> be almost always used with non-removable disks.
+>>>>>
+>>>>> However, QEMU's SCSI target is not used just for virtio-scsi (for
+>>>>> example it can be used for USB storage), and it lets you mark a d=
+isk as
+>>>>> removable---why? because there exists real hardware that presents=
+ itself
+>>>>> as an SBC removable disk.  The only thing that is specific to
+>>>>> virtualization, is support for online resizing (which generates a=
+ unit
+>>>>> attention condition CAPACITY DATA HAS CHANGED).
+>>> So what's the problem?  If you're doing pass through of a physical =
+disk,
+>>> we pick up removable from its inquiry string ... a physical removab=
+le
+>>> device doesn't get resized.  If you have a virtual disk you want to
+>>> resize, you don't set the removable flag in the inquiry data.
+>>
+>> In practice people will do what you said, and it's not a problem.
+>>
+>> However, there's nothing that prevents you from running qemu with a
+>> removable SCSI disk, and then resizing it.  I would like this to wor=
+k,
+>> because SBC allows it and there's no reason why it shouldn't.
 >=20
-> But first I'd like us to explore creating a config file for kpartx an=
+> There's no such thing in the market today as a removable disk that's
+> resizeable.  Removable disks are for things like backup cartridges an=
 d
-> controlling the behaviour from there.  Activation could then be
-> triggered by target type, device name, scsi WWID, dm UUID etc. accord=
-ing
-> to rules in that file.
+> ageing jazz drives.  Worse: most removeable devices today are USB car=
+d
+> readers whose standards compliance varies from iffy to non existent.
+> Resizeable disks are currently the province of storage arrays.
 >=20
-But that would mean one would have to maintain _two_ configuration
-files, one for multipath and one for kpartx.
+Ho-hum. I beg to disagree.
 
-Also kpartx initially doesn't have any clue about device names, SCSI
-WWIDs etc. It just takes a device-mapper device and acts upon it.
-The only information it's got is the device-mapper name (which could
-be anything) and the device-mapper UUID if present.
+drivers/scsi/aacraid/aachba.c:2266
 
-Same goes for udev rules; one would have to traverse the device
-stack backwards to retrieve any information about the hardware.
+		/* Do not cache partition table for arrays */
+		scsicmd->device->removable =3D 1;
 
-So when moving the configuration into kpartx we would lose quite
-some flexibility. And reliability, methinks.
+To the extend of my knowledge aacraid does this _precisely_ to allow
+for resizing; in effect every open() will trigger a device revalidation=
+=2E
 
-=46lexilibity is a valid goal, but not when it can achieved only by
-adding complexity to other pieces.
+So I guess by just setting the 'removable' flag you should be okay.
+You might need to remount it, but that's another story.
 
 Cheers,
 
@@ -59,12 +72,6 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
