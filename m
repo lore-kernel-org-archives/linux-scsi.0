@@ -1,90 +1,41 @@
-From: "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
-Subject: RE: [GIT PATCH 0/4] isci update for 3.6
-Date: Wed, 25 Jul 2012 23:08:58 +0000
-Message-ID: <71F80D142B3A3F4BA71741C00BED691D248996C8@FMSMSX102.amr.corp.intel.com>
-References: <20120711215901.26813.19955.stgit@dwillia2-linux.jf.intel.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] libata updates
+Date: Wed, 25 Jul 2012 16:30:27 -0700
+Message-ID: <CA+55aFwi7wS3SFZA-45d+KwKi+hqn1GXqRExYmOw6gnSipv5Rg@mail.gmail.com>
+References: <20120725203551.GA19762@havoc.gtf.org> <20120725204350.GA20530@havoc.gtf.org>
+ <CA+55aFwCCctcmryQJMCT_3TDr60CYBQKu9HMyxOgS8482+w5Xw@mail.gmail.com>
+ <50107297.305@pobox.com> <CA+55aFzun7GebfGZDa73MGLF_808+ROaei5Ag-9HvgUDp1bqLQ@mail.gmail.com>
+ <50107A0D.3060003@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:31617 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751302Ab2GYXJF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2012 19:09:05 -0400
-In-Reply-To: <20120711215901.26813.19955.stgit@dwillia2-linux.jf.intel.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <50107A0D.3060003@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "JBottomley@parallels.com" <JBottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Wed, Jul 25, 2012 at 3:58 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
+>
+> What is the right course in when a post-merge change is needed?
 
-James, is there any update available about the pull of the driver changes that
-Dan mentioned?  Please let me know if there is anything we need to do to assist.
+Just describe the issue and the required change. Than I can just do it
+as part of the merge, and now the whole series is bisectable,
+including the merge itself.
 
-Regards,
+Here's a (fairly bad) example:
 
+  http://www.spinics.net/lists/netdev/msg192349.html
 
+and the reason I call that a bad example is not because that's a bad
+pull request, but simply that those are all real data conflicts, not
+the more subtle kind of "it merges fine, but because new code
+introduced uses an interface that changed, you need to do xyz".
 
+I couldn't find an example of that in a quick look, it's fairly
+uncommon to have non-conflicting merges that had semantic - but not
+contextual - conflicts. (Although it does happen, and sometimes it's
+actually not the developer, but Stephen Rothwell who notices it in
+-next and lets me know before the merge).
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Dan Williams
-Sent: Wednesday, July 11, 2012 2:59 PM
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org
-Subject: [GIT PATCH 0/4] isci update for 3.6
-
-James,
-
-This is the backlog of the libsas indepedent driver changes for 3.6.  Just a
-small collection of fixlets.  Please pull, thanks.
-
---
-Dan
-
-
-The following changes since commit f8f5701bdaf9134b1f90e5044a82c66324d2073f:
-
-  Linux 3.5-rc1 (2012-06-02 18:29:26 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git tags/isci-for-3.6
-
-for you to fetch changes up to 6734092e66011def7875bd67beef889d0fee1cc9:
-
-  isci: add a couple __iomem annotations (2012-07-03 12:09:32 -0700)
-
-
-----------------------------------------------------------------
-isci update for 3.6
-
-1/ Fix the workaround for drives that have a slow response to COMSAS.
-   Drives with this problem intermittently take a long time to be
-   identified, or fail to be identified altogether.
-
-2/ A minor fix for the efi variable code failure path
-
-3/ A handful of smatch fixups from Dan Carpenter
-
-----------------------------------------------------------------
-Dan Carpenter (2):
-      isci: make function declaration match implementation
-      isci: add a couple __iomem annotations
-
-Dan Williams (1):
-      isci: fix isci_pci_probe() generates warning on efi failure path
-
-Dave Maurer (1):
-      isci: fix COMSAS negation timout workaround for WD SAS drives
-
- drivers/scsi/isci/host.c                | 2 +-
- drivers/scsi/isci/init.c                | 1 -
- drivers/scsi/isci/phy.c                 | 4 +++-
- drivers/scsi/isci/probe_roms.c          | 1 -
- drivers/scsi/isci/remote_node_context.h | 2 +-
- 5 files changed, 5 insertions(+), 5 deletions(-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+                  Linus
