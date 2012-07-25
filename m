@@ -1,77 +1,123 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: virtio(-scsi) vs. chained sg_lists (was Re: [PATCH] scsi: virtio-scsi:
- Fix address translation failure of HighMem pages used by sg list)
-Date: Wed, 25 Jul 2012 22:16:36 +0300
-Message-ID: <50104614.3080002@panasas.com>
-References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com> <500FB1DE.1000100@redhat.com> <500FBAE8.2050107@panasas.com> <500FBF37.50603@redhat.com> <500FE7D2.7070101@panasas.com> <500FEB63.3000709@redhat.com> <500FF412.3090600@panasas.com> <50100014.2010109@redhat.com> <50101091.5090909@panasas.com> <50103043.5050508@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Wed, 25 Jul 2012 23:55:55 +0400
+Message-ID: <1343246155.12094.59.camel@dabdike>
+References: <4FFB8A86.7000009@farcaster.org>
+	 <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de>
+	 <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com>
+	 <5005BF7D.2050703@matthiasprager.de> <20120717200136.GC24336@google.com>
+	 <500A9D7C.8080801@matthiasprager.de>
+	 <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
+	 <1343225953.12094.55.camel@dabdike> <20120725171723.GB32378@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50103043.5050508@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47877 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752432Ab2GYT4D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jul 2012 15:56:03 -0400
+In-Reply-To: <20120725171723.GB32378@google.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Matthias Prager <linux@matthiasprager.de>, Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-ide@vger.kernel.org
 
-On 07/25/2012 08:43 PM, Paolo Bonzini wrote:
-
-> Il 25/07/2012 17:28, Boaz Harrosh ha scritto:
->>> 1) what I get is a scsi_cmnd which contains an N-element scatterlist.
->>>
->>> 2) virtio-scsi has to build the "packet" that is passed to the hardware
->>> (it does not matter that the hardware is virtual).  This packet (per
->>> virtio-scsi spec) has an N+1-element scatterlist, where the first
->>> element is a request descriptor (struct virtio_scsi_cmd_req), and the
->>> others describe the written data.
->>
->> Then "virtio-scsi spec" is crap. It overloads the meaning of
->> "struct scatterlist" of the first element in an array. to be a
->> "struct virtio_scsi_cmd_req".
+On Wed, 2012-07-25 at 10:17 -0700, Tejun Heo wrote:
+> Hello, James.
 > 
-> What the holy fuck?  The first element simply _points_ to the "struct
-> virtio_scsi_cmd_req", just like subsequent elements point to the data.
+> On Wed, Jul 25, 2012 at 06:19:13PM +0400, James Bottomley wrote:
+> > > I haven't consulted SAT but it seems like a bug in SAS driver or
+> > > firmware.  If it's a driver bug, we better fix it there.  If a
+> > > firmware bug, working around those is one of major roles of drivers,
+> > > so I think setting allow_restart is fine.
+> > 
+> > Actually, I don't think so.  SAT-2 section 8.12.2 does say 
+> > 
+> >         if the device is in the stopped state as the result of
+> >         processing a START STOP UNIT command (see 9.11), then the SATL
+> >         shall terminate the TEST UNIT READY command with CHECK CONDITION
+> >         status with the sense key set to NOT READY and the additional
+> >         sense code of LOGICAL UNIT NOT READY, INITIALIZING COMMAND
+> >         REQUIRED;
+> > 
+> > START STOP UNIT (with START=0) translates to STANDBY IMMEDIATE, and
+> > that's what hdparm -y issues.  We don't see this in /drivers/ata because
+> > TEST UNIT READY always returns success.
 > 
-> And the protocol of the device is _not_ a struct scatterlist[].  The
-> virtio _API_ takes that array and converts to a series of physical
-> address + offset pairs.
+> Urgh... ATA device in standby mode is ready for any command and
+> definitely doesn't need an "initializing command".  Oh, well...
+
+Well, it does in sleep mode ... which seems to most closely map to what
+SCSI thinks of as a stopped unit. I checked the specs just in case there
+was an error ... they all say STANDBY not SLEEP.
+
+> > So it looks like the mpt2sas SAT is doing the correct thing and we only
+> > don't see this problem in normal SATA devices because of a bug in the
+> > libata-scsi SAT.
 > 
->> Since you need to change the standard to support chaining then
->> it is a good time to fix this.
-> 
-> Perhaps it is a good time for you to read the virtio spec.  You are
-> making a huge confusion between the LLD->virtio interface and the
-> virtio->hardware interface.  I'm talking only of the former.
-> 
->>> 3) virtio takes care of converting the "packet" from a scatterlist
->>> (which currently must be a flat one) to the hardware representation.
->>> Here a walk is inevitable, so we don't care about this walk.
->>
->> "hardware representation" you mean aio or biovec, what ever the
->> IO submission path uses at the host end?
-> 
-> No, I mean the way the virtio spec encodes the physical address + offset
-> pairs.
-> 
-> I stopped reading here.
-> 
+> libata is inconsistent with the standard but I think the standard is
+> wrong here. :(
+
+Well, reading it, so do I.  Unfortunately, we get to deal with the world
+as it is rather than as we would wish it to be.  We likely have this
+problem with a lot of USB SATLs as well ...
+
+It looks like a hack like this might be needed.
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 4a6381c..7e59a7f 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -42,6 +42,8 @@
+ 
+ #include <trace/events/scsi.h>
+ 
++static void scsi_eh_done(struct scsi_cmnd *scmd);
++
+ #define SENSE_TIMEOUT		(10*HZ)
+ 
+ /*
+@@ -241,6 +243,14 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 	if (! scsi_command_normalize_sense(scmd, &sshdr))
+ 		return FAILED;	/* no valid sense data */
+ 
++	if (scmd->cmnd[0] == TEST_UNIT_READY && scmd->scsi_done != scsi_eh_done)
++		/* 
++		 * nasty: for mid-layer issued TURs, we need to return the
++		 * actual sense data without any recovery attempt.  For eh
++		 * issued ones, we need to try to recover and interpret
++		 */
++		return SUCCESS;
++
+ 	if (scsi_sense_is_deferred(&sshdr))
+ 		return NEEDS_RETRY;
+ 
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 56a9379..91d3366 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -764,6 +764,16 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	sdev->model = (char *) (sdev->inquiry + 16);
+ 	sdev->rev = (char *) (sdev->inquiry + 32);
+ 
++	if (strncmp(sdev->vendor, "ATA     ", 8) == 0) {
++		/* 
++		 * sata emulation layer device.  This is a hack to work around
++		 * the SATL power management specifications which state that
++		 * when the SATL detects the device has gone into standby
++		 * mode, it shall respond with NOT READY.
++		 */
++		sdev->allow_restart = 1;
++	}
++
+ 	if (*bflags & BLIST_ISROM) {
+ 		sdev->type = TYPE_ROM;
+ 		sdev->removable = 1;
 
 
-The picture confused me. It looked like the first element is the virtio_scsi_cmd_req
-not an sgilist-element that points to the struct's buffer.
-
-In that case then yes your plan of making a two-elements fragment that points to the
-original scsi-sglist is perfect. All you have to do is that, and all you have to do
-at virtio is use the sg_for_each macro and you are done.
-
-You don't need any sglist allocation or reshaping. And you can easily support
-chaining. Looks like order of magnitude more simple then what you do now
-So what is the problem?
-
-And BTW you won't need that new __sg_set_page API anymore.
-
-> Paolo
-
-
-Cheers
-Boaz
