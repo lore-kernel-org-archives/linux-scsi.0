@@ -1,92 +1,65 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Wed, 25 Jul 2012 18:19:13 +0400
-Message-ID: <1343225953.12094.55.camel@dabdike>
-References: <4FFB32E5.1050109@farcaster.org>
-	 <4FFB7354.8040809@matthiasprager.de> <4FFB8A86.7000009@farcaster.org>
-	 <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de>
-	 <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com>
-	 <5005BF7D.2050703@matthiasprager.de> <20120717200136.GC24336@google.com>
-	 <500A9D7C.8080801@matthiasprager.de>
-	 <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] scsi: virtio-scsi: Fix address translation failure of
+ HighMem pages used by sg list
+Date: Wed, 25 Jul 2012 17:36:45 +0300
+Message-ID: <5010047D.6070807@panasas.com>
+References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com> <500FB1DE.1000100@redhat.com> <500FBAE8.2050107@panasas.com> <500FBF37.50603@redhat.com> <500FE7D2.7070101@panasas.com> <500FEB63.3000709@redhat.com> <500FF412.3090600@panasas.com> <500FF656.6000203@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46822 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933117Ab2GYOTW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jul 2012 10:19:22 -0400
-In-Reply-To: <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <500FF656.6000203@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Matthias Prager <linux@matthiasprager.de>, Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-ide@vger.kernel.org
 
-On Sun, 2012-07-22 at 10:31 -0700, Tejun Heo wrote:
-> Hello,
+On 07/25/2012 04:36 PM, Paolo Bonzini wrote:
+
+> Il 25/07/2012 15:26, Boaz Harrosh ha scritto:
+>> On 07/25/2012 03:49 PM, Paolo Bonzini wrote:
+>>
+>>>
+>>> Except here the destination array has to be given to virtio, which
+>>> doesn't (yet) understand chaining.  I'm using for_each_sg rather than a
+>>> simple memcpy exactly because I want to flatten the input scatterlist
+>>> onto consecutive scatterlist entries, which is what virtio expects (and
+>>> what I'll change when I get to it).
+>>>
+>>> for_each_sg guarantees that I get non-chain scatterlists only, so it is
+>>> okay to value-assign them to sg[].
+>>
+>> So if the virtio does not understand chaining at all then surly it will
+>> not understand the 2-bit end marker and will get a wrong page pointer
+>> with the 1st bit set.
 > 
-> On Sat, Jul 21, 2012 at 02:15:56PM +0200, Matthias Prager wrote:
-> > Now I'm not sure this isn't taping over another bug. Which leads me to
-> > my question: What is the correct behavior?
-> > 
-> > #1 Issuing a separate spin-up command (START UNIT?) prior to sending i/o
-> > by setting allow_restart=1 for sata disks on sas controllers
-> > 
-> > or
-> > 
-> > #2 Teaching the sas drivers they do not need spin-up commands and can
-> > simply start issuing i/o to sata disks
+> It doesn't understand chaining, but it does use sg_phys(x) so it will
+> not get a wrong page pointer for the end marker.
 > 
-> I haven't consulted SAT but it seems like a bug in SAS driver or
-> firmware.  If it's a driver bug, we better fix it there.  If a
-> firmware bug, working around those is one of major roles of drivers,
-> so I think setting allow_restart is fine.
-
-Actually, I don't think so.  SAT-2 section 8.12.2 does say 
-
-        if the device is in the stopped state as the result of
-        processing a START STOP UNIT command (see 9.11), then the SATL
-        shall terminate the TEST UNIT READY command with CHECK CONDITION
-        status with the sense key set to NOT READY and the additional
-        sense code of LOGICAL UNIT NOT READY, INITIALIZING COMMAND
-        REQUIRED;
-
-START STOP UNIT (with START=0) translates to STANDBY IMMEDIATE, and
-that's what hdparm -y issues.  We don't see this in /drivers/ata because
-TEST UNIT READY always returns success.
-
-So it looks like the mpt2sas SAT is doing the correct thing and we only
-don't see this problem in normal SATA devices because of a bug in the
-libata-scsi SAT.
-
-However, the kernel log
-
-Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj] Device not ready
-Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Sense Key : Not Ready [current]
-Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Add. Sense: Logical unit not ready, initializing command required
-Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj] CDB: Write(10): 2a 00 57 54 52 3f 00 00 08 00
-
-Indicates we got the NOT READY to a non-TUR command, so I suspect what's
-happening is that sending the TUR causes the SAT to remember the standby
-state and respond NOT READY to all subsequent commands.  However, if we
-just send an ordinary command, not a TUR, it quietly wakes the drive and
-we don't see any problems.
-
-There is support in SAT for this behaviour because there's a note on the
-START STOP UNIT command saying
-
-        After returning GOOD status for a START STOP UNIT command with
-        the START bit set to zero, the SATL shall consider the ATA
-        device to be in the Stopped power state (see SBC-2)
-
-Which in SCSI terms would mean return NOT READY to any subsequent
-commands.
-
-Can someone verify this is indeed what the mpt2sas HBA is doing?
-
-James
+>> Fine then your code is now a crash because the terminating bit was just
+>> copied over, which it was not before.
+> 
+> I did test the patch with value-assignment.
+> 
 
 
+Still you should use the sg_set_page()!!
+1. It is not allowed to directly manipulate sg entries. One should always
+   use the proper accessor. Even if open coding does work and is not a bug
+   it should not be used anyway!
+2. Future code that will support chaining will need to do as I say so why
+   change it then, again?
+
+Please don't change two things in one patch. The fix is for high-pages
+please fix only that here. You can blasphemy open-code the sg manipulation
+in a separate patch.
+
+Please
+Boaz
+
+>> Lets separate the two topics from now on. Send me one mail concerning
+>> the proper above patch, And a different mail for how to support chaining.
+> 
+> Ok, and I'll change the topic.
+> 
+> Paolo
