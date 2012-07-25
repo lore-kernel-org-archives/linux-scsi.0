@@ -1,77 +1,57 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] sd: do not set changed flag on all unit attention conditions
-Date: Wed, 25 Jul 2012 14:09:20 +0200
-Message-ID: <500FE1F0.3000303@suse.de>
-References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>    <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>    <50044D56.6000400@redhat.com>   <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>   <50052390.7030908@redhat.com>  <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com>  <5005285E.8060706@redhat.com> <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Wang Sen <senwang@linux.vnet.ibm.com>
+Subject: [PATCH v2] scsi: virtio-scsi: Fix address translation failure of HighMem pages used by sg list
+Date: Wed, 25 Jul 2012 20:13:10 +0800
+Message-ID: <1343218390-24310-1-git-send-email-senwang@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:56689 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756604Ab2GYMOR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2012 08:14:17 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <senwang@linux.vnet.ibm.com>;
+	Wed, 25 Jul 2012 22:14:00 +1000
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, pbonzini@redhat.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Wang Sen <senwang@linux.vnet.ibm.com>
 
-On 07/17/2012 11:11 AM, James Bottomley wrote:
-> On Tue, 2012-07-17 at 10:54 +0200, Paolo Bonzini wrote:
->> Il 17/07/2012 10:40, James Bottomley ha scritto:
->>>>>
->>>>> It's not specific to virtio-scsi, in fact I expect that virtio-sc=
-si will
->>>>> be almost always used with non-removable disks.
->>>>>
->>>>> However, QEMU's SCSI target is not used just for virtio-scsi (for
->>>>> example it can be used for USB storage), and it lets you mark a d=
-isk as
->>>>> removable---why? because there exists real hardware that presents=
- itself
->>>>> as an SBC removable disk.  The only thing that is specific to
->>>>> virtualization, is support for online resizing (which generates a=
- unit
->>>>> attention condition CAPACITY DATA HAS CHANGED).
->>> So what's the problem?  If you're doing pass through of a physical =
-disk,
->>> we pick up removable from its inquiry string ... a physical removab=
-le
->>> device doesn't get resized.  If you have a virtual disk you want to
->>> resize, you don't set the removable flag in the inquiry data.
->>
->> In practice people will do what you said, and it's not a problem.
->>
->> However, there's nothing that prevents you from running qemu with a
->> removable SCSI disk, and then resizing it.  I would like this to wor=
-k,
->> because SBC allows it and there's no reason why it shouldn't.
->=20
-> There's no such thing in the market today as a removable disk that's
-> resizeable.  Removable disks are for things like backup cartridges an=
-d
-> ageing jazz drives.  Worse: most removeable devices today are USB car=
-d
-> readers whose standards compliance varies from iffy to non existent.
-> Resizeable disks are currently the province of storage arrays.
->=20
-Ho-hum. I beg to disagree.
+When using the commands below to write some data to a virtio-scsi LUN of the
+QEMU guest(32-bit) with 1G physical memory(qemu -m 1024), the qemu will crash.
 
-drivers/scsi/aacraid/aachba.c:2266
+        # sudo mkfs.ext4 /dev/sdb  (/dev/sdb is the virtio-scsi LUN.)
+        # sudo mount /dev/sdb /mnt
+        # dd if=/dev/zero of=/mnt/file bs=1M count=1024
 
-		/* Do not cache partition table for arrays */
-		scsicmd->device->removable =3D 1;
+In current implementation, sg_set_buf is called to add buffers to sg list which
+is put into the virtqueue eventually. But if there are some HighMem pages in
+table->sgl you can not get virtual address by sg_virt. So, sg_virt(sg_elem) may
+return NULL value. This will cause QEMU exit when virtqueue_map_sg is called
+in QEMU because an invalid GPA is passed by virtqueue.
 
-To the extend of my knowledge aacraid does this _precisely_ to allow
-for resizing; in effect every open() will trigger a device revalidation=
-=2E
+I take Paolo's solution mentioned in last thread to avoid failure on handling 
+flag bits.
 
-So I guess by just setting the 'removable' flag you should be okay.
-You might need to remount it, but that's another story.
+I have tested the patch on my workstation. QEMU would not crash any more.
 
-Cheers,
+Signed-off-by: Wang Sen <senwang@linux.vnet.ibm.com>
+---
+ drivers/scsi/virtio_scsi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 1b38431..6661610 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -198,7 +198,7 @@ static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
+ 	int i;
+ 
+ 	for_each_sg(table->sgl, sg_elem, table->nents, i)
+-		sg_set_buf(&sg[idx++], sg_virt(sg_elem), sg_elem->length);
++		sg[idx++] = *sg_elem;
+ 
+ 	*p_idx = idx;
+ }
+-- 
+1.7.9.5
+
