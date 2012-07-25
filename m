@@ -1,56 +1,93 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: virtio(-scsi) vs. chained sg_lists (was Re: [PATCH] scsi: virtio-scsi:
- Fix address translation failure of HighMem pages used by sg list)
-Date: Wed, 25 Jul 2012 19:43:31 +0200
-Message-ID: <50103043.5050508@redhat.com>
-References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com> <500FB1DE.1000100@redhat.com> <500FBAE8.2050107@panasas.com> <500FBF37.50603@redhat.com> <500FE7D2.7070101@panasas.com> <500FEB63.3000709@redhat.com> <500FF412.3090600@panasas.com> <50100014.2010109@redhat.com> <50101091.5090909@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50101091.5090909@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [RESEND PATCH] SCSI: scsi_lib: fix scsi_io_completion's SG_IO error propagation
+Date: Wed, 25 Jul 2012 13:46:51 -0400
+Message-ID: <1343238411-18193-1-git-send-email-snitzer@redhat.com>
+References: <20120718230614.GC13570@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:56886 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750959Ab2GYRq4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jul 2012 13:46:56 -0400
+In-Reply-To: <20120718230614.GC13570@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@hansenpartnership.com
+Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, hare@suse.de, Babu.Moger@netapp.com
 
-Il 25/07/2012 17:28, Boaz Harrosh ha scritto:
->> 1) what I get is a scsi_cmnd which contains an N-element scatterlist.
->>
->> 2) virtio-scsi has to build the "packet" that is passed to the hardware
->> (it does not matter that the hardware is virtual).  This packet (per
->> virtio-scsi spec) has an N+1-element scatterlist, where the first
->> element is a request descriptor (struct virtio_scsi_cmd_req), and the
->> others describe the written data.
-> 
-> Then "virtio-scsi spec" is crap. It overloads the meaning of
-> "struct scatterlist" of the first element in an array. to be a
-> "struct virtio_scsi_cmd_req".
+The following v3.4-rc1 commit unmasked an existing bug in
+scsi_io_completion's SG_IO error handling:
+47ac56d [SCSI] scsi_error: classify some ILLEGAL_REQUEST sense as a permanent TARGET_ERROR
 
-What the holy fuck?  The first element simply _points_ to the "struct
-virtio_scsi_cmd_req", just like subsequent elements point to the data.
+Given that certain ILLEGAL_REQUEST are now properly categorized as
+TARGET_ERROR the host_byte is being set (before host_byte wasn't ever
+set for these ILLEGAL_REQUEST).
 
-And the protocol of the device is _not_ a struct scatterlist[].  The
-virtio _API_ takes that array and converts to a series of physical
-address + offset pairs.
+In scsi_io_completion, initialize req->errors with cmd->result _after_
+the SG_IO block that calls __scsi_error_from_host_byte (which may
+modify the host_byte).
 
-> Since you need to change the standard to support chaining then
-> it is a good time to fix this.
+Before this fix:
 
-Perhaps it is a good time for you to read the virtio spec.  You are
-making a huge confusion between the LLD->virtio interface and the
-virtio->hardware interface.  I'm talking only of the former.
+    cdb to send: 12 01 01 00 00 00
+ioctl(3, SG_IO, {'S', SG_DXFER_NONE, cmd[6]=[12, 01, 01, 00, 00, 00],
+    mx_sb_len=32, iovec_count=0, dxfer_len=0, timeout=20000, flags=0,
+    status=02, masked_status=01, sb[19]=[70, 00, 05, 00, 00, 00, 00, 0b,
+    00, 00, 00, 00, 24, 00, 00, 00, 00, 00, 00], host_status=0x10,
+    driver_status=0x8, resid=0, duration=0, info=0x1}) = 0
+SCSI Status: Check Condition
 
->> 3) virtio takes care of converting the "packet" from a scatterlist
->> (which currently must be a flat one) to the hardware representation.
->> Here a walk is inevitable, so we don't care about this walk.
-> 
-> "hardware representation" you mean aio or biovec, what ever the
-> IO submission path uses at the host end?
+Sense Information:
+sense buffer empty
 
-No, I mean the way the virtio spec encodes the physical address + offset
-pairs.
+After:
 
-I stopped reading here.
+    cdb to send: 12 01 01 00 00 00
+ioctl(3, SG_IO, {'S', SG_DXFER_NONE, cmd[6]=[12, 01, 01, 00, 00, 00],
+    mx_sb_len=32, iovec_count=0, dxfer_len=0, timeout=20000, flags=0,
+    status=02, masked_status=01, sb[19]=[70, 00, 05, 00, 00, 00, 00, 0b,
+    00, 00, 00, 00, 24, 00, 00, 00, 00, 00, 00], host_status=0,
+    driver_status=0x8, resid=0, duration=0, info=0x1}) = 0
+SCSI Status: Check Condition
 
-Paolo
+Sense Information:
+ Fixed format, current;  Sense key: Illegal Request
+ Additional sense: Invalid field in cdb
+ Raw sense data (in hex):
+        70 00 05 00 00 00 00 0b  00 00 00 00 24 00 00 00
+        00 00 00
+
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+Reported-by: Paolo Bonzini <pbonzini@redhat.com>
+Tested-by: Paolo Bonzini <pbonzini@redhat.com>
+Reviewed-by: Babu Moger <babu.moger@netapp.com>
+Cc: stable@vger.kernel.org [v3.4+]
+---
+ drivers/scsi/scsi_lib.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b583277..9377ed2 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -759,7 +759,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	}
+ 
+ 	if (req->cmd_type == REQ_TYPE_BLOCK_PC) { /* SG_IO ioctl from block level */
+-		req->errors = result;
+ 		if (result) {
+ 			if (sense_valid && req->sense) {
+ 				/*
+@@ -775,6 +774,10 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			if (!sense_deferred)
+ 				error = __scsi_error_from_host_byte(cmd, result);
+ 		}
++		/*
++		 * __scsi_error_from_host_byte may have reset the host_byte
++		 */
++		req->errors = cmd->result;
+ 
+ 		req->resid_len = scsi_get_resid(cmd);
+ 
+-- 
+1.7.4.4
+
