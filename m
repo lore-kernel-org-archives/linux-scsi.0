@@ -1,138 +1,92 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: virtio(-scsi) vs. chained sg_lists (was Re: [PATCH] scsi: virtio-scsi:
- Fix address translation failure of HighMem pages used by sg list)
-Date: Wed, 25 Jul 2012 16:17:56 +0200
-Message-ID: <50100014.2010109@redhat.com>
-References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com> <500FB1DE.1000100@redhat.com> <500FBAE8.2050107@panasas.com> <500FBF37.50603@redhat.com> <500FE7D2.7070101@panasas.com> <500FEB63.3000709@redhat.com> <500FF412.3090600@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Wed, 25 Jul 2012 18:19:13 +0400
+Message-ID: <1343225953.12094.55.camel@dabdike>
+References: <4FFB32E5.1050109@farcaster.org>
+	 <4FFB7354.8040809@matthiasprager.de> <4FFB8A86.7000009@farcaster.org>
+	 <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de>
+	 <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com>
+	 <5005BF7D.2050703@matthiasprager.de> <20120717200136.GC24336@google.com>
+	 <500A9D7C.8080801@matthiasprager.de>
+	 <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51531 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933089Ab2GYOSa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jul 2012 10:18:30 -0400
-In-Reply-To: <500FF412.3090600@panasas.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46822 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933117Ab2GYOTW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jul 2012 10:19:22 -0400
+In-Reply-To: <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>
+To: Tejun Heo <tj@kernel.org>
+Cc: Matthias Prager <linux@matthiasprager.de>, Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-ide@vger.kernel.org
 
-Il 25/07/2012 15:26, Boaz Harrosh ha scritto:
->>> In SCSI land most LLDs should support chaining just by virtu of using the
->>> for_each_sg macro. That all it takes. Your code above does support it.
->>
->> Yes, it supports it but still has to undo them before passing to virtio.
->>
->> What my LLD does is add a request descriptor in front of the scatterlist
->> that the LLD receives.  I would like to do this with a 2-item
->> scatterlist: one for the request descriptor, and one which is a chain to
->> the original scatterlist.  
+On Sun, 2012-07-22 at 10:31 -0700, Tejun Heo wrote:
+> Hello,
 > 
-> I hate that plan. Why yet override the scatter element yet again with a third
-> union of a "request descriptor"
-
-I'm not overriding (or did you mean overloading?) anything, and I think
-you're reading too much in my words.
-
-What I am saying is (for a WRITE command):
-
-1) what I get is a scsi_cmnd which contains an N-element scatterlist.
-
-2) virtio-scsi has to build the "packet" that is passed to the hardware
-(it does not matter that the hardware is virtual).  This packet (per
-virtio-scsi spec) has an N+1-element scatterlist, where the first
-element is a request descriptor (struct virtio_scsi_cmd_req), and the
-others describe the written data.
-
-3) virtio takes care of converting the "packet" from a scatterlist
-(which currently must be a flat one) to the hardware representation.
-Here a walk is inevitable, so we don't care about this walk.
-
-4) What I'm doing now: copying (and flattening) the N-element
-scatterlist onto the last elements of an N+1 array that I pass to virtio.
-
-          _ _ _ _ _ _
-         |_|_|_|_|_|_|  scsi_cmnd scatterlist
-
-         vvv COPY vvv
-        _ _ _ _ _ _ _
-       |_|_|_|_|_|_|_|  scatterlist passed to virtio
-        |
-    virtio_scsi_cmd_req
-
-Then I hand off the scatterlist to virtio.  virtio walks it and converts
-it to hardware format.
-
-5) What I want to do: create a 2-element scatterlist, the first being
-the request descriptor and the second chaining to scsi_cmnd's N-element
-scatterlist.
-
-             _ _ _ _ _ _
-            |_|_|_|_|_|_|  scsi_cmnd scatterlist
-        _ _/
-       |_|C|               scatterlist passed to virtio
-        |
-    virtio_scsi_cmd_req
-
-Then I hand off the scatterlist to virtio.  virtio will still walk the
-scatterlist chain, and convert it to N+1 elements for the hardware to
-consume.  Still, removing one walk largely reduces the length of my
-critical sections.  I also save some pointer-chasing because the
-2-element scatterlist are short-lived and can reside on the stack.
-
-
-Other details (you can probably skip these):
-
-There is also a response descriptor.  In the case of writes this is the
-only element that the hardware will write to, so in the case of writes
-the "written by hardware" scatterlist has 1 element only and does not
-need chaining.
-
-Reads are entirely symmetric.  The hardware will read the request
-descriptor from a 1-element scatterlist, and will write response+data
-into an N+1-element scatterlist (the response descriptor precedes the
-data that was read).  It can be treated in exactly the same way.  The
-N+1-element scatterlist could also become a 2-element scatterlist with
-chaining.
-
->> Except that if I call sg_chain and my
->> architecture does not define ARCH_HAS_SG_CHAIN, it will BUG out.  So I
->> need to keep all the scatterlist allocation and copying crap that I have
->> now within #ifdef, and it will bitrot.
+> On Sat, Jul 21, 2012 at 02:15:56PM +0200, Matthias Prager wrote:
+> > Now I'm not sure this isn't taping over another bug. Which leads me to
+> > my question: What is the correct behavior?
+> > 
+> > #1 Issuing a separate spin-up command (START UNIT?) prior to sending i/o
+> > by setting allow_restart=1 for sata disks on sas controllers
+> > 
+> > or
+> > 
+> > #2 Teaching the sas drivers they do not need spin-up commands and can
+> > simply start issuing i/o to sata disks
 > 
-> except that with the correct design you don't call sg_chain you just do:
-> 	request_descriptor->sg_list = sg;
+> I haven't consulted SAT but it seems like a bug in SAS driver or
+> firmware.  If it's a driver bug, we better fix it there.  If a
+> firmware bug, working around those is one of major roles of drivers,
+> so I think setting allow_restart is fine.
 
-By the above it should be clear, that request_descriptor is not a
-driver-private extension of the scsi_cmnd.  It is something passed to
-the hardware.
+Actually, I don't think so.  SAT-2 section 8.12.2 does say 
 
->>> Well that can be done as well, (If done carefully) It should be easy to add
->>> chained fragments to both the end of a given chain just as at beginning.
->>> It only means that the last element of the appended-to chain moves to
->>> the next fragment and it's place is replaced by a link.
->>
->> But you cannot do that in constant time, can you?  And that means you do
->> not enjoy any benefit in terms of cache misses etc.
-> 
-> I did not understand "constant time" it is O(0) if that what you meant.
+        if the device is in the stopped state as the result of
+        processing a START STOP UNIT command (see 9.11), then the SATL
+        shall terminate the TEST UNIT READY command with CHECK CONDITION
+        status with the sense key set to NOT READY and the additional
+        sense code of LOGICAL UNIT NOT READY, INITIALIZING COMMAND
+        REQUIRED;
 
-In the worst case it is a linked list, no?  So in the worst case
-_finding_ the last element of the appended-to chain is O(n).
+START STOP UNIT (with START=0) translates to STANDBY IMMEDIATE, and
+that's what hdparm -y issues.  We don't see this in /drivers/ata because
+TEST UNIT READY always returns success.
 
-Actually, appending to the end is not a problem for virtio-scsi.  But
-for example the virtio-blk spec places the response descriptor _after_
-the input data.  I think this was a mistake, and I didn't repeat it for
-virtio-scsi, but I cited it because in the past Rusty complained that
-the long sglist implementation was "SCSI-centric".
+So it looks like the mpt2sas SAT is doing the correct thing and we only
+don't see this problem in normal SATA devices because of a bug in the
+libata-scsi SAT.
 
->> Also, this assumes that I can modify the appended-to chain.  I'm not
->> sure I can do this?
-> 
-> Each case it's own. If the appended-to chain is const, yes you'll have
-> to reallocate it and copy. Is that your case?
+However, the kernel log
 
-It will be virtio-blk's case, but we can ignore it.
+Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj] Device not ready
+Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Sense Key : Not Ready [current]
+Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Add. Sense: Logical unit not ready, initializing command required
+Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj] CDB: Write(10): 2a 00 57 54 52 3f 00 00 08 00
 
-Paolo
+Indicates we got the NOT READY to a non-TUR command, so I suspect what's
+happening is that sending the TUR causes the SAT to remember the standby
+state and respond NOT READY to all subsequent commands.  However, if we
+just send an ordinary command, not a TUR, it quietly wakes the drive and
+we don't see any problems.
+
+There is support in SAT for this behaviour because there's a note on the
+START STOP UNIT command saying
+
+        After returning GOOD status for a START STOP UNIT command with
+        the START bit set to zero, the SATL shall consider the ATA
+        device to be in the Stopped power state (see SBC-2)
+
+Which in SCSI terms would mean return NOT READY to any subsequent
+commands.
+
+Can someone verify this is indeed what the mpt2sas HBA is doing?
+
+James
+
+
