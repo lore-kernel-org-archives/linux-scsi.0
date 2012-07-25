@@ -1,39 +1,57 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [resend PATCH 2/5] libata: export ata_port suspend/resume infrastructure
- for sas
-Date: Wed, 25 Jul 2012 01:21:47 -0400
-Message-ID: <500F826B.2080405@pobox.com>
-References: <20120710040434.26529.86552.stgit@dwillia2-linux.jf.intel.com> <20120710040552.26529.47482.stgit@dwillia2-linux.jf.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120710040552.26529.47482.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Wang Sen <senwang@linux.vnet.ibm.com>
+Subject: [PATCH] scsi: virtio-scsi: Fix address translation failure of HighMem pages used by sg list
+Date: Wed, 25 Jul 2012 16:29:26 +0800
+Message-ID: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:47879 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932748Ab2GYI35 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2012 04:29:57 -0400
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <senwang@linux.vnet.ibm.com>;
+	Wed, 25 Jul 2012 13:59:54 +0530
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, pbonzini@redhat.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, Wang Sen <senwang@linux.vnet.ibm.com>
 
-On 07/10/2012 12:05 AM, Dan Williams wrote:
-> Reuse ata_port_{suspend|resume}_common for sas.  This path is chosen
-> over adding coordination between ata-tranport and sas-transport because
-> libsas wants to revalidate the domain at resume-time at the host level.
-> It can not validate links have resumed properly until libata has had a
-> chance to perform its revalidation, and any sane placing of an ata_port
-> in the sas-transport model would delay it's resumption until after the
-> host.
->
-> Export the common portion of port suspend/resume (bypass pm_runtime),
-> and allow sas to perform these operations asynchronously (similar to the
-> libsas async-ata probe implmentation).  Async operation is determined by
-> having an external, rather than stack based, location for storing the
-> result of the operation.
->
-> Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+When using the commands below to write some data to a virtio-scsi LUN of the 
+QEMU guest(32-bit) with 1G physical memory(qemu -m 1024), the qemu will crash.
 
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
+	# sudo mkfs.ext4 /dev/sdb  (/dev/sdb is the virtio-scsi LUN.)
+	# sudo mount /dev/sdb /mnt
+	# dd if=/dev/zero of=/mnt/file bs=1M count=1024
 
+In current implementation, sg_set_buf is called to add buffers to sg list which
+is put into the virtqueue eventually. But there are some HighMem pages in 
+table->sgl can not get virtual address by sg_virt. So, sg_virt(sg_elem) may
+return NULL value. This will cause QEMU exit when virtqueue_map_sg is called 
+in QEMU because an invalid GPA is passed by virtqueue.
 
+My solution is using sg_set_page instead of sg_set_buf.
 
+I have tested the patch on my workstation. QEMU would not crash any more.
+
+Signed-off-by: Wang Sen <senwang@linux.vnet.ibm.com>
+---
+ drivers/scsi/virtio_scsi.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 1b38431..fc5c88a 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -198,7 +198,8 @@ static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
+ 	int i;
+ 
+ 	for_each_sg(table->sgl, sg_elem, table->nents, i)
+-		sg_set_buf(&sg[idx++], sg_virt(sg_elem), sg_elem->length);
++		sg_set_page(&sg[idx++], sg_page(sg_elem), sg_elem->length,
++			sg_elem->offset);
+ 
+ 	*p_idx = idx;
+ }
+-- 
+1.7.9.5
 
