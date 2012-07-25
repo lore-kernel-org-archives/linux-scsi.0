@@ -1,49 +1,48 @@
 From: Sen Wang <kelvin.xupt@gmail.com>
 Subject: Re: [PATCH] scsi: virtio-scsi: Fix address translation failure of
  HighMem pages used by sg list
-Date: Wed, 25 Jul 2012 19:46:18 +0800
-Message-ID: <CAKviJvW5w_9_wMazs3HQigosuk+W-iQipb_0pZxr0-bu3xhGbg@mail.gmail.com>
+Date: Wed, 25 Jul 2012 19:48:24 +0800
+Message-ID: <CAKviJvWpiAoAdy2weDrJ8=_baBhfFofGDiZxSt4Do7HMBxE52g@mail.gmail.com>
 References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com>
-	<ccef753fa6fd0ce145611de514e75018@sf-mail.de>
+	<500FB1DE.1000100@redhat.com>
+	<20120725104138.GA11098@stefanha-thinkpad.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ccef753fa6fd0ce145611de514e75018@sf-mail.de>
+In-Reply-To: <20120725104138.GA11098@stefanha-thinkpad.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, jbottomley@parallels.com, pbonzini@redhat.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org
+To: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-2012/7/25 Rolf Eike Beer <eike-kernel@sf-tec.de>:
-> Am 25.07.2012 10:29, schrieb Wang Sen:
->
->> When using the commands below to write some data to a virtio-scsi LUN of
->> the
->> QEMU guest(32-bit) with 1G physical memory(qemu -m 1024), the qemu
->> will crash.
+2012/7/25 Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>:
+> On Wed, Jul 25, 2012 at 10:44:14AM +0200, Paolo Bonzini wrote:
+>> Il 25/07/2012 10:29, Wang Sen ha scritto:
+>> > When using the commands below to write some data to a virtio-scsi LUN of the
+>> > QEMU guest(32-bit) with 1G physical memory(qemu -m 1024), the qemu will crash.
+>> >
+>> >     # sudo mkfs.ext4 /dev/sdb  (/dev/sdb is the virtio-scsi LUN.)
+>> >     # sudo mount /dev/sdb /mnt
+>> >     # dd if=/dev/zero of=/mnt/file bs=1M count=1024
+>> >
+>> > In current implementation, sg_set_buf is called to add buffers to sg list which
+>> > is put into the virtqueue eventually. But there are some HighMem pages in
+>> > table->sgl can not get virtual address by sg_virt. So, sg_virt(sg_elem) may
+>> > return NULL value. This will cause QEMU exit when virtqueue_map_sg is called
+>> > in QEMU because an invalid GPA is passed by virtqueue.
 >>
->>         # sudo mkfs.ext4 /dev/sdb  (/dev/sdb is the virtio-scsi LUN.)
->>         # sudo mount /dev/sdb /mnt
->>         # dd if=/dev/zero of=/mnt/file bs=1M count=1024
+>> Heh, I was compiling (almost) the same patch as we speak. :)
 >>
->> In current implementation, sg_set_buf is called to add buffers to sg
->> list which
->> is put into the virtqueue eventually.
+>> I've never seen QEMU crash; the VM would more likely just fail to boot
+>> with a panic.  But it's the same bug anyway.
 >
->
-> The next sentence is somehow broken:
->
->
->> But there are some HighMem pages in
->> table->sgl can not get virtual address by sg_virt.
->
->
-> Maybe something like "But _if_ there are ... _you_ can not get ..."?
+> It's not a segfault "crash", I think it hits an abort(3) in QEMU's
+> virtio code when trying to map an invalid guest physical address.
 
-Thanks, I'll pay attention in next post.
+How the guest boot fail? I never met this case.
 
 >
-> Eike
+> Stefan
 >
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
