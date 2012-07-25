@@ -1,49 +1,34 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [git patches] libata updates
-Date: Wed, 25 Jul 2012 17:38:15 -0400
-Message-ID: <50106747.8070501@pobox.com>
-References: <20120725203551.GA19762@havoc.gtf.org>
+Date: Wed, 25 Jul 2012 15:06:17 -0700
+Message-ID: <CA+55aFwCCctcmryQJMCT_3TDr60CYBQKu9HMyxOgS8482+w5Xw@mail.gmail.com>
+References: <20120725203551.GA19762@havoc.gtf.org> <20120725204350.GA20530@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120725203551.GA19762@havoc.gtf.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>, Aaron Lu <aaron.lu@amd.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:49089 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062Ab2GYWGj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2012 18:06:39 -0400
+In-Reply-To: <20120725204350.GA20530@havoc.gtf.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 07/25/2012 04:35 PM, Jeff Garzik wrote:
+On Wed, Jul 25, 2012 at 1:43 PM, Jeff Garzik <jeff@garzik.org> wrote:
+> On Wed, Jul 25, 2012 at 04:35:51PM -0400, Jeff Garzik wrote:
+>> Please pull 641589bff714f39b33ef1d7f02eaa009f2993b64 from
+>> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git tags/upstream
+>>
 >
-> Please pull 641589bff714f39b33ef1d7f02eaa009f2993b64 from
-> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git tags/upstream
->
-> (text copied from the upstream-linus tag)
-> Notable changes:
->
-> * Updating libata to directly bind with ACPI / runtime power mgmt.
->    This is a pre-req for SATA ZPODD (CD-ROM power management).
->
->    Touches ACPI (exports++) and SCSI in minor ways.  Has been in linux-next
->    for weeks.
->
->    The rest of [ZPODD] will probably come via SCSI tree, as it involves
->    a lot of updates to the 'sr' driver etc.
+> Oh, I forgot to point out the merge commit, making my HEAD more recent
+> than might be expected.  There was a merge conflict and an API change
+> that needed to be dealt with, in order for your pull to be correct.
 
-BTW Lin and Aaron, note that this did not include these changes:
+So I'd *much* rather see an explanation of what the conflict is when
+you ask me to pull, and let me handle it, rather than you pre-merging
+things for me. I *want* to see conflicts between subsystems.
+Seriously.
 
-       sr: check support for device busy class events
-       sr: support zero power ODD
-       sr: make sure ODD is in resumed state in block ioctl
-
-as in the end I wanted to put the brakes on SCSI-touching patches. 
-These should be able to go into James' scsi-misc tree with the other 
-SCSI-area ZPODD changes.
-
-For those three 'sr' changes listed above, you may add
-
-	Acked-by: Jeff Garzik <jgarzik@redhat.com>
-
-when moving them over.
-
-	Jeff
+                   Linus
