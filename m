@@ -1,87 +1,63 @@
-From: Aniket Kulkarni <aniket@linux.vnet.ibm.com>
-Subject: Question about releasing buffers allocated to request->special
-Date: Wed, 25 Jul 2012 11:52:59 -0400
-Message-ID: <20120725115259.Horde.CgVQ7Jir309QEBZbCdfg4HA@imap.linux.ibm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Wed, 25 Jul 2012 10:17:23 -0700
+Message-ID: <20120725171723.GB32378@google.com>
+References: <4FFB8A86.7000009@farcaster.org>
+ <4FFCBA4C.4000502@farcaster.org>
+ <4FFD6F3D.2030708@matthiasprager.de>
+ <4FFD8410.7050604@matthiasprager.de>
+ <20120717180932.GB2878@google.com>
+ <5005BF7D.2050703@matthiasprager.de>
+ <20120717200136.GC24336@google.com>
+ <500A9D7C.8080801@matthiasprager.de>
+ <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
+ <1343225953.12094.55.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:47854 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753013Ab2GYPyR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2012 11:54:17 -0400
-Received: from /spool/local
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <aniket@linux.vnet.ibm.com>;
-	Wed, 25 Jul 2012 09:54:15 -0600
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 124A61FF0098
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Jul 2012 15:53:08 +0000 (WET)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6PFr0Pt066950
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Jul 2012 09:53:00 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6PFqxv4012665
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Jul 2012 09:52:59 -0600
-Received: from imap.linux.ibm.com (maier.raleigh.ibm.com [9.37.253.158])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id q6PFqxNL012641
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Jul 2012 09:52:59 -0600
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:46491 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751808Ab2GYRRa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2012 13:17:30 -0400
 Content-Disposition: inline
+In-Reply-To: <1343225953.12094.55.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthias Prager <linux@matthiasprager.de>, Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-ide@vger.kernel.org
 
-Hello
+Hello, James.
 
-I have a setup with a 12 daisy chained EXP3000 enclosures connected to
-a server such that each of the disks are accessible via two paths
-through multiple sas expanders. The server has 2 dual ported HBAs. I'm
-running 2.6.32 kernel variant based on RHEL 6.0. I have seen this on
-2.6.31 as well.
+On Wed, Jul 25, 2012 at 06:19:13PM +0400, James Bottomley wrote:
+> > I haven't consulted SAT but it seems like a bug in SAS driver or
+> > firmware.  If it's a driver bug, we better fix it there.  If a
+> > firmware bug, working around those is one of major roles of drivers,
+> > so I think setting allow_restart is fine.
+> 
+> Actually, I don't think so.  SAT-2 section 8.12.2 does say 
+> 
+>         if the device is in the stopped state as the result of
+>         processing a START STOP UNIT command (see 9.11), then the SATL
+>         shall terminate the TEST UNIT READY command with CHECK CONDITION
+>         status with the sense key set to NOT READY and the additional
+>         sense code of LOGICAL UNIT NOT READY, INITIALIZING COMMAND
+>         REQUIRED;
+> 
+> START STOP UNIT (with START=0) translates to STANDBY IMMEDIATE, and
+> that's what hdparm -y issues.  We don't see this in /drivers/ata because
+> TEST UNIT READY always returns success.
 
-I am seeing a bunch of kernel panics pretty frequently with an
-interesting pattern -
+Urgh... ATA device in standby mode is ready for any command and
+definitely doesn't need an "initializing command".  Oh, well...
 
-The kernel paniced trying to deference stuff from scsi_cmnd passed to  
-scsi_dispatch_cmd. Looking at its caller
+> So it looks like the mpt2sas SAT is doing the correct thing and we only
+> don't see this problem in normal SATA devices because of a bug in the
+> libata-scsi SAT.
 
-scsi_request_fn(request_queue *q)
-     device = q->quedata;
-     req = get_request_from_queue(q);
+libata is inconsistent with the standard but I think the standard is
+wrong here. :(
 
-     cmd = req->special;
-     if (!cmd)
-         return;
+Thanks.
 
-     scsi_dispatch_cmd(cmd);
-
-The interesting thing is cmd->device != device; they should've been  
-the same. In fact it looks like req->special itself is garbage and  
-that's why we have been looking at the wrong stuff in  
-scsi_dispatch_cmd. It also explains why we can find the device on  
-upper frames and prove that it (and all its attributes) are healthy  
-all the way from MD to LSI.
-
-The only place in scsi layer that frees req->special is
-
-scsi_prep_return()
-....
-     case BLKPREP_KILL:
-         req->errors = DID_NO_CONNECT << 16;
-         /* release the command and kill it */
-         if (req->special) {
-             struct scsi_cmnd *cmd = req->special;   <--
-             scsi_release_buffers(cmd);                |__ not atomic
-             scsi_put_command(cmd);                    |
-             req->special = NULL;                    <--
-         }
-
-I know this is a basic question, but I'm wondering how does one  
-prevent threads from using req->special while its being deallocated  
-here? I see checks for special == NULL at a lot of places but the  
-release and reset of pointer (above) are not atomic.
-
-Thanks in advance.
 -- 
-Aniket Kulkarni
-
-
+tejun
