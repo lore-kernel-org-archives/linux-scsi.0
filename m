@@ -1,50 +1,75 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: virtio(-scsi) vs. chained sg_lists (was Re: [PATCH] scsi: virtio-scsi:
- Fix address translation failure of HighMem pages used by sg list)
-Date: Wed, 25 Jul 2012 22:06:55 +0200
-Message-ID: <501051DF.5040907@redhat.com>
-References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com> <500FB1DE.1000100@redhat.com> <500FBAE8.2050107@panasas.com> <500FBF37.50603@redhat.com> <500FE7D2.7070101@panasas.com> <500FEB63.3000709@redhat.com> <500FF412.3090600@panasas.com> <50100014.2010109@redhat.com> <50101091.5090909@panasas.com> <50103043.5050508@redhat.com> <50104614.3080002@panasas.com>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCH] scsi_lib: add NULL check to scsi_setup_blk_pc_cmnd
+Date: Wed, 25 Jul 2012 15:13:57 -0400
+Message-ID: <20120725191357.GA28115@logfs.org>
+References: <20120723173220.GA17767@logfs.org>
+ <1343072755.5865.1.camel@dabdike>
+ <20120723192439.GB17767@logfs.org>
+ <1343106101.3513.0.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50104614.3080002@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from longford.logfs.org ([213.229.74.203]:54018 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751815Ab2GYU1k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2012 16:27:40 -0400
+Content-Disposition: inline
+In-Reply-To: <1343106101.3513.0.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-Il 25/07/2012 21:16, Boaz Harrosh ha scritto:
-> The picture confused me. It looked like the first element is the virtio_scsi_cmd_req
-> not an sgilist-element that points to the struct's buffer.
-> 
-> In that case then yes your plan of making a two-elements fragment that points to the
-> original scsi-sglist is perfect. All you have to do is that, and all you have to do
-> at virtio is use the sg_for_each macro and you are done.
-> 
-> You don't need any sglist allocation or reshaping. And you can easily support
-> chaining. Looks like order of magnitude more simple then what you do now
+On Tue, 24 July 2012 09:01:41 +0400, James Bottomley wrote:
+> On Mon, 2012-07-23 at 15:24 -0400, J=C3=B6rn Engel wrote:
+> > On Mon, 23 July 2012 23:45:55 +0400, James Bottomley wrote:
+> > >=20
+> > > Have you checked this with the patches in scsi-misc?  There's a s=
+eries
+> > > of patches in there that alters the way sdev handling is done.
+> >=20
+> > I would have liked to, but the tree referenced in MAINTAINERS does =
+not
+> > appear to exist:
+> >=20
+> > git clone git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-m=
+isc-2.6.git
+> > Cloning into 'scsi-misc-2.6'...
+> > fatal: The remote end hung up unexpectedly
+>=20
+> git clone git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
+>=20
+> use the misc branch
 
-It is.
+joern@Sligo:/usr/src/kernel$ git clone --reference git/ git://git.kerne=
+l.org/pub/scm/linux/kernel/git/jejb/scsi.git
+Cloning into 'scsi'...
+remote: Counting objects: 869, done.
+remote: Compressing objects: 100% (420/420), done.
+remote: Total 668 (delta 562), reused 274 (delta 248)
+Receiving objects: 100% (668/668), 112.59 KiB, done.
+Resolving deltas: 100% (562/562), completed with 110 local objects.
+Checking out files: 100% (39127/39127), done.
+joern@Sligo:/usr/src/kernel$ cd scsi/
+joern@Sligo:/usr/src/kernel/scsi$ git branch
+* master
 
-> So what is the problem?
+Normally I never use branches, so there is a chance that I'm just
+clueless.  But to my untrained eye, this looks as if there is no misc
+branch.
 
-That not all architectures have ARCH_HAS_SG_CHAIN (though all those I
-care about do).  So I need to go through all architectures and make sure
-they use for_each_sg, or at least to change ARCH_HAS_SG_CHAIN to a
-Kconfig define so that dependencies can be expressed properly.
+J=C3=B6rn
 
-> And BTW you won't need that new __sg_set_page API anymore.
-
-Kind of.
-
-   sg_init_table(sg, 2);
-   sg_set_buf(sg[0], req, sizeof(req));
-   sg_chain(sg[1], scsi_out(sc));
-
-is still a little bit worse than
-
-   __sg_set_buf(sg[0], req, sizeof(req));
-   __sg_chain(sg[1], scsi_out(sc));
-
-Paolo
+--
+To my face you have the audacity to advise me to become a thief - the w=
+orst
+kind of thief that is conceivable, a thief of spiritual things, a thief=
+ of
+ideas! It is insufferable, intolerable!
+-- M. Binet in Scarabouche
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
