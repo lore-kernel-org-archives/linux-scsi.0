@@ -1,93 +1,48 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [RESEND PATCH] SCSI: scsi_lib: fix scsi_io_completion's SG_IO error propagation
-Date: Wed, 25 Jul 2012 13:46:51 -0400
-Message-ID: <1343238411-18193-1-git-send-email-snitzer@redhat.com>
-References: <20120718230614.GC13570@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56886 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750959Ab2GYRq4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jul 2012 13:46:56 -0400
-In-Reply-To: <20120718230614.GC13570@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [resend PATCH 5/5] libsas, ipr: cleanup ata_host flags initialization
+ via ata_host_init
+Date: Wed, 25 Jul 2012 14:42:54 -0400
+Message-ID: <50103E2E.40300@pobox.com>
+References: <20120710040434.26529.86552.stgit@dwillia2-linux.jf.intel.com> <20120710040608.26529.20117.stgit@dwillia2-linux.jf.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120710040608.26529.20117.stgit@dwillia2-linux.jf.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com
-Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, hare@suse.de, Babu.Moger@netapp.com
 
-The following v3.4-rc1 commit unmasked an existing bug in
-scsi_io_completion's SG_IO error handling:
-47ac56d [SCSI] scsi_error: classify some ILLEGAL_REQUEST sense as a permanent TARGET_ERROR
+On 07/10/2012 12:06 AM, Dan Williams wrote:
+> libsas and ipr pass flags to ata_host_init that are meant for the port.
+>
+> ata_host flags:
+> 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
+> 	ATA_HOST_STARTED	= (1 << 1),	/* Host started */
+> 	ATA_HOST_PARALLEL_SCAN	= (1 << 2),	/* Ports on this host can be scanned in parallel */
+> 	ATA_HOST_IGNORE_ATA	= (1 << 3),	/* Ignore ATA devices on this host. */
+>
+> flags passed by libsas:
+> 	ATA_FLAG_SATA		= (1 << 1),
+> 	ATA_FLAG_PIO_DMA	= (1 << 7), /* PIO cmds via DMA */
+> 	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
+>
+> The only one that aliases is ATA_HOST_STARTED which is a 'don't care' in
+> the libsas and ipr cases since ata_hosts from these sources are not
+> registered with libata.
+>
+> Cc: Brian King <brking@us.ibm.com>
+> Reported-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>   drivers/ata/libata-core.c     |   10 ++--------
+>   drivers/scsi/ipr.c            |    3 +--
+>   drivers/scsi/libsas/sas_ata.c |    5 +----
+>   include/linux/libata.h        |    3 +--
 
-Given that certain ILLEGAL_REQUEST are now properly categorized as
-TARGET_ERROR the host_byte is being set (before host_byte wasn't ever
-set for these ILLEGAL_REQUEST).
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
-In scsi_io_completion, initialize req->errors with cmd->result _after_
-the SG_IO block that calls __scsi_error_from_host_byte (which may
-modify the host_byte).
 
-Before this fix:
 
-    cdb to send: 12 01 01 00 00 00
-ioctl(3, SG_IO, {'S', SG_DXFER_NONE, cmd[6]=[12, 01, 01, 00, 00, 00],
-    mx_sb_len=32, iovec_count=0, dxfer_len=0, timeout=20000, flags=0,
-    status=02, masked_status=01, sb[19]=[70, 00, 05, 00, 00, 00, 00, 0b,
-    00, 00, 00, 00, 24, 00, 00, 00, 00, 00, 00], host_status=0x10,
-    driver_status=0x8, resid=0, duration=0, info=0x1}) = 0
-SCSI Status: Check Condition
-
-Sense Information:
-sense buffer empty
-
-After:
-
-    cdb to send: 12 01 01 00 00 00
-ioctl(3, SG_IO, {'S', SG_DXFER_NONE, cmd[6]=[12, 01, 01, 00, 00, 00],
-    mx_sb_len=32, iovec_count=0, dxfer_len=0, timeout=20000, flags=0,
-    status=02, masked_status=01, sb[19]=[70, 00, 05, 00, 00, 00, 00, 0b,
-    00, 00, 00, 00, 24, 00, 00, 00, 00, 00, 00], host_status=0,
-    driver_status=0x8, resid=0, duration=0, info=0x1}) = 0
-SCSI Status: Check Condition
-
-Sense Information:
- Fixed format, current;  Sense key: Illegal Request
- Additional sense: Invalid field in cdb
- Raw sense data (in hex):
-        70 00 05 00 00 00 00 0b  00 00 00 00 24 00 00 00
-        00 00 00
-
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-Reported-by: Paolo Bonzini <pbonzini@redhat.com>
-Tested-by: Paolo Bonzini <pbonzini@redhat.com>
-Reviewed-by: Babu Moger <babu.moger@netapp.com>
-Cc: stable@vger.kernel.org [v3.4+]
----
- drivers/scsi/scsi_lib.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b583277..9377ed2 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -759,7 +759,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	}
- 
- 	if (req->cmd_type == REQ_TYPE_BLOCK_PC) { /* SG_IO ioctl from block level */
--		req->errors = result;
- 		if (result) {
- 			if (sense_valid && req->sense) {
- 				/*
-@@ -775,6 +774,10 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 			if (!sense_deferred)
- 				error = __scsi_error_from_host_byte(cmd, result);
- 		}
-+		/*
-+		 * __scsi_error_from_host_byte may have reset the host_byte
-+		 */
-+		req->errors = cmd->result;
- 
- 		req->resid_len = scsi_get_resid(cmd);
- 
--- 
-1.7.4.4
 
