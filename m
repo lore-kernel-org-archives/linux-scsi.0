@@ -1,44 +1,67 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/2] virtio-scsi: fix parsing of hotplug/hot-unplug LUN
- number
-Date: Thu, 26 Jul 2012 15:31:00 +0400
-Message-ID: <1343302260.3115.33.camel@dabdike>
-References: <1342454751-8950-1-git-send-email-pbonzini@redhat.com>
-	    <1342454751-8950-2-git-send-email-pbonzini@redhat.com>
-	   <1343292731.3115.17.camel@dabdike> <50110820.4040403@redhat.com>
-	  <1343294472.3115.22.camel@dabdike> <50111936.8090508@acm.org>
-	 <1343298798.3115.31.camel@dabdike> <50111F6C.7010502@redhat.com>
+From: "S, Venkatraman" <svenkatr@ti.com>
+Subject: Re: [PATCH V3 0/4] [SCSI] ufs: Adds glue drivers to ufshcd
+Date: Thu, 26 Jul 2012 17:05:02 +0530
+Message-ID: <CANfBPZ97FvXnx0JtsDtDhYRxB=f38NsxcvvO4UOqN_sOYe_Rcg@mail.gmail.com>
+References: <1343292170-2599-1-git-send-email-vinholikatti@gmail.com>
+ <CANfBPZ-amdTBXMbj0E2SrMHBjHFnd8cuC4ASoygkbXC+5oeAGg@mail.gmail.com> <CAKVbJB96Y87=a1dOskYX472Um3w=_orQWN19_Yj+iRp7js9Anw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50111F6C.7010502@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:45231 "EHLO
+	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750766Ab2GZLfX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jul 2012 07:35:23 -0400
+Received: by obbeh20 with SMTP id eh20so2304661obb.10
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jul 2012 04:35:22 -0700 (PDT)
+In-Reply-To: <CAKVbJB96Y87=a1dOskYX472Um3w=_orQWN19_Yj+iRp7js9Anw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vinayak holikatti <vinholikatti@gmail.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com
 
-On Thu, 2012-07-26 at 12:43 +0200, Paolo Bonzini wrote:
-> Il 26/07/2012 12:33, James Bottomley ha scritto:
-> >> > Has it already been considered to modify scsilun_to_int() such that LUN
-> >> > numbers start at zero even for addressing method 1 ? This is what e.g.
-> >> > the function scst_unpack_lun() already does. See also
-> >> > http://scst.svn.sourceforge.net/viewvc/scst/trunk/scst/src/scst_lib.c?revision=HEAD&view=markup.
-> > Yes, as I said before, the problem is that the actual numbers are
-> > 
-> > 1. not 1:1: there are several possible encodings of luns 0-255
-> > 2. hierarchical, so once you go beyond a single level you can't properly
-> > use a numeric representation either.
-> > 
-> > the mid layer just uses the lun number as an encoding of the actual SAM
-> > lun.  The key for us is that int_to_scsilun has to go back the other
-> > way.
-> 
-> I still disagree, but I will modify QEMU so that this patch is not
-> necessary.  Later I can switch to int_to_scsilun.
+On Thu, Jul 26, 2012 at 4:42 PM, vinayak holikatti
+<vinholikatti@gmail.com> wrote:
+> On Thu, Jul 26, 2012 at 4:02 PM, S, Venkatraman <svenkatr@ti.com> wrote:
+>> On Thu, Jul 26, 2012 at 2:12 PM, Vinayak Holikatti
+>> <vinholikatti@gmail.com> wrote:
+>>> This patch set adds following features
+>>>  - Seggregate PCI specific code in ufshcd.c
+>>>  - Adds PCI glue driver ufshcd-pci.c and ufshcd.c become core module
+>>>  - Adds Platform glue driver ufshcd-pltfrm.c
+>>>  - Update correct transfer size in Command UPIU
+>>>
+>>> Vinayak Holikatti (4):
+>>>   [SCSI] drivers/scsi/ufs: Seggregate PCI Specific Code
+>>>   [SCSI] drivers/scsi/ufs: Separate PCI code into glue driver
+>>>   [SCSI] ufs: Add Platform glue driver for ufshcd
+>>>   [SCSI] ufs: Correct the expected data transfer size
+>>>
+>>>  drivers/scsi/ufs/Kconfig         |   37 +++-
+>>>  drivers/scsi/ufs/Makefile        |    2 +
+>>>  drivers/scsi/ufs/ufshcd-pci.c    |  228 ++++++++++++++++++++
+>>>  drivers/scsi/ufs/ufshcd-pltfrm.c |  222 ++++++++++++++++++++
+>>>  drivers/scsi/ufs/ufshcd.c        |  422 ++++++--------------------------------
+>>>  drivers/scsi/ufs/ufshcd.h        |  206 +++++++++++++++++++
+>>>  drivers/scsi/ufs/ufshcd_common.h |   53 +++++
+>>>  7 files changed, 813 insertions(+), 357 deletions(-)
+>>
+>> Two minor observations..
+>> 1) If both pci and platform have to do the exact same thing in their
+>> _suspend() and _resume() routines, perhaps there is scope for making
+>> them as common (the steps outlined in them should be done in core
+>> ufshcd) ?
+> Both will not have to do the exact same thing. We have plan to implement
+> ufshcd_suspend and ufshcd_resume which will be generic and will be part
+> of ufshcd core, as you said.
 
-Thanks, on the principle of least surprise, you definitely don't want
-the lun numbering to change depending on whether you directly attach to
-the array or pass it through virtio-scsi.
+Thanks. The comments in the driver files don't reflect this; it'd be
+wise to create
+the placeholder for core_suspend()/resume() in ufshcd.c, instead of
+the platform drivers.
 
-James
+>>
+>> 2) Need to include ufshcd_common.h in ufshcd.c so that the prototypes
+>> are supplied for the exported functions.
+> Thank you, I will make necessary changes in next version of patches.
+>
