@@ -1,40 +1,37 @@
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [git patches] libata updates
-Date: Thu, 26 Jul 2012 09:44:24 +0200
-Message-ID: <20120726074424.GB8421@gmail.com>
-References: <20120725203551.GA19762@havoc.gtf.org>
- <20120725204350.GA20530@havoc.gtf.org>
- <CA+55aFwCCctcmryQJMCT_3TDr60CYBQKu9HMyxOgS8482+w5Xw@mail.gmail.com>
- <50107297.305@pobox.com>
- <CA+55aFzun7GebfGZDa73MGLF_808+ROaei5Ag-9HvgUDp1bqLQ@mail.gmail.com>
- <50107A0D.3060003@pobox.com>
- <CA+55aFwi7wS3SFZA-45d+KwKi+hqn1GXqRExYmOw6gnSipv5Rg@mail.gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: virtio(-scsi) vs. chained sg_lists (was Re: [PATCH] scsi: virtio-scsi:
+ Fix address translation failure of HighMem pages used by sg list)
+Date: Thu, 26 Jul 2012 10:56:33 +0300
+Message-ID: <5010F831.9030300@panasas.com>
+References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com> <500FB1DE.1000100@redhat.com> <500FBAE8.2050107@panasas.com> <500FBF37.50603@redhat.com> <500FE7D2.7070101@panasas.com> <500FEB63.3000709@redhat.com> <500FF412.3090600@panasas.com> <50100014.2010109@redhat.com> <50101091.5090909@panasas.com> <50103043.5050508@redhat.com> <50104614.3080002@panasas.com> <501051DF.5040907@redhat.com> <50105F60.8050707@panasas.com> <5010F07E.7050506@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA+55aFwi7wS3SFZA-45d+KwKi+hqn1GXqRExYmOw6gnSipv5Rg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5010F07E.7050506@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>
 List-Id: linux-scsi@vger.kernel.org
 
+On 07/26/2012 10:23 AM, Paolo Bonzini wrote:
 
-* Linus Torvalds <torvalds@linux-foundation.org> wrote:
+> 
+> In the meanwhile, we still have a bug to fix, and we need to choose
+> between Sen Wang's v1 (sg_set_page) or v2 (value assignment).  I'm still
+> leaning more towards v2, if only because I already tested that one myself.
+> 
 
-> I couldn't find an example of that in a quick look, it's 
-> fairly uncommon to have non-conflicting merges that had 
-> semantic - but not contextual - conflicts. [...]
 
-This:
+It's your call, you know what I think ;-)
 
-  git log --grep='Semantic merge\|Semantic conflict'
+I Agree none of them are bugs in current code, they will both work
+just the same.
 
-gives over a dozen examples of such semantic merges I've done in 
-the past 4 years. I fully agree that they are best done in the 
-merge commit - in hindsight perhaps with a tad more explanation 
-than I did.
+> Paolo
 
-Thanks,
 
-	Ingo
+Please CC me on the "convert to sg copy-less" patches, It looks interesting
+
+Thanks
+Boaz
