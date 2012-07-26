@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 2/3] hpsa: fix incorrect abort diagnostic message
-Date: Thu, 26 Jul 2012 11:34:17 -0500
-Message-ID: <20120726163417.25864.82410.stgit@beardog.cce.hp.com>
+Subject: [PATCH 3/3] hpsa: use ioremap_nocache instead of ioremap
+Date: Thu, 26 Jul 2012 11:34:23 -0500
+Message-ID: <20120726163422.25864.19285.stgit@beardog.cce.hp.com>
 References: <20120726162726.25864.49510.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,25 +15,26 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-In the abort handler, when asked to abort a command which
-is not known to the driver, SUCCESS is returned, but the
-diagnostic message incorrectly indicates the abort failed.
+I think ioremap() ends up being equivalent to ioremap_nocache
+by default, but we should signal our intent that these mappings
+should be non-cacheable.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 015a6c8..415db96 100644
+index 415db96..5ed5859 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2609,7 +2609,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
- 	/* not in reqQ, if also not in cmpQ, must have already completed */
- 	found = hpsa_find_cmd_in_queue(h, sc, &h->cmpQ);
- 	if (!found)  {
--		dev_dbg(&h->pdev->dev, "%s Request FAILED (not known to driver).\n",
-+		dev_dbg(&h->pdev->dev, "%s Request SUCCEEDED (not known to driver).\n",
- 				msg);
- 		return SUCCESS;
- 	}
+@@ -3337,7 +3337,8 @@ static void __iomem *remap_pci_mem(ulong base, ulong size)
+ {
+ 	ulong page_base = ((ulong) base) & PAGE_MASK;
+ 	ulong page_offs = ((ulong) base) - page_base;
+-	void __iomem *page_remapped = ioremap(page_base, page_offs + size);
++	void __iomem *page_remapped = ioremap_nocache(page_base,
++		page_offs + size);
+ 
+ 	return page_remapped ? (page_remapped + page_offs) : NULL;
+ }
