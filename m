@@ -1,36 +1,56 @@
-From: Robert Trace <tachyon@farcaster.org>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Thu, 26 Jul 2012 15:20:30 -0400
-Message-ID: <5011987E.6020207@farcaster.org>
-References: <4FFB32E5.1050109@farcaster.org> <4FFB7354.8040809@matthiasprager.de> <4FFB8A86.7000009@farcaster.org> <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de> <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com> <5005BF7D.2050703@matthiasprager.de> <20120717200136.GC24336@google.com> <500A9D7C.8080801@matthiasprager.de> <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com> <loom.20120726T003312-580@post.gmane.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] tcm_vhost: Expose ABI version via
+	VHOST_SCSI_GET_ABI_VERSION
+Date: Thu, 26 Jul 2012 13:15:26 -0700
+Message-ID: <1343333727.22538.3.camel@haakon2.linux-iscsi.org>
+References: <1343093180-5598-1-git-send-email-nab@linux-iscsi.org>
+	<20120724015634.GD4093@kroah.com>
+	<1343162724.1813.111.camel@haakon2.linux-iscsi.org>
+	<20120725115552.GB11098@stefanha-thinkpad.localdomain>
+	<1343250890.1813.173.camel@haakon2.linux-iscsi.org>
+	<20120725223559.GA4786@stefanha-thinkpad.localdomain>
+	<1343270061.1813.181.camel@haakon2.linux-iscsi.org>
+	<5011069A.2080203@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eris.farcaster.org ([75.127.72.104]:54022 "EHLO
-	smtp.farcaster.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753534Ab2GZT3L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2012 15:29:11 -0400
-In-Reply-To: <loom.20120726T003312-580@post.gmane.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <5011069A.2080203@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Avi Kivity <avi@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, qemu-devel <qemu-devel@nongnu.org>, lf-virt <virtualization@lists.linux-foundation.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: tomm <tomm@lime-technology.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 07/25/2012 06:35 PM, tomm wrote:
->
-> If this is a driver or firmware bug, then why would commit
-> 85ef06d1d252f6a2e73b678591ab71caad4667bb 
-> cause this to happen?  What is the interaction between this issue
-> and this commit which just flushes events?
+On Thu, 2012-07-26 at 11:58 +0300, Avi Kivity wrote:
+> On 07/26/2012 05:34 AM, Nicholas A. Bellinger wrote:
+> > 
+> > In that case, respinning a -v5 for tcm_vhost to start from ABI=0 and
+> > will post an updated patch shortly.
+> > 
+> >> The main thing I would like to confirm is that this only versions the
+> >> tcm_vhost ioctls?  In that case a single version number works.
+> >> 
+> > 
+> > Correct, the GET_ABI_VERSION call is only intended to identify the
+> > changing of tcm_vhost ioctls.
+> 
+> Why use version numbers at all?
+> 
 
-That's confusing to me as well.  Tejun's patch seems very unrelated to
-anything related to power-state on non-removable disks.
+This was a request by QEMU folks.. 
 
-> Also this issue does not happen with mvsas, only with mpt2sas.
 
-Now _that_ is a useful data point.  Is that with SATA disks attached?
-Why is it limited (so far) to just the mpt2sas controller?
+> Feature maps are better, because you can get very fine granularity.
+> 
+> 
 
--- Robert
-
+Example..?  If there is a better way to handle ioctl compat I'd
+certainly like to hear about it.
