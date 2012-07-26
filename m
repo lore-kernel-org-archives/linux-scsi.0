@@ -1,45 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/2] virtio-scsi: fix parsing of hotplug/hot-unplug LUN
- number
-Date: Thu, 26 Jul 2012 12:52:11 +0400
-Message-ID: <1343292731.3115.17.camel@dabdike>
-References: <1342454751-8950-1-git-send-email-pbonzini@redhat.com>
-	 <1342454751-8950-2-git-send-email-pbonzini@redhat.com>
+From: Avi Kivity <avi@redhat.com>
+Subject: Re: [PATCH] tcm_vhost: Expose ABI version via
+	VHOST_SCSI_GET_ABI_VERSION
+Date: Thu, 26 Jul 2012 11:58:02 +0300
+Message-ID: <5011069A.2080203@redhat.com>
+References: <1343093180-5598-1-git-send-email-nab@linux-iscsi.org>
+	<20120724015634.GD4093@kroah.com>
+	<1343162724.1813.111.camel@haakon2.linux-iscsi.org>
+	<20120725115552.GB11098@stefanha-thinkpad.localdomain>
+	<1343250890.1813.173.camel@haakon2.linux-iscsi.org>
+	<20120725223559.GA4786@stefanha-thinkpad.localdomain>
+	<1343270061.1813.181.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1342454751-8950-2-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1343270061.1813.181.camel@haakon2.linux-iscsi.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, qemu-devel <qemu-devel@nongnu.org>, lf-virt <virtualization@lists.linux-foundation.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2012-07-16 at 18:05 +0200, Paolo Bonzini wrote:
-> Hotplug/hot-unplug of a LUN whose number is greater than 255
-> uses the "flat" format for LUNs, which has bit 14 set.  Clear
-> the bit when parsing the event structs.
+On 07/26/2012 05:34 AM, Nicholas A. Bellinger wrote:
 > 
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-> ---
->  drivers/scsi/virtio_scsi.c |    8 ++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
+> In that case, respinning a -v5 for tcm_vhost to start from ABI=0 and
+> will post an updated patch shortly.
 > 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index c7030fb..c937232 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -252,13 +252,19 @@ static void virtscsi_cancel_event_work(struct virtio_scsi *vscsi)
->  		cancel_work_sync(&vscsi->event_list[i].work);
->  }
->  
-> +static unsigned int virtscsi_get_lun(u8 *lun_bytes)
-> +{
-> +	unsigned int lun = (lun_bytes[2] << 8) | lun_bytes[3];
-> +	return lun & 16383;
-> +}
-> +
+>> The main thing I would like to confirm is that this only versions the
+>> tcm_vhost ioctls?  In that case a single version number works.
+>> 
+> 
+> Correct, the GET_ABI_VERSION call is only intended to identify the
+> changing of tcm_vhost ioctls.
 
-Why are you rolling your own incomplete version of scsilun_to_int here?
+Why use version numbers at all?
 
-James
+Feature maps are better, because you can get very fine granularity.
+
+
+-- 
+error compiling committee.c: too many arguments to function
