@@ -1,69 +1,35 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [git patches] libata updates
-Date: Thu, 26 Jul 2012 10:58:03 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1207261054410.1295-100000@iolanthe.rowland.org>
-References: <5010D2DD.9060201@amd.com>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 0/3] hpsa patches for July 2012
+Date: Thu, 26 Jul 2012 11:34:05 -0500
+Message-ID: <20120726162726.25864.49510.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <5010D2DD.9060201@amd.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, Lin Ming <minggr@gmail.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 26 Jul 2012, Aaron Lu wrote:
+Only one important bug fix, we should use LUN reset rather
+than target reset in the reset error handler as Smart Array
+logical drives don't actually support target reset and end up
+getting offlined, which is pretty bad.  I had done my reset
+testing with tape drives only, which turns out to have been
+a stupid thing to do.
 
-> On 07/26/2012 01:05 PM, James Bottomley wrote:
-> > On Thu, 2012-07-26 at 12:47 +0800, Aaron Lu wrote:
-> >> On 07/26/2012 05:38 AM, Jeff Garzik wrote:
-> >>> On 07/25/2012 04:35 PM, Jeff Garzik wrote:
-> >>>> * Updating libata to directly bind with ACPI / runtime power mgmt.
-> >>>> This is a pre-req for SATA ZPODD (CD-ROM power management).
-> >>>>
-> >>>> Touches ACPI (exports++) and SCSI in minor ways. Has been in linux-next
-> >>>> for weeks.
-> >>>>
-> >>>> The rest of [ZPODD] will probably come via SCSI tree, as it involves
-> >>>> a lot of updates to the 'sr' driver etc.
-> >>>
-> >>> BTW Lin and Aaron, note that this did not include these changes:
-> >>>
-> >>> sr: check support for device busy class events
-> >>> sr: support zero power ODD
-> >>> sr: make sure ODD is in resumed state in block ioctl
-> >>>
-> >>> as in the end I wanted to put the brakes on SCSI-touching patches. These
-> >>> should be able to go into James' scsi-misc tree with the other SCSI-area
-> >>> ZPODD changes.
-> >>>
-> >>> For those three 'sr' changes listed above, you may add
-> >>>
-> >>> Acked-by: Jeff Garzik<jgarzik@redhat.com>
-> >>>
-> >>> when moving them over.
-> >>
-> >> Thanks Jeff.
-> >>
-> >> Hi James,
-> >> I'll prepare these dropped patches plus some other fixes for ZPODD which
-> >> I've sent v2 recently and merge them into v3 for you to review.
-> >
-> > They weren't exactly dropped ... I've been waiting for you to address
-> > Alan Stern's comments, since he's our resident expert on suspend/resume.
-> 
-> Oh, I forgot to mention, that I agree with Alan's comments and have
-> addressed them in my v2 patches here:
-> http://marc.info/?l=linux-scsi&m=134312317325650&w=2
-> 
-> The 2 patches Alan has comments are:
-> http://marc.info/?l=linux-scsi&m=134312311025619&w=2
-> http://marc.info/?l=linux-scsi&m=134312308225610&w=2
-> 
-> Hi Alan,
-> Are the v2 patches look OK to you?
+The other two patches are very minor.
 
-Yes, they are better now.
+---
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Stephen M. Cameron (3):
+      hpsa: Use LUN reset instead of target reset
+      hpsa: fix incorrect abort diagnostic message
+      hpsa: use ioremap_nocache instead of ioremap 
 
+
+ drivers/scsi/hpsa.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+-- 
+-- steve
