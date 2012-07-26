@@ -1,49 +1,78 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/2] virtio-scsi: fix parsing of hotplug/hot-unplug LUN
- number
-Date: Thu, 26 Jul 2012 11:58:43 +0200
-Message-ID: <501114D3.8090402@redhat.com>
-References: <1342454751-8950-1-git-send-email-pbonzini@redhat.com>    <1342454751-8950-2-git-send-email-pbonzini@redhat.com>   <1343292731.3115.17.camel@dabdike> <50110820.4040403@redhat.com>  <1343294472.3115.22.camel@dabdike> <50110D8C.8060802@redhat.com> <1343295687.3115.27.camel@dabdike>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: [PATCH v3 6/7] scsi: sr: balance sr disk events block depth
+Date: Thu, 26 Jul 2012 18:05:28 +0800
+Message-ID: <1343297129-28174-7-git-send-email-aaron.lu@amd.com>
+References: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1343295687.3115.27.camel@dabdike>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Il 26/07/2012 11:41, James Bottomley ha scritto:
-> On Thu, 2012-07-26 at 11:27 +0200, Paolo Bonzini wrote:
->> Il 26/07/2012 11:21, James Bottomley ha scritto:
->>>>> Because scsilun_to_int does not do the AND, so it would have exactly the
->>>>> same bug I'm fixing.
->>> It's not a bug ... it's the encoding.  All the other devices use this
->>> too.  Ideally we should have switched to 64 bit lun numbers for the
->>> encoding to be exact, but nothing so far has gone over 32 bits.  If we
->>> don't encode the Address method as part of the lun number, we don't get
->>> the reverse transform right and the addressing often fails.
->>
->> But virtio-scsi gets it right even if you use method=0 and method=1
->> interchangeably.
-> 
-> I don't actually understand this statement.  LUNS < 256 may be encoded
-> either way (they should be encoded with address method=0 but they don't
-> have to be) if you address the array with the wrong method, it doesn't
-> have to give you your lun.
+When the ODD is resumed, disk_unblock_events should be called when:
+1 The ODD is runtime resumed;
+2 System is resuming from S3 and the ODD is runtime suspended before S3;
+But not when the system is resuming from S3 and the ODD is runtime
+active before S3.
 
-But virtio-scsi does, LUN "16384" and LUN 0 are the same.
+So seperate the resume calls, one for system resume and one for runtime
+resume to do different things accordingly.
 
-If somebody wanted to add support for >16383 LUNs, we would do it with
-the 4-byte encoding that is in SAM, but I don't see that happening.
+Signed-off-by: Aaron Lu <aaron.lu@amd.com>
+---
+ drivers/scsi/sr.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-> It's nothing to do with buggy hardware ...
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index fd1c2f6..b8c2f9d 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -82,6 +82,11 @@ static int sr_remove(struct device *);
+ static int sr_done(struct scsi_cmnd *);
+ static int sr_suspend(struct device *dev, pm_message_t msg);
+ static int sr_resume(struct device *dev);
++static int sr_runtime_resume(struct device *dev);
++
++static struct dev_pm_ops sr_pm_ops = {
++	.runtime_resume = sr_runtime_resume,
++};
+ 
+ static struct scsi_driver sr_template = {
+ 	.owner			= THIS_MODULE,
+@@ -91,6 +96,7 @@ static struct scsi_driver sr_template = {
+ 		.remove		= sr_remove,
+ 		.suspend	= sr_suspend,
+ 		.resume		= sr_resume,
++		.pm		= &sr_pm_ops,
+ 	},
+ 	.done			= sr_done,
+ };
+@@ -211,6 +217,21 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
+ 
+ static int sr_resume(struct device *dev)
+ {
++	struct scsi_cd *cd = dev_get_drvdata(dev);
++
++	/*
++	 * If ODD is runtime suspended before system pm, unblock disk
++	 * events now since on system resume, we will fully resume it
++	 * and set its rumtime status to active.
++	 */
++	if (pm_runtime_suspended(dev))
++		disk_unblock_events(cd->disk);
++
++	return 0;
++}
++
++static int sr_runtime_resume(struct device *dev)
++{
+ 	struct scsi_cd *cd;
+ 	struct scsi_sense_hdr sshdr;
+ 
+-- 
+1.7.11.3
 
-Hardware that knows about format=1 LUNs, and yet treats LUN 0
-differently depending on the encoding sounds buggy.
 
-Of course some hardware may not know anything about format=1, so it is
-wrong to pass format=1 unconditionally, but virtio-scsi does.
-
-Paolo
