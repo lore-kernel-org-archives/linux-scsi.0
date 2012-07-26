@@ -1,60 +1,69 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: Re: [PATCH v3 0/7] ZPODD patches for scsi tree
-Date: Thu, 26 Jul 2012 22:41:14 +0800
-Message-ID: <20120726144108.GA2724@localhost.localdomain>
-References: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
- <50114989.3010900@pobox.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [git patches] libata updates
+Date: Thu, 26 Jul 2012 10:58:03 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1207261054410.1295-100000@iolanthe.rowland.org>
+References: <5010D2DD.9060201@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <50114989.3010900@pobox.com>
+In-Reply-To: <5010D2DD.9060201@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: Aaron Lu <aaron.lu@amd.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, Lin Ming <minggr@gmail.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jul 26, 2012 at 09:43:37AM -0400, Jeff Garzik wrote:
-> On 07/26/2012 06:05 AM, Aaron Lu wrote:
-> >v3:
-> >Rebase on top of scsi-misc tree;
-> >Add the sr related patches previously in Jeff's libata tree;
-> >Re-organize the sr patches.
-> >A problem for now: for patch
-> >scsi: sr: support zero power ODD(ZPODD)
-> >I can't set a flag in libata-acpi.c since a related function is
-> >missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+On Thu, 26 Jul 2012, Aaron Lu wrote:
+
+> On 07/26/2012 01:05 PM, James Bottomley wrote:
+> > On Thu, 2012-07-26 at 12:47 +0800, Aaron Lu wrote:
+> >> On 07/26/2012 05:38 AM, Jeff Garzik wrote:
+> >>> On 07/25/2012 04:35 PM, Jeff Garzik wrote:
+> >>>> * Updating libata to directly bind with ACPI / runtime power mgmt.
+> >>>> This is a pre-req for SATA ZPODD (CD-ROM power management).
+> >>>>
+> >>>> Touches ACPI (exports++) and SCSI in minor ways. Has been in linux-next
+> >>>> for weeks.
+> >>>>
+> >>>> The rest of [ZPODD] will probably come via SCSI tree, as it involves
+> >>>> a lot of updates to the 'sr' driver etc.
+> >>>
+> >>> BTW Lin and Aaron, note that this did not include these changes:
+> >>>
+> >>> sr: check support for device busy class events
+> >>> sr: support zero power ODD
+> >>> sr: make sure ODD is in resumed state in block ioctl
+> >>>
+> >>> as in the end I wanted to put the brakes on SCSI-touching patches. These
+> >>> should be able to go into James' scsi-misc tree with the other SCSI-area
+> >>> ZPODD changes.
+> >>>
+> >>> For those three 'sr' changes listed above, you may add
+> >>>
+> >>> Acked-by: Jeff Garzik<jgarzik@redhat.com>
+> >>>
+> >>> when moving them over.
+> >>
+> >> Thanks Jeff.
+> >>
+> >> Hi James,
+> >> I'll prepare these dropped patches plus some other fixes for ZPODD which
+> >> I've sent v2 recently and merge them into v3 for you to review.
+> >
+> > They weren't exactly dropped ... I've been waiting for you to address
+> > Alan Stern's comments, since he's our resident expert on suspend/resume.
 > 
-> What does this mean?  Would you be more specific?
+> Oh, I forgot to mention, that I agree with Alan's comments and have
+> addressed them in my v2 patches here:
+> http://marc.info/?l=linux-scsi&m=134312317325650&w=2
+> 
+> The 2 patches Alan has comments are:
+> http://marc.info/?l=linux-scsi&m=134312311025619&w=2
+> http://marc.info/?l=linux-scsi&m=134312308225610&w=2
+> 
+> Hi Alan,
+> Are the v2 patches look OK to you?
 
-The patch "libata-acpi: add ata port runtime D3Cold support" by Lin Ming
-introduced a function ata_acpi_wake_dev in libata-acpi.c, and only lives
-in libata-next tree but not scsi-misc tree.
+Yes, they are better now.
 
-In patch "scsi: sr: support zero power ODD(ZPODD)" I need to set the
-wakeup_by_user flag of the scsi device in ata_acpi_wake_dev like this:
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -985,8 +985,10 @@ static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
- 	struct ata_device *ata_dev = context;
- 
- 	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
--			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev))
-+			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev)) {
-+		ata_dev->sdev->wakeup_by_user = 1;
- 		scsi_autopm_get_device(ata_dev->sdev);
-+	}
- }
- 
-But since there is no such function in scsi-misc tree, I can't set the
-flag. Any suggestions?
-
-Another minor issue is, I need to use the can_power_off and
-wakeup_by_user flag of the scsi_device structure in sr patches, but
-they are all introduced in patches in libata-next tree, so I have to
-re-define them in this patch set. Will cause conflict if James send
-these sr patches to Linus. Any way to avoid this?
-
-Thanks,
-Aaron
