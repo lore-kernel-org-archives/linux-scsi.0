@@ -1,33 +1,59 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/2] virtio-scsi: fix parsing of hotplug/hot-unplug LUN
- number
-Date: Thu, 26 Jul 2012 11:04:32 +0200
-Message-ID: <50110820.4040403@redhat.com>
-References: <1342454751-8950-1-git-send-email-pbonzini@redhat.com>  <1342454751-8950-2-git-send-email-pbonzini@redhat.com> <1343292731.3115.17.camel@dabdike>
+From: Wang Sen <kelvin.xupt@gmail.com>
+Subject: Re: [PATCH v2] scsi: virtio-scsi: Fix address translation failure of
+ HighMem pages used by sg list
+Date: Thu, 26 Jul 2012 17:20:27 +0800
+Message-ID: <CAKviJvXXrLFChXaUsP4+OYDnFxuX-8=0o-rqpbj_CiRZQrhoag@mail.gmail.com>
+References: <1343218390-24310-1-git-send-email-senwang@linux.vnet.ibm.com>
+	<1343218896.5132.135.camel@deadeye.wl.decadent.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44321 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751486Ab2GZJEe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jul 2012 05:04:34 -0400
-In-Reply-To: <1343292731.3115.17.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1343218896.5132.135.camel@deadeye.wl.decadent.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, pbonzini@redhat.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Il 26/07/2012 10:52, James Bottomley ha scritto:
->> > +static unsigned int virtscsi_get_lun(u8 *lun_bytes)
->> > +{
->> > +	unsigned int lun = (lun_bytes[2] << 8) | lun_bytes[3];
->> > +	return lun & 16383;
->> > +}
->> > +
-> Why are you rolling your own incomplete version of scsilun_to_int here?
+2012/7/25 Ben Hutchings <ben@decadent.org.uk>:
+> On Wed, 2012-07-25 at 20:13 +0800, Wang Sen wrote:
+>> When using the commands below to write some data to a virtio-scsi LUN of the
+>> QEMU guest(32-bit) with 1G physical memory(qemu -m 1024), the qemu will crash.
+>>
+>>         # sudo mkfs.ext4 /dev/sdb  (/dev/sdb is the virtio-scsi LUN.)
+>>         # sudo mount /dev/sdb /mnt
+>>         # dd if=/dev/zero of=/mnt/file bs=1M count=1024
+>>
+>> In current implementation, sg_set_buf is called to add buffers to sg list which
+>> is put into the virtqueue eventually. But if there are some HighMem pages in
+>> table->sgl you can not get virtual address by sg_virt. So, sg_virt(sg_elem) may
+>> return NULL value. This will cause QEMU exit when virtqueue_map_sg is called
+>> in QEMU because an invalid GPA is passed by virtqueue.
+>>
+>> I take Paolo's solution mentioned in last thread to avoid failure on handling
+>> flag bits.
+>>
+>> I have tested the patch on my workstation. QEMU would not crash any more.
+>>
+>> Signed-off-by: Wang Sen <senwang@linux.vnet.ibm.com>
+> [...]
+>
+> This is not the correct way to submit a change for stable.  See
+> Documentation/stable_kernel_rules.txt.
 
-Because scsilun_to_int does not do the AND, so it would have exactly the
-same bug I'm fixing.
+OK, thanks.
 
-Paolo
+>
+> Ben.
+>
+> --
+> Ben Hutchings
+> If more than one person is responsible for a bug, no one is at fault.
+
+
+
+-- 
+------------------------------------------
+Wang Sen
+Addr: XUPT,Xi'an,Shaanxi,China
+Email: kelvin.xupt@gmail.com
+------------------------------------------
