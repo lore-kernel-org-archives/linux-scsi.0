@@ -1,599 +1,287 @@
 From: Vinayak Holikatti <vinholikatti@gmail.com>
-Subject: [PATCH V3 1/4] [SCSI] drivers/scsi/ufs: Seggregate PCI Specific Code
-Date: Thu, 26 Jul 2012 14:12:47 +0530
-Message-ID: <1343292170-2599-2-git-send-email-vinholikatti@gmail.com>
+Subject: [PATCH V3 3/4] [SCSI] ufs: Add Platform glue driver for ufshcd
+Date: Thu, 26 Jul 2012 14:12:49 +0530
+Message-ID: <1343292170-2599-4-git-send-email-vinholikatti@gmail.com>
 References: <1343292170-2599-1-git-send-email-vinholikatti@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46559 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752015Ab2GZInw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2012 04:43:52 -0400
 In-Reply-To: <1343292170-2599-1-git-send-email-vinholikatti@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Yaraganavi <santoshsy@gmail.com>
-List-Id: linux-scsi@vger.kernel.org
 
-This patch seggregates the PCI specific code in ufshcd.c to make it
-ready for splitting into core ufs driver and PCI glue driver.
+This patch adds Platform glue driver for ufshcd.
 
 Reviewed-by: Namjae Jeon <linkinjeon@gmail.com>
 Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
 Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
 ---
- drivers/scsi/ufs/ufshcd.c |  277 ++++++++++++++++++++++++---------------------
- 1 file changed, 150 insertions(+), 127 deletions(-)
+ drivers/scsi/ufs/Kconfig         |   11 ++
+ drivers/scsi/ufs/Makefile        |    1 +
+ drivers/scsi/ufs/ufshcd-pltfrm.c |  222 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 234 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.c
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 6a4fd00..c7b8f4b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -129,7 +129,7 @@ struct uic_command {
-  * @utrdl_dma_addr: UTRDL DMA address
-  * @utmrdl_dma_addr: UTMRDL DMA address
-  * @host: Scsi_Host instance of the driver
-- * @pdev: PCI device handle
-+ * @dev: device handle
-  * @lrb: local reference block
-  * @outstanding_tasks: Bits representing outstanding task requests
-  * @outstanding_reqs: Bits representing outstanding transfer requests
-@@ -159,7 +159,7 @@ struct ufs_hba {
- 	dma_addr_t utmrdl_dma_addr;
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index 265a8c8..8c06330 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -67,3 +67,14 @@ config SCSI_UFSHCD_PCI
+ 	  If you have a controller with this interface, say Y or M here.
  
- 	struct Scsi_Host *host;
--	struct pci_dev *pdev;
-+	struct device *dev;
- 
- 	struct ufshcd_lrb *lrb;
- 
-@@ -335,21 +335,21 @@ static inline void ufshcd_free_hba_memory(struct ufs_hba *hba)
- 
- 	if (hba->utmrdl_base_addr) {
- 		utmrdl_size = sizeof(struct utp_task_req_desc) * hba->nutmrs;
--		dma_free_coherent(&hba->pdev->dev, utmrdl_size,
-+		dma_free_coherent(hba->dev, utmrdl_size,
- 				  hba->utmrdl_base_addr, hba->utmrdl_dma_addr);
- 	}
- 
- 	if (hba->utrdl_base_addr) {
- 		utrdl_size =
- 		(sizeof(struct utp_transfer_req_desc) * hba->nutrs);
--		dma_free_coherent(&hba->pdev->dev, utrdl_size,
-+		dma_free_coherent(hba->dev, utrdl_size,
- 				  hba->utrdl_base_addr, hba->utrdl_dma_addr);
- 	}
- 
- 	if (hba->ucdl_base_addr) {
- 		ucdl_size =
- 		(sizeof(struct utp_transfer_cmd_desc) * hba->nutrs);
--		dma_free_coherent(&hba->pdev->dev, ucdl_size,
-+		dma_free_coherent(hba->dev, ucdl_size,
- 				  hba->ucdl_base_addr, hba->ucdl_dma_addr);
- 	}
- }
-@@ -724,7 +724,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
- 
- 	/* Allocate memory for UTP command descriptors */
- 	ucdl_size = (sizeof(struct utp_transfer_cmd_desc) * hba->nutrs);
--	hba->ucdl_base_addr = dma_alloc_coherent(&hba->pdev->dev,
-+	hba->ucdl_base_addr = dma_alloc_coherent(hba->dev,
- 						 ucdl_size,
- 						 &hba->ucdl_dma_addr,
- 						 GFP_KERNEL);
-@@ -737,7 +737,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
- 	 */
- 	if (!hba->ucdl_base_addr ||
- 	    WARN_ON(hba->ucdl_dma_addr & (PAGE_SIZE - 1))) {
--		dev_err(&hba->pdev->dev,
-+		dev_err(hba->dev,
- 			"Command Descriptor Memory allocation failed\n");
- 		goto out;
- 	}
-@@ -747,13 +747,13 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
- 	 * UFSHCI requires 1024 byte alignment of UTRD
- 	 */
- 	utrdl_size = (sizeof(struct utp_transfer_req_desc) * hba->nutrs);
--	hba->utrdl_base_addr = dma_alloc_coherent(&hba->pdev->dev,
-+	hba->utrdl_base_addr = dma_alloc_coherent(hba->dev,
- 						  utrdl_size,
- 						  &hba->utrdl_dma_addr,
- 						  GFP_KERNEL);
- 	if (!hba->utrdl_base_addr ||
- 	    WARN_ON(hba->utrdl_dma_addr & (PAGE_SIZE - 1))) {
--		dev_err(&hba->pdev->dev,
-+		dev_err(hba->dev,
- 			"Transfer Descriptor Memory allocation failed\n");
- 		goto out;
- 	}
-@@ -763,13 +763,13 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
- 	 * UFSHCI requires 1024 byte alignment of UTMRD
- 	 */
- 	utmrdl_size = sizeof(struct utp_task_req_desc) * hba->nutmrs;
--	hba->utmrdl_base_addr = dma_alloc_coherent(&hba->pdev->dev,
-+	hba->utmrdl_base_addr = dma_alloc_coherent(hba->dev,
- 						   utmrdl_size,
- 						   &hba->utmrdl_dma_addr,
- 						   GFP_KERNEL);
- 	if (!hba->utmrdl_base_addr ||
- 	    WARN_ON(hba->utmrdl_dma_addr & (PAGE_SIZE - 1))) {
--		dev_err(&hba->pdev->dev,
-+		dev_err(hba->dev,
- 		"Task Management Descriptor Memory allocation failed\n");
- 		goto out;
- 	}
-@@ -777,7 +777,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
- 	/* Allocate memory for local reference block */
- 	hba->lrb = kcalloc(hba->nutrs, sizeof(struct ufshcd_lrb), GFP_KERNEL);
- 	if (!hba->lrb) {
--		dev_err(&hba->pdev->dev, "LRB Memory allocation failed\n");
-+		dev_err(hba->dev, "LRB Memory allocation failed\n");
- 		goto out;
- 	}
- 	return 0;
-@@ -867,7 +867,7 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
- 	/* check if controller is ready to accept UIC commands */
- 	if (((readl(hba->mmio_base + REG_CONTROLLER_STATUS)) &
- 	    UIC_COMMAND_READY) == 0x0) {
--		dev_err(&hba->pdev->dev,
-+		dev_err(hba->dev,
- 			"Controller not ready"
- 			" to accept UIC commands\n");
- 		return -EIO;
-@@ -912,7 +912,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 	/* check if device present */
- 	reg = readl((hba->mmio_base + REG_CONTROLLER_STATUS));
- 	if (ufshcd_is_device_present(reg)) {
--		dev_err(&hba->pdev->dev, "cc: Device not present\n");
-+		dev_err(hba->dev, "cc: Device not present\n");
- 		err = -ENXIO;
- 		goto out;
- 	}
-@@ -924,7 +924,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 	if (!(ufshcd_get_lists_status(reg))) {
- 		ufshcd_enable_run_stop_reg(hba);
- 	} else {
--		dev_err(&hba->pdev->dev,
-+		dev_err(hba->dev,
- 			"Host controller not ready to process requests");
- 		err = -EIO;
- 		goto out;
-@@ -1005,7 +1005,7 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 		if (retry) {
- 			retry--;
- 		} else {
--			dev_err(&hba->pdev->dev,
-+			dev_err(hba->dev,
- 				"Controller enable failed\n");
- 			return -EIO;
- 		}
-@@ -1084,7 +1084,7 @@ static int ufshcd_do_reset(struct ufs_hba *hba)
- 
- 	/* start the initialization process */
- 	if (ufshcd_initialize_hba(hba)) {
--		dev_err(&hba->pdev->dev,
-+		dev_err(hba->dev,
- 			"Reset: Controller initialization failed\n");
- 		return FAILED;
- 	}
-@@ -1165,7 +1165,7 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
- 			task_result = FAILED;
- 	} else {
- 		task_result = FAILED;
--		dev_err(&hba->pdev->dev,
-+		dev_err(hba->dev,
- 			"trc: Invalid ocs = %x\n", ocs_value);
- 	}
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
-@@ -1279,7 +1279,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 		/* check if the returned transfer response is valid */
- 		result = ufshcd_is_valid_req_rsp(lrbp->ucd_rsp_ptr);
- 		if (result) {
--			dev_err(&hba->pdev->dev,
-+			dev_err(hba->dev,
- 				"Invalid response = %x\n", result);
- 			break;
- 		}
-@@ -1308,7 +1308,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	case OCS_FATAL_ERROR:
- 	default:
- 		result |= DID_ERROR << 16;
--		dev_err(&hba->pdev->dev,
-+		dev_err(hba->dev,
- 		"OCS error from controller = %x\n", ocs);
- 		break;
- 	} /* end of switch */
-@@ -1372,7 +1372,7 @@ static void ufshcd_uic_cc_handler (struct work_struct *work)
- 	    !(ufshcd_get_uic_cmd_result(hba))) {
- 
- 		if (ufshcd_make_hba_operational(hba))
--			dev_err(&hba->pdev->dev,
-+			dev_err(hba->dev,
- 				"cc: hba not operational state\n");
- 		return;
- 	}
-@@ -1507,7 +1507,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 	free_slot = ufshcd_get_tm_free_slot(hba);
- 	if (free_slot >= hba->nutmrs) {
- 		spin_unlock_irqrestore(host->host_lock, flags);
--		dev_err(&hba->pdev->dev, "Task management queue full\n");
-+		dev_err(hba->dev, "Task management queue full\n");
- 		err = FAILED;
- 		goto out;
- 	}
-@@ -1550,7 +1550,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 					 &hba->tm_condition) != 0),
- 					 60 * HZ);
- 	if (!err) {
--		dev_err(&hba->pdev->dev,
-+		dev_err(hba->dev,
- 			"Task management command timed-out\n");
- 		err = FAILED;
- 		goto out;
-@@ -1686,23 +1686,23 @@ static struct scsi_host_template ufshcd_driver_template = {
- };
- 
- /**
-- * ufshcd_shutdown - main function to put the controller in reset state
-+ * ufshcd_pci_shutdown - main function to put the controller in reset state
-  * @pdev: pointer to PCI device handle
-  */
--static void ufshcd_shutdown(struct pci_dev *pdev)
-+static void ufshcd_pci_shutdown(struct pci_dev *pdev)
- {
- 	ufshcd_hba_stop((struct ufs_hba *)pci_get_drvdata(pdev));
- }
- 
- #ifdef CONFIG_PM
- /**
-- * ufshcd_suspend - suspend power management function
-+ * ufshcd_pci_suspend - suspend power management function
-  * @pdev: pointer to PCI device handle
-  * @state: power state
-  *
-  * Returns -ENOSYS
-  */
--static int ufshcd_suspend(struct pci_dev *pdev, pm_message_t state)
-+static int ufshcd_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- {
- 	/*
- 	 * TODO:
-@@ -1717,12 +1717,12 @@ static int ufshcd_suspend(struct pci_dev *pdev, pm_message_t state)
- }
- 
- /**
-- * ufshcd_resume - resume power management function
-+ * ufshcd_pci_resume - resume power management function
-  * @pdev: pointer to PCI device handle
-  *
-  * Returns -ENOSYS
-  */
--static int ufshcd_resume(struct pci_dev *pdev)
-+static int ufshcd_pci_resume(struct pci_dev *pdev)
- {
- 	/*
- 	 * TODO:
-@@ -1746,27 +1746,38 @@ static void ufshcd_hba_free(struct ufs_hba *hba)
- {
- 	iounmap(hba->mmio_base);
- 	ufshcd_free_hba_memory(hba);
--	pci_release_regions(hba->pdev);
- }
- 
- /**
-- * ufshcd_remove - de-allocate PCI/SCSI host and host memory space
-+ * ufshcd_remove - de-allocate SCSI host and host memory space
-  *		data structure memory
-- * @pdev - pointer to PCI handle
-+ * @hba - per adapter instance
-  */
--static void ufshcd_remove(struct pci_dev *pdev)
-+void ufshcd_remove(struct ufs_hba *hba)
- {
--	struct ufs_hba *hba = pci_get_drvdata(pdev);
--
- 	/* disable interrupts */
- 	ufshcd_int_config(hba, UFSHCD_INT_DISABLE);
--	free_irq(pdev->irq, hba);
- 
- 	ufshcd_hba_stop(hba);
- 	ufshcd_hba_free(hba);
- 
- 	scsi_remove_host(hba->host);
- 	scsi_host_put(hba->host);
-+}
-+EXPORT_SYMBOL(ufshcd_remove);
+ 	  If unsure, say N.
 +
-+/**
-+ * ufshcd_pci_remove - de-allocate PCI/SCSI host and host memory space
-+ *		data structure memory
-+ * @pdev - pointer to PCI handle
++config SCSI_UFSHCD_PLATFORM
++	tristate "Platform based UFS Controller support"
++	depends on SCSI_UFSHCD
++	---help---
++	This selects the UFS host controller support. If you have a
++	   platform with UFS controller, say Y or M here.
++
++	   If you have a controller with this interface, say Y or M here.
++
++	  If unsure, say N.
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 9eda0df..1e5bd48 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -1,3 +1,4 @@
+ # UFSHCD makefile
+ obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
++obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+new file mode 100644
+index 0000000..68e1675
+--- /dev/null
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -0,0 +1,222 @@
++/*
++ * Universal Flash Storage Host controller driver
++ *
++ * This code is based on drivers/scsi/ufs/ufshcd-pltfm.c
++ * Copyright (C) 2011-2012 Samsung India Software Operations
++ *
++ * Santosh Yaraganavi <santosh.sy@samsung.com>
++ * Vinayak Holikatti <h.vinayak@samsung.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * NO WARRANTY
++ * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
++ * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
++ * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
++ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
++ * solely responsible for determining the appropriateness of using and
++ * distributing the Program and assumes all risks associated with its
++ * exercise of rights under this Agreement, including but not limited to
++ * the risks and costs of program errors, damage to or loss of data,
++ * programs or equipment, and unavailability or interruption of operations.
++
++ * DISCLAIMER OF LIABILITY
++ * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
++ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
++ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
++ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
++ * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
++ * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
++
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
++ * USA.
 + */
-+static void ufshcd_pci_remove(struct pci_dev *pdev)
-+{
-+	struct ufs_hba *hba = pci_get_drvdata(pdev);
 +
-+	free_irq(pdev->irq, hba);
-+	ufshcd_remove(hba);
-+	pci_release_regions(pdev);
- 	pci_set_drvdata(pdev, NULL);
- 	pci_clear_master(pdev);
- 	pci_disable_device(pdev);
-@@ -1779,75 +1790,52 @@ static void ufshcd_remove(struct pci_dev *pdev)
-  *
-  * Returns 0 for success, non-zero for failure
-  */
--static int ufshcd_set_dma_mask(struct ufs_hba *hba)
-+static int ufshcd_set_dma_mask(struct pci_dev *pdev)
- {
- 	int err;
--	u64 dma_mask;
--
--	/*
--	 * If controller supports 64 bit addressing mode, then set the DMA
--	 * mask to 64-bit, else set the DMA mask to 32-bit
--	 */
--	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT)
--		dma_mask = DMA_BIT_MASK(64);
--	else
--		dma_mask = DMA_BIT_MASK(32);
--
--	err = pci_set_dma_mask(hba->pdev, dma_mask);
--	if (err)
--		return err;
--
--	err = pci_set_consistent_dma_mask(hba->pdev, dma_mask);
- 
-+	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
-+		&& !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)))
-+		return 0;
-+	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-+	if (!err)
-+		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
- 	return err;
- }
- 
- /**
-- * ufshcd_probe - probe routine of the driver
-- * @pdev: pointer to PCI device handle
-- * @id: PCI device id
-- *
-+ * ufshcd_init - Driver initialization routine
-+ * @dev: pointer to device handle
-+ * @hba_handle: driver private handle
-+ * @mmio_base: base register address
-+ * @irq_line: Interrupt line of device
-  * Returns 0 on success, non-zero value on failure
-  */
--static int __devinit
--ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-+int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
-+		 void __iomem *mmio_base, unsigned int irq_line)
- {
- 	struct Scsi_Host *host;
- 	struct ufs_hba *hba;
- 	int err;
- 
--	err = pci_enable_device(pdev);
--	if (err) {
--		dev_err(&pdev->dev, "pci_enable_device failed\n");
-+	if (!dev && !mmio_base) {
-+		dev_err(dev,
-+		"Invalid memory reference for dev or mmio_base NULL\n");
-+		err = -ENODEV;
- 		goto out_error;
- 	}
- 
--	pci_set_master(pdev);
--
- 	host = scsi_host_alloc(&ufshcd_driver_template,
- 				sizeof(struct ufs_hba));
- 	if (!host) {
--		dev_err(&pdev->dev, "scsi_host_alloc failed\n");
-+		dev_err(dev, "scsi_host_alloc failed\n");
- 		err = -ENOMEM;
--		goto out_disable;
-+		goto out_error;
- 	}
- 	hba = shost_priv(host);
--
--	err = pci_request_regions(pdev, UFSHCD);
--	if (err < 0) {
--		dev_err(&pdev->dev, "request regions failed\n");
--		goto out_host_put;
--	}
--
--	hba->mmio_base = pci_ioremap_bar(pdev, 0);
--	if (!hba->mmio_base) {
--		dev_err(&pdev->dev, "memory map failed\n");
--		err = -ENOMEM;
--		goto out_release_regions;
--	}
--
- 	hba->host = host;
--	hba->pdev = pdev;
-+	hba->dev = dev;
-+	hba->mmio_base = mmio_base;
- 
- 	/* Read capabilities registers */
- 	ufshcd_hba_capabilities(hba);
-@@ -1855,17 +1843,11 @@ ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	/* Get UFS version supported by the controller */
- 	hba->ufs_version = ufshcd_get_ufs_version(hba);
- 
--	err = ufshcd_set_dma_mask(hba);
--	if (err) {
--		dev_err(&pdev->dev, "set dma mask failed\n");
--		goto out_iounmap;
--	}
--
- 	/* Allocate memory for host memory space */
- 	err = ufshcd_memory_alloc(hba);
- 	if (err) {
--		dev_err(&pdev->dev, "Memory allocation failed\n");
--		goto out_iounmap;
-+		dev_err(hba->dev, "Memory allocation failed\n");
-+		goto out_disable;
- 	}
- 
- 	/* Configure LRB */
-@@ -1887,46 +1869,104 @@ ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
- 
- 	/* IRQ registration */
--	err = request_irq(pdev->irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
-+	err = request_irq(irq_line, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
- 	if (err) {
--		dev_err(&pdev->dev, "request irq failed\n");
-+		dev_err(hba->dev, "request irq failed\n");
- 		goto out_lrb_free;
- 	}
- 
- 	/* Enable SCSI tag mapping */
- 	err = scsi_init_shared_tag_map(host, host->can_queue);
- 	if (err) {
--		dev_err(&pdev->dev, "init shared queue failed\n");
-+		dev_err(hba->dev, "init shared queue failed\n");
- 		goto out_free_irq;
- 	}
- 
--	pci_set_drvdata(pdev, hba);
--
--	err = scsi_add_host(host, &pdev->dev);
-+	err = scsi_add_host(host, hba->dev);
- 	if (err) {
--		dev_err(&pdev->dev, "scsi_add_host failed\n");
-+		dev_err(hba->dev, "scsi_add_host failed\n");
- 		goto out_free_irq;
- 	}
- 
- 	/* Initialization routine */
- 	err = ufshcd_initialize_hba(hba);
- 	if (err) {
--		dev_err(&pdev->dev, "Initialization failed\n");
--		goto out_free_irq;
-+		dev_err(hba->dev, "Initialization failed\n");
-+		goto out_remove_scsi_host;
- 	}
-+	*hba_handle = hba;
- 
- 	return 0;
- 
-+out_remove_scsi_host:
-+	scsi_remove_host(hba->host);
- out_free_irq:
--	free_irq(pdev->irq, hba);
-+	free_irq(irq_line, hba);
- out_lrb_free:
- 	ufshcd_free_hba_memory(hba);
-+out_disable:
-+	scsi_host_put(host);
-+out_error:
-+	return err;
++#include "ufshcd.h"
++#include "ufshcd_common.h"
++#include <linux/platform_device.h>
++
++#ifdef CONFIG_PM
++/**
++ * ufshcd_pltfrm_suspend - suspend power management function
++ * @pdev: pointer to Platform device handle
++ * @mesg: power state
++ *
++ * Returns -ENOSYS
++ */
++static int ufshcd_pltfrm_suspend(struct platform_device *pdev,
++				 pm_message_t mesg)
++{
++	/*
++	 * TODO:
++	 * 1. Block SCSI requests from SCSI midlayer
++	 * 2. Change the internal driver state to non operational
++	 * 3. Set UTRLRSR and UTMRLRSR bits to zero
++	 * 4. Wait until outstanding commands are completed
++	 * 5. Set HCE to zero to send the UFS host controller to reset state
++	 */
++
++	return -ENOSYS;
 +}
-+EXPORT_SYMBOL(ufshcd_init);
 +
 +/**
-+ * ufshcd_pci_probe - probe routine of the driver
-+ * @pdev: pointer to PCI device handle
-+ * @id: PCI device id
++ * ufshcd_pltfrm_resume - resume power management function
++ * @pdev: pointer to Platform device handle
++ *
++ * Returns -ENOSYS
++ */
++static int ufshcd_pltfrm_resume(struct platform_device *pdev)
++{
++	/*
++	 * TODO:
++	 * 1. Set HCE to 1, to start the UFS host controller
++	 * initialization process
++	 * 2. Set UTRLRSR and UTMRLRSR bits to 1
++	 * 3. Change the internal driver state to operational
++	 * 4. Unblock SCSI requests from SCSI midlayer
++	 */
++
++	return -ENOSYS;
++}
++#endif
++
++/**
++ * ufshcd_pltfrm_probe - probe routine of the driver
++ * @pdev: pointer to Platform device handle
 + *
 + * Returns 0 on success, non-zero value on failure
 + */
 +static int __devinit
-+ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++ufshcd_pltfrm_probe(struct platform_device *pdev)
 +{
 +	struct ufs_hba *hba;
 +	void __iomem *mmio_base;
++	struct resource *mem_res;
++	struct resource *irq_res;
++	resource_size_t mem_size;
 +	int err;
++	struct device *dev = &pdev->dev;
 +
-+	err = pci_enable_device(pdev);
-+	if (err) {
-+		dev_err(&pdev->dev, "pci_enable_device failed\n");
++	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!mem_res) {
++		dev_err(&pdev->dev,
++			"%s: Memory resource not available\n", __FILE__);
++		err = -ENODEV;
 +		goto out_error;
 +	}
 +
-+	pci_set_master(pdev);
-+
-+	err = pci_request_regions(pdev, UFSHCD);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "request regions failed\n");
-+		goto out_disable;
++	mem_size = resource_size(mem_res);
++	if (!request_mem_region(mem_res->start, mem_size, "ufshcd")) {
++		dev_err(&pdev->dev,
++			"ufshcd: Cannot reserve the memory resource\n");
++		err = -EBUSY;
++		goto out_error;
 +	}
 +
-+	mmio_base = pci_ioremap_bar(pdev, 0);
++	mmio_base = ioremap_nocache(mem_res->start, mem_size);
 +	if (!mmio_base) {
 +		dev_err(&pdev->dev, "memory map failed\n");
 +		err = -ENOMEM;
 +		goto out_release_regions;
 +	}
 +
-+	err = ufshcd_set_dma_mask(pdev);
++	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (!irq_res) {
++		dev_err(&pdev->dev, "ufshcd: IRQ resource not available\n");
++		err = -ENODEV;
++		goto out_iounmap;
++	}
++
++	err = dma_set_coherent_mask(dev, dev->coherent_dma_mask);
 +	if (err) {
 +		dev_err(&pdev->dev, "set dma mask failed\n");
 +		goto out_iounmap;
 +	}
 +
-+	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
++	err = ufshcd_init(&pdev->dev, &hba, mmio_base, irq_res->start);
 +	if (err) {
-+		dev_err(&pdev->dev, "%s:%d %sInitialization failed\n",
-+				__FILE__, __LINE__, __func__);
++		dev_err(&pdev->dev, "%s: Intialization failed\n",
++			__FILE__);
 +		goto out_iounmap;
 +	}
 +
-+	pci_set_drvdata(pdev, hba);
++	platform_set_drvdata(pdev, hba);
 +
 +	return 0;
 +
- out_iounmap:
--	iounmap(hba->mmio_base);
++out_iounmap:
 +	iounmap(mmio_base);
- out_release_regions:
- 	pci_release_regions(pdev);
--out_host_put:
--	scsi_host_put(host);
- out_disable:
- 	pci_clear_master(pdev);
- 	pci_disable_device(pdev);
-@@ -1944,36 +1984,19 @@ MODULE_DEVICE_TABLE(pci, ufshcd_pci_tbl);
- static struct pci_driver ufshcd_pci_driver = {
- 	.name = UFSHCD,
- 	.id_table = ufshcd_pci_tbl,
--	.probe = ufshcd_probe,
--	.remove = __devexit_p(ufshcd_remove),
--	.shutdown = ufshcd_shutdown,
-+	.probe = ufshcd_pci_probe,
-+	.remove = __devexit_p(ufshcd_pci_remove),
-+	.shutdown = ufshcd_pci_shutdown,
- #ifdef CONFIG_PM
--	.suspend = ufshcd_suspend,
--	.resume = ufshcd_resume,
-+	.suspend = ufshcd_pci_suspend,
-+	.resume = ufshcd_pci_resume,
- #endif
- };
- 
--/**
-- * ufshcd_init - Driver registration routine
-- */
--static int __init ufshcd_init(void)
--{
--	return pci_register_driver(&ufshcd_pci_driver);
--}
--module_init(ufshcd_init);
--
--/**
-- * ufshcd_exit - Driver exit clean-up routine
-- */
--static void __exit ufshcd_exit(void)
--{
--	pci_unregister_driver(&ufshcd_pci_driver);
--}
--module_exit(ufshcd_exit);
--
-+module_pci_driver(ufshcd_pci_driver);
- 
--MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>, "
--	      "Vinayak Holikatti <h.vinayak@samsung.com>");
++out_release_regions:
++	release_mem_region(mem_res->start, mem_size);
++out_error:
++	return err;
++}
++
++/**
++ * ufshcd_pltfrm_remove - remove platform driver routine
++ * @pdev: pointer to platform device handle
++ *
++ * Returns 0 on success, non-zero value on failure
++ */
++static int __devexit ufshcd_pltfrm_remove(struct platform_device *pdev)
++{
++	struct resource *mem_res;
++	struct resource *irq_res;
++	resource_size_t mem_size;
++	struct ufs_hba *hba =  platform_get_drvdata(pdev);
++
++	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++
++	if (!irq_res)
++		dev_err(&pdev->dev, "ufshcd: IRQ resource not available\n");
++	else
++		free_irq(irq_res->start, hba);
++
++	ufshcd_remove(hba);
++	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!mem_res)
++		dev_err(&pdev->dev, "ufshcd: Memory resource not available\n");
++	else {
++		mem_size = resource_size(mem_res);
++		release_mem_region(mem_res->start, mem_size);
++	}
++	platform_set_drvdata(pdev, NULL);
++	return 0;
++}
++
++static const struct of_device_id ufs_of_match[] = {
++	{ .compatible = "jedec,ufs-1.1"},
++};
++
++static struct platform_driver ufshcd_pltfrm_driver = {
++	.probe	= ufshcd_pltfrm_probe,
++	.remove	= __devexit_p(ufshcd_pltfrm_remove),
++#ifdef CONFIG_PM
++	.suspend = ufshcd_pltfrm_suspend,
++	.resume = ufshcd_pltfrm_resume,
++#endif
++	.driver	= {
++		.name	= "ufshcd",
++		.owner	= THIS_MODULE,
++		.of_match_table = ufs_of_match,
++	},
++};
++
++module_platform_driver(ufshcd_pltfrm_driver);
++
 +MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
 +MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
- MODULE_DESCRIPTION("Generic UFS host controller driver");
- MODULE_LICENSE("GPL");
- MODULE_VERSION(UFSHCD_DRIVER_VERSION);
++MODULE_DESCRIPTION("Platform based UFS host controller driver");
++MODULE_LICENSE("GPL");
++MODULE_VERSION(UFSHCD_DRIVER_VERSION);
 -- 
 1.7.9.5
+
