@@ -1,62 +1,59 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH v3 6/7] scsi: sr: balance sr disk events block depth
-Date: Thu, 26 Jul 2012 14:54:01 +0400
-Message-ID: <501121C9.7080806@mvista.com>
-References: <1343297129-28174-1-git-send-email-aaron.lu@amd.com> <1343297129-28174-7-git-send-email-aaron.lu@amd.com>
+From: vinayak holikatti <vinholikatti@gmail.com>
+Subject: Re: [PATCH V3 0/4] [SCSI] ufs: Adds glue drivers to ufshcd
+Date: Thu, 26 Jul 2012 16:42:40 +0530
+Message-ID: <CAKVbJB96Y87=a1dOskYX472Um3w=_orQWN19_Yj+iRp7js9Anw@mail.gmail.com>
+References: <1343292170-2599-1-git-send-email-vinholikatti@gmail.com>
+	<CANfBPZ-amdTBXMbj0E2SrMHBjHFnd8cuC4ASoygkbXC+5oeAGg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:55751 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751720Ab2GZKy4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2012 06:54:56 -0400
-Received: by lbbgm6 with SMTP id gm6so1369941lbb.19
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jul 2012 03:54:54 -0700 (PDT)
-In-Reply-To: <1343297129-28174-7-git-send-email-aaron.lu@amd.com>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:57207 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961Ab2GZLMl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2012 07:12:41 -0400
+In-Reply-To: <CANfBPZ-amdTBXMbj0E2SrMHBjHFnd8cuC4ASoygkbXC+5oeAGg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: "S, Venkatraman" <svenkatr@ti.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com
 
-Hello.
-
-On 26-07-2012 14:05, Aaron Lu wrote:
-
-> When the ODD is resumed, disk_unblock_events should be called when:
-> 1 The ODD is runtime resumed;
-> 2 System is resuming from S3 and the ODD is runtime suspended before S3;
-> But not when the system is resuming from S3 and the ODD is runtime
-> active before S3.
-
-> So seperate the resume calls, one for system resume and one for runtime
-> resume to do different things accordingly.
-
-> Signed-off-by: Aaron Lu <aaron.lu@amd.com>
-> ---
->   drivers/scsi/sr.c | 21 +++++++++++++++++++++
->   1 file changed, 21 insertions(+)
-
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index fd1c2f6..b8c2f9d 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-[...]
-> @@ -211,6 +217,21 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
+On Thu, Jul 26, 2012 at 4:02 PM, S, Venkatraman <svenkatr@ti.com> wrote:
+> On Thu, Jul 26, 2012 at 2:12 PM, Vinayak Holikatti
+> <vinholikatti@gmail.com> wrote:
+>> This patch set adds following features
+>>  - Seggregate PCI specific code in ufshcd.c
+>>  - Adds PCI glue driver ufshcd-pci.c and ufshcd.c become core module
+>>  - Adds Platform glue driver ufshcd-pltfrm.c
+>>  - Update correct transfer size in Command UPIU
+>>
+>> Vinayak Holikatti (4):
+>>   [SCSI] drivers/scsi/ufs: Seggregate PCI Specific Code
+>>   [SCSI] drivers/scsi/ufs: Separate PCI code into glue driver
+>>   [SCSI] ufs: Add Platform glue driver for ufshcd
+>>   [SCSI] ufs: Correct the expected data transfer size
+>>
+>>  drivers/scsi/ufs/Kconfig         |   37 +++-
+>>  drivers/scsi/ufs/Makefile        |    2 +
+>>  drivers/scsi/ufs/ufshcd-pci.c    |  228 ++++++++++++++++++++
+>>  drivers/scsi/ufs/ufshcd-pltfrm.c |  222 ++++++++++++++++++++
+>>  drivers/scsi/ufs/ufshcd.c        |  422 ++++++--------------------------------
+>>  drivers/scsi/ufs/ufshcd.h        |  206 +++++++++++++++++++
+>>  drivers/scsi/ufs/ufshcd_common.h |   53 +++++
+>>  7 files changed, 813 insertions(+), 357 deletions(-)
 >
->   static int sr_resume(struct device *dev)
->   {
-> +	struct scsi_cd *cd = dev_get_drvdata(dev);
-> +
-> +	/*
-> +	 * If ODD is runtime suspended before system pm, unblock disk
-> +	 * events now since on system resume, we will fully resume it
+> Two minor observations..
+> 1) If both pci and platform have to do the exact same thing in their
+> _suspend() and _resume() routines, perhaps there is scope for making
+> them as common (the steps outlined in them should be done in core
+> ufshcd) ?
+Both will not have to do the exact same thing. We have plan to implement
+ufshcd_suspend and ufshcd_resume which will be generic and will be part
+of ufshcd core, as you said.
+>
+> 2) Need to include ufshcd_common.h in ufshcd.c so that the prototypes
+> are supplied for the exported functions.
+Thank you, I will make necessary changes in next version of patches.
 
-    Comma not needed.
-
-> +	 * and set its rumtime status to active.
-
-    s/rumtime/runtime/. Nice typo. %-)
-
-WBR, Sergei
-
+-- 
+Regards,
+Vinayak Holikatti
