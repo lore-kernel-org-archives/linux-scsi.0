@@ -1,114 +1,31 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 2/2] virtio-scsi: support online resizing of disks
-Date: Thu, 26 Jul 2012 15:28:08 +0200
-Message-ID: <1343309288-32615-3-git-send-email-pbonzini@redhat.com>
-References: <1343309288-32615-1-git-send-email-pbonzini@redhat.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH v3 0/7] ZPODD patches for scsi tree
+Date: Thu, 26 Jul 2012 09:43:37 -0400
+Message-ID: <50114989.3010900@pobox.com>
+References: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1343309288-32615-1-git-send-email-pbonzini@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: linux-kernel@vger.kernel.org
-Cc: JBottomley@parallels.com, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@amd.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Support the LUN parameter change event.  Currently, the host fires this event
-when the capacity of a disk is changed from the virtual machine monitor.
-The resize then appears in the kernel log like this:
+On 07/26/2012 06:05 AM, Aaron Lu wrote:
+> v3:
+> Rebase on top of scsi-misc tree;
+> Add the sr related patches previously in Jeff's libata tree;
+> Re-organize the sr patches.
+> A problem for now: for patch
+> scsi: sr: support zero power ODD(ZPODD)
+> I can't set a flag in libata-acpi.c since a related function is
+> missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
 
-  sd 0:0:0:0: [sda] 46137344 512-byte logical blocks: (23.6 GB/22.0 GIb)
-  sda: detected capacity change from 22548578304 to 23622320128
+What does this mean?  Would you be more specific?
 
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
- drivers/scsi/virtio_scsi.c  |   31 ++++++++++++++++++++++++++++++-
- include/linux/virtio_scsi.h |    2 ++
- 2 files changed, 32 insertions(+), 1 deletions(-)
+	Jeff
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 8b6b927..c1a5e60 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -279,6 +279,31 @@ static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
- 	}
- }
- 
-+static void virtscsi_handle_param_change(struct virtio_scsi *vscsi,
-+					 struct virtio_scsi_event *event)
-+{
-+	struct scsi_device *sdev;
-+	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
-+	unsigned int target = event->lun[1];
-+	unsigned int lun = (event->lun[2] << 8) | event->lun[3];
-+	u8 asc = event->reason & 255;
-+	u8 ascq = event->reason >> 8;
-+
-+	sdev = scsi_device_lookup(shost, 0, target, lun);
-+	if (!sdev) {
-+		pr_err("SCSI device %d 0 %d %d not found\n",
-+			shost->host_no, target, lun);
-+		return;
-+	}
-+
-+	/* Handle "Parameters changed", "Mode parameters changed", and
-+	   "Capacity data has changed".  */
-+	if (asc == 0x2a && (ascq == 0x00 || ascq == 0x01 || ascq == 0x09))
-+		scsi_rescan_device(&sdev->sdev_gendev);
-+
-+	scsi_device_put(sdev);
-+}
-+
- static void virtscsi_handle_event(struct work_struct *work)
- {
- 	struct virtio_scsi_event_node *event_node =
-@@ -297,6 +322,9 @@ static void virtscsi_handle_event(struct work_struct *work)
- 	case VIRTIO_SCSI_T_TRANSPORT_RESET:
- 		virtscsi_handle_transport_reset(vscsi, event);
- 		break;
-+	case VIRTIO_SCSI_T_PARAM_CHANGE:
-+		virtscsi_handle_param_change(vscsi, event);
-+		break;
- 	default:
- 		pr_err("Unsupport virtio scsi event %x\n", event->event);
- 	}
-@@ -737,7 +765,8 @@ static struct virtio_device_id id_table[] = {
- };
- 
- static unsigned int features[] = {
--	VIRTIO_SCSI_F_HOTPLUG
-+	VIRTIO_SCSI_F_HOTPLUG,
-+	VIRTIO_SCSI_F_CHANGE,
- };
- 
- static struct virtio_driver virtio_scsi_driver = {
-diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
-index dc8d305..d6b4440 100644
---- a/include/linux/virtio_scsi.h
-+++ b/include/linux/virtio_scsi.h
-@@ -72,6 +72,7 @@ struct virtio_scsi_config {
- /* Feature Bits */
- #define VIRTIO_SCSI_F_INOUT                    0
- #define VIRTIO_SCSI_F_HOTPLUG                  1
-+#define VIRTIO_SCSI_F_CHANGE                   2
- 
- /* Response codes */
- #define VIRTIO_SCSI_S_OK                       0
-@@ -108,6 +109,7 @@ struct virtio_scsi_config {
- #define VIRTIO_SCSI_T_NO_EVENT                 0
- #define VIRTIO_SCSI_T_TRANSPORT_RESET          1
- #define VIRTIO_SCSI_T_ASYNC_NOTIFY             2
-+#define VIRTIO_SCSI_T_PARAM_CHANGE             3
- 
- /* Reasons of transport reset event */
- #define VIRTIO_SCSI_EVT_RESET_HARD             0
--- 
-1.7.1
+
+
