@@ -1,7 +1,7 @@
 From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH v3 5/7] scsi: pm: use runtime resume callback if available
-Date: Thu, 26 Jul 2012 18:05:27 +0800
-Message-ID: <1343297129-28174-6-git-send-email-aaron.lu@amd.com>
+Subject: [PATCH v3 4/7] scsi: sr: block events when runtime suspended
+Date: Thu, 26 Jul 2012 18:05:26 +0800
+Message-ID: <1343297129-28174-5-git-send-email-aaron.lu@amd.com>
 References: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,61 +12,66 @@ To: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@r
 Cc: Jeff Garzik <jgarzik@pobox.com>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When runtime resume a scsi device, if the device's driver has
-implemented runtime resume callback, use that.
-
-sr driver needs this to do different things for system resume and
-runtime resume.
+When the ODD is runtime suspended, there is no need to poll it for
+events, so block events poll for it and unblock when resumed.
 
 Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 ---
- drivers/scsi/scsi_pm.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ block/genhd.c     | 2 ++
+ drivers/scsi/sr.c | 7 ++++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index 7c93723..65d723d 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -34,14 +34,19 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
- 	return err;
+diff --git a/block/genhd.c b/block/genhd.c
+index 9cf5583..bdb3682 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1458,6 +1458,7 @@ void disk_block_events(struct gendisk *disk)
+ 
+ 	mutex_unlock(&ev->block_mutex);
+ }
++EXPORT_SYMBOL(disk_block_events);
+ 
+ static void __disk_unblock_events(struct gendisk *disk, bool check_now)
+ {
+@@ -1502,6 +1503,7 @@ void disk_unblock_events(struct gendisk *disk)
+ 	if (disk->ev)
+ 		__disk_unblock_events(disk, false);
+ }
++EXPORT_SYMBOL(disk_unblock_events);
+ 
+ /**
+  * disk_flush_events - schedule immediate event checking and flushing
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 2573a42..fd1c2f6 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -204,6 +204,8 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
+ 		return -EBUSY;
+ 	}
+ 
++	disk_block_events(cd->disk);
++
+ 	return 0;
  }
  
--static int scsi_dev_type_resume(struct device *dev)
-+static int scsi_dev_type_resume(struct device *dev, bool runtime)
- {
- 	struct device_driver *drv;
- 	int err = 0;
-+	int (*resume)(struct device *);
+@@ -225,6 +227,8 @@ static int sr_resume(struct device *dev)
+ 		atomic_set(&cd->suspend_count, 1);
+ 	}
  
- 	drv = dev->driver;
--	if (drv && drv->resume)
--		err = drv->resume(dev);
-+	if (runtime && drv && drv->pm && drv->pm->runtime_resume)
-+		resume = drv->pm->runtime_resume;
-+	else
-+		resume = drv ? drv->resume : NULL;
-+	if (resume)
-+		err = resume(dev);
- 	scsi_device_resume(to_scsi_device(dev));
- 	dev_dbg(dev, "scsi resume: %d\n", err);
- 	return err;
-@@ -85,7 +90,7 @@ static int scsi_bus_resume_common(struct device *dev)
- 	pm_runtime_get_sync(dev->parent);
++	disk_unblock_events(cd->disk);
++
+ 	return 0;
+ }
  
- 	if (scsi_is_sdev_device(dev))
--		err = scsi_dev_type_resume(dev);
-+		err = scsi_dev_type_resume(dev, false);
- 	if (err == 0) {
- 		pm_runtime_disable(dev);
- 		pm_runtime_set_active(dev);
-@@ -160,7 +165,7 @@ static int scsi_runtime_resume(struct device *dev)
+@@ -314,9 +318,6 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	if (CDSL_CURRENT != slot)
+ 		return 0;
  
- 	dev_dbg(dev, "scsi_runtime_resume\n");
- 	if (scsi_is_sdev_device(dev))
--		err = scsi_dev_type_resume(dev);
-+		err = scsi_dev_type_resume(dev, true);
- 
- 	/* Insert hooks here for targets, hosts, and transport classes */
- 
+-	if (pm_runtime_suspended(&cd->device->sdev_gendev))
+-		return 0;
+-
+ 	/* if the logical unit just finished loading/unloading, do a TUR */
+ 	if (cd->device->can_power_off && cd->dbml && sr_unit_load_done(cd)) {
+ 		events = 0;
 -- 
 1.7.11.3
