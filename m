@@ -1,33 +1,69 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: virtio(-scsi) vs. chained sg_lists (was Re: [PATCH] scsi: virtio-scsi:
- Fix address translation failure of HighMem pages used by sg list)
-Date: Thu, 26 Jul 2012 09:58:14 +0200
-Message-ID: <5010F896.8090409@redhat.com>
-References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com> <500FB1DE.1000100@redhat.com> <500FBAE8.2050107@panasas.com> <500FBF37.50603@redhat.com> <500FE7D2.7070101@panasas.com> <500FEB63.3000709@redhat.com> <500FF412.3090600@panasas.com> <50100014.2010109@redhat.com> <50101091.5090909@panasas.com> <50103043.5050508@redhat.com> <50104614.3080002@panasas.com> <501051DF.5040907@redhat.com> <50105F60.8050707@panasas.com> <5010F07E.7050506@redhat.com> <5010F831.9030300@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 4/5] megaraid_sas: Move poll_aen_lock initializer
+Date: Thu, 26 Jul 2012 12:38:12 +0400
+Message-ID: <1343291892.3115.13.camel@dabdike>
+References: <CAHtARFHi3xyomKhrUg0r7soQFbUtPeiLkYeZ2YgmaU3gYktuYA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5010F831.9030300@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49195 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751372Ab2GZIi6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jul 2012 04:38:58 -0400
+In-Reply-To: <CAHtARFHi3xyomKhrUg0r7soQFbUtPeiLkYeZ2YgmaU3gYktuYA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Kashyap Desai <Kashyap.Desai@lsi.com>, stable <stable@kernel.org>
 
-Il 26/07/2012 09:56, Boaz Harrosh ha scritto:
->> > In the meanwhile, we still have a bug to fix, and we need to choose
->> > between Sen Wang's v1 (sg_set_page) or v2 (value assignment).  I'm still
->> > leaning more towards v2, if only because I already tested that one myself.
+On Tue, 2012-07-17 at 18:20 -0700, adam radford wrote:
+> Cc: stable
+
+That's not how to add a stable tag, please see
+Documentation/stable_kernel_rules.txt
+
+> James/linux-scsi,
 > 
-> It's your call, you know what I think ;-)
+> The following patch from Kashyap Desai for megaraid_sas moves the
+
+That's also not how you do someone else's patch ... this needs a
+
+From: Kashyap Desai <Kashyap.Desai@lsi.com>
+
+At the top for git to get the authorship correct.
+
+James
+
+> poll_aen_lock initializer from megasas_probe_one() to megasas_init().
+> This prevents a crash when a user loads the driver and tries to issue
+> a poll() system call on the ioctl interface with no adapters present.
 > 
-> I Agree none of them are bugs in current code, they will both work
-> just the same.
+> Signed-off-by: Kashyap Desai <Kashyap.Desai@lsi.com>
+> Signed-off-by: Adam Radford <aradford@gmail.com>
+> 
+> diff -Naur scsi/drivers/scsi/megaraid/megaraid_sas_base.c
+> scsi.new/drivers/scsi/megaraid/megaraid_sas_base.c
+> --- scsi/drivers/scsi/megaraid/megaraid_sas_base.c	2012-07-17
+> 14:57:32.890231627 -0700
+> +++ scsi.new/drivers/scsi/megaraid/megaraid_sas_base.c	2012-07-17
+> 14:59:37.285232167 -0700
+> @@ -4095,7 +4095,6 @@
+>  	spin_lock_init(&instance->cmd_pool_lock);
+>  	spin_lock_init(&instance->hba_lock);
+>  	spin_lock_init(&instance->completion_lock);
+> -	spin_lock_init(&poll_aen_lock);
+> 
+>  	mutex_init(&instance->aen_mutex);
+>  	mutex_init(&instance->reset_mutex);
+> @@ -5421,6 +5420,8 @@
+>  	printk(KERN_INFO "megasas: %s %s\n", MEGASAS_VERSION,
+>  	       MEGASAS_EXT_VERSION);
+> 
+> +	spin_lock_init(&poll_aen_lock);
+> +
+>  	support_poll_for_event = 2;
+>  	support_device_change = 1;
 
-Cool.  Then, Sen, please fix the commit message in v2 and repost.
 
-> Please CC me on the "convert to sg copy-less" patches, It looks interesting
-
-Sure.
-
-Paolo
