@@ -1,79 +1,76 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH v4 5/7] scsi: pm: use runtime resume callback if available
-Date: Fri, 27 Jul 2012 17:00:48 +0800
-Message-ID: <1343379650-2867-6-git-send-email-aaron.lu@amd.com>
-References: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] sd: do not set changed flag on all unit attention conditions
+Date: Fri, 27 Jul 2012 12:16:04 +0200
+Message-ID: <50126A64.9040206@suse.de>
+References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>  <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>  <50044D56.6000400@redhat.com>  <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>  <50052390.7030908@redhat.com>  <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com>  <5005285E.8060706@redhat.com>  <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>  <20120717163612.GA15995@infradead.org> <1342562390.3039.100.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:27491
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752181Ab2G0JCO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jul 2012 05:02:14 -0400
-In-Reply-To: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
+Received: from cantor2.suse.de ([195.135.220.15]:57824 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751643Ab2G0KQI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jul 2012 06:16:08 -0400
+In-Reply-To: <1342562390.3039.100.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Sergei Shtylyov <sshtylyov@mvista.com>, Oliver Neukum <oneukum@suse.de>
-Cc: Jeff Wu <jeff.wu@amd.com>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-When runtime resume a scsi device, if the device's driver has
-implemented runtime resume callback, use that.
+On 07/17/2012 11:59 PM, James Bottomley wrote:
+> On Tue, 2012-07-17 at 12:36 -0400, Christoph Hellwig wrote:
+>> On Tue, Jul 17, 2012 at 10:11:57AM +0100, James Bottomley wrote:
+>>> There's no such thing in the market today as a removable disk that'=
+s
+>>> resizeable.  Removable disks are for things like backup cartridges =
+and
+>>> ageing jazz drives.  Worse: most removeable devices today are USB c=
+ard
+>>> readers whose standards compliance varies from iffy to non existent=
+=2E
+>>> Resizeable disks are currently the province of storage arrays.
+>>
+>> The virtual disks exported by aacraid are both marked removable and
+>> can be resized.
+>=20
+> So what are properties of these things? ... or is this just an instan=
+ce
+> of a RAID manufacturer hacking around a problem by adding a removable
+> flag?
+>=20
+Presumably.
 
-sr driver needs this to do different things for system resume and
-runtime resume.
+The general intention is to automatically catch any disk resizing.
+As the SCSI stack (used to) ignore these things that was their way
+of working around it.
 
-Signed-off-by: Aaron Lu <aaron.lu@amd.com>
----
- drivers/scsi/scsi_pm.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+Curiously, though; the aacraid driver is the only one doing this,
+plus the process is quite involved (using a proprietary application
+for doing so etc).
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index 83edb93..690136c 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -34,14 +34,19 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
- 	return err;
- }
- 
--static int scsi_dev_type_resume(struct device *dev)
-+static int scsi_dev_type_resume(struct device *dev, bool runtime)
- {
- 	struct device_driver *drv;
- 	int err = 0;
-+	int (*resume)(struct device *);
- 
- 	drv = dev->driver;
--	if (drv && drv->resume)
--		err = drv->resume(dev);
-+	if (runtime && drv && drv->pm && drv->pm->runtime_resume)
-+		resume = drv->pm->runtime_resume;
-+	else
-+		resume = drv ? drv->resume : NULL;
-+	if (resume)
-+		err = resume(dev);
- 	scsi_device_resume(to_scsi_device(dev));
- 	dev_dbg(dev, "scsi resume: %d\n", err);
- 	return err;
-@@ -85,7 +90,7 @@ static int scsi_bus_resume_common(struct device *dev)
- 	pm_runtime_get_sync(dev->parent);
- 
- 	if (scsi_is_sdev_device(dev))
--		err = scsi_dev_type_resume(dev);
-+		err = scsi_dev_type_resume(dev, false);
- 	if (err == 0) {
- 		pm_runtime_disable(dev);
- 		pm_runtime_set_active(dev);
-@@ -160,7 +165,7 @@ static int scsi_runtime_resume(struct device *dev)
- 
- 	dev_dbg(dev, "scsi_runtime_resume\n");
- 	if (scsi_is_sdev_device(dev))
--		err = scsi_dev_type_resume(dev);
-+		err = scsi_dev_type_resume(dev, true);
- 
- 	/* Insert hooks here for targets, hosts, and transport classes */
- 
--- 
-1.7.11.3
+None of the FC driver do this, despite the fact that resizing a disk
+is even easier here.
+
+I even tried to remove that line once, but then got told off by then
+Adaptec that I would break their apps.
+Since then there's a patch in the SLES kernel for adding a module
+option switching off this behaviour.
+
+We should ask Adaptec/PMC-Sierra here.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
