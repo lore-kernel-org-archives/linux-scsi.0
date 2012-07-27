@@ -1,125 +1,123 @@
-From: Wang Sen <kelvin.xupt@gmail.com>
-Subject: Re: [PATCH] scsi: virtio-scsi: Fix address translation failure of
- HighMem pages used by sg list
-Date: Fri, 27 Jul 2012 11:12:58 +0800
-Message-ID: <CAKviJvV00Br4e455+_gdYyg6pdbdDqQnMC2NMTv-3ZyFgxvZ9A@mail.gmail.com>
-References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com>
-	<500FB1DE.1000100@redhat.com>
-	<CAKviJvVrrtyjFOzu7jmmD7cpXZcXtyQ+7HDy1G1o2_a0JRss5w@mail.gmail.com>
-	<500FE952.9030001@panasas.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] scsi/ibmvscsi: /sys/class/scsi_host/hostX/config
+ doesn't show any information
+Date: Fri, 27 Jul 2012 15:19:22 +1000
+Message-ID: <1343366362.2118.15.camel@pasglop>
+References: <1342630157-16468-1-git-send-email-olaf@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <500FE952.9030001@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1342630157-16468-1-git-send-email-olaf@aepfle.de>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: olaf@aepfle.de
+Cc: linuxppc-dev@ozlabs.org, Linda Xie <lxiep@us.ibm.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-2012/7/25 Boaz Harrosh <bharrosh@panasas.com>:
-> On 07/25/2012 02:44 PM, Sen Wang wrote:
->
->> 2012/7/25 Paolo Bonzini <pbonzini@redhat.com>:
->>> Il 25/07/2012 10:29, Wang Sen ha scritto:
->>>> When using the commands below to write some data to a virtio-scsi LUN of the
->>>> QEMU guest(32-bit) with 1G physical memory(qemu -m 1024), the qemu will crash.
->>>>
->>>>       # sudo mkfs.ext4 /dev/sdb  (/dev/sdb is the virtio-scsi LUN.)
->>>>       # sudo mount /dev/sdb /mnt
->>>>       # dd if=/dev/zero of=/mnt/file bs=1M count=1024
->>>>
->>>> In current implementation, sg_set_buf is called to add buffers to sg list which
->>>> is put into the virtqueue eventually. But there are some HighMem pages in
->>>> table->sgl can not get virtual address by sg_virt. So, sg_virt(sg_elem) may
->>>> return NULL value. This will cause QEMU exit when virtqueue_map_sg is called
->>>> in QEMU because an invalid GPA is passed by virtqueue.
->>>
->>> Heh, I was compiling (almost) the same patch as we speak. :)
->>
->> Uh, what a coincidence! :)
->>
->>>
->>> I've never seen QEMU crash; the VM would more likely just fail to boot
->>> with a panic.  But it's the same bug anyway.
->>
->> I never met this before. How this situation happens?
->>
->>>
->>>> My solution is using sg_set_page instead of sg_set_buf.
->>>>
->>>> I have tested the patch on my workstation. QEMU would not crash any more.
->>>>
->>>> Signed-off-by: Wang Sen <senwang@linux.vnet.ibm.com>
->>>> ---
->>>>  drivers/scsi/virtio_scsi.c |    3 ++-
->>>>  1 file changed, 2 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
->>>> index 1b38431..fc5c88a 100644
->>>> --- a/drivers/scsi/virtio_scsi.c
->>>> +++ b/drivers/scsi/virtio_scsi.c
->>>> @@ -198,7 +198,8 @@ static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
->>>>       int i;
->>>>
->>>>       for_each_sg(table->sgl, sg_elem, table->nents, i)
->>>> -             sg_set_buf(&sg[idx++], sg_virt(sg_elem), sg_elem->length);
->>>> +             sg_set_page(&sg[idx++], sg_page(sg_elem), sg_elem->length,
->>>> +                     sg_elem->offset);
->>>
->>> This can simply be
->>>
->>>    sg[idx++] = *sg_elem;
->>>
->>
->> Yes, I saw your another E-mail. I think you're right. Simply calling
->> sg_set_page can not handle
->> the flag bits correctly. So, I'll repost the patch soon. Thank you!
->>
->
->
-> No this code is correct, though you will need to make sure to properly
-> terminate the destination sg_list.
+On Wed, 2012-07-18 at 18:49 +0200, olaf@aepfle.de wrote:
+> From: Linda Xie <lxiep@us.ibm.com>
 
-Yes, the terminate marker in the destination list is set when initialization.
-sg_set_page would not break this marker because it saved both the two
-maker bits at sg_asign_page.
+James, can I assume you're picking up those two ?
 
-Also, the allocation of destination sg list considered the total number of
-the source sg_list. So, sg_set_page can work correctly.
+Cheers,
+Ben.
 
-The value assignment method also can also work correctly, because the
-termination marker in source sg_list has been set in blk_rq_map_sg(), as
-the last entry of source sg_list is just copied to the the last entry
-in destination
-list.
-
-Uh, Paolo, Boaz, have  you reached agreement on which method to use?
->
-> But since old code was using sg_set_buf(), than it means it was properly
-> terminated before, and there for this code is good as is please don't
-> touch it.
->
-> Thanks
-> Boaz
->
->>> Can you repost it with this change, and also add stable@vger.kernel.org
->>> to the Cc?  Thanks very much!
->>>
->>> Paolo
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->>
->
-
-
-
--- 
-------------------------------------------
-Wang Sen
-Addr: XUPT,Xi'an,Shaanxi,China
-Email: kelvin.xupt@gmail.com
-------------------------------------------
+> Expected result:
+> It should show something like this:
+> x1521p4:~ # cat /sys/class/scsi_host/host1/config
+> PARTITIONNAME='x1521p4'
+> NWSDNAME='X1521P4'
+> HOSTNAME='X1521P4'
+> DOMAINNAME='RCHLAND.IBM.COM'
+> NAMESERVERS='9.10.244.100 9.10.244.200'
+> 
+> Actual result:
+> x1521p4:~ # cat /sys/class/scsi_host/host0/config
+> x1521p4:~ #
+> 
+> This patch changes the size of the buffer used for transfering config
+> data to 4K. It was tested against 2.6.19-rc2 tree.
+> 
+> Reported by IBM during SLES11 beta testing:
+> 
+> https://bugzilla.novell.com/show_bug.cgi?id=439970
+> LTC49349
+> 
+> Signed-off-by: Olaf Hering <olaf@aepfle.de>
+> 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> index e580aa4..1513ca8 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> @@ -93,6 +93,8 @@ static int max_requests = IBMVSCSI_MAX_REQUESTS_DEFAULT;
+>  static int max_events = IBMVSCSI_MAX_REQUESTS_DEFAULT + 2;
+>  static int fast_fail = 1;
+>  static int client_reserve = 1;
+> +/* host data buffer size */
+> +#define HOST_BUFFER_SIZE 4096
+>  
+>  static struct scsi_transport_template *ibmvscsi_transport_template;
+>  
+> @@ -1666,7 +1668,7 @@ static ssize_t show_host_srp_version(struct device *dev,
+>  	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+>  	int len;
+>  
+> -	len = snprintf(buf, PAGE_SIZE, "%s\n",
+> +       len = snprintf(buf, HOST_BUFFER_SIZE, "%s\n",
+>  		       hostdata->madapter_info.srp_version);
+>  	return len;
+>  }
+> @@ -1687,7 +1689,7 @@ static ssize_t show_host_partition_name(struct device *dev,
+>  	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+>  	int len;
+>  
+> -	len = snprintf(buf, PAGE_SIZE, "%s\n",
+> +       len = snprintf(buf, HOST_BUFFER_SIZE, "%s\n",
+>  		       hostdata->madapter_info.partition_name);
+>  	return len;
+>  }
+> @@ -1708,7 +1710,7 @@ static ssize_t show_host_partition_number(struct device *dev,
+>  	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+>  	int len;
+>  
+> -	len = snprintf(buf, PAGE_SIZE, "%d\n",
+> +       len = snprintf(buf, HOST_BUFFER_SIZE, "%d\n",
+>  		       hostdata->madapter_info.partition_number);
+>  	return len;
+>  }
+> @@ -1728,7 +1730,7 @@ static ssize_t show_host_mad_version(struct device *dev,
+>  	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+>  	int len;
+>  
+> -	len = snprintf(buf, PAGE_SIZE, "%d\n",
+> +       len = snprintf(buf, HOST_BUFFER_SIZE, "%d\n",
+>  		       hostdata->madapter_info.mad_version);
+>  	return len;
+>  }
+> @@ -1748,7 +1750,7 @@ static ssize_t show_host_os_type(struct device *dev,
+>  	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+>  	int len;
+>  
+> -	len = snprintf(buf, PAGE_SIZE, "%d\n", hostdata->madapter_info.os_type);
+> +       len = snprintf(buf, HOST_BUFFER_SIZE, "%d\n", hostdata->madapter_info.os_type);
+>  	return len;
+>  }
+>  
+> @@ -1767,7 +1769,7 @@ static ssize_t show_host_config(struct device *dev,
+>  	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+>  
+>  	/* returns null-terminated host config data */
+> -	if (ibmvscsi_do_host_config(hostdata, buf, PAGE_SIZE) == 0)
+> +       if (ibmvscsi_do_host_config(hostdata, buf, HOST_BUFFER_SIZE) == 0)
+>  		return strlen(buf);
+>  	else
+>  		return 0;
