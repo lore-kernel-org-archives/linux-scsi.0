@@ -1,59 +1,79 @@
 From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH v4 0/7] ZPODD patches
-Date: Fri, 27 Jul 2012 17:00:43 +0800
-Message-ID: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
+Subject: [PATCH v4 5/7] scsi: pm: use runtime resume callback if available
+Date: Fri, 27 Jul 2012 17:00:48 +0800
+Message-ID: <1343379650-2867-6-git-send-email-aaron.lu@amd.com>
+References: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:27491
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752181Ab2G0JCO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jul 2012 05:02:14 -0400
+In-Reply-To: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Sergei Shtylyov <sshtylyov@mvista.com>, Oliver Neukum <oneukum@suse.de>
 Cc: Jeff Wu <jeff.wu@amd.com>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
-List-Id: linux-scsi@vger.kernel.org
 
-v4:
-Rebase on top of Linus' tree, due to this, the problem of a missing
-flag in v3 is gone;
-Add a new function scsi_autopm_put_device_autosuspend to first mark
-last busy for the device and then put autosuspend it as suggested by
-Oliver Neukum.
-Typo fix as pointed by Sergei Shtylyov.
-Check can_power_off flag before any runtime pm operations in sr.
+When runtime resume a scsi device, if the device's driver has
+implemented runtime resume callback, use that.
 
-v3:
-Rebase on top of scsi-misc tree;
-Add the sr related patches previously in Jeff's libata tree;
-Re-organize the sr patches.
-A problem for now: for patch
-scsi: sr: support zero power ODD(ZPODD)
-I can't set a flag in libata-acpi.c since a related function is
-missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+sr driver needs this to do different things for system resume and
+runtime resume.
 
-v2:
-Bug fix for v1;
-Use scsi_autopm_* in sr driver instead of pm_runtime_*;
+Signed-off-by: Aaron Lu <aaron.lu@amd.com>
+---
+ drivers/scsi/scsi_pm.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-v1:
-Here are some patches to make ZPODD easier to use for end users and
-a fix for using ZPODD with system suspend.
-
-Aaron Lu (7):
-  scsi: sr: check support for device busy class events
-  scsi: pm: add interface to autosuspend scsi device
-  scsi: sr: support zero power ODD(ZPODD)
-  scsi: sr: block events when runtime suspended
-  scsi: pm: use runtime resume callback if available
-  scsi: sr: balance sr disk events block depth
-  block: genhd: add an interface to set disk's poll interval
-
- block/genhd.c              |  25 +++++--
- drivers/ata/libata-acpi.c  |   4 +-
- drivers/scsi/scsi_pm.c     |  22 ++++--
- drivers/scsi/sr.c          | 179 ++++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/sr.h          |   3 +
- include/linux/cdrom.h      |  43 +++++++++++
- include/linux/genhd.h      |   1 +
- include/scsi/scsi_device.h |   3 +
- 8 files changed, 267 insertions(+), 13 deletions(-)
-
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 83edb93..690136c 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -34,14 +34,19 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
+ 	return err;
+ }
+ 
+-static int scsi_dev_type_resume(struct device *dev)
++static int scsi_dev_type_resume(struct device *dev, bool runtime)
+ {
+ 	struct device_driver *drv;
+ 	int err = 0;
++	int (*resume)(struct device *);
+ 
+ 	drv = dev->driver;
+-	if (drv && drv->resume)
+-		err = drv->resume(dev);
++	if (runtime && drv && drv->pm && drv->pm->runtime_resume)
++		resume = drv->pm->runtime_resume;
++	else
++		resume = drv ? drv->resume : NULL;
++	if (resume)
++		err = resume(dev);
+ 	scsi_device_resume(to_scsi_device(dev));
+ 	dev_dbg(dev, "scsi resume: %d\n", err);
+ 	return err;
+@@ -85,7 +90,7 @@ static int scsi_bus_resume_common(struct device *dev)
+ 	pm_runtime_get_sync(dev->parent);
+ 
+ 	if (scsi_is_sdev_device(dev))
+-		err = scsi_dev_type_resume(dev);
++		err = scsi_dev_type_resume(dev, false);
+ 	if (err == 0) {
+ 		pm_runtime_disable(dev);
+ 		pm_runtime_set_active(dev);
+@@ -160,7 +165,7 @@ static int scsi_runtime_resume(struct device *dev)
+ 
+ 	dev_dbg(dev, "scsi_runtime_resume\n");
+ 	if (scsi_is_sdev_device(dev))
+-		err = scsi_dev_type_resume(dev);
++		err = scsi_dev_type_resume(dev, true);
+ 
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+ 
 -- 
 1.7.11.3
+
+
