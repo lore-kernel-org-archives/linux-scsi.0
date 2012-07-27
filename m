@@ -1,76 +1,87 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] sd: do not set changed flag on all unit attention conditions
-Date: Fri, 27 Jul 2012 12:16:04 +0200
-Message-ID: <50126A64.9040206@suse.de>
-References: <1342454772-9018-1-git-send-email-pbonzini@redhat.com>  <1342455503.3176.42.camel@dabdike.int.hansenpartnership.com>  <50044D56.6000400@redhat.com>  <1342511100.3039.9.camel@dabdike.int.hansenpartnership.com>  <50052390.7030908@redhat.com>  <1342514444.3039.23.camel@dabdike.int.hansenpartnership.com>  <5005285E.8060706@redhat.com>  <1342516317.3039.35.camel@dabdike.int.hansenpartnership.com>  <20120717163612.GA15995@infradead.org> <1342562390.3039.100.camel@dabdike.int.hansenpartnership.com>
+From: Jiri Kosina <jkosina@suse.cz>
+Subject: Re: [PATCH] [RFC] [SCSI] mpt fusion: add support for 0x1000/0x0055
+Date: Fri, 27 Jul 2012 15:28:19 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1207271527550.11375@pobox.suse.cz>
+References: <alpine.LNX.2.00.1207210000190.21929@pobox.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57824 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:40384 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751643Ab2G0KQI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jul 2012 06:16:08 -0400
-In-Reply-To: <1342562390.3039.100.camel@dabdike.int.hansenpartnership.com>
+	id S1751720Ab2G0N20 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jul 2012 09:28:26 -0400
+In-Reply-To: <alpine.LNX.2.00.1207210000190.21929@pobox.suse.cz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Eric Moore <Eric.Moore@lsi.com>, James Bottomley <JBottomley@Parallels.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Cc: DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/17/2012 11:59 PM, James Bottomley wrote:
-> On Tue, 2012-07-17 at 12:36 -0400, Christoph Hellwig wrote:
->> On Tue, Jul 17, 2012 at 10:11:57AM +0100, James Bottomley wrote:
->>> There's no such thing in the market today as a removable disk that'=
-s
->>> resizeable.  Removable disks are for things like backup cartridges =
-and
->>> ageing jazz drives.  Worse: most removeable devices today are USB c=
-ard
->>> readers whose standards compliance varies from iffy to non existent=
-=2E
->>> Resizeable disks are currently the province of storage arrays.
->>
->> The virtual disks exported by aacraid are both marked removable and
->> can be resized.
->=20
-> So what are properties of these things? ... or is this just an instan=
-ce
-> of a RAID manufacturer hacking around a problem by adding a removable
-> flag?
->=20
-Presumably.
+On Sat, 21 Jul 2012, Jiri Kosina wrote:
 
-The general intention is to automatically catch any disk resizing.
-As the SCSI stack (used to) ignore these things that was their way
-of working around it.
+> The device identifies itself as
+> 
+> 0d:05.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068 PCI-X Fusion-MPT SAS (rev 01) Subsystem: NEC Corporation SAS1068
+> 
+> and seems to be functionally compatible with 0x0054 PID.
+> 
+> The request for support of this device has been raised on mailinglists several
+> times in the past (see [1] [2] and more), but aparently the PCI ID never made it
+> to mptsas_pci_table[].
+> 
+> [1] http://comments.gmane.org/gmane.linux.scsi/63836
+> [2] http://lkml.indiana.edu/hypermail/linux/kernel/0701.2/1715.html
+> 
+> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+> ---
+> 
+> 
+> I guess the "Subsystem: NEC Corporation" is telling us some rebranding 
+> story, including the PID change ... ?
 
-Curiously, though; the aacraid driver is the only one doing this,
-plus the process is quite involved (using a proprietary application
-for doing so etc).
+Hi guys,
 
-None of the FC driver do this, despite the fact that resizing a disk
-is even easier here.
+any feedback on this please?
 
-I even tried to remove that line once, but then got told off by then
-Adaptec that I would break their apps.
-Since then there's a patch in the SLES kernel for adding a module
-option switching off this behaviour.
+Thanks.
 
-We should ask Adaptec/PMC-Sierra here.
+> 
+> 
+> 
+>  drivers/message/fusion/lsi/mpi_cnfg.h |    1 +
+>  drivers/message/fusion/mptsas.c       |    2 ++
+>  2 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
+> index d9bcfba..29d54c9 100644
+> --- a/drivers/message/fusion/lsi/mpi_cnfg.h
+> +++ b/drivers/message/fusion/lsi/mpi_cnfg.h
+> @@ -582,6 +582,7 @@ typedef struct _MSG_CONFIG_REPLY
+>  #define MPI_MANUFACTPAGE_DEVID_SAS1066              (0x005E)
+>  #define MPI_MANUFACTPAGE_DEVID_SAS1066E             (0x005A)
+>  #define MPI_MANUFACTPAGE_DEVID_SAS1068              (0x0054)
+> +#define MPI_MANUFACTPAGE_DEVID_SAS1068_2            (0x0055)
+>  #define MPI_MANUFACTPAGE_DEVID_SAS1068E             (0x0058)
+>  #define MPI_MANUFACTPAGE_DEVID_SAS1068_820XELP      (0x0059)
+>  #define MPI_MANUFACTPAGE_DEVID_SAS1078              (0x0062)
+> diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+> index 551262e..2475f8c 100644
+> --- a/drivers/message/fusion/mptsas.c
+> +++ b/drivers/message/fusion/mptsas.c
+> @@ -5370,6 +5370,8 @@ static struct pci_device_id mptsas_pci_table[] = {
+>  		PCI_ANY_ID, PCI_ANY_ID },
+>  	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068,
+>  		PCI_ANY_ID, PCI_ANY_ID },
+> +	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068_2,
+> +		PCI_ANY_ID, PCI_ANY_ID },
+>  	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1064E,
+>  		PCI_ANY_ID, PCI_ANY_ID },
+>  	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068E,
+> 
+> -- 
+> Jiri Kosina
+> SUSE Labs
+> 
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jiri Kosina
+SUSE Labs
