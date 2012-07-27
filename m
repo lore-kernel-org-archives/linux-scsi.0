@@ -1,55 +1,79 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: virtio(-scsi) vs. chained sg_lists (was Re: [PATCH] scsi: virtio-scsi:
- Fix address translation failure of HighMem pages used by sg list)
-Date: Fri, 27 Jul 2012 10:11:26 +0200
-Message-ID: <50124D2E.7050407@redhat.com>
-References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com> <500FB1DE.1000100@redhat.com> <500FBAE8.2050107@panasas.com> <500FBF37.50603@redhat.com> <500FE7D2.7070101@panasas.com> <500FEB63.3000709@redhat.com> <500FF412.3090600@panasas.com> <50100014.2010109@redhat.com> <50101091.5090909@panasas.com> <50103043.5050508@redhat.com> <50104614.3080002@panasas.com> <501051DF.5040907@redhat.com> <50105F60.8050707@panasas.com> <5010F07E.7050506@redhat.com> <5010F831.9030300@panasas.com> <5010F896.8090409@redhat.com> <501140A3.9090908@redhat.com> <874notoh02.fsf@rustcorp.com.au>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: [PATCH v4 4/7] scsi: sr: block events when runtime suspended
+Date: Fri, 27 Jul 2012 17:00:47 +0800
+Message-ID: <1343379650-2867-5-git-send-email-aaron.lu@amd.com>
+References: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <874notoh02.fsf@rustcorp.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Sergei Shtylyov <sshtylyov@mvista.com>, Oliver Neukum <oneukum@suse.de>
+Cc: Jeff Wu <jeff.wu@amd.com>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Il 27/07/2012 08:27, Rusty Russell ha scritto:
->> > +int virtqueue_add_buf_sg(struct virtqueue *_vq,
->> > +			 struct scatterlist *sg_out,
->> > +			 unsigned int out,
->> > +			 struct scatterlist *sg_in,
->> > +			 unsigned int in,
->> > +			 void *data,
->> > +			 gfp_t gfp)
-> The point of chained scatterlists is they're self-terminated, so the
-> in & out counts should be calculated.
-> 
-> Counting them is not *that* bad, since we're about to read them all
-> anyway.
-> 
-> (Yes, the chained scatterlist stuff is complete crack, but I lost that
-> debate years ago.)
-> 
-> Here's my variant.  Networking, console and block seem OK, at least
-> (ie. it booted!).
+When the ODD is runtime suspended, there is no need to poll it for
+events, so block events poll for it and unblock when resumed.
 
-I hate the for loops, even though we're about indeed to read all the
-scatterlists anyway... all they do is lengthen critical sections.  Also,
-being the first user of chained scatterlist doesn't exactly give me warm
-fuzzies.
+Signed-off-by: Aaron Lu <aaron.lu@amd.com>
+---
+ block/genhd.c     | 2 ++
+ drivers/scsi/sr.c | 7 ++++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-I think it's simpler if we provide an API to add individual buffers to
-the virtqueue, so that you can do multiple virtqueue_add_buf_more
-(whatever) before kicking the virtqueue.  The idea is that I can still
-use indirect buffers for the scatterlists that come from the block layer
-or from an skb, but I will use direct buffers for the request/response
-descriptors.  The direct buffers are always a small number (usually 2),
-so you can balance the effect by making the virtqueue bigger.  And for
-small reads and writes, you save a kmalloc on a very hot path.
+diff --git a/block/genhd.c b/block/genhd.c
+index 9cf5583..bdb3682 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1458,6 +1458,7 @@ void disk_block_events(struct gendisk *disk)
+ 
+ 	mutex_unlock(&ev->block_mutex);
+ }
++EXPORT_SYMBOL(disk_block_events);
+ 
+ static void __disk_unblock_events(struct gendisk *disk, bool check_now)
+ {
+@@ -1502,6 +1503,7 @@ void disk_unblock_events(struct gendisk *disk)
+ 	if (disk->ev)
+ 		__disk_unblock_events(disk, false);
+ }
++EXPORT_SYMBOL(disk_unblock_events);
+ 
+ /**
+  * disk_flush_events - schedule immediate event checking and flushing
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index acfd10a..cbc14ea 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -205,6 +205,8 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
+ 		return -EBUSY;
+ 	}
+ 
++	disk_block_events(cd->disk);
++
+ 	return 0;
+ }
+ 
+@@ -226,6 +228,8 @@ static int sr_resume(struct device *dev)
+ 		atomic_set(&cd->suspend_count, 1);
+ 	}
+ 
++	disk_unblock_events(cd->disk);
++
+ 	return 0;
+ }
+ 
+@@ -314,9 +318,6 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	if (CDSL_CURRENT != slot)
+ 		return 0;
+ 
+-	if (pm_runtime_suspended(&cd->device->sdev_gendev))
+-		return 0;
+-
+ 	/* if the logical unit just finished loading/unloading, do a TUR */
+ 	if (cd->device->can_power_off && cd->dbml && sr_unit_load_done(cd)) {
+ 		events = 0;
+-- 
+1.7.11.3
 
-(BTW, scatterlists will have separate entries for each page; we do not
-need this in virtio buffers.  Collapsing physically-adjacent entries
-will speed up QEMU and will also help avoiding indirect buffers).
 
-Paolo
