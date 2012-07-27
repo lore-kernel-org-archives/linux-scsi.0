@@ -1,87 +1,93 @@
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: Re: [PATCH] [RFC] [SCSI] mpt fusion: add support for 0x1000/0x0055
-Date: Fri, 27 Jul 2012 15:28:19 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1207271527550.11375@pobox.suse.cz>
-References: <alpine.LNX.2.00.1207210000190.21929@pobox.suse.cz>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [RESEND PATCH] SCSI: scsi_lib: fix scsi_io_completion's SG_IO
+ error propagation
+Date: Fri, 27 Jul 2012 15:29:46 +0200
+Message-ID: <501297CA.2060704@suse.de>
+References: <20120718230614.GC13570@redhat.com> <1343238411-18193-1-git-send-email-snitzer@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40384 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:40406 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751720Ab2G0N20 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jul 2012 09:28:26 -0400
-In-Reply-To: <alpine.LNX.2.00.1207210000190.21929@pobox.suse.cz>
+	id S1751053Ab2G0N3v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jul 2012 09:29:51 -0400
+In-Reply-To: <1343238411-18193-1-git-send-email-snitzer@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <Eric.Moore@lsi.com>, James Bottomley <JBottomley@Parallels.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Cc: DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: James.Bottomley@hansenpartnership.com, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, Babu.Moger@netapp.com
 
-On Sat, 21 Jul 2012, Jiri Kosina wrote:
+On 07/25/2012 07:46 PM, Mike Snitzer wrote:
+> The following v3.4-rc1 commit unmasked an existing bug in
+> scsi_io_completion's SG_IO error handling:
+> 47ac56d [SCSI] scsi_error: classify some ILLEGAL_REQUEST sense as a p=
+ermanent TARGET_ERROR
+>=20
+> Given that certain ILLEGAL_REQUEST are now properly categorized as
+> TARGET_ERROR the host_byte is being set (before host_byte wasn't ever
+> set for these ILLEGAL_REQUEST).
+>=20
+> In scsi_io_completion, initialize req->errors with cmd->result _after=
+_
+> the SG_IO block that calls __scsi_error_from_host_byte (which may
+> modify the host_byte).
+>=20
+> Before this fix:
+>=20
+>     cdb to send: 12 01 01 00 00 00
+> ioctl(3, SG_IO, {'S', SG_DXFER_NONE, cmd[6]=3D[12, 01, 01, 00, 00, 00=
+],
+>     mx_sb_len=3D32, iovec_count=3D0, dxfer_len=3D0, timeout=3D20000, =
+flags=3D0,
+>     status=3D02, masked_status=3D01, sb[19]=3D[70, 00, 05, 00, 00, 00=
+, 00, 0b,
+>     00, 00, 00, 00, 24, 00, 00, 00, 00, 00, 00], host_status=3D0x10,
+>     driver_status=3D0x8, resid=3D0, duration=3D0, info=3D0x1}) =3D 0
+> SCSI Status: Check Condition
+>=20
+> Sense Information:
+> sense buffer empty
+>=20
+> After:
+>=20
+>     cdb to send: 12 01 01 00 00 00
+> ioctl(3, SG_IO, {'S', SG_DXFER_NONE, cmd[6]=3D[12, 01, 01, 00, 00, 00=
+],
+>     mx_sb_len=3D32, iovec_count=3D0, dxfer_len=3D0, timeout=3D20000, =
+flags=3D0,
+>     status=3D02, masked_status=3D01, sb[19]=3D[70, 00, 05, 00, 00, 00=
+, 00, 0b,
+>     00, 00, 00, 00, 24, 00, 00, 00, 00, 00, 00], host_status=3D0,
+>     driver_status=3D0x8, resid=3D0, duration=3D0, info=3D0x1}) =3D 0
+> SCSI Status: Check Condition
+>=20
+> Sense Information:
+>  Fixed format, current;  Sense key: Illegal Request
+>  Additional sense: Invalid field in cdb
+>  Raw sense data (in hex):
+>         70 00 05 00 00 00 00 0b  00 00 00 00 24 00 00 00
+>         00 00 00
+>=20
+> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+> Reported-by: Paolo Bonzini <pbonzini@redhat.com>
+> Tested-by: Paolo Bonzini <pbonzini@redhat.com>
+> Reviewed-by: Babu Moger <babu.moger@netapp.com>
+> Cc: stable@vger.kernel.org [v3.4+]
 
-> The device identifies itself as
-> 
-> 0d:05.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068 PCI-X Fusion-MPT SAS (rev 01) Subsystem: NEC Corporation SAS1068
-> 
-> and seems to be functionally compatible with 0x0054 PID.
-> 
-> The request for support of this device has been raised on mailinglists several
-> times in the past (see [1] [2] and more), but aparently the PCI ID never made it
-> to mptsas_pci_table[].
-> 
-> [1] http://comments.gmane.org/gmane.linux.scsi/63836
-> [2] http://lkml.indiana.edu/hypermail/linux/kernel/0701.2/1715.html
-> 
-> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
-> ---
-> 
-> 
-> I guess the "Subsystem: NEC Corporation" is telling us some rebranding 
-> story, including the PID change ... ?
+Acked-by: Hannes Reinecke <hare@suse.de>
 
-Hi guys,
+Cheers,
 
-any feedback on this please?
+Hannes--
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 
-Thanks.
 
-> 
-> 
-> 
->  drivers/message/fusion/lsi/mpi_cnfg.h |    1 +
->  drivers/message/fusion/mptsas.c       |    2 ++
->  2 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
-> index d9bcfba..29d54c9 100644
-> --- a/drivers/message/fusion/lsi/mpi_cnfg.h
-> +++ b/drivers/message/fusion/lsi/mpi_cnfg.h
-> @@ -582,6 +582,7 @@ typedef struct _MSG_CONFIG_REPLY
->  #define MPI_MANUFACTPAGE_DEVID_SAS1066              (0x005E)
->  #define MPI_MANUFACTPAGE_DEVID_SAS1066E             (0x005A)
->  #define MPI_MANUFACTPAGE_DEVID_SAS1068              (0x0054)
-> +#define MPI_MANUFACTPAGE_DEVID_SAS1068_2            (0x0055)
->  #define MPI_MANUFACTPAGE_DEVID_SAS1068E             (0x0058)
->  #define MPI_MANUFACTPAGE_DEVID_SAS1068_820XELP      (0x0059)
->  #define MPI_MANUFACTPAGE_DEVID_SAS1078              (0x0062)
-> diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-> index 551262e..2475f8c 100644
-> --- a/drivers/message/fusion/mptsas.c
-> +++ b/drivers/message/fusion/mptsas.c
-> @@ -5370,6 +5370,8 @@ static struct pci_device_id mptsas_pci_table[] = {
->  		PCI_ANY_ID, PCI_ANY_ID },
->  	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068,
->  		PCI_ANY_ID, PCI_ANY_ID },
-> +	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068_2,
-> +		PCI_ANY_ID, PCI_ANY_ID },
->  	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1064E,
->  		PCI_ANY_ID, PCI_ANY_ID },
->  	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068E,
-> 
-> -- 
-> Jiri Kosina
-> SUSE Labs
-> 
-
--- 
-Jiri Kosina
-SUSE Labs
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
