@@ -1,7 +1,7 @@
 From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH v4 1/7] scsi: sr: check support for device busy class events
-Date: Fri, 27 Jul 2012 17:00:44 +0800
-Message-ID: <1343379650-2867-2-git-send-email-aaron.lu@amd.com>
+Subject: [PATCH v4 2/7] scsi: pm: add interface to autosuspend scsi device
+Date: Fri, 27 Jul 2012 17:00:45 +0800
+Message-ID: <1343379650-2867-3-git-send-email-aaron.lu@amd.com>
 References: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,126 +12,48 @@ To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzi
 Cc: Jeff Wu <jeff.wu@amd.com>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Add a new interface scsi_autopm_put_device_autosuspend to mark
+last busy for the device and then put autosuspend the device.
+
 Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 ---
- drivers/scsi/sr.c     | 23 +++++++++++++++++++++++
- drivers/scsi/sr.h     |  1 +
- include/linux/cdrom.h | 43 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 67 insertions(+)
+ drivers/scsi/scsi_pm.c     | 7 +++++++
+ include/scsi/scsi_device.h | 2 ++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 5fc97d2..abfefab 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -101,6 +101,7 @@ static DEFINE_MUTEX(sr_ref_mutex);
- static int sr_open(struct cdrom_device_info *, int);
- static void sr_release(struct cdrom_device_info *);
- 
-+static void check_dbml(struct scsi_cd *);
- static void get_sectorsize(struct scsi_cd *);
- static void get_capabilities(struct scsi_cd *);
- 
-@@ -728,6 +729,28 @@ fail:
- 	return error;
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index dc0ad85..83edb93 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -201,6 +201,13 @@ void scsi_autopm_put_device(struct scsi_device *sdev)
  }
+ EXPORT_SYMBOL_GPL(scsi_autopm_put_device);
  
-+static void check_dbml(struct scsi_cd *cd)
++void scsi_autopm_put_device_autosuspend(struct scsi_device *sdev)
 +{
-+	struct packet_command cgc;
-+	unsigned char buffer[16];
-+	struct rm_feature_desc *rfd;
-+
-+	init_cdrom_command(&cgc, buffer, sizeof(buffer), CGC_DATA_READ);
-+	cgc.cmd[0] = GPCMD_GET_CONFIGURATION;
-+	cgc.cmd[3] = CDF_RM;
-+	cgc.cmd[8] = sizeof(buffer);
-+	cgc.quiet = 1;
-+
-+	if (cd->cdi.ops->generic_packet(&cd->cdi, &cgc))
-+		return;
-+
-+	rfd = (struct rm_feature_desc *)&buffer[sizeof(struct feature_header)];
-+	if (be16_to_cpu(rfd->feature_code) != CDF_RM)
-+		return;
-+
-+	if (rfd->dbml)
-+		cd->dbml = 1;
++	pm_runtime_mark_last_busy(&sdev->sdev_gendev);
++	pm_runtime_put_autosuspend(&sdev->sdev_gendev);
 +}
- 
- static void get_sectorsize(struct scsi_cd *cd)
++EXPORT_SYMBOL_GPL(scsi_autopm_put_device_autosuspend);
++
+ void scsi_autopm_get_target(struct scsi_target *starget)
  {
-diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
-index 37c8f6b..7cc40ad 100644
---- a/drivers/scsi/sr.h
-+++ b/drivers/scsi/sr.h
-@@ -41,6 +41,7 @@ typedef struct scsi_cd {
- 	unsigned readcd_known:1;	/* drive supports READ_CD (0xbe) */
- 	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
- 	unsigned media_present:1;	/* media is present */
-+	unsigned dbml:1;	/* generates device busy class events */
+ 	pm_runtime_get_sync(&starget->dev);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 9895f69..3636146 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -395,9 +395,11 @@ extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
+ #ifdef CONFIG_PM_RUNTIME
+ extern int scsi_autopm_get_device(struct scsi_device *);
+ extern void scsi_autopm_put_device(struct scsi_device *);
++extern void scsi_autopm_put_device_autosuspend(struct scsi_device *);
+ #else
+ static inline int scsi_autopm_get_device(struct scsi_device *d) { return 0; }
+ static inline void scsi_autopm_put_device(struct scsi_device *d) {}
++static inline void scsi_autopm_put_device_autosuspend(struct scsi_device *d) {}
+ #endif /* CONFIG_PM_RUNTIME */
  
- 	/* GET_EVENT spurious event handling, blk layer guarantees exclusion */
- 	int tur_mismatch;		/* nr of get_event TUR mismatches */
-diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-index dfd7f18..962be39 100644
---- a/include/linux/cdrom.h
-+++ b/include/linux/cdrom.h
-@@ -727,6 +727,7 @@ struct request_sense {
- /*
-  * feature profile
-  */
-+#define CDF_RM		0x0003	/* "Removable Medium" */
- #define CDF_RWRT	0x0020	/* "Random Writable" */
- #define CDF_HWDM	0x0024	/* "Hardware Defect Management" */
- #define CDF_MRW 	0x0028
-@@ -739,6 +740,48 @@ struct request_sense {
- #define CDM_MRW_BGFORMAT_ACTIVE		2
- #define CDM_MRW_BGFORMAT_COMPLETE	3
- 
-+/* Removable medium feature descriptor */
-+struct rm_feature_desc {
-+	__be16 feature_code;
-+#if defined(__BIG_ENDIAN_BITFIELD)
-+	__u8 reserved1		: 2;
-+	__u8 feature_version	: 4;
-+	__u8 persistent		: 1;
-+	__u8 curr		: 1;
-+#elif defined(__LITTLE_ENDIAN_BITFIELD)
-+	__u8 curr		: 1;
-+	__u8 persistent		: 1;
-+	__u8 feature_version	: 4;
-+	__u8 reserved1		: 2;
-+#endif
-+	__u8 add_len;
-+#if defined(__BIG_ENDIAN_BITFIELD)
-+	__u8 mech_type		: 3;
-+	__u8 load		: 1;
-+	__u8 eject		: 1;
-+	__u8 pvnt_jmpr		: 1;
-+	__u8 dbml		: 1;
-+	__u8 lock		: 1;
-+#elif defined(__LITTLE_ENDIAN_BITFIELD)
-+	__u8 lock		: 1;
-+	__u8 dbml		: 1;
-+	__u8 pvnt_jmpr		: 1;
-+	__u8 eject		: 1;
-+	__u8 load		: 1;
-+	__u8 mech_type		: 3;
-+#endif
-+	__u8 reserved2;
-+	__u8 reserved3;
-+	__u8 reserved4;
-+};
-+
-+struct device_busy_event_desc {
-+	__u8 device_busy_event	: 4;
-+	__u8 reserved1		: 4;
-+	__u8 device_busy_status;
-+	__u8 time;
-+};
-+
- /*
-  * mrw address spaces
-  */
+ static inline int __must_check scsi_device_reprobe(struct scsi_device *sdev)
 -- 
 1.7.11.3
