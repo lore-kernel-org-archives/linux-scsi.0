@@ -1,31 +1,33 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH] [RFC] [SCSI] mpt fusion: add support for 0x1000/0x0055
-Date: Fri, 27 Jul 2012 16:17:49 -0700
-Message-ID: <CAHtARFECa0090rCWuc5uH2ss7nsRvx9+bkki03TSxizbDvmX2A@mail.gmail.com>
-References: <alpine.LNX.2.00.1207210000190.21929@pobox.suse.cz>
-	<alpine.LNX.2.00.1207271527550.11375@pobox.suse.cz>
-	<CAHtARFHgG_8hQ85r5=W0E8d4BU-HVFLw7xkOFZA+H6kvH_83Nw@mail.gmail.com>
-	<alpine.LNX.2.00.1207272210200.30412@pobox.suse.cz>
+From: "gopl@libero.it" <gopl@libero.it>
+Subject: Summer Bonus!
+Date: Sat, 28 Jul 2012 08:48:51 +0200 (CEST)
+Message-ID: <13543880.1355401343458131595.JavaMail.defaultUser__23138.5472383865$1343458296$gmane$org@defaultHost>
+Reply-To: "gopl@libero.it" <gopl@libero.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1207272210200.30412@pobox.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Eric Moore <Eric.Moore@lsi.com>, James Bottomley <JBottomley@parallels.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from outrelay01.libero.it ([212.52.84.101]:38296 "EHLO
+	outrelay01.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785Ab2G1Guy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jul 2012 02:50:54 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/27/12, Jiri Kosina <jkosina@suse.cz> wrote:
-...
->
-> So, what is the alternative?
->
-> The only thing I know is that it works at least in basic mode (haven't
-> tested performance at all).
+We are please to inform you that the summer promotion award program hel=
+d 27th
+June  2012,have pronounce your email-address as the lucky winner of a t=
+otal
+sum: of =E2=82=AC50,000.
+CONTACT:
+The claim office/Email:Postinfo@luckymail.com , with your winning Seria=
+l-No:LE
+0031#44230.
+-------------------------------------
+Postcodesloterij.nl
 
-The driver for your card is a closed source driver called 'megasr'.
-Here is a link to the LSI download page for this card/driver:
-
-http://www.lsi.com/support/Pages/Download-Results.aspx?productcode=P00041&assettype=0&component=Storage%20Component&productfamily=Legacy%20RAID%20Controllers&productname=MegaRAID%20SAS%208208XLP
-
--Adam
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
