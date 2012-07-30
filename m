@@ -1,196 +1,38 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: virtio(-scsi) vs. chained sg_lists (was Re: [PATCH] scsi: virtio-scsi: Fix address translation failure of HighMem pages used by sg list)
-Date: Mon, 30 Jul 2012 09:20:12 +0930
-Message-ID: <87obmym8jv.fsf@rustcorp.com.au>
-References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com> <500FB1DE.1000100@redhat.com> <500FBAE8.2050107@panasas.com> <500FBF37.50603@redhat.com> <500FE7D2.7070101@panasas.com> <500FEB63.3000709@redhat.com> <500FF412.3090600@panasas.com> <50100014.2010109@redhat.com> <50101091.5090909@panasas.com> <50103043.5050508@redhat.com> <50104614.3080002@panasas.com> <501051DF.5040907@redhat.com> <50105F60.8050707@panasas.com> <5010F07E.7050506@redhat.com> <5010F831.9030300@panasas.com> <5010F896.8090409@redhat.com> <501140A3.9090908@redhat.com> <874notoh02.fsf@rustcorp.com.au> <50124D2E.7050407@redhat.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] scsi/ibmvscsi: /sys/class/scsi_host/hostX/config
+ doesn't show any information
+Date: Mon, 30 Jul 2012 10:20:13 +1000
+Message-ID: <1343607613.21647.9.camel@pasglop>
+References: <1342630157-16468-1-git-send-email-olaf@aepfle.de>
+	 <1343366362.2118.15.camel@pasglop> <1343372206.3323.24.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50124D2E.7050407@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:53853 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753779Ab2G3AUq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 Jul 2012 20:20:46 -0400
+In-Reply-To: <1343372206.3323.24.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: olaf@aepfle.de, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, Linda Xie <lxiep@us.ibm.com>
 
-On Fri, 27 Jul 2012 10:11:26 +0200, Paolo Bonzini <pbonzini@redhat.com> wrote:
-> Il 27/07/2012 08:27, Rusty Russell ha scritto:
-> >> > +int virtqueue_add_buf_sg(struct virtqueue *_vq,
-> >> > +			 struct scatterlist *sg_out,
-> >> > +			 unsigned int out,
-> >> > +			 struct scatterlist *sg_in,
-> >> > +			 unsigned int in,
-> >> > +			 void *data,
-> >> > +			 gfp_t gfp)
-> > The point of chained scatterlists is they're self-terminated, so the
-> > in & out counts should be calculated.
+On Fri, 2012-07-27 at 07:56 +0100, James Bottomley wrote:
+> On Fri, 2012-07-27 at 15:19 +1000, Benjamin Herrenschmidt wrote:
+> > On Wed, 2012-07-18 at 18:49 +0200, olaf@aepfle.de wrote:
+> > > From: Linda Xie <lxiep@us.ibm.com>
 > > 
-> > Counting them is not *that* bad, since we're about to read them all
-> > anyway.
-> > 
-> > (Yes, the chained scatterlist stuff is complete crack, but I lost that
-> > debate years ago.)
-> > 
-> > Here's my variant.  Networking, console and block seem OK, at least
-> > (ie. it booted!).
+> > James, can I assume you're picking up those two ?
 > 
-> I hate the for loops, even though we're about indeed to read all the
-> scatterlists anyway... all they do is lengthen critical sections.
+> If they get acked by the maintiners ...
 
-You're preaching to the choir: I agree.  But even more, I hate the
-passing of a number and a scatterlist: it makes it doubly ambigious
-whether we should use the number or the terminator.  And I really hate
-bad APIs, even more than a bit of icache loss.
-
-> Also, being the first user of chained scatterlist doesn't exactly give
-> me warm fuzzies.
-
-We're far from the first user: they've been in the kernel for well over
-7 years.  They were introduced for the block layer, but they tended to
-ignore private uses of scatterlists like this one.
-
-> I think it's simpler if we provide an API to add individual buffers to
-> the virtqueue, so that you can do multiple virtqueue_add_buf_more
-> (whatever) before kicking the virtqueue.  The idea is that I can still
-> use indirect buffers for the scatterlists that come from the block layer
-> or from an skb, but I will use direct buffers for the request/response
-> descriptors.  The direct buffers are always a small number (usually 2),
-> so you can balance the effect by making the virtqueue bigger.  And for
-> small reads and writes, you save a kmalloc on a very hot path.
-
-This is why I hate chained scatterlists: there's no sane way to tell the
-difference between passing a simple array and passing a chain.  We're
-mugging the type system.
-
-I think the right way of doing this is a flag.  We could abuse gfp_t,
-but that's super-ugly.  Perhaps we should create our own
-VQ_ATOMIC/VQ_KERNEL/VQ_DIRECT enum?
-
-Or we could do what we previously suggested, and try to do some
-intelligent size heuristic.  I've posted a patch from 3 years ago below.
- 
-> (BTW, scatterlists will have separate entries for each page; we do not
-> need this in virtio buffers.  Collapsing physically-adjacent entries
-> will speed up QEMU and will also help avoiding indirect buffers).
-
-Yes, we should do this.  But note that this means an iteration, so we
-might as well combine the loops :)
+I don't think we have a specific upstream maintainer for those drivers,
+so let's assume it's my job... NAK on the sysfs one, the other one is
+ok, I'll reply to the respective patches.
 
 Cheers,
-Rusty.
+Ben.
 
-FIXME: remove printk
-virtio: use indirect buffers based on demand (heuristic)
 
-virtio_ring uses a ring buffer of descriptors: indirect support allows
-a single descriptor to refer to a table of descriptors.  This saves
-space in the ring, but requires a kmalloc/kfree.
-
-Rather than try to figure out what the right threshold at which to use
-indirect buffers, we drop the threshold dynamically when the ring is
-under stress.
-
-Note: to stress this, I reduced the ring size to 32 in lguest, and a
-1G send reduced the threshold to 9.
-
-Note2: I moved the BUG_ON()s above the indirect test, where they belong
-(indirect falls thru on OOM, so the constraints still apply).
----
- drivers/virtio/virtio_ring.c |   61 ++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 52 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/virtio/virtio_ring.c b/drivers/virtio/virtio_ring.c
---- a/drivers/virtio/virtio_ring.c
-+++ b/drivers/virtio/virtio_ring.c
-@@ -63,6 +63,8 @@ struct vring_virtqueue
- 
- 	/* Host supports indirect buffers */
- 	bool indirect;
-+	/* Threshold before we go indirect. */
-+	unsigned int indirect_threshold;
- 
- 	/* Number of free buffers */
- 	unsigned int num_free;
-@@ -139,6 +141,32 @@ static int vring_add_indirect(struct vri
- 	return head;
- }
- 
-+static void adjust_threshold(struct vring_virtqueue *vq,
-+			     unsigned int out, unsigned int in)
-+{
-+	/* There are really two species of virtqueue, and it matters here.
-+	 * If there are no output parts, it's a "normally full" receive queue,
-+	 * otherwise it's a "normally empty" send queue. */
-+	if (out) {
-+		/* Leave threshold unless we're full. */
-+		if (out + in < vq->num_free)
-+			return;
-+	} else {
-+		/* Leave threshold unless we're empty. */
-+		if (vq->num_free != vq->vring.num)
-+			return;
-+	}
-+
-+	/* Never drop threshold below 1 */
-+	vq->indirect_threshold /= 2;
-+	vq->indirect_threshold |= 1;
-+
-+	printk("%s %s: indirect threshold %u (%u+%u vs %u)\n",
-+	       dev_name(&vq->vq.vdev->dev),
-+	       vq->vq.name, vq->indirect_threshold,
-+	       out, in, vq->num_free);
-+}
-+
- static int vring_add_buf(struct virtqueue *_vq,
- 			 struct scatterlist sg[],
- 			 unsigned int out,
-@@ -151,19 +179,33 @@ static int vring_add_buf(struct virtqueu
- 	START_USE(vq);
- 
- 	BUG_ON(data == NULL);
--
--	/* If the host supports indirect descriptor tables, and we have multiple
--	 * buffers, then go indirect. FIXME: tune this threshold */
--	if (vq->indirect && (out + in) > 1 && vq->num_free) {
--		head = vring_add_indirect(vq, sg, out, in);
--		if (head != vq->vring.num)
--			goto add_head;
--	}
--
- 	BUG_ON(out + in > vq->vring.num);
- 	BUG_ON(out + in == 0);
- 
- 	vq->addbuf_total++;
-+
-+	/* If the host supports indirect descriptor tables, consider it. */
-+	if (vq->indirect) {
-+		bool try_indirect;
-+
-+		/* We tweak the threshold automatically. */
-+		adjust_threshold(vq, out, in);
-+
-+		/* If we can't fit any at all, fall through. */
-+		if (vq->num_free == 0)
-+			try_indirect = false;
-+		else if (out + in > vq->num_free)
-+			try_indirect = true;
-+		else
-+			try_indirect = (out + in > vq->indirect_threshold);
-+
-+		if (try_indirect) {
-+			head = vring_add_indirect(vq, sg, out, in);
-+			if (head != vq->vring.num)
-+				goto add_head;
-+		}
-+	}
-+
- 	if (vq->num_free < out + in) {
- 		pr_debug("Can't add buf len %i - avail = %i\n",
- 			 out + in, vq->num_free);
-@@ -401,6 +443,7 @@ struct virtqueue *vring_new_virtqueue(un
- 		= vq->other_notify = 0;
- 
- 	vq->indirect = virtio_has_feature(vdev, VIRTIO_RING_F_INDIRECT_DESC);
-+	vq->indirect_threshold = num;
- 
- 	/* No callback?  Tell other side not to bother us. */
- 	if (!callback)
