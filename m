@@ -1,30 +1,41 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [patch 1/2] [SCSI] ipr: missing unlock before a return
-Date: Mon, 30 Jul 2012 07:33:33 -0500
-Message-ID: <50167F1D.5030406@linux.vnet.ibm.com>
-References: <20120730081635.GE15702@elgon.mountain>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: [PATCH] scsi/ibmvscsi: add module alias for ibmvscsic
+Date: Mon, 30 Jul 2012 21:06:06 +0200
+Message-ID: <20120730190606.GD3155@aepfle.de>
+References: <1342630158-16510-1-git-send-email-olaf@aepfle.de>
+ <1343611946.21647.23.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120730081635.GE15702@elgon.mountain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo-p00-ob.rzone.de ([81.169.146.160]:59854 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041Ab2G3TGK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2012 15:06:10 -0400
+Content-Disposition: inline
+In-Reply-To: <1343611946.21647.23.camel@pasglop>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Brian J King <bjking1@us.ibm.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-On 07/30/2012 03:16 AM, Dan Carpenter wrote:
-> We recently changed the locking in this function, but this return was
-> missed.  It needs an unlock and the IRQs need to be restored.
+On Mon, Jul 30, Benjamin Herrenschmidt wrote:
+
+> On Wed, 2012-07-18 at 18:49 +0200, olaf@aepfle.de wrote:
+> > From: Olaf Hering <olaf@aepfle.de>
+> > 
+> > The driver is named ibmvscsic, at runtime it its name is advertised as
+> > ibmvscsi. For this reason mkinitrd wont pickup the driver properly.
+> > Reported by IBM during SLES11 beta testing:
+> > 
+> > https://bugzilla.novell.com/show_bug.cgi?id=459933
+> > LTC50724
 > 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
+> So while this would work, I do wonder however whether we could instead
+> fix it by simplifying the whole thing as follow since iSeries is now
+> gone and so we don't need split backends anymore:
+> 
+> scsi/ibmvscsi: Remove backend abstraction
 
-Thanks for catching this.
+I cant that these things myself anymore.
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+Olaf
