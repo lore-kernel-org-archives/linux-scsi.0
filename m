@@ -1,67 +1,39 @@
-From: Wang Sen <senwang@linux.vnet.ibm.com>
-Subject: [PATCH v3] scsi: virtio-scsi: Fix address translation failure of HighMem pages used by sg list
-Date: Mon, 30 Jul 2012 14:25:06 +0800
-Message-ID: <1343629506-29627-1-git-send-email-senwang@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:48512 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529Ab2G3G0e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2012 02:26:34 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <senwang@linux.vnet.ibm.com>;
-	Mon, 30 Jul 2012 11:56:31 +0530
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: virtio(-scsi) vs. chained sg_lists (was Re: [PATCH] scsi: virtio-scsi:
+ Fix address translation failure of HighMem pages used by sg list)
+Date: Mon, 30 Jul 2012 09:12:42 +0200
+Message-ID: <501633EA.603@redhat.com>
+References: <1343204966-23560-1-git-send-email-senwang@linux.vnet.ibm.com> <500FB1DE.1000100@redhat.com> <500FBAE8.2050107@panasas.com> <500FBF37.50603@redhat.com> <500FE7D2.7070101@panasas.com> <500FEB63.3000709@redhat.com> <500FF412.3090600@panasas.com> <50100014.2010109@redhat.com> <50101091.5090909@panasas.com> <50103043.5050508@redhat.com> <50104614.3080002@panasas.com> <501051DF.5040907@redhat.com> <50105F60.8050707@panasas.com> <5010F07E.7050506@redhat.com> <5010F831.9030300@panasas.com> <5010F896.8090409@redhat.com> <501140A3.9090908@redhat.com> <874notoh02.fsf@rustcorp.com.au> <50124D2E.7050407@redhat.com> <87obmym8jv.fsf@rustcorp.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87obmym8jv.fsf@rustcorp.com.au>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Wang Sen <senwang@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, stefanha@linux.vnet.ibm.com, mc@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, "kvm@vger.kernel.org" <kvm@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, pbonzini@redhat.com, bharrosh@panasas.com, stefanha@linux.vnet.ibm.com
-Cc: mc@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zwanp@cn.ibm.com, xiaoguangrong@linux.vnet.ibm.com, Wang Sen <senwang@linux.vnet.ibm.com>
 
-When using the commands below to write some data to a virtio-scsi LUN of the
-QEMU guest(32-bit) with 1G physical memory(qemu -m 1024), the qemu will crash.
+Il 30/07/2012 01:50, Rusty Russell ha scritto:
+>> Also, being the first user of chained scatterlist doesn't exactly give
+>> me warm fuzzies.
+> 
+> We're far from the first user: they've been in the kernel for well over
+> 7 years.  They were introduced for the block layer, but they tended to
+> ignore private uses of scatterlists like this one.
 
-        # sudo mkfs.ext4 /dev/sdb  (/dev/sdb is the virtio-scsi LUN.)
-        # sudo mount /dev/sdb /mnt
-        # dd if=/dev/zero of=/mnt/file bs=1M count=1024
+Yeah, but sg_chain has no users in drivers, only a private one in
+lib/scatterlist.c.  The internal API could be changed to something else
+and leave virtio-scsi screwed...
 
-In current implementation, sg_set_buf is called to add buffers to sg list which
-is put into the virtqueue eventually. But if there are some HighMem pages in
-table->sgl you can not get virtual address by sg_virt. So, sg_virt(sg_elem) may
-return NULL value. This will cause QEMU exit when virtqueue_map_sg is called
-in QEMU because an invalid GPA is passed by virtqueue.
+> Yes, we should do this.  But note that this means an iteration, so we
+> might as well combine the loops :)
 
-Two solutions are discussed here:
-http://lkml.indiana.edu/hypermail/linux/kernel/1207.3/00675.html
+I'm really bad at posting pseudo-code, but you can count the number of
+physically-contiguous entries at the beginning of the list only.  So if
+everything is contiguous, you use a single non-indirect buffer and save
+a kmalloc.  If you use indirect buffers, I suspect it's much less
+effective to collapse physically-contiguous entries.  More elaborate
+heuristics do need a loop, though.
 
-Finally, value assignment approach was adopted because:
-
-Value assignment creates a well-formed scatterlist, because the termination 
-marker in source sg_list has been set in blk_rq_map_sg(). The last entry of the
-source sg_list is just copied to the the last entry in destination list.  Note 
-that, for now, virtio_ring does not care about the form of the scatterlist and 
-simply processes the first out_num + in_num consecutive elements of the sg[] 
-array.
-
-I have tested the patch on my workstation. QEMU would not crash any more.
-
-Cc: <stable@vger.kernel.org> # 3.4: 4fe74b1: [SCSI] virtio-scsi: SCSI driver
-Signed-off-by: Wang Sen <senwang@linux.vnet.ibm.com>
----
- drivers/scsi/virtio_scsi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 1b38431..6661610 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -198,7 +198,7 @@ static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
- 	int i;
- 
- 	for_each_sg(table->sgl, sg_elem, table->nents, i)
--		sg_set_buf(&sg[idx++], sg_virt(sg_elem), sg_elem->length);
-+		sg[idx++] = *sg_elem;
- 
- 	*p_idx = idx;
- }
--- 
-1.7.9.5
-
+Paolo
