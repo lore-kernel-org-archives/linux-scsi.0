@@ -1,51 +1,67 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [dm-devel] [PATCH] scsi : Adding all the definitions of host
- bytes in hostbyte_table
-Date: Mon, 30 Jul 2012 08:15:50 +0200
-Message-ID: <50162696.50105@suse.de>
-References: <77471C95FAFD844C8CA02DD4F4C5FE2B0BC9EDE3@SACEXCMBX02-PRD.hq.netapp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Wang Sen <senwang@linux.vnet.ibm.com>
+Subject: [PATCH v3] scsi: virtio-scsi: Fix address translation failure of HighMem pages used by sg list
+Date: Mon, 30 Jul 2012 14:25:06 +0800
+Message-ID: <1343629506-29627-1-git-send-email-senwang@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48787 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751385Ab2G3GPw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jul 2012 02:15:52 -0400
-In-Reply-To: <77471C95FAFD844C8CA02DD4F4C5FE2B0BC9EDE3@SACEXCMBX02-PRD.hq.netapp.com>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:48512 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751529Ab2G3G0e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2012 02:26:34 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <senwang@linux.vnet.ibm.com>;
+	Mon, 30 Jul 2012 11:56:31 +0530
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "Moger, Babu" <Babu.Moger@netapp.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: JBottomley@parallels.com, pbonzini@redhat.com, bharrosh@panasas.com, stefanha@linux.vnet.ibm.com
+Cc: mc@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zwanp@cn.ibm.com, xiaoguangrong@linux.vnet.ibm.com, Wang Sen <senwang@linux.vnet.ibm.com>
 
-On 07/27/2012 07:28 PM, Moger, Babu wrote:
-> Submitted this patch earlier. But it still did not make it to kernel =
-tree.
-> Resubmitting again(recreated on top of 3.5 kernel).
-> =20
-> Adding all the definitions of host bytes in hostbyte_table.
->=20
-> Without this patch, scsi_show_result prints hostbyte as invalid
-> for statuses that are not defined in hostbyte_table(when scsi logging=
- is enabled).
->=20
-> Look at scsi_print_result function for better understanding.
->=20
-> Signed-off-by: Babu Moger <babu.moger@netapp.com>
-Acked-by: Hannes Reinecke <hare@suse.de
+When using the commands below to write some data to a virtio-scsi LUN of the
+QEMU guest(32-bit) with 1G physical memory(qemu -m 1024), the qemu will crash.
 
-Cheers,
+        # sudo mkfs.ext4 /dev/sdb  (/dev/sdb is the virtio-scsi LUN.)
+        # sudo mount /dev/sdb /mnt
+        # dd if=/dev/zero of=/mnt/file bs=1M count=1024
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+In current implementation, sg_set_buf is called to add buffers to sg list which
+is put into the virtqueue eventually. But if there are some HighMem pages in
+table->sgl you can not get virtual address by sg_virt. So, sg_virt(sg_elem) may
+return NULL value. This will cause QEMU exit when virtqueue_map_sg is called
+in QEMU because an invalid GPA is passed by virtqueue.
 
+Two solutions are discussed here:
+http://lkml.indiana.edu/hypermail/linux/kernel/1207.3/00675.html
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Finally, value assignment approach was adopted because:
+
+Value assignment creates a well-formed scatterlist, because the termination 
+marker in source sg_list has been set in blk_rq_map_sg(). The last entry of the
+source sg_list is just copied to the the last entry in destination list.  Note 
+that, for now, virtio_ring does not care about the form of the scatterlist and 
+simply processes the first out_num + in_num consecutive elements of the sg[] 
+array.
+
+I have tested the patch on my workstation. QEMU would not crash any more.
+
+Cc: <stable@vger.kernel.org> # 3.4: 4fe74b1: [SCSI] virtio-scsi: SCSI driver
+Signed-off-by: Wang Sen <senwang@linux.vnet.ibm.com>
+---
+ drivers/scsi/virtio_scsi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 1b38431..6661610 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -198,7 +198,7 @@ static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
+ 	int i;
+ 
+ 	for_each_sg(table->sgl, sg_elem, table->nents, i)
+-		sg_set_buf(&sg[idx++], sg_virt(sg_elem), sg_elem->length);
++		sg[idx++] = *sg_elem;
+ 
+ 	*p_idx = idx;
+ }
+-- 
+1.7.9.5
+
