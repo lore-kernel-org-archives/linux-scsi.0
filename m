@@ -1,182 +1,2116 @@
-From: Markus Rathgeb <maggu2810@googlemail.com>
-Subject: Re: [PATCH SCSI] sr: check_events() ignore GET_EVENT when TUR says otherwise
-Date: Mon, 30 Jul 2012 22:28:50 +0200
-Message-ID: <CAOcK=CM0+cv1AG8PMZey4Mh1bk0bWZPh+NnR6rK2T-Amw=eq8A@mail.gmail.com>
-References: <20110630130348.GQ3386@htj.dyndns.org>
-	<20110720163308.GC9924@mtj.dyndns.org>
-	<CAPXgP11R=386wbqpOpymzdXYYhpvJg9Aj1Xck3wi91smud-8iA@mail.gmail.com>
-	<1311180316.8570.1.camel@mulgrave>
-	<CAOcK=CMPjZGNMiPS9LJMG6=t7sbLxjSkTikwRL2nhq6tewfofQ@mail.gmail.com>
-	<CAPXgP11xSaPnhO2xuXKSqar+k_PCxftgnRZiRjL=0ucFMe_fVw@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC-v5] tcm_vhost: Initial merge for vhost level target
+ fabric driver
+Date: Mon, 30 Jul 2012 15:10:16 -0700
+Message-ID: <1343686217.22538.548.camel@haakon2.linux-iscsi.org>
+References: <1343346200-19850-1-git-send-email-nab@linux-iscsi.org>
+	 <20120729134051.GC10041@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=14dae9340ab1f3157704c611e84c
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <CAPXgP11xSaPnhO2xuXKSqar+k_PCxftgnRZiRjL=0ucFMe_fVw@mail.gmail.com>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Kay Sievers <kay@vrfy.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-hotplug@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20120729134051.GC10041@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, kvm-devel <kvm@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Anthony Liguori <aliguori@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
---14dae9340ab1f3157704c611e84c
-Content-Type: text/plain; charset=UTF-8
+On Sun, 2012-07-29 at 16:40 +0300, Michael S. Tsirkin wrote: 
+> On Thu, Jul 26, 2012 at 11:43:20PM +0000, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > Hello KVM + QEMU folks,
+> > 
+> > This is -v5 of the in-flight tcm_vhost fabric driver for KVM host virtualized
+> > target support using the in-kernel storage stack with for-3.6 code.
+> > 
+> > The changes since -v4 have been pretty minimal.  A new GET_ABI_VERSION ioctl
+> > has been added as requested by Anthony & Co, and after some back <-> forth on
+> > the lists we've decided upon a starting point of VHOST_SCSI_ABI_VERSION=0,
+> > and vhost-scsi RFC userspace has been updated accordingly.
+> > 
+> > Along with that, a few handfuls of vq related error messages where converted
+> > to use vq_err as requested by MST, along with some minor checkpatch fixes.
+> > 
+> > So this point everything required to run tcm_vhost from drivers/target +
+> > drivers/vhost, and virtio-scsi LLD bugfix has been merged into v3.6-rc0 code.
+> > 
+> > Please have a look and let us know if there are any last-minute pre-merge
+> > comments ahead of MST returning from holiday this weekend.
+> > 
+> > Thank you!
+> > 
+> > --nab
+> 
+> Acked-by: Michael S. Tsirkin <mst@redhat.com>
+> 
+> some comments below but can be fixed in-tree I think.
+> 
 
-> I have 3.5 here and see the loop too, but it stops after a couple of seconds:
->
-> first: KERNEL[15636.368034]
-> last: KERNEL[15638.879796]
+Thanks alot MST!
 
-Ah, sorry then.
-The udev messages reported by the udev monitor reported up to 20
-seconds of udev (userspace) events. I did not filter kernel reported
-messages.
+I've added your ACK for -v5 RFC code that's in 07302012 linux-next, and
+made the changes requested below as an incremental patch that will be
+sending out shortly.
 
-# for SRC in KERNEL UDEV; do for CMD in head tail; do less udev.log |
-grep ${SRC} | ${CMD} -n1; done; done
+My comments are inline below..
 
-KERNEL[83579.700428] add      /devices/pci0000:00/0000:00:04.1/usb5/5-4 (usb)
-KERNEL[83582.989470] change
-/devices/pci0000:00/0000:00:04.1/usb5/5-4/5-4:1.0/host31/target31:0:0/31:0:0:1/block/sr1
-(block)
-UDEV  [83579.747646] add      /devices/pci0000:00/0000:00:04.1/usb5/5-4 (usb)
-UDEV  [83601.504952] add
-/devices/pci0000:00/0000:00:04.1/usb5/5-4/5-4:1.0/host31/target31:0:0/31:0:0:0/block/sdb/sdb1
-(block)
+> > Changelog v4 -> v5:
+> > 
+> >   Expose ABI version via VHOST_SCSI_GET_ABI_VERSION + use Rev 0 as
+> >   starting point for v3.6-rc code (Stefan + ALiguori + nab)
+> >   Convert vhost_scsi_handle_vq() to vq_err() (nab + MST)
+> >   Minor style fixes from checkpatch (nab)
+> > 
+> > Changelog v3 -> v4:
+> > 
+> >   Rename vhost_vring_target -> vhost_scsi_target (mst + nab)
+> >   Use TRANSPORT_IQN_LEN in vhost_scsi_target->vhost_wwpn[] def (nab)
+> >   Move back to drivers/vhost/, and just use drivers/vhost/Kconfig.tcm (mst)
+> >   Move TCM_VHOST related ioctl defines from include/linux/vhost.h ->
+> >   drivers/vhost/tcm_vhost.h as requested by MST (nab)
+> >   Move Kbuild.tcm include from drivers/staging -> drivers/vhost/, and
+> >   just use 'if STAGING' around 'source drivers/vhost/Kbuild.tcm'
+> > 
+> > Changelog v2 -> v3:
+> > 
+> >   Unlock on error in tcm_vhost_drop_nexus() (DanC)
+> >   Fix strlen() doesn't count the terminator (DanC)
+> >   Call kfree() on an error path (DanC)
+> >   Convert tcm_vhost_write_pending to use target_execute_cmd (hch + nab)
+> >   Fix another strlen() off by one in tcm_vhost_make_tport (DanC)
+> >   Add option under drivers/staging/Kconfig, and move to drivers/vhost/tcm/
+> >   as requested by MST (nab)
+> > 
+> > Changelog v1 -> v2:
+> > 
+> >   Fix tv_cmd completion -> release SGL memory leak (nab)
+> >   Fix sparse warnings for static variable usage ((Fengguang Wu)
+> >   Fix sparse warnings for min() typing + printk format specs (Fengguang Wu)
+> >   Convert to cmwq submission for I/O dispatch (nab + hch)
+> > 
+> > Changelog v0 -> v1:
+> > 
+> >   Merge into single source + header file, and move to drivers/vhost/
+> > 
+> > Cc: Michael S. Tsirkin <mst@redhat.com>
+> > Cc: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+> > Cc: Anthony Liguori <aliguori@us.ibm.com>
+> > Cc: Zhi Yong Wu <wuzhy@cn.ibm.com>
+> > Cc: Paolo Bonzini <pbonzini@redhat.com>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Hannes Reinecke <hare@suse.de>
+> > Cc: Jens Axboe <axboe@kernel.dk>
+> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> > ---
+> >  drivers/vhost/Kconfig     |    3 +
+> >  drivers/vhost/Kconfig.tcm |    6 +
+> >  drivers/vhost/Makefile    |    2 +
+> >  drivers/vhost/tcm_vhost.c | 1628 +++++++++++++++++++++++++++++++++++++++++++++
+> >  drivers/vhost/tcm_vhost.h |  101 +++
+> >  5 files changed, 1740 insertions(+), 0 deletions(-)
+> >  create mode 100644 drivers/vhost/Kconfig.tcm
+> >  create mode 100644 drivers/vhost/tcm_vhost.c
+> >  create mode 100644 drivers/vhost/tcm_vhost.h
+> > 
+> > diff --git a/drivers/vhost/Kconfig b/drivers/vhost/Kconfig
+> > index e4e2fd1..202bba6 100644
+> > --- a/drivers/vhost/Kconfig
+> > +++ b/drivers/vhost/Kconfig
+> > @@ -9,3 +9,6 @@ config VHOST_NET
+> >  	  To compile this driver as a module, choose M here: the module will
+> >  	  be called vhost_net.
+> >  
+> > +if STAGING
+> > +source "drivers/vhost/Kconfig.tcm"
+> > +endif
+> > diff --git a/drivers/vhost/Kconfig.tcm b/drivers/vhost/Kconfig.tcm
+> > new file mode 100644
+> > index 0000000..a9c6f76
+> > --- /dev/null
+> > +++ b/drivers/vhost/Kconfig.tcm
+> > @@ -0,0 +1,6 @@
+> > +config TCM_VHOST
+> > +	tristate "TCM_VHOST fabric module (EXPERIMENTAL)"
+> > +	depends on TARGET_CORE && EVENTFD && EXPERIMENTAL && m
+> > +	default n
+> > +	---help---
+> > +	Say M here to enable the TCM_VHOST fabric module for use with virtio-scsi guests
+> > diff --git a/drivers/vhost/Makefile b/drivers/vhost/Makefile
+> > index 72dd020..a27b053 100644
+> > --- a/drivers/vhost/Makefile
+> > +++ b/drivers/vhost/Makefile
+> > @@ -1,2 +1,4 @@
+> >  obj-$(CONFIG_VHOST_NET) += vhost_net.o
+> >  vhost_net-y := vhost.o net.o
+> > +
+> > +obj-$(CONFIG_TCM_VHOST) += tcm_vhost.o
+> > diff --git a/drivers/vhost/tcm_vhost.c b/drivers/vhost/tcm_vhost.c
+> > new file mode 100644
+> > index 0000000..fb36654
+> > --- /dev/null
+> > +++ b/drivers/vhost/tcm_vhost.c
+> > @@ -0,0 +1,1628 @@
+> > +/*******************************************************************************
+> > + * Vhost kernel TCM fabric driver for virtio SCSI initiators
+> > + *
+> > + * (C) Copyright 2010-2012 RisingTide Systems LLC.
+> > + * (C) Copyright 2010-2012 IBM Corp.
+> > + *
+> > + * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
+> > + *
+> > + * Authors: Nicholas A. Bellinger <nab@risingtidesystems.com>
+> > + *          Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+> > + *
+> > + * This program is free software; you can redistribute it and/or modify
+> > + * it under the terms of the GNU General Public License as published by
+> > + * the Free Software Foundation; either version 2 of the License, or
+> > + * (at your option) any later version.
+> > + *
+> > + * This program is distributed in the hope that it will be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + ****************************************************************************/
+> > +
+> > +#include <linux/module.h>
+> > +#include <linux/moduleparam.h>
+> > +#include <generated/utsrelease.h>
+> > +#include <linux/utsname.h>
+> > +#include <linux/init.h>
+> > +#include <linux/slab.h>
+> > +#include <linux/kthread.h>
+> > +#include <linux/types.h>
+> > +#include <linux/string.h>
+> > +#include <linux/configfs.h>
+> > +#include <linux/ctype.h>
+> > +#include <linux/compat.h>
+> > +#include <linux/eventfd.h>
+> > +#include <linux/vhost.h>
+> > +#include <linux/fs.h>
+> > +#include <linux/miscdevice.h>
+> > +#include <asm/unaligned.h>
+> > +#include <scsi/scsi.h>
+> > +#include <scsi/scsi_tcq.h>
+> > +#include <target/target_core_base.h>
+> > +#include <target/target_core_fabric.h>
+> > +#include <target/target_core_fabric_configfs.h>
+> > +#include <target/target_core_configfs.h>
+> > +#include <target/configfs_macros.h>
+> > +#include <linux/vhost.h>
+> > +#include <linux/virtio_net.h> /* TODO vhost.h currently depends on this */
+> > +#include <linux/virtio_scsi.h>
+> > +
+> > +#include "vhost.c"
+> > +#include "vhost.h"
+> > +#include "tcm_vhost.h"
+> > +
+> > +struct vhost_scsi {
+> > +	atomic_t vhost_ref_cnt;
+> > +	struct tcm_vhost_tpg *vs_tpg;
+> 
+> Would b enice to add a note on locking about this field.
+> 
 
+Done
 
-I should also disable the dbus logging verbosity:
-journald reported 494 complete dbus messages and 846 (475 + 371)
-suppressed dbus messages.
-That is really too much (but not your problem).
+> > +	struct vhost_dev dev;
+> > +	struct vhost_virtqueue vqs[3];
+> > +
+> > +	struct vhost_work vs_completion_work; /* cmd completion work item */
+> > +	struct list_head vs_completion_list;  /* cmd completion queue */
+> > +	spinlock_t vs_completion_lock;        /* protects s_completion_list */
+> > +};
+> > +
+> > +/* Local pointer to allocated TCM configfs fabric module */
+> > +static struct target_fabric_configfs *tcm_vhost_fabric_configfs;
+> > +
+> > +static struct workqueue_struct *tcm_vhost_workqueue;
+> > +
+> > +/* Global spinlock to protect tcm_vhost TPG list for vhost IOCTL access */
+> > +static DEFINE_MUTEX(tcm_vhost_mutex);
+> > +static LIST_HEAD(tcm_vhost_list);
+> > +
+> > +static int tcm_vhost_check_true(struct se_portal_group *se_tpg)
+> > +{
+> > +	return 1;
+> > +}
+> > +
+> > +static int tcm_vhost_check_false(struct se_portal_group *se_tpg)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static char *tcm_vhost_get_fabric_name(void)
+> > +{
+> > +	return "vhost";
+> > +}
+> > +
+> > +static u8 tcm_vhost_get_fabric_proto_ident(struct se_portal_group *se_tpg)
+> > +{
+> > +	struct tcm_vhost_tpg *tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +	struct tcm_vhost_tport *tport = tpg->tport;
+> > +
+> > +	switch (tport->tport_proto_id) {
+> > +	case SCSI_PROTOCOL_SAS:
+> > +		return sas_get_fabric_proto_ident(se_tpg);
+> > +	case SCSI_PROTOCOL_FCP:
+> > +		return fc_get_fabric_proto_ident(se_tpg);
+> > +	case SCSI_PROTOCOL_ISCSI:
+> > +		return iscsi_get_fabric_proto_ident(se_tpg);
+> > +	default:
+> > +		pr_err("Unknown tport_proto_id: 0x%02x, using"
+> > +			" SAS emulation\n", tport->tport_proto_id);
+> > +		break;
+> > +	}
+> > +
+> > +	return sas_get_fabric_proto_ident(se_tpg);
+> > +}
+> > +
+> > +static char *tcm_vhost_get_fabric_wwn(struct se_portal_group *se_tpg)
+> > +{
+> > +	struct tcm_vhost_tpg *tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +	struct tcm_vhost_tport *tport = tpg->tport;
+> > +
+> > +	return &tport->tport_name[0];
+> > +}
+> > +
+> > +static u16 tcm_vhost_get_tag(struct se_portal_group *se_tpg)
+> > +{
+> > +	struct tcm_vhost_tpg *tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +	return tpg->tport_tpgt;
+> > +}
+> > +
+> > +static u32 tcm_vhost_get_default_depth(struct se_portal_group *se_tpg)
+> > +{
+> > +	return 1;
+> > +}
+> > +
+> > +static u32 tcm_vhost_get_pr_transport_id(
+> > +	struct se_portal_group *se_tpg,
+> > +	struct se_node_acl *se_nacl,
+> > +	struct t10_pr_registration *pr_reg,
+> > +	int *format_code,
+> > +	unsigned char *buf)
+> > +{
+> > +	struct tcm_vhost_tpg *tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +	struct tcm_vhost_tport *tport = tpg->tport;
+> > +
+> > +	switch (tport->tport_proto_id) {
+> > +	case SCSI_PROTOCOL_SAS:
+> > +		return sas_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
+> > +					format_code, buf);
+> > +	case SCSI_PROTOCOL_FCP:
+> > +		return fc_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
+> > +					format_code, buf);
+> > +	case SCSI_PROTOCOL_ISCSI:
+> > +		return iscsi_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
+> > +					format_code, buf);
+> > +	default:
+> > +		pr_err("Unknown tport_proto_id: 0x%02x, using"
+> > +			" SAS emulation\n", tport->tport_proto_id);
+> > +		break;
+> > +	}
+> > +
+> > +	return sas_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
+> > +			format_code, buf);
+> > +}
+> > +
+> > +static u32 tcm_vhost_get_pr_transport_id_len(
+> > +	struct se_portal_group *se_tpg,
+> > +	struct se_node_acl *se_nacl,
+> > +	struct t10_pr_registration *pr_reg,
+> > +	int *format_code)
+> > +{
+> > +	struct tcm_vhost_tpg *tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +	struct tcm_vhost_tport *tport = tpg->tport;
+> > +
+> > +	switch (tport->tport_proto_id) {
+> > +	case SCSI_PROTOCOL_SAS:
+> > +		return sas_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
+> > +					format_code);
+> > +	case SCSI_PROTOCOL_FCP:
+> > +		return fc_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
+> > +					format_code);
+> > +	case SCSI_PROTOCOL_ISCSI:
+> > +		return iscsi_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
+> > +					format_code);
+> > +	default:
+> > +		pr_err("Unknown tport_proto_id: 0x%02x, using"
+> > +			" SAS emulation\n", tport->tport_proto_id);
+> > +		break;
+> > +	}
+> > +
+> > +	return sas_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
+> > +			format_code);
+> > +}
+> > +
+> > +static char *tcm_vhost_parse_pr_out_transport_id(
+> > +	struct se_portal_group *se_tpg,
+> > +	const char *buf,
+> > +	u32 *out_tid_len,
+> > +	char **port_nexus_ptr)
+> > +{
+> > +	struct tcm_vhost_tpg *tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +	struct tcm_vhost_tport *tport = tpg->tport;
+> > +
+> > +	switch (tport->tport_proto_id) {
+> > +	case SCSI_PROTOCOL_SAS:
+> > +		return sas_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
+> > +					port_nexus_ptr);
+> > +	case SCSI_PROTOCOL_FCP:
+> > +		return fc_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
+> > +					port_nexus_ptr);
+> > +	case SCSI_PROTOCOL_ISCSI:
+> > +		return iscsi_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
+> > +					port_nexus_ptr);
+> > +	default:
+> > +		pr_err("Unknown tport_proto_id: 0x%02x, using"
+> > +			" SAS emulation\n", tport->tport_proto_id);
+> > +		break;
+> > +	}
+> > +
+> > +	return sas_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
+> > +			port_nexus_ptr);
+> > +}
+> > +
+> > +static struct se_node_acl *tcm_vhost_alloc_fabric_acl(
+> > +	struct se_portal_group *se_tpg)
+> > +{
+> > +	struct tcm_vhost_nacl *nacl;
+> > +
+> > +	nacl = kzalloc(sizeof(struct tcm_vhost_nacl), GFP_KERNEL);
+> > +	if (!nacl) {
+> > +		pr_err("Unable to alocate struct tcm_vhost_nacl\n");
+> > +		return NULL;
+> > +	}
+> > +
+> > +	return &nacl->se_node_acl;
+> > +}
+> > +
+> > +static void tcm_vhost_release_fabric_acl(
+> > +	struct se_portal_group *se_tpg,
+> > +	struct se_node_acl *se_nacl)
+> > +{
+> > +	struct tcm_vhost_nacl *nacl = container_of(se_nacl,
+> > +			struct tcm_vhost_nacl, se_node_acl);
+> > +	kfree(nacl);
+> > +}
+> > +
+> > +static u32 tcm_vhost_tpg_get_inst_index(struct se_portal_group *se_tpg)
+> > +{
+> > +	return 1;
+> > +}
+> > +
+> > +static void tcm_vhost_release_cmd(struct se_cmd *se_cmd)
+> > +{
+> > +	return;
+> > +}
+> > +
+> > +static int tcm_vhost_shutdown_session(struct se_session *se_sess)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static void tcm_vhost_close_session(struct se_session *se_sess)
+> > +{
+> > +	return;
+> > +}
+> > +
+> > +static u32 tcm_vhost_sess_get_index(struct se_session *se_sess)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static int tcm_vhost_write_pending(struct se_cmd *se_cmd)
+> > +{
+> > +	/* Go ahead and process the write immediately */
+> > +	target_execute_cmd(se_cmd);
+> > +	return 0;
+> > +}
+> > +
+> > +static int tcm_vhost_write_pending_status(struct se_cmd *se_cmd)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static void tcm_vhost_set_default_node_attrs(struct se_node_acl *nacl)
+> > +{
+> > +	return;
+> > +}
+> > +
+> > +static u32 tcm_vhost_get_task_tag(struct se_cmd *se_cmd)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static int tcm_vhost_get_cmd_state(struct se_cmd *se_cmd)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static void vhost_scsi_complete_cmd(struct tcm_vhost_cmd *);
+> 
+> can we reorder code to avoid forward declarations?
+> 
 
-Thanks!!
+<nod>, moved vhost_scsi_complete_cmd() up here..
 
---14dae9340ab1f3157704c611e84c
-Content-Type: application/x-gzip; name="journald.log.gz"
-Content-Disposition: attachment; filename="journald.log.gz"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h5a077eg0
+> > +
+> > +static int tcm_vhost_queue_data_in(struct se_cmd *se_cmd)
+> > +{
+> > +	struct tcm_vhost_cmd *tv_cmd = container_of(se_cmd,
+> > +				struct tcm_vhost_cmd, tvc_se_cmd);
+> > +	vhost_scsi_complete_cmd(tv_cmd);
+> > +	return 0;
+> > +}
+> > +
+> > +static int tcm_vhost_queue_status(struct se_cmd *se_cmd)
+> > +{
+> > +	struct tcm_vhost_cmd *tv_cmd = container_of(se_cmd,
+> > +				struct tcm_vhost_cmd, tvc_se_cmd);
+> > +	vhost_scsi_complete_cmd(tv_cmd);
+> > +	return 0;
+> > +}
+> > +
+> > +static int tcm_vhost_queue_tm_rsp(struct se_cmd *se_cmd)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static u16 tcm_vhost_set_fabric_sense_len(struct se_cmd *se_cmd,
+> > +	u32 sense_length)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static u16 tcm_vhost_get_fabric_sense_len(void)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static void vhost_scsi_free_cmd(struct tcm_vhost_cmd *tv_cmd)
+> > +{
+> > +	struct se_cmd *se_cmd = &tv_cmd->tvc_se_cmd;
+> > +
+> > +	/* TODO locking against target/backend threads? */
+> > +	transport_generic_free_cmd(se_cmd, 1);
+> > +
+> > +	if (tv_cmd->tvc_sgl_count) {
+> > +		u32 i;
+> > +		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
+> > +			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
+> > +
+> > +		kfree(tv_cmd->tvc_sgl);
+> > +	}
+> > +
+> > +	kfree(tv_cmd);
+> > +}
+> > +
+> > +/* Dequeue a command from the completion list */
+> > +static struct tcm_vhost_cmd *vhost_scsi_get_cmd_from_completion(
+> > +	struct vhost_scsi *vs)
+> > +{
+> > +	struct tcm_vhost_cmd *tv_cmd = NULL;
+> > +
+> > +	spin_lock_bh(&vs->vs_completion_lock);
+> > +	if (list_empty(&vs->vs_completion_list)) {
+> > +		spin_unlock_bh(&vs->vs_completion_lock);
+> > +		return NULL;
+> > +	}
+> > +
+> > +	list_for_each_entry(tv_cmd, &vs->vs_completion_list,
+> > +			    tvc_completion_list) {
+> > +		list_del(&tv_cmd->tvc_completion_list);
+> > +		break;
+> > +	}
+> > +	spin_unlock_bh(&vs->vs_completion_lock);
+> > +	return tv_cmd;
+> > +}
+> > +
+> > +/* Fill in status and signal that we are done processing this command
+> > + *
+> > + * This is scheduled in the vhost work queue so we are called with the owner
+> > + * process mm and can access the vring.
+> > + */
+> > +static void vhost_scsi_complete_cmd_work(struct vhost_work *work)
+> > +{
+> > +	struct vhost_scsi *vs = container_of(work, struct vhost_scsi,
+> > +					vs_completion_work);
+> > +	struct tcm_vhost_cmd *tv_cmd;
+> > +
+> > +	while ((tv_cmd = vhost_scsi_get_cmd_from_completion(vs)) != NULL) {
+> 
+> I normally prefer while ((tv_cmd = vhost_scsi_get_cmd_from_completion(vs)))
+> without != NULL
+> 
 
-H4sICN/rFlAAA2pvdXJuYWxkLmxvZwDtnVFz2jgURt/3V9yZfenuhNjGEFLP5IESmk13Q7Ih6T5k
-OhljC3ALFiPJadNfvxKQlLYpGNIgtf1o0waKrj90j47yUutVMaLQp2o1CupRUCU15ILeMZGzUUSF
-7Jmv+uy79/E7VkwqgslizH57VX5gXCheahgbJtn1MEnJ14/I/K7tBhHNhpLgXNGw6C2vod9A9Yof
-Bbv+9Mn1Iy58xFRXxaqQNOFCRTWSs2e+H+z7IflEzdbfdHb6X/ucZDY4eEutbotap51Ou3WxRkxT
-nWrRffm6H1AyjPMBM4GCNSqZCowa04qS6rrKwKT1id2o6YdbO9XOYqqdhVj+DtX2fTrpeXKjyZ2V
-N81lihI+noyYYjuzl1ke90Ys/d5N8/36102TzKezdrmuGZrrFd2pnL2nYTYYVuSEsZQuuy8oZTdZ
-wigvxj0mqFrXb87ywX3KX2+OUtaPi5GikSamiA00H/ya/7zk6ELPp57FHeoVUs8p6e/GWa7feUD1
-cK9kkY5u00Jv+rzI0x3K0tcsT7k48Bv7gXl6JnhaJOqgXvM3rCyV0M2WEZ30xYGueVexukNdJrJ4
-1JlicRCWLD8fH9FlSC1RfNREnWSJ4CWHn8R50Y8TVQgmIurG+WEm35Ucu5g3Ir/RqNVDv/ryRRAG
-rZfNst2TveuJ4D12PZugksMSnvezQSFilfGcfjcW5JLl1Bd8TNNn5WvFaWrWn/le64yezWrrorrj
-uWJCz49G8o/l1UaZxq+IR3dlFj/ZfZXvUIIqNNC7W7ZiOeuRFam4MKtp80Rlq5QMJROZhQE9WPfh
-kamekUoaszHPr8JG9U1Ef+rHtNC1brii5uHhceeIPHkrvRlA0psk2Vxi3qLMPPNzhqcv580v6ZkK
-YeDdV5u/sGGU46PO6bkJozM9aaDw61mlMIj86S86zARLVKWZ6CtLMo/5qqY7P3x67O/6VTr7Vy9e
-ana6x+bvVqu74nLpwsWaSsXJUO9r0xADlmslJCQHes5uJ3rRlE+u95rWYeX89GQh3lrJV1xKBHP+
-KuNxQqnIblikfyz54OkvUiK+XTV+Iejnn3oeW19h4xKfJi6cTVx9jR5cybT35lPBbqt7rH8OGPMb
-s+tT+rXPw6VAf48VpWIxYGoW0btL6vVGPHnn6bRr5bk8O2xeOJVIz1D7kSv8e8ZpnxxfXMy9o3P1
-9TudyfZUMAV3eb616LYO06aJngimTeNsA6ZvZ6stzdb6q9k52rIJliey4ablie77N52s7eugRAe3
-605bSG0KuQ1DuYDUo6SwXYMCKSD1kyCFjQ8bnyOJgBSQwsZnf5/BxgdLwVKwFCxlHylYCpZyJBGQ
-AlLY+OzvM9j4YClYCpaCpewjBUvBUo5ADkvBUrCUfSnAUrAULAVLwVL2kYKlYClHIIelYClYyr4U
-YClYCpaCpWAp+0jBUrCUI5DDUrAUkLLfwe0iVXdu41ueyMbGtzyR7Y2vRAe3u/HZQmpTyG1YygWk
-HiUFWAqWgqWAFJCyjxQ2Pmx8jkAOS8FSsJR9KcBSsBQsBUvBUvaRgqVgKUcSASkghY3P/j6DjQ+W
-gqVgKVjKPlKwFCzlCOSwFCwFS9mXAiwFS8FSsBQsZR8pWAqWcgRyWAqWAlLbSbfklM8wCP1gLwyo
-HlQrvVvFaMQHWRKPaFpTRvQs2Nv16eiFF9R2n9NR9uLLc4tXX6TDqRUnQ3Mm8pinjCbmmN6JOVo8
-V2sXa0pZjE2p6ZGrlJhDSiN6LzKdXQ0FLwbDHz5gb/rHl4rf+/xtx91Ter6351P7g2K5zHhuDgE3
-R3VL3lf0io8ypugfdsN0kZWlXnYjSoZxPjDJFSfJEp6nsbglwfmXk/DF8M8Ooj1qX1y3X7c7FxTn
-KV1cnpsTY+OBYMycsa2yvOCFHN3ukCwmZorlwgidNVdy+cVem6R6ud1SluteSeL5LDhLaczSLCb9
-Zl03+6hfMIfVPnCQ7rxkYf5ZpleN2p5esSe8yJUeY9am2WApVuSJIvemVb1xPBgU1f3A9y5D6t5K
-xcbm0j02jEd94n0qspQCvYY/v1Z1ftqznI5IK295IfJ4dNUI9SW78ynQV6016jq+1DOlP9L00HFv
-NsQzbtmVTBhhPFzbHUOvSGTB0CsSWTZ0mQ5uddOvLj/N1QZSzp3mvCKRbaRKdBBIASkgBaSAFJAC
-UkAKSAEpIOVCOiAFpIAUkAJSQApIWQ/kVAOBFJACUvY7CKSA1A+NlHM36F6RyAZSLtz69lEdBFJA
-CkgBKSAFpIAUkAJSQApIuZAOSAEpIAWkgBSQAlLWAznVQCAFpICU/Q4CKSAFpH5ypJz+z/sr0llA
-yrn7QaxIBKSAFJCy30EgBaSAFJACUkAKSAEpIAWkgJQL6YAUkAJSQApIASkgZT2QUw0EUkDqJ0Bq
-z2mklqezgFSJQE41EEgBKSBlv4NACkgBKSAFpIAUkAJSQApIASkX0gEpIAWkgBSQAlJAynogpxoI
-pJxHquEcUssT2UBqeSLbSJXo4C+OVDi/Q65ccUZq2AjWPiM1dO7+ySsSWVhAKxJZXkBlOrjVBQSk
-gBSQAlJACkjZ7iCQAlJACkgBKSAFpIAUkAJSQMqFdEAKSAEpIAWkgBSQsh7IqQYCKSAFpOx3cLtI
-OXdL7hWJbCDl9F3ey3QQSAEpIAWkgBSQAlJACkgBKSDlQjogBaSAFJACUmsFah4ePnX7zFfgHlXr
-x9Jz9cStWz/TPe6zcE8N+yzgb/8DbG5m8t0tAQA=
---14dae9340ab1f3157704c611e84c
-Content-Type: application/x-gzip; name="udev.log.gz"
-Content-Disposition: attachment; filename="udev.log.gz"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h5a07cfw1
+Dropping the extra '!= NULL' conditional check here..
 
-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
---14dae9340ab1f3157704c611e84c--
+> > +		struct virtio_scsi_cmd_resp v_rsp;
+> > +		struct se_cmd *se_cmd = &tv_cmd->tvc_se_cmd;
+> > +		int ret;
+> > +
+> > +		pr_debug("%s tv_cmd %p resid %u status %#02x\n", __func__,
+> > +			tv_cmd, se_cmd->residual_count, se_cmd->scsi_status);
+> > +
+> > +		memset(&v_rsp, 0, sizeof(v_rsp));
+> > +		v_rsp.resid = se_cmd->residual_count;
+> > +		/* TODO is status_qualifier field needed? */
+> > +		v_rsp.status = se_cmd->scsi_status;
+> > +		v_rsp.sense_len = se_cmd->scsi_sense_length;
+> > +		memcpy(v_rsp.sense, tv_cmd->tvc_sense_buf,
+> > +		       v_rsp.sense_len);
+> > +		ret = copy_to_user(tv_cmd->tvc_resp, &v_rsp, sizeof(v_rsp));
+> > +		if (likely(ret == 0))
+> > +			vhost_add_used(&vs->vqs[2], tv_cmd->tvc_vq_desc, 0);
+> > +		else
+> > +			pr_err("Faulted on virtio_scsi_cmd_resp\n");
+> > +
+> > +		vhost_scsi_free_cmd(tv_cmd);
+> > +	}
+> > +
+> > +	vhost_signal(&vs->dev, &vs->vqs[2]);
+> > +}
+> > +
+> > +static void vhost_scsi_complete_cmd(struct tcm_vhost_cmd *tv_cmd)
+> > +{
+> > +	struct vhost_scsi *vs = tv_cmd->tvc_vhost;
+> > +
+> > +	pr_debug("%s tv_cmd %p\n", __func__, tv_cmd);
+> 
+> Is this doing something you can not already do with
+> tracing? If all these pr_debug messages are useful,
+> I think it's best to add a kconfig entry for them
+> so that they are off for people even if they build
+> debug kernels.
+> 
+
+So I ended up just dropping this particular noisemaker while moving
+vhost_scsi_complete_cmd().
+
+As for CONFIG_DYNAMIC_DEBUG=y usage, this is what we've used for target
+core + fabric debug messages since the v3.1 days when Andy Grover did
+the conversion in the old lio-core tree..
+
+IHMO they are pretty nice to have when your helping someone to debug an
+issue they are experiencing.  ;)
+
+> > +
+> > +	spin_lock_bh(&vs->vs_completion_lock);
+> > +	list_add_tail(&tv_cmd->tvc_completion_list, &vs->vs_completion_list);
+> > +	spin_unlock_bh(&vs->vs_completion_lock);
+> > +
+> > +	vhost_work_queue(&vs->dev, &vs->vs_completion_work);
+> > +}
+> > +
+> > +static struct tcm_vhost_cmd *vhost_scsi_allocate_cmd(
+> > +	struct tcm_vhost_tpg *tv_tpg,
+> > +	struct virtio_scsi_cmd_req *v_req,
+> > +	u32 exp_data_len,
+> > +	int data_direction)
+> > +{
+> > +	struct tcm_vhost_cmd *tv_cmd;
+> > +	struct tcm_vhost_nexus *tv_nexus;
+> > +	struct se_portal_group *se_tpg = &tv_tpg->se_tpg;
+> > +	struct se_session *se_sess;
+> > +	struct se_cmd *se_cmd;
+> > +	int sam_task_attr;
+> > +
+> > +	tv_nexus = tv_tpg->tpg_nexus;
+> > +	if (!tv_nexus) {
+> > +		pr_err("Unable to locate active struct tcm_vhost_nexus\n");
+> > +		return ERR_PTR(-EIO);
+> > +	}
+> > +	se_sess = tv_nexus->tvn_se_sess;
+> > +
+> > +	tv_cmd = kzalloc(sizeof(struct tcm_vhost_cmd), GFP_ATOMIC);
+> > +	if (!tv_cmd) {
+> > +		pr_err("Unable to allocate struct tcm_vhost_cmd\n");
+> > +		return ERR_PTR(-ENOMEM);
+> > +	}
+> > +	INIT_LIST_HEAD(&tv_cmd->tvc_completion_list);
+> > +	tv_cmd->tvc_tag = v_req->tag;
+> > +
+> > +	se_cmd = &tv_cmd->tvc_se_cmd;
+> > +	/*
+> > +	 * Locate the SAM Task Attr from virtio_scsi_cmd_req
+> > +	 */
+> > +	sam_task_attr = v_req->task_attr;
+> > +	/*
+> > +	 * Initialize struct se_cmd descriptor from TCM infrastructure
+> > +	 */
+> > +	transport_init_se_cmd(se_cmd, se_tpg->se_tpg_tfo, se_sess, exp_data_len,
+> > +				data_direction, sam_task_attr,
+> > +				&tv_cmd->tvc_sense_buf[0]);
+> > +
+> > +#if 0	/* FIXME: vhost_scsi_allocate_cmd() BIDI operation */
+> > +	if (bidi)
+> > +		se_cmd->se_cmd_flags |= SCF_BIDI;
+> > +#endif
+> > +	return tv_cmd;
+> > +}
+> > +
+> > +/*
+> > + * Map a user memory range into a scatterlist
+> > + *
+> > + * Returns the number of scatterlist entries used or -errno on error.
+> > + */
+> > +static int vhost_scsi_map_to_sgl(struct scatterlist *sgl,
+> > +	unsigned int sgl_count, void __user *ptr, size_t len, int write)
+> > +{
+> > +	struct scatterlist *sg = sgl;
+> > +	unsigned int npages = 0;
+> > +	int ret;
+> > +
+> > +	while (len > 0) {
+> > +		struct page *page;
+> > +		unsigned int offset = (uintptr_t)ptr & ~PAGE_MASK;
+> > +		unsigned int nbytes = min_t(unsigned int,
+> > +				PAGE_SIZE - offset, len);
+> > +
+> > +		if (npages == sgl_count) {
+> > +			ret = -ENOBUFS;
+> > +			goto err;
+> > +		}
+> > +
+> > +		ret = get_user_pages_fast((unsigned long)ptr, 1, write, &page);
+> > +		BUG_ON(ret == 0); /* we should either get our page or fail */
+> > +		if (ret < 0)
+> > +			goto err;
+> > +
+> > +		sg_set_page(sg, page, nbytes, offset);
+> > +		ptr += nbytes;
+> > +		len -= nbytes;
+> > +		sg++;
+> > +		npages++;
+> > +	}
+> > +	return npages;
+> > +
+> > +err:
+> > +	/* Put pages that we hold */
+> > +	for (sg = sgl; sg != &sgl[npages]; sg++)
+> > +		put_page(sg_page(sg));
+> > +	return ret;
+> > +}
+> > +
+> > +static int vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *tv_cmd,
+> > +	struct iovec *iov, unsigned int niov, int write)
+> > +{
+> > +	int ret;
+> > +	unsigned int i;
+> > +	u32 sgl_count;
+> > +	struct scatterlist *sg;
+> > +
+> > +	/*
+> > +	 * Find out how long sglist needs to be
+> > +	 */
+> > +	sgl_count = 0;
+> > +	for (i = 0; i < niov; i++) {
+> > +		sgl_count += (((uintptr_t)iov[i].iov_base + iov[i].iov_len +
+> > +				PAGE_SIZE - 1) >> PAGE_SHIFT) -
+> > +				((uintptr_t)iov[i].iov_base >> PAGE_SHIFT);
+> > +	}
+> > +	/* TODO overflow checking */
+> > +
+> > +	sg = kmalloc(sizeof(tv_cmd->tvc_sgl[0]) * sgl_count, GFP_ATOMIC);
+> > +	if (!sg)
+> > +		return -ENOMEM;
+> > +	pr_debug("%s sg %p sgl_count %u is_err %ld\n", __func__,
+> > +	       sg, sgl_count, IS_ERR(sg));
+> > +	sg_init_table(sg, sgl_count);
+> > +
+> > +	tv_cmd->tvc_sgl = sg;
+> > +	tv_cmd->tvc_sgl_count = sgl_count;
+> > +
+> > +	pr_debug("Mapping %u iovecs for %u pages\n", niov, sgl_count);
+> > +	for (i = 0; i < niov; i++) {
+> > +		ret = vhost_scsi_map_to_sgl(sg, sgl_count, iov[i].iov_base,
+> > +					iov[i].iov_len, write);
+> > +		if (ret < 0) {
+> > +			for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
+> > +				put_page(sg_page(&tv_cmd->tvc_sgl[i]));
+> > +			kfree(tv_cmd->tvc_sgl);
+> > +			tv_cmd->tvc_sgl = NULL;
+> > +			tv_cmd->tvc_sgl_count = 0;
+> > +			return ret;
+> > +		}
+> > +
+> > +		sg += ret;
+> > +		sgl_count -= ret;
+> > +	}
+> > +	return 0;
+> > +}
+> > +
+> > +static void tcm_vhost_submission_work(struct work_struct *work)
+> > +{
+> > +	struct tcm_vhost_cmd *tv_cmd =
+> > +		container_of(work, struct tcm_vhost_cmd, work);
+> > +	struct se_cmd *se_cmd = &tv_cmd->tvc_se_cmd;
+> > +	struct scatterlist *sg_ptr, *sg_bidi_ptr = NULL;
+> > +	int rc, sg_no_bidi = 0;
+> > +	/*
+> > +	 * Locate the struct se_lun pointer based on v_req->lun, and
+> > +	 * attach it to struct se_cmd
+> > +	 */
+> > +	rc = transport_lookup_cmd_lun(&tv_cmd->tvc_se_cmd, tv_cmd->tvc_lun);
+> > +	if (rc < 0) {
+> > +		pr_err("Failed to look up lun: %d\n", tv_cmd->tvc_lun);
+> > +		transport_send_check_condition_and_sense(&tv_cmd->tvc_se_cmd,
+> > +			tv_cmd->tvc_se_cmd.scsi_sense_reason, 0);
+> > +		transport_generic_free_cmd(se_cmd, 0);
+> > +		return;
+> > +	}
+> > +
+> > +	rc = target_setup_cmd_from_cdb(se_cmd, tv_cmd->tvc_cdb);
+> > +	if (rc == -ENOMEM) {
+> > +		transport_send_check_condition_and_sense(se_cmd,
+> > +				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
+> > +		transport_generic_free_cmd(se_cmd, 0);
+> > +		return;
+> > +	} else if (rc < 0) {
+> > +		if (se_cmd->se_cmd_flags & SCF_SCSI_RESERVATION_CONFLICT)
+> > +			tcm_vhost_queue_status(se_cmd);
+> > +		else
+> > +			transport_send_check_condition_and_sense(se_cmd,
+> > +					se_cmd->scsi_sense_reason, 0);
+> > +		transport_generic_free_cmd(se_cmd, 0);
+> > +		return;
+> > +	}
+> > +
+> > +	if (tv_cmd->tvc_sgl_count) {
+> > +		sg_ptr = tv_cmd->tvc_sgl;
+> > +		/*
+> > +		 * For BIDI commands, pass in the extra READ buffer
+> > +		 * to transport_generic_map_mem_to_cmd() below..
+> > +		 */
+> > +/* FIXME: Fix BIDI operation in tcm_vhost_submission_work() */
+> > +#if 0
+> > +		if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> > +			sg_bidi_ptr = NULL;
+> > +			sg_no_bidi = 0;
+> > +		}
+> > +#endif
+> > +	} else {
+> > +		sg_ptr = NULL;
+> > +	}
+> > +
+> > +	rc = transport_generic_map_mem_to_cmd(se_cmd, sg_ptr,
+> > +				tv_cmd->tvc_sgl_count, sg_bidi_ptr,
+> > +				sg_no_bidi);
+> > +	if (rc < 0) {
+> > +		transport_send_check_condition_and_sense(se_cmd,
+> > +				se_cmd->scsi_sense_reason, 0);
+> > +		transport_generic_free_cmd(se_cmd, 0);
+> > +		return;
+> > +	}
+> > +	transport_handle_cdb_direct(se_cmd);
+> > +}
+> > +
+> > +static void vhost_scsi_handle_vq(struct vhost_scsi *vs)
+> > +{
+> > +	struct vhost_virtqueue *vq = &vs->vqs[2];
+> > +	struct virtio_scsi_cmd_req v_req;
+> > +	struct tcm_vhost_tpg *tv_tpg;
+> > +	struct tcm_vhost_cmd *tv_cmd;
+> > +	u32 exp_data_len, data_first, data_num, data_direction;
+> > +	unsigned out, in, i;
+> > +	int head, ret;
+> > +
+> > +	/* Must use ioctl VHOST_SCSI_SET_ENDPOINT */
+> > +	tv_tpg = vs->vs_tpg;
+> > +	if (unlikely(!tv_tpg)) {
+> > +		pr_err("%s endpoint not set\n", __func__);
+> > +		return;
+> > +	}
+> > +
+> > +	mutex_lock(&vq->mutex);
+> > +	vhost_disable_notify(&vs->dev, vq);
+> > +
+> > +	for (;;) {
+> > +		head = vhost_get_vq_desc(&vs->dev, vq, vq->iov,
+> > +					ARRAY_SIZE(vq->iov), &out, &in,
+> > +					NULL, NULL);
+> > +		pr_debug("vhost_get_vq_desc: head: %d, out: %u in: %u\n",
+> > +					head, out, in);
+> > +		/* On error, stop handling until the next kick. */
+> > +		if (unlikely(head < 0))
+> > +			break;
+> > +		/* Nothing new?  Wait for eventfd to tell us they refilled. */
+> > +		if (head == vq->num) {
+> > +			if (unlikely(vhost_enable_notify(&vs->dev, vq))) {
+> > +				vhost_disable_notify(&vs->dev, vq);
+> > +				continue;
+> > +			}
+> > +			break;
+> > +		}
+> > +
+> > +/* FIXME: BIDI operation */
+> > +		if (out == 1 && in == 1) {
+> > +			data_direction = DMA_NONE;
+> > +			data_first = 0;
+> > +			data_num = 0;
+> > +		} else if (out == 1 && in > 1) {
+> > +			data_direction = DMA_FROM_DEVICE;
+> > +			data_first = out + 1;
+> > +			data_num = in - 1;
+> > +		} else if (out > 1 && in == 1) {
+> > +			data_direction = DMA_TO_DEVICE;
+> > +			data_first = 1;
+> > +			data_num = out - 1;
+> > +		} else {
+> > +			vq_err(vq, "Invalid buffer layout out: %u in: %u\n",
+> > +					out, in);
+> > +			break;
+> > +		}
+> > +
+> > +		/*
+> > +		 * Check for a sane resp buffer so we can report errors to
+> > +		 * the guest.
+> > +		 */
+> > +		if (unlikely(vq->iov[out].iov_len !=
+> > +					sizeof(struct virtio_scsi_cmd_resp))) {
+> > +			vq_err(vq, "Expecting virtio_scsi_cmd_resp, got %zu"
+> > +				" bytes\n", vq->iov[out].iov_len);
+> > +			break;
+> > +		}
+> > +
+> > +		if (unlikely(vq->iov[0].iov_len != sizeof(v_req))) {
+> > +			vq_err(vq, "Expecting virtio_scsi_cmd_req, got %zu"
+> > +				" bytes\n", vq->iov[0].iov_len);
+> > +			break;
+> > +		}
+> > +		pr_debug("Calling __copy_from_user: vq->iov[0].iov_base: %p,"
+> > +			" len: %zu\n", vq->iov[0].iov_base, sizeof(v_req));
+> > +		ret = __copy_from_user(&v_req, vq->iov[0].iov_base,
+> > +				sizeof(v_req));
+> > +		if (unlikely(ret)) {
+> > +			vq_err(vq, "Faulted on virtio_scsi_cmd_req\n");
+> > +			break;
+> > +		}
+> > +
+> > +		exp_data_len = 0;
+> > +		for (i = 0; i < data_num; i++)
+> > +			exp_data_len += vq->iov[data_first + i].iov_len;
+> > +
+> > +		tv_cmd = vhost_scsi_allocate_cmd(tv_tpg, &v_req,
+> > +					exp_data_len, data_direction);
+> > +		if (IS_ERR(tv_cmd)) {
+> > +			vq_err(vq, "vhost_scsi_allocate_cmd failed %ld\n",
+> > +					PTR_ERR(tv_cmd));
+> > +			break;
+> > +		}
+> > +		pr_debug("Allocated tv_cmd: %p exp_data_len: %d, data_direction"
+> > +			": %d\n", tv_cmd, exp_data_len, data_direction);
+> > +
+> > +		tv_cmd->tvc_vhost = vs;
+> > +
+> > +		if (unlikely(vq->iov[out].iov_len !=
+> > +				sizeof(struct virtio_scsi_cmd_resp))) {
+> > +			vq_err(vq, "Expecting virtio_scsi_cmd_resp, got %zu"
+> > +				" bytes, out: %d, in: %d\n",
+> > +				vq->iov[out].iov_len, out, in);
+> > +			break;
+> > +		}
+> > +
+> > +		tv_cmd->tvc_resp = vq->iov[out].iov_base;
+> > +
+> > +		/*
+> > +		 * Copy in the recieved CDB descriptor into tv_cmd->tvc_cdb
+> > +		 * that will be used by tcm_vhost_new_cmd_map() and down into
+> > +		 * target_setup_cmd_from_cdb()
+> > +		 */
+> > +		memcpy(tv_cmd->tvc_cdb, v_req.cdb, TCM_VHOST_MAX_CDB_SIZE);
+> > +		/*
+> > +		 * Check that the recieved CDB size does not exceeded our
+> > +		 * hardcoded max for tcm_vhost
+> > +		 */
+> > +		/* TODO what if cdb was too small for varlen cdb header? */
+> > +		if (unlikely(scsi_command_size(tv_cmd->tvc_cdb) >
+> > +					TCM_VHOST_MAX_CDB_SIZE)) {
+> > +			vq_err(vq, "Received SCSI CDB with command_size: %d that"
+> > +				" exceeds SCSI_MAX_VARLEN_CDB_SIZE: %d\n",
+> > +				scsi_command_size(tv_cmd->tvc_cdb),
+> > +				TCM_VHOST_MAX_CDB_SIZE);
+> > +			break; /* TODO */
+> > +		}
+> > +		tv_cmd->tvc_lun = ((v_req.lun[2] << 8) | v_req.lun[3]) & 0x3FFF;
+> > +
+> > +		pr_debug("vhost_scsi got command opcode: %#02x, lun: %d\n",
+> > +			tv_cmd->tvc_cdb[0], tv_cmd->tvc_lun);
+> > +
+> > +		if (data_direction != DMA_NONE) {
+> > +			ret = vhost_scsi_map_iov_to_sgl(tv_cmd,
+> > +					&vq->iov[data_first], data_num,
+> > +					data_direction == DMA_TO_DEVICE);
+> > +			if (unlikely(ret)) {
+> > +				vq_err(vq, "Failed to map iov to sgl\n");
+> > +				break; /* TODO */
+> > +			}
+> > +		}
+> > +
+> > +		/*
+> > +		 * Save the descriptor from vhost_get_vq_desc() to be used to
+> > +		 * complete the virtio-scsi request in TCM callback context via
+> > +		 * tcm_vhost_queue_data_in() and tcm_vhost_queue_status()
+> > +		 */
+> > +		tv_cmd->tvc_vq_desc = head;
+> > +		/*
+> > +		 * Dispatch tv_cmd descriptor for cmwq execution in process
+> > +		 * context provided by tcm_vhost_workqueue.  This also ensures
+> > +		 * tv_cmd is executed on the same kworker CPU as this vhost
+> > +		 * thread to gain positive L2 cache locality effects..
+> > +		 */
+> > +		INIT_WORK(&tv_cmd->work, tcm_vhost_submission_work);
+> > +		queue_work(tcm_vhost_workqueue, &tv_cmd->work);
+> > +	}
+> > +
+> > +	mutex_unlock(&vq->mutex);
+> > +}
+> > +
+> > +static void vhost_scsi_ctl_handle_kick(struct vhost_work *work)
+> > +{
+> > +	pr_err("%s: The handling func for control queue.\n", __func__);
+> > +}
+> > +
+> > +static void vhost_scsi_evt_handle_kick(struct vhost_work *work)
+> > +{
+> > +	pr_err("%s: The handling func for event queue.\n", __func__);
+> > +}
+> > +
+> 
+> can userspace still trigger these? If not pls add a comment explaining
+> why are above never triggering.
+> 
+
+Yes, they are both triggered via userspace once as the virtio-scsi
+enabled guest boots.
+
+Also, changing these from pr_err -> pr_debug..
+
+> > +static void vhost_scsi_handle_kick(struct vhost_work *work)
+> > +{
+> > +	struct vhost_virtqueue *vq = container_of(work, struct vhost_virtqueue,
+> > +						poll.work);
+> > +	struct vhost_scsi *vs = container_of(vq->dev, struct vhost_scsi, dev);
+> > +
+> > +	vhost_scsi_handle_vq(vs);
+> > +}
+> > +
+> > +/*
+> > + * Called from vhost_scsi_ioctl() context to walk the list of available
+> > + * tcm_vhost_tpg with an active struct tcm_vhost_nexus
+> > + */
+> > +static int vhost_scsi_set_endpoint(
+> > +	struct vhost_scsi *vs,
+> > +	struct vhost_scsi_target *t)
+> > +{
+> > +	struct tcm_vhost_tport *tv_tport;
+> > +	struct tcm_vhost_tpg *tv_tpg;
+> > +	int index;
+> > +
+> > +	mutex_lock(&vs->dev.mutex);
+> > +	/* Verify that ring has been setup correctly. */
+> > +	for (index = 0; index < vs->dev.nvqs; ++index) {
+> > +		/* Verify that ring has been setup correctly. */
+> > +		if (!vhost_vq_access_ok(&vs->vqs[index])) {
+> > +			mutex_unlock(&vs->dev.mutex);
+> > +			return -EFAULT;
+> > +		}
+> > +	}
+> > +
+> > +	if (vs->vs_tpg) {
+> > +		mutex_unlock(&vs->dev.mutex);
+> > +		return -EEXIST;
+> > +	}
+> > +	mutex_unlock(&vs->dev.mutex);
+> 
+> vs->vs_tpg can change at this point and be != NULL in loop below. Not an issue?
+> 
+
+Mmmm, your right, and I don't think it is correct..
+
+I think the right thing is to moving the 'if (vs->vs_tpg)' check down in
+the vs->dev.mutex protected area before doing the vs->vs_tpg = tv_tpg
+assignment..
+
+> > +	mutex_lock(&tcm_vhost_mutex);
+> > +	list_for_each_entry(tv_tpg, &tcm_vhost_list, tv_tpg_list) {
+> 
+> If you move this loop to a function, then it can use goto to cleanup on error.
+> 
+
+I've just inlined the one error case here in the loop..
+
+> > +		mutex_lock(&tv_tpg->tv_tpg_mutex);
+> > +		if (!tv_tpg->tpg_nexus) {
+> > +			mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +			continue;
+> > +		}
+> > +		if (atomic_read(&tv_tpg->tv_tpg_vhost_count)) {
+> > +			mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +			continue;
+> > +		}
+> > +		tv_tport = tv_tpg->tport;
+> > +
+> > +		if (!strcmp(tv_tport->tport_name, t->vhost_wwpn) &&
+> > +		    (tv_tpg->tport_tpgt == t->vhost_tpgt)) {
+> > +			atomic_inc(&tv_tpg->tv_tpg_vhost_count);
+> > +			smp_mb__after_atomic_inc();
+> 
+> this an other uses of memory barriers need a comment: what are we
+> flushing out and why.  Also - could something like kref be used for
+> reference counting? If this is not datapath this might be better.
+> 
+
+Actually, ->tpg_vhost_count is always protected by ->tv_tpg_mutex, so
+for this case it's unnecessary..  Changing this to a non atomic_t type
+now..
+
+Doing the same for ->tv_tpg_port_count, and obtaining/release
+->tv_tpg_mutex in tcm_vhost_port_*link() as well..
+
+> > +			mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +			mutex_unlock(&tcm_vhost_mutex);
+> > +
+> > +			mutex_lock(&vs->dev.mutex);
+> > +			vs->vs_tpg = tv_tpg;
+> > +			atomic_inc(&vs->vhost_ref_cnt);
+
+Also, vhost_scsi->vhost_ref_cnt doesn't appear to be used aside from
+this location (it's never decremented), and AFAICT it's not necessary.
+
+Dropping this for now at well, unless then is an objection from Stefan
+as to why it's needed..
+
+> > +			smp_mb__after_atomic_inc();
+> > +			mutex_unlock(&vs->dev.mutex);
+> > +			return 0;
+> > +		}
+> > +		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +	}
+> > +	mutex_unlock(&tcm_vhost_mutex);
+> > +	return -EINVAL;
+> > +}
+> > +
+> > +static int vhost_scsi_clear_endpoint(
+> > +	struct vhost_scsi *vs,
+> > +	struct vhost_scsi_target *t)
+> > +{
+> > +	struct tcm_vhost_tport *tv_tport;
+> > +	struct tcm_vhost_tpg *tv_tpg;
+> > +	int index;
+> > +
+> > +	mutex_lock(&vs->dev.mutex);
+> > +	/* Verify that ring has been setup correctly. */
+> > +	for (index = 0; index < vs->dev.nvqs; ++index) {
+> > +		if (!vhost_vq_access_ok(&vs->vqs[index])) {
+> > +			mutex_unlock(&vs->dev.mutex);
+> > +			return -EFAULT;
+> > +		}
+> > +	}
+> > +
+> > +	if (!vs->vs_tpg) {
+> > +		mutex_unlock(&vs->dev.mutex);
+> > +		return -ENODEV;
+> > +	}
+> > +	tv_tpg = vs->vs_tpg;
+> > +	tv_tport = tv_tpg->tport;
+> > +
+> > +	if (strcmp(tv_tport->tport_name, t->vhost_wwpn) ||
+> > +	    (tv_tpg->tport_tpgt != t->vhost_tpgt)) {
+> > +		mutex_unlock(&vs->dev.mutex);
+> > +		pr_warn("tv_tport->tport_name: %s, tv_tpg->tport_tpgt: %hu"
+> > +			" does not match t->vhost_wwpn: %s, t->vhost_tpgt: %hu\n",
+> > +			tv_tport->tport_name, tv_tpg->tport_tpgt,
+> > +			t->vhost_wwpn, t->vhost_tpgt);
+> > +		return -EINVAL;
+> > +	}
+> > +	atomic_dec(&tv_tpg->tv_tpg_vhost_count);
+> > +	vs->vs_tpg = NULL;
+> > +	mutex_unlock(&vs->dev.mutex);
+> > +
+> > +	return 0;
+> 
+> We could do it like this:
+> 
+> 	err:
+> 		mutex_unlock(&vs->dev.mutex);
+> 		return ret;
+> 
+> to make it clear we do not exit this with lock taken
+> 
+
+<nod>, Added err: label for vhost_scsi_clear_endpoint error path
+
+> > +}
+> > +
+> > +static int vhost_scsi_open(struct inode *inode, struct file *f)
+> > +{
+> > +	struct vhost_scsi *s;
+> > +	int r;
+> > +
+> > +	s = kzalloc(sizeof(*s), GFP_KERNEL);
+> > +	if (!s)
+> > +		return -ENOMEM;
+> > +
+> > +	vhost_work_init(&s->vs_completion_work, vhost_scsi_complete_cmd_work);
+> > +	INIT_LIST_HEAD(&s->vs_completion_list);
+> > +	spin_lock_init(&s->vs_completion_lock);
+> > +
+> > +	s->vqs[0].handle_kick = vhost_scsi_ctl_handle_kick;
+> > +	s->vqs[1].handle_kick = vhost_scsi_evt_handle_kick;
+> > +	s->vqs[2].handle_kick = vhost_scsi_handle_kick;
+> 
+> better to add an enum with VQ numbers.
+> 
+
+<nod>, adding the following + updated usage in vhost_scsi_open()
+
+enum {
+        VHOST_SCSI_VQ_CTL = 0,
+        VHOST_SCSI_VQ_EVT = 1,
+        VHOST_SCSI_VQ_IO = 2,
+};
+
+> > +	r = vhost_dev_init(&s->dev, s->vqs, 3);
+> > +	if (r < 0) {
+> > +		kfree(s);
+> > +		return r;
+> > +	}
+> > +
+> > +	f->private_data = s;
+> > +	return 0;
+> > +}
+> > +
+> > +static int vhost_scsi_release(struct inode *inode, struct file *f)
+> > +{
+> > +	struct vhost_scsi *s = f->private_data;
+> > +
+> > +	if (s->vs_tpg && s->vs_tpg->tport) {
+> > +		struct vhost_scsi_target backend;
+> > +
+> > +		memcpy(backend.vhost_wwpn, s->vs_tpg->tport->tport_name,
+> > +				sizeof(backend.vhost_wwpn));
+> > +		backend.vhost_tpgt = s->vs_tpg->tport_tpgt;
+> > +		vhost_scsi_clear_endpoint(s, &backend);
+> > +	}
+> > +
+> > +	vhost_dev_cleanup(&s->dev, false);
+> > +	kfree(s);
+> > +	return 0;
+> > +}
+> > +
+> > +static int vhost_scsi_set_features(struct vhost_scsi *vs, u64 features)
+> > +{
+> > +	if (features & ~VHOST_FEATURES)
+> > +		return -EOPNOTSUPP;
+> > +
+> > +	mutex_lock(&vs->dev.mutex);
+> > +	if ((features & (1 << VHOST_F_LOG_ALL)) &&
+> > +	    !vhost_log_access_ok(&vs->dev)) {
+> > +		mutex_unlock(&vs->dev.mutex);
+> > +		return -EFAULT;
+> > +	}
+> > +	vs->dev.acked_features = features;
+> > +	/* TODO possibly smp_wmb() and flush vqs */
+> 
+> Either that or fail if already running.
+> Current userspace does not change features once set,
+> but it's cleaner not to make assumptions.
+> 
+
+Ok, following what drivers/vhost/net.c does, how about the following..?
+
+Add the basic vhost_scsi_flush() primative:
+
+static void vhost_scsi_flush_vq(struct vhost_scsi *vs, int index)
+{
+        vhost_poll_flush(&vs->dev.vqs[index].poll);
+}
+
+static void vhost_scsi_flush(struct vhost_scsi *s)
+{
+        vhost_scsi_flush_vq(s, VHOST_SCSI_VQ_CTL);
+        vhost_scsi_flush_vq(s, VHOST_SCSI_VQ_EVT);
+        vhost_scsi_flush_vq(s, VHOST_SCSI_VQ_IO);
+}
+
+And update the set_features:
+
+@@ -967,7 +980,8 @@ static int vhost_scsi_set_features(struct vhost_scsi *vs, u64 features)
+                return -EFAULT;
+        }
+        vs->dev.acked_features = features;
+-       /* TODO possibly smp_wmb() and flush vqs */
++       smp_wmb();
++       vhost_scsi_flush(vs);
+        mutex_unlock(&vs->dev.mutex);
+        return 0;
+ }
+
+> > +	mutex_unlock(&vs->dev.mutex);
+> > +	return 0;
+> > +}
+> > +
+> > +static long vhost_scsi_ioctl(struct file *f, unsigned int ioctl,
+> > +				unsigned long arg)
+> > +{
+> > +	struct vhost_scsi *vs = f->private_data;
+> > +	struct vhost_scsi_target backend;
+> > +	void __user *argp = (void __user *)arg;
+> > +	u64 __user *featurep = argp;
+> > +	u64 features;
+> > +	int r;
+> > +
+> > +	switch (ioctl) {
+> > +	case VHOST_SCSI_SET_ENDPOINT:
+> > +		if (copy_from_user(&backend, argp, sizeof backend))
+> > +			return -EFAULT;
+> > +
+> > +		return vhost_scsi_set_endpoint(vs, &backend);
+> > +	case VHOST_SCSI_CLEAR_ENDPOINT:
+> > +		if (copy_from_user(&backend, argp, sizeof backend))
+> > +			return -EFAULT;
+> > +
+> > +		return vhost_scsi_clear_endpoint(vs, &backend);
+> > +	case VHOST_SCSI_GET_ABI_VERSION:
+> > +		if (copy_from_user(&backend, argp, sizeof backend))
+> > +			return -EFAULT;
+> 
+> Why are we reading this in BTW?
+> 
+
+Dropping the unnecessary copy_from_user() usage here..
+
+> > +
+> > +		backend.abi_version = VHOST_SCSI_ABI_VERSION;
+> > +
+> > +		if (copy_to_user(argp, &backend, sizeof backend))
+> > +			return -EFAULT;
+> > +		return 0;
+> > +	case VHOST_GET_FEATURES:
+> > +		features = VHOST_FEATURES;
+> > +		if (copy_to_user(featurep, &features, sizeof features))
+> > +			return -EFAULT;
+> > +		return 0;
+> > +	case VHOST_SET_FEATURES:
+> > +		if (copy_from_user(&features, featurep, sizeof features))
+> > +			return -EFAULT;
+> > +		return vhost_scsi_set_features(vs, features);
+> > +	default:
+> > +		mutex_lock(&vs->dev.mutex);
+> > +		r = vhost_dev_ioctl(&vs->dev, ioctl, arg);
+> > +		mutex_unlock(&vs->dev.mutex);
+> > +		return r;
+> > +	}
+> > +}
+> > +
+> > +static const struct file_operations vhost_scsi_fops = {
+> > +	.owner          = THIS_MODULE,
+> > +	.release        = vhost_scsi_release,
+> > +	.unlocked_ioctl = vhost_scsi_ioctl,
+> > +	/* TODO compat ioctl? */
+> 
+> well?
+> 
+
+<nod>, adding the missing compat ioctl handling now..
+
+> > +	.open           = vhost_scsi_open,
+> > +	.llseek		= noop_llseek,
+> > +};
+> > +
+> > +static struct miscdevice vhost_scsi_misc = {
+> > +	MISC_DYNAMIC_MINOR,
+> > +	"vhost-scsi",
+> > +	&vhost_scsi_fops,
+> > +};
+> > +
+> > +static int __init vhost_scsi_register(void)
+> > +{
+> > +	return misc_register(&vhost_scsi_misc);
+> > +}
+> > +
+> > +static int vhost_scsi_deregister(void)
+> > +{
+> > +	return misc_deregister(&vhost_scsi_misc);
+> > +}
+> > +
+> > +static char *tcm_vhost_dump_proto_id(struct tcm_vhost_tport *tport)
+> > +{
+> > +	switch (tport->tport_proto_id) {
+> > +	case SCSI_PROTOCOL_SAS:
+> > +		return "SAS";
+> > +	case SCSI_PROTOCOL_FCP:
+> > +		return "FCP";
+> > +	case SCSI_PROTOCOL_ISCSI:
+> > +		return "iSCSI";
+> > +	default:
+> > +		break;
+> > +	}
+> > +
+> > +	return "Unknown";
+> > +}
+> > +
+> > +static int tcm_vhost_port_link(
+> > +	struct se_portal_group *se_tpg,
+> > +	struct se_lun *lun)
+> 
+> I'd like this and other places to be like this:
+>  static int tcm_vhost_port_link(struct se_portal_group *se_tpg,
+>  	struct se_lun *lun)
+> 
+> or
+>  static int
+>  tcm_vhost_port_link(struct se_portal_group *se_tpg,
+> 		     struct se_lun *lun)
+> 
+> so that it's more like the rest of vhost code.
+> 
+
+<nod>, doing the former for all of the places that do not exceed 80
+characters..
+
+> 
+> > +{
+> > +	struct tcm_vhost_tpg *tv_tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +
+> > +	atomic_inc(&tv_tpg->tv_tpg_port_count);
+> > +	smp_mb__after_atomic_inc();
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static void tcm_vhost_port_unlink(
+> > +	struct se_portal_group *se_tpg,
+> > +	struct se_lun *se_lun)
+> > +{
+> > +	struct tcm_vhost_tpg *tv_tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +
+> > +	atomic_dec(&tv_tpg->tv_tpg_port_count);
+> > +	smp_mb__after_atomic_dec();
+> > +}
+> > +
+> > +static struct se_node_acl *tcm_vhost_make_nodeacl(
+> > +	struct se_portal_group *se_tpg,
+> > +	struct config_group *group,
+> > +	const char *name)
+> > +{
+> > +	struct se_node_acl *se_nacl, *se_nacl_new;
+> > +	struct tcm_vhost_nacl *nacl;
+> > +	u64 wwpn = 0;
+> > +	u32 nexus_depth;
+> > +
+> > +	/* tcm_vhost_parse_wwn(name, &wwpn, 1) < 0)
+> > +		return ERR_PTR(-EINVAL); */
+> > +	se_nacl_new = tcm_vhost_alloc_fabric_acl(se_tpg);
+> > +	if (!se_nacl_new)
+> > +		return ERR_PTR(-ENOMEM);
+> > +
+> > +	nexus_depth = 1;
+> > +	/*
+> > +	 * se_nacl_new may be released by core_tpg_add_initiator_node_acl()
+> > +	 * when converting a NodeACL from demo mode -> explict
+> > +	 */
+> > +	se_nacl = core_tpg_add_initiator_node_acl(se_tpg, se_nacl_new,
+> > +				name, nexus_depth);
+> > +	if (IS_ERR(se_nacl)) {
+> > +		tcm_vhost_release_fabric_acl(se_tpg, se_nacl_new);
+> > +		return se_nacl;
+> > +	}
+> > +	/*
+> > +	 * Locate our struct tcm_vhost_nacl and set the FC Nport WWPN
+> > +	 */
+> > +	nacl = container_of(se_nacl, struct tcm_vhost_nacl, se_node_acl);
+> > +	nacl->iport_wwpn = wwpn;
+> > +
+> > +	return se_nacl;
+> > +}
+> > +
+> > +static void tcm_vhost_drop_nodeacl(struct se_node_acl *se_acl)
+> > +{
+> > +	struct tcm_vhost_nacl *nacl = container_of(se_acl,
+> > +				struct tcm_vhost_nacl, se_node_acl);
+> > +	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);
+> > +	kfree(nacl);
+> > +}
+> > +
+> > +static int tcm_vhost_make_nexus(
+> > +	struct tcm_vhost_tpg *tv_tpg,
+> > +	const char *name)
+> > +{
+> > +	struct se_portal_group *se_tpg;
+> > +	struct tcm_vhost_nexus *tv_nexus;
+> > +
+> > +	mutex_lock(&tv_tpg->tv_tpg_mutex);
+> > +	if (tv_tpg->tpg_nexus) {
+> > +		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +		pr_debug("tv_tpg->tpg_nexus already exists\n");
+> > +		return -EEXIST;
+> > +	}
+> > +	se_tpg = &tv_tpg->se_tpg;
+> > +
+> > +	tv_nexus = kzalloc(sizeof(struct tcm_vhost_nexus), GFP_KERNEL);
+> > +	if (!tv_nexus) {
+> > +		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +		pr_err("Unable to allocate struct tcm_vhost_nexus\n");
+> > +		return -ENOMEM;
+> > +	}
+> > +	/*
+> > +	 *  Initialize the struct se_session pointer
+> > +	 */
+> > +	tv_nexus->tvn_se_sess = transport_init_session();
+> > +	if (IS_ERR(tv_nexus->tvn_se_sess)) {
+> > +		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +		kfree(tv_nexus);
+> > +		return -ENOMEM;
+> > +	}
+> > +	/*
+> > +	 * Since we are running in 'demo mode' this call with generate a
+> > +	 * struct se_node_acl for the tcm_vhost struct se_portal_group with
+> > +	 * the SCSI Initiator port name of the passed configfs group 'name'.
+> > +	 */
+> > +	tv_nexus->tvn_se_sess->se_node_acl = core_tpg_check_initiator_node_acl(
+> > +				se_tpg, (unsigned char *)name);
+> > +	if (!tv_nexus->tvn_se_sess->se_node_acl) {
+> > +		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +		pr_debug("core_tpg_check_initiator_node_acl() failed"
+> > +				" for %s\n", name);
+> > +		transport_free_session(tv_nexus->tvn_se_sess);
+> > +		kfree(tv_nexus);
+> > +		return -ENOMEM;
+> > +	}
+> > +	/*
+> > +	 * Now register the TCM vHost virtual I_T Nexus as active with the
+> 
+> I think s/vHost/vhost/ would be nice :)
+> 
+
+Done
+
+> > +	 * call to __transport_register_session()
+> > +	 */
+> > +	__transport_register_session(se_tpg, tv_nexus->tvn_se_sess->se_node_acl,
+> > +			tv_nexus->tvn_se_sess, tv_nexus);
+> > +	tv_tpg->tpg_nexus = tv_nexus;
+> > +
+> > +	mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +	return 0;
+> > +}
+> > +
+> > +static int tcm_vhost_drop_nexus(
+> > +	struct tcm_vhost_tpg *tpg)
+> > +{
+> > +	struct se_session *se_sess;
+> > +	struct tcm_vhost_nexus *tv_nexus;
+> > +
+> > +	mutex_lock(&tpg->tv_tpg_mutex);
+> > +	tv_nexus = tpg->tpg_nexus;
+> > +	if (!tv_nexus) {
+> > +		mutex_unlock(&tpg->tv_tpg_mutex);
+> > +		return -ENODEV;
+> > +	}
+> > +
+> > +	se_sess = tv_nexus->tvn_se_sess;
+> > +	if (!se_sess) {
+> > +		mutex_unlock(&tpg->tv_tpg_mutex);
+> > +		return -ENODEV;
+> > +	}
+> > +
+> > +	if (atomic_read(&tpg->tv_tpg_port_count)) {
+> > +		mutex_unlock(&tpg->tv_tpg_mutex);
+> > +		pr_err("Unable to remove TCM_vHost I_T Nexus with"
+> > +			" active TPG port count: %d\n",
+> > +			atomic_read(&tpg->tv_tpg_port_count));
+> > +		return -EPERM;
+> 
+> EBUSY?
+> 
+> 
+
+Fixed
+
+> > +	}
+> > +
+> > +	if (atomic_read(&tpg->tv_tpg_vhost_count)) {
+> > +		mutex_unlock(&tpg->tv_tpg_mutex);
+> > +		pr_err("Unable to remove TCM_vHost I_T Nexus with"
+> > +			" active TPG vhost count: %d\n",
+> > +			atomic_read(&tpg->tv_tpg_vhost_count));
+> > +		return -EPERM;
+> 
+> Same?
+> 
+
+Fixed
+
+> > +	}
+> > +
+> > +	pr_debug("TCM_vHost_ConfigFS: Removing I_T Nexus to emulated"
+> > +		" %s Initiator Port: %s\n", tcm_vhost_dump_proto_id(tpg->tport),
+> > +		tv_nexus->tvn_se_sess->se_node_acl->initiatorname);
+> > +	/*
+> > +	 * Release the SCSI I_T Nexus to the emulated vHost Target Port
+> > +	 */
+> > +	transport_deregister_session(tv_nexus->tvn_se_sess);
+> > +	tpg->tpg_nexus = NULL;
+> > +	mutex_unlock(&tpg->tv_tpg_mutex);
+> > +
+> > +	kfree(tv_nexus);
+> > +	return 0;
+> > +}
+> > +
+> > +static ssize_t tcm_vhost_tpg_show_nexus(
+> > +	struct se_portal_group *se_tpg,
+> > +	char *page)
+> > +{
+> > +	struct tcm_vhost_tpg *tv_tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +	struct tcm_vhost_nexus *tv_nexus;
+> > +	ssize_t ret;
+> > +
+> > +	mutex_lock(&tv_tpg->tv_tpg_mutex);
+> > +	tv_nexus = tv_tpg->tpg_nexus;
+> > +	if (!tv_nexus) {
+> > +		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +		return -ENODEV;
+> > +	}
+> > +	ret = snprintf(page, PAGE_SIZE, "%s\n",
+> > +			tv_nexus->tvn_se_sess->se_node_acl->initiatorname);
+> > +	mutex_unlock(&tv_tpg->tv_tpg_mutex);
+> > +
+> > +	return ret;
+> > +}
+> > +
+> > +static ssize_t tcm_vhost_tpg_store_nexus(
+> > +	struct se_portal_group *se_tpg,
+> > +	const char *page,
+> > +	size_t count)
+> > +{
+> > +	struct tcm_vhost_tpg *tv_tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +	struct tcm_vhost_tport *tport_wwn = tv_tpg->tport;
+> > +	unsigned char i_port[TCM_VHOST_NAMELEN], *ptr, *port_ptr;
+> > +	int ret;
+> > +	/*
+> > +	 * Shutdown the active I_T nexus if 'NULL' is passed..
+> > +	 */
+> > +	if (!strncmp(page, "NULL", 4)) {
+> > +		ret = tcm_vhost_drop_nexus(tv_tpg);
+> > +		return (!ret) ? count : ret;
+> > +	}
+> > +	/*
+> > +	 * Otherwise make sure the passed virtual Initiator port WWN matches
+> > +	 * the fabric protocol_id set in tcm_vhost_make_tport(), and call
+> > +	 * tcm_vhost_make_nexus().
+> > +	 */
+> > +	if (strlen(page) >= TCM_VHOST_NAMELEN) {
+> > +		pr_err("Emulated NAA Sas Address: %s, exceeds"
+> > +				" max: %d\n", page, TCM_VHOST_NAMELEN);
+> > +		return -EINVAL;
+> > +	}
+> > +	snprintf(&i_port[0], TCM_VHOST_NAMELEN, "%s", page);
+> > +
+> > +	ptr = strstr(i_port, "naa.");
+> > +	if (ptr) {
+> > +		if (tport_wwn->tport_proto_id != SCSI_PROTOCOL_SAS) {
+> > +			pr_err("Passed SAS Initiator Port %s does not"
+> > +				" match target port protoid: %s\n", i_port,
+> > +				tcm_vhost_dump_proto_id(tport_wwn));
+> > +			return -EINVAL;
+> > +		}
+> > +		port_ptr = &i_port[0];
+> > +		goto check_newline;
+> > +	}
+> > +	ptr = strstr(i_port, "fc.");
+> > +	if (ptr) {
+> > +		if (tport_wwn->tport_proto_id != SCSI_PROTOCOL_FCP) {
+> > +			pr_err("Passed FCP Initiator Port %s does not"
+> > +				" match target port protoid: %s\n", i_port,
+> > +				tcm_vhost_dump_proto_id(tport_wwn));
+> > +			return -EINVAL;
+> > +		}
+> > +		port_ptr = &i_port[3]; /* Skip over "fc." */
+> > +		goto check_newline;
+> > +	}
+> > +	ptr = strstr(i_port, "iqn.");
+> > +	if (ptr) {
+> > +		if (tport_wwn->tport_proto_id != SCSI_PROTOCOL_ISCSI) {
+> > +			pr_err("Passed iSCSI Initiator Port %s does not"
+> > +				" match target port protoid: %s\n", i_port,
+> > +				tcm_vhost_dump_proto_id(tport_wwn));
+> > +			return -EINVAL;
+> > +		}
+> > +		port_ptr = &i_port[0];
+> > +		goto check_newline;
+> > +	}
+> > +	pr_err("Unable to locate prefix for emulated Initiator Port:"
+> > +			" %s\n", i_port);
+> > +	return -EINVAL;
+> > +	/*
+> > +	 * Clear any trailing newline for the NAA WWN
+> > +	 */
+> > +check_newline:
+> > +	if (i_port[strlen(i_port)-1] == '\n')
+> > +		i_port[strlen(i_port)-1] = '\0';
+> > +
+> > +	ret = tcm_vhost_make_nexus(tv_tpg, port_ptr);
+> > +	if (ret < 0)
+> > +		return ret;
+> > +
+> > +	return count;
+> > +}
+> > +
+> > +TF_TPG_BASE_ATTR(tcm_vhost, nexus, S_IRUGO | S_IWUSR);
+> > +
+> > +static struct configfs_attribute *tcm_vhost_tpg_attrs[] = {
+> > +	&tcm_vhost_tpg_nexus.attr,
+> > +	NULL,
+> > +};
+> > +
+> > +static struct se_portal_group *tcm_vhost_make_tpg(
+> > +	struct se_wwn *wwn,
+> > +	struct config_group *group,
+> > +	const char *name)
+> > +{
+> > +	struct tcm_vhost_tport *tport = container_of(wwn,
+> > +			struct tcm_vhost_tport, tport_wwn);
+> > +
+> > +	struct tcm_vhost_tpg *tpg;
+> > +	unsigned long tpgt;
+> > +	int ret;
+> > +
+> > +	if (strstr(name, "tpgt_") != name)
+> > +		return ERR_PTR(-EINVAL);
+> > +	if (kstrtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)
+> > +		return ERR_PTR(-EINVAL);
+> > +
+> > +	tpg = kzalloc(sizeof(struct tcm_vhost_tpg), GFP_KERNEL);
+> > +	if (!tpg) {
+> > +		pr_err("Unable to allocate struct tcm_vhost_tpg");
+> > +		return ERR_PTR(-ENOMEM);
+> > +	}
+> > +	mutex_init(&tpg->tv_tpg_mutex);
+> > +	INIT_LIST_HEAD(&tpg->tv_tpg_list);
+> > +	tpg->tport = tport;
+> > +	tpg->tport_tpgt = tpgt;
+> > +
+> > +	ret = core_tpg_register(&tcm_vhost_fabric_configfs->tf_ops, wwn,
+> > +				&tpg->se_tpg, tpg, TRANSPORT_TPG_TYPE_NORMAL);
+> > +	if (ret < 0) {
+> > +		kfree(tpg);
+> > +		return NULL;
+> > +	}
+> > +	mutex_lock(&tcm_vhost_mutex);
+> > +	list_add_tail(&tpg->tv_tpg_list, &tcm_vhost_list);
+> > +	mutex_unlock(&tcm_vhost_mutex);
+> > +
+> > +	return &tpg->se_tpg;
+> > +}
+> > +
+> > +static void tcm_vhost_drop_tpg(struct se_portal_group *se_tpg)
+> > +{
+> > +	struct tcm_vhost_tpg *tpg = container_of(se_tpg,
+> > +				struct tcm_vhost_tpg, se_tpg);
+> > +
+> > +	mutex_lock(&tcm_vhost_mutex);
+> > +	list_del(&tpg->tv_tpg_list);
+> > +	mutex_unlock(&tcm_vhost_mutex);
+> > +	/*
+> > +	 * Release the virtual I_T Nexus for this vHost TPG
+> > +	 */
+> > +	tcm_vhost_drop_nexus(tpg);
+> > +	/*
+> > +	 * Deregister the se_tpg from TCM..
+> > +	 */
+> > +	core_tpg_deregister(se_tpg);
+> > +	kfree(tpg);
+> > +}
+> > +
+> > +static struct se_wwn *tcm_vhost_make_tport(
+> > +	struct target_fabric_configfs *tf,
+> > +	struct config_group *group,
+> > +	const char *name)
+> > +{
+> > +	struct tcm_vhost_tport *tport;
+> > +	char *ptr;
+> > +	u64 wwpn = 0;
+> > +	int off = 0;
+> > +
+> > +	/* if (tcm_vhost_parse_wwn(name, &wwpn, 1) < 0)
+> > +		return ERR_PTR(-EINVAL); */
+> > +
+> > +	tport = kzalloc(sizeof(struct tcm_vhost_tport), GFP_KERNEL);
+> > +	if (!tport) {
+> > +		pr_err("Unable to allocate struct tcm_vhost_tport");
+> > +		return ERR_PTR(-ENOMEM);
+> > +	}
+> > +	tport->tport_wwpn = wwpn;
+> > +	/*
+> > +	 * Determine the emulated Protocol Identifier and Target Port Name
+> > +	 * based on the incoming configfs directory name.
+> > +	 */
+> > +	ptr = strstr(name, "naa.");
+> > +	if (ptr) {
+> > +		tport->tport_proto_id = SCSI_PROTOCOL_SAS;
+> > +		goto check_len;
+> > +	}
+> > +	ptr = strstr(name, "fc.");
+> > +	if (ptr) {
+> > +		tport->tport_proto_id = SCSI_PROTOCOL_FCP;
+> > +		off = 3; /* Skip over "fc." */
+> > +		goto check_len;
+> > +	}
+> > +	ptr = strstr(name, "iqn.");
+> > +	if (ptr) {
+> > +		tport->tport_proto_id = SCSI_PROTOCOL_ISCSI;
+> > +		goto check_len;
+> > +	}
+> > +
+> > +	pr_err("Unable to locate prefix for emulated Target Port:"
+> > +			" %s\n", name);
+> > +	kfree(tport);
+> > +	return ERR_PTR(-EINVAL);
+> > +
+> > +check_len:
+> > +	if (strlen(name) >= TCM_VHOST_NAMELEN) {
+> > +		pr_err("Emulated %s Address: %s, exceeds"
+> > +			" max: %d\n", name, tcm_vhost_dump_proto_id(tport),
+> > +			TCM_VHOST_NAMELEN);
+> > +		kfree(tport);
+> > +		return ERR_PTR(-EINVAL);
+> > +	}
+> > +	snprintf(&tport->tport_name[0], TCM_VHOST_NAMELEN, "%s", &name[off]);
+> > +
+> > +	pr_debug("TCM_VHost_ConfigFS: Allocated emulated Target"
+> > +		" %s Address: %s\n", tcm_vhost_dump_proto_id(tport), name);
+> > +
+> > +	return &tport->tport_wwn;
+> > +}
+> > +
+> > +static void tcm_vhost_drop_tport(struct se_wwn *wwn)
+> > +{
+> > +	struct tcm_vhost_tport *tport = container_of(wwn,
+> > +				struct tcm_vhost_tport, tport_wwn);
+> > +
+> > +	pr_debug("TCM_VHost_ConfigFS: Deallocating emulated Target"
+> > +		" %s Address: %s\n", tcm_vhost_dump_proto_id(tport),
+> > +		tport->tport_name);
+> > +
+> > +	kfree(tport);
+> > +}
+> > +
+> > +static ssize_t tcm_vhost_wwn_show_attr_version(
+> > +	struct target_fabric_configfs *tf,
+> > +	char *page)
+> > +{
+> > +	return sprintf(page, "TCM_VHOST fabric module %s on %s/%s"
+> > +		"on "UTS_RELEASE"\n", TCM_VHOST_VERSION, utsname()->sysname,
+> > +		utsname()->machine);
+> > +}
+> > +
+> > +TF_WWN_ATTR_RO(tcm_vhost, version);
+> > +
+> > +static struct configfs_attribute *tcm_vhost_wwn_attrs[] = {
+> > +	&tcm_vhost_wwn_version.attr,
+> > +	NULL,
+> > +};
+> > +
+> > +static struct target_core_fabric_ops tcm_vhost_ops = {
+> > +	.get_fabric_name		= tcm_vhost_get_fabric_name,
+> > +	.get_fabric_proto_ident		= tcm_vhost_get_fabric_proto_ident,
+> > +	.tpg_get_wwn			= tcm_vhost_get_fabric_wwn,
+> > +	.tpg_get_tag			= tcm_vhost_get_tag,
+> > +	.tpg_get_default_depth		= tcm_vhost_get_default_depth,
+> > +	.tpg_get_pr_transport_id	= tcm_vhost_get_pr_transport_id,
+> > +	.tpg_get_pr_transport_id_len	= tcm_vhost_get_pr_transport_id_len,
+> > +	.tpg_parse_pr_out_transport_id	= tcm_vhost_parse_pr_out_transport_id,
+> > +	.tpg_check_demo_mode		= tcm_vhost_check_true,
+> > +	.tpg_check_demo_mode_cache	= tcm_vhost_check_true,
+> > +	.tpg_check_demo_mode_write_protect = tcm_vhost_check_false,
+> > +	.tpg_check_prod_mode_write_protect = tcm_vhost_check_false,
+> > +	.tpg_alloc_fabric_acl		= tcm_vhost_alloc_fabric_acl,
+> > +	.tpg_release_fabric_acl		= tcm_vhost_release_fabric_acl,
+> > +	.tpg_get_inst_index		= tcm_vhost_tpg_get_inst_index,
+> > +	.release_cmd			= tcm_vhost_release_cmd,
+> > +	.shutdown_session		= tcm_vhost_shutdown_session,
+> > +	.close_session			= tcm_vhost_close_session,
+> > +	.sess_get_index			= tcm_vhost_sess_get_index,
+> > +	.sess_get_initiator_sid		= NULL,
+> > +	.write_pending			= tcm_vhost_write_pending,
+> > +	.write_pending_status		= tcm_vhost_write_pending_status,
+> > +	.set_default_node_attributes	= tcm_vhost_set_default_node_attrs,
+> > +	.get_task_tag			= tcm_vhost_get_task_tag,
+> > +	.get_cmd_state			= tcm_vhost_get_cmd_state,
+> > +	.queue_data_in			= tcm_vhost_queue_data_in,
+> > +	.queue_status			= tcm_vhost_queue_status,
+> > +	.queue_tm_rsp			= tcm_vhost_queue_tm_rsp,
+> > +	.get_fabric_sense_len		= tcm_vhost_get_fabric_sense_len,
+> > +	.set_fabric_sense_len		= tcm_vhost_set_fabric_sense_len,
+> > +	/*
+> > +	 * Setup callers for generic logic in target_core_fabric_configfs.c
+> > +	 */
+> > +	.fabric_make_wwn		= tcm_vhost_make_tport,
+> > +	.fabric_drop_wwn		= tcm_vhost_drop_tport,
+> > +	.fabric_make_tpg		= tcm_vhost_make_tpg,
+> > +	.fabric_drop_tpg		= tcm_vhost_drop_tpg,
+> > +	.fabric_post_link		= tcm_vhost_port_link,
+> > +	.fabric_pre_unlink		= tcm_vhost_port_unlink,
+> > +	.fabric_make_np			= NULL,
+> > +	.fabric_drop_np			= NULL,
+> > +	.fabric_make_nodeacl		= tcm_vhost_make_nodeacl,
+> > +	.fabric_drop_nodeacl		= tcm_vhost_drop_nodeacl,
+> > +};
+> > +
+> > +static int tcm_vhost_register_configfs(void)
+> > +{
+> > +	struct target_fabric_configfs *fabric;
+> > +	int ret;
+> > +
+> > +	pr_debug("TCM_VHOST fabric module %s on %s/%s"
+> > +		" on "UTS_RELEASE"\n", TCM_VHOST_VERSION, utsname()->sysname,
+> > +		utsname()->machine);
+> > +	/*
+> > +	 * Register the top level struct config_item_type with TCM core
+> > +	 */
+> > +	fabric = target_fabric_configfs_init(THIS_MODULE, "vhost");
+> > +	if (IS_ERR(fabric)) {
+> > +		pr_err("target_fabric_configfs_init() failed\n");
+> > +		return PTR_ERR(fabric);
+> > +	}
+> > +	/*
+> > +	 * Setup fabric->tf_ops from our local tcm_vhost_ops
+> > +	 */
+> > +	fabric->tf_ops = tcm_vhost_ops;
+> > +	/*
+> > +	 * Setup default attribute lists for various fabric->tf_cit_tmpl
+> > +	 */
+> > +	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = tcm_vhost_wwn_attrs;
+> > +	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = tcm_vhost_tpg_attrs;
+> > +	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
+> > +	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
+> > +	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
+> > +	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;
+> > +	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
+> > +	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
+> > +	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;
+> > +	/*
+> > +	 * Register the fabric for use within TCM
+> > +	 */
+> > +	ret = target_fabric_configfs_register(fabric);
+> > +	if (ret < 0) {
+> > +		pr_err("target_fabric_configfs_register() failed"
+> > +				" for TCM_VHOST\n");
+> > +		return ret;
+> > +	}
+> > +	/*
+> > +	 * Setup our local pointer to *fabric
+> > +	 */
+> > +	tcm_vhost_fabric_configfs = fabric;
+> > +	pr_debug("TCM_VHOST[0] - Set fabric -> tcm_vhost_fabric_configfs\n");
+> > +	return 0;
+> > +};
+> > +
+> > +static void tcm_vhost_deregister_configfs(void)
+> > +{
+> > +	if (!tcm_vhost_fabric_configfs)
+> > +		return;
+> > +
+> > +	target_fabric_configfs_deregister(tcm_vhost_fabric_configfs);
+> > +	tcm_vhost_fabric_configfs = NULL;
+> > +	pr_debug("TCM_VHOST[0] - Cleared tcm_vhost_fabric_configfs\n");
+> > +};
+> > +
+> > +static int __init tcm_vhost_init(void)
+> > +{
+> > +	int ret = -ENOMEM;
+> > +
+> > +	tcm_vhost_workqueue = alloc_workqueue("tcm_vhost", 0, 0);
+> > +	if (!tcm_vhost_workqueue)
+> > +		goto out;
+> 
+> Pls add a comment explaining why we need our own workqueue
+> and aren't using the system one instead.
+> 
+
+<nod>, loopback + tcm_qla2xxx use their own dedicated workqueue(s) as
+well..
+
+> > +
+> > +	ret = vhost_scsi_register();
+> > +	if (ret < 0)
+> > +		goto out_destroy_workqueue;
+> > +
+> > +	ret = tcm_vhost_register_configfs();
+> > +	if (ret < 0)
+> > +		goto out_vhost_scsi_deregister;
+> > +
+> > +	return 0;
+> > +
+> > +out_vhost_scsi_deregister:
+> > +	vhost_scsi_deregister();
+> > +out_destroy_workqueue:
+> > +	destroy_workqueue(tcm_vhost_workqueue);
+> > +out:
+> > +	return ret;
+> > +};
+> > +
+> > +static void tcm_vhost_exit(void)
+> > +{
+> > +	tcm_vhost_deregister_configfs();
+> > +	vhost_scsi_deregister();
+> > +	destroy_workqueue(tcm_vhost_workqueue);
+> > +};
+> > +
+> > +MODULE_DESCRIPTION("TCM_VHOST series fabric driver");
+> > +MODULE_LICENSE("GPL");
+> > +module_init(tcm_vhost_init);
+> > +module_exit(tcm_vhost_exit);
+> > diff --git a/drivers/vhost/tcm_vhost.h b/drivers/vhost/tcm_vhost.h
+> > new file mode 100644
+> > index 0000000..c983ed2
+> > --- /dev/null
+> > +++ b/drivers/vhost/tcm_vhost.h
+> > @@ -0,0 +1,101 @@
+> > +#define TCM_VHOST_VERSION  "v0.1"
+> > +#define TCM_VHOST_NAMELEN 256
+> > +#define TCM_VHOST_MAX_CDB_SIZE 32
+> > +
+> > +struct tcm_vhost_cmd {
+> > +	/* Descriptor from vhost_get_vq_desc() for virt_queue segment */
+> > +	int tvc_vq_desc;
+> > +	/* The Tag from include/linux/virtio_scsi.h:struct virtio_scsi_cmd_req */
+> > +	u64 tvc_tag;
+> > +	/* The number of scatterlists associated with this cmd */
+> > +	u32 tvc_sgl_count;
+> > +	/* Saved unpacked SCSI LUN for tcm_vhost_submission_work() */
+> > +	u32 tvc_lun;
+> > +	/* Pointer to the SGL formatted memory from virtio-scsi */
+> > +	struct scatterlist *tvc_sgl;
+> > +	/* Pointer to response */
+> > +	struct virtio_scsi_cmd_resp __user *tvc_resp;
+> > +	/* Pointer to vhost_scsi for our device */
+> > +	struct vhost_scsi *tvc_vhost;
+> > +	/* The TCM I/O descriptor that is accessed via container_of() */
+> > +	struct se_cmd tvc_se_cmd;
+> > +	/* work item used for cmwq dispatch to tcm_vhost_submission_work() */
+> > +	struct work_struct work;
+> > +	/* Copy of the incoming SCSI command descriptor block (CDB) */
+> > +	unsigned char tvc_cdb[TCM_VHOST_MAX_CDB_SIZE];
+> > +	/* Sense buffer that will be mapped into outgoing status */
+> > +	unsigned char tvc_sense_buf[TRANSPORT_SENSE_BUFFER];
+> > +	/* Completed commands list, serviced from vhost worker thread */
+> > +	struct list_head tvc_completion_list;
+> > +};
+> > +
+> > +struct tcm_vhost_nexus {
+> > +	/* Pointer to TCM session for I_T Nexus */
+> > +	struct se_session *tvn_se_sess;
+> > +};
+> > +
+> > +struct tcm_vhost_nacl {
+> > +	/* Binary World Wide unique Port Name for Vhost Initiator port */
+> > +	u64 iport_wwpn;
+> > +	/* ASCII formatted WWPN for Sas Initiator port */
+> > +	char iport_name[TCM_VHOST_NAMELEN];
+> > +	/* Returned by tcm_vhost_make_nodeacl() */
+> > +	struct se_node_acl se_node_acl;
+> > +};
+> > +
+> > +struct tcm_vhost_tpg {
+> > +	/* Vhost port target portal group tag for TCM */
+> > +	u16 tport_tpgt;
+> > +	/* Used to track number of TPG Port/Lun Links wrt to explict I_T Nexus shutdown */
+> > +	atomic_t tv_tpg_port_count;
+> > +	/* Used for vhost_scsi device reference to tpg_nexus */
+> > +	atomic_t tv_tpg_vhost_count;
+> > +	/* list for tcm_vhost_list */
+> > +	struct list_head tv_tpg_list;
+> > +	/* Used to protect access for tpg_nexus */
+> > +	struct mutex tv_tpg_mutex;
+> 
+> would it be easier to just use dev mutex instead?
+> 
+> > +	/* Pointer to the TCM VHost I_T Nexus for this TPG endpoint */
+> > +	struct tcm_vhost_nexus *tpg_nexus;
+> > +	/* Pointer back to tcm_vhost_tport */
+> > +	struct tcm_vhost_tport *tport;
+> > +	/* Returned by tcm_vhost_make_tpg() */
+> > +	struct se_portal_group se_tpg;
+> > +};
+> > +
+> > +struct tcm_vhost_tport {
+> > +	/* SCSI protocol the tport is providing */
+> > +	u8 tport_proto_id;
+> > +	/* Binary World Wide unique Port Name for Vhost Target port */
+> > +	u64 tport_wwpn;
+> > +	/* ASCII formatted WWPN for Vhost Target port */
+> > +	char tport_name[TCM_VHOST_NAMELEN];
+> > +	/* Returned by tcm_vhost_make_tport() */
+> > +	struct se_wwn tport_wwn;
+> > +};
+> > +
+> > +/*
+> > + * As per request from MST, keep TCM_VHOST related ioctl defines out of
+> > + * linux/vhost.h (user-space) for now..
+> > + */
+> > +
+> > +#include <linux/vhost.h>
+> > +
+> > +/*
+> > + * Used by QEMU userspace to ensure a consistent vhost-scsi ABI.
+> > + *
+> > + * ABI Rev 0: July 2012 version starting point for v3.6-rc merge candidate +
+> > + *            RFC-v2 vhost-scsi userspace.  Add GET_ABI_VERSION ioctl usage
+> > + */
+> > +
+> > +#define VHOST_SCSI_ABI_VERSION	0
+> > +
+> > +struct vhost_scsi_target {
+> > +	int abi_version;
+> > +	unsigned char vhost_wwpn[TRANSPORT_IQN_LEN];
+> > +	unsigned short vhost_tpgt;
+> > +};
+> > +
+> > +/* VHOST_SCSI specific defines */
+> > +#define VHOST_SCSI_SET_ENDPOINT _IOW(VHOST_VIRTIO, 0x40, struct vhost_scsi_target)
+> > +#define VHOST_SCSI_CLEAR_ENDPOINT _IOW(VHOST_VIRTIO, 0x41, struct vhost_scsi_target)
+> > +#define VHOST_SCSI_GET_ABI_VERSION _IOW(VHOST_VIRTIO, 0x42, struct vhost_scsi_target)
+> 
+> CLEAR_ENDPOINT and SET_ENDPOINT commands get an abi version
+> too but it's ignored there. Intentional?
+> 
+
+Not quite..
+
+> 
+> Why not
+> #define VHOST_SCSI_GET_ABI_VERSION _IOW(VHOST_VIRTIO, 0x42, int)
+> and then you avoid changing vhost_scsi_target ...
+> 
+
+Ah yes, sorry, that makes alot more sense..  Changing GET_ABI_VERSION
+to return 'int abi_version' to userspace now.
+
+(As you may have noticed, I gave up ioctls for configfs for doing
+compatible control plane code w/ python code a long time ago..  ;)
+
+> 
+> Also, let's add a comment like
+> 
+> /* Changing this breaks userspace. */
+> 
+> so we remember never to change this value.
+> 
+
+<nod>
