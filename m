@@ -1,30 +1,41 @@
-From: "roboth roli company" <info@roli.com>
-Subject: inquiry
-Date: Tue, 31 Jul 2012 16:25:19 +0700 (ICT)
-Message-ID: <49484.209.188.18.159.1343726719.squirrel__44382.9910051592$1343757489$gmane$org@123.30.138.40>
-Reply-To: robothrollilimited@yahoo.com
+From: Robert Jennings <rcj@linux.vnet.ibm.com>
+Subject: [PATCH] ibmvscsi: Add maintainer for IBM virtual SCSI/FC drivers
+Date: Tue, 31 Jul 2012 12:34:36 -0500
+Message-ID: <20120731173436.GA2601@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static.vdc.vn ([123.30.138.40]:46837 "EHLO nguyenkimonline.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753979Ab2GaR5w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Jul 2012 13:57:52 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Add a MAINTAINERS entry for the IBM Power Virtual SCSI and FC device
+drivers.
 
+Signed-off-by: Robert Jennings <rcj@linux.vnet.ibm.com>
+---
+ MAINTAINERS |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-
-i am robothroli, Purchase manager from roli Merchant Ltd. We are
-Import/export Company based in taiwan. We are interested in purchasing
-your product and I would like to make an inquiry. Please inform me on:
-
-Sample availability and price
-Minimum order quantity
-FOB Prices
-
-Sincerely
-Purchase Manager
-robothroli
+diff --git a/MAINTAINERS b/MAINTAINERS
+index fb036a0..f441c46 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3425,6 +3425,13 @@ L:	netdev@vger.kernel.org
+ S:	Supported
+ F:	drivers/net/ethernet/ibm/ibmveth.*
+ 
++IBM Power Virtual SCSI/FC Device Drivers
++M:	Robert Jennings <rcj@linux.vnet.ibm.com>
++L:	linux-scsi@vger.kernel.org
++S:	Supported
++F:	drivers/scsi/ibmvscsi/
++X:	drivers/scsi/ibmvscsi/ibmvstgt.c
++
+ IBM ServeRAID RAID DRIVER
+ P:	Jack Hammer
+ M:	Dave Jeffery <ipslinux@adaptec.com>
+-- 
+1.7.0.4
