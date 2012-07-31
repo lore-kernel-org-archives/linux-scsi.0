@@ -1,36 +1,77 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH] scsi/ibmvscsi: add module alias for ibmvscsic
-Date: Tue, 31 Jul 2012 13:08:42 +1000
-Message-ID: <1343704122.8227.3.camel@pasglop>
-References: <1342630158-16510-1-git-send-email-olaf@aepfle.de>
-	 <1343611946.21647.23.camel@pasglop> <20120730190606.GD3155@aepfle.de>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscsim: spin_unlock_irq in interrupt handler fix
+Date: Tue, 31 Jul 2012 10:21:44 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1207311006171.27888@axis700.grange>
+References: <1342853283-32549-1-git-send-email-yefremov.denis@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:59374 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752029Ab2GaDI5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jul 2012 23:08:57 -0400
-In-Reply-To: <20120730190606.GD3155@aepfle.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1342853283-32549-1-git-send-email-yefremov.denis@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Denis Efremov <yefremov.denis@gmail.com>
+Cc: Kurt Garloff <garloff@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian J King <bjking1@us.ibm.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, Olaf Hering <olaf@aepfle.de>
 
-On Mon, 2012-07-30 at 21:06 +0200, Olaf Hering wrote:
-> > So while this would work, I do wonder however whether we could
-> instead
-> > fix it by simplifying the whole thing as follow since iSeries is now
-> > gone and so we don't need split backends anymore:
-> > 
-> > scsi/ibmvscsi: Remove backend abstraction
+Wow, been ages since the last patch to this driver has hit my mail:-)
+
+On Sat, 21 Jul 2012, Denis Efremov wrote:
+
+> The replacement of spin_lock_irq/spin_unlock_irq pair in interrupt
+> handler by spin_lock_irqsave/spin_lock_irqrestore pair.
 > 
-> I cant that these things myself anymore.
+> Found by Linux Driver Verification project (linuxtesting.org).
+> 
+> Signed-off-by: Denis Efremov <yefremov.denis@gmail.com>
 
-Brian, can somebody from your side own these ?
+Right, unconditionally enabling local IRQs in an ISR seems rude. BUT: 
+unfortunately, it's not as easy as this. From DC390_Interrupt() 
+dc390_DataOut_0() and dc390_DataIn_0() can be called, which also use 
+spin_lock_irq() / spin_unlock_irq()... So, maybe adding a flags field to 
+struct dc390_acb and using it on all 3 occasions would be the easiest and 
+safest fix...
 
-Cheers,
-Ben.
+Thanks
+Guennadi
 
+> ---
+>  drivers/scsi/tmscsim.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+> index a1baccc..0b9d68a 100644
+> --- a/drivers/scsi/tmscsim.c
+> +++ b/drivers/scsi/tmscsim.c
+> @@ -654,6 +654,7 @@ DC390_Interrupt(void *dev_id)
+>      u8  phase;
+>      void   (*stateV)( struct dc390_acb*, struct dc390_srb*, u8 *);
+>      u8  istate, istatus;
+> +    unsigned long flags;
+>  
+>      sstatus = DC390_read8 (Scsi_Status);
+>      if( !(sstatus & INTERRUPT) )
+> @@ -665,7 +666,7 @@ DC390_Interrupt(void *dev_id)
+>      //dstatus = DC390_read8 (DMA_Status);
+>      //DC390_write32 (DMA_ScsiBusCtrl, EN_INT_ON_PCI_ABORT);
+>  
+> -    spin_lock_irq(pACB->pScsiHost->host_lock);
+> +    spin_lock_irqsave(pACB->pScsiHost->host_lock, flags);
+>  
+>      istate = DC390_read8 (Intern_State);
+>      istatus = DC390_read8 (INT_Status); /* This clears Scsi_Status, Intern_State and INT_Status ! */
+> @@ -736,7 +737,7 @@ DC390_Interrupt(void *dev_id)
+>      }
+>  
+>   unlock:
+> -    spin_unlock_irq(pACB->pScsiHost->host_lock);
+> +    spin_unlock_irqrestore(pACB->pScsiHost->host_lock, flags);
+>      return IRQ_HANDLED;
+>  }
+>  
+> -- 
+> 1.7.7
+> 
 
+---
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
+http://www.open-technology.de/
