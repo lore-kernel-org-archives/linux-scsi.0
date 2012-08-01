@@ -1,86 +1,54 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 3/3] sd: error handling synchronizing caches
-Date: Wed, 01 Aug 2012 16:20:38 +0100
-Message-ID: <1343834438.3192.24.camel@dabdike.int.hansenpartnership.com>
-References: <1343832250-24228-1-git-send-email-oliver@neukum.org>
-	 <1343832250-24228-4-git-send-email-oliver@neukum.org>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] sg_io: allow UNMAP and WRITE SAME without CAP_SYS_RAWIO
+Date: Wed, 01 Aug 2012 17:53:44 +0200
+Message-ID: <50195108.1090105@redhat.com>
+References: <1342801801-15617-1-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36330 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755325Ab2HAPUm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Aug 2012 11:20:42 -0400
-In-Reply-To: <1343832250-24228-4-git-send-email-oliver@neukum.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1342801801-15617-1-git-send-email-pbonzini@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: linux-scsi@vger.kernel.org, hare@suse.de, Oliver Neukum <oneukum@suse.de>
 
-On Wed, 2012-08-01 at 16:44 +0200, Oliver Neukum wrote:
-> sd_sync_cache() can fail in several manners.
-> As the error return is passed to the generic layer,
-> it must be correctly processed.
+Il 20/07/2012 18:30, Paolo Bonzini ha scritto:
+> These commands cannot be issued right now without giving CAP_SYS_RAWIO to
+> the process who wishes to send them.  These commands can be useful also to
+> non-privileged programs who have access to the block devices.  For example
+> a virtual machine monitor needs them to forward trim/discard to host disks.
 > 
-> Failures due to unplugged devices or removed media
-> should be ignored. In the other cases retryable and
-> fatal errors must be differentiated.
-> 
-> This fixes a problem with unplugging eSATA devices
-> before suspending the system.
-> 
-> Signed-off-by: Oliver Neukum <oneukum@suse.de>
+> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 > ---
->  drivers/scsi/sd.c |   24 ++++++++++++++++++++++++
->  1 files changed, 24 insertions(+), 0 deletions(-)
+>  block/scsi_ioctl.c |    3 ++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
 > 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index a344220..49b0c52 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1278,8 +1278,32 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
->  
->  	if (res) {
->  		sd_print_result(sdkp, res);
-> +
->  		if (driver_byte(res) & DRIVER_SENSE)
->  			sd_print_sense_hdr(sdkp, &sshdr);
-> +			/* we need to evaluate the error return  */
-> +			if ((scsi_sense_valid(&sshdr) &&
+> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+> index 260fa80..dd71f18 100644
+> --- a/block/scsi_ioctl.c
+> +++ b/block/scsi_ioctl.c
+> @@ -168,13 +168,16 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+>  	/* Basic writing commands */
+>  	__set_bit(WRITE_6, filter->write_ok);
+>  	__set_bit(WRITE_10, filter->write_ok);
+> +	__set_bit(WRITE_SAME, filter->write_ok);
+>  	__set_bit(WRITE_VERIFY, filter->write_ok);
+>  	__set_bit(WRITE_12, filter->write_ok);
+>  	__set_bit(WRITE_VERIFY_12, filter->write_ok);
+>  	__set_bit(WRITE_16, filter->write_ok);
+> +	__set_bit(WRITE_SAME_16, filter->write_ok);
+>  	__set_bit(WRITE_LONG, filter->write_ok);
+>  	__set_bit(WRITE_LONG_2, filter->write_ok);
+>  	__set_bit(ERASE, filter->write_ok);
+> +	__set_bit(UNMAP, filter->write_ok);
+>  	__set_bit(GPCMD_MODE_SELECT_10, filter->write_ok);
+>  	__set_bit(MODE_SELECT, filter->write_ok);
+>  	__set_bit(LOG_SELECT, filter->write_ok);
+> 
 
-The indentation is completely wrong here ... it's implying that the
-first if should have an opening brace.
+Jens,
 
-> +				/* 0x3a is medium not present */
-> +				sshdr.asc == 0x3a))
-> +					/* this is no error here */
-> +					return 0;
-> +
-> +			switch (host_byte(res)) {
-> +			/* ignore errors due to racing a disconnection */
-> +			case DID_BAD_TARGET:
-> +			case DID_NO_CONNECT:
-> +				return 0;
-> +			/* signal the upper layer it might try again */
-> +			case DID_BUS_BUSY:
-> +			case DID_IMM_RETRY:
-> +			case DID_REQUEUE:
-> +			case DID_SOFT_ERROR:
-> +				return -EBUSY;
+can this go in 3.6 as well?
 
-Shouldn't you return -EBUSY for at least QUEUE_FULL and  BUSY as well?
-
-James
-
-
-> +			default:
-> +				return -EIO;
-> +		}
-> +	} else {
-> +		return 0;
->  	}
->  
->  	if (res)
-
-
+Paolo
