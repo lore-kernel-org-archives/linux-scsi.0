@@ -1,42 +1,100 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [RFC-v5] tcm_vhost: Initial merge for vhost level target fabric
-	driver
-Date: Wed, 01 Aug 2012 08:42:36 +0200
-Message-ID: <5018CFDC.4020703@redhat.com>
-References: <1343346200-19850-1-git-send-email-nab@linux-iscsi.org>
-	<CAG7+5M35QAK=ggAJRZtga0PWw5VZFi-mraKEAkWiq16U3ysxjg@mail.gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: [PATCH] scsi/mvsas: Fix oops when ata command timeout.
+Date: Wed, 1 Aug 2012 15:14:40 +0800
+Message-ID: <201208011514367031060@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <CAG7+5M35QAK=ggAJRZtga0PWw5VZFi-mraKEAkWiq16U3ysxjg@mail.gmail.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Eric Northup <digitaleric@google.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Anthony Liguori <aliguori@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, qemu-devel <qemu-devel@nongnu.org>, lf-virt <virtualization@lists.linux-foundation.org>, Anthony Liguori <aliguori@linux.vnet.ibm.com>, target-devel <target-devel@vger.kernel.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, Christoph Hellwig <hch@lst.de>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:40173 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753536Ab2HAHN0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Aug 2012 03:13:26 -0400
+Received: by pbbrp8 with SMTP id rp8so642210pbb.19
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Aug 2012 00:13:26 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley <JBottomley@parallels.com>
+Cc: =?gb2312?B?09rP8sHB?= <yuxiangl@marvell.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Il 31/07/2012 22:52, Eric Northup ha scritto:
-> It seems to me like this is not the way that virtio devices are supposed
-> to behave - if a guest splits a virtio_scsi_cmd_req or _resp across a
-> page boundary, then this code won't work.
+S2VybmVsIG1lc3NhZ2UgZm9sbG93czoNCg0KWyAgNTExLjcxMjAxMV0gc2QgMTE6MDowOjA6IFtz
+ZGZdIGNvbW1hbmQgZmZmZjg4MDBhNGU4MTQwMCB0aW1lZCBvdXQNClsgIDUxMS43MTIwMjJdIHNh
+czogRW50ZXIgc2FzX3Njc2lfcmVjb3Zlcl9ob3N0IGJ1c3k6IDEgZmFpbGVkOiAxDQpbICA1MTEu
+NzEyMDI0XSBzYXM6IHRyeWluZyB0byBmaW5kIHRhc2sgMHhmZmZmODgwMGE0ZDI0YzgwDQpbICA1
+MTEuNzEyMDI2XSBzYXM6IHNhc19zY3NpX2ZpbmRfdGFzazogYWJvcnRpbmcgdGFzayAweGZmZmY4
+ODAwYTRkMjRjODANClsgIDUxMS43MTIwMjldIGRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAx
+NjMxOm12c19hYm9ydF90YXNrKCkgbXZpPWZmZmY4ODAwYjUzMDAwMDAgdGFzaz1mZmZmODgwMGE0
+ZDI0YzgwIHNsb3Q9ZmZmZjg4MDBiNTMyNTAzOCBzbG90X2lkeD14MA0KWyAgNTExLjcxMjAzNV0g
+QlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgYXQg
+MDAwMDAwMDAwMDAwMDA1OA0KWyAgNTExLjcxMjA0MF0gSVA6IFs8ZmZmZmZmZmY4MTVmOGMwYz5d
+IF9yYXdfc3Bpbl9sb2NrX2lycXNhdmUrMHhjLzB4MzANClsgIDUxMS43MTIwNDddIFBHRCAwIA0K
+WyAgNTExLjcxMjA0OV0gT29wczogMDAwMiBbIzFdIFNNUCANClsgIDUxMS43MTIwNTJdIE1vZHVs
+ZXMgbGlua2VkIGluOiBtdnNhcyBsaWJzYXMgc2NzaV90cmFuc3BvcnRfc2FzIHJhaWQ0NTYgYXN5
+bmNfcHEgYXN5bmNfeG9yIHhvciBhc3luY19tZW1jcHkgYXN5bmNfcmFpZDZfcmVjb3YgcmFpZDZf
+cHEgYXN5bmNfdHggW2xhc3QgdW5sb2FkZWQ6IG12c2FzXQ0KWyAgNTExLjcxMjA2Ml0gQ1BVIDMg
+DQpbICA1MTEuNzEyMDY2XSBQaWQ6IDczMjIsIGNvbW06IHNjc2lfZWhfMTEgTm90IHRhaW50ZWQg
+My41LjArICMxMDYgVG8gQmUgRmlsbGVkIEJ5IE8uRS5NLiBUbyBCZSBGaWxsZWQgQnkgTy5FLk0u
+L1RvIGJlIGZpbGxlZCBieSBPLkUuTS4NClsgIDUxMS43MTIwNjhdIFJJUDogMDAxMDpbPGZmZmZm
+ZmZmODE1ZjhjMGM+XSAgWzxmZmZmZmZmZjgxNWY4YzBjPl0gX3Jhd19zcGluX2xvY2tfaXJxc2F2
+ZSsweGMvMHgzMA0KWyAgNTExLjcxMjA3M10gUlNQOiAwMDE4OmZmZmY4ODAwOThkM2JjYjAgIEVG
+TEFHUzogMDAwMTAwODYNClsgIDUxMS43MTIwNzRdIFJBWDogMDAwMDAwMDAwMDAwMDI4NiBSQlg6
+IDAwMDAwMDAwMDAwMDAwNTggUkNYOiAwMDAwMDAwMDAwMDAwMGMzDQpbICA1MTEuNzEyMDc2XSBS
+RFg6IDAwMDAwMDAwMDAwMDAxMDAgUlNJOiAwMDAwMDAwMDAwMDAwMDQ2IFJESTogMDAwMDAwMDAw
+MDAwMDA1OA0KWyAgNTExLjcxMjA3OF0gUkJQOiBmZmZmODgwMDk4ZDNiY2IwIFIwODogMDAwMDAw
+MDAwMDAwMDAwYSBSMDk6IDAwMDAwMDAwMDAwMDAwMDANClsgIDUxMS43MTIwODBdIFIxMDogMDAw
+MDAwMDAwMDAwMDRlOCBSMTE6IDAwMDAwMDAwMDAwMDA0ZTcgUjEyOiBmZmZmODgwMGE0ZDI0Yzgw
+DQpbICA1MTEuNzEyMDgyXSBSMTM6IDAwMDAwMDAwMDAwMDAwNTAgUjE0OiBmZmZmODgwMGI1MzI1
+MDM4IFIxNTogZmZmZjg4MDBhNGVhZmUwMA0KWyAgNTExLjcxMjA4NF0gRlM6ICAwMDAwMDAwMDAw
+MDAwMDAwKDAwMDApIEdTOmZmZmY4ODAwYmRiODAwMDAoMDAwMCkga25sR1M6MDAwMDAwMDAwMDAw
+MDAwMA0KWyAgNTExLjcxMjA4Nl0gQ1M6ICAwMDEwIERTOiAwMDAwIEVTOiAwMDAwIENSMDogMDAw
+MDAwMDA4MDA1MDAzYg0KWyAgNTExLjcxMjA4OF0gQ1IyOiAwMDAwMDAwMDAwMDAwMDU4IENSMzog
+MDAwMDAwMDBhNGNlNjAwMCBDUjQ6IDAwMDAwMDAwMDAwNDA3ZTANClsgIDUxMS43MTIwOTBdIERS
+MDogMDAwMDAwMDAwMDAwMDAwMCBEUjE6IDAwMDAwMDAwMDAwMDAwMDAgRFIyOiAwMDAwMDAwMDAw
+MDAwMDAwDQpbICA1MTEuNzEyMDkxXSBEUjM6IDAwMDAwMDAwMDAwMDAwMDAgRFI2OiAwMDAwMDAw
+MGZmZmYwZmYwIERSNzogMDAwMDAwMDAwMDAwMDQwMA0KWyAgNTExLjcxMjA5M10gUHJvY2VzcyBz
+Y3NpX2VoXzExIChwaWQ6IDczMjIsIHRocmVhZGluZm8gZmZmZjg4MDA5OGQzYTAwMCwgdGFzayBm
+ZmZmODgwMGE2MWRkZTQwKQ0KWyAgNTExLjcxMjA5NV0gU3RhY2s6DQpbICA1MTEuNzEyMDk2XSAg
+ZmZmZjg4MDA5OGQzYmNlMCBmZmZmZmZmZjgxMDYwNjgzIGZmZmY4ODAwMDAwMDAwMDAgMDAwMDAw
+MDAwMDAwMDAwMA0KWyAgNTExLjcxMjA5OV0gIGZmZmY4ODAwYTRkMjRjODAgZmZmZjg4MDBiNTMw
+MDAwMCBmZmZmODgwMDk4ZDNiY2YwIGZmZmZmZmZmYTAwNzZhODgNClsgIDUxMS43MTIxMDJdICBm
+ZmZmODgwMDk4ZDNiZDUwIGZmZmZmZmZmYTAwNzliYjUgZmZmZjg4MDAwMDAwMDAwMCBmZmZmODgw
+MDAwMDAwMDE4DQpbICA1MTEuNzEyMTA2XSBDYWxsIFRyYWNlOg0KWyAgNTExLjcxMjExMF0gIFs8
+ZmZmZmZmZmY4MTA2MDY4Mz5dIGNvbXBsZXRlKzB4MjMvMHg2MA0KWyAgNTExLjcxMjExNV0gIFs8
+ZmZmZmZmZmZhMDA3NmE4OD5dIG12c190bWZfdGltZWRvdXQrMHgxOC8weDIwIFttdnNhc10NClsg
+IDUxMS43MTIxMTldICBbPGZmZmZmZmZmYTAwNzliYjU+XSBtdnNfc2xvdF9jb21wbGV0ZSsweDc2
+NS8weDdkMCBbbXZzYXNdDQpbICA1MTEuNzEyMTI1XSAgWzxmZmZmZmZmZmEwMDVhMTdkPl0gc2Fz
+X3Njc2lfcmVjb3Zlcl9ob3N0KzB4NTVkLzB4ZGIwIFtsaWJzYXNdDQpbICA1MTEuNzEyMTI4XSAg
+WzxmZmZmZmZmZjgxMDZkNjAwPl0gPyBpZGxlX2JhbGFuY2UrMHhlMC8weDEzMA0KWyAgNTExLjcx
+MjEzM10gIFs8ZmZmZmZmZmY4MTNiMTUwYz5dIHNjc2lfZXJyb3JfaGFuZGxlcisweGNjLzB4NDcw
+DQpbICA1MTEuNzEyMTM2XSAgWzxmZmZmZmZmZjgxNWY3YWQwPl0gPyBfX3NjaGVkdWxlKzB4Mzcw
+LzB4NzMwDQpbICA1MTEuNzEyMTM5XSAgWzxmZmZmZmZmZjgxMDVmNzI4Pl0gPyBfX3dha2VfdXBf
+Y29tbW9uKzB4NTgvMHg5MA0KWyAgNTExLjcxMjE0Ml0gIFs8ZmZmZmZmZmY4MTNiMTQ0MD5dID8g
+c2NzaV9laF9nZXRfc2Vuc2UrMHgxMTAvMHgxMTANClsgIDUxMS43MTIxNDZdICBbPGZmZmZmZmZm
+ODEwNTcxYmU+XSBrdGhyZWFkKzB4OGUvMHhhMA0KWyAgNTExLjcxMjE1MF0gIFs8ZmZmZmZmZmY4
+MTYwMTVmND5dIGtlcm5lbF90aHJlYWRfaGVscGVyKzB4NC8weDEwDQpbICA1MTEuNzEyMTUzXSAg
+WzxmZmZmZmZmZjgxMDU3MTMwPl0gPyBmbHVzaF9rdGhyZWFkX3dvcmsrMHgxMjAvMHgxMjANClsg
+IDUxMS43MTIxNTZdICBbPGZmZmZmZmZmODE2MDE1ZjA+XSA/IGdzX2NoYW5nZSsweGIvMHhiDQpb
+ICA1MTEuNzEyMTU3XSBDb2RlOiA4YSAwMCAwMSAwMCAwMCA4OSBkMCBmMCA2NiAwZiBiMSAwZiA2
+NiAzOSBkMCAwZiA5NCBjMCAwZiBiNiBjMCA1ZCBjMyAwZiAxZiA4NCAwMCAwMCAwMCAwMCAwMCA1
+NSA0OCA4OSBlNSA5YyA1OCBmYSBiYSAwMCAwMSAwMCAwMCA8ZjA+IDY2IDBmIGMxIDE3IDBmIGI2
+IGNlIDM4IGQxIDc0IDExIDBmIDFmIDg0IDAwIDAwIDAwIDAwIDAwIGYzIA0KWyAgNTExLjcxMjE5
+MV0gUklQICBbPGZmZmZmZmZmODE1ZjhjMGM+XSBfcmF3X3NwaW5fbG9ja19pcnFzYXZlKzB4Yy8w
+eDMwDQpbICA1MTEuNzEyMTk0XSAgUlNQIDxmZmZmODgwMDk4ZDNiY2IwPg0KWyAgNTExLjcxMjE5
+Nl0gQ1IyOiAwMDAwMDAwMDAwMDAwMDU4DQpbICA1MTEuNzEyMTk4XSAtLS1bIGVuZCB0cmFjZSBh
+NzgxYzdiMWU2NWRiOTJjIF0tLS0NCg0KU2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlh
+bnBlbmdAZ21haWwuY29tPg0KLS0tDQogZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIHwgICAg
+NSArKysrLQ0KIDEgZmlsZSBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkN
+Cg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyBiL2RyaXZlcnMvc2Nz
+aS9tdnNhcy9tdl9zYXMuYw0KaW5kZXggNDUzOWQ1OS4uYWY2YTFjNSAxMDA2NDQNCi0tLSBhL2Ry
+aXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYw0KKysrIGIvZHJpdmVycy9zY3NpL212c2FzL212X3Nh
+cy5jDQpAQCAtMTYyOSw3ICsxNjI5LDEwIEBAIGludCBtdnNfYWJvcnRfdGFzayhzdHJ1Y3Qgc2Fz
+X3Rhc2sgKnRhc2spDQogCQkJbXZfZHByaW50aygibXZzX2Fib3J0X3Rhc2soKSBtdmk9JXAgdGFz
+az0lcCAiDQogCQkJCSAgICJzbG90PSVwIHNsb3RfaWR4PXgleFxuIiwNCiAJCQkJICAgbXZpLCB0
+YXNrLCBzbG90LCBzbG90X2lkeCk7DQotCQkJbXZzX3RtZl90aW1lZG91dCgodW5zaWduZWQgbG9u
+Zyl0YXNrKTsNCisJCQlpZiAodGFzay0+c2xvd190YXNrICE9IE5VTEwpDQorCQkJCW12c190bWZf
+dGltZWRvdXQoKHVuc2lnbmVkIGxvbmcpdGFzayk7DQorCQkJZWxzZQ0KKwkJCQl0YXNrLT50YXNr
+X3N0YXRlX2ZsYWdzIHw9IFNBU19UQVNLX1NUQVRFX0FCT1JURUQ7DQogCQkJbXZzX3Nsb3RfdGFz
+a19mcmVlKG12aSwgdGFzaywgc2xvdCwgc2xvdF9pZHgpOw0KIAkJCXJjID0gVE1GX1JFU1BfRlVO
+Q19DT01QTEVURTsNCiAJCQlnb3RvIG91dDsNCi0tIA0KMS43LjkuNQ0K
 
-Buffers can cover several pages.  Of course, data buffers have to be at
-least sector aligned, but this restriction does not apply to
-request/response descriptors.
-
-> Quoting the 'Message Framing' part of the virtio spec:
-> 
-> "In particular, no implementation should use the descriptor boundaries
-> to determine the size of any header in a request. "
-
-True,  but this has never matched reality.
-
-Paolo
