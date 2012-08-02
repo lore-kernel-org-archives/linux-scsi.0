@@ -1,60 +1,100 @@
 From: Oliver Neukum <oliver@neukum.org>
-Subject: [PATCH 2/4] sd: handle errors in sd_start_stop_device()
-Date: Thu,  2 Aug 2012 12:27:05 +0200
-Message-ID: <1343903227-17285-3-git-send-email-oliver@neukum.org>
+Subject: [PATCH 4/4] scsi: translate errors for power management
+Date: Thu,  2 Aug 2012 12:27:07 +0200
+Message-ID: <1343903227-17285-5-git-send-email-oliver@neukum.org>
 References: <1343903227-17285-1-git-send-email-oliver@neukum.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:36394 "EHLO
+Received: from smtp-out003.kontent.com ([81.88.40.217]:36400 "EHLO
 	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753888Ab2HBK2N (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Aug 2012 06:28:13 -0400
+	with ESMTP id S1754069Ab2HBK2Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Aug 2012 06:28:16 -0400
 In-Reply-To: <1343903227-17285-1-git-send-email-oliver@neukum.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, hare@suse.de
-Cc: Oliver Neukum <oliver@neukum.org>
+Cc: Oliver Neukum <oliver@neukum.org>, Oliver Neukum <oneukum@suse.de>
 
-Errors are not handled correctly in sd_start_stop_device().
+Synchronizing caches may fail. The reason for these
+failures need to be translated to the generic layer
+so that it nows whether to ignore a failure, retry later
+or give up, aborting sleep.
 
-First, if a device cannot be stopped because a medium has been
-removed, this is not an error. This fixes a bug when suspending
-the system right after pulling a medium out of a card reader.
-
-Second, if the full system is to be suspended, a failure to stop
-a device is not a good reason to abort a suspend, as that won't
-improve matters.
-
-Signed-of-by: Oliver Neukum <oneukum@suse.de>
+Signed-off-by: Oliver Neukum <oneukum@suse.de>
 ---
- drivers/scsi/sd.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/scsi/scsi_error.c |   33 +++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c         |    3 +--
+ include/scsi/scsi_eh.h    |    1 +
+ 3 files changed, 35 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 4a6381c..13f7060 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2217,3 +2217,36 @@ void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
+ 	}
+ }
+ EXPORT_SYMBOL(scsi_build_sense_buffer);
++
++/**
++ * scsi_translate_errors_to_power_management - errors in a form driver core understands
++ * @res:	Result of scsi command
++ *
++ * Return value:
++ * 	error code driver core understands
++ **/
++int scsi_translate_errors_to_power_management(int res)
++{
++	int rv = -EIO;
++
++	switch (host_byte(res)) {
++	/* ignore errors due to racing a disconnection */
++	case DID_BAD_TARGET:
++	case DID_NO_CONNECT:
++		return 0;
++	/* signal the upper layer it might try again */
++	case DID_BUS_BUSY:
++	case DID_IMM_RETRY:
++	case DID_REQUEUE:
++	case DID_SOFT_ERROR:
++	case DID_TIME_OUT:
++	case DID_ABORT:
++	case DID_RESET:
++	case DID_TRANSPORT_DISRUPTED:
++		return -EBUSY;
++	case DID_OK:
++		return 0;
++	}
++	return rv;
++}
++EXPORT_SYMBOL(scsi_translate_errors_to_power_management);
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index cef06f5..a344220 100644
+index c39a97e..8597294 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -2828,6 +2828,10 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 		sd_print_result(sdkp, res);
- 		if (driver_byte(res) & DRIVER_SENSE)
- 			sd_print_sense_hdr(sdkp, &sshdr);
-+		if ((scsi_sense_valid(&sshdr) &&
-+			/* 0x3a is medium not present */
-+			sshdr.asc == 0x3a))
-+			res = 0;
+@@ -1288,10 +1288,9 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+ 		 */
+ 		if ((scsi_sense_valid(&sshdr) && sshdr.asc == 0x3a))
+ 			return 0;
++		return scsi_translate_errors_to_power_management(res);
  	}
  
- 	/* SCSI error codes must not go to the generic layer */
-@@ -2884,6 +2888,10 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
- 	if ((mesg.event & PM_EVENT_SLEEP) && sdkp->device->manage_start_stop) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		ret = sd_start_stop_device(sdkp, 0);
-+
-+		/* an error is not worth aborting a system sleep */
-+		if (!(mesg.event & PM_EVENT_AUTO))
-+			ret = 0;
- 	}
+-	if (res)
+-		return -EIO;
+ 	return 0;
+ }
  
- done:
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index 06a8790..bdf6d6c 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -59,6 +59,7 @@ extern int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
+ 				   u64 * info_out);
+ 
+ extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
++extern int scsi_translate_errors_to_power_management(int res);
+ 
+ /*
+  * Reset request from external source
 -- 
 1.7.7
 
