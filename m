@@ -1,55 +1,43 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 3/3] sd: error handling synchronizing caches
-Date: Wed, 01 Aug 2012 11:35:36 -0500
-Message-ID: <50195AD8.2090803@cs.wisc.edu>
-References: <1343832250-24228-1-git-send-email-oliver@neukum.org> <1343832250-24228-4-git-send-email-oliver@neukum.org>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: RE: [PATCH] scsi/mvsas: Fix oops when ata command timeout.
+Date: Thu, 2 Aug 2012 13:13:03 +0800
+Message-ID: <201208021312245004210@gmail.com>
+References: <201208011514367031060@gmail.com>,
+	<F766E4F80769BD478052FB6533FA745D1A58530359@SC-VEXCH4.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:34131 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751105Ab2HAQgg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Aug 2012 12:36:36 -0400
-In-Reply-To: <1343832250-24228-4-git-send-email-oliver@neukum.org>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:48746 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751478Ab2HBFLt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Aug 2012 01:11:49 -0400
+Received: by obbuo13 with SMTP id uo13so13301046obb.19
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Aug 2012 22:11:49 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, hare@suse.de, Oliver Neukum <oneukum@suse.de>
+To: =?gb2312?B?09rP8sHB?= <yuxiangl@marvell.com>, scsi maintainers <JBottomley@parallels.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index a344220..49b0c52 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1278,8 +1278,32 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
->  
->  	if (res) {
->  		sd_print_result(sdkp, res);
-> +
->  		if (driver_byte(res) & DRIVER_SENSE)
->  			sd_print_sense_hdr(sdkp, &sshdr);
-> +			/* we need to evaluate the error return  */
-> +			if ((scsi_sense_valid(&sshdr) &&
-> +				/* 0x3a is medium not present */
-> +				sshdr.asc == 0x3a))
-> +					/* this is no error here */
-> +					return 0;
-> +
-> +			switch (host_byte(res)) {
-> +			/* ignore errors due to racing a disconnection */
-> +			case DID_BAD_TARGET:
-> +			case DID_NO_CONNECT:
-> +				return 0;
-> +			/* signal the upper layer it might try again */
-> +			case DID_BUS_BUSY:
-> +			case DID_IMM_RETRY:
-> +			case DID_REQUEUE:
-> +			case DID_SOFT_ERROR:
-> +				return -EBUSY;
-> +			default:
-> +				return -EIO;
-
-Could we have all the host/scsi-ml to -EXYZ error conversions put in one
-place like __scsi_error_from_host_byte()?
-
+T24gMjAxMi0wOC0wMSAxOToyMSBYaWFuZ2xpYW5nIFl1IDx5dXhpYW5nbEBtYXJ2ZWxsLmNvbT4g
+V3JvdGU6DQo+SGksIEppYW5wZW5nDQo+DQo+SSB0aGluayBNVlNBUyBzaG91bGRuJ3QgY2FyZSB0
+aGUgY29tcGxldGlvbiBzaWduIGhlcmUsIGp1c3QgbW9kaWZ5IHRhc2sgc3RhdGUgaXMgb2suDQo+
+DQo+DQo+DQpbc25pcF0NCj4+IA0KPj4gU2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlh
+bnBlbmdAZ21haWwuY29tPg0KPj4gLS0tDQo+PiAgZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5j
+IHwgICAgNSArKysrLQ0KPj4gIDEgZmlsZSBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKyksIDEgZGVs
+ZXRpb24oLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMu
+YyBiL2RyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYw0KPj4gaW5kZXggNDUzOWQ1OS4uYWY2YTFj
+NSAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYw0KPj4gKysrIGIv
+ZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jDQo+PiBAQCAtMTYyOSw3ICsxNjI5LDEwIEBAIGlu
+dCBtdnNfYWJvcnRfdGFzayhzdHJ1Y3Qgc2FzX3Rhc2sgKnRhc2spDQo+PiAgCQkJbXZfZHByaW50
+aygibXZzX2Fib3J0X3Rhc2soKSBtdmk9JXAgdGFzaz0lcCAiDQo+PiAgCQkJCSAgICJzbG90PSVw
+IHNsb3RfaWR4PXgleFxuIiwNCj4+ICAJCQkJICAgbXZpLCB0YXNrLCBzbG90LCBzbG90X2lkeCk7
+DQo+PiAtCQkJbXZzX3RtZl90aW1lZG91dCgodW5zaWduZWQgbG9uZyl0YXNrKTsNCj4+ICsJCQlp
+ZiAodGFzay0+c2xvd190YXNrICE9IE5VTEwpDQo+PiArCQkJCW12c190bWZfdGltZWRvdXQoKHVu
+c2lnbmVkIGxvbmcpdGFzayk7DQo+PiArCQkJZWxzZQ0KPj4gKwkJCQl0YXNrLT50YXNrX3N0YXRl
+X2ZsYWdzIHw9IFNBU19UQVNLX1NUQVRFX0FCT1JURUQ7DQo+PiAgCQkJbXZzX3Nsb3RfdGFza19m
+cmVlKG12aSwgdGFzaywgc2xvdCwgc2xvdF9pZHgpOw0KPj4gIAkJCXJjID0gVE1GX1JFU1BfRlVO
+Q19DT01QTEVURTsNCj4+ICAJCQlnb3RvIG91dDsNCj4+IC0tDQo+PiAxLjcuOS41DQpUaGFua3Ms
+IEknbGwgbW9kaWZ5IHRoZSBjb2RlIGFuZCByZXNlbmQu
 
