@@ -1,144 +1,92 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 15/21] lpfc 8.3.33: Allow per-hba interrupt rate tuning
-Date: Fri, 3 Aug 2012 12:36:24 -0400
-Message-ID: <1344011784.6110.40.camel@myfc17>
+Subject: [PATCH 16/21] lpfc 8.3.33: Change Naming convention for SLI4
+ Interrupt vector
+Date: Fri, 3 Aug 2012 12:36:33 -0400
+Message-ID: <1344011793.6110.41.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:40335 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753078Ab2HCQgb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:36:31 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:44846 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752553Ab2HCQgk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:36:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Allow per-hba interrupt rate tuning
+Change Naming convention for SLI4 Interrupt vector
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_attr.c |   27 ++++++++++++++++++++-------
- lpfc_hw4.h  |    8 +++++---
- lpfc_init.c |    2 +-
- lpfc_sli.c  |    3 ++-
- 4 files changed, 28 insertions(+), 12 deletions(-)
+ lpfc_init.c    |    6 +++++-
+ lpfc_sli4.h    |    3 +++
+ lpfc_version.h |    5 +++++
+ 3 files changed, 13 insertions(+), 1 deletion(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2012-07-22 14:17:41.352293516 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2012-07-22 14:23:42.607280969 -0400
-@@ -3643,14 +3643,21 @@ lpfc_fcp_imax_store(struct device *dev,
- 	struct lpfc_hba *phba = vport->phba;
- 	int val = 0, i;
- 
-+	/* fcp_imax is only valid for SLI4 */
-+	if (phba->sli_rev != LPFC_SLI_REV4)
-+		return -EINVAL;
-+
- 	/* Sanity check on user data */
- 	if (!isdigit(buf[0]))
- 		return -EINVAL;
- 	if (sscanf(buf, "%i", &val) != 1)
- 		return -EINVAL;
- 
--	/* Value range is [636,651042] */
--	if (val < LPFC_MIM_IMAX || val > LPFC_DMULT_CONST)
-+	/*
-+	 * Value range for the HBA is [5000,5000000]
-+	 * The value for each EQ depends on how many EQs are configured.
-+	 */
-+	if (val < LPFC_MIN_IMAX || val > LPFC_MAX_IMAX)
- 		return -EINVAL;
- 
- 	phba->cfg_fcp_imax = (uint32_t)val;
-@@ -3662,13 +3669,14 @@ lpfc_fcp_imax_store(struct device *dev,
- 
- /*
- # lpfc_fcp_imax: The maximum number of fast-path FCP interrupts per second
-+# for the HBA.
- #
--# Value range is [636,651042]. Default value is 10000.
-+# Value range is [5,000 to 5,000,000]. Default value is 50,000.
- */
--static int lpfc_fcp_imax = LPFC_FP_DEF_IMAX;
-+static int lpfc_fcp_imax = LPFC_DEF_IMAX;
- module_param(lpfc_fcp_imax, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(lpfc_fcp_imax,
--	    "Set the maximum number of fast-path FCP interrupts per second");
-+	    "Set the maximum number of FCP interrupts per second per HBA");
- lpfc_param_show(fcp_imax)
- 
- /**
-@@ -3687,14 +3695,19 @@ lpfc_param_show(fcp_imax)
- static int
- lpfc_fcp_imax_init(struct lpfc_hba *phba, int val)
- {
--	if (val >= LPFC_MIM_IMAX && val <= LPFC_DMULT_CONST) {
-+	if (phba->sli_rev != LPFC_SLI_REV4) {
-+		phba->cfg_fcp_imax = 0;
-+		return 0;
-+	}
-+
-+	if (val >= LPFC_MIN_IMAX && val <= LPFC_MAX_IMAX) {
- 		phba->cfg_fcp_imax = val;
- 		return 0;
- 	}
- 
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 			"3016 fcp_imax: %d out of range, using default\n", val);
--	phba->cfg_fcp_imax = LPFC_FP_DEF_IMAX;
-+	phba->cfg_fcp_imax = LPFC_DEF_IMAX;
- 
- 	return 0;
- }
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
---- a/drivers/scsi/lpfc/lpfc_hw4.h	2012-07-22 14:16:54.037295161 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h	2012-07-22 14:23:42.609280969 -0400
-@@ -189,9 +189,11 @@ struct lpfc_sli_intf {
- 
- /* Delay Multiplier constant */
- #define LPFC_DMULT_CONST       651042
--#define LPFC_MIM_IMAX          636
--#define LPFC_FP_DEF_IMAX       10000
--#define LPFC_SP_DEF_IMAX       10000
-+
-+/* Configuration of Interrupts / sec for entire HBA port */
-+#define LPFC_MIN_IMAX          5000
-+#define LPFC_MAX_IMAX          5000000
-+#define LPFC_DEF_IMAX          50000
- 
- /* PORT_CAPABILITIES constants. */
- #define LPFC_MAX_SUPPORTED_PAGES	8
 diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2012-07-22 14:17:41.361293517 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2012-07-22 14:23:12.197282023 -0400
-@@ -6927,7 +6927,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
- 			goto out_destroy_hba_eq;
- 		}
- 		rc = lpfc_eq_create(phba, phba->sli4_hba.hba_eq[fcp_eqidx],
--				    phba->cfg_fcp_imax);
-+			 (phba->cfg_fcp_imax / phba->cfg_fcp_io_channel));
+--- a/drivers/scsi/lpfc/lpfc_init.c	2012-07-22 14:23:12.197282023 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2012-07-22 14:27:16.366273544 -0400
+@@ -8105,11 +8105,15 @@ enable_msix_vectors:
+ 	 * Assign MSI-X vectors to interrupt handlers
+ 	 */
+ 	for (index = 0; index < vectors; index++) {
++		memset(&phba->sli4_hba.handler_name[index], 0, 16);
++		sprintf((char *)&phba->sli4_hba.handler_name[index],
++			 LPFC_DRIVER_HANDLER_NAME"%d", index);
++
+ 		phba->sli4_hba.fcp_eq_hdl[index].idx = index;
+ 		phba->sli4_hba.fcp_eq_hdl[index].phba = phba;
+ 		rc = request_irq(phba->sli4_hba.msix_entries[index].vector,
+ 				 &lpfc_sli4_hba_intr_handler, IRQF_SHARED,
+-				 LPFC_FP_DRIVER_HANDLER_NAME,
++				 (char *)&phba->sli4_hba.handler_name[index],
+ 				 &phba->sli4_hba.fcp_eq_hdl[index]);
  		if (rc) {
- 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 					"0523 Failed setup of fast-path EQ "
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 14:17:12.673294513 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 14:23:06.017282240 -0400
-@@ -12079,7 +12079,8 @@ lpfc_modify_fcp_eq_delay(struct lpfc_hba
- 	eq_delay = &mbox->u.mqe.un.eq_delay;
+ 			lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2012-07-22 14:22:51.296282749 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2012-07-22 14:27:16.369273544 -0400
+@@ -430,6 +430,8 @@ struct lpfc_sli4_lnk_info {
+ 	uint8_t lnk_no;
+ };
  
- 	/* Calculate delay multiper from maximum interrupt per second */
--	dmult = LPFC_DMULT_CONST/phba->cfg_fcp_imax - 1;
-+	dmult = phba->cfg_fcp_imax / phba->cfg_fcp_io_channel;
-+	dmult = LPFC_DMULT_CONST/dmult - 1;
++#define LPFC_SLI4_HANDLER_NAME_SZ	16
++
+ /* SLI4 HBA data structure entries */
+ struct lpfc_sli4_hba {
+ 	void __iomem *conf_regs_memmap_p; /* Kernel memory mapped address for
+@@ -486,6 +488,7 @@ struct lpfc_sli4_hba {
+ 	struct lpfc_register sli_intf;
+ 	struct lpfc_pc_sli4_params pc_sli4_params;
+ 	struct msix_entry *msix_entries;
++	uint8_t handler_name[LPFC_FCP_IO_CHAN_MAX][LPFC_SLI4_HANDLER_NAME_SZ];
+ 	uint32_t cfg_eqn;
+ 	uint32_t msix_vec_nr;
+ 	struct lpfc_fcp_eq_hdl *fcp_eq_hdl; /* FCP per-WQ handle */
+diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+--- a/drivers/scsi/lpfc/lpfc_version.h	2012-07-22 11:18:36.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_version.h	2012-07-22 14:27:16.370273544 -0400
+@@ -20,9 +20,14 @@
  
- 	cnt = 0;
- 	for (fcp_eqidx = startq; fcp_eqidx < phba->cfg_fcp_io_channel;
+ #define LPFC_DRIVER_VERSION "8.3.32"
+ #define LPFC_DRIVER_NAME		"lpfc"
++
++/* Used for SLI 2/3 */
+ #define LPFC_SP_DRIVER_HANDLER_NAME	"lpfc:sp"
+ #define LPFC_FP_DRIVER_HANDLER_NAME	"lpfc:fp"
+ 
++/* Used for SLI4 */
++#define LPFC_DRIVER_HANDLER_NAME	"lpfc:"
++
+ #define LPFC_MODULE_DESC "Emulex LightPulse Fibre Channel SCSI driver " \
+ 		LPFC_DRIVER_VERSION
+ #define LPFC_COPYRIGHT "Copyright(c) 2004-2009 Emulex.  All rights reserved."
 
 
 
