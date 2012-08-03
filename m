@@ -1,354 +1,76 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 12/21] lpfc 8.3.33: Parallelize SLI-4 Q distribution
-Date: Fri, 3 Aug 2012 12:35:54 -0400
-Message-ID: <1344011754.6110.37.camel@myfc17>
+Subject: [PATCH 13/21] lpfc 8.3.33: Add Interrupts per second stats via
+ debugfs
+Date: Fri, 3 Aug 2012 12:36:03 -0400
+Message-ID: <1344011763.6110.38.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:40327 "EHLO
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:40330 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753075Ab2HCQgA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:36:00 -0400
+	with ESMTP id S1751514Ab2HCQgK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:36:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Commonize SLI-3/4 Ring/Queue framework, to keep SLI-3 compatibility
-Parallelize SLI-4 Q distribution - to use multiple posting/completion queues
+Add Interrupts per second stats via debugfs
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc.h      |    2 +-
- lpfc_hw.h   |   14 +++++++-------
- lpfc_init.c |   35 +++++++++++++++++++++++++++++++++++
- lpfc_sli.c  |   52 +++++++++++++++++++++++++++-------------------------
- lpfc_sli.h  |    8 +++++---
- lpfc_sli4.h |    2 ++
- 6 files changed, 77 insertions(+), 36 deletions(-)
+ lpfc_sli.c |   18 +++++++++++++++++-
+ lpfc_sli.h |    2 ++
+ 2 files changed, 19 insertions(+), 1 deletion(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2012-07-22 11:18:36.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc.h	2012-07-22 13:24:29.400404499 -0400
-@@ -732,7 +732,7 @@ struct lpfc_hba {
- 	uint32_t hbq_count;	        /* Count of configured HBQs */
- 	struct hbq_s hbqs[LPFC_MAX_HBQS]; /* local copy of hbq indicies  */
- 
--	uint32_t fcp_qidx;		/* next work queue to post work to */
-+	atomic_t fcp_qidx;		/* next work queue to post work to */
- 
- 	unsigned long pci_bar0_map;     /* Physical address for PCI BAR0 */
- 	unsigned long pci_bar1_map;     /* Physical address for PCI BAR1 */
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
---- a/drivers/scsi/lpfc/lpfc_hw.h	2012-07-22 13:15:37.130422879 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw.h	2012-07-22 13:24:29.415404390 -0400
-@@ -1188,8 +1188,8 @@ typedef struct {
-  */
- 
- /* Number of rings currently used and available. */
--#define MAX_CONFIGURED_RINGS     3
--#define MAX_RINGS                4
-+#define MAX_SLI3_CONFIGURED_RINGS     3
-+#define MAX_SLI3_RINGS                4
- 
- /* IOCB / Mailbox is owned by FireFly */
- #define OWN_CHIP        1
-@@ -2993,7 +2993,7 @@ typedef struct _PCB {
- 
- 	uint32_t pgpAddrLow;
- 	uint32_t pgpAddrHigh;
--	SLI2_RDSC rdsc[MAX_RINGS];
-+	SLI2_RDSC rdsc[MAX_SLI3_RINGS];
- } PCB_t;
- 
- /* NEW_FEATURE */
-@@ -3103,18 +3103,18 @@ struct lpfc_pgp {
- 
- struct sli2_desc {
- 	uint32_t unused1[16];
--	struct lpfc_hgp host[MAX_RINGS];
--	struct lpfc_pgp port[MAX_RINGS];
-+	struct lpfc_hgp host[MAX_SLI3_RINGS];
-+	struct lpfc_pgp port[MAX_SLI3_RINGS];
- };
- 
- struct sli3_desc {
--	struct lpfc_hgp host[MAX_RINGS];
-+	struct lpfc_hgp host[MAX_SLI3_RINGS];
- 	uint32_t reserved[8];
- 	uint32_t hbq_put[16];
- };
- 
- struct sli3_pgp {
--	struct lpfc_pgp port[MAX_RINGS];
-+	struct lpfc_pgp port[MAX_SLI3_RINGS];
- 	uint32_t hbq_get[16];
- };
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2012-07-22 13:16:12.479421651 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2012-07-22 13:24:29.424404389 -0400
-@@ -4551,6 +4551,13 @@ lpfc_sli_driver_resource_setup(struct lp
- 			phba->cfg_sg_seg_cnt = LPFC_DEFAULT_MENLO_SG_SEG_CNT;
- 	}
- 
-+	if (!phba->sli.ring)
-+		phba->sli.ring = (struct lpfc_sli_ring *)
-+			kzalloc(LPFC_SLI3_MAX_RING *
-+			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
-+	if (!phba->sli.ring)
-+		return -ENOMEM;
-+
- 	/*
- 	 * Since the sg_tablesize is module parameter, the sg_dma_buf_size
- 	 * used to create the sg_dma_buf_pool must be dynamically calculated.
-@@ -4710,6 +4717,16 @@ lpfc_sli4_driver_resource_setup(struct l
- 		sges_per_segment = 2;
- 
- 	/*
-+	 * For SLI4, instead of using ring 0 (LPFC_FCP_RING) for FCP commands
-+	 * we will associate a new ring, for each FCP fastpath EQ/CQ/WQ tuple.
-+	 */
-+	if (!phba->sli.ring)
-+		phba->sli.ring = kzalloc(
-+			(LPFC_SLI3_MAX_RING + phba->cfg_fcp_eq_count) *
-+			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
-+	if (!phba->sli.ring)
-+		return -ENOMEM;
-+	/*
- 	 * Since the sg_tablesize is module parameter, the sg_dma_buf_size
- 	 * used to create the sg_dma_buf_pool must be dynamically calculated.
- 	 * 2 segments are added since the IOCB needs a command and response bde.
-@@ -5555,6 +5572,10 @@ lpfc_hba_free(struct lpfc_hba *phba)
- 	/* Release the driver assigned board number */
- 	idr_remove(&lpfc_hba_index, phba->brd_no);
- 
-+	/* Free memory allocated with sli rings */
-+	kfree(phba->sli.ring);
-+	phba->sli.ring = NULL;
-+
- 	kfree(phba);
- 	return;
- }
-@@ -6924,6 +6945,8 @@ lpfc_sli4_queue_destroy(struct lpfc_hba
- int
- lpfc_sli4_queue_setup(struct lpfc_hba *phba)
- {
-+	struct lpfc_sli *psli = &phba->sli;
-+	struct lpfc_sli_ring *pring;
- 	int rc = -ENOMEM;
- 	int fcp_eqidx, fcp_cqidx, fcp_wqidx;
- 	int fcp_cq_index = 0;
-@@ -7107,6 +7130,12 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
- 				"rc = 0x%x\n", rc);
- 		goto out_destroy_mbx_wq;
- 	}
-+
-+	/* Bind this WQ to the ELS ring */
-+	pring = &psli->ring[LPFC_ELS_RING];
-+	pring->sli.sli4.wqp = (void *)phba->sli4_hba.els_wq;
-+	phba->sli4_hba.els_cq->pring = pring;
-+
- 	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 			"2590 ELS WQ setup: wq-id=%d, parent cq-id=%d\n",
- 			phba->sli4_hba.els_wq->queue_id,
-@@ -7137,6 +7166,12 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
- 					"WQ (%d), rc = 0x%x\n", fcp_wqidx, rc);
- 			goto out_destroy_fcp_wq;
- 		}
-+
-+		/* Bind this WQ to the next FCP ring */
-+		pring = &psli->ring[MAX_SLI3_CONFIGURED_RINGS + fcp_wqidx];
-+		pring->sli.sli4.wqp = (void *)phba->sli4_hba.fcp_wq[fcp_wqidx];
-+		phba->sli4_hba.fcp_cq[fcp_cq_index]->pring = pring;
-+
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"2591 FCP WQ setup: wq[%d]-id=%d, "
- 				"parent cq[%d]-id=%d\n",
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2012-07-22 13:15:37.360422871 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2012-07-22 13:24:29.425404389 -0400
-@@ -142,6 +142,8 @@ struct lpfc_queue {
- 	uint32_t host_index;	/* The host's index for putting or getting */
- 	uint32_t hba_index;	/* The last known hba index for get or put */
- 
-+	struct lpfc_sli_ring *pring; /* ptr to io ring associated with q */
-+
- 	/* For q stats */
- 	uint32_t q_cnt_1;
- 	uint32_t q_cnt_2;
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 13:22:17.536408971 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 13:25:04.087403185 -0400
-@@ -7796,14 +7796,14 @@ lpfc_sli4_bpl2sgl(struct lpfc_hba *phba,
-  *
-  * Return: index into SLI4 fast-path FCP queue index.
-  **/
--static uint32_t
-+static inline uint32_t
- lpfc_sli4_scmd_to_wqidx_distr(struct lpfc_hba *phba)
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-07-23 15:26:06.443425608 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-07-23 15:30:43.182415997 -0400
+@@ -2825,10 +2825,26 @@ lpfc_sli_rsp_pointers_error(struct lpfc_
+ void lpfc_poll_eratt(unsigned long ptr)
  {
--	++phba->fcp_qidx;
--	if (phba->fcp_qidx >= phba->cfg_fcp_wq_count)
--		phba->fcp_qidx = 0;
-+	int i;
+ 	struct lpfc_hba *phba;
+-	uint32_t eratt = 0;
++	uint32_t eratt = 0, rem;
++	uint64_t sli_intr, cnt;
  
--	return phba->fcp_qidx;
-+	i = atomic_add_return(1, &phba->fcp_qidx);
-+	i = (i % phba->cfg_fcp_wq_count);
-+	return i;
- }
+ 	phba = (struct lpfc_hba *)ptr;
  
- /**
-@@ -8323,16 +8323,6 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba
++	/* Here we will also keep track of interrupts per sec of the hba */
++	sli_intr = phba->sli.slistat.sli_intr;
++
++	if (phba->sli.slistat.sli_prev_intr > sli_intr)
++		cnt = (((uint64_t)(-1) - phba->sli.slistat.sli_prev_intr) +
++			sli_intr);
++	else
++		cnt = (sli_intr - phba->sli.slistat.sli_prev_intr);
++
++	/* 64-bit integer division not supporte on 32-bit x86 - use do_div */
++	rem = do_div(cnt, LPFC_ERATT_POLL_INTERVAL);
++	phba->sli.slistat.sli_ips = cnt;
++
++	phba->sli.slistat.sli_prev_intr = sli_intr;
++
+ 	/* Check chip HA register for error event */
+ 	eratt = lpfc_sli_check_eratt(phba);
  
- 	if ((piocb->iocb_flag & LPFC_IO_FCP) ||
- 		(piocb->iocb_flag & LPFC_USE_FCPWQIDX)) {
--		/*
--		 * For FCP command IOCB, get a new WQ index to distribute
--		 * WQE across the WQsr. On the other hand, for abort IOCB,
--		 * it carries the same WQ index to the original command
--		 * IOCB.
--		 */
--		if (piocb->iocb_flag & LPFC_IO_FCP)
--			piocb->fcp_wqidx = lpfc_sli4_scmd_to_wqidx_distr(phba);
--		if (unlikely(!phba->sli4_hba.fcp_wq))
--			return IOCB_ERROR;
- 		if (lpfc_sli4_wq_put(phba->sli4_hba.fcp_wq[piocb->fcp_wqidx],
- 				     &wqe))
- 			return IOCB_ERROR;
-@@ -8413,11 +8403,18 @@ int
- lpfc_sli_issue_iocb(struct lpfc_hba *phba, uint32_t ring_number,
- 		    struct lpfc_iocbq *piocb, uint32_t flag)
- {
--	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
-+	struct lpfc_sli_ring *pring;
- 	unsigned long iflags;
--	int rc;
-+	int rc, idx;
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
-+		if (piocb->iocb_flag &  LPFC_IO_FCP) {
-+			if (unlikely(!phba->sli4_hba.fcp_wq))
-+				return IOCB_ERROR;
-+			idx = lpfc_sli4_scmd_to_wqidx_distr(phba);
-+			piocb->fcp_wqidx = idx;
-+			ring_number = MAX_SLI3_CONFIGURED_RINGS + idx;
-+		}
- 		pring = &phba->sli.ring[ring_number];
- 		spin_lock_irqsave(&pring->ring_lock, iflags);
- 		rc = __lpfc_sli_issue_iocb(phba, ring_number, piocb, flag);
-@@ -8712,7 +8709,9 @@ lpfc_sli_setup(struct lpfc_hba *phba)
- 	struct lpfc_sli *psli = &phba->sli;
- 	struct lpfc_sli_ring *pring;
- 
--	psli->num_rings = MAX_CONFIGURED_RINGS;
-+	psli->num_rings = MAX_SLI3_CONFIGURED_RINGS;
-+	if (phba->sli_rev == LPFC_SLI_REV4)
-+		psli->num_rings += phba->cfg_fcp_eq_count;
- 	psli->sli_flag = 0;
- 	psli->fcp_ring = LPFC_FCP_RING;
- 	psli->next_ring = LPFC_FCP_NEXT_RING;
-@@ -11191,6 +11190,7 @@ lpfc_sli4_sp_handle_mcqe(struct lpfc_hba
- /**
-  * lpfc_sli4_sp_handle_els_wcqe - Handle els work-queue completion event
-  * @phba: Pointer to HBA context object.
-+ * @cq: Pointer to associated CQ
-  * @wcqe: Pointer to work-queue completion queue entry.
-  *
-  * This routine handles an ELS work-queue completion event.
-@@ -11198,12 +11198,12 @@ lpfc_sli4_sp_handle_mcqe(struct lpfc_hba
-  * Return: true if work posted to worker thread, otherwise false.
-  **/
- static bool
--lpfc_sli4_sp_handle_els_wcqe(struct lpfc_hba *phba,
-+lpfc_sli4_sp_handle_els_wcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
- 			     struct lpfc_wcqe_complete *wcqe)
- {
- 	struct lpfc_iocbq *irspiocbq;
- 	unsigned long iflags;
--	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
-+	struct lpfc_sli_ring *pring = cq->pring;
- 
- 	/* Get an irspiocbq for later ELS response processing use */
- 	irspiocbq = lpfc_sli_get_iocbq(phba);
-@@ -11408,7 +11408,7 @@ lpfc_sli4_sp_handle_cqe(struct lpfc_hba
- 	case CQE_CODE_COMPL_WQE:
- 		/* Process the WQ/RQ complete event */
- 		phba->last_completion_time = jiffies;
--		workposted = lpfc_sli4_sp_handle_els_wcqe(phba,
-+		workposted = lpfc_sli4_sp_handle_els_wcqe(phba, cq,
- 				(struct lpfc_wcqe_complete *)&cqevt);
- 		break;
- 	case CQE_CODE_RELEASE_WQE:
-@@ -11540,16 +11540,18 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba
- 
- /**
-  * lpfc_sli4_fp_handle_fcp_wcqe - Process fast-path work queue completion entry
-- * @eqe: Pointer to fast-path completion queue entry.
-+ * @phba: Pointer to HBA context object.
-+ * @cq: Pointer to associated CQ
-+ * @wcqe: Pointer to work-queue completion queue entry.
-  *
-  * This routine process a fast-path work queue completion entry from fast-path
-  * event queue for FCP command response completion.
-  **/
- static void
--lpfc_sli4_fp_handle_fcp_wcqe(struct lpfc_hba *phba,
-+lpfc_sli4_fp_handle_fcp_wcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
- 			     struct lpfc_wcqe_complete *wcqe)
- {
--	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_FCP_RING];
-+	struct lpfc_sli_ring *pring = cq->pring;
- 	struct lpfc_iocbq *cmdiocbq;
- 	struct lpfc_iocbq irspiocbq;
- 	unsigned long iflags;
-@@ -11667,7 +11669,7 @@ lpfc_sli4_fp_handle_wcqe(struct lpfc_hba
- 		cq->CQ_wq++;
- 		/* Process the WQ complete event */
- 		phba->last_completion_time = jiffies;
--		lpfc_sli4_fp_handle_fcp_wcqe(phba,
-+		lpfc_sli4_fp_handle_fcp_wcqe(phba, cq,
- 				(struct lpfc_wcqe_complete *)&wcqe);
- 		break;
- 	case CQE_CODE_RELEASE_WQE:
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2012-07-22 13:16:12.512421650 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2012-07-22 13:24:29.452404388 -0400
-@@ -131,7 +131,9 @@ typedef struct lpfcMboxq {
- 
- #define LPFC_MAX_RING_MASK  5	/* max num of rctl/type masks allowed per
- 				   ring */
--#define LPFC_MAX_RING       4	/* max num of SLI rings used by driver */
-+#define LPFC_SLI3_MAX_RING  4	/* Max num of SLI3 rings used by driver.
-+				   For SLI4, an additional ring for each
-+				   FCP WQ will be allocated.  */
- 
- struct lpfc_sli_ring;
- 
-@@ -172,7 +174,7 @@ struct lpfc_sli3_ring {
- };
- 
- struct lpfc_sli4_ring {
--	void *wqp;	/* Pointer to associated WQ */
-+	struct lpfc_queue *wqp;	/* Pointer to associated WQ */
- };
- 
-
-@@ -284,7 +286,7 @@ struct lpfc_sli {
- #define LPFC_MENLO_MAINT          0x1000 /* need for menl fw download */
- #define LPFC_SLI_ASYNC_MBX_BLK    0x2000 /* Async mailbox is blocked */
- 
--	struct lpfc_sli_ring ring[LPFC_MAX_RING];
-+	struct lpfc_sli_ring *ring;
- 	int fcp_ring;		/* ring used for FCP initiator commands */
- 	int next_ring;
- 
+--- a/drivers/scsi/lpfc/lpfc_sli.h	2012-07-23 15:26:06.449425608 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.h	2012-07-23 15:26:18.519425189 -0400
+@@ -255,6 +255,8 @@ struct lpfc_sli_stat {
+ 	uint64_t mbox_stat_err;  /* Mbox cmds completed status error */
+ 	uint64_t mbox_cmd;       /* Mailbox commands issued */
+ 	uint64_t sli_intr;       /* Count of Host Attention interrupts */
++	uint64_t sli_prev_intr;  /* Previous cnt of Host Attention interrupts */
++	uint64_t sli_ips;        /* Host Attention interrupts per sec */
+ 	uint32_t err_attn_event; /* Error Attn event counters */
+ 	uint32_t link_event;     /* Link event counters */
+ 	uint32_t mbox_event;     /* Mailbox event counters */
 
 
 
