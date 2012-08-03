@@ -1,79 +1,637 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 09/21] lpfc 8.3.33: Convert to no SCSI host lock in
- queuecommand
-Date: Fri, 3 Aug 2012 12:35:24 -0400
-Message-ID: <1344011724.6110.34.camel@myfc17>
+Subject: [PATCH 10/21] lpfc 8.3.33: Formally separate lpfc_sli_ring SLI-3
+ and SLI-4 variantions
+Date: Fri, 3 Aug 2012 12:35:34 -0400
+Message-ID: <1344011734.6110.35.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:44821 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753075Ab2HCQfa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:35:30 -0400
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:40321 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075Ab2HCQfk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:35:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Convert to no SCSI host lock in queuecommand
+Formally separate lpfc_sli_ring SLI-3 and SLI-4 variantions
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_scsi.c |    9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ lpfc_debugfs.c |    8 +-
+ lpfc_init.c    |    6 -
+ lpfc_mbox.c    |   25 ++++---
+ lpfc_sli.c     |  182 ++++++++++++++++++++++++++++++++-------------------------
+ lpfc_sli.h     |   34 +++++++---
+ 5 files changed, 150 insertions(+), 105 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2012-07-22 12:44:35.540487541 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2012-07-22 13:07:03.723440712 -0400
-@@ -4241,9 +4241,8 @@ void lpfc_poll_timeout(unsigned long ptr
-  *   SCSI_MLQUEUE_HOST_BUSY - Block all devices served by this host temporarily.
-  **/
- static int
--lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
-+lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- {
--	struct Scsi_Host  *shost = cmnd->device->host;
- 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
- 	struct lpfc_hba   *phba = vport->phba;
- 	struct lpfc_rport_data *rdata = cmnd->device->hostdata;
-@@ -4299,7 +4298,6 @@ lpfc_queuecommand_lck(struct scsi_cmnd *
- 	lpfc_cmd->timeout = 0;
- 	lpfc_cmd->start_time = jiffies;
- 	cmnd->host_scribble = (unsigned char *)lpfc_cmd;
--	cmnd->scsi_done = done;
- 
- 	if (scsi_get_prot_op(cmnd) != SCSI_PROT_NORMAL) {
- 		if (vport->phba->cfg_enable_bg) {
-@@ -4363,11 +4361,9 @@ lpfc_queuecommand_lck(struct scsi_cmnd *
- 		goto out_host_busy_free_buf;
+diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c	2012-07-22 10:46:05.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c	2012-07-22 13:16:12.467421651 -0400
+@@ -490,9 +490,11 @@ lpfc_debugfs_dumpHostSlim_data(struct lp
+ 		len +=  snprintf(buf+len, size-len,
+ 				 "Ring %d: CMD GetInx:%d (Max:%d Next:%d "
+ 				 "Local:%d flg:x%x)  RSP PutInx:%d Max:%d\n",
+-				 i, pgpp->cmdGetInx, pring->numCiocb,
+-				 pring->next_cmdidx, pring->local_getidx,
+-				 pring->flag, pgpp->rspPutInx, pring->numRiocb);
++				 i, pgpp->cmdGetInx, pring->sli.sli3.numCiocb,
++				 pring->sli.sli3.next_cmdidx,
++				 pring->sli.sli3.local_getidx,
++				 pring->flag, pgpp->rspPutInx,
++				 pring->sli.sli3.numRiocb);
  	}
- 	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
--		spin_unlock(shost->host_lock);
- 		lpfc_sli_handle_fast_ring_event(phba,
- 			&phba->sli.ring[LPFC_FCP_RING], HA_R0RE_REQ);
  
--		spin_lock(shost->host_lock);
- 		if (phba->cfg_poll & DISABLE_FCP_RING_INT)
- 			lpfc_poll_rearm_timer(phba);
+ 	if (phba->sli_rev <= LPFC_SLI_REV3) {
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2012-07-22 13:15:37.215422876 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2012-07-22 13:16:12.479421651 -0400
+@@ -480,11 +480,11 @@ lpfc_config_port_post(struct lpfc_hba *p
+ 	phba->link_state = LPFC_LINK_DOWN;
+ 
+ 	/* Only process IOCBs on ELS ring till hba_state is READY */
+-	if (psli->ring[psli->extra_ring].cmdringaddr)
++	if (psli->ring[psli->extra_ring].sli.sli3.cmdringaddr)
+ 		psli->ring[psli->extra_ring].flag |= LPFC_STOP_IOCB_EVENT;
+-	if (psli->ring[psli->fcp_ring].cmdringaddr)
++	if (psli->ring[psli->fcp_ring].sli.sli3.cmdringaddr)
+ 		psli->ring[psli->fcp_ring].flag |= LPFC_STOP_IOCB_EVENT;
+-	if (psli->ring[psli->next_ring].cmdringaddr)
++	if (psli->ring[psli->next_ring].sli.sli3.cmdringaddr)
+ 		psli->ring[psli->next_ring].flag |= LPFC_STOP_IOCB_EVENT;
+ 
+ 	/* Post receive buffers for desired rings */
+diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+--- a/drivers/scsi/lpfc/lpfc_mbox.c	2012-07-22 10:46:05.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_mbox.c	2012-07-22 13:16:12.486421651 -0400
+@@ -950,44 +950,47 @@ lpfc_config_pcb_setup(struct lpfc_hba *
+ 	for (i = 0; i < psli->num_rings; i++) {
+ 		pring = &psli->ring[i];
+ 
+-		pring->sizeCiocb = phba->sli_rev == 3 ? SLI3_IOCB_CMD_SIZE:
++		pring->sli.sli3.sizeCiocb =
++			phba->sli_rev == 3 ? SLI3_IOCB_CMD_SIZE :
+ 							SLI2_IOCB_CMD_SIZE;
+-		pring->sizeRiocb = phba->sli_rev == 3 ? SLI3_IOCB_RSP_SIZE:
++		pring->sli.sli3.sizeRiocb =
++			phba->sli_rev == 3 ? SLI3_IOCB_RSP_SIZE :
+ 							SLI2_IOCB_RSP_SIZE;
+ 		/* A ring MUST have both cmd and rsp entries defined to be
+ 		   valid */
+-		if ((pring->numCiocb == 0) || (pring->numRiocb == 0)) {
++		if ((pring->sli.sli3.numCiocb == 0) ||
++			(pring->sli.sli3.numRiocb == 0)) {
+ 			pcbp->rdsc[i].cmdEntries = 0;
+ 			pcbp->rdsc[i].rspEntries = 0;
+ 			pcbp->rdsc[i].cmdAddrHigh = 0;
+ 			pcbp->rdsc[i].rspAddrHigh = 0;
+ 			pcbp->rdsc[i].cmdAddrLow = 0;
+ 			pcbp->rdsc[i].rspAddrLow = 0;
+-			pring->cmdringaddr = NULL;
+-			pring->rspringaddr = NULL;
++			pring->sli.sli3.cmdringaddr = NULL;
++			pring->sli.sli3.rspringaddr = NULL;
+ 			continue;
+ 		}
+ 		/* Command ring setup for ring */
+-		pring->cmdringaddr = (void *)&phba->IOCBs[iocbCnt];
+-		pcbp->rdsc[i].cmdEntries = pring->numCiocb;
++		pring->sli.sli3.cmdringaddr = (void *)&phba->IOCBs[iocbCnt];
++		pcbp->rdsc[i].cmdEntries = pring->sli.sli3.numCiocb;
+ 
+ 		offset = (uint8_t *) &phba->IOCBs[iocbCnt] -
+ 			 (uint8_t *) phba->slim2p.virt;
+ 		pdma_addr = phba->slim2p.phys + offset;
+ 		pcbp->rdsc[i].cmdAddrHigh = putPaddrHigh(pdma_addr);
+ 		pcbp->rdsc[i].cmdAddrLow = putPaddrLow(pdma_addr);
+-		iocbCnt += pring->numCiocb;
++		iocbCnt += pring->sli.sli3.numCiocb;
+ 
+ 		/* Response ring setup for ring */
+-		pring->rspringaddr = (void *) &phba->IOCBs[iocbCnt];
++		pring->sli.sli3.rspringaddr = (void *) &phba->IOCBs[iocbCnt];
+ 
+-		pcbp->rdsc[i].rspEntries = pring->numRiocb;
++		pcbp->rdsc[i].rspEntries = pring->sli.sli3.numRiocb;
+ 		offset = (uint8_t *)&phba->IOCBs[iocbCnt] -
+ 			 (uint8_t *)phba->slim2p.virt;
+ 		pdma_addr = phba->slim2p.phys + offset;
+ 		pcbp->rdsc[i].rspAddrHigh = putPaddrHigh(pdma_addr);
+ 		pcbp->rdsc[i].rspAddrLow = putPaddrLow(pdma_addr);
+-		iocbCnt += pring->numRiocb;
++		iocbCnt += pring->sli.sli3.numRiocb;
  	}
-@@ -4384,11 +4380,10 @@ lpfc_queuecommand_lck(struct scsi_cmnd *
- 	return SCSI_MLQUEUE_TARGET_BUSY;
- 
-  out_fail_command:
--	done(cmnd);
-+	cmnd->scsi_done(cmnd);
- 	return 0;
  }
  
--static DEF_SCSI_QCMD(lpfc_queuecommand)
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 13:15:37.370422870 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 13:16:21.699421601 -0400
+@@ -475,8 +475,8 @@ lpfc_sli4_rq_release(struct lpfc_queue *
+ static inline IOCB_t *
+ lpfc_cmd_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+ {
+-	return (IOCB_t *) (((char *) pring->cmdringaddr) +
+-			   pring->cmdidx * phba->iocb_cmd_size);
++	return (IOCB_t *) (((char *) pring->sli.sli3.cmdringaddr) +
++			   pring->sli.sli3.cmdidx * phba->iocb_cmd_size);
+ }
  
  /**
-  * lpfc_abort_handler - scsi_host_template eh_abort_handler entry point
+@@ -492,8 +492,8 @@ lpfc_cmd_iocb(struct lpfc_hba *phba, str
+ static inline IOCB_t *
+ lpfc_resp_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+ {
+-	return (IOCB_t *) (((char *) pring->rspringaddr) +
+-			   pring->rspidx * phba->iocb_rsp_size);
++	return (IOCB_t *) (((char *) pring->sli.sli3.rspringaddr) +
++			   pring->sli.sli3.rspidx * phba->iocb_rsp_size);
+ }
+ 
+ /**
+@@ -1323,21 +1323,23 @@ static IOCB_t *
+ lpfc_sli_next_iocb_slot (struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+ {
+ 	struct lpfc_pgp *pgp = &phba->port_gp[pring->ringno];
+-	uint32_t  max_cmd_idx = pring->numCiocb;
+-	if ((pring->next_cmdidx == pring->cmdidx) &&
+-	   (++pring->next_cmdidx >= max_cmd_idx))
+-		pring->next_cmdidx = 0;
++	uint32_t  max_cmd_idx = pring->sli.sli3.numCiocb;
++	if ((pring->sli.sli3.next_cmdidx == pring->sli.sli3.cmdidx) &&
++	   (++pring->sli.sli3.next_cmdidx >= max_cmd_idx))
++		pring->sli.sli3.next_cmdidx = 0;
+ 
+-	if (unlikely(pring->local_getidx == pring->next_cmdidx)) {
++	if (unlikely(pring->sli.sli3.local_getidx ==
++		pring->sli.sli3.next_cmdidx)) {
+ 
+-		pring->local_getidx = le32_to_cpu(pgp->cmdGetInx);
++		pring->sli.sli3.local_getidx = le32_to_cpu(pgp->cmdGetInx);
+ 
+-		if (unlikely(pring->local_getidx >= max_cmd_idx)) {
++		if (unlikely(pring->sli.sli3.local_getidx >= max_cmd_idx)) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 					"0315 Ring %d issue: portCmdGet %d "
+ 					"is bigger than cmd ring %d\n",
+ 					pring->ringno,
+-					pring->local_getidx, max_cmd_idx);
++					pring->sli.sli3.local_getidx,
++					max_cmd_idx);
+ 
+ 			phba->link_state = LPFC_HBA_ERROR;
+ 			/*
+@@ -1352,7 +1354,7 @@ lpfc_sli_next_iocb_slot (struct lpfc_hba
+ 			return NULL;
+ 		}
+ 
+-		if (pring->local_getidx == pring->next_cmdidx)
++		if (pring->sli.sli3.local_getidx == pring->sli.sli3.next_cmdidx)
+ 			return NULL;
+ 	}
+ 
+@@ -1487,8 +1489,8 @@ lpfc_sli_submit_iocb(struct lpfc_hba *ph
+ 	 * Let the HBA know what IOCB slot will be the next one the
+ 	 * driver will put a command into.
+ 	 */
+-	pring->cmdidx = pring->next_cmdidx;
+-	writel(pring->cmdidx, &phba->host_gp[pring->ringno].cmdPutInx);
++	pring->sli.sli3.cmdidx = pring->sli.sli3.next_cmdidx;
++	writel(pring->sli.sli3.cmdidx, &phba->host_gp[pring->ringno].cmdPutInx);
+ }
+ 
+ /**
+@@ -2789,7 +2791,7 @@ lpfc_sli_rsp_pointers_error(struct lpfc_
+ 			"0312 Ring %d handler: portRspPut %d "
+ 			"is bigger than rsp ring %d\n",
+ 			pring->ringno, le32_to_cpu(pgp->rspPutInx),
+-			pring->numRiocb);
++			pring->sli.sli3.numRiocb);
+ 
+ 	phba->link_state = LPFC_HBA_ERROR;
+ 
+@@ -2876,7 +2878,7 @@ lpfc_sli_handle_fast_ring_event(struct l
+ 	 * The next available response entry should never exceed the maximum
+ 	 * entries.  If it does, treat it as an adapter hardware error.
+ 	 */
+-	portRspMax = pring->numRiocb;
++	portRspMax = pring->sli.sli3.numRiocb;
+ 	portRspPut = le32_to_cpu(pgp->rspPutInx);
+ 	if (unlikely(portRspPut >= portRspMax)) {
+ 		lpfc_sli_rsp_pointers_error(phba, pring);
+@@ -2890,7 +2892,7 @@ lpfc_sli_handle_fast_ring_event(struct l
+ 		phba->fcp_ring_in_use = 1;
+ 
+ 	rmb();
+-	while (pring->rspidx != portRspPut) {
++	while (pring->sli.sli3.rspidx != portRspPut) {
+ 		/*
+ 		 * Fetch an entry off the ring and copy it into a local data
+ 		 * structure.  The copy involves a byte-swap since the
+@@ -2899,8 +2901,8 @@ lpfc_sli_handle_fast_ring_event(struct l
+ 		entry = lpfc_resp_iocb(phba, pring);
+ 		phba->last_completion_time = jiffies;
+ 
+-		if (++pring->rspidx >= portRspMax)
+-			pring->rspidx = 0;
++		if (++pring->sli.sli3.rspidx >= portRspMax)
++			pring->sli.sli3.rspidx = 0;
+ 
+ 		lpfc_sli_pcimem_bcopy((uint32_t *) entry,
+ 				      (uint32_t *) &rspiocbq.iocb,
+@@ -3001,9 +3003,10 @@ lpfc_sli_handle_fast_ring_event(struct l
+ 		 * been updated, sync the pgp->rspPutInx and fetch the new port
+ 		 * response put pointer.
+ 		 */
+-		writel(pring->rspidx, &phba->host_gp[pring->ringno].rspGetInx);
++		writel(pring->sli.sli3.rspidx,
++			&phba->host_gp[pring->ringno].rspGetInx);
+ 
+-		if (pring->rspidx == portRspPut)
++		if (pring->sli.sli3.rspidx == portRspPut)
+ 			portRspPut = le32_to_cpu(pgp->rspPutInx);
+ 	}
+ 
+@@ -3018,7 +3021,7 @@ lpfc_sli_handle_fast_ring_event(struct l
+ 		pring->stats.iocb_cmd_empty++;
+ 
+ 		/* Force update of the local copy of cmdGetInx */
+-		pring->local_getidx = le32_to_cpu(pgp->cmdGetInx);
++		pring->sli.sli3.local_getidx = le32_to_cpu(pgp->cmdGetInx);
+ 		lpfc_sli_resume_iocb(phba, pring);
+ 
+ 		if ((pring->lpfc_sli_cmd_available))
+@@ -3250,7 +3253,7 @@ lpfc_sli_handle_slow_ring_event_s3(struc
+ 	 * The next available response entry should never exceed the maximum
+ 	 * entries.  If it does, treat it as an adapter hardware error.
+ 	 */
+-	portRspMax = pring->numRiocb;
++	portRspMax = pring->sli.sli3.numRiocb;
+ 	portRspPut = le32_to_cpu(pgp->rspPutInx);
+ 	if (portRspPut >= portRspMax) {
+ 		/*
+@@ -3272,7 +3275,7 @@ lpfc_sli_handle_slow_ring_event_s3(struc
+ 	}
+ 
+ 	rmb();
+-	while (pring->rspidx != portRspPut) {
++	while (pring->sli.sli3.rspidx != portRspPut) {
+ 		/*
+ 		 * Build a completion list and call the appropriate handler.
+ 		 * The process is to get the next available response iocb, get
+@@ -3300,8 +3303,8 @@ lpfc_sli_handle_slow_ring_event_s3(struc
+ 				      phba->iocb_rsp_size);
+ 		irsp = &rspiocbp->iocb;
+ 
+-		if (++pring->rspidx >= portRspMax)
+-			pring->rspidx = 0;
++		if (++pring->sli.sli3.rspidx >= portRspMax)
++			pring->sli.sli3.rspidx = 0;
+ 
+ 		if (pring->ringno == LPFC_ELS_RING) {
+ 			lpfc_debugfs_slow_ring_trc(phba,
+@@ -3311,7 +3314,8 @@ lpfc_sli_handle_slow_ring_event_s3(struc
+ 				*(((uint32_t *) irsp) + 7));
+ 		}
+ 
+-		writel(pring->rspidx, &phba->host_gp[pring->ringno].rspGetInx);
++		writel(pring->sli.sli3.rspidx,
++			&phba->host_gp[pring->ringno].rspGetInx);
+ 
+ 		spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 		/* Handle the response IOCB */
+@@ -3323,10 +3327,10 @@ lpfc_sli_handle_slow_ring_event_s3(struc
+ 		 * the pgp->rspPutInx in the MAILBOX_tand fetch the new port
+ 		 * response put pointer.
+ 		 */
+-		if (pring->rspidx == portRspPut) {
++		if (pring->sli.sli3.rspidx == portRspPut) {
+ 			portRspPut = le32_to_cpu(pgp->rspPutInx);
+ 		}
+-	} /* while (pring->rspidx != portRspPut) */
++	} /* while (pring->sli.sli3.rspidx != portRspPut) */
+ 
+ 	if ((rspiocbp != NULL) && (mask & HA_R0RE_REQ)) {
+ 		/* At least one response entry has been freed */
+@@ -3341,7 +3345,7 @@ lpfc_sli_handle_slow_ring_event_s3(struc
+ 		pring->stats.iocb_cmd_empty++;
+ 
+ 		/* Force update of the local copy of cmdGetInx */
+-		pring->local_getidx = le32_to_cpu(pgp->cmdGetInx);
++		pring->sli.sli3.local_getidx = le32_to_cpu(pgp->cmdGetInx);
+ 		lpfc_sli_resume_iocb(phba, pring);
+ 
+ 		if ((pring->lpfc_sli_cmd_available))
+@@ -3862,10 +3866,10 @@ lpfc_sli_brdreset(struct lpfc_hba *phba)
+ 	for (i = 0; i < psli->num_rings; i++) {
+ 		pring = &psli->ring[i];
+ 		pring->flag = 0;
+-		pring->rspidx = 0;
+-		pring->next_cmdidx  = 0;
+-		pring->local_getidx = 0;
+-		pring->cmdidx = 0;
++		pring->sli.sli3.rspidx = 0;
++		pring->sli.sli3.next_cmdidx  = 0;
++		pring->sli.sli3.local_getidx = 0;
++		pring->sli.sli3.cmdidx = 0;
+ 		pring->missbufcnt = 0;
+ 	}
+ 
+@@ -8404,13 +8408,21 @@ int
+ lpfc_sli_issue_iocb(struct lpfc_hba *phba, uint32_t ring_number,
+ 		    struct lpfc_iocbq *piocb, uint32_t flag)
+ {
++	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
+ 	unsigned long iflags;
+ 	int rc;
+ 
+-	spin_lock_irqsave(&phba->hbalock, iflags);
+-	rc = __lpfc_sli_issue_iocb(phba, ring_number, piocb, flag);
+-	spin_unlock_irqrestore(&phba->hbalock, iflags);
+-
++	if (phba->sli_rev == LPFC_SLI_REV4) {
++		pring = &phba->sli.ring[ring_number];
++		spin_lock_irqsave(&pring->ring_lock, iflags);
++		rc = __lpfc_sli_issue_iocb(phba, ring_number, piocb, flag);
++		spin_unlock_irqrestore(&pring->ring_lock, iflags);
++	} else {
++		/* For now, SLI2/3 will still use hbalock */
++		spin_lock_irqsave(&phba->hbalock, iflags);
++		rc = __lpfc_sli_issue_iocb(phba, ring_number, piocb, flag);
++		spin_unlock_irqrestore(&phba->hbalock, iflags);
++	}
+ 	return rc;
+ }
+ 
+@@ -8437,18 +8449,18 @@ lpfc_extra_ring_setup( struct lpfc_hba *
+ 
+ 	/* Take some away from the FCP ring */
+ 	pring = &psli->ring[psli->fcp_ring];
+-	pring->numCiocb -= SLI2_IOCB_CMD_R1XTRA_ENTRIES;
+-	pring->numRiocb -= SLI2_IOCB_RSP_R1XTRA_ENTRIES;
+-	pring->numCiocb -= SLI2_IOCB_CMD_R3XTRA_ENTRIES;
+-	pring->numRiocb -= SLI2_IOCB_RSP_R3XTRA_ENTRIES;
++	pring->sli.sli3.numCiocb -= SLI2_IOCB_CMD_R1XTRA_ENTRIES;
++	pring->sli.sli3.numRiocb -= SLI2_IOCB_RSP_R1XTRA_ENTRIES;
++	pring->sli.sli3.numCiocb -= SLI2_IOCB_CMD_R3XTRA_ENTRIES;
++	pring->sli.sli3.numRiocb -= SLI2_IOCB_RSP_R3XTRA_ENTRIES;
+ 
+ 	/* and give them to the extra ring */
+ 	pring = &psli->ring[psli->extra_ring];
+ 
+-	pring->numCiocb += SLI2_IOCB_CMD_R1XTRA_ENTRIES;
+-	pring->numRiocb += SLI2_IOCB_RSP_R1XTRA_ENTRIES;
+-	pring->numCiocb += SLI2_IOCB_CMD_R3XTRA_ENTRIES;
+-	pring->numRiocb += SLI2_IOCB_RSP_R3XTRA_ENTRIES;
++	pring->sli.sli3.numCiocb += SLI2_IOCB_CMD_R1XTRA_ENTRIES;
++	pring->sli.sli3.numRiocb += SLI2_IOCB_RSP_R1XTRA_ENTRIES;
++	pring->sli.sli3.numCiocb += SLI2_IOCB_CMD_R3XTRA_ENTRIES;
++	pring->sli.sli3.numRiocb += SLI2_IOCB_RSP_R3XTRA_ENTRIES;
+ 
+ 	/* Setup default profile for this ring */
+ 	pring->iotag_max = 4096;
+@@ -8710,16 +8722,20 @@ lpfc_sli_setup(struct lpfc_hba *phba)
+ 		switch (i) {
+ 		case LPFC_FCP_RING:	/* ring 0 - FCP */
+ 			/* numCiocb and numRiocb are used in config_port */
+-			pring->numCiocb = SLI2_IOCB_CMD_R0_ENTRIES;
+-			pring->numRiocb = SLI2_IOCB_RSP_R0_ENTRIES;
+-			pring->numCiocb += SLI2_IOCB_CMD_R1XTRA_ENTRIES;
+-			pring->numRiocb += SLI2_IOCB_RSP_R1XTRA_ENTRIES;
+-			pring->numCiocb += SLI2_IOCB_CMD_R3XTRA_ENTRIES;
+-			pring->numRiocb += SLI2_IOCB_RSP_R3XTRA_ENTRIES;
+-			pring->sizeCiocb = (phba->sli_rev == 3) ?
++			pring->sli.sli3.numCiocb = SLI2_IOCB_CMD_R0_ENTRIES;
++			pring->sli.sli3.numRiocb = SLI2_IOCB_RSP_R0_ENTRIES;
++			pring->sli.sli3.numCiocb +=
++				SLI2_IOCB_CMD_R1XTRA_ENTRIES;
++			pring->sli.sli3.numRiocb +=
++				SLI2_IOCB_RSP_R1XTRA_ENTRIES;
++			pring->sli.sli3.numCiocb +=
++				SLI2_IOCB_CMD_R3XTRA_ENTRIES;
++			pring->sli.sli3.numRiocb +=
++				SLI2_IOCB_RSP_R3XTRA_ENTRIES;
++			pring->sli.sli3.sizeCiocb = (phba->sli_rev == 3) ?
+ 							SLI3_IOCB_CMD_SIZE :
+ 							SLI2_IOCB_CMD_SIZE;
+-			pring->sizeRiocb = (phba->sli_rev == 3) ?
++			pring->sli.sli3.sizeRiocb = (phba->sli_rev == 3) ?
+ 							SLI3_IOCB_RSP_SIZE :
+ 							SLI2_IOCB_RSP_SIZE;
+ 			pring->iotag_ctr = 0;
+@@ -8730,12 +8746,12 @@ lpfc_sli_setup(struct lpfc_hba *phba)
+ 			break;
+ 		case LPFC_EXTRA_RING:	/* ring 1 - EXTRA */
+ 			/* numCiocb and numRiocb are used in config_port */
+-			pring->numCiocb = SLI2_IOCB_CMD_R1_ENTRIES;
+-			pring->numRiocb = SLI2_IOCB_RSP_R1_ENTRIES;
+-			pring->sizeCiocb = (phba->sli_rev == 3) ?
++			pring->sli.sli3.numCiocb = SLI2_IOCB_CMD_R1_ENTRIES;
++			pring->sli.sli3.numRiocb = SLI2_IOCB_RSP_R1_ENTRIES;
++			pring->sli.sli3.sizeCiocb = (phba->sli_rev == 3) ?
+ 							SLI3_IOCB_CMD_SIZE :
+ 							SLI2_IOCB_CMD_SIZE;
+-			pring->sizeRiocb = (phba->sli_rev == 3) ?
++			pring->sli.sli3.sizeRiocb = (phba->sli_rev == 3) ?
+ 							SLI3_IOCB_RSP_SIZE :
+ 							SLI2_IOCB_RSP_SIZE;
+ 			pring->iotag_max = phba->cfg_hba_queue_depth;
+@@ -8743,12 +8759,12 @@ lpfc_sli_setup(struct lpfc_hba *phba)
+ 			break;
+ 		case LPFC_ELS_RING:	/* ring 2 - ELS / CT */
+ 			/* numCiocb and numRiocb are used in config_port */
+-			pring->numCiocb = SLI2_IOCB_CMD_R2_ENTRIES;
+-			pring->numRiocb = SLI2_IOCB_RSP_R2_ENTRIES;
+-			pring->sizeCiocb = (phba->sli_rev == 3) ?
++			pring->sli.sli3.numCiocb = SLI2_IOCB_CMD_R2_ENTRIES;
++			pring->sli.sli3.numRiocb = SLI2_IOCB_RSP_R2_ENTRIES;
++			pring->sli.sli3.sizeCiocb = (phba->sli_rev == 3) ?
+ 							SLI3_IOCB_CMD_SIZE :
+ 							SLI2_IOCB_CMD_SIZE;
+-			pring->sizeRiocb = (phba->sli_rev == 3) ?
++			pring->sli.sli3.sizeRiocb = (phba->sli_rev == 3) ?
+ 							SLI3_IOCB_RSP_SIZE :
+ 							SLI2_IOCB_RSP_SIZE;
+ 			pring->fast_iotag = 0;
+@@ -8789,8 +8805,9 @@ lpfc_sli_setup(struct lpfc_hba *phba)
+ 			    lpfc_sli4_ct_abort_unsol_event;
+ 			break;
+ 		}
+-		totiocbsize += (pring->numCiocb * pring->sizeCiocb) +
+-				(pring->numRiocb * pring->sizeRiocb);
++		totiocbsize += (pring->sli.sli3.numCiocb *
++			pring->sli.sli3.sizeCiocb) +
++			(pring->sli.sli3.numRiocb * pring->sli.sli3.sizeRiocb);
+ 	}
+ 	if (totiocbsize > MAX_SLIM_IOCB_SIZE) {
+ 		/* Too many cmd / rsp ring entries in SLI2 SLIM */
+@@ -8831,14 +8848,15 @@ lpfc_sli_queue_setup(struct lpfc_hba *ph
+ 	for (i = 0; i < psli->num_rings; i++) {
+ 		pring = &psli->ring[i];
+ 		pring->ringno = i;
+-		pring->next_cmdidx  = 0;
+-		pring->local_getidx = 0;
+-		pring->cmdidx = 0;
++		pring->sli.sli3.next_cmdidx  = 0;
++		pring->sli.sli3.local_getidx = 0;
++		pring->sli.sli3.cmdidx = 0;
+ 		INIT_LIST_HEAD(&pring->txq);
+ 		INIT_LIST_HEAD(&pring->txcmplq);
+ 		INIT_LIST_HEAD(&pring->iocb_continueq);
+ 		INIT_LIST_HEAD(&pring->iocb_continue_saveq);
+ 		INIT_LIST_HEAD(&pring->postbufq);
++		spin_lock_init(&pring->ring_lock);
+ 	}
+ 	spin_unlock_irq(&phba->hbalock);
+ 	return 1;
+@@ -9337,6 +9355,7 @@ lpfc_sli_abort_iotag_issue(struct lpfc_h
+ 	IOCB_t *icmd = NULL;
+ 	IOCB_t *iabt = NULL;
+ 	int retval;
++	unsigned long iflags;
+ 
+ 	/*
+ 	 * There are certain command types we don't want to abort.  And we
+@@ -9389,7 +9408,17 @@ lpfc_sli_abort_iotag_issue(struct lpfc_h
+ 			 iabt->un.acxri.abortIoTag,
+ 			 iabt->un.acxri.abortContextTag,
+ 			 abtsiocbp->iotag);
+-	retval = __lpfc_sli_issue_iocb(phba, pring->ringno, abtsiocbp, 0);
++
++	if (phba->sli_rev == LPFC_SLI_REV4) {
++		/* Note: both hbalock and ring_lock need to be set here */
++		spin_lock_irqsave(&pring->ring_lock, iflags);
++		retval = __lpfc_sli_issue_iocb(phba, pring->ringno,
++			abtsiocbp, 0);
++		spin_unlock_irqrestore(&pring->ring_lock, iflags);
++	} else {
++		retval = __lpfc_sli_issue_iocb(phba, pring->ringno,
++			abtsiocbp, 0);
++	}
+ 
+ 	if (retval)
+ 		__lpfc_sli_release_iocbq(phba, abtsiocbp);
+@@ -10950,12 +10979,12 @@ lpfc_sli4_els_wcqe_to_rspiocbq(struct lp
+ 	unsigned long iflags;
+ 
+ 	wcqe = &irspiocbq->cq_event.cqe.wcqe_cmpl;
+-	spin_lock_irqsave(&phba->hbalock, iflags);
++	spin_lock_irqsave(&pring->ring_lock, iflags);
+ 	pring->stats.iocb_event++;
+ 	/* Look up the ELS command IOCB and create pseudo response IOCB */
+ 	cmdiocbq = lpfc_sli_iocbq_lookup_by_tag(phba, pring,
+ 				bf_get(lpfc_wcqe_c_request_tag, wcqe));
+-	spin_unlock_irqrestore(&phba->hbalock, iflags);
++	spin_unlock_irqrestore(&pring->ring_lock, iflags);
+ 
+ 	if (unlikely(!cmdiocbq)) {
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
+@@ -11169,7 +11198,7 @@ lpfc_sli4_sp_handle_els_wcqe(struct lpfc
+ {
+ 	struct lpfc_iocbq *irspiocbq;
+ 	unsigned long iflags;
+-	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_FCP_RING];
++	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
+ 
+ 	/* Get an irspiocbq for later ELS response processing use */
+ 	irspiocbq = lpfc_sli_get_iocbq(phba);
+@@ -11520,10 +11549,6 @@ lpfc_sli4_fp_handle_fcp_wcqe(struct lpfc
+ 	struct lpfc_iocbq irspiocbq;
+ 	unsigned long iflags;
+ 
+-	spin_lock_irqsave(&phba->hbalock, iflags);
+-	pring->stats.iocb_event++;
+-	spin_unlock_irqrestore(&phba->hbalock, iflags);
+-
+ 	/* Check for response status */
+ 	if (unlikely(bf_get(lpfc_wcqe_c_status, wcqe))) {
+ 		/* If resource errors reported from HBA, reduce queue
+@@ -11546,10 +11571,11 @@ lpfc_sli4_fp_handle_fcp_wcqe(struct lpfc
+ 	}
+ 
+ 	/* Look up the FCP command IOCB and create pseudo response IOCB */
+-	spin_lock_irqsave(&phba->hbalock, iflags);
++	spin_lock_irqsave(&pring->ring_lock, iflags);
++	pring->stats.iocb_event++;
+ 	cmdiocbq = lpfc_sli_iocbq_lookup_by_tag(phba, pring,
+ 				bf_get(lpfc_wcqe_c_request_tag, wcqe));
+-	spin_unlock_irqrestore(&phba->hbalock, iflags);
++	spin_unlock_irqrestore(&pring->ring_lock, iflags);
+ 	if (unlikely(!cmdiocbq)) {
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
+ 				"0374 FCP complete with no corresponding "
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
+--- a/drivers/scsi/lpfc/lpfc_sli.h	2012-07-22 10:46:05.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.h	2012-07-22 13:16:12.512421650 -0400
+@@ -158,6 +158,24 @@ struct lpfc_sli_ring_stat {
+ 	uint64_t iocb_rsp_full;	 /* IOCB rsp ring full */
+ };
+ 
++struct lpfc_sli3_ring {
++	uint32_t local_getidx;  /* last available cmd index (from cmdGetInx) */
++	uint32_t next_cmdidx;   /* next_cmd index */
++	uint32_t rspidx;	/* current index in response ring */
++	uint32_t cmdidx;	/* current index in command ring */
++	uint16_t numCiocb;	/* number of command iocb's per ring */
++	uint16_t numRiocb;	/* number of rsp iocb's per ring */
++	uint16_t sizeCiocb;	/* Size of command iocb's in this ring */
++	uint16_t sizeRiocb;	/* Size of response iocb's in this ring */
++	uint32_t *cmdringaddr;	/* virtual address for cmd rings */
++	uint32_t *rspringaddr;	/* virtual address for rsp rings */
++};
++
++struct lpfc_sli4_ring {
++	void *wqp;	/* Pointer to associated WQ */
++};
++
++
+ /* Structure used to hold SLI ring information */
+ struct lpfc_sli_ring {
+ 	uint16_t flag;		/* ring flags */
+@@ -166,16 +184,10 @@ struct lpfc_sli_ring {
+ #define LPFC_STOP_IOCB_EVENT     0x020	/* Stop processing IOCB cmds event */
+ 	uint16_t abtsiotag;	/* tracks next iotag to use for ABTS */
+ 
+-	uint32_t local_getidx;   /* last available cmd index (from cmdGetInx) */
+-	uint32_t next_cmdidx;    /* next_cmd index */
+-	uint32_t rspidx;	/* current index in response ring */
+-	uint32_t cmdidx;	/* current index in command ring */
+ 	uint8_t rsvd;
+ 	uint8_t ringno;		/* ring number */
+-	uint16_t numCiocb;	/* number of command iocb's per ring */
+-	uint16_t numRiocb;	/* number of rsp iocb's per ring */
+-	uint16_t sizeCiocb;	/* Size of command iocb's in this ring */
+-	uint16_t sizeRiocb;	/* Size of response iocb's in this ring */
++
++	spinlock_t ring_lock;	/* lock for issuing commands */
+ 
+ 	uint32_t fast_iotag;	/* max fastlookup based iotag           */
+ 	uint32_t iotag_ctr;	/* keeps track of the next iotag to use */
+@@ -186,8 +198,6 @@ struct lpfc_sli_ring {
+ 	struct list_head txcmplq;
+ 	uint16_t txcmplq_cnt;	/* current length of queue */
+ 	uint16_t txcmplq_max;	/* max length */
+-	uint32_t *cmdringaddr;	/* virtual address for cmd rings */
+-	uint32_t *rspringaddr;	/* virtual address for rsp rings */
+ 	uint32_t missbufcnt;	/* keep track of buffers to post */
+ 	struct list_head postbufq;
+ 	uint16_t postbufq_cnt;	/* current length of queue */
+@@ -207,6 +217,10 @@ struct lpfc_sli_ring {
+ 	/* cmd ring available */
+ 	void (*lpfc_sli_cmd_available) (struct lpfc_hba *,
+ 					struct lpfc_sli_ring *);
++	union {
++		struct lpfc_sli3_ring sli3;
++		struct lpfc_sli4_ring sli4;
++	} sli;
+ };
+ 
+ /* Structure used for configuring rings to a specific profile or rctl / type */
 
 
 
