@@ -1,96 +1,41 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] tcm_vhost: Initial merge of vhost level target
-	fabric driver
-Date: Thu, 02 Aug 2012 13:23:45 -0700
-Message-ID: <1343939025.21687.68.camel@haakon2.linux-iscsi.org>
-References: <1343697577.22538.661.camel@haakon2.linux-iscsi.org>
+From: Chanho Min <chanho0207@gmail.com>
+Subject: Re: [PATCH] fix NULL-pointer dereference on scsi_run_queue
+Date: Fri, 3 Aug 2012 11:28:43 +0900
+Message-ID: <CAOAMb1B6ZyW33HT5+qc3pw2Fxi=baradQHYxeAbE9cf=hwWzzQ@mail.gmail.com>
+References: <CAOAMb1D+g0zzKGKjMPPp7V-XEwKB5AYGMDvUUbXNaHaz8ieTVg@mail.gmail.com>
+	<1343897839.5073.7.camel@dabdike.int.hansenpartnership.com>
+	<CAOAMb1C=fk_Ejm6TwOhoNLhP1TyRJ+QVi93VaqUmxoHsM1iXtQ@mail.gmail.com>
+	<1343900093.5073.15.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1343697577.22538.661.camel@haakon2.linux-iscsi.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jens Axboe <axboe@kernel.dk>, kvm-devel <kvm@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, qemu-devel <qemu-devel@nongnu.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, target-devel <target-devel@vger.kernel.org>, Anthony Liguori <anthony@codemonkey.ws>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:55273 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751265Ab2HCC2p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Aug 2012 22:28:45 -0400
+In-Reply-To: <1343900093.5073.15.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
 
-Hi Linus,
+> Does it occur with that patch applied?
+I'm trying to reproduce it with that patch. but, It is unlikely to be fixed.
+because scsi_run_queue is invoked from scsi_requeue_run_queue,
+not scsi_requeue_command.
 
-Ping on the initial tcm_vhost merge for-3.6..?  I know it's been a
-busier than usual merge window, but hopefully this one is still in your
-PULL queue..
+> If it does, the likely fix would be to take a copy of the queue ... but
+> I'd like to understand why first.  An active command has an automatic
+> reference to the sdev_gendev, so it shouldn't be the normal case.  This
+> was broken by unprep because it releases the command from the queue and
+> drops the reference.  We may have another case like unjprep, but in that
+__scsi_remove_device drops the last reference under race condition.
 
-Otherwise if there is something else that you'd like to see different
-from this PULL request, please let us know.
+> case, we need to find it ... trying to add extra get/put_device() calls
+> will paper over the problem.
+yes, extra reference is not good to fix.
+But, As long as scsi_device_dev_release_usercontext set request_queue
+to NULL, Isn't it necessary to ensure that __blk_run_queue don't release device?
 
-Thank you!
-
---nab
-
-On Mon, 2012-07-30 at 18:19 -0700, Nicholas A. Bellinger wrote:
-> Hi Linus,
-> 
-> Here is the PULL request for the initial merge of tcm_vhost based on
-> RFC-v5 code with MST's ACK appended to the initial merge commit.
-> As promised, the commit is available from two different branches for you
-> to consider merging as for-3.6 code.
-> 
-> The 'for-next-merge' branch based on mainline commit 7409a6657ae using
-> 3.5-rc2 code contains two duplicates of pre-merge vhost patch
-> dependencies that have already been merged into mainline via net-next.
-> This commit is also in the 07302012 -next patchset, and available here:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next-merge
-> 
-> Or the 'for-linus' branch containing an -rc0 head @ commit bdc0077af57:
-> 
->    Merge tag 'scsi-misc' of git://git.kernel.org/../jejb/scsi)
-> 
-> rebased up to the last commit in scsi-misc required for virtio-scsi
-> client LLD scanning logic to function properly with tcm_vhost fabric
-> ports, is available here:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-linus
-> 
-> Both branches have gotten recent testing and have been running
-> over-night small block random I/O tests connected to raw block flash
-> backends.  The same diffstat below will result from pulling either
-> branch.
-> 
-> Also, the incremental patch to address MST's last round of post-merge
-> comments has been sent to the lists for feedback this afternoon.  This
-> will be included into the usual post -rc1 PULL via 3.6-rc-fixes, along
-> with any other bits that end up changing post-merge.
-> 
-> Please let us know if you have any concerns.
-> 
-> Thank you!
-> 
-> --nab
-> 
-> Nicholas Bellinger (1):
->   tcm_vhost: Initial merge for vhost level target fabric driver
-> 
->  drivers/vhost/Kconfig     |    3 +
->  drivers/vhost/Kconfig.tcm |    6 +
->  drivers/vhost/Makefile    |    2 +
->  drivers/vhost/tcm_vhost.c | 1628 +++++++++++++++++++++++++++++++++++++++++++++
->  drivers/vhost/tcm_vhost.h |  101 +++
->  5 files changed, 1740 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/vhost/Kconfig.tcm
->  create mode 100644 drivers/vhost/tcm_vhost.c
->  create mode 100644 drivers/vhost/tcm_vhost.h
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Thanks a lot!
+Chanho Min
