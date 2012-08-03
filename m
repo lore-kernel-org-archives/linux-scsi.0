@@ -1,38 +1,60 @@
 From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [PATCH 4/4] scsi: translate errors for power management
-Date: Fri, 03 Aug 2012 14:22:55 +0200
-Message-ID: <5306802.hhdiODGtmh@linux-lqwf.site>
-References: <1343903227-17285-1-git-send-email-oliver@neukum.org> <1343903227-17285-5-git-send-email-oliver@neukum.org> <1343904224.5073.27.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Subject: [PATCH 2/5] sd: handle errors in sd_start_stop_device()
+Date: Fri,  3 Aug 2012 14:27:38 +0200
+Message-ID: <1343996861-20857-3-git-send-email-oliver@neukum.org>
+References: <1343996861-20857-1-git-send-email-oliver@neukum.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36907 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753375Ab2HCMX6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Aug 2012 08:23:58 -0400
-In-Reply-To: <1343904224.5073.27.camel@dabdike.int.hansenpartnership.com>
+Received: from smtp-out002.kontent.com ([81.88.40.216]:53918 "EHLO
+	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753737Ab2HCM2u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 08:28:50 -0400
+In-Reply-To: <1343996861-20857-1-git-send-email-oliver@neukum.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, hare@suse.de
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, hare@suse.de
+Cc: Oliver Neukum <oliver@neukum.org>
 
-On Thursday 02 August 2012 11:43:44 James Bottomley wrote:
+Errors are not handled correctly in sd_start_stop_device().
+
+First, if a device cannot be stopped because a medium has been
+removed, this is not an error. This fixes a bug when suspending
+the system right after pulling a medium out of a card reader.
+
+Second, if the full system is to be suspended, a failure to stop
+a device is not a good reason to abort a suspend, as that won't
+improve matters.
+
+Signed-of-by: Oliver Neukum <oneukum@suse.de>
+---
+ drivers/scsi/sd.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index cef06f5..a344220 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2828,6 +2828,10 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ 		sd_print_result(sdkp, res);
+ 		if (driver_byte(res) & DRIVER_SENSE)
+ 			sd_print_sense_hdr(sdkp, &sshdr);
++		if ((scsi_sense_valid(&sshdr) &&
++			/* 0x3a is medium not present */
++			sshdr.asc == 0x3a))
++			res = 0;
+ 	}
  
-> this should be inside the switch as
-> 
-> default:
-> 	return -EIO;
-> 
-> and no return statment outside of the switch.
-
-OK
-
-> Don't you still want to handle BUSY and QUEUE_FULL as -EBUSY?  Right at
-> the moment they'll fall through the default case and return -EIO.
-
-True. They should be handled.
-
-	Regards
-		Oliver
+ 	/* SCSI error codes must not go to the generic layer */
+@@ -2884,6 +2888,10 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+ 	if ((mesg.event & PM_EVENT_SLEEP) && sdkp->device->manage_start_stop) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		ret = sd_start_stop_device(sdkp, 0);
++
++		/* an error is not worth aborting a system sleep */
++		if (!(mesg.event & PM_EVENT_AUTO))
++			ret = 0;
+ 	}
+ 
+ done:
+-- 
+1.7.7
 
