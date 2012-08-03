@@ -1,489 +1,118 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 19/21] lpfc 8.3.33: Fixed debugfs queInfo to include queue
- stats
-Date: Fri, 3 Aug 2012 12:37:00 -0400
-Message-ID: <1344011820.6110.44.camel@myfc17>
+Subject: [PATCH 20/21] lpfc 8.3.33: Fixed incomplete list of SLI4 commands
+ with extended timeout value
+Date: Fri, 3 Aug 2012 12:37:08 -0400
+Message-ID: <1344011828.6110.45.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:40348 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753706Ab2HCQhH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:37:07 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:44858 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753786Ab2HCQhP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:37:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed debugfs queInfo to include queue stats
+Fixed incomplete list of SLI4 commands with extended second timeout value
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_debugfs.c |  420 +++++++++++++++++++++++++++++++++++----------------------
- 1 file changed, 261 insertions(+), 159 deletions(-)
+ lpfc_hw.h   |    1 +
+ lpfc_hw4.h  |    6 ++++++
+ lpfc_mbox.c |   11 ++++++++++-
+ lpfc_sli.c  |    1 +
+ 4 files changed, 18 insertions(+), 1 deletion(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
---- a/drivers/scsi/lpfc/lpfc_debugfs.c	2012-07-22 14:29:51.217268164 -0400
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c	2012-07-22 14:34:05.818259322 -0400
-@@ -2001,192 +2001,294 @@ lpfc_idiag_queinfo_read(struct file *fil
- {
- 	struct lpfc_debug *debug = file->private_data;
- 	struct lpfc_hba *phba = (struct lpfc_hba *)debug->i_private;
--	int len = 0, fcp_qidx;
-+	int len = 0;
- 	char *pbuffer;
-+	int x, cnt;
-+	int max_cnt;
-+	struct lpfc_queue *qp = NULL;
-+
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2012-07-22 14:30:08.557267563 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2012-07-22 14:35:29.464256416 -0400
+@@ -886,13 +886,19 @@ struct mbox_header {
+ #define LPFC_MBOX_OPCODE_EQ_DESTROY			0x37
+ #define LPFC_MBOX_OPCODE_QUERY_FW_CFG			0x3A
+ #define LPFC_MBOX_OPCODE_FUNCTION_RESET			0x3D
++#define LPFC_MBOX_OPCODE_SET_PHYSICAL_LINK_CONFIG	0x3E
++#define LPFC_MBOX_OPCODE_SET_BOOT_CONFIG		0x43
+ #define LPFC_MBOX_OPCODE_GET_PORT_NAME			0x4D
+ #define LPFC_MBOX_OPCODE_MQ_CREATE_EXT			0x5A
++#define LPFC_MBOX_OPCODE_GET_VPD_DATA			0x5B
++#define LPFC_MBOX_OPCODE_SEND_ACTIVATION		0x73
++#define LPFC_MBOX_OPCODE_RESET_LICENSES			0x74
+ #define LPFC_MBOX_OPCODE_GET_RSRC_EXTENT_INFO		0x9A
+ #define LPFC_MBOX_OPCODE_GET_ALLOC_RSRC_EXTENT		0x9B
+ #define LPFC_MBOX_OPCODE_ALLOC_RSRC_EXTENT		0x9C
+ #define LPFC_MBOX_OPCODE_DEALLOC_RSRC_EXTENT		0x9D
+ #define LPFC_MBOX_OPCODE_GET_FUNCTION_CONFIG		0xA0
++#define LPFC_MBOX_OPCODE_GET_PROFILE_CAPACITIES		0xA1
+ #define LPFC_MBOX_OPCODE_GET_PROFILE_CONFIG		0xA4
+ #define LPFC_MBOX_OPCODE_SET_PROFILE_CONFIG		0xA5
+ #define LPFC_MBOX_OPCODE_GET_PROFILE_LIST		0xA6
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2012-07-22 14:29:51.079268170 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2012-07-22 14:35:29.470256416 -0400
+@@ -1460,6 +1460,7 @@ typedef struct {		/* FireFly BIU registe
+ #define MBX_UNREG_FCFI	    0xA2
+ #define MBX_INIT_VFI        0xA3
+ #define MBX_INIT_VPI        0xA4
++#define MBX_ACCESS_VDATA    0xA5
  
- 	if (!debug->buffer)
- 		debug->buffer = kmalloc(LPFC_QUE_INFO_GET_BUF_SIZE, GFP_KERNEL);
- 	if (!debug->buffer)
- 		return 0;
- 	pbuffer = debug->buffer;
-+	max_cnt = LPFC_QUE_INFO_GET_BUF_SIZE - 128;
+ #define MBX_AUTH_PORT       0xF8
+ #define MBX_SECURITY_MGMT   0xF9
+diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+--- a/drivers/scsi/lpfc/lpfc_mbox.c	2012-07-22 14:29:50.958268174 -0400
++++ b/drivers/scsi/lpfc/lpfc_mbox.c	2012-07-22 14:35:29.471256416 -0400
+@@ -1612,12 +1612,15 @@ lpfc_mbox_tmo_val(struct lpfc_hba *phba,
  
- 	if (*ppos)
- 		return 0;
- 
--	/* Get fast-path event queue information */
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"HBA EQ information:\n");
--	if (phba->sli4_hba.hba_eq) {
--		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_io_channel;
--		     fcp_qidx++) {
--			if (phba->sli4_hba.hba_eq[fcp_qidx]) {
--				len += snprintf(pbuffer+len,
--					LPFC_QUE_INFO_GET_BUF_SIZE-len,
--				"\tEQID[%02d], "
--				"QE-COUNT[%04d], QE-SIZE[%04d], "
--				"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
--				phba->sli4_hba.hba_eq[fcp_qidx]->queue_id,
--				phba->sli4_hba.hba_eq[fcp_qidx]->entry_count,
--				phba->sli4_hba.hba_eq[fcp_qidx]->entry_size,
--				phba->sli4_hba.hba_eq[fcp_qidx]->host_index,
--				phba->sli4_hba.hba_eq[fcp_qidx]->hba_index);
--			}
--		}
--	}
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+	spin_lock_irq(&phba->hbalock);
- 
--	/* Get mailbox complete queue information */
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Slow-path MBX CQ information:\n");
--	if (phba->sli4_hba.mbx_cq) {
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Associated EQID[%02d]:\n",
--			phba->sli4_hba.mbx_cq->assoc_qid);
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"\tCQID[%02d], "
--			"QE-COUNT[%04d], QE-SIZE[%04d], "
--			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n\n",
--			phba->sli4_hba.mbx_cq->queue_id,
--			phba->sli4_hba.mbx_cq->entry_count,
--			phba->sli4_hba.mbx_cq->entry_size,
--			phba->sli4_hba.mbx_cq->host_index,
--			phba->sli4_hba.mbx_cq->hba_index);
--	}
-+	/* Fast-path event queue */
-+	if (phba->sli4_hba.hba_eq && phba->cfg_fcp_io_channel) {
-+		cnt = phba->cfg_fcp_io_channel;
-+
-+		for (x = 0; x < cnt; x++) {
-+
-+			/* Fast-path EQ */
-+			qp = phba->sli4_hba.hba_eq[x];
-+			if (!qp)
-+				goto proc_cq;
- 
--	/* Get slow-path complete queue information */
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Slow-path ELS CQ information:\n");
--	if (phba->sli4_hba.els_cq) {
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Associated EQID[%02d]:\n",
--			phba->sli4_hba.els_cq->assoc_qid);
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"\tCQID [%02d], "
--			"QE-COUNT[%04d], QE-SIZE[%04d], "
--			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n\n",
--			phba->sli4_hba.els_cq->queue_id,
--			phba->sli4_hba.els_cq->entry_count,
--			phba->sli4_hba.els_cq->entry_size,
--			phba->sli4_hba.els_cq->host_index,
--			phba->sli4_hba.els_cq->hba_index);
--	}
-+			len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+				"\nHBA EQ info: "
-+				"EQ-STAT[max:x%x noE:x%x "
-+				"bs:x%x proc:x%llx]\n",
-+				qp->q_cnt_1, qp->q_cnt_2,
-+				qp->q_cnt_3, qp->q_cnt_4);
-+
-+			len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+				"EQID[%02d], "
-+				"QE-CNT[%04d], QE-SIZE[%04d], "
-+				"HOST-IDX[%04d], PORT-IDX[%04d]",
-+				qp->queue_id,
-+				qp->entry_count,
-+				qp->entry_size,
-+				qp->host_index,
-+				qp->hba_index);
-+
-+
-+			/* Reset max counter */
-+			qp->EQ_max_eqe = 0;
-+
-+			len +=  snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+			if (len >= max_cnt)
-+				goto too_big;
-+proc_cq:
-+			/* Fast-path FCP CQ */
-+			qp = phba->sli4_hba.fcp_cq[x];
-+			len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+				"\tFCP CQ info: ");
-+			len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+				"AssocEQID[%02d]: "
-+				"CQ STAT[max:x%x relw:x%x "
-+				"xabt:x%x wq:x%llx]\n",
-+				qp->assoc_qid,
-+				qp->q_cnt_1, qp->q_cnt_2,
-+				qp->q_cnt_3, qp->q_cnt_4);
-+			len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+				"\tCQID[%02d], "
-+				"QE-CNT[%04d], QE-SIZE[%04d], "
-+				"HOST-IDX[%04d], PORT-IDX[%04d]",
-+				qp->queue_id, qp->entry_count,
-+				qp->entry_size, qp->host_index,
-+				qp->hba_index);
-+
-+
-+			/* Reset max counter */
-+			qp->CQ_max_cqe = 0;
- 
--	/* Get fast-path complete queue information */
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Fast-path FCP CQ information:\n");
--	fcp_qidx = 0;
--	if (phba->sli4_hba.fcp_cq) {
--		do {
--			if (phba->sli4_hba.fcp_cq[fcp_qidx]) {
-+			len +=  snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+			if (len >= max_cnt)
-+				goto too_big;
-+
-+			/* Fast-path FCP WQ */
-+			qp = phba->sli4_hba.fcp_wq[x];
-+
-+			len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+				"\t\tFCP WQ info: ");
-+			len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+				"AssocCQID[%02d]: "
-+				"WQ-STAT[oflow:x%x posted:x%llx]\n",
-+				qp->assoc_qid,
-+				qp->q_cnt_1, qp->q_cnt_4);
-+			len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+				"\t\tWQID[%02d], "
-+				"QE-CNT[%04d], QE-SIZE[%04d], "
-+				"HOST-IDX[%04d], PORT-IDX[%04d]",
-+				qp->queue_id,
-+				qp->entry_count,
-+				qp->entry_size,
-+				qp->host_index,
-+				qp->hba_index);
-+
-+			len +=  snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+			if (len >= max_cnt)
-+				goto too_big;
-+
-+			if (x)
-+				continue;
-+
-+			/* Only EQ 0 has slow path CQs configured */
-+
-+			/* Slow-path mailbox CQ */
-+			qp = phba->sli4_hba.mbx_cq;
-+			if (qp) {
- 				len += snprintf(pbuffer+len,
- 					LPFC_QUE_INFO_GET_BUF_SIZE-len,
--				"Associated EQID[%02d]:\n",
--				phba->sli4_hba.fcp_cq[fcp_qidx]->assoc_qid);
-+					"\tMBX CQ info: ");
- 				len += snprintf(pbuffer+len,
- 					LPFC_QUE_INFO_GET_BUF_SIZE-len,
--				"\tCQID[%02d], "
--				"QE-COUNT[%04d], QE-SIZE[%04d], "
--				"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
--				phba->sli4_hba.fcp_cq[fcp_qidx]->queue_id,
--				phba->sli4_hba.fcp_cq[fcp_qidx]->entry_count,
--				phba->sli4_hba.fcp_cq[fcp_qidx]->entry_size,
--				phba->sli4_hba.fcp_cq[fcp_qidx]->host_index,
--				phba->sli4_hba.fcp_cq[fcp_qidx]->hba_index);
-+					"AssocEQID[%02d]: "
-+					"CQ-STAT[mbox:x%x relw:x%x "
-+					"xabt:x%x wq:x%llx]\n",
-+					qp->assoc_qid,
-+					qp->q_cnt_1, qp->q_cnt_2,
-+					qp->q_cnt_3, qp->q_cnt_4);
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"\tCQID[%02d], "
-+					"QE-CNT[%04d], QE-SIZE[%04d], "
-+					"HOST-IDX[%04d], PORT-IDX[%04d]",
-+					qp->queue_id, qp->entry_count,
-+					qp->entry_size, qp->host_index,
-+					qp->hba_index);
-+
-+				len +=  snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+				if (len >= max_cnt)
-+					goto too_big;
+ 	switch (mbox->mbxCommand) {
+ 	case MBX_WRITE_NV:	/* 0x03 */
++	case MBX_DUMP_MEMORY:	/* 0x17 */
+ 	case MBX_UPDATE_CFG:	/* 0x1B */
+ 	case MBX_DOWN_LOAD:	/* 0x1C */
+ 	case MBX_DEL_LD_ENTRY:	/* 0x1D */
++	case MBX_WRITE_VPARMS:	/* 0x32 */
+ 	case MBX_LOAD_AREA:	/* 0x81 */
+ 	case MBX_WRITE_WWN:     /* 0x98 */
+ 	case MBX_LOAD_EXP_ROM:	/* 0x9C */
++	case MBX_ACCESS_VDATA:	/* 0xA5 */
+ 		return LPFC_MBOX_TMO_FLASH_CMD;
+ 	case MBX_SLI4_CONFIG:	/* 0x9b */
+ 		subsys = lpfc_sli_config_mbox_subsys_get(phba, mboxq);
+@@ -1628,11 +1631,17 @@ lpfc_mbox_tmo_val(struct lpfc_hba *phba,
+ 			case LPFC_MBOX_OPCODE_WRITE_OBJECT:
+ 			case LPFC_MBOX_OPCODE_READ_OBJECT_LIST:
+ 			case LPFC_MBOX_OPCODE_DELETE_OBJECT:
+-			case LPFC_MBOX_OPCODE_GET_FUNCTION_CONFIG:
+ 			case LPFC_MBOX_OPCODE_GET_PROFILE_LIST:
+ 			case LPFC_MBOX_OPCODE_SET_ACT_PROFILE:
++			case LPFC_MBOX_OPCODE_GET_PROFILE_CONFIG:
+ 			case LPFC_MBOX_OPCODE_SET_PROFILE_CONFIG:
+ 			case LPFC_MBOX_OPCODE_GET_FACTORY_PROFILE_CONFIG:
++			case LPFC_MBOX_OPCODE_GET_PROFILE_CAPACITIES:
++			case LPFC_MBOX_OPCODE_SEND_ACTIVATION:
++			case LPFC_MBOX_OPCODE_RESET_LICENSES:
++			case LPFC_MBOX_OPCODE_SET_BOOT_CONFIG:
++			case LPFC_MBOX_OPCODE_GET_VPD_DATA:
++			case LPFC_MBOX_OPCODE_SET_PHYSICAL_LINK_CONFIG:
+ 				return LPFC_MBOX_SLI4_CONFIG_EXTENDED_TMO;
  			}
--		} while (++fcp_qidx < phba->cfg_fcp_io_channel);
--		len += snprintf(pbuffer+len,
--				LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
--	}
- 
--	/* Get mailbox queue information */
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Slow-path MBX MQ information:\n");
--	if (phba->sli4_hba.mbx_wq) {
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Associated CQID[%02d]:\n",
--			phba->sli4_hba.mbx_wq->assoc_qid);
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"\tWQID[%02d], "
--			"QE-COUNT[%04d], QE-SIZE[%04d], "
--			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n\n",
--			phba->sli4_hba.mbx_wq->queue_id,
--			phba->sli4_hba.mbx_wq->entry_count,
--			phba->sli4_hba.mbx_wq->entry_size,
--			phba->sli4_hba.mbx_wq->host_index,
--			phba->sli4_hba.mbx_wq->hba_index);
--	}
-+			/* Slow-path MBOX MQ */
-+			qp = phba->sli4_hba.mbx_wq;
-+			if (qp) {
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"\t\tMBX MQ info: ");
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"AssocCQID[%02d]:\n",
-+					phba->sli4_hba.mbx_wq->assoc_qid);
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"\t\tWQID[%02d], "
-+					"QE-CNT[%04d], QE-SIZE[%04d], "
-+					"HOST-IDX[%04d], PORT-IDX[%04d]",
-+					qp->queue_id, qp->entry_count,
-+					qp->entry_size, qp->host_index,
-+					qp->hba_index);
-+
-+				len +=  snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+				if (len >= max_cnt)
-+					goto too_big;
-+			}
- 
--	/* Get slow-path work queue information */
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Slow-path ELS WQ information:\n");
--	if (phba->sli4_hba.els_wq) {
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Associated CQID[%02d]:\n",
--			phba->sli4_hba.els_wq->assoc_qid);
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"\tWQID[%02d], "
--			"QE-COUNT[%04d], QE-SIZE[%04d], "
--			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n\n",
--			phba->sli4_hba.els_wq->queue_id,
--			phba->sli4_hba.els_wq->entry_count,
--			phba->sli4_hba.els_wq->entry_size,
--			phba->sli4_hba.els_wq->host_index,
--			phba->sli4_hba.els_wq->hba_index);
--	}
-+			/* Slow-path ELS response CQ */
-+			qp = phba->sli4_hba.els_cq;
-+			if (qp) {
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"\tELS CQ info: ");
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"AssocEQID[%02d]: "
-+					"CQ-STAT[max:x%x relw:x%x "
-+					"xabt:x%x wq:x%llx]\n",
-+					qp->assoc_qid,
-+					qp->q_cnt_1, qp->q_cnt_2,
-+					qp->q_cnt_3, qp->q_cnt_4);
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"\tCQID [%02d], "
-+					"QE-CNT[%04d], QE-SIZE[%04d], "
-+					"HOST-IDX[%04d], PORT-IDX[%04d]",
-+					qp->queue_id, qp->entry_count,
-+					qp->entry_size, qp->host_index,
-+					qp->hba_index);
-+
-+				/* Reset max counter */
-+				qp->CQ_max_cqe = 0;
-+
-+				len +=  snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+				if (len >= max_cnt)
-+					goto too_big;
-+			}
- 
--	/* Get fast-path work queue information */
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Fast-path FCP WQ information:\n");
--	if (phba->sli4_hba.fcp_wq) {
--		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_io_channel;
--		     fcp_qidx++) {
--			if (!phba->sli4_hba.fcp_wq[fcp_qidx])
--				continue;
--			len += snprintf(pbuffer+len,
-+			/* Slow-path ELS WQ */
-+			qp = phba->sli4_hba.els_wq;
-+			if (qp) {
-+				len += snprintf(pbuffer+len,
- 					LPFC_QUE_INFO_GET_BUF_SIZE-len,
--				"Associated CQID[%02d]:\n",
--				phba->sli4_hba.fcp_wq[fcp_qidx]->assoc_qid);
--			len += snprintf(pbuffer+len,
-+					"\t\tELS WQ info: ");
-+				len += snprintf(pbuffer+len,
- 					LPFC_QUE_INFO_GET_BUF_SIZE-len,
--				"\tWQID[%02d], "
--				"QE-COUNT[%04d], WQE-SIZE[%04d], "
--				"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
--				phba->sli4_hba.fcp_wq[fcp_qidx]->queue_id,
--				phba->sli4_hba.fcp_wq[fcp_qidx]->entry_count,
--				phba->sli4_hba.fcp_wq[fcp_qidx]->entry_size,
--				phba->sli4_hba.fcp_wq[fcp_qidx]->host_index,
--				phba->sli4_hba.fcp_wq[fcp_qidx]->hba_index);
-+					"AssocCQID[%02d]: "
-+					" WQ-STAT[oflow:x%x "
-+					"posted:x%llx]\n",
-+					qp->assoc_qid,
-+					qp->q_cnt_1, qp->q_cnt_4);
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"\t\tWQID[%02d], "
-+					"QE-CNT[%04d], QE-SIZE[%04d], "
-+					"HOST-IDX[%04d], PORT-IDX[%04d]",
-+					qp->queue_id, qp->entry_count,
-+					qp->entry_size, qp->host_index,
-+					qp->hba_index);
-+
-+				len +=  snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+				if (len >= max_cnt)
-+					goto too_big;
-+			}
-+
-+			if (phba->sli4_hba.hdr_rq && phba->sli4_hba.dat_rq) {
-+				/* Slow-path RQ header */
-+				qp = phba->sli4_hba.hdr_rq;
-+
-+				len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"\t\tRQ info: ");
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"AssocCQID[%02d]: "
-+					"RQ-STAT[nopost:x%x nobuf:x%x "
-+					"trunc:x%x rcv:x%llx]\n",
-+					qp->assoc_qid,
-+					qp->q_cnt_1, qp->q_cnt_2,
-+					qp->q_cnt_3, qp->q_cnt_4);
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"\t\tHQID[%02d], "
-+					"QE-CNT[%04d], QE-SIZE[%04d], "
-+					"HOST-IDX[%04d], PORT-IDX[%04d]\n",
-+					qp->queue_id,
-+					qp->entry_count,
-+					qp->entry_size,
-+					qp->host_index,
-+					qp->hba_index);
-+
-+				/* Slow-path RQ data */
-+				qp = phba->sli4_hba.dat_rq;
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+					"\t\tDQID[%02d], "
-+					"QE-CNT[%04d], QE-SIZE[%04d], "
-+					"HOST-IDX[%04d], PORT-IDX[%04d]\n",
-+					qp->queue_id,
-+					qp->entry_count,
-+					qp->entry_size,
-+					qp->host_index,
-+					qp->hba_index);
-+
-+				len +=  snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+			}
  		}
--		len += snprintf(pbuffer+len,
--				LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
- 	}
- 
--	/* Get receive queue information */
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Slow-path RQ information:\n");
--	if (phba->sli4_hba.hdr_rq && phba->sli4_hba.dat_rq) {
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"Associated CQID[%02d]:\n",
--			phba->sli4_hba.hdr_rq->assoc_qid);
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"\tHQID[%02d], "
--			"QE-COUNT[%04d], QE-SIZE[%04d], "
--			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
--			phba->sli4_hba.hdr_rq->queue_id,
--			phba->sli4_hba.hdr_rq->entry_count,
--			phba->sli4_hba.hdr_rq->entry_size,
--			phba->sli4_hba.hdr_rq->host_index,
--			phba->sli4_hba.hdr_rq->hba_index);
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
--			"\tDQID[%02d], "
--			"QE-COUNT[%04d], QE-SIZE[%04d], "
--			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
--			phba->sli4_hba.dat_rq->queue_id,
--			phba->sli4_hba.dat_rq->entry_count,
--			phba->sli4_hba.dat_rq->entry_size,
--			phba->sli4_hba.dat_rq->host_index,
--			phba->sli4_hba.dat_rq->hba_index);
--	}
-+	spin_unlock_irq(&phba->hbalock);
-+	return simple_read_from_buffer(buf, nbytes, ppos, pbuffer, len);
-+
-+too_big:
-+	len +=  snprintf(pbuffer+len,
-+		LPFC_QUE_INFO_GET_BUF_SIZE-len, "Truncated ...\n");
-+	spin_unlock_irq(&phba->hbalock);
- 	return simple_read_from_buffer(buf, nbytes, ppos, pbuffer, len);
- }
- 
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 14:32:56.396261733 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 14:35:29.493256415 -0400
+@@ -2087,6 +2087,7 @@ lpfc_sli_chk_mbx_command(uint8_t mbxComm
+ 	case MBX_READ_EVENT_LOG:
+ 	case MBX_SECURITY_MGMT:
+ 	case MBX_AUTH_PORT:
++	case MBX_ACCESS_VDATA:
+ 		ret = mbxCommand;
+ 		break;
+ 	default:
 
 
 
