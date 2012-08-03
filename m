@@ -1,76 +1,1930 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 13/21] lpfc 8.3.33: Add Interrupts per second stats via
- debugfs
-Date: Fri, 3 Aug 2012 12:36:03 -0400
-Message-ID: <1344011763.6110.38.camel@myfc17>
+Subject: [PATCH 14/21] lpfc 8.3.33: Tie parallel I/O queues into separate
+ MSIX vectors
+Date: Fri, 3 Aug 2012 12:36:13 -0400
+Message-ID: <1344011773.6110.39.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:40330 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751514Ab2HCQgK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:36:10 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:44839 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752826Ab2HCQgV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:36:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Add Interrupts per second stats via debugfs
+Tie parallel I/O queues into separate MSIX vectors
+Add fcp_io_channel module attribute to control amount of parallel I/O queues
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_sli.c |   18 +++++++++++++++++-
- lpfc_sli.h |    2 ++
- 2 files changed, 19 insertions(+), 1 deletion(-)
+ lpfc.h         |    1 
+ lpfc_attr.c    |   26 +
+ lpfc_crtn.h    |    3 
+ lpfc_debugfs.c |   78 +----
+ lpfc_debugfs.h |   69 +----
+ lpfc_init.c    |  752 ++++++++++++++++++++++++---------------------------------
+ lpfc_sli.c     |  184 +++----------
+ lpfc_sli4.h    |   28 --
+ 8 files changed, 454 insertions(+), 687 deletions(-)
 
 
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2012-07-22 11:18:36.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2012-07-22 14:17:41.352293516 -0400
+@@ -3654,7 +3654,7 @@ lpfc_fcp_imax_store(struct device *dev,
+ 		return -EINVAL;
+ 
+ 	phba->cfg_fcp_imax = (uint32_t)val;
+-	for (i = 0; i < phba->cfg_fcp_eq_count; i += LPFC_MAX_EQ_DELAY)
++	for (i = 0; i < phba->cfg_fcp_io_channel; i += LPFC_MAX_EQ_DELAY)
+ 		lpfc_modify_fcp_eq_delay(phba, i);
+ 
+ 	return strlen(buf);
+@@ -3844,21 +3844,33 @@ LPFC_ATTR_R(use_msi, 2, 0, 2, "Use Messa
+ 
+ /*
+ # lpfc_fcp_wq_count: Set the number of fast-path FCP work queues
++# This parameter is ignored and will eventually be depricated
+ #
+-# Value range is [1,31]. Default value is 4.
++# Value range is [1,7]. Default value is 4.
+ */
+-LPFC_ATTR_R(fcp_wq_count, LPFC_FP_WQN_DEF, LPFC_FP_WQN_MIN, LPFC_FP_WQN_MAX,
++LPFC_ATTR_R(fcp_wq_count, LPFC_FCP_IO_CHAN_DEF, LPFC_FCP_IO_CHAN_MIN,
++	    LPFC_FCP_IO_CHAN_MAX,
+ 	    "Set the number of fast-path FCP work queues, if possible");
+ 
+ /*
+-# lpfc_fcp_eq_count: Set the number of fast-path FCP event queues
++# lpfc_fcp_eq_count: Set the number of FCP EQ/CQ/WQ IO channels
+ #
+-# Value range is [1,7]. Default value is 1.
++# Value range is [1,7]. Default value is 4.
+ */
+-LPFC_ATTR_R(fcp_eq_count, LPFC_FP_EQN_DEF, LPFC_FP_EQN_MIN, LPFC_FP_EQN_MAX,
++LPFC_ATTR_R(fcp_eq_count, LPFC_FCP_IO_CHAN_DEF, LPFC_FCP_IO_CHAN_MIN,
++	    LPFC_FCP_IO_CHAN_MAX,
+ 	    "Set the number of fast-path FCP event queues, if possible");
+ 
+ /*
++# lpfc_fcp_io_channel: Set the number of FCP EQ/CQ/WQ IO channels
++#
++# Value range is [1,7]. Default value is 4.
++*/
++LPFC_ATTR_R(fcp_io_channel, LPFC_FCP_IO_CHAN_DEF, LPFC_FCP_IO_CHAN_MIN,
++	    LPFC_FCP_IO_CHAN_MAX,
++	    "Set the number of FCP I/O channels");
++
++/*
+ # lpfc_enable_hba_reset: Allow or prevent HBA resets to the hardware.
+ #       0  = HBA resets disabled
+ #       1  = HBA resets enabled (default)
+@@ -4002,6 +4014,7 @@ struct device_attribute *lpfc_hba_attrs[
+ 	&dev_attr_lpfc_fcp_imax,
+ 	&dev_attr_lpfc_fcp_wq_count,
+ 	&dev_attr_lpfc_fcp_eq_count,
++	&dev_attr_lpfc_fcp_io_channel,
+ 	&dev_attr_lpfc_enable_bg,
+ 	&dev_attr_lpfc_soft_wwnn,
+ 	&dev_attr_lpfc_soft_wwpn,
+@@ -4980,6 +4993,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ 	lpfc_fcp_imax_init(phba, lpfc_fcp_imax);
+ 	lpfc_fcp_wq_count_init(phba, lpfc_fcp_wq_count);
+ 	lpfc_fcp_eq_count_init(phba, lpfc_fcp_eq_count);
++	lpfc_fcp_io_channel_init(phba, lpfc_fcp_io_channel);
+ 	lpfc_enable_hba_reset_init(phba, lpfc_enable_hba_reset);
+ 	lpfc_enable_hba_heartbeat_init(phba, lpfc_enable_hba_heartbeat);
+ 	lpfc_enable_bg_init(phba, lpfc_enable_bg);
+diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2012-07-22 11:18:36.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2012-07-22 14:17:12.560294516 -0400
+@@ -196,8 +196,7 @@ irqreturn_t lpfc_sli_intr_handler(int, v
+ irqreturn_t lpfc_sli_sp_intr_handler(int, void *);
+ irqreturn_t lpfc_sli_fp_intr_handler(int, void *);
+ irqreturn_t lpfc_sli4_intr_handler(int, void *);
+-irqreturn_t lpfc_sli4_sp_intr_handler(int, void *);
+-irqreturn_t lpfc_sli4_fp_intr_handler(int, void *);
++irqreturn_t lpfc_sli4_hba_intr_handler(int, void *);
+ 
+ void lpfc_read_rev(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ void lpfc_sli4_swap_str(struct lpfc_hba *, LPFC_MBOXQ_t *);
+diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c	2012-07-22 14:02:13.468325747 -0400
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c	2012-07-22 14:17:12.571294516 -0400
+@@ -2013,38 +2013,23 @@ lpfc_idiag_queinfo_read(struct file *fil
+ 	if (*ppos)
+ 		return 0;
+ 
+-	/* Get slow-path event queue information */
+-	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
+-			"Slow-path EQ information:\n");
+-	if (phba->sli4_hba.sp_eq) {
+-		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
+-			"\tEQID[%02d], "
+-			"QE-COUNT[%04d], QE-SIZE[%04d], "
+-			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n\n",
+-			phba->sli4_hba.sp_eq->queue_id,
+-			phba->sli4_hba.sp_eq->entry_count,
+-			phba->sli4_hba.sp_eq->entry_size,
+-			phba->sli4_hba.sp_eq->host_index,
+-			phba->sli4_hba.sp_eq->hba_index);
+-	}
+-
+ 	/* Get fast-path event queue information */
+ 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
+-			"Fast-path EQ information:\n");
+-	if (phba->sli4_hba.fp_eq) {
+-		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_eq_count;
++			"HBA EQ information:\n");
++	if (phba->sli4_hba.hba_eq) {
++		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_io_channel;
+ 		     fcp_qidx++) {
+-			if (phba->sli4_hba.fp_eq[fcp_qidx]) {
++			if (phba->sli4_hba.hba_eq[fcp_qidx]) {
+ 				len += snprintf(pbuffer+len,
+ 					LPFC_QUE_INFO_GET_BUF_SIZE-len,
+ 				"\tEQID[%02d], "
+ 				"QE-COUNT[%04d], QE-SIZE[%04d], "
+ 				"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
+-				phba->sli4_hba.fp_eq[fcp_qidx]->queue_id,
+-				phba->sli4_hba.fp_eq[fcp_qidx]->entry_count,
+-				phba->sli4_hba.fp_eq[fcp_qidx]->entry_size,
+-				phba->sli4_hba.fp_eq[fcp_qidx]->host_index,
+-				phba->sli4_hba.fp_eq[fcp_qidx]->hba_index);
++				phba->sli4_hba.hba_eq[fcp_qidx]->queue_id,
++				phba->sli4_hba.hba_eq[fcp_qidx]->entry_count,
++				phba->sli4_hba.hba_eq[fcp_qidx]->entry_size,
++				phba->sli4_hba.hba_eq[fcp_qidx]->host_index,
++				phba->sli4_hba.hba_eq[fcp_qidx]->hba_index);
+ 			}
+ 		}
+ 	}
+@@ -2108,7 +2093,7 @@ lpfc_idiag_queinfo_read(struct file *fil
+ 				phba->sli4_hba.fcp_cq[fcp_qidx]->host_index,
+ 				phba->sli4_hba.fcp_cq[fcp_qidx]->hba_index);
+ 			}
+-		} while (++fcp_qidx < phba->cfg_fcp_eq_count);
++		} while (++fcp_qidx < phba->cfg_fcp_io_channel);
+ 		len += snprintf(pbuffer+len,
+ 				LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
+ 	}
+@@ -2153,7 +2138,7 @@ lpfc_idiag_queinfo_read(struct file *fil
+ 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
+ 			"Fast-path FCP WQ information:\n");
+ 	if (phba->sli4_hba.fcp_wq) {
+-		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_wq_count;
++		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_io_channel;
+ 		     fcp_qidx++) {
+ 			if (!phba->sli4_hba.fcp_wq[fcp_qidx])
+ 				continue;
+@@ -2410,31 +2395,21 @@ lpfc_idiag_queacc_write(struct file *fil
+ 
+ 	switch (quetp) {
+ 	case LPFC_IDIAG_EQ:
+-		/* Slow-path event queue */
+-		if (phba->sli4_hba.sp_eq &&
+-		    phba->sli4_hba.sp_eq->queue_id == queid) {
+-			/* Sanity check */
+-			rc = lpfc_idiag_que_param_check(
+-					phba->sli4_hba.sp_eq, index, count);
+-			if (rc)
+-				goto error_out;
+-			idiag.ptr_private = phba->sli4_hba.sp_eq;
+-			goto pass_check;
+-		}
+-		/* Fast-path event queue */
+-		if (phba->sli4_hba.fp_eq) {
+-			for (qidx = 0; qidx < phba->cfg_fcp_eq_count; qidx++) {
+-				if (phba->sli4_hba.fp_eq[qidx] &&
+-				    phba->sli4_hba.fp_eq[qidx]->queue_id ==
++		/* HBA event queue */
++		if (phba->sli4_hba.hba_eq) {
++			for (qidx = 0; qidx < phba->cfg_fcp_io_channel;
++				qidx++) {
++				if (phba->sli4_hba.hba_eq[qidx] &&
++				    phba->sli4_hba.hba_eq[qidx]->queue_id ==
+ 				    queid) {
+ 					/* Sanity check */
+ 					rc = lpfc_idiag_que_param_check(
+-						phba->sli4_hba.fp_eq[qidx],
++						phba->sli4_hba.hba_eq[qidx],
+ 						index, count);
+ 					if (rc)
+ 						goto error_out;
+ 					idiag.ptr_private =
+-						phba->sli4_hba.fp_eq[qidx];
++						phba->sli4_hba.hba_eq[qidx];
+ 					goto pass_check;
+ 				}
+ 			}
+@@ -2481,7 +2456,7 @@ lpfc_idiag_queacc_write(struct file *fil
+ 						phba->sli4_hba.fcp_cq[qidx];
+ 					goto pass_check;
+ 				}
+-			} while (++qidx < phba->cfg_fcp_eq_count);
++			} while (++qidx < phba->cfg_fcp_io_channel);
+ 		}
+ 		goto error_out;
+ 		break;
+@@ -2513,7 +2488,8 @@ lpfc_idiag_queacc_write(struct file *fil
+ 		}
+ 		/* FCP work queue */
+ 		if (phba->sli4_hba.fcp_wq) {
+-			for (qidx = 0; qidx < phba->cfg_fcp_wq_count; qidx++) {
++			for (qidx = 0; qidx < phba->cfg_fcp_io_channel;
++				qidx++) {
+ 				if (!phba->sli4_hba.fcp_wq[qidx])
+ 					continue;
+ 				if (phba->sli4_hba.fcp_wq[qidx]->queue_id ==
+@@ -4492,7 +4468,7 @@ lpfc_debug_dump_all_queues(struct lpfc_h
+ 	lpfc_debug_dump_mbx_wq(phba);
+ 	lpfc_debug_dump_els_wq(phba);
+ 
+-	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_wq_count; fcp_wqidx++)
++	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_io_channel; fcp_wqidx++)
+ 		lpfc_debug_dump_fcp_wq(phba, fcp_wqidx);
+ 
+ 	lpfc_debug_dump_hdr_rq(phba);
+@@ -4503,14 +4479,12 @@ lpfc_debug_dump_all_queues(struct lpfc_h
+ 	lpfc_debug_dump_mbx_cq(phba);
+ 	lpfc_debug_dump_els_cq(phba);
+ 
+-	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_wq_count; fcp_wqidx++)
++	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_io_channel; fcp_wqidx++)
+ 		lpfc_debug_dump_fcp_cq(phba, fcp_wqidx);
+ 
+ 	/*
+ 	 * Dump Event Queues (EQs)
+ 	 */
+-	lpfc_debug_dump_sp_eq(phba);
+-
+-	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_wq_count; fcp_wqidx++)
+-		lpfc_debug_dump_fcp_eq(phba, fcp_wqidx);
++	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_io_channel; fcp_wqidx++)
++		lpfc_debug_dump_hba_eq(phba, fcp_wqidx);
+ }
+diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
+--- a/drivers/scsi/lpfc/lpfc_debugfs.h	2012-07-22 14:02:13.378325751 -0400
++++ b/drivers/scsi/lpfc/lpfc_debugfs.h	2012-07-22 14:17:12.574294516 -0400
+@@ -369,7 +369,7 @@ static inline void
+ lpfc_debug_dump_fcp_wq(struct lpfc_hba *phba, int fcp_wqidx)
+ {
+ 	/* sanity check */
+-	if (fcp_wqidx >= phba->cfg_fcp_wq_count)
++	if (fcp_wqidx >= phba->cfg_fcp_io_channel)
+ 		return;
+ 
+ 	printk(KERN_ERR "FCP WQ: WQ[Idx:%d|Qid:%d]\n",
+@@ -391,15 +391,15 @@ lpfc_debug_dump_fcp_cq(struct lpfc_hba *
+ 	int fcp_cqidx, fcp_cqid;
+ 
+ 	/* sanity check */
+-	if (fcp_wqidx >= phba->cfg_fcp_wq_count)
++	if (fcp_wqidx >= phba->cfg_fcp_io_channel)
+ 		return;
+ 
+ 	fcp_cqid = phba->sli4_hba.fcp_wq[fcp_wqidx]->assoc_qid;
+-	for (fcp_cqidx = 0; fcp_cqidx < phba->cfg_fcp_eq_count; fcp_cqidx++)
++	for (fcp_cqidx = 0; fcp_cqidx < phba->cfg_fcp_io_channel; fcp_cqidx++)
+ 		if (phba->sli4_hba.fcp_cq[fcp_cqidx]->queue_id == fcp_cqid)
+ 			break;
+ 	if (phba->intr_type == MSIX) {
+-		if (fcp_cqidx >= phba->cfg_fcp_eq_count)
++		if (fcp_cqidx >= phba->cfg_fcp_io_channel)
+ 			return;
+ 	} else {
+ 		if (fcp_cqidx > 0)
+@@ -413,7 +413,7 @@ lpfc_debug_dump_fcp_cq(struct lpfc_hba *
+ }
+ 
+ /**
+- * lpfc_debug_dump_fcp_eq - dump all entries from a fcp work queue's evt queue
++ * lpfc_debug_dump_hba_eq - dump all entries from a fcp work queue's evt queue
+  * @phba: Pointer to HBA context object.
+  * @fcp_wqidx: Index to a FCP work queue.
+  *
+@@ -421,36 +421,30 @@ lpfc_debug_dump_fcp_cq(struct lpfc_hba *
+  * associated to the FCP work queue specified by the @fcp_wqidx.
+  **/
+ static inline void
+-lpfc_debug_dump_fcp_eq(struct lpfc_hba *phba, int fcp_wqidx)
++lpfc_debug_dump_hba_eq(struct lpfc_hba *phba, int fcp_wqidx)
+ {
+ 	struct lpfc_queue *qdesc;
+ 	int fcp_eqidx, fcp_eqid;
+ 	int fcp_cqidx, fcp_cqid;
+ 
+ 	/* sanity check */
+-	if (fcp_wqidx >= phba->cfg_fcp_wq_count)
++	if (fcp_wqidx >= phba->cfg_fcp_io_channel)
+ 		return;
+ 	fcp_cqid = phba->sli4_hba.fcp_wq[fcp_wqidx]->assoc_qid;
+-	for (fcp_cqidx = 0; fcp_cqidx < phba->cfg_fcp_eq_count; fcp_cqidx++)
++	for (fcp_cqidx = 0; fcp_cqidx < phba->cfg_fcp_io_channel; fcp_cqidx++)
+ 		if (phba->sli4_hba.fcp_cq[fcp_cqidx]->queue_id == fcp_cqid)
+ 			break;
+ 	if (phba->intr_type == MSIX) {
+-		if (fcp_cqidx >= phba->cfg_fcp_eq_count)
++		if (fcp_cqidx >= phba->cfg_fcp_io_channel)
+ 			return;
+ 	} else {
+ 		if (fcp_cqidx > 0)
+ 			return;
+ 	}
+ 
+-	if (phba->cfg_fcp_eq_count == 0) {
+-		fcp_eqidx = -1;
+-		fcp_eqid = phba->sli4_hba.sp_eq->queue_id;
+-		qdesc = phba->sli4_hba.sp_eq;
+-	} else {
+-		fcp_eqidx = fcp_cqidx;
+-		fcp_eqid = phba->sli4_hba.fp_eq[fcp_eqidx]->queue_id;
+-		qdesc = phba->sli4_hba.fp_eq[fcp_eqidx];
+-	}
++	fcp_eqidx = fcp_cqidx;
++	fcp_eqid = phba->sli4_hba.hba_eq[fcp_eqidx]->queue_id;
++	qdesc = phba->sli4_hba.hba_eq[fcp_eqidx];
+ 
+ 	printk(KERN_ERR "FCP EQ: WQ[Idx:%d|Qid:%d]->CQ[Idx:%d|Qid:%d]->"
+ 		"EQ[Idx:%d|Qid:%d]\n",
+@@ -546,25 +540,6 @@ lpfc_debug_dump_mbx_cq(struct lpfc_hba *
+ }
+ 
+ /**
+- * lpfc_debug_dump_sp_eq - dump all entries from slow-path event queue
+- * @phba: Pointer to HBA context object.
+- *
+- * This function dumps all entries from the slow-path event queue.
+- **/
+-static inline void
+-lpfc_debug_dump_sp_eq(struct lpfc_hba *phba)
+-{
+-	printk(KERN_ERR "SP EQ: WQ[Qid:%d/Qid:%d]->CQ[Qid:%d/Qid:%d]->"
+-		"EQ[Qid:%d]:\n",
+-		phba->sli4_hba.mbx_wq->queue_id,
+-		phba->sli4_hba.els_wq->queue_id,
+-		phba->sli4_hba.mbx_cq->queue_id,
+-		phba->sli4_hba.els_cq->queue_id,
+-		phba->sli4_hba.sp_eq->queue_id);
+-	lpfc_debug_dump_q(phba->sli4_hba.sp_eq);
+-}
+-
+-/**
+  * lpfc_debug_dump_wq_by_id - dump all entries from a work queue by queue id
+  * @phba: Pointer to HBA context object.
+  * @qid: Work queue identifier.
+@@ -577,10 +552,10 @@ lpfc_debug_dump_wq_by_id(struct lpfc_hba
+ {
+ 	int wq_idx;
+ 
+-	for (wq_idx = 0; wq_idx < phba->cfg_fcp_wq_count; wq_idx++)
++	for (wq_idx = 0; wq_idx < phba->cfg_fcp_io_channel; wq_idx++)
+ 		if (phba->sli4_hba.fcp_wq[wq_idx]->queue_id == qid)
+ 			break;
+-	if (wq_idx < phba->cfg_fcp_wq_count) {
++	if (wq_idx < phba->cfg_fcp_io_channel) {
+ 		printk(KERN_ERR "FCP WQ[Idx:%d|Qid:%d]\n", wq_idx, qid);
+ 		lpfc_debug_dump_q(phba->sli4_hba.fcp_wq[wq_idx]);
+ 		return;
+@@ -647,9 +622,9 @@ lpfc_debug_dump_cq_by_id(struct lpfc_hba
+ 	do {
+ 		if (phba->sli4_hba.fcp_cq[cq_idx]->queue_id == qid)
+ 			break;
+-	} while (++cq_idx < phba->cfg_fcp_eq_count);
++	} while (++cq_idx < phba->cfg_fcp_io_channel);
+ 
+-	if (cq_idx < phba->cfg_fcp_eq_count) {
++	if (cq_idx < phba->cfg_fcp_io_channel) {
+ 		printk(KERN_ERR "FCP CQ[Idx:%d|Qid:%d]\n", cq_idx, qid);
+ 		lpfc_debug_dump_q(phba->sli4_hba.fcp_cq[cq_idx]);
+ 		return;
+@@ -680,21 +655,17 @@ lpfc_debug_dump_eq_by_id(struct lpfc_hba
+ {
+ 	int eq_idx;
+ 
+-	for (eq_idx = 0; eq_idx < phba->cfg_fcp_eq_count; eq_idx++) {
+-		if (phba->sli4_hba.fp_eq[eq_idx]->queue_id == qid)
++	for (eq_idx = 0; eq_idx < phba->cfg_fcp_io_channel; eq_idx++) {
++		if (phba->sli4_hba.hba_eq[eq_idx]->queue_id == qid)
+ 			break;
+ 	}
+ 
+-	if (eq_idx < phba->cfg_fcp_eq_count) {
++	if (eq_idx < phba->cfg_fcp_io_channel) {
+ 		printk(KERN_ERR "FCP EQ[Idx:%d|Qid:%d]\n", eq_idx, qid);
+-		lpfc_debug_dump_q(phba->sli4_hba.fp_eq[eq_idx]);
++		lpfc_debug_dump_q(phba->sli4_hba.hba_eq[eq_idx]);
+ 		return;
+ 	}
+ 
+-	if (phba->sli4_hba.sp_eq->queue_id == qid) {
+-		printk(KERN_ERR "SP EQ[|Qid:%d]\n", qid);
+-		lpfc_debug_dump_q(phba->sli4_hba.sp_eq);
+-	}
+ }
+ 
+ void lpfc_debug_dump_all_queues(struct lpfc_hba *);
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2012-07-22 14:02:13.635325742 -0400
++++ b/drivers/scsi/lpfc/lpfc.h	2012-07-22 14:17:12.644294513 -0400
+@@ -695,6 +695,7 @@ struct lpfc_hba {
+ 	uint32_t cfg_fcp_imax;
+ 	uint32_t cfg_fcp_wq_count;
+ 	uint32_t cfg_fcp_eq_count;
++	uint32_t cfg_fcp_io_channel;
+ 	uint32_t cfg_sg_seg_cnt;
+ 	uint32_t cfg_prot_sg_seg_cnt;
+ 	uint32_t cfg_sg_dma_buf_size;
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2012-07-22 14:02:13.657325741 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2012-07-22 14:17:41.361293517 -0400
+@@ -4702,6 +4702,10 @@ lpfc_sli4_driver_resource_setup(struct l
+ 	/* Get all the module params for configuring this host */
+ 	lpfc_get_cfgparam(phba);
+ 	phba->max_vpi = LPFC_MAX_VPI;
++
++	/* Eventually cfg_fcp_eq_count / cfg_fcp_wq_count will be depricated */
++	phba->cfg_fcp_io_channel = phba->cfg_fcp_eq_count;
++
+ 	/* This will be set to correct value after the read_config mbox */
+ 	phba->max_vports = 0;
+ 
+@@ -4722,7 +4726,7 @@ lpfc_sli4_driver_resource_setup(struct l
+ 	 */
+ 	if (!phba->sli.ring)
+ 		phba->sli.ring = kzalloc(
+-			(LPFC_SLI3_MAX_RING + phba->cfg_fcp_eq_count) *
++			(LPFC_SLI3_MAX_RING + phba->cfg_fcp_io_channel) *
+ 			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
+ 	if (!phba->sli.ring)
+ 		return -ENOMEM;
+@@ -4931,21 +4935,15 @@ lpfc_sli4_driver_resource_setup(struct l
+ 		goto out_remove_rpi_hdrs;
+ 	}
+ 
+-	/*
+-	 * The cfg_fcp_eq_count can be zero whenever there is exactly one
+-	 * interrupt vector.  This is not an error
+-	 */
+-	if (phba->cfg_fcp_eq_count) {
+-		phba->sli4_hba.fcp_eq_hdl =
+-				kzalloc((sizeof(struct lpfc_fcp_eq_hdl) *
+-				    phba->cfg_fcp_eq_count), GFP_KERNEL);
+-		if (!phba->sli4_hba.fcp_eq_hdl) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"2572 Failed allocate memory for "
+-					"fast-path per-EQ handle array\n");
+-			rc = -ENOMEM;
+-			goto out_free_fcf_rr_bmask;
+-		}
++	phba->sli4_hba.fcp_eq_hdl =
++			kzalloc((sizeof(struct lpfc_fcp_eq_hdl) *
++			    phba->cfg_fcp_io_channel), GFP_KERNEL);
++	if (!phba->sli4_hba.fcp_eq_hdl) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"2572 Failed allocate memory for "
++				"fast-path per-EQ handle array\n");
++		rc = -ENOMEM;
++		goto out_free_fcf_rr_bmask;
+ 	}
+ 
+ 	phba->sli4_hba.msix_entries = kzalloc((sizeof(struct msix_entry) *
+@@ -6538,53 +6536,26 @@ lpfc_setup_endian_order(struct lpfc_hba
+ static int
+ lpfc_sli4_queue_verify(struct lpfc_hba *phba)
+ {
+-	int cfg_fcp_wq_count;
+-	int cfg_fcp_eq_count;
++	int cfg_fcp_io_channel;
+ 
+ 	/*
+-	 * Sanity check for confiugred queue parameters against the run-time
++	 * Sanity check for configured queue parameters against the run-time
+ 	 * device parameters
+ 	 */
+ 
+-	/* Sanity check on FCP fast-path WQ parameters */
+-	cfg_fcp_wq_count = phba->cfg_fcp_wq_count;
+-	if (cfg_fcp_wq_count >
+-	    (phba->sli4_hba.max_cfg_param.max_wq - LPFC_SP_WQN_DEF)) {
+-		cfg_fcp_wq_count = phba->sli4_hba.max_cfg_param.max_wq -
+-				   LPFC_SP_WQN_DEF;
+-		if (cfg_fcp_wq_count < LPFC_FP_WQN_MIN) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"2581 Not enough WQs (%d) from "
+-					"the pci function for supporting "
+-					"FCP WQs (%d)\n",
+-					phba->sli4_hba.max_cfg_param.max_wq,
+-					phba->cfg_fcp_wq_count);
+-			goto out_error;
+-		}
+-		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+-				"2582 Not enough WQs (%d) from the pci "
+-				"function for supporting the requested "
+-				"FCP WQs (%d), the actual FCP WQs can "
+-				"be supported: %d\n",
+-				phba->sli4_hba.max_cfg_param.max_wq,
+-				phba->cfg_fcp_wq_count, cfg_fcp_wq_count);
+-	}
+-	/* The actual number of FCP work queues adopted */
+-	phba->cfg_fcp_wq_count = cfg_fcp_wq_count;
++	/* Sanity check on HBA EQ parameters */
++	cfg_fcp_io_channel = phba->cfg_fcp_io_channel;
+ 
+-	/* Sanity check on FCP fast-path EQ parameters */
+-	cfg_fcp_eq_count = phba->cfg_fcp_eq_count;
+-	if (cfg_fcp_eq_count >
+-	    (phba->sli4_hba.max_cfg_param.max_eq - LPFC_SP_EQN_DEF)) {
+-		cfg_fcp_eq_count = phba->sli4_hba.max_cfg_param.max_eq -
+-				   LPFC_SP_EQN_DEF;
+-		if (cfg_fcp_eq_count < LPFC_FP_EQN_MIN) {
++	if (cfg_fcp_io_channel >
++	    phba->sli4_hba.max_cfg_param.max_eq) {
++		cfg_fcp_io_channel = phba->sli4_hba.max_cfg_param.max_eq;
++		if (cfg_fcp_io_channel < LPFC_FCP_IO_CHAN_MIN) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 					"2574 Not enough EQs (%d) from the "
+ 					"pci function for supporting FCP "
+ 					"EQs (%d)\n",
+ 					phba->sli4_hba.max_cfg_param.max_eq,
+-					phba->cfg_fcp_eq_count);
++					phba->cfg_fcp_io_channel);
+ 			goto out_error;
+ 		}
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+@@ -6593,22 +6564,16 @@ lpfc_sli4_queue_verify(struct lpfc_hba *
+ 				"FCP EQs (%d), the actual FCP EQs can "
+ 				"be supported: %d\n",
+ 				phba->sli4_hba.max_cfg_param.max_eq,
+-				phba->cfg_fcp_eq_count, cfg_fcp_eq_count);
+-	}
+-	/* It does not make sense to have more EQs than WQs */
+-	if (cfg_fcp_eq_count > phba->cfg_fcp_wq_count) {
+-		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+-				"2593 The FCP EQ count(%d) cannot be greater "
+-				"than the FCP WQ count(%d), limiting the "
+-				"FCP EQ count to %d\n", cfg_fcp_eq_count,
+-				phba->cfg_fcp_wq_count,
+-				phba->cfg_fcp_wq_count);
+-		cfg_fcp_eq_count = phba->cfg_fcp_wq_count;
++				phba->cfg_fcp_io_channel, cfg_fcp_io_channel);
+ 	}
++
++	/* Eventually cfg_fcp_eq_count / cfg_fcp_wq_count will be depricated */
++
+ 	/* The actual number of FCP event queues adopted */
+-	phba->cfg_fcp_eq_count = cfg_fcp_eq_count;
+-	/* The overall number of event queues used */
+-	phba->sli4_hba.cfg_eqn = phba->cfg_fcp_eq_count + LPFC_SP_EQN_DEF;
++	phba->cfg_fcp_eq_count = cfg_fcp_io_channel;
++	phba->cfg_fcp_wq_count = cfg_fcp_io_channel;
++	phba->cfg_fcp_io_channel = cfg_fcp_io_channel;
++	phba->sli4_hba.cfg_eqn = cfg_fcp_io_channel;
+ 
+ 	/* Get EQ depth from module parameter, fake the default for now */
+ 	phba->sli4_hba.eq_esize = LPFC_EQE_SIZE_4B;
+@@ -6641,50 +6606,104 @@ int
+ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ {
+ 	struct lpfc_queue *qdesc;
+-	int fcp_eqidx, fcp_cqidx, fcp_wqidx;
++	int idx;
+ 
+ 	/*
+-	 * Create Event Queues (EQs)
++	 * Create HBA Record arrays.
+ 	 */
++	if (!phba->cfg_fcp_io_channel)
++		return -ERANGE;
+ 
+-	/* Create slow path event queue */
+-	qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.eq_esize,
+-				      phba->sli4_hba.eq_ecount);
+-	if (!qdesc) {
++	phba->sli4_hba.mq_esize = LPFC_MQE_SIZE;
++	phba->sli4_hba.mq_ecount = LPFC_MQE_DEF_COUNT;
++	phba->sli4_hba.wq_esize = LPFC_WQE_SIZE;
++	phba->sli4_hba.wq_ecount = LPFC_WQE_DEF_COUNT;
++	phba->sli4_hba.rq_esize = LPFC_RQE_SIZE;
++	phba->sli4_hba.rq_ecount = LPFC_RQE_DEF_COUNT;
++
++	phba->sli4_hba.hba_eq =  kzalloc((sizeof(struct lpfc_queue *) *
++				phba->cfg_fcp_io_channel), GFP_KERNEL);
++	if (!phba->sli4_hba.hba_eq) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++			"2576 Failed allocate memory for "
++			"fast-path EQ record array\n");
++		goto out_error;
++	}
++
++	phba->sli4_hba.fcp_cq = kzalloc((sizeof(struct lpfc_queue *) *
++				phba->cfg_fcp_io_channel), GFP_KERNEL);
++	if (!phba->sli4_hba.fcp_cq) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"0496 Failed allocate slow-path EQ\n");
++				"2577 Failed allocate memory for fast-path "
++				"CQ record array\n");
++		goto out_error;
++	}
++
++	phba->sli4_hba.fcp_wq = kzalloc((sizeof(struct lpfc_queue *) *
++				phba->cfg_fcp_io_channel), GFP_KERNEL);
++	if (!phba->sli4_hba.fcp_wq) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"2578 Failed allocate memory for fast-path "
++				"WQ record array\n");
+ 		goto out_error;
+ 	}
+-	phba->sli4_hba.sp_eq = qdesc;
+ 
+ 	/*
+-	 * Create fast-path FCP Event Queue(s).  The cfg_fcp_eq_count can be
+-	 * zero whenever there is exactly one interrupt vector.  This is not
+-	 * an error.
+-	 */
+-	if (phba->cfg_fcp_eq_count) {
+-		phba->sli4_hba.fp_eq = kzalloc((sizeof(struct lpfc_queue *) *
+-				       phba->cfg_fcp_eq_count), GFP_KERNEL);
+-		if (!phba->sli4_hba.fp_eq) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"2576 Failed allocate memory for "
+-					"fast-path EQ record array\n");
+-			goto out_free_sp_eq;
+-		}
++	 * Since the first EQ can have multiple CQs associated with it,
++	 * this array is used to quickly see if we have a FCP fast-path
++	 * CQ match.
++	 */
++	phba->sli4_hba.fcp_cq_map = kzalloc((sizeof(uint16_t) *
++					 phba->cfg_fcp_io_channel), GFP_KERNEL);
++	if (!phba->sli4_hba.fcp_cq_map) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"2545 Failed allocate memory for fast-path "
++				"CQ map\n");
++		goto out_error;
+ 	}
+-	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_eq_count; fcp_eqidx++) {
++
++	/*
++	 * Create HBA Event Queues (EQs).  The cfg_fcp_io_channel specifies
++	 * how many EQs to create.
++	 */
++	for (idx = 0; idx < phba->cfg_fcp_io_channel; idx++) {
++
++		/* Create EQs */
+ 		qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.eq_esize,
+ 					      phba->sli4_hba.eq_ecount);
+ 		if (!qdesc) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"0497 Failed allocate fast-path EQ\n");
+-			goto out_free_fp_eq;
++					"0497 Failed allocate EQ (%d)\n", idx);
++			goto out_error;
+ 		}
+-		phba->sli4_hba.fp_eq[fcp_eqidx] = qdesc;
++		phba->sli4_hba.hba_eq[idx] = qdesc;
++
++		/* Create Fast Path FCP CQs */
++		qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.cq_esize,
++					      phba->sli4_hba.cq_ecount);
++		if (!qdesc) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++					"0499 Failed allocate fast-path FCP "
++					"CQ (%d)\n", idx);
++			goto out_error;
++		}
++		phba->sli4_hba.fcp_cq[idx] = qdesc;
++
++		/* Create Fast Path FCP WQs */
++		qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.wq_esize,
++					      phba->sli4_hba.wq_ecount);
++		if (!qdesc) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++					"0503 Failed allocate fast-path FCP "
++					"WQ (%d)\n", idx);
++			goto out_error;
++		}
++		phba->sli4_hba.fcp_wq[idx] = qdesc;
+ 	}
+ 
++
+ 	/*
+-	 * Create Complete Queues (CQs)
++	 * Create Slow Path Completion Queues (CQs)
+ 	 */
+ 
+ 	/* Create slow-path Mailbox Command Complete Queue */
+@@ -6693,7 +6712,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *
+ 	if (!qdesc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0500 Failed allocate slow-path mailbox CQ\n");
+-		goto out_free_fp_eq;
++		goto out_error;
+ 	}
+ 	phba->sli4_hba.mbx_cq = qdesc;
+ 
+@@ -6703,59 +6722,29 @@ lpfc_sli4_queue_create(struct lpfc_hba *
+ 	if (!qdesc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0501 Failed allocate slow-path ELS CQ\n");
+-		goto out_free_mbx_cq;
++		goto out_error;
+ 	}
+ 	phba->sli4_hba.els_cq = qdesc;
+ 
+
+ 	/*
+-	 * Create fast-path FCP Completion Queue(s), one-to-one with FCP EQs.
+-	 * If there are no FCP EQs then create exactly one FCP CQ.
++	 * Create Slow Path Work Queues (WQs)
+ 	 */
+-	if (phba->cfg_fcp_eq_count)
+-		phba->sli4_hba.fcp_cq = kzalloc((sizeof(struct lpfc_queue *) *
+-						 phba->cfg_fcp_eq_count),
+-						GFP_KERNEL);
+-	else
+-		phba->sli4_hba.fcp_cq = kzalloc(sizeof(struct lpfc_queue *),
+-						GFP_KERNEL);
+-	if (!phba->sli4_hba.fcp_cq) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"2577 Failed allocate memory for fast-path "
+-				"CQ record array\n");
+-		goto out_free_els_cq;
+-	}
+-	fcp_cqidx = 0;
+-	do {
+-		qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.cq_esize,
+-					      phba->sli4_hba.cq_ecount);
+-		if (!qdesc) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"0499 Failed allocate fast-path FCP "
+-					"CQ (%d)\n", fcp_cqidx);
+-			goto out_free_fcp_cq;
+-		}
+-		phba->sli4_hba.fcp_cq[fcp_cqidx] = qdesc;
+-	} while (++fcp_cqidx < phba->cfg_fcp_eq_count);
+ 
+ 	/* Create Mailbox Command Queue */
+-	phba->sli4_hba.mq_esize = LPFC_MQE_SIZE;
+-	phba->sli4_hba.mq_ecount = LPFC_MQE_DEF_COUNT;
+ 
+ 	qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.mq_esize,
+ 				      phba->sli4_hba.mq_ecount);
+ 	if (!qdesc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0505 Failed allocate slow-path MQ\n");
+-		goto out_free_fcp_cq;
++		goto out_error;
+ 	}
+ 	phba->sli4_hba.mbx_wq = qdesc;
+ 
+ 	/*
+-	 * Create all the Work Queues (WQs)
++	 * Create ELS Work Queues
+ 	 */
+-	phba->sli4_hba.wq_esize = LPFC_WQE_SIZE;
+-	phba->sli4_hba.wq_ecount = LPFC_WQE_DEF_COUNT;
+ 
+ 	/* Create slow-path ELS Work Queue */
+ 	qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.wq_esize,
+@@ -6763,36 +6752,13 @@ lpfc_sli4_queue_create(struct lpfc_hba *
+ 	if (!qdesc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0504 Failed allocate slow-path ELS WQ\n");
+-		goto out_free_mbx_wq;
++		goto out_error;
+ 	}
+ 	phba->sli4_hba.els_wq = qdesc;
+ 
+-	/* Create fast-path FCP Work Queue(s) */
+-	phba->sli4_hba.fcp_wq = kzalloc((sizeof(struct lpfc_queue *) *
+-				phba->cfg_fcp_wq_count), GFP_KERNEL);
+-	if (!phba->sli4_hba.fcp_wq) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"2578 Failed allocate memory for fast-path "
+-				"WQ record array\n");
+-		goto out_free_els_wq;
+-	}
+-	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_wq_count; fcp_wqidx++) {
+-		qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.wq_esize,
+-					      phba->sli4_hba.wq_ecount);
+-		if (!qdesc) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"0503 Failed allocate fast-path FCP "
+-					"WQ (%d)\n", fcp_wqidx);
+-			goto out_free_fcp_wq;
+-		}
+-		phba->sli4_hba.fcp_wq[fcp_wqidx] = qdesc;
+-	}
+-
+ 	/*
+ 	 * Create Receive Queue (RQ)
+ 	 */
+-	phba->sli4_hba.rq_esize = LPFC_RQE_SIZE;
+-	phba->sli4_hba.rq_ecount = LPFC_RQE_DEF_COUNT;
+ 
+ 	/* Create Receive Queue for header */
+ 	qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.rq_esize,
+@@ -6800,7 +6766,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *
+ 	if (!qdesc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0506 Failed allocate receive HRQ\n");
+-		goto out_free_fcp_wq;
++		goto out_error;
+ 	}
+ 	phba->sli4_hba.hdr_rq = qdesc;
+ 
+@@ -6810,52 +6776,14 @@ lpfc_sli4_queue_create(struct lpfc_hba *
+ 	if (!qdesc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0507 Failed allocate receive DRQ\n");
+-		goto out_free_hdr_rq;
++		goto out_error;
+ 	}
+ 	phba->sli4_hba.dat_rq = qdesc;
+ 
+ 	return 0;
+ 
+-out_free_hdr_rq:
+-	lpfc_sli4_queue_free(phba->sli4_hba.hdr_rq);
+-	phba->sli4_hba.hdr_rq = NULL;
+-out_free_fcp_wq:
+-	for (--fcp_wqidx; fcp_wqidx >= 0; fcp_wqidx--) {
+-		lpfc_sli4_queue_free(phba->sli4_hba.fcp_wq[fcp_wqidx]);
+-		phba->sli4_hba.fcp_wq[fcp_wqidx] = NULL;
+-	}
+-	kfree(phba->sli4_hba.fcp_wq);
+-	phba->sli4_hba.fcp_wq = NULL;
+-out_free_els_wq:
+-	lpfc_sli4_queue_free(phba->sli4_hba.els_wq);
+-	phba->sli4_hba.els_wq = NULL;
+-out_free_mbx_wq:
+-	lpfc_sli4_queue_free(phba->sli4_hba.mbx_wq);
+-	phba->sli4_hba.mbx_wq = NULL;
+-out_free_fcp_cq:
+-	for (--fcp_cqidx; fcp_cqidx >= 0; fcp_cqidx--) {
+-		lpfc_sli4_queue_free(phba->sli4_hba.fcp_cq[fcp_cqidx]);
+-		phba->sli4_hba.fcp_cq[fcp_cqidx] = NULL;
+-	}
+-	kfree(phba->sli4_hba.fcp_cq);
+-	phba->sli4_hba.fcp_cq = NULL;
+-out_free_els_cq:
+-	lpfc_sli4_queue_free(phba->sli4_hba.els_cq);
+-	phba->sli4_hba.els_cq = NULL;
+-out_free_mbx_cq:
+-	lpfc_sli4_queue_free(phba->sli4_hba.mbx_cq);
+-	phba->sli4_hba.mbx_cq = NULL;
+-out_free_fp_eq:
+-	for (--fcp_eqidx; fcp_eqidx >= 0; fcp_eqidx--) {
+-		lpfc_sli4_queue_free(phba->sli4_hba.fp_eq[fcp_eqidx]);
+-		phba->sli4_hba.fp_eq[fcp_eqidx] = NULL;
+-	}
+-	kfree(phba->sli4_hba.fp_eq);
+-	phba->sli4_hba.fp_eq = NULL;
+-out_free_sp_eq:
+-	lpfc_sli4_queue_free(phba->sli4_hba.sp_eq);
+-	phba->sli4_hba.sp_eq = NULL;
+ out_error:
++	lpfc_sli4_queue_destroy(phba);
+ 	return -ENOMEM;
+ }
+ 
+@@ -6874,58 +6802,86 @@ out_error:
+ void
+ lpfc_sli4_queue_destroy(struct lpfc_hba *phba)
+ {
+-	int fcp_qidx;
++	int idx;
++
++	if (phba->sli4_hba.hba_eq != NULL) {
++		/* Release HBA event queue */
++		for (idx = 0; idx < phba->cfg_fcp_io_channel; idx++) {
++			if (phba->sli4_hba.hba_eq[idx] != NULL) {
++				lpfc_sli4_queue_free(
++					phba->sli4_hba.hba_eq[idx]);
++				phba->sli4_hba.hba_eq[idx] = NULL;
++			}
++		}
++		kfree(phba->sli4_hba.hba_eq);
++		phba->sli4_hba.hba_eq = NULL;
++	}
++
++	if (phba->sli4_hba.fcp_cq != NULL) {
++		/* Release FCP completion queue */
++		for (idx = 0; idx < phba->cfg_fcp_io_channel; idx++) {
++			if (phba->sli4_hba.fcp_cq[idx] != NULL) {
++				lpfc_sli4_queue_free(
++					phba->sli4_hba.fcp_cq[idx]);
++				phba->sli4_hba.fcp_cq[idx] = NULL;
++			}
++		}
++		kfree(phba->sli4_hba.fcp_cq);
++		phba->sli4_hba.fcp_cq = NULL;
++	}
++
++	if (phba->sli4_hba.fcp_wq != NULL) {
++		/* Release FCP work queue */
++		for (idx = 0; idx < phba->cfg_fcp_io_channel; idx++) {
++			if (phba->sli4_hba.fcp_wq[idx] != NULL) {
++				lpfc_sli4_queue_free(
++					phba->sli4_hba.fcp_wq[idx]);
++				phba->sli4_hba.fcp_wq[idx] = NULL;
++			}
++		}
++		kfree(phba->sli4_hba.fcp_wq);
++		phba->sli4_hba.fcp_wq = NULL;
++	}
++
++	/* Release FCP CQ mapping array */
++	if (phba->sli4_hba.fcp_cq_map != NULL) {
++		kfree(phba->sli4_hba.fcp_cq_map);
++		phba->sli4_hba.fcp_cq_map = NULL;
++	}
+ 
+ 	/* Release mailbox command work queue */
+-	lpfc_sli4_queue_free(phba->sli4_hba.mbx_wq);
+-	phba->sli4_hba.mbx_wq = NULL;
++	if (phba->sli4_hba.mbx_wq != NULL) {
++		lpfc_sli4_queue_free(phba->sli4_hba.mbx_wq);
++		phba->sli4_hba.mbx_wq = NULL;
++	}
+ 
+ 	/* Release ELS work queue */
+-	lpfc_sli4_queue_free(phba->sli4_hba.els_wq);
+-	phba->sli4_hba.els_wq = NULL;
+-
+-	/* Release FCP work queue */
+-	if (phba->sli4_hba.fcp_wq != NULL)
+-		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_wq_count;
+-		     fcp_qidx++)
+-			lpfc_sli4_queue_free(phba->sli4_hba.fcp_wq[fcp_qidx]);
+-	kfree(phba->sli4_hba.fcp_wq);
+-	phba->sli4_hba.fcp_wq = NULL;
++	if (phba->sli4_hba.els_wq != NULL) {
++		lpfc_sli4_queue_free(phba->sli4_hba.els_wq);
++		phba->sli4_hba.els_wq = NULL;
++	}
+ 
+ 	/* Release unsolicited receive queue */
+-	lpfc_sli4_queue_free(phba->sli4_hba.hdr_rq);
+-	phba->sli4_hba.hdr_rq = NULL;
+-	lpfc_sli4_queue_free(phba->sli4_hba.dat_rq);
+-	phba->sli4_hba.dat_rq = NULL;
++	if (phba->sli4_hba.hdr_rq != NULL) {
++		lpfc_sli4_queue_free(phba->sli4_hba.hdr_rq);
++		phba->sli4_hba.hdr_rq = NULL;
++	}
++	if (phba->sli4_hba.dat_rq != NULL) {
++		lpfc_sli4_queue_free(phba->sli4_hba.dat_rq);
++		phba->sli4_hba.dat_rq = NULL;
++	}
+ 
+ 	/* Release ELS complete queue */
+-	lpfc_sli4_queue_free(phba->sli4_hba.els_cq);
+-	phba->sli4_hba.els_cq = NULL;
++	if (phba->sli4_hba.els_cq != NULL) {
++		lpfc_sli4_queue_free(phba->sli4_hba.els_cq);
++		phba->sli4_hba.els_cq = NULL;
++	}
+ 
+ 	/* Release mailbox command complete queue */
+-	lpfc_sli4_queue_free(phba->sli4_hba.mbx_cq);
+-	phba->sli4_hba.mbx_cq = NULL;
+-
+-	/* Release FCP response complete queue */
+-	fcp_qidx = 0;
+-	if (phba->sli4_hba.fcp_cq != NULL)
+-		do
+-			lpfc_sli4_queue_free(phba->sli4_hba.fcp_cq[fcp_qidx]);
+-		while (++fcp_qidx < phba->cfg_fcp_eq_count);
+-	kfree(phba->sli4_hba.fcp_cq);
+-	phba->sli4_hba.fcp_cq = NULL;
+-
+-	/* Release fast-path event queue */
+-	if (phba->sli4_hba.fp_eq != NULL)
+-		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_eq_count;
+-		     fcp_qidx++)
+-			lpfc_sli4_queue_free(phba->sli4_hba.fp_eq[fcp_qidx]);
+-	kfree(phba->sli4_hba.fp_eq);
+-	phba->sli4_hba.fp_eq = NULL;
+-
+-	/* Release slow-path event queue */
+-	lpfc_sli4_queue_free(phba->sli4_hba.sp_eq);
+-	phba->sli4_hba.sp_eq = NULL;
++	if (phba->sli4_hba.mbx_cq != NULL) {
++		lpfc_sli4_queue_free(phba->sli4_hba.mbx_cq);
++		phba->sli4_hba.mbx_cq = NULL;
++	}
+ 
+ 	return;
+ }
+@@ -6952,56 +6908,117 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 	int fcp_cq_index = 0;
+ 
+ 	/*
+-	 * Set up Event Queues (EQs)
++	 * Set up HBA Event Queues (EQs)
+ 	 */
+ 
+-	/* Set up slow-path event queue */
+-	if (!phba->sli4_hba.sp_eq) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"0520 Slow-path EQ not allocated\n");
+-		goto out_error;
+-	}
+-	rc = lpfc_eq_create(phba, phba->sli4_hba.sp_eq,
+-			    LPFC_SP_DEF_IMAX);
+-	if (rc) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"0521 Failed setup of slow-path EQ: "
+-				"rc = 0x%x\n", rc);
+-		goto out_error;
+-	}
+-	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-			"2583 Slow-path EQ setup: queue-id=%d\n",
+-			phba->sli4_hba.sp_eq->queue_id);
+-
+-	/* Set up fast-path event queue */
+-	if (phba->cfg_fcp_eq_count && !phba->sli4_hba.fp_eq) {
++	/* Set up HBA event queue */
++	if (phba->cfg_fcp_io_channel && !phba->sli4_hba.hba_eq) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"3147 Fast-path EQs not allocated\n");
+ 		rc = -ENOMEM;
+-		goto out_destroy_sp_eq;
++		goto out_error;
+ 	}
+-	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_eq_count; fcp_eqidx++) {
+-		if (!phba->sli4_hba.fp_eq[fcp_eqidx]) {
++	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_io_channel; fcp_eqidx++) {
++		if (!phba->sli4_hba.hba_eq[fcp_eqidx]) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 					"0522 Fast-path EQ (%d) not "
+ 					"allocated\n", fcp_eqidx);
+ 			rc = -ENOMEM;
+-			goto out_destroy_fp_eq;
++			goto out_destroy_hba_eq;
+ 		}
+-		rc = lpfc_eq_create(phba, phba->sli4_hba.fp_eq[fcp_eqidx],
++		rc = lpfc_eq_create(phba, phba->sli4_hba.hba_eq[fcp_eqidx],
+ 				    phba->cfg_fcp_imax);
+ 		if (rc) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 					"0523 Failed setup of fast-path EQ "
+ 					"(%d), rc = 0x%x\n", fcp_eqidx, rc);
+-			goto out_destroy_fp_eq;
++			goto out_destroy_hba_eq;
+ 		}
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-				"2584 Fast-path EQ setup: "
++				"2584 HBA EQ setup: "
+ 				"queue[%d]-id=%d\n", fcp_eqidx,
+-				phba->sli4_hba.fp_eq[fcp_eqidx]->queue_id);
++				phba->sli4_hba.hba_eq[fcp_eqidx]->queue_id);
+ 	}
+ 
++	/* Set up fast-path FCP Response Complete Queue */
++	if (!phba->sli4_hba.fcp_cq) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"3148 Fast-path FCP CQ array not "
++				"allocated\n");
++		rc = -ENOMEM;
++		goto out_destroy_hba_eq;
++	}
++
++	for (fcp_cqidx = 0; fcp_cqidx < phba->cfg_fcp_io_channel; fcp_cqidx++) {
++		if (!phba->sli4_hba.fcp_cq[fcp_cqidx]) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++					"0526 Fast-path FCP CQ (%d) not "
++					"allocated\n", fcp_cqidx);
++			rc = -ENOMEM;
++			goto out_destroy_fcp_cq;
++		}
++		rc = lpfc_cq_create(phba, phba->sli4_hba.fcp_cq[fcp_cqidx],
++			phba->sli4_hba.hba_eq[fcp_cqidx], LPFC_WCQ, LPFC_FCP);
++		if (rc) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++					"0527 Failed setup of fast-path FCP "
++					"CQ (%d), rc = 0x%x\n", fcp_cqidx, rc);
++			goto out_destroy_fcp_cq;
++		}
++
++		/* Setup fcp_cq_map for fast lookup */
++		phba->sli4_hba.fcp_cq_map[fcp_cqidx] =
++				phba->sli4_hba.fcp_cq[fcp_cqidx]->queue_id;
++
++		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
++				"2588 FCP CQ setup: cq[%d]-id=%d, "
++				"parent seq[%d]-id=%d\n",
++				fcp_cqidx,
++				phba->sli4_hba.fcp_cq[fcp_cqidx]->queue_id,
++				fcp_cqidx,
++				phba->sli4_hba.hba_eq[fcp_cqidx]->queue_id);
++	}
++
++	/* Set up fast-path FCP Work Queue */
++	if (!phba->sli4_hba.fcp_wq) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"3149 Fast-path FCP WQ array not "
++				"allocated\n");
++		rc = -ENOMEM;
++		goto out_destroy_fcp_cq;
++	}
++
++	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_io_channel; fcp_wqidx++) {
++		if (!phba->sli4_hba.fcp_wq[fcp_wqidx]) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++					"0534 Fast-path FCP WQ (%d) not "
++					"allocated\n", fcp_wqidx);
++			rc = -ENOMEM;
++			goto out_destroy_fcp_wq;
++		}
++		rc = lpfc_wq_create(phba, phba->sli4_hba.fcp_wq[fcp_wqidx],
++				    phba->sli4_hba.fcp_cq[fcp_wqidx],
++				    LPFC_FCP);
++		if (rc) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++					"0535 Failed setup of fast-path FCP "
++					"WQ (%d), rc = 0x%x\n", fcp_wqidx, rc);
++			goto out_destroy_fcp_wq;
++		}
++
++		/* Bind this WQ to the next FCP ring */
++		pring = &psli->ring[MAX_SLI3_CONFIGURED_RINGS + fcp_wqidx];
++		pring->sli.sli4.wqp = (void *)phba->sli4_hba.fcp_wq[fcp_wqidx];
++		phba->sli4_hba.fcp_cq[fcp_wqidx]->pring = pring;
++
++		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
++				"2591 FCP WQ setup: wq[%d]-id=%d, "
++				"parent cq[%d]-id=%d\n",
++				fcp_wqidx,
++				phba->sli4_hba.fcp_wq[fcp_wqidx]->queue_id,
++				fcp_cq_index,
++				phba->sli4_hba.fcp_cq[fcp_wqidx]->queue_id);
++	}
+ 	/*
+ 	 * Set up Complete Queues (CQs)
+ 	 */
+@@ -7011,20 +7028,20 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0528 Mailbox CQ not allocated\n");
+ 		rc = -ENOMEM;
+-		goto out_destroy_fp_eq;
++		goto out_destroy_fcp_wq;
+ 	}
+-	rc = lpfc_cq_create(phba, phba->sli4_hba.mbx_cq, phba->sli4_hba.sp_eq,
+-			    LPFC_MCQ, LPFC_MBOX);
++	rc = lpfc_cq_create(phba, phba->sli4_hba.mbx_cq,
++			phba->sli4_hba.hba_eq[0], LPFC_MCQ, LPFC_MBOX);
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0529 Failed setup of slow-path mailbox CQ: "
+ 				"rc = 0x%x\n", rc);
+-		goto out_destroy_fp_eq;
++		goto out_destroy_fcp_wq;
+ 	}
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 			"2585 MBX CQ setup: cq-id=%d, parent eq-id=%d\n",
+ 			phba->sli4_hba.mbx_cq->queue_id,
+-			phba->sli4_hba.sp_eq->queue_id);
++			phba->sli4_hba.hba_eq[0]->queue_id);
+ 
+ 	/* Set up slow-path ELS Complete Queue */
+ 	if (!phba->sli4_hba.els_cq) {
+@@ -7033,8 +7050,8 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 		rc = -ENOMEM;
+ 		goto out_destroy_mbx_cq;
+ 	}
+-	rc = lpfc_cq_create(phba, phba->sli4_hba.els_cq, phba->sli4_hba.sp_eq,
+-			    LPFC_WCQ, LPFC_ELS);
++	rc = lpfc_cq_create(phba, phba->sli4_hba.els_cq,
++			phba->sli4_hba.hba_eq[0], LPFC_WCQ, LPFC_ELS);
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0531 Failed setup of slow-path ELS CQ: "
+@@ -7044,52 +7061,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 			"2586 ELS CQ setup: cq-id=%d, parent eq-id=%d\n",
+ 			phba->sli4_hba.els_cq->queue_id,
+-			phba->sli4_hba.sp_eq->queue_id);
+-
+-	/* Set up fast-path FCP Response Complete Queue */
+-	if (!phba->sli4_hba.fcp_cq) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"3148 Fast-path FCP CQ array not "
+-				"allocated\n");
+-		rc = -ENOMEM;
+-		goto out_destroy_els_cq;
+-	}
+-	fcp_cqidx = 0;
+-	do {
+-		if (!phba->sli4_hba.fcp_cq[fcp_cqidx]) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"0526 Fast-path FCP CQ (%d) not "
+-					"allocated\n", fcp_cqidx);
+-			rc = -ENOMEM;
+-			goto out_destroy_fcp_cq;
+-		}
+-		if (phba->cfg_fcp_eq_count)
+-			rc = lpfc_cq_create(phba,
+-					    phba->sli4_hba.fcp_cq[fcp_cqidx],
+-					    phba->sli4_hba.fp_eq[fcp_cqidx],
+-					    LPFC_WCQ, LPFC_FCP);
+-		else
+-			rc = lpfc_cq_create(phba,
+-					    phba->sli4_hba.fcp_cq[fcp_cqidx],
+-					    phba->sli4_hba.sp_eq,
+-					    LPFC_WCQ, LPFC_FCP);
+-		if (rc) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"0527 Failed setup of fast-path FCP "
+-					"CQ (%d), rc = 0x%x\n", fcp_cqidx, rc);
+-			goto out_destroy_fcp_cq;
+-		}
+-		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-				"2588 FCP CQ setup: cq[%d]-id=%d, "
+-				"parent %seq[%d]-id=%d\n",
+-				fcp_cqidx,
+-				phba->sli4_hba.fcp_cq[fcp_cqidx]->queue_id,
+-				(phba->cfg_fcp_eq_count) ? "" : "sp_",
+-				fcp_cqidx,
+-				(phba->cfg_fcp_eq_count) ?
+-				   phba->sli4_hba.fp_eq[fcp_cqidx]->queue_id :
+-				   phba->sli4_hba.sp_eq->queue_id);
+-	} while (++fcp_cqidx < phba->cfg_fcp_eq_count);
++			phba->sli4_hba.hba_eq[0]->queue_id);
+ 
+ 	/*
+ 	 * Set up all the Work Queues (WQs)
+@@ -7100,7 +7072,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0538 Slow-path MQ not allocated\n");
+ 		rc = -ENOMEM;
+-		goto out_destroy_fcp_cq;
++		goto out_destroy_els_cq;
+ 	}
+ 	rc = lpfc_mq_create(phba, phba->sli4_hba.mbx_wq,
+ 			    phba->sli4_hba.mbx_cq, LPFC_MBOX);
+@@ -7108,7 +7080,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0539 Failed setup of slow-path MQ: "
+ 				"rc = 0x%x\n", rc);
+-		goto out_destroy_fcp_cq;
++		goto out_destroy_els_cq;
+ 	}
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 			"2589 MBX MQ setup: wq-id=%d, parent cq-id=%d\n",
+@@ -7141,50 +7113,6 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 			phba->sli4_hba.els_wq->queue_id,
+ 			phba->sli4_hba.els_cq->queue_id);
+ 
+-	/* Set up fast-path FCP Work Queue */
+-	if (!phba->sli4_hba.fcp_wq) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"3149 Fast-path FCP WQ array not "
+-				"allocated\n");
+-		rc = -ENOMEM;
+-		goto out_destroy_els_wq;
+-	}
+-	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_wq_count; fcp_wqidx++) {
+-		if (!phba->sli4_hba.fcp_wq[fcp_wqidx]) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"0534 Fast-path FCP WQ (%d) not "
+-					"allocated\n", fcp_wqidx);
+-			rc = -ENOMEM;
+-			goto out_destroy_fcp_wq;
+-		}
+-		rc = lpfc_wq_create(phba, phba->sli4_hba.fcp_wq[fcp_wqidx],
+-				    phba->sli4_hba.fcp_cq[fcp_cq_index],
+-				    LPFC_FCP);
+-		if (rc) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"0535 Failed setup of fast-path FCP "
+-					"WQ (%d), rc = 0x%x\n", fcp_wqidx, rc);
+-			goto out_destroy_fcp_wq;
+-		}
+-
+-		/* Bind this WQ to the next FCP ring */
+-		pring = &psli->ring[MAX_SLI3_CONFIGURED_RINGS + fcp_wqidx];
+-		pring->sli.sli4.wqp = (void *)phba->sli4_hba.fcp_wq[fcp_wqidx];
+-		phba->sli4_hba.fcp_cq[fcp_cq_index]->pring = pring;
+-
+-		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-				"2591 FCP WQ setup: wq[%d]-id=%d, "
+-				"parent cq[%d]-id=%d\n",
+-				fcp_wqidx,
+-				phba->sli4_hba.fcp_wq[fcp_wqidx]->queue_id,
+-				fcp_cq_index,
+-				phba->sli4_hba.fcp_cq[fcp_cq_index]->queue_id);
+-		/* Round robin FCP Work Queue's Completion Queue assignment */
+-		if (phba->cfg_fcp_eq_count)
+-			fcp_cq_index = ((fcp_cq_index + 1) %
+-					phba->cfg_fcp_eq_count);
+-	}
+-
+ 	/*
+ 	 * Create Receive Queue (RQ)
+ 	 */
+@@ -7192,7 +7120,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0540 Receive Queue not allocated\n");
+ 		rc = -ENOMEM;
+-		goto out_destroy_fcp_wq;
++		goto out_destroy_els_wq;
+ 	}
+ 
+ 	lpfc_rq_adjust_repost(phba, phba->sli4_hba.hdr_rq, LPFC_ELS_HBQ);
+@@ -7215,25 +7143,23 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 			phba->sli4_hba.els_cq->queue_id);
+ 	return 0;
+ 
+-out_destroy_fcp_wq:
+-	for (--fcp_wqidx; fcp_wqidx >= 0; fcp_wqidx--)
+-		lpfc_wq_destroy(phba, phba->sli4_hba.fcp_wq[fcp_wqidx]);
+ out_destroy_els_wq:
+ 	lpfc_wq_destroy(phba, phba->sli4_hba.els_wq);
+ out_destroy_mbx_wq:
+ 	lpfc_mq_destroy(phba, phba->sli4_hba.mbx_wq);
+-out_destroy_fcp_cq:
+-	for (--fcp_cqidx; fcp_cqidx >= 0; fcp_cqidx--)
+-		lpfc_cq_destroy(phba, phba->sli4_hba.fcp_cq[fcp_cqidx]);
+ out_destroy_els_cq:
+ 	lpfc_cq_destroy(phba, phba->sli4_hba.els_cq);
+ out_destroy_mbx_cq:
+ 	lpfc_cq_destroy(phba, phba->sli4_hba.mbx_cq);
+-out_destroy_fp_eq:
++out_destroy_fcp_wq:
++	for (--fcp_wqidx; fcp_wqidx >= 0; fcp_wqidx--)
++		lpfc_wq_destroy(phba, phba->sli4_hba.fcp_wq[fcp_wqidx]);
++out_destroy_fcp_cq:
++	for (--fcp_cqidx; fcp_cqidx >= 0; fcp_cqidx--)
++		lpfc_cq_destroy(phba, phba->sli4_hba.fcp_cq[fcp_cqidx]);
++out_destroy_hba_eq:
+ 	for (--fcp_eqidx; fcp_eqidx >= 0; fcp_eqidx--)
+-		lpfc_eq_destroy(phba, phba->sli4_hba.fp_eq[fcp_eqidx]);
+-out_destroy_sp_eq:
+-	lpfc_eq_destroy(phba, phba->sli4_hba.sp_eq);
++		lpfc_eq_destroy(phba, phba->sli4_hba.hba_eq[fcp_eqidx]);
+ out_error:
+ 	return rc;
+ }
+@@ -7262,27 +7188,27 @@ lpfc_sli4_queue_unset(struct lpfc_hba *p
+ 	/* Unset unsolicited receive queue */
+ 	lpfc_rq_destroy(phba, phba->sli4_hba.hdr_rq, phba->sli4_hba.dat_rq);
+ 	/* Unset FCP work queue */
+-	for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_wq_count; fcp_qidx++)
+-		lpfc_wq_destroy(phba, phba->sli4_hba.fcp_wq[fcp_qidx]);
++	if (phba->sli4_hba.fcp_wq) {
++		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_io_channel;
++		     fcp_qidx++)
++			lpfc_wq_destroy(phba, phba->sli4_hba.fcp_wq[fcp_qidx]);
++	}
+ 	/* Unset mailbox command complete queue */
+ 	lpfc_cq_destroy(phba, phba->sli4_hba.mbx_cq);
+ 	/* Unset ELS complete queue */
+ 	lpfc_cq_destroy(phba, phba->sli4_hba.els_cq);
+ 	/* Unset FCP response complete queue */
+ 	if (phba->sli4_hba.fcp_cq) {
+-		fcp_qidx = 0;
+-		do {
++		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_io_channel;
++		     fcp_qidx++)
+ 			lpfc_cq_destroy(phba, phba->sli4_hba.fcp_cq[fcp_qidx]);
+-		} while (++fcp_qidx < phba->cfg_fcp_eq_count);
+ 	}
+ 	/* Unset fast-path event queue */
+-	if (phba->sli4_hba.fp_eq) {
+-		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_eq_count;
++	if (phba->sli4_hba.hba_eq) {
++		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_io_channel;
+ 		     fcp_qidx++)
+-			lpfc_eq_destroy(phba, phba->sli4_hba.fp_eq[fcp_qidx]);
++			lpfc_eq_destroy(phba, phba->sli4_hba.hba_eq[fcp_qidx]);
+ 	}
+-	/* Unset slow-path event queue */
+-	lpfc_eq_destroy(phba, phba->sli4_hba.sp_eq);
+ }
+ 
+ /**
+@@ -8174,33 +8100,17 @@ enable_msix_vectors:
+ 				"message=%d\n", index,
+ 				phba->sli4_hba.msix_entries[index].vector,
+ 				phba->sli4_hba.msix_entries[index].entry);
++
+ 	/*
+ 	 * Assign MSI-X vectors to interrupt handlers
+ 	 */
+-	if (vectors > 1)
+-		rc = request_irq(phba->sli4_hba.msix_entries[0].vector,
+-				 &lpfc_sli4_sp_intr_handler, IRQF_SHARED,
+-				 LPFC_SP_DRIVER_HANDLER_NAME, phba);
+-	else
+-		/* All Interrupts need to be handled by one EQ */
+-		rc = request_irq(phba->sli4_hba.msix_entries[0].vector,
+-				 &lpfc_sli4_intr_handler, IRQF_SHARED,
+-				 LPFC_DRIVER_NAME, phba);
+-	if (rc) {
+-		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+-				"0485 MSI-X slow-path request_irq failed "
+-				"(%d)\n", rc);
+-		goto msi_fail_out;
+-	}
+-
+-	/* The rest of the vector(s) are associated to fast-path handler(s) */
+-	for (index = 1; index < vectors; index++) {
+-		phba->sli4_hba.fcp_eq_hdl[index - 1].idx = index - 1;
+-		phba->sli4_hba.fcp_eq_hdl[index - 1].phba = phba;
++	for (index = 0; index < vectors; index++) {
++		phba->sli4_hba.fcp_eq_hdl[index].idx = index;
++		phba->sli4_hba.fcp_eq_hdl[index].phba = phba;
+ 		rc = request_irq(phba->sli4_hba.msix_entries[index].vector,
+-				 &lpfc_sli4_fp_intr_handler, IRQF_SHARED,
++				 &lpfc_sli4_hba_intr_handler, IRQF_SHARED,
+ 				 LPFC_FP_DRIVER_HANDLER_NAME,
+-				 &phba->sli4_hba.fcp_eq_hdl[index - 1]);
++				 &phba->sli4_hba.fcp_eq_hdl[index]);
+ 		if (rc) {
+ 			lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+ 					"0486 MSI-X fast-path (%d) "
+@@ -8214,12 +8124,9 @@ enable_msix_vectors:
+ 
+ cfg_fail_out:
+ 	/* free the irq already requested */
+-	for (--index; index >= 1; index--)
+-		free_irq(phba->sli4_hba.msix_entries[index - 1].vector,
+-			 &phba->sli4_hba.fcp_eq_hdl[index - 1]);
+-
+-	/* free the irq already requested */
+-	free_irq(phba->sli4_hba.msix_entries[0].vector, phba);
++	for (--index; index >= 0; index--)
++		free_irq(phba->sli4_hba.msix_entries[index].vector,
++			 &phba->sli4_hba.fcp_eq_hdl[index]);
+ 
+ msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+@@ -8240,11 +8147,9 @@ lpfc_sli4_disable_msix(struct lpfc_hba *
+ 	int index;
+ 
+ 	/* Free up MSI-X multi-message vectors */
+-	free_irq(phba->sli4_hba.msix_entries[0].vector, phba);
+-
+-	for (index = 1; index < phba->sli4_hba.msix_vec_nr; index++)
++	for (index = 0; index < phba->sli4_hba.msix_vec_nr; index++)
+ 		free_irq(phba->sli4_hba.msix_entries[index].vector,
+-			 &phba->sli4_hba.fcp_eq_hdl[index - 1]);
++			 &phba->sli4_hba.fcp_eq_hdl[index]);
+ 
+ 	/* Disable MSI-X */
+ 	pci_disable_msix(phba->pcidev);
+@@ -8290,7 +8195,7 @@ lpfc_sli4_enable_msi(struct lpfc_hba *ph
+ 		return rc;
+ 	}
+ 
+-	for (index = 0; index < phba->cfg_fcp_eq_count; index++) {
++	for (index = 0; index < phba->cfg_fcp_io_channel; index++) {
+ 		phba->sli4_hba.fcp_eq_hdl[index].idx = index;
+ 		phba->sli4_hba.fcp_eq_hdl[index].phba = phba;
+ 	}
+@@ -8370,7 +8275,7 @@ lpfc_sli4_enable_intr(struct lpfc_hba *p
+ 			/* Indicate initialization to INTx mode */
+ 			phba->intr_type = INTx;
+ 			intr_mode = 0;
+-			for (index = 0; index < phba->cfg_fcp_eq_count;
++			for (index = 0; index < phba->cfg_fcp_io_channel;
+ 			     index++) {
+ 				phba->sli4_hba.fcp_eq_hdl[index].idx = index;
+ 				phba->sli4_hba.fcp_eq_hdl[index].phba = phba;
+@@ -9490,7 +9395,7 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
+ 	int error;
+ 	uint32_t cfg_mode, intr_mode;
+ 	int mcnt;
+-	int adjusted_fcp_eq_count;
++	int adjusted_fcp_io_channel;
+ 	const struct firmware *fw;
+ 	uint8_t file_name[16];
+ 
+@@ -9593,13 +9498,13 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
+ 		}
+ 		/* Default to single EQ for non-MSI-X */
+ 		if (phba->intr_type != MSIX)
+-			adjusted_fcp_eq_count = 0;
++			adjusted_fcp_io_channel = 0;
+ 		else if (phba->sli4_hba.msix_vec_nr <
+-					phba->cfg_fcp_eq_count + 1)
+-			adjusted_fcp_eq_count = phba->sli4_hba.msix_vec_nr - 1;
++					phba->cfg_fcp_io_channel)
++			adjusted_fcp_io_channel = phba->sli4_hba.msix_vec_nr;
+ 		else
+-			adjusted_fcp_eq_count = phba->cfg_fcp_eq_count;
+-		phba->cfg_fcp_eq_count = adjusted_fcp_eq_count;
++			adjusted_fcp_io_channel = phba->cfg_fcp_io_channel;
++		phba->cfg_fcp_io_channel = adjusted_fcp_io_channel;
+ 		/* Set up SLI-4 HBA */
+ 		if (lpfc_sli4_hba_setup(phba)) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+@@ -9735,6 +9640,7 @@ lpfc_pci_remove_one_s4(struct pci_dev *p
+ 	 * buffers are released to their corresponding pools here.
+ 	 */
+ 	lpfc_scsi_free(phba);
++
+ 	lpfc_sli4_driver_resource_unset(phba);
+ 
+ 	/* Unmap adapter Control and Doorbell registers */
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2012-07-22 14:02:13.663325741 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2012-07-22 14:17:12.656294514 -0400
+@@ -34,18 +34,10 @@
+ /* Number of SGL entries can be posted in a 4KB nonembedded mbox command */
+ #define LPFC_NEMBED_MBOX_SGL_CNT		254
+ 
+-/* Multi-queue arrangement for fast-path FCP work queues */
+-#define LPFC_FN_EQN_MAX       8
+-#define LPFC_SP_EQN_DEF       1
+-#define LPFC_FP_EQN_DEF       4
+-#define LPFC_FP_EQN_MIN       1
+-#define LPFC_FP_EQN_MAX       (LPFC_FN_EQN_MAX - LPFC_SP_EQN_DEF)
+-
+-#define LPFC_FN_WQN_MAX       32
+-#define LPFC_SP_WQN_DEF       1
+-#define LPFC_FP_WQN_DEF       4
+-#define LPFC_FP_WQN_MIN       1
+-#define LPFC_FP_WQN_MAX       (LPFC_FN_WQN_MAX - LPFC_SP_WQN_DEF)
++/* Multi-queue arrangement for FCP EQ/CQ/WQ tuples */
++#define LPFC_FCP_IO_CHAN_DEF       4
++#define LPFC_FCP_IO_CHAN_MIN       1
++#define LPFC_FCP_IO_CHAN_MAX       8
+ 
+ /*
+  * Provide the default FCF Record attributes used by the driver
+@@ -497,17 +489,19 @@ struct lpfc_sli4_hba {
+ 	uint32_t cfg_eqn;
+ 	uint32_t msix_vec_nr;
+ 	struct lpfc_fcp_eq_hdl *fcp_eq_hdl; /* FCP per-WQ handle */
++
+ 	/* Pointers to the constructed SLI4 queues */
+-	struct lpfc_queue **fp_eq; /* Fast-path event queue */
+-	struct lpfc_queue *sp_eq;  /* Slow-path event queue */
++	struct lpfc_queue **hba_eq;/* Event queues for HBA */
++	struct lpfc_queue **fcp_cq;/* Fast-path FCP compl queue */
+ 	struct lpfc_queue **fcp_wq;/* Fast-path FCP work queue */
++	uint16_t *fcp_cq_map;
++
++	struct lpfc_queue *mbx_cq; /* Slow-path mailbox complete queue */
++	struct lpfc_queue *els_cq; /* Slow-path ELS response complete queue */
+ 	struct lpfc_queue *mbx_wq; /* Slow-path MBOX work queue */
+ 	struct lpfc_queue *els_wq; /* Slow-path ELS work queue */
+ 	struct lpfc_queue *hdr_rq; /* Slow-path Header Receive queue */
+ 	struct lpfc_queue *dat_rq; /* Slow-path Data Receive queue */
+-	struct lpfc_queue **fcp_cq;/* Fast-path FCP compl queue */
+-	struct lpfc_queue *mbx_cq; /* Slow-path mailbox complete queue */
+-	struct lpfc_queue *els_cq; /* Slow-path ELS response complete queue */
+ 
+ 	/* Setup information for various queue parameters */
+ 	int eq_esize;
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2012-07-23 15:26:06.443425608 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-07-23 15:30:43.182415997 -0400
-@@ -2825,10 +2825,26 @@ lpfc_sli_rsp_pointers_error(struct lpfc_
- void lpfc_poll_eratt(unsigned long ptr)
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 14:02:13.729325738 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 14:17:12.673294513 -0400
+@@ -4921,16 +4921,15 @@ lpfc_sli4_arm_cqeq_intr(struct lpfc_hba
+ 	lpfc_sli4_cq_release(phba->sli4_hba.els_cq, LPFC_QUEUE_REARM);
+ 	fcp_eqidx = 0;
+ 	if (phba->sli4_hba.fcp_cq) {
+-		do
++		do {
+ 			lpfc_sli4_cq_release(phba->sli4_hba.fcp_cq[fcp_eqidx],
+ 					     LPFC_QUEUE_REARM);
+-		while (++fcp_eqidx < phba->cfg_fcp_eq_count);
++		} while (++fcp_eqidx < phba->cfg_fcp_io_channel);
+ 	}
+-	lpfc_sli4_eq_release(phba->sli4_hba.sp_eq, LPFC_QUEUE_REARM);
+-	if (phba->sli4_hba.fp_eq) {
+-		for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_eq_count;
++	if (phba->sli4_hba.hba_eq) {
++		for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_io_channel;
+ 		     fcp_eqidx++)
+-			lpfc_sli4_eq_release(phba->sli4_hba.fp_eq[fcp_eqidx],
++			lpfc_sli4_eq_release(phba->sli4_hba.hba_eq[fcp_eqidx],
+ 					     LPFC_QUEUE_REARM);
+ 	}
+ }
+@@ -7818,7 +7817,7 @@ lpfc_sli4_scmd_to_wqidx_distr(struct lpf
+ 	int i;
+ 
+ 	i = atomic_add_return(1, &phba->fcp_qidx);
+-	i = (i % phba->cfg_fcp_wq_count);
++	i = (i % phba->cfg_fcp_io_channel);
+ 	return i;
+ }
+ 
+@@ -8727,7 +8726,7 @@ lpfc_sli_setup(struct lpfc_hba *phba)
+ 
+ 	psli->num_rings = MAX_SLI3_CONFIGURED_RINGS;
+ 	if (phba->sli_rev == LPFC_SLI_REV4)
+-		psli->num_rings += phba->cfg_fcp_eq_count;
++		psli->num_rings += phba->cfg_fcp_io_channel;
+ 	psli->sli_flag = 0;
+ 	psli->fcp_ring = LPFC_FCP_RING;
+ 	psli->next_ring = LPFC_FCP_NEXT_RING;
+@@ -11468,31 +11467,18 @@ lpfc_sli4_sp_handle_cqe(struct lpfc_hba
+  *
+  **/
+ static void
+-lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe)
++lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
++	struct lpfc_queue *speq)
+ {
+-	struct lpfc_queue *cq = NULL, *childq, *speq;
++	struct lpfc_queue *cq = NULL, *childq;
+ 	struct lpfc_cqe *cqe;
+ 	bool workposted = false;
+ 	int ecount = 0;
+ 	uint16_t cqid;
+ 
+-	if (bf_get_le32(lpfc_eqe_major_code, eqe) != 0) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+-				"0359 Not a valid slow-path completion "
+-				"event: majorcode=x%x, minorcode=x%x\n",
+-				bf_get_le32(lpfc_eqe_major_code, eqe),
+-				bf_get_le32(lpfc_eqe_minor_code, eqe));
+-		return;
+-	}
+-
+ 	/* Get the reference to the corresponding CQ */
+ 	cqid = bf_get_le32(lpfc_eqe_resource_id, eqe);
+ 
+-	/* Search for completion queue pointer matching this cqid */
+-	speq = phba->sli4_hba.sp_eq;
+-	/* sanity check on queue memory */
+-	if (unlikely(!speq))
+-		return;
+ 	list_for_each_entry(childq, &speq->child_list, list) {
+ 		if (childq->queue_id == cqid) {
+ 			cq = childq;
+@@ -11711,7 +11697,7 @@ lpfc_sli4_fp_handle_wcqe(struct lpfc_hba
+ }
+ 
+ /**
+- * lpfc_sli4_fp_handle_eqe - Process a fast-path event queue entry
++ * lpfc_sli4_hba_handle_eqe - Process a fast-path event queue entry
+  * @phba: Pointer to HBA context object.
+  * @eqe: Pointer to fast-path event queue entry.
+  *
+@@ -11723,8 +11709,8 @@ lpfc_sli4_fp_handle_wcqe(struct lpfc_hba
+  * completion queue, and then return.
+  **/
+ static void
+-lpfc_sli4_fp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+-			uint32_t fcp_cqidx)
++lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
++			uint32_t qidx)
+ {
+ 	struct lpfc_queue *cq;
+ 	struct lpfc_cqe *cqe;
+@@ -11734,30 +11720,38 @@ lpfc_sli4_fp_handle_eqe(struct lpfc_hba
+ 
+ 	if (unlikely(bf_get_le32(lpfc_eqe_major_code, eqe) != 0)) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+-				"0366 Not a valid fast-path completion "
++				"0366 Not a valid completion "
+ 				"event: majorcode=x%x, minorcode=x%x\n",
+ 				bf_get_le32(lpfc_eqe_major_code, eqe),
+ 				bf_get_le32(lpfc_eqe_minor_code, eqe));
+ 		return;
+ 	}
+ 
++	/* Get the reference to the corresponding CQ */
++	cqid = bf_get_le32(lpfc_eqe_resource_id, eqe);
++
++	/* Check if this is a Slow path event */
++	if (unlikely(cqid != phba->sli4_hba.fcp_cq_map[qidx])) {
++		lpfc_sli4_sp_handle_eqe(phba, eqe,
++			phba->sli4_hba.hba_eq[qidx]);
++		return;
++	}
++
+ 	if (unlikely(!phba->sli4_hba.fcp_cq)) {
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
+ 				"3146 Fast-path completion queues "
+ 				"does not exist\n");
+ 		return;
+ 	}
+-	cq = phba->sli4_hba.fcp_cq[fcp_cqidx];
++	cq = phba->sli4_hba.fcp_cq[qidx];
+ 	if (unlikely(!cq)) {
+ 		if (phba->sli.sli_flag & LPFC_SLI_ACTIVE)
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 					"0367 Fast-path completion queue "
+-					"(%d) does not exist\n", fcp_cqidx);
++					"(%d) does not exist\n", qidx);
+ 		return;
+ 	}
+ 
+-	/* Get the reference to the corresponding CQ */
+-	cqid = bf_get_le32(lpfc_eqe_resource_id, eqe);
+ 	if (unlikely(cqid != cq->queue_id)) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 				"0368 Miss-matched fast-path completion "
+@@ -11805,93 +11799,7 @@ lpfc_sli4_eq_flush(struct lpfc_hba *phba
+ }
+ 
+ /**
+- * lpfc_sli4_sp_intr_handler - Slow-path interrupt handler to SLI-4 device
+- * @irq: Interrupt number.
+- * @dev_id: The device context pointer.
+- *
+- * This function is directly called from the PCI layer as an interrupt
+- * service routine when device with SLI-4 interface spec is enabled with
+- * MSI-X multi-message interrupt mode and there are slow-path events in
+- * the HBA. However, when the device is enabled with either MSI or Pin-IRQ
+- * interrupt mode, this function is called as part of the device-level
+- * interrupt handler. When the PCI slot is in error recovery or the HBA is
+- * undergoing initialization, the interrupt handler will not process the
+- * interrupt. The link attention and ELS ring attention events are handled
+- * by the worker thread. The interrupt handler signals the worker thread
+- * and returns for these events. This function is called without any lock
+- * held. It gets the hbalock to access and update SLI data structures.
+- *
+- * This function returns IRQ_HANDLED when interrupt is handled else it
+- * returns IRQ_NONE.
+- **/
+-irqreturn_t
+-lpfc_sli4_sp_intr_handler(int irq, void *dev_id)
+-{
+-	struct lpfc_hba *phba;
+-	struct lpfc_queue *speq;
+-	struct lpfc_eqe *eqe;
+-	unsigned long iflag;
+-	int ecount = 0;
+-
+-	/*
+-	 * Get the driver's phba structure from the dev_id
+-	 */
+-	phba = (struct lpfc_hba *)dev_id;
+-
+-	if (unlikely(!phba))
+-		return IRQ_NONE;
+-
+-	/* Get to the EQ struct associated with this vector */
+-	speq = phba->sli4_hba.sp_eq;
+-	if (unlikely(!speq))
+-		return IRQ_NONE;
+-
+-	/* Check device state for handling interrupt */
+-	if (unlikely(lpfc_intr_state_check(phba))) {
+-		speq->EQ_badstate++;
+-		/* Check again for link_state with lock held */
+-		spin_lock_irqsave(&phba->hbalock, iflag);
+-		if (phba->link_state < LPFC_LINK_DOWN)
+-			/* Flush, clear interrupt, and rearm the EQ */
+-			lpfc_sli4_eq_flush(phba, speq);
+-		spin_unlock_irqrestore(&phba->hbalock, iflag);
+-		return IRQ_NONE;
+-	}
+-
+-	/*
+-	 * Process all the event on FCP slow-path EQ
+-	 */
+-	while ((eqe = lpfc_sli4_eq_get(speq))) {
+-		lpfc_sli4_sp_handle_eqe(phba, eqe);
+-		if (!(++ecount % speq->entry_repost))
+-			lpfc_sli4_eq_release(speq, LPFC_QUEUE_NOARM);
+-		speq->EQ_processed++;
+-	}
+-
+-	/* Track the max number of EQEs processed in 1 intr */
+-	if (ecount > speq->EQ_max_eqe)
+-		speq->EQ_max_eqe = ecount;
+-
+-	/* Always clear and re-arm the slow-path EQ */
+-	lpfc_sli4_eq_release(speq, LPFC_QUEUE_REARM);
+-
+-	/* Catch the no cq entry condition */
+-	if (unlikely(ecount == 0)) {
+-		speq->EQ_no_entry++;
+-		if (phba->intr_type == MSIX)
+-			/* MSI-X treated interrupt served as no EQ share INT */
+-			lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
+-					"0357 MSI-X interrupt with no EQE\n");
+-		else
+-			/* Non MSI-X treated on interrupt as EQ share INT */
+-			return IRQ_NONE;
+-	}
+-
+-	return IRQ_HANDLED;
+-} /* lpfc_sli4_sp_intr_handler */
+-
+-/**
+- * lpfc_sli4_fp_intr_handler - Fast-path interrupt handler to SLI-4 device
++ * lpfc_sli4_hba_intr_handler - HBA interrupt handler to SLI-4 device
+  * @irq: Interrupt number.
+  * @dev_id: The device context pointer.
+  *
+@@ -11908,11 +11816,16 @@ lpfc_sli4_sp_intr_handler(int irq, void
+  * the FCP EQ to FCP CQ are one-to-one map such that the FCP EQ index is
+  * equal to that of FCP CQ index.
+  *
++ * The link attention and ELS ring attention events are handled
++ * by the worker thread. The interrupt handler signals the worker thread
++ * and returns for these events. This function is called without any lock
++ * held. It gets the hbalock to access and update SLI data structures.
++ *
+  * This function returns IRQ_HANDLED when interrupt is handled else it
+  * returns IRQ_NONE.
+  **/
+ irqreturn_t
+-lpfc_sli4_fp_intr_handler(int irq, void *dev_id)
++lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
  {
  	struct lpfc_hba *phba;
--	uint32_t eratt = 0;
-+	uint32_t eratt = 0, rem;
-+	uint64_t sli_intr, cnt;
+ 	struct lpfc_fcp_eq_hdl *fcp_eq_hdl;
+@@ -11929,11 +11842,11 @@ lpfc_sli4_fp_intr_handler(int irq, void
  
- 	phba = (struct lpfc_hba *)ptr;
+ 	if (unlikely(!phba))
+ 		return IRQ_NONE;
+-	if (unlikely(!phba->sli4_hba.fp_eq))
++	if (unlikely(!phba->sli4_hba.hba_eq))
+ 		return IRQ_NONE;
  
-+	/* Here we will also keep track of interrupts per sec of the hba */
-+	sli_intr = phba->sli.slistat.sli_intr;
-+
-+	if (phba->sli.slistat.sli_prev_intr > sli_intr)
-+		cnt = (((uint64_t)(-1) - phba->sli.slistat.sli_prev_intr) +
-+			sli_intr);
-+	else
-+		cnt = (sli_intr - phba->sli.slistat.sli_prev_intr);
-+
-+	/* 64-bit integer division not supporte on 32-bit x86 - use do_div */
-+	rem = do_div(cnt, LPFC_ERATT_POLL_INTERVAL);
-+	phba->sli.slistat.sli_ips = cnt;
-+
-+	phba->sli.slistat.sli_prev_intr = sli_intr;
-+
- 	/* Check chip HA register for error event */
- 	eratt = lpfc_sli_check_eratt(phba);
+ 	/* Get to the EQ struct associated with this vector */
+-	fpeq = phba->sli4_hba.fp_eq[fcp_eqidx];
++	fpeq = phba->sli4_hba.hba_eq[fcp_eqidx];
+ 	if (unlikely(!fpeq))
+ 		return IRQ_NONE;
  
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2012-07-23 15:26:06.449425608 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2012-07-23 15:26:18.519425189 -0400
-@@ -255,6 +255,8 @@ struct lpfc_sli_stat {
- 	uint64_t mbox_stat_err;  /* Mbox cmds completed status error */
- 	uint64_t mbox_cmd;       /* Mailbox commands issued */
- 	uint64_t sli_intr;       /* Count of Host Attention interrupts */
-+	uint64_t sli_prev_intr;  /* Previous cnt of Host Attention interrupts */
-+	uint64_t sli_ips;        /* Host Attention interrupts per sec */
- 	uint32_t err_attn_event; /* Error Attn event counters */
- 	uint32_t link_event;     /* Link event counters */
- 	uint32_t mbox_event;     /* Mailbox event counters */
+@@ -11953,7 +11866,7 @@ lpfc_sli4_fp_intr_handler(int irq, void
+ 	 * Process all the event on FCP fast-path EQ
+ 	 */
+ 	while ((eqe = lpfc_sli4_eq_get(fpeq))) {
+-		lpfc_sli4_fp_handle_eqe(phba, eqe, fcp_eqidx);
++		lpfc_sli4_hba_handle_eqe(phba, eqe, fcp_eqidx);
+ 		if (!(++ecount % fpeq->entry_repost))
+ 			lpfc_sli4_eq_release(fpeq, LPFC_QUEUE_NOARM);
+ 		fpeq->EQ_processed++;
+@@ -12001,8 +11914,8 @@ irqreturn_t
+ lpfc_sli4_intr_handler(int irq, void *dev_id)
+ {
+ 	struct lpfc_hba  *phba;
+-	irqreturn_t sp_irq_rc, fp_irq_rc;
+-	bool fp_handled = false;
++	irqreturn_t hba_irq_rc;
++	bool hba_handled = false;
+ 	uint32_t fcp_eqidx;
+ 
+ 	/* Get the driver's phba structure from the dev_id */
+@@ -12012,21 +11925,16 @@ lpfc_sli4_intr_handler(int irq, void *de
+ 		return IRQ_NONE;
+ 
+ 	/*
+-	 * Invokes slow-path host attention interrupt handling as appropriate.
+-	 */
+-	sp_irq_rc = lpfc_sli4_sp_intr_handler(irq, dev_id);
+-
+-	/*
+ 	 * Invoke fast-path host attention interrupt handling as appropriate.
+ 	 */
+-	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_eq_count; fcp_eqidx++) {
+-		fp_irq_rc = lpfc_sli4_fp_intr_handler(irq,
++	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_io_channel; fcp_eqidx++) {
++		hba_irq_rc = lpfc_sli4_hba_intr_handler(irq,
+ 					&phba->sli4_hba.fcp_eq_hdl[fcp_eqidx]);
+-		if (fp_irq_rc == IRQ_HANDLED)
+-			fp_handled |= true;
++		if (hba_irq_rc == IRQ_HANDLED)
++			hba_handled |= true;
+ 	}
+ 
+-	return (fp_handled == true) ? IRQ_HANDLED : sp_irq_rc;
++	return (hba_handled == true) ? IRQ_HANDLED : IRQ_NONE;
+ } /* lpfc_sli4_intr_handler */
+ 
+ /**
+@@ -12157,7 +12065,7 @@ lpfc_modify_fcp_eq_delay(struct lpfc_hba
+ 	union lpfc_sli4_cfg_shdr *shdr;
+ 	uint16_t dmult;
+ 
+-	if (startq >= phba->cfg_fcp_eq_count)
++	if (startq >= phba->cfg_fcp_io_channel)
+ 		return 0;
+ 
+ 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+@@ -12174,9 +12082,9 @@ lpfc_modify_fcp_eq_delay(struct lpfc_hba
+ 	dmult = LPFC_DMULT_CONST/phba->cfg_fcp_imax - 1;
+ 
+ 	cnt = 0;
+-	for (fcp_eqidx = startq; fcp_eqidx < phba->cfg_fcp_eq_count;
++	for (fcp_eqidx = startq; fcp_eqidx < phba->cfg_fcp_io_channel;
+ 	    fcp_eqidx++) {
+-		eq = phba->sli4_hba.fp_eq[fcp_eqidx];
++		eq = phba->sli4_hba.hba_eq[fcp_eqidx];
+ 		if (!eq)
+ 			continue;
+ 		eq_delay->u.request.eq[cnt].eq_id = eq->queue_id;
 
 
 
