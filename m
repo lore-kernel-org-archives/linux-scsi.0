@@ -1,71 +1,181 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 06/21] lpfc 8.3.33: Fix scsi_eh escalation panic by checking
- the proper return status
-Date: Fri, 3 Aug 2012 12:34:54 -0400
-Message-ID: <1344011694.6110.31.camel@myfc17>
+Subject: [PATCH 07/21] lpfc 8.3.33: Fix error when remote port switches
+ address
+Date: Fri, 3 Aug 2012 12:35:03 -0400
+Message-ID: <1344011703.6110.32.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:40311 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752923Ab2HCQfA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:35:00 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:44815 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042Ab2HCQfK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:35:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix scsi_eh escalation panic by checking the proper return status
+Fix error when remote port switches address
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_scsi.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ lpfc_els.c     |   32 +++++++++++++++++++++++++-------
+ lpfc_hbadisc.c |   35 ++++++++++++++++++++++++++++++++++-
+ 2 files changed, 59 insertions(+), 8 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2012-07-22 11:35:20.453631868 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2012-07-22 11:35:20.648631862 -0400
-@@ -4414,7 +4414,7 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
- 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waitq);
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2012-07-22 10:46:05.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_els.c	2012-07-22 11:57:42.407585254 -0400
+@@ -1476,6 +1476,10 @@ lpfc_plogi_confirm_nport(struct lpfc_hba
+ 		return ndlp;
+ 	memset(&rrq.xri_bitmap, 0, sizeof(new_ndlp->active_rrqs.xri_bitmap));
  
- 	status = fc_block_scsi_eh(cmnd);
--	if (status)
-+	if (status != 0 && status != SUCCESS)
- 		return status;
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++		 "3178 PLOGI confirm: ndlp %p x%x: new_ndlp %p\n",
++		 ndlp, ndlp->nlp_DID, new_ndlp);
++
+ 	if (!new_ndlp) {
+ 		rc = memcmp(&ndlp->nlp_portname, name,
+ 			    sizeof(struct lpfc_name));
+@@ -1527,6 +1531,9 @@ lpfc_plogi_confirm_nport(struct lpfc_hba
+ 		/* The new_ndlp is replacing ndlp totally, so we need
+ 		 * to put ndlp on UNUSED list and try to free it.
+ 		 */
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++			 "3179 PLOGI confirm NEW: %x %x\n",
++			 new_ndlp->nlp_DID, keepDID);
  
- 	spin_lock_irq(&phba->hbalock);
-@@ -4769,7 +4769,7 @@ lpfc_device_reset_handler(struct scsi_cm
+ 		/* Fix up the rport accordingly */
+ 		rport =  ndlp->rport;
+@@ -1559,23 +1566,34 @@ lpfc_plogi_confirm_nport(struct lpfc_hba
+ 		lpfc_drop_node(vport, ndlp);
  	}
- 	pnode = rdata->pnode;
- 	status = fc_block_scsi_eh(cmnd);
--	if (status)
-+	if (status != 0 && status != SUCCESS)
- 		return status;
+ 	else {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++			 "3180 PLOGI confirm SWAP: %x %x\n",
++			 new_ndlp->nlp_DID, keepDID);
++
+ 		lpfc_unreg_rpi(vport, ndlp);
++
+ 		/* Two ndlps cannot have the same did */
+ 		ndlp->nlp_DID = keepDID;
+ 		if (phba->sli_rev == LPFC_SLI_REV4)
+ 			memcpy(&ndlp->active_rrqs.xri_bitmap,
+ 				&rrq.xri_bitmap,
+ 				sizeof(ndlp->active_rrqs.xri_bitmap));
++
+ 		/* Since we are swapping the ndlp passed in with the new one
+-		 * and the did has already been swapped, copy over the
+-		 * state and names.
++		 * and the did has already been swapped, copy over state.
++		 * The new WWNs are already in new_ndlp since thats what
++		 * we looked it up by in the begining of this routine.
+ 		 */
+-		memcpy(&new_ndlp->nlp_portname, &ndlp->nlp_portname,
+-			sizeof(struct lpfc_name));
+-		memcpy(&new_ndlp->nlp_nodename, &ndlp->nlp_nodename,
+-			sizeof(struct lpfc_name));
+ 		new_ndlp->nlp_state = ndlp->nlp_state;
+-		lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
++
++		/* Since we are switching over to the new_ndlp, the old
++		 * ndlp should be put in the NPR state, unless we have
++		 * already started re-discovery on it.
++		 */
++		if ((ndlp->nlp_state == NLP_STE_UNMAPPED_NODE) ||
++		    (ndlp->nlp_state == NLP_STE_MAPPED_NODE))
++			lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
++
+ 		/* Fix up the rport accordingly */
+ 		rport = ndlp->rport;
+ 		if (rport) {
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2012-07-22 11:18:36.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2012-07-22 11:59:11.621582157 -0400
+@@ -123,6 +123,10 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport
+ 		"rport devlosscb: sid:x%x did:x%x flg:x%x",
+ 		ndlp->nlp_sid, ndlp->nlp_DID, ndlp->nlp_flag);
  
- 	status = lpfc_chk_tgt_mapped(vport, cmnd);
-@@ -4836,7 +4836,7 @@ lpfc_target_reset_handler(struct scsi_cm
++	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
++			 "3181 dev_loss_callbk x%06x, rport %p flg x%x\n",
++			 ndlp->nlp_DID, ndlp->rport, ndlp->nlp_flag);
++
+ 	/* Don't defer this if we are in the process of deleting the vport
+ 	 * or unloading the driver. The unload will cleanup the node
+ 	 * appropriately we just need to cleanup the ndlp rport info here.
+@@ -142,6 +146,15 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport
+ 	if (ndlp->nlp_state == NLP_STE_MAPPED_NODE)
+ 		return;
+ 
++	if (ndlp->nlp_type & NLP_FABRIC) {
++
++		/* If the WWPN of the rport and ndlp don't match, ignore it */
++		if (rport->port_name != wwn_to_u64(ndlp->nlp_portname.u.wwn)) {
++			put_device(&rport->dev);
++			return;
++		}
++	}
++
+ 	evtp = &ndlp->dev_loss_evt;
+ 
+ 	if (!list_empty(&evtp->evt_listp))
+@@ -202,6 +215,10 @@ lpfc_dev_loss_tmo_handler(struct lpfc_no
+ 		"rport devlosstmo:did:x%x type:x%x id:x%x",
+ 		ndlp->nlp_DID, ndlp->nlp_type, rport->scsi_target_id);
+ 
++	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
++			 "3182 dev_loss_tmo_handler x%06x, rport %p flg x%x\n",
++			 ndlp->nlp_DID, ndlp->rport, ndlp->nlp_flag);
++
+ 	/* Don't defer this if we are in the process of deleting the vport
+ 	 * or unloading the driver. The unload will cleanup the node
+ 	 * appropriately we just need to cleanup the ndlp rport info here.
+@@ -3834,6 +3851,10 @@ lpfc_register_remote_port(struct lpfc_vp
+ 	if (rport_ids.roles !=  FC_RPORT_ROLE_UNKNOWN)
+ 		fc_remote_port_rolechg(rport, rport_ids.roles);
+ 
++	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
++			 "3183 rport register x%06x, rport %p role x%x\n",
++			 ndlp->nlp_DID, rport, rport_ids.roles);
++
+ 	if ((rport->scsi_target_id != -1) &&
+ 	    (rport->scsi_target_id < LPFC_MAX_TARGET)) {
+ 		ndlp->nlp_sid = rport->scsi_target_id;
+@@ -3850,6 +3871,10 @@ lpfc_unregister_remote_port(struct lpfc_
+ 		"rport delete:    did:x%x flg:x%x type x%x",
+ 		ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_type);
+ 
++	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
++			 "3184 rport unregister x%06x, rport %p\n",
++			 ndlp->nlp_DID, rport);
++
+ 	fc_remote_port_delete(rport);
+ 
+ 	return;
+@@ -5365,9 +5390,17 @@ __lpfc_find_node(struct lpfc_vport *vpor
+ 	struct lpfc_nodelist *ndlp;
+ 
+ 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
+-		if (filter(ndlp, param))
++		if (filter(ndlp, param)) {
++			lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
++					 "3185 FIND node filter %p DID "
++					 "Data: x%p x%x x%x\n",
++					 filter, ndlp, ndlp->nlp_DID,
++					 ndlp->nlp_flag);
+ 			return ndlp;
++		}
  	}
- 	pnode = rdata->pnode;
- 	status = fc_block_scsi_eh(cmnd);
--	if (status)
-+	if (status != 0 && status != SUCCESS)
- 		return status;
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
++			 "3186 FIND node filter %p NOT FOUND.\n", filter);
+ 	return NULL;
+ }
  
- 	status = lpfc_chk_tgt_mapped(vport, cmnd);
-@@ -4904,7 +4904,7 @@ lpfc_bus_reset_handler(struct scsi_cmnd
- 		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
- 
- 	status = fc_block_scsi_eh(cmnd);
--	if (status)
-+	if (status != 0 && status != SUCCESS)
- 		return status;
- 
- 	/*
 
 
 
