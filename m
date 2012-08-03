@@ -1,181 +1,234 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 07/21] lpfc 8.3.33: Fix error when remote port switches
- address
-Date: Fri, 3 Aug 2012 12:35:03 -0400
-Message-ID: <1344011703.6110.32.camel@myfc17>
+Subject: [PATCH 08/21] lpfc 8.3.33: Add debugfs interface to display SLI
+ queue information
+Date: Fri, 3 Aug 2012 12:35:13 -0400
+Message-ID: <1344011713.6110.33.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:44815 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042Ab2HCQfK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:35:10 -0400
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:40314 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753049Ab2HCQfU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 12:35:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix error when remote port switches address
+Add debugfs interface to display SLI queue information
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_els.c     |   32 +++++++++++++++++++++++++-------
- lpfc_hbadisc.c |   35 ++++++++++++++++++++++++++++++++++-
- 2 files changed, 59 insertions(+), 8 deletions(-)
+ lpfc_debugfs.h |    3 +++
+ lpfc_sli.c     |   35 ++++++++++++++++++++++++++++++++++-
+ lpfc_sli4.h    |   29 +++++++++++++++++++++++++++++
+ 3 files changed, 66 insertions(+), 1 deletion(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2012-07-22 10:46:05.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2012-07-22 11:57:42.407585254 -0400
-@@ -1476,6 +1476,10 @@ lpfc_plogi_confirm_nport(struct lpfc_hba
- 		return ndlp;
- 	memset(&rrq.xri_bitmap, 0, sizeof(new_ndlp->active_rrqs.xri_bitmap));
+diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
+--- a/drivers/scsi/lpfc/lpfc_debugfs.h	2012-07-22 11:18:36.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_debugfs.h	2012-07-22 12:45:05.890486486 -0400
+@@ -36,6 +36,9 @@
+ /* dumpHostSlim output buffer size */
+ #define LPFC_DUMPHOSTSLIM_SIZE 4096
  
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+		 "3178 PLOGI confirm: ndlp %p x%x: new_ndlp %p\n",
-+		 ndlp, ndlp->nlp_DID, new_ndlp);
++/* dumpSLIqinfo output buffer size */
++#define	LPFC_DUMPSLIQINFO_SIZE 4096
 +
- 	if (!new_ndlp) {
- 		rc = memcmp(&ndlp->nlp_portname, name,
- 			    sizeof(struct lpfc_name));
-@@ -1527,6 +1531,9 @@ lpfc_plogi_confirm_nport(struct lpfc_hba
- 		/* The new_ndlp is replacing ndlp totally, so we need
- 		 * to put ndlp on UNUSED list and try to free it.
- 		 */
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+			 "3179 PLOGI confirm NEW: %x %x\n",
-+			 new_ndlp->nlp_DID, keepDID);
+ /* hbqinfo output buffer size */
+ #define LPFC_HBQINFO_SIZE 8192
  
- 		/* Fix up the rport accordingly */
- 		rport =  ndlp->rport;
-@@ -1559,23 +1566,34 @@ lpfc_plogi_confirm_nport(struct lpfc_hba
- 		lpfc_drop_node(vport, ndlp);
- 	}
- 	else {
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+			 "3180 PLOGI confirm SWAP: %x %x\n",
-+			 new_ndlp->nlp_DID, keepDID);
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2012-07-22 11:18:36.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2012-07-22 12:45:05.896486487 -0400
+@@ -141,6 +141,35 @@ struct lpfc_queue {
+ 	uint32_t page_count;	/* Number of pages allocated for this queue */
+ 	uint32_t host_index;	/* The host's index for putting or getting */
+ 	uint32_t hba_index;	/* The last known hba index for get or put */
 +
- 		lpfc_unreg_rpi(vport, ndlp);
++	/* For q stats */
++	uint32_t q_cnt_1;
++	uint32_t q_cnt_2;
++	uint32_t q_cnt_3;
++	uint64_t q_cnt_4;
++/* defines for EQ stats */
++#define	EQ_max_eqe		q_cnt_1
++#define	EQ_no_entry		q_cnt_2
++#define	EQ_badstate		q_cnt_3
++#define	EQ_processed		q_cnt_4
 +
- 		/* Two ndlps cannot have the same did */
- 		ndlp->nlp_DID = keepDID;
- 		if (phba->sli_rev == LPFC_SLI_REV4)
- 			memcpy(&ndlp->active_rrqs.xri_bitmap,
- 				&rrq.xri_bitmap,
- 				sizeof(ndlp->active_rrqs.xri_bitmap));
++/* defines for CQ stats */
++#define	CQ_mbox			q_cnt_1
++#define	CQ_max_cqe		q_cnt_1
++#define	CQ_release_wqe		q_cnt_2
++#define	CQ_xri_aborted		q_cnt_3
++#define	CQ_wq			q_cnt_4
 +
- 		/* Since we are swapping the ndlp passed in with the new one
--		 * and the did has already been swapped, copy over the
--		 * state and names.
-+		 * and the did has already been swapped, copy over state.
-+		 * The new WWNs are already in new_ndlp since thats what
-+		 * we looked it up by in the begining of this routine.
- 		 */
--		memcpy(&new_ndlp->nlp_portname, &ndlp->nlp_portname,
--			sizeof(struct lpfc_name));
--		memcpy(&new_ndlp->nlp_nodename, &ndlp->nlp_nodename,
--			sizeof(struct lpfc_name));
- 		new_ndlp->nlp_state = ndlp->nlp_state;
--		lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
++/* defines for WQ stats */
++#define	WQ_overflow		q_cnt_1
++#define	WQ_posted		q_cnt_4
 +
-+		/* Since we are switching over to the new_ndlp, the old
-+		 * ndlp should be put in the NPR state, unless we have
-+		 * already started re-discovery on it.
-+		 */
-+		if ((ndlp->nlp_state == NLP_STE_UNMAPPED_NODE) ||
-+		    (ndlp->nlp_state == NLP_STE_MAPPED_NODE))
-+			lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
++/* defines for RQ stats */
++#define	RQ_no_posted_buf	q_cnt_1
++#define	RQ_no_buf_found		q_cnt_2
++#define	RQ_buf_trunc		q_cnt_3
++#define	RQ_rcv_buf		q_cnt_4
 +
- 		/* Fix up the rport accordingly */
- 		rport = ndlp->rport;
- 		if (rport) {
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2012-07-22 11:18:36.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2012-07-22 11:59:11.621582157 -0400
-@@ -123,6 +123,10 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport
- 		"rport devlosscb: sid:x%x did:x%x flg:x%x",
- 		ndlp->nlp_sid, ndlp->nlp_DID, ndlp->nlp_flag);
+ 	union sli4_qe qe[1];	/* array to index entries (must be last) */
+ };
  
-+	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
-+			 "3181 dev_loss_callbk x%06x, rport %p flg x%x\n",
-+			 ndlp->nlp_DID, ndlp->rport, ndlp->nlp_flag);
-+
- 	/* Don't defer this if we are in the process of deleting the vport
- 	 * or unloading the driver. The unload will cleanup the node
- 	 * appropriately we just need to cleanup the ndlp rport info here.
-@@ -142,6 +146,15 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport
- 	if (ndlp->nlp_state == NLP_STE_MAPPED_NODE)
- 		return;
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 11:18:36.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-07-22 12:45:05.916486486 -0400
+@@ -101,8 +101,11 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, u
+ 	temp_wqe = q->qe[q->host_index].wqe;
  
-+	if (ndlp->nlp_type & NLP_FABRIC) {
-+
-+		/* If the WWPN of the rport and ndlp don't match, ignore it */
-+		if (rport->port_name != wwn_to_u64(ndlp->nlp_portname.u.wwn)) {
-+			put_device(&rport->dev);
-+			return;
-+		}
+ 	/* If the host has not yet processed the next entry then we are done */
+-	if (((q->host_index + 1) % q->entry_count) == q->hba_index)
++	if (((q->host_index + 1) % q->entry_count) == q->hba_index) {
++		q->WQ_overflow++;
+ 		return -ENOMEM;
 +	}
++	q->WQ_posted++;
+ 	/* set consumption flag every once in a while */
+ 	if (!((q->host_index + 1) % q->entry_repost))
+ 		bf_set(wqe_wqec, &wqe->generic.wqe_com, 1);
+@@ -11311,14 +11314,17 @@ lpfc_sli4_sp_handle_rcqe(struct lpfc_hba
+ 	case FC_STATUS_RQ_BUF_LEN_EXCEEDED:
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 				"2537 Receive Frame Truncated!!\n");
++		hrq->RQ_buf_trunc++;
+ 	case FC_STATUS_RQ_SUCCESS:
+ 		lpfc_sli4_rq_release(hrq, drq);
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
+ 		dma_buf = lpfc_sli_hbqbuf_get(&phba->hbqs[0].hbq_buffer_list);
+ 		if (!dma_buf) {
++			hrq->RQ_no_buf_found++;
+ 			spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 			goto out;
+ 		}
++		hrq->RQ_rcv_buf++;
+ 		memcpy(&dma_buf->cq_event.cqe.rcqe_cmpl, rcqe, sizeof(*rcqe));
+ 		/* save off the frame for the word thread to process */
+ 		list_add_tail(&dma_buf->cq_event.list,
+@@ -11330,6 +11336,7 @@ lpfc_sli4_sp_handle_rcqe(struct lpfc_hba
+ 		break;
+ 	case FC_STATUS_INSUFF_BUF_NEED_BUF:
+ 	case FC_STATUS_INSUFF_BUF_FRM_DISC:
++		hrq->RQ_no_posted_buf++;
+ 		/* Post more buffers if possible */
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
+ 		phba->hba_flag |= HBA_POST_RECEIVE_BUFFER;
+@@ -11457,6 +11464,7 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba
+ 			workposted |= lpfc_sli4_sp_handle_mcqe(phba, cqe);
+ 			if (!(++ecount % cq->entry_repost))
+ 				lpfc_sli4_cq_release(cq, LPFC_QUEUE_NOARM);
++			cq->CQ_mbox++;
+ 		}
+ 		break;
+ 	case LPFC_WCQ:
+@@ -11470,6 +11478,10 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba
+ 			if (!(++ecount % cq->entry_repost))
+ 				lpfc_sli4_cq_release(cq, LPFC_QUEUE_NOARM);
+ 		}
 +
- 	evtp = &ndlp->dev_loss_evt;
- 
- 	if (!list_empty(&evtp->evt_listp))
-@@ -202,6 +215,10 @@ lpfc_dev_loss_tmo_handler(struct lpfc_no
- 		"rport devlosstmo:did:x%x type:x%x id:x%x",
- 		ndlp->nlp_DID, ndlp->nlp_type, rport->scsi_target_id);
- 
-+	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
-+			 "3182 dev_loss_tmo_handler x%06x, rport %p flg x%x\n",
-+			 ndlp->nlp_DID, ndlp->rport, ndlp->nlp_flag);
-+
- 	/* Don't defer this if we are in the process of deleting the vport
- 	 * or unloading the driver. The unload will cleanup the node
- 	 * appropriately we just need to cleanup the ndlp rport info here.
-@@ -3834,6 +3851,10 @@ lpfc_register_remote_port(struct lpfc_vp
- 	if (rport_ids.roles !=  FC_RPORT_ROLE_UNKNOWN)
- 		fc_remote_port_rolechg(rport, rport_ids.roles);
- 
-+	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
-+			 "3183 rport register x%06x, rport %p role x%x\n",
-+			 ndlp->nlp_DID, rport, rport_ids.roles);
-+
- 	if ((rport->scsi_target_id != -1) &&
- 	    (rport->scsi_target_id < LPFC_MAX_TARGET)) {
- 		ndlp->nlp_sid = rport->scsi_target_id;
-@@ -3850,6 +3871,10 @@ lpfc_unregister_remote_port(struct lpfc_
- 		"rport delete:    did:x%x flg:x%x type x%x",
- 		ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_type);
- 
-+	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
-+			 "3184 rport unregister x%06x, rport %p\n",
-+			 ndlp->nlp_DID, rport);
-+
- 	fc_remote_port_delete(rport);
- 
- 	return;
-@@ -5365,9 +5390,17 @@ __lpfc_find_node(struct lpfc_vport *vpor
- 	struct lpfc_nodelist *ndlp;
- 
- 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
--		if (filter(ndlp, param))
-+		if (filter(ndlp, param)) {
-+			lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
-+					 "3185 FIND node filter %p DID "
-+					 "Data: x%p x%x x%x\n",
-+					 filter, ndlp, ndlp->nlp_DID,
-+					 ndlp->nlp_flag);
- 			return ndlp;
-+		}
++		/* Track the max number of CQEs processed in 1 EQ */
++		if (ecount > cq->CQ_max_cqe)
++			cq->CQ_max_cqe = ecount;
+ 		break;
+ 	default:
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+@@ -11621,17 +11633,20 @@ lpfc_sli4_fp_handle_wcqe(struct lpfc_hba
+ 	/* Check and process for different type of WCQE and dispatch */
+ 	switch (bf_get(lpfc_wcqe_c_code, &wcqe)) {
+ 	case CQE_CODE_COMPL_WQE:
++		cq->CQ_wq++;
+ 		/* Process the WQ complete event */
+ 		phba->last_completion_time = jiffies;
+ 		lpfc_sli4_fp_handle_fcp_wcqe(phba,
+ 				(struct lpfc_wcqe_complete *)&wcqe);
+ 		break;
+ 	case CQE_CODE_RELEASE_WQE:
++		cq->CQ_release_wqe++;
+ 		/* Process the WQ release event */
+ 		lpfc_sli4_fp_handle_rel_wcqe(phba, cq,
+ 				(struct lpfc_wcqe_release *)&wcqe);
+ 		break;
+ 	case CQE_CODE_XRI_ABORTED:
++		cq->CQ_xri_aborted++;
+ 		/* Process the WQ XRI abort event */
+ 		phba->last_completion_time = jiffies;
+ 		workposted = lpfc_sli4_sp_handle_abort_xri_wcqe(phba, cq,
+@@ -11709,6 +11724,10 @@ lpfc_sli4_fp_handle_eqe(struct lpfc_hba
+ 			lpfc_sli4_cq_release(cq, LPFC_QUEUE_NOARM);
  	}
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
-+			 "3186 FIND node filter %p NOT FOUND.\n", filter);
- 	return NULL;
- }
  
++	/* Track the max number of CQEs processed in 1 EQ */
++	if (ecount > cq->CQ_max_cqe)
++		cq->CQ_max_cqe = ecount;
++
+ 	/* Catch the no cq entry condition */
+ 	if (unlikely(ecount == 0))
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+@@ -11780,6 +11799,7 @@ lpfc_sli4_sp_intr_handler(int irq, void
+ 
+ 	/* Check device state for handling interrupt */
+ 	if (unlikely(lpfc_intr_state_check(phba))) {
++		speq->EQ_badstate++;
+ 		/* Check again for link_state with lock held */
+ 		spin_lock_irqsave(&phba->hbalock, iflag);
+ 		if (phba->link_state < LPFC_LINK_DOWN)
+@@ -11796,13 +11816,19 @@ lpfc_sli4_sp_intr_handler(int irq, void
+ 		lpfc_sli4_sp_handle_eqe(phba, eqe);
+ 		if (!(++ecount % speq->entry_repost))
+ 			lpfc_sli4_eq_release(speq, LPFC_QUEUE_NOARM);
++		speq->EQ_processed++;
+ 	}
+ 
++	/* Track the max number of EQEs processed in 1 intr */
++	if (ecount > speq->EQ_max_eqe)
++		speq->EQ_max_eqe = ecount;
++
+ 	/* Always clear and re-arm the slow-path EQ */
+ 	lpfc_sli4_eq_release(speq, LPFC_QUEUE_REARM);
+ 
+ 	/* Catch the no cq entry condition */
+ 	if (unlikely(ecount == 0)) {
++		speq->EQ_no_entry++;
+ 		if (phba->intr_type == MSIX)
+ 			/* MSI-X treated interrupt served as no EQ share INT */
+ 			lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
+@@ -11864,6 +11890,7 @@ lpfc_sli4_fp_intr_handler(int irq, void
+ 
+ 	/* Check device state for handling interrupt */
+ 	if (unlikely(lpfc_intr_state_check(phba))) {
++		fpeq->EQ_badstate++;
+ 		/* Check again for link_state with lock held */
+ 		spin_lock_irqsave(&phba->hbalock, iflag);
+ 		if (phba->link_state < LPFC_LINK_DOWN)
+@@ -11880,12 +11907,18 @@ lpfc_sli4_fp_intr_handler(int irq, void
+ 		lpfc_sli4_fp_handle_eqe(phba, eqe, fcp_eqidx);
+ 		if (!(++ecount % fpeq->entry_repost))
+ 			lpfc_sli4_eq_release(fpeq, LPFC_QUEUE_NOARM);
++		fpeq->EQ_processed++;
+ 	}
+ 
++	/* Track the max number of EQEs processed in 1 intr */
++	if (ecount > fpeq->EQ_max_eqe)
++		fpeq->EQ_max_eqe = ecount;
++
+ 	/* Always clear and re-arm the fast-path EQ */
+ 	lpfc_sli4_eq_release(fpeq, LPFC_QUEUE_REARM);
+ 
+ 	if (unlikely(ecount == 0)) {
++		fpeq->EQ_no_entry++;
+ 		if (phba->intr_type == MSIX)
+ 			/* MSI-X treated interrupt served as no EQ share INT */
+ 			lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
 
 
 
