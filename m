@@ -1,111 +1,99 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH v2] tmscsim: spin_unlock_irq in interrupt handler fix
-Date: Sat, 4 Aug 2012 01:23:30 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1208040120210.5170@axis700.grange>
-References: <1342853283-32549-1-git-send-email-yefremov.denis@gmail.com>
- <1343735613-28392-1-git-send-email-yefremov.denis@gmail.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: [PATCH V1] scsi/mvsas: Fix oops when ata commond timeout.
+Date: Sat, 4 Aug 2012 10:34:14 +0800
+Message-ID: <201208041034116402760@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1343735613-28392-1-git-send-email-yefremov.denis@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Denis Efremov <yefremov.denis@gmail.com>
-Cc: Kurt Garloff <garloff@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:53537 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503Ab2HDCcw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 22:32:52 -0400
+Received: by pbbrp8 with SMTP id rp8so2259505pbb.19
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Aug 2012 19:32:51 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?gb2312?B?09rP8sHB?= <yuxiangl@marvell.com>
+Cc: JBottomley <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 31 Jul 2012, Denis Efremov wrote:
+S2VybmVsIG1lc3NhZ2UgZm9sbG93czoNCg0KWyAgNTExLjcxMjAxMV0gc2QgMTE6MDowOjA6IFtz
+ZGZdIGNvbW1hbmQgZmZmZjg4MDBhNGU4MTQwMCB0aW1lZCBvdXQNClsgIDUxMS43MTIwMjJdIHNh
+czogRW50ZXIgc2FzX3Njc2lfcmVjb3Zlcl9ob3N0IGJ1c3k6IDEgZmFpbGVkOiAxDQpbICA1MTEu
+NzEyMDI0XSBzYXM6IHRyeWluZyB0byBmaW5kIHRhc2sgMHhmZmZmODgwMGE0ZDI0YzgwDQpbICA1
+MTEuNzEyMDI2XSBzYXM6IHNhc19zY3NpX2ZpbmRfdGFzazogYWJvcnRpbmcgdGFzayAweGZmZmY4
+ODAwYTRkMjRjODANClsgIDUxMS43MTIwMjldIGRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAx
+NjMxOm12c19hYm9ydF90YXNrKCkNCm12aT1mZmZmODgwMGI1MzAwMDAwIHRhc2s9ZmZmZjg4MDBh
+NGQyNGM4MCBzbG90PWZmZmY4ODAwYjUzMjUwMzgNCnNsb3RfaWR4PXgwDQpbICA1MTEuNzEyMDM1
+XSBCVUc6IHVuYWJsZSB0byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBh
+dA0KMDAwMDAwMDAwMDAwMDA1OA0KWyAgNTExLjcxMjA0MF0gSVA6IFs8ZmZmZmZmZmY4MTVmOGMw
+Yz5dIF9yYXdfc3Bpbl9sb2NrX2lycXNhdmUrMHhjLzB4MzANClsgIDUxMS43MTIwNDddIFBHRCAw
+DQpbICA1MTEuNzEyMDQ5XSBPb3BzOiAwMDAyIFsjMV0gU01QDQpbICA1MTEuNzEyMDUyXSBNb2R1
+bGVzIGxpbmtlZCBpbjogbXZzYXMgbGlic2FzIHNjc2lfdHJhbnNwb3J0X3Nhcw0KcmFpZDQ1NiBh
+c3luY19wcSBhc3luY194b3IgeG9yIGFzeW5jX21lbWNweSBhc3luY19yYWlkNl9yZWNvdiByYWlk
+Nl9wcQ0KYXN5bmNfdHggW2xhc3QgdW5sb2FkZWQ6IG12c2FzXQ0KWyAgNTExLjcxMjA2Ml0gQ1BV
+IDMNClsgIDUxMS43MTIwNjZdIFBpZDogNzMyMiwgY29tbTogc2NzaV9laF8xMSBOb3QgdGFpbnRl
+ZCAzLjUuMCsgIzEwNiBUbyBCZQ0KRmlsbGVkIEJ5IE8uRS5NLiBUbyBCZSBGaWxsZWQgQnkgTy5F
+Lk0uL1RvIGJlIGZpbGxlZCBieSBPLkUuTS4NClsgIDUxMS43MTIwNjhdIFJJUDogMDAxMDpbPGZm
+ZmZmZmZmODE1ZjhjMGM+XSAgWzxmZmZmZmZmZjgxNWY4YzBjPl0NCl9yYXdfc3Bpbl9sb2NrX2ly
+cXNhdmUrMHhjLzB4MzANClsgIDUxMS43MTIwNzNdIFJTUDogMDAxODpmZmZmODgwMDk4ZDNiY2Iw
+ICBFRkxBR1M6IDAwMDEwMDg2DQpbICA1MTEuNzEyMDc0XSBSQVg6IDAwMDAwMDAwMDAwMDAyODYg
+UkJYOiAwMDAwMDAwMDAwMDAwMDU4IFJDWDoNCjAwMDAwMDAwMDAwMDAwYzMNClsgIDUxMS43MTIw
+NzZdIFJEWDogMDAwMDAwMDAwMDAwMDEwMCBSU0k6IDAwMDAwMDAwMDAwMDAwNDYgUkRJOg0KMDAw
+MDAwMDAwMDAwMDA1OA0KWyAgNTExLjcxMjA3OF0gUkJQOiBmZmZmODgwMDk4ZDNiY2IwIFIwODog
+MDAwMDAwMDAwMDAwMDAwYSBSMDk6DQowMDAwMDAwMDAwMDAwMDAwDQpbICA1MTEuNzEyMDgwXSBS
+MTA6IDAwMDAwMDAwMDAwMDA0ZTggUjExOiAwMDAwMDAwMDAwMDAwNGU3IFIxMjoNCmZmZmY4ODAw
+YTRkMjRjODANClsgIDUxMS43MTIwODJdIFIxMzogMDAwMDAwMDAwMDAwMDA1MCBSMTQ6IGZmZmY4
+ODAwYjUzMjUwMzggUjE1Og0KZmZmZjg4MDBhNGVhZmUwMA0KWyAgNTExLjcxMjA4NF0gRlM6ICAw
+MDAwMDAwMDAwMDAwMDAwKDAwMDApIEdTOmZmZmY4ODAwYmRiODAwMDAoMDAwMCkNCmtubEdTOjAw
+MDAwMDAwMDAwMDAwMDANClsgIDUxMS43MTIwODZdIENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAw
+MCBDUjA6IDAwMDAwMDAwODAwNTAwM2INClsgIDUxMS43MTIwODhdIENSMjogMDAwMDAwMDAwMDAw
+MDA1OCBDUjM6IDAwMDAwMDAwYTRjZTYwMDAgQ1I0Og0KMDAwMDAwMDAwMDA0MDdlMA0KWyAgNTEx
+LjcxMjA5MF0gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6
+DQowMDAwMDAwMDAwMDAwMDAwDQpbICA1MTEuNzEyMDkxXSBEUjM6IDAwMDAwMDAwMDAwMDAwMDAg
+RFI2OiAwMDAwMDAwMGZmZmYwZmYwIERSNzoNCjAwMDAwMDAwMDAwMDA0MDANClsgIDUxMS43MTIw
+OTNdIFByb2Nlc3Mgc2NzaV9laF8xMSAocGlkOiA3MzIyLCB0aHJlYWRpbmZvDQpmZmZmODgwMDk4
+ZDNhMDAwLCB0YXNrIGZmZmY4ODAwYTYxZGRlNDApDQpbICA1MTEuNzEyMDk1XSBTdGFjazoNClsg
+IDUxMS43MTIwOTZdICBmZmZmODgwMDk4ZDNiY2UwIGZmZmZmZmZmODEwNjA2ODMgZmZmZjg4MDAw
+MDAwMDAwMA0KMDAwMDAwMDAwMDAwMDAwMA0KWyAgNTExLjcxMjA5OV0gIGZmZmY4ODAwYTRkMjRj
+ODAgZmZmZjg4MDBiNTMwMDAwMCBmZmZmODgwMDk4ZDNiY2YwDQpmZmZmZmZmZmEwMDc2YTg4DQpb
+ICA1MTEuNzEyMTAyXSAgZmZmZjg4MDA5OGQzYmQ1MCBmZmZmZmZmZmEwMDc5YmI1IGZmZmY4ODAw
+MDAwMDAwMDANCmZmZmY4ODAwMDAwMDAwMTgNClsgIDUxMS43MTIxMDZdIENhbGwgVHJhY2U6DQpb
+ICA1MTEuNzEyMTEwXSAgWzxmZmZmZmZmZjgxMDYwNjgzPl0gY29tcGxldGUrMHgyMy8weDYwDQpb
+ICA1MTEuNzEyMTE1XSAgWzxmZmZmZmZmZmEwMDc2YTg4Pl0gbXZzX3RtZl90aW1lZG91dCsweDE4
+LzB4MjAgW212c2FzXQ0KWyAgNTExLjcxMjExOV0gIFs8ZmZmZmZmZmZhMDA3OWJiNT5dIG12c19z
+bG90X2NvbXBsZXRlKzB4NzY1LzB4N2QwDQpbbXZzYXNdDQpbICA1MTEuNzEyMTI1XSAgWzxmZmZm
+ZmZmZmEwMDVhMTdkPl0gc2FzX3Njc2lfcmVjb3Zlcl9ob3N0KzB4NTVkLzB4ZGIwDQpbbGlic2Fz
+XQ0KWyAgNTExLjcxMjEyOF0gIFs8ZmZmZmZmZmY4MTA2ZDYwMD5dID8gaWRsZV9iYWxhbmNlKzB4
+ZTAvMHgxMzANClsgIDUxMS43MTIxMzNdICBbPGZmZmZmZmZmODEzYjE1MGM+XSBzY3NpX2Vycm9y
+X2hhbmRsZXIrMHhjYy8weDQ3MA0KWyAgNTExLjcxMjEzNl0gIFs8ZmZmZmZmZmY4MTVmN2FkMD5d
+ID8gX19zY2hlZHVsZSsweDM3MC8weDczMA0KWyAgNTExLjcxMjEzOV0gIFs8ZmZmZmZmZmY4MTA1
+ZjcyOD5dID8gX193YWtlX3VwX2NvbW1vbisweDU4LzB4OTANClsgIDUxMS43MTIxNDJdICBbPGZm
+ZmZmZmZmODEzYjE0NDA+XSA/IHNjc2lfZWhfZ2V0X3NlbnNlKzB4MTEwLzB4MTEwDQpbICA1MTEu
+NzEyMTQ2XSAgWzxmZmZmZmZmZjgxMDU3MWJlPl0ga3RocmVhZCsweDhlLzB4YTANClsgIDUxMS43
+MTIxNTBdICBbPGZmZmZmZmZmODE2MDE1ZjQ+XSBrZXJuZWxfdGhyZWFkX2hlbHBlcisweDQvMHgx
+MA0KWyAgNTExLjcxMjE1M10gIFs8ZmZmZmZmZmY4MTA1NzEzMD5dID8gZmx1c2hfa3RocmVhZF93
+b3JrKzB4MTIwLzB4MTIwDQpbICA1MTEuNzEyMTU2XSAgWzxmZmZmZmZmZjgxNjAxNWYwPl0gPyBn
+c19jaGFuZ2UrMHhiLzB4Yg0KWyAgNTExLjcxMjE1N10gQ29kZTogOGEgMDAgMDEgMDAgMDAgODkg
+ZDAgZjAgNjYgMGYgYjEgMGYgNjYgMzkgZDAgMGYgOTQNCmMwIDBmIGI2IGMwIDVkIGMzIDBmIDFm
+IDg0IDAwIDAwIDAwIDAwIDAwIDU1IDQ4IDg5IGU1IDljIDU4IGZhIGJhIDAwIDAxDQowMCAwMCA8
+ZjA+IDY2IDBmIGMxIDE3IDBmIGI2IGNlIDM4IGQxIDc0IDExIDBmIDFmIDg0IDAwIDAwIDAwIDAw
+IDAwIGYzDQpbICA1MTEuNzEyMTkxXSBSSVAgIFs8ZmZmZmZmZmY4MTVmOGMwYz5dIF9yYXdfc3Bp
+bl9sb2NrX2lycXNhdmUrMHhjLzB4MzANClsgIDUxMS43MTIxOTRdICBSU1AgPGZmZmY4ODAwOThk
+M2JjYjA+DQpbICA1MTEuNzEyMTk2XSBDUjI6IDAwMDAwMDAwMDAwMDAwNTgNClsgIDUxMS43MTIx
+OThdIC0tLVsgZW5kIHRyYWNlIGE3ODFjN2IxZTY1ZGI5MmMgXS0tLQ0KDQpTaWduZWQtb2ZmLWJ5
+OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL3Njc2kv
+bXZzYXMvbXZfc2FzLmMgfCAgICAyICstDQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCsp
+LCAxIGRlbGV0aW9uKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2Fz
+LmMgYi9kcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMNCmluZGV4IDQ1MzlkNTkuLmEzNzc2ZDYg
+MTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMNCisrKyBiL2RyaXZlcnMv
+c2NzaS9tdnNhcy9tdl9zYXMuYw0KQEAgLTE2MjksNyArMTYyOSw3IEBAIGludCBtdnNfYWJvcnRf
+dGFzayhzdHJ1Y3Qgc2FzX3Rhc2sgKnRhc2spDQogCQkJbXZfZHByaW50aygibXZzX2Fib3J0X3Rh
+c2soKSBtdmk9JXAgdGFzaz0lcCAiDQogCQkJCSAgICJzbG90PSVwIHNsb3RfaWR4PXgleFxuIiwN
+CiAJCQkJICAgbXZpLCB0YXNrLCBzbG90LCBzbG90X2lkeCk7DQotCQkJbXZzX3RtZl90aW1lZG91
+dCgodW5zaWduZWQgbG9uZyl0YXNrKTsNCisJCQl0YXNrLT50YXNrX3N0YXRlX2ZsYWdzIHw9IFNB
+U19UQVNLX1NUQVRFX0FCT1JURUQ7DQogCQkJbXZzX3Nsb3RfdGFza19mcmVlKG12aSwgdGFzaywg
+c2xvdCwgc2xvdF9pZHgpOw0KIAkJCXJjID0gVE1GX1JFU1BfRlVOQ19DT01QTEVURTsNCiAJCQln
+b3RvIG91dDsNCi0tIA0KMS43LjkuNQ0K
 
-> The replacement of spin_lock_irq/spin_unlock_irq pairs which
-> can be called from interrupt handler by irqsave/irqrestore
-> versions.
-> 
-> Found by Linux Driver Verification project (linuxtesting.org).
-> 
-> Signed-off-by: Denis Efremov <yefremov.denis@gmail.com>
-
-Acked-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-
-Note: I didn't test this. I still have a dc390 card in my PC, so, I could 
-test it, but I haven't yet got time for this and I'll be away the next 
-week. The patch looks correct and safe. If it does break anything, well, 
-we'll get to know about that sooner or later...
-
-Thanks
-Guennadi
-
-> ---
->  drivers/scsi/tmscsim.c |   12 ++++++------
->  drivers/scsi/tmscsim.h |    1 +
->  2 files changed, 7 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
-> index a1baccc..e9b7148 100644
-> --- a/drivers/scsi/tmscsim.c
-> +++ b/drivers/scsi/tmscsim.c
-> @@ -665,7 +665,7 @@ DC390_Interrupt(void *dev_id)
->      //dstatus = DC390_read8 (DMA_Status);
->      //DC390_write32 (DMA_ScsiBusCtrl, EN_INT_ON_PCI_ABORT);
->  
-> -    spin_lock_irq(pACB->pScsiHost->host_lock);
-> +    spin_lock_irqsave(pACB->pScsiHost->host_lock, pACB->hlock_flags);
->  
->      istate = DC390_read8 (Intern_State);
->      istatus = DC390_read8 (INT_Status); /* This clears Scsi_Status, Intern_State and INT_Status ! */
-> @@ -736,7 +736,7 @@ DC390_Interrupt(void *dev_id)
->      }
->  
->   unlock:
-> -    spin_unlock_irq(pACB->pScsiHost->host_lock);
-> +    spin_unlock_irqrestore(pACB->pScsiHost->host_lock, pACB->hlock_flags);
->      return IRQ_HANDLED;
->  }
->  
-> @@ -771,9 +771,9 @@ dc390_DataOut_0(struct dc390_acb* pACB, struct dc390_srb* pSRB, u8 *psstatus)
->  	    /* Function called from the ISR with the host_lock held and interrupts disabled */
->  	    if (pSRB->SGToBeXferLen)
->  		while (time_before(jiffies, timeout) && !((dstate = DC390_read8 (DMA_Status)) & DMA_XFER_DONE)) {
-> -		    spin_unlock_irq(pACB->pScsiHost->host_lock);
-> +		    spin_unlock_irqrestore(pACB->pScsiHost->host_lock, pACB->hlock_flags);
->  		    udelay(50);
-> -		    spin_lock_irq(pACB->pScsiHost->host_lock);
-> +		    spin_lock_irqsave(pACB->pScsiHost->host_lock, pACB->hlock_flags);
->  		}
->  	    if (!time_before(jiffies, timeout))
->  		printk (KERN_CRIT "DC390: Deadlock in DataOut_0: DMA aborted unfinished: %06x bytes remain!!\n",
-> @@ -830,9 +830,9 @@ dc390_DataIn_0(struct dc390_acb* pACB, struct dc390_srb* pSRB, u8 *psstatus)
->  	    /* Function called from the ISR with the host_lock held and interrupts disabled */
->  	    if (pSRB->SGToBeXferLen)
->  		while (time_before(jiffies, timeout) && !((dstate = DC390_read8 (DMA_Status)) & DMA_XFER_DONE)) {
-> -		    spin_unlock_irq(pACB->pScsiHost->host_lock);
-> +		    spin_unlock_irqrestore(pACB->pScsiHost->host_lock, pACB->hlock_flags);
->  		    udelay(50);
-> -		    spin_lock_irq(pACB->pScsiHost->host_lock);
-> +		    spin_lock_irqsave(pACB->pScsiHost->host_lock, pACB->hlock_flags);
->  		}
->  	    if (!time_before(jiffies, timeout)) {
->  		printk (KERN_CRIT "DC390: Deadlock in DataIn_0: DMA aborted unfinished: %06x bytes remain!!\n",
-> diff --git a/drivers/scsi/tmscsim.h b/drivers/scsi/tmscsim.h
-> index 77adc54..3f9ea2b 100644
-> --- a/drivers/scsi/tmscsim.h
-> +++ b/drivers/scsi/tmscsim.h
-> @@ -107,6 +107,7 @@ u8		SyncOffset;	/*;for reg. and nego.(low nibble) */
->  struct dc390_acb
->  {
->  struct Scsi_Host *pScsiHost;
-> +unsigned long     hlock_flags;
->  u16		IOPortBase;
->  u8		IRQLevel;
->  u8		status;
-> -- 
-> 1.7.7
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
-http://www.open-technology.de/
