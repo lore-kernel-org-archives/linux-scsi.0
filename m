@@ -1,48 +1,82 @@
-From: vinayak holikatti <vinholikatti@gmail.com>
-Subject: Re: [PATCH V3 1/4] [SCSI] drivers/scsi/ufs: Seggregate PCI Specific Code
-Date: Sat, 4 Aug 2012 20:15:54 +0530
-Message-ID: <CAKVbJB_n7pivdNLq_3Q6auSKpnMOErd9eJgGJXBtbJ6NbAqG_g@mail.gmail.com>
-References: <1343292170-2599-1-git-send-email-vinholikatti@gmail.com>
-	<1343292170-2599-2-git-send-email-vinholikatti@gmail.com>
-	<201208011438.28719.arnd@arndb.de>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] fix NULL-pointer dereference on scsi_run_queue
+Date: Sat, 04 Aug 2012 11:46:09 -0500
+Message-ID: <501D51D1.2010806@cs.wisc.edu>
+References: <CAOAMb1D+g0zzKGKjMPPp7V-XEwKB5AYGMDvUUbXNaHaz8ieTVg@mail.gmail.com> <501CE4E5.20604@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201208011438.28719.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com, Santosh Yaraganavi <santoshsy@gmail.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39919 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753472Ab2HDQq3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 4 Aug 2012 12:46:29 -0400
+In-Reply-To: <501CE4E5.20604@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Chanho Min <chanho0207@gmail.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
 
-On Wed, Aug 1, 2012 at 8:08 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Thursday 26 July 2012, Vinayak Holikatti wrote:
->
->> -static void ufshcd_remove(struct pci_dev *pdev)
->> +void ufshcd_remove(struct ufs_hba *hba)
->>  {
->> -     struct ufs_hba *hba = pci_get_drvdata(pdev);
->> -
->>       /* disable interrupts */
->>       ufshcd_int_config(hba, UFSHCD_INT_DISABLE);
->> -     free_irq(pdev->irq, hba);
->>
->>       ufshcd_hba_stop(hba);
->>       ufshcd_hba_free(hba);
->>
->>       scsi_remove_host(hba->host);
->>       scsi_host_put(hba->host);
->> +}
->> +EXPORT_SYMBOL(ufshcd_remove);
->
-> For driver internal symbols, you should always use "EXPORT_SYMBOL_GPL"
-> here.
-Ok, will use EXPORT_SYMBOL_GPL
->
->         Arnd
->
+On 08/04/2012 04:01 AM, Bart Van Assche wrote:
+> On 08/02/12 08:41, Chanho Min wrote:
+>> This patch is to fix a oops from a torn down device. When
+>> scsi_run_queue process starved queues, scsi_request_fn can race with
+>> scsi_remove_device. In this case, rarely, scsi_request_fn release the
+>> last reference and set sdev->request_queue to NULL. It result in
+>> NULL-pointer dereference when spin_unlock is tried with (NULL)->
+>> queue_lock. We need to add an extra reference to the device on both
+>> sides of the __blk_run_queue to hold reference until scsi_request_fn
+>> is finished.
+> 
+> Good catch. So far I haven't been able to trigger this issue in my
+> tests. So it would be appreciated if you could verify whether the patch
+> below helps (patch is based on 3.6-rc1):
+> 
+> ---
+>  drivers/scsi/scsi_sysfs.c |    8 +++++++-
+>  1 files changed, 7 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 093d4f6..59e523c 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -348,7 +348,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>  	starget->reap_ref++;
+>  	list_del(&sdev->siblings);
+>  	list_del(&sdev->same_target_siblings);
+> -	list_del(&sdev->starved_entry);
+>  	spin_unlock_irqrestore(sdev->host->host_lock, flags);
+>  
+>  	cancel_work_sync(&sdev->event_work);
+> @@ -956,6 +955,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+>  void __scsi_remove_device(struct scsi_device *sdev)
+>  {
+>  	struct device *dev = &sdev->sdev_gendev;
+> +	struct Scsi_Host *shost = sdev->host;
+> +	unsigned long flags;
+>  
+>  	if (sdev->is_visible) {
+>  		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+> @@ -977,6 +978,11 @@ void __scsi_remove_device(struct scsi_device *sdev)
+>  	blk_cleanup_queue(sdev->request_queue);
+>  	cancel_work_sync(&sdev->requeue_work);
+>  
+> +	spin_lock_irqsave(shost->host_lock, flags);
+> +	if (!list_empty(&sdev->starved_entry))
+> +		list_del(&sdev->starved_entry);
+> +	spin_unlock_irqrestore(shost->host_lock, flags);
+> +
 
+I do not think it's that simple. If scsi_run_queue is running right now
+and that function has deleted the starved entry and is now about to
+access the sdev or queue, then this code above does not help and
+__scsi_remove_device could just continue on and end up calling
+scsi_device_dev_release_usercontext and freeing the device from under
+scsi_run_queue.
 
+I think we have to have scsi-ml do a get_device when a sdev is added to
+the starved entry and then do a put_device when it is removed (must do
+these under the host lock for the starved entry case too). I am not sure
+if that is just a hack/papering-over of the problem and there are more
+issues like this.
 
--- 
-Regards,
-Vinayak Holikatti
