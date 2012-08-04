@@ -1,82 +1,29 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Bart Van Assche <bvanassche@acm.org>
 Subject: Re: [PATCH] fix NULL-pointer dereference on scsi_run_queue
-Date: Sat, 04 Aug 2012 11:46:09 -0500
-Message-ID: <501D51D1.2010806@cs.wisc.edu>
-References: <CAOAMb1D+g0zzKGKjMPPp7V-XEwKB5AYGMDvUUbXNaHaz8ieTVg@mail.gmail.com> <501CE4E5.20604@acm.org>
+Date: Sat, 04 Aug 2012 20:18:41 +0000
+Message-ID: <501D83A1.7040900@acm.org>
+References: <CAOAMb1D+g0zzKGKjMPPp7V-XEwKB5AYGMDvUUbXNaHaz8ieTVg@mail.gmail.com> <501CE4E5.20604@acm.org> <501D51D1.2010806@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:39919 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753472Ab2HDQq3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Aug 2012 12:46:29 -0400
-In-Reply-To: <501CE4E5.20604@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <501D51D1.2010806@cs.wisc.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
 Cc: Chanho Min <chanho0207@gmail.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On 08/04/2012 04:01 AM, Bart Van Assche wrote:
-> On 08/02/12 08:41, Chanho Min wrote:
->> This patch is to fix a oops from a torn down device. When
->> scsi_run_queue process starved queues, scsi_request_fn can race with
->> scsi_remove_device. In this case, rarely, scsi_request_fn release the
->> last reference and set sdev->request_queue to NULL. It result in
->> NULL-pointer dereference when spin_unlock is tried with (NULL)->
->> queue_lock. We need to add an extra reference to the device on both
->> sides of the __blk_run_queue to hold reference until scsi_request_fn
->> is finished.
-> 
-> Good catch. So far I haven't been able to trigger this issue in my
-> tests. So it would be appreciated if you could verify whether the patch
-> below helps (patch is based on 3.6-rc1):
-> 
-> ---
->  drivers/scsi/scsi_sysfs.c |    8 +++++++-
->  1 files changed, 7 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 093d4f6..59e523c 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -348,7 +348,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
->  	starget->reap_ref++;
->  	list_del(&sdev->siblings);
->  	list_del(&sdev->same_target_siblings);
-> -	list_del(&sdev->starved_entry);
->  	spin_unlock_irqrestore(sdev->host->host_lock, flags);
->  
->  	cancel_work_sync(&sdev->event_work);
-> @@ -956,6 +955,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
->  void __scsi_remove_device(struct scsi_device *sdev)
->  {
->  	struct device *dev = &sdev->sdev_gendev;
-> +	struct Scsi_Host *shost = sdev->host;
-> +	unsigned long flags;
->  
->  	if (sdev->is_visible) {
->  		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
-> @@ -977,6 +978,11 @@ void __scsi_remove_device(struct scsi_device *sdev)
->  	blk_cleanup_queue(sdev->request_queue);
->  	cancel_work_sync(&sdev->requeue_work);
->  
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +	if (!list_empty(&sdev->starved_entry))
-> +		list_del(&sdev->starved_entry);
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
-> +
+On 08/04/12 16:46, Mike Christie wrote:
+> I think we have to have scsi-ml do a get_device when a sdev is added to
+> the starved entry and then do a put_device when it is removed (must do
+> these under the host lock for the starved entry case too). I am not sure
+> if that is just a hack/papering-over of the problem and there are more
+> issues like this.
 
-I do not think it's that simple. If scsi_run_queue is running right now
-and that function has deleted the starved entry and is now about to
-access the sdev or queue, then this code above does not help and
-__scsi_remove_device could just continue on and end up calling
-scsi_device_dev_release_usercontext and freeing the device from under
-scsi_run_queue.
+That would result in a more complex patch than the patch at the start of
+this thread, isn't it ? Also, IMHO it would help to document which
+functions in the scsi-ml are called with an sdev reference and which
+ones not. That would make the scsi-ml code easier to verify for issues
+like the one reported at the start of this thread.
 
-I think we have to have scsi-ml do a get_device when a sdev is added to
-the starved entry and then do a put_device when it is removed (must do
-these under the host lock for the starved entry case too). I am not sure
-if that is just a hack/papering-over of the problem and there are more
-issues like this.
-
+Bart.
