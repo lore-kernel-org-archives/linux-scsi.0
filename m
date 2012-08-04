@@ -1,99 +1,68 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: [PATCH V1] scsi/mvsas: Fix oops when ata commond timeout.
-Date: Sat, 4 Aug 2012 10:34:14 +0800
-Message-ID: <201208041034116402760@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] fix NULL-pointer dereference on scsi_run_queue
+Date: Sat, 04 Aug 2012 09:01:25 +0000
+Message-ID: <501CE4E5.20604@acm.org>
+References: <CAOAMb1D+g0zzKGKjMPPp7V-XEwKB5AYGMDvUUbXNaHaz8ieTVg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:53537 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753503Ab2HDCcw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2012 22:32:52 -0400
-Received: by pbbrp8 with SMTP id rp8so2259505pbb.19
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Aug 2012 19:32:51 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAOAMb1D+g0zzKGKjMPPp7V-XEwKB5AYGMDvUUbXNaHaz8ieTVg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chanho Min <chanho0207@gmail.com>
+Cc: James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: =?gb2312?B?09rP8sHB?= <yuxiangl@marvell.com>
-Cc: JBottomley <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-S2VybmVsIG1lc3NhZ2UgZm9sbG93czoNCg0KWyAgNTExLjcxMjAxMV0gc2QgMTE6MDowOjA6IFtz
-ZGZdIGNvbW1hbmQgZmZmZjg4MDBhNGU4MTQwMCB0aW1lZCBvdXQNClsgIDUxMS43MTIwMjJdIHNh
-czogRW50ZXIgc2FzX3Njc2lfcmVjb3Zlcl9ob3N0IGJ1c3k6IDEgZmFpbGVkOiAxDQpbICA1MTEu
-NzEyMDI0XSBzYXM6IHRyeWluZyB0byBmaW5kIHRhc2sgMHhmZmZmODgwMGE0ZDI0YzgwDQpbICA1
-MTEuNzEyMDI2XSBzYXM6IHNhc19zY3NpX2ZpbmRfdGFzazogYWJvcnRpbmcgdGFzayAweGZmZmY4
-ODAwYTRkMjRjODANClsgIDUxMS43MTIwMjldIGRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAx
-NjMxOm12c19hYm9ydF90YXNrKCkNCm12aT1mZmZmODgwMGI1MzAwMDAwIHRhc2s9ZmZmZjg4MDBh
-NGQyNGM4MCBzbG90PWZmZmY4ODAwYjUzMjUwMzgNCnNsb3RfaWR4PXgwDQpbICA1MTEuNzEyMDM1
-XSBCVUc6IHVuYWJsZSB0byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBh
-dA0KMDAwMDAwMDAwMDAwMDA1OA0KWyAgNTExLjcxMjA0MF0gSVA6IFs8ZmZmZmZmZmY4MTVmOGMw
-Yz5dIF9yYXdfc3Bpbl9sb2NrX2lycXNhdmUrMHhjLzB4MzANClsgIDUxMS43MTIwNDddIFBHRCAw
-DQpbICA1MTEuNzEyMDQ5XSBPb3BzOiAwMDAyIFsjMV0gU01QDQpbICA1MTEuNzEyMDUyXSBNb2R1
-bGVzIGxpbmtlZCBpbjogbXZzYXMgbGlic2FzIHNjc2lfdHJhbnNwb3J0X3Nhcw0KcmFpZDQ1NiBh
-c3luY19wcSBhc3luY194b3IgeG9yIGFzeW5jX21lbWNweSBhc3luY19yYWlkNl9yZWNvdiByYWlk
-Nl9wcQ0KYXN5bmNfdHggW2xhc3QgdW5sb2FkZWQ6IG12c2FzXQ0KWyAgNTExLjcxMjA2Ml0gQ1BV
-IDMNClsgIDUxMS43MTIwNjZdIFBpZDogNzMyMiwgY29tbTogc2NzaV9laF8xMSBOb3QgdGFpbnRl
-ZCAzLjUuMCsgIzEwNiBUbyBCZQ0KRmlsbGVkIEJ5IE8uRS5NLiBUbyBCZSBGaWxsZWQgQnkgTy5F
-Lk0uL1RvIGJlIGZpbGxlZCBieSBPLkUuTS4NClsgIDUxMS43MTIwNjhdIFJJUDogMDAxMDpbPGZm
-ZmZmZmZmODE1ZjhjMGM+XSAgWzxmZmZmZmZmZjgxNWY4YzBjPl0NCl9yYXdfc3Bpbl9sb2NrX2ly
-cXNhdmUrMHhjLzB4MzANClsgIDUxMS43MTIwNzNdIFJTUDogMDAxODpmZmZmODgwMDk4ZDNiY2Iw
-ICBFRkxBR1M6IDAwMDEwMDg2DQpbICA1MTEuNzEyMDc0XSBSQVg6IDAwMDAwMDAwMDAwMDAyODYg
-UkJYOiAwMDAwMDAwMDAwMDAwMDU4IFJDWDoNCjAwMDAwMDAwMDAwMDAwYzMNClsgIDUxMS43MTIw
-NzZdIFJEWDogMDAwMDAwMDAwMDAwMDEwMCBSU0k6IDAwMDAwMDAwMDAwMDAwNDYgUkRJOg0KMDAw
-MDAwMDAwMDAwMDA1OA0KWyAgNTExLjcxMjA3OF0gUkJQOiBmZmZmODgwMDk4ZDNiY2IwIFIwODog
-MDAwMDAwMDAwMDAwMDAwYSBSMDk6DQowMDAwMDAwMDAwMDAwMDAwDQpbICA1MTEuNzEyMDgwXSBS
-MTA6IDAwMDAwMDAwMDAwMDA0ZTggUjExOiAwMDAwMDAwMDAwMDAwNGU3IFIxMjoNCmZmZmY4ODAw
-YTRkMjRjODANClsgIDUxMS43MTIwODJdIFIxMzogMDAwMDAwMDAwMDAwMDA1MCBSMTQ6IGZmZmY4
-ODAwYjUzMjUwMzggUjE1Og0KZmZmZjg4MDBhNGVhZmUwMA0KWyAgNTExLjcxMjA4NF0gRlM6ICAw
-MDAwMDAwMDAwMDAwMDAwKDAwMDApIEdTOmZmZmY4ODAwYmRiODAwMDAoMDAwMCkNCmtubEdTOjAw
-MDAwMDAwMDAwMDAwMDANClsgIDUxMS43MTIwODZdIENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAw
-MCBDUjA6IDAwMDAwMDAwODAwNTAwM2INClsgIDUxMS43MTIwODhdIENSMjogMDAwMDAwMDAwMDAw
-MDA1OCBDUjM6IDAwMDAwMDAwYTRjZTYwMDAgQ1I0Og0KMDAwMDAwMDAwMDA0MDdlMA0KWyAgNTEx
-LjcxMjA5MF0gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6
-DQowMDAwMDAwMDAwMDAwMDAwDQpbICA1MTEuNzEyMDkxXSBEUjM6IDAwMDAwMDAwMDAwMDAwMDAg
-RFI2OiAwMDAwMDAwMGZmZmYwZmYwIERSNzoNCjAwMDAwMDAwMDAwMDA0MDANClsgIDUxMS43MTIw
-OTNdIFByb2Nlc3Mgc2NzaV9laF8xMSAocGlkOiA3MzIyLCB0aHJlYWRpbmZvDQpmZmZmODgwMDk4
-ZDNhMDAwLCB0YXNrIGZmZmY4ODAwYTYxZGRlNDApDQpbICA1MTEuNzEyMDk1XSBTdGFjazoNClsg
-IDUxMS43MTIwOTZdICBmZmZmODgwMDk4ZDNiY2UwIGZmZmZmZmZmODEwNjA2ODMgZmZmZjg4MDAw
-MDAwMDAwMA0KMDAwMDAwMDAwMDAwMDAwMA0KWyAgNTExLjcxMjA5OV0gIGZmZmY4ODAwYTRkMjRj
-ODAgZmZmZjg4MDBiNTMwMDAwMCBmZmZmODgwMDk4ZDNiY2YwDQpmZmZmZmZmZmEwMDc2YTg4DQpb
-ICA1MTEuNzEyMTAyXSAgZmZmZjg4MDA5OGQzYmQ1MCBmZmZmZmZmZmEwMDc5YmI1IGZmZmY4ODAw
-MDAwMDAwMDANCmZmZmY4ODAwMDAwMDAwMTgNClsgIDUxMS43MTIxMDZdIENhbGwgVHJhY2U6DQpb
-ICA1MTEuNzEyMTEwXSAgWzxmZmZmZmZmZjgxMDYwNjgzPl0gY29tcGxldGUrMHgyMy8weDYwDQpb
-ICA1MTEuNzEyMTE1XSAgWzxmZmZmZmZmZmEwMDc2YTg4Pl0gbXZzX3RtZl90aW1lZG91dCsweDE4
-LzB4MjAgW212c2FzXQ0KWyAgNTExLjcxMjExOV0gIFs8ZmZmZmZmZmZhMDA3OWJiNT5dIG12c19z
-bG90X2NvbXBsZXRlKzB4NzY1LzB4N2QwDQpbbXZzYXNdDQpbICA1MTEuNzEyMTI1XSAgWzxmZmZm
-ZmZmZmEwMDVhMTdkPl0gc2FzX3Njc2lfcmVjb3Zlcl9ob3N0KzB4NTVkLzB4ZGIwDQpbbGlic2Fz
-XQ0KWyAgNTExLjcxMjEyOF0gIFs8ZmZmZmZmZmY4MTA2ZDYwMD5dID8gaWRsZV9iYWxhbmNlKzB4
-ZTAvMHgxMzANClsgIDUxMS43MTIxMzNdICBbPGZmZmZmZmZmODEzYjE1MGM+XSBzY3NpX2Vycm9y
-X2hhbmRsZXIrMHhjYy8weDQ3MA0KWyAgNTExLjcxMjEzNl0gIFs8ZmZmZmZmZmY4MTVmN2FkMD5d
-ID8gX19zY2hlZHVsZSsweDM3MC8weDczMA0KWyAgNTExLjcxMjEzOV0gIFs8ZmZmZmZmZmY4MTA1
-ZjcyOD5dID8gX193YWtlX3VwX2NvbW1vbisweDU4LzB4OTANClsgIDUxMS43MTIxNDJdICBbPGZm
-ZmZmZmZmODEzYjE0NDA+XSA/IHNjc2lfZWhfZ2V0X3NlbnNlKzB4MTEwLzB4MTEwDQpbICA1MTEu
-NzEyMTQ2XSAgWzxmZmZmZmZmZjgxMDU3MWJlPl0ga3RocmVhZCsweDhlLzB4YTANClsgIDUxMS43
-MTIxNTBdICBbPGZmZmZmZmZmODE2MDE1ZjQ+XSBrZXJuZWxfdGhyZWFkX2hlbHBlcisweDQvMHgx
-MA0KWyAgNTExLjcxMjE1M10gIFs8ZmZmZmZmZmY4MTA1NzEzMD5dID8gZmx1c2hfa3RocmVhZF93
-b3JrKzB4MTIwLzB4MTIwDQpbICA1MTEuNzEyMTU2XSAgWzxmZmZmZmZmZjgxNjAxNWYwPl0gPyBn
-c19jaGFuZ2UrMHhiLzB4Yg0KWyAgNTExLjcxMjE1N10gQ29kZTogOGEgMDAgMDEgMDAgMDAgODkg
-ZDAgZjAgNjYgMGYgYjEgMGYgNjYgMzkgZDAgMGYgOTQNCmMwIDBmIGI2IGMwIDVkIGMzIDBmIDFm
-IDg0IDAwIDAwIDAwIDAwIDAwIDU1IDQ4IDg5IGU1IDljIDU4IGZhIGJhIDAwIDAxDQowMCAwMCA8
-ZjA+IDY2IDBmIGMxIDE3IDBmIGI2IGNlIDM4IGQxIDc0IDExIDBmIDFmIDg0IDAwIDAwIDAwIDAw
-IDAwIGYzDQpbICA1MTEuNzEyMTkxXSBSSVAgIFs8ZmZmZmZmZmY4MTVmOGMwYz5dIF9yYXdfc3Bp
-bl9sb2NrX2lycXNhdmUrMHhjLzB4MzANClsgIDUxMS43MTIxOTRdICBSU1AgPGZmZmY4ODAwOThk
-M2JjYjA+DQpbICA1MTEuNzEyMTk2XSBDUjI6IDAwMDAwMDAwMDAwMDAwNTgNClsgIDUxMS43MTIx
-OThdIC0tLVsgZW5kIHRyYWNlIGE3ODFjN2IxZTY1ZGI5MmMgXS0tLQ0KDQpTaWduZWQtb2ZmLWJ5
-OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL3Njc2kv
-bXZzYXMvbXZfc2FzLmMgfCAgICAyICstDQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCsp
-LCAxIGRlbGV0aW9uKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2Fz
-LmMgYi9kcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMNCmluZGV4IDQ1MzlkNTkuLmEzNzc2ZDYg
-MTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMNCisrKyBiL2RyaXZlcnMv
-c2NzaS9tdnNhcy9tdl9zYXMuYw0KQEAgLTE2MjksNyArMTYyOSw3IEBAIGludCBtdnNfYWJvcnRf
-dGFzayhzdHJ1Y3Qgc2FzX3Rhc2sgKnRhc2spDQogCQkJbXZfZHByaW50aygibXZzX2Fib3J0X3Rh
-c2soKSBtdmk9JXAgdGFzaz0lcCAiDQogCQkJCSAgICJzbG90PSVwIHNsb3RfaWR4PXgleFxuIiwN
-CiAJCQkJICAgbXZpLCB0YXNrLCBzbG90LCBzbG90X2lkeCk7DQotCQkJbXZzX3RtZl90aW1lZG91
-dCgodW5zaWduZWQgbG9uZyl0YXNrKTsNCisJCQl0YXNrLT50YXNrX3N0YXRlX2ZsYWdzIHw9IFNB
-U19UQVNLX1NUQVRFX0FCT1JURUQ7DQogCQkJbXZzX3Nsb3RfdGFza19mcmVlKG12aSwgdGFzaywg
-c2xvdCwgc2xvdF9pZHgpOw0KIAkJCXJjID0gVE1GX1JFU1BfRlVOQ19DT01QTEVURTsNCiAJCQln
-b3RvIG91dDsNCi0tIA0KMS43LjkuNQ0K
+On 08/02/12 08:41, Chanho Min wrote:
+> This patch is to fix a oops from a torn down device. When
+> scsi_run_queue process starved queues, scsi_request_fn can race with
+> scsi_remove_device. In this case, rarely, scsi_request_fn release the
+> last reference and set sdev->request_queue to NULL. It result in
+> NULL-pointer dereference when spin_unlock is tried with (NULL)->
+> queue_lock. We need to add an extra reference to the device on both
+> sides of the __blk_run_queue to hold reference until scsi_request_fn
+> is finished.
 
+Good catch. So far I haven't been able to trigger this issue in my
+tests. So it would be appreciated if you could verify whether the patch
+below helps (patch is based on 3.6-rc1):
+
+---
+ drivers/scsi/scsi_sysfs.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 093d4f6..59e523c 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -348,7 +348,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 	starget->reap_ref++;
+ 	list_del(&sdev->siblings);
+ 	list_del(&sdev->same_target_siblings);
+-	list_del(&sdev->starved_entry);
+ 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
+ 
+ 	cancel_work_sync(&sdev->event_work);
+@@ -956,6 +955,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ void __scsi_remove_device(struct scsi_device *sdev)
+ {
+ 	struct device *dev = &sdev->sdev_gendev;
++	struct Scsi_Host *shost = sdev->host;
++	unsigned long flags;
+ 
+ 	if (sdev->is_visible) {
+ 		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+@@ -977,6 +978,11 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	blk_cleanup_queue(sdev->request_queue);
+ 	cancel_work_sync(&sdev->requeue_work);
+ 
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (!list_empty(&sdev->starved_entry))
++		list_del(&sdev->starved_entry);
++	spin_unlock_irqrestore(shost->host_lock, flags);
++
+ 	if (sdev->host->hostt->slave_destroy)
+ 		sdev->host->hostt->slave_destroy(sdev);
+ 	transport_destroy_device(dev);
+-- 
+1.7.7
