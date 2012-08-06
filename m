@@ -1,22 +1,43 @@
-From: =?windows-1251?Q?=C7=E8=ED=E0=E8=E4=EE=F7=EA=E0_=D1=E8=E4=EE=F0=EE=E2=E0?=
-	<jmcdanal@legalshield.com>
-Subject: =?windows-1251?Q?=E5=F1=EB=E8_=E2=E4=F0=F3=E3_=F2=E5=E1=E5_=E7=E0=F5=EE=F7=E5=F2=F1=FF_=EE=E1=F9=E5=ED=E8=FF?=
-Date: Mon, 06 Aug 2012 06:37:10 +0200
-Message-ID: <6127201160.2012086063710@prepaidlegal.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
-Content-Transfer-Encoding: 7BIT
+From: Oliver Neukum <oliver@neukum.org>
+Subject: [PATCH] scsi: NULL followed if kmalloc fails and senses needed
+Date: Mon,  6 Aug 2012 15:09:58 +0200
+Message-ID: <1344258598-28019-1-git-send-email-oliver@neukum.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email1.prepaidlegal.com ([12.5.240.52]:45895 "EHLO
-	email.prepaidlegal.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755513Ab2HFDJQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Aug 2012 23:09:16 -0400
-Received: from prepaidlegal.com ([88.212.201.94]) by email1.prepaidlegal.com
- (Sun Java(tm) System Messaging Server 6.3-13.01 (built Sep 22 2010; 32bit))
- with ESMTPSA id <0M8B00MLIBDDBDC0@email1.prepaidlegal.com> for
- linux-scsi@vger.kernel.org; Sun, 05 Aug 2012 21:39:14 -0500 (CDT)
+Received: from smtp-out003.kontent.com ([81.88.40.217]:52578 "EHLO
+	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756141Ab2HFNLQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Aug 2012 09:11:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, hare@suse.de
+Cc: Oliver Neukum <oliver@neukum.org>, Oliver Neukum <oneukum@suse.de>, stable@kernel.org
 
-http://translate.yandex.net/mail.ru/../tr-url/mail.ru/mail.ru/../../en-ru.ru/mail.ru/mail.ru/../../natakocharyan.ru/tmp/gif.php/mail.ru/mail.ru/../../
+In scsi_test_unit_ready() a local sense may fail to allocate. In
+this case the buffer must not be used even if an IO error happens.
+
+Signed-off-by: Oliver Neukum <oneukum@suse.de>
+CC: stable@kernel.org
+---
+ drivers/scsi/scsi_lib.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ffd7773..bab19f2 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2043,10 +2043,10 @@ scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries,
+ 	do {
+ 		result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, sshdr,
+ 					  timeout, retries, NULL);
+-		if (sdev->removable && scsi_sense_valid(sshdr) &&
++		if (sdev->removable && sshdr && scsi_sense_valid(sshdr) &&
+ 		    sshdr->sense_key == UNIT_ATTENTION)
+ 			sdev->changed = 1;
+-	} while (scsi_sense_valid(sshdr) &&
++	} while (sshdr && scsi_sense_valid(sshdr) &&
+ 		 sshdr->sense_key == UNIT_ATTENTION && --retries);
+ 
+ 	if (!sshdr_external)
+-- 
+1.7.7
+
