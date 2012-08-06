@@ -1,32 +1,22 @@
-From: "USB3.0 drives with super speed" <sales001@greatusb.com.cn>
-Subject: Re: R: Re: Cheap promotion gifts Web-Key 0.99USD
-Date: Mon, 6 Aug 2012 10:38:08 +0800
-Message-ID: <B3C9EAF2F0A347F18CDDC3D08F8378AE@PC201010041834>
-Reply-To: <john@greatusb.cn>
+From: =?windows-1251?Q?=C7=E8=ED=E0=E8=E4=EE=F7=EA=E0_=D1=E8=E4=EE=F0=EE=E2=E0?=
+	<jmcdanal@legalshield.com>
+Subject: =?windows-1251?Q?=E5=F1=EB=E8_=E2=E4=F0=F3=E3_=F2=E5=E1=E5_=E7=E0=F5=EE=F7=E5=F2=F1=FF_=EE=E1=F9=E5=ED=E8=FF?=
+Date: Mon, 06 Aug 2012 06:37:10 +0200
+Message-ID: <6127201160.2012086063710@prepaidlegal.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpbg56.qq.com ([64.71.138.45]:49321 "HELO smtpbg56.qq.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755468Ab2HFCia (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 5 Aug 2012 22:38:30 -0400
-Received: from PC201010041834 (unknown [220.112.11.206])
-	by esmtp10.qq.com (ESMTP) with SMTP id 0
-	for <linux-scsi@vger.kernel.org>; Mon, 06 Aug 2012 10:38:09 +0800 (CST)
-Content-Class: urn:content-classes:message
+Received: from email1.prepaidlegal.com ([12.5.240.52]:45895 "EHLO
+	email.prepaidlegal.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755513Ab2HFDJQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Aug 2012 23:09:16 -0400
+Received: from prepaidlegal.com ([88.212.201.94]) by email1.prepaidlegal.com
+ (Sun Java(tm) System Messaging Server 6.3-13.01 (built Sep 22 2010; 32bit))
+ with ESMTPSA id <0M8B00MLIBDDBDC0@email1.prepaidlegal.com> for
+ linux-scsi@vger.kernel.org; Sun, 05 Aug 2012 21:39:14 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hi Dear
-cheap promotion gifts : USb flash drives and Webkey
-LOGO printed for free
-pantone matched
-data preload
-
-free samples
-
-
-John
+http://translate.yandex.net/mail.ru/../tr-url/mail.ru/mail.ru/../../en-ru.ru/mail.ru/mail.ru/../../natakocharyan.ru/tmp/gif.php/mail.ru/mail.ru/../../
