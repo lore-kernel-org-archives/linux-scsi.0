@@ -1,45 +1,152 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] fix NULL-pointer dereference on scsi_run_queue
-Date: Tue, 07 Aug 2012 09:43:16 +0000
-Message-ID: <5020E334.4070809@acm.org>
-References: <CAOAMb1D+g0zzKGKjMPPp7V-XEwKB5AYGMDvUUbXNaHaz8ieTVg@mail.gmail.com> <501CE4E5.20604@acm.org> <501D51D1.2010806@cs.wisc.edu> <501D83A1.7040900@acm.org> <501DA3F0.4090009@cs.wisc.edu> <50200561.4020100@acm.org> <CAOAMb1BWWzYPSode-6Y9+O5eNhMc-bYofCNwMRmzeC9-nhRb4g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH 4/5] qla4xxx: Properly handle SCSI underrun while processing status IOCBs.
+Date: Tue,  7 Aug 2012 07:57:16 -0400
+Message-ID: <1344340637-25526-5-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1344340637-25526-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01ant.iops.be ([212.53.4.34]:41930 "EHLO
-	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690Ab2HGJnV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2012 05:43:21 -0400
-In-Reply-To: <CAOAMb1BWWzYPSode-6Y9+O5eNhMc-bYofCNwMRmzeC9-nhRb4g@mail.gmail.com>
+Received: from mvnat01.qlogic.com ([198.186.3.73]:48120 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1754512Ab2HGMPO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Aug 2012 08:15:14 -0400
+In-Reply-To: <1344340637-25526-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chanho Min <chanho0207@gmail.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Tej Parkash <tej.parkash@qlogic.com>
 
-On 08/07/12 08:53, Chanho Min wrote:
-> In addition, Is it ironic that we are careful to use put_device at
-> scsi_request_fn?. If we trigger the ->remove(),
-> It occur a oops. What about the removal of unlock/lock as patch bellow?
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 4037fd5..8d9eccd 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1608,11 +1608,7 @@ out_delay:
->         if (sdev->device_busy == 0)
->                 blk_delay_queue(q, SCSI_QUEUE_DELAY);
->  out:
-> -       /* must be careful here...if we trigger the ->remove() function
-> -        * we cannot be holding the q lock */
-> -       spin_unlock_irq(q->queue_lock);
->         put_device(&sdev->sdev_gendev);
-> -       spin_lock_irq(q->queue_lock);
->  }
+From: Lalit Chandivade <lalit.chandivade@qlogic.com>
 
-As far as I can see the comment in the above code was added before
-scsi_device_dev_release() was moved to user context, so it might be
-outdated. See also
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=65110b2168950a19cc78b5027ed18cb811fbdae8.
+The current code would incorrectly return a DID_OK for a
+CHECK CONDITION with Recovered error sense key causing incorrect
+completion of a command when there is a dropped frame.
 
-Bart.
+Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
+Signed-off-by: Tej Parkash <tej.parkash@qlogic.com>
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_isr.c |  102 +++++++++++++++++++++++-----------------
+ 1 files changed, 59 insertions(+), 43 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index fc542a9..db8c8e5 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -243,56 +243,72 @@ static void qla4xxx_status_entry(struct scsi_qla_host *ha,
+ 
+ 		scsi_set_resid(cmd, residual);
+ 
+-		/*
+-		 * If there is scsi_status, it takes precedense over
+-		 * underflow condition.
+-		 */
+-		if (scsi_status != 0) {
+-			cmd->result = DID_OK << 16 | scsi_status;
++		if (sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_UNDER) {
++
++			/* Both the firmware and target reported UNDERRUN:
++			 *
++			 * MID-LAYER UNDERFLOW case:
++			 * Some kernels do not properly detect midlayer
++			 * underflow, so we manually check it and return
++			 * ERROR if the minimum required data was not
++			 * received.
++			 *
++			 * ALL OTHER cases:
++			 * Fall thru to check scsi_status
++			 */
++			if (!scsi_status && (scsi_bufflen(cmd) - residual) <
++			    cmd->underflow) {
++				DEBUG2(ql4_printk(KERN_INFO, ha,
++						  "scsi%ld:%d:%d:%d: %s: Mid-layer Data underrun, xferlen = 0x%x,residual = 0x%x\n",
++						   ha->host_no,
++						   cmd->device->channel,
++						   cmd->device->id,
++						   cmd->device->lun, __func__,
++						   scsi_bufflen(cmd),
++						   residual));
+ 
+-			if (scsi_status != SCSI_CHECK_CONDITION)
++				cmd->result = DID_ERROR << 16;
+ 				break;
++			}
++
++		} else if (scsi_status != SAM_STAT_TASK_SET_FULL &&
++			   scsi_status != SAM_STAT_BUSY) {
+ 
+-			/* Copy Sense Data into sense buffer. */
+-			qla4xxx_copy_sense(ha, sts_entry, srb);
+-		} else {
+ 			/*
+-			 * If RISC reports underrun and target does not
+-			 * report it then we must have a lost frame, so
+-			 * tell upper layer to retry it by reporting a
+-			 * bus busy.
++			 * The firmware reports UNDERRUN, but the target does
++			 * not report it:
++			 *
++			 *   scsi_status     |    host_byte       device_byte
++			 *                   |     (19:16)          (7:0)
++			 *   =============   |    =========       ===========
++			 *   TASK_SET_FULL   |    DID_OK          scsi_status
++			 *   BUSY            |    DID_OK          scsi_status
++			 *   ALL OTHERS      |    DID_ERROR       scsi_status
++			 *
++			 *   Note: If scsi_status is task set full or busy,
++			 *   then this else if would fall thru to check the
++			 *   scsi_status and return DID_OK.
+ 			 */
+-			if ((sts_entry->iscsiFlags &
+-			     ISCSI_FLAG_RESIDUAL_UNDER) == 0) {
+-				cmd->result = DID_BUS_BUSY << 16;
+-			} else if ((scsi_bufflen(cmd) - residual) <
+-				   cmd->underflow) {
+-				/*
+-				 * Handle mid-layer underflow???
+-				 *
+-				 * For kernels less than 2.4, the driver must
+-				 * return an error if an underflow is detected.
+-				 * For kernels equal-to and above 2.4, the
+-				 * mid-layer will appearantly handle the
+-				 * underflow by detecting the residual count --
+-				 * unfortunately, we do not see where this is
+-				 * actually being done.	 In the interim, we
+-				 * will return DID_ERROR.
+-				 */
+-				DEBUG2(printk("scsi%ld:%d:%d:%d: %s: "
+-					"Mid-layer Data underrun1, "
+-					"xferlen = 0x%x, "
+-					"residual = 0x%x\n", ha->host_no,
+-					cmd->device->channel,
+-					cmd->device->id,
+-					cmd->device->lun, __func__,
+-					scsi_bufflen(cmd), residual));
+ 
+-				cmd->result = DID_ERROR << 16;
+-			} else {
+-				cmd->result = DID_OK << 16;
+-			}
++			DEBUG2(ql4_printk(KERN_INFO, ha,
++					  "scsi%ld:%d:%d:%d: %s: Dropped frame(s) detected (0x%x of 0x%x bytes).\n",
++					  ha->host_no,
++					  cmd->device->channel,
++					  cmd->device->id,
++					  cmd->device->lun, __func__,
++					  residual,
++					  scsi_bufflen(cmd)));
++
++			cmd->result = DID_ERROR << 16 | scsi_status;
++			goto check_scsi_status;
+ 		}
++
++		cmd->result = DID_OK << 16 | scsi_status;
++
++check_scsi_status:
++		if (scsi_status == SAM_STAT_CHECK_CONDITION)
++			qla4xxx_copy_sense(ha, sts_entry, srb);
++
+ 		break;
+ 
+ 	case SCS_DEVICE_LOGGED_OUT:
+-- 
+1.7.8.GIT
+
