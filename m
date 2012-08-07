@@ -1,101 +1,45 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] fix NULL-pointer dereference on scsi_run_queue
-Date: Tue, 07 Aug 2012 11:16:22 -0500
-Message-ID: <50213F56.7030609@cs.wisc.edu>
-References: <CAOAMb1D+g0zzKGKjMPPp7V-XEwKB5AYGMDvUUbXNaHaz8ieTVg@mail.gmail.com> <501CE4E5.20604@acm.org> <501D51D1.2010806@cs.wisc.edu> <501D83A1.7040900@acm.org> <501DA3F0.4090009@cs.wisc.edu> <50200561.4020100@acm.org>
+Subject: Re: [PATCH 0/5] qla4xxx: Updates for scsi "misc" branch.
+Date: Tue, 07 Aug 2012 11:52:25 -0500
+Message-ID: <502147C9.3000401@cs.wisc.edu>
+References: <1344340637-25526-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43938 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:44023 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750737Ab2HGQQk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Aug 2012 12:16:40 -0400
-In-Reply-To: <50200561.4020100@acm.org>
+	id S1754594Ab2HGQwe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Aug 2012 12:52:34 -0400
+In-Reply-To: <1344340637-25526-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Chanho Min <chanho0207@gmail.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+To: vikas.chaudhary@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-On 08/06/2012 12:56 PM, Bart Van Assche wrote:
-> On 08/04/12 22:36, Mike Christie wrote:
->> On 08/04/2012 03:18 PM, Bart Van Assche wrote:
->>> On 08/04/12 16:46, Mike Christie wrote:
->>>> I think we have to have scsi-ml do a get_device when a sdev is added to
->>>> the starved entry and then do a put_device when it is removed (must do
->>>> these under the host lock for the starved entry case too). I am not sure
->>>> if that is just a hack/papering-over of the problem and there are more
->>>> issues like this.
->>>
->>> That would result in a more complex patch than the patch at the start of
->>> this thread, isn't it ?
->>
->> Yaah, but the original patch in this thread is still racey isn't it?
+On 08/07/2012 06:57 AM, vikas.chaudhary@qlogic.com wrote:
+> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 > 
-> Indeed. How about the patch below ? Scsi devices are removed from
-> starved_list after blk_cleanup_queue() and before put_device(). That
-> guarantees that inside scsi_run_queue() get_device() under host lock
-> will succeed.
+> James,
 > 
-> ---
->  drivers/scsi/scsi_lib.c   |    5 +++++
->  drivers/scsi/scsi_sysfs.c |    7 ++++++-
->  2 files changed, 11 insertions(+), 1 deletions(-)
+> Please apply the following patches to the scsi tree at your earliest
+> convenience.
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index ffd7773..bd7daec 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -452,10 +452,15 @@ static void scsi_run_queue(struct request_queue *q)
->  			continue;
->  		}
->  
-> +		get_device(&sdev->sdev_gendev);
->  		spin_unlock(shost->host_lock);
-> +
->  		spin_lock(sdev->request_queue->queue_lock);
->  		__blk_run_queue(sdev->request_queue);
->  		spin_unlock(sdev->request_queue->queue_lock);
-> +
-> +		put_device(&sdev->sdev_gendev);
-> +
->  		spin_lock(shost->host_lock);
->  	}
->  	/* put any unprocessed entries back */
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 093d4f6..44f232e 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -348,7 +348,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
->  	starget->reap_ref++;
->  	list_del(&sdev->siblings);
->  	list_del(&sdev->same_target_siblings);
-> -	list_del(&sdev->starved_entry);
->  	spin_unlock_irqrestore(sdev->host->host_lock, flags);
->  
->  	cancel_work_sync(&sdev->event_work);
-> @@ -956,6 +955,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
->  void __scsi_remove_device(struct scsi_device *sdev)
->  {
->  	struct device *dev = &sdev->sdev_gendev;
-> +	struct Scsi_Host *shost = sdev->host;
-> +	unsigned long flags;
->  
->  	if (sdev->is_visible) {
->  		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
-> @@ -977,6 +978,10 @@ void __scsi_remove_device(struct scsi_device *sdev)
->  	blk_cleanup_queue(sdev->request_queue);
->  	cancel_work_sync(&sdev->requeue_work);
->  
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +	list_del(&sdev->starved_entry);
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
-> +
->  	if (sdev->host->hostt->slave_destroy)
->  		sdev->host->hostt->slave_destroy(sdev);
->  	transport_destroy_device(dev);
+> Thanks,
+> Vikas.
+> 
+> Lalit Chandivade (1):
+>       qla4xxx: Properly handle SCSI underrun while processing status IOCBs.
+> 
+> Manish Rangankar (2):
+>       qla4xxx: Fix memory corruption issue in qla4xxx_ep_connect.
+>       qla4xxx: Fix multiple conn login event issue during session recovery.
+> 
+> Vikas Chaudhary (2):
+>       qla4xxx: Fix gcc warning for x86 system
+>       qla4xxx: Update driver version to 5.02.00-k19
 > 
 
-I think the patch will work now.
+Looks ok.
 
 Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
