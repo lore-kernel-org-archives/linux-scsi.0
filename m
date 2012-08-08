@@ -1,52 +1,74 @@
-From: Vladimir Gratinskiy <gratinskiy@ispras.ru>
-Subject: [PATCH 1/2] scsi: Use GFP_ATOMIC in kzalloc().
-Date: Wed,  8 Aug 2012 12:41:30 +0400
-Message-ID: <1344415290-10486-1-git-send-email-gratinskiy@ispras.ru>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jianyun Li <jyli@marvell.com>
-Cc: Vladimir Gratinskiy <gratinskiy@ispras.ru>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: [PATCH] scsi_dh_rdac: Add empty set_params function to scsi_dh_rdac
+Date: Wed, 8 Aug 2012 16:10:07 +0000
+Message-ID: <77471C95FAFD844C8CA02DD4F4C5FE2B0BCA09F1@SACEXCMBX02-PRD.hq.netapp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.netapp.com ([216.240.18.37]:55177 "EHLO mx2.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030391Ab2HHQKZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Aug 2012 12:10:25 -0400
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "device-mapper development (dm-devel@redhat.com)" <dm-devel@redhat.com>, "Mike Snitzer <snitzer@redhat.com> (snitzer@redhat.com)" <snitzer@redhat.com>
 
-Calling memory allocation function from the context of interrupt:
-request_irq(mhba->pdev->irq, mvumi_isr_handler, IRQF_SHARED, "mvumi", mhba);
-Function mvumi_isr_handler() calls mvumi_handshake(mhba) that calls
-mvumi_init_data(mhba). In mvumi_init_data() there is function
-mvumi_alloc_mem_resource(mhba,..) that calls kzalloc(sizeof(*res), GFP_KERNEL).
-In the case of GFP_KERNEL flag, function execution can be preempted,
-because a greater number of operations to find and allocate memory
-blocks is executed.
+This patch adds empty set_params function to scsi_dh_rdac.
 
-The patch change GFP_KERNEL flag to GFP_ATOMIC.
+This patch is required for the following features to work properly.
+1. add  retain_attached_hw_handler feature
 
-Found by Linux Driver Verification project (linuxtesting.org).
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=a58a935d5a1b2ad267017a68c3a1bca26226cc76
 
-Signed-off-by: Vladimir Gratinskiy <gratinskiy@ispras.ru>
+2. add scsi_dh_attached_handler_name
+
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=7e8a74b177f17d100916b6ad415450f7c9508691
+
+
+DM layer detaches the handler if the set_params is not implemented or fails.
+
+For example if we pass following parameters from multipath:
+
+	features "1 retain_attached_hw_handler" (consider rdac as attached_hw_handler)
+	hardware_handler "2 alua 1"
+
+If the attached_hw_handler is rdac, then DM anyway tries to call set_params on rdac. Because rdac does not 
+implement set_params, scsi_dh_set_params fails and DM detaches the handler.
+
+This patch fixes this problem. 
+
+Signed-off-by: Babu Moger <babu.moger@netapp.com>
 ---
- drivers/scsi/mvumi.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 88cf1db..097f72f 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -118,7 +118,7 @@ static int mvumi_map_pci_addr(struct pci_dev *dev, void **addr_array)
- static struct mvumi_res *mvumi_alloc_mem_resource(struct mvumi_hba *mhba,
- 				enum resource_type type, unsigned int size)
+--- linux-3.5-rc7/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2012-08-08 10:38:54.000000000 -0500
++++ linux-3.5-rc7/drivers/scsi/device_handler/scsi_dh_rdac.c	2012-08-08 11:02:10.000000000 -0500
+@@ -816,6 +816,17 @@ static const struct scsi_dh_devlist rdac
+ 	{NULL, NULL},
+ };
+ 
++/*
++ * params - parameters in the following format
++ *      "no_of_params\0param1\0param2\0param3\0...\0"
++ *      for example, string for 2 parameters with value 10 and 21
++ *      is specified as "2\010\021\0".
++ */
++static int rdac_set_params(struct scsi_device *sdev, const char *params)
++{
++	return 0;
++}
++
+ static bool rdac_match(struct scsi_device *sdev)
  {
--	struct mvumi_res *res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	struct mvumi_res *res = kzalloc(sizeof(*res), GFP_ATOMIC);
+ 	int i;
+@@ -846,6 +857,7 @@ static struct scsi_device_handler rdac_d
+ 	.attach = rdac_bus_attach,
+ 	.detach = rdac_bus_detach,
+ 	.activate = rdac_activate,
++	.set_params = rdac_set_params,
+ 	.match = rdac_match,
+ };
  
- 	if (!res) {
- 		dev_err(&mhba->pdev->dev,
-@@ -128,7 +128,7 @@ static struct mvumi_res *mvumi_alloc_mem_resource(struct mvumi_hba *mhba,
- 
- 	switch (type) {
- 	case RESOURCE_CACHED_MEMORY:
--		res->virt_addr = kzalloc(size, GFP_KERNEL);
-+		res->virt_addr = kzalloc(size, GFP_ATOMIC);
- 		if (!res->virt_addr) {
- 			dev_err(&mhba->pdev->dev,
- 				"unable to allocate memory,size = %d.\n", size);
--- 
-1.7.9.5
+
+
