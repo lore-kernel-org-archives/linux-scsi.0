@@ -1,25 +1,52 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] fix NULL-pointer dereference on scsi_run_queue
-Date: Wed, 08 Aug 2012 07:37:27 +0000
-Message-ID: <50221737.3010608@acm.org>
-References: <CAOAMb1D+g0zzKGKjMPPp7V-XEwKB5AYGMDvUUbXNaHaz8ieTVg@mail.gmail.com> <501CE4E5.20604@acm.org> <501D51D1.2010806@cs.wisc.edu> <501D83A1.7040900@acm.org> <501DA3F0.4090009@cs.wisc.edu> <50200561.4020100@acm.org> <CAOAMb1BWWzYPSode-6Y9+O5eNhMc-bYofCNwMRmzeC9-nhRb4g@mail.gmail.com> <5020E031.9080406@acm.org> <CAOAMb1BNSTaG8N68jcEDV3gNt6V7BM9HkjUuXHeebhLNHe18kA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Vladimir Gratinskiy <gratinskiy@ispras.ru>
+Subject: [PATCH 1/2] scsi: Use GFP_ATOMIC in kzalloc().
+Date: Wed,  8 Aug 2012 12:41:30 +0400
+Message-ID: <1344415290-10486-1-git-send-email-gratinskiy@ispras.ru>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAOAMb1BNSTaG8N68jcEDV3gNt6V7BM9HkjUuXHeebhLNHe18kA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Chanho Min <chanho0207@gmail.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+To: Jianyun Li <jyli@marvell.com>
+Cc: Vladimir Gratinskiy <gratinskiy@ispras.ru>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/08/12 03:42, Chanho Min wrote:
-> Thank you for the explanation. It look correct. Let's check one more thing.
-> What If __scsi_remove_device doesn't release device? : reference count
-> is more than 2.
-> So We lost starved_list but device is exist. Is there any issue about this?
+Calling memory allocation function from the context of interrupt:
+request_irq(mhba->pdev->irq, mvumi_isr_handler, IRQF_SHARED, "mvumi", mhba);
+Function mvumi_isr_handler() calls mvumi_handshake(mhba) that calls
+mvumi_init_data(mhba). In mvumi_init_data() there is function
+mvumi_alloc_mem_resource(mhba,..) that calls kzalloc(sizeof(*res), GFP_KERNEL).
+In the case of GFP_KERNEL flag, function execution can be preempted,
+because a greater number of operations to find and allocate memory
+blocks is executed.
 
-As far as I can see that scenario will also be handled correctly by the
-proposed patch.
+The patch change GFP_KERNEL flag to GFP_ATOMIC.
 
-Bart.
+Found by Linux Driver Verification project (linuxtesting.org).
+
+Signed-off-by: Vladimir Gratinskiy <gratinskiy@ispras.ru>
+---
+ drivers/scsi/mvumi.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 88cf1db..097f72f 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -118,7 +118,7 @@ static int mvumi_map_pci_addr(struct pci_dev *dev, void **addr_array)
+ static struct mvumi_res *mvumi_alloc_mem_resource(struct mvumi_hba *mhba,
+ 				enum resource_type type, unsigned int size)
+ {
+-	struct mvumi_res *res = kzalloc(sizeof(*res), GFP_KERNEL);
++	struct mvumi_res *res = kzalloc(sizeof(*res), GFP_ATOMIC);
+ 
+ 	if (!res) {
+ 		dev_err(&mhba->pdev->dev,
+@@ -128,7 +128,7 @@ static struct mvumi_res *mvumi_alloc_mem_resource(struct mvumi_hba *mhba,
+ 
+ 	switch (type) {
+ 	case RESOURCE_CACHED_MEMORY:
+-		res->virt_addr = kzalloc(size, GFP_KERNEL);
++		res->virt_addr = kzalloc(size, GFP_ATOMIC);
+ 		if (!res->virt_addr) {
+ 			dev_err(&mhba->pdev->dev,
+ 				"unable to allocate memory,size = %d.\n", size);
+-- 
+1.7.9.5
