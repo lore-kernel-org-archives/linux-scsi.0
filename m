@@ -1,45 +1,60 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/5] qla4xxx: Updates for scsi "misc" branch.
-Date: Tue, 07 Aug 2012 11:52:25 -0500
-Message-ID: <502147C9.3000401@cs.wisc.edu>
-References: <1344340637-25526-1-git-send-email-vikas.chaudhary@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:44023 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754594Ab2HGQwe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Aug 2012 12:52:34 -0400
-In-Reply-To: <1344340637-25526-1-git-send-email-vikas.chaudhary@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] target/pscsi: Fix bug with REPORT_LUNs handling for SCSI passthrough
+Date: Wed,  8 Aug 2012 00:14:13 +0000
+Message-ID: <1344384853-21599-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Alex Elsayed <eternaleye+usenet@gmail.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-On 08/07/2012 06:57 AM, vikas.chaudhary@qlogic.com wrote:
-> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> 
-> James,
-> 
-> Please apply the following patches to the scsi tree at your earliest
-> convenience.
-> 
-> Thanks,
-> Vikas.
-> 
-> Lalit Chandivade (1):
->       qla4xxx: Properly handle SCSI underrun while processing status IOCBs.
-> 
-> Manish Rangankar (2):
->       qla4xxx: Fix memory corruption issue in qla4xxx_ep_connect.
->       qla4xxx: Fix multiple conn login event issue during session recovery.
-> 
-> Vikas Chaudhary (2):
->       qla4xxx: Fix gcc warning for x86 system
->       qla4xxx: Update driver version to 5.02.00-k19
-> 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Looks ok.
+This patch fixes a regression bug in pscsi_transport_complete() callback
+code where *pt was being NULL dereferenced during REPORT_LUNS handling,
+that was introduced with the spc/sbc refactoring in:
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+commit 1fd032ee10d2816c947f5d5b9abda95e728f0a8f
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Sun May 20 11:59:15 2012 -0400
+
+    target: move code for CDB emulation
+
+As this is a special case for pscsi_parse_cdb() to call spc_parse_cdb() to
+allow TCM to handle REPORT_LUN emulation, pscsi_plugin_task will have not
+been allocated..
+
+So now in pscsi_transport_complete() just check for existence of *pt and
+return for this special case.
+
+Reported-by: Alex Elsayed <eternaleye+usenet@gmail.com>
+Cc: Alex Elsayed <eternaleye+usenet@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_pscsi.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 6e32ff6..5552fa7 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -673,8 +673,15 @@ static int pscsi_transport_complete(struct se_cmd *cmd, struct scatterlist *sg)
+ 	struct scsi_device *sd = pdv->pdv_sd;
+ 	int result;
+ 	struct pscsi_plugin_task *pt = cmd->priv;
+-	unsigned char *cdb = &pt->pscsi_cdb[0];
++	unsigned char *cdb;
++	/*
++	 * Special case for REPORT_LUNs handling where pscsi_plugin_task has
++	 * not been allocated because TCM is handling the emulation directly.
++	 */
++	if (!pt)
++		return 0;
+ 
++	cdb = &pt->pscsi_cdb[0];
+ 	result = pt->pscsi_result;
+ 	/*
+ 	 * Hack to make sure that Write-Protect modepage is set if R/O mode is
+-- 
+1.7.2.5
