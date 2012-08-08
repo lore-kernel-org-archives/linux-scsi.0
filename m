@@ -1,60 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target/pscsi: Fix bug with REPORT_LUNs handling for SCSI passthrough
-Date: Wed,  8 Aug 2012 00:14:13 +0000
-Message-ID: <1344384853-21599-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Alex Elsayed <eternaleye+usenet@gmail.com>, Christoph Hellwig <hch@lst.de>
+From: Chanho Min <chanho0207@gmail.com>
+Subject: Re: [PATCH] fix NULL-pointer dereference on scsi_run_queue
+Date: Wed, 8 Aug 2012 12:42:44 +0900
+Message-ID: <CAOAMb1BNSTaG8N68jcEDV3gNt6V7BM9HkjUuXHeebhLNHe18kA@mail.gmail.com>
+References: <CAOAMb1D+g0zzKGKjMPPp7V-XEwKB5AYGMDvUUbXNaHaz8ieTVg@mail.gmail.com>
+	<501CE4E5.20604@acm.org>
+	<501D51D1.2010806@cs.wisc.edu>
+	<501D83A1.7040900@acm.org>
+	<501DA3F0.4090009@cs.wisc.edu>
+	<50200561.4020100@acm.org>
+	<CAOAMb1BWWzYPSode-6Y9+O5eNhMc-bYofCNwMRmzeC9-nhRb4g@mail.gmail.com>
+	<5020E031.9080406@acm.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5020E031.9080406@acm.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+> I'm afraid that without the second half of that patch the following race
+> is still possible:
+> - sdev reference count drops to zero while scsi_run_queue() is in
+>   progress and while that sdev is on the starved_list of its SCSI host;
+>   scsi_device_dev_release_usercontext() call is scheduled but not yet
+>   executed.
+> - scsi_run_queue() takes that sdev off the local starved_list.
+> - scsi_run_queue() calls get_device() and that call fails since the
+>   sdev reference count is zero.
+> - scsi_device_dev_release_usercontext() gets scheduled and frees the
+>   sdev.
+> - scsi_run_queue() proceeds and calls __blk_run_queue() on a freed
+>   queue, which is what we were trying to avoid.
+Thank you for the explanation. It look correct. Let's check one more thing.
+What If __scsi_remove_device doesn't release device? : reference count
+is more than 2.
+So We lost starved_list but device is exist. Is there any issue about this?
 
-This patch fixes a regression bug in pscsi_transport_complete() callback
-code where *pt was being NULL dereferenced during REPORT_LUNS handling,
-that was introduced with the spc/sbc refactoring in:
-
-commit 1fd032ee10d2816c947f5d5b9abda95e728f0a8f
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Sun May 20 11:59:15 2012 -0400
-
-    target: move code for CDB emulation
-
-As this is a special case for pscsi_parse_cdb() to call spc_parse_cdb() to
-allow TCM to handle REPORT_LUN emulation, pscsi_plugin_task will have not
-been allocated..
-
-So now in pscsi_transport_complete() just check for existence of *pt and
-return for this special case.
-
-Reported-by: Alex Elsayed <eternaleye+usenet@gmail.com>
-Cc: Alex Elsayed <eternaleye+usenet@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_pscsi.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 6e32ff6..5552fa7 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -673,8 +673,15 @@ static int pscsi_transport_complete(struct se_cmd *cmd, struct scatterlist *sg)
- 	struct scsi_device *sd = pdv->pdv_sd;
- 	int result;
- 	struct pscsi_plugin_task *pt = cmd->priv;
--	unsigned char *cdb = &pt->pscsi_cdb[0];
-+	unsigned char *cdb;
-+	/*
-+	 * Special case for REPORT_LUNs handling where pscsi_plugin_task has
-+	 * not been allocated because TCM is handling the emulation directly.
-+	 */
-+	if (!pt)
-+		return 0;
- 
-+	cdb = &pt->pscsi_cdb[0];
- 	result = pt->pscsi_result;
- 	/*
- 	 * Hack to make sure that Write-Protect modepage is set if R/O mode is
--- 
-1.7.2.5
+Chanho,
