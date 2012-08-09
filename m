@@ -1,43 +1,43 @@
-From: vikas.chaudhary@qlogic.com
-Subject: [PATCH] scsi_lib: Set the device state from transport-offline to running
-Date: Thu,  9 Aug 2012 04:51:30 -0400
-Message-ID: <1344502290-30332-1-git-send-email-vikas.chaudhary@qlogic.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:17717 "HELO linux-zupk.site"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1750986Ab2HIJJk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Aug 2012 05:09:40 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Marina Makienko <makienko@ispras.ru>
+Subject: [PATCH 13/13] scsi: Potential null pointer dereference in scsi_eh_lock_door()
+Date: Thu,  9 Aug 2012 17:55:50 +0400
+Message-ID: <1344520550-21134-1-git-send-email-makienko@ispras.ru>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Marina Makienko <makienko@ispras.ru>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+The function blk_get_request() can return NULL in some cases. There are
+checks on it if function is called with argumetns one of which is
+GFP_ATOMIC/GFP_NOIO/etc. If system couldn't find request
+blk_get_request() return NULL.
 
-FC and iSCSI class set SCSI devices to transport-offline state after
-fast_io_fail/replacement_timeout has fired, but after relogin, function
-scsi_internal_device_unblock() is not setting scsi device state to running.
-Due to this the devices even after being relogged in remain offline.
+But if there is function call with argument __GFP_WAIT
+the system will wait until get request or the queue becomes
+dead. If something kills the queue, blk_get_request()
+return NULL and next operations will lead to errors.
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Found by Linux Driver Verification project (linuxtesting.org).
+
+Signed-off-by: Marina Makienko <makienko@ispras.ru>
 ---
- drivers/scsi/scsi_lib.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/scsi_error.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ffd7773..4ba3719 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2470,7 +2470,8 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
- 	 * Try to transition the scsi device to SDEV_RUNNING or one of the
- 	 * offlined states and goose the device queue if successful.
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 4a6381c..7dd67d4 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1624,6 +1624,9 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
  	 */
--	if (sdev->sdev_state == SDEV_BLOCK)
-+	if ((sdev->sdev_state == SDEV_BLOCK) ||
-+	    (sdev->sdev_state == SDEV_TRANSPORT_OFFLINE))
- 		sdev->sdev_state = new_state;
- 	else if (sdev->sdev_state == SDEV_CREATED_BLOCK) {
- 		if (new_state == SDEV_TRANSPORT_OFFLINE ||
+ 	req = blk_get_request(sdev->request_queue, READ, GFP_KERNEL);
+ 
++	if (!req)
++		return;
++
+ 	req->cmd[0] = ALLOW_MEDIUM_REMOVAL;
+ 	req->cmd[1] = 0;
+ 	req->cmd[2] = 0;
 -- 
-1.7.8.GIT
-
+1.7.7
