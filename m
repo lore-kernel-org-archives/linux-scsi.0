@@ -1,32 +1,43 @@
-From: Ankit Jain <jankit@suse.com>
-Subject: Re: [SCSI] mpt2sas T10 DIF fixes
-Date: Thu, 09 Aug 2012 13:44:09 +0530
-Message-ID: <50237151.9000801@suse.com>
-References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH] scsi_lib: Set the device state from transport-offline to running
+Date: Thu,  9 Aug 2012 04:51:30 -0400
+Message-ID: <1344502290-30332-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:43419 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755366Ab2HIIPB (ORCPT
-	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-	Thu, 9 Aug 2012 04:15:01 -0400
-In-Reply-To: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
+Received: from mvnat01.qlogic.com ([198.186.3.73]:17717 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1750986Ab2HIJJk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Aug 2012 05:09:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-On 02/21/2012 07:06 AM, Martin K. Petersen wrote:
-> This is a repost of the T10 DIF patches against mpt2sas that I posted a
-> while back:
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Will these patches be merged? Or have they been superseded by some other
-patchset?
+FC and iSCSI class set SCSI devices to transport-offline state after
+fast_io_fail/replacement_timeout has fired, but after relogin, function
+scsi_internal_device_unblock() is not setting scsi device state to running.
+Due to this the devices even after being relogged in remain offline.
 
-Thanks,
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/scsi_lib.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ffd7773..4ba3719 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2470,7 +2470,8 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 	 * Try to transition the scsi device to SDEV_RUNNING or one of the
+ 	 * offlined states and goose the device queue if successful.
+ 	 */
+-	if (sdev->sdev_state == SDEV_BLOCK)
++	if ((sdev->sdev_state == SDEV_BLOCK) ||
++	    (sdev->sdev_state == SDEV_TRANSPORT_OFFLINE))
+ 		sdev->sdev_state = new_state;
+ 	else if (sdev->sdev_state == SDEV_CREATED_BLOCK) {
+ 		if (new_state == SDEV_TRANSPORT_OFFLINE ||
 -- 
-Ankit Jain
-SUSE Labs
+1.7.8.GIT
 
