@@ -1,43 +1,41 @@
-From: Marina Makienko <makienko@ispras.ru>
-Subject: [PATCH 13/13] scsi: Potential null pointer dereference in scsi_eh_lock_door()
-Date: Thu,  9 Aug 2012 17:55:50 +0400
-Message-ID: <1344520550-21134-1-git-send-email-makienko@ispras.ru>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Marina Makienko <makienko@ispras.ru>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16275] Kernel panic when mounting filesystem
+Date: Thu,  9 Aug 2012 14:00:20 +0000 (UTC)
+Message-ID: <20120809140020.7E34C11FA51@bugzilla.kernel.org>
+References: <bug-16275-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:51157 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932751Ab2HIOAY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Aug 2012 10:00:24 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 6FE332026A
+	for <linux-scsi@vger.kernel.org>; Thu,  9 Aug 2012 14:00:23 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 7F90D20269
+	for <linux-scsi@vger.kernel.org>; Thu,  9 Aug 2012 14:00:20 +0000 (UTC)
+In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-The function blk_get_request() can return NULL in some cases. There are
-checks on it if function is called with argumetns one of which is
-GFP_ATOMIC/GFP_NOIO/etc. If system couldn't find request
-blk_get_request() return NULL.
+https://bugzilla.kernel.org/show_bug.cgi?id=16275
 
-But if there is function call with argument __GFP_WAIT
-the system will wait until get request or the queue becomes
-dead. If something kills the queue, blk_get_request()
-return NULL and next operations will lead to errors.
 
-Found by Linux Driver Verification project (linuxtesting.org).
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-Signed-off-by: Marina Makienko <makienko@ispras.ru>
----
- drivers/scsi/scsi_error.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |OBSOLETE
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 4a6381c..7dd67d4 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1624,6 +1624,9 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
- 	 */
- 	req = blk_get_request(sdev->request_queue, READ, GFP_KERNEL);
- 
-+	if (!req)
-+		return;
-+
- 	req->cmd[0] = ALLOW_MEDIUM_REMOVAL;
- 	req->cmd[1] = 0;
- 	req->cmd[2] = 0;
+
+
+
 -- 
-1.7.7
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
