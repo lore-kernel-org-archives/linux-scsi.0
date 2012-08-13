@@ -1,40 +1,78 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] be2iscsi: cleanup format strings using literal string
- concatenations
-Date: Sun, 12 Aug 2012 10:05:04 -0700
-Message-ID: <1344791104.3810.2.camel@joe2Laptop>
-References: <1344785130-24172-1-git-send-email-yamato@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:48250 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751586Ab2HLRFH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 12 Aug 2012 13:05:07 -0400
-In-Reply-To: <1344785130-24172-1-git-send-email-yamato@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Michael Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH] libiscsi: avoid unnecessary multiple NULL assignments
+Date: Sun, 12 Aug 2012 20:30:01 -0500
+Message-ID: <697C8ADD-803B-4225-825E-F2C027D0C6C3@cs.wisc.edu>
+References: <1344780951-5011-1-git-send-email-yamato@redhat.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0 (Mac OS X Mail 6.0 \(1485\))
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <open-iscsi+bncCLPJla3WGRCdsaGBBRoEazCKsw-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1344780951-5011-1-git-send-email-yamato-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Masatake YAMATO <yamato-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Masatake YAMATO <yamato@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2012-08-13 at 00:25 +0900, Masatake YAMATO wrote:
-> In format strings for printk in be2iscsi, literal c string
-> concatenations are used widely. However, the log output is a bit
-> difficult to read because whitespaces are missed in the literal c
-> strings like:
+Replacing linux-scsi list with linux-kernel.
+
+On Aug 12, 2012, at 9:15 AM, Masatake YAMATO <yamato-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+
+> In iscsi_free_task, NULL is assigned to task->sc twice: before and
+> after kfifo_in invocatoin. Allocating and freeing iscsi_task are guarded
+> with session->lock, so multiple NULL assignments cause no trouble. But
+> people reading the source code may be confused.
 > 
->     SE_DEBUG(DBG_LVL_1, "CQ Error %d, reset"
-> 			"received/sent on CID 0x%x...\n",
+> The second NULL assignment comes from commit:
 > 
-> You will see "CQ Error 0xffffffff resetreceived/sent on CID ..." and
-> wonder what is "resetreceived".
+>    3e5c28ad0391389959ccae81c938c7533efb3490
+> 
+> It seems that the line after kfifo_in invocation was introduced
+> accidentally.
+> 
+> Signed-off-by: Masatake YAMATO <yamato-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+> drivers/scsi/libiscsi.c | 1 -
+> 1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 82c3fd4..7aacf3a 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -500,21 +500,20 @@ static void iscsi_free_task(struct iscsi_task *task)
+> 	task->sc = NULL;
+> 	/*
+> 	 * login task is preallocated so do not free
+> 	 */
+> 	if (conn->login_task == task)
+> 		return;
+> 
+> 	kfifo_in(&session->cmdpool.queue, (void*)&task, sizeof(void*));
+> 
+> 	if (sc) {
+> -		task->sc = NULL;
+> 		/* SCSI eh reuses commands to verify us */
+> 		sc->SCp.ptr = NULL;
+> 		/*
+> 		 * queue command may call this to free the task, so
+> 		 * it will decide how to return sc to scsi-ml.
+> 		 */
+> 		if (oldstate != ISCSI_TASK_REQUEUE_SCSIQ)
+> 			sc->scsi_done(sc);
+> 	}
 
-It'd be even better to coalesce the formats so they'd be
-easier to grep.  Just ignore 80 columns.
+Looks ok to me.
 
-	SE_DEBUG(DBG_LVL_1,
-		 "CQ Error %d, reset received/sent on CID 0x%x...\n",
+Reviewed-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 
-
-
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
