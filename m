@@ -1,58 +1,322 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH 1/7] Removing the iscsi_data_pdu setting.
-Date: Mon, 13 Aug 2012 15:59:35 +0530
-Message-ID: <881ee591-57a1-4fc9-a509-fda0d864c850@exht1.ad.emulex.com>
+Subject: [PATCH 2/7] Issue MBX Cmd for login to boot target in crashdump mode
+Date: Mon, 13 Aug 2012 15:59:57 +0530
+Message-ID: <7012c437-3ab4-4cbb-9ecc-555d2fbf0df6@exht1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:11013 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046Ab2HMKaf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Aug 2012 06:30:35 -0400
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:48058 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975Ab2HMKaz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Aug 2012 06:30:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- The setting of iscsi_data_pdu is not required anymore,
- as this was required for BE1 adapters only.
+ When the driver comes up in crashdump mode, it has to explicitly
+ issue command to FW for logging to the boot target. This fix issues
+ MBX Cmd to login to boot target in crashdump mode.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |   12 ------------
- 1 files changed, 0 insertions(+), 12 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.h |   18 +++++
+ drivers/scsi/be2iscsi/be_main.c |   43 +++++--------
+ drivers/scsi/be2iscsi/be_main.h |    1 +
+ drivers/scsi/be2iscsi/be_mgmt.c |  133 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_mgmt.h |    5 ++
+ 5 files changed, 172 insertions(+), 28 deletions(-)
 
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index b0b36c6..953c354 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -348,6 +348,23 @@ struct be_cmd_get_boot_target_resp {
+ 	int  boot_session_handle;
+ };
+ 
++struct be_cmd_reopen_session_req {
++	struct be_cmd_req_hdr hdr;
++#define BE_REOPEN_ALL_SESSIONS  0x00
++#define BE_REOPEN_BOOT_SESSIONS 0x01
++#define BE_REOPEN_A_SESSION     0x02
++	u16 reopen_type;
++	u16 rsvd;
++	u32 session_handle;
++} __packed;
++
++struct be_cmd_reopen_session_resp {
++	struct be_cmd_resp_hdr hdr;
++	u32 rsvd;
++	u32 session_handle;
++} __packed;
++
++
+ struct be_cmd_mac_query_req {
+ 	struct be_cmd_req_hdr hdr;
+ 	u8 type;
+@@ -911,6 +928,7 @@ struct be_cmd_get_all_if_id_req {
+ #define OPCODE_ISCSI_INI_CFG_GET_HBA_NAME	6
+ #define OPCODE_ISCSI_INI_CFG_SET_HBA_NAME	7
+ #define OPCODE_ISCSI_INI_SESSION_GET_A_SESSION  14
++#define OPCODE_ISCSI_INI_DRIVER_REOPEN_ALL_SESSIONS 36
+ #define OPCODE_ISCSI_INI_DRIVER_OFFLOAD_SESSION 41
+ #define OPCODE_ISCSI_INI_DRIVER_INVALIDATE_CONNECTION 42
+ #define OPCODE_ISCSI_INI_BOOT_GET_BOOT_TARGET	52
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 0b1d99c..2cdae08 100644
+index 2cdae08..d1da630 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3981,15 +3981,6 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
- 	io_task->bhs_len = sizeof(struct be_cmd_bhs);
+@@ -3466,44 +3466,31 @@ static void hwi_disable_intr(struct beiscsi_hba *phba)
+ 			     "In hwi_disable_intr, Already Disabled\n");
+ }
  
- 	if (writedir) {
--		memset(&io_task->cmd_bhs->iscsi_data_pdu, 0, 48);
--		AMAP_SET_BITS(struct amap_pdu_data_out, itt,
--			      &io_task->cmd_bhs->iscsi_data_pdu,
--			      (unsigned int)io_task->cmd_bhs->iscsi_hdr.itt);
--		AMAP_SET_BITS(struct amap_pdu_data_out, opcode,
--			      &io_task->cmd_bhs->iscsi_data_pdu,
--			      ISCSI_OPCODE_SCSI_DATA_OUT);
--		AMAP_SET_BITS(struct amap_pdu_data_out, final_bit,
--			      &io_task->cmd_bhs->iscsi_data_pdu, 1);
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, type, pwrb,
- 			      INI_WR_CMD);
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, dsp, pwrb, 1);
-@@ -3998,9 +3989,6 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
- 			      INI_RD_CMD);
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, dsp, pwrb, 0);
++/**
++ * beiscsi_get_boot_info : Get the boot session info
++ * @phba : the device priv structure instance.
++ *
++ * Get the boot target info and store in driver priv structure
++ *
++ * returns Success/Failure.
++ **/
+ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ {
+-	struct be_cmd_get_boot_target_resp *boot_resp;
+ 	struct be_cmd_get_session_resp *session_resp;
+ 	struct be_mcc_wrb *wrb;
+ 	struct be_dma_mem nonemb_cmd;
+ 	unsigned int tag, wrb_num;
+ 	unsigned short status, extd_status;
++	unsigned int s_handle;
+ 	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
+ 	int ret = -ENOMEM;
+ 
+-	tag = mgmt_get_boot_target(phba);
+-	if (!tag) {
+-		SE_DEBUG(DBG_LVL_1, "beiscsi_get_boot_info Failed\n");
+-		return -EAGAIN;
+-	} else
+-		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
+-					 phba->ctrl.mcc_numtag[tag]);
+-
+-	wrb_num = (phba->ctrl.mcc_numtag[tag] & 0x00FF0000) >> 16;
+-	extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
+-	status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
+-	if (status || extd_status) {
+-		SE_DEBUG(DBG_LVL_1, "beiscsi_get_boot_info Failed"
+-				    " status = %d extd_status = %d\n",
+-				    status, extd_status);
+-		free_mcc_tag(&phba->ctrl, tag);
+-		return -EBUSY;
+-	}
+-	wrb = queue_get_wrb(mccq, wrb_num);
+-	free_mcc_tag(&phba->ctrl, tag);
+-	boot_resp = embedded_payload(wrb);
+-
+-	if (boot_resp->boot_session_handle < 0) {
+-		shost_printk(KERN_INFO, phba->shost, "No Boot Session.\n");
+-		return -ENXIO;
++	/* Get the session handle of the boot target */
++	ret = be_mgmt_get_boot_shandle(phba, &s_handle);
++	if (ret) {
++		SE_DEBUG(DBG_LVL_1, "No boot session\n");
++		return ret;
  	}
--	memcpy(&io_task->cmd_bhs->iscsi_data_pdu.
--	       dw[offsetof(struct amap_pdu_data_out, lun) / 32],
--	       &io_task->cmd_bhs->iscsi_hdr.lun, sizeof(struct scsi_lun));
+-
+ 	nonemb_cmd.va = pci_alloc_consistent(phba->ctrl.pdev,
+ 				sizeof(*session_resp),
+ 				&nonemb_cmd.dma);
+@@ -3515,7 +3502,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 	}
  
- 	AMAP_SET_BITS(struct amap_iscsi_wrb, lun, pwrb,
- 		      cpu_to_be16(*(unsigned short *)
+ 	memset(nonemb_cmd.va, 0, sizeof(*session_resp));
+-	tag = mgmt_get_session_info(phba, boot_resp->boot_session_handle,
++	tag = mgmt_get_session_info(phba, s_handle,
+ 				    &nonemb_cmd);
+ 	if (!tag) {
+ 		SE_DEBUG(DBG_LVL_1, "beiscsi_get_session_info"
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 40fea6e..8b2ce61 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -84,6 +84,7 @@
+ #define MAX_CMD_SZ			65536
+ #define IIOC_SCSI_DATA                  0x05	/* Write Operation */
+ 
++#define INVALID_SESS_HANDLE	0xFFFFFFFF
+ #define DBG_LVL				0x00000001
+ #define DBG_LVL_1			0x00000001
+ #define DBG_LVL_2			0x00000002
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 2a09679..81fd755 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -23,6 +23,47 @@
+ #include "be_mgmt.h"
+ #include "be_iscsi.h"
+ 
++/**
++ * mgmt_reopen_session : Reopen a session based on reopen_type
++ * @phba: The device priv structure instance
++ * @reopen_type: Type of reopen_session the FW should do.
++ * @sess_handle: Session Handle of the session to be re-opened
++ *
++ * returns the tag used for MBOX Command.
++ **/
++unsigned int mgmt_reopen_session(struct beiscsi_hba *phba,
++		unsigned int reopen_type, unsigned int sess_handle)
++{
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++	struct be_mcc_wrb *wrb;
++	struct be_cmd_reopen_session_req *req;
++	unsigned int tag = 0;
++
++	SE_DEBUG(DBG_LVL_8, "In bescsi_get_boot_target\n");
++	spin_lock(&ctrl->mbox_lock);
++	tag = alloc_mcc_tag(phba);
++	if (!tag) {
++		spin_unlock(&ctrl->mbox_lock);
++		return tag;
++	}
++
++	wrb = wrb_from_mccq(phba);
++	req = embedded_payload(wrb);
++	wrb->tag0 |= tag;
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI_INI,
++			OPCODE_ISCSI_INI_DRIVER_REOPEN_ALL_SESSIONS,
++			sizeof(struct be_cmd_reopen_session_resp));
++
++	/* set the reopen_type,sess_handle */
++	req->reopen_type = reopen_type;
++	req->session_handle = sess_handle;
++
++	be_mcc_notify(phba);
++	spin_unlock(&ctrl->mbox_lock);
++	return tag;
++}
++
+ unsigned int mgmt_get_boot_target(struct beiscsi_hba *phba)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+@@ -924,3 +965,95 @@ unsigned int be_cmd_get_port_speed(struct beiscsi_hba *phba)
+ 	spin_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
++
++/**
++  * be_mgmt_get_boot_shandle : Get the session handle for
++  *							   boot session.
++  * @phba : the device priv structure instance.
++  * @s_handle : store the session handle value
++  *				for the boot session.
++  *
++  * Get the boot target session handle. In case of
++  * crashdump mode, driver has to issue an MBX cmd
++  * for FW to login to the boot target.
++  *
++  * Returns
++  *	Success - 0.
++  *	Failure	- Non-Zero Value.
++  **/
++int be_mgmt_get_boot_shandle(struct beiscsi_hba *phba,
++		unsigned int *s_handle)
++{
++	struct be_cmd_get_boot_target_resp *boot_resp;
++	struct be_mcc_wrb *wrb;
++	unsigned int tag, wrb_num;
++	uint8_t boot_retry = 3;
++	unsigned short status, extd_status;
++	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
++
++	do {
++		/* Get the Boot Target Session Handle and Count*/
++		tag = mgmt_get_boot_target(phba);
++		if (!tag) {
++			SE_DEBUG(DBG_LVL_1, "mgmt_get_boot_target Failed\n");
++			return -EAGAIN;
++		} else
++			wait_event_interruptible(phba->ctrl.mcc_wait[tag],
++					phba->ctrl.mcc_numtag[tag]);
++
++		wrb_num = (phba->ctrl.mcc_numtag[tag] & 0x00FF0000) >> 16;
++		extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
++		status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
++		if (status || extd_status) {
++			SE_DEBUG(DBG_LVL_1, "mgmt_get_boot_target Failed"
++					" status = %d extd_status = %d\n",
++					status, extd_status);
++			free_mcc_tag(&phba->ctrl, tag);
++			return -EBUSY;
++		}
++		wrb = queue_get_wrb(mccq, wrb_num);
++		free_mcc_tag(&phba->ctrl, tag);
++		boot_resp = embedded_payload(wrb);
++
++		/* Check if the there are any Boot targets configured
++		 */
++		if (!boot_resp->boot_session_count) {
++			SE_DEBUG(DBG_LVL_8, "No boot targets configured\n");
++			return -ENXIO;
++		}
++
++		/* FW returns the session handle of the boot session */
++		if (boot_resp->boot_session_handle !=
++				INVALID_SESS_HANDLE) {
++			*s_handle = boot_resp->boot_session_handle;
++			return 0;
++		}
++
++		/* Issue MBX Cmd to FW to login to the boot target */
++		tag = mgmt_reopen_session(phba, BE_REOPEN_BOOT_SESSIONS,
++				INVALID_SESS_HANDLE);
++		if (!tag) {
++			SE_DEBUG(DBG_LVL_1, "mgmt_reopen_session Failed\n");
++			return -EAGAIN;
++		} else
++			wait_event_interruptible(phba->ctrl.mcc_wait[tag],
++					phba->ctrl.mcc_numtag[tag]);
++
++		wrb_num = (phba->ctrl.mcc_numtag[tag] & 0x00FF0000) >> 16;
++		extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
++		status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
++		if (status || extd_status) {
++			SE_DEBUG(DBG_LVL_1, "mgmt_reopen_session Failed"
++					" status = %d extd_status = %d\n",
++					status, extd_status);
++			free_mcc_tag(&phba->ctrl, tag);
++			return -EBUSY;
++		}
++		free_mcc_tag(&phba->ctrl, tag);
++
++	} while (--boot_retry);
++
++	/* Couldn't log into the boot target */
++	SE_DEBUG(DBG_LVL_1, "Login to Boot Target Failed\n");
++	return -ENXIO;
++}
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index 5c2e376..cd97e70 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -274,6 +274,9 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 
+ unsigned int mgmt_get_boot_target(struct beiscsi_hba *phba);
+ 
++unsigned int mgmt_reopen_session(struct beiscsi_hba *phba,
++		unsigned int reopen_type, unsigned sess_handle);
++
+ unsigned int mgmt_get_session_info(struct beiscsi_hba *phba,
+ 				   u32 boot_session_handle,
+ 				   struct be_dma_mem *nonemb_cmd);
+@@ -290,4 +293,6 @@ int mgmt_get_gateway(struct beiscsi_hba *phba, int ip_type,
+ int mgmt_set_gateway(struct beiscsi_hba *phba,
+ 		     struct iscsi_iface_param_info *gateway_param);
+ 
++int be_mgmt_get_boot_shandle(struct beiscsi_hba *phba,
++		unsigned int *s_handle);
+ #endif
 -- 
 1.7.1
 
