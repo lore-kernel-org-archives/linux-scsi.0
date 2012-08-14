@@ -1,44 +1,64 @@
-From: Chanho Min <chanho0207@gmail.com>
-Subject: [PATCH RESEND] remove the queue unlock in scsi_requset_fn
-Date: Tue, 14 Aug 2012 18:48:02 +0900
-Message-ID: <CAOAMb1Dp=E6fjMhdh6ze6Hq48qUixTpsqHZf3z742AUAqhU5Ug@mail.gmail.com>
-References: <CAOAMb1Dd5_KWQme+EzXdpnABk=A50+vXuLMoS+r5et6=o0605g@mail.gmail.com>
+From: Paul Menzel <paulepanter@users.sourceforge.net>
+Subject: [PATCH 1/3] Documentation: scsi.txt: Remove unused abbreviation lk
+Date: Tue, 14 Aug 2012 12:12:18 +0200
+Message-ID: <1344939138.4138.1.camel@mattotaupa>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAOAMb1Dd5_KWQme+EzXdpnABk=A50+vXuLMoS+r5et6=o0605g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <JBottomley@parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Bart Van Assche <bvanassche@acm.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-bbjzNiRF+8ooMSVGk4br"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gw90.de ([188.40.100.199]:34537 "EHLO mail.gw90.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755614Ab2HNKMg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Aug 2012 06:12:36 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 
-We don't need to unlock the queue before put_device in scsi_request_fn()
-If we trigger the ->remove() function, It occur a oops from the caller.
-So sdev reference count should not be dropped to zero here.
-Also It was added before scsi_device_dev_release() was moved
-to user context, so it is outdated.
 
-Signed-off-by: Chanho Min <chanho.min@lge.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+--=-bbjzNiRF+8ooMSVGk4br
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+From: Paul Menzel <paulepanter@users.sourceforge.net>
+Date: Tue, 14 Aug 2012 11:48:04 +0200
+
+=C2=BBlk=C2=AB is not used anywhere in the document.
+
+Signed-off-by: Paul Menzel <paulepanter@users.sourceforge.net>
 ---
- drivers/scsi/scsi_lib.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+ Documentation/scsi/scsi.txt |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ffd7773..cb2185a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1626,11 +1626,7 @@ out_delay:
- 	if (sdev->device_busy == 0)
- 		blk_delay_queue(q, SCSI_QUEUE_DELAY);
- out:
--	/* must be careful here...if we trigger the ->remove() function
--	 * we cannot be holding the q lock */
--	spin_unlock_irq(q->queue_lock);
- 	put_device(&sdev->sdev_gendev);
--	spin_lock_irq(q->queue_lock);
- }
+diff --git a/Documentation/scsi/scsi.txt b/Documentation/scsi/scsi.txt
+index 3d99d38..45b9c25 100644
+--- a/Documentation/scsi/scsi.txt
++++ b/Documentation/scsi/scsi.txt
+@@ -1,7 +1,7 @@
+ SCSI subsystem documentation
+ =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D
+ The Linux Documentation Project (LDP) maintains a document describing
+-the SCSI subsystem in the Linux kernel (lk) 2.4 series. See:
++the SCSI subsystem in the Linux kernel 2.4 series. See:
+ http://www.tldp.org/HOWTO/SCSI-2.4-HOWTO . The LDP has single
+ and multiple page HTML renderings as well as postscript and pdf.
+ It can also be found at:
+--=20
+1.7.10.4
 
- u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
--- 
-1.7.0.4
+--=-bbjzNiRF+8ooMSVGk4br
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEABECAAYFAlAqJIIACgkQPX1aK2wOHVgHLgCeKKTQHRYQQlB5r+lyPHWZwJB7
+vlMAn0XIoA3FboAfPDhDLrsosN6Cs/Aj
+=nfvm
+-----END PGP SIGNATURE-----
+
+--=-bbjzNiRF+8ooMSVGk4br--
+
