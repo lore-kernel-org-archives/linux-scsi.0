@@ -1,73 +1,42 @@
-From: Paul Menzel <paulepanter@users.sourceforge.net>
-Subject: [PATCH] drivers/scsi/Kconfig: Remove reference to non-existent
- howtos
-Date: Tue, 14 Aug 2012 12:39:43 +0200
-Message-ID: <1344940783.4138.5.camel@mattotaupa>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 20072] tapeinfo reports MaxBlock: 16777215  but writes with
+ blocksize >2M fail
+Date: Tue, 14 Aug 2012 11:06:42 +0000 (UTC)
+Message-ID: <20120814110642.04EE111FC6E@bugzilla.kernel.org>
+References: <bug-20072-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-pYAnvfEuzSNGi2eWhDr2"
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gw90.de ([188.40.100.199]:34550 "EHLO mail.gw90.de"
+Received: from mail.kernel.org ([198.145.19.201]:56110 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752488Ab2HNKjw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Aug 2012 06:39:52 -0400
+	id S1753151Ab2HNLGp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Aug 2012 07:06:45 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id F26BD20230
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Aug 2012 11:06:43 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 06B262021F
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Aug 2012 11:06:42 +0000 (UTC)
+In-Reply-To: <bug-20072-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+
+https://bugzilla.kernel.org/show_bug.cgi?id=20072
 
 
---=-pYAnvfEuzSNGi2eWhDr2
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-From: Paul Menzel <paulepanter@users.sourceforge.net>
-Date: Tue, 14 Aug 2012 12:22:43 +0200
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |DOCUMENTED
 
-Searching for =C2=BBscsi=C2=AB at <http://www.tldp.org/HOWTO/html_single/> =
-I only
-found =C2=BBSCSI-2.4-HOWTO=C2=AB [1].
 
-    The Linux 2.4 SCSI subsystem HOWTO
 
-[1] http://www.tldp.org/HOWTO/html_single/SCSI-2.4-HOWTO/
 
-Signed-off-by: Paul Menzel <paulepanter@users.sourceforge.net>
----
- drivers/scsi/Kconfig |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 74bf1aa..d717116 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -74,10 +74,7 @@ config BLK_DEV_SD
- 	  If you want to use SCSI hard disks, Fibre Channel disks,
- 	  Serial ATA (SATA) or Parallel ATA (PATA) hard disks,
- 	  USB storage or the SCSI or parallel port version of
--	  the IOMEGA ZIP drive, say Y and read the SCSI-HOWTO,
--	  the Disk-HOWTO and the Multi-Disk-HOWTO, available from
--	  <http://www.tldp.org/docs.html#howto>. This is NOT for SCSI
--	  CD-ROMs.
-+	  the IOMEGA ZIP drive, say Y. This is NOT for SCSI CD-ROMs.
-=20
- 	  To compile this driver as a module, choose M here and read
- 	  <file:Documentation/scsi/scsi.txt>.
---=20
-1.7.10.4
-
---=-pYAnvfEuzSNGi2eWhDr2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEABECAAYFAlAqKu8ACgkQPX1aK2wOHVicMgCePvSlRGF0aiRPpU51T2M4nmWE
-H5gAmwUktDyVcEjH7BqKxDYfpcsPAME6
-=cApp
------END PGP SIGNATURE-----
-
---=-pYAnvfEuzSNGi2eWhDr2--
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
