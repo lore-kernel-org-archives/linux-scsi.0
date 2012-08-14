@@ -1,34 +1,44 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] [SCSI] mvumi: GFP_KERNEL under spin lock
-Date: Tue, 14 Aug 2012 17:59:27 +0300
-Message-ID: <20120814145926.GA29090@elgon.mountain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 26692] Fusion MPT SPI bringup takes 80 seconds when the kernel
+ is quiet
+Date: Tue, 14 Aug 2012 15:36:49 +0000 (UTC)
+Message-ID: <20120814153649.893C311FC73@bugzilla.kernel.org>
+References: <bug-26692-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: jyli@marvell.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:43264 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751785Ab2HNPgx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Aug 2012 11:36:53 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id B1D1F2021F
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Aug 2012 15:36:51 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 2E4E62025D
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Aug 2012 15:36:50 +0000 (UTC)
+In-Reply-To: <bug-26692-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hello Jianyun Li,
+https://bugzilla.kernel.org/show_bug.cgi?id=26692
 
-The patch f0c568a478f0: "[SCSI] mvumi: Add Marvell UMI driver" from 
-May 11, 2011, leads to the following warning:
-drivers/scsi/mvumi.c:121 mvumi_alloc_mem_resource()
-	 error: scheduling with locks held: 'spin_lock:host_lock'
 
-The problem is that we do a couple GPF_KERNEL allocations in
-mvumi_alloc_mem_resource() and this static analysis program sees a path
-where that function is called with spin_locks held.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-mvumi_isr_handler() <- takes a spin lock
--> mvumi_handshake()
-   -> mvumi_init_data()
-      -> mvumi_alloc_mem_resource() <- GFP_KERNEL
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |NEEDINFO
+                 CC|                            |alan@lxorguk.ukuu.org.uk
 
-The IRQ handler does print a warning before calling mvumi_handshake()
-so it seems like this path doesn't get exercised very much.
 
-regards,
-dan carpenter
+
+
+--- Comment #9 from Alan <alan@lxorguk.ukuu.org.uk>  2012-08-14 15:36:49 ---
+Any updates on this ?
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
