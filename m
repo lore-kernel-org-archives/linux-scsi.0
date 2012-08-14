@@ -1,44 +1,63 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 26692] Fusion MPT SPI bringup takes 80 seconds when the kernel
- is quiet
-Date: Tue, 14 Aug 2012 15:36:49 +0000 (UTC)
-Message-ID: <20120814153649.893C311FC73@bugzilla.kernel.org>
-References: <bug-26692-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:43264 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751785Ab2HNPgx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Aug 2012 11:36:53 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id B1D1F2021F
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Aug 2012 15:36:51 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 2E4E62025D
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Aug 2012 15:36:50 +0000 (UTC)
-In-Reply-To: <bug-26692-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+Subject: [PATCH 2/5] drivers/scsi/bnx2fc/bnx2fc_io.c: Remove potential NULL dereference
+Date: Tue, 14 Aug 2012 17:49:45 +0200
+Message-ID: <1344959388-19719-3-git-send-email-Julia.Lawall@lip6.fr>
+References: <1344959388-19719-1-git-send-email-Julia.Lawall@lip6.fr>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1344959388-19719-1-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=26692
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
+If the NULL test is necessary, the initialization involving a dereference of
+the tested value should be moved after the NULL test.
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+The sematic patch that fixes this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |NEEDINFO
-                 CC|                            |alan@lxorguk.ukuu.org.uk
+// <smpl>
+@@
+type T;
+expression E;
+identifier i,fld;
+statement S;
+@@
 
+- T i = E->fld;
++ T i;
+  ... when != E
+      when != i
+  if (E == NULL) S
++ i = E->fld;
+// </smpl>
 
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
+---
+ drivers/scsi/bnx2fc/bnx2fc_io.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
---- Comment #9 from Alan <alan@lxorguk.ukuu.org.uk>  2012-08-14 15:36:49 ---
-Any updates on this ?
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 73f231c..1dd82db 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -686,7 +686,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+ {
+ 	struct fc_lport *lport;
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
+-	struct fc_rport_libfc_priv *rp = rport->dd_data;
++	struct fc_rport_libfc_priv *rp;
+ 	struct fcoe_port *port;
+ 	struct bnx2fc_interface *interface;
+ 	struct bnx2fc_rport *tgt;
+@@ -712,6 +712,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+ 		rc = FAILED;
+ 		goto tmf_err;
+ 	}
++	rp = rport->dd_data;
+ 
+ 	rc = fc_block_scsi_eh(sc_cmd);
+ 	if (rc)
