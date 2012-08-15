@@ -1,43 +1,51 @@
-From: Rob Evers <revers@redhat.com>
-Subject: [PATCH] iscsi_tcp: add write permission to max_lun
-Date: Wed, 15 Aug 2012 07:30:05 -0400
-Message-ID: <1345030205-23393-1-git-send-email-revers@redhat.com>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH RESUBMIT 3/3] lpfc: remove unnecessary read of PCI_CAP_ID_EXP
+Date: Wed, 15 Aug 2012 09:55:34 -0400
+Message-ID: <502BAA56.20909@emulex.com>
+References: <1341957477-30946-1-git-send-email-jdmason@kudzu.us> <1341957477-30946-4-git-send-email-jdmason@kudzu.us>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34396 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751317Ab2HOLaF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Aug 2012 07:30:05 -0400
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7FBU5D8024925
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Aug 2012 07:30:05 -0400
-Received: from localhost (dhcp-185-85.bos.redhat.com [10.16.185.85])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id q7FBU5FG015433
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Aug 2012 07:30:05 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:54908 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913Ab2HONzh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Aug 2012 09:55:37 -0400
+In-Reply-To: <1341957477-30946-4-git-send-email-jdmason@kudzu.us>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jon Mason <jdmason@kudzu.us>
+Cc: James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
 
-Add root write permission to iscsi_tcp max_lun parameter
+Acked-By:  James Smart <james.smart@emulex.com>
 
-Signed-off-by: Rob Evers <revers@redhat.com>
----
- drivers/scsi/iscsi_tcp.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+-- james
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 9220861..e8609a4 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -56,7 +56,7 @@ static struct scsi_host_template iscsi_sw_tcp_sht;
- static struct iscsi_transport iscsi_sw_tcp_transport;
- 
- static unsigned int iscsi_max_lun = 512;
--module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO);
-+module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO|S_IWUSR);
- 
- static int iscsi_sw_tcp_dbg;
- module_param_named(debug_iscsi_tcp, iscsi_sw_tcp_dbg, int,
--- 
-1.7.1
+
+On 7/10/2012 5:57 PM, Jon Mason wrote:
+> The PCIE capability offset is saved during PCI bus walking.  It will
+> remove an unnecessary search in the PCI configuration space if this
+> value is referenced instead of reacquiring it.  Also, pci_is_pcie is a
+> better way of determining if the device is PCIE or not (as it uses the
+> same saved PCIE capability offset).
+>
+> Signed-off-by: Jon Mason <jdmason@kudzu.us>
+> Cc: James Smart <james.smart@emulex.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_init.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 411ed48..f30b3d2 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -4253,7 +4253,7 @@ lpfc_enable_pci_dev(struct lpfc_hba *phba)
+>   	pci_save_state(pdev);
+>   
+>   	/* PCIe EEH recovery on powerpc platforms needs fundamental reset */
+> -	if (pci_find_capability(pdev, PCI_CAP_ID_EXP))
+> +	if (pci_is_pcie(pdev))
+>   		pdev->needs_freset = 1;
+>   
+>   	return 0;
 
