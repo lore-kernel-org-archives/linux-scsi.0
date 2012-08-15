@@ -1,71 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: PROBLEM: lpfc module kernel panics when SCSI devices disconnect
-  (resend with no HTML)
-Date: Wed, 15 Aug 2012 08:55:34 +0100
-Message-ID: <1345017334.2976.7.camel@dabdike.int.hansenpartnership.com>
-References: <dd3b439a5e780d407bef5c500f5ff665@www.nowhere.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Rob Evers <revers@redhat.com>
+Subject: [PATCH] iscsi_tcp: add write permission to max_lun
+Date: Wed, 15 Aug 2012 07:30:05 -0400
+Message-ID: <1345030205-23393-1-git-send-email-revers@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39474 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751479Ab2HOHzh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Aug 2012 03:55:37 -0400
-In-Reply-To: <dd3b439a5e780d407bef5c500f5ff665@www.nowhere.ca>
+Received: from mx1.redhat.com ([209.132.183.28]:34396 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751317Ab2HOLaF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Aug 2012 07:30:05 -0400
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7FBU5D8024925
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Aug 2012 07:30:05 -0400
+Received: from localhost (dhcp-185-85.bos.redhat.com [10.16.185.85])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id q7FBU5FG015433
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Aug 2012 07:30:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Keith Lawson <keith@nowhere.ca>
-Cc: linux-scsi@vger.kernel.org, james.smart@emulex.com
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2012-08-14 at 14:19 -0400, Keith Lawson wrote:
-> I believe we're encountering a bug in the lpfc module with our SLES
-> 11 
-> SP1 systems running on HP blades in a C7000 enclosure connected to a
-> SAN 
-> and virtual tape library. Please find my bug report below. We've had
-> HP 
-> engaged for this issue for approximately 7 weeks now and aren't any 
-> closer to solving the problem so I'm hoping you can help.
-> 
-> [1.] One line summary of the problem:
-> lpfc module kernel panics when SCSI devices disconnect from host.
-> 
-> [2.] Full description of the problem/report:
-> We have several BL460c blades in a C7000 enclosure connected to an HP 
-> EVA 8400 and an HP VLS 6840 tape library over fiber channel. Due to
-> an 
-> know issue on the VLS our backup administrator has to reset the tape 
-> library weekly which causes the virtual tape devices on the servers
-> to 
-> be removed and this is causing a kernel panic almost every time that 
-> happens. Kdumps indicated that the panic is happening inside the lpfc 
-> kernel module. The module also seems to be sensitive to I/O timeouts
-> on 
-> the EVA but we can't reliably reproduce panics due to disk related 
-> problems.
-> 
-> [3.] Keywords (i.e., modules, networking, kernel):
-> lpfc module, SCSI,HP EVA 8400,HP VLS6840, HP C7000 enclosure, HP 
-> ProLiant BL460c blade
-> 
-> [4.] Kernel information
-> SLES11 SP1 2.6.32.59-0.3-default
-> 
-> [4.1.] Kernel version (from /proc/version):
-> Linux version 2.6.32.59-0.3-default (geeko@buildhost) (gcc version 
-> 4.3.4 [gcc-4_3-branch revision 152973] (SUSE Linux) ) #1 SMP
-> 2012-04-27 
-> 11:14:44 +0200
-> 
-We can't really help you with a distro kernel. This list deals with the
-current Linux kernel, which is about three years ahead of the one you
-have. SUSE should be the first line of support.  However, you'll have to
-be very lucky to get anyone to diagnose this if you don't actually
-attach the kernel log of the panic.  I'd open a bug with SUSE and attach
-the panic log.
+Add root write permission to iscsi_tcp max_lun parameter
 
-James
+Signed-off-by: Rob Evers <revers@redhat.com>
+---
+ drivers/scsi/iscsi_tcp.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 9220861..e8609a4 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -56,7 +56,7 @@ static struct scsi_host_template iscsi_sw_tcp_sht;
+ static struct iscsi_transport iscsi_sw_tcp_transport;
+ 
+ static unsigned int iscsi_max_lun = 512;
+-module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO);
++module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO|S_IWUSR);
+ 
+ static int iscsi_sw_tcp_dbg;
+ module_param_named(debug_iscsi_tcp, iscsi_sw_tcp_dbg, int,
+-- 
+1.7.1
 
