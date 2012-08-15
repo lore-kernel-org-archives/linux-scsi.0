@@ -1,104 +1,45 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] st: unblock concurrent access in st_open()
-Date: Wed, 15 Aug 2012 16:24:49 +0200
-Message-ID: <1345040689-29362-1-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Michael Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] iscsi_tcp: add write permission to max_lun
+Date: Wed, 15 Aug 2012 10:50:52 -0500
+Message-ID: <DECF1C60-0ED2-4652-BD0D-5BA4F23F5D21@cs.wisc.edu>
+References: <1345030205-23393-1-git-send-email-revers@redhat.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.0 \(1485\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52926 "EHLO mx2.suse.de"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57333 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753495Ab2HOOYv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Aug 2012 10:24:51 -0400
+	id S1755228Ab2HOPvE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Aug 2012 11:51:04 -0400
+In-Reply-To: <1345030205-23393-1-git-send-email-revers@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, Lee Duncan <lduncan@suse.com>
+To: Rob Evers <revers@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-st_open() is taking a global mutex 'st_mutex' to protect
-against concurrent calls to st_open(). However, as
-st_open() might take quite some time before returning,
-_any_ open to _any_ st device will be blocked during
-that time.
 
-Seeing that all critical sections are already protected
-by individual spinlocks 'st_mutex' doesn't serve any
-purpose and can be removed, unblocking concurrent
-accesses.
+On Aug 15, 2012, at 6:30 AM, Rob Evers <revers@redhat.com> wrote:
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>
-Cc: Kai M=C3=A4kisara <Kai.Makisara@kolumbus.fi>
-Cc: Lee Duncan <lduncan@suse.com>
----
- drivers/scsi/st.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+> Add root write permission to iscsi_tcp max_lun parameter
+> 
+> Signed-off-by: Rob Evers <revers@redhat.com>
+> ---
+> drivers/scsi/iscsi_tcp.c |    2 +-
+> 1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+> index 9220861..e8609a4 100644
+> --- a/drivers/scsi/iscsi_tcp.c
+> +++ b/drivers/scsi/iscsi_tcp.c
+> @@ -56,7 +56,7 @@ static struct scsi_host_template iscsi_sw_tcp_sht;
+> static struct iscsi_transport iscsi_sw_tcp_transport;
+> 
+> static unsigned int iscsi_max_lun = 512;
+> -module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO);
+> +module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO|S_IWUSR);
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index e41998c..c6c172e 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -74,7 +74,6 @@ static const char *verstr =3D "20101219";
- #include "st_options.h"
- #include "st.h"
-=20
--static DEFINE_MUTEX(st_mutex);
- static int buffer_kbs;
- static int max_sg_segs;
- static int try_direct_io =3D TRY_DIRECT_IO;
-@@ -1188,7 +1187,6 @@ static int st_open(struct inode *inode, struct fi=
-le *filp)
- 	int dev =3D TAPE_NR(inode);
- 	char *name;
-=20
--	mutex_lock(&st_mutex);
- 	/*
- 	 * We really want to do nonseekable_open(inode, filp); here, but some
- 	 * versions of tar incorrectly call lseek on tapes and bail out if th=
-at
-@@ -1197,7 +1195,6 @@ static int st_open(struct inode *inode, struct fi=
-le *filp)
- 	filp->f_mode &=3D ~(FMODE_PREAD | FMODE_PWRITE);
-=20
- 	if (!(STp =3D scsi_tape_get(dev))) {
--		mutex_unlock(&st_mutex);
- 		return -ENXIO;
- 	}
-=20
-@@ -1208,7 +1205,6 @@ static int st_open(struct inode *inode, struct fi=
-le *filp)
- 	if (STp->in_use) {
- 		write_unlock(&st_dev_arr_lock);
- 		scsi_tape_put(STp);
--		mutex_unlock(&st_mutex);
- 		DEB( printk(ST_DEB_MSG "%s: Device already in use.\n", name); )
- 		return (-EBUSY);
- 	}
-@@ -1262,16 +1258,16 @@ static int st_open(struct inode *inode, struct =
-file *filp)
- 			retval =3D (-EIO);
- 		goto err_out;
- 	}
--	mutex_unlock(&st_mutex);
- 	return 0;
-=20
-  err_out:
- 	normalize_buffer(STp->buffer);
-+	write_lock(&st_dev_arr_lock);
- 	STp->in_use =3D 0;
-+	write_unlock(&st_dev_arr_lock);
- 	scsi_tape_put(STp);
- 	if (resumed)
- 		scsi_autopm_put_device(STp->device);
--	mutex_unlock(&st_mutex);
- 	return retval;
-=20
- }
---=20
-1.7.4.2
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Looks ok.
+
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
