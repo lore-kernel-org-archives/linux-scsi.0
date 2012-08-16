@@ -1,54 +1,25 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: areca [17d3:1320] controller not working with linux 3.5 and mvsas?!
-Date: Thu, 16 Aug 2012 09:07:38 +0800
-Message-ID: <668BF84A97B747B39C316D3D3F0CB017@usish.com.cn>
-References: <502BE024.8000309@powercraft.nl>
+From: Chanho Min <chanho0207@gmail.com>
+Subject: Re: [PATCH RESEND] remove the queue unlock in scsi_requset_fn
+Date: Thu, 16 Aug 2012 10:35:59 +0900
+Message-ID: <CAOAMb1COJbAF=ys7ZcpTuJNP6QzbQzuqz7gS4qPqSc1rfbnHTw@mail.gmail.com>
+References: <CAOAMb1Dd5_KWQme+EzXdpnABk=A50+vXuLMoS+r5et6=o0605g@mail.gmail.com>
+	<CAOAMb1Dp=E6fjMhdh6ze6Hq48qUixTpsqHZf3z742AUAqhU5Ug@mail.gmail.com>
+	<1344946071.3117.26.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:37810 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755154Ab2HPBH0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Aug 2012 21:07:26 -0400
-In-Reply-To: <502BE024.8000309@powercraft.nl>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1344946071.3117.26.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Jelle de Jong' <jelledejong@powercraft.nl>, 'linux-scsi' <linux-scsi@vger.kernel.org>
 
-Hi
+> functions will occur in line.  I also don't see why the sdev reference
+> couldn't drop to zero here.
+scsi_request_fn is called under the lock of request_queue->queue_lock.
+If we drop the sdev reference to zero here,
+scsi_device_dev_release_usercontext is
+invoked and make request_queue to NULL. When caller of scsi_request_fn try to
+unlock request_queue->queue_lock, the oops is occurred.
 
-Seems the all idenfy to the disk failed,
-And all phy add to port-0:0 looks stange.
-
-Jack
-> Hash: SHA1
-> 
-> Hello everybody,
-> 
-> I am trying to get my Areca sata non-raid controller[1] working, but
-> so far no luck.
-> 
-> Could somebody tell me if the device is supported and expected to work?
-> 
-> I attached my kernel and device information.
-> 
-> I could really use a fast response, so I know if I should order three
-> other controllers (the older 3Gb/s version worked).
-> 
-> [1] http://www.areca.com.tw/products/sasnoneraid6g.htm
-> 
-> Kind regards,
-> 
-> Jelle de Jong
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v1.4.12 (GNU/Linux)
-> 
-> iJwEAQECAAYFAlAr4B8ACgkQ1WclBW9j5HlQxgP+NhdLhBuU0QMjH6UXYK5syEGH
-> 8dEmSV92HIViq9nBj9f4cu4IpZycjm5bc58T+l21F7ihXsDClpL+oGz89VarqtJm
-> hehQGy3ZARxaH3qxuGa6CkDaTYBxutlTvScBXAVQd6CMchEx5JZK7OyrRnAi9qQD
-> tEGLc3mYeuUVYF/FW5A=
-> =Kp32
-> -----END PGP SIGNATURE-----
-
+Thanks, Chanho
