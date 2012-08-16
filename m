@@ -1,18 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 46031] New: kswapd0 moving to uninterruptible sleep (STAT
- D)
-Date: Thu, 16 Aug 2012 13:46:13 +0100
-Message-ID: <1345121173.3259.42.camel@dabdike.int.hansenpartnership.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 46031] kswapd0 moving to uninterruptible sleep (STAT D)
+Date: Thu, 16 Aug 2012 12:46:19 +0000 (UTC)
+Message-ID: <20120816124619.8BAE311FC70@bugzilla.kernel.org>
 References: <bug-46031-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ext4-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:44499 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755951Ab2HPMq1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Aug 2012 08:46:27 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 9D572201C7
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Aug 2012 12:46:22 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 00332201BB
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Aug 2012 12:46:21 +0000 (UTC)
 In-Reply-To: <bug-46031-11613@https.bugzilla.kernel.org/>
-Sender: linux-ext4-owner@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=46031
+
+
+
+
+
+--- Comment #2 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2012-08-16 12:46:19 ---
+Reply-To: James.Bottomley@HansenPartnership.com
 
 [Cc of more relevant fs lists added]
 On Thu, 2012-08-16 at 12:40 +0000, bugzilla-daemon@bugzilla.kernel.org
@@ -249,6 +265,9 @@ James
 > Any hints how to get the system back in a stable mode?
 > 
 > Markus
-> 
+>
 
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
