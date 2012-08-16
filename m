@@ -1,42 +1,54 @@
-From: Rob Evers <revers@redhat.com>
-Subject: [PATCH] increase iscsi_tcp max_lun to ~0, don't care
-Date: Wed, 15 Aug 2012 18:39:34 -0400
-Message-ID: <1345070374-32058-1-git-send-email-revers@redhat.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: areca [17d3:1320] controller not working with linux 3.5 and mvsas?!
+Date: Thu, 16 Aug 2012 09:07:38 +0800
+Message-ID: <668BF84A97B747B39C316D3D3F0CB017@usish.com.cn>
+References: <502BE024.8000309@powercraft.nl>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20387 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750968Ab2HOWje (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Aug 2012 18:39:34 -0400
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7FMdYBx027027
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Aug 2012 18:39:34 -0400
-Received: from localhost (dhcp-185-85.bos.redhat.com [10.16.185.85])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id q7FMdYL6011640
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Aug 2012 18:39:34 -0400
+Received: from sr-smtp.usish.com ([210.5.144.203]:37810 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755154Ab2HPBH0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Aug 2012 21:07:26 -0400
+In-Reply-To: <502BE024.8000309@powercraft.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'Jelle de Jong' <jelledejong@powercraft.nl>, 'linux-scsi' <linux-scsi@vger.kernel.org>
 
+Hi
 
-Signed-off-by: Rob Evers <revers@redhat.com>
----
- drivers/scsi/iscsi_tcp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Seems the all idenfy to the disk failed,
+And all phy add to port-0:0 looks stange.
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 9220861..1b91ca0 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -55,7 +55,7 @@ static struct scsi_transport_template *iscsi_sw_tcp_scsi_transport;
- static struct scsi_host_template iscsi_sw_tcp_sht;
- static struct iscsi_transport iscsi_sw_tcp_transport;
- 
--static unsigned int iscsi_max_lun = 512;
-+static unsigned int iscsi_max_lun = ~0;
- module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO);
- 
- static int iscsi_sw_tcp_dbg;
--- 
-1.7.11.2
+Jack
+> Hash: SHA1
+> 
+> Hello everybody,
+> 
+> I am trying to get my Areca sata non-raid controller[1] working, but
+> so far no luck.
+> 
+> Could somebody tell me if the device is supported and expected to work?
+> 
+> I attached my kernel and device information.
+> 
+> I could really use a fast response, so I know if I should order three
+> other controllers (the older 3Gb/s version worked).
+> 
+> [1] http://www.areca.com.tw/products/sasnoneraid6g.htm
+> 
+> Kind regards,
+> 
+> Jelle de Jong
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.4.12 (GNU/Linux)
+> 
+> iJwEAQECAAYFAlAr4B8ACgkQ1WclBW9j5HlQxgP+NhdLhBuU0QMjH6UXYK5syEGH
+> 8dEmSV92HIViq9nBj9f4cu4IpZycjm5bc58T+l21F7ihXsDClpL+oGz89VarqtJm
+> hehQGy3ZARxaH3qxuGa6CkDaTYBxutlTvScBXAVQd6CMchEx5JZK7OyrRnAi9qQD
+> tEGLc3mYeuUVYF/FW5A=
+> =Kp32
+> -----END PGP SIGNATURE-----
 
