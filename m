@@ -1,43 +1,34 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] scsi: return TARGET_ERROR when a device has been disconnected
-Date: Thu, 16 Aug 2012 08:40:08 +0200
-Message-ID: <1345099208-31687-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33220 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754755Ab2HPGkL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Aug 2012 02:40:11 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH RESEND] remove the queue unlock in scsi_requset_fn
+Date: Thu, 16 Aug 2012 07:52:35 +0000
+Message-ID: <502CA6C3.4040903@acm.org>
+References: <CAOAMb1Dd5_KWQme+EzXdpnABk=A50+vXuLMoS+r5et6=o0605g@mail.gmail.com> <CAOAMb1Dp=E6fjMhdh6ze6Hq48qUixTpsqHZf3z742AUAqhU5Ug@mail.gmail.com> <1344946071.3117.26.camel@dabdike.int.hansenpartnership.com> <CAOAMb1COJbAF=ys7ZcpTuJNP6QzbQzuqz7gS4qPqSc1rfbnHTw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAOAMb1COJbAF=ys7ZcpTuJNP6QzbQzuqz7gS4qPqSc1rfbnHTw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chanho Min <chanho0207@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
 
-When we receive a sense code of
-NOT READY, LOGICAL UNIT NOT SUPPORTED
-the device has been disconnected and any retry on other paths
-would be pointless. So return TARGET_ERROR here.
+On 08/16/12 01:35, Chanho Min wrote:
+>> functions will occur in line.  I also don't see why the sdev reference
+>> couldn't drop to zero here.
+> scsi_request_fn is called under the lock of request_queue->queue_lock.
+> If we drop the sdev reference to zero here,
+> scsi_device_dev_release_usercontext is
+> invoked and make request_queue to NULL. When caller of scsi_request_fn try to
+> unlock request_queue->queue_lock, the oops is occurred.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>
----
- drivers/scsi/scsi_error.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Whether or not your patch is applied, if the put_device() call in
+scsi_request_fn() decreases the sdev reference count to zero, the
+scsi_request_fn() caller will still try to unlock the queue lock after
+scsi_request_fn() finished and hence will trigger a use-after-free. I'm
+afraid the only real solution is to modify the SCSI and/or block layers
+such that scsi_remove_device() can't finish while scsi_request_fn() is
+in progress. And once that is guaranteed the get_device() / put_device()
+pair can be left out from scsi_request_fn().
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index de2337f..0fe639e 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -296,6 +296,10 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 
- 		return NEEDS_RETRY;
- 	case NOT_READY:
-+		if ((sshdr.asc == 0x25) && (sshdr.ascq == 0)) {
-+			/* Logical unit not supported */
-+			return TARGET_ERROR;
-+		}
- 	case UNIT_ATTENTION:
- 		/*
- 		 * if we are expecting a cc/ua because of a bus reset that we
--- 
-1.7.4.2
-
+Bart.
