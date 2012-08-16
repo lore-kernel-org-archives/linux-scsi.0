@@ -1,47 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RESEND] remove the queue unlock in scsi_requset_fn
-Date: Thu, 16 Aug 2012 09:10:01 +0100
-Message-ID: <1345104601.3259.19.camel@dabdike.int.hansenpartnership.com>
-References: <CAOAMb1Dd5_KWQme+EzXdpnABk=A50+vXuLMoS+r5et6=o0605g@mail.gmail.com>
-	 <CAOAMb1Dp=E6fjMhdh6ze6Hq48qUixTpsqHZf3z742AUAqhU5Ug@mail.gmail.com>
-	 <1344946071.3117.26.camel@dabdike.int.hansenpartnership.com>
-	 <CAOAMb1COJbAF=ys7ZcpTuJNP6QzbQzuqz7gS4qPqSc1rfbnHTw@mail.gmail.com>
-	 <502CA6C3.4040903@acm.org>
+From: Jelle de Jong <jelledejong@powercraft.nl>
+Subject: Re: areca [17d3:1320] controller not working with linux 3.5 and mvsas?!
+Date: Thu, 16 Aug 2012 10:58:22 +0200
+Message-ID: <502CB62E.1030609@powercraft.nl>
+References: <502BE024.8000309@powercraft.nl> <668BF84A97B747B39C316D3D3F0CB017@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <502CA6C3.4040903@acm.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Chanho Min <chanho0207@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay01.cambriumhosting.nl ([217.19.16.173]:37048 "EHLO
+	relay01.cambriumhosting.nl" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753222Ab2HPI60 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Aug 2012 04:58:26 -0400
+In-Reply-To: <668BF84A97B747B39C316D3D3F0CB017@usish.com.cn>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jack Wang <jack_wang@usish.com>
+Cc: 'linux-scsi' <linux-scsi@vger.kernel.org>
 
-On Thu, 2012-08-16 at 07:52 +0000, Bart Van Assche wrote:
-> On 08/16/12 01:35, Chanho Min wrote:
-> >> functions will occur in line.  I also don't see why the sdev reference
-> >> couldn't drop to zero here.
-> > scsi_request_fn is called under the lock of request_queue->queue_lock.
-> > If we drop the sdev reference to zero here,
-> > scsi_device_dev_release_usercontext is
-> > invoked and make request_queue to NULL. When caller of scsi_request_fn try to
-> > unlock request_queue->queue_lock, the oops is occurred.
-> 
-> Whether or not your patch is applied, if the put_device() call in
-> scsi_request_fn() decreases the sdev reference count to zero, the
-> scsi_request_fn() caller will still try to unlock the queue lock after
-> scsi_request_fn() finished and hence will trigger a use-after-free. I'm
-> afraid the only real solution is to modify the SCSI and/or block layers
-> such that scsi_remove_device() can't finish while scsi_request_fn() is
-> in progress. And once that is guaranteed the get_device() / put_device()
-> pair can be left out from scsi_request_fn().
+Hi Jack.
 
-Well, no.  The only way to destroy a queue is with blk_cleanup_queue()
-which does the final put.  blk_cleanup_queue has a rather clunky drain
-check that looks at both queued and in-flight requests.  Even if we have
-a scsi_remove_device() racing with the scsi_request_fn() and it gets to
-blk_cleanup_queue(), that call gets held at the drain wait until the
-scsi_request_fn() has exited.  The same is true for all other request
-functions, so we're safe.
+On 16/08/12 03:07, Jack Wang wrote:
+> Seems the all idenfy to the disk failed,
+> And all phy add to port-0:0 looks stange.
 
-James
+# ARC-1320ix-16 logs with a clean rmmod mvsas and modprobe mvsas
+http://paste.debian.net/183845/
+
+I tried to get the older working Areca 1300ix-16 controller but sadly
+they don=92t sell them any more... I need a working non-raid controller
+for 16 disks. I don't get why Areca doesn=92t use and support mainline
+drivers for there controllers?
+
+Does somebody know how to fix the mvsas driver for the ARC-1320ix-16? (=
+I
+can't do the coding myself)
+
+What do you guys recommend? I got about 14 days to fix the issue.
+
+Kind regards,
+
+Jelle
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
