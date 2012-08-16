@@ -1,56 +1,34 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE areca [17d3:1320] controller not working with linux 3.5 and mvsas?!
-Date: Thu, 16 Aug 2012 17:21:39 +0800
-Message-ID: <1ACD7A6CC63047168D1ED535F3311368@usish.com.cn>
-References: <502BE024.8000309@powercraft.nl> <668BF84A97B747B39C316D3D3F0CB017@usish.com.cn> <502CB62E.1030609@powercraft.nl>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] mvsas: fix a && vs & bug
+Date: Thu, 16 Aug 2012 14:04:02 +0300
+Message-ID: <20120816110401.GA12318@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:55015 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756175Ab2HPJVa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Aug 2012 05:21:30 -0400
-In-Reply-To: <502CB62E.1030609@powercraft.nl>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Jelle de Jong' <jelledejong@powercraft.nl>
-Cc: 'linux-scsi' <linux-scsi@vger.kernel.org>, 'Xiangliang Yu' <yuxiangl@marvell.com>
 
-Jelle,
+The "1 << (slot_idx % 32)" condition is always true.  The intent was to
+test a bit field here using bitwise AND.  We do the test correctly a few
+lines later in the do while loop.
 
-Xiangliang is current Marvell developer who maintain mvsas, he may gave you
-suggestion for fix this.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Static checker fix.  Untested.  Would apply to the -stable kernel.
 
-Best regards!
-
-Jack
-> 
-> Hi Jack.
-> 
-> On 16/08/12 03:07, Jack Wang wrote:
-> > Seems the all idenfy to the disk failed,
-> > And all phy add to port-0:0 looks stange.
-> 
-> # ARC-1320ix-16 logs with a clean rmmod mvsas and modprobe mvsas
-> http://paste.debian.net/183845/
-> 
-> I tried to get the older working Areca 1300ix-16 controller but sadly
-> they don't sell them any more... I need a working non-raid controller
-> for 16 disks. I don't get why Areca doesn't use and support mainline
-> drivers for there controllers?
-> 
-> Does somebody know how to fix the mvsas driver for the ARC-1320ix-16? (I
-> can't do the coding myself)
-> 
-> What do you guys recommend? I got about 14 days to fix the issue.
-> 
-> Kind regards,
-> 
-> Jelle
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
+index 7e423e5..16349aa 100644
+--- a/drivers/scsi/mvsas/mv_94xx.c
++++ b/drivers/scsi/mvsas/mv_94xx.c
+@@ -622,7 +622,7 @@ static void mvs_94xx_command_active(struct mvs_info *mvi, u32 slot_idx)
+ {
+ 	u32 tmp;
+ 	tmp = mvs_cr32(mvi, MVS_COMMAND_ACTIVE+(slot_idx >> 3));
+-	if (tmp && 1 << (slot_idx % 32)) {
++	if (tmp & 1 << (slot_idx % 32)) {
+ 		mv_printk("command active %08X,  slot [%x].\n", tmp, slot_idx);
+ 		mvs_cw32(mvi, MVS_COMMAND_ACTIVE + (slot_idx >> 3),
+ 			1 << (slot_idx % 32));
