@@ -1,59 +1,50 @@
-From: Alex Elsayed <eternaleye@gmail.com>
-Subject: Re: [ANNOUNCE] target-pending tree updated to v3.6-rc2
-Date: Fri, 17 Aug 2012 08:30:03 -0700
-Message-ID: <1612895.ZlIZRoGI8L@arkadios>
-References: <1345171412.25161.134.camel@haakon2.linux-iscsi.org> <1345186184.25161.141.camel@haakon2.linux-iscsi.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH RFC] increase ST_MAX_TAPES from 128 to 1024
+Date: Fri, 17 Aug 2012 16:37:53 +0100
+Message-ID: <1345217873.2838.12.camel@dabdike.int.hansenpartnership.com>
+References: <1345215024-5883-1-git-send-email-revers@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1345186184.25161.141.camel@haakon2.linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47046 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758306Ab2HQPh6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Aug 2012 11:37:58 -0400
+In-Reply-To: <1345215024-5883-1-git-send-email-revers@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rob Evers <revers@redhat.com>
+Cc: Kai.Makisara@kolumbus.fi, jeffm@suse.com, lduncan@suse.com, linux-scsi@vger.kernel.org
 
-On Thursday, August 16, 2012 11:49:44 PM Nicholas A. Bellinger wrote:
-> On Thu, 2012-08-16 at 19:43 -0700, Nicholas A. Bellinger wrote:
-> > Hi all,
-> > 
-> > With the release of v3.6-rc2 this afternoon, the target-pending.git tree
-> > now has been updated using the freshly cut -rc2 as it's new HEAD.
-> > Patches destined into for-3.7 code are now being added into for-next for
-> > linux-next build testing.
-> > 
-> > Also, thanks go out to MST, Stefan, and Paolo who managed to get
-> > tcm_vhost fabric code merged in mainline for -rc2  under the special
-> > post merge window exception rule for new kernel code, which in my
-> > experience tends to happens about as often as Haley's comet comes
-> > around..
-> > 
-> > Here is the current breakdown of pending patches by branch:
-> > 
-> > master: (patches headed for 3.6-rc-fixes)
-> > 
-> > 5b7517f8 tcm_vhost: Change vhost_scsi_target->vhost_wwpn to char *
-> > d0e27c88 target: fix NULL pointer dereference bug alloc_page() fails to
-> > get memory 1fa8f450 tcm_fc: Avoid debug overhead when not debugging
-> > 101998f6 tcm_vhost: Post-merge review changes requested by MST
-> > f0e0e9bb tcm_vhost: Fix incorrect IS_ERR() usage in
-> > vhost_scsi_map_iov_to_sgl
-> Whoops..  Missed one extra target/pscsi regression bug-fix reported
-> recently by Alex Elsayed (CC'ed) that has just been pushed into master
-> here:
+On Fri, 2012-08-17 at 10:50 -0400, Rob Evers wrote:
+> Wondering if this would be an acceptable interim solution
+> to increasing the limit on the number of tape drives
+> while http://marc.info/?l=linux-scsi&m=134212042809524&w=2
+> gets sorted out.
 > 
-> target/pscsi: Fix bug with REPORT_LUNs handling for SCSI passthrough
-> http://git.kernel.org/?p=linux/kernel/git/nab/target-pending.git;a=commitdif
-> f;h=1d2a2cd95ee0137a2353d1b5635739c281f27cd4
+> Signed-off-by: Rob Evers <revers@redhat.com>
+> ---
+>  drivers/scsi/st.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Alex-E, you where able to get TYPE_ROM passthrough w/ pSCSI export
-> working on your setup with this patch, yes..?
-> 
-> Thanks!
-> 
-> --nab
+> diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
+> index b548923..408d24f 100644
+> --- a/drivers/scsi/st.h
+> +++ b/drivers/scsi/st.h
+> @@ -76,7 +76,7 @@ struct st_modedef {
+>  #define ST_MODE_SHIFT (7 - ST_NBR_MODE_BITS)
+>  #define ST_MODE_MASK ((ST_NBR_MODES - 1) << ST_MODE_SHIFT)
+>  
+> -#define ST_MAX_TAPES 128
+> +#define ST_MAX_TAPES 1024
 
-The patch got it to where XP and Windows 7 would recognize it and mount it, 
-but there's still some weirdness - for instance, opening it in the file browser 
-hangs for an extended period of time before it starts working. No noise in 
-dmesg when that happens, and I haven't had time to look deeper.
+This is going to cause an order 2 GFP_ATOMIC allocation (on 64 bit
+platforms) for the contiguous scsi_tapes array ... if large numbers of
+tapes are genuinely required, shouldn't we fix this first and then
+expand the number quite a bit more?
+
+James
+
+
