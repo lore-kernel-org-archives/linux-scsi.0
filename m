@@ -1,53 +1,71 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [ANNOUNCE] target-pending tree updated to v3.6-rc2
-Date: Thu, 16 Aug 2012 23:49:44 -0700
-Message-ID: <1345186184.25161.141.camel@haakon2.linux-iscsi.org>
-References: <1345171412.25161.134.camel@haakon2.linux-iscsi.org>
+From: Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+Subject: Re: [PATCH v3] scsi: virtio-scsi: Fix address translation failure of
+ HighMem pages used by sg list
+Date: Fri, 17 Aug 2012 09:37:19 +0100
+Message-ID: <20120817083719.GA8485@stefanha-thinkpad.localdomain>
+References: <1343629506-29627-1-git-send-email-senwang@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1345171412.25161.134.camel@haakon2.linux-iscsi.org>
+Content-Disposition: inline
+In-Reply-To: <1343629506-29627-1-git-send-email-senwang@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Alex Elsayed <eternaleye+usenet@gmail.com>
+To: JBottomley@parallels.com
+Cc: pbonzini@redhat.com, bharrosh@panasas.com, mc@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zwanp@cn.ibm.com, xiaoguangrong@linux.vnet.ibm.com, Wang Sen <senwang@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-08-16 at 19:43 -0700, Nicholas A. Bellinger wrote:
-> Hi all,
+On Mon, Jul 30, 2012 at 02:25:06PM +0800, Wang Sen wrote:
+> When using the commands below to write some data to a virtio-scsi LUN of the
+> QEMU guest(32-bit) with 1G physical memory(qemu -m 1024), the qemu will crash.
 > 
-> With the release of v3.6-rc2 this afternoon, the target-pending.git tree
-> now has been updated using the freshly cut -rc2 as it's new HEAD.
-> Patches destined into for-3.7 code are now being added into for-next for
-> linux-next build testing.
+>         # sudo mkfs.ext4 /dev/sdb  (/dev/sdb is the virtio-scsi LUN.)
+>         # sudo mount /dev/sdb /mnt
+>         # dd if=/dev/zero of=/mnt/file bs=1M count=1024
 > 
-> Also, thanks go out to MST, Stefan, and Paolo who managed to get
-> tcm_vhost fabric code merged in mainline for -rc2  under the special
-> post merge window exception rule for new kernel code, which in my
-> experience tends to happens about as often as Haley's comet comes
-> around..
+> In current implementation, sg_set_buf is called to add buffers to sg list which
+> is put into the virtqueue eventually. But if there are some HighMem pages in
+> table->sgl you can not get virtual address by sg_virt. So, sg_virt(sg_elem) may
+> return NULL value. This will cause QEMU exit when virtqueue_map_sg is called
+> in QEMU because an invalid GPA is passed by virtqueue.
 > 
-> Here is the current breakdown of pending patches by branch:
+> Two solutions are discussed here:
+> http://lkml.indiana.edu/hypermail/linux/kernel/1207.3/00675.html
 > 
-> master: (patches headed for 3.6-rc-fixes)
+> Finally, value assignment approach was adopted because:
 > 
-> 5b7517f8 tcm_vhost: Change vhost_scsi_target->vhost_wwpn to char *
-> d0e27c88 target: fix NULL pointer dereference bug alloc_page() fails to get memory
-> 1fa8f450 tcm_fc: Avoid debug overhead when not debugging
-> 101998f6 tcm_vhost: Post-merge review changes requested by MST
-> f0e0e9bb tcm_vhost: Fix incorrect IS_ERR() usage in vhost_scsi_map_iov_to_sgl
+> Value assignment creates a well-formed scatterlist, because the termination 
+> marker in source sg_list has been set in blk_rq_map_sg(). The last entry of the
+> source sg_list is just copied to the the last entry in destination list.  Note 
+> that, for now, virtio_ring does not care about the form of the scatterlist and 
+> simply processes the first out_num + in_num consecutive elements of the sg[] 
+> array.
 > 
+> I have tested the patch on my workstation. QEMU would not crash any more.
+> 
+> Cc: <stable@vger.kernel.org> # 3.4: 4fe74b1: [SCSI] virtio-scsi: SCSI driver
+> Signed-off-by: Wang Sen <senwang@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/virtio_scsi.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index 1b38431..6661610 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -198,7 +198,7 @@ static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
+>  	int i;
+> 
+>  	for_each_sg(table->sgl, sg_elem, table->nents, i)
+> -		sg_set_buf(&sg[idx++], sg_virt(sg_elem), sg_elem->length);
+> +		sg[idx++] = *sg_elem;
+> 
+>  	*p_idx = idx;
+>  }
+> -- 
+> 1.7.9.5
 
-Whoops..  Missed one extra target/pscsi regression bug-fix reported
-recently by Alex Elsayed (CC'ed) that has just been pushed into master
-here:
+Paolo has acked and no further issues have been raised.
 
-target/pscsi: Fix bug with REPORT_LUNs handling for SCSI passthrough
-http://git.kernel.org/?p=linux/kernel/git/nab/target-pending.git;a=commitdiff;h=1d2a2cd95ee0137a2353d1b5635739c281f27cd4
+James: Can this be merged?
 
-Alex-E, you where able to get TYPE_ROM passthrough w/ pSCSI export
-working on your setup with this patch, yes..?
-
-Thanks!
-
---nab
+Stefan
