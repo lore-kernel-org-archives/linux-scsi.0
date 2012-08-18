@@ -1,26 +1,37 @@
-From: sonia <sonialife2@yahoo.com>
-Subject: hii
-Date: Sat, 18 Aug 2012 15:33:22 +0200 (CEST)
-Message-ID: <11103526.7711651345296802125.JavaMail.defaultUser__31821.9840330586$1345296846$gmane$org@defaultHost>
-Reply-To: sonia <sonialife2@yahoo.com>
+From: Fengguang Wu <fengguang.wu@intel.com>
+Subject: drivers/scsi/ipr.c:8448:2-19: alloc with no test
+Date: Sat, 18 Aug 2012 21:46:13 +0800
+Message-ID: <20120818134613.GA11000@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outrelay02.libero.it ([212.52.84.102]:52112 "EHLO
-	outrelay02.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755406Ab2HRNdY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Aug 2012 09:33:24 -0400
+Received: from mga01.intel.com ([192.55.52.88]:28167 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755509Ab2HRNqU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Aug 2012 09:46:20 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sonialife2@yahoo.com
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: kernel-janitors@vger.kernel.org, Wayne Boyer <wayneb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-Hello my dear
- How was your living life today i hope all is well, am Sonia by name i just
-went into your profile at this site  linux-archive.org  and saw how you have 
-pest
-your explanation over it i feel to know who your are so that we can shear one
-thing or the
-other from there i can send you my photo you can know who am ok . i am waiting
-for your reply yours Sonia
+Hi Brian,
 
+FYI, coccinelle warns about
+
+  drivers/scsi/ipr.c:8448:2-19: alloc with no test, possible model on line 8457
+
+vi +8448 drivers/scsi/ipr.c
+
+  8443         if (ioa_cfg->sis64) {
+  8444                 ioa_cfg->target_ids = kzalloc(sizeof(unsigned long) *
+  8445                                               BITS_TO_LONGS(ioa_cfg->max_devs_supported), GFP_KERNEL);
+  8446                 ioa_cfg->array_ids = kzalloc(sizeof(unsigned long) *
+  8447                                              BITS_TO_LONGS(ioa_cfg->max_devs_supported), GFP_KERNEL);
+> 8448                 ioa_cfg->vset_ids = kzalloc(sizeof(unsigned long) *
+  8449                                             BITS_TO_LONGS(ioa_cfg->max_devs_supported), GFP_KERNEL);
+  8450         }
+  8451   
+
+Thanks,
+Fengguang
