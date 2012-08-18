@@ -1,44 +1,36 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch 1/2]block: handle merged discard request
-Date: Fri, 17 Aug 2012 23:47:13 -0400
-Message-ID: <yq1wr0weu9q.fsf@sermon.lab.mkp.net>
-References: <20120316073213.656519005@fusionio.com>
-	<20120316073512.485027511@fusionio.com>
-	<20120320162157.GE17071@redhat.com>
-	<CANejiEWecb58G--=mwez+A4Ra6nJ0qOHGMcJA-nOGH=jmGA3qQ@mail.gmail.com>
-	<4F69C62C.7020604@kernel.org> <yq18vitwejt.fsf@sermon.lab.mkp.net>
-	<CANejiEX26=jqijgTwb0iLMw7WC7byF1o+whwp3K5CcY5_a8o8w@mail.gmail.com>
-	<yq1zkb9uz1t.fsf@sermon.lab.mkp.net>
-	<20120620085724.GA26295@infradead.org>
-	<yq1fw9o3t5b.fsf@sermon.lab.mkp.net>
-	<CAMM=eLcBMrOfhJZU2GsSnMXkmWZMemJcvTM6WPLiiXkysXHYiQ@mail.gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] bnx2fc: zero out sense buffer properly
+Date: Sat, 18 Aug 2012 11:46:37 +0300
+Message-ID: <20120818084637.GA30592@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:43752 "EHLO
+Received: from rcsinet15.oracle.com ([148.87.113.117]:31657 "EHLO
 	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754141Ab2HRDre (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Aug 2012 23:47:34 -0400
-In-Reply-To: <CAMM=eLcBMrOfhJZU2GsSnMXkmWZMemJcvTM6WPLiiXkysXHYiQ@mail.gmail.com>
-	(Mike Snitzer's message of "Fri, 17 Aug 2012 23:06:16 -0400")
+	with ESMTP id S1751489Ab2HRIrH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Aug 2012 04:47:07 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Shaohua Li <shli@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, axboe@kernel.dk, linux-kernel@vger.kernel.org, neilb@suse.de, linux-scsi@vger.kernel.org
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
->>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
+->sense_buffer used to be an array but it changed to pointer in
+de25deb180 "[SCSI] use dynamically allocated sense buffer".  This call
+to memset() needs to be updated as well.
 
-Mike> Could be I've wasted a few hours by rebasing these patches...
-Mike> regardless, it would be great if you could share what your plans
-Mike> are.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Heh, I worked on syncing my patch queue up to Jens' and James' trees
-this afternoon. But I didn't quite finish the block stuff, mainly due to
-some conflicts with a few topology changes I also have pending.
-
-I'll take a look at your series. Maybe I'll swap things around and put
-the topology changes on top instead of below. Leverage some of the work
-you did...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 73f231c..8d4626c 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1807,7 +1807,7 @@ static void bnx2fc_parse_fcp_rsp(struct bnx2fc_cmd *io_req,
+ 			fcp_sns_len = SCSI_SENSE_BUFFERSIZE;
+ 		}
+ 
+-		memset(sc_cmd->sense_buffer, 0, sizeof(sc_cmd->sense_buffer));
++		memset(sc_cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 		if (fcp_sns_len)
+ 			memcpy(sc_cmd->sense_buffer, rq_data, fcp_sns_len);
+ 
