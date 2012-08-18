@@ -1,73 +1,206 @@
-From: "Jeff Mahoney" <jeffm@suse.com>
-Subject: Re: [PATCH RFC] increase ST_MAX_TAPES from 128 to 1024
-Date: Fri, 17 Aug 2012 15:35:43 -0600
-Message-ID: <502E64D50200007E000C44DA@novprvoes0310.provo.novell.com>
-References: <1345215024-5883-1-git-send-email-revers@redhat.com>
- <1345217873.2838.12.camel@dabdike.int.hansenpartnership.com>
- <502EB04D.2000007@redhat.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: Remove unused se_cmd.cmd_spdtl
+Date: Fri, 17 Aug 2012 17:16:39 -0700
+Message-ID: <1345248999.25161.254.camel@haakon2.linux-iscsi.org>
+References: <1345091092-4539-1-git-send-email-roland@kernel.org>
+	 <CAL1RGDVOdPCOv-frz6UkD9DKp_DW10MmWyWQA7CnyDeGqSQ6=Q@mail.gmail.com>
+	 <1345155175.25161.85.camel@haakon2.linux-iscsi.org>
+	 <502E21B5.9040400@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from novprvoes0310.provo.novell.com ([137.65.248.74]:48217 "EHLO
-	novprvoes0310.provo.novell.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757876Ab2HQVz7 convert rfc822-to-8bit
-	(ORCPT <rfc822;groupwise-linux-scsi@vger.kernel.org:5:1>);
-	Fri, 17 Aug 2012 17:55:59 -0400
-In-Reply-To: <502EB04D.2000007@redhat.com>
-Content-Disposition: inline
+Received: from mail.linux-iscsi.org ([67.23.28.174]:40507 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753673Ab2HRAQm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Aug 2012 20:16:42 -0400
+In-Reply-To: <502E21B5.9040400@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: revers@redhat.com
-Cc: James.Bottomley@HansenPartnership.com, Kai.Makisara@kolumbus.fi, Lee Duncan <LDuncan@suse.com>, linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Roland Dreier <roland@kernel.org>, target-devel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <mail@hannes-reinecke.de>, Andy Grover <agrover@redhat.com>
 
-The preallocation of cdevs is also addressed in my patch set. I'll send it out as soon as I'm at my notebook again.
+(CC'ing linux-scsi as per request by Boaz)
 
--Jeff
-
---
-Jeff Mahoney
-(apologies for the top post -- from my mobile)
-
-On Aug 17, 2012, at 4:58 PM, "Rob Evers <revers@redhat.com>" <revers@redhat.com> wrote:
-
-> On 08/17/2012 11:37 AM, James Bottomley wrote:
->> On Fri, 2012-08-17 at 10:50 -0400, Rob Evers wrote:
->>> Wondering if this would be an acceptable interim solution
->>> to increasing the limit on the number of tape drives
->>> while http://marc.info/?l=linux-scsi&m=134212042809524&w=2
->>> gets sorted out.
->>> 
->>> Signed-off-by: Rob Evers<revers@redhat.com>
->>> ---
->>>  drivers/scsi/st.h | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>> 
->>> diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
->>> index b548923..408d24f 100644
->>> --- a/drivers/scsi/st.h
->>> +++ b/drivers/scsi/st.h
->>> @@ -76,7 +76,7 @@ struct st_modedef {
->>>  #define ST_MODE_SHIFT (7 - ST_NBR_MODE_BITS)
->>>  #define ST_MODE_MASK ((ST_NBR_MODES - 1)<<  ST_MODE_SHIFT)
->>> 
->>> -#define ST_MAX_TAPES 128
->>> +#define ST_MAX_TAPES 1024
->> This is going to cause an order 2 GFP_ATOMIC allocation (on 64 bit
->> platforms) for the contiguous scsi_tapes array ... if large numbers of
->> tapes are genuinely required, shouldn't we fix this first and then
->> expand the number quite a bit more?
->> 
->> James
->> 
+On Fri, 2012-08-17 at 13:49 +0300, Boaz Harrosh wrote:
+> On 08/17/2012 01:12 AM, Nicholas A. Bellinger wrote:
 > 
-> Pre allocation of cdevs during init time needs addressing as well
-> to increase ST_MAX_TAPES quite a bit more, right?
-> 
-> Would leaving out Lee's sysfs updates out be ok, if ST_MAX_TAPES were
-> significantly increased?
-> 
-> Rob
+> > On Thu, 2012-08-16 at 09:24 -0700, Roland Dreier wrote:
+> >> Actually I'm not sure removing cmd_spdtl is the right answer.
+> >>
+> >> If /dev/sda is a device on an iSCSI initiator exported by an LIO
+> >> target, try doing:
+> >>
+> >> # sg_raw -r512 /dev/sda 28 0 0 0 0 0 0 0 2 0
+> >>
+> >> This issues a READ (10) for 2 sectors, but only sends a length of 512
+> >> at the transfer level.
+> >>
+> >> The target responds by setting the residual to 512 but transmits all
+> >> 1024 bytes, 
 > 
 > 
+> Is this the correct behavior from the Target? I would imagine that the
+> target needs to only send 512 bytes (transfer level size) and set the
+> OVERFLOW bit and residual to 512.
+> 
+
+So my proposed target patch below to keep the smaller cmd->data_length
+assignment for the SCSI overflow case in target_cmd_size_check() makes
+the target do the right thing here, which is:
+
+Transfer 512 bytes and set the OVERFLOW bit in se_cmd (to signal to the
+fabric to also set OVERFLOW bit) with a residual count of 512 bytes
+reported during the DATAIN sequence back across the wire..
+
+
+> Not that it really matter because as you stated below the Initiator makes
+> sure nothing bad happens.
+> 
+> BTW what target are we talking about, on the other side of the initiator
+> here? (There are two targets in this setup right?)
+> 
+
+This is on the final target side running TCM + fabric driver
+
+> >> and the Linux initiator at least rejects it because it
+> >> hits:
+> >>
+> >> 	if (tcp_task->data_offset + tcp_conn->in.datalen > total_in_length) {
+> >> 		ISCSI_DBG_TCP(conn, "data_offset(%d) + data_len(%d) > "
+> >> 			      "total_length_in(%d)\n", tcp_task->data_offset,
+> >> 			      tcp_conn->in.datalen, total_in_length);
+> >> 		return ISCSI_ERR_DATA_OFFSET;
+> >> 	}
+> >>
+> > 
+> > Ok, this is the 'overflow' case when the fabric ->data_length (expected
+> > data transfer length of the initiator's buffer) is smaller than the SCSI
+> > CDB allocation length or sectors*block_size (attempted transfer length)
+> > the target has been asked to process.
+> > 
+> > The following patch which appears to do the right thing from the
+> > perspective of the target for overflow, but AFAICT open-iscsi still
+> > returns GOOD status w/ no data-in payload (at least via sg_raw) when the
+> > iscsi-target is signaling overflow bit in iSCSI Data IN PDU.  Not sure
+> > yet why this is the case, but drivers/scsi/libiscsi.c:iscsi_data_in_rsp
+> > code:
+> > 
+> >        if (rhdr->flags & (ISCSI_FLAG_DATA_UNDERFLOW |
+> >                            ISCSI_FLAG_DATA_OVERFLOW)) {
+> >                 int res_count = be32_to_cpu(rhdr->residual_count);
+> > 
+> >                 if (res_count > 0 &&
+> >                     (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
+> >                      res_count <= scsi_in(sc)->length))
+> >                         scsi_in(sc)->resid = res_count;
+> >                 else
+> >                         sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
+> >         }
+> > 
+> 
+> 
+> OK I admit I kind of rearranged all this code a few years ago. Guilty ;-) 
+> 
+> Well now that I look at it again, I think it is totally wrong!!
+> The scsi and block layer do not know anything about CMD_OVERFLOW
+> If a scsi_in/out(sc)->resid is set it only ever means UNDERFLOW.
+> 
+> Both scsi and block expects to only do transfer_length - resid.
+> This is why you get empty buffer back because the transfer_length=512
+> minus resid=512 means zero bytes.
+> 
+> So the "|| ISCSI_FLAG_CMD_OVERFLOW" case is wrong.
+> 
+
+Mmmm, your're right..  I could have sworn at one point that open-iscsi
+returned DID_BAD_TARGET status for all OVERFLOW cases, and set the
+proper residual + completed scsi_cmnd for UNDERFLOW cases.
+
+Doing the reverse in the current code is definitely not correct.
+
+> Now the big question is what to do. Fail the all command, or say
+> nothing?
+> 
+> The correct thing is to teach the middle layers about overflow,
+> With some kind of warning level system.
+> I was also thinking that we can make resid signed and signal
+> an overflow with a negative resid. Now the math of
+> transfer_length - resid will become correct since it means
+> more, in the case above 512 - (-512) would be our 1024 CDB len.
+> 
+> For now this code must be fixed. And the command must fail.
+> Do you need that I prepare a patch? (Please you do it, I'm
+> swamped, it'll take me time)
+> There are 3 more places like this.
+> 
+
+Swamped here as well atm..  mnc/hannes, would you mind taking a look at
+a patch to address these bugs in open-iscsi..?  I'm happy to test them
+against target-pending to make sure we get these correct, and add them
+into scsi-testsuite for your own use.
+
+> BTW did you notice how in the code above we have mixed up the
+> use of: ISCSI_FLAG_DATA_OVERFLOW and ISCSI_FLAG_CMD_OVERFLOW?
+> That's another bug, here it should be ISCSI_FLAG_DATA_OVERFLOW
+> only. The other places with the other flags.
+> 
+
+<nod>
+
+> > appears to be setting resid for non bidi cases correctly, right..? (mnc
+> > + boaz CC'ed)
+> > 
+> > How about the following to ensure we restrict overflow to keep the
+> > existing (smaller) cmd->data_length assignment, and only re-assign this
+> > value for the underflow case..?  (hch CC'ed)
+> > 
+> > WDYT..?
+> > 
+> > diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> > index 0eaae23..63b3594 100644
+> > --- a/drivers/target/target_core_transport.c
+> > +++ b/drivers/target/target_core_transport.c
+> > @@ -1183,15 +1183,20 @@ int target_cmd_size_check(struct se_cmd *cmd, unsigned int size)
+> >                         /* Returns CHECK_CONDITION + INVALID_CDB_FIELD */
+> >                         goto out_invalid_cdb_field;
+> >                 }
+> > -
+> > +               /*
+> > +                * For the overflow case keep the existing fabric provided
+> > +                * ->data_length.  Otherwise for the underflow case, reset
+> > +                * ->data_length to the smaller SCSI expected data transfer
+> > +                * length.
+> > +                */
+> >                 if (size > cmd->data_length) {
+> 
+> 
+> I'm a bit out of context. Is this code exercised on the first target that is in
+> pass-through over the initiator. Or this code is at the other target at the other
+> side of the initiator? (The final real target)  
+> 
+
+Yes, the final real target.  ;)
+
+> Because if it's at the pass-through target then this test might or might not
+> be correct because we lost the overflow information by now. (Now if resid was
+> negative that would be another thing)
+> 
+> >                         cmd->se_cmd_flags |= SCF_OVERFLOW_BIT;
+> >                         cmd->residual_count = (size - cmd->data_length);
+> >                 } else {
+> >                         cmd->se_cmd_flags |= SCF_UNDERFLOW_BIT;
+> >                         cmd->residual_count = (cmd->data_length - size);
+> > +                       cmd->data_length = size;
+> >                 }
+> > -               cmd->data_length = size;
+> >         }
+> >  
+> >         return 0;
+> > 
+> 
+
+Thanks for your comments Boaz!
+
+--nab
 
