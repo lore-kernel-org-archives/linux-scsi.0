@@ -1,77 +1,84 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: Remove unused se_cmd.cmd_spdtl
-Date: Sat, 18 Aug 2012 15:18:51 -0700
-Message-ID: <1345328331.25161.355.camel@haakon2.linux-iscsi.org>
-References: <1345091092-4539-1-git-send-email-roland@kernel.org>
-	 <CAL1RGDVOdPCOv-frz6UkD9DKp_DW10MmWyWQA7CnyDeGqSQ6=Q@mail.gmail.com>
-	 <1345155175.25161.85.camel@haakon2.linux-iscsi.org>
-	 <CAG4TOxNfzdSKUcB0sEb_WnaBeOUOiSms0hkX3NiY6GShrvuXjA@mail.gmail.com>
-	 <1345251732.25161.284.camel@haakon2.linux-iscsi.org>
-	 <CAL1RGDUvs5iPhypq5aWuR15yrVvBuV-bbk1f_oWBfd=fiqsSQw@mail.gmail.com>
+Subject: Re: [GIT PULL] tcm_vhost: Initial merge of vhost level target
+	fabric driver
+Date: Sat, 18 Aug 2012 15:31:05 -0700
+Message-ID: <1345329065.25161.364.camel@haakon2.linux-iscsi.org>
+References: <1343697577.22538.661.camel@haakon2.linux-iscsi.org>
+	<20120818200432.GA26215@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAL1RGDUvs5iPhypq5aWuR15yrVvBuV-bbk1f_oWBfd=fiqsSQw@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: target-devel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <mail@hannes-reinecke.de>, Andy Grover <agrover@redhat.com>
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20120818200432.GA26215@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, kvm-devel <kvm@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, target-devel <target-devel@vger.kernel.org>, Anthony Liguori <anthony@codemonkey.ws>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2012-08-18 at 10:13 -0700, Roland Dreier wrote:
-> On Fri, Aug 17, 2012 at 6:02 PM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > No, or at least that is not what happens anymore with current target
-> > core + iscsi-target code..
-> >
-> > The se_cmd->data_length re-assignment here is what will be used by
-> > iscsi-target fabric code for all iSCSI descriptor related allocations
-> > +ransfer, instead of the original fabric 'expected transfer length' that
-> > declares the size of the SCSI initiator's available buffer at the other
-> > end.
+On Sat, 2012-08-18 at 23:04 +0300, Michael S. Tsirkin wrote:
+> Hi Nicholas,
+> I just noticed this problem in the interface:
 > 
-> Not sure I follow this.  Isn't cmd->data_length also what we use to
-> allocate the buffer used to store the data we're going to transfer?
+> +#include <linux/vhost.h>
+> +
+> +/*
+> + * Used by QEMU userspace to ensure a consistent vhost-scsi ABI.
+> + *
+> + * ABI Rev 0: July 2012 version starting point for v3.6-rc merge
+> candidate +
+> + *            RFC-v2 vhost-scsi userspace.  Add GET_ABI_VERSION ioctl
+> usage
+> + */
+> +
+> +#define VHOST_SCSI_ABI_VERSION 0
+> +
+> +struct vhost_scsi_target {
+> +       int abi_version;
+> +       unsigned char vhost_wwpn[TRANSPORT_IQN_LEN];
+> +       unsigned short vhost_tpgt;
+> +};
+> +
 > 
-
-se_cmd->data_length is initially set up by transport_init_se_cmd() based
-upon the fabric provided expected transfer length.  It then gets
-adjusted (before any allocations happen) based upon underflow..   So in
-the overflow case w/ the proposed patch, we want to keep the original
-se_cmd->data_length because it's smaller than the CDB provided
-allocation length.
-
-> I guess my example with READ(10) actually works, because
-> iblock_execute_rw() just uses the buffer allocated, rather than
-> paying attention to the sector count in the command.
+> Here TRANSPORT_IQN_LEN is 224, which is a multiple of 4.
+> Since vhost_tpgt is 2 bytes and abi_version is 4, the total size would
+> be 230.  But gcc needs struct size be aligned to first field size, which
+> is 4 bytes, so it pads the structure by extra 2 bytes to the total of
+> 232.
 > 
-
-Correct, this is true for all SCF_SCSI_DATA_CDB with virtual backends,
-they no longer look into the CDB.
-
-> But what if an initiator sends, say, REPORT LUNS or PR OUT
-> with an allocation length of 8192, but a transport-level length
-> of only 4096?  If the REPORT LUNS or PR OUT response is
-> bigger than 4096 bytes, we'll overflow the allocated buffer with
-> your patch, right?
+> This padding is very undesirable in an ABI:
+> - it can not be initialized easily
+> - it can not be checked easily
+> - it can leak information between kernel and userspace
 > 
 
-With virtual backends + TCM control CDB emulation, the emulation code
-should be using (the possibly adjusted) se_cmd->data_length as it's
-upper limit for building a response payload, and not the possibly
-overflowed allocation length it may extracted from the CDB.
+Hmmmm, yes.  Very good reasons to avoid ABI ambiguity  ..
 
-So as long as the control CDB emulation code is doing the right thing
-here by using se_cmd->data_length, we should be OK for the virtual
-backend cases.  (Need to audit this)
+> Simplest solution is probably just to make the padding
+> explicit:
+> 
+> +struct vhost_scsi_target {
+> +       int abi_version;
+> +       unsigned char vhost_wwpn[TRANSPORT_IQN_LEN];
+> +       unsigned short vhost_tpgt;
+> +       unsigned short reserved;
+> +};
+> +
+> 
+> I think we should fix this buglet before it goes out to users.
+> 
 
-Now for pSCSI that may not be the case because we do expect underlying
-layers to look into the CDB at some point, but currently we are passing
-in SGLs based from the adjusted se_cmd->data_length, so this might end
-up causing a problem in SCSI..  (Need to test this)
+<nod>, fixing this up in target-pending/master now w/ your reported-by
++signoff, and will change vhost-scsi's copy of these defs for next
+week's RFC-v3 posting.
 
-Otherwise, I'm tempted to just reject all CDB overflow cases for pSCSI
-backends, as every host SCSI stack I've seen in practice only ends up
-generating underflow cases for control CDBs anyways..
+Thanks MST!
 
 --nab
