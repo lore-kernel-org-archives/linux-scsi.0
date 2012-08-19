@@ -1,84 +1,159 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] tcm_vhost: Initial merge of vhost level target
-	fabric driver
-Date: Sat, 18 Aug 2012 15:31:05 -0700
-Message-ID: <1345329065.25161.364.camel@haakon2.linux-iscsi.org>
-References: <1343697577.22538.661.camel@haakon2.linux-iscsi.org>
-	<20120818200432.GA26215@redhat.com>
+From: Rich <rercola@pha.jhu.edu>
+Subject: Re: Odd behavior of a "SAS-2" backplane with SGPIO commands
+Date: Sat, 18 Aug 2012 20:10:27 -0400
+Message-ID: <CAOeNLuob_oq3HBV1w3W64hT4c1qSjE9xsm0_Az3+KTHnEN3QbQ@mail.gmail.com>
+References: <CAOeNLuruup-22wAFgR0b+cPc0nCf_jUm0teDHB7DLnRmcHtTog@mail.gmail.com>
+	<20120818235247.GO19851@reaktio.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20120818200432.GA26215@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, kvm-devel <kvm@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, Zhi Yong Wu <wuzhy@cn.ibm.com>, target-devel <target-devel@vger.kernel.org>, Anthony Liguori <anthony@codemonkey.ws>, Paolo Bonzini <pbonzini@redhat.com>, lf-virt <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:61470 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759Ab2HSAK3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Aug 2012 20:10:29 -0400
+Received: by wgbdr13 with SMTP id dr13so4364073wgb.1
+        for <linux-scsi@vger.kernel.org>; Sat, 18 Aug 2012 17:10:27 -0700 (PDT)
+In-Reply-To: <20120818235247.GO19851@reaktio.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 2012-08-18 at 23:04 +0300, Michael S. Tsirkin wrote:
-> Hi Nicholas,
-> I just noticed this problem in the interface:
-> 
-> +#include <linux/vhost.h>
-> +
-> +/*
-> + * Used by QEMU userspace to ensure a consistent vhost-scsi ABI.
-> + *
-> + * ABI Rev 0: July 2012 version starting point for v3.6-rc merge
-> candidate +
-> + *            RFC-v2 vhost-scsi userspace.  Add GET_ABI_VERSION ioctl
-> usage
-> + */
-> +
-> +#define VHOST_SCSI_ABI_VERSION 0
-> +
-> +struct vhost_scsi_target {
-> +       int abi_version;
-> +       unsigned char vhost_wwpn[TRANSPORT_IQN_LEN];
-> +       unsigned short vhost_tpgt;
-> +};
-> +
-> 
-> Here TRANSPORT_IQN_LEN is 224, which is a multiple of 4.
-> Since vhost_tpgt is 2 bytes and abi_version is 4, the total size would
-> be 230.  But gcc needs struct size be aligned to first field size, which
-> is 4 bytes, so it pads the structure by extra 2 bytes to the total of
-> 232.
-> 
-> This padding is very undesirable in an ABI:
-> - it can not be initialized easily
-> - it can not be checked easily
-> - it can leak information between kernel and userspace
-> 
+I actually have a lot of information I can share about this since I
+wrote this email.
 
-Hmmmm, yes.  Very good reasons to avoid ABI ambiguity  ..
+To be brief, the sas2ircu toolset works perfectly fine with IT mode
+HBAs - just not with passive backplanes AFAICS [e.g. the 846A, versus
+the 846EL2].
 
-> Simplest solution is probably just to make the padding
-> explicit:
-> 
-> +struct vhost_scsi_target {
-> +       int abi_version;
-> +       unsigned char vhost_wwpn[TRANSPORT_IQN_LEN];
-> +       unsigned short vhost_tpgt;
-> +       unsigned short reserved;
-> +};
-> +
-> 
-> I think we should fix this buglet before it goes out to users.
-> 
+Also, the bug I'm experiencing is not present with the SAS2308
+generation of the HBAs (the 9217 and friends) at the same F/W version
+as the 9211, so this may be a bug - on the controller chip, driver, or
+HBA firmware.
 
-<nod>, fixing this up in target-pending/master now w/ your reported-by
-+signoff, and will change vhost-scsi's copy of these defs for next
-week's RFC-v3 posting.
+- Rich
 
-Thanks MST!
-
---nab
+On Sat, Aug 18, 2012 at 7:52 PM, Pasi K=C3=A4rkk=C3=A4inen <pasik@iki.f=
+i> wrote:
+> On Tue, Jul 03, 2012 at 09:54:58PM -0400, Rich wrote:
+>> [My apologies if this is the wrong mailing list for this, but it
+>> seemed to be the most relevant. Please direct me elsewhere and disca=
+rd
+>> if this is OT.]
+>>
+>
+> This is a perfectly fine list, hopefully :)
+>
+>> Hi all,
+>>
+>
+> Hello,
+>
+>> I've been beating my head against SGPIO for a bit now, and I can't
+>> tell if I'm just misreading SFF-8485, or this backplane is just not
+>> doing something sane.
+>>
+>
+> I've been struggling with SGPIO LED control aswell!
+>
+>> I have here a Supermicro X8DAH-F+ with a backplane of model
+>> BPN-SAS-836A - which means it has 3 MG9072 controller chips on it.
+>> Supports speaking in-band or out-of-band to read data, control light=
+s,
+>> &c.
+>>
+>> With two LSI 9201-16i HBA attached, manipulating it via
+>> /dev/bsg/sas_hostN and smp_utils 0.97, SFF-8485 section 8.4.4 seems =
+to
+>> think that changing this:
+>>  00     41 02 00 00 a0 a0 a0 a0  a0 a0 a0 a0 a0 a0 a0 a0
+>>  10     a0 a0 a0 a0 00 00 00 00  00 00 00 00 00 00 00 00
+>>  20     00 00 00 00
+>>
+>> By doing this:
+>> # smp_write_gpio -d a1,a0,a0,a0 -t 3 -i 0 -c /dev/bsg/sas_hostN
+>>
+>> Resulting in:
+>>  00     41 02 00 00 a1 a0 a0 a0  a0 a0 a0 a0 a0 a0 a0 a0
+>>  10     a0 a0 a0 a0 00 00 00 00  00 00 00 00 00 00 00 00
+>>  20     00 00 00 00
+>>
+>> Should enable a single drive's fault LED (drive m+3, by spec above).
+>>
+>
+> Wow, I've been trying to figure out how to control SGPIO from Linux,
+> and for some reason I didn't find anything about smp_write_gpio earli=
+er.
+>
+> I need to try that. Thanks a lot for this information! :)
+>
+> (earlier I tried getting LSI sas2ircu to do something clever
+> with the LEDS but that didn't work at all - I guess LSI only supports
+> SGPIO LED control in IR mode - not IT mode).
+>
+>
+>> In practice, I am in possession of ~90 identical machines, and on
+>> every single one, this controls the fault LED on 3 drives - I have 3
+>> SAS ports wired to the backplane (via iPASS cable) per HBA, so I wou=
+ld
+>> suspect the HBA of setting bit m+3 on each SAS port [and having each
+>> of its three ports running to an input controlled by a different SGP=
+IO
+>> controller on the backplane]. No permutation of the register bits
+>> beyond the 4 bytes at index 0 changes the behavior of the LEDs that =
+I
+>> can see, and the output in the beginning [a0 a0 ... 00 00 00 00] is
+>> what is returned on clean cold boot of the machine.
+>>
+>> In contrast, when I have an LSI 9240-8i attached, I can control
+>> per-drive LEDs, though the mechanism it uses for this is opaque to m=
+e
+>> (the megaraid_sas driver doesn't expose a virtual SAS host port like
+>> mpt2sas, so I am manipulating this using LSI's closed-source MegaCli
+>> blob); so I know it is possible, through some method, to control
+>> per-drive LEDs.
+>>
+>> I cannot tell, however, whether I am using smp_write_gpio incorrectl=
+y
+>> (either by misreading the spec or somehow abusing the virtual SAS
+>> port), or it's a bug somewhere (be it in smp_write_gpio, the kernel,
+>> the HBA firmware, or the upstream MG9072's firmware, that is somehow
+>> magically avoided by the 9240-8i), and there is almost no public
+>> documentation of people using smp_write_gpio.
+>>
+>> I've tried this with kernel 2.6.32-220.7.1.el6, 3.4.4, and 3.5.0-rc5
+>> (the last because it includes mpt2sas 13.XX.XX.XX, while 3.4.4 has
+>> 12.XX.XX.XX, and I was curious if anything had changed), and smp_uti=
+ls
+>> 0.97.
+>>
+>> I wanted to see what the register state was when the 9240-8i was in
+>> use, but I couldn't coax the megaraid_sas driver into disgorging thi=
+s
+>> information, and upon unplugging the iPASS cable from the backplane =
+to
+>> connect it to the HBA, the backplane appears to reset its internal
+>> state; the LEDs cease blinking in any pattern, and consequent queryi=
+ng
+>> with the HBA returns expected default initial state.
+>>
+>> Am I insane, or is this backplane crazy? Does anyone have any
+>> experience with cajoling such things into submission?
+>>
+>
+> Hmm, I have some servers with LSI 9211-8i SAS2 HBAs (mpt2sas driver)
+> and Supermicro BPN-SAS-846A backplanes, which have 3x MG9072 chips in=
+ them.
+>
+> I'll let you know how that stuff works for me!
+>
+> Thanks,
+>
+> -- Pasi
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
