@@ -1,64 +1,50 @@
-From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [SCSI] mpt2sas T10 DIF fixes
-Date: Sun, 19 Aug 2012 18:30:04 +0300
-Message-ID: <20120819153004.GU19851@reaktio.net>
+Date: Sun, 19 Aug 2012 12:38:43 -0400
+Message-ID: <yq1628eet0s.fsf@sermon.lab.mkp.net>
 References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
- <50237151.9000801@suse.com>
- <yq1lihdh5jc.fsf@sermon.lab.mkp.net>
- <20120819144932.GT19851@reaktio.net>
- <yq1ehn2ewpq.fsf@sermon.lab.mkp.net>
+	<50237151.9000801@suse.com> <yq1lihdh5jc.fsf@sermon.lab.mkp.net>
+	<20120819144932.GT19851@reaktio.net>
+	<yq1ehn2ewpq.fsf@sermon.lab.mkp.net>
+	<20120819153004.GU19851@reaktio.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.tele.fi ([192.89.123.25]:35672 "EHLO smtp.tele.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753727Ab2HSPaI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Aug 2012 11:30:08 -0400
-Content-Disposition: inline
-In-Reply-To: <yq1ehn2ewpq.fsf@sermon.lab.mkp.net>
+Received: from acsinet15.oracle.com ([141.146.126.227]:44770 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754467Ab2HSQkJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Aug 2012 12:40:09 -0400
+In-Reply-To: <20120819153004.GU19851@reaktio.net> ("Pasi =?utf-8?Q?K=C3=A4?=
+ =?utf-8?Q?rkk=C3=A4inen=22's?= message
+	of "Sun, 19 Aug 2012 18:30:04 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Ankit Jain <jankit@suse.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Eric.Moore@lsi.com
+To: Pasi =?utf-8?B?S8Okcmtrw6RpbmVu?= <pasik@iki.fi>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ankit Jain <jankit@suse.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Eric.Moore@lsi.com
 
-On Sun, Aug 19, 2012 at 11:18:57AM -0400, Martin K. Petersen wrote:
-> >>>>> "Pasi" =3D=3D Pasi K=E4rkk=E4inen <pasik@iki.fi> writes:
->=20
-> Pasi> Btw do you know which LSI mpt2sas HBAs support T10 DIF stuff?
-> Pasi> (using 520 or 528 bytes/sector drives with checkums).
->=20
-> Pasi> LSI SAS2008 based? SAS2308 based?
->=20
-> SAS2008 and beyond.
->
+>>>>> "Pasi" =3D=3D Pasi K=C3=A4rkk=C3=A4inen <pasik@iki.fi> writes:
 
-Ok, good.
+Pasi> So physically the disk is using 520 bytes/sector (and needs to
+Pasi> support that), but logically the HBA presents 512 bytes/sector +
+Pasi> PI.. is that correct?
 
-> 512-byte logical blocks + 8 bytes of PI.=20
->
+Yep. The beauty of PI is that we can store the extra stuff without
+having to deal with weird block sizes.
 
-So physically the disk is using 520 bytes/sector (and needs to support =
-that),
-but logically the HBA presents 512 bytes/sector + PI.. is that correct?=
-=20
 
-I guess what I'm asking is: Can I use sg_format to enable checksums/pro=
-tection
-on any disk that physically supports 520 bytes/sector,
-or does the disk need to have special T10 data protection support aswel=
-l?=20
+Pasi> I guess what I'm asking is: Can I use sg_format to enable
+Pasi> checksums/protection on any disk that physically supports 520
+Pasi> bytes/sector, or does the disk need to have special T10 data
+Pasi> protection support aswell?
 
-> Linux does not support logical block sizes that are not powers of two=
+The disk needs to support T10 PI (PROTECT=3D1 in the Standard Inquiry V=
+PD
+page). We don't support driving the HBA in PI mode with a non-PI target=
 =2E
->=20
 
-Yep.
-
-Thanks,
-
--- Pasi
-
+--=20
+Martin K. Petersen	Oracle Linux Engineering
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
