@@ -1,48 +1,291 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH v2 4/7] be2iscsi: Format the MAC_ADDR with sysfs_format_mac.
-Date: Mon, 20 Aug 2012 23:00:31 +0530
-Message-ID: <3968ed7b-1958-4849-b34d-4befdec570b0@exht1.ad.emulex.com>
+Subject: [PATCH v2 5/7] be2iscsi: Add support for configuring the VLAN on the adapter.
+Date: Mon, 20 Aug 2012 23:00:43 +0530
+Message-ID: <aed357ae-8b3e-41c8-8595-02efa966927e@exht1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:21660 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753502Ab2HTRbc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Aug 2012 13:31:32 -0400
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:41639 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754138Ab2HTRbm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Aug 2012 13:31:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- The MAC_ADDR stored in driver private structure is of
- unsigned char data type but strlcpy parameters is of
- signed char data type. This conversion of data types
- lead to change in the value.This changed value is passed
- to the upper layer and junk characters were displayed
- when "iscsiadm -m iface" command was run.
-
- In case of iSCSI boot, since the the MAC_ADDR was coming
- junk the boot was also not working
+ Add support for configuring the VLAN parameters on the adapter
+ using the iscsiadm interface.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c  |   42 +++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_cmds.h  |    9 ++++
+ drivers/scsi/be2iscsi/be_iscsi.c |   76 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_mgmt.c  |   46 +++++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_mgmt.h  |    4 ++
+ 5 files changed, 177 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index d0058e3..07d2cb1 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -934,3 +934,45 @@ int beiscsi_cmd_reset_function(struct beiscsi_hba  *phba)
+ 	spin_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
++
++/**
++ * be_cmd_set_vlan()- Configure VLAN paramters on the adapter
++ * @phba: device priv structure instance
++ * @vlan_tag: TAG to be set
++ *
++ * Set the VLAN_TAG for the adapter or Disable VLAN on adapter
++ *
++ * returns
++ *	TAG for the MBX Cmd
++ * **/
++int be_cmd_set_vlan(struct beiscsi_hba *phba,
++		     uint16_t vlan_tag)
++{
++	unsigned int tag = 0;
++	struct be_mcc_wrb *wrb;
++	struct be_cmd_set_vlan_req *req;
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++
++	spin_lock(&ctrl->mbox_lock);
++	tag = alloc_mcc_tag(phba);
++	if (!tag) {
++		spin_unlock(&ctrl->mbox_lock);
++		return tag;
++	}
++
++	wrb = wrb_from_mccq(phba);
++	req = embedded_payload(wrb);
++	wrb->tag0 |= tag;
++	be_wrb_hdr_prepare(wrb, sizeof(*wrb), true, 0);
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
++			   OPCODE_COMMON_ISCSI_NTWK_SET_VLAN,
++			   sizeof(*req));
++
++	req->interface_hndl = phba->interface_handle;
++	req->vlan_priority = vlan_tag;
++
++	be_mcc_notify(phba);
++	spin_unlock(&ctrl->mbox_lock);
++
++	return tag;
++}
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 953c354..2c8f98d 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -449,6 +449,12 @@ struct be_cmd_get_def_gateway_resp {
+ 	struct ip_addr_format ip_addr;
+ } __packed;
+ 
++#define BEISCSI_VLAN_DISABLE	0xFFFF
++struct be_cmd_set_vlan_req {
++	struct be_cmd_req_hdr hdr;
++	u32 interface_hndl;
++	u32 vlan_priority;
++} __packed;
+ /******************** Create CQ ***************************/
+ /**
+  * Pseudo amap definition in which each bit of the actual structure is defined
+@@ -688,6 +694,9 @@ int be_cmd_wrbq_create(struct be_ctrl_info *ctrl, struct be_dma_mem *q_mem,
+ 
+ bool is_link_state_evt(u32 trailer);
+ 
++/* Configuration Functions */
++int be_cmd_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag);
++
+ struct be_default_pdu_context {
+ 	u32 dw[4];
+ } __packed;
 diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 41b1fb7..8efdd8e 100644
+index 8efdd8e..ebb6c1f 100644
 --- a/drivers/scsi/be2iscsi/be_iscsi.c
 +++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -792,7 +792,7 @@ int beiscsi_get_macaddr(char *buf, struct beiscsi_hba *phba)
- 	int rc;
+@@ -332,6 +332,51 @@ beiscsi_set_static_ip(struct Scsi_Host *shost,
+ 	return ret;
+ }
  
- 	if (strlen(phba->mac_address))
--		return strlcpy(buf, phba->mac_address, PAGE_SIZE);
-+		return sysfs_format_mac(buf, phba->mac_address, ETH_ALEN);
++/**
++ * beiscsi_set_vlan_tag()- Set the VLAN TAG
++ * @shost: Scsi Host for the driver instance
++ * @iface_param: Interface paramters
++ *
++ * Set the VLAN TAG for the adapter or disable
++ * the VLAN config
++ *
++ * returns
++ *	Success: 0
++ *	Failure: Non-Zero Value
++ **/
++static int
++beiscsi_set_vlan_tag(struct Scsi_Host *shost,
++		      struct iscsi_iface_param_info *iface_param)
++{
++	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++	int ret = 0;
++
++	/* Get the Interface Handle */
++	if (mgmt_get_all_if_id(phba)) {
++		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
++			    "BS_%d : Getting Interface Handle Failed\n");
++		return -EIO;
++	}
++
++	switch (iface_param->param) {
++	case ISCSI_NET_PARAM_VLAN_ENABLED:
++		if (iface_param->value[0] != ISCSI_VLAN_ENABLE)
++			ret = mgmt_set_vlan(phba, BEISCSI_VLAN_DISABLE);
++		break;
++	case ISCSI_NET_PARAM_VLAN_TAG:
++		ret = mgmt_set_vlan(phba,
++				    *((uint16_t *)iface_param->value));
++		break;
++	default:
++		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
++			    "BS_%d : Unkown Param Type : %d\n",
++			    iface_param->param);
++		return -ENOSYS;
++	}
++	return ret;
++}
++
++
+ static int
+ beiscsi_set_ipv4(struct Scsi_Host *shost,
+ 		struct iscsi_iface_param_info *iface_param,
+@@ -368,6 +413,10 @@ beiscsi_set_ipv4(struct Scsi_Host *shost,
+ 		ret = beiscsi_set_static_ip(shost, iface_param,
+ 					    data, dt_len);
+ 		break;
++	case ISCSI_NET_PARAM_VLAN_ENABLED:
++	case ISCSI_NET_PARAM_VLAN_TAG:
++		ret = beiscsi_set_vlan_tag(shost, iface_param);
++		break;
+ 	default:
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+ 			    "BS_%d : Param %d not supported\n",
+@@ -489,6 +538,27 @@ static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
+ 	case ISCSI_NET_PARAM_IPV4_SUBNET:
+ 		len = sprintf(buf, "%pI4\n", &if_info.ip_addr.subnet_mask);
+ 		break;
++	case ISCSI_NET_PARAM_VLAN_ENABLED:
++		len = sprintf(buf, "%s\n",
++			     (if_info.vlan_priority == BEISCSI_VLAN_DISABLE)
++			     ? "Disabled" : "Enabled");
++		break;
++	case ISCSI_NET_PARAM_VLAN_ID:
++		if (if_info.vlan_priority == BEISCSI_VLAN_DISABLE)
++			return -EINVAL;
++		else
++			len = sprintf(buf, "%d\n",
++				     (if_info.vlan_priority &
++				     ISCSI_MAX_VLAN_ID));
++		break;
++	case ISCSI_NET_PARAM_VLAN_PRIORITY:
++		if (if_info.vlan_priority == BEISCSI_VLAN_DISABLE)
++			return -EINVAL;
++		else
++			len = sprintf(buf, "%d\n",
++				     ((if_info.vlan_priority >> 13) &
++				     ISCSI_MAX_VLAN_PRIORITY));
++		break;
+ 	default:
+ 		WARN_ON(1);
+ 	}
+@@ -510,6 +580,9 @@ int be2iscsi_iface_get_param(struct iscsi_iface *iface,
+ 	case ISCSI_NET_PARAM_IPV4_SUBNET:
+ 	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
+ 	case ISCSI_NET_PARAM_IPV6_ADDR:
++	case ISCSI_NET_PARAM_VLAN_ENABLED:
++	case ISCSI_NET_PARAM_VLAN_ID:
++	case ISCSI_NET_PARAM_VLAN_PRIORITY:
+ 		len = be2iscsi_get_if_param(phba, iface, param, buf);
+ 		break;
+ 	case ISCSI_NET_PARAM_IFACE_ENABLE:
+@@ -1233,6 +1306,9 @@ umode_t be2iscsi_attr_is_visible(int param_type, int param)
+ 		case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
+ 		case ISCSI_NET_PARAM_IPV4_GW:
+ 		case ISCSI_NET_PARAM_IPV6_ADDR:
++		case ISCSI_NET_PARAM_VLAN_ID:
++		case ISCSI_NET_PARAM_VLAN_PRIORITY:
++		case ISCSI_NET_PARAM_VLAN_ENABLED:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 3dca332..aab5dd3 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1090,3 +1090,49 @@ int be_mgmt_get_boot_shandle(struct beiscsi_hba *phba,
+ 		    "BG_%d : Login to Boot Target Failed\n");
+ 	return -ENXIO;
+ }
++
++/**
++ * mgmt_set_vlan()- Issue and wait for CMD completion
++ * @phba: device private structure instance
++ * @vlan_tag: VLAN tag
++ *
++ * Issue the MBX Cmd and wait for the completion of the
++ * command.
++ *
++ * returns
++ *	Success: 0
++ *	Failure: Non-Xero Value
++ **/
++int mgmt_set_vlan(struct beiscsi_hba *phba,
++		   uint16_t vlan_tag)
++{
++	unsigned int tag, wrb_num;
++	unsigned short status, extd_status;
++
++	tag = be_cmd_set_vlan(phba, vlan_tag);
++	if (!tag) {
++		beiscsi_log(phba, KERN_ERR,
++			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
++			    "BG_%d : VLAN Setting Failed\n");
++		return -EBUSY;
++	} else
++		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
++					 phba->ctrl.mcc_numtag[tag]);
++
++	wrb_num = (phba->ctrl.mcc_numtag[tag] & 0x00FF0000) >> 16;
++	extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
++	status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
++
++	if (status || extd_status) {
++		beiscsi_log(phba, KERN_ERR,
++			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
++			    "BS_%d : status : %d extd_status : %d\n",
++			    status, extd_status);
++
++		free_mcc_tag(&phba->ctrl, tag);
++		return -EAGAIN;
++	}
++
++	free_mcc_tag(&phba->ctrl, tag);
++	return 0;
++}
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index 63b8e81..1bbac5c 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -296,4 +296,8 @@ int mgmt_set_gateway(struct beiscsi_hba *phba,
  
- 	memset(&resp, 0, sizeof(resp));
- 	rc = mgmt_get_nic_conf(phba, &resp);
+ int be_mgmt_get_boot_shandle(struct beiscsi_hba *phba,
+ 			      unsigned int *s_handle);
++
++unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba);
++
++int mgmt_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag);
+ #endif
 -- 
 1.7.1
 
