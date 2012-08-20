@@ -1,72 +1,42 @@
-From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
-Subject: Re: [SCSI] mpt2sas T10 DIF fixes
-Date: Mon, 20 Aug 2012 14:06:56 +0300
-Message-ID: <20120820110656.GX19851@reaktio.net>
-References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
- <50237151.9000801@suse.com>
- <yq1lihdh5jc.fsf@sermon.lab.mkp.net>
- <20120819144932.GT19851@reaktio.net>
- <yq1ehn2ewpq.fsf@sermon.lab.mkp.net>
- <20120819153004.GU19851@reaktio.net>
- <yq1628eet0s.fsf@sermon.lab.mkp.net>
- <20120820104818.GW19851@reaktio.net>
+From: joystick <joystick@shiftmail.org>
+Subject: Using SCSI timeouts in place of ERC
+Date: Mon, 20 Aug 2012 13:37:00 +0200
+Message-ID: <5032215C.9080105@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; format=flowed; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.tele.fi ([192.89.123.25]:48824 "EHLO smtp.tele.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751256Ab2HTLHA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Aug 2012 07:07:00 -0400
-Content-Disposition: inline
-In-Reply-To: <20120820104818.GW19851@reaktio.net>
+Received: from blade3.isti.cnr.it ([194.119.192.19]:2577 "EHLO
+	blade3.isti.cnr.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752100Ab2HTLgQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Aug 2012 07:36:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Ankit Jain <jankit@suse.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Eric.Moore@lsi.com
+To: linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Aug 20, 2012 at 01:48:19PM +0300, Pasi K=E4rkk=E4inen wrote:
-> On Sun, Aug 19, 2012 at 12:38:43PM -0400, Martin K. Petersen wrote:
-> > >>>>> "Pasi" =3D=3D Pasi K=E4rkk=E4inen <pasik@iki.fi> writes:
-> >=20
-> > Pasi> So physically the disk is using 520 bytes/sector (and needs t=
-o
-> > Pasi> support that), but logically the HBA presents 512 bytes/secto=
-r +
-> > Pasi> PI.. is that correct?
-> >=20
-> > Yep. The beauty of PI is that we can store the extra stuff without
-> > having to deal with weird block sizes.
-> >=20
-> >=20
-> > Pasi> I guess what I'm asking is: Can I use sg_format to enable
-> > Pasi> checksums/protection on any disk that physically supports 520
-> > Pasi> bytes/sector, or does the disk need to have special T10 data
-> > Pasi> protection support aswell?
-> >=20
-> > The disk needs to support T10 PI (PROTECT=3D1 in the Standard Inqui=
-ry VPD
-> > page). We don't support driving the HBA in PI mode with a non-PI ta=
-rget.
-> >=20
->=20
-> Btw do you know the current status of T10 PI support in md/dm raid?=20
-> If I understood correctly there's some support for raid0/raid1 implem=
-ented..
->=20
-> Are there any docs how to enable/disable/configure T10 PI for md/dm r=
-aid?
-> Perhaps the <bdev>/integrite/{write_enable|read_verify} work directly=
- for the md/dm device?=20
->=20
+Hello lists
+I am wondering what kind of support I can get from linux for 
+"inexpensive" (SATA over SAS HBA in my case) disks on RAID ...
+Inexpensive non-raid-edition disks haven't got settable ERC timeout 
+(scterc) and can take very long time to respond in case of unreadable sector
+However I see an /dev/sdX/device/timeout tunable
+Supposing that I accept one disk being dropped from the array at the 
+first unreadable sector, can I set that tunable low such as 10sec and 
+live happy?
 
-=2E. and I probably need to sg_format the backing devices to enable PI =
-before enabling PI for the md/dm device?=20
+Unfortunately I have read that the expiration of the SCSI timeout can 
+trigger a "Host" reset in case the drive does not respond to a reset message
+https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/5/html/Online_Storage_Reconfiguration_Guide/task_controlling-scsi-command-timer-onlining-devices.html
+would that drop all my drives from the array? That would be a major problem.
 
--- Pasi
+Firstly, in "reset the bus": isn't the bus just an electrical wire? How 
+can it be "reset" and what does that do? I can understand in the case of 
+iSCSI the bus is maybe the TCP socket, I can somehow understand that it 
+can be reset, but what about physically attached disks?
+I suppose "device" is the disk.. ok for that one, suppose it's doomed
+I suppose "host" is the HBA card... so what does a reset of the HBA do? 
+Does it drop all the drives and rescan? MD wouldn't react well *at all* 
+to this
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thank you
+J
