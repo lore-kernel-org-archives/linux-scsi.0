@@ -1,54 +1,67 @@
-From: David Dillow <dillowda@ornl.gov>
-Subject: Re: [PATCH 17/18] srp_transport: Add transport layer recovery
- support
-Date: Sun, 19 Aug 2012 19:09:12 -0400
-Message-ID: <1345417752.5651.7.camel@obelisk.thedillows.org>
-References: <3109536.qySrY1Ts3e@asus> <2536946.Diyz1JQnfo@asus>
-	  <500490A5.7020202@cs.wisc.edu>
-	 <1342477710.25927.10.camel@frustration.ornl.gov> <502F7359.8020403@acm.org>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: [SCSI] mpt2sas T10 DIF fixes
+Date: Mon, 20 Aug 2012 13:48:19 +0300
+Message-ID: <20120820104818.GW19851@reaktio.net>
+References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
+ <50237151.9000801@suse.com>
+ <yq1lihdh5jc.fsf@sermon.lab.mkp.net>
+ <20120819144932.GT19851@reaktio.net>
+ <yq1ehn2ewpq.fsf@sermon.lab.mkp.net>
+ <20120819153004.GU19851@reaktio.net>
+ <yq1628eet0s.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from matrix.voodoobox.net ([75.127.97.206]:53117 "EHLO
-	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428Ab2HSX6P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Aug 2012 19:58:15 -0400
-In-Reply-To: <502F7359.8020403@acm.org>
+Received: from smtp.tele.fi ([192.89.123.25]:45606 "EHLO smtp.tele.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752678Ab2HTKsX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Aug 2012 06:48:23 -0400
+Content-Disposition: inline
+In-Reply-To: <yq1628eet0s.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Ankit Jain <jankit@suse.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Eric.Moore@lsi.com
 
-On Sat, 2012-08-18 at 10:50 +0000, Bart Van Assche wrote:
-> On 07/16/12 22:28, David Dillow wrote:
-> > On Mon, 2012-07-16 at 18:07 -0400, Mike Christie wrote:
-> >> Not sure about the ping code, but I think the dev loss tmo and fast io
-> >> fail related stuff should go to scsi_transport_template. We can then add
-> >> some common code to start the timers/delayed_work_queues, stop them,
-> >> set/get the value from sysfs, etc that all the transport classes can
-> >> then call.
-> > 
-> > Good idea, I'll look into doing this as part of it.
-> 
-> (replying to an e-mail of one month ago)
-> 
-> Hello Dave,
-> 
-> Have you already been able to make some progress with this work ? If the
-> patches for moving the shared parts of dev_loss_tmo / fast_io_fail_tmo
-> handling from scsi_transport_fc to scsi_transport_template would be
-> available in a reasonable timeframe I could adapt my ib_srp patch series
-> to take advantage of that work.
+On Sun, Aug 19, 2012 at 12:38:43PM -0400, Martin K. Petersen wrote:
+> >>>>> "Pasi" =3D=3D Pasi K=E4rkk=E4inen <pasik@iki.fi> writes:
+>=20
+> Pasi> So physically the disk is using 520 bytes/sector (and needs to
+> Pasi> support that), but logically the HBA presents 512 bytes/sector =
++
+> Pasi> PI.. is that correct?
+>=20
+> Yep. The beauty of PI is that we can store the extra stuff without
+> having to deal with weird block sizes.
+>=20
+>=20
+> Pasi> I guess what I'm asking is: Can I use sg_format to enable
+> Pasi> checksums/protection on any disk that physically supports 520
+> Pasi> bytes/sector, or does the disk need to have special T10 data
+> Pasi> protection support aswell?
+>=20
+> The disk needs to support T10 PI (PROTECT=3D1 in the Standard Inquiry=
+ VPD
+> page). We don't support driving the HBA in PI mode with a non-PI targ=
+et.
+>=20
 
-I've not made it very far; the same high priority project at work has
-trumped this for too long. The only good news is that there is light at
-the end of the tunnel, as we have a big demo at the end of the month.
-After that, I should be able to spend more cycles on this again.
+Btw do you know the current status of T10 PI support in md/dm raid?=20
+If I understood correctly there's some support for raid0/raid1 implemen=
+ted..
 
--- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
+Are there any docs how to enable/disable/configure T10 PI for md/dm rai=
+d?
+Perhaps the <bdev>/integrite/{write_enable|read_verify} work directly f=
+or the md/dm device?=20
 
+Thanks a lot!
+
+-- Pasi
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
