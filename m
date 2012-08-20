@@ -1,207 +1,38 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH v2 6/7] be2iscsi: Fix a kernel panic because of TCP RST/FIN received.
-Date: Mon, 20 Aug 2012 23:00:55 +0530
-Message-ID: <f3fc73d6-5057-4f58-8b9d-848786234be1@exht1.ad.emulex.com>
+Subject: [PATCH v2 7/7] be2iscsi: Bump the driver version.
+Date: Mon, 20 Aug 2012 23:01:06 +0530
+Message-ID: <1b72afc7-89eb-4967-a04a-ba68afe43482@exht1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:21671 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753662Ab2HTRbw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Aug 2012 13:31:52 -0400
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:41650 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753662Ab2HTRcH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Aug 2012 13:32:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- A TCP RST/FIN can be received even before the connection specific
- structures are initialized.This fix checks for the conn structure
- is intialized or not  when RST/FIN is received.
-
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c |   30 +++++++++++-------------
- drivers/scsi/be2iscsi/be_main.c  |   45 +++++++++++++++----------------------
- drivers/scsi/be2iscsi/be_mgmt.h  |    1 +
- 3 files changed, 33 insertions(+), 43 deletions(-)
+ drivers/scsi/be2iscsi/be_main.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index ebb6c1f..aedb0d9 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -1254,6 +1254,7 @@ void beiscsi_ep_disconnect(struct iscsi_endpoint *ep)
- 	struct beiscsi_endpoint *beiscsi_ep;
- 	struct beiscsi_hba *phba;
- 	unsigned int tag;
-+	uint8_t mgmt_invalidate_flag, tcp_upload_flag;
- 	unsigned short savecfg_flag = CMD_ISCSI_SESSION_SAVE_CFG_ON_FLASH;
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 084386c..b891226 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -36,7 +36,7 @@
  
- 	beiscsi_ep = ep->dd_data;
-@@ -1262,26 +1263,23 @@ void beiscsi_ep_disconnect(struct iscsi_endpoint *ep)
- 		    "BS_%d : In beiscsi_ep_disconnect for ep_cid = %d\n",
- 		    beiscsi_ep->ep_cid);
- 
--	if (!beiscsi_ep->conn) {
--		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
--			    "BS_%d : In beiscsi_ep_disconnect, no "
--			    "beiscsi_ep\n");
--		return;
-+	if (beiscsi_ep->conn) {
-+		beiscsi_conn = beiscsi_ep->conn;
-+		iscsi_suspend_queue(beiscsi_conn->conn);
-+		mgmt_invalidate_flag = ~BEISCSI_NO_RST_ISSUE;
-+		tcp_upload_flag = CONNECTION_UPLOAD_GRACEFUL;
-+	} else {
-+		mgmt_invalidate_flag = BEISCSI_NO_RST_ISSUE;
-+		tcp_upload_flag = CONNECTION_UPLOAD_ABORT;
- 	}
--	beiscsi_conn = beiscsi_ep->conn;
--	iscsi_suspend_queue(beiscsi_conn->conn);
--
--	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
--		    "BS_%d : In beiscsi_ep_disconnect ep_cid = %d\n",
--		    beiscsi_ep->ep_cid);
- 
- 	tag = mgmt_invalidate_connection(phba, beiscsi_ep,
--					    beiscsi_ep->ep_cid, 1,
--					    savecfg_flag);
-+					  beiscsi_ep->ep_cid,
-+					  mgmt_invalidate_flag,
-+					  savecfg_flag);
- 	if (!tag) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
--			    "BS_%d : mgmt_invalidate_connection"
--			    " Failed for cid=%d\n",
-+			    "BS_%d : mgmt_invalidate_connection Failed for cid=%d\n",
- 			    beiscsi_ep->ep_cid);
- 	} else {
- 		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
-@@ -1289,7 +1287,7 @@ void beiscsi_ep_disconnect(struct iscsi_endpoint *ep)
- 		free_mcc_tag(&phba->ctrl, tag);
- 	}
- 
--	beiscsi_close_conn(beiscsi_ep, CONNECTION_UPLOAD_GRACEFUL);
-+	beiscsi_close_conn(beiscsi_ep, tcp_upload_flag);
- 	beiscsi_free_ep(beiscsi_ep);
- 	beiscsi_unbind_conn_to_cid(phba, beiscsi_ep->ep_cid);
- 	iscsi_destroy_endpoint(beiscsi_ep->openiscsi_ep);
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 5637058..ff73f95 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -42,6 +42,7 @@
- #include "be_main.h"
- #include "be_iscsi.h"
- #include "be_mgmt.h"
-+#include "be_cmds.h"
- 
- static unsigned int be_iopoll_budget = 10;
- static unsigned int be_max_phys_size = 64;
-@@ -1920,6 +1921,7 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
- 	struct dmsg_cqe *dmsg;
- 	unsigned int num_processed = 0;
- 	unsigned int tot_nump = 0;
-+	unsigned short code = 0, cid = 0;
- 	struct beiscsi_conn *beiscsi_conn;
- 	struct beiscsi_endpoint *beiscsi_ep;
- 	struct iscsi_endpoint *ep;
-@@ -1933,10 +1935,11 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
- 	       CQE_VALID_MASK) {
- 		be_dws_le_to_cpu(sol, sizeof(struct sol_cqe));
- 
--		ep = phba->ep_array[(u32) ((sol->
--				   dw[offsetof(struct amap_sol_cqe, cid) / 32] &
--				   SOL_CID_MASK) >> 6) -
--				   phba->fw_config.iscsi_cid_start];
-+		cid = ((sol->dw[offsetof(struct amap_sol_cqe, cid)/32] &
-+		      CQE_CID_MASK) >> 6);
-+		code = (sol->dw[offsetof(struct amap_sol_cqe, code)/32] &
-+		       CQE_CODE_MASK);
-+		ep = phba->ep_array[cid - phba->fw_config.iscsi_cid_start];
- 
- 		beiscsi_ep = ep->dd_data;
- 		beiscsi_conn = beiscsi_ep->conn;
-@@ -1948,8 +1951,7 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
- 			num_processed = 0;
- 		}
- 
--		switch ((u32) sol->dw[offsetof(struct amap_sol_cqe, code) /
--			32] & CQE_CODE_MASK) {
-+		switch (code) {
- 		case SOL_CMD_COMPLETE:
- 			hwi_complete_cmd(beiscsi_conn, phba, sol);
- 			break;
-@@ -1996,11 +1998,7 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
- 			beiscsi_log(phba, KERN_ERR,
- 				    BEISCSI_LOG_CONFIG | BEISCSI_LOG_IO,
- 				    "BM_%d : CQ Error notification for cmd.. "
--				    "code %d cid 0x%x\n",
--				    sol->dw[offsetof(struct amap_sol_cqe,
--				    code) / 32] & CQE_CODE_MASK,
--				    sol->dw[offsetof(struct amap_sol_cqe,
--				    cid) / 32] & SOL_CID_MASK);
-+				    "code %d cid 0x%x\n", code, cid);
- 			break;
- 		case UNSOL_DATA_DIGEST_ERROR_NOTIFY:
- 			beiscsi_log(phba, KERN_ERR,
-@@ -2027,12 +2025,10 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
- 			beiscsi_log(phba, KERN_ERR,
- 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
- 				    "BM_%d : CQ Error %d, reset CID 0x%x...\n",
--				    sol->dw[offsetof(struct amap_sol_cqe,
--				    code) / 32] & CQE_CODE_MASK,
--				    sol->dw[offsetof(struct amap_sol_cqe,
--				    cid) / 32] & CQE_CID_MASK);
--			iscsi_conn_failure(beiscsi_conn->conn,
--					   ISCSI_ERR_CONN_FAILED);
-+				    code, cid);
-+			if (beiscsi_conn)
-+				iscsi_conn_failure(beiscsi_conn->conn,
-+						   ISCSI_ERR_CONN_FAILED);
- 			break;
- 		case CXN_KILLED_RST_SENT:
- 		case CXN_KILLED_RST_RCVD:
-@@ -2040,22 +2036,17 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
- 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
- 				    "BM_%d : CQ Error %d, reset"
- 				    "received/sent on CID 0x%x...\n",
--				    sol->dw[offsetof(struct amap_sol_cqe,
--					code) / 32] & CQE_CODE_MASK,
--				    sol->dw[offsetof(struct amap_sol_cqe,
--					cid) / 32] & CQE_CID_MASK);
--			iscsi_conn_failure(beiscsi_conn->conn,
--					   ISCSI_ERR_CONN_FAILED);
-+				    code, cid);
-+			if (beiscsi_conn)
-+				iscsi_conn_failure(beiscsi_conn->conn,
-+						   ISCSI_ERR_CONN_FAILED);
- 			break;
- 		default:
- 			beiscsi_log(phba, KERN_ERR,
- 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
- 				    "BM_%d : CQ Error Invalid code= %d "
- 				    "received on CID 0x%x...\n",
--				    sol->dw[offsetof(struct amap_sol_cqe,
--				    code) / 32] & CQE_CODE_MASK,
--				    sol->dw[offsetof(struct amap_sol_cqe,
--				    cid) / 32] & CQE_CID_MASK);
-+				    code, cid);
- 			break;
- 		}
- 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 1bbac5c..c50cef6 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -108,6 +108,7 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
- 					 struct bsg_job *job,
- 					 struct be_dma_mem *nonemb_cmd);
- 
-+#define BEISCSI_NO_RST_ISSUE	0
- struct iscsi_invalidate_connection_params_in {
- 	struct be_cmd_req_hdr hdr;
- 	unsigned int session_handle;
+ #include "be.h"
+ #define DRV_NAME		"be2iscsi"
+-#define BUILD_STR		"4.2.162.0"
++#define BUILD_STR		"4.4.58.0"
+ #define BE_NAME			"Emulex OneConnect" \
+ 				"Open-iSCSI Driver version" BUILD_STR
+ #define DRV_DESC		BE_NAME " " "Driver"
 -- 
 1.7.1
 
