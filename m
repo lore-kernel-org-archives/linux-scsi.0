@@ -1,36 +1,41 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 1/2]block: handle merged discard request
-Date: Mon, 20 Aug 2012 09:58:54 -0400
-Message-ID: <20120820135854.GA19254@infradead.org>
-References: <CANejiEWecb58G--=mwez+A4Ra6nJ0qOHGMcJA-nOGH=jmGA3qQ@mail.gmail.com>
- <4F69C62C.7020604@kernel.org>
- <yq18vitwejt.fsf@sermon.lab.mkp.net>
- <CANejiEX26=jqijgTwb0iLMw7WC7byF1o+whwp3K5CcY5_a8o8w@mail.gmail.com>
- <yq1zkb9uz1t.fsf@sermon.lab.mkp.net>
- <20120620085724.GA26295@infradead.org>
- <yq1fw9o3t5b.fsf@sermon.lab.mkp.net>
- <CAMM=eLcBMrOfhJZU2GsSnMXkmWZMemJcvTM6WPLiiXkysXHYiQ@mail.gmail.com>
- <yq1wr0weu9q.fsf@sermon.lab.mkp.net>
- <20120820135739.GB28570@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Subject: [PATCH] [SCSI] virtio-scsi: Initialize scatterlist structure.
+Date: Mon, 20 Aug 2012 15:04:50 +0100
+Message-ID: <1345471490-17289-1-git-send-email-rjones@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:37749
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754975Ab2HTN7D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Aug 2012 09:59:03 -0400
-Content-Disposition: inline
-In-Reply-To: <20120820135739.GB28570@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:17791 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755569Ab2HTOFA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Aug 2012 10:05:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Shaohua Li <shli@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, axboe@kernel.dk, linux-kernel@vger.kernel.org, neilb@suse.de, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: pbonzini@redhat.com, linux-scsi@vger.kernel.org
 
-On Mon, Aug 20, 2012 at 09:57:39AM -0400, Mike Snitzer wrote:
-> But I haven't put my finger on _why_ a discard bio has bio->bi_io_vec
-> (but given my use of DM, bio comes from bio_alloc_bioset, and DM passes
-> original bio->bi_max_vecs for nr_iovecs).
+From: "Richard W.M. Jones" <rjones@redhat.com>
 
-TRIM has a payload and we cheay by preallocation a data page for it.
+The sg struct is used without being initialized.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=847548
+
+Signed-off-by: Richard W.M. Jones <rjones@redhat.com>
+---
+ drivers/scsi/virtio_scsi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index c7030fb..8a66f83 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -219,7 +219,7 @@ static int virtscsi_kick_event(struct virtio_scsi *vscsi,
+ 	struct scatterlist sg;
+ 	unsigned long flags;
+ 
+-	sg_set_buf(&sg, &event_node->event, sizeof(struct virtio_scsi_event));
++	sg_init_one(&sg, &event_node->event, sizeof(struct virtio_scsi_event));
+ 
+ 	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
+ 
+-- 
+1.7.10.4
 
