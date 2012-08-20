@@ -1,42 +1,63 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: request size limit in scsi tape driver
-Date: Mon, 20 Aug 2012 17:50:32 +0200
-Message-ID: <20120820155032.GA14300@aepfle.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: Jim Meyering <jim@meyering.net>
+Subject: [PATCH] bfa: avoid buffer overrun for 12-byte model name
+Date: Mon, 20 Aug 2012 18:55:23 +0200
+Message-ID: <1345481724-30108-5-git-send-email-jim@meyering.net>
+References: <1345481724-30108-1-git-send-email-jim@meyering.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.162]:17255 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752860Ab2HTPvA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Aug 2012 11:51:00 -0400
-Received: from probook.site
-	(dslb-088-065-086-118.pools.arcor-ip.net [88.65.86.118])
-	by smtp.strato.de (joses mo85) (RZmta 30.9 DYNA|AUTH)
-	with (DHE-RSA-AES256-SHA encrypted) ESMTPA id k02a54o7KF8IFM
-	for <linux-scsi@vger.kernel.org>;
-	Mon, 20 Aug 2012 17:50:33 +0200 (CEST)
-Content-Disposition: inline
+Received: from mx.meyering.net ([88.168.87.75]:44792 "EHLO hx.meyering.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755466Ab2HTR3q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Aug 2012 13:29:46 -0400
+In-Reply-To: <1345481724-30108-1-git-send-email-jim@meyering.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Jim Meyering <meyering@redhat.com>, Jing Huang <huangj@brocade.com>, Krishna C Gudipati <kgudipat@brocade.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
+From: Jim Meyering <meyering@redhat.com>
 
-Currently the st driver does not to break up write requests into smaller
-chunks to satisfy the ->max_hw_sectors limit of the underlying host driver.
+we use strncpy to copy a model name of length up to 15 (16, if you count
+the NUL), into a buffer of size 12 (BFA_FCS_PORT_SYMBNAME_MODEL_SZ).
+However, strncpy does not always NUL-terminate, so whenever the original
+model string has strlen >= 12, the following strncat reads beyond end
+of the ->sym_name buffer as it attempts to find end of string.
 
- # modprobe -v scsi_debug ptype=1 opts=1 dev_size_mb=123
- # dd if=/dev/zero of=/dev/st0 bs=$((1024*54321))
+bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric)
+{
+	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
+	...
+	strncpy((char *)&port_cfg->sym_name, model,
+		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
+	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
+		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
+	...
 
-This leads to -EBUSY from this call chain:
-st_write -> st_do_scsi -> st_scsi_execute -> blk_rq_map_user
+bfa_ioc_get_adapter_model(struct bfa_ioc_s *ioc, char *model)
+{
+	struct bfi_ioc_attr_s	*ioc_attr;
 
-What is the reason for this behaviour?
-Should st_write write in smaller chunks, or would that break real
-hardware because they expect certain block sizes?
+	WARN_ON(!model);
+	memset((void *)model, 0, BFA_ADAPTER_MODEL_NAME_LEN);
 
-The specific issue at hand I have is that the (out-of-tree) Xen pvscsi
-has a ->max_hw_sectors limit of 200, which limits the block size in a
-guest to 100K.
+BFA_ADAPTER_MODEL_NAME_LEN = 16
 
+Signed-off-by: Jim Meyering <meyering@redhat.com>
+---
+ drivers/scsi/bfa/bfa_fcs.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Olaf
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index eaac57e..3329493 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -713,6 +713,7 @@ bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric)
+ 	/* Model name/number */
+ 	strncpy((char *)&port_cfg->sym_name, model,
+ 		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
++	port_cfg->sym_name[BFA_FCS_PORT_SYMBNAME_MODEL_SZ - 1] = 0;
+ 	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
+ 		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
+
+-- 
+1.7.12
+
