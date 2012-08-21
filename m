@@ -1,43 +1,74 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] increase iscsi_tcp max_lun to ~0, don't care
-Date: Tue, 21 Aug 2012 12:42:19 -0500
-Message-ID: <5033C87B.8000002@cs.wisc.edu>
-References: <1345070374-32058-1-git-send-email-revers@redhat.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [RESEND][PATCH][SCSI] mpt2sas: Fix for issue - Unable to boot from the SAS drive connected to HBA
+Date: Tue, 21 Aug 2012 19:48:35 +0200
+Message-ID: <1554075.4PqkcQvS1x@eto>
+References: <20120821162315.GA5135@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="nextPart1746846.1rdkakQSz9"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:39176 "EHLO sabe.cs.wisc.edu"
+Received: from mail.sf-mail.de ([62.27.20.61]:59255 "EHLO mail.sf-mail.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758022Ab2HURm0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Aug 2012 13:42:26 -0400
-In-Reply-To: <1345070374-32058-1-git-send-email-revers@redhat.com>
+	id S932164Ab2HURsj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Aug 2012 13:48:39 -0400
+In-Reply-To: <20120821162315.GA5135@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Evers <revers@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: sreekanth.reddy@lsi.com
+Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, jejb@kernel.org, stable@vger.kernel.org
 
-On 08/15/2012 05:39 PM, Rob Evers wrote:
-> Signed-off-by: Rob Evers <revers@redhat.com>
+
+--nextPart1746846.1rdkakQSz9
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+
+Am Dienstag 21 August 2012, 21:53:15 schrieb sreekanth.reddy@lsi.com:
+> Fix for issue - Unable to boot from the SAS drive connected to HBA
+> 
+> This patch checks whether HBA is SAS2008 B0 controller.
+> if it is a SAS2008 B0 controller then it use IO-APIC interrupt instead of
+> MSIX, as SAS2008 B0 controller doesn't support MSIX interrupts.
+> 
+> Signed-off-by: Sreekanth Reddy <sreekanth.reddy@lsi.com>
+> Cc: <stable@kernel.org>
 > ---
->  drivers/scsi/iscsi_tcp.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-> index 9220861..1b91ca0 100644
-> --- a/drivers/scsi/iscsi_tcp.c
-> +++ b/drivers/scsi/iscsi_tcp.c
-> @@ -55,7 +55,7 @@ static struct scsi_transport_template *iscsi_sw_tcp_scsi_transport;
->  static struct scsi_host_template iscsi_sw_tcp_sht;
->  static struct iscsi_transport iscsi_sw_tcp_transport;
->  
-> -static unsigned int iscsi_max_lun = 512;
-> +static unsigned int iscsi_max_lun = ~0;
->  module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO);
->  
->  static int iscsi_sw_tcp_dbg;
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> b/drivers/scsi/mpt2sas/mpt2sas_base.c index 6102ef2..fd2f4ad 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -1207,6 +1207,15 @@ _base_check_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+>  {
+>  	int base;
+>  	u16 message_control;
+> +	u8 revision;
+> +
+> +	/* Check whether controller SAS2008 B0 controller,
+> +	   if it is a SAS2008 B0 controller use IO-APIC instead of MSIX */
+> +	pci_read_config_byte(ioc->pdev, PCI_CLASS_REVISION, &revision);
+
+Nope. Just use ioc->pdev->revision here.
+
+> +	if (ioc->pdev->device == MPI2_MFGPAGE_DEVID_SAS2008 &&
+> +	    revision == 0x01) {
+> +		return -EINVAL;
+> +	}
 > 
+> 
+>  	base = pci_find_capability(ioc->pdev, PCI_CAP_ID_MSIX);
 
-Not sure if you need my ack James, but just in case. Patch is ok with me.
+Eike
+--nextPart1746846.1rdkakQSz9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
 
-Acked-by: Mike Christie <michaelc@cs.wisc.edu>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iEYEABECAAYFAlAzyfMACgkQXKSJPmm5/E4s7wCglxn6hqR+uOwfThoIy/ti0wJ3
+76oAni0atxK/8nzFM9JA9RP/btrN9xOh
+=R8nd
+-----END PGP SIGNATURE-----
+
+--nextPart1746846.1rdkakQSz9--
+
