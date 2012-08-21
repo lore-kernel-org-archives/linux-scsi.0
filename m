@@ -1,50 +1,60 @@
-From: Ying Xue <ying.xue@windriver.com>
-Subject: [PATCH] iscsi: Don't disable BH on BH context
-Date: Tue, 21 Aug 2012 09:28:27 +0800
-Message-ID: <1345512507-8257-1-git-send-email-ying.xue@windriver.com>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: [SCSI] mpt2sas T10 DIF fixes
+Date: Tue, 21 Aug 2012 09:12:56 +0300
+Message-ID: <20120821061256.GA19851@reaktio.net>
+References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
+ <50237151.9000801@suse.com>
+ <yq1lihdh5jc.fsf@sermon.lab.mkp.net>
+ <20120819144932.GT19851@reaktio.net>
+ <yq1ehn2ewpq.fsf@sermon.lab.mkp.net>
+ <20120819153004.GU19851@reaktio.net>
+ <yq1628eet0s.fsf@sermon.lab.mkp.net>
+ <20120820104818.GW19851@reaktio.net>
+ <yq1k3wtcc22.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:35579 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934Ab2HUBYU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Aug 2012 21:24:20 -0400
+Received: from smtp.tele.fi ([192.89.123.25]:53131 "EHLO smtp.tele.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753505Ab2HUGNA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Aug 2012 02:13:00 -0400
+Content-Disposition: inline
+In-Reply-To: <yq1k3wtcc22.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Ankit Jain <jankit@suse.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Eric.Moore@lsi.com
 
-Since we have already in BH context when iscsi_sw_tcp_write_space()
-is called, it's unnecessary to disable BH.
+On Mon, Aug 20, 2012 at 08:40:21PM -0400, Martin K. Petersen wrote:
+> >>>>> "Pasi" =3D=3D Pasi K=E4rkk=E4inen <pasik@iki.fi> writes:
+>=20
+> Pasi> Btw do you know the current status of T10 PI support in md/dm
+> Pasi> raid?  If I understood correctly there's some support for
+> Pasi> raid0/raid1 implemented..
+>=20
+> Yes. The only thing that doesn't work is RAID5/6.
+>=20
 
-Signed-off-by: Ying Xue <ying.xue@windriver.com>
-Acked-by: Michael Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/iscsi_tcp.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Ok, thanks for confirming that.
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 9220861..d763857 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -194,7 +194,7 @@ static void iscsi_sw_tcp_write_space(struct sock *sk)
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn;
- 	void (*old_write_space)(struct sock *);
- 
--	read_lock_bh(&sk->sk_callback_lock);
-+	read_lock(&sk->sk_callback_lock);
- 	conn = sk->sk_user_data;
- 	if (!conn) {
- 		read_unlock_bh(&sk->sk_callback_lock);
-@@ -204,7 +204,7 @@ static void iscsi_sw_tcp_write_space(struct sock *sk)
- 	tcp_conn = conn->dd_data;
- 	tcp_sw_conn = tcp_conn->dd_data;
- 	old_write_space = tcp_sw_conn->old_write_space;
--	read_unlock_bh(&sk->sk_callback_lock);
-+	read_unlock(&sk->sk_callback_lock);
- 
- 	old_write_space(sk);
- 
--- 
-1.7.11
+>=20
+> Pasi> Are there any docs how to enable/disable/configure T10 PI for
+> Pasi> md/dm raid?  Perhaps the
+> Pasi> <bdev>/integrite/{write_enable|read_verify} work directly for t=
+he
+> Pasi> md/dm device?
+>=20
+> You don't have to configure anything. If all component devices are
+> capable the md/dm device will register a suitable integrity profile.
+>=20
 
+Oh, nice! I'll have to try it once I get some drives with PI.
+
+-- Pasi
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
