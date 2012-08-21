@@ -1,105 +1,38 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [RFC PATCH][RESEND] Fusion MPT: disable pci device when mpt map
- resoures failed
-Date: Tue, 21 Aug 2012 17:11:42 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A60A503360D4@inbmail02.lsi.com>
-References: <1344653916-7832-1-git-send-email-guohanjun@huawei.com>
+From: "Jiang, Dave" <dave.jiang@intel.com>
+Subject: RE: [SCSI] mpt2sas T10 DIF fixes
+Date: Tue, 21 Aug 2012 15:50:38 +0000
+Message-ID: <112A412BB11A1242B37129D931BCE534352E7BA8@FMSMSX103.amr.corp.intel.com>
+References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
+	<50237151.9000801@suse.com> <yq1lihdh5jc.fsf@sermon.lab.mkp.net>
+	<20120819144932.GT19851@reaktio.net>	<yq1ehn2ewpq.fsf@sermon.lab.mkp.net>
+	<20120819153004.GU19851@reaktio.net>	<yq1628eet0s.fsf@sermon.lab.mkp.net>
+	<20120820104818.GW19851@reaktio.net> <yq1k3wtcc22.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1344653916-7832-1-git-send-email-guohanjun@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:11111 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751766Ab2HUPvA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Aug 2012 11:51:00 -0400
+In-Reply-To: <yq1k3wtcc22.fsf@sermon.lab.mkp.net>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hanjun Guo <guohanjun@huawei.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Yijing Wang <wangyijing@huawei.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jiang Liu <jiang.liu@huawei.com>, "Moore, Eric" <Eric.Moore@lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, =?utf-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>
+Cc: Ankit Jain <jankit@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "Eric.Moore@lsi.com" <Eric.Moore@lsi.com>
 
-This patch seem to be fine. Please consider this patch as Acked-by: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com> 
-
-Regards,
-Nagalakshmi
-
-
------Original Message-----
-From: Hanjun Guo [mailto:guohanjun@huawei.com] 
-Sent: Saturday, August 11, 2012 8:29 AM
-To: Moore, Eric
-Cc: Yinghai Lu; Yijing Wang; linux-scsi@vger.kernel.org; DL-MPT Fusion Linux; linux-kernel@vger.kernel.org; Hanjun Guo; Jiang Liu
-Subject: [RFC PATCH][RESEND] Fusion MPT: disable pci device when mpt map resoures failed
-
-
-when probe a pci device, first we enable it, and disable it when
-some error happened in the following process, because the power
-state of the device is set to D0, and if MSI is disabled,
-we will allocate irq and register gsi for this device in the enable process.
-
-In function mpt_mapresources(MPT_ADAPTER *ioc), it forgot disable the
-pci device when error happened, the irq and gsi will never be released.
-this patch will fix it.
-
-Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/message/fusion/mptbase.c |   18 +++++++++++-------
- 1 files changed, 11 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index d99db56..fb69baa 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1666,7 +1666,7 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 	if (pci_request_selected_regions(pdev, ioc->bars, "mpt")) {
- 		printk(MYIOC_s_ERR_FMT "pci_request_selected_regions() with "
- 		    "MEM failed\n", ioc->name);
--		return r;
-+		goto out_pci_disable_device;
- 	}
- 
- 	if (sizeof(dma_addr_t) > 4) {
-@@ -1690,8 +1690,7 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 		} else {
- 			printk(MYIOC_s_WARN_FMT "no suitable DMA mask for %s\n",
- 			    ioc->name, pci_name(pdev));
--			pci_release_selected_regions(pdev, ioc->bars);
--			return r;
-+			goto out_pci_release_region;
- 		}
- 	} else {
- 		if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))
-@@ -1704,8 +1703,7 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 		} else {
- 			printk(MYIOC_s_WARN_FMT "no suitable DMA mask for %s\n",
- 			    ioc->name, pci_name(pdev));
--			pci_release_selected_regions(pdev, ioc->bars);
--			return r;
-+			goto out_pci_release_region;
- 		}
- 	}
- 
-@@ -1735,8 +1733,8 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 	if (mem == NULL) {
- 		printk(MYIOC_s_ERR_FMT ": ERROR - Unable to map adapter"
- 			" memory!\n", ioc->name);
--		pci_release_selected_regions(pdev, ioc->bars);
--		return -EINVAL;
-+		r = -EINVAL;
-+		goto out_pci_release_region;
- 	}
- 	ioc->memmap = mem;
- 	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem = %p, mem_phys = %llx\n",
-@@ -1750,6 +1748,12 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 	ioc->pio_chip = (SYSIF_REGS __iomem *)port;
- 
- 	return 0;
-+
-+out_pci_release_region:
-+	pci_release_selected_regions(pdev, ioc->bars);
-+out_pci_disable_device:
-+	pci_disable_device(pdev);
-+	return r;
- }
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
--- 
-1.7.6.1
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIE1hcnRpbiBLLiBQZXRlcnNlbg0KPiBTZW50OiBNb25kYXksIEF1Z3Vz
+dCAyMCwgMjAxMiA1OjQwIFBNDQo+IFRvOiBQYXNpIEvDpHJra8OkaW5lbg0KPiBDYzogTWFydGlu
+IEsuIFBldGVyc2VuOyBBbmtpdCBKYWluOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsNCj4g
+SmFtZXMuQm90dG9tbGV5QGhhbnNlbnBhcnRuZXJzaGlwLmNvbTsgRXJpYy5Nb29yZUBsc2kuY29t
+DQo+IFN1YmplY3Q6IFJlOiBbU0NTSV0gbXB0MnNhcyBUMTAgRElGIGZpeGVzDQo+IA0KPiA+Pj4+
+PiAiUGFzaSIgPT0gUGFzaSBLw6Rya2vDpGluZW4gPHBhc2lrQGlraS5maT4gd3JpdGVzOg0KPiAN
+Cj4gUGFzaT4gQnR3IGRvIHlvdSBrbm93IHRoZSBjdXJyZW50IHN0YXR1cyBvZiBUMTAgUEkgc3Vw
+cG9ydCBpbiBtZC9kbQ0KPiBQYXNpPiByYWlkPyAgSWYgSSB1bmRlcnN0b29kIGNvcnJlY3RseSB0
+aGVyZSdzIHNvbWUgc3VwcG9ydCBmb3INCj4gUGFzaT4gcmFpZDAvcmFpZDEgaW1wbGVtZW50ZWQu
+Lg0KPiANCj4gWWVzLiBUaGUgb25seSB0aGluZyB0aGF0IGRvZXNuJ3Qgd29yayBpcyBSQUlENS82
+Lg0KDQpKdXN0IGN1cmlvdXMsIGhhcyBhbnkgd29yayBiZWVuIGRvbmUgb24gdGhpcz8gV29uZGVy
+aW5nIHdoYXQgdGhlIHJvYWRibG9ja3MgYXJlIHRvIGdldCB0aGlzIHN1cHBvcnQgaW4uLi4uIA0K
