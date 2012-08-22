@@ -1,12 +1,12 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 03/42] qla2xxx: Add check in qla82xx_watchdog for failed hardware state.
-Date: Wed, 22 Aug 2012 14:20:57 -0400
-Message-ID: <1345659696-3670-4-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 02/42] qla2xxx: Add I2C BSG interface.
+Date: Wed, 22 Aug 2012 14:20:56 -0400
+Message-ID: <1345659696-3670-3-git-send-email-chad.dupuis@qlogic.com>
 References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:28827 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:43581 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S964958Ab2HVSiK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S964798Ab2HVSiK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 22 Aug 2012 14:38:10 -0400
 In-Reply-To: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,82 +14,157 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+
+Add BSG interface to generically access I2C attached devices.
+
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |    2 +-
- drivers/scsi/qla2xxx/qla_nx.c  |   16 ++++++++++++----
- 2 files changed, 13 insertions(+), 5 deletions(-)
+ drivers/scsi/qla2xxx/qla_bsg.c |   96 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_bsg.h |   10 ++++
+ 2 files changed, 106 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index fdee561..72a1ea9 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -30,7 +30,7 @@
-  * |                              |                    | 0x800b,0x8039  |
-  * | AER/EEH                      |       0x9011       |		|
-  * | Virtual Port                 |       0xa007       |		|
-- * | ISP82XX Specific             |       0xb054       | 0xb024         |
-+ * | ISP82XX Specific             |       0xb055       | 0xb024         |
-  * | MultiQ                       |       0xc00c       |		|
-  * | Misc                         |       0xd010       |		|
-  * | Target Mode		  |	  0xe06f       |		|
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 9ce3a8f..1c3f65b 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -3027,7 +3027,6 @@ qla82xx_dev_failed_handler(scsi_qla_host_t *vha)
- 	ql_log(ql_log_fatal, vha, 0x00b8,
- 	    "Disabling the board.\n");
- 
--	qla82xx_idc_lock(ha);
- 	qla82xx_clear_drv_active(ha);
- 	qla82xx_idc_unlock(ha);
- 
-@@ -3267,7 +3266,7 @@ qla82xx_device_state_handler(scsi_qla_host_t *vha)
- 		switch (dev_state) {
- 		case QLA82XX_DEV_READY:
- 			ha->flags.isp82xx_reset_owner = 0;
--			goto exit;
-+			goto rel_lock;
- 		case QLA82XX_DEV_COLD:
- 			rval = qla82xx_device_bootstrap(vha);
- 			break;
-@@ -3298,7 +3297,7 @@ qla82xx_device_state_handler(scsi_qla_host_t *vha)
- 			 * to get changed
- 			 */
- 			if (ha->flags.quiesce_owner)
--				goto exit;
-+				goto rel_lock;
- 
- 			qla82xx_idc_unlock(ha);
- 			msleep(1000);
-@@ -3319,8 +3318,9 @@ qla82xx_device_state_handler(scsi_qla_host_t *vha)
- 		}
- 		loopcount++;
- 	}
--exit:
-+rel_lock:
- 	qla82xx_idc_unlock(ha);
-+exit:
- 	return rval;
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index c688838..462ac70 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1560,6 +1560,96 @@ done:
  }
  
-@@ -3384,6 +3384,14 @@ void qla82xx_watchdog(scsi_qla_host_t *vha)
- 			ql_log(ql_log_warn, vha, 0x6002,
- 			    "Quiescent needed.\n");
- 			set_bit(ISP_QUIESCE_NEEDED, &vha->dpc_flags);
-+		} else if (dev_state == QLA82XX_DEV_FAILED &&
-+			!test_bit(ISP_UNRECOVERABLE, &vha->dpc_flags) &&
-+			vha->flags.online == 1) {
-+			ql_log(ql_log_warn, vha, 0xb055,
-+			    "Adapter state is failed. Offlining.\n");
-+			set_bit(ISP_UNRECOVERABLE, &vha->dpc_flags);
-+			ha->flags.isp82xx_fw_hung = 1;
-+			qla82xx_clear_pending_mbx(vha);
- 		} else {
- 			if (qla82xx_check_fw_alive(vha)) {
- 				ql_dbg(ql_dbg_timer, vha, 0x6011,
+ static int
++qla2x00_write_i2c(struct fc_bsg_job *bsg_job)
++{
++	struct Scsi_Host *host = bsg_job->shost;
++	scsi_qla_host_t *vha = shost_priv(host);
++	struct qla_hw_data *ha = vha->hw;
++	int rval = 0;
++	uint8_t bsg[DMA_POOL_SIZE];
++	struct qla_i2c_access *i2c = (void *)bsg;
++	dma_addr_t sfp_dma;
++	uint8_t *sfp = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
++	if (!sfp) {
++		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
++		    EXT_STATUS_NO_MEMORY;
++		goto done;
++	}
++
++	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
++	    bsg_job->request_payload.sg_cnt, i2c, sizeof(*i2c));
++
++	memcpy(sfp, i2c->buffer, i2c->length);
++	rval = qla2x00_write_sfp(vha, sfp_dma, sfp,
++	    i2c->device, i2c->offset, i2c->length, i2c->option);
++
++	if (rval) {
++		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
++		    EXT_STATUS_MAILBOX;
++		goto dealloc;
++	}
++
++	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] = 0;
++
++dealloc:
++	dma_pool_free(ha->s_dma_pool, sfp, sfp_dma);
++
++done:
++	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
++	bsg_job->reply->result = DID_OK << 16;
++	bsg_job->job_done(bsg_job);
++
++	return 0;
++}
++
++static int
++qla2x00_read_i2c(struct fc_bsg_job *bsg_job)
++{
++	struct Scsi_Host *host = bsg_job->shost;
++	scsi_qla_host_t *vha = shost_priv(host);
++	struct qla_hw_data *ha = vha->hw;
++	int rval = 0;
++	uint8_t bsg[DMA_POOL_SIZE];
++	struct qla_i2c_access *i2c = (void *)bsg;
++	dma_addr_t sfp_dma;
++	uint8_t *sfp = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
++	if (!sfp) {
++		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
++		    EXT_STATUS_NO_MEMORY;
++		goto done;
++	}
++
++	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
++	    bsg_job->request_payload.sg_cnt, i2c, sizeof(*i2c));
++
++	rval = qla2x00_read_sfp(vha, sfp_dma, sfp,
++		i2c->device, i2c->offset, i2c->length, i2c->option);
++
++	if (rval) {
++		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
++		    EXT_STATUS_MAILBOX;
++		goto dealloc;
++	}
++
++	memcpy(i2c->buffer, sfp, i2c->length);
++	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
++	    bsg_job->reply_payload.sg_cnt, i2c, sizeof(*i2c));
++
++	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] = 0;
++
++dealloc:
++	dma_pool_free(ha->s_dma_pool, sfp, sfp_dma);
++
++done:
++	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
++	bsg_job->reply->reply_payload_rcv_len = sizeof(*i2c);
++	bsg_job->reply->result = DID_OK << 16;
++	bsg_job->job_done(bsg_job);
++
++	return 0;
++}
++
++static int
+ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+ {
+ 	switch (bsg_job->request->rqst_data.h_vendor.vendor_cmd[0]) {
+@@ -1596,6 +1686,12 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+ 	case QL_VND_WRITE_FRU_STATUS:
+ 		return qla2x00_write_fru_status(bsg_job);
+ 
++	case QL_VND_WRITE_I2C:
++		return qla2x00_write_i2c(bsg_job);
++
++	case QL_VND_READ_I2C:
++		return qla2x00_read_i2c(bsg_job);
++
+ 	default:
+ 		bsg_job->reply->result = (DID_ERROR << 16);
+ 		bsg_job->job_done(bsg_job);
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/qla_bsg.h
+index 70caa63..1a0ab37 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.h
++++ b/drivers/scsi/qla2xxx/qla_bsg.h
+@@ -19,6 +19,8 @@
+ #define QL_VND_SET_FRU_VERSION	0x0B
+ #define QL_VND_READ_FRU_STATUS	0x0C
+ #define QL_VND_WRITE_FRU_STATUS	0x0D
++#define QL_VND_WRITE_I2C	0x10
++#define QL_VND_READ_I2C		0x11
+ 
+ /* BSG Vendor specific subcode returns */
+ #define EXT_STATUS_OK			0
+@@ -183,4 +185,12 @@ struct qla_status_reg {
+ 	uint8_t reserved[7];
+ } __packed;
+ 
++struct qla_i2c_access {
++	uint16_t device;
++	uint16_t offset;
++	uint16_t option;
++	uint16_t length;
++	uint8_t  buffer[0x40];
++} __packed;
++
+ #endif
 -- 
 1.7.7
 
