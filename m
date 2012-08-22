@@ -1,36 +1,40 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/7] Updates for be2iscsi driver
-Date: Wed, 22 Aug 2012 11:33:53 -0500
-Message-ID: <503509F1.9070107@cs.wisc.edu>
-References: <31d949d2-1fb6-488b-b5d4-e03574436cb9@exht1.ad.emulex.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [SCSI] mpt2sas T10 DIF fixes
+Date: Wed, 22 Aug 2012 14:36:35 -0400
+Message-ID: <yq1lih6bwp8.fsf@sermon.lab.mkp.net>
+References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
+	<50237151.9000801@suse.com> <yq1lihdh5jc.fsf@sermon.lab.mkp.net>
+	<20120819144932.GT19851@reaktio.net>
+	<yq1ehn2ewpq.fsf@sermon.lab.mkp.net>
+	<20120819153004.GU19851@reaktio.net>
+	<yq1628eet0s.fsf@sermon.lab.mkp.net>
+	<20120820104818.GW19851@reaktio.net>
+	<yq1k3wtcc22.fsf@sermon.lab.mkp.net>
+	<112A412BB11A1242B37129D931BCE534352E7BA8@FMSMSX103.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:40919 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932661Ab2HVQeH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 12:34:07 -0400
-In-Reply-To: <31d949d2-1fb6-488b-b5d4-e03574436cb9@exht1.ad.emulex.com>
+Received: from acsinet15.oracle.com ([141.146.126.227]:34790 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933259Ab2HVSg6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Aug 2012 14:36:58 -0400
+In-Reply-To: <112A412BB11A1242B37129D931BCE534352E7BA8@FMSMSX103.amr.corp.intel.com>
+	(Dave Jiang's message of "Tue, 21 Aug 2012 15:50:38 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Soni Jose <sony.john-n@Emulex.Com>
-Cc: linux-scsi@vger.kernel.org, Jayamohan.Kallickal@Emulex.Com
+To: "Jiang, Dave" <dave.jiang@intel.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Pasi =?utf-8?B?S8Okcmtrw6RpbmVu?= <pasik@iki.fi>, Ankit Jain <jankit@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "Eric.Moore@lsi.com" <Eric.Moore@lsi.com>
 
-On 08/13/2012 05:29 AM, John Soni Jose wrote:
->  Patches to update the be2iscsi driver. These patches were generated
->  against the scsi tree "scsi-misc" branch.
-> 
->   Removing the iscsi_data_pdu setting.
->   Issue MBX Cmd for login to boot target in crashdump mode
->   Added Logging mechanism for the driver.
->   Format the MAC_ADDR with sysfs_format_mac.
->   Add support for configuring the VLAN on the adapter.
->   Fix a kernel panic because of TCP RST/FIN received.
->   Bump the driver version.
-> 
+>>>>> "dj" == Jiang, Dave <dave.jiang@intel.com> writes:
 
-There were some checkpatch.pl warnings about the logging, but I am not
-sure if we are being strict on those. If not then it looks ok.
+>> Yes. The only thing that doesn't work is RAID5/6.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+dj> Just curious, has any work been done on this? Wondering what the
+dj> roadblocks are to get this support in....
+
+Nobody has done the work, that's all. And it's not entirely trivial. The
+8 bytes of metadata for a parity sector is not "valid" T10 protection
+information, for instance.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
