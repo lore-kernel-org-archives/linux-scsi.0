@@ -1,53 +1,43 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 23/42] qla2xxx: Remove setting Scsi_host->this_id during adapter probe.
-Date: Wed, 22 Aug 2012 14:21:17 -0400
-Message-ID: <1345659696-3670-24-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 26/42] qla2xxx: Do PCI fundamental reset for ISP83xx
+Date: Wed, 22 Aug 2012 14:21:20 -0400
+Message-ID: <1345659696-3670-27-git-send-email-chad.dupuis@qlogic.com>
 References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:25407 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:13313 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S964869Ab2HVSiZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 14:38:25 -0400
+	id S964958Ab2HVSi3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 14:38:29 -0400
 In-Reply-To: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Setting this to 255 will cause any target with id 255 to not show up so leave
-it at the default in our host template.
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+On ISP83xx cards perform a fundamental reset instead of hot reset.
+
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_mid.c |    1 -
- drivers/scsi/qla2xxx/qla_os.c  |    1 -
- 2 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 4c2da06..bd4708a 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -476,7 +476,6 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
- 
- 	vha->req = base_vha->req;
- 	host->can_queue = base_vha->req->length + 128;
--	host->this_id = 255;
- 	host->cmd_per_lun = 3;
- 	if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif)
- 		host->max_cmd_len = 32;
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 5439d48..d3f71cc 100644
+index d3f71cc..2c95468 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2418,7 +2418,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	    host->can_queue, base_vha->req,
- 	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
- 	host->max_id = ha->max_fibre_devices;
--	host->this_id = 255;
- 	host->cmd_per_lun = 3;
- 	host->unique_id = host->host_no;
- 	if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif)
+@@ -2209,7 +2209,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	qla2x00_set_isp_flags(ha);
+ 
+ 	/* Set EEH reset type to fundamental if required by hba */
+-	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha))
++	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha) ||
++	    IS_QLA83XX(ha))
+ 		pdev->needs_freset = 1;
+ 
+ 	ha->prev_topology = 0;
 -- 
 1.7.7
 
