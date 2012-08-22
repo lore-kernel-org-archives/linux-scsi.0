@@ -1,401 +1,51 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 10/42] qla2xxx: Implemetation of mctp.
-Date: Wed, 22 Aug 2012 14:21:04 -0400
-Message-ID: <1345659696-3670-11-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 11/42] qla2xxx: Add bit to identify adapters for thermal temp.
+Date: Wed, 22 Aug 2012 14:21:05 -0400
+Message-ID: <1345659696-3670-12-git-send-email-chad.dupuis@qlogic.com>
 References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:25407 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:51518 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S964958Ab2HVSiN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 14:38:13 -0400
+	id S964974Ab2HVSiO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 14:38:14 -0400
 In-Reply-To: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |   25 +++++++++++++-
- drivers/scsi/qla2xxx/qla_dbg.c  |   10 +++--
- drivers/scsi/qla2xxx/qla_def.h  |   10 +++++-
- drivers/scsi/qla2xxx/qla_gbl.h  |    4 ++
- drivers/scsi/qla2xxx/qla_init.c |   53 +++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_mbx.c  |   70 +++++++++++++++++++++++++++++++-------
- drivers/scsi/qla2xxx/qla_os.c   |   39 ++++++++++++++--------
- 7 files changed, 177 insertions(+), 34 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index f76424e..d8858df 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -26,7 +26,7 @@ qla2x00_sysfs_read_fw_dump(struct file *filp, struct kobject *kobj,
- 	struct qla_hw_data *ha = vha->hw;
- 	int rval = 0;
- 
--	if (ha->fw_dump_reading == 0)
-+	if (!(ha->fw_dump_reading || ha->mctp_dump_reading))
- 		return 0;
- 
- 	if (IS_QLA82XX(ha)) {
-@@ -39,9 +39,14 @@ qla2x00_sysfs_read_fw_dump(struct file *filp, struct kobject *kobj,
- 		rval = memory_read_from_buffer(buf, count,
- 		    &off, ha->md_dump, ha->md_dump_size);
- 		return rval;
--	} else
-+	} else if (ha->mctp_dumped && ha->mctp_dump_reading)
-+		return memory_read_from_buffer(buf, count, &off, ha->mctp_dump,
-+		    MCTP_DUMP_SIZE);
-+	else if (ha->fw_dump_reading)
- 		return memory_read_from_buffer(buf, count, &off, ha->fw_dump,
- 					ha->fw_dump_len);
-+	else
-+		return 0;
- }
- 
- static ssize_t
-@@ -107,6 +112,22 @@ qla2x00_sysfs_write_fw_dump(struct file *filp, struct kobject *kobj,
- 		if (IS_QLA82XX(ha))
- 			set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
- 		break;
-+	case 6:
-+		if (!ha->mctp_dump_reading)
-+			break;
-+		ql_log(ql_log_info, vha, 0x70c1,
-+		    "MCTP dump cleared on (%ld). \n", vha->host_no);
-+		ha->mctp_dump_reading = 0;
-+		ha->mctp_dumped = 0;
-+		break;
-+	case 7:
-+		if (ha->mctp_dumped && !ha->mctp_dump_reading) {
-+			ha->mctp_dump_reading = 1;
-+			ql_log(ql_log_info, vha, 0x70c2,
-+			    "Raw mctp dump ready for read on (%ld).\n",
-+			    vha->host_no);
-+		}
-+		break;
- 	}
- 	return count;
- }
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 55998f4..6012805 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -12,28 +12,30 @@
-  * |             Level            |   Last Value Used  |     Holes	|
-  * ----------------------------------------------------------------------
-  * | Module Init and Probe        |       0x0124       | 0x4b,0xba,0xfa |
-- * | Mailbox commands             |       0x114c       | 0x111a-0x111b  |
-+ * | Mailbox commands             |       0x114f       | 0x111a-0x111b  |
-  * |                              |                    | 0x112c-0x112e  |
-  * |                              |                    | 0x113a         |
-  * | Device Discovery             |       0x2087       | 0x2020-0x2022  |
-  * | Queue Command and IO tracing |       0x3030       | 0x3006,0x3008  |
-  * |                              |                    | 0x302d-0x302e  |
-  * | DPC Thread                   |       0x401c       | 0x4002,0x4013  |
-- * | Async Events                 |       0x506c       | 0x502b-0x502f  |
-+ * | Async Events                 |       0x5071       | 0x502b-0x502f  |
-  * |                              |                    | 0x5047,0x5052  |
-  * | Timer Routines               |       0x6011       |                |
-- * | User Space Interactions      |       0x70bd       | 0x7018,0x702e, |
-+ * | User Space Interactions      |       0x70c2       | 0x7018,0x702e, |
-  * |                              |                    | 0x7039,0x7045, |
-  * |                              |                    | 0x7073-0x7075, |
-  * |                              |                    | 0x708c,        |
-  * |                              |                    | 0x70a5,0x70a6, |
-  * |                              |                    | 0x70a8,0x70ab, |
-  * |                              |                    | 0x70ad-0x70ae  |
-+ * |                              |                    | 0x70be-70c0    |
-  * | Task Management              |       0x803c       | 0x8025-0x8026  |
-  * |                              |                    | 0x800b,0x8039  |
-  * | AER/EEH                      |       0x9011       |		|
-  * | Virtual Port                 |       0xa007       |		|
-- * | ISP82XX Specific             |       0xb080       | 0xb024         |
-+ * | ISP82XX Specific             |       0xb084       | 0xb002         |
-+ * |                              |                    | 0xb082,0xb083  |
-  * | MultiQ                       |       0xc00c       |		|
-  * | Misc                         |       0xd010       |		|
-  * | Target Mode		  |	  0xe06f       |		|
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index f82e7bb..c6b13d2 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2765,6 +2765,9 @@ struct qla_hw_data {
- #define IS_CT6_SUPPORTED(ha)	((ha)->device_type & DT_CT6_SUPPORTED)
- #define IS_MQUE_CAPABLE(ha)	((ha)->mqenable || IS_QLA83XX(ha))
- #define IS_BIDI_CAPABLE(ha)	((IS_QLA25XX(ha) || IS_QLA2031(ha)))
-+/* Bit 21 of fw_attributes decides the MCTP capabilities */
-+#define IS_MCTP_CAPABLE(ha)	(IS_QLA2031(ha) && \
-+				((ha)->fw_attributes_ext[0] & BIT_0))
- 
- 	/* HBA serial number */
- 	uint8_t		serial0;
-@@ -2880,7 +2883,12 @@ struct qla_hw_data {
- 	int		fw_dump_reading;
- 	dma_addr_t	eft_dma;
- 	void		*eft;
--
-+/* Current size of mctp dump is 0x086064 bytes */
-+#define MCTP_DUMP_SIZE  0x086064
-+	dma_addr_t	mctp_dump_dma;
-+	void		*mctp_dump;
-+	int		mctp_dumped;
-+	int		mctp_dump_reading;
- 	uint32_t	chain_offset;
- 	struct dentry *dfs_dir;
- 	struct dentry *dfs_fce;
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 98c187d..b808b8e 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -82,6 +82,7 @@ extern int __qla83xx_get_idc_control(scsi_qla_host_t *, uint32_t *);
- extern void qla83xx_idc_audit(scsi_qla_host_t *, int);
- extern int qla83xx_nic_core_reset(scsi_qla_host_t *);
- extern void qla83xx_reset_ownership(scsi_qla_host_t *);
-+extern int qla2xxx_mctp_dump(scsi_qla_host_t *);
- 
- /*
-  * Global Data in qla_os.c source file.
-@@ -399,6 +400,9 @@ qla81xx_set_port_config(scsi_qla_host_t *, uint16_t *);
- extern int
- qla2x00_port_logout(scsi_qla_host_t *, struct fc_port *);
- 
-+extern int
-+qla2x00_dump_mctp_data(scsi_qla_host_t *, dma_addr_t, uint32_t, uint32_t);
-+
- /*
-  * Global Function Prototypes in qla_isr.c source file.
-  */
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 71310d3..c8d1aff 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -4110,6 +4110,59 @@ exit:
- 	return rval;
- }
- 
-+int
-+qla2xxx_mctp_dump(scsi_qla_host_t *vha)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	int rval = QLA_FUNCTION_FAILED;
-+
-+	if (!IS_MCTP_CAPABLE(ha)) {
-+		/* This message can be removed from the final version */
-+		ql_log(ql_log_info, vha, 0x506d,
-+		    "This board is not MCTP capable\n");
-+		return rval;
-+	}
-+
-+	if (!ha->mctp_dump) {
-+		ha->mctp_dump = dma_alloc_coherent(&ha->pdev->dev,
-+		    MCTP_DUMP_SIZE, &ha->mctp_dump_dma, GFP_KERNEL);
-+
-+		if (!ha->mctp_dump) {
-+			ql_log(ql_log_warn, vha, 0x506e,
-+			    "Failed to allocate memory for mctp dump\n");
-+			return rval;
-+		}
-+	}
-+
-+#define MCTP_DUMP_STR_ADDR	0x00000000
-+	rval = qla2x00_dump_mctp_data(vha, ha->mctp_dump_dma,
-+	    MCTP_DUMP_STR_ADDR, MCTP_DUMP_SIZE/4);
-+	if (rval != QLA_SUCCESS) {
-+		ql_log(ql_log_warn, vha, 0x506f,
-+		    "Failed to capture mctp dump\n");
-+	} else {
-+		ql_log(ql_log_info, vha, 0x5070,
-+		    "Mctp dump capture for host (%ld/%p).\n",
-+		    vha->host_no, ha->mctp_dump);
-+		ha->mctp_dumped = 1;
-+	}
-+
-+	if (!ha->flags.nic_core_reset_hdlr_active) {
-+		ha->flags.nic_core_reset_hdlr_active = 1;
-+		if ((rval = qla83xx_restart_nic_firmware(vha)))
-+			/* NIC Core reset failed. */
-+			ql_log(ql_log_warn, vha, 0x5071,
-+			    "Failed to restart nic firmware\n");
-+		else
-+			ql_dbg(ql_dbg_p3p, vha, 0xb084,
-+			    "Restarted NIC firmware successfully.\n");
-+		ha->flags.nic_core_reset_hdlr_active = 0;
-+	}
-+
-+	return rval;
-+
-+}
-+
- /*
- * qla82xx_quiescent_state_cleanup
- * Description: This function will block the new I/Os
 diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 1587b64..691be37 100644
+index 691be37..1b7bea1 100644
 --- a/drivers/scsi/qla2xxx/qla_mbx.c
 +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -559,18 +559,16 @@ qla2x00_get_fw_version(scsi_qla_host_t *vha)
- 		ha->phy_version[1] = mcp->mb[9] >> 8;
- 		ha->phy_version[2] = mcp->mb[9] & 0xff;
- 	}
--	if (IS_QLA83XX(ha)) {
--		if (mcp->mb[6] & BIT_15) {
--			ha->fw_attributes_h = mcp->mb[15];
--			ha->fw_attributes_ext[0] = mcp->mb[16];
--			ha->fw_attributes_ext[1] = mcp->mb[17];
--			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1139,
--			    "%s: FW_attributes Upper: 0x%x, Lower: 0x%x.\n",
--			    __func__, mcp->mb[15], mcp->mb[6]);
--		} else
--			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x112f,
--			    "%s: FwAttributes [Upper]  invalid, MB6:%04x\n",
--			    __func__, mcp->mb[6]);
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		ha->fw_attributes_h = mcp->mb[15];
-+		ha->fw_attributes_ext[0] = mcp->mb[16];
-+		ha->fw_attributes_ext[1] = mcp->mb[17];
-+		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1139,
-+		    "%s: FW_attributes Upper: 0x%x, Lower: 0x%x.\n",
-+		    __func__, mcp->mb[15], mcp->mb[6]);
-+		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x112f,
-+		    "%s: Ext_FwAttributes Upper: 0x%x, Lower: 0x%x.\n",
-+		    __func__, mcp->mb[17], mcp->mb[16]);
- 	}
+@@ -4425,7 +4425,8 @@ qla2x00_get_thermal_temp(scsi_qla_host_t *vha, uint16_t *temp, uint16_t *frac)
+ 	    "Entered %s.\n", __func__);
  
- failed:
-@@ -3408,7 +3406,6 @@ qla2x00_dump_ram(scsi_qla_host_t *vha, dma_addr_t req_dma, uint32_t addr,
+ 	/* Integer part */
+-	rval = qla2x00_read_sfp(vha, 0, &byte, 0x98, 0x01, 1, BIT_13|BIT_0);
++	rval = qla2x00_read_sfp(vha, 0, &byte, 0x98, 0x01, 1,
++		BIT_13|BIT_12|BIT_0);
+ 	if (rval != QLA_SUCCESS) {
+ 		ql_dbg(ql_dbg_mbx, vha, 0x10c9, "Failed=%x.\n", rval);
+ 		ha->flags.thermal_supported = 0;
+@@ -4434,7 +4435,8 @@ qla2x00_get_thermal_temp(scsi_qla_host_t *vha, uint16_t *temp, uint16_t *frac)
+ 	*temp = byte;
  
- 	return rval;
- }
--
- /* 84XX Support **************************************************************/
- 
- struct cs84xx_mgmt_cmd {
-@@ -4950,3 +4947,50 @@ qla83xx_access_control(scsi_qla_host_t *vha, uint16_t options,
- 
- 	return rval;
- }
-+
-+int
-+qla2x00_dump_mctp_data(scsi_qla_host_t *vha, dma_addr_t req_dma, uint32_t addr,
-+	uint32_t size)
-+{
-+	int rval;
-+	mbx_cmd_t mc;
-+	mbx_cmd_t *mcp = &mc;
-+
-+	if (!IS_MCTP_CAPABLE(vha->hw))
-+		return QLA_FUNCTION_FAILED;
-+
-+	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x114f,
-+	    "Entered %s.\n", __func__);
-+
-+	mcp->mb[0] = MBC_DUMP_RISC_RAM_EXTENDED;
-+	mcp->mb[1] = LSW(addr);
-+	mcp->mb[2] = MSW(req_dma);
-+	mcp->mb[3] = LSW(req_dma);
-+	mcp->mb[4] = MSW(size);
-+	mcp->mb[5] = LSW(size);
-+	mcp->mb[6] = MSW(MSD(req_dma));
-+	mcp->mb[7] = LSW(MSD(req_dma));
-+	mcp->mb[8] = MSW(addr);
-+	/* Setting RAM ID to valid */
-+	mcp->mb[10] |= BIT_7;
-+	/* For MCTP RAM ID is 0x40 */
-+	mcp->mb[10] |= 0x40;
-+
-+	mcp->out_mb |= MBX_10|MBX_8|MBX_7|MBX_6|MBX_5|MBX_4|MBX_3|MBX_2|MBX_1|
-+	    MBX_0;
-+
-+	mcp->in_mb = MBX_0;
-+	mcp->tov = MBX_TOV_SECONDS;
-+	mcp->flags = 0;
-+	rval = qla2x00_mailbox_command(vha, mcp);
-+
-+	if (rval != QLA_SUCCESS) {
-+		ql_dbg(ql_dbg_mbx, vha, 0x114e,
-+		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
-+	} else {
-+		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x114d,
-+		    "Done %s.\n", __func__);
-+	}
-+
-+	return rval;
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 8862d5b..2718d1f 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2404,20 +2404,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		base_vha->mgmt_svr_loop_id = MANAGEMENT_SERVER +
- 						base_vha->vp_idx;
- 
--	if (IS_QLA8031(ha)) {
--		sprintf(wq_name, "qla2xxx_%lu_dpc_lp_wq", base_vha->host_no);
--		ha->dpc_lp_wq = create_singlethread_workqueue(wq_name);
--		INIT_WORK(&ha->idc_aen, qla83xx_service_idc_aen);
--
--		sprintf(wq_name, "qla2xxx_%lu_dpc_hp_wq", base_vha->host_no);
--		ha->dpc_hp_wq = create_singlethread_workqueue(wq_name);
--		INIT_WORK(&ha->nic_core_reset, qla83xx_nic_core_reset_work);
--		INIT_WORK(&ha->idc_state_handler,
--		    qla83xx_idc_state_handler_work);
--		INIT_WORK(&ha->nic_core_unrecoverable,
--		    qla83xx_nic_core_unrecoverable_work);
--	}
--
- 	/* Set the SG table size based on ISP type */
- 	if (!IS_FWI2_CAPABLE(ha)) {
- 		if (IS_QLA2100(ha))
-@@ -2558,6 +2544,20 @@ que_init:
- 	 */
- 	qla2xxx_wake_dpc(base_vha);
- 
-+	if (IS_QLA8031(ha) || IS_MCTP_CAPABLE(ha)) {
-+		sprintf(wq_name, "qla2xxx_%lu_dpc_lp_wq", base_vha->host_no);
-+		ha->dpc_lp_wq = create_singlethread_workqueue(wq_name);
-+		INIT_WORK(&ha->idc_aen, qla83xx_service_idc_aen);
-+
-+		sprintf(wq_name, "qla2xxx_%lu_dpc_hp_wq", base_vha->host_no);
-+		ha->dpc_hp_wq = create_singlethread_workqueue(wq_name);
-+		INIT_WORK(&ha->nic_core_reset, qla83xx_nic_core_reset_work);
-+		INIT_WORK(&ha->idc_state_handler,
-+		    qla83xx_idc_state_handler_work);
-+		INIT_WORK(&ha->nic_core_unrecoverable,
-+		    qla83xx_nic_core_unrecoverable_work);
-+	}
-+
- skip_dpc:
- 	list_add_tail(&base_vha->list, &ha->vp_list);
- 	base_vha->host->irq = ha->pdev->irq;
-@@ -3330,6 +3330,10 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- {
- 	qla2x00_free_fw_dump(ha);
- 
-+	if (ha->mctp_dump)
-+		dma_free_coherent(&ha->pdev->dev, MCTP_DUMP_SIZE, ha->mctp_dump,
-+		    ha->mctp_dump_dma);
-+
- 	if (ha->srb_mempool)
- 		mempool_destroy(ha->srb_mempool);
- 
-@@ -3859,6 +3863,13 @@ qla83xx_nic_core_reset_work(struct work_struct *work)
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
- 	uint32_t dev_state = 0;
- 
-+	if (IS_QLA2031(ha)) {
-+		if (qla2xxx_mctp_dump(base_vha) != QLA_SUCCESS)
-+			ql_log(ql_log_warn, base_vha, 0xb081,
-+			    "Failed to dump mctp\n");
-+		return;
-+	}
-+
- 	if (!ha->flags.nic_core_reset_hdlr_active) {
- 		if (qla83xx_check_nic_core_fw_alive(base_vha) == QLA_SUCCESS) {
- 			qla83xx_idc_lock(base_vha, 0);
+ 	/* Fraction part */
+-	rval = qla2x00_read_sfp(vha, 0, &byte, 0x98, 0x10, 1, BIT_13|BIT_0);
++	rval = qla2x00_read_sfp(vha, 0, &byte, 0x98, 0x10, 1,
++		BIT_13|BIT_12|BIT_0);
+ 	if (rval != QLA_SUCCESS) {
+ 		ql_dbg(ql_dbg_mbx, vha, 0x1019, "Failed=%x.\n", rval);
+ 		ha->flags.thermal_supported = 0;
 -- 
 1.7.7
 
