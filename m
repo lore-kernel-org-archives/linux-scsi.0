@@ -1,47 +1,53 @@
-From: <sreekanth.reddy@lsi.com>
-Subject: [RESEND][PATCH][SCSI] mpt2sas: Fix for issue - Unable to boot from
- the drive connected to HBA
-Date: Wed, 22 Aug 2012 16:55:13 +0530
-Message-ID: <20120822112513.GA4720@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH 2/4] qla4xxx: Clear interrupt while unloading driver.
+Date: Wed, 22 Aug 2012 07:45:25 -0400
+Message-ID: <1345635927-22420-3-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1345635927-22420-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:33337 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753608Ab2HVLYX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 07:24:23 -0400
-Content-Disposition: inline
+Received: from mvnat01.qlogic.com ([198.186.3.73]:51257 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1752169Ab2HVMCD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 08:02:03 -0400
+In-Reply-To: <1345635927-22420-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, jejb@kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com
-Cc: stable@vger.kernel.org
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-Fix for issue - Unable to boot from the SAS drive connected to HBA
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-This patch checks whether HBA is SAS2008 B0 controller.
-if it is a SAS2008 B0 controller then it use IO-APIC interrupt instead of MSIX,
-as SAS2008 B0 controller doesn't support MSIX interrupts.
+while processing the stop firmware mailbox command on driver unload,
+a interrupt is processed which causes kernel panic as the response
+queue is not valid.
 
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@lsi.com>
-Cc: <stable@kernel.org>
+Fix is to clear the interrupt in free_adapter call just after
+disabling the interrupts.
+
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
+ drivers/scsi/qla4xxx/ql4_os.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 2f77f39..4c66a55 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1208,6 +1208,13 @@ _base_check_enable_msix(struct MPT2SAS_ADAPTER *ioc)
- 	int base;
- 	u16 message_control;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index fa1a359..f06b7c5 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -3487,6 +3487,15 @@ static void qla4xxx_free_adapter(struct scsi_qla_host *ha)
+ 		ha->isp_ops->disable_intrs(ha);
+ 	}
  
-+	/* Check whether controller SAS2008 B0 controller,
-+           if it is SAS2008 B0 controller use IO-APIC instead of MSIX */
-+        if (ioc->pdev->device == MPI2_MFGPAGE_DEVID_SAS2008 &&
-+            ioc->pdev->revision == 0x01) {
-+                return -EINVAL;
-+        }
++	if (is_qla40XX(ha)) {
++		writel(set_rmask(CSR_SCSI_PROCESSOR_INTR),
++		       &ha->reg->ctrl_status);
++		readl(&ha->reg->ctrl_status);
++	} else if (is_qla8022(ha)) {
++		writel(0, &ha->qla4_8xxx_reg->host_int);
++		readl(&ha->qla4_8xxx_reg->host_int);
++	}
 +
- 	base = pci_find_capability(ioc->pdev, PCI_CAP_ID_MSIX);
- 	if (!base) {
- 		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "msix not "
+ 	/* Remove timer thread, if present */
+ 	if (ha->timer_active)
+ 		qla4xxx_stop_timer(ha);
+-- 
+1.7.8.GIT
+
