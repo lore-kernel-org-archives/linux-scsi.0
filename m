@@ -1,153 +1,72 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 04/42] qla2xxx: Fix typo in qla2xxx files
-Date: Wed, 22 Aug 2012 14:20:58 -0400
-Message-ID: <1345659696-3670-5-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 08/42] qla2xxx: Add FW DUMP SIZE sysfs attribute.
+Date: Wed, 22 Aug 2012 14:21:02 -0400
+Message-ID: <1345659696-3670-9-git-send-email-chad.dupuis@qlogic.com>
 References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:39693 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:58992 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S964799Ab2HVSiK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 14:38:10 -0400
+	id S964967Ab2HVSiL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 14:38:11 -0400
 In-Reply-To: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Masanari Iida <standby24x7@gmail.com>
+From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
-Correct spelling typo within qla2xxx files.
-
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c  |    4 ++--
- drivers/scsi/qla2xxx/qla_fw.h   |    4 ++--
- drivers/scsi/qla2xxx/qla_iocb.c |    2 +-
- drivers/scsi/qla2xxx/qla_isr.c  |    2 +-
- drivers/scsi/qla2xxx/qla_mid.c  |    2 +-
- drivers/scsi/qla2xxx/qla_nx.c   |    2 +-
- drivers/scsi/qla2xxx/qla_os.c   |    4 ++--
- 7 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 72a1ea9..d651179 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -2357,7 +2357,7 @@ ql_dbg(uint32_t level, scsi_qla_host_t *vha, int32_t id, const char *fmt, ...)
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index ff2439b..da804f4 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1276,6 +1276,24 @@ qla2x00_diag_megabytes_show(struct device *dev,
+ 	    vha->bidi_stats.transfer_bytes >> 20);
+ }
  
- /*
-  * This function is for formatting and logging debug information.
-- * It is to be used when vha is not available and pci is availble,
-+ * It is to be used when vha is not available and pci is available,
-  * i.e., before host allocation. It formats the message and logs it
-  * to the messages file.
-  * parameters:
-@@ -2452,7 +2452,7 @@ ql_log(uint32_t level, scsi_qla_host_t *vha, int32_t id, const char *fmt, ...)
++static ssize_t
++qla2x00_fw_dump_size_show(struct device *dev, struct device_attribute *attr,
++	char *buf)
++{
++	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t size;
++
++	if (!ha->fw_dumped)
++		size = 0;
++	else if (IS_QLA82XX(ha))
++		size = ha->md_template_size + ha->md_dump_size;
++	else
++		size = ha->fw_dump_len;
++
++	return snprintf(buf, PAGE_SIZE, "%d\n", size);
++}
++
+ static DEVICE_ATTR(driver_version, S_IRUGO, qla2x00_drvr_version_show, NULL);
+ static DEVICE_ATTR(fw_version, S_IRUGO, qla2x00_fw_version_show, NULL);
+ static DEVICE_ATTR(serial_num, S_IRUGO, qla2x00_serial_num_show, NULL);
+@@ -1316,6 +1334,7 @@ static DEVICE_ATTR(fw_state, S_IRUGO, qla2x00_fw_state_show, NULL);
+ static DEVICE_ATTR(thermal_temp, S_IRUGO, qla2x00_thermal_temp_show, NULL);
+ static DEVICE_ATTR(diag_requests, S_IRUGO, qla2x00_diag_requests_show, NULL);
+ static DEVICE_ATTR(diag_megabytes, S_IRUGO, qla2x00_diag_megabytes_show, NULL);
++static DEVICE_ATTR(fw_dump_size, S_IRUGO, qla2x00_fw_dump_size_show, NULL);
  
- /*
-  * This function is for formatting and logging log messages.
-- * It is to be used when vha is not available and pci is availble,
-+ * It is to be used when vha is not available and pci is available,
-  * i.e., before host allocation. It formats the message and logs
-  * it to the messages file. All the messages are logged irrespective
-  * of the value of ql2xextended_error_logging.
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index 6d7d775..980b5a7 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -1130,7 +1130,7 @@ struct mid_db_entry_24xx {
- /*
-  * Virtual Port Control IOCB
-  */
--#define VP_CTRL_IOCB_TYPE	0x30	/* Vitual Port Control entry. */
-+#define VP_CTRL_IOCB_TYPE	0x30	/* Virtual Port Control entry. */
- struct vp_ctrl_entry_24xx {
- 	uint8_t entry_type;		/* Entry type. */
- 	uint8_t entry_count;		/* Entry count. */
-@@ -1166,7 +1166,7 @@ struct vp_ctrl_entry_24xx {
- /*
-  * Modify Virtual Port Configuration IOCB
-  */
--#define VP_CONFIG_IOCB_TYPE	0x31	/* Vitual Port Config entry. */
-+#define VP_CONFIG_IOCB_TYPE	0x31	/* Virtual Port Config entry. */
- struct vp_config_entry_24xx {
- 	uint8_t entry_type;		/* Entry type. */
- 	uint8_t entry_count;		/* Entry count. */
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 70dbf53..23e8375 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -1858,7 +1858,7 @@ qla2x00_alloc_iocbs(scsi_qla_host_t *vha, srb_t *sp)
- 	}
- 	if (index == MAX_OUTSTANDING_COMMANDS) {
- 		ql_log(ql_log_warn, vha, 0x700b,
--		    "No room on oustanding cmd array.\n");
-+		    "No room on outstanding cmd array.\n");
- 		goto queuing_error;
- 	}
- 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 6f67a9d..0b09776 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1414,7 +1414,7 @@ qla2x00_handle_sense(srb_t *sp, uint8_t *sense_data, uint32_t par_sense_len,
- 
- struct scsi_dif_tuple {
- 	__be16 guard;       /* Checksum */
--	__be16 app_tag;         /* APPL identifer */
-+	__be16 app_tag;         /* APPL identifier */
- 	__be32 ref_tag;         /* Target LBA or indirect LBA */
+ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_driver_version,
+@@ -1347,6 +1366,7 @@ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_thermal_temp,
+ 	&dev_attr_diag_requests,
+ 	&dev_attr_diag_megabytes,
++	&dev_attr_fw_dump_size,
+ 	NULL,
  };
  
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 3e8b324..54330ff 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -643,7 +643,7 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
- 			&req->dma, GFP_KERNEL);
- 	if (req->ring == NULL) {
- 		ql_log(ql_log_fatal, base_vha, 0x00da,
--		    "Failed to allocte memory for request_ring.\n");
-+		    "Failed to allocate memory for request_ring.\n");
- 		goto que_failed;
- 	}
- 
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 1c3f65b..642aea0 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -4038,7 +4038,7 @@ qla82xx_minidump_process_rdmem(scsi_qla_host_t *vha,
- 
- 	if (r_addr & 0xf) {
- 		ql_log(ql_log_warn, vha, 0xb033,
--		    "Read addr 0x%x not 16 bytes alligned\n", r_addr);
-+		    "Read addr 0x%x not 16 bytes aligned\n", r_addr);
- 		return rval;
- 	}
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 18237a6..caa4ce4 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1078,7 +1078,7 @@ __qla2xxx_eh_generic_reset(char *name, enum nexus_wait_type type,
- 	if (qla2x00_eh_wait_for_pending_commands(vha, cmd->device->id,
- 	    cmd->device->lun, type) != QLA_SUCCESS) {
- 		ql_log(ql_log_warn, vha, 0x800d,
--		    "wait for peding cmds failed for cmd=%p.\n", cmd);
-+		    "wait for pending cmds failed for cmd=%p.\n", cmd);
- 		goto eh_reset_failed;
- 	}
- 
-@@ -1177,7 +1177,7 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
- eh_bus_reset_done:
- 	ql_log(ql_log_warn, vha, 0x802b,
- 	    "BUS RESET %s nexus=%ld:%d:%d.\n",
--	    (ret == FAILED) ? "FAILED" : "SUCCEDED", vha->host_no, id, lun);
-+	    (ret == FAILED) ? "FAILED" : "SUCCEEDED", vha->host_no, id, lun);
- 
- 	return ret;
- }
 -- 
 1.7.7
 
