@@ -1,40 +1,37 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [SCSI] mpt2sas T10 DIF fixes
-Date: Wed, 22 Aug 2012 14:36:35 -0400
-Message-ID: <yq1lih6bwp8.fsf@sermon.lab.mkp.net>
-References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
-	<50237151.9000801@suse.com> <yq1lihdh5jc.fsf@sermon.lab.mkp.net>
-	<20120819144932.GT19851@reaktio.net>
-	<yq1ehn2ewpq.fsf@sermon.lab.mkp.net>
-	<20120819153004.GU19851@reaktio.net>
-	<yq1628eet0s.fsf@sermon.lab.mkp.net>
-	<20120820104818.GW19851@reaktio.net>
-	<yq1k3wtcc22.fsf@sermon.lab.mkp.net>
-	<112A412BB11A1242B37129D931BCE534352E7BA8@FMSMSX103.amr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: [PATCH 01/42] qla2xxx: Bind to ISP8031 devices.
+Date: Wed, 22 Aug 2012 14:20:55 -0400
+Message-ID: <1345659696-3670-2-git-send-email-chad.dupuis@qlogic.com>
+References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:34790 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933259Ab2HVSg6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Aug 2012 14:36:58 -0400
-In-Reply-To: <112A412BB11A1242B37129D931BCE534352E7BA8@FMSMSX103.amr.corp.intel.com>
-	(Dave Jiang's message of "Tue, 21 Aug 2012 15:50:38 +0000")
+Received: from mvnat01.qlogic.com ([198.186.3.73]:62806 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S964862Ab2HVSiK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 14:38:10 -0400
+In-Reply-To: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Jiang, Dave" <dave.jiang@intel.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Pasi =?utf-8?B?S8Okcmtrw6RpbmVu?= <pasik@iki.fi>, Ankit Jain <jankit@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "Eric.Moore@lsi.com" <Eric.Moore@lsi.com>
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
->>>>> "dj" == Jiang, Dave <dave.jiang@intel.com> writes:
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
->> Yes. The only thing that doesn't work is RAID5/6.
-
-dj> Just curious, has any work been done on this? Wondering what the
-dj> roadblocks are to get this support in....
-
-Nobody has done the work, that's all. And it's not entirely trivial. The
-8 bytes of metadata for a parity sector is not "valid" T10 protection
-information, for instance.
-
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index fb8cd38..18237a6 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4495,6 +4495,7 @@ static struct pci_device_id qla2xxx_pci_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2031) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP8001) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP8021) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP8031) },
+ 	{ 0 },
+ };
+ MODULE_DEVICE_TABLE(pci, qla2xxx_pci_tbl);
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.7.7
+
