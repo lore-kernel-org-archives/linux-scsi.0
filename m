@@ -1,12 +1,12 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 26/42] qla2xxx: Do PCI fundamental reset for ISP83xx
-Date: Wed, 22 Aug 2012 14:21:20 -0400
-Message-ID: <1345659696-3670-27-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 27/42] qla2xxx: Do not restrict the number of NPIV ports for ISP83xx.
+Date: Wed, 22 Aug 2012 14:21:21 -0400
+Message-ID: <1345659696-3670-28-git-send-email-chad.dupuis@qlogic.com>
 References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:13313 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:63378 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S964958Ab2HVSi3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S964999Ab2HVSi3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 22 Aug 2012 14:38:29 -0400
 In-Reply-To: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,30 +14,27 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-On ISP83xx cards perform a fundamental reset instead of hot reset.
-
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d3f71cc..2c95468 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2209,7 +2209,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	qla2x00_set_isp_flags(ha);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 6987fbe..2b9b750 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1907,7 +1907,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 	ql_dbg(ql_dbg_init, vha, 0x00d1, "Issue init firmware.\n");
  
- 	/* Set EEH reset type to fundamental if required by hba */
--	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha))
-+	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha) ||
-+	    IS_QLA83XX(ha))
- 		pdev->needs_freset = 1;
- 
- 	ha->prev_topology = 0;
+ 	if (ha->flags.npiv_supported) {
+-		if (ha->operating_mode == LOOP)
++		if (ha->operating_mode == LOOP && !IS_CNA_CAPABLE(ha))
+ 			ha->max_npiv_vports = MIN_MULTI_ID_FABRIC - 1;
+ 		mid_init_cb->count = cpu_to_le16(ha->max_npiv_vports);
+ 	}
 -- 
 1.7.7
 
