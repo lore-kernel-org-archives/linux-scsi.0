@@ -1,94 +1,87 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 17/42] qla2xxx: Implement beacon support for ISP83xx.
-Date: Wed, 22 Aug 2012 14:21:11 -0400
-Message-ID: <1345659696-3670-18-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 20/42] qla2xxx: Wrong PCIe(2.5Gb/s x8) speed in the kerenel message for ISP82xx.
+Date: Wed, 22 Aug 2012 14:21:14 -0400
+Message-ID: <1345659696-3670-21-git-send-email-chad.dupuis@qlogic.com>
 References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:53253 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:58992 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S964986Ab2HVSiR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 14:38:17 -0400
+	id S964799Ab2HVSiS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 14:38:18 -0400
 In-Reply-To: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Atul Deshmukh <atul.deshmukh@qlogic.com>
+
+qla2xxx show wrong PCIe(2.5Gb/s x8) speed in the kerenel message. It should be
+5.0Gb/s.
+
+Signed-off-by: Atul Deshmukh <atul.deshmukh@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_sup.c |   41 ++++++++++++++++++++++++++++++++++-----
- 1 files changed, 35 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_gbl.h |    1 -
+ drivers/scsi/qla2xxx/qla_nx.c  |   19 -------------------
+ drivers/scsi/qla2xxx/qla_os.c  |    2 +-
+ 3 files changed, 1 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
-index 41ed7af..32fdc2a 100644
---- a/drivers/scsi/qla2xxx/qla_sup.c
-+++ b/drivers/scsi/qla2xxx/qla_sup.c
-@@ -1662,6 +1662,23 @@ qla24xx_beacon_blink(struct scsi_qla_host *vha)
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 5afd72e..6acb397 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -558,7 +558,6 @@ extern void qla24xx_wrt_rsp_reg(struct qla_hw_data *, uint16_t, uint16_t);
+ /* PCI related functions */
+ extern int qla82xx_pci_config(struct scsi_qla_host *);
+ extern int qla82xx_pci_mem_read_2M(struct qla_hw_data *, u64, void *, int);
+-extern char *qla82xx_pci_info_str(struct scsi_qla_host *, char *);
+ extern int qla82xx_pci_region_offset(struct pci_dev *, int);
+ extern int qla82xx_iospace_config(struct qla_hw_data *);
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 3653c8f..9fc08b8 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -1612,25 +1612,6 @@ qla82xx_get_fw_offs(struct qla_hw_data *ha)
  }
  
-+static uint32_t
-+qla83xx_select_led_port(struct qla_hw_data *ha)
-+{
-+	uint32_t led_select_value = 0;
-+
-+	if (!IS_QLA83XX(ha))
-+		goto out;
-+
-+	if (ha->flags.port0)
-+		led_select_value = QLA83XX_LED_PORT0;
-+	else
-+		led_select_value = QLA83XX_LED_PORT1;
-+
-+out:
-+	return led_select_value;
-+}
-+
- void
- qla83xx_beacon_blink(struct scsi_qla_host *vha)
+ /* PCI related functions */
+-char *
+-qla82xx_pci_info_str(struct scsi_qla_host *vha, char *str)
+-{
+-	int pcie_reg;
+-	struct qla_hw_data *ha = vha->hw;
+-	char lwstr[6];
+-	uint16_t lnk;
+-
+-	pcie_reg = pci_pcie_cap(ha->pdev);
+-	pci_read_config_word(ha->pdev, pcie_reg + PCI_EXP_LNKSTA, &lnk);
+-	ha->link_width = (lnk >> 4) & 0x3f;
+-
+-	strcpy(str, "PCIe (");
+-	strcat(str, "2.5Gb/s ");
+-	snprintf(lwstr, sizeof(lwstr), "x%d)", ha->link_width);
+-	strcat(str, lwstr);
+-	return str;
+-}
+-
+ int qla82xx_pci_region_offset(struct pci_dev *pdev, int region)
  {
-@@ -1669,22 +1686,34 @@ qla83xx_beacon_blink(struct scsi_qla_host *vha)
- 	struct qla_hw_data *ha = vha->hw;
- 	uint16_t led_cfg[6];
- 	uint16_t orig_led_cfg[6];
-+	uint32_t led_10_value, led_43_value;
- 
- 	if (!IS_QLA83XX(ha) && !IS_QLA81XX(ha))
- 		return;
- 
--	if (IS_QLA2031(ha) && ha->beacon_blink_led) {
--		if (ha->flags.port0)
--			led_select_value = QLA83XX_LED_PORT0;
--		else
--			led_select_value = QLA83XX_LED_PORT1;
-+	if (!ha->beacon_blink_led)
-+		return;
-+
-+	if (IS_QLA2031(ha)) {
-+		led_select_value = qla83xx_select_led_port(ha);
- 
- 		qla83xx_wr_reg(vha, led_select_value, 0x40002000);
- 		qla83xx_wr_reg(vha, led_select_value + 4, 0x40002000);
- 		msleep(1000);
- 		qla83xx_wr_reg(vha, led_select_value, 0x40004000);
- 		qla83xx_wr_reg(vha, led_select_value + 4, 0x40004000);
--	} else if ((IS_QLA8031(ha) || IS_QLA81XX(ha)) && ha->beacon_blink_led) {
-+	} else if (IS_QLA8031(ha)) {
-+		led_select_value = qla83xx_select_led_port(ha);
-+
-+		qla83xx_rd_reg(vha, led_select_value, &led_10_value);
-+		qla83xx_rd_reg(vha, led_select_value + 0x10, &led_43_value);
-+		qla83xx_wr_reg(vha, led_select_value, 0x01f44000);
-+		msleep(500);
-+		qla83xx_wr_reg(vha, led_select_value, 0x400001f4);
-+		msleep(1000);
-+		qla83xx_wr_reg(vha, led_select_value, led_10_value);
-+		qla83xx_wr_reg(vha, led_select_value + 0x10, led_43_value);
-+	} else if (IS_QLA81XX(ha)) {
- 		int rval;
- 
- 		/* Save Current */
+ 	unsigned long val = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 22db1f6e..5439d48 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1919,7 +1919,7 @@ static struct isp_operations qla82xx_isp_ops = {
+ 	.nvram_config		= qla81xx_nvram_config,
+ 	.update_fw_options	= qla24xx_update_fw_options,
+ 	.load_risc		= qla82xx_load_risc,
+-	.pci_info_str		= qla82xx_pci_info_str,
++	.pci_info_str		= qla24xx_pci_info_str,
+ 	.fw_version_str		= qla24xx_fw_version_str,
+ 	.intr_handler		= qla82xx_intr_handler,
+ 	.enable_intrs		= qla82xx_enable_intrs,
 -- 
 1.7.7
 
