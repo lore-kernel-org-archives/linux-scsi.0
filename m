@@ -1,98 +1,755 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: Re: [PATCH 0/12] qla4xxx: Updates for scsi "misc" branch.
-Date: Wed, 22 Aug 2012 06:29:33 -0700
-Message-ID: <CC5ADBB9.11353%vikas.chaudhary@qlogic.com>
-References: <1345636510-23131-1-git-send-email-vikas.chaudhary@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH 04/12] qla4xxx: Rename 82XX macros
+Date: Wed, 22 Aug 2012 09:14:24 -0400
+Message-ID: <1345641264-25762-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:34658
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751972Ab2HVN3n convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 09:29:43 -0400
-In-Reply-To: <1345636510-23131-1-git-send-email-vikas.chaudhary@qlogic.com>
-Content-Language: en-US
+Received: from mvnat01.qlogic.com ([198.186.3.73]:40725 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751972Ab2HVNa7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 09:30:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-linux-scsi list rejected patch "qla4xxx: Rename macros from 82XX to 8XXX"
-for probable junk email.
-Rename patch to "qla4xxx: Rename 82XX macros" and resending in next email.
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_attr.c |    6 +-
+ drivers/scsi/qla4xxx/ql4_def.h  |    2 +-
+ drivers/scsi/qla4xxx/ql4_fw.h   |   10 ++--
+ drivers/scsi/qla4xxx/ql4_mbx.c  |    2 +-
+ drivers/scsi/qla4xxx/ql4_nx.c   |  152 +++++++++++++++++++-------------------
+ drivers/scsi/qla4xxx/ql4_nx.h   |   86 +++++++++++-----------
+ drivers/scsi/qla4xxx/ql4_os.c   |   20 +++---
+ 7 files changed, 139 insertions(+), 139 deletions(-)
 
-
------Original Message-----
-From: Vikas <vikas.chaudhary@qlogic.com>
-To: "jbottomley@parallels.com" <jbottomley@parallels.com>, Mike Christie
-<michaelc@cs.wisc.edu>
-Cc: scsi <linux-scsi@vger.kernel.org>, Vikas <vikas.chaudhary@qlogic.com>,
-Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand
-<ravi.anand@qlogic.com>
-Subject: [PATCH 0/12] qla4xxx: Updates for scsi "misc" branch.
-
->From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
->
->James,
->
->Please apply the following patches to the scsi tree at your earliest
->convenience.
->
->Following patches are to add support for our new adapter ISP83XX.
->
->Patch 01/12 to 07/12 is just to change function, variable, structure,
->macros name so that common functions for ISP82xx and ISP83xx include
->string "8xxx" in there name and functions only for ISP82xx will include
->string "82xx" in there name.
->
->Thanks,
->Vikas.
->
->Vikas Chaudhary (12):
->      qla4xxx: Update function name from 8xxx to 82xx
->      qla4xxx: Update structure and variable names
->      qla4xxx: Update func name from ql4_ to qla4_
->      qla4xxx: Rename macros from 82XX to 8XXX
->      qla4xxx: Clean-up and optimize macros
->      qla4xxx: Added new functions in isp_ops
->      qla4xxx: Replace all !is_qla8022() with is_qla40XX()
->      qla4xxx: Set IDC version in correct way
->      qla4xxx: Added new function qla4_8xxx_get_minidump
->      qla4xxx: Added support for ISP83XX
->      qla4xxx: Update Copyright header
->      qla4xxx: Update driver version to 5.03.00-k0
->
->
-> drivers/scsi/qla4xxx/Kconfig       |    4 +-
-> drivers/scsi/qla4xxx/Makefile      |    2 +-
-> drivers/scsi/qla4xxx/ql4_83xx.c    | 1468
->++++++++++++++++++++++++++++++++++++
-> drivers/scsi/qla4xxx/ql4_83xx.h    |  262 +++++++
-> drivers/scsi/qla4xxx/ql4_attr.c    |   26 +-
-> drivers/scsi/qla4xxx/ql4_dbg.c     |   32 +-
-> drivers/scsi/qla4xxx/ql4_dbg.h     |    2 +-
-> drivers/scsi/qla4xxx/ql4_def.h     |   60 ++-
-> drivers/scsi/qla4xxx/ql4_fw.h      |   50 ++-
-> drivers/scsi/qla4xxx/ql4_glbl.h    |   90 ++-
-> drivers/scsi/qla4xxx/ql4_init.c    |   23 +-
-> drivers/scsi/qla4xxx/ql4_inline.h  |    2 +-
-> drivers/scsi/qla4xxx/ql4_iocb.c    |   28 +-
-> drivers/scsi/qla4xxx/ql4_isr.c     |  254 +++++--
-> drivers/scsi/qla4xxx/ql4_mbx.c     |  110 ++--
-> drivers/scsi/qla4xxx/ql4_nvram.c   |    2 +-
-> drivers/scsi/qla4xxx/ql4_nvram.h   |    2 +-
-> drivers/scsi/qla4xxx/ql4_nx.c      | 1430
->+++++++++++++++++++++++------------
-> drivers/scsi/qla4xxx/ql4_nx.h      |  198 +++--
-> drivers/scsi/qla4xxx/ql4_os.c      |  414 +++++++----
-> drivers/scsi/qla4xxx/ql4_version.h |    4 +-
-> 21 files changed, 3553 insertions(+), 910 deletions(-)
-> create mode 100644 drivers/scsi/qla4xxx/ql4_83xx.c
-> create mode 100644 drivers/scsi/qla4xxx/ql4_83xx.h
-
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+diff --git a/drivers/scsi/qla4xxx/ql4_attr.c b/drivers/scsi/qla4xxx/ql4_attr.c
+index d991799..71b44f0 100644
+--- a/drivers/scsi/qla4xxx/ql4_attr.c
++++ b/drivers/scsi/qla4xxx/ql4_attr.c
+@@ -77,13 +77,13 @@ qla4_8xxx_sysfs_write_fw_dump(struct file *filep, struct kobject *kobj,
+ 		/* Reset HBA */
+ 		qla4_82xx_idc_lock(ha);
+ 		dev_state = qla4_82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+-		if (dev_state == QLA82XX_DEV_READY) {
++		if (dev_state == QLA8XXX_DEV_READY) {
+ 			ql4_printk(KERN_INFO, ha,
+ 				   "%s: Setting Need reset, reset_owner is 0x%x.\n",
+ 				   __func__, ha->func_num);
+ 			qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
+-					QLA82XX_DEV_NEED_RESET);
+-			set_bit(AF_82XX_RST_OWNER, &ha->flags);
++					QLA8XXX_DEV_NEED_RESET);
++			set_bit(AF_8XXX_RST_OWNER, &ha->flags);
+ 		} else
+ 			ql4_printk(KERN_INFO, ha,
+ 				   "%s: Reset not performed as device state is 0x%x\n",
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 1d6d1a9..82f70db 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -497,7 +497,7 @@ struct scsi_qla_host {
+ #define AF_PCI_CHANNEL_IO_PERM_FAILURE	21 /* 0x00200000 */
+ #define AF_BUILD_DDB_LIST		22 /* 0x00400000 */
+ #define AF_82XX_FW_DUMPED		24 /* 0x01000000 */
+-#define AF_82XX_RST_OWNER		25 /* 0x02000000 */
++#define AF_8XXX_RST_OWNER		25 /* 0x02000000 */
+ #define AF_82XX_DUMP_READING		26 /* 0x04000000 */
+ 
+ 	unsigned long dpc_flags;
+diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
+index 7240948..037d380 100644
+--- a/drivers/scsi/qla4xxx/ql4_fw.h
++++ b/drivers/scsi/qla4xxx/ql4_fw.h
+@@ -1195,9 +1195,9 @@ struct ql_iscsi_stats {
+ 	uint8_t reserved2[264]; /* 0x0308 - 0x040F */
+ };
+ 
+-#define QLA82XX_DBG_STATE_ARRAY_LEN		16
+-#define QLA82XX_DBG_CAP_SIZE_ARRAY_LEN		8
+-#define QLA82XX_DBG_RSVD_ARRAY_LEN		8
++#define QLA8XXX_DBG_STATE_ARRAY_LEN		16
++#define QLA8XXX_DBG_CAP_SIZE_ARRAY_LEN		8
++#define QLA8XXX_DBG_RSVD_ARRAY_LEN		8
+ 
+ struct qla4_8xxx_minidump_template_hdr {
+ 	uint32_t entry_type;
+@@ -1214,8 +1214,8 @@ struct qla4_8xxx_minidump_template_hdr {
+ 	uint32_t driver_info_word3;
+ 	uint32_t driver_info_word4;
+ 
+-	uint32_t saved_state_array[QLA82XX_DBG_STATE_ARRAY_LEN];
+-	uint32_t capture_size_array[QLA82XX_DBG_CAP_SIZE_ARRAY_LEN];
++	uint32_t saved_state_array[QLA8XXX_DBG_STATE_ARRAY_LEN];
++	uint32_t capture_size_array[QLA8XXX_DBG_CAP_SIZE_ARRAY_LEN];
+ };
+ 
+ #endif /*  _QLA4X_FW_H */
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index e99b671..ea08e52 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -88,7 +88,7 @@ int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
+ 		qla4_82xx_idc_lock(ha);
+ 		dev_state = qla4_82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+ 		qla4_82xx_idc_unlock(ha);
+-		if (dev_state == QLA82XX_DEV_FAILED) {
++		if (dev_state == QLA8XXX_DEV_FAILED) {
+ 			ql4_printk(KERN_WARNING, ha,
+ 				   "scsi%ld: %s: H/W is in failed state, do not send any mailbox commands\n",
+ 				   ha->host_no, __func__);
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 7764c3f..e480184 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -563,7 +563,7 @@ qla4_82xx_pci_get_crb_addr_2M(struct scsi_qla_host *ha, ulong *off)
+ }
+ 
+ /*  PCI Windowing for DDR regions.  */
+-#define QLA82XX_ADDR_IN_RANGE(addr, low, high)            \
++#define QLA8XXX_ADDR_IN_RANGE(addr, low, high)            \
+ 	(((addr) <= (high)) && ((addr) >= (low)))
+ 
+ /*
+@@ -574,10 +574,10 @@ static unsigned long
+ qla4_82xx_pci_mem_bound_check(struct scsi_qla_host *ha,
+ 		unsigned long long addr, int size)
+ {
+-	if (!QLA82XX_ADDR_IN_RANGE(addr, QLA82XX_ADDR_DDR_NET,
+-	    QLA82XX_ADDR_DDR_NET_MAX) ||
+-	    !QLA82XX_ADDR_IN_RANGE(addr + size - 1,
+-	    QLA82XX_ADDR_DDR_NET, QLA82XX_ADDR_DDR_NET_MAX) ||
++	if (!QLA8XXX_ADDR_IN_RANGE(addr, QLA8XXX_ADDR_DDR_NET,
++	    QLA8XXX_ADDR_DDR_NET_MAX) ||
++	    !QLA8XXX_ADDR_IN_RANGE(addr + size - 1,
++	    QLA8XXX_ADDR_DDR_NET, QLA8XXX_ADDR_DDR_NET_MAX) ||
+ 	    ((size != 1) && (size != 2) && (size != 4) && (size != 8))) {
+ 		return 0;
+ 	}
+@@ -592,8 +592,8 @@ qla4_82xx_pci_set_window(struct scsi_qla_host *ha, unsigned long long addr)
+ 	int window;
+ 	u32 win_read;
+ 
+-	if (QLA82XX_ADDR_IN_RANGE(addr, QLA82XX_ADDR_DDR_NET,
+-	    QLA82XX_ADDR_DDR_NET_MAX)) {
++	if (QLA8XXX_ADDR_IN_RANGE(addr, QLA8XXX_ADDR_DDR_NET,
++	    QLA8XXX_ADDR_DDR_NET_MAX)) {
+ 		/* DDR network side */
+ 		window = MN_WIN(addr);
+ 		ha->ddr_mn_window = window;
+@@ -607,8 +607,8 @@ qla4_82xx_pci_set_window(struct scsi_qla_host *ha, unsigned long long addr)
+ 			__func__, window, win_read);
+ 		}
+ 		addr = GET_MEM_OFFS_2M(addr) + QLA82XX_PCI_DDR_NET;
+-	} else if (QLA82XX_ADDR_IN_RANGE(addr, QLA82XX_ADDR_OCM0,
+-				QLA82XX_ADDR_OCM0_MAX)) {
++	} else if (QLA8XXX_ADDR_IN_RANGE(addr, QLA8XXX_ADDR_OCM0,
++				QLA8XXX_ADDR_OCM0_MAX)) {
+ 		unsigned int temp1;
+ 		/* if bits 19:18&17:11 are on */
+ 		if ((addr & 0x00ff800) == 0xff800) {
+@@ -630,7 +630,7 @@ qla4_82xx_pci_set_window(struct scsi_qla_host *ha, unsigned long long addr)
+ 		}
+ 		addr = GET_MEM_OFFS_2M(addr) + QLA82XX_PCI_OCM0_2M;
+ 
+-	} else if (QLA82XX_ADDR_IN_RANGE(addr, QLA82XX_ADDR_QDR_NET,
++	} else if (QLA8XXX_ADDR_IN_RANGE(addr, QLA8XXX_ADDR_QDR_NET,
+ 				QLA82XX_P3_ADDR_QDR_NET_MAX)) {
+ 		/* QDR network side */
+ 		window = MS_WIN(addr);
+@@ -669,20 +669,20 @@ static int qla4_82xx_pci_is_same_window(struct scsi_qla_host *ha,
+ 
+ 	qdr_max = QLA82XX_P3_ADDR_QDR_NET_MAX;
+ 
+-	if (QLA82XX_ADDR_IN_RANGE(addr, QLA82XX_ADDR_DDR_NET,
+-	    QLA82XX_ADDR_DDR_NET_MAX)) {
++	if (QLA8XXX_ADDR_IN_RANGE(addr, QLA8XXX_ADDR_DDR_NET,
++	    QLA8XXX_ADDR_DDR_NET_MAX)) {
+ 		/* DDR network side */
+ 		BUG();	/* MN access can not come here */
+-	} else if (QLA82XX_ADDR_IN_RANGE(addr, QLA82XX_ADDR_OCM0,
+-	     QLA82XX_ADDR_OCM0_MAX)) {
++	} else if (QLA8XXX_ADDR_IN_RANGE(addr, QLA8XXX_ADDR_OCM0,
++	     QLA8XXX_ADDR_OCM0_MAX)) {
+ 		return 1;
+-	} else if (QLA82XX_ADDR_IN_RANGE(addr, QLA82XX_ADDR_OCM1,
+-	     QLA82XX_ADDR_OCM1_MAX)) {
++	} else if (QLA8XXX_ADDR_IN_RANGE(addr, QLA8XXX_ADDR_OCM1,
++	     QLA8XXX_ADDR_OCM1_MAX)) {
+ 		return 1;
+-	} else if (QLA82XX_ADDR_IN_RANGE(addr, QLA82XX_ADDR_QDR_NET,
++	} else if (QLA8XXX_ADDR_IN_RANGE(addr, QLA8XXX_ADDR_QDR_NET,
+ 	    qdr_max)) {
+ 		/* QDR network side */
+-		window = ((addr - QLA82XX_ADDR_QDR_NET) >> 22) & 0x3f;
++		window = ((addr - QLA8XXX_ADDR_QDR_NET) >> 22) & 0x3f;
+ 		if (ha->qdr_sn_window == window)
+ 			return 1;
+ 	}
+@@ -1250,7 +1250,7 @@ qla4_82xx_pci_mem_read_2M(struct scsi_qla_host *ha,
+ 	 * If not MN, go check for MS or invalid.
+ 	 */
+ 
+-	if (off >= QLA82XX_ADDR_QDR_NET && off <= QLA82XX_P3_ADDR_QDR_NET_MAX)
++	if (off >= QLA8XXX_ADDR_QDR_NET && off <= QLA82XX_P3_ADDR_QDR_NET_MAX)
+ 		mem_crb = QLA82XX_CRB_QDR_NET;
+ 	else {
+ 		mem_crb = QLA82XX_CRB_DDR_NET;
+@@ -1340,7 +1340,7 @@ qla4_82xx_pci_mem_write_2M(struct scsi_qla_host *ha,
+ 	/*
+ 	 * If not MN, go check for MS or invalid.
+ 	 */
+-	if (off >= QLA82XX_ADDR_QDR_NET && off <= QLA82XX_P3_ADDR_QDR_NET_MAX)
++	if (off >= QLA8XXX_ADDR_QDR_NET && off <= QLA82XX_P3_ADDR_QDR_NET_MAX)
+ 		mem_crb = QLA82XX_CRB_QDR_NET;
+ 	else {
+ 		mem_crb = QLA82XX_CRB_DDR_NET;
+@@ -1744,33 +1744,33 @@ static int qla4_8xxx_minidump_process_control(struct scsi_qla_host *ha,
+ 	crb_addr = crb_entry->addr;
+ 	for (i = 0; i < crb_entry->op_count; i++) {
+ 		opcode = crb_entry->crb_ctrl.opcode;
+-		if (opcode & QLA82XX_DBG_OPCODE_WR) {
++		if (opcode & QLA8XXX_DBG_OPCODE_WR) {
+ 			qla4_8xxx_md_rw_32(ha, crb_addr,
+ 					   crb_entry->value_1, 1);
+-			opcode &= ~QLA82XX_DBG_OPCODE_WR;
++			opcode &= ~QLA8XXX_DBG_OPCODE_WR;
+ 		}
+-		if (opcode & QLA82XX_DBG_OPCODE_RW) {
++		if (opcode & QLA8XXX_DBG_OPCODE_RW) {
+ 			read_value = qla4_8xxx_md_rw_32(ha, crb_addr, 0, 0);
+ 			qla4_8xxx_md_rw_32(ha, crb_addr, read_value, 1);
+-			opcode &= ~QLA82XX_DBG_OPCODE_RW;
++			opcode &= ~QLA8XXX_DBG_OPCODE_RW;
+ 		}
+-		if (opcode & QLA82XX_DBG_OPCODE_AND) {
++		if (opcode & QLA8XXX_DBG_OPCODE_AND) {
+ 			read_value = qla4_8xxx_md_rw_32(ha, crb_addr, 0, 0);
+ 			read_value &= crb_entry->value_2;
+-			opcode &= ~QLA82XX_DBG_OPCODE_AND;
+-			if (opcode & QLA82XX_DBG_OPCODE_OR) {
++			opcode &= ~QLA8XXX_DBG_OPCODE_AND;
++			if (opcode & QLA8XXX_DBG_OPCODE_OR) {
+ 				read_value |= crb_entry->value_3;
+-				opcode &= ~QLA82XX_DBG_OPCODE_OR;
++				opcode &= ~QLA8XXX_DBG_OPCODE_OR;
+ 			}
+ 			qla4_8xxx_md_rw_32(ha, crb_addr, read_value, 1);
+ 		}
+-		if (opcode & QLA82XX_DBG_OPCODE_OR) {
++		if (opcode & QLA8XXX_DBG_OPCODE_OR) {
+ 			read_value = qla4_8xxx_md_rw_32(ha, crb_addr, 0, 0);
+ 			read_value |= crb_entry->value_3;
+ 			qla4_8xxx_md_rw_32(ha, crb_addr, read_value, 1);
+-			opcode &= ~QLA82XX_DBG_OPCODE_OR;
++			opcode &= ~QLA8XXX_DBG_OPCODE_OR;
+ 		}
+-		if (opcode & QLA82XX_DBG_OPCODE_POLL) {
++		if (opcode & QLA8XXX_DBG_OPCODE_POLL) {
+ 			poll_time = crb_entry->crb_strd.poll_timeout;
+ 			wtime = jiffies + poll_time;
+ 			read_value = qla4_8xxx_md_rw_32(ha, crb_addr, 0, 0);
+@@ -1787,10 +1787,10 @@ static int qla4_8xxx_minidump_process_control(struct scsi_qla_host *ha,
+ 					read_value = qla4_8xxx_md_rw_32(ha,
+ 								crb_addr, 0, 0);
+ 			} while (1);
+-			opcode &= ~QLA82XX_DBG_OPCODE_POLL;
++			opcode &= ~QLA8XXX_DBG_OPCODE_POLL;
+ 		}
+ 
+-		if (opcode & QLA82XX_DBG_OPCODE_RDSTATE) {
++		if (opcode & QLA8XXX_DBG_OPCODE_RDSTATE) {
+ 			if (crb_entry->crb_strd.state_index_a) {
+ 				index = crb_entry->crb_strd.state_index_a;
+ 				addr = tmplt_hdr->saved_state_array[index];
+@@ -1801,10 +1801,10 @@ static int qla4_8xxx_minidump_process_control(struct scsi_qla_host *ha,
+ 			read_value = qla4_8xxx_md_rw_32(ha, addr, 0, 0);
+ 			index = crb_entry->crb_ctrl.state_index_v;
+ 			tmplt_hdr->saved_state_array[index] = read_value;
+-			opcode &= ~QLA82XX_DBG_OPCODE_RDSTATE;
++			opcode &= ~QLA8XXX_DBG_OPCODE_RDSTATE;
+ 		}
+ 
+-		if (opcode & QLA82XX_DBG_OPCODE_WRSTATE) {
++		if (opcode & QLA8XXX_DBG_OPCODE_WRSTATE) {
+ 			if (crb_entry->crb_strd.state_index_a) {
+ 				index = crb_entry->crb_strd.state_index_a;
+ 				addr = tmplt_hdr->saved_state_array[index];
+@@ -1821,10 +1821,10 @@ static int qla4_8xxx_minidump_process_control(struct scsi_qla_host *ha,
+ 			}
+ 
+ 			qla4_8xxx_md_rw_32(ha, addr, read_value, 1);
+-			opcode &= ~QLA82XX_DBG_OPCODE_WRSTATE;
++			opcode &= ~QLA8XXX_DBG_OPCODE_WRSTATE;
+ 		}
+ 
+-		if (opcode & QLA82XX_DBG_OPCODE_MDSTATE) {
++		if (opcode & QLA8XXX_DBG_OPCODE_MDSTATE) {
+ 			index = crb_entry->crb_ctrl.state_index_v;
+ 			read_value = tmplt_hdr->saved_state_array[index];
+ 			read_value <<= crb_entry->crb_ctrl.shl;
+@@ -1834,7 +1834,7 @@ static int qla4_8xxx_minidump_process_control(struct scsi_qla_host *ha,
+ 			read_value |= crb_entry->value_3;
+ 			read_value += crb_entry->value_1;
+ 			tmplt_hdr->saved_state_array[index] = read_value;
+-			opcode &= ~QLA82XX_DBG_OPCODE_MDSTATE;
++			opcode &= ~QLA8XXX_DBG_OPCODE_MDSTATE;
+ 		}
+ 		crb_addr += crb_entry->crb_strd.addr_stride;
+ 	}
+@@ -2081,7 +2081,7 @@ static void qla4_8xxx_mark_entry_skipped(struct scsi_qla_host *ha,
+ 				struct qla8xxx_minidump_entry_hdr *entry_hdr,
+ 				int index)
+ {
+-	entry_hdr->d_ctrl.driver_flags |= QLA82XX_DBG_SKIPPED_FLAG;
++	entry_hdr->d_ctrl.driver_flags |= QLA8XXX_DBG_SKIPPED_FLAG;
+ 	DEBUG2(ql4_printk(KERN_INFO, ha,
+ 			  "scsi(%ld): Skipping entry[%d]: ETYPE[0x%x]-ELEVEL[0x%x]\n",
+ 			  ha->host_no, index, entry_hdr->entry_type,
+@@ -2147,7 +2147,7 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
+ 		if (!(entry_hdr->d_ctrl.entry_capture_mask &
+ 		      ha->fw_dump_capture_mask)) {
+ 			entry_hdr->d_ctrl.driver_flags |=
+-						QLA82XX_DBG_SKIPPED_FLAG;
++						QLA8XXX_DBG_SKIPPED_FLAG;
+ 			goto skip_nxt_entry;
+ 		}
+ 
+@@ -2160,10 +2160,10 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
+ 		 * debug data
+ 		 */
+ 		switch (entry_hdr->entry_type) {
+-		case QLA82XX_RDEND:
++		case QLA8XXX_RDEND:
+ 			qla4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
+ 			break;
+-		case QLA82XX_CNTRL:
++		case QLA8XXX_CNTRL:
+ 			rval = qla4_8xxx_minidump_process_control(ha,
+ 								  entry_hdr);
+ 			if (rval != QLA_SUCCESS) {
+@@ -2171,11 +2171,11 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
+ 				goto md_failed;
+ 			}
+ 			break;
+-		case QLA82XX_RDCRB:
++		case QLA8XXX_RDCRB:
+ 			qla4_8xxx_minidump_process_rdcrb(ha, entry_hdr,
+ 							 &data_ptr);
+ 			break;
+-		case QLA82XX_RDMEM:
++		case QLA8XXX_RDMEM:
+ 			rval = qla4_8xxx_minidump_process_rdmem(ha, entry_hdr,
+ 								&data_ptr);
+ 			if (rval != QLA_SUCCESS) {
+@@ -2183,15 +2183,15 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
+ 				goto md_failed;
+ 			}
+ 			break;
+-		case QLA82XX_BOARD:
+-		case QLA82XX_RDROM:
++		case QLA8XXX_BOARD:
++		case QLA8XXX_RDROM:
+ 			qla4_82xx_minidump_process_rdrom(ha, entry_hdr,
+ 							 &data_ptr);
+ 			break;
+-		case QLA82XX_L2DTG:
+-		case QLA82XX_L2ITG:
+-		case QLA82XX_L2DAT:
+-		case QLA82XX_L2INS:
++		case QLA8XXX_L2DTG:
++		case QLA8XXX_L2ITG:
++		case QLA8XXX_L2DAT:
++		case QLA8XXX_L2INS:
+ 			rval = qla4_8xxx_minidump_process_l2tag(ha, entry_hdr,
+ 								&data_ptr);
+ 			if (rval != QLA_SUCCESS) {
+@@ -2199,24 +2199,24 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
+ 				goto md_failed;
+ 			}
+ 			break;
+-		case QLA82XX_L1DAT:
+-		case QLA82XX_L1INS:
++		case QLA8XXX_L1DAT:
++		case QLA8XXX_L1INS:
+ 			qla4_8xxx_minidump_process_l1cache(ha, entry_hdr,
+ 							   &data_ptr);
+ 			break;
+-		case QLA82XX_RDOCM:
++		case QLA8XXX_RDOCM:
+ 			qla4_8xxx_minidump_process_rdocm(ha, entry_hdr,
+ 							 &data_ptr);
+ 			break;
+-		case QLA82XX_RDMUX:
++		case QLA8XXX_RDMUX:
+ 			qla4_8xxx_minidump_process_rdmux(ha, entry_hdr,
+ 							 &data_ptr);
+ 			break;
+-		case QLA82XX_QUEUE:
++		case QLA8XXX_QUEUE:
+ 			qla4_8xxx_minidump_process_queue(ha, entry_hdr,
+ 							 &data_ptr);
+ 			break;
+-		case QLA82XX_RDNOP:
++		case QLA8XXX_RDNOP:
+ 		default:
+ 			qla4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
+ 			break;
+@@ -2289,7 +2289,7 @@ qla4_8xxx_device_bootstrap(struct scsi_qla_host *ha)
+ 		timeout = msleep_interruptible(200);
+ 		if (timeout) {
+ 			qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
+-			   QLA82XX_DEV_FAILED);
++			   QLA8XXX_DEV_FAILED);
+ 			return rval;
+ 		}
+ 
+@@ -2319,7 +2319,7 @@ qla4_8xxx_device_bootstrap(struct scsi_qla_host *ha)
+ dev_initialize:
+ 	/* set to DEV_INITIALIZING */
+ 	ql4_printk(KERN_INFO, ha, "HW State: INITIALIZING\n");
+-	qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE, QLA82XX_DEV_INITIALIZING);
++	qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE, QLA8XXX_DEV_INITIALIZING);
+ 
+ 	/* Driver that sets device state to initializating sets IDC version */
+ 	qla4_82xx_wr_32(ha, QLA82XX_CRB_DRV_IDC_VERSION, QLA82XX_IDC_VERSION);
+@@ -2340,13 +2340,13 @@ dev_initialize:
+ 	if (rval != QLA_SUCCESS) {
+ 		ql4_printk(KERN_INFO, ha, "HW State: FAILED\n");
+ 		qla4_8xxx_clear_drv_active(ha);
+-		qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE, QLA82XX_DEV_FAILED);
++		qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE, QLA8XXX_DEV_FAILED);
+ 		return rval;
+ 	}
+ 
+ dev_ready:
+ 	ql4_printk(KERN_INFO, ha, "HW State: READY\n");
+-	qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE, QLA82XX_DEV_READY);
++	qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE, QLA8XXX_DEV_READY);
+ 
+ 	return rval;
+ }
+@@ -2373,7 +2373,7 @@ qla4_82xx_need_reset_handler(struct scsi_qla_host *ha)
+ 		qla4_82xx_idc_lock(ha);
+ 	}
+ 
+-	if (!test_bit(AF_82XX_RST_OWNER, &ha->flags)) {
++	if (!test_bit(AF_8XXX_RST_OWNER, &ha->flags)) {
+ 		DEBUG2(ql4_printk(KERN_INFO, ha,
+ 				  "%s(%ld): reset acknowledged\n",
+ 				  __func__, ha->host_no));
+@@ -2404,7 +2404,7 @@ qla4_82xx_need_reset_handler(struct scsi_qla_host *ha)
+ 		 * When reset_owner times out, check which functions
+ 		 * acked/did not ack
+ 		 */
+-		if (test_bit(AF_82XX_RST_OWNER, &ha->flags)) {
++		if (test_bit(AF_8XXX_RST_OWNER, &ha->flags)) {
+ 			ql4_printk(KERN_INFO, ha,
+ 				   "%s(%ld): drv_state = 0x%x, drv_active = 0x%x\n",
+ 				   __func__, ha->host_no, drv_state,
+@@ -2419,16 +2419,16 @@ qla4_82xx_need_reset_handler(struct scsi_qla_host *ha)
+ 	}
+ 
+ 	/* Clear RESET OWNER as we are not going to use it any further */
+-	clear_bit(AF_82XX_RST_OWNER, &ha->flags);
++	clear_bit(AF_8XXX_RST_OWNER, &ha->flags);
+ 
+ 	dev_state = qla4_82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+ 	ql4_printk(KERN_INFO, ha, "Device state is 0x%x = %s\n", dev_state,
+ 		   dev_state < MAX_STATES ? qdev_state[dev_state] : "Unknown");
+ 
+ 	/* Force to DEV_COLD unless someone else is starting a reset */
+-	if (dev_state != QLA82XX_DEV_INITIALIZING) {
++	if (dev_state != QLA8XXX_DEV_INITIALIZING) {
+ 		ql4_printk(KERN_INFO, ha, "HW State: COLD/RE-INIT\n");
+-		qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE, QLA82XX_DEV_COLD);
++		qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE, QLA8XXX_DEV_COLD);
+ 		qla4_8xxx_set_rst_ready(ha);
+ 	}
+ }
+@@ -2481,7 +2481,7 @@ int qla4_8xxx_device_state_handler(struct scsi_qla_host *ha)
+ 				   dev_state, dev_state < MAX_STATES ?
+ 				   qdev_state[dev_state] : "Unknown");
+ 			qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
+-				QLA82XX_DEV_FAILED);
++				QLA8XXX_DEV_FAILED);
+ 		}
+ 
+ 		dev_state = qla4_82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+@@ -2491,17 +2491,17 @@ int qla4_8xxx_device_state_handler(struct scsi_qla_host *ha)
+ 
+ 		/* NOTE: Make sure idc unlocked upon exit of switch statement */
+ 		switch (dev_state) {
+-		case QLA82XX_DEV_READY:
++		case QLA8XXX_DEV_READY:
+ 			goto exit;
+-		case QLA82XX_DEV_COLD:
++		case QLA8XXX_DEV_COLD:
+ 			rval = qla4_8xxx_device_bootstrap(ha);
+ 			goto exit;
+-		case QLA82XX_DEV_INITIALIZING:
++		case QLA8XXX_DEV_INITIALIZING:
+ 			qla4_82xx_idc_unlock(ha);
+ 			msleep(1000);
+ 			qla4_82xx_idc_lock(ha);
+ 			break;
+-		case QLA82XX_DEV_NEED_RESET:
++		case QLA8XXX_DEV_NEED_RESET:
+ 			if (!ql4xdontresethba) {
+ 				qla4_82xx_need_reset_handler(ha);
+ 				/* Update timeout value after need
+@@ -2514,16 +2514,16 @@ int qla4_8xxx_device_state_handler(struct scsi_qla_host *ha)
+ 				qla4_82xx_idc_lock(ha);
+ 			}
+ 			break;
+-		case QLA82XX_DEV_NEED_QUIESCENT:
++		case QLA8XXX_DEV_NEED_QUIESCENT:
+ 			/* idc locked/unlocked in handler */
+ 			qla4_8xxx_need_qsnt_handler(ha);
+ 			break;
+-		case QLA82XX_DEV_QUIESCENT:
++		case QLA8XXX_DEV_QUIESCENT:
+ 			qla4_82xx_idc_unlock(ha);
+ 			msleep(1000);
+ 			qla4_82xx_idc_lock(ha);
+ 			break;
+-		case QLA82XX_DEV_FAILED:
++		case QLA8XXX_DEV_FAILED:
+ 			qla4_82xx_idc_unlock(ha);
+ 			qla4xxx_dead_adapter_cleanup(ha);
+ 			rval = QLA_ERROR;
+@@ -2884,11 +2884,11 @@ qla4_82xx_isp_reset(struct scsi_qla_host *ha)
+ 	qla4_82xx_idc_lock(ha);
+ 	dev_state = qla4_82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+ 
+-	if (dev_state == QLA82XX_DEV_READY) {
++	if (dev_state == QLA8XXX_DEV_READY) {
+ 		ql4_printk(KERN_INFO, ha, "HW State: NEED RESET\n");
+ 		qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
+-		    QLA82XX_DEV_NEED_RESET);
+-		set_bit(AF_82XX_RST_OWNER, &ha->flags);
++		    QLA8XXX_DEV_NEED_RESET);
++		set_bit(AF_8XXX_RST_OWNER, &ha->flags);
+ 	} else
+ 		ql4_printk(KERN_INFO, ha, "HW State: DEVICE INITIALIZING\n");
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.h b/drivers/scsi/qla4xxx/ql4_nx.h
+index e7a9cc4..1936c81 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.h
++++ b/drivers/scsi/qla4xxx/ql4_nx.h
+@@ -490,8 +490,8 @@ enum {
+  * Base addresses of major components on-chip.
+  * ====================== BASE ADDRESSES ON-CHIP ======================
+  */
+-#define QLA82XX_ADDR_DDR_NET		(0x0000000000000000ULL)
+-#define QLA82XX_ADDR_DDR_NET_MAX	(0x000000000fffffffULL)
++#define QLA8XXX_ADDR_DDR_NET		(0x0000000000000000ULL)
++#define QLA8XXX_ADDR_DDR_NET_MAX	(0x000000000fffffffULL)
+ 
+ /* Imbus address bit used to indicate a host address. This bit is
+  * eliminated by the pcie bar and bar select before presentation
+@@ -500,11 +500,11 @@ enum {
+ #define QLA82XX_P2_ADDR_PCIE	(0x0000000800000000ULL)
+ #define QLA82XX_P3_ADDR_PCIE	(0x0000008000000000ULL)
+ #define QLA82XX_ADDR_PCIE_MAX	(0x0000000FFFFFFFFFULL)
+-#define QLA82XX_ADDR_OCM0	(0x0000000200000000ULL)
+-#define QLA82XX_ADDR_OCM0_MAX	(0x00000002000fffffULL)
+-#define QLA82XX_ADDR_OCM1	(0x0000000200400000ULL)
+-#define QLA82XX_ADDR_OCM1_MAX	(0x00000002004fffffULL)
+-#define QLA82XX_ADDR_QDR_NET	(0x0000000300000000ULL)
++#define QLA8XXX_ADDR_OCM0	(0x0000000200000000ULL)
++#define QLA8XXX_ADDR_OCM0_MAX	(0x00000002000fffffULL)
++#define QLA8XXX_ADDR_OCM1	(0x0000000200400000ULL)
++#define QLA8XXX_ADDR_OCM1_MAX	(0x00000002004fffffULL)
++#define QLA8XXX_ADDR_QDR_NET	(0x0000000300000000ULL)
+ 
+ #define QLA82XX_P2_ADDR_QDR_NET_MAX	(0x00000003001fffffULL)
+ #define QLA82XX_P3_ADDR_QDR_NET_MAX	(0x0000000303ffffffULL)
+@@ -572,13 +572,13 @@ enum {
+ #define QLA82XX_CRB_DEV_PART_INFO	(QLA82XX_CAM_RAM(0x14c))
+ 
+ /* Every driver should use these Device State */
+-#define QLA82XX_DEV_COLD		1
+-#define QLA82XX_DEV_INITIALIZING	2
+-#define QLA82XX_DEV_READY		3
+-#define QLA82XX_DEV_NEED_RESET		4
+-#define QLA82XX_DEV_NEED_QUIESCENT	5
+-#define QLA82XX_DEV_FAILED		6
+-#define QLA82XX_DEV_QUIESCENT		7
++#define QLA8XXX_DEV_COLD		1
++#define QLA8XXX_DEV_INITIALIZING	2
++#define QLA8XXX_DEV_READY		3
++#define QLA8XXX_DEV_NEED_RESET		4
++#define QLA8XXX_DEV_NEED_QUIESCENT	5
++#define QLA8XXX_DEV_FAILED		6
++#define QLA8XXX_DEV_QUIESCENT		7
+ #define MAX_STATES			8 /* Increment if new state added */
+ 
+ #define QLA82XX_IDC_VERSION		0x1
+@@ -795,41 +795,41 @@ struct crb_addr_pair {
+ /* Minidump related */
+ 
+ /* Entry Type Defines */
+-#define QLA82XX_RDNOP	0
+-#define QLA82XX_RDCRB	1
+-#define QLA82XX_RDMUX	2
+-#define QLA82XX_QUEUE	3
+-#define QLA82XX_BOARD	4
+-#define QLA82XX_RDOCM	6
+-#define QLA82XX_PREGS	7
+-#define QLA82XX_L1DTG	8
+-#define QLA82XX_L1ITG	9
+-#define QLA82XX_L1DAT	11
+-#define QLA82XX_L1INS	12
+-#define QLA82XX_L2DTG	21
+-#define QLA82XX_L2ITG	22
+-#define QLA82XX_L2DAT	23
+-#define QLA82XX_L2INS	24
+-#define QLA82XX_RDROM	71
+-#define QLA82XX_RDMEM	72
+-#define QLA82XX_CNTRL	98
+-#define QLA82XX_RDEND	255
++#define QLA8XXX_RDNOP	0
++#define QLA8XXX_RDCRB	1
++#define QLA8XXX_RDMUX	2
++#define QLA8XXX_QUEUE	3
++#define QLA8XXX_BOARD	4
++#define QLA8XXX_RDOCM	6
++#define QLA8XXX_PREGS	7
++#define QLA8XXX_L1DTG	8
++#define QLA8XXX_L1ITG	9
++#define QLA8XXX_L1DAT	11
++#define QLA8XXX_L1INS	12
++#define QLA8XXX_L2DTG	21
++#define QLA8XXX_L2ITG	22
++#define QLA8XXX_L2DAT	23
++#define QLA8XXX_L2INS	24
++#define QLA8XXX_RDROM	71
++#define QLA8XXX_RDMEM	72
++#define QLA8XXX_CNTRL	98
++#define QLA8XXX_RDEND	255
+ 
+ /* Opcodes for Control Entries.
+  * These Flags are bit fields.
+  */
+-#define QLA82XX_DBG_OPCODE_WR		0x01
+-#define QLA82XX_DBG_OPCODE_RW		0x02
+-#define QLA82XX_DBG_OPCODE_AND		0x04
+-#define QLA82XX_DBG_OPCODE_OR		0x08
+-#define QLA82XX_DBG_OPCODE_POLL		0x10
+-#define QLA82XX_DBG_OPCODE_RDSTATE	0x20
+-#define QLA82XX_DBG_OPCODE_WRSTATE	0x40
+-#define QLA82XX_DBG_OPCODE_MDSTATE	0x80
++#define QLA8XXX_DBG_OPCODE_WR		0x01
++#define QLA8XXX_DBG_OPCODE_RW		0x02
++#define QLA8XXX_DBG_OPCODE_AND		0x04
++#define QLA8XXX_DBG_OPCODE_OR		0x08
++#define QLA8XXX_DBG_OPCODE_POLL		0x10
++#define QLA8XXX_DBG_OPCODE_RDSTATE	0x20
++#define QLA8XXX_DBG_OPCODE_WRSTATE	0x40
++#define QLA8XXX_DBG_OPCODE_MDSTATE	0x80
+ 
+ /* Driver Flags */
+-#define QLA82XX_DBG_SKIPPED_FLAG	0x80 /* driver skipped this entry  */
+-#define QLA82XX_DBG_SIZE_ERR_FLAG	0x40 /* Entry vs Capture size
++#define QLA8XXX_DBG_SKIPPED_FLAG	0x80 /* driver skipped this entry  */
++#define QLA8XXX_DBG_SIZE_ERR_FLAG	0x40 /* Entry vs Capture size
+ 					      * mismatch */
+ 
+ /* Driver_code is for driver to write some info about the entry
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 89c2576..6aa508c 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -2525,7 +2525,7 @@ void qla4_8xxx_watchdog(struct scsi_qla_host *ha)
+ 					CRB_NIU_XG_PAUSE_CTL_P1);
+ 			set_bit(DPC_HA_UNRECOVERABLE, &ha->dpc_flags);
+ 			qla4xxx_wake_dpc(ha);
+-		} else if (dev_state == QLA82XX_DEV_NEED_RESET &&
++		} else if (dev_state == QLA8XXX_DEV_NEED_RESET &&
+ 		    !test_bit(DPC_RESET_HA, &ha->dpc_flags)) {
+ 			if (!ql4xdontresethba) {
+ 				ql4_printk(KERN_INFO, ha, "%s: HW State: "
+@@ -2533,7 +2533,7 @@ void qla4_8xxx_watchdog(struct scsi_qla_host *ha)
+ 				set_bit(DPC_RESET_HA, &ha->dpc_flags);
+ 				qla4xxx_wake_dpc(ha);
+ 			}
+-		} else if (dev_state == QLA82XX_DEV_NEED_QUIESCENT &&
++		} else if (dev_state == QLA8XXX_DEV_NEED_QUIESCENT &&
+ 		    !test_bit(DPC_HA_NEED_QUIESCENT, &ha->dpc_flags)) {
+ 			ql4_printk(KERN_INFO, ha, "%s: HW State: NEED QUIES!\n",
+ 			    __func__);
+@@ -3043,7 +3043,7 @@ recover_ha_init_adapter:
+ 			qla4_82xx_idc_lock(ha);
+ 			dev_state = qla4_82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+ 			qla4_82xx_idc_unlock(ha);
+-			if (dev_state == QLA82XX_DEV_FAILED) {
++			if (dev_state == QLA8XXX_DEV_FAILED) {
+ 				ql4_printk(KERN_INFO, ha, "%s: don't retry "
+ 					   "recover adapter. H/W is in Failed "
+ 					   "state\n", __func__);
+@@ -3387,7 +3387,7 @@ static void qla4xxx_do_dpc(struct work_struct *work)
+ 		if (test_bit(DPC_HA_UNRECOVERABLE, &ha->dpc_flags)) {
+ 			qla4_82xx_idc_lock(ha);
+ 			qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
+-			    QLA82XX_DEV_FAILED);
++			    QLA8XXX_DEV_FAILED);
+ 			qla4_82xx_idc_unlock(ha);
+ 			ql4_printk(KERN_INFO, ha, "HW State: FAILED\n");
+ 			qla4_8xxx_device_state_handler(ha);
+@@ -5164,7 +5164,7 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
+ 			qla4_82xx_idc_lock(ha);
+ 			dev_state = qla4_82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+ 			qla4_82xx_idc_unlock(ha);
+-			if (dev_state == QLA82XX_DEV_FAILED) {
++			if (dev_state == QLA8XXX_DEV_FAILED) {
+ 				ql4_printk(KERN_WARNING, ha, "%s: don't retry "
+ 				    "initialize adapter. H/W is in failed state\n",
+ 				    __func__);
+@@ -5188,7 +5188,7 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
+ 			DEBUG2(printk(KERN_ERR "HW STATE: FAILED\n"));
+ 			qla4_82xx_idc_lock(ha);
+ 			qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
+-			    QLA82XX_DEV_FAILED);
++			    QLA8XXX_DEV_FAILED);
+ 			qla4_82xx_idc_unlock(ha);
+ 		}
+ 		ret = -ENODEV;
+@@ -6035,7 +6035,7 @@ static uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
+ 
+ 		qla4_82xx_idc_lock(ha);
+ 		qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
+-		    QLA82XX_DEV_COLD);
++		    QLA8XXX_DEV_COLD);
+ 
+ 		qla4_82xx_wr_32(ha, QLA82XX_CRB_DRV_IDC_VERSION,
+ 		    QLA82XX_IDC_VERSION);
+@@ -6050,12 +6050,12 @@ static uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
+ 			    "FAILED\n", ha->host_no, __func__);
+ 			qla4_8xxx_clear_drv_active(ha);
+ 			qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
+-			    QLA82XX_DEV_FAILED);
++			    QLA8XXX_DEV_FAILED);
+ 		} else {
+ 			ql4_printk(KERN_INFO, ha, "scsi%ld: %s: HW State: "
+ 			    "READY\n", ha->host_no, __func__);
+ 			qla4_82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
+-			    QLA82XX_DEV_READY);
++			    QLA8XXX_DEV_READY);
+ 			/* Clear driver state register */
+ 			qla4_82xx_wr_32(ha, QLA82XX_CRB_DRV_STATE, 0);
+ 			qla4_8xxx_set_drv_active(ha);
+@@ -6076,7 +6076,7 @@ static uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
+ 		    "the reset owner\n", ha->host_no, __func__,
+ 		    ha->pdev->devfn);
+ 		if ((qla4_82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE) ==
+-		    QLA82XX_DEV_READY)) {
++		    QLA8XXX_DEV_READY)) {
+ 			clear_bit(AF_FW_RECOVERY, &ha->flags);
+ 			rval = qla4xxx_initialize_adapter(ha, RESET_ADAPTER);
+ 			if (rval == QLA_SUCCESS) {
+-- 
+1.7.8.GIT
 
