@@ -1,12 +1,14 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 0/12] qla4xxx: Updates for scsi "misc" branch.
-Date: Wed, 22 Aug 2012 07:54:58 -0400
-Message-ID: <1345636510-23131-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 02/12] qla4xxx: Update structure and variable names
+Date: Wed, 22 Aug 2012 07:55:00 -0400
+Message-ID: <1345636510-23131-3-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1345636510-23131-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:47344 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:45337 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751498Ab2HVMLv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753556Ab2HVMLv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 22 Aug 2012 08:11:51 -0400
+In-Reply-To: <1345636510-23131-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
@@ -14,57 +16,636 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-James,
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_dbg.c  |    2 +-
+ drivers/scsi/qla4xxx/ql4_def.h  |    2 +-
+ drivers/scsi/qla4xxx/ql4_init.c |    6 +-
+ drivers/scsi/qla4xxx/ql4_iocb.c |    4 +-
+ drivers/scsi/qla4xxx/ql4_isr.c  |   22 +++++-----
+ drivers/scsi/qla4xxx/ql4_mbx.c  |   12 +++---
+ drivers/scsi/qla4xxx/ql4_nx.c   |   80 +++++++++++++++++++-------------------
+ drivers/scsi/qla4xxx/ql4_nx.h   |   30 +++++++-------
+ drivers/scsi/qla4xxx/ql4_os.c   |   14 +++---
+ 9 files changed, 86 insertions(+), 86 deletions(-)
 
-Please apply the following patches to the scsi tree at your earliest
-convenience.
+diff --git a/drivers/scsi/qla4xxx/ql4_dbg.c b/drivers/scsi/qla4xxx/ql4_dbg.c
+index 8d58ae2..ea6af8c 100644
+--- a/drivers/scsi/qla4xxx/ql4_dbg.c
++++ b/drivers/scsi/qla4xxx/ql4_dbg.c
+@@ -37,7 +37,7 @@ void qla4xxx_dump_registers(struct scsi_qla_host *ha)
+ 	if (is_qla8022(ha)) {
+ 		for (i = 1; i < MBOX_REG_COUNT; i++)
+ 			printk(KERN_INFO "mailbox[%d]     = 0x%08X\n",
+-			    i, readl(&ha->qla4_8xxx_reg->mailbox_in[i]));
++			    i, readl(&ha->qla4_82xx_reg->mailbox_in[i]));
+ 		return;
+ 	}
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index c298ee9..1d6d1a9 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -647,7 +647,7 @@ struct scsi_qla_host {
+ 	uint8_t acb_version;
+ 
+ 	/* qla82xx specific fields */
+-	struct device_reg_82xx  __iomem *qla4_8xxx_reg; /* Base I/O address */
++	struct device_reg_82xx  __iomem *qla4_82xx_reg; /* Base I/O address */
+ 	unsigned long nx_pcibase;	/* Base I/O address */
+ 	uint8_t *nx_db_rd_ptr;		/* Doorbell read pointer */
+ 	unsigned long nx_db_wr_ptr;	/* Door bell write pointer */
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index ddd9472..6bc983d 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -102,11 +102,11 @@ int qla4xxx_init_rings(struct scsi_qla_host *ha)
+ 
+ 	if (is_qla8022(ha)) {
+ 		writel(0,
+-		    (unsigned long  __iomem *)&ha->qla4_8xxx_reg->req_q_out);
++		    (unsigned long  __iomem *)&ha->qla4_82xx_reg->req_q_out);
+ 		writel(0,
+-		    (unsigned long  __iomem *)&ha->qla4_8xxx_reg->rsp_q_in);
++		    (unsigned long  __iomem *)&ha->qla4_82xx_reg->rsp_q_in);
+ 		writel(0,
+-		    (unsigned long  __iomem *)&ha->qla4_8xxx_reg->rsp_q_out);
++		    (unsigned long  __iomem *)&ha->qla4_82xx_reg->rsp_q_out);
+ 	} else {
+ 		/*
+ 		 * Initialize DMA Shadow registers.  The firmware is really
+diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
+index cc70ff9..1def688 100644
+--- a/drivers/scsi/qla4xxx/ql4_iocb.c
++++ b/drivers/scsi/qla4xxx/ql4_iocb.c
+@@ -219,8 +219,8 @@ void qla4_82xx_queue_iocb(struct scsi_qla_host *ha)
+  **/
+ void qla4_82xx_complete_iocb(struct scsi_qla_host *ha)
+ {
+-	writel(ha->response_out, &ha->qla4_8xxx_reg->rsp_q_out);
+-	readl(&ha->qla4_8xxx_reg->rsp_q_out);
++	writel(ha->response_out, &ha->qla4_82xx_reg->rsp_q_out);
++	readl(&ha->qla4_82xx_reg->rsp_q_out);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index 26546eb..dda602c 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -607,7 +607,7 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
+ 			 */
+ 			for (i = 0; i < ha->mbox_status_count; i++)
+ 				ha->mbox_status[i] = is_qla8022(ha)
+-				    ? readl(&ha->qla4_8xxx_reg->mailbox_out[i])
++				    ? readl(&ha->qla4_82xx_reg->mailbox_out[i])
+ 				    : readl(&ha->reg->mailbox[i]);
+ 
+ 			set_bit(AF_MBOX_COMMAND_DONE, &ha->flags);
+@@ -618,7 +618,7 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
+ 	} else if (mbox_status >> 12 == MBOX_ASYNC_EVENT_STATUS) {
+ 		for (i = 0; i < MBOX_AEN_REG_COUNT; i++)
+ 			mbox_sts[i] = is_qla8022(ha)
+-			    ? readl(&ha->qla4_8xxx_reg->mailbox_out[i])
++			    ? readl(&ha->qla4_82xx_reg->mailbox_out[i])
+ 			    : readl(&ha->reg->mailbox[i]);
+ 
+ 		/* Immediately process the AENs that don't require much work.
+@@ -832,11 +832,11 @@ void qla4_82xx_interrupt_service_routine(struct scsi_qla_host *ha,
+ 	/* Process mailbox/asynch event interrupt.*/
+ 	if (intr_status & HSRX_RISC_MB_INT)
+ 		qla4xxx_isr_decode_mailbox(ha,
+-		    readl(&ha->qla4_8xxx_reg->mailbox_out[0]));
++		    readl(&ha->qla4_82xx_reg->mailbox_out[0]));
+ 
+ 	/* clear the interrupt */
+-	writel(0, &ha->qla4_8xxx_reg->host_int);
+-	readl(&ha->qla4_8xxx_reg->host_int);
++	writel(0, &ha->qla4_82xx_reg->host_int);
++	readl(&ha->qla4_82xx_reg->host_int);
+ }
+ 
+ /**
+@@ -879,7 +879,7 @@ static void qla4_82xx_spurious_interrupt(struct scsi_qla_host *ha,
+ 
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "Spurious Interrupt\n"));
+ 	if (is_qla8022(ha)) {
+-		writel(0, &ha->qla4_8xxx_reg->host_int);
++		writel(0, &ha->qla4_82xx_reg->host_int);
+ 		if (test_bit(AF_INTx_ENABLED, &ha->flags))
+ 			qla4_82xx_wr_32(ha, ha->nx_legacy_intr.tgt_mask_reg,
+ 			    0xfbff);
+@@ -1020,12 +1020,12 @@ irqreturn_t qla4_82xx_intr_handler(int irq, void *dev_id)
+ 
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	while (1) {
+-		if (!(readl(&ha->qla4_8xxx_reg->host_int) &
++		if (!(readl(&ha->qla4_82xx_reg->host_int) &
+ 		    ISRX_82XX_RISC_INT)) {
+ 			qla4_82xx_spurious_interrupt(ha, reqs_count);
+ 			break;
+ 		}
+-		intr_status =  readl(&ha->qla4_8xxx_reg->host_status);
++		intr_status =  readl(&ha->qla4_82xx_reg->host_status);
+ 		if ((intr_status &
+ 		    (HSRX_RISC_MB_INT | HSRX_RISC_IOCB_INT)) == 0)  {
+ 			qla4_82xx_spurious_interrupt(ha, reqs_count);
+@@ -1086,13 +1086,13 @@ qla4_8xxx_default_intr_handler(int irq, void *dev_id)
+ 
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	while (1) {
+-		if (!(readl(&ha->qla4_8xxx_reg->host_int) &
++		if (!(readl(&ha->qla4_82xx_reg->host_int) &
+ 		    ISRX_82XX_RISC_INT)) {
+ 			qla4_82xx_spurious_interrupt(ha, reqs_count);
+ 			break;
+ 		}
+ 
+-		intr_status =  readl(&ha->qla4_8xxx_reg->host_status);
++		intr_status =  readl(&ha->qla4_82xx_reg->host_status);
+ 		if ((intr_status &
+ 		    (HSRX_RISC_MB_INT | HSRX_RISC_IOCB_INT)) == 0) {
+ 			qla4_82xx_spurious_interrupt(ha, reqs_count);
+@@ -1118,7 +1118,7 @@ qla4_8xxx_msix_rsp_q(int irq, void *dev_id)
+ 
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	qla4xxx_process_response_queue(ha);
+-	writel(0, &ha->qla4_8xxx_reg->host_int);
++	writel(0, &ha->qla4_82xx_reg->host_int);
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 	ha->isr_count++;
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 8f05a88..e99b671 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -111,10 +111,10 @@ int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
+ 		    printk("\n"));
+ 
+ 		for (i = 1; i < inCount; i++)
+-			writel(mbx_cmd[i], &ha->qla4_8xxx_reg->mailbox_in[i]);
+-		writel(mbx_cmd[0], &ha->qla4_8xxx_reg->mailbox_in[0]);
+-		readl(&ha->qla4_8xxx_reg->mailbox_in[0]);
+-		writel(HINT_MBX_INT_PENDING, &ha->qla4_8xxx_reg->hint);
++			writel(mbx_cmd[i], &ha->qla4_82xx_reg->mailbox_in[i]);
++		writel(mbx_cmd[0], &ha->qla4_82xx_reg->mailbox_in[0]);
++		readl(&ha->qla4_82xx_reg->mailbox_in[0]);
++		writel(HINT_MBX_INT_PENDING, &ha->qla4_82xx_reg->hint);
+ 	} else {
+ 		/* Load all mailbox registers, except mailbox 0. */
+ 		for (i = 1; i < inCount; i++)
+@@ -169,11 +169,11 @@ int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
+ 			spin_lock_irqsave(&ha->hardware_lock, flags);
+ 			if (is_qla8022(ha)) {
+ 				intr_status =
+-				    readl(&ha->qla4_8xxx_reg->host_int);
++				    readl(&ha->qla4_82xx_reg->host_int);
+ 				if (intr_status & ISRX_82XX_RISC_INT) {
+ 					ha->mbox_status_count = outCount;
+ 					intr_status =
+-					 readl(&ha->qla4_8xxx_reg->host_status);
++					 readl(&ha->qla4_82xx_reg->host_status);
+ 					ha->isp_ops->interrupt_service_routine(
+ 					    ha, intr_status);
+ 					if (test_bit(AF_INTERRUPTS_ON,
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 404555a..fa34e20 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -27,7 +27,7 @@
+ #define CRB_BLK(off)	((off >> 20) & 0x3f)
+ #define CRB_SUBBLK(off)	((off >> 16) & 0xf)
+ #define CRB_WINDOW_2M	(0x130060)
+-#define CRB_HI(off)	((qla4_8xxx_crb_hub_agt[CRB_BLK(off)] << 20) | \
++#define CRB_HI(off)	((qla4_82xx_crb_hub_agt[CRB_BLK(off)] << 20) | \
+ 			((off) & 0xf0000))
+ #define QLA82XX_PCI_CAMQM_2M_END	(0x04800800UL)
+ #define QLA82XX_PCI_CAMQM_2M_BASE	(0x000ff800UL)
+@@ -268,7 +268,7 @@ static struct crb_128M_2M_block_map crb_128M_2M_map[64] = {
+ /*
+  * top 12 bits of crb internal address (hub, agent)
+  */
+-static unsigned qla4_8xxx_crb_hub_agt[64] = {
++static unsigned qla4_82xx_crb_hub_agt[64] = {
+ 	0,
+ 	QLA82XX_HW_CRB_HUB_AGT_ADR_PS,
+ 	QLA82XX_HW_CRB_HUB_AGT_ADR_MN,
+@@ -584,7 +584,7 @@ qla4_82xx_pci_mem_bound_check(struct scsi_qla_host *ha,
+ 	return 1;
+ }
+ 
+-static int qla4_8xxx_pci_set_window_warning_count;
++static int qla4_82xx_pci_set_window_warning_count;
+ 
+ static unsigned long
+ qla4_82xx_pci_set_window(struct scsi_qla_host *ha, unsigned long long addr)
+@@ -650,8 +650,8 @@ qla4_82xx_pci_set_window(struct scsi_qla_host *ha, unsigned long long addr)
+ 		 * peg gdb frequently accesses memory that doesn't exist,
+ 		 * this limits the chit chat so debugging isn't slowed down.
+ 		 */
+-		if ((qla4_8xxx_pci_set_window_warning_count++ < 8) ||
+-		    (qla4_8xxx_pci_set_window_warning_count%64 == 0)) {
++		if ((qla4_82xx_pci_set_window_warning_count++ < 8) ||
++		    (qla4_82xx_pci_set_window_warning_count%64 == 0)) {
+ 			printk("%s: Warning:%s Unknown address range!\n",
+ 			    __func__, DRIVER_NAME);
+ 		}
+@@ -860,7 +860,7 @@ qla4_82xx_decode_crb_addr(unsigned long addr)
+ }
+ 
+ static long rom_max_timeout = 100;
+-static long qla4_8xxx_rom_lock_timeout = 100;
++static long qla4_82xx_rom_lock_timeout = 100;
+ 
+ static int
+ qla4_82xx_rom_lock(struct scsi_qla_host *ha)
+@@ -874,7 +874,7 @@ qla4_82xx_rom_lock(struct scsi_qla_host *ha)
+ 		done = qla4_82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_LOCK));
+ 		if (done == 1)
+ 			break;
+-		if (timeout >= qla4_8xxx_rom_lock_timeout)
++		if (timeout >= qla4_82xx_rom_lock_timeout)
+ 			return -1;
+ 
+ 		timeout++;
+@@ -1645,15 +1645,15 @@ static void qla4_82xx_rom_lock_recovery(struct scsi_qla_host *ha)
+ }
+ 
+ static void qla4_8xxx_minidump_process_rdcrb(struct scsi_qla_host *ha,
+-				struct qla82xx_minidump_entry_hdr *entry_hdr,
++				struct qla8xxx_minidump_entry_hdr *entry_hdr,
+ 				uint32_t **d_ptr)
+ {
+ 	uint32_t r_addr, r_stride, loop_cnt, i, r_value;
+-	struct qla82xx_minidump_entry_crb *crb_hdr;
++	struct qla8xxx_minidump_entry_crb *crb_hdr;
+ 	uint32_t *data_ptr = *d_ptr;
+ 
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "Entering fn: %s\n", __func__));
+-	crb_hdr = (struct qla82xx_minidump_entry_crb *)entry_hdr;
++	crb_hdr = (struct qla8xxx_minidump_entry_crb *)entry_hdr;
+ 	r_addr = crb_hdr->addr;
+ 	r_stride = crb_hdr->crb_strd.addr_stride;
+ 	loop_cnt = crb_hdr->op_count;
+@@ -1668,19 +1668,19 @@ static void qla4_8xxx_minidump_process_rdcrb(struct scsi_qla_host *ha,
+ }
+ 
+ static int qla4_8xxx_minidump_process_l2tag(struct scsi_qla_host *ha,
+-				 struct qla82xx_minidump_entry_hdr *entry_hdr,
++				 struct qla8xxx_minidump_entry_hdr *entry_hdr,
+ 				 uint32_t **d_ptr)
+ {
+ 	uint32_t addr, r_addr, c_addr, t_r_addr;
+ 	uint32_t i, k, loop_count, t_value, r_cnt, r_value;
+ 	unsigned long p_wait, w_time, p_mask;
+ 	uint32_t c_value_w, c_value_r;
+-	struct qla82xx_minidump_entry_cache *cache_hdr;
++	struct qla8xxx_minidump_entry_cache *cache_hdr;
+ 	int rval = QLA_ERROR;
+ 	uint32_t *data_ptr = *d_ptr;
+ 
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "Entering fn: %s\n", __func__));
+-	cache_hdr = (struct qla82xx_minidump_entry_cache *)entry_hdr;
++	cache_hdr = (struct qla8xxx_minidump_entry_cache *)entry_hdr;
+ 
+ 	loop_count = cache_hdr->op_count;
+ 	r_addr = cache_hdr->read_addr;
+@@ -1727,9 +1727,9 @@ static int qla4_8xxx_minidump_process_l2tag(struct scsi_qla_host *ha,
+ }
+ 
+ static int qla4_8xxx_minidump_process_control(struct scsi_qla_host *ha,
+-				struct qla82xx_minidump_entry_hdr *entry_hdr)
++				struct qla8xxx_minidump_entry_hdr *entry_hdr)
+ {
+-	struct qla82xx_minidump_entry_crb *crb_entry;
++	struct qla8xxx_minidump_entry_crb *crb_entry;
+ 	uint32_t read_value, opcode, poll_time, addr, index, rval = QLA_SUCCESS;
+ 	uint32_t crb_addr;
+ 	unsigned long wtime;
+@@ -1739,7 +1739,7 @@ static int qla4_8xxx_minidump_process_control(struct scsi_qla_host *ha,
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "Entering fn: %s\n", __func__));
+ 	tmplt_hdr = (struct qla4_8xxx_minidump_template_hdr *)
+ 						ha->fw_dump_tmplt_hdr;
+-	crb_entry = (struct qla82xx_minidump_entry_crb *)entry_hdr;
++	crb_entry = (struct qla8xxx_minidump_entry_crb *)entry_hdr;
+ 
+ 	crb_addr = crb_entry->addr;
+ 	for (i = 0; i < crb_entry->op_count; i++) {
+@@ -1843,15 +1843,15 @@ static int qla4_8xxx_minidump_process_control(struct scsi_qla_host *ha,
+ }
+ 
+ static void qla4_8xxx_minidump_process_rdocm(struct scsi_qla_host *ha,
+-				struct qla82xx_minidump_entry_hdr *entry_hdr,
++				struct qla8xxx_minidump_entry_hdr *entry_hdr,
+ 				uint32_t **d_ptr)
+ {
+ 	uint32_t r_addr, r_stride, loop_cnt, i, r_value;
+-	struct qla82xx_minidump_entry_rdocm *ocm_hdr;
++	struct qla8xxx_minidump_entry_rdocm *ocm_hdr;
+ 	uint32_t *data_ptr = *d_ptr;
+ 
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "Entering fn: %s\n", __func__));
+-	ocm_hdr = (struct qla82xx_minidump_entry_rdocm *)entry_hdr;
++	ocm_hdr = (struct qla8xxx_minidump_entry_rdocm *)entry_hdr;
+ 	r_addr = ocm_hdr->read_addr;
+ 	r_stride = ocm_hdr->read_addr_stride;
+ 	loop_cnt = ocm_hdr->op_count;
+@@ -1871,15 +1871,15 @@ static void qla4_8xxx_minidump_process_rdocm(struct scsi_qla_host *ha,
+ }
+ 
+ static void qla4_8xxx_minidump_process_rdmux(struct scsi_qla_host *ha,
+-				struct qla82xx_minidump_entry_hdr *entry_hdr,
++				struct qla8xxx_minidump_entry_hdr *entry_hdr,
+ 				uint32_t **d_ptr)
+ {
+ 	uint32_t r_addr, s_stride, s_addr, s_value, loop_cnt, i, r_value;
+-	struct qla82xx_minidump_entry_mux *mux_hdr;
++	struct qla8xxx_minidump_entry_mux *mux_hdr;
+ 	uint32_t *data_ptr = *d_ptr;
+ 
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "Entering fn: %s\n", __func__));
+-	mux_hdr = (struct qla82xx_minidump_entry_mux *)entry_hdr;
++	mux_hdr = (struct qla8xxx_minidump_entry_mux *)entry_hdr;
+ 	r_addr = mux_hdr->read_addr;
+ 	s_addr = mux_hdr->select_addr;
+ 	s_stride = mux_hdr->select_value_stride;
+@@ -1897,16 +1897,16 @@ static void qla4_8xxx_minidump_process_rdmux(struct scsi_qla_host *ha,
+ }
+ 
+ static void qla4_8xxx_minidump_process_l1cache(struct scsi_qla_host *ha,
+-				struct qla82xx_minidump_entry_hdr *entry_hdr,
++				struct qla8xxx_minidump_entry_hdr *entry_hdr,
+ 				uint32_t **d_ptr)
+ {
+ 	uint32_t addr, r_addr, c_addr, t_r_addr;
+ 	uint32_t i, k, loop_count, t_value, r_cnt, r_value;
+ 	uint32_t c_value_w;
+-	struct qla82xx_minidump_entry_cache *cache_hdr;
++	struct qla8xxx_minidump_entry_cache *cache_hdr;
+ 	uint32_t *data_ptr = *d_ptr;
+ 
+-	cache_hdr = (struct qla82xx_minidump_entry_cache *)entry_hdr;
++	cache_hdr = (struct qla8xxx_minidump_entry_cache *)entry_hdr;
+ 	loop_count = cache_hdr->op_count;
+ 	r_addr = cache_hdr->read_addr;
+ 	c_addr = cache_hdr->control_addr;
+@@ -1931,17 +1931,17 @@ static void qla4_8xxx_minidump_process_l1cache(struct scsi_qla_host *ha,
+ }
+ 
+ static void qla4_8xxx_minidump_process_queue(struct scsi_qla_host *ha,
+-				struct qla82xx_minidump_entry_hdr *entry_hdr,
++				struct qla8xxx_minidump_entry_hdr *entry_hdr,
+ 				uint32_t **d_ptr)
+ {
+ 	uint32_t s_addr, r_addr;
+ 	uint32_t r_stride, r_value, r_cnt, qid = 0;
+ 	uint32_t i, k, loop_cnt;
+-	struct qla82xx_minidump_entry_queue *q_hdr;
++	struct qla8xxx_minidump_entry_queue *q_hdr;
+ 	uint32_t *data_ptr = *d_ptr;
+ 
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "Entering fn: %s\n", __func__));
+-	q_hdr = (struct qla82xx_minidump_entry_queue *)entry_hdr;
++	q_hdr = (struct qla8xxx_minidump_entry_queue *)entry_hdr;
+ 	s_addr = q_hdr->select_addr;
+ 	r_cnt = q_hdr->rd_strd.read_addr_cnt;
+ 	r_stride = q_hdr->rd_strd.read_addr_stride;
+@@ -1964,16 +1964,16 @@ static void qla4_8xxx_minidump_process_queue(struct scsi_qla_host *ha,
+ #define MD_DIRECT_ROM_READ_BASE		0x42150000
+ 
+ static void qla4_82xx_minidump_process_rdrom(struct scsi_qla_host *ha,
+-				struct qla82xx_minidump_entry_hdr *entry_hdr,
++				struct qla8xxx_minidump_entry_hdr *entry_hdr,
+ 				uint32_t **d_ptr)
+ {
+ 	uint32_t r_addr, r_value;
+ 	uint32_t i, loop_cnt;
+-	struct qla82xx_minidump_entry_rdrom *rom_hdr;
++	struct qla8xxx_minidump_entry_rdrom *rom_hdr;
+ 	uint32_t *data_ptr = *d_ptr;
+ 
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "Entering fn: %s\n", __func__));
+-	rom_hdr = (struct qla82xx_minidump_entry_rdrom *)entry_hdr;
++	rom_hdr = (struct qla8xxx_minidump_entry_rdrom *)entry_hdr;
+ 	r_addr = rom_hdr->read_addr;
+ 	loop_cnt = rom_hdr->read_data_size/sizeof(uint32_t);
+ 
+@@ -1998,17 +1998,17 @@ static void qla4_82xx_minidump_process_rdrom(struct scsi_qla_host *ha,
+ #define MD_MIU_TEST_AGT_ADDR_HI		0x41000098
+ 
+ static int qla4_8xxx_minidump_process_rdmem(struct scsi_qla_host *ha,
+-				struct qla82xx_minidump_entry_hdr *entry_hdr,
++				struct qla8xxx_minidump_entry_hdr *entry_hdr,
+ 				uint32_t **d_ptr)
+ {
+ 	uint32_t r_addr, r_value, r_data;
+ 	uint32_t i, j, loop_cnt;
+-	struct qla82xx_minidump_entry_rdmem *m_hdr;
++	struct qla8xxx_minidump_entry_rdmem *m_hdr;
+ 	unsigned long flags;
+ 	uint32_t *data_ptr = *d_ptr;
+ 
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "Entering fn: %s\n", __func__));
+-	m_hdr = (struct qla82xx_minidump_entry_rdmem *)entry_hdr;
++	m_hdr = (struct qla8xxx_minidump_entry_rdmem *)entry_hdr;
+ 	r_addr = m_hdr->read_addr;
+ 	loop_cnt = m_hdr->read_data_size/16;
+ 
+@@ -2078,7 +2078,7 @@ static int qla4_8xxx_minidump_process_rdmem(struct scsi_qla_host *ha,
+ }
+ 
+ static void ql4_8xxx_mark_entry_skipped(struct scsi_qla_host *ha,
+-				struct qla82xx_minidump_entry_hdr *entry_hdr,
++				struct qla8xxx_minidump_entry_hdr *entry_hdr,
+ 				int index)
+ {
+ 	entry_hdr->d_ctrl.driver_flags |= QLA82XX_DBG_SKIPPED_FLAG;
+@@ -2095,7 +2095,7 @@ static void ql4_8xxx_mark_entry_skipped(struct scsi_qla_host *ha,
+ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
+ {
+ 	int num_entry_hdr = 0;
+-	struct qla82xx_minidump_entry_hdr *entry_hdr;
++	struct qla8xxx_minidump_entry_hdr *entry_hdr;
+ 	struct qla4_8xxx_minidump_template_hdr *tmplt_hdr;
+ 	uint32_t *data_ptr;
+ 	uint32_t data_collected = 0;
+@@ -2131,7 +2131,7 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
+ 	timestamp = (u32)(jiffies_to_msecs(now) / 1000);
+ 	tmplt_hdr->driver_timestamp = timestamp;
+ 
+-	entry_hdr = (struct qla82xx_minidump_entry_hdr *)
++	entry_hdr = (struct qla8xxx_minidump_entry_hdr *)
+ 					(((uint8_t *)ha->fw_dump_tmplt_hdr) +
+ 					 tmplt_hdr->first_entry_offset);
+ 
+@@ -2227,7 +2227,7 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
+ 						ha->fw_dump_tmplt_size));
+ skip_nxt_entry:
+ 		/*  next entry in the template */
+-		entry_hdr = (struct qla82xx_minidump_entry_hdr *)
++		entry_hdr = (struct qla8xxx_minidump_entry_hdr *)
+ 				(((uint8_t *)entry_hdr) +
+ 				 entry_hdr->entry_size);
+ 	}
+@@ -2547,8 +2547,8 @@ int qla4_8xxx_load_risc(struct scsi_qla_host *ha)
+ 	int retval;
+ 
+ 	/* clear the interrupt */
+-	writel(0, &ha->qla4_8xxx_reg->host_int);
+-	readl(&ha->qla4_8xxx_reg->host_int);
++	writel(0, &ha->qla4_82xx_reg->host_int);
++	readl(&ha->qla4_82xx_reg->host_int);
+ 
+ 	retval = qla4_8xxx_device_state_handler(ha);
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.h b/drivers/scsi/qla4xxx/ql4_nx.h
+index 3025847..e7a9cc4 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.h
++++ b/drivers/scsi/qla4xxx/ql4_nx.h
+@@ -835,7 +835,7 @@ struct crb_addr_pair {
+ /* Driver_code is for driver to write some info about the entry
+  * currently not used.
+  */
+-struct qla82xx_minidump_entry_hdr {
++struct qla8xxx_minidump_entry_hdr {
+ 	uint32_t entry_type;
+ 	uint32_t entry_size;
+ 	uint32_t entry_capture_size;
+@@ -848,8 +848,8 @@ struct qla82xx_minidump_entry_hdr {
+ };
+ 
+ /*  Read CRB entry header */
+-struct qla82xx_minidump_entry_crb {
+-	struct qla82xx_minidump_entry_hdr h;
++struct qla8xxx_minidump_entry_crb {
++	struct qla8xxx_minidump_entry_hdr h;
+ 	uint32_t addr;
+ 	struct {
+ 		uint8_t addr_stride;
+@@ -871,8 +871,8 @@ struct qla82xx_minidump_entry_crb {
+ 	uint32_t value_3;
+ };
+ 
+-struct qla82xx_minidump_entry_cache {
+-	struct qla82xx_minidump_entry_hdr h;
++struct qla8xxx_minidump_entry_cache {
++	struct qla8xxx_minidump_entry_hdr h;
+ 	uint32_t tag_reg_addr;
+ 	struct {
+ 		uint16_t tag_value_stride;
+@@ -895,8 +895,8 @@ struct qla82xx_minidump_entry_cache {
+ };
+ 
+ /* Read OCM */
+-struct qla82xx_minidump_entry_rdocm {
+-	struct qla82xx_minidump_entry_hdr h;
++struct qla8xxx_minidump_entry_rdocm {
++	struct qla8xxx_minidump_entry_hdr h;
+ 	uint32_t rsvd_0;
+ 	uint32_t rsvd_1;
+ 	uint32_t data_size;
+@@ -908,24 +908,24 @@ struct qla82xx_minidump_entry_rdocm {
+ };
+ 
+ /* Read Memory */
+-struct qla82xx_minidump_entry_rdmem {
+-	struct qla82xx_minidump_entry_hdr h;
++struct qla8xxx_minidump_entry_rdmem {
++	struct qla8xxx_minidump_entry_hdr h;
+ 	uint32_t rsvd[6];
+ 	uint32_t read_addr;
+ 	uint32_t read_data_size;
+ };
+ 
+ /* Read ROM */
+-struct qla82xx_minidump_entry_rdrom {
+-	struct qla82xx_minidump_entry_hdr h;
++struct qla8xxx_minidump_entry_rdrom {
++	struct qla8xxx_minidump_entry_hdr h;
+ 	uint32_t rsvd[6];
+ 	uint32_t read_addr;
+ 	uint32_t read_data_size;
+ };
+ 
+ /* Mux entry */
+-struct qla82xx_minidump_entry_mux {
+-	struct qla82xx_minidump_entry_hdr h;
++struct qla8xxx_minidump_entry_mux {
++	struct qla8xxx_minidump_entry_hdr h;
+ 	uint32_t select_addr;
+ 	uint32_t rsvd_0;
+ 	uint32_t data_size;
+@@ -937,8 +937,8 @@ struct qla82xx_minidump_entry_mux {
+ };
+ 
+ /* Queue entry */
+-struct qla82xx_minidump_entry_queue {
+-	struct qla82xx_minidump_entry_hdr h;
++struct qla8xxx_minidump_entry_queue {
++	struct qla8xxx_minidump_entry_hdr h;
+ 	uint32_t select_addr;
+ 	struct {
+ 		uint16_t queue_id_stride;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index b82c82d..a3a26e4 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -3492,8 +3492,8 @@ static void qla4xxx_free_adapter(struct scsi_qla_host *ha)
+ 		       &ha->reg->ctrl_status);
+ 		readl(&ha->reg->ctrl_status);
+ 	} else if (is_qla8022(ha)) {
+-		writel(0, &ha->qla4_8xxx_reg->host_int);
+-		readl(&ha->qla4_8xxx_reg->host_int);
++		writel(0, &ha->qla4_82xx_reg->host_int);
++		readl(&ha->qla4_82xx_reg->host_int);
+ 	}
+ 
+ 	/* Remove timer thread, if present */
+@@ -3561,7 +3561,7 @@ int qla4_8xxx_iospace_config(struct scsi_qla_host *ha)
+ 	/* Mapping of IO base pointer, door bell read and write pointer */
+ 
+ 	/* mapping of IO base pointer */
+-	ha->qla4_8xxx_reg =
++	ha->qla4_82xx_reg =
+ 	    (struct device_reg_82xx  __iomem *)((uint8_t *)ha->nx_pcibase +
+ 	    0xbc000 + (ha->pdev->devfn << 11));
+ 
+@@ -3660,7 +3660,7 @@ static struct isp_operations qla4xxx_isp_ops = {
+ 	.get_sys_info           = qla4xxx_get_sys_info,
+ };
+ 
+-static struct isp_operations qla4_8xxx_isp_ops = {
++static struct isp_operations qla4_82xx_isp_ops = {
+ 	.iospace_config         = qla4_8xxx_iospace_config,
+ 	.pci_config             = qla4_8xxx_pci_config,
+ 	.disable_intrs          = qla4_82xx_disable_intrs,
+@@ -3684,7 +3684,7 @@ uint16_t qla4xxx_rd_shdw_req_q_out(struct scsi_qla_host *ha)
+ 
+ uint16_t qla4_82xx_rd_shdw_req_q_out(struct scsi_qla_host *ha)
+ {
+-	return (uint16_t)le32_to_cpu(readl(&ha->qla4_8xxx_reg->req_q_out));
++	return (uint16_t)le32_to_cpu(readl(&ha->qla4_82xx_reg->req_q_out));
+ }
+ 
+ uint16_t qla4xxx_rd_shdw_rsp_q_in(struct scsi_qla_host *ha)
+@@ -3694,7 +3694,7 @@ uint16_t qla4xxx_rd_shdw_rsp_q_in(struct scsi_qla_host *ha)
+ 
+ uint16_t qla4_82xx_rd_shdw_rsp_q_in(struct scsi_qla_host *ha)
+ {
+-	return (uint16_t)le32_to_cpu(readl(&ha->qla4_8xxx_reg->rsp_q_in));
++	return (uint16_t)le32_to_cpu(readl(&ha->qla4_82xx_reg->rsp_q_in));
+ }
+ 
+ static ssize_t qla4xxx_show_boot_eth_info(void *data, int type, char *buf)
+@@ -5074,7 +5074,7 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
+ 
+ 	/* Setup Runtime configurable options */
+ 	if (is_qla8022(ha)) {
+-		ha->isp_ops = &qla4_8xxx_isp_ops;
++		ha->isp_ops = &qla4_82xx_isp_ops;
+ 		rwlock_init(&ha->hw_lock);
+ 		ha->qdr_sn_window = -1;
+ 		ha->ddr_mn_window = -1;
+-- 
+1.7.8.GIT
 
-Following patches are to add support for our new adapter ISP83XX.
-
-Patch 01/12 to 07/12 is just to change function, variable, structure,
-macros name so that common functions for ISP82xx and ISP83xx include
-string "8xxx" in there name and functions only for ISP82xx will include
-string "82xx" in there name.
-
-Thanks,
-Vikas.
-
-Vikas Chaudhary (12):
-      qla4xxx: Update function name from 8xxx to 82xx
-      qla4xxx: Update structure and variable names
-      qla4xxx: Update func name from ql4_ to qla4_
-      qla4xxx: Rename macros from 82XX to 8XXX
-      qla4xxx: Clean-up and optimize macros
-      qla4xxx: Added new functions in isp_ops
-      qla4xxx: Replace all !is_qla8022() with is_qla40XX()
-      qla4xxx: Set IDC version in correct way
-      qla4xxx: Added new function qla4_8xxx_get_minidump
-      qla4xxx: Added support for ISP83XX
-      qla4xxx: Update Copyright header
-      qla4xxx: Update driver version to 5.03.00-k0
-
-
- drivers/scsi/qla4xxx/Kconfig       |    4 +-
- drivers/scsi/qla4xxx/Makefile      |    2 +-
- drivers/scsi/qla4xxx/ql4_83xx.c    | 1468 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_83xx.h    |  262 +++++++
- drivers/scsi/qla4xxx/ql4_attr.c    |   26 +-
- drivers/scsi/qla4xxx/ql4_dbg.c     |   32 +-
- drivers/scsi/qla4xxx/ql4_dbg.h     |    2 +-
- drivers/scsi/qla4xxx/ql4_def.h     |   60 ++-
- drivers/scsi/qla4xxx/ql4_fw.h      |   50 ++-
- drivers/scsi/qla4xxx/ql4_glbl.h    |   90 ++-
- drivers/scsi/qla4xxx/ql4_init.c    |   23 +-
- drivers/scsi/qla4xxx/ql4_inline.h  |    2 +-
- drivers/scsi/qla4xxx/ql4_iocb.c    |   28 +-
- drivers/scsi/qla4xxx/ql4_isr.c     |  254 +++++--
- drivers/scsi/qla4xxx/ql4_mbx.c     |  110 ++--
- drivers/scsi/qla4xxx/ql4_nvram.c   |    2 +-
- drivers/scsi/qla4xxx/ql4_nvram.h   |    2 +-
- drivers/scsi/qla4xxx/ql4_nx.c      | 1430 +++++++++++++++++++++++------------
- drivers/scsi/qla4xxx/ql4_nx.h      |  198 +++--
- drivers/scsi/qla4xxx/ql4_os.c      |  414 +++++++----
- drivers/scsi/qla4xxx/ql4_version.h |    4 +-
- 21 files changed, 3553 insertions(+), 910 deletions(-)
- create mode 100644 drivers/scsi/qla4xxx/ql4_83xx.c
- create mode 100644 drivers/scsi/qla4xxx/ql4_83xx.h
