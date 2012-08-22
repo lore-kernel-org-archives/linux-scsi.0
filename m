@@ -1,277 +1,933 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 06/42] qla2xxx: Use bitmap to store loop_id's for fcports.
-Date: Wed, 22 Aug 2012 14:21:00 -0400
-Message-ID: <1345659696-3670-7-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 07/42] qla2xxx: Implementation of bidirectional.
+Date: Wed, 22 Aug 2012 14:21:01 -0400
+Message-ID: <1345659696-3670-8-git-send-email-chad.dupuis@qlogic.com>
 References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:53253 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:44279 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S964817Ab2HVSiK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 14:38:10 -0400
+	id S964869Ab2HVSiL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 14:38:11 -0400
 In-Reply-To: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Store used fcport loop_id's in a bitmap so that as opposed to looping through
-all fcports to find the next free loop_id, new loop_id lookup can be just be
-done via bitops.
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c    |    2 +-
- drivers/scsi/qla2xxx/qla_def.h    |    2 +
- drivers/scsi/qla2xxx/qla_init.c   |   79 +++++++++---------------------------
- drivers/scsi/qla2xxx/qla_inline.h |   26 ++++++++++++
- drivers/scsi/qla2xxx/qla_os.c     |   15 +++++++-
- 5 files changed, 63 insertions(+), 61 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |   29 ++++++
+ drivers/scsi/qla2xxx/qla_bsg.c  |  183 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_bsg.h  |   16 +++
+ drivers/scsi/qla2xxx/qla_dbg.c  |    9 +-
+ drivers/scsi/qla2xxx/qla_def.h  |   23 +++++
+ drivers/scsi/qla2xxx/qla_fw.h   |   38 ++++++++
+ drivers/scsi/qla2xxx/qla_gbl.h  |    2 +
+ drivers/scsi/qla2xxx/qla_init.c |    2 +-
+ drivers/scsi/qla2xxx/qla_iocb.c |  198 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_isr.c  |  167 +++++++++++++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_os.c   |    1 +
+ 11 files changed, 656 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 5ab9530..ff2439b 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1251,6 +1251,31 @@ qla2x00_fw_state_show(struct device *dev, struct device_attribute *attr,
+ 	    state[1], state[2], state[3], state[4]);
+ }
+ 
++static ssize_t
++qla2x00_diag_requests_show(struct device *dev,
++	struct device_attribute *attr, char *buf)
++{
++	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
++
++	if (!IS_BIDI_CAPABLE(vha->hw))
++		return snprintf(buf, PAGE_SIZE, "\n");
++
++	return snprintf(buf, PAGE_SIZE, "%llu\n", vha->bidi_stats.io_count);
++}
++
++static ssize_t
++qla2x00_diag_megabytes_show(struct device *dev,
++	struct device_attribute *attr, char *buf)
++{
++	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
++
++	if (!IS_BIDI_CAPABLE(vha->hw))
++		return snprintf(buf, PAGE_SIZE, "\n");
++
++	return snprintf(buf, PAGE_SIZE, "%llu\n",
++	    vha->bidi_stats.transfer_bytes >> 20);
++}
++
+ static DEVICE_ATTR(driver_version, S_IRUGO, qla2x00_drvr_version_show, NULL);
+ static DEVICE_ATTR(fw_version, S_IRUGO, qla2x00_fw_version_show, NULL);
+ static DEVICE_ATTR(serial_num, S_IRUGO, qla2x00_serial_num_show, NULL);
+@@ -1289,6 +1314,8 @@ static DEVICE_ATTR(vn_port_mac_address, S_IRUGO,
+ static DEVICE_ATTR(fabric_param, S_IRUGO, qla2x00_fabric_param_show, NULL);
+ static DEVICE_ATTR(fw_state, S_IRUGO, qla2x00_fw_state_show, NULL);
+ static DEVICE_ATTR(thermal_temp, S_IRUGO, qla2x00_thermal_temp_show, NULL);
++static DEVICE_ATTR(diag_requests, S_IRUGO, qla2x00_diag_requests_show, NULL);
++static DEVICE_ATTR(diag_megabytes, S_IRUGO, qla2x00_diag_megabytes_show, NULL);
+ 
+ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_driver_version,
+@@ -1318,6 +1345,8 @@ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_fw_state,
+ 	&dev_attr_optrom_gold_fw_version,
+ 	&dev_attr_thermal_temp,
++	&dev_attr_diag_requests,
++	&dev_attr_diag_megabytes,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 462ac70..dac3427 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1650,6 +1650,186 @@ done:
+ }
+ 
+ static int
++qla24xx_process_bidir_cmd(struct fc_bsg_job *bsg_job)
++{
++	struct Scsi_Host *host = bsg_job->shost;
++	scsi_qla_host_t *vha = shost_priv(host);
++	struct qla_hw_data *ha = vha->hw;
++	uint16_t thread_id;
++	uint32_t rval = EXT_STATUS_OK;
++	uint16_t req_sg_cnt = 0;
++	uint16_t rsp_sg_cnt = 0;
++	uint16_t nextlid = 0;
++	uint32_t tot_dsds;
++	srb_t *sp = NULL;
++	uint32_t req_data_len = 0;
++	uint32_t rsp_data_len = 0;
++
++	/* Check the type of the adapter */
++	if (!IS_BIDI_CAPABLE(ha)) {
++		ql_log(ql_log_warn, vha, 0x70a0,
++			"This adapter is not supported\n");
++		rval = EXT_STATUS_NOT_SUPPORTED;
++		goto done;
++	}
++
++	if (test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
++		test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
++		test_bit(ISP_ABORT_RETRY, &vha->dpc_flags)) {
++		rval =  EXT_STATUS_BUSY;
++		goto done;
++	}
++
++	/* Check if host is online */
++	if (!vha->flags.online) {
++		ql_log(ql_log_warn, vha, 0x70a1,
++			"Host is not online\n");
++		rval = EXT_STATUS_DEVICE_OFFLINE;
++		goto done;
++	}
++
++	/* Check if cable is plugged in or not */
++	if (vha->device_flags & DFLG_NO_CABLE) {
++		ql_log(ql_log_warn, vha, 0x70a2,
++			"Cable is unplugged...\n");
++		rval = EXT_STATUS_INVALID_CFG;
++		goto done;
++	}
++
++	/* Check if the switch is connected or not */
++	if (ha->current_topology != ISP_CFG_F) {
++		ql_log(ql_log_warn, vha, 0x70a3,
++			"Host is not connected to the switch\n");
++		rval = EXT_STATUS_INVALID_CFG;
++		goto done;
++	}
++
++	/* Check if operating mode is P2P */
++	if (ha->operating_mode != P2P) {
++		ql_log(ql_log_warn, vha, 0x70a4,
++		    "Host is operating mode is not P2p\n");
++		rval = EXT_STATUS_INVALID_CFG;
++		goto done;
++	}
++
++	thread_id = bsg_job->request->rqst_data.h_vendor.vendor_cmd[1];
++
++	mutex_lock(&ha->selflogin_lock);
++	if (vha->self_login_loop_id == 0) {
++		/* Initialize all required  fields of fcport */
++		vha->bidir_fcport.vha = vha;
++		vha->bidir_fcport.d_id.b.al_pa = vha->d_id.b.al_pa;
++		vha->bidir_fcport.d_id.b.area = vha->d_id.b.area;
++		vha->bidir_fcport.d_id.b.domain = vha->d_id.b.domain;
++		vha->bidir_fcport.loop_id = vha->loop_id;
++
++		if (qla2x00_fabric_login(vha, &(vha->bidir_fcport), &nextlid)) {
++			ql_log(ql_log_warn, vha, 0x70a7,
++			    "Failed to login port %06X for bidirectional IOCB\n",
++			    vha->bidir_fcport.d_id.b24);
++			mutex_unlock(&ha->selflogin_lock);
++			rval = EXT_STATUS_MAILBOX;
++			goto done;
++		}
++		vha->self_login_loop_id = nextlid - 1;
++
++	}
++	/* Assign the self login loop id to fcport */
++	mutex_unlock(&ha->selflogin_lock);
++
++	vha->bidir_fcport.loop_id = vha->self_login_loop_id;
++
++	req_sg_cnt = dma_map_sg(&ha->pdev->dev,
++		bsg_job->request_payload.sg_list,
++		bsg_job->request_payload.sg_cnt,
++		DMA_TO_DEVICE);
++
++	if (!req_sg_cnt) {
++		rval = EXT_STATUS_NO_MEMORY;
++		goto done;
++	}
++
++	rsp_sg_cnt = dma_map_sg(&ha->pdev->dev,
++		bsg_job->reply_payload.sg_list, bsg_job->reply_payload.sg_cnt,
++		DMA_FROM_DEVICE);
++
++	if (!rsp_sg_cnt) {
++		rval = EXT_STATUS_NO_MEMORY;
++		goto done_unmap_req_sg;
++	}
++
++	if ((req_sg_cnt !=  bsg_job->request_payload.sg_cnt) ||
++		(rsp_sg_cnt != bsg_job->reply_payload.sg_cnt)) {
++		ql_dbg(ql_dbg_user, vha, 0x70a9,
++		    "Dma mapping resulted in different sg counts "
++		    "[request_sg_cnt: %x dma_request_sg_cnt: %x reply_sg_cnt: "
++		    "%x dma_reply_sg_cnt: %x]\n",
++		    bsg_job->request_payload.sg_cnt, req_sg_cnt,
++		    bsg_job->reply_payload.sg_cnt, rsp_sg_cnt);
++		rval = EXT_STATUS_NO_MEMORY;
++		goto done_unmap_sg;
++	}
++
++	if (req_data_len != rsp_data_len) {
++		rval = EXT_STATUS_BUSY;
++		ql_log(ql_log_warn, vha, 0x70aa,
++		    "req_data_len != rsp_data_len\n");
++		goto done_unmap_sg;
++	}
++
++	req_data_len = bsg_job->request_payload.payload_len;
++	rsp_data_len = bsg_job->reply_payload.payload_len;
++
++
++	/* Alloc SRB structure */
++	sp = qla2x00_get_sp(vha, &(vha->bidir_fcport), GFP_KERNEL);
++	if (!sp) {
++		ql_dbg(ql_dbg_user, vha, 0x70ac,
++		    "Alloc SRB structure failed\n");
++		rval = EXT_STATUS_NO_MEMORY;
++		goto done_unmap_sg;
++	}
++
++	/*Populate srb->ctx with bidir ctx*/
++	sp->u.bsg_job = bsg_job;
++	sp->free = qla2x00_bsg_sp_free;
++	sp->type = SRB_BIDI_CMD;
++	sp->done = qla2x00_bsg_job_done;
++
++	/* Add the read and write sg count */
++	tot_dsds = rsp_sg_cnt + req_sg_cnt;
++
++	rval = qla2x00_start_bidir(sp, vha, tot_dsds);
++	if (rval != EXT_STATUS_OK)
++		goto done_free_srb;
++	/* the bsg request  will be completed in the interrupt handler */
++	return rval;
++
++done_free_srb:
++	mempool_free(sp, ha->srb_mempool);
++done_unmap_sg:
++	dma_unmap_sg(&ha->pdev->dev,
++	    bsg_job->reply_payload.sg_list,
++	    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
++done_unmap_req_sg:
++	dma_unmap_sg(&ha->pdev->dev,
++	    bsg_job->request_payload.sg_list,
++	    bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
++done:
++
++	/* Return an error vendor specific response
++	 * and complete the bsg request
++	 */
++	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] = rval;
++	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
++	bsg_job->reply->reply_payload_rcv_len = 0;
++	bsg_job->reply->result = (DID_OK) << 16;
++	bsg_job->job_done(bsg_job);
++	/* Always retrun success, vendor rsp carries correct status */
++	return 0;
++}
++
++static int
+ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+ {
+ 	switch (bsg_job->request->rqst_data.h_vendor.vendor_cmd[0]) {
+@@ -1692,6 +1872,9 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+ 	case QL_VND_READ_I2C:
+ 		return qla2x00_read_i2c(bsg_job);
+ 
++	case QL_VND_DIAG_IO_CMD:
++		return qla24xx_process_bidir_cmd(bsg_job);
++
+ 	default:
+ 		bsg_job->reply->result = (DID_ERROR << 16);
+ 		bsg_job->job_done(bsg_job);
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/qla_bsg.h
+index 1a0ab37..1875ee1 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.h
++++ b/drivers/scsi/qla2xxx/qla_bsg.h
+@@ -19,15 +19,31 @@
+ #define QL_VND_SET_FRU_VERSION	0x0B
+ #define QL_VND_READ_FRU_STATUS	0x0C
+ #define QL_VND_WRITE_FRU_STATUS	0x0D
++#define QL_VND_DIAG_IO_CMD	0x0A
+ #define QL_VND_WRITE_I2C	0x10
+ #define QL_VND_READ_I2C		0x11
+ 
+ /* BSG Vendor specific subcode returns */
+ #define EXT_STATUS_OK			0
+ #define EXT_STATUS_ERR			1
++#define EXT_STATUS_BUSY			2
+ #define EXT_STATUS_INVALID_PARAM	6
++#define EXT_STATUS_DATA_OVERRUN		7
++#define EXT_STATUS_DATA_UNDERRUN	8
+ #define EXT_STATUS_MAILBOX		11
+ #define EXT_STATUS_NO_MEMORY		17
++#define EXT_STATUS_DEVICE_OFFLINE	22
++
++/*
++ * To support bidirectional iocb
++ * BSG Vendor specific returns
++ */
++#define EXT_STATUS_NOT_SUPPORTED	27
++#define EXT_STATUS_INVALID_CFG		28
++#define EXT_STATUS_DMA_ERR		29
++#define EXT_STATUS_TIMEOUT		30
++#define EXT_STATUS_THREAD_FAILED	31
++#define EXT_STATUS_DATA_CMP_FAILED	32
+ 
+ /* BSG definations for interpreting CommandSent field */
+ #define INT_DEF_LB_LOOPBACK_CMD         0
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index d651179..0c4fd2c 100644
+index 0c4fd2c..156f534 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -11,7 +11,7 @@
-  * ----------------------------------------------------------------------
-  * |             Level            |   Last Value Used  |     Holes	|
-  * ----------------------------------------------------------------------
-- * | Module Init and Probe        |       0x0122       | 0x4b,0xba,0xfa |
-+ * | Module Init and Probe        |       0x0123       | 0x4b,0xba,0xfa |
+@@ -15,17 +15,20 @@
   * | Mailbox commands             |       0x1140       | 0x111a-0x111b  |
   * |                              |                    | 0x112c-0x112e  |
   * |                              |                    | 0x113a         |
+- * | Device Discovery             |       0x2086       | 0x2020-0x2022  |
++ * | Device Discovery             |       0x2087       | 0x2020-0x2022  |
+  * | Queue Command and IO tracing |       0x3030       | 0x3006,0x3008  |
+  * |                              |                    | 0x302d-0x302e  |
+  * | DPC Thread                   |       0x401c       | 0x4002,0x4013  |
+  * | Async Events                 |       0x505f       | 0x502b-0x502f  |
+  * |                              |                    | 0x5047,0x5052  |
+  * | Timer Routines               |       0x6011       |                |
+- * | User Space Interactions      |       0x709f       | 0x7018,0x702e, |
++ * | User Space Interactions      |       0x70bb       | 0x7018,0x702e, |
+  * |                              |                    | 0x7039,0x7045, |
+  * |                              |                    | 0x7073-0x7075, |
+- * |                              |                    | 0x708c         |
++ * |                              |                    | 0x708c,        |
++ * |                              |                    | 0x70a5,0x70a6, |
++ * |                              |                    | 0x70a8,0x70ab, |
++ * |                              |                    | 0x70ad-0x70ae  |
+  * | Task Management              |       0x803c       | 0x8025-0x8026  |
+  * |                              |                    | 0x800b,0x8039  |
+  * | AER/EEH                      |       0x9011       |		|
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 39007f5..84db668 100644
+index 84db668..9926d9b 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -129,6 +129,7 @@
- #define MAX_FIBRE_DEVICES_2400	2048
- #define MAX_FIBRE_DEVICES_LOOP	128
- #define MAX_FIBRE_DEVICES_MAX	MAX_FIBRE_DEVICES_2400
-+#define LOOPID_MAP_SIZE		(ha->max_fibre_devices / 8)
- #define MAX_FIBRE_LUNS  	0xFFFF
- #define	MAX_HOST_COUNT		16
+@@ -260,6 +260,7 @@ struct srb_iocb {
+ #define SRB_ADISC_CMD	6
+ #define SRB_TM_CMD	7
+ #define SRB_SCSI_CMD	8
++#define SRB_BIDI_CMD	9
  
-@@ -2918,6 +2919,7 @@ struct qla_hw_data {
- 	void            *md_dump;
- 	uint32_t	md_dump_size;
+ typedef struct srb {
+ 	atomic_t ref_count;
+@@ -1510,6 +1511,13 @@ typedef struct {
+ #define CS_RETRY		0x82	/* Driver defined */
+ #define CS_LOOP_DOWN_ABORT	0x83	/* Driver defined */
  
-+	void		*loop_id_map;
- 	struct qlt_hw_data tgt;
++#define CS_BIDIR_RD_OVERRUN			0x700
++#define CS_BIDIR_RD_WR_OVERRUN			0x707
++#define CS_BIDIR_RD_OVERRUN_WR_UNDERRUN		0x715
++#define CS_BIDIR_RD_UNDERRUN			0x1500
++#define CS_BIDIR_RD_UNDERRUN_WR_OVERRUN		0x1507
++#define CS_BIDIR_RD_WR_UNDERRUN			0x1515
++#define CS_BIDIR_DMA				0x200
+ /*
+  * Status entry status flags
+  */
+@@ -2374,6 +2382,11 @@ struct qla_statistics {
+ 	uint64_t output_bytes;
  };
  
++struct bidi_statistics {
++	unsigned long long io_count;
++	unsigned long long transfer_bytes;
++};
++
+ /* Multi queue support */
+ #define MBC_INITIALIZE_MULTIQ 0x1f
+ #define QLA_QUE_PAGE 0X1000
+@@ -2671,6 +2684,7 @@ struct qla_hw_data {
+ #define HAS_EXTENDED_IDS(ha)    ((ha)->device_type & DT_EXTENDED_IDS)
+ #define IS_CT6_SUPPORTED(ha)	((ha)->device_type & DT_CT6_SUPPORTED)
+ #define IS_MQUE_CAPABLE(ha)	((ha)->mqenable || IS_QLA83XX(ha))
++#define IS_BIDI_CAPABLE(ha)	((IS_QLA25XX(ha) || IS_QLA2031(ha)))
+ 
+ 	/* HBA serial number */
+ 	uint8_t		serial0;
+@@ -2754,6 +2768,7 @@ struct qla_hw_data {
+ 	struct completion mbx_intr_comp;  /* Used for completion notification */
+ 	struct completion dcbx_comp;	/* For set port config notification */
+ 	int notify_dcbx_comp;
++	struct mutex selflogin_lock;
+ 
+ 	/* Basic firmware related information. */
+ 	uint16_t	fw_major_version;
+@@ -2987,6 +3002,13 @@ typedef struct scsi_qla_host {
+ 
+ 	/* ISP configuration data. */
+ 	uint16_t	loop_id;		/* Host adapter loop id */
++	uint16_t        self_login_loop_id;     /* host adapter loop id
++						 * get it on self login
++						 */
++	fc_port_t       bidir_fcport;		/* fcport used for bidir cmnds
++						 * no need of allocating it for
++						 * each command
++						 */
+ 
+ 	port_id_t	d_id;			/* Host adapter port id */
+ 	uint8_t		marker_needed;
+@@ -3040,6 +3062,7 @@ typedef struct scsi_qla_host {
+ 	int		seconds_since_last_heartbeat;
+ 	struct fc_host_statistics fc_host_stat;
+ 	struct qla_statistics qla_stats;
++	struct bidi_statistics bidi_stats;
+ 
+ 	atomic_t	vref_count;
+ } scsi_qla_host_t;
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index 980b5a7..a678ed5 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -381,6 +381,44 @@ struct init_cb_24xx {
+ /*
+  * ISP queue - command entry structure definition.
+  */
++#define COMMAND_BIDIRECTIONAL 0x75
++struct cmd_bidir {
++	uint8_t entry_type;		/* Entry type. */
++	uint8_t entry_count;		/* Entry count. */
++	uint8_t sys_define;		/* System defined */
++	uint8_t entry_status;		/* Entry status. */
++
++	uint32_t handle;		/* System handle. */
++
++	uint16_t nport_handle;		/* N_PORT hanlde. */
++
++	uint16_t timeout;		/* Commnad timeout. */
++
++	uint16_t wr_dseg_count;		/* Write Data segment count. */
++	uint16_t rd_dseg_count;		/* Read Data segment count. */
++
++	struct scsi_lun lun;		/* FCP LUN (BE). */
++
++	uint16_t control_flags;		/* Control flags. */
++#define BD_WRAP_BACK			BIT_3
++#define BD_READ_DATA			BIT_1
++#define BD_WRITE_DATA			BIT_0
++
++	uint16_t fcp_cmnd_dseg_len;		/* Data segment length. */
++	uint32_t fcp_cmnd_dseg_address[2];	/* Data segment address. */
++
++	uint16_t reserved[2];			/* Reserved */
++
++	uint32_t rd_byte_count;			/* Total Byte count Read. */
++	uint32_t wr_byte_count;			/* Total Byte count write. */
++
++	uint8_t port_id[3];			/* PortID of destination port.*/
++	uint8_t vp_index;
++
++	uint32_t fcp_data_dseg_address[2];	/* Data segment address. */
++	uint16_t fcp_data_dseg_len;		/* Data segment length. */
++};
++
+ #define COMMAND_TYPE_6	0x48		/* Command Type 6 entry */
+ struct cmd_type_6 {
+ 	uint8_t entry_type;		/* Entry type. */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 9eacd2d..d7588ad 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -188,6 +188,8 @@ extern int qla2x00_start_sp(srb_t *);
+ extern uint16_t qla24xx_calc_iocbs(scsi_qla_host_t *, uint16_t);
+ extern void qla24xx_build_scsi_iocbs(srb_t *, struct cmd_type_7 *, uint16_t);
+ extern int qla24xx_dif_start_scsi(srb_t *);
++extern int qla2x00_start_bidir(srb_t *, struct scsi_qla_host *, uint32_t);
++extern unsigned long qla2x00_get_async_timeout(struct scsi_qla_host *);
+ 
+ extern void *qla2x00_alloc_iocbs(scsi_qla_host_t *, srb_t *);
+ extern int qla2x00_issue_marker(scsi_qla_host_t *, int);
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index a44653b..ee2ccc3 100644
+index ee2ccc3..4aef7f0 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3285,7 +3285,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
- 			 */
- 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
- 				fcport->d_id.b24 = new_fcport->d_id.b24;
--				fcport->loop_id = FC_NO_LOOP_ID;
-+				qla2x00_clear_loop_id(fcport);
- 				fcport->flags |= (FCF_FABRIC_DEVICE |
- 				    FCF_LOGIN_NEEDED);
- 				break;
-@@ -3306,7 +3306,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
- 				ha->isp_ops->fabric_logout(vha, fcport->loop_id,
- 				    fcport->d_id.b.domain, fcport->d_id.b.area,
- 				    fcport->d_id.b.al_pa);
--				fcport->loop_id = FC_NO_LOOP_ID;
-+				qla2x00_clear_loop_id(fcport);
- 			}
+@@ -77,7 +77,7 @@ qla2x00_sp_free(void *data, void *ptr)
  
- 			break;
-@@ -3352,71 +3352,32 @@ int
- qla2x00_find_new_loop_id(scsi_qla_host_t *vha, fc_port_t *dev)
+ /* Asynchronous Login/Logout Routines -------------------------------------- */
+ 
+-static inline unsigned long
++unsigned long
+ qla2x00_get_async_timeout(struct scsi_qla_host *vha)
  {
- 	int	rval;
--	int	found;
--	fc_port_t *fcport;
--	uint16_t first_loop_id;
- 	struct qla_hw_data *ha = vha->hw;
--	struct scsi_qla_host *vp;
--	struct scsi_qla_host *tvp;
- 	unsigned long flags = 0;
- 
- 	rval = QLA_SUCCESS;
- 
--	/* Save starting loop ID. */
--	first_loop_id = dev->loop_id;
--
--	for (;;) {
--		/* Skip loop ID if already used by adapter. */
--		if (dev->loop_id == vha->loop_id)
--			dev->loop_id++;
--
--		/* Skip reserved loop IDs. */
--		while (qla2x00_is_reserved_id(vha, dev->loop_id))
--			dev->loop_id++;
--
--		/* Reset loop ID if passed the end. */
--		if (dev->loop_id > ha->max_loop_id) {
--			/* first loop ID. */
--			dev->loop_id = ha->min_external_loopid;
--		}
-+	spin_lock_irqsave(&ha->vport_slock, flags);
- 
--		/* Check for loop ID being already in use. */
--		found = 0;
--		fcport = NULL;
-+	dev->loop_id = find_first_zero_bit(ha->loop_id_map,
-+	    LOOPID_MAP_SIZE);
- 
--		spin_lock_irqsave(&ha->vport_slock, flags);
--		list_for_each_entry_safe(vp, tvp, &ha->vp_list, list) {
--			list_for_each_entry(fcport, &vp->vp_fcports, list) {
--				if (fcport->loop_id == dev->loop_id &&
--								fcport != dev) {
--					/* ID possibly in use */
--					found++;
--					break;
--				}
--			}
--			if (found)
--				break;
--		}
--		spin_unlock_irqrestore(&ha->vport_slock, flags);
--
--		/* If not in use then it is free to use. */
--		if (!found) {
--			ql_dbg(ql_dbg_disc, dev->vha, 0x2086,
--			    "Assigning new loopid=%x, portid=%x.\n",
--			    dev->loop_id, dev->d_id.b24);
--			break;
--		}
-+	if (qla2x00_is_reserved_id(vha, dev->loop_id)) {
-+		dev->loop_id = FC_NO_LOOP_ID;
-+		rval = QLA_FUNCTION_FAILED;
-+	} else
-+		set_bit(dev->loop_id, ha->loop_id_map);
- 
--		/* ID in use. Try next value. */
--		dev->loop_id++;
-+	spin_unlock_irqrestore(&ha->vport_slock, flags);
- 
--		/* If wrap around. No free ID to use. */
--		if (dev->loop_id == first_loop_id) {
--			dev->loop_id = FC_NO_LOOP_ID;
--			rval = QLA_FUNCTION_FAILED;
--			break;
--		}
--	}
-+	if (rval == QLA_SUCCESS)
-+		ql_dbg(ql_dbg_disc, dev->vha, 0x2086,
-+		    "Assigning new loopid=%x, portid=%x.\n",
-+		    dev->loop_id, dev->d_id.b24);
-+	else
-+		ql_log(ql_log_warn, dev->vha, 0x2087,
-+		    "No loop_id's available, portid=%x.\n",
-+		    dev->d_id.b24);
- 
- 	return (rval);
+ 	unsigned long tmo;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 23e8375..74c69ba 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2665,3 +2665,201 @@ done:
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 	return rval;
  }
-@@ -3616,7 +3577,7 @@ qla2x00_fabric_login(scsi_qla_host_t *vha, fc_port_t *fcport,
- 			ha->isp_ops->fabric_logout(vha, fcport->loop_id,
- 			    fcport->d_id.b.domain, fcport->d_id.b.area,
- 			    fcport->d_id.b.al_pa);
--			fcport->loop_id = FC_NO_LOOP_ID;
-+			qla2x00_clear_loop_id(fcport);
- 			fcport->login_retry = 0;
- 
- 			rval = 3;
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index 6e45764..c12add2 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -57,6 +57,20 @@ host_to_fcp_swap(uint8_t *fcp, uint32_t bsize)
-        return fcp;
- }
- 
-+static inline void
-+qla2x00_set_reserved_loop_ids(struct qla_hw_data *ha)
++
++static void
++qla25xx_build_bidir_iocb(srb_t *sp, struct scsi_qla_host *vha,
++				struct cmd_bidir *cmd_pkt, uint32_t tot_dsds)
 +{
-+	int i;
++	uint16_t avail_dsds;
++	uint32_t *cur_dsd;
++	uint32_t req_data_len = 0;
++	uint32_t rsp_data_len = 0;
++	struct scatterlist *sg;
++	int index;
++	int entry_count = 1;
++	struct fc_bsg_job *bsg_job = sp->u.bsg_job;
 +
-+	if (IS_FWI2_CAPABLE(ha))
-+		return;
++	/*Update entry type to indicate bidir command */
++	*((uint32_t *)(&cmd_pkt->entry_type)) =
++		__constant_cpu_to_le32(COMMAND_BIDIRECTIONAL);
 +
-+	for (i = 0; i < SNS_FIRST_LOOP_ID; i++)
-+		set_bit(i, ha->loop_id_map);
-+	set_bit(MANAGEMENT_SERVER, ha->loop_id_map);
-+	set_bit(BROADCAST, ha->loop_id_map);
++	/* Set the transfer direction, in this set both flags
++	 * Also set the BD_WRAP_BACK flag, firmware will take care
++	 * assigning DID=SID for outgoing pkts.
++	 */
++	cmd_pkt->wr_dseg_count = cpu_to_le16(bsg_job->request_payload.sg_cnt);
++	cmd_pkt->rd_dseg_count = cpu_to_le16(bsg_job->reply_payload.sg_cnt);
++	cmd_pkt->control_flags =
++			__constant_cpu_to_le16(BD_WRITE_DATA | BD_READ_DATA |
++							BD_WRAP_BACK);
++
++	req_data_len = rsp_data_len = bsg_job->request_payload.payload_len;
++	cmd_pkt->wr_byte_count = cpu_to_le32(req_data_len);
++	cmd_pkt->rd_byte_count = cpu_to_le32(rsp_data_len);
++	cmd_pkt->timeout = cpu_to_le16(qla2x00_get_async_timeout(vha) + 2);
++
++	vha->bidi_stats.transfer_bytes += req_data_len;
++	vha->bidi_stats.io_count++;
++
++	/* Only one dsd is available for bidirectional IOCB, remaining dsds
++	 * are bundled in continuation iocb
++	 */
++	avail_dsds = 1;
++	cur_dsd = (uint32_t *)&cmd_pkt->fcp_data_dseg_address;
++
++	index = 0;
++
++	for_each_sg(bsg_job->request_payload.sg_list, sg,
++				bsg_job->request_payload.sg_cnt, index) {
++		dma_addr_t sle_dma;
++		cont_a64_entry_t *cont_pkt;
++
++		/* Allocate additional continuation packets */
++		if (avail_dsds == 0) {
++			/* Continuation type 1 IOCB can accomodate
++			 * 5 DSDS
++			 */
++			cont_pkt = qla2x00_prep_cont_type1_iocb(vha, vha->req);
++			cur_dsd = (uint32_t *) cont_pkt->dseg_0_address;
++			avail_dsds = 5;
++			entry_count++;
++		}
++		sle_dma = sg_dma_address(sg);
++		*cur_dsd++   = cpu_to_le32(LSD(sle_dma));
++		*cur_dsd++   = cpu_to_le32(MSD(sle_dma));
++		*cur_dsd++   = cpu_to_le32(sg_dma_len(sg));
++		avail_dsds--;
++	}
++	/* For read request DSD will always goes to continuation IOCB
++	 * and follow the write DSD. If there is room on the current IOCB
++	 * then it is added to that IOCB else new continuation IOCB is
++	 * allocated.
++	 */
++	for_each_sg(bsg_job->reply_payload.sg_list, sg,
++				bsg_job->reply_payload.sg_cnt, index) {
++		dma_addr_t sle_dma;
++		cont_a64_entry_t *cont_pkt;
++
++		/* Allocate additional continuation packets */
++		if (avail_dsds == 0) {
++			/* Continuation type 1 IOCB can accomodate
++			 * 5 DSDS
++			 */
++			cont_pkt = qla2x00_prep_cont_type1_iocb(vha, vha->req);
++			cur_dsd = (uint32_t *) cont_pkt->dseg_0_address;
++			avail_dsds = 5;
++			entry_count++;
++		}
++		sle_dma = sg_dma_address(sg);
++		*cur_dsd++   = cpu_to_le32(LSD(sle_dma));
++		*cur_dsd++   = cpu_to_le32(MSD(sle_dma));
++		*cur_dsd++   = cpu_to_le32(sg_dma_len(sg));
++		avail_dsds--;
++	}
++	/* This value should be same as number of IOCB required for this cmd */
++	cmd_pkt->entry_count = entry_count;
 +}
 +
- static inline int
- qla2x00_is_reserved_id(scsi_qla_host_t *vha, uint16_t loop_id)
- {
-@@ -69,6 +83,18 @@ qla2x00_is_reserved_id(scsi_qla_host_t *vha, uint16_t loop_id)
- }
- 
- static inline void
-+qla2x00_clear_loop_id(fc_port_t *fcport) {
-+	struct qla_hw_data *ha = fcport->vha->hw;
++int
++qla2x00_start_bidir(srb_t *sp, struct scsi_qla_host *vha, uint32_t tot_dsds)
++{
 +
-+	if (fcport->loop_id == FC_NO_LOOP_ID ||
-+	    qla2x00_is_reserved_id(fcport->vha, fcport->loop_id))
-+		return;
++	struct qla_hw_data *ha = vha->hw;
++	unsigned long flags;
++	uint32_t handle;
++	uint32_t index;
++	uint16_t req_cnt;
++	uint16_t cnt;
++	uint32_t *clr_ptr;
++	struct cmd_bidir *cmd_pkt = NULL;
++	struct rsp_que *rsp;
++	struct req_que *req;
++	int rval = EXT_STATUS_OK;
++	device_reg_t __iomem *reg = ISP_QUE_REG(ha, vha->req->id);
 +
-+	clear_bit(fcport->loop_id, ha->loop_id_map);
-+	fcport->loop_id = FC_NO_LOOP_ID;
-+}
++	rval = QLA_SUCCESS;
 +
-+static inline void
- qla2x00_clean_dsd_pool(struct qla_hw_data *ha, srb_t *sp)
- {
- 	struct dsd_dma *dsd_ptr, *tdsd_ptr;
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index caa4ce4..6b87b55 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2872,6 +2872,7 @@ void qla2x00_free_fcports(struct scsi_qla_host *vha)
- 
- 	list_for_each_entry_safe(fcport, tfcport, &vha->vp_fcports, list) {
- 		list_del(&fcport->list);
-+		qla2x00_clear_loop_id(fcport);
- 		kfree(fcport);
- 		fcport = NULL;
- 	}
-@@ -3169,6 +3170,17 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 	}
- 
- 	INIT_LIST_HEAD(&ha->vp_list);
++	rsp = ha->rsp_q_map[0];
++	req = vha->req;
 +
-+	/* Allocate memory for our loop_id bitmap */
-+	ha->loop_id_map = kzalloc(LOOPID_MAP_SIZE, GFP_KERNEL);
-+	if (!ha->loop_id_map)
-+		goto fail_async_pd;
-+	else {
-+		qla2x00_set_reserved_loop_ids(ha);
-+		ql_dbg_pci(ql_dbg_init, ha->pdev, 0x0123,
-+		    "loop_id_map=%p. \n", ha->loop_id_map);
++	/* Send marker if required */
++	if (vha->marker_needed != 0) {
++		if (qla2x00_marker(vha, req,
++			rsp, 0, 0, MK_SYNC_ALL) != QLA_SUCCESS)
++			return EXT_STATUS_MAILBOX;
++		vha->marker_needed = 0;
 +	}
 +
++	/* Acquire ring specific lock */
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++
++	/* Check for room in outstanding command list. */
++	handle = req->current_outstanding_cmd;
++	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
++		handle++;
++	if (handle == MAX_OUTSTANDING_COMMANDS)
++		handle = 1;
++	if (!req->outstanding_cmds[handle])
++		break;
++	}
++
++	if (index == MAX_OUTSTANDING_COMMANDS) {
++		rval = EXT_STATUS_BUSY;
++		goto queuing_error;
++	}
++
++	/* Calculate number of IOCB required */
++	req_cnt = qla24xx_calc_iocbs(vha, tot_dsds);
++
++	/* Check for room on request queue. */
++	if (req->cnt < req_cnt + 2) {
++		if (ha->mqenable)
++			cnt = RD_REG_DWORD(&reg->isp25mq.req_q_out);
++		else if (IS_QLA82XX(ha))
++			cnt = RD_REG_DWORD(&reg->isp82.req_q_out);
++		else if (IS_FWI2_CAPABLE(ha))
++			cnt = RD_REG_DWORD(&reg->isp24.req_q_out);
++		else
++			cnt = qla2x00_debounce_register(
++					ISP_REQ_Q_OUT(ha, &reg->isp));
++
++		if  (req->ring_index < cnt)
++			req->cnt = cnt - req->ring_index;
++		else
++			req->cnt = req->length -
++				(req->ring_index - cnt);
++	}
++	if (req->cnt < req_cnt + 2) {
++		rval = EXT_STATUS_BUSY;
++		goto queuing_error;
++	}
++
++	cmd_pkt = (struct cmd_bidir *)req->ring_ptr;
++	cmd_pkt->handle = MAKE_HANDLE(req->id, handle);
++
++	/* Zero out remaining portion of packet. */
++	/* tagged queuing modifier -- default is TSK_SIMPLE (0).*/
++	clr_ptr = (uint32_t *)cmd_pkt + 2;
++	memset(clr_ptr, 0, REQUEST_ENTRY_SIZE - 8);
++
++	/* Set NPORT-ID  (of vha)*/
++	cmd_pkt->nport_handle = cpu_to_le16(vha->self_login_loop_id);
++	cmd_pkt->port_id[0] = vha->d_id.b.al_pa;
++	cmd_pkt->port_id[1] = vha->d_id.b.area;
++	cmd_pkt->port_id[2] = vha->d_id.b.domain;
++
++	qla25xx_build_bidir_iocb(sp, vha, cmd_pkt, tot_dsds);
++	cmd_pkt->entry_status = (uint8_t) rsp->id;
++	/* Build command packet. */
++	req->current_outstanding_cmd = handle;
++	req->outstanding_cmds[handle] = sp;
++	sp->handle = handle;
++	req->cnt -= req_cnt;
++
++	/* Send the command to the firmware */
++	wmb();
++	qla2x00_start_iocbs(vha, req);
++queuing_error:
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	return rval;
++}
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 0b09776..2ea848c 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1546,6 +1546,149 @@ qla2x00_handle_dif_error(srb_t *sp, struct sts_entry_24xx *sts24)
  	return 1;
+ }
  
- fail_async_pd:
-@@ -3352,6 +3364,7 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- 	kfree(ha->nvram);
- 	kfree(ha->npiv_info);
- 	kfree(ha->swl);
-+	kfree(ha->loop_id_map);
++static void
++qla25xx_process_bidir_status_iocb(scsi_qla_host_t *vha, void *pkt,
++				  struct req_que *req, uint32_t index)
++{
++	struct qla_hw_data *ha = vha->hw;
++	srb_t *sp;
++	uint16_t	comp_status;
++	uint16_t	scsi_status;
++	uint16_t thread_id;
++	uint32_t rval;
++	struct fc_bsg_job *bsg_job = NULL;
++	sts_entry_t *sts;
++	struct sts_entry_24xx *sts24;
++	sts = (sts_entry_t *) pkt;
++	sts24 = (struct sts_entry_24xx *) pkt;
++
++	/* Validate handle. */
++	if (index >= MAX_OUTSTANDING_COMMANDS) {
++		ql_log(ql_log_warn, vha, 0x70af,
++		    "Invalid SCSI completion handle 0x%x.\n", index);
++		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
++		return;
++	}
++
++	sp = req->outstanding_cmds[index];
++	if (sp) {
++		/* Free outstanding command slot. */
++		req->outstanding_cmds[index] = NULL;
++		bsg_job = sp->u.bsg_job;
++	} else {
++		ql_log(ql_log_warn, vha, 0x70b0,
++		    "Req:%d: Invalid ISP SCSI completion handle(0x%x)\n",
++		    req->id, index);
++
++		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
++		return;
++	}
++
++	if (IS_FWI2_CAPABLE(ha)) {
++		comp_status = le16_to_cpu(sts24->comp_status);
++		scsi_status = le16_to_cpu(sts24->scsi_status) & SS_MASK;
++	} else {
++		comp_status = le16_to_cpu(sts->comp_status);
++		scsi_status = le16_to_cpu(sts->scsi_status) & SS_MASK;
++	}
++
++	thread_id = bsg_job->request->rqst_data.h_vendor.vendor_cmd[1];
++	switch (comp_status) {
++	case CS_COMPLETE:
++		if (scsi_status == 0) {
++			bsg_job->reply->reply_payload_rcv_len =
++					bsg_job->reply_payload.payload_len;
++			rval = EXT_STATUS_OK;
++		}
++		goto done;
++
++	case CS_DATA_OVERRUN:
++		ql_dbg(ql_dbg_user, vha, 0x70b1,
++		    "Command completed with date overrun thread_id=%d\n",
++		    thread_id);
++		rval = EXT_STATUS_DATA_OVERRUN;
++		break;
++
++	case CS_DATA_UNDERRUN:
++		ql_dbg(ql_dbg_user, vha, 0x70b2,
++		    "Command completed with date underrun thread_id=%d\n",
++		    thread_id);
++		rval = EXT_STATUS_DATA_UNDERRUN;
++		break;
++	case CS_BIDIR_RD_OVERRUN:
++		ql_dbg(ql_dbg_user, vha, 0x70b3,
++		    "Command completed with read data overrun thread_id=%d\n",
++		    thread_id);
++		rval = EXT_STATUS_DATA_OVERRUN;
++		break;
++
++	case CS_BIDIR_RD_WR_OVERRUN:
++		ql_dbg(ql_dbg_user, vha, 0x70b4,
++		    "Command completed with read and write data overrun "
++		    "thread_id=%d\n", thread_id);
++		rval = EXT_STATUS_DATA_OVERRUN;
++		break;
++
++	case CS_BIDIR_RD_OVERRUN_WR_UNDERRUN:
++		ql_dbg(ql_dbg_user, vha, 0x70b5,
++		    "Command completed with read data over and write data "
++		    "underrun thread_id=%d\n", thread_id);
++		rval = EXT_STATUS_DATA_OVERRUN;
++		break;
++
++	case CS_BIDIR_RD_UNDERRUN:
++		ql_dbg(ql_dbg_user, vha, 0x70b6,
++		    "Command completed with read data data underrun "
++		    "thread_id=%d\n", thread_id);
++		rval = EXT_STATUS_DATA_UNDERRUN;
++		break;
++
++	case CS_BIDIR_RD_UNDERRUN_WR_OVERRUN:
++		ql_dbg(ql_dbg_user, vha, 0x70b7,
++		    "Command completed with read data under and write data "
++		    "overrun thread_id=%d\n", thread_id);
++		rval = EXT_STATUS_DATA_UNDERRUN;
++		break;
++
++	case CS_BIDIR_RD_WR_UNDERRUN:
++		ql_dbg(ql_dbg_user, vha, 0x70b8,
++		    "Command completed with read and write data underrun "
++		    "thread_id=%d\n", thread_id);
++		rval = EXT_STATUS_DATA_UNDERRUN;
++		break;
++
++	case CS_BIDIR_DMA:
++		ql_dbg(ql_dbg_user, vha, 0x70b9,
++		    "Command completed with data DMA error thread_id=%d\n",
++		    thread_id);
++		rval = EXT_STATUS_DMA_ERR;
++		break;
++
++	case CS_TIMEOUT:
++		ql_dbg(ql_dbg_user, vha, 0x70ba,
++		    "Command completed with timeout thread_id=%d\n",
++		    thread_id);
++		rval = EXT_STATUS_TIMEOUT;
++		break;
++	default:
++		ql_dbg(ql_dbg_user, vha, 0x70bb,
++		    "Command completed with completion status=0x%x "
++		    "thread_id=%d\n", comp_status, thread_id);
++		rval = EXT_STATUS_ERR;
++		break;
++	}
++		bsg_job->reply->reply_payload_rcv_len = 0;
++
++done:
++	/* Return the vendor specific reply to API */
++	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] = rval;
++	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
++	/* Always return DID_OK, bsg will send the vendor specific response
++	 * in this case only */
++	sp->done(vha, sp, (DID_OK << 6));
++
++}
++
+ /**
+  * qla2x00_status_entry() - Process a Status IOCB entry.
+  * @ha: SCSI driver HA context
+@@ -1573,12 +1716,14 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 	struct req_que *req;
+ 	int logit = 1;
+ 	int res = 0;
++	uint16_t state_flags = 0;
  
- 	ha->srb_mempool = NULL;
- 	ha->ctx_mempool = NULL;
-@@ -3687,7 +3700,7 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
- 			}
+ 	sts = (sts_entry_t *) pkt;
+ 	sts24 = (struct sts_entry_24xx *) pkt;
+ 	if (IS_FWI2_CAPABLE(ha)) {
+ 		comp_status = le16_to_cpu(sts24->comp_status);
+ 		scsi_status = le16_to_cpu(sts24->scsi_status) & SS_MASK;
++		state_flags = le16_to_cpu(sts24->state_flags);
+ 	} else {
+ 		comp_status = le16_to_cpu(sts->comp_status);
+ 		scsi_status = le16_to_cpu(sts->scsi_status) & SS_MASK;
+@@ -1587,17 +1732,9 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 	que = MSW(sts->handle);
+ 	req = ha->req_q_map[que];
  
- 			if (fcport->login_retry == 0 && status != QLA_SUCCESS)
--				fcport->loop_id = FC_NO_LOOP_ID;
-+				qla2x00_clear_loop_id(fcport);
- 		}
- 		if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
- 			break;
+-	/* Fast path completion. */
+-	if (comp_status == CS_COMPLETE && scsi_status == 0) {
+-		qla2x00_process_completed_request(vha, req, handle);
+-
+-		return;
+-	}
+-
+ 	/* Validate handle. */
+ 	if (handle < MAX_OUTSTANDING_COMMANDS) {
+ 		sp = req->outstanding_cmds[handle];
+-		req->outstanding_cmds[handle] = NULL;
+ 	} else
+ 		sp = NULL;
+ 
+@@ -1612,6 +1749,20 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 		qla2xxx_wake_dpc(vha);
+ 		return;
+ 	}
++
++	if (unlikely((state_flags & BIT_1) && (sp->type == SRB_BIDI_CMD))) {
++		qla25xx_process_bidir_status_iocb(vha, pkt, req, handle);
++		return;
++	}
++
++	/* Fast path completion. */
++	if (comp_status == CS_COMPLETE && scsi_status == 0) {
++		qla2x00_process_completed_request(vha, req, handle);
++
++		return;
++	}
++
++	req->outstanding_cmds[handle] = NULL;
+ 	cp = GET_CMD_SP(sp);
+ 	if (cp == NULL) {
+ 		ql_dbg(ql_dbg_io, vha, 0x3018,
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 6b87b55..d96adb7 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2203,6 +2203,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ha->mem_only = mem_only;
+ 	spin_lock_init(&ha->hardware_lock);
+ 	spin_lock_init(&ha->vport_slock);
++	mutex_init(&ha->selflogin_lock);
+ 
+ 	/* Set ISP-type information. */
+ 	qla2x00_set_isp_flags(ha);
 -- 
 1.7.7
 
