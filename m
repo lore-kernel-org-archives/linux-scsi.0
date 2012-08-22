@@ -1,74 +1,85 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [RESEND][PATCH][SCSI] mpt2sas: Fix for issue - Unable to boot from the SAS drive connected to HBA
-Date: Tue, 21 Aug 2012 19:48:35 +0200
-Message-ID: <1554075.4PqkcQvS1x@eto>
-References: <20120821162315.GA5135@localhost.localdomain>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v3.6-rc3
+Date: Tue, 21 Aug 2012 20:23:54 -0700
+Message-ID: <1345605834.23278.280.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1746846.1rdkakQSz9"; micalg="pgp-sha1"; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:59255 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932164Ab2HURsj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Aug 2012 13:48:39 -0400
-In-Reply-To: <20120821162315.GA5135@localhost.localdomain>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38577 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751719Ab2HVDX5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Aug 2012 23:23:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sreekanth.reddy@lsi.com
-Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, jejb@kernel.org, stable@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Yi Zou <yi.zou@intel.com>, "Rustad, Mark D" <mark.d.rustad@intel.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>
 
+Hello Linus!
 
---nextPart1746846.1rdkakQSz9
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+The following are pending target fixes destined for v3.6-rc3.  Please go
+ahead and pull from:
 
-Am Dienstag 21 August 2012, 21:53:15 schrieb sreekanth.reddy@lsi.com:
-> Fix for issue - Unable to boot from the SAS drive connected to HBA
-> 
-> This patch checks whether HBA is SAS2008 B0 controller.
-> if it is a SAS2008 B0 controller then it use IO-APIC interrupt instead of
-> MSIX, as SAS2008 B0 controller doesn't support MSIX interrupts.
-> 
-> Signed-off-by: Sreekanth Reddy <sreekanth.reddy@lsi.com>
-> Cc: <stable@kernel.org>
-> ---
-> 
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> b/drivers/scsi/mpt2sas/mpt2sas_base.c index 6102ef2..fd2f4ad 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -1207,6 +1207,15 @@ _base_check_enable_msix(struct MPT2SAS_ADAPTER *ioc)
->  {
->  	int base;
->  	u16 message_control;
-> +	u8 revision;
-> +
-> +	/* Check whether controller SAS2008 B0 controller,
-> +	   if it is a SAS2008 B0 controller use IO-APIC instead of MSIX */
-> +	pci_read_config_byte(ioc->pdev, PCI_CLASS_REVISION, &revision);
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
 
-Nope. Just use ioc->pdev->revision here.
+The executive summary includes:
 
-> +	if (ioc->pdev->device == MPI2_MFGPAGE_DEVID_SAS2008 &&
-> +	    revision == 0x01) {
-> +		return -EINVAL;
-> +	}
-> 
-> 
->  	base = pci_find_capability(ioc->pdev, PCI_CAP_ID_MSIX);
+- Post-merge review comments for tcm_vhost (MST + nab)
+- Avoid debugging overhead when not debugging for tcm-fc(FCoE) (MDR)
+- Fix NULL pointer dereference bug on alloc_page failulre (Yi Zou)
+- Fix REPORT_LUNs regression bug with pSCSI export (AlexE + nab)
+- Fix regression bug with handling of zero-length data CDBs (nab)
+- Fix vhost_scsi_target structure alignment (MST)
 
-Eike
---nextPart1746846.1rdkakQSz9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
+Thanks again to everyone who contributed a bugfix patch, gave review
+feedback on tcm_vhost code, and/or reported a bug during their own
+testing over the last weeks.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+There is one other outstanding bug reported by Roland recently related
+to SCSI transfer length overflow handling, for which the current
+proposed bugfix has been left in queue pending further testing with
+other non iscsi-target based fabric drivers.
 
-iEYEABECAAYFAlAzyfMACgkQXKSJPmm5/E4s7wCglxn6hqR+uOwfThoIy/ti0wJ3
-76oAni0atxK/8nzFM9JA9RP/btrN9xOh
-=R8nd
------END PGP SIGNATURE-----
+As the patch is verified with loopback (local SGL memory from SCSI LLD)
++ tcm_qla2xxx (TCM allocated SGL memory mapped to PCI HW) fabric ports,
+it will be included into the next 3.6-rc-fixes PULL request.
 
---nextPart1746846.1rdkakQSz9--
+Thank you!
+
+--nab
+
+Denis Efremov (1):
+  tcm_fc: rcu_deref outside rcu lock/unlock section
+
+Fengguang Wu (1):
+  tcm_vhost: Fix incorrect IS_ERR() usage in vhost_scsi_map_iov_to_sgl
+
+Mark Rustad (1):
+  tcm_fc: Avoid debug overhead when not debugging
+
+Michael S. Tsirkin (1):
+  tcm_vhost: Fix vhost_scsi_target structure alignment
+
+Nicholas Bellinger (4):
+  tcm_vhost: Post-merge review changes requested by MST
+  tcm_vhost: Change vhost_scsi_target->vhost_wwpn to char *
+  target/pscsi: Fix bug with REPORT_LUNs handling for SCSI passthrough
+  target: Fix regression bug with handling of zero-length data CDBs
+
+Roland Dreier (1):
+  target: Remove unused se_cmd.cmd_spdtl
+
+Yi Zou (1):
+  target: fix NULL pointer dereference bug alloc_page() fails to get
+    memory
+
+ drivers/target/target_core_pscsi.c     |    9 ++-
+ drivers/target/target_core_transport.c |   15 ++-
+ drivers/target/tcm_fc/tcm_fc.h         |    1 +
+ drivers/target/tcm_fc/tfc_cmd.c        |    8 +-
+ drivers/target/tcm_fc/tfc_sess.c       |    4 +-
+ drivers/vhost/tcm_vhost.c              |  203 ++++++++++++++++++--------------
+ drivers/vhost/tcm_vhost.h              |   12 +-
+ include/target/target_core_base.h      |    2 -
+ 8 files changed, 146 insertions(+), 108 deletions(-)
 
