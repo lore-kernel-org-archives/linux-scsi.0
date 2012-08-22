@@ -1,54 +1,332 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 39/42] qla2xxx: Don't toggle RISC interrupt bits after IRQ lines are attached.
-Date: Wed, 22 Aug 2012 14:21:33 -0400
-Message-ID: <1345659696-3670-40-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 37/42] qla2xxx: T10 DIF - ISP83xx changes.
+Date: Wed, 22 Aug 2012 14:21:31 -0400
+Message-ID: <1345659696-3670-38-git-send-email-chad.dupuis@qlogic.com>
 References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:9483 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:53253 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S965019Ab2HVSii (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 14:38:38 -0400
+	id S965015Ab2HVSih (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 14:38:37 -0400
 In-Reply-To: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Arun Easi <arun.easi@qlogic.com>
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Signed-off-by: Arun Easi <arun.easi@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c |   14 +-------------
- 1 files changed, 1 insertions(+), 13 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |   11 ++++++-
+ drivers/scsi/qla2xxx/qla_dbg.c  |    3 +-
+ drivers/scsi/qla2xxx/qla_def.h  |   13 ++++++--
+ drivers/scsi/qla2xxx/qla_init.c |    3 ++
+ drivers/scsi/qla2xxx/qla_iocb.c |   59 ++++++++++----------------------------
+ drivers/scsi/qla2xxx/qla_isr.c  |   13 ++++++++
+ drivers/scsi/qla2xxx/qla_os.c   |   19 +++++++++---
+ 7 files changed, 67 insertions(+), 54 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 2cc8e12..3c72acb 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1812,7 +1812,7 @@ qla24xx_vport_create(struct fc_vport *fc_vport, bool disable)
+ 
+ 	if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
+ 		if (ha->fw_attributes & BIT_4) {
+-			int prot = 0;
++			int prot = 0, guard;
+ 			vha->flags.difdix_supported = 1;
+ 			ql_dbg(ql_dbg_user, vha, 0x7082,
+ 			    "Registered for DIF/DIX type 1 and 3 protection.\n");
+@@ -1825,7 +1825,14 @@ qla24xx_vport_create(struct fc_vport *fc_vport, bool disable)
+ 			    | SHOST_DIX_TYPE1_PROTECTION
+ 			    | SHOST_DIX_TYPE2_PROTECTION
+ 			    | SHOST_DIX_TYPE3_PROTECTION);
+-			scsi_host_set_guard(vha->host, SHOST_DIX_GUARD_CRC);
++
++			guard = SHOST_DIX_GUARD_CRC;
++
++			if (IS_PI_IPGUARD_CAPABLE(ha) &&
++			    (ql2xenabledif > 1 || IS_PI_DIFB_DIX0_CAPABLE(ha)))
++				guard |= SHOST_DIX_GUARD_IP;
++
++			scsi_host_set_guard(vha->host, guard);
+ 		} else
+ 			vha->flags.difdix_supported = 0;
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 3e081bd..44efe3c 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -17,7 +17,8 @@
+  * |                              |                    | 0x113a         |
+  * | Device Discovery             |       0x2087       | 0x2020-0x2022, |
+  * |                              |                    | 0x2016         |
+- * | Queue Command and IO tracing |       0x3030       | 0x3006,0x3008  |
++ * | Queue Command and IO tracing |       0x3030       | 0x3006-0x300b  |
++ * |                              |                    | 0x3027-0x3028  |
+  * |                              |                    | 0x302d-0x302e  |
+  * | DPC Thread                   |       0x401d       | 0x4002,0x4013  |
+  * | Async Events                 |       0x5071       | 0x502b-0x502f  |
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index c03f1e2..3841fb18 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -1468,9 +1468,10 @@ typedef struct {
+ } cont_a64_entry_t;
+ 
+ #define PO_MODE_DIF_INSERT	0
+-#define PO_MODE_DIF_REMOVE	BIT_0
+-#define PO_MODE_DIF_PASS	BIT_1
+-#define PO_MODE_DIF_REPLACE	(BIT_0 + BIT_1)
++#define PO_MODE_DIF_REMOVE	1
++#define PO_MODE_DIF_PASS	2
++#define PO_MODE_DIF_REPLACE	3
++#define PO_MODE_DIF_TCP_CKSUM	6
+ #define PO_ENABLE_DIF_BUNDLING	BIT_8
+ #define PO_ENABLE_INCR_GUARD_SEED	BIT_3
+ #define PO_DISABLE_INCR_REF_TAG	BIT_5
+@@ -2781,6 +2782,12 @@ struct qla_hw_data {
+ /* Bit 21 of fw_attributes decides the MCTP capabilities */
+ #define IS_MCTP_CAPABLE(ha)	(IS_QLA2031(ha) && \
+ 				((ha)->fw_attributes_ext[0] & BIT_0))
++#define IS_PI_UNINIT_CAPABLE(ha)	(IS_QLA83XX(ha))
++#define IS_PI_IPGUARD_CAPABLE(ha)	(IS_QLA83XX(ha))
++#define IS_PI_DIFB_DIX0_CAPABLE(ha)	(0)
++#define IS_PI_SPLIT_DET_CAPABLE_HBA(ha)	(IS_QLA83XX(ha))
++#define IS_PI_SPLIT_DET_CAPABLE(ha)	(IS_PI_SPLIT_DET_CAPABLE_HBA(ha) && \
++    (((ha)->fw_attributes_h << 16 | (ha)->fw_attributes) & BIT_22))
+ 
+ 	/* HBA serial number */
+ 	uint8_t		serial0;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 5dff3be..b9af96a 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5497,6 +5497,9 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 		rval = 1;
+ 	}
+ 
++	if (IS_T10_PI_CAPABLE(ha))
++		nv->frame_payload_size &= ~7;
++
+ 	/* Reset Initialization control block */
+ 	memset(icb, 0, ha->init_cb_size);
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index f58b2b2..03b7526 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -147,13 +147,6 @@ qla24xx_configure_prot_mode(srb_t *sp, uint16_t *fw_prot_opts)
+ 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
+ 	uint8_t	guard = scsi_host_get_guard(cmd->device->host);
+ 
+-	/* We only support T10 DIF right now */
+-	if (guard != SHOST_DIX_GUARD_CRC) {
+-		ql_dbg(ql_dbg_io, sp->fcport->vha, 0x3007,
+-		    "Unsupported guard: %d for cmd=%p.\n", guard, cmd);
+-		return 0;
+-	}
+-
+ 	/* We always use DIFF Bundling for best performance */
+ 	*fw_prot_opts = 0;
+ 
+@@ -172,10 +165,11 @@ qla24xx_configure_prot_mode(srb_t *sp, uint16_t *fw_prot_opts)
+ 		*fw_prot_opts |= PO_MODE_DIF_REMOVE;
+ 		break;
+ 	case SCSI_PROT_READ_PASS:
+-		*fw_prot_opts |= PO_MODE_DIF_PASS;
+-		break;
+ 	case SCSI_PROT_WRITE_PASS:
+-		*fw_prot_opts |= PO_MODE_DIF_PASS;
++		if (guard & SHOST_DIX_GUARD_IP)
++			*fw_prot_opts |= PO_MODE_DIF_TCP_CKSUM;
++		else
++			*fw_prot_opts |= PO_MODE_DIF_PASS;
+ 		break;
+ 	default:	/* Normal Request */
+ 		*fw_prot_opts |= PO_MODE_DIF_PASS;
+@@ -821,7 +815,6 @@ qla24xx_set_t10dif_tags(srb_t *sp, struct fw_dif_context *pkt,
+     unsigned int protcnt)
+ {
+ 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
+-	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
+ 
+ 	switch (scsi_get_prot_type(cmd)) {
+ 	case SCSI_PROT_DIF_TYPE0:
+@@ -891,12 +884,6 @@ qla24xx_set_t10dif_tags(srb_t *sp, struct fw_dif_context *pkt,
+ 		pkt->ref_tag_mask[3] = 0xff;
+ 		break;
+ 	}
+-
+-	ql_dbg(ql_dbg_io, vha, 0x3009,
+-	    "Setting protection Tags: (BIG) ref tag = 0x%x, app tag = 0x%x, "
+-	    "prot SG count %d, cmd lba 0x%x, prot_type=%u cmd=%p.\n",
+-	    pkt->ref_tag, pkt->app_tag, protcnt, (int)scsi_get_lba(cmd),
+-	    scsi_get_prot_type(cmd), cmd);
+ }
+ 
+ struct qla2_sgx {
+@@ -1068,9 +1055,6 @@ qla24xx_walk_and_build_sglist(struct qla_hw_data *ha, srb_t *sp, uint32_t *dsd,
+ 	int	i;
+ 	uint16_t	used_dsds = tot_dsds;
+ 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
+-	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
+-
+-	uint8_t		*cp;
+ 
+ 	scsi_for_each_sg(cmd, sg, tot_dsds, i) {
+ 		dma_addr_t	sle_dma;
+@@ -1113,19 +1097,12 @@ qla24xx_walk_and_build_sglist(struct qla_hw_data *ha, srb_t *sp, uint32_t *dsd,
+ 			cur_dsd = (uint32_t *)next_dsd;
+ 		}
+ 		sle_dma = sg_dma_address(sg);
+-		ql_dbg(ql_dbg_io, vha, 0x300a,
+-		    "sg entry %d - addr=0x%x 0x%x, " "len=%d for cmd=%p.\n",
+-		    i, LSD(sle_dma), MSD(sle_dma), sg_dma_len(sg), cmd);
++
+ 		*cur_dsd++ = cpu_to_le32(LSD(sle_dma));
+ 		*cur_dsd++ = cpu_to_le32(MSD(sle_dma));
+ 		*cur_dsd++ = cpu_to_le32(sg_dma_len(sg));
+ 		avail_dsds--;
+ 
+-		if (scsi_get_prot_op(cmd) == SCSI_PROT_WRITE_PASS) {
+-			cp = page_address(sg_page(sg)) + sg->offset;
+-			ql_dbg(ql_dbg_io, vha, 0x300b,
+-			    "User data buffer=%p for cmd=%p.\n", cp, cmd);
+-		}
+ 	}
+ 	/* Null termination */
+ 	*cur_dsd++ = 0;
+@@ -1148,8 +1125,6 @@ qla24xx_walk_and_build_prot_sglist(struct qla_hw_data *ha, srb_t *sp,
+ 	struct scsi_cmnd *cmd;
+ 	uint32_t *cur_dsd = dsd;
+ 	uint16_t	used_dsds = tot_dsds;
+-	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
+-	uint8_t		*cp;
+ 
+ 	cmd = GET_CMD_SP(sp);
+ 	scsi_for_each_prot_sg(cmd, sg, tot_dsds, i) {
+@@ -1193,23 +1168,11 @@ qla24xx_walk_and_build_prot_sglist(struct qla_hw_data *ha, srb_t *sp,
+ 			cur_dsd = (uint32_t *)next_dsd;
+ 		}
+ 		sle_dma = sg_dma_address(sg);
+-		if (scsi_get_prot_op(cmd) == SCSI_PROT_WRITE_PASS) {
+-			ql_dbg(ql_dbg_io, vha, 0x3027,
+-			    "%s(): %p, sg_entry %d - "
+-			    "addr=0x%x0x%x, len=%d.\n",
+-			    __func__, cur_dsd, i,
+-			    LSD(sle_dma), MSD(sle_dma), sg_dma_len(sg));
+-		}
++
+ 		*cur_dsd++ = cpu_to_le32(LSD(sle_dma));
+ 		*cur_dsd++ = cpu_to_le32(MSD(sle_dma));
+ 		*cur_dsd++ = cpu_to_le32(sg_dma_len(sg));
+ 
+-		if (scsi_get_prot_op(cmd) == SCSI_PROT_WRITE_PASS) {
+-			cp = page_address(sg_page(sg)) + sg->offset;
+-			ql_dbg(ql_dbg_io, vha, 0x3028,
+-			    "%s(): Protection Data buffer = %p.\n", __func__,
+-			    cp);
+-		}
+ 		avail_dsds--;
+ 	}
+ 	/* Null termination */
+@@ -1386,6 +1349,16 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
+ 
+ 	if (!qla2x00_hba_err_chk_enabled(sp))
+ 		fw_prot_opts |= 0x10; /* Disable Guard tag checking */
++	/* HBA error checking enabled */
++	else if (IS_PI_UNINIT_CAPABLE(ha)) {
++		if ((scsi_get_prot_type(GET_CMD_SP(sp)) == SCSI_PROT_DIF_TYPE1)
++		    || (scsi_get_prot_type(GET_CMD_SP(sp)) ==
++			SCSI_PROT_DIF_TYPE2))
++			fw_prot_opts |= BIT_10;
++		else if (scsi_get_prot_type(GET_CMD_SP(sp)) ==
++		    SCSI_PROT_DIF_TYPE3)
++			fw_prot_opts |= BIT_11;
++	}
+ 
+ 	if (!bundling) {
+ 		cur_dsd = (uint32_t *) &crc_ctx_pkt->u.nobundling.data_address;
 diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index c93cd65..2349d2e 100644
+index f01be76..7614e14 100644
 --- a/drivers/scsi/qla2xxx/qla_isr.c
 +++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2948,21 +2948,9 @@ skip_msi:
+@@ -2163,6 +2163,19 @@ check_scsi_status:
+ 	case CS_DIF_ERROR:
+ 		logit = qla2x00_handle_dif_error(sp, sts24);
+ 		break;
++
++	case CS_TRANSPORT:
++		res = DID_ERROR << 16;
++
++		if (!IS_PI_SPLIT_DET_CAPABLE(ha))
++			break;
++
++		if (state_flags & BIT_4)
++			scmd_printk(KERN_WARNING, cp,
++			    "Unsupported device '%s' found.\n",
++			    cp->device->vendor);
++		break;
++
+ 	default:
+ 		res = DID_ERROR << 16;
+ 		break;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index deef57a..37a1b90 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -116,9 +116,8 @@ MODULE_PARM_DESC(ql2xmaxqdepth,
+ 		"Maximum queue depth to set for each LUN. "
+ 		"Default is 32.");
  
- clear_risc_ints:
+-/* Do not change the value of this after module load */
+-int ql2xenabledif = 0;
+-module_param(ql2xenabledif, int, S_IRUGO|S_IWUSR);
++int ql2xenabledif = 2;
++module_param(ql2xenabledif, int, S_IRUGO);
+ MODULE_PARM_DESC(ql2xenabledif,
+ 		" Enable T10-CRC-DIF "
+ 		" Default is 0 - No DIF Support. 1 - Enable it"
+@@ -1358,6 +1357,9 @@ qla2xxx_slave_configure(struct scsi_device *sdev)
+ 	scsi_qla_host_t *vha = shost_priv(sdev->host);
+ 	struct req_que *req = vha->req;
  
--	/*
--	 * FIXME: Noted that 8014s were being dropped during NK testing.
--	 * Timing deltas during MSI-X/INTa transitions?
--	 */
--	if (IS_QLA81XX(ha) || IS_QLA82XX(ha) || IS_QLA83XX(ha))
--		goto fail;
- 	spin_lock_irq(&ha->hardware_lock);
--	if (IS_FWI2_CAPABLE(ha)) {
--		WRT_REG_DWORD(&reg->isp24.hccr, HCCRX_CLR_HOST_INT);
--		WRT_REG_DWORD(&reg->isp24.hccr, HCCRX_CLR_RISC_INT);
--	} else {
-+	if (!IS_FWI2_CAPABLE(ha))
- 		WRT_REG_WORD(&reg->isp.semaphore, 0);
--		WRT_REG_WORD(&reg->isp.hccr, HCCR_CLR_RISC_INT);
--		WRT_REG_WORD(&reg->isp.hccr, HCCR_CLR_HOST_INT);
--	}
- 	spin_unlock_irq(&ha->hardware_lock);
++	if (IS_T10_PI_CAPABLE(vha->hw))
++		blk_queue_update_dma_alignment(sdev->request_queue, 0x7);
++
+ 	if (sdev->tagged_supported)
+ 		scsi_activate_tcq(sdev, req->max_q_depth);
+ 	else
+@@ -2574,7 +2576,7 @@ skip_dpc:
  
- fail:
+ 	if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
+ 		if (ha->fw_attributes & BIT_4) {
+-			int prot = 0;
++			int prot = 0, guard;
+ 			base_vha->flags.difdix_supported = 1;
+ 			ql_dbg(ql_dbg_init, base_vha, 0x00f1,
+ 			    "Registering for DIF/DIX type 1 and 3 protection.\n");
+@@ -2587,7 +2589,14 @@ skip_dpc:
+ 			    | SHOST_DIX_TYPE1_PROTECTION
+ 			    | SHOST_DIX_TYPE2_PROTECTION
+ 			    | SHOST_DIX_TYPE3_PROTECTION);
+-			scsi_host_set_guard(host, SHOST_DIX_GUARD_CRC);
++
++			guard = SHOST_DIX_GUARD_CRC;
++
++			if (IS_PI_IPGUARD_CAPABLE(ha) &&
++			    (ql2xenabledif > 1 || IS_PI_DIFB_DIX0_CAPABLE(ha)))
++				guard |= SHOST_DIX_GUARD_IP;
++
++			scsi_host_set_guard(host, guard);
+ 		} else
+ 			base_vha->flags.difdix_supported = 0;
+ 	}
 -- 
 1.7.7
 
