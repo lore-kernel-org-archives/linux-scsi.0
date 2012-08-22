@@ -1,14 +1,12 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 03/12] qla4xxx: Update func name from ql4_ to qla4_
-Date: Wed, 22 Aug 2012 07:55:01 -0400
-Message-ID: <1345636510-23131-4-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1345636510-23131-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 0/12] qla4xxx: Updates for scsi "misc" branch.
+Date: Wed, 22 Aug 2012 07:54:58 -0400
+Message-ID: <1345636510-23131-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:53184 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:47344 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754070Ab2HVMLw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 08:11:52 -0400
-In-Reply-To: <1345636510-23131-1-git-send-email-vikas.chaudhary@qlogic.com>
+	id S1751498Ab2HVMLv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 08:11:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
@@ -16,102 +14,57 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-ql4_8xxx_mark_entry_skipped to qla4_8xxx_mark_entry_skipped
-ql4_attr_is_visible to qla4_attr_is_visible
+James,
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_nx.c |   12 ++++++------
- drivers/scsi/qla4xxx/ql4_os.c |    6 +++---
- 2 files changed, 9 insertions(+), 9 deletions(-)
+Please apply the following patches to the scsi tree at your earliest
+convenience.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index fa34e20..7764c3f 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -2077,7 +2077,7 @@ static int qla4_8xxx_minidump_process_rdmem(struct scsi_qla_host *ha,
- 	return QLA_SUCCESS;
- }
- 
--static void ql4_8xxx_mark_entry_skipped(struct scsi_qla_host *ha,
-+static void qla4_8xxx_mark_entry_skipped(struct scsi_qla_host *ha,
- 				struct qla8xxx_minidump_entry_hdr *entry_hdr,
- 				int index)
- {
-@@ -2161,13 +2161,13 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
- 		 */
- 		switch (entry_hdr->entry_type) {
- 		case QLA82XX_RDEND:
--			ql4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
-+			qla4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
- 			break;
- 		case QLA82XX_CNTRL:
- 			rval = qla4_8xxx_minidump_process_control(ha,
- 								  entry_hdr);
- 			if (rval != QLA_SUCCESS) {
--				ql4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
-+				qla4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
- 				goto md_failed;
- 			}
- 			break;
-@@ -2179,7 +2179,7 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
- 			rval = qla4_8xxx_minidump_process_rdmem(ha, entry_hdr,
- 								&data_ptr);
- 			if (rval != QLA_SUCCESS) {
--				ql4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
-+				qla4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
- 				goto md_failed;
- 			}
- 			break;
-@@ -2195,7 +2195,7 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
- 			rval = qla4_8xxx_minidump_process_l2tag(ha, entry_hdr,
- 								&data_ptr);
- 			if (rval != QLA_SUCCESS) {
--				ql4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
-+				qla4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
- 				goto md_failed;
- 			}
- 			break;
-@@ -2218,7 +2218,7 @@ static int qla4_8xxx_collect_md_data(struct scsi_qla_host *ha)
- 			break;
- 		case QLA82XX_RDNOP:
- 		default:
--			ql4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
-+			qla4_8xxx_mark_entry_skipped(ha, entry_hdr, i);
- 			break;
- 		}
- 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index a3a26e4..89c2576 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -160,7 +160,7 @@ static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd);
- static int qla4xxx_slave_alloc(struct scsi_device *device);
- static int qla4xxx_slave_configure(struct scsi_device *device);
- static void qla4xxx_slave_destroy(struct scsi_device *sdev);
--static umode_t ql4_attr_is_visible(int param_type, int param);
-+static umode_t qla4_attr_is_visible(int param_type, int param);
- static int qla4xxx_host_reset(struct Scsi_Host *shost, int reset_type);
- static int qla4xxx_change_queue_depth(struct scsi_device *sdev, int qdepth,
- 				      int reason);
-@@ -203,7 +203,7 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
- 				  CAP_DATA_PATH_OFFLOAD | CAP_HDRDGST |
- 				  CAP_DATADGST | CAP_LOGIN_OFFLOAD |
- 				  CAP_MULTI_R2T,
--	.attr_is_visible	= ql4_attr_is_visible,
-+	.attr_is_visible	= qla4_attr_is_visible,
- 	.create_session         = qla4xxx_session_create,
- 	.destroy_session        = qla4xxx_session_destroy,
- 	.start_conn             = qla4xxx_conn_start,
-@@ -315,7 +315,7 @@ exit_send_ping:
- 	return rval;
- }
- 
--static umode_t ql4_attr_is_visible(int param_type, int param)
-+static umode_t qla4_attr_is_visible(int param_type, int param)
- {
- 	switch (param_type) {
- 	case ISCSI_HOST_PARAM:
--- 
-1.7.8.GIT
+Following patches are to add support for our new adapter ISP83XX.
 
+Patch 01/12 to 07/12 is just to change function, variable, structure,
+macros name so that common functions for ISP82xx and ISP83xx include
+string "8xxx" in there name and functions only for ISP82xx will include
+string "82xx" in there name.
+
+Thanks,
+Vikas.
+
+Vikas Chaudhary (12):
+      qla4xxx: Update function name from 8xxx to 82xx
+      qla4xxx: Update structure and variable names
+      qla4xxx: Update func name from ql4_ to qla4_
+      qla4xxx: Rename macros from 82XX to 8XXX
+      qla4xxx: Clean-up and optimize macros
+      qla4xxx: Added new functions in isp_ops
+      qla4xxx: Replace all !is_qla8022() with is_qla40XX()
+      qla4xxx: Set IDC version in correct way
+      qla4xxx: Added new function qla4_8xxx_get_minidump
+      qla4xxx: Added support for ISP83XX
+      qla4xxx: Update Copyright header
+      qla4xxx: Update driver version to 5.03.00-k0
+
+
+ drivers/scsi/qla4xxx/Kconfig       |    4 +-
+ drivers/scsi/qla4xxx/Makefile      |    2 +-
+ drivers/scsi/qla4xxx/ql4_83xx.c    | 1468 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_83xx.h    |  262 +++++++
+ drivers/scsi/qla4xxx/ql4_attr.c    |   26 +-
+ drivers/scsi/qla4xxx/ql4_dbg.c     |   32 +-
+ drivers/scsi/qla4xxx/ql4_dbg.h     |    2 +-
+ drivers/scsi/qla4xxx/ql4_def.h     |   60 ++-
+ drivers/scsi/qla4xxx/ql4_fw.h      |   50 ++-
+ drivers/scsi/qla4xxx/ql4_glbl.h    |   90 ++-
+ drivers/scsi/qla4xxx/ql4_init.c    |   23 +-
+ drivers/scsi/qla4xxx/ql4_inline.h  |    2 +-
+ drivers/scsi/qla4xxx/ql4_iocb.c    |   28 +-
+ drivers/scsi/qla4xxx/ql4_isr.c     |  254 +++++--
+ drivers/scsi/qla4xxx/ql4_mbx.c     |  110 ++--
+ drivers/scsi/qla4xxx/ql4_nvram.c   |    2 +-
+ drivers/scsi/qla4xxx/ql4_nvram.h   |    2 +-
+ drivers/scsi/qla4xxx/ql4_nx.c      | 1430 +++++++++++++++++++++++------------
+ drivers/scsi/qla4xxx/ql4_nx.h      |  198 +++--
+ drivers/scsi/qla4xxx/ql4_os.c      |  414 +++++++----
+ drivers/scsi/qla4xxx/ql4_version.h |    4 +-
+ 21 files changed, 3553 insertions(+), 910 deletions(-)
+ create mode 100644 drivers/scsi/qla4xxx/ql4_83xx.c
+ create mode 100644 drivers/scsi/qla4xxx/ql4_83xx.h
