@@ -1,129 +1,57 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 30/42] qla2xxx: Fix for handling some error conditions in loopback.
-Date: Wed, 22 Aug 2012 14:21:24 -0400
-Message-ID: <1345659696-3670-31-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 19/42] qla2xxx: Perform ROM mbx cmd access only after ISP soft-reset during f/w recovery.
+Date: Wed, 22 Aug 2012 14:21:13 -0400
+Message-ID: <1345659696-3670-20-git-send-email-chad.dupuis@qlogic.com>
 References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:34760 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:9483 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S965002Ab2HVSia (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 14:38:30 -0400
+	id S964954Ab2HVSiS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Aug 2012 14:38:18 -0400
 In-Reply-To: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Santosh Vernekar <santosh.vernekar@qlogic.com>
+
+Signed-off-by: Santosh Vernekar <santosh.vernekar@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c |   14 +++++++++++---
- drivers/scsi/qla2xxx/qla_dbg.c |    2 +-
- drivers/scsi/qla2xxx/qla_def.h |    3 ++-
- drivers/scsi/qla2xxx/qla_isr.c |   25 +++++++++++++------------
- 4 files changed, 27 insertions(+), 17 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index d25f0fa..2f9bddd 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -568,9 +568,17 @@ qla81xx_set_loopback_mode(scsi_qla_host_t *vha, uint16_t *config,
- 	if (!wait_for_completion_timeout(&ha->dcbx_comp, (20 * HZ))) {
- 		ql_dbg(ql_dbg_user, vha, 0x7022,
- 		    "State change notification not received.\n");
--	} else
--		ql_dbg(ql_dbg_user, vha, 0x7023,
--		    "State change received.\n");
-+		rval = -EINVAL;
-+	} else {
-+		if (ha->flags.idc_compl_status) {
-+			ql_dbg(ql_dbg_user, vha, 0x70c3,
-+			    "Bad status in IDC Completion AEN\n");
-+			rval = -EINVAL;
-+			ha->flags.idc_compl_status = 0;
-+		} else
-+			ql_dbg(ql_dbg_user, vha, 0x7023,
-+			    "State change received.\n");
-+	}
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 5fcc0b6..cf8944f 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -4300,17 +4300,17 @@ qla2x00_abort_isp(scsi_qla_host_t *vha)
+ 	struct req_que *req = ha->req_q_map[0];
+ 	unsigned long flags;
  
- 	ha->notify_dcbx_comp = 0;
- 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 279f52c..6d3cf6e 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -22,7 +22,7 @@
-  * | Async Events                 |       0x5071       | 0x502b-0x502f  |
-  * |                              |                    | 0x5047,0x5052  |
-  * | Timer Routines               |       0x6011       |                |
-- * | User Space Interactions      |       0x70c2       | 0x7018,0x702e, |
-+ * | User Space Interactions      |       0x70c3       | 0x7018,0x702e, |
-  * |                              |                    | 0x7039,0x7045, |
-  * |                              |                    | 0x7073-0x7075, |
-  * |                              |                    | 0x708c,        |
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index a970dbf..c03f1e2 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2622,7 +2622,8 @@ struct qla_hw_data {
- 		uint32_t	nic_core_reset_owner:1;
- 		uint32_t	isp82xx_no_md_cap:1;
- 		uint32_t	host_shutting_down:1;
--		/* 30 bits */
-+		uint32_t	idc_compl_status:1;
-+		/* 32 bits */
- 	} flags;
- 
- 	/* This spinlock is used to protect "io transactions", you must
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index a551827..9a2e1fa 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -294,17 +294,20 @@ qla81xx_idc_event(scsi_qla_host_t *vha, uint16_t aen, uint16_t descr)
- 	    "%04x %04x %04x %04x %04x %04x %04x.\n",
- 	    event[aen & 0xff], mb[0], mb[1], mb[2], mb[3],
- 	    mb[4], mb[5], mb[6]);
-+	if ((aen == MBA_IDC_COMPLETE && mb[1] >> 15)) {
-+		vha->hw->flags.idc_compl_status = 1;
-+		if (vha->hw->notify_dcbx_comp)
-+			complete(&vha->hw->dcbx_comp);
-+	}
- 
--	if (IS_QLA81XX(vha->hw)) {
--		/* Acknowledgement needed? [Notify && non-zero timeout]. */
--		timeout = (descr >> 8) & 0xf;
--		if (aen != MBA_IDC_NOTIFY || !timeout)
--			return;
-+	/* Acknowledgement needed? [Notify && non-zero timeout]. */
-+	timeout = (descr >> 8) & 0xf;
-+	if (aen != MBA_IDC_NOTIFY || !timeout)
-+		return;
- 
--		ql_dbg(ql_dbg_async, vha, 0x5022,
--		    "%lu Inter-Driver Communication %s -- ACK timeout=%d.\n",
--		    vha->host_no, event[aen & 0xff], timeout);
+-	if (IS_QLA8031(ha)) {
+-		ql_dbg(ql_dbg_p3p, vha, 0xb05c,
+-		    "Clearing fcoe driver presence.\n");
+-		if (qla83xx_clear_drv_presence(vha) != QLA_SUCCESS)
+-			ql_dbg(ql_dbg_p3p, vha, 0xb073,
+-			    "Erro while clearing DRV-Presence.\n");
 -	}
-+	ql_dbg(ql_dbg_async, vha, 0x5022,
-+	    "%lu Inter-Driver Communication %s -- ACK timeout=%d.\n",
-+	    vha->host_no, event[aen & 0xff], timeout);
+-
+ 	if (vha->flags.online) {
+ 		qla2x00_abort_isp_cleanup(vha);
  
- 	rval = qla2x00_post_idc_ack_work(vha, mb);
- 	if (rval != QLA_SUCCESS)
-@@ -989,13 +992,11 @@ skip_rio:
- 			if ((mb[2] & 0x7fff) == MBC_PORT_RESET ||
- 			    (mb[2] & 0x7fff) == MBC_SET_PORT_CONFIG) {
- 				set_bit(ISP_QUIESCE_NEEDED, &vha->dpc_flags);
--				/* Ack that we have quiesced I/O */
--				qla81xx_idc_event(vha, mb[0], mb[1]);
- 				qla2xxx_wake_dpc(vha);
- 			}
- 	case MBA_IDC_COMPLETE:
- 	case MBA_IDC_TIME_EXT:
--		if (IS_QLA81XX(vha->hw))
-+		if (IS_QLA81XX(vha->hw) || IS_QLA8031(vha->hw))
- 			qla81xx_idc_event(vha, mb[0], mb[1]);
- 		break;
- 
++		if (IS_QLA8031(ha)) {
++			ql_dbg(ql_dbg_p3p, vha, 0xb05c,
++			    "Clearing fcoe driver presence.\n");
++			if (qla83xx_clear_drv_presence(vha) != QLA_SUCCESS)
++				ql_dbg(ql_dbg_p3p, vha, 0xb073,
++				    "Error while clearing DRV-Presence.\n");
++		}
++
+ 		if (unlikely(pci_channel_offline(ha->pdev) &&
+ 		    ha->flags.pci_channel_io_perm_failure)) {
+ 			clear_bit(ISP_ABORT_RETRY, &vha->dpc_flags);
 -- 
 1.7.7
 
