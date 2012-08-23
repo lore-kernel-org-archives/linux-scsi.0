@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 04/10] bfa: Add new hardware model info to sysfs model description routine.
-Date: Wed, 22 Aug 2012 19:51:35 -0700
-Message-ID: <1345690295-21148-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 05/10] bfa: Add PowerPC support and enable PCIE AER handling.
+Date: Wed, 22 Aug 2012 19:52:02 -0700
+Message-ID: <1345690322-21342-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:43466 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757235Ab2HWCwJ (ORCPT
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:59095 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757235Ab2HWCw0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 22:52:09 -0400
+	Wed, 22 Aug 2012 22:52:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
@@ -18,32 +18,884 @@ Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Added new hardware model Brocade-1867 information to
-	  sysfs model description routine.
+	- Added few missing endian swap changes to support BFA on PowerPC.
+	- Added PCIE AER support to BFA:
+	  a) Implemented the PCI error handler entry points.
+	  b) Made changes to FCS state machine to handle STOP event from the
+		 PCI error detected entry point.
+	  c) Made changes to the IO Controller state machine to handle SUSPEND
+	     event from the PCI error detected entry point.
+	  d) Made changes to restart the BFA operations on a slot_reset completion.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfad_attr.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+ drivers/scsi/bfa/bfa_core.c      |   12 +--
+ drivers/scsi/bfa/bfa_fcs.c       |  133 ++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_fcs.h       |    8 ++
+ drivers/scsi/bfa/bfa_fcs_lport.c |   28 +++++
+ drivers/scsi/bfa/bfa_ioc.c       |   24 +++-
+ drivers/scsi/bfa/bfa_ioc.h       |    2 +
+ drivers/scsi/bfa/bfa_svc.c       |    4 +-
+ drivers/scsi/bfa/bfa_svc.h       |    1 +
+ drivers/scsi/bfa/bfad.c          |  232 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/bfa/bfad_drv.h      |    3 +
+ drivers/scsi/bfa/bfad_im.c       |    9 ++
+ 11 files changed, 434 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
-index 91a2044..72f5dc3 100644
---- a/drivers/scsi/bfa/bfad_attr.c
-+++ b/drivers/scsi/bfa/bfad_attr.c
-@@ -824,6 +824,13 @@ bfad_im_model_desc_show(struct device *dev, struct device_attribute *attr,
- 		else if (nports == 2 && !bfa_ioc_is_cna(&bfad->bfa.ioc))
- 			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
- 				"Brocade 16Gbps PCIe dual port FC HBA");
-+	} else if (!strcmp(model, "Brocade-1867")) {
-+		if (nports == 1 && !bfa_ioc_is_cna(&bfad->bfa.ioc))
-+			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
-+				"Brocade 16Gbps PCIe single port FC HBA for IBM");
-+		else if (nports == 2 && !bfa_ioc_is_cna(&bfad->bfa.ioc))
-+			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
-+				"Brocade 16Gbps PCIe dual port FC HBA for IBM");
- 	} else
- 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
- 			"Invalid Model");
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 456e576..a4129c9 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -1022,7 +1022,7 @@ bfa_iocfc_mem_claim(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
+ {
+ 	u8	*dm_kva = NULL;
+ 	u64	dm_pa = 0;
+-	int	i, per_reqq_sz, per_rspq_sz, dbgsz;
++	int	i, per_reqq_sz, per_rspq_sz;
+ 	struct bfa_iocfc_s  *iocfc = &bfa->iocfc;
+ 	struct bfa_mem_dma_s *ioc_dma = BFA_MEM_IOC_DMA(bfa);
+ 	struct bfa_mem_dma_s *iocfc_dma = BFA_MEM_IOCFC_DMA(bfa);
+@@ -1083,11 +1083,8 @@ bfa_iocfc_mem_claim(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
+ 			BFA_CACHELINE_SZ);
+ 
+ 	/* Claim IOCFC kva memory */
+-	dbgsz = (bfa_auto_recover) ? BFA_DBG_FWTRC_LEN : 0;
+-	if (dbgsz > 0) {
+-		bfa_ioc_debug_memclaim(&bfa->ioc, bfa_mem_kva_curp(iocfc));
+-		bfa_mem_kva_curp(iocfc) += dbgsz;
+-	}
++	bfa_ioc_debug_memclaim(&bfa->ioc, bfa_mem_kva_curp(iocfc));
++	bfa_mem_kva_curp(iocfc) += BFA_DBG_FWTRC_LEN;
+ }
+ 
+ /*
+@@ -1429,8 +1426,7 @@ bfa_iocfc_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
+ 	bfa_mem_dma_setup(meminfo, iocfc_dma, dm_len);
+ 
+ 	/* kva memory setup for IOCFC */
+-	bfa_mem_kva_setup(meminfo, iocfc_kva,
+-			((bfa_auto_recover) ? BFA_DBG_FWTRC_LEN : 0));
++	bfa_mem_kva_setup(meminfo, iocfc_kva, BFA_DBG_FWTRC_LEN);
+ }
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index 3f71d50..671a1a2 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -119,6 +119,18 @@ bfa_fcs_update_cfg(struct bfa_fcs_s *fcs)
+ }
+ 
+ /*
++ * Stop FCS operations.
++ */
++void
++bfa_fcs_stop(struct bfa_fcs_s *fcs)
++{
++	bfa_wc_init(&fcs->wc, bfa_fcs_exit_comp, fcs);
++	bfa_wc_up(&fcs->wc);
++	bfa_fcs_fabric_modstop(fcs);
++	bfa_wc_wait(&fcs->wc);
++}
++
++/*
+  * fcs pbc vport initialization
+  */
+ void
+@@ -213,6 +225,8 @@ static void bfa_fcs_fabric_notify_offline(struct bfa_fcs_fabric_s *fabric);
+ static void bfa_fcs_fabric_delay(void *cbarg);
+ static void bfa_fcs_fabric_delete(struct bfa_fcs_fabric_s *fabric);
+ static void bfa_fcs_fabric_delete_comp(void *cbarg);
++static void bfa_fcs_fabric_stop(struct bfa_fcs_fabric_s *fabric);
++static void bfa_fcs_fabric_stop_comp(void *cbarg);
+ static void bfa_fcs_fabric_process_uf(struct bfa_fcs_fabric_s *fabric,
+ 				      struct fchs_s *fchs, u16 len);
+ static void bfa_fcs_fabric_process_flogi(struct bfa_fcs_fabric_s *fabric,
+@@ -250,6 +264,10 @@ static void	bfa_fcs_fabric_sm_isolated(struct bfa_fcs_fabric_s *fabric,
+ 					   enum bfa_fcs_fabric_event event);
+ static void	bfa_fcs_fabric_sm_deleting(struct bfa_fcs_fabric_s *fabric,
+ 					   enum bfa_fcs_fabric_event event);
++static void	bfa_fcs_fabric_sm_stopping(struct bfa_fcs_fabric_s *fabric,
++					   enum bfa_fcs_fabric_event event);
++static void	bfa_fcs_fabric_sm_cleanup(struct bfa_fcs_fabric_s *fabric,
++					  enum bfa_fcs_fabric_event event);
+ /*
+  *   Beginning state before fabric creation.
+  */
+@@ -334,6 +352,11 @@ bfa_fcs_fabric_sm_linkdown(struct bfa_fcs_fabric_s *fabric,
+ 		bfa_fcs_fabric_delete(fabric);
+ 		break;
+ 
++	case BFA_FCS_FABRIC_SM_STOP:
++		bfa_sm_set_state(fabric, bfa_fcs_fabric_sm_cleanup);
++		bfa_fcs_fabric_stop(fabric);
++		break;
++
+ 	default:
+ 		bfa_sm_fault(fabric->fcs, event);
+ 	}
+@@ -585,6 +608,11 @@ bfa_fcs_fabric_sm_online(struct bfa_fcs_fabric_s *fabric,
+ 		bfa_fcs_fabric_delete(fabric);
+ 		break;
+ 
++	case BFA_FCS_FABRIC_SM_STOP:
++		bfa_sm_set_state(fabric, bfa_fcs_fabric_sm_stopping);
++		bfa_fcs_fabric_stop(fabric);
++		break;
++
+ 	case BFA_FCS_FABRIC_SM_AUTH_FAILED:
+ 		bfa_sm_set_state(fabric, bfa_fcs_fabric_sm_auth_failed);
+ 		bfa_sm_send_event(fabric->lps, BFA_LPS_SM_OFFLINE);
+@@ -682,7 +710,62 @@ bfa_fcs_fabric_sm_deleting(struct bfa_fcs_fabric_s *fabric,
+ 	}
+ }
+ 
++/*
++ * Fabric is being stopped, awaiting vport stop completions.
++ */
++static void
++bfa_fcs_fabric_sm_stopping(struct bfa_fcs_fabric_s *fabric,
++			   enum bfa_fcs_fabric_event event)
++{
++	bfa_trc(fabric->fcs, fabric->bport.port_cfg.pwwn);
++	bfa_trc(fabric->fcs, event);
++
++	switch (event) {
++	case BFA_FCS_FABRIC_SM_STOPCOMP:
++		bfa_sm_set_state(fabric, bfa_fcs_fabric_sm_cleanup);
++		bfa_sm_send_event(fabric->lps, BFA_LPS_SM_LOGOUT);
++		break;
++
++	case BFA_FCS_FABRIC_SM_LINK_UP:
++		break;
++
++	case BFA_FCS_FABRIC_SM_LINK_DOWN:
++		bfa_sm_set_state(fabric, bfa_fcs_fabric_sm_cleanup);
++		break;
++
++	default:
++		bfa_sm_fault(fabric->fcs, event);
++	}
++}
++
++/*
++ * Fabric is being stopped, cleanup without FLOGO
++ */
++static void
++bfa_fcs_fabric_sm_cleanup(struct bfa_fcs_fabric_s *fabric,
++			  enum bfa_fcs_fabric_event event)
++{
++	bfa_trc(fabric->fcs, fabric->bport.port_cfg.pwwn);
++	bfa_trc(fabric->fcs, event);
++
++	switch (event) {
++	case BFA_FCS_FABRIC_SM_STOPCOMP:
++	case BFA_FCS_FABRIC_SM_LOGOCOMP:
++		bfa_sm_set_state(fabric, bfa_fcs_fabric_sm_created);
++		bfa_wc_down(&(fabric->fcs)->wc);
++		break;
++
++	case BFA_FCS_FABRIC_SM_LINK_DOWN:
++		/*
++		 * Ignore - can get this event if we get notified about IOC down
++		 * before the fabric completion callbk is done.
++		 */
++		break;
+ 
++	default:
++		bfa_sm_fault(fabric->fcs, event);
++	}
++}
+ 
+ /*
+  *  fcs_fabric_private fabric private functions
+@@ -919,6 +1002,28 @@ bfa_fcs_fabric_delay(void *cbarg)
+ }
+ 
+ /*
++ * Stop all vports and wait for vport stop completions.
++ */
++static void
++bfa_fcs_fabric_stop(struct bfa_fcs_fabric_s *fabric)
++{
++	struct bfa_fcs_vport_s *vport;
++	struct list_head	*qe, *qen;
++
++	bfa_wc_init(&fabric->stop_wc, bfa_fcs_fabric_stop_comp, fabric);
++
++	list_for_each_safe(qe, qen, &fabric->vport_q) {
++		vport = (struct bfa_fcs_vport_s *) qe;
++		bfa_wc_up(&fabric->stop_wc);
++		bfa_fcs_vport_fcs_stop(vport);
++	}
++
++	bfa_wc_up(&fabric->stop_wc);
++	bfa_fcs_lport_stop(&fabric->bport);
++	bfa_wc_wait(&fabric->stop_wc);
++}
++
++/*
+  * Computes operating BB_SCN value
+  */
+ static u8
+@@ -978,6 +1083,14 @@ bfa_fcs_fabric_delete_comp(void *cbarg)
+ 	bfa_sm_send_event(fabric, BFA_FCS_FABRIC_SM_DELCOMP);
+ }
+ 
++static void
++bfa_fcs_fabric_stop_comp(void *cbarg)
++{
++	struct bfa_fcs_fabric_s *fabric = cbarg;
++
++	bfa_sm_send_event(fabric, BFA_FCS_FABRIC_SM_STOPCOMP);
++}
++
+ /*
+  *  fcs_fabric_public fabric public functions
+  */
+@@ -1039,6 +1152,19 @@ bfa_fcs_fabric_modexit(struct bfa_fcs_s *fcs)
+ }
+ 
+ /*
++ * Fabric module stop -- stop FCS actions
++ */
++void
++bfa_fcs_fabric_modstop(struct bfa_fcs_s *fcs)
++{
++	struct bfa_fcs_fabric_s *fabric;
++
++	bfa_trc(fcs, 0);
++	fabric = &fcs->fabric;
++	bfa_sm_send_event(fabric, BFA_FCS_FABRIC_SM_STOP);
++}
++
++/*
+  * Fabric module start -- kick starts FCS actions
+  */
+ void
+@@ -1387,6 +1513,13 @@ bfa_fcs_fabric_set_fabric_name(struct bfa_fcs_fabric_s *fabric,
+ 	}
+ }
+ 
++void
++bfa_cb_lps_flogo_comp(void *bfad, void *uarg)
++{
++	struct bfa_fcs_fabric_s *fabric = uarg;
++	bfa_sm_send_event(fabric, BFA_FCS_FABRIC_SM_LOGOCOMP);
++}
++
+ /*
+  *	Returns FCS vf structure for a given vf_id.
+  *
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index 10c93bf..b64ca35 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -205,6 +205,7 @@ struct bfa_fcs_fabric_s {
+ 	struct bfa_lps_s	*lps;	/*  lport login services	*/
+ 	u8	fabric_ip_addr[BFA_FCS_FABRIC_IPADDR_SZ];
+ 					/*  attached fabric's ip addr  */
++	struct bfa_wc_s stop_wc;	/*  wait counter for stop */
+ };
+ 
+ #define bfa_fcs_fabric_npiv_capable(__f)    ((__f)->is_npiv)
+@@ -323,6 +324,7 @@ void bfa_fcs_lport_init(struct bfa_fcs_lport_s *lport,
+ void            bfa_fcs_lport_online(struct bfa_fcs_lport_s *port);
+ void            bfa_fcs_lport_offline(struct bfa_fcs_lport_s *port);
+ void            bfa_fcs_lport_delete(struct bfa_fcs_lport_s *port);
++void		bfa_fcs_lport_stop(struct bfa_fcs_lport_s *port);
+ struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_pid(
+ 		struct bfa_fcs_lport_s *port, u32 pid);
+ struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_old_pid(
+@@ -387,6 +389,7 @@ void bfa_fcs_vport_online(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_offline(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_delete_comp(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_fcs_delete(struct bfa_fcs_vport_s *vport);
++void bfa_fcs_vport_fcs_stop(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_stop_comp(struct bfa_fcs_vport_s *vport);
+ 
+ #define BFA_FCS_RPORT_DEF_DEL_TIMEOUT	90	/* in secs */
+@@ -709,6 +712,9 @@ enum bfa_fcs_fabric_event {
+ 	BFA_FCS_FABRIC_SM_DELCOMP       = 14,   /*  all vports deleted event */
+ 	BFA_FCS_FABRIC_SM_LOOPBACK      = 15,   /*  Received our own FLOGI   */
+ 	BFA_FCS_FABRIC_SM_START         = 16,   /*  from driver       */
++	BFA_FCS_FABRIC_SM_STOP		= 17,	/*  Stop from driver	*/
++	BFA_FCS_FABRIC_SM_STOPCOMP	= 18,	/*  Stop completion	*/
++	BFA_FCS_FABRIC_SM_LOGOCOMP	= 19,	/*  FLOGO completion	*/
+ };
+ 
+ /*
+@@ -748,6 +754,7 @@ void bfa_fcs_update_cfg(struct bfa_fcs_s *fcs);
+ void bfa_fcs_driver_info_init(struct bfa_fcs_s *fcs,
+ 			      struct bfa_fcs_driver_info_s *driver_info);
+ void bfa_fcs_exit(struct bfa_fcs_s *fcs);
++void bfa_fcs_stop(struct bfa_fcs_s *fcs);
+ 
+ /*
+  * bfa fcs vf public functions
+@@ -778,6 +785,7 @@ void bfa_fcs_fabric_set_fabric_name(struct bfa_fcs_fabric_s *fabric,
+ u16 bfa_fcs_fabric_get_switch_oui(struct bfa_fcs_fabric_s *fabric);
+ void bfa_fcs_uf_attach(struct bfa_fcs_s *fcs);
+ void bfa_fcs_port_attach(struct bfa_fcs_s *fcs);
++void bfa_fcs_fabric_modstop(struct bfa_fcs_s *fcs);
+ void bfa_fcs_fabric_sm_online(struct bfa_fcs_fabric_s *fabric,
+ 			enum bfa_fcs_fabric_event event);
+ void bfa_fcs_fabric_sm_loopback(struct bfa_fcs_fabric_s *fabric,
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index e566170..3c9bde9 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -131,6 +131,8 @@ bfa_fcs_lport_sm_init(struct bfa_fcs_lport_s *port,
+ 		/* If vport - send completion call back */
+ 		if (port->vport)
+ 			bfa_fcs_vport_stop_comp(port->vport);
++		else
++			bfa_wc_down(&(port->fabric->stop_wc));
+ 		break;
+ 
+ 	case BFA_FCS_PORT_SM_OFFLINE:
+@@ -166,6 +168,8 @@ bfa_fcs_lport_sm_online(
+ 			/* If vport - send completion call back */
+ 			if (port->vport)
+ 				bfa_fcs_vport_stop_comp(port->vport);
++			else
++				bfa_wc_down(&(port->fabric->stop_wc));
+ 		} else {
+ 			bfa_sm_set_state(port, bfa_fcs_lport_sm_stopping);
+ 			list_for_each_safe(qe, qen, &port->rport_q) {
+@@ -222,6 +226,8 @@ bfa_fcs_lport_sm_offline(
+ 			/* If vport - send completion call back */
+ 			if (port->vport)
+ 				bfa_fcs_vport_stop_comp(port->vport);
++			else
++				bfa_wc_down(&(port->fabric->stop_wc));
+ 		} else {
+ 			bfa_sm_set_state(port, bfa_fcs_lport_sm_stopping);
+ 			list_for_each_safe(qe, qen, &port->rport_q) {
+@@ -267,6 +273,8 @@ bfa_fcs_lport_sm_stopping(struct bfa_fcs_lport_s *port,
+ 			/* If vport - send completion call back */
+ 			if (port->vport)
+ 				bfa_fcs_vport_stop_comp(port->vport);
++			else
++				bfa_wc_down(&(port->fabric->stop_wc));
+ 		}
+ 		break;
+ 
+@@ -978,6 +986,16 @@ bfa_fcs_lport_offline(struct bfa_fcs_lport_s *port)
+ }
+ 
+ /*
++ * Called by fabric for base port and by vport for virtual ports
++ * when target mode driver is unloaded.
++ */
++void
++bfa_fcs_lport_stop(struct bfa_fcs_lport_s *port)
++{
++	bfa_sm_send_event(port, BFA_FCS_PORT_SM_STOP);
++}
++
++/*
+  * Called by fabric to delete base lport and associated resources.
+  *
+  * Called by vport to delete lport and associated resources. Should call
+@@ -5884,6 +5902,16 @@ bfa_fcs_vport_cleanup(struct bfa_fcs_vport_s *vport)
+ {
+ 	vport->vport_stats.fab_cleanup++;
+ }
++
++/*
++ * Stop notification from fabric SM. To be invoked from within FCS.
++ */
++void
++bfa_fcs_vport_fcs_stop(struct bfa_fcs_vport_s *vport)
++{
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_STOP);
++}
++
+ /*
+  * delete notification from fabric SM. To be invoked from within FCS.
+  */
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 8cdb79c..7689872 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -92,7 +92,6 @@ static void bfa_ioc_event_notify(struct bfa_ioc_s *ioc ,
+ 				enum bfa_ioc_event_e event);
+ static void bfa_ioc_disable_comp(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_lpu_stop(struct bfa_ioc_s *ioc);
+-static void bfa_ioc_debug_save_ftrc(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_fail_notify(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_pf_fwmismatch(struct bfa_ioc_s *ioc);
+ 
+@@ -599,8 +598,9 @@ bfa_ioc_sm_fail(struct bfa_ioc_s *ioc, enum ioc_event event)
+ 		break;
+ 
+ 	case IOC_E_HWERROR:
++	case IOC_E_HWFAILED:
+ 		/*
+-		 * HB failure notification, ignore.
++		 * HB failure / HW error notification, ignore.
+ 		 */
+ 		break;
+ 	default:
+@@ -632,6 +632,10 @@ bfa_ioc_sm_hwfail(struct bfa_ioc_s *ioc, enum ioc_event event)
+ 		bfa_fsm_set_state(ioc, bfa_ioc_sm_uninit);
+ 		break;
+ 
++	case IOC_E_HWERROR:
++		/* Ignore - already in hwfail state */
++		break;
++
+ 	default:
+ 		bfa_sm_fault(ioc, event);
+ 	}
+@@ -1455,7 +1459,7 @@ bfa_ioc_fwver_cmp(struct bfa_ioc_s *ioc, struct bfi_ioc_image_hdr_s *fwhdr)
+ 		bfa_cb_image_get_chunk(bfa_ioc_asic_gen(ioc), 0);
+ 
+ 	for (i = 0; i < BFI_IOC_MD5SUM_SZ; i++) {
+-		if (fwhdr->md5sum[i] != drv_fwhdr->md5sum[i]) {
++		if (fwhdr->md5sum[i] != cpu_to_le32(drv_fwhdr->md5sum[i])) {
+ 			bfa_trc(ioc, i);
+ 			bfa_trc(ioc, fwhdr->md5sum[i]);
+ 			bfa_trc(ioc, drv_fwhdr->md5sum[i]);
+@@ -1480,7 +1484,7 @@ bfa_ioc_fwver_valid(struct bfa_ioc_s *ioc, u32 boot_env)
+ 	drv_fwhdr = (struct bfi_ioc_image_hdr_s *)
+ 		bfa_cb_image_get_chunk(bfa_ioc_asic_gen(ioc), 0);
+ 
+-	if (fwhdr.signature != drv_fwhdr->signature) {
++	if (fwhdr.signature != cpu_to_le32(drv_fwhdr->signature)) {
+ 		bfa_trc(ioc, fwhdr.signature);
+ 		bfa_trc(ioc, drv_fwhdr->signature);
+ 		return BFA_FALSE;
+@@ -1704,7 +1708,7 @@ bfa_ioc_download_fw(struct bfa_ioc_s *ioc, u32 boot_type,
+ 		 * write smem
+ 		 */
+ 		bfa_mem_write(ioc->ioc_regs.smem_page_start, loff,
+-			      fwimg[BFA_IOC_FLASH_OFFSET_IN_CHUNK(i)]);
++			cpu_to_le32(fwimg[BFA_IOC_FLASH_OFFSET_IN_CHUNK(i)]));
+ 
+ 		loff += sizeof(u32);
+ 
+@@ -2260,6 +2264,12 @@ bfa_ioc_disable(struct bfa_ioc_s *ioc)
+ 	bfa_fsm_send_event(ioc, IOC_E_DISABLE);
+ }
+ 
++void
++bfa_ioc_suspend(struct bfa_ioc_s *ioc)
++{
++	ioc->dbg_fwsave_once = BFA_TRUE;
++	bfa_fsm_send_event(ioc, IOC_E_HWERROR);
++}
+ 
+ /*
+  * Initialize memory for saving firmware trace. Driver must initialize
+@@ -2269,7 +2279,7 @@ void
+ bfa_ioc_debug_memclaim(struct bfa_ioc_s *ioc, void *dbg_fwsave)
+ {
+ 	ioc->dbg_fwsave	    = dbg_fwsave;
+-	ioc->dbg_fwsave_len = (ioc->iocpf.auto_recover) ? BFA_DBG_FWTRC_LEN : 0;
++	ioc->dbg_fwsave_len = BFA_DBG_FWTRC_LEN;
+ }
+ 
+ /*
+@@ -2856,7 +2866,7 @@ bfa_ioc_fw_stats_clear(struct bfa_ioc_s *ioc)
+ /*
+  * Save firmware trace if configured.
+  */
+-static void
++void
+ bfa_ioc_debug_save_ftrc(struct bfa_ioc_s *ioc)
+ {
+ 	int		tlen;
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 1a99d4b..593ce6b 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -820,6 +820,7 @@ void bfa_ioc_attach(struct bfa_ioc_s *ioc, void *bfa,
+ 		struct bfa_ioc_cbfn_s *cbfn, struct bfa_timer_mod_s *timer_mod);
+ void bfa_ioc_auto_recover(bfa_boolean_t auto_recover);
+ void bfa_ioc_detach(struct bfa_ioc_s *ioc);
++void bfa_ioc_suspend(struct bfa_ioc_s *ioc);
+ void bfa_ioc_pci_init(struct bfa_ioc_s *ioc, struct bfa_pcidev_s *pcidev,
+ 		enum bfi_pcifn_class clscode);
+ void bfa_ioc_mem_claim(struct bfa_ioc_s *ioc,  u8 *dm_kva, u64 dm_pa);
+@@ -866,6 +867,7 @@ bfa_boolean_t bfa_ioc_fwver_cmp(struct bfa_ioc_s *ioc,
+ void bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event);
+ bfa_status_t bfa_ioc_fw_stats_get(struct bfa_ioc_s *ioc, void *stats);
+ bfa_status_t bfa_ioc_fw_stats_clear(struct bfa_ioc_s *ioc);
++void bfa_ioc_debug_save_ftrc(struct bfa_ioc_s *ioc);
+ 
+ /*
+  * asic block configuration related APIs
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 849eac9..e7669f8 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -1440,11 +1440,11 @@ bfa_lps_sm_logout(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ 
+ 	switch (event) {
+ 	case BFA_LPS_SM_FWRSP:
++	case BFA_LPS_SM_OFFLINE:
+ 		bfa_sm_set_state(lps, bfa_lps_sm_init);
+ 		bfa_lps_logout_comp(lps);
+ 		break;
+ 
+-	case BFA_LPS_SM_OFFLINE:
+ 	case BFA_LPS_SM_DELETE:
+ 		bfa_sm_set_state(lps, bfa_lps_sm_init);
+ 		break;
+@@ -1822,6 +1822,8 @@ bfa_lps_logout_comp_cb(void *arg, bfa_boolean_t complete)
+ 
+ 	if (lps->fdisc)
+ 		bfa_cb_lps_fdisclogo_comp(lps->bfa->bfad, lps->uarg);
++	else
++		bfa_cb_lps_flogo_comp(lps->bfa->bfad, lps->uarg);
+ }
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
+index 4da2b58..1abcf7c 100644
+--- a/drivers/scsi/bfa/bfa_svc.h
++++ b/drivers/scsi/bfa/bfa_svc.h
+@@ -664,6 +664,7 @@ u8 bfa_lps_get_fwtag(struct bfa_s *bfa, u8 lp_tag);
+ u32 bfa_lps_get_base_pid(struct bfa_s *bfa);
+ u8 bfa_lps_get_tag_from_pid(struct bfa_s *bfa, u32 pid);
+ void bfa_cb_lps_flogi_comp(void *bfad, void *uarg, bfa_status_t status);
++void bfa_cb_lps_flogo_comp(void *bfad, void *uarg);
+ void bfa_cb_lps_fdisc_comp(void *bfad, void *uarg, bfa_status_t status);
+ void bfa_cb_lps_fdisclogo_comp(void *bfad, void *uarg);
+ void bfa_cb_lps_cvl_event(void *bfad, void *uarg);
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 2c8f0c7..ab11ef0 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -736,6 +736,9 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+ 		}
+ 	}
+ 
++	/* Enable PCIE Advanced Error Recovery (AER) if kernel supports */
++	pci_enable_pcie_error_reporting(pdev);
++
+ 	bfad->pci_bar0_kva = pci_iomap(pdev, 0, pci_resource_len(pdev, 0));
+ 	bfad->pci_bar2_kva = pci_iomap(pdev, 2, pci_resource_len(pdev, 2));
+ 
+@@ -806,6 +809,8 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+ 		}
+ 	}
+ 
++	pci_save_state(pdev);
++
+ 	return 0;
+ 
+ out_release_region:
+@@ -822,6 +827,8 @@ bfad_pci_uninit(struct pci_dev *pdev, struct bfad_s *bfad)
+ 	pci_iounmap(pdev, bfad->pci_bar0_kva);
+ 	pci_iounmap(pdev, bfad->pci_bar2_kva);
+ 	pci_release_regions(pdev);
++	/* Disable PCIE Advanced Error Recovery (AER) */
++	pci_disable_pcie_error_reporting(pdev);
+ 	pci_disable_device(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+ }
+@@ -1258,6 +1265,16 @@ bfad_setup_intr(struct bfad_s *bfad)
+ 
+ 		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
+ 		if (error) {
++			/* In CT1 & CT2, try to allocate just one vector */
++			if (bfa_asic_id_ctc(pdev->device)) {
++				printk(KERN_WARNING "bfa %s: trying one msix "
++				       "vector failed to allocate %d[%d]\n",
++				       bfad->pci_name, bfad->nvec, error);
++				bfad->nvec = 1;
++				error = pci_enable_msix(bfad->pcidev,
++						msix_entries, bfad->nvec);
++			}
++
+ 			/*
+ 			 * Only error number of vector is available.
+ 			 * We don't have a mechanism to map multiple
+@@ -1267,12 +1284,13 @@ bfad_setup_intr(struct bfad_s *bfad)
+ 			 *  vectors. Linux doesn't duplicate vectors
+ 			 * in the MSIX table for this case.
+ 			 */
+-
+-			printk(KERN_WARNING "bfad%d: "
+-				"pci_enable_msix failed (%d),"
+-				" use line based.\n", bfad->inst_no, error);
+-
+-			goto line_based;
++			if (error) {
++				printk(KERN_WARNING "bfad%d: "
++				       "pci_enable_msix failed (%d), "
++				       "use line based.\n",
++					bfad->inst_no, error);
++				goto line_based;
++			}
+ 		}
+ 
+ 		/* Disable INTX in MSI-X mode */
+@@ -1470,6 +1488,197 @@ bfad_pci_remove(struct pci_dev *pdev)
+ 	kfree(bfad);
+ }
+ 
++/*
++ * PCI Error Recovery entry, error detected.
++ */
++static pci_ers_result_t
++bfad_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
++{
++	struct bfad_s *bfad = pci_get_drvdata(pdev);
++	unsigned long	flags;
++	pci_ers_result_t ret = PCI_ERS_RESULT_NONE;
++
++	dev_printk(KERN_ERR, &pdev->dev,
++		   "error detected state: %d - flags: 0x%x\n",
++		   state, bfad->bfad_flags);
++
++	switch (state) {
++	case pci_channel_io_normal: /* non-fatal error */
++		spin_lock_irqsave(&bfad->bfad_lock, flags);
++		bfad->bfad_flags &= ~BFAD_EEH_BUSY;
++		/* Suspend/fail all bfa operations */
++		bfa_ioc_suspend(&bfad->bfa.ioc);
++		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++		del_timer_sync(&bfad->hal_tmo);
++		ret = PCI_ERS_RESULT_CAN_RECOVER;
++		break;
++	case pci_channel_io_frozen: /* fatal error */
++		init_completion(&bfad->comp);
++		spin_lock_irqsave(&bfad->bfad_lock, flags);
++		bfad->bfad_flags |= BFAD_EEH_BUSY;
++		/* Suspend/fail all bfa operations */
++		bfa_ioc_suspend(&bfad->bfa.ioc);
++		bfa_fcs_stop(&bfad->bfa_fcs);
++		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++		wait_for_completion(&bfad->comp);
++
++		bfad_remove_intr(bfad);
++		del_timer_sync(&bfad->hal_tmo);
++		pci_disable_device(pdev);
++		ret = PCI_ERS_RESULT_NEED_RESET;
++		break;
++	case pci_channel_io_perm_failure: /* PCI Card is DEAD */
++		spin_lock_irqsave(&bfad->bfad_lock, flags);
++		bfad->bfad_flags |= BFAD_EEH_BUSY |
++				    BFAD_EEH_PCI_CHANNEL_IO_PERM_FAILURE;
++		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++
++		/* If the error_detected handler is called with the reason
++		 * pci_channel_io_perm_failure - it will subsequently call
++		 * pci_remove() entry point to remove the pci device from the
++		 * system - So defer the cleanup to pci_remove(); cleaning up
++		 * here causes inconsistent state during pci_remove().
++		 */
++		ret = PCI_ERS_RESULT_DISCONNECT;
++		break;
++	default:
++		WARN_ON(1);
++	}
++
++	return ret;
++}
++
++int
++restart_bfa(struct bfad_s *bfad)
++{
++	unsigned long flags;
++	struct pci_dev *pdev = bfad->pcidev;
++
++	bfa_attach(&bfad->bfa, bfad, &bfad->ioc_cfg,
++		   &bfad->meminfo, &bfad->hal_pcidev);
++
++	/* Enable Interrupt and wait bfa_init completion */
++	if (bfad_setup_intr(bfad)) {
++		dev_printk(KERN_WARNING, &pdev->dev,
++			   "%s: bfad_setup_intr failed\n", bfad->pci_name);
++		bfa_sm_send_event(bfad, BFAD_E_INTR_INIT_FAILED);
++		return -1;
++	}
++
++	init_completion(&bfad->comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	bfa_iocfc_init(&bfad->bfa);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++
++	/* Set up interrupt handler for each vectors */
++	if ((bfad->bfad_flags & BFAD_MSIX_ON) &&
++	    bfad_install_msix_handler(bfad))
++		dev_printk(KERN_WARNING, &pdev->dev,
++			   "%s: install_msix failed.\n", bfad->pci_name);
++
++	bfad_init_timer(bfad);
++	wait_for_completion(&bfad->comp);
++	bfad_drv_start(bfad);
++
++	return 0;
++}
++
++/*
++ * PCI Error Recovery entry, re-initialize the chip.
++ */
++static pci_ers_result_t
++bfad_pci_slot_reset(struct pci_dev *pdev)
++{
++	struct bfad_s *bfad = pci_get_drvdata(pdev);
++	u8 byte;
++
++	dev_printk(KERN_ERR, &pdev->dev,
++		   "bfad_pci_slot_reset flags: 0x%x\n", bfad->bfad_flags);
++
++	if (pci_enable_device(pdev)) {
++		dev_printk(KERN_ERR, &pdev->dev, "Cannot re-enable "
++			   "PCI device after reset.\n");
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++
++	pci_restore_state(pdev);
++
++	/*
++	 * Read some byte (e.g. DMA max. payload size which can't
++	 * be 0xff any time) to make sure - we did not hit another PCI error
++	 * in the middle of recovery. If we did, then declare permanent failure.
++	 */
++	pci_read_config_byte(pdev, 0x68, &byte);
++	if (byte == 0xff) {
++		dev_printk(KERN_ERR, &pdev->dev,
++			   "slot_reset failed ... got another PCI error !\n");
++		goto out_disable_device;
++	}
++
++	pci_save_state(pdev);
++	pci_set_master(pdev);
++
++	if (pci_set_dma_mask(bfad->pcidev, DMA_BIT_MASK(64)) != 0)
++		if (pci_set_dma_mask(bfad->pcidev, DMA_BIT_MASK(32)) != 0)
++			goto out_disable_device;
++
++	pci_cleanup_aer_uncorrect_error_status(pdev);
++
++	if (restart_bfa(bfad) == -1)
++		goto out_disable_device;
++
++	pci_enable_pcie_error_reporting(pdev);
++	dev_printk(KERN_WARNING, &pdev->dev,
++		   "slot_reset completed  flags: 0x%x!\n", bfad->bfad_flags);
++
++	return PCI_ERS_RESULT_RECOVERED;
++
++out_disable_device:
++	pci_disable_device(pdev);
++	return PCI_ERS_RESULT_DISCONNECT;
++}
++
++static pci_ers_result_t
++bfad_pci_mmio_enabled(struct pci_dev *pdev)
++{
++	unsigned long	flags;
++	struct bfad_s *bfad = pci_get_drvdata(pdev);
++
++	dev_printk(KERN_INFO, &pdev->dev, "mmio_enabled\n");
++
++	/* Fetch FW diagnostic information */
++	bfa_ioc_debug_save_ftrc(&bfad->bfa.ioc);
++
++	/* Cancel all pending IOs */
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	init_completion(&bfad->comp);
++	bfa_fcs_stop(&bfad->bfa_fcs);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	wait_for_completion(&bfad->comp);
++
++	bfad_remove_intr(bfad);
++	del_timer_sync(&bfad->hal_tmo);
++	pci_disable_device(pdev);
++
++	return PCI_ERS_RESULT_NEED_RESET;
++}
++
++static void
++bfad_pci_resume(struct pci_dev *pdev)
++{
++	unsigned long	flags;
++	struct bfad_s *bfad = pci_get_drvdata(pdev);
++
++	dev_printk(KERN_WARNING, &pdev->dev, "resume\n");
++
++	/* wait until the link is online */
++	bfad_rport_online_wait(bfad);
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	bfad->bfad_flags &= ~BFAD_EEH_BUSY;
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++}
++
+ struct pci_device_id bfad_id_table[] = {
+ 	{
+ 		.vendor = BFA_PCI_VENDOR_ID_BROCADE,
+@@ -1513,11 +1722,22 @@ struct pci_device_id bfad_id_table[] = {
+ 
+ MODULE_DEVICE_TABLE(pci, bfad_id_table);
+ 
++/*
++ * PCI error recovery handlers.
++ */
++static struct pci_error_handlers bfad_err_handler = {
++	.error_detected = bfad_pci_error_detected,
++	.slot_reset = bfad_pci_slot_reset,
++	.mmio_enabled = bfad_pci_mmio_enabled,
++	.resume = bfad_pci_resume,
++};
++
+ static struct pci_driver bfad_pci_driver = {
+ 	.name = BFAD_DRIVER_NAME,
+ 	.id_table = bfad_id_table,
+ 	.probe = bfad_pci_probe,
+ 	.remove = __devexit_p(bfad_pci_remove),
++	.err_handler = &bfad_err_handler,
+ };
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
+index 7f74f1d..d1511d8 100644
+--- a/drivers/scsi/bfa/bfad_drv.h
++++ b/drivers/scsi/bfa/bfad_drv.h
+@@ -37,6 +37,7 @@
+ #include <linux/vmalloc.h>
+ #include <linux/workqueue.h>
+ #include <linux/bitops.h>
++#include <linux/aer.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+@@ -81,6 +82,8 @@
+ #define BFAD_FC4_PROBE_DONE			0x00000200
+ #define BFAD_PORT_DELETE			0x00000001
+ #define BFAD_INTX_ON				0x00000400
++#define BFAD_EEH_BUSY				0x00000800
++#define BFAD_EEH_PCI_CHANNEL_IO_PERM_FAILURE	0x00001000
+ /*
+  * BFAD related definition
+  */
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 2eebf8d..8f92732 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -1216,6 +1216,15 @@ bfad_im_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd
+ 		return 0;
+ 	}
+ 
++	if (bfad->bfad_flags & BFAD_EEH_BUSY) {
++		if (bfad->bfad_flags & BFAD_EEH_PCI_CHANNEL_IO_PERM_FAILURE)
++			cmnd->result = DID_NO_CONNECT << 16;
++		else
++			cmnd->result = DID_REQUEUE << 16;
++		done(cmnd);
++		return 0;
++	}
++
+ 	sg_cnt = scsi_dma_map(cmnd);
+ 	if (sg_cnt < 0)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
 -- 
 1.7.3.rc1
 
