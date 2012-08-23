@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 00/10] bfa: Update the driver version to v3.1.2.0
-Date: Wed, 22 Aug 2012 19:50:10 -0700
-Message-ID: <1345690210-20346-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 02/10] bfa: FCS remote port enhancements.
+Date: Wed, 22 Aug 2012 19:50:43 -0700
+Message-ID: <1345690243-20704-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:58994 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:59027 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753685Ab2HWCuc (ORCPT
+	by vger.kernel.org with ESMTP id S1756039Ab2HWCvP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 22:50:32 -0400
+	Wed, 22 Aug 2012 22:51:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
@@ -17,58 +17,285 @@ Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
-Hi James,
+Change details:
+	- Introduced rport qualifier structure and modified design to
+	  export remote ports with valid pid or valid pwwn to the user space.
+	- Introduced old_pid field in the rport structure and made changes to
+	  prevent re-creating a new remote port for an already existing rport
+	  that is transitioning to a delete state. (Happens if we receive a RSCN
+	  on the existing remote port that is getting deleted).
 
-	The following patch-set includes bug-fixes and also adds new features to BFA
-	such as PCIE - AER handling support, FCS remote port enhancements,
-	changes to split the FCXP memory allocation, support to register the
-	node symbolic name with the name server, support for max target ports discovery
-	and updates the Brocade BFA driver to v3.1.2.0.
-
-	I have compiled and tested the code against your scsi-misc.
-
-Thanks,
-Krishna C Gudipati
-
-Krishna Gudipati (10):
-  bfa: Support vport symbolic name change from sysfs.
-  bfa: FCS remote port enhancements.
-  bfa: Make changes to FCXP resource management.
-  bfa: Add new hardware model info to sysfs model description routine.
-  bfa: Add PowerPC support and enable PCIE AER handling.
-  bfa: Fix to process mbox interrupts only if interrupts are enabled in
-    INTx mode.
-  bfa: Add support to register node symbolic name with name server
-  bfa: Add support for max target ports discovery
-  bfa: Update MAINTAINERS file for BFA driver.
-  bfa: Update the driver version to v3.1.2.0.
-
- MAINTAINERS                      |    1 -
- drivers/scsi/bfa/bfa_core.c      |   21 +-
- drivers/scsi/bfa/bfa_cs.h        |    4 +-
- drivers/scsi/bfa/bfa_defs_fcs.h  |   18 +
- drivers/scsi/bfa/bfa_fc.h        |   10 +
- drivers/scsi/bfa/bfa_fcbuild.c   |   21 ++
- drivers/scsi/bfa/bfa_fcbuild.h   |    2 +
- drivers/scsi/bfa/bfa_fcpim.c     |   12 +-
- drivers/scsi/bfa/bfa_fcs.c       |  182 +++++++++++-
- drivers/scsi/bfa/bfa_fcs.h       |   66 ++++-
- drivers/scsi/bfa/bfa_fcs_fcpim.c |  129 +++++----
- drivers/scsi/bfa/bfa_fcs_lport.c |  632 +++++++++++++++++++++++++++++++++++---
- drivers/scsi/bfa/bfa_fcs_rport.c |  466 +++++++++++++++++++++--------
- drivers/scsi/bfa/bfa_ioc.c       |   24 +-
- drivers/scsi/bfa/bfa_ioc.h       |    2 +
- drivers/scsi/bfa/bfa_modules.h   |    1 +
- drivers/scsi/bfa/bfa_svc.c       |   95 +++++--
- drivers/scsi/bfa/bfa_svc.h       |   23 +-
- drivers/scsi/bfa/bfad.c          |  236 ++++++++++++++-
- drivers/scsi/bfa/bfad_attr.c     |   46 +++-
- drivers/scsi/bfa/bfad_bsg.c      |   39 ++-
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfa_defs_fcs.h  |    5 +++
+ drivers/scsi/bfa/bfa_fcs.h       |   10 +++++--
+ drivers/scsi/bfa/bfa_fcs_lport.c |   56 +++++++++++++++++++++++++++++++++++---
+ drivers/scsi/bfa/bfa_fcs_rport.c |    3 ++
+ drivers/scsi/bfa/bfad_attr.c     |    7 +++--
+ drivers/scsi/bfa/bfad_bsg.c      |   14 +++++++---
  drivers/scsi/bfa/bfad_bsg.h      |    2 +
- drivers/scsi/bfa/bfad_drv.h      |    5 +-
- drivers/scsi/bfa/bfad_im.c       |    9 +
- 24 files changed, 1736 insertions(+), 310 deletions(-)
+ 7 files changed, 83 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfa_defs_fcs.h b/drivers/scsi/bfa/bfa_defs_fcs.h
+index 3bbc583..5871a1b 100644
+--- a/drivers/scsi/bfa/bfa_defs_fcs.h
++++ b/drivers/scsi/bfa/bfa_defs_fcs.h
+@@ -410,6 +410,11 @@ struct bfa_rport_remote_link_stats_s {
+ 	u32 icc; /*  Invalid CRC Count */
+ };
+ 
++struct bfa_rport_qualifier_s {
++	wwn_t	pwwn;	/* Port WWN */
++	u32	pid;	/* port ID */
++	u32	rsvd;
++};
+ 
+ #define BFA_MAX_IO_INDEX 7
+ #define BFA_NO_IO_INDEX 9
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index 050a7e9..ef0ec66 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -286,9 +286,8 @@ bfa_fcs_lport_get_drvport(struct bfa_fcs_lport_s *port)
+ 
+ bfa_boolean_t   bfa_fcs_lport_is_online(struct bfa_fcs_lport_s *port);
+ struct bfa_fcs_lport_s *bfa_fcs_get_base_port(struct bfa_fcs_s *fcs);
+-void bfa_fcs_lport_get_rports(struct bfa_fcs_lport_s *port,
+-			      wwn_t rport_wwns[], int *nrports);
+-
++void bfa_fcs_lport_get_rport_quals(struct bfa_fcs_lport_s *port,
++			struct bfa_rport_qualifier_s rport[], int *nrports);
+ wwn_t bfa_fcs_lport_get_rport(struct bfa_fcs_lport_s *port, wwn_t wwn,
+ 			      int index, int nrports, bfa_boolean_t bwwn);
+ 
+@@ -326,10 +325,14 @@ void            bfa_fcs_lport_offline(struct bfa_fcs_lport_s *port);
+ void            bfa_fcs_lport_delete(struct bfa_fcs_lport_s *port);
+ struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_pid(
+ 		struct bfa_fcs_lport_s *port, u32 pid);
++struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_old_pid(
++		struct bfa_fcs_lport_s *port, u32 pid);
+ struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_pwwn(
+ 		struct bfa_fcs_lport_s *port, wwn_t pwwn);
+ struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_nwwn(
+ 		struct bfa_fcs_lport_s *port, wwn_t nwwn);
++struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_qualifier(
++		struct bfa_fcs_lport_s *port, wwn_t pwwn, u32 pid);
+ void            bfa_fcs_lport_add_rport(struct bfa_fcs_lport_s *port,
+ 				       struct bfa_fcs_rport_s *rport);
+ void            bfa_fcs_lport_del_rport(struct bfa_fcs_lport_s *port,
+@@ -421,6 +424,7 @@ struct bfa_fcs_rport_s {
+ 	struct bfa_fcs_s	*fcs;	/*  fcs instance */
+ 	struct bfad_rport_s	*rp_drv;	/*  driver peer instance */
+ 	u32	pid;	/*  port ID of rport */
++	u32	old_pid;	/* PID before rport goes offline */
+ 	u16	maxfrsize;	/*  maximum frame size */
+ 	__be16	reply_oxid;	/*  OX_ID of inbound requests */
+ 	enum fc_cos	fc_cos;	/*  FC classes of service supp */
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index f8e8017..5392df5 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -854,6 +854,25 @@ bfa_fcs_lport_get_rport_by_pid(struct bfa_fcs_lport_s *port, u32 pid)
+ }
+ 
+ /*
++ * OLD_PID based Lookup for a R-Port in the Port R-Port Queue
++ */
++struct bfa_fcs_rport_s *
++bfa_fcs_lport_get_rport_by_old_pid(struct bfa_fcs_lport_s *port, u32 pid)
++{
++	struct bfa_fcs_rport_s *rport;
++	struct list_head	*qe;
++
++	list_for_each(qe, &port->rport_q) {
++		rport = (struct bfa_fcs_rport_s *) qe;
++		if (rport->old_pid == pid)
++			return rport;
++	}
++
++	bfa_trc(port->fcs, pid);
++	return NULL;
++}
++
++/*
+  *   PWWN based Lookup for a R-Port in the Port R-Port Queue
+  */
+ struct bfa_fcs_rport_s *
+@@ -892,6 +911,26 @@ bfa_fcs_lport_get_rport_by_nwwn(struct bfa_fcs_lport_s *port, wwn_t nwwn)
+ }
+ 
+ /*
++ * PWWN & PID based Lookup for a R-Port in the Port R-Port Queue
++ */
++struct bfa_fcs_rport_s *
++bfa_fcs_lport_get_rport_by_qualifier(struct bfa_fcs_lport_s *port,
++				     wwn_t pwwn, u32 pid)
++{
++	struct bfa_fcs_rport_s *rport;
++	struct list_head	*qe;
++
++	list_for_each(qe, &port->rport_q) {
++		rport = (struct bfa_fcs_rport_s *) qe;
++		if (wwn_is_equal(rport->pwwn, pwwn) && rport->pid == pid)
++			return rport;
++	}
++
++	bfa_trc(port->fcs, pwwn);
++	return NULL;
++}
++
++/*
+  * Called by rport module when new rports are discovered.
+  */
+ void
+@@ -4759,6 +4798,9 @@ bfa_fcs_lport_scn_portid_rscn(struct bfa_fcs_lport_s *port, u32 rpid)
+ 	 * Otherwise let rport handle the RSCN event.
+ 	 */
+ 	rport = bfa_fcs_lport_get_rport_by_pid(port, rpid);
++	if (!rport)
++		rport = bfa_fcs_lport_get_rport_by_old_pid(port, rpid);
++
+ 	if (rport == NULL) {
+ 		/*
+ 		 * If min cfg mode is enabled, we donot need to
+@@ -4951,15 +4993,15 @@ bfa_fcs_lport_get_rport(struct bfa_fcs_lport_s *port, wwn_t wwn, int index,
+ }
+ 
+ void
+-bfa_fcs_lport_get_rports(struct bfa_fcs_lport_s *port,
+-	 wwn_t rport_wwns[], int *nrports)
++bfa_fcs_lport_get_rport_quals(struct bfa_fcs_lport_s *port,
++		struct bfa_rport_qualifier_s rports[], int *nrports)
+ {
+ 	struct list_head	*qh, *qe;
+ 	struct bfa_fcs_rport_s *rport = NULL;
+ 	int	i;
+ 	struct bfa_fcs_s	*fcs;
+ 
+-	if (port == NULL || rport_wwns == NULL || *nrports == 0)
++	if (port == NULL || rports == NULL || *nrports == 0)
+ 		return;
+ 
+ 	fcs = port->fcs;
+@@ -4979,7 +5021,13 @@ bfa_fcs_lport_get_rports(struct bfa_fcs_lport_s *port,
+ 			continue;
+ 		}
+ 
+-		rport_wwns[i] = rport->pwwn;
++		if (!rport->pwwn && !rport->pid) {
++			qe = bfa_q_next(qe);
++			continue;
++		}
++
++		rports[i].pwwn = rport->pwwn;
++		rports[i].pid = rport->pid;
+ 
+ 		i++;
+ 		qe = bfa_q_next(qe);
+diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
+index fe0463a..fa2df04 100644
+--- a/drivers/scsi/bfa/bfa_fcs_rport.c
++++ b/drivers/scsi/bfa/bfa_fcs_rport.c
+@@ -397,6 +397,7 @@ bfa_fcs_rport_sm_plogi(struct bfa_fcs_rport_s *rport, enum rport_event event)
+ 					BFA_FCS_RETRY_TIMEOUT);
+ 		} else {
+ 			bfa_stats(rport->port, rport_del_max_plogi_retry);
++			rport->old_pid = rport->pid;
+ 			rport->pid = 0;
+ 			bfa_sm_set_state(rport, bfa_fcs_rport_sm_offline);
+ 			bfa_timer_start(rport->fcs->bfa, &rport->timer,
+@@ -1296,6 +1297,7 @@ bfa_fcs_rport_sm_nsdisc_sent(struct bfa_fcs_rport_s *rport,
+ 				 bfa_fcs_rport_sm_nsdisc_sending);
+ 			bfa_fcs_rport_send_nsdisc(rport, NULL);
+ 		} else {
++			rport->old_pid = rport->pid;
+ 			rport->pid = 0;
+ 			bfa_sm_set_state(rport, bfa_fcs_rport_sm_offline);
+ 			bfa_timer_start(rport->fcs->bfa, &rport->timer,
+@@ -1981,6 +1983,7 @@ bfa_fcs_rport_alloc(struct bfa_fcs_lport_s *port, wwn_t pwwn, u32 rpid)
+ 	rport->rp_drv = rport_drv;
+ 	rport->pid = rpid;
+ 	rport->pwwn = pwwn;
++	rport->old_pid = 0;
+ 
+ 	/*
+ 	 * allocate BFA rport
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index 1d18a80..91a2044 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -941,15 +941,16 @@ bfad_im_num_of_discovered_ports_show(struct device *dev,
+ 	struct bfad_port_s    *port = im_port->port;
+ 	struct bfad_s         *bfad = im_port->bfad;
+ 	int        nrports = 2048;
+-	wwn_t          *rports = NULL;
++	struct bfa_rport_qualifier_s *rports = NULL;
+ 	unsigned long   flags;
+ 
+-	rports = kzalloc(sizeof(wwn_t) * nrports , GFP_ATOMIC);
++	rports = kzalloc(sizeof(struct bfa_rport_qualifier_s) * nrports,
++			 GFP_ATOMIC);
+ 	if (rports == NULL)
+ 		return snprintf(buf, PAGE_SIZE, "Failed\n");
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+-	bfa_fcs_lport_get_rports(port->fcs_port, rports, &nrports);
++	bfa_fcs_lport_get_rport_quals(port->fcs_port, rports, &nrports);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 	kfree(rports);
+ 
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 9c1495b..d9463d8 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -535,7 +535,8 @@ bfad_iocmd_lport_get_rports(struct bfad_s *bfad, void *cmd,
+ 
+ 	if (bfad_chk_iocmd_sz(payload_len,
+ 			sizeof(struct bfa_bsg_lport_get_rports_s),
+-			sizeof(wwn_t) * iocmd->nrports) != BFA_STATUS_OK) {
++			sizeof(struct bfa_rport_qualifier_s) * iocmd->nrports)
++			!= BFA_STATUS_OK) {
+ 		iocmd->status = BFA_STATUS_VERSION_FAIL;
+ 		return 0;
+ 	}
+@@ -552,8 +553,9 @@ bfad_iocmd_lport_get_rports(struct bfad_s *bfad, void *cmd,
+ 		goto out;
+ 	}
+ 
+-	bfa_fcs_lport_get_rports(fcs_port, (wwn_t *)iocmd_bufptr,
+-				&iocmd->nrports);
++	bfa_fcs_lport_get_rport_quals(fcs_port,
++			(struct bfa_rport_qualifier_s *)iocmd_bufptr,
++			&iocmd->nrports);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 	iocmd->status = BFA_STATUS_OK;
+ out:
+@@ -578,7 +580,11 @@ bfad_iocmd_rport_get_attr(struct bfad_s *bfad, void *cmd)
+ 		goto out;
+ 	}
+ 
+-	fcs_rport = bfa_fcs_rport_lookup(fcs_port, iocmd->rpwwn);
++	if (iocmd->pid)
++		fcs_rport = bfa_fcs_lport_get_rport_by_qualifier(fcs_port,
++						iocmd->rpwwn, iocmd->pid);
++	else
++		fcs_rport = bfa_fcs_rport_lookup(fcs_port, iocmd->rpwwn);
+ 	if (fcs_rport == NULL) {
+ 		bfa_trc(bfad, 0);
+ 		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
+index 17ad672..8c569dd 100644
+--- a/drivers/scsi/bfa/bfad_bsg.h
++++ b/drivers/scsi/bfa/bfad_bsg.h
+@@ -319,6 +319,8 @@ struct bfa_bsg_rport_attr_s {
+ 	u16		vf_id;
+ 	wwn_t		pwwn;
+ 	wwn_t		rpwwn;
++	u32		pid;
++	u32		rsvd;
+ 	struct bfa_rport_attr_s attr;
+ };
+ 
 -- 
 1.7.3.rc1
 
