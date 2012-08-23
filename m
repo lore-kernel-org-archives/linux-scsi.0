@@ -1,76 +1,655 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 06/10] bfa: Fix to process mbox interrupts only if interrupts are enabled in INTx mode.
-Date: Wed, 22 Aug 2012 19:52:18 -0700
-Message-ID: <1345690338-21429-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 07/10] bfa: Add support to register node symbolic name with name server
+Date: Wed, 22 Aug 2012 19:52:43 -0700
+Message-ID: <1345690363-21715-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:59106 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:59112 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756242Ab2HWCwu (ORCPT
+	by vger.kernel.org with ESMTP id S1755953Ab2HWCxG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Aug 2012 22:52:50 -0400
+	Wed, 22 Aug 2012 22:53:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
+Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Made changes to process mbox and error interrupts only if interrupts are
-	  enabled, when running in INTx mode.
+	- Changes to register node symbolic name with name server on the fabric
+	  by sending CT commands RNN_ID and RSNN_NN.
 
+Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_core.c    |    9 ++++++++-
- drivers/scsi/bfa/bfa_modules.h |    1 +
- 2 files changed, 9 insertions(+), 1 deletions(-)
+ drivers/scsi/bfa/bfa_defs_fcs.h  |   13 ++
+ drivers/scsi/bfa/bfa_fc.h        |   10 +
+ drivers/scsi/bfa/bfa_fcbuild.c   |   21 +++
+ drivers/scsi/bfa/bfa_fcbuild.h   |    2 +
+ drivers/scsi/bfa/bfa_fcs.c       |   39 ++++
+ drivers/scsi/bfa/bfa_fcs.h       |    5 +
+ drivers/scsi/bfa/bfa_fcs_lport.c |  366 +++++++++++++++++++++++++++++++++++++-
+ 7 files changed, 454 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index a4129c9..b7c326f 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -775,7 +775,8 @@ bfa_intx(struct bfa_s *bfa)
- 	if (!intr)
- 		return BFA_TRUE;
+diff --git a/drivers/scsi/bfa/bfa_defs_fcs.h b/drivers/scsi/bfa/bfa_defs_fcs.h
+index 5871a1b..06f0a16 100644
+--- a/drivers/scsi/bfa/bfa_defs_fcs.h
++++ b/drivers/scsi/bfa/bfa_defs_fcs.h
+@@ -93,6 +93,7 @@ struct bfa_lport_cfg_s {
+ 	wwn_t	       pwwn;       /*  port wwn */
+ 	wwn_t	       nwwn;       /*  node wwn */
+ 	struct bfa_lport_symname_s  sym_name;   /*  vm port symbolic name */
++	struct bfa_lport_symname_s node_sym_name; /* Node symbolic name */
+ 	enum bfa_lport_role roles;      /* FCS port roles */
+ 	u32     rsvd;
+ 	bfa_boolean_t   preboot_vp;  /*  vport created from PBC */
+@@ -192,6 +193,18 @@ struct bfa_lport_stats_s {
+ 	u32	ns_gidft_unknown_rsp;
+ 	u32	ns_gidft_alloc_wait;
  
--	bfa_msix_lpu_err(bfa, intr);
-+	if (bfa->intr_enabled)
-+		bfa_msix_lpu_err(bfa, intr);
- 
- 	return BFA_TRUE;
- }
-@@ -803,11 +804,17 @@ bfa_isr_enable(struct bfa_s *bfa)
- 	writel(~umsk, bfa->iocfc.bfa_regs.intr_mask);
- 	bfa->iocfc.intr_mask = ~umsk;
- 	bfa_isr_mode_set(bfa, bfa->msix.nvecs != 0);
++	u32	ns_rnnid_sent;
++	u32	ns_rnnid_accepts;
++	u32	ns_rnnid_rsp_err;
++	u32	ns_rnnid_rejects;
++	u32	ns_rnnid_alloc_wait;
 +
-+	/*
-+	 * Set the flag indicating successful enabling of interrupts
-+	 */
-+	bfa->intr_enabled = BFA_TRUE;
- }
- 
- void
- bfa_isr_disable(struct bfa_s *bfa)
- {
-+	bfa->intr_enabled = BFA_FALSE;
- 	bfa_isr_mode_set(bfa, BFA_FALSE);
- 	writel(-1L, bfa->iocfc.bfa_regs.intr_mask);
- 	bfa_msix_uninstall(bfa);
-diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
-index 2d36e48..189fff7 100644
---- a/drivers/scsi/bfa/bfa_modules.h
-+++ b/drivers/scsi/bfa/bfa_modules.h
-@@ -121,6 +121,7 @@ struct bfa_s {
- 	bfa_boolean_t		fcs;		/*  FCS is attached to BFA */
- 	struct bfa_msix_s	msix;
- 	int			bfa_aen_seq;
-+	bfa_boolean_t		intr_enabled;	/*  Status of interrupts */
++	u32	ns_rsnn_nn_sent;
++	u32	ns_rsnn_nn_accepts;
++	u32	ns_rsnn_nn_rsp_err;
++	u32	ns_rsnn_nn_rejects;
++	u32	ns_rsnn_nn_alloc_wait;
++
+ 	/*
+ 	 * Mgmt Server stats
+ 	 */
+diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
+index 8d0b88f..e0beb4d 100644
+--- a/drivers/scsi/bfa/bfa_fc.h
++++ b/drivers/scsi/bfa/bfa_fc.h
+@@ -1279,6 +1279,7 @@ enum {
+ 	GS_GSPN_ID	= 0x0118,	/* Get symbolic PN on ID */
+ 	GS_RFT_ID	= 0x0217,	/* Register fc4type on ID */
+ 	GS_RSPN_ID	= 0x0218,	/* Register symbolic PN on ID */
++	GS_RSNN_NN	= 0x0239,	/* Register symbolic NN on NN */
+ 	GS_RPN_ID	= 0x0212,	/* Register port name */
+ 	GS_RNN_ID	= 0x0213,	/* Register node name */
+ 	GS_RCS_ID	= 0x0214,	/* Register class of service */
+@@ -1357,6 +1358,15 @@ struct fcgs_rspnid_req_s {
  };
  
- extern bfa_boolean_t bfa_auto_recover;
+ /*
++ * RSNN_NN
++ */
++struct fcgs_rsnn_nn_req_s {
++	wwn_t	node_name;	/* Node name */
++	u8	snn_len;	/* symbolic node name length */
++	u8	snn[256];	/* symbolic node name */
++};
++
++/*
+  * RPN_ID
+  */
+ struct fcgs_rpnid_req_s {
+diff --git a/drivers/scsi/bfa/bfa_fcbuild.c b/drivers/scsi/bfa/bfa_fcbuild.c
+index 17b59b8..273cee9 100644
+--- a/drivers/scsi/bfa/bfa_fcbuild.c
++++ b/drivers/scsi/bfa/bfa_fcbuild.c
+@@ -1252,6 +1252,27 @@ fc_rspnid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u16 ox_id,
+ }
+ 
+ u16
++fc_rsnn_nn_build(struct fchs_s *fchs, void *pyld, u32 s_id,
++			wwn_t node_name, u8 *name)
++{
++	struct ct_hdr_s *cthdr = (struct ct_hdr_s *) pyld;
++	struct fcgs_rsnn_nn_req_s *rsnn_nn =
++		(struct fcgs_rsnn_nn_req_s *) (cthdr + 1);
++	u32	d_id = bfa_hton3b(FC_NAME_SERVER);
++
++	fc_gs_fchdr_build(fchs, d_id, s_id, 0);
++	fc_gs_cthdr_build(cthdr, s_id, GS_RSNN_NN);
++
++	memset(rsnn_nn, 0, sizeof(struct fcgs_rsnn_nn_req_s));
++
++	rsnn_nn->node_name = node_name;
++	rsnn_nn->snn_len = (u8) strlen((char *)name);
++	strncpy((char *)rsnn_nn->snn, (char *)name, rsnn_nn->snn_len);
++
++	return sizeof(struct fcgs_rsnn_nn_req_s) + sizeof(struct ct_hdr_s);
++}
++
++u16
+ fc_gid_ft_build(struct fchs_s *fchs, void *pyld, u32 s_id, u8 fc4_type)
+ {
+ 
+diff --git a/drivers/scsi/bfa/bfa_fcbuild.h b/drivers/scsi/bfa/bfa_fcbuild.h
+index 42cd9d4..03c753d 100644
+--- a/drivers/scsi/bfa/bfa_fcbuild.h
++++ b/drivers/scsi/bfa/bfa_fcbuild.h
+@@ -166,6 +166,8 @@ enum fc_parse_status fc_rrq_rsp_parse(struct fchs_s *buf, int len);
+ 
+ u16        fc_rspnid_build(struct fchs_s *fchs, void *pld, u32 s_id,
+ 				u16 ox_id, u8 *name);
++u16	fc_rsnn_nn_build(struct fchs_s *fchs, void *pld, u32 s_id,
++				wwn_t node_name, u8 *name);
+ 
+ u16        fc_rftid_build(struct fchs_s *fchs, void *pld, u32 s_id,
+ 			       u16 ox_id, enum bfa_lport_role role);
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index 671a1a2..2139592 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -165,6 +165,7 @@ bfa_fcs_driver_info_init(struct bfa_fcs_s *fcs,
+ 	fcs->driver_info = *driver_info;
+ 
+ 	bfa_fcs_fabric_psymb_init(&fcs->fabric);
++	bfa_fcs_fabric_nsymb_init(&fcs->fabric);
+ }
+ 
+ /*
+@@ -843,6 +844,44 @@ bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric)
+ }
+ 
+ /*
++ * Node Symbolic Name Creation for base port and all vports
++ */
++void
++bfa_fcs_fabric_nsymb_init(struct bfa_fcs_fabric_s *fabric)
++{
++	struct bfa_lport_cfg_s *port_cfg = &fabric->bport.port_cfg;
++	char model[BFA_ADAPTER_MODEL_NAME_LEN] = {0};
++	struct bfa_fcs_driver_info_s *driver_info = &fabric->fcs->driver_info;
++
++	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
++
++	/* Model name/number */
++	strncpy((char *)&port_cfg->node_sym_name, model,
++		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
++	strncat((char *)&port_cfg->node_sym_name,
++			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
++			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
++
++	/* Driver Version */
++	strncat((char *)&port_cfg->node_sym_name, (char *)driver_info->version,
++		BFA_FCS_PORT_SYMBNAME_VERSION_SZ);
++	strncat((char *)&port_cfg->node_sym_name,
++			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
++			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
++
++	/* Host machine name */
++	strncat((char *)&port_cfg->node_sym_name,
++		(char *)driver_info->host_machine_name,
++		BFA_FCS_PORT_SYMBNAME_MACHINENAME_SZ);
++	strncat((char *)&port_cfg->node_sym_name,
++			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
++			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
++
++	/* null terminate */
++	port_cfg->node_sym_name.symname[BFA_SYMNAME_MAXLEN - 1] = 0;
++}
++
++/*
+  * bfa lps login completion callback
+  */
+ void
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index b64ca35..2b35f1b 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -62,6 +62,7 @@ struct bfa_fcs_s;
+ #define N2N_LOCAL_PID	    0x010000
+ #define N2N_REMOTE_PID		0x020000
+ #define	BFA_FCS_RETRY_TIMEOUT 2000
++#define BFA_FCS_MAX_NS_RETRIES 5
+ #define BFA_FCS_PID_IS_WKA(pid)  ((bfa_ntoh3b(pid) > 0xFFF000) ?  1 : 0)
+ 
+ 
+@@ -72,6 +73,8 @@ struct bfa_fcs_lport_ns_s {
+ 	struct bfa_fcs_lport_s *port;	/*  parent port */
+ 	struct bfa_fcxp_s *fcxp;
+ 	struct bfa_fcxp_wqe_s fcxp_wqe;
++	u8	num_rnnid_retries;
++	u8	num_rsnn_nn_retries;
+ };
+ 
+ 
+@@ -265,6 +268,7 @@ struct bfa_fcs_fabric_s;
+ #define bfa_fcs_lport_get_pwwn(_lport)	((_lport)->port_cfg.pwwn)
+ #define bfa_fcs_lport_get_nwwn(_lport)	((_lport)->port_cfg.nwwn)
+ #define bfa_fcs_lport_get_psym_name(_lport)	((_lport)->port_cfg.sym_name)
++#define bfa_fcs_lport_get_nsym_name(_lport) ((_lport)->port_cfg.node_sym_name)
+ #define bfa_fcs_lport_is_initiator(_lport)			\
+ 	((_lport)->port_cfg.roles & BFA_LPORT_ROLE_FCP_IM)
+ #define bfa_fcs_lport_get_nrports(_lport)	\
+@@ -780,6 +784,7 @@ void bfa_fcs_fabric_modstart(struct bfa_fcs_s *fcs);
+ void bfa_fcs_fabric_uf_recv(struct bfa_fcs_fabric_s *fabric,
+ 		struct fchs_s *fchs, u16 len);
+ void	bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric);
++void	bfa_fcs_fabric_nsymb_init(struct bfa_fcs_fabric_s *fabric);
+ void bfa_fcs_fabric_set_fabric_name(struct bfa_fcs_fabric_s *fabric,
+ 	       wwn_t fabric_name);
+ u16 bfa_fcs_fabric_get_switch_oui(struct bfa_fcs_fabric_s *fabric);
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 3c9bde9..d4a4d53 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -3229,6 +3229,10 @@ static void     bfa_fcs_lport_ns_send_rff_id(void *ns_cbarg,
+ 					    struct bfa_fcxp_s *fcxp_alloced);
+ static void     bfa_fcs_lport_ns_send_gid_ft(void *ns_cbarg,
+ 					    struct bfa_fcxp_s *fcxp_alloced);
++static void	bfa_fcs_lport_ns_send_rnn_id(void *ns_cbarg,
++					struct bfa_fcxp_s *fcxp_alloced);
++static void	bfa_fcs_lport_ns_send_rsnn_nn(void *ns_cbarg,
++					struct bfa_fcxp_s *fcxp_alloced);
+ static void     bfa_fcs_lport_ns_timeout(void *arg);
+ static void     bfa_fcs_lport_ns_plogi_response(void *fcsarg,
+ 					       struct bfa_fcxp_s *fcxp,
+@@ -3265,6 +3269,20 @@ static void     bfa_fcs_lport_ns_gid_ft_response(void *fcsarg,
+ 						u32 rsp_len,
+ 						u32 resid_len,
+ 						struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_ns_rnn_id_response(void *fcsarg,
++						struct bfa_fcxp_s *fcxp,
++						void *cbarg,
++						bfa_status_t req_status,
++						u32 rsp_len,
++						u32 resid_len,
++						struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_ns_rsnn_nn_response(void *fcsarg,
++						struct bfa_fcxp_s *fcxp,
++						void *cbarg,
++						bfa_status_t req_status,
++						u32 rsp_len,
++						u32 resid_len,
++						struct fchs_s *rsp_fchs);
+ static void     bfa_fcs_lport_ns_process_gidft_pids(
+ 				struct bfa_fcs_lport_s *port,
+ 				u32 *pid_buf, u32 n_pids);
+@@ -3289,6 +3307,8 @@ enum vport_ns_event {
+ 	NSSM_EVENT_RFTID_SENT = 9,
+ 	NSSM_EVENT_RFFID_SENT = 10,
+ 	NSSM_EVENT_GIDFT_SENT = 11,
++	NSSM_EVENT_RNNID_SENT = 12,
++	NSSM_EVENT_RSNN_NN_SENT = 13,
+ };
+ 
+ static void     bfa_fcs_lport_ns_sm_offline(struct bfa_fcs_lport_ns_s *ns,
+@@ -3329,6 +3349,21 @@ static void     bfa_fcs_lport_ns_sm_gid_ft_retry(struct bfa_fcs_lport_ns_s *ns,
+ 						enum vport_ns_event event);
+ static void     bfa_fcs_lport_ns_sm_online(struct bfa_fcs_lport_ns_s *ns,
+ 					  enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_sending_rnn_id(
++					struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_rnn_id(struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_rnn_id_retry(struct bfa_fcs_lport_ns_s *ns,
++						enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_sending_rsnn_nn(
++					struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_rsnn_nn(struct bfa_fcs_lport_ns_s *ns,
++						enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_rsnn_nn_retry(
++					struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event);
+ /*
+  *	Start in offline state - awaiting linkup
+  */
+@@ -3396,8 +3431,9 @@ bfa_fcs_lport_ns_sm_plogi(struct bfa_fcs_lport_ns_s *ns,
+ 		break;
+ 
+ 	case NSSM_EVENT_RSP_OK:
+-		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rspn_id);
+-		bfa_fcs_lport_ns_send_rspn_id(ns, NULL);
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rnn_id);
++		ns->num_rnnid_retries = 0;
++		bfa_fcs_lport_ns_send_rnn_id(ns, NULL);
+ 		break;
+ 
+ 	case NSSM_EVENT_PORT_OFFLINE:
+@@ -3437,6 +3473,176 @@ bfa_fcs_lport_ns_sm_plogi_retry(struct bfa_fcs_lport_ns_s *ns,
+ }
+ 
+ static void
++bfa_fcs_lport_ns_sm_sending_rnn_id(struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RNNID_SENT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_rnn_id);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++						&ns->fcxp_wqe);
++		break;
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_rnn_id(struct bfa_fcs_lport_ns_s *ns,
++				enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RSP_OK:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rsnn_nn);
++		ns->num_rnnid_retries = 0;
++		ns->num_rsnn_nn_retries = 0;
++		bfa_fcs_lport_ns_send_rsnn_nn(ns, NULL);
++		break;
++
++	case NSSM_EVENT_RSP_ERROR:
++		if (ns->num_rnnid_retries < BFA_FCS_MAX_NS_RETRIES) {
++			bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_rnn_id_retry);
++			ns->port->stats.ns_retries++;
++			ns->num_rnnid_retries++;
++			bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++				&ns->timer, bfa_fcs_lport_ns_timeout, ns,
++				BFA_FCS_RETRY_TIMEOUT);
++		} else {
++			bfa_sm_set_state(ns,
++				bfa_fcs_lport_ns_sm_sending_rspn_id);
++			bfa_fcs_lport_ns_send_rspn_id(ns, NULL);
++		}
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_fcxp_discard(ns->fcxp);
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_rnn_id_retry(struct bfa_fcs_lport_ns_s *ns,
++				enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_TIMEOUT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rnn_id);
++		bfa_fcs_lport_ns_send_rnn_id(ns, NULL);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_timer_stop(&ns->timer);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_sending_rsnn_nn(struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RSNN_NN_SENT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_rsnn_nn);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++			&ns->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_rsnn_nn(struct bfa_fcs_lport_ns_s *ns,
++				enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RSP_OK:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rspn_id);
++		ns->num_rsnn_nn_retries = 0;
++		bfa_fcs_lport_ns_send_rspn_id(ns, NULL);
++		break;
++
++	case NSSM_EVENT_RSP_ERROR:
++		if (ns->num_rsnn_nn_retries < BFA_FCS_MAX_NS_RETRIES) {
++			bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_rsnn_nn_retry);
++			ns->port->stats.ns_retries++;
++			ns->num_rsnn_nn_retries++;
++			bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++					&ns->timer, bfa_fcs_lport_ns_timeout,
++					ns, BFA_FCS_RETRY_TIMEOUT);
++		} else {
++			bfa_sm_set_state(ns,
++				bfa_fcs_lport_ns_sm_sending_rspn_id);
++			bfa_fcs_lport_ns_send_rspn_id(ns, NULL);
++		}
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_discard(ns->fcxp);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_rsnn_nn_retry(struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_TIMEOUT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rsnn_nn);
++		bfa_fcs_lport_ns_send_rsnn_nn(ns, NULL);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_timer_stop(&ns->timer);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
+ bfa_fcs_lport_ns_sm_sending_rspn_id(struct bfa_fcs_lport_ns_s *ns,
+ 				   enum vport_ns_event event)
+ {
+@@ -3917,6 +4123,162 @@ bfa_fcs_lport_ns_plogi_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
+ }
+ 
+ /*
++ * Register node name for port_id
++ */
++static void
++bfa_fcs_lport_ns_send_rnn_id(void *ns_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_ns_s *ns = ns_cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct fchs_s  fchs;
++	int	len;
++	struct bfa_fcxp_s *fcxp;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	fcxp = fcxp_alloced ? fcxp_alloced :
++			bfa_fcs_fcxp_alloc(port->fcs, BFA_TRUE);
++	if (!fcxp) {
++		port->stats.ns_rnnid_alloc_wait++;
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ns->fcxp_wqe,
++				bfa_fcs_lport_ns_send_rnn_id, ns, BFA_TRUE);
++		return;
++	}
++
++	ns->fcxp = fcxp;
++
++	len = fc_rnnid_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++				bfa_fcs_lport_get_fcid(port),
++				bfa_fcs_lport_get_fcid(port),
++				bfa_fcs_lport_get_nwwn(port));
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_ns_rnn_id_response, (void *)ns,
++			  FC_MAX_PDUSZ, FC_FCCT_TOV);
++
++	port->stats.ns_rnnid_sent++;
++	bfa_sm_send_event(ns, NSSM_EVENT_RNNID_SENT);
++}
++
++static void
++bfa_fcs_lport_ns_rnn_id_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++				void *cbarg, bfa_status_t req_status,
++				u32 rsp_len, u32 resid_len,
++				struct fchs_s *rsp_fchs)
++
++{
++	struct bfa_fcs_lport_ns_s *ns = (struct bfa_fcs_lport_ns_s *) cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct ct_hdr_s	*cthdr = NULL;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		port->stats.ns_rnnid_rsp_err++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = be16_to_cpu(cthdr->cmd_rsp_code);
++
++	if (cthdr->cmd_rsp_code == CT_RSP_ACCEPT) {
++		port->stats.ns_rnnid_accepts++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_OK);
++		return;
++	}
++
++	port->stats.ns_rnnid_rejects++;
++	bfa_trc(port->fcs, cthdr->reason_code);
++	bfa_trc(port->fcs, cthdr->exp_code);
++	bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++}
++
++/*
++ * Register the symbolic node name for a given node name.
++ */
++static void
++bfa_fcs_lport_ns_send_rsnn_nn(void *ns_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_ns_s *ns = ns_cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct fchs_s  fchs;
++	int     len;
++	struct bfa_fcxp_s *fcxp;
++	u8 *nsymbl;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	fcxp = fcxp_alloced ? fcxp_alloced :
++			bfa_fcs_fcxp_alloc(port->fcs, BFA_TRUE);
++	if (!fcxp) {
++		port->stats.ns_rsnn_nn_alloc_wait++;
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ns->fcxp_wqe,
++				bfa_fcs_lport_ns_send_rsnn_nn, ns, BFA_TRUE);
++		return;
++	}
++	ns->fcxp = fcxp;
++
++	nsymbl = (u8 *) &(bfa_fcs_lport_get_nsym_name(
++					bfa_fcs_get_base_port(port->fcs)));
++
++	len = fc_rsnn_nn_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++				bfa_fcs_lport_get_fcid(port),
++				bfa_fcs_lport_get_nwwn(port), nsymbl);
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_ns_rsnn_nn_response, (void *)ns,
++			  FC_MAX_PDUSZ, FC_FCCT_TOV);
++
++	port->stats.ns_rsnn_nn_sent++;
++
++	bfa_sm_send_event(ns, NSSM_EVENT_RSNN_NN_SENT);
++}
++
++static void
++bfa_fcs_lport_ns_rsnn_nn_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++				void *cbarg, bfa_status_t req_status,
++				u32 rsp_len, u32 resid_len,
++				struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_ns_s *ns = (struct bfa_fcs_lport_ns_s *) cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct ct_hdr_s	*cthdr = NULL;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		port->stats.ns_rsnn_nn_rsp_err++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = be16_to_cpu(cthdr->cmd_rsp_code);
++
++	if (cthdr->cmd_rsp_code == CT_RSP_ACCEPT) {
++		port->stats.ns_rsnn_nn_accepts++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_OK);
++		return;
++	}
++
++	port->stats.ns_rsnn_nn_rejects++;
++	bfa_trc(port->fcs, cthdr->reason_code);
++	bfa_trc(port->fcs, cthdr->exp_code);
++	bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++}
++
++/*
+  * Register the symbolic port name.
+  */
+ static void
 -- 
 1.7.3.rc1
 
