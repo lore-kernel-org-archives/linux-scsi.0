@@ -1,91 +1,66 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/3] ibmvfc: Fix double completion on abort timeout
-Date: Fri, 24 Aug 2012 16:50:59 -0500
-Message-ID: <201208242151.q7OLp0Ib013123@d01av04.pok.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/8] csiostor: Chelsio FCoE offload driver submission
+Date: Fri, 24 Aug 2012 22:58:55 +0100
+Message-ID: <1345845535.3283.74.camel@dabdike>
+References: <1345760873-12101-1-git-send-email-naresh@chelsio.com>
+	 <CAP=VYLqtcULyoxPv0z89SEFvvFJiBUpG0UhWXzfm8KVMoGmYpg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:36038 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758819Ab2HXVvQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Aug 2012 17:51:16 -0400
-Received: from /spool/local
-	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Fri, 24 Aug 2012 17:51:14 -0400
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 2906DC9003C
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Aug 2012 17:51:02 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q7OLp1eN34144258
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Aug 2012 17:51:01 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q7OLp1h6013176
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Aug 2012 17:51:01 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37663 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755583Ab2HXV67 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Aug 2012 17:58:59 -0400
+In-Reply-To: <CAP=VYLqtcULyoxPv0z89SEFvvFJiBUpG0UhWXzfm8KVMoGmYpg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, rcj@linux.vnet.ibm.com, stimmer@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>, linux-scsi@vger.kernel.org, dm@chelsio.com, netdev@vger.kernel.org, chethan@chelsio.com
 
+On Fri, 2012-08-24 at 17:45 -0400, Paul Gortmaker wrote:
+> On Thu, Aug 23, 2012 at 6:27 PM, Naresh Kumar Inna <naresh@chelsio.com> wrote:
+> > This is the initial submission of the Chelsio FCoE offload driver (csiostor)
+> > to the upstream kernel. This driver currently supports FCoE offload
+> > functionality over Chelsio T4-based 10Gb Converged Network Adapters.
+> >
+> > The following patches contain the driver sources for csiostor driver and
+> > updates to firmware/hardware header files shared between csiostor and
+> > cxgb4 (Chelsio T4-based NIC driver). The csiostor driver is dependent on these
+> > header updates. These patches have been generated against scsi 'misc' branch.
+> >
+> > csiostor is a low level SCSI driver that interfaces with PCI, SCSI midlayer and
+> > FC transport subsystems. This driver claims the FCoE PCIe function on the
+> > Chelsio Converged Network Adapter. It relies on firmware events for slow path
+> > operations like discovery, thereby offloading session management. The driver
+> > programs firmware via Work Request interfaces for fast path I/O offload
+> > features.
+> >
+> > Here is the brief description of patches:
+> > [PATCH 1/8]: Hardware interface, Makefile and Kconfig changes.
+> > [PATCH 2/8]: Driver initialization and Work Request services.
+> > [PATCH 3/8]: FC transport interfaces and mailbox services.
+> > [PATCH 4/8]: Local and remote port state tracking functionality.
+> > [PATCH 5/8]: Interrupt handling and fast path I/O functionality.
+> > [PATCH 6/8]: Header files part 1.
+> > [PATCH 7/8]: Header files part 2.
+> 
+> Based on the above two, I'm guessing nothing will build and work
+> on any of steps one through six?  Yet you expose the Kconfig
+> and Makefile linkage into the tree in patch #1?   So your patches
+> as presented are non bisectable.
+> 
+> You need to rethink your breakup in the presentation.  Factoring
+> things just by files alone is not the right approach.  You need to
+> ask yourself whether each commit is a stand-alone entity that does
+> something independently on its own -- since they generally should.
 
-If an abort request times out to the virtual fibre channel adapter,
-the ibmvfc driver will kick off a reset of the adapter. This
-patch ensures we wait for the both the abort request and the
-request being aborted to be completed prior to exiting the
-eh_abort handler. This fixes a bug where the ibmvfc driver
-was erroneously returning success to the eh_abort handler
-then later sending back a response to the same command.
+Actually, this is fine for a new driver ... everything just gets put in
+as a single commit.  There's really no point adding a driver in pieces
+if it's not functional until the last patch, so in this case only, the
+breakup is to help the review.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
+James
 
- drivers/scsi/ibmvscsi/ibmvfc.c |   30 +++++++++++++++++++++++++++++-
- 1 file changed, 29 insertions(+), 1 deletion(-)
-
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_abort_timeout_fix drivers/scsi/ibmvscsi/ibmvfc.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_abort_timeout_fix	2012-08-24 16:37:47.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2012-08-24 16:37:47.000000000 -0500
-@@ -2242,6 +2242,21 @@ static int ibmvfc_match_key(struct ibmvf
- }
- 
- /**
-+ * ibmvfc_match_evt - Match function for specified event
-+ * @evt:	ibmvfc event struct
-+ * @match:	event to match
-+ *
-+ * Returns:
-+ *	1 if event matches key / 0 if event does not match key
-+ **/
-+static int ibmvfc_match_evt(struct ibmvfc_event *evt, void *match)
-+{
-+	if (evt == match)
-+		return 1;
-+	return 0;
-+}
-+
-+/**
-  * ibmvfc_abort_task_set - Abort outstanding commands to the device
-  * @sdev:	scsi device to abort commands
-  *
-@@ -2322,7 +2337,20 @@ static int ibmvfc_abort_task_set(struct
- 		if (rc) {
- 			sdev_printk(KERN_INFO, sdev, "Cancel failed, resetting host\n");
- 			ibmvfc_reset_host(vhost);
--			rsp_rc = 0;
-+			rsp_rc = -EIO;
-+			rc = ibmvfc_wait_for_ops(vhost, sdev->hostdata, ibmvfc_match_key);
-+
-+			if (rc == SUCCESS)
-+				rsp_rc = 0;
-+
-+			rc = ibmvfc_wait_for_ops(vhost, evt, ibmvfc_match_evt);
-+			if (rc != SUCCESS) {
-+				spin_lock_irqsave(vhost->host->host_lock, flags);
-+				ibmvfc_hard_reset_host(vhost);
-+				spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+				rsp_rc = 0;
-+			}
-+
- 			goto out;
- 		}
- 	}
-_
 
