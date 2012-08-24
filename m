@@ -1,77 +1,52 @@
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: Re: [PATCH 0/8] csiostor: Chelsio FCoE offload driver submission
-Date: Fri, 24 Aug 2012 17:45:38 -0400
-Message-ID: <CAP=VYLqtcULyoxPv0z89SEFvvFJiBUpG0UhWXzfm8KVMoGmYpg@mail.gmail.com>
-References: <1345760873-12101-1-git-send-email-naresh@chelsio.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 3/3] ibmvfc: Driver version 1.0.10
+Date: Fri, 24 Aug 2012 16:51:03 -0500
+Message-ID: <201208242151.q7OLp3O3013247@d01av04.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60807 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752905Ab2HXVqK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Aug 2012 17:46:10 -0400
-In-Reply-To: <1345760873-12101-1-git-send-email-naresh@chelsio.com>
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:48776 "EHLO e8.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758034Ab2HXVvI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Aug 2012 17:51:08 -0400
+Received: from /spool/local
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Fri, 24 Aug 2012 17:51:07 -0400
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 3C02EC90046
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Aug 2012 17:51:05 -0400 (EDT)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q7OLp49T38535228
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Aug 2012 17:51:04 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q7OLp4Xs013303
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Aug 2012 17:51:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, dm@chelsio.com, netdev@vger.kernel.org, chethan@chelsio.com
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, rcj@linux.vnet.ibm.com, stimmer@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
-On Thu, Aug 23, 2012 at 6:27 PM, Naresh Kumar Inna <naresh@chelsio.com> wrote:
-> This is the initial submission of the Chelsio FCoE offload driver (csiostor)
-> to the upstream kernel. This driver currently supports FCoE offload
-> functionality over Chelsio T4-based 10Gb Converged Network Adapters.
->
-> The following patches contain the driver sources for csiostor driver and
-> updates to firmware/hardware header files shared between csiostor and
-> cxgb4 (Chelsio T4-based NIC driver). The csiostor driver is dependent on these
-> header updates. These patches have been generated against scsi 'misc' branch.
->
-> csiostor is a low level SCSI driver that interfaces with PCI, SCSI midlayer and
-> FC transport subsystems. This driver claims the FCoE PCIe function on the
-> Chelsio Converged Network Adapter. It relies on firmware events for slow path
-> operations like discovery, thereby offloading session management. The driver
-> programs firmware via Work Request interfaces for fast path I/O offload
-> features.
->
-> Here is the brief description of patches:
-> [PATCH 1/8]: Hardware interface, Makefile and Kconfig changes.
-> [PATCH 2/8]: Driver initialization and Work Request services.
-> [PATCH 3/8]: FC transport interfaces and mailbox services.
-> [PATCH 4/8]: Local and remote port state tracking functionality.
-> [PATCH 5/8]: Interrupt handling and fast path I/O functionality.
-> [PATCH 6/8]: Header files part 1.
-> [PATCH 7/8]: Header files part 2.
 
-Based on the above two, I'm guessing nothing will build and work
-on any of steps one through six?  Yet you expose the Kconfig
-and Makefile linkage into the tree in patch #1?   So your patches
-as presented are non bisectable.
+Bump driver version.
 
-You need to rethink your breakup in the presentation.  Factoring
-things just by files alone is not the right approach.  You need to
-ask yourself whether each commit is a stand-alone entity that does
-something independently on its own -- since they generally should.
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-> [PATCH 8/8]: Updates to header files shared between cxgb4 and csiostor.
->
-> Naresh Kumar Inna (8):
->   csiostor: Chelsio FCoE offload driver submission (sources part 1).
->   csiostor: Chelsio FCoE offload driver submission (sources part 2).
->   csiostor: Chelsio FCoE offload driver submission (sources part 3).
->   csiostor: Chelsio FCoE offload driver submission (sources part 4).
->   csiostor: Chelsio FCoE offload driver submission (sources part 5).
->   csiostor: Chelsio FCoE offload driver submission (headers part 1).
->   csiostor: Chelsio FCoE offload driver submission (headers part 2).
->   cxgb4: Chelsio FCoE offload driver submission (cxgb4 common header
->     updates).
+ drivers/scsi/ibmvscsi/ibmvfc.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Something is wrong here.   You offer up semi-informational shortlogs
-in your 1st list, but this shows the shortlogs you've used in the actual
-commits are largely content-free.
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_version_1_0_10 drivers/scsi/ibmvscsi/ibmvfc.h
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_version_1_0_10	2012-08-24 16:47:14.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.h	2012-08-24 16:48:45.000000000 -0500
+@@ -29,8 +29,8 @@
+ #include "viosrp.h"
+ 
+ #define IBMVFC_NAME	"ibmvfc"
+-#define IBMVFC_DRIVER_VERSION		"1.0.9"
+-#define IBMVFC_DRIVER_DATE		"(August 5, 2010)"
++#define IBMVFC_DRIVER_VERSION		"1.0.10"
++#define IBMVFC_DRIVER_DATE		"(August 24, 2012)"
+ 
+ #define IBMVFC_DEFAULT_TIMEOUT	60
+ #define IBMVFC_ADISC_CANCEL_TIMEOUT	45
+_
 
-The above are just what I'd happened to notice in reading the 0/8
-since I was curious what it was for.  I've not looked at the individual
-driver code itself.  It might be worthwhile to go over some of the
-suggestions in Documentation/Submit* files though.
-
-Paul.
