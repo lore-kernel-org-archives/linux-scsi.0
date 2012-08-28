@@ -1,53 +1,62 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 00/20, v4] Make ib_srp better suited for H.A. purposes
-Date: Tue, 28 Aug 2012 10:04:28 +0000
-Message-ID: <503C97AC.9060703@acm.org>
-References: <5023DA39.7020000@acm.org> <20120827183731.GB6094@gmail.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] sg_io: allow UNMAP and WRITE SAME without CAP_SYS_RAWIO
+Date: Tue, 28 Aug 2012 13:04:26 +0200
+Message-ID: <503CA5BA.2040003@redhat.com>
+References: <1342801801-15617-1-git-send-email-pbonzini@redhat.com> <50195108.1090105@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01ant.iops.be ([212.53.4.34]:50958 "EHLO
-	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752575Ab2H1KEf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Aug 2012 06:04:35 -0400
-In-Reply-To: <20120827183731.GB6094@gmail.com>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:60813 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751484Ab2H1LEc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Aug 2012 07:04:32 -0400
+In-Reply-To: <50195108.1090105@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dongsu Park <dongsu.park@profitbricks.com>
-Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, David Dillow <dillowda@ornl.gov>
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 08/27/12 18:37, Dongsu Park wrote:
-> while testing ib_srp based on your srp-ha,
-> we sometimes hit kernel crashes with the call trace below.
+Il 01/08/2012 17:53, Paolo Bonzini ha scritto:
+> Il 20/07/2012 18:30, Paolo Bonzini ha scritto:
+>> These commands cannot be issued right now without giving CAP_SYS_RAWIO to
+>> the process who wishes to send them.  These commands can be useful also to
+>> non-privileged programs who have access to the block devices.  For example
+>> a virtual machine monitor needs them to forward trim/discard to host disks.
+>>
+>> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+>> ---
+>>  block/scsi_ioctl.c |    3 ++
+>>  1 files changed, 3 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+>> index 260fa80..dd71f18 100644
+>> --- a/block/scsi_ioctl.c
+>> +++ b/block/scsi_ioctl.c
+>> @@ -168,13 +168,16 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+>>  	/* Basic writing commands */
+>>  	__set_bit(WRITE_6, filter->write_ok);
+>>  	__set_bit(WRITE_10, filter->write_ok);
+>> +	__set_bit(WRITE_SAME, filter->write_ok);
+>>  	__set_bit(WRITE_VERIFY, filter->write_ok);
+>>  	__set_bit(WRITE_12, filter->write_ok);
+>>  	__set_bit(WRITE_VERIFY_12, filter->write_ok);
+>>  	__set_bit(WRITE_16, filter->write_ok);
+>> +	__set_bit(WRITE_SAME_16, filter->write_ok);
+>>  	__set_bit(WRITE_LONG, filter->write_ok);
+>>  	__set_bit(WRITE_LONG_2, filter->write_ok);
+>>  	__set_bit(ERASE, filter->write_ok);
+>> +	__set_bit(UNMAP, filter->write_ok);
+>>  	__set_bit(GPCMD_MODE_SELECT_10, filter->write_ok);
+>>  	__set_bit(MODE_SELECT, filter->write_ok);
+>>  	__set_bit(LOG_SELECT, filter->write_ok);
+>>
 > 
-> How to reproduce:
+> Jens,
 > 
-> 0. Kernel 3.2.15 with SCST v4193 on the target,
->    Kernel 3.2.8 with ib_srp-ha on the initiator.
-> 1. Configure 500+ vdisks on target, and get initiator connected.
-> 2. Exchange data intensively, which works well.
-> 3. (On initiator) delete SRP remote port occasionally, e.g.
->    # echo "1" > /sys/class/srp_remote_ports/port-6\:1/delete
->    And configure again the SRP target.
-> 4. (On target) disable Infiniband interface, and enable it again.
-> 5. Repeat 3 and 4.
-> 
-> Then the initiator's kernel suddenly crashes. (but not always)
-> 
-> Do you have any idea why?
+> can this go in 3.6 as well?
 
-Hello Dongsu,
+Another ping...
 
-That's unfortunate. I've just finished running the above test 1000 times
-on my test setup. The test ran perfectly - login succeeded every time,
-the test finished in the expected time, no kernel crash did occur and no
-memory was leaked. I've been running my test with kernel 3.6-rc3 instead
-of kernel 3.2.8 though. Can you repeat your test with kernel 3.6-rc3 on
-the initiator system instead of kernel 3.2.8 ? The 3.6-rc3 kernel
-contains multiple patches that improve robustness with regard to SCSI
-device removal.
+Paolo
 
-Thanks,
-
-Bart.
