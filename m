@@ -1,8 +1,8 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 3/5] virtio-scsi: allocate target pointers in a separate
-	memory block
-Date: Tue, 28 Aug 2012 13:54:15 +0200
-Message-ID: <1346154857-12487-4-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH 4/5] virtio-scsi: pass struct virtio_scsi to virtqueue
+	completion function
+Date: Tue, 28 Aug 2012 13:54:16 +0200
+Message-ID: <1346154857-12487-5-git-send-email-pbonzini@redhat.com>
 References: <1346154857-12487-1-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,72 +22,86 @@ To: linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-We will place the request virtqueues in the flexible array member.
-
-Refining the virtqueue API would let us drop the sglist copy, at
-which point the pointer-to-array-of-pointers can become a simple
-pointer-to-array.  It would both simplify the allocation and remove a
-dereference in several hot paths.
+This will be needed soon in order to retrieve the per-target
+struct.
 
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- drivers/scsi/virtio_scsi.c |   23 +++++++++++++++--------
- 1 files changed, 15 insertions(+), 8 deletions(-)
+ drivers/scsi/virtio_scsi.c |   17 +++++++++--------
+ 1 files changed, 9 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 595af1a..62fec04 100644
+index 62fec04..6414ea0 100644
 --- a/drivers/scsi/virtio_scsi.c
 +++ b/drivers/scsi/virtio_scsi.c
-@@ -77,7 +77,7 @@ struct virtio_scsi {
- 	/* Get some buffers ready for event vq */
- 	struct virtio_scsi_event_node event_list[VIRTIO_SCSI_EVENT_LEN];
+@@ -107,7 +107,7 @@ static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
+  *
+  * Called with vq_lock held.
+  */
+-static void virtscsi_complete_cmd(void *buf)
++static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+ {
+ 	struct virtio_scsi_cmd *cmd = buf;
+ 	struct scsi_cmnd *sc = cmd->sc;
+@@ -168,7 +168,8 @@ static void virtscsi_complete_cmd(void *buf)
+ 	sc->scsi_done(sc);
+ }
  
--	struct virtio_scsi_target_state *tgt[];
-+	struct virtio_scsi_target_state **tgt;
+-static void virtscsi_vq_done(struct virtqueue *vq, void (*fn)(void *buf))
++static void virtscsi_vq_done(struct virtio_scsi *vscsi, struct virtqueue *vq,
++			     void (*fn)(struct virtio_scsi *vscsi, void *buf))
+ {
+ 	void *buf;
+ 	unsigned int len;
+@@ -176,7 +177,7 @@ static void virtscsi_vq_done(struct virtqueue *vq, void (*fn)(void *buf))
+ 	do {
+ 		virtqueue_disable_cb(vq);
+ 		while ((buf = virtqueue_get_buf(vq, &len)) != NULL)
+-			fn(buf);
++			fn(vscsi, buf);
+ 	} while (!virtqueue_enable_cb(vq));
+ }
+ 
+@@ -187,11 +188,11 @@ static void virtscsi_req_done(struct virtqueue *vq)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&vscsi->req_vq.vq_lock, flags);
+-	virtscsi_vq_done(vq, virtscsi_complete_cmd);
++	virtscsi_vq_done(vscsi, vq, virtscsi_complete_cmd);
+ 	spin_unlock_irqrestore(&vscsi->req_vq.vq_lock, flags);
  };
  
- static struct kmem_cache *virtscsi_cmd_cache;
-@@ -615,10 +615,13 @@ static void virtscsi_remove_vqs(struct virtio_device *vdev)
- 	/* Stop all the virtqueues. */
- 	vdev->config->reset(vdev);
+-static void virtscsi_complete_free(void *buf)
++static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
+ {
+ 	struct virtio_scsi_cmd *cmd = buf;
  
--	num_targets = sh->max_id;
--	for (i = 0; i < num_targets; i++) {
--		kfree(vscsi->tgt[i]);
--		vscsi->tgt[i] = NULL;
-+	if (vscsi->tgt) {
-+		num_targets = sh->max_id;
-+		for (i = 0; i < num_targets; i++) {
-+			kfree(vscsi->tgt[i]);
-+			vscsi->tgt[i] = NULL;
-+		}
-+		kfree(vscsi->tgt);
- 	}
+@@ -208,7 +209,7 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
+ 	unsigned long flags;
  
- 	vdev->config->del_vqs(vdev);
-@@ -660,6 +663,12 @@ static int virtscsi_init(struct virtio_device *vdev,
- 	/* We need to know how many segments before we allocate.  */
- 	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
+ 	spin_lock_irqsave(&vscsi->ctrl_vq.vq_lock, flags);
+-	virtscsi_vq_done(vq, virtscsi_complete_free);
++	virtscsi_vq_done(vscsi, vq, virtscsi_complete_free);
+ 	spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
+ };
  
-+	vscsi->tgt = kmalloc(num_targets *
-+			sizeof(struct virtio_scsi_target_state *), GFP_KERNEL);
-+	if (!vscsi->tgt) {
-+		err = -ENOMEM;
-+		goto out;
-+	}
- 	for (i = 0; i < num_targets; i++) {
- 		vscsi->tgt[i] = virtscsi_alloc_tgt(vdev, sg_elems);
- 		if (!vscsi->tgt[i]) {
-@@ -685,9 +694,7 @@ static int __devinit virtscsi_probe(struct virtio_device *vdev)
+@@ -331,7 +332,7 @@ static void virtscsi_handle_event(struct work_struct *work)
+ 	virtscsi_kick_event(vscsi, event_node);
+ }
  
- 	/* Allocate memory and link the structs together.  */
- 	num_targets = virtscsi_config_get(vdev, max_target) + 1;
--	shost = scsi_host_alloc(&virtscsi_host_template,
--		sizeof(*vscsi)
--		+ num_targets * sizeof(struct virtio_scsi_target_state));
-+	shost = scsi_host_alloc(&virtscsi_host_template, sizeof(*vscsi));
+-static void virtscsi_complete_event(void *buf)
++static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
+ {
+ 	struct virtio_scsi_event_node *event_node = buf;
  
- 	if (!shost)
- 		return -ENOMEM;
+@@ -346,7 +347,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
+-	virtscsi_vq_done(vq, virtscsi_complete_event);
++	virtscsi_vq_done(vscsi, vq, virtscsi_complete_event);
+ 	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
+ };
+ 
 -- 
 1.7.1
