@@ -1,42 +1,112 @@
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: [PATCH v2] [SCSI] mpt2sas: fix double mutex lock in NON_BLOCKING state
-Date: Tue, 28 Aug 2012 18:38:02 +0400
-Message-ID: <1346164683-9315-1-git-send-email-khoroshilov@ispras.ru>
+From: Dan Williams <djbw@fb.com>
+Subject: Re: Possible mptsas regression post 3.5.0
+Date: Tue, 28 Aug 2012 09:12:30 -0700
+Message-ID: <1346170350.12384.9.camel@localhost.localdomain>
+References: <CAEhu1-6wq1YsNiscGMwP4ud0Q+MrViRzv=kcWCQSBNc8c68N5Q@mail.gmail.com>
+	 <CAEhu1-5VLuFsZomDZ1yxixqD7oLEhoXs+N698_VBkdGz5trK8g@mail.gmail.com>
+	 <CAEhu1-5sHQOTZ=KRxkpiAeBFC5BReR+svUGpp=9tk3drqJNg0A@mail.gmail.com>
+	 <CAD9gYJJQ+vsv12+-0e_nMtgs71Snvt4j2s48-HnwkrV2yOiwLQ@mail.gmail.com>
+	 <CAEhu1-7zGeZ-A0hkJ0=PqJart8f1zGyapWo-DP0fORuNTpj0sg@mail.gmail.com>
+	 <1346132253.12384.6.camel@localhost.localdomain>
+	 <CAEhu1-6nKpX=tqES95AsPn-yFioS8-5+mcU1maSYh0AozVT5PA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="=-JLjCog8p08IZVNonnz3z"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAEhu1-6nKpX=tqES95AsPn-yFioS8-5+mcU1maSYh0AozVT5PA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, linux-scsi@vger.kernel.org, Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>, Sreekanth.Reddy@lsi.com, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+To: John Drescher <drescherjm@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
 List-Id: linux-scsi@vger.kernel.org
 
-If state is NON_BLOCKING and mutex_trylock is succeed,
-the control flow goes to mutex_lock_interruptible() that is a deadlock.
+--=-JLjCog8p08IZVNonnz3z
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-The previous version of the patch becomes obsolete after 
-code movement in commit 913809f6.
+On Tue, 2012-08-28 at 10:03 -0400, John Drescher wrote:
+> > I wonder if we are preventing scsi_device_dev_release_usercontext() from
+> > making forward progress?
+> >
+> > ...the attached patch should confirm this or give more info otherwise.
+> >
+> 
+> [  174.758218] scsi_remove_target[0]: reap 0:0 state: 2 reap: 1 dev_del: 1
 
-Found by Linux Driver Verification project (linuxtesting.org).
+Thanks!  Does the attached patch fix the issue for you?
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+--
+Dan
+
+
+--=-JLjCog8p08IZVNonnz3z
+Content-Disposition: attachment;
+	filename="test-scsi-remove-target-fix.patch"
+Content-Type: text/x-patch; name="test-scsi-remove-target-fix.patch";
+	charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+scsi_remove_target: fix softlockup condition
+
+From: Dan Williams <djbw@fb.com>
+
+Don't restart lookup of stargets in the multi-target case, just arrange to
+traverse the list once, on the assumption that new targets are always added at
+the end.  There is no guarantee that the target will change state in
+scsi_target_reap() so we can end up spinning if we restart.
 ---
- drivers/scsi/mpt2sas/mpt2sas_ctl.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_sysfs.c |   30 ++++++++++++++----------------
+ 1 file changed, 14 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index 49bdd2d..d29ea56 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -2181,8 +2181,10 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
- 		return -EAGAIN;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 093d4f6..ce5224c 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1031,33 +1031,31 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ void scsi_remove_target(struct device *dev)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+-	struct scsi_target *starget, *found;
++	struct scsi_target *starget, *last = NULL;
+ 	unsigned long flags;
  
- 	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING : BLOCKING;
--	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
--		return -EAGAIN;
-+	if (state == NON_BLOCKING) {
-+		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
-+			return -EAGAIN;
-+	}
- 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
- 		return -ERESTARTSYS;
+- restart:
+-	found = NULL;
++	/* remove targets being careful to lookup next entry before
++	 * deleting the last
++	 */
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(starget, &shost->__targets, siblings) {
+ 		if (starget->state == STARGET_DEL)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+-			found = starget;
+-			found->reap_ref++;
+-			break;
++			/* assuming new targets arrive at the end */
++			starget->reap_ref++;
++			spin_unlock_irqrestore(shost->host_lock, flags);
++			if (last)
++				scsi_target_reap(last);
++			last = starget;
++			__scsi_remove_target(starget);
++			spin_lock_irqsave(shost->host_lock, flags);
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
  
--- 
-1.7.9.5
+-	if (found) {
+-		__scsi_remove_target(found);
+-		scsi_target_reap(found);
+-		/* in the case where @dev has multiple starget children,
+-		 * continue removing.
+-		 *
+-		 * FIXME: does such a case exist?
+-		 */
+-		goto restart;
+-	}
++	if (last)
++		scsi_target_reap(last);
+ }
+ EXPORT_SYMBOL(scsi_remove_target);
+ 
+
+--=-JLjCog8p08IZVNonnz3z--
