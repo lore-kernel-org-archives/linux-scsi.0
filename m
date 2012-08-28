@@ -1,43 +1,42 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 3/5] virtio-scsi: allocate target pointers in a separate
-	memory block
-Date: Tue, 28 Aug 2012 16:25:26 +0200
-Message-ID: <503CD4D6.40503@redhat.com>
-References: <1346154857-12487-1-git-send-email-pbonzini@redhat.com>
-	<1346154857-12487-4-git-send-email-pbonzini@redhat.com>
-	<503CD097.2020900@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <503CD097.2020900@gmail.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Sasha Levin <levinsasha928@gmail.com>
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Subject: [PATCH v2] [SCSI] mpt2sas: fix double mutex lock in NON_BLOCKING state
+Date: Tue, 28 Aug 2012 18:38:02 +0400
+Message-ID: <1346164683-9315-1-git-send-email-khoroshilov@ispras.ru>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, linux-scsi@vger.kernel.org, Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>, Sreekanth.Reddy@lsi.com, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
 List-Id: linux-scsi@vger.kernel.org
 
-Il 28/08/2012 16:07, Sasha Levin ha scritto:
->> > -	num_targets = sh->max_id;
->> > -	for (i = 0; i < num_targets; i++) {
->> > -		kfree(vscsi->tgt[i]);
->> > -		vscsi->tgt[i] = NULL;
->> > +	if (vscsi->tgt) {
->> > +		num_targets = sh->max_id;
->> > +		for (i = 0; i < num_targets; i++) {
->> > +			kfree(vscsi->tgt[i]);
-> Since we now kmalloc() the vscsi->tgt array, it doesn't get zeroed anymore.
-> 
-> This means that if for example, num_targets=3, and the second
-> virtscsi_alloc_tgt() in virtscsi_init() failed, we're going to kfree() garbage here.
+If state is NON_BLOCKING and mutex_trylock is succeed,
+the control flow goes to mutex_lock_interruptible() that is a deadlock.
 
-Right, changed to kzalloc.
+The previous version of the patch becomes obsolete after 
+code movement in commit 913809f6.
 
-Paolo
+Found by Linux Driver Verification project (linuxtesting.org).
+
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 49bdd2d..d29ea56 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -2181,8 +2181,10 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+ 		return -EAGAIN;
+ 
+ 	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING : BLOCKING;
+-	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
+-		return -EAGAIN;
++	if (state == NON_BLOCKING) {
++		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
++			return -EAGAIN;
++	}
+ 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
+ 		return -ERESTARTSYS;
+ 
+-- 
+1.7.9.5
