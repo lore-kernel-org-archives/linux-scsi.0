@@ -1,209 +1,124 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] block: Provide I/O alignment statistics
-Date: Tue, 28 Aug 2012 14:13:34 -0400
-Message-ID: <yq13936sx4h.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain
+Subject: [PATCH 1/5] sd: Avoid remapping bad reference tags
+Date: Tue, 28 Aug 2012 14:29:33 -0400
+Message-ID: <1346178577-28628-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:50269 "EHLO
+Received: from rcsinet15.oracle.com ([148.87.113.117]:31939 "EHLO
 	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236Ab2H1SNl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Aug 2012 14:13:41 -0400
+	with ESMTP id S1751519Ab2H1SaA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Aug 2012 14:30:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <jaxboe@fusionio.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@hansenpartnership.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-As an aid to users with 512e drives and disk arrays we now keep track of
-whether submitted I/O requests are aligned to the block sizes contained
-in the queue limits. We record whether each request is a properly
-aligned multiple of the optimal, minumum, physical and logical block
-sizes respectively. There are separate metrics for reads and writes and
-the reported device alignment is taken into account. The statistics are
-available in block/alignment_stat and block/<part>/alignment_stat. The
-output format is documented in Documentation/ABI/testing/sysfs-block.
+It does not make sense to translate ref tags with unexpected values.
+Instead we simply ignore them and let the upper layers catch the
+problem. Ref tags that contain the expected value are still remapped.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
 ---
+ drivers/scsi/sd.c     |    5 ++---
+ drivers/scsi/sd.h     |    2 +-
+ drivers/scsi/sd_dif.c |   25 ++++++-------------------
+ 3 files changed, 9 insertions(+), 23 deletions(-)
 
-Example run unpacking a kernel tarball using XFS on a 512e device.
-Partition sdb1 is aligned, sdb2 is misaligned. Output has been
-pretty-printed for readability:
-
-RD    TOTAL      LBS      PBS      MIN      OPT   
-sdb1:   564      136        0      428        0   
-sdb2:   501      501        0        0        0   
-
-WR    TOTAL      LBS      PBS      MIN      OPT
-sdb1: 24440       42        0    24225      613
-sdb2: 25248    25687        0        1        0
-
-As expected, we were pretty good at issuing big I/O requests on the
-aligned partition. The logical block size-aligned requests are from
-mkfs.xfs and mount.
-
-
-diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
-index 0ad8442..747c95b 100644
---- a/Documentation/ABI/testing/sysfs-block
-+++ b/Documentation/ABI/testing/sysfs-block
-@@ -229,3 +229,31 @@ Description:
- 		when a discarded area is read the discard_zeroes_data
- 		parameter will be set to one. Otherwise it will be 0 and
- 		the result of reading a discarded area is undefined.
-+
-+What:		/sys/block/<disk>/alignment_stat
-+Date:		August 2012
-+Contact:	Martin K. Petersen <martin.petersen@oracle.com>
-+Description:
-+		The block layer keeps track of whether I/O requests are
-+		properly aligned multiples of the block sizes found in
-+		the queue limits (optimal, minimum, physical and
-+		logical). alignment_stat provides a dump of these
-+		statistics for a disk. The file contains 10 fields:
-+		 1 - reads: total number of completed requests
-+		 2 - reads: properly aligned multiples of logical block size
-+		 3 - reads: properly aligned multiples of physical block size
-+		 4 - reads: properly aligned multiples of minimum I/O size
-+		 5 - reads: properly aligned multiples of optimal I/O size
-+		 6 - writes: total number of completed requests
-+		 7 - writes: properly aligned multiples of logical block size
-+		 8 - writes: properly aligned multiples of physical block size
-+		 9 - writes: properly aligned multiples of minimum I/O size
-+		10 - writes: properly aligned multiples of optimal I/O size
-+
-+What:		/sys/block/<disk>/<part>/alignment_stat
-+Date:		August 2012
-+Contact:	Martin K. Petersen <martin.petersen@oracle.com>
-+Description:
-+		The /sys/block/<disk>/<part>/stat file displays the I/O
-+		alignment statistics for partition <part>. The format is
-+		the same as /sys/block/<disk>/alignment_stat.
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 4b4dbdf..fd890d0 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1979,13 +1979,30 @@ EXPORT_SYMBOL_GPL(blk_rq_err_bytes);
- static void blk_account_io_completion(struct request *req, unsigned int bytes)
- {
- 	if (blk_do_io_stat(req)) {
-+		struct queue_limits *lim = &req->q->limits;
- 		const int rw = rq_data_dir(req);
- 		struct hd_struct *part;
--		int cpu;
-+		int cpu, alignment;
-+		sector_t offset;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 4df73e5..9f7fc39 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -804,9 +804,8 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 		SCpnt->cmnd[0] = WRITE_6;
+ 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
  
- 		cpu = part_stat_lock();
- 		part = req->part;
-+		alignment = queue_alignment_offset(req->q);
-+		offset = blk_rq_pos(req) << 9;
- 		part_stat_add(cpu, part, sectors[rw], bytes >> 9);
-+
-+		if (lim->io_opt && offset % lim->io_opt == alignment &&
-+		    bytes % lim->io_opt == 0)
-+			part_stat_inc(cpu, part, opt_aligned_ios[rw]);
-+		else if (offset % lim->io_min == alignment &&
-+			 bytes % lim->io_min == 0)
-+			part_stat_inc(cpu, part, min_aligned_ios[rw]);
-+		else if (offset % lim->physical_block_size == alignment &&
-+			   bytes % lim->physical_block_size == 0)
-+			part_stat_inc(cpu, part, pbs_aligned_ios[rw]);
-+		else
-+			part_stat_inc(cpu, part, lbs_aligned_ios[rw]);
-+
- 		part_stat_unlock();
+-		if (blk_integrity_rq(rq) &&
+-		    sd_dif_prepare(rq, block, sdp->sector_size) == -EIO)
+-			goto out;
++		if (blk_integrity_rq(rq))
++			sd_dif_prepare(rq, block, sdp->sector_size);
+ 
+ 	} else if (rq_data_dir(rq) == READ) {
+ 		SCpnt->cmnd[0] = READ_6;
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index f703f48..47c52a6 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -156,7 +156,7 @@ struct sd_dif_tuple {
+ #ifdef CONFIG_BLK_DEV_INTEGRITY
+ 
+ extern void sd_dif_config_host(struct scsi_disk *);
+-extern int sd_dif_prepare(struct request *rq, sector_t, unsigned int);
++extern void sd_dif_prepare(struct request *rq, sector_t, unsigned int);
+ extern void sd_dif_complete(struct scsi_cmnd *, unsigned int);
+ 
+ #else /* CONFIG_BLK_DEV_INTEGRITY */
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+index e52d5bc..04998f3 100644
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -366,7 +366,8 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
+  *
+  * Type 3 does not have a reference tag so no remapping is required.
+  */
+-int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_sz)
++void sd_dif_prepare(struct request *rq, sector_t hw_sector,
++		    unsigned int sector_sz)
+ {
+ 	const int tuple_sz = sizeof(struct sd_dif_tuple);
+ 	struct bio *bio;
+@@ -378,7 +379,7 @@ int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_s
+ 	sdkp = rq->bio->bi_bdev->bd_disk->private_data;
+ 
+ 	if (sdkp->protection_type == SD_DIF_TYPE3_PROTECTION)
+-		return 0;
++		return;
+ 
+ 	phys = hw_sector & 0xffffffff;
+ 
+@@ -397,10 +398,9 @@ int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_s
+ 
+ 			for (j = 0 ; j < iv->bv_len ; j += tuple_sz, sdt++) {
+ 
+-				if (be32_to_cpu(sdt->ref_tag) != virt)
+-					goto error;
++				if (be32_to_cpu(sdt->ref_tag) == virt)
++					sdt->ref_tag = cpu_to_be32(phys);
+ 
+-				sdt->ref_tag = cpu_to_be32(phys);
+ 				virt++;
+ 				phys++;
+ 			}
+@@ -410,16 +410,6 @@ int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_s
+ 
+ 		bio->bi_flags |= (1 << BIO_MAPPED_INTEGRITY);
  	}
- }
-diff --git a/block/genhd.c b/block/genhd.c
-index d839723..7d5819a 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -988,6 +988,7 @@ static DEVICE_ATTR(discard_alignment, S_IRUGO, disk_discard_alignment_show,
- 		   NULL);
- static DEVICE_ATTR(capability, S_IRUGO, disk_capability_show, NULL);
- static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
-+static DEVICE_ATTR(alignment_stat, S_IRUGO, part_alignment_stat_show, NULL);
- static DEVICE_ATTR(inflight, S_IRUGO, part_inflight_show, NULL);
- #ifdef CONFIG_FAIL_MAKE_REQUEST
- static struct device_attribute dev_attr_fail =
-@@ -1009,6 +1010,7 @@ static struct attribute *disk_attrs[] = {
- 	&dev_attr_discard_alignment.attr,
- 	&dev_attr_capability.attr,
- 	&dev_attr_stat.attr,
-+	&dev_attr_alignment_stat.attr,
- 	&dev_attr_inflight.attr,
- #ifdef CONFIG_FAIL_MAKE_REQUEST
- 	&dev_attr_fail.attr,
-diff --git a/block/partition-generic.c b/block/partition-generic.c
-index f1d1451..35c54af 100644
---- a/block/partition-generic.c
-+++ b/block/partition-generic.c
-@@ -135,6 +135,25 @@ ssize_t part_stat_show(struct device *dev,
- 		jiffies_to_msecs(part_stat_read(p, time_in_queue)));
+-
+-	return 0;
+-
+-error:
+-	kunmap_atomic(sdt);
+-	sd_printk(KERN_ERR, sdkp, "%s: virt %u, phys %u, ref %u, app %4x\n",
+-		  __func__, virt, phys, be32_to_cpu(sdt->ref_tag),
+-		  be16_to_cpu(sdt->app_tag));
+-
+-	return -EILSEQ;
  }
  
-+ssize_t part_alignment_stat_show(struct device *dev,
-+				 struct device_attribute *attr, char *buf)
-+{
-+	struct hd_struct *p = dev_to_part(dev);
-+
-+	return sprintf(buf,
-+		       "%8lu %8lu %8lu %8lu %8lu %8lu %8lu %8lu %8lu %8lu\n",
-+		       part_stat_read(p, ios[READ]),
-+		       part_stat_read(p, lbs_aligned_ios[READ]),
-+		       part_stat_read(p, pbs_aligned_ios[READ]),
-+		       part_stat_read(p, min_aligned_ios[READ]),
-+		       part_stat_read(p, opt_aligned_ios[READ]),
-+		       part_stat_read(p, ios[WRITE]),
-+		       part_stat_read(p, lbs_aligned_ios[WRITE]),
-+		       part_stat_read(p, pbs_aligned_ios[WRITE]),
-+		       part_stat_read(p, min_aligned_ios[WRITE]),
-+		       part_stat_read(p, opt_aligned_ios[WRITE]));
-+}
-+
- ssize_t part_inflight_show(struct device *dev,
- 			struct device_attribute *attr, char *buf)
- {
-@@ -175,6 +194,7 @@ static DEVICE_ATTR(alignment_offset, S_IRUGO, part_alignment_offset_show, NULL);
- static DEVICE_ATTR(discard_alignment, S_IRUGO, part_discard_alignment_show,
- 		   NULL);
- static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
-+static DEVICE_ATTR(alignment_stat, S_IRUGO, part_alignment_stat_show, NULL);
- static DEVICE_ATTR(inflight, S_IRUGO, part_inflight_show, NULL);
- #ifdef CONFIG_FAIL_MAKE_REQUEST
- static struct device_attribute dev_attr_fail =
-@@ -189,6 +209,7 @@ static struct attribute *part_attrs[] = {
- 	&dev_attr_alignment_offset.attr,
- 	&dev_attr_discard_alignment.attr,
- 	&dev_attr_stat.attr,
-+	&dev_attr_alignment_stat.attr,
- 	&dev_attr_inflight.attr,
- #ifdef CONFIG_FAIL_MAKE_REQUEST
- 	&dev_attr_fail.attr,
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 4f440b3..9f158be 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -85,6 +85,10 @@ struct disk_stats {
- 	unsigned long ticks[2];
- 	unsigned long io_ticks;
- 	unsigned long time_in_queue;
-+	unsigned long lbs_aligned_ios[2];
-+	unsigned long pbs_aligned_ios[2];
-+	unsigned long min_aligned_ios[2];
-+	unsigned long opt_aligned_ios[2];
- };
+ /*
+@@ -463,10 +453,7 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
+ 					return;
+ 				}
  
- #define PARTITION_META_INFO_VOLNAMELTH	64
-@@ -620,6 +624,8 @@ extern ssize_t part_size_show(struct device *dev,
- 			      struct device_attribute *attr, char *buf);
- extern ssize_t part_stat_show(struct device *dev,
- 			      struct device_attribute *attr, char *buf);
-+extern ssize_t part_alignment_stat_show(struct device *dev,
-+			      struct device_attribute *attr, char *buf);
- extern ssize_t part_inflight_show(struct device *dev,
- 			      struct device_attribute *attr, char *buf);
- #ifdef CONFIG_FAIL_MAKE_REQUEST
+-				if (be32_to_cpu(sdt->ref_tag) != phys &&
+-				    sdt->app_tag != 0xffff)
+-					sdt->ref_tag = 0xffffffff; /* Bad ref */
+-				else
++				if (be32_to_cpu(sdt->ref_tag) == phys)
+ 					sdt->ref_tag = cpu_to_be32(virt);
+ 
+ 				virt++;
+-- 
+1.7.7.6
+
