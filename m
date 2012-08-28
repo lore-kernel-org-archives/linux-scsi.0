@@ -1,62 +1,96 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] sg_io: allow UNMAP and WRITE SAME without CAP_SYS_RAWIO
-Date: Tue, 28 Aug 2012 13:04:26 +0200
-Message-ID: <503CA5BA.2040003@redhat.com>
-References: <1342801801-15617-1-git-send-email-pbonzini@redhat.com> <50195108.1090105@redhat.com>
+Subject: [PATCH 0/5] Multiqueue virtio-scsi
+Date: Tue, 28 Aug 2012 13:54:12 +0200
+Message-ID: <1346154857-12487-1-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:60813 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484Ab2H1LEc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Aug 2012 07:04:32 -0400
-In-Reply-To: <50195108.1090105@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Il 01/08/2012 17:53, Paolo Bonzini ha scritto:
-> Il 20/07/2012 18:30, Paolo Bonzini ha scritto:
->> These commands cannot be issued right now without giving CAP_SYS_RAWIO to
->> the process who wishes to send them.  These commands can be useful also to
->> non-privileged programs who have access to the block devices.  For example
->> a virtual machine monitor needs them to forward trim/discard to host disks.
->>
->> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
->> ---
->>  block/scsi_ioctl.c |    3 ++
->>  1 files changed, 3 insertions(+), 0 deletions(-)
->>
->> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
->> index 260fa80..dd71f18 100644
->> --- a/block/scsi_ioctl.c
->> +++ b/block/scsi_ioctl.c
->> @@ -168,13 +168,16 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
->>  	/* Basic writing commands */
->>  	__set_bit(WRITE_6, filter->write_ok);
->>  	__set_bit(WRITE_10, filter->write_ok);
->> +	__set_bit(WRITE_SAME, filter->write_ok);
->>  	__set_bit(WRITE_VERIFY, filter->write_ok);
->>  	__set_bit(WRITE_12, filter->write_ok);
->>  	__set_bit(WRITE_VERIFY_12, filter->write_ok);
->>  	__set_bit(WRITE_16, filter->write_ok);
->> +	__set_bit(WRITE_SAME_16, filter->write_ok);
->>  	__set_bit(WRITE_LONG, filter->write_ok);
->>  	__set_bit(WRITE_LONG_2, filter->write_ok);
->>  	__set_bit(ERASE, filter->write_ok);
->> +	__set_bit(UNMAP, filter->write_ok);
->>  	__set_bit(GPCMD_MODE_SELECT_10, filter->write_ok);
->>  	__set_bit(MODE_SELECT, filter->write_ok);
->>  	__set_bit(LOG_SELECT, filter->write_ok);
->>
-> 
-> Jens,
-> 
-> can this go in 3.6 as well?
+Hi all,
 
-Another ping...
+this series adds multiqueue support to the virtio-scsi driver, based
+on Jason Wang's work on virtio-net.  It uses a simple queue steering
+algorithm that expects one queue per CPU.  LUNs in the same target always
+use the same queue (so that commands are not reordered); queue switching
+occurs when the request being queued is the only one for the target.
+Also based on Jason's patches, the virtqueue affinity is set so that
+each CPU is associated to one virtqueue.
 
-Paolo
+I tested the patches with fio, using up to 32 virtio-scsi disks backed
+by tmpfs on the host, and 1 LUN per target.
 
+FIO configuration
+-----------------
+[global]
+rw=read
+bsrange=4k-64k
+ioengine=libaio
+direct=1
+iodepth=4
+loops=20
+
+overall bandwidth (MB/s)
+-----------------
+
+# of targets    single-queue    multi-queue, 4 VCPUs    multi-queue, 8 VCPUs
+1                  540               626                     599
+2                  795               965                     925
+4                  997              1376                    1500
+8                 1136              2130                    2060
+16                1440              2269                    2474
+24                1408              2179                    2436
+32                1515              1978                    2319
+
+(These numbers for single-queue are with 4 VCPUs, but the impact of adding
+more VCPUs is very limited).
+
+avg bandwidth per LUN (MB/s)
+---------------------
+
+# of targets    single-queue    multi-queue, 4 VCPUs    multi-queue, 8 VCPUs
+1                  540               626                     599
+2                  397               482                     462
+4                  249               344                     375
+8                  142               266                     257
+16                  90               141                     154
+24                  58                90                     101
+32                  47                61                      72
+
+Testing this may require an irqbalance daemon that is built from git,
+due to http://code.google.com/p/irqbalance/issues/detail?id=37.
+Alternatively you can just set the affinity manually in /proc.
+
+Rusty, can you please give your Acked-by to the first two patches?
+
+Jason Wang (2):
+  virtio-ring: move queue_index to vring_virtqueue
+  virtio: introduce an API to set affinity for a virtqueue
+
+Paolo Bonzini (3):
+  virtio-scsi: allocate target pointers in a separate memory block
+  virtio-scsi: pass struct virtio_scsi to virtqueue completion function
+  virtio-scsi: introduce multiqueue support
+
+ drivers/lguest/lguest_device.c         |    1 +
+ drivers/remoteproc/remoteproc_virtio.c |    1 +
+ drivers/s390/kvm/kvm_virtio.c          |    1 +
+ drivers/scsi/virtio_scsi.c             |  200 ++++++++++++++++++++++++--------
+ drivers/virtio/virtio_mmio.c           |   11 +-
+ drivers/virtio/virtio_pci.c            |   58 ++++++++-
+ drivers/virtio/virtio_ring.c           |   17 +++
+ include/linux/virtio.h                 |    4 +
+ include/linux/virtio_config.h          |   21 ++++
+ 9 files changed, 253 insertions(+), 61 deletions(-)
