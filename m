@@ -1,97 +1,257 @@
-From: John Drescher <drescherjm@gmail.com>
-Subject: Re: Possible mptsas regression post 3.5.0
-Date: Tue, 28 Aug 2012 12:42:22 -0400
-Message-ID: <CAEhu1-4FqG7MhfOwrBnd1mtCVp2=SiOzpeBXt_597bDYjY17bA@mail.gmail.com>
-References: <CAEhu1-6wq1YsNiscGMwP4ud0Q+MrViRzv=kcWCQSBNc8c68N5Q@mail.gmail.com>
-	<CAEhu1-5VLuFsZomDZ1yxixqD7oLEhoXs+N698_VBkdGz5trK8g@mail.gmail.com>
-	<CAEhu1-5sHQOTZ=KRxkpiAeBFC5BReR+svUGpp=9tk3drqJNg0A@mail.gmail.com>
-	<CAD9gYJJQ+vsv12+-0e_nMtgs71Snvt4j2s48-HnwkrV2yOiwLQ@mail.gmail.com>
-	<CAEhu1-7zGeZ-A0hkJ0=PqJart8f1zGyapWo-DP0fORuNTpj0sg@mail.gmail.com>
-	<1346132253.12384.6.camel@localhost.localdomain>
-	<CAEhu1-6nKpX=tqES95AsPn-yFioS8-5+mcU1maSYh0AozVT5PA@mail.gmail.com>
-	<1346170350.12384.9.camel@localhost.localdomain>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] block/scsi: Allow request and error handling timeouts to be specified
+Date: Tue, 28 Aug 2012 14:01:51 -0400
+Message-ID: <yq1ehmqsxo0.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:41285 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752955Ab2H1QmX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Aug 2012 12:42:23 -0400
-In-Reply-To: <1346170350.12384.9.camel@localhost.localdomain>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:21926 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752703Ab2H1SB7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Aug 2012 14:01:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <djbw@fb.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
-
->> [  174.758218] scsi_remove_target[0]: reap 0:0 state: 2 reap: 1 dev_del: 1
->
-> Thanks!  Does the attached patch fix the issue for you?
->
-
-That worked!
-
-[  169.402990] netconsole: network logging started
-[  200.903700] mptbase: ioc0: LogInfo(0x31110d00): Originator={PL},
-Code={Reset}, SubCode(0x0d00) cb_idx mptbase_reply
-[  205.173793] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-[  205.173876] sd 0:0:0:0: [sda]
-[  205.173919] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-[  205.177611] md/raid:md1: Disk failure on sda2, disabling device.
-[  205.177611] md/raid:md1: Operation continuing on 11 devices.
-[  205.177653] md/raid1:md0: Disk failure on sda1, disabling device.
-[  205.177653] md/raid1:md0: Operation continuing on 9 devices.
-[  205.234825] md: recovery of RAID array md0
-[  205.234921] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  205.235016] md: using maximum available idle IO bandwidth (but not
-more than 200000 KB/sec) for recovery.
-[  205.235171] md: using 128k window, over a total of 1048512k.
-[  205.244799] md: delaying recovery of md1 until md0 has finished
-(they share one or more physical units)
-[  205.304574] md: unbind<sda1>
-[  205.313688] md: unbind<sda2>
-[  205.321117] md: export_rdev(sda1)
-[  205.331098] md: export_rdev(sda2)
-[  214.452649] mptsas: ioc0: attaching sata device: fw_channel 0,
-fw_id 0, phy 0, sas_addr 0x1221000000000000
-[  214.459858] scsi 0:0:7:0: Direct-Access     ATA      WDC
-WD2500JD-00H 2D08 PQ: 0 ANSI: 5
-[  214.461941] sd 0:0:7:0: Attached scsi generic sg0 type 0
-[  214.462949] sd 0:0:7:0: [sda] 488397168 512-byte logical blocks:
-(250 GB/232 GiB)
-[  214.781445] sd 0:0:7:0: [sda] Write Protect is off
-[  214.788044] sd 0:0:7:0: [sda] Write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
-[  215.017999]  sda: sda1 sda2
-[  215.342944] sd 0:0:7:0: [sda] Attached SCSI disk
-[  230.608957] md: md0: recovery done.
-[  230.641045] md: recovery of RAID array md1
-[  230.641140] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  230.641238] md: using maximum available idle IO bandwidth (but not
-more than 200000 KB/sec) for recovery.
-[  230.641394] md: using 128k window, over a total of 243147776k.
+To: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <jaxboe@fusionio.com>, James.Bottomley@hansenpartnership.com
 
 
-localhost ~ # uname -a
-Linux localhost
-3.5.0-bisect-9-test-scsi-remove-target-fix-00014-g10f8d5b-dirty #10
-SMP Tue Aug 28 12:33:16 EDT 2012 x86_64 Intel(R) Xeon(R) CPU E31230 @
-3.20GHz GenuineIntel GNU/Linux
+Export rq_timeout in sysfs for block devices since it is a request_queue
+property. Until now it has only been possible to explicitly set this for
+SCSI class devices.
 
+Also introduce eh_timeout which can be used for error handling
+purposes. This was previously hardcoded to 10 seconds in the SCSI error
+handling code. However, for some fast-fail scenarios it is necessary to
+be able to tune this as it can take several iterations (bus device,
+target, bus, controller) before we give up.
 
-localhost ~ # cat /proc/mdstat
-Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [raid0]
-[linear] [multipath]
-md0 : active raid1 sdj1[0] sdk1[2] sdf1[10](S) sdb1[11](S) sdg1[9]
-sdh1[8] sdl1[7] sdm1[6] sde1[5] sdd1[4] sdi1[3] sdc1[1]
-      1048512 blocks [10/10] [UUUUUUUUUU]
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-md1 : active raid6 sdk2[17] sdj2[18] sdf2[16] sdm2[19] sdl2[14]
-sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21] sdb2[20] sdc2[1]
-      2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
-[12/11] [_UUUUUUUUUUU]
-      [>....................]  recovery =  1.2% (3134952/243147776)
-finish=100.1min speed=39954K/sec
-
-unused devices: <none>
-
-John
+diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
+index c1eb41c..0ad8442 100644
+--- a/Documentation/ABI/testing/sysfs-block
++++ b/Documentation/ABI/testing/sysfs-block
+@@ -129,6 +129,29 @@ Description:
+ 		throughput is desired.  If no optimal I/O size is
+ 		reported this file contains 0.
+ 
++What:		/sys/block/<disk>/queue/rq_timeout_secs
++Date:		June 2012
++Contact:	Martin K. Petersen <martin.petersen@oracle.com>
++Description:
++		This is the timeout in seconds for regular filesystem
++		I/O requests.  If the disk device has not completed the
++		request in this many seconds the kernel will fail the
++		I/O and initiate the subsystem-specific error handling
++		process.
++
++What:		/sys/block/<disk>/queue/eh_timeout_secs
++Date:		June 2012
++Contact:	Martin K. Petersen <martin.petersen@oracle.com>
++Description:
++		If a device has timed out while processing regular
++		filesystem I/O the kernel will attempt to bring the
++		device back online.  This typically involves an
++		escalating set of approaches (device reset, bus reset,
++		controller reset).  eh_timeout_secs describes how many
++		seconds should be spent waiting for response after each
++		recovery attempt before moving on to the next step in
++		the error handling process.
++
+ What:		/sys/block/<disk>/queue/nomerges
+ Date:		January 2010
+ Contact:
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index 565a678..7cc6066 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -87,6 +87,12 @@ void blk_queue_rq_timeout(struct request_queue *q, unsigned int timeout)
+ }
+ EXPORT_SYMBOL_GPL(blk_queue_rq_timeout);
+ 
++void blk_queue_eh_timeout(struct request_queue *q, unsigned int timeout)
++{
++	q->eh_timeout = timeout;
++}
++EXPORT_SYMBOL_GPL(blk_queue_eh_timeout);
++
+ void blk_queue_rq_timed_out(struct request_queue *q, rq_timed_out_fn *fn)
+ {
+ 	q->rq_timed_out_fn = fn;
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 9628b29..7725c84 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -280,6 +280,42 @@ queue_rq_affinity_store(struct request_queue *q, const char *page, size_t count)
+ 	return ret;
+ }
+ 
++static ssize_t
++queue_rq_timeout_store(struct request_queue *q, const char *page, size_t count)
++{
++	unsigned long rq_timeout;
++	ssize_t ret = queue_var_store(&rq_timeout, page, count);
++
++	q->rq_timeout = rq_timeout * HZ;
++
++	return ret;
++}
++
++static ssize_t queue_rq_timeout_show(struct request_queue *q, char *page)
++{
++	int rq_timeout = q->rq_timeout / HZ;
++
++	return queue_var_show(rq_timeout, (page));
++}
++
++static ssize_t
++queue_eh_timeout_store(struct request_queue *q, const char *page, size_t count)
++{
++	unsigned long eh_timeout;
++	ssize_t ret = queue_var_store(&eh_timeout, page, count);
++
++	q->eh_timeout = eh_timeout * HZ;
++
++	return ret;
++}
++
++static ssize_t queue_eh_timeout_show(struct request_queue *q, char *page)
++{
++	int eh_timeout = q->eh_timeout / HZ;
++
++	return queue_var_show(eh_timeout, (page));
++}
++
+ static struct queue_sysfs_entry queue_requests_entry = {
+ 	.attr = {.name = "nr_requests", .mode = S_IRUGO | S_IWUSR },
+ 	.show = queue_requests_show,
+@@ -394,6 +430,18 @@ static struct queue_sysfs_entry queue_random_entry = {
+ 	.store = queue_store_random,
+ };
+ 
++static struct queue_sysfs_entry queue_rq_timeout_entry = {
++	.attr = {.name = "rq_timeout_secs", .mode = S_IRUGO | S_IWUSR },
++	.show = queue_rq_timeout_show,
++	.store = queue_rq_timeout_store,
++};
++
++static struct queue_sysfs_entry queue_eh_timeout_entry = {
++	.attr = {.name = "eh_timeout_secs", .mode = S_IRUGO | S_IWUSR },
++	.show = queue_eh_timeout_show,
++	.store = queue_eh_timeout_store,
++};
++
+ static struct attribute *default_attrs[] = {
+ 	&queue_requests_entry.attr,
+ 	&queue_ra_entry.attr,
+@@ -416,6 +464,8 @@ static struct attribute *default_attrs[] = {
+ 	&queue_rq_affinity_entry.attr,
+ 	&queue_iostats_entry.attr,
+ 	&queue_random_entry.attr,
++	&queue_rq_timeout_entry.attr,
++	&queue_eh_timeout_entry.attr,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 4a6381c..22e5480 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -42,8 +42,6 @@
+ 
+ #include <trace/events/scsi.h>
+ 
+-#define SENSE_TIMEOUT		(10*HZ)
+-
+ /*
+  * These should *probably* be handled by the host itself.
+  * Since it is allowed to sleep, it probably should.
+@@ -852,7 +850,8 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+  */
+ static int scsi_request_sense(struct scsi_cmnd *scmd)
+ {
+-	return scsi_send_eh_cmnd(scmd, NULL, 0, SENSE_TIMEOUT, ~0);
++	return scsi_send_eh_cmnd(scmd, NULL, 0,
++				 scmd->device->request_queue->eh_timeout, ~0);
+ }
+ 
+ /**
+@@ -953,7 +952,8 @@ static int scsi_eh_tur(struct scsi_cmnd *scmd)
+ 	int retry_cnt = 1, rtn;
+ 
+ retry_tur:
+-	rtn = scsi_send_eh_cmnd(scmd, tur_command, 6, SENSE_TIMEOUT, 0);
++	rtn = scsi_send_eh_cmnd(scmd, tur_command, 6,
++				scmd->device->request_queue->eh_timeout, 0);
+ 
+ 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd %p rtn %x\n",
+ 		__func__, scmd, rtn));
+@@ -1065,12 +1065,13 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
+ static int scsi_eh_try_stu(struct scsi_cmnd *scmd)
+ {
+ 	static unsigned char stu_command[6] = {START_STOP, 0, 0, 0, 1, 0};
++	unsigned int tmo = scmd->device->request_queue->rq_timeout;
+ 
+ 	if (scmd->device->allow_restart) {
+ 		int i, rtn = NEEDS_RETRY;
+ 
+ 		for (i = 0; rtn == NEEDS_RETRY && i < 2; i++)
+-			rtn = scsi_send_eh_cmnd(scmd, stu_command, 6, scmd->device->request_queue->rq_timeout, 0);
++			rtn = scsi_send_eh_cmnd(scmd, stu_command, 6, tmo, 0);
+ 
+ 		if (rtn == SUCCESS)
+ 			return 0;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ffd7773..3a4f5f1 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1696,6 +1696,9 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
+ 	 */
+ 	blk_queue_dma_alignment(q, 0x03);
+ 
++	blk_queue_rq_timeout(q, SCSI_DEFAULT_RQ_TIMEOUT);
++	blk_queue_eh_timeout(q, SCSI_DEFAULT_EH_TIMEOUT);
++
+ 	return q;
+ }
+ EXPORT_SYMBOL(__scsi_alloc_queue);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 4a2ab7c..608e220 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -379,6 +379,7 @@ struct request_queue {
+ 	unsigned int		in_flight[2];
+ 
+ 	unsigned int		rq_timeout;
++	unsigned int		eh_timeout;
+ 	struct timer_list	timeout;
+ 	struct list_head	timeout_list;
+ 
+@@ -889,6 +890,7 @@ extern void blk_queue_update_dma_alignment(struct request_queue *, int);
+ extern void blk_queue_softirq_done(struct request_queue *, softirq_done_fn *);
+ extern void blk_queue_rq_timed_out(struct request_queue *, rq_timed_out_fn *);
+ extern void blk_queue_rq_timeout(struct request_queue *, unsigned int);
++extern void blk_queue_eh_timeout(struct request_queue *, unsigned int);
+ extern void blk_queue_flush(struct request_queue *q, unsigned int flush);
+ extern void blk_queue_flush_queueable(struct request_queue *q, bool queueable);
+ extern struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev);
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 66216c1..3a01dd1 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -10,9 +10,15 @@
+ 
+ #include <linux/types.h>
+ #include <linux/scatterlist.h>
++#include <linux/kernel.h>
+ 
+ struct scsi_cmnd;
+ 
++enum scsi_timeouts {
++	SCSI_DEFAULT_RQ_TIMEOUT		= 30 * HZ,
++	SCSI_DEFAULT_EH_TIMEOUT		= 10 * HZ,
++};
++
+ /*
+  * The maximum number of SG segments that we will put inside a
+  * scatterlist (unless chaining is used). Should ideally fit inside a
