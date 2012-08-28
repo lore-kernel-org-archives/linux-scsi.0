@@ -1,12 +1,14 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 1/5] sd: Avoid remapping bad reference tags
-Date: Tue, 28 Aug 2012 14:29:33 -0400
-Message-ID: <1346178577-28628-1-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 3/5] scsi: Disable DIF on Hitachi Ultrastar 15K300
+Date: Tue, 28 Aug 2012 14:29:35 -0400
+Message-ID: <1346178577-28628-3-git-send-email-martin.petersen@oracle.com>
+References: <1346178577-28628-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:31939 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519Ab2H1SaA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Aug 2012 14:30:00 -0400
+Received: from acsinet15.oracle.com ([141.146.126.227]:30828 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751784Ab2H1SaH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Aug 2012 14:30:07 -0400
+In-Reply-To: <1346178577-28628-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -14,111 +16,74 @@ Cc: James.Bottomley@hansenpartnership.com, "Martin K. Petersen" <martin.petersen
 
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-It does not make sense to translate ref tags with unexpected values.
-Instead we simply ignore them and let the upper layers catch the
-problem. Ref tags that contain the expected value are still remapped.
+Hitachi Ultrastar 15K300 is quirky. Disable T10 PI (DIF).
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/sd.c     |    5 ++---
- drivers/scsi/sd.h     |    2 +-
- drivers/scsi/sd_dif.c |   25 ++++++-------------------
- 3 files changed, 9 insertions(+), 23 deletions(-)
+ drivers/scsi/scsi_devinfo.c |    1 +
+ drivers/scsi/scsi_scan.c    |    3 +++
+ include/scsi/scsi_device.h  |    4 ++++
+ include/scsi/scsi_devinfo.h |    1 +
+ 4 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 4df73e5..9f7fc39 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -804,9 +804,8 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 		SCpnt->cmnd[0] = WRITE_6;
- 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index cf8dfab..43fca91 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -172,6 +172,7 @@ static struct {
+ 	{"HITACHI", "DF400", "*", BLIST_REPORTLUN2},
+ 	{"HITACHI", "DF500", "*", BLIST_REPORTLUN2},
+ 	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_REPORTLUN2},
++	{"HITACHI", "HUS1530", "*", BLIST_NO_DIF},
+ 	{"HITACHI", "OPEN-", "*", BLIST_REPORTLUN2},
+ 	{"HITACHI", "OP-C-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HITACHI", "3380-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 56a9379..0a224e2 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -911,6 +911,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	if (*bflags & BLIST_RETRY_HWERROR)
+ 		sdev->retry_hwerror = 1;
  
--		if (blk_integrity_rq(rq) &&
--		    sd_dif_prepare(rq, block, sdp->sector_size) == -EIO)
--			goto out;
-+		if (blk_integrity_rq(rq))
-+			sd_dif_prepare(rq, block, sdp->sector_size);
++	if (*bflags & BLIST_NO_DIF)
++		sdev->no_dif = 1;
++
+ 	transport_configure_device(&sdev->sdev_gendev);
  
- 	} else if (rq_data_dir(rq) == READ) {
- 		SCpnt->cmnd[0] = READ_6;
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index f703f48..47c52a6 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -156,7 +156,7 @@ struct sd_dif_tuple {
- #ifdef CONFIG_BLK_DEV_INTEGRITY
+ 	if (sdev->host->hostt->slave_configure) {
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 9895f69..88fae8d 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -156,6 +156,7 @@ struct scsi_device {
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
+ 	unsigned can_power_off:1; /* Device supports runtime power off */
+ 	unsigned wce_default_on:1;	/* Cache is ON by default */
++	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
  
- extern void sd_dif_config_host(struct scsi_disk *);
--extern int sd_dif_prepare(struct request *rq, sector_t, unsigned int);
-+extern void sd_dif_prepare(struct request *rq, sector_t, unsigned int);
- extern void sd_dif_complete(struct scsi_cmnd *, unsigned int);
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
+@@ -476,6 +477,9 @@ static inline int scsi_device_enclosure(struct scsi_device *sdev)
  
- #else /* CONFIG_BLK_DEV_INTEGRITY */
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index e52d5bc..04998f3 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -366,7 +366,8 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
-  *
-  * Type 3 does not have a reference tag so no remapping is required.
-  */
--int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_sz)
-+void sd_dif_prepare(struct request *rq, sector_t hw_sector,
-+		    unsigned int sector_sz)
+ static inline int scsi_device_protection(struct scsi_device *sdev)
  {
- 	const int tuple_sz = sizeof(struct sd_dif_tuple);
- 	struct bio *bio;
-@@ -378,7 +379,7 @@ int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_s
- 	sdkp = rq->bio->bi_bdev->bd_disk->private_data;
- 
- 	if (sdkp->protection_type == SD_DIF_TYPE3_PROTECTION)
--		return 0;
-+		return;
- 
- 	phys = hw_sector & 0xffffffff;
- 
-@@ -397,10 +398,9 @@ int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_s
- 
- 			for (j = 0 ; j < iv->bv_len ; j += tuple_sz, sdt++) {
- 
--				if (be32_to_cpu(sdt->ref_tag) != virt)
--					goto error;
-+				if (be32_to_cpu(sdt->ref_tag) == virt)
-+					sdt->ref_tag = cpu_to_be32(phys);
- 
--				sdt->ref_tag = cpu_to_be32(phys);
- 				virt++;
- 				phys++;
- 			}
-@@ -410,16 +410,6 @@ int sd_dif_prepare(struct request *rq, sector_t hw_sector, unsigned int sector_s
- 
- 		bio->bi_flags |= (1 << BIO_MAPPED_INTEGRITY);
- 	}
--
--	return 0;
--
--error:
--	kunmap_atomic(sdt);
--	sd_printk(KERN_ERR, sdkp, "%s: virt %u, phys %u, ref %u, app %4x\n",
--		  __func__, virt, phys, be32_to_cpu(sdt->ref_tag),
--		  be16_to_cpu(sdt->app_tag));
--
--	return -EILSEQ;
++	if (sdev->no_dif)
++		return 0;
++
+ 	return sdev->scsi_level > SCSI_2 && sdev->inquiry[5] & (1<<0);
  }
  
- /*
-@@ -463,10 +453,7 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
- 					return;
- 				}
- 
--				if (be32_to_cpu(sdt->ref_tag) != phys &&
--				    sdt->app_tag != 0xffff)
--					sdt->ref_tag = 0xffffffff; /* Bad ref */
--				else
-+				if (be32_to_cpu(sdt->ref_tag) == phys)
- 					sdt->ref_tag = cpu_to_be32(virt);
- 
- 				virt++;
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index b4ddd3b..cc1f3e7 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -30,4 +30,5 @@
+ #define BLIST_RETRY_HWERROR	0x400000 /* retry HARDWARE_ERROR */
+ #define BLIST_MAX_512		0x800000 /* maximum 512 sector cdb length */
+ #define BLIST_ATTACH_PQ3	0x1000000 /* Scan: Attach to PQ3 devices */
++#define BLIST_NO_DIF		0x2000000 /* Disable T10 PI (DIF) */
+ #endif
 -- 
 1.7.7.6
 
