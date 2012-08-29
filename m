@@ -1,63 +1,97 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 4/5] mpt2sas: Return the correct sense key for DIF errors
-Date: Tue, 28 Aug 2012 14:29:36 -0400
-Message-ID: <1346178577-28628-4-git-send-email-martin.petersen@oracle.com>
-References: <1346178577-28628-1-git-send-email-martin.petersen@oracle.com>
+From: Dan Williams <djbw@fb.com>
+Subject: [PATCH] scsi_remove_target: fix softlockup regression on hot remove
+Date: Tue, 28 Aug 2012 17:03:13 -0700
+Message-ID: <20120829000257.25796.41641.stgit@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:30893 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751784Ab2H1SaN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Aug 2012 14:30:13 -0400
-In-Reply-To: <1346178577-28628-1-git-send-email-martin.petersen@oracle.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:55414 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750851Ab2H2ADZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Aug 2012 20:03:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@hansenpartnership.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Nagalakshmi.Nandigama@lsi.com, Eric.Moore@lsi.com
+To: JBottomley@parallels.com
+Cc: John Drescher <drescherjm@gmail.com>, linux-scsi@vger.kernel.org
 
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+John reports:
+ BUG: soft lockup - CPU#2 stuck for 23s! [kworker/u:8:2202]
+ [..]
+ Call Trace:
+  [<ffffffff8141782a>] scsi_remove_target+0xda/0x1f0
+  [<ffffffff81421de5>] sas_rphy_remove+0x55/0x60
+  [<ffffffff81421e01>] sas_rphy_delete+0x11/0x20
+  [<ffffffff81421e35>] sas_port_delete+0x25/0x160
+  [<ffffffff814549a3>] mptsas_del_end_device+0x183/0x270
 
-Only a target device should return ABORTED COMMAND when a PI error is
-discovered. The HBA should always set the sense key to ILLEGAL REQUEST.
+...introduced by commit 3b661a9 "[SCSI] fix hot unplug vs async scan race".
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Nagalakshmi.Nandigama@lsi.com
-Cc: Eric.Moore@lsi.com
+Don't restart lookup of more stargets in the multi-target case, just
+arrange to traverse the list once, on the assumption that new targets
+are always added at the end.  There is no guarantee that the target will
+change state in scsi_target_reap() so we can end up spinning if we
+restart.
+
+LKML-Reference: <CAEhu1-6wq1YsNiscGMwP4ud0Q+MrViRzv=kcWCQSBNc8c68N5Q@mail.gmail.com>
+Reported-by: John Drescher <drescherjm@gmail.com>
+Tested-by: John Drescher <drescherjm@gmail.com>
+Signed-off-by: Dan Williams <djbw@fb.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |   14 ++------------
- 1 files changed, 2 insertions(+), 12 deletions(-)
+ drivers/scsi/scsi_sysfs.c |   30 ++++++++++++++----------------
+ 1 file changed, 14 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 7d774c5..bfda0ec 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -3772,8 +3772,6 @@ static void
- _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 093d4f6..ce5224c 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1031,33 +1031,31 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ void scsi_remove_target(struct device *dev)
  {
- 	u8 ascq;
--	u8 sk;
--	u8 host_byte;
+ 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+-	struct scsi_target *starget, *found;
++	struct scsi_target *starget, *last = NULL;
+ 	unsigned long flags;
  
- 	switch (ioc_status) {
- 	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
-@@ -3790,16 +3788,8 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
- 		break;
+- restart:
+-	found = NULL;
++	/* remove targets being careful to lookup next entry before
++	 * deleting the last
++	 */
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(starget, &shost->__targets, siblings) {
+ 		if (starget->state == STARGET_DEL)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+-			found = starget;
+-			found->reap_ref++;
+-			break;
++			/* assuming new targets arrive at the end */
++			starget->reap_ref++;
++			spin_unlock_irqrestore(shost->host_lock, flags);
++			if (last)
++				scsi_target_reap(last);
++			last = starget;
++			__scsi_remove_target(starget);
++			spin_lock_irqsave(shost->host_lock, flags);
+ 		}
  	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
  
--	if (scmd->sc_data_direction == DMA_TO_DEVICE) {
--		sk = ILLEGAL_REQUEST;
--		host_byte = DID_ABORT;
--	} else {
--		sk = ABORTED_COMMAND;
--		host_byte = DID_OK;
+-	if (found) {
+-		__scsi_remove_target(found);
+-		scsi_target_reap(found);
+-		/* in the case where @dev has multiple starget children,
+-		 * continue removing.
+-		 *
+-		 * FIXME: does such a case exist?
+-		 */
+-		goto restart;
 -	}
--
--	scsi_build_sense_buffer(0, scmd->sense_buffer, sk, 0x10, ascq);
--	scmd->result = DRIVER_SENSE << 24 | (host_byte << 16) |
-+	scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST, 0x10, ascq);
-+	scmd->result = DRIVER_SENSE << 24 | (DID_ABORT << 16) |
- 	    SAM_STAT_CHECK_CONDITION;
++	if (last)
++		scsi_target_reap(last);
  }
+ EXPORT_SYMBOL(scsi_remove_target);
  
--- 
-1.7.7.6
 
