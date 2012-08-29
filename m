@@ -1,97 +1,69 @@
 From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: RE: [PATCH 5/5] mpt2sas: Add a module parameter that permits
- overriding protection capabilities
-Date: Wed, 29 Aug 2012 15:43:35 +0530
-Message-ID: <DCD177647606E9419ED923E0C8C4AA7223E20ADBF3@inbmail02.lsi.com>
-References: <1346178577-28628-1-git-send-email-martin.petersen@oracle.com>
- <1346178577-28628-5-git-send-email-martin.petersen@oracle.com>
+Subject: RE: [PATCH v2] [SCSI] mpt2sas: fix double mutex lock in
+ NON_BLOCKING state
+Date: Wed, 29 Aug 2012 15:48:06 +0530
+Message-ID: <DCD177647606E9419ED923E0C8C4AA7223E20ADBF8@inbmail02.lsi.com>
+References: <1346164683-9315-1-git-send-email-khoroshilov@ispras.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:59322 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751911Ab2H2KNo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Aug 2012 06:13:44 -0400
-In-Reply-To: <1346178577-28628-5-git-send-email-martin.petersen@oracle.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1346164683-9315-1-git-send-email-khoroshilov@ispras.ru>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "ldv-project@ispras.ru" <ldv-project@ispras.ru>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>
-Cc: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>
 
 James,
 
-This patch seem to be fine. Please consider this patch as Acked-by: "Sreekanth Reddy" <Sreekanth.reddy@lsi.com>
+This patch seem to be fine. Please consider this patch as Acked-by: "Sreekanth Reddy" <sreekanth.reddy@lsi.com>
 
 Regards,
-Sreekanth
+Sreekanth.
 
 > -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Martin K. Petersen
-> Sent: Wednesday, August 29, 2012 12:00 AM
-> To: linux-scsi@vger.kernel.org
-> Cc: James.Bottomley@hansenpartnership.com; Martin K. Petersen;
-> Nandigama, Nagalakshmi; Moore, Eric
-> Subject: [PATCH 5/5] mpt2sas: Add a module parameter that permits
-> overriding protection capabilities
+> From: Alexey Khoroshilov [mailto:khoroshilov@ispras.ru]
+> Sent: Tuesday, August 28, 2012 8:08 PM
+> To: James E.J. Bottomley
+> Cc: Alexey Khoroshilov; linux-scsi@vger.kernel.org; Nandigama,
+> Nagalakshmi; Reddy, Sreekanth; linux-kernel@vger.kernel.org; ldv-
+> project@ispras.ru
+> Subject: [PATCH v2] [SCSI] mpt2sas: fix double mutex lock in
+> NON_BLOCKING state
 > 
-> From: "Martin K. Petersen" <martin.petersen@oracle.com>
+> If state is NON_BLOCKING and mutex_trylock is succeed,
+> the control flow goes to mutex_lock_interruptible() that is a deadlock.
 > 
-> Add a parameter that allows the host protection capabilities mask to be
-> provided at module load time.
+> The previous version of the patch becomes obsolete after
+> code movement in commit 913809f6.
 > 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Nagalakshmi.Nandigama@lsi.com
-> Cc: Eric.Moore@lsi.com
+> Found by Linux Driver Verification project (linuxtesting.org).
+> 
+> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
 > ---
->  drivers/scsi/mpt2sas/mpt2sas_scsih.c |   15 +++++++++++++--
->  1 files changed, 13 insertions(+), 2 deletions(-)
+>  drivers/scsi/mpt2sas/mpt2sas_ctl.c |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> index bfda0ec..96f4d1f 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> @@ -123,6 +123,11 @@ static int disable_discovery = -1;
->  module_param(disable_discovery, int, 0);
->  MODULE_PARM_DESC(disable_discovery, " disable discovery ");
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+> b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+> index 49bdd2d..d29ea56 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+> @@ -2181,8 +2181,10 @@ _ctl_ioctl_main(struct file *file, unsigned int
+> cmd, void __user *arg,
+>  		return -EAGAIN;
 > 
-> +/* permit overriding the host protection capabilities mask (EEDP/T10
-> PI) */
-> +static int prot_mask = 0;
-> +module_param(prot_mask, int, 0);
-> +MODULE_PARM_DESC(prot_mask, " host protection capabilities mask, def=7
-> ");
-> +
->  /**
->   * struct sense_info - common structure for obtaining sense keys
->   * @skey: sense key
-> @@ -8088,8 +8093,14 @@ _scsih_probe(struct pci_dev *pdev, const struct
-> pci_device_id *id)
->  		goto out_add_shost_fail;
->  	}
-> 
-> -	scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
-> -	    | SHOST_DIF_TYPE2_PROTECTION | SHOST_DIF_TYPE3_PROTECTION);
-> +	/* register EEDP capabilities with SCSI layer */
-> +	if (prot_mask)
-> +		scsi_host_set_prot(shost, prot_mask);
-> +	else
-> +		scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
-> +				   | SHOST_DIF_TYPE2_PROTECTION
-> +				   | SHOST_DIF_TYPE3_PROTECTION);
-> +
->  	scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
-> 
->  	/* event thread */
-> --
-> 1.7.7.6
+>  	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING : BLOCKING;
+> -	if (state == NON_BLOCKING && !mutex_trylock(&ioc-
+> >ctl_cmds.mutex))
+> -		return -EAGAIN;
+> +	if (state == NON_BLOCKING) {
+> +		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
+> +			return -EAGAIN;
+> +	}
+>  	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
+>  		return -ERESTARTSYS;
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 1.7.9.5
