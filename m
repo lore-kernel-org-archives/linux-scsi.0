@@ -1,72 +1,75 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v5 3/7] scsi: sr: block events checking when suspended for zpodd
-Date: Fri, 31 Aug 2012 17:42:31 +0800
-Message-ID: <1346406155-4768-4-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v5 4/7] libata: acpi: set can_power_off for both ODD and HD
+Date: Fri, 31 Aug 2012 17:42:32 +0800
+Message-ID: <1346406155-4768-5-git-send-email-aaron.lu@intel.com>
 References: <1346406155-4768-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1346406155-4768-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When ODD is runtime suspended and if it can be powered off(reflected by
-the can_power_off flag), we will block events checking for it so that it
-can stay in powered off state until resumed by:
-1 user pressing the eject button or inserting a disc;
-2 software opening the block device.
-But not by events checking that normally occurs every 2 seconds.
-
-Old versions of udisk will poll the ODD periodically, so it is advised
-to inhibit the polling:
-$ udisks --inhibit-polling /dev/sr0
+Hard disk may also be runtime powered off, so set can_power_off flag
+for it too if condition satisfies.
 
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- drivers/scsi/sr.c | 10 ++++++++++
- drivers/scsi/sr.h |  1 +
- 2 files changed, 11 insertions(+)
+ drivers/ata/libata-acpi.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 04a658b..1acfe0e 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -204,6 +204,11 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
- 	if (!suspend)
- 		return -EBUSY;
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 64ba43d..6c8f89c 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -1005,7 +1005,7 @@ static void ata_acpi_add_pm_notifier(struct ata_device *dev)
+ 	if (ACPI_FAILURE(status))
+ 		return;
  
-+	if (cd->device->can_power_off) {
-+		cd->disk_events_blocked = 1;
-+		disk_block_events(cd->disk);
-+	}
+-	if (dev->sdev->can_power_off) {
++	if (dev->class == ATA_DEV_ATAPI && dev->sdev->can_power_off) {
+ 		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 			ata_acpi_wake_dev, dev);
+ 		device_set_run_wake(&dev->sdev->sdev_gendev, true);
+@@ -1026,7 +1026,7 @@ static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
+ 	if (ACPI_FAILURE(status))
+ 		return;
+ 
+-	if (dev->sdev->can_power_off) {
++	if (dev->class == ATA_DEV_ATAPI && dev->sdev->can_power_off) {
+ 		device_set_run_wake(&dev->sdev->sdev_gendev, false);
+ 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 			ata_acpi_wake_dev);
+@@ -1130,14 +1130,23 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
+ 
+ 	/*
+ 	 * If firmware has _PS3 or _PR3 for this device,
+-	 * and this ata ODD device support device attention,
+-	 * it means this device can be powered off
++	 * it means this device can be powered off runtime
+ 	 */
+ 	states = acpi_dev->power.states;
+-	if ((states[ACPI_STATE_D3_HOT].flags.valid ||
+-			states[ACPI_STATE_D3_COLD].flags.explicit_set) &&
+-			ata_dev->flags & ATA_DFLAG_DA)
+-		sdev->can_power_off = 1;
++	if (states[ACPI_STATE_D3_HOT].flags.valid ||
++			states[ACPI_STATE_D3_COLD].flags.explicit_set) {
++		/*
++		 * For ODD, it needs to support device attention or
++		 * it can't be powered up back by user
++		 */
++		if (ata_dev->class == ATA_DEV_ATAPI &&
++				ata_dev->flags & ATA_DFLAG_DA)
++			sdev->can_power_off = 1;
 +
++		/* No requirement for hard disk */
++		if (ata_dev->class == ATA_DEV_ATA)
++			sdev->can_power_off = 1;
++	}
+ 
  	return 0;
  }
- 
-@@ -224,6 +229,11 @@ static int sr_resume(struct device *dev)
- 			sr_tray_move(&cd->cdi, 1);
- 	}
- 
-+	if (cd->disk_events_blocked) {
-+		cd->disk_events_blocked = 0;
-+		disk_unblock_events(cd->disk);
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
-index 37c8f6b..9d9a76f 100644
---- a/drivers/scsi/sr.h
-+++ b/drivers/scsi/sr.h
-@@ -41,6 +41,7 @@ typedef struct scsi_cd {
- 	unsigned readcd_known:1;	/* drive supports READ_CD (0xbe) */
- 	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
- 	unsigned media_present:1;	/* media is present */
-+	unsigned disk_events_blocked:1; /* disk events is blocked */
- 
- 	/* GET_EVENT spurious event handling, blk layer guarantees exclusion */
- 	int tur_mismatch;		/* nr of get_event TUR mismatches */
 -- 
 1.7.11.5
 
