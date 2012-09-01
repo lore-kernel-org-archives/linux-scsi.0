@@ -1,51 +1,21 @@
-From: dongsu.park@profitbricks.com
-Subject: [PATCH 1/5] ib_srp: free memory correctly in srp_free_iu()
-Date: Fri, 31 Aug 2012 22:00:37 +0200
-Message-ID: <1346443241-24844-2-git-send-email-dongsu.park@profitbricks.com>
-References: <1346443241-24844-1-git-send-email-dongsu.park@profitbricks.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1346443241-24844-1-git-send-email-dongsu.park@profitbricks.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: bvanassche@acm.org
-Cc: dillowda@ornl.gov, roland@kernel.org, sean.hefty@intel.com, hal.rosenstock@gmail.com, JBottomley@parallels.com, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Dongsu Park <dongsu.park@profitbricks.com>
+From: "Postmaster" <postmaster@ecampus.planetvidya.com>
+Subject: Undeliverable Mail
+Date: Sat,  1 Sep 2012 08:03:54
+Message-ID: <11209010803.AA751566851@ecampus.planetvidya.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail1.educomp.com ([125.16.64.70]:38448 "EHLO mail1.educomp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755222Ab2IACh7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Aug 2012 22:37:59 -0400
+Received: from ecampus.planetvidya.com (ecampus.planetvidya.com [125.16.64.67]) by mail1.educomp.com with ESMTP id SmhhqVUvAeZEaUZr for <linux-scsi@vger.kernel.org>; Sat, 01 Sep 2012 08:53:34 +0530 (IST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Dongsu Park <dongsu.park@profitbricks.com>
+No message body: begusarai.chiefmentor@takshilaschools.in
 
-As a potential fix for a race condition in srp_free_iu(),
-hold a mutex in srp_free_target_ib() before calling srp_free_iu().
 
-In addition, also clear rx/tx ring after freeing memory.
-Both rx_ring[] and tx_ring[] should be reinitialized to NULL,
-to prevent other tasks from accessing the freed memory.
+Original message follows.
 
-Signed-off-by: Dongsu Park <dongsu.park@profitbricks.com>
----
- drivers/infiniband/ulp/srp/ib_srp.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 7ae5a00..a0d0ca2 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -291,10 +291,16 @@ static void srp_free_target_ib(struct srp_target_port *target)
- 	ib_destroy_cq(target->send_cq);
- 	ib_destroy_cq(target->recv_cq);
- 
--	for (i = 0; i < SRP_RQ_SIZE; ++i)
-+	mutex_lock(&target->mutex);
-+	for (i = 0; i < SRP_RQ_SIZE; ++i) {
- 		srp_free_iu(target->srp_host, target->rx_ring[i]);
--	for (i = 0; i < SRP_SQ_SIZE; ++i)
-+		target->rx_ring[i] = NULL;
-+	}
-+	for (i = 0; i < SRP_SQ_SIZE; ++i) {
- 		srp_free_iu(target->srp_host, target->tx_ring[i]);
-+		target->tx_ring[i] = NULL;
-+	}
-+	mutex_unlock(&target->mutex);
- }
- 
- static void srp_path_rec_completion(int status,
--- 
-1.7.11.1
