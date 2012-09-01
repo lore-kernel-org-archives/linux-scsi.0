@@ -1,46 +1,47 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH 0/5] Fix bugs in ib_srp patches for H.A. purposes
-Date: Sat, 01 Sep 2012 08:09:57 +0000
-Message-ID: <5041C2D5.1040503@acm.org>
-References: <1346443241-24844-1-git-send-email-dongsu.park@profitbricks.com>
+From: Stefan Ring <stefanrin@gmail.com>
+Subject: Re: [resend PATCH] =?utf-8?b?c2NzaV9yZW1vdmVfdGFyZ2V0Og==?= fix softlockup regression on hot remove
+Date: Sat, 1 Sep 2012 16:01:39 +0000 (UTC)
+Message-ID: <loom.20120901T175838-180@post.gmane.org>
+References: <20120829051119.26395.15980.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1346443241-24844-1-git-send-email-dongsu.park-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: dongsu.park-EIkl63zCoXaH+58JC4qpiA@public.gmane.org
-Cc: dillowda-1Heg1YXhbW8@public.gmane.org, roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from plane.gmane.org ([80.91.229.3]:41782 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753071Ab2IAQFJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 Sep 2012 12:05:09 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1T7qBz-0007Ql-Nq
+	for linux-scsi@vger.kernel.org; Sat, 01 Sep 2012 18:05:03 +0200
+Received: from chello084113150185.1.13.vie.surfer.at ([84.113.152.185])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Sat, 01 Sep 2012 18:05:03 +0200
+Received: from stefanrin by chello084113150185.1.13.vie.surfer.at with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Sat, 01 Sep 2012 18:05:03 +0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 08/31/12 20:00, dongsu.park-EIkl63zCoXaH+58JC4qpiA@public.gmane.org wrote:
-> This patchset aims at fixing bugs that have been discovered in our own
-> SRP test environment so far. These patches are based on your patchset v4,
-> "Make ib_srp better suited for H.A. purposes",(09 Aug 2012).
-> 
-> The 5th patch, "fix an error accessing invalid memory in
-> rport_dev_loss_timedout" is including your suggestion (30 Aug 2012).
-> 
-> You can also pull the following git repo to get the patches.
-> 
->   git://github.com/advance38/linux.git srp-ha
-> 
-> Our test setup consists of two systems.
-> Kernel 3.2.15 with SCST v4193 on the target,
-> and Kernel 3.2.8 with ib_srp-ha on the initiator.
-> Although I rebased the patches again onto 3.6-rc3,
-> I suppose there will be no significant differences.
-> 
-> All of the known critical issues seem to have been resolved
-> according to our internal tests in the last weeks.
+Dan Williams <djbw <at> fb.com> writes:
 
-Thanks for the testing and the feedback. Let's hope that the ib_srp
-maintainer will be able to review these patches soon. For the linux-scsi
-and LKML readers: I've sent my feedback about this patch series to the
-linux-rdma mailing list only.
+> John reports:
+>  BUG: soft lockup - CPU#2 stuck for 23s! [kworker/u:8:2202]
+>  [..]
+> 
+> ...introduced by commit 3b661a9 "[SCSI] fix hot unplug vs async scan race".
+> 
+> Don't restart lookup of more stargets in the multi-target case, just
+> arrange to traverse the list once, on the assumption that new targets
+> are always added at the end.  There is no guarantee that the target will
+> change state in scsi_target_reap() so we can end up spinning if we
+> restart.
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Patch works for me.
+
+See also <https://bugzilla.redhat.com/show_bug.cgi?id=848425> for
+"hardware-less" reproduction instructions.
+
