@@ -1,42 +1,44 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 46891] scsi/bnx2fc/bnx2fc_io.c:1810: bad call to memset
-Date: Mon,  3 Sep 2012 15:53:52 +0000 (UTC)
-Message-ID: <20120903155352.3116211FC43@bugzilla.kernel.org>
-References: <bug-46891-11613@https.bugzilla.kernel.org/>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: [PATCH] Fix incorrect memset in bnx2fc_parse_fcp_rsp
+Date: Mon, 3 Sep 2012 20:50:30 +0200
+Message-ID: <20120903185030.GV16230@one.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:42397 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752843Ab2ICPxz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Sep 2012 11:53:55 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 9E65A201F9
-	for <linux-scsi@vger.kernel.org>; Mon,  3 Sep 2012 15:53:54 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id B279620157
-	for <linux-scsi@vger.kernel.org>; Mon,  3 Sep 2012 15:53:53 +0000 (UTC)
-In-Reply-To: <bug-46891-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: bprakash@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=46891
+gcc 4.8 warns because the memset only clears sizeof(char *) bytes, not
+the whole buffer. Use the correct buffer size and clear the whole sense
+buffer.
+
+/backup/lsrc/git/linux-lto-2.6/drivers/scsi/bnx2fc/bnx2fc_io.c: In
+function 'bnx2fc_parse_fcp_rsp':
+/backup/lsrc/git/linux-lto-2.6/drivers/scsi/bnx2fc/bnx2fc_io.c:1810:41:
+warning: argument to 'sizeof' in 'memset' call is the same expression as
+the destination; did you mean to provide an explicit length?
+[-Wsizeof-pointer-memaccess]
+   memset(sc_cmd->sense_buffer, 0, sizeof(sc_cmd->sense_buffer));
+                                         ^
+
+Signed-off-by: Andi Kleen <ak@linux.intel.com>
 
 
-Bhanu Prakash Gollapudi <bprakash@broadcom.com> changed:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bprakash@broadcom.com
-
-
-
-
---- Comment #2 from Bhanu Prakash Gollapudi <bprakash@broadcom.com>  2012-09-03 15:53:51 ---
-Agree. I'll fix this soon.
-
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 73f231c..8d4626c 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1807,7 +1807,7 @@ static void bnx2fc_parse_fcp_rsp(struct bnx2fc_cmd *io_req,
+ 			fcp_sns_len = SCSI_SENSE_BUFFERSIZE;
+ 		}
+ 
+-		memset(sc_cmd->sense_buffer, 0, sizeof(sc_cmd->sense_buffer));
++		memset(sc_cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 		if (fcp_sns_len)
+ 			memcpy(sc_cmd->sense_buffer, rq_data, fcp_sns_len);
+ 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+ak@linux.intel.com -- Speaking for myself only.
