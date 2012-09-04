@@ -1,144 +1,78 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 5/5] virtio-scsi: introduce multiqueue support
-Date: Tue, 04 Sep 2012 13:11:06 -0700
-Message-ID: <1346789466.4162.181.camel@haakon2.linux-iscsi.org>
-References: <1346154857-12487-1-git-send-email-pbonzini@redhat.com>
-	<1346154857-12487-6-git-send-email-pbonzini@redhat.com>
-	<1346725294.4162.79.camel@haakon2.linux-iscsi.org>
-	<5045A3B4.2030101@redhat.com>
+From: Dan Williams <djbw@fb.com>
+Subject: Re: [resend PATCH] scsi_remove_target: fix softlockup regression on
+ hot remove
+Date: Tue, 4 Sep 2012 16:01:57 -0700
+Message-ID: <CAA9_cmd8+jWh+WBb50RSJFziVCbvOmULNenjwceEnd0x3mzAmg@mail.gmail.com>
+References: <20120829051119.26395.15980.stgit@localhost.localdomain>
+	<503DBBA0.5060108@acm.org>
+	<1346252361.27020.8.camel@localhost.localdomain>
+	<CAEhu1-4EuoEUD9wCj_5aPa5zuSS+PB_R9hCEu3t2cqm3Q9HBPw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <5045A3B4.2030101@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, target-devel <target-devel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:34951 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757871Ab2IDXB6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Sep 2012 19:01:58 -0400
+In-Reply-To: <CAEhu1-4EuoEUD9wCj_5aPa5zuSS+PB_R9hCEu3t2cqm3Q9HBPw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Drescher <drescherjm@gmail.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, JBottomley@parallels.com, stable@vger.kernel.org, linux-scsi@vger.kernel.org, Jack Wang <jack_wang@usish.com>
 
-On Tue, 2012-09-04 at 08:46 +0200, Paolo Bonzini wrote:
-> Il 04/09/2012 04:21, Nicholas A. Bellinger ha scritto:
-> >> @@ -112,6 +118,9 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
-> >>  	struct virtio_scsi_cmd *cmd = buf;
-> >>  	struct scsi_cmnd *sc = cmd->sc;
-> >>  	struct virtio_scsi_cmd_resp *resp = &cmd->resp.cmd;
-> >> +	struct virtio_scsi_target_state *tgt = vscsi->tgt[sc->device->id];
-> >> +
-> >> +	atomic_dec(&tgt->reqs);
-> >>  
-> > 
-> > As tgt->tgt_lock is taken in virtscsi_queuecommand_multi() before the
-> > atomic_inc_return(tgt->reqs) check, it seems like using atomic_dec() w/o
-> > smp_mb__after_atomic_dec or tgt_lock access here is not using atomic.h
-> > accessors properly, no..?
-> 
-> No, only a single "thing" is being accessed, and there is no need to
-> order the decrement with respect to preceding or subsequent accesses to
-> other locations.
-> 
-> In other words, tgt->reqs is already synchronized with itself, and that
-> is enough.
-> 
-> (Besides, on x86 smp_mb__after_atomic_dec is a nop).
-> 
+On Tue, Sep 4, 2012 at 7:02 AM, John Drescher <drescherjm@gmail.com> wrote:
+> On Wed, Aug 29, 2012 at 10:59 AM, Dan Williams <djbw@fb.com> wrote:
+>> On Wed, 2012-08-29 at 06:50 +0000, Bart Van Assche wrote:
+>>> On 08/29/12 05:12, Dan Williams wrote:
+>>> > John reports:
+>>> >  BUG: soft lockup - CPU#2 stuck for 23s! [kworker/u:8:2202]
+>>> >  [..]
+>>> >  Call Trace:
+>>> >   [<ffffffff8141782a>] scsi_remove_target+0xda/0x1f0
+>>> >   [<ffffffff81421de5>] sas_rphy_remove+0x55/0x60
+>>> >   [<ffffffff81421e01>] sas_rphy_delete+0x11/0x20
+>>> >   [<ffffffff81421e35>] sas_port_delete+0x25/0x160
+>>> >   [<ffffffff814549a3>] mptsas_del_end_device+0x183/0x270
+>>> >
+>>> > ...introduced by commit 3b661a9 "[SCSI] fix hot unplug vs async scan race".
+>>>
+>>> Including that call stack in the patch description may create the
+>>> misleading impression that this only occurs with the mptsas driver. This
+>>> lockup also happens with at least the iSCSI initiator. See also
+>>> http://lkml.org/lkml/2012/8/24/340.
+>>
+>> I don't think it does that.  The title is pretty generic, but you're
+>> right the impact is potentially all scsi_remove_target() users.
+>>
+>>> By the way, in order to get a patch in the stable tree the proper "Cc:"
+>>> tag should be added in the patch description but the
+>>> stable@vger.kernel.org e-mail address should be left out from the
+>>> Cc-list of the e-mail with the patch.
+>>
+>> No, we talked about that at kernel summit.  It's ok for the stable@
+>> alias to get a few extra mails.  The patch won't be applied until it
+>> hits mainline and in the meantime it gives a heads up to the -stable
+>> folks, or anyone that wants to follow up on stable patches making their
+>> way to mainline.
+>>
+>
+> It appears that this did not get into 3.6 rc4 (unless I am reading the
+> changlog wrong). Do I have to file an official bug report to get this
+> noticed?
 
-So the implementation detail wrt to requests to the same target being
-processed in FIFO ordering + only being able to change the queue when no
-requests are pending helps understand this code more.  Thanks for the
-explanation on that bit..
+I know James was travelling last week, and I think he wanted some more
+time to look over the removal of the restart logic... but I think we
+are ok.  Prior to commit 3b661a9 we had
 
-However, it's still my understanding that the use of atomic_dec() in the
-completion path mean that smp_mb__after_atomic_dec() is a requirement to
-be proper portable atomic.hcode, no..?  Otherwise tgt->regs should be
-using something other than an atomic_t, right..?
+       get_device(dev);
+       device_for_each_child(dev, NULL, __remove_child);
+       put_device(dev);
 
-> >> +static int virtscsi_queuecommand_multi(struct Scsi_Host *sh,
-> >> +				       struct scsi_cmnd *sc)
-> >> +{
-> >> +	struct virtio_scsi *vscsi = shost_priv(sh);
-> >> +	struct virtio_scsi_target_state *tgt = vscsi->tgt[sc->device->id];
-> >> +	unsigned long flags;
-> >> +	u32 queue_num;
-> >> +
-> >> +	/* Using an atomic_t for tgt->reqs lets the virtqueue handler
-> >> +	 * decrement it without taking the spinlock.
-> >> +	 */
-> >> +	spin_lock_irqsave(&tgt->tgt_lock, flags);
-> >> +	if (atomic_inc_return(&tgt->reqs) == 1) {
-> >> +		queue_num = smp_processor_id();
-> >> +		while (unlikely(queue_num >= vscsi->num_queues))
-> >> +			queue_num -= vscsi->num_queues;
-> >> +		tgt->req_vq = &vscsi->req_vqs[queue_num];
-> >> +	}
-> >> +	spin_unlock_irqrestore(&tgt->tgt_lock, flags);
-> >> +	return virtscsi_queuecommand(vscsi, tgt, sc);
-> >> +}
-> >> +
-> > 
-> > The extra memory barriers to get this right for the current approach are
-> > just going to slow things down even more for virtio-scsi-mq..
-> 
-> virtio-scsi multiqueue has a performance benefit up to 20% (for a single
-> LUN) or 40% (on overall bandwidth across multiple LUNs).  I doubt that a
-> single memory barrier can have that much impact. :)
-> 
+Where that device_for_each_child would not restart, but also would not
+consider stargets that were not yet proper children of dev.  With the
+fix we find all stargets and make sure to be immune to the regression
+case where scsi_remove_target() is not the final source of
+scsi_target_reap().
 
-I've no doubt that this series increases the large block high bandwidth
-for virtio-scsi, but historically that has always been the easier
-workload to scale.  ;)
-
-> The way to go to improve performance even more is to add new virtio APIs
-> for finer control of the usage of the ring.  These should let us avoid
-> copying the sg list and almost get rid of the tgt_lock; even though the
-> locking is quite efficient in virtio-scsi (see how tgt_lock and vq_lock
-> are "pipelined" so as to overlap the preparation of two requests), it
-> should give a nice improvement and especially avoid a kmalloc with small
-> requests.  I may have some time for it next month.
-> 
-> > Jen's approach is what we will ultimately need to re-architect in SCSI
-> > core if we're ever going to move beyond the issues of legacy host_lock,
-> > so I'm wondering if maybe this is the direction that virtio-scsi-mq
-> > needs to go in as well..?
-> 
-> We can see after the block layer multiqueue work goes in...  I also need
-> to look more closely at Jens's changes.
-> 
-
-Yes, I think Jen's new approach is providing some pretty significant
-gains for raw block drivers with extremly high packet (small block
-random I/O) workloads, esp with hw block drivers that support genuine mq
-with hw num_queues > 1.
-
-He also has virtio-blk converted to run in num_queues=1 mode.
-
-> Have you measured the host_lock to be a bottleneck in high-iops
-> benchmarks, even for a modern driver that does not hold it in
-> queuecommand?  (Certainly it will become more important as the
-> virtio-scsi queuecommand becomes thinner and thinner).
-
-This is exactly why it would make such a good vehicle to re-architect
-SCSI core.  I'm thinking it can be the first sw LLD we attempt to get
-running on an (currently) future scsi-mq prototype.
-
->   If so, we can
-> start looking at limiting host_lock usage in the fast path.
-> 
-
-That would be a good incremental step for SCSI core, but I'm not sure
-that that we'll be able to scale compared to blk-mq without a
-new-approach for sw/hw LLDs along the lines of what Jen's is doing.
-
-> BTW, supporting this in tcm-vhost should be quite trivial, as all the
-> request queues are the same and all serialization is done in the
-> virtio-scsi driver.
-> 
-
-Looking forward to that too..  ;)
+--
+Dan
