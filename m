@@ -1,18 +1,18 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH 6/8] zfcp: restore refcount check on port_remove
-Date: Tue, 04 Sep 2012 15:23:34 +0200
-Message-ID: <20120904132348.845821668@linux.vnet.ibm.com>
+Subject: [PATCH 1/8] zfcp: Adapt to new FC_PORTSPEED semantics
+Date: Tue, 04 Sep 2012 15:23:29 +0200
+Message-ID: <20120904132348.304927022@linux.vnet.ibm.com>
 References: <20120904132328.564402930@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e06smtp14.uk.ibm.com ([195.75.94.110]:45166 "EHLO
-	e06smtp14.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757129Ab2IDN3p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Sep 2012 09:29:45 -0400
+Received: from e06smtp10.uk.ibm.com ([195.75.94.106]:34838 "EHLO
+	e06smtp10.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932202Ab2IDNaA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Sep 2012 09:30:00 -0400
 Received: from /spool/local
-	by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-	Tue, 4 Sep 2012 14:29:42 +0100
-Content-Disposition: inline; filename=713-zfcp-restore-port-refcount-check.patch
+	Tue, 4 Sep 2012 14:29:58 +0100
+Content-Disposition: inline; filename=705-zfcp-adapt-to-new-FC_PORTSPEED-semantics.patch
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
@@ -20,184 +20,80 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <
 
 From: Steffen Maier <maier@linux.vnet.ibm.com>
 
-Upstream commit f3450c7b917201bb49d67032e9f60d5125675d6a
-"[SCSI] zfcp: Replace local reference counting with common kref"
-accidentally dropped a reference count check before tearing down
-zfcp_ports that are potentially in use by zfcp_units.
-Even remote ports in use can be removed causing
-unreachable garbage objects zfcp_ports with zfcp_units.
-Thus units won't come back even after a manual port_rescan.
-The kref of zfcp_port->dev.kobj is already used by the driver core.
-We cannot re-use it to track the number of zfcp_units.
-Re-introduce our own counter for units per port
-and check on port_remove.
+Commit a9277e7783651d4e0a849f7988340b1c1cf748a4
+"[SCSI] scsi_transport_fc: Getting FC Port Speed in sync with FC-GS"
+changed the semantics of FC_PORTSPEED defines to
+FDMI port attributes of FC-HBA/SM-HBA
+which is different from the previous bit reversed
+Report Port Speed Capabilities (RPSC) ELS of FC-GS/FC-LS.
+
+Zfcp showed "10 Gbit" instead of "4 Gbit" for supported_speeds.
+It now uses explicit bit conversion as the other LLDs already
+do, in order to be independent of the kernel bit semantics.
+See also http://marc.info/?l=linux-scsi&m=134452926830730&w=2
 
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Reviewed-by: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: <stable@vger.kernel.org> #2.6.33+
+Reviewed-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Cc: <stable@vger.kernel.org> #3.4+
 ---
- drivers/s390/scsi/zfcp_aux.c   |    1 +
- drivers/s390/scsi/zfcp_def.h   |    1 +
- drivers/s390/scsi/zfcp_ext.h   |    1 +
- drivers/s390/scsi/zfcp_sysfs.c |   18 ++++++++++++++++--
- drivers/s390/scsi/zfcp_unit.c  |   36 ++++++++++++++++++++++++++----------
- 5 files changed, 45 insertions(+), 12 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c |   34 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 32 insertions(+), 2 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_aux.c
-+++ b/drivers/s390/scsi/zfcp_aux.c
-@@ -519,6 +519,7 @@ struct zfcp_port *zfcp_port_enqueue(stru
- 
- 	rwlock_init(&port->unit_list_lock);
- 	INIT_LIST_HEAD(&port->unit_list);
-+	atomic_set(&port->units, 0);
- 
- 	INIT_WORK(&port->gid_pn_work, zfcp_fc_port_did_lookup);
- 	INIT_WORK(&port->test_link_work, zfcp_fc_link_test_work);
---- a/drivers/s390/scsi/zfcp_def.h
-+++ b/drivers/s390/scsi/zfcp_def.h
-@@ -205,6 +205,7 @@ struct zfcp_port {
- 	struct zfcp_adapter    *adapter;       /* adapter used to access port */
- 	struct list_head	unit_list;	/* head of logical unit list */
- 	rwlock_t		unit_list_lock; /* unit list lock */
-+	atomic_t		units;	       /* zfcp_unit count */
- 	atomic_t	       status;	       /* status of this remote port */
- 	u64		       wwnn;	       /* WWNN if known */
- 	u64		       wwpn;	       /* WWPN */
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -159,6 +159,7 @@ extern void zfcp_scsi_dif_sense_error(st
- extern struct attribute_group zfcp_sysfs_unit_attrs;
- extern struct attribute_group zfcp_sysfs_adapter_attrs;
- extern struct attribute_group zfcp_sysfs_port_attrs;
-+extern struct mutex zfcp_sysfs_port_units_mutex;
- extern struct device_attribute *zfcp_sysfs_sdev_attrs[];
- extern struct device_attribute *zfcp_sysfs_shost_attrs[];
- 
---- a/drivers/s390/scsi/zfcp_sysfs.c
-+++ b/drivers/s390/scsi/zfcp_sysfs.c
-@@ -227,6 +227,8 @@ static ssize_t zfcp_sysfs_port_rescan_st
- static ZFCP_DEV_ATTR(adapter, port_rescan, S_IWUSR, NULL,
- 		     zfcp_sysfs_port_rescan_store);
- 
-+DEFINE_MUTEX(zfcp_sysfs_port_units_mutex);
-+
- static ssize_t zfcp_sysfs_port_remove_store(struct device *dev,
- 					    struct device_attribute *attr,
- 					    const char *buf, size_t count)
-@@ -249,6 +251,16 @@ static ssize_t zfcp_sysfs_port_remove_st
- 	else
- 		retval = 0;
- 
-+	mutex_lock(&zfcp_sysfs_port_units_mutex);
-+	if (atomic_read(&port->units) > 0) {
-+		retval = -EBUSY;
-+		mutex_unlock(&zfcp_sysfs_port_units_mutex);
-+		goto out;
-+	}
-+	/* port is about to be removed, so no more unit_add */
-+	atomic_set(&port->units, -1);
-+	mutex_unlock(&zfcp_sysfs_port_units_mutex);
-+
- 	write_lock_irq(&adapter->port_list_lock);
- 	list_del(&port->list);
- 	write_unlock_irq(&adapter->port_list_lock);
-@@ -289,12 +301,14 @@ static ssize_t zfcp_sysfs_unit_add_store
- {
- 	struct zfcp_port *port = container_of(dev, struct zfcp_port, dev);
- 	u64 fcp_lun;
-+	int retval;
- 
- 	if (strict_strtoull(buf, 0, (unsigned long long *) &fcp_lun))
- 		return -EINVAL;
- 
--	if (zfcp_unit_add(port, fcp_lun))
--		return -EINVAL;
-+	retval = zfcp_unit_add(port, fcp_lun);
-+	if (retval)
-+		return retval;
- 
- 	return count;
- }
---- a/drivers/s390/scsi/zfcp_unit.c
-+++ b/drivers/s390/scsi/zfcp_unit.c
-@@ -104,7 +104,7 @@ static void zfcp_unit_release(struct dev
- {
- 	struct zfcp_unit *unit = container_of(dev, struct zfcp_unit, dev);
- 
--	put_device(&unit->port->dev);
-+	atomic_dec(&unit->port->units);
- 	kfree(unit);
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -437,6 +437,34 @@ void zfcp_fsf_req_dismiss_all(struct zfc
+ 	}
  }
  
-@@ -119,16 +119,27 @@ static void zfcp_unit_release(struct dev
- int zfcp_unit_add(struct zfcp_port *port, u64 fcp_lun)
++#define ZFCP_FSF_PORTSPEED_1GBIT	(1 <<  0)
++#define ZFCP_FSF_PORTSPEED_2GBIT	(1 <<  1)
++#define ZFCP_FSF_PORTSPEED_4GBIT	(1 <<  2)
++#define ZFCP_FSF_PORTSPEED_10GBIT	(1 <<  3)
++#define ZFCP_FSF_PORTSPEED_8GBIT	(1 <<  4)
++#define ZFCP_FSF_PORTSPEED_16GBIT	(1 <<  5)
++#define ZFCP_FSF_PORTSPEED_NOT_NEGOTIATED (1 << 15)
++
++static u32 zfcp_fsf_convert_portspeed(u32 fsf_speed)
++{
++	u32 fdmi_speed = 0;
++	if (fsf_speed & ZFCP_FSF_PORTSPEED_1GBIT)
++		fdmi_speed |= FC_PORTSPEED_1GBIT;
++	if (fsf_speed & ZFCP_FSF_PORTSPEED_2GBIT)
++		fdmi_speed |= FC_PORTSPEED_2GBIT;
++	if (fsf_speed & ZFCP_FSF_PORTSPEED_4GBIT)
++		fdmi_speed |= FC_PORTSPEED_4GBIT;
++	if (fsf_speed & ZFCP_FSF_PORTSPEED_10GBIT)
++		fdmi_speed |= FC_PORTSPEED_10GBIT;
++	if (fsf_speed & ZFCP_FSF_PORTSPEED_8GBIT)
++		fdmi_speed |= FC_PORTSPEED_8GBIT;
++	if (fsf_speed & ZFCP_FSF_PORTSPEED_16GBIT)
++		fdmi_speed |= FC_PORTSPEED_16GBIT;
++	if (fsf_speed & ZFCP_FSF_PORTSPEED_NOT_NEGOTIATED)
++		fdmi_speed |= FC_PORTSPEED_NOT_NEGOTIATED;
++	return fdmi_speed;
++}
++
+ static int zfcp_fsf_exchange_config_evaluate(struct zfcp_fsf_req *req)
  {
- 	struct zfcp_unit *unit;
-+	int retval = 0;
-+
-+	mutex_lock(&zfcp_sysfs_port_units_mutex);
-+	if (atomic_read(&port->units) == -1) {
-+		/* port is already gone */
-+		retval = -ENODEV;
-+		goto out;
-+	}
+ 	struct fsf_qtcb_bottom_config *bottom = &req->qtcb->bottom.config;
+@@ -456,7 +484,8 @@ static int zfcp_fsf_exchange_config_eval
+ 	fc_host_port_name(shost) = nsp->fl_wwpn;
+ 	fc_host_node_name(shost) = nsp->fl_wwnn;
+ 	fc_host_port_id(shost) = ntoh24(bottom->s_id);
+-	fc_host_speed(shost) = bottom->fc_link_speed;
++	fc_host_speed(shost) =
++		zfcp_fsf_convert_portspeed(bottom->fc_link_speed);
+ 	fc_host_supported_classes(shost) = FC_COS_CLASS2 | FC_COS_CLASS3;
  
- 	unit = zfcp_unit_find(port, fcp_lun);
- 	if (unit) {
- 		put_device(&unit->dev);
--		return -EEXIST;
-+		retval = -EEXIST;
-+		goto out;
- 	}
- 
- 	unit = kzalloc(sizeof(struct zfcp_unit), GFP_KERNEL);
--	if (!unit)
--		return -ENOMEM;
-+	if (!unit) {
-+		retval = -ENOMEM;
-+		goto out;
-+	}
- 
- 	unit->port = port;
- 	unit->fcp_lun = fcp_lun;
-@@ -139,28 +150,33 @@ int zfcp_unit_add(struct zfcp_port *port
- 	if (dev_set_name(&unit->dev, "0x%016llx",
- 			 (unsigned long long) fcp_lun)) {
- 		kfree(unit);
--		return -ENOMEM;
-+		retval = -ENOMEM;
-+		goto out;
- 	}
- 
--	get_device(&port->dev);
--
- 	if (device_register(&unit->dev)) {
- 		put_device(&unit->dev);
--		return -ENOMEM;
-+		retval = -ENOMEM;
-+		goto out;
- 	}
- 
- 	if (sysfs_create_group(&unit->dev.kobj, &zfcp_sysfs_unit_attrs)) {
- 		device_unregister(&unit->dev);
--		return -EINVAL;
-+		retval = -EINVAL;
-+		goto out;
- 	}
- 
-+	atomic_inc(&port->units); /* under zfcp_sysfs_port_units_mutex ! */
-+
- 	write_lock_irq(&port->unit_list_lock);
- 	list_add_tail(&unit->list, &port->unit_list);
- 	write_unlock_irq(&port->unit_list_lock);
- 
- 	zfcp_unit_scsi_scan(unit);
- 
--	return 0;
-+out:
-+	mutex_unlock(&zfcp_sysfs_port_units_mutex);
-+	return retval;
- }
- 
- /**
+ 	adapter->hydra_version = bottom->adapter_type;
+@@ -580,7 +609,8 @@ static void zfcp_fsf_exchange_port_evalu
+ 	} else
+ 		fc_host_permanent_port_name(shost) = fc_host_port_name(shost);
+ 	fc_host_maxframe_size(shost) = bottom->maximum_frame_size;
+-	fc_host_supported_speeds(shost) = bottom->supported_speed;
++	fc_host_supported_speeds(shost) =
++		zfcp_fsf_convert_portspeed(bottom->supported_speed);
+ 	memcpy(fc_host_supported_fc4s(shost), bottom->supported_fc4_types,
+ 	       FC_FC4_LIST_SIZE);
+ 	memcpy(fc_host_active_fc4s(shost), bottom->active_fc4_types,
 
