@@ -1,15 +1,15 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
 Subject: Re: [PATCH 5/5] virtio-scsi: introduce multiqueue support
-Date: Tue, 4 Sep 2012 17:47:54 +0300
-Message-ID: <20120904144754.GO9805@redhat.com>
+Date: Tue, 04 Sep 2012 16:55:56 +0200
+Message-ID: <5046167C.3070109@redhat.com>
 References: <1346154857-12487-1-git-send-email-pbonzini@redhat.com>
 	<1346154857-12487-6-git-send-email-pbonzini@redhat.com>
+	<20120904144754.GO9805@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1346154857-12487-6-git-send-email-pbonzini@redhat.com>
+In-Reply-To: <20120904144754.GO9805@redhat.com>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -19,35 +19,38 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualizati
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
 Sender: virtualization-bounces@lists.linux-foundation.org
 Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Paolo Bonzini <pbonzini@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
 Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 28, 2012 at 01:54:17PM +0200, Paolo Bonzini wrote:
-> @@ -575,15 +630,19 @@ static struct scsi_host_template virtscsi_host_template = {
->  				  &__val, sizeof(__val)); \
->  	})
->  
-> +
+Il 04/09/2012 16:47, Michael S. Tsirkin ha scritto:
+>> >  static void virtscsi_init_vq(struct virtio_scsi_vq *virtscsi_vq,
+>> > -			     struct virtqueue *vq)
+>> > +			     struct virtqueue *vq, bool affinity)
+>> >  {
+>> >  	spin_lock_init(&virtscsi_vq->vq_lock);
+>> >  	virtscsi_vq->vq = vq;
+>> > +	if (affinity)
+>> > +		virtqueue_set_affinity(vq, virtqueue_get_queue_index(vq) -
+>> > +				       VIRTIO_SCSI_VQ_BASE);
+>> >  }
+>> >  
+> This means in practice if you have less virtqueues than CPUs,
+> things are not going to work well, will they?
 
-Pls don't add empty lines.
+Not particularly.  It could be better or worse than single queue
+depending on the workload.
 
->  static void virtscsi_init_vq(struct virtio_scsi_vq *virtscsi_vq,
-> -			     struct virtqueue *vq)
-> +			     struct virtqueue *vq, bool affinity)
->  {
->  	spin_lock_init(&virtscsi_vq->vq_lock);
->  	virtscsi_vq->vq = vq;
-> +	if (affinity)
-> +		virtqueue_set_affinity(vq, virtqueue_get_queue_index(vq) -
-> +				       VIRTIO_SCSI_VQ_BASE);
->  }
->  
+> Any idea what to do?
 
-This means in practice if you have less virtqueues than CPUs,
-things are not going to work well, will they?
+Two possibilities:
 
-Any idea what to do?
+1) Add a stride argument to virtqueue_set_affinity, and make it equal to
+the number of queues.
 
--- 
-MST
+2) Make multiqueue the default in QEMU, and make the default number of
+queues equal to the number of VCPUs.
+
+I was going for (2).
+
+Paolo
