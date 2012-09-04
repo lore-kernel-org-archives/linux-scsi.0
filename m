@@ -1,41 +1,49 @@
-From: Aaron Lu <aaron.lwe@gmail.com>
-Subject: [PATCH v6 7/7] libata: acpi: respect may_power_off flag
-Date: Tue,  4 Sep 2012 22:24:40 +0800
-Message-ID: <1346768680-7287-8-git-send-email-aaron.lwe@gmail.com>
-References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>, Aaron Lu <aaron.lwe@gmail.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 5/5] virtio-scsi: introduce multiqueue support
+Date: Tue, 04 Sep 2012 16:30:35 +0200
+Message-ID: <5046108B.8030609@redhat.com>
+References: <1346154857-12487-1-git-send-email-pbonzini@redhat.com>
+	<1346154857-12487-6-git-send-email-pbonzini@redhat.com>
+	<20120904124800.GE9805@redhat.com> <504606F6.4080603@redhat.com>
+	<20120904142154.GL9805@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20120904142154.GL9805@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Aaron Lu <aaron.lu@intel.com>
+Il 04/09/2012 16:21, Michael S. Tsirkin ha scritto:
+> > One reason is that, even though in practice I expect roughly the same
+> > number of targets and VCPUs, hotplug means the number of targets is
+> > difficult to predict and is usually fixed to 256.
+> > 
+> > The other reason is that per-target vq didn't give any performance
+> > advantage.  The bonus comes from cache locality and less process
+> > migrations, more than from the independent virtqueues.
+> 
+> Okay, and why is per-target worse for cache locality?
 
-If user does not want the device being powered off when runtime
-suspended by setting may_power_off flag to 0, we will not choose D3 cold
-ACPI D-State for it.
+Because per-target doesn't have IRQ affinity for a particular CPU.
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/ata/libata-acpi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Assuming that the thread that is sending requests to the device is
+I/O-bound, it is likely to be sleeping at the time the ISR is executed,
+and thus executing the ISR on the same processor that sent the requests
+is cheap.
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 6c8f89c..774180d 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -869,7 +869,9 @@ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
- 
- 		if (state.event != PM_EVENT_ON) {
- 			acpi_state = acpi_pm_device_sleep_state(
--				&dev->sdev->sdev_gendev, NULL, ACPI_STATE_D3);
-+				&dev->sdev->sdev_gendev, NULL,
-+				dev->sdev->may_power_off ?
-+				ACPI_STATE_D3_COLD : ACPI_STATE_D3_HOT);
- 			if (acpi_state > 0)
- 				acpi_bus_set_power(handle, acpi_state);
- 			/* TBD: need to check if it's runtime pm request */
--- 
-1.7.11.3
+But if you have many such I/O-bound processes, the kernel will execute
+the ISR on a random processor, rather than the one that is sending
+requests to the device.
 
+Paolo
