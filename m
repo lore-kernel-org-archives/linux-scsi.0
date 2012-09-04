@@ -1,13 +1,13 @@
 From: Aaron Lu <aaron.lwe@gmail.com>
-Subject: [PATCH v6 4/7] libata: acpi: set can_power_off for both ODD and HD
-Date: Tue,  4 Sep 2012 22:24:37 +0800
-Message-ID: <1346768680-7287-5-git-send-email-aaron.lwe@gmail.com>
+Subject: [PATCH v6 5/7] scsi: pm: add may_power_off flag
+Date: Tue,  4 Sep 2012 22:24:38 +0800
+Message-ID: <1346768680-7287-6-git-send-email-aaron.lwe@gmail.com>
 References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-pb0-f46.google.com ([209.85.160.46]:44458 "EHLO
 	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932262Ab2IDOZn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Sep 2012 10:25:43 -0400
+	with ESMTP id S932244Ab2IDOZu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Sep 2012 10:25:50 -0400
 In-Reply-To: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,66 +16,107 @@ Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.
 
 From: Aaron Lu <aaron.lu@intel.com>
 
-Hard disk may also be runtime powered off, so set can_power_off flag
-for it too if condition satisfies.
+Add a new flag may_power_off for scsi device, it gives the user a chance
+to control when the device is runtime suspended, can we remove its power
+if possible.
+
+And if the device can be powered off(reflected by can_power_off flag,
+determined by individual driver), create a sysfs entry named
+may_power_off to let user control the flag.
+
+When user changes this flag through sysfs entry and if the device is
+already runtime suspended, runtime resume it so that it can respect this
+flag next time it is runtime suspended.
+
+I'm planning using this flag for sr and sd.
 
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- drivers/ata/libata-acpi.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+ drivers/scsi/scsi_sysfs.c  | 37 ++++++++++++++++++++++++++++++++++++-
+ include/scsi/scsi_device.h |  1 +
+ 2 files changed, 37 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 64ba43d..6c8f89c 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -1005,7 +1005,7 @@ static void ata_acpi_add_pm_notifier(struct ata_device *dev)
- 	if (ACPI_FAILURE(status))
- 		return;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 093d4f6..8c8efd3 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -509,6 +509,7 @@ sdev_store_##field (struct device *dev, struct device_attribute *attr,	\
+ 	return ret;							\
+ }									\
+ static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_store_##field);
++#endif
  
--	if (dev->sdev->can_power_off) {
-+	if (dev->class == ATA_DEV_ATAPI && dev->sdev->can_power_off) {
- 		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 			ata_acpi_wake_dev, dev);
- 		device_set_run_wake(&dev->sdev->sdev_gendev, true);
-@@ -1026,7 +1026,7 @@ static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
- 	if (ACPI_FAILURE(status))
- 		return;
- 
--	if (dev->sdev->can_power_off) {
-+	if (dev->class == ATA_DEV_ATAPI && dev->sdev->can_power_off) {
- 		device_set_run_wake(&dev->sdev->sdev_gendev, false);
- 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 			ata_acpi_wake_dev);
-@@ -1130,14 +1130,23 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
- 
- 	/*
- 	 * If firmware has _PS3 or _PR3 for this device,
--	 * and this ata ODD device support device attention,
--	 * it means this device can be powered off
-+	 * it means this device can be powered off runtime
- 	 */
- 	states = acpi_dev->power.states;
--	if ((states[ACPI_STATE_D3_HOT].flags.valid ||
--			states[ACPI_STATE_D3_COLD].flags.explicit_set) &&
--			ata_dev->flags & ATA_DFLAG_DA)
--		sdev->can_power_off = 1;
-+	if (states[ACPI_STATE_D3_HOT].flags.valid ||
-+			states[ACPI_STATE_D3_COLD].flags.explicit_set) {
-+		/*
-+		 * For ODD, it needs to support device attention or
-+		 * it can't be powered up back by user
-+		 */
-+		if (ata_dev->class == ATA_DEV_ATAPI &&
-+				ata_dev->flags & ATA_DFLAG_DA)
-+			sdev->can_power_off = 1;
-+
-+		/* No requirement for hard disk */
-+		if (ata_dev->class == ATA_DEV_ATA)
-+			sdev->can_power_off = 1;
-+	}
- 
- 	return 0;
+ /*
+  * scsi_sdev_check_buf_bit: return 0 if buf is "0", return 1 if buf is "1",
+@@ -526,7 +527,7 @@ static int scsi_sdev_check_buf_bit(const char *buf)
+ 	} else
+ 		return -EINVAL;
  }
+-#endif
++
+ /*
+  * Create the actual show/store functions and data structures.
+  */
+@@ -860,6 +861,37 @@ static struct device_attribute sdev_attr_queue_type_rw =
+ 	__ATTR(queue_type, S_IRUGO | S_IWUSR, show_queue_type_field,
+ 	       sdev_store_queue_type_rw);
+ 
++static ssize_t
++sdev_show_may_power_off(struct device *dev, struct device_attribute *attr,
++			char *buf)
++{
++	struct scsi_device *sdev;
++	sdev = to_scsi_device(dev);
++	return snprintf (buf, 20, "%d\n", sdev->may_power_off);
++}
++
++static ssize_t
++sdev_store_may_power_off(struct device *dev, struct device_attribute *attr,
++			 const char *buf, size_t count)
++{
++	int ret;
++	struct scsi_device *sdev;
++
++	ret = scsi_sdev_check_buf_bit(buf);
++	if (ret >= 0) {
++		sdev = to_scsi_device(dev);
++		if (sdev->may_power_off != ret) {
++			sdev->may_power_off = ret;
++			if (pm_runtime_suspended(dev))
++				pm_runtime_resume(dev);
++		}
++		ret = count;
++	}
++	return ret;
++}
++static DEVICE_ATTR(may_power_off, S_IRUGO | S_IWUSR,
++			sdev_show_may_power_off, sdev_store_may_power_off);
++
+ /**
+  * scsi_sysfs_add_sdev - add scsi device to sysfs
+  * @sdev:	scsi_device to add
+@@ -950,6 +982,9 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 		}
+ 	}
+ 
++	if (sdev->can_power_off)
++		device_create_file(&sdev->sdev_gendev, &dev_attr_may_power_off);
++
+ 	return error;
+ }
+ 
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 72d946f..41cec7f 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -157,6 +157,7 @@ struct scsi_device {
+ 	unsigned can_power_off:1; /* Device supports runtime power off */
+ 	unsigned wce_default_on:1;	/* Cache is ON by default */
+ 	unsigned wakeup_by_user:1;	/* User wakes up the device */
++	unsigned may_power_off:1;	/* Power off is allowed by user */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
 -- 
 1.7.11.3
 
