@@ -1,61 +1,144 @@
-From: Marcin Nowakowski <marcin.nowakowski.000@gmail.com>
-Subject: continuous 'Test WP failed, assume Write Enabled' errors
-Date: Tue, 4 Sep 2012 20:34:43 +0100
-Message-ID: <CACdKh3FQGMLVSRErwcpQjty6uF9mi9n_VrrYj6X-v23nHkJ4TA@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 5/5] virtio-scsi: introduce multiqueue support
+Date: Tue, 04 Sep 2012 13:11:06 -0700
+Message-ID: <1346789466.4162.181.camel@haakon2.linux-iscsi.org>
+References: <1346154857-12487-1-git-send-email-pbonzini@redhat.com>
+	<1346154857-12487-6-git-send-email-pbonzini@redhat.com>
+	<1346725294.4162.79.camel@haakon2.linux-iscsi.org>
+	<5045A3B4.2030101@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60164 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753099Ab2IDTen (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Sep 2012 15:34:43 -0400
-Received: by pbbrr13 with SMTP id rr13so9979143pbb.19
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Sep 2012 12:34:43 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <5045A3B4.2030101@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, target-devel <target-devel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
+On Tue, 2012-09-04 at 08:46 +0200, Paolo Bonzini wrote:
+> Il 04/09/2012 04:21, Nicholas A. Bellinger ha scritto:
+> >> @@ -112,6 +118,9 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+> >>  	struct virtio_scsi_cmd *cmd = buf;
+> >>  	struct scsi_cmnd *sc = cmd->sc;
+> >>  	struct virtio_scsi_cmd_resp *resp = &cmd->resp.cmd;
+> >> +	struct virtio_scsi_target_state *tgt = vscsi->tgt[sc->device->id];
+> >> +
+> >> +	atomic_dec(&tgt->reqs);
+> >>  
+> > 
+> > As tgt->tgt_lock is taken in virtscsi_queuecommand_multi() before the
+> > atomic_inc_return(tgt->reqs) check, it seems like using atomic_dec() w/o
+> > smp_mb__after_atomic_dec or tgt_lock access here is not using atomic.h
+> > accessors properly, no..?
+> 
+> No, only a single "thing" is being accessed, and there is no need to
+> order the decrement with respect to preceding or subsequent accesses to
+> other locations.
+> 
+> In other words, tgt->reqs is already synchronized with itself, and that
+> is enough.
+> 
+> (Besides, on x86 smp_mb__after_atomic_dec is a nop).
+> 
 
-That's something that has been bothering me for a while but I hadn't
-got to writing a question about it ...
+So the implementation detail wrt to requests to the same target being
+processed in FIFO ordering + only being able to change the queue when no
+requests are pending helps understand this code more.  Thanks for the
+explanation on that bit..
 
-I can see a stream of the following errors on my desktop
+However, it's still my understanding that the use of atomic_dec() in the
+completion path mean that smp_mb__after_atomic_dec() is a requirement to
+be proper portable atomic.hcode, no..?  Otherwise tgt->regs should be
+using something other than an atomic_t, right..?
 
+> >> +static int virtscsi_queuecommand_multi(struct Scsi_Host *sh,
+> >> +				       struct scsi_cmnd *sc)
+> >> +{
+> >> +	struct virtio_scsi *vscsi = shost_priv(sh);
+> >> +	struct virtio_scsi_target_state *tgt = vscsi->tgt[sc->device->id];
+> >> +	unsigned long flags;
+> >> +	u32 queue_num;
+> >> +
+> >> +	/* Using an atomic_t for tgt->reqs lets the virtqueue handler
+> >> +	 * decrement it without taking the spinlock.
+> >> +	 */
+> >> +	spin_lock_irqsave(&tgt->tgt_lock, flags);
+> >> +	if (atomic_inc_return(&tgt->reqs) == 1) {
+> >> +		queue_num = smp_processor_id();
+> >> +		while (unlikely(queue_num >= vscsi->num_queues))
+> >> +			queue_num -= vscsi->num_queues;
+> >> +		tgt->req_vq = &vscsi->req_vqs[queue_num];
+> >> +	}
+> >> +	spin_unlock_irqrestore(&tgt->tgt_lock, flags);
+> >> +	return virtscsi_queuecommand(vscsi, tgt, sc);
+> >> +}
+> >> +
+> > 
+> > The extra memory barriers to get this right for the current approach are
+> > just going to slow things down even more for virtio-scsi-mq..
+> 
+> virtio-scsi multiqueue has a performance benefit up to 20% (for a single
+> LUN) or 40% (on overall bandwidth across multiple LUNs).  I doubt that a
+> single memory barrier can have that much impact. :)
+> 
 
-[233755.873770] sd 6:0:0:3: [sde] Test WP failed, assume Write Enabled
-[233755.886450] sd 6:0:0:3: [sde] Asking for cache data failed
-[233755.886455] sd 6:0:0:3: [sde] Assuming drive cache: write through
-[233807.297205] sd 6:0:0:0: [sdb] Test WP failed, assume Write Enabled
-[233807.309884] sd 6:0:0:0: [sdb] Asking for cache data failed
-[233807.309890] sd 6:0:0:0: [sdb] Assuming drive cache: write through
-[233859.059886] sd 6:0:0:3: [sde] Test WP failed, assume Write Enabled
-[233859.072563] sd 6:0:0:3: [sde] Asking for cache data failed
-[233859.072569] sd 6:0:0:3: [sde] Assuming drive cache: write through
-[233910.823178] sd 6:0:0:4: [sdf] Test WP failed, assume Write Enabled
+I've no doubt that this series increases the large block high bandwidth
+for virtio-scsi, but historically that has always been the easier
+workload to scale.  ;)
 
-(continues infinitely)
+> The way to go to improve performance even more is to add new virtio APIs
+> for finer control of the usage of the ring.  These should let us avoid
+> copying the sg list and almost get rid of the tgt_lock; even though the
+> locking is quite efficient in virtio-scsi (see how tgt_lock and vq_lock
+> are "pipelined" so as to overlap the preparation of two requests), it
+> should give a nice improvement and especially avoid a kmalloc with small
+> requests.  I may have some time for it next month.
+> 
+> > Jen's approach is what we will ultimately need to re-architect in SCSI
+> > core if we're ever going to move beyond the issues of legacy host_lock,
+> > so I'm wondering if maybe this is the direction that virtio-scsi-mq
+> > needs to go in as well..?
+> 
+> We can see after the block layer multiqueue work goes in...  I also need
+> to look more closely at Jens's changes.
+> 
 
-and also possibly related error when coming out of suspend state
+Yes, I think Jen's new approach is providing some pretty significant
+gains for raw block drivers with extremly high packet (small block
+random I/O) workloads, esp with hw block drivers that support genuine mq
+with hw num_queues > 1.
 
-[233714.179445] ata1: link is slow to respond, please be patient (ready=0)
-[233718.792644] ata1: COMRESET failed (errno=-16)
-[233719.821109] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[233719.961354] ata1.00: configured for UDMA/133
-[233719.980924] sd 0:0:0:0: [sda] Starting disk
-[233719.988158] PM: resume of devices complete after 11241.539 msecs
-[233719.988206] PM: resume devices took 11.240 seconds
-[233719.988207] ------------[ cut here ]------------
-[233719.988211] WARNING: at kernel/power/suspend_test.c:53
-suspend_test_finish+0x86/0x90()
-[233719.988212] Hardware name: Aspire M3920
-[233719.988213] Component: resume devices, time: 11240
+He also has virtio-blk converted to run in num_queues=1 mode.
 
-I'm currently running Ubuntu 12.04 using an upstream kernel 3.5.
+> Have you measured the host_lock to be a bottleneck in high-iops
+> benchmarks, even for a modern driver that does not hold it in
+> queuecommand?  (Certainly it will become more important as the
+> virtio-scsi queuecommand becomes thinner and thinner).
 
-I'm not familiar with the scsi subsystem at all, but I can help anyone
-familiar with such problems with debugging - and hopefully solving -
-this problem.
+This is exactly why it would make such a good vehicle to re-architect
+SCSI core.  I'm thinking it can be the first sw LLD we attempt to get
+running on an (currently) future scsi-mq prototype.
 
-thanks
-Marcin
+>   If so, we can
+> start looking at limiting host_lock usage in the fast path.
+> 
+
+That would be a good incremental step for SCSI core, but I'm not sure
+that that we'll be able to scale compared to blk-mq without a
+new-approach for sw/hw LLDs along the lines of what Jen's is doing.
+
+> BTW, supporting this in tcm-vhost should be quite trivial, as all the
+> request queues are the same and all serialization is done in the
+> virtio-scsi driver.
+> 
+
+Looking forward to that too..  ;)
