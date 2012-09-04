@@ -1,99 +1,72 @@
-From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH 1/8] zfcp: Adapt to new FC_PORTSPEED semantics
-Date: Tue, 04 Sep 2012 15:23:29 +0200
-Message-ID: <20120904132348.304927022@linux.vnet.ibm.com>
-References: <20120904132328.564402930@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e06smtp10.uk.ibm.com ([195.75.94.106]:34838 "EHLO
-	e06smtp10.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932202Ab2IDNaA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Sep 2012 09:30:00 -0400
-Received: from /spool/local
-	by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-	Tue, 4 Sep 2012 14:29:58 +0100
-Content-Disposition: inline; filename=705-zfcp-adapt-to-new-FC_PORTSPEED-semantics.patch
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH 5/5] virtio-scsi: introduce multiqueue support
+Date: Tue, 4 Sep 2012 16:35:43 +0300
+Message-ID: <20120904133543.GF9805@redhat.com>
+References: <1346154857-12487-1-git-send-email-pbonzini@redhat.com>
+	<1346154857-12487-6-git-send-email-pbonzini@redhat.com>
+	<1346725294.4162.79.camel@haakon2.linux-iscsi.org>
+	<5045A3B4.2030101@redhat.com> <20120904084628.GA8437@redhat.com>
+	<5045D6FF.5020801@redhat.com> <20120904110905.GA9119@redhat.com>
+	<5045E387.4030103@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <5045E387.4030103@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, target-devel <target-devel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, stable@vger.kernel.org
 
-From: Steffen Maier <maier@linux.vnet.ibm.com>
+On Tue, Sep 04, 2012 at 01:18:31PM +0200, Paolo Bonzini wrote:
+> Il 04/09/2012 13:09, Michael S. Tsirkin ha scritto:
+> >> >     queuecommand on CPU #0         queuecommand #2 on CPU #1
+> >> >   --------------------------------------------------------------
+> >> >     atomic_inc_return(...) == 1
+> >> >                                    atomic_inc_return(...) == 2
+> >> >                                    virtscsi_queuecommand to queue #1
+> >> >     tgt->req_vq = queue #0
+> >> >     virtscsi_queuecommand to queue #0
+> >> > 
+> >> > then two requests are issued to different queues without a quiescent
+> >> > point in the middle.
+> > What happens then? Does this break correctness?
+> 
+> Yes, requests to the same target should be processed in FIFO order, or
+> you have things like a flush issued before the write it was supposed to
+> flush.  This is why I can only change the queue when there is no request
+> pending.
+> 
+> Paolo
 
-Commit a9277e7783651d4e0a849f7988340b1c1cf748a4
-"[SCSI] scsi_transport_fc: Getting FC Port Speed in sync with FC-GS"
-changed the semantics of FC_PORTSPEED defines to
-FDMI port attributes of FC-HBA/SM-HBA
-which is different from the previous bit reversed
-Report Port Speed Capabilities (RPSC) ELS of FC-GS/FC-LS.
+I see.  I guess you can rewrite this as:
+atomic_inc
+if (atomic_read() == 1)
+which is a bit cheaper, and make the fact
+that you do not need increment and return to be atomic,
+explicit.
 
-Zfcp showed "10 Gbit" instead of "4 Gbit" for supported_speeds.
-It now uses explicit bit conversion as the other LLDs already
-do, in order to be independent of the kernel bit semantics.
-See also http://marc.info/?l=linux-scsi&m=134452926830730&w=2
+Another simple idea: store last processor id in target,
+if it is unchanged no need to play with req_vq
+and take spinlock.
 
-Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Reviewed-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Cc: <stable@vger.kernel.org> #3.4+
----
- drivers/s390/scsi/zfcp_fsf.c |   34 ++++++++++++++++++++++++++++++++--
- 1 file changed, 32 insertions(+), 2 deletions(-)
+Also - some kind of comment explaining why a similar race can not happen
+with this lock in place would be nice: I see why this specific race can
+not trigger but since lock is dropped later before you submit command, I
+have hard time convincing myself what exactly gurantees that vq is never
+switched before or even while command is submitted.
 
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -437,6 +437,34 @@ void zfcp_fsf_req_dismiss_all(struct zfc
- 	}
- }
- 
-+#define ZFCP_FSF_PORTSPEED_1GBIT	(1 <<  0)
-+#define ZFCP_FSF_PORTSPEED_2GBIT	(1 <<  1)
-+#define ZFCP_FSF_PORTSPEED_4GBIT	(1 <<  2)
-+#define ZFCP_FSF_PORTSPEED_10GBIT	(1 <<  3)
-+#define ZFCP_FSF_PORTSPEED_8GBIT	(1 <<  4)
-+#define ZFCP_FSF_PORTSPEED_16GBIT	(1 <<  5)
-+#define ZFCP_FSF_PORTSPEED_NOT_NEGOTIATED (1 << 15)
-+
-+static u32 zfcp_fsf_convert_portspeed(u32 fsf_speed)
-+{
-+	u32 fdmi_speed = 0;
-+	if (fsf_speed & ZFCP_FSF_PORTSPEED_1GBIT)
-+		fdmi_speed |= FC_PORTSPEED_1GBIT;
-+	if (fsf_speed & ZFCP_FSF_PORTSPEED_2GBIT)
-+		fdmi_speed |= FC_PORTSPEED_2GBIT;
-+	if (fsf_speed & ZFCP_FSF_PORTSPEED_4GBIT)
-+		fdmi_speed |= FC_PORTSPEED_4GBIT;
-+	if (fsf_speed & ZFCP_FSF_PORTSPEED_10GBIT)
-+		fdmi_speed |= FC_PORTSPEED_10GBIT;
-+	if (fsf_speed & ZFCP_FSF_PORTSPEED_8GBIT)
-+		fdmi_speed |= FC_PORTSPEED_8GBIT;
-+	if (fsf_speed & ZFCP_FSF_PORTSPEED_16GBIT)
-+		fdmi_speed |= FC_PORTSPEED_16GBIT;
-+	if (fsf_speed & ZFCP_FSF_PORTSPEED_NOT_NEGOTIATED)
-+		fdmi_speed |= FC_PORTSPEED_NOT_NEGOTIATED;
-+	return fdmi_speed;
-+}
-+
- static int zfcp_fsf_exchange_config_evaluate(struct zfcp_fsf_req *req)
- {
- 	struct fsf_qtcb_bottom_config *bottom = &req->qtcb->bottom.config;
-@@ -456,7 +484,8 @@ static int zfcp_fsf_exchange_config_eval
- 	fc_host_port_name(shost) = nsp->fl_wwpn;
- 	fc_host_node_name(shost) = nsp->fl_wwnn;
- 	fc_host_port_id(shost) = ntoh24(bottom->s_id);
--	fc_host_speed(shost) = bottom->fc_link_speed;
-+	fc_host_speed(shost) =
-+		zfcp_fsf_convert_portspeed(bottom->fc_link_speed);
- 	fc_host_supported_classes(shost) = FC_COS_CLASS2 | FC_COS_CLASS3;
- 
- 	adapter->hydra_version = bottom->adapter_type;
-@@ -580,7 +609,8 @@ static void zfcp_fsf_exchange_port_evalu
- 	} else
- 		fc_host_permanent_port_name(shost) = fc_host_port_name(shost);
- 	fc_host_maxframe_size(shost) = bottom->maximum_frame_size;
--	fc_host_supported_speeds(shost) = bottom->supported_speed;
-+	fc_host_supported_speeds(shost) =
-+		zfcp_fsf_convert_portspeed(bottom->supported_speed);
- 	memcpy(fc_host_supported_fc4s(shost), bottom->supported_fc4_types,
- 	       FC_FC4_LIST_SIZE);
- 	memcpy(fc_host_active_fc4s(shost), bottom->active_fc4_types,
 
+
+
+-- 
+MST
