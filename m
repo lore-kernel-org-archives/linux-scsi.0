@@ -1,61 +1,29 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
-Date: Wed, 5 Sep 2012 12:08:25 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1209051154400.1837-100000@iolanthe.rowland.org>
-References: <20120905152251.GA2794@localhost.localdomain>
+From: Stephen Hemminger <shemminger@vyatta.com>
+Subject: Re: [V2 PATCH 1/9] csiostor: Chelsio FCoE offload driver submission
+ (sources part 1).
+Date: Wed, 5 Sep 2012 09:23:26 -0700
+Message-ID: <20120905092326.0a54226f@nehalam.linuxnetplumber.net>
+References: <1346848442-4573-1-git-send-email-naresh@chelsio.com>
+	<1346848442-4573-2-git-send-email-naresh@chelsio.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120905152251.GA2794@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lwe@gmail.com>
-Cc: Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.vyatta.com ([76.74.103.46]:39618 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751999Ab2IEQXy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Sep 2012 12:23:54 -0400
+In-Reply-To: <1346848442-4573-2-git-send-email-naresh@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, dm@chelsio.com, leedom@chelsio.com, netdev@vger.kernel.org, chethan@chelsio.com
 
-On Wed, 5 Sep 2012, Aaron Lu wrote:
+On Wed,  5 Sep 2012 18:03:54 +0530
+Naresh Kumar Inna <naresh@chelsio.com> wrote:
 
-> > > > That flag is badly named. Something like "insert_event_during_suspend"
-> > > > would be better.
-> 
-> This flag means, the reason the device gets runtime resumed is due to
-> user as described by the above situation 2, not by software(e.g. by
-> sr_check_events).
-> 
-> I don't quite understand insert_event_during_suspend mean here...
+> +
+> +/* FCoE Adapter types & its description */
+> +static struct csio_adap_desc csio_fcoe_adapters[] = {
 
-It means: An insert event occurred while the device was suspended.
-
-> > > >  And even so I don't see why you wouldn't
-> > > > want to suspend for example a drive with an inserted but unopened disk.
-> > > 
-> > > I assume that Aaron wanted to handle the easiest case first.  Adding 
-> > > suspend/resume handling to the open/close routines can be done later.
-> > 
-> > Sure, but this patch blocks that in contrast to just not implementing it.
-> 
-> It's already implemented. I did it in scsi_cd_get/put.
-> 
-> And the reason I didn't allow runtime suspend for medium inside and door
-> closed case are:
-> 1 ZPODD has a spec and it didn't allow that;
-
-In theory we should allow runtime suspend in this case too, but leave 
-the power on.  (Although in practice, turning the power off would 
-probably work even though it may violate the spec.)
-
-> 2 It's not easy to implement. Imagine user just inserts a disc, and the
-> sr_suspend routine checks that door is closed so that it wants to
-> suspend the device. But actually, after user just inserts a disc, he
-> definitely wants to use the device, so it's not a good thing to do. And
-> if ZPODD is used, the device will be powered off instantly when the door
-> is closed, this is not good.
-
-That's why we have an autosuspend delay.  Although for some reason the 
-SCSI subsystem doesn't use it currently...  We need to add a call to 
-pm_runtime_use_autosuspend() in scsi_sysfs_add_sdev().  Likewise, the 
-pm_schedule_suspend() call in scsi_runtime_idle() should be changed to 
-pm_runtime_autosuspend().  And there should be calls to 
-pm_runtime_set_autosuspend_delay() in the sd and sr drivers.
-
-Alan Stern
-
+Tables like this should be const.
