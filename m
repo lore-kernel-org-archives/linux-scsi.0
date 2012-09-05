@@ -1,40 +1,47 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v6 5/7] scsi: pm: add may_power_off flag
-Date: Thu, 6 Sep 2012 09:52:01 +0800
-Message-ID: <20120906015200.GA1866@mint-spring.sh.intel.com>
-References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
- <1346768680-7287-6-git-send-email-aaron.lwe@gmail.com>
- <1539628.e0bNDi5Td8@linux-lqwf.site>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 1/5] virtio-ring: move queue_index to vring_virtqueue
+Date: Thu, 06 Sep 2012 09:02:24 +0930
+Message-ID: <877gs8jbav.fsf@rustcorp.com.au>
+References: <1346154857-12487-1-git-send-email-pbonzini@redhat.com>
+	<1346154857-12487-2-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1539628.e0bNDi5Td8@linux-lqwf.site>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1346154857-12487-2-git-send-email-pbonzini@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org
+Cc: virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Sep 04, 2012 at 06:01:22PM +0200, Oliver Neukum wrote:
-> On Tuesday 04 September 2012 22:24:38 Aaron Lu wrote:
-> > From: Aaron Lu <aaron.lu@intel.com>
-> > 
-> > Add a new flag may_power_off for scsi device, it gives the user a chance
-> > to control when the device is runtime suspended, can we remove its power
-> > if possible.
-> > 
-> > And if the device can be powered off(reflected by can_power_off flag,
-> > determined by individual driver), create a sysfs entry named
-> > may_power_off to let user control the flag.
-> 
-> Do we really need yet another interface to user space?
+Paolo Bonzini <pbonzini@redhat.com> writes:
 
-We do not have a way to let user decide when device is runtime
-suspended, can we remove its power, so I added this flag. PCI subsystem
-has a similar flag named d3cold_allowed.
+> From: Jason Wang <jasowang@redhat.com>
+>
+> Instead of storing the queue index in transport-specific virtio structs,
+> this patch moves them to vring_virtqueue and introduces an helper to get
+> the value.  This lets drivers simplify their management and tracing of
+> virtqueues.
+>
+> Signed-off-by: Jason Wang <jasowang@redhat.com>
+> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 
-This flag can disable the power off of ZPODD capable devices, or put a
-rotational disk into powered off if user so choose.
+Sorry for the delay, I was at Kernel Summit and am only now actually
+reading (vs skimming) my backlog.
 
-Thanks,
-Aaron
+Putting it in vring_virtqueue rather than virtqueue seems weird, though.
+But I've applied as-is, we can clean up that later if we want (probably
+by merging the two structures, I'll have to think harder on that).
+
+Acked-by: Rusty Russell <rusty@rustcorp.com.au>
+
+Cheers,
+Rusty.
