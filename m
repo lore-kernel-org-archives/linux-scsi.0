@@ -1,29 +1,73 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: Fix off-by-one bug when unmapping region
-Date: Wed, 05 Sep 2012 15:41:13 -0400
-Message-ID: <5047AAD9.90106@interlog.com>
-References: <1345127925-32042-1-git-send-email-lczerner@redhat.com> <yq1d32ph515.fsf@sermon.lab.mkp.net>
-Reply-To: dgilbert@interlog.com
+From: Ric Wheeler <ricwheeler@gmail.com>
+Subject: Re: [Ping^3] Re: [PATCH] sg_io: allow UNMAP and WRITE SAME without
+ CAP_SYS_RAWIO
+Date: Wed, 05 Sep 2012 16:18:21 -0400
+Message-ID: <5047B38D.9000607@gmail.com>
+References: <1342801801-15617-1-git-send-email-pbonzini@redhat.com> <50195108.1090105@redhat.com> <503CA5BA.2040003@redhat.com> <50476480.9010302@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1d32ph515.fsf@sermon.lab.mkp.net>
+In-Reply-To: <50476480.9010302@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Lukas Czerner <lczerner@redhat.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, tytso@mit.edu, pbonzini@redhat.com, linux-kernel@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: axboe@kernel.dk, Mike Snitzer <snitzer@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 12-08-17 12:11 PM, Martin K. Petersen wrote:
->>>>>> "Lukas" == Lukas Czerner <lczerner@redhat.com> writes:
+On 09/05/2012 10:41 AM, Paolo Bonzini wrote:
+> Il 28/08/2012 13:04, Paolo Bonzini ha scritto:
+>> Il 01/08/2012 17:53, Paolo Bonzini ha scritto:
+>>> Il 20/07/2012 18:30, Paolo Bonzini ha scritto:
+>>>> These commands cannot be issued right now without giving CAP_SYS_RAWIO to
+>>>> the process who wishes to send them.  These commands can be useful also to
+>>>> non-privileged programs who have access to the block devices.  For example
+>>>> a virtual machine monitor needs them to forward trim/discard to host disks.
+>>>>
+>>>> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+>>>> ---
+>>>>   block/scsi_ioctl.c |    3 ++
+>>>>   1 files changed, 3 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+>>>> index 260fa80..dd71f18 100644
+>>>> --- a/block/scsi_ioctl.c
+>>>> +++ b/block/scsi_ioctl.c
+>>>> @@ -168,13 +168,16 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+>>>>   	/* Basic writing commands */
+>>>>   	__set_bit(WRITE_6, filter->write_ok);
+>>>>   	__set_bit(WRITE_10, filter->write_ok);
+>>>> +	__set_bit(WRITE_SAME, filter->write_ok);
+>>>>   	__set_bit(WRITE_VERIFY, filter->write_ok);
+>>>>   	__set_bit(WRITE_12, filter->write_ok);
+>>>>   	__set_bit(WRITE_VERIFY_12, filter->write_ok);
+>>>>   	__set_bit(WRITE_16, filter->write_ok);
+>>>> +	__set_bit(WRITE_SAME_16, filter->write_ok);
+>>>>   	__set_bit(WRITE_LONG, filter->write_ok);
+>>>>   	__set_bit(WRITE_LONG_2, filter->write_ok);
+>>>>   	__set_bit(ERASE, filter->write_ok);
+>>>> +	__set_bit(UNMAP, filter->write_ok);
+>>>>   	__set_bit(GPCMD_MODE_SELECT_10, filter->write_ok);
+>>>>   	__set_bit(MODE_SELECT, filter->write_ok);
+>>>>   	__set_bit(LOG_SELECT, filter->write_ok);
+>>>>
+>>> Jens,
+>>>
+>>> can this go in 3.6 as well?
+>> Another ping...
+> Ping & adding some more folks hoping to get a Reviewed-by or to be
+> screamed at.
 >
-> Lukas> Currently it is possible to unmap one more block than user
-> Lukas> requested to due to the off-by-one error in unmap_region(). This
-> Lukas> is probably due to the fact that the end variable despite its
-> Lukas> name actually points to the last block to unmap + 1. However in
-> Lukas> the condition it is handled as the last block of the region to
-> Lukas> unmap.
->
-> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Paolo
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Hi Paolo,
+
+Both of these commands are destructive. WRITE_SAME (if done without the discard 
+bits set) can also take a very long time to be destructive and tie up the storage.
+
+I think that restricting them to CAP_SYS_RAWIO seems reasonable - better to vet 
+and give the appropriate apps the needed capability than to widely open up the 
+safety check?
+
+thanks!
+
+Ric
