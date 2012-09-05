@@ -1,78 +1,58 @@
-From: Aaron Lu <aaron.lwe@gmail.com>
-Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
-Date: Thu, 6 Sep 2012 06:49:13 +0800
-Message-ID: <20120905224912.GA1443@localhost.localdomain>
-References: <20120905152251.GA2794@localhost.localdomain>
- <Pine.LNX.4.44L0.1209051154400.1837-100000@iolanthe.rowland.org>
+From: Stephen Hemminger <shemminger@vyatta.com>
+Subject: Re: [V2 PATCH 2/9] csiostor: Chelsio FCoE offload driver submission
+ (sources part 2).
+Date: Wed, 5 Sep 2012 15:59:56 -0700
+Message-ID: <20120905155956.561b172d@nehalam.linuxnetplumber.net>
+References: <1346848442-4573-1-git-send-email-naresh@chelsio.com>
+	<1346848442-4573-3-git-send-email-naresh@chelsio.com>
+	<20120905092957.7d24187e@nehalam.linuxnetplumber.net>
+	<50478F52.208@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:41802 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759768Ab2IEWtU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Sep 2012 18:49:20 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1209051154400.1837-100000@iolanthe.rowland.org>
+Received: from mail.vyatta.com ([76.74.103.46]:49685 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759760Ab2IEXAY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Sep 2012 19:00:24 -0400
+In-Reply-To: <50478F52.208@chelsio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
+To: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Chethan Seshadri <chethan@chelsio.com>
 
-On Wed, Sep 05, 2012 at 12:08:25PM -0400, Alan Stern wrote:
-> On Wed, 5 Sep 2012, Aaron Lu wrote:
-> 
-> > > > > That flag is badly named. Something like "insert_event_during_suspend"
-> > > > > would be better.
+On Wed, 5 Sep 2012 23:13:46 +0530
+Naresh Kumar Inna <naresh@chelsio.com> wrote:
+
+> On 9/5/2012 9:59 PM, Stephen Hemminger wrote:
+> > On Wed,  5 Sep 2012 18:03:55 +0530
+> > Naresh Kumar Inna <naresh@chelsio.com> wrote:
 > > 
-> > This flag means, the reason the device gets runtime resumed is due to
-> > user as described by the above situation 2, not by software(e.g. by
-> > sr_check_events).
+> >> This patch contains code for driver initialization, driver resource
+> >> allocation and the Work Request module functionality. Driver initialization
+> >> includes module entry/exit points, registration with PCI, FC transport and
+> >> SCSI mid layer subsystems. The Work Request module provides services for
+> >> allocation of DMA queues, posting Work Requests on them and processing
+> >> completions.
+> >>
+> >> Signed-off-by: Naresh Kumar Inna <naresh@chelsio.com>
 > > 
-> > I don't quite understand insert_event_during_suspend mean here...
+> > Although the comments say you are using proc fs, there is no
+> > code here related to that.
 > 
-> It means: An insert event occurred while the device was suspended.
-
-Thanks, I got it now.
-
+> I will remove that comment.
 > 
-> > > > >  And even so I don't see why you wouldn't
-> > > > > want to suspend for example a drive with an inserted but unopened disk.
-> > > > 
-> > > > I assume that Aaron wanted to handle the easiest case first.  Adding 
-> > > > suspend/resume handling to the open/close routines can be done later.
-> > > 
-> > > Sure, but this patch blocks that in contrast to just not implementing it.
 > > 
-> > It's already implemented. I did it in scsi_cd_get/put.
+> > Any use of debugfs must be conditional the DEBUG_FS kernel configuration
+> > parameter.  Your code probably will break if DEBUG_FS is not
+> > enabled.  For a possible alternative see how a sub-config parameter
+> > was added in sky2 driver.
 > > 
-> > And the reason I didn't allow runtime suspend for medium inside and door
-> > closed case are:
-> > 1 ZPODD has a spec and it didn't allow that;
 > 
-> In theory we should allow runtime suspend in this case too, but leave 
-> the power on.  (Although in practice, turning the power off would 
-> probably work even though it may violate the spec.)
+> It appears that debugfs_create_dir() returns an error if DEBUG_FS is not
+> enabled. Considering the driver handles this error and continues
+> initialization, do you still think I should guard this code within DEBUG_FS?
 > 
+> Thanks.
 
-Agree. But it's not easy to implement with autosuspend.
-Please see below.
-
-> > 2 It's not easy to implement. Imagine user just inserts a disc, and the
-> > sr_suspend routine checks that door is closed so that it wants to
-> > suspend the device. But actually, after user just inserts a disc, he
-> > definitely wants to use the device, so it's not a good thing to do. And
-> > if ZPODD is used, the device will be powered off instantly when the door
-> > is closed, this is not good.
-> 
-> That's why we have an autosuspend delay.  Although for some reason the 
-> SCSI subsystem doesn't use it currently...  We need to add a call to 
-> pm_runtime_use_autosuspend() in scsi_sysfs_add_sdev().  Likewise, the 
-> pm_schedule_suspend() call in scsi_runtime_idle() should be changed to 
-> pm_runtime_autosuspend().  And there should be calls to 
-> pm_runtime_set_autosuspend_delay() in the sd and sr drivers.
-
-I tried to use autosuspend when preparing the patch, but the fact that
-the devices will be polled every 2 seconds make it impossible to enter
-suspend state if the autosuspend delay is larger than that.
-
--Aaron
+That works, just make sure and test it.
