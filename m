@@ -1,51 +1,73 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH 2/5] virtio: introduce an API to set affinity for a
-	virtqueue
-Date: Thu, 06 Sep 2012 09:02:04 +0930
-Message-ID: <878vcojbbf.fsf@rustcorp.com.au>
-References: <1346154857-12487-1-git-send-email-pbonzini@redhat.com>
-	<1346154857-12487-3-git-send-email-pbonzini@redhat.com>
+From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+Subject: [PATCH] isci: Allow SSP tasks into the task management path.
+Date: Wed, 05 Sep 2012 21:36:47 -0700
+Message-ID: <20120906043646.30186.87623.stgit@jdskirvi-devbox.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1346154857-12487-3-git-send-email-pbonzini@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org
-Cc: virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:21972 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750829Ab2IFERv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Sep 2012 00:17:51 -0400
+Received: from jdskirvi-devbox.ch.intel.com (localhost [IPv6:::1])
+	by jdskirvi-devbox.ch.intel.com (Postfix) with ESMTP id 3F8DB400DC
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Sep 2012 21:36:47 -0700 (MST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Paolo Bonzini <pbonzini@redhat.com> writes:
+This commit fixes a driver bug for SSP tasks that require task management
+in the target after they complete in the SCU hardware.  The problem was
+manifested in the function "isci_task_abort_task", which tests
+to see if the sas_task.lldd_task is non-NULL before allowing task
+management; this bug would always NULL lldd_task in the SCU I/O completion
+path even if target management was required, which would prevent
+task / target manangement from happening.
 
-> From: Jason Wang <jasowang@redhat.com>
->
-> Sometimes, virtio device need to configure irq affinity hint to maximize the
-> performance. Instead of just exposing the irq of a virtqueue, this patch
-> introduce an API to set the affinity for a virtqueue.
->
-> The api is best-effort, the affinity hint may not be set as expected due to
-> platform support, irq sharing or irq type. Currently, only pci method were
-> implemented and we set the affinity according to:
->
-> - if device uses INTX, we just ignore the request
-> - if device has per vq vector, we force the affinity hint
-> - if the virtqueues share MSI, make the affinity OR over all affinities
->   requested
->
-> Signed-off-by: Jason Wang <jasowang@redhat.com>
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Note that in the case of SATA/STP targets, error recovery is provided by
+the libata error handler which is why SATA/STP device recovery worked
+correctly even though SSP handling did not.
 
-Applied, thanks.
+Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+---
 
-Acked-by: Rusty Russell <rusty@rustcorp.com.au>
+ drivers/scsi/isci/host.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-Cheers,
-Rusty.
+diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
+index 45385f5..446fdd8 100644
+--- a/drivers/scsi/isci/host.c
++++ b/drivers/scsi/isci/host.c
+@@ -1079,7 +1079,6 @@ static void sci_controller_completion_handler(struct isci_host *ihost)
+ 
+ void ireq_done(struct isci_host *ihost, struct isci_request *ireq, struct sas_task *task)
+ {
+-	task->lldd_task = NULL;
+ 	if (!test_bit(IREQ_ABORT_PATH_ACTIVE, &ireq->flags) &&
+ 	    !(task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+ 		if (test_bit(IREQ_COMPLETE_IN_TARGET, &ireq->flags)) {
+@@ -1087,16 +1086,19 @@ void ireq_done(struct isci_host *ihost, struct isci_request *ireq, struct sas_ta
+ 			dev_dbg(&ihost->pdev->dev,
+ 				"%s: Normal - ireq/task = %p/%p\n",
+ 				__func__, ireq, task);
+-
++			task->lldd_task = NULL;
+ 			task->task_done(task);
+ 		} else {
+ 			dev_dbg(&ihost->pdev->dev,
+ 				"%s: Error - ireq/task = %p/%p\n",
+ 				__func__, ireq, task);
+-
++			if (sas_protocol_ata(task->task_proto))
++				task->lldd_task = NULL;
+ 			sas_task_abort(task);
+ 		}
+-	}
++	} else
++		task->lldd_task = NULL;
++
+ 	if (test_and_clear_bit(IREQ_ABORT_PATH_ACTIVE, &ireq->flags))
+ 		wake_up_all(&ihost->eventq);
+ 
+
