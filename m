@@ -1,48 +1,63 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
-Date: Thu, 6 Sep 2012 14:50:32 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1209061437050.1182-100000@iolanthe.rowland.org>
-References: <1670507.4ddqykZP6b@linux-lqwf.site>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] Fix a use-after-free triggered by device removal
+Date: Thu, 06 Sep 2012 20:52:09 +0200
+Message-ID: <5048F0D9.6080403@acm.org>
+References: <5044BAD2.7060901@acm.org> <91D94272-CA62-4E68-87D7-CE77DE776CC9@cs.wisc.edu> <5048E45E.1070302@acm.org> <5048E80B.5010101@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1670507.4ddqykZP6b@linux-lqwf.site>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from juliette.telenet-ops.be ([195.130.137.74]:40455 "EHLO
+	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753788Ab2IFSwM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Sep 2012 14:52:12 -0400
+In-Reply-To: <5048E80B.5010101@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-On Thu, 6 Sep 2012, Oliver Neukum wrote:
-
-> > > > But in the long run that wouldn't be a good solution.  What I'd really 
-> > > > like is a way to do the status polling without having it reset the 
-> > > > idle timer.
-> > > > 
-> > > > Oliver, what do you think?  Would that be a good solution?
-> > > 
-> > > Well, we could introduce a flag into the requests for the polls.
-> > > But best would be to simply declare a device immediately idle
-> > > as soon as we learn that it has no medium. No special casing
-> > > would be needed.
-> > 
-> > We could do that, but what about idle drives that do have media?
+On 09/06/12 20:14, Mike Christie wrote:
+> On 09/06/2012 12:58 PM, Bart Van Assche wrote:
+>> _suOn 09/06/12 18:27, Michael Christie wrote:
+>>> On Sep 3, 2012, at 9:12 AM, Bart Van Assche <bvanassche@acm.org> wrote:
+>>>> If the put_device() call in scsi_request_fn() drops the sdev refcount
+>>>> to zero then the spin_lock() call after the put_device() call triggers
+>>>> a use-after-free. Avoid that by making sure that blk_cleanup_queue()
+>>>> can only finish after all active scsi_request_fn() calls have returned.
+>>>
+>>> If we have this patch http://marc.info/?l=linux-scsi&m=134453905402413&w=2
+>>> it seems we have all the scsi layer callers of the request_fn/
+>>> *blk_run_queue holding a reference to the device when they make the call.
+>>> Right, or are there some other places missing?
+>>>
+>>> What are the other places we can call the request_fn without already
+>>> holding a reference to the device? Is it the block layer? Is that why we
+>>> need this patch?
+>>
+>> The purpose of this patch is indeed to make *blk_run_queue() calls from
+>> the block layer safe. There are several direct or indirect
+>> *blk_run_queue() calls in the block layer where a reference on the queue
+>> is held but not on the sdev, e.g. in the md, dm and bsg drivers.
 > 
-> Then we do have a problem. To handle this optimally we'd have to make
-> a difference between the first time a new medium is noticed and later
-> polls.
+> Is there a race still? If some blk code is calling blk_run_queue
+> (waiting on the queue lock) but no IO is queued,
+> blk_drain_queue/blk_cleanup_queue could complete since the drain
+> counters are zero. Then blk_run_queue could grab the queue lock and call
+> the request_fn on a freed scsi_device (sdev pointed to by q->queuedata
+> would be freed so scsi_reuqest_fn would be freed).
+> 
+> Do we need a check in __blk_run_queue for QUEUE_FLAG_DEAD (if dead then
+> fail IO?), or do we need a check in scsi_request_fn for this. A dead
+> queue check or maybe null q->queuedata in
+> scsi_device_dev_release_usercontext (do this with the queue lock held),
+> then check for null q->queuedata in scsi_request_fn?
 
-That's right.  It shouldn't be too difficult to accomplish.
+Yet another scenario is that scsi_remove_host() gets invoked and
+finishes after scsi_request_fn() has unlocked the queue and before it
+locks the queue again. That's a scenario that can't be handled by adding
+more checks at the start of __blk_run_queue() or scsi_request_fn().
 
-One case to watch out for is a ZPODD with no media and an open door.  
-We should put the drive into runtime suspend immediately, but continue
-polling and leave the power on.  The runtime suspend after each poll
-will to see if the door is shut; when it is then polling can be turned
-off and power removed.
+Bart.
 
-This leads to a question: How should the sr device tell its parent 
-whether or not to turn off the power?  Aaron's current patches simply 
-rely on the device being runtime suspended, but that won't work with 
-this scheme.  Do we need a "ready_to_power_down" flag?
-
-Alan Stern
 
