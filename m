@@ -1,52 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: use list_move_tail instead of
- list_del/list_add_tail
-Date: Wed, 05 Sep 2012 17:30:24 -0700
-Message-ID: <1346891424.4162.316.camel@haakon2.linux-iscsi.org>
-References: <CAPgLHd9tGyUzBdbNzorncaa57RFD-YO06tz3UCffuXXxgLDdyg@mail.gmail.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v6 5/7] scsi: pm: add may_power_off flag
+Date: Thu, 6 Sep 2012 09:52:01 +0800
+Message-ID: <20120906015200.GA1866@mint-spring.sh.intel.com>
+References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
+ <1346768680-7287-6-git-send-email-aaron.lwe@gmail.com>
+ <1539628.e0bNDi5Td8@linux-lqwf.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAPgLHd9tGyUzBdbNzorncaa57RFD-YO06tz3UCffuXXxgLDdyg@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: bootc@bootc.net, yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1539628.e0bNDi5Td8@linux-lqwf.site>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-09-05 at 14:42 +0800, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Tue, Sep 04, 2012 at 06:01:22PM +0200, Oliver Neukum wrote:
+> On Tuesday 04 September 2012 22:24:38 Aaron Lu wrote:
+> > From: Aaron Lu <aaron.lu@intel.com>
+> > 
+> > Add a new flag may_power_off for scsi device, it gives the user a chance
+> > to control when the device is runtime suspended, can we remove its power
+> > if possible.
+> > 
+> > And if the device can be powered off(reflected by can_power_off flag,
+> > determined by individual driver), create a sysfs entry named
+> > may_power_off to let user control the flag.
 > 
-> Using list_move_tail() instead of list_del() + list_add_tail().
-> 
-> spatch with a semantic match is used to found this problem.
-> (http://coccinelle.lip6.fr/)
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->  drivers/target/sbp/sbp_target.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
-> index 39ddba5..e57971f 100644
-> --- a/drivers/target/sbp/sbp_target.c
-> +++ b/drivers/target/sbp/sbp_target.c
-> @@ -660,8 +660,7 @@ static void session_reconnect_expired(struct sbp_session *sess)
->  	spin_lock_bh(&sess->lock);
->  	list_for_each_entry_safe(login, temp, &sess->login_list, link) {
->  		login->sess = NULL;
-> -		list_del(&login->link);
-> -		list_add_tail(&login->link, &login_list);
-> +		list_move_tail(&login->link, &login_list);
->  	}
->  	spin_unlock_bh(&sess->lock);
->  
-> 
-> 
-> --
+> Do we really need yet another interface to user space?
 
-Applied to target-pending/for-next.
+We do not have a way to let user decide when device is runtime
+suspended, can we remove its power, so I added this flag. PCI subsystem
+has a similar flag named d3cold_allowed.
 
-Thanks Wei!
+This flag can disable the power off of ZPODD capable devices, or put a
+rotational disk into powered off if user so choose.
 
---nab
+Thanks,
+Aaron
