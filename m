@@ -1,45 +1,42 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH] [SCSI] libfcoe: use list_move instead of list_del/list_add
-Date: Thu, 6 Sep 2012 12:36:21 +0800
-Message-ID: <CAPgLHd_m2J1W8Su4NJuShHTzwdb94t=-8=oFv6=r1OL5735uyQ@mail.gmail.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
+Date: Thu, 6 Sep 2012 13:17:33 +0800
+Message-ID: <20120906051732.GA1706@mint-spring.sh.intel.com>
+References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
+ <1346768680-7287-2-git-send-email-aaron.lwe@gmail.com>
+ <1519541.IZ88lAq0Bj@linux-lqwf.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:40019 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762Ab2IFEgV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Sep 2012 00:36:21 -0400
-Received: by mail-qc0-f174.google.com with SMTP id o28so585005qcr.19
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Sep 2012 21:36:21 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1519541.IZ88lAq0Bj@linux-lqwf.site>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: robert.w.love@intel.com, JBottomley@parallels.com
-Cc: yongjun_wei@trendmicro.com.cn, devel@open-fcoe.org, linux-scsi@vger.kernel.org
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Tue, Sep 04, 2012 at 05:57:35PM +0200, Oliver Neukum wrote:
+> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> > index 902b5a4..64ba43d 100644
+> > --- a/drivers/ata/libata-acpi.c
+> > +++ b/drivers/ata/libata-acpi.c
+> > @@ -985,8 +985,10 @@ static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
+> >  	struct ata_device *ata_dev = context;
+> >  
+> >  	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
+> > -			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev))
+> > -		scsi_autopm_get_device(ata_dev->sdev);
+> > +			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev)) {
+> > +		ata_dev->sdev->wakeup_by_user = 1;
+> 
+> That flag is badly named. Something like "insert_event_during_suspend"
+> would be better.
 
-Using list_move() instead of list_del() + list_add().
+The reason I added the flag is to let sr knows that when the device
+gets resumed, please eject its tray since user just pressed the eject
+button when it is in powered off state.
 
-spatch with a semantic match is used to found this problem.
-(http://coccinelle.lip6.fr/)
+If wakeup_by_user is badly named, what about need_eject? I don't think
+insert_event_during_suspend reflects what happened here.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/scsi/fcoe/fcoe_ctlr.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 2ebe03a..44b4d99 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -817,8 +817,7 @@ static unsigned long fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
- 			 * fcoe_sysfs_fcf_del (which can sleep)
- 			 * after the put_cpu().
- 			 */
--			list_del(&fcf->list);
--			list_add(&fcf->list, &del_list);
-+			list_move(&fcf->list, &del_list);
- 			stats->VLinkFailureCount++;
- 		} else {
- 			if (time_after(next_timer, deadline))
-
+-Aaron
