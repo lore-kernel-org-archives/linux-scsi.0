@@ -1,52 +1,34 @@
-From: Peter Senna Tschudin <peter.senna@gmail.com>
-Subject: [PATCH 2/10] drivers/scsi/sym53c8xx_2/sym_fw.c: removes unnecessary semicolon
-Date: Thu,  6 Sep 2012 18:09:10 +0200
-Message-ID: <1346947757-10481-3-git-send-email-peter.senna@gmail.com>
-References: <1346947757-10481-1-git-send-email-peter.senna@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1346947757-10481-1-git-send-email-peter.senna@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: kernel-janitors@vger.kernel.org, Peter Senna Tschudin <peter.senna@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Michael Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] Fix a use-after-free triggered by device removal
+Date: Thu, 6 Sep 2012 11:27:10 -0500
+Message-ID: <91D94272-CA62-4E68-87D7-CE77DE776CC9@cs.wisc.edu>
+References: <5044BAD2.7060901@acm.org>
+Mime-Version: 1.0 (Mac OS X Mail 6.0 \(1486\))
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37666 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750829Ab2IFQ12 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Sep 2012 12:27:28 -0400
+In-Reply-To: <5044BAD2.7060901@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-From: Peter Senna Tschudin <peter.senna@gmail.com>
 
-removes unnecessary semicolon
+On Sep 3, 2012, at 9:12 AM, Bart Van Assche <bvanassche@acm.org> wrote:
 
-Found by Coccinelle: http://coccinelle.lip6.fr/
+> If the put_device() call in scsi_request_fn() drops the sdev refcount
+> to zero then the spin_lock() call after the put_device() call triggers
+> a use-after-free. Avoid that by making sure that blk_cleanup_queue()
+> can only finish after all active scsi_request_fn() calls have returned.
 
-Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
 
----
- drivers/scsi/sym53c8xx_2/sym_fw.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff -u -p a/drivers/scsi/sym53c8xx_2/sym_fw.c b/drivers/scsi/sym53c8xx_2/sym_fw.c
---- a/drivers/scsi/sym53c8xx_2/sym_fw.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_fw.c
-@@ -386,7 +386,7 @@ void sym_fw_bind_script(struct sym_hcb *
- 				sym_name(np), (int) (cur-start));
- 			++cur;
- 			continue;
--		};
-+		}
- 
- 		/*
- 		 *  We use the bogus value 0xf00ff00f ;-)
-@@ -494,7 +494,7 @@ void sym_fw_bind_script(struct sym_hcb *
- 		default:
- 			relocs = 0;
- 			break;
--		};
-+		}
- 
- 		/*
- 		 *  Scriptify:) the opcode.
-@@ -550,5 +550,5 @@ void sym_fw_bind_script(struct sym_hcb *
- 
- 			*cur++ = cpu_to_scr(new);
- 		}
--	};
-+	}
- }
+If we have this patch
+http://marc.info/?l=linux-scsi&m=134453905402413&w=2
+it seems we have all the scsi layer callers of the request_fn/*blk_run_queue holding a reference to the device when they make the call. Right, or are there some other places missing?
+
+What are the other places we can call the request_fn without already holding a reference to the device? Is it the block layer? Is that why we need this patch?
