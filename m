@@ -1,54 +1,52 @@
-From: Dave Jiang <dave.jiang@intel.com>
-Subject: [PATCH] isci: Fix interrupt coalescing assumption of active TCs
-Date: Wed, 05 Sep 2012 16:35:44 -0700
-Message-ID: <20120905233543.5774.73174.stgit@djiang5-linux.ch.intel.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: use list_move_tail instead of
+ list_del/list_add_tail
+Date: Wed, 05 Sep 2012 17:30:24 -0700
+Message-ID: <1346891424.4162.316.camel@haakon2.linux-iscsi.org>
+References: <CAPgLHd9tGyUzBdbNzorncaa57RFD-YO06tz3UCffuXXxgLDdyg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:6290 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759937Ab2IEXfu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Sep 2012 19:35:50 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CAPgLHd9tGyUzBdbNzorncaa57RFD-YO06tz3UCffuXXxgLDdyg@mail.gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: bootc@bootc.net, yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, dan@seamicro.com, richard.g.boyd@intel.com
 
-We always assign a dummy task context to a port in order to address a
-silicon issue. We have 4 ports per controller. So when idle, there are always
-exactly 4 TCs "active". The adaptive interrupt coalescing code uses number of
-active TCs to figure out the coalescing values. However, we never hit "0" TCs
-because of the 4 dummy TCs. Putting in fix so that we calculate this correctly.
+On Wed, 2012-09-05 at 14:42 +0800, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Using list_move_tail() instead of list_del() + list_add_tail().
+> 
+> spatch with a semantic match is used to found this problem.
+> (http://coccinelle.lip6.fr/)
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>  drivers/target/sbp/sbp_target.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
+> index 39ddba5..e57971f 100644
+> --- a/drivers/target/sbp/sbp_target.c
+> +++ b/drivers/target/sbp/sbp_target.c
+> @@ -660,8 +660,7 @@ static void session_reconnect_expired(struct sbp_session *sess)
+>  	spin_lock_bh(&sess->lock);
+>  	list_for_each_entry_safe(login, temp, &sess->login_list, link) {
+>  		login->sess = NULL;
+> -		list_del(&login->link);
+> -		list_add_tail(&login->link, &login_list);
+> +		list_move_tail(&login->link, &login_list);
+>  	}
+>  	spin_unlock_bh(&sess->lock);
+>  
+> 
+> 
+> --
 
-Reported-by: Dan Melnic <dan@seamicro.com>
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
----
+Applied to target-pending/for-next.
 
- drivers/scsi/isci/host.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+Thanks Wei!
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index b425ed5..bbe9fa5 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -1120,10 +1120,16 @@ void isci_host_completion_routine(unsigned long data)
- 	sci_controller_completion_handler(ihost);
- 	spin_unlock_irq(&ihost->scic_lock);
- 
--	/* the coalesence timeout doubles at each encoding step, so
-+	/*
-+	 * we subtract SCI_MAX_PORTS to account for the number of dummy TCs
-+	 * issued for hardware issue workaround
-+	 */
-+	active = isci_tci_active(ihost) - SCI_MAX_PORTS;
-+
-+	/*
-+	 * the coalesence timeout doubles at each encoding step, so
- 	 * update it based on the ilog2 value of the outstanding requests
- 	 */
--	active = isci_tci_active(ihost);
- 	writel(SMU_ICC_GEN_VAL(NUMBER, active) |
- 	       SMU_ICC_GEN_VAL(TIMER, ISCI_COALESCE_BASE + ilog2(active)),
- 	       &ihost->smu_registers->interrupt_coalesce_control);
-
+--nab
