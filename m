@@ -1,42 +1,41 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
-Date: Thu, 6 Sep 2012 13:17:33 +0800
-Message-ID: <20120906051732.GA1706@mint-spring.sh.intel.com>
-References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
- <1346768680-7287-2-git-send-email-aaron.lwe@gmail.com>
- <1519541.IZ88lAq0Bj@linux-lqwf.site>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/4] qla4xxx: Updates for scsi "misc" branch.
+Date: Thu, 06 Sep 2012 00:36:10 -0500
+Message-ID: <5048364A.7030904@cs.wisc.edu>
+References: <1345635927-22420-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1519541.IZ88lAq0Bj@linux-lqwf.site>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36762 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751301Ab2IFFgb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Sep 2012 01:36:31 -0400
+In-Reply-To: <1345635927-22420-1-git-send-email-vikas.chaudhary@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vikas.chaudhary@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-On Tue, Sep 04, 2012 at 05:57:35PM +0200, Oliver Neukum wrote:
-> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> > index 902b5a4..64ba43d 100644
-> > --- a/drivers/ata/libata-acpi.c
-> > +++ b/drivers/ata/libata-acpi.c
-> > @@ -985,8 +985,10 @@ static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
-> >  	struct ata_device *ata_dev = context;
-> >  
-> >  	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
-> > -			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev))
-> > -		scsi_autopm_get_device(ata_dev->sdev);
-> > +			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev)) {
-> > +		ata_dev->sdev->wakeup_by_user = 1;
+On 08/22/2012 06:45 AM, vikas.chaudhary@qlogic.com wrote:
+> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 > 
-> That flag is badly named. Something like "insert_event_during_suspend"
-> would be better.
+> James,
+> 
+> Please apply the following patches to the scsi tree at your earliest
+> convenience.
+> 
+> Thanks,
+> Vikas.
+> 
+> Vikas Chaudhary (4):
+>       qla4xxx: Fix lockdep warning in qla4xxx_post_work()
+>       qla4xxx: Clear interrupt while unloading driver.
+>       qla4xxx: Wait for cmd to complete before chip reset for ISP40XX
+>       qla4xxx: Update driver version to 5.02.00-k20
+> 
 
-The reason I added the flag is to let sr knows that when the device
-gets resumed, please eject its tray since user just pressed the eject
-button when it is in powered off state.
+Looks ok to me.
 
-If wakeup_by_user is badly named, what about need_eject? I don't think
-insert_event_during_suspend reflects what happened here.
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 
--Aaron
