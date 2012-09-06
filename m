@@ -1,72 +1,46 @@
-From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
-Subject: [PATCH] isci: Allow SSP tasks into the task management path.
-Date: Thu, 06 Sep 2012 10:56:49 -0700
-Message-ID: <20120906175608.30998.36898.stgit@jdskirvi-devbox.ch.intel.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] Fix a use-after-free triggered by device removal
+Date: Thu, 06 Sep 2012 19:58:54 +0200
+Message-ID: <5048E45E.1070302@acm.org>
+References: <5044BAD2.7060901@acm.org> <91D94272-CA62-4E68-87D7-CE77DE776CC9@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24692 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932075Ab2IFRhr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Sep 2012 13:37:47 -0400
+Received: from georges.telenet-ops.be ([195.130.137.68]:54932 "EHLO
+	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932609Ab2IFR65 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Sep 2012 13:58:57 -0400
+In-Reply-To: <91D94272-CA62-4E68-87D7-CE77DE776CC9@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, jeffrey.d.skirvin@intel.com, dave.jiang@intel.com
+To: Michael Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-This commit fixes a driver bug for SSP tasks that require task management
-in the target after they complete in the SCU hardware.  The problem was
-manifested in the function "isci_task_abort_task", which tests
-to see if the sas_task.lldd_task is non-NULL before allowing task
-management; this bug would always NULL lldd_task in the SCU I/O completion
-path even if target management was required, which would prevent
-task / target manangement from happening.
+_suOn 09/06/12 18:27, Michael Christie wrote:
+> On Sep 3, 2012, at 9:12 AM, Bart Van Assche <bvanassche@acm.org> wrote:
+>> If the put_device() call in scsi_request_fn() drops the sdev refcount
+>> to zero then the spin_lock() call after the put_device() call triggers
+>> a use-after-free. Avoid that by making sure that blk_cleanup_queue()
+>> can only finish after all active scsi_request_fn() calls have returned.
+> 
+> If we have this patch http://marc.info/?l=linux-scsi&m=134453905402413&w=2
+> it seems we have all the scsi layer callers of the request_fn/
+> *blk_run_queue holding a reference to the device when they make the call.
+> Right, or are there some other places missing?
+> 
+> What are the other places we can call the request_fn without already
+> holding a reference to the device? Is it the block layer? Is that why we
+> need this patch?
 
-Note that in the case of SATA/STP targets, error recovery is provided by
-the libata error handler which is why SATA/STP device recovery worked
-correctly even though SSP handling did not.
+Hello Mike,
 
-Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
----
-Resubmitting to include James...
+The purpose of this patch is indeed to make *blk_run_queue() calls from
+the block layer safe. There are several direct or indirect
+*blk_run_queue() calls in the block layer where a reference on the queue
+is held but not on the sdev, e.g. in the md, dm and bsg drivers.
 
- drivers/scsi/isci/host.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+Bart.
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 45385f5..446fdd8 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -1079,7 +1079,6 @@ static void sci_controller_completion_handler(struct isci_host *ihost)
- 
- void ireq_done(struct isci_host *ihost, struct isci_request *ireq, struct sas_task *task)
- {
--	task->lldd_task = NULL;
- 	if (!test_bit(IREQ_ABORT_PATH_ACTIVE, &ireq->flags) &&
- 	    !(task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
- 		if (test_bit(IREQ_COMPLETE_IN_TARGET, &ireq->flags)) {
-@@ -1087,16 +1086,19 @@ void ireq_done(struct isci_host *ihost, struct isci_request *ireq, struct sas_ta
- 			dev_dbg(&ihost->pdev->dev,
- 				"%s: Normal - ireq/task = %p/%p\n",
- 				__func__, ireq, task);
--
-+			task->lldd_task = NULL;
- 			task->task_done(task);
- 		} else {
- 			dev_dbg(&ihost->pdev->dev,
- 				"%s: Error - ireq/task = %p/%p\n",
- 				__func__, ireq, task);
--
-+			if (sas_protocol_ata(task->task_proto))
-+				task->lldd_task = NULL;
- 			sas_task_abort(task);
- 		}
--	}
-+	} else
-+		task->lldd_task = NULL;
-+
- 	if (test_and_clear_bit(IREQ_ABORT_PATH_ACTIVE, &ireq->flags))
- 		wake_up_all(&ihost->eventq);
- 
+
 
