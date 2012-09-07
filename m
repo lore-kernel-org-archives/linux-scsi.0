@@ -1,7 +1,7 @@
 From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH] tcm_fc: move the dereference below the NULL test
-Date: Fri, 7 Sep 2012 14:55:32 +0800
-Message-ID: <CAPgLHd88a_SPmNfjC=kWAwgC29XdbafzumA1iBQ7aYsGs+tnMA@mail.gmail.com>
+Subject: [PATCH] target: move the dereference below the NULL test
+Date: Fri, 7 Sep 2012 14:56:28 +0800
+Message-ID: <CAPgLHd9VbkJDffbSiUZHaVuqPmtjVbRrjhzfheb6XxHOzgk_8Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <target-devel-owner@vger.kernel.org>
@@ -19,24 +19,57 @@ spatch with a semantic match is used to found this.
 
 Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- drivers/target/tcm_fc/tfc_io.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/target/target_core_pr.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-index ad36ede1..1b367a9 100644
---- a/drivers/target/tcm_fc/tfc_io.c
-+++ b/drivers/target/tcm_fc/tfc_io.c
-@@ -328,11 +328,12 @@ drop:
-  */
- void ft_invl_hw_context(struct ft_cmd *cmd)
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 1e94650..7e2e9be 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -197,10 +197,10 @@ int target_scsi2_reservation_release(struct se_cmd *cmd)
  {
--	struct fc_seq *seq = cmd->seq;
-+	struct fc_seq *seq;
- 	struct fc_exch *ep = NULL;
- 	struct fc_lport *lport = NULL;
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_session *sess = cmd->se_sess;
+-	struct se_portal_group *tpg = sess->se_tpg;
++	struct se_portal_group *tpg;
+ 	int ret = 0, rc;
  
- 	BUG_ON(!cmd);
-+	seq = cmd->seq;
+-	if (!sess || !tpg)
++	if (!sess || !sess->se_tpg)
+ 		goto out;
+ 	rc = target_check_scsi2_reservation_conflict(cmd);
+ 	if (rc == 1)
+@@ -228,6 +228,7 @@ int target_scsi2_reservation_release(struct se_cmd *cmd)
+ 		dev->dev_res_bin_isid = 0;
+ 		dev->dev_flags &= ~DF_SPC2_RESERVATIONS_WITH_ISID;
+ 	}
++	tpg = sess->se_tpg;
+ 	pr_debug("SCSI-2 Released reservation for %s LUN: %u ->"
+ 		" MAPPED LUN: %u for %s\n", tpg->se_tpg_tfo->get_fabric_name(),
+ 		cmd->se_lun->unpacked_lun, cmd->se_deve->mapped_lun,
+@@ -245,7 +246,7 @@ int target_scsi2_reservation_reserve(struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_session *sess = cmd->se_sess;
+-	struct se_portal_group *tpg = sess->se_tpg;
++	struct se_portal_group *tpg;
+ 	int ret = 0, rc;
  
- 	/* Cleanup the DDP context in HW if DDP was setup */
- 	if (cmd->was_ddp_setup && seq) {
+ 	if ((cmd->t_task_cdb[1] & 0x01) &&
+@@ -260,7 +261,7 @@ int target_scsi2_reservation_reserve(struct se_cmd *cmd)
+ 	 * This is currently the case for target_core_mod passthrough struct se_cmd
+ 	 * ops
+ 	 */
+-	if (!sess || !tpg)
++	if (!sess || !sess->se_tpg)
+ 		goto out;
+ 	rc = target_check_scsi2_reservation_conflict(cmd);
+ 	if (rc == 1)
+@@ -272,6 +273,7 @@ int target_scsi2_reservation_reserve(struct se_cmd *cmd)
+ 	}
+ 
+ 	ret = 0;
++	tpg = sess->se_tpg;
+ 	spin_lock(&dev->dev_reservation_lock);
+ 	if (dev->dev_reserved_node_acl &&
+ 	   (dev->dev_reserved_node_acl != sess->se_node_acl)) {
