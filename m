@@ -1,92 +1,76 @@
-From: Stephen Hemminger <shemminger@vyatta.com>
-Subject: [PATCH 3/4] scsi: make pci error handlers const
-Date: Fri, 07 Sep 2012 09:33:16 -0700
-Message-ID: <20120907163438.026331954@vyatta.com>
-References: <20120907163313.614852012@vyatta.com>
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline; filename=pci-errhandle-scsi.patch
-Sender: linux-pci-owner@vger.kernel.org
-To: Linas Vepstas <linasvepstas@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH 2/5] drivers/scsi/bnx2fc/bnx2fc_io.c: Remove
+ potential NULL dereference
+Date: Fri, 7 Sep 2012 11:23:59 -0700
+Message-ID: <504A3BBF.5030604@broadcom.com>
+References: <1344959388-19719-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1344959388-19719-3-git-send-email-Julia.Lawall@lip6.fr>
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1344959388-19719-3-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+On 8/14/2012 8:49 AM, Julia Lawall wrote:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+> If the NULL test is necessary, the initialization involving a dereference of
+> the tested value should be moved after the NULL test.
+>
+> The sematic patch that fixes this problem is as follows:
+> (http://coccinelle.lip6.fr/)
+>
+> // <smpl>
+> @@
+> type T;
+> expression E;
+> identifier i,fld;
+> statement S;
+> @@
+>
+> - T i = E->fld;
+> + T i;
+>    ... when != E
+>        when != i
+>    if (E == NULL) S
+> + i = E->fld;
+> // </smpl>
+>
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+> ---
+>   drivers/scsi/bnx2fc/bnx2fc_io.c |    3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> index 73f231c..1dd82db 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> @@ -686,7 +686,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+>   {
+>   	struct fc_lport *lport;
+>   	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
+> -	struct fc_rport_libfc_priv *rp = rport->dd_data;
+> +	struct fc_rport_libfc_priv *rp;
+>   	struct fcoe_port *port;
+>   	struct bnx2fc_interface *interface;
+>   	struct bnx2fc_rport *tgt;
+> @@ -712,6 +712,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+>   		rc = FAILED;
+>   		goto tmf_err;
+>   	}
+> +	rp = rport->dd_data;
+>
+>   	rc = fc_block_scsi_eh(sc_cmd);
+>   	if (rc)
+>
+>
+Thanks Julia.
 
-
----
-Depends on first patch that changes PCI core.
-
- drivers/scsi/ipr.c                   |    2 +-
- drivers/scsi/lpfc/lpfc_init.c        |    2 +-
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |    2 +-
- drivers/scsi/qla2xxx/qla_os.c        |    2 +-
- drivers/scsi/qla4xxx/ql4_os.c        |    2 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c  |    2 +-
- 6 files changed, 6 insertions(+), 6 deletions(-)
-
---- a/drivers/scsi/ipr.c	2012-09-07 09:21:37.154557681 -0700
-+++ b/drivers/scsi/ipr.c	2012-09-07 09:27:25.495059297 -0700
-@@ -9228,7 +9228,7 @@ static struct pci_device_id ipr_pci_tabl
- };
- MODULE_DEVICE_TABLE(pci, ipr_pci_table);
- 
--static struct pci_error_handlers ipr_err_handler = {
-+static const struct pci_error_handlers ipr_err_handler = {
- 	.error_detected = ipr_pci_error_detected,
- 	.slot_reset = ipr_pci_slot_reset,
- };
---- a/drivers/scsi/lpfc/lpfc_init.c	2012-09-07 09:21:37.154557681 -0700
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2012-09-07 09:27:25.499059257 -0700
-@@ -10425,7 +10425,7 @@ static struct pci_device_id lpfc_id_tabl
- 
- MODULE_DEVICE_TABLE(pci, lpfc_id_table);
- 
--static struct pci_error_handlers lpfc_err_handler = {
-+static const struct pci_error_handlers lpfc_err_handler = {
- 	.error_detected = lpfc_io_error_detected,
- 	.slot_reset = lpfc_io_slot_reset,
- 	.resume = lpfc_io_resume,
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2012-09-07 09:21:37.154557681 -0700
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2012-09-07 09:27:25.499059257 -0700
-@@ -8306,7 +8306,7 @@ _scsih_pci_mmio_enabled(struct pci_dev *
- 	return PCI_ERS_RESULT_NEED_RESET;
- }
- 
--static struct pci_error_handlers _scsih_err_handler = {
-+static const struct pci_error_handlers _scsih_err_handler = {
- 	.error_detected = _scsih_pci_error_detected,
- 	.mmio_enabled = _scsih_pci_mmio_enabled,
- 	.slot_reset =	_scsih_pci_slot_reset,
---- a/drivers/scsi/qla2xxx/qla_os.c	2012-09-07 09:21:37.154557681 -0700
-+++ b/drivers/scsi/qla2xxx/qla_os.c	2012-09-07 09:27:25.499059257 -0700
-@@ -4471,7 +4471,7 @@ qla2xxx_pci_resume(struct pci_dev *pdev)
- 	ha->flags.eeh_busy = 0;
- }
- 
--static struct pci_error_handlers qla2xxx_err_handler = {
-+static const struct pci_error_handlers qla2xxx_err_handler = {
- 	.error_detected = qla2xxx_pci_error_detected,
- 	.mmio_enabled = qla2xxx_pci_mmio_enabled,
- 	.slot_reset = qla2xxx_pci_slot_reset,
---- a/drivers/scsi/qla4xxx/ql4_os.c	2012-09-07 09:21:37.154557681 -0700
-+++ b/drivers/scsi/qla4xxx/ql4_os.c	2012-09-07 09:27:25.503059217 -0700
-@@ -6148,7 +6148,7 @@ qla4xxx_pci_resume(struct pci_dev *pdev)
- 	clear_bit(AF_EEH_BUSY, &ha->flags);
- }
- 
--static struct pci_error_handlers qla4xxx_err_handler = {
-+static const struct pci_error_handlers qla4xxx_err_handler = {
- 	.error_detected = qla4xxx_pci_error_detected,
- 	.mmio_enabled = qla4xxx_pci_mmio_enabled,
- 	.slot_reset = qla4xxx_pci_slot_reset,
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c	2012-09-07 09:21:37.154557681 -0700
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c	2012-09-07 09:27:25.503059217 -0700
-@@ -2117,7 +2117,7 @@ static struct pci_device_id sym2_id_tabl
- 
- MODULE_DEVICE_TABLE(pci, sym2_id_table);
- 
--static struct pci_error_handlers sym2_err_handler = {
-+static const struct pci_error_handlers sym2_err_handler = {
- 	.error_detected	= sym2_io_error_detected,
- 	.mmio_enabled	= sym2_io_slot_dump,
- 	.slot_reset	= sym2_io_slot_reset,
+Acked-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
