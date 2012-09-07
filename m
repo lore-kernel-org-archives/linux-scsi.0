@@ -1,39 +1,53 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] Fix a use-after-free triggered by device removal
-Date: Fri, 07 Sep 2012 08:57:10 +0200
-Message-ID: <50499AC6.1050008@acm.org>
-References: <5044BAD2.7060901@acm.org> <91D94272-CA62-4E68-87D7-CE77DE776CC9@cs.wisc.edu> <5048E45E.1070302@acm.org> <5048E80B.5010101@cs.wisc.edu> <5048F0D9.6080403@acm.org> <20120906232031.GU29092@google.com>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH] [SCSI] bnx2fc: move the dereference below the NULL test
+Date: Fri, 7 Sep 2012 14:59:47 +0800
+Message-ID: <CAPgLHd-N6Sx-d2_28+FFkWaXCB0gQQJBBZWouPwzFeOm6wkRxQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:36644 "EHLO
-	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753138Ab2IGG5N (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Sep 2012 02:57:13 -0400
-In-Reply-To: <20120906232031.GU29092@google.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:33690 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756189Ab2IGG7r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Sep 2012 02:59:47 -0400
+Received: by qcro28 with SMTP id o28so1233388qcr.19
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Sep 2012 23:59:47 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>
+To: bprakash@broadcom.com, JBottomley@parallels.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org
 
-On 09/07/12 01:20, Tejun Heo wrote:
-> I think Mike is wondering whether your patch in isolation is enough or
-> we also need to have DEAD check there too.  The proposed patch can't
-> handle the case where q->request_fn() is invoked after drain is
-> complete.  I'm not really sure whether that can happen tho.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Hello Tejun,
+The dereference should be moved below the NULL test.
 
-I'm not sure it would be a good idea to add a blk_queue_dead() check in
-any of the __blk_run_queue() variants since blk_drain_queue() can invoke
-__blk_run_queue() to drain the queue.
+spatch with a semantic match is used to found this.
+(http://coccinelle.lip6.fr/)
 
-Also, as far as I can see the functions that can insert a request into
-the queue (blk_insert_cloned_request(), queue_unplugged(),
-blk_execute_rq_nowait()) all check whether the queue is dead before
-inserting a request. That should be sufficient to prevent that new
-requests are queued after QUEUE_FLAG_DEAD has been set.
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/scsi/bnx2fc/bnx2fc_io.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Bart.
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 73f231c..298a0fe 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -686,7 +686,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+ {
+ 	struct fc_lport *lport;
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
+-	struct fc_rport_libfc_priv *rp = rport->dd_data;
++	struct fc_rport_libfc_priv *rp;
+ 	struct fcoe_port *port;
+ 	struct bnx2fc_interface *interface;
+ 	struct bnx2fc_rport *tgt;
+@@ -722,6 +722,8 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+ 		rc = FAILED;
+ 		goto tmf_err;
+ 	}
++
++	rp = rport->dd_data;
+ 	/* rport and tgt are allocated together, so tgt should be non-NULL */
+ 	tgt = (struct bnx2fc_rport *)&rp[1];
+ 
 
