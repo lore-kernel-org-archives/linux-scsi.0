@@ -1,75 +1,39 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH] target: move the dereference below the NULL test
-Date: Fri, 7 Sep 2012 14:56:28 +0800
-Message-ID: <CAPgLHd9VbkJDffbSiUZHaVuqPmtjVbRrjhzfheb6XxHOzgk_8Q@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] Fix a use-after-free triggered by device removal
+Date: Fri, 07 Sep 2012 08:57:10 +0200
+Message-ID: <50499AC6.1050008@acm.org>
+References: <5044BAD2.7060901@acm.org> <91D94272-CA62-4E68-87D7-CE77DE776CC9@cs.wisc.edu> <5048E45E.1070302@acm.org> <5048E80B.5010101@cs.wisc.edu> <5048F0D9.6080403@acm.org> <20120906232031.GU29092@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from jacques.telenet-ops.be ([195.130.132.50]:36644 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753138Ab2IGG5N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Sep 2012 02:57:13 -0400
+In-Reply-To: <20120906232031.GU29092@google.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On 09/07/12 01:20, Tejun Heo wrote:
+> I think Mike is wondering whether your patch in isolation is enough or
+> we also need to have DEAD check there too.  The proposed patch can't
+> handle the case where q->request_fn() is invoked after drain is
+> complete.  I'm not really sure whether that can happen tho.
 
-The dereference should be moved below the NULL test.
+Hello Tejun,
 
-spatch with a semantic match is used to found this.
-(http://coccinelle.lip6.fr/)
+I'm not sure it would be a good idea to add a blk_queue_dead() check in
+any of the __blk_run_queue() variants since blk_drain_queue() can invoke
+__blk_run_queue() to drain the queue.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/target/target_core_pr.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+Also, as far as I can see the functions that can insert a request into
+the queue (blk_insert_cloned_request(), queue_unplugged(),
+blk_execute_rq_nowait()) all check whether the queue is dead before
+inserting a request. That should be sufficient to prevent that new
+requests are queued after QUEUE_FLAG_DEAD has been set.
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 1e94650..7e2e9be 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -197,10 +197,10 @@ int target_scsi2_reservation_release(struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	struct se_session *sess = cmd->se_sess;
--	struct se_portal_group *tpg = sess->se_tpg;
-+	struct se_portal_group *tpg;
- 	int ret = 0, rc;
- 
--	if (!sess || !tpg)
-+	if (!sess || !sess->se_tpg)
- 		goto out;
- 	rc = target_check_scsi2_reservation_conflict(cmd);
- 	if (rc == 1)
-@@ -228,6 +228,7 @@ int target_scsi2_reservation_release(struct se_cmd *cmd)
- 		dev->dev_res_bin_isid = 0;
- 		dev->dev_flags &= ~DF_SPC2_RESERVATIONS_WITH_ISID;
- 	}
-+	tpg = sess->se_tpg;
- 	pr_debug("SCSI-2 Released reservation for %s LUN: %u ->"
- 		" MAPPED LUN: %u for %s\n", tpg->se_tpg_tfo->get_fabric_name(),
- 		cmd->se_lun->unpacked_lun, cmd->se_deve->mapped_lun,
-@@ -245,7 +246,7 @@ int target_scsi2_reservation_reserve(struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	struct se_session *sess = cmd->se_sess;
--	struct se_portal_group *tpg = sess->se_tpg;
-+	struct se_portal_group *tpg;
- 	int ret = 0, rc;
- 
- 	if ((cmd->t_task_cdb[1] & 0x01) &&
-@@ -260,7 +261,7 @@ int target_scsi2_reservation_reserve(struct se_cmd *cmd)
- 	 * This is currently the case for target_core_mod passthrough struct se_cmd
- 	 * ops
- 	 */
--	if (!sess || !tpg)
-+	if (!sess || !sess->se_tpg)
- 		goto out;
- 	rc = target_check_scsi2_reservation_conflict(cmd);
- 	if (rc == 1)
-@@ -272,6 +273,7 @@ int target_scsi2_reservation_reserve(struct se_cmd *cmd)
- 	}
- 
- 	ret = 0;
-+	tpg = sess->se_tpg;
- 	spin_lock(&dev->dev_reservation_lock);
- 	if (dev->dev_reserved_node_acl &&
- 	   (dev->dev_reserved_node_acl != sess->se_node_acl)) {
+Bart.
+
