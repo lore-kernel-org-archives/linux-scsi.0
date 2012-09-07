@@ -1,76 +1,25 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [PATCH 2/5] drivers/scsi/bnx2fc/bnx2fc_io.c: Remove
- potential NULL dereference
-Date: Fri, 7 Sep 2012 11:23:59 -0700
-Message-ID: <504A3BBF.5030604@broadcom.com>
-References: <1344959388-19719-1-git-send-email-Julia.Lawall@lip6.fr>
- <1344959388-19719-3-git-send-email-Julia.Lawall@lip6.fr>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 0/4] PCI error handler const
+Date: Fri, 7 Sep 2012 15:42:03 -0700
+Message-ID: <CAErSpo6T=vQnP2u6KP0+sDvT5=iQs1UFjpOLub+9y=B2k_MRgQ@mail.gmail.com>
+References: <20120907163313.614852012@vyatta.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1344959388-19719-3-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20120907163313.614852012@vyatta.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: Linas Vepstas <linasvepstas@gmail.com>, linux-pci@vger.kernel.org, David Miller <davem@davemloft.net>, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 8/14/2012 8:49 AM, Julia Lawall wrote:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> If the NULL test is necessary, the initialization involving a dereference of
-> the tested value should be moved after the NULL test.
->
-> The sematic patch that fixes this problem is as follows:
-> (http://coccinelle.lip6.fr/)
->
-> // <smpl>
-> @@
-> type T;
-> expression E;
-> identifier i,fld;
-> statement S;
-> @@
->
-> - T i = E->fld;
-> + T i;
->    ... when != E
->        when != i
->    if (E == NULL) S
-> + i = E->fld;
-> // </smpl>
->
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> ---
->   drivers/scsi/bnx2fc/bnx2fc_io.c |    3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-> index 73f231c..1dd82db 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-> @@ -686,7 +686,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
->   {
->   	struct fc_lport *lport;
->   	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
-> -	struct fc_rport_libfc_priv *rp = rport->dd_data;
-> +	struct fc_rport_libfc_priv *rp;
->   	struct fcoe_port *port;
->   	struct bnx2fc_interface *interface;
->   	struct bnx2fc_rport *tgt;
-> @@ -712,6 +712,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
->   		rc = FAILED;
->   		goto tmf_err;
->   	}
-> +	rp = rport->dd_data;
->
->   	rc = fc_block_scsi_eh(sc_cmd);
->   	if (rc)
->
->
-Thanks Julia.
+On Fri, Sep 7, 2012 at 9:33 AM, Stephen Hemminger <shemminger@vyatta.com> wrote:
+> This is a trivial patch to make PCI error handler function
+> tables const. Split into pieces so that core changes are first.
 
-Acked-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+I put all four of these on this branch:
+
+http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/stephen-const
+
+If the netdev and scsi folks approve, I can handle them all through my PCI tree.
+
+Bjorn
