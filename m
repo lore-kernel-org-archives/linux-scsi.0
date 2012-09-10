@@ -1,40 +1,51 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [RFC PATCH 1/5] libfcoe, fcoe: Allow user to set a ctlr's mode
-Date: Mon, 10 Sep 2012 16:12:11 -0700
-Message-ID: <20120910231211.GB14302@kroah.com>
-References: <20120910225908.13140.97277.stgit@fritz>
- <20120910225914.13140.22190.stgit@fritz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] Fix a use-after-free triggered by device removal
+Date: Mon, 10 Sep 2012 16:38:43 -0700
+Message-ID: <20120910233843.GI7677@google.com>
+References: <5044BAD2.7060901@acm.org>
+ <91D94272-CA62-4E68-87D7-CE77DE776CC9@cs.wisc.edu>
+ <5048E45E.1070302@acm.org>
+ <5048E80B.5010101@cs.wisc.edu>
+ <5048F0D9.6080403@acm.org>
+ <20120906232031.GU29092@google.com>
+ <50499AC6.1050008@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:35107 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757284Ab2IJXMP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2012 19:12:15 -0400
-Received: by pbbrr13 with SMTP id rr13so3179559pbb.19
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Sep 2012 16:12:14 -0700 (PDT)
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:44376 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757987Ab2IJXis (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2012 19:38:48 -0400
+Received: by dady13 with SMTP id y13so1702275dad.19
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Sep 2012 16:38:48 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20120910225914.13140.22190.stgit@fritz>
+In-Reply-To: <50499AC6.1050008@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, bprakash@broadcom.com, devel@open-fcoe.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>
 
-On Mon, Sep 10, 2012 at 03:59:14PM -0700, Robert Love wrote:
-> This patch makes the 'mode' attribute of a
-> fcoe_ctlr_device writale. This allows the user
-> to store the mode with with the ctlr will be in.
-> 
-> Possible modes would be 'Fabric', or 'VN2VN'.
-> 
-> The default mode for a fcoe_ctlr{,_device} is 'Fabric'.
-> Drivers must implement the set_fcoe_ctlr_mode routine
-> to support this feature.
-> 
-> libfcoe offers an exported routine to set a fcoe_ctlr's
-> mode.
-> 
-> Signed-off-by: Robert Love <robert.w.love@intel.com>
+Hello,
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+On Fri, Sep 07, 2012 at 08:57:10AM +0200, Bart Van Assche wrote:
+> I'm not sure it would be a good idea to add a blk_queue_dead() check in
+> any of the __blk_run_queue() variants since blk_drain_queue() can invoke
+> __blk_run_queue() to drain the queue.
 
+Right, we can't cancel requests from block layer which were already
+seen by the driver.
+
+> Also, as far as I can see the functions that can insert a request into
+> the queue (blk_insert_cloned_request(), queue_unplugged(),
+> blk_execute_rq_nowait()) all check whether the queue is dead before
+> inserting a request. That should be sufficient to prevent that new
+> requests are queued after QUEUE_FLAG_DEAD has been set.
+
+Yes, but does that guarantee that none would call into ->request_fn()?
+If so, fine; otherwise, we may need to add another state to prevent
+that.
+
+Thanks.
+
+-- 
+tejun
