@@ -1,94 +1,47 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH] st: remove st_mutex
-Date: Mon, 10 Sep 2012 14:59:46 -0700
-Message-ID: <504E62D2.8030904@suse.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi_netlink: Remove dead and buggy code
+Date: Mon, 10 Sep 2012 23:07:59 +0100
+Message-ID: <1347314879.3038.74.camel@dabdike.int.hansenpartnership.com>
+References: <87pq5xjw4m.fsf@xmission.com>
+	 <20120910.150700.1197774171539303770.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:44690 "EHLO
-	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750886Ab2IJWAQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2012 18:00:16 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20120910.150700.1197774171539303770.davem@davemloft.net>
+Sender: netdev-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: ebiederm@xmission.com, netdev@vger.kernel.org, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, =?ISO-8859-1?Q?Kai_M=E4kisara?= <kai.makisara@kolumbus.fi>, Jeff Mahoney <jeffm@suse.com>
 
-This patch is based on the "misc" branch of the SCSI tree
-and the 5-patch series for st sent by Jeff Mahoney 8/18/2012
-and Ack-ed by Kai on 8/20.
+On Mon, 2012-09-10 at 15:07 -0400, David Miller wrote:
+> From: ebiederm@xmission.com (Eric W. Biederman)
+> Date: Fri, 07 Sep 2012 15:39:21 -0700
+> 
+> > 
+> > The scsi netlink code confuses the netlink port id with a process id,
+> > going so far as to read NETLINK_CREDS(skb)->pid instead of the correct
+> > NETLINK_CB(skb).pid.  Fortunately it does not matter because nothing
+> > registers to respond to scsi netlink requests.
+> > 
+> > The only interesting use of the scsi_netlink interface is
+> > fc_host_post_vendor_event which sends a netlink multicast message.
+> > 
+> > Since nothing registers to handle scsi netlink messages kill all of the
+> > registration logic, while retaining the same error handling behavior
+> > preserving the userspace visible behavior and removing all of the
+> > confused code that thought a netlink port id was a process id.
+> > 
+> > This was tested with a kernel allyesconfig build which had no problems.
+> > 
+> > Cc: James Bottomley <James.Bottomley@parallels.com>
+> > Cc: James Smart <James.Smart@Emulex.Com>
+> > Signed-off-by: "Eric W. Biederman" <ebiederm@xmission.com>
+> 
+> James et al., please review and ACK.
 
-From: Jeff Mahoney <jeffm@suse.com>
+I'll defer to the decision of James Smart and the other FC contributors,
+since the FC transport class is really the only one using a netlink
+interface.
 
-The st_mutex was created when the BKL was removed, and
-prevents simultaneous st_open calls. It is better to
-protect just the necessary data.
-
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-Reviewed-by: Lee Duncan <lduncan@suse.com>
----
- drivers/scsi/st.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index ceca095..98156a9 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -75,7 +75,6 @@ static const char *verstr = "20101219";
- #include "st_options.h"
- #include "st.h"
-
--static DEFINE_MUTEX(st_mutex);
- static int buffer_kbs;
- static int max_sg_segs;
- static int try_direct_io = TRY_DIRECT_IO;
-@@ -1185,7 +1184,6 @@ static int st_open(struct inode *inode, struct
-file *filp)
- 	int dev = TAPE_NR(inode);
- 	char *name;
-
--	mutex_lock(&st_mutex);
- 	/*
- 	 * We really want to do nonseekable_open(inode, filp); here, but some
- 	 * versions of tar incorrectly call lseek on tapes and bail out if that
-@@ -1194,7 +1192,6 @@ static int st_open(struct inode *inode, struct
-file *filp)
- 	filp->f_mode &= ~(FMODE_PREAD | FMODE_PWRITE);
-
- 	if (!(STp = scsi_tape_get(dev))) {
--		mutex_unlock(&st_mutex);
- 		return -ENXIO;
- 	}
-
-@@ -1205,7 +1202,6 @@ static int st_open(struct inode *inode, struct
-file *filp)
- 	if (STp->in_use) {
- 		spin_unlock(&st_use_lock);
- 		scsi_tape_put(STp);
--		mutex_unlock(&st_mutex);
- 		DEB( printk(ST_DEB_MSG "%s: Device already in use.\n", name); )
- 		return (-EBUSY);
- 	}
-@@ -1259,16 +1255,16 @@ static int st_open(struct inode *inode, struct
-file *filp)
- 			retval = (-EIO);
- 		goto err_out;
- 	}
--	mutex_unlock(&st_mutex);
- 	return 0;
-
-  err_out:
- 	normalize_buffer(STp->buffer);
-+	spin_lock(&st_use_lock);
- 	STp->in_use = 0;
-+	spin_unlock(&st_use_lock);
- 	scsi_tape_put(STp);
- 	if (resumed)
- 		scsi_autopm_put_device(STp->device);
--	mutex_unlock(&st_mutex);
- 	return retval;
-
- }
--- 
-1.7.11.5
+James
