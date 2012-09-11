@@ -1,39 +1,28 @@
-From: Chris Leech <cleech@redhat.com>
-Subject: Re: [RFC PATCH 0/5] Reorganize libfcoe control interfaces
-Date: Tue, 11 Sep 2012 10:12:09 -0700
-Message-ID: <CAHNqLyXhUo9ny3Wez5kWazaj_bk7mOEqvB8TemkFsu8ZP-ypXw@mail.gmail.com>
-References: <20120910225908.13140.97277.stgit@fritz>
-	<504E8040.70403@broadcom.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [V3 PATCH 9/9] cxgb4vf: Chelsio FCoE offload driver submission
+ (header compatibility fixes).
+Date: Tue, 11 Sep 2012 13:33:21 -0400 (EDT)
+Message-ID: <20120911.133321.282568248903907762.davem@davemloft.net>
+References: <1347374347-3852-1-git-send-email-naresh@chelsio.com>
+	<1347374347-3852-10-git-send-email-naresh@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:52866 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759645Ab2IKRML (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2012 13:12:11 -0400
-In-Reply-To: <504E8040.70403@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1347374347-3852-10-git-send-email-naresh@chelsio.com>
+Sender: netdev-owner@vger.kernel.org
+To: naresh@chelsio.com
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, dm@chelsio.com, leedom@chelsio.com, netdev@vger.kernel.org, chethan@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: Robert Love <robert.w.love@intel.com>, netdev@vger.kernel.org, gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-On Mon, Sep 10, 2012 at 5:05 PM, Bhanu Prakash Gollapudi
-<bprakash@broadcom.com> wrote:
->
-> I'm concerned that we will be breaking user space compatibility with this
-> change, as there should be a corresponding fcoemon/fipvlan change along with
-> this, and existing utilities will not work.  Also the way we start fcoe will
-> be completely different and the user may need to do the scripting changes,
-> if any.
->
+From: Naresh Kumar Inna <naresh@chelsio.com>
+Date: Tue, 11 Sep 2012 20:09:07 +0530
 
-I agree with Bhanu on these concerns, even though I hope everyone's
-using fcoeadm/fcoemon/fipvlan.  I think there needs to be more of a
-transition plan than requiring everyone moving to a new kernel to
-update the user-space tools at the same time.  Removing the module
-parameters with the last patch might be rushed, they should probably
-remain for a few kernel cycles with a warning.  When the tools are
-updated for the new interface, they should probably maintain fallback
-support for the module parameters for a while as well.
+> This patch contains minor fixes to make cxgb4vf driver work with the updates to
+> shared firmware/hardware header files.
+> 
+> Signed-off-by: Naresh Kumar Inna <naresh@chelsio.com>
 
-- Chris
+You cannot submit a patch set that isn't bisectable, and in particular
+create a situation that mid-way through your patch set things do not
+build or operate correctly.
