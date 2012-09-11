@@ -1,51 +1,99 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Fix a use-after-free triggered by device removal
-Date: Mon, 10 Sep 2012 16:38:43 -0700
-Message-ID: <20120910233843.GI7677@google.com>
-References: <5044BAD2.7060901@acm.org>
- <91D94272-CA62-4E68-87D7-CE77DE776CC9@cs.wisc.edu>
- <5048E45E.1070302@acm.org>
- <5048E80B.5010101@cs.wisc.edu>
- <5048F0D9.6080403@acm.org>
- <20120906232031.GU29092@google.com>
- <50499AC6.1050008@acm.org>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [RFC PATCH 0/5] Reorganize libfcoe control interfaces
+Date: Mon, 10 Sep 2012 17:05:20 -0700
+Message-ID: <504E8040.70403@broadcom.com>
+References: <20120910225908.13140.97277.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:44376 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757987Ab2IJXis (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2012 19:38:48 -0400
-Received: by dady13 with SMTP id y13so1702275dad.19
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Sep 2012 16:38:48 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <50499AC6.1050008@acm.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:3836 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754645Ab2IKAF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Sep 2012 20:05:29 -0400
+In-Reply-To: <20120910225908.13140.97277.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>
+To: Robert Love <robert.w.love@intel.com>
+Cc: netdev@vger.kernel.org, gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-Hello,
+On 9/10/2012 3:59 PM, Robert Love wrote:
+> The following series implements a move from using module parameters
+> as control interfaces to /sys/bus/fcoe based interfaces. A sysfs infrastructure
+> was added to the kernel a few cycles ago, this series builds on that work.
+>
+> It moves the create, vn2vn_create, destroy, enable and disable interfaces
+> from /sys/module/libfcoe/parameters/ to various places under /sys/bus/fcoe/.
+> These interfaces simply are not module configurations- they are control
+> interfaces.
+>
+> A second goal of this series is to change the initialization sequence for
+> a FCoE device. The result of this series is that interfaces created using
+> libfcoe.ko interfaces (i.e. fcoe.ko or bnx2fc.ko) will have the following
+> starting steps-
+>
+> 1) Create/alloc the port
+>     - Allocate kernel memory and create per-instance sysfs devices
+>     - No discovery or login
+>
+> 2) Configure the port
+>     - Change mode, set ddp_min, etc...
+>
+> 3) Start the port
+>     - Begins discovery and/or login (depending on mode)
+>
+> 4) Destroy the port
+>     - Logout and free all memory
 
-On Fri, Sep 07, 2012 at 08:57:10AM +0200, Bart Van Assche wrote:
-> I'm not sure it would be a good idea to add a blk_queue_dead() check in
-> any of the __blk_run_queue() variants since blk_drain_queue() can invoke
-> __blk_run_queue() to drain the queue.
+Robert, Can you please let me now what is the motivation for this change 
+and what problem are we solving with this approach? Is this primarily to 
+allow user to set the mode?
 
-Right, we can't cancel requests from block layer which were already
-seen by the driver.
+I'm concerned that we will be breaking user space compatibility with 
+this change, as there should be a corresponding fcoemon/fipvlan change 
+along with this, and existing utilities will not work.  Also the way we 
+start fcoe will be completely different and the user may need to do the 
+scripting changes, if any.
 
-> Also, as far as I can see the functions that can insert a request into
-> the queue (blk_insert_cloned_request(), queue_unplugged(),
-> blk_execute_rq_nowait()) all check whether the queue is dead before
-> inserting a request. That should be sufficient to prevent that new
-> requests are queued after QUEUE_FLAG_DEAD has been set.
+Thanks,
+Bhanu
 
-Yes, but does that guarantee that none would call into ->request_fn()?
-If so, fine; otherwise, we may need to add another state to prevent
-that.
+>
+> I'm looking for feedback on using sysfs files as control interfaces that
+> the user (application) would write interface names to. I modeled this
+> series off of the bonding sysfs interface, but it was suggested to me that
+> it might not be a good example. I belive bonding uses two values per-file
+> a '+' or a '-" to add or delete and then the ifname apended. I am simply
+> writing the ifname to the ctlr_create or ctlr_destroy.
+>
+> Series compiled and tested against v3.5. libfcoe.ko compile warning fixed
+> upstream after v3.5, anyone who compiles this can ignore section mismatch
+> warning. Also note that a modified fcoemon is needed to use the fcoe system
+> service against this kernel modification. I'd be happy to provide that
+> fcoemon code on request.
+>
+> ---
+>
+> Robert Love (5):
+>        libfcoe, fcoe: Allow user to set a ctlr's mode
+>        libfcoe: Create new libfcoe control interfaces
+>        fcoe: Use new fcoe_sysfs control interface
+>        bnx2fc: Use new fcoe_sysfs control interface
+>        libfcoe, fcoe: Remove libfcoe module parameters
+>
+>
+>   Documentation/ABI/testing/sysfs-bus-fcoe |   51 +++++++
+>   drivers/scsi/bnx2fc/bnx2fc_fcoe.c        |   98 ++++++++-----
+>   drivers/scsi/fcoe/fcoe.c                 |  229 +++++++++++++++---------------
+>   drivers/scsi/fcoe/fcoe.h                 |    9 +
+>   drivers/scsi/fcoe/fcoe_ctlr.c            |   24 +++
+>   drivers/scsi/fcoe/fcoe_sysfs.c           |  139 ++++++++++++++++++
+>   drivers/scsi/fcoe/fcoe_transport.c       |  174 ++++-------------------
+>   include/scsi/fcoe_sysfs.h                |    5 +
+>   include/scsi/libfcoe.h                   |   20 ++-
+>   9 files changed, 445 insertions(+), 304 deletions(-)
+>
 
-Thanks.
 
--- 
-tejun
