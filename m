@@ -1,37 +1,40 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
-Date: Tue, 11 Sep 2012 14:35:21 +0200
-Message-ID: <13778612.777Jy5uJnq@linux-lqwf.site>
-References: <Pine.LNX.4.44L0.1209061437050.1182-100000@iolanthe.rowland.org> <3491742.cmOxhNregO@linux-lqwf.site> <20120911123116.GB20978@mint-spring.sh.intel.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: 4 isci patches from isci-for-3.6 tag?
+Date: Tue, 11 Sep 2012 12:41:29 +0000
+Message-ID: <1347367288.2951.27.camel@dabdike.int.hansenpartnership.com>
+References: <D9FFE20C522965449E182ACE73889AEB19007E46@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20120911123116.GB20978@mint-spring.sh.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([64.131.90.16]:41152 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755123Ab2IKMlc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Sep 2012 08:41:32 -0400
+In-Reply-To: <D9FFE20C522965449E182ACE73889AEB19007E46@IRSMSX102.ger.corp.intel.com>
+Content-Language: en-US
+Content-ID: <793787C49732C749B4BDFF42F4996CBA@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
 
-On Tuesday 11 September 2012 20:31:17 Aaron Lu wrote:
-> OK, I think I got your meaning.
-> 
-> For a simpler scenario:
-> 1 User application did an ioctl to lock the door of the ODD when there
-> is no medium inside(but why? :-);
-> 2 The ODD is runtime suspended;
-> 3 The ODD is runtime powered off;
-> 4 User presses the eject button, and the door is ejected in sr_resume.
-> 
-> Condition 1 is a must for this to happen, as if there is medium inside,
-> the ODD will never be powered off; or if the underlying block device is
-> opened by some process, it will not enter runtime suspend state.
-> 
-> Looks like I need to record if the door is locked in scsi_cd structure
-> so that I did not mistakenly eject the door. Does this sound OK?
-
-Yes, that will do.
-
-	Regards
-		Oliver
-
+T24gVHVlLCAyMDEyLTA5LTExIGF0IDEyOjI5ICswMDAwLCBEb3JhdSwgTHVrYXN6IHdyb3RlOg0K
+PiBIaSBKYW1lcw0KPiANCj4gV2hhdCBhcmUgeW91IGdvaW5nIHRvIGRvIHdpdGggdGhlIGZvbGxv
+d2luZyBmb3VyIElTQ0kgcGF0Y2hlcyBmcm9tIGlzY2ktZm9yLTMuNiB0YWc/Og0KPiANCj4gNjcz
+NDA5MmU2NjAxMWRlZjc4NzViZDY3YmVlZjg4OWQwZmVlMWNjOSAgICBpc2NpOiBhZGQgYSBjb3Vw
+bGUgX19pb21lbSBhbm5vdGF0aW9ucw0KPiA2Nzc4N2MzMzA3NjJlYjg4NGJmOGMxNjlmZTk0MjI2
+M2Q1NWVjMTYyICAgIGlzY2k6IG1ha2UgZnVuY3Rpb24gZGVjbGFyYXRpb24gbWF0Y2ggaW1wbGVt
+ZW50YXRpb24NCj4gYTkwMDM3NTYwNTg4ZTUxYjNlOThiNDk1Mzc3OTkxMzdjYmZkYTE3ZCAgaXNj
+aTogZml4IENPTVNBUyBuZWdhdGlvbiB0aW1vdXQgd29ya2Fyb3VuZCBmb3IgV0QgU0FTIGRyaXZl
+cw0KPiA2ZDcwYTc0ZmZkNjE2MDczYTY4YWUwOTc0ZDk4ODE5YmZhOGU2ZGE2ICAgaXNjaTogZml4
+IGlzY2lfcGNpX3Byb2JlKCkgZ2VuZXJhdGVzIHdhcm5pbmcgb24gZWZpIGZhaWx1cmUgcGF0aA0K
+PiAoYnk6IERhbiBDYXJwZW50ZXIsIERhdmUgTWF1cmVyIGFuZCBEYW4gV2lsbGlhbXMpDQo+IA0K
+PiBXZSBob3BlIHRoZXkgd2lsbCBnZXQgdG8gdGhlIHVwc3RyZWFtIGtlcm5lbCBzb29uLi4uDQoN
+ClRoZXkgd2VyZSB0YWdnZWQgZm9yIC1uZXh0IGFuZCBtYW5hZ2VkIHRvIG1pc3MgdGhlIG1lcmdl
+IHdpbmRvdyBiZWNhdXNlDQppdCBjbG9zZWQgZWFybHkuICBJIGNhbid0IHJlYWxseSBkbyBhbnl0
+aGluZyB3aXRoIHRoZW0gc2luY2UgdGhleSdyZQ0KcGFydCBvZiBhIHNpZ25lZCBwdWxsLCB1bmxl
+c3Mgc29tZW9uZSB0YWtlcyB0aGUgdHJlZSBhcGFydCBhbmQgcmVkb2VzDQp0aGVtIGFzIGluZGl2
+aWR1YWwgcGF0Y2hlcy4NCg0KTm9uZSBvZiB0aGVtIGxvb2tzIGxpa2UgLXJjIGNhbmRpZGF0ZXMs
+IHRob3VnaCBiZWNhdXNlIHRoZXkgZG9uJ3Qgc2VlbQ0KdG8gaGF2ZSB1c2VyIHZpc2libGUgYnVn
+cy4NCg0KSmFtZXMNCg0K
