@@ -1,55 +1,57 @@
-From: Dan Williams <djbw@fb.com>
-Subject: Re: 4 isci patches from isci-for-3.6 tag?
-Date: Tue, 11 Sep 2012 11:43:28 -0700
-Message-ID: <CAA9_cmeBP26iyFR_4wJiFg+vaqv8xUm3ngq09Ur_=izCHyPOJg@mail.gmail.com>
-References: <D9FFE20C522965449E182ACE73889AEB19007E46@IRSMSX102.ger.corp.intel.com>
-	<1347367288.2951.27.camel@dabdike.int.hansenpartnership.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Re: [RFC PATCH 0/5] Reorganize libfcoe control interfaces
+Date: Tue, 11 Sep 2012 18:47:33 +0000
+Message-ID: <504F8744.8000400@intel.com>
+References: <20120910225908.13140.97277.stgit@fritz>
+ <CAHNqLyUUeVPVzvZCKzmbp0LdOGnOYudOehVfagySokrq8zj4hA@mail.gmail.com>
+ <504F76A1.50809@intel.com> <504F836C.3040907@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:51645 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751895Ab2IKSnf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Sep 2012 14:43:35 -0400
-Received: by lagy9 with SMTP id y9so543261lag.19
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Sep 2012 11:43:34 -0700 (PDT)
-In-Reply-To: <1347367288.2951.27.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <504F836C.3040907@broadcom.com>
+Content-Language: en-US
+Content-ID: <80E25DF96BCD624CB6466B638F70A179@intel.com>
+Sender: netdev-owner@vger.kernel.org
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: Chris Leech <leech@pobox.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "Dorau, Lukasz" <lukasz.dorau@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
 
-On Tue, Sep 11, 2012 at 5:41 AM, James Bottomley
-<jbottomley@parallels.com> wrote:
-> On Tue, 2012-09-11 at 12:29 +0000, Dorau, Lukasz wrote:
->> Hi James
->>
->> What are you going to do with the following four ISCI patches from isci-for-3.6 tag?:
->>
->> 6734092e66011def7875bd67beef889d0fee1cc9    isci: add a couple __iomem annotations
->> 67787c330762eb884bf8c169fe942263d55ec162    isci: make function declaration match implementation
->> a90037560588e51b3e98b49537799137cbfda17d  isci: fix COMSAS negation timout workaround for WD SAS drives
->> 6d70a74ffd616073a68ae0974d98819bfa8e6da6   isci: fix isci_pci_probe() generates warning on efi failure path
->> (by: Dan Carpenter, Dave Maurer and Dan Williams)
->>
->> We hope they will get to the upstream kernel soon...
->
-> They were tagged for -next and managed to miss the merge window because
-> it closed early.
-
-Just a one-off growing pain of the new process:
-
-http://marc.info/?l=linux-scsi&m=134327946218188&w=2
-
-> I can't really do anything with them since they're
-> part of a signed pull, unless someone takes the tree apart and redoes
-> them as individual patches.
->
-> None of them looks like -rc candidates, though because they don't seem
-> to have user visible bugs.
-
-They merge fine with latest upstream, do they need to be rebased as patches?
-
---
-Dan
+T24gVHVlIDExIFNlcCAyMDEyIDExOjMxOjA4IEFNIFBEVCwgQmhhbnUgUHJha2FzaCBHb2xsYXB1
+ZGkgd3JvdGU6DQo+IE9uIDkvMTEvMjAxMiAxMDozNiBBTSwgTG92ZSwgUm9iZXJ0IFcgd3JvdGU6
+DQo+PiBPbiBUdWUgMTEgU2VwIDIwMTIgMTA6MDY6MjkgQU0gUERULCBDaHJpcyBMZWVjaCB3cm90
+ZToNCj4+PiBPbiBNb24sIFNlcCAxMCwgMjAxMiBhdCAzOjU5IFBNLCBSb2JlcnQgTG92ZQ0KPj4+
+IDxyb2JlcnQudy5sb3ZlQGludGVsLmNvbT4gd3JvdGU6DQo+Pg0KPj4gPHNuaXA+DQo+Pg0KPj4+
+PiAxKSBDcmVhdGUvYWxsb2MgdGhlIHBvcnQNCj4+Pj4gICAgICAtIEFsbG9jYXRlIGtlcm5lbCBt
+ZW1vcnkgYW5kIGNyZWF0ZSBwZXItaW5zdGFuY2Ugc3lzZnMgZGV2aWNlcw0KPj4+PiAgICAgIC0g
+Tm8gZGlzY292ZXJ5IG9yIGxvZ2luDQo+Pj4+DQo+Pg0KPj4gIyBlY2hvIGV0aDMuMTcyLWZjb2Ug
+PiAvc3lzL2J1cy9mY29lL2N0bHJfY3JlYXRlDQo+DQo+IEknbSBhc3N1bWluZyB0aGUgZXhpc3Rp
+bmcgZnVuY3Rpb25hbGl0eSBvZiBhdXRvbWF0aWNhbGx5IGNyZWF0aW5nIHRoZQ0KPiB2bGFuIGlu
+dGVyZmFjZSBieSBmY29lbW9uICh1c2luZyB0aGUgY2ZnLWV0aFgpIGNvbnRpbnVlcyB0byBleGlz
+dCBhbmQNCj4gdGhlIGFib3ZlIGlzIG5vdCBhIHJlcGxhY2VtZW50IGZvciBmY29lYWRtIC1jLg0K
+Pg0KDQpZZXMsIHlvdSdyZSByaWdodC4gVGhlc2UgZXhhbXBsZXMgYXJlIG9ubHkgaWYgeW91IHdl
+cmUgdXNpbmcgdGhlIA0KaW50ZXJmYWNlcyBmcm9tIEJBU0guIEl0J3MgYWxsIGNvZGVkIHVwIGZv
+ciBmY29lbW9uIGFuZCB0aGVyZSBzaG91bGRuJ3QgDQpiZSBhbnkgdXNlciBleHBlcmllbmNlIGNo
+YW5nZSB3aXRoIHRoZSBuZXcgY29kZS4gSSdsbCBwb3N0IHRoYXQgY29kZSB0byANCmRldmVsQG9w
+ZW4tZmNvZS5vcmcgb25jZSBJIGdldCBpdCByZWJhc2VkIGFuZCBxdWlja2x5IHRlc3RlZC4NCg0K
+Pj4NCj4+IHJlc3VsdHMgaW46DQo+Pg0KPj4gL3N5cy9idXMvZmNvZS9kZXZpY2VzL2N0bHJfMC8N
+Cj4+DQo+Pj4+IDIpIENvbmZpZ3VyZSB0aGUgcG9ydA0KPj4+PiAgICAgIC0gQ2hhbmdlIG1vZGUs
+IHNldCBkZHBfbWluLCBldGMuLi4NCj4+Pj4NCj4+DQo+PiAjIGVjaG8gIkZhYnJpYyIgPiAvc3lz
+L2J1cy9mY29lL2RldmljZXMvY3Rscl8wL21vZGUNCj4+DQo+PiBubyB2aXNpYmxlIGNoYW5nZQ0K
+Pj4NCj4+Pj4gMykgU3RhcnQgdGhlIHBvcnQNCj4+Pj4gICAgICAtIEJlZ2lucyBkaXNjb3Zlcnkg
+YW5kL29yIGxvZ2luIChkZXBlbmRpbmcgb24gbW9kZSkNCj4+Pj4NCj4+DQo+PiAjIGVjaG8gMSA+
+IC9zeXMvYnVzL2Zjb2UvZGV2aWNlcy9jdGxyXzAvc3RhcnQNCj4+DQo+PiBCZWdpbnMgZGlzY292
+ZXJ5IGFuZCBsb2dpbi4gQXNzdW1pbmcgdGhlcmUgYXJlIEZDRnMgdGhlbiByZXN1bHRzIGluOg0K
+Pj4NCj4+IC9zeXMvYnVzL2Zjb2UvZGV2aWNlcy9mY2ZfMA0KPg0KPiBJJ20gYWxzbyBhc3N1bWlu
+ZyB0aGF0IHRoZSBhYm92ZSB0aHJlZSBzdGVwcyBjYW4gYmUgY2x1YmJlZCBieQ0KPiBmY29ldXRp
+bHMsIHBlcmhhcHMgYnkgYWRkaW5nICdtb2RlJyBwYXJhbWV0ZXIgaW50byB0aGUgY2ZnLWV0aFgg
+ZmlsZS4NCj4gVGhhdCB3YXkgJ3NlcnZpY2UgZmNvZSBzdGFydCcgd2lsbCBiZSBubyBkaWZmZXJl
+bnQgd2l0aCB0aGUgcHJvcG9zZWQNCj4gbW9kZWwsIGV4Y2VwdCB0aGF0IHRoZXJlIHdpbGwgYmUg
+bXVsdGlwbGUgZW50cnkgcG9pbnRzIGludG8gdGhlIGRyaXZlcg0KPiAoYWxsb2MsIGNvbmZpZywg
+c3RhcnQpIGluc3RlYWQgb2YganVzdCBvbmUgKGNyZWF0ZSkuDQo+DQoNClllcywgeW91J3JlIHJp
+Z2h0IGhlcmUgdG9vLiBIb3dldmVyLCB0aGUgZGVmYXVsdCBpcyAnRmFicmljJyBzbyBmY29lbW9u
+IA0Kd29uJ3QgYWN0dWFsbHkgaGF2ZSB0byBjaGFuZ2UgdGhlIG1vZGUuIEhvd2V2ZXIsIEknZCBs
+aWtlIHRvIHNlZSBWTjJWTiANCnN1cHBvcnQgYWRkZWQgdG8gZmNvZWFkbS9mY29lbW9uLiBJdCdz
+IG9uIHRoZSBUT0RPIGxpc3QuIE9uY2UgdGhhdCdzIA0KaW1wbGVtZW50ZWQgZmNvZW1vbiB3b3Vs
+ZCBuZWVkIHRvIGNoYW5nZSB0aGUgbW9kZSBkZXBlbmRpbmcgb24gdGhlIA0KdXNlcidzIHNlbGVj
+dGlvbi4=
