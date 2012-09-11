@@ -1,40 +1,113 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: 4 isci patches from isci-for-3.6 tag?
-Date: Tue, 11 Sep 2012 12:41:29 +0000
-Message-ID: <1347367288.2951.27.camel@dabdike.int.hansenpartnership.com>
-References: <D9FFE20C522965449E182ACE73889AEB19007E46@IRSMSX102.ger.corp.intel.com>
+From: Michael J Gruber <michaeljgruber+fedora-lists@gmail.com>
+Subject: Wrong SSD sector count with after reboot
+Date: Tue, 11 Sep 2012 17:02:23 +0200
+Message-ID: <504F527F.7000604@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:41152 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755123Ab2IKMlc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Sep 2012 08:41:32 -0400
-In-Reply-To: <D9FFE20C522965449E182ACE73889AEB19007E46@IRSMSX102.ger.corp.intel.com>
-Content-Language: en-US
-Content-ID: <793787C49732C749B4BDFF42F4996CBA@sw.swsoft.com>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:39485 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752838Ab2IKPC2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2012 11:02:28 -0400
+Received: by eekc1 with SMTP id c1so499604eek.19
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Sep 2012 08:02:27 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
+To: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDEyLTA5LTExIGF0IDEyOjI5ICswMDAwLCBEb3JhdSwgTHVrYXN6IHdyb3RlOg0K
-PiBIaSBKYW1lcw0KPiANCj4gV2hhdCBhcmUgeW91IGdvaW5nIHRvIGRvIHdpdGggdGhlIGZvbGxv
-d2luZyBmb3VyIElTQ0kgcGF0Y2hlcyBmcm9tIGlzY2ktZm9yLTMuNiB0YWc/Og0KPiANCj4gNjcz
-NDA5MmU2NjAxMWRlZjc4NzViZDY3YmVlZjg4OWQwZmVlMWNjOSAgICBpc2NpOiBhZGQgYSBjb3Vw
-bGUgX19pb21lbSBhbm5vdGF0aW9ucw0KPiA2Nzc4N2MzMzA3NjJlYjg4NGJmOGMxNjlmZTk0MjI2
-M2Q1NWVjMTYyICAgIGlzY2k6IG1ha2UgZnVuY3Rpb24gZGVjbGFyYXRpb24gbWF0Y2ggaW1wbGVt
-ZW50YXRpb24NCj4gYTkwMDM3NTYwNTg4ZTUxYjNlOThiNDk1Mzc3OTkxMzdjYmZkYTE3ZCAgaXNj
-aTogZml4IENPTVNBUyBuZWdhdGlvbiB0aW1vdXQgd29ya2Fyb3VuZCBmb3IgV0QgU0FTIGRyaXZl
-cw0KPiA2ZDcwYTc0ZmZkNjE2MDczYTY4YWUwOTc0ZDk4ODE5YmZhOGU2ZGE2ICAgaXNjaTogZml4
-IGlzY2lfcGNpX3Byb2JlKCkgZ2VuZXJhdGVzIHdhcm5pbmcgb24gZWZpIGZhaWx1cmUgcGF0aA0K
-PiAoYnk6IERhbiBDYXJwZW50ZXIsIERhdmUgTWF1cmVyIGFuZCBEYW4gV2lsbGlhbXMpDQo+IA0K
-PiBXZSBob3BlIHRoZXkgd2lsbCBnZXQgdG8gdGhlIHVwc3RyZWFtIGtlcm5lbCBzb29uLi4uDQoN
-ClRoZXkgd2VyZSB0YWdnZWQgZm9yIC1uZXh0IGFuZCBtYW5hZ2VkIHRvIG1pc3MgdGhlIG1lcmdl
-IHdpbmRvdyBiZWNhdXNlDQppdCBjbG9zZWQgZWFybHkuICBJIGNhbid0IHJlYWxseSBkbyBhbnl0
-aGluZyB3aXRoIHRoZW0gc2luY2UgdGhleSdyZQ0KcGFydCBvZiBhIHNpZ25lZCBwdWxsLCB1bmxl
-c3Mgc29tZW9uZSB0YWtlcyB0aGUgdHJlZSBhcGFydCBhbmQgcmVkb2VzDQp0aGVtIGFzIGluZGl2
-aWR1YWwgcGF0Y2hlcy4NCg0KTm9uZSBvZiB0aGVtIGxvb2tzIGxpa2UgLXJjIGNhbmRpZGF0ZXMs
-IHRob3VnaCBiZWNhdXNlIHRoZXkgZG9uJ3Qgc2VlbQ0KdG8gaGF2ZSB1c2VyIHZpc2libGUgYnVn
-cy4NCg0KSmFtZXMNCg0K
+[Originally posted to fedora-general, where Alan Cox suspected a usb
+issue and suggested linux-usb; they suggested linux-scsi.]
+
+F17 with current updates gets the sector count wrong (too large by 5)
+for my SSD (Jetflash USB), resulting in read errors (during boot, fdisk
+reading the disk etc.) for those sectors. While everything "seems to
+work" this is not OK, of course. I'd be grateful for any clue.
+
+[The device provides USB to S-ATA, is USB3, connected to a USB2 port.]
+
+Test systems (Fedora)
+============
+F16 with updates (kernel 3.4.9-2)
+F17 live (kernel 3.3.4-5)
+F17 with updates (kernels 3.3.4-5, 3.5.0-2, 3.5.2-3,
+3.5.3-13.6.0-0.rc2.git2.1.fc18)
+
+After several rounds of testing, the described problem appears to be
+independent of the mentioned kernel versions. It is not present after
+the first boot, appears with the first soft reboot and remains to be
+present until the next hard reboot (shutdown, wait a few secs, boot again).
+
+[Since I had switched between different kernels by rebooting I had been
+tricked into that previous diagnosis. After rebooting the same
+versions again and again, soft and hard, I'm convinced it's the
+difference between first boot and subsequent reboots.]
+
+
+lsusb
+=====
+Bus 002 Device 003: ID 2174:07d0
+
+dmesg
+=====
+(after a common part about the USB to S-ATA device)
+
+After a cold boot:
+[  287.229149] scsi6 : usb-storage 2-1.5:1.0
+[  288.230862] scsi 6:0:0:0: Direct-Access     JetFlash TS128GSSD18C3
+ 0004 PQ: 0 ANSI: 0
+[  288.231591] sd 6:0:0:0: Attached scsi generic sg7 type 0
+[  288.232184] sd 6:0:0:0: [sdg] 250069676 512-byte logical blocks: (128
+GB/119 GiB)
+[  288.234815] sd 6:0:0:0: [sdg] Write Protect is off
+[  288.234820] sd 6:0:0:0: [sdg] Mode Sense: 03 00 00 00
+[  288.235676] sd 6:0:0:0: [sdg] No Caching mode page present
+[  288.235680] sd 6:0:0:0: [sdg] Assuming drive cache: write through
+
+After a reboot:
+[    2.661796] scsi5 : usb-storage 2-1.5:1.0
+[    3.665597] scsi 5:0:0:0: Direct-Access     JetFlash TS128GSSD18C3
+ 0004 PQ: 0 ANSI: 0
+[    3.666375] sd 5:0:0:0: Attached scsi generic sg6 type 0
+[    3.666917] sd 5:0:0:0: [sdf] 250069681 512-byte logical blocks: (128
+GB/119 GiB)
+[    3.667784] sd 5:0:0:0: [sdf] Write Protect is off
+[    3.667789] sd 5:0:0:0: [sdf] Mode Sense: 03 00 00 00
+[    3.668657] sd 5:0:0:0: [sdf] No Caching mode page present
+[    3.668661] sd 5:0:0:0: [sdf] Assuming drive cache: write through
+
+Note the different sector count!
+After enumerating the partitions, dmesg throws:
+[    3.674173]  sdf: sdf1 sdf2 sdf3 sdf4 < sdf5 >
+[    3.678160] sd 5:0:0:0: [sdf] No Caching mode page present
+[    3.678165] sd 5:0:0:0: [sdf] Assuming drive cache: write through
+[    3.678168] sd 5:0:0:0: [sdf] Attached SCSI disk
+
+[    3.694795] sd 5:0:0:0: [sdf] Unhandled sense code
+[    3.694798] sd 5:0:0:0: [sdf]  Result: hostbyte=invalid
+driverbyte=DRIVER_SENSE
+[    3.694802] sd 5:0:0:0: [sdf]  Sense Key : Medium Error [current]
+[    3.694806] sd 5:0:0:0: [sdf]  Add. Sense: Recorded entity not found
+[    3.694811] sd 5:0:0:0: [sdf] CDB: Read(10): 28 00 0e e7 c2 b0 00 00
+01 00
+[    3.694821] end_request: critical target error, dev sdf, sector 250069680
+[    3.694824] Buffer I/O error on device sdf, logical block 250069680
+
+The last few lines get repeated.
+
+The same difference in sector size is reported by fdisk and hdparm:
+ geometry      = 15566/255/63, sectors = 250069676, start = 0
+vs.
+ geometry      = 15566/255/63, sectors = 250069681, start = 0
+
+Interestingly, "hdparm -N" agrees in both cases:
+max sectors   = 250069680/1(250069680?), HPA setting seems invalid
+(buggy kernel device driver?)
+
+But ignore_hpa=0 for the libata module in all cases (Fedora default).
+
+Stomped!
+
+I can provide the full dmesg, of course. Please help :|
+
+
