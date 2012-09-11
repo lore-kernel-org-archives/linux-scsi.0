@@ -1,53 +1,58 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sg_io: allow UNMAP and WRITE SAME without CAP_SYS_RAWIO
-Date: Tue, 11 Sep 2012 15:13:53 -0700
-Message-ID: <CAOS58YNbzX=FJk6X5zB6iQ6kVVugc_2SegyizpGpVVLLgEj6QQ@mail.gmail.com>
-References: <1342801801-15617-1-git-send-email-pbonzini@redhat.com>
-	<20120911165953.GK7677@google.com>
-	<504F7B65.9090603@redhat.com>
-	<20120911182904.GS7677@google.com>
-	<504F88CB.6030105@redhat.com>
-	<20120911191325.GU7677@google.com>
-	<504F8FF0.3000408@redhat.com>
-	<20120911200150.GV7677@google.com>
-	<504FB22E.4090707@redhat.com>
-	<20120911220218.GH7677@google.com>
-	<504FB6CB.6020607@redhat.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH] scsi_netlink: Remove dead and buggy code
+Date: Tue, 11 Sep 2012 15:40:08 -0700
+Message-ID: <878vcggp4n.fsf@xmission.com>
+References: <87pq5xjw4m.fsf@xmission.com>
+	<20120910.150700.1197774171539303770.davem@davemloft.net>
+	<1347314879.3038.74.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <504FB6CB.6020607@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Kay Sievers <kay.sievers@vrfy.org>, Al Viro <viro@zeniv.linux.org.uk>
+Content-Type: text/plain
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1347314879.3038.74.camel@dabdike.int.hansenpartnership.com>
+	(James Bottomley's message of "Mon, 10 Sep 2012 23:07:59 +0100")
+Sender: netdev-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-On Tue, Sep 11, 2012 at 3:10 PM, Paolo Bonzini <pbonzini@redhat.com> wrote:
-> Il 12/09/2012 00:02, Tejun Heo ha scritto:
->> SG_IO itself is a bypassing interface.  It bypasses most of block
->> layer and the kernel doesn't have any idea (apart from the adhoc
->> filtering) about what's going on.
+> On Mon, 2012-09-10 at 15:07 -0400, David Miller wrote:
+>> From: ebiederm@xmission.com (Eric W. Biederman)
+>> Date: Fri, 07 Sep 2012 15:39:21 -0700
+>> 
+>> > 
+>> > The scsi netlink code confuses the netlink port id with a process id,
+>> > going so far as to read NETLINK_CREDS(skb)->pid instead of the correct
+>> > NETLINK_CB(skb).pid.  Fortunately it does not matter because nothing
+>> > registers to respond to scsi netlink requests.
+>> > 
+>> > The only interesting use of the scsi_netlink interface is
+>> > fc_host_post_vendor_event which sends a netlink multicast message.
+>> > 
+>> > Since nothing registers to handle scsi netlink messages kill all of the
+>> > registration logic, while retaining the same error handling behavior
+>> > preserving the userspace visible behavior and removing all of the
+>> > confused code that thought a netlink port id was a process id.
+>> > 
+>> > This was tested with a kernel allyesconfig build which had no problems.
+>> > 
+>> > Cc: James Bottomley <James.Bottomley@parallels.com>
+>> > Cc: James Smart <James.Smart@Emulex.Com>
+>> > Signed-off-by: "Eric W. Biederman" <ebiederm@xmission.com>
+>> 
+>> James et al., please review and ACK.
 >
-> That's very much the point.  The guest must have free reins.
->
-> You asked "Could being able to bypass the filters for this "you own this
-> LUN" be a solution?", I said yes and outlined how.  Do you agree with
-> the proposed solution?
+> I'll defer to the decision of James Smart and the other FC contributors,
+> since the FC transport class is really the only one using a netlink
+> interface.
 
-Ooh, yeah, I like that one. I was still thinking about the bpf one. It
-being based on cgroup made me worried even more. :)
+So just for curiosity I searched the entire git history for scsi_nl_add_
+and the only commit that I found was the addition of that code to the
+tree in August of 2008.
 
-> Sure, I'm fine with leaving the current ad hoc filtering aside.  Again,
-> I was hoping to get most of the job done by loosening the filter a bit,
-> but discussion is inversely proportional to patch length sometimes.
+Does anyone have any reason to keep scsi_nl_add_transport or
+scsi_nl_add_driver that have never been used in the 4 years since
+they have been added?
 
-Sorry about dragging it on. The cdb filtering one has always been
-controversial and I think it'll continue to be. It's an unfortunate
-thing that we had to add.
-
-Thanks.
-
--- 
-tejun
+Eric
