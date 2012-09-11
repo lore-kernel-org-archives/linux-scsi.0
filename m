@@ -1,71 +1,67 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sg_io: allow UNMAP and WRITE SAME without CAP_SYS_RAWIO
-Date: Tue, 11 Sep 2012 09:59:53 -0700
-Message-ID: <20120911165953.GK7677@google.com>
-References: <1342801801-15617-1-git-send-email-pbonzini@redhat.com>
+From: Chris Leech <leech@pobox.com>
+Subject: Re: [RFC PATCH 0/5] Reorganize libfcoe control interfaces
+Date: Tue, 11 Sep 2012 10:06:29 -0700
+Message-ID: <CAHNqLyUUeVPVzvZCKzmbp0LdOGnOYudOehVfagySokrq8zj4hA@mail.gmail.com>
+References: <20120910225908.13140.97277.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1342801801-15617-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20120910225908.13140.97277.stgit@fritz>
+Sender: netdev-owner@vger.kernel.org
+To: Robert Love <robert.w.love@intel.com>
+Cc: netdev@vger.kernel.org, gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org, bprakash@broadcom.com, devel@open-fcoe.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+On Mon, Sep 10, 2012 at 3:59 PM, Robert Love <robert.w.love@intel.com> wrote:
+> The following series implements a move from using module parameters
+> as control interfaces to /sys/bus/fcoe based interfaces. A sysfs infrastructure
+> was added to the kernel a few cycles ago, this series builds on that work.
+>
+> It moves the create, vn2vn_create, destroy, enable and disable interfaces
+> from /sys/module/libfcoe/parameters/ to various places under /sys/bus/fcoe/.
+> These interfaces simply are not module configurations- they are control
+> interfaces.
+>
+> A second goal of this series is to change the initialization sequence for
+> a FCoE device. The result of this series is that interfaces created using
+> libfcoe.ko interfaces (i.e. fcoe.ko or bnx2fc.ko) will have the following
+> starting steps-
+>
+> 1) Create/alloc the port
+>    - Allocate kernel memory and create per-instance sysfs devices
+>    - No discovery or login
+>
+> 2) Configure the port
+>    - Change mode, set ddp_min, etc...
+>
+> 3) Start the port
+>    - Begins discovery and/or login (depending on mode)
+>
+> 4) Destroy the port
+>    - Logout and free all memory
+>
+> I'm looking for feedback on using sysfs files as control interfaces that
+> the user (application) would write interface names to. I modeled this
+> series off of the bonding sysfs interface, but it was suggested to me that
+> it might not be a good example. I belive bonding uses two values per-file
+> a '+' or a '-" to add or delete and then the ifname apended. I am simply
+> writing the ifname to the ctlr_create or ctlr_destroy.
 
-On Fri, Jul 20, 2012 at 06:30:01PM +0200, Paolo Bonzini wrote:
-> These commands cannot be issued right now without giving CAP_SYS_RAWIO to
-> the process who wishes to send them.  These commands can be useful also to
-> non-privileged programs who have access to the block devices.  For example
-> a virtual machine monitor needs them to forward trim/discard to host disks.
-> 
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-> ---
->  block/scsi_ioctl.c |    3 ++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-> index 260fa80..dd71f18 100644
-> --- a/block/scsi_ioctl.c
-> +++ b/block/scsi_ioctl.c
-> @@ -168,13 +168,16 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
->  	/* Basic writing commands */
->  	__set_bit(WRITE_6, filter->write_ok);
->  	__set_bit(WRITE_10, filter->write_ok);
-> +	__set_bit(WRITE_SAME, filter->write_ok);
->  	__set_bit(WRITE_VERIFY, filter->write_ok);
->  	__set_bit(WRITE_12, filter->write_ok);
->  	__set_bit(WRITE_VERIFY_12, filter->write_ok);
->  	__set_bit(WRITE_16, filter->write_ok);
-> +	__set_bit(WRITE_SAME_16, filter->write_ok);
->  	__set_bit(WRITE_LONG, filter->write_ok);
->  	__set_bit(WRITE_LONG_2, filter->write_ok);
->  	__set_bit(ERASE, filter->write_ok);
-> +	__set_bit(UNMAP, filter->write_ok);
+Can you give an example session that goes through the 4 steps above
+and what the sysfs hierarchy looks like at each step?  I mostly get it
+from the patch descriptions, but I think it would help discussion of
+your proposed interfaces to see an example of them in use.
 
-FWIW, I don't think this is the right way to expose functionality
-which needs management in terms of access control, interpretation
-(stacking drivers) and serving concurrent users.  SG_IO filtering was
-mostly for cd/dvd burning and other removeable devices.  Especially
-for the former, the possibility of having a properly encapsulated
-interface was long lost and I think significant part of that is how
-the underlying technology and its hardware interface developed.  We
-basically just gave up.  Fortunately, they're going the way of
-floppies.
+This feels a little awkward with all the special control files.  Have
+you thought about something designed for creating kernel objects, like
+configfs?  Similarly the separate start, enable, disable files vs.
+having some sort of status attribute that can take different values.
+I feel like these need to be rethought as attributes instead of
+triggers.  Is there a big difference between start and enable?  Can
+you achieve the split between create and start by having it come up in
+a disabled state by default?
 
-So, it wouldn't be a good idea to abuse SG_IO filtering for exposing
-trim/discard.  It's something which should be retired or at least
-severely restricted in time.  I don't think we want to be developing
-new uses of it.
+That being said, I'm glad this is being reworked.  Do you have any
+other functionality in mind that this is laying the groundwork for?
 
-I think trim/discards are fairly easy to abstract and common enough to
-justify having properly abstracted interface.  In fact, we already
-have block layer interface for it - BLKDISCARD.  If it's lacking,
-let's improve that.
-
-Thanks.
-
--- 
-tejun
+- Chris
