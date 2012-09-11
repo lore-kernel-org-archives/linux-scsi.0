@@ -1,57 +1,100 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: Re: [RFC PATCH 0/5] Reorganize libfcoe control interfaces
-Date: Tue, 11 Sep 2012 18:47:33 +0000
-Message-ID: <504F8744.8000400@intel.com>
-References: <20120910225908.13140.97277.stgit@fritz>
- <CAHNqLyUUeVPVzvZCKzmbp0LdOGnOYudOehVfagySokrq8zj4hA@mail.gmail.com>
- <504F76A1.50809@intel.com> <504F836C.3040907@broadcom.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] sg_io: allow UNMAP and WRITE SAME without CAP_SYS_RAWIO
+Date: Tue, 11 Sep 2012 20:54:03 +0200
+Message-ID: <504F88CB.6030105@redhat.com>
+References: <1342801801-15617-1-git-send-email-pbonzini@redhat.com> <20120911165953.GK7677@google.com> <504F7B65.9090603@redhat.com> <20120911182904.GS7677@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <504F836C.3040907@broadcom.com>
-Content-Language: en-US
-Content-ID: <80E25DF96BCD624CB6466B638F70A179@intel.com>
-Sender: netdev-owner@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: Chris Leech <leech@pobox.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:53819 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753509Ab2IKSyI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2012 14:54:08 -0400
+In-Reply-To: <20120911182904.GS7677@google.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-T24gVHVlIDExIFNlcCAyMDEyIDExOjMxOjA4IEFNIFBEVCwgQmhhbnUgUHJha2FzaCBHb2xsYXB1
-ZGkgd3JvdGU6DQo+IE9uIDkvMTEvMjAxMiAxMDozNiBBTSwgTG92ZSwgUm9iZXJ0IFcgd3JvdGU6
-DQo+PiBPbiBUdWUgMTEgU2VwIDIwMTIgMTA6MDY6MjkgQU0gUERULCBDaHJpcyBMZWVjaCB3cm90
-ZToNCj4+PiBPbiBNb24sIFNlcCAxMCwgMjAxMiBhdCAzOjU5IFBNLCBSb2JlcnQgTG92ZQ0KPj4+
-IDxyb2JlcnQudy5sb3ZlQGludGVsLmNvbT4gd3JvdGU6DQo+Pg0KPj4gPHNuaXA+DQo+Pg0KPj4+
-PiAxKSBDcmVhdGUvYWxsb2MgdGhlIHBvcnQNCj4+Pj4gICAgICAtIEFsbG9jYXRlIGtlcm5lbCBt
-ZW1vcnkgYW5kIGNyZWF0ZSBwZXItaW5zdGFuY2Ugc3lzZnMgZGV2aWNlcw0KPj4+PiAgICAgIC0g
-Tm8gZGlzY292ZXJ5IG9yIGxvZ2luDQo+Pj4+DQo+Pg0KPj4gIyBlY2hvIGV0aDMuMTcyLWZjb2Ug
-PiAvc3lzL2J1cy9mY29lL2N0bHJfY3JlYXRlDQo+DQo+IEknbSBhc3N1bWluZyB0aGUgZXhpc3Rp
-bmcgZnVuY3Rpb25hbGl0eSBvZiBhdXRvbWF0aWNhbGx5IGNyZWF0aW5nIHRoZQ0KPiB2bGFuIGlu
-dGVyZmFjZSBieSBmY29lbW9uICh1c2luZyB0aGUgY2ZnLWV0aFgpIGNvbnRpbnVlcyB0byBleGlz
-dCBhbmQNCj4gdGhlIGFib3ZlIGlzIG5vdCBhIHJlcGxhY2VtZW50IGZvciBmY29lYWRtIC1jLg0K
-Pg0KDQpZZXMsIHlvdSdyZSByaWdodC4gVGhlc2UgZXhhbXBsZXMgYXJlIG9ubHkgaWYgeW91IHdl
-cmUgdXNpbmcgdGhlIA0KaW50ZXJmYWNlcyBmcm9tIEJBU0guIEl0J3MgYWxsIGNvZGVkIHVwIGZv
-ciBmY29lbW9uIGFuZCB0aGVyZSBzaG91bGRuJ3QgDQpiZSBhbnkgdXNlciBleHBlcmllbmNlIGNo
-YW5nZSB3aXRoIHRoZSBuZXcgY29kZS4gSSdsbCBwb3N0IHRoYXQgY29kZSB0byANCmRldmVsQG9w
-ZW4tZmNvZS5vcmcgb25jZSBJIGdldCBpdCByZWJhc2VkIGFuZCBxdWlja2x5IHRlc3RlZC4NCg0K
-Pj4NCj4+IHJlc3VsdHMgaW46DQo+Pg0KPj4gL3N5cy9idXMvZmNvZS9kZXZpY2VzL2N0bHJfMC8N
-Cj4+DQo+Pj4+IDIpIENvbmZpZ3VyZSB0aGUgcG9ydA0KPj4+PiAgICAgIC0gQ2hhbmdlIG1vZGUs
-IHNldCBkZHBfbWluLCBldGMuLi4NCj4+Pj4NCj4+DQo+PiAjIGVjaG8gIkZhYnJpYyIgPiAvc3lz
-L2J1cy9mY29lL2RldmljZXMvY3Rscl8wL21vZGUNCj4+DQo+PiBubyB2aXNpYmxlIGNoYW5nZQ0K
-Pj4NCj4+Pj4gMykgU3RhcnQgdGhlIHBvcnQNCj4+Pj4gICAgICAtIEJlZ2lucyBkaXNjb3Zlcnkg
-YW5kL29yIGxvZ2luIChkZXBlbmRpbmcgb24gbW9kZSkNCj4+Pj4NCj4+DQo+PiAjIGVjaG8gMSA+
-IC9zeXMvYnVzL2Zjb2UvZGV2aWNlcy9jdGxyXzAvc3RhcnQNCj4+DQo+PiBCZWdpbnMgZGlzY292
-ZXJ5IGFuZCBsb2dpbi4gQXNzdW1pbmcgdGhlcmUgYXJlIEZDRnMgdGhlbiByZXN1bHRzIGluOg0K
-Pj4NCj4+IC9zeXMvYnVzL2Zjb2UvZGV2aWNlcy9mY2ZfMA0KPg0KPiBJJ20gYWxzbyBhc3N1bWlu
-ZyB0aGF0IHRoZSBhYm92ZSB0aHJlZSBzdGVwcyBjYW4gYmUgY2x1YmJlZCBieQ0KPiBmY29ldXRp
-bHMsIHBlcmhhcHMgYnkgYWRkaW5nICdtb2RlJyBwYXJhbWV0ZXIgaW50byB0aGUgY2ZnLWV0aFgg
-ZmlsZS4NCj4gVGhhdCB3YXkgJ3NlcnZpY2UgZmNvZSBzdGFydCcgd2lsbCBiZSBubyBkaWZmZXJl
-bnQgd2l0aCB0aGUgcHJvcG9zZWQNCj4gbW9kZWwsIGV4Y2VwdCB0aGF0IHRoZXJlIHdpbGwgYmUg
-bXVsdGlwbGUgZW50cnkgcG9pbnRzIGludG8gdGhlIGRyaXZlcg0KPiAoYWxsb2MsIGNvbmZpZywg
-c3RhcnQpIGluc3RlYWQgb2YganVzdCBvbmUgKGNyZWF0ZSkuDQo+DQoNClllcywgeW91J3JlIHJp
-Z2h0IGhlcmUgdG9vLiBIb3dldmVyLCB0aGUgZGVmYXVsdCBpcyAnRmFicmljJyBzbyBmY29lbW9u
-IA0Kd29uJ3QgYWN0dWFsbHkgaGF2ZSB0byBjaGFuZ2UgdGhlIG1vZGUuIEhvd2V2ZXIsIEknZCBs
-aWtlIHRvIHNlZSBWTjJWTiANCnN1cHBvcnQgYWRkZWQgdG8gZmNvZWFkbS9mY29lbW9uLiBJdCdz
-IG9uIHRoZSBUT0RPIGxpc3QuIE9uY2UgdGhhdCdzIA0KaW1wbGVtZW50ZWQgZmNvZW1vbiB3b3Vs
-ZCBuZWVkIHRvIGNoYW5nZSB0aGUgbW9kZSBkZXBlbmRpbmcgb24gdGhlIA0KdXNlcidzIHNlbGVj
-dGlvbi4=
+Il 11/09/2012 20:29, Tejun Heo ha scritto:> Hello, Paolo.
+> 
+> On Tue, Sep 11, 2012 at 07:56:53PM +0200, Paolo Bonzini wrote:
+>> Understood; unfortunately, there is another major user of it
+>> (virtualization).  If you are passing "raw" LUNs down to a virtual
+>> machine, there's no possibility at all to use a properly encapsulated
+> 
+> Is there still command filtering issue when you're passing "raw" LUNs
+> down?
+
+Yes, the passing down is just a userland program that gets SCSI
+commands from the guest, sends them via SG_IO, and passes back the
+result.  If the userland program is unprivileged (it usually is), then
+you go through the filter.
+
+>> The set of use cases is so variable that no single filter can accomodate
+>> all of them: high availability people want persistent reservations, NAS
+>> people want trim/discard, but these are just two groups.  Someone is
+>> using a Windows VM to run vendor tools and wants to have access to
+>> vendor-specific commands.
+>>
+>> You can tell this last group to use root, but not everyone else who is
+>> already relying on Unix permissions, SELinux and/or device cgroups to
+>> confine their virtual machines.
+> 
+> You listed three - HA w/ persistent reservation, NAS w/ trim/discard
+> and the third which you said that using root would be fine.  Dunno
+> much about persistent reservation but I don't see why trim/discard
+> can't use existing block layer facilities whether from userland or
+> virtio-scsi?
+
+This is the userland for virtio-scsi (the kernel part of virtio-scsi is just
+a driver running in the guest).  It can run in two mode: it can do its own
+SCSI emulation, or it can just relay CDBs and their results.
+
+It can (and does) use higher-level services if SCSI emulation is done in
+userland.  In that case, trim/discard can become a BLKDISCARD or a fallocate
+for example.  However, in this case userland doesn't do any emulation and in
+fact doesn't even need to know that this CDB is a discard.
+
+Also, if it fails, there's no way to reconstruct the NAS's sense data to
+pass it back to the guest.  We do a limited amount of "making up" sense
+data (for example if a command is filtered, all we get is an errno value;
+and we say it was not recognized), but it should really be as simple
+and limited as possible.
+
+>> A generic filter (see
+>> http://article.gmane.org/gmane.linux.kernel/1312326 for a proposal)
+>> would be satisfactory for everyone, but it's also a major undertaking
+>> and so far I've not received a single comment about it.
+> 
+> Maybe I'm just not familiar with the problem space but I really hope
+> things don't come to that.
+
+Why not? :)  (BTW it was suggested by Alan Cox, that's just my proposal for
+how to do it).  I think that it's a good idea, but it's a big bazooka for
+the smaller issue of supporting trim/discard.
+
+>>> So, it wouldn't be a good idea to abuse SG_IO filtering for exposing
+>>> trim/discard.  It's something which should be retired or at least
+>>> severely restricted in time.  I don't think we want to be developing
+>>> new uses of it.
+>>>
+>>> I think trim/discards are fairly easy to abstract and common enough to
+>>> justify having properly abstracted interface.  In fact, we already
+>>> have block layer interface for it - BLKDISCARD.  If it's lacking,
+>>> let's improve that.
+>>
+>> I do want to improve the block layer interfaces to avoid that people use
+>> SG_IO.  But unfortunately this is for a completely different use case.
+> 
+> Hmmm?  This was about discard, no?
+
+One example of block layer interfaces that I want to add is BLKPING, so
+that you can see if the NAS is reachable.  Then SCSI emulation can map
+the "test unit ready" command to BLKPING.  There's a handful of such
+ioctls that would be useful, such as BLKDISCARD itself.
+
+But this is for the other direction, where ioctls are not enough accurate.
+
+Paolo
