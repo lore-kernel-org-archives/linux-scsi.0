@@ -1,65 +1,79 @@
-From: Naresh Kumar Inna <naresh@chelsio.com>
-Subject: [V3 PATCH 9/9] cxgb4vf: Chelsio FCoE offload driver submission (header compatibility fixes).
-Date: Tue, 11 Sep 2012 20:09:07 +0530
-Message-ID: <1347374347-3852-10-git-send-email-naresh@chelsio.com>
-References: <1347374347-3852-1-git-send-email-naresh@chelsio.com>
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1347374347-3852-1-git-send-email-naresh@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, dm@chelsio.com, leedom@chelsio.com
-Cc: netdev@vger.kernel.org, naresh@chelsio.com, chethan@chelsio.com
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
+Date: Tue, 11 Sep 2012 17:24:13 +0800
+Message-ID: <20120911092410.GA1704@mint-spring.sh.intel.com>
+References: <Pine.LNX.4.44L0.1209061437050.1182-100000@iolanthe.rowland.org>
+ <4663685.bsC7gzLV6E@linux-lqwf.site>
+ <20120911064429.GA2196@mint-spring.sh.intel.com>
+ <3578472.dQIepChrCX@linux-lqwf.site>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3578472.dQIepChrCX@linux-lqwf.site>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch contains minor fixes to make cxgb4vf driver work with the updates to
-shared firmware/hardware header files.
+On Tue, Sep 11, 2012 at 10:55:44AM +0200, Oliver Neukum wrote:
+> On Tuesday 11 September 2012 14:44:30 Aaron Lu wrote:
+> > On Mon, Sep 10, 2012 at 12:45:51PM +0200, Oliver Neukum wrote:
+> > > On Monday 10 September 2012 17:16:22 Aaron Lu wrote:
+> > > 
+> > > > +static int sr_resume(struct device *dev)
+> > > > +{
+> > > > +	struct scsi_cd *cd;
+> > > > +	struct scsi_sense_hdr sshdr;
+> > > > +
+> > > > +	cd = dev_get_drvdata(dev);
+> > > > +
+> > > > +	if (!cd->device->powered_off)
+> > > > +		return 0;
+> > > > +
+> > > > +	/* get the disk ready */
+> > > > +	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+> > > > +
+> > > > +	/* if user wakes up the ODD, eject the tray */
+> > > > +	if (cd->device->need_eject) {
+> > > > +		cd->device->need_eject = 0;
+> > > > +		if (!(cd->cdi.mask & CDC_CLOSE_TRAY))
+> > > > +			sr_tray_move(&cd->cdi, 1);
+> > > 
+> > > 1. Even if the door is locked?
+> > 
+> > This piece of code of sr_resume is intended for ZPODD devices, for
+> > normal devices it will simply return as the powered_off flag will never
+> > be set for them.
+> > 
+> > And for ZPODD devices, the door shouldn't be in locked state here since
+> > for it to enter power off state, "no medium inside" has to be satisfied
+> 
+> This is true only if the device is autosuspended. But sr_resume()
+> will also be called if the whole system was suspended.
 
-Signed-off-by: Naresh Kumar Inna <naresh@chelsio.com>
----
- drivers/net/ethernet/chelsio/cxgb4vf/sge.c |   11 ++++++-----
- 1 files changed, 6 insertions(+), 5 deletions(-)
+You mean when system resumes, right?
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-index 8877fbf..33fc1ca 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-@@ -536,7 +536,7 @@ static inline void ring_fl_db(struct adapter *adapter, struct sge_fl *fl)
- 	if (fl->pend_cred >= FL_PER_EQ_UNIT) {
- 		wmb();
- 		t4_write_reg(adapter, T4VF_SGE_BASE_ADDR + SGE_VF_KDOORBELL,
--			     DBPRIO |
-+			     DBPRIO(1) |
- 			     QID(fl->cntxt_id) |
- 			     PIDX(fl->pend_cred / FL_PER_EQ_UNIT));
- 		fl->pend_cred %= FL_PER_EQ_UNIT;
-@@ -952,7 +952,7 @@ static inline void ring_tx_db(struct adapter *adapter, struct sge_txq *tq,
- 	 * Warn if we write doorbells with the wrong priority and write
- 	 * descriptors before telling HW.
- 	 */
--	WARN_ON((QID(tq->cntxt_id) | PIDX(n)) & DBPRIO);
-+	WARN_ON((QID(tq->cntxt_id) | PIDX(n)) & DBPRIO(1));
- 	wmb();
- 	t4_write_reg(adapter, T4VF_SGE_BASE_ADDR + SGE_VF_KDOORBELL,
- 		     QID(tq->cntxt_id) | PIDX(n));
-@@ -2126,8 +2126,8 @@ int t4vf_sge_alloc_rxq(struct adapter *adapter, struct sge_rspq *rspq,
- 		cmd.iqns_to_fl0congen =
- 			cpu_to_be32(
- 				FW_IQ_CMD_FL0HOSTFCMODE(SGE_HOSTFCMODE_NONE) |
--				FW_IQ_CMD_FL0PACKEN |
--				FW_IQ_CMD_FL0PADEN);
-+				FW_IQ_CMD_FL0PACKEN(1) |
-+				FW_IQ_CMD_FL0PADEN(1));
- 		cmd.fl0dcaen_to_fl0cidxfthresh =
- 			cpu_to_be16(
- 				FW_IQ_CMD_FL0FBMIN(SGE_FETCHBURSTMIN_64B) |
-@@ -2431,7 +2431,8 @@ int t4vf_sge_init(struct adapter *adapter)
- 	 */
- 	if (fl1)
- 		FL_PG_ORDER = ilog2(fl1) - PAGE_SHIFT;
--	STAT_LEN = ((sge_params->sge_control & EGRSTATUSPAGESIZE) ? 128 : 64);
-+	STAT_LEN = ((sge_params->sge_control & EGRSTATUSPAGESIZE(1)) ?
-+		    128 : 64);
- 	PKTSHIFT = PKTSHIFT_GET(sge_params->sge_control);
- 	FL_ALIGN = 1 << (INGPADBOUNDARY_GET(sge_params->sge_control) +
- 			 SGE_INGPADBOUNDARY_SHIFT);
--- 
-1.7.1
+> What happens if the user presses the door button on the drive
+> while the system was suspended?
+
+The drive does not have the capability to wake up the system from S3, so
+nothing happens.
+
+> 
+> > and when there is no medium inside, we do not lock its door.
+> > 
+> > > 2. sr_tray_move allocates memory with GFP_KERNEL. This smells of a deadlock.
+> > 
+> > Sorry, don't get this. Can you please elaborate?
+> 
+> Suppose you need to wake up two devices for the same reason, a ZPODD and a hard
+> drive. The ZPODD is woken first and sr_resume() requests memory with GFP_KERNEL.
+> The VM layer decides to page out to the hard drive to be woken up -> deadlock.
+
+While, I don't understand what stops the hard disk from being resumed,
+the hard drive's runtime resume does not depend on the ODD's, and I
+don't think there should be an order enforced on them.
+
+Thanks,
+Aaron
