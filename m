@@ -1,80 +1,82 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v7 0/6] ZPODD patches
-Date: Wed, 12 Sep 2012 16:29:51 +0800
-Message-ID: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Subject: [PATCH v7 1/6] block: genhd: add an interface to set disk poll interval
+Date: Wed, 12 Sep 2012 16:29:52 +0800
+Message-ID: <1347438597-5903-2-git-send-email-aaron.lu@intel.com>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:15412 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753424Ab2ILIaH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Sep 2012 04:30:07 -0400
+In-Reply-To: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
-List-Id: linux-scsi@vger.kernel.org
 
-v7:
-Re work of runtime pm of sr driver, based on ideas of Alan Stern and
-Oliver Neukum.
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+---
+ block/genhd.c         | 23 +++++++++++++++++------
+ include/linux/genhd.h |  1 +
+ 2 files changed, 18 insertions(+), 6 deletions(-)
 
-Jeff, due to the ready_to_power_off flag added, there is a small
-change in [PATCH v7 6/6] libata: acpi: respect may_power_off flag,
-please check if I can still get your ack, thanks.
-
-v6:
-When user changes may_power_off flag through sysfs entry and if device
-is already runtime suspended, resume resume it so that it can respect
-this flag next time it is runtime suspended as suggested by Alan Stern.
-Call scsi_autopm_get/put_device once in sr_check_events as suggested by
-Alan Stern.
-
-v5:
-Add may_power_off flag to scsi device.
-Alan Stern suggested that I should not mess runtime suspend with
-runtime power off, but the current zpodd implementation made it not
-easy to seperate. So I re-wrote the zpodd implementation, the end
-result is, normal ODD can also enter runtime suspended state, but
-their power won't be removed.
-
-v4:
-Rebase on top of Linus' tree, due to this, the problem of a missing
-flag in v3 is gone;
-Add a new function scsi_autopm_put_device_autosuspend to first mark
-last busy for the device and then put autosuspend it as suggested by
-Oliver Neukum.
-Typo fix as pointed by Sergei Shtylyov.
-Check can_power_off flag before any runtime pm operations in sr.
-
-v3:
-Rebase on top of scsi-misc tree;
-Add the sr related patches previously in Jeff's libata tree;
-Re-organize the sr patches.
-A problem for now: for patch
-scsi: sr: support zero power ODD(ZPODD)
-I can't set a flag in libata-acpi.c since a related function is
-missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
-
-v2:
-Bug fix for v1;
-Use scsi_autopm_* in sr driver instead of pm_runtime_*;
-
-v1:
-Here are some patches to make ZPODD easier to use for end users and
-a fix for using ZPODD with system suspend.
-
-Aaron Lu (6):
-  block: genhd: add an interface to set disk poll interval
-  scsi: sr: support runtime pm
-  scsi: sr: support zero power ODD(ZPODD)
-  scsi: pm: add may_power_off flag
-  scsi: sr: use may_power_off
-  libata: acpi: respect may_power_off flag
-
- block/genhd.c              | 23 +++++++++----
- drivers/ata/libata-acpi.c  | 30 +++++++++++-----
- drivers/scsi/scsi_sysfs.c  | 37 +++++++++++++++++++-
- drivers/scsi/sr.c          | 86 +++++++++++++++++++++++++++++++++++++++++++---
- drivers/scsi/sr.h          |  1 +
- drivers/scsi/sr_ioctl.c    |  7 +++-
- include/linux/genhd.h      |  1 +
- include/scsi/scsi_device.h |  4 +++
- 8 files changed, 168 insertions(+), 21 deletions(-)
-
+diff --git a/block/genhd.c b/block/genhd.c
+index cac7366..4244256 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1627,6 +1627,19 @@ static void disk_events_workfn(struct work_struct *work)
+ 		kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
+ }
+ 
++int disk_events_set_poll_msecs(struct gendisk *disk, long intv)
++{
++	if (intv < 0 && intv != -1)
++		return -EINVAL;
++
++	disk_block_events(disk);
++	disk->ev->poll_msecs = intv;
++	__disk_unblock_events(disk, true);
++
++	return 0;
++}
++EXPORT_SYMBOL(disk_events_set_poll_msecs);
++
+ /*
+  * A disk events enabled device has the following sysfs nodes under
+  * its /sys/block/X/ directory.
+@@ -1683,16 +1696,14 @@ static ssize_t disk_events_poll_msecs_store(struct device *dev,
+ {
+ 	struct gendisk *disk = dev_to_disk(dev);
+ 	long intv;
++	int ret;
+ 
+ 	if (!count || !sscanf(buf, "%ld", &intv))
+ 		return -EINVAL;
+ 
+-	if (intv < 0 && intv != -1)
+-		return -EINVAL;
+-
+-	disk_block_events(disk);
+-	disk->ev->poll_msecs = intv;
+-	__disk_unblock_events(disk, true);
++	ret = disk_events_set_poll_msecs(disk, intv);
++	if (ret)
++		return ret;
+ 
+ 	return count;
+ }
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 4f440b3..63409e5 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -423,6 +423,7 @@ extern void disk_block_events(struct gendisk *disk);
+ extern void disk_unblock_events(struct gendisk *disk);
+ extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
+ extern unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask);
++extern int disk_events_set_poll_msecs(struct gendisk *disk, long intv);
+ 
+ /* drivers/char/random.c */
+ extern void add_disk_randomness(struct gendisk *disk);
 -- 
 1.7.12.21.g871e293
 
