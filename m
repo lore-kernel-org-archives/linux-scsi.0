@@ -1,33 +1,74 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] scsi_netlink: Remove dead and buggy code
-Date: Tue, 11 Sep 2012 18:48:46 -0400 (EDT)
-Message-ID: <20120911.184846.1973557158791638595.davem@davemloft.net>
-References: <20120910.150700.1197774171539303770.davem@davemloft.net>
-	<1347314879.3038.74.camel@dabdike.int.hansenpartnership.com>
-	<878vcggp4n.fsf@xmission.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: A oops bug
+Date: Wed, 12 Sep 2012 09:36:08 +0800
+Message-ID: <201209120936025001620@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:48994 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218Ab2IKWsu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2012 18:48:50 -0400
-In-Reply-To: <878vcggp4n.fsf@xmission.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38992 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758145Ab2ILBft (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2012 21:35:49 -0400
+Received: by pbbrr13 with SMTP id rr13so1557449pbb.19
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Sep 2012 18:35:49 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ebiederm@xmission.com
-Cc: James.Bottomley@HansenPartnership.com, netdev@vger.kernel.org, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-From: ebiederm@xmission.com (Eric W. Biederman)
-Date: Tue, 11 Sep 2012 15:40:08 -0700
+VG9kYXksIHdoZW4gaSByZW1vdmVkIHNvbWUgZGlza3MgZnJvbSBzb2Z0cmFpZCBhbmQgZm91bmQg
+dGhpcyBvb3BzLg0KQnV0IGkgZGlkIG5vdCBmaW5kIGhvdyB0byByZXByb2R1Y2UuDQoNClRoZSBt
+ZXNzYWdlIGlzOg0KWyAyNzk2LjEwNzEyMF0gQlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBO
+VUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgYXQgMDAwMDAwMDAwMDAwMDgzNw0KWyAyNzk2LjEwNzEy
+M10gSVA6IFs8ZmZmZmZmZmY4MTNkMjgzOT5dIHNjc2lfZWhfZmx1c2hfZG9uZV9xKzB4NDkvMHhl
+MA0KWyAyNzk2LjEwNzEyOV0gUEdEIGE1ZjA2MDY3IFBVRCBiNmMwMDA2NyBQTUQgMCANClsgMjc5
+Ni4xMDcxMzNdIE9vcHM6IDAwMDAgWyMxXSBTTVAgDQpbIDI3OTYuMTA3MTM2XSBNb2R1bGVzIGxp
+bmtlZCBpbjogbmZzZCBleHBvcnRmcyBtdnNhcyBsaWJzYXMgc2NzaV90cmFuc3BvcnRfc2FzIHJh
+aWQxMCByYWlkNDU2IGFzeW5jX3BxIGFzeW5jX3hvciB4b3IgDQoNCmFzeW5jX21lbWNweSBhc3lu
+Y19yYWlkNl9yZWNvdiByYWlkNl9wcSBhc3luY190eA0KWyAyNzk2LjEwNzE0OF0gQ1BVIDAgDQpb
+IDI3OTYuMTA3MTUxXSBQaWQ6IDgwNiwgY29tbTogc2NzaV9laF80IFRhaW50ZWQ6IEcgICAgICAg
+ICAgIE8gMy42LjAtcmM1KyAjNzggVG8gQmUgRmlsbGVkIEJ5IE8uRS5NLiBUbyBCZSBGaWxsZWQg
+QnkgDQoNCk8uRS5NLi9UbyBiZSBmaWxsZWQgYnkgTy5FLk0uDQpbIDI3OTYuMTA3MTUzXSBSSVA6
+IDAwMTA6WzxmZmZmZmZmZjgxM2QyODM5Pl0gIFs8ZmZmZmZmZmY4MTNkMjgzOT5dIHNjc2lfZWhf
+Zmx1c2hfZG9uZV9xKzB4NDkvMHhlMA0KWyAyNzk2LjEwNzE1Nl0gUlNQOiAwMDE4OmZmZmY4ODAw
+YjdhZDFkNjAgIEVGTEFHUzogMDAwMTAyNDYNClsgMjc5Ni4xMDcxNThdIFJBWDogZmZmZmZmZmZm
+ZmZmZmZmZiBSQlg6IGZmZmY4ODAwYTY4MzYwMDAgUkNYOiBkZWFkMDAwMDAwMjAwMjAwDQpbIDI3
+OTYuMTA3MTYwXSBSRFg6IGZmZmY4ODAwYTY4MzY3MTggUlNJOiAwMDAwMDAwMDAwMDAwMDAwIFJE
+STogZmZmZjg4MDBhNjgzNjAxOA0KWyAyNzk2LjEwNzE2MV0gUkJQOiBmZmZmODgwMGI3YWQxZDgw
+IFIwODogZmZmZjg4MDBhNjgzNjAxOCBSMDk6IDAwMDAwMDAwMDAwMDAwMDANClsgMjc5Ni4xMDcx
+NjNdIFIxMDogMDAwMDAwMDAwMDAwMDAwMCBSMTE6IGRlYWQwMDAwMDAyMDAyMDAgUjEyOiBmZmZm
+ODgwMGE2ODM2NzAwDQpbIDI3OTYuMTA3MTY0XSBSMTM6IGZmZmY4ODAwYjc5Y2YzZTAgUjE0OiBm
+ZmZmODgwMGE2ODM2MDE4IFIxNTogMDAwMDAwMDAwMDAwMDI4Ng0KWyAyNzk2LjEwNzE2Nl0gRlM6
+ICAwMDAwMDAwMDAwMDAwMDAwKDAwMDApIEdTOmZmZmY4ODAwYjljMDAwMDAoMDAwMCkga25sR1M6
+MDAwMDAwMDAwMDAwMDAwMA0KWyAyNzk2LjEwNzE2OF0gQ1M6ICAwMDEwIERTOiAwMDAwIEVTOiAw
+MDAwIENSMDogMDAwMDAwMDA4MDA1MDAzYg0KWyAyNzk2LjEwNzE3MF0gQ1IyOiAwMDAwMDAwMDAw
+MDAwODM3IENSMzogMDAwMDAwMDBhNWNhYTAwMCBDUjQ6IDAwMDAwMDAwMDAwNDA3ZjANClsgMjc5
+Ni4xMDcxNzFdIERSMDogMDAwMDAwMDAwMDAwMDAwMCBEUjE6IDAwMDAwMDAwMDAwMDAwMDAgRFIy
+OiAwMDAwMDAwMDAwMDAwMDAwDQpbIDI3OTYuMTA3MTczXSBEUjM6IDAwMDAwMDAwMDAwMDAwMDAg
+RFI2OiAwMDAwMDAwMGZmZmYwZmYwIERSNzogMDAwMDAwMDAwMDAwMDQwMA0KWyAyNzk2LjEwNzE3
+NV0gUHJvY2VzcyBzY3NpX2VoXzQgKHBpZDogODA2LCB0aHJlYWRpbmZvIGZmZmY4ODAwYjdhZDAw
+MDAsIHRhc2sgZmZmZjg4MDBiODg1NGJjMCkNClsgMjc5Ni4xMDcxNzZdIFN0YWNrOg0KWyAyNzk2
+LjEwNzE3N10gIDAwMDAwMDAwMDAwMDAyODYgZmZmZjg4MDBiNzljYzAwMCAwMDAwMDAwMDAwMDAw
+MDAwIDAwMDAwMDAwMDAwMDAwMDANClsgMjc5Ni4xMDcxODFdICBmZmZmODgwMGI3YWQxZGQwIGZm
+ZmZmZmZmODEzZmNkM2IgZmZmZjg4MDBiOTFkMzA5MCBmZmZmODgwMGI3OWNmNGM4DQpbIDI3OTYu
+MTA3MTg1XSAgZmZmZjg4MDBiN2FkMWUzOCBmZmZmODgwMGI5MWQzMDAwIGZmZmY4ODAwYjdhZDFk
+ZTAgZmZmZjg4MDBiNzljYzAwMA0KWyAyNzk2LjEwNzE4OF0gQ2FsbCBUcmFjZToNClsgMjc5Ni4x
+MDcxOTJdICBbPGZmZmZmZmZmODEzZmNkM2I+XSBhdGFfc2NzaV9wb3J0X2Vycm9yX2hhbmRsZXIr
+MHg3ZGIvMHg4ZjANClsgMjc5Ni4xMDcxOTVdICBbPGZmZmZmZmZmODEzZmNlZTk+XSBhdGFfc2Nz
+aV9lcnJvcisweDk5LzB4ZDANClsgMjc5Ni4xMDcxOThdICBbPGZmZmZmZmZmODEzZDJjMmM+XSBz
+Y3NpX2Vycm9yX2hhbmRsZXIrMHhjYy8weDQ1MA0KWyAyNzk2LjEwNzIwMV0gIFs8ZmZmZmZmZmY4
+MTNkMmI2MD5dID8gc2NzaV9laF9nZXRfc2Vuc2UrMHhkMC8weGQwDQpbIDI3OTYuMTA3MjA0XSAg
+WzxmZmZmZmZmZjgxMDU5NDRkPl0ga3RocmVhZCsweDlkLzB4YjANClsgMjc5Ni4xMDcyMDhdICBb
+PGZmZmZmZmZmODE2NGFmZjQ+XSBrZXJuZWxfdGhyZWFkX2hlbHBlcisweDQvMHgxMA0KWyAyNzk2
+LjEwNzIxMV0gIFs8ZmZmZmZmZmY4MTA1OTNiMD5dID8gZmx1c2hfa3RocmVhZF93b3JrKzB4MWIw
+LzB4MWIwDQpbIDI3OTYuMTA3MjEzXSAgWzxmZmZmZmZmZjgxNjRhZmYwPl0gPyBnc19jaGFuZ2Ur
+MHhiLzB4Yg0KWyAyNzk2LjEwNzIxNF0gQ29kZTogZmUgNzUgMTUgZTkgOTUgMDAgMDAgMDAgNjYg
+MmUgMGYgMWYgODQgMDAgMDAgMDAgMDAgMDAgNGMgODkgZTMgNDkgODkgYzQgNGMgODkgZjcgZTgg
+ZjIgOGQgZWQgZmYgNDggOGIgMDMgNGMgDQoNCjg5IDczIDE4IDRjIDg5IDczIDIwIDw4Yj4gODAg
+MzggMDggMDAgMDAgOGQgNTAgZmEgODMgZmEgMDEgMGYgOTcgYzIgODMgZjggMDQgMGYgOTUgYzAg
+DQpbIDI3OTYuMTA3MjUyXSBSSVAgIFs8ZmZmZmZmZmY4MTNkMjgzOT5dIHNjc2lfZWhfZmx1c2hf
+ZG9uZV9xKzB4NDkvMHhlMA0KWyAyNzk2LjEwNzI1NV0gIFJTUCA8ZmZmZjg4MDBiN2FkMWQ2MD4N
+ClsgMjc5Ni4xMDcyNTZdIENSMjogMDAwMDAwMDAwMDAwMDgzNw0KWyAyNzk2LjEwNzI2M10gLS0t
+WyBlbmQgdHJhY2UgOGZiNDRmMDdlNmExYWI2NSBdLS0tAg==
 
-> So just for curiosity I searched the entire git history for scsi_nl_add_
-> and the only commit that I found was the addition of that code to the
-> tree in August of 2008.
-> 
-> Does anyone have any reason to keep scsi_nl_add_transport or
-> scsi_nl_add_driver that have never been used in the 4 years since
-> they have been added?
-
-That's basically the question on the table right now :-)
