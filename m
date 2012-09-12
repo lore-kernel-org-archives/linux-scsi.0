@@ -1,33 +1,47 @@
-From: Naresh Kumar Inna <naresh@chelsio.com>
-Subject: Re: [V3 PATCH 9/9] cxgb4vf: Chelsio FCoE offload driver submission
- (header compatibility fixes).
-Date: Wed, 12 Sep 2012 22:50:25 +0530
-Message-ID: <5050C459.3090402@chelsio.com>
-References: <1347374347-3852-10-git-send-email-naresh@chelsio.com> <20120911.133321.282568248903907762.davem@davemloft.net> <50501F1A.6040905@chelsio.com> <20120912.014746.636228439025755624.davem@davemloft.net> <50502B3A.6080803@chelsio.com> <m2har3yyig.fsf@firstfloor.org>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Re: [RFC PATCH 1/5] libfcoe, fcoe: Allow user to set a ctlr's mode
+Date: Wed, 12 Sep 2012 19:24:37 +0000
+Message-ID: <5050E174.2070200@intel.com>
+References: <20120910225908.13140.97277.stgit@fritz>
+ <20120910225914.13140.22190.stgit@fritz> <504ED16D.5080607@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <m2har3yyig.fsf@firstfloor.org>
-Sender: netdev-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: David Miller <davem@davemloft.net>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Chethan Seshadri <chethan@chelsio.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:42223 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750737Ab2ILTYk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Sep 2012 15:24:40 -0400
+In-Reply-To: <504ED16D.5080607@acm.org>
+Content-Language: en-US
+Content-ID: <0A843583CB7B7A4AA8140BE72AD0CA08@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bprakash@broadcom.com" <bprakash@broadcom.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-On 9/12/2012 10:22 PM, Andi Kleen wrote:
-> Naresh Kumar Inna <naresh@chelsio.com> writes:
->>
->> OK, I think I should be able to arrange the patch set to fulfill that
->> requirement. I was under the impression it was fine for new drivers to
->> split patches in this fashion, since they go as a single commit, sorry
->> about that.
-> 
-> What they normally do then is to add the Kconfig or Makefile entry
-> only in the end, so it cannot build before.
-> 
-> -Andi
-> 
-
-Patch-set V4 I sent a few hours ago does just that. Thanks nevertheless.
-
--Naresh
+T24gTW9uIDEwIFNlcCAyMDEyIDEwOjUxOjQxIFBNIFBEVCwgQmFydCBWYW4gQXNzY2hlIHdyb3Rl
+Og0KPiBPbiAwOS8xMS8xMiAwMDo1OSwgUm9iZXJ0IExvdmUgd3JvdGU6DQo+PiArc3RhdGljIGVu
+dW0gZmlwX2Nvbm5fdHlwZSBmY29lX3BhcnNlX21vZGUoY29uc3QgY2hhciAqYnVmLA0KPj4gKwkJ
+CQkgIGNvbnN0IHN0cnVjdCBmY29lX2N0bHJfbW9kZV90YWJsZSAqdGJsKQ0KPj4gK3sNCj4+ICsJ
+aW50IG1vZGVpbnQgPSAtMSwgaSwgcnY7DQo+PiArCWNoYXIgKnAsIG1vZGVzdHJbRkNPRV9NQVhf
+TU9ERU5BTUVfTEVOICsgMV0gPSB7IDAsIH07DQo+PiArDQo+PiArCWZvciAocCA9IChjaGFyICop
+YnVmOyAqcDsgcCsrKQ0KPj4gKwkJaWYgKCEoaXNkaWdpdCgqcCkgfHwgaXNzcGFjZSgqcCkpKQ0K
+Pj4gKwkJCWJyZWFrOw0KPg0KPiBJZiB5b3UgY2hhbmdlIHRoZSBkZWNsYXJhdGlvbiBvZiBwIGZy
+b20gImNoYXIgKnAiIGludG8gImNvbnN0IGNoYXIgKnAiDQo+IHlvdSB3b24ndCBuZWVkIGEgY2Fz
+dCBpbiB0aGUgYWJvdmUgZm9yIGxvb3AuDQo+DQo+IFsgLi4uIF0NCj4NCj4+IC1zdGF0aWMgRkNP
+RV9ERVZJQ0VfQVRUUihjdGxyLCBtb2RlLCBTX0lSVUdPLA0KPj4gLQkJCXNob3dfY3Rscl9tb2Rl
+LCBOVUxMKTsNCj4+ICsNCj4+ICtzdGF0aWMgc3NpemVfdCBzdG9yZV9jdGxyX21vZGUoc3RydWN0
+IGRldmljZSAqZGV2LA0KPj4gKwkJCSAgICAgICBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0
+ciwNCj4+ICsJCQkgICAgICAgY29uc3QgY2hhciAqYnVmLCBzaXplX3QgY291bnQpDQo+PiArew0K
+Pj4gKwlzdHJ1Y3QgZmNvZV9jdGxyX2RldmljZSAqY3RsciA9IGRldl90b19jdGxyKGRldik7DQo+
+PiArDQo+PiArCWlmICghY3Rsci0+Zi0+c2V0X2Zjb2VfY3Rscl9tb2RlKQ0KPj4gKwkJcmV0dXJu
+IC1FSU5WQUw7DQo+PiArDQo+PiArCWN0bHItPm1vZGUgPSBmY29lX3BhcnNlX21vZGUoYnVmLCBj
+dGxyX21vZGVfdGJsKTsNCj4NCj4gQXMgZmFyIGFzIEkga25vdyBzeXNmcyBkb2Vzbid0IHRlcm1p
+bmF0ZSBidWYgd2l0aCBhICdcMCcgYmVmb3JlIGNhbGxpbmcNCj4gYSBzdG9yZSBtZXRob2QuIERv
+ZXMgdGhhdCBtZWFuIHRoYXQgeW91IGFyZSBwYXNzaW5nIGEgc3RyaW5nIHRoYXQgaXMgbm90DQo+
+ICdcMCctdGVybWluYXRlZCB0byBhIGZ1bmN0aW9uIHRoYXQgZXhwZWN0cyBhICdcMCctdGVybWlu
+YXRlZCBzdHJpbmcgPw0KPg0KPiBCYXJ0Lg0KDQpIZXkgQmFydC4gSSBqdXN0IHdhbnRlZCB0byBh
+Y2tub3dsZWRnZSB5b3VyIGNvbW1lbnRzLiBJIHdpbGwgbWFrZSBzdXJlIA0KdGhhdCB0aGV5J3Jl
+IGFkZHJlc3NlZCBhZnRlciBmaWd1cmluZyBvdXQgaWYgc3lzZnMgaXMgdGhlIHJpZ2h0IHBsYWNl
+IA0KZm9yIHRoZSBpbnRlcmZhY2VzLg0KDQpUaGFua3MsIC8vUm9iDQo=
