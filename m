@@ -1,36 +1,58 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [V3 PATCH 9/9] cxgb4vf: Chelsio FCoE offload driver submission (header compatibility fixes).
-Date: Wed, 12 Sep 2012 09:52:23 -0700
-Message-ID: <m2har3yyig.fsf@firstfloor.org>
-References: <1347374347-3852-10-git-send-email-naresh@chelsio.com>
-	<20120911.133321.282568248903907762.davem@davemloft.net>
-	<50501F1A.6040905@chelsio.com>
-	<20120912.014746.636228439025755624.davem@davemloft.net>
-	<50502B3A.6080803@chelsio.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:3998 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751544Ab2ILQwf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Sep 2012 12:52:35 -0400
-In-Reply-To: <50502B3A.6080803@chelsio.com> (Naresh Kumar Inna's message of
-	"Wed, 12 Sep 2012 11:57:06 +0530")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Peter Senna Tschudin <peter.senna@gmail.com>
+Subject: [PATCH 2/15] drivers/scsi/bfa: removes unnecessary semicolon
+Date: Wed, 12 Sep 2012 19:03:09 +0200
+Message-ID: <1347469402-27557-2-git-send-email-peter.senna@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jing Huang <huangj@brocade.com>
+Cc: trivial@kernel.org, kernel-janitors@vger.kernel.org, Krishna C Gudipati <kgudipat@brocade.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: David Miller <davem@davemloft.net>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Chethan Seshadri <chethan@chelsio.com>
 
-Naresh Kumar Inna <naresh@chelsio.com> writes:
->
-> OK, I think I should be able to arrange the patch set to fulfill that
-> requirement. I was under the impression it was fine for new drivers to
-> split patches in this fashion, since they go as a single commit, sorry
-> about that.
+From: Peter Senna Tschudin <peter.senna@gmail.com>
 
-What they normally do then is to add the Kconfig or Makefile entry
-only in the end, so it cannot build before.
+removes unnecessary semicolon
 
--Andi
--- 
-ak@linux.intel.com -- Speaking for myself only
+Found by Coccinelle: http://coccinelle.lip6.fr/
+
+Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+
+---
+ drivers/scsi/bfa/bfa_fcs_lport.c |    2 +-
+ drivers/scsi/bfa/bfa_fcs_rport.c |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index bcc4966..6a383ba 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -3745,7 +3745,7 @@ bfa_fcs_lport_ns_sm_online(struct bfa_fcs_lport_ns_s *ns,
+ 			bfa_sm_set_state(ns,
+ 				bfa_fcs_lport_ns_sm_sending_gid_ft);
+ 			bfa_fcs_lport_ns_send_gid_ft(ns, NULL);
+-		};
++		}
+ 		break;
+ 
+ 	default:
+diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
+index fe0463a..5eeddc6 100644
+--- a/drivers/scsi/bfa/bfa_fcs_rport.c
++++ b/drivers/scsi/bfa/bfa_fcs_rport.c
+@@ -1301,7 +1301,7 @@ bfa_fcs_rport_sm_nsdisc_sent(struct bfa_fcs_rport_s *rport,
+ 			bfa_timer_start(rport->fcs->bfa, &rport->timer,
+ 					bfa_fcs_rport_timeout, rport,
+ 					bfa_fcs_rport_del_timeout);
+-		};
++		}
+ 		break;
+ 
+ 	case RPSM_EVENT_DELETE:
+@@ -2089,7 +2089,7 @@ bfa_fcs_rport_online_action(struct bfa_fcs_rport_s *rport)
+ 		bfa_fcs_itnim_rport_online(rport->itnim);
+ 		if (!BFA_FCS_PID_IS_WKA(rport->pid))
+ 			bfa_fcs_rpf_rport_online(rport);
+-	};
++	}
+ 
+ 	wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(port));
+ 	wwn2str(rpwwn_buf, rport->pwwn);
