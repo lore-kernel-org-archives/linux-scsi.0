@@ -1,24 +1,80 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] sg_io: allow UNMAP and WRITE SAME without CAP_SYS_RAWIO
-Date: Wed, 12 Sep 2012 10:18:22 +0200
-Message-ID: <5050454E.5020301@redhat.com>
-References: <1342801801-15617-1-git-send-email-pbonzini@redhat.com>  <20120911165953.GK7677@google.com> <504F7B65.9090603@redhat.com> <1347437141.2793.2.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1347437141.2793.2.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-scsi@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH v7 0/6] ZPODD patches
+Date: Wed, 12 Sep 2012 16:29:51 +0800
+Message-ID: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Il 12/09/2012 10:05, James Bottomley ha scritto:
-> This is why the whole filter thing was mutable via sysfs.  That way the
-> admin could set this up per device.  It sounds like this is what you
-> want to fix, rather than opening up more holes in an already leaky
-> security apparatus.
+v7:
+Re work of runtime pm of sr driver, based on ideas of Alan Stern and
+Oliver Neukum.
 
-It is, thanks for the useful history lesson!
+Jeff, due to the ready_to_power_off flag added, there is a small
+change in [PATCH v7 6/6] libata: acpi: respect may_power_off flag,
+please check if I can still get your ack, thanks.
 
-Paolo
+v6:
+When user changes may_power_off flag through sysfs entry and if device
+is already runtime suspended, resume resume it so that it can respect
+this flag next time it is runtime suspended as suggested by Alan Stern.
+Call scsi_autopm_get/put_device once in sr_check_events as suggested by
+Alan Stern.
+
+v5:
+Add may_power_off flag to scsi device.
+Alan Stern suggested that I should not mess runtime suspend with
+runtime power off, but the current zpodd implementation made it not
+easy to seperate. So I re-wrote the zpodd implementation, the end
+result is, normal ODD can also enter runtime suspended state, but
+their power won't be removed.
+
+v4:
+Rebase on top of Linus' tree, due to this, the problem of a missing
+flag in v3 is gone;
+Add a new function scsi_autopm_put_device_autosuspend to first mark
+last busy for the device and then put autosuspend it as suggested by
+Oliver Neukum.
+Typo fix as pointed by Sergei Shtylyov.
+Check can_power_off flag before any runtime pm operations in sr.
+
+v3:
+Rebase on top of scsi-misc tree;
+Add the sr related patches previously in Jeff's libata tree;
+Re-organize the sr patches.
+A problem for now: for patch
+scsi: sr: support zero power ODD(ZPODD)
+I can't set a flag in libata-acpi.c since a related function is
+missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+
+v2:
+Bug fix for v1;
+Use scsi_autopm_* in sr driver instead of pm_runtime_*;
+
+v1:
+Here are some patches to make ZPODD easier to use for end users and
+a fix for using ZPODD with system suspend.
+
+Aaron Lu (6):
+  block: genhd: add an interface to set disk poll interval
+  scsi: sr: support runtime pm
+  scsi: sr: support zero power ODD(ZPODD)
+  scsi: pm: add may_power_off flag
+  scsi: sr: use may_power_off
+  libata: acpi: respect may_power_off flag
+
+ block/genhd.c              | 23 +++++++++----
+ drivers/ata/libata-acpi.c  | 30 +++++++++++-----
+ drivers/scsi/scsi_sysfs.c  | 37 +++++++++++++++++++-
+ drivers/scsi/sr.c          | 86 +++++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/sr.h          |  1 +
+ drivers/scsi/sr_ioctl.c    |  7 +++-
+ include/linux/genhd.h      |  1 +
+ include/scsi/scsi_device.h |  4 +++
+ 8 files changed, 168 insertions(+), 21 deletions(-)
+
+-- 
+1.7.12.21.g871e293
+
