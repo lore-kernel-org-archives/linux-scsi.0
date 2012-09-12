@@ -1,55 +1,46 @@
-From: Naresh Kumar Inna <naresh@chelsio.com>
-Subject: Re: [V3 PATCH 9/9] cxgb4vf: Chelsio FCoE offload driver submission
- (header compatibility fixes).
-Date: Wed, 12 Sep 2012 11:57:06 +0530
-Message-ID: <50502B3A.6080803@chelsio.com>
-References: <1347374347-3852-10-git-send-email-naresh@chelsio.com> <20120911.133321.282568248903907762.davem@davemloft.net> <50501F1A.6040905@chelsio.com> <20120912.014746.636228439025755624.davem@davemloft.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] sg_io: allow UNMAP and WRITE SAME without CAP_SYS_RAWIO
+Date: Wed, 12 Sep 2012 09:05:41 +0100
+Message-ID: <1347437141.2793.2.camel@dabdike.int.hansenpartnership.com>
+References: <1342801801-15617-1-git-send-email-pbonzini@redhat.com>
+	 <20120911165953.GK7677@google.com> <504F7B65.9090603@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20120912.014746.636228439025755624.davem@davemloft.net>
-Sender: netdev-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Chethan Seshadri <chethan@chelsio.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <504F7B65.9090603@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 9/12/2012 11:17 AM, David Miller wrote:
-> From: Naresh Kumar Inna <naresh@chelsio.com>
-> Date: Wed, 12 Sep 2012 11:05:22 +0530
+On Tue, 2012-09-11 at 19:56 +0200, Paolo Bonzini wrote:
+> The set of use cases is so variable that no single filter can accomodate
+> all of them: high availability people want persistent reservations, NAS
+> people want trim/discard, but these are just two groups.  Someone is
+> using a Windows VM to run vendor tools and wants to have access to
+> vendor-specific commands.
 > 
->> On 9/11/2012 11:03 PM, David Miller wrote:
->>> From: Naresh Kumar Inna <naresh@chelsio.com>
->>> Date: Tue, 11 Sep 2012 20:09:07 +0530
->>>
->>>> This patch contains minor fixes to make cxgb4vf driver work with the updates to
->>>> shared firmware/hardware header files.
->>>>
->>>> Signed-off-by: Naresh Kumar Inna <naresh@chelsio.com>
->>>
->>> You cannot submit a patch set that isn't bisectable, and in particular
->>> create a situation that mid-way through your patch set things do not
->>> build or operate correctly.
->>>
->>
->> Sorry, I am new to this process. The reason I did that was because I was
->> not sure if I could create a single patch with both cxgb4 and cxgb4vf
->> files in it, since they are two different subsystems. If I could do
->> that, the single patch then would build on its own, and not be dependent
->> on the other patches in the series. Is that something I can do?
-> 
-> I don't know how else to say this, every step along the way the tree
-> has to build.  You arrange the patches however necessary to achieve
-> that goal.
-> 
+> You can tell this last group to use root, but not everyone else who is
+> already relying on Unix permissions, SELinux and/or device cgroups to
+> confine their virtual machines.
 
-OK, I think I should be able to arrange the patch set to fulfill that
-requirement. I was under the impression it was fine for new drivers to
-split patches in this fashion, since they go as a single commit, sorry
-about that.
+This is why the whole filter thing was mutable via sysfs.  That way the
+admin could set this up per device.  It sounds like this is what you
+want to fix, rather than opening up more holes in an already leaky
+security apparatus.  The ideal is that we would be much more restrictive
+by default and give root the ability to override this both globally and
+per-device to conform to whatever policy it has for the virtual
+environments.
 
-As for a single patch with both cxgb4 and cxgb4vf changes, I assume it
-is OK for the commit log to start with "cxgb4/cxgb4vf:..."?
+The patch which removed all of the sysfs pieces was:
 
-Thanks,
-Naresh.
+commit 018e0446890661504783f92388ecce7138c1566d
+Author: Jens Axboe <jens.axboe@oracle.com>
+Date:   Fri Jun 26 16:27:10 2009 +0200
+
+    block: get rid of queue-private command filter
+
+So that's probably the place to start for putting it back properly.
+
+James
