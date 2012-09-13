@@ -1,96 +1,104 @@
-From: Chris Leech <cleech@redhat.com>
-Subject: future FCoE ideas (Re: [RFC PATCH 0/5] Reorganize libfcoe control interfaces)
-Date: Thu, 13 Sep 2012 15:32:50 -0700
-Message-ID: <CAHNqLyUCgrDLCXnchVAieP0y2n8QmWHD-Nr-V54aypgSDHnR0g@mail.gmail.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Re: future FCoE ideas (Re: [RFC PATCH 0/5] Reorganize libfcoe
+ control interfaces)
+Date: Thu, 13 Sep 2012 22:45:33 +0000
+Message-ID: <5052620C.7040006@intel.com>
+References: <CAHNqLyUCgrDLCXnchVAieP0y2n8QmWHD-Nr-V54aypgSDHnR0g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:58112 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074Ab2IMWcv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Sep 2012 18:32:51 -0400
-Received: by vbbff1 with SMTP id ff1so4133426vbb.19
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Sep 2012 15:32:50 -0700 (PDT)
+Received: from mga03.intel.com ([143.182.124.21]:15962 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750702Ab2IMWpo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Sep 2012 18:45:44 -0400
+In-Reply-To: <CAHNqLyUCgrDLCXnchVAieP0y2n8QmWHD-Nr-V54aypgSDHnR0g@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <EAB824C0FB855F44A7C98FCB52B7CD52@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Love, Robert W" <robert.w.love@intel.com>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, linux-scsi@vger.kernel.org
+To: Chris Leech <cleech@redhat.com>
+Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-<cutting down the CC list, as this bit isn't really about patch review anymore>
-
->> That being said, I'm glad this is being reworked.  Do you have any
->> other functionality in mind that this is laying the groundwork for?
->>
->
-> I have one feature and a few ideas. I currently have a patch that adds
-> a fabric selection feature. I add another RW attribute to the ctlr_X
-> device. If the user writes fabric name to the file libfcoe uses it in
-> it's FCF selection algorithm. Here's my commit message from that patch.
-> I can share the patch if people would like to see it too. The current
-> implementation also allows the user to force the login through a
-> specific FCF.
->
->      libfcoe, bnx2fc, fcoe: Add 'selection' attribute
->
->     This patch adds a 'selection' attribute to the
->     fcoe_ctlr_device. The user can write either a
->     '0x' prefixed fabric name or a ':' separated
->     MAC address to this file. If a fabric name is
->     provided the fcoe ctlr will only consider FCFs
->     with the fabric name when choosing a FCF to login
->     to. If a MAC address is provided the initiator
->     will only login to a FCF with the given Ethernet
->     address. Only one selection is valid at a time.
->
->     There are corresponding changes to fcoe-utils
->     to take advantage of this kernel feature and
->     to make it more accessible for the user.
->
-> To accompany this feature I created a new fipfcf application based on
-> fipvlan that sends out a discovery solicitation and displays
-> advertising FCFs.
-
-Cool, I think you know that the lack of control over FCF selection has
-bothered me for a while :)
-
-Another option to think about, instead of configuring a preferred FCF
-prior to discovery (using your command line tool to find out what's
-available) what if it was possible to disable the auto-login behavior
-(leaving it on by default) and then enable login to an FCF using the
-representation you've added to sysfs?  Basically, allow a user-space
-policy agent to disable the auto-selection and take control.
-
-So the steps could be
-
-1) create and FCoE controller for a network interface
-2) configure the controller, disabling auto-fabric-selection
-3) enable the controller, starting FCF discovery
-4) select from the discovered FCF objects
-5) enable fabric login on the desires FCFs
-
-That could even work for native PCI-function FCoE devices, where
-fipvlan/fipfcf have issues because the netdev might not be up (or even
-have a driver loaded), as long as they support the interface and
-provide the OS with information about discovered FCFs.
-
-> I've also been talking with Mark Rustad about doing an 'auto' mode
-> where Fabric discovery is attempted first and if it fails then it tries
-> VN2VN discovery, but so for we've only had hallway conversations about
-> it and nothing has been flushed out.
-
-I'm trying to get caught up on what's getting traction with the
-FC-BB-6 working group, but it looks like VN2VN for both true
-point-to-point and multipoint might get nailed down.  As well as
-establishing shortest-path connections between native FCoE endpoints
-in fabric mode, to avoid shoving all data through the FCF if it
-doesn't need to.  All exciting work to think about.
-
-Do we have a better indication of what network interface an fc_host is
-created on, or is parsing for 'fcoe v0.1 over <ifname>' in the
-symbolic name still the best thing going?
-
-Sorry if it seems like I've got lots of opinions but no patches right now :)
-I'm testing your RFC patchset out, at least to the extent that I can
-with VN2VN mode right now.
-
-- Chris
+T24gVGh1IDEzIFNlcCAyMDEyIDAzOjMyOjUwIFBNIFBEVCwgQ2hyaXMgTGVlY2ggd3JvdGU6DQo+
+IDxjdXR0aW5nIGRvd24gdGhlIENDIGxpc3QsIGFzIHRoaXMgYml0IGlzbid0IHJlYWxseSBhYm91
+dCBwYXRjaCByZXZpZXcgYW55bW9yZT4NCj4NCj4+PiBUaGF0IGJlaW5nIHNhaWQsIEknbSBnbGFk
+IHRoaXMgaXMgYmVpbmcgcmV3b3JrZWQuICBEbyB5b3UgaGF2ZSBhbnkNCj4+PiBvdGhlciBmdW5j
+dGlvbmFsaXR5IGluIG1pbmQgdGhhdCB0aGlzIGlzIGxheWluZyB0aGUgZ3JvdW5kd29yayBmb3I/
+DQo+Pj4NCj4+DQo+PiBJIGhhdmUgb25lIGZlYXR1cmUgYW5kIGEgZmV3IGlkZWFzLiBJIGN1cnJl
+bnRseSBoYXZlIGEgcGF0Y2ggdGhhdCBhZGRzDQo+PiBhIGZhYnJpYyBzZWxlY3Rpb24gZmVhdHVy
+ZS4gSSBhZGQgYW5vdGhlciBSVyBhdHRyaWJ1dGUgdG8gdGhlIGN0bHJfWA0KPj4gZGV2aWNlLiBJ
+ZiB0aGUgdXNlciB3cml0ZXMgZmFicmljIG5hbWUgdG8gdGhlIGZpbGUgbGliZmNvZSB1c2VzIGl0
+IGluDQo+PiBpdCdzIEZDRiBzZWxlY3Rpb24gYWxnb3JpdGhtLiBIZXJlJ3MgbXkgY29tbWl0IG1l
+c3NhZ2UgZnJvbSB0aGF0IHBhdGNoLg0KPj4gSSBjYW4gc2hhcmUgdGhlIHBhdGNoIGlmIHBlb3Bs
+ZSB3b3VsZCBsaWtlIHRvIHNlZSBpdCB0b28uIFRoZSBjdXJyZW50DQo+PiBpbXBsZW1lbnRhdGlv
+biBhbHNvIGFsbG93cyB0aGUgdXNlciB0byBmb3JjZSB0aGUgbG9naW4gdGhyb3VnaCBhDQo+PiBz
+cGVjaWZpYyBGQ0YuDQo+Pg0KPj4gICAgICAgbGliZmNvZSwgYm54MmZjLCBmY29lOiBBZGQgJ3Nl
+bGVjdGlvbicgYXR0cmlidXRlDQo+Pg0KPj4gICAgICBUaGlzIHBhdGNoIGFkZHMgYSAnc2VsZWN0
+aW9uJyBhdHRyaWJ1dGUgdG8gdGhlDQo+PiAgICAgIGZjb2VfY3Rscl9kZXZpY2UuIFRoZSB1c2Vy
+IGNhbiB3cml0ZSBlaXRoZXIgYQ0KPj4gICAgICAnMHgnIHByZWZpeGVkIGZhYnJpYyBuYW1lIG9y
+IGEgJzonIHNlcGFyYXRlZA0KPj4gICAgICBNQUMgYWRkcmVzcyB0byB0aGlzIGZpbGUuIElmIGEg
+ZmFicmljIG5hbWUgaXMNCj4+ICAgICAgcHJvdmlkZWQgdGhlIGZjb2UgY3RsciB3aWxsIG9ubHkg
+Y29uc2lkZXIgRkNGcw0KPj4gICAgICB3aXRoIHRoZSBmYWJyaWMgbmFtZSB3aGVuIGNob29zaW5n
+IGEgRkNGIHRvIGxvZ2luDQo+PiAgICAgIHRvLiBJZiBhIE1BQyBhZGRyZXNzIGlzIHByb3ZpZGVk
+IHRoZSBpbml0aWF0b3INCj4+ICAgICAgd2lsbCBvbmx5IGxvZ2luIHRvIGEgRkNGIHdpdGggdGhl
+IGdpdmVuIEV0aGVybmV0DQo+PiAgICAgIGFkZHJlc3MuIE9ubHkgb25lIHNlbGVjdGlvbiBpcyB2
+YWxpZCBhdCBhIHRpbWUuDQo+Pg0KPj4gICAgICBUaGVyZSBhcmUgY29ycmVzcG9uZGluZyBjaGFu
+Z2VzIHRvIGZjb2UtdXRpbHMNCj4+ICAgICAgdG8gdGFrZSBhZHZhbnRhZ2Ugb2YgdGhpcyBrZXJu
+ZWwgZmVhdHVyZSBhbmQNCj4+ICAgICAgdG8gbWFrZSBpdCBtb3JlIGFjY2Vzc2libGUgZm9yIHRo
+ZSB1c2VyLg0KPj4NCj4+IFRvIGFjY29tcGFueSB0aGlzIGZlYXR1cmUgSSBjcmVhdGVkIGEgbmV3
+IGZpcGZjZiBhcHBsaWNhdGlvbiBiYXNlZCBvbg0KPj4gZmlwdmxhbiB0aGF0IHNlbmRzIG91dCBh
+IGRpc2NvdmVyeSBzb2xpY2l0YXRpb24gYW5kIGRpc3BsYXlzDQo+PiBhZHZlcnRpc2luZyBGQ0Zz
+Lg0KPg0KPiBDb29sLCBJIHRoaW5rIHlvdSBrbm93IHRoYXQgdGhlIGxhY2sgb2YgY29udHJvbCBv
+dmVyIEZDRiBzZWxlY3Rpb24gaGFzDQo+IGJvdGhlcmVkIG1lIGZvciBhIHdoaWxlIDopDQo+DQo+
+IEFub3RoZXIgb3B0aW9uIHRvIHRoaW5rIGFib3V0LCBpbnN0ZWFkIG9mIGNvbmZpZ3VyaW5nIGEg
+cHJlZmVycmVkIEZDRg0KPiBwcmlvciB0byBkaXNjb3ZlcnkgKHVzaW5nIHlvdXIgY29tbWFuZCBs
+aW5lIHRvb2wgdG8gZmluZCBvdXQgd2hhdCdzDQo+IGF2YWlsYWJsZSkgd2hhdCBpZiBpdCB3YXMg
+cG9zc2libGUgdG8gZGlzYWJsZSB0aGUgYXV0by1sb2dpbiBiZWhhdmlvcg0KPiAobGVhdmluZyBp
+dCBvbiBieSBkZWZhdWx0KSBhbmQgdGhlbiBlbmFibGUgbG9naW4gdG8gYW4gRkNGIHVzaW5nIHRo
+ZQ0KPiByZXByZXNlbnRhdGlvbiB5b3UndmUgYWRkZWQgdG8gc3lzZnM/ICBCYXNpY2FsbHksIGFs
+bG93IGEgdXNlci1zcGFjZQ0KPiBwb2xpY3kgYWdlbnQgdG8gZGlzYWJsZSB0aGUgYXV0by1zZWxl
+Y3Rpb24gYW5kIHRha2UgY29udHJvbC4NCj4NCj4gU28gdGhlIHN0ZXBzIGNvdWxkIGJlDQo+DQo+
+IDEpIGNyZWF0ZSBhbmQgRkNvRSBjb250cm9sbGVyIGZvciBhIG5ldHdvcmsgaW50ZXJmYWNlDQo+
+IDIpIGNvbmZpZ3VyZSB0aGUgY29udHJvbGxlciwgZGlzYWJsaW5nIGF1dG8tZmFicmljLXNlbGVj
+dGlvbg0KPiAzKSBlbmFibGUgdGhlIGNvbnRyb2xsZXIsIHN0YXJ0aW5nIEZDRiBkaXNjb3ZlcnkN
+Cj4gNCkgc2VsZWN0IGZyb20gdGhlIGRpc2NvdmVyZWQgRkNGIG9iamVjdHMNCj4gNSkgZW5hYmxl
+IGZhYnJpYyBsb2dpbiBvbiB0aGUgZGVzaXJlcyBGQ0ZzDQo+DQo+IFRoYXQgY291bGQgZXZlbiB3
+b3JrIGZvciBuYXRpdmUgUENJLWZ1bmN0aW9uIEZDb0UgZGV2aWNlcywgd2hlcmUNCj4gZmlwdmxh
+bi9maXBmY2YgaGF2ZSBpc3N1ZXMgYmVjYXVzZSB0aGUgbmV0ZGV2IG1pZ2h0IG5vdCBiZSB1cCAo
+b3IgZXZlbg0KPiBoYXZlIGEgZHJpdmVyIGxvYWRlZCksIGFzIGxvbmcgYXMgdGhleSBzdXBwb3J0
+IHRoZSBpbnRlcmZhY2UgYW5kDQo+IHByb3ZpZGUgdGhlIE9TIHdpdGggaW5mb3JtYXRpb24gYWJv
+dXQgZGlzY292ZXJlZCBGQ0ZzLg0KPg0KPj4gSSd2ZSBhbHNvIGJlZW4gdGFsa2luZyB3aXRoIE1h
+cmsgUnVzdGFkIGFib3V0IGRvaW5nIGFuICdhdXRvJyBtb2RlDQo+PiB3aGVyZSBGYWJyaWMgZGlz
+Y292ZXJ5IGlzIGF0dGVtcHRlZCBmaXJzdCBhbmQgaWYgaXQgZmFpbHMgdGhlbiBpdCB0cmllcw0K
+Pj4gVk4yVk4gZGlzY292ZXJ5LCBidXQgc28gZm9yIHdlJ3ZlIG9ubHkgaGFkIGhhbGx3YXkgY29u
+dmVyc2F0aW9ucyBhYm91dA0KPj4gaXQgYW5kIG5vdGhpbmcgaGFzIGJlZW4gZmx1c2hlZCBvdXQu
+DQo+DQo+IEknbSB0cnlpbmcgdG8gZ2V0IGNhdWdodCB1cCBvbiB3aGF0J3MgZ2V0dGluZyB0cmFj
+dGlvbiB3aXRoIHRoZQ0KPiBGQy1CQi02IHdvcmtpbmcgZ3JvdXAsIGJ1dCBpdCBsb29rcyBsaWtl
+IFZOMlZOIGZvciBib3RoIHRydWUNCj4gcG9pbnQtdG8tcG9pbnQgYW5kIG11bHRpcG9pbnQgbWln
+aHQgZ2V0IG5haWxlZCBkb3duLiAgQXMgd2VsbCBhcw0KPiBlc3RhYmxpc2hpbmcgc2hvcnRlc3Qt
+cGF0aCBjb25uZWN0aW9ucyBiZXR3ZWVuIG5hdGl2ZSBGQ29FIGVuZHBvaW50cw0KPiBpbiBmYWJy
+aWMgbW9kZSwgdG8gYXZvaWQgc2hvdmluZyBhbGwgZGF0YSB0aHJvdWdoIHRoZSBGQ0YgaWYgaXQN
+Cj4gZG9lc24ndCBuZWVkIHRvLiAgQWxsIGV4Y2l0aW5nIHdvcmsgdG8gdGhpbmsgYWJvdXQuDQo+
+DQo+IERvIHdlIGhhdmUgYSBiZXR0ZXIgaW5kaWNhdGlvbiBvZiB3aGF0IG5ldHdvcmsgaW50ZXJm
+YWNlIGFuIGZjX2hvc3QgaXMNCj4gY3JlYXRlZCBvbiwgb3IgaXMgcGFyc2luZyBmb3IgJ2Zjb2Ug
+djAuMSBvdmVyIDxpZm5hbWU+JyBpbiB0aGUNCj4gc3ltYm9saWMgbmFtZSBzdGlsbCB0aGUgYmVz
+dCB0aGluZyBnb2luZz8NCj4NCg0KSnVzdCBzb21lIHF1aWNrIHRob3VnaHRzLg0KDQpJIGhhdmUg
+YSBwYXRjaCB0byBhZGQgYSBoYmFhcGlfbGlicmFyeSAob3Igc29tZXRoaW5nIGxpa2UgdGhhdCkg
+DQphdHRyaWJ1dGUgdG8gdGhlIGZjX2hvc3Qgd2hlcmUgTExEcyB0aGF0IHdhbnQgdG8gYmUgbWFu
+YWdlZCBieSANCmxpYmhiYWxpbnV4IGNvdWxkIHNldCB0aGlzIHRvICJsaWJoYmFsaW51eCIuIEkg
+a25vdyB0aGlzIGlzbid0IGV4YWN0bHkgDQp3aGF0IHlvdSdyZSBhc2tpbmcgZm9yLCBidXQgSSB0
+aG91Z2h0IEkgc2hvdWxkIG1lbnRpb24gaXQuIFRoaXMgZWZmb3J0IA0Kd2FzIHNpbXBseSBkZXNp
+Z25lZCB0byBnZXQgcmlkIHRoZSAiIG92ZXIgIiBwYXJzaW5nIGFuZCB3YXNuJ3QgaW50ZW5kZWQg
+DQp0byBiZSByZWxhdGVkIHRvIHRoZSBmYWJyaWMgc2VsZWN0aW9uIGVmZm9ydC4NCg0KPiBTb3Jy
+eSBpZiBpdCBzZWVtcyBsaWtlIEkndmUgZ290IGxvdHMgb2Ygb3BpbmlvbnMgYnV0IG5vIHBhdGNo
+ZXMgcmlnaHQgbm93IDopDQo+IEknbSB0ZXN0aW5nIHlvdXIgUkZDIHBhdGNoc2V0IG91dCwgYXQg
+bGVhc3QgdG8gdGhlIGV4dGVudCB0aGF0IEkgY2FuDQo+IHdpdGggVk4yVk4gbW9kZSByaWdodCBu
+b3cuDQoNCkhtbS4uIFRoZXJlIG1pZ2h0IG5vdCBiZSBhbnl0aGluZyB0byB0ZXN0IHdpdGggVk4y
+Vk4gc2luY2UgSSBvbmx5IA0KY2hhbmdlZCB0aGUgc2VsZWN0aW9uIEZDRiBhbGdvcml0aC4NCg0K
+VGhlIGxhc3QgdGhpbmcgSSd2ZSBiZWVuIHRoaW5raW5nIG9mIGxhdGVseSByZWdhcmRpbmcgdGhl
+IG5ldyBpbnRlcmZhY2UgDQplZmZvcnQgaXMgdGhhdCBpZiB3ZSBkbyBtb3ZlIHRvIGEgY3JlYXRl
+L2NvbmZpZ3VyZS9zdGFydCBvciANCmNyZWF0ZS1kaXNhYmxlZC9jb25maWd1cmUvZW5hYmxlLiBX
+ZSBjb3VsZCBtb3ZlIHRoZSBkY2JfcmVxdWlyZWQgY2hlY2sgDQppbiBrZXJuZWwgYW5kIHRoaW4g
+ZG93biBmY29lbW9uIGNvbnNpZGVyYWJseS4NCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3L2NvbW1l
+bnRzLCAvL1JvYg0K
