@@ -1,33 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/2] scsi: sd: set ready_to_power_off for scsi disk
-Date: Thu, 13 Sep 2012 09:14:52 +0100
-Message-ID: <1347524092.2720.1.camel@dabdike.int.hansenpartnership.com>
-References: <1347522049-1836-1-git-send-email-aaron.lu@intel.com>
-	 <1347522049-1836-2-git-send-email-aaron.lu@intel.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH v6 0/7] ZPODD patches
+Date: Thu, 13 Sep 2012 16:15:18 +0800
+Message-ID: <EA857C7C6FB245F1B2B3C82DEA6DA148@usish.com.cn>
+References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com> <7AD76063A97F48128F7F6B285CD05C7E@usish.com.cn> <505150F7.3040800@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1347522049-1836-2-git-send-email-aaron.lu@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oliver@neukum.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:33361 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753834Ab2IMIQN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Sep 2012 04:16:13 -0400
+In-Reply-To: <505150F7.3040800@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Aaron Lu' <aaron.lu@intel.com>
+Cc: 'Aaron Lu' <aaron.lwe@gmail.com>, 'Alan Stern' <stern@rowland.harvard.edu>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, 'Jeff Garzik' <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 
-On Thu, 2012-09-13 at 15:40 +0800, Aaron Lu wrote:
-> The ready_to_power_off flag is used to give indication to ATA layer
-> if this device's power can be removed when runtime suspended.
+> > For hard disk runtime power off, Is there (hardware?) requirement for
+hard
+> > drive to support similar feature?
 > 
-> This flag is determined by individual SCSI driver like sr, sd.
+> No requirement for hard drive, as it does not need to remote wake up
+> itself while powered off.
 > 
-> This flag is introduced to support zero power ODD. When ODD
-> is runtime suspended, it may not be OK to remove its power.
+> Please note that there is a v7 sent yesterday, you may want to take a
+> look at that instead of v6.
 > 
-> But for disk, it is always OK to be powered off, so set this flag.
+> And the runtime power off of hard drive is dropped from that patch set,
+> I'll submit it in another patch set(pretty small changes needed).
+> 
+> Thanks,
+> Aaron
+[Jack Wang] Thanks Aaron for quick replay, for disk runtime power off, will
+it   a different proach from block runtime power management patch set from
+Lin Ming? 
 
-It is? I may have missed this, but where do you flush the cache of write
-back cache devices you're about to power off?
-
-James
 
 
