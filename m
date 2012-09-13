@@ -1,54 +1,50 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/2] scsi: sd: set ready_to_power_off for scsi disk
-Date: Thu, 13 Sep 2012 09:37:46 +0100
-Message-ID: <1347525466.2720.10.camel@dabdike.int.hansenpartnership.com>
-References: <1347522049-1836-1-git-send-email-aaron.lu@intel.com>
-	  <1347522049-1836-2-git-send-email-aaron.lu@intel.com>
-	 <1347524092.2720.1.camel@dabdike.int.hansenpartnership.com>
-	 <50519801.6080502@intel.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH v6 0/7] ZPODD patches
+Date: Thu, 13 Sep 2012 16:39:48 +0800
+Message-ID: <B87BE1FCC4D44A6FBD300820B5C79842@usish.com.cn>
+References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com> <7AD76063A97F48128F7F6B285CD05C7E@usish.com.cn> <505150F7.3040800@intel.com> <EA857C7C6FB245F1B2B3C82DEA6DA148@usish.com.cn> <505199C2.7070309@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54855 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756091Ab2IMIhv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Sep 2012 04:37:51 -0400
-In-Reply-To: <50519801.6080502@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <505199C2.7070309@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: 'Aaron Lu' <aaron.lu@intel.com>
+Cc: 'Aaron Lu' <aaron.lwe@gmail.com>, 'Alan Stern' <stern@rowland.harvard.edu>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, 'Jeff Garzik' <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oliver@neukum.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 
-On Thu, 2012-09-13 at 16:23 +0800, Aaron Lu wrote:
-> On 09/13/2012 04:14 PM, James Bottomley wrote:
-> > On Thu, 2012-09-13 at 15:40 +0800, Aaron Lu wrote:
-> >> The ready_to_power_off flag is used to give indication to ATA layer
-> >> if this device's power can be removed when runtime suspended.
+> >>> For hard disk runtime power off, Is there (hardware?) requirement for
+> > hard
+> >>> drive to support similar feature?
 > >>
-> >> This flag is determined by individual SCSI driver like sr, sd.
+> >> No requirement for hard drive, as it does not need to remote wake up
+> >> itself while powered off.
 > >>
-> >> This flag is introduced to support zero power ODD. When ODD
-> >> is runtime suspended, it may not be OK to remove its power.
+> >> Please note that there is a v7 sent yesterday, you may want to take a
+> >> look at that instead of v6.
 > >>
-> >> But for disk, it is always OK to be powered off, so set this flag.
-> > 
-> > It is? I may have missed this, but where do you flush the cache of write
-> > back cache devices you're about to power off?
+> >> And the runtime power off of hard drive is dropped from that patch set,
+> >> I'll submit it in another patch set(pretty small changes needed).
+> >>
+> >> Thanks,
+> >> Aaron
+> > [Jack Wang] Thanks Aaron for quick replay, for disk runtime power off,
+will
+> > it   a different proach from block runtime power management patch set
+from
+> > Lin Ming?
 > 
-> I suppose that is handled in sd_suspend callback, the power off happens
-> after a device is runtime suspended.
-
-Well that would mean something is wrong somewhere:  For runtime power
-management using idle timers and forced standby, there's no need to
-flush the cache (if the drive goes into standby on its own as a result
-of an idle timeout, the cache will never flush).  The cache needs to
-flush before we power off the device: that's before the system goes into
-S3, or now before you power it off at runtime.  Flushing the cache on
-runtime transitions to standby will likely cause performance problems
-since that happens quite often.
-
-James
-
+> I suppose you mean the "block layer runtime pm" from Lin Ming?
+> No, they are different things.
+> 
+> That patch set introduced a mechanism to decide when a device can enter
+> runtime suspend based on block layer request, while my patch cares about
+> when it is runtime suspended, how to remove its power.
+> 
+> Thanks,
+> Aaron
+[Jack Wang] Thanks, but I still not get how to remove hard disk power?
+Through acpi? But libata acpi not cover scsi disk right? Sorry if my
+question is too stupid.
 
