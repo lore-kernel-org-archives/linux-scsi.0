@@ -1,39 +1,33 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] Fix a use-after-free triggered by device removal
-Date: Thu, 13 Sep 2012 09:26:59 +0200
-Message-ID: <50518AC3.2070009@acm.org>
-References: <5044BAD2.7060901@acm.org> <91D94272-CA62-4E68-87D7-CE77DE776CC9@cs.wisc.edu> <5048E45E.1070302@acm.org> <5048E80B.5010101@cs.wisc.edu> <5048F0D9.6080403@acm.org> <20120906232031.GU29092@google.com> <50499AC6.1050008@acm.org> <20120910233843.GI7677@google.com> <504EDD54.9000408@acm.org> <20120912205338.GV7677@google.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/2] scsi: sd: set ready_to_power_off for scsi disk
+Date: Thu, 13 Sep 2012 09:14:52 +0100
+Message-ID: <1347524092.2720.1.camel@dabdike.int.hansenpartnership.com>
+References: <1347522049-1836-1-git-send-email-aaron.lu@intel.com>
+	 <1347522049-1836-2-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [178.239.52.149] ([178.239.52.149]:56951 "EHLO wimaserver10.be"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750980Ab2IMHqX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Sep 2012 03:46:23 -0400
-In-Reply-To: <20120912205338.GV7677@google.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1347522049-1836-2-git-send-email-aaron.lu@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oliver@neukum.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>
 
-On 09/12/12 22:53, Tejun Heo wrote:
-> The problem at hand IIUC is ->request_fn() being invoked when
-> request_queue itself is alive but the underlying driver is gone.  We
-> already make sure that a new request is not queued once drain is
-> complete but there's no guarantee about calling into ->request_fn()
-> and this is what you want to fix, right?
+On Thu, 2012-09-13 at 15:40 +0800, Aaron Lu wrote:
+> The ready_to_power_off flag is used to give indication to ATA layer
+> if this device's power can be removed when runtime suspended.
+> 
+> This flag is determined by individual SCSI driver like sr, sd.
+> 
+> This flag is introduced to support zero power ODD. When ODD
+> is runtime suspended, it may not be OK to remove its power.
+> 
+> But for disk, it is always OK to be powered off, so set this flag.
 
-Actually it's a slightly different issue that I want to address, namely
-that with the current implementation of the block layer and the SCSI
-core it's possible that blk_cleanup_queue() finishes after
-scsi_request_fn() has unlocked the queue lock and before it obtains the
-queue lock again.
+It is? I may have missed this, but where do you flush the cache of write
+back cache devices you're about to power off?
 
-The reason I'm proposing to add a counter in the block layer and not in
-the SCSI core is because I think it would be useful for other
-request-based block drivers too to be able to unlock the queue inside
-their ->request_fn(). That would allow to reduce lock contention on the
-request_queue lock for low-latency block drivers.
+James
 
-Bart.
+
