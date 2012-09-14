@@ -1,115 +1,127 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [RFC PATCH 4/5] bnx2fc: Use new fcoe_sysfs control
- interface
-Date: Fri, 14 Sep 2012 00:28:54 -0700
-Message-ID: <5052DCB6.4030704@broadcom.com>
-References: <20120910225908.13140.97277.stgit@fritz>
- <20120910225930.13140.97949.stgit@fritz>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: + sections-fix-section-conflicts-in-drivers-scsi.patch added to
+ -mm tree
+Date: Fri, 14 Sep 2012 09:04:21 +0100
+Message-ID: <1347609861.2794.1.camel@dabdike.int.hansenpartnership.com>
+References: <20120913233742.7287E100047@wpzn3.hot.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20120910225930.13140.97949.stgit@fritz>
-Sender: netdev-owner@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: netdev@vger.kernel.org, gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57736 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756468Ab2INIE2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Sep 2012 04:04:28 -0400
+In-Reply-To: <20120913233742.7287E100047@wpzn3.hot.corp.google.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: mm-commits@vger.kernel.org, ak@linux.intel.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 09/10/2012 03:59 PM, Robert Love wrote:
-> Convert	bnx2fc to use the new fcoe_sysfs create, delete,
-> enable, disable, start and mode.
->
-> bnx2fc doesn't support VN2VN. bnx2fc will not initialize
-> the set_fcoe_ctlr_mode routine and therefore its instances
-> will always be in FABRIC mode. There was previously an
-> explicit check for the ctlr's mode, but this is no longer
-> needed because not implementing set_fcoe_ctlr_mode implies
-> that the ctlr cannot change from the FABRIC mode.
->
-> Signed-off-by: Robert Love <robert.w.love@intel.com>
+On Thu, 2012-09-13 at 16:37 -0700, akpm@linux-foundation.org wrote:
+> The patch titled
+>      Subject: sections: fix section conflicts in drivers/scsi
+> has been added to the -mm tree.  Its filename is
+>      sections-fix-section-conflicts-in-drivers-scsi.patch
+> 
+> Before you just go and hit "reply", please:
+>    a) Consider who else should be cc'ed
+>    b) Prefer to cc a suitable mailing list as well
+>    c) Ideally: find the original patch on the mailing list and do a
+>       reply-to-all to that, adding suitable additional cc's
+> 
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
+> 
+> The -mm tree is included into linux-next and is updated
+> there every 3-4 working days
+> 
+> ------------------------------------------------------
+> From: Andi Kleen <ak@linux.intel.com>
+> Subject: sections: fix section conflicts in drivers/scsi
+
+NAK this, please.  We're fixing all of this by removing CONFIG_HOTPLUG,
+so all __dev annotations become nops and there's little point changing
+any.
+
+James
+
+> Signed-off-by: Andi Kleen <ak@linux.intel.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 > ---
->   drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   98 +++++++++++++++++++++++--------------
->   1 file changed, 60 insertions(+), 38 deletions(-)
->
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> index f52f668f..560c8c8 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-<snip>
+> 
+>  drivers/scsi/aacraid/linit.c        |    2 +-
+>  drivers/scsi/aic94xx/aic94xx_init.c |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff -puN drivers/scsi/aacraid/linit.c~sections-fix-section-conflicts-in-drivers-scsi drivers/scsi/aacraid/linit.c
+> --- a/drivers/scsi/aacraid/linit.c~sections-fix-section-conflicts-in-drivers-scsi
+> +++ a/drivers/scsi/aacraid/linit.c
+> @@ -93,7 +93,7 @@ static DECLARE_PCI_DEVICE_TABLE(aac_pci_
+>  #elif defined(__devinitconst)
+>  static const struct pci_device_id aac_pci_tbl[] __devinitconst = {
+>  #else
+> -static const struct pci_device_id aac_pci_tbl[] __devinitdata = {
+> +static const struct pci_device_id aac_pci_tbl[] __devinitconst = {
+>  #endif
+>  	{ 0x1028, 0x0001, 0x1028, 0x0001, 0, 0, 0 }, /* PERC 2/Si (Iguana/PERC2Si) */
+>  	{ 0x1028, 0x0002, 0x1028, 0x0002, 0, 0, 1 }, /* PERC 3/Di (Opal/PERC3Di) */
+> diff -puN drivers/scsi/aic94xx/aic94xx_init.c~sections-fix-section-conflicts-in-drivers-scsi drivers/scsi/aic94xx/aic94xx_init.c
+> --- a/drivers/scsi/aic94xx/aic94xx_init.c~sections-fix-section-conflicts-in-drivers-scsi
+> +++ a/drivers/scsi/aic94xx/aic94xx_init.c
+> @@ -1012,7 +1012,7 @@ static struct sas_domain_function_templa
+>  	.lldd_ata_set_dmamode	= asd_set_dmamode,
+>  };
+>  
+> -static const struct pci_device_id aic94xx_pci_table[] __devinitdata = {
+> +static const struct pci_device_id aic94xx_pci_table[] __devinitconst = {
+>  	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, 0x410),0, 0, 1},
+>  	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, 0x412),0, 0, 1},
+>  	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, 0x416),0, 0, 1},
+> _
+> 
+> Patches currently in -mm which might be from ak@linux.intel.com are
+> 
+> compilerh-add-__visible.patch
+> linux-next.patch
+> thp-x86-introduce-have_arch_transparent_hugepage.patch
+> thp-remove-assumptions-on-pgtable_t-type.patch
+> thp-introduce-pmdp_invalidate.patch
+> thp-make-madv_hugepage-check-for-mm-def_flags.patch
+> thp-s390-thp-splitting-backend-for-s390.patch
+> thp-s390-thp-pagetable-pre-allocation-for-s390.patch
+> thp-s390-disable-thp-for-kvm-host-on-s390.patch
+> thp-s390-architecture-backend-for-thp-on-s390.patch
+> sections-disable-const-sections-for-pa-risc-v2.patch
+> sections-fix-section-conflicts-in-arch-arm.patch
+> sections-fix-section-conflicts-in-arch-frv.patch
+> sections-fix-section-conflicts-in-arch-h8300.patch
+> sections-fix-section-conflicts-in-arch-ia64.patch
+> sections-fix-section-conflicts-in-arch-mips.patch
+> sections-fix-section-conflicts-in-arch-powerpc.patch
+> sections-fix-section-conflicts-in-arch-score.patch
+> sections-fix-section-conflicts-in-arch-sh.patch
+> sections-fix-section-conflicts-in-arch-x86.patch
+> sections-fix-section-conflicts-in-drivers-atm.patch
+> sections-fix-section-conflicts-in-drivers-char.patch
+> sections-fix-section-conflicts-in-drivers-cpufreq.patch
+> sections-fix-section-conflicts-in-drivers-ide.patch
+> sections-fix-section-conflicts-in-drivers-macintosh.patch
+> sections-fix-section-conflicts-in-drivers-mfd.patch
+> sections-fix-section-conflicts-in-drivers-mmc.patch
+> sections-fix-section-conflicts-in-drivers-net.patch
+> sections-fix-section-conflicts-in-drivers-net-hamradio.patch
+> sections-fix-section-conflicts-in-drivers-net-wan.patch
+> sections-fix-section-conflicts-in-drivers-platform-x86.patch
+> sections-fix-section-conflicts-in-drivers-scsi.patch
+> sections-fix-section-conflicts-in-drivers-video.patch
+> sections-fix-section-conflicts-in-mm-percpuc.patch
+> sections-fix-section-conflicts-in-net-can.patch
+> sections-fix-section-conflicts-in-net.patch
+> sections-fix-section-conflicts-in-sound.patch
+> sectons-fix-const-sections-for-crc32-table.patch
+> compat_ioctl-remove-unused-local-typedef.patch
 
->   /**
-> + * bnx2fc_alloc - Alocate a bnx2fc FCoE interface
-> + *
-> + * @cdev: The FCoE Controller Device to start
-> + *
-> + * Called from sysfs.
-> + *
-> + * Returns: 0 for success
-> + */
-> +static int bnx2fc_start(struct fcoe_ctlr_device *cdev)
-> +{
-> +	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(cdev);
-> +	struct fc_lport *lport = ctlr->lp;
-> +	struct fcoe_port *port = lport_priv(lport);
-> +	struct bnx2fc_interface *interface = port->priv;
-> +
-> +	lport->boot_time = jiffies;
-> +
-> +	/* Make this master N_port */
-> +	ctlr->lp = lport;
 
-ctlr->lp should be set in bnx2fc_alloc() as we access it here in the 
-beginning of this function.
 
-> +
-> +	if (!bnx2fc_link_ok(lport)) {
-> +		fcoe_ctlr_link_up(ctlr);
-> +		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
-> +		set_bit(ADAPTER_STATE_READY, &interface->hba->adapter_state);
-> +	}
-> +
-> +	BNX2FC_HBA_DBG(lport, "create: START DISC\n");
-> +	bnx2fc_start_disc(interface);
-I think more changes are required for bnx2fc as fc_lport_init() is 
-called just before calling fc_fabric_login() - whcih is called during 
-'start'. Because of this, if we just call 'create' followed by 'destroy' 
-without calling 'start', lport is not initialized and I expect to see 
-some panics when destroy is called.
-
-Let me try testing your patches and send you any fixes that are required.
-
-> +	interface->enabled = true;
-> +
-> +	return 0;
-> +}
-> +
-> +/**
->    * bnx2fc_find_hba_for_cnic - maps cnic instance to bnx2fc hba instance
->    *
->    * @cnic:	Pointer to cnic device instance
-> @@ -2271,10 +2292,8 @@ static struct fcoe_transport bnx2fc_transport = {
->   	.attached = false,
->   	.list = LIST_HEAD_INIT(bnx2fc_transport.list),
->   	.match = bnx2fc_match,
-> -	.create = bnx2fc_create,
-> +	.alloc = bnx2fc_alloc,
->   	.destroy = bnx2fc_destroy,
-> -	.enable = bnx2fc_enable,
-> -	.disable = bnx2fc_disable,
->   };
->   
->   /**
-> @@ -2514,6 +2533,9 @@ module_init(bnx2fc_mod_init);
->   module_exit(bnx2fc_mod_exit);
->   
->   static struct fcoe_sysfs_function_template bnx2fc_fcoe_sysfs_templ = {
-> +	.set_fcoe_ctlr_start = bnx2fc_start,
-> +	.set_fcoe_ctlr_enable = bnx2fc_enable,
-> +	.set_fcoe_ctlr_disable = bnx2fc_disable,
->   	.get_fcoe_ctlr_mode = fcoe_ctlr_get_fip_mode,
->   	.get_fcoe_ctlr_link_fail = bnx2fc_ctlr_get_lesb,
->   	.get_fcoe_ctlr_vlink_fail = bnx2fc_ctlr_get_lesb,
->
->
