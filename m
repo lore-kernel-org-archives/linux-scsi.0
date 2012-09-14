@@ -1,49 +1,47 @@
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: [scsi:misc 49/55] drivers/scsi/mvumi.c:1880:3: error: implicit
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [scsi:misc 49/55] drivers/scsi/mvumi.c:1880:3: error: implicit
  declaration of function 'virt_to_bus'
-Date: Sat, 15 Sep 2012 00:50:01 +0800
-Message-ID: <20120914165001.GB22939@localhost>
+Date: Fri, 14 Sep 2012 16:59:51 +0000
+Message-ID: <1347641990.2450.18.camel@dabdike.int.hansenpartnership.com>
+References: <20120914165001.GB22939@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60159 "EHLO mga01.intel.com"
+Received: from mx2.parallels.com ([64.131.90.16]:42944 "EHLO mx2.parallels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756225Ab2INQuF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Sep 2012 12:50:05 -0400
-Content-Disposition: inline
+	id S1757349Ab2INQ7x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Sep 2012 12:59:53 -0400
+In-Reply-To: <20120914165001.GB22939@localhost>
+Content-Language: en-US
+Content-ID: <940A1FDA21FEEF4F8044C4ED42A9D999@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shun Fu <fushun@gmail.com>
-Cc: kernel-janitors@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: Shun Fu <fushun@gmail.com>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi Shun,
-
-FYI, kernel build failed on
-
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
-head:   e1daec5547bdb8a53b023852d578409005c69ea7
-commit: 8b3fa849abc2b62920d7e4fc4f8e6ce3d0783623 [49/55] [SCSI] mvumi: Add support for Marvell SAS/SATA RAID-on-Chip(ROC) 88RC9580
-config: powerpc-allmodconfig
-
-All related error/warning messages:
-
-drivers/scsi/mvumi.c: In function 'mvumi_send_command':
-drivers/scsi/mvumi.c:1880:3: error: implicit declaration of function 'virt_to_bus' [-Werror=implicit-function-declaration]
-cc1: some warnings being treated as errors
-
-vim +1880 drivers/scsi/mvumi.c
-  1875		frame_len = sizeof(*ib_frame) - 4 +
-  1876					ib_frame->sg_counts * sizeof(struct mvumi_sgl);
-  1877		if (mhba->hba_capability & HS_CAPABILITY_SUPPORT_DYN_SRC) {
-  1878			struct mvumi_dyn_list_entry *dle;
-  1879			dle = ib_entry;
-> 1880			dle->src_low_addr = virt_to_bus(ib_frame) & 0xFFFFFFFF;
-  1881			dle->src_high_addr =
-  1882				((virt_to_bus(ib_frame) >> 16) >> 16) & 0xFFFFFFFF;
-  1883			dle->if_length = (frame_len >> 2) & 0xFFF;
-  1884		} else {
-  1885			memcpy(ib_entry, ib_frame, frame_len);
-
----
-0-DAY kernel build testing backend         Open Source Technology Centre
-Fengguang Wu, Yuanhan Liu                              Intel Corporation
+T24gU2F0LCAyMDEyLTA5LTE1IGF0IDAwOjUwICswODAwLCBGZW5nZ3VhbmcgV3Ugd3JvdGU6DQo+
+IEhpIFNodW4sDQo+IA0KPiBGWUksIGtlcm5lbCBidWlsZCBmYWlsZWQgb24NCj4gDQo+IHRyZWU6
+ICAgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2plamIvc2Nz
+aS5naXQgbWlzYw0KPiBoZWFkOiAgIGUxZGFlYzU1NDdiZGI4YTUzYjAyMzg1MmQ1Nzg0MDkwMDVj
+NjllYTcNCj4gY29tbWl0OiA4YjNmYTg0OWFiYzJiNjI5MjBkN2U0ZmM0ZjhlNmNlM2QwNzgzNjIz
+IFs0OS81NV0gW1NDU0ldIG12dW1pOiBBZGQgc3VwcG9ydCBmb3IgTWFydmVsbCBTQVMvU0FUQSBS
+QUlELW9uLUNoaXAoUk9DKSA4OFJDOTU4MA0KPiBjb25maWc6IHBvd2VycGMtYWxsbW9kY29uZmln
+DQo+IA0KPiBBbGwgcmVsYXRlZCBlcnJvci93YXJuaW5nIG1lc3NhZ2VzOg0KPiANCj4gZHJpdmVy
+cy9zY3NpL212dW1pLmM6IEluIGZ1bmN0aW9uICdtdnVtaV9zZW5kX2NvbW1hbmQnOg0KPiBkcml2
+ZXJzL3Njc2kvbXZ1bWkuYzoxODgwOjM6IGVycm9yOiBpbXBsaWNpdCBkZWNsYXJhdGlvbiBvZiBm
+dW5jdGlvbiAndmlydF90b19idXMnIFstV2Vycm9yPWltcGxpY2l0LWZ1bmN0aW9uLWRlY2xhcmF0
+aW9uXQ0KPiBjYzE6IHNvbWUgd2FybmluZ3MgYmVpbmcgdHJlYXRlZCBhcyBlcnJvcnMNCj4gDQo+
+IHZpbSArMTg4MCBkcml2ZXJzL3Njc2kvbXZ1bWkuYw0KPiAgIDE4NzUJCWZyYW1lX2xlbiA9IHNp
+emVvZigqaWJfZnJhbWUpIC0gNCArDQo+ICAgMTg3NgkJCQkJaWJfZnJhbWUtPnNnX2NvdW50cyAq
+IHNpemVvZihzdHJ1Y3QgbXZ1bWlfc2dsKTsNCj4gICAxODc3CQlpZiAobWhiYS0+aGJhX2NhcGFi
+aWxpdHkgJiBIU19DQVBBQklMSVRZX1NVUFBPUlRfRFlOX1NSQykgew0KPiAgIDE4NzgJCQlzdHJ1
+Y3QgbXZ1bWlfZHluX2xpc3RfZW50cnkgKmRsZTsNCj4gICAxODc5CQkJZGxlID0gaWJfZW50cnk7
+DQo+ID4gMTg4MAkJCWRsZS0+c3JjX2xvd19hZGRyID0gdmlydF90b19idXMoaWJfZnJhbWUpICYg
+MHhGRkZGRkZGRjsNCj4gICAxODgxCQkJZGxlLT5zcmNfaGlnaF9hZGRyID0NCj4gICAxODgyCQkJ
+CSgodmlydF90b19idXMoaWJfZnJhbWUpID4+IDE2KSA+PiAxNikgJiAweEZGRkZGRkZGOw0KPiAg
+IDE4ODMJCQlkbGUtPmlmX2xlbmd0aCA9IChmcmFtZV9sZW4gPj4gMikgJiAweEZGRjsNCj4gICAx
+ODg0CQl9IGVsc2Ugew0KPiAgIDE4ODUJCQltZW1jcHkoaWJfZW50cnksIGliX2ZyYW1lLCBmcmFt
+ZV9sZW4pOw0KDQpPSywgdGhhdCdzIG5vdCBmaXhhYmxlIHdpdGhvdXQgYSByZXdyaXRlLg0KDQpN
+YXJ2ZWxsIHBlb3BsZSwgcGxlYXNlIHJld3JpdGUuICBJJ3ZlIGRyb3BwZWQgdGhlIHBhdGNoIGZy
+b20gdGhlIFNDU0kNCnRyZWUuDQoNCkphbWVzDQoNCg==
