@@ -1,104 +1,60 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: Re: future FCoE ideas (Re: [RFC PATCH 0/5] Reorganize libfcoe
- control interfaces)
-Date: Thu, 13 Sep 2012 22:45:33 +0000
-Message-ID: <5052620C.7040006@intel.com>
-References: <CAHNqLyUCgrDLCXnchVAieP0y2n8QmWHD-Nr-V54aypgSDHnR0g@mail.gmail.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH 1/2] scsi: sd: set ready_to_power_off for scsi disk
+Date: Fri, 14 Sep 2012 13:20:42 +0800
+Message-ID: <20120914052041.GA5177@mint-spring.sh.intel.com>
+References: <1347522049-1836-1-git-send-email-aaron.lu@intel.com>
+ <1347522049-1836-2-git-send-email-aaron.lu@intel.com>
+ <1347524092.2720.1.camel@dabdike.int.hansenpartnership.com>
+ <50519801.6080502@intel.com>
+ <1347525466.2720.10.camel@dabdike.int.hansenpartnership.com>
+ <50519E08.10800@intel.com>
+ <1347526590.2720.15.camel@dabdike.int.hansenpartnership.com>
+ <5051A25F.7040704@intel.com>
+ <1347528404.2720.28.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:15962 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750702Ab2IMWpo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Sep 2012 18:45:44 -0400
-In-Reply-To: <CAHNqLyUCgrDLCXnchVAieP0y2n8QmWHD-Nr-V54aypgSDHnR0g@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <EAB824C0FB855F44A7C98FCB52B7CD52@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1347528404.2720.28.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oliver@neukum.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Leech <cleech@redhat.com>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gVGh1IDEzIFNlcCAyMDEyIDAzOjMyOjUwIFBNIFBEVCwgQ2hyaXMgTGVlY2ggd3JvdGU6DQo+
-IDxjdXR0aW5nIGRvd24gdGhlIENDIGxpc3QsIGFzIHRoaXMgYml0IGlzbid0IHJlYWxseSBhYm91
-dCBwYXRjaCByZXZpZXcgYW55bW9yZT4NCj4NCj4+PiBUaGF0IGJlaW5nIHNhaWQsIEknbSBnbGFk
-IHRoaXMgaXMgYmVpbmcgcmV3b3JrZWQuICBEbyB5b3UgaGF2ZSBhbnkNCj4+PiBvdGhlciBmdW5j
-dGlvbmFsaXR5IGluIG1pbmQgdGhhdCB0aGlzIGlzIGxheWluZyB0aGUgZ3JvdW5kd29yayBmb3I/
-DQo+Pj4NCj4+DQo+PiBJIGhhdmUgb25lIGZlYXR1cmUgYW5kIGEgZmV3IGlkZWFzLiBJIGN1cnJl
-bnRseSBoYXZlIGEgcGF0Y2ggdGhhdCBhZGRzDQo+PiBhIGZhYnJpYyBzZWxlY3Rpb24gZmVhdHVy
-ZS4gSSBhZGQgYW5vdGhlciBSVyBhdHRyaWJ1dGUgdG8gdGhlIGN0bHJfWA0KPj4gZGV2aWNlLiBJ
-ZiB0aGUgdXNlciB3cml0ZXMgZmFicmljIG5hbWUgdG8gdGhlIGZpbGUgbGliZmNvZSB1c2VzIGl0
-IGluDQo+PiBpdCdzIEZDRiBzZWxlY3Rpb24gYWxnb3JpdGhtLiBIZXJlJ3MgbXkgY29tbWl0IG1l
-c3NhZ2UgZnJvbSB0aGF0IHBhdGNoLg0KPj4gSSBjYW4gc2hhcmUgdGhlIHBhdGNoIGlmIHBlb3Bs
-ZSB3b3VsZCBsaWtlIHRvIHNlZSBpdCB0b28uIFRoZSBjdXJyZW50DQo+PiBpbXBsZW1lbnRhdGlv
-biBhbHNvIGFsbG93cyB0aGUgdXNlciB0byBmb3JjZSB0aGUgbG9naW4gdGhyb3VnaCBhDQo+PiBz
-cGVjaWZpYyBGQ0YuDQo+Pg0KPj4gICAgICAgbGliZmNvZSwgYm54MmZjLCBmY29lOiBBZGQgJ3Nl
-bGVjdGlvbicgYXR0cmlidXRlDQo+Pg0KPj4gICAgICBUaGlzIHBhdGNoIGFkZHMgYSAnc2VsZWN0
-aW9uJyBhdHRyaWJ1dGUgdG8gdGhlDQo+PiAgICAgIGZjb2VfY3Rscl9kZXZpY2UuIFRoZSB1c2Vy
-IGNhbiB3cml0ZSBlaXRoZXIgYQ0KPj4gICAgICAnMHgnIHByZWZpeGVkIGZhYnJpYyBuYW1lIG9y
-IGEgJzonIHNlcGFyYXRlZA0KPj4gICAgICBNQUMgYWRkcmVzcyB0byB0aGlzIGZpbGUuIElmIGEg
-ZmFicmljIG5hbWUgaXMNCj4+ICAgICAgcHJvdmlkZWQgdGhlIGZjb2UgY3RsciB3aWxsIG9ubHkg
-Y29uc2lkZXIgRkNGcw0KPj4gICAgICB3aXRoIHRoZSBmYWJyaWMgbmFtZSB3aGVuIGNob29zaW5n
-IGEgRkNGIHRvIGxvZ2luDQo+PiAgICAgIHRvLiBJZiBhIE1BQyBhZGRyZXNzIGlzIHByb3ZpZGVk
-IHRoZSBpbml0aWF0b3INCj4+ICAgICAgd2lsbCBvbmx5IGxvZ2luIHRvIGEgRkNGIHdpdGggdGhl
-IGdpdmVuIEV0aGVybmV0DQo+PiAgICAgIGFkZHJlc3MuIE9ubHkgb25lIHNlbGVjdGlvbiBpcyB2
-YWxpZCBhdCBhIHRpbWUuDQo+Pg0KPj4gICAgICBUaGVyZSBhcmUgY29ycmVzcG9uZGluZyBjaGFu
-Z2VzIHRvIGZjb2UtdXRpbHMNCj4+ICAgICAgdG8gdGFrZSBhZHZhbnRhZ2Ugb2YgdGhpcyBrZXJu
-ZWwgZmVhdHVyZSBhbmQNCj4+ICAgICAgdG8gbWFrZSBpdCBtb3JlIGFjY2Vzc2libGUgZm9yIHRo
-ZSB1c2VyLg0KPj4NCj4+IFRvIGFjY29tcGFueSB0aGlzIGZlYXR1cmUgSSBjcmVhdGVkIGEgbmV3
-IGZpcGZjZiBhcHBsaWNhdGlvbiBiYXNlZCBvbg0KPj4gZmlwdmxhbiB0aGF0IHNlbmRzIG91dCBh
-IGRpc2NvdmVyeSBzb2xpY2l0YXRpb24gYW5kIGRpc3BsYXlzDQo+PiBhZHZlcnRpc2luZyBGQ0Zz
-Lg0KPg0KPiBDb29sLCBJIHRoaW5rIHlvdSBrbm93IHRoYXQgdGhlIGxhY2sgb2YgY29udHJvbCBv
-dmVyIEZDRiBzZWxlY3Rpb24gaGFzDQo+IGJvdGhlcmVkIG1lIGZvciBhIHdoaWxlIDopDQo+DQo+
-IEFub3RoZXIgb3B0aW9uIHRvIHRoaW5rIGFib3V0LCBpbnN0ZWFkIG9mIGNvbmZpZ3VyaW5nIGEg
-cHJlZmVycmVkIEZDRg0KPiBwcmlvciB0byBkaXNjb3ZlcnkgKHVzaW5nIHlvdXIgY29tbWFuZCBs
-aW5lIHRvb2wgdG8gZmluZCBvdXQgd2hhdCdzDQo+IGF2YWlsYWJsZSkgd2hhdCBpZiBpdCB3YXMg
-cG9zc2libGUgdG8gZGlzYWJsZSB0aGUgYXV0by1sb2dpbiBiZWhhdmlvcg0KPiAobGVhdmluZyBp
-dCBvbiBieSBkZWZhdWx0KSBhbmQgdGhlbiBlbmFibGUgbG9naW4gdG8gYW4gRkNGIHVzaW5nIHRo
-ZQ0KPiByZXByZXNlbnRhdGlvbiB5b3UndmUgYWRkZWQgdG8gc3lzZnM/ICBCYXNpY2FsbHksIGFs
-bG93IGEgdXNlci1zcGFjZQ0KPiBwb2xpY3kgYWdlbnQgdG8gZGlzYWJsZSB0aGUgYXV0by1zZWxl
-Y3Rpb24gYW5kIHRha2UgY29udHJvbC4NCj4NCj4gU28gdGhlIHN0ZXBzIGNvdWxkIGJlDQo+DQo+
-IDEpIGNyZWF0ZSBhbmQgRkNvRSBjb250cm9sbGVyIGZvciBhIG5ldHdvcmsgaW50ZXJmYWNlDQo+
-IDIpIGNvbmZpZ3VyZSB0aGUgY29udHJvbGxlciwgZGlzYWJsaW5nIGF1dG8tZmFicmljLXNlbGVj
-dGlvbg0KPiAzKSBlbmFibGUgdGhlIGNvbnRyb2xsZXIsIHN0YXJ0aW5nIEZDRiBkaXNjb3ZlcnkN
-Cj4gNCkgc2VsZWN0IGZyb20gdGhlIGRpc2NvdmVyZWQgRkNGIG9iamVjdHMNCj4gNSkgZW5hYmxl
-IGZhYnJpYyBsb2dpbiBvbiB0aGUgZGVzaXJlcyBGQ0ZzDQo+DQo+IFRoYXQgY291bGQgZXZlbiB3
-b3JrIGZvciBuYXRpdmUgUENJLWZ1bmN0aW9uIEZDb0UgZGV2aWNlcywgd2hlcmUNCj4gZmlwdmxh
-bi9maXBmY2YgaGF2ZSBpc3N1ZXMgYmVjYXVzZSB0aGUgbmV0ZGV2IG1pZ2h0IG5vdCBiZSB1cCAo
-b3IgZXZlbg0KPiBoYXZlIGEgZHJpdmVyIGxvYWRlZCksIGFzIGxvbmcgYXMgdGhleSBzdXBwb3J0
-IHRoZSBpbnRlcmZhY2UgYW5kDQo+IHByb3ZpZGUgdGhlIE9TIHdpdGggaW5mb3JtYXRpb24gYWJv
-dXQgZGlzY292ZXJlZCBGQ0ZzLg0KPg0KPj4gSSd2ZSBhbHNvIGJlZW4gdGFsa2luZyB3aXRoIE1h
-cmsgUnVzdGFkIGFib3V0IGRvaW5nIGFuICdhdXRvJyBtb2RlDQo+PiB3aGVyZSBGYWJyaWMgZGlz
-Y292ZXJ5IGlzIGF0dGVtcHRlZCBmaXJzdCBhbmQgaWYgaXQgZmFpbHMgdGhlbiBpdCB0cmllcw0K
-Pj4gVk4yVk4gZGlzY292ZXJ5LCBidXQgc28gZm9yIHdlJ3ZlIG9ubHkgaGFkIGhhbGx3YXkgY29u
-dmVyc2F0aW9ucyBhYm91dA0KPj4gaXQgYW5kIG5vdGhpbmcgaGFzIGJlZW4gZmx1c2hlZCBvdXQu
-DQo+DQo+IEknbSB0cnlpbmcgdG8gZ2V0IGNhdWdodCB1cCBvbiB3aGF0J3MgZ2V0dGluZyB0cmFj
-dGlvbiB3aXRoIHRoZQ0KPiBGQy1CQi02IHdvcmtpbmcgZ3JvdXAsIGJ1dCBpdCBsb29rcyBsaWtl
-IFZOMlZOIGZvciBib3RoIHRydWUNCj4gcG9pbnQtdG8tcG9pbnQgYW5kIG11bHRpcG9pbnQgbWln
-aHQgZ2V0IG5haWxlZCBkb3duLiAgQXMgd2VsbCBhcw0KPiBlc3RhYmxpc2hpbmcgc2hvcnRlc3Qt
-cGF0aCBjb25uZWN0aW9ucyBiZXR3ZWVuIG5hdGl2ZSBGQ29FIGVuZHBvaW50cw0KPiBpbiBmYWJy
-aWMgbW9kZSwgdG8gYXZvaWQgc2hvdmluZyBhbGwgZGF0YSB0aHJvdWdoIHRoZSBGQ0YgaWYgaXQN
-Cj4gZG9lc24ndCBuZWVkIHRvLiAgQWxsIGV4Y2l0aW5nIHdvcmsgdG8gdGhpbmsgYWJvdXQuDQo+
-DQo+IERvIHdlIGhhdmUgYSBiZXR0ZXIgaW5kaWNhdGlvbiBvZiB3aGF0IG5ldHdvcmsgaW50ZXJm
-YWNlIGFuIGZjX2hvc3QgaXMNCj4gY3JlYXRlZCBvbiwgb3IgaXMgcGFyc2luZyBmb3IgJ2Zjb2Ug
-djAuMSBvdmVyIDxpZm5hbWU+JyBpbiB0aGUNCj4gc3ltYm9saWMgbmFtZSBzdGlsbCB0aGUgYmVz
-dCB0aGluZyBnb2luZz8NCj4NCg0KSnVzdCBzb21lIHF1aWNrIHRob3VnaHRzLg0KDQpJIGhhdmUg
-YSBwYXRjaCB0byBhZGQgYSBoYmFhcGlfbGlicmFyeSAob3Igc29tZXRoaW5nIGxpa2UgdGhhdCkg
-DQphdHRyaWJ1dGUgdG8gdGhlIGZjX2hvc3Qgd2hlcmUgTExEcyB0aGF0IHdhbnQgdG8gYmUgbWFu
-YWdlZCBieSANCmxpYmhiYWxpbnV4IGNvdWxkIHNldCB0aGlzIHRvICJsaWJoYmFsaW51eCIuIEkg
-a25vdyB0aGlzIGlzbid0IGV4YWN0bHkgDQp3aGF0IHlvdSdyZSBhc2tpbmcgZm9yLCBidXQgSSB0
-aG91Z2h0IEkgc2hvdWxkIG1lbnRpb24gaXQuIFRoaXMgZWZmb3J0IA0Kd2FzIHNpbXBseSBkZXNp
-Z25lZCB0byBnZXQgcmlkIHRoZSAiIG92ZXIgIiBwYXJzaW5nIGFuZCB3YXNuJ3QgaW50ZW5kZWQg
-DQp0byBiZSByZWxhdGVkIHRvIHRoZSBmYWJyaWMgc2VsZWN0aW9uIGVmZm9ydC4NCg0KPiBTb3Jy
-eSBpZiBpdCBzZWVtcyBsaWtlIEkndmUgZ290IGxvdHMgb2Ygb3BpbmlvbnMgYnV0IG5vIHBhdGNo
-ZXMgcmlnaHQgbm93IDopDQo+IEknbSB0ZXN0aW5nIHlvdXIgUkZDIHBhdGNoc2V0IG91dCwgYXQg
-bGVhc3QgdG8gdGhlIGV4dGVudCB0aGF0IEkgY2FuDQo+IHdpdGggVk4yVk4gbW9kZSByaWdodCBu
-b3cuDQoNCkhtbS4uIFRoZXJlIG1pZ2h0IG5vdCBiZSBhbnl0aGluZyB0byB0ZXN0IHdpdGggVk4y
-Vk4gc2luY2UgSSBvbmx5IA0KY2hhbmdlZCB0aGUgc2VsZWN0aW9uIEZDRiBhbGdvcml0aC4NCg0K
-VGhlIGxhc3QgdGhpbmcgSSd2ZSBiZWVuIHRoaW5raW5nIG9mIGxhdGVseSByZWdhcmRpbmcgdGhl
-IG5ldyBpbnRlcmZhY2UgDQplZmZvcnQgaXMgdGhhdCBpZiB3ZSBkbyBtb3ZlIHRvIGEgY3JlYXRl
-L2NvbmZpZ3VyZS9zdGFydCBvciANCmNyZWF0ZS1kaXNhYmxlZC9jb25maWd1cmUvZW5hYmxlLiBX
-ZSBjb3VsZCBtb3ZlIHRoZSBkY2JfcmVxdWlyZWQgY2hlY2sgDQppbiBrZXJuZWwgYW5kIHRoaW4g
-ZG93biBmY29lbW9uIGNvbnNpZGVyYWJseS4NCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3L2NvbW1l
-bnRzLCAvL1JvYg0K
+On Thu, Sep 13, 2012 at 10:26:44AM +0100, James Bottomley wrote:
+> On Thu, 2012-09-13 at 17:07 +0800, Aaron Lu wrote:
+> > So I think this is basically 2 things, one is the runtime suspend of the
+> > disk, another is when it is runtime suspended, how to remove its power.
+> > I'm currently doing the latter one, which is simpler, so I want to do it
+> > first :-)
+> 
+> Well, I don't like the way the interaction of the patches is going.
+> You're the one proposing powering down the device outside of the
+> standards defined transitions, so you need to be responsible for the
+> actions that necessitates, including synchronizing the cache. The specs
+
+OK, I'll update the code.
+
+> (SPC-4) say that cache management is explicitly unnecessary for the
+> standard SCSI power states (Active, Idle, Standby and Stopped), so
+
+Just read the SPC-4 spec, in section 5.12.3, it has words like this:
+
+Logical units that contain cache memory shall write all cached data to
+the medium for the logical unit(e.g., as a logical unit would do in
+response to a SYNCHRONIZE CACHE command as described SBC-3) prior to
+entering into any power condition that prevents accessing the
+media(e.g., before a hard drive stops its spindle motor during a change
+to the standby power condition).
+
+So this looks like cache needs to be synced before the device enter
+standby/stopped power condition. Or do I miss somthing?
+
+> someone at some point is going to read that and remove the unnecessary
+> cache sync in the code.  When that happens, you'll start getting data
+> loss.
+
+Indeed, I'll make sure cache gets synced when we are to power off the
+device. Thanks for the remind.
+
+-Aaron
