@@ -1,60 +1,66 @@
 From: Aaron Lu <aaron.lu@intel.com>
 Subject: Re: [PATCH 1/2] scsi: sd: set ready_to_power_off for scsi disk
-Date: Fri, 14 Sep 2012 13:20:42 +0800
-Message-ID: <20120914052041.GA5177@mint-spring.sh.intel.com>
-References: <1347522049-1836-1-git-send-email-aaron.lu@intel.com>
- <1347522049-1836-2-git-send-email-aaron.lu@intel.com>
- <1347524092.2720.1.camel@dabdike.int.hansenpartnership.com>
- <50519801.6080502@intel.com>
- <1347525466.2720.10.camel@dabdike.int.hansenpartnership.com>
- <50519E08.10800@intel.com>
- <1347526590.2720.15.camel@dabdike.int.hansenpartnership.com>
- <5051A25F.7040704@intel.com>
- <1347528404.2720.28.camel@dabdike.int.hansenpartnership.com>
+Date: Fri, 14 Sep 2012 14:57:19 +0800
+Message-ID: <20120914065717.GB5177@mint-spring.sh.intel.com>
+References: <1791163.r67kWVIx1R@linux-lqwf.site>
+ <Pine.LNX.4.44L0.1209131213450.21932-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1347528404.2720.28.camel@dabdike.int.hansenpartnership.com>
+In-Reply-To: <Pine.LNX.4.44L0.1209131213450.21932-100000@netrider.rowland.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oliver@neukum.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 13, 2012 at 10:26:44AM +0100, James Bottomley wrote:
-> On Thu, 2012-09-13 at 17:07 +0800, Aaron Lu wrote:
-> > So I think this is basically 2 things, one is the runtime suspend of the
-> > disk, another is when it is runtime suspended, how to remove its power.
-> > I'm currently doing the latter one, which is simpler, so I want to do it
-> > first :-)
+On Thu, Sep 13, 2012 at 12:24:46PM -0400, Alan Stern wrote:
+> > > Disk runtime power states are defined in the standard and so we rely on
+> > > the standard taking care of the cache.  I suspect the most efficient use
+> > > may be via the power management mode page, which does everything
+> > > automatically on timers (you just get to set the timer interval, plus
+> > > some transports *may* require an initialising command which we already
+> > > have some provision for) than doing it all ourselves from block.
+> > 
+> > Well, yes, but we need support modes of power management that cut off
+> > power to the disk in any case, so what does it matter if we also do it for
+> > runtime PM?
+> > 
+> > Are you concerned about layering?
 > 
-> Well, I don't like the way the interaction of the patches is going.
-> You're the one proposing powering down the device outside of the
-> standards defined transitions, so you need to be responsible for the
-> actions that necessitates, including synchronizing the cache. The specs
+> It sounds like James is partly concerned about efficiency.  If Lin
+> Ming's patches are merged then we will be doing runtime suspend
+> relatively often, not just when the device file is closed.  The
+> sd_suspend routine should know when SYNCHRONIZE CACHE is needed and
+> when it can be skipped.
+> 
+> From what I gather of this discussion, we can avoid flushing the cache 
+> during (1) a runtime suspend provided (2) the drive isn't going to be 
+> powered down.  If either (1) or (2) doesn't hold then the cache needs 
+> to be synchronized.
 
-OK, I'll update the code.
+Agree.
 
-> (SPC-4) say that cache management is explicitly unnecessary for the
-> standard SCSI power states (Active, Idle, Standby and Stopped), so
+> 
+> The problem with relying on the internal timers and the power
+> management mode page is that the transitions take place automatically
+> and the host system doesn't know about them.  We _want_ to know about
+> them so that the higher layers of the device tree can go to low power
+> when the disk does.
 
-Just read the SPC-4 spec, in section 5.12.3, it has words like this:
+Looks like it's not easy to know when the device entered a low power
+state. Constantly polling with request sense doesn't seem to be a good
+idea.
 
-Logical units that contain cache memory shall write all cached data to
-the medium for the logical unit(e.g., as a logical unit would do in
-response to a SYNCHRONIZE CACHE command as described SBC-3) prior to
-entering into any power condition that prevents accessing the
-media(e.g., before a hard drive stops its spindle motor during a change
-to the standby power condition).
+This will make upper layer devices not able to enter runtime suspend
+state and device's power can't be cut.
 
-So this looks like cache needs to be synced before the device enter
-standby/stopped power condition. Or do I miss somthing?
+> 
+> On the other hand, perhaps sd_suspend/sd_resume could use the mode page
+> by telling it to go into or out of Stopped mode immediately.
 
-> someone at some point is going to read that and remove the unnecessary
-> cache sync in the code.  When that happens, you'll start getting data
-> loss.
+BTW, is it necessary to issue the stop command before we cut its power
+either due to runtime power off or system entering S3/S4/S5?
 
-Indeed, I'll make sure cache gets synced when we are to power off the
-device. Thanks for the remind.
-
--Aaron
+Thanks,
+Aaron
