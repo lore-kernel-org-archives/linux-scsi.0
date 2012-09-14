@@ -1,44 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Andi Kleen <ak@linux.intel.com>
 Subject: Re: + sections-fix-section-conflicts-in-drivers-scsi.patch added to
  -mm tree
-Date: Fri, 14 Sep 2012 15:03:49 +0100
-Message-ID: <1347631429.2450.11.camel@dabdike.int.hansenpartnership.com>
+Date: Fri, 14 Sep 2012 07:18:21 -0700
+Message-ID: <20120914141821.GG4092@tassilo.jf.intel.com>
 References: <20120913233742.7287E100047@wpzn3.hot.corp.google.com>
-	 <1347609861.2794.1.camel@dabdike.int.hansenpartnership.com>
-	 <20120914135043.GF4092@tassilo.jf.intel.com>
+ <1347609861.2794.1.camel@dabdike.int.hansenpartnership.com>
+ <20120914135043.GF4092@tassilo.jf.intel.com>
+ <1347631429.2450.11.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58650 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756160Ab2INOD4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Sep 2012 10:03:56 -0400
-In-Reply-To: <20120914135043.GF4092@tassilo.jf.intel.com>
+Received: from mga01.intel.com ([192.55.52.88]:25076 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751684Ab2INOS2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Sep 2012 10:18:28 -0400
+Content-Disposition: inline
+In-Reply-To: <1347631429.2450.11.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@linux.intel.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: akpm@linux-foundation.org, mm-commits@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2012-09-14 at 06:50 -0700, Andi Kleen wrote:
-> > > ------------------------------------------------------
-> > > From: Andi Kleen <ak@linux.intel.com>
-> > > Subject: sections: fix section conflicts in drivers/scsi
+On Fri, Sep 14, 2012 at 03:03:49PM +0100, James Bottomley wrote:
+> On Fri, 2012-09-14 at 06:50 -0700, Andi Kleen wrote:
+> > > > ------------------------------------------------------
+> > > > From: Andi Kleen <ak@linux.intel.com>
+> > > > Subject: sections: fix section conflicts in drivers/scsi
+> > > 
+> > > NAK this, please.  We're fixing all of this by removing CONFIG_HOTPLUG,
+> > > so all __dev annotations become nops and there's little point changing
+> > > any.
 > > 
-> > NAK this, please.  We're fixing all of this by removing CONFIG_HOTPLUG,
-> > so all __dev annotations become nops and there's little point changing
-> > any.
+> > I would prefer to still put it in because it fixes my compilation.
+> > You can still remove them then, but it's better to fix it first.
 > 
-> I would prefer to still put it in because it fixes my compilation.
-> You can still remove them then, but it's better to fix it first.
+> Just for curiosity, how?  You're compiling for x86-64, right?  There
 
-Just for curiosity, how?  You're compiling for x86-64, right?  There
-aren't actually any defined configs for that arch with it disabled.  I
-thought non-hotplug x86 configs weren't really meaningful (because USB
-requires it and all modern x86 configs are USB).
+I compile allyes (and also random/no/normal/rhel6/opensuse configs) on 32bit
+and 64bit. Most of the section fixes I did showed up as actual errors,
+but I also did some greping some time ago, so there may be a few changes
+in dead code. However the majority was live.
 
-James
+-Andi
 
-
-
+-- 
+ak@linux.intel.com -- Speaking for myself only
