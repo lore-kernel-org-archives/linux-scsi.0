@@ -1,270 +1,115 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [RFC PATCH 2/5] libfcoe: Create new libfcoe control
- interfaces
-Date: Fri, 14 Sep 2012 00:06:05 -0700
-Message-ID: <5052D75D.5060908@broadcom.com>
+Subject: Re: [RFC PATCH 4/5] bnx2fc: Use new fcoe_sysfs control
+ interface
+Date: Fri, 14 Sep 2012 00:28:54 -0700
+Message-ID: <5052DCB6.4030704@broadcom.com>
 References: <20120910225908.13140.97277.stgit@fritz>
- <20120910225919.13140.63240.stgit@fritz>
+ <20120910225930.13140.97949.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain;
  charset=utf-8;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1552 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751113Ab2INHGO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Sep 2012 03:06:14 -0400
-In-Reply-To: <20120910225919.13140.63240.stgit@fritz>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20120910225930.13140.97949.stgit@fritz>
+Sender: netdev-owner@vger.kernel.org
 To: Robert Love <robert.w.love@intel.com>
 Cc: netdev@vger.kernel.org, gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org
+List-Id: linux-scsi@vger.kernel.org
 
-On 9/10/2012 3:59 PM, Robert Love wrote:
-> This patch is the first in a series that will remove
-> libfcoe's create, destroy, enable and disable module
-> parameters and replace them with interface files in
-> the new /sys/bus/fcoe subsystem.
+On 09/10/2012 03:59 PM, Robert Love wrote:
+> Convert	bnx2fc to use the new fcoe_sysfs create, delete,
+> enable, disable, start and mode.
 >
-> Old layout:
->
-> /sys/module/libfcoe/parameters/{create,destroy,enable,disable,vn2vn_create}
->
-> New layout:
->
-> /sys/bus/fcoe/ctlr_{create,destroy}
-> /sys/bus/fcoe/ctlr_X/{enable,disable,start}
->
-> This patch moves fcoe drivers to the following
-> initialization sequence-
->
-> 1) create/alloc
-> 2) configure
-> 3) start
->
-> A control sysfs interface at /sys/bus/fcoe/ctlr_create
-> is added. Writing the interface name to this file
-> will allocate memory and create a sysfs entry for a
-> new fcoe_ctlr_device. The user may then tune the interface in
-> any desired way. After configuration the user will
-> echo any value into the /sys/bus/fcoe/devices/ctlr_X/start
-> interface to proceed with logging in.
->
-> VN2VN logins will still use the module parameters.
-> A follow up patch to this one will make the 'mode'
-> attribute of the fcoe_ctlr_device writable. Which will
-> allow a user to change the ctlr's mode to 'VN2VN'.
+> bnx2fc doesn't support VN2VN. bnx2fc will not initialize
+> the set_fcoe_ctlr_mode routine and therefore its instances
+> will always be in FABRIC mode. There was previously an
+> explicit check for the ctlr's mode, but this is no longer
+> needed because not implementing set_fcoe_ctlr_mode implies
+> that the ctlr cannot change from the FABRIC mode.
 >
 > Signed-off-by: Robert Love <robert.w.love@intel.com>
 > ---
->   Documentation/ABI/testing/sysfs-bus-fcoe |   43 ++++++++++++
->   drivers/scsi/fcoe/fcoe.h                 |    9 +++
->   drivers/scsi/fcoe/fcoe_ctlr.c            |    2 -
->   drivers/scsi/fcoe/fcoe_sysfs.c           |   78 ++++++++++++++++++++++
->   drivers/scsi/fcoe/fcoe_transport.c       |  105 +++++++++++++++++++++++++++++-
->   include/scsi/fcoe_sysfs.h                |    4 +
->   include/scsi/libfcoe.h                   |   14 ++++
->   7 files changed, 250 insertions(+), 5 deletions(-)
+>   drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   98 +++++++++++++++++++++++--------------
+>   1 file changed, 60 insertions(+), 38 deletions(-)
 >
-
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> index f52f668f..560c8c8 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
 <snip>
 
-> diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-> index bd899bf..ccb92323 100644
-> --- a/drivers/scsi/fcoe/fcoe_ctlr.c
-> +++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-> @@ -147,7 +147,7 @@ static void fcoe_ctlr_map_dest(struct fcoe_ctlr *fip)
->    */
->   void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_state mode)
->   {
-> -	fcoe_ctlr_set_state(fip, FIP_ST_LINK_WAIT);
-> +	fcoe_ctlr_set_state(fip, FIP_ST_DISABLED);
-
-Robert, what is the reason for initializing it to DISABLED? Unless the 
-FIP state is FIP_ST_LINK_WAIT, fcoe_ctlr_link_up() doesnt set 
-lport->link_up and hence does not allow any FIP/FCoE frames to be sent out.
-
->   	fip->mode = mode;
->   	INIT_LIST_HEAD(&fip->fcfs);
->   	mutex_init(&fip->ctlr_mutex);
-
-<snip>
-
-> @@ -627,6 +626,108 @@ static int libfcoe_device_notification(struct notifier_block *notifier,
->   	return NOTIFY_OK;
->   }
->
-> +ssize_t fcoe_ctlr_create_store(struct bus_type *bus,
-> +			       const char *buf, size_t count)
-> +{
-> +	struct net_device *netdev = NULL;
-> +	struct fcoe_transport *ft = NULL;
-> +	struct fcoe_ctlr_device *ctlr_dev = NULL;
-> +	int rc = -ENODEV;
-> +	int err;
-> +
-> +	mutex_lock(&ft_mutex);
-> +
-> +	netdev = fcoe_if_to_netdev(buf);
-> +	if (!netdev) {
-> +		LIBFCOE_TRANSPORT_DBG("Invalid device %s.\n", buf);
-> +		rc = -ENODEV;
-> +		goto out_nodev;
-> +	}
-> +
-> +	ft = fcoe_netdev_map_lookup(netdev);
-> +	if (ft) {
-> +		LIBFCOE_TRANSPORT_DBG("transport %s already has existing "
-> +				      "FCoE instance on %s.\n",
-> +				      ft->name, netdev->name);
-> +		rc = -EEXIST;
-> +		goto out_putdev;
-> +	}
-> +
-> +	ft = fcoe_transport_lookup(netdev);
-> +	if (!ft) {
-> +		LIBFCOE_TRANSPORT_DBG("no FCoE transport found for %s.\n",
-> +				      netdev->name);
-> +		rc = -ENODEV;
-> +		goto out_putdev;
-> +	}
-> +
-> +	/* pass to transport create */
-> +	err = ft->alloc ? ft->alloc(netdev) : -ENODEV;
-> +	if (err) {
-> +		fcoe_del_netdev_mapping(netdev);
-> +		rc = -ENOMEM;
-> +		goto out_putdev;
-> +	}
-> +
-> +	err = fcoe_add_netdev_mapping(netdev, ft);
-> +	if (err) {
-> +		LIBFCOE_TRANSPORT_DBG("failed to add new netdev mapping "
-> +				      "for FCoE transport %s for %s.\n",
-> +				      ft->name, netdev->name);
-> +		rc = -ENODEV;
-> +		goto out_putdev;
-> +	}
-> +
-> +	LIBFCOE_TRANSPORT_DBG("transport %s %s to create fcoe on %s.\n",
-> +			      ft->name, (ctlr_dev) ? "succeeded" : "failed",
-> +			      netdev->name);
-
-Where is ctlr_dev updated? I guess you're intending to check return 
-status of ft->alloc() here.
-
-> +
-> +out_putdev:
-> +	dev_put(netdev);
-> +out_nodev:
-> +	mutex_unlock(&ft_mutex);
-> +	return rc;
-> +}
-> +
-> +ssize_t fcoe_ctlr_destroy_store(struct bus_type *bus,
-> +				const char *buf, size_t count)
-> +{
-> +	int rc = -ENODEV;
-> +	struct net_device *netdev = NULL;
-> +	struct fcoe_transport *ft = NULL;
-> +
-> +	mutex_lock(&ft_mutex);
-> +
-> +	netdev = fcoe_if_to_netdev(buf);
-> +	if (!netdev) {
-> +		LIBFCOE_TRANSPORT_DBG("invalid device %s.\n", buf);
-> +		goto out_nodev;
-> +	}
-> +
-> +	ft = fcoe_netdev_map_lookup(netdev);
-> +	if (!ft) {
-> +		LIBFCOE_TRANSPORT_DBG("no FCoE transport found for %s.\n",
-> +				      netdev->name);
-> +		goto out_putdev;
-> +	}
-> +
-> +	/* pass to transport destroy */
-> +	rc = ft->destroy(netdev);
-> +	if (rc)
-> +		goto out_putdev;
-> +
-> +	fcoe_del_netdev_mapping(netdev);
-> +	LIBFCOE_TRANSPORT_DBG("transport %s %s to destroy fcoe on %s.\n",
-> +			      ft->name, (rc) ? "failed" : "succeeded",
-> +			      netdev->name);
-> +	rc = count; /* required for successful return */
-> +out_putdev:
-> +	dev_put(netdev);
-> +out_nodev:
-> +	mutex_unlock(&ft_mutex);
-> +	return rc;
-> +}
-> +EXPORT_SYMBOL(fcoe_ctlr_destroy_store);
->
 >   /**
->    * fcoe_transport_create() - Create a fcoe interface
-> diff --git a/include/scsi/fcoe_sysfs.h b/include/scsi/fcoe_sysfs.h
-> index 421ae67..8c5ea70 100644
-> --- a/include/scsi/fcoe_sysfs.h
-> +++ b/include/scsi/fcoe_sysfs.h
-> @@ -36,6 +36,9 @@ struct fcoe_sysfs_function_template {
->   	void (*get_fcoe_ctlr_fcs_error)(struct fcoe_ctlr_device *);
->   	void (*get_fcoe_ctlr_mode)(struct fcoe_ctlr_device *);
->   	void (*set_fcoe_ctlr_mode)(struct fcoe_ctlr_device *);
-> +	int  (*set_fcoe_ctlr_start)(struct fcoe_ctlr_device *);
-> +	int  (*set_fcoe_ctlr_enable)(struct fcoe_ctlr_device *);
-> +	int  (*set_fcoe_ctlr_disable)(struct fcoe_ctlr_device *);
->   	void (*get_fcoe_fcf_selected)(struct fcoe_fcf_device *);
->   	void (*get_fcoe_fcf_vlan_id)(struct fcoe_fcf_device *);
+> + * bnx2fc_alloc - Alocate a bnx2fc FCoE interface
+> + *
+> + * @cdev: The FCoE Controller Device to start
+> + *
+> + * Called from sysfs.
+> + *
+> + * Returns: 0 for success
+> + */
+> +static int bnx2fc_start(struct fcoe_ctlr_device *cdev)
+> +{
+> +	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(cdev);
+> +	struct fc_lport *lport = ctlr->lp;
+> +	struct fcoe_port *port = lport_priv(lport);
+> +	struct bnx2fc_interface *interface = port->priv;
+> +
+> +	lport->boot_time = jiffies;
+> +
+> +	/* Make this master N_port */
+> +	ctlr->lp = lport;
+
+ctlr->lp should be set in bnx2fc_alloc() as we access it here in the 
+beginning of this function.
+
+> +
+> +	if (!bnx2fc_link_ok(lport)) {
+> +		fcoe_ctlr_link_up(ctlr);
+> +		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
+> +		set_bit(ADAPTER_STATE_READY, &interface->hba->adapter_state);
+> +	}
+> +
+> +	BNX2FC_HBA_DBG(lport, "create: START DISC\n");
+> +	bnx2fc_start_disc(interface);
+I think more changes are required for bnx2fc as fc_lport_init() is 
+called just before calling fc_fabric_login() - whcih is called during 
+'start'. Because of this, if we just call 'create' followed by 'destroy' 
+without calling 'start', lport is not initialized and I expect to see 
+some panics when destroy is called.
+
+Let me try testing your patches and send you any fixes that are required.
+
+> +	interface->enabled = true;
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+>    * bnx2fc_find_hba_for_cnic - maps cnic instance to bnx2fc hba instance
+>    *
+>    * @cnic:	Pointer to cnic device instance
+> @@ -2271,10 +2292,8 @@ static struct fcoe_transport bnx2fc_transport = {
+>   	.attached = false,
+>   	.list = LIST_HEAD_INIT(bnx2fc_transport.list),
+>   	.match = bnx2fc_match,
+> -	.create = bnx2fc_create,
+> +	.alloc = bnx2fc_alloc,
+>   	.destroy = bnx2fc_destroy,
+> -	.enable = bnx2fc_enable,
+> -	.disable = bnx2fc_disable,
 >   };
-> @@ -64,6 +67,7 @@ struct fcoe_ctlr_device {
->
->   	int                             fcf_dev_loss_tmo;
->   	enum fip_conn_type              mode;
-> +	u8                              started:1;
->
->   	/* expected in host order for displaying */
->   	struct fcoe_fc_els_lesb         lesb;
-> diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-> index 20533cc..b19a489 100644
-> --- a/include/scsi/libfcoe.h
-> +++ b/include/scsi/libfcoe.h
-> @@ -289,8 +289,11 @@ static inline bool is_fip_mode(struct fcoe_ctlr *fip)
->    * @attached:	whether this transport is already attached
->    * @list:	list linkage to all attached transports
->    * @match:	handler to allow the transport driver to match up a given netdev
-> + * @alloc:      handler to allocate per-instance FCoE structures
-> + *		(no discovery or login)
->    * @create:	handler to sysfs entry of create for FCoE instances
-> - * @destroy:	handler to sysfs entry of destroy for FCoE instances
-> + * @destroy:    handler to delete per-instance FCoE structures
-> + *		(frees all memory)
->    * @enable:	handler to sysfs entry of enable for FCoE instances
->    * @disable:	handler to sysfs entry of disable for FCoE instances
->    */
-> @@ -299,6 +302,7 @@ struct fcoe_transport {
->   	bool attached;
->   	struct list_head list;
->   	bool (*match) (struct net_device *device);
-> +	int (*alloc) (struct net_device *device);
->   	int (*create) (struct net_device *device, enum fip_state fip_mode);
->   	int (*destroy) (struct net_device *device);
->   	int (*enable) (struct net_device *device);
-> @@ -375,4 +379,12 @@ struct fcoe_netdev_mapping {
->   int fcoe_transport_attach(struct fcoe_transport *ft);
->   int fcoe_transport_detach(struct fcoe_transport *ft);
->
-> +/* sysfs store handler for ctrl_control interface */
-> +ssize_t fcoe_ctlr_create_store(struct bus_type *bus,
-> +			       const char *buf, size_t count);
-> +ssize_t fcoe_ctlr_destroy_store(struct bus_type *bus,
-> +				const char *buf, size_t count);
-> +
->   #endif /* _LIBFCOE_H */
-> +
-> +
+>   
+>   /**
+> @@ -2514,6 +2533,9 @@ module_init(bnx2fc_mod_init);
+>   module_exit(bnx2fc_mod_exit);
+>   
+>   static struct fcoe_sysfs_function_template bnx2fc_fcoe_sysfs_templ = {
+> +	.set_fcoe_ctlr_start = bnx2fc_start,
+> +	.set_fcoe_ctlr_enable = bnx2fc_enable,
+> +	.set_fcoe_ctlr_disable = bnx2fc_disable,
+>   	.get_fcoe_ctlr_mode = fcoe_ctlr_get_fip_mode,
+>   	.get_fcoe_ctlr_link_fail = bnx2fc_ctlr_get_lesb,
+>   	.get_fcoe_ctlr_vlink_fail = bnx2fc_ctlr_get_lesb,
 >
 >
-
-
