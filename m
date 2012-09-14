@@ -1,105 +1,50 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: Re: future FCoE ideas (Re: [RFC PATCH 0/5] Reorganize libfcoe
- control interfaces)
-Date: Fri, 14 Sep 2012 17:13:01 +0000
-Message-ID: <5053659C.3060308@intel.com>
-References: <CAHNqLyUCgrDLCXnchVAieP0y2n8QmWHD-Nr-V54aypgSDHnR0g@mail.gmail.com>
- <5052620C.7040006@intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 42/42] qla2xxx: Update version number to 8.04.00.07-k.
+Date: Fri, 14 Sep 2012 18:20:36 +0100
+Message-ID: <1347643236.2450.19.camel@dabdike.int.hansenpartnership.com>
+References: <1345659696-3670-1-git-send-email-chad.dupuis@qlogic.com>
+	 <1345659696-3670-43-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:35574 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751004Ab2INRNJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Sep 2012 13:13:09 -0400
-In-Reply-To: <5052620C.7040006@intel.com>
-Content-Language: en-US
-Content-ID: <7720AAB73321D846A9DE0507B7C1FDD8@intel.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59351 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759508Ab2INRUj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Sep 2012 13:20:39 -0400
+In-Reply-To: <1345659696-3670-43-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Leech <cleech@redhat.com>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-T24gVGh1IDEzIFNlcCAyMDEyIDAzOjQ1OjMzIFBNIFBEVCwgTG92ZSwgUm9iZXJ0IFcgd3JvdGU6
-DQo+IE9uIFRodSAxMyBTZXAgMjAxMiAwMzozMjo1MCBQTSBQRFQsIENocmlzIExlZWNoIHdyb3Rl
-Og0KPj4gPGN1dHRpbmcgZG93biB0aGUgQ0MgbGlzdCwgYXMgdGhpcyBiaXQgaXNuJ3QgcmVhbGx5
-IGFib3V0IHBhdGNoIHJldmlldyBhbnltb3JlPg0KPj4NCj4+Pj4gVGhhdCBiZWluZyBzYWlkLCBJ
-J20gZ2xhZCB0aGlzIGlzIGJlaW5nIHJld29ya2VkLiAgRG8geW91IGhhdmUgYW55DQo+Pj4+IG90
-aGVyIGZ1bmN0aW9uYWxpdHkgaW4gbWluZCB0aGF0IHRoaXMgaXMgbGF5aW5nIHRoZSBncm91bmR3
-b3JrIGZvcj8NCj4+Pj4NCj4+Pg0KPj4+IEkgaGF2ZSBvbmUgZmVhdHVyZSBhbmQgYSBmZXcgaWRl
-YXMuIEkgY3VycmVudGx5IGhhdmUgYSBwYXRjaCB0aGF0IGFkZHMNCj4+PiBhIGZhYnJpYyBzZWxl
-Y3Rpb24gZmVhdHVyZS4gSSBhZGQgYW5vdGhlciBSVyBhdHRyaWJ1dGUgdG8gdGhlIGN0bHJfWA0K
-Pj4+IGRldmljZS4gSWYgdGhlIHVzZXIgd3JpdGVzIGZhYnJpYyBuYW1lIHRvIHRoZSBmaWxlIGxp
-YmZjb2UgdXNlcyBpdCBpbg0KPj4+IGl0J3MgRkNGIHNlbGVjdGlvbiBhbGdvcml0aG0uIEhlcmUn
-cyBteSBjb21taXQgbWVzc2FnZSBmcm9tIHRoYXQgcGF0Y2guDQo+Pj4gSSBjYW4gc2hhcmUgdGhl
-IHBhdGNoIGlmIHBlb3BsZSB3b3VsZCBsaWtlIHRvIHNlZSBpdCB0b28uIFRoZSBjdXJyZW50DQo+
-Pj4gaW1wbGVtZW50YXRpb24gYWxzbyBhbGxvd3MgdGhlIHVzZXIgdG8gZm9yY2UgdGhlIGxvZ2lu
-IHRocm91Z2ggYQ0KPj4+IHNwZWNpZmljIEZDRi4NCj4+Pg0KPj4+ICAgICAgICBsaWJmY29lLCBi
-bngyZmMsIGZjb2U6IEFkZCAnc2VsZWN0aW9uJyBhdHRyaWJ1dGUNCj4+Pg0KPj4+ICAgICAgIFRo
-aXMgcGF0Y2ggYWRkcyBhICdzZWxlY3Rpb24nIGF0dHJpYnV0ZSB0byB0aGUNCj4+PiAgICAgICBm
-Y29lX2N0bHJfZGV2aWNlLiBUaGUgdXNlciBjYW4gd3JpdGUgZWl0aGVyIGENCj4+PiAgICAgICAn
-MHgnIHByZWZpeGVkIGZhYnJpYyBuYW1lIG9yIGEgJzonIHNlcGFyYXRlZA0KPj4+ICAgICAgIE1B
-QyBhZGRyZXNzIHRvIHRoaXMgZmlsZS4gSWYgYSBmYWJyaWMgbmFtZSBpcw0KPj4+ICAgICAgIHBy
-b3ZpZGVkIHRoZSBmY29lIGN0bHIgd2lsbCBvbmx5IGNvbnNpZGVyIEZDRnMNCj4+PiAgICAgICB3
-aXRoIHRoZSBmYWJyaWMgbmFtZSB3aGVuIGNob29zaW5nIGEgRkNGIHRvIGxvZ2luDQo+Pj4gICAg
-ICAgdG8uIElmIGEgTUFDIGFkZHJlc3MgaXMgcHJvdmlkZWQgdGhlIGluaXRpYXRvcg0KPj4+ICAg
-ICAgIHdpbGwgb25seSBsb2dpbiB0byBhIEZDRiB3aXRoIHRoZSBnaXZlbiBFdGhlcm5ldA0KPj4+
-ICAgICAgIGFkZHJlc3MuIE9ubHkgb25lIHNlbGVjdGlvbiBpcyB2YWxpZCBhdCBhIHRpbWUuDQo+
-Pj4NCj4+PiAgICAgICBUaGVyZSBhcmUgY29ycmVzcG9uZGluZyBjaGFuZ2VzIHRvIGZjb2UtdXRp
-bHMNCj4+PiAgICAgICB0byB0YWtlIGFkdmFudGFnZSBvZiB0aGlzIGtlcm5lbCBmZWF0dXJlIGFu
-ZA0KPj4+ICAgICAgIHRvIG1ha2UgaXQgbW9yZSBhY2Nlc3NpYmxlIGZvciB0aGUgdXNlci4NCj4+
-Pg0KPj4+IFRvIGFjY29tcGFueSB0aGlzIGZlYXR1cmUgSSBjcmVhdGVkIGEgbmV3IGZpcGZjZiBh
-cHBsaWNhdGlvbiBiYXNlZCBvbg0KPj4+IGZpcHZsYW4gdGhhdCBzZW5kcyBvdXQgYSBkaXNjb3Zl
-cnkgc29saWNpdGF0aW9uIGFuZCBkaXNwbGF5cw0KPj4+IGFkdmVydGlzaW5nIEZDRnMuDQo+Pg0K
-Pj4gQ29vbCwgSSB0aGluayB5b3Uga25vdyB0aGF0IHRoZSBsYWNrIG9mIGNvbnRyb2wgb3ZlciBG
-Q0Ygc2VsZWN0aW9uIGhhcw0KPj4gYm90aGVyZWQgbWUgZm9yIGEgd2hpbGUgOikNCj4+DQo+PiBB
-bm90aGVyIG9wdGlvbiB0byB0aGluayBhYm91dCwgaW5zdGVhZCBvZiBjb25maWd1cmluZyBhIHBy
-ZWZlcnJlZCBGQ0YNCj4+IHByaW9yIHRvIGRpc2NvdmVyeSAodXNpbmcgeW91ciBjb21tYW5kIGxp
-bmUgdG9vbCB0byBmaW5kIG91dCB3aGF0J3MNCj4+IGF2YWlsYWJsZSkgd2hhdCBpZiBpdCB3YXMg
-cG9zc2libGUgdG8gZGlzYWJsZSB0aGUgYXV0by1sb2dpbiBiZWhhdmlvcg0KPj4gKGxlYXZpbmcg
-aXQgb24gYnkgZGVmYXVsdCkgYW5kIHRoZW4gZW5hYmxlIGxvZ2luIHRvIGFuIEZDRiB1c2luZyB0
-aGUNCj4+IHJlcHJlc2VudGF0aW9uIHlvdSd2ZSBhZGRlZCB0byBzeXNmcz8gIEJhc2ljYWxseSwg
-YWxsb3cgYSB1c2VyLXNwYWNlDQo+PiBwb2xpY3kgYWdlbnQgdG8gZGlzYWJsZSB0aGUgYXV0by1z
-ZWxlY3Rpb24gYW5kIHRha2UgY29udHJvbC4NCj4+DQo+PiBTbyB0aGUgc3RlcHMgY291bGQgYmUN
-Cj4+DQo+PiAxKSBjcmVhdGUgYW5kIEZDb0UgY29udHJvbGxlciBmb3IgYSBuZXR3b3JrIGludGVy
-ZmFjZQ0KPj4gMikgY29uZmlndXJlIHRoZSBjb250cm9sbGVyLCBkaXNhYmxpbmcgYXV0by1mYWJy
-aWMtc2VsZWN0aW9uDQo+PiAzKSBlbmFibGUgdGhlIGNvbnRyb2xsZXIsIHN0YXJ0aW5nIEZDRiBk
-aXNjb3ZlcnkNCj4+IDQpIHNlbGVjdCBmcm9tIHRoZSBkaXNjb3ZlcmVkIEZDRiBvYmplY3RzDQo+
-PiA1KSBlbmFibGUgZmFicmljIGxvZ2luIG9uIHRoZSBkZXNpcmVzIEZDRnMNCj4+DQo+PiBUaGF0
-IGNvdWxkIGV2ZW4gd29yayBmb3IgbmF0aXZlIFBDSS1mdW5jdGlvbiBGQ29FIGRldmljZXMsIHdo
-ZXJlDQo+PiBmaXB2bGFuL2ZpcGZjZiBoYXZlIGlzc3VlcyBiZWNhdXNlIHRoZSBuZXRkZXYgbWln
-aHQgbm90IGJlIHVwIChvciBldmVuDQo+PiBoYXZlIGEgZHJpdmVyIGxvYWRlZCksIGFzIGxvbmcg
-YXMgdGhleSBzdXBwb3J0IHRoZSBpbnRlcmZhY2UgYW5kDQo+PiBwcm92aWRlIHRoZSBPUyB3aXRo
-IGluZm9ybWF0aW9uIGFib3V0IGRpc2NvdmVyZWQgRkNGcy4NCj4+DQo+Pj4gSSd2ZSBhbHNvIGJl
-ZW4gdGFsa2luZyB3aXRoIE1hcmsgUnVzdGFkIGFib3V0IGRvaW5nIGFuICdhdXRvJyBtb2RlDQo+
-Pj4gd2hlcmUgRmFicmljIGRpc2NvdmVyeSBpcyBhdHRlbXB0ZWQgZmlyc3QgYW5kIGlmIGl0IGZh
-aWxzIHRoZW4gaXQgdHJpZXMNCj4+PiBWTjJWTiBkaXNjb3ZlcnksIGJ1dCBzbyBmb3Igd2UndmUg
-b25seSBoYWQgaGFsbHdheSBjb252ZXJzYXRpb25zIGFib3V0DQo+Pj4gaXQgYW5kIG5vdGhpbmcg
-aGFzIGJlZW4gZmx1c2hlZCBvdXQuDQo+Pg0KPj4gSSdtIHRyeWluZyB0byBnZXQgY2F1Z2h0IHVw
-IG9uIHdoYXQncyBnZXR0aW5nIHRyYWN0aW9uIHdpdGggdGhlDQo+PiBGQy1CQi02IHdvcmtpbmcg
-Z3JvdXAsIGJ1dCBpdCBsb29rcyBsaWtlIFZOMlZOIGZvciBib3RoIHRydWUNCj4+IHBvaW50LXRv
-LXBvaW50IGFuZCBtdWx0aXBvaW50IG1pZ2h0IGdldCBuYWlsZWQgZG93bi4gIEFzIHdlbGwgYXMN
-Cj4+IGVzdGFibGlzaGluZyBzaG9ydGVzdC1wYXRoIGNvbm5lY3Rpb25zIGJldHdlZW4gbmF0aXZl
-IEZDb0UgZW5kcG9pbnRzDQo+PiBpbiBmYWJyaWMgbW9kZSwgdG8gYXZvaWQgc2hvdmluZyBhbGwg
-ZGF0YSB0aHJvdWdoIHRoZSBGQ0YgaWYgaXQNCj4+IGRvZXNuJ3QgbmVlZCB0by4gIEFsbCBleGNp
-dGluZyB3b3JrIHRvIHRoaW5rIGFib3V0Lg0KPj4NCj4+IERvIHdlIGhhdmUgYSBiZXR0ZXIgaW5k
-aWNhdGlvbiBvZiB3aGF0IG5ldHdvcmsgaW50ZXJmYWNlIGFuIGZjX2hvc3QgaXMNCj4+IGNyZWF0
-ZWQgb24sIG9yIGlzIHBhcnNpbmcgZm9yICdmY29lIHYwLjEgb3ZlciA8aWZuYW1lPicgaW4gdGhl
-DQo+PiBzeW1ib2xpYyBuYW1lIHN0aWxsIHRoZSBiZXN0IHRoaW5nIGdvaW5nPw0KPj4NCj4NCj4g
-SnVzdCBzb21lIHF1aWNrIHRob3VnaHRzLg0KPg0KPiBJIGhhdmUgYSBwYXRjaCB0byBhZGQgYSBo
-YmFhcGlfbGlicmFyeSAob3Igc29tZXRoaW5nIGxpa2UgdGhhdCkNCj4gYXR0cmlidXRlIHRvIHRo
-ZSBmY19ob3N0IHdoZXJlIExMRHMgdGhhdCB3YW50IHRvIGJlIG1hbmFnZWQgYnkNCj4gbGliaGJh
-bGludXggY291bGQgc2V0IHRoaXMgdG8gImxpYmhiYWxpbnV4Ii4gSSBrbm93IHRoaXMgaXNuJ3Qg
-ZXhhY3RseQ0KPiB3aGF0IHlvdSdyZSBhc2tpbmcgZm9yLCBidXQgSSB0aG91Z2h0IEkgc2hvdWxk
-IG1lbnRpb24gaXQuIFRoaXMgZWZmb3J0DQo+IHdhcyBzaW1wbHkgZGVzaWduZWQgdG8gZ2V0IHJp
-ZCB0aGUgIiBvdmVyICIgcGFyc2luZyBhbmQgd2Fzbid0IGludGVuZGVkDQo+IHRvIGJlIHJlbGF0
-ZWQgdG8gdGhlIGZhYnJpYyBzZWxlY3Rpb24gZWZmb3J0Lg0KPg0KPj4gU29ycnkgaWYgaXQgc2Vl
-bXMgbGlrZSBJJ3ZlIGdvdCBsb3RzIG9mIG9waW5pb25zIGJ1dCBubyBwYXRjaGVzIHJpZ2h0IG5v
-dyA6KQ0KPj4gSSdtIHRlc3RpbmcgeW91ciBSRkMgcGF0Y2hzZXQgb3V0LCBhdCBsZWFzdCB0byB0
-aGUgZXh0ZW50IHRoYXQgSSBjYW4NCj4+IHdpdGggVk4yVk4gbW9kZSByaWdodCBub3cuDQo+DQo+
-IEhtbS4uIFRoZXJlIG1pZ2h0IG5vdCBiZSBhbnl0aGluZyB0byB0ZXN0IHdpdGggVk4yVk4gc2lu
-Y2UgSSBvbmx5DQo+IGNoYW5nZWQgdGhlIHNlbGVjdGlvbiBGQ0YgYWxnb3JpdGguDQoNCklnbm9y
-ZSB0aGlzIHN0YXRlbWVudC4gU2V0dGluZyB0aGUgY3RscidzIG1vZGUgdG8gVk4yVk4gc2hvdWxk
-IHdvcmsuIEkgDQptZWFudCB0byBzYXkgdGhhdCBJIGRpZG4ndCBhZGQgYW55dGhpbmcgdG8gZmNv
-ZW1vbiBmb3IgVk4yVk4uDQo=
+On Wed, 2012-08-22 at 14:21 -0400, Chad Dupuis wrote:
+> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_version.h |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+> index e6a5270..cfe934e 100644
+> --- a/drivers/scsi/qla2xxx/qla_version.h
+> +++ b/drivers/scsi/qla2xxx/qla_version.h
+> @@ -7,9 +7,9 @@
+>  /*
+>   * Driver version
+>   */
+> -#define QLA2XXX_VERSION      "8.04.00.03-k"
+> +#define QLA2XXX_VERSION      "8.04.00.07-k"
+>  
+>  #define QLA_DRIVER_MAJOR_VER	8
+>  #define QLA_DRIVER_MINOR_VER	4
+>  #define QLA_DRIVER_PATCH_VER	0
+> -#define QLA_DRIVER_BETA_VER	3
+> +#define QLA_DRIVER_BETA_VER	0
+
+Shouldn't this be 7 not 0?
+
+James
+
+
