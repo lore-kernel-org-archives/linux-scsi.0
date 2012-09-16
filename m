@@ -1,78 +1,60 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v3.6-rc6
-Date: Sat, 15 Sep 2012 17:37:22 -0700
-Message-ID: <1347755842.10711.23.camel@haakon2.linux-iscsi.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
+Date: Sat, 15 Sep 2012 21:30:50 -0600
+Message-ID: <CAErSpo6OkAV-wwKnpMRAvisQ_Jj=w9dxLbO3JxkX2A_Vd8QX=Q@mail.gmail.com>
+References: <505456FD.6040801@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Fengguang Wu <wfg@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:59884 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751692Ab2IPDbM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Sep 2012 23:31:12 -0400
+Received: by lbbgj3 with SMTP id gj3so3550744lbb.19
+        for <linux-scsi@vger.kernel.org>; Sat, 15 Sep 2012 20:31:10 -0700 (PDT)
+In-Reply-To: <505456FD.6040801@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, PCI <linux-pci@vger.kernel.org>
 
-Hello Linus!
+On Sat, Sep 15, 2012 at 4:22 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Hi all,
+>    I encountered a very strange problem when I hot plug a fiber channel card(using qla2xxx driver).
+> I did the hotplug in arch x86 machine, using pciehp driver for hotplug, this platform supports pci hot-plug triggering from both
+> sysfs and attention button. If a hot-plug slot is empty when system boot-up, then hotplug FC card in this slot is ok.
+> If a hot-plug slot has been embeded a FC card when system boot-up, hot-remove this card is ok, but hot-add this card will fail.
+> I used
+> #modprobe qla2xxx ql2xextended_error_logging=0x7fffffff
+> to get all probe info. As bellow:
+>
+> Can anyone give me any suggestion for this problem?
 
-Here is the current set of target-pending fixes headed for v3.6-final.
+It sounds like you did this:
 
-Please go ahead and pull from:
+  1) Power down system
+  2) Remove FC card from slot
+  3) Boot system
+  4) Hot-add FC card
+  5) Load qla2xxx driver
+  6) qla2xxx driver claims FC card
+  7) FC card works correctly
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+  8) Power down system
+  9) Install FC card in slot
+ 10) Boot system
+ 11) Load qla2xxx driver
+ 12) qla2xxx driver claims FC card
+ 13) FC card works correctly
+ 14) Hot-remove card
+ 15) Hot-add card
+ 16) qla2xxx driver claims FC card
+ 17) FC card does not work
 
-The main parts of this series include bug-fixes from Paolo Bonzini to
-address an use-after-free bug in pSCSI sense exception handling, along
-with addressing some long-standing bugs wrt the handling of zero-length
-SCSI CDB payloads also specific to pSCSI pass-through device backends.
+and I assume the dmesg log you included is just from steps 15 and 16
+(correct me if I'm wrong).
 
-A heads up that the following patch of the series:
-
-target: go through normal processing for zero-length PSCSI commands
-http://git.kernel.org/?p=linux/kernel/git/nab/target-pending.git;a=commitdiff;h=306c11b28d7bb85a7adda741798a2b6b60dd305a
-
-does not compile due to a minor syntax error in the original patch, that
-unfortunately had already been pushed to target-pending/master before
-being caught by Wu's 0-day build script.
-
-So it's ultimately my fault for not catching this during review +
-testing, and to avoid this in the future if I don't have the immediate
-time to compile test each patch headed into master, they will now go
-into target-pending/queue (for a day or two) so that the 0-day build
-scripts can do their thing and notify us of bi-sectable trouble ahead of
-time.
-
-Please let me know if you'd prefer a re-spin branch to address this, or
-if you'd rather fix this up on your end before pushing.
-
-Thank you,
-
---nab
-
-Benjamin Wang (1):
-  target: Check idr_get_new return value in iscsi_login_zero_tsih_s1
-
-Nicholas Bellinger (1):
-  target: Fix ->data_length re-assignment bug with SCSI overflow
-
-Paolo Bonzini (9):
-  target: move transport_get_sense_data
-  target: simplify code around transport_get_sense_data
-  target: fix use-after-free with PSCSI sense data
-  target: go through normal processing for zero-length PSCSI commands
-  target: report too-small parameter lists everywhere
-  target: fail REPORT LUNS with less than 16 bytes of payload
-  target: support zero-size allocation lengths in
-    transport_kmap_data_sg
-  target: support zero allocation length in REQUEST SENSE
-  target: go through normal processing for zero-length REQUEST_SENSE
-
- drivers/target/iscsi/iscsi_target_login.c |   11 ++-
- drivers/target/target_core_alua.c         |    7 ++
- drivers/target/target_core_device.c       |    7 ++
- drivers/target/target_core_iblock.c       |   17 +++-
- drivers/target/target_core_pr.c           |    8 ++
- drivers/target/target_core_pscsi.c        |   29 ++----
- drivers/target/target_core_spc.c          |   35 ++++----
- drivers/target/target_core_transport.c    |  148 ++++++++++++-----------------
- include/target/target_core_backend.h      |    4 +-
- include/target/target_core_base.h         |    1 +
- 10 files changed, 141 insertions(+), 126 deletions(-)
+It would be useful to see the entire log showing all these events so
+we can compare the working cases with the non-working one.  If you use
+the pciehp_debug module parameter, we should also see some pciehp
+events that would help me understand that driver.
