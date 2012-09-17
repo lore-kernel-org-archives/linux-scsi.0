@@ -1,74 +1,89 @@
-From: Borislav Petkov <bp@amd64.org>
-Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
-Date: Mon, 17 Sep 2012 19:23:45 +0200
-Message-ID: <20120917172345.GH13879@aftab.osrc.amd.com>
-References: <87obojef7t.fsf@schwinge.name>
- <20120616181008.GB20623@liondog.tnic>
- <87ehpddw9k.fsf@schwinge.name>
- <20120618142900.GA9710@aftab.osrc.amd.com>
- <87sjdsd64r.fsf@schwinge.name>
- <20120618155141.GF8378@aftab.osrc.amd.com>
- <877gs69oue.fsf@schwinge.name>
- <20120913125825.GB19691@aftab.osrc.amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.x86-64.org ([217.9.48.20]:54231 "EHLO mail.x86-64.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755941Ab2IQRXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Sep 2012 13:23:49 -0400
-Content-Disposition: inline
-In-Reply-To: <20120913125825.GB19691@aftab.osrc.amd.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Peter Senna Tschudin <peter.senna@gmail.com>
+Subject: [PATCH] drivers/target/target_core_configfs.c: fix error return code
+Date: Mon, 17 Sep 2012 20:05:33 +0200
+Message-ID: <1347905133-28492-1-git-send-email-peter.senna@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Peter Senna Tschudin <peter.senna@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Schwinge <thomas@codesourcery.com>
-Cc: Borislav Petkov <bp@alien8.de>, debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Sep 13, 2012 at 02:58:25PM +0200, Borislav Petkov wrote:
-> Here's the script, let me know how it goes:
+From: Peter Senna Tschudin <peter.senna@gmail.com>
 
-Here's a more correct version. I'm not saying yours won't work based
-on the rdmsr and setpci output on your box, but here's a version which
-should pay attention to one other workaround and work on all K8s.
+Convert a nonnegative error return code to a negative one, as returned
+elsewhere in the function.
 
-HTH.
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
---
-#!/bin/bash
-# assuming a single CPU system
+// <smpl>
+(
+if@p1 (\(ret < 0\|ret != 0\))
+ { ... return ret; }
+|
+ret@p1 = 0
+)
+... when != ret = e1
+    when != &ret
+*if(...)
+{
+  ... when != ret = e2
+      when forall
+ return ret;
+}
+// </smpl>
 
-nb_cfg=0xc001001f
-ht_tr_ctl=0x68
+Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+---
+ drivers/target/target_core_configfs.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-
-val="0x"$(rdmsr $nb_cfg)
-
-# revert E131 workaround
-val=$(( $val & ~(1 << 20) ))
-
-val=$(( $val | (1 << 32) ))
-val=$(printf "0x%08x" $val)
-wrmsr $nb_cfg $val
-
-
-val="0x"$(setpci -s 18.0 $ht_tr_ctl.l)
-
-# clear bits [22:21]
-val=$(( $val & ~( 0x3 << 21) ))
-
-val=$(( $val | (1 << 21) ))
-val=$(printf "0x%08x" $val)
-setpci -s 18.0 $ht_tr_ctl.l=$val
-
-echo "Erratum 169 workaround applied."
---
-
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index a1b4171..015f5be 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -3124,6 +3124,7 @@ static int __init target_core_init_configfs(void)
+ 				GFP_KERNEL);
+ 	if (!target_cg->default_groups) {
+ 		pr_err("Unable to allocate target_cg->default_groups\n");
++		ret = -ENOMEM;
+ 		goto out_global;
+ 	}
+ 
+@@ -3139,6 +3140,7 @@ static int __init target_core_init_configfs(void)
+ 				GFP_KERNEL);
+ 	if (!hba_cg->default_groups) {
+ 		pr_err("Unable to allocate hba_cg->default_groups\n");
++		ret = -ENOMEM;
+ 		goto out_global;
+ 	}
+ 	config_group_init_type_name(&alua_group,
+@@ -3154,6 +3156,7 @@ static int __init target_core_init_configfs(void)
+ 			GFP_KERNEL);
+ 	if (!alua_cg->default_groups) {
+ 		pr_err("Unable to allocate alua_cg->default_groups\n");
++		ret = -ENOMEM;
+ 		goto out_global;
+ 	}
+ 
+@@ -3165,14 +3168,17 @@ static int __init target_core_init_configfs(void)
+ 	 * Add core/alua/lu_gps/default_lu_gp
+ 	 */
+ 	lu_gp = core_alua_allocate_lu_gp("default_lu_gp", 1);
+-	if (IS_ERR(lu_gp))
++	if (IS_ERR(lu_gp)) {
++		ret = -ENOMEM;
+ 		goto out_global;
++	}
+ 
+ 	lu_gp_cg = &alua_lu_gps_group;
+ 	lu_gp_cg->default_groups = kzalloc(sizeof(struct config_group) * 2,
+ 			GFP_KERNEL);
+ 	if (!lu_gp_cg->default_groups) {
+ 		pr_err("Unable to allocate lu_gp_cg->default_groups\n");
++		ret = -ENOMEM;
+ 		goto out_global;
+ 	}
+ 
 -- 
-Regards/Gruss,
-Boris.
-
-Advanced Micro Devices GmbH
-Einsteinring 24, 85609 Dornach
-GM: Alberto Bozzo
-Reg: Dornach, Landkreis Muenchen
-HRB Nr. 43632 WEEE Registernr: 129 19551
+1.7.11.4
