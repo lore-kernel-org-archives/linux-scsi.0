@@ -1,66 +1,74 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [scsi:for-next 92/128] drivers/scsi/qla2xxx/qla_isr.c:1684:56:
- warning: 'rval' may be used uninitialized in this function
-Date: Mon, 17 Sep 2012 11:13:15 -0500
-Message-ID: <CC7D49BC.E02F%saurav.kashyap@qlogic.com>
-References: <1347885307.2397.21.camel@dabdike.int.hansenpartnership.com>
+From: Borislav Petkov <bp@amd64.org>
+Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
+Date: Mon, 17 Sep 2012 19:23:45 +0200
+Message-ID: <20120917172345.GH13879@aftab.osrc.amd.com>
+References: <87obojef7t.fsf@schwinge.name>
+ <20120616181008.GB20623@liondog.tnic>
+ <87ehpddw9k.fsf@schwinge.name>
+ <20120618142900.GA9710@aftab.osrc.amd.com>
+ <87sjdsd64r.fsf@schwinge.name>
+ <20120618155141.GF8378@aftab.osrc.amd.com>
+ <877gs69oue.fsf@schwinge.name>
+ <20120913125825.GB19691@aftab.osrc.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:57155
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932398Ab2IQQNZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Sep 2012 12:13:25 -0400
-In-Reply-To: <1347885307.2397.21.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
+Received: from mail.x86-64.org ([217.9.48.20]:54231 "EHLO mail.x86-64.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755941Ab2IQRXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Sep 2012 13:23:49 -0400
+Content-Disposition: inline
+In-Reply-To: <20120913125825.GB19691@aftab.osrc.amd.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>, Fengguang Wu <fengguang.wu@intel.com>
-Cc: Yuanhan Liu <yuanhan.liu@intel.com>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Thomas Schwinge <thomas@codesourcery.com>
+Cc: Borislav Petkov <bp@alien8.de>, debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+
+On Thu, Sep 13, 2012 at 02:58:25PM +0200, Borislav Petkov wrote:
+> Here's the script, let me know how it goes:
+
+Here's a more correct version. I'm not saying yours won't work based
+on the rdmsr and setpci output on your box, but here's a version which
+should pay attention to one other workaround and work on all K8s.
+
+HTH.
+
+--
+#!/bin/bash
+# assuming a single CPU system
+
+nb_cfg=0xc001001f
+ht_tr_ctl=0x68
 
 
+val="0x"$(rdmsr $nb_cfg)
+
+# revert E131 workaround
+val=$(( $val & ~(1 << 20) ))
+
+val=$(( $val | (1 << 32) ))
+val=$(printf "0x%08x" $val)
+wrmsr $nb_cfg $val
 
 
->On Sat, 2012-09-15 at 07:57 +0800, Fengguang Wu wrote:
->> Hi Saurav,
->>
->> FYI, there are new compile warnings show up in
->>
->> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
->>for-next
->> head:   71cfff4af0525891941199b142b759d00b293959
->> commit: 387fddaa3564503c9f82d091d2ebe390f3af62a1 [92/128] [SCSI]
->>qla2xxx: Implementation of bidirectional.
->> config: x86_64-allmodconfig
->>
->> All error/warnings:
->>
->> drivers/scsi/qla2xxx/qla_isr.c: In function 'qla2x00_status_entry':
->> drivers/scsi/qla2xxx/qla_isr.c:1684:56: warning: 'rval' may be used
->>uninitialized in this function [-Wmaybe-uninitialized]
->> drivers/scsi/qla2xxx/qla_isr.c:1558:11: note: 'rval' was declared here
->
->Hmm, that's actually fixed by a later patch in the series:
->
->commit 2d7a7dc9bf4772b6ed711cadeee0bce9bace2a94
->Author: Saurav Kashyap <saurav.kashyap@qlogic.com>
->Date:   Wed Aug 22 14:21:12 2012 -0400
->
->    [SCSI] qla2xxx: Fix rval may be used uninitialized in this function
->warning.
->
->Note to qlogic: please don't do this in future.  I'll combine these two
->patches so we get a single series with no introduced and later fixed
->warnings.
+val="0x"$(setpci -s 18.0 $ht_tr_ctl.l)
 
-Hi James,
-We will take care of this in future.
+# clear bits [22:21]
+val=$(( $val & ~( 0x3 << 21) ))
 
-Thanks,
-~Saurav
+val=$(( $val | (1 << 21) ))
+val=$(printf "0x%08x" $val)
+setpci -s 18.0 $ht_tr_ctl.l=$val
 
+echo "Erratum 169 workaround applied."
+--
 
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+-- 
+Regards/Gruss,
+Boris.
 
+Advanced Micro Devices GmbH
+Einsteinring 24, 85609 Dornach
+GM: Alberto Bozzo
+Reg: Dornach, Landkreis Muenchen
+HRB Nr. 43632 WEEE Registernr: 129 19551
