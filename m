@@ -1,39 +1,41 @@
-From: "Allen and Violet Large" <fernandosiqueira@ufc.br>
-Subject: Goodluck
-Date: Sun, 16 Sep 2012 11:50:57 -0300 (BRT)
-Message-ID: <76cb14b84dfea672ade4f4136676a746.squirrel@correio3.ufc.br>
-Reply-To: allen_violetlarge08@yahoo.co.jp
+From: roel kluin <roel.kluin@gmail.com>
+Subject: pm8001_hwi.c uldd_task - missing spin_lockirqsave?
+Date: Mon, 17 Sep 2012 11:09:27 +0200
+Message-ID: <5056E8C7.2080704@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from correio5.ufc.br ([200.19.190.13]:54570 "EHLO correio5.ufc.br"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751067Ab2IPPiM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Sep 2012 11:38:12 -0400
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:44099 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755302Ab2IQJJx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Sep 2012 05:09:53 -0400
+Received: by bkwj10 with SMTP id j10so2342945bkw.19
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Sep 2012 02:09:52 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jack_wang@usish.com, lindar_liu@usish.com
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
+The file drivers/scsi/pm8001/pm8001_hwi.c contains the piece of code below, at
+the end of mpi_sata_completion() and  mpi_sata_event(), which appears wrong.
+While the test is opposite, the executed branch does exactly the same. I believe
+one of the branches should spin_lockirqsave instead? not 100% sure how to fix this.
 
+Roel
 
-
-This is a personal email directed to you. My wife and I won a Jackpot
-Lottery of $11.3 million in July and have voluntarily decided to donate
-the sum of $500,000.00 USD to you as part of our own charity project to
-improve the lot of 10 lucky individuals all over the world. If you have
-received this email then you are one of the lucky recipients and all you
-have to do is get back with us so that we can send your details to the
-payout bank.
-Please note that you have to contact my private email for more
-informations (allen_violetlarge08@yahoo.co.jp)
-You can verify this by visiting the web pages below.
-
-http://www.dailymail.co.uk/news/article-1326473/Canadian-couple-Allen-Violet-Large-away-entire-11-2m-lottery-win.html
-
-http://www.cbc.ca/news/canada/nova-scotia/story/2010/11/04/ns-allen-violet-large-lottery-winning.html
-
-
-Goodluck,
-Allen and Violet Large
-Email: allen_violetlarge08@yahoo.co.jp
-
+	} else if (t->uldd_task) {
+		spin_unlock_irqrestore(&t->task_state_lock, flags);
+		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+		mb();/* ditto */
+		spin_unlock_irq(&pm8001_ha->lock);
+		t->task_done(t);
+		spin_lock_irq(&pm8001_ha->lock);
+	} else if (!t->uldd_task) {
+		spin_unlock_irqrestore(&t->task_state_lock, flags);
+		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+		mb();/*ditto*/
+		spin_unlock_irq(&pm8001_ha->lock);
+		t->task_done(t);
+		spin_lock_irq(&pm8001_ha->lock);
+	}
