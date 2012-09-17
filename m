@@ -1,89 +1,60 @@
-From: Peter Senna Tschudin <peter.senna@gmail.com>
-Subject: [PATCH] drivers/target/target_core_configfs.c: fix error return code
-Date: Mon, 17 Sep 2012 20:05:33 +0200
-Message-ID: <1347905133-28492-1-git-send-email-peter.senna@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Peter Senna Tschudin <peter.senna@gmail.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
+Date: Mon, 17 Sep 2012 11:15:43 -0700
+Message-ID: <CC7CB653.20008%giridhar.malavali@qlogic.com>
+References: <50571243.4050001@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <50571243.4050001@huawei.com>
+Content-Language: en-US
+Sender: linux-pci-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, PCI <linux-pci@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Peter Senna Tschudin <peter.senna@gmail.com>
 
-Convert a nonnegative error return code to a negative one, as returned
-elsewhere in the function.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
+On 9/17/12 5:06 AM, "Yijing Wang" <wangyijing@huawei.com> wrote:
 
-// <smpl>
-(
-if@p1 (\(ret < 0\|ret != 0\))
- { ... return ret; }
-|
-ret@p1 = 0
-)
-... when != ret = e1
-    when != &ret
-*if(...)
-{
-  ... when != ret = e2
-      when forall
- return ret;
-}
-// </smpl>
+>[  769.531289] qla2xxx [0000:08:00.0]-001d: : Found an ISP2532 irq 32
+>iobase 0xffffc90016bcc000.
+>[  769.531748] qla2xxx 0000:08:00.0: irq 91 for MSI/MSI-X
+>[  769.531768] qla2xxx 0000:08:00.0: irq 92 for MSI/MSI-X
+>[  799.503673] qla2xxx [0000:08:00.0]-d008:10: No buffer available for
+>dump.
+>[  799.503682] qla2xxx [0000:08:00.0]-101c:10: Mailbox cmd timeout
+>occurred, cmd=0xb, mb[0]=0xb, eeh_busy=0x0. Scheduling ISP abort.
+>[  799.503689] qla2xxx [0000:08:00.0]-0098:10: Failed to load segment 0
+>of firmware.
+>[  829.853242] qla2xxx [0000:08:00.0]-d008:10: No buffer available for
+>dump.
+>[  829.853249] qla2xxx [0000:08:00.0]-008f:10: Failed to load segment 0
+>of firmware.
+>[  829.853253] qla2xxx [0000:08:00.0]-00cf:10: Setup chip ****FAILED****.
+>[  829.853258] qla2xxx [0000:08:00.0]-00d6:10: Failed to initialize
+>adapter - Adapter flags 2.
+>[  829.853893] qla2xxx 0000:08:00.1: enabling device (0104 -> 0106)
+>[  829.855251] qla2xxx [0000:08:00.1]-001d: : Found an ISP2532 irq 42
+>iobase 0xffffc90016b88000.
+>[  829.855828] qla2xxx 0000:08:00.1: irq 91 for MSI/MSI-X
+>[  829.855849] qla2xxx 0000:08:00.1: irq 92 for MSI/MSI-X
+>[  859.827388] qla2xxx [0000:08:00.1]-d008:11: No buffer available for
+>dump.
+>[  859.827395] qla2xxx [0000:08:00.1]-101c:11: Mailbox cmd timeout
+>occurred, cmd=0xb, mb[0]=0xb, eeh_busy=0x0. Scheduling ISP abort.
+>[  859.827400] qla2xxx [0000:08:00.1]-0098:11: Failed to load segment 0
+>of firmware.
+>[  890.176829] qla2xxx [0000:08:00.1]-d008:11: No buffer available for
+>dump.
+>[  890.176837] qla2xxx [0000:08:00.1]-008f:11: Failed to load segment 0
+>of firmware.
+>[  890.176841] qla2xxx [0000:08:00.1]-00cf:11: Setup chip ****FAILED****.
+>[  890.176845] qla2xxx [0000:08:00.1]-00d6:11: Failed to initialize
+>adapter - Adapter flags 2.
 
-Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
----
- drivers/target/target_core_configfs.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+I see that the one of the initial mailbox which loads data from system
+memory to RISC RAM failing causing the probe to fail.
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index a1b4171..015f5be 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -3124,6 +3124,7 @@ static int __init target_core_init_configfs(void)
- 				GFP_KERNEL);
- 	if (!target_cg->default_groups) {
- 		pr_err("Unable to allocate target_cg->default_groups\n");
-+		ret = -ENOMEM;
- 		goto out_global;
- 	}
- 
-@@ -3139,6 +3140,7 @@ static int __init target_core_init_configfs(void)
- 				GFP_KERNEL);
- 	if (!hba_cg->default_groups) {
- 		pr_err("Unable to allocate hba_cg->default_groups\n");
-+		ret = -ENOMEM;
- 		goto out_global;
- 	}
- 	config_group_init_type_name(&alua_group,
-@@ -3154,6 +3156,7 @@ static int __init target_core_init_configfs(void)
- 			GFP_KERNEL);
- 	if (!alua_cg->default_groups) {
- 		pr_err("Unable to allocate alua_cg->default_groups\n");
-+		ret = -ENOMEM;
- 		goto out_global;
- 	}
- 
-@@ -3165,14 +3168,17 @@ static int __init target_core_init_configfs(void)
- 	 * Add core/alua/lu_gps/default_lu_gp
- 	 */
- 	lu_gp = core_alua_allocate_lu_gp("default_lu_gp", 1);
--	if (IS_ERR(lu_gp))
-+	if (IS_ERR(lu_gp)) {
-+		ret = -ENOMEM;
- 		goto out_global;
-+	}
- 
- 	lu_gp_cg = &alua_lu_gps_group;
- 	lu_gp_cg->default_groups = kzalloc(sizeof(struct config_group) * 2,
- 			GFP_KERNEL);
- 	if (!lu_gp_cg->default_groups) {
- 		pr_err("Unable to allocate lu_gp_cg->default_groups\n");
-+		ret = -ENOMEM;
- 		goto out_global;
- 	}
- 
--- 
-1.7.11.4
+-- Giri
