@@ -1,74 +1,82 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v2 2/4] scsi: sd: enter stop power condition on runtime suspend
-Date: Tue, 18 Sep 2012 15:00:29 +0800
-Message-ID: <1347951631-1592-3-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v2 4/4] libata: acpi: set can_power_off for both ODD and HDD
+Date: Tue, 18 Sep 2012 15:00:31 +0800
+Message-ID: <1347951631-1592-5-git-send-email-aaron.lu@intel.com>
 References: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga14.intel.com ([143.182.124.37]:32964 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757048Ab2IRHBA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Sep 2012 03:01:00 -0400
+	id S1757048Ab2IRHBF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Sep 2012 03:01:05 -0400
 In-Reply-To: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Oliver Neukum <oneukum@suse.de>
 Cc: Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
 
-On runtime suspend, put device into stop power condition.
-
-For standard scsi device, no need to synchronize cache.
-For ata devices, issue synchronize cache before enter standby state
-as reflected by the sync_before_stop flag.
+Hard disk may also be runtime powered off, so set can_power_off flag
+for it too if condition satisfies so that the may_power_off sysfs file
+will be created for it to give user a chance to disable runtime power
+off.
 
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
 ---
- drivers/ata/libata-scsi.c |  1 +
- drivers/scsi/sd.c         | 10 ++++++++--
- 2 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/ata/libata-acpi.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 8ec81ca..9307f52 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1117,6 +1117,7 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
- 	} else {
- 		sdev->sector_size = ata_id_logical_sector_size(dev->id);
- 		sdev->manage_start_stop = 1;
-+		sdev->sync_before_stop = 1;
- 	}
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 24347e0..443c3f2 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -1015,7 +1015,7 @@ static void ata_acpi_add_pm_notifier(struct ata_device *dev)
+ 	if (ACPI_FAILURE(status))
+ 		return;
+ 
+-	if (dev->sdev->can_power_off) {
++	if (dev->class == ATA_DEV_ATAPI && dev->sdev->can_power_off) {
+ 		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 			ata_acpi_wake_dev, dev);
+ 		device_set_run_wake(&dev->sdev->sdev_gendev, true);
+@@ -1036,7 +1036,7 @@ static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
+ 	if (ACPI_FAILURE(status))
+ 		return;
+ 
+-	if (dev->sdev->can_power_off) {
++	if (dev->class == ATA_DEV_ATAPI && dev->sdev->can_power_off) {
+ 		device_set_run_wake(&dev->sdev->sdev_gendev, false);
+ 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 			ata_acpi_wake_dev);
+@@ -1140,14 +1140,23 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
  
  	/*
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 4df73e5..7b0f07a 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2866,18 +2866,24 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
- {
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
- 	int ret = 0;
-+	bool sync;
- 
- 	if (!sdkp)
- 		return 0;	/* this can happen */
- 
--	if (sdkp->WCE) {
-+	if (!sdkp->device->manage_start_stop)
-+		sync = !!sdkp->WCE;
-+	else
-+		sync = sdkp->device->sync_before_stop && !!sdkp->WCE;
+ 	 * If firmware has _PS3 or _PR3 for this device,
+-	 * and this ata ODD device support device attention,
+-	 * it means this device can be powered off
++	 * it means this device can be powered off runtime
+ 	 */
+ 	states = acpi_dev->power.states;
+-	if ((states[ACPI_STATE_D3_HOT].flags.valid ||
+-			states[ACPI_STATE_D3_COLD].flags.explicit_set) &&
+-			ata_dev->flags & ATA_DFLAG_DA)
+-		sdev->can_power_off = 1;
++	if (states[ACPI_STATE_D3_HOT].flags.valid ||
++			states[ACPI_STATE_D3_COLD].flags.explicit_set) {
++		/*
++		 * For ODD, it needs to support device attention or
++		 * it can't be powered up back by user
++		 */
++		if (ata_dev->class == ATA_DEV_ATAPI &&
++				ata_dev->flags & ATA_DFLAG_DA)
++			sdev->can_power_off = 1;
 +
-+	if (sync) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
- 		ret = sd_sync_cache(sdkp);
- 		if (ret)
- 			goto done;
- 	}
++		/* No requirement for hard disk */
++		if (ata_dev->class == ATA_DEV_ATA)
++			sdev->can_power_off = 1;
++	}
  
--	if ((mesg.event & PM_EVENT_SLEEP) && sdkp->device->manage_start_stop) {
-+	if (sdkp->device->manage_start_stop) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		ret = sd_start_stop_device(sdkp, 0);
- 	}
+ 	return 0;
+ }
 -- 
 1.7.12.21.g871e293
 
