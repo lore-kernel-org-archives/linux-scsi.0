@@ -1,81 +1,45 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v2 4/4] libata: acpi: set can_power_off for both ODD and HDD
-Date: Tue, 18 Sep 2012 15:00:31 +0800
-Message-ID: <1347951631-1592-5-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v2 3/4] scsi: sd: set ready_to_power_off for scsi disk
+Date: Tue, 18 Sep 2012 15:00:30 +0800
+Message-ID: <1347951631-1592-4-git-send-email-aaron.lu@intel.com>
 References: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga14.intel.com ([143.182.124.37]:32964 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757048Ab2IRHBF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Sep 2012 03:01:05 -0400
+	id S1757060Ab2IRHBD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Sep 2012 03:01:03 -0400
 In-Reply-To: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Oliver Neukum <oneukum@suse.de>
 Cc: Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
 
-Hard disk may also be runtime powered off, so set can_power_off flag
-for it too if condition satisfies so that the may_power_off sysfs file
-will be created for it to give user a chance to disable runtime power
-off.
+The ready_to_power_off flag is used to give indication to ATA layer
+if this device's power can be removed after runtime suspended from the
+perspective of scsi driver.
+
+It is introduced to support zero power ODD. When ODD is runtime
+suspended, it may not be OK to remove its power.
+
+But for disk, there doesn't exist a scenario that when the disk is
+runtime suspended, it can't be powered off.
 
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
 ---
- drivers/ata/libata-acpi.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+ drivers/scsi/sd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 24347e0..443c3f2 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -1015,7 +1015,7 @@ static void ata_acpi_add_pm_notifier(struct ata_device *dev)
- 	if (ACPI_FAILURE(status))
- 		return;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7b0f07a..009d30c 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2638,6 +2638,7 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
  
--	if (dev->sdev->can_power_off) {
-+	if (dev->class == ATA_DEV_ATAPI && dev->sdev->can_power_off) {
- 		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 			ata_acpi_wake_dev, dev);
- 		device_set_run_wake(&dev->sdev->sdev_gendev, true);
-@@ -1036,7 +1036,7 @@ static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
- 	if (ACPI_FAILURE(status))
- 		return;
- 
--	if (dev->sdev->can_power_off) {
-+	if (dev->class == ATA_DEV_ATAPI && dev->sdev->can_power_off) {
- 		device_set_run_wake(&dev->sdev->sdev_gendev, false);
- 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 			ata_acpi_wake_dev);
-@@ -1140,14 +1140,23 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
- 
- 	/*
- 	 * If firmware has _PS3 or _PR3 for this device,
--	 * and this ata ODD device support device attention,
--	 * it means this device can be powered off
-+	 * it means this device can be powered off runtime
- 	 */
- 	states = acpi_dev->power.states;
--	if ((states[ACPI_STATE_D3_HOT].flags.valid ||
--			states[ACPI_STATE_D3_COLD].flags.explicit_set) &&
--			ata_dev->flags & ATA_DFLAG_DA)
--		sdev->can_power_off = 1;
-+	if (states[ACPI_STATE_D3_HOT].flags.valid ||
-+			states[ACPI_STATE_D3_COLD].flags.explicit_set) {
-+		/*
-+		 * For ODD, it needs to support device attention or
-+		 * it can't be powered up back by user
-+		 */
-+		if (ata_dev->class == ATA_DEV_ATAPI &&
-+				ata_dev->flags & ATA_DFLAG_DA)
-+			sdev->can_power_off = 1;
-+
-+		/* No requirement for hard disk */
-+		if (ata_dev->class == ATA_DEV_ATA)
-+			sdev->can_power_off = 1;
-+	}
- 
- 	return 0;
+ 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+ 		  sdp->removable ? "removable " : "");
++	sdp->ready_to_power_off = 1;
+ 	scsi_autopm_put_device(sdp);
+ 	put_device(&sdkp->dev);
  }
 -- 
 1.7.12.21.g871e293
