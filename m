@@ -1,119 +1,148 @@
-From: Naresh Kumar Inna <naresh@chelsio.com>
-Subject: Re: [V4 PATCH 0/8] csiostor: Chelsio FCoE offload driver submission
-Date: Tue, 18 Sep 2012 23:20:51 +0530
-Message-ID: <5058B47B.1050604@chelsio.com>
-References: <1347470328-32490-1-git-send-email-naresh@chelsio.com>  <5057F791.8020702@chelsio.com> <1347957374.2388.15.camel@dabdike.int.hansenpartnership.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
+Date: Tue, 18 Sep 2012 11:54:38 -0600
+Message-ID: <CAErSpo7WwwB3ZO9g4WjQZKcfXAP0tKuXWKn=UTw1mDGJyX6=vQ@mail.gmail.com>
+References: <505456FD.6040801@huawei.com> <CAErSpo6OkAV-wwKnpMRAvisQ_Jj=w9dxLbO3JxkX2A_Vd8QX=Q@mail.gmail.com>
+ <50571243.4050001@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:22878 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752295Ab2IRRu6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Sep 2012 13:50:58 -0400
-In-Reply-To: <1347957374.2388.15.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <50571243.4050001@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, PCI <linux-pci@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 
-On 9/18/2012 2:06 PM, James Bottomley wrote:
-> On Tue, 2012-09-18 at 09:54, Naresh Kumar Inna wrote:
->> Hi James,
+On Mon, Sep 17, 2012 at 6:06 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2012/9/16 11:30, Bjorn Helgaas wrote:
+>> On Sat, Sep 15, 2012 at 4:22 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> Hi all,
+>>>    I encountered a very strange problem when I hot plug a fiber channel card(using qla2xxx driver).
+>>> I did the hotplug in arch x86 machine, using pciehp driver for hotplug, this platform supports pci hot-plug triggering from both
+>>> sysfs and attention button. If a hot-plug slot is empty when system boot-up, then hotplug FC card in this slot is ok.
+>>> If a hot-plug slot has been embeded a FC card when system boot-up, hot-remove this card is ok, but hot-add this card will fail.
+>>> I used
+>>> #modprobe qla2xxx ql2xextended_error_logging=0x7fffffff
+>>> to get all probe info. As bellow:
+>>>
+>>> Can anyone give me any suggestion for this problem?
 >>
->> Could you please consider merging version V4 of the driver patches, if
->> you think they are in good shape now?
-> 
-> Well, definitely not yet; you seem to have missed the memo on readq:
-> 
->   CC [M]  drivers/scsi/cxgbi/cxgb4i/cxgb4i.o
-> drivers/scsi/csiostor/csio_hw.c: In function csio_hw_mc_read:
-> drivers/scsi/csiostor/csio_hw.c:194:3: error: implicit declaration of
-> function readq [-Werror=implicit-function-declaration]
-> 
-> It's only defined on platforms which can support an atomic 64 bit
-> operation (which is mostly not any 32 bit platforms) ... so this could
-> do with compile testing on those.
-> 
-> To see how to handle readq/writeq in the 32 bit case, see the uses in
-> fnic or qla2xxx
-> 
+>> It sounds like you did this:
+>>
+>>   1) Power down system
+>>   2) Remove FC card from slot
+>>   3) Boot system
+>>   4) Hot-add FC card
+>>   5) Load qla2xxx driver
+>>   6) qla2xxx driver claims FC card
+>>   7) FC card works correctly
+>>
+>>   8) Power down system
+>>   9) Install FC card in slot
+>>  10) Boot system
+>>  11) Load qla2xxx driver
+>>  12) qla2xxx driver claims FC card
+>>  13) FC card works correctly
+> I rmmod qla2xxx driver here and modprobe qla2xxx ql2xextended_error_logging=0x1e400000 again for get errors info
+> Also I modprobe pciehp pciehp_debug=1 for getting debug info
+>>  14) Hot-remove card
+>>  15) Hot-add card
+>>  16) qla2xxx driver claims FC card
+>>  17) FC card does not work
+>>
+>> and I assume the dmesg log you included is just from steps 15 and 16
+>> (correct me if I'm wrong).
+>>
+>> It would be useful to see the entire log showing all these events so
+>> we can compare the working cases with the non-working one.  If you use
+>> the pciehp_debug module parameter, we should also see some pciehp
+>> events that would help me understand that driver.
+>>
+>
+> Hi Bjorn,
+>    Thanks for your comments very much!
+>
+> My steps:
+> 1) power down system
+> 2) Install FC card in slot
+> 3) Boot system
+> 4) Load qla2xxx driver
+> 5) qla2xxx driver claims FC card
+> 6) FC card works correctly(at least probe return ok, I don't know qla2xxx driver much..)
+> 7) rmmod qla2xxx
+> 8) modprobe qla2xxx ql2xextended_error_logging=0x1e400000(for get errors info)
+> 9) modprobe pciehp pciehp_debug=1
+> 10) Hot-remove card
+> 11) Hot-add card
+> 12) qla2xxx driver claims FC card fail(probe return fail, setup chip fail)
+> --------------------------------------so this is failed situation----------
+>
+> --------------------------------------continue to hot-add fc card into empty slot(also support pci hp)
+> 13) Install FC card in empty slot
+> 14) Hot-add card
+> 15) qla2xxx driver claims FC card ok (probe return ok)
+>
+> btw:
+> If fc card firmware version 4.03, everything is ok (hot-plug in any slots(empty or not))
+> fc card firmware version is 4.04 or 5.04 , situation as same as 1)--->12)
 
-Thanks for reviewing. I will fix up readq/writeq, as well as other
-32-bit compilation issues, if any.
+Thanks.  The FW change is a good clue.  If everything works with
+version 4.03, but it doesn't work with version 4.04, it's likely to be
+a FW problem, not a Linux PCI core problem.
 
-> You also have a couple of unnecessary version.h includes.
-> 
+Here's what I see from your logs.  In slot 4 (bus 08), the card was
+present before boot, you removed it, re-added it, and it failed after
+being re-added.  Slot 3 (bus 06) was empty at boot, you hot-added a
+card, and it worked.  Here are the resources available on those two
+buses and the boot-time config of the first device in slot 4:
 
-I will get rid of them.
+      pci 0000:00:07.0: PCI bridge to [bus 06-07]
+      pci 0000:00:07.0:   bridge window [io  0xc000-0xcfff]
+      pci 0000:00:07.0:   bridge window [mem 0xf9000000-0xf9ffffff]
+      pci 0000:00:07.0:   bridge window [mem 0xf1000000-0xf1ffffff 64bit pref]
+      pci 0000:00:09.0: PCI bridge to [bus 08-09]
+      pci 0000:00:09.0:   bridge window [io  0xb000-0xbfff]
+      pci 0000:00:09.0:   bridge window [mem 0xf8000000-0xf8ffffff]
+      pci 0000:00:09.0:   bridge window [mem 0xf0000000-0xf0ffffff 64bit pref]
+      pci 0000:08:00.0: [1077:2532] type 00 class 0x0c0400
+      pci 0000:08:00.0: reg 10: [io  0xb100-0xb1ff]
+      pci 0000:08:00.0: reg 14: [mem 0xf8084000-0xf8087fff 64bit]
+      pci 0000:08:00.0: reg 30: [mem 0xf8040000-0xf807ffff pref]
 
-> Since you're a new driver, could you not do a correctly unlocked
-> queuecommand routine?  You'll find the way you've currently got it coded
-> (holding the host lock for the entire queuecommand routine) is very
-> performance detrimental.
-> 
+After you remove and re-add the card in slot 4, it starts with
+uninitialized BARs as expected, then we assign resources to it.  It's
+sort of interesting that the BIOS had originally put the ROM (reg 30)
+in the non-prefetchable window, while after the hot-add, Linux places
+it in the prefetchable window.  Either should work, and in fact the
+card you added in slot 3 *does* work with its ROM in the prefetchable
+window.
 
-Yes, I am aware of that. However, some of this code was written and
-tested before the lock-less queuecommand came into existence. Going the
-lock-less route would require me to test the driver thoroughly again. It
-definitely is in my to-do list, but I would like to take that up after
-the initial submission goes through. Would that be OK?
+      pci 0000:08:00.0: [1077:2532] type 00 class 0x0c0400
+      pci 0000:08:00.0: reg 10: [io  0x0000-0x00ff]
+      pci 0000:08:00.0: reg 14: [mem 0x00000000-0x00003fff 64bit]
+      pci 0000:08:00.0: reg 30: [mem 0x00000000-0x0003ffff pref]
+      pci 0000:08:00.0: BAR 0: assigned [io  0xb000-0xb0ff]
+      pci 0000:08:00.0: BAR 1: assigned [mem 0xf8000000-0xf8003fff 64bit]
+      pci 0000:08:00.0: BAR 6: assigned [mem 0xf0000000-0xf003ffff pref]
+      qla2xxx [0000:08:00.0]-0098:10: Failed to load segment 0 of firmware.
+      qla2xxx [0000:08:00.0]-d008:10: No buffer available for dump.
+      qla2xxx [0000:08:00.0]-008f:10: Failed to load segment 0 of firmware.
+      qla2xxx [0000:08:00.0]-00cf:10: Setup chip ****FAILED****.
 
-> You have a lot of locking statements which aren't easy to audit by hand
-> because there are multiple unlocks.  Things like this:
-> 
-> csio_scan_finished(struct Scsi_Host *shost, unsigned long time)
-> {
-> 	struct csio_lnode *ln = shost_priv(shost);
-> 	int rv = 0;
-> 
-> 	spin_lock_irq(shost->host_lock);
-> 	if (!ln->hwp || csio_list_deleted(&ln->sm.sm_list)) {
-> 		spin_unlock_irq(shost->host_lock);
-> 		return 1;
-> 	}
-> 
-> 	rv = csio_scan_done(ln, jiffies, time, csio_max_scan_tmo * HZ,
-> 			    csio_delta_scan_tmo * HZ);
-> 
-> 	spin_unlock_irq(shost->host_lock);
-> 
-> 	return rv;
-> }
-> 
-> Are better coded as
-> 
-> csio_scan_finished(struct Scsi_Host *shost, unsigned long time)
-> {
-> 	struct csio_lnode *ln = shost_priv(shost);
-> 	int rv = 1;
-> 
-> 	spin_lock_irq(shost->host_lock);
-> 	if (!ln->hwp || csio_list_deleted(&ln->sm.sm_list))
-> 		goto out;
-> 
-> 	rv = csio_scan_done(ln, jiffies, time, csio_max_scan_tmo * HZ,
-> 			    csio_delta_scan_tmo * HZ);
-> 
->  out:
-> 	spin_unlock_irq(shost->host_lock);
-> 
-> 	return rv;
-> }
-> 
-> It's shorter and the unlock clearly matches the lock.  You could even
-> invert the if logic and just make the csio_scan_done() conditional on it
-> avoiding the goto.
-> 
+When you hot-add the card in slot 3, it starts with uninitialized BARs
+as expected, but again, we assign valid resources to it:
 
-I will try to minimize the lock/unlock mismatch instances per your
-suggestions, if not eliminate them altogether.
+      pci 0000:06:00.0: [1077:2532] type 00 class 0x0c0400
+      pci 0000:06:00.0: reg 10: [io  0x0000-0x00ff]
+      pci 0000:06:00.0: reg 14: [mem 0x00000000-0x00003fff 64bit]
+      pci 0000:06:00.0: reg 30: [mem 0x00000000-0x0003ffff pref]
+      pci 0000:06:00.0: BAR 0: assigned [io  0xc000-0xc0ff]
+      pci 0000:06:00.0: BAR 1: assigned [mem 0xf9000000-0xf9003fff 64bit]
+      pci 0000:06:00.0: BAR 6: assigned [mem 0xf1000000-0xf103ffff pref]
 
-> I'd also really like the people who understand FC to take a look over
-> this as well.
-> 
+I don't see anything wrong from a PCI perspective.  I suspect
+something strange in the card firmware.
 
-Sure.
+If you do figure out something wrong in PCI, let me know.
 
-Thanks,
-Naresh.
+Bjorn
