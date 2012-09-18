@@ -1,33 +1,40 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] lpfc: fix an '&&' vs '&' typo
-Date: Tue, 18 Sep 2012 09:56:47 +0300
-Message-ID: <20120918065647.GA31914@elgon.mountain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@emulex.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH v2 0/4] Support runtime power off of HDD
+Date: Tue, 18 Sep 2012 15:00:27 +0800
+Message-ID: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:32964 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756984Ab2IRHAw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Sep 2012 03:00:52 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Oliver Neukum <oneukum@suse.de>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
 
-The intent here was clearly to do a bitwise AND similar to the others in
-this file.  The current condition is never true.
+v2:
+Introduced a new flag sync_before_stop as scsi_stop =
+ata_flush_cache + ata_standby_immediate. This flag specifies
+that when stop command is to send to this device, please issue
+an additional synchronize cache command to it before the stop
+command.
+Put device into stop power condition on runtime suspend.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-Only needed in linux-next.
+v1:
+This patch set is baed on v7 ZPODD patches.
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 7ffabb7..65f9fb6 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -634,7 +634,7 @@ lpfc_cmpl_ct_cmd_gid_ft(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		/* Check for retry */
- 		if (vport->fc_ns_retry < LPFC_MAX_NS_RETRY) {
- 			if (irsp->ulpStatus != IOSTAT_LOCAL_REJECT ||
--			    (irsp->un.ulpWord[4] && IOERR_PARAM_MASK) !=
-+			    (irsp->un.ulpWord[4] & IOERR_PARAM_MASK) !=
- 			    IOERR_NO_RESOURCES)
- 				vport->fc_ns_retry++;
- 
+Aaron Lu (4):
+  scsi: introduce sync_before_stop flag
+  scsi: sd: enter stop power condition on runtime suspend
+  scsi: sd: set ready_to_power_off for scsi disk
+  libata: acpi: set can_power_off for both ODD and HDD
+
+ drivers/ata/libata-acpi.c  | 25 +++++++++++++++++--------
+ drivers/ata/libata-scsi.c  |  1 +
+ drivers/scsi/sd.c          | 11 +++++++++--
+ include/scsi/scsi_device.h |  1 +
+ 4 files changed, 28 insertions(+), 10 deletions(-)
+
+-- 
+1.7.12.21.g871e293
+
