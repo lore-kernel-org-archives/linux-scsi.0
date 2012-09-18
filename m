@@ -1,46 +1,27 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v2 3/4] scsi: sd: set ready_to_power_off for scsi disk
-Date: Tue, 18 Sep 2012 15:00:30 +0800
-Message-ID: <1347951631-1592-4-git-send-email-aaron.lu@intel.com>
-References: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:32964 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757060Ab2IRHBD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Sep 2012 03:01:03 -0400
-In-Reply-To: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Oliver Neukum <oneukum@suse.de>
+Subject: Re: [PATCH v2 1/4] scsi: introduce sync_before_stop flag
+Date: Tue, 18 Sep 2012 09:30:11 +0200
+Message-ID: <1676757.rqQnA7IDdg@linux-lqwf.site>
+References: <1347951631-1592-1-git-send-email-aaron.lu@intel.com> <1347951631-1592-2-git-send-email-aaron.lu@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1347951631-1592-2-git-send-email-aaron.lu@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Oliver Neukum <oneukum@suse.de>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
 
-The ready_to_power_off flag is used to give indication to ATA layer
-if this device's power can be removed after runtime suspended from the
-perspective of scsi driver.
+On Tuesday 18 September 2012 15:00:28 Aaron Lu wrote:
+> When scsi device received stop command, it will take care of its
+> internal cache before enters stopped power condition. This command is
+> translated to standby immediate in libata-scsi, but standby doesn't
+> imply flush cache for ATA device, so to issue stop command to ATA
+> device, an additional flush cache has to be issued.
 
-It is introduced to support zero power ODD. When ODD is runtime
-suspended, it may not be OK to remove its power.
+Why not just set WCE?
 
-But for disk, there doesn't exist a scenario that when the disk is
-runtime suspended, it can't be powered off.
-
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/scsi/sd.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 7b0f07a..009d30c 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2638,6 +2638,7 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
- 		  sdp->removable ? "removable " : "");
-+	sdp->ready_to_power_off = 1;
- 	scsi_autopm_put_device(sdp);
- 	put_device(&sdkp->dev);
- }
--- 
-1.7.12.21.g871e293
+	Regards
+		Oliver
 
