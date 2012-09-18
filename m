@@ -1,148 +1,182 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
-Date: Tue, 18 Sep 2012 11:54:38 -0600
-Message-ID: <CAErSpo7WwwB3ZO9g4WjQZKcfXAP0tKuXWKn=UTw1mDGJyX6=vQ@mail.gmail.com>
-References: <505456FD.6040801@huawei.com> <CAErSpo6OkAV-wwKnpMRAvisQ_Jj=w9dxLbO3JxkX2A_Vd8QX=Q@mail.gmail.com>
- <50571243.4050001@huawei.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 2/8] block: Consolidate command flag and queue limit
+ checks for merges
+Date: Tue, 18 Sep 2012 13:59:21 -0400
+Message-ID: <20120918175921.GA8960@redhat.com>
+References: <1347985172-2495-1-git-send-email-martin.petersen@oracle.com>
+ <1347985172-2495-3-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <50571243.4050001@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, PCI <linux-pci@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:63321 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753006Ab2IRR71 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Sep 2012 13:59:27 -0400
+Content-Disposition: inline
+In-Reply-To: <1347985172-2495-3-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, axboe@kernel.dk, shli@kernel.org
 
-On Mon, Sep 17, 2012 at 6:06 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2012/9/16 11:30, Bjorn Helgaas wrote:
->> On Sat, Sep 15, 2012 at 4:22 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> Hi all,
->>>    I encountered a very strange problem when I hot plug a fiber channel card(using qla2xxx driver).
->>> I did the hotplug in arch x86 machine, using pciehp driver for hotplug, this platform supports pci hot-plug triggering from both
->>> sysfs and attention button. If a hot-plug slot is empty when system boot-up, then hotplug FC card in this slot is ok.
->>> If a hot-plug slot has been embeded a FC card when system boot-up, hot-remove this card is ok, but hot-add this card will fail.
->>> I used
->>> #modprobe qla2xxx ql2xextended_error_logging=0x7fffffff
->>> to get all probe info. As bellow:
->>>
->>> Can anyone give me any suggestion for this problem?
->>
->> It sounds like you did this:
->>
->>   1) Power down system
->>   2) Remove FC card from slot
->>   3) Boot system
->>   4) Hot-add FC card
->>   5) Load qla2xxx driver
->>   6) qla2xxx driver claims FC card
->>   7) FC card works correctly
->>
->>   8) Power down system
->>   9) Install FC card in slot
->>  10) Boot system
->>  11) Load qla2xxx driver
->>  12) qla2xxx driver claims FC card
->>  13) FC card works correctly
-> I rmmod qla2xxx driver here and modprobe qla2xxx ql2xextended_error_logging=0x1e400000 again for get errors info
-> Also I modprobe pciehp pciehp_debug=1 for getting debug info
->>  14) Hot-remove card
->>  15) Hot-add card
->>  16) qla2xxx driver claims FC card
->>  17) FC card does not work
->>
->> and I assume the dmesg log you included is just from steps 15 and 16
->> (correct me if I'm wrong).
->>
->> It would be useful to see the entire log showing all these events so
->> we can compare the working cases with the non-working one.  If you use
->> the pciehp_debug module parameter, we should also see some pciehp
->> events that would help me understand that driver.
->>
->
-> Hi Bjorn,
->    Thanks for your comments very much!
->
-> My steps:
-> 1) power down system
-> 2) Install FC card in slot
-> 3) Boot system
-> 4) Load qla2xxx driver
-> 5) qla2xxx driver claims FC card
-> 6) FC card works correctly(at least probe return ok, I don't know qla2xxx driver much..)
-> 7) rmmod qla2xxx
-> 8) modprobe qla2xxx ql2xextended_error_logging=0x1e400000(for get errors info)
-> 9) modprobe pciehp pciehp_debug=1
-> 10) Hot-remove card
-> 11) Hot-add card
-> 12) qla2xxx driver claims FC card fail(probe return fail, setup chip fail)
-> --------------------------------------so this is failed situation----------
->
-> --------------------------------------continue to hot-add fc card into empty slot(also support pci hp)
-> 13) Install FC card in empty slot
-> 14) Hot-add card
-> 15) qla2xxx driver claims FC card ok (probe return ok)
->
-> btw:
-> If fc card firmware version 4.03, everything is ok (hot-plug in any slots(empty or not))
-> fc card firmware version is 4.04 or 5.04 , situation as same as 1)--->12)
+On Tue, Sep 18 2012 at 12:19pm -0400,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-Thanks.  The FW change is a good clue.  If everything works with
-version 4.03, but it doesn't work with version 4.04, it's likely to be
-a FW problem, not a Linux PCI core problem.
+> From: "Martin K. Petersen" <martin.petersen@oracle.com>
+> 
+>  - blk_check_merge_flags() verifies that cmd_flags / bi_rw are
+>    compatible. This function is called for both req-req and req-bio
+>    merging.
+> 
+>  - blk_rq_get_max_sectors() and blk_queue_get_max_sectors() can be used
+>    to query the maximum sector count for a given request or queue. The
+>    calls will return the right value from the queue limits given the
+>    type of command (RW, discard, write same, etc.)
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>  block/blk-core.c       |    3 +--
+>  block/blk-merge.c      |   30 ++++++++++++------------------
+>  include/linux/blkdev.h |   31 +++++++++++++++++++++++++++++++
+>  3 files changed, 44 insertions(+), 20 deletions(-)
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 5cc2929..33eded0 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -1866,8 +1866,7 @@ int blk_rq_check_limits(struct request_queue *q, struct request *rq)
+>  	if (!rq_mergeable(rq))
+>  		return 0;
+>  
+> -	if (blk_rq_sectors(rq) > queue_max_sectors(q) ||
+> -	    blk_rq_bytes(rq) > queue_max_hw_sectors(q) << 9) {
+> +	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, rq->cmd_flags)) {
+>  		printk(KERN_ERR "%s: over max size limit.\n", __func__);
+>  		return -EIO;
+>  	}
+> diff --git a/block/blk-merge.c b/block/blk-merge.c
+> index 86710ca..642b862 100644
+> --- a/block/blk-merge.c
+> +++ b/block/blk-merge.c
+> @@ -275,14 +275,8 @@ no_merge:
+>  int ll_back_merge_fn(struct request_queue *q, struct request *req,
+>  		     struct bio *bio)
+>  {
+> -	unsigned short max_sectors;
+> -
+> -	if (unlikely(req->cmd_type == REQ_TYPE_BLOCK_PC))
+> -		max_sectors = queue_max_hw_sectors(q);
+> -	else
+> -		max_sectors = queue_max_sectors(q);
+> -
+> -	if (blk_rq_sectors(req) + bio_sectors(bio) > max_sectors) {
+> +	if (blk_rq_sectors(req) + bio_sectors(bio) >
+> +	    blk_rq_get_max_sectors(req)) {
+>  		req->cmd_flags |= REQ_NOMERGE;
+>  		if (req == q->last_merge)
+>  			q->last_merge = NULL;
+> @@ -299,15 +293,8 @@ int ll_back_merge_fn(struct request_queue *q, struct request *req,
+>  int ll_front_merge_fn(struct request_queue *q, struct request *req,
+>  		      struct bio *bio)
+>  {
+> -	unsigned short max_sectors;
+> -
+> -	if (unlikely(req->cmd_type == REQ_TYPE_BLOCK_PC))
+> -		max_sectors = queue_max_hw_sectors(q);
+> -	else
+> -		max_sectors = queue_max_sectors(q);
+> -
+> -
+> -	if (blk_rq_sectors(req) + bio_sectors(bio) > max_sectors) {
+> +	if (blk_rq_sectors(req) + bio_sectors(bio) >
+> +	    blk_rq_get_max_sectors(req)) {
+>  		req->cmd_flags |= REQ_NOMERGE;
+>  		if (req == q->last_merge)
+>  			q->last_merge = NULL;
+> @@ -338,7 +325,8 @@ static int ll_merge_requests_fn(struct request_queue *q, struct request *req,
+>  	/*
+>  	 * Will it become too large?
+>  	 */
+> -	if ((blk_rq_sectors(req) + blk_rq_sectors(next)) > queue_max_sectors(q))
+> +	if ((blk_rq_sectors(req) + blk_rq_sectors(next)) >
+> +	    blk_rq_get_max_sectors(req))
+>  		return 0;
+>  
+>  	total_phys_segments = req->nr_phys_segments + next->nr_phys_segments;
+> @@ -417,6 +405,9 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+>  	if (!rq_mergeable(req) || !rq_mergeable(next))
+>  		return 0;
+>  
+> +	if (!blk_check_merge_flags(req->cmd_flags, next->cmd_flags))
+> +		return 0;
+> +
+>  	/*
+>  	 * not contiguous
+>  	 */
+> @@ -512,6 +503,9 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+>  	if (!rq_mergeable(rq) || !bio_mergeable(bio))
+>  		return false;
+>  
+> +	if (!blk_check_merge_flags(rq->cmd_flags, bio->bi_rw))
+> +		return false;
+> +
+>  	/* different data direction or already started, don't merge */
+>  	if (bio_data_dir(bio) != rq_data_dir(rq))
+>  		return false;
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 3a6fea7..90f7abe 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -605,6 +605,18 @@ static inline bool rq_mergeable(struct request *rq)
+>  	return true;
+>  }
+>  
+> +static inline bool blk_check_merge_flags(unsigned int flags1,
+> +					 unsigned int flags2)
+> +{
+> +	if ((flags1 & REQ_DISCARD) != (flags2 & REQ_DISCARD))
+> +		return false;
+> +
+> +	if ((flags1 & REQ_SECURE) != (flags2 & REQ_SECURE))
+> +		return false;
+> +
+> +	return true;
+> +}
+> +
+>  /*
+>   * q->prep_rq_fn return values
+>   */
+> @@ -800,6 +812,25 @@ static inline unsigned int blk_rq_cur_sectors(const struct request *rq)
+>  	return blk_rq_cur_bytes(rq) >> 9;
+>  }
+>  
+> +static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
+> +						     unsigned int cmd_flags)
+> +{
+> +	if (unlikely(cmd_flags & REQ_DISCARD))
+> +		return q->limits.max_discard_sectors;
+> +
+> +	return q->limits.max_sectors;
 
-Here's what I see from your logs.  In slot 4 (bus 08), the card was
-present before boot, you removed it, re-added it, and it failed after
-being re-added.  Slot 3 (bus 06) was empty at boot, you hot-added a
-card, and it worked.  Here are the resources available on those two
-buses and the boot-time config of the first device in slot 4:
+Any reason not to use queue_max_sectors() here?
 
-      pci 0000:00:07.0: PCI bridge to [bus 06-07]
-      pci 0000:00:07.0:   bridge window [io  0xc000-0xcfff]
-      pci 0000:00:07.0:   bridge window [mem 0xf9000000-0xf9ffffff]
-      pci 0000:00:07.0:   bridge window [mem 0xf1000000-0xf1ffffff 64bit pref]
-      pci 0000:00:09.0: PCI bridge to [bus 08-09]
-      pci 0000:00:09.0:   bridge window [io  0xb000-0xbfff]
-      pci 0000:00:09.0:   bridge window [mem 0xf8000000-0xf8ffffff]
-      pci 0000:00:09.0:   bridge window [mem 0xf0000000-0xf0ffffff 64bit pref]
-      pci 0000:08:00.0: [1077:2532] type 00 class 0x0c0400
-      pci 0000:08:00.0: reg 10: [io  0xb100-0xb1ff]
-      pci 0000:08:00.0: reg 14: [mem 0xf8084000-0xf8087fff 64bit]
-      pci 0000:08:00.0: reg 30: [mem 0xf8040000-0xf807ffff pref]
+> +}
+> +
+> +static inline unsigned int blk_rq_get_max_sectors(struct request *rq)
+> +{
+> +	struct request_queue *q = rq->q;
+> +
+> +	if (unlikely(rq->cmd_type == REQ_TYPE_BLOCK_PC))
+> +		return q->limits.max_hw_sectors;
 
-After you remove and re-add the card in slot 4, it starts with
-uninitialized BARs as expected, then we assign resources to it.  It's
-sort of interesting that the BIOS had originally put the ROM (reg 30)
-in the non-prefetchable window, while after the hot-add, Linux places
-it in the prefetchable window.  Either should work, and in fact the
-card you added in slot 3 *does* work with its ROM in the prefetchable
-window.
+Or queue_max_hw_sectors() here?
 
-      pci 0000:08:00.0: [1077:2532] type 00 class 0x0c0400
-      pci 0000:08:00.0: reg 10: [io  0x0000-0x00ff]
-      pci 0000:08:00.0: reg 14: [mem 0x00000000-0x00003fff 64bit]
-      pci 0000:08:00.0: reg 30: [mem 0x00000000-0x0003ffff pref]
-      pci 0000:08:00.0: BAR 0: assigned [io  0xb000-0xb0ff]
-      pci 0000:08:00.0: BAR 1: assigned [mem 0xf8000000-0xf8003fff 64bit]
-      pci 0000:08:00.0: BAR 6: assigned [mem 0xf0000000-0xf003ffff pref]
-      qla2xxx [0000:08:00.0]-0098:10: Failed to load segment 0 of firmware.
-      qla2xxx [0000:08:00.0]-d008:10: No buffer available for dump.
-      qla2xxx [0000:08:00.0]-008f:10: Failed to load segment 0 of firmware.
-      qla2xxx [0000:08:00.0]-00cf:10: Setup chip ****FAILED****.
+> +	return blk_queue_get_max_sectors(q, rq->cmd_flags);
+> +}
+> +
 
-When you hot-add the card in slot 3, it starts with uninitialized BARs
-as expected, but again, we assign valid resources to it:
+But I don't feel that strongly on these nits.  So regardless:
 
-      pci 0000:06:00.0: [1077:2532] type 00 class 0x0c0400
-      pci 0000:06:00.0: reg 10: [io  0x0000-0x00ff]
-      pci 0000:06:00.0: reg 14: [mem 0x00000000-0x00003fff 64bit]
-      pci 0000:06:00.0: reg 30: [mem 0x00000000-0x0003ffff pref]
-      pci 0000:06:00.0: BAR 0: assigned [io  0xc000-0xc0ff]
-      pci 0000:06:00.0: BAR 1: assigned [mem 0xf9000000-0xf9003fff 64bit]
-      pci 0000:06:00.0: BAR 6: assigned [mem 0xf1000000-0xf103ffff pref]
+Acked-by: Mike Snitzer <snitzer@redhat.com>
 
-I don't see anything wrong from a PCI perspective.  I suspect
-something strange in the card firmware.
-
-If you do figure out something wrong in PCI, let me know.
-
-Bjorn
+(thanks for getting this patchset together Martin)
