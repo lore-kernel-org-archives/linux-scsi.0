@@ -1,40 +1,41 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v2 0/4] Support runtime power off of HDD
-Date: Tue, 18 Sep 2012 15:00:27 +0800
-Message-ID: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:32964 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756984Ab2IRHAw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Sep 2012 03:00:52 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH v2 1/4] scsi: introduce sync_before_stop flag
+Date: Tue, 18 Sep 2012 15:00:28 +0800
+Message-ID: <1347951631-1592-2-git-send-email-aaron.lu@intel.com>
+References: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Oliver Neukum <oneukum@suse.de>
 Cc: Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
+List-Id: linux-scsi@vger.kernel.org
 
-v2:
-Introduced a new flag sync_before_stop as scsi_stop =
-ata_flush_cache + ata_standby_immediate. This flag specifies
-that when stop command is to send to this device, please issue
-an additional synchronize cache command to it before the stop
-command.
-Put device into stop power condition on runtime suspend.
+When scsi device received stop command, it will take care of its
+internal cache before enters stopped power condition. This command is
+translated to standby immediate in libata-scsi, but standby doesn't
+imply flush cache for ATA device, so to issue stop command to ATA
+device, an additional flush cache has to be issued.
 
-v1:
-This patch set is baed on v7 ZPODD patches.
+Introduce this flag so that when we are to stop the ATA disk in scsi
+disk driver, also flush its internal cache.
 
-Aaron Lu (4):
-  scsi: introduce sync_before_stop flag
-  scsi: sd: enter stop power condition on runtime suspend
-  scsi: sd: set ready_to_power_off for scsi disk
-  libata: acpi: set can_power_off for both ODD and HDD
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+---
+ include/scsi/scsi_device.h | 1 +
+ 1 file changed, 1 insertion(+)
 
- drivers/ata/libata-acpi.c  | 25 +++++++++++++++++--------
- drivers/ata/libata-scsi.c  |  1 +
- drivers/scsi/sd.c          | 11 +++++++++--
- include/scsi/scsi_device.h |  1 +
- 4 files changed, 28 insertions(+), 10 deletions(-)
-
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 4712aa1..26c3621 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -160,6 +160,7 @@ struct scsi_device {
+ 	unsigned ready_to_power_off:1;	/* Device is ready to be powered off */
+ 	unsigned powered_off:1;	/* Device is powered off */
+ 	unsigned may_power_off:1; /* Power off is allowed by user */
++	unsigned sync_before_stop:1; /* Sync cache before stop */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
 -- 
 1.7.12.21.g871e293
 
