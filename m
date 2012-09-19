@@ -1,23 +1,25 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] scsi_dh_alua: Enable STPG for unavailable ports
-Date: Wed, 19 Sep 2012 10:49:18 -0500
-Message-ID: <5059E97E.1000500@cs.wisc.edu>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: scsi_dh_alua: Enable STPG for unavailable ports
+Date: Wed, 19 Sep 2012 13:36:46 -0400
+Message-ID: <20120919173645.GA17612@redhat.com>
 References: <50374499.5010808@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:33945 "EHLO sabe.cs.wisc.edu"
+Received: from mx1.redhat.com ([209.132.183.28]:43384 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756008Ab2ISPte (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Sep 2012 11:49:34 -0400
+	id S932308Ab2ISRhA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Sep 2012 13:37:00 -0400
+Content-Disposition: inline
 In-Reply-To: <50374499.5010808@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Mike Snitzer <snitzer@redhat.com>, Babu Moger <babu.moger@netapp.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Babu Moger <babu.moger@netapp.com>
 
-On 08/24/2012 04:08 AM, Bart Van Assche wrote:
+On Fri, Aug 24 2012 at  5:08am -0400,
+Bart Van Assche <bvanassche@acm.org> wrote:
+
 > A quote from SPC-4: "While in the unavailable primary target port
 > asymmetric access state, the device server shall support those of
 > the following commands that it supports while in the active/optimized
@@ -30,32 +32,7 @@ On 08/24/2012 04:08 AM, Bart Van Assche wrote:
 > Cc: Mike Snitzer <snitzer@redhat.com>
 > Cc: Babu Moger <babu.moger@netapp.com>
 > Cc: <stable@vger.kernel.org>
-> ---
->  drivers/scsi/device_handler/scsi_dh_alua.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 08d80a6..a05d469 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -641,8 +641,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
->  		h->state = TPGS_STATE_STANDBY;
->  		break;
->  	case TPGS_STATE_OFFLINE:
-> -	case TPGS_STATE_UNAVAILABLE:
-> -		/* Path unusable for unavailable/offline */
-> +		/* Path unusable */
->  		err = SCSI_DH_DEV_OFFLINED;
->  		break;
->  	default:
-> 
 
-Hey, was this patch ok Hannes and James and others?
+Looks good to me.
 
-I see bb2c94a3a6ad37fe7d34f369295bcdf5387e264f was merged, but this one
-was not.
-
-I was thinking this might have got missed because it has the same patch
-description as  bb2c94a3a6ad37fe7d34f369295bcdf5387e264f, so it is
-confusion, but they are different patches. One fixes alua_rtpg and one
-fixes alua_activate, but both are needed.
+Acked-by: Mike Snitzer <snitzer@redhat.com>
