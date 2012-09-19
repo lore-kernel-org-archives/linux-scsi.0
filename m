@@ -1,165 +1,189 @@
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v7 0/6] ZPODD patches
-Date: Wed, 19 Sep 2012 16:19:32 +0100
-Message-ID: <1348067972.21322.218.camel@shinybook.infradead.org>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
-	 <20120919080328.GA4283@mint-spring.sh.intel.com>
-	 <1348057667.2479.33.camel@dabdike.int.hansenpartnership.com>
+From: Jiang Liu <liuj97@gmail.com>
+Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
+Date: Wed, 19 Sep 2012 23:31:44 +0800
+Message-ID: <5059E560.5060006@gmail.com>
+References: <505456FD.6040801@huawei.com> <CAErSpo6OkAV-wwKnpMRAvisQ_Jj=w9dxLbO3JxkX2A_Vd8QX=Q@mail.gmail.com> <50571243.4050001@huawei.com> <CAErSpo7WwwB3ZO9g4WjQZKcfXAP0tKuXWKn=UTw1mDGJyX6=vQ@mail.gmail.com> <505924E4.5010502@huawei.com> <CAErSpo5PuwG1pvCRBxOUoyK-_ajg-AZkkuCUxeGbkb6TyBP_Kw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature";
-	boundary="=-RSqN0yT0Ef7AlFEdJtwp"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1348057667.2479.33.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <CAErSpo5PuwG1pvCRBxOUoyK-_ajg-AZkkuCUxeGbkb6TyBP_Kw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>, Jon Mason <jdmason@kudzu.us>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, PCI <linux-pci@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On 09/19/2012 09:39 PM, Bjorn Helgaas wrote:
+> On Tue, Sep 18, 2012 at 7:50 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> On 2012/9/19 1:54, Bjorn Helgaas wrote:
+>>> On Mon, Sep 17, 2012 at 6:06 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>> On 2012/9/16 11:30, Bjorn Helgaas wrote:
+>>>>> On Sat, Sep 15, 2012 at 4:22 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>>>> Hi all,
+>>>>>>    I encountered a very strange problem when I hot plug a fiber channel card(using qla2xxx driver).
+>>>>>> I did the hotplug in arch x86 machine, using pciehp driver for hotplug, this platform supports pci hot-plug triggering from both
+>>>>>> sysfs and attention button. If a hot-plug slot is empty when system boot-up, then hotplug FC card in this slot is ok.
+>>>>>> If a hot-plug slot has been embeded a FC card when system boot-up, hot-remove this card is ok, but hot-add this card will fail.
+>>>>>> I used
+>>>>>> #modprobe qla2xxx ql2xextended_error_logging=0x7fffffff
+>>>>>> to get all probe info. As bellow:
+>>>>>>
+>>>>>> Can anyone give me any suggestion for this problem?
+>>>>>
+>>>>> It sounds like you did this:
+>>>>>
+>>>>>   1) Power down system
+>>>>>   2) Remove FC card from slot
+>>>>>   3) Boot system
+>>>>>   4) Hot-add FC card
+>>>>>   5) Load qla2xxx driver
+>>>>>   6) qla2xxx driver claims FC card
+>>>>>   7) FC card works correctly
+>>>>>
+>>>>>   8) Power down system
+>>>>>   9) Install FC card in slot
+>>>>>  10) Boot system
+>>>>>  11) Load qla2xxx driver
+>>>>>  12) qla2xxx driver claims FC card
+>>>>>  13) FC card works correctly
+>>>> I rmmod qla2xxx driver here and modprobe qla2xxx ql2xextended_error_logging=0x1e400000 again for get errors info
+>>>> Also I modprobe pciehp pciehp_debug=1 for getting debug info
+>>>>>  14) Hot-remove card
+>>>>>  15) Hot-add card
+>>>>>  16) qla2xxx driver claims FC card
+>>>>>  17) FC card does not work
+>>>>>
+>>>>> and I assume the dmesg log you included is just from steps 15 and 16
+>>>>> (correct me if I'm wrong).
+>>>>>
+>>>>> It would be useful to see the entire log showing all these events so
+>>>>> we can compare the working cases with the non-working one.  If you use
+>>>>> the pciehp_debug module parameter, we should also see some pciehp
+>>>>> events that would help me understand that driver.
+>>>>>
+>>>>
+>>>> Hi Bjorn,
+>>>>    Thanks for your comments very much!
+>>>>
+>>>> My steps:
+>>>> 1) power down system
+>>>> 2) Install FC card in slot
+>>>> 3) Boot system
+>>>> 4) Load qla2xxx driver
+>>>> 5) qla2xxx driver claims FC card
+>>>> 6) FC card works correctly(at least probe return ok, I don't know qla2xxx driver much..)
+>>>> 7) rmmod qla2xxx
+>>>> 8) modprobe qla2xxx ql2xextended_error_logging=0x1e400000(for get errors info)
+>>>> 9) modprobe pciehp pciehp_debug=1
+>>>> 10) Hot-remove card
+>>>> 11) Hot-add card
+>>>> 12) qla2xxx driver claims FC card fail(probe return fail, setup chip fail)
+>>>> --------------------------------------so this is failed situation----------
+>>>>
+>>>> --------------------------------------continue to hot-add fc card into empty slot(also support pci hp)
+>>>> 13) Install FC card in empty slot
+>>>> 14) Hot-add card
+>>>> 15) qla2xxx driver claims FC card ok (probe return ok)
+>>>>
+>>>> btw:
+>>>> If fc card firmware version 4.03, everything is ok (hot-plug in any slots(empty or not))
+>>>> fc card firmware version is 4.04 or 5.04 , situation as same as 1)--->12)
+>>>
+>>> Thanks.  The FW change is a good clue.  If everything works with
+>>> version 4.03, but it doesn't work with version 4.04, it's likely to be
+>>> a FW problem, not a Linux PCI core problem.
+>>>
+>>> Here's what I see from your logs.  In slot 4 (bus 08), the card was
+>>> present before boot, you removed it, re-added it, and it failed after
+>>> being re-added.  Slot 3 (bus 06) was empty at boot, you hot-added a
+>>> card, and it worked.  Here are the resources available on those two
+>>> buses and the boot-time config of the first device in slot 4:
+>>>
+>>>       pci 0000:00:07.0: PCI bridge to [bus 06-07]
+>>>       pci 0000:00:07.0:   bridge window [io  0xc000-0xcfff]
+>>>       pci 0000:00:07.0:   bridge window [mem 0xf9000000-0xf9ffffff]
+>>>       pci 0000:00:07.0:   bridge window [mem 0xf1000000-0xf1ffffff 64bit pref]
+>>>       pci 0000:00:09.0: PCI bridge to [bus 08-09]
+>>>       pci 0000:00:09.0:   bridge window [io  0xb000-0xbfff]
+>>>       pci 0000:00:09.0:   bridge window [mem 0xf8000000-0xf8ffffff]
+>>>       pci 0000:00:09.0:   bridge window [mem 0xf0000000-0xf0ffffff 64bit pref]
+>>>       pci 0000:08:00.0: [1077:2532] type 00 class 0x0c0400
+>>>       pci 0000:08:00.0: reg 10: [io  0xb100-0xb1ff]
+>>>       pci 0000:08:00.0: reg 14: [mem 0xf8084000-0xf8087fff 64bit]
+>>>       pci 0000:08:00.0: reg 30: [mem 0xf8040000-0xf807ffff pref]
+>>>
+>>> After you remove and re-add the card in slot 4, it starts with
+>>> uninitialized BARs as expected, then we assign resources to it.  It's
+>>> sort of interesting that the BIOS had originally put the ROM (reg 30)
+>>> in the non-prefetchable window, while after the hot-add, Linux places
+>>> it in the prefetchable window.  Either should work, and in fact the
+>>> card you added in slot 3 *does* work with its ROM in the prefetchable
+>>> window.
+>>>
+>>>       pci 0000:08:00.0: [1077:2532] type 00 class 0x0c0400
+>>>       pci 0000:08:00.0: reg 10: [io  0x0000-0x00ff]
+>>>       pci 0000:08:00.0: reg 14: [mem 0x00000000-0x00003fff 64bit]
+>>>       pci 0000:08:00.0: reg 30: [mem 0x00000000-0x0003ffff pref]
+>>>       pci 0000:08:00.0: BAR 0: assigned [io  0xb000-0xb0ff]
+>>>       pci 0000:08:00.0: BAR 1: assigned [mem 0xf8000000-0xf8003fff 64bit]
+>>>       pci 0000:08:00.0: BAR 6: assigned [mem 0xf0000000-0xf003ffff pref]
+>>>       qla2xxx [0000:08:00.0]-0098:10: Failed to load segment 0 of firmware.
+>>>       qla2xxx [0000:08:00.0]-d008:10: No buffer available for dump.
+>>>       qla2xxx [0000:08:00.0]-008f:10: Failed to load segment 0 of firmware.
+>>>       qla2xxx [0000:08:00.0]-00cf:10: Setup chip ****FAILED****.
+>>>
+>>> When you hot-add the card in slot 3, it starts with uninitialized BARs
+>>> as expected, but again, we assign valid resources to it:
+>>>
+>>>       pci 0000:06:00.0: [1077:2532] type 00 class 0x0c0400
+>>>       pci 0000:06:00.0: reg 10: [io  0x0000-0x00ff]
+>>>       pci 0000:06:00.0: reg 14: [mem 0x00000000-0x00003fff 64bit]
+>>>       pci 0000:06:00.0: reg 30: [mem 0x00000000-0x0003ffff pref]
+>>>       pci 0000:06:00.0: BAR 0: assigned [io  0xc000-0xc0ff]
+>>>       pci 0000:06:00.0: BAR 1: assigned [mem 0xf9000000-0xf9003fff 64bit]
+>>>       pci 0000:06:00.0: BAR 6: assigned [mem 0xf1000000-0xf103ffff pref]
+>>>
+>>> I don't see anything wrong from a PCI perspective.  I suspect
+>>> something strange in the card firmware.
+>>>
+>>> If you do figure out something wrong in PCI, let me know.
+>>>
+>>> Bjorn
+>>>
+>>
+>> Hi Bjorn,
+>>    Thanks for your detailed analysis very much!
+>>
+>> We compared the two situations after BIOS initialization, and found Max Payload Size in DEVCTRL is 256B
+>> if FC card had been installed, if the slot is empty, Max Payload Size is 128B. We force it to be 128B when
+>> FC card installed when system boot up. Finally pci hotplug becomes ok. So I suspect maybe our PCIe hardware
+>> has problem supporting 256B.
+> 
+> Ah, this sounds like something I've been worried about for a while,
+> i.e., do we handle MPS correctly when we hot-add devices?
+> 
+> Yijing, I'm not quite clear on what you're observing.  I guess you're
+> saying that if an FC card is installed at boot, the BIOS sets MPS to
+> 256, and that if no FC card is installed, the BIOS sets MPS to 128?
+> You haven't mentioned any Linux boot options, so I assume you haven't
+> tried any.  Does "pci=pcie_bus_safe" make any difference?
+> 
+> Jon, here's a pointer to the beginning of the thread:
+> http://marc.info/?l=linux-pci&m=134770460302298&w=2 (full dmesg log at
+> http://marc.info/?l=linux-scsi&m=134788365823217&w=2).  I'm not sure
+> we have enough in the dmesg log to diagnose an issue like this.  I
+> wonder if it would be useful to log the current setting, so we could
+> notice BIOS default differences like this one.
 
---=-RSqN0yT0Ef7AlFEdJtwp
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2012-09-19 at 13:27 +0100, James Bottomley wrote:
-> I think we could do this with a couple of flags sitting inside struct
-> device itself: one for pm state and capabilities defined at a generic
-> level and one for device specific pm state.  The latter would be for
-> things like the door lock information which is very specific to CDs
-> (although not specific to SCSI CDs).  Alternatively, even if we can't
-> use these capabilities at the generic pm level, we still need an
-> internal state set of flags because power state stuff traverses the
-> stack and struct device is the only universal object in that stack.
-
-FWIW the SATA Device Sleep support, which is currently only used (in a
-patch which is pending) automatically as an extension of the AHCI link
-power management, can also be triggered manually by a GPIO line; I've
-got a platform where it's done with an ACPI call. I suspect we'll see
-that kind of manual setup on a few embedded platforms too.
-
-If we're working on hooking this up through the device layers, perhaps
-that's worth taking into consideration?
-
---=20
-David Woodhouse                            Open Source Technology Centre
-David.Woodhouse@intel.com                              Intel Corporation
-
-
-
---=-RSqN0yT0Ef7AlFEdJtwp
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIUbjCCBjQw
-ggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0
-Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxKTAn
-BgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3MTAyNDIxMDE1NVoX
-DTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSsw
-KQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFy
-dENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTCCASIwDQYJKoZIhvcN
-AQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOrlr6KMoOMpohBllVHrdRvEg/q6r8jR+EK
-75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSMzR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC
-+y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxD
-z2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSDkOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr
-/+N2JLKutIxMYqQOJebr/f/h5t95m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0w
-ggGpMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFc
-fH6WNU7y1LhRgjAfBgNVHSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRa
-MFgwJwYIKwYBBQUHMAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYh
-aHR0cDovL3d3dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6
-Ly93d3cuc3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5j
-b20vc2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
-dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93d3cu
-c3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqDCH14qywG
-XLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy6QMVQjbbMXlt
-UfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPIzKKR9tQW8gGK+2+R
-HxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKfKSETEPrHh7p5shuuNktv
-sv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HORz9v3vQwR4e3ksLc2JZOAFK+s
-sS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9sIPP7ON0fz095HdThKjiVJe6vofq
-+n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCieuoBJ9OlqmsVWQvifIYf40dJPZkk9YgGT
-zWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7tw1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGq
-Up/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQG2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb1
-9mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIHFzCCBf+g
-AwIBAgIDBCZ6MA0GCSqGSIb3DQEBBQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRD
-b20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYG
-A1UEAxMvU3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcN
-MTIwNTAxMTI1ODI3WhcNMTMwNTAzMTEzNzIwWjBdMRkwFwYDVQQNExA4Y1VOSzUzMTc0ODRYRjk3
-MRwwGgYDVQQDDBNkd213MkBpbmZyYWRlYWQub3JnMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZy
-YWRlYWQub3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyYe7wo6MrtrB4uIGGbrY
-4IifY/Xsq22pSv605yganL0+uyUdd8rCjrYlH6Q/ra5TVJCQFTgzaepkuqPQc79DC/Cxmzm6Qo+s
-wLZy868oFsccsVokL2bPAWIPaRXfNPJKkYR1FTWQfZpWJVQmT+sPf1XFUullVBAK+d9RztopyacI
-xWoZ/W/Cmv7mseQbttYTtGKJa0btX73nsQRWl6SgErWXo59zg9friCLTy1GXMXJYB8H+PtnuwX0w
-MrAvWDdX1ABgIlA17W3FraCn0eW15ZM46eyu0/amGzJZNtemCWF73P7BAijzeV1jNmiJFXdZ0DT0
-w+hmtMO9PxdDUyt78QIDAQABo4IDrjCCA6owCQYDVR0TBAIwADALBgNVHQ8EBAMCBLAwHQYDVR0l
-BBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMB0GA1UdDgQWBBTkfe5UOr3PcirsjApibyyUEfsyRzAf
-BgNVHSMEGDAWgBRTcu2SnODaywFcfH6WNU7y1LhRgjAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRl
-YWQub3JnMIICIQYDVR0gBIICGDCCAhQwggIQBgsrBgEEAYG1NwECAjCCAf8wLgYIKwYBBQUHAgEW
-Imh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
-d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwgfcGCCsGAQUFBwICMIHqMCcWIFN0YXJ0
-Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MAMCAQEagb5UaGlzIGNlcnRpZmljYXRlIHdhcyBp
-c3N1ZWQgYWNjb3JkaW5nIHRvIHRoZSBDbGFzcyAxIFZhbGlkYXRpb24gcmVxdWlyZW1lbnRzIG9m
-IHRoZSBTdGFydENvbSBDQSBwb2xpY3ksIHJlbGlhbmNlIG9ubHkgZm9yIHRoZSBpbnRlbmRlZCBw
-dXJwb3NlIGluIGNvbXBsaWFuY2Ugb2YgdGhlIHJlbHlpbmcgcGFydHkgb2JsaWdhdGlvbnMuMIGc
-BggrBgEFBQcCAjCBjzAnFiBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgECGmRM
-aWFiaWxpdHkgYW5kIHdhcnJhbnRpZXMgYXJlIGxpbWl0ZWQhIFNlZSBzZWN0aW9uICJMZWdhbCBh
-bmQgTGltaXRhdGlvbnMiIG9mIHRoZSBTdGFydENvbSBDQSBwb2xpY3kuMDYGA1UdHwQvMC0wK6Ap
-oCeGJWh0dHA6Ly9jcmwuc3RhcnRzc2wuY29tL2NydHUxLWNybC5jcmwwgY4GCCsGAQUFBwEBBIGB
-MH8wOQYIKwYBBQUHMAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9zdWIvY2xhc3MxL2NsaWVu
-dC9jYTBCBggrBgEFBQcwAoY2aHR0cDovL2FpYS5zdGFydHNzbC5jb20vY2VydHMvc3ViLmNsYXNz
-MS5jbGllbnQuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3RhcnRzc2wuY29tLzANBgkq
-hkiG9w0BAQUFAAOCAQEAqDU1FKifNtCFJbLnvOi1BLRfk7mut55PMtPSZLJ4/AnG7AjmJnbBI4U5
-DELwvVq3mIpwUpGqZUkqkZMEfBPIbfq517UZB3h4iANtqif+ULfTLhg5XgcK5eF8/T6EtX2c3epq
-ylARdleCbj/0FwiUDvPlTsA6PIN4SCekjRLgjKERrL3heFz+Hteq1rtMAvMkNuyL0/0ijyyg2y45
-NASAl2Afl9SLes/fnoh9nBwzfNQfb6qDYUFpnglfpGrq/0b1NtaOUb2z1SR+H1tKlb8bVJJIdvpu
-mEi27kSRIhzk3h30uTfKkKetgy++ouyldxZ7KZ0PuoLQrBy465EoQLosETCCBxcwggX/oAMCAQIC
-AwQmejANBgkqhkiG9w0BAQUFADCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0
-ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMT
-L1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBMB4XDTEyMDUw
-MTEyNTgyN1oXDTEzMDUwMzExMzcyMFowXTEZMBcGA1UEDRMQOGNVTks1MzE3NDg0WEY5NzEcMBoG
-A1UEAwwTZHdtdzJAaW5mcmFkZWFkLm9yZzEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFk
-Lm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMmHu8KOjK7aweLiBhm62OCIn2P1
-7KttqUr+tOcoGpy9PrslHXfKwo62JR+kP62uU1SQkBU4M2nqZLqj0HO/QwvwsZs5ukKPrMC2cvOv
-KBbHHLFaJC9mzwFiD2kV3zTySpGEdRU1kH2aViVUJk/rD39VxVLpZVQQCvnfUc7aKcmnCMVqGf1v
-wpr+5rHkG7bWE7RiiWtG7V+957EEVpekoBK1l6Ofc4PX64gi08tRlzFyWAfB/j7Z7sF9MDKwL1g3
-V9QAYCJQNe1txa2gp9HlteWTOOnsrtP2phsyWTbXpglhe9z+wQIo83ldYzZoiRV3WdA09MPoZrTD
-vT8XQ1Mre/ECAwEAAaOCA64wggOqMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQG
-CCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQU5H3uVDq9z3Iq7IwKYm8slBH7MkcwHwYDVR0j
-BBgwFoAUU3Ltkpzg2ssBXHx+ljVO8tS4UYIwHgYDVR0RBBcwFYETZHdtdzJAaW5mcmFkZWFkLm9y
-ZzCCAiEGA1UdIASCAhgwggIUMIICEAYLKwYBBAGBtTcBAgIwggH/MC4GCCsGAQUFBwIBFiJodHRw
-Oi8vd3d3LnN0YXJ0c3NsLmNvbS9wb2xpY3kucGRmMDQGCCsGAQUFBwIBFihodHRwOi8vd3d3LnN0
-YXJ0c3NsLmNvbS9pbnRlcm1lZGlhdGUucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBTdGFydENvbSBD
-ZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0ZSB3YXMgaXNzdWVk
-IGFjY29yZGluZyB0byB0aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVpcmVtZW50cyBvZiB0aGUg
-U3RhcnRDb20gQ0EgcG9saWN5LCByZWxpYW5jZSBvbmx5IGZvciB0aGUgaW50ZW5kZWQgcHVycG9z
-ZSBpbiBjb21wbGlhbmNlIG9mIHRoZSByZWx5aW5nIHBhcnR5IG9ibGlnYXRpb25zLjCBnAYIKwYB
-BQUHAgIwgY8wJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwAwIBAhpkTGlhYmls
-aXR5IGFuZCB3YXJyYW50aWVzIGFyZSBsaW1pdGVkISBTZWUgc2VjdGlvbiAiTGVnYWwgYW5kIExp
-bWl0YXRpb25zIiBvZiB0aGUgU3RhcnRDb20gQ0EgcG9saWN5LjA2BgNVHR8ELzAtMCugKaAnhiVo
-dHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9jcnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkG
-CCsGAQUFBzABhi1odHRwOi8vb2NzcC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2Ew
-QgYIKwYBBQUHMAKGNmh0dHA6Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xp
-ZW50LmNhLmNydDAjBgNVHRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcN
-AQEFBQADggEBAKg1NRSonzbQhSWy57zotQS0X5O5rreeTzLT0mSyePwJxuwI5iZ2wSOFOQxC8L1a
-t5iKcFKRqmVJKpGTBHwTyG36ude1GQd4eIgDbaon/lC30y4YOV4HCuXhfP0+hLV9nN3qaspQEXZX
-gm4/9BcIlA7z5U7AOjyDeEgnpI0S4IyhEay94Xhc/h7Xqta7TALzJDbsi9P9Io8soNsuOTQEgJdg
-H5fUi3rP356IfZwcM3zUH2+qg2FBaZ4JX6Rq6v9G9TbWjlG9s9Ukfh9bSpW/G1SSSHb6bphItu5E
-kSIc5N4d9Lk3ypCnrYMvvqLspXcWeymdD7qC0KwcuOuRKEC6LBExggNvMIIDawIBATCBlDCBjDEL
-MAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdp
-dGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFy
-eSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMEJnowCQYFKw4DAhoFAKCCAa8wGAYJKoZIhvcNAQkD
-MQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTIwOTE5MTUxOTMyWjAjBgkqhkiG9w0BCQQx
-FgQUIA9Zbq2FqHqyh7JPT8iWbuEapb4wgaUGCSsGAQQBgjcQBDGBlzCBlDCBjDELMAkGA1UEBhMC
-SUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRp
-ZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1l
-ZGlhdGUgQ2xpZW50IENBAgMEJnowgacGCyqGSIb3DQEJEAILMYGXoIGUMIGMMQswCQYDVQQGEwJJ
-TDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlm
-aWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVk
-aWF0ZSBDbGllbnQgQ0ECAwQmejANBgkqhkiG9w0BAQEFAASCAQBz8Imtj0LIgpMTS+XjsFyGPTIq
-Rj454lKW335PC7J8I/g+/8k8B2kGAOMP0yBTD5kDQQk7OKWHhE0Jh6flYEfqlSrGomck8apALbTb
-5/9Ea/w3iPjqfApCTfajOG6KX9lv8UII3MCDMcex7aegDqUZRMPv3eSwvsgvKjTtEXjFaVCjSOBL
-tWWdYeboAV2ZlyGG07noIsjyJNtybhVIMK98Krs2k8TZDhPFjFLI42WnZ6VEEL+VzJfVsuL+CtLo
-n2iQ/Z3jZb39lHG0Q25lgXw1TbHXfb+vim2jMwHxit6m3kFrkYztLt8PZ2FF5QzS8EFXTuYZjDeQ
-aRLS8IovXQUDAAAAAAAA
-
-
---=-RSqN0yT0Ef7AlFEdJtwp--
-
+Hi Yijing,
+	It's possible that the issue is caused by pcie_bus_configure_settings() instead of
+hardware flaw. By default, pcie_bus_config is setting to PCIE_BUS_TUNE_OFF, which means 
+all PCIe devices' Max Payload Size if configured by BIOS and OS won't change it.
+	So could you please help to:
+	1) add "pci=pcie_bus_safe" kernel option and check whether the behavior changes.
+	2) Print out Max Payload Size configuration for all PCIe devices along the path from
+the hod-added card to corresponding root port.
+	3) tracing executing of pcie_bus_configure_settings().
+	Thanks!
+	Gerry
+card to the 
