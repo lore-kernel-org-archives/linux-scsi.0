@@ -1,83 +1,46 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [RFC PATCH] libata: scsi: flush cache on scsi stop command
-Date: Wed, 19 Sep 2012 16:56:59 +0800
-Message-ID: <1348045019-21532-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v7 0/6] ZPODD patches
+Date: Wed, 19 Sep 2012 13:27:47 +0100
+Message-ID: <1348057667.2479.33.camel@dabdike.int.hansenpartnership.com>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
+	 <20120919080328.GA4283@mint-spring.sh.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20120919080328.GA4283@mint-spring.sh.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-scsi stop command is used to put a device into stopped power
-condition, and scsi devices will take care of its internal cache
-before entering this power condition. For ata devices, this command
-should be translated to flush cache + standby immediate, currently,
-we are translating it to only standby.
+On Wed, 2012-09-19 at 16:03 +0800, Aaron Lu wrote:
+> Hi James,
+> 
+> May I know if this patchset will enter v3.7?
 
-This patch handle this by sending flush cache command when standby is
-to be sent, and in its qc complete function, send the actual standby.
+Sigh, well, I was hoping to persuade the PM people to sort this out
+first.
 
-This patch will be used to support poweroff hard disk either when
-runtime or when system is going to S3/S4/S5. The sd_suspend will be
-modified to only send a stop command to the device if device manages
-start_stop, the current implementation will send a sync cache command,
-which is not necessary per the scsi spec.
+The first observation is that all this looks to be too specific.  ZPO
+may be ACPI specific, but the property it abstracts: whether the
+particular device is powered off or not is generic and probably should
+be known at the generic PM level.  Nothing actually really cares about
+how we power off the device until you get all the way down to the ACPI
+controller.
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/ata/libata-scsi.c | 32 ++++++++++++++++++++++++++++++--
- 1 file changed, 30 insertions(+), 2 deletions(-)
+I think we could do this with a couple of flags sitting inside struct
+device itself: one for pm state and capabilities defined at a generic
+level and one for device specific pm state.  The latter would be for
+things like the door lock information which is very specific to CDs
+(although not specific to SCSI CDs).  Alternatively, even if we can't
+use these capabilities at the generic pm level, we still need an
+internal state set of flags because power state stuff traverses the
+stack and struct device is the only universal object in that stack.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 8ec81ca..de6e734 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1759,6 +1759,27 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 	ata_qc_free(qc);
- }
- 
-+static void ata_flush_qc_complete(struct ata_queued_cmd *qc)
-+{
-+	if (qc->err_mask) {
-+		ata_gen_ata_sense(qc);
-+		qc->scsidone(qc->scsicmd);
-+		ata_qc_free(qc);
-+	} else {
-+		qc->complete_fn = ata_scsi_qc_complete;
-+		qc->tf.command = ATA_CMD_STANDBYNOW1;
-+		ata_qc_issue(qc);
-+	}
-+}
-+
-+static void ata_qc_issue_flush(struct ata_queued_cmd *qc)
-+{
-+	qc->complete_fn = ata_flush_qc_complete;
-+	qc->tf.command = qc->dev->flags & ATA_DFLAG_FLUSH_EXT ?
-+				ATA_CMD_FLUSH_EXT : ATA_CMD_FLUSH;
-+	ata_qc_issue(qc);
-+}
-+
- /**
-  *	ata_scsi_translate - Translate then issue SCSI command to ATA device
-  *	@dev: ATA device to which the command is addressed
-@@ -1821,8 +1842,15 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 			goto defer;
- 	}
- 
--	/* select device, send command to hardware */
--	ata_qc_issue(qc);
-+	/*
-+	 * If we received scsi stop command,
-+	 * we will need to flush cache first
-+	 */
-+	if (qc->tf.command == ATA_CMD_STANDBYNOW1 && ata_try_flush_cache(dev))
-+		ata_qc_issue_flush(qc);
-+	else
-+		/* select device, send command to hardware */
-+		ata_qc_issue(qc);
- 
- 	VPRINTK("EXIT\n");
- 	return 0;
--- 
-1.7.12.21.g871e293
+So I definitely think all of the sdev flags should become either generic
+or specific flags in device.
+
+James
+
 
