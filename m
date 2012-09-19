@@ -1,31 +1,35 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 7/8] sd: Permit merged discard requests
-Date: Thu, 20 Sep 2012 08:35:43 +0800
-Message-ID: <20120920003543.GA1523@kernel.org>
-References: <1347985172-2495-1-git-send-email-martin.petersen@oracle.com>
- <1347985172-2495-8-git-send-email-martin.petersen@oracle.com>
+From: "Freda Stuart" <fstuart@scott.k12.ms.us>
+Subject: Dear Email User,
+Date: Wed, 19 Sep 2012 18:50:37 -0500
+Message-ID: <505A13FD020000DB00010E9F__20749.5202929296$1348101557$gmane$org@Scott.k12.ms.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:42910 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495Ab2ITAfu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Sep 2012 20:35:50 -0400
-Received: by pbbrr13 with SMTP id rr13so3750511pbb.19
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Sep 2012 17:35:49 -0700 (PDT)
+Received: from mail.scott.k12.ms.us ([68.153.119.111]:3427 "EHLO
+	Scott.k12.ms.us" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752634Ab2ITAig convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Sep 2012 20:38:36 -0400
 Content-Disposition: inline
-In-Reply-To: <1347985172-2495-8-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, axboe@kernel.dk, snitzer@redhat.com
 
-On Tue, Sep 18, 2012 at 12:19:31PM -0400, Martin K. Petersen wrote:
-> From: "Martin K. Petersen" <martin.petersen@oracle.com>
-> 
-> Support requests with more than one bio payload for discards. The total
-> number of bytes to be discarded is stored in req->__data_len and used in
-> sd_done() to complete the I/O.
+Dear Email User,
 
-patch looks great. Tested the discard merge in my side, and it works. Thanks
-for the effort.
+  This e-mail has been sent to you by our webmail administrator to inform you 
+that we were unable to verify your account details. 
+
+This might be due to either of the following reasons:
+
+1. Exceeding the sending limit of your email
+2. Submitting incorrect information during registration process.
+                                
+  Due to this,we want you to ensure that your email service is not interrupted, 
+so we request you to confirm and update your information today by clicking on the 
+link below and verify your login details
+
+http://gf35544.7uw.net/feedback/feedback.html 
+  
+Regards,
+Magan Duncan
+Administrator
