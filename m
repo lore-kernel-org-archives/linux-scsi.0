@@ -1,47 +1,37 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 46031] kswapd0 moving to uninterruptible sleep (STAT D)
-Date: Wed, 19 Sep 2012 08:01:07 +0000 (UTC)
-Message-ID: <20120919080107.8A99111FB4B@bugzilla.kernel.org>
-References: <bug-46031-11613@https.bugzilla.kernel.org/>
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Fix for freeze on SATA hotplug
+Date: Wed, 19 Sep 2012 08:01:57 +0000
+Message-ID: <20120919080157.GA34192@nsrc.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:54814 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751519Ab2ISIBO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Sep 2012 04:01:14 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 4050C20241
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Sep 2012 08:01:13 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 1CEE420238
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Sep 2012 08:01:08 +0000 (UTC)
-In-Reply-To: <bug-46031-11613@https.bugzilla.kernel.org/>
+Received: from b-pb-sasl-quonix.pobox.com ([208.72.237.35]:53117 "EHLO
+	smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751728Ab2ISIB7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Sep 2012 04:01:59 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=46031
+I had an issue where a failing drive which generated SATA hotplug events
+caused the whole I/O subsystem to deadlock.
 
+Jack Wang on the gluster-users mailing list identified the problem as a
+regression, and gave me a patch which has successfully fixed it:
+http://gluster.org/pipermail/gluster-users/2012-September/011355.html
 
-Markus Hetzmannseder <Markus.Hetzmannseder@jku.at> changed:
+However, I see this patch is not in mainline kernel yet. Has any progress
+been made towards this, e.g. including it in subsystem maintainer's tree?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |INVALID
+Thanks,
 
+Brian.
 
+P.S. Original problem description at
+http://gluster.org/pipermail/gluster-users/2012-September/011354.html
 
-
---- Comment #3 from Markus Hetzmannseder <Markus.Hetzmannseder@jku.at>  2012-09-19 08:01:07 ---
-Thx for the help on it. As far as i could strip down the reasion for the
-errors, its deffinitly something hardware related. I think there is something
-wrong with the motherboard. 
-
-Markus
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+The issue is now also recorded at
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1049013
+since it exists in Ubuntu kernel 3.2.0-30
