@@ -1,47 +1,272 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 00/13] qla4xxx: Updates for scsi "misc" branch
-Date: Thu, 20 Sep 2012 07:35:00 -0400
-Message-ID: <1348140913-11828-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 12/13] qla4xxx: Disable generating pause frames for ISP83XX
+Date: Thu, 20 Sep 2012 07:35:12 -0400
+Message-ID: <1348140913-11828-13-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1348140913-11828-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:45702 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:59424 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754042Ab2ITLxE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Sep 2012 07:53:04 -0400
+	id S1754157Ab2ITLxG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Sep 2012 07:53:06 -0400
+In-Reply-To: <1348140913-11828-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Tej Parkash <tej.parkash@qlogic.com>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Tej Parkash <tej.parkash@qlogic.com>
 
-James,
+In case of FW hung ISP83XX generates continuous pause frames
+which causes switch to disable port.
+Added fix to disable generating pause frames in case of
+FW hung
 
-Please apply the following patches to the scsi tree at your earliest
-convenience.
+Signed-off-by: Tej Parkash <tej.parkash@qlogic.com>
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_83xx.c |  144 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_83xx.h |   13 ++++
+ drivers/scsi/qla4xxx/ql4_glbl.h |    1 +
+ drivers/scsi/qla4xxx/ql4_mbx.c  |    4 +
+ drivers/scsi/qla4xxx/ql4_os.c   |   15 ++++
+ 5 files changed, 177 insertions(+), 0 deletions(-)
 
-Thanks,
-Vikas.
-
-Manish Dusane (2):
-      qla4xxx: Added new mbox cmd to pass driver version to FW
-      qla4xxx: Fix double clearing of risc_intr for ISP83XX
-
-Nilesh Javali (1):
-      qla4xxx: IDC implementation for Loopback
-
-Poornima Vonti (2):
-      qla4xxx: Fix double IDC locking in qla4_8xxx_error_recovery
-      qla4xxx: Fail probe_adapter if IRQ allocation fails
-
-Tej Parkash (1):
-      qla4xxx: Disable generating pause frames for ISP83XX
-
-Vikas Chaudhary (7):
-      qla4xxx: Print correct IDC version
-      qla4xxx: Clear interrupt while unloading driver for ISP83XX
-      qla4xxx: Update idc reg in case of PCI AER
-      qla4xxx: Prevent MSI/MSI-X falling back to INTx for ISP82XX
-      qla4xxx: Fix panic while rmmod
-      qla4xxx: update LICENSE.qla4xxx
-      qla4xxx: Update driver version to 5.03.00-k1
+diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
+index 8b367ef..6e9af20 100644
+--- a/drivers/scsi/qla4xxx/ql4_83xx.c
++++ b/drivers/scsi/qla4xxx/ql4_83xx.c
+@@ -1465,3 +1465,147 @@ exit_isp_reset:
+ 
+ 	return rval;
+ }
++
++static void qla4_83xx_dump_pause_control_regs(struct scsi_qla_host *ha)
++{
++	u32 val = 0, val1 = 0;
++	int i, status = QLA_SUCCESS;
++
++	status = qla4_83xx_rd_reg_indirect(ha, QLA83XX_SRE_SHIM_CONTROL, &val);
++	DEBUG2(ql4_printk(KERN_INFO, ha, "SRE-Shim Ctrl:0x%x\n", val));
++
++	/* Port 0 Rx Buffer Pause Threshold Registers. */
++	DEBUG2(ql4_printk(KERN_INFO, ha,
++		"Port 0 Rx Buffer Pause Threshold Registers[TC7..TC0]:"));
++	for (i = 0; i < 8; i++) {
++		status = qla4_83xx_rd_reg_indirect(ha,
++				QLA83XX_PORT0_RXB_PAUSE_THRS + (i * 0x4), &val);
++		DEBUG2(pr_info("0x%x ", val));
++	}
++
++	DEBUG2(pr_info("\n"));
++
++	/* Port 1 Rx Buffer Pause Threshold Registers. */
++	DEBUG2(ql4_printk(KERN_INFO, ha,
++		"Port 1 Rx Buffer Pause Threshold Registers[TC7..TC0]:"));
++	for (i = 0; i < 8; i++) {
++		status = qla4_83xx_rd_reg_indirect(ha,
++				QLA83XX_PORT1_RXB_PAUSE_THRS + (i * 0x4), &val);
++		DEBUG2(pr_info("0x%x  ", val));
++	}
++
++	DEBUG2(pr_info("\n"));
++
++	/* Port 0 RxB Traffic Class Max Cell Registers. */
++	DEBUG2(ql4_printk(KERN_INFO, ha,
++		"Port 0 RxB Traffic Class Max Cell Registers[3..0]:"));
++	for (i = 0; i < 4; i++) {
++		status = qla4_83xx_rd_reg_indirect(ha,
++			       QLA83XX_PORT0_RXB_TC_MAX_CELL + (i * 0x4), &val);
++		DEBUG2(pr_info("0x%x  ", val));
++	}
++
++	DEBUG2(pr_info("\n"));
++
++	/* Port 1 RxB Traffic Class Max Cell Registers. */
++	DEBUG2(ql4_printk(KERN_INFO, ha,
++		"Port 1 RxB Traffic Class Max Cell Registers[3..0]:"));
++	for (i = 0; i < 4; i++) {
++		status = qla4_83xx_rd_reg_indirect(ha,
++			       QLA83XX_PORT1_RXB_TC_MAX_CELL + (i * 0x4), &val);
++		DEBUG2(pr_info("0x%x  ", val));
++	}
++
++	DEBUG2(pr_info("\n"));
++
++	/* Port 0 RxB Rx Traffic Class Stats. */
++	DEBUG2(ql4_printk(KERN_INFO, ha,
++			  "Port 0 RxB Rx Traffic Class Stats [TC7..TC0]"));
++	for (i = 7; i >= 0; i--) {
++		status = qla4_83xx_rd_reg_indirect(ha,
++						   QLA83XX_PORT0_RXB_TC_STATS,
++						   &val);
++		val &= ~(0x7 << 29);    /* Reset bits 29 to 31 */
++		qla4_83xx_wr_reg_indirect(ha, QLA83XX_PORT0_RXB_TC_STATS,
++					  (val | (i << 29)));
++		status = qla4_83xx_rd_reg_indirect(ha,
++						   QLA83XX_PORT0_RXB_TC_STATS,
++						   &val);
++		DEBUG2(pr_info("0x%x  ", val));
++	}
++
++	DEBUG2(pr_info("\n"));
++
++	/* Port 1 RxB Rx Traffic Class Stats. */
++	DEBUG2(ql4_printk(KERN_INFO, ha,
++			  "Port 1 RxB Rx Traffic Class Stats [TC7..TC0]"));
++	for (i = 7; i >= 0; i--) {
++		status = qla4_83xx_rd_reg_indirect(ha,
++						   QLA83XX_PORT1_RXB_TC_STATS,
++						   &val);
++		val &= ~(0x7 << 29);    /* Reset bits 29 to 31 */
++		qla4_83xx_wr_reg_indirect(ha, QLA83XX_PORT1_RXB_TC_STATS,
++					  (val | (i << 29)));
++		status = qla4_83xx_rd_reg_indirect(ha,
++						   QLA83XX_PORT1_RXB_TC_STATS,
++						   &val);
++		DEBUG2(pr_info("0x%x  ", val));
++	}
++
++	DEBUG2(pr_info("\n"));
++
++	status = qla4_83xx_rd_reg_indirect(ha, QLA83XX_PORT2_IFB_PAUSE_THRS,
++					   &val);
++	status = qla4_83xx_rd_reg_indirect(ha, QLA83XX_PORT3_IFB_PAUSE_THRS,
++					   &val1);
++
++	DEBUG2(ql4_printk(KERN_INFO, ha,
++			  "IFB-Pause Thresholds: Port 2:0x%x, Port 3:0x%x\n",
++			  val, val1));
++}
++
++static void __qla4_83xx_disable_pause(struct scsi_qla_host *ha)
++{
++	int i;
++
++	/* set SRE-Shim Control Register */
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_SRE_SHIM_CONTROL,
++				  QLA83XX_SET_PAUSE_VAL);
++
++	for (i = 0; i < 8; i++) {
++		/* Port 0 Rx Buffer Pause Threshold Registers. */
++		qla4_83xx_wr_reg_indirect(ha,
++				      QLA83XX_PORT0_RXB_PAUSE_THRS + (i * 0x4),
++				      QLA83XX_SET_PAUSE_VAL);
++		/* Port 1 Rx Buffer Pause Threshold Registers. */
++		qla4_83xx_wr_reg_indirect(ha,
++				      QLA83XX_PORT1_RXB_PAUSE_THRS + (i * 0x4),
++				      QLA83XX_SET_PAUSE_VAL);
++	}
++
++	for (i = 0; i < 4; i++) {
++		/* Port 0 RxB Traffic Class Max Cell Registers. */
++		qla4_83xx_wr_reg_indirect(ha,
++				     QLA83XX_PORT0_RXB_TC_MAX_CELL + (i * 0x4),
++				     QLA83XX_SET_TC_MAX_CELL_VAL);
++		/* Port 1 RxB Traffic Class Max Cell Registers. */
++		qla4_83xx_wr_reg_indirect(ha,
++				     QLA83XX_PORT1_RXB_TC_MAX_CELL + (i * 0x4),
++				     QLA83XX_SET_TC_MAX_CELL_VAL);
++	}
++
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_PORT2_IFB_PAUSE_THRS,
++				  QLA83XX_SET_PAUSE_VAL);
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_PORT3_IFB_PAUSE_THRS,
++				  QLA83XX_SET_PAUSE_VAL);
++
++	ql4_printk(KERN_INFO, ha, "Disabled pause frames successfully.\n");
++}
++
++void qla4_83xx_disable_pause(struct scsi_qla_host *ha)
++{
++	ha->isp_ops->idc_lock(ha);
++	qla4_83xx_dump_pause_control_regs(ha);
++	__qla4_83xx_disable_pause(ha);
++	ha->isp_ops->idc_unlock(ha);
++}
+diff --git a/drivers/scsi/qla4xxx/ql4_83xx.h b/drivers/scsi/qla4xxx/ql4_83xx.h
+index 18d86ab..6a00f90 100644
+--- a/drivers/scsi/qla4xxx/ql4_83xx.h
++++ b/drivers/scsi/qla4xxx/ql4_83xx.h
+@@ -41,6 +41,19 @@
+ #define QLA83XX_CRB_IDC_VER_MINOR	0x3798
+ #define QLA83XX_IDC_DRV_CTRL		0x3790
+ #define QLA83XX_IDC_DRV_AUDIT		0x3794
++#define QLA83XX_SRE_SHIM_CONTROL	0x0D200284
++#define QLA83XX_PORT0_RXB_PAUSE_THRS	0x0B2003A4
++#define QLA83XX_PORT1_RXB_PAUSE_THRS	0x0B2013A4
++#define QLA83XX_PORT0_RXB_TC_MAX_CELL	0x0B200388
++#define QLA83XX_PORT1_RXB_TC_MAX_CELL	0x0B201388
++#define QLA83XX_PORT0_RXB_TC_STATS	0x0B20039C
++#define QLA83XX_PORT1_RXB_TC_STATS	0x0B20139C
++#define QLA83XX_PORT2_IFB_PAUSE_THRS	0x0B200704
++#define QLA83XX_PORT3_IFB_PAUSE_THRS	0x0B201704
++
++/* set value to pause threshold value */
++#define QLA83XX_SET_PAUSE_VAL		0x0
++#define QLA83XX_SET_TC_MAX_CELL_VAL	0x03FF03FF
+ 
+ /* qla_83xx_reg_tbl registers */
+ #define QLA83XX_PEG_HALT_STATUS1	0x34A8
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index 3eb5fd9..57a5a3c 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -258,6 +258,7 @@ int qla4_8xxx_mbx_intr_enable(struct scsi_qla_host *ha);
+ int qla4_8xxx_set_param(struct scsi_qla_host *ha, int param);
+ int qla4_8xxx_update_idc_reg(struct scsi_qla_host *ha);
+ int qla4_83xx_post_idc_ack(struct scsi_qla_host *ha);
++void qla4_83xx_disable_pause(struct scsi_qla_host *ha);
+ 
+ extern int ql4xextended_error_logging;
+ extern int ql4xdontresethba;
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 0d3d641..3d41034 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -204,6 +204,10 @@ int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
+ 			qla4_82xx_wr_32(ha, QLA82XX_CRB_NIU + 0x98,
+ 					CRB_NIU_XG_PAUSE_CTL_P0 |
+ 					CRB_NIU_XG_PAUSE_CTL_P1);
++		} else if (is_qla8032(ha)) {
++			ql4_printk(KERN_INFO, ha, " %s: disabling pause transmit on port 0 & 1.\n",
++				   __func__);
++			qla4_83xx_disable_pause(ha);
+ 		}
+ 		goto mbox_exit;
+ 	}
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 3554680..ad2da9c 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -2946,6 +2946,14 @@ static int qla4xxx_recover_adapter(struct scsi_qla_host *ha)
+ 
+ 	set_bit(DPC_RESET_ACTIVE, &ha->dpc_flags);
+ 
++	if (is_qla8032(ha) &&
++	    !test_bit(DPC_RESET_HA_FW_CONTEXT, &ha->dpc_flags)) {
++		ql4_printk(KERN_INFO, ha, "%s: disabling pause transmit on port 0 & 1.\n",
++			   __func__);
++		/* disable pause frame for ISP83xx */
++		qla4_83xx_disable_pause(ha);
++	}
++
+ 	iscsi_host_for_each_session(ha->host, qla4xxx_fail_session);
+ 
+ 	if (test_bit(DPC_RESET_HA, &ha->dpc_flags))
+@@ -3391,6 +3399,13 @@ static void qla4xxx_do_dpc(struct work_struct *work)
+ 
+ 	if (is_qla80XX(ha)) {
+ 		if (test_bit(DPC_HA_UNRECOVERABLE, &ha->dpc_flags)) {
++			if (is_qla8032(ha)) {
++				ql4_printk(KERN_INFO, ha, "%s: disabling pause transmit on port 0 & 1.\n",
++					   __func__);
++				/* disable pause frame for ISP83xx */
++				qla4_83xx_disable_pause(ha);
++			}
++
+ 			ha->isp_ops->idc_lock(ha);
+ 			qla4_8xxx_wr_direct(ha, QLA8XXX_CRB_DEV_STATE,
+ 					    QLA8XXX_DEV_FAILED);
+-- 
+1.7.1
 
