@@ -1,38 +1,47 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: scsi_dh_alua: Enable STPG for unavailable ports
-Date: Wed, 19 Sep 2012 13:36:46 -0400
-Message-ID: <20120919173645.GA17612@redhat.com>
-References: <50374499.5010808@acm.org>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH v7 0/6] ZPODD patches
+Date: Thu, 20 Sep 2012 08:34:59 +0800
+Message-ID: <61B33BA8121D47DDB62CF71F004E15E8@usish.com.cn>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <20120919080328.GA4283@mint-spring.sh.intel.com> <1348057667.2479.33.camel@dabdike.int.hansenpartnership.com> <1348067972.21322.218.camel@shinybook.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43384 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932308Ab2ISRhA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Sep 2012 13:37:00 -0400
-Content-Disposition: inline
-In-Reply-To: <50374499.5010808@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1348067972.21322.218.camel@shinybook.infradead.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: 'David Woodhouse' <dwmw2@infradead.org>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>
+Cc: 'Aaron Lu' <aaron.lu@intel.com>, 'Alan Stern' <stern@rowland.harvard.edu>, 'Oliver Neukum' <oliver@neukum.org>, 'Jeff Garzik' <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, 'Aaron Lu' <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Babu Moger <babu.moger@netapp.com>
 
-On Fri, Aug 24 2012 at  5:08am -0400,
-Bart Van Assche <bvanassche@acm.org> wrote:
-
-> A quote from SPC-4: "While in the unavailable primary target port
-> asymmetric access state, the device server shall support those of
-> the following commands that it supports while in the active/optimized
-> state: [ ... ] d) SET TARGET PORT GROUPS; [ ... ]". Hence enable
-> sending STPG to a target port group that is in the unavailable state.
 > 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Mike Christie <michaelc@cs.wisc.edu>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Cc: Babu Moger <babu.moger@netapp.com>
-> Cc: <stable@vger.kernel.org>
+> On Wed, 2012-09-19 at 13:27 +0100, James Bottomley wrote:
+> > I think we could do this with a couple of flags sitting inside struct
+> > device itself: one for pm state and capabilities defined at a generic
+> > level and one for device specific pm state.  The latter would be for
+> > things like the door lock information which is very specific to CDs
+> > (although not specific to SCSI CDs).  Alternatively, even if we can't
+> > use these capabilities at the generic pm level, we still need an
+> > internal state set of flags because power state stuff traverses the
+> > stack and struct device is the only universal object in that stack.
+> 
+> FWIW the SATA Device Sleep support, which is currently only used (in a
+> patch which is pending) automatically as an extension of the AHCI link
+> power management, can also be triggered manually by a GPIO line; I've
+> got a platform where it's done with an ACPI call. I suspect we'll see
+> that kind of manual setup on a few embedded platforms too.
+> 
+> If we're working on hooking this up through the device layers, perhaps
+> that's worth taking into consideration?
+> 
+> --
 
-Looks good to me.
+Hi David,
 
-Acked-by: Mike Snitzer <snitzer@redhat.com>
+For SATA Device sleep, what's the appropriate time to set the Device sleep,
+this seems also part of runtime PM?
+
+Best regards!
+
+Jack
+
