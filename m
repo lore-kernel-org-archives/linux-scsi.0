@@ -1,89 +1,74 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi_dh_alua: Enable STPG for unavailable ports
-Date: Thu, 20 Sep 2012 07:28:29 +0200
-Message-ID: <505AA97D.7040005@suse.de>
-References: <50374499.5010808@acm.org> <5059E97E.1000500@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH] qla2xxx: Correct loop_id_map allocation-size and usage.
+Date: Thu, 20 Sep 2012 03:39:34 -0400
+Message-ID: <1348126774-3844-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58080 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751534Ab2ITF2d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Sep 2012 01:28:33 -0400
-In-Reply-To: <5059E97E.1000500@cs.wisc.edu>
+Received: from mvnat01.qlogic.com ([198.186.3.73]:19711 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1752506Ab2ITH5K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Sep 2012 03:57:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Babu Moger <babu.moger@netapp.com>
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On 09/19/2012 05:49 PM, Mike Christie wrote:
-> On 08/24/2012 04:08 AM, Bart Van Assche wrote:
->> A quote from SPC-4: "While in the unavailable primary target port
->> asymmetric access state, the device server shall support those of
->> the following commands that it supports while in the active/optimize=
-d
->> state: [ ... ] d) SET TARGET PORT GROUPS; [ ... ]". Hence enable
->> sending STPG to a target port group that is in the unavailable state=
-=2E
->>
->> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->> Cc: Hannes Reinecke <hare@suse.de>
->> Cc: Mike Christie <michaelc@cs.wisc.edu>
->> Cc: Mike Snitzer <snitzer@redhat.com>
->> Cc: Babu Moger <babu.moger@netapp.com>
->> Cc: <stable@vger.kernel.org>
->> ---
->>  drivers/scsi/device_handler/scsi_dh_alua.c |    3 +--
->>  1 files changed, 1 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/sc=
-si/device_handler/scsi_dh_alua.c
->> index 08d80a6..a05d469 100644
->> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
->> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
->> @@ -641,8 +641,7 @@ static int alua_rtpg(struct scsi_device *sdev, s=
-truct alua_dh_data *h)
->>  		h->state =3D TPGS_STATE_STANDBY;
->>  		break;
->>  	case TPGS_STATE_OFFLINE:
->> -	case TPGS_STATE_UNAVAILABLE:
->> -		/* Path unusable for unavailable/offline */
->> +		/* Path unusable */
->>  		err =3D SCSI_DH_DEV_OFFLINED;
->>  		break;
->>  	default:
->>
->=20
-> Hey, was this patch ok Hannes and James and others?
->=20
-> I see bb2c94a3a6ad37fe7d34f369295bcdf5387e264f was merged, but this o=
-ne
-> was not.
->=20
-> I was thinking this might have got missed because it has the same pat=
-ch
-> description as  bb2c94a3a6ad37fe7d34f369295bcdf5387e264f, so it is
-> confusion, but they are different patches. One fixes alua_rtpg and on=
-e
-> fixes alua_activate, but both are needed.
->=20
-Yeah, patch's okay.
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Acked-by: Hannes Reinecke <hare@suse.de>
+Original code incorrectly assigned LOOPID_MAP_SIZE to be the
+allocation size in bytes rather than total bit size.
+Additionally corrected code to check for bit-allocation failure
+in qla2x00_find_new_loop_id().
 
-Cheers,
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_def.h  |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c |    4 ++--
+ drivers/scsi/qla2xxx/qla_os.c   |    3 ++-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 3841fb18..a9725bf 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -205,7 +205,7 @@
+ #define MAX_FIBRE_DEVICES_2400	2048
+ #define MAX_FIBRE_DEVICES_LOOP	128
+ #define MAX_FIBRE_DEVICES_MAX	MAX_FIBRE_DEVICES_2400
+-#define LOOPID_MAP_SIZE		(ha->max_fibre_devices / 8)
++#define LOOPID_MAP_SIZE		(ha->max_fibre_devices)
+ #define MAX_FIBRE_LUNS  	0xFFFF
+ #define	MAX_HOST_COUNT		16
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 3c83934..799a58b 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -3440,8 +3440,8 @@ qla2x00_find_new_loop_id(scsi_qla_host_t *vha, fc_port_t *dev)
+ 
+ 	dev->loop_id = find_first_zero_bit(ha->loop_id_map,
+ 	    LOOPID_MAP_SIZE);
+-
+-	if (qla2x00_is_reserved_id(vha, dev->loop_id)) {
++	if (dev->loop_id >= LOOPID_MAP_SIZE ||
++	    qla2x00_is_reserved_id(vha, dev->loop_id)) {
+ 		dev->loop_id = FC_NO_LOOP_ID;
+ 		rval = QLA_FUNCTION_FAILED;
+ 	} else
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 84ddd30..c7dd298 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3220,7 +3220,8 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
+ 	INIT_LIST_HEAD(&ha->vp_list);
+ 
+ 	/* Allocate memory for our loop_id bitmap */
+-	ha->loop_id_map = kzalloc(LOOPID_MAP_SIZE, GFP_KERNEL);
++	ha->loop_id_map = kzalloc(BITS_TO_LONGS(LOOPID_MAP_SIZE) * sizeof(long),
++	    GFP_KERNEL);
+ 	if (!ha->loop_id_map)
+ 		goto fail_async_pd;
+ 	else {
+-- 
+1.7.7
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
