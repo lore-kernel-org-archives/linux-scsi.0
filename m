@@ -1,59 +1,60 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: Discard merging / Write same support v5
-Date: Thu, 20 Sep 2012 14:47:17 +0200
-Message-ID: <505B1055.5090509@kernel.dk>
-References: <1347985172-2495-1-git-send-email-martin.petersen@oracle.com>  <505B0D02.70707@kernel.dk> <1348145006.2936.12.camel@dabdike.int.hansenpartnership.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
+Date: Thu, 20 Sep 2012 09:46:48 -0600
+Message-ID: <CAErSpo6Wvn_cdOJg-OULbjyDQ0Qibq_+X78QMSqBeoC0GuB2VQ@mail.gmail.com>
+References: <505456FD.6040801@huawei.com> <CAErSpo6OkAV-wwKnpMRAvisQ_Jj=w9dxLbO3JxkX2A_Vd8QX=Q@mail.gmail.com>
+ <50571243.4050001@huawei.com> <CAErSpo7WwwB3ZO9g4WjQZKcfXAP0tKuXWKn=UTw1mDGJyX6=vQ@mail.gmail.com>
+ <505924E4.5010502@huawei.com> <CAErSpo5PuwG1pvCRBxOUoyK-_ajg-AZkkuCUxeGbkb6TyBP_Kw@mail.gmail.com>
+ <505A7599.5070103@huawei.com> <505B0B6A.2050709@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:38803 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754666Ab2ITMro (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Sep 2012 08:47:44 -0400
-In-Reply-To: <1348145006.2936.12.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <505B0B6A.2050709@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Jon Mason <jdmason@kudzu.us>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, PCI <linux-pci@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, shli@kernel.org, snitzer@redhat.com
 
-On 09/20/2012 02:43 PM, James Bottomley wrote:
-> On Thu, 2012-09-20 at 14:33 +0200, Jens Axboe wrote:
->> On 09/18/2012 06:19 PM, Martin K. Petersen wrote:
->>> I've been beating on this patch kit for the last few weeks with a bunch
->>> of different devices. I have also tested extensively with Shaohua Li's
->>> MD RAID0 discard support.
+On Thu, Sep 20, 2012 at 6:26 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2012/9/20 9:47, Yijing Wang wrote:
+>>>> We compared the two situations after BIOS initialization, and found Max Payload Size in DEVCTRL is 256B
+>>>> if FC card had been installed, if the slot is empty, Max Payload Size is 128B. We force it to be 128B when
+>>>> FC card installed when system boot up. Finally pci hotplug becomes ok. So I suspect maybe our PCIe hardware
+>>>> has problem supporting 256B.
 >>>
->>> The only functional change is support for discard and write same
->>> bio/request merging. Other than that there were a few tweaks for later
->>> kernels by both Mike and me.
+>>> Ah, this sounds like something I've been worried about for a while,
+>>> i.e., do we handle MPS correctly when we hot-add devices?
 >>>
->>> I put a writesame5 branch on:
->>>
->>>    git://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git
->>>
->>> It's against block/for-3.7/core.
->>>
->>> [PATCH 1/8] block: Clean up special command handling logic
->>> [PATCH 2/8] block: Consolidate command flag and queue limit checks
->>> [PATCH 3/8] block: Implement support for WRITE SAME
->>> [PATCH 4/8] block: Make blkdev_issue_zeroout use WRITE SAME
->>> [PATCH 5/8] block: ioctl to zero block ranges
->>> [PATCH 6/8] scsi: Add a report opcode helper
->>> [PATCH 7/8] sd: Permit merged discard requests
->>> [PATCH 8/8] sd: Implement support for WRITE SAME
+>>> Yijing, I'm not quite clear on what you're observing.  I guess you're
+>>> saying that if an FC card is installed at boot, the BIOS sets MPS to
+>>> 256, and that if no FC card is installed, the BIOS sets MPS to 128?
 >>
->> Thanks Martin, I queued up 1..5 in for-3.7/core. I'm assuming James will
->> pick up the SCSI bits?
-> 
-> Yes, but Linus gave me a rocket about post merge trees.  Can you do this
-> on a separate branch and I'll build on top of that?
+>> Yes.
+>>
+>>> You haven't mentioned any Linux boot options, so I assume you haven't
+>>> tried any.  Does "pci=pcie_bus_safe" make any difference?
+>>
+>> Yes, I don't add any Linux boot options before. I will try this boot option
+>> "pci=pcie_bus_safe".
+>>
+>>> Jon, here's a pointer to the beginning of the thread:
+>>> http://marc.info/?l=linux-pci&m=134770460302298&w=2 (full dmesg log at
+>>> http://marc.info/?l=linux-scsi&m=134788365823217&w=2).  I'm not sure
+>>> we have enough in the dmesg log to diagnose an issue like this.  I
+>>> wonder if it would be useful to log the current setting, so we could
+>>> notice BIOS default differences like this one.
+>>>
+>
+> Hi Bjorn,
+>    After add "pci=pcie_bus_safe" boot options, Hot-plug for FC card is OK.
+> It's great! Thanks for your help!
+>
+> Giri, it's not the fc card problem, we fix this problem by add boot option
+> "pci=pcie_bus_safe" which force the MPS of the entire system to the smallest
+> possible.
 
-He did, didn't he... You could just use for-3.7/core as of today,
-there's not that much in there yet. Alternatively, I'd have to rebase
-for-3.7/core and rip them out, put them in a separate branch, and pull
-that back into for-3.7/core.
-
--- 
-Jens Axboe
-
+That's OK for a workaround, but it'd definitely not a complete
+solution.  At the very least, we need some kind of info in dmesg that
+will enable us to diagnose the problem next time somebody runs into
+it.  *You* are sophisticated enough to poke around and look at MPS
+settings manually, but the next person who runs into it will not be.
