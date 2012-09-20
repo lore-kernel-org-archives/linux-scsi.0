@@ -1,123 +1,79 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Kernel crash with unsupported DIF protection type
-Date: Thu, 20 Sep 2012 15:53:47 -0400
-Message-ID: <yq14nmslbck.fsf@sermon.lab.mkp.net>
-References: <50583924.90708@suse.de>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v7 0/6] ZPODD patches
+Date: Thu, 20 Sep 2012 22:00:51 +0200
+Message-ID: <201209202200.51303.rjw@sisk.pl>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209191450.37735.rjw@sisk.pl> <5059D488.6070208@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:22388 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754093Ab2ITTyE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Sep 2012 15:54:04 -0400
-In-Reply-To: <50583924.90708@suse.de> (Hannes Reinecke's message of "Tue, 18
-	Sep 2012 11:04:36 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <5059D488.6070208@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+On Wednesday, September 19, 2012, Aaron Lu wrote:
+> On 09/19/2012 08:50 PM, Rafael J. Wysocki wrote:
+> > On Wednesday, September 19, 2012, James Bottomley wrote:
+> >> On Wed, 2012-09-19 at 16:03 +0800, Aaron Lu wrote:
+> >>> Hi James,
+> >>>
+> >>> May I know if this patchset will enter v3.7?
+> >>
+> >> Sigh, well, I was hoping to persuade the PM people to sort this out
+> >> first.
+> >>
+> >> The first observation is that all this looks to be too specific.  ZPO
+> >> may be ACPI specific, but the property it abstracts: whether the
+> >> particular device is powered off or not is generic and probably should
+> >> be known at the generic PM level.  Nothing actually really cares about
+> >> how we power off the device until you get all the way down to the ACPI
+> >> controller.
+> >>
+> >> I think we could do this with a couple of flags sitting inside struct
+> >> device itself: one for pm state and capabilities defined at a generic
+> >> level and one for device specific pm state.  The latter would be for
+> >> things like the door lock information which is very specific to CDs
+> >> (although not specific to SCSI CDs).  Alternatively, even if we can't
+> >> use these capabilities at the generic pm level, we still need an
+> >> internal state set of flags because power state stuff traverses the
+> >> stack and struct device is the only universal object in that stack.
+> >>
+> >> So I definitely think all of the sdev flags should become either generic
+> >> or specific flags in device.
+> > 
+> > Well, the problem is that it is kind of irrelevant to the core whether or
+> > not the given device can be powered off.  Moreover, the actual meaning of
+> > what "power off" means depends on the platform (it may be an individual device
+> > state or a power domain state, for instance).  Also, the set of available
+> > low-power states depends on the platform (or the bus type) and generally
+> > cannot be universally represented and there are low-power states that
+> > aren't "power off" per se, but still require the device state to be
+> > restored when putting it back into full power.
+> > 
+> > We've discussed that for a few times and each time we've ended up agreeing
+> > that struct device is not the right place to store this information (for
+> > example, PCI stores it in struct pci_dev, USB has its own rules etc.).
+> > 
+> > I'll have a look at the patchset again and see what can be done about this.
+> 
+> Thanks Rafael, and if there is any question/problem,
+> please kindly let me know.
 
-Hannes> I recently got my hands on some weird drives, insisting on
-Hannes> having been formatted with protection type 7:
+Well, unfortunately my initial review indicates that the patchset is not
+quite ready to go upstream yet.
 
-Lovely :|
+I'll send comments in replies to the individual patches, but overall I can
+say that at this stage of development, when I look at the patches, it should
+be clear to me not only what is being changed, but _why_ it is being changed
+in the first place and, secondly, why it is being changed in this particular
+way.  It's far from that, though.
 
+The first patch in the series doesn't even have a changelog.  How the changelog
+of the second patch is related to it's actual contents is more than quite
+unclear to me.  Etc.
 
-Hannes> I've attached a tentative patch, which allows the system to
-Hannes> boot.  However, I'm not completely happy with that, as the
-Hannes> capacity is _still_ updated after revalidation:
-
-How about this?
-
-
-sd: Ensure we correctly disable devices with unknown protection type
-
-We set the capacity to zero when we discovered a device formatted with
-an unknown DIF protection type. However, the read_capacity code would
-override the capacity and cause the device to be enabled regardless.
-
-Make sd_read_protection_type() return an error if the protection type is
-unknown. Also prevent duplicate printk lines when the device is being
-revalidated.
-
-Reported-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 1cf2d5d..1c54564 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1820,34 +1820,42 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- /*
-  * Determine whether disk supports Data Integrity Field.
-  */
--static void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
-+static int sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
- {
- 	struct scsi_device *sdp = sdkp->device;
- 	u8 type;
-+	int ret = 0;
- 
- 	if (scsi_device_protection(sdp) == 0 || (buffer[12] & 1) == 0)
--		return;
-+		return ret;
- 
- 	type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
- 
--	if (type == sdkp->protection_type || !sdkp->first_scan)
--		return;
-+	if (type > SD_DIF_TYPE3_PROTECTION)
-+		ret = -ENODEV;
-+	else if (scsi_host_dif_capable(sdp->host, type))
-+		ret = 1;
-+
-+	if (sdkp->first_scan || type != sdkp->protection_type)
-+		switch (ret) {
-+		case -ENODEV:
-+			sd_printk(KERN_ERR, sdkp, "formatted with unsupported" \
-+				  " protection type %u. Disabling disk!\n",
-+				  type);
-+			break;
-+		case 1:
-+			sd_printk(KERN_NOTICE, sdkp,
-+				  "Enabling DIF Type %u protection\n", type);
-+			break;
-+		case 0:
-+			sd_printk(KERN_NOTICE, sdkp,
-+				  "Disabling DIF Type %u protection\n", type);
-+			break;
-+		}
- 
- 	sdkp->protection_type = type;
- 
--	if (type > SD_DIF_TYPE3_PROTECTION) {
--		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
--			  "protection type %u. Disabling disk!\n", type);
--		sdkp->capacity = 0;
--		return;
--	}
--
--	if (scsi_host_dif_capable(sdp->host, type))
--		sd_printk(KERN_NOTICE, sdkp,
--			  "Enabling DIF Type %u protection\n", type);
--	else
--		sd_printk(KERN_NOTICE, sdkp,
--			  "Disabling DIF Type %u protection\n", type);
-+	return ret;
- }
- 
- static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
-@@ -1943,7 +1951,10 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	sector_size = get_unaligned_be32(&buffer[8]);
- 	lba = get_unaligned_be64(&buffer[0]);
- 
--	sd_read_protection_type(sdkp, buffer);
-+	if (sd_read_protection_type(sdkp, buffer) < 0) {
-+		sdkp->capacity = 0;
-+		return -ENODEV;
-+	}
- 
- 	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
- 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+Thanks,
+Rafael
