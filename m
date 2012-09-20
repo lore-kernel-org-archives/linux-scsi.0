@@ -1,47 +1,31 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH v7 0/6] ZPODD patches
-Date: Thu, 20 Sep 2012 08:34:59 +0800
-Message-ID: <61B33BA8121D47DDB62CF71F004E15E8@usish.com.cn>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <20120919080328.GA4283@mint-spring.sh.intel.com> <1348057667.2479.33.camel@dabdike.int.hansenpartnership.com> <1348067972.21322.218.camel@shinybook.infradead.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 7/8] sd: Permit merged discard requests
+Date: Thu, 20 Sep 2012 08:35:43 +0800
+Message-ID: <20120920003543.GA1523@kernel.org>
+References: <1347985172-2495-1-git-send-email-martin.petersen@oracle.com>
+ <1347985172-2495-8-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1348067972.21322.218.camel@shinybook.infradead.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: 'David Woodhouse' <dwmw2@infradead.org>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>
-Cc: 'Aaron Lu' <aaron.lu@intel.com>, 'Alan Stern' <stern@rowland.harvard.edu>, 'Oliver Neukum' <oliver@neukum.org>, 'Jeff Garzik' <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, 'Aaron Lu' <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:42910 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752495Ab2ITAfu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Sep 2012 20:35:50 -0400
+Received: by pbbrr13 with SMTP id rr13so3750511pbb.19
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Sep 2012 17:35:49 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1347985172-2495-8-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, axboe@kernel.dk, snitzer@redhat.com
 
+On Tue, Sep 18, 2012 at 12:19:31PM -0400, Martin K. Petersen wrote:
+> From: "Martin K. Petersen" <martin.petersen@oracle.com>
 > 
-> On Wed, 2012-09-19 at 13:27 +0100, James Bottomley wrote:
-> > I think we could do this with a couple of flags sitting inside struct
-> > device itself: one for pm state and capabilities defined at a generic
-> > level and one for device specific pm state.  The latter would be for
-> > things like the door lock information which is very specific to CDs
-> > (although not specific to SCSI CDs).  Alternatively, even if we can't
-> > use these capabilities at the generic pm level, we still need an
-> > internal state set of flags because power state stuff traverses the
-> > stack and struct device is the only universal object in that stack.
-> 
-> FWIW the SATA Device Sleep support, which is currently only used (in a
-> patch which is pending) automatically as an extension of the AHCI link
-> power management, can also be triggered manually by a GPIO line; I've
-> got a platform where it's done with an ACPI call. I suspect we'll see
-> that kind of manual setup on a few embedded platforms too.
-> 
-> If we're working on hooking this up through the device layers, perhaps
-> that's worth taking into consideration?
-> 
-> --
+> Support requests with more than one bio payload for discards. The total
+> number of bytes to be discarded is stored in req->__data_len and used in
+> sd_done() to complete the I/O.
 
-Hi David,
-
-For SATA Device sleep, what's the appropriate time to set the Device sleep,
-this seems also part of runtime PM?
-
-Best regards!
-
-Jack
-
+patch looks great. Tested the discard merge in my side, and it works. Thanks
+for the effort.
