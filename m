@@ -1,72 +1,62 @@
 From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 1/2] hpsa: gen8plus Smart Array IDs
-Date: Thu, 20 Sep 2012 16:05:18 -0500
-Message-ID: <20120920210518.GA30921@beardog.cce.hp.com>
+Subject: [PATCH 2/2] hpsa: Smart Array Gen8 marketing names
+Date: Thu, 20 Sep 2012 16:08:04 -0500
+Message-ID: <20120920210804.GB30921@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:16683 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752439Ab2ITVIK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Sep 2012 17:08:10 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, thenzl@redhat.com
-List-Id: linux-scsi@vger.kernel.org
 
 
-hpsa: add PCI ID's for next gen Smart Array
+hpsa: add marketing names for Gen8 controllers
 
 From: Mike Miller <mike.miller@hp.com>
 
-No marketing names yet available for the next generation of Smart Array.
+Now that the controllers have announced I can add the marketing names for
+the Proliant Gen8 server controllers.
 ---
- drivers/scsi/hpsa.c     |   18 ++++++++++++++++++
- include/linux/pci_ids.h |    1 +
- 2 files changed, 19 insertions(+), 0 deletions(-)
+ drivers/scsi/hpsa.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 796482b..edc598b 100644
+index edc598b..41fc5b0 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -99,6 +99,15 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3354},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3355},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3356},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1920},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1921},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1922},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1923},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1924},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1925},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1926},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1928},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x334d},
- 	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,	PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
- 	{0,}
-@@ -125,6 +134,15 @@ static struct board_type products[] = {
- 	{0x3354103C, "Smart Array", &SA5_access},
- 	{0x3355103C, "Smart Array", &SA5_access},
- 	{0x3356103C, "Smart Array", &SA5_access},
-+	{0x1920103C, "Smart Array", &SA5_access},
-+	{0x1921103C, "Smart Array", &SA5_access},
-+	{0x1922103C, "Smart Array", &SA5_access},
-+	{0x1923103C, "Smart Array", &SA5_access},
-+	{0x1924103C, "Smart Array", &SA5_access},
-+	{0x1925103C, "Smart Array", &SA5_access},
-+	{0x1926103C, "Smart Array", &SA5_access},
-+	{0x1928103C, "Smart Array", &SA5_access},
-+	{0x334d103C, "Smart Array", &SA5_access},
+@@ -127,13 +127,13 @@ static struct board_type products[] = {
+ 	{0x3249103C, "Smart Array P812", &SA5_access},
+ 	{0x324a103C, "Smart Array P712m", &SA5_access},
+ 	{0x324b103C, "Smart Array P711m", &SA5_access},
+-	{0x3350103C, "Smart Array", &SA5_access},
+-	{0x3351103C, "Smart Array", &SA5_access},
+-	{0x3352103C, "Smart Array", &SA5_access},
+-	{0x3353103C, "Smart Array", &SA5_access},
+-	{0x3354103C, "Smart Array", &SA5_access},
+-	{0x3355103C, "Smart Array", &SA5_access},
+-	{0x3356103C, "Smart Array", &SA5_access},
++	{0x3350103C, "Smart Array P222", &SA5_access},
++	{0x3351103C, "Smart Array P420", &SA5_access},
++	{0x3352103C, "Smart Array P421", &SA5_access},
++	{0x3353103C, "Smart Array P822", &SA5_access},
++	{0x3354103C, "Smart Array P420i", &SA5_access},
++	{0x3355103C, "Smart Array P220i", &SA5_access},
++	{0x3356103C, "Smart Array P721m", &SA5_access},
+ 	{0x1920103C, "Smart Array", &SA5_access},
+ 	{0x1921103C, "Smart Array", &SA5_access},
+ 	{0x1922103C, "Smart Array", &SA5_access},
+@@ -142,7 +142,7 @@ static struct board_type products[] = {
+ 	{0x1925103C, "Smart Array", &SA5_access},
+ 	{0x1926103C, "Smart Array", &SA5_access},
+ 	{0x1928103C, "Smart Array", &SA5_access},
+-	{0x334d103C, "Smart Array", &SA5_access},
++	{0x334d103C, "Smart Array P822se", &SA5_access},
  	{0xFFFF103C, "Unknown Smart Array", &SA5_access},
  };
  
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 6b4565c..416db39 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -753,6 +753,7 @@
- #define PCI_DEVICE_ID_HP_CISSD		0x3238
- #define PCI_DEVICE_ID_HP_CISSE		0x323a
- #define PCI_DEVICE_ID_HP_CISSF		0x323b
-+#define PCI_DEVICE_ID_HP_CISSH		0x323c
- #define PCI_DEVICE_ID_HP_ZX2_IOC	0x4031
- 
- #define PCI_VENDOR_ID_PCTECH		0x1042
