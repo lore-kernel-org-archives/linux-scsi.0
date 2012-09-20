@@ -1,214 +1,48 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 10/13] qla4xxx: IDC implementation for Loopback
-Date: Thu, 20 Sep 2012 07:35:10 -0400
-Message-ID: <1348140913-11828-11-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 11/13] qla4xxx: Fix double clearing of risc_intr for ISP83XX
+Date: Thu, 20 Sep 2012 07:35:11 -0400
+Message-ID: <1348140913-11828-12-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1348140913-11828-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:45309 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:15378 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754190Ab2ITLxG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754192Ab2ITLxG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 20 Sep 2012 07:53:06 -0400
 In-Reply-To: <1348140913-11828-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Nilesh Javali <nilesh.javali@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Manish Dusane <manish.dusane@qlogic.com>
 
-From: Nilesh Javali <nilesh.javali@qlogic.com>
+From: Manish Dusane <manish.dusane@qlogic.com>
 
-Handle IDC Request Notify AEN and post IDC Acknowledgement
-while participating in Loopback IDC.
+Issue:
+For ISP83XX risc_intr getting clear two times in case of polling mode.
+risc_intr getting clear from interrupt_service_routine() as well
+from process_mbox_intr() because of this driver may clear risc_intr
+without processing interrupt.
 
-Signed-off-by: Nilesh Javali <nilesh.javali@qlogic.com>
+Fix:
+Do not clear risc_intr from process_mbox_intr().
+
+Signed-off-by: Manish Dusane <manish.dusane@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_83xx.h |    8 ++++++++
- drivers/scsi/qla4xxx/ql4_def.h  |    3 ++-
- drivers/scsi/qla4xxx/ql4_fw.h   |    6 ++++++
- drivers/scsi/qla4xxx/ql4_glbl.h |    1 +
- drivers/scsi/qla4xxx/ql4_isr.c  |   37 +++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_mbx.c  |   33 +++++++++++++++++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_os.c   |    4 ++++
- 7 files changed, 91 insertions(+), 1 deletions(-)
+ drivers/scsi/qla4xxx/ql4_83xx.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_83xx.h b/drivers/scsi/qla4xxx/ql4_83xx.h
-index a679263..18d86ab 100644
---- a/drivers/scsi/qla4xxx/ql4_83xx.h
-+++ b/drivers/scsi/qla4xxx/ql4_83xx.h
-@@ -259,4 +259,12 @@ struct qla83xx_minidump_entry_pollrdmwr {
- 	uint32_t data_size;
- };
- 
-+/* IDC additional information */
-+struct qla4_83xx_idc_information {
-+	uint32_t request_desc;  /* IDC request descriptor */
-+	uint32_t info1; /* IDC additional info */
-+	uint32_t info2; /* IDC additional info */
-+	uint32_t info3; /* IDC additional info */
-+};
-+
- #endif
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 8e061ea..329d553 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -531,7 +531,7 @@ struct scsi_qla_host {
- #define DPC_RESET_ACTIVE		20 /* 0x00040000 */
- #define DPC_HA_UNRECOVERABLE		21 /* 0x00080000 ISP-82xx only*/
- #define DPC_HA_NEED_QUIESCENT		22 /* 0x00100000 ISP-82xx only*/
--
-+#define DPC_POST_IDC_ACK		23 /* 0x00200000 */
- 
- 	struct Scsi_Host *host; /* pointer to host data */
- 	uint32_t tot_ddbs;
-@@ -756,6 +756,7 @@ struct scsi_qla_host {
- 	struct device_reg_83xx  __iomem *qla4_83xx_reg; /* Base I/O address
- 							   for ISP8324 */
- 	uint32_t pf_bit;
-+	struct qla4_83xx_idc_information idc_info;
- };
- 
- struct ql4_task_data {
-diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
-index 69a2171..1c47950 100644
---- a/drivers/scsi/qla4xxx/ql4_fw.h
-+++ b/drivers/scsi/qla4xxx/ql4_fw.h
-@@ -454,6 +454,10 @@ struct qla_flt_region {
- #define MBOX_CMD_GET_CRASH_RECORD		0x0076	/* 4010 only */
- #define MBOX_CMD_GET_CONN_EVENT_LOG		0x0077
- 
-+#define MBOX_CMD_IDC_ACK			0x0101
-+#define MBOX_CMD_PORT_RESET			0x0120
-+#define MBOX_CMD_SET_PORT_CONFIG		0x0122
-+
- /*  Mailbox status definitions */
- #define MBOX_COMPLETION_STATUS			4
- #define MBOX_STS_BUSY				0x0007
-@@ -490,6 +494,8 @@ struct qla_flt_region {
- #define MBOX_ASTS_IPV6_ND_PREFIX_IGNORED	0x802C
- #define MBOX_ASTS_IPV6_LCL_PREFIX_IGNORED	0x802D
- #define MBOX_ASTS_ICMPV6_ERROR_MSG_RCVD		0x802E
-+#define MBOX_ASTS_IDC_COMPLETE			0x8100
-+#define MBOX_ASTS_IDC_NOTIFY			0x8101
- #define MBOX_ASTS_TXSCVR_INSERTED		0x8130
- #define MBOX_ASTS_TXSCVR_REMOVED		0x8131
- 
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index 0580f80..3eb5fd9 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -257,6 +257,7 @@ int qla4_8xxx_mbx_intr_disable(struct scsi_qla_host *ha);
- int qla4_8xxx_mbx_intr_enable(struct scsi_qla_host *ha);
- int qla4_8xxx_set_param(struct scsi_qla_host *ha, int param);
- int qla4_8xxx_update_idc_reg(struct scsi_qla_host *ha);
-+int qla4_83xx_post_idc_ack(struct scsi_qla_host *ha);
- 
- extern int ql4xextended_error_logging;
- extern int ql4xdontresethba;
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index 5050321..15ea814 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -806,6 +806,43 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
- 			    " removed\n",  ha->host_no, mbox_sts[0]));
- 			break;
- 
-+		case MBOX_ASTS_IDC_NOTIFY:
-+		{
-+			uint32_t opcode;
-+			if (is_qla8032(ha)) {
-+				DEBUG2(ql4_printk(KERN_INFO, ha,
-+						  "scsi%ld: AEN %04x, mbox_sts[1]=%08x, mbox_sts[2]=%08x, mbox_sts[3]=%08x, mbox_sts[4]=%08x\n",
-+						  ha->host_no, mbox_sts[0],
-+						  mbox_sts[1], mbox_sts[2],
-+						  mbox_sts[3], mbox_sts[4]));
-+				opcode = mbox_sts[1] >> 16;
-+				if ((opcode == MBOX_CMD_SET_PORT_CONFIG) ||
-+				    (opcode == MBOX_CMD_PORT_RESET)) {
-+					set_bit(DPC_POST_IDC_ACK,
-+						&ha->dpc_flags);
-+					ha->idc_info.request_desc = mbox_sts[1];
-+					ha->idc_info.info1 = mbox_sts[2];
-+					ha->idc_info.info2 = mbox_sts[3];
-+					ha->idc_info.info3 = mbox_sts[4];
-+					qla4xxx_wake_dpc(ha);
-+				}
-+			}
-+			break;
-+		}
-+
-+		case MBOX_ASTS_IDC_COMPLETE:
-+			if (is_qla8032(ha)) {
-+				DEBUG2(ql4_printk(KERN_INFO, ha,
-+						  "scsi%ld: AEN %04x, mbox_sts[1]=%08x, mbox_sts[2]=%08x, mbox_sts[3]=%08x, mbox_sts[4]=%08x\n",
-+						  ha->host_no, mbox_sts[0],
-+						  mbox_sts[1], mbox_sts[2],
-+						  mbox_sts[3], mbox_sts[4]));
-+				DEBUG2(ql4_printk(KERN_INFO, ha,
-+						  "scsi:%ld: AEN %04x IDC Complete notification\n",
-+						  ha->host_no, mbox_sts[0]));
-+			}
-+			break;
-+
- 		default:
- 			DEBUG2(printk(KERN_WARNING
- 				      "scsi%ld: AEN %04x UNKNOWN\n",
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index f31e79b..0d3d641 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1968,3 +1968,36 @@ int qla4_8xxx_set_param(struct scsi_qla_host *ha, int param)
- exit_set_param:
- 	return status;
+diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
+index f963b06..8b367ef 100644
+--- a/drivers/scsi/qla4xxx/ql4_83xx.c
++++ b/drivers/scsi/qla4xxx/ql4_83xx.c
+@@ -1402,7 +1402,6 @@ void qla4_83xx_process_mbox_intr(struct scsi_qla_host *ha, int outcount)
+ 		ha->mbox_status_count = outcount;
+ 		ha->isp_ops->interrupt_service_routine(ha, intr_status);
+ 	}
+-	writel(0, &ha->qla4_83xx_reg->risc_intr);
  }
-+
-+/**
-+ * qla4_83xx_post_idc_ack - post IDC ACK
-+ * @ha: Pointer to host adapter structure.
-+ *
-+ * Posts IDC ACK for IDC Request Notification AEN.
-+ **/
-+int qla4_83xx_post_idc_ack(struct scsi_qla_host *ha)
-+{
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	int status;
-+
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
-+	mbox_cmd[0] = MBOX_CMD_IDC_ACK;
-+	mbox_cmd[1] = ha->idc_info.request_desc;
-+	mbox_cmd[2] = ha->idc_info.info1;
-+	mbox_cmd[3] = ha->idc_info.info2;
-+	mbox_cmd[4] = ha->idc_info.info3;
-+
-+	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, MBOX_REG_COUNT,
-+					 mbox_cmd, mbox_sts);
-+	if (status == QLA_ERROR)
-+		ql4_printk(KERN_ERR, ha, "%s: failed status %04X\n", __func__,
-+			   mbox_sts[0]);
-+	else
-+	       DEBUG2(ql4_printk(KERN_INFO, ha, "%s: IDC ACK posted\n",
-+				 __func__));
-+
-+	return status;
-+}
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 97ce44b..3554680 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -3398,6 +3398,10 @@ static void qla4xxx_do_dpc(struct work_struct *work)
- 			ql4_printk(KERN_INFO, ha, "HW State: FAILED\n");
- 			qla4_8xxx_device_state_handler(ha);
- 		}
-+
-+		if (test_and_clear_bit(DPC_POST_IDC_ACK, &ha->dpc_flags))
-+			qla4_83xx_post_idc_ack(ha);
-+
- 		if (test_and_clear_bit(DPC_HA_NEED_QUIESCENT, &ha->dpc_flags)) {
- 			qla4_8xxx_need_qsnt_handler(ha);
- 		}
+ 
+ /**
 -- 
 1.7.1
 
