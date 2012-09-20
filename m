@@ -1,60 +1,73 @@
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: bfa_ioc.c:3407 code aligned with following code on line 3409
-Date: Thu, 20 Sep 2012 16:58:56 +0800
-Message-ID: <20120920085856.GA6724@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH 04/13] qla4xxx: Fix double IDC locking in qla4_8xxx_error_recovery
+Date: Thu, 20 Sep 2012 07:35:04 -0400
+Message-ID: <1348140913-11828-5-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1348140913-11828-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:6145 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753191Ab2ITI7B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Sep 2012 04:59:01 -0400
-Content-Disposition: inline
+Received: from mvnat01.qlogic.com ([198.186.3.73]:15912 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1754157Ab2ITLxE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Sep 2012 07:53:04 -0400
+In-Reply-To: <1348140913-11828-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Krishna Gudipati <kgudipat@brocade.com>
-Cc: kernel-janitors@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Poornima Vonti <poornima.vonti@qlogic.com>
 
-Hi Krishna,
+From: Poornima Vonti <poornima.vonti@qlogic.com>
 
-According to these (old) coccinelle warnings, bfa_cb_sfp_state_query() has very
-weird indents and "if" blocks:
+Issue:
+In qla4_8xxx_error_recovery() IDC lock recovery is initiated as
+IDC lock is held while enabling the interrupts
 
-  drivers/scsi/bfa/bfa_ioc.c:3407:3-18: code aligned with following code on line 3409
-  drivers/scsi/bfa/bfa_ioc.c:3415:4-19: code aligned with following code on line 3417
+Fix:
+Correctly handle IDC locking mechanism in qla4_8xxx_error_recovery().
 
-        3400 static void
-        3401 bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
-        3402 {
-        3403         bfa_trc(sfp, sfp->portspeed);
-        3404         if (sfp->media) {
-        3405                 bfa_sfp_media_get(sfp);
-        3406                 if (sfp->state_query_cbfn)
->       3407                         sfp->state_query_cbfn(sfp->state_query_cbarg,
-        3408                                         sfp->status);
-        3409                         sfp->media = NULL;
-        3410                 }
-        3411 
-        3412                 if (sfp->portspeed) {
-        3413                         sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
-        3414                         if (sfp->state_query_cbfn)
-        3415                                 sfp->state_query_cbfn(sfp->state_query_cbarg,
-        3416                                                 sfp->status);
->       3417                                 sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
-        3418                 }
-        3419 
-        3420                 sfp->state_query_lock = 0;
-        3421                 sfp->state_query_cbfn = NULL;
-        3422 }
+Signed-off-by: Poornima Vonti <poornima.vonti@qlogic.com>
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_os.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-The code was introduced by
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index c1093eb..afaba52 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -6140,22 +6140,25 @@ static uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
+ 		ha->isp_ops->idc_unlock(ha);
+ 		clear_bit(AF_FW_RECOVERY, &ha->flags);
+ 		rval = qla4xxx_initialize_adapter(ha, RESET_ADAPTER);
+-		ha->isp_ops->idc_lock(ha);
+ 
+ 		if (rval != QLA_SUCCESS) {
+ 			ql4_printk(KERN_INFO, ha, "scsi%ld: %s: HW State: "
+ 			    "FAILED\n", ha->host_no, __func__);
++			ha->isp_ops->idc_lock(ha);
+ 			qla4_8xxx_clear_drv_active(ha);
+ 			qla4_8xxx_wr_direct(ha, QLA8XXX_CRB_DEV_STATE,
+ 					    QLA8XXX_DEV_FAILED);
++			ha->isp_ops->idc_unlock(ha);
+ 		} else {
+ 			ql4_printk(KERN_INFO, ha, "scsi%ld: %s: HW State: "
+ 			    "READY\n", ha->host_no, __func__);
++			ha->isp_ops->idc_lock(ha);
+ 			qla4_8xxx_wr_direct(ha, QLA8XXX_CRB_DEV_STATE,
+ 					    QLA8XXX_DEV_READY);
+ 			/* Clear driver state register */
+ 			qla4_8xxx_wr_direct(ha, QLA8XXX_CRB_DRV_STATE, 0);
+ 			qla4_8xxx_set_drv_active(ha);
++			ha->isp_ops->idc_unlock(ha);
+ 			ret = qla4xxx_request_irqs(ha);
+ 			if (ret) {
+ 				ql4_printk(KERN_WARNING, ha, "Failed to "
+@@ -6167,7 +6170,6 @@ static uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
+ 				rval = QLA_SUCCESS;
+ 			}
+ 		}
+-		ha->isp_ops->idc_unlock(ha);
+ 	} else {
+ 		ql4_printk(KERN_INFO, ha, "scsi%ld: %s: devfn 0x%x is not "
+ 		    "the reset owner\n", ha->host_no, __func__,
+-- 
+1.7.1
 
-commit 51e569aa1f0c10bd71af05e76e4ba0e42c51e4ab
-Author:     Krishna Gudipati <kgudipat@brocade.com>
-Commit:     James Bottomley <JBottomley@Parallels.com>
-CommitDate: Wed Jun 29 17:22:26 2011 -0500
-
-    [SCSI] bfa: Added support to obtain SFP info.
-
-Thanks,
-Fengguang
