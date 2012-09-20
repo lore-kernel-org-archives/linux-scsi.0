@@ -1,96 +1,244 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v7 0/6] ZPODD patches
-Date: Thu, 20 Sep 2012 23:46:25 +0200
-Message-ID: <201209202346.25888.rjw@sisk.pl>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209191450.37735.rjw@sisk.pl> <1348066345.2479.41.camel@dabdike.int.hansenpartnership.com>
+Subject: Re: [PATCH v7 3/6] scsi: sr: support zero power ODD(ZPODD)
+Date: Fri, 21 Sep 2012 00:07:23 +0200
+Message-ID: <201209210007.23494.rjw@sisk.pl>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <1347438597-5903-4-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="utf-8"
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1348066345.2479.41.camel@dabdike.int.hansenpartnership.com>
+In-Reply-To: <1347438597-5903-4-git-send-email-aaron.lu@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wednesday, September 19, 2012, James Bottomley wrote:
-> On Wed, 2012-09-19 at 14:50 +0200, Rafael J. Wysocki wrote:
-> > On Wednesday, September 19, 2012, James Bottomley wrote:
-> > > On Wed, 2012-09-19 at 16:03 +0800, Aaron Lu wrote:
-> > > > Hi James,
-> > > > 
-> > > > May I know if this patchset will enter v3.7?
-> > > 
-> > > Sigh, well, I was hoping to persuade the PM people to sort this out
-> > > first.
-> > > 
-> > > The first observation is that all this looks to be too specific.  ZPO
-> > > may be ACPI specific, but the property it abstracts: whether the
-> > > particular device is powered off or not is generic and probably should
-> > > be known at the generic PM level.  Nothing actually really cares about
-> > > how we power off the device until you get all the way down to the ACPI
-> > > controller.
-> > > 
-> > > I think we could do this with a couple of flags sitting inside struct
-> > > device itself: one for pm state and capabilities defined at a generic
-> > > level and one for device specific pm state.  The latter would be for
-> > > things like the door lock information which is very specific to CDs
-> > > (although not specific to SCSI CDs).  Alternatively, even if we can't
-> > > use these capabilities at the generic pm level, we still need an
-> > > internal state set of flags because power state stuff traverses the
-> > > stack and struct device is the only universal object in that stack.
-> > > 
-> > > So I definitely think all of the sdev flags should become either generic
-> > > or specific flags in device.
-> > 
-> > Well, the problem is that it is kind of irrelevant to the core whether or
-> > not the given device can be powered off.  Moreover, the actual meaning of
-> > what "power off" means depends on the platform (it may be an individual device
-> > state or a power domain state, for instance).  Also, the set of available
-> > low-power states depends on the platform (or the bus type) and generally
-> > cannot be universally represented and there are low-power states that
-> > aren't "power off" per se, but still require the device state to be
-> > restored when putting it back into full power.
+On Wednesday, September 12, 2012, Aaron Lu wrote:
+> When ODD is runtime suspended, we will check if it is OK to remove
+> its power:
+> 1 For tray type, no medium inside and tray closed;
+> 2 For slot type, no medium inside.
+> And if yes, we will set the ready_to_power_off flag as an indication to
+> ATA layer that it is safe to place this device into ACPI D3 cold power
+> state.
 > 
-> So I don't insist on it being generic, but we do need somewhere to hang
-> the state.
+> And when it is powered off, we will set the powered_off flag so that the
+> periodically running check_events will not bother this device by simply
+> return.
+
+Well, so I agree with James that the PM flags in struct scsi_device are
+kind of odd and it would be better to put them somewhere else.
+
+I'd probably prefer them to sit in the ACPI layer with some helper functions
+allowing the sr driver to manipulate them, but that depends on the resulting
+code complexity.
+
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>  drivers/ata/libata-acpi.c  | 27 +++++++++++++++--------
+>  drivers/scsi/sr.c          | 53 ++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/sr.h          |  1 +
+>  drivers/scsi/sr_ioctl.c    |  7 +++++-
+>  include/scsi/scsi_device.h |  3 +++
+>  5 files changed, 81 insertions(+), 10 deletions(-)
 > 
-> > We've discussed that for a few times and each time we've ended up agreeing
-> > that struct device is not the right place to store this information (for
-> > example, PCI stores it in struct pci_dev, USB has its own rules etc.).
-> 
-> So, here's the problem this causes.  In SCSI, lower level devices have
-> no access to the drivers (to which the upper layer structures are tied),
-> so we have no way to go from device/scsi device to the scsi_disk
-> structure say.  This means that a lot of device specific PM stuff tends
-> to have flags in scsi_device just so we can get access to it.  A flag in
-> device would allow us to carry the information farther (say to struct
-> cdrom for instance).
-> 
-> > I'll have a look at the patchset again and see what can be done about this.
+> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> index 902b5a4..9aca057 100644
+> --- a/drivers/ata/libata-acpi.c
+> +++ b/drivers/ata/libata-acpi.c
+> @@ -854,7 +854,7 @@ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
+>  {
+>  	struct ata_device *dev;
+>  	acpi_handle handle;
+> -	int acpi_state;
+> +	int acpi_state, ret;
+>  
+>  	/* channel first and then drives for power on and vica versa
+>  	   for power off */
+> @@ -869,17 +869,24 @@ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
+>  
+>  		if (state.event != PM_EVENT_ON) {
+>  			acpi_state = acpi_pm_device_sleep_state(
+> -				&dev->sdev->sdev_gendev, NULL, ACPI_STATE_D3);
+> -			if (acpi_state > 0)
+> -				acpi_bus_set_power(handle, acpi_state);
+> -			/* TBD: need to check if it's runtime pm request */
+> -			acpi_pm_device_run_wake(
+> -				&dev->sdev->sdev_gendev, true);
+> +					&dev->sdev->sdev_gendev, NULL,
+> +					dev->sdev->ready_to_power_off ?
+> +					ACPI_STATE_D3 : ACPI_STATE_D3_HOT);
+> +			if (acpi_state > 0) {
+> +				ret = acpi_bus_set_power(handle, acpi_state);
+> +				if (!ret && acpi_state == ACPI_STATE_D3)
+> +					dev->sdev->powered_off = 1;
+> +
+> +				/* TODO: check if it's runtime pm request */
+> +				acpi_pm_device_run_wake(
+> +						&dev->sdev->sdev_gendev, true);
+> +			}
+>  		} else {
+>  			/* Ditto */
+>  			acpi_pm_device_run_wake(
+>  				&dev->sdev->sdev_gendev, false);
+>  			acpi_bus_set_power(handle, ACPI_STATE_D0);
+> +			dev->sdev->powered_off = 0;
+>  		}
+>  	}
+>  
+> @@ -985,8 +992,10 @@ static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
+>  	struct ata_device *ata_dev = context;
+>  
+>  	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
+> -			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev))
+> -		scsi_autopm_get_device(ata_dev->sdev);
+> +			ata_dev->sdev->powered_off) {
+> +		ata_dev->sdev->need_eject = 1;
+> +		pm_runtime_resume(&ata_dev->sdev->sdev_gendev);
+> +	}
+>  }
+>  
+>  static void ata_acpi_add_pm_notifier(struct ata_device *dev)
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 7a8222f..ef72682 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -80,6 +80,8 @@ static DEFINE_MUTEX(sr_mutex);
+>  static int sr_probe(struct device *);
+>  static int sr_remove(struct device *);
+>  static int sr_done(struct scsi_cmnd *);
+> +static int sr_suspend(struct device *, pm_message_t msg);
+> +static int sr_resume(struct device *);
+>  
+>  static struct scsi_driver sr_template = {
+>  	.owner			= THIS_MODULE,
+> @@ -87,6 +89,8 @@ static struct scsi_driver sr_template = {
+>  		.name   	= "sr",
+>  		.probe		= sr_probe,
+>  		.remove		= sr_remove,
+> +		.suspend        = sr_suspend,
+> +		.resume         = sr_resume,
+>  	},
+>  	.done			= sr_done,
+>  };
+> @@ -172,6 +176,52 @@ static void scsi_cd_put(struct scsi_cd *cd)
+>  	mutex_unlock(&sr_ref_mutex);
+>  }
 
-I think I see what you mean.
+Besides, I need some help to understand how this is supposed to work.
 
-For example, the sr driver uses its "device" member to pass information
-to the libata layer, if I understand things correctly, and the libata
-layer cannot go back to its struct scsi_cd, right?
+Do I think correctly that sr_suspend(), for example, will be run by the
+SCSI bus type layer in case of a CD device runtime suspend?  However,
+won't this routine be used during system suspend as well and won't it cause
+problems to happen if so?
 
-First off, I agree with you that putting those PM fields into struct scsi_device
-is not the cleanest approach and it would be good to find some other place
-for them.  However, I also don't think that struct device (or struct dev_pm_info
-embedded in it for that matter) is any better (those fields in there would make
-as little sense as they do in struct scsi_device).
-
-Now, the question is where to store them and I think there are a couple of
-places worth considering.  For instance, there's the void *driver_data field
-in struct acpi_device that I bet is unused for the ACPI devices associated with
-ATA ones and in principle it might be set by libata to point to a PM data
-structure (that would require some "platform" helper functions for the
-sr, sd etc. drivers to access that structure).  There also is the subsys_data
-field in struct dev_pm_info that might be used to point to some libata-specific
-PM data (although the question is which struct dev_pm_info to use in that
-case, the sdev's one, or the sdev->gendev's one?).
+> +static int sr_suspend(struct device *dev, pm_message_t msg)
+> +{
+> +	struct scsi_sense_hdr sshdr;
+> +	struct scsi_cd *cd = dev_get_drvdata(dev);
+> +
+> +	if (!cd->device->can_power_off)
+> +		return 0;
+> +
+> +	/* See if we can power off this ZPODD device */
+> +	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+> +	if (cd->cdi.mask & CDC_CLOSE_TRAY)
+> +		/* no media for caddy/slot type ODD */
+> +		cd->device->ready_to_power_off = scsi_sense_valid(&sshdr) &&
+> +							sshdr.asc == 0x3a;
+> +	else
+> +		/* no media and door closed for tray type ODD */
+> +		cd->device->ready_to_power_off = scsi_sense_valid(&sshdr) &&
+> +					sshdr.asc == 0x3a && sshdr.ascq == 0x01;
+> +
+> +	return 0;
+> +}
+> +
+> +static int sr_resume(struct device *dev)
+> +{
+> +	struct scsi_cd *cd;
+> +	struct scsi_sense_hdr sshdr;
+> +
+> +	cd = dev_get_drvdata(dev);
+> +
+> +	if (!cd->device->powered_off)
+> +		return 0;
+> +
+> +	/* get the disk ready */
+> +	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+> +
+> +	/* If user wakes up the ODD, eject the tray */
+> +	if (cd->device->need_eject) {
+> +		cd->device->need_eject = 0;
+> +		/* But only for tray type ODD when door is not locked */
+> +		if (!(cd->cdi.mask & CDC_CLOSE_TRAY) && !cd->door_locked)
+> +			sr_tray_move(&cd->cdi, 1);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static unsigned int sr_get_events(struct scsi_device *sdev)
+>  {
+>  	u8 buf[8];
+> @@ -226,6 +276,9 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+>  	if (CDSL_CURRENT != slot)
+>  		return 0;
+>  
+> +	if (cd->device->powered_off)
+> +		return 0;
+> +
+>  	scsi_autopm_get_device(cd->device);
+>  
+>  	events = sr_get_events(cd->device);
+> diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
+> index 37c8f6b..1c84537 100644
+> --- a/drivers/scsi/sr.h
+> +++ b/drivers/scsi/sr.h
+> @@ -41,6 +41,7 @@ typedef struct scsi_cd {
+>  	unsigned readcd_known:1;	/* drive supports READ_CD (0xbe) */
+>  	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
+>  	unsigned media_present:1;	/* media is present */
+> +	unsigned door_locked:1; /* door is locked */
+>  
+>  	/* GET_EVENT spurious event handling, blk layer guarantees exclusion */
+>  	int tur_mismatch;		/* nr of get_event TUR mismatches */
+> diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+> index a3911c3..c1275f6 100644
+> --- a/drivers/scsi/sr_ioctl.c
+> +++ b/drivers/scsi/sr_ioctl.c
+> @@ -292,10 +292,15 @@ int sr_tray_move(struct cdrom_device_info *cdi, int pos)
+>  
+>  int sr_lock_door(struct cdrom_device_info *cdi, int lock)
+>  {
+> +	int ret;
+>  	Scsi_CD *cd = cdi->handle;
+>  
+> -	return scsi_set_medium_removal(cd->device, lock ?
+> +	ret = scsi_set_medium_removal(cd->device, lock ?
+>  		       SCSI_REMOVAL_PREVENT : SCSI_REMOVAL_ALLOW);
+> +	if (!ret)
+> +		cd->door_locked = lock;
+> +
+> +	return ret;
+>  }
+>  
+>  int sr_drive_status(struct cdrom_device_info *cdi, int slot)
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 9895f69..da5c86f 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -156,6 +156,9 @@ struct scsi_device {
+>  	unsigned is_visible:1;	/* is the device visible in sysfs */
+>  	unsigned can_power_off:1; /* Device supports runtime power off */
+>  	unsigned wce_default_on:1;	/* Cache is ON by default */
+> +	unsigned need_eject:1;	/* Need eject the tray when wakes up */
+> +	unsigned ready_to_power_off:1;	/* Device is ready to be powered off */
+> +	unsigned powered_off:1;	/* Device is powered off */
+>  
+>  	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+>  	struct list_head event_list;	/* asserted events */
 
 Thanks,
 Rafael
