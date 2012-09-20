@@ -1,29 +1,123 @@
-From: Jiang Liu <liuj97@gmail.com>
-Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
-Date: Thu, 20 Sep 2012 23:58:52 +0800
-Message-ID: <505B3D3C.6030109@gmail.com>
-References: <505456FD.6040801@huawei.com> <CAErSpo6OkAV-wwKnpMRAvisQ_Jj=w9dxLbO3JxkX2A_Vd8QX=Q@mail.gmail.com> <50571243.4050001@huawei.com> <CAErSpo7WwwB3ZO9g4WjQZKcfXAP0tKuXWKn=UTw1mDGJyX6=vQ@mail.gmail.com> <505924E4.5010502@huawei.com> <CAErSpo5PuwG1pvCRBxOUoyK-_ajg-AZkkuCUxeGbkb6TyBP_Kw@mail.gmail.com> <505A7599.5070103@huawei.com> <505B0B6A.2050709@huawei.com> <CAErSpo6Wvn_cdOJg-OULbjyDQ0Qibq_+X78QMSqBeoC0GuB2VQ@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Kernel crash with unsupported DIF protection type
+Date: Thu, 20 Sep 2012 15:53:47 -0400
+Message-ID: <yq14nmslbck.fsf@sermon.lab.mkp.net>
+References: <50583924.90708@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <CAErSpo6Wvn_cdOJg-OULbjyDQ0Qibq_+X78QMSqBeoC0GuB2VQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Jon Mason <jdmason@kudzu.us>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, PCI <linux-pci@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:22388 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754093Ab2ITTyE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Sep 2012 15:54:04 -0400
+In-Reply-To: <50583924.90708@suse.de> (Hannes Reinecke's message of "Tue, 18
+	Sep 2012 11:04:36 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Hi Bjorn,
-	We will try to work out a patch for this issue, won't silently ignore it.
-We also found another issue related to ARI. The steps to reproduce the bug is:
-1) Boot with a ARI-capable device connected to ARI-capable port, so ARI will be enabled.
-2) Hot-remove the ARI-capable device.
-3) Hot-add another non-ARI-capable multifunction device into the same slot.
-4) Now only the function 0 of the hot-added device could be enumerated.
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-	I think Yijing is going to work on the above two issues.
-	Thanks!
-	Gerry
+Hannes> I recently got my hands on some weird drives, insisting on
+Hannes> having been formatted with protection type 7:
 
-On 09/20/2012 11:46 PM, Bjorn Helgaas wrote:
->>>> tried any.  Does "pci=pcie_bus_safe" make any difference?
+Lovely :|
+
+
+Hannes> I've attached a tentative patch, which allows the system to
+Hannes> boot.  However, I'm not completely happy with that, as the
+Hannes> capacity is _still_ updated after revalidation:
+
+How about this?
+
+
+sd: Ensure we correctly disable devices with unknown protection type
+
+We set the capacity to zero when we discovered a device formatted with
+an unknown DIF protection type. However, the read_capacity code would
+override the capacity and cause the device to be enabled regardless.
+
+Make sd_read_protection_type() return an error if the protection type is
+unknown. Also prevent duplicate printk lines when the device is being
+revalidated.
+
+Reported-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 1cf2d5d..1c54564 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1820,34 +1820,42 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ /*
+  * Determine whether disk supports Data Integrity Field.
+  */
+-static void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
++static int sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ {
+ 	struct scsi_device *sdp = sdkp->device;
+ 	u8 type;
++	int ret = 0;
+ 
+ 	if (scsi_device_protection(sdp) == 0 || (buffer[12] & 1) == 0)
+-		return;
++		return ret;
+ 
+ 	type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
+ 
+-	if (type == sdkp->protection_type || !sdkp->first_scan)
+-		return;
++	if (type > SD_DIF_TYPE3_PROTECTION)
++		ret = -ENODEV;
++	else if (scsi_host_dif_capable(sdp->host, type))
++		ret = 1;
++
++	if (sdkp->first_scan || type != sdkp->protection_type)
++		switch (ret) {
++		case -ENODEV:
++			sd_printk(KERN_ERR, sdkp, "formatted with unsupported" \
++				  " protection type %u. Disabling disk!\n",
++				  type);
++			break;
++		case 1:
++			sd_printk(KERN_NOTICE, sdkp,
++				  "Enabling DIF Type %u protection\n", type);
++			break;
++		case 0:
++			sd_printk(KERN_NOTICE, sdkp,
++				  "Disabling DIF Type %u protection\n", type);
++			break;
++		}
+ 
+ 	sdkp->protection_type = type;
+ 
+-	if (type > SD_DIF_TYPE3_PROTECTION) {
+-		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
+-			  "protection type %u. Disabling disk!\n", type);
+-		sdkp->capacity = 0;
+-		return;
+-	}
+-
+-	if (scsi_host_dif_capable(sdp->host, type))
+-		sd_printk(KERN_NOTICE, sdkp,
+-			  "Enabling DIF Type %u protection\n", type);
+-	else
+-		sd_printk(KERN_NOTICE, sdkp,
+-			  "Disabling DIF Type %u protection\n", type);
++	return ret;
+ }
+ 
+ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
+@@ -1943,7 +1951,10 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 	sector_size = get_unaligned_be32(&buffer[8]);
+ 	lba = get_unaligned_be64(&buffer[0]);
+ 
+-	sd_read_protection_type(sdkp, buffer);
++	if (sd_read_protection_type(sdkp, buffer) < 0) {
++		sdkp->capacity = 0;
++		return -ENODEV;
++	}
+ 
+ 	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
+ 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
