@@ -1,50 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] qla2xxx: Correct loop_id_map allocation-size and usage.
-Date: Thu, 20 Sep 2012 09:15:12 +0100
-Message-ID: <1348128912.2388.3.camel@dabdike.int.hansenpartnership.com>
-References: <1348126774-3844-1-git-send-email-saurav.kashyap@qlogic.com>
+From: Fengguang Wu <fengguang.wu@intel.com>
+Subject: bfa_ioc.c:3407 code aligned with following code on line 3409
+Date: Thu, 20 Sep 2012 16:58:56 +0800
+Message-ID: <20120920085856.GA6724@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54509 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751756Ab2ITIPQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Sep 2012 04:15:16 -0400
-In-Reply-To: <1348126774-3844-1-git-send-email-saurav.kashyap@qlogic.com>
+Received: from mga01.intel.com ([192.55.52.88]:6145 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753191Ab2ITI7B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Sep 2012 04:59:01 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: Krishna Gudipati <kgudipat@brocade.com>
+Cc: kernel-janitors@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2012-09-20 at 03:39 -0400, Saurav Kashyap wrote:
-> From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-> 
-> Original code incorrectly assigned LOOPID_MAP_SIZE to be the
-> allocation size in bytes rather than total bit size.
-> Additionally corrected code to check for bit-allocation failure
-> in qla2x00_find_new_loop_id().
-> 
-> Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-> ---
->  drivers/scsi/qla2xxx/qla_def.h  |    2 +-
->  drivers/scsi/qla2xxx/qla_init.c |    4 ++--
->  drivers/scsi/qla2xxx/qla_os.c   |    3 ++-
->  3 files changed, 5 insertions(+), 4 deletions(-)
+Hi Krishna,
 
-This is correcting a bug introduced by
+According to these (old) coccinelle warnings, bfa_cb_sfp_state_query() has very
+weird indents and "if" blocks:
 
-commit 07f2a8c179aa81075a161e6d0c522aa1289d994f
-Author: Chad Dupuis <chad.dupuis@qlogic.com>
-Date:   Wed Aug 22 14:21:00 2012 -0400
+  drivers/scsi/bfa/bfa_ioc.c:3407:3-18: code aligned with following code on line 3409
+  drivers/scsi/bfa/bfa_ioc.c:3415:4-19: code aligned with following code on line 3417
 
-    [SCSI] qla2xxx: Use bitmap to store loop_id's for fcports.
+        3400 static void
+        3401 bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
+        3402 {
+        3403         bfa_trc(sfp, sfp->portspeed);
+        3404         if (sfp->media) {
+        3405                 bfa_sfp_media_get(sfp);
+        3406                 if (sfp->state_query_cbfn)
+>       3407                         sfp->state_query_cbfn(sfp->state_query_cbarg,
+        3408                                         sfp->status);
+        3409                         sfp->media = NULL;
+        3410                 }
+        3411 
+        3412                 if (sfp->portspeed) {
+        3413                         sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
+        3414                         if (sfp->state_query_cbfn)
+        3415                                 sfp->state_query_cbfn(sfp->state_query_cbarg,
+        3416                                                 sfp->status);
+>       3417                                 sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
+        3418                 }
+        3419 
+        3420                 sfp->state_query_lock = 0;
+        3421                 sfp->state_query_cbfn = NULL;
+        3422 }
 
-Isn't it?  So rather than introducing a bug and later fixing it, we
-should just merge the two, since it's not yet upstream, right?
+The code was introduced by
 
-James
+commit 51e569aa1f0c10bd71af05e76e4ba0e42c51e4ab
+Author:     Krishna Gudipati <kgudipat@brocade.com>
+Commit:     James Bottomley <JBottomley@Parallels.com>
+CommitDate: Wed Jun 29 17:22:26 2011 -0500
 
+    [SCSI] bfa: Added support to obtain SFP info.
 
+Thanks,
+Fengguang
