@@ -1,68 +1,75 @@
-From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 06/13] qla4xxx: Prevent MSI/MSI-X falling back to INTx for ISP82XX
-Date: Thu, 20 Sep 2012 07:35:06 -0400
-Message-ID: <1348140913-11828-7-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1348140913-11828-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Yijing Wang <wangyijing@huawei.com>
+Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
+Date: Thu, 20 Sep 2012 20:26:18 +0800
+Message-ID: <505B0B6A.2050709@huawei.com>
+References: <505456FD.6040801@huawei.com> <CAErSpo6OkAV-wwKnpMRAvisQ_Jj=w9dxLbO3JxkX2A_Vd8QX=Q@mail.gmail.com> <50571243.4050001@huawei.com> <CAErSpo7WwwB3ZO9g4WjQZKcfXAP0tKuXWKn=UTw1mDGJyX6=vQ@mail.gmail.com> <505924E4.5010502@huawei.com> <CAErSpo5PuwG1pvCRBxOUoyK-_ajg-AZkkuCUxeGbkb6TyBP_Kw@mail.gmail.com> <505A7599.5070103@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:39004 "HELO linux-zupk.site"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754178Ab2ITLxF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Sep 2012 07:53:05 -0400
-In-Reply-To: <1348140913-11828-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:6636 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753576Ab2ITM2L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Sep 2012 08:28:11 -0400
+In-Reply-To: <505A7599.5070103@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+To: Bjorn Helgaas <bhelgaas@google.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+Cc: Jon Mason <jdmason@kudzu.us>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, PCI <linux-pci@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+On 2012/9/20 9:47, Yijing Wang wrote:
+>>> We compared the two situations after BIOS initialization, and found Max Payload Size in DEVCTRL is 256B
+>>> if FC card had been installed, if the slot is empty, Max Payload Size is 128B. We force it to be 128B when
+>>> FC card installed when system boot up. Finally pci hotplug becomes ok. So I suspect maybe our PCIe hardware
+>>> has problem supporting 256B.
+>>
+>> Ah, this sounds like something I've been worried about for a while,
+>> i.e., do we handle MPS correctly when we hot-add devices?
+>>
+>> Yijing, I'm not quite clear on what you're observing.  I guess you're
+>> saying that if an FC card is installed at boot, the BIOS sets MPS to
+>> 256, and that if no FC card is installed, the BIOS sets MPS to 128?
+> 
+> Yes.
+> 
+>> You haven't mentioned any Linux boot options, so I assume you haven't
+>> tried any.  Does "pci=pcie_bus_safe" make any difference?
+> 
+> Yes, I don't add any Linux boot options before. I will try this boot option
+> "pci=pcie_bus_safe".
+> 
+>> Jon, here's a pointer to the beginning of the thread:
+>> http://marc.info/?l=linux-pci&m=134770460302298&w=2 (full dmesg log at
+>> http://marc.info/?l=linux-scsi&m=134788365823217&w=2).  I'm not sure
+>> we have enough in the dmesg log to diagnose an issue like this.  I
+>> wonder if it would be useful to log the current setting, so we could
+>> notice BIOS default differences like this one.
+>>
 
-For ISP82xx mixed interrupt mode is not supported.
-Hence prevent MSI/MSI-x from falling back to INTx mode.
+Hi Bjorn,
+   After add "pci=pcie_bus_safe" boot options, Hot-plug for FC card is OK.
+It's great! Thanks for your help!
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_isr.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+Giri, it's not the fc card problem, we fix this problem by add boot option
+"pci=pcie_bus_safe" which force the MPS of the entire system to the smallest
+possible.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index 68bdb8c..5050321 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -1364,9 +1364,15 @@ try_msi:
- 			pci_disable_msi(ha->pdev);
- 		}
- 	}
--	ql4_printk(KERN_WARNING, ha,
--	    "MSI: Falling back-to INTx mode -- %d.\n", ret);
- 
-+	/*
-+	 * Prevent interrupts from falling back to INTx mode in cases where
-+	 * interrupts cannot get acquired through MSI-X or MSI mode.
-+	 */
-+	if (is_qla8022(ha)) {
-+		ql4_printk(KERN_WARNING, ha, "IRQ not attached -- %d.\n", ret);
-+		goto irq_not_attached;
-+	}
- try_intx:
- 	/* Trying INTx */
- 	ret = request_irq(ha->pdev->irq, ha->isp_ops->intr_handler,
-@@ -1380,7 +1386,7 @@ try_intx:
- 		ql4_printk(KERN_WARNING, ha,
- 		    "INTx: Failed to reserve interrupt %d already in"
- 		    " use.\n", ha->pdev->irq);
--		return ret;
-+		goto irq_not_attached;
- 	}
- 
- irq_attached:
-@@ -1388,6 +1394,7 @@ irq_attached:
- 	ha->host->irq = ha->pdev->irq;
- 	ql4_printk(KERN_INFO, ha, "%s: irq %d attached\n",
- 	    __func__, ha->pdev->irq);
-+irq_not_attached:
- 	return ret;
- }
- 
+Thanks
+Yijing
+
+>> Bjorn
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> .
+>>
+> 
+> 
+
+
 -- 
-1.7.1
+Thanks!
+Yijing
 
