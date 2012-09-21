@@ -1,150 +1,103 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Kernel crash with unsupported DIF protection type
-Date: Fri, 21 Sep 2012 12:44:12 -0400
-Message-ID: <yq1d31fjpgj.fsf@sermon.lab.mkp.net>
-References: <50583924.90708@suse.de> <yq14nmslbck.fsf@sermon.lab.mkp.net>
-	<505C76D1.6020506@suse.de> <yq1haqrjr8w.fsf@sermon.lab.mkp.net>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Re: [RFC PATCH] libata: scsi: flush cache on scsi stop command
+Date: Fri, 21 Sep 2012 12:05:33 -0700
+Message-ID: <CAMHSBOWwGjsov2WMUn1SRH-MkASTCbNVFABPVFPmXwtZ_Gh2oA@mail.gmail.com>
+References: <1348045019-21532-1-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:48230 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756555Ab2IUQoX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Sep 2012 12:44:23 -0400
-In-Reply-To: <yq1haqrjr8w.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
-	message of "Fri, 21 Sep 2012 12:05:35 -0400")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1348045019-21532-1-git-send-email-aaron.lu@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>
 
->>>>> "Martin" == Martin K Petersen <martin.petersen@oracle.com> writes:
+On Wed, Sep 19, 2012 at 1:56 AM, Aaron Lu <aaron.lu@intel.com> wrote:
+> scsi stop command is used to put a device into stopped power
+> condition, and scsi devices will take care of its internal cache
+> before entering this power condition. For ata devices, this command
+> should be translated to flush cache + standby immediate, currently,
+> we are translating it to only standby.
+>
+> This patch handle this by sending flush cache command when standby is
+> to be sent, and in its qc complete function, send the actual standby.
+>
+> This patch will be used to support poweroff hard disk either when
+> runtime or when system is going to S3/S4/S5. The sd_suspend will be
+> modified to only send a stop command to the device if device manages
+> start_stop, the current implementation will send a sync cache command,
+> which is not necessary per the scsi spec.
+>
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>  drivers/ata/libata-scsi.c | 32 ++++++++++++++++++++++++++++++--
+>  1 file changed, 30 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 8ec81ca..de6e734 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1759,6 +1759,27 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+>         ata_qc_free(qc);
+>  }
+>
+> +static void ata_flush_qc_complete(struct ata_queued_cmd *qc)
+> +{
+> +       if (qc->err_mask) {
+> +               ata_gen_ata_sense(qc);
+> +               qc->scsidone(qc->scsicmd);
+> +               ata_qc_free(qc);
+> +       } else {
+> +               qc->complete_fn = ata_scsi_qc_complete;
+> +               qc->tf.command = ATA_CMD_STANDBYNOW1;
+> +               ata_qc_issue(qc);
+> +       }
+> +}
+> +
+> +static void ata_qc_issue_flush(struct ata_queued_cmd *qc)
+> +{
+> +       qc->complete_fn = ata_flush_qc_complete;
+> +       qc->tf.command = qc->dev->flags & ATA_DFLAG_FLUSH_EXT ?
+> +                               ATA_CMD_FLUSH_EXT : ATA_CMD_FLUSH;
+> +       ata_qc_issue(qc);
+> +}
+> +
+>  /**
+>   *     ata_scsi_translate - Translate then issue SCSI command to ATA device
+>   *     @dev: ATA device to which the command is addressed
+> @@ -1821,8 +1842,15 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
+>                         goto defer;
+>         }
+>
+> -       /* select device, send command to hardware */
+> -       ata_qc_issue(qc);
+> +       /*
+> +        * If we received scsi stop command,
+> +        * we will need to flush cache first
+> +        */
+> +       if (qc->tf.command == ATA_CMD_STANDBYNOW1 && ata_try_flush_cache(dev))
+You are adding tests on the data path.
+What about changing the xlat function ata_scsi_start_stop_xlat to -
+when stop is requested:
+- if try_flush_cache is true,
+ change qc->complete_fn to ata_flush_qc_complete
+ build a flush command
+- else
+ do as usual.
 
-Martin> Updated patch below...
+ata_flush_qc_complete remains the same.
 
-This time without mangled closing bracket...
-
-
-sd: Ensure we correctly disable devices with unknown protection type
-
-We set the capacity to zero when we discovered a device formatted with
-an unknown DIF protection type. However, the read_capacity code would
-override the capacity and cause the device to be enabled regardless.
-
-Make sd_read_protection_type() return an error if the protection type is
-unknown. Also prevent duplicate printk lines when the device is being
-revalidated.
-
-Reported-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 1cf2d5d..7a22db3 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1820,34 +1820,42 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- /*
-  * Determine whether disk supports Data Integrity Field.
-  */
--static void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
-+static int sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
- {
- 	struct scsi_device *sdp = sdkp->device;
- 	u8 type;
-+	int ret = 0;
- 
- 	if (scsi_device_protection(sdp) == 0 || (buffer[12] & 1) == 0)
--		return;
-+		return ret;
- 
- 	type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
- 
--	if (type == sdkp->protection_type || !sdkp->first_scan)
--		return;
-+	if (type > SD_DIF_TYPE3_PROTECTION)
-+		ret = -ENODEV;
-+	else if (scsi_host_dif_capable(sdp->host, type))
-+		ret = 1;
-+
-+	if (sdkp->first_scan || type != sdkp->protection_type)
-+		switch (ret) {
-+		case -ENODEV:
-+			sd_printk(KERN_ERR, sdkp, "formatted with unsupported" \
-+				  " protection type %u. Disabling disk!\n",
-+				  type);
-+			break;
-+		case 1:
-+			sd_printk(KERN_NOTICE, sdkp,
-+				  "Enabling DIF Type %u protection\n", type);
-+			break;
-+		case 0:
-+			sd_printk(KERN_NOTICE, sdkp,
-+				  "Disabling DIF Type %u protection\n", type);
-+			break;
-+		}
- 
- 	sdkp->protection_type = type;
- 
--	if (type > SD_DIF_TYPE3_PROTECTION) {
--		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
--			  "protection type %u. Disabling disk!\n", type);
--		sdkp->capacity = 0;
--		return;
--	}
--
--	if (scsi_host_dif_capable(sdp->host, type))
--		sd_printk(KERN_NOTICE, sdkp,
--			  "Enabling DIF Type %u protection\n", type);
--	else
--		sd_printk(KERN_NOTICE, sdkp,
--			  "Disabling DIF Type %u protection\n", type);
-+	return ret;
- }
- 
- static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
-@@ -1943,7 +1951,10 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	sector_size = get_unaligned_be32(&buffer[8]);
- 	lba = get_unaligned_be64(&buffer[0]);
- 
--	sd_read_protection_type(sdkp, buffer);
-+	if (sd_read_protection_type(sdkp, buffer) < 0) {
-+		sdkp->capacity = 0;
-+		return -ENODEV;
-+	}
- 
- 	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
- 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
-@@ -2788,7 +2799,8 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
- 	}
- 
- 	add_disk(gd);
--	sd_dif_config_host(sdkp);
-+	if (sdkp->capacity)
-+		sd_dif_config_host(sdkp);
- 
- 	sd_revalidate_disk(gd);
- 
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 5f7d5b3..4908480 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -873,6 +873,9 @@ static inline unsigned int scsi_host_dif_capable(struct Scsi_Host *shost, unsign
- 				       SHOST_DIF_TYPE2_PROTECTION,
- 				       SHOST_DIF_TYPE3_PROTECTION };
- 
-+	if (target_type > SHOST_DIF_TYPE3_PROTECTION)
-+		return 0;
-+
- 	return shost->prot_capabilities & cap[target_type] ? target_type : 0;
- }
- 
-@@ -884,6 +887,9 @@ static inline unsigned int scsi_host_dix_capable(struct Scsi_Host *shost, unsign
- 				       SHOST_DIX_TYPE2_PROTECTION,
- 				       SHOST_DIX_TYPE3_PROTECTION };
- 
-+	if (target_type > SHOST_DIX_TYPE3_PROTECTION)
-+		return 0;
-+
- 	return shost->prot_capabilities & cap[target_type];
- #endif
- 	return 0;
+> +               ata_qc_issue_flush(qc);
+> +       else
+> +               /* select device, send command to hardware */
+> +               ata_qc_issue(qc);
+>
+>         VPRINTK("EXIT\n");
+>         return 0;
+> --
+> 1.7.12.21.g871e293
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
