@@ -1,185 +1,170 @@
-From: Hannes Reinecke <hare@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Kernel crash with unsupported DIF protection type
-Date: Fri, 21 Sep 2012 16:16:49 +0200
-Message-ID: <505C76D1.6020506@suse.de>
+Date: Fri, 21 Sep 2012 12:05:35 -0400
+Message-ID: <yq1haqrjr8w.fsf@sermon.lab.mkp.net>
 References: <50583924.90708@suse.de> <yq14nmslbck.fsf@sermon.lab.mkp.net>
+	<505C76D1.6020506@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34865 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753287Ab2IUOQv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Sep 2012 10:16:51 -0400
-In-Reply-To: <yq14nmslbck.fsf@sermon.lab.mkp.net>
+Received: from acsinet15.oracle.com ([141.146.126.227]:33092 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753676Ab2IUQFp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Sep 2012 12:05:45 -0400
+In-Reply-To: <505C76D1.6020506@suse.de> (Hannes Reinecke's message of "Fri, 21
+	Sep 2012 16:16:49 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>
 
-On 09/20/2012 09:53 PM, Martin K. Petersen wrote:
->>>>>> "Hannes" =3D=3D Hannes Reinecke <hare@suse.de> writes:
->=20
-> Hannes> I recently got my hands on some weird drives, insisting on
-> Hannes> having been formatted with protection type 7:
->=20
-> Lovely :|
->=20
->=20
-> Hannes> I've attached a tentative patch, which allows the system to
-> Hannes> boot.  However, I'm not completely happy with that, as the
-> Hannes> capacity is _still_ updated after revalidation:
->=20
-> How about this?
->=20
->=20
-> sd: Ensure we correctly disable devices with unknown protection type
->=20
-> We set the capacity to zero when we discovered a device formatted wit=
-h
-> an unknown DIF protection type. However, the read_capacity code would
-> override the capacity and cause the device to be enabled regardless.
->=20
-> Make sd_read_protection_type() return an error if the protection type=
- is
-> unknown. Also prevent duplicate printk lines when the device is being
-> revalidated.
->=20
-> Reported-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
->=20
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 1cf2d5d..1c54564 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1820,34 +1820,42 @@ sd_spinup_disk(struct scsi_disk *sdkp)
->  /*
->   * Determine whether disk supports Data Integrity Field.
->   */
-> -static void sd_read_protection_type(struct scsi_disk *sdkp, unsigned=
- char *buffer)
-> +static int sd_read_protection_type(struct scsi_disk *sdkp, unsigned =
-char *buffer)
->  {
->  	struct scsi_device *sdp =3D sdkp->device;
->  	u8 type;
-> +	int ret =3D 0;
-> =20
->  	if (scsi_device_protection(sdp) =3D=3D 0 || (buffer[12] & 1) =3D=3D=
- 0)
-> -		return;
-> +		return ret;
-> =20
->  	type =3D ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 =3D Type 1 */
-> =20
-> -	if (type =3D=3D sdkp->protection_type || !sdkp->first_scan)
-> -		return;
-> +	if (type > SD_DIF_TYPE3_PROTECTION)
-> +		ret =3D -ENODEV;
-> +	else if (scsi_host_dif_capable(sdp->host, type))
-> +		ret =3D 1;
-> +
-> +	if (sdkp->first_scan || type !=3D sdkp->protection_type)
-> +		switch (ret) {
-> +		case -ENODEV:
-> +			sd_printk(KERN_ERR, sdkp, "formatted with unsupported" \
-> +				  " protection type %u. Disabling disk!\n",
-> +				  type);
-> +			break;
-> +		case 1:
-> +			sd_printk(KERN_NOTICE, sdkp,
-> +				  "Enabling DIF Type %u protection\n", type);
-> +			break;
-> +		case 0:
-> +			sd_printk(KERN_NOTICE, sdkp,
-> +				  "Disabling DIF Type %u protection\n", type);
-> +			break;
-> +		}
-> =20
->  	sdkp->protection_type =3D type;
-> =20
-> -	if (type > SD_DIF_TYPE3_PROTECTION) {
-> -		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
-> -			  "protection type %u. Disabling disk!\n", type);
-> -		sdkp->capacity =3D 0;
-> -		return;
-> -	}
-> -
-> -	if (scsi_host_dif_capable(sdp->host, type))
-> -		sd_printk(KERN_NOTICE, sdkp,
-> -			  "Enabling DIF Type %u protection\n", type);
-> -	else
-> -		sd_printk(KERN_NOTICE, sdkp,
-> -			  "Disabling DIF Type %u protection\n", type);
-> +	return ret;
->  }
-> =20
->  static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_=
-device *sdp,
-> @@ -1943,7 +1951,10 @@ static int read_capacity_16(struct scsi_disk *=
-sdkp, struct scsi_device *sdp,
->  	sector_size =3D get_unaligned_be32(&buffer[8]);
->  	lba =3D get_unaligned_be64(&buffer[0]);
-> =20
-> -	sd_read_protection_type(sdkp, buffer);
-> +	if (sd_read_protection_type(sdkp, buffer) < 0) {
-> +		sdkp->capacity =3D 0;
-> +		return -ENODEV;
-> +	}
-> =20
->  	if ((sizeof(sdkp->capacity) =3D=3D 4) && (lba >=3D 0xffffffffULL)) =
-{
->  		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Hehe. It helps to actually test patches.
+Hannes> Hehe. It helps to actually test patches.
 
-Now I get:
-sd 6:0:0:0: [sdb] formatted with unsupported protection type 7.
-Disabling disk!
-
-and silence after that.
-However, I still get:
-
-sd 6:0:0:0: [sdb] Write Protect is off
-sd 6:0:0:0: [sdb] Mode Sense: cf 00 10 08
-sd 6:0:0:0: [sdb] Write cache: disabled, read cache: enabled,
-supports DPO and FUA
-sd 6:0:0:0: [sdb] Enabling DIX T10-DIF-TYPE1-CRC protection
-sd 6:0:0:0: [sdb] Attached SCSI disk
-
-which is a bit odd, given that the disk is disabled.
-Plus that we never actually claimed to support type1.
-So maybe we should add this patch, too?
-
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 0cb39ff..e0500bf 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -320,7 +320,7 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
-                dif =3D 0; dix =3D 1;
-        }
-
--       if (!dix)
-+       if (!dix || type > SD_DIF_TYPE3_PROTECTION)
-                return;
-
-        /* Enable DMA of protection information */
-
-But then, main issue is resolved, as the system continues to boot.
-So my Acked-by: still stands.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+I did. However, with scsi_debug I have all sorts of sanity checks in
+place. Not sure what your disk is connected to?
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hannes> sd 6:0:0:0: [sdb] Write Protect is off sd 6:0:0:0: [sdb] Mode
+Hannes> Sense: cf 00 10 08 sd 6:0:0:0: [sdb] Write cache: disabled, read
+Hannes> cache: enabled, supports DPO and FUA sd 6:0:0:0: [sdb] Enabling
+Hannes> DIX T10-DIF-TYPE1-CRC protection sd 6:0:0:0: [sdb] Attached SCSI
+Hannes> disk
+
+DIX and DIF are orthogonal. If the HBA driver does not support the
+appropriate DIF type we'll still enable DIX. That's a feature.
+
+But there are two issues here. First we should not configure DIX if
+capacity is 0. Secondly, we need some bounds checking in the host mask
+checking to protect against crackpot disks.
+
+Updated patch below...
+
+
+sd: Ensure we correctly disable devices with unknown protection type
+
+We set the capacity to zero when we discovered a device formatted with
+an unknown DIF protection type. However, the read_capacity code would
+override the capacity and cause the device to be enabled regardless.
+
+Make sd_read_protection_type() return an error if the protection type is
+unknown. Also prevent duplicate printk lines when the device is being
+revalidated.
+
+Reported-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 1cf2d5d..7a22db3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1820,34 +1820,42 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ /*
+  * Determine whether disk supports Data Integrity Field.
+  */
+-static void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
++static int sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ {
+ 	struct scsi_device *sdp = sdkp->device;
+ 	u8 type;
++	int ret = 0;
+ 
+ 	if (scsi_device_protection(sdp) == 0 || (buffer[12] & 1) == 0)
+-		return;
++		return ret;
+ 
+ 	type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
+ 
+-	if (type == sdkp->protection_type || !sdkp->first_scan)
+-		return;
++	if (type > SD_DIF_TYPE3_PROTECTION)
++		ret = -ENODEV;
++	else if (scsi_host_dif_capable(sdp->host, type))
++		ret = 1;
++
++	if (sdkp->first_scan || type != sdkp->protection_type)
++		switch (ret) {
++		case -ENODEV:
++			sd_printk(KERN_ERR, sdkp, "formatted with unsupported" \
++				  " protection type %u. Disabling disk!\n",
++				  type);
++			break;
++		case 1:
++			sd_printk(KERN_NOTICE, sdkp,
++				  "Enabling DIF Type %u protection\n", type);
++			break;
++		case 0:
++			sd_printk(KERN_NOTICE, sdkp,
++				  "Disabling DIF Type %u protection\n", type);
++			break;
++		}
+ 
+ 	sdkp->protection_type = type;
+ 
+-	if (type > SD_DIF_TYPE3_PROTECTION) {
+-		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
+-			  "protection type %u. Disabling disk!\n", type);
+-		sdkp->capacity = 0;
+-		return;
+-	}
+-
+-	if (scsi_host_dif_capable(sdp->host, type))
+-		sd_printk(KERN_NOTICE, sdkp,
+-			  "Enabling DIF Type %u protection\n", type);
+-	else
+-		sd_printk(KERN_NOTICE, sdkp,
+-			  "Disabling DIF Type %u protection\n", type);
++	return ret;
+ }
+ 
+ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
+@@ -1943,7 +1951,10 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 	sector_size = get_unaligned_be32(&buffer[8]);
+ 	lba = get_unaligned_be64(&buffer[0]);
+ 
+-	sd_read_protection_type(sdkp, buffer);
++	if (sd_read_protection_type(sdkp, buffer) < 0) {
++		sdkp->capacity = 0;
++		return -ENODEV;
++	}
+ 
+ 	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
+ 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+@@ -2788,7 +2799,8 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
+ 	}
+ 
+ 	add_disk(gd);
+-	sd_dif_config_host(sdkp);
++	if (sdkp->capacity)
++		sd_dif_config_host(sdkp);
+ 
+ 	sd_revalidate_disk(gd);
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 5f7d5b3..b19223d 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -871,7 +871,11 @@ static inline unsigned int scsi_host_dif_capable(struct Scsi_Host *shost, unsign
+ 	static unsigned char cap[] = { 0,
+ 				       SHOST_DIF_TYPE1_PROTECTION,
+ 				       SHOST_DIF_TYPE2_PROTECTION,
+-				       SHOST_DIF_TYPE3_PROTECTION };
++				       SHOST_DIF_TYPE3_PROTECTION,
++	};
++
++	if (target_type > SHOST_DIF_TYPE3_PROTECTION)
++		return 0;
+ 
+ 	return shost->prot_capabilities & cap[target_type] ? target_type : 0;
+ }
+@@ -884,6 +888,9 @@ static inline unsigned int scsi_host_dix_capable(struct Scsi_Host *shost, unsign
+ 				       SHOST_DIX_TYPE2_PROTECTION,
+ 				       SHOST_DIX_TYPE3_PROTECTION };
+ 
++	if (target_type > SHOST_DIX_TYPE3_PROTECTION)
++		return 0;
++
+ 	return shost->prot_capabilities & cap[target_type];
+ #endif
+ 	return 0;
