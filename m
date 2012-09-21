@@ -1,72 +1,105 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v7 3/6] scsi: sr: support zero power ODD(ZPODD)
-Date: Fri, 21 Sep 2012 23:02:19 +0200
-Message-ID: <201209212302.19896.rjw@sisk.pl>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209210007.23494.rjw@sisk.pl> <20120921013917.GB2142@mint-spring.sh.intel.com>
+Subject: Re: [PATCH v7 0/6] ZPODD patches
+Date: Fri, 21 Sep 2012 23:18:27 +0200
+Message-ID: <201209212318.28137.rjw@sisk.pl>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209202200.51303.rjw@sisk.pl> <20120921054844.GB2987@mint-spring.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20120921013917.GB2142@mint-spring.sh.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120921054844.GB2987@mint-spring.sh.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: Aaron Lu <aaron.lu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On Friday, September 21, 2012, Aaron Lu wrote:
-> On Fri, Sep 21, 2012 at 12:07:23AM +0200, Rafael J. Wysocki wrote:
-> > On Wednesday, September 12, 2012, Aaron Lu wrote:
-> > >  static struct scsi_driver sr_template = {
-> > >  	.owner			= THIS_MODULE,
-> > > @@ -87,6 +89,8 @@ static struct scsi_driver sr_template = {
-> > >  		.name   	= "sr",
-> > >  		.probe		= sr_probe,
-> > >  		.remove		= sr_remove,
-> > > +		.suspend        = sr_suspend,
-> > > +		.resume         = sr_resume,
-> > >  	},
-> > >  	.done			= sr_done,
-> > >  };
-> > > @@ -172,6 +176,52 @@ static void scsi_cd_put(struct scsi_cd *cd)
-> > >  	mutex_unlock(&sr_ref_mutex);
-> > >  }
+> On Thu, Sep 20, 2012 at 10:00:51PM +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, September 19, 2012, Aaron Lu wrote:
+> > > Thanks Rafael, and if there is any question/problem,
+> > > please kindly let me know.
 > > 
-> > Besides, I need some help to understand how this is supposed to work.
+> > Well, unfortunately my initial review indicates that the patchset is not
+> > quite ready to go upstream yet.
 > > 
-> > Do I think correctly that sr_suspend(), for example, will be run by the
-> > SCSI bus type layer in case of a CD device runtime suspend?  However,
+> > I'll send comments in replies to the individual patches, but overall I can
+> > say that at this stage of development, when I look at the patches, it should
+> > be clear to me not only what is being changed, but _why_ it is being changed
+> > in the first place and, secondly, why it is being changed in this particular
+> > way.  It's far from that, though.
 > 
-> Yes.
+> I'm adding zero power support for optical disk drive(ZPODD), which is
+> made possible with the newly defined device attention(DA) pin introduced
+> in SATA 3.1 spec.
 > 
-> > won't this routine be used during system suspend as well and won't it cause
-> > problems to happen if so?
+> The idea here is to use runtime pm to achieve this, so I basically did 2
+> things:
+> 1 Add runtime pm support for ODD;
+> 2 Add power off support for ODD after it is runtime suspended.
 > 
-> On system suspend, nothing needs to be done.
-> I'll add the following code in next version.
+> Patch 2 is runtime pm support for ODD, the reason it is done this way is
+> discussed here:
+> http://www.spinics.net/lists/linux-scsi/msg61551.html
+
+Why isn't it explained in the patch changelog, then?  People should be able
+to learn why things are done the way they are done from git logs.
+
+> The basic idea is, the ODD will be runtime suspended as long as there is
+> nobody using it, that is, no programs opening the block device.
 > 
-> 	if (!PMSG_IS_AUTO(msg))
-> 		return 0;
+> The ODD will be polled periodically, so it will be runtime resumed
+> before checking if there is any events pending and suspended when done.
 
-Please don't.  The pm_message_t thing is obsolete and shoulnd't really be
-used by device drivers.  I know that ATA relies on it internally, but that's
-just something that needs to be changed at one point.
+OK.  So what happens if we power off the drive via runtime PM.  Does it
+it really make sense to resumie it through polling in that case?
 
-Moreover, I'd like to migrate SCSI drivers to the PM handling based on struct
-dev_pm_ops eventually and your change is kind of going in the opposite
-direction.  I don't know how much effort the migration is going to take,
-though, so perhaps we can just make this change first.
+> The only exception is, if we found a disc is just inserted, we will not
+> idle it immediately at the end of the poll, reason explained in another
+> mail.
+> 
+> This is the rational I wrote patch 2, and patch 1 is used by patch 2.
+> 
+> Patch 3 is adding power off support for ODD after it is runtime
+> suspended, the condition is specified in section 15:
+> ftp://ftp.seagate.com/sff/INF-8090.PDF
+> 
+> That is, for tray type ODD: no media inside and door closed; for slot
+> type ODD: no media inside.
+> 
+> The is the reason sr_suspend is written, for non-ZPODD capable devices,
+> it does nothing; for ZPODD devices, it will check the above condition to
+> see if it is ready to be powered off. The ready_to_power_off flag will be
+> used by ATA layer to decide if power can be removed.
 
-On a slightly related note, suppose that we have an "enabled" bit in flags
-in struct acpi_device_power_state and suppose that we have a helper
-function pm_platform_power_off_allowed(dev, bool), such that if the driver
-(or subsystem) does pm_platform_power_off_allowed(dev, false) and the
-platform is ACPI, the "enabled" bit for the D3cold state will be cleared.
-Then, the ACPI device PM routines will never use D3cold as the device
-power state.
+Now, James says he doesn't like the way ready_to_power_off is used.  Sure
+enough, it is totally irrelevant to the majority of SCSI devices.  It actually
+is totally irrelevant to everything in the SCSI subsystem except for the sr
+driver and libata.  So I wonder if you have considered any alternative
+way to address the use case at hand?
 
-In that case, it seems, you won't need the "ready_to_power_off" flag in struct
-scsi_device any more.
+> When in powered off state, if user presses the eject button or insert a
+> disc, an ACPI event will be generated and our acpi wake handler will
+> pm_runtime_resume the ODD. And if it is a tray type ODD, its tray should
+> be ejected(need_eject flag) after powered on. This is patch 3.
 
-Thanks,
+That sounds reasonable enough, but the role of the powered_off and
+need_eject flags could be explained a bit better.  In particular, it would
+be nice to have explained why they have to be present in struct scsi_device,
+because they don't seem to be particularly useful for many SCSI devices
+that aren't CD drives (the need_eject one in particular).
+
+> And patch 4-6 introduces a new sysfs file may_power_off to give user a
+> chance to disable the power off of the device due to various reasons
+> like the ODD claims support of device attention while actually it is
+> broken.
+
+User space has an interface to disable runtime PM of any device and it looks
+like that interface should be sufficient to disable the feature in question.
+Why do you think the new interface is needed?
+
+> I hope it makes more sense to you now.
+
+Well, thanks for the explanation. :-)
+
 Rafael
