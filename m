@@ -1,45 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Kernel crash with unsupported DIF protection type
-Date: Fri, 21 Sep 2012 12:05:35 -0400
-Message-ID: <yq1haqrjr8w.fsf@sermon.lab.mkp.net>
+Date: Fri, 21 Sep 2012 12:44:12 -0400
+Message-ID: <yq1d31fjpgj.fsf@sermon.lab.mkp.net>
 References: <50583924.90708@suse.de> <yq14nmslbck.fsf@sermon.lab.mkp.net>
-	<505C76D1.6020506@suse.de>
+	<505C76D1.6020506@suse.de> <yq1haqrjr8w.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:33092 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753676Ab2IUQFp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Sep 2012 12:05:45 -0400
-In-Reply-To: <505C76D1.6020506@suse.de> (Hannes Reinecke's message of "Fri, 21
-	Sep 2012 16:16:49 +0200")
+Received: from rcsinet15.oracle.com ([148.87.113.117]:48230 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756555Ab2IUQoX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Sep 2012 12:44:23 -0400
+In-Reply-To: <yq1haqrjr8w.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
+	message of "Fri, 21 Sep 2012 12:05:35 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Martin" == Martin K Petersen <martin.petersen@oracle.com> writes:
 
-Hannes> Hehe. It helps to actually test patches.
+Martin> Updated patch below...
 
-I did. However, with scsi_debug I have all sorts of sanity checks in
-place. Not sure what your disk is connected to?
-
-
-Hannes> sd 6:0:0:0: [sdb] Write Protect is off sd 6:0:0:0: [sdb] Mode
-Hannes> Sense: cf 00 10 08 sd 6:0:0:0: [sdb] Write cache: disabled, read
-Hannes> cache: enabled, supports DPO and FUA sd 6:0:0:0: [sdb] Enabling
-Hannes> DIX T10-DIF-TYPE1-CRC protection sd 6:0:0:0: [sdb] Attached SCSI
-Hannes> disk
-
-DIX and DIF are orthogonal. If the HBA driver does not support the
-appropriate DIF type we'll still enable DIX. That's a feature.
-
-But there are two issues here. First we should not configure DIX if
-capacity is 0. Secondly, we need some bounds checking in the host mask
-checking to protect against crackpot disks.
-
-Updated patch below...
+This time without mangled closing bracket...
 
 
 sd: Ensure we correctly disable devices with unknown protection type
@@ -142,23 +125,20 @@ index 1cf2d5d..7a22db3 100644
  	sd_revalidate_disk(gd);
  
 diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 5f7d5b3..b19223d 100644
+index 5f7d5b3..4908480 100644
 --- a/include/scsi/scsi_host.h
 +++ b/include/scsi/scsi_host.h
-@@ -871,7 +871,11 @@ static inline unsigned int scsi_host_dif_capable(struct Scsi_Host *shost, unsign
- 	static unsigned char cap[] = { 0,
- 				       SHOST_DIF_TYPE1_PROTECTION,
+@@ -873,6 +873,9 @@ static inline unsigned int scsi_host_dif_capable(struct Scsi_Host *shost, unsign
  				       SHOST_DIF_TYPE2_PROTECTION,
--				       SHOST_DIF_TYPE3_PROTECTION };
-+				       SHOST_DIF_TYPE3_PROTECTION,
-+	};
-+
+ 				       SHOST_DIF_TYPE3_PROTECTION };
+ 
 +	if (target_type > SHOST_DIF_TYPE3_PROTECTION)
 +		return 0;
- 
++
  	return shost->prot_capabilities & cap[target_type] ? target_type : 0;
  }
-@@ -884,6 +888,9 @@ static inline unsigned int scsi_host_dix_capable(struct Scsi_Host *shost, unsign
+ 
+@@ -884,6 +887,9 @@ static inline unsigned int scsi_host_dix_capable(struct Scsi_Host *shost, unsign
  				       SHOST_DIX_TYPE2_PROTECTION,
  				       SHOST_DIX_TYPE3_PROTECTION };
  
