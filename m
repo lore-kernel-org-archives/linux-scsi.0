@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 12/15] bfa: Support Power on Hours display and diag temp sensor fixes
-Date: Fri, 21 Sep 2012 17:27:01 -0700
-Message-ID: <1348273621-28344-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 13/15] bfa: Add support to read/update the FRU data.
+Date: Fri, 21 Sep 2012 17:27:14 -0700
+Message-ID: <1348273634-28456-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:51828 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:51847 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757512Ab2IVA1Q (ORCPT
+	by vger.kernel.org with ESMTP id S1757566Ab2IVA10 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Sep 2012 20:27:16 -0400
+	Fri, 21 Sep 2012 20:27:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
@@ -18,126 +18,885 @@ Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Add Power On Hours display support during sfpshow
-	- Fix to properly set the diag temperature sensor status variable.
+	- Add FRU sub-module to support FRU read/write/update.
+	- Add support to read/write from the temp FRU module.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_defs.h     |   29 +++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfa_defs_svc.h |    4 ++++
- drivers/scsi/bfa/bfa_ioc.c      |   14 +++++++++-----
- 3 files changed, 42 insertions(+), 5 deletions(-)
+ drivers/scsi/bfa/bfa_core.c    |   14 ++
+ drivers/scsi/bfa/bfa_defs.h    |    1 +
+ drivers/scsi/bfa/bfa_ioc.c     |  445 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_ioc.h     |   49 +++++
+ drivers/scsi/bfa/bfa_modules.h |    1 +
+ drivers/scsi/bfa/bfad_bsg.c    |  125 +++++++++++-
+ drivers/scsi/bfa/bfad_bsg.h    |   35 +++-
+ drivers/scsi/bfa/bfi.h         |   47 ++++-
+ drivers/scsi/bfa/bfi_ms.h      |    1 +
+ 9 files changed, 713 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 89ebd44..342d7d9 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -165,6 +165,16 @@ bfa_com_phy_attach(struct bfa_s *bfa, bfa_boolean_t mincfg)
+ 	bfa_phy_memclaim(phy, phy_dma->kva_curp, phy_dma->dma_curp, mincfg);
+ }
+ 
++static void
++bfa_com_fru_attach(struct bfa_s *bfa, bfa_boolean_t mincfg)
++{
++	struct bfa_fru_s	*fru = BFA_FRU(bfa);
++	struct bfa_mem_dma_s	*fru_dma = BFA_MEM_FRU_DMA(bfa);
++
++	bfa_fru_attach(fru, &bfa->ioc, bfa, bfa->trcmod, mincfg);
++	bfa_fru_memclaim(fru, fru_dma->kva_curp, fru_dma->dma_curp, mincfg);
++}
++
+ /*
+  * BFA IOC FC related definitions
+  */
+@@ -1752,6 +1762,7 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
+ 	struct bfa_mem_dma_s *flash_dma = BFA_MEM_FLASH_DMA(bfa);
+ 	struct bfa_mem_dma_s *diag_dma = BFA_MEM_DIAG_DMA(bfa);
+ 	struct bfa_mem_dma_s *phy_dma = BFA_MEM_PHY_DMA(bfa);
++	struct bfa_mem_dma_s *fru_dma = BFA_MEM_FRU_DMA(bfa);
+ 
+ 	WARN_ON((cfg == NULL) || (meminfo == NULL));
+ 
+@@ -1776,6 +1787,8 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
+ 	bfa_mem_dma_setup(meminfo, diag_dma, bfa_diag_meminfo());
+ 	bfa_mem_dma_setup(meminfo, phy_dma,
+ 			  bfa_phy_meminfo(cfg->drvcfg.min_cfg));
++	bfa_mem_dma_setup(meminfo, fru_dma,
++			  bfa_fru_meminfo(cfg->drvcfg.min_cfg));
+ }
+ 
+ /*
+@@ -1848,6 +1861,7 @@ bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	bfa_com_flash_attach(bfa, cfg->drvcfg.min_cfg);
+ 	bfa_com_diag_attach(bfa);
+ 	bfa_com_phy_attach(bfa, cfg->drvcfg.min_cfg);
++	bfa_com_fru_attach(bfa, cfg->drvcfg.min_cfg);
+ }
+ 
+ /*
 diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
-index f0b251e..daf7314 100644
+index daf7314..0efdf31 100644
 --- a/drivers/scsi/bfa/bfa_defs.h
 +++ b/drivers/scsi/bfa/bfa_defs.h
-@@ -918,11 +918,40 @@ struct sfp_diag_ext_s {
- 	u8	ext_status_ctl[2];
+@@ -196,6 +196,7 @@ enum bfa_status {
+ 	BFA_STATUS_DPORT_ENABLED = 235, /* D-port mode is already enabled */
+ 	BFA_STATUS_DPORT_DISABLED = 236, /* D-port mode is already disabled */
+ 	BFA_STATUS_CMD_NOTSUPP_MEZZ = 239, /* Cmd not supported for MEZZ card */
++	BFA_STATUS_FRU_NOT_PRESENT = 240, /* fru module not present */
+ 	BFA_STATUS_DPORT_ERR = 245,	/* D-port mode is enabled */
+ 	BFA_STATUS_MAX_VAL		/* Unknown error code */
  };
- 
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index caf1e45..29bf74d 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -5956,3 +5956,448 @@ bfa_dconf_modexit(struct bfa_s *bfa)
+ 	struct bfa_dconf_mod_s *dconf = BFA_DCONF_MOD(bfa);
+ 	bfa_sm_send_event(dconf, BFA_DCONF_SM_EXIT);
+ }
++
 +/*
-+ * Diagnostic: Data Fields -- Address A2h
-+ * General Use Fields: User Writable Table - Features's Control Registers
-+ * Total 32 bytes
++ * FRU specific functions
 + */
-+struct sfp_usr_eeprom_s {
-+	u8	rsvd1[2];       /* 128-129 */
-+	u8	ewrap;          /* 130 */
-+	u8	rsvd2[2];       /*  */
-+	u8	owrap;          /* 133 */
-+	u8	rsvd3[2];       /*  */
-+	u8	prbs;           /* 136: PRBS 7 generator */
-+	u8	rsvd4[2];       /*  */
-+	u8	tx_eqz_16;      /* 139: TX Equalizer (16xFC) */
-+	u8	tx_eqz_8;       /* 140: TX Equalizer (8xFC) */
-+	u8	rsvd5[2];       /*  */
-+	u8	rx_emp_16;      /* 143: RX Emphasis (16xFC) */
-+	u8	rx_emp_8;       /* 144: RX Emphasis (8xFC) */
-+	u8	rsvd6[2];       /*  */
-+	u8	tx_eye_adj;     /* 147: TX eye Threshold Adjust */
-+	u8	rsvd7[3];       /*  */
-+	u8	tx_eye_qctl;    /* 151: TX eye Quality Control */
-+	u8	tx_eye_qres;    /* 152: TX eye Quality Result */
-+	u8	rsvd8[2];       /*  */
-+	u8	poh[3];         /* 155-157: Power On Hours */
-+	u8	rsvd9[2];       /*  */
++
++#define BFA_FRU_DMA_BUF_SZ	0x02000		/* 8k dma buffer */
++#define BFA_FRU_CHINOOK_MAX_SIZE 0x10000
++#define BFA_FRU_LIGHTNING_MAX_SIZE 0x200
++
++static void
++bfa_fru_notify(void *cbarg, enum bfa_ioc_event_e event)
++{
++	struct bfa_fru_s *fru = cbarg;
++
++	bfa_trc(fru, event);
++
++	switch (event) {
++	case BFA_IOC_E_DISABLED:
++	case BFA_IOC_E_FAILED:
++		if (fru->op_busy) {
++			fru->status = BFA_STATUS_IOC_FAILURE;
++			fru->cbfn(fru->cbarg, fru->status);
++			fru->op_busy = 0;
++		}
++		break;
++
++	default:
++		break;
++	}
++}
++
++/*
++ * Send fru write request.
++ *
++ * @param[in] cbarg - callback argument
++ */
++static void
++bfa_fru_write_send(void *cbarg, enum bfi_fru_h2i_msgs msg_type)
++{
++	struct bfa_fru_s *fru = cbarg;
++	struct bfi_fru_write_req_s *msg =
++			(struct bfi_fru_write_req_s *) fru->mb.msg;
++	u32 len;
++
++	msg->offset = cpu_to_be32(fru->addr_off + fru->offset);
++	len = (fru->residue < BFA_FRU_DMA_BUF_SZ) ?
++				fru->residue : BFA_FRU_DMA_BUF_SZ;
++	msg->length = cpu_to_be32(len);
++
++	/*
++	 * indicate if it's the last msg of the whole write operation
++	 */
++	msg->last = (len == fru->residue) ? 1 : 0;
++
++	bfi_h2i_set(msg->mh, BFI_MC_FRU, msg_type, bfa_ioc_portid(fru->ioc));
++	bfa_alen_set(&msg->alen, len, fru->dbuf_pa);
++
++	memcpy(fru->dbuf_kva, fru->ubuf + fru->offset, len);
++	bfa_ioc_mbox_queue(fru->ioc, &fru->mb);
++
++	fru->residue -= len;
++	fru->offset += len;
++}
++
++/*
++ * Send fru read request.
++ *
++ * @param[in] cbarg - callback argument
++ */
++static void
++bfa_fru_read_send(void *cbarg, enum bfi_fru_h2i_msgs msg_type)
++{
++	struct bfa_fru_s *fru = cbarg;
++	struct bfi_fru_read_req_s *msg =
++			(struct bfi_fru_read_req_s *) fru->mb.msg;
++	u32 len;
++
++	msg->offset = cpu_to_be32(fru->addr_off + fru->offset);
++	len = (fru->residue < BFA_FRU_DMA_BUF_SZ) ?
++				fru->residue : BFA_FRU_DMA_BUF_SZ;
++	msg->length = cpu_to_be32(len);
++	bfi_h2i_set(msg->mh, BFI_MC_FRU, msg_type, bfa_ioc_portid(fru->ioc));
++	bfa_alen_set(&msg->alen, len, fru->dbuf_pa);
++	bfa_ioc_mbox_queue(fru->ioc, &fru->mb);
++}
++
++/*
++ * Flash memory info API.
++ *
++ * @param[in] mincfg - minimal cfg variable
++ */
++u32
++bfa_fru_meminfo(bfa_boolean_t mincfg)
++{
++	/* min driver doesn't need fru */
++	if (mincfg)
++		return 0;
++
++	return BFA_ROUNDUP(BFA_FRU_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
++}
++
++/*
++ * Flash attach API.
++ *
++ * @param[in] fru - fru structure
++ * @param[in] ioc  - ioc structure
++ * @param[in] dev  - device structure
++ * @param[in] trcmod - trace module
++ * @param[in] logmod - log module
++ */
++void
++bfa_fru_attach(struct bfa_fru_s *fru, struct bfa_ioc_s *ioc, void *dev,
++	struct bfa_trc_mod_s *trcmod, bfa_boolean_t mincfg)
++{
++	fru->ioc = ioc;
++	fru->trcmod = trcmod;
++	fru->cbfn = NULL;
++	fru->cbarg = NULL;
++	fru->op_busy = 0;
++
++	bfa_ioc_mbox_regisr(fru->ioc, BFI_MC_FRU, bfa_fru_intr, fru);
++	bfa_q_qe_init(&fru->ioc_notify);
++	bfa_ioc_notify_init(&fru->ioc_notify, bfa_fru_notify, fru);
++	list_add_tail(&fru->ioc_notify.qe, &fru->ioc->notify_q);
++
++	/* min driver doesn't need fru */
++	if (mincfg) {
++		fru->dbuf_kva = NULL;
++		fru->dbuf_pa = 0;
++	}
++}
++
++/*
++ * Claim memory for fru
++ *
++ * @param[in] fru - fru structure
++ * @param[in] dm_kva - pointer to virtual memory address
++ * @param[in] dm_pa - frusical memory address
++ * @param[in] mincfg - minimal cfg variable
++ */
++void
++bfa_fru_memclaim(struct bfa_fru_s *fru, u8 *dm_kva, u64 dm_pa,
++	bfa_boolean_t mincfg)
++{
++	if (mincfg)
++		return;
++
++	fru->dbuf_kva = dm_kva;
++	fru->dbuf_pa = dm_pa;
++	memset(fru->dbuf_kva, 0, BFA_FRU_DMA_BUF_SZ);
++	dm_kva += BFA_ROUNDUP(BFA_FRU_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
++	dm_pa += BFA_ROUNDUP(BFA_FRU_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
++}
++
++/*
++ * Update fru vpd image.
++ *
++ * @param[in] fru - fru structure
++ * @param[in] buf - update data buffer
++ * @param[in] len - data buffer length
++ * @param[in] offset - offset relative to starting address
++ * @param[in] cbfn - callback function
++ * @param[in] cbarg - callback argument
++ *
++ * Return status.
++ */
++bfa_status_t
++bfa_fruvpd_update(struct bfa_fru_s *fru, void *buf, u32 len, u32 offset,
++		  bfa_cb_fru_t cbfn, void *cbarg)
++{
++	bfa_trc(fru, BFI_FRUVPD_H2I_WRITE_REQ);
++	bfa_trc(fru, len);
++	bfa_trc(fru, offset);
++
++	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2)
++		return BFA_STATUS_FRU_NOT_PRESENT;
++
++	if (fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK)
++		return BFA_STATUS_CMD_NOTSUPP;
++
++	if (!bfa_ioc_is_operational(fru->ioc))
++		return BFA_STATUS_IOC_NON_OP;
++
++	if (fru->op_busy) {
++		bfa_trc(fru, fru->op_busy);
++		return BFA_STATUS_DEVBUSY;
++	}
++
++	fru->op_busy = 1;
++
++	fru->cbfn = cbfn;
++	fru->cbarg = cbarg;
++	fru->residue = len;
++	fru->offset = 0;
++	fru->addr_off = offset;
++	fru->ubuf = buf;
++
++	bfa_fru_write_send(fru, BFI_FRUVPD_H2I_WRITE_REQ);
++
++	return BFA_STATUS_OK;
++}
++
++/*
++ * Read fru vpd image.
++ *
++ * @param[in] fru - fru structure
++ * @param[in] buf - read data buffer
++ * @param[in] len - data buffer length
++ * @param[in] offset - offset relative to starting address
++ * @param[in] cbfn - callback function
++ * @param[in] cbarg - callback argument
++ *
++ * Return status.
++ */
++bfa_status_t
++bfa_fruvpd_read(struct bfa_fru_s *fru, void *buf, u32 len, u32 offset,
++		bfa_cb_fru_t cbfn, void *cbarg)
++{
++	bfa_trc(fru, BFI_FRUVPD_H2I_READ_REQ);
++	bfa_trc(fru, len);
++	bfa_trc(fru, offset);
++
++	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2)
++		return BFA_STATUS_FRU_NOT_PRESENT;
++
++	if (fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK)
++		return BFA_STATUS_CMD_NOTSUPP;
++
++	if (!bfa_ioc_is_operational(fru->ioc))
++		return BFA_STATUS_IOC_NON_OP;
++
++	if (fru->op_busy) {
++		bfa_trc(fru, fru->op_busy);
++		return BFA_STATUS_DEVBUSY;
++	}
++
++	fru->op_busy = 1;
++
++	fru->cbfn = cbfn;
++	fru->cbarg = cbarg;
++	fru->residue = len;
++	fru->offset = 0;
++	fru->addr_off = offset;
++	fru->ubuf = buf;
++	bfa_fru_read_send(fru, BFI_FRUVPD_H2I_READ_REQ);
++
++	return BFA_STATUS_OK;
++}
++
++/*
++ * Get maximum size fru vpd image.
++ *
++ * @param[in] fru - fru structure
++ * @param[out] size - maximum size of fru vpd data
++ *
++ * Return status.
++ */
++bfa_status_t
++bfa_fruvpd_get_max_size(struct bfa_fru_s *fru, u32 *max_size)
++{
++	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2)
++		return BFA_STATUS_FRU_NOT_PRESENT;
++
++	if (!bfa_ioc_is_operational(fru->ioc))
++		return BFA_STATUS_IOC_NON_OP;
++
++	if (fru->ioc->attr->card_type == BFA_MFG_TYPE_CHINOOK)
++		*max_size = BFA_FRU_CHINOOK_MAX_SIZE;
++	else
++		return BFA_STATUS_CMD_NOTSUPP;
++	return BFA_STATUS_OK;
++}
++/*
++ * tfru write.
++ *
++ * @param[in] fru - fru structure
++ * @param[in] buf - update data buffer
++ * @param[in] len - data buffer length
++ * @param[in] offset - offset relative to starting address
++ * @param[in] cbfn - callback function
++ * @param[in] cbarg - callback argument
++ *
++ * Return status.
++ */
++bfa_status_t
++bfa_tfru_write(struct bfa_fru_s *fru, void *buf, u32 len, u32 offset,
++	       bfa_cb_fru_t cbfn, void *cbarg)
++{
++	bfa_trc(fru, BFI_TFRU_H2I_WRITE_REQ);
++	bfa_trc(fru, len);
++	bfa_trc(fru, offset);
++	bfa_trc(fru, *((u8 *) buf));
++
++	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2)
++		return BFA_STATUS_FRU_NOT_PRESENT;
++
++	if (!bfa_ioc_is_operational(fru->ioc))
++		return BFA_STATUS_IOC_NON_OP;
++
++	if (fru->op_busy) {
++		bfa_trc(fru, fru->op_busy);
++		return BFA_STATUS_DEVBUSY;
++	}
++
++	fru->op_busy = 1;
++
++	fru->cbfn = cbfn;
++	fru->cbarg = cbarg;
++	fru->residue = len;
++	fru->offset = 0;
++	fru->addr_off = offset;
++	fru->ubuf = buf;
++
++	bfa_fru_write_send(fru, BFI_TFRU_H2I_WRITE_REQ);
++
++	return BFA_STATUS_OK;
++}
++
++/*
++ * tfru read.
++ *
++ * @param[in] fru - fru structure
++ * @param[in] buf - read data buffer
++ * @param[in] len - data buffer length
++ * @param[in] offset - offset relative to starting address
++ * @param[in] cbfn - callback function
++ * @param[in] cbarg - callback argument
++ *
++ * Return status.
++ */
++bfa_status_t
++bfa_tfru_read(struct bfa_fru_s *fru, void *buf, u32 len, u32 offset,
++	      bfa_cb_fru_t cbfn, void *cbarg)
++{
++	bfa_trc(fru, BFI_TFRU_H2I_READ_REQ);
++	bfa_trc(fru, len);
++	bfa_trc(fru, offset);
++
++	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2)
++		return BFA_STATUS_FRU_NOT_PRESENT;
++
++	if (!bfa_ioc_is_operational(fru->ioc))
++		return BFA_STATUS_IOC_NON_OP;
++
++	if (fru->op_busy) {
++		bfa_trc(fru, fru->op_busy);
++		return BFA_STATUS_DEVBUSY;
++	}
++
++	fru->op_busy = 1;
++
++	fru->cbfn = cbfn;
++	fru->cbarg = cbarg;
++	fru->residue = len;
++	fru->offset = 0;
++	fru->addr_off = offset;
++	fru->ubuf = buf;
++	bfa_fru_read_send(fru, BFI_TFRU_H2I_READ_REQ);
++
++	return BFA_STATUS_OK;
++}
++
++/*
++ * Process fru response messages upon receiving interrupts.
++ *
++ * @param[in] fruarg - fru structure
++ * @param[in] msg - message structure
++ */
++void
++bfa_fru_intr(void *fruarg, struct bfi_mbmsg_s *msg)
++{
++	struct bfa_fru_s *fru = fruarg;
++	struct bfi_fru_rsp_s *rsp = (struct bfi_fru_rsp_s *)msg;
++	u32 status;
++
++	bfa_trc(fru, msg->mh.msg_id);
++
++	if (!fru->op_busy) {
++		/*
++		 * receiving response after ioc failure
++		 */
++		bfa_trc(fru, 0x9999);
++		return;
++	}
++
++	switch (msg->mh.msg_id) {
++	case BFI_FRUVPD_I2H_WRITE_RSP:
++	case BFI_TFRU_I2H_WRITE_RSP:
++		status = be32_to_cpu(rsp->status);
++		bfa_trc(fru, status);
++
++		if (status != BFA_STATUS_OK || fru->residue == 0) {
++			fru->status = status;
++			fru->op_busy = 0;
++			if (fru->cbfn)
++				fru->cbfn(fru->cbarg, fru->status);
++		} else {
++			bfa_trc(fru, fru->offset);
++			if (msg->mh.msg_id == BFI_FRUVPD_I2H_WRITE_RSP)
++				bfa_fru_write_send(fru,
++					BFI_FRUVPD_H2I_WRITE_REQ);
++			else
++				bfa_fru_write_send(fru,
++					BFI_TFRU_H2I_WRITE_REQ);
++		}
++		break;
++	case BFI_FRUVPD_I2H_READ_RSP:
++	case BFI_TFRU_I2H_READ_RSP:
++		status = be32_to_cpu(rsp->status);
++		bfa_trc(fru, status);
++
++		if (status != BFA_STATUS_OK) {
++			fru->status = status;
++			fru->op_busy = 0;
++			if (fru->cbfn)
++				fru->cbfn(fru->cbarg, fru->status);
++		} else {
++			u32 len = be32_to_cpu(rsp->length);
++
++			bfa_trc(fru, fru->offset);
++			bfa_trc(fru, len);
++
++			memcpy(fru->ubuf + fru->offset, fru->dbuf_kva, len);
++			fru->residue -= len;
++			fru->offset += len;
++
++			if (fru->residue == 0) {
++				fru->status = status;
++				fru->op_busy = 0;
++				if (fru->cbfn)
++					fru->cbfn(fru->cbarg, fru->status);
++			} else {
++				if (msg->mh.msg_id == BFI_FRUVPD_I2H_READ_RSP)
++					bfa_fru_read_send(fru,
++						BFI_FRUVPD_H2I_READ_REQ);
++				else
++					bfa_fru_read_send(fru,
++						BFI_TFRU_H2I_READ_REQ);
++			}
++		}
++		break;
++	default:
++		WARN_ON(1);
++	}
++}
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 54b9048..cb65f44 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -702,6 +702,55 @@ void bfa_phy_memclaim(struct bfa_phy_s *phy,
+ void bfa_phy_intr(void *phyarg, struct bfi_mbmsg_s *msg);
+ 
+ /*
++ * FRU module specific
++ */
++typedef void (*bfa_cb_fru_t) (void *cbarg, bfa_status_t status);
++
++struct bfa_fru_s {
++	struct bfa_ioc_s *ioc;		/* back pointer to ioc */
++	struct bfa_trc_mod_s *trcmod;	/* trace module */
++	u8		op_busy;	/* operation busy flag */
++	u8		rsv[3];
++	u32		residue;	/* residual length */
++	u32		offset;		/* offset */
++	bfa_status_t	status;		/* status */
++	u8		*dbuf_kva;	/* dma buf virtual address */
++	u64		dbuf_pa;	/* dma buf physical address */
++	struct bfa_reqq_wait_s reqq_wait; /* to wait for room in reqq */
++	bfa_cb_fru_t	cbfn;		/* user callback function */
++	void		*cbarg;		/* user callback arg */
++	u8		*ubuf;		/* user supplied buffer */
++	struct bfa_cb_qe_s	hcb_qe;	/* comp: BFA callback qelem */
++	u32		addr_off;	/* fru address offset */
++	struct bfa_mbox_cmd_s mb;	/* mailbox */
++	struct bfa_ioc_notify_s ioc_notify; /* ioc event notify */
++	struct bfa_mem_dma_s	fru_dma;
 +};
 +
- struct sfp_mem_s {
- 	struct sfp_srlid_base_s	srlid_base;
- 	struct sfp_srlid_ext_s	srlid_ext;
- 	struct sfp_diag_base_s	diag_base;
- 	struct sfp_diag_ext_s	diag_ext;
-+	struct sfp_usr_eeprom_s usr_eeprom;
++#define BFA_FRU(__bfa)	(&(__bfa)->modules.fru)
++#define BFA_MEM_FRU_DMA(__bfa)	(&(BFA_FRU(__bfa)->fru_dma))
++
++bfa_status_t bfa_fruvpd_update(struct bfa_fru_s *fru,
++			void *buf, u32 len, u32 offset,
++			bfa_cb_fru_t cbfn, void *cbarg);
++bfa_status_t bfa_fruvpd_read(struct bfa_fru_s *fru,
++			void *buf, u32 len, u32 offset,
++			bfa_cb_fru_t cbfn, void *cbarg);
++bfa_status_t bfa_fruvpd_get_max_size(struct bfa_fru_s *fru, u32 *max_size);
++bfa_status_t bfa_tfru_write(struct bfa_fru_s *fru,
++			void *buf, u32 len, u32 offset,
++			bfa_cb_fru_t cbfn, void *cbarg);
++bfa_status_t bfa_tfru_read(struct bfa_fru_s *fru,
++			void *buf, u32 len, u32 offset,
++			bfa_cb_fru_t cbfn, void *cbarg);
++u32	bfa_fru_meminfo(bfa_boolean_t mincfg);
++void bfa_fru_attach(struct bfa_fru_s *fru, struct bfa_ioc_s *ioc,
++		void *dev, struct bfa_trc_mod_s *trcmod, bfa_boolean_t mincfg);
++void bfa_fru_memclaim(struct bfa_fru_s *fru,
++		u8 *dm_kva, u64 dm_pa, bfa_boolean_t mincfg);
++void bfa_fru_intr(void *fruarg, struct bfi_mbmsg_s *msg);
++
++/*
+  * Driver Config( dconf) specific
+  */
+ #define BFI_DCONF_SIGNATURE	0xabcdabcd
+diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
+index 189fff7..a14c784 100644
+--- a/drivers/scsi/bfa/bfa_modules.h
++++ b/drivers/scsi/bfa/bfa_modules.h
+@@ -45,6 +45,7 @@ struct bfa_modules_s {
+ 	struct bfa_diag_s	diag_mod;	/*  diagnostics module	*/
+ 	struct bfa_phy_s	phy;		/*  phy module		*/
+ 	struct bfa_dconf_mod_s	dconf_mod;	/*  DCONF common module	*/
++	struct bfa_fru_s	fru;		/*  fru module		*/
  };
  
  /*
-diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
-index 0e37e23..ec03c8c 100644
---- a/drivers/scsi/bfa/bfa_defs_svc.h
-+++ b/drivers/scsi/bfa/bfa_defs_svc.h
-@@ -258,6 +258,7 @@ struct bfa_fw_port_lksm_stats_s {
- 	u32    hwsm_lrr_rx;        /*  No. of times LRR rx-ed by HWSM      */
- 	u32    hwsm_lr_rx;         /*  No. of times LR rx-ed by HWSM       */
- 	u32    bbsc_lr;		   /* LKSM LR tx for credit recovery       */
-+	u32	rsvd;
- };
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 0ab1d40..f718de4 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -107,9 +107,8 @@ bfad_iocmd_ioc_get_info(struct bfad_s *bfad, void *cmd)
  
- struct bfa_fw_port_snsm_stats_s {
-@@ -270,6 +271,9 @@ struct bfa_fw_port_snsm_stats_s {
- 	u32    sync_lost;          /*  Sync loss count                     */
- 	u32    sig_lost;           /*  Signal loss count                   */
- 	u32    asn8g_attempts;	   /* SNSM HWSM at 8Gbps attempts	   */
-+	u32    adapt_success;	   /* SNSM adaptation success	*/
-+	u32    adapt_fails;	   /* SNSM adaptation failures */
-+	u32    adapt_ign_fails;	   /* SNSM adaptation failures ignored */
- };
- 
- struct bfa_fw_port_physm_stats_s {
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index a8fcc81..caf1e45 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -4687,22 +4687,25 @@ diag_tempsensor_comp(struct bfa_diag_s *diag, bfi_diag_ts_rsp_t *rsp)
- 	diag->tsensor.temp->temp = be16_to_cpu(rsp->temp);
- 	diag->tsensor.temp->ts_junc = rsp->ts_junc;
- 	diag->tsensor.temp->ts_brd = rsp->ts_brd;
--	diag->tsensor.temp->status = BFA_STATUS_OK;
- 
- 	if (rsp->ts_brd) {
-+		/* tsensor.temp->status is brd_temp status */
-+		diag->tsensor.temp->status = rsp->status;
- 		if (rsp->status == BFA_STATUS_OK) {
- 			diag->tsensor.temp->brd_temp =
- 				be16_to_cpu(rsp->brd_temp);
--		} else {
--			bfa_trc(diag, rsp->status);
-+		} else
- 			diag->tsensor.temp->brd_temp = 0;
--			diag->tsensor.temp->status = BFA_STATUS_DEVBUSY;
--		}
- 	}
-+
-+	bfa_trc(diag, rsp->status);
- 	bfa_trc(diag, rsp->ts_junc);
- 	bfa_trc(diag, rsp->temp);
- 	bfa_trc(diag, rsp->ts_brd);
- 	bfa_trc(diag, rsp->brd_temp);
-+
-+	/* tsensor status is always good bcos we always have junction temp */
-+	diag->tsensor.status = BFA_STATUS_OK;
- 	diag->tsensor.cbfn(diag->tsensor.cbarg, diag->tsensor.status);
- 	diag->tsensor.lock = 0;
+ 	/* set adapter hw path */
+ 	strcpy(iocmd->adapter_hwpath, bfad->pci_name);
+-	i = strlen(iocmd->adapter_hwpath) - 1;
+-	while (iocmd->adapter_hwpath[i] != '.')
+-		i--;
++	for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32; i++);
++	for (; iocmd->adapter_hwpath[++i] != ':' && i < BFA_STRING_32; );
+ 	iocmd->adapter_hwpath[i] = '\0';
+ 	iocmd->status = BFA_STATUS_OK;
+ 	return 0;
+@@ -2583,6 +2582,109 @@ bfad_iocmd_fcpim_throttle_set(struct bfad_s *bfad, void *cmd)
+ 	return 0;
  }
-@@ -4931,6 +4934,7 @@ bfa_diag_tsensor_query(struct bfa_diag_s *diag,
- 	diag->tsensor.temp = result;
- 	diag->tsensor.cbfn = cbfn;
- 	diag->tsensor.cbarg = cbarg;
-+	diag->tsensor.status = BFA_STATUS_OK;
  
- 	/* Send msg to fw */
- 	diag_tempsensor_send(diag);
++int
++bfad_iocmd_tfru_read(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_tfru_s *iocmd =
++			(struct bfa_bsg_tfru_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	unsigned long flags = 0;
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_tfru_read(BFA_FRU(&bfad->bfa),
++				&iocmd->data, iocmd->len, iocmd->offset,
++				bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	if (iocmd->status == BFA_STATUS_OK) {
++		wait_for_completion(&fcomp.comp);
++		iocmd->status = fcomp.status;
++	}
++
++	return 0;
++}
++
++int
++bfad_iocmd_tfru_write(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_tfru_s *iocmd =
++			(struct bfa_bsg_tfru_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	unsigned long flags = 0;
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_tfru_write(BFA_FRU(&bfad->bfa),
++				&iocmd->data, iocmd->len, iocmd->offset,
++				bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	if (iocmd->status == BFA_STATUS_OK) {
++		wait_for_completion(&fcomp.comp);
++		iocmd->status = fcomp.status;
++	}
++
++	return 0;
++}
++
++int
++bfad_iocmd_fruvpd_read(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_fruvpd_s *iocmd =
++			(struct bfa_bsg_fruvpd_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	unsigned long flags = 0;
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_fruvpd_read(BFA_FRU(&bfad->bfa),
++				&iocmd->data, iocmd->len, iocmd->offset,
++				bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	if (iocmd->status == BFA_STATUS_OK) {
++		wait_for_completion(&fcomp.comp);
++		iocmd->status = fcomp.status;
++	}
++
++	return 0;
++}
++
++int
++bfad_iocmd_fruvpd_update(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_fruvpd_s *iocmd =
++			(struct bfa_bsg_fruvpd_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	unsigned long flags = 0;
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_fruvpd_update(BFA_FRU(&bfad->bfa),
++				&iocmd->data, iocmd->len, iocmd->offset,
++				bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	if (iocmd->status == BFA_STATUS_OK) {
++		wait_for_completion(&fcomp.comp);
++		iocmd->status = fcomp.status;
++	}
++
++	return 0;
++}
++
++int
++bfad_iocmd_fruvpd_get_max_size(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_fruvpd_max_size_s *iocmd =
++			(struct bfa_bsg_fruvpd_max_size_s *)cmd;
++	unsigned long flags = 0;
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_fruvpd_get_max_size(BFA_FRU(&bfad->bfa),
++						&iocmd->max_size);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++
++	return 0;
++}
++
+ static int
+ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 		unsigned int payload_len)
+@@ -2923,6 +3025,23 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 	case IOCMD_FCPIM_THROTTLE_SET:
+ 		rc = bfad_iocmd_fcpim_throttle_set(bfad, iocmd);
+ 		break;
++	/* TFRU */
++	case IOCMD_TFRU_READ:
++		rc = bfad_iocmd_tfru_read(bfad, iocmd);
++		break;
++	case IOCMD_TFRU_WRITE:
++		rc = bfad_iocmd_tfru_write(bfad, iocmd);
++		break;
++	/* FRU */
++	case IOCMD_FRUVPD_READ:
++		rc = bfad_iocmd_fruvpd_read(bfad, iocmd);
++		break;
++	case IOCMD_FRUVPD_UPDATE:
++		rc = bfad_iocmd_fruvpd_update(bfad, iocmd);
++		break;
++	case IOCMD_FRUVPD_GET_MAX_SIZE:
++		rc = bfad_iocmd_fruvpd_get_max_size(bfad, iocmd);
++		break;
+ 	default:
+ 		rc = -EINVAL;
+ 		break;
+diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
+index e48dcca..15e1fc8 100644
+--- a/drivers/scsi/bfa/bfad_bsg.h
++++ b/drivers/scsi/bfa/bfad_bsg.h
+@@ -146,7 +146,12 @@ enum {
+ 	IOCMD_DIAG_DPORT_GET_STATE,
+ 	IOCMD_QOS_SET_BW,
+ 	IOCMD_FCPIM_THROTTLE_QUERY,
+-	IOCMD_FCPIM_THROTTLE_SET
++	IOCMD_FCPIM_THROTTLE_SET,
++	IOCMD_TFRU_READ,
++	IOCMD_TFRU_WRITE,
++	IOCMD_FRUVPD_READ,
++	IOCMD_FRUVPD_UPDATE,
++	IOCMD_FRUVPD_GET_MAX_SIZE,
+ };
+ 
+ struct bfa_bsg_gen_s {
+@@ -750,6 +755,34 @@ struct bfa_bsg_fcpim_throttle_s {
+ 	struct bfa_defs_fcpim_throttle_s throttle;
+ };
+ 
++#define BFA_TFRU_DATA_SIZE		64
++#define BFA_MAX_FRUVPD_TRANSFER_SIZE	0x1000
++
++struct bfa_bsg_tfru_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	u32		offset;
++	u32		len;
++	u8		data[BFA_TFRU_DATA_SIZE];
++};
++
++struct bfa_bsg_fruvpd_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	u32		offset;
++	u32		len;
++	u8		data[BFA_MAX_FRUVPD_TRANSFER_SIZE];
++};
++
++struct bfa_bsg_fruvpd_max_size_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	u32		max_size;
++};
++
+ struct bfa_bsg_fcpt_s {
+ 	bfa_status_t    status;
+ 	u16		vf_id;
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index 9c9861f..57b146b 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -210,7 +210,8 @@ enum bfi_mclass {
+ 	BFI_MC_PORT		= 21,	/*  Physical port		    */
+ 	BFI_MC_SFP		= 22,	/*  SFP module	*/
+ 	BFI_MC_PHY		= 25,   /*  External PHY message class	*/
+-	BFI_MC_MAX		= 32
++	BFI_MC_FRU		= 34,
++	BFI_MC_MAX		= 35
+ };
+ 
+ #define BFI_IOC_MAX_CQS		4
+@@ -1170,6 +1171,50 @@ struct bfi_phy_write_rsp_s {
+ 	u32			length;
+ };
+ 
++enum bfi_fru_h2i_msgs {
++	BFI_FRUVPD_H2I_WRITE_REQ = 1,
++	BFI_FRUVPD_H2I_READ_REQ = 2,
++	BFI_TFRU_H2I_WRITE_REQ = 3,
++	BFI_TFRU_H2I_READ_REQ = 4,
++};
++
++enum bfi_fru_i2h_msgs {
++	BFI_FRUVPD_I2H_WRITE_RSP = BFA_I2HM(1),
++	BFI_FRUVPD_I2H_READ_RSP = BFA_I2HM(2),
++	BFI_TFRU_I2H_WRITE_RSP = BFA_I2HM(3),
++	BFI_TFRU_I2H_READ_RSP = BFA_I2HM(4),
++};
++
++/*
++ * FRU write request
++ */
++struct bfi_fru_write_req_s {
++	struct bfi_mhdr_s	mh;	/* Common msg header */
++	u8			last;
++	u8			rsv[3];
++	u32			offset;
++	u32			length;
++	struct bfi_alen_s	alen;
++};
++
++/*
++ * FRU read request
++ */
++struct bfi_fru_read_req_s {
++	struct bfi_mhdr_s	mh;	/* Common msg header */
++	u32			offset;
++	u32			length;
++	struct bfi_alen_s	alen;
++};
++
++/*
++ * FRU response
++ */
++struct bfi_fru_rsp_s {
++	struct bfi_mhdr_s	mh;	/* Common msg header */
++	u32			status;
++	u32			length;
++};
+ #pragma pack()
+ 
+ #endif /* __BFI_H__ */
+diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
+index c89defc..5ae2c16 100644
+--- a/drivers/scsi/bfa/bfi_ms.h
++++ b/drivers/scsi/bfa/bfi_ms.h
+@@ -426,6 +426,7 @@ struct bfi_lps_login_req_s {
+ 	u8		auth_en;
+ 	u8		lps_role;
+ 	u8		bb_scn;
++	u32		vvl_flag;
+ };
+ 
+ struct bfi_lps_login_rsp_s {
 -- 
 1.7.3.rc1
 
