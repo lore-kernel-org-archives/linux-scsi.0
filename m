@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 11/15] bfa: Add support to configure min/max bandwidth for a pcifn
-Date: Fri, 21 Sep 2012 17:26:50 -0700
-Message-ID: <1348273610-28100-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 12/15] bfa: Support Power on Hours display and diag temp sensor fixes
+Date: Fri, 21 Sep 2012 17:27:01 -0700
+Message-ID: <1348273621-28344-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:51814 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:51828 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757512Ab2IVA1F (ORCPT
+	by vger.kernel.org with ESMTP id S1757512Ab2IVA1Q (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Sep 2012 20:27:05 -0400
+	Fri, 21 Sep 2012 20:27:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
@@ -18,254 +18,126 @@ Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Added support to configure minimum bandwidth for a pcifn.
-	- Minimum bandwith is guaranteed at per queue level.
-	- Added support to update pcifn bandwidth dynamically without
-	  a server reboot.
+	- Add Power On Hours display support during sfpshow
+	- Fix to properly set the diag temperature sensor status variable.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_core.c |    9 +++++----
- drivers/scsi/bfa/bfa_defs.h |    4 +++-
- drivers/scsi/bfa/bfa_ioc.c  |   20 ++++++++++++--------
- drivers/scsi/bfa/bfa_ioc.h  |    8 ++++----
- drivers/scsi/bfa/bfad_bsg.c |   20 +++++++++++++-------
- drivers/scsi/bfa/bfad_bsg.h |    3 ++-
- drivers/scsi/bfa/bfi.h      |    3 ++-
- 7 files changed, 41 insertions(+), 26 deletions(-)
+ drivers/scsi/bfa/bfa_defs.h     |   29 +++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_defs_svc.h |    4 ++++
+ drivers/scsi/bfa/bfa_ioc.c      |   14 +++++++++-----
+ 3 files changed, 42 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index eb29628..89ebd44 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -838,19 +838,20 @@ void
- bfa_isr_enable(struct bfa_s *bfa)
- {
- 	u32 umsk;
--	int pci_func = bfa_ioc_pcifn(&bfa->ioc);
-+	int port_id = bfa_ioc_portid(&bfa->ioc);
- 
--	bfa_trc(bfa, pci_func);
-+	bfa_trc(bfa, bfa_ioc_pcifn(&bfa->ioc));
-+	bfa_trc(bfa, port_id);
- 
- 	bfa_msix_ctrl_install(bfa);
- 
- 	if (bfa_asic_id_ct2(bfa->ioc.pcidev.device_id)) {
- 		umsk = __HFN_INT_ERR_MASK_CT2;
--		umsk |= pci_func == 0 ?
-+		umsk |= port_id == 0 ?
- 			__HFN_INT_FN0_MASK_CT2 : __HFN_INT_FN1_MASK_CT2;
- 	} else {
- 		umsk = __HFN_INT_ERR_MASK;
--		umsk |= pci_func == 0 ? __HFN_INT_FN0_MASK : __HFN_INT_FN1_MASK;
-+		umsk |= port_id == 0 ? __HFN_INT_FN0_MASK : __HFN_INT_FN1_MASK;
- 	}
- 
- 	writel(umsk, bfa->iocfc.bfa_regs.intr_status);
 diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
-index f8df2c9..f0b251e 100644
+index f0b251e..daf7314 100644
 --- a/drivers/scsi/bfa/bfa_defs.h
 +++ b/drivers/scsi/bfa/bfa_defs.h
-@@ -190,6 +190,7 @@ enum bfa_status {
- 	BFA_STATUS_TOPOLOGY_LOOP = 230, /* Topology is set to Loop */
- 	BFA_STATUS_LOOP_UNSUPP_MEZZ = 231, /* Loop topology is not supported
- 					    * on mezz cards */
-+	BFA_STATUS_INVALID_BW = 233,	/* Invalid bandwidth value */
- 	BFA_STATUS_QOS_BW_INVALID = 234,   /* Invalid QOS bandwidth
- 					    * configuration */
- 	BFA_STATUS_DPORT_ENABLED = 235, /* D-port mode is already enabled */
-@@ -749,7 +750,8 @@ struct bfa_ablk_cfg_pf_s {
- 	u8	rsvd[1];
- 	u16	num_qpairs;
- 	u16	num_vectors;
--	u32	bw;
-+	u16	bw_min;
-+	u16	bw_max;
+@@ -918,11 +918,40 @@ struct sfp_diag_ext_s {
+ 	u8	ext_status_ctl[2];
  };
  
- struct bfa_ablk_cfg_port_s {
++/*
++ * Diagnostic: Data Fields -- Address A2h
++ * General Use Fields: User Writable Table - Features's Control Registers
++ * Total 32 bytes
++ */
++struct sfp_usr_eeprom_s {
++	u8	rsvd1[2];       /* 128-129 */
++	u8	ewrap;          /* 130 */
++	u8	rsvd2[2];       /*  */
++	u8	owrap;          /* 133 */
++	u8	rsvd3[2];       /*  */
++	u8	prbs;           /* 136: PRBS 7 generator */
++	u8	rsvd4[2];       /*  */
++	u8	tx_eqz_16;      /* 139: TX Equalizer (16xFC) */
++	u8	tx_eqz_8;       /* 140: TX Equalizer (8xFC) */
++	u8	rsvd5[2];       /*  */
++	u8	rx_emp_16;      /* 143: RX Emphasis (16xFC) */
++	u8	rx_emp_8;       /* 144: RX Emphasis (8xFC) */
++	u8	rsvd6[2];       /*  */
++	u8	tx_eye_adj;     /* 147: TX eye Threshold Adjust */
++	u8	rsvd7[3];       /*  */
++	u8	tx_eye_qctl;    /* 151: TX eye Quality Control */
++	u8	tx_eye_qres;    /* 152: TX eye Quality Result */
++	u8	rsvd8[2];       /*  */
++	u8	poh[3];         /* 155-157: Power On Hours */
++	u8	rsvd9[2];       /*  */
++};
++
+ struct sfp_mem_s {
+ 	struct sfp_srlid_base_s	srlid_base;
+ 	struct sfp_srlid_ext_s	srlid_ext;
+ 	struct sfp_diag_base_s	diag_base;
+ 	struct sfp_diag_ext_s	diag_ext;
++	struct sfp_usr_eeprom_s usr_eeprom;
+ };
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
+index 0e37e23..ec03c8c 100644
+--- a/drivers/scsi/bfa/bfa_defs_svc.h
++++ b/drivers/scsi/bfa/bfa_defs_svc.h
+@@ -258,6 +258,7 @@ struct bfa_fw_port_lksm_stats_s {
+ 	u32    hwsm_lrr_rx;        /*  No. of times LRR rx-ed by HWSM      */
+ 	u32    hwsm_lr_rx;         /*  No. of times LR rx-ed by HWSM       */
+ 	u32    bbsc_lr;		   /* LKSM LR tx for credit recovery       */
++	u32	rsvd;
+ };
+ 
+ struct bfa_fw_port_snsm_stats_s {
+@@ -270,6 +271,9 @@ struct bfa_fw_port_snsm_stats_s {
+ 	u32    sync_lost;          /*  Sync loss count                     */
+ 	u32    sig_lost;           /*  Signal loss count                   */
+ 	u32    asn8g_attempts;	   /* SNSM HWSM at 8Gbps attempts	   */
++	u32    adapt_success;	   /* SNSM adaptation success	*/
++	u32    adapt_fails;	   /* SNSM adaptation failures */
++	u32    adapt_ign_fails;	   /* SNSM adaptation failures ignored */
+ };
+ 
+ struct bfa_fw_port_physm_stats_s {
 diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index be33725..a8fcc81 100644
+index a8fcc81..caf1e45 100644
 --- a/drivers/scsi/bfa/bfa_ioc.c
 +++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -3019,7 +3019,6 @@ bfa_ablk_config_swap(struct bfa_ablk_cfg_s *cfg)
- 	struct bfa_ablk_cfg_inst_s *cfg_inst;
- 	int i, j;
- 	u16	be16;
--	u32	be32;
+@@ -4687,22 +4687,25 @@ diag_tempsensor_comp(struct bfa_diag_s *diag, bfi_diag_ts_rsp_t *rsp)
+ 	diag->tsensor.temp->temp = be16_to_cpu(rsp->temp);
+ 	diag->tsensor.temp->ts_junc = rsp->ts_junc;
+ 	diag->tsensor.temp->ts_brd = rsp->ts_brd;
+-	diag->tsensor.temp->status = BFA_STATUS_OK;
  
- 	for (i = 0; i < BFA_ABLK_MAX; i++) {
- 		cfg_inst = &cfg->inst[i];
-@@ -3030,8 +3029,10 @@ bfa_ablk_config_swap(struct bfa_ablk_cfg_s *cfg)
- 			cfg_inst->pf_cfg[j].num_qpairs = be16_to_cpu(be16);
- 			be16 = cfg_inst->pf_cfg[j].num_vectors;
- 			cfg_inst->pf_cfg[j].num_vectors = be16_to_cpu(be16);
--			be32 = cfg_inst->pf_cfg[j].bw;
--			cfg_inst->pf_cfg[j].bw = be16_to_cpu(be32);
-+			be16 = cfg_inst->pf_cfg[j].bw_min;
-+			cfg_inst->pf_cfg[j].bw_min = be16_to_cpu(be16);
-+			be16 = cfg_inst->pf_cfg[j].bw_max;
-+			cfg_inst->pf_cfg[j].bw_max = be16_to_cpu(be16);
- 		}
+ 	if (rsp->ts_brd) {
++		/* tsensor.temp->status is brd_temp status */
++		diag->tsensor.temp->status = rsp->status;
+ 		if (rsp->status == BFA_STATUS_OK) {
+ 			diag->tsensor.temp->brd_temp =
+ 				be16_to_cpu(rsp->brd_temp);
+-		} else {
+-			bfa_trc(diag, rsp->status);
++		} else
+ 			diag->tsensor.temp->brd_temp = 0;
+-			diag->tsensor.temp->status = BFA_STATUS_DEVBUSY;
+-		}
  	}
- }
-@@ -3173,7 +3174,8 @@ bfa_ablk_query(struct bfa_ablk_s *ablk, struct bfa_ablk_cfg_s *ablk_cfg,
- 
- bfa_status_t
- bfa_ablk_pf_create(struct bfa_ablk_s *ablk, u16 *pcifn,
--		u8 port, enum bfi_pcifn_class personality, int bw,
-+		u8 port, enum bfi_pcifn_class personality,
-+		u16 bw_min, u16 bw_max,
- 		bfa_ablk_cbfn_t cbfn, void *cbarg)
- {
- 	struct bfi_ablk_h2i_pf_req_s *m;
-@@ -3197,7 +3199,8 @@ bfa_ablk_pf_create(struct bfa_ablk_s *ablk, u16 *pcifn,
- 	bfi_h2i_set(m->mh, BFI_MC_ABLK, BFI_ABLK_H2I_PF_CREATE,
- 		    bfa_ioc_portid(ablk->ioc));
- 	m->pers = cpu_to_be16((u16)personality);
--	m->bw = cpu_to_be32(bw);
-+	m->bw_min = cpu_to_be16(bw_min);
-+	m->bw_max = cpu_to_be16(bw_max);
- 	m->port = port;
- 	bfa_ioc_mbox_queue(ablk->ioc, &ablk->mb);
- 
-@@ -3297,8 +3300,8 @@ bfa_ablk_port_config(struct bfa_ablk_s *ablk, int port, enum bfa_mode_s mode,
- }
- 
- bfa_status_t
--bfa_ablk_pf_update(struct bfa_ablk_s *ablk, int pcifn, int bw,
--		bfa_ablk_cbfn_t cbfn, void *cbarg)
-+bfa_ablk_pf_update(struct bfa_ablk_s *ablk, int pcifn, u16 bw_min,
-+		   u16 bw_max, bfa_ablk_cbfn_t cbfn, void *cbarg)
- {
- 	struct bfi_ablk_h2i_pf_req_s *m;
- 
-@@ -3320,7 +3323,8 @@ bfa_ablk_pf_update(struct bfa_ablk_s *ablk, int pcifn, int bw,
- 	bfi_h2i_set(m->mh, BFI_MC_ABLK, BFI_ABLK_H2I_PF_UPDATE,
- 		bfa_ioc_portid(ablk->ioc));
- 	m->pcifn = (u8)pcifn;
--	m->bw = cpu_to_be32(bw);
-+	m->bw_min = cpu_to_be16(bw_min);
-+	m->bw_max = cpu_to_be16(bw_max);
- 	bfa_ioc_mbox_queue(ablk->ioc, &ablk->mb);
- 
- 	return BFA_STATUS_OK;
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 6d772b4..54b9048 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -889,12 +889,12 @@ bfa_status_t bfa_ablk_port_config(struct bfa_ablk_s *ablk, int port,
- 		enum bfa_mode_s mode, int max_pf, int max_vf,
- 		bfa_ablk_cbfn_t cbfn, void *cbarg);
- bfa_status_t bfa_ablk_pf_create(struct bfa_ablk_s *ablk, u16 *pcifn,
--		u8 port, enum bfi_pcifn_class personality, int bw,
--		bfa_ablk_cbfn_t cbfn, void *cbarg);
-+		u8 port, enum bfi_pcifn_class personality,
-+		u16 bw_min, u16 bw_max, bfa_ablk_cbfn_t cbfn, void *cbarg);
- bfa_status_t bfa_ablk_pf_delete(struct bfa_ablk_s *ablk, int pcifn,
- 		bfa_ablk_cbfn_t cbfn, void *cbarg);
--bfa_status_t bfa_ablk_pf_update(struct bfa_ablk_s *ablk, int pcifn, int bw,
--		bfa_ablk_cbfn_t cbfn, void *cbarg);
-+bfa_status_t bfa_ablk_pf_update(struct bfa_ablk_s *ablk, int pcifn,
-+		u16 bw_min, u16 bw_max, bfa_ablk_cbfn_t cbfn, void *cbarg);
- bfa_status_t bfa_ablk_optrom_en(struct bfa_ablk_s *ablk,
- 		bfa_ablk_cbfn_t cbfn, void *cbarg);
- bfa_status_t bfa_ablk_optrom_dis(struct bfa_ablk_s *ablk,
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 6e1478a..0ab1d40 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -33,7 +33,7 @@ bfad_iocmd_ioc_enable(struct bfad_s *bfad, void *cmd)
- 	/* If IOC is not in disabled state - return */
- 	if (!bfa_ioc_is_disabled(&bfad->bfa.ioc)) {
- 		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
--		iocmd->status = BFA_STATUS_IOC_FAILURE;
-+		iocmd->status = BFA_STATUS_OK;
- 		return rc;
- 	}
- 
-@@ -54,6 +54,12 @@ bfad_iocmd_ioc_disable(struct bfad_s *bfad, void *cmd)
- 	unsigned long	flags;
- 
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	if (bfa_ioc_is_disabled(&bfad->bfa.ioc)) {
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		iocmd->status = BFA_STATUS_OK;
-+		return rc;
-+	}
 +
- 	if (bfad->disable_active) {
- 		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 		return -EBUSY;
-@@ -1191,8 +1197,8 @@ bfad_iocmd_pcifn_create(struct bfad_s *bfad, void *cmd)
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	iocmd->status = bfa_ablk_pf_create(&bfad->bfa.modules.ablk,
- 				&iocmd->pcifn_id, iocmd->port,
--				iocmd->pcifn_class, iocmd->bandwidth,
--				bfad_hcb_comp, &fcomp);
-+				iocmd->pcifn_class, iocmd->bw_min,
-+				iocmd->bw_max, bfad_hcb_comp, &fcomp);
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 	if (iocmd->status != BFA_STATUS_OK)
- 		goto out;
-@@ -1235,8 +1241,8 @@ bfad_iocmd_pcifn_bw(struct bfad_s *bfad, void *cmd)
- 	init_completion(&fcomp.comp);
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	iocmd->status = bfa_ablk_pf_update(&bfad->bfa.modules.ablk,
--				iocmd->pcifn_id, iocmd->bandwidth,
--				bfad_hcb_comp, &fcomp);
-+				iocmd->pcifn_id, iocmd->bw_min,
-+				iocmd->bw_max, bfad_hcb_comp, &fcomp);
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 	bfa_trc(bfad, iocmd->status);
- 	if (iocmd->status != BFA_STATUS_OK)
-@@ -2122,7 +2128,7 @@ bfad_iocmd_boot_cfg(struct bfad_s *bfad, void *cmd)
- 	init_completion(&fcomp.comp);
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	iocmd->status = bfa_flash_update_part(BFA_FLASH(&bfad->bfa),
--			BFA_FLASH_PART_BOOT, PCI_FUNC(bfad->pcidev->devfn),
-+			BFA_FLASH_PART_BOOT, bfad->bfa.ioc.port_id,
- 			&iocmd->cfg, sizeof(struct bfa_boot_cfg_s), 0,
- 			bfad_hcb_comp, &fcomp);
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-@@ -2144,7 +2150,7 @@ bfad_iocmd_boot_query(struct bfad_s *bfad, void *cmd)
- 	init_completion(&fcomp.comp);
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	iocmd->status = bfa_flash_read_part(BFA_FLASH(&bfad->bfa),
--			BFA_FLASH_PART_BOOT, PCI_FUNC(bfad->pcidev->devfn),
-+			BFA_FLASH_PART_BOOT, bfad->bfa.ioc.port_id,
- 			&iocmd->cfg, sizeof(struct bfa_boot_cfg_s), 0,
- 			bfad_hcb_comp, &fcomp);
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index 37922b9..e48dcca 100644
---- a/drivers/scsi/bfa/bfad_bsg.h
-+++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -469,7 +469,8 @@ struct bfa_bsg_pcifn_s {
- 	bfa_status_t		status;
- 	u16			bfad_num;
- 	u16			pcifn_id;
--	u32			bandwidth;
-+	u16			bw_min;
-+	u16			bw_max;
- 	u8			port;
- 	enum bfi_pcifn_class	pcifn_class;
- 	u8			rsvd[1];
-diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
-index 6f1dd9e..9c9861f 100644
---- a/drivers/scsi/bfa/bfi.h
-+++ b/drivers/scsi/bfa/bfi.h
-@@ -690,7 +690,8 @@ struct bfi_ablk_h2i_pf_req_s {
- 	u8			pcifn;
- 	u8			port;
- 	u16			pers;
--	u32			bw;
-+	u16			bw_min; /* percent BW @ max speed */
-+	u16			bw_max; /* percent BW @ max speed */
- };
++	bfa_trc(diag, rsp->status);
+ 	bfa_trc(diag, rsp->ts_junc);
+ 	bfa_trc(diag, rsp->temp);
+ 	bfa_trc(diag, rsp->ts_brd);
+ 	bfa_trc(diag, rsp->brd_temp);
++
++	/* tsensor status is always good bcos we always have junction temp */
++	diag->tsensor.status = BFA_STATUS_OK;
+ 	diag->tsensor.cbfn(diag->tsensor.cbarg, diag->tsensor.status);
+ 	diag->tsensor.lock = 0;
+ }
+@@ -4931,6 +4934,7 @@ bfa_diag_tsensor_query(struct bfa_diag_s *diag,
+ 	diag->tsensor.temp = result;
+ 	diag->tsensor.cbfn = cbfn;
+ 	diag->tsensor.cbarg = cbarg;
++	diag->tsensor.status = BFA_STATUS_OK;
  
- /* BFI_ABLK_H2I_OPTROM_ENABLE, BFI_ABLK_H2I_OPTROM_DISABLE */
+ 	/* Send msg to fw */
+ 	diag_tempsensor_send(diag);
 -- 
 1.7.3.rc1
 
