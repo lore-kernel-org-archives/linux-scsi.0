@@ -1,71 +1,41 @@
-From: Thomas Schwinge <thomas@codesourcery.com>
-Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
-Date: Sat, 22 Sep 2012 13:53:20 +0200
-Message-ID: <87ehlu5l5b.fsf@schwinge.name>
-References: <87obojef7t.fsf@schwinge.name> <20120616181008.GB20623@liondog.tnic> <87ehpddw9k.fsf@schwinge.name> <20120618142900.GA9710@aftab.osrc.amd.com> <87sjdsd64r.fsf@schwinge.name> <20120618155141.GF8378@aftab.osrc.amd.com> <877gs69oue.fsf@schwinge.name> <20120913125825.GB19691@aftab.osrc.amd.com> <20120917172345.GH13879@aftab.osrc.amd.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v7 0/6] ZPODD patches
+Date: Sat, 22 Sep 2012 11:38:45 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1209221133410.7497-100000@netrider.rowland.org>
+References: <201209221328.37967.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
-	protocol="application/pgp-signature"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:32929 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996Ab2IVLxd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Sep 2012 07:53:33 -0400
-In-Reply-To: <20120917172345.GH13879@aftab.osrc.amd.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <201209221328.37967.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oliver@neukum.org>, Aaron Lu <aaron.lu@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Borislav Petkov <bp@amd64.org>
-Cc: Borislav Petkov <bp@alien8.de>, debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On Sat, 22 Sep 2012, Rafael J. Wysocki wrote:
 
-Hi Borislav!
+> > There are sd devices with removable media.
+> 
+> OK.  Does the SCSI layer distinguish them from devices without removable media?
 
-On Mon, 17 Sep 2012 19:23:45 +0200, Borislav Petkov <bp@amd64.org> wrote:
-> On Thu, Sep 13, 2012 at 02:58:25PM +0200, Borislav Petkov wrote:
-> > Here's the script, let me know how it goes:
->=20
-> Here's a more correct version. I'm not saying yours won't work based
-> on the rdmsr and setpci output on your box, but here's a version which
-> should pay attention to one other workaround and work on all K8s.
+Yes, it does.  struct scsi_device has a .removable member, and the
+Removable flag is part of the response data to the INQUIRY command
+(which belongs to the primary command set common to all SCSI devices).
 
-Thanks for that.  I invoke it from /etc/rc.local, and then get:
+> > > User space has an interface to disable runtime PM of any device and it looks
+> > > like that interface should be sufficient to disable the feature in question.
+> > > Why do you think the new interface is needed?
+> > 
+> > Because this is not equivalent to doing no runtime PM at all. SCSI
+> > now defines some powersaving states which do not involve powering
+> > down and thus losing state.
+> 
+> I see. So the sr's runtime suspend may be useful even without the power-off
+> feature, right?
 
-    $ sudo setpci -s 18.0 0x68.l
-    0f20cc0f
-    $ sudo rdmsr 0xc001001f
-    100000008
+Exactly.  Even though the drive itself may not be powered off, by 
+putting it into runtime suspend we gain the ability to suspend the 
+ancestor devices.
 
-Previously that was:
+Alan Stern
 
-    $ sudo setpci -s 18.0 0x68.l
-    0f00cc0f
-    $ sudo rdmsr 0xc001001f
-    8
-
-However, putting in that one audio CD still crashes the machine:
-<http://schwinge.homeip.net/~thomas/tmp/linux-crash-audio-cd-2.jpeg>.
-Original (identical, from a quick glance) MCE is at
-<http://schwinge.homeip.net/~thomas/tmp/linux-crash-audio-cd.jpeg>.
-
-
-Gr=C3=BC=C3=9Fe,
- Thomas
-
---=-=-=
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQEcBAEBAgAGBQJQXaawAAoJENuKOtuXzphJVVcIAKmb101eB6XCgHkoX7mO9uNf
-Dn28TLSYpiRoNq8k2+tMz3h9Wy0gaWSGGqvJU+3tC17pWP/lXMhQAPw43I7z7TF2
-LaQgQ3HF719tn67V0Mfsdd0LcXVUnHmT9RdwlPKhzaZZZ10OgKCsOF9S8QXdMV9J
-S1NgKJ413Wdy/UAeB7NjMDCZBt+fOh+M4r2EDoIkOcIZHlrRdgPCJ6jObZNisJjN
-tMMR/Qy4prMTwPDH1/PxYkKr3jWvgAAcnxI40Jw9AN4+gDqcWfxFObu72ajYM2Ba
-9xanTwM+eFXkppwXYqU1YFZ9k9hmQU/gGk4jDVupVd7w8pEmv136olIVCfpDWUA=
-=dHko
------END PGP SIGNATURE-----
---=-=-=--
