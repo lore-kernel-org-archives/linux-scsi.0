@@ -1,57 +1,64 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v7 0/6] ZPODD patches
-Date: Sat, 22 Sep 2012 23:48:52 +0200
-Message-ID: <201209222348.52273.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1209221615360.11873-100000@netrider.rowland.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] qla2xxx: Fix endianness of task management response
+ code
+Date: Sat, 22 Sep 2012 16:52:38 -0700
+Message-ID: <1348357958.8016.0.camel@haakon2.linux-iscsi.org>
+References: <CC7F593D.E135%saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1209221615360.11873-100000@netrider.rowland.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Oliver Neukum <oliver@neukum.org>, Aaron Lu <aaron.lu@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:41031 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752687Ab2IVXws (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Sep 2012 19:52:48 -0400
+In-Reply-To: <CC7F593D.E135%saurav.kashyap@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: Roland Dreier <roland@kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Arun Easi <arun.easi@qlogic.com>
 
-On Saturday, September 22, 2012, Alan Stern wrote:
-> On Sat, 22 Sep 2012, Rafael J. Wysocki wrote:
+On Wed, 2012-09-19 at 00:43 -0500, Saurav Kashyap wrote:
 > 
-> > > > I see. So the sr's runtime suspend may be useful even without the power-off
-> > > > feature, right?
-> > > 
-> > > Exactly.  Even though the drive itself may not be powered off, by 
-> > > putting it into runtime suspend we gain the ability to suspend the 
-> > > ancestor devices.
-> > 
-> > OK, so what about using a PM QoS-based approach as described (in general
-> > terms) in this message in the "USB ports power off" thread:
-> > 
-> > http://marc.info/?l=linux-pm&m=134831537224566&w=4
+> >From: Roland Dreier <roland@purestorage.com>
+> >
+> >The qla2xxx firmware actually expects the task management response
+> >code in a CTIO IOCB with SCSI status mode 1 to be in little-endian
+> >byte order, ie the response code should be the first byte in the
+> >sense_data[] array.  The old code erroneously byte-swapped the
+> >response code, which puts it in the wrong place on the wire and leads
+> >to initiators thinking every task management request succeeds (since
+> >they see 0 in the byte where they look for the response code).
+> >
+> >Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+> >Cc: Arun Easi <arun.easi@qlogic.com>
+> >Signed-off-by: Roland Dreier <roland@purestorage.com>
+> >---
+> > drivers/scsi/qla2xxx/qla_target.c |    2 +-
+> > 1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> >diff --git a/drivers/scsi/qla2xxx/qla_target.c
+> >b/drivers/scsi/qla2xxx/qla_target.c
+> >index 5b30132..41b74ba 100644
+> >--- a/drivers/scsi/qla2xxx/qla_target.c
+> >+++ b/drivers/scsi/qla2xxx/qla_target.c
+> >@@ -1403,7 +1403,7 @@ static void qlt_24xx_send_task_mgmt_ctio(struct
+> >scsi_qla_host *ha,
+> >       ctio->u.status1.scsi_status =
+> >           __constant_cpu_to_le16(SS_RESPONSE_INFO_LEN_VALID);
+> >       ctio->u.status1.response_len = __constant_cpu_to_le16(8);
+> >-      ((uint32_t *)ctio->u.status1.sense_data)[0] = cpu_to_be32(resp_code);
+> >+      ctio->u.status1.sense_data[0] = resp_code;
+> >
+> >       qla2x00_start_iocbs(ha, ha->req);
+> > }
+> >--
+> >1.7.10.4
 > 
-> I'm not entirely sure.  It may well work out better in this case than 
-> in the USB ports case.
+> Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 > 
-> For the ZPODD stuff, the userspace control amounts to a single flag
-> ("do not allow zero-power") which can easily be represented as a QoS
-> constraint.
-> 
-> For the USB ports, the situation is more complicated.  The decision 
-> about whether or not to power-off a port depends not just on the port 
-> itself but also on the device plugged into the port, and there's no 
-> direct relation between the two in the sysfs device tree.  (That could 
-> be fixed perhaps by adding symbolic links between them.)
 
-That doesn't seem to be a big obstacle as far as PM QoS is concerned, though.
-The trick may be to add PM QoS constraints not for the device itself, but
-directly for the port it is connected to (it always is possible to add a
-constraint for the device too, but that simply may be unnecessary).  Then,
-whoever decides whether or not to power off the port would only have to
-look at the effective PM QoS requirement bits of the port.
+Applied to target-pending/for-next with CC' to stable
 
-> This should be discussed in the USB thread, though...
+Thanks Roland & Co!
 
-Sure.
-
-Thanks,
-Rafael
