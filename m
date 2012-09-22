@@ -1,406 +1,271 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 10/15] bfa: Add support for IO throttling at port level
-Date: Fri, 21 Sep 2012 17:26:41 -0700
-Message-ID: <1348273601-28033-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 11/15] bfa: Add support to configure min/max bandwidth for a pcifn
+Date: Fri, 21 Sep 2012 17:26:50 -0700
+Message-ID: <1348273610-28100-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:43821 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755950Ab2IVA0w (ORCPT
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:51814 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757512Ab2IVA1F (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Sep 2012 20:26:52 -0400
+	Fri, 21 Sep 2012 20:27:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>, Sudarsana Reddy Kalluru <skalluru@brocade.com>
+Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Add capability to limit the number of exchanges on a port to
-	  avoid queue-full conditions from the target side.
+	- Added support to configure minimum bandwidth for a pcifn.
+	- Minimum bandwith is guaranteed at per queue level.
+	- Added support to update pcifn bandwidth dynamically without
+	  a server reboot.
 
-Signed-off-by: Sudarsana Reddy Kalluru <skalluru@brocade.com>
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_core.c      |    9 +++-
- drivers/scsi/bfa/bfa_defs_svc.h  |   13 +++++
- drivers/scsi/bfa/bfa_fcpim.c     |  105 ++++++++++++++++++++++++++++++++++++--
- drivers/scsi/bfa/bfa_fcpim.h     |    9 +++-
- drivers/scsi/bfa/bfa_fcs_rport.c |    6 ++-
- drivers/scsi/bfa/bfa_ioc.h       |    3 +
- drivers/scsi/bfa/bfad_bsg.c      |   36 +++++++++++++
- drivers/scsi/bfa/bfad_bsg.h      |    9 +++
- 8 files changed, 182 insertions(+), 8 deletions(-)
+ drivers/scsi/bfa/bfa_core.c |    9 +++++----
+ drivers/scsi/bfa/bfa_defs.h |    4 +++-
+ drivers/scsi/bfa/bfa_ioc.c  |   20 ++++++++++++--------
+ drivers/scsi/bfa/bfa_ioc.h  |    8 ++++----
+ drivers/scsi/bfa/bfad_bsg.c |   20 +++++++++++++-------
+ drivers/scsi/bfa/bfad_bsg.h |    3 ++-
+ drivers/scsi/bfa/bfi.h      |    3 ++-
+ 7 files changed, 41 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 837879d..eb29628 100644
+index eb29628..89ebd44 100644
 --- a/drivers/scsi/bfa/bfa_core.c
 +++ b/drivers/scsi/bfa/bfa_core.c
-@@ -983,7 +983,8 @@ bfa_iocfc_send_cfg(void *bfa_arg)
- 		cfg_info->single_msix_vec = 1;
- 	cfg_info->endian_sig = BFI_IOC_ENDIAN_SIG;
- 	cfg_info->num_cqs = cfg->fwcfg.num_cqs;
--	cfg_info->num_ioim_reqs = cpu_to_be16(cfg->fwcfg.num_ioim_reqs);
-+	cfg_info->num_ioim_reqs = cpu_to_be16(bfa_fcpim_get_throttle_cfg(bfa,
-+					       cfg->fwcfg.num_ioim_reqs));
- 	cfg_info->num_fwtio_reqs = cpu_to_be16(cfg->fwcfg.num_fwtio_reqs);
- 
- 	bfa_dma_be_addr_set(cfg_info->cfgrsp_addr, iocfc->cfgrsp_dma.pa);
-@@ -1245,10 +1246,14 @@ bfa_iocfc_qreg(struct bfa_s *bfa, struct bfi_iocfc_qreg_s *qreg)
- static void
- bfa_iocfc_res_recfg(struct bfa_s *bfa, struct bfa_iocfc_fwcfg_s *fwcfg)
+@@ -838,19 +838,20 @@ void
+ bfa_isr_enable(struct bfa_s *bfa)
  {
-+	struct bfa_iocfc_s	*iocfc   = &bfa->iocfc;
-+	struct bfi_iocfc_cfg_s	*cfg_info = iocfc->cfginfo;
-+
- 	bfa_fcxp_res_recfg(bfa, fwcfg->num_fcxp_reqs);
- 	bfa_uf_res_recfg(bfa, fwcfg->num_uf_bufs);
- 	bfa_rport_res_recfg(bfa, fwcfg->num_rports);
--	bfa_fcp_res_recfg(bfa, fwcfg->num_ioim_reqs);
-+	bfa_fcp_res_recfg(bfa, cpu_to_be16(cfg_info->num_ioim_reqs),
-+			  fwcfg->num_ioim_reqs);
- 	bfa_tskim_res_recfg(bfa, fwcfg->num_tskim_reqs);
- }
+ 	u32 umsk;
+-	int pci_func = bfa_ioc_pcifn(&bfa->ioc);
++	int port_id = bfa_ioc_portid(&bfa->ioc);
  
-diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
-index 18e4f6b..0e37e23 100644
---- a/drivers/scsi/bfa/bfa_defs_svc.h
-+++ b/drivers/scsi/bfa/bfa_defs_svc.h
-@@ -875,6 +875,19 @@ struct bfa_lunmask_cfg_s {
- 	struct bfa_lun_mask_s	lun_list[MAX_LUN_MASK_CFG];
+-	bfa_trc(bfa, pci_func);
++	bfa_trc(bfa, bfa_ioc_pcifn(&bfa->ioc));
++	bfa_trc(bfa, port_id);
+ 
+ 	bfa_msix_ctrl_install(bfa);
+ 
+ 	if (bfa_asic_id_ct2(bfa->ioc.pcidev.device_id)) {
+ 		umsk = __HFN_INT_ERR_MASK_CT2;
+-		umsk |= pci_func == 0 ?
++		umsk |= port_id == 0 ?
+ 			__HFN_INT_FN0_MASK_CT2 : __HFN_INT_FN1_MASK_CT2;
+ 	} else {
+ 		umsk = __HFN_INT_ERR_MASK;
+-		umsk |= pci_func == 0 ? __HFN_INT_FN0_MASK : __HFN_INT_FN1_MASK;
++		umsk |= port_id == 0 ? __HFN_INT_FN0_MASK : __HFN_INT_FN1_MASK;
+ 	}
+ 
+ 	writel(umsk, bfa->iocfc.bfa_regs.intr_status);
+diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
+index f8df2c9..f0b251e 100644
+--- a/drivers/scsi/bfa/bfa_defs.h
++++ b/drivers/scsi/bfa/bfa_defs.h
+@@ -190,6 +190,7 @@ enum bfa_status {
+ 	BFA_STATUS_TOPOLOGY_LOOP = 230, /* Topology is set to Loop */
+ 	BFA_STATUS_LOOP_UNSUPP_MEZZ = 231, /* Loop topology is not supported
+ 					    * on mezz cards */
++	BFA_STATUS_INVALID_BW = 233,	/* Invalid bandwidth value */
+ 	BFA_STATUS_QOS_BW_INVALID = 234,   /* Invalid QOS bandwidth
+ 					    * configuration */
+ 	BFA_STATUS_DPORT_ENABLED = 235, /* D-port mode is already enabled */
+@@ -749,7 +750,8 @@ struct bfa_ablk_cfg_pf_s {
+ 	u8	rsvd[1];
+ 	u16	num_qpairs;
+ 	u16	num_vectors;
+-	u32	bw;
++	u16	bw_min;
++	u16	bw_max;
  };
  
-+struct bfa_throttle_cfg_s {
-+	u16	is_valid;
-+	u16	value;
-+	u32	rsvd;
-+};
-+
-+struct bfa_defs_fcpim_throttle_s {
-+	u16	max_value;
-+	u16	cur_value;
-+	u16	cfg_value;
-+	u16	rsvd;
-+};
-+
- /*
-  *      Physical port configuration
-  */
-diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
-index 4118d84..27b5609 100644
---- a/drivers/scsi/bfa/bfa_fcpim.c
-+++ b/drivers/scsi/bfa/bfa_fcpim.c
-@@ -3703,6 +3703,7 @@ bfa_fcp_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	struct bfa_mem_dma_s *seg_ptr;
- 	u16	idx, nsegs, num_io_req;
+ struct bfa_ablk_cfg_port_s {
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index be33725..a8fcc81 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -3019,7 +3019,6 @@ bfa_ablk_config_swap(struct bfa_ablk_cfg_s *cfg)
+ 	struct bfa_ablk_cfg_inst_s *cfg_inst;
+ 	int i, j;
+ 	u16	be16;
+-	u32	be32;
  
-+	fcp->max_ioim_reqs = cfg->fwcfg.num_ioim_reqs;
- 	fcp->num_ioim_reqs = cfg->fwcfg.num_ioim_reqs;
- 	fcp->num_fwtio_reqs  = cfg->fwcfg.num_fwtio_reqs;
- 	fcp->num_itns   = cfg->fwcfg.num_rports;
-@@ -3725,6 +3726,7 @@ bfa_fcp_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 		bfa_iocfc_set_snsbase(bfa, idx, fcp->snsbase[idx].pa);
+ 	for (i = 0; i < BFA_ABLK_MAX; i++) {
+ 		cfg_inst = &cfg->inst[i];
+@@ -3030,8 +3029,10 @@ bfa_ablk_config_swap(struct bfa_ablk_cfg_s *cfg)
+ 			cfg_inst->pf_cfg[j].num_qpairs = be16_to_cpu(be16);
+ 			be16 = cfg_inst->pf_cfg[j].num_vectors;
+ 			cfg_inst->pf_cfg[j].num_vectors = be16_to_cpu(be16);
+-			be32 = cfg_inst->pf_cfg[j].bw;
+-			cfg_inst->pf_cfg[j].bw = be16_to_cpu(be32);
++			be16 = cfg_inst->pf_cfg[j].bw_min;
++			cfg_inst->pf_cfg[j].bw_min = be16_to_cpu(be16);
++			be16 = cfg_inst->pf_cfg[j].bw_max;
++			cfg_inst->pf_cfg[j].bw_max = be16_to_cpu(be16);
+ 		}
  	}
+ }
+@@ -3173,7 +3174,8 @@ bfa_ablk_query(struct bfa_ablk_s *ablk, struct bfa_ablk_cfg_s *ablk_cfg,
  
-+	fcp->throttle_update_required = 1;
- 	bfa_fcpim_attach(fcp, bfad, cfg, pcidev);
- 
- 	bfa_iotag_attach(fcp);
-@@ -3763,23 +3765,33 @@ bfa_fcp_iocdisable(struct bfa_s *bfa)
+ bfa_status_t
+ bfa_ablk_pf_create(struct bfa_ablk_s *ablk, u16 *pcifn,
+-		u8 port, enum bfi_pcifn_class personality, int bw,
++		u8 port, enum bfi_pcifn_class personality,
++		u16 bw_min, u16 bw_max,
+ 		bfa_ablk_cbfn_t cbfn, void *cbarg)
  {
- 	struct bfa_fcp_mod_s *fcp = BFA_FCP_MOD(bfa);
+ 	struct bfi_ablk_h2i_pf_req_s *m;
+@@ -3197,7 +3199,8 @@ bfa_ablk_pf_create(struct bfa_ablk_s *ablk, u16 *pcifn,
+ 	bfi_h2i_set(m->mh, BFI_MC_ABLK, BFI_ABLK_H2I_PF_CREATE,
+ 		    bfa_ioc_portid(ablk->ioc));
+ 	m->pers = cpu_to_be16((u16)personality);
+-	m->bw = cpu_to_be32(bw);
++	m->bw_min = cpu_to_be16(bw_min);
++	m->bw_max = cpu_to_be16(bw_max);
+ 	m->port = port;
+ 	bfa_ioc_mbox_queue(ablk->ioc, &ablk->mb);
  
--	/* Enqueue unused ioim resources to free_q */
--	list_splice_tail_init(&fcp->iotag_unused_q, &fcp->iotag_ioim_free_q);
--
- 	bfa_fcpim_iocdisable(fcp);
+@@ -3297,8 +3300,8 @@ bfa_ablk_port_config(struct bfa_ablk_s *ablk, int port, enum bfa_mode_s mode,
  }
  
- void
--bfa_fcp_res_recfg(struct bfa_s *bfa, u16 num_ioim_fw)
-+bfa_fcp_res_recfg(struct bfa_s *bfa, u16 num_ioim_fw, u16 max_ioim_fw)
+ bfa_status_t
+-bfa_ablk_pf_update(struct bfa_ablk_s *ablk, int pcifn, int bw,
+-		bfa_ablk_cbfn_t cbfn, void *cbarg)
++bfa_ablk_pf_update(struct bfa_ablk_s *ablk, int pcifn, u16 bw_min,
++		   u16 bw_max, bfa_ablk_cbfn_t cbfn, void *cbarg)
  {
- 	struct bfa_fcp_mod_s	*mod = BFA_FCP_MOD(bfa);
- 	struct list_head	*qe;
- 	int	i;
+ 	struct bfi_ablk_h2i_pf_req_s *m;
  
-+	/* Update io throttle value only once during driver load time */
-+	if (!mod->throttle_update_required)
-+		return;
-+
- 	for (i = 0; i < (mod->num_ioim_reqs - num_ioim_fw); i++) {
- 		bfa_q_deq_tail(&mod->iotag_ioim_free_q, &qe);
- 		list_add_tail(qe, &mod->iotag_unused_q);
- 	}
-+
-+	if (mod->num_ioim_reqs != num_ioim_fw) {
-+		bfa_trc(bfa, mod->num_ioim_reqs);
-+		bfa_trc(bfa, num_ioim_fw);
-+	}
-+
-+	mod->max_ioim_reqs = max_ioim_fw;
-+	mod->num_ioim_reqs = num_ioim_fw;
-+	mod->throttle_update_required = 0;
- }
+@@ -3320,7 +3323,8 @@ bfa_ablk_pf_update(struct bfa_ablk_s *ablk, int pcifn, int bw,
+ 	bfi_h2i_set(m->mh, BFI_MC_ABLK, BFI_ABLK_H2I_PF_UPDATE,
+ 		bfa_ioc_portid(ablk->ioc));
+ 	m->pcifn = (u8)pcifn;
+-	m->bw = cpu_to_be32(bw);
++	m->bw_min = cpu_to_be16(bw_min);
++	m->bw_max = cpu_to_be16(bw_max);
+ 	bfa_ioc_mbox_queue(ablk->ioc, &ablk->mb);
  
- void
-@@ -3837,3 +3849,88 @@ bfa_iotag_attach(struct bfa_fcp_mod_s *fcp)
- 
- 	bfa_mem_kva_curp(fcp) = (u8 *) iotag;
- }
-+
-+
-+/**
-+ * To send config req, first try to use throttle value from flash
-+ * If 0, then use driver parameter
-+ * We need to use min(flash_val, drv_val) because
-+ * memory allocation was done based on this cfg'd value
-+ */
-+u16
-+bfa_fcpim_get_throttle_cfg(struct bfa_s *bfa, u16 drv_cfg_param)
-+{
-+	u16 tmp;
-+	struct bfa_fcp_mod_s *fcp = BFA_FCP_MOD(bfa);
-+
-+	/*
-+	 * If throttle value from flash is already in effect after driver is
-+	 * loaded then until next load, always return current value instead
-+	 * of actual flash value
-+	 */
-+	if (!fcp->throttle_update_required)
-+		return (u16)fcp->num_ioim_reqs;
-+
-+	tmp = bfa_dconf_read_data_valid(bfa) ? bfa_fcpim_read_throttle(bfa) : 0;
-+	if (!tmp || (tmp > drv_cfg_param))
-+		tmp = drv_cfg_param;
-+
-+	return tmp;
-+}
-+
-+bfa_status_t
-+bfa_fcpim_write_throttle(struct bfa_s *bfa, u16 value)
-+{
-+	if (!bfa_dconf_get_min_cfg(bfa)) {
-+		BFA_DCONF_MOD(bfa)->dconf->throttle_cfg.value = value;
-+		BFA_DCONF_MOD(bfa)->dconf->throttle_cfg.is_valid = 1;
-+		return BFA_STATUS_OK;
-+	}
-+
-+	return BFA_STATUS_FAILED;
-+}
-+
-+u16
-+bfa_fcpim_read_throttle(struct bfa_s *bfa)
-+{
-+	struct bfa_throttle_cfg_s *throttle_cfg =
-+			&(BFA_DCONF_MOD(bfa)->dconf->throttle_cfg);
-+
-+	return ((!bfa_dconf_get_min_cfg(bfa)) ?
-+	       ((throttle_cfg->is_valid == 1) ? (throttle_cfg->value) : 0) : 0);
-+}
-+
-+bfa_status_t
-+bfa_fcpim_throttle_set(struct bfa_s *bfa, u16 value)
-+{
-+	/* in min cfg no commands should run. */
-+	if ((bfa_dconf_get_min_cfg(bfa) == BFA_TRUE) ||
-+	    (!bfa_dconf_read_data_valid(bfa)))
-+		return BFA_STATUS_FAILED;
-+
-+	bfa_fcpim_write_throttle(bfa, value);
-+
-+	return bfa_dconf_update(bfa);
-+}
-+
-+bfa_status_t
-+bfa_fcpim_throttle_get(struct bfa_s *bfa, void *buf)
-+{
-+	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
-+	struct bfa_defs_fcpim_throttle_s throttle;
-+
-+	if ((bfa_dconf_get_min_cfg(bfa) == BFA_TRUE) ||
-+	    (!bfa_dconf_read_data_valid(bfa)))
-+		return BFA_STATUS_FAILED;
-+
-+	memset(&throttle, 0, sizeof(struct bfa_defs_fcpim_throttle_s));
-+
-+	throttle.cur_value = (u16)(fcpim->fcp->num_ioim_reqs);
-+	throttle.cfg_value = bfa_fcpim_read_throttle(bfa);
-+	if (!throttle.cfg_value)
-+		throttle.cfg_value = throttle.cur_value;
-+	throttle.max_value = (u16)(fcpim->fcp->max_ioim_reqs);
-+	memcpy(buf, &throttle, sizeof(struct bfa_defs_fcpim_throttle_s));
-+
-+	return BFA_STATUS_OK;
-+}
-diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
-index b81d51c..e693af6 100644
---- a/drivers/scsi/bfa/bfa_fcpim.h
-+++ b/drivers/scsi/bfa/bfa_fcpim.h
-@@ -42,7 +42,7 @@ void bfa_itn_create(struct bfa_s *bfa, struct bfa_rport_s *rport,
- 		void (*isr)(struct bfa_s *bfa, struct bfi_msg_s *m));
- void bfa_itn_isr(struct bfa_s *bfa, struct bfi_msg_s *m);
- void bfa_iotag_attach(struct bfa_fcp_mod_s *fcp);
--void bfa_fcp_res_recfg(struct bfa_s *bfa, u16 num_ioim_fw);
-+void bfa_fcp_res_recfg(struct bfa_s *bfa, u16 num_ioim_fw, u16 max_ioim_fw);
- 
- #define BFA_FCP_MOD(_hal)	(&(_hal)->modules.fcp_mod)
- #define BFA_MEM_FCP_KVA(__bfa)	(&(BFA_FCP_MOD(__bfa)->kva_seg))
-@@ -150,6 +150,7 @@ struct bfa_fcp_mod_s {
- 	struct list_head	iotag_unused_q;	/* unused IO resources*/
- 	struct bfa_iotag_s	*iotag_arr;
- 	struct bfa_itn_s	*itn_arr;
-+	int			max_ioim_reqs;
- 	int			num_ioim_reqs;
- 	int			num_fwtio_reqs;
- 	int			num_itns;
-@@ -157,6 +158,7 @@ struct bfa_fcp_mod_s {
- 	struct bfa_fcpim_s	fcpim;
- 	struct bfa_mem_dma_s	dma_seg[BFA_FCP_DMA_SEGS];
- 	struct bfa_mem_kva_s	kva_seg;
-+	int			throttle_update_required;
- };
- 
- /*
-@@ -418,5 +420,10 @@ bfa_status_t	bfa_fcpim_lunmask_delete(struct bfa_s *bfa, u16 vf_id,
- bfa_status_t	bfa_fcpim_lunmask_add(struct bfa_s *bfa, u16 vf_id,
- 				wwn_t *pwwn, wwn_t rpwwn, struct scsi_lun lun);
- bfa_status_t	bfa_fcpim_lunmask_clear(struct bfa_s *bfa);
-+u16		bfa_fcpim_read_throttle(struct bfa_s *bfa);
-+bfa_status_t	bfa_fcpim_write_throttle(struct bfa_s *bfa, u16 value);
-+bfa_status_t	bfa_fcpim_throttle_set(struct bfa_s *bfa, u16 value);
-+bfa_status_t	bfa_fcpim_throttle_get(struct bfa_s *bfa, void *buf);
-+u16     bfa_fcpim_get_throttle_cfg(struct bfa_s *bfa, u16 drv_cfg_param);
- 
- #endif /* __BFA_FCPIM_H__ */
-diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
-index e90800d..58ac643 100644
---- a/drivers/scsi/bfa/bfa_fcs_rport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_rport.c
-@@ -3026,6 +3026,9 @@ bfa_fcs_rport_get_attr(struct bfa_fcs_rport_s *rport,
- 	struct bfa_rport_qos_attr_s qos_attr;
- 	struct bfa_fcs_lport_s *port = rport->port;
- 	bfa_port_speed_t rport_speed = rport->rpf.rpsc_speed;
-+	struct bfa_port_attr_s port_attr;
-+
-+	bfa_fcport_get_attr(rport->fcs->bfa, &port_attr);
- 
- 	memset(rport_attr, 0, sizeof(struct bfa_rport_attr_s));
- 	memset(&qos_attr, 0, sizeof(struct bfa_rport_qos_attr_s));
-@@ -3056,7 +3059,8 @@ bfa_fcs_rport_get_attr(struct bfa_fcs_rport_s *rport,
- 			rport_speed =
- 				bfa_fcport_get_ratelim_speed(rport->fcs->bfa);
- 
--		if (rport_speed < bfa_fcs_lport_get_rport_max_speed(port))
-+		if ((bfa_fcs_lport_get_rport_max_speed(port) !=
-+		    BFA_PORT_SPEED_UNKNOWN) && (rport_speed < port_attr.speed))
- 			rport_attr->trl_enforced = BFA_TRUE;
- 	}
- }
+ 	return BFA_STATUS_OK;
 diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 47038da..6d772b4 100644
+index 6d772b4..54b9048 100644
 --- a/drivers/scsi/bfa/bfa_ioc.h
 +++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -716,6 +716,7 @@ struct bfa_dconf_hdr_s {
- struct bfa_dconf_s {
- 	struct bfa_dconf_hdr_s		hdr;
- 	struct bfa_lunmask_cfg_s	lun_mask;
-+	struct bfa_throttle_cfg_s	throttle_cfg;
- };
- #pragma pack()
- 
-@@ -738,6 +739,8 @@ struct bfa_dconf_mod_s {
- #define bfa_dconf_read_data_valid(__bfa)	\
- 	(BFA_DCONF_MOD(__bfa)->read_data_valid)
- #define BFA_DCONF_UPDATE_TOV	5000	/* memtest timeout in msec */
-+#define bfa_dconf_get_min_cfg(__bfa)	\
-+	(BFA_DCONF_MOD(__bfa)->min_cfg)
- 
- void	bfa_dconf_modinit(struct bfa_s *bfa);
- void	bfa_dconf_modexit(struct bfa_s *bfa);
+@@ -889,12 +889,12 @@ bfa_status_t bfa_ablk_port_config(struct bfa_ablk_s *ablk, int port,
+ 		enum bfa_mode_s mode, int max_pf, int max_vf,
+ 		bfa_ablk_cbfn_t cbfn, void *cbarg);
+ bfa_status_t bfa_ablk_pf_create(struct bfa_ablk_s *ablk, u16 *pcifn,
+-		u8 port, enum bfi_pcifn_class personality, int bw,
+-		bfa_ablk_cbfn_t cbfn, void *cbarg);
++		u8 port, enum bfi_pcifn_class personality,
++		u16 bw_min, u16 bw_max, bfa_ablk_cbfn_t cbfn, void *cbarg);
+ bfa_status_t bfa_ablk_pf_delete(struct bfa_ablk_s *ablk, int pcifn,
+ 		bfa_ablk_cbfn_t cbfn, void *cbarg);
+-bfa_status_t bfa_ablk_pf_update(struct bfa_ablk_s *ablk, int pcifn, int bw,
+-		bfa_ablk_cbfn_t cbfn, void *cbarg);
++bfa_status_t bfa_ablk_pf_update(struct bfa_ablk_s *ablk, int pcifn,
++		u16 bw_min, u16 bw_max, bfa_ablk_cbfn_t cbfn, void *cbarg);
+ bfa_status_t bfa_ablk_optrom_en(struct bfa_ablk_s *ablk,
+ 		bfa_ablk_cbfn_t cbfn, void *cbarg);
+ bfa_status_t bfa_ablk_optrom_dis(struct bfa_ablk_s *ablk,
 diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 90c40e4..6e1478a 100644
+index 6e1478a..0ab1d40 100644
 --- a/drivers/scsi/bfa/bfad_bsg.c
 +++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -2547,6 +2547,36 @@ bfad_iocmd_fcpim_cfg_lunmask(struct bfad_s *bfad, void *cmd, unsigned int v_cmd)
- 	return 0;
- }
+@@ -33,7 +33,7 @@ bfad_iocmd_ioc_enable(struct bfad_s *bfad, void *cmd)
+ 	/* If IOC is not in disabled state - return */
+ 	if (!bfa_ioc_is_disabled(&bfad->bfa.ioc)) {
+ 		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+-		iocmd->status = BFA_STATUS_IOC_FAILURE;
++		iocmd->status = BFA_STATUS_OK;
+ 		return rc;
+ 	}
  
-+int
-+bfad_iocmd_fcpim_throttle_query(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_fcpim_throttle_s *iocmd =
-+			(struct bfa_bsg_fcpim_throttle_s *)cmd;
-+	unsigned long   flags;
+@@ -54,6 +54,12 @@ bfad_iocmd_ioc_disable(struct bfad_s *bfad, void *cmd)
+ 	unsigned long	flags;
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	if (bfa_ioc_is_disabled(&bfad->bfa.ioc)) {
++		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++		iocmd->status = BFA_STATUS_OK;
++		return rc;
++	}
 +
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_fcpim_throttle_get(&bfad->bfa,
-+				(void *)&iocmd->throttle);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_fcpim_throttle_set(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_fcpim_throttle_s *iocmd =
-+			(struct bfa_bsg_fcpim_throttle_s *)cmd;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_fcpim_throttle_set(&bfad->bfa,
-+				iocmd->throttle.cfg_value);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	return 0;
-+}
-+
- static int
- bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 		unsigned int payload_len)
-@@ -2881,6 +2911,12 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 	case IOCMD_FCPIM_LUNMASK_DELETE:
- 		rc = bfad_iocmd_fcpim_cfg_lunmask(bfad, iocmd, cmd);
- 		break;
-+	case IOCMD_FCPIM_THROTTLE_QUERY:
-+		rc = bfad_iocmd_fcpim_throttle_query(bfad, iocmd);
-+		break;
-+	case IOCMD_FCPIM_THROTTLE_SET:
-+		rc = bfad_iocmd_fcpim_throttle_set(bfad, iocmd);
-+		break;
- 	default:
- 		rc = -EINVAL;
- 		break;
+ 	if (bfad->disable_active) {
+ 		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 		return -EBUSY;
+@@ -1191,8 +1197,8 @@ bfad_iocmd_pcifn_create(struct bfad_s *bfad, void *cmd)
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	iocmd->status = bfa_ablk_pf_create(&bfad->bfa.modules.ablk,
+ 				&iocmd->pcifn_id, iocmd->port,
+-				iocmd->pcifn_class, iocmd->bandwidth,
+-				bfad_hcb_comp, &fcomp);
++				iocmd->pcifn_class, iocmd->bw_min,
++				iocmd->bw_max, bfad_hcb_comp, &fcomp);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 	if (iocmd->status != BFA_STATUS_OK)
+ 		goto out;
+@@ -1235,8 +1241,8 @@ bfad_iocmd_pcifn_bw(struct bfad_s *bfad, void *cmd)
+ 	init_completion(&fcomp.comp);
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	iocmd->status = bfa_ablk_pf_update(&bfad->bfa.modules.ablk,
+-				iocmd->pcifn_id, iocmd->bandwidth,
+-				bfad_hcb_comp, &fcomp);
++				iocmd->pcifn_id, iocmd->bw_min,
++				iocmd->bw_max, bfad_hcb_comp, &fcomp);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 	bfa_trc(bfad, iocmd->status);
+ 	if (iocmd->status != BFA_STATUS_OK)
+@@ -2122,7 +2128,7 @@ bfad_iocmd_boot_cfg(struct bfad_s *bfad, void *cmd)
+ 	init_completion(&fcomp.comp);
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	iocmd->status = bfa_flash_update_part(BFA_FLASH(&bfad->bfa),
+-			BFA_FLASH_PART_BOOT, PCI_FUNC(bfad->pcidev->devfn),
++			BFA_FLASH_PART_BOOT, bfad->bfa.ioc.port_id,
+ 			&iocmd->cfg, sizeof(struct bfa_boot_cfg_s), 0,
+ 			bfad_hcb_comp, &fcomp);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+@@ -2144,7 +2150,7 @@ bfad_iocmd_boot_query(struct bfad_s *bfad, void *cmd)
+ 	init_completion(&fcomp.comp);
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	iocmd->status = bfa_flash_read_part(BFA_FLASH(&bfad->bfa),
+-			BFA_FLASH_PART_BOOT, PCI_FUNC(bfad->pcidev->devfn),
++			BFA_FLASH_PART_BOOT, bfad->bfa.ioc.port_id,
+ 			&iocmd->cfg, sizeof(struct bfa_boot_cfg_s), 0,
+ 			bfad_hcb_comp, &fcomp);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
 diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index b67a229..37922b9 100644
+index 37922b9..e48dcca 100644
 --- a/drivers/scsi/bfa/bfad_bsg.h
 +++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -145,6 +145,8 @@ enum {
- 	IOCMD_DIAG_DPORT_DISABLE,
- 	IOCMD_DIAG_DPORT_GET_STATE,
- 	IOCMD_QOS_SET_BW,
-+	IOCMD_FCPIM_THROTTLE_QUERY,
-+	IOCMD_FCPIM_THROTTLE_SET
+@@ -469,7 +469,8 @@ struct bfa_bsg_pcifn_s {
+ 	bfa_status_t		status;
+ 	u16			bfad_num;
+ 	u16			pcifn_id;
+-	u32			bandwidth;
++	u16			bw_min;
++	u16			bw_max;
+ 	u8			port;
+ 	enum bfi_pcifn_class	pcifn_class;
+ 	u8			rsvd[1];
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index 6f1dd9e..9c9861f 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -690,7 +690,8 @@ struct bfi_ablk_h2i_pf_req_s {
+ 	u8			pcifn;
+ 	u8			port;
+ 	u16			pers;
+-	u32			bw;
++	u16			bw_min; /* percent BW @ max speed */
++	u16			bw_max; /* percent BW @ max speed */
  };
  
- struct bfa_bsg_gen_s {
-@@ -740,6 +742,13 @@ struct bfa_bsg_fcpim_lunmask_s {
- 	struct scsi_lun	lun;
- };
- 
-+struct bfa_bsg_fcpim_throttle_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		vf_id;
-+	struct bfa_defs_fcpim_throttle_s throttle;
-+};
-+
- struct bfa_bsg_fcpt_s {
- 	bfa_status_t    status;
- 	u16		vf_id;
+ /* BFI_ABLK_H2I_OPTROM_ENABLE, BFI_ABLK_H2I_OPTROM_DISABLE */
 -- 
 1.7.3.rc1
 
