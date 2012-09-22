@@ -1,105 +1,79 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v7 0/6] ZPODD patches
-Date: Fri, 21 Sep 2012 23:18:27 +0200
-Message-ID: <201209212318.28137.rjw@sisk.pl>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209202200.51303.rjw@sisk.pl> <20120921054844.GB2987@mint-spring.sh.intel.com>
+From: <kgudipat@brocade.com>
+Subject: [PATCH 00/15] bfa: Update the driver version to 3.1.2.1
+Date: Fri, 21 Sep 2012 17:23:55 -0700
+Message-ID: <1348273435-26498-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120921054844.GB2987@mint-spring.sh.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:51680 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755029Ab2IVAYD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Sep 2012 20:24:03 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
 
-On Friday, September 21, 2012, Aaron Lu wrote:
-> On Thu, Sep 20, 2012 at 10:00:51PM +0200, Rafael J. Wysocki wrote:
-> > On Wednesday, September 19, 2012, Aaron Lu wrote:
-> > > Thanks Rafael, and if there is any question/problem,
-> > > please kindly let me know.
-> > 
-> > Well, unfortunately my initial review indicates that the patchset is not
-> > quite ready to go upstream yet.
-> > 
-> > I'll send comments in replies to the individual patches, but overall I can
-> > say that at this stage of development, when I look at the patches, it should
-> > be clear to me not only what is being changed, but _why_ it is being changed
-> > in the first place and, secondly, why it is being changed in this particular
-> > way.  It's far from that, though.
-> 
-> I'm adding zero power support for optical disk drive(ZPODD), which is
-> made possible with the newly defined device attention(DA) pin introduced
-> in SATA 3.1 spec.
-> 
-> The idea here is to use runtime pm to achieve this, so I basically did 2
-> things:
-> 1 Add runtime pm support for ODD;
-> 2 Add power off support for ODD after it is runtime suspended.
-> 
-> Patch 2 is runtime pm support for ODD, the reason it is done this way is
-> discussed here:
-> http://www.spinics.net/lists/linux-scsi/msg61551.html
+From: Krishna Gudipati <kgudipat@brocade.com>
 
-Why isn't it explained in the patch changelog, then?  People should be able
-to learn why things are done the way they are done from git logs.
+Hi James,
 
-> The basic idea is, the ODD will be runtime suspended as long as there is
-> nobody using it, that is, no programs opening the block device.
-> 
-> The ODD will be polled periodically, so it will be runtime resumed
-> before checking if there is any events pending and suspended when done.
+	The following patch-set includes bug-fixes, firmware naming convention change,
+	adds new features such as FC Arbitrated Loop support, Diagnostic Port (D-port),
+	IO throttle, FRU update support, QoS bandwidth config support to the BFA driver
+	and updates the Brocade BFA driver to v3.1.2.1.
 
-OK.  So what happens if we power off the drive via runtime PM.  Does it
-it really make sense to resumie it through polling in that case?
+	I have compiled and tested the code against your scsi-misc.
 
-> The only exception is, if we found a disc is just inserted, we will not
-> idle it immediately at the end of the poll, reason explained in another
-> mail.
-> 
-> This is the rational I wrote patch 2, and patch 1 is used by patch 2.
-> 
-> Patch 3 is adding power off support for ODD after it is runtime
-> suspended, the condition is specified in section 15:
-> ftp://ftp.seagate.com/sff/INF-8090.PDF
-> 
-> That is, for tray type ODD: no media inside and door closed; for slot
-> type ODD: no media inside.
-> 
-> The is the reason sr_suspend is written, for non-ZPODD capable devices,
-> it does nothing; for ZPODD devices, it will check the above condition to
-> see if it is ready to be powered off. The ready_to_power_off flag will be
-> used by ATA layer to decide if power can be removed.
+Thanks,
+Krishna C Gudipati
 
-Now, James says he doesn't like the way ready_to_power_off is used.  Sure
-enough, it is totally irrelevant to the majority of SCSI devices.  It actually
-is totally irrelevant to everything in the SCSI subsystem except for the sr
-driver and libata.  So I wonder if you have considered any alternative
-way to address the use case at hand?
+Krishna Gudipati (15):
+  bfa: Add support for FC Arbitrated Loop topology.
+  bfa: IOCFC state machine enhancements
+  bfa: Flash Controller PLL initialization fixes
+  bfa: Add support to have mfg date as part of adapter attributes
+  bfa: Fix few attributes in the RHBA CT passthru command
+  bfa: Fix to handle firmware tskim abort request response
+  bfa: Add diagnostic port (D-Port) support
+  bfa: Fabric Assigned Address implementation fix
+  bfa: Add support for user to configure bandwidth on QoS priorities
+  bfa: Add support for IO throttling at port level
+  bfa: Add support to configure min/max bandwidth for a pcifn
+  bfa: Support Power on Hours display and diag temp sensor fixes
+  bfa: Add support to read/update the FRU data.
+  bfa: Firmware image naming convention update
+  bfa: Update the driver version to 3.1.2.1
 
-> When in powered off state, if user presses the eject button or insert a
-> disc, an ACPI event will be generated and our acpi wake handler will
-> pm_runtime_resume the ODD. And if it is a tray type ODD, its tray should
-> be ejected(need_eject flag) after powered on. This is patch 3.
+ drivers/scsi/bfa/bfa_core.c      |   85 ++++-
+ drivers/scsi/bfa/bfa_defs.h      |   61 +++-
+ drivers/scsi/bfa/bfa_defs_svc.h  |  119 +++++-
+ drivers/scsi/bfa/bfa_fc.h        |    5 +
+ drivers/scsi/bfa/bfa_fcbuild.c   |    4 +
+ drivers/scsi/bfa/bfa_fcpim.c     |  123 ++++++-
+ drivers/scsi/bfa/bfa_fcpim.h     |   13 +-
+ drivers/scsi/bfa/bfa_fcs.c       |   64 +++-
+ drivers/scsi/bfa/bfa_fcs.h       |   23 +-
+ drivers/scsi/bfa/bfa_fcs_lport.c |  155 ++++++++-
+ drivers/scsi/bfa/bfa_fcs_rport.c |  288 +++++++++++++--
+ drivers/scsi/bfa/bfa_ioc.c       |  494 ++++++++++++++++++++++++-
+ drivers/scsi/bfa/bfa_ioc.h       |   63 +++-
+ drivers/scsi/bfa/bfa_ioc_ct.c    |  236 +++++++------
+ drivers/scsi/bfa/bfa_modules.h   |    1 +
+ drivers/scsi/bfa/bfa_port.c      |   32 ++
+ drivers/scsi/bfa/bfa_port.h      |    3 +
+ drivers/scsi/bfa/bfa_svc.c       |  732 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/bfa/bfa_svc.h       |   30 ++-
+ drivers/scsi/bfa/bfad.c          |    6 +-
+ drivers/scsi/bfa/bfad_bsg.c      |  373 +++++++++++++++++---
+ drivers/scsi/bfa/bfad_bsg.h      |   63 ++++-
+ drivers/scsi/bfa/bfad_drv.h      |    2 +-
+ drivers/scsi/bfa/bfi.h           |   72 ++++-
+ drivers/scsi/bfa/bfi_ms.h        |   14 +
+ drivers/scsi/bfa/bfi_reg.h       |    3 +
+ 26 files changed, 2762 insertions(+), 302 deletions(-)
 
-That sounds reasonable enough, but the role of the powered_off and
-need_eject flags could be explained a bit better.  In particular, it would
-be nice to have explained why they have to be present in struct scsi_device,
-because they don't seem to be particularly useful for many SCSI devices
-that aren't CD drives (the need_eject one in particular).
+-- 
+1.7.3.rc1
 
-> And patch 4-6 introduces a new sysfs file may_power_off to give user a
-> chance to disable the power off of the device due to various reasons
-> like the ODD claims support of device attention while actually it is
-> broken.
-
-User space has an interface to disable runtime PM of any device and it looks
-like that interface should be sufficient to disable the feature in question.
-Why do you think the new interface is needed?
-
-> I hope it makes more sense to you now.
-
-Well, thanks for the explanation. :-)
-
-Rafael
