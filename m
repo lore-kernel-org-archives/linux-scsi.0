@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 05/15] bfa: Fix few attributes in the RHBA CT passthru command
-Date: Fri, 21 Sep 2012 17:25:20 -0700
-Message-ID: <1348273520-27347-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 06/15] bfa: Fix to handle firmware tskim abort request response
+Date: Fri, 21 Sep 2012 17:25:30 -0700
+Message-ID: <1348273530-27449-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:43766 "EHLO
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:43781 "EHLO
 	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757635Ab2IVAZc (ORCPT
+	by vger.kernel.org with ESMTP id S1756514Ab2IVA0J (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Sep 2012 20:25:32 -0400
+	Fri, 21 Sep 2012 20:26:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
@@ -18,97 +18,137 @@ Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Made changes to set the RHBA command max payload based on
-	  the port configured frame size.
-	- Made changes to fix the driver/fw version size in FMDI structure.
-	- Fix to pass the fw version for FDMI attribute type
-	  FDMI_HBA_ATTRIB_FW_VERSION rather than driver version.
+	- Enhance tracing to include both tskim tag and event.
+	- Handle the tskim abort response from firmware in the
+	  tskim state machine cleanup state and proceed with the
+	  tskim cleanup.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_fcs.h       |    4 ++--
- drivers/scsi/bfa/bfa_fcs_lport.c |   14 +++++++-------
- drivers/scsi/bfa/bfa_ioc.h       |    3 ++-
- 3 files changed, 11 insertions(+), 10 deletions(-)
+ drivers/scsi/bfa/bfa_fcpim.c |   18 +++++++++++-------
+ drivers/scsi/bfa/bfa_fcpim.h |    4 +++-
+ drivers/scsi/bfa/bfi_ms.h    |    1 +
+ 3 files changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
-index f2a6a3c..a449706 100644
---- a/drivers/scsi/bfa/bfa_fcs.h
-+++ b/drivers/scsi/bfa/bfa_fcs.h
-@@ -642,9 +642,9 @@ struct bfa_fcs_fdmi_hba_attr_s {
- 	u8         model[16];
- 	u8         model_desc[256];
- 	u8         hw_version[8];
--	u8         driver_version[8];
-+	u8         driver_version[BFA_VERSION_LEN];
- 	u8         option_rom_ver[BFA_VERSION_LEN];
--	u8         fw_version[8];
-+	u8         fw_version[BFA_VERSION_LEN];
- 	u8         os_name[256];
- 	__be32        max_ct_pyld;
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index 1633963..4118d84 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -158,6 +158,7 @@ enum bfa_tskim_event {
+ 	BFA_TSKIM_SM_IOS_DONE	= 7,	/*  IO and sub TM completions	*/
+ 	BFA_TSKIM_SM_CLEANUP	= 8,	/*  TM cleanup on ITN offline	*/
+ 	BFA_TSKIM_SM_CLEANUP_DONE = 9,	/*  TM abort completion	*/
++	BFA_TSKIM_SM_UTAG	= 10,	/*  TM completion unknown tag  */
  };
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index c58a5e0..1224d04 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -2014,13 +2014,10 @@ bfa_fcs_lport_fdmi_build_rhba_pyld(struct bfa_fcs_lport_fdmi_s *fdmi, u8 *pyld)
- 					 sizeof(templen));
- 	}
  
--	/*
--	 * f/w Version = driver version
--	 */
- 	attr = (struct fdmi_attr_s *) curr_ptr;
- 	attr->type = cpu_to_be16(FDMI_HBA_ATTRIB_FW_VERSION);
--	templen = (u16) strlen(fcs_hba_attr->driver_version);
--	memcpy(attr->value, fcs_hba_attr->driver_version, templen);
-+	templen = (u16) strlen(fcs_hba_attr->fw_version);
-+	memcpy(attr->value, fcs_hba_attr->fw_version, templen);
- 	templen = fc_roundup(templen, sizeof(u32));
- 	curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
- 	len += templen;
-@@ -2422,6 +2419,7 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
- {
- 	struct bfa_fcs_lport_s *port = fdmi->ms->port;
- 	struct bfa_fcs_driver_info_s  *driver_info = &port->fcs->driver_info;
-+	struct bfa_fcs_fdmi_port_attr_s fcs_port_attr;
- 
- 	memset(hba_attr, 0, sizeof(struct bfa_fcs_fdmi_hba_attr_s));
- 
-@@ -2457,7 +2455,9 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
- 				sizeof(driver_info->host_os_patch));
- 	}
- 
--	hba_attr->max_ct_pyld = cpu_to_be32(FC_MAX_PDUSZ);
-+	/* Retrieve the max frame size from the port attr */
-+	bfa_fcs_fdmi_get_portattr(fdmi, &fcs_port_attr);
-+	hba_attr->max_ct_pyld = fcs_port_attr.max_frm_size;
- }
- 
+ /*
+@@ -3036,7 +3037,7 @@ bfa_ioim_abort(struct bfa_ioim_s *ioim)
  static void
-@@ -2517,7 +2517,7 @@ bfa_fcs_fdmi_get_portattr(struct bfa_fcs_lport_fdmi_s *fdmi,
- 	/*
- 	 * Max PDU Size.
+ bfa_tskim_sm_uninit(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ {
+-	bfa_trc(tskim->bfa, event);
++	bfa_trc(tskim->bfa, tskim->tsk_tag << 16 | event);
+ 
+ 	switch (event) {
+ 	case BFA_TSKIM_SM_START:
+@@ -3074,7 +3075,7 @@ bfa_tskim_sm_uninit(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ static void
+ bfa_tskim_sm_active(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ {
+-	bfa_trc(tskim->bfa, event);
++	bfa_trc(tskim->bfa, tskim->tsk_tag << 16 | event);
+ 
+ 	switch (event) {
+ 	case BFA_TSKIM_SM_DONE:
+@@ -3110,7 +3111,7 @@ bfa_tskim_sm_active(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ static void
+ bfa_tskim_sm_cleanup(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ {
+-	bfa_trc(tskim->bfa, event);
++	bfa_trc(tskim->bfa, tskim->tsk_tag << 16 | event);
+ 
+ 	switch (event) {
+ 	case BFA_TSKIM_SM_DONE:
+@@ -3119,6 +3120,7 @@ bfa_tskim_sm_cleanup(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ 		 */
+ 		break;
+ 
++	case BFA_TSKIM_SM_UTAG:
+ 	case BFA_TSKIM_SM_CLEANUP_DONE:
+ 		bfa_sm_set_state(tskim, bfa_tskim_sm_iocleanup);
+ 		bfa_tskim_cleanup_ios(tskim);
+@@ -3138,7 +3140,7 @@ bfa_tskim_sm_cleanup(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ static void
+ bfa_tskim_sm_iocleanup(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ {
+-	bfa_trc(tskim->bfa, event);
++	bfa_trc(tskim->bfa, tskim->tsk_tag << 16 | event);
+ 
+ 	switch (event) {
+ 	case BFA_TSKIM_SM_IOS_DONE:
+@@ -3170,7 +3172,7 @@ bfa_tskim_sm_iocleanup(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ static void
+ bfa_tskim_sm_qfull(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ {
+-	bfa_trc(tskim->bfa, event);
++	bfa_trc(tskim->bfa, tskim->tsk_tag << 16 | event);
+ 
+ 	switch (event) {
+ 	case BFA_TSKIM_SM_QRESUME:
+@@ -3207,7 +3209,7 @@ static void
+ bfa_tskim_sm_cleanup_qfull(struct bfa_tskim_s *tskim,
+ 		enum bfa_tskim_event event)
+ {
+-	bfa_trc(tskim->bfa, event);
++	bfa_trc(tskim->bfa, tskim->tsk_tag << 16 | event);
+ 
+ 	switch (event) {
+ 	case BFA_TSKIM_SM_DONE:
+@@ -3238,7 +3240,7 @@ bfa_tskim_sm_cleanup_qfull(struct bfa_tskim_s *tskim,
+ static void
+ bfa_tskim_sm_hcb(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
+ {
+-	bfa_trc(tskim->bfa, event);
++	bfa_trc(tskim->bfa, tskim->tsk_tag << 16 | event);
+ 
+ 	switch (event) {
+ 	case BFA_TSKIM_SM_HCB:
+@@ -3560,6 +3562,8 @@ bfa_tskim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ 	if (rsp->tsk_status == BFI_TSKIM_STS_ABORTED) {
+ 		bfa_stats(tskim->itnim, tm_cleanup_comps);
+ 		bfa_sm_send_event(tskim, BFA_TSKIM_SM_CLEANUP_DONE);
++	} else if (rsp->tsk_status == BFI_TSKIM_STS_UTAG) {
++		bfa_sm_send_event(tskim, BFA_TSKIM_SM_UTAG);
+ 	} else {
+ 		bfa_stats(tskim->itnim, tm_fw_rsps);
+ 		bfa_sm_send_event(tskim, BFA_TSKIM_SM_DONE);
+diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
+index 36f26da..b81d51c 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.h
++++ b/drivers/scsi/bfa/bfa_fcpim.h
+@@ -51,7 +51,9 @@ void bfa_fcp_res_recfg(struct bfa_s *bfa, u16 num_ioim_fw);
+ #define BFA_ITN_FROM_TAG(_fcp, _tag)	\
+ 	((_fcp)->itn_arr + ((_tag) & ((_fcp)->num_itns - 1)))
+ #define BFA_SNSINFO_FROM_TAG(_fcp, _tag) \
+-	bfa_mem_get_dmabuf_kva(_fcp, _tag, BFI_IOIM_SNSLEN)
++	bfa_mem_get_dmabuf_kva(_fcp, (_tag & BFA_IOIM_IOTAG_MASK),	\
++	BFI_IOIM_SNSLEN)
++
+ 
+ #define BFA_ITNIM_MIN   32
+ #define BFA_ITNIM_MAX   1024
+diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
+index 1f73db9..c89defc 100644
+--- a/drivers/scsi/bfa/bfi_ms.h
++++ b/drivers/scsi/bfa/bfi_ms.h
+@@ -840,6 +840,7 @@ enum bfi_tskim_status {
  	 */
--	port_attr->max_frm_size = cpu_to_be32(FC_MAX_PDUSZ);
-+	port_attr->max_frm_size = cpu_to_be32(pport_attr.pport_cfg.maxfrsize);
+ 	BFI_TSKIM_STS_TIMEOUT  = 10,	/*  TM request timedout	*/
+ 	BFI_TSKIM_STS_ABORTED  = 11,	/*  Aborted on host request */
++	BFI_TSKIM_STS_UTAG     = 12,	/*  unknown tag for request */
+ };
  
- 	/*
- 	 * OS device Name
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 593ce6b..47038da 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -761,7 +761,8 @@ bfa_status_t	bfa_dconf_update(struct bfa_s *bfa);
- #define bfa_ioc_maxfrsize(__ioc)	((__ioc)->attr->maxfrsize)
- #define bfa_ioc_rx_bbcredit(__ioc)	((__ioc)->attr->rx_bbcredit)
- #define bfa_ioc_speed_sup(__ioc)	\
--	BFI_ADAPTER_GETP(SPEED, (__ioc)->attr->adapter_prop)
-+	((bfa_ioc_is_cna(__ioc)) ? BFA_PORT_SPEED_10GBPS :	\
-+	 BFI_ADAPTER_GETP(SPEED, (__ioc)->attr->adapter_prop))
- #define bfa_ioc_get_nports(__ioc)	\
- 	BFI_ADAPTER_GETP(NPORTS, (__ioc)->attr->adapter_prop)
- 
+ struct bfi_tskim_rsp_s {
 -- 
 1.7.3.rc1
 
