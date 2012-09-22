@@ -1,48 +1,54 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [PATCH v7 0/6] ZPODD patches
-Date: Sat, 22 Sep 2012 09:32:57 +0200
-Message-ID: <7102619.L8oEHmBsA2@linux-lqwf.site>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <20120921054844.GB2987@mint-spring.sh.intel.com> <201209212318.28137.rjw@sisk.pl>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v3] scsi_lib: rate-limit the error message from failing
+ commands
+Date: Sat, 22 Sep 2012 09:11:31 +0100
+Message-ID: <1348301491.2476.3.camel@dabdike.int.hansenpartnership.com>
+References: <20120830210607.28119.96438.stgit@localhost6.localdomain6>
+	 <503FF64C.6040409@kernel.dk>
+	 <CAMM=eLdhuqKij12zXxTWJ9wMEHp3HxZJxbCHGCRbzBE647WK8A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <201209212318.28137.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Aaron Lu <aaron.lu@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60389 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754417Ab2IVILf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 Sep 2012 04:11:35 -0400
+In-Reply-To: <CAMM=eLdhuqKij12zXxTWJ9wMEHp3HxZJxbCHGCRbzBE647WK8A@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Yi Zou <yi.zou@intel.com>, Jens Axboe <axboe@kernel.dk>, "www.Open-FCoE.org" <devel@open-fcoe.org>, Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
 
-On Friday 21 September 2012 23:18:27 Rafael J. Wysocki wrote:
+On Fri, 2012-09-21 at 15:15 -0400, Mike Snitzer wrote:
+> On Thu, Aug 30, 2012 at 7:25 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> > On 2012-08-30 14:06, Yi Zou wrote:
+> >> [
+> >> Jens/James,
+> >>
+> >> This is a rather old rate limt patch but never gets picked up in upstream, so I
+> >> am resending it here as v3, with some minor changes so it is directly applicable
+> >> to the current linux-2.6.git tree. I don't have that many LUNs that the original
+> >> issue was reported but the patch was already reviewed and acked in the past,
+> >> I did retest w/ stress I/O on 4 LUNs I have right now.
+> >>
+> >> Original thread can be found at:
+> >> http://comments.gmane.org/gmane.linux.scsi/73497
+> >> http://www.open-fcoe.org/patchwork/patch/2436/
+> >>
+> >> Can you please pull this patch in? it's been hanging there for a long time.
+> >> Original patch description is below.
+> >
+> > I've pulled in the block bit.
+> 
+> James,
+> 
+> Do you intend to pick up the scsi_lib.c change?
 
-> Now, James says he doesn't like the way ready_to_power_off is used.  Sure
-> enough, it is totally irrelevant to the majority of SCSI devices.  It actually
-> is totally irrelevant to everything in the SCSI subsystem except for the sr
-> driver and libata.  So I wonder if you have considered any alternative
-> way to address the use case at hand?
+Possibly, if someone resends.  The original v3 patch isn't actually on
+the list that I can find.
 
-Strictly speaking, USB on very modern systems could use it, but doesn't
-in the current implementation.
+James
 
-> That sounds reasonable enough, but the role of the powered_off and
-> need_eject flags could be explained a bit better.  In particular, it would
-
-I think need_eject needs to be renamed. Something like "media_change_detected"
-
-> be nice to have explained why they have to be present in struct scsi_device,
-> because they don't seem to be particularly useful for many SCSI devices
-> that aren't CD drives (the need_eject one in particular).
-
-There are sd devices with removable media.
- 
-> User space has an interface to disable runtime PM of any device and it looks
-> like that interface should be sufficient to disable the feature in question.
-> Why do you think the new interface is needed?
-
-Because this is not equivalent to doing no runtime PM at all. SCSI
-now defines some powersaving states which do not involve powering
-down and thus losing state.
-
-	Regards
-		Oliver
 
