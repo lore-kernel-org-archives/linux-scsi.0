@@ -1,85 +1,114 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 04/15] bfa: Add support to have mfg date as part of adapter attributes
-Date: Fri, 21 Sep 2012 17:25:02 -0700
-Message-ID: <1348273502-27244-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 05/15] bfa: Fix few attributes in the RHBA CT passthru command
+Date: Fri, 21 Sep 2012 17:25:20 -0700
+Message-ID: <1348273520-27347-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:51735 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755982Ab2IVAZW (ORCPT
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:43766 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757635Ab2IVAZc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Sep 2012 20:25:22 -0400
+	Fri, 21 Sep 2012 20:25:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Made changes to expose mfg day/month/year as part of the
-	  adapter attributes for user space applications.
+	- Made changes to set the RHBA command max payload based on
+	  the port configured frame size.
+	- Made changes to fix the driver/fw version size in FMDI structure.
+	- Fix to pass the fw version for FDMI attribute type
+	  FDMI_HBA_ATTRIB_FW_VERSION rather than driver version.
 
-Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_defs.h |    4 ++++
- drivers/scsi/bfa/bfa_ioc.c  |    4 ++++
- drivers/scsi/bfa/bfi.h      |    3 +++
- 3 files changed, 11 insertions(+), 0 deletions(-)
+ drivers/scsi/bfa/bfa_fcs.h       |    4 ++--
+ drivers/scsi/bfa/bfa_fcs_lport.c |   14 +++++++-------
+ drivers/scsi/bfa/bfa_ioc.h       |    3 ++-
+ 3 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
-index f1c9314..4e77776 100644
---- a/drivers/scsi/bfa/bfa_defs.h
-+++ b/drivers/scsi/bfa/bfa_defs.h
-@@ -254,6 +254,10 @@ struct bfa_adapter_attr_s {
- 
- 	u8		is_mezz;
- 	u8		trunk_capable;
-+	u8		mfg_day;	/* manufacturing day */
-+	u8		mfg_month;	/* manufacturing month */
-+	u16		mfg_year;	/* manufacturing year */
-+	u16		rsvd;
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index f2a6a3c..a449706 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -642,9 +642,9 @@ struct bfa_fcs_fdmi_hba_attr_s {
+ 	u8         model[16];
+ 	u8         model_desc[256];
+ 	u8         hw_version[8];
+-	u8         driver_version[8];
++	u8         driver_version[BFA_VERSION_LEN];
+ 	u8         option_rom_ver[BFA_VERSION_LEN];
+-	u8         fw_version[8];
++	u8         fw_version[BFA_VERSION_LEN];
+ 	u8         os_name[256];
+ 	__be32        max_ct_pyld;
  };
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index c58a5e0..1224d04 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -2014,13 +2014,10 @@ bfa_fcs_lport_fdmi_build_rhba_pyld(struct bfa_fcs_lport_fdmi_s *fdmi, u8 *pyld)
+ 					 sizeof(templen));
+ 	}
  
- /*
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 28ace31..be33725 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -1750,6 +1750,7 @@ bfa_ioc_getattr_reply(struct bfa_ioc_s *ioc)
- 	attr->card_type     = be32_to_cpu(attr->card_type);
- 	attr->maxfrsize	    = be16_to_cpu(attr->maxfrsize);
- 	ioc->fcmode	= (attr->port_mode == BFI_PORT_MODE_FC);
-+	attr->mfg_year	= be16_to_cpu(attr->mfg_year);
+-	/*
+-	 * f/w Version = driver version
+-	 */
+ 	attr = (struct fdmi_attr_s *) curr_ptr;
+ 	attr->type = cpu_to_be16(FDMI_HBA_ATTRIB_FW_VERSION);
+-	templen = (u16) strlen(fcs_hba_attr->driver_version);
+-	memcpy(attr->value, fcs_hba_attr->driver_version, templen);
++	templen = (u16) strlen(fcs_hba_attr->fw_version);
++	memcpy(attr->value, fcs_hba_attr->fw_version, templen);
+ 	templen = fc_roundup(templen, sizeof(u32));
+ 	curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
+ 	len += templen;
+@@ -2422,6 +2419,7 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
+ {
+ 	struct bfa_fcs_lport_s *port = fdmi->ms->port;
+ 	struct bfa_fcs_driver_info_s  *driver_info = &port->fcs->driver_info;
++	struct bfa_fcs_fdmi_port_attr_s fcs_port_attr;
  
- 	bfa_fsm_send_event(ioc, IOC_E_FWRSP_GETATTR);
+ 	memset(hba_attr, 0, sizeof(struct bfa_fcs_fdmi_hba_attr_s));
+ 
+@@ -2457,7 +2455,9 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
+ 				sizeof(driver_info->host_os_patch));
+ 	}
+ 
+-	hba_attr->max_ct_pyld = cpu_to_be32(FC_MAX_PDUSZ);
++	/* Retrieve the max frame size from the port attr */
++	bfa_fcs_fdmi_get_portattr(fdmi, &fcs_port_attr);
++	hba_attr->max_ct_pyld = fcs_port_attr.max_frm_size;
  }
-@@ -2496,6 +2497,9 @@ bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
- 	ad_attr->cna_capable = bfa_ioc_is_cna(ioc);
- 	ad_attr->trunk_capable = (ad_attr->nports > 1) &&
- 				  !bfa_ioc_is_cna(ioc) && !ad_attr->is_mezz;
-+	ad_attr->mfg_day = ioc_attr->mfg_day;
-+	ad_attr->mfg_month = ioc_attr->mfg_month;
-+	ad_attr->mfg_year = ioc_attr->mfg_year;
- }
  
- enum bfa_ioc_type_e
-diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
-index b2ba0b2..e6269c2 100644
---- a/drivers/scsi/bfa/bfi.h
-+++ b/drivers/scsi/bfa/bfi.h
-@@ -288,6 +288,9 @@ struct bfi_ioc_attr_s {
- 	char		optrom_version[BFA_VERSION_LEN];
- 	struct		bfa_mfg_vpd_s	vpd;
- 	u32	card_type;	/*  card type			*/
-+	u8	mfg_day;	/* manufacturing day */
-+	u8	mfg_month;	/* manufacturing month */
-+	u16	mfg_year;	/* manufacturing year */
- };
+ static void
+@@ -2517,7 +2517,7 @@ bfa_fcs_fdmi_get_portattr(struct bfa_fcs_lport_fdmi_s *fdmi,
+ 	/*
+ 	 * Max PDU Size.
+ 	 */
+-	port_attr->max_frm_size = cpu_to_be32(FC_MAX_PDUSZ);
++	port_attr->max_frm_size = cpu_to_be32(pport_attr.pport_cfg.maxfrsize);
  
- /*
+ 	/*
+ 	 * OS device Name
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 593ce6b..47038da 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -761,7 +761,8 @@ bfa_status_t	bfa_dconf_update(struct bfa_s *bfa);
+ #define bfa_ioc_maxfrsize(__ioc)	((__ioc)->attr->maxfrsize)
+ #define bfa_ioc_rx_bbcredit(__ioc)	((__ioc)->attr->rx_bbcredit)
+ #define bfa_ioc_speed_sup(__ioc)	\
+-	BFI_ADAPTER_GETP(SPEED, (__ioc)->attr->adapter_prop)
++	((bfa_ioc_is_cna(__ioc)) ? BFA_PORT_SPEED_10GBPS :	\
++	 BFI_ADAPTER_GETP(SPEED, (__ioc)->attr->adapter_prop))
+ #define bfa_ioc_get_nports(__ioc)	\
+ 	BFI_ADAPTER_GETP(NPORTS, (__ioc)->attr->adapter_prop)
+ 
 -- 
 1.7.3.rc1
 
