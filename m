@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 03/15] bfa: Flash Controller PLL initialization fixes
-Date: Fri, 21 Sep 2012 17:24:52 -0700
-Message-ID: <1348273492-26992-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 04/15] bfa: Add support to have mfg date as part of adapter attributes
+Date: Fri, 21 Sep 2012 17:25:02 -0700
+Message-ID: <1348273502-27244-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:43737 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755982Ab2IVAZF (ORCPT
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:51735 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755982Ab2IVAZW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Sep 2012 20:25:05 -0400
+	Fri, 21 Sep 2012 20:25:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
@@ -18,318 +18,68 @@ Cc: adapter_linux_open_src_team@brocade.com, Krishna Gudipati <kgudipat@brocade.
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Made changes to check the flash controller status before IOC initialization.
-	- Made changes to poll on the FLASH_STS_REG bit to check if the flash controller
-	  initialization is completed during the PLL init.
+	- Made changes to expose mfg day/month/year as part of the
+	  adapter attributes for user space applications.
 
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_ioc_ct.c |  211 +++++++++++++++++++++++++----------------
- drivers/scsi/bfa/bfi_reg.h    |    3 +
- 2 files changed, 131 insertions(+), 83 deletions(-)
+ drivers/scsi/bfa/bfa_defs.h |    4 ++++
+ drivers/scsi/bfa/bfa_ioc.c  |    4 ++++
+ drivers/scsi/bfa/bfi.h      |    3 +++
+ 3 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
-index 29efbb7..de4e726 100644
---- a/drivers/scsi/bfa/bfa_ioc_ct.c
-+++ b/drivers/scsi/bfa/bfa_ioc_ct.c
-@@ -744,25 +744,6 @@ bfa_ioc_ct2_mem_init(void __iomem *rb)
- void
- bfa_ioc_ct2_mac_reset(void __iomem *rb)
- {
--	u32	r32;
--
--	bfa_ioc_ct2_sclk_init(rb);
--	bfa_ioc_ct2_lclk_init(rb);
--
--	/*
--	 * release soft reset on s_clk & l_clk
--	 */
--	r32 = readl((rb + CT2_APP_PLL_SCLK_CTL_REG));
--	writel(r32 & ~__APP_PLL_SCLK_LOGIC_SOFT_RESET,
--		(rb + CT2_APP_PLL_SCLK_CTL_REG));
--
--	/*
--	 * release soft reset on s_clk & l_clk
--	 */
--	r32 = readl((rb + CT2_APP_PLL_LCLK_CTL_REG));
--	writel(r32 & ~__APP_PLL_LCLK_LOGIC_SOFT_RESET,
--		(rb + CT2_APP_PLL_LCLK_CTL_REG));
--
- 	/* put port0, port1 MAC & AHB in reset */
- 	writel((__CSI_MAC_RESET | __CSI_MAC_AHB_RESET),
- 		rb + CT2_CSI_MAC_CONTROL_REG(0));
-@@ -770,8 +751,21 @@ bfa_ioc_ct2_mac_reset(void __iomem *rb)
- 		rb + CT2_CSI_MAC_CONTROL_REG(1));
- }
+diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
+index f1c9314..4e77776 100644
+--- a/drivers/scsi/bfa/bfa_defs.h
++++ b/drivers/scsi/bfa/bfa_defs.h
+@@ -254,6 +254,10 @@ struct bfa_adapter_attr_s {
  
-+static void
-+bfa_ioc_ct2_enable_flash(void __iomem *rb)
-+{
-+	u32 r32;
-+
-+	r32 = readl((rb + PSS_GPIO_OUT_REG));
-+	writel(r32 & ~1, (rb + PSS_GPIO_OUT_REG));
-+	r32 = readl((rb + PSS_GPIO_OE_REG));
-+	writel(r32 | 1, (rb + PSS_GPIO_OE_REG));
-+}
-+
- #define CT2_NFC_MAX_DELAY	1000
--#define CT2_NFC_VER_VALID	0x143
-+#define CT2_NFC_PAUSE_MAX_DELAY 4000
-+#define CT2_NFC_VER_VALID	0x147
-+#define CT2_NFC_STATE_RUNNING   0x20000001
- #define BFA_IOC_PLL_POLL	1000000
+ 	u8		is_mezz;
+ 	u8		trunk_capable;
++	u8		mfg_day;	/* manufacturing day */
++	u8		mfg_month;	/* manufacturing month */
++	u16		mfg_year;	/* manufacturing year */
++	u16		rsvd;
+ };
  
- static bfa_boolean_t
-@@ -787,6 +781,20 @@ bfa_ioc_ct2_nfc_halted(void __iomem *rb)
- }
- 
- static void
-+bfa_ioc_ct2_nfc_halt(void __iomem *rb)
-+{
-+	int	i;
-+
-+	writel(__HALT_NFC_CONTROLLER, rb + CT2_NFC_CSR_SET_REG);
-+	for (i = 0; i < CT2_NFC_MAX_DELAY; i++) {
-+		if (bfa_ioc_ct2_nfc_halted(rb))
-+			break;
-+		udelay(1000);
-+	}
-+	WARN_ON(!bfa_ioc_ct2_nfc_halted(rb));
-+}
-+
-+static void
- bfa_ioc_ct2_nfc_resume(void __iomem *rb)
- {
- 	u32	r32;
-@@ -802,105 +810,142 @@ bfa_ioc_ct2_nfc_resume(void __iomem *rb)
- 	WARN_ON(1);
- }
- 
--bfa_status_t
--bfa_ioc_ct2_pll_init(void __iomem *rb, enum bfi_asic_mode mode)
-+static void
-+bfa_ioc_ct2_clk_reset(void __iomem *rb)
- {
--	u32 wgn, r32, nfc_ver, i;
-+	u32 r32;
- 
--	wgn = readl(rb + CT2_WGN_STATUS);
--	nfc_ver = readl(rb + CT2_RSC_GPR15_REG);
-+	bfa_ioc_ct2_sclk_init(rb);
-+	bfa_ioc_ct2_lclk_init(rb);
- 
--	if ((wgn == (__A2T_AHB_LOAD | __WGN_READY)) &&
--	    (nfc_ver >= CT2_NFC_VER_VALID)) {
--		if (bfa_ioc_ct2_nfc_halted(rb))
--			bfa_ioc_ct2_nfc_resume(rb);
-+	/*
-+	 * release soft reset on s_clk & l_clk
-+	 */
-+	r32 = readl((rb + CT2_APP_PLL_SCLK_CTL_REG));
-+	writel(r32 & ~__APP_PLL_SCLK_LOGIC_SOFT_RESET,
-+			(rb + CT2_APP_PLL_SCLK_CTL_REG));
- 
--		writel(__RESET_AND_START_SCLK_LCLK_PLLS,
--		       rb + CT2_CSI_FW_CTL_SET_REG);
-+	r32 = readl((rb + CT2_APP_PLL_LCLK_CTL_REG));
-+	writel(r32 & ~__APP_PLL_LCLK_LOGIC_SOFT_RESET,
-+			(rb + CT2_APP_PLL_LCLK_CTL_REG));
- 
--		for (i = 0; i < BFA_IOC_PLL_POLL; i++) {
--			r32 = readl(rb + CT2_APP_PLL_LCLK_CTL_REG);
--			if (r32 & __RESET_AND_START_SCLK_LCLK_PLLS)
--				break;
--		}
-+}
- 
--		WARN_ON(!(r32 & __RESET_AND_START_SCLK_LCLK_PLLS));
-+static void
-+bfa_ioc_ct2_nfc_clk_reset(void __iomem *rb)
-+{
-+	u32 r32, i;
- 
--		for (i = 0; i < BFA_IOC_PLL_POLL; i++) {
--			r32 = readl(rb + CT2_APP_PLL_LCLK_CTL_REG);
--			if (!(r32 & __RESET_AND_START_SCLK_LCLK_PLLS))
--				break;
--		}
-+	r32 = readl((rb + PSS_CTL_REG));
-+	r32 |= (__PSS_LPU0_RESET | __PSS_LPU1_RESET);
-+	writel(r32, (rb + PSS_CTL_REG));
-+
-+	writel(__RESET_AND_START_SCLK_LCLK_PLLS, rb + CT2_CSI_FW_CTL_SET_REG);
-+
-+	for (i = 0; i < BFA_IOC_PLL_POLL; i++) {
-+		r32 = readl(rb + CT2_NFC_FLASH_STS_REG);
-+
-+		if ((r32 & __FLASH_PLL_INIT_AND_RESET_IN_PROGRESS))
-+			break;
-+	}
-+	WARN_ON(!(r32 & __FLASH_PLL_INIT_AND_RESET_IN_PROGRESS));
-+
-+	for (i = 0; i < BFA_IOC_PLL_POLL; i++) {
-+		r32 = readl(rb + CT2_NFC_FLASH_STS_REG);
-+
-+		if (!(r32 & __FLASH_PLL_INIT_AND_RESET_IN_PROGRESS))
-+			break;
-+	}
-+	WARN_ON((r32 & __FLASH_PLL_INIT_AND_RESET_IN_PROGRESS));
-+
-+	r32 = readl(rb + CT2_CSI_FW_CTL_REG);
-+	WARN_ON((r32 & __RESET_AND_START_SCLK_LCLK_PLLS));
-+}
-+
-+static void
-+bfa_ioc_ct2_wait_till_nfc_running(void __iomem *rb)
-+{
-+	u32 r32;
-+	int i;
- 
--		WARN_ON(r32 & __RESET_AND_START_SCLK_LCLK_PLLS);
-+	if (bfa_ioc_ct2_nfc_halted(rb))
-+		bfa_ioc_ct2_nfc_resume(rb);
-+	for (i = 0; i < CT2_NFC_PAUSE_MAX_DELAY; i++) {
-+		r32 = readl(rb + CT2_NFC_STS_REG);
-+		if (r32 == CT2_NFC_STATE_RUNNING)
-+			return;
- 		udelay(1000);
-+	}
- 
--		r32 = readl(rb + CT2_CSI_FW_CTL_REG);
--		WARN_ON(r32 & __RESET_AND_START_SCLK_LCLK_PLLS);
--	} else {
--		writel(__HALT_NFC_CONTROLLER, rb + CT2_NFC_CSR_SET_REG);
--		for (i = 0; i < CT2_NFC_MAX_DELAY; i++) {
--			r32 = readl(rb + CT2_NFC_CSR_SET_REG);
--			if (r32 & __NFC_CONTROLLER_HALTED)
--				break;
--			udelay(1000);
--		}
-+	r32 = readl(rb + CT2_NFC_STS_REG);
-+	WARN_ON(!(r32 == CT2_NFC_STATE_RUNNING));
-+}
- 
--		bfa_ioc_ct2_mac_reset(rb);
--		bfa_ioc_ct2_sclk_init(rb);
--		bfa_ioc_ct2_lclk_init(rb);
-+bfa_status_t
-+bfa_ioc_ct2_pll_init(void __iomem *rb, enum bfi_asic_mode mode)
-+{
-+	u32 wgn, r32, nfc_ver;
- 
--		/*
--		 * release soft reset on s_clk & l_clk
--		 */
--		r32 = readl(rb + CT2_APP_PLL_SCLK_CTL_REG);
--		writel(r32 & ~__APP_PLL_SCLK_LOGIC_SOFT_RESET,
--		       (rb + CT2_APP_PLL_SCLK_CTL_REG));
-+	wgn = readl(rb + CT2_WGN_STATUS);
- 
-+	if (wgn == (__WGN_READY | __GLBL_PF_VF_CFG_RDY)) {
- 		/*
--		 * release soft reset on s_clk & l_clk
-+		 * If flash is corrupted, enable flash explicitly
- 		 */
--		r32 = readl(rb + CT2_APP_PLL_LCLK_CTL_REG);
--		writel(r32 & ~__APP_PLL_LCLK_LOGIC_SOFT_RESET,
--		      (rb + CT2_APP_PLL_LCLK_CTL_REG));
--	}
-+		bfa_ioc_ct2_clk_reset(rb);
-+		bfa_ioc_ct2_enable_flash(rb);
- 
--	/*
--	 * Announce flash device presence, if flash was corrupted.
--	 */
--	if (wgn == (__WGN_READY | __GLBL_PF_VF_CFG_RDY)) {
--		r32 = readl(rb + PSS_GPIO_OUT_REG);
--		writel(r32 & ~1, (rb + PSS_GPIO_OUT_REG));
--		r32 = readl(rb + PSS_GPIO_OE_REG);
--		writel(r32 | 1, (rb + PSS_GPIO_OE_REG));
-+		bfa_ioc_ct2_mac_reset(rb);
-+
-+		bfa_ioc_ct2_clk_reset(rb);
-+		bfa_ioc_ct2_enable_flash(rb);
-+
-+	} else {
-+		nfc_ver = readl(rb + CT2_RSC_GPR15_REG);
-+
-+		if ((nfc_ver >= CT2_NFC_VER_VALID) &&
-+		    (wgn == (__A2T_AHB_LOAD | __WGN_READY))) {
-+
-+			bfa_ioc_ct2_wait_till_nfc_running(rb);
-+
-+			bfa_ioc_ct2_nfc_clk_reset(rb);
-+		} else {
-+			bfa_ioc_ct2_nfc_halt(rb);
-+
-+			bfa_ioc_ct2_clk_reset(rb);
-+			bfa_ioc_ct2_mac_reset(rb);
-+			bfa_ioc_ct2_clk_reset(rb);
-+
-+		}
- 	}
- 
- 	/*
- 	 * Mask the interrupts and clear any
--	 * pending interrupts.
-+	 * pending interrupts left by BIOS/EFI
- 	 */
-+
- 	writel(1, (rb + CT2_LPU0_HOSTFN_MBOX0_MSK));
- 	writel(1, (rb + CT2_LPU1_HOSTFN_MBOX0_MSK));
- 
- 	/* For first time initialization, no need to clear interrupts */
- 	r32 = readl(rb + HOST_SEM5_REG);
- 	if (r32 & 0x1) {
--		r32 = readl(rb + CT2_LPU0_HOSTFN_CMD_STAT);
-+		r32 = readl((rb + CT2_LPU0_HOSTFN_CMD_STAT));
- 		if (r32 == 1) {
--			writel(1, rb + CT2_LPU0_HOSTFN_CMD_STAT);
-+			writel(1, (rb + CT2_LPU0_HOSTFN_CMD_STAT));
- 			readl((rb + CT2_LPU0_HOSTFN_CMD_STAT));
- 		}
--		r32 = readl(rb + CT2_LPU1_HOSTFN_CMD_STAT);
-+		r32 = readl((rb + CT2_LPU1_HOSTFN_CMD_STAT));
- 		if (r32 == 1) {
--			writel(1, rb + CT2_LPU1_HOSTFN_CMD_STAT);
--			readl(rb + CT2_LPU1_HOSTFN_CMD_STAT);
-+			writel(1, (rb + CT2_LPU1_HOSTFN_CMD_STAT));
-+			readl((rb + CT2_LPU1_HOSTFN_CMD_STAT));
- 		}
- 	}
- 
- 	bfa_ioc_ct2_mem_init(rb);
- 
--	writel(BFI_IOC_UNINIT, rb + CT2_BFA_IOC0_STATE_REG);
--	writel(BFI_IOC_UNINIT, rb + CT2_BFA_IOC1_STATE_REG);
-+	writel(BFI_IOC_UNINIT, (rb + CT2_BFA_IOC0_STATE_REG));
-+	writel(BFI_IOC_UNINIT, (rb + CT2_BFA_IOC1_STATE_REG));
- 
- 	return BFA_STATUS_OK;
- }
-diff --git a/drivers/scsi/bfa/bfi_reg.h b/drivers/scsi/bfa/bfi_reg.h
-index ed5f159..99133bc 100644
---- a/drivers/scsi/bfa/bfi_reg.h
-+++ b/drivers/scsi/bfa/bfi_reg.h
-@@ -338,6 +338,7 @@ enum {
- #define __A2T_AHB_LOAD			0x00000800
- #define __WGN_READY			0x00000400
- #define __GLBL_PF_VF_CFG_RDY		0x00000200
-+#define CT2_NFC_STS_REG			0x00027410
- #define CT2_NFC_CSR_CLR_REG		0x00027420
- #define CT2_NFC_CSR_SET_REG		0x00027424
- #define __HALT_NFC_CONTROLLER		0x00000002
-@@ -355,6 +356,8 @@ enum {
- 	(CT2_CSI_MAC0_CONTROL_REG +	\
- 	(__n) * (CT2_CSI_MAC1_CONTROL_REG - CT2_CSI_MAC0_CONTROL_REG))
- 
-+#define CT2_NFC_FLASH_STS_REG		0x00014834
-+#define __FLASH_PLL_INIT_AND_RESET_IN_PROGRESS	0x00000020
  /*
-  * Name semaphore registers based on usage
-  */
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 28ace31..be33725 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -1750,6 +1750,7 @@ bfa_ioc_getattr_reply(struct bfa_ioc_s *ioc)
+ 	attr->card_type     = be32_to_cpu(attr->card_type);
+ 	attr->maxfrsize	    = be16_to_cpu(attr->maxfrsize);
+ 	ioc->fcmode	= (attr->port_mode == BFI_PORT_MODE_FC);
++	attr->mfg_year	= be16_to_cpu(attr->mfg_year);
+ 
+ 	bfa_fsm_send_event(ioc, IOC_E_FWRSP_GETATTR);
+ }
+@@ -2496,6 +2497,9 @@ bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
+ 	ad_attr->cna_capable = bfa_ioc_is_cna(ioc);
+ 	ad_attr->trunk_capable = (ad_attr->nports > 1) &&
+ 				  !bfa_ioc_is_cna(ioc) && !ad_attr->is_mezz;
++	ad_attr->mfg_day = ioc_attr->mfg_day;
++	ad_attr->mfg_month = ioc_attr->mfg_month;
++	ad_attr->mfg_year = ioc_attr->mfg_year;
+ }
+ 
+ enum bfa_ioc_type_e
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index b2ba0b2..e6269c2 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -288,6 +288,9 @@ struct bfi_ioc_attr_s {
+ 	char		optrom_version[BFA_VERSION_LEN];
+ 	struct		bfa_mfg_vpd_s	vpd;
+ 	u32	card_type;	/*  card type			*/
++	u8	mfg_day;	/* manufacturing day */
++	u8	mfg_month;	/* manufacturing month */
++	u16	mfg_year;	/* manufacturing year */
+ };
+ 
+ /*
 -- 
 1.7.3.rc1
 
