@@ -1,64 +1,54 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] qla2xxx: Fix endianness of task management response
- code
-Date: Sat, 22 Sep 2012 16:52:38 -0700
-Message-ID: <1348357958.8016.0.camel@haakon2.linux-iscsi.org>
-References: <CC7F593D.E135%saurav.kashyap@qlogic.com>
+Subject: Re: [PATCH] target: fix return value check in
+ sbp_register_configfs()
+Date: Sat, 22 Sep 2012 16:55:45 -0700
+Message-ID: <1348358145.8016.3.camel@haakon2.linux-iscsi.org>
+References: <CAPgLHd-Ts0ABMCb0Y6Do_ovMVd20_i+XETkm7v17Thc7wR9-fg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:41031 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752687Ab2IVXws (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Sep 2012 19:52:48 -0400
-In-Reply-To: <CC7F593D.E135%saurav.kashyap@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CAPgLHd-Ts0ABMCb0Y6Do_ovMVd20_i+XETkm7v17Thc7wR9-fg@mail.gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: bootc@bootc.net, yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Cc: Roland Dreier <roland@kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Arun Easi <arun.easi@qlogic.com>
 
-On Wed, 2012-09-19 at 00:43 -0500, Saurav Kashyap wrote:
+On Fri, 2012-09-21 at 13:57 +0800, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 > 
-> >From: Roland Dreier <roland@purestorage.com>
-> >
-> >The qla2xxx firmware actually expects the task management response
-> >code in a CTIO IOCB with SCSI status mode 1 to be in little-endian
-> >byte order, ie the response code should be the first byte in the
-> >sense_data[] array.  The old code erroneously byte-swapped the
-> >response code, which puts it in the wrong place on the wire and leads
-> >to initiators thinking every task management request succeeds (since
-> >they see 0 in the byte where they look for the response code).
-> >
-> >Cc: Chad Dupuis <chad.dupuis@qlogic.com>
-> >Cc: Arun Easi <arun.easi@qlogic.com>
-> >Signed-off-by: Roland Dreier <roland@purestorage.com>
-> >---
-> > drivers/scsi/qla2xxx/qla_target.c |    2 +-
-> > 1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> >diff --git a/drivers/scsi/qla2xxx/qla_target.c
-> >b/drivers/scsi/qla2xxx/qla_target.c
-> >index 5b30132..41b74ba 100644
-> >--- a/drivers/scsi/qla2xxx/qla_target.c
-> >+++ b/drivers/scsi/qla2xxx/qla_target.c
-> >@@ -1403,7 +1403,7 @@ static void qlt_24xx_send_task_mgmt_ctio(struct
-> >scsi_qla_host *ha,
-> >       ctio->u.status1.scsi_status =
-> >           __constant_cpu_to_le16(SS_RESPONSE_INFO_LEN_VALID);
-> >       ctio->u.status1.response_len = __constant_cpu_to_le16(8);
-> >-      ((uint32_t *)ctio->u.status1.sense_data)[0] = cpu_to_be32(resp_code);
-> >+      ctio->u.status1.sense_data[0] = resp_code;
-> >
-> >       qla2x00_start_iocbs(ha, ha->req);
-> > }
-> >--
-> >1.7.10.4
+> In case of error, the function target_fabric_configfs_init() returns
+> ERR_PTR() not NULL pointer. The NULL test in the return value check
+> should be replaced with IS_ERR().
 > 
-> Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+> dpatch engine is used to auto generated this patch.
+> (https://github.com/weiyj/dpatch)
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>  drivers/target/sbp/sbp_target.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
+> index 39ddba5..773303e 100644
+> --- a/drivers/target/sbp/sbp_target.c
+> +++ b/drivers/target/sbp/sbp_target.c
+> @@ -2556,9 +2556,9 @@ static int sbp_register_configfs(void)
+>  	int ret;
+>  
+>  	fabric = target_fabric_configfs_init(THIS_MODULE, "sbp");
+> -	if (!fabric) {
+> +	if (IS_ERR(fabric)) {
+>  		pr_err("target_fabric_configfs_init() failed\n");
+> -		return -ENOMEM;
+> +		return PTR_ERR(fabric);
+>  	}
+>  
+>  	fabric->tf_ops = sbp_ops;
+> 
 > 
 
-Applied to target-pending/for-next with CC' to stable
+Good catch.  Applied to target-pending/for-next for the v3.7-rc1
+target-updates PULL.
 
-Thanks Roland & Co!
-
+Thanks Wei !
