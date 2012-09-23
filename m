@@ -1,108 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 3.6-rc6
-Date: Sun, 23 Sep 2012 08:09:36 +0100
-Message-ID: <1348384176.2549.5.camel@dabdike.int.hansenpartnership.com>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCHv2] st: remove st_mutex
+Date: Sun, 23 Sep 2012 10:25:23 +0300 (EEST)
+Message-ID: <alpine.LNX.2.00.1209231023030.16292@kai.makisara.local>
+References: <504E6B7C.9010407@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811327-2069649490-1348385133=:16292"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vs18.mail.saunalahti.fi ([62.142.117.199]:56610 "EHLO
+	vs18.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261Ab2IWHZf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Sep 2012 03:25:35 -0400
+In-Reply-To: <504E6B7C.9010407@suse.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>
 
-This is a set of four essential fixes: two oops related (bnx2i,
-virtio-scsi), one data corruption related (hpsa) and one failure to boot
-due to interrupt routing issues (mpt2ss).
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-The patch is available here:
+---1463811327-2069649490-1348385133=:16292
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+On Mon, 10 Sep 2012, Lee Duncan wrote:
 
-The short changelog is:
+> From: Hannes Reinecke <hare@suse.com>
+>=20
+> The st_mutex was created when the BKL was removed, and
+> prevents simultaneous st_open calls. It is better to
+> protect just the necessary data.
+>=20
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Reviewed-by: Lee Duncan <lduncan@suse.com>
 
-Eddie Wai (1):
-      bnx2i: Fixed NULL ptr deference for 1G bnx2 Linux iSCSI offload
+Acked-by: Kai M=C3=A4kisara <Kai.Makisara@kolumbus.fi>
 
-Stephen M. Cameron (1):
-      hpsa: fix handling of protocol error
+>=20
+> This patch is based on the "misc" branch of the SCSI tree
+> and the 5-patch series for st sent by Jeff Mahoney 8/18/2012
+> and Ack-ed by Kai on 8/20.
+>=20
 
-Wang Sen (1):
-      scsi: virtio-scsi: Fix address translation failure of HighMem pages used by sg list
+Thanks,
+Kai
 
-sreekanth.reddy@lsi.com (1):
-      mpt2sas: Fix for issue - Unable to boot from the drive connected to HBA
-
-And the diffstat:
-
- drivers/scsi/bnx2i/bnx2i_hwi.c      | 3 +++
- drivers/scsi/hpsa.c                 | 3 ++-
- drivers/scsi/mpt2sas/mpt2sas_base.c | 7 +++++++
- drivers/scsi/virtio_scsi.c          | 2 +-
- 4 files changed, 13 insertions(+), 2 deletions(-)
-
-Full diff is appended below.
-
-James
-
----
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index 33d6630..91eec60 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -1264,6 +1264,9 @@ int bnx2i_send_fw_iscsi_init_msg(struct bnx2i_hba *hba)
- 	int rc = 0;
- 	u64 mask64;
- 
-+	memset(&iscsi_init, 0x00, sizeof(struct iscsi_kwqe_init1));
-+	memset(&iscsi_init2, 0x00, sizeof(struct iscsi_kwqe_init2));
-+
- 	bnx2i_adjust_qp_size(hba);
- 
- 	iscsi_init.flags =
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 796482b..2b4261c 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -1315,8 +1315,9 @@ static void complete_scsi_command(struct CommandList *cp)
- 	}
- 		break;
- 	case CMD_PROTOCOL_ERR:
-+		cmd->result = DID_ERROR << 16;
- 		dev_warn(&h->pdev->dev, "cp %p has "
--			"protocol error \n", cp);
-+			"protocol error\n", cp);
- 		break;
- 	case CMD_HARDWARE_ERR:
- 		cmd->result = DID_ERROR << 16;
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index b25757d..9d5a56c 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1209,6 +1209,13 @@ _base_check_enable_msix(struct MPT2SAS_ADAPTER *ioc)
- 	u16 message_control;
- 
- 
-+	/* Check whether controller SAS2008 B0 controller,
-+	   if it is SAS2008 B0 controller use IO-APIC instead of MSIX */
-+	if (ioc->pdev->device == MPI2_MFGPAGE_DEVID_SAS2008 &&
-+	    ioc->pdev->revision == 0x01) {
-+		return -EINVAL;
-+	}
-+
- 	base = pci_find_capability(ioc->pdev, PCI_CAP_ID_MSIX);
- 	if (!base) {
- 		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "msix not "
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index c7030fb..3e79a2f 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -331,7 +331,7 @@ static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
- 	int i;
- 
- 	for_each_sg(table->sgl, sg_elem, table->nents, i)
--		sg_set_buf(&sg[idx++], sg_virt(sg_elem), sg_elem->length);
-+		sg[idx++] = *sg_elem;
- 
- 	*p_idx = idx;
- }
+---1463811327-2069649490-1348385133=:16292--
