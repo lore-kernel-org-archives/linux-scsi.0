@@ -1,54 +1,31 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 47781] ata2: exception Emask 0x10 SAct 0x0 SErr 0x4050002
- action 0xe frozen
-Date: Mon, 24 Sep 2012 05:38:59 +0000 (UTC)
-Message-ID: <20120924053859.9B36911FBF3@bugzilla.kernel.org>
-References: <bug-47781-11613@https.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH scsi] Add NULL checking of return value from
+ scsi_cmd_to_driver()
+Date: Mon, 24 Sep 2012 09:44:53 +0400
+Message-ID: <1348465493.2467.3.camel@dabdike>
+References: <1348464626.2475.13.camel@ThinkPad-T420>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:43897 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750792Ab2IXFjN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Sep 2012 01:39:13 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 9A487202EB
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Sep 2012 05:39:09 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id A15AC202E2
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Sep 2012 05:39:00 +0000 (UTC)
-In-Reply-To: <bug-47781-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1348464626.2475.13.camel@ThinkPad-T420>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Li Zhong <zhong@linux.vnet.ibm.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=47781
-
-
-
-
-
---- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2012-09-24 05:38:59 ---
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Sun, 2012-09-23 at 21:07 +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=47781
+On Mon, 2012-09-24 at 13:30 +0800, Li Zhong wrote:
+> Just noticed that after commit 919f797, it is possible that 
+> scsi_cmd_to_driver() returns NULL. This patch adds the NULL checking for drv 
+> returned from the above function. 
 > 
-> 
-> Alan <alan@lxorguk.ukuu.org.uk> changed:
-> 
->            What    |Removed                     |Added
-> ----------------------------------------------------------------------------
->           Component|IDE                         |SCSI
->          AssignedTo|io_ide@kernel-bugs.osdl.org |linux-scsi@vger.kernel.org
+> Maybe it is not possible at run time, but from the code itself, we'd better
+> have this check?  
 
-I'm a bit mystified by this reassignment.  This looks like a pure ata
-problem to me; what makes you think it's SCSI?
+There's not much point having a check that never trips, unless it's an
+assert, in which case a NULL deref does that.  All it does is add
+pointless instructions to the critical path.  only REQ_TYPE_BLOCK_PC
+commands can be submitted without a driver, so the check above would
+seem to preclude that.
 
 James
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
