@@ -1,112 +1,108 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH scsi] Add NULL checking of return value from
- scsi_cmd_to_driver()
-Date: Mon, 24 Sep 2012 13:33:01 +0400
-Message-ID: <1348479181.2467.28.camel@dabdike>
-References: <1348464626.2475.13.camel@ThinkPad-T420>
-	 <1348465493.2467.3.camel@dabdike> <1348470210.2475.47.camel@ThinkPad-T420>
-	 <1348472104.2467.8.camel@dabdike> <1348478750.2475.51.camel@ThinkPad-T420>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1348478750.2475.51.camel@ThinkPad-T420>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Li Zhong <zhong@linux.vnet.ibm.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, "Martin K. Petersen" <mkp@mkp.net>
+From: Naresh Kumar Inna <naresh@chelsio.com>
+Subject: [V5 PATCH 0/8] csiostor: Chelsio FCoE offload driver submission
+Date: Mon, 24 Sep 2012 22:47:44 +0530
+Message-ID: <1348507072-25625-1-git-send-email-naresh@chelsio.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([67.207.112.58]:9246 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754261Ab2IXLm1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2012 07:42:27 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, dm@chelsio.com, leedom@chelsio.com
+Cc: netdev@vger.kernel.org, naresh@chelsio.com, chethan@chelsio.com
 
-On Mon, 2012-09-24 at 17:25 +0800, Li Zhong wrote:
-> On Mon, 2012-09-24 at 11:35 +0400, James Bottomley wrote:
-> > On Mon, 2012-09-24 at 15:03 +0800, Li Zhong wrote:
-> > > On Mon, 2012-09-24 at 09:44 +0400, James Bottomley wrote:
-> > > > On Mon, 2012-09-24 at 13:30 +0800, Li Zhong wrote:
-> > > > > Just noticed that after commit 919f797, it is possible that 
-> > > > > scsi_cmd_to_driver() returns NULL. This patch adds the NULL checking for drv 
-> > > > > returned from the above function. 
-> > > > > 
-> > > > > Maybe it is not possible at run time, but from the code itself, we'd better
-> > > > > have this check?  
-> > > > 
-> > > > There's not much point having a check that never trips, unless it's an
-> > > > assert, in which case a NULL deref does that.  All it does is add
-> > > > pointless instructions to the critical path.  only REQ_TYPE_BLOCK_PC
-> > > > commands can be submitted without a driver, so the check above would
-> > > > seem to preclude that.
-> > > 
-> > > Hi James, 
-> > > 
-> > > Thank you, it sounds reasonable to me. Let's drop it. 
-> > 
-> > Well, there is another thing you might do: The path length of
-> > scsi_cmd_to_driver() increased a lot thanks to 18a4d0a22ed6 it might be
-> > worth getting it back to what it was (this looks to be doable with the
-> > same != REQ_TYPE_BLOCK_PC test in the error handler.  Plus, I think it
-> > fixes a bug where you get different behaviours from REQ_TYPE_BLOCK_PC
-> > commands when a driver is and isn't attached (I've cc'd Martin to see
-> > what he thinks).
-> 
-> Hi James, 
-> 
-> Do you mean something like this: 
+This is the initial submission of the Chelsio FCoE offload driver (csiostor)
+to the upstream kernel. This driver currently supports FCoE offload
+functionality over Chelsio T4-based 10Gb Converged Network Adapters.
 
-Pretty much, yes.
+The following patches contain the driver sources for csiostor driver and
+updates to firmware/hardware header files shared between csiostor,
+cxgb4 (Chelsio T4-based NIC driver) and cxgb4vf (Chelsio T4-based Virtual
+Function NIC driver). The csiostor driver is dependent on these
+header updates. These patches have been generated against scsi 'misc' branch.
 
-James
+csiostor is a low level SCSI driver that interfaces with PCI, SCSI midlayer and
+FC transport subsystems. This driver claims the FCoE PCIe function on
+Chelsio Converged Network Adapters. It relies on firmware events for slow path
+operations like discovery, thereby offloading session management. The driver
+programs firmware via Work Request interfaces for fast path I/O offload
+features.
 
-> =======
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index de2337f..c1b05a8 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -789,7 +789,6 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->  			     int cmnd_size, int timeout, unsigned sense_bytes)
->  {
->  	struct scsi_device *sdev = scmd->device;
-> -	struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->  	struct Scsi_Host *shost = sdev->host;
->  	DECLARE_COMPLETION_ONSTACK(done);
->  	unsigned long timeleft;
-> @@ -845,8 +844,11 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->  
->  	scsi_eh_restore_cmnd(scmd, &ses);
->  
-> -	if (sdrv && sdrv->eh_action)
-> -		rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
-> +	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
-> +		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
-> +		if (sdrv->eh_action)
-> +			rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
-> +	}
->  
->  	return rtn;
->  }
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index ac06cc5..377df4a 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -134,16 +134,7 @@ struct scsi_cmnd {
->  
->  static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
->  {
-> -	struct scsi_driver **sdp;
-> -
-> -	if (!cmd->request->rq_disk)
-> -		return NULL;
-> -
-> -	sdp = (struct scsi_driver **)cmd->request->rq_disk->private_data;
-> -	if (!sdp)
-> -		return NULL;
-> -
-> -	return *sdp;
-> +	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
->  }
->  
->  extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Version V5 of the patches addresses James's comment, primary among them being
+moving to the lockless version of queuecommand(). Rest of the V5 changes are
+listed in the individual patches.
+
+Here is the brief description of patches:
+[V5 PATCH 1/8]: Updates to header files shared between cxgb4, cxgb4vf and
+                csiostor.
+[V5 PATCH 2/8]: Header files part 1.
+[V5 PATCH 3/8]: Header files part 2.
+[V5 PATCH 4/8]: Driver initialization and Work Request services.
+[V5 PATCH 5/8]: FC transport interfaces and mailbox services.
+[V5 PATCH 6/8]: Local and remote port state tracking functionality.
+[V5 PATCH 7/8]: Interrupt handling and fast path I/O functionality.
+[V5 PATCH 8/8]: Hardware interface, Makefile and Kconfig changes.
+
+Naresh Kumar Inna (8):
+  cxgb4/cxgb4vf: Chelsio FCoE offload driver submission (common header
+    updates).
+  csiostor: Chelsio FCoE offload driver submission (headers part 1).
+  csiostor: Chelsio FCoE offload driver submission (headers part 2).
+  csiostor: Chelsio FCoE offload driver submission (sources part 1).
+  csiostor: Chelsio FCoE offload driver submission (sources part 2).
+  csiostor: Chelsio FCoE offload driver submission (sources part 3).
+  csiostor: Chelsio FCoE offload driver submission (sources part 4).
+  csiostor: Chelsio FCoE offload driver submission (sources part 5).
+
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |    2 +-
+ drivers/net/ethernet/chelsio/cxgb4/sge.c        |   10 +-
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |   16 +-
+ drivers/net/ethernet/chelsio/cxgb4/t4_msg.h     |    1 +
+ drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |   69 +-
+ drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h   |  104 +-
+ drivers/net/ethernet/chelsio/cxgb4vf/sge.c      |   11 +-
+ drivers/scsi/Kconfig                            |    1 +
+ drivers/scsi/Makefile                           |    1 +
+ drivers/scsi/csiostor/Kconfig                   |   19 +
+ drivers/scsi/csiostor/Makefile                  |   11 +
+ drivers/scsi/csiostor/csio_attr.c               |  804 +++++
+ drivers/scsi/csiostor/csio_defs.h               |  121 +
+ drivers/scsi/csiostor/csio_hw.c                 | 4395 +++++++++++++++++++++++
+ drivers/scsi/csiostor/csio_hw.h                 |  666 ++++
+ drivers/scsi/csiostor/csio_init.c               | 1274 +++++++
+ drivers/scsi/csiostor/csio_init.h               |  158 +
+ drivers/scsi/csiostor/csio_isr.c                |  624 ++++
+ drivers/scsi/csiostor/csio_lnode.c              | 2133 +++++++++++
+ drivers/scsi/csiostor/csio_lnode.h              |  255 ++
+ drivers/scsi/csiostor/csio_mb.c                 | 1769 +++++++++
+ drivers/scsi/csiostor/csio_mb.h                 |  278 ++
+ drivers/scsi/csiostor/csio_rnode.c              |  889 +++++
+ drivers/scsi/csiostor/csio_rnode.h              |  141 +
+ drivers/scsi/csiostor/csio_scsi.c               | 2554 +++++++++++++
+ drivers/scsi/csiostor/csio_scsi.h               |  342 ++
+ drivers/scsi/csiostor/csio_wr.c                 | 1632 +++++++++
+ drivers/scsi/csiostor/csio_wr.h                 |  512 +++
+ drivers/scsi/csiostor/t4fw_api_stor.h           |  578 +++
+ 29 files changed, 19333 insertions(+), 37 deletions(-)
+ create mode 100644 drivers/scsi/csiostor/Kconfig
+ create mode 100644 drivers/scsi/csiostor/Makefile
+ create mode 100644 drivers/scsi/csiostor/csio_attr.c
+ create mode 100644 drivers/scsi/csiostor/csio_defs.h
+ create mode 100644 drivers/scsi/csiostor/csio_hw.c
+ create mode 100644 drivers/scsi/csiostor/csio_hw.h
+ create mode 100644 drivers/scsi/csiostor/csio_init.c
+ create mode 100644 drivers/scsi/csiostor/csio_init.h
+ create mode 100644 drivers/scsi/csiostor/csio_isr.c
+ create mode 100644 drivers/scsi/csiostor/csio_lnode.c
+ create mode 100644 drivers/scsi/csiostor/csio_lnode.h
+ create mode 100644 drivers/scsi/csiostor/csio_mb.c
+ create mode 100644 drivers/scsi/csiostor/csio_mb.h
+ create mode 100644 drivers/scsi/csiostor/csio_rnode.c
+ create mode 100644 drivers/scsi/csiostor/csio_rnode.h
+ create mode 100644 drivers/scsi/csiostor/csio_scsi.c
+ create mode 100644 drivers/scsi/csiostor/csio_scsi.h
+ create mode 100644 drivers/scsi/csiostor/csio_wr.c
+ create mode 100644 drivers/scsi/csiostor/csio_wr.h
+ create mode 100644 drivers/scsi/csiostor/t4fw_api_stor.h
+
