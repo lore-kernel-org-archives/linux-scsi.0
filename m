@@ -1,191 +1,253 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v7 0/6] ZPODD patches
-Date: Mon, 24 Sep 2012 23:04:50 +0800
-Message-ID: <20120924150449.GB3293@mint-spring.sh.intel.com>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
- <201209212318.28137.rjw@sisk.pl>
- <20120924025540.GA15069@mint-spring.sh.intel.com>
- <201209241506.11631.rjw@sisk.pl>
+From: "Peter M. Petrakis" <peter.petrakis@canonical.com>
+Subject: Re: [scsi] mpt-fusion: No SES device support?
+Date: Mon, 24 Sep 2012 11:17:45 -0400
+Message-ID: <50607999.9080700@canonical.com>
+References: <CAO5z_vJq+LgaE9noZxvxX8Gu_J_+5=ECBuY5OiQ_687cnrq9cw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201209241506.11631.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:34729 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756311Ab2IXPRy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2012 11:17:54 -0400
+In-Reply-To: <CAO5z_vJq+LgaE9noZxvxX8Gu_J_+5=ECBuY5OiQ_687cnrq9cw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lars Randers <lars@nstec.dk>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Sep 24, 2012 at 03:06:11PM +0200, Rafael J. Wysocki wrote:
-> On Monday, September 24, 2012, Aaron Lu wrote:
-> > On Fri, Sep 21, 2012 at 11:18:27PM +0200, Rafael J. Wysocki wrote:
-> > > On Friday, September 21, 2012, Aaron Lu wrote:
-> > > > On Thu, Sep 20, 2012 at 10:00:51PM +0200, Rafael J. Wysocki wrote:
-> > > > > On Wednesday, September 19, 2012, Aaron Lu wrote:
-> > > > > > Thanks Rafael, and if there is any question/problem,
-> > > > > > please kindly let me know.
-> > > > > 
-> > > > > Well, unfortunately my initial review indicates that the patchset is not
-> > > > > quite ready to go upstream yet.
-> > > > > 
-> > > > > I'll send comments in replies to the individual patches, but overall I can
-> > > > > say that at this stage of development, when I look at the patches, it should
-> > > > > be clear to me not only what is being changed, but _why_ it is being changed
-> > > > > in the first place and, secondly, why it is being changed in this particular
-> > > > > way.  It's far from that, though.
-> > > > 
-> > > > I'm adding zero power support for optical disk drive(ZPODD), which is
-> > > > made possible with the newly defined device attention(DA) pin introduced
-> > > > in SATA 3.1 spec.
-> > > > 
-> > > > The idea here is to use runtime pm to achieve this, so I basically did 2
-> > > > things:
-> > > > 1 Add runtime pm support for ODD;
-> > > > 2 Add power off support for ODD after it is runtime suspended.
-> > > > 
-> > > > Patch 2 is runtime pm support for ODD, the reason it is done this way is
-> > > > discussed here:
-> > > > http://www.spinics.net/lists/linux-scsi/msg61551.html
-> > > 
-> > > Why isn't it explained in the patch changelog, then?  People should be able
-> > > to learn why things are done the way they are done from git logs.
-> > > 
-> > > > The basic idea is, the ODD will be runtime suspended as long as there is
-> > > > nobody using it, that is, no programs opening the block device.
-> > > > 
-> > > > The ODD will be polled periodically, so it will be runtime resumed
-> > > > before checking if there is any events pending and suspended when done.
-> > > 
-> > > OK.  So what happens if we power off the drive via runtime PM.  Does it
-> > > it really make sense to resumie it through polling in that case?
-> > 
-> > No, this is the reason I introduced the powered_off flag. If set, the
-> > poll will simply return without touching the device.
-> > 
-> > I've tried to do a disk_block_events call on its suspend callback when
-> > it is ready to be powered off, but there is a race that I don't know how
-> > to solve:
-> > pm_runtime_suspend			disk_events_workfn		
-> >   scsi_dev_type_suspend			  sr_block_check_events
-> >     sr_suspend				    cdrom_check_events
-> >       disk_block_events		      	      cdrom_update_events
-> >       (this call waits for all		        sr_check_events
-> >       running events_checking function	          scsi_autopm_get_device
-> >       to return)
-> > 
-> > Suppose sr_suspend runs first, and then sr_check_events comes in.
-> > sr_suspend calls disk_block_events, which waits for sr_check_events,
-> > while scsi_autopm_get_device wait for suspend callback to finish,
-> > deadlock.
-> 
-> I need some more time to think about this, stay tuned.
 
-Thanks.
 
-> 
-> > > > The only exception is, if we found a disc is just inserted, we will not
-> > > > idle it immediately at the end of the poll, reason explained in another
-> > > > mail.
-> > > > 
-> > > > This is the rational I wrote patch 2, and patch 1 is used by patch 2.
-> > > > 
-> > > > Patch 3 is adding power off support for ODD after it is runtime
-> > > > suspended, the condition is specified in section 15:
-> > > > ftp://ftp.seagate.com/sff/INF-8090.PDF
-> > > > 
-> > > > That is, for tray type ODD: no media inside and door closed; for slot
-> > > > type ODD: no media inside.
-> > > > 
-> > > > The is the reason sr_suspend is written, for non-ZPODD capable devices,
-> > > > it does nothing; for ZPODD devices, it will check the above condition to
-> > > > see if it is ready to be powered off. The ready_to_power_off flag will be
-> > > > used by ATA layer to decide if power can be removed.
-> > > 
-> > > Now, James says he doesn't like the way ready_to_power_off is used.  Sure
-> > > enough, it is totally irrelevant to the majority of SCSI devices.  It actually
-> > > is totally irrelevant to everything in the SCSI subsystem except for the sr
-> > > driver and libata.  So I wonder if you have considered any alternative
-> > > way to address the use case at hand?
-> > > 
-> > > > When in powered off state, if user presses the eject button or insert a
-> > > > disc, an ACPI event will be generated and our acpi wake handler will
-> > > > pm_runtime_resume the ODD. And if it is a tray type ODD, its tray should
-> > > > be ejected(need_eject flag) after powered on. This is patch 3.
-> > > 
-> > > That sounds reasonable enough, but the role of the powered_off and
-> > > need_eject flags could be explained a bit better.  In particular, it would
-> > 
-> > powered_off: set when the device is powered off, clear otherwise.
-> 
-> That's pretty clear, but I think this flag should be called no_polling
-> or something like this, because that's what it means to the SCSI layer.
+On 09/22/2012 03:54 PM, Lars Randers wrote:
+> I can't get the SES device on my MPT controller to show up in Linux as
+> a sg device.
+>
+> The controller is a re-flashed IBM BR10i (LSISAS1068E), running the
+> latest firmware and it is connected
+> to the SES capable backplane via i2c on the SFF-8087 sidebands.
+>
+> Bios post as follows:
+>
+> SLOT  ID   LUN  VENDOR                    PRODUCT
+> REVISION                SIZE \ NV
+> --------- ----- ------- ---------------------------------
+> ------------------------------  ---------------------------
+> ----------------
+>      8       0    0    IBM                            SAS SES-2 DEVICE  01.0
+>      8       1    0    IBM-ESXS                   ST973401SS
+>   B51D                       68 GB
+>      8       2    0    IBM-ESXS                   ST973401SS
+>   B51D                       68 GB
+>      8                  LSILogic                      SAS1068E-IT
+>        1.33.00.00               NV 2D:03
+>
+>
+> Windows 7 reports the device present in device manager.
+>
+> Here's a snip from messages:
+>
+> Sep 22 21:31:15 nas kernel: Fusion MPT base driver 3.04.20
+> Sep 22 21:31:15 nas kernel: Copyright (c) 1999-2008 LSI Corporation
+> Sep 22 21:31:15 nas kernel: Fusion MPT SAS Host driver 3.04.20
+> Sep 22 21:31:15 nas kernel: ACPI: PCI Interrupt Link [APC5] enabled at IRQ 16
+> Sep 22 21:31:15 nas kernel: mptsas 0000:01:00.0: PCI INT A ->
+> Link[APC5] -> GSI 16 (level, low) -> IRQ 16
+> Sep 22 21:31:15 nas kernel: mptbase: ioc0: Initiating bringup
+> Sep 22 21:31:15 nas kernel: ioc0: LSISAS1068E B3: Capabilities={Initiator}
+> Sep 22 21:31:15 nas kernel: scsi7 : ioc0: LSISAS1068E B3,
+> FwRev=01210000h, Ports=1, MaxQ=483, IRQ=16
+> Sep 22 21:31:15 nas kernel: mptsas: ioc0: attaching ssp device:
+> fw_channel 0, fw_id 1, phy 1, sas_addr 0x5000c500002b0f59
+> Sep 22 21:31:15 nas kernel: scsi 7:0:0:0: Direct-Access     IBM-ESXS
+> ST973401SS       B51D PQ: 0 ANSI: 5
+> Sep 22 21:31:15 nas kernel: mptsas: ioc0: attaching ssp device:
+> fw_channel 0, fw_id 2, phy 2, sas_addr 0x5000c500002b0d95
+> Sep 22 21:31:15 nas kernel: scsi 7:0:1:0: Direct-Access     IBM-ESXS
+> ST973401SS       B51D PQ: 0 ANSI: 5
+> Sep 22 21:31:15 nas kernel: sd 7:0:1:0: [sdd] 143374000 512-byte
+> logical blocks: (73.4 GB/68.3 GiB)
+> Sep 22 21:31:15 nas kernel: sd 7:0:0:0: [sdc] 143374000 512-byte
+> logical blocks: (73.4 GB/68.3 GiB)
+> Sep 22 21:31:15 nas kernel: sd 7:0:1:0: [sdd] Write Protect is off
+> Sep 22 21:31:15 nas kernel: sd 7:0:0:0: [sdc] Write Protect is off
+> Sep 22 21:31:15 nas kernel: sd 7:0:1:0: [sdd] Write cache: disabled,
+> read cache: enabled, supports DPO and FUA
+> Sep 22 21:31:15 nas kernel: sd 7:0:0:0: [sdc] Write cache: disabled,
+> read cache: enabled, supports DPO and FUA
+> Sep 22 21:31:15 nas kernel: sd 7:0:1:0: [sdd] Attached SCSI disk
+> Sep 22 21:31:15 nas kernel: sd 7:0:0:0: [sdc] Attached SCSI disk
+> Sep 22 21:31:15 nas kernel: sd 7:0:0:0: Attached scsi generic sg2 type 0
+> Sep 22 21:31:15 nas kernel: sd 7:0:1:0: Attached scsi generic sg3 type 0
+>
+> Looking at mptsas.c with my limited knowledge of the mpt complex, I
+> can't really spot any probes for anything but
+> resources connected directly to the PHY's and ofc the adding of the
+> raid volume if the firmware is running as IR.
+>
+> Is there anyone here who wants to help me get the raw SES device to
+> show up as a /dev/sg<x>
+> so I can use the sg_ses (sg3_utils) commands to control the leds and
+> get environmental readouts?
 
-Agree.
+It's there, but for some reason, the LSI controller fails to discovery it.
+Comparing on an IBM branded LSI raid controller.
 
-> 
-> > need_eject:
-> > First consider how the device will be runtime resumed:
-> > 1 Some program opens the block device;
-> > 2 Events checking poll when it's not powered off yet;
-> > 3 User presses the eject button or inserts a disc into the slot when the
-> >   device is in powered off state.
-> > And the need_eject flag is for case 3, when the device is in powered off
-> > state and user presses the eject button, it will be powered on(through
-> > acpi wake notification function) and runtime resumed. In its runtime
-> > resume callback, its tray needs to be ejected since user just presses
-> > the eject button. The whole process of ZPODD is opaque to the user,
-> > he/she doesn't know the ODD lost power so the ODD has to behave exactly
-> > like it doesn't lose power.
-> 
-> Do you think it can be useful for other types of devices, not necessarily
-> handled through ACPI?
+root@ubuntu:/tmp/dist# lsscsi -g
+[0:0:0:0]    cd/dvd  HL-DT-ST DVD-ROM DH10N    0M10  /dev/sr0  /dev/sg0
+[4:2:0:0]    disk    IBM      ServeRAID M5014  2.0.  /dev/sda  /dev/sg1
+root@ubuntu:/tmp/dist# sg_ses -v /dev/sg1
+     inquiry cdb: 12 00 00 00 24 00
+   IBM  ServeRAID M5014  2.0.
+     disk device (not an enclosure)
+     Receive diagnostic results cmd: 1c 01 00 10 00 00
+Supported diagnostic pages:
+   <unknown> [0x5b]
 
-I can only say that it is useful for ZPODD, if ZPODD someday is used on
-another platform that does not use ACPI, the need_eject flag should
-still be needed.
 
-As for other scsi devices, I'm not sure.
 
-> 
-> > Hi Oliver,
-> > This flag is really to say the tray needs to be ejected after runtime
-> > resumed, it's not that media change detected. It is possible that user
-> > ejects the tray without putting any disc inside and simply close the
-> > tray, which doesn't qualify a media change event. And if user does
-> > put a disc in, the sr_check_events will find that and report the media
-> > change event to user space. Agree?
-> > 
-> > > be nice to have explained why they have to be present in struct scsi_device,
-> > > because they don't seem to be particularly useful for many SCSI devices
-> > > that aren't CD drives (the need_eject one in particular).
-> > 
-> > With your suggestion of pm_platform_power_off_allowed, I suppose
-> > powered_off can be eliminated similarly with something like
-> > pm_platform_powered_off returning true or false(for ACPI platform,
-> > return true when device is in D3 cold state).
-> 
-> I'm currently thinking that using PM QoS may be a better approach here.
+Though when I use the proprietary MegaCLI util... [1]
 
-Is it something like a "power_off_allowed" binary constraint?
-Then both the sr driver and the user can change the value so that both
-the ready_to_power_off and may_power_off is no longer needed.
+root@ubuntu:/tmp/dist# ./MegaCli64 -PDList -a0
+                                      
+Adapter #0
 
-> 
-> > And for the need_eject flag, I don't know if there is a better place for
-> > it. The acpi wake notification code resides in libata(where we need to
-> > record that this resume is due to user presses the eject button and the
-> > tray needs to be ejected after resumed), and the runtime resume callback
-> > resides in scsi driver(where we actually eject the tray). Ideally, this
-> > flag should sit in scsi_cd structure, but libata does not have access to
-> > it.
-> 
-> Yes, that's the problem that James mentioned.
+Enclosure Device ID: 252
+Slot Number: 0
+Drive's postion: DiskGroup: 0, Span: 0, Arm: 0
+Enclosure position: N/A
+Device Id: 9
+WWN:
+Sequence Number: 2
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 0
+Last Predictive Failure Event Seq Number: 0
+PD Type: SAS
 
-Right, not easy to find a home for need_eject...
+Raw Size: 279.396 GB [0x22ecb25c Sectors]
+Non Coerced Size: 278.896 GB [0x22dcb25c Sectors]
+Coerced Size: 278.464 GB [0x22cee000 Sectors]
+Firmware state: Online, Spun Up
+Device Firmware Level: SB19
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x500000e1167824b2
+SAS Address(1): 0x0
+Connected Port Number: 0(path0)
+Inquiry Data: IBM-ESXSMBD2300RC       SB19D0008ALKSB19SB19SB19
+IBM FRU/CRU: 42D0628
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: None
+Device Speed: 6.0Gb/s
+Link Speed: 6.0Gb/s
+Media Type: Hard Disk Device
+Drive Temperature :25C (77.00 F)
+PI Eligibility:  No
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: 6.0Gb/s
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown
+Drive has flagged a S.M.A.R.T alert : No
 
-Thanks,
-Aaron
 
-> 
-> Thanks,
-> Rafael
+
+
+Exit Code: 0x00
+
+
+Slot number, connected port, looks like SES to me.
+
+Even better.
+
+root@ubuntu:/tmp/dist# ./MegaCli64 -EncInfo -a0
+                                      
+     Number of enclosures on adapter 0 -- 1
+
+     Enclosure 0:
+     Device ID                     : 252
+     Number of Slots               : 8
+     Number of Power Supplies      : 0
+     Number of Fans                : 0
+     Number of Temperature Sensors : 0
+     Number of Alarms              : 0
+     Number of SIM Modules         : 1
+     Number of Physical Drives     : 1
+     Status                        : Normal
+     Position                      : 1
+     Connector Name                : Unavailable
+     Enclosure type                : SGPIO
+     FRU Part Number               : N/A
+     Enclosure Serial Number       : N/A
+     ESM Serial Number             : N/A
+     Enclosure Zoning Mode         : N/A
+     Partner Device Id             : Unavailable
+
+     Inquiry data                  :
+         Vendor Identification     : LSI
+         Product Identification    : SGPIO
+         Product Revision Level    : N/A
+         Vendor Specific           :
+
+
+Exit Code: 0x00
+
+
+>
+> I'll apply any patch you can come up with for the sake of getting
+> support into the kernel.
+
+Using the sg_ses man page for reference.
+
+"The DEVICE should be a SES device which may be a dedicated enclosure services processor (INQUIRY peripheral device type 0xd) or attached to another type of SCSI device (e.g. a disk) in which case the EncServ bit set in its INQUIRY response."
+
+I believe your BIOS POST, there appears to be a dedicated device there. Just
+like mine, if you were to perform inquiry, EncServ is probably zero. So the
+SES tools literally have nothing to work with.
+
+root@ubuntu:/tmp/dist# sg_inq /dev/sg1
+standard INQUIRY:
+   PQual=0  Device_type=0  RMB=0  version=0x05  [SPC-3]
+   [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=2
+   SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  BQue=0
+  
+       EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
+#should be 1?-^
+  
+  [RelAdr=0]  WBus16=0  Sync=0  Linked=0  [TranDis=0]  CmdQue=1
+   [SPI: Clocking=0x0  QAS=0  IUS=0]
+     length=96 (0x60)   Peripheral device type: disk
+  Vendor identification: IBM
+  Product identification: ServeRAID M5014
+  Product revision level: 2.0.
+  Unit serial number: 003f6fc57f48ff1015204d4202b00506
+
+I would need to take a closer look to understand what's going on. There is
+clearly a lot of enclosure centric logic in mptsas.c, it could be that it's
+deliberately not exposing it to the OS so that their proprietary tool can have
+exclusive access. It would be appreciated if someone from LSI shed some
+light on the situation, save us all some time.
+
+I suspect that if you plug a non-raid SAS controller (adaptec) that
+the ses enclosure will be presented correctly to the OS.
+
+Peter
+
+1. http://artipc10.vub.ac.be/wordpress/2011/09/12/megacli-useful-commands/
+
+>
+> TIA,
+> Lars Randers.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
