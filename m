@@ -1,37 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCHv2] st: remove st_mutex
-Date: Mon, 24 Sep 2012 13:06:00 +0400
-Message-ID: <1348477560.2467.23.camel@dabdike>
-References: <504E6B7C.9010407@suse.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 47781] ata2: exception Emask 0x10 SAct 0x0 SErr 0x4050002
+ action 0xe frozen
+Date: Mon, 24 Sep 2012 09:12:44 +0000 (UTC)
+Message-ID: <20120924091244.F15A411FBF3@bugzilla.kernel.org>
+References: <bug-47781-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35811 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751635Ab2IXJGF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Sep 2012 05:06:05 -0400
-In-Reply-To: <504E6B7C.9010407@suse.com>
+Received: from mail.kernel.org ([198.145.19.201]:47870 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751454Ab2IXJMs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Sep 2012 05:12:48 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 9C1E620343
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Sep 2012 09:12:47 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 0EE9C20339
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Sep 2012 09:12:46 +0000 (UTC)
+In-Reply-To: <bug-47781-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: linux-scsi@vger.kernel.org, Kai =?ISO-8859-1?Q?M=E4kisara?= <kai.makisara@kolumbus.fi>, Hannes Reinecke <hare@suse.de>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2012-09-10 at 15:36 -0700, Lee Duncan wrote:
-> From: Hannes Reinecke <hare@suse.com>
-> 
-> The st_mutex was created when the BKL was removed, and
-> prevents simultaneous st_open calls. It is better to
-> protect just the necessary data.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> Reviewed-by: Lee Duncan <lduncan@suse.com>
-
-That should be Signed-off-by since you sent the patch to me.  Signoffs
-have to follow the chain of transmission.  I've assumed this was just a
-mistype.
-
-James
+https://bugzilla.kernel.org/show_bug.cgi?id=47781
 
 
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+          Component|SCSI                        |Serial ATA
+         AssignedTo|linux-scsi@vger.kernel.org  |jgarzik@pobox.com
+
+
+
+
+--- Comment #7 from Alan <alan@lxorguk.ukuu.org.uk>  2012-09-24 09:12:44 ---
+I missed the menu entry 8-)
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
