@@ -1,159 +1,277 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 47781] ata2: exception Emask 0x10 SAct 0x0 SErr 0x4050002
- action 0xe frozen
-Date: Sun, 23 Sep 2012 21:54:10 +0000 (UTC)
-Message-ID: <20120923215410.0FCF111FB49@bugzilla.kernel.org>
-References: <bug-47781-11613@https.bugzilla.kernel.org/>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Mon, 24 Sep 2012 09:20:12 +0800
+Message-ID: <20120924012010.GA14797@mint-spring.sh.intel.com>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
+ <201209202248.10613.rjw@sisk.pl>
+ <20120921010226.GA2142@mint-spring.sh.intel.com>
+ <201209212249.33063.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:38770 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754520Ab2IWVyP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Sep 2012 17:54:15 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 450C7202C4
-	for <linux-scsi@vger.kernel.org>; Sun, 23 Sep 2012 21:54:14 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 175F5202CA
-	for <linux-scsi@vger.kernel.org>; Sun, 23 Sep 2012 21:54:10 +0000 (UTC)
-In-Reply-To: <bug-47781-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <201209212249.33063.rjw@sisk.pl>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=47781
+On Fri, Sep 21, 2012 at 10:49:32PM +0200, Rafael J. Wysocki wrote:
+> On Friday, September 21, 2012, Aaron Lu wrote:
+> > On Thu, Sep 20, 2012 at 10:48:10PM +0200, Rafael J. Wysocki wrote:
+> > > On Wednesday, September 12, 2012, Aaron Lu wrote:
+> > > > Place the ODD into runtime suspend state as soon as there is nobody
+> > > > using it.
+> > > 
+> > > OK, so how is ODD related to the sr driver?
+> > 
+> > As Alan has explained, ODD(optical disk drive) is driven by scsi
+> > sr driver.
+> 
+> OK, but what about writing "ODD (Optical Disk Drive)" in the changelog?
+> 
+> People reading git logs may not know all of the hardware acronyms and the
+> "0" message doesn't go into the git log. :-)
+> 
+> > > > The only exception is, if we just find that a new medium is
+> > > > inserted, we wait for the next events checking to idle it.
+> > > 
+> > > What exactly do you mean by "to idle it"?
+> > 
+> > I mean to put its usage count so that its idle callback will kick in.
+> 
+> So I'd just write that directly in the changelog.
+> 
+> > > Does this patch have any functional effect without the following patches?
+> > 
+> > Yes, this one alone takes care of ODD's runtime pm
+> 
+> I suppose you mean the runtime PM status and usage counter?  I.e. the "software
+> state"?
 
+Yes.
 
-Reartes Guillermo <rtguille@gmail.com> changed:
+> 
+> > while the following
+> > patches take care of removing its power after it's runtime suspended.
+> > But it doesn't have any real benefit without the following patches.
+> 
+> Please put that information into the changelog too.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |rtguille@gmail.com
+As Alan explained, I think I would say:
+Though currently it doesn't have any benefit, it allows its parent
+devices enter runtime suspend state which may save some power.
 
+> 
+> > > > Based on ideas of Alan Stern and Oliver Neukum.
+> > > > 
+> > > > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> > > > ---
+> > > >  drivers/scsi/sr.c | 29 +++++++++++++++++++++++++----
+> > > >  1 file changed, 25 insertions(+), 4 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> > > > index 5fc97d2..7a8222f 100644
+> > > > --- a/drivers/scsi/sr.c
+> > > > +++ b/drivers/scsi/sr.c
+> > > > @@ -45,6 +45,7 @@
+> > > >  #include <linux/blkdev.h>
+> > > >  #include <linux/mutex.h>
+> > > >  #include <linux/slab.h>
+> > > > +#include <linux/pm_runtime.h>
+> > > >  #include <asm/uaccess.h>
+> > > >  
+> > > >  #include <scsi/scsi.h>
+> > > > @@ -146,8 +147,12 @@ static inline struct scsi_cd *scsi_cd_get(struct gendisk *disk)
+> > > >  	kref_get(&cd->kref);
+> > > >  	if (scsi_device_get(cd->device))
+> > > >  		goto out_put;
+> > > > +	if (scsi_autopm_get_device(cd->device))
+> > > > +		goto out_pm;
+> > > >  	goto out;
+> > > 
+> > > Why don't you do
+> > > 
+> > > > +	if (!scsi_autopm_get_device(cd->device))
+> > > > +		goto out;
+> > > 
+> > > without the new label?
+> > 
+> > I was just stupidly following the pattern.
+> > Thanks and I'll change this.
+> > 
+> > > 
+> > > >  
+> > > > + out_pm:
+> > > > +	scsi_device_put(cd->device);
+> > > >   out_put:
+> > > >  	kref_put(&cd->kref, sr_kref_release);
+> > > >  	cd = NULL;
+> > > > @@ -163,6 +168,7 @@ static void scsi_cd_put(struct scsi_cd *cd)
+> > > >  	mutex_lock(&sr_ref_mutex);
+> > > >  	kref_put(&cd->kref, sr_kref_release);
+> > > >  	scsi_device_put(sdev);
+> > > > +	scsi_autopm_put_device(sdev);
+> > > >  	mutex_unlock(&sr_ref_mutex);
+> > > >  }
+> > > >  
+> > > > @@ -211,7 +217,7 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+> > > >  				    unsigned int clearing, int slot)
+> > > >  {
+> > > >  	struct scsi_cd *cd = cdi->handle;
+> > > > -	bool last_present;
+> > > > +	bool last_present = cd->media_present;
+> > > >  	struct scsi_sense_hdr sshdr;
+> > > >  	unsigned int events;
+> > > >  	int ret;
+> > > > @@ -220,6 +226,8 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+> > > >  	if (CDSL_CURRENT != slot)
+> > > >  		return 0;
+> > > >  
+> > > > +	scsi_autopm_get_device(cd->device);
+> > > > +
+> > > >  	events = sr_get_events(cd->device);
+> > > >  	cd->get_event_changed |= events & DISK_EVENT_MEDIA_CHANGE;
+> > > >  
+> > > > @@ -246,10 +254,9 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+> > > >  	}
+> > > >  
+> > > >  	if (!(clearing & DISK_EVENT_MEDIA_CHANGE))
+> > > > -		return events;
+> > > > +		goto out;
+> > > >  do_tur:
+> > > >  	/* let's see whether the media is there with TUR */
+> > > > -	last_present = cd->media_present;
+> > > >  	ret = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+> > > >  
+> > > >  	/*
+> > > > @@ -270,7 +277,7 @@ do_tur:
+> > > >  	}
+> > > >  
+> > > >  	if (cd->ignore_get_event)
+> > > > -		return events;
+> > > > +		goto out;
+> > > >  
+> > > >  	/* check whether GET_EVENT is reporting spurious MEDIA_CHANGE */
+> > > >  	if (!cd->tur_changed) {
+> > > > @@ -287,6 +294,12 @@ do_tur:
+> > > >  	cd->tur_changed = false;
+> > > >  	cd->get_event_changed = false;
+> > > >  
+> > > > +out:
+> > > > +	if (cd->media_present && !last_present)
+> > > > +		pm_runtime_put_noidle(&cd->device->sdev_gendev);
+> > > > +	else
+> > > > +		scsi_autopm_put_device(cd->device);
+> > > > +
+> > > 
+> > > This thing is asking for a comment.
+> > > 
+> > > It looks like you're kind of avoiding to call _idle() for the device, but why?
+> > > What might go wrong if pm_runtime_put() is used instead of the whole conditional,
+> > > among other things?
+> > 
+> > The above code means, if we found that a disc is just inserted(reflected
+> > by cd->media_present is true and last_present is false), we do not want
+> > to put the device into suspend state immediately until next poll. In the
+> > interval, some programs may decide to use this device by opening it.
+> > 
+> > Nothing will go wrong, but it can possibly avoid a runtime status change.
+> 
+> OK, so suppose the condition is true and we do the _noidle() put.  Who's
+> going to suspend the device in that case if no one actually uses the device?
 
+Next time when the check_events poll runs, it will find that:
+1 Either the disc is still there, then both last_present and
+  media_present would be true, we will do the put to idle it;
+2 Or the disc is ejected, we will do the put to idle it.
 
+The poll runs periodically, until the device is powered off(reflected by
+the powered_off flag), in which case, the poll will simply return
+0 without touching this device.
 
---- Comment #5 from Reartes Guillermo <rtguille@gmail.com>  2012-09-23 21:54:09 ---
-Controller #1:
+> 
+> > > >  	return events;
+> > > >  }
+> > > >  
+> > > > @@ -715,9 +728,14 @@ static int sr_probe(struct device *dev)
+> > > >  	dev_set_drvdata(dev, cd);
+> > > >  	disk->flags |= GENHD_FL_REMOVABLE;
+> > > >  	add_disk(disk);
+> > > > +	disk_events_set_poll_msecs(disk, 5000);
+> > > 
+> > > Why do you need this and why is the poll interval universally suitable?
+> > 
+> > For a system with udev, the block module parameter events_dfl_poll_msecs
+> > will be set to 2s. If disk's events_poll_msecs is not set, that will be
+> > used. So the disk will be polled every 2s, that means it will be runtime
+> > suspended/resumed every 2s if there is no user. I set it to 5s so that
+> > the device can stay in runtime suspended state longer.
+> > 
+> > And the sysfs interface is still there, if udev thinks a device needs
+> > special setting, it will do that and I'll not overwrite that setting.
+> 
+> I'm not quite convinced this is the right approach here.
+> 
+> So if you set it to 5 s this way, the user space will have no idea that
+> the polling happens less often than it thinks, or am I misunderstanding
+> what you said above?
 
-<<<< SATA controller [0106]: Intel Corporation N10/ICH7 Family SATA Controller 
-[AHCI mode] [8086:27c1] (rev 01) (prog-if 01 [AHCI 1.0]) >>>
+That's correct.
+AFAIK, user space does not care how often the device is polled, it
+cares only one thing: when there is a media change event, please let me
+know(through uevent).
 
-ahci 0000:00:1f.2: version 3.0
-ahci 0000:00:1f.2: irq 45 for MSI/MSI-X
-ahci 0000:00:1f.2: enabling ASUS P5W DH Deluxe on-board SIMG4726 workaround
-ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl SATA mode
-ahci 0000:00:1f.2: flags: 64bit ncq pm led clo pio slum part 
-ahci 0000:00:1f.2: setting latency timer to 64
-scsi0 : ahci
-scsi1 : ahci
-scsi2 : ahci
-scsi3 : ahci
-ata1: SATA max UDMA/133 abar m1024@0xfebfb800 port 0xfebfb900 irq 45
-ata2: SATA max UDMA/133 abar m1024@0xfebfb800 port 0xfebfb980 irq 45
-ata3: SATA max UDMA/133 abar m1024@0xfebfb800 port 0xfebfba00 irq 45
-ata4: SATA max UDMA/133 abar m1024@0xfebfb800 port 0xfebfba80 irq 45
+I agree that we can't make user wait for too long before seeing
+something happen(auto play, etc.) after he inserted a disc, and 5
+seconds doesn't seem too long to me.
 
-Controller #2:
+> 
+> Moreover, what about changing the code so that the polling doesn't
+> actually resume the device?
 
-<<< SATA controller [0106]: JMicron Technology Corp. JMB363 SATA/IDE Controller
-[197b:2363] (rev 03) (prog-if 01 [AHCI 1.0]) >>>
+Since the device is going to do IO(executing a scsi command), I think I
+should resume the device.
 
-ahci 0000:02:00.0: AHCI 0001.0000 32 slots 2 ports 3 Gbps 0x3 impl SATA mode
-ahci 0000:02:00.0: flags: 64bit ncq pm led clo pmp pio slum part 
-scsi4 : ahci
-scsi5 : ahci
-ata5: SATA max UDMA/133 abar m8192@0xf87fe000 port 0xf87fe100 irq 17
-ata6: SATA max UDMA/133 abar m8192@0xf87fe000 port 0xf87fe180 irq 17
+But there is a case for ZPODD, when the ODD is powered off(reflected by
+the powered_off flag), the events checking will simply return without
+resuming the device.
 
-Controller #3:
+> 
+> > > >  
+> > > >  	sdev_printk(KERN_DEBUG, sdev,
+> > > >  		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
+> > > > +
+> > > > +	/* enable runtime pm */
+> > > 
+> > > Not really.  What it does is to enable the device to be suspended.
+> > 
+> > OK, will change this.
+> > 
+> > > 
+> > > > +	scsi_autopm_put_device(cd->device);
+> > > > +
+> > > >  	return 0;
+> > > >  
+> > > >  fail_put:
+> > > > @@ -965,6 +983,9 @@ static int sr_remove(struct device *dev)
+> > > >  {
+> > > >  	struct scsi_cd *cd = dev_get_drvdata(dev);
+> > > >  
+> > > > +	/* disable runtime pm */
+> > > 
+> > > And that prevents the device from being suspended (which means that it's
+> > > going to be resumed at this point in case it was suspended before).
+> > 
+> > Yes, that's what I want.
+> > We are removing its driver and I think we should undo what we have done
+> > to it.
+> 
+> Yes, I agree.  Only the comment wording can better reflect what really
+> happens here (runtime PM is not disabled, in particular).
 
-<<<  IDE interface [0101]: Intel Corporation 82801G (ICH7 Family) IDE
-Controller
-[8086:27df] (rev 01) (prog-if 8a [Master SecP PriP]) >>>
+OK, looks like you are saying by disable, disable_depth is the subject
+while I'm playing with usage_count. I'll pay attention to these words,
+thanks for the remind.
 
-ata_piix 0000:00:1f.1: version 2.13
-ata_piix 0000:00:1f.1: setting latency timer to 64
-scsi6 : ata_piix
-scsi7 : ata_piix
-ata7: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xffa0 irq 14
-ata8: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xffa8 irq 15
-
-Controller #4 (PATA, SAME CARD as #2):
-
-<<< IDE interface [0101]: JMicron Technology Corp. JMB363 SATA/IDE Controller
-[197b:2363] (rev 03) (prog-if 85 [Master SecO PriO]) >>>
-
-pata_acpi 0000:02:00.1: enabling device (0000 -> 0001)
-pata_acpi 0000:02:00.1: setting latency timer to 64
-scsi8 : pata_acpi
-scsi9 : pata_acpi
-ata9: PATA max UDMA/133 cmd 0xac00 ctl 0xa880 bmdma 0xa400 irq 18
-ata10: PATA max UDMA/133 cmd 0xa800 ctl 0xa480 bmdma 0xa408 irq 18
-
-ERRORS:
-
-* ata2.00: failed to IDENTIFY (I/O error, err_mask=0x100)
-
-* ata2.00: unsupported device, disabling
-
-* ata10: prereset failed (errno=-19)
-  ata10: reset failed, giving up
-
-WARNINGS:
-
-* WARNING#1: (For ATA6 & ATA7)
-
-  pci 0000:02:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it
-with 'pcie_aspm=force'
-
-
-* WARNING#2: 
-
-  pci0000:00: ACPI _OSC support notification failed, disabling PCIe ASPM
-  pci0000:00: Unable to request _OSC control (_OSC support mask: 0x08)
-
-
-* WARNING#3: 
-
-  ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-  ata2.00: failed to IDENTIFY (I/O error, err_mask=0x100)
-  ata2: SATA link down (SStatus 0 SControl 300)
-
-  ata2: exception Emask 0x10 SAct 0x0 SErr 0x4050002 action 0xe frozen
-  ata2: irq_stat 0x00000040, connection status changed
-  ata2: SError: { RecovComm PHYRdyChg CommWake DevExch }
-  ata2: hard resetting link
-  ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-  ata2.00: unsupported device, disabling
-  ata2.00: disabled
-  ata2: EH complete
-
-* WARNING#4:
-
-  ata10: prereset failed (errno=-19)
-  ata10: reset failed, giving up
-
-* WARNING#5:
-
-  ACPI: Invalid Power Resource to register!
-
-  ACPI Warning: 0x00000295-0x00000296 SystemIO conflicts with Region
-\_SB_.PCI0.SBRG.SIOR.HWRE 1 (20120711/utaddress-251)
-  ACPI: If an ACPI driver is available for this device, you should use it
-instead of the native driver
-
-  ACPI Warning: 0x00000480-0x000004bf SystemIO conflicts with Region
-\_SB_.PCI0.SBRG.GPIO 1 (20120711/utaddress-251)
-  ACPI: If an ACPI driver is available for this device, you should use it
-instead of the native driver
-
-------------------------------------------------
-
-What device is attached to ata2 and ata10?
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+-Aaron
