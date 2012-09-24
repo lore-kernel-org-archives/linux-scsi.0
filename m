@@ -1,46 +1,37 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH scsi] Add NULL checking of return value from
- scsi_cmd_to_driver()
-Date: Mon, 24 Sep 2012 11:35:04 +0400
-Message-ID: <1348472104.2467.8.camel@dabdike>
-References: <1348464626.2475.13.camel@ThinkPad-T420>
-	 <1348465493.2467.3.camel@dabdike> <1348470210.2475.47.camel@ThinkPad-T420>
+Subject: Re: [PATCHv2] st: remove st_mutex
+Date: Mon, 24 Sep 2012 13:06:00 +0400
+Message-ID: <1348477560.2467.23.camel@dabdike>
+References: <504E6B7C.9010407@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1348470210.2475.47.camel@ThinkPad-T420>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Li Zhong <zhong@linux.vnet.ibm.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, "Martin K. Petersen" <mkp@mkp.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35811 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751635Ab2IXJGF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Sep 2012 05:06:05 -0400
+In-Reply-To: <504E6B7C.9010407@suse.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>
+Cc: linux-scsi@vger.kernel.org, Kai =?ISO-8859-1?Q?M=E4kisara?= <kai.makisara@kolumbus.fi>, Hannes Reinecke <hare@suse.de>
 
-On Mon, 2012-09-24 at 15:03 +0800, Li Zhong wrote:
-> On Mon, 2012-09-24 at 09:44 +0400, James Bottomley wrote:
-> > On Mon, 2012-09-24 at 13:30 +0800, Li Zhong wrote:
-> > > Just noticed that after commit 919f797, it is possible that 
-> > > scsi_cmd_to_driver() returns NULL. This patch adds the NULL checking for drv 
-> > > returned from the above function. 
-> > > 
-> > > Maybe it is not possible at run time, but from the code itself, we'd better
-> > > have this check?  
-> > 
-> > There's not much point having a check that never trips, unless it's an
-> > assert, in which case a NULL deref does that.  All it does is add
-> > pointless instructions to the critical path.  only REQ_TYPE_BLOCK_PC
-> > commands can be submitted without a driver, so the check above would
-> > seem to preclude that.
+On Mon, 2012-09-10 at 15:36 -0700, Lee Duncan wrote:
+> From: Hannes Reinecke <hare@suse.com>
 > 
-> Hi James, 
+> The st_mutex was created when the BKL was removed, and
+> prevents simultaneous st_open calls. It is better to
+> protect just the necessary data.
 > 
-> Thank you, it sounds reasonable to me. Let's drop it. 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Reviewed-by: Lee Duncan <lduncan@suse.com>
 
-Well, there is another thing you might do: The path length of
-scsi_cmd_to_driver() increased a lot thanks to 18a4d0a22ed6 it might be
-worth getting it back to what it was (this looks to be doable with the
-same != REQ_TYPE_BLOCK_PC test in the error handler.  Plus, I think it
-fixes a bug where you get different behaviours from REQ_TYPE_BLOCK_PC
-commands when a driver is and isn't attached (I've cc'd Martin to see
-what he thinks).
+That should be Signed-off-by since you sent the patch to me.  Signoffs
+have to follow the chain of transmission.  I've assumed this was just a
+mistype.
 
 James
+
+
