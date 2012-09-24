@@ -1,155 +1,178 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Mon, 24 Sep 2012 23:40:18 +0200
-Message-ID: <201209242340.18318.rjw@sisk.pl>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209241455.31754.rjw@sisk.pl> <20120924145235.GA3293@mint-spring.sh.intel.com>
+Subject: Re: [PATCH v7 0/6] ZPODD patches
+Date: Mon, 24 Sep 2012 23:46:03 +0200
+Message-ID: <201209242346.03414.rjw@sisk.pl>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209241506.11631.rjw@sisk.pl> <20120924150449.GB3293@mint-spring.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120924145235.GA3293@mint-spring.sh.intel.com>
+In-Reply-To: <20120924150449.GB3293@mint-spring.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: Aaron Lu <aaron.lu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Cc: Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On Monday, September 24, 2012, Aaron Lu wrote:
-> On Mon, Sep 24, 2012 at 02:55:31PM +0200, Rafael J. Wysocki wrote:
+> On Mon, Sep 24, 2012 at 03:06:11PM +0200, Rafael J. Wysocki wrote:
 > > On Monday, September 24, 2012, Aaron Lu wrote:
-> > > On Fri, Sep 21, 2012 at 10:49:32PM +0200, Rafael J. Wysocki wrote:
+> > > On Fri, Sep 21, 2012 at 11:18:27PM +0200, Rafael J. Wysocki wrote:
 > > > > On Friday, September 21, 2012, Aaron Lu wrote:
-> > > > > On Thu, Sep 20, 2012 at 10:48:10PM +0200, Rafael J. Wysocki wrote:
-> > > > > > On Wednesday, September 12, 2012, Aaron Lu wrote:
-
-[...] 
-
-> > > > > > >  	/* check whether GET_EVENT is reporting spurious MEDIA_CHANGE */
-> > > > > > >  	if (!cd->tur_changed) {
-> > > > > > > @@ -287,6 +294,12 @@ do_tur:
-> > > > > > >  	cd->tur_changed = false;
-> > > > > > >  	cd->get_event_changed = false;
-> > > > > > >  
-> > > > > > > +out:
-> > > > > > > +	if (cd->media_present && !last_present)
-> > > > > > > +		pm_runtime_put_noidle(&cd->device->sdev_gendev);
-> > > > > > > +	else
-> > > > > > > +		scsi_autopm_put_device(cd->device);
-> > > > > > > +
+> > > > > On Thu, Sep 20, 2012 at 10:00:51PM +0200, Rafael J. Wysocki wrote:
+> > > > > > On Wednesday, September 19, 2012, Aaron Lu wrote:
+> > > > > > > Thanks Rafael, and if there is any question/problem,
+> > > > > > > please kindly let me know.
 > > > > > > 
-> > > > > > This thing is asking for a comment.
+> > > > > > Well, unfortunately my initial review indicates that the patchset is not
+> > > > > > quite ready to go upstream yet.
 > > > > > > 
-> > > > > > It looks like you're kind of avoiding to call _idle() for the device, but why?
-> > > > > > What might go wrong if pm_runtime_put() is used instead of the whole conditional,
-> > > > > > among other things?
+> > > > > > I'll send comments in replies to the individual patches, but overall I can
+> > > > > > say that at this stage of development, when I look at the patches, it should
+> > > > > > be clear to me not only what is being changed, but _why_ it is being changed
+> > > > > > in the first place and, secondly, why it is being changed in this particular
+> > > > > > way.  It's far from that, though.
 > > > > > 
-> > > > > The above code means, if we found that a disc is just inserted(reflected
-> > > > > by cd->media_present is true and last_present is false), we do not want
-> > > > > to put the device into suspend state immediately until next poll. In the
-> > > > > interval, some programs may decide to use this device by opening it.
+> > > > > I'm adding zero power support for optical disk drive(ZPODD), which is
+> > > > > made possible with the newly defined device attention(DA) pin introduced
+> > > > > in SATA 3.1 spec.
 > > > > > 
-> > > > > Nothing will go wrong, but it can possibly avoid a runtime status change.
+> > > > > The idea here is to use runtime pm to achieve this, so I basically did 2
+> > > > > things:
+> > > > > 1 Add runtime pm support for ODD;
+> > > > > 2 Add power off support for ODD after it is runtime suspended.
+> > > > > 
+> > > > > Patch 2 is runtime pm support for ODD, the reason it is done this way is
+> > > > > discussed here:
+> > > > > http://www.spinics.net/lists/linux-scsi/msg61551.html
 > > > > 
-> > > > OK, so suppose the condition is true and we do the _noidle() put.  Who's
-> > > > going to suspend the device in that case if no one actually uses the device?
+> > > > Why isn't it explained in the patch changelog, then?  People should be able
+> > > > to learn why things are done the way they are done from git logs.
+> > > > 
+> > > > > The basic idea is, the ODD will be runtime suspended as long as there is
+> > > > > nobody using it, that is, no programs opening the block device.
+> > > > > 
+> > > > > The ODD will be polled periodically, so it will be runtime resumed
+> > > > > before checking if there is any events pending and suspended when done.
+> > > > 
+> > > > OK.  So what happens if we power off the drive via runtime PM.  Does it
+> > > > it really make sense to resumie it through polling in that case?
 > > > 
-> > > Next time when the check_events poll runs, it will find that:
-> > > 1 Either the disc is still there, then both last_present and
-> > >   media_present would be true, we will do the put to idle it;
-> > > 2 Or the disc is ejected, we will do the put to idle it.
-> > 
-> > In that case I would do:
-> > 
-> > pm_runtime_put_noidle(&cd->device->sdev_gendev);
-> > if (cd->media_present && !last_present)
-> >     pm_runtime_suspend(&cd->device->sdev_gendev);
-> 
-> This doesn't cover the !cd->media_present(media not present) case.
-> If there is no media present, we will also need to idle it.
-
-Oh, I got the condition backwards.  I meant:
-
-pm_runtime_put_noidle(&cd->device->sdev_gendev);
-if (!cd->media_present || last_present)
-     pm_runtime_suspend(&cd->device->sdev_gendev);
-
-which should be equivalent to your original code (if I'm not mistaken again).
-
-> > And I'd add a comment about the next poll.
-> > 
-> > This appears somewhat racy, though, because in theory a media may be inserted
-> > while we are removing power from the device.  Isn't that a problem?
-> 
-> Yes, this is a problem.
-> To avoid this race, I think the following needs to be done:
-> - For slot type ODD, make it such that user can't insert a disc;
-> - For tray type ODD, make it such that when user presses the eject
->   button, the tray doesn't open.
-> I'll see if this is possible, thanks for the remind.
-
-OK
-
-> > > The poll runs periodically, until the device is powered off(reflected by
-> > > the powered_off flag), in which case, the poll will simply return
-> > > 0 without touching this device.
-> > 
-> > Is it useful to poll the device after it has been suspended, but not powered
-> > off?
-> 
-> Yes, it is necessary to poll the device when it has been suspended with
-> power left. The reason is, we need to check if there is a media change
-> event happened, and the way to check this is to issue a
-> GET_EVENT_STATUS_NOTIFICATION comand.
-> 
-> Please note that when the drive is not powered off, it will not send us
-> a notification when its eject button is pressed.
-
-I'm not sure about that, actually.  If it doesn't notify us, that whole thing
-is inherently racy pretty much beyond fixing, because it is always possible
-that the user will press the eject button right after we've checked the
-status last time and right before power removal.  We're going to lose that
-event, so the user will have to push the button once again in that case.
-
-> > > > > > >  	return events;
-> > > > > > >  }
-> > > > > > >  
-> > > > > > > @@ -715,9 +728,14 @@ static int sr_probe(struct device *dev)
-> > > > > > >  	dev_set_drvdata(dev, cd);
-> > > > > > >  	disk->flags |= GENHD_FL_REMOVABLE;
-> > > > > > >  	add_disk(disk);
-> > > > > > > +	disk_events_set_poll_msecs(disk, 5000);
-> > > > > > 
-> > > > > > Why do you need this and why is the poll interval universally suitable?
-> > > > > 
-> > > > > For a system with udev, the block module parameter events_dfl_poll_msecs
-> > > > > will be set to 2s. If disk's events_poll_msecs is not set, that will be
-> > > > > used. So the disk will be polled every 2s, that means it will be runtime
-> > > > > suspended/resumed every 2s if there is no user. I set it to 5s so that
-> > > > > the device can stay in runtime suspended state longer.
-> > > > > 
-> > > > > And the sysfs interface is still there, if udev thinks a device needs
-> > > > > special setting, it will do that and I'll not overwrite that setting.
-> > > > 
-> > > > I'm not quite convinced this is the right approach here.
-> > > > 
-> > > > So if you set it to 5 s this way, the user space will have no idea that
-> > > > the polling happens less often than it thinks, or am I misunderstanding
-> > > > what you said above?
+> > > No, this is the reason I introduced the powered_off flag. If set, the
+> > > poll will simply return without touching the device.
 > > > 
-> > > That's correct.
-> > > AFAIK, user space does not care how often the device is polled, it
-> > > cares only one thing: when there is a media change event, please let me
-> > > know(through uevent).
+> > > I've tried to do a disk_block_events call on its suspend callback when
+> > > it is ready to be powered off, but there is a race that I don't know how
+> > > to solve:
+> > > pm_runtime_suspend			disk_events_workfn		
+> > >   scsi_dev_type_suspend			  sr_block_check_events
+> > >     sr_suspend				    cdrom_check_events
+> > >       disk_block_events		      	      cdrom_update_events
+> > >       (this call waits for all		        sr_check_events
+> > >       running events_checking function	          scsi_autopm_get_device
+> > >       to return)
+> > > 
+> > > Suppose sr_suspend runs first, and then sr_check_events comes in.
+> > > sr_suspend calls disk_block_events, which waits for sr_check_events,
+> > > while scsi_autopm_get_device wait for suspend callback to finish,
+> > > deadlock.
 > > 
-> > So that's why we do the polling, right?
+> > I need some more time to think about this, stay tuned.
 > 
-> Yes.
+> Thanks.
 
-Well, that's difficult.
+Alan has just given you a good suggestion, you can follow it I think.
 
-If the remote wakeup is signaled through a GPE, it should be possible to
-enable it before we actually put the device into D3cold.  That may allow us
-to eliminate the races.
+> > > > > The only exception is, if we found a disc is just inserted, we will not
+> > > > > idle it immediately at the end of the poll, reason explained in another
+> > > > > mail.
+> > > > > 
+> > > > > This is the rational I wrote patch 2, and patch 1 is used by patch 2.
+> > > > > 
+> > > > > Patch 3 is adding power off support for ODD after it is runtime
+> > > > > suspended, the condition is specified in section 15:
+> > > > > ftp://ftp.seagate.com/sff/INF-8090.PDF
+> > > > > 
+> > > > > That is, for tray type ODD: no media inside and door closed; for slot
+> > > > > type ODD: no media inside.
+> > > > > 
+> > > > > The is the reason sr_suspend is written, for non-ZPODD capable devices,
+> > > > > it does nothing; for ZPODD devices, it will check the above condition to
+> > > > > see if it is ready to be powered off. The ready_to_power_off flag will be
+> > > > > used by ATA layer to decide if power can be removed.
+> > > > 
+> > > > Now, James says he doesn't like the way ready_to_power_off is used.  Sure
+> > > > enough, it is totally irrelevant to the majority of SCSI devices.  It actually
+> > > > is totally irrelevant to everything in the SCSI subsystem except for the sr
+> > > > driver and libata.  So I wonder if you have considered any alternative
+> > > > way to address the use case at hand?
+> > > > 
+> > > > > When in powered off state, if user presses the eject button or insert a
+> > > > > disc, an ACPI event will be generated and our acpi wake handler will
+> > > > > pm_runtime_resume the ODD. And if it is a tray type ODD, its tray should
+> > > > > be ejected(need_eject flag) after powered on. This is patch 3.
+> > > > 
+> > > > That sounds reasonable enough, but the role of the powered_off and
+> > > > need_eject flags could be explained a bit better.  In particular, it would
+> > > 
+> > > powered_off: set when the device is powered off, clear otherwise.
+> > 
+> > That's pretty clear, but I think this flag should be called no_polling
+> > or something like this, because that's what it means to the SCSI layer.
+> 
+> Agree.
+> 
+> > 
+> > > need_eject:
+> > > First consider how the device will be runtime resumed:
+> > > 1 Some program opens the block device;
+> > > 2 Events checking poll when it's not powered off yet;
+> > > 3 User presses the eject button or inserts a disc into the slot when the
+> > >   device is in powered off state.
+> > > And the need_eject flag is for case 3, when the device is in powered off
+> > > state and user presses the eject button, it will be powered on(through
+> > > acpi wake notification function) and runtime resumed. In its runtime
+> > > resume callback, its tray needs to be ejected since user just presses
+> > > the eject button. The whole process of ZPODD is opaque to the user,
+> > > he/she doesn't know the ODD lost power so the ODD has to behave exactly
+> > > like it doesn't lose power.
+> > 
+> > Do you think it can be useful for other types of devices, not necessarily
+> > handled through ACPI?
+> 
+> I can only say that it is useful for ZPODD, if ZPODD someday is used on
+> another platform that does not use ACPI, the need_eject flag should
+> still be needed.
+> 
+> As for other scsi devices, I'm not sure.
+
+I see.  This means we don't really have good arguments for putting that flag
+into struct scsi_device ...
+
+> > > Hi Oliver,
+> > > This flag is really to say the tray needs to be ejected after runtime
+> > > resumed, it's not that media change detected. It is possible that user
+> > > ejects the tray without putting any disc inside and simply close the
+> > > tray, which doesn't qualify a media change event. And if user does
+> > > put a disc in, the sr_check_events will find that and report the media
+> > > change event to user space. Agree?
+> > > 
+> > > > be nice to have explained why they have to be present in struct scsi_device,
+> > > > because they don't seem to be particularly useful for many SCSI devices
+> > > > that aren't CD drives (the need_eject one in particular).
+> > > 
+> > > With your suggestion of pm_platform_power_off_allowed, I suppose
+> > > powered_off can be eliminated similarly with something like
+> > > pm_platform_powered_off returning true or false(for ACPI platform,
+> > > return true when device is in D3 cold state).
+> > 
+> > I'm currently thinking that using PM QoS may be a better approach here.
+> 
+> Is it something like a "power_off_allowed" binary constraint?
+> Then both the sr driver and the user can change the value so that both
+> the ready_to_power_off and may_power_off is no longer needed.
+
+Yes, that's the idea.
 
 Thanks,
 Rafael
