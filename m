@@ -1,39 +1,55 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [SCSI PATCH] sd: max-retries becomes configurable
-Date: Tue, 25 Sep 2012 01:21:54 -0400
-Message-ID: <50613F72.4000302@pobox.com>
-References: <20120924210049.GA18527@havoc.gtf.org> <1348546019.2457.3.camel@dabdike>
+From: =?big5?B?VG9ueSBIdW5nIC0gUFRUIKx4t+fArw==?=
+	<tony.hung@tw.promise.com>
+Subject: RE: RE: [PATCH] ahci: add a boot option to enable promise ahci
+Date: Tue, 25 Sep 2012 13:39:34 +0800
+Message-ID: <1AF0FA078A5A3541A8A8019D26081C2E88DCE6D980@ptt-ex02.promise.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="big5"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1348546019.2457.3.camel@dabdike>
+Content-Language: zh-TW
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/25/2012 12:06 AM, James Bottomley wrote:
-> On Mon, 2012-09-24 at 17:00 -0400, Jeff Garzik wrote:
->>
->>   drivers/scsi/sd.c |    4 ++++
->>   drivers/scsi/sd.h |    2 +-
->>   2 files changed, 5 insertions(+), 1 deletion(-)
->
-> I'm not opposed in principle to doing this (except that it should be a
-> sysfs parameter like all our other controls), but what's the reasoning
-> behind needing it changed?
-
-<vendor hat on>
-
-Periodically turns up as a useful field sledgehammer for solving 
-problems, until the real problem is found and fixed.  Got tired of a 
-very similar patch manually bouncing around the "hey, pssst, this worked 
-for me" backchannel IT network.
-
-</red hat>
-
-Can you be more specific about sysfs location?  A runtime-writable (via 
-sysfs!) module parameter for a module-wide default seemed appropriate.
-
-	Jeff
+T24gMjAxMi85LzI1IDExOjA1IEFNLCBKZWZmIEdhcnppayB3cm90ZToNCj4NCj4gT24gMDkvMjMv
+MjAxMiAxMDozNCBQTSwgVG9ueSBIdW5nIC0gUFRUIKx4t+fAryB3cm90ZToNCj4NCj4gPiBsaW51
+eC0zLjIuMC9kcml2ZXJzL2F0YS9haGNpLmM6IEluIGZ1bmN0aW9uICdocHRpb3BfaG9zdF9yZXF1
+ZXN0X2NhbGxiYWNrJzoNCj4NCj4gPiANCj4NCj4gPiBVc2UgbWluX3Qoc2l6ZV90LCAuLi4pIHRv
+IGZpeC4NCg0KQ29ycmVjdCB0aGlzLA0KbGludXgtMy4yLjAvZHJpdmVycy9hdGEvYWhjaS5jOiBJ
+biBmdW5jdGlvbiAnYWhjaV9pbml0X29uZSc6DQpVc2UgdmFyaWFibGUgcHJvbWlzZV9lbmFibGUg
+dG8gZGlzYWJsZSBSQUlEIFBDSSBjb250cm9sbGVkIGJ5IG9yaWdpbmFsIEFIQ0kuDQo+DQo+ID4g
+DQo+DQo+ID4gU2lnbmVkLW9mZi1ieTogVG9ueSBIdW5nIDx0b255Lmh1bmdAdHcucHJvbWlzZS5j
+b20+DQo+DQo+ID4gLS0tDQo+DQo+ID4gDQo+DQo+ID4gZGlmZiAtLWdpdCBhL2xpbnV4LTMuMi4w
+L2RyaXZlcnMvYXRhL2FoY2kuYyBiL2xpbnV4LTMuMi4wL2RyaXZlcnMvYXRhL2FoY2kuYw0KPg0K
+PiA+IC0tLSBhL2xpbnV4LTMuMi4wL2RyaXZlcnMvYXRhL2FoY2kuYyAgICAyMDEyLTA4LTI5IDEz
+OjQwOjI2LjA0Njg1MTY5MyArMDgwMA0KPg0KPiA+ICsrKyBiL2xpbnV4LTMuMi4wL2RyaXZlcnMv
+YXRhL2FoY2kuYyAgMjAxMi0wOC0zMCAxNzoyMzoxMC4yMDc4Mzg5NjAgKzA4MDANCj4NCj4gPiBA
+QCAtNDMwLDYgKzQzMCw5IEBAIHN0YXRpYyBpbnQgbWFydmVsbF9lbmFibGUgPSAxOw0KPg0KPiA+
+ICAgbW9kdWxlX3BhcmFtKG1hcnZlbGxfZW5hYmxlLCBpbnQsIDA2NDQpOw0KPg0KPiA+ICAgTU9E
+VUxFX1BBUk1fREVTQyhtYXJ2ZWxsX2VuYWJsZSwgIk1hcnZlbGwgU0FUQSB2aWEgQUhDSSAoMSA9
+DQo+DQo+ID4gZW5hYmxlZCkiKTsNCj4NCj4gPiANCj4NCj4gPiArc3RhdGljIGludCBwcm9taXNl
+X2VuYWJsZTsNCj4NCj4gPiArbW9kdWxlX3BhcmFtKHByb21pc2VfZW5hYmxlLCBpbnQsIDA2NDQp
+Ow0KPg0KPiA+ICtNT0RVTEVfUEFSTV9ERVNDKHByb21pc2VfZW5hYmxlLCAiUHJvbWlzZSBTQVRB
+IHZpYSBBSENJICgxID0NCj4NCj4gPiArZW5hYmxlZCkiKTsNCj4NCj4gPiANCj4NCj4gPiAgIHN0
+YXRpYyB2b2lkIGFoY2lfcGNpX3NhdmVfaW5pdGlhbF9jb25maWcoc3RydWN0IHBjaV9kZXYgKnBk
+ZXYsDQo+DQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICBzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmhwcml2KQ0KPg0KPiA+IEBAIC0xMDQ5LDYgKzEwNTIs
+MTYgQEAgc3RhdGljIGludCBhaGNpX2luaXRfb25lKHN0cnVjdCBwY2lfZGV2DQo+DQo+ID4gICAg
+ICAgICAgICBpZiAocGRldi0+dmVuZG9yID09IFBDSV9WRU5ET1JfSURfTUFSVkVMTCAmJiAhbWFy
+dmVsbF9lbmFibGUpDQo+DQo+ID4gICAgICAgICAgICAgICAgICAgIHJldHVybiAtRU5PREVWOw0K
+Pg0KPiA+IA0KPg0KPiA+ICsgICAgICAgIC8qDQo+DQo+ID4gKyAgICAgICAgICogSW4gUkFJRCBt
+b2RlLCBQcm9taXNlIHNvZnR3YXJlIFJBSUQgbmVlZCB0byByZXBsYWNlDQo+DQo+ID4gKyAgICAg
+ICAgICogb3JpZ2luYWwgQUhDSSBtb2R1bGUsIGJ1dCBpZiBBSENJIGRyaXZlciBidWlsZC1pbiBr
+ZXJuZWwsDQo+DQo+ID4gKyAgICAgICAgICogUHJvbWlzZSBBSENJIG1vZHVsZSBuZWVkIGEgYm9v
+dCBvcHRpb24gdG8gZGlzYWJsZSBpdA0KPg0KPiA+ICsgICAgICAgICAqLw0KPg0KPiA+ICsgICAg
+ICAgIGlmIChwcm9taXNlX2VuYWJsZSAmJg0KPg0KPiA+ICsgICAgICAgICAgICAoKHBkZXYtPmNs
+YXNzID4+IDgpID09IFBDSV9DTEFTU19TVE9SQUdFX1JBSUQpICYmDQo+DQo+ID4gKyAgICAgICAg
+ICAgICAocGRldi0+dmVuZG9yID09IFBDSV9WRU5ET1JfSURfQVRJIHx8DQo+DQo+ID4gKyAgICAg
+ICAgICAgICAgcGRldi0+dmVuZG9yID09IFBDSV9WRU5ET1JfSURfQU1EKSkNCj4NCj4gPiArICAg
+ICAgICAgICAgICAgIHJldHVybiAtRU5PREVWOw0KPg0KPiAgDQo+DQo+IFdlIG5lZWQgdGhlIHBh
+dGNoIGZvciB0aGUgUHJvbWlzZSBTb2Z0d2FyZSBSQUlEIGRyaXZlciwgdG8gYWNjZXB0IHRoaXMu
+Li4NCj4NCj4gIA0KPg0KPiAgICAgICAgICBKZWZmIA0KDQpQYXRjaCBmaWxlIGlzIGluIGF0dGFj
+aG1lbnQsIGFuZCBzb3JyeSBmb3IgZXJyb3IgZGVzY3JpcHQuDQoNCkJlc3Qgd2lzaGVzLA0KVG9u
+eSBIdW5nDQo=
