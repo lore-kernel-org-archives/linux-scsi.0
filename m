@@ -1,85 +1,114 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH] aic94xx: fix handling of default CTRL-A settings
-Date: Tue, 25 Sep 2012 14:07:39 +0200
-Message-ID: <1348574859.1436.38.camel@x61.thuisdomein>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 0/6] ZPODD patches
+Date: Tue, 25 Sep 2012 21:56:12 +0800
+Message-ID: <20120925135611.GA2858@mint-spring.sh.intel.com>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
+ <201209241506.11631.rjw@sisk.pl>
+ <20120924150449.GB3293@mint-spring.sh.intel.com>
+ <201209242346.03414.rjw@sisk.pl>
+ <20120925081825.GA1666@mint-spring.sh.intel.com>
+ <1348570949.2457.36.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:1156 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756077Ab2IYMHm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Sep 2012 08:07:42 -0400
+Received: from mga03.intel.com ([143.182.124.21]:12985 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753224Ab2IYN4Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Sep 2012 09:56:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1348570949.2457.36.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oliver@neukum.org>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-Compiling aic94xx_sds.o (part of the aic94xx driver) triggers this GCC
-warning:
-    drivers/scsi/aic94xx/aic94xx_sds.c: In function 'asd_read_flash':
-    drivers/scsi/aic94xx/aic94xx_sds.c:597:21: warning: 'offs' may be used uninitialized in this function [-Wmaybe-uninitialized]
-    drivers/scsi/aic94xx/aic94xx_sds.c:985:6: note: 'offs' was declared here
+On Tue, Sep 25, 2012 at 03:02:29PM +0400, James Bottomley wrote:
+> On Tue, 2012-09-25 at 16:18 +0800, Aaron Lu wrote:
+> > A example patch would be something like the following, I didn't seperate
+> > these ACPI calls in sr.c as this is just a concept proof, if this is the
+> > right thing to do, I will separate them into another file sr-acpi.c and
+> > make empty stubs for them in sr.h for systems do not have ACPI configured.
+> 
+> Apart from the needed separation to compile in the !ACPI case
+> 
+> > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> > index ef72682..94d17f1 100644
+> > --- a/drivers/scsi/sr.c
+> > +++ b/drivers/scsi/sr.c
+> > @@ -46,6 +46,7 @@
+> >  #include <linux/mutex.h>
+> >  #include <linux/slab.h>
+> >  #include <linux/pm_runtime.h>
+> > +#include <linux/acpi.h>
+> >  #include <asm/uaccess.h>
+> >  
+> >  #include <scsi/scsi.h>
+> > @@ -57,6 +58,8 @@
+> >  #include <scsi/scsi_host.h>
+> >  #include <scsi/scsi_ioctl.h>	/* For the door lock/unlock commands */
+> >  
+> > +#include <acpi/acpi_bus.h>
+> > +
+> >  #include "scsi_logging.h"
+> >  #include "sr.h"
+> >  
+> > @@ -212,8 +220,8 @@ static int sr_resume(struct device *dev)
+> >  	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+> >  
+> >  	/* If user wakes up the ODD, eject the tray */
+> > -	if (cd->device->need_eject) {
+> > -		cd->device->need_eject = 0;
+> > +	if (cd->need_eject) {
+> > +		cd->need_eject = false;
+> >  		/* But only for tray type ODD when door is not locked */
+> >  		if (!(cd->cdi.mask & CDC_CLOSE_TRAY) && !cd->door_locked)
+> >  			sr_tray_move(&cd->cdi, 1);
+> > @@ -704,6 +711,58 @@ static void sr_release(struct cdrom_device_info *cdi)
+> >  
+> >  }
+> >  
+> > +static void sr_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
+> > +{
+> > +	struct device *dev = context;
+> > +	struct scsi_cd *cd = dev_get_drvdata(dev);
+> > +
+> > +	if (event == ACPI_NOTIFY_DEVICE_WAKE && pm_runtime_suspended(dev)) {
+> > +		cd->need_eject = true;
+> > +		pm_runtime_resume(dev);
+> > +	}
+> > +}
+> > +
+> > +static void sr_acpi_add_pm_notifier(struct device *dev)
+> > +{
+> > +	struct acpi_device *acpi_dev;
+> > +	acpi_handle handle;
+> > +	acpi_status status;
+> > +
+> > +	handle = dev->archdata.acpi_handle;
+> 
+> This is a complete no-no.  archdata is defined to be specific to the
+> architecture it's supposed to be opaque to non-arch code.  You'll find
+> that only x86 and ia64 defines an acpi_handle there.  This will
+> instantly fail to compile on non intel.  If you need the handle, it
 
-This warning can be traced back to asd_find_flash_de(). If it fails to
-find a FLASH_DE_CTRL_A_USER entry it will return without setting 'offs'.
-And that will leave 'offs' uninitialized when asd_read_flash_seg() is
-called a little later.
+If you are OK with this change to solve the need_eject flag, I'll prepare
+a formal patch, in which, all of the newly added function will be within
+the range of
 
-But that call of asd_read_flash_seg() isn't needed in that case.
-Everything this code cares about can already be found in the "default
-CTRL-A user settings section" that was created in the error path. So
-let's just jump over that call (and all other unneeded code) after
-creating that section.
+#ifdef CONFIG_ACPI
+... ...
+#endif
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-0) I noticed this warning while building v3.6-rc7 on current Fedora
-17, using Fedora's default config.
+And for the CONFIG_ACPI not defined case, they will be static inline
+empty functions. Then there should be no compile errors.
 
-1) Compile tested only. It might be best to run test this too, if only
-to test whether the non-error path is unaffected.
+> should be obtained via some accessor like dev_to_acpi_handle() which
+> will allow this to continue to function when, say, arm acquires ACPI.
 
-2) This piece of code has not been touched ever since it was added in
-v2.6.19, with commit 2908d778ab3e244900c310974e1fc1c69066e450 ("[SCSI]
-aic94xx: new driver"). So, given the current code, chances are that a
-"CTRL-A user settings section" is always present and the code to create
-a default section might as well be dropped. So perhaps a more drastic
-patch is preferable.
+There is a DEVICE_ACPI_HANDLE macro that I'll use when preparing the
+formal patch. I'm rushing out these code to show the idea.
+Sorry for not considering these things.
 
- drivers/scsi/aic94xx/aic94xx_sds.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
-index edb43fd..ecb4a1c 100644
---- a/drivers/scsi/aic94xx/aic94xx_sds.c
-+++ b/drivers/scsi/aic94xx/aic94xx_sds.c
-@@ -983,7 +983,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
- {
- 	int err, i;
- 	u32 offs, size;
--	struct asd_ll_el *el;
-+	struct asd_ll_el *el = NULL;
- 	struct asd_ctrla_phy_settings *ps;
- 	struct asd_ctrla_phy_settings dflt_ps;
- 
-@@ -1004,6 +1004,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
- 
- 		size = sizeof(struct asd_ctrla_phy_settings);
- 		ps = &dflt_ps;
-+		goto ctrla_phy_settings;
- 	}
- 
- 	if (size == 0)
-@@ -1029,6 +1030,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
- 		goto out2;
- 	}
- 
-+ctrla_phy_settings:
- 	err = asd_process_ctrla_phy_settings(asd_ha, ps);
- 	if (err) {
- 		ASD_DPRINTK("couldn't process ctrla phy settings\n");
--- 
-1.7.11.4
+Thanks,
+Aaron
 
