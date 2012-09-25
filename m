@@ -1,74 +1,31 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v2 2/3] scsi: create an all-zero filter for scanners
-Date: Tue, 25 Sep 2012 17:30:08 +0200
-Message-ID: <1348587009-22400-3-git-send-email-pbonzini@redhat.com>
-References: <1348587009-22400-1-git-send-email-pbonzini@redhat.com>
+From: "Zou, Yi" <yi.zou@intel.com>
+Subject: RE: [PATCH 2/3] libfc: fix lun reset failure bugs in fc_fcp_resp
+ handling of FCP_RSP_INFO
+Date: Tue, 25 Sep 2012 16:20:43 +0000
+Message-ID: <138EA028228D124A900F5E6746F3C2162F4F78E5@ORSMSX102.amr.corp.intel.com>
+References: <20120924185240.521.22975.stgit@fritz>
+ <20120924185250.521.92611.stgit@fritz> <50614CED.1010707@acm.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:39458 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756931Ab2IYPa3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Sep 2012 11:30:29 -0400
-In-Reply-To: <1348587009-22400-1-git-send-email-pbonzini@redhat.com>
+Received: from mga03.intel.com ([143.182.124.21]:4501 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758054Ab2IYQVI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Sep 2012 12:21:08 -0400
+In-Reply-To: <50614CED.1010707@acm.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Ric Wheeler <rwheeler@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, "Love, Robert W" <robert.w.love@intel.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Brattain, Ross B" <ross.b.brattain@intel.com>, "Zhang, Frank_1" <frank_1.zhang@intel.com>
 
-Using /dev/sg for scanners is blocked from unprivileged users.  Reimplement
-this using customizable command filters, so that the sysfs knobs will work
-in this case too.
-
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
-	v1->v2: OOM check [Alan Cox]
-		use GFP_ATOMIC, not GFP_KERNEL
-
- drivers/scsi/scsi_scan.c |    8 +++++++-
- drivers/scsi/sg.c        |    3 ---
- 2 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 56a9379..81b1579 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -773,13 +773,19 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	}
- 
- 	switch (sdev->type) {
-+	case TYPE_SCANNER:
-+		sdev->request_queue->cmd_filter =
-+			kzalloc(sizeof(struct blk_cmd_filter), GFP_ATOMIC);
-+		if (sdev->request_queue->cmd_filter == NULL)
-+			return SCSI_SCAN_NO_RESPONSE;
-+		/* fallthrough */
-+
- 	case TYPE_RBC:
- 	case TYPE_TAPE:
- 	case TYPE_DISK:
- 	case TYPE_PRINTER:
- 	case TYPE_MOD:
- 	case TYPE_PROCESSOR:
--	case TYPE_SCANNER:
- 	case TYPE_MEDIUM_CHANGER:
- 	case TYPE_ENCLOSURE:
- 	case TYPE_COMM:
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 2ba7c82..c7474f5 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -219,9 +219,6 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
- 	struct sg_fd *sfp = filp->private_data;
- 	struct request_queue *q = sfp->parentdp->device->request_queue;
- 
--	if (sfp->parentdp->device->type == TYPE_SCANNER)
--		return 0;
--
- 	return blk_verify_command(q->cmd_filter,
- 				  cmd, filp->f_mode & FMODE_WRITE);
- }
--- 
-1.7.1
-
-
-
+PiANCj4gT24gMDkvMjQvMTIgMjA6NTIsIFJvYmVydCBMb3ZlIHdyb3RlOg0KPiA+IEluIExVTiBS
+RVNFVCB0ZXN0aW5nIGludm9sdmluZyBOZXRBcHAgdGFyZ2V0cywgaXQgaXMgb2JzZXJ2ZWQgdGhh
+dCBMVU4NCj4gPiBSRVNFVCBpcyBmYWlsaW5nLiBUaGUgZmNfZmNwX3Jlc3AoKSBpcyBub3QgY29t
+cGxldGluZyB0aGUgY29tcGxldGlvbmcNCj4gDQo+IEl0IGxvb2tzIGxpa2UgdGhlcmUgaXMgYSB0
+eXBvIGluIHRoZSBwYXRjaCBkZXNjcmlwdGlvbiAoaW4gdGhlIGxhc3Qgd29yZA0KPiBvZiB0aGUg
+c2Vjb25kIGxpbmUpID8NCj4gDQo+IEJhcnQuDQoNClllYWgsIGV4dHJhICdnJyBzaG91bGQgYmUg
+cmVtb3ZlZC4uLm1lYW50IHRvIHNheSB0aGUgImNvbXBsZXRpb24gdGFzayIuLi4NCkhtbSwgbm90
+IHN1cmUgaG93IG15IHZpbSBzcGVsbGNoZWNrZXIgbWlzc2VkIGl0LiANCg0KSmFtZXMsIHdvdWxk
+IG1pbmQgZml4aW5nIHRoaXMgd2hlbiBpdCBnZXRzIGFwcGxpZWQ/DQoNClRoYW5rcywNCnlpDQo=
