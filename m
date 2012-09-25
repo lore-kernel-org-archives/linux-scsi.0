@@ -1,35 +1,96 @@
-From: <sreekanth.reddy@lsi.com>
-Subject: [PATCH][SCSI] mpt3sas: linux/miscdevice.h
-Date: Tue, 25 Sep 2012 11:10:53 +0530
-Message-ID: <20120925054052.GA14017@localhost.localdomain>
+From: =?big5?B?VG9ueSBIdW5nIC0gUFRUIKx4t+fArw==?=
+	<tony.hung@tw.promise.com>
+Subject: RE: RE: [PATCH] ahci: add a boot option to enable promise ahci
+Date: Tue, 25 Sep 2012 13:44:12 +0800
+Message-ID: <1AF0FA078A5A3541A8A8019D26081C2E88DCE6D982@ptt-ex02.promise.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/mixed;
+	boundary="_002_1AF0FA078A5A3541A8A8019D26081C2E88DCE6D982pttex02promis_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:47669 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752760Ab2IYFj0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Sep 2012 01:39:26 -0400
-Content-Disposition: inline
+Received: from mailgw.tw.promise.com ([61.222.81.250]:54485 "HELO
+	mailgw.promise.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752990Ab2IYFnN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Sep 2012 01:43:13 -0400
+Content-Language: zh-TW
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com
-Cc: Sathya.Prakash@lsi.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Adding support for MPT3SAS_MINOR(222)
+--_002_1AF0FA078A5A3541A8A8019D26081C2E88DCE6D982pttex02promis_
+Content-Type: text/plain; charset="big5"
+Content-Transfer-Encoding: base64
 
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
----
+DQoNCk9uIDIwMTIvOS8yNSAxMTowNSBBTSwgSmVmZiBHYXJ6aWsgd3JvdGU6DQo+DQo+IE9uIDA5
+LzIzLzIwMTIgMTA6MzQgUE0sIFRvbnkgSHVuZyAtIFBUVCCseLfnwK8gd3JvdGU6DQo+DQo+ID4g
+bGludXgtMy4yLjAvZHJpdmVycy9hdGEvYWhjaS5jOiBJbiBmdW5jdGlvbiAnYWhjaV9pbml0X29u
+ZSc6DQo+DQo+ID4gDQo+DQo+ID4gVXNlIHByb21pc2VfZW5hYmxlIHRvIGRpc2FibGUgQUhDSSBj
+b250cm9sIFBDSSBSQUlELg0KPg0KPiA+IA0KPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFRvbnkgSHVu
+ZyA8dG9ueS5odW5nQHR3LnByb21pc2UuY29tPg0KPg0KPiA+IC0tLQ0KPg0KPiA+IA0KPg0KPiA+
+IGRpZmYgLS1naXQgYS9saW51eC0zLjIuMC9kcml2ZXJzL2F0YS9haGNpLmMgYi9saW51eC0zLjIu
+MC9kcml2ZXJzL2F0YS9haGNpLmMNCj4NCj4gPiAtLS0gYS9saW51eC0zLjIuMC9kcml2ZXJzL2F0
+YS9haGNpLmMgICAgMjAxMi0wOC0yOSAxMzo0MDoyNi4wNDY4NTE2OTMgKzA4MDANCj4NCj4gPiAr
+KysgYi9saW51eC0zLjIuMC9kcml2ZXJzL2F0YS9haGNpLmMgIDIwMTItMDgtMzAgMTc6MjM6MTAu
+MjA3ODM4OTYwICswODAwDQo+DQo+ID4gQEAgLTQzMCw2ICs0MzAsOSBAQCBzdGF0aWMgaW50IG1h
+cnZlbGxfZW5hYmxlID0gMTsNCj4NCj4gPiAgIG1vZHVsZV9wYXJhbShtYXJ2ZWxsX2VuYWJsZSwg
+aW50LCAwNjQ0KTsNCj4NCj4gPiAgIE1PRFVMRV9QQVJNX0RFU0MobWFydmVsbF9lbmFibGUsICJN
+YXJ2ZWxsIFNBVEEgdmlhIEFIQ0kgKDEgPQ0KPg0KPiA+IGVuYWJsZWQpIik7DQo+DQo+ID4gDQo+
+DQo+ID4gK3N0YXRpYyBpbnQgcHJvbWlzZV9lbmFibGU7DQo+DQo+ID4gK21vZHVsZV9wYXJhbShw
+cm9taXNlX2VuYWJsZSwgaW50LCAwNjQ0KTsgDQo+DQo+ID4gK01PRFVMRV9QQVJNX0RFU0MocHJv
+bWlzZV9lbmFibGUsICJQcm9taXNlIFNBVEEgdmlhIEFIQ0kgKDEgPQ0KPg0KPiA+ICtlbmFibGVk
+KSIpOw0KPg0KPiA+IA0KPg0KPiA+ICAgc3RhdGljIHZvaWQgYWhjaV9wY2lfc2F2ZV9pbml0aWFs
+X2NvbmZpZyhzdHJ1Y3QgcGNpX2RldiAqcGRldiwNCj4NCj4gPiAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0cnVjdCBhaGNpX2hvc3RfcHJpdiAqaHByaXYp
+DQo+DQo+ID4gQEAgLTEwNDksNiArMTA1MiwxNiBAQCBzdGF0aWMgaW50IGFoY2lfaW5pdF9vbmUo
+c3RydWN0IHBjaV9kZXYNCj4NCj4gPiAgICAgICAgICAgIGlmIChwZGV2LT52ZW5kb3IgPT0gUENJ
+X1ZFTkRPUl9JRF9NQVJWRUxMICYmICFtYXJ2ZWxsX2VuYWJsZSkNCj4NCj4gPiAgICAgICAgICAg
+ICAgICAgICAgcmV0dXJuIC1FTk9ERVY7DQo+DQo+ID4gDQo+DQo+ID4gKyAgICAgICAgLyoNCj4N
+Cj4gPiArICAgICAgICAgKiBJbiBSQUlEIG1vZGUsIFByb21pc2Ugc29mdHdhcmUgUkFJRCBuZWVk
+IHRvIHJlcGxhY2UNCj4NCj4gPiArICAgICAgICAgKiBvcmlnaW5hbCBBSENJIG1vZHVsZSwgYnV0
+IGlmIEFIQ0kgZHJpdmVyIGJ1aWxkLWluIGtlcm5lbCwNCj4NCj4gPiArICAgICAgICAgKiBQcm9t
+aXNlIEFIQ0kgbW9kdWxlIG5lZWQgYSBib290IG9wdGlvbiB0byBkaXNhYmxlIGl0DQo+DQo+ID4g
+KyAgICAgICAgICovDQo+DQo+ID4gKyAgICAgICAgaWYgKHByb21pc2VfZW5hYmxlICYmDQo+DQo+
+ID4gKyAgICAgICAgICAgICgocGRldi0+Y2xhc3MgPj4gOCkgPT0gUENJX0NMQVNTX1NUT1JBR0Vf
+UkFJRCkgJiYNCj4NCj4gPiArICAgICAgICAgICAgIChwZGV2LT52ZW5kb3IgPT0gUENJX1ZFTkRP
+Ul9JRF9BVEkgfHwNCj4NCj4gPiArICAgICAgICAgICAgICBwZGV2LT52ZW5kb3IgPT0gUENJX1ZF
+TkRPUl9JRF9BTUQpKQ0KPg0KPiA+ICsgICAgICAgICAgICAgICAgcmV0dXJuIC1FTk9ERVY7DQo+
+DQo+ICANCj4NCj4gV2UgbmVlZCB0aGUgcGF0Y2ggZm9yIHRoZSBQcm9taXNlIFNvZnR3YXJlIFJB
+SUQgZHJpdmVyLCB0byBhY2NlcHQgdGhpcy4uLg0KPg0KPiAgDQo+DQo+ICAgICAgICAgIEplZmYN
+Cg0KIA0KDQpQYXRjaCBmaWxlIGlzIGluIGF0dGFjaG1lbnQsIGFuZCBzb3JyeSBmb3IgZXJyb3Ig
+ZGVzY3JpcHQuDQoNCiANCg0KQmVzdCB3aXNoZXMsDQoNClRvbnkgSHVuZw0K
 
-diff --git a/include/linux/miscdevice.h b/include/linux/miscdevice.h
-index 0549d211..9c9ba04 100644
---- a/include/linux/miscdevice.h
-+++ b/include/linux/miscdevice.h
-@@ -34,6 +34,7 @@
- #define MWAVE_MINOR		219	/* ACP/Mwave Modem */
- #define MPT_MINOR		220
- #define MPT2SAS_MINOR		221
-+#define MPT3SAS_MINOR		222
- #define UINPUT_MINOR		223
- #define HPET_MINOR		228
- #define FUSE_MINOR		229
+--_002_1AF0FA078A5A3541A8A8019D26081C2E88DCE6D982pttex02promis_
+Content-Type: application/octet-stream;
+	name="[PATCH]ahci-add-a-boot-option-to-enable-promise-ahci.patch"
+Content-Description: [PATCH]ahci-add-a-boot-option-to-enable-promise-ahci.patch
+Content-Disposition: attachment;
+	filename="[PATCH]ahci-add-a-boot-option-to-enable-promise-ahci.patch";
+	size=1266; creation-date="Fri, 31 Aug 2012 09:26:38 GMT";
+	modification-date="Tue, 25 Sep 2012 03:49:22 GMT"
+Content-Transfer-Encoding: base64
+
+LS0tIGxpbnV4LTMuMi4wL2RyaXZlcnMvYXRhL2FoY2kuYy5vcmlnCTIwMTItMDgtMjkgMTM6NDA6
+MjYuMDQ2ODUxNjkzICswODAwCisrKyBsaW51eC0zLjIuMC9kcml2ZXJzL2F0YS9haGNpLmMJMjAx
+Mi0wOC0zMCAxNzoyMzoxMC4yMDc4Mzg5NjAgKzA4MDAKQEAgLTQzMCw2ICs0MzAsOSBAQCBzdGF0
+aWMgaW50IG1hcnZlbGxfZW5hYmxlID0gMTsKIG1vZHVsZV9wYXJhbShtYXJ2ZWxsX2VuYWJsZSwg
+aW50LCAwNjQ0KTsKIE1PRFVMRV9QQVJNX0RFU0MobWFydmVsbF9lbmFibGUsICJNYXJ2ZWxsIFNB
+VEEgdmlhIEFIQ0kgKDEgPSBlbmFibGVkKSIpOwoKK3N0YXRpYyBpbnQgcHJvbWlzZV9lbmFibGU7
+Cittb2R1bGVfcGFyYW0ocHJvbWlzZV9lbmFibGUsIGludCwgMDY0NCk7CitNT0RVTEVfUEFSTV9E
+RVNDKHByb21pc2VfZW5hYmxlLCAiUHJvbWlzZSBTQVRBIHZpYSBBSENJICgxID0gZW5hYmxlZCki
+KTsKCiBzdGF0aWMgdm9pZCBhaGNpX3BjaV9zYXZlX2luaXRpYWxfY29uZmlnKHN0cnVjdCBwY2lf
+ZGV2ICpwZGV2LAogCQkJCQkgc3RydWN0IGFoY2lfaG9zdF9wcml2ICpocHJpdikKQEAgLTEwNDks
+NiArMTA1MiwxNiBAQCBzdGF0aWMgaW50IGFoY2lfaW5pdF9vbmUoc3RydWN0IHBjaV9kZXYKIAlp
+ZiAocGRldi0+dmVuZG9yID09IFBDSV9WRU5ET1JfSURfTUFSVkVMTCAmJiAhbWFydmVsbF9lbmFi
+bGUpCiAJCXJldHVybiAtRU5PREVWOwoKKyAgICAgICAgLyoKKyAgICAgICAgICogSW4gUkFJRCBt
+b2RlLCBQcm9taXNlIHNvZnR3YXJlIFJBSUQgbmVlZCB0byByZXBsYWNlCisgICAgICAgICAqIG9y
+aWdpbmFsIEFIQ0kgbW9kdWxlLCBidXQgaWYgQUhDSSBkcml2ZXIgYnVpbGQtaW4ga2VybmVsLAor
+ICAgICAgICAgKiBQcm9taXNlIEFIQ0kgbW9kdWxlIG5lZWQgYSBib290IG9wdGlvbiB0byBkaXNh
+YmxlIGl0CisgICAgICAgICAqLworICAgICAgICBpZiAocHJvbWlzZV9lbmFibGUgJiYKKyAgICAg
+ICAgICAgICgocGRldi0+Y2xhc3MgPj4gOCkgPT0gUENJX0NMQVNTX1NUT1JBR0VfUkFJRCkgJiYK
+KyAgICAgICAgICAgICAocGRldi0+dmVuZG9yID09IFBDSV9WRU5ET1JfSURfQVRJIHx8CisgICAg
+ICAgICAgICAgIHBkZXYtPnZlbmRvciA9PSBQQ0lfVkVORE9SX0lEX0FNRCkpCisgICAgICAgICAg
+ICAgICAgcmV0dXJuIC1FTk9ERVY7CisKIAkvKgogCSAqIEZvciBzb21lIHJlYXNvbiwgTUNQODkg
+b24gTWFjQm9vayA3LDEgZG9lc24ndCB3b3JrIHdpdGgKIAkgKiBhaGNpLCB1c2UgYXRhX2dlbmVy
+aWMgaW5zdGVhZC4K
+
+--_002_1AF0FA078A5A3541A8A8019D26081C2E88DCE6D982pttex02promis_--
