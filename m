@@ -1,130 +1,173 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Wed, 26 Sep 2012 22:52:35 +0800
-Message-ID: <CAOzJMDQ5X=uTk-J2v6-YtQzxateUP=5Pp8v24u9AQc5Kr2h0jQ@mail.gmail.com>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
-	<201209252345.35233.rjw@sisk.pl>
-	<20120926010349.GA4291@mint-spring.sh.intel.com>
-	<201209261318.05891.rjw@sisk.pl>
+From: Adrian Sandu <dexter@d3xt3r01.tk>
+Subject: Re: [usb-storage] Re: usb3 fails to write when using usb3 hub in usb3 port
+Date: Wed, 26 Sep 2012 19:59:36 +0300
+Message-ID: <CAEG-z28iDWikxzJo+JwL_XAMDN067Ru--pKpq=EeUCzXjwWpyg@mail.gmail.com>
+References: <20120925211910.GH32108@xanatos> <Pine.LNX.4.44L0.1209261042270.1727-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <201209261318.05891.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46888 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757408Ab2IZQ75 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Sep 2012 12:59:57 -0400
+Received: by pbbrr4 with SMTP id rr4so2188912pbb.19
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Sep 2012 09:59:56 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.44L0.1209261042270.1727-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-On Wed, Sep 26, 2012 at 7:18 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Wednesday, September 26, 2012, Aaron Lu wrote:
->> On Tue, Sep 25, 2012 at 11:45:34PM +0200, Rafael J. Wysocki wrote:
->> > On Tuesday, September 25, 2012, Aaron Lu wrote:
->> > > On 09/25/2012 10:23 PM, Oliver Neukum wrote:
->> > > > On Tuesday 25 September 2012 22:20:21 Aaron Lu wrote:
->> > > >> On Tue, Sep 25, 2012 at 01:47:52PM +0200, Rafael J. Wysocki wrote:
->> > > >>> On Tuesday, September 25, 2012, Aaron Lu wrote:
->> > > >>>> I'm thinking of enabling this GPE in sr_suspend once we decided that it
->> > > >>>> is ready to be powered off, so the time frame between sr_suspend and
->> > > >>>> when the power is actually removed in libata should be taken care of by
->> > > >>>> the GPE. If GPE fires, the notification function will request a runtime
->> > > >>>> resume of the device. Does this sound OK?
->> > > >>>
->> > > >>> Well, depending on the implementation.  sr_suspend() should be rather
->> > > >>> generic, but the ACPI association (including the GPE thing) is specific to ATA.
->> > > >>
->> > > >> Sorry, but don't quite understand this.
->> > > >>
->> > > >> We have ACPI bindings for scsi devices, isn't that for us to use ACPI
->> > > >> when needed in scsi?
->> > > >
->> > > > We don't have ACPI bindings for generic SCSI devices. We have such
->> > > > bindings for SATA drives. You can put such things only in sr if it applies
->> > > > to all (maybe most) types of drives.
->> > >
->> > > OK. Then these scsi bindings for sata drives will be pretty much of
->> > > no use I think.
->> > >
->> > > >
->> > > >> BTW, if sr_suspend should be generic, that would suggest I shouldn't
->> > > >> write any ZPODD related code there, right? Any suggestion where these
->> > > >> code should go then?
->> > > >
->> > > > libata. Maybe some generic hooks can be called in sr_suspend().
->> > >
->> > > Thanks for the suggestion.
->> > > The problem is, I need to know whether the door is closed and if there
->> > > is a medium inside. I've no way of getting such information in libata.
->> >
->> > How does sr get to know it in the libata case?
->>
->> By executing a test_unit_ready command.
->>
->> Libata does/should not have any routine to do this, it is one of the
->> transport of SCSI devices and it relies on SCSI driver to manage the
->> device(both disk and ODD).
->>
->> >
->> > > > PS: Are you sure sr_suspend() handles DVD-RAMs correctly?
->> > >
->> > > No. Is there a spec for it?
->> > > Considering there are many different drives sr handle, is it possible to
->> > > write a generic sr_suspend?
->> > > Maybe your suggestion of callback is the way to go.
->> > > What about this idea, if we find this is a ZPODD capable drive, we
->> > > enable runtime suspend for it and write a suspend callback according to
->> > > ZPODD spec. For other drives that does not have a suspend callback, we
->> > > do not enable runtime suspend.
->> >
->> > You can enable runtime PM for all kinds of drives, but make the suspend
->> > and resume callbacks only do something for ZPODD ones.  This may allow their
->> > parents to use runtime PM (as Alan said earlier in this thread), even if the
->> > drives themseleves are not really physically suspended.
->>
->> Sounds good.
->>
->> >
->> > > Does this sound reasonable?
->> >
->> > First, we need to know when the drive is not in use.  That information
->> > we can get from the sr's runtime PM and it looks like we need to notify
->> > libata about that somehow.  I'm not sure what mechanism is the best for
->> > that at the moment.
->>
->> The current mechanism to notify libata is by rumtime suspend. When scsi
->> device is runtime suspended, its parent device will be suspended. And
->> ata_port is one of the ancestor devices of scsi device, and we will
->> remove its power in ata_port's runtime suspend callback.
+On Wed, Sep 26, 2012 at 5:50 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Tue, 25 Sep 2012, Sarah Sharp wrote:
 >
-> The problem, then, is that the ata_port's runtime suspend callback would
-> have to know whether or not power can be removed from the drive.
->
-> I'm going to post patches introducing a "no power off" flag for PM QoS,
-> among other things, today or tomorrow.  I suppose this flag might be used to
-> tell the ata_port's suspend not to remove power from the attached device.
-
-Cool, thanks.
-
->
->> > Second, when the device is resumed by remote wakeup, we need to notify
->> > sr about that.  A "resume" alone is not sufficient, though, because it may
->> > be necessary to open the tray.  Perhaps in that case we can use the same
->> > mechanism by which user events are processed by libata and delivered to sr?
+>> Alan, I'm wondering if the xHCI ring expansion is causing issues with
+>> USB hard drives under xHCI.  Testing with a Buffalo USB 3.0 hard drive
+>> with an NEC uPD720200 xHCI host, I see that the usb-storage and SCSI
+>> initialization produces I/O errors on random sectors in 3.4.0, 3.4.6,
+>> and 3.5.0.  I can't get those errors to be reproduced in 3.3.1.
 >>
->> Thanks for the suggestion.
->> I'm not aware of any user events processed by libata. Do you mean the
->> events_checking poll?
+>> The xHCI ring expansion was added in 3.4, and we changed the xHCI's
+>> sg_tablesize:
+>>
+>> int xhci_gen_setup(struct usb_hcd *hcd, xhci_get_quirks_t get_quirks)
+>> {
+>> ...
+>>         /* Accept arbitrarily long scatter-gather lists */
+>>         hcd->self.sg_tablesize = ~0;
+>>
+>> The usb-storage driver sets the tablesize thus:
+>>
+>> static unsigned int usb_stor_sg_tablesize(struct usb_interface *intf)
+>> {
+>>         struct usb_device *usb_dev = interface_to_usbdev(intf);
+>>
+>>         if (usb_dev->bus->sg_tablesize) {
+>>                 return usb_dev->bus->sg_tablesize;
+>>         }
+>>         return SG_ALL;
+>> }
+>>
+>> I notice that SG_ALL is set to SCSI_MAX_SG_SEGMENTS, which is only 128.
+>> Should we be passing an arbitrarily large number to the SCSI core?
 >
-> Yes, basically.  In the remote wakeup case libata might report the same
-> status as in the "user pressed the eject button" situation happening
-> normally with power on.
+> Yes, there's no reason not to.  The block layer will make sure that
+> each individual request has a sufficiently small number of segments.
+>
+>> There's some wording in include/scsi/scsi.h about also limiting the
+>> number of chained sgs to 2048.  I'm wondering if we're hitting some bugs
+>> in the SCSI layer because we're setting the sg_tablesize so high.
+>
+> I doubt it.  Anyway, this stuff is handled by the block layer now, not
+> the SCSI layer.  If you look through drivers/scsi, you'll see that
+> SG_ALL is used only in various SCSI interface drivers, not in the core.
+>
+>> Alternately, we could be hitting bugs in the USB 3.0 firmware when we
+>> attempt to issue a read or write that's too big.  The read on Adrian's
+>> hard drive failed on a bigger read request (122880 bytes).  It would be
+>> interesting to see if it works fine if the xHCI sg_tablesize is limited.
+>> I'm going to try that with my own drive on 3.5.4 and see if it helps.
+>
+> There were examples in the earlier usbmon traces where 122880-byte
+> reads succeeded, for whatever that's worth...
+>
+> I doubt very much that you are anywhere close to hitting that limit.
+> If a 120-KB transfer has more than 128 SG segments then on average each
+> segment would be under 1024 bytes, a lot smaller than a page, which
+> seems unlikely.  I don't think I've ever seen a transfer needing more
+> than about 8 segments.
+>
+> Alan Stern
+>
+Ok, back to vanilla 3.4.11, disabled CONFIG_USB_XHCI_HCD_DEBUGGING ..
 
-Maybe I didn't explain it clearly. The "user pressed the eject button"
-is reported
-by ACPI through GPE, while the events_checking poll sends a command to the
-device to let it report events like media_change, etc.
+I still see
 
-And the events is reported to user space, that doesn't seem can help us in
-this case.
+2012-09-26T19:52:16.661604+03:00 d3xt3r01 kernel: [ 1213.416759] usb
+3-2.4: reset SuperSpeed USB device number 11 using xhci_hcd
+2012-09-26T19:52:16.674632+03:00 d3xt3r01 kernel: [ 1213.429351]
+xhci_hcd 0000:04:00.0: xHCI xhci_drop_endpoint called with disabled ep
+ffff88011d3c6980
+2012-09-26T19:52:16.674665+03:00 d3xt3r01 kernel: [ 1213.429363]
+xhci_hcd 0000:04:00.0: xHCI xhci_drop_endpoint called with disabled ep
+ffff88011d3c69c0
+T:  Bus=03 Lev=01 Prnt=01 Port=01 Cnt=01 Dev#=  8 Spd=5000 MxCh= 4
+D:  Ver= 3.00 Cls=09(hub  ) Sub=00 Prot=03 MxPS= 9 #Cfgs=  1
+P:  Vendor=2109 ProdID=0810 Rev= 3.74
+S:  Manufacturer=VIA Labs, Inc.
+S:  Product=4-Port USB 3.0 Hub
+C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
+I:* If#= 0 Alt= 0 #EPs= 1 Cls=09(hub  ) Sub=00 Prot=00 Driver=hub
+E:  Ad=81(I) Atr=13(Int.) MxPS=   2 Ivl=4096ms
 
-Thanks,
-Aaron
+T:  Bus=02 Lev=01 Prnt=01 Port=01 Cnt=01 Dev#=  4 Spd=480  MxCh= 4
+D:  Ver= 2.00 Cls=09(hub  ) Sub=00 Prot=01 MxPS=64 #Cfgs=  1
+P:  Vendor=2109 ProdID=3431 Rev= 2.74
+S:  Product=USB2.0 Hub
+C:* #Ifs= 1 Cfg#= 1 Atr=e0 MxPwr=100mA
+I:* If#= 0 Alt= 0 #EPs= 1 Cls=09(hub  ) Sub=00 Prot=00 Driver=hub
+E:  Ad=81(I) Atr=03(Int.) MxPS=   1 Ivl=256ms
+
+T:  Bus=03 Lev=02 Prnt=08 Port=00 Cnt=01 Dev#=  9 Spd=5000 MxCh= 0
+D:  Ver= 3.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS= 9 #Cfgs=  1
+P:  Vendor=1058 ProdID=1140 Rev=10.03
+S:  Manufacturer=Western Digital
+S:  Product=My Book 1140
+S:  SerialNumber=5743415A4144303235323133
+C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
+I:* If#= 0 Alt= 0 #EPs= 2 Cls=08(stor.) Sub=06 Prot=50 Driver=usb-storage
+E:  Ad=81(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+E:  Ad=02(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+
+T:  Bus=03 Lev=02 Prnt=08 Port=03 Cnt=04 Dev#= 11 Spd=5000 MxCh= 0
+D:  Ver= 3.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS= 9 #Cfgs=  1
+P:  Vendor=1058 ProdID=1140 Rev=10.03
+S:  Manufacturer=Western Digital
+S:  Product=My Book 1140
+S:  SerialNumber=574D415A4135343330323937
+C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
+I:* If#= 0 Alt= 0 #EPs= 2 Cls=08(stor.) Sub=06 Prot=50 Driver=usb-storage
+E:  Ad=81(I) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+E:  Ad=02(O) Atr=02(Bulk) MxPS=1024 Ivl=0ms
+
+So I need to cat 3u .. right ? Available at
+http://d3xt3r01.tk/~dexter/usbmon/1348678668_3u
+After the copy .. I see
+
+2012-09-26T19:52:51.477641+03:00 d3xt3r01 kernel: [ 1248.232213] hub
+3-2:1.0: Cannot enable port 4.  Maybe the USB cable is bad?
+2012-09-26T19:52:52.003074+03:00 d3xt3r01 kernel: [ 1248.757636] sd
+16:0:0:0: Device offlined - not ready after error recovery
+2012-09-26T19:52:52.003081+03:00 d3xt3r01 kernel: [ 1248.757652] sd
+16:0:0:0: [sdd] Unhandled error code
+2012-09-26T19:52:52.003088+03:00 d3xt3r01 kernel: [ 1248.757656] sd
+16:0:0:0: [sdd]  Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+2012-09-26T19:52:52.003095+03:00 d3xt3r01 kernel: [ 1248.757663] sd
+16:0:0:0: [sdd] CDB: Read(10): 28 00 17 ab ab e0 00 00 f0 00
+2012-09-26T19:52:52.003101+03:00 d3xt3r01 kernel: [ 1248.757680]
+end_request: I/O error, dev sdd, sector 397126624
+2012-09-26T19:52:52.003107+03:00 d3xt3r01 kernel: [ 1248.757721] sd
+16:0:0:0: rejecting I/O to offline device
+2012-09-26T19:52:52.003112+03:00 d3xt3r01 kernel: [ 1248.757730] sd
+16:0:0:0: [sdd] killing request
+2012-09-26T19:52:52.003118+03:00 d3xt3r01 kernel: [ 1248.757750] sd
+16:0:0:0: rejecting I/O to offline device
+2012-09-26T19:52:52.003125+03:00 d3xt3r01 kernel: [ 1248.757769] sd
+16:0:0:0: rejecting I/O to offline device
+2012-09-26T19:52:52.003131+03:00 d3xt3r01 kernel: [ 1248.757788] sd
+16:0:0:0: rejecting I/O to offline device
+2012-09-26T19:52:52.003138+03:00 d3xt3r01 kernel: [ 1248.757814] sd
+16:0:0:0: [sdd] Unhandled error code
+2012-09-26T19:52:52.003145+03:00 d3xt3r01 kernel: [ 1248.757821] sd
+16:0:0:0: [sdd]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+2012-09-26T19:52:52.003152+03:00 d3xt3r01 kernel: [ 1248.757829] sd
+16:0:0:0: [sdd] CDB: Read(10): 28 00 17 ab ac d0 00 00 10 00
+2012-09-26T19:52:52.003159+03:00 d3xt3r01 kernel: [ 1248.757849]
+end_request: I/O error, dev sdd, sector 397126864
+2012-09-26T19:52:52.018669+03:00 d3xt3r01 kernel: [ 1248.773433] usb
+3-2.4: USB disconnect, device number 11
+
+While trying to copy ( using mc ) from /dev/sdb1 ( mounted /media/sdd1
+) to /dev/sdd1 ( mounted /media/sde1 ) .. Sorry for the confusion ..
+because I don't know which ones will get in what order I use uuids in
+fstab ..
