@@ -1,110 +1,70 @@
-From: Aaron Lu <aaron.lu@intel.com>
+From: Oliver Neukum <oneukum@suse.de>
 Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Wed, 26 Sep 2012 09:03:50 +0800
-Message-ID: <20120926010349.GA4291@mint-spring.sh.intel.com>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
- <1627578.tkYE3uqGuq@linux-lqwf.site>
- <5061C3AE.6030103@intel.com>
- <201209252345.35233.rjw@sisk.pl>
+Date: Wed, 26 Sep 2012 09:20:19 +0200
+Message-ID: <1434443.RRHkHMkq2z@linux-lqwf.site>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <1627578.tkYE3uqGuq@linux-lqwf.site> <5061C3AE.6030103@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201209252345.35233.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:45007 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752398Ab2IZHWF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Sep 2012 03:22:05 -0400
+In-Reply-To: <5061C3AE.6030103@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-On Tue, Sep 25, 2012 at 11:45:34PM +0200, Rafael J. Wysocki wrote:
-> On Tuesday, September 25, 2012, Aaron Lu wrote:
-> > On 09/25/2012 10:23 PM, Oliver Neukum wrote:
-> > > On Tuesday 25 September 2012 22:20:21 Aaron Lu wrote:
-> > >> On Tue, Sep 25, 2012 at 01:47:52PM +0200, Rafael J. Wysocki wrote:
-> > >>> On Tuesday, September 25, 2012, Aaron Lu wrote:
-> > >>>> I'm thinking of enabling this GPE in sr_suspend once we decided that it
-> > >>>> is ready to be powered off, so the time frame between sr_suspend and
-> > >>>> when the power is actually removed in libata should be taken care of by
-> > >>>> the GPE. If GPE fires, the notification function will request a runtime
-> > >>>> resume of the device. Does this sound OK?
-> > >>>
-> > >>> Well, depending on the implementation.  sr_suspend() should be rather
-> > >>> generic, but the ACPI association (including the GPE thing) is specific to ATA.
-> > >>
-> > >> Sorry, but don't quite understand this.
-> > >>
-> > >> We have ACPI bindings for scsi devices, isn't that for us to use ACPI
-> > >> when needed in scsi?
-> > > 
-> > > We don't have ACPI bindings for generic SCSI devices. We have such
-> > > bindings for SATA drives. You can put such things only in sr if it applies
-> > > to all (maybe most) types of drives.
+On Tuesday 25 September 2012 22:46:06 Aaron Lu wrote:
+> On 09/25/2012 10:23 PM, Oliver Neukum wrote:
+
+> >> BTW, if sr_suspend should be generic, that would suggest I shouldn't
+> >> write any ZPODD related code there, right? Any suggestion where these
+> >> code should go then?
 > > 
-> > OK. Then these scsi bindings for sata drives will be pretty much of
-> > no use I think.
-> > 
-> > > 
-> > >> BTW, if sr_suspend should be generic, that would suggest I shouldn't
-> > >> write any ZPODD related code there, right? Any suggestion where these
-> > >> code should go then?
-> > > 
-> > > libata. Maybe some generic hooks can be called in sr_suspend().
-> > 
-> > Thanks for the suggestion.
-> > The problem is, I need to know whether the door is closed and if there
-> > is a medium inside. I've no way of getting such information in libata.
+> > libata. Maybe some generic hooks can be called in sr_suspend().
 > 
-> How does sr get to know it in the libata case?
+> Thanks for the suggestion.
+> The problem is, I need to know whether the door is closed and if there
+> is a medium inside. I've no way of getting such information in libata.
 
-By executing a test_unit_ready command.
+Hooks can be called with the necessary parameters. I suggest
+a triplett of medium presence, tray state and door lock state.
+That should cover most types of drives.
 
-Libata does/should not have any routine to do this, it is one of the
-transport of SCSI devices and it relies on SCSI driver to manage the
-device(both disk and ODD).
-
+> > PS: Are you sure sr_suspend() handles DVD-RAMs correctly?
 > 
-> > > PS: Are you sure sr_suspend() handles DVD-RAMs correctly?
-> > 
-> > No. Is there a spec for it?
-> > Considering there are many different drives sr handle, is it possible to
-> > write a generic sr_suspend?
-> > Maybe your suggestion of callback is the way to go.
-> > What about this idea, if we find this is a ZPODD capable drive, we
-> > enable runtime suspend for it and write a suspend callback according to
-> > ZPODD spec. For other drives that does not have a suspend callback, we
-> > do not enable runtime suspend.
-> 
-> You can enable runtime PM for all kinds of drives, but make the suspend
-> and resume callbacks only do something for ZPODD ones.  This may allow their
-> parents to use runtime PM (as Alan said earlier in this thread), even if the
-> drives themseleves are not really physically suspended.
+> No. Is there a spec for it?
 
-Sounds good.
+Mount Fuji I presume.
 
-> 
-> > Does this sound reasonable?
-> 
-> First, we need to know when the drive is not in use.  That information
-> we can get from the sr's runtime PM and it looks like we need to notify
-> libata about that somehow.  I'm not sure what mechanism is the best for
-> that at the moment.
+> Considering there are many different drives sr handle, is it possible to
+> write a generic sr_suspend?
 
-The current mechanism to notify libata is by rumtime suspend. When scsi
-device is runtime suspended, its parent device will be suspended. And
-ata_port is one of the ancestor devices of scsi device, and we will
-remove its power in ata_port's runtime suspend callback.
+There are two different issues. sr handles some different devices:
+CD/DVD/BD-ROMs, -writers and -RAMs. For those you can have different
+code paths in sr. That is no problem at all.
 
-> 
-> Second, when the device is resumed by remote wakeup, we need to notify
-> sr about that.  A "resume" alone is not sufficient, though, because it may
-> be necessary to open the tray.  Perhaps in that case we can use the same
-> mechanism by which user events are processed by libata and delivered to sr?
+In addition devices can be attached by different hardware. In fact
+the same drive can be attached in a USB enclosure or by SATA.
+>From the perspective of power management they are no longer
+the same device.
 
-Thanks for the suggestion.
-I'm not aware of any user events processed by libata. Do you mean the
-events_checking poll? I'm not sure about this events passing thing, as
-in that case, I will need to add code to listen to a socket in sr.
+Those are best handled in callbacks and limited use of special cases in
+sr.
 
-Thanks,
-Aaron
+> Maybe your suggestion of callback is the way to go.
+> What about this idea, if we find this is a ZPODD capable drive, we
+> enable runtime suspend for it and write a suspend callback according to
+> ZPODD spec. For other drives that does not have a suspend callback, we
+> do not enable runtime suspend.
+> Does this sound reasonable?
+
+No. It would badly harm usb-storage.
+You need to leave paths open for other device types.
+
+	Regards
+		Oliver
 
