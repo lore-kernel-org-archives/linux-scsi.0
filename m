@@ -1,33 +1,40 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH scsi] Add NULL checking of return value from
- scsi_cmd_to_driver()
-Date: Thu, 27 Sep 2012 08:44:15 +0400
-Message-ID: <1348721055.2509.0.camel@dabdike>
-References: <1348464626.2475.13.camel@ThinkPad-T420>
-	 <1348465493.2467.3.camel@dabdike> <1348470210.2475.47.camel@ThinkPad-T420>
-	 <1348472104.2467.8.camel@dabdike> <yq13924b4uw.fsf@sermon.lab.mkp.net>
+Subject: Re: [SCSI PATCH] sd: max-retries becomes configurable
+Date: Thu, 27 Sep 2012 08:45:24 +0400
+Message-ID: <1348721124.2509.1.camel@dabdike>
+References: <20120924210049.GA18527@havoc.gtf.org>
+	 <1348546019.2457.3.camel@dabdike> <yq1y5jw9pfd.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq13924b4uw.fsf@sermon.lab.mkp.net>
+In-Reply-To: <yq1y5jw9pfd.fsf@sermon.lab.mkp.net>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Li Zhong <zhong@linux.vnet.ibm.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-09-26 at 22:02 -0400, Martin K. Petersen wrote:
+On Wed, 2012-09-26 at 22:20 -0400, Martin K. Petersen wrote:
 > >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 > 
-> James> Plus, I think it fixes a bug where you get different behaviours
-> James> from REQ_TYPE_BLOCK_PC commands when a driver is and isn't
-> James> attached (I've cc'd Martin to see what he thinks).
+> James> On Mon, 2012-09-24 at 17:00 -0400, Jeff Garzik wrote:
+> >> 
+> >> drivers/scsi/sd.c | 4 ++++ drivers/scsi/sd.h | 2 +- 2 files changed,
+> >> 5 insertions(+), 1 deletion(-)
 > 
-> I'm fine with having the eh action be triggered for FS requests only, if
-> that's what you're asking?
+> James> I'm not opposed in principle to doing this (except that it should
+> James> be a sysfs parameter like all our other controls),
+> 
+> Now that we're in that department. I never got any feedback on the
+> following patch.
+> 
+> Hannes told me in person that he felt the eh_timeout belonged in
+> scsi_device and not in the request queue. Whereas I favored making it a
+> block layer tunable despite currently only being used by SCSI. Any
+> opinions?
 
-Sort of ... I was thinking do it for all non REQ_TYPE_BLOCK_PC commands
-(which includes flush and other strange types), but if you think it
-should only be for REQ_TYPE_FS, that's fine too.
+request_queue makes more sense to me because there was once a plan to
+move all our timeout processing to block.  I think it got stalled
+somewhere, but this would act as a reminder.
 
 James
