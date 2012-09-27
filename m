@@ -1,33 +1,26 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 1/3] block: Rename queue dead flag
-Date: Thu, 27 Sep 2012 18:35:59 +0200
-Message-ID: <5064806F.9080103@acm.org>
+Subject: [PATCH 2/3] block: Avoid that request_fn is invoked on a dead queue
+Date: Thu, 27 Sep 2012 18:38:10 +0200
+Message-ID: <506480F2.7070403@acm.org>
 References: <50648014.7080308@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [178.239.52.149] ([178.239.52.149]:45950 "EHLO wimaserver10.be"
+Received: from [178.239.52.149] ([178.239.52.149]:44139 "EHLO wimaserver10.be"
 	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752087Ab2I0QgL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Sep 2012 12:36:11 -0400
+	id S1750793Ab2I0QiX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Sep 2012 12:38:23 -0400
 In-Reply-To: <50648014.7080308@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-This flag is used to indicate that queuing new requests must stop.
-After this flag has been set queue draining starts. However, during
-the queue draining phase it is still safe to invoke the queue's
-request_fn, so "dying" is a better name than "dead".
-
-This patch is the result of running the command below and manually
-fixing up indentation:
-
-git grep -lE 'blk_queue_dead|QUEUE_FLAG_DEAD' |
-  xargs sed -i .tmp -e 's/blk_queue_dead/blk_queue_dying/g' \
-	-e 's/QUEUE_FLAG_DEAD/QUEUE_FLAG_DYING/g'
+Avoid that request_fn gets invoked after queue draining finished.
+blk_cleanup_queue() callers expect that request handling has
+finished once this function has returned so request_fn must not
+get invoked after blk_cleanup_queue() finished.
 
 Cc: James Bottomley <JBottomley@Parallels.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
@@ -36,212 +29,105 @@ Cc: Tejun Heo <tj@kernel.org>
 Cc: Chanho Min <chanho.min@lge.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-cgroup.c      |    2 +-
- block/blk-core.c        |   16 ++++++++--------
- block/blk-exec.c        |    2 +-
- block/blk-sysfs.c       |    4 ++--
- block/blk-throttle.c    |    2 +-
- block/blk.h             |    2 +-
- drivers/block/ub.c      |    2 +-
- drivers/scsi/scsi_lib.c |    2 +-
- include/linux/blkdev.h  |    4 ++--
- 9 files changed, 18 insertions(+), 18 deletions(-)
+ block/blk-core.c       |   25 ++++++++++++++++++++++++-
+ block/blk-exec.c       |    2 +-
+ block/blk.h            |    2 ++
+ include/linux/blkdev.h |    2 ++
+ 4 files changed, 29 insertions(+), 2 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index f3b44a6..5cbdad5 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -231,7 +231,7 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 	 * we shouldn't allow anything to go through for a bypassing queue.
- 	 */
- 	if (unlikely(blk_queue_bypass(q)))
--		return ERR_PTR(blk_queue_dead(q) ? -EINVAL : -EBUSY);
-+		return ERR_PTR(blk_queue_dying(q) ? -EINVAL : -EBUSY);
- 	return __blkg_lookup_create(blkcg, q, NULL);
- }
- EXPORT_SYMBOL_GPL(blkg_lookup_create);
 diff --git a/block/blk-core.c b/block/blk-core.c
-index ee3cb3a..b37ac03 100644
+index b37ac03..b5436b6 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -484,7 +484,7 @@ void blk_cleanup_queue(struct request_queue *q)
+@@ -293,6 +293,25 @@ void blk_sync_queue(struct request_queue *q)
+ EXPORT_SYMBOL(blk_sync_queue);
  
- 	/* mark @q DEAD, no new request or merges will be allowed afterwards */
- 	mutex_lock(&q->sysfs_lock);
--	queue_flag_set_unlocked(QUEUE_FLAG_DEAD, q);
-+	queue_flag_set_unlocked(QUEUE_FLAG_DYING, q);
- 	spin_lock_irq(lock);
- 
- 	/*
-@@ -501,7 +501,7 @@ void blk_cleanup_queue(struct request_queue *q)
- 
- 	queue_flag_set(QUEUE_FLAG_NOMERGES, q);
- 	queue_flag_set(QUEUE_FLAG_NOXMERGES, q);
--	queue_flag_set(QUEUE_FLAG_DEAD, q);
-+	queue_flag_set(QUEUE_FLAG_DYING, q);
- 	spin_unlock_irq(lock);
- 	mutex_unlock(&q->sysfs_lock);
- 
-@@ -723,7 +723,7 @@ EXPORT_SYMBOL(blk_init_allocated_queue);
- 
- bool blk_get_queue(struct request_queue *q)
- {
--	if (likely(!blk_queue_dead(q))) {
-+	if (likely(!blk_queue_dying(q))) {
- 		__blk_get_queue(q);
- 		return true;
- 	}
-@@ -877,7 +877,7 @@ static struct request *__get_request(struct request_list *rl, int rw_flags,
- 	const bool is_sync = rw_is_sync(rw_flags) != 0;
- 	int may_queue;
- 
--	if (unlikely(blk_queue_dead(q)))
-+	if (unlikely(blk_queue_dying(q)))
- 		return NULL;
- 
- 	may_queue = elv_may_queue(q, rw_flags);
-@@ -1057,7 +1057,7 @@ retry:
- 	if (rq)
- 		return rq;
- 
--	if (!(gfp_mask & __GFP_WAIT) || unlikely(blk_queue_dead(q))) {
-+	if (!(gfp_mask & __GFP_WAIT) || unlikely(blk_queue_dying(q))) {
- 		blk_put_rl(rl);
- 		return NULL;
- 	}
-@@ -1909,7 +1909,7 @@ int blk_insert_cloned_request(struct request_queue *q, struct request *rq)
- 		return -EIO;
- 
- 	spin_lock_irqsave(q->queue_lock, flags);
--	if (unlikely(blk_queue_dead(q))) {
-+	if (unlikely(blk_queue_dying(q))) {
- 		spin_unlock_irqrestore(q->queue_lock, flags);
- 		return -ENODEV;
- 	}
-@@ -2891,7 +2891,7 @@ static void queue_unplugged(struct request_queue *q, unsigned int depth,
- 	/*
- 	 * Don't mess with dead queue.
- 	 */
--	if (unlikely(blk_queue_dead(q))) {
-+	if (unlikely(blk_queue_dying(q))) {
- 		spin_unlock(q->queue_lock);
+ /**
++ * __blk_run_queue_uncond - run a queue whether or not it has been stopped
++ * @q:	The queue to run
++ *
++ * Description:
++ *    Invoke request handling on a queue if there are any pending requests.
++ *    May be used to restart request handling after a request has completed.
++ *    This variant runs the queue whether or not the queue has been
++ *    stopped. Must be called with the queue lock held and interrupts
++ *    disabled. See also @blk_run_queue.
++ */
++void __blk_run_queue_uncond(struct request_queue *q)
++{
++	if (unlikely(blk_queue_dead(q)))
++		return;
++
++	q->request_fn(q);
++}
++
++/**
+  * __blk_run_queue - run a single device queue
+  * @q:	The queue to run
+  *
+@@ -305,7 +324,7 @@ void __blk_run_queue(struct request_queue *q)
+ 	if (unlikely(blk_queue_stopped(q)))
  		return;
- 	}
-@@ -3000,7 +3000,7 @@ void blk_flush_plug_list(struct blk_plug *plug, bool from_schedule)
- 		/*
- 		 * Short-circuit if @q is dead
- 		 */
--		if (unlikely(blk_queue_dead(q))) {
-+		if (unlikely(blk_queue_dying(q))) {
- 			__blk_end_request_all(rq, -ENODEV);
- 			continue;
- 		}
+ 
+-	q->request_fn(q);
++	__blk_run_queue_uncond(q);
+ }
+ EXPORT_SYMBOL(__blk_run_queue);
+ 
+@@ -508,6 +527,10 @@ void blk_cleanup_queue(struct request_queue *q)
+ 	/* drain all requests queued before DEAD marking */
+ 	blk_drain_queue(q, true);
+ 
++	spin_lock_irq(lock);
++	queue_flag_set(QUEUE_FLAG_DEAD, q);
++	spin_unlock_irq(lock);
++
+ 	/* @q won't process any more request, flush async actions */
+ 	del_timer_sync(&q->backing_dev_info.laptop_mode_wb_timer);
+ 	blk_sync_queue(q);
 diff --git a/block/blk-exec.c b/block/blk-exec.c
-index 8b6dc5b..4aec98d 100644
+index 4aec98d..1320e74 100644
 --- a/block/blk-exec.c
 +++ b/block/blk-exec.c
-@@ -60,7 +60,7 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
- 
- 	spin_lock_irq(q->queue_lock);
- 
--	if (unlikely(blk_queue_dead(q))) {
-+	if (unlikely(blk_queue_dying(q))) {
- 		rq->errors = -ENXIO;
- 		if (rq->end_io)
- 			rq->end_io(rq, rq->errors);
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 9628b29..6898f17 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -432,7 +432,7 @@ queue_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
- 	if (!entry->show)
- 		return -EIO;
- 	mutex_lock(&q->sysfs_lock);
--	if (blk_queue_dead(q)) {
-+	if (blk_queue_dying(q)) {
- 		mutex_unlock(&q->sysfs_lock);
- 		return -ENOENT;
- 	}
-@@ -454,7 +454,7 @@ queue_attr_store(struct kobject *kobj, struct attribute *attr,
- 
- 	q = container_of(kobj, struct request_queue, kobj);
- 	mutex_lock(&q->sysfs_lock);
--	if (blk_queue_dead(q)) {
-+	if (blk_queue_dying(q)) {
- 		mutex_unlock(&q->sysfs_lock);
- 		return -ENOENT;
- 	}
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index e287c19..1da8497 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -303,7 +303,7 @@ static struct throtl_grp *throtl_lookup_create_tg(struct throtl_data *td,
- 		/* if %NULL and @q is alive, fall back to root_tg */
- 		if (!IS_ERR(blkg))
- 			tg = blkg_to_tg(blkg);
--		else if (!blk_queue_dead(q))
-+		else if (!blk_queue_dying(q))
- 			tg = td_root_tg(td);
- 	}
- 
+@@ -72,7 +72,7 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
+ 	__blk_run_queue(q);
+ 	/* the queue is stopped so it won't be run */
+ 	if (rq->cmd_type == REQ_TYPE_PM_RESUME)
+-		q->request_fn(q);
++		__blk_run_queue_uncond(q);
+ 	spin_unlock_irq(q->queue_lock);
+ }
+ EXPORT_SYMBOL_GPL(blk_execute_rq_nowait);
 diff --git a/block/blk.h b/block/blk.h
-index 2a0ea32..a066ceb 100644
+index a066ceb..3e94c14 100644
 --- a/block/blk.h
 +++ b/block/blk.h
-@@ -96,7 +96,7 @@ static inline struct request *__elv_next_request(struct request_queue *q)
- 			q->flush_queue_delayed = 1;
- 			return NULL;
- 		}
--		if (unlikely(blk_queue_dead(q)) ||
-+		if (unlikely(blk_queue_dying(q)) ||
- 		    !q->elevator->type->ops.elevator_dispatch_fn(q, 0))
- 			return NULL;
- 	}
-diff --git a/drivers/block/ub.c b/drivers/block/ub.c
-index fcec022..f32e4d6 100644
---- a/drivers/block/ub.c
-+++ b/drivers/block/ub.c
-@@ -2394,7 +2394,7 @@ static void ub_disconnect(struct usb_interface *intf)
- 		del_gendisk(lun->disk);
- 		/*
- 		 * I wish I could do:
--		 *    queue_flag_set(QUEUE_FLAG_DEAD, q);
-+		 *    queue_flag_set(QUEUE_FLAG_DYING, q);
- 		 * As it is, we rely on our internal poisoning and let
- 		 * the upper levels to spin furiously failing all the I/O.
- 		 */
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index faa790f..593fc71 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1406,7 +1406,7 @@ static int scsi_lld_busy(struct request_queue *q)
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost;
+@@ -145,6 +145,8 @@ int blk_try_merge(struct request *rq, struct bio *bio);
  
--	if (blk_queue_dead(q))
-+	if (blk_queue_dying(q))
- 		return 0;
+ void blk_queue_congestion_threshold(struct request_queue *q);
  
- 	shost = sdev->host;
++void __blk_run_queue_uncond(struct request_queue *q);
++
+ int blk_dev_init(void);
+ 
+ 
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 4a2ab7c..c6ab0db 100644
+index c6ab0db..9b9855f 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -436,7 +436,7 @@ struct request_queue {
- #define QUEUE_FLAG_STOPPED	2	/* queue is stopped */
- #define	QUEUE_FLAG_SYNCFULL	3	/* read queue has been filled */
- #define QUEUE_FLAG_ASYNCFULL	4	/* write queue has been filled */
--#define QUEUE_FLAG_DEAD		5	/* queue being torn down */
-+#define QUEUE_FLAG_DYING	5	/* queue being torn down */
- #define QUEUE_FLAG_BYPASS	6	/* act as dumb FIFO queue */
- #define QUEUE_FLAG_BIDI		7	/* queue supports bidi requests */
- #define QUEUE_FLAG_NOMERGES     8	/* disable merge attempts */
-@@ -520,7 +520,7 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+@@ -451,6 +451,7 @@ struct request_queue {
+ #define QUEUE_FLAG_ADD_RANDOM  16	/* Contributes to random pool */
+ #define QUEUE_FLAG_SECDISCARD  17	/* supports SECDISCARD */
+ #define QUEUE_FLAG_SAME_FORCE  18	/* force complete on same CPU */
++#define QUEUE_FLAG_DEAD        19	/* queue tear-down finished */
  
+ #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+ 				 (1 << QUEUE_FLAG_STACKABLE)	|	\
+@@ -521,6 +522,7 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
  #define blk_queue_tagged(q)	test_bit(QUEUE_FLAG_QUEUED, &(q)->queue_flags)
  #define blk_queue_stopped(q)	test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags)
--#define blk_queue_dead(q)	test_bit(QUEUE_FLAG_DEAD, &(q)->queue_flags)
-+#define blk_queue_dying(q)	test_bit(QUEUE_FLAG_DYING, &(q)->queue_flags)
+ #define blk_queue_dying(q)	test_bit(QUEUE_FLAG_DYING, &(q)->queue_flags)
++#define blk_queue_dead(q)	test_bit(QUEUE_FLAG_DEAD, &(q)->queue_flags)
  #define blk_queue_bypass(q)	test_bit(QUEUE_FLAG_BYPASS, &(q)->queue_flags)
  #define blk_queue_nomerges(q)	test_bit(QUEUE_FLAG_NOMERGES, &(q)->queue_flags)
  #define blk_queue_noxmerges(q)	\
