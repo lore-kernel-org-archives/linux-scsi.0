@@ -1,43 +1,76 @@
-From: Adrian Sandu <dexter@d3xt3r01.tk>
-Subject: Re: [usb-storage] Re: usb3 fails to write when using usb3 hub in usb3 port
-Date: Thu, 27 Sep 2012 23:35:55 +0300
-Message-ID: <CAEG-z2-Z9ojSYatHAq-71EjM36uieL3rrn1V4+hsZAz5murGTA@mail.gmail.com>
-References: <CAEG-z2-QqRs4rK58BsPafnqLuQKXxHCGE_Q5R-WkhpPGNz1RoA@mail.gmail.com>
- <Pine.LNX.4.44L0.1209271447340.1230-100000@iolanthe.rowland.org>
- <CAEG-z29dU=C49u7_Hi--dKLLf4OuS_LgB3azR4ui4ngu8dt-bQ@mail.gmail.com> <20120927200433.GB27721@xanatos>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v7 3/6] scsi: sr: support zero power ODD(ZPODD)
+Date: Fri, 28 Sep 2012 01:29:48 +0200
+Message-ID: <201209280129.48715.rjw@sisk.pl>
+References: <Pine.LNX.4.44L0.1209271038050.1596-100000@iolanthe.rowland.org> <506468E6.1020007@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:42573 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712Ab2I0UgP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2012 16:36:15 -0400
-Received: by pbbrr4 with SMTP id rr4so4121418pbb.19
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Sep 2012 13:36:15 -0700 (PDT)
-In-Reply-To: <20120927200433.GB27721@xanatos>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <506468E6.1020007@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-> They're the same chipset.  There's minor differences in the PCI
-> capabilities, but not much else.  It could be something electrically
-> wrong with the AsRock system, I suppose.  That's possible if you see
-> the errors popping up erratically.
->
-> Any chance you can exchange the AsRock system?
+On Thursday, September 27, 2012, Aaron Lu wrote:
+> On 09/27/2012 10:42 PM, Alan Stern wrote:
+> > On Thu, 27 Sep 2012, Aaron Lu wrote:
+> > 
+> >>> Moreover, I'd like to migrate SCSI drivers to the PM handling based on struct
+> >>> dev_pm_ops eventually and your change is kind of going in the opposite
+> >>> direction.  I don't know how much effort the migration is going to take,
+> >>> though, so perhaps we can just make this change first.
+> >>
+> >> Does the following change look OK?
+> >>
+> >> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> >> index dc0ad85..1fb7ccc 100644
+> >> --- a/drivers/scsi/scsi_pm.c
+> >> +++ b/drivers/scsi/scsi_pm.c
+> >> @@ -143,7 +143,15 @@ static int scsi_runtime_suspend(struct device *dev)
+> >>  
+> >>  	dev_dbg(dev, "scsi_runtime_suspend\n");
+> >>  	if (scsi_is_sdev_device(dev)) {
+> >> -		err = scsi_dev_type_suspend(dev, PMSG_AUTO_SUSPEND);
+> >> +		err = scsi_device_quiesce(to_scsi_device(dev));
+> >> +		if (err)
+> >> +			goto out;
+> >> +
+> >> +		err = pm_generic_runtime_suspend(dev);
+> >> +		if (!err)
+> >> +			goto out;
+> >> +
+> >> +		scsi_device_resume(to_scsi_device(dev));
+> >>  		if (err == -EAGAIN)
+> >>  			pm_schedule_suspend(dev, jiffies_to_msecs(
+> >>  				round_jiffies_up_relative(HZ/10)));
+> > 
+> > Maybe in the end it will be better, but for now this looks like 
+> > unnecessary code duplication.  Basically you are copying 
+> > scsi_dev_type_suspend() into scsi_runtime_suspend(), except that you 
+> > omitted the debugging statement.
+> 
+> And I've used pm_generic_runtime_suspend :-)
+> That would allow me to write runtime callbacks of dev_pm_ops for
+> indivisual scsi drivers, like sr.
 
-Nope... I have it for more than 1 year and I kinda' need it even if
-the usb3 won't work... at least I can use the 2 ports to dirrectly
-connect 2 drives...nothing else is wrong and I wouldn't of known if I
-wouldn't of got these hubs...
+Well, actually, I meant something different.
 
-My only solution if no more debugging can be done is to get a nas a
-put the drives in it...
+The above patch would make it possible for drivers to provide runtime PM
+callbacks through dev->driver.pm, but drv->suspend and drv->resume would
+still be used for system suspend/resume (and hibernation).
 
-Maybe it's the drives fault somehow ? maybe we should mail wd ?
-manhattan's fault ? via ? :) There must be someone/someway/somehow
-that can analyze it in someway and say what is wrong ..
+The transition to struct dev_pm_ops I meant, however, would be to start using
+callbacks from dev->driver.pm for _all_ device PM operations by default and
+fall back to drv->suspend and drv->resume for the drivers whose dev->driver.pm
+is NULL (along the lines of what PCI does).  The next step would be to
+convert all drivers to use dev->driver.pm only.
 
-Still weird..I'll try on another laptop tomorrow or so ( a dell
-inspiron with an usb3 port .. dunno what usb3 root chipset it has )
+So I wouldn't like any drivers to use dev->driver.pm callbacks for some
+operations and drv->suspend and drv->resume for the remaining ones at the
+same time.
+
+Thanks,
+Rafael
