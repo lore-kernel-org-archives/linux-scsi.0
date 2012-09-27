@@ -1,42 +1,37 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH scsi] Short the path length of scsi_cmd_to_driver()
-Date: Thu, 27 Sep 2012 13:43:18 -0400
-Message-ID: <yq1a9wb8iq1.fsf@sermon.lab.mkp.net>
-References: <1348464626.2475.13.camel@ThinkPad-T420>
-	<1348465493.2467.3.camel@dabdike>
-	<1348470210.2475.47.camel@ThinkPad-T420>
-	<1348472104.2467.8.camel@dabdike> <yq13924b4uw.fsf@sermon.lab.mkp.net>
-	<1348721055.2509.0.camel@dabdike>
-	<1348739495.3596.55.camel@ThinkPad-T420>
+From: Adrian Sandu <dexter@d3xt3r01.tk>
+Subject: Re: [usb-storage] Re: usb3 fails to write when using usb3 hub in usb3 port
+Date: Thu, 27 Sep 2012 21:23:34 +0300
+Message-ID: <CAEG-z2-QqRs4rK58BsPafnqLuQKXxHCGE_Q5R-WkhpPGNz1RoA@mail.gmail.com>
+References: <CAEG-z28Whi7BufhFnUD8xLZAXjiV0qANc1JNF_62Toget_9CXg@mail.gmail.com>
+ <Pine.LNX.4.44L0.1209271031340.1596-100000@iolanthe.rowland.org>
+ <CAEG-z2-JCSsuiTOauUc9P9U7fNvbC0AB2Y=RmfRKrWb_d1SisQ@mail.gmail.com>
+ <20120927152526.26675.qmail@stuge.se> <CAEG-z29bZGu4HLF=ZD2Rfk9c87Axo=vP-_s0VreuYMy5yA19sg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1348739495.3596.55.camel@ThinkPad-T420> (Li Zhong's message of
-	"Thu, 27 Sep 2012 17:51:35 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Li Zhong <zhong@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:48635 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755154Ab2I0SXz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2012 14:23:55 -0400
+Received: by pbbrr4 with SMTP id rr4so3970823pbb.19
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Sep 2012 11:23:55 -0700 (PDT)
+In-Reply-To: <CAEG-z29bZGu4HLF=ZD2Rfk9c87Axo=vP-_s0VreuYMy5yA19sg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
->>>>> "Li" == Li Zhong <zhong@linux.vnet.ibm.com> writes:
+>> Adrian Sandu wrote:
+>>> I tried with a 3.3.8 , same thing happened. I don't understand why my
+>>> gentoo (asrock) fails and fedora(laptop) didn't ! :|
 
-> @@ -845,8 +844,11 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
-> 
-> 	scsi_eh_restore_cmnd(scmd, &ses);
-> 
->-	if (sdrv && sdrv->eh_action)
->-		rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
->+	if (scmd->request->cmd_type == REQ_TYPE_FS) {
->+		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->+		if (sdrv->eh_action)
->+			rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
->+	}
-> 
-> 	return rtn;
-> }
+Tried to use the live cd on my laptop, can't reproduce it in any way
+on my computer ..
+Using the same live cd I can reproduce the problem on the asrock :|
 
-My only concern is whether our device lifetime rules guarantee that the
-ULD is always attached when we service an error handling command?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Tried with 3.3.8, 3.4.11, 3.5.4. I don't get what's causing the drive
+to die from a simple hdparm -tT .. :|
+The even more weird thing is that it's not dying every time ..
+sometimes a hdparm runs successfully once or a few times before dying
+.. :|
+Guess I just have a bad luck .. ( altough .. I don't believe in "luck"
+when it comes to hardware/software/science .. :) )
