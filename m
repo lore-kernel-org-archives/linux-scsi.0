@@ -1,34 +1,32 @@
-From: Peter Stuge <peter@stuge.se>
-Subject: Re: [usb-storage] Re: usb3 fails to write when using usb3 hub in
-	usb3 port
-Date: Thu, 27 Sep 2012 17:25:26 +0200
-Message-ID: <20120927152526.26675.qmail@stuge.se>
-References: <CAEG-z28Whi7BufhFnUD8xLZAXjiV0qANc1JNF_62Toget_9CXg@mail.gmail.com> <Pine.LNX.4.44L0.1209271031340.1596-100000@iolanthe.rowland.org> <CAEG-z2-JCSsuiTOauUc9P9U7fNvbC0AB2Y=RmfRKrWb_d1SisQ@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/3 v3] blk_cleanup_queue() versus request_fn order fix
+Date: Thu, 27 Sep 2012 18:34:28 +0200
+Message-ID: <50648014.7080308@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from foo.stuge.se ([212.116.89.98]:41164 "HELO foo.stuge.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754729Ab2I0PZ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Sep 2012 11:25:28 -0400
-Content-Disposition: inline
-In-Reply-To: <CAEG-z2-JCSsuiTOauUc9P9U7fNvbC0AB2Y=RmfRKrWb_d1SisQ@mail.gmail.com>
+Received: from [178.239.52.149] ([178.239.52.149]:45932 "EHLO wimaserver10.be"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750793Ab2I0Qep (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Sep 2012 12:34:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Sandu <dexter@d3xt3r01.tk>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-Adrian Sandu wrote:
-> I tried with a 3.3.8 , same thing happened. I don't understand why my
-> gentoo (asrock) fails and fedora(laptop) didn't ! :|
+At device removal time request processing functions like
+scsi_request_fn() that unlock the queue lock internally may cause
+blk_cleanup_queue() to finish while request_fn is in progress.
+This three-patch series makes sure that blk_cleanup_queue() can't
+finish before all active request_fn calls have finished and also
+that request_fn isn't invoked anymore after queue draining finished.
 
-Try what Alan suggested, start the Gentoo userland with the Fedora
-kernel.
+Changes compared to v2:
+- Split second patch into two patches.
+- Refined patch descriptions.
 
-Do you have some crazy USE flags for your toolchain?
+Changes compared to v1:
+- Included a patch to rename QUEUE_FLAG_DEAD.
+- Refined the descriptions of the __blk_run_queue_uncond() and
+   blk_cleanup_queue() functions.
 
-If the Fedora kernel works, I would suggest to re-emerge binutils and
-gcc with USE=vanilla, and then build a fresh kernel.
-
-
-//Peter
