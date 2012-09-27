@@ -1,94 +1,45 @@
-From: Li Zhong <zhong@linux.vnet.ibm.com>
-Subject: [PATCH scsi] Short the path length of scsi_cmd_to_driver()
-Date: Thu, 27 Sep 2012 17:51:35 +0800
-Message-ID: <1348739495.3596.55.camel@ThinkPad-T420>
-References: <1348464626.2475.13.camel@ThinkPad-T420>
-	 <1348465493.2467.3.camel@dabdike> <1348470210.2475.47.camel@ThinkPad-T420>
-	 <1348472104.2467.8.camel@dabdike> <yq13924b4uw.fsf@sermon.lab.mkp.net>
-	 <1348721055.2509.0.camel@dabdike>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Thu, 27 Sep 2012 12:46:41 +0200
+Message-ID: <3158525.rj2S1Jvnll@linux-lqwf.site>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209242340.18318.rjw@sisk.pl> <20120925080133.GA1629@mint-spring.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1348721055.2509.0.camel@dabdike>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20120925080133.GA1629@mint-spring.sh.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi James, Martin,  
+On Tuesday 25 September 2012 16:01:35 Aaron Lu wrote:
+> On Mon, Sep 24, 2012 at 11:40:18PM +0200, Rafael J. Wysocki wrote:
+> > On Monday, September 24, 2012, Aaron Lu wrote:
+> > > On Mon, Sep 24, 2012 at 02:55:31PM +0200, Rafael J. Wysocki wrote:
 
-Here is the updated version, please help to review.
+> I just checked the spec again and tested, when the ODD has power, it
+> will also send out notifications on pressing the eject button/inserting
+> a disc. So we should be able to capture such a event.
 
-Thanks, Zhong
+In this case there's no need to poll for disk change unless the button has
+been pressed.
 
-========
-As suggested by James: this patch tries to short the path length of
-scsi_cmd_to_driver(). As only REQ_TYPE_BLOCK_PC commands can be
-submitted without a driver, so we could avoid the related NULL 
-checking, as long as we make sure we don't use it for REQ_TYPE_BLOCK_PC
-type commands. Plus, this fixes a bug where you get different behaviors
-from REQ_TYPE_BLOCK_PC commands when a driver is and isn't attached. 
+> I'm thinking of enabling this GPE in sr_suspend once we decided that it
+> is ready to be powered off, so the time frame between sr_suspend and
+> when the power is actually removed in libata should be taken care of by
+> the GPE. If GPE fires, the notification function will request a runtime
+> resume of the device. Does this sound OK?
 
-And Martin pointed out that we could have eh action be triggered for 
-REQ_TYPE_FS type only. 
+This sounds terribly, needlessly complicated. Just enable it when
+you detect the presence of a disk drive that supports it.
 
-Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
----
- drivers/scsi/scsi_error.c |    8 +++++---
- include/scsi/scsi_cmnd.h  |   12 ++----------
- 2 files changed, 7 insertions(+), 13 deletions(-)
+Furthermore we have a device which can detect that a button has
+been pressed. It is fundamentally wrong to poll for medium change in
+such devices. You know that it hasn't been changed.
+We should notify the upper layers that we can do medium change
+detection on our own.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index de2337f..4001559 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -789,7 +789,6 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 			     int cmnd_size, int timeout, unsigned sense_bytes)
- {
- 	struct scsi_device *sdev = scmd->device;
--	struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
- 	struct Scsi_Host *shost = sdev->host;
- 	DECLARE_COMPLETION_ONSTACK(done);
- 	unsigned long timeleft;
-@@ -845,8 +844,11 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 
- 	scsi_eh_restore_cmnd(scmd, &ses);
- 
--	if (sdrv && sdrv->eh_action)
--		rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
-+	if (scmd->request->cmd_type == REQ_TYPE_FS) {
-+		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
-+		if (sdrv->eh_action)
-+			rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
-+	}
- 
- 	return rtn;
- }
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index ac06cc5..de5f5d8 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -132,18 +132,10 @@ struct scsi_cmnd {
- 	unsigned char tag;	/* SCSI-II queued command tag */
- };
- 
-+/* make sure not to use it with REQ_TYPE_BLOCK_PC commands */
- static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
- {
--	struct scsi_driver **sdp;
--
--	if (!cmd->request->rq_disk)
--		return NULL;
--
--	sdp = (struct scsi_driver **)cmd->request->rq_disk->private_data;
--	if (!sdp)
--		return NULL;
--
--	return *sdp;
-+	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
- }
- 
- extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
--- 
-1.7.7.6
+	Regards
+		Oliver
+
