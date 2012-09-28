@@ -1,34 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH scsi] Add NULL checking of return value from
- scsi_cmd_to_driver()
-Date: Fri, 28 Sep 2012 08:48:18 +0100
-Message-ID: <1348818498.2411.8.camel@dabdike.int.hansenpartnership.com>
-References: <1348464626.2475.13.camel@ThinkPad-T420>
-	 <1348465493.2467.3.camel@dabdike> <1348470210.2475.47.camel@ThinkPad-T420>
-	 <1348472104.2467.8.camel@dabdike> <yq13924b4uw.fsf@sermon.lab.mkp.net>
-	 <1348721055.2509.0.camel@dabdike> <yq1bogr8itb.fsf@sermon.lab.mkp.net>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Fri, 28 Sep 2012 16:20:50 +0800
+Message-ID: <50655DE2.3030600@intel.com>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209242340.18318.rjw@sisk.pl> <20120925080133.GA1629@mint-spring.sh.intel.com> <3158525.rj2S1Jvnll@linux-lqwf.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1bogr8itb.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Li Zhong <zhong@linux.vnet.ibm.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <3158525.rj2S1Jvnll@linux-lqwf.site>
+Sender: linux-ide-owner@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-09-27 at 13:41 -0400, Martin K. Petersen wrote:
-> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+On 09/27/2012 06:46 PM, Oliver Neukum wrote:
+> On Tuesday 25 September 2012 16:01:35 Aaron Lu wrote:
+>> On Mon, Sep 24, 2012 at 11:40:18PM +0200, Rafael J. Wysocki wrote:
+>>> On Monday, September 24, 2012, Aaron Lu wrote:
+>>>> On Mon, Sep 24, 2012 at 02:55:31PM +0200, Rafael J. Wysocki wrote:
 > 
-> >> I'm fine with having the eh action be triggered for FS requests only,
-> >> if that's what you're asking?
+>> I just checked the spec again and tested, when the ODD has power, it
+>> will also send out notifications on pressing the eject button/inserting
+>> a disc. So we should be able to capture such a event.
 > 
-> James> Sort of ... I was thinking do it for all non REQ_TYPE_BLOCK_PC
-> James> commands (which includes flush and other strange types), but if
-> James> you think it should only be for REQ_TYPE_FS, that's fine too.
-> 
-> I'm ok either way.
+> In this case there's no need to poll for disk change unless the button has
+> been pressed.
 
-OK, let's mirror the code in scsi.c then, so != REQ_TYPE_BLOCK_PC.
+The SATA spec says the device attention pin shall assert when:
+- For tray type ODD, its front panel button is released;
+- For slot type ODD, media is inserted.
 
-James
+I've a slot type ODD which has a eject button. The notification will be
+sent when a disc is inserted, but not when the eject button is pressed,
+and this doesn't violate the spec.
+
+But if we disable the poll for disc changes, we will lose an event when
+the disc is ejected by the eject button(the device attention pin shall
+not trigger this time). I suppose this is a problem?
+
+I think the device attention scheme is not designed to do this job,
+while SATA asynchronous notification is.
+
+> 
+>> I'm thinking of enabling this GPE in sr_suspend once we decided that it
+>> is ready to be powered off, so the time frame between sr_suspend and
+>> when the power is actually removed in libata should be taken care of by
+>> the GPE. If GPE fires, the notification function will request a runtime
+>> resume of the device. Does this sound OK?
+> 
+> This sounds terribly, needlessly complicated. Just enable it when
+> you detect the presence of a disk drive that supports it.
+> 
+> Furthermore we have a device which can detect that a button has
+> been pressed. It is fundamentally wrong to poll for medium change in
+> such devices. You know that it hasn't been changed.
+
+That may depend on the ODD's capability. For the slot type ODD I
+mentioned above, we will not know when the disc is gone.
+
+Thanks,
+Aaron
+
+> We should notify the upper layers that we can do medium change
+> detection on our own.
+> 
+> 	Regards
+> 		Oliver
+> 
+
