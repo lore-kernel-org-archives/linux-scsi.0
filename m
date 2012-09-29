@@ -1,93 +1,145 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH 10/17] be2iscsi: Fix max EQ supported by the driver.
-Date: Sat, 29 Sep 2012 07:03:38 +0530
-Message-ID: <4302fd7a-57be-430b-a425-03c89ea573f3@CMEXHTCAS2.ad.emulex.com>
+Subject: [PATCH 11/17] be2iscsi: Fix CQ create MBX CMD for Skyhawk.
+Date: Sat, 29 Sep 2012 07:03:52 +0530
+Message-ID: <dc73dc64-adae-4492-b713-e9b4f3a51ad8@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:5855 "EHLO
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:5861 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030298Ab2I2Bel (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Sep 2012 21:34:41 -0400
+	with ESMTP id S1030494Ab2I2Be6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Sep 2012 21:34:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- Fix the max EQ created when driver is loaded. The max
- EQ for BE3 adapter will be 8 and for Skyhawk it will be 64.
+ Fix the CQ creation for Skyhawk by creating version V2 of the MBOX Cmd.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |   15 +++++++++++++--
- drivers/scsi/be2iscsi/be_main.h |   13 ++++++++-----
- 2 files changed, 21 insertions(+), 7 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c |   38 +++++++++++++++++++++++++++-----------
+ drivers/scsi/be2iscsi/be_cmds.h |   26 ++++++++++++++++++++++++--
+ drivers/scsi/be2iscsi/be_main.h |    1 +
+ 3 files changed, 52 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index c97f010..ebb102f 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3325,8 +3325,19 @@ static void find_num_cpus(struct beiscsi_hba *phba)
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 05f70bb..1257038 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -649,18 +649,34 @@ int beiscsi_cmd_cq_create(struct be_ctrl_info *ctrl,
+ 			OPCODE_COMMON_CQ_CREATE, sizeof(*req));
  
- 	num_cpus = num_online_cpus();
- 
--	phba->num_cpus = (num_cpus >= BEISCSI_MAX_NUM_CPU) ?
--			 (BEISCSI_MAX_NUM_CPU - 1) : num_cpus;
-+	switch (phba->generation) {
-+	case BE_GEN2:
-+	case BE_GEN3:
-+		phba->num_cpus = (num_cpus > BEISCSI_MAX_NUM_CPUS) ?
-+				  BEISCSI_MAX_NUM_CPUS : num_cpus;
-+		break;
-+	case BE_GEN4:
-+		phba->num_cpus = (num_cpus > OC_SKH_MAX_NUM_CPUS) ?
-+				  OC_SKH_MAX_NUM_CPUS : num_cpus;
-+		break;
-+	default:
-+		phba->num_cpus = 1;
+ 	req->num_pages = cpu_to_le16(PAGES_4K_SPANNED(q_mem->va, q_mem->size));
++	if (chip_skyhawk(ctrl->pdev)) {
++		req->hdr.version = MBX_CMD_VER2;
++		req->page_size = 1;
++		AMAP_SET_BITS(struct amap_cq_context_v2, coalescwm,
++			      ctxt, coalesce_wm);
++		AMAP_SET_BITS(struct amap_cq_context_v2, nodelay,
++			      ctxt, no_delay);
++		AMAP_SET_BITS(struct amap_cq_context_v2, count, ctxt,
++			      __ilog2_u32(cq->len / 256));
++		AMAP_SET_BITS(struct amap_cq_context_v2, valid, ctxt, 1);
++		AMAP_SET_BITS(struct amap_cq_context_v2, eventable, ctxt, 1);
++		AMAP_SET_BITS(struct amap_cq_context_v2, eqid, ctxt, eq->id);
++		AMAP_SET_BITS(struct amap_cq_context_v2, armed, ctxt, 1);
++	} else {
++		AMAP_SET_BITS(struct amap_cq_context, coalescwm,
++			      ctxt, coalesce_wm);
++		AMAP_SET_BITS(struct amap_cq_context, nodelay, ctxt, no_delay);
++		AMAP_SET_BITS(struct amap_cq_context, count, ctxt,
++			      __ilog2_u32(cq->len / 256));
++		AMAP_SET_BITS(struct amap_cq_context, valid, ctxt, 1);
++		AMAP_SET_BITS(struct amap_cq_context, solevent, ctxt, sol_evts);
++		AMAP_SET_BITS(struct amap_cq_context, eventable, ctxt, 1);
++		AMAP_SET_BITS(struct amap_cq_context, eqid, ctxt, eq->id);
++		AMAP_SET_BITS(struct amap_cq_context, armed, ctxt, 1);
++		AMAP_SET_BITS(struct amap_cq_context, func, ctxt,
++			      PCI_FUNC(ctrl->pdev->devfn));
 +	}
- }
  
- static int hwi_init_port(struct beiscsi_hba *phba)
+-	AMAP_SET_BITS(struct amap_cq_context, coalescwm, ctxt, coalesce_wm);
+-	AMAP_SET_BITS(struct amap_cq_context, nodelay, ctxt, no_delay);
+-	AMAP_SET_BITS(struct amap_cq_context, count, ctxt,
+-		      __ilog2_u32(cq->len / 256));
+-	AMAP_SET_BITS(struct amap_cq_context, valid, ctxt, 1);
+-	AMAP_SET_BITS(struct amap_cq_context, solevent, ctxt, sol_evts);
+-	AMAP_SET_BITS(struct amap_cq_context, eventable, ctxt, 1);
+-	AMAP_SET_BITS(struct amap_cq_context, eqid, ctxt, eq->id);
+-	AMAP_SET_BITS(struct amap_cq_context, armed, ctxt, 1);
+-	AMAP_SET_BITS(struct amap_cq_context, func, ctxt,
+-		      PCI_FUNC(ctrl->pdev->devfn));
+ 	be_dws_cpu_to_le(ctxt, sizeof(req->context));
+ 
+ 	be_cmd_page_addrs_prepare(req->pages, ARRAY_SIZE(req->pages), q_mem);
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 897086b..c560e9d 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -58,6 +58,9 @@ struct be_mcc_wrb {
+ #define CQE_STATUS_EXTD_MASK 0xFFFF
+ #define CQE_STATUS_EXTD_SHIFT 16		/* bits 0 - 15 */
+ 
++/* MBOX Command VER */
++#define MBX_CMD_VER2	0x02
++
+ struct be_mcc_compl {
+ 	u32 status;		/* dword 0 */
+ 	u32 tag0;		/* dword 1 */
+@@ -183,7 +186,8 @@ struct be_cmd_req_hdr {
+ 	u8 domain;		/* dword 0 */
+ 	u32 timeout;		/* dword 1 */
+ 	u32 request_length;	/* dword 2 */
+-	u32 rsvd0;		/* dword 3 */
++	u8 version;		/* dword 3 */
++	u8 rsvd0[3];		/* dword 3 */
+ };
+ 
+ struct be_cmd_resp_hdr {
+@@ -483,10 +487,28 @@ struct amap_cq_context {
+ 	u8 rsvd5[32];		/* dword 3 */
+ } __packed;
+ 
++struct amap_cq_context_v2 {
++	u8 rsvd0[12];   /* dword 0 */
++	u8 coalescwm[2];    /* dword 0 */
++	u8 nodelay;     /* dword 0 */
++	u8 rsvd1[12];   /* dword 0 */
++	u8 count[2];    /* dword 0 */
++	u8 valid;       /* dword 0 */
++	u8 rsvd2;       /* dword 0 */
++	u8 eventable;   /* dword 0 */
++	u8 eqid[16];    /* dword 1 */
++	u8 rsvd3[15];   /* dword 1 */
++	u8 armed;       /* dword 1 */
++	u8 cqecount[16];/* dword 2 */
++	u8 rsvd4[16];   /* dword 2 */
++	u8 rsvd5[32];   /* dword 3 */
++};
++
+ struct be_cmd_req_cq_create {
+ 	struct be_cmd_req_hdr hdr;
+ 	u16 num_pages;
+-	u16 rsvd0;
++	u8 page_size;
++	u8 rsvd0;
+ 	u8 context[sizeof(struct amap_cq_context) / 8];
+ 	struct phys_addr pages[4];
+ } __packed;
 diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 71443fd..4a9dd37 100644
+index 4a9dd37..93345f8 100644
 --- a/drivers/scsi/be2iscsi/be_main.h
 +++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -64,8 +64,11 @@
- #define BE2_DEFPDU_HDR_SZ	64
- #define BE2_DEFPDU_DATA_SZ	8192
+@@ -265,6 +265,7 @@ struct invalidate_command_table {
+ 	unsigned short cid;
+ } __packed;
  
--#define MAX_CPUS		31
--#define BEISCSI_MAX_NUM_CPU	8
-+#define MAX_CPUS		64
-+#define BEISCSI_MAX_NUM_CPUS	7
-+#define OC_SKH_MAX_NUM_CPUS	63
-+
-+
- #define BEISCSI_SGLIST_ELEMENTS	30
- 
- #define BEISCSI_CMD_PER_LUN	128	/* scsi_host->cmd_per_lun */
-@@ -279,8 +282,8 @@ struct beiscsi_hba {
- 	unsigned short asic_revision;
- 	unsigned int num_cpus;
- 	unsigned int nxt_cqid;
--	struct msix_entry msix_entries[MAX_CPUS + 1];
--	char *msi_name[MAX_CPUS + 1];
-+	struct msix_entry msix_entries[MAX_CPUS];
-+	char *msi_name[MAX_CPUS];
- 	bool msix_enabled;
- 	struct be_mem_descriptor *init_mem;
- 
-@@ -839,7 +842,7 @@ struct hwi_context_memory {
- 	u16 max_eqd;		/* in usecs */
- 	u16 cur_eqd;		/* in usecs */
- 	struct be_eq_obj be_eq[MAX_CPUS];
--	struct be_queue_info be_cq[MAX_CPUS];
-+	struct be_queue_info be_cq[MAX_CPUS - 1];
- 
- 	struct be_queue_info be_def_hdrq;
- 	struct be_queue_info be_def_dataq;
++#define chip_skyhawk(pdev)	(pdev->device == OC_SKH_ID1)
+ struct beiscsi_hba {
+ 	struct hba_parameters params;
+ 	struct hwi_controller *phwi_ctrlr;
 -- 
 1.7.2
 
