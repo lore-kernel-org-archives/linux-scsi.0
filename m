@@ -1,73 +1,51 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Sat, 29 Sep 2012 23:03:32 +0800
-Message-ID: <50670DC4.7020105@intel.com>
-References: <Pine.LNX.4.44L0.1209291024380.29902-100000@netrider.rowland.org>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 00/16] lpfc 8.3.35: Update lpfc to revision 8.3.35
+Date: Sat, 29 Sep 2012 11:28:29 -0400
+Message-ID: <1348932509.23909.19.camel@myfc17>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:55117 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755450Ab2I2PDv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Sep 2012 11:03:51 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1209291024380.29902-100000@netrider.rowland.org>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:34997 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754143Ab2I2PeD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Sep 2012 11:34:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 09/29/2012 10:29 PM, Alan Stern wrote:
-> On Sat, 29 Sep 2012, Aaron Lu wrote:
-> 
->>> I don't think this is a good idea, quite frankly.  sr seems to be a too
->>> generic place for that.
->>
->> Does this mean sr can only have code that is useful to all devices it
->> manages? i.e. If a piece of code enables a feature for a special kind of
->> ODD(like the sata based ZPODD), it shouldn't be done in sr?
-> 
-> Drivers are allowed to have special features and quirks that apply only 
-> to some devices.
+This patch set updates the lpfc driver to revision 8.3.35
 
-I think SATA based zero power capable ODDs are the "some devices".
+The patches for 8.3.35 contain:
 
-> 
->> There is nothing in theory stopping us from doing this in ata layer.
->> For the loading mechanism, we can always send an ATAPI command to figure
->> it out.
->>
->> So gentlemen, I need your opinions on where this ZPODD code should live
->> before I can continue this work, thanks.
-> 
-> Can arbitrary SCSI devices be ZP, or does this notion apply only to
-> ATAPI-based drives?  That's the key question, and the answer determines
-> where the ZP support belongs.
+- Fix interrupt delay multipler conversion for eq_create
+- Added checking BMBX register for RDY bit before writing the first address in
+- Fix incorrect comment in T10 DIF attributes
+- Correct missing queue destroy on function reset
+- Expand I/O channel support for large systems
+- Fixed Linux generic firmware download on SLI4 devices with longer module names
+- Fix FCP2 Retries for non-r/w commands.
+- Correct request_firmware use that was increasing boot times
+- Fixed PRLI not being retried if a LS_RJT with a reason 
+- Fixed kernel warning on spinlock usage on some distributions
+- Fixed messages for misconfigured port errors 
+- Fixed not checking solicition in progress bit when verifying FCF
+  record for use
+- Fixed SCSI host create showing wrong link speed on SLI3 HBA ports
+- Fix error with fabric service parameters
+- Fixed not reporting logical link speed to SCSI midlayer when QoS not on
+- Update lpfc version for 8.3.35 driver release
 
-I don't know if arbitrary SCSI devices can be ZP or not, the SPC spec
-doesn't seem to define such a power state.
 
-ZPODD is defined for sata based ATAPI ODD which supports device
-attention, but doesn't specify how the ODD is powered off and how the
-device attention pin notifies OS. On x86 systems, these are implemented
-by ACPI.
+The patches were cut against scsi.git, branch "misc".
 
-Though SCSI devices may not have a general notion of ZP, the fact that
-ZPODD are managed by sr driver is enough to make the decision that ZPODD
-code can live in sr?
+-- james s
 
-> 
-> On the other hand, the sr driver certainly deserves to have some form 
-> of runtime PM support, even for devices that aren't ZP.
 
-Agree.
+Signed-off-by: James Smart <james.smart@emulex.com>
 
-And the following codes need to find a home:
-- Code used to handle ACPI wake notification(currently done in ATA, but
-  causes the "annoying" need_eject flag in scsi_device);
-- Code to check if the ODD is ready to be powered off per the ZPODD
-  spec.
 
-Thanks,
-Aaron
+
+
 
