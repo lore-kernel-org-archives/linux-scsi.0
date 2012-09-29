@@ -1,148 +1,57 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 02/16] lpfc 8.3.35: Added checking BMBX register for RDY bit
- before writing the first address in
-Date: Sat, 29 Sep 2012 11:29:06 -0400
-Message-ID: <1348932546.23909.21.camel@myfc17>
+Subject: [PATCH 03/16] lpfc 8.3.35: Fix incorrect comment in T10 DIF
+ attributes
+Date: Sat, 29 Sep 2012 11:29:17 -0400
+Message-ID: <1348932557.23909.22.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:33774 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756248Ab2I2Pei (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Sep 2012 11:34:38 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:35003 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756351Ab2I2Peu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Sep 2012 11:34:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Added checking BMBX register for RDY bit before writing the first address in
+Fix incorrect comment in T10 DIF attributes
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_sli.c |   75 ++++++++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 47 insertions(+), 28 deletions(-)
+ lpfc_attr.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2012-09-26 21:11:18.464153500 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-09-26 21:11:28.318153726 -0400
-@@ -7072,6 +7072,40 @@ lpfc_sli4_async_mbox_unblock(struct lpfc
- }
- 
- /**
-+ * lpfc_sli4_wait_bmbx_ready - Wait for bootstrap mailbox register ready
-+ * @phba: Pointer to HBA context object.
-+ * @mboxq: Pointer to mailbox object.
-+ *
-+ * The function waits for the bootstrap mailbox register ready bit from
-+ * port for twice the regular mailbox command timeout value.
-+ *
-+ *      0 - no timeout on waiting for bootstrap mailbox register ready.
-+ *      MBXERR_ERROR - wait for bootstrap mailbox register timed out.
-+ **/
-+static int
-+lpfc_sli4_wait_bmbx_ready(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
-+{
-+	uint32_t db_ready;
-+	unsigned long timeout;
-+	struct lpfc_register bmbx_reg;
-+
-+	timeout = msecs_to_jiffies(lpfc_mbox_tmo_val(phba, mboxq)
-+				   * 1000) + jiffies;
-+
-+	do {
-+		bmbx_reg.word0 = readl(phba->sli4_hba.BMBXregaddr);
-+		db_ready = bf_get(lpfc_bmbx_rdy, &bmbx_reg);
-+		if (!db_ready)
-+			msleep(2);
-+
-+		if (time_after(jiffies, timeout))
-+			return MBXERR_ERROR;
-+	} while (!db_ready);
-+
-+	return 0;
-+}
-+
-+/**
-  * lpfc_sli4_post_sync_mbox - Post an SLI4 mailbox to the bootstrap mailbox
-  * @phba: Pointer to HBA context object.
-  * @mboxq: Pointer to mailbox object.
-@@ -7092,15 +7126,12 @@ lpfc_sli4_post_sync_mbox(struct lpfc_hba
- {
- 	int rc = MBX_SUCCESS;
- 	unsigned long iflag;
--	uint32_t db_ready;
- 	uint32_t mcqe_status;
- 	uint32_t mbx_cmnd;
--	unsigned long timeout;
- 	struct lpfc_sli *psli = &phba->sli;
- 	struct lpfc_mqe *mb = &mboxq->u.mqe;
- 	struct lpfc_bmbx_create *mbox_rgn;
- 	struct dma_address *dma_address;
--	struct lpfc_register bmbx_reg;
- 
- 	/*
- 	 * Only one mailbox can be active to the bootstrap mailbox region
-@@ -7124,6 +7155,11 @@ lpfc_sli4_post_sync_mbox(struct lpfc_hba
- 	phba->sli.mbox_active = mboxq;
- 	spin_unlock_irqrestore(&phba->hbalock, iflag);
- 
-+	/* wait for bootstrap mbox register for readyness */
-+	rc = lpfc_sli4_wait_bmbx_ready(phba, mboxq);
-+	if (rc)
-+		goto exit;
-+
- 	/*
- 	 * Initialize the bootstrap memory region to avoid stale data areas
- 	 * in the mailbox post.  Then copy the caller's mailbox contents to
-@@ -7138,35 +7174,18 @@ lpfc_sli4_post_sync_mbox(struct lpfc_hba
- 	dma_address = &phba->sli4_hba.bmbx.dma_address;
- 	writel(dma_address->addr_hi, phba->sli4_hba.BMBXregaddr);
- 
--	timeout = msecs_to_jiffies(lpfc_mbox_tmo_val(phba, mboxq)
--				   * 1000) + jiffies;
--	do {
--		bmbx_reg.word0 = readl(phba->sli4_hba.BMBXregaddr);
--		db_ready = bf_get(lpfc_bmbx_rdy, &bmbx_reg);
--		if (!db_ready)
--			msleep(2);
--
--		if (time_after(jiffies, timeout)) {
--			rc = MBXERR_ERROR;
--			goto exit;
--		}
--	} while (!db_ready);
-+	/* wait for bootstrap mbox register for hi-address write done */
-+	rc = lpfc_sli4_wait_bmbx_ready(phba, mboxq);
-+	if (rc)
-+		goto exit;
- 
- 	/* Post the low mailbox dma address to the port. */
- 	writel(dma_address->addr_lo, phba->sli4_hba.BMBXregaddr);
--	timeout = msecs_to_jiffies(lpfc_mbox_tmo_val(phba, mboxq)
--				   * 1000) + jiffies;
--	do {
--		bmbx_reg.word0 = readl(phba->sli4_hba.BMBXregaddr);
--		db_ready = bf_get(lpfc_bmbx_rdy, &bmbx_reg);
--		if (!db_ready)
--			msleep(2);
- 
--		if (time_after(jiffies, timeout)) {
--			rc = MBXERR_ERROR;
--			goto exit;
--		}
--	} while (!db_ready);
-+	/* wait for bootstrap mbox register for low address write done */
-+	rc = lpfc_sli4_wait_bmbx_ready(phba, mboxq);
-+	if (rc)
-+		goto exit;
- 
- 	/*
- 	 * Read the CQ to ensure the mailbox has completed.
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2012-09-26 20:19:47.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2012-09-26 21:11:31.694153802 -0400
+@@ -3935,6 +3935,12 @@ MODULE_PARM_DESC(lpfc_fcp_look_ahead, "L
+ # 	- Only meaningful if BG is turned on (lpfc_enable_bg=1).
+ #	- Allows you to ultimately specify which profiles to use
+ #	- Default will result in registering capabilities for all profiles.
++#	- SHOST_DIF_TYPE1_PROTECTION	1
++#		HBA supports T10 DIF Type 1: HBA to Target Type 1 Protection
++#	- SHOST_DIX_TYPE0_PROTECTION	8
++#		HBA supports DIX Type 0: Host to HBA protection only
++#	- SHOST_DIX_TYPE1_PROTECTION	16
++#		HBA supports DIX Type 1: Host to HBA  Type 1 protection
+ #
+ */
+ unsigned int lpfc_prot_mask = SHOST_DIF_TYPE1_PROTECTION |
+@@ -3947,7 +3953,7 @@ MODULE_PARM_DESC(lpfc_prot_mask, "host p
+ /*
+ # lpfc_prot_guard: i
+ #	- Bit mask of protection guard types to register with the SCSI mid-layer
+-# 	- Guard types are currently either 1) IP checksum 2) T10-DIF CRC
++#	- Guard types are currently either 1) T10-DIF CRC 2) IP checksum
+ #	- Allows you to ultimately specify which profiles to use
+ #	- Default will result in registering capabilities for all guard types
+ #
 
 
 
