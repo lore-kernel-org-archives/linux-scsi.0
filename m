@@ -1,44 +1,33 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 16/16] lpfc 8.3.35: Update lpfc version for 8.3.35 driver
- release
-Date: Sat, 29 Sep 2012 11:32:51 -0400
-Message-ID: <1348932771.23909.35.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Michael Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 07/17] be2iscsi: Fix the kernel panic in blkiopoll disable mode
+Date: Sat, 29 Sep 2012 11:31:40 -0500
+Message-ID: <79ADB278-10C0-401F-9E5E-F40B32502EC6@cs.wisc.edu>
+References: <da282c92-f339-43bc-a13f-28e13a2420a3@CMEXHTCAS1.ad.emulex.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.1 \(1498\))
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:35030 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758575Ab2I2PiZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Sep 2012 11:38:25 -0400
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:52687 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756618Ab2I2Qbt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Sep 2012 12:31:49 -0400
+In-Reply-To: <da282c92-f339-43bc-a13f-28e13a2420a3@CMEXHTCAS1.ad.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Update lpfc version for 8.3.35 driver release
-
-
-Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- lpfc_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+To: John Soni Jose <sony.john-n@emulex.com>
+Cc: linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2012-09-26 20:19:47.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2012-09-26 21:12:03.409154523 -0400
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.3.34"
-+#define LPFC_DRIVER_VERSION "8.3.35"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
+On Sep 28, 2012, at 8:32 PM, John Soni Jose <sony.john-n@emulex.com> wrote:
 
+> From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> 
+> Fix kernel panic issue while running IO in blk_iopoll disable mode.
 
+What was the bug exactly?
 
+> Creating UNBOUND WQ for each EQ in the driver.
+
+What is the benefit of doing this vs per hba like before?
+
+Why WQ_UNBOUND? It seems other drivers prefer it the other way.
