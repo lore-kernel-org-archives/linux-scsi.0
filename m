@@ -1,63 +1,121 @@
-From: Theodore Kilgore <kilgota-StTmvpUuumi84Ug3WP2LR/zrsOk5h0fN@public.gmane.org>
-Subject: Re: [usb-storage] Re: usb3 fails to write when using usb3 hub in
- usb3 port
-Date: Sat, 29 Sep 2012 17:08:30 -0500 (CDT)
-Message-ID: <alpine.LNX.2.02.1209291644400.14415@banach.math.auburn.edu>
-References: <CAEG-z2-QqRs4rK58BsPafnqLuQKXxHCGE_Q5R-WkhpPGNz1RoA@mail.gmail.com> <Pine.LNX.4.44L0.1209271447340.1230-100000@iolanthe.rowland.org> <CAEG-z29dU=C49u7_Hi--dKLLf4OuS_LgB3azR4ui4ngu8dt-bQ@mail.gmail.com> <20120927200433.GB27721@xanatos>
- <CAEG-z2-Z9ojSYatHAq-71EjM36uieL3rrn1V4+hsZAz5murGTA@mail.gmail.com> <alpine.LNX.2.00.1209271758310.12216@banach.math.auburn.edu> <CAEG-z2-vNfQh2yHnu2LqfCjP06LzULHU3vUWoVp-eetAzNbFpg@mail.gmail.com> <CAEG-z29e2mh8b9mhvFtbEXGAdP+sHA+S5-6u5vnpdzhb20QEgQ@mail.gmail.com>
- <CAEG-z2-e2cwZLsDc9ZK8JWAtpKbEcHSG7STwGezc-+9D-=P5Jw@mail.gmail.com> <alpine.LNX.2.02.1209291443590.14311@banach.math.auburn.edu> <CAEG-z2_06EafADVT9NP=YV8oOjXQK9t82gv9gr28vEBqJm_C9w@mail.gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Sun, 30 Sep 2012 00:27:41 +0200
+Message-ID: <201209300027.41533.rjw@sisk.pl>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209282346.15872.rjw@sisk.pl> <50665882.8020104@intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAEG-z2_06EafADVT9NP=YV8oOjXQK9t82gv9gr28vEBqJm_C9w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Adrian Sandu <dexter-aBDqsGrG5hJxuZdfhUSrJg@public.gmane.org>
-Cc: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:51775 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751849Ab2I2WVE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Sep 2012 18:21:04 -0400
+In-Reply-To: <50665882.8020104@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-
-On Sun, 30 Sep 2012, Adrian Sandu wrote:
-
-> > We are working with computers. Weird stuff is not supposed to happen. But
-> > it does. Occasionally, this needs to be remembered, as it does
-> > occasionally cause real-world problems and is often the likely explanation
-> > for what is otherwise inexplicable. Thus, sooner or later some old geezer
-> > comes along and reminds people that Murphy is still around to do his
-> > mischief. I am glad that my suggestions turned out to be helpful.
+On Saturday, September 29, 2012, Aaron Lu wrote:
+> [Adding more people and list back in]
 > 
-> I can't thank you people enough .. I just hope that this thread will
-> help someone else in the future ( feel free to add this to your list
-> of stories ! :) )
-> I just hate it when hardware (or in my case, cable ) makes don't stick
-> to the specs or "improve"/change them as they see it fit. If I'm
-> payin' for a product ( especially from a brand ) I expect it to do its
-> job better than others. I wouldn't of expected this from WD ..
+> On 09/29/2012 05:46 AM, Rafael J. Wysocki wrote:
+> > On Friday, September 28, 2012, Aaron Lu wrote:
+> >> On 09/28/2012 07:15 AM, Rafael J. Wysocki wrote:
+> >>> On Thursday, September 27, 2012, Aaron Lu wrote:
+> >>>> On 09/27/2012 05:37 AM, Rafael J. Wysocki wrote:
+> >>>>>
+> >>>>> Say the user has pressed the eject button.  What does need to happen so that
+> >>>>> the tray is physically ejected?
+> >>>>
+> >>>> The tray is ejected by the ODD itself, host does not have to do anything.
+> >>>>
+> >>>> There is a command(PREVENT_MEDIUM_REMOVAL) to lock the door so that when
+> >>>> user presses the eject button, the tray will not be ejected. This command
+> >>>> is usually sent when we have a disc inside and a user space program
+> >>>> opened the underlying block device(e.g. /dev/sr0) to read/write data.
+> >>>>
+> >>>> And host can also eject the tray by sending a START_STOP_UNIT command
+> >>>> with param LoEj set to 1 and we have a function called sr_tray_move to
+> >>>> do just this. And this is also what I've used to eject the tray after
+> >>>> user wakes up the ODD, as when user presses the eject button when the
+> >>>> ODD is in zero power state, it can't eject the tray as usual, so host
+> >>>> software will need to do this, that's the reason I need to know such
+> >>>> information:
+> >>>> When ODD is resumed, is it because user wakes it up?
+> >>>
+> >>> But START_STOP_UNIT eventually causes ata_scsi_start_stop_xlat() to be
+> >>
+> >> You are following ata case, while the ODD is an atapi device :-)
+> >> The translation function is atapi_xlat, but that doesn't affect the idea
+> >> here.
+> >>
+> >>> executed, so I wonder if we really need to go up through the SCSI stack
+> >>> to send that command to the drive from there?  It should be possible
+> >>> to issue STANDBY/READ VERIFY to the device directly from libata if
+> >>> an eject event is signaled through a GPE.
+> >>
+> >> Yes, this is possible.
+> >> Though it doesn't feel very cool, since I have no idea if the ODD is a
+> >> tray type or slot type in ATA layer and I'll blindly send this command
+> >> to it then, not a problem maybe.
+> > 
+> > It would be good to verify if that works for slot devices, if possible.
+> 
+> The ACPI GPE event is triggered when user inserts a disc into a slot
+> type ODD, and if I send an eject command to it, the disc will be
+> ejected, which is wrong.
+> 
+> I need to know the loading mechanism(tray type or slot type) of the ODD
+> to decide if I should send this command.
+> 
+> > 
+> >> And what do you think of moving the acpi notification code to sr?
+> >> http://marc.info/?l=linux-pm&m=134873904332704&w=4
+> > 
+> > I don't think this is a good idea, quite frankly.  sr seems to be a too
+> > generic place for that.
+> 
+> Does this mean sr can only have code that is useful to all devices it
+> manages? i.e. If a piece of code enables a feature for a special kind of
+> ODD(like the sata based ZPODD), it shouldn't be done in sr?
 
-Oh? Why not? Of course, perhaps Seagate stuff is always better. Or 
-Microsoft. Or Apple. Or ...??? (:-)
+If the feature is specific to one special kind of ODD only, then I don't
+think sr is the right place to add support for it.
 
-Specs and standards are for violating, you know. Or that is what some 
-people think. It has been that way from the beginning of time. But what 
-would be the solution? To have neither specs nor standards? One 
-wouldn't expect that to work out too well, either.
+> > Ideally, the whole ZPODD handling should not be visible to the SCSI layer,
+> 
+> I can see 2 problems:
+> - Don't know its loading machanism so we have the problem above;
 
-Peter Stuge's comments are quite relevant, too. He is probably right about 
-the category of external hard drives, these days. Indeed, they seem too 
-good of a bargain. But maybe we are the ones who are fooled and it is the 
-internal hard drives which are overpriced. Who knows? Anyway, one of the 
-things which makes life really complicated for too many of us is, the 
-statement that "you get what you pay for" is not necessarily true, either. 
-It happens sometimes that some fly-by-night or Brand X company is making 
-and selling the best product on the market in some category, but they 
-can't charge nearly as much money as the so-called reputable producers and 
-vendors precisely because they have no brand recognition. So one never 
-knows.
+Does using the need_eject flag address this problem somehow?
 
-Cheers,
+> - Need to send command to find out if ODD is zero power ready somewhere
+>   in ata layer, this implies the device is doing IO after it is runtime
+>   suspended in scsi layer.
 
-Theodore Kilgore
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There's nothing wrong with accessig suspended devices as long as we know
+that they will respond. :-)
+
+> > perhaps except the "no_polling" flag disabling the polling that may be
+> > useful for other purposes in principle.
+> 
+> I hope so, let's hear what other people has to say.
+> 
+> > 
+> > I'm not sure if it's possible at this point, but if not we need to know
+> > very precisely why not.
+> 
+> There is nothing in theory stopping us from doing this in ata layer.
+> For the loading mechanism, we can always send an ATAPI command to figure
+> it out.
+> 
+> So gentlemen, I need your opinions on where this ZPODD code should live
+> before I can continue this work, thanks.
+
+I would _try_ to add it at the ATA level.
+
+Thanks,
+Rafael
