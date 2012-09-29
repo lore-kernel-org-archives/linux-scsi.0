@@ -1,105 +1,87 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Sat, 29 Sep 2012 10:10:10 +0800
-Message-ID: <50665882.8020104@intel.com>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209280115.06964.rjw@sisk.pl> <5064FA08.6030005@intel.com> <201209282346.15872.rjw@sisk.pl>
+From: Li Zhong <zhong@linux.vnet.ibm.com>
+Subject: [PATCH v2 scsi] Short the path length of scsi_cmd_to_driver()
+Date: Sat, 29 Sep 2012 12:23:37 +0800
+Message-ID: <1348892617.6455.4.camel@ThinkPad-T420>
+References: <1348464626.2475.13.camel@ThinkPad-T420>
+	 <1348465493.2467.3.camel@dabdike> <1348470210.2475.47.camel@ThinkPad-T420>
+	 <1348472104.2467.8.camel@dabdike> <yq13924b4uw.fsf@sermon.lab.mkp.net>
+	 <1348721055.2509.0.camel@dabdike> <yq1bogr8itb.fsf@sermon.lab.mkp.net>
+	 <1348818498.2411.8.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <201209282346.15872.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1348818498.2411.8.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-[Adding more people and list back in]
+As suggested by James: this patch tries to short the path length of
+scsi_cmd_to_driver(). As only REQ_TYPE_BLOCK_PC commands can be
+submitted without a driver, so we could avoid the related NULL
+checking, as long as we make sure we don't use it for REQ_TYPE_BLOCK_PC
+type commands. Plus, this fixes a bug where you get different behaviors
+from REQ_TYPE_BLOCK_PC commands when a driver is and isn't attached.
 
-On 09/29/2012 05:46 AM, Rafael J. Wysocki wrote:
-> On Friday, September 28, 2012, Aaron Lu wrote:
->> On 09/28/2012 07:15 AM, Rafael J. Wysocki wrote:
->>> On Thursday, September 27, 2012, Aaron Lu wrote:
->>>> On 09/27/2012 05:37 AM, Rafael J. Wysocki wrote:
->>>>>
->>>>> Say the user has pressed the eject button.  What does need to happen so that
->>>>> the tray is physically ejected?
->>>>
->>>> The tray is ejected by the ODD itself, host does not have to do anything.
->>>>
->>>> There is a command(PREVENT_MEDIUM_REMOVAL) to lock the door so that when
->>>> user presses the eject button, the tray will not be ejected. This command
->>>> is usually sent when we have a disc inside and a user space program
->>>> opened the underlying block device(e.g. /dev/sr0) to read/write data.
->>>>
->>>> And host can also eject the tray by sending a START_STOP_UNIT command
->>>> with param LoEj set to 1 and we have a function called sr_tray_move to
->>>> do just this. And this is also what I've used to eject the tray after
->>>> user wakes up the ODD, as when user presses the eject button when the
->>>> ODD is in zero power state, it can't eject the tray as usual, so host
->>>> software will need to do this, that's the reason I need to know such
->>>> information:
->>>> When ODD is resumed, is it because user wakes it up?
->>>
->>> But START_STOP_UNIT eventually causes ata_scsi_start_stop_xlat() to be
->>
->> You are following ata case, while the ODD is an atapi device :-)
->> The translation function is atapi_xlat, but that doesn't affect the idea
->> here.
->>
->>> executed, so I wonder if we really need to go up through the SCSI stack
->>> to send that command to the drive from there?  It should be possible
->>> to issue STANDBY/READ VERIFY to the device directly from libata if
->>> an eject event is signaled through a GPE.
->>
->> Yes, this is possible.
->> Though it doesn't feel very cool, since I have no idea if the ODD is a
->> tray type or slot type in ATA layer and I'll blindly send this command
->> to it then, not a problem maybe.
-> 
-> It would be good to verify if that works for slot devices, if possible.
+v2: mirror code != REQ_TYPE_BLOCK_PC in scsi.c, rather than == REQ_TYPE_FS
 
-The ACPI GPE event is triggered when user inserts a disc into a slot
-type ODD, and if I send an eject command to it, the disc will be
-ejected, which is wrong.
+Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
+---
+ drivers/scsi/scsi_error.c |    8 +++++---
+ include/scsi/scsi_cmnd.h  |   12 ++----------
+ 2 files changed, 7 insertions(+), 13 deletions(-)
 
-I need to know the loading mechanism(tray type or slot type) of the ODD
-to decide if I should send this command.
-
-> 
->> And what do you think of moving the acpi notification code to sr?
->> http://marc.info/?l=linux-pm&m=134873904332704&w=4
-> 
-> I don't think this is a good idea, quite frankly.  sr seems to be a too
-> generic place for that.
-
-Does this mean sr can only have code that is useful to all devices it
-manages? i.e. If a piece of code enables a feature for a special kind of
-ODD(like the sata based ZPODD), it shouldn't be done in sr?
-
-> 
-> Ideally, the whole ZPODD handling should not be visible to the SCSI layer,
-
-I can see 2 problems:
-- Don't know its loading machanism so we have the problem above;
-- Need to send command to find out if ODD is zero power ready somewhere
-  in ata layer, this implies the device is doing IO after it is runtime
-  suspended in scsi layer.
-
-> perhaps except the "no_polling" flag disabling the polling that may be
-> useful for other purposes in principle.
-
-I hope so, let's hear what other people has to say.
-
-> 
-> I'm not sure if it's possible at this point, but if not we need to know
-> very precisely why not.
-
-There is nothing in theory stopping us from doing this in ata layer.
-For the loading mechanism, we can always send an ATAPI command to figure
-it out.
-
-So gentlemen, I need your opinions on where this ZPODD code should live
-before I can continue this work, thanks.
-
--Aaron
-
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index de2337f..c1b05a8 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -789,7 +789,6 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 			     int cmnd_size, int timeout, unsigned sense_bytes)
+ {
+ 	struct scsi_device *sdev = scmd->device;
+-	struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+ 	struct Scsi_Host *shost = sdev->host;
+ 	DECLARE_COMPLETION_ONSTACK(done);
+ 	unsigned long timeleft;
+@@ -845,8 +844,11 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 
+ 	scsi_eh_restore_cmnd(scmd, &ses);
+ 
+-	if (sdrv && sdrv->eh_action)
+-		rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
++	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
++		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
++		if (sdrv->eh_action)
++			rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
++	}
+ 
+ 	return rtn;
+ }
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index ac06cc5..de5f5d8 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -132,18 +132,10 @@ struct scsi_cmnd {
+ 	unsigned char tag;	/* SCSI-II queued command tag */
+ };
+ 
++/* make sure not to use it with REQ_TYPE_BLOCK_PC commands */
+ static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+ {
+-	struct scsi_driver **sdp;
+-
+-	if (!cmd->request->rq_disk)
+-		return NULL;
+-
+-	sdp = (struct scsi_driver **)cmd->request->rq_disk->private_data;
+-	if (!sdp)
+-		return NULL;
+-
+-	return *sdp;
++	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
+ }
+ 
+ extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
+-- 
+1.7.7.6
