@@ -1,91 +1,148 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 01/16] lpfc 8.3.35: Fix interrupt delay multipler conversion
- for eq_create
-Date: Sat, 29 Sep 2012 11:28:52 -0400
-Message-ID: <1348932532.23909.20.camel@myfc17>
+Subject: [PATCH 02/16] lpfc 8.3.35: Added checking BMBX register for RDY bit
+ before writing the first address in
+Date: Sat, 29 Sep 2012 11:29:06 -0400
+Message-ID: <1348932546.23909.21.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:33773 "EHLO
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:33774 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754143Ab2I2PeZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Sep 2012 11:34:25 -0400
+	with ESMTP id S1756248Ab2I2Pei (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Sep 2012 11:34:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix interrupt delay multipler conversion for eq_create
+Added checking BMBX register for RDY bit before writing the first address in
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_sli.c  |   15 +++++++++++----
- lpfc_sli4.h |    2 +-
- 2 files changed, 12 insertions(+), 5 deletions(-)
+ lpfc_sli.c |   75 ++++++++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 47 insertions(+), 28 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2012-09-26 20:19:47.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2012-09-26 21:11:18.456153500 -0400
-@@ -626,7 +626,7 @@ void lpfc_sli4_hba_reset(struct lpfc_hba
- struct lpfc_queue *lpfc_sli4_queue_alloc(struct lpfc_hba *, uint32_t,
- 			uint32_t);
- void lpfc_sli4_queue_free(struct lpfc_queue *);
--uint32_t lpfc_eq_create(struct lpfc_hba *, struct lpfc_queue *, uint16_t);
-+uint32_t lpfc_eq_create(struct lpfc_hba *, struct lpfc_queue *, uint32_t);
- uint32_t lpfc_modify_fcp_eq_delay(struct lpfc_hba *, uint16_t);
- uint32_t lpfc_cq_create(struct lpfc_hba *, struct lpfc_queue *,
- 			struct lpfc_queue *, uint32_t, uint32_t);
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2012-09-26 20:19:47.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-09-26 21:11:18.464153500 -0400
-@@ -12099,6 +12099,7 @@ lpfc_modify_fcp_eq_delay(struct lpfc_hba
- 	struct lpfc_queue *eq;
- 	int cnt, rc, length, status = 0;
- 	uint32_t shdr_status, shdr_add_status;
-+	uint32_t result;
- 	int fcp_eqidx;
- 	union lpfc_sli4_cfg_shdr *shdr;
- 	uint16_t dmult;
-@@ -12117,8 +12118,11 @@ lpfc_modify_fcp_eq_delay(struct lpfc_hba
- 	eq_delay = &mbox->u.mqe.un.eq_delay;
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-09-26 21:11:18.464153500 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-09-26 21:11:28.318153726 -0400
+@@ -7072,6 +7072,40 @@ lpfc_sli4_async_mbox_unblock(struct lpfc
+ }
  
- 	/* Calculate delay multiper from maximum interrupt per second */
--	dmult = phba->cfg_fcp_imax / phba->cfg_fcp_io_channel;
--	dmult = LPFC_DMULT_CONST/dmult - 1;
-+	result = phba->cfg_fcp_imax / phba->cfg_fcp_io_channel;
-+	if (result > LPFC_DMULT_CONST)
-+		dmult = 0;
-+	else
-+		dmult = LPFC_DMULT_CONST/result - 1;
- 
- 	cnt = 0;
- 	for (fcp_eqidx = startq; fcp_eqidx < phba->cfg_fcp_io_channel;
-@@ -12174,7 +12178,7 @@ lpfc_modify_fcp_eq_delay(struct lpfc_hba
-  * fails this function will return -ENXIO.
-  **/
- uint32_t
--lpfc_eq_create(struct lpfc_hba *phba, struct lpfc_queue *eq, uint16_t imax)
-+lpfc_eq_create(struct lpfc_hba *phba, struct lpfc_queue *eq, uint32_t imax)
+ /**
++ * lpfc_sli4_wait_bmbx_ready - Wait for bootstrap mailbox register ready
++ * @phba: Pointer to HBA context object.
++ * @mboxq: Pointer to mailbox object.
++ *
++ * The function waits for the bootstrap mailbox register ready bit from
++ * port for twice the regular mailbox command timeout value.
++ *
++ *      0 - no timeout on waiting for bootstrap mailbox register ready.
++ *      MBXERR_ERROR - wait for bootstrap mailbox register timed out.
++ **/
++static int
++lpfc_sli4_wait_bmbx_ready(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
++{
++	uint32_t db_ready;
++	unsigned long timeout;
++	struct lpfc_register bmbx_reg;
++
++	timeout = msecs_to_jiffies(lpfc_mbox_tmo_val(phba, mboxq)
++				   * 1000) + jiffies;
++
++	do {
++		bmbx_reg.word0 = readl(phba->sli4_hba.BMBXregaddr);
++		db_ready = bf_get(lpfc_bmbx_rdy, &bmbx_reg);
++		if (!db_ready)
++			msleep(2);
++
++		if (time_after(jiffies, timeout))
++			return MBXERR_ERROR;
++	} while (!db_ready);
++
++	return 0;
++}
++
++/**
+  * lpfc_sli4_post_sync_mbox - Post an SLI4 mailbox to the bootstrap mailbox
+  * @phba: Pointer to HBA context object.
+  * @mboxq: Pointer to mailbox object.
+@@ -7092,15 +7126,12 @@ lpfc_sli4_post_sync_mbox(struct lpfc_hba
  {
- 	struct lpfc_mbx_eq_create *eq_create;
- 	LPFC_MBOXQ_t *mbox;
-@@ -12206,7 +12210,10 @@ lpfc_eq_create(struct lpfc_hba *phba, st
- 	       LPFC_EQE_SIZE);
- 	bf_set(lpfc_eq_context_valid, &eq_create->u.request.context, 1);
- 	/* Calculate delay multiper from maximum interrupt per second */
--	dmult = LPFC_DMULT_CONST/imax - 1;
-+	if (imax > LPFC_DMULT_CONST)
-+		dmult = 0;
-+	else
-+		dmult = LPFC_DMULT_CONST/imax - 1;
- 	bf_set(lpfc_eq_context_delay_multi, &eq_create->u.request.context,
- 	       dmult);
- 	switch (eq->entry_count) {
+ 	int rc = MBX_SUCCESS;
+ 	unsigned long iflag;
+-	uint32_t db_ready;
+ 	uint32_t mcqe_status;
+ 	uint32_t mbx_cmnd;
+-	unsigned long timeout;
+ 	struct lpfc_sli *psli = &phba->sli;
+ 	struct lpfc_mqe *mb = &mboxq->u.mqe;
+ 	struct lpfc_bmbx_create *mbox_rgn;
+ 	struct dma_address *dma_address;
+-	struct lpfc_register bmbx_reg;
+ 
+ 	/*
+ 	 * Only one mailbox can be active to the bootstrap mailbox region
+@@ -7124,6 +7155,11 @@ lpfc_sli4_post_sync_mbox(struct lpfc_hba
+ 	phba->sli.mbox_active = mboxq;
+ 	spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 
++	/* wait for bootstrap mbox register for readyness */
++	rc = lpfc_sli4_wait_bmbx_ready(phba, mboxq);
++	if (rc)
++		goto exit;
++
+ 	/*
+ 	 * Initialize the bootstrap memory region to avoid stale data areas
+ 	 * in the mailbox post.  Then copy the caller's mailbox contents to
+@@ -7138,35 +7174,18 @@ lpfc_sli4_post_sync_mbox(struct lpfc_hba
+ 	dma_address = &phba->sli4_hba.bmbx.dma_address;
+ 	writel(dma_address->addr_hi, phba->sli4_hba.BMBXregaddr);
+ 
+-	timeout = msecs_to_jiffies(lpfc_mbox_tmo_val(phba, mboxq)
+-				   * 1000) + jiffies;
+-	do {
+-		bmbx_reg.word0 = readl(phba->sli4_hba.BMBXregaddr);
+-		db_ready = bf_get(lpfc_bmbx_rdy, &bmbx_reg);
+-		if (!db_ready)
+-			msleep(2);
+-
+-		if (time_after(jiffies, timeout)) {
+-			rc = MBXERR_ERROR;
+-			goto exit;
+-		}
+-	} while (!db_ready);
++	/* wait for bootstrap mbox register for hi-address write done */
++	rc = lpfc_sli4_wait_bmbx_ready(phba, mboxq);
++	if (rc)
++		goto exit;
+ 
+ 	/* Post the low mailbox dma address to the port. */
+ 	writel(dma_address->addr_lo, phba->sli4_hba.BMBXregaddr);
+-	timeout = msecs_to_jiffies(lpfc_mbox_tmo_val(phba, mboxq)
+-				   * 1000) + jiffies;
+-	do {
+-		bmbx_reg.word0 = readl(phba->sli4_hba.BMBXregaddr);
+-		db_ready = bf_get(lpfc_bmbx_rdy, &bmbx_reg);
+-		if (!db_ready)
+-			msleep(2);
+ 
+-		if (time_after(jiffies, timeout)) {
+-			rc = MBXERR_ERROR;
+-			goto exit;
+-		}
+-	} while (!db_ready);
++	/* wait for bootstrap mbox register for low address write done */
++	rc = lpfc_sli4_wait_bmbx_ready(phba, mboxq);
++	if (rc)
++		goto exit;
+ 
+ 	/*
+ 	 * Read the CQ to ensure the mailbox has completed.
 
 
 
