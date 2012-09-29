@@ -1,44 +1,62 @@
-From: Adrian Sandu <dexter-aBDqsGrG5hJxuZdfhUSrJg@public.gmane.org>
-Subject: Re: [usb-storage] Re: usb3 fails to write when using usb3 hub in usb3 port
-Date: Sat, 29 Sep 2012 22:31:12 +0300
-Message-ID: <CAEG-z2-e2cwZLsDc9ZK8JWAtpKbEcHSG7STwGezc-+9D-=P5Jw@mail.gmail.com>
-References: <CAEG-z2-QqRs4rK58BsPafnqLuQKXxHCGE_Q5R-WkhpPGNz1RoA@mail.gmail.com>
- <Pine.LNX.4.44L0.1209271447340.1230-100000@iolanthe.rowland.org>
- <CAEG-z29dU=C49u7_Hi--dKLLf4OuS_LgB3azR4ui4ngu8dt-bQ@mail.gmail.com>
- <20120927200433.GB27721@xanatos> <CAEG-z2-Z9ojSYatHAq-71EjM36uieL3rrn1V4+hsZAz5murGTA@mail.gmail.com>
- <alpine.LNX.2.00.1209271758310.12216@banach.math.auburn.edu>
- <CAEG-z2-vNfQh2yHnu2LqfCjP06LzULHU3vUWoVp-eetAzNbFpg@mail.gmail.com> <CAEG-z29e2mh8b9mhvFtbEXGAdP+sHA+S5-6u5vnpdzhb20QEgQ@mail.gmail.com>
+From: <sreekanth.reddy@lsi.com>
+Subject: [PATCH][SCSI] mpt3sas: Driver submission v01.100.00.00
+Date: Sat, 29 Sep 2012 19:37:06 +0530
+Message-ID: <20120929140706.GA20615@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAEG-z29e2mh8b9mhvFtbEXGAdP+sHA+S5-6u5vnpdzhb20QEgQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Theodore Kilgore <kilgota-StTmvpUuumi84Ug3WP2LR/zrsOk5h0fN@public.gmane.org>
-Cc: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:49571 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750908Ab2I2UTy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Sep 2012 16:19:54 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com
+Cc: Sathya.Prakash@lsi.com
 
-> The only solution I see is to buy something else, like an Asus
-> EB1501P-B057E .. I need something small and fast enough .. :| Maybe
-> any other recommendations ? ( other root chipset / atom cpu .. small
-> powered .. etc. )
+This is new scsi lld device driver from LSI supporting the SAS 3.0
+standard.
 
-DON'T KILL ME ! .. I got the best cables I could get my hands on (
-double-shielded, 24k golded connectors .. metal pieces .. the best I
-could get my hands on on such short notice )... I replaced 2 cables (
-to hard drives ) and the one from the hub to the computer. I only got
-1 "reset" message in /var/log/messages in 24 hours .. I'll replace the
-other 4 just to be sure .. Now I should "spam" the companies and tell
-them they should provide cables within specs ..
+Here is list of new 12gb host controllers:
 
-I guess having 6 drives that close ( among with other powering cables
-.. networking (I think I got at least 40 cables in that 1 sq m. ))
-isn't that good especially when the usb has another power source and
-stuff..
+  LSI SAS3004
+  LSI SAS3008
+  LSI SAS3108
 
-IT WORKS. YEY. Hope this will help somebody in the future. Thanks for
-bearing me .. I sure learned a lesson from this. I guess all is well
-when it ends well.
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Reviewed-by: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+---
+Here is the brief description of patches:
+[PATCH 01/20] [SCSI] mpt3sas : Makefile, Kconfig and scsi_transport_sas file changes to support new driver mpt3sas
+[PATCH 02/20] [SCSI] mpt3sas : MPI API headers. This patch is part 1 of MPI API headers.
+[PATCH 03/20] [SCSI] mpt3sas : MPI API headers. This patch is part 2 of MPI API headers.
+[PATCH 04/20] [SCSI] mpt3sas : MPI API headers. This patch is part 3 of MPI API headers.
+[PATCH 05/20] [SCSI] mpt3sas : MPI API headers. This patch is part 4 of MPI API headers.
+[PATCH 06/20] [SCSI] mpt3sas : MPI API headers. This patch is part 5 of MPI API headers.
+[PATCH 07/20] [SCSI] mpt3sas : Fusion MPT base driver providing common API layer interface
+						for access to MPT (Message Passing Technology) firmware.
+						This patch is part 1 of mpt3sas_base.c
+[PATCH 08/20] [SCSI] mpt3sas : This patch is part 2 of mpt3sas_base.c
+[PATCH 09/20] [SCSI] mpt3sas : Fusion MPT base driver providing common API layer interface
+						headers for access to MPT (Message Passing Technology) firmware.
+[PATCH 10/20] [SCSI] mpt3sas : Common API for accessing firmware configuration pages
+[PATCH 11/20] [SCSI] mpt3sas : Ioctl Support for MPT (Message Passing Technology)
+						based controller
+[PATCH 12/20] [SCSI] mpt3sas : Ioctl Module Support headers for MPT (Message Passing Technology)
+						based controllers
+[PATCH 13/20] [SCSI] mpt3sas : Logging Support for MPT (Message Passing Technology)
+						based controllers
+[PATCH 14/20] [SCSI] mpt3sas : Code related to Scsi Host Layer for
+						MPT (Message Passing Technology) based controllers
+						This patch is part 1 of mpt3sas_scsih.c
+[PATCH 15/20] [SCSI] mpt3sas : This patch is part 2 of mpt3sas_scsih.c
+[PATCH 16/20] [SCSI] mpt3sas : This patch is part 3 of mpt3sas_scsih.c
+[PATCH 17/20] [SCSI] mpt3sas : Code related to SAS Transport Layer for
+					MPT (Message Passing Technology) based controllers
+[PATCH 18/20] [SCSI] mpt3sas : Common API to set Diagnostic trigger for MPT
+					(Message Passing Technology) based controllers
+[PATCH 19/20] [SCSI] mpt3sas : Common API headers to set Diagnostic trigger for MPT
+					(Message Passing Technology) based controllers
+[PATCH 20/20] [SCSI] mpt3sas : Adding support for MPT3SAS_MINOR(222)
