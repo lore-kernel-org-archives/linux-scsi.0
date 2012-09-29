@@ -1,40 +1,41 @@
 From: <sreekanth.reddy@lsi.com>
-Subject: [PATCH][SCSI] mpt3sas: Common API to set Diagnostic trigger for MPT
- based controllers
-Date: Sat, 29 Sep 2012 19:40:08 +0530
-Message-ID: <20120929141008.GA20696@localhost.localdomain>
+Subject: [PATCH][SCSI] mpt3sas: Common API headers to set Diagnostic trigger
+ for MPT based controllers
+Date: Sat, 29 Sep 2012 19:40:15 +0530
+Message-ID: <20120929141015.GA20699@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:53204 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751060Ab2I2UW4 (ORCPT
+Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:34277 "EHLO
+	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751060Ab2I2UXD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Sep 2012 16:22:56 -0400
+	Sat, 29 Sep 2012 16:23:03 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com
 Cc: Sathya.Prakash@lsi.com
 
-This patch provides common API to set Diagnostic trigger for MPT
+This patch provides common API headers to set Diagnostic trigger for MPT
 (Message Passing Technology) based controllers
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 Reviewed-by: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
 ---
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h
 new file mode 100644
-index 0000000..da6c5f2
+index 0000000..a10c309
 --- /dev/null
-+++ b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
-@@ -0,0 +1,434 @@
++++ b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h
+@@ -0,0 +1,193 @@
 +/*
-+ * This module provides common API to set Diagnostic trigger for MPT
-+ * (Message Passing Technology) based controllers
++ * This is the Fusion MPT base driver providing common API layer interface
++ * to set Diagnostic triggers for MPT (Message Passing Technology) based
++ * controllers
 + *
-+ * This code is based on drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
++ * This code is based on drivers/scsi/mpt3sas/mpt3sas_base.h
 + * Copyright (C) 2012  LSI Corporation
 + *  (mailto:DL-MPTFusionLinux@lsi.com)
 + *
@@ -73,394 +74,152 @@ index 0000000..da6c5f2
 + * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 + * USA.
 + */
++  /* Diagnostic Trigger Configuration Data Structures */
 +
-+#include <linux/version.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/errno.h>
-+#include <linux/init.h>
-+#include <linux/slab.h>
-+#include <linux/types.h>
-+#include <linux/pci.h>
-+#include <linux/delay.h>
-+#include <linux/compat.h>
-+#include <linux/poll.h>
++#ifndef MPT3SAS_TRIGGER_DIAG_H_INCLUDED
++#define MPT3SAS_TRIGGER_DIAG_H_INCLUDED
 +
-+#include <linux/io.h>
-+#include <linux/uaccess.h>
++/* limitation on number of entries */
++#define NUM_VALID_ENTRIES               (20)
 +
-+#include "mpt3sas_base.h"
++/* trigger types */
++#define MPT3SAS_TRIGGER_MASTER          (1)
++#define MPT3SAS_TRIGGER_EVENT           (2)
++#define MPT3SAS_TRIGGER_SCSI            (3)
++#define MPT3SAS_TRIGGER_MPI             (4)
 +
-+/**
-+ * _mpt3sas_raise_sigio - notifiy app
-+ * @ioc: per adapter object
-+ * @event_data:
-+ */
-+static void
-+_mpt3sas_raise_sigio(struct MPT3SAS_ADAPTER *ioc,
-+	struct SL_WH_TRIGGERS_EVENT_DATA_T *event_data)
-+{
-+	Mpi2EventNotificationReply_t *mpi_reply;
-+	u16 sz, event_data_sz;
-+	unsigned long flags;
++/* trigger names */
++#define MASTER_TRIGGER_FILE_NAME        "diag_trigger_master"
++#define EVENT_TRIGGERS_FILE_NAME        "diag_trigger_event"
++#define SCSI_TRIGGERS_FILE_NAME         "diag_trigger_scsi"
++#define MPI_TRIGGER_FILE_NAME           "diag_trigger_mpi"
 +
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT "%s: enter\n",
-+	    ioc->name, __func__));
++/* master trigger bitmask */
++#define MASTER_TRIGGER_FW_FAULT         (0x00000001)
++#define MASTER_TRIGGER_ADAPTER_RESET    (0x00000002)
++#define MASTER_TRIGGER_TASK_MANAGMENT   (0x00000004)
++#define MASTER_TRIGGER_DEVICE_REMOVAL   (0x00000008)
 +
-+	sz = offsetof(Mpi2EventNotificationReply_t, EventData) +
-+	    sizeof(struct SL_WH_TRIGGERS_EVENT_DATA_T) + 4;
-+	mpi_reply = kzalloc(sz, GFP_KERNEL);
-+	if (!mpi_reply)
-+		goto out;
-+	mpi_reply->Event = cpu_to_le16(MPI3_EVENT_DIAGNOSTIC_TRIGGER_FIRED);
-+	event_data_sz = (sizeof(struct SL_WH_TRIGGERS_EVENT_DATA_T) + 4) / 4;
-+	mpi_reply->EventDataLength = cpu_to_le16(event_data_sz);
-+	memcpy(&mpi_reply->EventData, event_data,
-+	    sizeof(struct SL_WH_TRIGGERS_EVENT_DATA_T));
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: add to driver event log\n",
-+		ioc->name, __func__));
-+	mpt3sas_ctl_add_to_event_log(ioc, mpi_reply);
-+	kfree(mpi_reply);
-+ out:
-+
-+	/* clearing the diag_trigger_active flag */
-+	spin_lock_irqsave(&ioc->diag_trigger_lock, flags);
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: clearing diag_trigger_active flag\n",
-+		ioc->name, __func__));
-+	ioc->diag_trigger_active = 0;
-+	spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT "%s: exit\n", ioc->name,
-+	    __func__));
-+}
++/* fake firmware event for tigger */
++#define MPI3_EVENT_DIAGNOSTIC_TRIGGER_FIRED	(0x6E)
 +
 +/**
-+ * mpt3sas_process_trigger_data - process the event data for the trigger
-+ * @ioc: per adapter object
-+ * @event_data:
-+ */
-+void
-+mpt3sas_process_trigger_data(struct MPT3SAS_ADAPTER *ioc,
-+	struct SL_WH_TRIGGERS_EVENT_DATA_T *event_data)
-+{
-+	u8 issue_reset = 0;
-+
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT "%s: enter\n",
-+	    ioc->name, __func__));
-+
-+	/* release the diag buffer trace */
-+	if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
-+	    MPT3_DIAG_BUFFER_IS_RELEASED) == 0) {
-+		dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: release trace diag buffer\n", ioc->name, __func__));
-+		mpt3sas_send_diag_release(ioc, MPI2_DIAG_BUF_TYPE_TRACE,
-+		    &issue_reset);
-+	}
-+
-+	_mpt3sas_raise_sigio(ioc, event_data);
-+
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT "%s: exit\n", ioc->name,
-+	    __func__));
-+}
-+
-+/**
-+ * mpt3sas_trigger_master - Master trigger handler
-+ * @ioc: per adapter object
-+ * @trigger_bitmask:
++ * MasterTrigger is a single U32 passed to/from sysfs.
 + *
++ * Bit Flags (enables) include:
++ * 1. FW Faults
++ * 2. Adapter Reset issued by driver
++ * 3. TMs
++ * 4. Device Remove Event sent by FW
 + */
-+void
-+mpt3sas_trigger_master(struct MPT3SAS_ADAPTER *ioc, u32 trigger_bitmask)
-+{
-+	struct SL_WH_TRIGGERS_EVENT_DATA_T event_data;
-+	unsigned long flags;
-+	u8 found_match = 0;
 +
-+	spin_lock_irqsave(&ioc->diag_trigger_lock, flags);
-+
-+	if (trigger_bitmask & MASTER_TRIGGER_FW_FAULT ||
-+	    trigger_bitmask & MASTER_TRIGGER_ADAPTER_RESET)
-+		goto by_pass_checks;
-+
-+	/* check to see if trace buffers are currently registered */
-+	if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
-+	    MPT3_DIAG_BUFFER_IS_REGISTERED) == 0) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		return;
-+	}
-+
-+	/* check to see if trace buffers are currently released */
-+	if (ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
-+	    MPT3_DIAG_BUFFER_IS_RELEASED) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		return;
-+	}
-+
-+ by_pass_checks:
-+
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: enter - trigger_bitmask = 0x%08x\n",
-+		ioc->name, __func__, trigger_bitmask));
-+
-+	/* don't send trigger if an trigger is currently active */
-+	if (ioc->diag_trigger_active) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		goto out;
-+	}
-+
-+	/* check for the trigger condition */
-+	if (ioc->diag_trigger_master.MasterData & trigger_bitmask) {
-+		found_match = 1;
-+		ioc->diag_trigger_active = 1;
-+		dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: setting diag_trigger_active flag\n",
-+		ioc->name, __func__));
-+	}
-+	spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+
-+	if (!found_match)
-+		goto out;
-+
-+	memset(&event_data, 0, sizeof(struct SL_WH_TRIGGERS_EVENT_DATA_T));
-+	event_data.trigger_type = MPT3SAS_TRIGGER_MASTER;
-+	event_data.u.master.MasterData = trigger_bitmask;
-+
-+	if (trigger_bitmask & MASTER_TRIGGER_FW_FAULT ||
-+	    trigger_bitmask & MASTER_TRIGGER_ADAPTER_RESET)
-+		_mpt3sas_raise_sigio(ioc, &event_data);
-+	else
-+		mpt3sas_send_trigger_data_event(ioc, &event_data);
-+
-+ out:
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT "%s: exit\n", ioc->name,
-+	    __func__));
-+}
++struct SL_WH_MASTER_TRIGGER_T {
++	uint32_t MasterData;
++};
 +
 +/**
-+ * mpt3sas_trigger_event - Event trigger handler
-+ * @ioc: per adapter object
-+ * @event:
-+ * @log_entry_qualifier:
++ * struct SL_WH_EVENT_TRIGGER_T -  Definition of an event trigger element
++ * @EventValue: Event Code to trigger on
++ * @LogEntryQualifier: Type of FW event that logged (Log Entry Added Event only)
 + *
++ * Defines an event that should induce a DIAG_TRIGGER driver event if observed.
 + */
-+void
-+mpt3sas_trigger_event(struct MPT3SAS_ADAPTER *ioc, u16 event,
-+	u16 log_entry_qualifier)
-+{
-+	struct SL_WH_TRIGGERS_EVENT_DATA_T event_data;
-+	struct SL_WH_EVENT_TRIGGER_T *event_trigger;
-+	int i;
-+	unsigned long flags;
-+	u8 found_match;
-+
-+	spin_lock_irqsave(&ioc->diag_trigger_lock, flags);
-+
-+	/* check to see if trace buffers are currently registered */
-+	if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
-+	    MPT3_DIAG_BUFFER_IS_REGISTERED) == 0) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		return;
-+	}
-+
-+	/* check to see if trace buffers are currently released */
-+	if (ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
-+	    MPT3_DIAG_BUFFER_IS_RELEASED) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		return;
-+	}
-+
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: enter - event = 0x%04x, log_entry_qualifier = 0x%04x\n",
-+		ioc->name, __func__, event, log_entry_qualifier));
-+
-+	/* don't send trigger if an trigger is currently active */
-+	if (ioc->diag_trigger_active) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		goto out;
-+	}
-+
-+	/* check for the trigger condition */
-+	event_trigger = ioc->diag_trigger_event.EventTriggerEntry;
-+	for (i = 0 , found_match = 0; i < ioc->diag_trigger_event.ValidEntries
-+	    && !found_match; i++, event_trigger++) {
-+		if (event_trigger->EventValue != event)
-+			continue;
-+		if (event == MPI2_EVENT_LOG_ENTRY_ADDED) {
-+			if (event_trigger->LogEntryQualifier ==
-+			    log_entry_qualifier)
-+				found_match = 1;
-+			continue;
-+		}
-+		found_match = 1;
-+		ioc->diag_trigger_active = 1;
-+		dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+			"%s: setting diag_trigger_active flag\n",
-+			ioc->name, __func__));
-+	}
-+	spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+
-+	if (!found_match)
-+		goto out;
-+
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: setting diag_trigger_active flag\n",
-+		ioc->name, __func__));
-+	memset(&event_data, 0, sizeof(struct SL_WH_TRIGGERS_EVENT_DATA_T));
-+	event_data.trigger_type = MPT3SAS_TRIGGER_EVENT;
-+	event_data.u.event.EventValue = event;
-+	event_data.u.event.LogEntryQualifier = log_entry_qualifier;
-+	mpt3sas_send_trigger_data_event(ioc, &event_data);
-+ out:
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT "%s: exit\n", ioc->name,
-+	    __func__));
-+}
++struct SL_WH_EVENT_TRIGGER_T {
++	uint16_t EventValue;
++	uint16_t LogEntryQualifier;
++};
 +
 +/**
-+ * mpt3sas_trigger_scsi - SCSI trigger handler
-+ * @ioc: per adapter object
-+ * @sense_key:
-+ * @asc:
-+ * @ascq:
++ * struct SL_WH_EVENT_TRIGGERS_T -  Structure passed to/from sysfs containing a
++ *    list of Event Triggers to be monitored for.
++ * @ValidEntries: Number of _SL_WH_EVENT_TRIGGER_T structures contained in this
++ *    structure.
++ * @EventTriggerEntry: List of Event trigger elements.
 + *
++ * This binary structure is transferred via sysfs to get/set Event Triggers
++ * in the Linux Driver.
 + */
-+void
-+mpt3sas_trigger_scsi(struct MPT3SAS_ADAPTER *ioc, u8 sense_key, u8 asc,
-+	u8 ascq)
-+{
-+	struct SL_WH_TRIGGERS_EVENT_DATA_T event_data;
-+	struct SL_WH_SCSI_TRIGGER_T *scsi_trigger;
-+	int i;
-+	unsigned long flags;
-+	u8 found_match;
 +
-+	spin_lock_irqsave(&ioc->diag_trigger_lock, flags);
-+
-+	/* check to see if trace buffers are currently registered */
-+	if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
-+	    MPT3_DIAG_BUFFER_IS_REGISTERED) == 0) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		return;
-+	}
-+
-+	/* check to see if trace buffers are currently released */
-+	if (ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
-+	    MPT3_DIAG_BUFFER_IS_RELEASED) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		return;
-+	}
-+
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: enter - sense_key = 0x%02x, asc = 0x%02x, ascq = 0x%02x\n",
-+		ioc->name, __func__, sense_key, asc, ascq));
-+
-+	/* don't send trigger if an trigger is currently active */
-+	if (ioc->diag_trigger_active) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		goto out;
-+	}
-+
-+	/* check for the trigger condition */
-+	scsi_trigger = ioc->diag_trigger_scsi.SCSITriggerEntry;
-+	for (i = 0 , found_match = 0; i < ioc->diag_trigger_scsi.ValidEntries
-+	    && !found_match; i++, scsi_trigger++) {
-+		if (scsi_trigger->SenseKey != sense_key)
-+			continue;
-+		if (!(scsi_trigger->ASC == 0xFF || scsi_trigger->ASC == asc))
-+			continue;
-+		if (!(scsi_trigger->ASCQ == 0xFF || scsi_trigger->ASCQ == ascq))
-+			continue;
-+		found_match = 1;
-+		ioc->diag_trigger_active = 1;
-+	}
-+	spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+
-+	if (!found_match)
-+		goto out;
-+
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: setting diag_trigger_active flag\n",
-+		ioc->name, __func__));
-+	memset(&event_data, 0, sizeof(struct SL_WH_TRIGGERS_EVENT_DATA_T));
-+	event_data.trigger_type = MPT3SAS_TRIGGER_SCSI;
-+	event_data.u.scsi.SenseKey = sense_key;
-+	event_data.u.scsi.ASC = asc;
-+	event_data.u.scsi.ASCQ = ascq;
-+	mpt3sas_send_trigger_data_event(ioc, &event_data);
-+ out:
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT "%s: exit\n", ioc->name,
-+	    __func__));
-+}
++struct SL_WH_EVENT_TRIGGERS_T {
++	uint32_t ValidEntries;
++	struct SL_WH_EVENT_TRIGGER_T EventTriggerEntry[NUM_VALID_ENTRIES];
++};
 +
 +/**
-+ * mpt3sas_trigger_mpi - MPI trigger handler
-+ * @ioc: per adapter object
-+ * @ioc_status:
-+ * @loginfo:
++ * struct SL_WH_SCSI_TRIGGER_T -  Definition of a SCSI trigger element
++ * @ASCQ: Additional Sense Code Qualifier.  Can be specific or 0xFF for
++ *     wildcard.
++ * @ASC: Additional Sense Code.  Can be specific or 0xFF for wildcard
++ * @SenseKey: SCSI Sense Key
 + *
++ * Defines a sense key (single or many variants) that should induce a
++ * DIAG_TRIGGER driver event if observed.
 + */
-+void
-+mpt3sas_trigger_mpi(struct MPT3SAS_ADAPTER *ioc, u16 ioc_status, u32 loginfo)
-+{
-+	struct SL_WH_TRIGGERS_EVENT_DATA_T event_data;
-+	struct SL_WH_MPI_TRIGGER_T *mpi_trigger;
-+	int i;
-+	unsigned long flags;
-+	u8 found_match;
++struct SL_WH_SCSI_TRIGGER_T {
++	U8 ASCQ;
++	U8 ASC;
++	U8 SenseKey;
++	U8 Reserved;
++};
 +
-+	spin_lock_irqsave(&ioc->diag_trigger_lock, flags);
++/**
++ * struct SL_WH_SCSI_TRIGGERS_T -  Structure passed to/from sysfs containing a
++ *    list of SCSI sense codes that should trigger a DIAG_SERVICE event when
++ *    observed.
++ * @ValidEntries: Number of _SL_WH_SCSI_TRIGGER_T structures contained in this
++ *    structure.
++ * @SCSITriggerEntry: List of SCSI Sense Code trigger elements.
++ *
++ * This binary structure is transferred via sysfs to get/set SCSI Sense Code
++ * Triggers in the Linux Driver.
++ */
++struct SL_WH_SCSI_TRIGGERS_T {
++	uint32_t ValidEntries;
++	struct SL_WH_SCSI_TRIGGER_T SCSITriggerEntry[NUM_VALID_ENTRIES];
++};
 +
-+	/* check to see if trace buffers are currently registered */
-+	if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
-+	    MPT3_DIAG_BUFFER_IS_REGISTERED) == 0) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		return;
-+	}
++/**
++ * struct SL_WH_MPI_TRIGGER_T -  Definition of an MPI trigger element
++ * @IOCStatus: MPI IOCStatus
++ * @IocLogInfo: MPI IocLogInfo.  Can be specific or 0xFFFFFFFF for wildcard
++ *
++ * Defines a MPI IOCStatus/IocLogInfo pair that should induce a DIAG_TRIGGER
++ * driver event if observed.
++ */
++struct SL_WH_MPI_TRIGGER_T {
++	uint16_t IOCStatus;
++	uint16_t Reserved;
++	uint32_t IocLogInfo;
++};
 +
-+	/* check to see if trace buffers are currently released */
-+	if (ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
-+	    MPT3_DIAG_BUFFER_IS_RELEASED) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		return;
-+	}
++/**
++ * struct SL_WH_MPI_TRIGGERS_T -  Structure passed to/from sysfs containing a
++ *    list of MPI IOCStatus/IocLogInfo pairs that should trigger a DIAG_SERVICE
++ *    event when observed.
++ * @ValidEntries: Number of _SL_WH_MPI_TRIGGER_T structures contained in this
++ *    structure.
++ * @MPITriggerEntry: List of MPI IOCStatus/IocLogInfo trigger elements.
++ *
++ * This binary structure is transferred via sysfs to get/set MPI Error Triggers
++ * in the Linux Driver.
++ */
++struct SL_WH_MPI_TRIGGERS_T {
++	uint32_t ValidEntries;
++	struct SL_WH_MPI_TRIGGER_T MPITriggerEntry[NUM_VALID_ENTRIES];
++};
 +
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: enter - ioc_status = 0x%04x, loginfo = 0x%08x\n",
-+		ioc->name, __func__, ioc_status, loginfo));
-+
-+	/* don't send trigger if an trigger is currently active */
-+	if (ioc->diag_trigger_active) {
-+		spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+		goto out;
-+	}
-+
-+	/* check for the trigger condition */
-+	mpi_trigger = ioc->diag_trigger_mpi.MPITriggerEntry;
-+	for (i = 0 , found_match = 0; i < ioc->diag_trigger_mpi.ValidEntries
-+	    && !found_match; i++, mpi_trigger++) {
-+		if (mpi_trigger->IOCStatus != ioc_status)
-+			continue;
-+		if (!(mpi_trigger->IocLogInfo == 0xFFFFFFFF ||
-+		    mpi_trigger->IocLogInfo == loginfo))
-+			continue;
-+		found_match = 1;
-+		ioc->diag_trigger_active = 1;
-+	}
-+	spin_unlock_irqrestore(&ioc->diag_trigger_lock, flags);
-+
-+	if (!found_match)
-+		goto out;
-+
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT
-+		"%s: setting diag_trigger_active flag\n",
-+		ioc->name, __func__));
-+	memset(&event_data, 0, sizeof(struct SL_WH_TRIGGERS_EVENT_DATA_T));
-+	event_data.trigger_type = MPT3SAS_TRIGGER_MPI;
-+	event_data.u.mpi.IOCStatus = ioc_status;
-+	event_data.u.mpi.IocLogInfo = loginfo;
-+	mpt3sas_send_trigger_data_event(ioc, &event_data);
-+ out:
-+	dTriggerDiagPrintk(ioc, pr_info(MPT3SAS_FMT "%s: exit\n", ioc->name,
-+	    __func__));
-+}
++/**
++ * struct SL_WH_TRIGGERS_EVENT_DATA_T -  event data for trigger
++ * @trigger_type: trigger type (see MPT3SAS_TRIGGER_XXXX)
++ * @u: trigger condition that caused trigger to be sent
++ */
++struct SL_WH_TRIGGERS_EVENT_DATA_T {
++	uint32_t trigger_type;
++	union {
++		struct SL_WH_MASTER_TRIGGER_T master;
++		struct SL_WH_EVENT_TRIGGER_T event;
++		struct SL_WH_SCSI_TRIGGER_T scsi;
++		struct SL_WH_MPI_TRIGGER_T mpi;
++	} u;
++};
++#endif /* MPT3SAS_TRIGGER_DIAG_H_INCLUDED */
