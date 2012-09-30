@@ -1,29 +1,20 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/6] iscsi-target: Add base MaxXmitDataSegmentLength code
-Date: Sun, 30 Sep 2012 05:58:12 +0000
-Message-ID: <1348984696-30992-3-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 4/6] iscsi-target: Convert incoming PDU payload checks to MaxXmitDataSegmentLength
+Date: Sun, 30 Sep 2012 05:58:14 +0000
+Message-ID: <1348984696-30992-5-git-send-email-nab@linux-iscsi.org>
 References: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:38358 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751820Ab2I3GDc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Sep 2012 02:03:32 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch introduces a new per connection MaxXmitDataSegmentLength
-parameter value used to represent the outgoing MaxRecvDataSegmentLength
-that is actually sent over the wire during iSCSI login response back
-to the initiator side.
-
-It also adds a new MaxXmitDataSegmentLength configfs attribute to
-represent this value within the existing TPG parameter group under
-/sys/kernel/config/target/iscsi/$TARGETNAME/$TPGT/param/
+Now that iscsi-target supports a local configurable MaxXmitDataSegmentLength,
+go ahead and make ISCSI_OP_SCSI_CMD, ISCSI_OP_SCSI_DATA_OUT, ISCSI_OP_NOOP_OUT
+and ISCSI_OP_TEXT PDU payload checks honor conn_ops->MaxXmitDataSegmentLength.
 
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Cc: Andy Grover <agrover@redhat.com>
@@ -31,115 +22,69 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Roland Dreier <roland@purestorage.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_configfs.c   |    4 ++++
- drivers/target/iscsi/iscsi_target_core.h       |    1 +
- drivers/target/iscsi/iscsi_target_parameters.c |   21 +++++++++++++++++++++
- drivers/target/iscsi/iscsi_target_parameters.h |    5 +++++
- 4 files changed, 31 insertions(+), 0 deletions(-)
+ drivers/target/iscsi/iscsi_target.c |   24 ++++++++++++------------
+ 1 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-index f86833f..f491f96 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -1034,6 +1034,9 @@ TPG_PARAM_ATTR(ImmediateData, S_IRUGO | S_IWUSR);
- DEF_TPG_PARAM(MaxRecvDataSegmentLength);
- TPG_PARAM_ATTR(MaxRecvDataSegmentLength, S_IRUGO | S_IWUSR);
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 30842e1..632a5ae 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -869,10 +869,10 @@ done:
+ 				buf, conn);
+ 	}
  
-+DEF_TPG_PARAM(MaxXmitDataSegmentLength);
-+TPG_PARAM_ATTR(MaxXmitDataSegmentLength, S_IRUGO | S_IWUSR);
-+
- DEF_TPG_PARAM(MaxBurstLength);
- TPG_PARAM_ATTR(MaxBurstLength, S_IRUGO | S_IWUSR);
+-	if (payload_length > conn->conn_ops->MaxRecvDataSegmentLength) {
++	if (payload_length > conn->conn_ops->MaxXmitDataSegmentLength) {
+ 		pr_err("DataSegmentLength: %u is greater than"
+-			" MaxRecvDataSegmentLength: %u, protocol error.\n",
+-			payload_length, conn->conn_ops->MaxRecvDataSegmentLength);
++			" MaxXmitDataSegmentLength: %u, protocol error.\n",
++			payload_length, conn->conn_ops->MaxXmitDataSegmentLength);
+ 		return iscsit_add_reject(ISCSI_REASON_PROTOCOL_ERROR, 1,
+ 				buf, conn);
+ 	}
+@@ -1216,10 +1216,10 @@ static int iscsit_handle_data_out(struct iscsi_conn *conn, unsigned char *buf)
+ 	}
+ 	spin_unlock_bh(&conn->sess->session_stats_lock);
  
-@@ -1079,6 +1082,7 @@ static struct configfs_attribute *lio_target_tpg_param_attrs[] = {
- 	&iscsi_tpg_param_InitialR2T.attr,
- 	&iscsi_tpg_param_ImmediateData.attr,
- 	&iscsi_tpg_param_MaxRecvDataSegmentLength.attr,
-+	&iscsi_tpg_param_MaxXmitDataSegmentLength.attr,
- 	&iscsi_tpg_param_MaxBurstLength.attr,
- 	&iscsi_tpg_param_FirstBurstLength.attr,
- 	&iscsi_tpg_param_DefaultTime2Wait.attr,
-diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
-index 8a908b2..b26611a 100644
---- a/drivers/target/iscsi/iscsi_target_core.h
-+++ b/drivers/target/iscsi/iscsi_target_core.h
-@@ -239,6 +239,7 @@ struct iscsi_conn_ops {
- 	u8	HeaderDigest;			/* [0,1] == [None,CRC32C] */
- 	u8	DataDigest;			/* [0,1] == [None,CRC32C] */
- 	u32	MaxRecvDataSegmentLength;	/* [512..2**24-1] */
-+	u32	MaxXmitDataSegmentLength;	/* [512..2**24-1] */
- 	u8	OFMarker;			/* [0,1] == [No,Yes] */
- 	u8	IFMarker;			/* [0,1] == [No,Yes] */
- 	u32	OFMarkInt;			/* [1..65535] */
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index 0c4760f..40864ee 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.c
-+++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -334,6 +334,13 @@ int iscsi_create_default_params(struct iscsi_param_list **param_list_ptr)
- 	if (!param)
- 		goto out;
+-	if (payload_length > conn->conn_ops->MaxRecvDataSegmentLength) {
++	if (payload_length > conn->conn_ops->MaxXmitDataSegmentLength) {
+ 		pr_err("DataSegmentLength: %u is greater than"
+-			" MaxRecvDataSegmentLength: %u\n", payload_length,
+-			conn->conn_ops->MaxRecvDataSegmentLength);
++			" MaxXmitDataSegmentLength: %u\n", payload_length,
++			conn->conn_ops->MaxXmitDataSegmentLength);
+ 		return iscsit_add_reject(ISCSI_REASON_PROTOCOL_ERROR, 1,
+ 					buf, conn);
+ 	}
+@@ -1437,11 +1437,11 @@ static int iscsit_handle_nop_out(
+ 					buf, conn);
+ 	}
  
-+	param = iscsi_set_default_param(pl, MAXXMITDATASEGMENTLENGTH,
-+			INITIAL_MAXXMITDATASEGMENTLENGTH,
-+			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
-+			TYPERANGE_512_TO_16777215, USE_ALL);
-+	if (!param)
-+		goto out;
-+
- 	param = iscsi_set_default_param(pl, MAXRECVDATASEGMENTLENGTH,
- 			INITIAL_MAXRECVDATASEGMENTLENGTH,
- 			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
-@@ -467,6 +474,8 @@ int iscsi_set_keys_to_negotiate(
- 			SET_PSTATE_NEGOTIATE(param);
- 		} else if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH)) {
- 			SET_PSTATE_NEGOTIATE(param);
-+		} else if (!strcmp(param->name, MAXXMITDATASEGMENTLENGTH)) {
-+			continue;
- 		} else if (!strcmp(param->name, MAXBURSTLENGTH)) {
- 			SET_PSTATE_NEGOTIATE(param);
- 		} else if (!strcmp(param->name, FIRSTBURSTLENGTH)) {
-@@ -1720,6 +1729,18 @@ void iscsi_set_connection_parameters(
- 	pr_debug("---------------------------------------------------"
- 			"---------------\n");
- 	list_for_each_entry(param, &param_list->param_list, p_list) {
-+		/*
-+		 * Special case to set MAXXMITDATASEGMENTLENGTH from the
-+		 * target requested MaxRecvDataSegmentLength, even though
-+		 * this key is not sent over the wire.
-+		 */
-+		if (!strcmp(param->name, MAXXMITDATASEGMENTLENGTH)) {
-+			ops->MaxXmitDataSegmentLength =
-+				simple_strtoul(param->value, &tmpptr, 0);
-+			pr_debug("MaxXmitDataSegmentLength:     %s\n",
-+				param->value);
-+		}
-+
- 		if (!IS_PSTATE_ACCEPTOR(param) && !IS_PSTATE_PROPOSER(param))
- 			continue;
- 		if (!strcmp(param->name, AUTHMETHOD)) {
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.h b/drivers/target/iscsi/iscsi_target_parameters.h
-index 6a37fd6..77a28b5 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.h
-+++ b/drivers/target/iscsi/iscsi_target_parameters.h
-@@ -70,6 +70,7 @@ extern void iscsi_set_session_parameters(struct iscsi_sess_ops *,
- #define INITIALR2T			"InitialR2T"
- #define IMMEDIATEDATA			"ImmediateData"
- #define MAXRECVDATASEGMENTLENGTH	"MaxRecvDataSegmentLength"
-+#define MAXXMITDATASEGMENTLENGTH	"MaxXmitDataSegmentLength"
- #define MAXBURSTLENGTH			"MaxBurstLength"
- #define FIRSTBURSTLENGTH		"FirstBurstLength"
- #define DEFAULTTIME2WAIT		"DefaultTime2Wait"
-@@ -113,6 +114,10 @@ extern void iscsi_set_session_parameters(struct iscsi_sess_ops *,
- #define INITIAL_INITIALR2T			YES
- #define INITIAL_IMMEDIATEDATA			YES
- #define INITIAL_MAXRECVDATASEGMENTLENGTH	"8192"
-+/*
-+ * Match outgoing MXDSL default to incoming Open-iSCSI default
-+ */
-+#define INITIAL_MAXXMITDATASEGMENTLENGTH	"262144"
- #define INITIAL_MAXBURSTLENGTH			"262144"
- #define INITIAL_FIRSTBURSTLENGTH		"65536"
- #define INITIAL_DEFAULTTIME2WAIT		"2"
+-	if (payload_length > conn->conn_ops->MaxRecvDataSegmentLength) {
++	if (payload_length > conn->conn_ops->MaxXmitDataSegmentLength) {
+ 		pr_err("NOPOUT Ping Data DataSegmentLength: %u is"
+-			" greater than MaxRecvDataSegmentLength: %u, protocol"
++			" greater than MaxXmitDataSegmentLength: %u, protocol"
+ 			" error.\n", payload_length,
+-			conn->conn_ops->MaxRecvDataSegmentLength);
++			conn->conn_ops->MaxXmitDataSegmentLength);
+ 		return iscsit_add_reject(ISCSI_REASON_PROTOCOL_ERROR, 1,
+ 					buf, conn);
+ 	}
+@@ -1874,10 +1874,10 @@ static int iscsit_handle_text_cmd(
+ 	hdr->cmdsn		= be32_to_cpu(hdr->cmdsn);
+ 	hdr->exp_statsn		= be32_to_cpu(hdr->exp_statsn);
+ 
+-	if (payload_length > conn->conn_ops->MaxRecvDataSegmentLength) {
++	if (payload_length > conn->conn_ops->MaxXmitDataSegmentLength) {
+ 		pr_err("Unable to accept text parameter length: %u"
+-			"greater than MaxRecvDataSegmentLength %u.\n",
+-		       payload_length, conn->conn_ops->MaxRecvDataSegmentLength);
++			"greater than MaxXmitDataSegmentLength %u.\n",
++		       payload_length, conn->conn_ops->MaxXmitDataSegmentLength);
+ 		return iscsit_add_reject(ISCSI_REASON_PROTOCOL_ERROR, 1,
+ 					buf, conn);
+ 	}
 -- 
 1.7.2.5
-
