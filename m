@@ -1,82 +1,135 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 5/6] iscsi-target: Add MaxXmitDataSegmentLength connection recovery check
-Date: Sun, 30 Sep 2012 05:58:15 +0000
-Message-ID: <1348984696-30992-6-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 1/6] target/file: Re-enable optional fd_buffered_io=1 operation
+Date: Sun, 30 Sep 2012 05:58:11 +0000
+Message-ID: <1348984696-30992-2-git-send-email-nab@linux-iscsi.org>
 References: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-The iSCSI TMR TASK_REASSIGN completion logic in iscsi_tmr_task_reassign()
-does an explict check for MRDSL across task reassignment, so go ahead and
-add an explict MaxXmitDataSegmentLength check here as well to be safe.
+This patch re-adds the ability to optionally run in buffered FILEIO mode
+(eg: w/o O_DSYNC) for device backends in order to once again use the
+Linux buffered cache as a write-back storage mechanism.
 
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Andy Grover <agrover@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Roland Dreier <roland@purestorage.com>
+This logic was originally dropped with mainline v3.5-rc commit:
+
+commit a4dff3043c231d57f982af635c9d2192ee40e5ae
+Author: Nicholas Bellinger <nab@linux-iscsi.org>
+Date:   Wed May 30 16:25:41 2012 -0700
+
+    target/file: Use O_DSYNC by default for FILEIO backends
+
+This difference with this patch is that fd_create_virtdevice() now
+forces the explicit setting of emulate_write_cache=1 when buffered FILEIO
+operation has been enabled.
+
+Reported-by: Ferry <iscsitmp@bananateam.nl>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: <stable@vger.kernel.org>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_core.h |    1 +
- drivers/target/iscsi/iscsi_target_erl2.c |    1 +
- drivers/target/iscsi/iscsi_target_tmr.c  |    9 ++++++++-
- 3 files changed, 10 insertions(+), 1 deletions(-)
+ drivers/target/target_core_file.c |   36 +++++++++++++++++++++++++++++++++---
+ drivers/target/target_core_file.h |    1 +
+ 2 files changed, 34 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
-index b26611a..e6a8305 100644
---- a/drivers/target/iscsi/iscsi_target_core.h
-+++ b/drivers/target/iscsi/iscsi_target_core.h
-@@ -579,6 +579,7 @@ struct iscsi_conn_recovery {
- 	u16			cid;
- 	u32			cmd_count;
- 	u32			maxrecvdatasegmentlength;
-+	u32			maxxmitdatasegmentlength;
- 	int			ready_for_reallegiance;
- 	struct list_head	conn_recovery_cmd_list;
- 	spinlock_t		conn_recovery_cmd_lock;
-diff --git a/drivers/target/iscsi/iscsi_target_erl2.c b/drivers/target/iscsi/iscsi_target_erl2.c
-index 65aac14..667c19c 100644
---- a/drivers/target/iscsi/iscsi_target_erl2.c
-+++ b/drivers/target/iscsi/iscsi_target_erl2.c
-@@ -421,6 +421,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
- 	cr->cid = conn->cid;
- 	cr->cmd_count = cmd_count;
- 	cr->maxrecvdatasegmentlength = conn->conn_ops->MaxRecvDataSegmentLength;
-+	cr->maxxmitdatasegmentlength = conn->conn_ops->MaxXmitDataSegmentLength;
- 	cr->sess = conn->sess;
- 
- 	iscsit_attach_inactive_connection_recovery_entry(conn->sess, cr);
-diff --git a/drivers/target/iscsi/iscsi_target_tmr.c b/drivers/target/iscsi/iscsi_target_tmr.c
-index f62fe12..05d2e64 100644
---- a/drivers/target/iscsi/iscsi_target_tmr.c
-+++ b/drivers/target/iscsi/iscsi_target_tmr.c
-@@ -146,7 +146,7 @@ u8 iscsit_tmr_task_reassign(
- 	}
- 	/*
- 	 * Temporary check to prevent connection recovery for
--	 * connections with a differing MaxRecvDataSegmentLength.
-+	 * connections with a differing Max*DataSegmentLength.
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 1111925..e79b7b9 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -125,6 +125,14 @@ static struct se_device *fd_create_virtdevice(
+ 	 * of pure timestamp updates.
  	 */
- 	if (cr->maxrecvdatasegmentlength !=
- 	    conn->conn_ops->MaxRecvDataSegmentLength) {
-@@ -155,6 +155,13 @@ u8 iscsit_tmr_task_reassign(
- 			" TMR TASK_REASSIGN.\n");
- 		return ISCSI_TMF_RSP_REJECTED;
- 	}
-+	if (cr->maxxmitdatasegmentlength !=
-+	    conn->conn_ops->MaxXmitDataSegmentLength) {
-+		pr_err("Unable to perform connection recovery for"
-+			" differing MaxXmitDataSegmentLength, rejecting"
-+			" TMR TASK_REASSIGN.\n");
-+		return ISCSI_TMF_RSP_REJECTED;
+ 	flags = O_RDWR | O_CREAT | O_LARGEFILE | O_DSYNC;
++	 /*
++	 * Optionally allow fd_buffered_io=1 to be enabled for people
++	 * who know what they are doing w/o O_DSYNC.
++	 */
++	if (fd_dev->fbd_flags & FDBD_USE_BUFFERED_IO) {
++		pr_debug("FILEIO: Disabling O_DSYNC, using buffered FILEIO\n");
++		flags &= ~O_DSYNC;
 +	}
  
- 	ref_lun = scsilun_to_int(&hdr->lun);
- 	if (ref_lun != ref_cmd->se_cmd.orig_fe_lun) {
+ 	file = filp_open(fd_dev->fd_dev_name, flags, 0600);
+ 	if (IS_ERR(file)) {
+@@ -188,6 +196,12 @@ static struct se_device *fd_create_virtdevice(
+ 	if (!dev)
+ 		goto fail;
+ 
++	if (fd_dev->fbd_flags & FDBD_USE_BUFFERED_IO) {
++		pr_debug("FILEIO: Forcing setting of emulate_write_cache=1"
++			" with FDBD_USE_BUFFERED_IO\n");
++		dev->se_sub_dev->se_dev_attrib.emulate_write_cache = 1;
++	}
++
+ 	fd_dev->fd_dev_id = fd_host->fd_host_dev_id_count++;
+ 	fd_dev->fd_queue_depth = dev->queue_depth;
+ 
+@@ -407,6 +421,7 @@ enum {
+ static match_table_t tokens = {
+ 	{Opt_fd_dev_name, "fd_dev_name=%s"},
+ 	{Opt_fd_dev_size, "fd_dev_size=%s"},
++	{Opt_fd_buffered_io, "fd_buffered_io=%d"},
+ 	{Opt_err, NULL}
+ };
+ 
+@@ -418,7 +433,7 @@ static ssize_t fd_set_configfs_dev_params(
+ 	struct fd_dev *fd_dev = se_dev->se_dev_su_ptr;
+ 	char *orig, *ptr, *arg_p, *opts;
+ 	substring_t args[MAX_OPT_ARGS];
+-	int ret = 0, token;
++	int ret = 0, arg, token;
+ 
+ 	opts = kstrdup(page, GFP_KERNEL);
+ 	if (!opts)
+@@ -459,6 +474,19 @@ static ssize_t fd_set_configfs_dev_params(
+ 					" bytes\n", fd_dev->fd_dev_size);
+ 			fd_dev->fbd_flags |= FBDF_HAS_SIZE;
+ 			break;
++		case Opt_fd_buffered_io:
++			match_int(args, &arg);
++			if (arg != 1) {
++				pr_err("bogus fd_buffered_io=%d value\n", arg);
++				ret = -EINVAL;
++				goto out;
++			}
++
++			pr_debug("FILEIO: Using buffered I/O"
++				" operations for struct fd_dev\n");
++
++			fd_dev->fbd_flags |= FDBD_USE_BUFFERED_IO;
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -490,8 +518,10 @@ static ssize_t fd_show_configfs_dev_params(
+ 	ssize_t bl = 0;
+ 
+ 	bl = sprintf(b + bl, "TCM FILEIO ID: %u", fd_dev->fd_dev_id);
+-	bl += sprintf(b + bl, "        File: %s  Size: %llu  Mode: O_DSYNC\n",
+-		fd_dev->fd_dev_name, fd_dev->fd_dev_size);
++	bl += sprintf(b + bl, "        File: %s  Size: %llu  Mode: %s\n",
++		fd_dev->fd_dev_name, fd_dev->fd_dev_size,
++		(fd_dev->fbd_flags & FDBD_USE_BUFFERED_IO) ?
++		"Buffered" : "O_DSYNC");
+ 	return bl;
+ }
+ 
+diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core_file.h
+index 70ce7fd..fbd59ef 100644
+--- a/drivers/target/target_core_file.h
++++ b/drivers/target/target_core_file.h
+@@ -14,6 +14,7 @@
+ 
+ #define FBDF_HAS_PATH		0x01
+ #define FBDF_HAS_SIZE		0x02
++#define FDBD_USE_BUFFERED_IO	0x04
+ 
+ struct fd_dev {
+ 	u32		fbd_flags;
 -- 
 1.7.2.5
