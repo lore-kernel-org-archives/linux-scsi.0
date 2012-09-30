@@ -1,41 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Sun, 30 Sep 2012 15:15:19 -0400
-Message-ID: <50689A47.6060806@pobox.com>
-References: <Pine.LNX.4.44L0.1209301044000.14373-100000@netrider.rowland.org>
+Date: Sun, 30 Sep 2012 15:43:27 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
+References: <50689794.50203@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1209301044000.14373-100000@netrider.rowland.org>
+In-Reply-To: <50689794.50203@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Aaron Lu <aaron.lu@intel.com>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/30/2012 10:47 AM, Alan Stern wrote:
-> On Sun, 30 Sep 2012, Aaron Lu wrote:
->
->> Makes sense to me, but there is a problem if I want to block events
->> checking for the disk, as I do not have a pointer to the gendisk in ATA
->> layer.
+On Sun, 30 Sep 2012, Jeff Garzik wrote:
 
-You may discover the gendisk by going the ATA -> SCSI -> block route.
+> The simple fact of "only ZPODD devices out there are ATA" is not the 
+> decision-maker for where the code should live.  It is more a question 
+> where ZPODD belongs in the device/command set model currently employed.
 
+I don't really accept this argument.  It's a little like saying: The
+tty layer uses ioctl commands to control RS232 line settings; therefore
+RS232 settings should be handled in the VFS layer as part of the ioctl
+core.
 
->> The tray will be ejected by the ODD itself when it has power, I do not
->> need to do that. Moreover, I don't think I need enable the GPE bit when
->> it has power.
->
-> It sounds like you need to add only two things to the sr layer: An
-> interface to enable/disable event checking and an interface to request
-> an eject.  (And perhaps ejects can be carried out entirely within the
-> ATAPI layer, with no need to involve sr.)
+Regardless, according to Aaron the ZP power-off stuff is currently
+implemented only in ACPI, tied more closely to the ATA layer than the
+SCSI layer (though not part of either).  It is not part of the SCSI
+spec in any form.  Now it's true that determining whether a device is
+in the right state for power to be removed involves sending a TEST UNIT
+READY command, which is of course a SCSI command.  This seems to be
+incidental to the overall scheme, however.
 
-Sounds reasonable.
-
-	Jeff
-
-
-
+Alan Stern
 
