@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 6/6] iscsi-target: Change iscsi_target_seq_pdu_list.c to honor MaxXmitDataSegmentLength
-Date: Sun, 30 Sep 2012 05:58:16 +0000
-Message-ID: <1348984696-30992-7-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 3/6] iscsi-target: Enable MaxXmitDataSegmentLength operation in login path
+Date: Sun, 30 Sep 2012 05:58:13 +0000
+Message-ID: <1348984696-30992-4-git-send-email-nab@linux-iscsi.org>
 References: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
@@ -12,9 +12,22 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts iscsi_target_seq_pdu_list.c code for DataSequenceInOrder=No +
-DataPDUInOrder=No operation to honor the MaxXmitDataSegmentLength value
-for iscsi_cmd->se_cmd.data_direction == DMA_TO_DEVICE cases.
+This patch activates MaxXmitDataSegmentLength usage that performs the
+following sequence of events:
+
+- Once the incoming initiator's MAXRECVDATASEGMENTLENGTH key is detected
+  within iscsi_check_acceptor_state(), save the requested MRDSL into
+  conn->conn_ops->MaxRecvDataSegmentLength
+
+- Next change the outgoing target's MaxRecvDataSegmenthLength key=value
+  based upon the local TPG's MaxXmitDataSegmentLength attribute value.
+
+- Change iscsi_set_connection_parameters() to skip the assignment of
+  conn->conn_ops->MaxRecvDataSegmentLength, now setup within
+  iscsi_check_acceptor_state()
+
+Also update iscsi_decode_text_input() -> iscsi_check_acceptor_state()
+code-path to accept struct iscsi_conn *.
 
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Cc: Andy Grover <agrover@redhat.com>
@@ -22,164 +35,135 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Roland Dreier <roland@purestorage.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_seq_pdu_list.c |   61 +++++++++++-----------
- 1 files changed, 31 insertions(+), 30 deletions(-)
+ drivers/target/iscsi/iscsi_target_nego.c       |    4 +-
+ drivers/target/iscsi/iscsi_target_parameters.c |   50 +++++++++++++++++++----
+ drivers/target/iscsi/iscsi_target_parameters.h |    2 +-
+ 3 files changed, 44 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_seq_pdu_list.c b/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
-index 85a306e..edb592a 100644
---- a/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
-+++ b/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
-@@ -219,8 +219,14 @@ static void iscsit_determine_counts_for_list(
- 	int check_immediate = 0;
- 	u32 burstlength = 0, offset = 0;
- 	u32 unsolicited_data_length = 0;
-+	u32 mdsl;
- 	struct iscsi_conn *conn = cmd->conn;
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index a9a73ac..d08373f 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -550,7 +550,7 @@ static int iscsi_target_handle_csg_zero(
+ 			SENDER_INITIATOR|SENDER_RECEIVER,
+ 			login->req_buf,
+ 			payload_length,
+-			conn->param_list);
++			conn);
+ 	if (ret < 0)
+ 		return -1;
  
-+	if (cmd->se_cmd.data_direction == DMA_TO_DEVICE)
-+		mdsl = cmd->conn->conn_ops->MaxXmitDataSegmentLength;
-+	else
-+		mdsl = cmd->conn->conn_ops->MaxRecvDataSegmentLength;
-+
- 	if ((bl->type == PDULIST_IMMEDIATE) ||
- 	    (bl->type == PDULIST_IMMEDIATE_AND_UNSOLICITED))
- 		check_immediate = 1;
-@@ -243,14 +249,13 @@ static void iscsit_determine_counts_for_list(
- 			continue;
- 		}
- 		if (unsolicited_data_length > 0) {
--			if ((offset + conn->conn_ops->MaxRecvDataSegmentLength)
--					>= cmd->se_cmd.data_length) {
-+			if ((offset + mdsl) >= cmd->se_cmd.data_length) {
- 				unsolicited_data_length -=
- 					(cmd->se_cmd.data_length - offset);
- 				offset += (cmd->se_cmd.data_length - offset);
- 				continue;
- 			}
--			if ((offset + conn->conn_ops->MaxRecvDataSegmentLength)
-+			if ((offset + mdsl)
- 					>= conn->sess->sess_ops->FirstBurstLength) {
- 				unsolicited_data_length -=
- 					(conn->sess->sess_ops->FirstBurstLength -
-@@ -262,17 +267,15 @@ static void iscsit_determine_counts_for_list(
- 				continue;
- 			}
+@@ -627,7 +627,7 @@ static int iscsi_target_handle_csg_one(struct iscsi_conn *conn, struct iscsi_log
+ 			SENDER_INITIATOR|SENDER_RECEIVER,
+ 			login->req_buf,
+ 			payload_length,
+-			conn->param_list);
++			conn);
+ 	if (ret < 0)
+ 		return -1;
  
--			offset += conn->conn_ops->MaxRecvDataSegmentLength;
--			unsolicited_data_length -=
--				conn->conn_ops->MaxRecvDataSegmentLength;
-+			offset += mdsl;
-+			unsolicited_data_length -= mdsl;
- 			continue;
- 		}
--		if ((offset + conn->conn_ops->MaxRecvDataSegmentLength) >=
--		     cmd->se_cmd.data_length) {
-+		if ((offset + mdsl) >= cmd->se_cmd.data_length) {
- 			offset += (cmd->se_cmd.data_length - offset);
- 			continue;
- 		}
--		if ((burstlength + conn->conn_ops->MaxRecvDataSegmentLength) >=
-+		if ((burstlength + mdsl) >=
- 		     conn->sess->sess_ops->MaxBurstLength) {
- 			offset += (conn->sess->sess_ops->MaxBurstLength -
- 					burstlength);
-@@ -281,8 +284,8 @@ static void iscsit_determine_counts_for_list(
- 			continue;
- 		}
- 
--		burstlength += conn->conn_ops->MaxRecvDataSegmentLength;
--		offset += conn->conn_ops->MaxRecvDataSegmentLength;
-+		burstlength += mdsl;
-+		offset += mdsl;
- 	}
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index 40864ee..3678ff2 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -1065,7 +1065,8 @@ out:
+ 	return proposer_values;
  }
  
-@@ -296,12 +299,17 @@ static int iscsit_do_build_pdu_and_seq_lists(
- 	struct iscsi_build_list *bl)
+-static int iscsi_check_acceptor_state(struct iscsi_param *param, char *value)
++static int iscsi_check_acceptor_state(struct iscsi_param *param, char *value,
++				struct iscsi_conn *conn)
  {
- 	int check_immediate = 0, datapduinorder, datasequenceinorder;
--	u32 burstlength = 0, offset = 0, i = 0;
-+	u32 burstlength = 0, offset = 0, i = 0, mdsl;
- 	u32 pdu_count = 0, seq_no = 0, unsolicited_data_length = 0;
- 	struct iscsi_conn *conn = cmd->conn;
- 	struct iscsi_pdu *pdu = cmd->pdu_list;
- 	struct iscsi_seq *seq = cmd->seq_list;
+ 	u8 acceptor_boolean_value = 0, proposer_boolean_value = 0;
+ 	char *negoitated_value = NULL;
+@@ -1140,8 +1141,35 @@ static int iscsi_check_acceptor_state(struct iscsi_param *param, char *value)
+ 				return -1;
+ 		}
  
-+	if (cmd->se_cmd.data_direction == DMA_TO_DEVICE)
-+		mdsl = cmd->conn->conn_ops->MaxXmitDataSegmentLength;
-+	else
-+		mdsl = cmd->conn->conn_ops->MaxRecvDataSegmentLength;
+-		if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH))
+-			SET_PSTATE_REPLY_OPTIONAL(param);
++		if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH)) {
++			struct iscsi_param *param_mxdsl;
++			unsigned long long tmp;
++			int rc;
 +
- 	datapduinorder = conn->sess->sess_ops->DataPDUInOrder;
- 	datasequenceinorder = conn->sess->sess_ops->DataSequenceInOrder;
++			rc = strict_strtoull(param->value, 0, &tmp);
++			if (rc < 0)
++				return -1;
++
++			conn->conn_ops->MaxRecvDataSegmentLength = tmp;
++			pr_debug("Saving op->MaxRecvDataSegmentLength from"
++				" original initiator received value: %u\n",
++				conn->conn_ops->MaxRecvDataSegmentLength);
++
++			param_mxdsl = iscsi_find_param_from_key(
++						MAXXMITDATASEGMENTLENGTH,
++						conn->param_list);
++			if (!param_mxdsl)
++				return -1;
++
++			rc = iscsi_update_param_value(param,
++						param_mxdsl->value);
++			if (rc < 0)
++				return -1;
++
++			pr_debug("Updated %s to target MXDSL value: %s\n",
++					param->name, param->value);
++		}
++
+ 	} else if (IS_TYPE_NUMBER_RANGE(param)) {
+ 		negoitated_value = iscsi_get_value_from_number_range(
+ 					param, value);
+@@ -1535,8 +1563,9 @@ int iscsi_decode_text_input(
+ 	u8 sender,
+ 	char *textbuf,
+ 	u32 length,
+-	struct iscsi_param_list *param_list)
++	struct iscsi_conn *conn)
+ {
++	struct iscsi_param_list *param_list = conn->param_list;
+ 	char *tmpbuf, *start = NULL, *end = NULL;
  
-@@ -348,9 +356,7 @@ static int iscsit_do_build_pdu_and_seq_lists(
- 			continue;
- 		}
- 		if (unsolicited_data_length > 0) {
--			if ((offset +
--			     conn->conn_ops->MaxRecvDataSegmentLength) >=
--			     cmd->se_cmd.data_length) {
-+			if ((offset + mdsl) >= cmd->se_cmd.data_length) {
- 				if (!datapduinorder) {
- 					pdu[i].type = PDUTYPE_UNSOLICITED;
- 					pdu[i].length =
-@@ -367,8 +373,7 @@ static int iscsit_do_build_pdu_and_seq_lists(
- 				offset += (cmd->se_cmd.data_length - offset);
- 				continue;
+ 	tmpbuf = kzalloc(length + 1, GFP_KERNEL);
+@@ -1594,7 +1623,7 @@ int iscsi_decode_text_input(
  			}
--			if ((offset +
--			     conn->conn_ops->MaxRecvDataSegmentLength) >=
-+			if ((offset + mdsl) >=
- 					conn->sess->sess_ops->FirstBurstLength) {
- 				if (!datapduinorder) {
- 					pdu[i].type = PDUTYPE_UNSOLICITED;
-@@ -396,17 +401,14 @@ static int iscsit_do_build_pdu_and_seq_lists(
- 
- 			if (!datapduinorder) {
- 				pdu[i].type = PDUTYPE_UNSOLICITED;
--				pdu[i++].length =
--				     conn->conn_ops->MaxRecvDataSegmentLength;
-+				pdu[i++].length = mdsl;
+ 			SET_PSTATE_RESPONSE_GOT(param);
+ 		} else {
+-			if (iscsi_check_acceptor_state(param, value) < 0) {
++			if (iscsi_check_acceptor_state(param, value, conn) < 0) {
+ 				kfree(tmpbuf);
+ 				return -1;
  			}
--			burstlength += conn->conn_ops->MaxRecvDataSegmentLength;
--			offset += conn->conn_ops->MaxRecvDataSegmentLength;
--			unsolicited_data_length -=
--				conn->conn_ops->MaxRecvDataSegmentLength;
-+			burstlength += mdsl;
-+			offset += mdsl;
-+			unsolicited_data_length -= mdsl;
- 			continue;
- 		}
--		if ((offset + conn->conn_ops->MaxRecvDataSegmentLength) >=
--		     cmd->se_cmd.data_length) {
-+		if ((offset + mdsl) >= cmd->se_cmd.data_length) {
- 			if (!datapduinorder) {
- 				pdu[i].type = PDUTYPE_NORMAL;
- 				pdu[i].length = (cmd->se_cmd.data_length - offset);
-@@ -420,7 +422,7 @@ static int iscsit_do_build_pdu_and_seq_lists(
- 			offset += (cmd->se_cmd.data_length - offset);
- 			continue;
- 		}
--		if ((burstlength + conn->conn_ops->MaxRecvDataSegmentLength) >=
-+		if ((burstlength + mdsl) >=
- 		     conn->sess->sess_ops->MaxBurstLength) {
- 			if (!datapduinorder) {
- 				pdu[i].type = PDUTYPE_NORMAL;
-@@ -445,11 +447,10 @@ static int iscsit_do_build_pdu_and_seq_lists(
- 
- 		if (!datapduinorder) {
- 			pdu[i].type = PDUTYPE_NORMAL;
--			pdu[i++].length =
--				conn->conn_ops->MaxRecvDataSegmentLength;
-+			pdu[i++].length = mdsl;
- 		}
--		burstlength += conn->conn_ops->MaxRecvDataSegmentLength;
--		offset += conn->conn_ops->MaxRecvDataSegmentLength;
-+		burstlength += mdsl;
-+		offset += mdsl;
- 	}
- 
- 	if (!datasequenceinorder) {
+@@ -1755,10 +1784,13 @@ void iscsi_set_connection_parameters(
+ 			pr_debug("DataDigest:                   %s\n",
+ 				param->value);
+ 		} else if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH)) {
+-			ops->MaxRecvDataSegmentLength =
+-				simple_strtoul(param->value, &tmpptr, 0);
+-			pr_debug("MaxRecvDataSegmentLength:     %s\n",
+-				param->value);
++			/*
++			 * At this point iscsi_check_acceptor_state() will have
++			 * set ops->MaxRecvDataSegmentLength from the original
++			 * initiator provided value.
++			 */
++			pr_debug("MaxRecvDataSegmentLength:     %u\n",
++				ops->MaxRecvDataSegmentLength);
+ 		} else if (!strcmp(param->name, OFMARKER)) {
+ 			ops->OFMarker = !strcmp(param->value, YES);
+ 			pr_debug("OFMarker:                     %s\n",
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.h b/drivers/target/iscsi/iscsi_target_parameters.h
+index 77a28b5..1e1b750 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.h
++++ b/drivers/target/iscsi/iscsi_target_parameters.h
+@@ -36,7 +36,7 @@ extern void iscsi_release_param_list(struct iscsi_param_list *);
+ extern struct iscsi_param *iscsi_find_param_from_key(char *, struct iscsi_param_list *);
+ extern int iscsi_extract_key_value(char *, char **, char **);
+ extern int iscsi_update_param_value(struct iscsi_param *, char *);
+-extern int iscsi_decode_text_input(u8, u8, char *, u32, struct iscsi_param_list *);
++extern int iscsi_decode_text_input(u8, u8, char *, u32, struct iscsi_conn *);
+ extern int iscsi_encode_text_output(u8, u8, char *, u32 *,
+ 			struct iscsi_param_list *);
+ extern int iscsi_check_negotiated_keys(struct iscsi_param_list *);
 -- 
 1.7.2.5
