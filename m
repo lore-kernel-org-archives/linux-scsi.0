@@ -1,90 +1,132 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH] qla2xxx: silence two GCC warnings
-Date: Sun, 30 Sep 2012 13:07:54 +0200
-Message-ID: <1349003274.15306.6.camel@x61.thuisdomein>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Sun, 30 Sep 2012 20:32:23 +0800
+Message-ID: <20120930123222.GA2412@localhost.localdomain>
+References: <Pine.LNX.4.44L0.1209291024380.29902-100000@netrider.rowland.org>
+ <50670DC4.7020105@intel.com>
+ <201209300044.51017.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:4525 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750786Ab2I3LIA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Sep 2012 07:08:00 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <201209300044.51017.rjw@sisk.pl>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Compiling qla_gs.o (part of the qla2xxx module) triggers two GCC
-warnings:
-    drivers/scsi/qla2xxx/qla_gs.c: In function =E2=80=98qla2x00_fdmi_rh=
-ba=E2=80=99:
-    drivers/scsi/qla2xxx/qla_gs.c:1339:7: warning: array subscript is a=
-bove array bounds [-Warray-bounds]
-    drivers/scsi/qla2xxx/qla_gs.c: In function =E2=80=98qla2x00_fdmi_re=
-gister=E2=80=99:
-    drivers/scsi/qla2xxx/qla_gs.c:1663:15: warning: array subscript is =
-above array bounds [-Warray-bounds]
+On Sun, Sep 30, 2012 at 12:44:50AM +0200, Rafael J. Wysocki wrote:
+> On Saturday, September 29, 2012, Aaron Lu wrote:
+> > On 09/29/2012 10:29 PM, Alan Stern wrote:
+> > > On Sat, 29 Sep 2012, Aaron Lu wrote:
+> > > 
+> > >>> I don't think this is a good idea, quite frankly.  sr seems to be a too
+> > >>> generic place for that.
+> > >>
+> > >> Does this mean sr can only have code that is useful to all devices it
+> > >> manages? i.e. If a piece of code enables a feature for a special kind of
+> > >> ODD(like the sata based ZPODD), it shouldn't be done in sr?
+> > > 
+> > > Drivers are allowed to have special features and quirks that apply only 
+> > > to some devices.
+> > 
+> > I think SATA based zero power capable ODDs are the "some devices".
+> > 
+> > > 
+> > >> There is nothing in theory stopping us from doing this in ata layer.
+> > >> For the loading mechanism, we can always send an ATAPI command to figure
+> > >> it out.
+> > >>
+> > >> So gentlemen, I need your opinions on where this ZPODD code should live
+> > >> before I can continue this work, thanks.
+> > > 
+> > > Can arbitrary SCSI devices be ZP, or does this notion apply only to
+> > > ATAPI-based drives?  That's the key question, and the answer determines
+> > > where the ZP support belongs.
+> > 
+> > I don't know if arbitrary SCSI devices can be ZP or not, the SPC spec
+> > doesn't seem to define such a power state.
+> > 
+> > ZPODD is defined for sata based ATAPI ODD which supports device
+> > attention, but doesn't specify how the ODD is powered off and how the
+> > device attention pin notifies OS. On x86 systems, these are implemented
+> > by ACPI.
+> > 
+> > Though SCSI devices may not have a general notion of ZP, the fact that
+> > ZPODD are managed by sr driver is enough to make the decision that ZPODD
+> > code can live in sr?
+> 
+> Well, only a part of it is handled by sr, the high-level part so to speak.
+> The low-level handling is done by the ATA layer.  Now, since sr is the
+> high-level part and is supposed to be generic, I don't think it's appropriate
+> to make it care about some low-level things specific to ATA (because there is
+> another layer of code supposed to handle those).
 
-It seems that the sequence of a strcpy followed by a strlen confuses GC=
-C
-when it is keeping track of array bounds here. (It is not clear to me
-which array triggers this warning and by how much GCC thinks the
-subscript is above its bounds. Neither is it clear to me why comparable
-code in these two functions doesn't trigger this warning.)
+Makes sense to me, but there is a problem if I want to block events
+checking for the disk, as I do not have a pointer to the gendisk in ATA
+layer.
 
-The easiest way to silence these warnings is to hardcode the length of
-these two strings in the code here. The length used here is the length
-of the string, including its NUL terminator, rounded up to the next
-multiple of four.
+> 
+> > > On the other hand, the sr driver certainly deserves to have some form 
+> > > of runtime PM support, even for devices that aren't ZP.
+> > 
+> > Agree.
+> > 
+> > And the following codes need to find a home:
+> > - Code used to handle ACPI wake notification(currently done in ATA, but
+> >   causes the "annoying" need_eject flag in scsi_device);
+> 
+> And quite frankly I'd more and more convinced that this flag isn't really
+> necessary.
+> 
+> What you really want to achieve is to eject the tray of a tray-type ODD
+> if the eject is signaled through a GPE.  I don't see anything for sr to
+> do in that.  Moreover, you probably would like to do that even if the
+> drive is not powered down, right?
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-0) I noticed this warning while building v3.6-rc7 on current Fedora
-17, using Fedora's default config.
+The tray will be ejected by the ODD itself when it has power, I do not
+need to do that. Moreover, I don't think I need enable the GPE bit when
+it has power.
 
-1) Compile tested only.=20
+> 
+> I wonder if this mechanism can be used for user space notification
+> without polling regardless of whether or not the zero-power feature is
+> used?
 
- drivers/scsi/qla2xxx/qla_gs.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+This may be a reason the GPE should be always enabled no matter if power
+is removed or not. But I have concerns that this mechanism is designed
+to acheive this, as explained in another mail thread:
+http://marc.info/?l=linux-pm&m=134882049212936&w=2
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_g=
-s.c
-index 05260d2..a3ef5d0 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -1326,10 +1326,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
- 	eiter =3D (struct ct_fdmi_hba_attr *) (entries + size);
- 	eiter->type =3D __constant_cpu_to_be16(FDMI_HBA_MANUFACTURER);
- 	strcpy(eiter->a.manufacturer, "QLogic Corporation");
--	alen =3D strlen(eiter->a.manufacturer);
--	alen +=3D (alen & 3) ? (4 - (alen & 3)) : 4;
--	eiter->len =3D cpu_to_be16(4 + alen);
--	size +=3D 4 + alen;
-+	eiter->len =3D cpu_to_be16(4 + 20);
-+	size +=3D 4 + 20;
-=20
- 	ql_dbg(ql_dbg_disc, vha, 0x2026,
- 	    "Manufacturer =3D %s.\n", eiter->a.manufacturer);
-@@ -1647,10 +1645,8 @@ qla2x00_fdmi_rpa(scsi_qla_host_t *vha)
- 	eiter =3D (struct ct_fdmi_port_attr *) (entries + size);
- 	eiter->type =3D __constant_cpu_to_be16(FDMI_PORT_OS_DEVICE_NAME);
- 	strcpy(eiter->a.os_dev_name, QLA2XXX_DRIVER_NAME);
--	alen =3D strlen(eiter->a.os_dev_name);
--	alen +=3D (alen & 3) ? (4 - (alen & 3)) : 4;
--	eiter->len =3D cpu_to_be16(4 + alen);
--	size +=3D 4 + alen;
-+	eiter->len =3D cpu_to_be16(4 + 8);
-+	size +=3D 4 + 8;
-=20
- 	ql_dbg(ql_dbg_disc, vha, 0x204b,
- 	    "OS_Device_Name=3D%s.\n", eiter->a.os_dev_name);
---=20
-1.7.11.4
+Copied here:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The SATA spec says the device attention pin shall assert when:
+- For tray type ODD, its front panel button is released;
+- For slot type ODD, media is inserted.
+
+I've a slot type ODD which has a eject button. The notification will be
+sent when a disc is inserted, but not when the eject button is pressed,
+and this doesn't violate the spec.
+
+But if we disable the poll for disc changes, we will lose an event when
+the disc is ejected by the eject button(the device attention pin shall
+not trigger this time). I suppose this is a problem?
+
+I think the device attention scheme is not designed to do this job,
+while SATA asynchronous notification is.
+
+Thanks,
+Aaron
+
+> 
+> > - Code to check if the ODD is ready to be powered off per the ZPODD
+> >   spec.
+> 
+> If that can be done at the ATA level, I'd prefer it too.
+> 
+> Thanks,
+> Rafael
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
