@@ -1,56 +1,145 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/6] target: Reenable buffered FILEIO + add iscsi-target MXDSL logic
-Date: Sun, 30 Sep 2012 05:58:10 +0000
-Message-ID: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 2/6] iscsi-target: Add base MaxXmitDataSegmentLength code
+Date: Sun, 30 Sep 2012 05:58:12 +0000
+Message-ID: <1348984696-30992-3-git-send-email-nab@linux-iscsi.org>
+References: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38358 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820Ab2I3GDc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Sep 2012 02:03:32 -0400
+In-Reply-To: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi folks,
+This patch introduces a new per connection MaxXmitDataSegmentLength
+parameter value used to represent the outgoing MaxRecvDataSegmentLength
+that is actually sent over the wire during iSCSI login response back
+to the initiator side.
 
-This following series is destined for v3.7-rc1 code, and re-adds support for
-buffered FILEIO + emulate_write_cache=1 emulation removed in v3.5, as well as
-fixing up a long standing issue wrt to MaxRecvDataSegmentLength handling within
-iscsi-target code.
+It also adds a new MaxXmitDataSegmentLength configfs attribute to
+represent this value within the existing TPG parameter group under
+/sys/kernel/config/target/iscsi/$TARGETNAME/$TPGT/param/
 
-The latter bit is the bulk of the series that involves adding a proper
-configurable MaxXmitDataSegmentLength TPG parameter configfs attr, and converts
-iscsi-target login logic, incoming PDU payload checks, TMR TASK_REASSIGN ops, and
-non contigious sequence+pdu operation to now honor MXDSL.
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Andy Grover <agrover@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/iscsi/iscsi_target_configfs.c   |    4 ++++
+ drivers/target/iscsi/iscsi_target_core.h       |    1 +
+ drivers/target/iscsi/iscsi_target_parameters.c |   21 +++++++++++++++++++++
+ drivers/target/iscsi/iscsi_target_parameters.h |    5 +++++
+ 4 files changed, 31 insertions(+), 0 deletions(-)
 
-Open-iSCSI + Linux-iSCSI folks please review the MXDSL bits, and please let us
-know if you have any concerns.
-
-Thank you!
-
---nab
-
-Nicholas Bellinger (6):
-  target/file: Re-enable optional fd_buffered_io=1 operation
-  iscsi-target: Add base MaxXmitDataSegmentLength code
-  iscsi-target: Enable MaxXmitDataSegmentLength operation in login path
-  iscsi-target: Convert incoming PDU payload checks to
-    MaxXmitDataSegmentLength
-  iscsi-target: Add MaxXmitDataSegmentLength connection recovery check
-  iscsi-target: Change iscsi_target_seq_pdu_list.c to honor
-    MaxXmitDataSegmentLength
-
- drivers/target/iscsi/iscsi_target.c              |   24 ++++----
- drivers/target/iscsi/iscsi_target_configfs.c     |    4 +
- drivers/target/iscsi/iscsi_target_core.h         |    2 +
- drivers/target/iscsi/iscsi_target_erl2.c         |    1 +
- drivers/target/iscsi/iscsi_target_nego.c         |    4 +-
- drivers/target/iscsi/iscsi_target_parameters.c   |   71 +++++++++++++++++++---
- drivers/target/iscsi/iscsi_target_parameters.h   |    7 ++-
- drivers/target/iscsi/iscsi_target_seq_pdu_list.c |   61 ++++++++++---------
- drivers/target/iscsi/iscsi_target_tmr.c          |    9 +++-
- drivers/target/target_core_file.c                |   36 ++++++++++-
- drivers/target/target_core_file.h                |    1 +
- 11 files changed, 162 insertions(+), 58 deletions(-)
-
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index f86833f..f491f96 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -1034,6 +1034,9 @@ TPG_PARAM_ATTR(ImmediateData, S_IRUGO | S_IWUSR);
+ DEF_TPG_PARAM(MaxRecvDataSegmentLength);
+ TPG_PARAM_ATTR(MaxRecvDataSegmentLength, S_IRUGO | S_IWUSR);
+ 
++DEF_TPG_PARAM(MaxXmitDataSegmentLength);
++TPG_PARAM_ATTR(MaxXmitDataSegmentLength, S_IRUGO | S_IWUSR);
++
+ DEF_TPG_PARAM(MaxBurstLength);
+ TPG_PARAM_ATTR(MaxBurstLength, S_IRUGO | S_IWUSR);
+ 
+@@ -1079,6 +1082,7 @@ static struct configfs_attribute *lio_target_tpg_param_attrs[] = {
+ 	&iscsi_tpg_param_InitialR2T.attr,
+ 	&iscsi_tpg_param_ImmediateData.attr,
+ 	&iscsi_tpg_param_MaxRecvDataSegmentLength.attr,
++	&iscsi_tpg_param_MaxXmitDataSegmentLength.attr,
+ 	&iscsi_tpg_param_MaxBurstLength.attr,
+ 	&iscsi_tpg_param_FirstBurstLength.attr,
+ 	&iscsi_tpg_param_DefaultTime2Wait.attr,
+diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
+index 8a908b2..b26611a 100644
+--- a/drivers/target/iscsi/iscsi_target_core.h
++++ b/drivers/target/iscsi/iscsi_target_core.h
+@@ -239,6 +239,7 @@ struct iscsi_conn_ops {
+ 	u8	HeaderDigest;			/* [0,1] == [None,CRC32C] */
+ 	u8	DataDigest;			/* [0,1] == [None,CRC32C] */
+ 	u32	MaxRecvDataSegmentLength;	/* [512..2**24-1] */
++	u32	MaxXmitDataSegmentLength;	/* [512..2**24-1] */
+ 	u8	OFMarker;			/* [0,1] == [No,Yes] */
+ 	u8	IFMarker;			/* [0,1] == [No,Yes] */
+ 	u32	OFMarkInt;			/* [1..65535] */
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index 0c4760f..40864ee 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -334,6 +334,13 @@ int iscsi_create_default_params(struct iscsi_param_list **param_list_ptr)
+ 	if (!param)
+ 		goto out;
+ 
++	param = iscsi_set_default_param(pl, MAXXMITDATASEGMENTLENGTH,
++			INITIAL_MAXXMITDATASEGMENTLENGTH,
++			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
++			TYPERANGE_512_TO_16777215, USE_ALL);
++	if (!param)
++		goto out;
++
+ 	param = iscsi_set_default_param(pl, MAXRECVDATASEGMENTLENGTH,
+ 			INITIAL_MAXRECVDATASEGMENTLENGTH,
+ 			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
+@@ -467,6 +474,8 @@ int iscsi_set_keys_to_negotiate(
+ 			SET_PSTATE_NEGOTIATE(param);
+ 		} else if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH)) {
+ 			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, MAXXMITDATASEGMENTLENGTH)) {
++			continue;
+ 		} else if (!strcmp(param->name, MAXBURSTLENGTH)) {
+ 			SET_PSTATE_NEGOTIATE(param);
+ 		} else if (!strcmp(param->name, FIRSTBURSTLENGTH)) {
+@@ -1720,6 +1729,18 @@ void iscsi_set_connection_parameters(
+ 	pr_debug("---------------------------------------------------"
+ 			"---------------\n");
+ 	list_for_each_entry(param, &param_list->param_list, p_list) {
++		/*
++		 * Special case to set MAXXMITDATASEGMENTLENGTH from the
++		 * target requested MaxRecvDataSegmentLength, even though
++		 * this key is not sent over the wire.
++		 */
++		if (!strcmp(param->name, MAXXMITDATASEGMENTLENGTH)) {
++			ops->MaxXmitDataSegmentLength =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("MaxXmitDataSegmentLength:     %s\n",
++				param->value);
++		}
++
+ 		if (!IS_PSTATE_ACCEPTOR(param) && !IS_PSTATE_PROPOSER(param))
+ 			continue;
+ 		if (!strcmp(param->name, AUTHMETHOD)) {
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.h b/drivers/target/iscsi/iscsi_target_parameters.h
+index 6a37fd6..77a28b5 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.h
++++ b/drivers/target/iscsi/iscsi_target_parameters.h
+@@ -70,6 +70,7 @@ extern void iscsi_set_session_parameters(struct iscsi_sess_ops *,
+ #define INITIALR2T			"InitialR2T"
+ #define IMMEDIATEDATA			"ImmediateData"
+ #define MAXRECVDATASEGMENTLENGTH	"MaxRecvDataSegmentLength"
++#define MAXXMITDATASEGMENTLENGTH	"MaxXmitDataSegmentLength"
+ #define MAXBURSTLENGTH			"MaxBurstLength"
+ #define FIRSTBURSTLENGTH		"FirstBurstLength"
+ #define DEFAULTTIME2WAIT		"DefaultTime2Wait"
+@@ -113,6 +114,10 @@ extern void iscsi_set_session_parameters(struct iscsi_sess_ops *,
+ #define INITIAL_INITIALR2T			YES
+ #define INITIAL_IMMEDIATEDATA			YES
+ #define INITIAL_MAXRECVDATASEGMENTLENGTH	"8192"
++/*
++ * Match outgoing MXDSL default to incoming Open-iSCSI default
++ */
++#define INITIAL_MAXXMITDATASEGMENTLENGTH	"262144"
+ #define INITIAL_MAXBURSTLENGTH			"262144"
+ #define INITIAL_FIRSTBURSTLENGTH		"65536"
+ #define INITIAL_DEFAULTTIME2WAIT		"2"
 -- 
 1.7.2.5
+
