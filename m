@@ -1,135 +1,185 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/6] target/file: Re-enable optional fd_buffered_io=1 operation
-Date: Sun, 30 Sep 2012 05:58:11 +0000
-Message-ID: <1348984696-30992-2-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 6/6] iscsi-target: Change iscsi_target_seq_pdu_list.c to honor MaxXmitDataSegmentLength
+Date: Sun, 30 Sep 2012 05:58:16 +0000
+Message-ID: <1348984696-30992-7-git-send-email-nab@linux-iscsi.org>
 References: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch re-adds the ability to optionally run in buffered FILEIO mode
-(eg: w/o O_DSYNC) for device backends in order to once again use the
-Linux buffered cache as a write-back storage mechanism.
+This patch converts iscsi_target_seq_pdu_list.c code for DataSequenceInOrder=No +
+DataPDUInOrder=No operation to honor the MaxXmitDataSegmentLength value
+for iscsi_cmd->se_cmd.data_direction == DMA_TO_DEVICE cases.
 
-This logic was originally dropped with mainline v3.5-rc commit:
-
-commit a4dff3043c231d57f982af635c9d2192ee40e5ae
-Author: Nicholas Bellinger <nab@linux-iscsi.org>
-Date:   Wed May 30 16:25:41 2012 -0700
-
-    target/file: Use O_DSYNC by default for FILEIO backends
-
-This difference with this patch is that fd_create_virtdevice() now
-forces the explicit setting of emulate_write_cache=1 when buffered FILEIO
-operation has been enabled.
-
-Reported-by: Ferry <iscsitmp@bananateam.nl>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: <stable@vger.kernel.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Andy Grover <agrover@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Roland Dreier <roland@purestorage.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_file.c |   36 +++++++++++++++++++++++++++++++++---
- drivers/target/target_core_file.h |    1 +
- 2 files changed, 34 insertions(+), 3 deletions(-)
+ drivers/target/iscsi/iscsi_target_seq_pdu_list.c |   61 +++++++++++-----------
+ 1 files changed, 31 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 1111925..e79b7b9 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -125,6 +125,14 @@ static struct se_device *fd_create_virtdevice(
- 	 * of pure timestamp updates.
- 	 */
- 	flags = O_RDWR | O_CREAT | O_LARGEFILE | O_DSYNC;
-+	 /*
-+	 * Optionally allow fd_buffered_io=1 to be enabled for people
-+	 * who know what they are doing w/o O_DSYNC.
-+	 */
-+	if (fd_dev->fbd_flags & FDBD_USE_BUFFERED_IO) {
-+		pr_debug("FILEIO: Disabling O_DSYNC, using buffered FILEIO\n");
-+		flags &= ~O_DSYNC;
-+	}
+diff --git a/drivers/target/iscsi/iscsi_target_seq_pdu_list.c b/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
+index 85a306e..edb592a 100644
+--- a/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
++++ b/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
+@@ -219,8 +219,14 @@ static void iscsit_determine_counts_for_list(
+ 	int check_immediate = 0;
+ 	u32 burstlength = 0, offset = 0;
+ 	u32 unsolicited_data_length = 0;
++	u32 mdsl;
+ 	struct iscsi_conn *conn = cmd->conn;
  
- 	file = filp_open(fd_dev->fd_dev_name, flags, 0600);
- 	if (IS_ERR(file)) {
-@@ -188,6 +196,12 @@ static struct se_device *fd_create_virtdevice(
- 	if (!dev)
- 		goto fail;
- 
-+	if (fd_dev->fbd_flags & FDBD_USE_BUFFERED_IO) {
-+		pr_debug("FILEIO: Forcing setting of emulate_write_cache=1"
-+			" with FDBD_USE_BUFFERED_IO\n");
-+		dev->se_sub_dev->se_dev_attrib.emulate_write_cache = 1;
-+	}
++	if (cmd->se_cmd.data_direction == DMA_TO_DEVICE)
++		mdsl = cmd->conn->conn_ops->MaxXmitDataSegmentLength;
++	else
++		mdsl = cmd->conn->conn_ops->MaxRecvDataSegmentLength;
 +
- 	fd_dev->fd_dev_id = fd_host->fd_host_dev_id_count++;
- 	fd_dev->fd_queue_depth = dev->queue_depth;
- 
-@@ -407,6 +421,7 @@ enum {
- static match_table_t tokens = {
- 	{Opt_fd_dev_name, "fd_dev_name=%s"},
- 	{Opt_fd_dev_size, "fd_dev_size=%s"},
-+	{Opt_fd_buffered_io, "fd_buffered_io=%d"},
- 	{Opt_err, NULL}
- };
- 
-@@ -418,7 +433,7 @@ static ssize_t fd_set_configfs_dev_params(
- 	struct fd_dev *fd_dev = se_dev->se_dev_su_ptr;
- 	char *orig, *ptr, *arg_p, *opts;
- 	substring_t args[MAX_OPT_ARGS];
--	int ret = 0, token;
-+	int ret = 0, arg, token;
- 
- 	opts = kstrdup(page, GFP_KERNEL);
- 	if (!opts)
-@@ -459,6 +474,19 @@ static ssize_t fd_set_configfs_dev_params(
- 					" bytes\n", fd_dev->fd_dev_size);
- 			fd_dev->fbd_flags |= FBDF_HAS_SIZE;
- 			break;
-+		case Opt_fd_buffered_io:
-+			match_int(args, &arg);
-+			if (arg != 1) {
-+				pr_err("bogus fd_buffered_io=%d value\n", arg);
-+				ret = -EINVAL;
-+				goto out;
-+			}
-+
-+			pr_debug("FILEIO: Using buffered I/O"
-+				" operations for struct fd_dev\n");
-+
-+			fd_dev->fbd_flags |= FDBD_USE_BUFFERED_IO;
-+			break;
- 		default:
- 			break;
+ 	if ((bl->type == PDULIST_IMMEDIATE) ||
+ 	    (bl->type == PDULIST_IMMEDIATE_AND_UNSOLICITED))
+ 		check_immediate = 1;
+@@ -243,14 +249,13 @@ static void iscsit_determine_counts_for_list(
+ 			continue;
  		}
-@@ -490,8 +518,10 @@ static ssize_t fd_show_configfs_dev_params(
- 	ssize_t bl = 0;
+ 		if (unsolicited_data_length > 0) {
+-			if ((offset + conn->conn_ops->MaxRecvDataSegmentLength)
+-					>= cmd->se_cmd.data_length) {
++			if ((offset + mdsl) >= cmd->se_cmd.data_length) {
+ 				unsolicited_data_length -=
+ 					(cmd->se_cmd.data_length - offset);
+ 				offset += (cmd->se_cmd.data_length - offset);
+ 				continue;
+ 			}
+-			if ((offset + conn->conn_ops->MaxRecvDataSegmentLength)
++			if ((offset + mdsl)
+ 					>= conn->sess->sess_ops->FirstBurstLength) {
+ 				unsolicited_data_length -=
+ 					(conn->sess->sess_ops->FirstBurstLength -
+@@ -262,17 +267,15 @@ static void iscsit_determine_counts_for_list(
+ 				continue;
+ 			}
  
- 	bl = sprintf(b + bl, "TCM FILEIO ID: %u", fd_dev->fd_dev_id);
--	bl += sprintf(b + bl, "        File: %s  Size: %llu  Mode: O_DSYNC\n",
--		fd_dev->fd_dev_name, fd_dev->fd_dev_size);
-+	bl += sprintf(b + bl, "        File: %s  Size: %llu  Mode: %s\n",
-+		fd_dev->fd_dev_name, fd_dev->fd_dev_size,
-+		(fd_dev->fbd_flags & FDBD_USE_BUFFERED_IO) ?
-+		"Buffered" : "O_DSYNC");
- 	return bl;
+-			offset += conn->conn_ops->MaxRecvDataSegmentLength;
+-			unsolicited_data_length -=
+-				conn->conn_ops->MaxRecvDataSegmentLength;
++			offset += mdsl;
++			unsolicited_data_length -= mdsl;
+ 			continue;
+ 		}
+-		if ((offset + conn->conn_ops->MaxRecvDataSegmentLength) >=
+-		     cmd->se_cmd.data_length) {
++		if ((offset + mdsl) >= cmd->se_cmd.data_length) {
+ 			offset += (cmd->se_cmd.data_length - offset);
+ 			continue;
+ 		}
+-		if ((burstlength + conn->conn_ops->MaxRecvDataSegmentLength) >=
++		if ((burstlength + mdsl) >=
+ 		     conn->sess->sess_ops->MaxBurstLength) {
+ 			offset += (conn->sess->sess_ops->MaxBurstLength -
+ 					burstlength);
+@@ -281,8 +284,8 @@ static void iscsit_determine_counts_for_list(
+ 			continue;
+ 		}
+ 
+-		burstlength += conn->conn_ops->MaxRecvDataSegmentLength;
+-		offset += conn->conn_ops->MaxRecvDataSegmentLength;
++		burstlength += mdsl;
++		offset += mdsl;
+ 	}
  }
  
-diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core_file.h
-index 70ce7fd..fbd59ef 100644
---- a/drivers/target/target_core_file.h
-+++ b/drivers/target/target_core_file.h
-@@ -14,6 +14,7 @@
+@@ -296,12 +299,17 @@ static int iscsit_do_build_pdu_and_seq_lists(
+ 	struct iscsi_build_list *bl)
+ {
+ 	int check_immediate = 0, datapduinorder, datasequenceinorder;
+-	u32 burstlength = 0, offset = 0, i = 0;
++	u32 burstlength = 0, offset = 0, i = 0, mdsl;
+ 	u32 pdu_count = 0, seq_no = 0, unsolicited_data_length = 0;
+ 	struct iscsi_conn *conn = cmd->conn;
+ 	struct iscsi_pdu *pdu = cmd->pdu_list;
+ 	struct iscsi_seq *seq = cmd->seq_list;
  
- #define FBDF_HAS_PATH		0x01
- #define FBDF_HAS_SIZE		0x02
-+#define FDBD_USE_BUFFERED_IO	0x04
++	if (cmd->se_cmd.data_direction == DMA_TO_DEVICE)
++		mdsl = cmd->conn->conn_ops->MaxXmitDataSegmentLength;
++	else
++		mdsl = cmd->conn->conn_ops->MaxRecvDataSegmentLength;
++
+ 	datapduinorder = conn->sess->sess_ops->DataPDUInOrder;
+ 	datasequenceinorder = conn->sess->sess_ops->DataSequenceInOrder;
  
- struct fd_dev {
- 	u32		fbd_flags;
+@@ -348,9 +356,7 @@ static int iscsit_do_build_pdu_and_seq_lists(
+ 			continue;
+ 		}
+ 		if (unsolicited_data_length > 0) {
+-			if ((offset +
+-			     conn->conn_ops->MaxRecvDataSegmentLength) >=
+-			     cmd->se_cmd.data_length) {
++			if ((offset + mdsl) >= cmd->se_cmd.data_length) {
+ 				if (!datapduinorder) {
+ 					pdu[i].type = PDUTYPE_UNSOLICITED;
+ 					pdu[i].length =
+@@ -367,8 +373,7 @@ static int iscsit_do_build_pdu_and_seq_lists(
+ 				offset += (cmd->se_cmd.data_length - offset);
+ 				continue;
+ 			}
+-			if ((offset +
+-			     conn->conn_ops->MaxRecvDataSegmentLength) >=
++			if ((offset + mdsl) >=
+ 					conn->sess->sess_ops->FirstBurstLength) {
+ 				if (!datapduinorder) {
+ 					pdu[i].type = PDUTYPE_UNSOLICITED;
+@@ -396,17 +401,14 @@ static int iscsit_do_build_pdu_and_seq_lists(
+ 
+ 			if (!datapduinorder) {
+ 				pdu[i].type = PDUTYPE_UNSOLICITED;
+-				pdu[i++].length =
+-				     conn->conn_ops->MaxRecvDataSegmentLength;
++				pdu[i++].length = mdsl;
+ 			}
+-			burstlength += conn->conn_ops->MaxRecvDataSegmentLength;
+-			offset += conn->conn_ops->MaxRecvDataSegmentLength;
+-			unsolicited_data_length -=
+-				conn->conn_ops->MaxRecvDataSegmentLength;
++			burstlength += mdsl;
++			offset += mdsl;
++			unsolicited_data_length -= mdsl;
+ 			continue;
+ 		}
+-		if ((offset + conn->conn_ops->MaxRecvDataSegmentLength) >=
+-		     cmd->se_cmd.data_length) {
++		if ((offset + mdsl) >= cmd->se_cmd.data_length) {
+ 			if (!datapduinorder) {
+ 				pdu[i].type = PDUTYPE_NORMAL;
+ 				pdu[i].length = (cmd->se_cmd.data_length - offset);
+@@ -420,7 +422,7 @@ static int iscsit_do_build_pdu_and_seq_lists(
+ 			offset += (cmd->se_cmd.data_length - offset);
+ 			continue;
+ 		}
+-		if ((burstlength + conn->conn_ops->MaxRecvDataSegmentLength) >=
++		if ((burstlength + mdsl) >=
+ 		     conn->sess->sess_ops->MaxBurstLength) {
+ 			if (!datapduinorder) {
+ 				pdu[i].type = PDUTYPE_NORMAL;
+@@ -445,11 +447,10 @@ static int iscsit_do_build_pdu_and_seq_lists(
+ 
+ 		if (!datapduinorder) {
+ 			pdu[i].type = PDUTYPE_NORMAL;
+-			pdu[i++].length =
+-				conn->conn_ops->MaxRecvDataSegmentLength;
++			pdu[i++].length = mdsl;
+ 		}
+-		burstlength += conn->conn_ops->MaxRecvDataSegmentLength;
+-		offset += conn->conn_ops->MaxRecvDataSegmentLength;
++		burstlength += mdsl;
++		offset += mdsl;
+ 	}
+ 
+ 	if (!datasequenceinorder) {
 -- 
 1.7.2.5
