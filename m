@@ -1,169 +1,90 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 3/6] iscsi-target: Enable MaxXmitDataSegmentLength operation in login path
-Date: Sun, 30 Sep 2012 05:58:13 +0000
-Message-ID: <1348984696-30992-4-git-send-email-nab@linux-iscsi.org>
-References: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: [PATCH] qla2xxx: silence two GCC warnings
+Date: Sun, 30 Sep 2012 13:07:54 +0200
+Message-ID: <1349003274.15306.6.camel@x61.thuisdomein>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:4525 "EHLO
+	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750786Ab2I3LIA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Sep 2012 07:08:00 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Compiling qla_gs.o (part of the qla2xxx module) triggers two GCC
+warnings:
+    drivers/scsi/qla2xxx/qla_gs.c: In function =E2=80=98qla2x00_fdmi_rh=
+ba=E2=80=99:
+    drivers/scsi/qla2xxx/qla_gs.c:1339:7: warning: array subscript is a=
+bove array bounds [-Warray-bounds]
+    drivers/scsi/qla2xxx/qla_gs.c: In function =E2=80=98qla2x00_fdmi_re=
+gister=E2=80=99:
+    drivers/scsi/qla2xxx/qla_gs.c:1663:15: warning: array subscript is =
+above array bounds [-Warray-bounds]
 
-This patch activates MaxXmitDataSegmentLength usage that performs the
-following sequence of events:
+It seems that the sequence of a strcpy followed by a strlen confuses GC=
+C
+when it is keeping track of array bounds here. (It is not clear to me
+which array triggers this warning and by how much GCC thinks the
+subscript is above its bounds. Neither is it clear to me why comparable
+code in these two functions doesn't trigger this warning.)
 
-- Once the incoming initiator's MAXRECVDATASEGMENTLENGTH key is detected
-  within iscsi_check_acceptor_state(), save the requested MRDSL into
-  conn->conn_ops->MaxRecvDataSegmentLength
+The easiest way to silence these warnings is to hardcode the length of
+these two strings in the code here. The length used here is the length
+of the string, including its NUL terminator, rounded up to the next
+multiple of four.
 
-- Next change the outgoing target's MaxRecvDataSegmenthLength key=value
-  based upon the local TPG's MaxXmitDataSegmentLength attribute value.
-
-- Change iscsi_set_connection_parameters() to skip the assignment of
-  conn->conn_ops->MaxRecvDataSegmentLength, now setup within
-  iscsi_check_acceptor_state()
-
-Also update iscsi_decode_text_input() -> iscsi_check_acceptor_state()
-code-path to accept struct iscsi_conn *.
-
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Andy Grover <agrover@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Roland Dreier <roland@purestorage.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
 ---
- drivers/target/iscsi/iscsi_target_nego.c       |    4 +-
- drivers/target/iscsi/iscsi_target_parameters.c |   50 +++++++++++++++++++----
- drivers/target/iscsi/iscsi_target_parameters.h |    2 +-
- 3 files changed, 44 insertions(+), 12 deletions(-)
+0) I noticed this warning while building v3.6-rc7 on current Fedora
+17, using Fedora's default config.
 
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index a9a73ac..d08373f 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -550,7 +550,7 @@ static int iscsi_target_handle_csg_zero(
- 			SENDER_INITIATOR|SENDER_RECEIVER,
- 			login->req_buf,
- 			payload_length,
--			conn->param_list);
-+			conn);
- 	if (ret < 0)
- 		return -1;
- 
-@@ -627,7 +627,7 @@ static int iscsi_target_handle_csg_one(struct iscsi_conn *conn, struct iscsi_log
- 			SENDER_INITIATOR|SENDER_RECEIVER,
- 			login->req_buf,
- 			payload_length,
--			conn->param_list);
-+			conn);
- 	if (ret < 0)
- 		return -1;
- 
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index 40864ee..3678ff2 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.c
-+++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -1065,7 +1065,8 @@ out:
- 	return proposer_values;
- }
- 
--static int iscsi_check_acceptor_state(struct iscsi_param *param, char *value)
-+static int iscsi_check_acceptor_state(struct iscsi_param *param, char *value,
-+				struct iscsi_conn *conn)
- {
- 	u8 acceptor_boolean_value = 0, proposer_boolean_value = 0;
- 	char *negoitated_value = NULL;
-@@ -1140,8 +1141,35 @@ static int iscsi_check_acceptor_state(struct iscsi_param *param, char *value)
- 				return -1;
- 		}
- 
--		if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH))
--			SET_PSTATE_REPLY_OPTIONAL(param);
-+		if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH)) {
-+			struct iscsi_param *param_mxdsl;
-+			unsigned long long tmp;
-+			int rc;
-+
-+			rc = strict_strtoull(param->value, 0, &tmp);
-+			if (rc < 0)
-+				return -1;
-+
-+			conn->conn_ops->MaxRecvDataSegmentLength = tmp;
-+			pr_debug("Saving op->MaxRecvDataSegmentLength from"
-+				" original initiator received value: %u\n",
-+				conn->conn_ops->MaxRecvDataSegmentLength);
-+
-+			param_mxdsl = iscsi_find_param_from_key(
-+						MAXXMITDATASEGMENTLENGTH,
-+						conn->param_list);
-+			if (!param_mxdsl)
-+				return -1;
-+
-+			rc = iscsi_update_param_value(param,
-+						param_mxdsl->value);
-+			if (rc < 0)
-+				return -1;
-+
-+			pr_debug("Updated %s to target MXDSL value: %s\n",
-+					param->name, param->value);
-+		}
-+
- 	} else if (IS_TYPE_NUMBER_RANGE(param)) {
- 		negoitated_value = iscsi_get_value_from_number_range(
- 					param, value);
-@@ -1535,8 +1563,9 @@ int iscsi_decode_text_input(
- 	u8 sender,
- 	char *textbuf,
- 	u32 length,
--	struct iscsi_param_list *param_list)
-+	struct iscsi_conn *conn)
- {
-+	struct iscsi_param_list *param_list = conn->param_list;
- 	char *tmpbuf, *start = NULL, *end = NULL;
- 
- 	tmpbuf = kzalloc(length + 1, GFP_KERNEL);
-@@ -1594,7 +1623,7 @@ int iscsi_decode_text_input(
- 			}
- 			SET_PSTATE_RESPONSE_GOT(param);
- 		} else {
--			if (iscsi_check_acceptor_state(param, value) < 0) {
-+			if (iscsi_check_acceptor_state(param, value, conn) < 0) {
- 				kfree(tmpbuf);
- 				return -1;
- 			}
-@@ -1755,10 +1784,13 @@ void iscsi_set_connection_parameters(
- 			pr_debug("DataDigest:                   %s\n",
- 				param->value);
- 		} else if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH)) {
--			ops->MaxRecvDataSegmentLength =
--				simple_strtoul(param->value, &tmpptr, 0);
--			pr_debug("MaxRecvDataSegmentLength:     %s\n",
--				param->value);
-+			/*
-+			 * At this point iscsi_check_acceptor_state() will have
-+			 * set ops->MaxRecvDataSegmentLength from the original
-+			 * initiator provided value.
-+			 */
-+			pr_debug("MaxRecvDataSegmentLength:     %u\n",
-+				ops->MaxRecvDataSegmentLength);
- 		} else if (!strcmp(param->name, OFMARKER)) {
- 			ops->OFMarker = !strcmp(param->value, YES);
- 			pr_debug("OFMarker:                     %s\n",
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.h b/drivers/target/iscsi/iscsi_target_parameters.h
-index 77a28b5..1e1b750 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.h
-+++ b/drivers/target/iscsi/iscsi_target_parameters.h
-@@ -36,7 +36,7 @@ extern void iscsi_release_param_list(struct iscsi_param_list *);
- extern struct iscsi_param *iscsi_find_param_from_key(char *, struct iscsi_param_list *);
- extern int iscsi_extract_key_value(char *, char **, char **);
- extern int iscsi_update_param_value(struct iscsi_param *, char *);
--extern int iscsi_decode_text_input(u8, u8, char *, u32, struct iscsi_param_list *);
-+extern int iscsi_decode_text_input(u8, u8, char *, u32, struct iscsi_conn *);
- extern int iscsi_encode_text_output(u8, u8, char *, u32 *,
- 			struct iscsi_param_list *);
- extern int iscsi_check_negotiated_keys(struct iscsi_param_list *);
--- 
-1.7.2.5
+1) Compile tested only.=20
+
+ drivers/scsi/qla2xxx/qla_gs.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_g=
+s.c
+index 05260d2..a3ef5d0 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1326,10 +1326,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
+ 	eiter =3D (struct ct_fdmi_hba_attr *) (entries + size);
+ 	eiter->type =3D __constant_cpu_to_be16(FDMI_HBA_MANUFACTURER);
+ 	strcpy(eiter->a.manufacturer, "QLogic Corporation");
+-	alen =3D strlen(eiter->a.manufacturer);
+-	alen +=3D (alen & 3) ? (4 - (alen & 3)) : 4;
+-	eiter->len =3D cpu_to_be16(4 + alen);
+-	size +=3D 4 + alen;
++	eiter->len =3D cpu_to_be16(4 + 20);
++	size +=3D 4 + 20;
+=20
+ 	ql_dbg(ql_dbg_disc, vha, 0x2026,
+ 	    "Manufacturer =3D %s.\n", eiter->a.manufacturer);
+@@ -1647,10 +1645,8 @@ qla2x00_fdmi_rpa(scsi_qla_host_t *vha)
+ 	eiter =3D (struct ct_fdmi_port_attr *) (entries + size);
+ 	eiter->type =3D __constant_cpu_to_be16(FDMI_PORT_OS_DEVICE_NAME);
+ 	strcpy(eiter->a.os_dev_name, QLA2XXX_DRIVER_NAME);
+-	alen =3D strlen(eiter->a.os_dev_name);
+-	alen +=3D (alen & 3) ? (4 - (alen & 3)) : 4;
+-	eiter->len =3D cpu_to_be16(4 + alen);
+-	size +=3D 4 + alen;
++	eiter->len =3D cpu_to_be16(4 + 8);
++	size +=3D 4 + 8;
+=20
+ 	ql_dbg(ql_dbg_disc, vha, 0x204b,
+ 	    "OS_Device_Name=3D%s.\n", eiter->a.os_dev_name);
+--=20
+1.7.11.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
