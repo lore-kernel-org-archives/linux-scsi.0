@@ -1,68 +1,55 @@
-From: Ric Wheeler <ricwheeler@gmail.com>
-Subject: Re: [SCSI PATCH] sd: max-retries becomes configurable
-Date: Mon, 01 Oct 2012 13:13:26 +0530
-Message-ID: <5069499E.6000006@gmail.com>
-References: <20120924210049.GA18527@havoc.gtf.org>  <1348546019.2457.3.camel@dabdike> <50613F72.4000302@pobox.com> <1348569508.2457.28.camel@dabdike>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/6] target/file: Re-enable optional fd_buffered_io=1
+ operation
+Date: Mon, 1 Oct 2012 04:46:05 -0400
+Message-ID: <20121001084605.GA23497@infradead.org>
+References: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
+ <1348984696-30992-2-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1348569508.2457.28.camel@dabdike>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1348984696-30992-2-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/25/2012 04:08 PM, James Bottomley wrote:
-> On Tue, 2012-09-25 at 01:21 -0400, Jeff Garzik wrote:
->> On 09/25/2012 12:06 AM, James Bottomley wrote:
->>> On Mon, 2012-09-24 at 17:00 -0400, Jeff Garzik wrote:
->>>>    drivers/scsi/sd.c |    4 ++++
->>>>    drivers/scsi/sd.h |    2 +-
->>>>    2 files changed, 5 insertions(+), 1 deletion(-)
->>> I'm not opposed in principle to doing this (except that it should be a
->>> sysfs parameter like all our other controls), but what's the reasoning
->>> behind needing it changed?
->> <vendor hat on>
->>
->> Periodically turns up as a useful field sledgehammer for solving
->> problems, until the real problem is found and fixed.  Got tired of a
->> very similar patch manually bouncing around the "hey, pssst, this worked
->> for me" backchannel IT network.
->>
->> </red hat>
-> I'm asking because the general consensus from the device guys is that we
-> should never retry unless the device or the transport tells us to (and
-> then we shouldn't count the retries).  A long time ago we used to get
-> spurious command failures from retry exhaustion on QUEUE_FULL or BUSY,
-> but since we switched those to being purely timeout based, I thought the
-> problem had gone away and I'm curious to know what guise it resurfaced
-> in.
+On Sun, Sep 30, 2012 at 05:58:11AM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch re-adds the ability to optionally run in buffered FILEIO mode
+> (eg: w/o O_DSYNC) for device backends in order to once again use the
+> Linux buffered cache as a write-back storage mechanism.
+> 
+> This difference with this patch is that fd_create_virtdevice() now
+> forces the explicit setting of emulate_write_cache=1 when buffered FILEIO
+> operation has been enabled.
 
-I think that is still very much a true statement. By the time normal disks 
-return an error, they have retried *many* times in firmware. There are some 
-exceptions of course - vibrations and so on might make this useful.
+What this lacks is a clear reason why you would enable this inherently
+unsafe mode.  While there is some clear precedence to allow people doing
+stupid thing I'd least like a rationale for it, and it being documented
+as unsafe.
 
-Back when my day job often involved recovering data from dead drives, we 
-actually normally wanted to cut retries down to zero since various part of the 
-stack retried for us so much that each bad sector had to be timed out multiple 
-times!
+> +	 /*
 
-I don't object to making this a tunable, but we should default to not retrying.
+Indention error.
 
-Also would be very interesting to seeing if this actually is useful in the real 
-world, not just "word on the street" world :)
+> +	 * Optionally allow fd_buffered_io=1 to be enabled for people
+> +	 * who know what they are doing w/o O_DSYNC.
+> +	 */
 
-Ric
+This comment doesn't explain at all what's going on here.  It should be
+something like
 
->
->> Can you be more specific about sysfs location?  A runtime-writable (via
->> sysfs!) module parameter for a module-wide default seemed appropriate.
-> Well, if it's really important, the same thing should happen with
-> retries as happened with timeout (it became a request_queue property),
-> but it could be hacked as a struct scsi_disk one with a corresponding
-> entry in sd_dis_attrs.
->
-> James
->
->
+	/*
+	 * Unsafe mode allows disabling data integrity by not forcing
+	 * data out to disk in writethrough cache mode.  Only to be used
+	 * for benchmark cheating or similar purposes.
+	 */
+
+>  #define FBDF_HAS_PATH		0x01
+>  #define FBDF_HAS_SIZE		0x02
+> +#define FDBD_USE_BUFFERED_IO	0x04
+
+This should be named BDBD_UNSAFE
