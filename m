@@ -1,32 +1,50 @@
-From: "Mrs. Maria Bristow" <no-reply@mx2.4shared.com>
-Subject: RE: Please am dying of breast cancer !!!
-Date: Mon, 01 Oct 2012 14:09:14 +0200
-Message-ID: <201210011213.q91CCjvb031201__4074.47038819573$1349093453$gmane$org@srv1.iexpress.com.br>
-Reply-To: maria.bristow@1email.eu
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 0/2] virtio-scsi fixes for 3.6
+Date: Mon, 01 Oct 2012 15:11:30 +0200
+Message-ID: <50699682.9020804@redhat.com>
+References: <1343309288-32615-1-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from c906f44f.static.virtua.com.br ([201.6.244.79]:57835 "EHLO
-	srv1.iexpress.com.br" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751913Ab2JAMK2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2012 08:10:28 -0400
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1343309288-32615-1-git-send-email-pbonzini@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-kernel@vger.kernel.org, JBottomley@parallels.com, kvm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <no-reply@mx2.4shared.com>
 
-Hello,
+Il 26/07/2012 15:28, Paolo Bonzini ha scritto:
+> James,
+> 
+> patch 1 fixes scanning of LUNs whose number is greater than 255.  QEMU
+> passes a max_lun of 16383 (because it uses SAM numbering) but in Linux
+> it must become 32768 (because LUNs above 255 are "relocated" to 16640).
+> Patch 2 is a resubmission of the patch for online resizing of virtio-scsi
+> LUNs, which needs to be rebased.
+> 
+> LUNs above 255 now work for all of scanning, hotplug, hotunplug and
+> resize.
+> 
+> Thanks,
+> 
+> Paolo
+> 
+> Paolo Bonzini (2):
+>   virtio-scsi: fix LUNs greater than 255
+>   virtio-scsi: support online resizing of disks
+> 
+>  drivers/scsi/virtio_scsi.c  |   37 +++++++++++++++++++++++++++++++++++--
+>  include/linux/virtio_scsi.h |    2 ++
+>  2 files changed, 37 insertions(+), 2 deletions(-)
+> 
 
-Am dying of breast cancer and I need your assistance to help me carry o=
-ut my dream charity work with my funds =E2=82=AC2.8M Euros with a Secur=
-ity firm, if you are interested please reach me for more details on thi=
-s email: maria.bristow@1email.eu
+Ping, are these patches going into 3.7?
 
-Yours Sincerely,
-Mrs. Maria Bristow
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Paolo
