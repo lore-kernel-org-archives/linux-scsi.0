@@ -1,102 +1,126 @@
-From: Dan Williams <djbw@fb.com>
-Subject: Re: [PATCH 3/3] Make blk_cleanup_queue() wait until request_fn finished
-Date: Mon, 1 Oct 2012 10:41:41 -0700
-Message-ID: <CAA9_cmcJC+xFZigKWBjXPvKY39diN0iTMTWXMSep7++YRt1Dfw@mail.gmail.com>
-References: <50648014.7080308@acm.org>
-	<50648130.4060902@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:46291 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753Ab2JARlm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2012 13:41:42 -0400
-Received: by obbuo13 with SMTP id uo13so5234371obb.19
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Oct 2012 10:41:41 -0700 (PDT)
-In-Reply-To: <50648130.4060902@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Gwendal Grignou <gwendal@google.com>
+Subject: [PATCH 0/3] Insert ATA transport objects in SCSI syfs topology.
+Date: Mon,  1 Oct 2012 11:22:53 -0700
+Message-ID: <1349115776-17569-1-git-send-email-gwendal@google.com>
+References: <20120928062709.GA2091@mint-spring.sh.intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120928062709.GA2091@mint-spring.sh.intel.com>
+In-Reply-To: <20120928062709.GA2091@mint-spring.sh.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: aaron.lu@intel.com, minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com
+Cc: Gwendal Grignou <gwendal@google.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-On Thu, Sep 27, 2012 at 9:39 AM, Bart Van Assche <bvanassche@acm.org> wrote:
-> Some request_fn implementations, e.g. scsi_request_fn(), unlock
-> the queue lock. Make sure that blk_cleanup_queue() waits until all
-> active request_fn invocations have finished. This fixes a potential
-> use-after-free at the end of scsi_request_fn().
->
-> Reported-by: Chanho Min <chanho.min@lge.com>
-> Cc: James Bottomley <JBottomley@Parallels.com>
-> Cc: Mike Christie <michaelc@cs.wisc.edu>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  block/blk-core.c        |    7 +++++--
->  drivers/scsi/scsi_lib.c |   10 +---------
->  include/linux/blkdev.h  |    5 +++++
->  3 files changed, 11 insertions(+), 11 deletions(-)
->
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index b5436b6..e41b291 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -308,7 +308,9 @@ void __blk_run_queue_uncond(struct request_queue *q)
->         if (unlikely(blk_queue_dead(q)))
->                 return;
->
-> +       q->request_fn_active++;
->         q->request_fn(q);
-> +       q->request_fn_active--;
->  }
->
->  /**
-> @@ -407,6 +409,7 @@ void blk_drain_queue(struct request_queue *q, bool drain_all)
->                         __blk_run_queue(q);
->
->                 drain |= q->nr_rqs_elvpriv;
-> +               drain |= q->request_fn_active;
->
->                 /*
->                  * Unfortunately, requests are queued at and tracked from
-> @@ -494,8 +497,8 @@ EXPORT_SYMBOL_GPL(blk_queue_bypass_end);
->   * blk_cleanup_queue - shutdown a request queue
->   * @q: request queue to shutdown
->   *
-> - * Mark @q DEAD, drain all pending requests, destroy and put it.  All
-> - * future requests will be failed immediately with -ENODEV.
-> + * Mark @q as dying, drain all pending requests, mark @q as dead, destroy and
-> + * put it.  All future requests will be failed immediately with -ENODEV.
->   */
->  void blk_cleanup_queue(struct request_queue *q)
->  {
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 593fc71..03571a3 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1517,10 +1517,6 @@ static void scsi_request_fn(struct request_queue *q)
->         struct scsi_cmnd *cmd;
->         struct request *req;
->
-> -       if(!get_device(&sdev->sdev_gendev))
-> -               /* We must be tearing the block queue down already */
-> -               return;
-> -
->         /*
->          * To start with, we keep looping until the queue is empty, or until
->          * the host is no longer able to accept any more requests.
-> @@ -1629,11 +1625,7 @@ out_delay:
->         if (sdev->device_busy == 0)
->                 blk_delay_queue(q, SCSI_QUEUE_DELAY);
->  out:
-> -       /* must be careful here...if we trigger the ->remove() function
-> -        * we cannot be holding the q lock */
-> -       spin_unlock_irq(q->queue_lock);
-> -       put_device(&sdev->sdev_gendev);
-> -       spin_lock_irq(q->queue_lock);
-> +       ;
+This set of patches improve ATA transport classes integration with SCSI
+objects.
 
-Any reason to keep this "out:" label now that it has no effect?
+Before [2.6.x]
 
---
-Dan
+Ata and scsi transport class where separated:
+`--0000:09:00.0
+|  `--ata1
+|  |  `--port_port
+|  |  `--link1
+|  |  |  `--dev1.0
+|  |  |  `--dev1.1
+|  `--ata2
+|  ...
+|  `--host0
+|  |  `--scsi_host
+|  |  |  `--host0
+|  |  `--target0:0:0
+|  |  |  `--0:0:0:0
+|  |  |  |  `--block
+|  |  |  |  |  `--sda
+|  |  |  |  |  |  `--sda1
+
+In 3.2, Lin - in commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a - addressed
+the issue of linking the ata port with the scsi host object by placing the
+scsi_host object under ata port objects.
+
+However to be more consistent with other transport, this patch does the opposite:
+
+For instance, with SAS transport, We have
+`--0000:0b:00.0
+|  `--host6
+|  |  `--phy-6:0
+|  |  `--phy-6:1
+...
+|  |  `--port-6:0
+|  |  |  `--end_device-6:0
+|  |  |  |  `--sas_device
+|  |  |  |  |  `--end_device-6:0
+|  |  |  |  `--sas_end_device
+|  |  |  |  |  `--end_device-6:0
+|  |  |  |  `--target6:0:0
+|  |  |  |  |  `--6:0:0:0
+|  |  |  |  |  |  `--block
+|  |  |  |  |  |  |  `--sdb
+...
+|  |  `--port-6:1
+|  |  |  `--end_device-6:1
+...
+phy and port have to be separated, sas_port are created dynamically.
+
+For ata, all objects are created at initialization time, so the layout is:
+`--0000:09:00.0
+|  `--host0
+|  |  `--port1
+|  |  |  `--link1
+|  |  |  |  `--dev1.0
+|  |  |  |  |  `--target0:0:0
+|  |  |  |  |  |  `--0:0:0:0
+|  |  |  |  |  |  |  `--block
+|  |  |  |  |  |  |  |  `--sda
+
+If we have a port multiplier, more links are created.
+`--0000:09:00.0
+...
+|  `--host4
+|  |  `--port5
+|  |  |  `--link5
+|  |  |  |  `--dev5.0
+[device for the port multiplier]
+|  |  |  `--link5.0
+|  |  |  |  `--dev5.0.0
+|  |  |  |  |  `--target4:0:0
+|  |  |  |  |  |  `--4:0:0:0
+|  |  |  |  |  |  |  `--block
+|  |  |  |  |  |  |  |  `--sdc
+[disk in port 0 of the port multiplier]
+...
+|  |  |  `--link5.2
+|  |  |  |  `--dev5.2.0
+|  |  |  |  |  `--target4:2:0
+|  |  |  |  |  |  `--4:2:0:0
+|  |  |  |  |  |  |  `--block
+|  |  |  |  |  |  |  |  `--sde
+[disk in port 2 of the port multiplier]
+
+In consequence, the path of a scsi device becomes:
+.../0000:00:1f.2/host0/port1/link1/dev1.0/target0:0:0/0:0:0:0
+dev1.0 indicates the master device [0] in ata port 1.
+ata1 being under host0, we know the reliationships between the scsi_host id and
+ata port id.
+
+or when a port multiplier is present: for instance the device in port 4 of the
+port multiplier:
+.../0000:00:06.0/0000:09:00.0/host5/port6/link6.4/dev6.4.0/target5:4:0/5:4:0:0
+
+Gwendal Grignou (3):
+  Revert "ata: make ata port as parent device of scsi host"
+  scsi: Allow devices to have arbitrary parent
+  libata: Change transport topology layout
+
+ drivers/ata/libata-core.c      |   13 ++++++-------
+ drivers/ata/libata-scsi.c      |    4 ++--
+ drivers/ata/libata-transport.c |    2 +-
+ drivers/firewire/sbp2.c        |    3 ++-
+ drivers/message/i2o/i2o_scsi.c |    4 ++--
+ drivers/scsi/scsi_scan.c       |    9 +++++----
+ include/scsi/scsi_device.h     |    2 +-
+ 7 files changed, 19 insertions(+), 18 deletions(-)
+
+-- 
+1.7.7.3
+
