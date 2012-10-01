@@ -1,126 +1,123 @@
 From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH 0/3] Insert ATA transport objects in SCSI syfs topology.
-Date: Mon,  1 Oct 2012 11:22:53 -0700
-Message-ID: <1349115776-17569-1-git-send-email-gwendal@google.com>
+Subject: [PATCH 2/3] scsi: Allow devices to have arbitrary parent
+Date: Mon,  1 Oct 2012 11:22:55 -0700
+Message-ID: <1349115776-17569-3-git-send-email-gwendal@google.com>
 References: <20120928062709.GA2091@mint-spring.sh.intel.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120928062709.GA2091@mint-spring.sh.intel.com>
-In-Reply-To: <20120928062709.GA2091@mint-spring.sh.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+ <1349115776-17569-1-git-send-email-gwendal@google.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ee0-f74.google.com ([74.125.83.74]:35178 "EHLO
+	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751648Ab2JASXO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2012 14:23:14 -0400
+Received: by eekb57 with SMTP id b57so383775eek.1
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Oct 2012 11:23:13 -0700 (PDT)
+In-Reply-To: <1349115776-17569-1-git-send-email-gwendal@google.com>
+In-Reply-To: <50672B03.8000101@mvista.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: aaron.lu@intel.com, minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com
 Cc: Gwendal Grignou <gwendal@google.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-This set of patches improve ATA transport classes integration with SCSI
-objects.
+Allow driver who calls __scsi_add_device directly to create the scsi
+device on any parent, not just scsi_host directly.
+This is alreay done for transport with their own class [SAS, iSCSI, FC, ...]
 
-Before [2.6.x]
-
-Ata and scsi transport class where separated:
-`--0000:09:00.0
-|  `--ata1
-|  |  `--port_port
-|  |  `--link1
-|  |  |  `--dev1.0
-|  |  |  `--dev1.1
-|  `--ata2
-|  ...
-|  `--host0
-|  |  `--scsi_host
-|  |  |  `--host0
-|  |  `--target0:0:0
-|  |  |  `--0:0:0:0
-|  |  |  |  `--block
-|  |  |  |  |  `--sda
-|  |  |  |  |  |  `--sda1
-
-In 3.2, Lin - in commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a - addressed
-the issue of linking the ata port with the scsi host object by placing the
-scsi_host object under ata port objects.
-
-However to be more consistent with other transport, this patch does the opposite:
-
-For instance, with SAS transport, We have
-`--0000:0b:00.0
-|  `--host6
-|  |  `--phy-6:0
-|  |  `--phy-6:1
-...
-|  |  `--port-6:0
-|  |  |  `--end_device-6:0
-|  |  |  |  `--sas_device
-|  |  |  |  |  `--end_device-6:0
-|  |  |  |  `--sas_end_device
-|  |  |  |  |  `--end_device-6:0
-|  |  |  |  `--target6:0:0
-|  |  |  |  |  `--6:0:0:0
-|  |  |  |  |  |  `--block
-|  |  |  |  |  |  |  `--sdb
-...
-|  |  `--port-6:1
-|  |  |  `--end_device-6:1
-...
-phy and port have to be separated, sas_port are created dynamically.
-
-For ata, all objects are created at initialization time, so the layout is:
-`--0000:09:00.0
-|  `--host0
-|  |  `--port1
-|  |  |  `--link1
-|  |  |  |  `--dev1.0
-|  |  |  |  |  `--target0:0:0
-|  |  |  |  |  |  `--0:0:0:0
-|  |  |  |  |  |  |  `--block
-|  |  |  |  |  |  |  |  `--sda
-
-If we have a port multiplier, more links are created.
-`--0000:09:00.0
-...
-|  `--host4
-|  |  `--port5
-|  |  |  `--link5
-|  |  |  |  `--dev5.0
-[device for the port multiplier]
-|  |  |  `--link5.0
-|  |  |  |  `--dev5.0.0
-|  |  |  |  |  `--target4:0:0
-|  |  |  |  |  |  `--4:0:0:0
-|  |  |  |  |  |  |  `--block
-|  |  |  |  |  |  |  |  `--sdc
-[disk in port 0 of the port multiplier]
-...
-|  |  |  `--link5.2
-|  |  |  |  `--dev5.2.0
-|  |  |  |  |  `--target4:2:0
-|  |  |  |  |  |  `--4:2:0:0
-|  |  |  |  |  |  |  `--block
-|  |  |  |  |  |  |  |  `--sde
-[disk in port 2 of the port multiplier]
-
-In consequence, the path of a scsi device becomes:
-.../0000:00:1f.2/host0/port1/link1/dev1.0/target0:0:0/0:0:0:0
-dev1.0 indicates the master device [0] in ata port 1.
-ata1 being under host0, we know the reliationships between the scsi_host id and
-ata port id.
-
-or when a port multiplier is present: for instance the device in port 4 of the
-port multiplier:
-.../0000:00:06.0/0000:09:00.0/host5/port6/link6.4/dev6.4.0/target5:4:0/5:4:0:0
-
-Gwendal Grignou (3):
-  Revert "ata: make ata port as parent device of scsi host"
-  scsi: Allow devices to have arbitrary parent
-  libata: Change transport topology layout
-
- drivers/ata/libata-core.c      |   13 ++++++-------
+Signed-off-by: Gwendal Grignou <gwendal@google.com>
+---
  drivers/ata/libata-scsi.c      |    4 ++--
- drivers/ata/libata-transport.c |    2 +-
  drivers/firewire/sbp2.c        |    3 ++-
  drivers/message/i2o/i2o_scsi.c |    4 ++--
  drivers/scsi/scsi_scan.c       |    9 +++++----
  include/scsi/scsi_device.h     |    2 +-
- 7 files changed, 19 insertions(+), 18 deletions(-)
+ 5 files changed, 12 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index be38930..bfda61f 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3649,8 +3649,8 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+ 			else
+ 				channel = link->pmp;
+ 
+-			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
+-						 NULL);
++			sdev = __scsi_add_device(&ap->scsi_host->shost_gendev,
++						 channel, id, 0, NULL);
+ 			if (!IS_ERR(sdev)) {
+ 				dev->sdev = sdev;
+ 				scsi_device_put(sdev);
+diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
+index 1162d6b..839afa5 100644
+--- a/drivers/firewire/sbp2.c
++++ b/drivers/firewire/sbp2.c
+@@ -879,7 +879,8 @@ static void sbp2_login(struct work_struct *work)
+ 		ssleep(SBP2_INQUIRY_DELAY);
+ 
+ 	shost = container_of((void *)tgt, struct Scsi_Host, hostdata[0]);
+-	sdev = __scsi_add_device(shost, 0, 0, sbp2_lun2int(lu->lun), lu);
++	sdev = __scsi_add_device(&shost->shost_gendev, 0, 0,
++				 sbp2_lun2int(lu->lun), lu);
+ 	/*
+ 	 * FIXME:  We are unable to perform reconnects while in sbp2_login().
+ 	 * Therefore __scsi_add_device() will get into trouble if a bus reset
+diff --git a/drivers/message/i2o/i2o_scsi.c b/drivers/message/i2o/i2o_scsi.c
+index 1d31d72..ee1353c 100644
+--- a/drivers/message/i2o/i2o_scsi.c
++++ b/drivers/message/i2o/i2o_scsi.c
+@@ -294,8 +294,8 @@ static int i2o_scsi_probe(struct device *dev)
+ 	}
+ 
+ 	scsi_dev =
+-	    __scsi_add_device(i2o_shost->scsi_host, channel, le32_to_cpu(id),
+-			      le64_to_cpu(lun), i2o_dev);
++	    __scsi_add_device(&i2o_shost->scsi_host->shost_gendev, channel,
++			      le32_to_cpu(id), le64_to_cpu(lun), i2o_dev);
+ 
+ 	if (IS_ERR(scsi_dev)) {
+ 		osm_warn("can not add SCSI device %03x\n",
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 56a9379..105123c 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1489,11 +1489,11 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 	return ret;
+ }
+ 
+-struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
++struct scsi_device *__scsi_add_device(struct device *parent, uint channel,
+ 				      uint id, uint lun, void *hostdata)
+ {
++	struct Scsi_Host *shost = dev_to_shost(parent);
+ 	struct scsi_device *sdev = ERR_PTR(-ENODEV);
+-	struct device *parent = &shost->shost_gendev;
+ 	struct scsi_target *starget;
+ 
+ 	if (strncmp(scsi_scan_type, "none", 4) == 0)
+@@ -1524,8 +1524,9 @@ EXPORT_SYMBOL(__scsi_add_device);
+ int scsi_add_device(struct Scsi_Host *host, uint channel,
+ 		    uint target, uint lun)
+ {
+-	struct scsi_device *sdev = 
+-		__scsi_add_device(host, channel, target, lun, NULL);
++	struct scsi_device *sdev =
++		__scsi_add_device(&host->shost_gendev, channel, target,
++				  lun, NULL);
+ 	if (IS_ERR(sdev))
+ 		return PTR_ERR(sdev);
+ 
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 9895f69..9646a1d 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -285,7 +285,7 @@ static inline struct scsi_target *scsi_target(struct scsi_device *sdev)
+ #define starget_printk(prefix, starget, fmt, a...)	\
+ 	dev_printk(prefix, &(starget)->dev, fmt, ##a)
+ 
+-extern struct scsi_device *__scsi_add_device(struct Scsi_Host *,
++extern struct scsi_device *__scsi_add_device(struct device *,
+ 		uint, uint, uint, void *hostdata);
+ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
+ 			   uint target, uint lun);
 -- 
 1.7.7.3
 
