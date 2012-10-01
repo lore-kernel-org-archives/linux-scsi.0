@@ -1,77 +1,118 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH] qla2xxx: silence two GCC warnings
-Date: Sun, 30 Sep 2012 23:21:30 +0200
-Message-ID: <3591681.K68OpP9yPi@eto>
-References: <1349003274.15306.6.camel@x61.thuisdomein>
+From: Naresh Kumar Inna <naresh@chelsio.com>
+Subject: Re: [V5 PATCH 0/8] csiostor: Chelsio FCoE offload driver submission
+Date: Mon, 1 Oct 2012 09:44:13 +0530
+Message-ID: <50691895.8030506@chelsio.com>
+References: <1348507072-25625-1-git-send-email-naresh@chelsio.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1619425.UVYHHceP1Z"; micalg="pgp-sha1"; protocol="application/pgp-signature"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:40830 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751627Ab2I3VVr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Sep 2012 17:21:47 -0400
-In-Reply-To: <1349003274.15306.6.camel@x61.thuisdomein>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1348507072-25625-1-git-send-email-naresh@chelsio.com>
+Sender: netdev-owner@vger.kernel.org
+To: "JBottomley@parallels.com" <JBottomley@parallels.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Chethan Seshadri <chethan@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>, linux-scsi@vger.kernel.org
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-kernel@vger.kernel.org
 
+Hi James,
 
---nextPart1619425.UVYHHceP1Z
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
+Do you have any update with regards to the review of this driver? You
+were mentioning about getting FC folks to take a look at it.
 
-Am Sonntag 30 September 2012, 13:07:54 schrieb Paul Bolle:
-> Compiling qla_gs.o (part of the qla2xxx module) triggers two GCC
-> warnings:
->     drivers/scsi/qla2xxx/qla_gs.c: In function =E2=80=98qla2x00_fdmi_=
-rhba=E2=80=99:
->     drivers/scsi/qla2xxx/qla_gs.c:1339:7: warning: array subscript is=
- above
-> array bounds [-Warray-bounds] drivers/scsi/qla2xxx/qla_gs.c: In funct=
-ion
-> =E2=80=98qla2x00_fdmi_register=E2=80=99: drivers/scsi/qla2xxx/qla_gs.=
-c:1663:15: warning:
-> array subscript is above array bounds [-Warray-bounds]
->=20
-> It seems that the sequence of a strcpy followed by a strlen confuses =
-GCC
-> when it is keeping track of array bounds here. (It is not clear to me=
+Thanks,
+Naresh.
 
-> which array triggers this warning and by how much GCC thinks the
-> subscript is above its bounds. Neither is it clear to me why comparab=
-le
-> code in these two functions doesn't trigger this warning.)
->=20
-> The easiest way to silence these warnings is to hardcode the length o=
-f
-> these two strings in the code here. The length used here is the lengt=
-h
-> of the string, including its NUL terminator, rounded up to the next
-> multiple of four.
-
-This adds some magic values, which is asking for trouble once someone c=
-hanges=20
-the manufacturer string or something. What about something like this:
-
-const char *qlogic =3D "QLogic Corporation";
-strcpy(eiter->a.manufacturer, qlogic);
-alen +=3D round_up(strlen(qlogic), 4);
-...
-
-Eike
---nextPart1619425.UVYHHceP1Z
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iEYEABECAAYFAlBot+AACgkQXKSJPmm5/E5WcQCfWjNqE5yJHPEMHHBRFq++DQ4B
-+CsAoKThjAOhtJoAYJ4M0QeMTS+kHiM7
-=z0Rh
------END PGP SIGNATURE-----
-
---nextPart1619425.UVYHHceP1Z--
-
+On 9/24/2012 10:47 PM, Naresh Kumar Inna wrote:
+> This is the initial submission of the Chelsio FCoE offload driver (csiostor)
+> to the upstream kernel. This driver currently supports FCoE offload
+> functionality over Chelsio T4-based 10Gb Converged Network Adapters.
+> 
+> The following patches contain the driver sources for csiostor driver and
+> updates to firmware/hardware header files shared between csiostor,
+> cxgb4 (Chelsio T4-based NIC driver) and cxgb4vf (Chelsio T4-based Virtual
+> Function NIC driver). The csiostor driver is dependent on these
+> header updates. These patches have been generated against scsi 'misc' branch.
+> 
+> csiostor is a low level SCSI driver that interfaces with PCI, SCSI midlayer and
+> FC transport subsystems. This driver claims the FCoE PCIe function on
+> Chelsio Converged Network Adapters. It relies on firmware events for slow path
+> operations like discovery, thereby offloading session management. The driver
+> programs firmware via Work Request interfaces for fast path I/O offload
+> features.
+> 
+> Version V5 of the patches addresses James's comment, primary among them being
+> moving to the lockless version of queuecommand(). Rest of the V5 changes are
+> listed in the individual patches.
+> 
+> Here is the brief description of patches:
+> [V5 PATCH 1/8]: Updates to header files shared between cxgb4, cxgb4vf and
+>                 csiostor.
+> [V5 PATCH 2/8]: Header files part 1.
+> [V5 PATCH 3/8]: Header files part 2.
+> [V5 PATCH 4/8]: Driver initialization and Work Request services.
+> [V5 PATCH 5/8]: FC transport interfaces and mailbox services.
+> [V5 PATCH 6/8]: Local and remote port state tracking functionality.
+> [V5 PATCH 7/8]: Interrupt handling and fast path I/O functionality.
+> [V5 PATCH 8/8]: Hardware interface, Makefile and Kconfig changes.
+> 
+> Naresh Kumar Inna (8):
+>   cxgb4/cxgb4vf: Chelsio FCoE offload driver submission (common header
+>     updates).
+>   csiostor: Chelsio FCoE offload driver submission (headers part 1).
+>   csiostor: Chelsio FCoE offload driver submission (headers part 2).
+>   csiostor: Chelsio FCoE offload driver submission (sources part 1).
+>   csiostor: Chelsio FCoE offload driver submission (sources part 2).
+>   csiostor: Chelsio FCoE offload driver submission (sources part 3).
+>   csiostor: Chelsio FCoE offload driver submission (sources part 4).
+>   csiostor: Chelsio FCoE offload driver submission (sources part 5).
+> 
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |    2 +-
+>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |   10 +-
+>  drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |   16 +-
+>  drivers/net/ethernet/chelsio/cxgb4/t4_msg.h     |    1 +
+>  drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |   69 +-
+>  drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h   |  104 +-
+>  drivers/net/ethernet/chelsio/cxgb4vf/sge.c      |   11 +-
+>  drivers/scsi/Kconfig                            |    1 +
+>  drivers/scsi/Makefile                           |    1 +
+>  drivers/scsi/csiostor/Kconfig                   |   19 +
+>  drivers/scsi/csiostor/Makefile                  |   11 +
+>  drivers/scsi/csiostor/csio_attr.c               |  804 +++++
+>  drivers/scsi/csiostor/csio_defs.h               |  121 +
+>  drivers/scsi/csiostor/csio_hw.c                 | 4395 +++++++++++++++++++++++
+>  drivers/scsi/csiostor/csio_hw.h                 |  666 ++++
+>  drivers/scsi/csiostor/csio_init.c               | 1274 +++++++
+>  drivers/scsi/csiostor/csio_init.h               |  158 +
+>  drivers/scsi/csiostor/csio_isr.c                |  624 ++++
+>  drivers/scsi/csiostor/csio_lnode.c              | 2133 +++++++++++
+>  drivers/scsi/csiostor/csio_lnode.h              |  255 ++
+>  drivers/scsi/csiostor/csio_mb.c                 | 1769 +++++++++
+>  drivers/scsi/csiostor/csio_mb.h                 |  278 ++
+>  drivers/scsi/csiostor/csio_rnode.c              |  889 +++++
+>  drivers/scsi/csiostor/csio_rnode.h              |  141 +
+>  drivers/scsi/csiostor/csio_scsi.c               | 2554 +++++++++++++
+>  drivers/scsi/csiostor/csio_scsi.h               |  342 ++
+>  drivers/scsi/csiostor/csio_wr.c                 | 1632 +++++++++
+>  drivers/scsi/csiostor/csio_wr.h                 |  512 +++
+>  drivers/scsi/csiostor/t4fw_api_stor.h           |  578 +++
+>  29 files changed, 19333 insertions(+), 37 deletions(-)
+>  create mode 100644 drivers/scsi/csiostor/Kconfig
+>  create mode 100644 drivers/scsi/csiostor/Makefile
+>  create mode 100644 drivers/scsi/csiostor/csio_attr.c
+>  create mode 100644 drivers/scsi/csiostor/csio_defs.h
+>  create mode 100644 drivers/scsi/csiostor/csio_hw.c
+>  create mode 100644 drivers/scsi/csiostor/csio_hw.h
+>  create mode 100644 drivers/scsi/csiostor/csio_init.c
+>  create mode 100644 drivers/scsi/csiostor/csio_init.h
+>  create mode 100644 drivers/scsi/csiostor/csio_isr.c
+>  create mode 100644 drivers/scsi/csiostor/csio_lnode.c
+>  create mode 100644 drivers/scsi/csiostor/csio_lnode.h
+>  create mode 100644 drivers/scsi/csiostor/csio_mb.c
+>  create mode 100644 drivers/scsi/csiostor/csio_mb.h
+>  create mode 100644 drivers/scsi/csiostor/csio_rnode.c
+>  create mode 100644 drivers/scsi/csiostor/csio_rnode.h
+>  create mode 100644 drivers/scsi/csiostor/csio_scsi.c
+>  create mode 100644 drivers/scsi/csiostor/csio_scsi.h
+>  create mode 100644 drivers/scsi/csiostor/csio_wr.c
+>  create mode 100644 drivers/scsi/csiostor/csio_wr.h
+>  create mode 100644 drivers/scsi/csiostor/t4fw_api_stor.h
+> 
