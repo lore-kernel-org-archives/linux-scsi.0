@@ -1,60 +1,52 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch] target/iscsi: precedence bug in
- iscsit_set_dataout_sequence_values()
-Date: Tue, 02 Oct 2012 13:30:00 -0700
-Message-ID: <1349209800.28145.66.camel@haakon2.linux-iscsi.org>
-References: <20121002082248.GB12398@elgon.mountain>
+Subject: Re: [PATCH 1/4] target: Add target_submit_cmd_map_mem for SGL
+ fabric memory passthrough
+Date: Tue, 02 Oct 2012 13:49:46 -0700
+Message-ID: <1349210986.28145.73.camel@haakon2.linux-iscsi.org>
+References: <1349162147-29098-1-git-send-email-nab@linux-iscsi.org>
+	 <1349162147-29098-2-git-send-email-nab@linux-iscsi.org>
+	 <20121002151752.GA21786@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58043 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:41881 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755103Ab2JBUaD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2012 16:30:03 -0400
-In-Reply-To: <20121002082248.GB12398@elgon.mountain>
+	with ESMTP id S1751318Ab2JBUty (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2012 16:49:54 -0400
+In-Reply-To: <20121002151752.GA21786@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@gmail.com>
 
-On Tue, 2012-10-02 at 11:22 +0300, Dan Carpenter wrote:
-> Clang warns about this bug:
-> drivers/target/iscsi/iscsi_target_erl0.c:52:45: warning: operator '?:'
-> 	has lower precedence than '+'; '+' will be evaluated first
-> 	[-Wparentheses]
+On Tue, 2012-10-02 at 11:17 -0400, Christoph Hellwig wrote:
+> On Tue, Oct 02, 2012 at 07:15:44AM +0000, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch adds a new TARGET_SCF_MAP_MEM flag within __target_submit_cmd()
+> > + a target_submit_cmd_map_mem() wrapper to pass pre-allocated SGL memory
+> > using existing transport_generic_map_mem_to_cmd() logic into the generic
+> > target submit I/O codepath.
 > 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> Please review this very carefully because I haven't tested it.  It could
-> be that the check should be:
-> (data_done + data_length > FirstBurstLength) ? FirstBurstLength : data_length);
-> Instead of what I have which is:
-> data_done + (data_length > FirstBurstLength ? FirstBurstLength : data_length);
+> Instead of requiring a flag we could simply check for the sglist_count
+> to be non-zero instead of requiring multiple pieces of information to
+> be in sync.
 > 
-> diff --git a/drivers/target/iscsi/iscsi_target_erl0.c b/drivers/target/iscsi/iscsi_target_erl0.c
-> index 1a02016..2067efd 100644
-> --- a/drivers/target/iscsi/iscsi_target_erl0.c
-> +++ b/drivers/target/iscsi/iscsi_target_erl0.c
-> @@ -48,9 +48,9 @@ void iscsit_set_dataout_sequence_values(
->  	if (cmd->unsolicited_data) {
->  		cmd->seq_start_offset = cmd->write_data_done;
->  		cmd->seq_end_offset = (cmd->write_data_done +
-> -			(cmd->se_cmd.data_length >
-> -			 conn->sess->sess_ops->FirstBurstLength) ?
-> -			conn->sess->sess_ops->FirstBurstLength : cmd->se_cmd.data_length);
-> +			((cmd->se_cmd.data_length >
-> +			  conn->sess->sess_ops->FirstBurstLength) ?
-> +			 conn->sess->sess_ops->FirstBurstLength : cmd->se_cmd.data_length));
->  		return;
->  	}
->  
-> --
 
-This is indeed the original intention and your patch is correct, so
-applied to for-next.
+Mmmm, fair point here.  In that case I'd rather rename
+__target_submit_cmd() to target_submit_cmd_mapsgl(), and update the
+target_submit_cmd() wrapper accordingly.
 
-Thank you!
+> I'd also be tempted to remove the wrappers and just expose what is
+> __target_submit_cmd now to the drivers, but that can be done
+> independently as a cleanup.
+> 
+
+<nod>, dropping the extra target_submit_cmd_map_mem bit + flag now.
+
+Thanks hch!
 
 --nab
+
 
