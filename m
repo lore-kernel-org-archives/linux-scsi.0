@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2 4/4] tcm_vhost: Convert I/O path to use target_submit_cmd_map_sgls
-Date: Tue,  2 Oct 2012 21:16:58 +0000
-Message-ID: <1349212618-348-5-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH-v2 1/4] target: Add target_submit_cmd_map_sgls for SGL fabric memory passthrough
+Date: Tue,  2 Oct 2012 21:16:55 +0000
+Message-ID: <1349212618-348-2-git-send-email-nab@linux-iscsi.org>
 References: <1349212618-348-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:38200 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38184 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932373Ab2JBVWX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2012 17:22:23 -0400
+	with ESMTP id S932365Ab2JBVWR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2012 17:22:17 -0400
 In-Reply-To: <1349212618-348-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,166 +16,157 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Pao
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts tcm_vhost to use target_submit_cmd_map_sgls() for
-I/O submission and mapping of pre-allocated SGL memory from incoming
-virtio-scsi SGL memory -> se_cmd descriptors.
+This patch adds a new target_submit_cmd_map_sgls() to pass pre-allocated
+SGL memory using transport_generic_map_mem_to_cmd() logic into the generic
+target submit I/O codepath.
 
-This includes removing the original open-coded fabric uses of target
-core callers to support transport_generic_map_mem_to_cmd() between
-target_setup_cmd_from_cdb() and transport_handle_cdb_direct() logic.
+It also adds a target_submit_cmd() wrapper around target_submit_cmd_map_sgls()
+for existing fabric code that already assumes internal target-core SGL memory
+allocation.
 
-It also includes adding a handful of new tcm_vhost_cmnd member +
-assignments in vhost_scsi_allocate_cmd() used from cmwq process
-context I/O submission within tcm_vhost_submission_work()
-
-(v2: Use renamed target_submit_cmd_map_sgls)
+(v2: Rename to target_submit_cmd_map_sgls + drop TARGET_SCF_MAP_MEM flag
+     in favor of non zero sgl_count check)
 
 Reported-by: Christoph Hellwig <hch@lst.de>
 Cc: Christoph Hellwig <hch@lst.de>
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Stefan Hajnoczi <stefanha@gmail.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/vhost/tcm_vhost.c |   68 +++++++++-----------------------------------
- drivers/vhost/tcm_vhost.h |    8 +++++
- 2 files changed, 22 insertions(+), 54 deletions(-)
+ drivers/target/target_core_transport.c |   65 +++++++++++++++++++++++++++++---
+ include/target/target_core_base.h      |    1 +
+ include/target/target_core_fabric.h    |    3 +
+ 3 files changed, 63 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/vhost/tcm_vhost.c b/drivers/vhost/tcm_vhost.c
-index 89dc99b..aa31692 100644
---- a/drivers/vhost/tcm_vhost.c
-+++ b/drivers/vhost/tcm_vhost.c
-@@ -415,10 +415,7 @@ static struct tcm_vhost_cmd *vhost_scsi_allocate_cmd(
- {
- 	struct tcm_vhost_cmd *tv_cmd;
- 	struct tcm_vhost_nexus *tv_nexus;
--	struct se_portal_group *se_tpg = &tv_tpg->se_tpg;
- 	struct se_session *se_sess;
--	struct se_cmd *se_cmd;
--	int sam_task_attr;
- 
- 	tv_nexus = tv_tpg->tpg_nexus;
- 	if (!tv_nexus) {
-@@ -434,23 +431,11 @@ static struct tcm_vhost_cmd *vhost_scsi_allocate_cmd(
- 	}
- 	INIT_LIST_HEAD(&tv_cmd->tvc_completion_list);
- 	tv_cmd->tvc_tag = v_req->tag;
-+	tv_cmd->tvc_task_attr = v_req->task_attr;
-+	tv_cmd->tvc_exp_data_len = exp_data_len;
-+	tv_cmd->tvc_data_direction = data_direction;
-+	tv_cmd->tvc_nexus = tv_nexus;
- 
--	se_cmd = &tv_cmd->tvc_se_cmd;
--	/*
--	 * Locate the SAM Task Attr from virtio_scsi_cmd_req
--	 */
--	sam_task_attr = v_req->task_attr;
--	/*
--	 * Initialize struct se_cmd descriptor from TCM infrastructure
--	 */
--	transport_init_se_cmd(se_cmd, se_tpg->se_tpg_tfo, se_sess, exp_data_len,
--				data_direction, sam_task_attr,
--				&tv_cmd->tvc_sense_buf[0]);
--
--#if 0	/* FIXME: vhost_scsi_allocate_cmd() BIDI operation */
--	if (bidi)
--		se_cmd->se_cmd_flags |= SCF_BIDI;
--#endif
- 	return tv_cmd;
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 221f67f..d96d9aa 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1455,8 +1455,9 @@ int transport_handle_cdb_direct(
  }
+ EXPORT_SYMBOL(transport_handle_cdb_direct);
  
-@@ -549,37 +534,10 @@ static void tcm_vhost_submission_work(struct work_struct *work)
+-/**
+- * target_submit_cmd - lookup unpacked lun and submit uninitialized se_cmd
++/*
++ * target_submit_cmd_map_sgls - lookup unpacked lun and submit uninitialized
++ * 			 se_cmd + use pre-allocated SGL memory.
+  *
+  * @se_cmd: command descriptor to submit
+  * @se_sess: associated se_sess for endpoint
+@@ -1467,6 +1468,10 @@ EXPORT_SYMBOL(transport_handle_cdb_direct);
+  * @task_addr: SAM task attribute
+  * @data_dir: DMA data direction
+  * @flags: flags for command submission from target_sc_flags_tables
++ * @sgl: struct scatterlist memory for unidirectional mapping
++ * @sgl_count: scatterlist count for unidirectional mapping
++ * @sgl_bidi: struct scatterlist memory for bidirectional READ mapping
++ * @sgl_bidi_count: scatterlist count for bidirectional READ mapping
+  *
+  * Returns non zero to signal active I/O shutdown failure.  All other
+  * setup exceptions will be returned as a SCSI CHECK_CONDITION response,
+@@ -1474,10 +1479,12 @@ EXPORT_SYMBOL(transport_handle_cdb_direct);
+  *
+  * This may only be called from process context, and also currently
+  * assumes internal allocation of fabric payload buffer by target-core.
+- **/
+-int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
++ */
++int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 		unsigned char *cdb, unsigned char *sense, u32 unpacked_lun,
+-		u32 data_length, int task_attr, int data_dir, int flags)
++		u32 data_length, int task_attr, int data_dir, int flags,
++		struct scatterlist *sgl, u32 sgl_count,
++		struct scatterlist *sgl_bidi, u32 sgl_bidi_count)
  {
- 	struct tcm_vhost_cmd *tv_cmd =
- 		container_of(work, struct tcm_vhost_cmd, work);
-+	struct tcm_vhost_nexus *tv_nexus;
- 	struct se_cmd *se_cmd = &tv_cmd->tvc_se_cmd;
- 	struct scatterlist *sg_ptr, *sg_bidi_ptr = NULL;
- 	int rc, sg_no_bidi = 0;
--	/*
--	 * Locate the struct se_lun pointer based on v_req->lun, and
--	 * attach it to struct se_cmd
--	 */
--	rc = transport_lookup_cmd_lun(&tv_cmd->tvc_se_cmd, tv_cmd->tvc_lun);
--	if (rc < 0) {
--		pr_err("Failed to look up lun: %d\n", tv_cmd->tvc_lun);
--		transport_send_check_condition_and_sense(&tv_cmd->tvc_se_cmd,
--			tv_cmd->tvc_se_cmd.scsi_sense_reason, 0);
--		transport_generic_free_cmd(se_cmd, 0);
--		return;
--	}
--
--	rc = target_setup_cmd_from_cdb(se_cmd, tv_cmd->tvc_cdb);
--	if (rc == -ENOMEM) {
--		transport_send_check_condition_and_sense(se_cmd,
--				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
--		transport_generic_free_cmd(se_cmd, 0);
--		return;
--	} else if (rc < 0) {
--		if (se_cmd->se_cmd_flags & SCF_SCSI_RESERVATION_CONFLICT)
--			tcm_vhost_queue_status(se_cmd);
--		else
--			transport_send_check_condition_and_sense(se_cmd,
--					se_cmd->scsi_sense_reason, 0);
--		transport_generic_free_cmd(se_cmd, 0);
--		return;
--	}
- 
- 	if (tv_cmd->tvc_sgl_count) {
- 		sg_ptr = tv_cmd->tvc_sgl;
-@@ -597,17 +555,19 @@ static void tcm_vhost_submission_work(struct work_struct *work)
- 	} else {
- 		sg_ptr = NULL;
+ 	struct se_portal_group *se_tpg;
+ 	int rc;
+@@ -1524,7 +1531,21 @@ int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 		transport_generic_request_failure(se_cmd);
+ 		return 0;
  	}
 -
--	rc = transport_generic_map_mem_to_cmd(se_cmd, sg_ptr,
--				tv_cmd->tvc_sgl_count, sg_bidi_ptr,
--				sg_no_bidi);
-+	tv_nexus = tv_cmd->tvc_nexus;
++	/*
++	 * When a non zero sgl_count has been passed perform SGL passthrough
++	 * mapping for pre-allocated fabric memory instead of having target
++	 * core perform an internal SGL allocation..
++	 */
++	if (sgl_count != 0) {
++		BUG_ON(!sgl);
 +
-+	rc = target_submit_cmd_map_sgls(se_cmd, tv_nexus->tvn_se_sess,
-+			tv_cmd->tvc_cdb, &tv_cmd->tvc_sense_buf[0],
-+			tv_cmd->tvc_lun, tv_cmd->tvc_exp_data_len,
-+			tv_cmd->tvc_task_attr, tv_cmd->tvc_data_direction,
-+			0, sg_ptr, tv_cmd->tvc_sgl_count,
-+			sg_bidi_ptr, sg_no_bidi);
- 	if (rc < 0) {
- 		transport_send_check_condition_and_sense(se_cmd,
--				se_cmd->scsi_sense_reason, 0);
-+				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
- 		transport_generic_free_cmd(se_cmd, 0);
--		return;
- 	}
--	transport_handle_cdb_direct(se_cmd);
++		rc = transport_generic_map_mem_to_cmd(se_cmd, sgl, sgl_count,
++				sgl_bidi, sgl_bidi_count);
++		if (rc != 0) {
++			transport_generic_request_failure(se_cmd);
++			return 0;
++		}
++	}
+ 	/*
+ 	 * Check if we need to delay processing because of ALUA
+ 	 * Active/NonOptimized primary access state..
+@@ -1534,6 +1555,38 @@ int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 	transport_handle_cdb_direct(se_cmd);
+ 	return 0;
  }
++EXPORT_SYMBOL(target_submit_cmd_map_sgls);
++
++/*
++ * target_submit_cmd - lookup unpacked lun and submit uninitialized se_cmd
++ *
++ * @se_cmd: command descriptor to submit
++ * @se_sess: associated se_sess for endpoint
++ * @cdb: pointer to SCSI CDB
++ * @sense: pointer to SCSI sense buffer
++ * @unpacked_lun: unpacked LUN to reference for struct se_lun
++ * @data_length: fabric expected data transfer length
++ * @task_addr: SAM task attribute
++ * @data_dir: DMA data direction
++ * @flags: flags for command submission from target_sc_flags_tables
++ *
++ * Returns non zero to signal active I/O shutdown failure.  All other
++ * setup exceptions will be returned as a SCSI CHECK_CONDITION response,
++ * but still return zero here.
++ *
++ * This may only be called from process context, and also currently
++ * assumes internal allocation of fabric payload buffer by target-core.
++ *
++ * It also assumes interal target core SGL memory allocation.
++ */
++int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
++		unsigned char *cdb, unsigned char *sense, u32 unpacked_lun,
++		u32 data_length, int task_attr, int data_dir, int flags)
++{
++	return target_submit_cmd_map_sgls(se_cmd, se_sess, cdb, sense,
++			unpacked_lun, data_length, task_attr, data_dir,
++			flags, NULL, 0, NULL, 0);
++}
+ EXPORT_SYMBOL(target_submit_cmd);
  
- static void vhost_scsi_handle_vq(struct vhost_scsi *vs)
-diff --git a/drivers/vhost/tcm_vhost.h b/drivers/vhost/tcm_vhost.h
-index d9e9355..7e87c63 100644
---- a/drivers/vhost/tcm_vhost.h
-+++ b/drivers/vhost/tcm_vhost.h
-@@ -5,6 +5,12 @@
- struct tcm_vhost_cmd {
- 	/* Descriptor from vhost_get_vq_desc() for virt_queue segment */
- 	int tvc_vq_desc;
-+	/* virtio-scsi initiator task attribute */
-+	int tvc_task_attr;
-+	/* virtio-scsi initiator data direction */
-+	enum dma_data_direction tvc_data_direction;
-+	/* Expected data transfer length from virtio-scsi header */
-+	u32 tvc_exp_data_len;
- 	/* The Tag from include/linux/virtio_scsi.h:struct virtio_scsi_cmd_req */
- 	u64 tvc_tag;
- 	/* The number of scatterlists associated with this cmd */
-@@ -17,6 +23,8 @@ struct tcm_vhost_cmd {
- 	struct virtio_scsi_cmd_resp __user *tvc_resp;
- 	/* Pointer to vhost_scsi for our device */
- 	struct vhost_scsi *tvc_vhost;
-+	/* Pointer to vhost nexus memory */
-+	struct tcm_vhost_nexus *tvc_nexus;
- 	/* The TCM I/O descriptor that is accessed via container_of() */
- 	struct se_cmd tvc_se_cmd;
- 	/* work item used for cmwq dispatch to tcm_vhost_submission_work() */
+ static void target_complete_tmr_failure(struct work_struct *work)
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 5be8937..6309298 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -220,6 +220,7 @@ enum target_sc_flags_table {
+ 	TARGET_SCF_BIDI_OP		= 0x01,
+ 	TARGET_SCF_ACK_KREF		= 0x02,
+ 	TARGET_SCF_UNKNOWN_SIZE		= 0x04,
++	TARGET_SCF_MAP_MEM		= 0x08,
+ };
+ 
+ /* fabric independent task management function values */
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index 85a5d7a..81ddb4a 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -100,6 +100,9 @@ void	transport_init_se_cmd(struct se_cmd *, struct target_core_fabric_ops *,
+ 		struct se_session *, u32, int, int, unsigned char *);
+ int	transport_lookup_cmd_lun(struct se_cmd *, u32);
+ int	target_setup_cmd_from_cdb(struct se_cmd *, unsigned char *);
++int	target_submit_cmd_map_sgls(struct se_cmd *, struct se_session *,
++		unsigned char *, unsigned char *, u32, u32, int, int, int,
++		struct scatterlist *, u32, struct scatterlist *, u32);
+ int	target_submit_cmd(struct se_cmd *, struct se_session *, unsigned char *,
+ 		unsigned char *, u32, u32, int, int, int);
+ int	target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
 -- 
 1.7.2.5
 
