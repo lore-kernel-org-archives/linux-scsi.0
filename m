@@ -1,47 +1,52 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [SCSI] mpt2sas T10 DIF fixes
-Date: Tue, 02 Oct 2012 18:24:19 -0400
-Message-ID: <yq11uhg4ing.fsf@sermon.lab.mkp.net>
-References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
-	<50237151.9000801@suse.com> <yq1lihdh5jc.fsf@sermon.lab.mkp.net>
-	<20121001091746.GA8912@reaktio.net>
+From: "John, Sony" <Sony.John-N@Emulex.Com>
+Subject: RE: [PATCH 07/17] be2iscsi: Fix the kernel panic in blkiopoll
+ disable mode
+Date: Tue, 2 Oct 2012 23:51:57 +0000
+Message-ID: <ebf16d13-360f-459e-8164-d30db3c7023f@CMEXHTCAS1.ad.emulex.com>
+References: <da282c92-f339-43bc-a13f-28e13a2420a3@CMEXHTCAS1.ad.emulex.com>
+ <79ADB278-10C0-401F-9E5E-F40B32502EC6@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:37893 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752287Ab2JBWYk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2012 18:24:40 -0400
-In-Reply-To: <20121001091746.GA8912@reaktio.net> ("Pasi =?utf-8?Q?K=C3=A4r?=
- =?utf-8?Q?kk=C3=A4inen=22's?= message
-	of "Mon, 1 Oct 2012 12:17:46 +0300")
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:39826 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932177Ab2JBXwC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2012 19:52:02 -0400
+In-Reply-To: <79ADB278-10C0-401F-9E5E-F40B32502EC6@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pasi =?utf-8?B?S8Okcmtrw6RpbmVu?= <pasik@iki.fi>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ankit Jain <jankit@suse.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Eric.Moore@lsi.com
+To: Michael Christie <michaelc@cs.wisc.edu>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Kallickal, Jayamohan" <Jayamohan.Kallickal@Emulex.Com>
 
->>>>> "Pasi" =3D=3D Pasi K=C3=A4rkk=C3=A4inen <pasik@iki.fi> writes:
 
->> 2 of the patches are absolutely trivial and should just be applied.
->> However, LSI objects to patch #3 which tweaks an incorrect NVDATA
->> flag from within the driver.
->>=20
->> Instead LSI has promised to revert to the original behavior in their
->> firmware/NVDATA updates. Eric, can you give us an update? There was
->> another bug report on linux-scsi just a couple of weeks ago.
 
-Pasi> Hopefully these T10 patches can go in during the 3.7 merge window=
-!
+-----Original Message-----
+From: Michael Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Saturday, September 29, 2012 9:32 AM
+To: John, Sony
+Cc: linux-scsi@vger.kernel.org; Kallickal, Jayamohan
+Subject: Re: [PATCH 07/17] be2iscsi: Fix the kernel panic in blkiopoll disable mode
 
-The 2 trivial patches are queued for 3.7, yes. LSI are still working th=
-e
-bad NVDATA default issue.
 
---=20
-Martin K. Petersen	Oracle Linux Engineering
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sep 28, 2012, at 8:32 PM, John Soni Jose <sony.john-n@emulex.com> wrote:
+
+> From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> 
+> Fix kernel panic issue while running IO in blk_iopoll disable mode.
+
+>What was the bug exactly?
+The task completion notification comes on an EQ.  In existing code getting EQ  from the workQ was not proper, because of which the kernel panic used to happen.
+
+> Creating UNBOUND WQ for each EQ in the driver.
+>What is the benefit of doing this vs per hba like before?
+EQ's are created based on the NUM_CPU in the machine. Notification for task completion comes on an EQ. There could be multiple entries in the EQ that need to be processed and driver iterates the list of entries on that EQ does the required processing and then re-arms EQ for further interrupts. The issue with per hba WQ was it was not possible to get the EQ on which the interrupt has come. 
+
+In the new infrastructure a single_thread WQ is assigned to each EQ that is created. The EQ structure ptr is passed as the device data structure while registering the interrupts. When interrupts comes, driver can just queue_work for that  EQ from the interrupt handler.
+
+>Why WQ_UNBOUND? It seems other drivers prefer it the other way.
+The intention of using the flag WQ_UNBOUND was to have a single_work_queue across all cores for each EQ created.  Default implementation of "alloc_workqueue"  is creating  workqueue per core, in driver EQ creation depends on NUM_CPU and based on that too many workqueues will be created which can be counter productive.  This scenario is hit only in blk_iopoll disable mode and the latest kernel it is always enabled. So used the WQ_UNBOUND flag to make is as single thread.
+
+Thanks
+Sony
