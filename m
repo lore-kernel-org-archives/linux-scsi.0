@@ -1,39 +1,47 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 scsi] Short the path length of scsi_cmd_to_driver()
-Date: Tue, 02 Oct 2012 18:22:49 -0400
-Message-ID: <yq1626s4ipy.fsf@sermon.lab.mkp.net>
-References: <1348464626.2475.13.camel@ThinkPad-T420>
-	<1348465493.2467.3.camel@dabdike>
-	<1348470210.2475.47.camel@ThinkPad-T420>
-	<1348472104.2467.8.camel@dabdike> <yq13924b4uw.fsf@sermon.lab.mkp.net>
-	<1348721055.2509.0.camel@dabdike> <yq1bogr8itb.fsf@sermon.lab.mkp.net>
-	<1348818498.2411.8.camel@dabdike.int.hansenpartnership.com>
-	<1348892617.6455.4.camel@ThinkPad-T420>
+Subject: Re: [SCSI] mpt2sas T10 DIF fixes
+Date: Tue, 02 Oct 2012 18:24:19 -0400
+Message-ID: <yq11uhg4ing.fsf@sermon.lab.mkp.net>
+References: <1329788184-6477-1-git-send-email-martin.petersen@oracle.com>
+	<50237151.9000801@suse.com> <yq1lihdh5jc.fsf@sermon.lab.mkp.net>
+	<20121001091746.GA8912@reaktio.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:37215 "EHLO
+Received: from acsinet15.oracle.com ([141.146.126.227]:37893 "EHLO
 	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752287Ab2JBWW6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2012 18:22:58 -0400
-In-Reply-To: <1348892617.6455.4.camel@ThinkPad-T420> (Li Zhong's message of
-	"Sat, 29 Sep 2012 12:23:37 +0800")
+	with ESMTP id S1752287Ab2JBWYk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2012 18:24:40 -0400
+In-Reply-To: <20121001091746.GA8912@reaktio.net> ("Pasi =?utf-8?Q?K=C3=A4r?=
+ =?utf-8?Q?kk=C3=A4inen=22's?= message
+	of "Mon, 1 Oct 2012 12:17:46 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Li Zhong <zhong@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: Pasi =?utf-8?B?S8Okcmtrw6RpbmVu?= <pasik@iki.fi>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ankit Jain <jankit@suse.com>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Eric.Moore@lsi.com
 
->>>>> "Li" == Li Zhong <zhong@linux.vnet.ibm.com> writes:
+>>>>> "Pasi" =3D=3D Pasi K=C3=A4rkk=C3=A4inen <pasik@iki.fi> writes:
 
-Li> As suggested by James: this patch tries to short the path length of
-Li> scsi_cmd_to_driver(). As only REQ_TYPE_BLOCK_PC commands can be
-Li> submitted without a driver, so we could avoid the related NULL
-Li> checking, as long as we make sure we don't use it for
-Li> REQ_TYPE_BLOCK_PC type commands. Plus, this fixes a bug where you
-Li> get different behaviors from REQ_TYPE_BLOCK_PC commands when a
-Li> driver is and isn't attached.
+>> 2 of the patches are absolutely trivial and should just be applied.
+>> However, LSI objects to patch #3 which tweaks an incorrect NVDATA
+>> flag from within the driver.
+>>=20
+>> Instead LSI has promised to revert to the original behavior in their
+>> firmware/NVDATA updates. Eric, can you give us an update? There was
+>> another bug report on linux-scsi just a couple of weeks ago.
 
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Pasi> Hopefully these T10 patches can go in during the 3.7 merge window=
+!
 
--- 
+The 2 trivial patches are queued for 3.7, yes. LSI are still working th=
+e
+bad NVDATA default issue.
+
+--=20
 Martin K. Petersen	Oracle Linux Engineering
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
