@@ -1,79 +1,60 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/6] target/file: Re-enable optional fd_buffered_io=1
- operation
-Date: Tue, 02 Oct 2012 13:16:44 -0700
-Message-ID: <1349209004.28145.61.camel@haakon2.linux-iscsi.org>
-References: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
-	 <1348984696-30992-2-git-send-email-nab@linux-iscsi.org>
-	 <20121001084605.GA23497@infradead.org>
+Subject: Re: [patch] target/iscsi: precedence bug in
+ iscsit_set_dataout_sequence_values()
+Date: Tue, 02 Oct 2012 13:30:00 -0700
+Message-ID: <1349209800.28145.66.camel@haakon2.linux-iscsi.org>
+References: <20121002082248.GB12398@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20121001084605.GA23497@infradead.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58043 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755103Ab2JBUaD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2012 16:30:03 -0400
+In-Reply-To: <20121002082248.GB12398@elgon.mountain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Mon, 2012-10-01 at 04:46 -0400, Christoph Hellwig wrote:
-> On Sun, Sep 30, 2012 at 05:58:11AM +0000, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > This patch re-adds the ability to optionally run in buffered FILEIO mode
-> > (eg: w/o O_DSYNC) for device backends in order to once again use the
-> > Linux buffered cache as a write-back storage mechanism.
-> > 
-> > This difference with this patch is that fd_create_virtdevice() now
-> > forces the explicit setting of emulate_write_cache=1 when buffered FILEIO
-> > operation has been enabled.
+On Tue, 2012-10-02 at 11:22 +0300, Dan Carpenter wrote:
+> Clang warns about this bug:
+> drivers/target/iscsi/iscsi_target_erl0.c:52:45: warning: operator '?:'
+> 	has lower precedence than '+'; '+' will be evaluated first
+> 	[-Wparentheses]
 > 
-> What this lacks is a clear reason why you would enable this inherently
-> unsafe mode.  While there is some clear precedence to allow people doing
-> stupid thing I'd least like a rationale for it, and it being documented
-> as unsafe.
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> Please review this very carefully because I haven't tested it.  It could
+> be that the check should be:
+> (data_done + data_length > FirstBurstLength) ? FirstBurstLength : data_length);
+> Instead of what I have which is:
+> data_done + (data_length > FirstBurstLength ? FirstBurstLength : data_length);
 > 
-> > +	 /*
-> 
-> Indention error.
-> 
+> diff --git a/drivers/target/iscsi/iscsi_target_erl0.c b/drivers/target/iscsi/iscsi_target_erl0.c
+> index 1a02016..2067efd 100644
+> --- a/drivers/target/iscsi/iscsi_target_erl0.c
+> +++ b/drivers/target/iscsi/iscsi_target_erl0.c
+> @@ -48,9 +48,9 @@ void iscsit_set_dataout_sequence_values(
+>  	if (cmd->unsolicited_data) {
+>  		cmd->seq_start_offset = cmd->write_data_done;
+>  		cmd->seq_end_offset = (cmd->write_data_done +
+> -			(cmd->se_cmd.data_length >
+> -			 conn->sess->sess_ops->FirstBurstLength) ?
+> -			conn->sess->sess_ops->FirstBurstLength : cmd->se_cmd.data_length);
+> +			((cmd->se_cmd.data_length >
+> +			  conn->sess->sess_ops->FirstBurstLength) ?
+> +			 conn->sess->sess_ops->FirstBurstLength : cmd->se_cmd.data_length));
+>  		return;
+>  	}
+>  
+> --
 
-Fixed
+This is indeed the original intention and your patch is correct, so
+applied to for-next.
 
-> > +	 * Optionally allow fd_buffered_io=1 to be enabled for people
-> > +	 * who know what they are doing w/o O_DSYNC.
-> > +	 */
-> 
-> This comment doesn't explain at all what's going on here.  It should be
-> something like
-> 
-> 	/*
-> 	 * Unsafe mode allows disabling data integrity by not forcing
-> 	 * data out to disk in writethrough cache mode.  Only to be used
-> 	 * for benchmark cheating or similar purposes.
-> 	 */
-> 
+Thank you!
 
-How about the following instead..?
+--nab
 
-        /*
-         * Optionally allow fd_buffered_io=1 to be enabled for people
-         * who want use the fs buffer cache as an WriteCache mechanism.
-         *
-         * This means that in event of a hard failure, there is a risk
-         * of silent data-loss if the SCSI client has *not* performed a
-         * forced unit access (FUA) write, or issued SYNCHRONIZE_CACHE
-         * to write-out the entire device cache.
-         */
-
-
-> >  #define FBDF_HAS_PATH		0x01
-> >  #define FBDF_HAS_SIZE		0x02
-> > +#define FDBD_USE_BUFFERED_IO	0x04
-> 
-> This should be named BDBD_UNSAFE
-> 
-
-As we are keeping the same fd_buffered_io key=value usage that rtslib
-user-space already knows about, how using FDBD_HAS_BUFFERED_IO_WCE
-instead for consistency..?
