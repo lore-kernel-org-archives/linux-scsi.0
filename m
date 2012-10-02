@@ -1,123 +1,85 @@
-From: Dan Williams <djbw@fb.com>
-Subject: Re: [PATCH 0/3] Insert ATA transport objects in SCSI syfs topology.
-Date: Mon, 1 Oct 2012 12:14:47 -0700
-Message-ID: <CAA9_cmdWHRLBru6hN1ibGK75rw3ZQbQ9TULRe-bU=3q4-fb+qw@mail.gmail.com>
-References: <20120928062709.GA2091@mint-spring.sh.intel.com>
-	<1349115776-17569-1-git-send-email-gwendal@google.com>
+From: adam radford <aradford@gmail.com>
+Subject: [PATCH 2/7] megaraid_sas: Add module param for configurable MSI-X
+ vector count
+Date: Mon, 1 Oct 2012 19:26:59 -0700
+Message-ID: <CAHtARFFb6hkxFsdRxOe4f7kbstegyjBrTRdMQEpBGo4ED8qf-g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed; boundary=20cf3071ccc0b79c6d04cb0a41f7
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:52550 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226Ab2JATOr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2012 15:14:47 -0400
-In-Reply-To: <1349115776-17569-1-git-send-email-gwendal@google.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:48521 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757547Ab2JBC07 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2012 22:26:59 -0400
+Received: by mail-vc0-f174.google.com with SMTP id fo13so6426342vcb.19
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Oct 2012 19:26:59 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: aaron.lu@intel.com, minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Kashyap Desai <Kashyap.Desai@lsi.com>
 
-On Mon, Oct 1, 2012 at 11:22 AM, Gwendal Grignou <gwendal@google.com> wrote:
-> This set of patches improve ATA transport classes integration with SCSI
-> objects.
->
-> Before [2.6.x]
->
-> Ata and scsi transport class where separated:
-> `--0000:09:00.0
-> |  `--ata1
-> |  |  `--port_port
-> |  |  `--link1
-> |  |  |  `--dev1.0
-> |  |  |  `--dev1.1
-> |  `--ata2
-> |  ...
-> |  `--host0
-> |  |  `--scsi_host
-> |  |  |  `--host0
-> |  |  `--target0:0:0
-> |  |  |  `--0:0:0:0
-> |  |  |  |  `--block
-> |  |  |  |  |  `--sda
-> |  |  |  |  |  |  `--sda1
->
-> In 3.2, Lin - in commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a - addressed
-> the issue of linking the ata port with the scsi host object by placing the
-> scsi_host object under ata port objects.
->
-> However to be more consistent with other transport, this patch does the opposite:
->
-> For instance, with SAS transport, We have
-> `--0000:0b:00.0
-> |  `--host6
-> |  |  `--phy-6:0
-> |  |  `--phy-6:1
-> ...
-> |  |  `--port-6:0
-> |  |  |  `--end_device-6:0
-> |  |  |  |  `--sas_device
-> |  |  |  |  |  `--end_device-6:0
-> |  |  |  |  `--sas_end_device
-> |  |  |  |  |  `--end_device-6:0
-> |  |  |  |  `--target6:0:0
-> |  |  |  |  |  `--6:0:0:0
-> |  |  |  |  |  |  `--block
-> |  |  |  |  |  |  |  `--sdb
-> ...
-> |  |  `--port-6:1
-> |  |  |  `--end_device-6:1
-> ...
-> phy and port have to be separated, sas_port are created dynamically.
->
-> For ata, all objects are created at initialization time, so the layout is:
-> `--0000:09:00.0
-> |  `--host0
-> |  |  `--port1
-> |  |  |  `--link1
-> |  |  |  |  `--dev1.0
-> |  |  |  |  |  `--target0:0:0
-> |  |  |  |  |  |  `--0:0:0:0
-> |  |  |  |  |  |  |  `--block
-> |  |  |  |  |  |  |  |  `--sda
->
-> If we have a port multiplier, more links are created.
-> `--0000:09:00.0
-> ...
-> |  `--host4
-> |  |  `--port5
-> |  |  |  `--link5
-> |  |  |  |  `--dev5.0
-> [device for the port multiplier]
-> |  |  |  `--link5.0
-> |  |  |  |  `--dev5.0.0
-> |  |  |  |  |  `--target4:0:0
-> |  |  |  |  |  |  `--4:0:0:0
-> |  |  |  |  |  |  |  `--block
-> |  |  |  |  |  |  |  |  `--sdc
-> [disk in port 0 of the port multiplier]
-> ...
-> |  |  |  `--link5.2
-> |  |  |  |  `--dev5.2.0
-> |  |  |  |  |  `--target4:2:0
-> |  |  |  |  |  |  `--4:2:0:0
-> |  |  |  |  |  |  |  `--block
-> |  |  |  |  |  |  |  |  `--sde
-> [disk in port 2 of the port multiplier]
->
-> In consequence, the path of a scsi device becomes:
-> .../0000:00:1f.2/host0/port1/link1/dev1.0/target0:0:0/0:0:0:0
-> dev1.0 indicates the master device [0] in ata port 1.
-> ata1 being under host0, we know the reliationships between the scsi_host id and
-> ata port id.
->
-> or when a port multiplier is present: for instance the device in port 4 of the
-> port multiplier:
-> .../0000:00:06.0/0000:09:00.0/host5/port6/link6.4/dev6.4.0/target5:4:0/5:4:0:0
+--20cf3071ccc0b79c6d04cb0a41f7
+Content-Type: text/plain; charset=ISO-8859-1
 
-What's the benefit of this?  From a PM perspective now it seems we'll
-have the parent hardware port suspended before all the scsi_hosts on
-that port, which defeats the original purpose of putting the ata_port
-in the PM hierarchy.
+James/linux-scsi,
 
---
-Dan
+The following patch for megaraid_sas adds a module parameter for
+configurable MSI-X vector count.
+
+Signed-off-by: Adam Radford <aradford@gmail.com>
+
+diff -Naur scsi-misc/drivers/scsi/megaraid/megaraid_sas_base.c
+scsi-misc.new/drivers/scsi/megaraid/megaraid_sas_base.c
+--- scsi-misc/drivers/scsi/megaraid/megaraid_sas_base.c	2012-10-01
+18:03:42.000000000 -0700
++++ scsi-misc.new/drivers/scsi/megaraid/megaraid_sas_base.c	2012-10-01
+18:05:20.831864155 -0700
+@@ -71,6 +71,10 @@
+ module_param(msix_disable, int, S_IRUGO);
+ MODULE_PARM_DESC(msix_disable, "Disable MSI-X interrupt handling. Default: 0");
+
++static unsigned int msix_vectors;
++module_param(msix_vectors, int, S_IRUGO);
++MODULE_PARM_DESC(msix_vectors, "MSI-X max vector count. Default: Set by FW");
++
+ static int throttlequeuedepth = MEGASAS_THROTTLE_QUEUE_DEPTH;
+ module_param(throttlequeuedepth, int, S_IRUGO);
+ MODULE_PARM_DESC(throttlequeuedepth,
+@@ -3520,6 +3524,10 @@
+ 			instance->msix_vectors = (readl(&instance->reg_set->
+ 							outbound_scratch_pad_2
+ 							  ) & 0x1F) + 1;
++			if (msix_vectors)
++				instance->msix_vectors =
++					min(msix_vectors,
++					    instance->msix_vectors);
+ 		} else
+ 			instance->msix_vectors = 1;
+ 		/* Don't bother allocating more MSI-X vectors than cpus */
+
+--20cf3071ccc0b79c6d04cb0a41f7
+Content-Type: application/octet-stream; name="megaraid_sas.patch2"
+Content-Disposition: attachment; filename="megaraid_sas.patch2"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file0
+
+ZGlmZiAtTmF1ciBzY3NpLW1pc2MvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19i
+YXNlLmMgc2NzaS1taXNjLm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jh
+c2UuYwotLS0gc2NzaS1taXNjL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFz
+ZS5jCTIwMTItMTAtMDEgMTg6MDM6NDIuMDAwMDAwMDAwIC0wNzAwCisrKyBzY3NpLW1pc2MubmV3
+L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jCTIwMTItMTAtMDEgMTg6
+MDU6MjAuODMxODY0MTU1IC0wNzAwCkBAIC03MSw2ICs3MSwxMCBAQAogbW9kdWxlX3BhcmFtKG1z
+aXhfZGlzYWJsZSwgaW50LCBTX0lSVUdPKTsKIE1PRFVMRV9QQVJNX0RFU0MobXNpeF9kaXNhYmxl
+LCAiRGlzYWJsZSBNU0ktWCBpbnRlcnJ1cHQgaGFuZGxpbmcuIERlZmF1bHQ6IDAiKTsKIAorc3Rh
+dGljIHVuc2lnbmVkIGludCBtc2l4X3ZlY3RvcnM7Cittb2R1bGVfcGFyYW0obXNpeF92ZWN0b3Jz
+LCBpbnQsIFNfSVJVR08pOworTU9EVUxFX1BBUk1fREVTQyhtc2l4X3ZlY3RvcnMsICJNU0ktWCBt
+YXggdmVjdG9yIGNvdW50LiBEZWZhdWx0OiBTZXQgYnkgRlciKTsKKwogc3RhdGljIGludCB0aHJv
+dHRsZXF1ZXVlZGVwdGggPSBNRUdBU0FTX1RIUk9UVExFX1FVRVVFX0RFUFRIOwogbW9kdWxlX3Bh
+cmFtKHRocm90dGxlcXVldWVkZXB0aCwgaW50LCBTX0lSVUdPKTsKIE1PRFVMRV9QQVJNX0RFU0Mo
+dGhyb3R0bGVxdWV1ZWRlcHRoLApAQCAtMzUyMCw2ICszNTI0LDEwIEBACiAJCQlpbnN0YW5jZS0+
+bXNpeF92ZWN0b3JzID0gKHJlYWRsKCZpbnN0YW5jZS0+cmVnX3NldC0+CiAJCQkJCQkJb3V0Ym91
+bmRfc2NyYXRjaF9wYWRfMgogCQkJCQkJCSAgKSAmIDB4MUYpICsgMTsKKwkJCWlmIChtc2l4X3Zl
+Y3RvcnMpCisJCQkJaW5zdGFuY2UtPm1zaXhfdmVjdG9ycyA9CisJCQkJCW1pbihtc2l4X3ZlY3Rv
+cnMsCisJCQkJCSAgICBpbnN0YW5jZS0+bXNpeF92ZWN0b3JzKTsKIAkJfSBlbHNlCiAJCQlpbnN0
+YW5jZS0+bXNpeF92ZWN0b3JzID0gMTsKIAkJLyogRG9uJ3QgYm90aGVyIGFsbG9jYXRpbmcgbW9y
+ZSBNU0ktWCB2ZWN0b3JzIHRoYW4gY3B1cyAqLwo=
+--20cf3071ccc0b79c6d04cb0a41f7--
