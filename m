@@ -1,172 +1,50 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2 1/4] target: Add target_submit_cmd_map_sgls for SGL fabric memory passthrough
-Date: Tue,  2 Oct 2012 21:16:55 +0000
-Message-ID: <1349212618-348-2-git-send-email-nab@linux-iscsi.org>
-References: <1349212618-348-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:38184 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932365Ab2JBVWR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2012 17:22:17 -0400
-In-Reply-To: <1349212618-348-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH-v2 0/4] target: Add target_submit_cmd_map_sgls + convert tcm_loop+tcm_vhost
+Date: Tue,  2 Oct 2012 21:16:54 +0000
+Message-ID: <1349212618-348-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds a new target_submit_cmd_map_sgls() to pass pre-allocated
-SGL memory using transport_generic_map_mem_to_cmd() logic into the generic
-target submit I/O codepath.
+Hi folks,
 
-It also adds a target_submit_cmd() wrapper around target_submit_cmd_map_sgls()
-for existing fabric code that already assumes internal target-core SGL memory
-allocation.
+Here is a -v2 of the series to allow target_submit_cmd() logic to accept SGL
+passthrough memory using existing transport_generic_map_mem_to_cmd() code
+based upon hch's feedback this morning.
 
-(v2: Rename to target_submit_cmd_map_sgls + drop TARGET_SCF_MAP_MEM flag
-     in favor of non zero sgl_count check)
+The changelog from v1 -> v2 includes:
 
-Reported-by: Christoph Hellwig <hch@lst.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_transport.c |   65 +++++++++++++++++++++++++++++---
- include/target/target_core_base.h      |    1 +
+- Rename target_submit_cmd_map_mem() -> target_submit_cmd_map_sgls()
+  and export kernel symbol to fabrics.
+- Drop TARGET_SCF_MAP_MEM flag in favor of non zero sgl_count check
+- Drop TARGET_SCF_MAP_CLEAR_MEM flag, and zero control CDB READ payload
+  for all fabrics doing SGL passthrough
+- Update tcm_loop+tcm_vhost to use target_submit_cmd_map_sgls
+
+All of the v2 changes are straight-forward enough, but please let us know
+if there are any more concerns here.
+
+Thank you!
+
+--nab
+
+Nicholas Bellinger (4):
+  target: Add target_submit_cmd_map_sgls for SGL fabric memory
+    passthrough
+  tcm_loop: Convert I/O path to use target_submit_cmd_map_sgls
+  target: Add control CDB READ payload zero work-around
+  tcm_vhost: Convert I/O path to use target_submit_cmd_map_sgls
+
+ drivers/target/loopback/tcm_loop.c     |   62 +++--------------------
+ drivers/target/target_core_transport.c |   84 ++++++++++++++++++++++++++++++--
+ drivers/vhost/tcm_vhost.c              |   68 +++++--------------------
+ drivers/vhost/tcm_vhost.h              |    8 +++
  include/target/target_core_fabric.h    |    3 +
- 3 files changed, 63 insertions(+), 6 deletions(-)
+ 5 files changed, 112 insertions(+), 113 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 221f67f..d96d9aa 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1455,8 +1455,9 @@ int transport_handle_cdb_direct(
- }
- EXPORT_SYMBOL(transport_handle_cdb_direct);
- 
--/**
-- * target_submit_cmd - lookup unpacked lun and submit uninitialized se_cmd
-+/*
-+ * target_submit_cmd_map_sgls - lookup unpacked lun and submit uninitialized
-+ * 			 se_cmd + use pre-allocated SGL memory.
-  *
-  * @se_cmd: command descriptor to submit
-  * @se_sess: associated se_sess for endpoint
-@@ -1467,6 +1468,10 @@ EXPORT_SYMBOL(transport_handle_cdb_direct);
-  * @task_addr: SAM task attribute
-  * @data_dir: DMA data direction
-  * @flags: flags for command submission from target_sc_flags_tables
-+ * @sgl: struct scatterlist memory for unidirectional mapping
-+ * @sgl_count: scatterlist count for unidirectional mapping
-+ * @sgl_bidi: struct scatterlist memory for bidirectional READ mapping
-+ * @sgl_bidi_count: scatterlist count for bidirectional READ mapping
-  *
-  * Returns non zero to signal active I/O shutdown failure.  All other
-  * setup exceptions will be returned as a SCSI CHECK_CONDITION response,
-@@ -1474,10 +1479,12 @@ EXPORT_SYMBOL(transport_handle_cdb_direct);
-  *
-  * This may only be called from process context, and also currently
-  * assumes internal allocation of fabric payload buffer by target-core.
-- **/
--int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
-+ */
-+int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess,
- 		unsigned char *cdb, unsigned char *sense, u32 unpacked_lun,
--		u32 data_length, int task_attr, int data_dir, int flags)
-+		u32 data_length, int task_attr, int data_dir, int flags,
-+		struct scatterlist *sgl, u32 sgl_count,
-+		struct scatterlist *sgl_bidi, u32 sgl_bidi_count)
- {
- 	struct se_portal_group *se_tpg;
- 	int rc;
-@@ -1524,7 +1531,21 @@ int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
- 		transport_generic_request_failure(se_cmd);
- 		return 0;
- 	}
--
-+	/*
-+	 * When a non zero sgl_count has been passed perform SGL passthrough
-+	 * mapping for pre-allocated fabric memory instead of having target
-+	 * core perform an internal SGL allocation..
-+	 */
-+	if (sgl_count != 0) {
-+		BUG_ON(!sgl);
-+
-+		rc = transport_generic_map_mem_to_cmd(se_cmd, sgl, sgl_count,
-+				sgl_bidi, sgl_bidi_count);
-+		if (rc != 0) {
-+			transport_generic_request_failure(se_cmd);
-+			return 0;
-+		}
-+	}
- 	/*
- 	 * Check if we need to delay processing because of ALUA
- 	 * Active/NonOptimized primary access state..
-@@ -1534,6 +1555,38 @@ int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
- 	transport_handle_cdb_direct(se_cmd);
- 	return 0;
- }
-+EXPORT_SYMBOL(target_submit_cmd_map_sgls);
-+
-+/*
-+ * target_submit_cmd - lookup unpacked lun and submit uninitialized se_cmd
-+ *
-+ * @se_cmd: command descriptor to submit
-+ * @se_sess: associated se_sess for endpoint
-+ * @cdb: pointer to SCSI CDB
-+ * @sense: pointer to SCSI sense buffer
-+ * @unpacked_lun: unpacked LUN to reference for struct se_lun
-+ * @data_length: fabric expected data transfer length
-+ * @task_addr: SAM task attribute
-+ * @data_dir: DMA data direction
-+ * @flags: flags for command submission from target_sc_flags_tables
-+ *
-+ * Returns non zero to signal active I/O shutdown failure.  All other
-+ * setup exceptions will be returned as a SCSI CHECK_CONDITION response,
-+ * but still return zero here.
-+ *
-+ * This may only be called from process context, and also currently
-+ * assumes internal allocation of fabric payload buffer by target-core.
-+ *
-+ * It also assumes interal target core SGL memory allocation.
-+ */
-+int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
-+		unsigned char *cdb, unsigned char *sense, u32 unpacked_lun,
-+		u32 data_length, int task_attr, int data_dir, int flags)
-+{
-+	return target_submit_cmd_map_sgls(se_cmd, se_sess, cdb, sense,
-+			unpacked_lun, data_length, task_attr, data_dir,
-+			flags, NULL, 0, NULL, 0);
-+}
- EXPORT_SYMBOL(target_submit_cmd);
- 
- static void target_complete_tmr_failure(struct work_struct *work)
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 5be8937..6309298 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -220,6 +220,7 @@ enum target_sc_flags_table {
- 	TARGET_SCF_BIDI_OP		= 0x01,
- 	TARGET_SCF_ACK_KREF		= 0x02,
- 	TARGET_SCF_UNKNOWN_SIZE		= 0x04,
-+	TARGET_SCF_MAP_MEM		= 0x08,
- };
- 
- /* fabric independent task management function values */
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index 85a5d7a..81ddb4a 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -100,6 +100,9 @@ void	transport_init_se_cmd(struct se_cmd *, struct target_core_fabric_ops *,
- 		struct se_session *, u32, int, int, unsigned char *);
- int	transport_lookup_cmd_lun(struct se_cmd *, u32);
- int	target_setup_cmd_from_cdb(struct se_cmd *, unsigned char *);
-+int	target_submit_cmd_map_sgls(struct se_cmd *, struct se_session *,
-+		unsigned char *, unsigned char *, u32, u32, int, int, int,
-+		struct scatterlist *, u32, struct scatterlist *, u32);
- int	target_submit_cmd(struct se_cmd *, struct se_session *, unsigned char *,
- 		unsigned char *, u32, u32, int, int, int);
- int	target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
 -- 
 1.7.2.5
-
