@@ -1,44 +1,53 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] target/iscsi: precedence bug in
- iscsit_set_dataout_sequence_values()
-Date: Tue, 2 Oct 2012 11:22:48 +0300
-Message-ID: <20121002082248.GB12398@elgon.mountain>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 0/2] virtio-scsi fixes for 3.6
+Date: Tue, 02 Oct 2012 11:12:13 +0200
+Message-ID: <506AAFED.2050600@redhat.com>
+References: <1343309288-32615-1-git-send-email-pbonzini@redhat.com>  <50699682.9020804@redhat.com> <1349165906.2406.13.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1349165906.2406.13.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-Clang warns about this bug:
-drivers/target/iscsi/iscsi_target_erl0.c:52:45: warning: operator '?:'
-	has lower precedence than '+'; '+' will be evaluated first
-	[-Wparentheses]
+Il 02/10/2012 10:18, James Bottomley ha scritto:
+> On Mon, 2012-10-01 at 15:11 +0200, Paolo Bonzini wrote:
+>> Il 26/07/2012 15:28, Paolo Bonzini ha scritto:
+>>> James,
+>>>
+>>> patch 1 fixes scanning of LUNs whose number is greater than 255.  QEMU
+>>> passes a max_lun of 16383 (because it uses SAM numbering) but in Linux
+>>> it must become 32768 (because LUNs above 255 are "relocated" to 16640).
+>>> Patch 2 is a resubmission of the patch for online resizing of virtio-scsi
+>>> LUNs, which needs to be rebased.
+>>>
+>>> LUNs above 255 now work for all of scanning, hotplug, hotunplug and
+>>> resize.
+>>>
+>>> Thanks,
+>>>
+>>> Paolo
+>>>
+>>> Paolo Bonzini (2):
+>>>   virtio-scsi: fix LUNs greater than 255
+>>>   virtio-scsi: support online resizing of disks
+>>>
+>>>  drivers/scsi/virtio_scsi.c  |   37 +++++++++++++++++++++++++++++++++++--
+>>>  include/linux/virtio_scsi.h |    2 ++
+>>>  2 files changed, 37 insertions(+), 2 deletions(-)
+>>>
+>>
+>> Ping, are these patches going into 3.7?
+> 
+> They're 3.7 candidates yes (enhancements certainly aren't 3.6).
+> I seem to have become lost with the virtio-scsi updates since what I have
+> marked for inclusion is a patch series that's a partial intersection
+> with this.  I'll flush my queue for virto-scsi, please resend all the
+> missing patches you want in 3.7.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-Please review this very carefully because I haven't tested it.  It could
-be that the check should be:
-(data_done + data_length > FirstBurstLength) ? FirstBurstLength : data_length);
-Instead of what I have which is:
-data_done + (data_length > FirstBurstLength ? FirstBurstLength : data_length);
+Ok, will do so soon and tag the appropriate ones for stable.
 
-diff --git a/drivers/target/iscsi/iscsi_target_erl0.c b/drivers/target/iscsi/iscsi_target_erl0.c
-index 1a02016..2067efd 100644
---- a/drivers/target/iscsi/iscsi_target_erl0.c
-+++ b/drivers/target/iscsi/iscsi_target_erl0.c
-@@ -48,9 +48,9 @@ void iscsit_set_dataout_sequence_values(
- 	if (cmd->unsolicited_data) {
- 		cmd->seq_start_offset = cmd->write_data_done;
- 		cmd->seq_end_offset = (cmd->write_data_done +
--			(cmd->se_cmd.data_length >
--			 conn->sess->sess_ops->FirstBurstLength) ?
--			conn->sess->sess_ops->FirstBurstLength : cmd->se_cmd.data_length);
-+			((cmd->se_cmd.data_length >
-+			  conn->sess->sess_ops->FirstBurstLength) ?
-+			 conn->sess->sess_ops->FirstBurstLength : cmd->se_cmd.data_length));
- 		return;
- 	}
- 
+Paolo
