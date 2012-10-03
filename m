@@ -1,65 +1,32 @@
-From: walter harms <wharms@bfs.de>
-Subject: Re: [patch] target/iscsi: precedence bug in iscsit_set_dataout_sequence_values()
-Date: Wed, 03 Oct 2012 10:00:55 +0200
-Message-ID: <506BF0B7.9030807@bfs.de>
-References: <20121002082248.GB12398@elgon.mountain> <1349209800.28145.66.camel@haakon2.linux-iscsi.org>
-Reply-To: wharms@bfs.de
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/6] target/file: Re-enable optional fd_buffered_io=1
+ operation
+Date: Wed, 3 Oct 2012 07:47:21 -0400
+Message-ID: <20121003114721.GA16209@infradead.org>
+References: <1348984696-30992-1-git-send-email-nab@linux-iscsi.org>
+ <1348984696-30992-2-git-send-email-nab@linux-iscsi.org>
+ <20121001084605.GA23497@infradead.org>
+ <1349209004.28145.61.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1349209800.28145.66.camel@haakon2.linux-iscsi.org>
+Content-Disposition: inline
+In-Reply-To: <1349209004.28145.61.camel@haakon2.linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Tue, Oct 02, 2012 at 01:16:44PM -0700, Nicholas A. Bellinger wrote:
+>          * Optionally allow fd_buffered_io=1 to be enabled for people
+>          * who want use the fs buffer cache as an WriteCache mechanism.
+>          *
+>          * This means that in event of a hard failure, there is a risk
+>          * of silent data-loss if the SCSI client has *not* performed a
+>          * forced unit access (FUA) write, or issued SYNCHRONIZE_CACHE
+>          * to write-out the entire device cache.
+>          */
 
-
-Am 02.10.2012 22:30, schrieb Nicholas A. Bellinger:
-> On Tue, 2012-10-02 at 11:22 +0300, Dan Carpenter wrote:
->> Clang warns about this bug:
->> drivers/target/iscsi/iscsi_target_erl0.c:52:45: warning: operator '?:'
->> 	has lower precedence than '+'; '+' will be evaluated first
->> 	[-Wparentheses]
->>
->> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->> ---
->> Please review this very carefully because I haven't tested it.  It could
->> be that the check should be:
->> (data_done + data_length > FirstBurstLength) ? FirstBurstLength : data_length);
->> Instead of what I have which is:
->> data_done + (data_length > FirstBurstLength ? FirstBurstLength : data_length);
->>
->> diff --git a/drivers/target/iscsi/iscsi_target_erl0.c b/drivers/target/iscsi/iscsi_target_erl0.c
->> index 1a02016..2067efd 100644
->> --- a/drivers/target/iscsi/iscsi_target_erl0.c
->> +++ b/drivers/target/iscsi/iscsi_target_erl0.c
->> @@ -48,9 +48,9 @@ void iscsit_set_dataout_sequence_values(
->>  	if (cmd->unsolicited_data) {
->>  		cmd->seq_start_offset = cmd->write_data_done;
->>  		cmd->seq_end_offset = (cmd->write_data_done +
->> -			(cmd->se_cmd.data_length >
->> -			 conn->sess->sess_ops->FirstBurstLength) ?
->> -			conn->sess->sess_ops->FirstBurstLength : cmd->se_cmd.data_length);
->> +			((cmd->se_cmd.data_length >
->> +			  conn->sess->sess_ops->FirstBurstLength) ?
->> +			 conn->sess->sess_ops->FirstBurstLength : cmd->se_cmd.data_length));
->>  		return;
->>  	}
->>  
->> --
-> 
-> This is indeed the original intention and your patch is correct, so
-> applied to for-next.
-> 
-> Thank you!
-> 
-> --nab
-> 
-
-please consider rewriting this into an if ... else ... statement.
-See my comments and Dan's reply on this.
-
-re,
- wh
+Oh, I get Vlads flame.  This doesn't simply disable O_DSYNC now but also
+sets WCE=1.  In this case I don't really get the point of the patch, why
+can't we simply set it from configfs?
