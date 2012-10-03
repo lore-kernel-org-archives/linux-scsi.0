@@ -1,40 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 48241] oops when setting up LVM
-Date: Wed,  3 Oct 2012 16:46:41 +0000 (UTC)
-Message-ID: <20121003164641.6AE4311FC3E@bugzilla.kernel.org>
-References: <bug-48241-11613@https.bugzilla.kernel.org/>
+From: Neil Horman <nhorman@tuxdriver.com>
+Subject: Request for improved commit tracking between fcoe and scsi trees
+Date: Wed, 3 Oct 2012 15:23:47 -0400
+Message-ID: <20121003192346.GA15969@hmsreliant.think-freely.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:46798 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932112Ab2JCQqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Oct 2012 12:46:47 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id CF58820510
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Oct 2012 16:46:46 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 6CF7A2050D
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Oct 2012 16:46:41 +0000 (UTC)
-In-Reply-To: <bug-48241-11613@https.bugzilla.kernel.org/>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39593 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160Ab2JCTX6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2012 15:23:58 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: devel@open-fcoe.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Robert Love <robert.w.love@intel.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=48241
+James, Robert-
+	I've been doing lots of backports of FCoE code to the RHEL tree these
+last few months, and I've noticed something fairly irritating, and I was
+wondering if you two could help me out with it (in fact you two are the only two
+which can).  I noticed that commits which are accepted into the FCoE tree that
+get passed upstream through the scsi tree have their commit hashes altered.  I
+can't find any examples currently, due to the fact that you, Robert, have
+recently re-cloned your git tree at open-fcoe.org, so all this nastiness has
+been covered up currently, but if things don't change, this issue will quickly
+resurface.
 
+Regardless, This makes it _really_ difficult to track a given patchs' traversal 
+between trees upstream, and makes my life as a distro subsystem maintainer fairly
+painful.  Normally I would just live with it, but I can't see any reason why it
+should be this way, given that git can easily prevent this with a pull.  James,
+Robert, could you two please work out a way to provide commit hash consistency
+between your trees?  It would make mine (and I'm sure many other people's)
+lives, much easier.
 
-Daniel Santos <daniel.santos@pobox.com> changed:
+Thanks & Regards
+Neil
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-  Attachment #81971|application/octet-stream    |text/plain
-          mime type|                            |
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
