@@ -1,124 +1,120 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH v2] qla2xxx: silence two GCC warnings
-Date: Thu, 4 Oct 2012 12:42:42 -0500
-Message-ID: <CC93C7DD.EB60%saurav.kashyap@qlogic.com>
-References: <1349163768.1414.32.camel@x61.thuisdomein>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [qla2xxx] INFO: possible irq lock inversion dependency detected
+Date: Thu, 04 Oct 2012 11:44:15 -0700
+Message-ID: <1349376255.740.11.camel@haakon2.linux-iscsi.org>
+References: <506D80C2.5040405@linux.vnet.ibm.com>
+	 <alpine.LNX.2.00.1210041500010.9942@pobox.suse.cz>
+	 <506DAE41.6040007@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1349163768.1414.32.camel@x61.thuisdomein>
-Content-Language: en-US
+In-Reply-To: <506DAE41.6040007@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Cc: Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, 2012-10-04 at 21:11 +0530, Srivatsa S. Bhat wrote:
+> Hi Jiri,
+> 
+> Thanks for taking a look!
 
+Hi Srivatsa & Jiri,
 
+>  
+> > This seems to be real. You should be seeing that since 3.5-rc1 already 
+> > though ... ?
+> > 
+> > Does the patch below fix that?
+> > 
+> 
+> Yes, it does, thanks! But 3.6-rc kernels were booting fine as far as I remember.
+> I'll check again and get back tomorrow.
+> 
 
+Thanks for testing with v3.7-rc0 code !
 
->Compiling qla_gs.o (part of the qla2xxx module) triggers two GCC
->warnings:
->    drivers/scsi/qla2xxx/qla_gs.c: In function =8Cqla2x00_fdmi_rhba=B9=
-:
->    drivers/scsi/qla2xxx/qla_gs.c:1339:7: warning: array subscript is
->above array bounds [-Warray-bounds]
->    drivers/scsi/qla2xxx/qla_gs.c: In function =8Cqla2x00_fdmi_registe=
-r=B9:
->    drivers/scsi/qla2xxx/qla_gs.c:1663:15: warning: array subscript is
->above array bounds [-Warray-bounds]
->
->It seems that the sequence of a strcpy followed by a strlen confuses G=
-CC
->when it is keeping track of array bounds here. (It is not clear to me
->which array triggers this warning and by how much GCC thinks the
->subscript is above its bounds. Neither is it clear to me why comparabl=
-e
->code in these two functions doesn't trigger this warning.)
->
->An easy way to silence these warnings is to use preprocessor macros
->here, as that apparently gives GCC enough information to keep track of
->array bounds.
->
->Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
->---
->0) Rolf suggested to not use magic constants, to make sure things keep
->working when these strings change in the future. A trivial solution is
->to use preprocessor macros. I needed to add one for the manufacturer
->string.
->
->1) Still only compile tested.
->
-> drivers/scsi/qla2xxx/qla_def.h | 1 +
-> drivers/scsi/qla2xxx/qla_gs.c  | 6 +++---
-> 2 files changed, 4 insertions(+), 3 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/qla_def.h
->b/drivers/scsi/qla2xxx/qla_def.h
->index 39007f5..8895038 100644
->--- a/drivers/scsi/qla2xxx/qla_def.h
->+++ b/drivers/scsi/qla2xxx/qla_def.h
->@@ -37,6 +37,7 @@
-> #include "qla_nx.h"
-> #define QLA2XXX_DRIVER_NAME   "qla2xxx"
-> #define QLA2XXX_APIDEV                "ql2xapidev"
->+#define QLA2XXX_MANUFACTURER  "QLogic Corporation"
->
-> /*
->  * We have MAILBOX_REGISTER_COUNT sized arrays in a few places,
->diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_=
-gs.c
->index 05260d2..1714035 100644
->--- a/drivers/scsi/qla2xxx/qla_gs.c
->+++ b/drivers/scsi/qla2xxx/qla_gs.c
->@@ -1325,8 +1325,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
->       /* Manufacturer. */
->       eiter =3D (struct ct_fdmi_hba_attr *) (entries + size);
->       eiter->type =3D __constant_cpu_to_be16(FDMI_HBA_MANUFACTURER);
->-      strcpy(eiter->a.manufacturer, "QLogic Corporation");
->-      alen =3D strlen(eiter->a.manufacturer);
->+      strcpy(eiter->a.manufacturer, QLA2XXX_MANUFACTURER);
->+      alen =3D strlen(QLA2XXX_MANUFACTURER);
-
-Hi Paul,
-It looks fine except one small thing. Instead of strcpy, strncpy will b=
-e
-better option something like this
-
-+       alen =3D strlen(QLA2XXX_MANUFACTURER);
-+       strncpy(eiter->a.manufacturer, QLA2XXX_MANUFACTURER, alen);
+Cc'ing the Qlogic folks here, as this irq lock inversion warning appears
+to be regression from v3.7-rc1 qla2xxx (initiator) LLD changes that went
+in recently via scsi.git.
 
 Thanks,
-~Saurav
 
+--nab
 
->       alen +=3D (alen & 3) ? (4 - (alen & 3)) : 4;
->       eiter->len =3D cpu_to_be16(4 + alen);
->       size +=3D 4 + alen;
->@@ -1647,7 +1647,7 @@ qla2x00_fdmi_rpa(scsi_qla_host_t *vha)
->       eiter =3D (struct ct_fdmi_port_attr *) (entries + size);
->       eiter->type =3D __constant_cpu_to_be16(FDMI_PORT_OS_DEVICE_NAME=
-);
->       strcpy(eiter->a.os_dev_name, QLA2XXX_DRIVER_NAME);
->-      alen =3D strlen(eiter->a.os_dev_name);
->+      alen =3D strlen(QLA2XXX_DRIVER_NAME);
->       alen +=3D (alen & 3) ? (4 - (alen & 3)) : 4;
->       eiter->len =3D cpu_to_be16(4 + alen);
->       size +=3D 4 + alen;
->--
->1.7.11.4
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" =
-in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-This message and any attached documents contain information from QLogic=
- Corporation or its wholly-owned subsidiaries that may be confidential.=
- If you are not the intended recipient, you may not read, copy, distrib=
-ute, or use this information. If you have received this transmission in=
- error, please notify the sender immediately by reply e-mail and then d=
-elete this message.
+> > 
+> > From: Jiri Kosina <jkosina@suse.cz>
+> > Subject: [PATCH] [SCSI] qla2xxx: fix potential deadlock on ha->hardware_lock
+> > 
+> > Lockdep reports:
+> > 
+> > === [ cut here ] ===
+> >  =========================================================
+> >  [ INFO: possible irq lock inversion dependency detected ]
+> >  3.6.0-0.0.0.28.36b5ec9-default #1 Not tainted
+> >  ---------------------------------------------------------
+> >  qla2xxx_1_dpc/368 just changed the state of lock:
+> >   (&(&ha->vport_slock)->rlock){+.....}, at: [<ffffffffa009b377>] qla2x00_configure_hba+0x197/0x3c0 [qla2xxx]
+> >  but this lock was taken by another, HARDIRQ-safe lock in the past:
+> >   (&(&ha->hardware_lock)->rlock){-.....}
+> > 
+> > and interrupts could create inverse lock ordering between them.
+> > 
+> > other info that might help us debug this:
+> >  Possible interrupt unsafe locking scenario:
+> > 
+> >        CPU0                    CPU1
+> >        ----                    ----
+> >   lock(&(&ha->vport_slock)->rlock);
+> >                                local_irq_disable();
+> >                                lock(&(&ha->hardware_lock)->rlock);
+> >                                lock(&(&ha->vport_slock)->rlock);
+> >   <Interrupt>
+> >     lock(&(&ha->hardware_lock)->rlock);
+> > === [ cut here ] ===
+> > 
+> > Fix the potential deadlock by disabling IRQs while holding ha->vport_slock.
+> > 
+> > Reported-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+> 
+> Tested-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+> 
+> Regards,
+> Srivatsa S. Bhat
+> 
+> > ---
+> >  drivers/scsi/qla2xxx/qla_init.c |    5 +++--
+> >  1 files changed, 3 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+> > index 799a58b..48fca47 100644
+> > --- a/drivers/scsi/qla2xxx/qla_init.c
+> > +++ b/drivers/scsi/qla2xxx/qla_init.c
+> > @@ -2080,6 +2080,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+> >  	uint8_t       domain;
+> >  	char		connect_type[22];
+> >  	struct qla_hw_data *ha = vha->hw;
+> > +	unsigned long flags;
+> > 
+> >  	/* Get host addresses. */
+> >  	rval = qla2x00_get_adapter_id(vha,
+> > @@ -2154,9 +2155,9 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+> >  	vha->d_id.b.area = area;
+> >  	vha->d_id.b.al_pa = al_pa;
+> > 
+> > -	spin_lock(&ha->vport_slock);
+> > +	spin_lock_irqsave(&ha->vport_slock, flags);
+> >  	qlt_update_vp_map(vha, SET_AL_PA);
+> > -	spin_unlock(&ha->vport_slock);
+> > +	spin_unlock_irqrestore(&ha->vport_slock, flags);
+> > 
+> >  	if (!vha->flags.init_done)
+> >  		ql_log(ql_log_info, vha, 0x2010,
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
