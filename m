@@ -1,120 +1,84 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [qla2xxx] INFO: possible irq lock inversion dependency detected
-Date: Thu, 04 Oct 2012 11:44:15 -0700
-Message-ID: <1349376255.740.11.camel@haakon2.linux-iscsi.org>
-References: <506D80C2.5040405@linux.vnet.ibm.com>
-	 <alpine.LNX.2.00.1210041500010.9942@pobox.suse.cz>
-	 <506DAE41.6040007@linux.vnet.ibm.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH v2 2/3] libfc: fix lun reset failure bugs in fc_fcp_resp
+ handling of FCP_RSP_INFO
+Date: Thu, 04 Oct 2012 13:14:47 -0700
+Message-ID: <20121004201447.29312.96679.stgit@fritz>
+References: <20121004201436.29312.47930.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <506DAE41.6040007@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Cc: Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:12862 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755549Ab2JDUPG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Oct 2012 16:15:06 -0400
+In-Reply-To: <20121004201436.29312.47930.stgit@fritz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Ross Brattain <ross.b.brattain@intel.com>, Frank Zhang <frank_1.zhang@intel.com>, Yi Zou <yi.zou@intel.com>
 
-On Thu, 2012-10-04 at 21:11 +0530, Srivatsa S. Bhat wrote:
-> Hi Jiri,
-> 
-> Thanks for taking a look!
+From: Yi Zou <yi.zou@intel.com>
 
-Hi Srivatsa & Jiri,
+In LUN RESET testing involving NetApp targets, it is observed that LUN
+RESET is failing. The fc_fcp_resp() is not completing the completion
+for the LUN RESET task since fc_fcp_resp assumes that the FCP_RSP_INFO
+is 8 bytes with the 4 byte reserved field, where in case of NetApp targets
+the FCP_RSP to LUN RESET only has 4 bytes of FCP_RSP_INFO. This leads
+fc_fcp_resp to error out w/o completing the task completion, eventually
+causing LUN RESET to be escalated to host reset, which is not very nice.
 
->  
-> > This seems to be real. You should be seeing that since 3.5-rc1 already 
-> > though ... ?
-> > 
-> > Does the patch below fix that?
-> > 
-> 
-> Yes, it does, thanks! But 3.6-rc kernels were booting fine as far as I remember.
-> I'll check again and get back tomorrow.
-> 
+Per FCP-3 r04, clause 9.5.15 and Table 23, the FCP_RSP_INFO field can be either
+4 bytes or 8 bytes, with the last 4 bytes as "Reserved (if any)". Therefore it
+is valid to have 4 bytes FCP_RSP_INFO like some of the NetApp targets behave.
+Fixing this by validating the FCP_RSP_INFO against both the two spec allowed
+length.
 
-Thanks for testing with v3.7-rc0 code !
+Reported-by: Frank Zhang <frank_1.zhang@intel.com>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Tested-by: Ross Brattain <ross.b.brattain@intel.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
+---
+ drivers/scsi/libfc/fc_fcp.c |    3 ++-
+ include/scsi/fc/fc_fcp.h    |    6 ++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-Cc'ing the Qlogic folks here, as this irq lock inversion warning appears
-to be regression from v3.7-rc1 qla2xxx (initiator) LLD changes that went
-in recently via scsi.git.
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 14243fa..fcb9d0b 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -851,7 +851,8 @@ static void fc_fcp_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 			fc_rp_info = (struct fcp_resp_rsp_info *)(rp_ex + 1);
+ 			if (flags & FCP_RSP_LEN_VAL) {
+ 				respl = ntohl(rp_ex->fr_rsp_len);
+-				if (respl != sizeof(*fc_rp_info))
++				if ((respl != FCP_RESP_RSP_INFO_LEN4) &&
++				    (respl != FCP_RESP_RSP_INFO_LEN8))
+ 					goto len_err;
+ 				if (fsp->wait_for_comp) {
+ 					/* Abuse cdb_status for rsp code */
+diff --git a/include/scsi/fc/fc_fcp.h b/include/scsi/fc/fc_fcp.h
+index 0d7d67e..9c87029 100644
+--- a/include/scsi/fc/fc_fcp.h
++++ b/include/scsi/fc/fc_fcp.h
+@@ -127,6 +127,9 @@ struct fcp_txrdy {
+  *
+  * All response frames will always contain the fcp_resp template.  Some
+  * will also include the fcp_resp_len template.
++ *
++ * From Table 23, the FCP_RSP_INFO can either be 4 bytes or 8 bytes, both
++ * are valid length.
+  */
+ struct fcp_resp {
+ 	__u8		_fr_resvd[8];	/* reserved */
+@@ -156,6 +159,9 @@ struct fcp_resp_rsp_info {
+     __u8      _fr_resvd2[4];      /* reserved */
+ };
+ 
++#define FCP_RESP_RSP_INFO_LEN4    4 /* without reserved field */
++#define FCP_RESP_RSP_INFO_LEN8    8 /* with reserved field */
++
+ struct fcp_resp_with_ext {
+ 	struct fcp_resp resp;
+ 	struct fcp_resp_ext ext;
 
-Thanks,
-
---nab
-
-> > 
-> > From: Jiri Kosina <jkosina@suse.cz>
-> > Subject: [PATCH] [SCSI] qla2xxx: fix potential deadlock on ha->hardware_lock
-> > 
-> > Lockdep reports:
-> > 
-> > === [ cut here ] ===
-> >  =========================================================
-> >  [ INFO: possible irq lock inversion dependency detected ]
-> >  3.6.0-0.0.0.28.36b5ec9-default #1 Not tainted
-> >  ---------------------------------------------------------
-> >  qla2xxx_1_dpc/368 just changed the state of lock:
-> >   (&(&ha->vport_slock)->rlock){+.....}, at: [<ffffffffa009b377>] qla2x00_configure_hba+0x197/0x3c0 [qla2xxx]
-> >  but this lock was taken by another, HARDIRQ-safe lock in the past:
-> >   (&(&ha->hardware_lock)->rlock){-.....}
-> > 
-> > and interrupts could create inverse lock ordering between them.
-> > 
-> > other info that might help us debug this:
-> >  Possible interrupt unsafe locking scenario:
-> > 
-> >        CPU0                    CPU1
-> >        ----                    ----
-> >   lock(&(&ha->vport_slock)->rlock);
-> >                                local_irq_disable();
-> >                                lock(&(&ha->hardware_lock)->rlock);
-> >                                lock(&(&ha->vport_slock)->rlock);
-> >   <Interrupt>
-> >     lock(&(&ha->hardware_lock)->rlock);
-> > === [ cut here ] ===
-> > 
-> > Fix the potential deadlock by disabling IRQs while holding ha->vport_slock.
-> > 
-> > Reported-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
-> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
-> 
-> Tested-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
-> 
-> Regards,
-> Srivatsa S. Bhat
-> 
-> > ---
-> >  drivers/scsi/qla2xxx/qla_init.c |    5 +++--
-> >  1 files changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> > index 799a58b..48fca47 100644
-> > --- a/drivers/scsi/qla2xxx/qla_init.c
-> > +++ b/drivers/scsi/qla2xxx/qla_init.c
-> > @@ -2080,6 +2080,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
-> >  	uint8_t       domain;
-> >  	char		connect_type[22];
-> >  	struct qla_hw_data *ha = vha->hw;
-> > +	unsigned long flags;
-> > 
-> >  	/* Get host addresses. */
-> >  	rval = qla2x00_get_adapter_id(vha,
-> > @@ -2154,9 +2155,9 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
-> >  	vha->d_id.b.area = area;
-> >  	vha->d_id.b.al_pa = al_pa;
-> > 
-> > -	spin_lock(&ha->vport_slock);
-> > +	spin_lock_irqsave(&ha->vport_slock, flags);
-> >  	qlt_update_vp_map(vha, SET_AL_PA);
-> > -	spin_unlock(&ha->vport_slock);
-> > +	spin_unlock_irqrestore(&ha->vport_slock, flags);
-> > 
-> >  	if (!vha->flags.init_done)
-> >  		ql_log(ql_log_info, vha, 0x2010,
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
