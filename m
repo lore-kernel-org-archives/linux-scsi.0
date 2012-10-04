@@ -1,85 +1,130 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v2 0/3] block: add queue-private command filter, editable
- via sysfs
-Date: Thu, 04 Oct 2012 12:12:12 +0200
-Message-ID: <506D60FC.7090801@redhat.com>
-References: <1348587009-22400-1-git-send-email-pbonzini@redhat.com>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Re: [PATCH 0/3] Insert ATA transport objects in SCSI syfs topology.
+Date: Thu, 4 Oct 2012 09:56:25 -0700
+Message-ID: <CAMHSBOV8ghAV_RCRMPMHW0Gk8ugX6zWTp+aNnWUJ9tmiFeN8pg@mail.gmail.com>
+References: <20120928062709.GA2091@mint-spring.sh.intel.com>
+	<1349115776-17569-1-git-send-email-gwendal@google.com>
+	<CAA9_cmdWHRLBru6hN1ibGK75rw3ZQbQ9TULRe-bU=3q4-fb+qw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1348587009-22400-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Ric Wheeler <rwheeler@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAA9_cmdWHRLBru6hN1ibGK75rw3ZQbQ9TULRe-bU=3q4-fb+qw@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dan Williams <djbw@fb.com>
+Cc: aaron.lu@intel.com, minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Il 25/09/2012 17:30, Paolo Bonzini ha scritto:
-> The set of use cases for SG_IO is quite variable that no single filter can
-> accomodate all of them.  The current filter is tailored very much to
-> CD burning, and includes many MMC-specific commands that may have
-> other meanings in different standards.  Someone may want to remove
-> those commands; at the same time, people that trust their users may
-> want to add persistent reservations, trim/discard, or even access to
-> vendor-specific commands.
-> 
-> Filters used to be mutable via sysfs, but the implementation was
-> never enabled.  Add it back, and let the admin set this up per device.
-> 
-> A simple bitmap does not let you do things like enabling command A with
-> option B on a specific device for a certain block range.  However, the
-> question is really whether this is needed---in fact, neither of the known
-> uses for the filtering need it.
-> 
-> In one use case, the administrator then needs the ability to configure
-> devices easily, for example to be much more restrictive on non-MMC
-> devices.  It must be done with the same tools it uses for other aspects
-> of the policy---which will be a combination of DAC (Unix permissions and
-> ACLs) and sysfs.  Different SCSI standards may give different meanings
-> for the same byte value, but a simple bitmap is enough for this.
-> 
-> In the virtualization case, the problem is really that you want to
-> pass through everything or almost everything, while still running as
-> confined as possible (i.e. CAP_SYS_RAWIO is not a choice).  But in this
-> case a more complex filtering can be done just as easily in userspace,
-> in the virtual machine monitor.  While the userspace filter can be
-> subverted if the guest can escape the QEMU jail, the bitmap still lets
-> you block some commands at the kernel level if really necessary.
-> 
-> One alternative is a ioctl to disable the filter altogether, to be
-> used together with SCM_RIGHTS file descriptor passing.  This works in
-> the virtualization case but not for policy decisions.  So this patch
-> series provides the sysfs knob.  It is a tweaked revert of commit 018e044
-> (block: get rid of queue-private command filter, 2009-06-26).
-> 
-> Please review!
-> 
-> Paolo
-> 
-> v1->v2: add OOM and capability checks
-> 
-> Paolo Bonzini (3):
->   block: add back queue-private command filter
->   scsi: create an all-zero filter for scanners
->   block: add back command filter modification via sysfs
-> 
->  Documentation/block/queue-sysfs.txt |   16 +++++
->  block/Kconfig                       |   10 +++
->  block/blk-sysfs.c                   |   43 +++++++++++++
->  block/bsg.c                         |    2 +-
->  block/scsi_ioctl.c                  |  117 +++++++++++++++++++++++++++++++----
->  drivers/scsi/scsi_scan.c            |    6 ++-
->  drivers/scsi/sg.c                   |    7 +-
->  include/linux/blkdev.h              |   31 +++++++++-
->  8 files changed, 213 insertions(+), 19 deletions(-)
-> 
+On Mon, Oct 1, 2012 at 12:14 PM, Dan Williams <djbw@fb.com> wrote:
+> On Mon, Oct 1, 2012 at 11:22 AM, Gwendal Grignou <gwendal@google.com> wrote:
+>> This set of patches improve ATA transport classes integration with SCSI
+>> objects.
+>>
+>> Before [2.6.x]
+>>
+>> Ata and scsi transport class where separated:
+>> `--0000:09:00.0
+>> |  `--ata1
+>> |  |  `--port_port
+>> |  |  `--link1
+>> |  |  |  `--dev1.0
+>> |  |  |  `--dev1.1
+>> |  `--ata2
+>> |  ...
+>> |  `--host0
+>> |  |  `--scsi_host
+>> |  |  |  `--host0
+>> |  |  `--target0:0:0
+>> |  |  |  `--0:0:0:0
+>> |  |  |  |  `--block
+>> |  |  |  |  |  `--sda
+>> |  |  |  |  |  |  `--sda1
+>>
+>> In 3.2, Lin - in commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a - addressed
+>> the issue of linking the ata port with the scsi host object by placing the
+>> scsi_host object under ata port objects.
+>>
+>> However to be more consistent with other transport, this patch does the opposite:
+>>
+>> For instance, with SAS transport, We have
+>> `--0000:0b:00.0
+>> |  `--host6
+>> |  |  `--phy-6:0
+>> |  |  `--phy-6:1
+>> ...
+>> |  |  `--port-6:0
+>> |  |  |  `--end_device-6:0
+>> |  |  |  |  `--sas_device
+>> |  |  |  |  |  `--end_device-6:0
+>> |  |  |  |  `--sas_end_device
+>> |  |  |  |  |  `--end_device-6:0
+>> |  |  |  |  `--target6:0:0
+>> |  |  |  |  |  `--6:0:0:0
+>> |  |  |  |  |  |  `--block
+>> |  |  |  |  |  |  |  `--sdb
+>> ...
+>> |  |  `--port-6:1
+>> |  |  |  `--end_device-6:1
+>> ...
+>> phy and port have to be separated, sas_port are created dynamically.
+>>
+>> For ata, all objects are created at initialization time, so the layout is:
+>> `--0000:09:00.0
+>> |  `--host0
+>> |  |  `--port1
+>> |  |  |  `--link1
+>> |  |  |  |  `--dev1.0
+>> |  |  |  |  |  `--target0:0:0
+>> |  |  |  |  |  |  `--0:0:0:0
+>> |  |  |  |  |  |  |  `--block
+>> |  |  |  |  |  |  |  |  `--sda
+>>
+>> If we have a port multiplier, more links are created.
+>> `--0000:09:00.0
+>> ...
+>> |  `--host4
+>> |  |  `--port5
+>> |  |  |  `--link5
+>> |  |  |  |  `--dev5.0
+>> [device for the port multiplier]
+>> |  |  |  `--link5.0
+>> |  |  |  |  `--dev5.0.0
+>> |  |  |  |  |  `--target4:0:0
+>> |  |  |  |  |  |  `--4:0:0:0
+>> |  |  |  |  |  |  |  `--block
+>> |  |  |  |  |  |  |  |  `--sdc
+>> [disk in port 0 of the port multiplier]
+>> ...
+>> |  |  |  `--link5.2
+>> |  |  |  |  `--dev5.2.0
+>> |  |  |  |  |  `--target4:2:0
+>> |  |  |  |  |  |  `--4:2:0:0
+>> |  |  |  |  |  |  |  `--block
+>> |  |  |  |  |  |  |  |  `--sde
+>> [disk in port 2 of the port multiplier]
+>>
+>> In consequence, the path of a scsi device becomes:
+>> .../0000:00:1f.2/host0/port1/link1/dev1.0/target0:0:0/0:0:0:0
+>> dev1.0 indicates the master device [0] in ata port 1.
+>> ata1 being under host0, we know the reliationships between the scsi_host id and
+>> ata port id.
+>>
+>> or when a port multiplier is present: for instance the device in port 4 of the
+>> port multiplier:
+>> .../0000:00:06.0/0000:09:00.0/host5/port6/link6.4/dev6.4.0/target5:4:0/5:4:0:0
+>
+> What's the benefit of this?
++ To unify ata transport sysfs topology with other scsi transport.
++ To easily map a ata_port with its associated scsi_host structure.
+
+> From a PM perspective now it seems we'll
+> have the parent hardware port suspended before all the scsi_hosts on
+> that port,
+There is a one to one mapping between ata port and scsi-host, so it works.
+All ata ports must be suspended before the parent hardware is.
+
+Gwendal.
+> which defeats the original purpose of putting the ata_port
+> in the PM hierarchy.
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-Ping?
-
-Tejun, Jens, anyone else, any hope that this gets in 3.7?
-
-Paolo
+> Dan
