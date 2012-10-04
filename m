@@ -1,72 +1,61 @@
-From: "Zou, Yi" <yi.zou-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: Request for improved commit tracking between fcoe
-	and scsi trees
-Date: Thu, 4 Oct 2012 21:08:01 +0000
-Message-ID: <138EA028228D124A900F5E6746F3C2162F5011C6@ORSMSX102.amr.corp.intel.com>
-References: <20121003192346.GA15969@hmsreliant.think-freely.org>
- <506DF0B4.9000004@intel.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH v2 3/3] Documentation: Add lesb/ to path for LESB attributes
+ in FCoE bus documentation
+Date: Thu, 04 Oct 2012 13:14:54 -0700
+Message-ID: <20121004201454.29312.72957.stgit@fritz>
+References: <20121004201436.29312.47930.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <506DF0B4.9000004-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.open-fcoe.org/mailman/options/devel>,
- <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.open-fcoe.org/mailman/listinfo/devel>,
- <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: "Love, Robert W" <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
-Cc: "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:49410 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752285Ab2JDUPT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Oct 2012 16:15:19 -0400
+In-Reply-To: <20121004201436.29312.47930.stgit@fritz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Ross Brattain <ross.b.brattain@intel.com>
 
-> On 10/3/2012 12:23 PM, Neil Horman wrote:
-> > James, Robert-
-> > 	I've been doing lots of backports of FCoE code to the RHEL tree these
-> > last few months, and I've noticed something fairly irritating, and I was
-> > wondering if you two could help me out with it (in fact you two are the only
-> two
-> > which can).  I noticed that commits which are accepted into the FCoE tree that
-> > get passed upstream through the scsi tree have their commit hashes altered.  I
-> > can't find any examples currently, due to the fact that you, Robert, have
-> > recently re-cloned your git tree at open-fcoe.org, so all this nastiness has
-> > been covered up currently, but if things don't change, this issue will quickly
-> > resurface.
-> >
-> > Regardless, This makes it _really_ difficult to track a given patchs' traversal
-> > between trees upstream, and makes my life as a distro subsystem maintainer
-> fairly
-> > painful.  Normally I would just live with it, but I can't see any reason why it
-> > should be this way, given that git can easily prevent this with a pull.  James,
-> > Robert, could you two please work out a way to provide commit hash
-> consistency
-> > between your trees?  It would make mine (and I'm sure many other people's)
-> > lives, much easier.
-> 
-> I had included pull URLs in the covermails of my updates, but I haven't
-> lately. I will make sure to do that from now on. Bart had a complaint
-> about a misspelling in a commit message of a patch in my last update. I
-> just resent that three patch series with the corrected commit message. I
-> included a signed-tag to pull from in the covermail.
-> 
-> Consistent commit IDs between linux-fcoe.git and scsi.git would help me
-> as well. It would allow me to track commit IDs from my tree all the way
-> into the distros, so that I can make sure nothing gets missed.
-> 
-> Thanks, //Rob
-> --
+The Link Error Status Block attributes are incorrectly named as they do
+not have the lesb_ prefix, but instead are grouped in the lesb/ attribute
+group.
 
-I definitely share with Neil's comments as I did some backporting before and
-had to make sure remember whatever commit id on open-fcoe is gonna change 
-later, kind of defeats the commit id's purpose. So I certainly would hope 
-linux-fcoe.git always gets pulled directly from scsi.git so we have 
-the full true history as reflected by the commit id when Rob commits it.
+Signed-off-by: Robert Love <robert.w.love@intel.com>
+Tested-by: Ross Brattain <ross.b.brattain@intel.com>
+---
+ Documentation/ABI/testing/sysfs-bus-fcoe |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Of course, James sign-off line on each open-fcoe patch is superseded by the
-pull merge commit so no information loss there, except [SCSI] prefix on the patch 
+diff --git a/Documentation/ABI/testing/sysfs-bus-fcoe b/Documentation/ABI/testing/sysfs-bus-fcoe
+index 469d09c..50e2a80 100644
+--- a/Documentation/ABI/testing/sysfs-bus-fcoe
++++ b/Documentation/ABI/testing/sysfs-bus-fcoe
+@@ -9,19 +9,19 @@ Attributes:
+ 			  this value will change the dev_loss_tmo for all
+ 			  FCFs discovered by this controller.
+ 
+-	lesb_link_fail:   Link Error Status Block (LESB) link failure count.
++	lesb/link_fail:   Link Error Status Block (LESB) link failure count.
+ 
+-	lesb_vlink_fail:  Link Error Status Block (LESB) virtual link
++	lesb/vlink_fail:  Link Error Status Block (LESB) virtual link
+ 			  failure count.
+ 
+-	lesb_miss_fka:    Link Error Status Block (LESB) missed FCoE
++	lesb/miss_fka:    Link Error Status Block (LESB) missed FCoE
+ 			  Initialization Protocol (FIP) Keep-Alives (FKA).
+ 
+-	lesb_symb_err:    Link Error Status Block (LESB) symbolic error count.
++	lesb/symb_err:    Link Error Status Block (LESB) symbolic error count.
+ 
+-	lesb_err_block:   Link Error Status Block (LESB) block error count.
++	lesb/err_block:   Link Error Status Block (LESB) block error count.
+ 
+-	lesb_fcs_error:   Link Error Status Block (LESB) Fibre Channel
++	lesb/fcs_error:   Link Error Status Block (LESB) Fibre Channel
+ 			  Serivces error count.
+ 
+ Notes: ctlr_X (global increment starting at 0)
 
-yi
