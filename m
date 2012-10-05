@@ -1,89 +1,55 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH v3] qla2xxx: silence two GCC warnings
-Date: Fri, 05 Oct 2012 14:23:30 +0200
-Message-ID: <1349439810.1491.18.camel@x61.thuisdomein>
-References: <CC93C7DD.EB60%saurav.kashyap@qlogic.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 03/16] SCSI: ARM: ncr5380/oak uses no interrupts
+Date: Fri,  5 Oct 2012 16:55:17 +0200
+Message-ID: <1349448930-23976-4-git-send-email-arnd@arndb.de>
+References: <1349448930-23976-1-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CC93C7DD.EB60%saurav.kashyap@qlogic.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-driver@qlogic.com, Rolf Eike Beer <eike-kernel@sf-tec.de>, Saurav Kashyap <saurav.kashyap@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1349448930-23976-1-git-send-email-arnd@arndb.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: linux-arm-kernel-bounces@lists.infradead.org
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, arm@kernel.org, Russell King <rmk+kernel@arm.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
 
-Compiling qla_gs.o (part of the qla2xxx module) triggers two GCC
-warnings:
-    drivers/scsi/qla2xxx/qla_gs.c: In function =E2=80=98qla2x00_fdmi_rh=
-ba=E2=80=99:
-    drivers/scsi/qla2xxx/qla_gs.c:1339:7: warning: array subscript is a=
-bove array bounds [-Warray-bounds]
-    drivers/scsi/qla2xxx/qla_gs.c: In function =E2=80=98qla2x00_fdmi_re=
-gister=E2=80=99:
-    drivers/scsi/qla2xxx/qla_gs.c:1663:15: warning: array subscript is =
-above array bounds [-Warray-bounds]
+The ncr5380 driver is included by multiple board specific
+drivers, which may or may not use the interrupt handler.
+The oak variant doesn't, and should set the DONT_USE_INTR
+macro.
 
-It seems that the sequence of a strcpy followed by a strlen confuses GC=
-C
-when it is keeping track of array bounds here. (It is not clear to me
-which array triggers this warning and by how much GCC thinks the
-subscript is above its bounds. Neither is it clear to me why comparable
-code in these two functions doesn't trigger this warning.)
+Without this patch, building rpc_defconfig results in:
 
-An easy way to silence these warnings is to use preprocessor macros and
-strncpy, as that apparently gives GCC enough information to keep track
-of array bounds.
+drivers/scsi/arm/../NCR5380.c:1160:20: warning: 'oakscsi_intr' defined but not used [-Wunused-function]
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-scsi@vger.kernel.org
 ---
-0) Updated for Saurav's request to use strncpy().
+ drivers/scsi/arm/oak.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-1) Still only compile tested.
-
- drivers/scsi/qla2xxx/qla_def.h | 1 +
- drivers/scsi/qla2xxx/qla_gs.c  | 8 ++++----
- 2 files changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_=
-def.h
-index 39007f5..8895038 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -37,6 +37,7 @@
- #include "qla_nx.h"
- #define QLA2XXX_DRIVER_NAME	"qla2xxx"
- #define QLA2XXX_APIDEV		"ql2xapidev"
-+#define QLA2XXX_MANUFACTURER	"QLogic Corporation"
-=20
- /*
-  * We have MAILBOX_REGISTER_COUNT sized arrays in a few places,
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_g=
-s.c
-index 05260d2..824cbcf 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -1325,8 +1325,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
- 	/* Manufacturer. */
- 	eiter =3D (struct ct_fdmi_hba_attr *) (entries + size);
- 	eiter->type =3D __constant_cpu_to_be16(FDMI_HBA_MANUFACTURER);
--	strcpy(eiter->a.manufacturer, "QLogic Corporation");
--	alen =3D strlen(eiter->a.manufacturer);
-+	alen =3D strlen(QLA2XXX_MANUFACTURER);
-+	strncpy(eiter->a.manufacturer, QLA2XXX_MANUFACTURER, alen + 1);
- 	alen +=3D (alen & 3) ? (4 - (alen & 3)) : 4;
- 	eiter->len =3D cpu_to_be16(4 + alen);
- 	size +=3D 4 + alen;
-@@ -1646,8 +1646,8 @@ qla2x00_fdmi_rpa(scsi_qla_host_t *vha)
- 	/* OS device name. */
- 	eiter =3D (struct ct_fdmi_port_attr *) (entries + size);
- 	eiter->type =3D __constant_cpu_to_be16(FDMI_PORT_OS_DEVICE_NAME);
--	strcpy(eiter->a.os_dev_name, QLA2XXX_DRIVER_NAME);
--	alen =3D strlen(eiter->a.os_dev_name);
-+	alen =3D strlen(QLA2XXX_DRIVER_NAME);
-+	strncpy(eiter->a.os_dev_name, QLA2XXX_DRIVER_NAME, alen + 1);
- 	alen +=3D (alen & 3) ? (4 - (alen & 3)) : 4;
- 	eiter->len =3D cpu_to_be16(4 + alen);
- 	size +=3D 4 + alen;
---=20
-1.7.11.4
+diff --git a/drivers/scsi/arm/oak.c b/drivers/scsi/arm/oak.c
+index d25f944..fc6a5aa 100644
+--- a/drivers/scsi/arm/oak.c
++++ b/drivers/scsi/arm/oak.c
+@@ -21,6 +21,7 @@
+ /*#define PSEUDO_DMA*/
+ 
+ #define OAKSCSI_PUBLIC_RELEASE 1
++#define DONT_USE_INTR
+ 
+ #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
+ #define NCR5380_local_declare()		void __iomem *_base
+-- 
+1.7.10
