@@ -1,621 +1,309 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [RFC PATCH v3 2/4] libfcoe, fcoe,
- bnx2fc: Add new fcoe control interface
-Date: Fri, 05 Oct 2012 09:54:32 -0700
-Message-ID: <20121005165432.22466.91096.stgit@fritz>
+Subject: [RFC PATCH v3 3/4] fcoe: Use the fcoe_sysfs control interface
+Date: Fri, 05 Oct 2012 09:54:38 -0700
+Message-ID: <20121005165438.22466.58014.stgit@fritz>
 References: <20121005165422.22466.33025.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:45861 "EHLO mga11.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:15239 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756769Ab2JEQye (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Oct 2012 12:54:34 -0400
+	id S1756769Ab2JEQyo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Oct 2012 12:54:44 -0400
 In-Reply-To: <20121005165422.22466.33025.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: cleech@redhat.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, bprakash@broadcom.com
 Cc: gregkh@linuxfoundation.org, devel@open-fcoe.org
 
-This patch does a few things.
+This patch adds support for the new fcoe_sysfs
+control interface to fcoe.ko. It keeps the deprecated
+interface in tact and therefore either the legacy
+or the new control interfaces can be used. A mixed mode
+is not supported. A user must either use the new
+interfaces or the old ones, but not both.
 
-1) Makes /sys/bus/fcoe/ctlr_{create,destroy} interfaces.
-   These interfaces take an <ifname> and will either
-   create an FCoE Controller or destroy an FCoE
-   Controller depending on which file is written to.
-
-   The new FCoE Controller will start in a DISABLED
-   state and will not do discovery or login until it
-   is ENABLED. This pause will allow us to configure
-   the FCoE Controller before enabling it.
-
-2) Makes the 'mode' attribute of a fcoe_ctlr_device
-   writale. This allows the user to configure the mode
-   in which the FCoE Controller will start in when it
-   is ENABLED.
-
-   Possible modes are 'Fabric', or 'VN2VN'.
-
-   The default mode for a fcoe_ctlr{,_device} is 'Fabric'.
-   Drivers must implement the set_fcoe_ctlr_mode routine
-   to support this feature.
-
-   libfcoe offers an exported routine to set a FCoE
-   Controller's mode. The mode can only be changed
-   when the FCoE Controller is DISABLED.
-
-   This patch also removes the get_fcoe_ctlr_mode pointer
-   in the fcoe_sysfs function template, the code in
-   fcoe_ctlr.c to get the mode and the assignment of
-   the fcoe_sysfs function pointer to the fcoe_ctlr.c
-   implementation (in fcoe and bnx2fc). fcoe_sysfs can
-   return that value for the mode without consulting the
-   LLD.
-
-3) Make a 'enabled' attribute of a fcoe_ctlr_device. On a
-   read, fcoe_sysfs will return the attribute's value. On
-   a write, fcoe_sysfs will call the LLD (if there is a
-   callback) to notifiy that the enalbed state has changed.
-
-This patch maintains the old FCoE control interfaces as
-module parameters, but it adds comments pointing out that
-the old interfaces are deprecated.
+The fcoe_ctlr's link state is now driven by both the
+netdev link state as well as the fcoe_ctlr_device's
+enabled attribute. The link must be up and the
+fcoe_ctlr_device must be enabled before the FCoE
+Controller starts discovery or login.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- Documentation/ABI/testing/sysfs-bus-fcoe |   42 +++++++
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c        |    1 
- drivers/scsi/fcoe/fcoe.c                 |    1 
- drivers/scsi/fcoe/fcoe_sysfs.c           |  186 +++++++++++++++++++++++++++---
- drivers/scsi/fcoe/fcoe_transport.c       |  104 +++++++++++++++++
- include/scsi/fcoe_sysfs.h                |   11 ++
- include/scsi/libfcoe.h                   |   16 ++-
- 7 files changed, 338 insertions(+), 23 deletions(-)
+ drivers/scsi/fcoe/fcoe.c      |  147 +++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/fcoe/fcoe_ctlr.c |   17 ++---
+ 2 files changed, 140 insertions(+), 24 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-fcoe b/Documentation/ABI/testing/sysfs-bus-fcoe
-index 469d09c..a57bf37 100644
---- a/Documentation/ABI/testing/sysfs-bus-fcoe
-+++ b/Documentation/ABI/testing/sysfs-bus-fcoe
-@@ -1,14 +1,54 @@
-+What:		/sys/bus/fcoe/
-+Date:		August 2012
-+KernelVersion:	TBD
-+Contact:	Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org
-+Description:	The FCoE bus. Attributes in this directory are control interfaces.
-+Attributes:
-+
-+	ctlr_create: 'FCoE Controller' instance creation interface. Writing an
-+		     <ifname> to this file will allocate and populate sysfs with a
-+		     fcoe_ctlr_device (ctlr_X). The user can then configure any
-+		     per-port settings and finally write to the fcoe_ctlr_device's
-+		     'start' attribute to begin the kernel's discovery and login
-+		     process.
-+
-+	ctlr_destroy: 'FCoE Controller' instance removal interface. Writing a
-+		       fcoe_ctlr_device's sysfs name to this file will log the
-+		       fcoe_ctlr_device out of the fabric or otherwise connected
-+		       FCoE devices. It will also free all kernel memory allocated
-+		       for this fcoe_ctlr_device and any structures associated
-+		       with it, this includes the scsi_host.
-+
- What:		/sys/bus/fcoe/ctlr_X
- Date:		March 2012
- KernelVersion:	TBD
- Contact:	Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org
--Description:	'FCoE Controller' instances on the fcoe bus
-+Description:	'FCoE Controller' instances on the fcoe bus.
-+
-+		The FCoE Controller now has a three stage creation process.
-+		1) Write interface name to ctlr_create 2) Configure the FCoE
-+		Controller (ctlr_X) 3) Enable the FCoE Controller to begin
-+		discovery and login. The FCoE Controller is destroyed by
-+		writing it's name, i.e. ctlr_X to the ctlr_delete file.
-+
- Attributes:
- 
- 	fcf_dev_loss_tmo: Device loss timeout peroid (see below). Changing
- 			  this value will change the dev_loss_tmo for all
- 			  FCFs discovered by this controller.
- 
-+	mode:		  Display or change the FCoE Controller's mode. Possible
-+			  modes are 'Fabric' and 'VN2VN'. If a FCoE Controller
-+			  is started in 'Fabric' mode then FIP FCF discovery is
-+			  initiated and ultimately a fabric login is attempted.
-+			  If a FCoE Controller is started in 'VN2VN' mode then
-+			  FIP VN2VN discovery and login is performed. A FCoE
-+			  Controller only supports one mode at a time.
-+
-+	enabled:	  Whether an FCoE controller is enabled or disabled.
-+			  0 if disabled, 1 if enabled. Writing either 0 or 1
-+			  to this file will enable or disable the FCoE controller.
-+
- 	lesb_link_fail:   Link Error Status Block (LESB) link failure count.
- 
- 	lesb_vlink_fail:  Link Error Status Block (LESB) virtual link
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index ae1cb76..97d9a58 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2555,7 +2555,6 @@ module_init(bnx2fc_mod_init);
- module_exit(bnx2fc_mod_exit);
- 
- static struct fcoe_sysfs_function_template bnx2fc_fcoe_sysfs_templ = {
--	.get_fcoe_ctlr_mode = fcoe_ctlr_get_fip_mode,
- 	.get_fcoe_ctlr_link_fail = bnx2fc_ctlr_get_lesb,
- 	.get_fcoe_ctlr_vlink_fail = bnx2fc_ctlr_get_lesb,
- 	.get_fcoe_ctlr_miss_fka = bnx2fc_ctlr_get_lesb,
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 078d262..99e9d02 100644
+index 99e9d02..995ef96 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -155,7 +155,6 @@ static void fcoe_ctlr_get_lesb(struct fcoe_ctlr_device *);
+@@ -117,6 +117,11 @@ static int fcoe_destroy(struct net_device *netdev);
+ static int fcoe_enable(struct net_device *netdev);
+ static int fcoe_disable(struct net_device *netdev);
+ 
++/* fcoe_syfs control interface handlers */
++static int fcoe_ctlr_alloc(struct net_device *netdev);
++static int fcoe_ctlr_enabled(struct fcoe_ctlr_device *cdev);
++
++
+ static struct fc_seq *fcoe_elsct_send(struct fc_lport *,
+ 				      u32 did, struct fc_frame *,
+ 				      unsigned int op,
+@@ -155,6 +160,8 @@ static void fcoe_ctlr_get_lesb(struct fcoe_ctlr_device *);
  static void fcoe_fcf_get_vlan_id(struct fcoe_fcf_device *);
  
  static struct fcoe_sysfs_function_template fcoe_sysfs_templ = {
--	.get_fcoe_ctlr_mode = fcoe_ctlr_get_fip_mode,
++	.set_fcoe_ctlr_mode = fcoe_ctlr_set_fip_mode,
++	.set_fcoe_ctlr_enabled = fcoe_ctlr_enabled,
  	.get_fcoe_ctlr_link_fail = fcoe_ctlr_get_lesb,
  	.get_fcoe_ctlr_vlink_fail = fcoe_ctlr_get_lesb,
  	.get_fcoe_ctlr_miss_fka = fcoe_ctlr_get_lesb,
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index 8b7b9d7..de3aba4 100644
---- a/drivers/scsi/fcoe/fcoe_sysfs.c
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -21,8 +21,10 @@
- #include <linux/types.h>
- #include <linux/kernel.h>
- #include <linux/etherdevice.h>
-+#include <linux/ctype.h>
+@@ -1966,6 +1973,7 @@ static int fcoe_dcb_app_notification(struct notifier_block *notifier,
+ static int fcoe_device_notification(struct notifier_block *notifier,
+ 				    ulong event, void *ptr)
+ {
++	struct fcoe_ctlr_device *cdev;
+ 	struct fc_lport *lport = NULL;
+ 	struct net_device *netdev = ptr;
+ 	struct fcoe_ctlr *ctlr;
+@@ -2022,13 +2030,29 @@ static int fcoe_device_notification(struct notifier_block *notifier,
  
- #include <scsi/fcoe_sysfs.h>
-+#include <scsi/libfcoe.h>
+ 	fcoe_link_speed_update(lport);
  
- /*
-  * OK to include local libfcoe.h for debug_logging, but cannot include
-@@ -47,6 +49,47 @@ MODULE_PARM_DESC(fcf_dev_loss_tmo,
- 		 " insulate the loss of a fcf. Once this value is"
- 		 " exceeded, the fcf is removed.");
- 
-+#define FCOE_MAX_MODENAME_LEN 20
-+struct fcoe_ctlr_mode_table {
-+	char *modename;
-+	enum fip_conn_type mode;
-+};
+-	if (link_possible && !fcoe_link_ok(lport))
+-		fcoe_ctlr_link_up(ctlr);
+-	else if (fcoe_ctlr_link_down(ctlr)) {
+-		stats = per_cpu_ptr(lport->stats, get_cpu());
+-		stats->LinkFailureCount++;
+-		put_cpu();
+-		fcoe_clean_pending_queue(lport);
++	cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
 +
-+const struct fcoe_ctlr_mode_table ctlr_mode_tbl[] = {
-+	{       "Fabric",           FIP_CONN_TYPE_FABRIC},
-+	{       "VN2VN",            FIP_CONN_TYPE_VN2VN},
-+	{       NULL,               -1},
-+};
-+
-+static enum fip_conn_type fcoe_parse_mode(const char *buf,
-+				  const struct fcoe_ctlr_mode_table *tbl)
-+{
-+	int modeint = -1, i, rv;
-+	char modestr[FCOE_MAX_MODENAME_LEN + 1] = { 0, };
-+	const char *p;
-+
-+	for (p = buf; *p; p++)
-+		if (!(isdigit(*p) || isspace(*p)))
++	if (link_possible && !fcoe_link_ok(lport)) {
++		switch (cdev->enabled) {
++		case FCOE_CTLR_DISABLED:
++			pr_info("Link up while interface is disabled.\n");
 +			break;
-+
-+	if (*p)
-+		rv = sscanf(buf, "%20s", modestr);
-+	else
-+		rv = sscanf(buf, "%d", &modeint);
-+
-+	if (!rv)
-+		return FIP_CONN_TYPE_UNKNOWN;
-+
-+	for (i = 0; tbl[i].modename; i++) {
-+		if (modeint == tbl[i].mode)
-+			return tbl[i].mode;
-+		if (strcasecmp(modestr, tbl[i].modename) == 0)
-+			return tbl[i].mode;
-+	}
-+
-+	return FIP_CONN_TYPE_UNKNOWN;
-+}
-+
- /*
-  * These are used by the fcoe_*_show_function routines, they
-  * are intentionally placed in the .c file as they're not intended
-@@ -78,6 +121,8 @@ MODULE_PARM_DESC(fcf_dev_loss_tmo,
- 	((x)->lesb.lesb_err_block)
- #define fcoe_ctlr_fcs_error(x)			\
- 	((x)->lesb.lesb_fcs_error)
-+#define fcoe_ctlr_enabled(x)			\
-+	((x)->enabled)
- #define fcoe_fcf_state(x)			\
- 	((x)->state)
- #define fcoe_fcf_fabric_name(x)			\
-@@ -230,6 +275,16 @@ static const char *get_fcoe_##title##_name(enum table_type table_key)	\
++		case FCOE_CTLR_ENABLED:
++		case FCOE_CTLR_UNUSED:
++			fcoe_ctlr_link_up(ctlr);
++		};
++	} else if (fcoe_ctlr_link_down(ctlr)) {
++		switch (cdev->enabled) {
++		case FCOE_CTLR_DISABLED:
++			pr_info("Link down while interface is disabled.\n");
++			break;
++		case FCOE_CTLR_ENABLED:
++		case FCOE_CTLR_UNUSED:
++			stats = per_cpu_ptr(lport->stats, get_cpu());
++			stats->LinkFailureCount++;
++			put_cpu();
++			fcoe_clean_pending_queue(lport);
++		};
+ 	}
+ out:
+ 	return rc;
+@@ -2041,6 +2065,8 @@ out:
+  * Called from fcoe transport.
+  *
+  * Returns: 0 for success
++ *
++ * Deprecated: use fcoe_ctlr_enabled()
+  */
+ static int fcoe_disable(struct net_device *netdev)
+ {
+@@ -2100,6 +2126,33 @@ out:
  }
  
- static struct {
-+	enum fip_conn_type value;
-+	char               *name;
-+} fip_conn_type_names[] = {
-+	{ FIP_CONN_TYPE_UNKNOWN, "Unknown" },
-+	{ FIP_CONN_TYPE_FABRIC, "Fabric" },
-+	{ FIP_CONN_TYPE_VN2VN, "VN2VN" },
-+};
-+fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
-+
-+static struct {
- 	enum fcf_state value;
- 	char           *name;
- } fcf_state_names[] = {
-@@ -253,17 +308,6 @@ static ssize_t show_fcf_state(struct device *dev,
- }
- static FCOE_DEVICE_ATTR(fcf, state, S_IRUGO, show_fcf_state, NULL);
- 
--static struct {
--	enum fip_conn_type value;
--	char               *name;
--} fip_conn_type_names[] = {
--	{ FIP_CONN_TYPE_UNKNOWN, "Unknown" },
--	{ FIP_CONN_TYPE_FABRIC, "Fabric" },
--	{ FIP_CONN_TYPE_VN2VN, "VN2VN" },
--};
--fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
--#define FCOE_CTLR_MODE_MAX_NAMELEN 50
--
- static ssize_t show_ctlr_mode(struct device *dev,
- 			      struct device_attribute *attr,
- 			      char *buf)
-@@ -271,17 +315,116 @@ static ssize_t show_ctlr_mode(struct device *dev,
- 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
- 	const char *name;
- 
--	if (ctlr->f->get_fcoe_ctlr_mode)
--		ctlr->f->get_fcoe_ctlr_mode(ctlr);
--
- 	name = get_fcoe_ctlr_mode_name(ctlr->mode);
- 	if (!name)
- 		return -EINVAL;
--	return snprintf(buf, FCOE_CTLR_MODE_MAX_NAMELEN,
-+	return snprintf(buf, FCOE_MAX_MODENAME_LEN,
-+			"%s\n", name);
-+}
-+
-+static ssize_t store_ctlr_mode(struct device *dev,
-+			       struct device_attribute *attr,
-+			       const char *buf, size_t count)
+ /**
++ * fcoe_ctlr_enabled() - Enable or disable an FCoE Controller
++ * @cdev: The FCoE Controller that is being enabled or disabled
++ *
++ * fcoe_sysfs will ensure that the state of 'enabled' has
++ * changed, so no checking is necessary here. This routine simply
++ * calls fcoe_enable or fcoe_disable, both of which are deprecated.
++ * When those routines are removed the functionality can be merged
++ * here.
++ */
++static int fcoe_ctlr_enabled(struct fcoe_ctlr_device *cdev)
 +{
-+	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
-+	char mode[FCOE_MAX_MODENAME_LEN + 1];
++	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(cdev);
++	struct fc_lport *lport = ctlr->lp;
++	struct net_device *netdev = fcoe_netdev(lport);
 +
-+	if (count > FCOE_MAX_MODENAME_LEN)
-+		return -EINVAL;
-+
-+	strncpy(mode, buf, count);
-+	mode[count] = '\0';
-+
-+	switch (ctlr->enabled) {
++	switch (cdev->enabled) {
 +	case FCOE_CTLR_ENABLED:
-+		LIBFCOE_SYSFS_DBG(ctlr, "Cannot change mode when enabled.");
-+		return -EBUSY;
++		return fcoe_enable(netdev);
 +	case FCOE_CTLR_DISABLED:
-+		if (!ctlr->f->set_fcoe_ctlr_mode) {
-+			LIBFCOE_SYSFS_DBG(ctlr,
-+					  "Mode change not supported by LLD.");
-+			return -ENOTSUPP;
-+		}
-+
-+		ctlr->mode = fcoe_parse_mode(mode, ctlr_mode_tbl);
-+		if (ctlr->mode == FIP_CONN_TYPE_UNKNOWN) {
-+			LIBFCOE_SYSFS_DBG(ctlr,
-+					  "Unknown mode %s provided.", buf);
-+			return -EINVAL;
-+		}
-+
-+		ctlr->f->set_fcoe_ctlr_mode(ctlr);
-+		LIBFCOE_SYSFS_DBG(ctlr, "Mode changed to %s.", buf);
-+
-+		return count;
++		return fcoe_disable(netdev);
 +	case FCOE_CTLR_UNUSED:
 +	default:
-+		LIBFCOE_SYSFS_DBG(ctlr, "Mode change not supported.");
 +		return -ENOTSUPP;
 +	};
 +}
 +
-+static FCOE_DEVICE_ATTR(ctlr, mode, S_IRUGO | S_IWUSR,
-+			show_ctlr_mode, store_ctlr_mode);
-+
-+static ssize_t store_ctlr_enabled(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
-+	int rc;
-+
-+	switch (ctlr->enabled) {
-+	case FCOE_CTLR_ENABLED:
-+		if (*buf == '1')
-+			return count;
-+		ctlr->enabled = FCOE_CTLR_DISABLED;
-+		break;
-+	case FCOE_CTLR_DISABLED:
-+		if (*buf == '0')
-+			return count;
-+		ctlr->enabled = FCOE_CTLR_ENABLED;
-+		break;
-+	case FCOE_CTLR_UNUSED:
-+		return -ENOTSUPP;
-+	};
-+
-+	rc = ctlr->f->set_fcoe_ctlr_enabled(ctlr);
-+	if (rc)
-+		return rc;
-+
-+	return count;
-+}
-+
-+static struct {
-+	enum ctlr_enabled_state value;
-+	char                    *name;
-+} ctlr_enabled_state_names[] = {
-+	{ FCOE_CTLR_ENABLED,  "Enabled" },
-+	{ FCOE_CTLR_DISABLED, "Disabled" },
-+	{ FCOE_CTLR_UNUSED,   "Unused" },
-+};
-+fcoe_enum_name_search(ctlr_enabled_state, ctlr_enabled_state,
-+		      ctlr_enabled_state_names)
-+#define FCOE_CTLR_ENABLED_MAX_NAMELEN 50
-+
-+static ssize_t show_ctlr_enabled_state(struct device *dev,
-+				       struct device_attribute *attr,
-+				       char *buf)
-+{
-+	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
-+	const char *name;
-+
-+	name = get_fcoe_ctlr_enabled_state_name(ctlr->enabled);
-+	if (!name)
-+		return -EINVAL;
-+	return snprintf(buf, FCOE_CTLR_ENABLED_MAX_NAMELEN,
- 			"%s\n", name);
- }
--static FCOE_DEVICE_ATTR(ctlr, mode, S_IRUGO,
--			show_ctlr_mode, NULL);
-+
-+static FCOE_DEVICE_ATTR(ctlr, enabled, S_IRUGO | S_IWUSR,
-+			show_ctlr_enabled_state,
-+			store_ctlr_enabled);
- 
- static ssize_t
- store_private_fcoe_ctlr_fcf_dev_loss_tmo(struct device *dev,
-@@ -366,6 +509,7 @@ static struct attribute_group fcoe_ctlr_lesb_attr_group = {
- 
- static struct attribute *fcoe_ctlr_attrs[] = {
- 	&device_attr_fcoe_ctlr_fcf_dev_loss_tmo.attr,
-+	&device_attr_fcoe_ctlr_enabled.attr,
- 	&device_attr_fcoe_ctlr_mode.attr,
- 	NULL,
- };
-@@ -450,9 +594,16 @@ struct device_type fcoe_fcf_device_type = {
- 	.release = fcoe_fcf_device_release,
- };
- 
-+struct bus_attribute fcoe_bus_attr_group[] = {
-+	__ATTR(ctlr_create, S_IWUSR, NULL, fcoe_ctlr_create_store),
-+	__ATTR(ctlr_destroy, S_IWUSR, NULL, fcoe_ctlr_destroy_store),
-+	__ATTR_NULL
-+};
-+
- struct bus_type fcoe_bus_type = {
- 	.name = "fcoe",
- 	.match = &fcoe_bus_match,
-+	.bus_attrs = fcoe_bus_attr_group,
- };
- 
- /**
-@@ -573,6 +724,7 @@ struct fcoe_ctlr_device *fcoe_ctlr_device_add(struct device *parent,
- 
- 	ctlr->id = atomic_inc_return(&ctlr_num) - 1;
- 	ctlr->f = f;
-+	ctlr->mode = FIP_CONN_TYPE_FABRIC;
- 	INIT_LIST_HEAD(&ctlr->fcfs);
- 	mutex_init(&ctlr->lock);
- 	ctlr->dev.parent = parent;
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index ac76d8a..83e78f9 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -627,6 +627,110 @@ static int libfcoe_device_notification(struct notifier_block *notifier,
- 	return NOTIFY_OK;
++/**
+  * fcoe_destroy() - Destroy a FCoE interface
+  * @netdev  : The net_device object the Ethernet interface to create on
+  *
+@@ -2207,16 +2260,26 @@ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
+ #endif
  }
  
-+ssize_t fcoe_ctlr_create_store(struct bus_type *bus,
-+			       const char *buf, size_t count)
-+{
-+	struct net_device *netdev = NULL;
-+	struct fcoe_transport *ft = NULL;
-+	struct fcoe_ctlr_device *ctlr_dev = NULL;
-+	int rc = 0;
-+	int err;
-+
-+	mutex_lock(&ft_mutex);
-+
-+	netdev = fcoe_if_to_netdev(buf);
-+	if (!netdev) {
-+		LIBFCOE_TRANSPORT_DBG("Invalid device %s.\n", buf);
-+		rc = -ENODEV;
-+		goto out_nodev;
-+	}
-+
-+	ft = fcoe_netdev_map_lookup(netdev);
-+	if (ft) {
-+		LIBFCOE_TRANSPORT_DBG("transport %s already has existing "
-+				      "FCoE instance on %s.\n",
-+				      ft->name, netdev->name);
-+		rc = -EEXIST;
-+		goto out_putdev;
-+	}
-+
-+	ft = fcoe_transport_lookup(netdev);
-+	if (!ft) {
-+		LIBFCOE_TRANSPORT_DBG("no FCoE transport found for %s.\n",
-+				      netdev->name);
-+		rc = -ENODEV;
-+		goto out_putdev;
-+	}
-+
-+	/* pass to transport create */
-+	err = ft->alloc ? ft->alloc(netdev) : -ENODEV;
-+	if (err) {
-+		fcoe_del_netdev_mapping(netdev);
-+		rc = -ENOMEM;
-+		goto out_putdev;
-+	}
-+
-+	err = fcoe_add_netdev_mapping(netdev, ft);
-+	if (err) {
-+		LIBFCOE_TRANSPORT_DBG("failed to add new netdev mapping "
-+				      "for FCoE transport %s for %s.\n",
-+				      ft->name, netdev->name);
-+		rc = -ENODEV;
-+		goto out_putdev;
-+	}
-+
-+	LIBFCOE_TRANSPORT_DBG("transport %s %s to create fcoe on %s.\n",
-+			      ft->name, (ctlr_dev) ? "succeeded" : "failed",
-+			      netdev->name);
-+
-+out_putdev:
-+	dev_put(netdev);
-+out_nodev:
-+	mutex_unlock(&ft_mutex);
-+	if (rc)
-+		return rc;
-+	return count;
-+}
-+
-+ssize_t fcoe_ctlr_destroy_store(struct bus_type *bus,
-+				const char *buf, size_t count)
-+{
-+	int rc = -ENODEV;
-+	struct net_device *netdev = NULL;
-+	struct fcoe_transport *ft = NULL;
-+
-+	mutex_lock(&ft_mutex);
-+
-+	netdev = fcoe_if_to_netdev(buf);
-+	if (!netdev) {
-+		LIBFCOE_TRANSPORT_DBG("invalid device %s.\n", buf);
-+		goto out_nodev;
-+	}
-+
-+	ft = fcoe_netdev_map_lookup(netdev);
-+	if (!ft) {
-+		LIBFCOE_TRANSPORT_DBG("no FCoE transport found for %s.\n",
-+				      netdev->name);
-+		goto out_putdev;
-+	}
-+
-+	/* pass to transport destroy */
-+	rc = ft->destroy(netdev);
-+	if (rc)
-+		goto out_putdev;
-+
-+	fcoe_del_netdev_mapping(netdev);
-+	LIBFCOE_TRANSPORT_DBG("transport %s %s to destroy fcoe on %s.\n",
-+			      ft->name, (rc) ? "failed" : "succeeded",
-+			      netdev->name);
-+	rc = count; /* required for successful return */
-+out_putdev:
-+	dev_put(netdev);
-+out_nodev:
-+	mutex_unlock(&ft_mutex);
-+	return rc;
-+}
-+EXPORT_SYMBOL(fcoe_ctlr_destroy_store);
- 
- /**
-  * fcoe_transport_create() - Create a fcoe interface
-diff --git a/include/scsi/fcoe_sysfs.h b/include/scsi/fcoe_sysfs.h
-index 604cb9b..7e23148 100644
---- a/include/scsi/fcoe_sysfs.h
-+++ b/include/scsi/fcoe_sysfs.h
-@@ -34,7 +34,8 @@ struct fcoe_sysfs_function_template {
- 	void (*get_fcoe_ctlr_symb_err)(struct fcoe_ctlr_device *);
- 	void (*get_fcoe_ctlr_err_block)(struct fcoe_ctlr_device *);
- 	void (*get_fcoe_ctlr_fcs_error)(struct fcoe_ctlr_device *);
--	void (*get_fcoe_ctlr_mode)(struct fcoe_ctlr_device *);
-+	void (*set_fcoe_ctlr_mode)(struct fcoe_ctlr_device *);
-+	int  (*set_fcoe_ctlr_enabled)(struct fcoe_ctlr_device *);
- 	void (*get_fcoe_fcf_selected)(struct fcoe_fcf_device *);
- 	void (*get_fcoe_fcf_vlan_id)(struct fcoe_fcf_device *);
- };
-@@ -48,6 +49,12 @@ enum fip_conn_type {
- 	FIP_CONN_TYPE_VN2VN,
- };
- 
-+enum ctlr_enabled_state {
-+	FCOE_CTLR_ENABLED,
-+	FCOE_CTLR_DISABLED,
-+	FCOE_CTLR_UNUSED,
++enum fcoe_create_link_state {
++	FCOE_CREATE_LINK_DOWN,
++	FCOE_CREATE_LINK_UP,
 +};
 +
- struct fcoe_ctlr_device {
- 	u32				id;
- 
-@@ -64,6 +71,8 @@ struct fcoe_ctlr_device {
- 	int                             fcf_dev_loss_tmo;
- 	enum fip_conn_type              mode;
- 
-+	enum ctlr_enabled_state         enabled;
-+
- 	/* expected in host order for displaying */
- 	struct fcoe_fc_els_lesb         lesb;
- };
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 22b07cc..02dcc05 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -289,8 +289,11 @@ static inline bool is_fip_mode(struct fcoe_ctlr *fip)
-  * @attached:	whether this transport is already attached
-  * @list:	list linkage to all attached transports
-  * @match:	handler to allow the transport driver to match up a given netdev
-+ * @alloc:      handler to allocate per-instance FCoE structures
-+ *		(no discovery or login)
-  * @create:	handler to sysfs entry of create for FCoE instances
-- * @destroy:	handler to sysfs entry of destroy for FCoE instances
-+ * @destroy:    handler to delete per-instance FCoE structures
-+ *		(frees all memory)
-  * @enable:	handler to sysfs entry of enable for FCoE instances
-  * @disable:	handler to sysfs entry of disable for FCoE instances
+ /**
+- * fcoe_create() - Create a fcoe interface
+- * @netdev  : The net_device object the Ethernet interface to create on
+- * @fip_mode: The FIP mode for this creation
++ * _fcoe_create() - (internal) Create a fcoe interface
++ * @netdev  :   The net_device object the Ethernet interface to create on
++ * @fip_mode:   The FIP mode for this creation
++ * @link_state: The ctlr link state on creation
+  *
+- * Called from fcoe transport
++ * Called from either the libfcoe 'create' module parameter
++ * via fcoe_create or from fcoe_syfs's ctlr_create file.
+  *
+- * Returns: 0 for success
++ * libfcoe's 'create' module parameter is deprecated so some
++ * consolidation of code can be done when that interface is
++ * removed.
   */
-@@ -299,6 +302,7 @@ struct fcoe_transport {
- 	bool attached;
- 	struct list_head list;
- 	bool (*match) (struct net_device *device);
-+	int (*alloc) (struct net_device *device);
- 	int (*create) (struct net_device *device, enum fip_state fip_mode);
- 	int (*destroy) (struct net_device *device);
- 	int (*enable) (struct net_device *device);
-@@ -358,7 +362,7 @@ int fcoe_get_paged_crc_eof(struct sk_buff *skb, int tlen,
- 
- /* FCoE Sysfs helpers */
- void fcoe_fcf_get_selected(struct fcoe_fcf_device *);
--void fcoe_ctlr_get_fip_mode(struct fcoe_ctlr_device *);
-+void fcoe_ctlr_set_fip_mode(struct fcoe_ctlr_device *);
+-static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
++static int _fcoe_create(struct net_device *netdev, enum fip_state fip_mode,
++			enum fcoe_create_link_state link_state)
+ {
+ 	int rc = 0;
+ 	struct fcoe_ctlr_device *ctlr_dev;
+@@ -2263,7 +2326,26 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
+ 	/* start FIP Discovery and FLOGI */
+ 	lport->boot_time = jiffies;
+ 	fc_fabric_login(lport);
+-	if (!fcoe_link_ok(lport)) {
++
++	/*
++	 * If the fcoe_ctlr_device is to be set to DISABLED
++	 * it must be done after the lport is added to the
++	 * hostlist, but before the rtnl_lock is released.
++	 * This is because the rtnl_lock protects the
++	 * hostlist that fcoe_device_notification uses. If
++	 * the FCoE Controller is intended to be created
++	 * DISABLED then 'enabled' needs to be considered
++	 * handling link events. 'enabled' must be set
++	 * before the lport can be found in the hostlist
++	 * when a link up event is received.
++	 */
++	if (link_state == FCOE_CREATE_LINK_UP)
++		ctlr_dev->enabled = FCOE_CTLR_ENABLED;
++	else
++		ctlr_dev->enabled = FCOE_CTLR_DISABLED;
++
++	if (link_state == FCOE_CREATE_LINK_UP &&
++	    !fcoe_link_ok(lport)) {
+ 		rtnl_unlock();
+ 		fcoe_ctlr_link_up(ctlr);
+ 		mutex_unlock(&fcoe_config_mutex);
+@@ -2278,6 +2360,37 @@ out_nortnl:
+ }
  
  /**
-  * struct netdev_list
-@@ -374,4 +378,12 @@ struct fcoe_netdev_mapping {
- int fcoe_transport_attach(struct fcoe_transport *ft);
- int fcoe_transport_detach(struct fcoe_transport *ft);
++ * fcoe_create() - Create a fcoe interface
++ * @netdev  : The net_device object the Ethernet interface to create on
++ * @fip_mode: The FIP mode for this creation
++ *
++ * Called from fcoe transport
++ *
++ * Returns: 0 for success
++ */
++static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
++{
++	return _fcoe_create(netdev, fip_mode, FCOE_CREATE_LINK_UP);
++}
++
++/**
++ * fcoe_ctlr_alloc() - Allocate a fcoe interface from fcoe_sysfs
++ * @netdev: The net_device to be used by the allocated FCoE Controller
++ *
++ * This routine is called from fcoe_sysfs. It will start the fcoe_ctlr
++ * in a link_down state. The allows the user an opportunity to configure
++ * the FCoE Controller from sysfs before enabling the FCoE Controller.
++ *
++ * Creating in with this routine starts the FCoE Controller in Fabric
++ * mode. The user can change to VN2VN or another mode before enabling.
++ */
++static int fcoe_ctlr_alloc(struct net_device *netdev)
++{
++	return _fcoe_create(netdev, FIP_MODE_FABRIC,
++			    FCOE_CREATE_LINK_DOWN);
++}
++
++/**
+  * fcoe_link_speed_update() - Update the supported and actual link speeds
+  * @lport: The local port to update speeds for
+  *
+@@ -2378,10 +2491,13 @@ static int fcoe_reset(struct Scsi_Host *shost)
+ 	struct fcoe_port *port = lport_priv(lport);
+ 	struct fcoe_interface *fcoe = port->priv;
+ 	struct fcoe_ctlr *ctlr = fcoe_to_ctlr(fcoe);
++	struct fcoe_ctlr_device *cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
  
-+/* sysfs store handler for ctrl_control interface */
-+ssize_t fcoe_ctlr_create_store(struct bus_type *bus,
-+			       const char *buf, size_t count);
-+ssize_t fcoe_ctlr_destroy_store(struct bus_type *bus,
-+				const char *buf, size_t count);
+ 	fcoe_ctlr_link_down(ctlr);
+ 	fcoe_clean_pending_queue(ctlr->lp);
+-	if (!fcoe_link_ok(ctlr->lp))
 +
- #endif /* _LIBFCOE_H */
++	if (cdev->enabled != FCOE_CTLR_DISABLED &&
++	    !fcoe_link_ok(ctlr->lp))
+ 		fcoe_ctlr_link_up(ctlr);
+ 	return 0;
+ }
+@@ -2454,6 +2570,7 @@ static struct fcoe_transport fcoe_sw_transport = {
+ 	.attached = false,
+ 	.list = LIST_HEAD_INIT(fcoe_sw_transport.list),
+ 	.match = fcoe_match,
++	.alloc = fcoe_ctlr_alloc,
+ 	.create = fcoe_create,
+ 	.destroy = fcoe_destroy,
+ 	.enable = fcoe_enable,
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 2ebe03a..7583425 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2864,22 +2864,21 @@ void fcoe_fcf_get_selected(struct fcoe_fcf_device *fcf_dev)
+ }
+ EXPORT_SYMBOL(fcoe_fcf_get_selected);
+ 
+-void fcoe_ctlr_get_fip_mode(struct fcoe_ctlr_device *ctlr_dev)
++void fcoe_ctlr_set_fip_mode(struct fcoe_ctlr_device *ctlr_dev)
+ {
+ 	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(ctlr_dev);
+ 
+ 	mutex_lock(&ctlr->ctlr_mutex);
+-	switch (ctlr->mode) {
+-	case FIP_MODE_FABRIC:
+-		ctlr_dev->mode = FIP_CONN_TYPE_FABRIC;
+-		break;
+-	case FIP_MODE_VN2VN:
+-		ctlr_dev->mode = FIP_CONN_TYPE_VN2VN;
++	switch (ctlr_dev->mode) {
++	case FIP_CONN_TYPE_VN2VN:
++		ctlr->mode = FIP_MODE_VN2VN;
+ 		break;
++	case FIP_CONN_TYPE_FABRIC:
+ 	default:
+-		ctlr_dev->mode = FIP_CONN_TYPE_UNKNOWN;
++		ctlr->mode = FIP_MODE_FABRIC;
+ 		break;
+ 	}
 +
-+
+ 	mutex_unlock(&ctlr->ctlr_mutex);
+ }
+-EXPORT_SYMBOL(fcoe_ctlr_get_fip_mode);
++EXPORT_SYMBOL(fcoe_ctlr_set_fip_mode);
 
