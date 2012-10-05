@@ -1,122 +1,89 @@
-From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Subject: Re: [qla2xxx] INFO: possible irq lock inversion dependency detected
-Date: Fri, 05 Oct 2012 17:25:30 +0530
-Message-ID: <506ECAB2.2050005@linux.vnet.ibm.com>
-References: <506D80C2.5040405@linux.vnet.ibm.com> <alpine.LNX.2.00.1210041500010.9942@pobox.suse.cz> <506DAE41.6040007@linux.vnet.ibm.com> <1349376255.740.11.camel@haakon2.linux-iscsi.org>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: [PATCH v3] qla2xxx: silence two GCC warnings
+Date: Fri, 05 Oct 2012 14:23:30 +0200
+Message-ID: <1349439810.1491.18.camel@x61.thuisdomein>
+References: <CC93C7DD.EB60%saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1349376255.740.11.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CC93C7DD.EB60%saurav.kashyap@qlogic.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-driver@qlogic.com, Rolf Eike Beer <eike-kernel@sf-tec.de>, Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Compiling qla_gs.o (part of the qla2xxx module) triggers two GCC
+warnings:
+    drivers/scsi/qla2xxx/qla_gs.c: In function =E2=80=98qla2x00_fdmi_rh=
+ba=E2=80=99:
+    drivers/scsi/qla2xxx/qla_gs.c:1339:7: warning: array subscript is a=
+bove array bounds [-Warray-bounds]
+    drivers/scsi/qla2xxx/qla_gs.c: In function =E2=80=98qla2x00_fdmi_re=
+gister=E2=80=99:
+    drivers/scsi/qla2xxx/qla_gs.c:1663:15: warning: array subscript is =
+above array bounds [-Warray-bounds]
 
-Hi Nicholas,
+It seems that the sequence of a strcpy followed by a strlen confuses GC=
+C
+when it is keeping track of array bounds here. (It is not clear to me
+which array triggers this warning and by how much GCC thinks the
+subscript is above its bounds. Neither is it clear to me why comparable
+code in these two functions doesn't trigger this warning.)
 
-On 10/05/2012 12:14 AM, Nicholas A. Bellinger wrote:
-> On Thu, 2012-10-04 at 21:11 +0530, Srivatsa S. Bhat wrote:
->> Hi Jiri,
->>
->> Thanks for taking a look!
-> 
-> Hi Srivatsa & Jiri,
-> 
->>  
->>> This seems to be real. You should be seeing that since 3.5-rc1 already 
->>> though ... ?
->>>
->>> Does the patch below fix that?
->>>
->>
->> Yes, it does, thanks! But 3.6-rc kernels were booting fine as far as I remember.
->> I'll check again and get back tomorrow.
->>
-> 
-> Thanks for testing with v3.7-rc0 code !
-> 
-> Cc'ing the Qlogic folks here, as this irq lock inversion warning appears
-> to be regression from v3.7-rc1 qla2xxx (initiator) LLD changes that went
-> in recently via scsi.git.
-> 
+An easy way to silence these warnings is to use preprocessor macros and
+strncpy, as that apparently gives GCC enough information to keep track
+of array bounds.
 
-Actually Jiri is right - I am seeing this with 3.5-rc1 kernel also. So its not
-a regression from this merge window.. it was there all along!
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+---
+0) Updated for Saurav's request to use strncpy().
 
-Regards,
-Srivatsa S. Bhat
+1) Still only compile tested.
 
-> 
->>>
->>> From: Jiri Kosina <jkosina@suse.cz>
->>> Subject: [PATCH] [SCSI] qla2xxx: fix potential deadlock on ha->hardware_lock
->>>
->>> Lockdep reports:
->>>
->>> === [ cut here ] ===
->>>  =========================================================
->>>  [ INFO: possible irq lock inversion dependency detected ]
->>>  3.6.0-0.0.0.28.36b5ec9-default #1 Not tainted
->>>  ---------------------------------------------------------
->>>  qla2xxx_1_dpc/368 just changed the state of lock:
->>>   (&(&ha->vport_slock)->rlock){+.....}, at: [<ffffffffa009b377>] qla2x00_configure_hba+0x197/0x3c0 [qla2xxx]
->>>  but this lock was taken by another, HARDIRQ-safe lock in the past:
->>>   (&(&ha->hardware_lock)->rlock){-.....}
->>>
->>> and interrupts could create inverse lock ordering between them.
->>>
->>> other info that might help us debug this:
->>>  Possible interrupt unsafe locking scenario:
->>>
->>>        CPU0                    CPU1
->>>        ----                    ----
->>>   lock(&(&ha->vport_slock)->rlock);
->>>                                local_irq_disable();
->>>                                lock(&(&ha->hardware_lock)->rlock);
->>>                                lock(&(&ha->vport_slock)->rlock);
->>>   <Interrupt>
->>>     lock(&(&ha->hardware_lock)->rlock);
->>> === [ cut here ] ===
->>>
->>> Fix the potential deadlock by disabling IRQs while holding ha->vport_slock.
->>>
->>> Reported-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
->>> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
->>
->> Tested-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
->>
->> Regards,
->> Srivatsa S. Bhat
->>
->>> ---
->>>  drivers/scsi/qla2xxx/qla_init.c |    5 +++--
->>>  1 files changed, 3 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
->>> index 799a58b..48fca47 100644
->>> --- a/drivers/scsi/qla2xxx/qla_init.c
->>> +++ b/drivers/scsi/qla2xxx/qla_init.c
->>> @@ -2080,6 +2080,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
->>>  	uint8_t       domain;
->>>  	char		connect_type[22];
->>>  	struct qla_hw_data *ha = vha->hw;
->>> +	unsigned long flags;
->>>
->>>  	/* Get host addresses. */
->>>  	rval = qla2x00_get_adapter_id(vha,
->>> @@ -2154,9 +2155,9 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
->>>  	vha->d_id.b.area = area;
->>>  	vha->d_id.b.al_pa = al_pa;
->>>
->>> -	spin_lock(&ha->vport_slock);
->>> +	spin_lock_irqsave(&ha->vport_slock, flags);
->>>  	qlt_update_vp_map(vha, SET_AL_PA);
->>> -	spin_unlock(&ha->vport_slock);
->>> +	spin_unlock_irqrestore(&ha->vport_slock, flags);
->>>
->>>  	if (!vha->flags.init_done)
->>>  		ql_log(ql_log_info, vha, 0x2010,
->>>
->>
+ drivers/scsi/qla2xxx/qla_def.h | 1 +
+ drivers/scsi/qla2xxx/qla_gs.c  | 8 ++++----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_=
+def.h
+index 39007f5..8895038 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -37,6 +37,7 @@
+ #include "qla_nx.h"
+ #define QLA2XXX_DRIVER_NAME	"qla2xxx"
+ #define QLA2XXX_APIDEV		"ql2xapidev"
++#define QLA2XXX_MANUFACTURER	"QLogic Corporation"
+=20
+ /*
+  * We have MAILBOX_REGISTER_COUNT sized arrays in a few places,
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_g=
+s.c
+index 05260d2..824cbcf 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1325,8 +1325,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
+ 	/* Manufacturer. */
+ 	eiter =3D (struct ct_fdmi_hba_attr *) (entries + size);
+ 	eiter->type =3D __constant_cpu_to_be16(FDMI_HBA_MANUFACTURER);
+-	strcpy(eiter->a.manufacturer, "QLogic Corporation");
+-	alen =3D strlen(eiter->a.manufacturer);
++	alen =3D strlen(QLA2XXX_MANUFACTURER);
++	strncpy(eiter->a.manufacturer, QLA2XXX_MANUFACTURER, alen + 1);
+ 	alen +=3D (alen & 3) ? (4 - (alen & 3)) : 4;
+ 	eiter->len =3D cpu_to_be16(4 + alen);
+ 	size +=3D 4 + alen;
+@@ -1646,8 +1646,8 @@ qla2x00_fdmi_rpa(scsi_qla_host_t *vha)
+ 	/* OS device name. */
+ 	eiter =3D (struct ct_fdmi_port_attr *) (entries + size);
+ 	eiter->type =3D __constant_cpu_to_be16(FDMI_PORT_OS_DEVICE_NAME);
+-	strcpy(eiter->a.os_dev_name, QLA2XXX_DRIVER_NAME);
+-	alen =3D strlen(eiter->a.os_dev_name);
++	alen =3D strlen(QLA2XXX_DRIVER_NAME);
++	strncpy(eiter->a.os_dev_name, QLA2XXX_DRIVER_NAME, alen + 1);
+ 	alen +=3D (alen & 3) ? (4 - (alen & 3)) : 4;
+ 	eiter->len =3D cpu_to_be16(4 + alen);
+ 	size +=3D 4 + alen;
+--=20
+1.7.11.4
