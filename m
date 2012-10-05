@@ -1,24 +1,51 @@
-From: Bintou Eboue <missbintou.eboue@hotmail.com>
-Subject: Hello Dear
-Date: Thu, 4 Oct 2012 19:06:41 -0700
-Message-ID: <CAHXOMRVYTFHdqSwojydtbhrs6OeZqLb2g9kEjmj5bx=YYzMCMg@mail.gmail.com>
+From: Sistema Administrador <info@admin.net>
+Subject: Alerta de =?iso-8859-1?b?c2VndXJhbudh?=
+Date: Fri, 05 Oct 2012 03:30:04 -0500
+Message-ID: <20121005033004.2060481nvk2hng6c@mail.inp.gob.ec>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f194.google.com ([209.85.223.194]:35417 "EHLO
-	mail-ie0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756514Ab2JEC36 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Oct 2012 22:29:58 -0400
-Received: by mail-ie0-f194.google.com with SMTP id 9so936344iec.1
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Oct 2012 19:29:57 -0700 (PDT)
+Received: from mail.inp.gob.ec ([190.110.215.78]:58886 "EHLO mail.inp.gob.ec"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753638Ab2JEJBW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Oct 2012 05:01:22 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-how are you dear? I'm happy to write this little note just to say, how
-are you? I'm Bintou, single girl looking for a sincere and honest
-someone for friendship, i have made a very serious decision and I need
-to share it with a trusted someone for our own future benefits, i will
-tell you my motive in details with my picture as soon as i receive
-your response. bye and remain bless as am waiting to hear from you.
-Yours Sincerely
-Bintou
+Alerta de seguran=E7a,
+
+Um v=EDrus DGTJTO foi detectado em sua conta de webmail. Sua conta de =20
+webmail tem de ser protegido para o nosso VQZZF novo seguro! Macafee =20
+anti-v=EDrus 2012/2013
+vers=E3o para evitar danos ao nosso banco de dados e seus arquivos =20
+importantes e mensagens. basta clicar no link abaixo e preencher os =20
+detalhes para actualizar
+
+a sua conta
+
+nosso banco de dados para evitar a propaga=E7=E3o do v=EDrus.
+
+=3D=3D=3D=3D=3D=3D=3D=3D>https://docs.google.com/spreadsheet/viewform?f=
+ormkey=3DdGpETzVWMjkzQzBTZEVCTmRMeDlCOHc6MQ
+
+Obrigado por sua coopera=E7=E3o,
+ADMINISTRADOR DO SISTEMA
+
+----------------------------------------------------------------
+This message was sent using IMP, the Internet Messaging Program.
+
+
+
+--=20
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
