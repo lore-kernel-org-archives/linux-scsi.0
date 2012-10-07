@@ -1,65 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RESEND][PATCH 0/20][SCSI] mpt3sas: Driver submission
- v01.100.00.00
-Date: Sun, 07 Oct 2012 13:07:30 +0100
-Message-ID: <1349611650.2541.27.camel@dabdike.int.hansenpartnership.com>
-References: <20120929141853.GA20768@localhost.localdomain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 47701] When too many disks fall out at the same time, RCU hangs
+Date: Sun,  7 Oct 2012 14:20:46 +0000 (UTC)
+Message-ID: <20121007142046.AB8E011FC3E@bugzilla.kernel.org>
+References: <bug-47701-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54454 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751055Ab2JGMHg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Oct 2012 08:07:36 -0400
-In-Reply-To: <20120929141853.GA20768@localhost.localdomain>
+Received: from mail.kernel.org ([198.145.19.201]:55703 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751232Ab2JGOUw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Oct 2012 10:20:52 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 465C820275
+	for <linux-scsi@vger.kernel.org>; Sun,  7 Oct 2012 14:20:51 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 5729520276
+	for <linux-scsi@vger.kernel.org>; Sun,  7 Oct 2012 14:20:49 +0000 (UTC)
+In-Reply-To: <bug-47701-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sreekanth.reddy@lsi.com
-Cc: linux-scsi@vger.kernel.org, jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com
+To: linux-scsi@vger.kernel.org
 
-On Sat, 2012-09-29 at 19:48 +0530, sreekanth.reddy@lsi.com wrote:
-> This is new scsi lld device driver from LSI supporting the SAS 3.0
-> standard.
->=20
-> Here is list of new 12gb host controllers:
->=20
->   LSI SAS3004
->   LSI SAS3008
->   LSI SAS3108
->=20
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-> Reviewed-by: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-
-This doesn't seem to compile:
-
-drivers/scsi/mpt3sas/mpt3sas_scsih.c: In function
-=E2=80=98_scsih_sas_broadcast_primitive_event=E2=80=99:
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: error: =E2=80=98event_data=
-=E2=80=99
-undeclared (first use in this function)
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: note: each undeclared
-identifier is reported only once for each function it appears in
-drivers/scsi/mpt3sas/mpt3sas_ctl.c: In function
-=E2=80=98mpt3sas_ctl_reset_handler=E2=80=99:
-drivers/scsi/mpt3sas/mpt3sas_ctl.c:475:3: error: expected =E2=80=98)=E2=
-=80=99 before
-=E2=80=98MPT3SAS_FMT9=E2=80=99
-make[3]: *** [drivers/scsi/mpt3sas/mpt3sas_scsih.o] Error 1
-make[3]: *** Waiting for unfinished jobs....
-make[3]: *** [drivers/scsi/mpt3sas/mpt3sas_ctl.o] Error 1
-make[2]: *** [drivers/scsi/mpt3sas] Error 2
-make[2]: *** Waiting for unfinished jobs....
-make[1]: *** [drivers/scsi] Error 2
-make: *** [drivers] Error 2
-
-Did you miss something in the split?
-
-James
+https://bugzilla.kernel.org/show_bug.cgi?id=47701
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Brad Campbell <lists2009@fnarfbargle.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |lists2009@fnarfbargle.com
+
+
+
+
+--- Comment #3 from Brad Campbell <lists2009@fnarfbargle.com>  2012-10-07 14:20:46 ---
+Apparently fixed as of 3.6.0-07201-ged5062d (current git as of 8 hours ago).
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
