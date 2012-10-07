@@ -1,42 +1,35 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 47701] When too many disks fall out at the same time, RCU hangs
-Date: Sun,  7 Oct 2012 14:20:46 +0000 (UTC)
-Message-ID: <20121007142046.AB8E011FC3E@bugzilla.kernel.org>
-References: <bug-47701-11613@https.bugzilla.kernel.org/>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: standards revisions
+Date: Sun, 7 Oct 2012 10:51:54 -0400
+Message-ID: <20121007145154.GA30586@infradead.org>
+References: <20121007014900.GA30316@infradead.org>
+ <1349590310.9312.163.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:55703 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751232Ab2JGOUw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 7 Oct 2012 10:20:52 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 465C820275
-	for <linux-scsi@vger.kernel.org>; Sun,  7 Oct 2012 14:20:51 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 5729520276
-	for <linux-scsi@vger.kernel.org>; Sun,  7 Oct 2012 14:20:49 +0000 (UTC)
-In-Reply-To: <bug-47701-11613@https.bugzilla.kernel.org/>
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:58799
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751225Ab2JGOwA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Oct 2012 10:52:00 -0400
+Content-Disposition: inline
+In-Reply-To: <1349590310.9312.163.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@infradead.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Roland Dreier <roland@kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=47701
+On Sat, Oct 06, 2012 at 11:11:50PM -0700, Nicholas A. Bellinger wrote:
+> On Sat, 2012-10-06 at 21:49 -0400, Christoph Hellwig wrote:
+> > Currenly all non-pscsi bakcneds report their standards version as
+> > SPC 2 via ->get_device_rev.
+> 
+> No, the proper on-the-wire bits to signal SPC-3 compliance are already
+> being returned by virtual backend drivers within standard INQUIRY
+> payload data.  
 
+I missed that, but it doesn't matter for the point I was making, which
+is the code to special case the SCSI_2 case, which can't happen for
+any virtual backend.  In addition it also can't happen for pscsi as
+we don't wire up any command emulation but REPORT LUNS for it any more,
+effectively making it dead code.
 
-Brad Campbell <lists2009@fnarfbargle.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |lists2009@fnarfbargle.com
-
-
-
-
---- Comment #3 from Brad Campbell <lists2009@fnarfbargle.com>  2012-10-07 14:20:46 ---
-Apparently fixed as of 3.6.0-07201-ged5062d (current git as of 8 hours ago).
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
