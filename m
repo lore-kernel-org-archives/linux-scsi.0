@@ -1,58 +1,65 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Request for improved commit tracking between fcoe and scsi trees
-Date: Sun, 07 Oct 2012 12:01:43 +0100
-Message-ID: <1349607703.2541.25.camel@dabdike.int.hansenpartnership.com>
-References: <20121003192346.GA15969@hmsreliant.think-freely.org>
-	 <506DF0B4.9000004@intel.com>
+Subject: Re: [RESEND][PATCH 0/20][SCSI] mpt3sas: Driver submission
+ v01.100.00.00
+Date: Sun, 07 Oct 2012 13:07:30 +0100
+Message-ID: <1349611650.2541.27.camel@dabdike.int.hansenpartnership.com>
+References: <20120929141853.GA20768@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54396 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54454 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752681Ab2JGLBr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Oct 2012 07:01:47 -0400
-In-Reply-To: <506DF0B4.9000004@intel.com>
+	by vger.kernel.org with ESMTP id S1751055Ab2JGMHg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Oct 2012 08:07:36 -0400
+In-Reply-To: <20120929141853.GA20768@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Love, Robert W" <robert.w.love@intel.com>
-Cc: Neil Horman <nhorman@tuxdriver.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: sreekanth.reddy@lsi.com
+Cc: linux-scsi@vger.kernel.org, jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com
 
-On Thu, 2012-10-04 at 20:25 +0000, Love, Robert W wrote:
-> On 10/3/2012 12:23 PM, Neil Horman wrote:
-> > James, Robert-
-> > 	I've been doing lots of backports of FCoE code to the RHEL tree these
-> > last few months, and I've noticed something fairly irritating, and I was
-> > wondering if you two could help me out with it (in fact you two are the only two
-> > which can).  I noticed that commits which are accepted into the FCoE tree that
-> > get passed upstream through the scsi tree have their commit hashes altered.  I
-> > can't find any examples currently, due to the fact that you, Robert, have
-> > recently re-cloned your git tree at open-fcoe.org, so all this nastiness has
-> > been covered up currently, but if things don't change, this issue will quickly
-> > resurface.
-> >
-> > Regardless, This makes it _really_ difficult to track a given patchs' traversal
-> > between trees upstream, and makes my life as a distro subsystem maintainer fairly
-> > painful.  Normally I would just live with it, but I can't see any reason why it
-> > should be this way, given that git can easily prevent this with a pull.  James,
-> > Robert, could you two please work out a way to provide commit hash consistency
-> > between your trees?  It would make mine (and I'm sure many other people's)
-> > lives, much easier.
-> 
-> I had included pull URLs in the covermails of my updates, but I haven't 
-> lately. I will make sure to do that from now on.
+On Sat, 2012-09-29 at 19:48 +0530, sreekanth.reddy@lsi.com wrote:
+> This is new scsi lld device driver from LSI supporting the SAS 3.0
+> standard.
+>=20
+> Here is list of new 12gb host controllers:
+>=20
+>   LSI SAS3004
+>   LSI SAS3008
+>   LSI SAS3108
+>=20
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> Reviewed-by: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
 
-Actually, I'm happy to do a pull based process with signed tags going
-forwards.  However:
+This doesn't seem to compile:
 
->  Bart had a complaint 
-> about a misspelling in a commit message of a patch in my last update. I 
-> just resent that three patch series with the corrected commit message. I 
-> included a signed-tag to pull from in the covermail.
+drivers/scsi/mpt3sas/mpt3sas_scsih.c: In function
+=E2=80=98_scsih_sas_broadcast_primitive_event=E2=80=99:
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: error: =E2=80=98event_data=
+=E2=80=99
+undeclared (first use in this function)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: note: each undeclared
+identifier is reported only once for each function it appears in
+drivers/scsi/mpt3sas/mpt3sas_ctl.c: In function
+=E2=80=98mpt3sas_ctl_reset_handler=E2=80=99:
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:475:3: error: expected =E2=80=98)=E2=
+=80=99 before
+=E2=80=98MPT3SAS_FMT9=E2=80=99
+make[3]: *** [drivers/scsi/mpt3sas/mpt3sas_scsih.o] Error 1
+make[3]: *** Waiting for unfinished jobs....
+make[3]: *** [drivers/scsi/mpt3sas/mpt3sas_ctl.o] Error 1
+make[2]: *** [drivers/scsi/mpt3sas] Error 2
+make[2]: *** Waiting for unfinished jobs....
+make[1]: *** [drivers/scsi] Error 2
+make: *** [drivers] Error 2
 
-That change changed the commit id and gives a graphic illustration of
-why any tracking process based on git commit ids is wrong.
+Did you miss something in the split?
 
 James
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
