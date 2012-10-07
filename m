@@ -1,94 +1,61 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: standards revisions
-Date: Sun, 07 Oct 2012 11:11:46 -0700
-Message-ID: <1349633507.13843.47.camel@haakon2.linux-iscsi.org>
-References: <20121007014900.GA30316@infradead.org>
-	 <1349590310.9312.163.camel@haakon2.linux-iscsi.org>
-	 <1349597773.2541.12.camel@dabdike.int.hansenpartnership.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH, resend] Fix race between starved list processing and
+ device removal
+Date: Sun, 07 Oct 2012 20:24:27 +0200
+Message-ID: <5071C8DB.50803@acm.org>
+References: <5024088C.9060205@acm.org> <50605CBC.5080701@acm.org> <1349606837.2541.19.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1349597773.2541.12.camel@dabdike.int.hansenpartnership.com>
-Sender: target-devel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Roland Dreier <roland@kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from jacques.telenet-ops.be ([195.130.132.50]:33570 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119Ab2JGSYb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Oct 2012 14:24:31 -0400
+In-Reply-To: <1349606837.2541.19.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-On Sun, 2012-10-07 at 09:16 +0100, James Bottomley wrote:
-> On Sat, 2012-10-06 at 23:11 -0700, Nicholas A. Bellinger wrote:
-> > On Sat, 2012-10-06 at 21:49 -0400, Christoph Hellwig wrote:
-> > > Currenly all non-pscsi bakcneds report their standards version as
-> > > SPC 2 via ->get_device_rev.
-> > 
-> > No, the proper on-the-wire bits to signal SPC-3 compliance are already
-> > being returned by virtual backend drivers within standard INQUIRY
-> > payload data.  
-> > 
-> > Notice the comment:
-> > 
-> > root@tifa:/usr/src/target-pending.git# grep SCSI_SPC_2 drivers/target/*.c
-> > drivers/target/target_core_file.c:	return SCSI_SPC_2; /* Returns SPC-3 in Initiator Data */
-> > drivers/target/target_core_iblock.c:	return SCSI_SPC_2; /* Returns SPC-3 in Initiator Data */
-> > drivers/target/target_core_rd.c:	return SCSI_SPC_2; /* Returns SPC-3 in Initiator Data */
-> 
-> That's causing confusion, I think!
-> 
-> > >  In addition to putting it into the
-> > > inquirty data in spc_emulate_inquiry_std we also use it in two
-> > > places to check on the version of the persistent reservation and
-> > > alua support.  What is the benefit of supporting the old-style SCSI 2
-> > > reservations and ALUA support when they can't be used at all with
-> > > the virtual backends, and can only be used in the corner case emulated
-> > > ALUA/PR support for pscsi?
-> > > 
-> > 
-> > It's the include/scsi/scsi.h SCSI_3 + SCSI_SPC_* version definition
-> > names that are incorrect:
-> > 
-> > #define SCSI_UNKNOWN    0
-> > #define SCSI_1          1
-> > #define SCSI_1_CCS      2
-> > #define SCSI_2          3
-> > #define SCSI_3          4        /* SPC */
-> > #define SCSI_SPC_2      5
-> > #define SCSI_SPC_3      6
-> > 
-> > from spc4r30 section 6.4.2 Standard INQUIRY data, Table 142 -- Version:
-> > 
-> >    00h     The device server does not claim conformance to any standard.
-> > 01h to 02h Obsolete
-> >    03h     The device server complies to ANSI INCITS 301-1997 (a withdrawn standard).
-> >    04h     The device server complies to ANSI INCITS 351-2001 (SPC-2).
-> >    05h     The device server complies to ANSI INCITS 408-2005 (SPC-3).
-> >    06h     The device server complies to this standard.
-> > 
-> > How about the following patch to fix the long-standing incorrect name
-> > usage of these three scsi.h defines..?
-> 
-> Because it's not incorrect.  Your confusion is that the SCSI_ constants
-> should match the inquiry data ... they shouldn't.
+On 10/07/12 12:47, James Bottomley wrote:
+> On Mon, 2012-09-24 at 15:14 +0200, Bart Van Assche wrote:
+>> Avoid that the sdev reference count can drop to zero before
+>> the queue is run by scsi_run_queue(). Also avoid that the sdev
+>> reference count can drop to zero in the same function by invoking
+>> __blk_run_queue().
+> [...]		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+>> @@ -977,6 +978,10 @@ void __scsi_remove_device(struct scsi_device *sdev)
+>>   	blk_cleanup_queue(sdev->request_queue);
+>>   	cancel_work_sync(&sdev->requeue_work);
+>>
+>> +	spin_lock_irqsave(shost->host_lock, flags);
+>> +	list_del(&sdev->starved_entry);
+>> +	spin_unlock_irqrestore(shost->host_lock, flags);
+>> +
+>
+> This hunk doesn't make much sense.  It seems to be orthogonal to the
+> problem listed in the changelog and this action is done on last put
+> anyway.
 
-No, my current confusion is stemming from why it's OK for SCSI_SPC_[2,3]
-constant names+values to not match what is actually defined in SPC-4
-drafts for what target INQUIRY emulation bits end up going 'over the
-wire'.
+Removing an sdev from the starved list in __scsi_remove_device() has the 
+advantage that it is guaranteed that the get_device() call added in 
+scsi_run_queue() will succeed. A possible alternative is to leave the 
+starved list removal code in scsi_device_dev_release_usercontext() and 
+to invoke __blk_run_queue() in scsi_run_queue() only if the get_device() 
+call in that function succeeded. Does this mean that you prefer the 
+second option - something like the (untested) code below ?
 
-> Look where we set
-> scsi_level in scsi_scan.c:708-713.  We have to fit an extra identifier
-> for SCSI_1_CCS so the scsi_level doesn't actually match the inquiry
-> data; it's incremented by 1 for SCSI_3 and above.
+		if (get_device(&sdev->sdev_gendev)) {
+			spin_unlock(shost->host_lock);
 
-The extra increment by 1 is required by some Linux/SCSI client
-implementation dependent requirements, yes..?
+			spin_lock(sdev->request_queue->queue_lock);
+			__blk_run_queue(sdev->request_queue);
+			spin_unlock(sdev->request_queue->queue_lock);
 
-> SCSI_3 does exist, by
-> the way, it was defined in the first version of SPC and there are some
-> devices which conform to it.
-> 
+			put_device(&sdev->sdev_gendev);
+			spin_lock(shost->host_lock);
+		}
 
-Regardless, SCSI_SPC_[2,3] -> SCSI_SPC[3,4] constants for target-core +
-scsi-core should still be re-named to avoid the extra confusion this
-introduces for folks reading code.
+Bart.
 
---nab
