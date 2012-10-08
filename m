@@ -1,54 +1,119 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Mon, 8 Oct 2012 17:27:04 +0800
-Message-ID: <20121008092703.GA2541@mint-spring.sh.intel.com>
-References: <50689794.50203@pobox.com>
- <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
+From: Naresh Kumar Inna <naresh@chelsio.com>
+Subject: Re: [V5 PATCH 0/8] csiostor: Chelsio FCoE offload driver submission
+Date: Mon, 8 Oct 2012 15:37:01 +0530
+Message-ID: <5072A5C5.6070102@chelsio.com>
+References: <1348507072-25625-1-git-send-email-naresh@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1348507072-25625-1-git-send-email-naresh@chelsio.com>
+Sender: netdev-owner@vger.kernel.org
+To: "JBottomley@parallels.com" <JBottomley@parallels.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Chethan Seshadri <chethan@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Sep 30, 2012 at 03:43:27PM -0400, Alan Stern wrote:
-> On Sun, 30 Sep 2012, Jeff Garzik wrote:
-> 
-> > The simple fact of "only ZPODD devices out there are ATA" is not the 
-> > decision-maker for where the code should live.  It is more a question 
-> > where ZPODD belongs in the device/command set model currently employed.
-> 
-> I don't really accept this argument.  It's a little like saying: The
-> tty layer uses ioctl commands to control RS232 line settings; therefore
-> RS232 settings should be handled in the VFS layer as part of the ioctl
-> core.
-> 
-> Regardless, according to Aaron the ZP power-off stuff is currently
-> implemented only in ACPI, tied more closely to the ATA layer than the
-> SCSI layer (though not part of either).  It is not part of the SCSI
-> spec in any form.
+Hi James,
 
-The mechanism of SATA ODD zero power model is specified in Mount Fuji
-spec v8 section 15 describing what the ODD needs support, how to sense
-if the ODD is ready to be powered off and on power up what needs to be
-done, etc. And the actual power off and wakeup is implemented in ACPI
-and SATA.
-
-> Now it's true that determining whether a device is
-> in the right state for power to be removed involves sending a TEST UNIT
-> READY command, which is of course a SCSI command.  This seems to be
-> incidental to the overall scheme, however.
-
-I need to add that, there are 2 schemes to sense if the ODD is ready to
-be powered off:
-1 the one I used here, by checking if the door is closed and no media
-  inside with test_unit_ready;
-2 some ZP capable ODDs can report zero power ready(ZPReady) event to
-  host when queried, eliminating the need of host checking the conditions.
+Please let me know if you are expecting any more changes to this driver
+to resume its review. I have addressed all review comments as of the
+last series of patches (below).
 
 Thanks,
-Aaron
+Naresh.
 
+On 9/24/2012 10:47 PM, Naresh Kumar Inna wrote:
+> This is the initial submission of the Chelsio FCoE offload driver (csiostor)
+> to the upstream kernel. This driver currently supports FCoE offload
+> functionality over Chelsio T4-based 10Gb Converged Network Adapters.
+> 
+> The following patches contain the driver sources for csiostor driver and
+> updates to firmware/hardware header files shared between csiostor,
+> cxgb4 (Chelsio T4-based NIC driver) and cxgb4vf (Chelsio T4-based Virtual
+> Function NIC driver). The csiostor driver is dependent on these
+> header updates. These patches have been generated against scsi 'misc' branch.
+> 
+> csiostor is a low level SCSI driver that interfaces with PCI, SCSI midlayer and
+> FC transport subsystems. This driver claims the FCoE PCIe function on
+> Chelsio Converged Network Adapters. It relies on firmware events for slow path
+> operations like discovery, thereby offloading session management. The driver
+> programs firmware via Work Request interfaces for fast path I/O offload
+> features.
+> 
+> Version V5 of the patches addresses James's comment, primary among them being
+> moving to the lockless version of queuecommand(). Rest of the V5 changes are
+> listed in the individual patches.
+> 
+> Here is the brief description of patches:
+> [V5 PATCH 1/8]: Updates to header files shared between cxgb4, cxgb4vf and
+>                 csiostor.
+> [V5 PATCH 2/8]: Header files part 1.
+> [V5 PATCH 3/8]: Header files part 2.
+> [V5 PATCH 4/8]: Driver initialization and Work Request services.
+> [V5 PATCH 5/8]: FC transport interfaces and mailbox services.
+> [V5 PATCH 6/8]: Local and remote port state tracking functionality.
+> [V5 PATCH 7/8]: Interrupt handling and fast path I/O functionality.
+> [V5 PATCH 8/8]: Hardware interface, Makefile and Kconfig changes.
+> 
+> Naresh Kumar Inna (8):
+>   cxgb4/cxgb4vf: Chelsio FCoE offload driver submission (common header
+>     updates).
+>   csiostor: Chelsio FCoE offload driver submission (headers part 1).
+>   csiostor: Chelsio FCoE offload driver submission (headers part 2).
+>   csiostor: Chelsio FCoE offload driver submission (sources part 1).
+>   csiostor: Chelsio FCoE offload driver submission (sources part 2).
+>   csiostor: Chelsio FCoE offload driver submission (sources part 3).
+>   csiostor: Chelsio FCoE offload driver submission (sources part 4).
+>   csiostor: Chelsio FCoE offload driver submission (sources part 5).
+> 
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |    2 +-
+>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |   10 +-
+>  drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |   16 +-
+>  drivers/net/ethernet/chelsio/cxgb4/t4_msg.h     |    1 +
+>  drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |   69 +-
+>  drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h   |  104 +-
+>  drivers/net/ethernet/chelsio/cxgb4vf/sge.c      |   11 +-
+>  drivers/scsi/Kconfig                            |    1 +
+>  drivers/scsi/Makefile                           |    1 +
+>  drivers/scsi/csiostor/Kconfig                   |   19 +
+>  drivers/scsi/csiostor/Makefile                  |   11 +
+>  drivers/scsi/csiostor/csio_attr.c               |  804 +++++
+>  drivers/scsi/csiostor/csio_defs.h               |  121 +
+>  drivers/scsi/csiostor/csio_hw.c                 | 4395 +++++++++++++++++++++++
+>  drivers/scsi/csiostor/csio_hw.h                 |  666 ++++
+>  drivers/scsi/csiostor/csio_init.c               | 1274 +++++++
+>  drivers/scsi/csiostor/csio_init.h               |  158 +
+>  drivers/scsi/csiostor/csio_isr.c                |  624 ++++
+>  drivers/scsi/csiostor/csio_lnode.c              | 2133 +++++++++++
+>  drivers/scsi/csiostor/csio_lnode.h              |  255 ++
+>  drivers/scsi/csiostor/csio_mb.c                 | 1769 +++++++++
+>  drivers/scsi/csiostor/csio_mb.h                 |  278 ++
+>  drivers/scsi/csiostor/csio_rnode.c              |  889 +++++
+>  drivers/scsi/csiostor/csio_rnode.h              |  141 +
+>  drivers/scsi/csiostor/csio_scsi.c               | 2554 +++++++++++++
+>  drivers/scsi/csiostor/csio_scsi.h               |  342 ++
+>  drivers/scsi/csiostor/csio_wr.c                 | 1632 +++++++++
+>  drivers/scsi/csiostor/csio_wr.h                 |  512 +++
+>  drivers/scsi/csiostor/t4fw_api_stor.h           |  578 +++
+>  29 files changed, 19333 insertions(+), 37 deletions(-)
+>  create mode 100644 drivers/scsi/csiostor/Kconfig
+>  create mode 100644 drivers/scsi/csiostor/Makefile
+>  create mode 100644 drivers/scsi/csiostor/csio_attr.c
+>  create mode 100644 drivers/scsi/csiostor/csio_defs.h
+>  create mode 100644 drivers/scsi/csiostor/csio_hw.c
+>  create mode 100644 drivers/scsi/csiostor/csio_hw.h
+>  create mode 100644 drivers/scsi/csiostor/csio_init.c
+>  create mode 100644 drivers/scsi/csiostor/csio_init.h
+>  create mode 100644 drivers/scsi/csiostor/csio_isr.c
+>  create mode 100644 drivers/scsi/csiostor/csio_lnode.c
+>  create mode 100644 drivers/scsi/csiostor/csio_lnode.h
+>  create mode 100644 drivers/scsi/csiostor/csio_mb.c
+>  create mode 100644 drivers/scsi/csiostor/csio_mb.h
+>  create mode 100644 drivers/scsi/csiostor/csio_rnode.c
+>  create mode 100644 drivers/scsi/csiostor/csio_rnode.h
+>  create mode 100644 drivers/scsi/csiostor/csio_scsi.c
+>  create mode 100644 drivers/scsi/csiostor/csio_scsi.h
+>  create mode 100644 drivers/scsi/csiostor/csio_wr.c
+>  create mode 100644 drivers/scsi/csiostor/csio_wr.h
+>  create mode 100644 drivers/scsi/csiostor/t4fw_api_stor.h
+> 
