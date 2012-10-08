@@ -1,95 +1,54 @@
-From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Subject: Re: [PATCH] [RESEND] qla2xxx: fix potential deadlock on ha->hardware_lock
-Date: Mon, 08 Oct 2012 13:39:12 +0530
-Message-ID: <50728A28.6030805@linux.vnet.ibm.com>
-References: <506D80C2.5040405@linux.vnet.ibm.com> <alpine.LNX.2.00.1210041500010.9942@pobox.suse.cz> <alpine.LNX.2.00.1210080922250.28357@pobox.suse.cz>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Mon, 8 Oct 2012 17:27:04 +0800
+Message-ID: <20121008092703.GA2541@mint-spring.sh.intel.com>
+References: <50689794.50203@pobox.com>
+ <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:43751 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753317Ab2JHIKE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Oct 2012 04:10:04 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <srivatsa.bhat@linux.vnet.ibm.com>;
-	Mon, 8 Oct 2012 13:40:00 +0530
-In-Reply-To: <alpine.LNX.2.00.1210080922250.28357@pobox.suse.cz>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-driver@qlogic.com, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On 10/08/2012 12:53 PM, Jiri Kosina wrote:
-> Lockdep reports:
+On Sun, Sep 30, 2012 at 03:43:27PM -0400, Alan Stern wrote:
+> On Sun, 30 Sep 2012, Jeff Garzik wrote:
 > 
-> === [ cut here ] ===
->  =========================================================
->  [ INFO: possible irq lock inversion dependency detected ]
->  3.6.0-0.0.0.28.36b5ec9-default #1 Not tainted
->  ---------------------------------------------------------
->  qla2xxx_1_dpc/368 just changed the state of lock:
->   (&(&ha->vport_slock)->rlock){+.....}, at: [<ffffffffa009b377>] qla2x00_configure_hba+0x197/0x3c0 [qla2xxx]
->  but this lock was taken by another, HARDIRQ-safe lock in the past:
->   (&(&ha->hardware_lock)->rlock){-.....}
+> > The simple fact of "only ZPODD devices out there are ATA" is not the 
+> > decision-maker for where the code should live.  It is more a question 
+> > where ZPODD belongs in the device/command set model currently employed.
 > 
-> and interrupts could create inverse lock ordering between them.
+> I don't really accept this argument.  It's a little like saying: The
+> tty layer uses ioctl commands to control RS232 line settings; therefore
+> RS232 settings should be handled in the VFS layer as part of the ioctl
+> core.
 > 
-> other info that might help us debug this:
->  Possible interrupt unsafe locking scenario:
-> 
->        CPU0                    CPU1
->        ----                    ----
->   lock(&(&ha->vport_slock)->rlock);
->                                local_irq_disable();
->                                lock(&(&ha->hardware_lock)->rlock);
->                                lock(&(&ha->vport_slock)->rlock);
->   <Interrupt>
->     lock(&(&ha->hardware_lock)->rlock);
-> === [ cut here ] ===
-> 
-> Fix the potential deadlock by disabling IRQs while holding ha->vport_slock.
-> 
-> Reported-and-tested-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
-> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+> Regardless, according to Aaron the ZP power-off stuff is currently
+> implemented only in ACPI, tied more closely to the ATA layer than the
+> SCSI layer (though not part of either).  It is not part of the SCSI
+> spec in any form.
 
-This needs a CC to stable also right?
+The mechanism of SATA ODD zero power model is specified in Mount Fuji
+spec v8 section 15 describing what the ODD needs support, how to sense
+if the ODD is ready to be powered off and on power up what needs to be
+done, etc. And the actual power off and wakeup is implemented in ACPI
+and SATA.
 
-Regards,
-Srivatsa S. Bhat
-> ---
->  drivers/scsi/qla2xxx/qla_init.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index 799a58b..48fca47 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -2080,6 +2080,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
->  	uint8_t       domain;
->  	char		connect_type[22];
->  	struct qla_hw_data *ha = vha->hw;
-> +	unsigned long flags;
-> 
->  	/* Get host addresses. */
->  	rval = qla2x00_get_adapter_id(vha,
-> @@ -2154,9 +2155,9 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
->  	vha->d_id.b.area = area;
->  	vha->d_id.b.al_pa = al_pa;
-> 
-> -	spin_lock(&ha->vport_slock);
-> +	spin_lock_irqsave(&ha->vport_slock, flags);
->  	qlt_update_vp_map(vha, SET_AL_PA);
-> -	spin_unlock(&ha->vport_slock);
-> +	spin_unlock_irqrestore(&ha->vport_slock, flags);
-> 
->  	if (!vha->flags.init_done)
->  		ql_log(ql_log_info, vha, 0x2010,
-> 
+> Now it's true that determining whether a device is
+> in the right state for power to be removed involves sending a TEST UNIT
+> READY command, which is of course a SCSI command.  This seems to be
+> incidental to the overall scheme, however.
 
+I need to add that, there are 2 schemes to sense if the ODD is ready to
+be powered off:
+1 the one I used here, by checking if the door is closed and no media
+  inside with test_unit_ready;
+2 some ZP capable ODDs can report zero power ready(ZPReady) event to
+  host when queried, eliminating the need of host checking the conditions.
 
--- 
-Regards,
-Srivatsa S. Bhat
+Thanks,
+Aaron
 
