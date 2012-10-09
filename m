@@ -1,73 +1,65 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] Drivers: scsi: storvsc: Account for in-transit
- packets in the RESET path
-Date: Tue, 9 Oct 2012 13:48:24 +0000
-Message-ID: <426367E2313C2449837CD2DE46E7EAF930A2E7CA@SN2PRD0310MB382.namprd03.prod.outlook.com>
-References: <1349201011-14572-1-git-send-email-kys@microsoft.com>
-	 <426367E2313C2449837CD2DE46E7EAF930A1FCB6@SN2PRD0310MB382.namprd03.prod.outlook.com>
- <1349782700.2615.65.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: David Howells <dhowells@redhat.com>
+Subject: [PATCH/GIT PULL] UAPI: (Scripted) Disintegrate include/scsi
+Date: Tue, 09 Oct 2012 14:50:11 +0100
+Message-ID: <31138.1349790611@warthog.procyon.org.uk>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1349782700.2615.65.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: JBottomley@parallels.com
+Cc: dhowells@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-VHVlc2RheSwgT2N0b2JlciAwOSwgMjAxMiA3OjM4IEFNDQo+IFRvOiBLWSBTcmluaXZhc2FuDQo+
-IENjOiBncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVs
-Lm9yZzsNCj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgb2hlcmluZ0BzdXNlLmNvbTsg
-aGNoQGluZnJhZGVhZC5vcmc7IGxpbnV4LQ0KPiBzY3NpQHZnZXIua2VybmVsLm9yZzsgc3RhYmxl
-QHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvMV0gRHJpdmVyczogc2Nz
-aTogc3RvcnZzYzogQWNjb3VudCBmb3IgaW4tdHJhbnNpdCBwYWNrZXRzIGluDQo+IHRoZSBSRVNF
-VCBwYXRoDQo+IA0KPiBPbiBNb24sIDIwMTItMTAtMDggYXQgMTU6NTEgKzAwMDAsIEtZIFNyaW5p
-dmFzYW4gd3JvdGU6DQo+ID4NCj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4g
-PiBGcm9tOiBLLiBZLiBTcmluaXZhc2FuIFttYWlsdG86a3lzQG1pY3Jvc29mdC5jb21dDQo+ID4g
-PiBTZW50OiBUdWVzZGF5LCBPY3RvYmVyIDAyLCAyMDEyIDI6MDQgUE0NCj4gPiA+IFRvOiBncmVn
-a2hAbGludXhmb3VuZGF0aW9uLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4g
-PiA+IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IG9oZXJpbmdAc3VzZS5jb207DQo+IGpi
-b3R0b21sZXlAcGFyYWxsZWxzLmNvbTsNCj4gPiA+IGhjaEBpbmZyYWRlYWQub3JnOyBsaW51eC1z
-Y3NpQHZnZXIua2VybmVsLm9yZw0KPiA+ID4gQ2M6IEtZIFNyaW5pdmFzYW47IHN0YWJsZUB2Z2Vy
-Lmtlcm5lbC5vcmcNCj4gPiA+IFN1YmplY3Q6IFtQQVRDSCAxLzFdIERyaXZlcnM6IHNjc2k6IHN0
-b3J2c2M6IEFjY291bnQgZm9yIGluLXRyYW5zaXQgcGFja2V0cyBpbg0KPiB0aGUNCj4gPiA+IFJF
-U0VUIHBhdGgNCj4gPiA+DQo+ID4gPiBQcm9wZXJseSBhY2NvdW50IGZvciBJL08gaW4gdHJhbnNp
-dCBiZWZvcmUgcmV0dXJuaW5nIGZyb20gdGhlIFJFU0VUIGNhbGwuDQo+ID4gPiBJbiB0aGUgYWJz
-ZW5zZSBvZiB0aGlzIHBhdGNoLCB3ZSBjb3VsZCBoYXZlIGEgc2l0dWF0aW9uIHdoZXJlIHRoZSBo
-b3N0IG1heQ0KPiA+ID4gcmVzcG9uZCB0byBhIGNvbW1hbmQgdGhhdCB3YXMgaXNzdWVkIHByaW9y
-IHRvIHRoZSBpc3N1YW5jZSBvZiB0aGUgUkVTRVQNCj4gPiA+IGNvbW1hbmQgYXQgc29tZSBhcmJp
-dHJhcnkgdGltZSBhZnRlciByZXNwb25kaW5nIHRvIHRoZSBSRVNFVCBjb21tYW5kLg0KPiA+ID4g
-Q3VycmVudGx5LCB0aGUgaG9zdCBkb2VzIG5vdCBkbyBhbnl0aGluZyB3aXRoIHRoZSBSRVNFVCBj
-b21tYW5kLg0KPiA+ID4NCj4gPiA+IFNpZ25lZC1vZmYtYnk6IEsuIFkuIFNyaW5pdmFzYW4gPGt5
-c0BtaWNyb3NvZnQuY29tPg0KPiA+ID4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcNCj4gPiA+
-IC0tLQ0KPiA+ID4gIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jIHwgICAgNSArKysrKw0KPiA+
-ID4gIDEgZmlsZXMgY2hhbmdlZCwgNSBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KPiA+
-ID4NCj4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyBiL2RyaXZl
-cnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+ID4gPiBpbmRleCA1MjhkNTJiLi4wMTQ0MDc4IDEwMDY0
-NA0KPiA+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4gPiA+ICsrKyBiL2Ry
-aXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+ID4gPiBAQCAtMTIyMSw3ICsxMjIxLDEyIEBAIHN0
-YXRpYyBpbnQgc3RvcnZzY19ob3N0X3Jlc2V0X2hhbmRsZXIoc3RydWN0DQo+IHNjc2lfY21uZA0K
-PiA+ID4gKnNjbW5kKQ0KPiA+ID4gIAkvKg0KPiA+ID4gIAkgKiBBdCB0aGlzIHBvaW50LCBhbGwg
-b3V0c3RhbmRpbmcgcmVxdWVzdHMgaW4gdGhlIGFkYXB0ZXINCj4gPiA+ICAJICogc2hvdWxkIGhh
-dmUgYmVlbiBmbHVzaGVkIG91dCBhbmQgcmV0dXJuIHRvIHVzDQo+ID4gPiArCSAqIFRoZXJlIGlz
-IGEgcG90ZW50aWFsIHJhY2UgaGVyZSB3aGVyZSB0aGUgaG9zdCBtYXkgYmUgaW4NCj4gPiA+ICsJ
-ICogdGhlIHByb2Nlc3Mgb2YgcmVzcG9uZGluZyB3aGVuIHdlIHJldHVybiBmcm9tIGhlcmUuDQo+
-ID4gPiArCSAqIEp1c3Qgd2FpdCBmb3IgYWxsIGluLXRyYW5zaXQgcGFja2V0cyB0byBiZSBhY2Nv
-dW50ZWQgZm9yDQo+ID4gPiArCSAqIGJlZm9yZSB3ZSByZXR1cm4gZnJvbSBoZXJlLg0KPiA+ID4g
-IAkgKi8NCj4gPiA+ICsJc3RvcnZzY193YWl0X3RvX2RyYWluKHN0b3JfZGV2aWNlKTsNCj4gPiA+
-DQo+ID4gPiAgCXJldHVybiBTVUNDRVNTOw0KPiA+ID4gIH0NCj4gPiA+IC0tDQo+ID4gPiAxLjcu
-NC4xDQo+ID4NCj4gPiBKYW1lcywNCj4gPg0KPiA+IFRoaXMgcGF0Y2ggaXMgY3JpdGljYWwgZm9y
-IHJ1bm5pbmcgTGludXggYmFzZWQgd29ya2xvYWRzIG9uIG91ciBDbG91ZA0KPiBpbmZyYXN0cnVj
-dHVyZSAtIEF6dXJlLg0KPiA+IFBsZWFzZSBsZXQgbWUga25vdyBpZiB0aGVyZSBhcmUgYW55IGlz
-c3Vlcy4NCj4gDQo+IFNvIGp1c3QgZm9yIG5leHQgdGltZTogaXQncyBhIGJpdCBoYXJkIHRvIHdv
-cmsgb3V0IHRoaXMgaXMgYSBjcml0aWNhbA0KPiBpc3N1ZSBmcm9tIHRoZSBjaGFuZ2UgbG9nLiAg
-SWYgSSBoYWQgdG8gZ3Vlc3MsIEknZCBzYXkgdGhlIHJlc3BvbnNlIHRvIGENCj4gY29tbWFuZCBr
-aWxsZWQgYnkgcmVzZXQgY2F1c2VzIHNvbWUgdHlwZSBvZiB1c2UgYWZ0ZXIgZnJlZSBhbmQgYQ0K
-PiBwb3RlbnRpYWwgb29wcyAoYWxsIG9mIHdoaWNoIHdvdWxkIGhhdmUgYmVlbiB2ZXJ5IG5pY2Ug
-aW4gdGhlIGNoYW5nZQ0KPiBsb2cpPw0KDQpZb3UgZ3Vlc3NlZCByaWdodCEgTXkgYXBvbG9naWVz
-LCBJIHdpbGwgYWRkIHN1Y2ggZGV0YWlscyBpbiB0aGUgY2hhbmdlIGxvZw0KaW4gdGhlIGZ1dHVy
-ZS4NCg0KUmVnYXJkcywNCg0KSy4gWQ0KPiANCj4gSmFtZXMNCj4gDQo+IA0KPiANCj4gDQoNCg==
+
+This completes part of the Userspace API (UAPI) disintegration for which the
+preparatory patches were pulled recently.  After these patches, userspace
+headers will be segregated into:
+
+	include/uapi/linux/.../foo.h
+
+for the userspace interface stuff, and:
+
+	include/linux/.../foo.h
+
+for the strictly kernel internal stuff.
+
+This patch can be pulled from:
+
+	git://git.infradead.org/users/dhowells/linux-headers.git tags/disintegrate-scsi-20121009
+
+Signed-off-by: David Howells <dhowells@redhat.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Michael Kerrisk <mtk.manpages@gmail.com>
+Acked-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+Acked-by: Dave Jones <davej@redhat.com>
+---
+diff --git a/include/scsi/Kbuild b/include/scsi/Kbuild
+index f2b9491..562ff9d 100644
+--- a/include/scsi/Kbuild
++++ b/include/scsi/Kbuild
+@@ -1,4 +1 @@
+-header-y += scsi_netlink.h
+-header-y += scsi_netlink_fc.h
+-header-y += scsi_bsg_fc.h
+ header-y += fc/
+diff --git a/include/uapi/scsi/Kbuild b/include/uapi/scsi/Kbuild
+index 29a87dd..75746d5 100644
+--- a/include/uapi/scsi/Kbuild
++++ b/include/uapi/scsi/Kbuild
+@@ -1,2 +1,5 @@
+ # UAPI Header export list
+ header-y += fc/
++header-y += scsi_bsg_fc.h
++header-y += scsi_netlink.h
++header-y += scsi_netlink_fc.h
+diff --git a/include/scsi/scsi_bsg_fc.h b/include/uapi/scsi/scsi_bsg_fc.h
+similarity index 100%
+rename from include/scsi/scsi_bsg_fc.h
+rename to include/uapi/scsi/scsi_bsg_fc.h
+diff --git a/include/scsi/scsi_netlink.h b/include/uapi/scsi/scsi_netlink.h
+similarity index 100%
+rename from include/scsi/scsi_netlink.h
+rename to include/uapi/scsi/scsi_netlink.h
+diff --git a/include/scsi/scsi_netlink_fc.h b/include/uapi/scsi/scsi_netlink_fc.h
+similarity index 100%
+rename from include/scsi/scsi_netlink_fc.h
+rename to include/uapi/scsi/scsi_netlink_fc.h
