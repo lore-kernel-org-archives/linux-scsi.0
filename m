@@ -1,137 +1,61 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] [RESEND] qla2xxx: fix potential deadlock on
- ha->hardware_lock
-Date: Tue, 09 Oct 2012 11:47:47 -0700
-Message-ID: <1349808467.3776.48.camel@haakon2.linux-iscsi.org>
-References: <506D80C2.5040405@linux.vnet.ibm.com>
-	 <alpine.LNX.2.00.1210041500010.9942@pobox.suse.cz>
-	 <alpine.LNX.2.00.1210080922250.28357@pobox.suse.cz>
+Subject: Re: standards revisions
+Date: Tue, 09 Oct 2012 11:55:17 -0700
+Message-ID: <1349808917.3776.54.camel@haakon2.linux-iscsi.org>
+References: <20121007014900.GA30316@infradead.org>
+	 <1349590310.9312.163.camel@haakon2.linux-iscsi.org>
+	 <20121007145154.GA30586@infradead.org>
+	 <1349631097.13843.5.camel@haakon2.linux-iscsi.org>
+	 <20121008034448.GA6919@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1210080922250.28357@pobox.suse.cz>
+In-Reply-To: <20121008034448.GA6919@infradead.org>
 Sender: target-devel-owner@vger.kernel.org
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-driver@qlogic.com, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, target-devel <target-devel@vger.kernel.org>, Roland Dreier <roland@kernel.org>, Arun Easi <arun.easi@qlogic.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Roland Dreier <roland@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Jiri, Andrew, Arun & Co,
+On Sun, 2012-10-07 at 23:44 -0400, Christoph Hellwig wrote:
+> On Sun, Oct 07, 2012 at 10:31:37AM -0700, Nicholas A. Bellinger wrote:
+> > Regardless of if an virtual backend reports a SPC-3 version (0x05) in
+> > INQUIRY response, an initiator is still allowed to fall back to using
+> > legacy SCSI-2 reservations instead of SPC-3 persistent reservations.  I
+> > can think of at least one mainstream SCSI initiator that does this.
+> 
+> Yes, but we have a different code path for the mixed SCSI-2/SPC-3
+> reservations from the pure SCSI-2 mode, based on the function pointers
+> set up in core_setup_reservations().  As far as I can see we could
+> only reach the SCSI-2 path there for a pscsi device that has the
+> emulate_reservations flag set, and even then we would never actually hit
+> the code the function pointers point to as we don't actually support
+> emulated reservations for pscsi.
 
-On Mon, 2012-10-08 at 09:23 +0200, Jiri Kosina wrote:
-> Lockdep reports:
-> 
-> === [ cut here ] ===
->  =========================================================
->  [ INFO: possible irq lock inversion dependency detected ]
->  3.6.0-0.0.0.28.36b5ec9-default #1 Not tainted
->  ---------------------------------------------------------
->  qla2xxx_1_dpc/368 just changed the state of lock:
->   (&(&ha->vport_slock)->rlock){+.....}, at: [<ffffffffa009b377>] qla2x00_configure_hba+0x197/0x3c0 [qla2xxx]
->  but this lock was taken by another, HARDIRQ-safe lock in the past:
->   (&(&ha->hardware_lock)->rlock){-.....}
-> 
-> and interrupts could create inverse lock ordering between them.
-> 
-> other info that might help us debug this:
->  Possible interrupt unsafe locking scenario:
-> 
->        CPU0                    CPU1
->        ----                    ----
->   lock(&(&ha->vport_slock)->rlock);
->                                local_irq_disable();
->                                lock(&(&ha->hardware_lock)->rlock);
->                                lock(&(&ha->vport_slock)->rlock);
->   <Interrupt>
->     lock(&(&ha->hardware_lock)->rlock);
-> === [ cut here ] ===
-> 
-> Fix the potential deadlock by disabling IRQs while holding ha->vport_slock.
-> 
-> Reported-and-tested-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
-> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
-> ---
+Ok, I see what your getting now wrt to dead code during ALUA/PR init..
 
-I'm fine with this patch and have applied to target-pending/queue for
-the moment.
+So yes, the two SPC2_ALUA_DISABLED and SPC2_RESERVATIONS cases are not
+ever reached, and where originally intended to disable this emulation
+for virtual backends based upon se_subsystem_api->get_device_rev()
 
-It will be moved into /master + included in the next PULL request once
-Linus merges the outstanding /for-next series into -rc0 code.
-
-Also please have a look below for a few more related items I noticed
-while reviewing this patch..
-
->  drivers/scsi/qla2xxx/qla_init.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index 799a58b..48fca47 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -2080,6 +2080,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
->  	uint8_t       domain;
->  	char		connect_type[22];
->  	struct qla_hw_data *ha = vha->hw;
-> +	unsigned long flags;
->  
->  	/* Get host addresses. */
->  	rval = qla2x00_get_adapter_id(vha,
-> @@ -2154,9 +2155,9 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
->  	vha->d_id.b.area = area;
->  	vha->d_id.b.al_pa = al_pa;
->  
-> -	spin_lock(&ha->vport_slock);
-> +	spin_lock_irqsave(&ha->vport_slock, flags);
->  	qlt_update_vp_map(vha, SET_AL_PA);
-> -	spin_unlock(&ha->vport_slock);
-> +	spin_unlock_irqrestore(&ha->vport_slock, flags);
->  
->  	if (!vha->flags.init_done)
->  		ql_log(ql_log_info, vha, 0x2010,
+> > Also, I think your mistaken about ALUA and SCSI-2 compatibility.  ALUA
+> > is an SPC-3 and above specific feature.
+> 
+> What I mean is that int core_setup_alua again has a special code path
+> for < SCSI-3 levels, which has the same reachability issues as for the
+> reservations above.
+> 
+> > pSCSI has always NOP'ed the reservation + ALUA function pointers within
+> > core_setup_reservations() and core_setup_alua().
+> 
+> Unless the emulate_reservations or emulate_alua flags are set, in which
+> case we will set the other functions pointers.  That being said I can't
+> see why the function pointers are even needed, as the non-noop versions
+> are careful enough to do the right thing for pscsi as we'll never have
+> registrations set.  I'll send a series of patches to clean all this up.
 > 
 
-So while looking at other ->vport_slock + qlt_update_vp_map() usage, two
-more items caught my eye:
+<nod>
 
-In qla_mid.c:qla24xx_disable_vp() code:
-
-        ret = qla24xx_control_vp(vha, VCE_COMMAND_DISABLE_VPS_LOGO_ALL);
-        atomic_set(&vha->loop_state, LOOP_DOWN);
-        atomic_set(&vha->loop_down_timer, LOOP_DOWN_TIME);
- 
-        /* Remove port id from vp target map */
-        qlt_update_vp_map(vha, RESET_AL_PA);
- 
-        qla2x00_mark_vp_devices_dead(vha);
-        atomic_set(&vha->vp_state, VP_FAILED);
-
-AFAICT all callers of qlt_update_vp_map() into qla_target.c code should
-be holding ->vport_slock.  I'll send out a separate patch for this
-shortly.
-
-And in qla_init.c:qla2x00_init_rings() code:
-
-        for (que = 0; que < ha->max_rsp_queues; que++) {
-                rsp = ha->rsp_q_map[que];
-                if (!rsp)
-                        continue;
-                /* Initialize response queue entries */
-                qla2x00_init_response_q_entries(rsp);
-        }
-
-        spin_lock(&ha->vport_slock);
-
-        spin_unlock(&ha->vport_slock);
-
-        ha->tgt.atio_ring_ptr = ha->tgt.atio_ring;
-        ha->tgt.atio_ring_index = 0;
-        /* Initialize ATIO queue entries */
-        qlt_init_atio_q_entries(vha);
-
-The usage of ->vport_slock seems to be now either unnecessary, or a
-result of some bad merge outside of qla2xxx target mode. 
-
-Qlogic folks, can this (leftover..?) usage of ->vport_slock now be
-safety removed..?
-
---nab
+Thanks Christoph !
