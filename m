@@ -1,84 +1,240 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: [PATCH v2 0/8]  ARM: mostly harmless gcc warnings
-Date: Tue,  9 Oct 2012 22:13:50 +0200
-Message-ID: <1349813638-4617-1-git-send-email-arnd@arndb.de>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [RFC PATCH v4 0/5] Add new fcoe_sysfs based control interfaces to
+ libfcoe, bnx2fc and fcoe
+Date: Tue, 09 Oct 2012 15:18:50 -0700
+Message-ID: <20121009221850.11139.39902.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <spi-devel-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/spi-devel-general>,
-	<mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=spi-devel-general>
-List-Post: <mailto:spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/spi-devel-general>,
-	<mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-Errors-To: spi-devel-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: arm-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>, Pavel Machek <pavel-AlSwsSmVLrQ@public.gmane.org>, Kukjin Kim <kgene.kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Mike Turquette <mturquette-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Florian Tobias Schandinat <FlorianSchandinat-Mmb7MZpHnFY@public.gmane.org>, Jochen Friedrich <jochen-NIgtFMG+Po8@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>, linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ben Dooks <ben-linux-elnMNo+KYs3YtjvyW6yDsg@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:2638 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752184Ab2JIWSw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Oct 2012 18:18:52 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: nhorman@redhat.com, bvanassche@acm.org, gregkh@linuxfoundation.org, cleech@redhat.com, bprakash@broadcom.com, devel@open-fcoe.org
 
-Most patches from the first time this was posted have been
-adopted by a subsystem maintainer or were show to be obsolete.
-Here are the remaining ones again.
+v4:
 
-I'm planning to submit those patches that are still necessary
-by the time we have an -rc1 through the arm-soc tree, but
-my preference is still to have them go through the subsystem
-maintainers.
+@Neil:
+	Policy is now:
 
-Olof: should we add it to for-next?
+	'mode' attribute:
+	       input: "Fabric" "VN2VN" (case insensitive)
+	       output: "Fabric" "VN2VN"
 
-	Arnd
+	'enabled' attribute:
+	       input: "1" "0"
+	       output: "1" "0"
 
-Arnd Bergmann (8):
-  SCSI: ARM: ncr5380/oak uses no interrupts
-  SCSI: ARM: make fas216_dumpinfo function conditional
-  mm/slob: use min_t() to compare ARCH_SLAB_MINALIGN
-  USB: EHCI: mark ehci_orion_conf_mbus_windows __devinit
-  clk: don't mark clkdev_add_table as init
-  pcmcia: sharpsl: don't discard sharpsl_pcmcia_ops
-  video: mark nuc900fb_map_video_memory as __devinit
-  spi/s3c64xx: use correct dma_transfer_direction type
+@Mark:
+	Initial patch now optimizes enum-to-string memory usage and
+	string retreival
 
- drivers/clk/clkdev.c            |    2 +-
- drivers/pcmcia/pxa2xx_sharpsl.c |    2 +-
- drivers/scsi/arm/fas216.c       |    2 +-
- drivers/scsi/arm/oak.c          |    1 +
- drivers/spi/spi-s3c64xx.c       |    2 +-
- drivers/usb/host/ehci-orion.c   |    2 +-
- drivers/video/nuc900fb.c        |    2 +-
- mm/slob.c                       |    6 +++---
- 8 files changed, 10 insertions(+), 9 deletions(-)
+--
+
+v3:
+
+This series applies to the v3.6 kernel.
+
+@Bart: Fixed bus_create_file -> bus_attrs
+       Removed sscanf with non-NULL buffer, only checking for '1' or '0' now
+       Removed unnecessary whitespace change
+
+@Bhanu: Incorporated check in _bnx2fc_create (thanks for the code)
+
+Additional changes: Added check for 'enabled' in reset in fcoe.c
+	   	    Made mode strncmp case insensitive so user can
+		    # echo "vn2vn" > /sys/.../ctlr_0/mode # or
+		    # echo "VN2VN" > /sys/.../ctlr_0/mode # or even
+		    # echo "FaBRiC" > /sys/.../ctlr_0/mode
+
+--
+
+v2:
+
+The following series adds /sys/bus/fcoe based control interfaces to
+libfcoe. A fcoe_sysfs infrastructure was added to the kernel a few
+cycles ago, this series builds on that work. The patches deprecate
+the old create, vn2vn_create, destroy, enable and disable interfaces
+that exist in /sys/module/libfcoe/parameters/.
+
+Another goal of this series is to change the initialization sequence for
+a FCoE device. The result of this series is that interfaces created using
+libfcoe.ko interfaces (i.e. fcoe.ko or bnx2fc.ko) will have the following
+starting steps-
+
+1) Create/alloc the FCoE Controller
+   - Allocate kernel memory and create per-instance sysfs devices
+   - The FCoE Controller is created disabled, no discovery or login
+     until it is enabled.
+
+   # echo eth3.172-fcoe > /sys/bus/fcoe/ctlr_create
+
+2) Configure the FCoE Controller
+   - Change mode, set ddp_min (future), set dcb_required (future), etc...
+
+   # echo 2 > /sys/bus/fcoe/ctlr_0/mode #sets mode to VN2VN
+
+3) Enable the FCoE Controller
+   - Begins discovery and login in 'Fabric' mode. or
+   - Begins FIP FCID claim process, discovery and login in 'VN2VN' mode
+
+4) Destroy the FCoE Controller
+   - Logout and free all memory
+
+   # echo eth3.172-fcoe > /sys/bus/fcoe/ctlr_destroy
+
+This series converts both fcoe.ko and bnx2fc.ko to use the new
+fcoe_sysfs based interfaces. The legacy interfaces can remain in kernel
+for a kernel cycle or two before being removed.
+
+I'm looking for feedback on the use of /sys/bus/fcoe/ctlr_create and
+/sys/bus/fcoe/ctlr_destroy and that those interfaces take an ifname.
+I modeled it after the bonding interface, but I'm not sure if that's
+acceptible.
+
+Incorpoated v1 feedback:
+
+@Chris:
+
+I spent a lot of time looking into FCF selection.
+
+I implemented a POC series where I made the 'enabled' attribute
+of a fcoe_fcf_device (i.e. /sys/bus/fcoe/devices/fcf_X) writable. The
+fcoe_ctlr_device (i.e. /sys/bus/fcoe/devices/ctlr_X) has a
+'selection_strategy' attribute that would allow the user to toggle between
+AUTO (current kernel selection algorithm) and USER (user writes to FCF's
+'selection' attribute).
+
+I also wrote a little libudev based application that listened for fcoe_fcf_device
+sysfs add/remove events. My plan was to have fcoemon monitor the discovery
+of FCFs and then have it write to the 'selected' attribute of the FCF the user
+had chosen.
+
+Working on this series convinced me that any FCF selection needs further
+consideration. First of all, it's fairly complicated to update the fcoe_ctlr.c
+functional FIP code to handle FCF/fabric selection. Some questions that arise:
+
+What triggers FLOGI/LOGO? We would now have link, enabled/disabled, selection
+strategy and FCF selection to consider.
+
+Can a new FCF be selected when one is already selected and an FLOGI has occurred?
+Can a FCF be de-selected when the FLOGI has been sent?
+
+Maybe we can only change things when disabled, that probably makes the most sense..
+
+When does discovery happen? When the ctlr is created (no opportunity for
+mode/selection strategy to be set)? When the mode is changed (same problem)?
+What about when the cltr is enabled (but that's when we were going to FLOGI)?
+
+This isn't a complete list of considerations, just what came to mind when writing
+this. Anyway, the policies started to get complicated, or maybe my lack of policies
+made the POC implementation more complicated. Either way it made me think about
+use cases and how valuable FCF/fabric selection is.
+
+After further consideration I think that most of the access decisions, when
+connecting to a FC fabric, should be done by the fabric services. I'm not sure
+the endstations should be whitelisting or blacklisting FCFs or even making
+decisions about which ones to use when they're already prioritized amongst themselves
+(on the same fabric). I think it might be nice for debugging, but I don't have a
+need at the moment.
+
+I think user selection may be more valuable with VN2VN, which may interest you
+more anyway, as you said that you were running a VN2VN setup. Since there
+aren't fabric services to rely on I can see it useful for VN_Ports to whitelist or
+blacklist other VN_Ports. I think the first step to support something like this
+would be to represent the fcoe_rports in fcoe_sysfs or in the FC Transport such
+that they can be selected or de-slected.
+
+I think that's a fine goal, but with this series, I think I'd like to focus on
+just getting away from using module parameters for control interfaces. I think
+this current series allows for selection as I've described above since it will
+now start the FCoE Controller in a DISABLED state such that configurations can
+now be made before the FLOGI.
+
+@Bhanu
+
+I implemented the changes for bnx2fc and I think it should be mostly fine. I
+wasn't able to test the code, so I'd appreciate any feedback about whether
+there are bugs or not.
+
+@Bart:
+
+Fixed the 'const char *p' and cast issue in fcoe_parse_mode().
+
+Now checking for string length and passing correctly NULL terminated string
+to fcoe_parse_mode().
+
+Thanks, //Rob
+
+---
+
+v1 covermail
+
+The following series implements a move from using module parameters
+as control interfaces to /sys/bus/fcoe based interfaces. A sysfs infrastructure
+was added to the kernel a few cycles ago, this series builds on that work.
+
+It moves the create, vn2vn_create, destroy, enable and disable interfaces
+from /sys/module/libfcoe/parameters/ to various places under /sys/bus/fcoe/.
+These interfaces simply are not module configurations- they are control
+interfaces.
+
+A second goal of this series is to change the initialization sequence for
+a FCoE device. The result of this series is that interfaces created using
+libfcoe.ko interfaces (i.e. fcoe.ko or bnx2fc.ko) will have the following
+starting steps-
+
+1) Create/alloc the port
+   - Allocate kernel memory and create per-instance sysfs devices
+   - No discovery or login
+
+2) Configure the port
+   - Change mode, set ddp_min, etc...
+
+3) Start the port
+   - Begins discovery and/or login (depending on mode)
+
+4) Destroy the port
+   - Logout and free all memory
+
+I'm looking for feedback on using sysfs files as control interfaces that
+the user (application) would write interface names to. I modeled this
+series off of the bonding sysfs interface, but it was suggested to me that
+it might not be a good example. I belive bonding uses two values per-file
+a '+' or a '-" to add or delete and then the ifname apended. I am simply
+writing the ifname to the ctlr_create or ctlr_destroy.
+
+Series compiled and tested against v3.5. libfcoe.ko compile warning fixed
+upstream after v3.5, anyone who compiles this can ignore section mismatch
+warning. Also note that a modified fcoemon is needed to use the fcoe system
+service against this kernel modification. I'd be happy to provide that
+fcoemon code on request.
+
+---
+
+Robert Love (5):
+      libfcoe: Save some memory and optimize name lookups
+      libfcoe: Add fcoe_sysfs debug logging level
+      libfcoe, fcoe, bnx2fc: Add new fcoe control interface
+      fcoe: Use the fcoe_sysfs control interface
+      bnx2fc: Use the fcoe_sysfs control interface
+
+
+ Documentation/ABI/testing/sysfs-bus-fcoe |   42 +++++++
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c        |  169 ++++++++++++++++++++++-----
+ drivers/scsi/fcoe/fcoe.c                 |  148 +++++++++++++++++++++---
+ drivers/scsi/fcoe/fcoe_ctlr.c            |   17 +--
+ drivers/scsi/fcoe/fcoe_sysfs.c           |  186 +++++++++++++++++++++++++-----
+ drivers/scsi/fcoe/fcoe_transport.c       |  104 +++++++++++++++++
+ drivers/scsi/fcoe/libfcoe.h              |   11 +-
+ include/scsi/fcoe_sysfs.h                |   11 ++
+ include/scsi/libfcoe.h                   |   16 ++-
+ 9 files changed, 608 insertions(+), 96 deletions(-)
 
 -- 
-1.7.10
 
-Cc: "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Ben Dooks <ben-linux-elnMNo+KYs3YtjvyW6yDsg@public.gmane.org>
-Cc: Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-Cc: Florian Tobias Schandinat <FlorianSchandinat-Mmb7MZpHnFY@public.gmane.org>
-Cc: Grant Likely <grant.likely-s3s/WqlpOiPyB63q8FvJNQ@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: Jochen Friedrich <jochen-NIgtFMG+Po8@public.gmane.org>
-Cc: Kukjin Kim <kgene.kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Cc: Mike Turquette <mturquette-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Pavel Machek <pavel-AlSwsSmVLrQ@public.gmane.org>
-Cc: Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
-Cc: Wan ZongShun <mcuos.com-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-Cc: linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-Cc: linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-
-------------------------------------------------------------------------------
-Don't let slow site performance ruin your business. Deploy New Relic APM
-Deploy New Relic app performance management and know exactly
-what is happening inside your Ruby, Python, PHP, Java, and .NET app
-Try New Relic at no cost today and get our sweet Data Nerd shirt too!
-http://p.sf.net/sfu/newrelic-dev2dev
+Thanks, //Rob
