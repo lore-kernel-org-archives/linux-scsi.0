@@ -1,7 +1,7 @@
 From: David Howells <dhowells@redhat.com>
-Subject: [PATCH/GIT PULL] UAPI: (Scripted) Disintegrate include/scsi
-Date: Tue, 09 Oct 2012 14:50:11 +0100
-Message-ID: <31138.1349790611@warthog.procyon.org.uk>
+Subject: [PATCH/GIT PULL] UAPI: (Scripted) Disintegrate include/scsi/fc
+Date: Tue, 09 Oct 2012 14:51:19 +0100
+Message-ID: <31155.1349790679@warthog.procyon.org.uk>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: JBottomley@parallels.com
@@ -23,7 +23,7 @@ for the strictly kernel internal stuff.
 
 This patch can be pulled from:
 
-	git://git.infradead.org/users/dhowells/linux-headers.git tags/disintegrate-scsi-20121009
+	git://git.infradead.org/users/dhowells/linux-headers.git tags/disintegrate-fc-20121009
 
 Signed-off-by: David Howells <dhowells@redhat.com>
 Acked-by: Arnd Bergmann <arnd@arndb.de>
@@ -32,34 +32,38 @@ Acked-by: Michael Kerrisk <mtk.manpages@gmail.com>
 Acked-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
 Acked-by: Dave Jones <davej@redhat.com>
 ---
-diff --git a/include/scsi/Kbuild b/include/scsi/Kbuild
-index f2b9491..562ff9d 100644
---- a/include/scsi/Kbuild
-+++ b/include/scsi/Kbuild
-@@ -1,4 +1 @@
--header-y += scsi_netlink.h
--header-y += scsi_netlink_fc.h
--header-y += scsi_bsg_fc.h
- header-y += fc/
-diff --git a/include/uapi/scsi/Kbuild b/include/uapi/scsi/Kbuild
-index 29a87dd..75746d5 100644
---- a/include/uapi/scsi/Kbuild
-+++ b/include/uapi/scsi/Kbuild
-@@ -1,2 +1,5 @@
+diff --git a/include/scsi/fc/Kbuild b/include/scsi/fc/Kbuild
+index 5660381..e69de29 100644
+--- a/include/scsi/fc/Kbuild
++++ b/include/scsi/fc/Kbuild
+@@ -1,4 +0,0 @@
+-header-y += fc_els.h
+-header-y += fc_fs.h
+-header-y += fc_gs.h
+-header-y += fc_ns.h
+diff --git a/include/uapi/scsi/fc/Kbuild b/include/uapi/scsi/fc/Kbuild
+index aafaa5a..5ead9fa 100644
+--- a/include/uapi/scsi/fc/Kbuild
++++ b/include/uapi/scsi/fc/Kbuild
+@@ -1 +1,5 @@
  # UAPI Header export list
- header-y += fc/
-+header-y += scsi_bsg_fc.h
-+header-y += scsi_netlink.h
-+header-y += scsi_netlink_fc.h
-diff --git a/include/scsi/scsi_bsg_fc.h b/include/uapi/scsi/scsi_bsg_fc.h
++header-y += fc_els.h
++header-y += fc_fs.h
++header-y += fc_gs.h
++header-y += fc_ns.h
+diff --git a/include/scsi/fc/fc_els.h b/include/uapi/scsi/fc/fc_els.h
 similarity index 100%
-rename from include/scsi/scsi_bsg_fc.h
-rename to include/uapi/scsi/scsi_bsg_fc.h
-diff --git a/include/scsi/scsi_netlink.h b/include/uapi/scsi/scsi_netlink.h
+rename from include/scsi/fc/fc_els.h
+rename to include/uapi/scsi/fc/fc_els.h
+diff --git a/include/scsi/fc/fc_fs.h b/include/uapi/scsi/fc/fc_fs.h
 similarity index 100%
-rename from include/scsi/scsi_netlink.h
-rename to include/uapi/scsi/scsi_netlink.h
-diff --git a/include/scsi/scsi_netlink_fc.h b/include/uapi/scsi/scsi_netlink_fc.h
+rename from include/scsi/fc/fc_fs.h
+rename to include/uapi/scsi/fc/fc_fs.h
+diff --git a/include/scsi/fc/fc_gs.h b/include/uapi/scsi/fc/fc_gs.h
 similarity index 100%
-rename from include/scsi/scsi_netlink_fc.h
-rename to include/uapi/scsi/scsi_netlink_fc.h
+rename from include/scsi/fc/fc_gs.h
+rename to include/uapi/scsi/fc/fc_gs.h
+diff --git a/include/scsi/fc/fc_ns.h b/include/uapi/scsi/fc/fc_ns.h
+similarity index 100%
+rename from include/scsi/fc/fc_ns.h
+rename to include/uapi/scsi/fc/fc_ns.h
