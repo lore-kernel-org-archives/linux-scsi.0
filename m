@@ -1,61 +1,51 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: standards revisions
-Date: Tue, 09 Oct 2012 11:55:17 -0700
-Message-ID: <1349808917.3776.54.camel@haakon2.linux-iscsi.org>
-References: <20121007014900.GA30316@infradead.org>
-	 <1349590310.9312.163.camel@haakon2.linux-iscsi.org>
-	 <20121007145154.GA30586@infradead.org>
-	 <1349631097.13843.5.camel@haakon2.linux-iscsi.org>
-	 <20121008034448.GA6919@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] qla2xxx: Add missing ->vport_slock while calling qlt_update_vp_map
+Date: Tue,  9 Oct 2012 19:12:11 +0000
+Message-ID: <1349809931-9079-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20121008034448.GA6919@infradead.org>
 Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Roland Dreier <roland@kernel.org>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Arun Easi <arun.easi@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jiri Kosina <jkosina@suse.cz>, Roland Dreier <roland@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2012-10-07 at 23:44 -0400, Christoph Hellwig wrote:
-> On Sun, Oct 07, 2012 at 10:31:37AM -0700, Nicholas A. Bellinger wrote:
-> > Regardless of if an virtual backend reports a SPC-3 version (0x05) in
-> > INQUIRY response, an initiator is still allowed to fall back to using
-> > legacy SCSI-2 reservations instead of SPC-3 persistent reservations.  I
-> > can think of at least one mainstream SCSI initiator that does this.
-> 
-> Yes, but we have a different code path for the mixed SCSI-2/SPC-3
-> reservations from the pure SCSI-2 mode, based on the function pointers
-> set up in core_setup_reservations().  As far as I can see we could
-> only reach the SCSI-2 path there for a pscsi device that has the
-> emulate_reservations flag set, and even then we would never actually hit
-> the code the function pointers point to as we don't actually support
-> emulated reservations for pscsi.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Ok, I see what your getting now wrt to dead code during ALUA/PR init..
+All other callers of qlt_update_vp_map() already hold ->vport_slock
+while updating the vp target map, so go ahead and add the missing
+->vport_slock within qla24xx_disable_vp() code.
 
-So yes, the two SPC2_ALUA_DISABLED and SPC2_RESERVATIONS cases are not
-ever reached, and where originally intended to disable this emulation
-for virtual backends based upon se_subsystem_api->get_device_rev()
+Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: Arun Easi <arun.easi@qlogic.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Jiri Kosina <jkosina@suse.cz>
+Cc: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/scsi/qla2xxx/qla_mid.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-> 
-> > Also, I think your mistaken about ALUA and SCSI-2 compatibility.  ALUA
-> > is an SPC-3 and above specific feature.
-> 
-> What I mean is that int core_setup_alua again has a special code path
-> for < SCSI-3 levels, which has the same reachability issues as for the
-> reservations above.
-> 
-> > pSCSI has always NOP'ed the reservation + ALUA function pointers within
-> > core_setup_reservations() and core_setup_alua().
-> 
-> Unless the emulate_reservations or emulate_alua flags are set, in which
-> case we will set the other functions pointers.  That being said I can't
-> see why the function pointers are even needed, as the non-noop versions
-> are careful enough to do the right thing for pscsi as we'll never have
-> registrations set.  I'll send a series of patches to clean all this up.
-> 
-
-<nod>
-
-Thanks Christoph !
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 3e8b324..c7eb3bb 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -149,6 +149,7 @@ qla2x00_mark_vp_devices_dead(scsi_qla_host_t *vha)
+ int
+ qla24xx_disable_vp(scsi_qla_host_t *vha)
+ {
++	unsigned long flags;
+ 	int ret;
+ 
+ 	ret = qla24xx_control_vp(vha, VCE_COMMAND_DISABLE_VPS_LOGO_ALL);
+@@ -156,7 +157,9 @@ qla24xx_disable_vp(scsi_qla_host_t *vha)
+ 	atomic_set(&vha->loop_down_timer, LOOP_DOWN_TIME);
+ 
+ 	/* Remove port id from vp target map */
++	spin_lock_irqsave(&vha->hw->vport_slock, flags);
+ 	qlt_update_vp_map(vha, RESET_AL_PA);
++	spin_unlock_irqrestore(&vha->hw->vport_slock, flags);
+ 
+ 	qla2x00_mark_vp_devices_dead(vha);
+ 	atomic_set(&vha->vp_state, VP_FAILED);
+-- 
+1.7.2.5
