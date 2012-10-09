@@ -1,295 +1,118 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [RFC PATCH v4 5/5] bnx2fc: Use the fcoe_sysfs control interface
-Date: Tue, 09 Oct 2012 15:19:17 -0700
-Message-ID: <20121009221917.11139.9762.stgit@fritz>
-References: <20121009221850.11139.39902.stgit@fritz>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Wed, 10 Oct 2012 01:26:48 +0200
+Message-ID: <1656261.kxqxa9cdEn@vostro.rjw.lan>
+References: <50689794.50203@pobox.com> <1349691716.2615.34.camel@dabdike.int.hansenpartnership.com> <5073D047.5060601@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:31838 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754163Ab2JIWTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Oct 2012 18:19:18 -0400
-In-Reply-To: <20121009221850.11139.39902.stgit@fritz>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <5073D047.5060601@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, Oliver Neukum <oneukum@suse.de>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: nhorman@redhat.com, bvanassche@acm.org, gregkh@linuxfoundation.org, cleech@redhat.com, bprakash@broadcom.com, devel@open-fcoe.org
 
-This patch adds support for the new fcoe_sysfs
-control interface to bnx2fc.ko. It keeps the deprecated
-interface in tact and therefore either the legacy
-or the new control interfaces can be used. A mixed mode
-is not supported. A user must either use the new
-interfaces or the old ones, but not both.
+On Tuesday 09 of October 2012 15:20:39 Aaron Lu wrote:
+> On 10/08/2012 06:21 PM, James Bottomley wrote:
+> > On Mon, 2012-10-08 at 17:27 +0800, Aaron Lu wrote:
+> >> On Sun, Sep 30, 2012 at 03:43:27PM -0400, Alan Stern wrote:
+> >>> On Sun, 30 Sep 2012, Jeff Garzik wrote:
+> >>>
+> >>>> The simple fact of "only ZPODD devices out there are ATA" is not the 
+> >>>> decision-maker for where the code should live.  It is more a question 
+> >>>> where ZPODD belongs in the device/command set model currently employed.
+> >>>
+> >>> I don't really accept this argument.  It's a little like saying: The
+> >>> tty layer uses ioctl commands to control RS232 line settings; therefore
+> >>> RS232 settings should be handled in the VFS layer as part of the ioctl
+> >>> core.
+> >>>
+> >>> Regardless, according to Aaron the ZP power-off stuff is currently
+> >>> implemented only in ACPI, tied more closely to the ATA layer than the
+> >>> SCSI layer (though not part of either).  It is not part of the SCSI
+> >>> spec in any form.
+> >>
+> >> The mechanism of SATA ODD zero power model is specified in Mount Fuji
+> >> spec v8 section 15 describing what the ODD needs support, how to sense
+> >> if the ODD is ready to be powered off and on power up what needs to be
+> >> done, etc. And the actual power off and wakeup is implemented in ACPI
+> >> and SATA.
+> >>
+> >>> Now it's true that determining whether a device is
+> >>> in the right state for power to be removed involves sending a TEST UNIT
+> >>> READY command, which is of course a SCSI command.  This seems to be
+> >>> incidental to the overall scheme, however.
+> >>
+> >> I need to add that, there are 2 schemes to sense if the ODD is ready to
+> >> be powered off:
+> >> 1 the one I used here, by checking if the door is closed and no media
+> >>   inside with test_unit_ready;
+> >> 2 some ZP capable ODDs can report zero power ready(ZPReady) event to
+> >>   host when queried, eliminating the need of host checking the conditions.
+> > 
+> > The way I read the standard is that ZP ODD is a hack to try and get to
+> 
+> Thanks for your time.
+> 
+> > off and ZPready is the same hack but integrated into the standardised
+> > power management states (and hence available to normal power saving).
+> > The standard even implies ZP ODD is a less desirable hack by
+> > recommending the use of ZPready.
+> 
+> There are ZPODDs not supporting ZPready and I want to support them so
+> the sense scheme 1 is used.
+> 
+> > 
+> > The ZPready method, being an extension of the usual SCSI power
+> > management model, is pretty much what we support today (especially as
+> > the whole thing is timer driven from values in the mode page and happens
+> > pretty much invisibly to us).
+> > 
+> > Since the object is to make this as painless as possible, why don't we
+> > just implement ZPODD the way the spec recommends?  i.e. emulate the
+> > timers at an incredibly low level and intercept and emulate the non-disk
+> > commands listed in table 321.  I bet, in Linux, since we moved basically
+> > to GET_EVENT_STATUS_NOTIFICATION, that's the only one that actually
+> > needs an emulation.
+> > 
+> > The state model seems to work if you snoop the polled media event, so
+> > you wait for no media, then set your internal timer, stop it if we get a
+> > media change and power off the device after interval expiry.  Thereafter
+> > you emulate media event with no change keeping the device powered off.
+> > If a disc gets inserted or the eject button is pressed, you see that via
+> > the SATA PHY events (so wake the drive) and if the Upper Layer sends an
+> > unexpected command, you also power on the drive.
+> > 
+> > That way all of this should be nicely containable within SATA/ACPI.
+> 
+> Thanks for the suggestion, it is really something that I've never
+> thought of :-)
 
-The fcoe_ctlr's link state is now driven by both the
-netdev link state as well as the fcoe_ctlr_device's
-enabled attribute. The link must be up and the
-fcoe_ctlr_device must be enabled before the FCoE
-Controller starts discovery or login.
+Well, that's what I wanted to say previously, but James expressed it much
+better than I could. ;-)
 
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |  168 +++++++++++++++++++++++++++++++------
- 1 file changed, 139 insertions(+), 29 deletions(-)
+> But I was hoping to use the runtime pm framework to support ZPODD.
+> With your suggestion, I don't know how to do this. Maybe I can set the
+> scsi device representing the ODD to runtime suspended once I decided to
+> power it off and resume it when I power it up. But there is a problem,
+> that I'm setting a scsi device's runtime status in ATA layer, this
+> doesn't feel right. And someday, someone may want to add runtime pm
+> support for sr and the runtime status of the scsi device will be messed.
+> 
+> The reason I want to use runtime PM is, when the scsi device is runtime
+> suspended, its ancestor devices will have a chance to enter runtime
+> suspend state, e.g. the sata controller.
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 97d9a58..9e15998 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -62,6 +62,10 @@ static int bnx2fc_destroy(struct net_device *net_device);
- static int bnx2fc_enable(struct net_device *netdev);
- static int bnx2fc_disable(struct net_device *netdev);
- 
-+/* fcoe_syfs control interface handlers */
-+static int bnx2fc_ctlr_alloc(struct net_device *netdev);
-+static int bnx2fc_ctlr_enabled(struct fcoe_ctlr_device *cdev);
-+
- static void bnx2fc_recv_frame(struct sk_buff *skb);
- 
- static void bnx2fc_start_disc(struct bnx2fc_interface *interface);
-@@ -864,6 +868,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
- 				     u16 vlan_id)
- {
- 	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)context;
-+	struct fcoe_ctlr_device *cdev;
- 	struct fc_lport *lport;
- 	struct fc_lport *vport;
- 	struct bnx2fc_interface *interface, *tmp;
-@@ -925,28 +930,45 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
- 
- 		bnx2fc_link_speed_update(lport);
- 
-+		cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
-+
- 		if (link_possible && !bnx2fc_link_ok(lport)) {
--			/* Reset max recv frame size to default */
--			fc_set_mfs(lport, BNX2FC_MFS);
--			/*
--			 * ctlr link up will only be handled during
--			 * enable to avoid sending discovery solicitation
--			 * on a stale vlan
--			 */
--			if (interface->enabled)
--				fcoe_ctlr_link_up(ctlr);
-+			switch (cdev->enabled) {
-+			case FCOE_CTLR_DISABLED:
-+				pr_info("Link up while interface is disabled.\n");
-+				break;
-+			case FCOE_CTLR_ENABLED:
-+			case FCOE_CTLR_UNUSED:
-+				/* Reset max recv frame size to default */
-+				fc_set_mfs(lport, BNX2FC_MFS);
-+				/*
-+				 * ctlr link up will only be handled during
-+				 * enable to avoid sending discovery
-+				 * solicitation on a stale vlan
-+				 */
-+				if (interface->enabled)
-+					fcoe_ctlr_link_up(ctlr);
-+			};
- 		} else if (fcoe_ctlr_link_down(ctlr)) {
--			mutex_lock(&lport->lp_mutex);
--			list_for_each_entry(vport, &lport->vports, list)
--				fc_host_port_type(vport->host) =
--							FC_PORTTYPE_UNKNOWN;
--			mutex_unlock(&lport->lp_mutex);
--			fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
--			per_cpu_ptr(lport->stats,
--				    get_cpu())->LinkFailureCount++;
--			put_cpu();
--			fcoe_clean_pending_queue(lport);
--			wait_for_upload = 1;
-+			switch (cdev->enabled) {
-+			case FCOE_CTLR_DISABLED:
-+				pr_info("Link down while interface is disabled.\n");
-+				break;
-+			case FCOE_CTLR_ENABLED:
-+			case FCOE_CTLR_UNUSED:
-+				mutex_lock(&lport->lp_mutex);
-+				list_for_each_entry(vport, &lport->vports, list)
-+					fc_host_port_type(vport->host) =
-+					FC_PORTTYPE_UNKNOWN;
-+				mutex_unlock(&lport->lp_mutex);
-+				fc_host_port_type(lport->host) =
-+					FC_PORTTYPE_UNKNOWN;
-+				per_cpu_ptr(lport->stats,
-+					    get_cpu())->LinkFailureCount++;
-+				put_cpu();
-+				fcoe_clean_pending_queue(lport);
-+				wait_for_upload = 1;
-+			};
- 		}
- 	}
- 	mutex_unlock(&bnx2fc_dev_lock);
-@@ -1996,7 +2018,9 @@ static void bnx2fc_ulp_init(struct cnic_dev *dev)
- 		set_bit(BNX2FC_CNIC_REGISTERED, &hba->reg_with_cnic);
- }
- 
--
-+/**
-+ * Deperecated: Use bnx2fc_enabled()
-+ */
- static int bnx2fc_disable(struct net_device *netdev)
- {
- 	struct bnx2fc_interface *interface;
-@@ -2022,7 +2046,9 @@ static int bnx2fc_disable(struct net_device *netdev)
- 	return rc;
- }
- 
--
-+/**
-+ * Deprecated: Use bnx2fc_enabled()
-+ */
- static int bnx2fc_enable(struct net_device *netdev)
- {
- 	struct bnx2fc_interface *interface;
-@@ -2048,17 +2074,57 @@ static int bnx2fc_enable(struct net_device *netdev)
- }
- 
- /**
-- * bnx2fc_create - Create bnx2fc FCoE interface
-+ * bnx2fc_ctlr_enabled() - Enable or disable an FCoE Controller
-+ * @cdev: The FCoE Controller that is being enabled or disabled
-  *
-- * @buffer: The name of Ethernet interface to create on
-- * @kp:     The associated kernel param
-+ * fcoe_sysfs will ensure that the state of 'enabled' has
-+ * changed, so no checking is necessary here. This routine simply
-+ * calls fcoe_enable or fcoe_disable, both of which are deprecated.
-+ * When those routines are removed the functionality can be merged
-+ * here.
-+ */
-+static int bnx2fc_ctlr_enabled(struct fcoe_ctlr_device *cdev)
-+{
-+	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(cdev);
-+	struct fc_lport *lport = ctlr->lp;
-+	struct net_device *netdev = bnx2fc_netdev(lport);
-+
-+	switch (cdev->enabled) {
-+	case FCOE_CTLR_ENABLED:
-+		return bnx2fc_enable(netdev);
-+	case FCOE_CTLR_DISABLED:
-+		return bnx2fc_disable(netdev);
-+	case FCOE_CTLR_UNUSED:
-+	default:
-+		return -ENOTSUPP;
-+	};
-+}
-+
-+enum bnx2fc_create_link_state {
-+	BNX2FC_CREATE_LINK_DOWN,
-+	BNX2FC_CREATE_LINK_UP,
-+};
-+
-+/**
-+ * _bnx2fc_create() - Create bnx2fc FCoE interface
-+ * @netdev  :   The net_device object the Ethernet interface to create on
-+ * @fip_mode:   The FIP mode for this creation
-+ * @link_state: The ctlr link state on creation
-  *
-- * Called from sysfs.
-+ * Called from either the libfcoe 'create' module parameter
-+ * via fcoe_create or from fcoe_syfs's ctlr_create file.
-+ *
-+ * libfcoe's 'create' module parameter is deprecated so some
-+ * consolidation of code can be done when that interface is
-+ * removed.
-  *
-  * Returns: 0 for success
-  */
--static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
-+static int _bnx2fc_create(struct net_device *netdev,
-+			  enum fip_state fip_mode,
-+			  enum bnx2fc_create_link_state link_state)
- {
-+	struct fcoe_ctlr_device *cdev;
- 	struct fcoe_ctlr *ctlr;
- 	struct bnx2fc_interface *interface;
- 	struct bnx2fc_hba *hba;
-@@ -2153,7 +2219,15 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
- 	/* Make this master N_port */
- 	ctlr->lp = lport;
- 
--	if (!bnx2fc_link_ok(lport)) {
-+	cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
-+
-+	if (link_state == BNX2FC_CREATE_LINK_UP)
-+		cdev->enabled = FCOE_CTLR_ENABLED;
-+	else
-+		cdev->enabled = FCOE_CTLR_DISABLED;
-+
-+	if (link_state == BNX2FC_CREATE_LINK_UP &&
-+	    !bnx2fc_link_ok(lport)) {
- 		fcoe_ctlr_link_up(ctlr);
- 		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
- 		set_bit(ADAPTER_STATE_READY, &interface->hba->adapter_state);
-@@ -2161,7 +2235,10 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
- 
- 	BNX2FC_HBA_DBG(lport, "create: START DISC\n");
- 	bnx2fc_start_disc(interface);
--	interface->enabled = true;
-+
-+	if (link_state == BNX2FC_CREATE_LINK_UP)
-+		interface->enabled = true;
-+
- 	/*
- 	 * Release from kref_init in bnx2fc_interface_setup, on success
- 	 * lport should be holding a reference taken in bnx2fc_if_create
-@@ -2187,6 +2264,37 @@ mod_err:
- }
- 
- /**
-+ * bnx2fc_create() - Create a bnx2fc interface
-+ * @netdev  : The net_device object the Ethernet interface to create on
-+ * @fip_mode: The FIP mode for this creation
-+ *
-+ * Called from fcoe transport
-+ *
-+ * Returns: 0 for success
-+ */
-+static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
-+{
-+	return _bnx2fc_create(netdev, fip_mode, BNX2FC_CREATE_LINK_UP);
-+}
-+
-+/**
-+ * bnx2fc_ctlr_alloc() - Allocate a bnx2fc interface from fcoe_sysfs
-+ * @netdev: The net_device to be used by the allocated FCoE Controller
-+ *
-+ * This routine is called from fcoe_sysfs. It will start the fcoe_ctlr
-+ * in a link_down state. The allows the user an opportunity to configure
-+ * the FCoE Controller from sysfs before enabling the FCoE Controller.
-+ *
-+ * Creating in with this routine starts the FCoE Controller in Fabric
-+ * mode. The user can change to VN2VN or another mode before enabling.
-+ */
-+static int bnx2fc_ctlr_alloc(struct net_device *netdev)
-+{
-+	return _bnx2fc_create(netdev, FIP_MODE_FABRIC,
-+			      BNX2FC_CREATE_LINK_DOWN);
-+}
-+
-+/**
-  * bnx2fc_find_hba_for_cnic - maps cnic instance to bnx2fc hba instance
-  *
-  * @cnic:	Pointer to cnic device instance
-@@ -2311,6 +2419,7 @@ static struct fcoe_transport bnx2fc_transport = {
- 	.name = {"bnx2fc"},
- 	.attached = false,
- 	.list = LIST_HEAD_INIT(bnx2fc_transport.list),
-+	.alloc = bnx2fc_ctlr_alloc,
- 	.match = bnx2fc_match,
- 	.create = bnx2fc_create,
- 	.destroy = bnx2fc_destroy,
-@@ -2555,6 +2664,7 @@ module_init(bnx2fc_mod_init);
- module_exit(bnx2fc_mod_exit);
- 
- static struct fcoe_sysfs_function_template bnx2fc_fcoe_sysfs_templ = {
-+	.set_fcoe_ctlr_enabled = bnx2fc_ctlr_enabled,
- 	.get_fcoe_ctlr_link_fail = bnx2fc_ctlr_get_lesb,
- 	.get_fcoe_ctlr_vlink_fail = bnx2fc_ctlr_get_lesb,
- 	.get_fcoe_ctlr_miss_fka = bnx2fc_ctlr_get_lesb,
+You can add runtime PM support for sr that won't do anything hardware-specific
+and in addition to that you can do pm_runtime_get_sync() on the parent directly
+from the ATA layer when you know it is needed and pm_runtime_put() when you
+know it is safe for it to go to a low-power state.
 
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
