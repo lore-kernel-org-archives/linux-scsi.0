@@ -1,131 +1,137 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Tue, 09 Oct 2012 15:58:34 +0100
-Message-ID: <1349794714.2615.92.camel@dabdike.int.hansenpartnership.com>
-References: <50689794.50203@pobox.com>
-	  <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
-	  <20121008092703.GA2541@mint-spring.sh.intel.com>
-	 <1349691716.2615.34.camel@dabdike.int.hansenpartnership.com>
-	 <5073D047.5060601@intel.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] [RESEND] qla2xxx: fix potential deadlock on
+ ha->hardware_lock
+Date: Tue, 09 Oct 2012 11:47:47 -0700
+Message-ID: <1349808467.3776.48.camel@haakon2.linux-iscsi.org>
+References: <506D80C2.5040405@linux.vnet.ibm.com>
+	 <alpine.LNX.2.00.1210041500010.9942@pobox.suse.cz>
+	 <alpine.LNX.2.00.1210080922250.28357@pobox.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <5073D047.5060601@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1210080922250.28357@pobox.suse.cz>
+Sender: target-devel-owner@vger.kernel.org
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-driver@qlogic.com, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, target-devel <target-devel@vger.kernel.org>, Roland Dreier <roland@kernel.org>, Arun Easi <arun.easi@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2012-10-09 at 15:20 +0800, Aaron Lu wrote:
-> On 10/08/2012 06:21 PM, James Bottomley wrote:
-> > On Mon, 2012-10-08 at 17:27 +0800, Aaron Lu wrote:
-> >> On Sun, Sep 30, 2012 at 03:43:27PM -0400, Alan Stern wrote:
-> >>> On Sun, 30 Sep 2012, Jeff Garzik wrote:
-> >>>
-> >>>> The simple fact of "only ZPODD devices out there are ATA" is not the 
-> >>>> decision-maker for where the code should live.  It is more a question 
-> >>>> where ZPODD belongs in the device/command set model currently employed.
-> >>>
-> >>> I don't really accept this argument.  It's a little like saying: The
-> >>> tty layer uses ioctl commands to control RS232 line settings; therefore
-> >>> RS232 settings should be handled in the VFS layer as part of the ioctl
-> >>> core.
-> >>>
-> >>> Regardless, according to Aaron the ZP power-off stuff is currently
-> >>> implemented only in ACPI, tied more closely to the ATA layer than the
-> >>> SCSI layer (though not part of either).  It is not part of the SCSI
-> >>> spec in any form.
-> >>
-> >> The mechanism of SATA ODD zero power model is specified in Mount Fuji
-> >> spec v8 section 15 describing what the ODD needs support, how to sense
-> >> if the ODD is ready to be powered off and on power up what needs to be
-> >> done, etc. And the actual power off and wakeup is implemented in ACPI
-> >> and SATA.
-> >>
-> >>> Now it's true that determining whether a device is
-> >>> in the right state for power to be removed involves sending a TEST UNIT
-> >>> READY command, which is of course a SCSI command.  This seems to be
-> >>> incidental to the overall scheme, however.
-> >>
-> >> I need to add that, there are 2 schemes to sense if the ODD is ready to
-> >> be powered off:
-> >> 1 the one I used here, by checking if the door is closed and no media
-> >>   inside with test_unit_ready;
-> >> 2 some ZP capable ODDs can report zero power ready(ZPReady) event to
-> >>   host when queried, eliminating the need of host checking the conditions.
-> > 
-> > The way I read the standard is that ZP ODD is a hack to try and get to
+Hi Jiri, Andrew, Arun & Co,
+
+On Mon, 2012-10-08 at 09:23 +0200, Jiri Kosina wrote:
+> Lockdep reports:
 > 
-> Thanks for your time.
+> === [ cut here ] ===
+>  =========================================================
+>  [ INFO: possible irq lock inversion dependency detected ]
+>  3.6.0-0.0.0.28.36b5ec9-default #1 Not tainted
+>  ---------------------------------------------------------
+>  qla2xxx_1_dpc/368 just changed the state of lock:
+>   (&(&ha->vport_slock)->rlock){+.....}, at: [<ffffffffa009b377>] qla2x00_configure_hba+0x197/0x3c0 [qla2xxx]
+>  but this lock was taken by another, HARDIRQ-safe lock in the past:
+>   (&(&ha->hardware_lock)->rlock){-.....}
 > 
-> > off and ZPready is the same hack but integrated into the standardised
-> > power management states (and hence available to normal power saving).
-> > The standard even implies ZP ODD is a less desirable hack by
-> > recommending the use of ZPready.
+> and interrupts could create inverse lock ordering between them.
 > 
-> There are ZPODDs not supporting ZPready and I want to support them so
-> the sense scheme 1 is used.
-
-Right, but what I'm saying is that ZPODD looks like a hack until ZPready
-is fairly universally implemented.  ZPready makes far more sense since
-it's integrated into the usual SCSI power management, so ZPODD should
-have a limited shelf life.
-
-> > 
-> > The ZPready method, being an extension of the usual SCSI power
-> > management model, is pretty much what we support today (especially as
-> > the whole thing is timer driven from values in the mode page and happens
-> > pretty much invisibly to us).
-> > 
-> > Since the object is to make this as painless as possible, why don't we
-> > just implement ZPODD the way the spec recommends?  i.e. emulate the
-> > timers at an incredibly low level and intercept and emulate the non-disk
-> > commands listed in table 321.  I bet, in Linux, since we moved basically
-> > to GET_EVENT_STATUS_NOTIFICATION, that's the only one that actually
-> > needs an emulation.
-> > 
-> > The state model seems to work if you snoop the polled media event, so
-> > you wait for no media, then set your internal timer, stop it if we get a
-> > media change and power off the device after interval expiry.  Thereafter
-> > you emulate media event with no change keeping the device powered off.
-> > If a disc gets inserted or the eject button is pressed, you see that via
-> > the SATA PHY events (so wake the drive) and if the Upper Layer sends an
-> > unexpected command, you also power on the drive.
-> > 
-> > That way all of this should be nicely containable within SATA/ACPI.
+> other info that might help us debug this:
+>  Possible interrupt unsafe locking scenario:
 > 
-> Thanks for the suggestion, it is really something that I've never
-> thought of :-)
+>        CPU0                    CPU1
+>        ----                    ----
+>   lock(&(&ha->vport_slock)->rlock);
+>                                local_irq_disable();
+>                                lock(&(&ha->hardware_lock)->rlock);
+>                                lock(&(&ha->vport_slock)->rlock);
+>   <Interrupt>
+>     lock(&(&ha->hardware_lock)->rlock);
+> === [ cut here ] ===
 > 
-> But I was hoping to use the runtime pm framework to support ZPODD.
+> Fix the potential deadlock by disabling IRQs while holding ha->vport_slock.
+> 
+> Reported-and-tested-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+> ---
 
-Well, the runtime pm framework doesn't support the current SCSI power
-management states within the drive, that's why it makes sense to treat
-what is essentially a hack to them in the same manner.
+I'm fine with this patch and have applied to target-pending/queue for
+the moment.
 
-> With your suggestion, I don't know how to do this. Maybe I can set the
-> scsi device representing the ODD to runtime suspended once I decided to
-> power it off and resume it when I power it up. But there is a problem,
-> that I'm setting a scsi device's runtime status in ATA layer, this
-> doesn't feel right. And someday, someone may want to add runtime pm
-> support for sr and the runtime status of the scsi device will be messed.
+It will be moved into /master + included in the next PULL request once
+Linus merges the outstanding /for-next series into -rc0 code.
 
-No, if we ever actually supported the standard power management states,
-you'd simply be intercepting the SCSI commands that forced the state
-transitions (START_STOP_UNIT) and act when yours was forced.
+Also please have a look below for a few more related items I noticed
+while reviewing this patch..
 
-> The reason I want to use runtime PM is, when the scsi device is runtime
-> suspended, its ancestor devices will have a chance to enter runtime
-> suspend state, e.g. the sata controller.
+>  drivers/scsi/qla2xxx/qla_init.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+> index 799a58b..48fca47 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -2080,6 +2080,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+>  	uint8_t       domain;
+>  	char		connect_type[22];
+>  	struct qla_hw_data *ha = vha->hw;
+> +	unsigned long flags;
+>  
+>  	/* Get host addresses. */
+>  	rval = qla2x00_get_adapter_id(vha,
+> @@ -2154,9 +2155,9 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+>  	vha->d_id.b.area = area;
+>  	vha->d_id.b.al_pa = al_pa;
+>  
+> -	spin_lock(&ha->vport_slock);
+> +	spin_lock_irqsave(&ha->vport_slock, flags);
+>  	qlt_update_vp_map(vha, SET_AL_PA);
+> -	spin_unlock(&ha->vport_slock);
+> +	spin_unlock_irqrestore(&ha->vport_slock, flags);
+>  
+>  	if (!vha->flags.init_done)
+>  		ql_log(ql_log_info, vha, 0x2010,
+> 
 
-But this, I think, is why it looks odd.  You're implementing a lower
-state than standard SCSI power model which the current runtime pm
-doesn't support anyway.
+So while looking at other ->vport_slock + qlt_update_vp_map() usage, two
+more items caught my eye:
 
-There is, of course, the question of whether we *should* force the SCSI
-transitions in runtime pm ...  but that's orthogonal to this discussion.
+In qla_mid.c:qla24xx_disable_vp() code:
 
-James
+        ret = qla24xx_control_vp(vha, VCE_COMMAND_DISABLE_VPS_LOGO_ALL);
+        atomic_set(&vha->loop_state, LOOP_DOWN);
+        atomic_set(&vha->loop_down_timer, LOOP_DOWN_TIME);
+ 
+        /* Remove port id from vp target map */
+        qlt_update_vp_map(vha, RESET_AL_PA);
+ 
+        qla2x00_mark_vp_devices_dead(vha);
+        atomic_set(&vha->vp_state, VP_FAILED);
 
+AFAICT all callers of qlt_update_vp_map() into qla_target.c code should
+be holding ->vport_slock.  I'll send out a separate patch for this
+shortly.
 
+And in qla_init.c:qla2x00_init_rings() code:
+
+        for (que = 0; que < ha->max_rsp_queues; que++) {
+                rsp = ha->rsp_q_map[que];
+                if (!rsp)
+                        continue;
+                /* Initialize response queue entries */
+                qla2x00_init_response_q_entries(rsp);
+        }
+
+        spin_lock(&ha->vport_slock);
+
+        spin_unlock(&ha->vport_slock);
+
+        ha->tgt.atio_ring_ptr = ha->tgt.atio_ring;
+        ha->tgt.atio_ring_index = 0;
+        /* Initialize ATIO queue entries */
+        qlt_init_atio_q_entries(vha);
+
+The usage of ->vport_slock seems to be now either unnecessary, or a
+result of some bad merge outside of qla2xxx target mode. 
+
+Qlogic folks, can this (leftover..?) usage of ->vport_slock now be
+safety removed..?
+
+--nab
