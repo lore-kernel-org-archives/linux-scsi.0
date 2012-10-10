@@ -1,13 +1,13 @@
 From: Srinivas KANDAGATLA <srinivas.kandagatla@st.com>
-Subject: [PATCH 3.6.0- 2/6] scsi/mac_esp: use module_platform_driver macro
-Date: Wed, 10 Oct 2012 19:34:33 +0100
-Message-ID: <1349894073-8261-1-git-send-email-srinivas.kandagatla@st.com>
+Subject: [PATCH 3.6.0- 3/6] scsi/qlogicpti: use module_platform_driver macro
+Date: Wed, 10 Oct 2012 19:34:42 +0100
+Message-ID: <1349894082-8295-1-git-send-email-srinivas.kandagatla@st.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eu1sys200aog103.obsmtp.com ([207.126.144.115]:50742 "EHLO
-	eu1sys200aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755573Ab2JJSgA (ORCPT
+Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:49544 "EHLO
+	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753226Ab2JJSgC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Oct 2012 14:36:00 -0400
+	Wed, 10 Oct 2012 14:36:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
@@ -20,36 +20,36 @@ module_platform_driver.
 
 Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@st.com>
 ---
- drivers/scsi/mac_esp.c |   14 +-------------
+ drivers/scsi/qlogicpti.c |   14 +-------------
  1 files changed, 1 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/mac_esp.c b/drivers/scsi/mac_esp.c
-index 70eb1f7..3ad155e 100644
---- a/drivers/scsi/mac_esp.c
-+++ b/drivers/scsi/mac_esp.c
-@@ -621,21 +621,9 @@ static struct platform_driver esp_mac_driver = {
- 	},
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index b191dd5..449f64e 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -1473,21 +1473,9 @@ static struct platform_driver qpti_sbus_driver = {
+ 	.remove		= __devexit_p(qpti_sbus_remove),
  };
  
--static int __init mac_esp_init(void)
+-static int __init qpti_init(void)
 -{
--	return platform_driver_register(&esp_mac_driver);
+-	return platform_driver_register(&qpti_sbus_driver);
 -}
 -
--static void __exit mac_esp_exit(void)
+-static void __exit qpti_exit(void)
 -{
--	platform_driver_unregister(&esp_mac_driver);
+-	platform_driver_unregister(&qpti_sbus_driver);
 -}
 -
- MODULE_DESCRIPTION("Mac ESP SCSI driver");
- MODULE_AUTHOR("Finn Thain <fthain@telegraphics.com.au>");
- MODULE_LICENSE("GPL v2");
- MODULE_VERSION(DRV_VERSION);
- MODULE_ALIAS("platform:" DRV_MODULE_NAME);
+ MODULE_DESCRIPTION("QlogicISP SBUS driver");
+ MODULE_AUTHOR("David S. Miller (davem@davemloft.net)");
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION("2.1");
+ MODULE_FIRMWARE("qlogic/isp1000.bin");
 -
--module_init(mac_esp_init);
--module_exit(mac_esp_exit);
-+module_platform_driver(esp_mac_driver);
+-module_init(qpti_init);
+-module_exit(qpti_exit);
++module_platform_driver(qpti_sbus_driver);
 -- 
 1.7.0.4
 
