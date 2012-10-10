@@ -1,93 +1,72 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH 2/2] [SCSI] sd: update sd to use the new pm callbacks
-Date: Wed, 10 Oct 2012 15:28:06 +0800
-Message-ID: <1349854086-2502-3-git-send-email-aaron.lu@intel.com>
-References: <1349854086-2502-1-git-send-email-aaron.lu@intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] sd: Reshuffle init_sd to avoid crash
+Date: Wed, 10 Oct 2012 10:36:11 +0200
+Message-ID: <1349858171-29358-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:38350 "EHLO mga14.intel.com"
+Received: from cantor2.suse.de ([195.135.220.15]:53789 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753093Ab2JJH2h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Oct 2012 03:28:37 -0400
-In-Reply-To: <1349854086-2502-1-git-send-email-aaron.lu@intel.com>
+	id S1751318Ab2JJIgT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Oct 2012 04:36:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Joel D. Diaz" <joeldiaz@us.ibm.com>
 
-Update sd driver to use the callbacks defined in dev_pm_ops.
+scsi_register_driver will register a prep_fn() function, which
+in turn migh need to use the sd_cdp_pool for DIF.
+Which hasn't been initialised at this point, leading to
+a crash. So reshuffle the init_sd() and exit_sd() paths
+to have the driver registered last.
 
-sd_freeze is NULL, the bus level callback has taken care of quiescing
-the device so there should be nothing needs to be done here.
-Consequently, sd_thaw is not needed here either.
-
-Both suspend and poweroff shares the same routine sd_suspend, which will
-sync flush and then stop the drive, this is the same as before.
-
-sd_runtime_suspend also uses sd_suspend, so when a scsi disk is runtime
-suspended, it will be placed to stopped power state.
-
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Signed-off-by: Joel D. Diaz <joeldiaz@us.ibm.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/sd.c | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ drivers/scsi/sd.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 12f6fdf..09ab14a 100644
+index 12f6fdf..a88c34e 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -104,7 +104,7 @@ static void sd_unlock_native_capacity(struct gendisk *disk);
- static int  sd_probe(struct device *);
- static int  sd_remove(struct device *);
- static void sd_shutdown(struct device *);
--static int sd_suspend(struct device *, pm_message_t state);
-+static int sd_suspend(struct device *);
- static int sd_resume(struct device *);
- static void sd_rescan(struct device *);
- static int sd_done(struct scsi_cmnd *);
-@@ -423,15 +423,23 @@ static struct class sd_disk_class = {
- 	.dev_attrs	= sd_disk_attrs,
- };
+@@ -2960,10 +2960,6 @@ static int __init init_sd(void)
+ 	if (err)
+ 		goto err_out;
  
-+static struct dev_pm_ops sd_pm_ops = {
-+	.suspend		= sd_suspend,
-+	.resume			= sd_resume,
-+	.poweroff		= sd_suspend,
-+	.restore		= sd_resume,
-+	.runtime_suspend	= sd_suspend,
-+	.runtime_resume		= sd_resume,
-+};
+-	err = scsi_register_driver(&sd_template.gendrv);
+-	if (err)
+-		goto err_out_class;
+-
+ 	sd_cdb_cache = kmem_cache_create("sd_ext_cdb", SD_EXT_CDB_SIZE,
+ 					 0, 0, NULL);
+ 	if (!sd_cdb_cache) {
+@@ -2977,8 +2973,15 @@ static int __init init_sd(void)
+ 		goto err_out_cache;
+ 	}
+ 
++	err = scsi_register_driver(&sd_template.gendrv);
++	if (err)
++		goto err_out_driver;
 +
- static struct scsi_driver sd_template = {
- 	.owner			= THIS_MODULE,
- 	.gendrv = {
- 		.name		= "sd",
- 		.probe		= sd_probe,
- 		.remove		= sd_remove,
--		.suspend	= sd_suspend,
--		.resume		= sd_resume,
- 		.shutdown	= sd_shutdown,
-+		.pm		= &sd_pm_ops,
- 	},
- 	.rescan			= sd_rescan,
- 	.done			= sd_done,
-@@ -2896,7 +2904,7 @@ exit:
- 	scsi_disk_put(sdkp);
- }
+ 	return 0;
  
--static int sd_suspend(struct device *dev, pm_message_t mesg)
-+static int sd_suspend(struct device *dev)
- {
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
- 	int ret = 0;
-@@ -2911,7 +2919,7 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
- 			goto done;
- 	}
++err_out_driver:
++	mempool_destroy(sd_cdb_pool);
++
+ err_out_cache:
+ 	kmem_cache_destroy(sd_cdb_cache);
  
--	if ((mesg.event & PM_EVENT_SLEEP) && sdkp->device->manage_start_stop) {
-+	if (sdkp->device->manage_start_stop) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		ret = sd_start_stop_device(sdkp, 0);
- 	}
+@@ -3001,10 +3004,10 @@ static void __exit exit_sd(void)
+ 
+ 	SCSI_LOG_HLQUEUE(3, printk("exit_sd: exiting sd driver\n"));
+ 
++	scsi_unregister_driver(&sd_template.gendrv);
+ 	mempool_destroy(sd_cdb_pool);
+ 	kmem_cache_destroy(sd_cdb_cache);
+ 
+-	scsi_unregister_driver(&sd_template.gendrv);
+ 	class_unregister(&sd_disk_class);
+ 
+ 	for (i = 0; i < SD_MAJORS; i++)
 -- 
-1.7.12.21.g871e293
+1.7.4.2
 
