@@ -1,251 +1,139 @@
-From: Neil Horman <nhorman@tuxdriver.com>
-Subject: Re: [Open-FCoE] [RFC PATCH v4 0/5] Add new fcoe_sysfs based control
- interfaces to libfcoe, bnx2fc and fcoe
-Date: Wed, 10 Oct 2012 13:04:24 -0400
-Message-ID: <20121010170424.GA3416@hmsreliant.think-freely.org>
-References: <20121009221850.11139.39902.stgit@fritz>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/2] [SCSI] pm: use callbacks from dev_pm_ops for scsi
+ devices
+Date: Wed, 10 Oct 2012 14:32:13 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1210101414570.1170-100000@iolanthe.rowland.org>
+References: <1349854086-2502-2-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39537 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755628Ab2JJREf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Oct 2012 13:04:35 -0400
-Content-Disposition: inline
-In-Reply-To: <20121009221850.11139.39902.stgit@fritz>
+Received: from iolanthe.rowland.org ([192.131.102.54]:59566 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752293Ab2JJScO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Oct 2012 14:32:14 -0400
+In-Reply-To: <1349854086-2502-2-git-send-email-aaron.lu@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: linux-scsi@vger.kernel.org, cleech@redhat.com, bvanassche@acm.org, gregkh@linuxfoundation.org, nhorman@redhat.com, devel@open-fcoe.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-On Tue, Oct 09, 2012 at 03:18:50PM -0700, Robert Love wrote:
-> v4:
-> 
-> @Neil:
-> 	Policy is now:
-> 
-> 	'mode' attribute:
-> 	       input: "Fabric" "VN2VN" (case insensitive)
-> 	       output: "Fabric" "VN2VN"
-> 
-> 	'enabled' attribute:
-> 	       input: "1" "0"
-> 	       output: "1" "0"
-> 
-Thanks, for the series
-Acked-by: Neil Horman <nhorman@tuxdriver.com>
+On Wed, 10 Oct 2012, Aaron Lu wrote:
 
-> @Mark:
-> 	Initial patch now optimizes enum-to-string memory usage and
-> 	string retreival
+> Use of pm_message_t is deprecated and device driver is not supposed
+> to use that. This patch tries to migrate the SCSI bus level pm callbacks
+> to call device's pm callbacks defined in its driver's dev_pm_ops.
 > 
-> --
+> NO logic changes in scsi_pm.c, a new function called run_dev_callback is
+> added, which will choose the proper callback for the device based on the
+> mesg param passed in and then call that chosen callback function with
+> the help of pm generic function APIs. So run_dev_callback will be used
+> to replace the previous drv->suspend/drv->resume call.
 > 
-> v3:
+> Since only sd has implemented drv->suspend/drv->resume, and I'll update
+> sd driver to use the new callbacks in the following patch, there is no
+> need to fallback to call drv->suspend/drv->resume if dev_pm_ops is NULL.
 > 
-> This series applies to the v3.6 kernel.
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+
+I'm sorry, but this is a really ugly patch.
+
+>  drivers/scsi/scsi_pm.c | 85 +++++++++++++++++++++++++++++++++++++++-----------
+>  1 file changed, 66 insertions(+), 19 deletions(-)
 > 
-> @Bart: Fixed bus_create_file -> bus_attrs
->        Removed sscanf with non-NULL buffer, only checking for '1' or '0' now
->        Removed unnecessary whitespace change
-> 
-> @Bhanu: Incorporated check in _bnx2fc_create (thanks for the code)
-> 
-> Additional changes: Added check for 'enabled' in reset in fcoe.c
-> 	   	    Made mode strncmp case insensitive so user can
-> 		    # echo "vn2vn" > /sys/.../ctlr_0/mode # or
-> 		    # echo "VN2VN" > /sys/.../ctlr_0/mode # or even
-> 		    # echo "FaBRiC" > /sys/.../ctlr_0/mode
-> 
-> --
-> 
-> v2:
-> 
-> The following series adds /sys/bus/fcoe based control interfaces to
-> libfcoe. A fcoe_sysfs infrastructure was added to the kernel a few
-> cycles ago, this series builds on that work. The patches deprecate
-> the old create, vn2vn_create, destroy, enable and disable interfaces
-> that exist in /sys/module/libfcoe/parameters/.
-> 
-> Another goal of this series is to change the initialization sequence for
-> a FCoE device. The result of this series is that interfaces created using
-> libfcoe.ko interfaces (i.e. fcoe.ko or bnx2fc.ko) will have the following
-> starting steps-
-> 
-> 1) Create/alloc the FCoE Controller
->    - Allocate kernel memory and create per-instance sysfs devices
->    - The FCoE Controller is created disabled, no discovery or login
->      until it is enabled.
-> 
->    # echo eth3.172-fcoe > /sys/bus/fcoe/ctlr_create
-> 
-> 2) Configure the FCoE Controller
->    - Change mode, set ddp_min (future), set dcb_required (future), etc...
-> 
->    # echo 2 > /sys/bus/fcoe/ctlr_0/mode #sets mode to VN2VN
-> 
-> 3) Enable the FCoE Controller
->    - Begins discovery and login in 'Fabric' mode. or
->    - Begins FIP FCID claim process, discovery and login in 'VN2VN' mode
-> 
-> 4) Destroy the FCoE Controller
->    - Logout and free all memory
-> 
->    # echo eth3.172-fcoe > /sys/bus/fcoe/ctlr_destroy
-> 
-> This series converts both fcoe.ko and bnx2fc.ko to use the new
-> fcoe_sysfs based interfaces. The legacy interfaces can remain in kernel
-> for a kernel cycle or two before being removed.
-> 
-> I'm looking for feedback on the use of /sys/bus/fcoe/ctlr_create and
-> /sys/bus/fcoe/ctlr_destroy and that those interfaces take an ifname.
-> I modeled it after the bonding interface, but I'm not sure if that's
-> acceptible.
-> 
-> Incorpoated v1 feedback:
-> 
-> @Chris:
-> 
-> I spent a lot of time looking into FCF selection.
-> 
-> I implemented a POC series where I made the 'enabled' attribute
-> of a fcoe_fcf_device (i.e. /sys/bus/fcoe/devices/fcf_X) writable. The
-> fcoe_ctlr_device (i.e. /sys/bus/fcoe/devices/ctlr_X) has a
-> 'selection_strategy' attribute that would allow the user to toggle between
-> AUTO (current kernel selection algorithm) and USER (user writes to FCF's
-> 'selection' attribute).
-> 
-> I also wrote a little libudev based application that listened for fcoe_fcf_device
-> sysfs add/remove events. My plan was to have fcoemon monitor the discovery
-> of FCFs and then have it write to the 'selected' attribute of the FCF the user
-> had chosen.
-> 
-> Working on this series convinced me that any FCF selection needs further
-> consideration. First of all, it's fairly complicated to update the fcoe_ctlr.c
-> functional FIP code to handle FCF/fabric selection. Some questions that arise:
-> 
-> What triggers FLOGI/LOGO? We would now have link, enabled/disabled, selection
-> strategy and FCF selection to consider.
-> 
-> Can a new FCF be selected when one is already selected and an FLOGI has occurred?
-> Can a FCF be de-selected when the FLOGI has been sent?
-> 
-> Maybe we can only change things when disabled, that probably makes the most sense..
-> 
-> When does discovery happen? When the ctlr is created (no opportunity for
-> mode/selection strategy to be set)? When the mode is changed (same problem)?
-> What about when the cltr is enabled (but that's when we were going to FLOGI)?
-> 
-> This isn't a complete list of considerations, just what came to mind when writing
-> this. Anyway, the policies started to get complicated, or maybe my lack of policies
-> made the POC implementation more complicated. Either way it made me think about
-> use cases and how valuable FCF/fabric selection is.
-> 
-> After further consideration I think that most of the access decisions, when
-> connecting to a FC fabric, should be done by the fabric services. I'm not sure
-> the endstations should be whitelisting or blacklisting FCFs or even making
-> decisions about which ones to use when they're already prioritized amongst themselves
-> (on the same fabric). I think it might be nice for debugging, but I don't have a
-> need at the moment.
-> 
-> I think user selection may be more valuable with VN2VN, which may interest you
-> more anyway, as you said that you were running a VN2VN setup. Since there
-> aren't fabric services to rely on I can see it useful for VN_Ports to whitelist or
-> blacklist other VN_Ports. I think the first step to support something like this
-> would be to represent the fcoe_rports in fcoe_sysfs or in the FC Transport such
-> that they can be selected or de-slected.
-> 
-> I think that's a fine goal, but with this series, I think I'd like to focus on
-> just getting away from using module parameters for control interfaces. I think
-> this current series allows for selection as I've described above since it will
-> now start the FCoE Controller in a DISABLED state such that configurations can
-> now be made before the FLOGI.
-> 
-> @Bhanu
-> 
-> I implemented the changes for bnx2fc and I think it should be mostly fine. I
-> wasn't able to test the code, so I'd appreciate any feedback about whether
-> there are bugs or not.
-> 
-> @Bart:
-> 
-> Fixed the 'const char *p' and cast issue in fcoe_parse_mode().
-> 
-> Now checking for string length and passing correctly NULL terminated string
-> to fcoe_parse_mode().
-> 
-> Thanks, //Rob
-> 
-> ---
-> 
-> v1 covermail
-> 
-> The following series implements a move from using module parameters
-> as control interfaces to /sys/bus/fcoe based interfaces. A sysfs infrastructure
-> was added to the kernel a few cycles ago, this series builds on that work.
-> 
-> It moves the create, vn2vn_create, destroy, enable and disable interfaces
-> from /sys/module/libfcoe/parameters/ to various places under /sys/bus/fcoe/.
-> These interfaces simply are not module configurations- they are control
-> interfaces.
-> 
-> A second goal of this series is to change the initialization sequence for
-> a FCoE device. The result of this series is that interfaces created using
-> libfcoe.ko interfaces (i.e. fcoe.ko or bnx2fc.ko) will have the following
-> starting steps-
-> 
-> 1) Create/alloc the port
->    - Allocate kernel memory and create per-instance sysfs devices
->    - No discovery or login
-> 
-> 2) Configure the port
->    - Change mode, set ddp_min, etc...
-> 
-> 3) Start the port
->    - Begins discovery and/or login (depending on mode)
-> 
-> 4) Destroy the port
->    - Logout and free all memory
-> 
-> I'm looking for feedback on using sysfs files as control interfaces that
-> the user (application) would write interface names to. I modeled this
-> series off of the bonding sysfs interface, but it was suggested to me that
-> it might not be a good example. I belive bonding uses two values per-file
-> a '+' or a '-" to add or delete and then the ifname apended. I am simply
-> writing the ifname to the ctlr_create or ctlr_destroy.
-> 
-> Series compiled and tested against v3.5. libfcoe.ko compile warning fixed
-> upstream after v3.5, anyone who compiles this can ignore section mismatch
-> warning. Also note that a modified fcoemon is needed to use the fcoe system
-> service against this kernel modification. I'd be happy to provide that
-> fcoemon code on request.
-> 
-> ---
-> 
-> Robert Love (5):
->       libfcoe: Save some memory and optimize name lookups
->       libfcoe: Add fcoe_sysfs debug logging level
->       libfcoe, fcoe, bnx2fc: Add new fcoe control interface
->       fcoe: Use the fcoe_sysfs control interface
->       bnx2fc: Use the fcoe_sysfs control interface
-> 
-> 
->  Documentation/ABI/testing/sysfs-bus-fcoe |   42 +++++++
->  drivers/scsi/bnx2fc/bnx2fc_fcoe.c        |  169 ++++++++++++++++++++++-----
->  drivers/scsi/fcoe/fcoe.c                 |  148 +++++++++++++++++++++---
->  drivers/scsi/fcoe/fcoe_ctlr.c            |   17 +--
->  drivers/scsi/fcoe/fcoe_sysfs.c           |  186 +++++++++++++++++++++++++-----
->  drivers/scsi/fcoe/fcoe_transport.c       |  104 +++++++++++++++++
->  drivers/scsi/fcoe/libfcoe.h              |   11 +-
->  include/scsi/fcoe_sysfs.h                |   11 ++
->  include/scsi/libfcoe.h                   |   16 ++-
->  9 files changed, 608 insertions(+), 96 deletions(-)
-> 
-> -- 
-> 
-> Thanks, //Rob
-> _______________________________________________
-> devel mailing list
-> devel@open-fcoe.org
-> https://lists.open-fcoe.org/mailman/listinfo/devel
-> 
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index dc0ad85..aeb151e 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -16,32 +16,62 @@
+>  
+>  #include "scsi_priv.h"
+>  
+> +static int run_dev_callback(struct device *dev, pm_message_t mesg)
+> +{
+> +	int ret;
+> +
+> +	switch (mesg.event) {
+> +		case PM_EVENT_SUSPEND:
+> +			ret = pm_generic_suspend(dev);
+> +			break;
+> +		case PM_EVENT_RESUME:
+> +			ret = pm_generic_resume(dev);
+> +			break;
+> +		case PM_EVENT_FREEZE:
+> +			ret = pm_generic_freeze(dev);
+> +			break;
+> +		case PM_EVENT_THAW:
+> +			ret = pm_generic_thaw(dev);
+> +			break;
+> +		case PM_EVENT_HIBERNATE:
+> +			ret = pm_generic_poweroff(dev);
+> +			break;
+> +		case PM_EVENT_RESTORE:
+> +			ret = pm_generic_restore(dev);
+> +			break;
+> +		case PM_EVENT_AUTO_SUSPEND:
+> +			ret = pm_generic_runtime_suspend(dev);
+> +			break;
+> +		case PM_EVENT_AUTO_RESUME:
+> +			ret = pm_generic_runtime_resume(dev);
+> +			break;
+> +		default:
+> +			ret = -1;
+> +			break;
+> +	}
+> +
+> +	return ret;
+> +}
+
+> @@ -115,23 +145,40 @@ static int scsi_bus_suspend(struct device *dev)
+>  	return scsi_bus_suspend_common(dev, PMSG_SUSPEND);
+>  }
+>  
+> +static int scsi_bus_resume(struct device *dev)
+> +{
+> +	return scsi_bus_resume_common(dev, PMSG_RESUME);
+> +}
+> +
+>  static int scsi_bus_freeze(struct device *dev)
+>  {
+>  	return scsi_bus_suspend_common(dev, PMSG_FREEZE);
+>  }
+>  
+> +static int scsi_bus_thaw(struct device *dev)
+> +{
+> +	return scsi_bus_resume_common(dev, PMSG_THAW);
+> +}
+> +
+>  static int scsi_bus_poweroff(struct device *dev)
+>  {
+>  	return scsi_bus_suspend_common(dev, PMSG_HIBERNATE);
+>  }
+>  
+> +static int scsi_bus_restore(struct device *dev)
+> +{
+> +	return scsi_bus_resume_common(dev, PMSG_RESTORE);
+> +}
+> +
+
+This is just dumb.  Do the parts that depend on the event type here, in 
+these routines, instead of using a big "switch" statement somewhere 
+else.  For example, have these routines figure out which callback 
+routine or generic routine to use, and pass that pointer to 
+scsi_bus_{suspend,resume}_common() instead of the PMSG_* argument.
+
+One thing may help simplify the conversion (you can do this in a
+separate patch).  Linus's current git tree contains a new commit
+88d26136a256576e444db312179e17af6dd0ea87 (PM: Prevent runtime suspend
+during system resume) which makes some of the code in scsi_pm.c
+unnecessary.  The following two commits can now be reverted:
+
+	33a2285d96b5e7b9500612ec623bf4313397bb53
+	[SCSI] scsi_pm: set device runtime state before parent suspended
+
+	28fd00d42cca178638f51c08efa986a777c24a4b
+	[SCSI] runtime resume parent for child's system-resume
+
+This will reduce the amount of code you need to worry about.
+
+Alan Stern
+
