@@ -1,42 +1,44 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [SCSI] hpsa: dial down lockup detection during firmware flash
-Date: Wed, 10 Oct 2012 09:18:40 -0500
-Message-ID: <20121010141840.GE3546@beardog.cce.hp.com>
-References: <1349840858.6336.31.camel@deadeye.wl.decadent.org.uk>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/4 v4] More device removal fixes
+Date: Wed, 10 Oct 2012 17:05:34 +0200
+Message-ID: <50758EBE.7050202@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:30761 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756505Ab2JJOSw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Oct 2012 10:18:52 -0400
-Content-Disposition: inline
-In-Reply-To: <1349840858.6336.31.camel@deadeye.wl.decadent.org.uk>
+Received: from gerard.telenet-ops.be ([195.130.132.48]:54764 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932229Ab2JJPFi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Oct 2012 11:05:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: stable@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, scameron@beardog.cce.hp.com
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
+Fix a few race conditions that can be triggered by removing a device:
+- Avoid that request_fn() can be invoked on a dead queue.
+- Avoid that blk_cleanup_queue() can finish while request_fn is still
+   running.
+- Fix a race between starved list processing and device removal.
 
-Yes, I think so.  Thanks.
+These patches have been tested on top of commit 2474542f - a commit 
+between 3.6 and the upcoming 3.7-rc1.
 
--- steve
+Changes compared to v3:
+- Fixed a race condition by setting QUEUE_FLAG_DEAD earlier.
+- Added a patch for fixing a race between starved list processing
+   and device removal to this series.
 
-On Wed, Oct 10, 2012 at 04:47:38AM +0100, Ben Hutchings wrote:
-> Should this fix for hpsa be included in stable updates?  It looks like
-> it would be needed in 3.2.y and 3.4.y, as lockup detection was
-> introduced in 3.2 and the fix went into 3.5.
-> 
-> commit e85c59746957fd6e3595d02cf614370056b5816e
-> Author: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> Date:   Tue May 1 11:43:42 2012 -0500
-> 
->     [SCSI] hpsa: dial down lockup detection during firmware flash
-> 
-> Ben.
-> 
-> -- 
-> Ben Hutchings
-> Who are all these weirdos? - David Bowie, about L-Space IRC channel #afp
+Changes compared to v2:
+- Split second patch into two patches.
+- Refined patch descriptions.
 
+Changes compared to v1:
+- Included a patch to rename QUEUE_FLAG_DEAD.
+- Refined the descriptions of the __blk_run_queue_uncond() and
+   blk_cleanup_queue() functions.
+
+-- 
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
