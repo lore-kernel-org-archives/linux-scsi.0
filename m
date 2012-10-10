@@ -1,11 +1,11 @@
 From: Srinivas KANDAGATLA <srinivas.kandagatla@st.com>
-Subject: [PATCH 3.6.0- 0/6] SCSI: use module_platform_driver macro
-Date: Wed, 10 Oct 2012 19:34:18 +0100
-Message-ID: <1349894058-8194-1-git-send-email-srinivas.kandagatla@st.com>
+Subject: [PATCH 3.6.0- 1/6] scsi/jazz_esp: use module_platform_driver macro
+Date: Wed, 10 Oct 2012 19:34:26 +0100
+Message-ID: <1349894066-8227-1-git-send-email-srinivas.kandagatla@st.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eu1sys200aog115.obsmtp.com ([207.126.144.139]:45146 "EHLO
-	eu1sys200aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753226Ab2JJSgA (ORCPT
+Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:57718 "EHLO
+	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755516Ab2JJSgA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 10 Oct 2012 14:36:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
@@ -15,42 +15,40 @@ Cc: srinivas.kandagatla@st.com, fthain@telegraphics.com.au, JBottomley@Parallels
 
 From: Srinivas Kandagatla <srinivas.kandagatla@st.com>
 
-Running below Coccinelle lookup pattern like below on the 
-latest kernel showed about 52 hits. This patch series is a subset 
-of those 52 patches, so that it will be easy for maintainers to review.
-Hopefully these patches will get rid of some code duplication in kernel.
+This patch removes some code duplication by using
+module_platform_driver.
 
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@st.com>
+---
+ drivers/scsi/jazz_esp.c |   14 +-------------
+ 1 files changed, 1 insertions(+), 13 deletions(-)
 
-@  @
-- initfunc(void)
-- { return platform_driver_register(&dr); }
-
-...
-
-- module_init(initfunc);
-...
-
-- exitfunc(void)
-- { platform_driver_unregister(&dr); }
-
-...
-
-- module_exit(exitfunc);
-+ module_platform_driver(dr); 
-
-Srinivas Kandagatla (6):
-  scsi/jazz_esp: use module_platform_driver macro
-  scsi/mac_esp: use module_platform_driver macro
-  scsi/qlogicpti: use module_platform_driver macro
-  scsi/sni_53c710: use module_platform_driver macro
-  scsi/sun3x_esp: use module_platform_driver macro
-  scsi/sun_esp: use module_platform_driver macro
-
- drivers/scsi/jazz_esp.c   |   14 +-------------
- drivers/scsi/mac_esp.c    |   14 +-------------
- drivers/scsi/qlogicpti.c  |   14 +-------------
- drivers/scsi/sni_53c710.c |   14 +-------------
- drivers/scsi/sun3x_esp.c  |   14 +-------------
- drivers/scsi/sun_esp.c    |   14 +-------------
- 6 files changed, 6 insertions(+), 78 deletions(-)
+diff --git a/drivers/scsi/jazz_esp.c b/drivers/scsi/jazz_esp.c
+index 27cfb0c..35bfd0d 100644
+--- a/drivers/scsi/jazz_esp.c
++++ b/drivers/scsi/jazz_esp.c
+@@ -230,20 +230,8 @@ static struct platform_driver esp_jazz_driver = {
+ 	},
+ };
+ 
+-static int __init jazz_esp_init(void)
+-{
+-	return platform_driver_register(&esp_jazz_driver);
+-}
+-
+-static void __exit jazz_esp_exit(void)
+-{
+-	platform_driver_unregister(&esp_jazz_driver);
+-}
+-
+ MODULE_DESCRIPTION("JAZZ ESP SCSI driver");
+ MODULE_AUTHOR("Thomas Bogendoerfer (tsbogend@alpha.franken.de)");
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(DRV_VERSION);
+-
+-module_init(jazz_esp_init);
+-module_exit(jazz_esp_exit);
++module_platform_driver(esp_jazz_driver);
+-- 
+1.7.0.4
 
