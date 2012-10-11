@@ -1,95 +1,55 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v2 5/5] sd: update sd to use the new pm callbacks
-Date: Thu, 11 Oct 2012 13:08:11 +0800
-Message-ID: <1349932091-6856-6-git-send-email-aaron.lu@intel.com>
-References: <1349932091-6856-1-git-send-email-aaron.lu@intel.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] bfa: Add support to read/update the FRU data.
+Date: Thu, 11 Oct 2012 09:57:29 +0300
+Message-ID: <20121011065729.GE31607@elgon.mountain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:3751 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753680Ab2JKFIs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Oct 2012 01:08:48 -0400
-In-Reply-To: <1349932091-6856-1-git-send-email-aaron.lu@intel.com>
+Received: from acsinet15.oracle.com ([141.146.126.227]:45755 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755131Ab2JKG5y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Oct 2012 02:57:54 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
+To: kgudipat@brocade.com
+Cc: linux-scsi@vger.kernel.org
 
-Update sd driver to use the callbacks defined in dev_pm_ops.
+Hello Krishna Gudipati,
 
-sd_freeze is NULL, the bus level callback has taken care of quiescing
-the device so there should be nothing needs to be done here.
-Consequently, sd_thaw is not needed here either.
+The patch e6826c96ced7: "[SCSI] bfa: Add support to read/update the 
+FRU data." from Sep 21, 2012, leads to the following warning:
+drivers/scsi/bfa/bfad_bsg.c:114 bfad_iocmd_ioc_get_info()
+	 error: buffer overflow 'iocmd->adapter_hwpath' 32 <= 32
 
-suspend, poweroff and runtime suspend share the same routine sd_suspend,
-which will sync flush and then stop the drive, this is the same as before.
-
-resume, restore and runtime resume share the same routine sd_resume,
-which will start the drive by putting it into active power state, this
-is also the same as before.
-
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/scsi/sd.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8b6e004..6564305 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -104,7 +104,7 @@ static void sd_unlock_native_capacity(struct gendisk *disk);
- static int  sd_probe(struct device *);
- static int  sd_remove(struct device *);
- static void sd_shutdown(struct device *);
--static int sd_suspend(struct device *, pm_message_t state);
-+static int sd_suspend(struct device *);
- static int sd_resume(struct device *);
- static void sd_rescan(struct device *);
- static int sd_done(struct scsi_cmnd *);
-@@ -423,15 +423,23 @@ static struct class sd_disk_class = {
- 	.dev_attrs	= sd_disk_attrs,
- };
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 0ab1d40..555e7db 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -107,9 +107,10 @@ bfad_iocmd_ioc_get_info(struct bfad_s *bfad, void *cmd)
  
-+static const struct dev_pm_ops sd_pm_ops = {
-+	.suspend		= sd_suspend,
-+	.resume			= sd_resume,
-+	.poweroff		= sd_suspend,
-+	.restore		= sd_resume,
-+	.runtime_suspend	= sd_suspend,
-+	.runtime_resume		= sd_resume,
-+};
-+
- static struct scsi_driver sd_template = {
- 	.owner			= THIS_MODULE,
- 	.gendrv = {
- 		.name		= "sd",
- 		.probe		= sd_probe,
- 		.remove		= sd_remove,
--		.suspend	= sd_suspend,
--		.resume		= sd_resume,
- 		.shutdown	= sd_shutdown,
-+		.pm		= &sd_pm_ops,
- 	},
- 	.rescan			= sd_rescan,
- 	.done			= sd_done,
-@@ -2896,7 +2904,7 @@ exit:
- 	scsi_disk_put(sdkp);
- }
- 
--static int sd_suspend(struct device *dev, pm_message_t mesg)
-+static int sd_suspend(struct device *dev)
- {
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
- 	int ret = 0;
-@@ -2911,8 +2919,7 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
- 			goto done;
- 	}
- 
--	if (((mesg.event & PM_EVENT_SLEEP) || PMSG_IS_AUTO(mesg)) &&
--			sdkp->device->manage_start_stop) {
-+	if (sdkp->device->manage_start_stop) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		ret = sd_start_stop_device(sdkp, 0);
- 	}
--- 
-1.7.12.21.g871e293
+        /* set adapter hw path */
+        strcpy(iocmd->adapter_hwpath, bfad->pci_name);
+-       i = strlen(iocmd->adapter_hwpath) - 1;
+-       while (iocmd->adapter_hwpath[i] != '.')
+-               i--;
++       for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32; i++)
++               ;
+
+i is 32 here.
+
++       for (; iocmd->adapter_hwpath[++i] != ':' && i < BFA_STRING_32; )
++               ;
+
+i is 33 after the increment.
+
+        iocmd->adapter_hwpath[i] = '\0';
+
+We are placing a NUL char 2 places past the end of the array.
+
+        iocmd->status = BFA_STATUS_OK;
+        return 0;
+
+regards,
+dan carpenter
 
