@@ -1,57 +1,71 @@
-From: James Hogan <james.hogan@imgtec.com>
-Subject: Re: [RESEND PATCH] scsi: make struct scsi_varlen_cdb_hdr packed
-Date: Thu, 11 Oct 2012 15:10:40 +0100
-Message-ID: <5076D360.2010804@imgtec.com>
-References: <1349946933-30314-1-git-send-email-james.hogan@imgtec.com>  <1349951069.2425.44.camel@dabdike.int.hansenpartnership.com>  <5076AE3B.5040509@imgtec.com> <1349960296.2425.53.camel@dabdike.int.hansenpartnership.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v2 1/5] sd: put to stopped power state when runtime
+ suspend
+Date: Thu, 11 Oct 2012 10:50:37 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1210111039510.1170-100000@iolanthe.rowland.org>
+References: <1349932091-6856-2-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1349960296.2425.53.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:59639 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756925Ab2JKOui (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Oct 2012 10:50:38 -0400
+In-Reply-To: <1349932091-6856-2-git-send-email-aaron.lu@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-On 11/10/12 13:58, James Bottomley wrote:
-> On Thu, 2012-10-11 at 12:32 +0100, James Hogan wrote:
->> On 11/10/12 11:24, James Bottomley wrote:
->>> On Thu, 2012-10-11 at 10:15 +0100, James Hogan wrote:
->>>> The struct scsi_varlen_cdb_hdr is expected to be exactly 10 bytes when
->>>> used in struct osd_cdb_head, but it isn't marked as packed. Some
->>>> architectures will round the struct size up which triggers BUILD_BUG_ON
->>>> compile errors in osd_initiator.c when the outer structs are unexpected
->>>> sizes. This is fixed by marking struct scsi_varlen_cdb_hdr as __packed.
->>>
->>> What actual problem have you encountered? The structure is {u8[8], u16}
->>> which is naturally packed on every architecture I know about.  I've even
->>> built osd_initiator without problem on parisc, which has some of the
->>> most rigid alignment rules I've seen.
->>
->> Hi James,
->>
->> The alignment is fine (the offset of the u16 is 8 bytes), but
->> unfortunately with the metag port of gcc, sizeof(struct
->> scsi_varlen_cdb_hdr) is rounded up to a 4 byte boundary (even though the
->> largest data member alignment is only 2 bytes), which is 12 bytes
->> instead of 10.
-> 
-> That sounds to be a bug in your compiler ... it shouldn't be rounding up
-> structure sizes if the structure can fit in 10 bytes.  This isn't
-> happening in any other architecture that I know of (otherwise we'd have
-> had a reported build break).
+On Thu, 11 Oct 2012, Aaron Lu wrote:
 
-This was my initial thought, and I share your feeling that this isn't
-ideal compiler behaviour, however it's pretty much set in stone as part
-of our ABI now. Having talked to one of our compiler folk about it
-here's what he had to say:
-> In GCC 4.2 the following backends have STRUCTURE_SIZE_BOUNDARY set to >=32 which will trigger this behaviour:
+> When device is runtime suspended, put it to stopped power state to save
+> some power.
 > 
-> Alpha+unicos
-> Arm prior to AAPCS
-> Mt
+> This will also make the behaviour consistent with what the scsi_pm.c
+> thinks about sd as the comment says:
+> sd treats runtime suspend, system suspend and system hibernate identical.
+> With this patch, it is now identical.
+> And sd_shutdown will also do nothing when it finds the device has been
+> runtime suspended, if we do not spin down the disk in runtime suspend
+> by putting it into stopped power state, the disk will be shut down
+> incorrectly.
+> And the the same problem can be solved for runtime power off after
+> runtime suspended case by this change.
 > 
-> This is within standards to my knowledge.
+> With the current runtime scheme for disk, it will only be runtime
+> suspended when no process opens the disk, so this shouldn't happen a
+> lot, which makes it acceptable to spin down the disk when runtime
+> suspended. If some day a more aggressive runtime scheme is used, like
+> the 'request based runtime pm for disk' that Alan Stern and Lin Ming
+> has been working, we can introduce some policy to control this. But for
+> now, make it simple and correct by spinning down the disk.
+> 
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>  drivers/scsi/sd.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 12f6fdf..8b6e004 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2911,7 +2911,8 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+>  			goto done;
+>  	}
+>  
+> -	if ((mesg.event & PM_EVENT_SLEEP) && sdkp->device->manage_start_stop) {
+> +	if (((mesg.event & PM_EVENT_SLEEP) || PMSG_IS_AUTO(mesg)) &&
+> +			sdkp->device->manage_start_stop) {
 
-Cheers
-James
+This is more complicated than it needs to be.  Any suspend is either a
+system sleep or an autosuspend, so the test doesn't have to be there at
+all.  But since you remove the test anyway in patch 5/5, this doesn't
+matter very much.  If you end up resubmitting these patches, you might
+as well get rid of the test in this one.
+
+Overall this series is much better than before; thanks for rewriting 
+it.
+
+Alan Stern
+
