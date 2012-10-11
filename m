@@ -1,38 +1,49 @@
-From: James Hogan <james.hogan@imgtec.com>
-Subject: [RESEND PATCH] scsi: make struct scsi_varlen_cdb_hdr packed
-Date: Thu, 11 Oct 2012 10:15:33 +0100
-Message-ID: <1349946933-30314-1-git-send-email-james.hogan@imgtec.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [RESEND PATCH] scsi: make struct scsi_varlen_cdb_hdr packed
+Date: Thu, 11 Oct 2012 12:01:48 +0200
+Message-ID: <5076990C.4080406@acm.org>
+References: <1349946933-30314-1-git-send-email-james.hogan@imgtec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1349946933-30314-1-git-send-email-james.hogan@imgtec.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Hogan <james.hogan@imgtec.com>
+To: James Hogan <james.hogan@imgtec.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The struct scsi_varlen_cdb_hdr is expected to be exactly 10 bytes when
-used in struct osd_cdb_head, but it isn't marked as packed. Some
-architectures will round the struct size up which triggers BUILD_BUG_ON
-compile errors in osd_initiator.c when the outer structs are unexpected
-sizes. This is fixed by marking struct scsi_varlen_cdb_hdr as __packed.
+On 10/11/12 11:15, James Hogan wrote:
+> The struct scsi_varlen_cdb_hdr is expected to be exactly 10 bytes when
+> used in struct osd_cdb_head, but it isn't marked as packed. Some
+> architectures will round the struct size up which triggers BUILD_BUG_ON
+> compile errors in osd_initiator.c when the outer structs are unexpected
+> sizes. This is fixed by marking struct scsi_varlen_cdb_hdr as __packed.
+>
+> Signed-off-by: James Hogan <james.hogan@imgtec.com>
+> ---
+>   include/scsi/scsi.h |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+> index 66216c1..3beaef3 100644
+> --- a/include/scsi/scsi.h
+> +++ b/include/scsi/scsi.h
+> @@ -198,7 +198,7 @@ struct scsi_varlen_cdb_hdr {
+>   	__u8 additional_cdb_length;         /* total cdb length - 8 */
+>   	__be16 service_action;
+>   	/* service specific data follows */
+> -};
+> +} __packed;
+>
+>   static inline unsigned
+>   scsi_varlen_cdb_length(const void *hdr)
 
-Signed-off-by: James Hogan <james.hogan@imgtec.com>
----
- include/scsi/scsi.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hello James,
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 66216c1..3beaef3 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -198,7 +198,7 @@ struct scsi_varlen_cdb_hdr {
- 	__u8 additional_cdb_length;         /* total cdb length - 8 */
- 	__be16 service_action;
- 	/* service specific data follows */
--};
-+} __packed;
- 
- static inline unsigned
- scsi_varlen_cdb_length(const void *hdr)
--- 
-1.7.7.6
+Are you aware that __packed can also be used on individual struct 
+members and that doing so has a lower performance penalty than using the 
+__packed attribute on an entire struct ? See e.g. <linux/sysv_fs.h> for 
+an example.
+
+Bart.
