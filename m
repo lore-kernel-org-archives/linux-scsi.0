@@ -1,228 +1,78 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v3 4/5] pm: use callbacks from dev_pm_ops for scsi devices
-Date: Fri, 12 Oct 2012 14:59:37 +0800
-Message-ID: <1350025178-2976-5-git-send-email-aaron.lu@intel.com>
-References: <1350025178-2976-1-git-send-email-aaron.lu@intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 00/10] scsi: avoid linebreaks in syslog output
+Date: Fri, 12 Oct 2012 10:33:40 +0200
+Message-ID: <1350030830-25614-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50792 "EHLO mga01.intel.com"
+Received: from cantor2.suse.de ([195.135.220.15]:34550 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751837Ab2JLHAB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Oct 2012 03:00:01 -0400
-In-Reply-To: <1350025178-2976-1-git-send-email-aaron.lu@intel.com>
+	id S933255Ab2JLIdx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Oct 2012 04:33:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Use of pm_message_t is deprecated and device driver is not supposed
-to use that. This patch tries to migrate the SCSI bus level pm callbacks
-to call device's pm callbacks defined in its driver's dev_pm_ops.
+This patchset updates the SCSI midlayer to use dev_printk() instead
+of the simple printk(). The main objective here is to avoid line-breaks
+in syslog output; with the current state it's nearly impossible to match
+the output to the occurring device; under high load even the CDB will
+be split off into individual bytes, spread randomly across the lines.
+Which makes debugging via scsi_logging_level _really_ hard.
+In addition we'll be getting the syslog messages nicely prefixed with
+the device, which will make userspace logging daemons happy.
 
-This is achieved by finding out which device pm callback should be used
-in bus callback function, and then pass that callback function pointer
-as a param to the scsi_bus_{suspend,resume}_common routine, which will
-further pass that callback to scsi_dev_type_{suspend,resume} after
-proper handling.
+Before:
+[  297.300605] sd 2:0:3:2: Send: 
+[  297.300607] 0xffff8802348b0980 
+[  297.300610] sd 2:0:3:2: CDB: 
+[  297.300615] Test Unit Ready: 00 00 00 00 00 00
+[  297.300747] sd 2:0:3:2: Done: 
+[  297.300750] 0xffff8802348b0980 SUCCESS
+[  297.300753] sd 2:0:3:2:  
+[  297.300755] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[  297.300758] sd 2:0:3:2: CDB: 
+[  297.300764] Test Unit Ready: 00 00 00 00 00 00
+[  297.300766] sd 2:0:3:2:  
+[  297.300769] Sense Key : Unit Attention [current] 
+[  297.300771] Info fld=0x0
+[  297.300772] sd 2:0:3:2:  
+[  297.300776] Add. Sense: Capacity data has changed
 
-The special case for freeze in scsi_bus_suspend_common is not necessary
-since there is no high level SCSI driver has implemented freeze, so no
-need to runtime resume the device if it is in runtime suspended state
-for system freeze, just return like the system suspend/hibernate case.
+After:
+[  636.683556] sd 2:0:3:2: Send: 0xffff88043145eec0
+[  636.727856] sd 2:0:3:2: CDB: Test Unit Ready: 00 00 00 00 00 00
+[  636.785330] sd 2:0:3:2: Done: 0xffff88043145eec0 SUCCESS
+[  636.838228] sd 2:0:3:2: Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[  636.899099] sd 2:0:3:2: CDB: Test Unit Ready: 00 00 00 00 00 00
+[  636.955905] sd 2:0:3:2: Sense Key : Unit Attention [current] 
+[  637.069179] sd 2:0:3:2: Add. Sense: Capacity data has changed
 
-Since only sd has implemented drv->suspend/drv->resume, and I'll update
-sd driver to use the new callbacks in the following patch, there is no
-need to fallback to call drv->suspend/drv->resume if dev_pm_ops is NULL.
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/scsi/scsi_pm.c | 85 ++++++++++++++++++++++++++++++--------------------
- 1 file changed, 52 insertions(+), 33 deletions(-)
+Hannes Reinecke (10):
+  sg: Use dev_printk
+  sr: Use dev_printk()
+  scsi: Avoid linebreaks in syslog output
+  scsi: Use sdev_printk() for logging
+  scsi: use buffer for print_opcode_name()
+  scsi: use single printk call in scsi_print_command()
+  scsi: use buffer for scsi_show_result()
+  scsi: open-code scsi_decode_sense_buffer()
+  scsi: decode descriptor sense
+  scsi: use local buffer for decoding sense data
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index 9923b26..6e70a16 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -16,16 +16,14 @@
- 
- #include "scsi_priv.h"
- 
--static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
-+static int scsi_dev_type_suspend(struct device *dev, int (*cb)(struct device *))
- {
--	struct device_driver *drv;
- 	int err;
- 
- 	err = scsi_device_quiesce(to_scsi_device(dev));
- 	if (err == 0) {
--		drv = dev->driver;
--		if (drv && drv->suspend) {
--			err = drv->suspend(dev, msg);
-+		if (cb) {
-+			err = cb(dev);
- 			if (err)
- 				scsi_device_resume(to_scsi_device(dev));
- 		}
-@@ -34,14 +32,12 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
- 	return err;
- }
- 
--static int scsi_dev_type_resume(struct device *dev)
-+static int scsi_dev_type_resume(struct device *dev, int (*cb)(struct device *))
- {
--	struct device_driver *drv;
- 	int err = 0;
- 
--	drv = dev->driver;
--	if (drv && drv->resume)
--		err = drv->resume(dev);
-+	if (cb)
-+		err = cb(dev);
- 	scsi_device_resume(to_scsi_device(dev));
- 	dev_dbg(dev, "scsi resume: %d\n", err);
- 	return err;
-@@ -49,35 +45,33 @@ static int scsi_dev_type_resume(struct device *dev)
- 
- #ifdef CONFIG_PM_SLEEP
- 
--static int scsi_bus_suspend_common(struct device *dev, pm_message_t msg)
-+static int
-+scsi_bus_suspend_common(struct device *dev, int (*cb)(struct device *))
- {
- 	int err = 0;
- 
- 	if (scsi_is_sdev_device(dev)) {
- 		/*
--		 * sd is the only high-level SCSI driver to implement runtime
--		 * PM, and sd treats runtime suspend, system suspend, and
--		 * system hibernate identically (but not system freeze).
-+		 * All the high-level SCSI drivers that implement runtime
-+		 * PM treat runtime suspend, system suspend, and system
-+		 * hibernate identically.
- 		 */
--		if (pm_runtime_suspended(dev)) {
--			if (msg.event == PM_EVENT_SUSPEND ||
--			    msg.event == PM_EVENT_HIBERNATE)
--				return 0;	/* already suspended */
-+		if (pm_runtime_suspended(dev))
-+			return 0;
- 
--			/* wake up device so that FREEZE will succeed */
--			pm_runtime_resume(dev);
--		}
--		err = scsi_dev_type_suspend(dev, msg);
-+		err = scsi_dev_type_suspend(dev, cb);
- 	}
-+
- 	return err;
- }
- 
--static int scsi_bus_resume_common(struct device *dev)
-+static int
-+scsi_bus_resume_common(struct device *dev, int (*cb)(struct device *))
- {
- 	int err = 0;
- 
- 	if (scsi_is_sdev_device(dev))
--		err = scsi_dev_type_resume(dev);
-+		err = scsi_dev_type_resume(dev, cb);
- 
- 	if (err == 0) {
- 		pm_runtime_disable(dev);
-@@ -102,26 +96,49 @@ static int scsi_bus_prepare(struct device *dev)
- 
- static int scsi_bus_suspend(struct device *dev)
- {
--	return scsi_bus_suspend_common(dev, PMSG_SUSPEND);
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	return scsi_bus_suspend_common(dev, pm ? pm->suspend : NULL);
-+}
-+
-+static int scsi_bus_resume(struct device *dev)
-+{
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	return scsi_bus_resume_common(dev, pm ? pm->resume : NULL);
- }
- 
- static int scsi_bus_freeze(struct device *dev)
- {
--	return scsi_bus_suspend_common(dev, PMSG_FREEZE);
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	return scsi_bus_suspend_common(dev, pm ? pm->freeze : NULL);
-+}
-+
-+static int scsi_bus_thaw(struct device *dev)
-+{
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	return scsi_bus_resume_common(dev, pm ? pm->thaw : NULL);
- }
- 
- static int scsi_bus_poweroff(struct device *dev)
- {
--	return scsi_bus_suspend_common(dev, PMSG_HIBERNATE);
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	return scsi_bus_suspend_common(dev, pm ? pm->poweroff : NULL);
-+}
-+
-+static int scsi_bus_restore(struct device *dev)
-+{
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	return scsi_bus_resume_common(dev, pm ? pm->restore : NULL);
- }
- 
- #else /* CONFIG_PM_SLEEP */
- 
--#define scsi_bus_resume_common		NULL
- #define scsi_bus_prepare		NULL
- #define scsi_bus_suspend		NULL
-+#define scsi_bus_resume			NULL
- #define scsi_bus_freeze			NULL
-+#define scsi_bus_thaw			NULL
- #define scsi_bus_poweroff		NULL
-+#define scsi_bus_restore		NULL
- 
- #endif /* CONFIG_PM_SLEEP */
- 
-@@ -130,10 +147,11 @@ static int scsi_bus_poweroff(struct device *dev)
- static int scsi_runtime_suspend(struct device *dev)
- {
- 	int err = 0;
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
- 	dev_dbg(dev, "scsi_runtime_suspend\n");
- 	if (scsi_is_sdev_device(dev)) {
--		err = scsi_dev_type_suspend(dev, PMSG_AUTO_SUSPEND);
-+		err = scsi_dev_type_suspend(dev, pm ? pm->runtime_suspend : NULL);
- 		if (err == -EAGAIN)
- 			pm_schedule_suspend(dev, jiffies_to_msecs(
- 				round_jiffies_up_relative(HZ/10)));
-@@ -147,10 +165,11 @@ static int scsi_runtime_suspend(struct device *dev)
- static int scsi_runtime_resume(struct device *dev)
- {
- 	int err = 0;
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
- 	dev_dbg(dev, "scsi_runtime_resume\n");
- 	if (scsi_is_sdev_device(dev))
--		err = scsi_dev_type_resume(dev);
-+		err = scsi_dev_type_resume(dev, pm ? pm->runtime_resume : NULL);
- 
- 	/* Insert hooks here for targets, hosts, and transport classes */
- 
-@@ -229,11 +248,11 @@ void scsi_autopm_put_host(struct Scsi_Host *shost)
- const struct dev_pm_ops scsi_bus_pm_ops = {
- 	.prepare =		scsi_bus_prepare,
- 	.suspend =		scsi_bus_suspend,
--	.resume =		scsi_bus_resume_common,
-+	.resume =		scsi_bus_resume,
- 	.freeze =		scsi_bus_freeze,
--	.thaw =			scsi_bus_resume_common,
-+	.thaw =			scsi_bus_thaw,
- 	.poweroff =		scsi_bus_poweroff,
--	.restore =		scsi_bus_resume_common,
-+	.restore =		scsi_bus_restore,
- 	.runtime_suspend =	scsi_runtime_suspend,
- 	.runtime_resume =	scsi_runtime_resume,
- 	.runtime_idle =		scsi_runtime_idle,
+ drivers/scsi/constants.c  |  406 +++++++++++++++++++++++++--------------------
+ drivers/scsi/scsi.c       |   54 ++++---
+ drivers/scsi/scsi_error.c |  190 ++++++++++++++-------
+ drivers/scsi/scsi_lib.c   |   13 +-
+ drivers/scsi/scsi_scan.c  |   68 ++++----
+ drivers/scsi/sd.c         |   16 +-
+ drivers/scsi/sg.c         |  187 ++++++++++++---------
+ drivers/scsi/sr.c         |   47 +++---
+ drivers/scsi/sr.h         |    4 +
+ include/scsi/scsi_dbg.h   |    6 +-
+ include/scsi/scsi_eh.h    |    8 +-
+ 11 files changed, 588 insertions(+), 411 deletions(-)
+
 -- 
-1.7.12.21.g871e293
+1.7.4.2
 
