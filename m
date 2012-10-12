@@ -1,94 +1,50 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v2 4/5] pm: use callbacks from dev_pm_ops for scsi devices
-Date: Fri, 12 Oct 2012 14:48:23 +0800
-Message-ID: <20121012064822.GB2165@mint-spring.sh.intel.com>
-References: <1349932091-6856-5-git-send-email-aaron.lu@intel.com>
- <Pine.LNX.4.44L0.1210111051300.1170-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH v3 0/5] Migrate SCSI drivers to use dev_pm_ops
+Date: Fri, 12 Oct 2012 14:59:33 +0800
+Message-ID: <1350025178-2976-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:41359 "EHLO mga03.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:50792 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755877Ab2JLGs0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Oct 2012 02:48:26 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1210111051300.1170-100000@iolanthe.rowland.org>
+	id S1751837Ab2JLG7z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Oct 2012 02:59:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@vger.kernel.org>, Aaron Lu <aaron.lwe@gmail.com>
+To: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
 
-On Thu, Oct 11, 2012 at 10:57:26AM -0400, Alan Stern wrote:
-> I have a couple of small changes to suggest.  Nothing major.
-> 
-> On Thu, 11 Oct 2012, Aaron Lu wrote:
-> 
-> > @@ -102,26 +77,87 @@ static int scsi_bus_prepare(struct device *dev)
-> >  
-> >  static int scsi_bus_suspend(struct device *dev)
-> >  {
-> > -	return scsi_bus_suspend_common(dev, PMSG_SUSPEND);
-> > +	int err = 0;
-> > +	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-> > +
-> > +	if (scsi_is_sdev_device(dev)) {
-> > +		/*
-> > +		 * sd is the only high-level SCSI driver to implement runtime
-> > +		 * PM, and sd treats runtime suspend, system suspend, and
-> > +		 * system hibernate identically.
-> > +		 */
-> 
-> It would be better if we don't refer to sd specifically.  The comment 
-> could be changed to something like this:
-> 
-> 		/*
-> 		 * All the high-level SCSI drivers that implement runtime PM
-> 		 * treat runtime suspend, system suspend, and system
-> 		 * hibernate identically.
-> 		 */
+v3:
+Only patch 4 is modified:
+Remove the special case for system freeze in scsi_bus_suspend_common
+as pointed out by Alan Stern;
+Updated some comments;
+Removed the use of typedef (*pm_callback_t)(struct device *).
 
-OK, will do this.
+v2:
+Change the runtime suspend behaviour of sd driver by putting the device
+into stopped power state.
+Revert 2 patches which are no longer needed as pointed out by Alan Stern.
+Find out device callbacks in bus callbacks as suggested by Alan Stern.
 
-> 
-> >  static int scsi_bus_freeze(struct device *dev)
-> >  {
-> > -	return scsi_bus_suspend_common(dev, PMSG_FREEZE);
-> > +	int err = 0;
-> > +	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-> > +
-> > +	if (scsi_is_sdev_device(dev)) {
-> > +		/* wake up device so that FREEZE will succeed */
-> > +		if (pm_runtime_suspended(dev))
-> > +			pm_runtime_resume(dev);
-> 
-> I'm not sure why this is here.  If none of the high-level drivers 
-> implement FREEZE then it's not needed.
+Due to these changes, patch number grows from 2 -> 5.
 
-Agree.
-I should have checked the git log to see why it is here.
->From the log, it doesn't seem to have a reason.
-Thanks for pointing this out.
+v1:
+The 2 patches will migrate SCSI drivers to use the pm callbacks defined
+in dev_pm_ops as pm_message is deprecated and should not be used by driver.
+Bus level callback is changed to use callbacks defined in dev_pm_ops when
+needed and sd's pm callback is updated to use what are defined in dev_pm_ops.
 
-> 
-> 
-> >  static int scsi_bus_poweroff(struct device *dev)
-> >  {
-> > -	return scsi_bus_suspend_common(dev, PMSG_HIBERNATE);
-> > +	int err = 0;
-> > +	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-> > +
-> > +	if (scsi_is_sdev_device(dev)) {
-> > +		/*
-> > +		 * sd is the only high-level SCSI driver to implement runtime
-> > +		 * PM, and sd treats runtime suspend, system suspend, and
-> > +		 * system hibernate identically.
-> > +		 */
-> 
-> Same change as above for this comment.
+Aaron Lu (5):
+  sd: put to stopped power state when runtime suspend
+  Revert "[SCSI] scsi_pm: set device runtime state before parent
+    suspended"
+  Revert "[SCSI] runtime resume parent for child's system-resume"
+  pm: use callbacks from dev_pm_ops for scsi devices
+  sd: update sd to use the new pm callbacks
 
-OK.
+ drivers/scsi/scsi_pm.c | 97 +++++++++++++++++++++++++++-----------------------
+ drivers/scsi/sd.c      | 18 +++++++---
+ 2 files changed, 66 insertions(+), 49 deletions(-)
 
-And thanks for reviewing.
-
--Aaron
+-- 
+1.7.12.21.g871e293
 
