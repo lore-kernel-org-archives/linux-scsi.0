@@ -1,129 +1,98 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/10] scsi: use single printk call in scsi_print_command()
-Date: Fri, 12 Oct 2012 10:33:46 +0200
-Message-ID: <1350030830-25614-7-git-send-email-hare@suse.de>
+Subject: [PATCH 08/10] scsi: open-code scsi_decode_sense_buffer()
+Date: Fri, 12 Oct 2012 10:33:48 +0200
+Message-ID: <1350030830-25614-9-git-send-email-hare@suse.de>
 References: <1350030830-25614-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34567 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:34577 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933614Ab2JLId6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Oct 2012 04:33:58 -0400
+	id S933510Ab2JLIeA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Oct 2012 04:34:00 -0400
 In-Reply-To: <1350030830-25614-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Kay Sievers <kay@vrfy.org>
 
-scsi_print_command is using several calls to printk(), causing
-the output to be garbled. Modify it to use a single call to
-printk().
+Pointless, and actually wrong as there is no point in trying
+to decode invalid sense data.
 
 Cc: Kay Sievers <kay@vrfy.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c |   71 +++++++++++++++++++++++++++++++++++++++------
- 1 files changed, 61 insertions(+), 10 deletions(-)
+ drivers/scsi/constants.c |   43 +++++++++++++++++--------------------------
+ 1 files changed, 17 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index b469798..65367e8 100644
+index ded16d9..8bf2616 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -349,34 +349,85 @@ static int print_opcode_name(char *buf, int buf_len,
+@@ -1373,29 +1373,6 @@ scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *desc,
+ EXPORT_SYMBOL(scsi_cmd_print_sense_hdr);
  
- void __scsi_print_command(unsigned char *cdb)
+ static void
+-scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
+-		       struct scsi_sense_hdr *sshdr)
+-{
+-	int k, num, res;
+-    
+-	res = scsi_normalize_sense(sense_buffer, sense_len, sshdr);
+-	if (0 == res) {
+-		/* this may be SCSI-1 sense data */
+-		num = (sense_len < 32) ? sense_len : 32;
+-		printk("Unrecognized sense data (in hex):");
+-		for (k = 0; k < num; ++k) {
+-			if (0 == (k % 16)) {
+-				printk("\n");
+-				printk(KERN_INFO "        ");
+-			}
+-			printk("%02x ", sense_buffer[k]);
+-		}
+-		printk("\n");
+-		return;
+-	}
+-}
+-
+-static void
+ scsi_decode_sense_extras(const unsigned char *sense_buffer, int sense_len,
+ 			 struct scsi_sense_hdr *sshdr)
  {
--	int k, len;
-+	int k, len, rem, linelen;
- 	char cdb_str[64];
-+	char line[16 * 3 + 1];
- 
- 	print_opcode_name(cdb_str, 64, cdb, 0);
--	pr_info("%s", cdb_str);
- 	len = scsi_command_size(cdb);
- 	/* print out all bytes in cdb */
--	for (k = 0; k < len; ++k) 
--		printk(" %02x", cdb[k]);
--	printk("\n");
-+	switch (len) {
-+	case 6:
-+		pr_info("%s %6ph\n", cdb_str, cdb);
-+		break;
-+	case 10:
-+		pr_info("%s %10ph\n", cdb_str, cdb);
-+		break;
-+	case 12:
-+		pr_info("%s %12ph\n", cdb_str, cdb);
-+		break;
-+	case 16:
-+		pr_info("%s %16ph\n", cdb_str, cdb);
-+		break;
-+	default:
-+		pr_info("%s\n", cdb_str);
-+		rem = len;
-+		for (k = 0; k < len; k += 16) {
-+			linelen = min(rem, 16);
-+			rem -= 16;
-+
-+			hex_dump_to_buffer(cdb + k, linelen, 16, 1,
-+					   line, sizeof(line), false);
-+			pr_info("%s\n", line);
-+		}
-+		break;
-+	}
- }
- EXPORT_SYMBOL(__scsi_print_command);
- 
- void scsi_print_command(struct scsi_cmnd *cmd)
+@@ -1462,8 +1439,15 @@ void __scsi_print_sense(const char *name, const unsigned char *sense_buffer,
  {
--	int k;
-+	int k, rem, linelen;
- 	char cdb_str[64];
-+	char line[16 * 3 + 1];
+ 	struct scsi_sense_hdr sshdr;
  
- 	if (cmd->cmnd == NULL)
- 		return;
- 
- 	print_opcode_name(cdb_str, 64, cmd->cmnd, cmd->cmd_len);
--	scmd_printk(KERN_INFO, cmd, "CDB: %s:", cdb_str);
- 
- 	/* print out all bytes in cdb */
--	for (k = 0; k < cmd->cmd_len; ++k)
--		printk(" %02x", cmd->cmnd[k]);
--	printk("\n");
-+	switch (cmd->cmd_len) {
-+	case 6:
-+		scmd_printk(KERN_INFO, cmd, "CDB: %s: %6ph\n",
-+			    cdb_str, cmd->cmnd);
-+		break;
-+	case 10:
-+		scmd_printk(KERN_INFO, cmd, "CDB: %s: %10ph\n",
-+			    cdb_str, cmd->cmnd);
-+		break;
-+	case 12:
-+		scmd_printk(KERN_INFO, cmd, "CDB: %s: %12ph\n",
-+			    cdb_str, cmd->cmnd);
-+		break;
-+	case 16:
-+		scmd_printk(KERN_INFO, cmd, "CDB: %s: %16ph\n",
-+			    cdb_str, cmd->cmnd);
-+		break;
-+	default:
-+		scmd_printk(KERN_INFO, cmd, "CDB: %s\n", cdb_str);
-+		rem = cmd->cmd_len;
-+		for (k = 0; k < cmd->cmd_len; k += 16) {
-+			linelen = min(rem, 16);
-+			rem -= 16;
-+
-+			hex_dump_to_buffer(cmd->cmnd + k, linelen, 16, 1,
-+					   line, sizeof(line), false);
-+			scmd_printk(KERN_INFO, cmd, "        %d: %s\n",
-+				    k, line);
-+		}
-+		break;
++	if (!scsi_normalize_sense(sense_buffer, sense_len, &sshdr)) {
++		/* this may be SCSI-1 sense data */
++		int num = (sense_len < 32) ? sense_len : 32;
++		pr_info("%s: Unrecognized sense data (in hex):", name);
++		print_hex_dump(KERN_INFO, "        ", DUMP_PREFIX_OFFSET,
++			       16, 1, sense_buffer, num, false);
++		return;
 +	}
- }
- EXPORT_SYMBOL(scsi_print_command);
+ 	printk(KERN_INFO "%s: ", name);
+-	scsi_decode_sense_buffer(sense_buffer, sense_len, &sshdr);
+ 	scsi_show_sense_hdr(&sshdr);
+ 	scsi_decode_sense_extras(sense_buffer, sense_len, &sshdr);
+ 	printk(KERN_INFO "%s: ", name);
+@@ -1476,9 +1460,16 @@ void scsi_print_sense(char *name, struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_sense_hdr sshdr;
  
++	if (!scsi_normalize_sense(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
++				  &sshdr)) {
++		scmd_printk(KERN_INFO, cmd,
++			    "Unrecognized sense data (in hex):");
++		print_hex_dump(KERN_INFO, "        ", DUMP_PREFIX_OFFSET,
++			       16, 1, cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
++			       false);
++		return;
++	}
+ 	scmd_printk(KERN_INFO, cmd, " ");
+-	scsi_decode_sense_buffer(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
+-				 &sshdr);
+ 	scsi_show_sense_hdr(&sshdr);
+ 	scsi_decode_sense_extras(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
+ 				 &sshdr);
 -- 
 1.7.4.2
 
