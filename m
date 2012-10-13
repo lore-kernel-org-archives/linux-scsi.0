@@ -1,39 +1,16 @@
-From: Royaldoc International Globe <bensonblake_co@yahoo.com>
-Subject: enquiry
-Date: Sat, 13 Oct 2012 08:37:19 +0900
-Message-ID: <20121013083719.59176q18jivprbsw__32096.2331294597$1350091575$gmane$org@27.120.95.201>
-Reply-To: royaldoc@inbox.org.tw
+From: CHEVRON TEXACO DEVELOPMENT FUNDS <elba_estrada@inah.gob.mx>
+Subject: CONGRATULATIONS!
+Date: Sat, 13 Oct 2012 04:03:50 -0500 (CDT)
+Message-ID: <1444302763.170800.1350119030764.JavaMail.root__28536.8922901855$1350120107$gmane$org@tonali.inah.gob.mx>
+Reply-To: CHEVRON TEXACO DEVELOPMENT FUNDS <chevrontexaco@postribe.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from v-27-120-95-201.ub-freebit.net ([27.120.95.201]:39980 "EHLO
-	ns.pro.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752848Ab2JMBZl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Oct 2012 21:25:41 -0400
-Content-Disposition: inline
+Received: from ikel.inah.gob.mx ([201.148.81.60]:43151 "EHLO ikel.inah.gob.mx"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752767Ab2JMJVP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Oct 2012 05:21:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-
-
-
-Royaldoc International Globe,
-103, Park son road,
-Carlifonia,USA.
-63-1-3522 2501
-royaldoc@inbox.org.tw
-
-   We are interested in purchasing your products and I would like to  
-make an inquiry. can you inform me of your minimum order quantity? and  
-also your maximum order quantity, if there is any available sample do  
-let me know.
-
-
-Sincerely,
-Purchase Manager
-Alan Smith
 
