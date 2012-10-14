@@ -1,267 +1,274 @@
-From: Jim Meyering <jim@meyering.net>
-Subject: Re: [PATCH] bfa: avoid buffer overrun for 12-byte model name
-Date: Sun, 14 Oct 2012 09:53:14 +0200
-Message-ID: <87wqytbic5.fsf@rho.meyering.net>
-References: <1345481724-30108-1-git-send-email-jim@meyering.net>
-	<1345481724-30108-5-git-send-email-jim@meyering.net>
-	<B5EE62D80D50B84BB9E5174F7FCCE80A2839ABC2C4@HQ1-EXCH02.corp.brocade.com>
-	<87d32ll2nk.fsf@rho.meyering.net>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v3 4/5] pm: use callbacks from dev_pm_ops for scsi devices
+Date: Sun, 14 Oct 2012 10:15:45 +0200
+Message-ID: <2277287.MQtXyUZY5h@vostro.rjw.lan>
+References: <1350025178-2976-1-git-send-email-aaron.lu@intel.com> <1350025178-2976-5-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87d32ll2nk.fsf@rho.meyering.net> (Jim Meyering's message of
-	"Mon, 20 Aug 2012 22:38:39 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Krishna Gudipati <kgudipat@Brocade.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:45711 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752341Ab2JNIMH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Oct 2012 04:12:07 -0400
+In-Reply-To: <1350025178-2976-5-git-send-email-aaron.lu@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-Jim Meyering wrote:
-> Krishna Gudipati wrote:
->>> -----Original Message-----
->>> From: Jim Meyering [mailto:jim@meyering.net]
->>> Sent: Monday, August 20, 2012 9:55 AM
->>> To: linux-kernel@vger.kernel.org
->>> Cc: Jim Meyering; Jing Huang; Krishna Gudipati; James E.J. Bottomley; linux-
->>> scsi@vger.kernel.org
->>> Subject: [PATCH] bfa: avoid buffer overrun for 12-byte model name
->>>
->>> From: Jim Meyering <meyering@redhat.com>
->>>
->>> we use strncpy to copy a model name of length up to 15 (16, if you count the
->>> NUL), into a buffer of size 12 (BFA_FCS_PORT_SYMBNAME_MODEL_SZ).
->>> However, strncpy does not always NUL-terminate, so whenever the original
->>> model string has strlen >= 12, the following strncat reads beyond end of the -
->>> >sym_name buffer as it attempts to find end of string.
->>>
->>> bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric) {
->>> 	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
->>> 	...
->>> 	strncpy((char *)&port_cfg->sym_name, model,
->>> 		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
->>> 	strncat((char *)&port_cfg->sym_name,
->>> BFA_FCS_PORT_SYMBNAME_SEPARATOR,
->>> 		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
->>> 	...
->>>
->>> bfa_ioc_get_adapter_model(struct bfa_ioc_s *ioc, char *model) {
->>> 	struct bfi_ioc_attr_s	*ioc_attr;
->>>
->>> 	WARN_ON(!model);
->>> 	memset((void *)model, 0, BFA_ADAPTER_MODEL_NAME_LEN);
->>>
->>> BFA_ADAPTER_MODEL_NAME_LEN = 16
->>>
->>> Signed-off-by: Jim Meyering <meyering@redhat.com>
->>> ---
->>>  drivers/scsi/bfa/bfa_fcs.c | 1 +
->>>  1 file changed, 1 insertion(+)
->>>
->>> diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c index
->>> eaac57e..3329493 100644
->>> --- a/drivers/scsi/bfa/bfa_fcs.c
->>> +++ b/drivers/scsi/bfa/bfa_fcs.c
->>> @@ -713,6 +713,7 @@ bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s
->>> *fabric)
->>>  	/* Model name/number */
->>>  	strncpy((char *)&port_cfg->sym_name, model,
->>>  		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
->>> +	port_cfg->sym_name[BFA_FCS_PORT_SYMBNAME_MODEL_SZ - 1]
->>> = 0;
->>>  	strncat((char *)&port_cfg->sym_name,
->>> BFA_FCS_PORT_SYMBNAME_SEPARATOR,
->>>  		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
->>
->> Nacked-by: Krishna Gudipati <kgudipat@brocade.com>
->>
->> Hi Jim,
->>
->> This model number is of length 12 bytes and the logic added here will
->> reset the model last byte.
->> In addition strncat does not need the src to be null terminated, the
->> change does not compile even.
->> NACK to this change.
->
-> Hi Krishna,
->
-> Thanks for the quick feedback and sorry the patch wasn't quite right.
-> However, the log is accurate: there is at least a theoretical problem
-> when the string in "model" (a buffer of size 16 bytes) has strlen >= 12.
-> While strncat does not require that its second argument be NUL-terminated,
-> the first one (the destination) must be.  Otherwise, it has no way to
-> determine the end of the string to which it must append the source bytes.
+On Friday 12 of October 2012 14:59:37 Aaron Lu wrote:
+> Use of pm_message_t is deprecated and device driver is not supposed
+> to use that. This patch tries to migrate the SCSI bus level pm callba=
+cks
+> to call device's pm callbacks defined in its driver's dev_pm_ops.
 
-Ping?
-In case it wasn't clear, there *is* a risk of buffer overflow,
-which happens when strncpy makes it so strncat's destination
-is not NUL terminated.
+Well, as Yoda had said: =E2=80=9CDo or do not... there is no try.=E2=80=
+=9D ;-)
 
-If you require support for 12-byte model numbers, then
-you'll have to increase the length of that buffer
-(BFA_FCS_PORT_SYMBNAME_MODEL_SZ) to at least 13.
+The patch looks OK, though.
 
-I've just rebased, and thus confirmed that the patches still apply.
-
-> Here is a v2 patch to which I've added the requisite (char*) cast.
-> However, this whole function is rather unreadable due to the
-> repetition (12 times!) of "(char *)&port_cfg->sym_name".
-> In case someone prefers to factor out that repetition,
-> I've appended a larger, v3 patch to do that.
->
-> From 4d1ce4e5caf8a5041e5c4f3ae4deddb79c9e247c Mon Sep 17 00:00:00 2001
-> From: Jim Meyering <meyering@redhat.com>
-> Date: Sun, 29 Apr 2012 10:41:05 +0200
-> Subject: [PATCHv2] bfa: avoid buffer overrun for 12-byte model name
->
-> we use strncpy to copy a model name of length up to 15 (16, if you count
-> the NUL), into a buffer of size 12 (BFA_FCS_PORT_SYMBNAME_MODEL_SZ).
-> However, strncpy does not always NUL-terminate, so whenever the original
-> model string has strlen >= 12, the following strncat reads beyond end
-> of the ->sym_name buffer as it attempts to find end of string.
->
-> bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric)
-> {
-> 	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
-> 	...
-> 	strncpy((char *)&port_cfg->sym_name, model,
-> 		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
-> 	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-> 		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
-> 	...
->
-> bfa_ioc_get_adapter_model(struct bfa_ioc_s *ioc, char *model)
-> {
-> 	struct bfi_ioc_attr_s	*ioc_attr;
->
-> 	WARN_ON(!model);
-> 	memset((void *)model, 0, BFA_ADAPTER_MODEL_NAME_LEN);
->
-> BFA_ADAPTER_MODEL_NAME_LEN = 16
->
-> Signed-off-by: Jim Meyering <meyering@redhat.com>
+> This is achieved by finding out which device pm callback should be us=
+ed
+> in bus callback function, and then pass that callback function pointe=
+r
+> as a param to the scsi_bus_{suspend,resume}_common routine, which wil=
+l
+> further pass that callback to scsi_dev_type_{suspend,resume} after
+> proper handling.
+>=20
+> The special case for freeze in scsi_bus_suspend_common is not necessa=
+ry
+> since there is no high level SCSI driver has implemented freeze, so n=
+o
+> need to runtime resume the device if it is in runtime suspended state
+> for system freeze, just return like the system suspend/hibernate case=
+=2E
+>=20
+> Since only sd has implemented drv->suspend/drv->resume, and I'll upda=
+te
+> sd driver to use the new callbacks in the following patch, there is n=
+o
+> need to fallback to call drv->suspend/drv->resume if dev_pm_ops is NU=
+LL.
+>=20
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 > ---
->  drivers/scsi/bfa/bfa_fcs.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
-> index eaac57e..242c37f 100644
-> --- a/drivers/scsi/bfa/bfa_fcs.c
-> +++ b/drivers/scsi/bfa/bfa_fcs.c
-> @@ -713,6 +713,7 @@ bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric)
->  	/* Model name/number */
->  	strncpy((char *)&port_cfg->sym_name, model,
->  		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
-> +	((char *)&port_cfg->sym_name)[BFA_FCS_PORT_SYMBNAME_MODEL_SZ - 1] = 0;
->  	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
->  		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
->
-> --
-> 1.7.12
->
->
-> From d7f49a0a2f835ec4808772678fe6c4d595ffa8f5 Mon Sep 17 00:00:00 2001
-> From: Jim Meyering <meyering@redhat.com>
-> Date: Sun, 29 Apr 2012 10:41:05 +0200
-> Subject: [PATCHv3] bfa: avoid buffer overrun for 12-byte model name
->
-> we use strncpy to copy a model name of length up to 15 (16, if you count
-> the NUL), into a buffer of size 12 (BFA_FCS_PORT_SYMBNAME_MODEL_SZ).
-> However, strncpy does not always NUL-terminate, so whenever the original
-> model string has strlen >= 12, the following strncat reads beyond end
-> of the ->sym_name buffer as it attempts to find end of string.
-> Also, factor out the 12 uses of (char *)&port_cfg->sym_name.
->
-> bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric)
-> {
-> 	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
-> 	...
-> 	strncpy((char *)&port_cfg->sym_name, model,
-> 		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
-> 	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-> 		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
-> 	...
->
-> bfa_ioc_get_adapter_model(struct bfa_ioc_s *ioc, char *model)
-> {
-> 	struct bfi_ioc_attr_s	*ioc_attr;
->
-> 	WARN_ON(!model);
-> 	memset((void *)model, 0, BFA_ADAPTER_MODEL_NAME_LEN);
->
-> BFA_ADAPTER_MODEL_NAME_LEN = 16
->
-> Signed-off-by: Jim Meyering <meyering@redhat.com>
-> ---
->  drivers/scsi/bfa/bfa_fcs.c | 31 +++++++++++++------------------
->  1 file changed, 13 insertions(+), 18 deletions(-)
->
-> diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
-> index eaac57e..77d08f9 100644
-> --- a/drivers/scsi/bfa/bfa_fcs.c
-> +++ b/drivers/scsi/bfa/bfa_fcs.c
-> @@ -707,26 +707,26 @@ bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric)
->  	struct bfa_lport_cfg_s *port_cfg = &fabric->bport.port_cfg;
->  	char model[BFA_ADAPTER_MODEL_NAME_LEN] = {0};
->  	struct bfa_fcs_driver_info_s *driver_info = &fabric->fcs->driver_info;
-> +	char *s_name = (char *)&port_cfg->sym_name;
->
->  	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
->
->  	/* Model name/number */
-> -	strncpy((char *)&port_cfg->sym_name, model,
-> -		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
-> -	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-> +	strncpy(s_name, model, BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
-> +	s_name[BFA_FCS_PORT_SYMBNAME_MODEL_SZ - 1] = 0;
-> +	strncat(s_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
->  		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
->
->  	/* Driver Version */
-> -	strncat((char *)&port_cfg->sym_name, (char *)driver_info->version,
-> +	strncat(s_name, (char *)driver_info->version,
->  		BFA_FCS_PORT_SYMBNAME_VERSION_SZ);
-> -	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-> +	strncat(s_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
->  		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
->
->  	/* Host machine name */
-> -	strncat((char *)&port_cfg->sym_name,
-> -		(char *)driver_info->host_machine_name,
-> +	strncat(s_name, (char *)driver_info->host_machine_name,
->  		BFA_FCS_PORT_SYMBNAME_MACHINENAME_SZ);
-> -	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-> +	strncat(s_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
->  		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
->
->  	/*
-> @@ -735,23 +735,18 @@ bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric)
->  	 * OS name string and instead copy the entire OS info string (64 bytes).
->  	 */
->  	if (driver_info->host_os_patch[0] == '\0') {
-> -		strncat((char *)&port_cfg->sym_name,
-> -			(char *)driver_info->host_os_name,
-> +		strncat(s_name, (char *)driver_info->host_os_name,
->  			BFA_FCS_OS_STR_LEN);
-> -		strncat((char *)&port_cfg->sym_name,
-> -			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-> +		strncat(s_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
->  			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
->  	} else {
-> -		strncat((char *)&port_cfg->sym_name,
-> -			(char *)driver_info->host_os_name,
-> +		strncat(s_name, (char *)driver_info->host_os_name,
->  			BFA_FCS_PORT_SYMBNAME_OSINFO_SZ);
-> -		strncat((char *)&port_cfg->sym_name,
-> -			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-> +		strncat(s_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
->  			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
->
->  		/* Append host OS Patch Info */
-> -		strncat((char *)&port_cfg->sym_name,
-> -			(char *)driver_info->host_os_patch,
-> +		strncat(s_name, (char *)driver_info->host_os_patch,
->  			BFA_FCS_PORT_SYMBNAME_OSPATCH_SZ);
+>  drivers/scsi/scsi_pm.c | 85 ++++++++++++++++++++++++++++++----------=
+----------
+>  1 file changed, 52 insertions(+), 33 deletions(-)
+>=20
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index 9923b26..6e70a16 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -16,16 +16,14 @@
+> =20
+>  #include "scsi_priv.h"
+> =20
+> -static int scsi_dev_type_suspend(struct device *dev, pm_message_t ms=
+g)
+> +static int scsi_dev_type_suspend(struct device *dev, int (*cb)(struc=
+t device *))
+>  {
+> -	struct device_driver *drv;
+>  	int err;
+> =20
+>  	err =3D scsi_device_quiesce(to_scsi_device(dev));
+>  	if (err =3D=3D 0) {
+> -		drv =3D dev->driver;
+> -		if (drv && drv->suspend) {
+> -			err =3D drv->suspend(dev, msg);
+> +		if (cb) {
+> +			err =3D cb(dev);
+>  			if (err)
+>  				scsi_device_resume(to_scsi_device(dev));
+>  		}
+> @@ -34,14 +32,12 @@ static int scsi_dev_type_suspend(struct device *d=
+ev, pm_message_t msg)
+>  	return err;
+>  }
+> =20
+> -static int scsi_dev_type_resume(struct device *dev)
+> +static int scsi_dev_type_resume(struct device *dev, int (*cb)(struct=
+ device *))
+>  {
+> -	struct device_driver *drv;
+>  	int err =3D 0;
+> =20
+> -	drv =3D dev->driver;
+> -	if (drv && drv->resume)
+> -		err =3D drv->resume(dev);
+> +	if (cb)
+> +		err =3D cb(dev);
+>  	scsi_device_resume(to_scsi_device(dev));
+>  	dev_dbg(dev, "scsi resume: %d\n", err);
+>  	return err;
+> @@ -49,35 +45,33 @@ static int scsi_dev_type_resume(struct device *de=
+v)
+> =20
+>  #ifdef CONFIG_PM_SLEEP
+> =20
+> -static int scsi_bus_suspend_common(struct device *dev, pm_message_t =
+msg)
+> +static int
+> +scsi_bus_suspend_common(struct device *dev, int (*cb)(struct device =
+*))
+>  {
+>  	int err =3D 0;
+> =20
+>  	if (scsi_is_sdev_device(dev)) {
+>  		/*
+> -		 * sd is the only high-level SCSI driver to implement runtime
+> -		 * PM, and sd treats runtime suspend, system suspend, and
+> -		 * system hibernate identically (but not system freeze).
+> +		 * All the high-level SCSI drivers that implement runtime
+> +		 * PM treat runtime suspend, system suspend, and system
+> +		 * hibernate identically.
+>  		 */
+> -		if (pm_runtime_suspended(dev)) {
+> -			if (msg.event =3D=3D PM_EVENT_SUSPEND ||
+> -			    msg.event =3D=3D PM_EVENT_HIBERNATE)
+> -				return 0;	/* already suspended */
+> +		if (pm_runtime_suspended(dev))
+> +			return 0;
+> =20
+> -			/* wake up device so that FREEZE will succeed */
+> -			pm_runtime_resume(dev);
+> -		}
+> -		err =3D scsi_dev_type_suspend(dev, msg);
+> +		err =3D scsi_dev_type_suspend(dev, cb);
 >  	}
->
-> --
-> 1.7.12
+> +
+>  	return err;
+>  }
+> =20
+> -static int scsi_bus_resume_common(struct device *dev)
+> +static int
+> +scsi_bus_resume_common(struct device *dev, int (*cb)(struct device *=
+))
+>  {
+>  	int err =3D 0;
+> =20
+>  	if (scsi_is_sdev_device(dev))
+> -		err =3D scsi_dev_type_resume(dev);
+> +		err =3D scsi_dev_type_resume(dev, cb);
+> =20
+>  	if (err =3D=3D 0) {
+>  		pm_runtime_disable(dev);
+> @@ -102,26 +96,49 @@ static int scsi_bus_prepare(struct device *dev)
+> =20
+>  static int scsi_bus_suspend(struct device *dev)
+>  {
+> -	return scsi_bus_suspend_common(dev, PMSG_SUSPEND);
+> +	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
+L;
+> +	return scsi_bus_suspend_common(dev, pm ? pm->suspend : NULL);
+> +}
+> +
+> +static int scsi_bus_resume(struct device *dev)
+> +{
+> +	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
+L;
+> +	return scsi_bus_resume_common(dev, pm ? pm->resume : NULL);
+>  }
+> =20
+>  static int scsi_bus_freeze(struct device *dev)
+>  {
+> -	return scsi_bus_suspend_common(dev, PMSG_FREEZE);
+> +	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
+L;
+> +	return scsi_bus_suspend_common(dev, pm ? pm->freeze : NULL);
+> +}
+> +
+> +static int scsi_bus_thaw(struct device *dev)
+> +{
+> +	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
+L;
+> +	return scsi_bus_resume_common(dev, pm ? pm->thaw : NULL);
+>  }
+> =20
+>  static int scsi_bus_poweroff(struct device *dev)
+>  {
+> -	return scsi_bus_suspend_common(dev, PMSG_HIBERNATE);
+> +	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
+L;
+> +	return scsi_bus_suspend_common(dev, pm ? pm->poweroff : NULL);
+> +}
+> +
+> +static int scsi_bus_restore(struct device *dev)
+> +{
+> +	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
+L;
+> +	return scsi_bus_resume_common(dev, pm ? pm->restore : NULL);
+>  }
+> =20
+>  #else /* CONFIG_PM_SLEEP */
+> =20
+> -#define scsi_bus_resume_common		NULL
+>  #define scsi_bus_prepare		NULL
+>  #define scsi_bus_suspend		NULL
+> +#define scsi_bus_resume			NULL
+>  #define scsi_bus_freeze			NULL
+> +#define scsi_bus_thaw			NULL
+>  #define scsi_bus_poweroff		NULL
+> +#define scsi_bus_restore		NULL
+> =20
+>  #endif /* CONFIG_PM_SLEEP */
+> =20
+> @@ -130,10 +147,11 @@ static int scsi_bus_poweroff(struct device *dev=
+)
+>  static int scsi_runtime_suspend(struct device *dev)
+>  {
+>  	int err =3D 0;
+> +	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
+L;
+> =20
+>  	dev_dbg(dev, "scsi_runtime_suspend\n");
+>  	if (scsi_is_sdev_device(dev)) {
+> -		err =3D scsi_dev_type_suspend(dev, PMSG_AUTO_SUSPEND);
+> +		err =3D scsi_dev_type_suspend(dev, pm ? pm->runtime_suspend : NULL=
+);
+>  		if (err =3D=3D -EAGAIN)
+>  			pm_schedule_suspend(dev, jiffies_to_msecs(
+>  				round_jiffies_up_relative(HZ/10)));
+> @@ -147,10 +165,11 @@ static int scsi_runtime_suspend(struct device *=
+dev)
+>  static int scsi_runtime_resume(struct device *dev)
+>  {
+>  	int err =3D 0;
+> +	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
+L;
+> =20
+>  	dev_dbg(dev, "scsi_runtime_resume\n");
+>  	if (scsi_is_sdev_device(dev))
+> -		err =3D scsi_dev_type_resume(dev);
+> +		err =3D scsi_dev_type_resume(dev, pm ? pm->runtime_resume : NULL);
+> =20
+>  	/* Insert hooks here for targets, hosts, and transport classes */
+> =20
+> @@ -229,11 +248,11 @@ void scsi_autopm_put_host(struct Scsi_Host *sho=
+st)
+>  const struct dev_pm_ops scsi_bus_pm_ops =3D {
+>  	.prepare =3D		scsi_bus_prepare,
+>  	.suspend =3D		scsi_bus_suspend,
+> -	.resume =3D		scsi_bus_resume_common,
+> +	.resume =3D		scsi_bus_resume,
+>  	.freeze =3D		scsi_bus_freeze,
+> -	.thaw =3D			scsi_bus_resume_common,
+> +	.thaw =3D			scsi_bus_thaw,
+>  	.poweroff =3D		scsi_bus_poweroff,
+> -	.restore =3D		scsi_bus_resume_common,
+> +	.restore =3D		scsi_bus_restore,
+>  	.runtime_suspend =3D	scsi_runtime_suspend,
+>  	.runtime_resume =3D	scsi_runtime_resume,
+>  	.runtime_idle =3D		scsi_runtime_idle,
+>=20
+--=20
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
