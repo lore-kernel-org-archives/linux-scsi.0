@@ -1,85 +1,71 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/10] scsi: avoid linebreaks in syslog output
-Date: Mon, 15 Oct 2012 08:02:17 +0200
-Message-ID: <507BA6E9.8020002@suse.de>
-References: <1350030830-25614-1-git-send-email-hare@suse.de> <CAMM=eLfLq3sqm4hkiCAqB2m75+1UN+3O0pvYMOES-xHT9PHiwA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH v4 2/5] Revert "[SCSI] scsi_pm: set device runtime state before parent suspended"
+Date: Mon, 15 Oct 2012 17:26:56 +0800
+Message-ID: <1350293219-8154-3-git-send-email-aaron.lu@intel.com>
+References: <1350293219-8154-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49152 "EHLO mx2.suse.de"
+Received: from mga11.intel.com ([192.55.52.93]:57365 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753856Ab2JOGCT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Oct 2012 02:02:19 -0400
-In-Reply-To: <CAMM=eLfLq3sqm4hkiCAqB2m75+1UN+3O0pvYMOES-xHT9PHiwA@mail.gmail.com>
+	id S1751968Ab2JOJ1O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Oct 2012 05:27:14 -0400
+In-Reply-To: <1350293219-8154-1-git-send-email-aaron.lu@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
 
-On 10/15/2012 02:19 AM, Mike Snitzer wrote:
-> On Fri, Oct 12, 2012 at 4:33 AM, Hannes Reinecke <hare@suse.de> wrote=
-:
->> This patchset updates the SCSI midlayer to use dev_printk() instead
->> of the simple printk(). The main objective here is to avoid line-bre=
-aks
->> in syslog output; with the current state it's nearly impossible to m=
-atch
->> the output to the occurring device; under high load even the CDB wil=
-l
->> be split off into individual bytes, spread randomly across the lines=
-=2E
->> Which makes debugging via scsi_logging_level _really_ hard.
->> In addition we'll be getting the syslog messages nicely prefixed wit=
-h
->> the device, which will make userspace logging daemons happy.
->>
->> Before:
->> [  297.300605] sd 2:0:3:2: Send:
->> [  297.300607] 0xffff8802348b0980
->> [  297.300610] sd 2:0:3:2: CDB:
->> [  297.300615] Test Unit Ready: 00 00 00 00 00 00
->> [  297.300747] sd 2:0:3:2: Done:
->> [  297.300750] 0xffff8802348b0980 SUCCESS
->> [  297.300753] sd 2:0:3:2:
->> [  297.300755] Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_OK
->> [  297.300758] sd 2:0:3:2: CDB:
->> [  297.300764] Test Unit Ready: 00 00 00 00 00 00
->> [  297.300766] sd 2:0:3:2:
->> [  297.300769] Sense Key : Unit Attention [current]
->> [  297.300771] Info fld=3D0x0
->> [  297.300772] sd 2:0:3:2:
->> [  297.300776] Add. Sense: Capacity data has changed
->>
->> After:
->> [  636.683556] sd 2:0:3:2: Send: 0xffff88043145eec0
->> [  636.727856] sd 2:0:3:2: CDB: Test Unit Ready: 00 00 00 00 00 00
->> [  636.785330] sd 2:0:3:2: Done: 0xffff88043145eec0 SUCCESS
->> [  636.838228] sd 2:0:3:2: Result: hostbyte=3DDID_OK driverbyte=3DDR=
-IVER_OK
->> [  636.899099] sd 2:0:3:2: CDB: Test Unit Ready: 00 00 00 00 00 00
->> [  636.955905] sd 2:0:3:2: Sense Key : Unit Attention [current]
->> [  637.069179] sd 2:0:3:2: Add. Sense: Capacity data has changed
->
-> I know there are a lot of changes here but shouldn't all this get
-> fixed in stable 3.5+?
->
+This reverts commit 33a2285d96b5e7b9500612ec623bf4313397bb53.
 
-If you ask me, yes, of course.
-I can easily post a v2 of the patchset (meanwhile I've got another
-patch for st :-), Cc'ing stable with it.
+With commit 88d26136a256576e444db312179e17af6dd0ea87 (PM: Prevent
+runtime suspend during system resume), this patch is no longer needed.
 
-Cheers,
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/scsi/scsi_pm.c | 23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index dc0ad85..d4201de 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -76,24 +76,23 @@ static int scsi_bus_resume_common(struct device *dev)
+ {
+ 	int err = 0;
+ 
+-	/*
+-	 * Parent device may have runtime suspended as soon as
+-	 * it is woken up during the system resume.
+-	 *
+-	 * Resume it on behalf of child.
+-	 */
+-	pm_runtime_get_sync(dev->parent);
+-
+-	if (scsi_is_sdev_device(dev))
++	if (scsi_is_sdev_device(dev)) {
++		/*
++		 * Parent device may have runtime suspended as soon as
++		 * it is woken up during the system resume.
++		 *
++		 * Resume it on behalf of child.
++		 */
++		pm_runtime_get_sync(dev->parent);
+ 		err = scsi_dev_type_resume(dev);
++		pm_runtime_put_sync(dev->parent);
++	}
++
+ 	if (err == 0) {
+ 		pm_runtime_disable(dev);
+ 		pm_runtime_set_active(dev);
+ 		pm_runtime_enable(dev);
+ 	}
+-
+-	pm_runtime_put_sync(dev->parent);
+-
+ 	return err;
+ }
+ 
+-- 
+1.7.12.21.g871e293
+
