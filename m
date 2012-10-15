@@ -1,97 +1,55 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v4 5/5] sd: update sd to use the new pm callbacks
-Date: Mon, 15 Oct 2012 17:26:59 +0800
-Message-ID: <1350293219-8154-6-git-send-email-aaron.lu@intel.com>
-References: <1350293219-8154-1-git-send-email-aaron.lu@intel.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: [PATCH] scsi/mvsas: Fix memeleak when remove mvsas.ko.
+Date: Mon, 15 Oct 2012 18:08:54 +0800
+Message-ID: <201210151808514379358@gmail.com>
+References: <201208011821354063261@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:18720 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751788Ab2JOJ1n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Oct 2012 05:27:43 -0400
-In-Reply-To: <1350293219-8154-1-git-send-email-aaron.lu@intel.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:41459 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925Ab2JOKIU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2012 06:08:20 -0400
+Received: by mail-pa0-f46.google.com with SMTP id hz1so4704496pad.19
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Oct 2012 03:08:20 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
+To: scsi maintainers <JBottomley@parallels.com>
+Cc: =?gb2312?B?09rP8sHB?= <yuxiangl@marvell.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Update sd driver to use the callbacks defined in dev_pm_ops.
-
-sd_freeze is NULL, the bus level callback has taken care of quiescing
-the device so there should be nothing needs to be done here.
-Consequently, sd_thaw is not needed here either.
-
-suspend, poweroff and runtime suspend share the same routine sd_suspend,
-which will sync flush and then stop the drive, this is the same as before.
-
-resume, restore and runtime resume share the same routine sd_resume,
-which will start the drive by putting it into active power state, this
-is also the same as before.
-
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/scsi/sd.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8b6e004..6564305 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -104,7 +104,7 @@ static void sd_unlock_native_capacity(struct gendisk *disk);
- static int  sd_probe(struct device *);
- static int  sd_remove(struct device *);
- static void sd_shutdown(struct device *);
--static int sd_suspend(struct device *, pm_message_t state);
-+static int sd_suspend(struct device *);
- static int sd_resume(struct device *);
- static void sd_rescan(struct device *);
- static int sd_done(struct scsi_cmnd *);
-@@ -423,15 +423,23 @@ static struct class sd_disk_class = {
- 	.dev_attrs	= sd_disk_attrs,
- };
- 
-+static const struct dev_pm_ops sd_pm_ops = {
-+	.suspend		= sd_suspend,
-+	.resume			= sd_resume,
-+	.poweroff		= sd_suspend,
-+	.restore		= sd_resume,
-+	.runtime_suspend	= sd_suspend,
-+	.runtime_resume		= sd_resume,
-+};
-+
- static struct scsi_driver sd_template = {
- 	.owner			= THIS_MODULE,
- 	.gendrv = {
- 		.name		= "sd",
- 		.probe		= sd_probe,
- 		.remove		= sd_remove,
--		.suspend	= sd_suspend,
--		.resume		= sd_resume,
- 		.shutdown	= sd_shutdown,
-+		.pm		= &sd_pm_ops,
- 	},
- 	.rescan			= sd_rescan,
- 	.done			= sd_done,
-@@ -2896,7 +2904,7 @@ exit:
- 	scsi_disk_put(sdkp);
- }
- 
--static int sd_suspend(struct device *dev, pm_message_t mesg)
-+static int sd_suspend(struct device *dev)
- {
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
- 	int ret = 0;
-@@ -2911,8 +2919,7 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
- 			goto done;
- 	}
- 
--	if (((mesg.event & PM_EVENT_SLEEP) || PMSG_IS_AUTO(mesg)) &&
--			sdkp->device->manage_start_stop) {
-+	if (sdkp->device->manage_start_stop) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		ret = sd_start_stop_device(sdkp, 0);
- 	}
--- 
-1.7.12.21.g871e293
+T24gMjAxMi0wOC0wMSAxODoyMSBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4gV3Jv
+dGU6DQo+dW5yZWZlcmVuY2VkIG9iamVjdCAweGZmZmY4ODAwYTgzZDZlODAgKHNpemUgNjQpOg0K
+PiAgY29tbSAiaW5zbW9kIiwgcGlkIDEwMjg4LCBqaWZmaWVzIDQyOTY4ODY5NTkgKGFnZSA2NjIu
+NTg3cykNCj4gIGhleCBkdW1wIChmaXJzdCAzMiBieXRlcyk6DQo+ICAgIDAxIDA0IDAxIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIGE4IDc2IDAwIDg4IGZmIGZmICAuLi4uLi4uLi4uLnYuLi4uDQo+ICAg
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4u
+Li4uLi4uLi4uDQo+ICBiYWNrdHJhY2U6DQo+ICAgIFs8ZmZmZmZmZmY4MTVkZDk0MT5dIGttZW1s
+ZWFrX2FsbG9jKzB4MjEvMHg1MA0KPiAgICBbPGZmZmZmZmZmODExMTA3NjM+XSBfX2ttYWxsb2Mr
+MHgxNTMvMHgyNDANCj4gICAgWzxmZmZmZmZmZmEwMDdlN2RhPl0gMHhmZmZmZmZmZmEwMDdlN2Rh
+DQo+ICAgIFs8ZmZmZmZmZmZhMDA3ZWU3MT5dIDB4ZmZmZmZmZmZhMDA3ZWU3MQ0KPiAgICBbPGZm
+ZmZmZmZmODEyYTA4YTU+XSBwY2lfZGV2aWNlX3Byb2JlKzB4NzUvMHhhMA0KPiAgICBbPGZmZmZm
+ZmZmODEzOWMxZTc+XSBkcml2ZXJfcHJvYmVfZGV2aWNlKzB4NzcvMHgyMzANCj4gICAgWzxmZmZm
+ZmZmZjgxMzljNDNiPl0gX19kcml2ZXJfYXR0YWNoKzB4OWIvMHhhMA0KPiAgICBbPGZmZmZmZmZm
+ODEzOWE2ZmU+XSBidXNfZm9yX2VhY2hfZGV2KzB4NGUvMHg4MA0KPiAgICBbPGZmZmZmZmZmODEz
+OWJkNTk+XSBkcml2ZXJfYXR0YWNoKzB4MTkvMHgyMA0KPiAgICBbPGZmZmZmZmZmODEzOWI5MDA+
+XSBidXNfYWRkX2RyaXZlcisweDE4MC8weDI4MA0KPiAgICBbPGZmZmZmZmZmODEzOWM5NDU+XSBk
+cml2ZXJfcmVnaXN0ZXIrMHg3NS8weDE1MA0KPiAgICBbPGZmZmZmZmZmODEyYTA2NDA+XSBfX3Bj
+aV9yZWdpc3Rlcl9kcml2ZXIrMHg1MC8weGMwDQo+ICAgIFs8ZmZmZmZmZmZhMDAzZjA4Nj5dIDB4
+ZmZmZmZmZmZhMDAzZjA4Ng0KPiAgICBbPGZmZmZmZmZmODEwMDAxYmE+XSBkb19vbmVfaW5pdGNh
+bGwrMHgzYS8weDE2MA0KPiAgICBbPGZmZmZmZmZmODEwOGE3NDQ+XSBzeXNfaW5pdF9tb2R1bGUr
+MHhiMDQvMHgxZDEwDQo+ICAgIFs8ZmZmZmZmZmY4MTYwMDVhMj5dIHN5c3RlbV9jYWxsX2Zhc3Rw
+YXRoKzB4MTYvMHgxYg0KPg0KPlNpZ25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxtYWppYW5wZW5n
+QGdtYWlsLmNvbT4NCj4tLS0NCj4gZHJpdmVycy9zY3NpL212c2FzL212X2luaXQuYyB8ICAgIDEg
+Kw0KPiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKykNCj4NCj5kaWZmIC0tZ2l0IGEvZHJp
+dmVycy9zY3NpL212c2FzL212X2luaXQuYyBiL2RyaXZlcnMvc2NzaS9tdnNhcy9tdl9pbml0LmMN
+Cj5pbmRleCBjYzU5ZGZmLi5jZDlmYzM2IDEwMDY0NA0KPi0tLSBhL2RyaXZlcnMvc2NzaS9tdnNh
+cy9tdl9pbml0LmMNCj4rKysgYi9kcml2ZXJzL3Njc2kvbXZzYXMvbXZfaW5pdC5jDQo+QEAgLTY3
+MSw2ICs2NzEsNyBAQCBzdGF0aWMgdm9pZCBfX2RldmV4aXQgbXZzX3BjaV9yZW1vdmUoc3RydWN0
+IHBjaV9kZXYgKnBkZXYpDQo+IAl9DQo+IAlrZnJlZShzaGEtPnNhc19waHkpOw0KPiAJa2ZyZWUo
+c2hhLT5zYXNfcG9ydCk7DQo+KwlrZnJlZShzaGEtPmxsZGRfaGEpOw0KPiAJa2ZyZWUoc2hhKTsN
+Cj4gCXBjaV9yZWxlYXNlX3JlZ2lvbnMocGRldik7DQo+IAlwY2lfZGlzYWJsZV9kZXZpY2UocGRl
+dik7DQo+LS0gDQo+MS43LjkuNQ0KSGkgIEpCb3R0b21sZXksDQoJSG93IGFib3V0IHRoaXMgcGF0
+Y2g/DQoNClRoYW5rcyENCkppYW5wZW5nDQo=
 
