@@ -1,72 +1,60 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] sg3_utils-1.34 available
-Date: Sun, 14 Oct 2012 18:44:34 -0400
-Message-ID: <507B4052.5000102@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 00/10] scsi: avoid linebreaks in syslog output
+Date: Sun, 14 Oct 2012 20:19:27 -0400
+Message-ID: <CAMM=eLfLq3sqm4hkiCAqB2m75+1UN+3O0pvYMOES-xHT9PHiwA@mail.gmail.com>
+References: <1350030830-25614-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:59535 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750946Ab2JNWo5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Oct 2012 18:44:57 -0400
+Received: from mail-la0-f46.google.com ([209.85.215.46]:36801 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752091Ab2JOATt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Oct 2012 20:19:49 -0400
+Received: by mail-la0-f46.google.com with SMTP id h6so3026834lag.19
+        for <linux-scsi@vger.kernel.org>; Sun, 14 Oct 2012 17:19:48 -0700 (PDT)
+In-Reply-To: <1350030830-25614-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-sg3_utils is a package of command line utilities for sending
-SCSI and some ATA commands to devices. This package targets
-the linux kernel (lk) 3, 2.6 and lk 2.4 series. It also has
-ports to FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
+On Fri, Oct 12, 2012 at 4:33 AM, Hannes Reinecke <hare@suse.de> wrote:
+> This patchset updates the SCSI midlayer to use dev_printk() instead
+> of the simple printk(). The main objective here is to avoid line-breaks
+> in syslog output; with the current state it's nearly impossible to match
+> the output to the occurring device; under high load even the CDB will
+> be split off into individual bytes, spread randomly across the lines.
+> Which makes debugging via scsi_logging_level _really_ hard.
+> In addition we'll be getting the syslog messages nicely prefixed with
+> the device, which will make userspace logging daemons happy.
+>
+> Before:
+> [  297.300605] sd 2:0:3:2: Send:
+> [  297.300607] 0xffff8802348b0980
+> [  297.300610] sd 2:0:3:2: CDB:
+> [  297.300615] Test Unit Ready: 00 00 00 00 00 00
+> [  297.300747] sd 2:0:3:2: Done:
+> [  297.300750] 0xffff8802348b0980 SUCCESS
+> [  297.300753] sd 2:0:3:2:
+> [  297.300755] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+> [  297.300758] sd 2:0:3:2: CDB:
+> [  297.300764] Test Unit Ready: 00 00 00 00 00 00
+> [  297.300766] sd 2:0:3:2:
+> [  297.300769] Sense Key : Unit Attention [current]
+> [  297.300771] Info fld=0x0
+> [  297.300772] sd 2:0:3:2:
+> [  297.300776] Add. Sense: Capacity data has changed
+>
+> After:
+> [  636.683556] sd 2:0:3:2: Send: 0xffff88043145eec0
+> [  636.727856] sd 2:0:3:2: CDB: Test Unit Ready: 00 00 00 00 00 00
+> [  636.785330] sd 2:0:3:2: Done: 0xffff88043145eec0 SUCCESS
+> [  636.838228] sd 2:0:3:2: Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+> [  636.899099] sd 2:0:3:2: CDB: Test Unit Ready: 00 00 00 00 00 00
+> [  636.955905] sd 2:0:3:2: Sense Key : Unit Attention [current]
+> [  637.069179] sd 2:0:3:2: Add. Sense: Capacity data has changed
 
-This version adds sg_xcopy and sg_copy_results (contributed by
-Hannes Reinecke). This version tracks various changes made by
-www.t10.org since January 2012.
+I know there are a lot of changes here but shouldn't all this get
+fixed in stable 3.5+?
 
-For an overview of sg3_utils and downloads see this page:
-     http://sg.danny.cz/sg/sg3_utils.html
-The sg_ses utility (for enclosure devices) is discussed at:
-     http://sg.danny.cz/sg/sg_ses.html
-The SG_IO ioctl is discussed at:
-     http://sg.danny.cz/sg/sg_io.html
-A full changelog can be found at:
-     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
-
-A release announcement will be sent to freecode.com .
-
-Changelog for sg3_utils-1.34 [20121013] [svn: r461]
-   - sg_xcopy: new dd like utility for extended copy command
-   - sg_copy_results: new utility for receive copy results
-   - sg_verify: add 16 byte cdb, bytchk (data-out buffer)
-     and group number support
-   - sync to spc4r36 and sbc3r32
-   - sg_inq: add --export so sg_inq can replace udev's scsi_id
-     - decode old EMC Symmetrix abuse of VPD page 0x83
-   - sg_vpd: decode old EMC Symmetrix abuse of VPD page 0x83
-   - sg_ses: increase max dpage response size to 64 KB
-     - allow ident,locate on enclosure controller
-     - more sanity for additional element status descriptor
-   - sg_sanitize: add --ause, --fail and --test=
-   - sg_luns: add long extended flat space addressing format
-   - sg_logs: add ATA pass-through results lpage (SAT-2)
-   - sg_rtpg: add --extended option
-   - sg_senddiag: list rebuild assist diag page name
-   - sg_pt_linux: expand DID_ (host_byte) codes
-     - cope with a transport error plus sense data
-     - prefer major() over MAJOR() macro
-   - sg_lib: fix sg_get_command_name() service actions
-     - report sdat_ovfl bit (if set) in sense data
-     - decode extended_copy and receive_copy service actions
-     - decode read_buffer and write_buffer modes
-     - decode ATA PT fixed format sense (SAT-2)
-   - sg_cmds_extra: add sg_ll_report_tgt_prt_grp2()
-   - ./configure options:
-     - change --enable-no-linux-bsg to --disable-linuxbsg
-     - add --disable-scsistrings to reduce utility sizes
-
-Changelog for sg3_utils-1.33 [20120118] [svn: r435]
-...
-
-Doug Gilbert
+Thanks for sorting all this out Hannes.
