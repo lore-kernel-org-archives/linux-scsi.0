@@ -1,55 +1,44 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: [PATCH] scsi/mvsas: Fix memeleak when remove mvsas.ko.
-Date: Mon, 15 Oct 2012 18:08:54 +0800
-Message-ID: <201210151808514379358@gmail.com>
-References: <201208011821354063261@gmail.com>
+From: Maciej Patelczyk <maciej.patelczyk@intel.com>
+Subject: [PATCH] isci: copy fis 0x34 response into proper buffer
+Date: Mon, 15 Oct 2012 14:29:03 +0200
+Message-ID: <20121015122903.1538.77822.stgit@gklab-128-044.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:41459 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925Ab2JOKIU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2012 06:08:20 -0400
-Received: by mail-pa0-f46.google.com with SMTP id hz1so4704496pad.19
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Oct 2012 03:08:20 -0700 (PDT)
+Received: from mga14.intel.com ([143.182.124.37]:44483 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753052Ab2JOMdM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Oct 2012 08:33:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi maintainers <JBottomley@parallels.com>
-Cc: =?gb2312?B?09rP8sHB?= <yuxiangl@marvell.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-T24gMjAxMi0wOC0wMSAxODoyMSBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4gV3Jv
-dGU6DQo+dW5yZWZlcmVuY2VkIG9iamVjdCAweGZmZmY4ODAwYTgzZDZlODAgKHNpemUgNjQpOg0K
-PiAgY29tbSAiaW5zbW9kIiwgcGlkIDEwMjg4LCBqaWZmaWVzIDQyOTY4ODY5NTkgKGFnZSA2NjIu
-NTg3cykNCj4gIGhleCBkdW1wIChmaXJzdCAzMiBieXRlcyk6DQo+ICAgIDAxIDA0IDAxIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIGE4IDc2IDAwIDg4IGZmIGZmICAuLi4uLi4uLi4uLnYuLi4uDQo+ICAg
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4u
-Li4uLi4uLi4uDQo+ICBiYWNrdHJhY2U6DQo+ICAgIFs8ZmZmZmZmZmY4MTVkZDk0MT5dIGttZW1s
-ZWFrX2FsbG9jKzB4MjEvMHg1MA0KPiAgICBbPGZmZmZmZmZmODExMTA3NjM+XSBfX2ttYWxsb2Mr
-MHgxNTMvMHgyNDANCj4gICAgWzxmZmZmZmZmZmEwMDdlN2RhPl0gMHhmZmZmZmZmZmEwMDdlN2Rh
-DQo+ICAgIFs8ZmZmZmZmZmZhMDA3ZWU3MT5dIDB4ZmZmZmZmZmZhMDA3ZWU3MQ0KPiAgICBbPGZm
-ZmZmZmZmODEyYTA4YTU+XSBwY2lfZGV2aWNlX3Byb2JlKzB4NzUvMHhhMA0KPiAgICBbPGZmZmZm
-ZmZmODEzOWMxZTc+XSBkcml2ZXJfcHJvYmVfZGV2aWNlKzB4NzcvMHgyMzANCj4gICAgWzxmZmZm
-ZmZmZjgxMzljNDNiPl0gX19kcml2ZXJfYXR0YWNoKzB4OWIvMHhhMA0KPiAgICBbPGZmZmZmZmZm
-ODEzOWE2ZmU+XSBidXNfZm9yX2VhY2hfZGV2KzB4NGUvMHg4MA0KPiAgICBbPGZmZmZmZmZmODEz
-OWJkNTk+XSBkcml2ZXJfYXR0YWNoKzB4MTkvMHgyMA0KPiAgICBbPGZmZmZmZmZmODEzOWI5MDA+
-XSBidXNfYWRkX2RyaXZlcisweDE4MC8weDI4MA0KPiAgICBbPGZmZmZmZmZmODEzOWM5NDU+XSBk
-cml2ZXJfcmVnaXN0ZXIrMHg3NS8weDE1MA0KPiAgICBbPGZmZmZmZmZmODEyYTA2NDA+XSBfX3Bj
-aV9yZWdpc3Rlcl9kcml2ZXIrMHg1MC8weGMwDQo+ICAgIFs8ZmZmZmZmZmZhMDAzZjA4Nj5dIDB4
-ZmZmZmZmZmZhMDAzZjA4Ng0KPiAgICBbPGZmZmZmZmZmODEwMDAxYmE+XSBkb19vbmVfaW5pdGNh
-bGwrMHgzYS8weDE2MA0KPiAgICBbPGZmZmZmZmZmODEwOGE3NDQ+XSBzeXNfaW5pdF9tb2R1bGUr
-MHhiMDQvMHgxZDEwDQo+ICAgIFs8ZmZmZmZmZmY4MTYwMDVhMj5dIHN5c3RlbV9jYWxsX2Zhc3Rw
-YXRoKzB4MTYvMHgxYg0KPg0KPlNpZ25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxtYWppYW5wZW5n
-QGdtYWlsLmNvbT4NCj4tLS0NCj4gZHJpdmVycy9zY3NpL212c2FzL212X2luaXQuYyB8ICAgIDEg
-Kw0KPiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKykNCj4NCj5kaWZmIC0tZ2l0IGEvZHJp
-dmVycy9zY3NpL212c2FzL212X2luaXQuYyBiL2RyaXZlcnMvc2NzaS9tdnNhcy9tdl9pbml0LmMN
-Cj5pbmRleCBjYzU5ZGZmLi5jZDlmYzM2IDEwMDY0NA0KPi0tLSBhL2RyaXZlcnMvc2NzaS9tdnNh
-cy9tdl9pbml0LmMNCj4rKysgYi9kcml2ZXJzL3Njc2kvbXZzYXMvbXZfaW5pdC5jDQo+QEAgLTY3
-MSw2ICs2NzEsNyBAQCBzdGF0aWMgdm9pZCBfX2RldmV4aXQgbXZzX3BjaV9yZW1vdmUoc3RydWN0
-IHBjaV9kZXYgKnBkZXYpDQo+IAl9DQo+IAlrZnJlZShzaGEtPnNhc19waHkpOw0KPiAJa2ZyZWUo
-c2hhLT5zYXNfcG9ydCk7DQo+KwlrZnJlZShzaGEtPmxsZGRfaGEpOw0KPiAJa2ZyZWUoc2hhKTsN
-Cj4gCXBjaV9yZWxlYXNlX3JlZ2lvbnMocGRldik7DQo+IAlwY2lfZGlzYWJsZV9kZXZpY2UocGRl
-dik7DQo+LS0gDQo+MS43LjkuNQ0KSGkgIEpCb3R0b21sZXksDQoJSG93IGFib3V0IHRoaXMgcGF0
-Y2g/DQoNClRoYW5rcyENCkppYW5wZW5nDQo=
+SATA MICROCODE DOWNALOAD fails on isci driver. After receiving Register
+Device to Host (FIS 0x34) frame Initiator resets phy.
+In the frame handler routine response (FIS 0x34) was copied into wrong
+buffer and upper layer did not receive any answer which resulted in
+timeout and reset.
+This patch corrects this bug.
+
+
+Signed-off-by: Maciej Patelczyk <maciej.patelczyk@intel.com>
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+---
+ drivers/scsi/isci/request.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index 7a0431c..94483c9 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -1972,7 +1972,7 @@ sci_io_request_frame_handler(struct isci_request *ireq,
+ 								      frame_index,
+ 								      (void **)&frame_buffer);
+ 
+-			sci_controller_copy_sata_response(&ireq->stp.req,
++			sci_controller_copy_sata_response(&ireq->stp.rsp,
+ 							       frame_header,
+ 							       frame_buffer);
+ 
 
