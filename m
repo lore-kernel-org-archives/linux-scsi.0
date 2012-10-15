@@ -1,56 +1,54 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v4 0/5] Migrate SCSI drivers to use dev_pm_ops
-Date: Mon, 15 Oct 2012 17:26:54 +0800
-Message-ID: <1350293219-8154-1-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v4 3/5] Revert "[SCSI] runtime resume parent for child's system-resume"
+Date: Mon, 15 Oct 2012 17:26:57 +0800
+Message-ID: <1350293219-8154-4-git-send-email-aaron.lu@intel.com>
+References: <1350293219-8154-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57365 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:61410 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751755Ab2JOJ1M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Oct 2012 05:27:12 -0400
+	id S1751788Ab2JOJ1m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Oct 2012 05:27:42 -0400
+In-Reply-To: <1350293219-8154-1-git-send-email-aaron.lu@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
 
-v4:
-Only Patch 4 is modified:
-Fixed a line over 80 characters warning by checkpatch.pl;
-Update the changelog so that it is no more a try :-)
+This reverts commit 28fd00d42cca178638f51c08efa986a777c24a4b.
 
-v3:
-Only patch 4 is modified:
-Remove the special case for system freeze in scsi_bus_suspend_common
-as pointed out by Alan Stern;
-Updated some comments;
-Removed the use of typedef (*pm_callback_t)(struct device *).
+With commit 88d26136a256576e444db312179e17af6dd0ea87 (PM: Prevent
+runtime suspend during system resume), this patch is no longer needed.
 
-v2:
-Change the runtime suspend behaviour of sd driver by putting the device
-into stopped power state.
-Revert 2 patches which are no longer needed as pointed out by Alan Stern.
-Find out device callbacks in bus callbacks as suggested by Alan Stern.
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/scsi/scsi_pm.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-Due to these changes, patch number grows from 2 -> 5.
-
-v1:
-The 2 patches will migrate SCSI drivers to use the pm callbacks defined
-in dev_pm_ops as pm_message is deprecated and should not be used by driver.
-Bus level callback is changed to use callbacks defined in dev_pm_ops when
-needed and sd's pm callback is updated to use what are defined in dev_pm_ops.
-
-
-Aaron Lu (5):
-  sd: put to stopped power state when runtime suspend
-  Revert "[SCSI] scsi_pm: set device runtime state before parent
-    suspended"
-  Revert "[SCSI] runtime resume parent for child's system-resume"
-  pm: use callbacks from dev_pm_ops for scsi devices
-  sd: update sd to use the new pm callbacks
-
- drivers/scsi/scsi_pm.c | 98 +++++++++++++++++++++++++++-----------------------
- drivers/scsi/sd.c      | 18 +++++++---
- 2 files changed, 67 insertions(+), 49 deletions(-)
-
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d4201de..9923b26 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -76,17 +76,8 @@ static int scsi_bus_resume_common(struct device *dev)
+ {
+ 	int err = 0;
+ 
+-	if (scsi_is_sdev_device(dev)) {
+-		/*
+-		 * Parent device may have runtime suspended as soon as
+-		 * it is woken up during the system resume.
+-		 *
+-		 * Resume it on behalf of child.
+-		 */
+-		pm_runtime_get_sync(dev->parent);
++	if (scsi_is_sdev_device(dev))
+ 		err = scsi_dev_type_resume(dev);
+-		pm_runtime_put_sync(dev->parent);
+-	}
+ 
+ 	if (err == 0) {
+ 		pm_runtime_disable(dev);
 -- 
 1.7.12.21.g871e293
 
