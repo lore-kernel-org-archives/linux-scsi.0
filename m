@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/4] block: Avoid that request_fn is invoked on a dead
- queue
-Date: Tue, 16 Oct 2012 16:38:29 -0700
-Message-ID: <20121016233829.GK16166@google.com>
+Subject: Re: [PATCH 3/4] Make blk_cleanup_queue() wait until request_fn
+ finished
+Date: Tue, 16 Oct 2012 16:51:52 -0700
+Message-ID: <20121016235152.GL16166@google.com>
 References: <50758EBE.7050202@acm.org>
- <50758F51.3020601@acm.org>
+ <50758F90.4020407@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:44856 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755901Ab2JPXie (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Oct 2012 19:38:34 -0400
-Received: by mail-pa0-f46.google.com with SMTP id hz1so6411009pad.19
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Oct 2012 16:38:34 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:52813 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754580Ab2JPXv4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Oct 2012 19:51:56 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr4so6486337pbb.19
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Oct 2012 16:51:56 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <50758F51.3020601@acm.org>
+In-Reply-To: <50758F90.4020407@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
@@ -23,61 +23,67 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@paralle
 
 Hello,
 
-On Wed, Oct 10, 2012 at 05:08:01PM +0200, Bart Van Assche wrote:
-> A block driver may start cleaning up resources needed by its
-> request_fn as soon as blk_cleanup_queue() finished, so request_fn
-> must not be invoked after draining finished.
+On Wed, Oct 10, 2012 at 05:09:04PM +0200, Bart Van Assche wrote:
+> Some request_fn implementations, e.g. scsi_request_fn(), unlock
+> the queue lock. Make sure that blk_cleanup_queue() waits until all
+> active request_fn invocations have finished. This fixes a potential
+> use-after-free at the end of scsi_request_fn(). Also, change the
+> type of the 'drain' variable from bool to int to avoid that the
+> highest bits of the request counters get ignored.
 
-Can you please make the commit message more verbose preferably with
-example crash trace?  It's difficult to tell what bug it's trying to
-fix how.
+Similar comment.  It would be great if you better separate what's
+broken and how it's fixed.  Kinda difficult to digest.
 
->  /**
-> + * __blk_run_queue_uncond - run a queue whether or not it has been stopped
-> + * @q:	The queue to run
-> + *
-> + * Description:
-> + *    Invoke request handling on a queue if there are any pending requests.
-> + *    May be used to restart request handling after a request has completed.
-> + *    This variant runs the queue whether or not the queue has been
-> + *    stopped. Must be called with the queue lock held and interrupts
-> + *    disabled. See also @blk_run_queue.
-> + */
-> +void __blk_run_queue_uncond(struct request_queue *q)
-> +{
-> +	if (unlikely(blk_queue_dead(q)))
-> +		return;
-> +
-> +	q->request_fn(q);
-> +}
-> +
-> +/**
->   * __blk_run_queue - run a single device queue
->   * @q:	The queue to run
->   *
-> @@ -305,7 +324,7 @@ void __blk_run_queue(struct request_queue *q)
->  	if (unlikely(blk_queue_stopped(q)))
+> @@ -308,7 +308,9 @@ void __blk_run_queue_uncond(struct request_queue *q)
+>  	if (unlikely(blk_queue_dead(q)))
 >  		return;
 >  
-> -	q->request_fn(q);
-> +	__blk_run_queue_uncond(q);
+> +	q->driver_active++;
+>  	q->request_fn(q);
+> +	q->driver_active--;
 
-__blk_run_queue_uncond() is a cold path and I don't think adding a
-test there matters but I think it would be better if we avoid an extra
-branch if possible for __blk_run_queue().  Can't we merge
-blk_queue_stopped/dead() testing?
+Maybe q->request_fn_active is a better name?
 
-> @@ -401,6 +420,9 @@ void blk_drain_queue(struct request_queue *q, bool drain_all)
->  			}
->  		}
+> -void blk_drain_queue(struct request_queue *q, bool drain_all)
+> +static void blk_drain_queue(struct request_queue *q, bool drain_all)
+>  {
+>  	int i;
 >  
-> +		if (!drain && blk_queue_dying(q))
-> +			queue_flag_set(QUEUE_FLAG_DEAD, q);
-> +
+>  	while (true) {
+> -		bool drain = false;
+> +		int drain = 0;
 
-Wouldn't doing this in blk_cleanup_queue() be better?  It may involve
-an extra queue locking but I don't think that matter at all in that
-path and doing things where they belong is far more important.
+I don't think this is necessary.  bool conversion works fine
+regardless how high the bits are.  Isn't avoiding signed/unsigned
+autocast maze one of the reasons why we're using bool to begin with?
+
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index f29a1a9..0e15374 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1517,10 +1517,6 @@ static void scsi_request_fn(struct request_queue *q)
+>  	struct scsi_cmnd *cmd;
+>  	struct request *req;
+>  
+> -	if(!get_device(&sdev->sdev_gendev))
+> -		/* We must be tearing the block queue down already */
+> -		return;
+> -
+>  	/*
+>  	 * To start with, we keep looping until the queue is empty, or until
+>  	 * the host is no longer able to accept any more requests.
+> @@ -1629,11 +1625,7 @@ out_delay:
+>  	if (sdev->device_busy == 0)
+>  		blk_delay_queue(q, SCSI_QUEUE_DELAY);
+>  out:
+> -	/* must be careful here...if we trigger the ->remove() function
+> -	 * we cannot be holding the q lock */
+> -	spin_unlock_irq(q->queue_lock);
+> -	put_device(&sdev->sdev_gendev);
+> -	spin_lock_irq(q->queue_lock);
+> +	;
+
+I think moving this out to a separate patch would be better.
 
 Thanks.
 
