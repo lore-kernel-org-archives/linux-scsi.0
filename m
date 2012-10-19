@@ -1,136 +1,102 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH v2 03/19] be2iscsi: Fix memory leak in control path of driver
-Date: Sat, 20 Oct 2012 04:42:00 +0530
-Message-ID: <40a3d987-f9b3-4f05-935a-3b5446688499@CMEXHTCAS2.ad.emulex.com>
+Subject: [PATCH v2 04/19] be2iscsi: Fix max supported EQ count to 8.
+Date: Sat, 20 Oct 2012 04:42:13 +0530
+Message-ID: <8328486d-3b1b-4321-a12a-72e45fc755dd@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:38739 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754309Ab2JSXNJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2012 19:13:09 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:4706 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755131Ab2JSXNU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2012 19:13:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- In contorl path of the driver the task was mapped using
- pci_map_single which was not unmapped when the completion
- for the task had come.
+ The maximum EQ that can be created for a function is 8. Check the
+ CPU online count and create only 8 EQ if CPU_Count >= 8
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |   39 +++++++++++++++++++++++++++++----------
- drivers/scsi/be2iscsi/be_main.h |    2 ++
- 2 files changed, 31 insertions(+), 10 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   23 ++++++++++++++---------
+ drivers/scsi/be2iscsi/be_main.h |    1 +
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index b52c5c0..db3ea14 100644
+index db3ea14..2d1bbb8 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2242,10 +2242,14 @@ hwi_write_sgl(struct iscsi_wrb *pwrb, struct scatterlist *sg,
- 	AMAP_SET_BITS(struct amap_iscsi_sge, last_sge, psgl, 1);
+@@ -2890,7 +2890,7 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
+ 	}
+ 	return 0;
+ create_eq_error:
+-	for (i = 0; i < (phba->num_cpus + 1); i++) {
++	for (i = 0; i < (phba->num_cpus + eq_for_mcc); i++) {
+ 		eq = &phwi_context->be_eq[i].q;
+ 		mem = &eq->dma_mem;
+ 		if (mem->va)
+@@ -3315,15 +3315,20 @@ err:
+ 	return -ENOMEM;
  }
  
+-static int find_num_cpus(void)
 +/**
-+ * hwi_write_buffer()- Populate the WRB with task info
-+ * @pwrb: ptr to the WRB entry
-+ * @task: iscsi task which is to be executed
-+ **/
- static void hwi_write_buffer(struct iscsi_wrb *pwrb, struct iscsi_task *task)
- {
- 	struct iscsi_sge *psgl;
--	unsigned long long addr;
- 	struct beiscsi_io_task *io_task = task->dd_data;
- 	struct beiscsi_conn *beiscsi_conn = io_task->conn;
- 	struct beiscsi_hba *phba = beiscsi_conn->phba;
-@@ -2259,24 +2263,27 @@ static void hwi_write_buffer(struct iscsi_wrb *pwrb, struct iscsi_task *task)
- 	if (task->data) {
- 		if (task->data_count) {
- 			AMAP_SET_BITS(struct amap_iscsi_wrb, dsp, pwrb, 1);
--			addr = (u64) pci_map_single(phba->pcidev,
--						    task->data,
--						    task->data_count, 1);
-+			io_task->mtask_addr = pci_map_single(phba->pcidev,
-+							     task->data,
-+							     task->data_count,
-+							     PCI_DMA_TODEVICE);
-+
-+			io_task->mtask_data_count = task->data_count;
- 		} else {
- 			AMAP_SET_BITS(struct amap_iscsi_wrb, dsp, pwrb, 0);
--			addr = 0;
-+			io_task->mtask_addr = 0;
- 		}
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, sge0_addr_lo, pwrb,
--						((u32)(addr & 0xFFFFFFFF)));
-+			      lower_32_bits(io_task->mtask_addr));
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, sge0_addr_hi, pwrb,
--						((u32)(addr >> 32)));
-+			      upper_32_bits(io_task->mtask_addr));
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, sge0_len, pwrb,
- 						task->data_count);
- 
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, sge0_last, pwrb, 1);
- 	} else {
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, dsp, pwrb, 0);
--		addr = 0;
-+		io_task->mtask_addr = 0;
- 	}
- 
- 	psgl = (struct iscsi_sge *)io_task->psgl_handle->pfrag;
-@@ -2299,9 +2306,9 @@ static void hwi_write_buffer(struct iscsi_wrb *pwrb, struct iscsi_task *task)
- 		psgl++;
- 		if (task->data) {
- 			AMAP_SET_BITS(struct amap_iscsi_sge, addr_lo, psgl,
--						((u32)(addr & 0xFFFFFFFF)));
-+				      lower_32_bits(io_task->mtask_addr));
- 			AMAP_SET_BITS(struct amap_iscsi_sge, addr_hi, psgl,
--						((u32)(addr >> 32)));
-+				      upper_32_bits(io_task->mtask_addr));
- 		}
- 		AMAP_SET_BITS(struct amap_iscsi_sge, len, psgl, 0x106);
- 	}
-@@ -3893,6 +3900,11 @@ static void beiscsi_clean_port(struct beiscsi_hba *phba)
- 	kfree(phba->ep_array);
- }
- 
-+/**
-+ * beiscsi_cleanup_task()- Free driver resources of the task
-+ * @task: ptr to the iscsi task
++ * find_num_cpus()- Get the CPU online count
++ * @phba: ptr to priv structure
 + *
++ * CPU count is used for creating EQ.
 + **/
- static void beiscsi_cleanup_task(struct iscsi_task *task)
++static void find_num_cpus(struct beiscsi_hba *phba)
  {
- 	struct beiscsi_io_task *io_task = task->dd_data;
-@@ -3940,6 +3952,13 @@ static void beiscsi_cleanup_task(struct iscsi_task *task)
- 				spin_unlock(&phba->mgmt_sgl_lock);
- 				io_task->psgl_handle = NULL;
- 			}
-+			if (io_task->mtask_addr) {
-+				pci_unmap_single(phba->pcidev,
-+						 io_task->mtask_addr,
-+						 io_task->mtask_data_count,
-+						 PCI_DMA_TODEVICE);
-+				io_task->mtask_addr = 0;
-+			}
- 		}
- 	}
+ 	int  num_cpus = 0;
+ 
+ 	num_cpus = num_online_cpus();
+-	if (num_cpus >= MAX_CPUS)
+-		num_cpus = MAX_CPUS - 1;
+ 
+-	return num_cpus;
++	phba->num_cpus = (num_cpus >= BEISCSI_MAX_NUM_CPU) ?
++			 (BEISCSI_MAX_NUM_CPU - 1) : num_cpus;
  }
+ 
+ static int hwi_init_port(struct beiscsi_hba *phba)
+@@ -4542,7 +4547,7 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
+ 	struct hwi_controller *phwi_ctrlr;
+ 	struct hwi_context_memory *phwi_context;
+ 	struct be_eq_obj *pbe_eq;
+-	int ret, num_cpus, i;
++	int ret, i;
+ 	u8 *real_offset = 0;
+ 	u32 value = 0;
+ 
+@@ -4578,10 +4583,10 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
+ 	}
+ 
+ 	if (enable_msix)
+-		num_cpus = find_num_cpus();
++		find_num_cpus(phba);
+ 	else
+-		num_cpus = 1;
+-	phba->num_cpus = num_cpus;
++		phba->num_cpus = 1;
++
+ 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+ 		    "BM_%d : num_cpus = %d\n",
+ 		    phba->num_cpus);
 diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index b891226..f4e8d19 100644
+index f4e8d19..e24d550 100644
 --- a/drivers/scsi/be2iscsi/be_main.h
 +++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -410,6 +410,8 @@ struct beiscsi_io_task {
- 	struct be_cmd_bhs *cmd_bhs;
- 	struct be_bus_address bhs_pa;
- 	unsigned short bhs_len;
-+	dma_addr_t mtask_addr;
-+	uint32_t mtask_data_count;
- };
+@@ -61,6 +61,7 @@
+ #define BE2_DEFPDU_DATA_SZ	8192
  
- struct be_nonio_bhs {
+ #define MAX_CPUS		31
++#define BEISCSI_MAX_NUM_CPU	8
+ #define BEISCSI_SGLIST_ELEMENTS	30
+ 
+ #define BEISCSI_CMD_PER_LUN	128	/* scsi_host->cmd_per_lun */
 -- 
 1.7.2
 
