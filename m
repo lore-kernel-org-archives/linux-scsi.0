@@ -1,322 +1,38 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH v2 18/19] be2iscsi: Fix Unrecoverable Error Detection
-Date: Sat, 20 Oct 2012 04:45:51 +0530
-Message-ID: <fb405d33-8dae-4175-af00-b0068603b870@CMEXHTCAS2.ad.emulex.com>
+Subject: [PATCH v2 19/19] be2iscsi: Bump the driver version
+Date: Sat, 20 Oct 2012 04:46:04 +0530
+Message-ID: <1b217f08-34ac-41e2-aa62-b59b6122b686@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:4768 "EHLO
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:4773 "EHLO
 	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758593Ab2JSXQ7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2012 19:16:59 -0400
+	with ESMTP id S1758593Ab2JSXRP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2012 19:17:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- Driver periodically checks adapter state,is up fine or not.
- Based on the value updates the internal structures of driver.
-
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c |   10 +++-
- drivers/scsi/be2iscsi/be_main.c |   26 ++++++++
- drivers/scsi/be2iscsi/be_main.h |    5 ++
- drivers/scsi/be2iscsi/be_mgmt.c |  132 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/be2iscsi/be_mgmt.h |    7 ++
- 5 files changed, 178 insertions(+), 2 deletions(-)
+ drivers/scsi/be2iscsi/be_main.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 352fc53..5c87768 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -157,6 +157,9 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
- 	struct be_cmd_req_hdr *ioctl_hdr;
- 	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
- 
-+	if (beiscsi_error(phba))
-+		return -EIO;
-+
- 	/* wait for the mccq completion */
- 	rc = wait_event_interruptible_timeout(
- 				phba->ctrl.mcc_wait[tag],
-@@ -423,7 +426,7 @@ static int be_mcc_wait_compl(struct beiscsi_hba *phba)
- {
- 	int i, status;
- 	for (i = 0; i < mcc_timeout; i++) {
--		if (phba->fw_timeout)
-+		if (beiscsi_error(phba))
- 			return -EIO;
- 
- 		status = beiscsi_process_mcc(phba);
-@@ -439,6 +442,7 @@ static int be_mcc_wait_compl(struct beiscsi_hba *phba)
- 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
- 			    "BC_%d : FW Timed Out\n");
- 		phba->fw_timeout = true;
-+		beiscsi_ue_detect(phba);
- 		return -EBUSY;
- 	}
- 	return 0;
-@@ -479,7 +483,8 @@ static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
- 	u32 ready;
- 
- 	do {
--		if (phba->fw_timeout)
-+
-+		if (beiscsi_error(phba))
- 			return -EIO;
- 
- 		ready = ioread32(db) & MPU_MAILBOX_DB_RDY_MASK;
-@@ -491,6 +496,7 @@ static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
- 				    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
- 				    "BC_%d : FW Timed Out\n");
- 			phba->fw_timeout = true;
-+			beiscsi_ue_detect(phba);
- 			return -EBUSY;
- 		}
- 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 73a29b2..48d37dd 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4717,6 +4717,8 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba)
- 			    phba->ctrl.mbox_mem_alloced.size,
- 			    phba->ctrl.mbox_mem_alloced.va,
- 			    phba->ctrl.mbox_mem_alloced.dma);
-+
-+	cancel_delayed_work_sync(&phba->beiscsi_hw_check_task);
- }
- 
- static void beiscsi_remove(struct pci_dev *pcidev)
-@@ -4769,6 +4771,25 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
- 	return;
- }
- 
-+/*
-+ * beiscsi_hw_health_check()- Check adapter health
-+ * @work: work item to check HW health
-+ *
-+ * Check if adapter in an unrecoverable state or not.
-+ **/
-+static void
-+beiscsi_hw_health_check(struct work_struct *work)
-+{
-+	struct beiscsi_hba *phba =
-+		container_of(work, struct beiscsi_hba,
-+			     beiscsi_hw_check_task.work);
-+
-+	beiscsi_ue_detect(phba);
-+
-+	schedule_delayed_work(&phba->beiscsi_hw_check_task,
-+			      msecs_to_jiffies(1000));
-+}
-+
- static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
- 				const struct pci_device_id *id)
- {
-@@ -4892,6 +4913,8 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
- 		goto free_twq;
- 	}
- 
-+	INIT_DELAYED_WORK(&phba->beiscsi_hw_check_task,
-+			  beiscsi_hw_health_check);
- 
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
-@@ -4941,6 +4964,9 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
- 			    "iSCSI boot info.\n");
- 
- 	beiscsi_create_def_ifaces(phba);
-+	schedule_delayed_work(&phba->beiscsi_hw_check_task,
-+			      msecs_to_jiffies(1000));
-+
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
- 		    "\n\n\n BM_%d : SUCCESS - DRIVER LOADED\n\n\n");
- 	return 0;
 diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 033c053..5b27275 100644
+index 5b27275..5946577 100644
 --- a/drivers/scsi/be2iscsi/be_main.h
 +++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -750,6 +750,11 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle);
+@@ -36,7 +36,7 @@
  
- void beiscsi_process_all_cqs(struct work_struct *work);
- 
-+static inline bool beiscsi_error(struct beiscsi_hba *phba)
-+{
-+	return phba->ue_detected || phba->fw_timeout;
-+}
-+
- struct pdu_nop_out {
- 	u32 dw[12];
- };
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 688bf64..a6c2fe4 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -22,6 +22,138 @@
- #include <scsi/scsi_bsg_iscsi.h>
- #include "be_mgmt.h"
- #include "be_iscsi.h"
-+#include "be_main.h"
-+
-+/* UE Status Low CSR */
-+static const char * const desc_ue_status_low[] = {
-+	"CEV",
-+	"CTX",
-+	"DBUF",
-+	"ERX",
-+	"Host",
-+	"MPU",
-+	"NDMA",
-+	"PTC ",
-+	"RDMA ",
-+	"RXF ",
-+	"RXIPS ",
-+	"RXULP0 ",
-+	"RXULP1 ",
-+	"RXULP2 ",
-+	"TIM ",
-+	"TPOST ",
-+	"TPRE ",
-+	"TXIPS ",
-+	"TXULP0 ",
-+	"TXULP1 ",
-+	"UC ",
-+	"WDMA ",
-+	"TXULP2 ",
-+	"HOST1 ",
-+	"P0_OB_LINK ",
-+	"P1_OB_LINK ",
-+	"HOST_GPIO ",
-+	"MBOX ",
-+	"AXGMAC0",
-+	"AXGMAC1",
-+	"JTAG",
-+	"MPU_INTPEND"
-+};
-+
-+/* UE Status High CSR */
-+static const char * const desc_ue_status_hi[] = {
-+	"LPCMEMHOST",
-+	"MGMT_MAC",
-+	"PCS0ONLINE",
-+	"MPU_IRAM",
-+	"PCS1ONLINE",
-+	"PCTL0",
-+	"PCTL1",
-+	"PMEM",
-+	"RR",
-+	"TXPB",
-+	"RXPP",
-+	"XAUI",
-+	"TXP",
-+	"ARM",
-+	"IPC",
-+	"HOST2",
-+	"HOST3",
-+	"HOST4",
-+	"HOST5",
-+	"HOST6",
-+	"HOST7",
-+	"HOST8",
-+	"HOST9",
-+	"NETC",
-+	"Unknown",
-+	"Unknown",
-+	"Unknown",
-+	"Unknown",
-+	"Unknown",
-+	"Unknown",
-+	"Unknown",
-+	"Unknown"
-+};
-+
-+/*
-+ * beiscsi_ue_detec()- Detect Unrecoverable Error on adapter
-+ * @phba: Driver priv structure
-+ *
-+ * Read registers linked to UE and check for the UE status
-+ **/
-+void beiscsi_ue_detect(struct beiscsi_hba *phba)
-+{
-+	uint32_t ue_hi = 0, ue_lo = 0;
-+	uint32_t ue_mask_hi = 0, ue_mask_lo = 0;
-+	uint8_t i = 0;
-+
-+	if (phba->ue_detected)
-+		return;
-+
-+	pci_read_config_dword(phba->pcidev,
-+			      PCICFG_UE_STATUS_LOW, &ue_lo);
-+	pci_read_config_dword(phba->pcidev,
-+			      PCICFG_UE_STATUS_MASK_LOW,
-+			      &ue_mask_lo);
-+	pci_read_config_dword(phba->pcidev,
-+			      PCICFG_UE_STATUS_HIGH,
-+			      &ue_hi);
-+	pci_read_config_dword(phba->pcidev,
-+			      PCICFG_UE_STATUS_MASK_HI,
-+			      &ue_mask_hi);
-+
-+	ue_lo = (ue_lo & ~ue_mask_lo);
-+	ue_hi = (ue_hi & ~ue_mask_hi);
-+
-+
-+	if (ue_lo || ue_hi) {
-+		phba->ue_detected = true;
-+		beiscsi_log(phba, KERN_ERR,
-+			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-+			    "BG_%d : Error detected on the adapter\n");
-+	}
-+
-+	if (ue_lo) {
-+		for (i = 0; ue_lo; ue_lo >>= 1, i++) {
-+			if (ue_lo & 1)
-+				beiscsi_log(phba, KERN_ERR,
-+					    BEISCSI_LOG_CONFIG,
-+					    "BG_%d : UE_LOW %s bit set\n",
-+					    desc_ue_status_low[i]);
-+		}
-+	}
-+
-+	if (ue_hi) {
-+		for (i = 0; ue_hi; ue_hi >>= 1, i++) {
-+			if (ue_hi & 1)
-+				beiscsi_log(phba, KERN_ERR,
-+					    BEISCSI_LOG_CONFIG,
-+					    "BG_%d : UE_HIGH %s bit set\n",
-+					    desc_ue_status_hi[i]);
-+		}
-+	}
-+}
- 
- /**
-  * mgmt_reopen_session()- Reopen a session based on reopen_type
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 88a8ed2..2e4968a 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -30,6 +30,12 @@
- #define IP_V6_LEN	16
- #define IP_V4_LEN	4
- 
-+/* UE Status and Mask register */
-+#define PCICFG_UE_STATUS_LOW            0xA0
-+#define PCICFG_UE_STATUS_HIGH           0xA4
-+#define PCICFG_UE_STATUS_MASK_LOW       0xA8
-+#define PCICFG_UE_STATUS_MASK_HI        0xAC
-+
- /**
-  * Pseudo amap definition in which each bit of the actual structure is defined
-  * as a byte: used to calculate offset/shift/mask of each field
-@@ -314,5 +320,6 @@ void beiscsi_offload_cxn_v0(struct beiscsi_offload_params *params,
- 
- void beiscsi_offload_cxn_v2(struct beiscsi_offload_params *params,
- 			     struct wrb_handle *pwrb_handle);
-+void beiscsi_ue_detect(struct beiscsi_hba *phba);
- 
- #endif
+ #include "be.h"
+ #define DRV_NAME		"be2iscsi"
+-#define BUILD_STR		"4.4.58.0"
++#define BUILD_STR		"10.0.272.0"
+ #define BE_NAME			"Emulex OneConnect" \
+ 				"Open-iSCSI Driver version" BUILD_STR
+ #define DRV_DESC		BE_NAME " " "Driver"
 -- 
 1.7.2
 
