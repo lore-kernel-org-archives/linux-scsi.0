@@ -1,43 +1,208 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH v2 01/19] be2iscsi: Fix the issue with soft reset.
-Date: Sat, 20 Oct 2012 04:41:24 +0530
-Message-ID: <a1ed23df-f582-4c7b-9d85-0468559c645a@CMEXHTCAS2.ad.emulex.com>
+Subject: [PATCH v2 02/19] be2iscsi: Display Completion Event string instead of Opcode
+Date: Sat, 20 Oct 2012 04:41:45 +0530
+Message-ID: <bde5485b-625b-4414-9e4f-013ccf3cbaba@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:38726 "EHLO
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:38733 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754309Ab2JSXMe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2012 19:12:34 -0400
+	with ESMTP id S1754309Ab2JSXMz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2012 19:12:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
-Cc: Minh Tran <minhduc.tran@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-From: Minh Tran <minhduc.tran@emulex.com>
+ Display the event string along with the opcode and CID on which
+ an event has occured.
 
- Fixed soft_reset problem which driver modified
- all 32bit before a write on second pass.
-
-Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.h |    2 -
+ drivers/scsi/be2iscsi/be_main.c |   88 ++++++++++++++++++++++++++++-----------
+ 2 files changed, 64 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 07d2cb1..05f70bb 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -56,7 +56,7 @@ int beiscsi_pci_soft_reset(struct beiscsi_hba *phba)
- 	writel(pconline0, (void *)pci_online0_offset);
- 	writel(pconline1, (void *)pci_online1_offset);
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 2c8f98d..897086b 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -992,8 +992,6 @@ struct be_cmd_get_all_if_id_req {
+ #define CONNECTION_UPLOAD_ABORT_WITH_SEQ 4	/* Abortive upload with reset,
+ 						 * sequence number by driver  */
  
--	sreset = BE2_SET_RESET;
-+	sreset |= BE2_SET_RESET;
- 	writel(sreset, (void *)pci_reset_offset);
+-/* Returns byte size of given field with a structure. */
+-
+ /* Returns the number of items in the field array. */
+ #define BE_NUMBER_OF_FIELD(_type_, _field_)	\
+ 	(FIELD_SIZEOF(_type_, _field_)/sizeof((((_type_ *)0)->_field_[0])))\
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index ff73f95..b52c5c0 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -158,6 +158,45 @@ struct device_attribute *beiscsi_attrs[] = {
+ 	NULL,
+ };
  
- 	i = 0;
++static char const *cqe_desc[] = {
++	"RESERVED_DESC",
++	"SOL_CMD_COMPLETE",
++	"SOL_CMD_KILLED_DATA_DIGEST_ERR",
++	"CXN_KILLED_PDU_SIZE_EXCEEDS_DSL",
++	"CXN_KILLED_BURST_LEN_MISMATCH",
++	"CXN_KILLED_AHS_RCVD",
++	"CXN_KILLED_HDR_DIGEST_ERR",
++	"CXN_KILLED_UNKNOWN_HDR",
++	"CXN_KILLED_STALE_ITT_TTT_RCVD",
++	"CXN_KILLED_INVALID_ITT_TTT_RCVD",
++	"CXN_KILLED_RST_RCVD",
++	"CXN_KILLED_TIMED_OUT",
++	"CXN_KILLED_RST_SENT",
++	"CXN_KILLED_FIN_RCVD",
++	"CXN_KILLED_BAD_UNSOL_PDU_RCVD",
++	"CXN_KILLED_BAD_WRB_INDEX_ERROR",
++	"CXN_KILLED_OVER_RUN_RESIDUAL",
++	"CXN_KILLED_UNDER_RUN_RESIDUAL",
++	"CMD_KILLED_INVALID_STATSN_RCVD",
++	"CMD_KILLED_INVALID_R2T_RCVD",
++	"CMD_CXN_KILLED_LUN_INVALID",
++	"CMD_CXN_KILLED_ICD_INVALID",
++	"CMD_CXN_KILLED_ITT_INVALID",
++	"CMD_CXN_KILLED_SEQ_OUTOFORDER",
++	"CMD_CXN_KILLED_INVALID_DATASN_RCVD",
++	"CXN_INVALIDATE_NOTIFY",
++	"CXN_INVALIDATE_INDEX_NOTIFY",
++	"CMD_INVALIDATED_NOTIFY",
++	"UNSOL_HDR_NOTIFY",
++	"UNSOL_DATA_NOTIFY",
++	"UNSOL_DATA_DIGEST_ERROR_NOTIFY",
++	"DRIVERMSG_NOTIFY",
++	"CXN_KILLED_CMND_DATA_NOT_ON_SAME_CONN",
++	"SOL_CMD_KILLED_DIF_ERR",
++	"CXN_KILLED_SYN_RCVD",
++	"CXN_KILLED_IMM_DATA_RCVD"
++};
++
+ static int beiscsi_slave_configure(struct scsi_device *sdev)
+ {
+ 	blk_queue_max_segment_size(sdev->request_queue, 65536);
+@@ -1914,6 +1953,13 @@ static void  beiscsi_process_mcc_isr(struct beiscsi_hba *phba)
+ 
+ }
+ 
++/**
++ * beiscsi_process_cq()- Process the Completion Queue
++ * @pbe_eq: Event Q on which the Completion has come
++ *
++ * return
++ *     Number of Completion Entries processed.
++ **/
+ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ {
+ 	struct be_queue_info *cq;
+@@ -1958,7 +2004,8 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ 		case DRIVERMSG_NOTIFY:
+ 			beiscsi_log(phba, KERN_INFO,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d : Received DRIVERMSG_NOTIFY\n");
++				    "BM_%d : Received %s[%d] on CID : %d\n",
++				    cqe_desc[code], code, cid);
+ 
+ 			dmsg = (struct dmsg_cqe *)sol;
+ 			hwi_complete_drvr_msgs(beiscsi_conn, phba, sol);
+@@ -1966,7 +2013,8 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ 		case UNSOL_HDR_NOTIFY:
+ 			beiscsi_log(phba, KERN_INFO,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d : Received UNSOL_HDR_ NOTIFY\n");
++				    "BM_%d : Received %s[%d] on CID : %d\n",
++				    cqe_desc[code], code, cid);
+ 
+ 			hwi_process_default_pdu_ring(beiscsi_conn, phba,
+ 					     (struct i_t_dpdu_cqe *)sol);
+@@ -1974,7 +2022,8 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ 		case UNSOL_DATA_NOTIFY:
+ 			beiscsi_log(phba, KERN_INFO,
+ 				    BEISCSI_LOG_CONFIG | BEISCSI_LOG_IO,
+-				    "BM_%d : Received UNSOL_DATA_NOTIFY\n");
++				    "BM_%d : Received %s[%d] on CID : %d\n",
++				    cqe_desc[code], code, cid);
+ 
+ 			hwi_process_default_pdu_ring(beiscsi_conn, phba,
+ 					     (struct i_t_dpdu_cqe *)sol);
+@@ -1984,8 +2033,8 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ 		case CXN_INVALIDATE_NOTIFY:
+ 			beiscsi_log(phba, KERN_ERR,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d : Ignoring CQ Error notification for"
+-				    " cmd/cxn invalidate\n");
++				    "BM_%d : Ignoring %s[%d] on CID : %d\n",
++				    cqe_desc[code], code, cid);
+ 			break;
+ 		case SOL_CMD_KILLED_DATA_DIGEST_ERR:
+ 		case CMD_KILLED_INVALID_STATSN_RCVD:
+@@ -1997,14 +2046,14 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ 		case CMD_CXN_KILLED_INVALID_DATASN_RCVD:
+ 			beiscsi_log(phba, KERN_ERR,
+ 				    BEISCSI_LOG_CONFIG | BEISCSI_LOG_IO,
+-				    "BM_%d : CQ Error notification for cmd.. "
+-				    "code %d cid 0x%x\n", code, cid);
++				    "BM_%d : Cmd Notification %s[%d] on CID : %d\n",
++				    cqe_desc[code], code,  cid);
+ 			break;
+ 		case UNSOL_DATA_DIGEST_ERROR_NOTIFY:
+ 			beiscsi_log(phba, KERN_ERR,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d : Digest error on def pdu ring,"
+-				    " dropping..\n");
++				    "BM_%d :  Dropping %s[%d] on DPDU ring on CID : %d\n",
++				    cqe_desc[code], code, cid);
+ 			hwi_flush_default_pdu_buffer(phba, beiscsi_conn,
+ 					     (struct i_t_dpdu_cqe *) sol);
+ 			break;
+@@ -2017,6 +2066,8 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ 		case CXN_KILLED_INVALID_ITT_TTT_RCVD:
+ 		case CXN_KILLED_TIMED_OUT:
+ 		case CXN_KILLED_FIN_RCVD:
++		case CXN_KILLED_RST_SENT:
++		case CXN_KILLED_RST_RCVD:
+ 		case CXN_KILLED_BAD_UNSOL_PDU_RCVD:
+ 		case CXN_KILLED_BAD_WRB_INDEX_ERROR:
+ 		case CXN_KILLED_OVER_RUN_RESIDUAL:
+@@ -2024,19 +2075,8 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ 		case CXN_KILLED_CMND_DATA_NOT_ON_SAME_CONN:
+ 			beiscsi_log(phba, KERN_ERR,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d : CQ Error %d, reset CID 0x%x...\n",
+-				    code, cid);
+-			if (beiscsi_conn)
+-				iscsi_conn_failure(beiscsi_conn->conn,
+-						   ISCSI_ERR_CONN_FAILED);
+-			break;
+-		case CXN_KILLED_RST_SENT:
+-		case CXN_KILLED_RST_RCVD:
+-			beiscsi_log(phba, KERN_ERR,
+-				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d : CQ Error %d, reset"
+-				    "received/sent on CID 0x%x...\n",
+-				    code, cid);
++				    "BM_%d : Event %s[%d] received on CID : %d\n",
++				    cqe_desc[code], code, cid);
+ 			if (beiscsi_conn)
+ 				iscsi_conn_failure(beiscsi_conn->conn,
+ 						   ISCSI_ERR_CONN_FAILED);
+@@ -2044,8 +2084,8 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ 		default:
+ 			beiscsi_log(phba, KERN_ERR,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d : CQ Error Invalid code= %d "
+-				    "received on CID 0x%x...\n",
++				    "BM_%d : Invalid CQE Event Received Code : %d"
++				    "CID 0x%x...\n",
+ 				    code, cid);
+ 			break;
+ 		}
 -- 
 1.7.2
 
