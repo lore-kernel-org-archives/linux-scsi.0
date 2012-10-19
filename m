@@ -1,51 +1,53 @@
-From: Pavel Roskin <proski-mXXj517/zsQ@public.gmane.org>
-Subject: Re: [ath9k-devel] [PATCH net-next 00/21] treewide: Use
- consistent api style for address testing
-Date: Fri, 19 Oct 2012 11:55:17 -0400
-Message-ID: <20121019115517.7b8514a8@mj>
-References: <cover.1350618006.git.joe@perches.com>
-	<1350630254.2293.183.camel@edumazet-glaptop>
+From: John Soni Jose <sony.john-n@emulex.com>
+Subject: [PATCH v2 00/19] be2iscsi driver updates
+Date: Sat, 20 Oct 2012 04:41:08 +0530
+Message-ID: <257c4982-e7d0-4b5e-9eee-5f60f4c49dba@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org>
-In-Reply-To: <1350630254.2293.183.camel@edumazet-glaptop>
-List-Unsubscribe: <http://openvswitch.org/mailman/options/dev>,
-	<mailto:dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://openvswitch.org/pipermail/dev>
-List-Post: <mailto:dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org>
-List-Help: <mailto:dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=help>
-List-Subscribe: <http://openvswitch.org/mailman/listinfo/dev>,
-	<mailto:dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=subscribe>
-Sender: dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
-Errors-To: dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
-To: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, b.a.t.m.a.n-ZwoEplunGu2X36UT3dwllkB+6BGkLq7r@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, brcm80211-dev-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, users-poMEt7QlJxcwIE2E9O76wjtx2kNaKg5H@public.gmane.org, linux-sctp-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, wimax-BPSAo7wm5JOHVYUYWc+uSQ@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bridge-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, lvs-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, cbe-oss-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, user-mode-linux-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org, netfilter-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, user-mode-linux-user-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-parisc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.orgl
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:38717 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755127Ab2JSXMP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2012 19:12:15 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+Cc: John Soni Jose <sony.john-n@emulex.com>
 
-On Fri, 19 Oct 2012 09:04:14 +0200
-Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+ V2 patches for be2iscsi driver updates. Fixed the review comments
+ with this patch. These patches were generated aganist scsi-misc branch.
 
-> Yes they are some names discrepancies, thats a big deal.
-> 
-> And we have alloc_skb() / kfree_skb() / skb_clone() 
-> 
-> Why not skb_alloc() / skb_free() / skb_clone() ?
-> 
-> Some people actually know current code by name of functions, they dont
-> want to change their mind and having to grep include files and git log
-> to learn the new names of an old function, especially when traveling
-> and using a laptop.
+  be2iscsi: Fix the issue with soft reset.
+  be2iscsi: Display Completion Event string instead of Opcode
+  be2iscsi: Fix memory leak in control path of driver
+  be2iscsi: Fix max supported EQ count to 8.
+  be2iscsi: Display driver name and version in device attribute
+  be2iscsi: Issue an FLR when driver is loaded
+  be2iscsi: Fix kernel panic in blk_iopoll disable mode.
+  be2iscsi: Fix return value and typo.
+  be2iscsi: Fix driver support for an adapter.
+  be2iscsi: Fix max EQ supported by the driver.
+  be2iscsi: Fix support for handling CQ_CREATE V2 version.
+  be2iscsi: Fix support for V2 version of WRB.
+  be2iscsi: Fix session update context with V2 version.
+  be2iscsi: Fix Task Completion Event handling
+  be2iscsi: Fix issue of displaying adapter family.
+  be2iscsi: Fix the copyright information
+  be2iscsi: Fix for MBX timeout issue
+  be2iscsi: Fix Unrecoverable Error Detection
+  be2iscsi: Bump the driver version
 
-I agree.
-
-Also, it makes sense to introduce a more consistent name for a function
-when it's improved in some way and the callers need to be adjusted or
-re-checked.
-
-That way, the old name can be phased out as the code is made compatible
-with the new function.
+ drivers/scsi/be2iscsi/be.h       |    7 +-
+ drivers/scsi/be2iscsi/be_cmds.c  |  236 +++++++--
+ drivers/scsi/be2iscsi/be_cmds.h  |   93 ++++-
+ drivers/scsi/be2iscsi/be_iscsi.c |  124 ++---
+ drivers/scsi/be2iscsi/be_iscsi.h |    2 +-
+ drivers/scsi/be2iscsi/be_main.c  | 1068 ++++++++++++++++++++++++--------------
+ drivers/scsi/be2iscsi/be_main.h  |  152 +++++-
+ drivers/scsi/be2iscsi/be_mgmt.c  |  424 +++++++++++++---
+ drivers/scsi/be2iscsi/be_mgmt.h  |   23 +-
+ 9 files changed, 1547 insertions(+), 582 deletions(-)
 
 -- 
-Regards,
-Pavel Roskin
+1.7.2
+
