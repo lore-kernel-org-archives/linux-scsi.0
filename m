@@ -1,53 +1,43 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH v2 00/19] be2iscsi driver updates
-Date: Sat, 20 Oct 2012 04:41:08 +0530
-Message-ID: <257c4982-e7d0-4b5e-9eee-5f60f4c49dba@CMEXHTCAS1.ad.emulex.com>
+Subject: [PATCH v2 01/19] be2iscsi: Fix the issue with soft reset.
+Date: Sat, 20 Oct 2012 04:41:24 +0530
+Message-ID: <a1ed23df-f582-4c7b-9d85-0468559c645a@CMEXHTCAS2.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:38717 "EHLO
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:38726 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755127Ab2JSXMP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2012 19:12:15 -0400
+	with ESMTP id S1754309Ab2JSXMe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2012 19:12:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
-Cc: John Soni Jose <sony.john-n@emulex.com>
+Cc: Minh Tran <minhduc.tran@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- V2 patches for be2iscsi driver updates. Fixed the review comments
- with this patch. These patches were generated aganist scsi-misc branch.
+From: Minh Tran <minhduc.tran@emulex.com>
 
-  be2iscsi: Fix the issue with soft reset.
-  be2iscsi: Display Completion Event string instead of Opcode
-  be2iscsi: Fix memory leak in control path of driver
-  be2iscsi: Fix max supported EQ count to 8.
-  be2iscsi: Display driver name and version in device attribute
-  be2iscsi: Issue an FLR when driver is loaded
-  be2iscsi: Fix kernel panic in blk_iopoll disable mode.
-  be2iscsi: Fix return value and typo.
-  be2iscsi: Fix driver support for an adapter.
-  be2iscsi: Fix max EQ supported by the driver.
-  be2iscsi: Fix support for handling CQ_CREATE V2 version.
-  be2iscsi: Fix support for V2 version of WRB.
-  be2iscsi: Fix session update context with V2 version.
-  be2iscsi: Fix Task Completion Event handling
-  be2iscsi: Fix issue of displaying adapter family.
-  be2iscsi: Fix the copyright information
-  be2iscsi: Fix for MBX timeout issue
-  be2iscsi: Fix Unrecoverable Error Detection
-  be2iscsi: Bump the driver version
+ Fixed soft_reset problem which driver modified
+ all 32bit before a write on second pass.
 
- drivers/scsi/be2iscsi/be.h       |    7 +-
- drivers/scsi/be2iscsi/be_cmds.c  |  236 +++++++--
- drivers/scsi/be2iscsi/be_cmds.h  |   93 ++++-
- drivers/scsi/be2iscsi/be_iscsi.c |  124 ++---
- drivers/scsi/be2iscsi/be_iscsi.h |    2 +-
- drivers/scsi/be2iscsi/be_main.c  | 1068 ++++++++++++++++++++++++--------------
- drivers/scsi/be2iscsi/be_main.h  |  152 +++++-
- drivers/scsi/be2iscsi/be_mgmt.c  |  424 +++++++++++++---
- drivers/scsi/be2iscsi/be_mgmt.h  |   23 +-
- 9 files changed, 1547 insertions(+), 582 deletions(-)
+Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+---
+ drivers/scsi/be2iscsi/be_cmds.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 07d2cb1..05f70bb 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -56,7 +56,7 @@ int beiscsi_pci_soft_reset(struct beiscsi_hba *phba)
+ 	writel(pconline0, (void *)pci_online0_offset);
+ 	writel(pconline1, (void *)pci_online1_offset);
+ 
+-	sreset = BE2_SET_RESET;
++	sreset |= BE2_SET_RESET;
+ 	writel(sreset, (void *)pci_reset_offset);
+ 
+ 	i = 0;
 -- 
 1.7.2
 
