@@ -1,48 +1,33 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v2 0/3] block: add queue-private command filter,
- editable via sysfs
-Date: Fri, 19 Oct 2012 05:07:09 -0400 (EDT)
-Message-ID: <1954562860.13360801.1350637629926.JavaMail.root@redhat.com>
-References: <20121019002250.GB13370@google.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 1/1] aacraid: SCSI dma mapping failure case handling
+Date: Fri, 19 Oct 2012 16:30:21 +0200
+Message-ID: <508163FD.506@redhat.com>
+References: <1350654667-2304-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20121019002250.GB13370@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Ric Wheeler <rwheeler@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53276 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030393Ab2JSOaz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Oct 2012 10:30:55 -0400
+In-Reply-To: <1350654667-2304-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>
+Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, aacraid@pmc-sierra.com, Achim_Leubner@pmc-sierra.com, Tony_Ruiz@pmc-sierra.com
 
-> > In one use case, the administrator then needs the ability to configure
-> > devices easily, for example to be much more restrictive on non-MMC
-> > devices.  It must be done with the same tools it uses for other
-> > aspects of the policy---which will be a combination of DAC (Unix
-> > permissions and ACLs) and sysfs.  Different SCSI standards may give different
-> > meanings for the same byte value, but a simple bitmap is enough for this.
-> > 
-> > In the virtualization case, the problem is really that you want to
-> > pass through everything or almost everything, while still running
-> > as confined as possible (i.e. CAP_SYS_RAWIO is not a choice).  But
-> > in this case a more complex filtering can be done just as easily in
-> > userspace, in the virtual machine monitor.
-> > 
-> > One alternative is a ioctl to disable the filter altogether, to be
-> > used together with SCM_RIGHTS file descriptor passing.  This works in
-> > the virtualization case but not for policy decisions.  So this patch
-> > series provides the sysfs knob.  It is a tweaked revert of commit
-> > 018e044 (block: get rid of queue-private command filter, 2009-06-26).
-> 
-> If your use case at hand is mostly virtualization, I personally would
-> prefer the latter solution instead of extending in-kernel SG_IO
-> filter.  It could be that I'm just not aware but I don't think there
-> have been too many complaints regarding other use cases.  This type
-> of deep inspection and filtering has fairly strong tendency to be
-> unpopular.  Userland configurable one is even scarier and I don't
-> think too many would know and make use of it in the end.
+On 10/19/2012 03:51 PM, Mahesh Rajashekhara wrote:
+> Hi James,
+>
+> We've incorporated the changes suggested by Tomas in this driver patch.  I would request you to please consider this patch. Please let us know your comments if any.
+>
+> Patch Description:
+> This patch handles SCSI dma mapping failure case. Reporting error code to the upper layer instead of BUG_ON().
+>
+> Signed-off-by: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>
 
-Actually I plan to set up the filtering in udev, so that we need not
-pass through many MMC commands (some of which have completely different
-meanings) to SBC devices.  So it would really be useful.
+Acked-by: Tomas Henzl <thenzl@redhat.com>
 
-Paolo
+Thanks.
+
