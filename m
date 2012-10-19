@@ -1,33 +1,51 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1/1] aacraid: SCSI dma mapping failure case handling
-Date: Fri, 19 Oct 2012 16:30:21 +0200
-Message-ID: <508163FD.506@redhat.com>
-References: <1350654667-2304-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com>
+From: Pavel Roskin <proski-mXXj517/zsQ@public.gmane.org>
+Subject: Re: [ath9k-devel] [PATCH net-next 00/21] treewide: Use
+ consistent api style for address testing
+Date: Fri, 19 Oct 2012 11:55:17 -0400
+Message-ID: <20121019115517.7b8514a8@mj>
+References: <cover.1350618006.git.joe@perches.com>
+	<1350630254.2293.183.camel@edumazet-glaptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53276 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030393Ab2JSOaz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Oct 2012 10:30:55 -0400
-In-Reply-To: <1350654667-2304-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org>
+In-Reply-To: <1350630254.2293.183.camel@edumazet-glaptop>
+List-Unsubscribe: <http://openvswitch.org/mailman/options/dev>,
+	<mailto:dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://openvswitch.org/pipermail/dev>
+List-Post: <mailto:dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org>
+List-Help: <mailto:dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=help>
+List-Subscribe: <http://openvswitch.org/mailman/listinfo/dev>,
+	<mailto:dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=subscribe>
+Sender: dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
+Errors-To: dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
+To: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, b.a.t.m.a.n-ZwoEplunGu2X36UT3dwllkB+6BGkLq7r@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, brcm80211-dev-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, users-poMEt7QlJxcwIE2E9O76wjtx2kNaKg5H@public.gmane.org, linux-sctp-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, wimax-BPSAo7wm5JOHVYUYWc+uSQ@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bridge-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, lvs-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, cbe-oss-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, user-mode-linux-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org, netfilter-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, user-mode-linux-user-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-parisc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.orgl
 List-Id: linux-scsi@vger.kernel.org
-To: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>
-Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, aacraid@pmc-sierra.com, Achim_Leubner@pmc-sierra.com, Tony_Ruiz@pmc-sierra.com
 
-On 10/19/2012 03:51 PM, Mahesh Rajashekhara wrote:
-> Hi James,
->
-> We've incorporated the changes suggested by Tomas in this driver patch.  I would request you to please consider this patch. Please let us know your comments if any.
->
-> Patch Description:
-> This patch handles SCSI dma mapping failure case. Reporting error code to the upper layer instead of BUG_ON().
->
-> Signed-off-by: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>
+On Fri, 19 Oct 2012 09:04:14 +0200
+Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 
-Acked-by: Tomas Henzl <thenzl@redhat.com>
+> Yes they are some names discrepancies, thats a big deal.
+> 
+> And we have alloc_skb() / kfree_skb() / skb_clone() 
+> 
+> Why not skb_alloc() / skb_free() / skb_clone() ?
+> 
+> Some people actually know current code by name of functions, they dont
+> want to change their mind and having to grep include files and git log
+> to learn the new names of an old function, especially when traveling
+> and using a laptop.
 
-Thanks.
+I agree.
 
+Also, it makes sense to introduce a more consistent name for a function
+when it's improved in some way and the callers need to be adjusted or
+re-checked.
+
+That way, the old name can be phased out as the code is made compatible
+with the new function.
+
+-- 
+Regards,
+Pavel Roskin
