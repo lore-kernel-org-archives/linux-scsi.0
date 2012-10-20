@@ -1,47 +1,31 @@
-From: Tom Rini <trini@ti.com>
-Subject: [PATCH] [SCSI] mvsas: Fix warning in mvs_update_phyinfo
-Date: Sat, 20 Oct 2012 14:11:04 -0700
-Message-ID: <1350767464-3012-1-git-send-email-trini@ti.com>
+From: The Larges <pediatria@dcc.ulpgc.es>
+Subject: Generous Offer
+Date: Sat, 20 Oct 2012 23:34:29 +0100
+Message-ID: <20121020233429.46061qk7fpl7cg00__16023.355353582$1350773985$gmane$org@correo.ulpgc.es>
+Reply-To: allen_violet000@yahoo.co.jp
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:50099 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923Ab2JTVLM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Oct 2012 17:11:12 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so761596dak.19
-        for <linux-scsi@vger.kernel.org>; Sat, 20 Oct 2012 14:11:11 -0700 (PDT)
+Received: from smtp1.gestion.ulpgc.es ([193.145.138.5]:43213 "EHLO
+	smtp1.ulpgc.es" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753559Ab2JTW7T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Oct 2012 18:59:19 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Xiangliang Yu <yuxiangl@marvell.com>, Dan Williams <dan.j.williams@intel.com>, James Bottomley <JBottomley@Parallels.com>
 
-In mvs_update_phyinfo we were comparing phy->identify.device_type
-against enum sas_dev_type instead of enum sas_device_type
+Dear Sir/Madam
 
-Cc: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Signed-off-by: Tom Rini <trini@ti.com>
----
- drivers/scsi/mvsas/mv_sas.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Please let me know if this is your correct email.
 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index a3776d6..9f91359 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1153,10 +1153,10 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st)
- 			phy->identify.device_type =
- 				phy->att_dev_info & PORT_DEV_TYPE_MASK;
- 
--			if (phy->identify.device_type == SAS_END_DEV)
-+			if (phy->identify.device_type == SAS_END_DEVICE)
- 				phy->identify.target_port_protocols =
- 							SAS_PROTOCOL_SSP;
--			else if (phy->identify.device_type != NO_DEVICE)
-+			else if (phy->identify.device_type != SAS_PHY_UNUSED)
- 				phy->identify.target_port_protocols =
- 							SAS_PROTOCOL_SMP;
- 			if (oob_done)
--- 
-1.7.9.5
+The Larges Family.
+
+
+
+
+
 
