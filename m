@@ -1,122 +1,71 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH] LIBISCSI: Added the new boot_nic entry in the session
- sysfs
-Date: Mon, 22 Oct 2012 17:53:12 -0700
-Message-ID: <1350953592-29467-1-git-send-email-eddie.wai@broadcom.com>
-References: <Eddie Wai <eddie.wai@broadcom.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [patch/rfc/rft] sd: allocate request_queue on device's local
+ numa node
+Date: Tue, 23 Oct 2012 08:45:30 +0200
+Message-ID: <50863D0A.6040800@acm.org>
+References: <x49pq4axre1.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4263 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756195Ab2JWAxk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Oct 2012 20:53:40 -0400
-In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <x49pq4axre1.fsf@segfault.boston.devel.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-This is the kernel part of the modification to extract the net params
-from the ibft sysfs to the iface struct used for the connection
-request upon sync_session in the open-iscsi util.
+On 10/22/12 21:01, Jeff Moyer wrote:
+> All of the infrastructure is available to allocate a request_queue on a
+> particular numa node, but it isn't being utilized at all.  Wire up the
+> sd driver to allocate the request_queue on the HBA's local numa node.
+>
+> This is a request for comments and testing (I've built and booted it,
+> nothing more).  I believe that this should be a performance win, but I
+> have no numbers to back it up as yet.  Suggestions for workloads to test
+> are welcome.
+>
+> Cheers,
+> Jeff
+>
+> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+>
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index da36a3a..7986483 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1664,7 +1664,8 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
+>   	struct request_queue *q;
+>   	struct device *dev = shost->dma_dev;
+>
+> -	q = blk_init_queue(request_fn, NULL);
+> +	q = blk_init_queue_node(request_fn, NULL,
+> +				dev_to_node(&shost->shost_dev));
+>   	if (!q)
+>   		return NULL;
 
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
----
- drivers/scsi/libiscsi.c             |    6 ++++++
- drivers/scsi/scsi_transport_iscsi.c |    4 ++++
- include/scsi/iscsi_if.h             |    2 ++
- include/scsi/libiscsi.h             |    2 ++
- 4 files changed, 14 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 82c3fd4..4f4c154 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2809,6 +2809,7 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
- 	kfree(session->targetname);
- 	kfree(session->targetalias);
- 	kfree(session->initiatorname);
-+	kfree(session->boot_nic);
- 	kfree(session->ifacename);
+Are you sure this approach will always result in the queue being 
+allocated on the same NUMA node as the HCA ? If e.g. a user triggers LUN 
+scanning via sysfs the above code may be invoked on another NUMA node 
+than the node to which the HCA is connected. Also, if you have a look at 
+e.g. scsi_request_fn() or scsi_device_unbusy() you will see that in 
+order to avoid inter-node traffic it's important to allocate the sdev 
+and shost data structures on the same NUMA node. How about the following 
+approach ?
+- Add a variant of scsi_host_alloc() that allows to specify on which
+   NUMA node to allocate the shost structure and also that stores the
+   identity of that node in the shost structure.
+- Modify __scsi_alloc_queue() such that it allocates the sdev structure
+   on the same NUMA node as the shost structure.
+- Modify the SCSI LLD of your choice such that it uses the new
+   scsi_host_alloc() call. According to what is appropriate the NUMA node
+   on which to allocate the shost could be specified by the user or could
+   be identical to the NUMA node of the HCA controlled by the SCSI LLD
+   (see e.g. /sys/devices/pci*/*/numa_node). Please keep in mind that a
+   single PCIe bus may have a minimal distance to more than one NUMA
+   node. See e.g. the diagram at the top of page 8 in
  
- 	iscsi_destroy_session(cls_session);
-@@ -3248,6 +3249,8 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
- 		return iscsi_switch_str_param(&session->ifacename, buf);
- 	case ISCSI_PARAM_INITIATOR_NAME:
- 		return iscsi_switch_str_param(&session->initiatorname, buf);
-+	case ISCSI_PARAM_BOOT_NIC:
-+		return iscsi_switch_str_param(&session->boot_nic, buf);
- 	default:
- 		return -ENOSYS;
- 	}
-@@ -3326,6 +3329,9 @@ int iscsi_session_get_param(struct iscsi_cls_session *cls_session,
- 	case ISCSI_PARAM_INITIATOR_NAME:
- 		len = sprintf(buf, "%s\n", session->initiatorname);
- 		break;
-+	case ISCSI_PARAM_BOOT_NIC:
-+		len = sprintf(buf, "%s\n", session->boot_nic);
-+		break;
- 	default:
- 		return -ENOSYS;
- 	}
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 31969f2..2cc28fe 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2484,6 +2484,7 @@ iscsi_session_attr(tgt_reset_tmo, ISCSI_PARAM_TGT_RESET_TMO, 0);
- iscsi_session_attr(ifacename, ISCSI_PARAM_IFACE_NAME, 0);
- iscsi_session_attr(initiatorname, ISCSI_PARAM_INITIATOR_NAME, 0);
- iscsi_session_attr(targetalias, ISCSI_PARAM_TARGET_ALIAS, 0);
-+iscsi_session_attr(boot_nic, ISCSI_PARAM_BOOT_NIC, 0);
- 
- static ssize_t
- show_priv_session_state(struct device *dev, struct device_attribute *attr,
-@@ -2570,6 +2571,7 @@ static struct attribute *iscsi_session_attrs[] = {
- 	&dev_attr_sess_ifacename.attr,
- 	&dev_attr_sess_initiatorname.attr,
- 	&dev_attr_sess_targetalias.attr,
-+	&dev_attr_sess_boot_nic.attr,
- 	&dev_attr_priv_sess_recovery_tmo.attr,
- 	&dev_attr_priv_sess_state.attr,
- 	&dev_attr_priv_sess_creator.attr,
-@@ -2632,6 +2634,8 @@ static umode_t iscsi_session_attr_is_visible(struct kobject *kobj,
- 		param = ISCSI_PARAM_INITIATOR_NAME;
- 	else if (attr == &dev_attr_sess_targetalias.attr)
- 		param = ISCSI_PARAM_TARGET_ALIAS;
-+	else if (attr == &dev_attr_sess_boot_nic.attr)
-+		param = ISCSI_PARAM_BOOT_NIC;
- 	else if (attr == &dev_attr_priv_sess_recovery_tmo.attr)
- 		return S_IRUGO | S_IWUSR;
- 	else if (attr == &dev_attr_priv_sess_state.attr)
-diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index 917741b..874c8f3 100644
---- a/include/scsi/iscsi_if.h
-+++ b/include/scsi/iscsi_if.h
-@@ -452,6 +452,8 @@ enum iscsi_param {
- 	ISCSI_PARAM_TGT_RESET_TMO,
- 	ISCSI_PARAM_TARGET_ALIAS,
- 
-+	ISCSI_PARAM_BOOT_NIC,
-+
- 	ISCSI_PARAM_CHAP_IN_IDX,
- 	ISCSI_PARAM_CHAP_OUT_IDX,
- 	/* must always be last */
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 6e33386..7ba5cc8 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -287,6 +287,8 @@ struct iscsi_session {
- 	char			*targetalias;
- 	char			*ifacename;
- 	char			*initiatorname;
-+	char			*boot_nic;
-+
- 	/* control data */
- 	struct iscsi_transport	*tt;
- 	struct Scsi_Host	*host;
--- 
-1.7.7.4
+http://bizsupport1.austin.hp.com/bc/docs/support/SupportManual/c03261871/c03261871.pdf
+   for a system diagram of a NUMA system where each PCIe bus has a
+   minimal distance to two different NUMA nodes.
 
-
+Bart.
