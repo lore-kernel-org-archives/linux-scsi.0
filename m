@@ -1,41 +1,45 @@
-From: Archana Pundle <av.pundle@ncl.res.in>
-Subject: ADMIN ALERT.
-Date: Tue, 23 Oct 2012 07:04:59 +0000
-Message-ID: <4BC2581804B1CD46821588ED67639B390CBF5DAB@mailsrv01.ncl.res.in>
+From: Naresh Kumar Inna <naresh@chelsio.com>
+Subject: Re: [V5 PATCH 0/8] csiostor: Chelsio FCoE offload driver submission
+Date: Tue, 23 Oct 2012 15:18:51 +0530
+Message-ID: <50866803.3040003@chelsio.com>
+References: <1348507072-25625-1-git-send-email-naresh@chelsio.com>  <5072A5C5.6070102@chelsio.com> <1349691923.2615.36.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from surya.ncl.res.in ([14.139.126.12]:60746 "EHLO surya.ncl.res.in"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756733Ab2JWJL6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Oct 2012 05:11:58 -0400
-Content-Language: en-US
+Received: from stargate.chelsio.com ([67.207.112.58]:7784 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932811Ab2JWJsy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Oct 2012 05:48:54 -0400
+In-Reply-To: <1349691923.2615.36.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Chethan Seshadri <chethan@chelsio.com>
 
+Hi James,
 
+I hope now is a good time to resume the review of this driver. I will
+send out v6 version of the driver shortly, which has some bug fixes and
+other cleanup.
 
+Thanks,
+Naresh.
 
-Attention Email User:
+On 10/8/2012 3:55 PM, James Bottomley wrote:
+> On Mon, 2012-10-08 at 15:37 +0530, Naresh Kumar Inna wrote:
+>> Please let me know if you are expecting any more changes to this driver
+>> to resume its review. I have addressed all review comments as of the
+>> last series of patches (below).
+> 
+> No, I don't think so, but please understand that the review talent is
+> all busy concentrating on the merge window for at least the next week
+> and a bit, so I won't be able to get them to pay attention until 3.7-rc1
+> is released.
+> 
+> Thanks,
+> 
+> James
+> 
+> 
 
-An Attempt has been made to login from a new computer. For the
-security of your account, we are poised to open a query and you
-will be having problems in sending and receiving mails Until You Re-Validate.
-Kindly verify your login details by responding to this email We are upgrading our Email
-system to enable us reduce the occurrence of Spam.
-
-Please Click the link Below or copy paste to your browser To Validate Your
-Mailbox.
-
-http://www.empirixweb.com/email/use/filter/form1.html
-
-Do not ignore this message to avoid termination of your webmail account.
-
-Webmaster Customer Care.
-
-________________________________
-
-Disclaimer:
-
-This message and the information contained herein is proprietary and confidential and subject to the policy statement of the National Chemical Laboratory, Pune, India. You may review the policy at http://www.ncl-india.org/common/webmailDisclaimer.htm
