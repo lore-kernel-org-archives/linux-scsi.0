@@ -1,45 +1,61 @@
-From: Naresh Kumar Inna <naresh@chelsio.com>
-Subject: Re: [V5 PATCH 0/8] csiostor: Chelsio FCoE offload driver submission
-Date: Tue, 23 Oct 2012 15:18:51 +0530
-Message-ID: <50866803.3040003@chelsio.com>
-References: <1348507072-25625-1-git-send-email-naresh@chelsio.com>  <5072A5C5.6070102@chelsio.com> <1349691923.2615.36.camel@dabdike.int.hansenpartnership.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 2/4] block: Avoid that request_fn is invoked on a dead
+ queue
+Date: Tue, 23 Oct 2012 14:11:29 +0200
+Message-ID: <50868971.2060209@acm.org>
+References: <50758EBE.7050202@acm.org> <50758F51.3020601@acm.org> <20121016233829.GK16166@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:7784 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932811Ab2JWJsy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Oct 2012 05:48:54 -0400
-In-Reply-To: <1349691923.2615.36.camel@dabdike.int.hansenpartnership.com>
+Received: from juliette.telenet-ops.be ([195.130.137.74]:42598 "EHLO
+	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622Ab2JWMLd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Oct 2012 08:11:33 -0400
+In-Reply-To: <20121016233829.GK16166@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dimitrios Michailidis <dm@chelsio.com>, Casey Leedom <leedom@chelsio.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Chethan Seshadri <chethan@chelsio.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>
 
-Hi James,
+On 10/17/12 01:38, Tejun Heo wrote:
+>>   /**
+>> + * __blk_run_queue_uncond - run a queue whether or not it has been stopped
+>> + * @q:	The queue to run
+>> + *
+>> + * Description:
+>> + *    Invoke request handling on a queue if there are any pending requests.
+>> + *    May be used to restart request handling after a request has completed.
+>> + *    This variant runs the queue whether or not the queue has been
+>> + *    stopped. Must be called with the queue lock held and interrupts
+>> + *    disabled. See also @blk_run_queue.
+>> + */
+>> +void __blk_run_queue_uncond(struct request_queue *q)
+>> +{
+>> +	if (unlikely(blk_queue_dead(q)))
+>> +		return;
+>> +
+>> +	q->request_fn(q);
+>> +}
+>> +
+>> +/**
+>>    * __blk_run_queue - run a single device queue
+>>    * @q:	The queue to run
+>>    *
+>> @@ -305,7 +324,7 @@ void __blk_run_queue(struct request_queue *q)
+>>   	if (unlikely(blk_queue_stopped(q)))
+>>   		return;
+>>
+>> -	q->request_fn(q);
+>> +	__blk_run_queue_uncond(q);
+>
+> __blk_run_queue_uncond() is a cold path and I don't think adding a
+> test there matters but I think it would be better if we avoid an extra
+> branch if possible for __blk_run_queue().  Can't we merge
+> blk_queue_stopped/dead() testing?
 
-I hope now is a good time to resume the review of this driver. I will
-send out v6 version of the driver shortly, which has some bug fixes and
-other cleanup.
+How about declaring the function __blk_run_queue_uncond() inline ? That 
+should allow the compiler to combine the two tests into a single test.
 
-Thanks,
-Naresh.
-
-On 10/8/2012 3:55 PM, James Bottomley wrote:
-> On Mon, 2012-10-08 at 15:37 +0530, Naresh Kumar Inna wrote:
->> Please let me know if you are expecting any more changes to this driver
->> to resume its review. I have addressed all review comments as of the
->> last series of patches (below).
-> 
-> No, I don't think so, but please understand that the review talent is
-> all busy concentrating on the merge window for at least the next week
-> and a bit, so I won't be able to get them to pay attention until 3.7-rc1
-> is released.
-> 
-> Thanks,
-> 
-> James
-> 
-> 
+Bart.
 
