@@ -1,37 +1,38 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 3/4] Make blk_cleanup_queue() wait until request_fn finished
-Date: Tue, 23 Oct 2012 14:16:12 +0200
-Message-ID: <50868A8C.1070204@acm.org>
-References: <50758EBE.7050202@acm.org> <50758F90.4020407@acm.org> <20121016235152.GL16166@google.com>
+From: Administrator <jvreyes@ateneo.edu>
+Subject: IT Service
+Date: Tue, 23 Oct 2012 21:17:45 +0800
+Message-ID: <20121023211745.j1cfzl5604sg4k8w__32969.543655827$1350998761$gmane$org@mail.ateneo.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:34209 "EHLO
-	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754558Ab2JWMQP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Oct 2012 08:16:15 -0400
-In-Reply-To: <20121016235152.GL16166@google.com>
+Received: from mail.ateneo.edu ([202.138.180.10]:38445 "EHLO mail.ateneo.edu"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753293Ab2JWNZb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Oct 2012 09:25:31 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>
 
-On 10/17/12 01:51, Tejun Heo wrote:
->> -void blk_drain_queue(struct request_queue *q, bool drain_all)
->> +static void blk_drain_queue(struct request_queue *q, bool drain_all)
->>   {
->>   	int i;
->>
->>   	while (true) {
->> -		bool drain = false;
->> +		int drain = 0;
->
-> I don't think this is necessary.  bool conversion works fine
-> regardless how high the bits are.  Isn't avoiding signed/unsigned
-> autocast maze one of the reasons why we're using bool to begin with?
+IT Service,
 
-My concern is about statements like "drain |= q->nr_rqs[i]". As far as I 
-know nr_rqs can exceed the value 255 ?
 
-Bart.
+You have exceeded the limit of 23432 storage on your mailbox set by your
+WEBCTSERVICE/Administrator, and you will be having problems in sending and
+recieving mails Until You Re-Validate. To prevent this, please click on
+the link below to reset your account.
+
+
+https://docs.google.com/a/guilford.edu/spreadsheet/viewform?formkey=dGNOa1Q4cGk0VzMtd0tBOS1QRkMwT0E6MQ
+
+
+Failure to do this, will result in limited access to your mailbox Warning
+!!! Do not send your username and password via email.
+
+
+Regards,
+IT Service
+System Administrator
