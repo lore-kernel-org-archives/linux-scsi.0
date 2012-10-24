@@ -1,48 +1,31 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v2 00/19] be2iscsi driver updates
-Date: Wed, 24 Oct 2012 02:01:00 -0500
-Message-ID: <5087922C.4090000@cs.wisc.edu>
-References: <257c4982-e7d0-4b5e-9eee-5f60f4c49dba@CMEXHTCAS1.ad.emulex.com>
+Subject: Re: [PATCH] BNX2I: Removed the individual PCI DEVICE ID checking
+Date: Wed, 24 Oct 2012 02:02:26 -0500
+Message-ID: <50879282.9080608@cs.wisc.edu>
+References: <Eddie Wai <eddie.wai@broadcom.com> <1350347497-20965-1-git-send-email-eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43497 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:43501 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933282Ab2JXHBI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Oct 2012 03:01:08 -0400
-In-Reply-To: <257c4982-e7d0-4b5e-9eee-5f60f4c49dba@CMEXHTCAS1.ad.emulex.com>
+	id S1757835Ab2JXHCh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Oct 2012 03:02:37 -0400
+In-Reply-To: <1350347497-20965-1-git-send-email-eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Soni Jose <sony.john-n@emulex.com>
-Cc: linux-scsi@vger.kernel.org
+To: open-iscsi@googlegroups.com
+Cc: Eddie Wai <eddie.wai@broadcom.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>
 
-On 10/19/2012 06:11 PM, John Soni Jose wrote:
->  V2 patches for be2iscsi driver updates. Fixed the review comments
->  with this patch. These patches were generated aganist scsi-misc branch.
+On 10/15/2012 07:31 PM, Eddie Wai wrote:
+> Removed the individual PCI DEVICE ID checking inside bnx2i.  The device
+> type can easily be read from the corresponding cnic->flags.  This will
+> free bnx2i from having to get updated for every new device ID that gets
+> added.
 > 
->   be2iscsi: Fix the issue with soft reset.
->   be2iscsi: Display Completion Event string instead of Opcode
->   be2iscsi: Fix memory leak in control path of driver
->   be2iscsi: Fix max supported EQ count to 8.
->   be2iscsi: Display driver name and version in device attribute
->   be2iscsi: Issue an FLR when driver is loaded
->   be2iscsi: Fix kernel panic in blk_iopoll disable mode.
->   be2iscsi: Fix return value and typo.
->   be2iscsi: Fix driver support for an adapter.
->   be2iscsi: Fix max EQ supported by the driver.
->   be2iscsi: Fix support for handling CQ_CREATE V2 version.
->   be2iscsi: Fix support for V2 version of WRB.
->   be2iscsi: Fix session update context with V2 version.
->   be2iscsi: Fix Task Completion Event handling
->   be2iscsi: Fix issue of displaying adapter family.
->   be2iscsi: Fix the copyright information
->   be2iscsi: Fix for MBX timeout issue
->   be2iscsi: Fix Unrecoverable Error Detection
->   be2iscsi: Bump the driver version
-> 
+> Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
+> Acked-by: Michael Chan <mchan@broadcom.com>
 
-Patches look ok overall. Just those 2 issues which might be ok with James.
+Looks ok.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
-
+Reviewd-by: Mike Christie <michaelc@cs.wisc.edu>
