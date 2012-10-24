@@ -1,99 +1,31 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [osd-dev] [PATCH] osduld: Add osdname & systemid sysfs at scsi_osd
- class
-Date: Wed, 24 Oct 2012 14:55:34 -0700
-Message-ID: <508863D6.4040301@panasas.com>
-References: <508862ED.1070600@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Drivers: scsi
+Date: Thu, 25 Oct 2012 07:25:20 +0900
+Message-ID: <1351117520.2494.8.camel@dabdike>
+References: <1351095938-12204-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from natasha.panasas.com ([67.152.220.90]:42142 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422720Ab2JXVzn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2012 17:55:43 -0400
-In-Reply-To: <508862ED.1070600@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1351095938-12204-1-git-send-email-kys@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
-On 10/24/2012 02:51 PM, Boaz Harrosh wrote:
-> 
-> This patch adds the support for the following two read-only sysfs attributes
-> to scsi_osd class members : osdname & systemid
-> 
-> These attributes will show up as below in sysfs class hierarchy:
-> /sys/class/scsi_osd/osdX/osdname
-> /sys/class/scsi_osd/osdX/systemid
-> 
-> The osdname & systemid are OSD device attributes which uniquely
-> identify a device on the network, while it's IP and certainly
-> it's /dev/osdX device path might change.
-> Userspace utilities (e.g. mkfs.exofs) can parse these attributes to
-> identify the correct OSD in safer and faster way.
-> 
-> (Today osd apps open each device in the system and send a
->  attributes query for these, in order to access the user
->  requested device)
-> 
-> Signed-off-by: Sachin Bhamare <sbhamare@panasas.com>
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+On Wed, 2012-10-24 at 09:25 -0700, K. Y. Srinivasan wrote:
+> When the low level driver returns SCSI_MLQUEUE_DEVICE_BUSY,
+> how is the command retried; I suspect the retry is done after some delay.
 
-James hi.
+Delay depends mainly on I/O pressure and the unplug timer in the block
+layer.
 
-This is for the next (v3.8) merge window. Please submit to scsi-misc tree.
+> Is this delay programmable? If the device state changes,
+> can the low level driver notify upper layers that it can now handle
+> the command that it had failed earlier with SCSI_MLQUEUE_DEVICE_BUSY.
 
-It is actually a very old well tested, but forgotten patch.
+In theory, you can call blk_run_queue() from the event handler that sees
+the device become ready.  I don't think any driver actually does this,
+but I can't see it would cause any problem.
 
-Thanks
-Boaz
-
-> ---
->  drivers/scsi/osd/osd_uld.c |   28 ++++++++++++++++++++++++++++
->  1 files changed, 28 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-> index d4ed9eb..4375417 100644
-> --- a/drivers/scsi/osd/osd_uld.c
-> +++ b/drivers/scsi/osd/osd_uld.c
-> @@ -97,9 +97,37 @@ struct osd_dev_handle {
->  
->  static DEFINE_IDA(osd_minor_ida);
->  
-> +/*
-> + * scsi sysfs attribute operations
-> + */
-> +static ssize_t osdname_show(struct device *dev, struct device_attribute *attr,
-> +			    char *buf)
-> +{
-> +	struct osd_uld_device *ould = container_of(dev, struct osd_uld_device,
-> +						   class_dev);
-> +	return sprintf(buf, "%s\n", ould->odi.osdname);
-> +}
-> +
-> +static ssize_t systemid_show(struct device *dev, struct device_attribute *attr,
-> +			    char *buf)
-> +{
-> +	struct osd_uld_device *ould = container_of(dev, struct osd_uld_device,
-> +						   class_dev);
-> +
-> +	memcpy(buf, ould->odi.systemid, ould->odi.systemid_len);
-> +	return ould->odi.systemid_len;
-> +}
-> +
-> +static struct device_attribute osd_uld_attrs[] = {
-> +	__ATTR(osdname, S_IRUGO, osdname_show, NULL),
-> +	__ATTR(systemid, S_IRUGO, systemid_show, NULL),
-> +	__ATTR_NULL,
-> +};
-> +
->  static struct class osd_uld_class = {
->  	.owner		= THIS_MODULE,
->  	.name		= "scsi_osd",
-> +	.dev_attrs	= osd_uld_attrs,
->  };
->  
->  /*
-> 
-
-
+James
