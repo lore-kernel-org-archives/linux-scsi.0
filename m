@@ -1,23 +1,23 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/4] Make blk_cleanup_queue() wait until request_fn
- finished
-Date: Wed, 24 Oct 2012 12:11:28 -0700
-Message-ID: <20121024191128.GD12182@atj.dyndns.org>
+Subject: Re: [PATCH 2/4] block: Avoid that request_fn is invoked on a dead
+ queue
+Date: Wed, 24 Oct 2012 12:13:16 -0700
+Message-ID: <20121024191316.GE12182@atj.dyndns.org>
 References: <50758EBE.7050202@acm.org>
- <50758F90.4020407@acm.org>
- <20121016235152.GL16166@google.com>
- <50868A8C.1070204@acm.org>
+ <50758F51.3020601@acm.org>
+ <20121016233829.GK16166@google.com>
+ <50868971.2060209@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:50732 "EHLO
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:62670 "EHLO
 	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161085Ab2JXTLg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2012 15:11:36 -0400
-Received: by mail-ie0-f174.google.com with SMTP id k13so1178360iea.19
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Oct 2012 12:11:36 -0700 (PDT)
+	with ESMTP id S1030213Ab2JXTNY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2012 15:13:24 -0400
+Received: by mail-ie0-f174.google.com with SMTP id k13so1181068iea.19
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Oct 2012 12:13:23 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <50868A8C.1070204@acm.org>
+In-Reply-To: <50868971.2060209@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
@@ -25,29 +25,20 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@paralle
 
 Hello, Bart.
 
-On Tue, Oct 23, 2012 at 02:16:12PM +0200, Bart Van Assche wrote:
-> On 10/17/12 01:51, Tejun Heo wrote:
-> >>-void blk_drain_queue(struct request_queue *q, bool drain_all)
-> >>+static void blk_drain_queue(struct request_queue *q, bool drain_all)
-> >>  {
-> >>  	int i;
-> >>
-> >>  	while (true) {
-> >>-		bool drain = false;
-> >>+		int drain = 0;
-> >
-> >I don't think this is necessary.  bool conversion works fine
-> >regardless how high the bits are.  Isn't avoiding signed/unsigned
-> >autocast maze one of the reasons why we're using bool to begin with?
+On Tue, Oct 23, 2012 at 02:11:29PM +0200, Bart Van Assche wrote:
+> >__blk_run_queue_uncond() is a cold path and I don't think adding a
+> >test there matters but I think it would be better if we avoid an extra
+> >branch if possible for __blk_run_queue().  Can't we merge
+> >blk_queue_stopped/dead() testing?
 > 
-> My concern is about statements like "drain |= q->nr_rqs[i]". As far
-> as I know nr_rqs can exceed the value 255 ?
+> How about declaring the function __blk_run_queue_uncond() inline ?
+> That should allow the compiler to combine the two tests into a
+> single test.
 
-How would that be a problem?  Can you please elaborate (or better
-demonstrate) the problem case?  And if such problem exists, please
-make it a separate bug fix patch.
+Let's leave it as-is for now.  Given the later patches, I no longer
+think it would be better to merge the testings.
 
-Thanks.
+Thanks!
 
 --
 tejun
