@@ -1,31 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Drivers: scsi
-Date: Thu, 25 Oct 2012 07:25:20 +0900
-Message-ID: <1351117520.2494.8.camel@dabdike>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: Drivers: scsi
+Date: Wed, 24 Oct 2012 22:34:38 +0000
+Message-ID: <426367E2313C2449837CD2DE46E7EAF930A46535@SN2PRD0310MB382.namprd03.prod.outlook.com>
 References: <1351095938-12204-1-git-send-email-kys@microsoft.com>
+ <1351117520.2494.8.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1351095938-12204-1-git-send-email-kys@microsoft.com>
+In-Reply-To: <1351117520.2494.8.camel@dabdike>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, hch@infradead.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-10-24 at 09:25 -0700, K. Y. Srinivasan wrote:
-> When the low level driver returns SCSI_MLQUEUE_DEVICE_BUSY,
-> how is the command retried; I suspect the retry is done after some delay.
-
-Delay depends mainly on I/O pressure and the unplug timer in the block
-layer.
-
-> Is this delay programmable? If the device state changes,
-> can the low level driver notify upper layers that it can now handle
-> the command that it had failed earlier with SCSI_MLQUEUE_DEVICE_BUSY.
-
-In theory, you can call blk_run_queue() from the event handler that sees
-the device become ready.  I don't think any driver actually does this,
-but I can't see it would cause any problem.
-
-James
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+V2VkbmVzZGF5LCBPY3RvYmVyIDI0LCAyMDEyIDY6MjUgUE0NCj4gVG86IEtZIFNyaW5pdmFzYW4N
+Cj4gQ2M6IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJu
+ZWwub3JnOw0KPiBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBvaGVyaW5nQHN1c2UuY29t
+OyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJuZWwub3JnDQo+IFN1
+YmplY3Q6IFJlOiBEcml2ZXJzOiBzY3NpDQo+IA0KPiBPbiBXZWQsIDIwMTItMTAtMjQgYXQgMDk6
+MjUgLTA3MDAsIEsuIFkuIFNyaW5pdmFzYW4gd3JvdGU6DQo+ID4gV2hlbiB0aGUgbG93IGxldmVs
+IGRyaXZlciByZXR1cm5zIFNDU0lfTUxRVUVVRV9ERVZJQ0VfQlVTWSwNCj4gPiBob3cgaXMgdGhl
+IGNvbW1hbmQgcmV0cmllZDsgSSBzdXNwZWN0IHRoZSByZXRyeSBpcyBkb25lIGFmdGVyIHNvbWUg
+ZGVsYXkuDQo+IA0KPiBEZWxheSBkZXBlbmRzIG1haW5seSBvbiBJL08gcHJlc3N1cmUgYW5kIHRo
+ZSB1bnBsdWcgdGltZXIgaW4gdGhlIGJsb2NrDQo+IGxheWVyLg0KPiANCj4gPiBJcyB0aGlzIGRl
+bGF5IHByb2dyYW1tYWJsZT8gSWYgdGhlIGRldmljZSBzdGF0ZSBjaGFuZ2VzLA0KPiA+IGNhbiB0
+aGUgbG93IGxldmVsIGRyaXZlciBub3RpZnkgdXBwZXIgbGF5ZXJzIHRoYXQgaXQgY2FuIG5vdyBo
+YW5kbGUNCj4gPiB0aGUgY29tbWFuZCB0aGF0IGl0IGhhZCBmYWlsZWQgZWFybGllciB3aXRoIFND
+U0lfTUxRVUVVRV9ERVZJQ0VfQlVTWS4NCj4gDQo+IEluIHRoZW9yeSwgeW91IGNhbiBjYWxsIGJs
+a19ydW5fcXVldWUoKSBmcm9tIHRoZSBldmVudCBoYW5kbGVyIHRoYXQgc2Vlcw0KPiB0aGUgZGV2
+aWNlIGJlY29tZSByZWFkeS4gIEkgZG9uJ3QgdGhpbmsgYW55IGRyaXZlciBhY3R1YWxseSBkb2Vz
+IHRoaXMsDQo+IGJ1dCBJIGNhbid0IHNlZSBpdCB3b3VsZCBjYXVzZSBhbnkgcHJvYmxlbS4NCg0K
+SSB3aWxsIHRyeSB0aGlzLiBUaGFua3MgZm9yIHlvdXIgcHJvbXB0IHJlc3BvbnNlLg0KDQpSZWdh
+cmRzLA0KDQpLLiBZDQogDQoNCg==
