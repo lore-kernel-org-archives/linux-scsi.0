@@ -1,93 +1,48 @@
-From: "Zou, Yi" <yi.zou-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v4] scsi_lib: rate-limit the error message
-	from failing	commands
-Date: Thu, 25 Oct 2012 19:01:33 +0000
-Message-ID: <138EA028228D124A900F5E6746F3C2162F5A93F1@ORSMSX102.amr.corp.intel.com>
-References: <20120924195709.18104.65833.stg.yi.zou@intel.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/7 v5] More device removal fixes
+Date: Fri, 26 Oct 2012 14:00:35 +0200
+Message-ID: <508A7B63.60608@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <20120924195709.18104.65833.stg.yi.zou-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.open-fcoe.org/mailman/options/devel>,
- <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.open-fcoe.org/mailman/listinfo/devel>,
- <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: "James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org" <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "www.Open-FCoE.org" <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tomas Henzl <thenzl-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from georges.telenet-ops.be ([195.130.137.68]:37594 "EHLO
+	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753964Ab2JZMAi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Oct 2012 08:00:38 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-> [
-> James,
-> 
-> Not sure why you could not see the original v3 on the list as the block part
-> was pulled ok by Jens. Anyway, I have diffsplitted the v3 and v4 below is
-> the scsi_lib part only, hopefully this works for you, pls let me know. Below
-> is directly applicable against the current upstream 3.6-rc7 tip.
-> 
-> ]
-> 
-> Resending as v4 for the change on scsi_lib part, where the corresponding block
-> part is at commit 37d7b34. Threads related to this can be found at:
-> 
-> http://marc.info/?l=linux-scsi&m=134830150821548&w=2
-> http://comments.gmane.org/gmane.linux.scsi/73497
-> http://www.open-fcoe.org/patchwork/patch/2436/
-> 
-> Signed-off-by: Yi Zou <yi.zou-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Cc: www.Open-FCoE.org <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-> Cc: Tomas Henzl <thenzl-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-> Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Fix a few race conditions that can be triggered by removing a device:
+- Avoid that request_fn() can be invoked on a dead queue.
+- Avoid that blk_cleanup_queue() can finish while request_fn is still
+   running.
+- Fix a race between starved list processing and device removal.
 
-James,
+These patches have been tested on top of kernel v3.7-rc2.
 
-Can you please apply this patch? I have been just being updating this patch for four versions over and over and it was acked long time ago that I don't even remember how long already. I also resent as you requested a month ago again.
+Changes compared to v4:
+- Moved queue_flag_set(QUEUE_FLAG_DEAD, q) from blk_drain_queue() into
+   blk_cleanup_queue().
+- Declared the new __blk_run_queue_uncond() function inline. Checked in
+   the generated assembler code that this function is really inlined in
+   __blk_run_queue().
+- Elaborated several patch descriptions.
+- Added sparse annotations to scsi_request_fn().
+- Split several patches.
 
-Thanks,
-yi
+Changes compared to v3:
+- Fixed a race condition by setting QUEUE_FLAG_DEAD earlier.
+- Added a patch for fixing a race between starved list processing
+   and device removal to this series.
 
+Changes compared to v2:
+- Split second patch into two patches.
+- Refined patch descriptions.
 
-> ---
-> 
->  drivers/scsi/scsi_lib.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index faa790f..daa72ef 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -20,6 +20,7 @@
->  #include <linux/delay.h>
->  #include <linux/hardirq.h>
->  #include <linux/scatterlist.h>
-> +#include <linux/ratelimit.h>
-> 
->  #include <scsi/scsi.h>
->  #include <scsi/scsi_cmnd.h>
-> @@ -768,6 +769,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd,
-> unsigned int good_bytes)
->  	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
->  	      ACTION_DELAYED_RETRY} action;
->  	char *description = NULL;
-> +	static DEFINE_RATELIMIT_STATE(rs,  DEFAULT_RATELIMIT_INTERVAL,
-> +				      DEFAULT_RATELIMIT_BURST);
-> 
->  	if (result) {
->  		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
-> @@ -961,7 +964,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd,
-> unsigned int good_bytes)
->  	case ACTION_FAIL:
->  		/* Give up and fail the remainder of the request */
->  		scsi_release_buffers(cmd);
-> -		if (!(req->cmd_flags & REQ_QUIET)) {
-> +		if (!(req->cmd_flags & REQ_QUIET) && __ratelimit(&rs)) {
->  			if (description)
->  				scmd_printk(KERN_INFO, cmd, "%s\n",
->  					    description);
+Changes compared to v1:
+- Included a patch to rename QUEUE_FLAG_DEAD.
+- Refined the descriptions of the __blk_run_queue_uncond() and
+   blk_cleanup_queue() functions.
+
