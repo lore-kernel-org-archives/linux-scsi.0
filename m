@@ -1,8 +1,7 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 5/7] block: Make blk_cleanup_queue() wait until request_fn
- finished
-Date: Fri, 26 Oct 2012 14:04:27 +0200
-Message-ID: <508A7C4B.2060904@acm.org>
+Subject: [PATCH 6/7] Fix race between starved list processing and device removal
+Date: Fri, 26 Oct 2012 14:05:01 +0200
+Message-ID: <508A7C6D.8070002@acm.org>
 References: <508A7B63.60608@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -10,71 +9,91 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from georges.telenet-ops.be ([195.130.137.68]:37594 "EHLO
 	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932514Ab2JZME2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Oct 2012 08:04:28 -0400
+	with ESMTP id S932514Ab2JZMFC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Oct 2012 08:05:02 -0400
 In-Reply-To: <508A7B63.60608@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-Some request_fn implementations, e.g. scsi_request_fn(), unlock
-the queue lock. Make sure that blk_cleanup_queue() waits until all
-active request_fn invocations have finished. A block driver may
-start cleaning up resources needed by its request_fn as soon as
-blk_cleanup_queue() finished, so blk_cleanup_queue() must wait
-for all outstanding request_fn invocations to finish.
+The SCSI core maintains a "starved list" per SCSI host. This is a
+list of devices for which one or more requests have been queued
+but that have not yet been passed to the SCSI LLD. The function
+scsi_run_queue() examines all SCSI devices on the starved list.
+Since scsi_remove_device() can be invoked concurrently with
+scsi_run_queue() it is important to avoid that a SCSI device is
+accessed by that function after it has been freed. Avoid that the
+sdev reference count can drop to zero before the queue is run by
+scsi_run_queue() by inserting a get_device() / put_device() pair
+in that function. Move the code for removing a device from the
+starved list from scsi_device_dev_release_usercontext() to
+__scsi_remove_device() such that it is guaranteed that the newly
+added get_device() call succeeds.
 
-Reported-by: Chanho Min <chanho.min@lge.com>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+Reported-and-tested-by: Chanho Min <chanho.min@lge.com>
+Reference: http://lkml.org/lkml/2012/8/2/96
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Tejun Heo <tj@kernel.org>
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-core.c       |    3 +++
- include/linux/blkdev.h |    6 ++++++
- 2 files changed, 9 insertions(+)
+ drivers/scsi/scsi_lib.c   |    5 +++++
+ drivers/scsi/scsi_sysfs.c |    7 ++++++-
+ 2 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 2f1be7a..7662d83 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -308,7 +308,9 @@ void inline __blk_run_queue_uncond(struct request_queue *q)
- 	if (unlikely(blk_queue_dead(q)))
- 		return;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f29a1a9..c5d4ec2 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -452,10 +452,15 @@ static void scsi_run_queue(struct request_queue *q)
+ 			continue;
+ 		}
  
-+	q->request_fn_active++;
- 	q->request_fn(q);
-+	q->request_fn_active--;
- }
++		get_device(&sdev->sdev_gendev);
+ 		spin_unlock(shost->host_lock);
++
+ 		spin_lock(sdev->request_queue->queue_lock);
+ 		__blk_run_queue(sdev->request_queue);
+ 		spin_unlock(sdev->request_queue->queue_lock);
++
++		put_device(&sdev->sdev_gendev);
++
+ 		spin_lock(shost->host_lock);
+ 	}
+ 	/* put any unprocessed entries back */
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index ce5224c..2661a957 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -348,7 +348,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 	starget->reap_ref++;
+ 	list_del(&sdev->siblings);
+ 	list_del(&sdev->same_target_siblings);
+-	list_del(&sdev->starved_entry);
+ 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
  
- /**
-@@ -407,6 +409,7 @@ static void __blk_drain_queue(struct request_queue *q, bool drain_all)
- 			__blk_run_queue(q);
+ 	cancel_work_sync(&sdev->event_work);
+@@ -956,6 +955,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ void __scsi_remove_device(struct scsi_device *sdev)
+ {
+ 	struct device *dev = &sdev->sdev_gendev;
++	struct Scsi_Host *shost = sdev->host;
++	unsigned long flags;
  
- 		drain |= q->nr_rqs_elvpriv;
-+		drain |= q->request_fn_active;
+ 	if (sdev->is_visible) {
+ 		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+@@ -977,6 +978,10 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	blk_cleanup_queue(sdev->request_queue);
+ 	cancel_work_sync(&sdev->requeue_work);
  
- 		/*
- 		 * Unfortunately, requests are queued at and tracked from
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 8bc46c2..c9d233e 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -378,6 +378,12 @@ struct request_queue {
- 
- 	unsigned int		nr_sorted;
- 	unsigned int		in_flight[2];
-+	/*
-+	 * Number of active block driver functions for which blk_drain_queue()
-+	 * must wait. Must be incremented around functions that unlock the
-+	 * queue_lock internally, e.g. scsi_request_fn().
-+	 */
-+	unsigned int		request_fn_active;
- 
- 	unsigned int		rq_timeout;
- 	struct timer_list	timeout;
++	spin_lock_irqsave(shost->host_lock, flags);
++	list_del(&sdev->starved_entry);
++	spin_unlock_irqrestore(shost->host_lock, flags);
++
+ 	if (sdev->host->hostt->slave_destroy)
+ 		sdev->host->hostt->slave_destroy(sdev);
+ 	transport_destroy_device(dev);
 -- 
 1.7.10.4
 
