@@ -1,48 +1,50 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 0/7 v5] More device removal fixes
-Date: Fri, 26 Oct 2012 14:00:35 +0200
-Message-ID: <508A7B63.60608@acm.org>
+Subject: [PATCH 1/7] block: Avoid that blk_drain_queue() finishes early
+Date: Fri, 26 Oct 2012 14:01:23 +0200
+Message-ID: <508A7B93.4090409@acm.org>
+References: <508A7B63.60608@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from georges.telenet-ops.be ([195.130.137.68]:37594 "EHLO
 	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753964Ab2JZMAi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Oct 2012 08:00:38 -0400
+	with ESMTP id S1753964Ab2JZMBY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Oct 2012 08:01:24 -0400
+In-Reply-To: <508A7B63.60608@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-Fix a few race conditions that can be triggered by removing a device:
-- Avoid that request_fn() can be invoked on a dead queue.
-- Avoid that blk_cleanup_queue() can finish while request_fn is still
-   running.
-- Fix a race between starved list processing and device removal.
+Code like "drain |= q->nr_rqs[i]" might result in blk_drain_queue()
+to finish early if the expression at the RHS is a multiple of 256
+since the drain variable is only eight bits wide. Avoid this by
+changing the type of the drain variable from bool into unsigned.
 
-These patches have been tested on top of kernel v3.7-rc2.
+Cc: James Bottomley <JBottomley@Parallels.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Chanho Min <chanho.min@lge.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ block/blk-core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changes compared to v4:
-- Moved queue_flag_set(QUEUE_FLAG_DEAD, q) from blk_drain_queue() into
-   blk_cleanup_queue().
-- Declared the new __blk_run_queue_uncond() function inline. Checked in
-   the generated assembler code that this function is really inlined in
-   __blk_run_queue().
-- Elaborated several patch descriptions.
-- Added sparse annotations to scsi_request_fn().
-- Split several patches.
-
-Changes compared to v3:
-- Fixed a race condition by setting QUEUE_FLAG_DEAD earlier.
-- Added a patch for fixing a race between starved list processing
-   and device removal to this series.
-
-Changes compared to v2:
-- Split second patch into two patches.
-- Refined patch descriptions.
-
-Changes compared to v1:
-- Included a patch to rename QUEUE_FLAG_DEAD.
-- Refined the descriptions of the __blk_run_queue_uncond() and
-   blk_cleanup_queue() functions.
+diff --git a/block/blk-core.c b/block/blk-core.c
+index a33870b..ef2e045 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -362,7 +362,7 @@ void blk_drain_queue(struct request_queue *q, bool drain_all)
+ 	int i;
+ 
+ 	while (true) {
+-		bool drain = false;
++		unsigned drain = 0;
+ 
+ 		spin_lock_irq(q->queue_lock);
+ 
+-- 
+1.7.10.4
 
