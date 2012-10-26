@@ -1,348 +1,188 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: [PATCH 16/19] srp_transport: Add transport layer error handling
-Date: Fri, 26 Oct 2012 14:56:32 +0200
-Message-ID: <508A8880.4080802@acm.org>
-References: <508A85BB.1000505@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <508A85BB.1000505-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+From: Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] [trivial] qla2xxx: Fix typo in qla2xxx drivers
+Date: Fri, 26 Oct 2012 22:10:54 +0900
+Message-ID: <1351257054-12729-1-git-send-email-standby24x7@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: trivial@kernel.org, linux-kernel@vger.kernel.org, andrew.vasquez@qlogic.com, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+Cc: Masanari Iida <standby24x7@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add the necessary functions in the SRP transport module to allow
-an SRP initiator driver to implement transport error handling.
-This includes:
-- Support for implementing fast_io_fail_tmo, the time that should
-  elapse after having detected a transport layer problem and
-  before failing I/O.
-- Support for implementing dev_loss_tmo, the time that should
-  elapse after having detected a transport layer problem and
-  before removing a remote port.
+Correct spelling typo in debug messages within qla2xxx drivers.
 
-Cc: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
-Cc: Robert Jennings <rcj-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
 ---
- Documentation/ABI/stable/sysfs-transport-srp |   17 +++
- drivers/scsi/scsi_transport_srp.c            |  192 +++++++++++++++++++++++++-
- include/scsi/scsi_transport_srp.h            |   10 +-
- 3 files changed, 216 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_iocb.c    |  2 +-
+ drivers/scsi/qla2xxx/qla_isr.c     |  4 ++--
+ drivers/scsi/qla2xxx/qla_mid.c     |  2 +-
+ drivers/scsi/qla2xxx/qla_nx.c      |  6 +++---
+ drivers/scsi/qla2xxx/qla_os.c      |  2 +-
+ drivers/scsi/qla2xxx/qla_target.c  | 12 ++++++------
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |  2 +-
+ 7 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/Documentation/ABI/stable/sysfs-transport-srp b/Documentation/ABI/stable/sysfs-transport-srp
-index b36fb0d..2f14a5b 100644
---- a/Documentation/ABI/stable/sysfs-transport-srp
-+++ b/Documentation/ABI/stable/sysfs-transport-srp
-@@ -5,6 +5,23 @@ Contact:	linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
- Description:	Instructs an SRP initiator to disconnect from a target and to
- 		remove all LUNs imported from that target.
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 70dbf53..23e8375 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -1858,7 +1858,7 @@ qla2x00_alloc_iocbs(scsi_qla_host_t *vha, srb_t *sp)
+ 	}
+ 	if (index == MAX_OUTSTANDING_COMMANDS) {
+ 		ql_log(ql_log_warn, vha, 0x700b,
+-		    "No room on oustanding cmd array.\n");
++		    "No room on outstanding cmd array.\n");
+ 		goto queuing_error;
+ 	}
  
-+What:		/sys/class/srp_remote_ports/port-<h>:<n>/dev_loss_tmo
-+Date:		January 1, 2012
-+KernelVersion:	3.7
-+Contact:	linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-+Description:	Number of seconds the SCSI layer will wait after a transport
-+		layer error has been observed before removing a target port.
-+		Zero means immediate removal.
-+
-+What:		/sys/class/srp_remote_ports/port-<h>:<n>/fast_io_fail_tmo
-+Date:		January 1, 2012
-+KernelVersion:	3.7
-+Contact:	linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-+Description:	Number of seconds the SCSI layer will wait after a transport
-+		layer error has been observed before failing I/O. Zero means
-+		immediate removal. A negative value will disable this
-+		behavior.
-+
- What:		/sys/class/srp_remote_ports/port-<h>:<n>/port_id
- Date:		June 27, 2007
- KernelVersion:	2.6.24
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index f379c7f..8b452c6 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -30,6 +30,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_srp.h>
-+#include "scsi_priv.h"
- #include "scsi_transport_srp_internal.h"
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 6f67a9d..fce641e 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -251,7 +251,7 @@ qla2x00_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
+ 	/* Read all mbox registers? */
+ 	mboxes = (1 << ha->mbx_count) - 1;
+ 	if (!ha->mcp)
+-		ql_dbg(ql_dbg_async, vha, 0x5001, "MBX pointer ERRROR.\n");
++		ql_dbg(ql_dbg_async, vha, 0x5001, "MBX pointer ERROR.\n");
+ 	else
+ 		mboxes = ha->mcp->in_mb;
  
- struct srp_host_attrs {
-@@ -38,7 +39,7 @@ struct srp_host_attrs {
- #define to_srp_host_attrs(host)	((struct srp_host_attrs *)(host)->shost_data)
+@@ -1972,7 +1972,7 @@ qla24xx_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
+ 	/* Read all mbox registers? */
+ 	mboxes = (1 << ha->mbx_count) - 1;
+ 	if (!ha->mcp)
+-		ql_dbg(ql_dbg_async, vha, 0x504e, "MBX pointer ERRROR.\n");
++		ql_dbg(ql_dbg_async, vha, 0x504e, "MBX pointer ERROR.\n");
+ 	else
+ 		mboxes = ha->mcp->in_mb;
  
- #define SRP_HOST_ATTRS 0
--#define SRP_RPORT_ATTRS 3
-+#define SRP_RPORT_ATTRS 5
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 3e8b324..54330ff 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -643,7 +643,7 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
+ 			&req->dma, GFP_KERNEL);
+ 	if (req->ring == NULL) {
+ 		ql_log(ql_log_fatal, base_vha, 0x00da,
+-		    "Failed to allocte memory for request_ring.\n");
++		    "Failed to allocate memory for request_ring.\n");
+ 		goto que_failed;
+ 	}
  
- struct srp_internal {
- 	struct scsi_transport_template t;
-@@ -54,6 +55,10 @@ struct srp_internal {
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 9ce3a8f..10a302e 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -955,7 +955,7 @@ qla82xx_rom_fast_read(struct qla_hw_data *ha, int addr, int *valp)
+ 	}
+ 	if (loops >= 50000) {
+ 		ql_log(ql_log_fatal, vha, 0x00b9,
+-		    "Failed to aquire SEM2 lock.\n");
++		    "Failed to acquire SEM2 lock.\n");
+ 		return -1;
+ 	}
+ 	ret = qla82xx_do_rom_fast_read(ha, addr, valp);
+@@ -1122,7 +1122,7 @@ qla82xx_pinit_from_rom(scsi_qla_host_t *vha)
+ 		long data;
+ 	};
  
- #define	dev_to_rport(d)	container_of(d, struct srp_rport, dev)
- #define transport_class_to_srp_rport(dev) dev_to_rport((dev)->parent)
-+static inline struct Scsi_Host *rport_to_shost(struct srp_rport *r)
-+{
-+	return dev_to_shost(r->dev.parent);
-+}
+-	/* Halt all the indiviual PEGs and other blocks of the ISP */
++	/* Halt all the individual PEGs and other blocks of the ISP */
+ 	qla82xx_rom_lock(ha);
  
- static int srp_host_setup(struct transport_container *tc, struct device *dev,
- 			  struct device *cdev)
-@@ -134,6 +139,175 @@ static ssize_t store_srp_rport_delete(struct device *dev,
+ 	/* disable all I2Q */
+@@ -4030,7 +4030,7 @@ qla82xx_minidump_process_rdmem(scsi_qla_host_t *vha,
  
- static DEVICE_ATTR(delete, S_IWUSR, NULL, store_srp_rport_delete);
+ 	if (r_addr & 0xf) {
+ 		ql_log(ql_log_warn, vha, 0xb033,
+-		    "Read addr 0x%x not 16 bytes alligned\n", r_addr);
++		    "Read addr 0x%x not 16 bytes aligned\n", r_addr);
+ 		return rval;
+ 	}
  
-+/**
-+ * srp_tmo_valid() - Check timeout combination validity.
-+ *
-+ * If no fast I/O fail timeout has been configured then the device loss timeout
-+ * must be below SCSI_DEVICE_BLOCK_MAX_TIMEOUT. If a fast I/O fail timeout has
-+ * been configured then it must be below the device loss timeout.
-+ */
-+static int srp_tmo_valid(int fast_io_fail_tmo, unsigned dev_loss_tmo)
-+{
-+	return (fast_io_fail_tmo < 0 &&
-+		dev_loss_tmo <= SCSI_DEVICE_BLOCK_MAX_TIMEOUT)
-+		|| (0 <= fast_io_fail_tmo &&
-+		    fast_io_fail_tmo < dev_loss_tmo &&
-+		    dev_loss_tmo < ULONG_MAX / HZ) ? 0 : -EINVAL;
-+}
-+
-+static ssize_t show_srp_rport_fast_io_fail_tmo(struct device *dev,
-+					   struct device_attribute *attr,
-+					   char *buf)
-+{
-+	struct srp_rport *rport = transport_class_to_srp_rport(dev);
-+
-+	if (rport->fast_io_fail_tmo >= 0)
-+		return sprintf(buf, "%d\n", rport->fast_io_fail_tmo);
-+	else
-+		return sprintf(buf, "off\n");
-+}
-+
-+static ssize_t store_srp_rport_fast_io_fail_tmo(struct device *dev,
-+					    struct device_attribute *attr,
-+					    const char *buf, size_t count)
-+{
-+	struct srp_rport *rport = transport_class_to_srp_rport(dev);
-+	char ch[16];
-+	int res;
-+	int fast_io_fail_tmo;
-+
-+	if (count >= 3 && memcmp(buf, "off", 3) == 0) {
-+		fast_io_fail_tmo = -1;
-+	} else {
-+		sprintf(ch, "%.*s", min_t(int, sizeof(ch) - 1, count), buf);
-+		res = kstrtoint(ch, 0, &fast_io_fail_tmo);
-+		if (res)
-+			goto out;
-+	}
-+	res = srp_tmo_valid(fast_io_fail_tmo, rport->dev_loss_tmo);
-+	if (res)
-+		goto out;
-+	rport->fast_io_fail_tmo = fast_io_fail_tmo;
-+	res = count;
-+out:
-+	return res;
-+}
-+
-+static DEVICE_ATTR(fast_io_fail_tmo, S_IRUGO | S_IWUSR,
-+		   show_srp_rport_fast_io_fail_tmo,
-+		   store_srp_rport_fast_io_fail_tmo);
-+
-+static ssize_t show_srp_rport_dev_loss_tmo(struct device *dev,
-+					   struct device_attribute *attr,
-+					   char *buf)
-+{
-+	struct srp_rport *rport = transport_class_to_srp_rport(dev);
-+
-+	return sprintf(buf, "%u\n", rport->dev_loss_tmo);
-+}
-+
-+static ssize_t store_srp_rport_dev_loss_tmo(struct device *dev,
-+					    struct device_attribute *attr,
-+					    const char *buf, size_t count)
-+{
-+	struct srp_rport *rport = transport_class_to_srp_rport(dev);
-+	char ch[16];
-+	int res;
-+	unsigned dev_loss_tmo;
-+
-+	sprintf(ch, "%.*s", min_t(int, sizeof(ch) - 1, count), buf);
-+	res = kstrtouint(ch, 0, &dev_loss_tmo);
-+	if (res)
-+		goto out;
-+	res = srp_tmo_valid(rport->fast_io_fail_tmo, dev_loss_tmo);
-+	if (res)
-+		goto out;
-+	rport->dev_loss_tmo = dev_loss_tmo;
-+	res = count;
-+out:
-+	return res;
-+}
-+
-+static DEVICE_ATTR(dev_loss_tmo, S_IRUGO | S_IWUSR,
-+		   show_srp_rport_dev_loss_tmo,
-+		   store_srp_rport_dev_loss_tmo);
-+
-+/**
-+ * rport_fast_io_fail_timedout() - Fast I/O failure timeout handler.
-+ *
-+ * Unblocks the SCSI host.
-+ */
-+static void rport_fast_io_fail_timedout(struct work_struct *work)
-+{
-+	struct srp_rport *rport =
-+		container_of(to_delayed_work(work), struct srp_rport,
-+			     fast_io_fail_work);
-+	struct Scsi_Host *shost;
-+	struct srp_internal *i;
-+
-+	pr_err("SRP transport: fast_io_fail_tmo (%ds) expired - unblocking %s.\n",
-+	       rport->fast_io_fail_tmo, dev_name(&rport->dev));
-+
-+	shost = rport_to_shost(rport);
-+	i = to_srp_internal(shost->transportt);
-+	/* Involve the LLDD if possible to terminate all io on the rport. */
-+	if (i->f->terminate_rport_io)
-+		i->f->terminate_rport_io(rport);
-+
-+	scsi_target_unblock(rport->dev.parent, SDEV_TRANSPORT_OFFLINE);
-+}
-+
-+/**
-+ * rport_dev_loss_timedout() - Device loss timeout handler.
-+ *
-+ * Note: rport->ft->rport_delete must either unblock the SCSI host or schedule
-+ * SCSI host removal.
-+ */
-+static void rport_dev_loss_timedout(struct work_struct *work)
-+{
-+	struct srp_rport *rport =
-+		container_of(to_delayed_work(work), struct srp_rport,
-+			     dev_loss_work);
-+	struct Scsi_Host *shost;
-+	struct srp_internal *i;
-+
-+	pr_err("SRP transport: dev_loss_tmo (%ds) expired - removing %s.\n",
-+	       rport->dev_loss_tmo, dev_name(&rport->dev));
-+
-+	shost = rport_to_shost(rport);
-+	i = to_srp_internal(shost->transportt);
-+	BUG_ON(!i->f);
-+	BUG_ON(!i->f->rport_delete);
-+
-+	i->f->rport_delete(rport);
-+}
-+
-+/**
-+ * srp_start_tl_fail_timers() - Start the transport layer failure timers.
-+ * @rport: rport on which to start the transport layer failure timers.
-+ * @elapsed: Time in jiffies that has already elapsed since the failure.
-+ *
-+ * Start the transport layer fast I/O failure and device loss timers. Do not
-+ * modify a timer that was already started.
-+ */
-+void srp_start_tl_fail_timers(struct srp_rport *rport, int elapsed)
-+{
-+	if (rport->fast_io_fail_tmo >= 0)
-+		queue_delayed_work(system_long_wq, &rport->fast_io_fail_work,
-+				   max_t(long, 1UL * rport->fast_io_fail_tmo
-+					 * HZ - elapsed, 0));
-+	queue_delayed_work(system_long_wq, &rport->dev_loss_work,
-+		max_t(long, 1UL * rport->dev_loss_tmo * HZ - elapsed, 0));
-+}
-+EXPORT_SYMBOL(srp_start_tl_fail_timers);
-+
-+void srp_stop_tl_fail_timers(struct srp_rport *rport)
-+{
-+	cancel_delayed_work_sync(&rport->fast_io_fail_work);
-+	cancel_delayed_work_sync(&rport->dev_loss_work);
-+}
-+EXPORT_SYMBOL(srp_stop_tl_fail_timers);
-+
- static void srp_rport_release(struct device *dev)
- {
- 	struct srp_rport *rport = dev_to_rport(dev);
-@@ -210,6 +384,12 @@ struct srp_rport *srp_rport_add(struct Scsi_Host *shost,
- 	memcpy(rport->port_id, ids->port_id, sizeof(rport->port_id));
- 	rport->roles = ids->roles;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index fb8cd38..18a6c7a 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1177,7 +1177,7 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ eh_bus_reset_done:
+ 	ql_log(ql_log_warn, vha, 0x802b,
+ 	    "BUS RESET %s nexus=%ld:%d:%d.\n",
+-	    (ret == FAILED) ? "FAILED" : "SUCCEDED", vha->host_no, id, lun);
++	    (ret == FAILED) ? "FAILED" : "SUCCEEDED", vha->host_no, id, lun);
  
-+	rport->fast_io_fail_tmo = -1;
-+	rport->dev_loss_tmo = 60;
-+	INIT_DELAYED_WORK(&rport->fast_io_fail_work,
-+			  rport_fast_io_fail_timedout);
-+	INIT_DELAYED_WORK(&rport->dev_loss_work, rport_dev_loss_timedout);
-+
- 	id = atomic_inc_return(&to_srp_host_attrs(shost)->next_port_id);
- 	dev_set_name(&rport->dev, "port-%d:%d", shost->host_no, id);
+ 	return ret;
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 5b30132..75beb7e 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -73,7 +73,7 @@ enum fcp_resp_rsp_codes {
+ #define FCP_PTA_SIMPLE      0   /* simple task attribute */
+ #define FCP_PTA_HEADQ       1   /* head of queue task attribute */
+ #define FCP_PTA_ORDERED     2   /* ordered task attribute */
+-#define FCP_PTA_ACA         4   /* auto. contigent allegiance */
++#define FCP_PTA_ACA         4   /* auto. contingent allegiance */
+ #define FCP_PTA_MASK        7   /* mask for task attribute field */
+ #define FCP_PRI_SHIFT       3   /* priority field starts in bit 3 */
+ #define FCP_PRI_RESVD_MASK  0x80        /* reserved bits in priority field */
+@@ -3983,7 +3983,7 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 	case MBA_RSP_TRANSFER_ERR:	/* Response Transfer Error */
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03a,
+ 		    "qla_target(%d): System error async event %#x "
+-		    "occured", vha->vp_idx, code);
++		    "occurred", vha->vp_idx, code);
+ 		break;
+ 	case MBA_WAKEUP_THRES:		/* Request Queue Wake-up. */
+ 		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+@@ -3992,7 +3992,7 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 	case MBA_LOOP_UP:
+ 	{
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03b,
+-		    "qla_target(%d): Async LOOP_UP occured "
++		    "qla_target(%d): Async LOOP_UP occurred "
+ 		    "(m[0]=%x, m[1]=%x, m[2]=%x, m[3]=%x)", vha->vp_idx,
+ 		    le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
+ 		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
+@@ -4009,7 +4009,7 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 	case MBA_LIP_RESET:
+ 	case MBA_RSCN_UPDATE:
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03c,
+-		    "qla_target(%d): Async event %#x occured "
++		    "qla_target(%d): Async event %#x occurred "
+ 		    "(m[0]=%x, m[1]=%x, m[2]=%x, m[3]=%x)", vha->vp_idx, code,
+ 		    le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
+ 		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
+@@ -4018,7 +4018,7 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 	case MBA_PORT_UPDATE:
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03d,
+ 		    "qla_target(%d): Port update async event %#x "
+-		    "occured: updating the ports database (m[0]=%x, m[1]=%x, "
++		    "occurred: updating the ports database (m[0]=%x, m[1]=%x, "
+ 		    "m[2]=%x, m[3]=%x)", vha->vp_idx, code,
+ 		    le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
+ 		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
+@@ -4034,7 +4034,7 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
  
-@@ -252,6 +432,11 @@ void srp_rport_del(struct srp_rport *rport)
- 	struct device *dev = &rport->dev;
- 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+ 	default:
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf040,
+-		    "qla_target(%d): Async event %#x occured: "
++		    "qla_target(%d): Async event %#x occurred: "
+ 		    "ignore (m[0]=%x, m[1]=%x, m[2]=%x, m[3]=%x)", vha->vp_idx,
+ 		    code, le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
+ 		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 4752f65..389083d 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -367,7 +367,7 @@ static struct se_node_acl *tcm_qla2xxx_alloc_fabric_acl(
  
-+	device_remove_file(dev, &dev_attr_fast_io_fail_tmo);
-+	device_remove_file(dev, &dev_attr_dev_loss_tmo);
-+	srp_stop_tl_fail_timers(rport);
-+	scsi_target_unblock(rport->dev.parent, SDEV_RUNNING);
-+
- 	if (shost->active_mode & MODE_TARGET &&
- 	    rport->roles == SRP_RPORT_ROLE_INITIATOR)
- 		srp_tgt_it_nexus_destroy(shost, (unsigned long)rport);
-@@ -327,8 +512,11 @@ srp_attach_transport(struct srp_function_template *ft)
- 	count = 0;
- 	i->rport_attrs[count++] = &dev_attr_port_id;
- 	i->rport_attrs[count++] = &dev_attr_roles;
--	if (ft->rport_delete)
-+	if (ft->rport_delete) {
-+		i->rport_attrs[count++] = &dev_attr_dev_loss_tmo;
-+		i->rport_attrs[count++] = &dev_attr_fast_io_fail_tmo;
- 		i->rport_attrs[count++] = &dev_attr_delete;
-+	}
- 	i->rport_attrs[count++] = NULL;
- 	BUG_ON(count > ARRAY_SIZE(i->rport_attrs));
- 
-diff --git a/include/scsi/scsi_transport_srp.h b/include/scsi/scsi_transport_srp.h
-index ff0f04a..eb996db 100644
---- a/include/scsi/scsi_transport_srp.h
-+++ b/include/scsi/scsi_transport_srp.h
-@@ -23,11 +23,17 @@ struct srp_rport {
- 
- 	/* for initiator drivers */
- 
--	void *lld_data;	/* LLD private data */
-+	void			*lld_data;	/* LLD private data */
-+
-+	int			fast_io_fail_tmo;
-+	unsigned		dev_loss_tmo;
-+	struct delayed_work	fast_io_fail_work;
-+	struct delayed_work	dev_loss_work;
- };
- 
- struct srp_function_template {
- 	/* for initiator drivers */
-+	void (*terminate_rport_io)(struct srp_rport *rport);
- 	void (*rport_delete)(struct srp_rport *rport);
- 	/* for target drivers */
- 	int (* tsk_mgmt_response)(struct Scsi_Host *, u64, u64, int);
-@@ -41,6 +47,8 @@ extern void srp_release_transport(struct scsi_transport_template *);
- extern struct srp_rport *srp_rport_add(struct Scsi_Host *,
- 				       struct srp_rport_identifiers *);
- extern void srp_rport_del(struct srp_rport *);
-+extern void srp_start_tl_fail_timers(struct srp_rport *rport, int elapsed);
-+extern void srp_stop_tl_fail_timers(struct srp_rport *rport);
- 
- extern void srp_remove_host(struct Scsi_Host *);
+ 	nacl = kzalloc(sizeof(struct tcm_qla2xxx_nacl), GFP_KERNEL);
+ 	if (!nacl) {
+-		pr_err("Unable to alocate struct tcm_qla2xxx_nacl\n");
++		pr_err("Unable to allocate struct tcm_qla2xxx_nacl\n");
+ 		return NULL;
+ 	}
  
 -- 
-1.7.10.4
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1.8.0.rc3.16.g8ead1bf
