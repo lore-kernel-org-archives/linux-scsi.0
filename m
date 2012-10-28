@@ -1,44 +1,28 @@
-From: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 00/16] treewide: Convert dev_printk(KERN_<LEVEL> to
- dev_<level>(
-Date: Sun, 28 Oct 2012 05:12:15 -0700
-Message-ID: <1351426335.2008.6.camel@joe-AO722>
-References: <cover.1351411047.git.joe@perches.com>
-	 <508D0ECA.8040008@mvista.com>
+From: Shlomo Pongratz <shlomop@mellanox.com>
+Subject: spin_lock in scsi_request_fn
+Date: Sun, 28 Oct 2012 18:17:34 +0200
+Message-ID: <508D5A9E.9040109@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <508D0ECA.8040008-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
-Sender: linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, virtualization-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-watchdog-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from eu1sys200aog117.obsmtp.com ([207.126.144.143]:43718 "HELO
+	eu1sys200aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753086Ab2J1QRk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 28 Oct 2012 12:17:40 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
+Cc: ogerlitz@mellanox.com
 
-On Sun, 2012-10-28 at 14:54 +0400, Sergei Shtylyov wrote:
-> Hello.
+Hi,
 
-Hi Sergei.
+I've noticed a strange usage of spin lock in  scsi_request_fn located in 
+drivers/scsi/scsi_lib.c
+That is in line 1565 we have spin_lock(shost->host_lock);
+but in line 1595 we have spin_unlock_irq(shost->host_lock);
+Is this by design or it is a typo?
 
-> On 28-10-2012 12:05, Joe Perches wrote:
-> 
-> > dev_<level> create smaller objects than dev_printk(KERN_<LEVEL>.
-> > Convert non-debug calls to this form.
-> 
-> > Joe Perches (16):
-> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-> [...]
-> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-> [...]
-> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-> 
->     Hm, somehow this patch is repeated thrice?
-
-Nope, I forgot to edit the 0000 file after I edited
-patches locally when I noticed I forgot to update
-the subject lines.  Patches are corrected, 0000 not.
-
-I don't think it's a bit deal, I could repost just the 0000
-if you want though.
-
-cheers, Joe
+Best regards,
+Shlomo Pongratz.
