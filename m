@@ -1,257 +1,192 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v8 07/11] libata: separate ATAPI code
-Date: Mon, 29 Oct 2012 17:01:34 +0800
-Message-ID: <1351501298-3716-8-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v8 06/11] ata: zpodd: check loading mechanism for ODD
+Date: Mon, 29 Oct 2012 17:01:33 +0800
+Message-ID: <1351501298-3716-7-git-send-email-aaron.lu@intel.com>
 References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga14.intel.com ([143.182.124.37]:45943 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758399Ab2J2JCD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Oct 2012 05:02:03 -0400
+	id S1758415Ab2J2JCA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Oct 2012 05:02:00 -0400
 In-Reply-To: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Oliver Neukum <oliver@neukum.org>
 Cc: Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 
-The atapi_eh_tur and atapi_eh_request_sense can be reused by ZPODD
-code, so separate them out to a file named libata-atapi.c. A header
-file libata-atapi.h is added and the Makefile is modified accordingly.
+Per the Mount Fuji spec on SATA ZPODD, only slot type or drawer type
+ODD can support ZPODD. So add a function to check this, and if fails,
+skip setting of dev->private_data so that zpodd_dev_enabled will return
+false.
 
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- drivers/ata/Makefile       |  2 +-
- drivers/ata/libata-atapi.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-atapi.h |  7 ++++
- drivers/ata/libata-eh.c    | 86 +-------------------------------------------
- 4 files changed, 97 insertions(+), 86 deletions(-)
- create mode 100644 drivers/ata/libata-atapi.c
- create mode 100644 drivers/ata/libata-atapi.h
+ drivers/ata/sata_zpodd.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/cdrom.h    | 35 +++++++++++++++++++
+ 2 files changed, 122 insertions(+)
 
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index a5120ff..335407c 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -103,7 +103,7 @@ obj-$(CONFIG_ATA_GENERIC)	+= ata_generic.o
- # Should be last libata driver
- obj-$(CONFIG_PATA_LEGACY)	+= pata_legacy.o
+diff --git a/drivers/ata/sata_zpodd.c b/drivers/ata/sata_zpodd.c
+index 009b1e4..c7c63a1 100644
+--- a/drivers/ata/sata_zpodd.c
++++ b/drivers/ata/sata_zpodd.c
+@@ -1,13 +1,89 @@
+ #include <linux/libata.h>
+ #include <linux/pm_runtime.h>
++#include <linux/cdrom.h>
+ #include <scsi/scsi_device.h>
  
--libata-y	:= libata-core.o libata-scsi.o libata-eh.o libata-transport.o
-+libata-y	:= libata-core.o libata-scsi.o libata-eh.o libata-atapi.o libata-transport.o
- libata-$(CONFIG_ATA_SFF)	+= libata-sff.o
- libata-$(CONFIG_SATA_PMP)	+= libata-pmp.o
- libata-$(CONFIG_ATA_ACPI)	+= libata-acpi.o
-diff --git a/drivers/ata/libata-atapi.c b/drivers/ata/libata-atapi.c
-new file mode 100644
-index 0000000..28684ae
---- /dev/null
-+++ b/drivers/ata/libata-atapi.c
-@@ -0,0 +1,88 @@
-+#include <linux/libata.h>
-+#include <scsi/scsi_cmnd.h>
 +#include "libata.h"
 +
-+/**
-+ *	atapi_eh_tur - perform ATAPI TEST_UNIT_READY
-+ *	@dev: target ATAPI device
-+ *	@r_sense_key: out parameter for sense_key
-+ *
-+ *	Perform ATAPI TEST_UNIT_READY.
-+ *
-+ *	LOCKING:
-+ *	EH context (may sleep).
-+ *
-+ *	RETURNS:
-+ *	0 on success, AC_ERR_* mask on failure.
-+ */
-+unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
+ struct zpodd {
++	bool slot:1;
++	bool drawer:1;
+ 	bool from_notify:1;	/* resumed as a result of acpi notification */
+ 
+ 	struct ata_device *dev;
+ };
+ 
++static int zpodd_run_atapi_cmd(struct ata_device *dev, const char *cdb,
++		unsigned short cdb_len, char *buf, unsigned int buf_len)
 +{
-+	u8 cdb[ATAPI_CDB_LEN] = { TEST_UNIT_READY, 0, 0, 0, 0, 0 };
-+	struct ata_taskfile tf;
-+	unsigned int err_mask;
-+
-+	ata_tf_init(dev, &tf);
-+
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.command = ATA_CMD_PACKET;
-+	tf.protocol = ATAPI_PROT_NODATA;
-+
-+	err_mask = ata_exec_internal(dev, &tf, cdb, DMA_NONE, NULL, 0, 0);
-+	if (err_mask == AC_ERR_DEV)
-+		*r_sense_key = tf.feature >> 4;
-+	return err_mask;
-+}
-+
-+/**
-+ *	atapi_eh_request_sense - perform ATAPI REQUEST_SENSE
-+ *	@dev: device to perform REQUEST_SENSE to
-+ *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
-+ *	@dfl_sense_key: default sense key to use
-+ *
-+ *	Perform ATAPI REQUEST_SENSE after the device reported CHECK
-+ *	SENSE.  This function is EH helper.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ *
-+ *	RETURNS:
-+ *	0 on success, AC_ERR_* mask on failure
-+ */
-+unsigned int atapi_eh_request_sense(struct ata_device *dev,
-+				    u8 *sense_buf, u8 dfl_sense_key)
-+{
-+	u8 cdb[ATAPI_CDB_LEN] =	{
-+		REQUEST_SENSE, 0, 0, 0, SCSI_SENSE_BUFFERSIZE, 0 };
-+	struct ata_port *ap = dev->link->ap;
-+	struct ata_taskfile tf;
-+
-+	DPRINTK("ATAPI request sense\n");
-+
-+	/* FIXME: is this needed? */
-+	memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
-+
-+	/* initialize sense_buf with the error register,
-+	 * for the case where they are -not- overwritten
-+	 */
-+	sense_buf[0] = 0x70;
-+	sense_buf[2] = dfl_sense_key;
-+
-+	/* some devices time out if garbage left in tf */
-+	ata_tf_init(dev, &tf);
++	int ret = 0;
++	struct ata_taskfile tf = {0};
 +
 +	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
 +	tf.command = ATA_CMD_PACKET;
 +
-+	/* is it pointless to prefer PIO for "safety reasons"? */
-+	if (ap->flags & ATA_FLAG_PIO_DMA) {
-+		tf.protocol = ATAPI_PROT_DMA;
-+		tf.feature |= ATAPI_PKT_DMA;
-+	} else {
++	if (buf) {
 +		tf.protocol = ATAPI_PROT_PIO;
-+		tf.lbam = SCSI_SENSE_BUFFERSIZE;
-+		tf.lbah = 0;
++		tf.lbam = buf_len;
++	} else {
++		tf.protocol = ATAPI_PROT_NODATA;
 +	}
 +
-+	return ata_exec_internal(dev, &tf, cdb, DMA_FROM_DEVICE,
-+				 sense_buf, SCSI_SENSE_BUFFERSIZE, 0);
++	ata_eh_acquire(dev->link->ap);
++	ret = ata_exec_internal(dev, &tf, cdb, buf ? DMA_FROM_DEVICE : DMA_NONE,
++				buf, buf_len, 0);
++	ata_eh_release(dev->link->ap);
++
++	return ret;
 +}
-diff --git a/drivers/ata/libata-atapi.h b/drivers/ata/libata-atapi.h
-new file mode 100644
-index 0000000..4d2e441
---- /dev/null
-+++ b/drivers/ata/libata-atapi.h
-@@ -0,0 +1,7 @@
-+#ifndef __LIBATA_ATAPI_H__
-+#define __LIBATA_ATAPI_H__
 +
-+unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key);
-+unsigned int atapi_eh_request_sense(struct ata_device *dev, u8 *sense_buf, u8 dfl_sense_key);
++/*
++ * Per the spec, only slot type and drawer type ODD can be supported
++ *
++ * Return 0 for slot, 1 for drawer, and -ENODEV for others or on error.
++ */
++static int check_loading_mechanism(struct ata_device *dev)
++{
++	char buf[16];
++	unsigned int ret, i, retry = 10;
++	struct rm_feature_desc *desc = (void *)(buf + 8);
 +
++	char cdb[] = {  GPCMD_GET_CONFIGURATION,
++			2,      /* only 1 feature descriptor requested */
++			0, 3,   /* 3, removable medium feature */
++			0, 0, 0,/* reserved */
++			0, sizeof(buf),
++			0, 0, 0,
++	};
++
++	/*
++	 * When we issue this command in ATA layer, SCSI layer may also
++	 * issue some commands to the ODD. To avoid this command failed
++	 * due to defer, retry for several times.
++	 */
++	for (i = 0; i < retry; i++) {
++		ret = zpodd_run_atapi_cmd(dev, cdb, sizeof(cdb),
++					  buf, sizeof(buf));
++		if (!ret || ret != -EBUSY)
++			break;
++		msleep(20);
++	}
++	if (ret)
++		return -ENODEV;
++
++	if (be16_to_cpu(desc->feature_code) != 3)
++		return -ENODEV;
++
++	if (desc->mech_type == 0 && desc->load == 0 && desc->eject == 1)
++		ret = 0; /* slot */
++	else if (desc->mech_type == 1 && desc->load == 0 && desc->eject == 1)
++		ret = 1; /* drawer */
++	else
++		ret = -ENODEV;
++
++	return ret;
++}
++
+ static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
+ {
+ 	struct ata_device *ata_dev = context;
+@@ -38,10 +114,21 @@ static void zpodd_acpi_remove_pm_notifier(struct ata_device *dev)
+ void zpodd_init(struct ata_device *dev)
+ {
+ 	struct zpodd *zpodd;
++	int ret;
++
+ 	zpodd = kzalloc(sizeof(struct zpodd), GFP_KERNEL);
+ 	if (!zpodd)
+ 		return;
+ 
++	if ((ret = check_loading_mechanism(dev)) == -ENODEV) {
++		kfree(zpodd);
++		return;
++	}
++	if (ret == 0)
++		zpodd->slot = true;
++	else
++		zpodd->drawer = true;
++
+ 	zpodd_acpi_add_pm_notifier(dev);
+ 	zpodd->dev = dev;
+ 	dev->private_data = zpodd;
+diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
+index dfd7f18..755f2b4 100644
+--- a/include/linux/cdrom.h
++++ b/include/linux/cdrom.h
+@@ -806,6 +806,41 @@ struct rwrt_feature_desc {
+ 	__u8 reserved3;
+ };
+ 
++/* removable medium feature descriptor */
++struct rm_feature_desc {
++	__be16 feature_code;
++#if defined(__BIG_ENDIAN_BITFIELD)
++	__u8 reserved1:2;
++	__u8 feature_version:4;
++	__u8 persistent:1;
++	__u8 curr:1;
++#elif defined(__LITTLE_ENDIAN_BITFIELD)
++	__u8 curr:1;
++	__u8 persistent:1;
++	__u8 feature_version:4;
++	__u8 reserved1:2;
 +#endif
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 2659894..c2f2357 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -47,6 +47,7 @@
- #include <linux/libata.h>
- 
- #include "libata.h"
-+#include "libata-atapi.h"
- 
- enum {
- 	/* speed down verdicts */
-@@ -1579,91 +1580,6 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
- }
- 
- /**
-- *	atapi_eh_tur - perform ATAPI TEST_UNIT_READY
-- *	@dev: target ATAPI device
-- *	@r_sense_key: out parameter for sense_key
-- *
-- *	Perform ATAPI TEST_UNIT_READY.
-- *
-- *	LOCKING:
-- *	EH context (may sleep).
-- *
-- *	RETURNS:
-- *	0 on success, AC_ERR_* mask on failure.
-- */
--static unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
--{
--	u8 cdb[ATAPI_CDB_LEN] = { TEST_UNIT_READY, 0, 0, 0, 0, 0 };
--	struct ata_taskfile tf;
--	unsigned int err_mask;
--
--	ata_tf_init(dev, &tf);
--
--	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
--	tf.command = ATA_CMD_PACKET;
--	tf.protocol = ATAPI_PROT_NODATA;
--
--	err_mask = ata_exec_internal(dev, &tf, cdb, DMA_NONE, NULL, 0, 0);
--	if (err_mask == AC_ERR_DEV)
--		*r_sense_key = tf.feature >> 4;
--	return err_mask;
--}
--
--/**
-- *	atapi_eh_request_sense - perform ATAPI REQUEST_SENSE
-- *	@dev: device to perform REQUEST_SENSE to
-- *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
-- *	@dfl_sense_key: default sense key to use
-- *
-- *	Perform ATAPI REQUEST_SENSE after the device reported CHECK
-- *	SENSE.  This function is EH helper.
-- *
-- *	LOCKING:
-- *	Kernel thread context (may sleep).
-- *
-- *	RETURNS:
-- *	0 on success, AC_ERR_* mask on failure
-- */
--static unsigned int atapi_eh_request_sense(struct ata_device *dev,
--					   u8 *sense_buf, u8 dfl_sense_key)
--{
--	u8 cdb[ATAPI_CDB_LEN] =
--		{ REQUEST_SENSE, 0, 0, 0, SCSI_SENSE_BUFFERSIZE, 0 };
--	struct ata_port *ap = dev->link->ap;
--	struct ata_taskfile tf;
--
--	DPRINTK("ATAPI request sense\n");
--
--	/* FIXME: is this needed? */
--	memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
--
--	/* initialize sense_buf with the error register,
--	 * for the case where they are -not- overwritten
--	 */
--	sense_buf[0] = 0x70;
--	sense_buf[2] = dfl_sense_key;
--
--	/* some devices time out if garbage left in tf */
--	ata_tf_init(dev, &tf);
--
--	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
--	tf.command = ATA_CMD_PACKET;
--
--	/* is it pointless to prefer PIO for "safety reasons"? */
--	if (ap->flags & ATA_FLAG_PIO_DMA) {
--		tf.protocol = ATAPI_PROT_DMA;
--		tf.feature |= ATAPI_PKT_DMA;
--	} else {
--		tf.protocol = ATAPI_PROT_PIO;
--		tf.lbam = SCSI_SENSE_BUFFERSIZE;
--		tf.lbah = 0;
--	}
--
--	return ata_exec_internal(dev, &tf, cdb, DMA_FROM_DEVICE,
--				 sense_buf, SCSI_SENSE_BUFFERSIZE, 0);
--}
--
--/**
-  *	ata_eh_analyze_serror - analyze SError for a failed port
-  *	@link: ATA link to analyze SError for
-  *
++	__u8 add_len;
++#if defined(__BIG_ENDIAN_BITFIELD)
++	__u8 mech_type:3;
++	__u8 load:1;
++	__u8 eject:1;
++	__u8 pvnt_jmpr:1;
++	__u8 dbml:1;
++	__u8 lock:1;
++#elif defined(__LITTLE_ENDIAN_BITFIELD)
++	__u8 lock:1;
++	__u8 dbml:1;
++	__u8 pvnt_jmpr:1;
++	__u8 eject:1;
++	__u8 load:1;
++	__u8 mech_type:3;
++#endif
++	__u8 reserved2;
++	__u8 reserved3;
++	__u8 reserved4;
++};
++
+ typedef struct {
+ 	__be16 disc_information_length;
+ #if defined(__BIG_ENDIAN_BITFIELD)
 -- 
 1.7.12.4
 
