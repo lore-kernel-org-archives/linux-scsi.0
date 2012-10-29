@@ -1,95 +1,257 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v8 05/11] libata-eh: allow defer in ata_exec_internal
-Date: Mon, 29 Oct 2012 17:01:32 +0800
-Message-ID: <1351501298-3716-6-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v8 07/11] libata: separate ATAPI code
+Date: Mon, 29 Oct 2012 17:01:34 +0800
+Message-ID: <1351501298-3716-8-git-send-email-aaron.lu@intel.com>
 References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-pm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:45943 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758399Ab2J2JCD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Oct 2012 05:02:03 -0400
 In-Reply-To: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Oliver Neukum <oliver@neukum.org>
 Cc: Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-ata_exec_internal will preempt the ata link's active_tag and ata port's
-qc_active flags, this is OK for error recovery, but if normal code path
-wants to use ata_exec_internal, there is a problem: we need to check if
-it is OK to issue a new command with the help of port_ops->defer.
-
-In ZPODD, I'll need to find out the loading mechanism of the ODD by
-issuing a GET_CONFIGURATION command. And this command may very well
-race with commands issued from SCSI layer. So instead of preempt the
-current command, defer the new command if it's not OK to issue it, as
-it is always wrong to issue a non-NCQ command when there is command(s)
-in processing.
-
-So ata_exec_internal is modified to check if it is in eh recovery
-environment, and if yes, act as before; if not, check if this command
-should be defered with the help of port_ops->defer.
+The atapi_eh_tur and atapi_eh_request_sense can be reused by ZPODD
+code, so separate them out to a file named libata-atapi.c. A header
+file libata-atapi.h is added and the Makefile is modified accordingly.
 
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- drivers/ata/libata-core.c | 34 ++++++++++++++++++++++------------
- 1 file changed, 22 insertions(+), 12 deletions(-)
+ drivers/ata/Makefile       |  2 +-
+ drivers/ata/libata-atapi.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-atapi.h |  7 ++++
+ drivers/ata/libata-eh.c    | 86 +-------------------------------------------
+ 4 files changed, 97 insertions(+), 86 deletions(-)
+ create mode 100644 drivers/ata/libata-atapi.c
+ create mode 100644 drivers/ata/libata-atapi.h
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 611050d..95fb7b8 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1557,6 +1557,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	unsigned long flags;
- 	unsigned int err_mask;
- 	int rc;
-+	bool eh_in_recover;
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index a5120ff..335407c 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -103,7 +103,7 @@ obj-$(CONFIG_ATA_GENERIC)	+= ata_generic.o
+ # Should be last libata driver
+ obj-$(CONFIG_PATA_LEGACY)	+= pata_legacy.o
  
- 	spin_lock_irqsave(ap->lock, flags);
- 
-@@ -1588,14 +1589,21 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	qc->dev = dev;
- 	ata_qc_reinit(qc);
- 
--	preempted_tag = link->active_tag;
--	preempted_sactive = link->sactive;
--	preempted_qc_active = ap->qc_active;
--	preempted_nr_active_links = ap->nr_active_links;
--	link->active_tag = ATA_TAG_POISON;
--	link->sactive = 0;
--	ap->qc_active = 0;
--	ap->nr_active_links = 0;
-+	eh_in_recover = ap->pflags & ATA_PFLAG_EH_IN_PROGRESS;
-+	if (eh_in_recover) {
-+		preempted_tag = link->active_tag;
-+		preempted_sactive = link->sactive;
-+		preempted_qc_active = ap->qc_active;
-+		preempted_nr_active_links = ap->nr_active_links;
-+		link->active_tag = ATA_TAG_POISON;
-+		link->sactive = 0;
-+		ap->qc_active = 0;
-+		ap->nr_active_links = 0;
-+	} else if (ap->ops->qc_defer && ap->ops->qc_defer(qc)) {
-+		ata_qc_free(qc);
-+		spin_unlock_irqrestore(ap->lock, flags);
-+		return -EBUSY;
+-libata-y	:= libata-core.o libata-scsi.o libata-eh.o libata-transport.o
++libata-y	:= libata-core.o libata-scsi.o libata-eh.o libata-atapi.o libata-transport.o
+ libata-$(CONFIG_ATA_SFF)	+= libata-sff.o
+ libata-$(CONFIG_SATA_PMP)	+= libata-pmp.o
+ libata-$(CONFIG_ATA_ACPI)	+= libata-acpi.o
+diff --git a/drivers/ata/libata-atapi.c b/drivers/ata/libata-atapi.c
+new file mode 100644
+index 0000000..28684ae
+--- /dev/null
++++ b/drivers/ata/libata-atapi.c
+@@ -0,0 +1,88 @@
++#include <linux/libata.h>
++#include <scsi/scsi_cmnd.h>
++#include "libata.h"
++
++/**
++ *	atapi_eh_tur - perform ATAPI TEST_UNIT_READY
++ *	@dev: target ATAPI device
++ *	@r_sense_key: out parameter for sense_key
++ *
++ *	Perform ATAPI TEST_UNIT_READY.
++ *
++ *	LOCKING:
++ *	EH context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, AC_ERR_* mask on failure.
++ */
++unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
++{
++	u8 cdb[ATAPI_CDB_LEN] = { TEST_UNIT_READY, 0, 0, 0, 0, 0 };
++	struct ata_taskfile tf;
++	unsigned int err_mask;
++
++	ata_tf_init(dev, &tf);
++
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.command = ATA_CMD_PACKET;
++	tf.protocol = ATAPI_PROT_NODATA;
++
++	err_mask = ata_exec_internal(dev, &tf, cdb, DMA_NONE, NULL, 0, 0);
++	if (err_mask == AC_ERR_DEV)
++		*r_sense_key = tf.feature >> 4;
++	return err_mask;
++}
++
++/**
++ *	atapi_eh_request_sense - perform ATAPI REQUEST_SENSE
++ *	@dev: device to perform REQUEST_SENSE to
++ *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
++ *	@dfl_sense_key: default sense key to use
++ *
++ *	Perform ATAPI REQUEST_SENSE after the device reported CHECK
++ *	SENSE.  This function is EH helper.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, AC_ERR_* mask on failure
++ */
++unsigned int atapi_eh_request_sense(struct ata_device *dev,
++				    u8 *sense_buf, u8 dfl_sense_key)
++{
++	u8 cdb[ATAPI_CDB_LEN] =	{
++		REQUEST_SENSE, 0, 0, 0, SCSI_SENSE_BUFFERSIZE, 0 };
++	struct ata_port *ap = dev->link->ap;
++	struct ata_taskfile tf;
++
++	DPRINTK("ATAPI request sense\n");
++
++	/* FIXME: is this needed? */
++	memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
++
++	/* initialize sense_buf with the error register,
++	 * for the case where they are -not- overwritten
++	 */
++	sense_buf[0] = 0x70;
++	sense_buf[2] = dfl_sense_key;
++
++	/* some devices time out if garbage left in tf */
++	ata_tf_init(dev, &tf);
++
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.command = ATA_CMD_PACKET;
++
++	/* is it pointless to prefer PIO for "safety reasons"? */
++	if (ap->flags & ATA_FLAG_PIO_DMA) {
++		tf.protocol = ATAPI_PROT_DMA;
++		tf.feature |= ATAPI_PKT_DMA;
++	} else {
++		tf.protocol = ATAPI_PROT_PIO;
++		tf.lbam = SCSI_SENSE_BUFFERSIZE;
++		tf.lbah = 0;
 +	}
++
++	return ata_exec_internal(dev, &tf, cdb, DMA_FROM_DEVICE,
++				 sense_buf, SCSI_SENSE_BUFFERSIZE, 0);
++}
+diff --git a/drivers/ata/libata-atapi.h b/drivers/ata/libata-atapi.h
+new file mode 100644
+index 0000000..4d2e441
+--- /dev/null
++++ b/drivers/ata/libata-atapi.h
+@@ -0,0 +1,7 @@
++#ifndef __LIBATA_ATAPI_H__
++#define __LIBATA_ATAPI_H__
++
++unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key);
++unsigned int atapi_eh_request_sense(struct ata_device *dev, u8 *sense_buf, u8 dfl_sense_key);
++
++#endif
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 2659894..c2f2357 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -47,6 +47,7 @@
+ #include <linux/libata.h>
  
- 	/* prepare & issue qc */
- 	qc->tf = *tf;
-@@ -1687,10 +1695,12 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	err_mask = qc->err_mask;
+ #include "libata.h"
++#include "libata-atapi.h"
  
- 	ata_qc_free(qc);
--	link->active_tag = preempted_tag;
--	link->sactive = preempted_sactive;
--	ap->qc_active = preempted_qc_active;
--	ap->nr_active_links = preempted_nr_active_links;
-+	if (eh_in_recover) {
-+		link->active_tag = preempted_tag;
-+		link->sactive = preempted_sactive;
-+		ap->qc_active = preempted_qc_active;
-+		ap->nr_active_links = preempted_nr_active_links;
-+	}
+ enum {
+ 	/* speed down verdicts */
+@@ -1579,91 +1580,6 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
+ }
  
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
+ /**
+- *	atapi_eh_tur - perform ATAPI TEST_UNIT_READY
+- *	@dev: target ATAPI device
+- *	@r_sense_key: out parameter for sense_key
+- *
+- *	Perform ATAPI TEST_UNIT_READY.
+- *
+- *	LOCKING:
+- *	EH context (may sleep).
+- *
+- *	RETURNS:
+- *	0 on success, AC_ERR_* mask on failure.
+- */
+-static unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
+-{
+-	u8 cdb[ATAPI_CDB_LEN] = { TEST_UNIT_READY, 0, 0, 0, 0, 0 };
+-	struct ata_taskfile tf;
+-	unsigned int err_mask;
+-
+-	ata_tf_init(dev, &tf);
+-
+-	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+-	tf.command = ATA_CMD_PACKET;
+-	tf.protocol = ATAPI_PROT_NODATA;
+-
+-	err_mask = ata_exec_internal(dev, &tf, cdb, DMA_NONE, NULL, 0, 0);
+-	if (err_mask == AC_ERR_DEV)
+-		*r_sense_key = tf.feature >> 4;
+-	return err_mask;
+-}
+-
+-/**
+- *	atapi_eh_request_sense - perform ATAPI REQUEST_SENSE
+- *	@dev: device to perform REQUEST_SENSE to
+- *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
+- *	@dfl_sense_key: default sense key to use
+- *
+- *	Perform ATAPI REQUEST_SENSE after the device reported CHECK
+- *	SENSE.  This function is EH helper.
+- *
+- *	LOCKING:
+- *	Kernel thread context (may sleep).
+- *
+- *	RETURNS:
+- *	0 on success, AC_ERR_* mask on failure
+- */
+-static unsigned int atapi_eh_request_sense(struct ata_device *dev,
+-					   u8 *sense_buf, u8 dfl_sense_key)
+-{
+-	u8 cdb[ATAPI_CDB_LEN] =
+-		{ REQUEST_SENSE, 0, 0, 0, SCSI_SENSE_BUFFERSIZE, 0 };
+-	struct ata_port *ap = dev->link->ap;
+-	struct ata_taskfile tf;
+-
+-	DPRINTK("ATAPI request sense\n");
+-
+-	/* FIXME: is this needed? */
+-	memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
+-
+-	/* initialize sense_buf with the error register,
+-	 * for the case where they are -not- overwritten
+-	 */
+-	sense_buf[0] = 0x70;
+-	sense_buf[2] = dfl_sense_key;
+-
+-	/* some devices time out if garbage left in tf */
+-	ata_tf_init(dev, &tf);
+-
+-	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+-	tf.command = ATA_CMD_PACKET;
+-
+-	/* is it pointless to prefer PIO for "safety reasons"? */
+-	if (ap->flags & ATA_FLAG_PIO_DMA) {
+-		tf.protocol = ATAPI_PROT_DMA;
+-		tf.feature |= ATAPI_PKT_DMA;
+-	} else {
+-		tf.protocol = ATAPI_PROT_PIO;
+-		tf.lbam = SCSI_SENSE_BUFFERSIZE;
+-		tf.lbah = 0;
+-	}
+-
+-	return ata_exec_internal(dev, &tf, cdb, DMA_FROM_DEVICE,
+-				 sense_buf, SCSI_SENSE_BUFFERSIZE, 0);
+-}
+-
+-/**
+  *	ata_eh_analyze_serror - analyze SError for a failed port
+  *	@link: ATA link to analyze SError for
+  *
 -- 
 1.7.12.4
 
