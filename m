@@ -1,86 +1,36 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v8 10/11] scsi: sr: support (un)block events
-Date: Mon, 29 Oct 2012 17:01:37 +0800
-Message-ID: <1351501298-3716-11-git-send-email-aaron.lu@intel.com>
-References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Oliver Neukum <oliver@neukum.org>
-Cc: Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH] aic7xxx_old: silence GCC warnings
+Date: Mon, 29 Oct 2012 11:36:18 +0100
+Message-ID: <1351506978.1339.8.camel@x61.thuisdomein>
+References: <1348219723.1581.5.camel@x61.thuisdomein>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1348219723.1581.5.camel@x61.thuisdomein>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-2 interfaces are added to block/unblock events for the disk sr manages.
-This is used by SATA ZPODD, when ODD is runtime powered off, the events
-poll is no longer needed so better be blocked. And once powered on,
-events poll will be unblocked.
+On Fri, 2012-09-21 at 11:28 +0200, Paul Bolle wrote:
+> Building the aic7xxx_old driver triggers these GCC warnings:
+>     drivers/scsi/aic7xxx_old.c:7901:5: warning: case value '257' not in enumerated type 'ahc_chip' [-Wswitch]
+>     drivers/scsi/aic7xxx_old.c:7898:5: warning: case value '513' not in enumerated type 'ahc_chip' [-Wswitch]
+>     drivers/scsi/aic7xxx_old.c:8517:5: warning: case value '257' not in enumerated type 'ahc_chip' [-Wswitch]
+>     drivers/scsi/aic7xxx_old.c:8510:5: warning: case value '513' not in enumerated type 'ahc_chip' [-Wswitch]
+> 
+> Fix these warnings by adopting the idiom used elsewhere in this driver.
+> Since AHC_EISA and AHC_VL are only ever set for AHC_AIC7770 this fix
+> should not lead to any functional change.
+> 
+> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> ---
+> 0) I noticed these warnings while building v3.6-rc6 on current Fedora
+> 17, using Fedora's default config.
 
-These 2 interfaces are needed here because SATA layer does not have
-access to the gendisk structure sr manages.
+Identical warnings can be seen while building v3.7-rc3. What's the
+status of my patch? Did anyone found some time to have a look at it?
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/scsi/Makefile   |  1 +
- drivers/scsi/sr_zpodd.c | 21 +++++++++++++++++++++
- drivers/scsi/sr_zpodd.h |  9 +++++++++
- 3 files changed, 31 insertions(+)
- create mode 100644 drivers/scsi/sr_zpodd.c
- create mode 100644 drivers/scsi/sr_zpodd.h
 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 888f73a..474efe2 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -177,6 +177,7 @@ sd_mod-objs	:= sd.o
- sd_mod-$(CONFIG_BLK_DEV_INTEGRITY) += sd_dif.o
- 
- sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o
-+sr_mod-$(CONFIG_SATA_ZPODD) += sr_zpodd.o
- ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
- 		:= -DCONFIG_NCR53C8XX_PREFETCH -DSCSI_NCR_BIG_ENDIAN \
- 			-DCONFIG_SCSI_NCR53C8XX_NO_WORD_TRANSFERS
-diff --git a/drivers/scsi/sr_zpodd.c b/drivers/scsi/sr_zpodd.c
-new file mode 100644
-index 0000000..0686e8c
---- /dev/null
-+++ b/drivers/scsi/sr_zpodd.c
-@@ -0,0 +1,21 @@
-+#include <linux/module.h>
-+#include <linux/genhd.h>
-+#include <linux/cdrom.h>
-+#include "sr.h"
-+
-+bool sr_block_events(struct device *dev)
-+{
-+	struct scsi_cd *cd = dev_get_drvdata(dev);
-+	if (cd)
-+		return disk_try_block_events(cd->disk);
-+	return false;
-+}
-+EXPORT_SYMBOL(sr_block_events);
-+
-+void sr_unblock_events(struct device *dev)
-+{
-+	struct scsi_cd *cd = dev_get_drvdata(dev);
-+	if (cd)
-+		disk_unblock_events(cd->disk);
-+}
-+EXPORT_SYMBOL(sr_unblock_events);
-diff --git a/drivers/scsi/sr_zpodd.h b/drivers/scsi/sr_zpodd.h
-new file mode 100644
-index 0000000..49c6a55
---- /dev/null
-+++ b/drivers/scsi/sr_zpodd.h
-@@ -0,0 +1,9 @@
-+#ifndef __SR_ZPODD_H__
-+#define __SR_ZPODD_H__
-+
-+#include <linux/device.h>
-+
-+extern bool sr_block_events(struct device *dev);
-+extern void sr_unblock_events(struct device *dev);
-+
-+#endif
--- 
-1.7.12.4
-
+Paul Bolle
