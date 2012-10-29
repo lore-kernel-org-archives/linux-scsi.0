@@ -1,7 +1,7 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v8 08/11] ata: zpodd: check zero power ready status
-Date: Mon, 29 Oct 2012 17:01:35 +0800
-Message-ID: <1351501298-3716-9-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v8 11/11] ata: zpodd: handle power transition of ODD
+Date: Mon, 29 Oct 2012 17:01:38 +0800
+Message-ID: <1351501298-3716-12-git-send-email-aaron.lu@intel.com>
 References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
@@ -10,262 +10,247 @@ To: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bo
 Cc: Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Per the Mount Fuji spec, the ODD is considered zero power ready when:
-- For slot type ODD, no media inside;
-- For tray type ODD, no media inside and tray closed.
+The implementation of ZPODD aligns with runtime pm, which means the ODD
+will only be runtime powered off after it is runtime suspended.
 
-The information can be retrieved by either the returned information of
-command GET_EVENT_STATUS_NOTIFICATION(the command is used to poll for
-media event) or sense code.
+And each time in ata port's suspend callback, a check is made to see if
+the ODD is ready to be powered off:
+1 zp_ready is true;
+2 events is successfully blocked.
 
-In this implementation, the zero power ready status is determined by
-the following factors:
-1 polled media status byte, and this info is recorded in status_ready
-  field of zpodd structure;
-2 sense code by issuing a TEST_UNIT_READY command after status_ready
-  is found to be true.
+If the 2 conditions are not met, ACPI_STATE_D0 is chosen since as far
+as ACPI is concerned about ODD's power management, only D0 and D3 is
+meanningful. There is no definition of D1/D2/D3hot state for ODD, so
+avoid setting those ACPI states.
 
-The information provided by the media status byte is not accurate, it is
-possible that after a new disc is just inserted, the status byte still
-returns media not present. So this information can not be used as the
-final deciding factor. But since SCSI ODD driver sr will always poll the
-ODD every 2 seconds, this information is readily available without any
-much cost. So it is used as a hint: when we find zero power ready status
-in the media status byte, we will see if it is really the case with the
-sense code method. This way, we can avoid sending too many
-TEST_UNIT_READY commands to the ODD.
-
-When we first sensed the ODD in the zero power ready state, the
-timestamp will be recoreded. And after ODD stayed in this state for some
-pre-defined period, the ODD is considered as power off ready and the
-zp_ready flag will be set. The zp_ready flag serves as the deciding
-factor other code will use to see if power off is OK for the ODD. The
-Mount Fuji spec suggests a delay should be used here, to avoid the case
-user ejects the ODD and then instantly inserts a new one again, so that
-we can avoid a power transition. And some ODDs may be slow to place its
-head to the home position after disc is ejected, so a delay here is
-generally a good idea.
-
-The zero power ready status check is performed in the ata port's runtime
-suspend code path, when port is not frozen yet, as we need to issue some
-IOs to the ODD.
+And on resume, it will re-gain power and go through the recovery
+process. When EH for the ata port is done, the ODD is considered
+functional, and post processing like eject tray if the ODD is drawer
+type is done there.
 
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- drivers/ata/libata-acpi.c |   8 +++-
- drivers/ata/libata-scsi.c |   5 ++
- drivers/ata/sata_zpodd.c  | 117 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/sata_zpodd.h  |   5 ++
- 4 files changed, 134 insertions(+), 1 deletion(-)
+ drivers/ata/libata-acpi.c | 34 +++++++++++++++++++-------
+ drivers/ata/libata-core.c | 20 ++++++++++++++-
+ drivers/ata/sata_zpodd.c  | 62 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/sata_zpodd.h  |  8 ++++++
+ 4 files changed, 114 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 3167fc2..5a78cb3 100644
+index 5a78cb3..a8c9199 100644
 --- a/drivers/ata/libata-acpi.c
 +++ b/drivers/ata/libata-acpi.c
-@@ -785,7 +785,13 @@ static int ata_acpi_push_id(struct ata_device *dev)
-  */
- int ata_acpi_on_suspend(struct ata_port *ap)
- {
--	/* nada */
-+	struct ata_device *dev;
-+
-+	ata_for_each_dev(dev, &ap->link, ENABLED) {
-+		if (zpodd_dev_enabled(dev))
-+			zpodd_check_zpready(dev);
-+	}
-+
- 	return 0;
+@@ -839,6 +839,24 @@ void ata_acpi_on_resume(struct ata_port *ap)
+ 	}
  }
  
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e3bda07..ed3e4d3 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -53,6 +53,7 @@
++static int ata_acpi_choose_state(struct ata_device *dev)
++{
++	int acpi_state;
++
++	/* Always choose D3 for PATA devices */
++	if (!(dev->link->ap->flags & ATA_FLAG_ACPI_SATA))
++		return ACPI_STATE_D3;
++
++	acpi_state = acpi_pm_device_sleep_state(&dev->sdev->sdev_gendev,
++						NULL, ACPI_STATE_D3);
++
++	if (acpi_state == ACPI_STATE_D3 && zpodd_dev_enabled(dev) &&
++			!zpodd_poweroff_ready(dev))
++		acpi_state = ACPI_STATE_D0;
++
++	return acpi_state;
++}
++
+ /**
+  * ata_acpi_set_state - set the port power state
+  * @ap: target ATA port
+@@ -865,17 +883,15 @@ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
+ 			continue;
+ 
+ 		if (state.event != PM_EVENT_ON) {
+-			acpi_state = acpi_pm_device_sleep_state(
+-				&dev->sdev->sdev_gendev, NULL, ACPI_STATE_D3);
+-			if (acpi_state > 0)
++			acpi_state = ata_acpi_choose_state(dev);
++			if (acpi_state > 0) {
+ 				acpi_bus_set_power(handle, acpi_state);
+-			/* TBD: need to check if it's runtime pm request */
+-			acpi_pm_device_run_wake(
+-				&dev->sdev->sdev_gendev, true);
++				if (zpodd_dev_enabled(dev))
++					zpodd_post_poweroff(dev);
++			}
+ 		} else {
+-			/* Ditto */
+-			acpi_pm_device_run_wake(
+-				&dev->sdev->sdev_gendev, false);
++			if (zpodd_dev_enabled(dev))
++				zpodd_pre_poweron(dev);
+ 			acpi_bus_set_power(handle, ACPI_STATE_D0);
+ 		}
+ 	}
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 95fb7b8..d3be1b6 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -70,6 +70,7 @@
  
  #include "libata.h"
  #include "libata-transport.h"
 +#include "sata_zpodd.h"
  
- #define ATA_SCSI_RBUF_SIZE	4096
+ /* debounce timing parameters in msecs { interval, duration, timeout } */
+ const unsigned long sata_deb_timing_normal[]		= {   5,  100, 2000 };
+@@ -5399,6 +5400,23 @@ static int ata_port_runtime_idle(struct device *dev)
+ 	return pm_runtime_suspend(dev);
+ }
  
-@@ -2665,6 +2666,10 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
- 			ata_scsi_rbuf_put(cmd, true, &flags);
- 		}
- 
-+		if (zpodd_dev_enabled(qc->dev) &&
-+				scsicmd[0] == GET_EVENT_STATUS_NOTIFICATION)
-+			zpodd_snoop_status(qc->dev, cmd);
++static int ata_port_runtime_resume(struct device *dev)
++{
++	int rc;
++	struct ata_device *ata_dev;
++	struct ata_port *ap = to_ata_port(dev);
 +
- 		cmd->result = SAM_STAT_GOOD;
- 	}
++	rc = ata_port_resume_common(dev);
++	if (!rc) {
++		ata_for_each_dev(ata_dev, &ap->link, ENABLED) {
++			if (zpodd_dev_enabled(ata_dev))
++				zpodd_post_resume(ata_dev);
++		}
++	}
++
++	return rc;
++}
++
+ static const struct dev_pm_ops ata_port_pm_ops = {
+ 	.suspend = ata_port_suspend,
+ 	.resume = ata_port_resume,
+@@ -5408,7 +5426,7 @@ static const struct dev_pm_ops ata_port_pm_ops = {
+ 	.restore = ata_port_resume,
+ 
+ 	.runtime_suspend = ata_port_suspend,
+-	.runtime_resume = ata_port_resume_common,
++	.runtime_resume = ata_port_runtime_resume,
+ 	.runtime_idle = ata_port_runtime_idle,
+ };
  
 diff --git a/drivers/ata/sata_zpodd.c b/drivers/ata/sata_zpodd.c
-index c7c63a1..0ec62f3 100644
+index 0ec62f3..aca2553 100644
 --- a/drivers/ata/sata_zpodd.c
 +++ b/drivers/ata/sata_zpodd.c
-@@ -2,13 +2,22 @@
- #include <linux/pm_runtime.h>
- #include <linux/cdrom.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_cmnd.h>
+@@ -6,6 +6,7 @@
  
  #include "libata.h"
-+#include "libata-atapi.h"
-+
-+#define POWEROFF_DELAY  (30 * 1000)     /* 30 seconds for power off delay */
+ #include "libata-atapi.h"
++#include "../scsi/sr_zpodd.h"
  
- struct zpodd {
- 	bool slot:1;
- 	bool drawer:1;
- 	bool from_notify:1;	/* resumed as a result of acpi notification */
-+	bool status_ready:1;	/* ready status derived from media event poll,
-+				   it is not accurate, but serves as a hint */
-+	bool zp_ready:1;	/* zero power ready state */
-+
-+	unsigned long last_ready; /* last zero power ready timestamp */
+ #define POWEROFF_DELAY  (30 * 1000)     /* 30 seconds for power off delay */
  
- 	struct ata_device *dev;
- };
-@@ -84,6 +93,114 @@ static int check_loading_mechanism(struct ata_device *dev)
+@@ -16,6 +17,7 @@ struct zpodd {
+ 	bool status_ready:1;	/* ready status derived from media event poll,
+ 				   it is not accurate, but serves as a hint */
+ 	bool zp_ready:1;	/* zero power ready state */
++	bool powered_off:1;	/* ODD is powered off */
+ 
+ 	unsigned long last_ready; /* last zero power ready timestamp */
+ 
+@@ -46,6 +48,17 @@ static int zpodd_run_atapi_cmd(struct ata_device *dev, const char *cdb,
  	return ret;
  }
  
-+/*
-+ * Snoop the result of GET_STATUS_NOTIFICATION_EVENT, the media
-+ * status byte has information on media present/door closed.
-+ *
-+ * This information serves only as a hint, as it is not accurate.
-+ * The sense code method will be used when deciding if the ODD is
-+ * really zero power ready.
-+ */
-+void zpodd_snoop_status(struct ata_device *dev, struct scsi_cmnd *scmd)
++static int zpodd_eject_tray(struct ata_device *dev)
 +{
-+	bool ready;
-+	char buf[8];
-+	struct event_header *eh = (void *)buf;
-+	struct media_event_desc *med = (void *)(buf + 4);
-+	struct sg_table *table = &scmd->sdb.table;
-+	struct zpodd *zpodd = dev->private_data;
++	const char cdb[] = {  GPCMD_START_STOP_UNIT,
++			      0, 0, 0,
++			      0x02,     /* LoEj */
++			      0, 0, 0, 0, 0, 0, 0,
++	};
 +
-+	if (sg_copy_to_buffer(table->sgl, table->nents, buf, 8) != 8)
-+		return;
-+
-+	if (be16_to_cpu(eh->data_len) < sizeof(*med))
-+		return;
-+
-+	if (eh->nea || eh->notification_class != 0x4)
-+		return;
-+
-+	if (zpodd->slot)
-+		ready = !med->media_present;
-+	else
-+		ready = !(med->media_present || med->door_open);
-+
-+	zpodd->status_ready = ready;
++	return zpodd_run_atapi_cmd(dev, cdb, sizeof(cdb), NULL, 0);
 +}
 +
-+/* Test if ODD is zero power ready by sense code */
-+static bool zpready(struct ata_device *dev)
+ /*
+  * Per the spec, only slot type and drawer type ODD can be supported
+  *
+@@ -201,6 +214,55 @@ void zpodd_check_zpready(struct ata_device *dev)
+ 		zpodd->last_ready = 0;
+ }
+ 
++/*
++ * Test if ODD is ready to be powered off.
++ * Determined by zp_ready and if events is successfully blocked
++ */
++bool zpodd_poweroff_ready(struct ata_device *dev)
 +{
-+	u8 sense_key, *sense_buf;
-+	unsigned int ret, asc, ascq, add_len;
 +	struct zpodd *zpodd = dev->private_data;
 +
-+	ret = atapi_eh_tur(dev, &sense_key);
-+
-+	if (!ret || sense_key != NOT_READY)
-+		return false;
-+
-+	sense_buf = dev->link->ap->sector_buf;
-+	ret = atapi_eh_request_sense(dev, sense_buf, sense_key);
-+	if (ret)
-+		return false;
-+
-+	/* sense valid */
-+	if ((sense_buf[0] & 0x7f) != 0x70)
-+		return false;
-+
-+	add_len = sense_buf[7];
-+	/* has asc and ascq */
-+	if (add_len < 6)
-+		return false;
-+
-+	asc = sense_buf[12];
-+	ascq = sense_buf[13];
-+
-+	if (zpodd->slot)
-+		/* no media inside */
-+		return asc == 0x3a;
++	if (zpodd->zp_ready && sr_block_events(&dev->sdev->sdev_gendev))
++		return true;
 +	else
-+		/* no media inside and door closed */
-+		return asc == 0x3a && ascq == 0x01;
++		return false;
 +}
 +
-+/*
-+ * Check ODD's zero power ready status.
-+ *
-+ * This function is called during ATA port's suspend path,
-+ * when the port is not frozen yet, so that we can still make
-+ * some IO to the ODD to decide if it is zero power ready.
-+ *
-+ * The ODD is regarded as zero power ready when it is in zero
-+ * power ready state for some time(defined by POWEROFF_DELAY).
-+ */
-+void zpodd_check_zpready(struct ata_device *dev)
++void zpodd_post_poweroff(struct ata_device *dev)
 +{
-+	bool zp_ready;
-+	unsigned long expires;
 +	struct zpodd *zpodd = dev->private_data;
 +
-+	if (!zpodd->status_ready) {
-+		zpodd->last_ready = 0;
++	zpodd->powered_off = true;
++	acpi_pm_device_run_wake(&dev->sdev->sdev_gendev, true);
++}
++
++void zpodd_pre_poweron(struct ata_device *dev)
++{
++	struct zpodd *zpodd = dev->private_data;
++	if (zpodd->powered_off)
++		acpi_pm_device_run_wake(&dev->sdev->sdev_gendev, false);
++}
++
++void zpodd_post_resume(struct ata_device *dev)
++{
++	struct zpodd *zpodd = dev->private_data;
++
++	if (!zpodd->powered_off)
 +		return;
++
++	zpodd->powered_off = false;
++
++	if (zpodd->from_notify) {
++		zpodd->from_notify = false;
++		if (zpodd->drawer)
++			zpodd_eject_tray(dev);
 +	}
 +
-+	if (!zpodd->last_ready) {
-+		zp_ready = zpready(dev);
-+		if (zp_ready)
-+			zpodd->last_ready = jiffies;
-+		return;
-+	}
-+
-+	expires = zpodd->last_ready + msecs_to_jiffies(POWEROFF_DELAY);
-+	if (time_before(jiffies, expires))
-+		return;
-+
-+	zpodd->zp_ready = zpready(dev);
-+	if (!zpodd->zp_ready)
-+		zpodd->last_ready = 0;
++	zpodd->last_ready = 0;
++	zpodd->zp_ready = false;
++	sr_unblock_events(&dev->sdev->sdev_gendev);
 +}
 +
  static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
  {
  	struct ata_device *ata_dev = context;
 diff --git a/drivers/ata/sata_zpodd.h b/drivers/ata/sata_zpodd.h
-index e320c6f..03d6b4d 100644
+index 03d6b4d..87f6f53 100644
 --- a/drivers/ata/sata_zpodd.h
 +++ b/drivers/ata/sata_zpodd.h
-@@ -2,6 +2,7 @@
- #define __SATA_ZPODD_H__
+@@ -18,12 +18,20 @@ static bool zpodd_dev_enabled(struct ata_device *dev)
  
- #include <linux/libata.h>
-+#include <scsi/scsi_cmnd.h>
- 
- #ifdef CONFIG_SATA_ZPODD
- void zpodd_init(struct ata_device *);
-@@ -15,10 +16,14 @@ static bool zpodd_dev_enabled(struct ata_device *dev)
- 		return false;
- }
- 
-+void zpodd_snoop_status(struct ata_device *, struct scsi_cmnd *);
-+void zpodd_check_zpready(struct ata_device *);
+ void zpodd_snoop_status(struct ata_device *, struct scsi_cmnd *);
+ void zpodd_check_zpready(struct ata_device *);
++bool zpodd_poweroff_ready(struct ata_device *);
++void zpodd_post_poweroff(struct ata_device *);
++void zpodd_pre_poweron(struct ata_device *);
++void zpodd_post_resume(struct ata_device *);
  #else
  static inline void zpodd_init(struct ata_device *dev) {}
  static inline void zpodd_deinit(struct ata_device *dev) {}
  static inline bool zpodd_dev_enabled(struct ata_device *dev) { return false; }
-+static inline void zpodd_snoop_status(struct ata_device *dev, struct scsi_cmnd *cmd) {}
-+static inline void zpodd_check_zpready(struct ata_device *dev) {}
+ static inline void zpodd_snoop_status(struct ata_device *dev, struct scsi_cmnd *cmd) {}
+ static inline void zpodd_check_zpready(struct ata_device *dev) {}
++static inline bool zpodd_poweroff_ready(struct ata_device *dev) { return false; }
++static inline void zpodd_post_poweroff(struct ata_device *dev) {}
++static inline void zpodd_pre_poweron(struct ata_device *dev) {}
++static inline void zpodd_post_resume(struct ata_device *dev) {}
  #endif
  
  #endif
