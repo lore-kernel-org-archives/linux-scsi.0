@@ -1,119 +1,86 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v8 09/11] block: add a new interface to block events
-Date: Mon, 29 Oct 2012 17:01:36 +0800
-Message-ID: <1351501298-3716-10-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v8 10/11] scsi: sr: support (un)block events
+Date: Mon, 29 Oct 2012 17:01:37 +0800
+Message-ID: <1351501298-3716-11-git-send-email-aaron.lu@intel.com>
 References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-pm-owner@vger.kernel.org>
 In-Reply-To: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-pm-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Oliver Neukum <oliver@neukum.org>
 Cc: Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-A new interface to block disk events is added, this interface is
-meant to eliminate a race between PM runtime callback and disk events
-checking.
+2 interfaces are added to block/unblock events for the disk sr manages.
+This is used by SATA ZPODD, when ODD is runtime powered off, the events
+poll is no longer needed so better be blocked. And once powered on,
+events poll will be unblocked.
 
-Suppose the following device tree:
-device_sata_port  (the parent)
-  device_ODD      (the child)
-
-When ODD is runtime suspended, sata port will have a chance to enter
-runtime suspended state. And in sata port's runtime suspend callback,
-it will check if it is OK to omit the power of the ODD. And if yes, the
-periodically running events checking work will be stopped, as the ODD
-will be waken up by that check and cancel it can make the ODD stay in
-zero power state much longer(no worry about how the ODD gets media
-change event in ZPODD's case).
-
-I used disk_block_events to do the events blocking, but there is a race
-and can lead to a deadlock: when I call disk_block_events in sata port's
-runtime suspend callback, the events checking work may already be running
-and it will resume the ODD synchronously, and PM core will try to resume
-its parent, the sata port first. The PM core makes sure that runtime
-resume callback does not run concurrently with runtime suspend callback,
-and if the runtime suspend callback is running, the runtime resume
-callback will wait for it done. So the events checking work will wait
-for sata port's runtime suspend callback, while the sata port's runtime
-suspend callback is waiting for the disk events work to finish. Deadlock.
-
-ODD_suspend                        disk_events_workfn
-  ata_port_suspend                   check_events
-    disk_block_events                  resume ODD
-      cancel_delayed_work_sync           resume parent
-      (waiting for disk_events_workfn)   (waiting for suspend callback)
-
-So a new function disk_try_block_events is added, it will try to
-cancel the delayed work if the work is currently pending, which means
-it has been queued but the timer is not expired yet. If the work is not
-pending, we return false, as we do not know if the task is already
-running or not queued at all. And if the queued work is successfully
-cancelled, disk_block_events will be called and we are done. But if we
-failed to cancel the work, false will be returned, and the calling
-thread knows that it's not safe to block events at the moment and should
-act accordingly. In ZPODD's case, poweroff will not be attempted.
-
-Note:
-ODD means: Optical Disc Drive.
-ZPODD means: Zero Power ODD. It's a mechnism to place the ODD into zero
-power state without user's awareness when the system is at S0 system
-state.
+These 2 interfaces are needed here because SATA layer does not have
+access to the gendisk structure sr manages.
 
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- block/genhd.c         | 26 ++++++++++++++++++++++++++
- include/linux/genhd.h |  1 +
- 2 files changed, 27 insertions(+)
+ drivers/scsi/Makefile   |  1 +
+ drivers/scsi/sr_zpodd.c | 21 +++++++++++++++++++++
+ drivers/scsi/sr_zpodd.h |  9 +++++++++
+ 3 files changed, 31 insertions(+)
+ create mode 100644 drivers/scsi/sr_zpodd.c
+ create mode 100644 drivers/scsi/sr_zpodd.h
 
-diff --git a/block/genhd.c b/block/genhd.c
-index cac7366..c6af755 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -1469,6 +1469,32 @@ void disk_block_events(struct gendisk *disk)
- 	mutex_unlock(&ev->block_mutex);
- }
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 888f73a..474efe2 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -177,6 +177,7 @@ sd_mod-objs	:= sd.o
+ sd_mod-$(CONFIG_BLK_DEV_INTEGRITY) += sd_dif.o
  
-+/*
-+ * Under some circumstances, there is a race between the calling thread
-+ * of disk_block_events and the events checking function. To avoid such a race,
-+ * this function will check if the delayed work is pending. If not, it means
-+ * the work is either not queued or is already running, false is returned.
-+ * And if yes, try to cancel the delayed work. If succedded, disk_block_events
-+ * will be called and there is no worry that cancel_delayed_work_sync will
-+ * deadlock the events checking function. And if failed, false is returned.
-+ */
-+bool disk_try_block_events(struct gendisk *disk)
+ sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o
++sr_mod-$(CONFIG_SATA_ZPODD) += sr_zpodd.o
+ ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
+ 		:= -DCONFIG_NCR53C8XX_PREFETCH -DSCSI_NCR_BIG_ENDIAN \
+ 			-DCONFIG_SCSI_NCR53C8XX_NO_WORD_TRANSFERS
+diff --git a/drivers/scsi/sr_zpodd.c b/drivers/scsi/sr_zpodd.c
+new file mode 100644
+index 0000000..0686e8c
+--- /dev/null
++++ b/drivers/scsi/sr_zpodd.c
+@@ -0,0 +1,21 @@
++#include <linux/module.h>
++#include <linux/genhd.h>
++#include <linux/cdrom.h>
++#include "sr.h"
++
++bool sr_block_events(struct device *dev)
 +{
-+	struct disk_events *ev = disk->ev;
-+
-+	if (!ev)
-+		return false;
-+
-+	if (delayed_work_pending(&ev->dwork)) {
-+		if (cancel_delayed_work(&disk->ev->dwork)) {
-+			disk_block_events(disk);
-+			return true;
-+		}
-+	}
-+
++	struct scsi_cd *cd = dev_get_drvdata(dev);
++	if (cd)
++		return disk_try_block_events(cd->disk);
 +	return false;
 +}
++EXPORT_SYMBOL(sr_block_events);
 +
- static void __disk_unblock_events(struct gendisk *disk, bool check_now)
- {
- 	struct disk_events *ev = disk->ev;
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 4f440b3..b67247f 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -420,6 +420,7 @@ static inline int get_disk_ro(struct gendisk *disk)
- }
- 
- extern void disk_block_events(struct gendisk *disk);
-+extern bool disk_try_block_events(struct gendisk *disk);
- extern void disk_unblock_events(struct gendisk *disk);
- extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
- extern unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask);
++void sr_unblock_events(struct device *dev)
++{
++	struct scsi_cd *cd = dev_get_drvdata(dev);
++	if (cd)
++		disk_unblock_events(cd->disk);
++}
++EXPORT_SYMBOL(sr_unblock_events);
+diff --git a/drivers/scsi/sr_zpodd.h b/drivers/scsi/sr_zpodd.h
+new file mode 100644
+index 0000000..49c6a55
+--- /dev/null
++++ b/drivers/scsi/sr_zpodd.h
+@@ -0,0 +1,9 @@
++#ifndef __SR_ZPODD_H__
++#define __SR_ZPODD_H__
++
++#include <linux/device.h>
++
++extern bool sr_block_events(struct device *dev);
++extern void sr_unblock_events(struct device *dev);
++
++#endif
 -- 
 1.7.12.4
 
