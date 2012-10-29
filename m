@@ -1,57 +1,46 @@
-From: Jonathan Nieder <jrnieder@gmail.com>
-Subject: Re: megaraid_sas: which patches are needed for 2.6.32.y?
-Date: Mon, 29 Oct 2012 04:50:49 -0700
-Message-ID: <20121029115049.GA28465@elie.Belkin>
-References: <FB09F9AF3FE25444B277AA82BB35EE175F02612C@LCHQEX03.lancope.local>
- <FB09F9AF3FE25444B277AA82BB35EE175F028482@LCHQEX03.lancope.local>
- <20120329165806.GC3147@burratino>
- <FB09F9AF3FE25444B277AA82BB35EE175F0284E2@LCHQEX03.lancope.local>
- <20120329194751.GG3147@burratino>
- <20120609164753.GA18761@burratino>
- <20120624151318.GA18451@burratino>
- <CAHtARFH=kmVO_xWs+DafPuWd+wPFnP-Cw5vTVRR-Pd3+xDxkzw@mail.gmail.com>
- <20120628202743.GA7295@burratino>
- <CAHtARFHafR+hrB4u=wDUSE3-J2uXOQCFHW3wRSQMiebowu-9iA@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] aic7xxx_old: silence GCC warnings
+Date: Mon, 29 Oct 2012 12:17:06 +0000
+Message-ID: <1351513026.2480.4.camel@dabdike.sthat4.btopenzone.com>
+References: <1348219723.1581.5.camel@x61.thuisdomein>
+	 <1351506978.1339.8.camel@x61.thuisdomein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:45741 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758652Ab2J2Lu5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2012 07:50:57 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so2397253dak.19
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Oct 2012 04:50:57 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <CAHtARFHafR+hrB4u=wDUSE3-J2uXOQCFHW3wRSQMiebowu-9iA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1351506978.1339.8.camel@x61.thuisdomein>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, Buford Peek <BPeek@lancope.com>, 666108@bugs.debian.org, Gator_Yin@dell.com, linux-scsi@vger.kernel.org, Priyantha Bleeker <priyantha.bleeker@gmail.com>, Edward Konetzko <konetzed@gmail.com>
 
-Hi,
+On Mon, 2012-10-29 at 11:36 +0100, Paul Bolle wrote:
+> On Fri, 2012-09-21 at 11:28 +0200, Paul Bolle wrote:
+> > Building the aic7xxx_old driver triggers these GCC warnings:
+> >     drivers/scsi/aic7xxx_old.c:7901:5: warning: case value '257' not in enumerated type 'ahc_chip' [-Wswitch]
+> >     drivers/scsi/aic7xxx_old.c:7898:5: warning: case value '513' not in enumerated type 'ahc_chip' [-Wswitch]
+> >     drivers/scsi/aic7xxx_old.c:8517:5: warning: case value '257' not in enumerated type 'ahc_chip' [-Wswitch]
+> >     drivers/scsi/aic7xxx_old.c:8510:5: warning: case value '513' not in enumerated type 'ahc_chip' [-Wswitch]
+> > 
+> > Fix these warnings by adopting the idiom used elsewhere in this driver.
+> > Since AHC_EISA and AHC_VL are only ever set for AHC_AIC7770 this fix
+> > should not lead to any functional change.
+> > 
+> > Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> > ---
+> > 0) I noticed these warnings while building v3.6-rc6 on current Fedora
+> > 17, using Fedora's default config.
+> 
+> Identical warnings can be seen while building v3.7-rc3. What's the
+> status of my patch? Did anyone found some time to have a look at it?
 
-In June, adam radford wrote:
-> On Thu, Jun 28, 2012 at 1:27 PM, Jonathan Nieder <jrnieder@gmail.com> wrote:
+the aic7xxx_old driver is in deep maintenance; I don't think anyone can
+actually test changes to it anymore, so we just keep it around unchanged
+for the odd really old card that can't be driven by the current driver.
+For this reason, we tend only to do tested bug fixes to it because
+no-one will notice if any error is introduced.
 
->> If someone makes a backport of the patches marked [3] as well, would
->> you be able to look over or test the combination?  That would be much
->> appreciated.  If that's not possible, your advice would still be
->> welcome but we will need to use a more minimal set of changes.
->
-> Yes, I will be able to look over and/or test the combination.  If you
-> apply all patches then diff vs. the scsi-misc tip, you should only see
-> kernel 2.6.32.y specific changes.
+mvsas has a maintainer: poke them harder and aic94xx is currently
+maintainerless, so it will depend on someone finding the time to test.
 
-Sorry for the long delay.
-
-I've made a backport with all relevant patches I could find from the
-3.0.y tree and put the patches and a built package at
-
-  http://alioth.debian.org/~jrnieder-guest/temp/driver-test/
-
-Patches are against 2.6.32.y.  The most notable missing patch is the
-BKL conversion --- for Debian squeeze it seems safest to just keep
-using the BKL.  I'd be happy for any thoughts you have.
-
-Thanks,
-Jonathan
+James
