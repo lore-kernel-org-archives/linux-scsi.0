@@ -1,86 +1,45 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v8 02/11] ata: zpodd: Add CONFIG_SATA_ZPODD
-Date: Tue, 30 Oct 2012 11:19:31 +0800
-Message-ID: <508F4743.3010905@intel.com>
-References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>  <1351501298-3716-3-git-send-email-aaron.lu@intel.com> <1351534282.3051.7.camel@dabdike>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: scsi:sd: provisioning_mode not being set to unmap
+Date: Mon, 29 Oct 2012 23:53:50 -0400
+Message-ID: <yq1r4og8vjl.fsf@sermon.lab.mkp.net>
+References: <CADHvswAnKx7COQrtnXp7LTmRP2euC0xortkcd2+HgwAxUc3-Rw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <1351534282.3051.7.camel@dabdike>
-Sender: linux-pm-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:22570 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754020Ab2J3Dx4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2012 23:53:56 -0400
+In-Reply-To: <CADHvswAnKx7COQrtnXp7LTmRP2euC0xortkcd2+HgwAxUc3-Rw@mail.gmail.com>
+	(John Washer's message of "Sat, 27 Oct 2012 12:52:46 +0900")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Washer <johnkwasher@gmail.com>
+Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com
 
-On 10/30/2012 02:11 AM, James Bottomley wrote:
-> On Mon, 2012-10-29 at 17:01 +0800, Aaron Lu wrote:
->> Added a new config CONFIG_SATA_ZPODD, which is ued to support
->> SATA based zero power ODD. It depends on ACPI, and selects BLK_DEV_SR
->> as the implementation of ZPODD depends on SCSI sr driver.
->>
->> 2 new files are added, which will be used to host ZPODD related code.
->> They are empty for this commit.
-> 
-> I think you actually need to combine this with patch 3 to have it
-> compile ...
+>>>>> "John" == John Washer <johnkwasher@gmail.com> writes:
 
-I remembered I tested this, and I just tested the compile again, with
-the CONFIG_SATA_ZPODD both on and off, and it didn't have any compile
-issue, so I'm not sure if this is a problem...
+John> Provisioning mode is not being set to "unmap" even though it seems
+John> that device firmware provides all the required information to SD.
 
--Aaron
+I instrumented scsi_debug to provide the same values as your device
+(LBPME=1, identical Block Limits VPD, no LBP VPD) and we end up choosing
+unmap. So I'm not sure what's going on in your case. Which kernel are
+you using?
 
-> 
-> James
-> 
-> 
->> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
->> ---
->>  drivers/ata/Kconfig  | 12 ++++++++++++
->>  drivers/ata/Makefile |  1 +
->>  2 files changed, 13 insertions(+)
->>  create mode 100644 drivers/ata/sata_zpodd.c
->>  create mode 100644 drivers/ata/sata_zpodd.h
->>
->> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
->> index e08d322..2cdecee 100644
->> --- a/drivers/ata/Kconfig
->> +++ b/drivers/ata/Kconfig
->> @@ -58,6 +58,18 @@ config ATA_ACPI
->>  	  You can disable this at kernel boot time by using the
->>  	  option libata.noacpi=1
->>  
->> +config SATA_ZPODD
->> +	bool "SATA Zero Power ODD Support"
->> +	depends on ACPI
->> +	select BLK_DEV_SR
->> +	default n
->> +	help
->> +	  This option adds support for SATA ZPODD. It requires both
->> +	  ODD and the platform support, and if enabled, will automatically
->> +	  power on/off the ODD when certain condition is satisfied. This
->> +	  does not impact user's experience of the ODD, only power is saved
->> +	  when ODD is not in use(i.e. no disc inside).
->> +
->>  config SATA_PMP
->>  	bool "SATA Port Multiplier support"
->>  	default y
->> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
->> index 9329daf..a5120ff 100644
->> --- a/drivers/ata/Makefile
->> +++ b/drivers/ata/Makefile
->> @@ -107,3 +107,4 @@ libata-y	:= libata-core.o libata-scsi.o libata-eh.o libata-transport.o
->>  libata-$(CONFIG_ATA_SFF)	+= libata-sff.o
->>  libata-$(CONFIG_SATA_PMP)	+= libata-pmp.o
->>  libata-$(CONFIG_ATA_ACPI)	+= libata-acpi.o
->> +obj-$(CONFIG_SATA_ZPODD)	+= sata_zpodd.o
->> diff --git a/drivers/ata/sata_zpodd.c b/drivers/ata/sata_zpodd.c
->> new file mode 100644
->> index 0000000..e69de29
->> diff --git a/drivers/ata/sata_zpodd.h b/drivers/ata/sata_zpodd.h
->> new file mode 100644
->> index 0000000..e69de29
-> 
-> 
 
+John> 3. The device does not support VPD 0xb2.
+John> $ sudo sg_vpd  -p 0xb2 /dev/sg1
+John> VPD page=0xb2
+John> fetching VPD page failed
+
+FWIW, the Logical Block Provisioning VPD page is now mandatory.
+
+
+John> But when I check the "/sys.../provisioning_mode" it is set to
+John> Write Same 16.
+
+What happens if you override it by writing "unmap" to that file?
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
