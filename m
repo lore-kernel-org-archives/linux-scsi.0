@@ -1,36 +1,83 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 11713] bugcheck with modprobe -r sym53c8xx
-Date: Tue, 30 Oct 2012 15:45:50 +0000 (UTC)
-Message-ID: <20121030154550.836FA11FB80@bugzilla.kernel.org>
-References: <bug-11713-11613@https.bugzilla.kernel.org/>
+Subject: Your Kernel Bug Tracker bug list needs attention.
+Date: Tue, 30 Oct 2012 15:50:04 +0000 (UTC)
+Message-ID: <20121030155004.A6D6E11FEFD@bugzilla.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:53162 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.19.201]:53902 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751164Ab2J3Pp4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Oct 2012 11:45:56 -0400
+	id S933789Ab2J3Pu3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Oct 2012 11:50:29 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 78E0C20349
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2012 15:45:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9844D20371
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2012 15:50:24 +0000 (UTC)
 Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id D6B25202FD
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2012 15:45:50 +0000 (UTC)
-In-Reply-To: <bug-11713-11613@https.bugzilla.kernel.org/>
+	by mail.kernel.org (Postfix) with ESMTP id D7016203B0
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2012 15:50:13 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=11713
+[This e-mail has been automatically generated.]
 
+You have one or more bugs assigned to you in the Kernel Bug Tracker bug tracking system (https://bugzilla.kernel.org/) that require
+attention.
 
+All of these bugs are in the NEW orREOPENED state, and have not been
+touched in 7 days or more.
+You need to take a look at them, and decide on an initial action.
 
+Generally, this means one of three things:
 
+(1) You decide this bug is really quick to deal with (like, it's INVALID),
+    and so you get rid of it immediately.
+(2) You decide the bug doesn't belong to you, and you reassign it to
+    someone else. (Hint: if you don't know who to reassign it to, make
+    sure that the Component field seems reasonable, and then use the
+    "Reassign bug to default assignee of selected component" option.)
+(3) You decide the bug belongs to you, but you can't solve it this moment.
+    Just use the "Accept bug" command.
 
---- Comment #3 from John M. Drescher <drescherjm@gmail.com>  2012-10-30 15:45:50 ---
-I have not seen this issue in several years.
+To get a list of all NEW/REOPENED bugs, you can use this URL (bookmark
+it if you like!):
+https://bugzilla.kernel.org/buglist.cgi?bug_status=NEW&bug_status=REOPENED&assigned_to=linux-scsi@vger.kernel.org
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Or, you can use the general query page, at 
+https://bugzilla.kernel.org/query.cgi
+
+Appended below are the individual URLs to get to all of your NEW bugs
+that haven't been touched for 7 days or more.
+
+You will get this message once a day until you've dealt with these bugs!
+
+ udev causes high cpu usage
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=13783
+ mvsas : repeatably disconnects all disks during RAID6 resync
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=14534
+ No closing brace, in the example tag_info.
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=14572
+ SCSI Generic READ_10 to SATA fails when starting multiple processes
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=15561
+ SCSI Generic block io queueing can lock up
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=15562
+ SCSI Generic timeout is NOOP
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=15563
+ SCSI Generic queueing of insufficient dxferlen for command can succeed
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=15564
+ SCSI Generic queueing info result never indicates direct data transfer?
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=15566
+ SCSI Generic queueing appears unfair between processes
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=15567
+ "Assuming drive cache: write through" messages probably have wrong loglevel
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=16490
+ Possible kernel memory corruption due to wrong usage of CDROM_SEND_PACKET
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=18362
+ Softlockup during boot during init_sd
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=42969
+ When too many disks fall out at the same time, RCU hangs
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=47701
+ oops when setting up LVM
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=48241
+ scsi/lpfc/lpfc_ct.c:637: possible finger trouble ?
+    -> https://bugzilla.kernel.org/show_bug.cgi?id=48891
