@@ -1,45 +1,50 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: scsi:sd: provisioning_mode not being set to unmap
-Date: Mon, 29 Oct 2012 23:53:50 -0400
-Message-ID: <yq1r4og8vjl.fsf@sermon.lab.mkp.net>
-References: <CADHvswAnKx7COQrtnXp7LTmRP2euC0xortkcd2+HgwAxUc3-Rw@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v8 10/11] scsi: sr: support (un)block events
+Date: Tue, 30 Oct 2012 08:34:29 +0400
+Message-ID: <1351571669.3051.18.camel@dabdike>
+References: <Pine.LNX.4.44L0.1210291818100.31151-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:22570 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754020Ab2J3Dx4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2012 23:53:56 -0400
-In-Reply-To: <CADHvswAnKx7COQrtnXp7LTmRP2euC0xortkcd2+HgwAxUc3-Rw@mail.gmail.com>
-	(John Washer's message of "Sat, 27 Oct 2012 12:52:46 +0900")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1210291818100.31151-100000@netrider.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Washer <johnkwasher@gmail.com>
-Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com
 
->>>>> "John" == John Washer <johnkwasher@gmail.com> writes:
+On Mon, 2012-10-29 at 18:22 -0400, Alan Stern wrote:
+> On Mon, 29 Oct 2012, James Bottomley wrote:
+> 
+> > On Mon, 2012-10-29 at 17:01 +0800, Aaron Lu wrote:
+> > > 2 interfaces are added to block/unblock events for the disk sr manages.
+> > > This is used by SATA ZPODD, when ODD is runtime powered off, the events
+> > > poll is no longer needed so better be blocked. And once powered on,
+> > > events poll will be unblocked.
+> > > 
+> > > These 2 interfaces are needed here because SATA layer does not have
+> > > access to the gendisk structure sr manages.
+> > 
+> > I'm afraid this is a nasty layering violation.  You can't have a low
+> > level driver have knowledge of a call back in an upper layer one (in
+> > this case sr_block_events).
+> > 
+> > This is all done it looks like because of the problem of getting access
+> > to the scsi_cd structure from libata, but it's not the right way to
+> > solve it.
+> > 
+> > I also don't really think you need to do any blocking or unblocking.  As
+> > I said in the previous thread, just fake the events the standard tells
+> > you to, so userspace can probe to its heart's content and you can keep
+> > the device powered off.
+> 
+> James, one of us has misunderstood the event-polling mechanism.  As far
+> as I know, the polling calls that Aaron is concerned with are generated
+> by the kernel, not by userspace.
 
-John> Provisioning mode is not being set to "unmap" even though it seems
-John> that device firmware provides all the required information to SD.
+I don't think the origin of the poll changes anything in what I said
+above, does it?
 
-I instrumented scsi_debug to provide the same values as your device
-(LBPME=1, identical Block Limits VPD, no LBP VPD) and we end up choosing
-unmap. So I'm not sure what's going on in your case. Which kernel are
-you using?
+James
 
 
-John> 3. The device does not support VPD 0xb2.
-John> $ sudo sg_vpd  -p 0xb2 /dev/sg1
-John> VPD page=0xb2
-John> fetching VPD page failed
-
-FWIW, the Logical Block Provisioning VPD page is now mandatory.
-
-
-John> But when I check the "/sys.../provisioning_mode" it is set to
-John> Write Same 16.
-
-What happens if you override it by writing "unmap" to that file?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
