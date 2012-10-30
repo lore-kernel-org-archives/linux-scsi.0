@@ -1,42 +1,86 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v8 05/11] libata-eh: allow defer in ata_exec_internal
-Date: Tue, 30 Oct 2012 11:09:21 +0800
-Message-ID: <508F44E1.3000801@intel.com>
-References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com> <1351501298-3716-6-git-send-email-aaron.lu@intel.com> <20121029152051.GK5171@htj.dyndns.org> <508F42C0.8070807@intel.com> <20121030030144.GG4066@htj.dyndns.org>
+Subject: Re: [PATCH v8 02/11] ata: zpodd: Add CONFIG_SATA_ZPODD
+Date: Tue, 30 Oct 2012 11:19:31 +0800
+Message-ID: <508F4743.3010905@intel.com>
+References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>  <1351501298-3716-3-git-send-email-aaron.lu@intel.com> <1351534282.3051.7.camel@dabdike>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20121030030144.GG4066@htj.dyndns.org>
+In-Reply-To: <1351534282.3051.7.camel@dabdike>
 Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/30/2012 11:01 AM, Tejun Heo wrote:
-> Hello,
-> 
-> On Tue, Oct 30, 2012 at 11:00:16AM +0800, Aaron Lu wrote:
->>> Why not do the discovery from EH?
+On 10/30/2012 02:11 AM, James Bottomley wrote:
+> On Mon, 2012-10-29 at 17:01 +0800, Aaron Lu wrote:
+>> Added a new config CONFIG_SATA_ZPODD, which is ued to support
+>> SATA based zero power ODD. It depends on ACPI, and selects BLK_DEV_SR
+>> as the implementation of ZPODD depends on SCSI sr driver.
 >>
->> Do you mean set a device level EH flag and then schedule EH to do the
->> discovery?
+>> 2 new files are added, which will be used to host ZPODD related code.
+>> They are empty for this commit.
 > 
-> Yeah, something like that or why can't it be done while probing the
-> device in the first place?
+> I think you actually need to combine this with patch 3 to have it
+> compile ...
 
-I'm not aware of a place to store such ODD specific information when
-probing the device.
+I remembered I tested this, and I just tested the compile again, with
+the CONFIG_SATA_ZPODD both on and off, and it didn't have any compile
+issue, so I'm not sure if this is a problem...
 
-I'm currently storing the loading mech type in structure zpodd, which
-gets created after the corresponding SCSI device gets created in
-ata_scsi_scan_host, so at the probe time, the zpodd structure does not
-exist yet. And the reason I create the zpodd sturcture this late is
-that, it is only created when the ODD together the platform is ZPODD
-capable, and to find out if this platform is ZPODD capbale, ACPI binding
-has to occur first, and ACPI binding happens when SCSI device is added
-to the device tree.
+-Aaron
 
-Thanks,
-Aaron
+> 
+> James
+> 
+> 
+>> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+>> ---
+>>  drivers/ata/Kconfig  | 12 ++++++++++++
+>>  drivers/ata/Makefile |  1 +
+>>  2 files changed, 13 insertions(+)
+>>  create mode 100644 drivers/ata/sata_zpodd.c
+>>  create mode 100644 drivers/ata/sata_zpodd.h
+>>
+>> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+>> index e08d322..2cdecee 100644
+>> --- a/drivers/ata/Kconfig
+>> +++ b/drivers/ata/Kconfig
+>> @@ -58,6 +58,18 @@ config ATA_ACPI
+>>  	  You can disable this at kernel boot time by using the
+>>  	  option libata.noacpi=1
+>>  
+>> +config SATA_ZPODD
+>> +	bool "SATA Zero Power ODD Support"
+>> +	depends on ACPI
+>> +	select BLK_DEV_SR
+>> +	default n
+>> +	help
+>> +	  This option adds support for SATA ZPODD. It requires both
+>> +	  ODD and the platform support, and if enabled, will automatically
+>> +	  power on/off the ODD when certain condition is satisfied. This
+>> +	  does not impact user's experience of the ODD, only power is saved
+>> +	  when ODD is not in use(i.e. no disc inside).
+>> +
+>>  config SATA_PMP
+>>  	bool "SATA Port Multiplier support"
+>>  	default y
+>> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+>> index 9329daf..a5120ff 100644
+>> --- a/drivers/ata/Makefile
+>> +++ b/drivers/ata/Makefile
+>> @@ -107,3 +107,4 @@ libata-y	:= libata-core.o libata-scsi.o libata-eh.o libata-transport.o
+>>  libata-$(CONFIG_ATA_SFF)	+= libata-sff.o
+>>  libata-$(CONFIG_SATA_PMP)	+= libata-pmp.o
+>>  libata-$(CONFIG_ATA_ACPI)	+= libata-acpi.o
+>> +obj-$(CONFIG_SATA_ZPODD)	+= sata_zpodd.o
+>> diff --git a/drivers/ata/sata_zpodd.c b/drivers/ata/sata_zpodd.c
+>> new file mode 100644
+>> index 0000000..e69de29
+>> diff --git a/drivers/ata/sata_zpodd.h b/drivers/ata/sata_zpodd.h
+>> new file mode 100644
+>> index 0000000..e69de29
+> 
+> 
 
