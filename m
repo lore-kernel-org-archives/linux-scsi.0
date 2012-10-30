@@ -1,42 +1,68 @@
 From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [patch 09/10] lpfc: use scsi_host_alloc_node
-Date: Tue, 30 Oct 2012 16:14:43 -0400
-Message-ID: <1351628084-29358-12-git-send-email-jmoyer@redhat.com>
+Subject: [patch 03/10] scsi: allocate scsi_cmnd-s from the device's local numa node
+Date: Tue, 30 Oct 2012 16:14:37 -0400
+Message-ID: <1351628084-29358-6-git-send-email-jmoyer@redhat.com>
 References: <1351628084-29358-1-git-send-email-jmoyer@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1351628084-29358-1-git-send-email-jmoyer@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: James Smart <james.smart@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
 Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi.c |   17 +++++++++++------
+ 1 files changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 7dc4218..65956d3 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3051,11 +3051,13 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
- 	int error = 0;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 2936b44..4db6973 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -173,16 +173,20 @@ static DEFINE_MUTEX(host_cmd_pool_mutex);
+  * NULL on failure
+  */
+ static struct scsi_cmnd *
+-scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask)
++scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask,
++			int node)
+ {
+ 	struct scsi_cmnd *cmd;
  
- 	if (dev != &phba->pcidev->dev)
--		shost = scsi_host_alloc(&lpfc_vport_template,
--					sizeof(struct lpfc_vport));
-+		shost = scsi_host_alloc_node(&lpfc_vport_template,
-+					     sizeof(struct lpfc_vport),
-+					     dev_to_node(&phba->pcidev->dev));
- 	else
--		shost = scsi_host_alloc(&lpfc_template,
--					sizeof(struct lpfc_vport));
-+		shost = scsi_host_alloc_node(&lpfc_template,
-+					     sizeof(struct lpfc_vport),
-+					     dev_to_node(&phba->pcidev->dev));
- 	if (!shost)
- 		goto out;
+-	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
++	cmd = kmem_cache_alloc_node(pool->cmd_slab,
++				    gfp_mask | pool->gfp_mask | __GFP_ZERO,
++				    node);
+ 	if (!cmd)
+ 		return NULL;
+ 
+-	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
+-					     gfp_mask | pool->gfp_mask);
++	cmd->sense_buffer = kmem_cache_alloc_node(pool->sense_slab,
++					gfp_mask | pool->gfp_mask | __GFP_ZERO,
++					node);
+ 	if (!cmd->sense_buffer) {
+ 		kmem_cache_free(pool->cmd_slab, cmd);
+ 		return NULL;
+@@ -223,7 +227,8 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
+ {
+ 	struct scsi_cmnd *cmd;
+ 
+-	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask);
++	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask,
++				      shost->numa_node);
+ 	if (!cmd)
+ 		return NULL;
+ 
+@@ -435,7 +440,7 @@ struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask)
+ 	if (!pool)
+ 		return NULL;
+ 
+-	return scsi_pool_alloc_command(pool, gfp_mask);
++	return scsi_pool_alloc_command(pool, gfp_mask, NUMA_NO_NODE);
+ }
+ EXPORT_SYMBOL(scsi_allocate_command);
  
 -- 
 1.7.1
