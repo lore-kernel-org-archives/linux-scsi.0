@@ -1,44 +1,37 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v8 10/11] scsi: sr: support (un)block events
-Date: Mon, 29 Oct 2012 18:22:01 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1210291818100.31151-100000@netrider.rowland.org>
-References: <1351534295.3051.9.camel@dabdike>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v8 05/11] libata-eh: allow defer in ata_exec_internal
+Date: Tue, 30 Oct 2012 11:00:16 +0800
+Message-ID: <508F42C0.8070807@intel.com>
+References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com> <1351501298-3716-6-git-send-email-aaron.lu@intel.com> <20121029152051.GK5171@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1351534295.3051.9.camel@dabdike>
+In-Reply-To: <20121029152051.GK5171@htj.dyndns.org>
 Sender: linux-acpi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 29 Oct 2012, James Bottomley wrote:
-
-> On Mon, 2012-10-29 at 17:01 +0800, Aaron Lu wrote:
-> > 2 interfaces are added to block/unblock events for the disk sr manages.
-> > This is used by SATA ZPODD, when ODD is runtime powered off, the events
-> > poll is no longer needed so better be blocked. And once powered on,
-> > events poll will be unblocked.
-> > 
-> > These 2 interfaces are needed here because SATA layer does not have
-> > access to the gendisk structure sr manages.
+On 10/29/2012 11:20 PM, Tejun Heo wrote:
+> On Mon, Oct 29, 2012 at 05:01:32PM +0800, Aaron Lu wrote:
+>> ata_exec_internal will preempt the ata link's active_tag and ata port's
+>> qc_active flags, this is OK for error recovery, but if normal code path
+>> wants to use ata_exec_internal, there is a problem: we need to check if
+>> it is OK to issue a new command with the help of port_ops->defer.
+>>
+>> In ZPODD, I'll need to find out the loading mechanism of the ODD by
+>> issuing a GET_CONFIGURATION command. And this command may very well
+>> race with commands issued from SCSI layer. So instead of preempt the
+>> current command, defer the new command if it's not OK to issue it, as
+>> it is always wrong to issue a non-NCQ command when there is command(s)
+>> in processing.
 > 
-> I'm afraid this is a nasty layering violation.  You can't have a low
-> level driver have knowledge of a call back in an upper layer one (in
-> this case sr_block_events).
-> 
-> This is all done it looks like because of the problem of getting access
-> to the scsi_cd structure from libata, but it's not the right way to
-> solve it.
-> 
-> I also don't really think you need to do any blocking or unblocking.  As
-> I said in the previous thread, just fake the events the standard tells
-> you to, so userspace can probe to its heart's content and you can keep
-> the device powered off.
+> Why not do the discovery from EH?
 
-James, one of us has misunderstood the event-polling mechanism.  As far
-as I know, the polling calls that Aaron is concerned with are generated
-by the kernel, not by userspace.
+Do you mean set a device level EH flag and then schedule EH to do the
+discovery?
 
-Alan Stern
+Thanks,
+Aaron
 
