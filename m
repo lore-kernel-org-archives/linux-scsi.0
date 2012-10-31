@@ -1,42 +1,264 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 0/7] lpfc 8.3.36: Update lpfc to revision 8.3.36
-Date: Wed, 31 Oct 2012 14:44:21 -0400
-Message-ID: <1351709061.957.15.camel@myfc17>
+Subject: [PATCH 1/7] lpfc 8.3.36: Fixed boot from san failure
+Date: Wed, 31 Oct 2012 14:44:33 -0400
+Message-ID: <1351709073.957.16.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:15742 "EHLO
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:15745 "EHLO
 	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759642Ab2JaSpE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2012 14:45:04 -0400
+	with ESMTP id S1759677Ab2JaSpP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2012 14:45:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This patch set updates the lpfc driver to revision 8.3.36
+Fixed boot from san failure when SLI4 FC device presented on the same PCI bus
 
-The patches for 8.3.36 contain:
+The request_firmware interface can induce delays while looking
+for firmware files, even if no fw file is present. In some situations
+the delays exceeded scan_wait timeouts, resulting in situations in which
+the boot device had not been discovered in time.  Boot Device does not
+need to be on a lpfc device.
 
-- Fixed boot from san failure 
-- Fix bug with Target Resets and FCP2 devices
-- Update DIF support for passthru/strip/insert
-- Fixed setting sequential delivery bit 
-- Correct buffer length overrun.
-- Correct mask error
-- Update lpfc version for 8.3.36 driver release
-
-
-The patches were cut against scsi.git, branch "misc".
-
--- james s
+Change request_firmware use to be module paramater driven. Default is to
+not attempt firmware download on boot. Add sysfs parameter to invoke
+firmware update.
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
+ ---
+
+ lpfc.h      |    1 
+ lpfc_attr.c |   73 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ lpfc_crtn.h |    1 
+ lpfc_init.c |   55 ++++++++++++++++++++++++++++++++++-----------
+ lpfc_sli4.h |    3 ++
+ 5 files changed, 120 insertions(+), 13 deletions(-)
 
 
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2012-10-23 09:51:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2012-10-29 11:18:27.431032734 -0400
+@@ -3618,6 +3618,77 @@ static DEVICE_ATTR(lpfc_sriov_nr_virtfn,
+ 		   lpfc_sriov_nr_virtfn_show, lpfc_sriov_nr_virtfn_store);
+ 
+ /**
++ * lpfc_request_firmware_store - Request for Linux generic firmware upgrade
++ *
++ * @dev: class device that is converted into a Scsi_host.
++ * @attr: device attribute, not used.
++ * @buf: containing the string the number of vfs to be enabled.
++ * @count: unused variable.
++ *
++ * Description:
++ *
++ * Returns:
++ * length of the buf on success if val is in range the intended mode
++ * is supported.
++ * -EINVAL if val out of range or intended mode is not supported.
++ **/
++static ssize_t
++lpfc_request_firmware_upgrade_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct lpfc_vport *vport = (struct lpfc_vport *)shost->hostdata;
++	struct lpfc_hba *phba = vport->phba;
++	int val = 0, rc = -EINVAL;
++
++	/* Sanity check on user data */
++	if (!isdigit(buf[0]))
++		return -EINVAL;
++	if (sscanf(buf, "%i", &val) != 1)
++		return -EINVAL;
++	if (val != 1)
++		return -EINVAL;
++
++	rc = lpfc_sli4_request_firmware_update(phba, RUN_FW_UPGRADE);
++	if (rc)
++		rc = -EPERM;
++	else
++		rc = strlen(buf);
++	return rc;
++}
++
++static int lpfc_req_fw_upgrade;
++module_param(lpfc_req_fw_upgrade, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(lpfc_req_fw_upgrade, "Enable Linux generic firmware upgrade");
++lpfc_param_show(request_firmware_upgrade)
++
++/**
++ * lpfc_request_firmware_upgrade_init - Enable initial linux generic fw upgrade
++ * @phba: lpfc_hba pointer.
++ * @val: 0 or 1.
++ *
++ * Description:
++ * Set the initial Linux generic firmware upgrade enable or disable flag.
++ *
++ * Returns:
++ * zero if val saved.
++ * -EINVAL val out of range
++ **/
++static int
++lpfc_request_firmware_upgrade_init(struct lpfc_hba *phba, int val)
++{
++	if (val >= 0 && val <= 1) {
++		phba->cfg_request_firmware_upgrade = val;
++		return 0;
++	}
++	return -EINVAL;
++}
++static DEVICE_ATTR(lpfc_req_fw_upgrade, S_IRUGO | S_IWUSR,
++		   lpfc_request_firmware_upgrade_show,
++		   lpfc_request_firmware_upgrade_store);
++
++/**
+  * lpfc_fcp_imax_store
+  *
+  * @dev: class device that is converted into a Scsi_host.
+@@ -4069,6 +4140,7 @@ struct device_attribute *lpfc_hba_attrs[
+ 	&dev_attr_lpfc_aer_support,
+ 	&dev_attr_lpfc_aer_state_cleanup,
+ 	&dev_attr_lpfc_sriov_nr_virtfn,
++	&dev_attr_lpfc_req_fw_upgrade,
+ 	&dev_attr_lpfc_suppress_link_up,
+ 	&dev_attr_lpfc_iocb_cnt,
+ 	&dev_attr_iocb_hw,
+@@ -5051,6 +5123,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ 	lpfc_hba_log_verbose_init(phba, lpfc_log_verbose);
+ 	lpfc_aer_support_init(phba, lpfc_aer_support);
+ 	lpfc_sriov_nr_virtfn_init(phba, lpfc_sriov_nr_virtfn);
++	lpfc_request_firmware_upgrade_init(phba, lpfc_req_fw_upgrade);
+ 	lpfc_suppress_link_up_init(phba, lpfc_suppress_link_up);
+ 	lpfc_iocb_cnt_init(phba, lpfc_iocb_cnt);
+ 	phba->cfg_enable_dss = 1;
+diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2012-10-23 09:51:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2012-10-29 11:18:27.435032734 -0400
+@@ -468,3 +468,4 @@ void lpfc_sli4_node_prep(struct lpfc_hba
+ int lpfc_sli4_xri_sgl_update(struct lpfc_hba *);
+ void lpfc_free_sgl_list(struct lpfc_hba *, struct list_head *);
+ uint32_t lpfc_sli_port_speed_get(struct lpfc_hba *);
++int lpfc_sli4_request_firmware_update(struct lpfc_hba *, uint8_t);
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2012-10-23 09:51:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc.h	2012-10-29 11:18:27.452032734 -0400
+@@ -714,6 +714,7 @@ struct lpfc_hba {
+ 	uint32_t cfg_log_verbose;
+ 	uint32_t cfg_aer_support;
+ 	uint32_t cfg_sriov_nr_virtfn;
++	uint32_t cfg_request_firmware_upgrade;
+ 	uint32_t cfg_iocb_cnt;
+ 	uint32_t cfg_suppress_link_up;
+ #define LPFC_INITIALIZE_LINK              0	/* do normal init_link mbox */
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2012-10-23 09:51:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2012-10-29 11:18:27.462032734 -0400
+@@ -9450,7 +9450,7 @@ lpfc_write_firmware(const struct firmwar
+ 	struct lpfc_dmabuf *dmabuf, *next;
+ 	uint32_t offset = 0, temp_offset = 0;
+ 
+-	/* It can be null, sanity check */
++	/* It can be null in no-wait mode, sanity check */
+ 	if (!fw) {
+ 		rc = -ENXIO;
+ 		goto out;
+@@ -9528,11 +9528,48 @@ release_out:
+ 	release_firmware(fw);
+ out:
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-			"3024 Firmware update done: %d.", rc);
++			"3024 Firmware update done: %d.\n", rc);
+ 	return;
+ }
+ 
+ /**
++ * lpfc_sli4_request_firmware_update - Request linux generic firmware upgrade
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is called to perform Linux generic firmware upgrade on device
++ * that supports such feature.
++ **/
++int
++lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
++{
++	uint8_t file_name[ELX_MODEL_NAME_SIZE];
++	int ret;
++	const struct firmware *fw;
++
++	/* Only supported on SLI4 interface type 2 for now */
++	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
++	    LPFC_SLI_INTF_IF_TYPE_2)
++		return -EPERM;
++
++	snprintf(file_name, ELX_MODEL_NAME_SIZE, "%s.grp", phba->ModelName);
++
++	if (fw_upgrade == INT_FW_UPGRADE) {
++		ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_HOTPLUG,
++					file_name, &phba->pcidev->dev,
++					GFP_KERNEL, (void *)phba,
++					lpfc_write_firmware);
++	} else if (fw_upgrade == RUN_FW_UPGRADE) {
++		ret = request_firmware(&fw, file_name, &phba->pcidev->dev);
++		if (!ret)
++			lpfc_write_firmware(fw, (void *)phba);
++	} else {
++		ret = -EINVAL;
++	}
++
++	return ret;
++}
++
++/**
+  * lpfc_pci_probe_one_s4 - PCI probe func to reg SLI-4 device to PCI subsys
+  * @pdev: pointer to PCI device
+  * @pid: pointer to PCI device identifier
+@@ -9560,7 +9597,6 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
+ 	uint32_t cfg_mode, intr_mode;
+ 	int mcnt;
+ 	int adjusted_fcp_io_channel;
+-	uint8_t file_name[ELX_MODEL_NAME_SIZE];
+ 
+ 	/* Allocate memory for HBA structure */
+ 	phba = lpfc_hba_alloc(pdev);
+@@ -9703,16 +9739,9 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
+ 	/* Perform post initialization setup */
+ 	lpfc_post_init_setup(phba);
+ 
+-	/* check for firmware upgrade or downgrade (if_type 2 only) */
+-	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) ==
+-	    LPFC_SLI_INTF_IF_TYPE_2) {
+-		snprintf(file_name, ELX_MODEL_NAME_SIZE, "%s.grp",
+-			 phba->ModelName);
+-		ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_HOTPLUG,
+-					file_name, &phba->pcidev->dev,
+-					GFP_KERNEL, (void *)phba,
+-					lpfc_write_firmware);
+-	}
++	/* check for firmware upgrade or downgrade */
++	if (phba->cfg_request_firmware_upgrade)
++		ret = lpfc_sli4_request_firmware_update(phba, INT_FW_UPGRADE);
+ 
+ 	/* Check if there are static vports to be created. */
+ 	lpfc_create_static_vport(phba);
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2012-10-23 09:51:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2012-10-29 11:18:27.463032734 -0400
+@@ -82,6 +82,9 @@
+ 
+ #define LPFC_FW_RESET_MAXIMUM_WAIT_10MS_CNT 12000
+ 
++#define INT_FW_UPGRADE	0
++#define RUN_FW_UPGRADE	1
++
+ enum lpfc_sli4_queue_type {
+ 	LPFC_EQ,
+ 	LPFC_GCQ,
 
 
 
