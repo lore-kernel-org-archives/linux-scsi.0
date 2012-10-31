@@ -1,264 +1,97 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/7] lpfc 8.3.36: Fixed boot from san failure
-Date: Wed, 31 Oct 2012 14:44:33 -0400
-Message-ID: <1351709073.957.16.camel@myfc17>
+Subject: [PATCH 2/7] lpfc 8.3.36: Fix bug with Target Resets and FCP2 devices
+Date: Wed, 31 Oct 2012 14:44:42 -0400
+Message-ID: <1351709082.957.17.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:15745 "EHLO
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:15752 "EHLO
 	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759677Ab2JaSpP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2012 14:45:15 -0400
+	with ESMTP id S1759216Ab2JaSpY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2012 14:45:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed boot from san failure when SLI4 FC device presented on the same PCI bus
+Fix bug with Target Resets and FCP2 devices
 
-The request_firmware interface can induce delays while looking
-for firmware files, even if no fw file is present. In some situations
-the delays exceeded scan_wait timeouts, resulting in situations in which
-the boot device had not been discovered in time.  Boot Device does not
-need to be on a lpfc device.
-
-Change request_firmware use to be module paramater driven. Default is to
-not attempt firmware download on boot. Add sysfs parameter to invoke
-firmware update.
+Create module parameter to disable Target Reset on FCP-Tape devices
+when a "bus reset" is requested. Default is to reset all devices on
+bus reset.
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc.h      |    1 
- lpfc_attr.c |   73 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- lpfc_crtn.h |    1 
- lpfc_init.c |   55 ++++++++++++++++++++++++++++++++++-----------
- lpfc_sli4.h |    3 ++
- 5 files changed, 120 insertions(+), 13 deletions(-)
+ lpfc.h      |    1 +
+ lpfc_attr.c |   12 ++++++++++++
+ lpfc_scsi.c |    3 +++
+ 3 files changed, 16 insertions(+)
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2012-10-23 09:51:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2012-10-29 11:18:27.431032734 -0400
-@@ -3618,6 +3618,77 @@ static DEVICE_ATTR(lpfc_sriov_nr_virtfn,
- 		   lpfc_sriov_nr_virtfn_show, lpfc_sriov_nr_virtfn_store);
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2012-10-29 11:18:27.431032734 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2012-10-29 11:18:35.022032906 -0400
+@@ -3859,6 +3859,16 @@ LPFC_ATTR_RW(fcp_io_sched, 0, 0, 1, "Det
+ 		"issuing commands [0] - Round Robin, [1] - Current CPU");
  
- /**
-+ * lpfc_request_firmware_store - Request for Linux generic firmware upgrade
-+ *
-+ * @dev: class device that is converted into a Scsi_host.
-+ * @attr: device attribute, not used.
-+ * @buf: containing the string the number of vfs to be enabled.
-+ * @count: unused variable.
-+ *
-+ * Description:
-+ *
-+ * Returns:
-+ * length of the buf on success if val is in range the intended mode
-+ * is supported.
-+ * -EINVAL if val out of range or intended mode is not supported.
-+ **/
-+static ssize_t
-+lpfc_request_firmware_upgrade_store(struct device *dev,
-+				    struct device_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct lpfc_vport *vport = (struct lpfc_vport *)shost->hostdata;
-+	struct lpfc_hba *phba = vport->phba;
-+	int val = 0, rc = -EINVAL;
+ /*
++# lpfc_fcp2_no_tgt_reset: Determine bus reset behavior
++# range is [0,1]. Default value is 0.
++# For [0], bus reset issues target reset to ALL devices
++# For [1], bus reset issues target reset to non-FCP2 devices
++*/
++LPFC_ATTR_RW(fcp2_no_tgt_reset, 0, 0, 1, "Determine bus reset behavior for "
++	     "FCP2 devices [0] - issue tgt reset, [1] - no tgt reset");
 +
-+	/* Sanity check on user data */
-+	if (!isdigit(buf[0]))
-+		return -EINVAL;
-+	if (sscanf(buf, "%i", &val) != 1)
-+		return -EINVAL;
-+	if (val != 1)
-+		return -EINVAL;
 +
-+	rc = lpfc_sli4_request_firmware_update(phba, RUN_FW_UPGRADE);
-+	if (rc)
-+		rc = -EPERM;
-+	else
-+		rc = strlen(buf);
-+	return rc;
-+}
-+
-+static int lpfc_req_fw_upgrade;
-+module_param(lpfc_req_fw_upgrade, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(lpfc_req_fw_upgrade, "Enable Linux generic firmware upgrade");
-+lpfc_param_show(request_firmware_upgrade)
-+
-+/**
-+ * lpfc_request_firmware_upgrade_init - Enable initial linux generic fw upgrade
-+ * @phba: lpfc_hba pointer.
-+ * @val: 0 or 1.
-+ *
-+ * Description:
-+ * Set the initial Linux generic firmware upgrade enable or disable flag.
-+ *
-+ * Returns:
-+ * zero if val saved.
-+ * -EINVAL val out of range
-+ **/
-+static int
-+lpfc_request_firmware_upgrade_init(struct lpfc_hba *phba, int val)
-+{
-+	if (val >= 0 && val <= 1) {
-+		phba->cfg_request_firmware_upgrade = val;
-+		return 0;
-+	}
-+	return -EINVAL;
-+}
-+static DEVICE_ATTR(lpfc_req_fw_upgrade, S_IRUGO | S_IWUSR,
-+		   lpfc_request_firmware_upgrade_show,
-+		   lpfc_request_firmware_upgrade_store);
-+
-+/**
-  * lpfc_fcp_imax_store
-  *
-  * @dev: class device that is converted into a Scsi_host.
-@@ -4069,6 +4140,7 @@ struct device_attribute *lpfc_hba_attrs[
- 	&dev_attr_lpfc_aer_support,
- 	&dev_attr_lpfc_aer_state_cleanup,
- 	&dev_attr_lpfc_sriov_nr_virtfn,
-+	&dev_attr_lpfc_req_fw_upgrade,
- 	&dev_attr_lpfc_suppress_link_up,
- 	&dev_attr_lpfc_iocb_cnt,
- 	&dev_attr_iocb_hw,
-@@ -5051,6 +5123,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
- 	lpfc_hba_log_verbose_init(phba, lpfc_log_verbose);
- 	lpfc_aer_support_init(phba, lpfc_aer_support);
- 	lpfc_sriov_nr_virtfn_init(phba, lpfc_sriov_nr_virtfn);
-+	lpfc_request_firmware_upgrade_init(phba, lpfc_req_fw_upgrade);
- 	lpfc_suppress_link_up_init(phba, lpfc_suppress_link_up);
- 	lpfc_iocb_cnt_init(phba, lpfc_iocb_cnt);
- 	phba->cfg_enable_dss = 1;
-diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2012-10-23 09:51:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2012-10-29 11:18:27.435032734 -0400
-@@ -468,3 +468,4 @@ void lpfc_sli4_node_prep(struct lpfc_hba
- int lpfc_sli4_xri_sgl_update(struct lpfc_hba *);
- void lpfc_free_sgl_list(struct lpfc_hba *, struct list_head *);
- uint32_t lpfc_sli_port_speed_get(struct lpfc_hba *);
-+int lpfc_sli4_request_firmware_update(struct lpfc_hba *, uint8_t);
++/*
+ # lpfc_cr_delay & lpfc_cr_count: Default values for I/O colaesing
+ # cr_delay (msec) or cr_count outstanding commands. cr_delay can take
+ # value [0,63]. cr_count can take value [1,255]. Default value of cr_delay
+@@ -4100,6 +4110,7 @@ struct device_attribute *lpfc_hba_attrs[
+ 	&dev_attr_lpfc_scan_down,
+ 	&dev_attr_lpfc_link_speed,
+ 	&dev_attr_lpfc_fcp_io_sched,
++	&dev_attr_lpfc_fcp2_no_tgt_reset,
+ 	&dev_attr_lpfc_cr_delay,
+ 	&dev_attr_lpfc_cr_count,
+ 	&dev_attr_lpfc_multi_ring_support,
+@@ -5091,6 +5102,7 @@ void
+ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ {
+ 	lpfc_fcp_io_sched_init(phba, lpfc_fcp_io_sched);
++	lpfc_fcp2_no_tgt_reset_init(phba, lpfc_fcp2_no_tgt_reset);
+ 	lpfc_cr_delay_init(phba, lpfc_cr_delay);
+ 	lpfc_cr_count_init(phba, lpfc_cr_count);
+ 	lpfc_multi_ring_support_init(phba, lpfc_multi_ring_support);
 diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2012-10-23 09:51:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc.h	2012-10-29 11:18:27.452032734 -0400
-@@ -714,6 +714,7 @@ struct lpfc_hba {
- 	uint32_t cfg_log_verbose;
- 	uint32_t cfg_aer_support;
- 	uint32_t cfg_sriov_nr_virtfn;
-+	uint32_t cfg_request_firmware_upgrade;
- 	uint32_t cfg_iocb_cnt;
- 	uint32_t cfg_suppress_link_up;
- #define LPFC_INITIALIZE_LINK              0	/* do normal init_link mbox */
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2012-10-23 09:51:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2012-10-29 11:18:27.462032734 -0400
-@@ -9450,7 +9450,7 @@ lpfc_write_firmware(const struct firmwar
- 	struct lpfc_dmabuf *dmabuf, *next;
- 	uint32_t offset = 0, temp_offset = 0;
- 
--	/* It can be null, sanity check */
-+	/* It can be null in no-wait mode, sanity check */
- 	if (!fw) {
- 		rc = -ENXIO;
- 		goto out;
-@@ -9528,11 +9528,48 @@ release_out:
- 	release_firmware(fw);
- out:
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--			"3024 Firmware update done: %d.", rc);
-+			"3024 Firmware update done: %d.\n", rc);
- 	return;
- }
- 
- /**
-+ * lpfc_sli4_request_firmware_update - Request linux generic firmware upgrade
-+ * @phba: pointer to lpfc hba data structure.
-+ *
-+ * This routine is called to perform Linux generic firmware upgrade on device
-+ * that supports such feature.
-+ **/
-+int
-+lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
-+{
-+	uint8_t file_name[ELX_MODEL_NAME_SIZE];
-+	int ret;
-+	const struct firmware *fw;
-+
-+	/* Only supported on SLI4 interface type 2 for now */
-+	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
-+	    LPFC_SLI_INTF_IF_TYPE_2)
-+		return -EPERM;
-+
-+	snprintf(file_name, ELX_MODEL_NAME_SIZE, "%s.grp", phba->ModelName);
-+
-+	if (fw_upgrade == INT_FW_UPGRADE) {
-+		ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_HOTPLUG,
-+					file_name, &phba->pcidev->dev,
-+					GFP_KERNEL, (void *)phba,
-+					lpfc_write_firmware);
-+	} else if (fw_upgrade == RUN_FW_UPGRADE) {
-+		ret = request_firmware(&fw, file_name, &phba->pcidev->dev);
-+		if (!ret)
-+			lpfc_write_firmware(fw, (void *)phba);
-+	} else {
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-  * lpfc_pci_probe_one_s4 - PCI probe func to reg SLI-4 device to PCI subsys
-  * @pdev: pointer to PCI device
-  * @pid: pointer to PCI device identifier
-@@ -9560,7 +9597,6 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
- 	uint32_t cfg_mode, intr_mode;
- 	int mcnt;
- 	int adjusted_fcp_io_channel;
--	uint8_t file_name[ELX_MODEL_NAME_SIZE];
- 
- 	/* Allocate memory for HBA structure */
- 	phba = lpfc_hba_alloc(pdev);
-@@ -9703,16 +9739,9 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
- 	/* Perform post initialization setup */
- 	lpfc_post_init_setup(phba);
- 
--	/* check for firmware upgrade or downgrade (if_type 2 only) */
--	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) ==
--	    LPFC_SLI_INTF_IF_TYPE_2) {
--		snprintf(file_name, ELX_MODEL_NAME_SIZE, "%s.grp",
--			 phba->ModelName);
--		ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_HOTPLUG,
--					file_name, &phba->pcidev->dev,
--					GFP_KERNEL, (void *)phba,
--					lpfc_write_firmware);
--	}
-+	/* check for firmware upgrade or downgrade */
-+	if (phba->cfg_request_firmware_upgrade)
-+		ret = lpfc_sli4_request_firmware_update(phba, INT_FW_UPGRADE);
- 
- 	/* Check if there are static vports to be created. */
- 	lpfc_create_static_vport(phba);
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2012-10-23 09:51:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2012-10-29 11:18:27.463032734 -0400
-@@ -82,6 +82,9 @@
- 
- #define LPFC_FW_RESET_MAXIMUM_WAIT_10MS_CNT 12000
- 
-+#define INT_FW_UPGRADE	0
-+#define RUN_FW_UPGRADE	1
-+
- enum lpfc_sli4_queue_type {
- 	LPFC_EQ,
- 	LPFC_GCQ,
+--- a/drivers/scsi/lpfc/lpfc.h	2012-10-29 11:18:27.452032734 -0400
++++ b/drivers/scsi/lpfc/lpfc.h	2012-10-29 11:18:35.027032906 -0400
+@@ -689,6 +689,7 @@ struct lpfc_hba {
+ #define LPFC_FCF_PRIORITY 2	/* Priority fcf failover */
+ 	uint32_t cfg_fcf_failover_policy;
+ 	uint32_t cfg_fcp_io_sched;
++	uint32_t cfg_fcp2_no_tgt_reset;
+ 	uint32_t cfg_cr_delay;
+ 	uint32_t cfg_cr_count;
+ 	uint32_t cfg_multi_ring_support;
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2012-10-23 09:51:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2012-10-29 11:18:35.053032906 -0400
+@@ -4914,6 +4914,9 @@ lpfc_bus_reset_handler(struct scsi_cmnd
+ 		list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
+ 			if (!NLP_CHK_NODE_ACT(ndlp))
+ 				continue;
++			if (vport->phba->cfg_fcp2_no_tgt_reset &&
++			    (ndlp->nlp_fcp_info & NLP_FCP_2_DEVICE))
++				continue;
+ 			if (ndlp->nlp_state == NLP_STE_MAPPED_NODE &&
+ 			    ndlp->nlp_sid == i &&
+ 			    ndlp->rport) {
 
 
 
