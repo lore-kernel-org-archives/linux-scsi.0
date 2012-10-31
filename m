@@ -1,52 +1,47 @@
 From: James Smart <James.Smart@emulex.com>
-Subject: Re: [patch 09/10] lpfc: use scsi_host_alloc_node
-Date: Wed, 31 Oct 2012 14:56:43 -0400
-Message-ID: <5091746B.3040405@emulex.com>
-References: <1351628084-29358-1-git-send-email-jmoyer@redhat.com> <1351628084-29358-12-git-send-email-jmoyer@redhat.com>
+Subject: Re: [Bug 48871] drivers/scsi/lpfc/lpfc_init.c: 2 * Buffer is accessed
+ out of bounds
+Date: Wed, 31 Oct 2012 15:02:12 -0400
+Message-ID: <509175B4.9080004@emulex.com>
+References: <bug-48871-11613@https.bugzilla.kernel.org/> <20121017102635.A6DB211FC6B@bugzilla.kernel.org>
 Reply-To: <James.Smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1351628084-29358-12-git-send-email-jmoyer@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:53223 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755439Ab2JaTCN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2012 15:02:13 -0400
+In-Reply-To: <20121017102635.A6DB211FC6B@bugzilla.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Thanks Jeff.
+Thank You.
+
+This problem has been addressed by patch5 of our 8.3.36 patch kit: See  
+http://marc.info/?l=linux-scsi&m=135170915426118&w=2
 
 -- james s
 
 
-Acked-By: James Smart  <james.smart@emulex.com>
-
-
-On 10/30/2012 4:14 PM, Jeff Moyer wrote:
-> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
-> ---
->   drivers/scsi/lpfc/lpfc_init.c |   10 ++++++----
->   1 files changed, 6 insertions(+), 4 deletions(-)
+On 10/17/2012 6:26 AM, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=48871
 >
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 7dc4218..65956d3 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -3051,11 +3051,13 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
->   	int error = 0;
->   
->   	if (dev != &phba->pcidev->dev)
-> -		shost = scsi_host_alloc(&lpfc_vport_template,
-> -					sizeof(struct lpfc_vport));
-> +		shost = scsi_host_alloc_node(&lpfc_vport_template,
-> +					     sizeof(struct lpfc_vport),
-> +					     dev_to_node(&phba->pcidev->dev));
->   	else
-> -		shost = scsi_host_alloc(&lpfc_template,
-> -					sizeof(struct lpfc_vport));
-> +		shost = scsi_host_alloc_node(&lpfc_template,
-> +					     sizeof(struct lpfc_vport),
-> +					     dev_to_node(&phba->pcidev->dev));
->   	if (!shost)
->   		goto out;
->   
+>
+> Alan <alan@lxorguk.ukuu.org.uk> changed:
+>
+>             What    |Removed                     |Added
+> ----------------------------------------------------------------------------
+>                   CC|                            |alan@lxorguk.ukuu.org.uk
+>            Component|Other                       |Other
+>           AssignedTo|drivers_other@kernel-bugs.o |scsi_drivers-other@kernel-b
+>                     |sdl.org                     |ugs.osdl.org
+>              Product|Drivers                     |SCSI Drivers
+>
+>
+>
+>
+
