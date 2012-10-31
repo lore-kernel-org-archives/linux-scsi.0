@@ -1,44 +1,52 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 7/7] lpfc 8.3.36: Update lpfc version for 8.3.36 driver
- release
-Date: Wed, 31 Oct 2012 14:45:29 -0400
-Message-ID: <1351709129.957.22.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
+From: James Smart <James.Smart@emulex.com>
+Subject: Re: [patch 09/10] lpfc: use scsi_host_alloc_node
+Date: Wed, 31 Oct 2012 14:56:43 -0400
+Message-ID: <5091746B.3040405@emulex.com>
+References: <1351628084-29358-1-git-send-email-jmoyer@redhat.com> <1351628084-29358-12-git-send-email-jmoyer@redhat.com>
+Reply-To: <James.Smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:15783 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752099Ab2JaSqQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2012 14:46:16 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1351628084-29358-12-git-send-email-jmoyer@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Update lpfc version for 8.3.36 driver release
+Thanks Jeff.
 
-
-Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- lpfc_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+-- james s
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2012-10-23 09:51:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2012-10-29 11:18:43.624033102 -0400
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.3.35"
-+#define LPFC_DRIVER_VERSION "8.3.36"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
+Acked-By: James Smart  <james.smart@emulex.com>
 
 
-
+On 10/30/2012 4:14 PM, Jeff Moyer wrote:
+> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_init.c |   10 ++++++----
+>   1 files changed, 6 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 7dc4218..65956d3 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -3051,11 +3051,13 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+>   	int error = 0;
+>   
+>   	if (dev != &phba->pcidev->dev)
+> -		shost = scsi_host_alloc(&lpfc_vport_template,
+> -					sizeof(struct lpfc_vport));
+> +		shost = scsi_host_alloc_node(&lpfc_vport_template,
+> +					     sizeof(struct lpfc_vport),
+> +					     dev_to_node(&phba->pcidev->dev));
+>   	else
+> -		shost = scsi_host_alloc(&lpfc_template,
+> -					sizeof(struct lpfc_vport));
+> +		shost = scsi_host_alloc_node(&lpfc_template,
+> +					     sizeof(struct lpfc_vport),
+> +					     dev_to_node(&phba->pcidev->dev));
+>   	if (!shost)
+>   		goto out;
+>   
