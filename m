@@ -1,48 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 05/11] libata-eh: allow defer in ata_exec_internal
-Date: Wed, 31 Oct 2012 14:52:13 -0700
-Message-ID: <20121031215213.GD2945@htj.dyndns.org>
-References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
- <1351501298-3716-6-git-send-email-aaron.lu@intel.com>
- <20121029152051.GK5171@htj.dyndns.org>
- <508F42C0.8070807@intel.com>
- <20121030030144.GG4066@htj.dyndns.org>
- <508F44E1.3000801@intel.com>
+From: "Zou, Yi" <yi.zou@intel.com>
+Subject: RE: tcm_fc+ libfcoe regression on v3.7-rc2
+Date: Wed, 31 Oct 2012 23:08:16 +0000
+Message-ID: <138EA028228D124A900F5E6746F3C2162F5AED8D@ORSMSX102.amr.corp.intel.com>
+References: <1351294400.13631.22.camel@haakon2.linux-iscsi.org>
+	 <138EA028228D124A900F5E6746F3C2162F5AC54A@ORSMSX102.amr.corp.intel.com>
+ <1351299908.13631.89.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:56025 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754482Ab2JaVwS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2012 17:52:18 -0400
-Content-Disposition: inline
-In-Reply-To: <508F44E1.3000801@intel.com>
+Received: from mga09.intel.com ([134.134.136.24]:63853 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759362Ab2JaXIT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Oct 2012 19:08:19 -0400
+In-Reply-To: <1351299908.13631.89.camel@haakon2.linux-iscsi.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, openfcoe-devel <devel@open-fcoe.org>, "Rustad, Mark D" <mark.d.rustad@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, Vasu Dev <vasu.dev@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello,
-
-On Tue, Oct 30, 2012 at 11:09:21AM +0800, Aaron Lu wrote:
-> I'm not aware of a place to store such ODD specific information when
-> probing the device.
-
-You can always add some fields. :)
-
-> I'm currently storing the loading mech type in structure zpodd, which
-> gets created after the corresponding SCSI device gets created in
-> ata_scsi_scan_host, so at the probe time, the zpodd structure does not
-> exist yet. And the reason I create the zpodd sturcture this late is
-> that, it is only created when the ODD together the platform is ZPODD
-> capable, and to find out if this platform is ZPODD capbale, ACPI binding
-> has to occur first, and ACPI binding happens when SCSI device is added
-> to the device tree.
-
-Hmm... I see.  Which ACPI binding is it?  The ATA ACPI binding happens
-during probing.  It's a different one, I presume?
-
-Thanks.
-
--- 
-tejun
+PiBPbiBGcmksIDIwMTItMTAtMjYgYXQgMjM6NTkgKzAwMDAsIFpvdSwgWWkgd3JvdGU6DQo+DQo+
+IDwtLSBzbmlwIC0tPg0KPg0KPiANCj4gTW1tbW0sIG5vdCBzdXJlIG9uIHRoaXMgb25lLiAgVGhl
+cmUgaGF2ZSBkZWZpbml0ZWx5IGJlZW4gY2hhbmdlcyBpbiB0aGUNCj4gVENNIGFjdGl2ZSBJL08g
+c2h1dGRvd24gY29kZXBhdGggdG8gc3VwcG9ydCB0Y21fcWxhMnh4eCBhY3RpdmUgSS9PDQo+IHNo
+dXRkb3duIHN0YXJ0aW5nIGluIHYzLjUgY29kZSwgc28gaWYgcHJlIHYzLjUgY29kZSBpcyB3b3Jr
+aW5nIGFzDQo+IGV4cGVjdGVkIGl0IG1pZ2h0IHZlcnkgd2VsbCBiZSBpdC4NCj4gDQo+IEknbSBo
+YXBweSB0byBoYXZlIGEgbG9vayBhdCB0aGlzIHNvbWUgcG9pbnQgaW4gdGhlIG5leHQgd2VlayB0
+byB0cnkgYW5kDQo+IHJlcHJvZHVjZSBpbiB2bjJ2biBtb2RlLg0KPiANCj4gPiBBbnl3YXksIEkg
+d291bGQgbGlrZSB0byBtaW1pYyB5b3VyIHNldHVwIHRvIHNlZSBpZiBJIGNhbiByZXByb2R1Y2Ug
+aXQuDQo+ID4NCj4gDQo+IFN1cmUsIHRoZSBsYXRlc3QgdGFyZ2V0LXBlbmRpbmcvbWFzdGVyIEhF
+QUQgc2hvdWxkIGVhc2lseSByZXByb2R1Y2Ugd2l0aA0KPiBzbHViX2RlYnVnPUZQVVouDQo+IA0K
+PiBUaGFua3MgWWkhDQo+IA0KPiAtLW5hYg0KPiANCk5pY2ssDQoNCldpdGggaGVscCBmcm9tIE1h
+cmssIHRoZSBvcmlnaW5hbCBpc3N1ZSBJIHdhcyBzZWVpbmcgc2VlbXMgZml4ZWQgYnkgdGhlIGZv
+bGxvd2luZzoNCg0KYzAxNThjYSB3b3JrcXVldWU6IGNhbmNlbF9kZWxheWVkX3dvcmsoKSBzaG91
+bGQgcmV0dXJuICVmYWxzZSBpZiB3b3JrIGl0ZW0gaXMgaWRsZQ0KDQp3aGljaCB3YXMgY2F1c2lu
+ZyByZWZjbnQgb24gZXhjaGFuZ2UgYmVpbmcgbWVzc2VkIHVwLiBIb3dldmVyIHRoZXJlIG1heSBi
+ZSBvdGhlcg0KaXNzdWVzIGJ1dCBsZXQgbWUga25vdyBpZiB5b3UgYXJlIHN0aWxsIGhpdHRpbmcg
+dGhpcyBvbiByYzMuDQoNClRoYW5rcywNCnlpDQoNCg==
