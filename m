@@ -1,60 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 05/11] libata-eh: allow defer in ata_exec_internal
-Date: Thu, 1 Nov 2012 09:03:00 -0700
-Message-ID: <20121101160300.GB9169@htj.dyndns.org>
-References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
- <1351501298-3716-6-git-send-email-aaron.lu@intel.com>
- <20121029152051.GK5171@htj.dyndns.org>
- <508F42C0.8070807@intel.com>
- <20121030030144.GG4066@htj.dyndns.org>
- <508F44E1.3000801@intel.com>
- <20121031215213.GD2945@htj.dyndns.org>
- <5091DFDE.1060904@intel.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49821] Random Call traces when using tape device.
+Date: Thu,  1 Nov 2012 16:03:07 +0000 (UTC)
+Message-ID: <20121101160307.223C811FB81@bugzilla.kernel.org>
+References: <bug-49821-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46829 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992489Ab2KAQDF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Nov 2012 12:03:05 -0400
-Content-Disposition: inline
-In-Reply-To: <5091DFDE.1060904@intel.com>
+Received: from mail.kernel.org ([198.145.19.201]:53521 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933964Ab2KAQDR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Nov 2012 12:03:17 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id DA97A20420
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Nov 2012 16:03:12 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 3679320427
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Nov 2012 16:03:08 +0000 (UTC)
+In-Reply-To: <bug-49821-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hello, Aaron.
+https://bugzilla.kernel.org/show_bug.cgi?id=49821
 
-On Thu, Nov 01, 2012 at 10:35:10AM +0800, Aaron Lu wrote:
-> > You can always add some fields. :)
-> 
-> OK. My concern is that, such information is only useful to ZPODD
-> capable device+platforms, so checking this loading mechanism thing for
-> all ATAPI devices during probe time doesn't seem a good idea.
 
-Hmmm.. but it's not like querying acpi is high cost or anything.
-Maybe I'm missing something but if it can be simpler that way, please
-do so by all means.  I don't care whether you add some extra fields or
-some processing overhead during probing.  It doesn't really matter.
 
-> > Hmm... I see.  Which ACPI binding is it?  The ATA ACPI binding happens
-> > during probing.  It's a different one, I presume?
-> 
-> Since commit 6b66d95895c149cbc04d4fac5a2f5477c543a8ae:
-> libata: bind the Linux device tree to the ACPI device tree
-> ACPI binding happens when SCSI devices are added to the device tree. The
-> ata port/device software structure does not have a acpi_handle field
-> anymore.
 
-Please bear with me.  I haven't paid much attention to zpodd, so it
-probably is my ignorance but at least the ATA <-> ACPI association
-happens during probing by calling ata_acpi_on_devcfg() from
-ata_dev_configure(), and it pretty much has to happen then because
-_SDD/_GTF should be executed after hardreset which happens during
-probing.  So, yeah, I'm confused.
 
-Thanks.
+--- Comment #4 from Alan <alan@lxorguk.ukuu.org.uk>  2012-11-01 16:03:06 ---
+If the Nvidia driver breaks it then you'll need to discuss that with Nvidia -
+only they have the source to it. It might be interesting to try it with the
+nouveau driver and X server setup with a modern kernel. If that works then
+great you've got graphics, if not and you also get IRQ 17 problems it may be a
+useful pointer.
 
 -- 
-tejun
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
