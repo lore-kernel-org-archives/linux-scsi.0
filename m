@@ -1,58 +1,55 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: RE: tcm_fc+ libfcoe regression on v3.7-rc2
-Date: Wed, 31 Oct 2012 22:49:08 -0700
-Message-ID: <1351748948.29493.40.camel@haakon2.linux-iscsi.org>
-References: <1351294400.13631.22.camel@haakon2.linux-iscsi.org>
-	 <138EA028228D124A900F5E6746F3C2162F5AC54A@ORSMSX102.amr.corp.intel.com>
-	 <1351299908.13631.89.camel@haakon2.linux-iscsi.org>
-	 <138EA028228D124A900F5E6746F3C2162F5AED8D@ORSMSX102.amr.corp.intel.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v8 09/11] block: add a new interface to block events
+Date: Thu, 01 Nov 2012 14:30:53 +0800
+Message-ID: <5092171D.8040202@intel.com>
+References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com> <1351501298-3716-10-git-send-email-aaron.lu@intel.com> <20121029153536.GL5171@htj.dyndns.org> <508F7BF1.1040009@intel.com> <20121031215121.GC2945@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <138EA028228D124A900F5E6746F3C2162F5AED8D@ORSMSX102.amr.corp.intel.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Zou, Yi" <yi.zou@intel.com>
-Cc: target-devel <target-devel@vger.kernel.org>, openfcoe-devel <devel@open-fcoe.org>, "Rustad, Mark D" <mark.d.rustad@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, Vasu Dev <vasu.dev@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20121031215121.GC2945@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-10-31 at 23:08 +0000, Zou, Yi wrote:
-> > On Fri, 2012-10-26 at 23:59 +0000, Zou, Yi wrote:
-> >
-> > <-- snip -->
-> >
-> > 
-> > Mmmmm, not sure on this one.  There have definitely been changes in the
-> > TCM active I/O shutdown codepath to support tcm_qla2xxx active I/O
-> > shutdown starting in v3.5 code, so if pre v3.5 code is working as
-> > expected it might very well be it.
-> > 
-> > I'm happy to have a look at this some point in the next week to try and
-> > reproduce in vn2vn mode.
-> > 
-> > > Anyway, I would like to mimic your setup to see if I can reproduce it.
-> > >
-> > 
-> > Sure, the latest target-pending/master HEAD should easily reproduce with
-> > slub_debug=FPUZ.
-> > 
-> > Thanks Yi!
-> > 
-> > --nab
-> > 
-> Nick,
+Hi,
+
+On 11/01/2012 05:51 AM, Tejun Heo wrote:
+> Hello,
 > 
-> With help from Mark, the original issue I was seeing seems fixed by the following:
+> On Tue, Oct 30, 2012 at 03:04:17PM +0800, Aaron Lu wrote:
+>>> check_event() can retry.  Just add a per-sr mutex which is try-locked
+>>> by sr_block_check_events() and grab it when entering zero power.
+>>
+>> Good suggestion. I didn't think about solving it this way.
+>>
+>> Many people suggest me that ZPODD is pure SATA/ACPI stuff, and should
+>> not pollute sr driver, so I was trying hard not to touch sr while
+>> preparing these patches, unless there is no other choice(like the
+>> blocking event interface).
+>>
+>> So I'm not sure if your suggestion is the way to go.
+>>
+>> James, what do you think? Is it OK if I add a mutex into the scsi_cd
+>> structure to do this? Of course I'll define this only under
+>> CONFIG_SATA_ZPODD.
 > 
-> c0158ca workqueue: cancel_delayed_work() should return %false if work item is idle
+> I don't think what James' and my suggestions are that different.  Just
+> silence check_event() while zpodd is kicked in somehow.  There's no
+
+Well, since sr is not supposed to know anything about ZPODD, I don't see
+another way to silence check_event() in ATA layer.
+
+What I hope to achieve is when zero power ready status is sensed in ATA
+layer, no more sr_check_events should be called, as that function will
+runtime resume the ODD.
+
+Thanks,
+Aaron
+
+> reason to synchronize across multiple subsystems.
 > 
-> which was causing refcnt on exchange being messed up. However there may be other
-> issues but let me know if you are still hitting this on rc3.
+> Thanks.
 > 
 
-<nod>  Just verified with target-pending v3.7-rc2 + commit c0158ca and
-slub poison overwritten warnings with tcm_fc(FCoE) I/O are gone.
-
-Thanks Yi, MDR & Co!  :)
-
---nab
