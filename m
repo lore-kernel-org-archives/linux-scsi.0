@@ -1,50 +1,59 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v8 05/11] libata-eh: allow defer in ata_exec_internal
-Date: Thu, 01 Nov 2012 10:35:10 +0800
-Message-ID: <5091DFDE.1060904@intel.com>
-References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com> <1351501298-3716-6-git-send-email-aaron.lu@intel.com> <20121029152051.GK5171@htj.dyndns.org> <508F42C0.8070807@intel.com> <20121030030144.GG4066@htj.dyndns.org> <508F44E1.3000801@intel.com> <20121031215213.GD2945@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20121031215213.GD2945@htj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] target: Re-add explict zeroing of INQUIRY bounce buffer memory
+Date: Thu,  1 Nov 2012 05:13:08 +0000
+Message-ID: <1351746788-25985-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:36632 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750802Ab2KAFT1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Nov 2012 01:19:27 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Kelsey Prantis <kelsey.prantis@intel.com>, Paolo Bonzini <pbonzini@redhat.com>, Andy Grover <agrover@redhat.com>, stable@vger.kernel.org
 
-On 11/01/2012 05:52 AM, Tejun Heo wrote:
-> Hello,
-> 
-> On Tue, Oct 30, 2012 at 11:09:21AM +0800, Aaron Lu wrote:
->> I'm not aware of a place to store such ODD specific information when
->> probing the device.
-> 
-> You can always add some fields. :)
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-OK. My concern is that, such information is only useful to ZPODD
-capable device+platforms, so checking this loading mechanism thing for
-all ATAPI devices during probe time doesn't seem a good idea.
+This patch fixes a regression in spc_emulate_inquiry() code where the
+local scope bounce buffer was no longer getting it's memory zeroed,
+causing various problems with SCSI initiators that depend upon areas
+of INQUIRY EVPD=0x83 payload having been zeroed.
 
-> 
->> I'm currently storing the loading mech type in structure zpodd, which
->> gets created after the corresponding SCSI device gets created in
->> ata_scsi_scan_host, so at the probe time, the zpodd structure does not
->> exist yet. And the reason I create the zpodd sturcture this late is
->> that, it is only created when the ODD together the platform is ZPODD
->> capable, and to find out if this platform is ZPODD capbale, ACPI binding
->> has to occur first, and ACPI binding happens when SCSI device is added
->> to the device tree.
-> 
-> Hmm... I see.  Which ACPI binding is it?  The ATA ACPI binding happens
-> during probing.  It's a different one, I presume?
+This bug was introduced with the following v3.7-rc1 patch + CC'ed
+stable commit:
 
-Since commit 6b66d95895c149cbc04d4fac5a2f5477c543a8ae:
-libata: bind the Linux device tree to the ACPI device tree
-ACPI binding happens when SCSI devices are added to the device tree. The
-ata port/device software structure does not have a acpi_handle field
-anymore.
+commit ffe7b0e9326d9c68f5688bef691dd49f1e0d3651
+Author: Paolo Bonzini <pbonzini@redhat.com>
+Date:   Fri Sep 7 17:30:38 2012 +0200
 
-Thanks,
-Aaron
+    target: support zero allocation length in INQUIRY
+
+Go ahead and re-add the missing memset of bounce buffer memory to be
+copied into the outgoing se_cmd descriptor kmapped SGL payload.
+
+Reported-by: Kelsey Prantis <kelsey.prantis@intel.com>
+Cc: Kelsey Prantis <kelsey.prantis@intel.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Andy Grover <agrover@redhat.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_spc.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index 9229bd9..6fd434d 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -605,6 +605,8 @@ static int spc_emulate_inquiry(struct se_cmd *cmd)
+ 	unsigned char buf[SE_INQUIRY_BUF];
+ 	int p, ret;
+ 
++	memset(buf, 0, SE_INQUIRY_BUF);
++
+ 	if (dev == tpg->tpg_virt_lun0.lun_se_dev)
+ 		buf[0] = 0x3f; /* Not connected */
+ 	else
+-- 
+1.7.2.5
 
