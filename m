@@ -1,55 +1,51 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v8 09/11] block: add a new interface to block events
-Date: Thu, 01 Nov 2012 14:30:53 +0800
-Message-ID: <5092171D.8040202@intel.com>
-References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com> <1351501298-3716-10-git-send-email-aaron.lu@intel.com> <20121029153536.GL5171@htj.dyndns.org> <508F7BF1.1040009@intel.com> <20121031215121.GC2945@htj.dyndns.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49821] Random Call traces when using tape device.
+Date: Thu,  1 Nov 2012 14:12:42 +0000 (UTC)
+Message-ID: <20121101141242.B643211FB91@bugzilla.kernel.org>
+References: <bug-49821-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20121031215121.GC2945@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:49549 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756011Ab2KAOMp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Nov 2012 10:12:45 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id A3239203C2
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Nov 2012 14:12:44 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 9B755203BC
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Nov 2012 14:12:43 +0000 (UTC)
+In-Reply-To: <bug-49821-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi,
+https://bugzilla.kernel.org/show_bug.cgi?id=49821
 
-On 11/01/2012 05:51 AM, Tejun Heo wrote:
-> Hello,
-> 
-> On Tue, Oct 30, 2012 at 03:04:17PM +0800, Aaron Lu wrote:
->>> check_event() can retry.  Just add a per-sr mutex which is try-locked
->>> by sr_block_check_events() and grab it when entering zero power.
->>
->> Good suggestion. I didn't think about solving it this way.
->>
->> Many people suggest me that ZPODD is pure SATA/ACPI stuff, and should
->> not pollute sr driver, so I was trying hard not to touch sr while
->> preparing these patches, unless there is no other choice(like the
->> blocking event interface).
->>
->> So I'm not sure if your suggestion is the way to go.
->>
->> James, what do you think? Is it OK if I add a mutex into the scsi_cd
->> structure to do this? Of course I'll define this only under
->> CONFIG_SATA_ZPODD.
-> 
-> I don't think what James' and my suggestions are that different.  Just
-> silence check_event() while zpodd is kicked in somehow.  There's no
 
-Well, since sr is not supposed to know anything about ZPODD, I don't see
-another way to silence check_event() in ATA layer.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-What I hope to achieve is when zero power ready status is sensed in ATA
-layer, no more sr_check_events should be called, as that function will
-runtime resume the ODD.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk
 
-Thanks,
-Aaron
 
-> reason to synchronize across multiple subsystems.
-> 
-> Thanks.
-> 
 
+
+--- Comment #1 from Alan <alan@lxorguk.ukuu.org.uk>  2012-11-01 14:12:42 ---
+nvidia              10188726  41 
+
+Please verify you can duplicate this without proprietary stuff loaded. In this
+case I expect you can but it would be good to check.
+
+
+[    8.737551] scsi8 : ioc0: LSI53C1030 B2, FwRev=01032700h, Ports=1, MaxQ=255,
+IRQ=17
+
+does look like an unhandled interrupt from the device
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
