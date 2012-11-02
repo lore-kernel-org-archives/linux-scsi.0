@@ -1,45 +1,88 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [patch 01/10] scsi: make __scsi_alloc_queue numa-aware
-Date: Fri, 02 Nov 2012 12:31:37 +0100
-Message-ID: <5093AF19.5040707@acm.org>
-References: <1351628084-29358-1-git-send-email-jmoyer@redhat.com> <1351628084-29358-4-git-send-email-jmoyer@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1351628084-29358-4-git-send-email-jmoyer@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH] [SCSI] sd: fix crash when UA received on DIF enabled device
+Date: Fri,  2 Nov 2012 09:38:34 -0400
+Message-ID: <1351863514-12745-1-git-send-email-emilne@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:23818 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752784Ab2KBNig (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Nov 2012 09:38:36 -0400
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA2DcZi3000705
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Fri, 2 Nov 2012 09:38:35 -0400
+Received: from emilne.csb (dhcp-186-175.bos.redhat.com [10.16.186.175])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id qA2DcZmT007508
+	for <linux-scsi@vger.kernel.org>; Fri, 2 Nov 2012 09:38:35 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 10/30/12 21:14, Jeff Moyer wrote:
-> Pass the numa node id set in the Scsi_Host on to blk_init_queue_node
-> in order to keep all allocations local to the numa node the device is
-> closest to.
->
-> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
-> ---
->   drivers/scsi/scsi_lib.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index da36a3a..8662a09 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1664,7 +1664,7 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
->   	struct request_queue *q;
->   	struct device *dev = shost->dma_dev;
->
-> -	q = blk_init_queue(request_fn, NULL);
-> +	q = blk_init_queue_node(request_fn, NULL, shost->numa_node);
->   	if (!q)
->   		return NULL;
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-Hello Jeff,
+sd_prep_fn will allocate a larger CDB for the command via mempool_alloc
+for devices using DIF type 2 protection.  This CDB was being freed
+in sd_done, which results in a kernel crash if the command is retried
+due to a UNIT ATTENTION.  This change moves the code to free the larger
+CDB into sd_unprep_fn instead, which is invoked after the request is
+complete.
 
-I haven't seen the patch that introduces numa_node in struct Scsi_Host 
-nor the cover letter of this patch series ? Have these been posted on 
-the linux-scsi mailing list ?
+It is no longer necessary to call scsi_print_command separately for
+this case as the ->cmnd will no longer be NULL in the normal code path.
 
-Bart.
+Also removed conditional test for DIF type 2 when freeing the larger
+CDB because the protection_type could have been changed via sysfs while
+the command was executing.
+
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/sd.c | 22 +++++++---------------
+ 1 file changed, 7 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 6f0a4c6..00a366a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -658,10 +658,17 @@ static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct request *rq)
+ 
+ static void sd_unprep_fn(struct request_queue *q, struct request *rq)
+ {
++	struct scsi_cmnd *SCpnt = rq->special;
++
+ 	if (rq->cmd_flags & REQ_DISCARD) {
+ 		free_page((unsigned long)rq->buffer);
+ 		rq->buffer = NULL;
+ 	}
++	if (SCpnt->cmnd != rq->cmd) {
++		mempool_free(SCpnt->cmnd, sd_cdb_pool);
++		SCpnt->cmnd = NULL;
++		SCpnt->cmd_len = 0;
++	}
+ }
+ 
+ /**
+@@ -1525,21 +1532,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	if (rq_data_dir(SCpnt->request) == READ && scsi_prot_sg_count(SCpnt))
+ 		sd_dif_complete(SCpnt, good_bytes);
+ 
+-	if (scsi_host_dif_capable(sdkp->device->host, sdkp->protection_type)
+-	    == SD_DIF_TYPE2_PROTECTION && SCpnt->cmnd != SCpnt->request->cmd) {
+-
+-		/* We have to print a failed command here as the
+-		 * extended CDB gets freed before scsi_io_completion()
+-		 * is called.
+-		 */
+-		if (result)
+-			scsi_print_command(SCpnt);
+-
+-		mempool_free(SCpnt->cmnd, sd_cdb_pool);
+-		SCpnt->cmnd = NULL;
+-		SCpnt->cmd_len = 0;
+-	}
+-
+ 	return good_bytes;
+ }
+ 
+-- 
+1.7.11.7
+
