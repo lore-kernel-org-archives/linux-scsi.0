@@ -1,7 +1,7 @@
 From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [patch,v2 03/10] scsi: make scsi_alloc_sdev numa-aware
-Date: Fri,  2 Nov 2012 17:45:56 -0400
-Message-ID: <1351892763-21325-4-git-send-email-jmoyer@redhat.com>
+Subject: [patch,v2 04/10] scsi: allocate scsi_cmnd-s from the device's local numa node
+Date: Fri,  2 Nov 2012 17:45:57 -0400
+Message-ID: <1351892763-21325-5-git-send-email-jmoyer@redhat.com>
 References: <1351892763-21325-1-git-send-email-jmoyer@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1351892763-21325-1-git-send-email-jmoyer@redhat.com>
@@ -10,28 +10,59 @@ To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Bart Van Assche <bvanassche@acm.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Use the numa node id set in the Scsi_Host to allocate the sdev structure
-on the device-local numa node.
 
 Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 ---
- drivers/scsi/scsi_scan.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi.c |   17 +++++++++++------
+ 1 files changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3e58b22..f10a308 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -232,8 +232,8 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	extern void scsi_evt_thread(struct work_struct *work);
- 	extern void scsi_requeue_run_queue(struct work_struct *work);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 2936b44..4db6973 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -173,16 +173,20 @@ static DEFINE_MUTEX(host_cmd_pool_mutex);
+  * NULL on failure
+  */
+ static struct scsi_cmnd *
+-scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask)
++scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask,
++			int node)
+ {
+ 	struct scsi_cmnd *cmd;
  
--	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
--		       GFP_ATOMIC);
-+	sdev = kzalloc_node(sizeof(*sdev) + shost->transportt->device_size,
-+			    GFP_ATOMIC, shost->numa_node);
- 	if (!sdev)
- 		goto out;
+-	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
++	cmd = kmem_cache_alloc_node(pool->cmd_slab,
++				    gfp_mask | pool->gfp_mask | __GFP_ZERO,
++				    node);
+ 	if (!cmd)
+ 		return NULL;
+ 
+-	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
+-					     gfp_mask | pool->gfp_mask);
++	cmd->sense_buffer = kmem_cache_alloc_node(pool->sense_slab,
++					gfp_mask | pool->gfp_mask | __GFP_ZERO,
++					node);
+ 	if (!cmd->sense_buffer) {
+ 		kmem_cache_free(pool->cmd_slab, cmd);
+ 		return NULL;
+@@ -223,7 +227,8 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
+ {
+ 	struct scsi_cmnd *cmd;
+ 
+-	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask);
++	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask,
++				      shost->numa_node);
+ 	if (!cmd)
+ 		return NULL;
+ 
+@@ -435,7 +440,7 @@ struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask)
+ 	if (!pool)
+ 		return NULL;
+ 
+-	return scsi_pool_alloc_command(pool, gfp_mask);
++	return scsi_pool_alloc_command(pool, gfp_mask, NUMA_NO_NODE);
+ }
+ EXPORT_SYMBOL(scsi_allocate_command);
  
 -- 
 1.7.1
