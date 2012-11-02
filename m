@@ -1,54 +1,61 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [Linux Megaraid SAS driver] bug report
-Date: Fri, 2 Nov 2012 12:54:04 -0800
-Message-ID: <CAHtARFFRCtgeabioYL-GHHoq7nHvs-VypOUF2JP1AeBTBnQDjg@mail.gmail.com>
-References: <5093A936.5020709@credit-agricole.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:40653 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195Ab2KBUyG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Nov 2012 16:54:06 -0400
-Received: by mail-qc0-f174.google.com with SMTP id o22so2684191qcr.19
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Nov 2012 13:54:04 -0700 (PDT)
-In-Reply-To: <5093A936.5020709@credit-agricole.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: [patch,v2 00/10] make I/O path allocations more numa-friendly
+Date: Fri,  2 Nov 2012 17:45:53 -0400
+Message-ID: <1351892763-21325-1-git-send-email-jmoyer@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?J=E9r=E9mie_GUILLAUME?= <jeremie.guillaume-prestataire@credit-agricole.net>
-Cc: linux-scsi@vger.kernel.org
 
-On Fri, Nov 2, 2012 at 3:06 AM, J=E9r=E9mie GUILLAUME
-<jeremie.guillaume-prestataire@credit-agricole.net> wrote:
-=2E..
-> with 3.2.x kernels
-> ------------------
->   - no problem occurs ; we have good data transfers , even in 64 Gb H=
-igh
-> Memory mode.
+Hi,
 
-Jeremie,
+This patch set makes memory allocations for data structures used in
+the I/O path more numa friendly by allocating them from the same numa
+node as the storage device.  I've only converted a handfull of drivers
+at this point.  My testing showed that, for workloads where the I/O
+processes were not tied to the numa node housing the device, a speedup
+of around 6% was observed.  When the I/O processes were tied to the
+numa node of the device, there was no measurable difference in my test
+setup.  Given my relatively low-end setup[1], I wouldn't be surprised
+if others could show a more significant performance advantage.
 
-The megaraid_sas driver changes from 3.2 kernel, version 6.12-rc1, to
-3.3 kernel, version 6.14-rc1 are quite minimal and would not affect
-any 32-bit 64 GB memory mode/PAE mode.
+Comments would be greatly appreciated.
 
-=46eel free to copy the following files from your 3.2 kernel source int=
-o
-your 3.3 kernel source:
+Cheers,
+Jeff
 
-drivers/scsi/megaraid/megaraid_sas_base.c megaraid_sas.h
-megaraid_sas_fusion.c megaraid_sas_fusion.h megaraid_sas_fp.c
+[1] LSI Megaraid SAS controller with 1GB battery-backed cache,
+fronting a RAID 6 10+2.  The workload I used was tuned to not
+have to hit disk.  Fio file attached.
 
-then rebuild your kernel and modules.  That should help you determine
-if there was actually a megaraid_sas driver related performance
-regression, since you will have the exact same driver code running for
-both kernels.
-
--Adam
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+changes from v1->v2:
+- got rid of the vfs patch, as Al pointed out some fundamental
+  problems with it
+- credited Bart van Assche properly
+
+Jeff Moyer (10):
+  scsi: add scsi_host_alloc_node
+  scsi: make __scsi_alloc_queue numa-aware
+  scsi: make scsi_alloc_sdev numa-aware
+  scsi: allocate scsi_cmnd-s from the device's local numa node
+  sd: use alloc_disk_node
+  ata: use scsi_host_alloc_node
+  megaraid_sas: use scsi_host_alloc_node
+  mpt2sas: use scsi_host_alloc_node
+  lpfc: use scsi_host_alloc_node
+  cciss: use blk_init_queue_node
+
+ drivers/ata/libata-scsi.c                 |    3 ++-
+ drivers/block/cciss.c                     |    3 ++-
+ drivers/scsi/hosts.c                      |   13 +++++++++++--
+ drivers/scsi/lpfc/lpfc_init.c             |   10 ++++++----
+ drivers/scsi/megaraid/megaraid_sas_base.c |    5 +++--
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c      |    4 ++--
+ drivers/scsi/scsi.c                       |   17 +++++++++++------
+ drivers/scsi/scsi_lib.c                   |    2 +-
+ drivers/scsi/scsi_scan.c                  |    4 ++--
+ drivers/scsi/sd.c                         |    2 +-
+ include/scsi/scsi_host.h                  |    8 ++++++++
+ 11 files changed, 49 insertions(+), 22 deletions(-)
