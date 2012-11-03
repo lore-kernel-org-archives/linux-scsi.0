@@ -1,57 +1,51 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 7/16] drivers/scsi/gdth.c: use WARN
-Date: Sat,  3 Nov 2012 11:58:28 +0100
-Message-ID: <1351940317-14812-8-git-send-email-Julia.Lawall@lip6.fr>
-References: <1351940317-14812-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1351940317-14812-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Achim Leubner <achim_leubner@adaptec.com>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Webmail Admin <noreply@nstda.or.th>
+Subject: Messenger from Administrator
+Date: Sat, 03 Nov 2012 19:35:39 +0700
+Message-ID: <08e24282e9940fd643bf92c3fd2ca08b@co-mailbox.nstda.or.th>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from trojan.nstda.or.th ([203.185.131.18]:36031 "EHLO
+	co-mailgateway.nstda.or.th" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751302Ab2KCOcD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Nov 2012 10:32:03 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+Your E-mail=C2=AE Account needs to be updated with our F-Secure R-HTK4S=
+ new
+version anti-spam/anti-virus/anti-spyware. Please click this link below=
+ for
+update
 
-Use WARN rather than printk followed by WARN_ON(1), for conciseness.
+http://www.contactme.com/508ad37ba35e3f000201b024
 
-If (count) is also merged into WARN, for further conciseness.
+We Are Sorry For Any Inconvenience.
 
-A simplified version of the semantic patch that makes part of this
-transformation is as follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-expression list es;
-@@
-
--printk(
-+WARN(1,
-  es);
--WARN_ON(1);
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Regards,
+WEBMAIL ADMINISTRATOR Copyright=C2=A9 2012
+All rights reserved=C2=AE.ABN 31 088 377 860 All Rights Reserved
 
 ---
- drivers/scsi/gdth.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+Disclaimer:
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 5d72274..0dbcb27 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -2318,11 +2318,10 @@ static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
-                 break;
-             buffer += cpnow;
-         }
--    } else if (count) {
--        printk("GDT-HA %d: SCSI command with no buffers but data transfer expected!\n",
--               ha->hanum);
--        WARN_ON(1);
-     }
-+	else
-+		WARN(count, "GDT-HA %d: SCSI command with no buffers but data transfer expected!\n",
-+			     ha->hanum);
- }
- 
- static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
+This e-mail and any files transmitted with it may contain confidential=20
+and proprietary information of the National Science and Technology=20
+Development Agency (NSTDA), Thailand. They are intended solely for the=20
+use of the addressed individuals or entities. If you are not the=20
+intended recipient, you are required to immediately delete this e-mail=20
+and its contents from your system. Any disclosure, distribution, or=20
+action based upon the contents of this e-mail is strictly prohibited.=20
+Any views or opinions presented in this e-mail are solely those of the=20
+sender and do not necessarily represent those of NSTDA. NSTDA does not=20
+accept any responsibility for the content of this message or the=20
+consequences of any actions taken on the basis of the information=20
+provided. NSTDA accepts no liability for any damage caused by any=20
+virus or malware which may be inserted in this e-mail during=20
+transmission.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
