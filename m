@@ -1,56 +1,57 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: Drivers: scsi
-Date: Sun, 4 Nov 2012 15:26:31 +0000
-Message-ID: <426367E2313C2449837CD2DE46E7EAF930DF9113@SN2PRD0310MB382.namprd03.prod.outlook.com>
-References: <1351960806-16240-1-git-send-email-kys@microsoft.com>
- <1352021949.2427.19.camel@dabdike.int.hansenpartnership.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 31212] aacraid is generally unstable with newer kernels
+Date: Sun,  4 Nov 2012 16:05:49 +0000 (UTC)
+Message-ID: <20121104160549.CBEDE11FB1E@bugzilla.kernel.org>
+References: <bug-31212-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1352021949.2427.19.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
- <mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel/>
-List-Post: <mailto:devel@linuxdriverproject.org>
-List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
- <mailto:devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: devel-bounces@linuxdriverproject.org
-Sender: "devel" <devel-bounces@linuxdriverproject.org>
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "ohering@suse.com" <ohering@suse.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:50104 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751030Ab2KDQFw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Nov 2012 11:05:52 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 4AABD201D8
+	for <linux-scsi@vger.kernel.org>; Sun,  4 Nov 2012 16:05:51 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 765FE201D0
+	for <linux-scsi@vger.kernel.org>; Sun,  4 Nov 2012 16:05:50 +0000 (UTC)
+In-Reply-To: <bug-31212-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=31212
+
+
+Ryan Underwood <nemesis@icequake.net> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |UNREPRODUCIBLE
 
 
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-> Sent: Sunday, November 04, 2012 4:39 AM
-> To: KY Srinivasan
-> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com; hch@infradead.org; linux-
-> scsi@vger.kernel.org
-> Subject: Re: Drivers: scsi
-> 
-> On Sat, 2012-11-03 at 09:40 -0700, K. Y. Srinivasan wrote:
-> > Do we currently support dynamic re-sizing of LUNs. Hyper-V can
-> > notify capacity change via sense data and I was wondering if this
-> > is handled in the generic scsi code.
-> 
-> Depends what you mean by "dynamic".  Experience shows that most users
-> really don't want all this to happen without manual intervention
-> (particularly on shrink).  However, we have the mechanics in place.
-> Just send ASC/Q 2A/09 and it can get vectored up to LVM which resizes
-> the volume and can be scripted automatically to resize the filesystem.
-> 
-> hypervisor people tend to have problems with scripting, so there are
-> some hacks that do this outside of the normal event system ... see for
-> example virtio_scsi.c
 
-Thanks for the prompt response.
+--- Comment #8 from Ryan Underwood <nemesis@icequake.net>  2012-11-04 16:05:49 ---
+I have found that there are at least two different versions of the ASR-2120S. 
+There is an older version which shipped with v5xxx and v6xxx firmware which has
+a RAID processor which looks like a PPGA Intel Celeron.  There is a newer
+version which is labeled RoHS on the product label, comes with v8208 firmware
+(latest), and has a "shiny" BGA looking RAID processor.  This latter version
+has been working since I last reported without a single crash or other problem.
 
-Regards,
+I think there may be hardware defects arising in the older versions perhaps due
+to age or due to problems solved in later versions.  Since when the older
+vesrions of the card crashes Linux it remains upset in other ways (will not
+POST, will not bring drives online, etc), I am reluctant to blame this on Linux
+and am therefore closing this bug.  Anyone having problems with ASR-2120S
+should seek the later RoHS hardware revision which can visually be identified
+by the RoHS indication on the product sticker and the shiny surfaced RAID
+processor.
 
-K. Y
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
