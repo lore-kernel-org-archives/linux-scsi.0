@@ -1,40 +1,64 @@
-From: Xi Wang <xi.wang@gmail.com>
-Subject: [PATCH] [SCSI] bnx2fc: fix NULL checking in bnx2fc_initiate_tmf()
-Date: Mon,  5 Nov 2012 01:15:53 -0500
-Message-ID: <1352096153-18211-1-git-send-email-xi.wang@gmail.com>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: [PATCH] [SCSI] advansys: change buildtime warning into runtime error
+Date: Mon, 05 Nov 2012 11:58:02 +0100
+Message-ID: <1352113082.1434.31.camel@x61.thuisdomein>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xi Wang <xi.wang@gmail.com>
+To: Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The dereference rport->data should come after the NULL check of rport.
+Building advansys.o triggers this warning:
+    drivers/scsi/advansys.c:71:2: warning: #warning this driver is still not properly converted to the DMA API [-Wcpp]
 
-Signed-off-by: Xi Wang <xi.wang@gmail.com>
+This warning can be traced back to a patch called "advansys: add warning
+and convert #includes" which was included in v2.6.10. That patch also
+marked the driver as BROKEN.
+
+Commit 4661e3eace2c7b8433476b5bf0ee437ab3c7dfd4 ("[SCSI] advansys
+driver: limp along on x86") enabled this driver for x86-32. And commit
+9d511a4b29de6764931343d03e493f2e04df0271 ("[SCSI] advansys: Changes to
+work on parisc") enabled this driver for all architectures. But the
+commit explanation stated:
+    I haven't removed the #warning yet because virt_to_bus/bus_to_virt are
+    only eliminated for narrow boards.  Wide boards need more work.
+
+Five years have passed and, apparently, those wide boards still need
+more work. So let's change the buildtime warning into a runtime error,
+only printed for those wide boards. Perhaps that might push the people
+using those wide boards to convert this driver. And for all others
+there's now one less buildtime warning to ignore.
+
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
 ---
- drivers/scsi/bnx2fc/bnx2fc_io.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Compile tested only. I don't have any AdvanSys SCSI boards (neither
+narrow nor wide).
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 8d4626c..eebe93c 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -686,7 +686,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- {
- 	struct fc_lport *lport;
- 	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
--	struct fc_rport_libfc_priv *rp = rport->dd_data;
-+	struct fc_rport_libfc_priv *rp;
- 	struct fcoe_port *port;
- 	struct bnx2fc_interface *interface;
- 	struct bnx2fc_rport *tgt;
-@@ -712,6 +712,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 		rc = FAILED;
- 		goto tmf_err;
- 	}
-+	rp = rport->dd_data;
+ drivers/scsi/advansys.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 374c4ed..23d347d 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -68,7 +68,6 @@
+  *  7. advansys_info is not safe against multiple simultaneous callers
+  *  8. Add module_param to override ISA/VLB ioport array
+  */
+-#warning this driver is still not properly converted to the DMA API
  
- 	rc = fc_block_scsi_eh(sc_cmd);
- 	if (rc)
+ /* Enable driver /proc statistics. */
+ #define ADVANSYS_STATS
+@@ -12772,6 +12771,7 @@ advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	    pdev->device == PCI_DEVICE_ID_38C0800_REV1 ||
+ 	    pdev->device == PCI_DEVICE_ID_38C1600_REV1) {
+ 		board->flags |= ASC_IS_WIDE_BOARD;
++		pr_err("This driver is still not properly converted to the DMA API");
+ 	}
+ 
+ 	err = advansys_board_found(shost, ioport, ASC_IS_PCI);
 -- 
-1.7.10.4
+1.7.11.7
