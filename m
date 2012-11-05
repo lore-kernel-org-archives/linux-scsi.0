@@ -1,77 +1,49 @@
 From: Ben Hutchings <ben@decadent.org.uk>
-Subject: [PATCH] [SCSI] aic94xx: Remove broken fallback for missing 'Ctrl-A'
- user settings
-Date: Mon, 05 Nov 2012 13:18:52 +0000
-Message-ID: <1352121532.3043.95.camel@deadeye.wl.decadent.org.uk>
+Subject: [PATCH] [SCSI] mv_sas: Fix confusion between enum sas_device_type
+ and enum sas_dev_type
+Date: Mon, 05 Nov 2012 13:21:55 +0000
+Message-ID: <1352121715.3043.99.camel@deadeye.wl.decadent.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57633 "EHLO
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57661 "EHLO
 	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751272Ab2KENS5 convert rfc822-to-8bit
+	by vger.kernel.org with ESMTP id S1754038Ab2KENV7 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Nov 2012 08:18:57 -0500
+	Mon, 5 Nov 2012 08:21:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-asd_process_ctrl_a_user() attempts to find user settings in flash, and
-if they are missing it prepares a substitute structure containing
-default values for PHY settings.  But having done so, it will still
-try to read user settings - from some random address in flash, as the
-local variable 'offs' has not been initialised.
-
-Since asd_common_setup() already sets default PHY settings, there
-seems to be no need to repeat them here, and we can just return 0.
-This matches what is done if any empty user settings area is found.
+The enumeration of standard types is called enum sas_device_type and
+is defined in <scsi/scsi_transport_sas.h> along with the Linux
+internal structures, whereas the enumeration with Linux extensions is
+called enum sas_dev_type and is defined in <scsi/sas.h> along with the
+standard-defined structures.  All clear?  Apparently not; I can't
+think why.
 
 Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
-Compile-tested only.
+ drivers/scsi/mvsas/mv_sas.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Ben.
-
- drivers/scsi/aic94xx/aic94xx_sds.c |   19 +++----------------
- 1 file changed, 3 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
-index edb43fd..7b13ccc 100644
---- a/drivers/scsi/aic94xx/aic94xx_sds.c
-+++ b/drivers/scsi/aic94xx/aic94xx_sds.c
-@@ -981,29 +981,16 @@ static int asd_process_ctrla_phy_settings(struct asd_ha_struct *asd_ha,
- static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
- 				   struct asd_flash_dir *flash_dir)
- {
--	int err, i;
-+	int err;
- 	u32 offs, size;
- 	struct asd_ll_el *el;
- 	struct asd_ctrla_phy_settings *ps;
--	struct asd_ctrla_phy_settings dflt_ps;
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index a3776d6..9f91359 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1153,10 +1153,10 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st)
+ 			phy->identify.device_type =
+ 				phy->att_dev_info & PORT_DEV_TYPE_MASK;
  
- 	err = asd_find_flash_de(flash_dir, FLASH_DE_CTRL_A_USER, &offs, &size);
- 	if (err) {
- 		ASD_DPRINTK("couldn't find CTRL-A user settings section\n");
--		ASD_DPRINTK("Creating default CTRL-A user settings section\n");
--
--		dflt_ps.id0 = 'h';
--		dflt_ps.num_phys = 8;
--		for (i =0; i < ASD_MAX_PHYS; i++) {
--			memcpy(dflt_ps.phy_ent[i].sas_addr,
--			       asd_ha->hw_prof.sas_addr, SAS_ADDR_SIZE);
--			dflt_ps.phy_ent[i].sas_link_rates = 0x98;
--			dflt_ps.phy_ent[i].flags = 0x0;
--			dflt_ps.phy_ent[i].sata_link_rates = 0x0;
--		}
--
--		size = sizeof(struct asd_ctrla_phy_settings);
--		ps = &dflt_ps;
-+		ASD_DPRINTK("Using default settings\n");
-+		return 0;
- 	}
- 
- 	if (size == 0)
-
+-			if (phy->identify.device_type == SAS_END_DEV)
++			if (phy->identify.device_type == SAS_END_DEVICE)
+ 				phy->identify.target_port_protocols =
+ 							SAS_PROTOCOL_SSP;
+-			else if (phy->identify.device_type != NO_DEVICE)
++			else if (phy->identify.device_type != SAS_PHY_UNUSED)
+ 				phy->identify.target_port_protocols =
+ 							SAS_PROTOCOL_SMP;
+ 			if (oob_done)
 
