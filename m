@@ -1,62 +1,24 @@
-From: taco <tacoee@gmail.com>
-Subject: Re: [patch,v2 05/10] sd: use alloc_disk_node
-Date: Mon, 05 Nov 2012 23:32:35 +0800
-Message-ID: <5097DC13.9060809@gmail.com>
-References: <1351892763-21325-1-git-send-email-jmoyer@redhat.com> <1351892763-21325-6-git-send-email-jmoyer@redhat.com> <50954852.5050209@acm.org> <x497gq0cf54.fsf@segfault.boston.devel.redhat.com> <5097D3D2.9020407@acm.org>
+From: David Sterba <dave@jikos.cz>
+Subject: Re: merging printk and WARN
+Date: Mon, 5 Nov 2012 16:42:32 +0100
+Message-ID: <20121105154232.GL3102@twin.jikos.cz>
+References: <alpine.DEB.2.02.1211042120200.1960@localhost6.localdomain6>
+Reply-To: dave@jikos.cz
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5097D3D2.9020407@acm.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1211042120200.1960@localhost6.localdomain6>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: linux-kernel@vger.kernel.org, airlied@linux.ie, netdev@vger.kernel.org, arnd@arndb.de, joern@logfs.org, chris.mason@fusionio.com, m@bues.ch, jejb@parisc-linux.org, faisal.latif@intel.com, neilb@suse.de, gregkh@linuxfoundation.org, JBottomley@parallels.com, swise@chelsio.com, achim_leubner@adaptec.com, tytso@mit.edu, dri-devel@lists.freedesktop.org, jason.wessel@windriver.com, kgdb-bugreport@lists.sourceforge.net, Prasad Joshi <prasadjoshi.linux@gmail.com>, logfs@logfs.org, linux-btrfs@vger.kernel.org, Helge Deller <deller@gmx.de>, linux-parisc@vger.kernel.org, Roland Dreier <roland@kernel.org>, Sean Hefty <sean.hefty@intel.com>, hal.rosenstock@gmail.com, linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, linux-ext4@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/05/2012 10:57 PM, Bart Van Assche wrote:
-> On 11/05/12 15:12, Jeff Moyer wrote:
->> Bart Van Assche <bvanassche@acm.org> writes:
->>
->>> On 11/02/12 22:45, Jeff Moyer wrote:
->>>> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
->>>> ---
->>>>    drivers/scsi/sd.c |    2 +-
->>>>    1 files changed, 1 insertions(+), 1 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->>>> index 12f6fdf..8deb915 100644
->>>> --- a/drivers/scsi/sd.c
->>>> +++ b/drivers/scsi/sd.c
->>>> @@ -2714,7 +2714,7 @@ static int sd_probe(struct device *dev)
->>>>        if (!sdkp)
->>>>            goto out;
->>>>
->>>> -    gd = alloc_disk(SD_MINORS);
->>>> +    gd = alloc_disk_node(SD_MINORS, dev_to_node(dev));
->>>>        if (!gd)
->>>>            goto out_free;
->>>
->>> shost->numa_node can be another NUMA node than dev_to_node(dev). Have
->>> you considered using shost->numa_node here ?
->>
->> It can?  How?
->
-> E.g. if the LLD allows the user to specify the value of numa_node and 
-> passes that value to scsi_host_alloc_node() (see also 
-> http://lkml.org/lkml/2012/10/23/477 for further information).
->
->> Just so I'm clear, you're suggesting I use the scsi_device's host
->> pointer to get to the Scsi_Host, and that *will* be filled in that this
->> point, right?
->
-> As far as I can see the sdev->host pointer is set in scsi_alloc_sdev() 
-> and that happens before sd_probe() is invoked.
->
-yes, struct scsi_device was created before sd, sd is the top layer.
-> Bart.
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+On Sun, Nov 04, 2012 at 09:25:53PM +0100, Julia Lawall wrote:
+> It looks like these patches were not a good idea, because in each case the
+> printk provides an error level, and WARN then provides another one.
+
+I think this is not a problem within btrfs at the place where this has
+changed.
+
+david
