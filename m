@@ -1,18 +1,40 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: merging printk and WARN
-Date: Sun, 4 Nov 2012 21:25:53 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1211042120200.1960@localhost6.localdomain6>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, airlied@linux.ie, netdev@vger.kernel.org, arnd@arndb.de, joern@logfs.org, chris.mason@fusionio.com, m@bues.ch, jejb@parisc-linux.org, faisal.latif@intel.com, neilb@suse.de, gregkh@linuxfoundation.org, JBottomley@parallels.com, swise@chelsio.com, achim_leubner@adaptec.comswise@chelsio.com, tytso@mit.edu
-Cc: dri-devel@lists.freedesktop.org, jason.wessel@windriver.com, kgdb-bugreport@lists.sourceforge.net, Prasad Joshi <prasadjoshi.linux@gmail.com>, logfs@logfs.org, linux-btrfs@vger.kernel.org, Helge Deller <deller@gmx.de>, linux-parisc@vger.kernel.org, Roland Dreier <roland@kernel.org>, Sean Hefty <sean.hefty@intel.com>, hal.rosenstock@gmail.com, linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, linux-ext4@vger.kernel.org
+From: Xi Wang <xi.wang@gmail.com>
+Subject: [PATCH] [SCSI] bnx2fc: fix NULL checking in bnx2fc_initiate_tmf()
+Date: Mon,  5 Nov 2012 01:15:53 -0500
+Message-ID: <1352096153-18211-1-git-send-email-xi.wang@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xi Wang <xi.wang@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-It looks like these patches were not a good idea, because in each case the 
-printk provides an error level, and WARN then provides another one.
+The dereference rport->data should come after the NULL check of rport.
 
-Sorry for the noise.
+Signed-off-by: Xi Wang <xi.wang@gmail.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_io.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-julia
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 8d4626c..eebe93c 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -686,7 +686,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+ {
+ 	struct fc_lport *lport;
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
+-	struct fc_rport_libfc_priv *rp = rport->dd_data;
++	struct fc_rport_libfc_priv *rp;
+ 	struct fcoe_port *port;
+ 	struct bnx2fc_interface *interface;
+ 	struct bnx2fc_rport *tgt;
+@@ -712,6 +712,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+ 		rc = FAILED;
+ 		goto tmf_err;
+ 	}
++	rp = rport->dd_data;
+ 
+ 	rc = fc_block_scsi_eh(sc_cmd);
+ 	if (rc)
+-- 
+1.7.10.4
