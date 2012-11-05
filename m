@@ -1,115 +1,53 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [osd-dev] [PATCH] osduld: Add osdname & systemid sysfs at scsi_osd
- class
-Date: Mon, 5 Nov 2012 12:15:47 -0800
-Message-ID: <50981E73.1060603@panasas.com>
-References: <508862ED.1070600@panasas.com> <508863D6.4040301@panasas.com>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH] [SCSI] bnx2fc: fix NULL checking in
+ bnx2fc_initiate_tmf()
+Date: Mon, 5 Nov 2012 13:35:59 -0800
+Message-ID: <5098313F.2060903@broadcom.com>
+References: <1352096153-18211-1-git-send-email-xi.wang@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from natasha.panasas.com ([67.152.220.90]:40850 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636Ab2KEUP4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Nov 2012 15:15:56 -0500
-In-Reply-To: <508863D6.4040301@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1352096153-18211-1-git-send-email-xi.wang@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Xi Wang <xi.wang@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
-On 10/24/2012 02:55 PM, Boaz Harrosh wrote:
-> On 10/24/2012 02:51 PM, Boaz Harrosh wrote:
->>
->> This patch adds the support for the following two read-only sysfs attributes
->> to scsi_osd class members : osdname & systemid
->>
->> These attributes will show up as below in sysfs class hierarchy:
->> /sys/class/scsi_osd/osdX/osdname
->> /sys/class/scsi_osd/osdX/systemid
->>
->> The osdname & systemid are OSD device attributes which uniquely
->> identify a device on the network, while it's IP and certainly
->> it's /dev/osdX device path might change.
->> Userspace utilities (e.g. mkfs.exofs) can parse these attributes to
->> identify the correct OSD in safer and faster way.
->>
->> (Today osd apps open each device in the system and send a
->>  attributes query for these, in order to access the user
->>  requested device)
->>
->> Signed-off-by: Sachin Bhamare <sbhamare@panasas.com>
->> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> 
-> James hi.
-> 
-> This is for the next (v3.8) merge window. Please submit to scsi-misc tree.
-> 
+On 11/04/2012 10:15 PM, Xi Wang wrote:
+> The dereference rport->data should come after the NULL check of rport.
+>
+> Signed-off-by: Xi Wang <xi.wang@gmail.com>
+> ---
+>   drivers/scsi/bnx2fc/bnx2fc_io.c |    3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> index 8d4626c..eebe93c 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> @@ -686,7 +686,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+>   {
+>   	struct fc_lport *lport;
+>   	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
+> -	struct fc_rport_libfc_priv *rp = rport->dd_data;
+> +	struct fc_rport_libfc_priv *rp;
+>   	struct fcoe_port *port;
+>   	struct bnx2fc_interface *interface;
+>   	struct bnx2fc_rport *tgt;
+> @@ -712,6 +712,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+>   		rc = FAILED;
+>   		goto tmf_err;
+>   	}
+> +	rp = rport->dd_data;
+>   
+>   	rc = fc_block_scsi_eh(sc_cmd);
+>   	if (rc)
+I thought I acked similar patch sometime back, but this did not make it 
+to the tree yet.
 
-James ping!
+doing it again. Thanks!
 
-Do you want that I push it through my osd tree?
-
-Thanks
-Boaz
-
-> It is actually a very old well tested, but forgotten patch.
-> 
-> Thanks
-> Boaz
-> 
->> ---
->>  drivers/scsi/osd/osd_uld.c |   28 ++++++++++++++++++++++++++++
->>  1 files changed, 28 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
->> index d4ed9eb..4375417 100644
->> --- a/drivers/scsi/osd/osd_uld.c
->> +++ b/drivers/scsi/osd/osd_uld.c
->> @@ -97,9 +97,37 @@ struct osd_dev_handle {
->>  
->>  static DEFINE_IDA(osd_minor_ida);
->>  
->> +/*
->> + * scsi sysfs attribute operations
->> + */
->> +static ssize_t osdname_show(struct device *dev, struct device_attribute *attr,
->> +			    char *buf)
->> +{
->> +	struct osd_uld_device *ould = container_of(dev, struct osd_uld_device,
->> +						   class_dev);
->> +	return sprintf(buf, "%s\n", ould->odi.osdname);
->> +}
->> +
->> +static ssize_t systemid_show(struct device *dev, struct device_attribute *attr,
->> +			    char *buf)
->> +{
->> +	struct osd_uld_device *ould = container_of(dev, struct osd_uld_device,
->> +						   class_dev);
->> +
->> +	memcpy(buf, ould->odi.systemid, ould->odi.systemid_len);
->> +	return ould->odi.systemid_len;
->> +}
->> +
->> +static struct device_attribute osd_uld_attrs[] = {
->> +	__ATTR(osdname, S_IRUGO, osdname_show, NULL),
->> +	__ATTR(systemid, S_IRUGO, systemid_show, NULL),
->> +	__ATTR_NULL,
->> +};
->> +
->>  static struct class osd_uld_class = {
->>  	.owner		= THIS_MODULE,
->>  	.name		= "scsi_osd",
->> +	.dev_attrs	= osd_uld_attrs,
->>  };
->>  
->>  /*
->>
-> 
-> 
-> _______________________________________________
-> osd-dev mailing list
-> osd-dev@open-osd.org
-> http://mailman.open-osd.org/mailman/listinfo/osd-dev
-> 
-
-
+Acked-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
