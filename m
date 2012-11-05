@@ -1,48 +1,115 @@
-From: Xi Wang <xi.wang@gmail.com>
-Subject: [PATCH 2/3] [SCSI] mvsas: fix shift in mvs_94xx_free_reg_set()
-Date: Mon,  5 Nov 2012 14:53:02 -0500
-Message-ID: <1352145183-29355-3-git-send-email-xi.wang@gmail.com>
-References: <1352145183-29355-1-git-send-email-xi.wang@gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [osd-dev] [PATCH] osduld: Add osdname & systemid sysfs at scsi_osd
+ class
+Date: Mon, 5 Nov 2012 12:15:47 -0800
+Message-ID: <50981E73.1060603@panasas.com>
+References: <508862ED.1070600@panasas.com> <508863D6.4040301@panasas.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:35664 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753036Ab2KETxp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Nov 2012 14:53:45 -0500
-In-Reply-To: <1352145183-29355-1-git-send-email-xi.wang@gmail.com>
+Received: from natasha.panasas.com ([67.152.220.90]:40850 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636Ab2KEUP4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Nov 2012 15:15:56 -0500
+In-Reply-To: <508863D6.4040301@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Xi Wang <xi.wang@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
-Invoking bit(n) with n >= 64 is undefined behavior, since bit(n) does
-a 64-bit shift.  This patch adds a check on the shifting amount.
+On 10/24/2012 02:55 PM, Boaz Harrosh wrote:
+> On 10/24/2012 02:51 PM, Boaz Harrosh wrote:
+>>
+>> This patch adds the support for the following two read-only sysfs attributes
+>> to scsi_osd class members : osdname & systemid
+>>
+>> These attributes will show up as below in sysfs class hierarchy:
+>> /sys/class/scsi_osd/osdX/osdname
+>> /sys/class/scsi_osd/osdX/systemid
+>>
+>> The osdname & systemid are OSD device attributes which uniquely
+>> identify a device on the network, while it's IP and certainly
+>> it's /dev/osdX device path might change.
+>> Userspace utilities (e.g. mkfs.exofs) can parse these attributes to
+>> identify the correct OSD in safer and faster way.
+>>
+>> (Today osd apps open each device in the system and send a
+>>  attributes query for these, in order to access the user
+>>  requested device)
+>>
+>> Signed-off-by: Sachin Bhamare <sbhamare@panasas.com>
+>> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> 
+> James hi.
+> 
+> This is for the next (v3.8) merge window. Please submit to scsi-misc tree.
+> 
 
-Signed-off-by: Xi Wang <xi.wang@gmail.com>
----
- drivers/scsi/mvsas/mv_94xx.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+James ping!
 
-diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
-index 7e423e5..e1f35d4 100644
---- a/drivers/scsi/mvsas/mv_94xx.c
-+++ b/drivers/scsi/mvsas/mv_94xx.c
-@@ -715,11 +715,13 @@ static void mvs_94xx_free_reg_set(struct mvs_info *mvi, u8 *tfs)
- 	if (*tfs == MVS_ID_NOT_MAPPED)
- 		return;
- 
--	mvi->sata_reg_set &= ~bit(reg_set);
--	if (reg_set < 32)
-+	if (reg_set < 32) {
-+		mvi->sata_reg_set &= ~bit(reg_set);
- 		w_reg_set_enable(reg_set, (u32)mvi->sata_reg_set);
--	else
-+	} else if (reg_set < 64) {
-+		mvi->sata_reg_set &= ~bit(reg_set);
- 		w_reg_set_enable(reg_set, (u32)(mvi->sata_reg_set >> 32));
-+	}
- 
- 	*tfs = MVS_ID_NOT_MAPPED;
- 
--- 
-1.7.10.4
+Do you want that I push it through my osd tree?
+
+Thanks
+Boaz
+
+> It is actually a very old well tested, but forgotten patch.
+> 
+> Thanks
+> Boaz
+> 
+>> ---
+>>  drivers/scsi/osd/osd_uld.c |   28 ++++++++++++++++++++++++++++
+>>  1 files changed, 28 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+>> index d4ed9eb..4375417 100644
+>> --- a/drivers/scsi/osd/osd_uld.c
+>> +++ b/drivers/scsi/osd/osd_uld.c
+>> @@ -97,9 +97,37 @@ struct osd_dev_handle {
+>>  
+>>  static DEFINE_IDA(osd_minor_ida);
+>>  
+>> +/*
+>> + * scsi sysfs attribute operations
+>> + */
+>> +static ssize_t osdname_show(struct device *dev, struct device_attribute *attr,
+>> +			    char *buf)
+>> +{
+>> +	struct osd_uld_device *ould = container_of(dev, struct osd_uld_device,
+>> +						   class_dev);
+>> +	return sprintf(buf, "%s\n", ould->odi.osdname);
+>> +}
+>> +
+>> +static ssize_t systemid_show(struct device *dev, struct device_attribute *attr,
+>> +			    char *buf)
+>> +{
+>> +	struct osd_uld_device *ould = container_of(dev, struct osd_uld_device,
+>> +						   class_dev);
+>> +
+>> +	memcpy(buf, ould->odi.systemid, ould->odi.systemid_len);
+>> +	return ould->odi.systemid_len;
+>> +}
+>> +
+>> +static struct device_attribute osd_uld_attrs[] = {
+>> +	__ATTR(osdname, S_IRUGO, osdname_show, NULL),
+>> +	__ATTR(systemid, S_IRUGO, systemid_show, NULL),
+>> +	__ATTR_NULL,
+>> +};
+>> +
+>>  static struct class osd_uld_class = {
+>>  	.owner		= THIS_MODULE,
+>>  	.name		= "scsi_osd",
+>> +	.dev_attrs	= osd_uld_attrs,
+>>  };
+>>  
+>>  /*
+>>
+> 
+> 
+> _______________________________________________
+> osd-dev mailing list
+> osd-dev@open-osd.org
+> http://mailman.open-osd.org/mailman/listinfo/osd-dev
+> 
+
 
