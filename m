@@ -1,15 +1,15 @@
 From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [patch,v2 04/10] scsi: allocate scsi_cmnd-s from the device's local numa node
-Date: Mon, 05 Nov 2012 09:09:43 -0500
-Message-ID: <x49bofccfa0.fsf@segfault.boston.devel.redhat.com>
+Subject: Re: [patch,v2 05/10] sd: use alloc_disk_node
+Date: Mon, 05 Nov 2012 09:12:39 -0500
+Message-ID: <x497gq0cf54.fsf@segfault.boston.devel.redhat.com>
 References: <1351892763-21325-1-git-send-email-jmoyer@redhat.com>
-	<1351892763-21325-5-git-send-email-jmoyer@redhat.com>
-	<50954818.8050908@acm.org>
+	<1351892763-21325-6-git-send-email-jmoyer@redhat.com>
+	<50954852.5050209@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50954818.8050908@acm.org> (Bart Van Assche's message of "Sat, 03
-	Nov 2012 17:36:40 +0100")
+In-Reply-To: <50954852.5050209@acm.org> (Bart Van Assche's message of "Sat, 03
+	Nov 2012 17:37:38 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
@@ -18,37 +18,32 @@ List-Id: linux-scsi@vger.kernel.org
 Bart Van Assche <bvanassche@acm.org> writes:
 
 > On 11/02/12 22:45, Jeff Moyer wrote:
->> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
->> index 2936b44..4db6973 100644
->> --- a/drivers/scsi/scsi.c
->> +++ b/drivers/scsi/scsi.c
->> @@ -173,16 +173,20 @@ static DEFINE_MUTEX(host_cmd_pool_mutex);
->>    * NULL on failure
->>    */
->>   static struct scsi_cmnd *
->> -scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask)
->> +scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask,
->> +			int node)
->>   {
->>   	struct scsi_cmnd *cmd;
+>> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+>> ---
+>>   drivers/scsi/sd.c |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
 >>
->> -	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
->> +	cmd = kmem_cache_alloc_node(pool->cmd_slab,
->> +				    gfp_mask | pool->gfp_mask | __GFP_ZERO,
->> +				    node);
->>   	if (!cmd)
->>   		return NULL;
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index 12f6fdf..8deb915 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -2714,7 +2714,7 @@ static int sd_probe(struct device *dev)
+>>   	if (!sdkp)
+>>   		goto out;
 >>
->> -	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
->> -					     gfp_mask | pool->gfp_mask);
->> +	cmd->sense_buffer = kmem_cache_alloc_node(pool->sense_slab,
->> +					gfp_mask | pool->gfp_mask | __GFP_ZERO,
->> +					node);
+>> -	gd = alloc_disk(SD_MINORS);
+>> +	gd = alloc_disk_node(SD_MINORS, dev_to_node(dev));
+>>   	if (!gd)
+>>   		goto out_free;
 >
-> It's not clear to me why __GFP_ZERO is added to the allocation flags ?
+> shost->numa_node can be another NUMA node than dev_to_node(dev). Have
+> you considered using shost->numa_node here ?
 
-Hmm, seems I thought this was another case of kmem_cache_zalloc.  I'll
-fix it up.
+It can?  How?
+
+Just so I'm clear, you're suggesting I use the scsi_device's host
+pointer to get to the Scsi_Host, and that *will* be filled in that this
+point, right?
 
 Cheers,
 Jeff
