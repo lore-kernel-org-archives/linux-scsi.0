@@ -1,64 +1,77 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH] [SCSI] advansys: change buildtime warning into runtime error
-Date: Mon, 05 Nov 2012 11:58:02 +0100
-Message-ID: <1352113082.1434.31.camel@x61.thuisdomein>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [PATCH] [SCSI] aic94xx: Remove broken fallback for missing 'Ctrl-A'
+ user settings
+Date: Mon, 05 Nov 2012 13:18:52 +0000
+Message-ID: <1352121532.3043.95.camel@deadeye.wl.decadent.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57633 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751272Ab2KENS5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Nov 2012 08:18:57 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Building advansys.o triggers this warning:
-    drivers/scsi/advansys.c:71:2: warning: #warning this driver is still not properly converted to the DMA API [-Wcpp]
+asd_process_ctrl_a_user() attempts to find user settings in flash, and
+if they are missing it prepares a substitute structure containing
+default values for PHY settings.  But having done so, it will still
+try to read user settings - from some random address in flash, as the
+local variable 'offs' has not been initialised.
 
-This warning can be traced back to a patch called "advansys: add warning
-and convert #includes" which was included in v2.6.10. That patch also
-marked the driver as BROKEN.
+Since asd_common_setup() already sets default PHY settings, there
+seems to be no need to repeat them here, and we can just return 0.
+This matches what is done if any empty user settings area is found.
 
-Commit 4661e3eace2c7b8433476b5bf0ee437ab3c7dfd4 ("[SCSI] advansys
-driver: limp along on x86") enabled this driver for x86-32. And commit
-9d511a4b29de6764931343d03e493f2e04df0271 ("[SCSI] advansys: Changes to
-work on parisc") enabled this driver for all architectures. But the
-commit explanation stated:
-    I haven't removed the #warning yet because virt_to_bus/bus_to_virt are
-    only eliminated for narrow boards.  Wide boards need more work.
-
-Five years have passed and, apparently, those wide boards still need
-more work. So let's change the buildtime warning into a runtime error,
-only printed for those wide boards. Perhaps that might push the people
-using those wide boards to convert this driver. And for all others
-there's now one less buildtime warning to ignore.
-
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
-Compile tested only. I don't have any AdvanSys SCSI boards (neither
-narrow nor wide).
+Compile-tested only.
 
- drivers/scsi/advansys.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Ben.
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 374c4ed..23d347d 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -68,7 +68,6 @@
-  *  7. advansys_info is not safe against multiple simultaneous callers
-  *  8. Add module_param to override ISA/VLB ioport array
-  */
--#warning this driver is still not properly converted to the DMA API
+ drivers/scsi/aic94xx/aic94xx_sds.c |   19 +++----------------
+ 1 file changed, 3 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
+index edb43fd..7b13ccc 100644
+--- a/drivers/scsi/aic94xx/aic94xx_sds.c
++++ b/drivers/scsi/aic94xx/aic94xx_sds.c
+@@ -981,29 +981,16 @@ static int asd_process_ctrla_phy_settings(struct asd_ha_struct *asd_ha,
+ static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
+ 				   struct asd_flash_dir *flash_dir)
+ {
+-	int err, i;
++	int err;
+ 	u32 offs, size;
+ 	struct asd_ll_el *el;
+ 	struct asd_ctrla_phy_settings *ps;
+-	struct asd_ctrla_phy_settings dflt_ps;
  
- /* Enable driver /proc statistics. */
- #define ADVANSYS_STATS
-@@ -12772,6 +12771,7 @@ advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	    pdev->device == PCI_DEVICE_ID_38C0800_REV1 ||
- 	    pdev->device == PCI_DEVICE_ID_38C1600_REV1) {
- 		board->flags |= ASC_IS_WIDE_BOARD;
-+		pr_err("This driver is still not properly converted to the DMA API");
+ 	err = asd_find_flash_de(flash_dir, FLASH_DE_CTRL_A_USER, &offs, &size);
+ 	if (err) {
+ 		ASD_DPRINTK("couldn't find CTRL-A user settings section\n");
+-		ASD_DPRINTK("Creating default CTRL-A user settings section\n");
+-
+-		dflt_ps.id0 = 'h';
+-		dflt_ps.num_phys = 8;
+-		for (i =0; i < ASD_MAX_PHYS; i++) {
+-			memcpy(dflt_ps.phy_ent[i].sas_addr,
+-			       asd_ha->hw_prof.sas_addr, SAS_ADDR_SIZE);
+-			dflt_ps.phy_ent[i].sas_link_rates = 0x98;
+-			dflt_ps.phy_ent[i].flags = 0x0;
+-			dflt_ps.phy_ent[i].sata_link_rates = 0x0;
+-		}
+-
+-		size = sizeof(struct asd_ctrla_phy_settings);
+-		ps = &dflt_ps;
++		ASD_DPRINTK("Using default settings\n");
++		return 0;
  	}
  
- 	err = advansys_board_found(shost, ioport, ASC_IS_PCI);
--- 
-1.7.11.7
+ 	if (size == 0)
+
+
