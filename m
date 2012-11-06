@@ -1,132 +1,31 @@
-From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: RE: [PATCH v4 08/24] block: Remove some unnecessary bi_vcnt usage
-Date: Tue, 6 Nov 2012 16:49:46 +0530
-Message-ID: <DCD177647606E9419ED923E0C8C4AA7223E7397F74@inbmail02.lsi.com>
-References: <1350331769-14856-1-git-send-email-koverstreet@google.com>
- <1350331769-14856-9-git-send-email-koverstreet@google.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 2/3] [SCSI] mvsas: fix shift in mvs_94xx_free_reg_set()
+Date: Tue, 06 Nov 2012 13:06:58 +0100
+Message-ID: <1352203618.2529.22.camel@dabdike>
+References: <1352145183-29355-1-git-send-email-xi.wang@gmail.com>
+	 <1352145183-29355-3-git-send-email-xi.wang@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1350331769-14856-9-git-send-email-koverstreet@google.com>
-Content-Language: en-US
+In-Reply-To: <1352145183-29355-3-git-send-email-xi.wang@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kent Overstreet <koverstreet@google.com>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
-Cc: "tj@kernel.org" <tj@kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "neilb@suse.de" <neilb@suse.de>, "vgoyal@redhat.com" <vgoyal@redhat.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Xi Wang <xi.wang@gmail.com>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch seem to be fine. Please consider this patch.
+On Mon, 2012-11-05 at 14:53 -0500, Xi Wang wrote:
+> Invoking bit(n) with n >= 64 is undefined behavior, since bit(n) does
+> a 64-bit shift.  This patch adds a check on the shifting amount.
 
-Regards,
-Sreekanth.
+Why is this necessary?  As I read the reg set assignment code, it finds
+a free bit in the 64 bit register and uses that ... which can never be
+greater than 64 so there's no need for the check.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Kent Overstreet
-Sent: Tuesday, October 16, 2012 1:39 AM
-To: linux-bcache@vger.kernel.org; linux-kernel@vger.kernel.org; dm-devel@redhat.com
-Cc: Kent Overstreet; tj@kernel.org; axboe@kernel.dk; neilb@suse.de; vgoyal@redhat.com; Moore, Eric; James E.J. Bottomley; linux-scsi@vger.kernel.org
-Subject: [PATCH v4 08/24] block: Remove some unnecessary bi_vcnt usage
+The other two look OK (probably redone as a single patch with a stable
+tag), but I'd like the input of the mvs people since it seems with the
+current code, we only use 32 bit regsets and probably hang if we go over
+that.  The bug fix is either to enable the full 64 if it works, or
+possibly cap at 32 ... what works with all released devices?
 
-More prep work for immutable bvecs/effecient bio splitting - usage of bi_vcnt has to be auditing, so getting rid of all the unnecessary usage makes that easier.
-
-Plus, bio_segments() is really what this code wanted, as it respects the current value of bi_idx.
-
-Signed-off-by: Kent Overstreet <koverstreet@google.com>
-CC: Jens Axboe <axboe@kernel.dk>
-CC: Eric Moore <Eric.Moore@lsi.com>
-CC: "James E.J. Bottomley" <JBottomley@parallels.com>
-CC: linux-scsi@vger.kernel.org
----
- drivers/message/fusion/mptsas.c          |  6 +++---
- drivers/scsi/libsas/sas_expander.c       |  6 +++---
- drivers/scsi/mpt2sas/mpt2sas_transport.c | 10 +++++-----
- 3 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c index 551262e..5406a9f 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -2235,10 +2235,10 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	}
- 
- 	/* do we need to support multiple segments? */
--	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
-+	if (bio_segments(req->bio) > 1 || bio_segments(rsp->bio) > 1) {
- 		printk(MYIOC_s_ERR_FMT "%s: multiple segments req %u %u, rsp %u %u\n",
--		    ioc->name, __func__, req->bio->bi_vcnt, blk_rq_bytes(req),
--		    rsp->bio->bi_vcnt, blk_rq_bytes(rsp));
-+		    ioc->name, __func__, bio_segments(req->bio), blk_rq_bytes(req),
-+		    bio_segments(rsp->bio), blk_rq_bytes(rsp));
- 		return -EINVAL;
- 	}
- 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index efc6e72..ee331a7 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -2151,10 +2151,10 @@ int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	}
- 
- 	/* do we need to support multiple segments? */
--	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
-+	if (bio_segments(req->bio) > 1 || bio_segments(rsp->bio) > 1) {
- 		printk("%s: multiple segments req %u %u, rsp %u %u\n",
--		       __func__, req->bio->bi_vcnt, blk_rq_bytes(req),
--		       rsp->bio->bi_vcnt, blk_rq_bytes(rsp));
-+		       __func__, bio_segments(req->bio), blk_rq_bytes(req),
-+		       bio_segments(rsp->bio), blk_rq_bytes(rsp));
- 		return -EINVAL;
- 	}
- 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-index c6cf20f..403a57b 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-@@ -1939,7 +1939,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	ioc->transport_cmds.status = MPT2_CMD_PENDING;
- 
- 	/* Check if the request is split across multiple segments */
--	if (req->bio->bi_vcnt > 1) {
-+	if (bio_segments(req->bio) > 1) {
- 		u32 offset = 0;
- 
- 		/* Allocate memory and copy the request */ @@ -1971,7 +1971,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 
- 	/* Check if the response needs to be populated across
- 	 * multiple segments */
--	if (rsp->bio->bi_vcnt > 1) {
-+	if (bio_segments(rsp->bio) > 1) {
- 		pci_addr_in = pci_alloc_consistent(ioc->pdev, blk_rq_bytes(rsp),
- 		    &pci_dma_in);
- 		if (!pci_addr_in) {
-@@ -2038,7 +2038,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	sgl_flags = (MPI2_SGE_FLAGS_SIMPLE_ELEMENT |
- 	    MPI2_SGE_FLAGS_END_OF_BUFFER | MPI2_SGE_FLAGS_HOST_TO_IOC);
- 	sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
--	if (req->bio->bi_vcnt > 1) {
-+	if (bio_segments(req->bio) > 1) {
- 		ioc->base_add_sg_single(psge, sgl_flags |
- 		    (blk_rq_bytes(req) - 4), pci_dma_out);
- 	} else {
-@@ -2054,7 +2054,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	    MPI2_SGE_FLAGS_LAST_ELEMENT | MPI2_SGE_FLAGS_END_OF_BUFFER |
- 	    MPI2_SGE_FLAGS_END_OF_LIST);
- 	sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
--	if (rsp->bio->bi_vcnt > 1) {
-+	if (bio_segments(rsp->bio) > 1) {
- 		ioc->base_add_sg_single(psge, sgl_flags |
- 		    (blk_rq_bytes(rsp) + 4), pci_dma_in);
- 	} else {
-@@ -2099,7 +2099,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 		    le16_to_cpu(mpi_reply->ResponseDataLength);
- 		/* check if the resp needs to be copied from the allocated
- 		 * pci mem */
--		if (rsp->bio->bi_vcnt > 1) {
-+		if (bio_segments(rsp->bio) > 1) {
- 			u32 offset = 0;
- 			u32 bytes_to_copy =
- 			    le16_to_cpu(mpi_reply->ResponseDataLength);
---
-1.7.12
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
