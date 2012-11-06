@@ -1,70 +1,35 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] [SCSI] gdth: Remove buggy ROM handling
-Date: Tue, 06 Nov 2012 15:04:44 -0700
-Message-ID: <20121106220444.19405.66777.stgit@bhelgaas.mtv.corp.google.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] [SCSI] sd: fix crash when UA received on DIF enabled device
+Date: Tue, 06 Nov 2012 17:48:55 -0500
+Message-ID: <yq1liee4aaw.fsf@sermon.lab.mkp.net>
+References: <1351863514-12745-1-git-send-email-emilne@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f202.google.com ([209.85.212.202]:34968 "EHLO
-	mail-wi0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753160Ab2KFWEr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Nov 2012 17:04:47 -0500
-Received: by mail-wi0-f202.google.com with SMTP id hr7so65698wib.1
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Nov 2012 14:04:46 -0800 (PST)
+Received: from userp1040.oracle.com ([156.151.31.81]:42211 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753219Ab2KFWs6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Nov 2012 17:48:58 -0500
+In-Reply-To: <1351863514-12745-1-git-send-email-emilne@redhat.com> (Ewan
+	D. Milne's message of "Fri, 2 Nov 2012 09:38:34 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Achim Leubner <achim_leubner@adaptec.com>
-Cc: Joe Perches <joe@perches.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-The ROM address handling in gdth_init_pci() is useless and possibly
-dangerous.  This patch removes it.
+>>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
 
-"pci_resource_start(pdev, 8)" is not well-defined.  PCI resources 0-5 are
-standard PCI BARs and 6 is the expansion ROM.  Resource 8 is either an
-SR-IOV BAR (if CONFIG_PCI_IOV=y, resources 7-12 are SR-IOV BARs) or a
-bridge window (resources 7-10).
+Ewan> sd_prep_fn will allocate a larger CDB for the command via
+Ewan> mempool_alloc for devices using DIF type 2 protection.  This CDB
+Ewan> was being freed in sd_done, which results in a kernel crash if the
+Ewan> command is retried due to a UNIT ATTENTION.  This change moves the
+Ewan> code to free the larger CDB into sd_unprep_fn instead, which is
+Ewan> invoked after the request is complete.
 
-The GDT device is neither an SR-IOV device nor a bridge, so in either case
-resource 8 should be zero since struct pci_dev is allocated with kzalloc().
+The 32-byte CDB support predates unprep. This fix is obviously the
+correct approach.
 
-It is illegal for a driver to write an arbitrary address to the ROM BAR
-because it has no way of knowing whether the ROM will conflict with another
-device.
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-I think the only effect of the code being removed was to:
-
-  1) Enable the ROM at 0xFEFF0000 (possibly causing a conflict with
-     another device)
-  2) Delay one millisecond
-  3) Write zero to the ROM BAR, disabling it
-
-I doubt the delay is needed, but I left it since it seems innocuous.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/scsi/gdth.c |   10 ++--------
- 1 files changed, 2 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 5d72274..3efe4ef 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -1107,14 +1107,8 @@ static int __devinit gdth_init_pci(struct pci_dev *pdev, gdth_pci_str *pcistr,
- 	pci_read_config_word(pdev, PCI_COMMAND, &command);
-         command |= 6;
- 	pci_write_config_word(pdev, PCI_COMMAND, command);
--	if (pci_resource_start(pdev, 8) == 1UL)
--	    pci_resource_start(pdev, 8) = 0UL;
--        i = 0xFEFF0001UL;
--	pci_write_config_dword(pdev, PCI_ROM_ADDRESS, i);
--        gdth_delay(1);
--	pci_write_config_dword(pdev, PCI_ROM_ADDRESS,
--			       pci_resource_start(pdev, 8));
--        
-+	gdth_delay(1);
-+
-         dp6m_ptr = ha->brd;
- 
-         /* Ensure that it is safe to access the non HW portions of DPMEM.
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
