@@ -1,61 +1,132 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: build failure after merge of the pci tree
-Date: Tue, 6 Nov 2012 13:09:38 +1100
-Message-ID: <20121106130938.081aaaa8450313466084755f@canb.auug.org.au>
-References: <20121106112729.994c25ccce521ab5aaf1f060@canb.auug.org.au>
-	<20121106015542.GA13487@kroah.com>
+From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
+Subject: RE: [PATCH v4 08/24] block: Remove some unnecessary bi_vcnt usage
+Date: Tue, 6 Nov 2012 16:49:46 +0530
+Message-ID: <DCD177647606E9419ED923E0C8C4AA7223E7397F74@inbmail02.lsi.com>
+References: <1350331769-14856-1-git-send-email-koverstreet@google.com>
+ <1350331769-14856-9-git-send-email-koverstreet@google.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Tue__6_Nov_2012_13_09_38_+1100_QQaBDAMDrVmDBjOj"
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20121106015542.GA13487@kroah.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Achim Leubner <achim_leubner@adaptec.com>, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-next@vger.kernel.org, Joe Perches <joe@perches.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1350331769-14856-9-git-send-email-koverstreet@google.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kent Overstreet <koverstreet@google.com>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Cc: "tj@kernel.org" <tj@kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "neilb@suse.de" <neilb@suse.de>, "vgoyal@redhat.com" <vgoyal@redhat.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
---Signature=_Tue__6_Nov_2012_13_09_38_+1100_QQaBDAMDrVmDBjOj
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch seem to be fine. Please consider this patch.
 
-Hi Greg,
+Regards,
+Sreekanth.
 
-On Tue, 6 Nov 2012 02:55:42 +0100 Greg Kroah-Hartman <gregkh@linuxfoundatio=
-n.org> wrote:
->
-> It is gone in my tree, and it should be deleted in yours, do you not see
-> that?
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Kent Overstreet
+Sent: Tuesday, October 16, 2012 1:39 AM
+To: linux-bcache@vger.kernel.org; linux-kernel@vger.kernel.org; dm-devel@redhat.com
+Cc: Kent Overstreet; tj@kernel.org; axboe@kernel.dk; neilb@suse.de; vgoyal@redhat.com; Moore, Eric; James E.J. Bottomley; linux-scsi@vger.kernel.org
+Subject: [PATCH v4 08/24] block: Remove some unnecessary bi_vcnt usage
 
-Unfortunately, your tree gets merged late in my set of trees ... so I'll
-just keep the disabling patch and the problem will go away eventually.
+More prep work for immutable bvecs/effecient bio splitting - usage of bi_vcnt has to be auditing, so getting rid of all the unnecessary usage makes that easier.
 
-Thanks.
+Plus, bio_segments() is really what this code wanted, as it respects the current value of bi_idx.
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
+Signed-off-by: Kent Overstreet <koverstreet@google.com>
+CC: Jens Axboe <axboe@kernel.dk>
+CC: Eric Moore <Eric.Moore@lsi.com>
+CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+CC: linux-scsi@vger.kernel.org
+---
+ drivers/message/fusion/mptsas.c          |  6 +++---
+ drivers/scsi/libsas/sas_expander.c       |  6 +++---
+ drivers/scsi/mpt2sas/mpt2sas_transport.c | 10 +++++-----
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
---Signature=_Tue__6_Nov_2012_13_09_38_+1100_QQaBDAMDrVmDBjOj
-Content-Type: application/pgp-signature
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c index 551262e..5406a9f 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -2235,10 +2235,10 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 	}
+ 
+ 	/* do we need to support multiple segments? */
+-	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
++	if (bio_segments(req->bio) > 1 || bio_segments(rsp->bio) > 1) {
+ 		printk(MYIOC_s_ERR_FMT "%s: multiple segments req %u %u, rsp %u %u\n",
+-		    ioc->name, __func__, req->bio->bi_vcnt, blk_rq_bytes(req),
+-		    rsp->bio->bi_vcnt, blk_rq_bytes(rsp));
++		    ioc->name, __func__, bio_segments(req->bio), blk_rq_bytes(req),
++		    bio_segments(rsp->bio), blk_rq_bytes(rsp));
+ 		return -EINVAL;
+ 	}
+ 
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index efc6e72..ee331a7 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -2151,10 +2151,10 @@ int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 	}
+ 
+ 	/* do we need to support multiple segments? */
+-	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
++	if (bio_segments(req->bio) > 1 || bio_segments(rsp->bio) > 1) {
+ 		printk("%s: multiple segments req %u %u, rsp %u %u\n",
+-		       __func__, req->bio->bi_vcnt, blk_rq_bytes(req),
+-		       rsp->bio->bi_vcnt, blk_rq_bytes(rsp));
++		       __func__, bio_segments(req->bio), blk_rq_bytes(req),
++		       bio_segments(rsp->bio), blk_rq_bytes(rsp));
+ 		return -EINVAL;
+ 	}
+ 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+index c6cf20f..403a57b 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+@@ -1939,7 +1939,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 	ioc->transport_cmds.status = MPT2_CMD_PENDING;
+ 
+ 	/* Check if the request is split across multiple segments */
+-	if (req->bio->bi_vcnt > 1) {
++	if (bio_segments(req->bio) > 1) {
+ 		u32 offset = 0;
+ 
+ 		/* Allocate memory and copy the request */ @@ -1971,7 +1971,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 
+ 	/* Check if the response needs to be populated across
+ 	 * multiple segments */
+-	if (rsp->bio->bi_vcnt > 1) {
++	if (bio_segments(rsp->bio) > 1) {
+ 		pci_addr_in = pci_alloc_consistent(ioc->pdev, blk_rq_bytes(rsp),
+ 		    &pci_dma_in);
+ 		if (!pci_addr_in) {
+@@ -2038,7 +2038,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 	sgl_flags = (MPI2_SGE_FLAGS_SIMPLE_ELEMENT |
+ 	    MPI2_SGE_FLAGS_END_OF_BUFFER | MPI2_SGE_FLAGS_HOST_TO_IOC);
+ 	sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
+-	if (req->bio->bi_vcnt > 1) {
++	if (bio_segments(req->bio) > 1) {
+ 		ioc->base_add_sg_single(psge, sgl_flags |
+ 		    (blk_rq_bytes(req) - 4), pci_dma_out);
+ 	} else {
+@@ -2054,7 +2054,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 	    MPI2_SGE_FLAGS_LAST_ELEMENT | MPI2_SGE_FLAGS_END_OF_BUFFER |
+ 	    MPI2_SGE_FLAGS_END_OF_LIST);
+ 	sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
+-	if (rsp->bio->bi_vcnt > 1) {
++	if (bio_segments(rsp->bio) > 1) {
+ 		ioc->base_add_sg_single(psge, sgl_flags |
+ 		    (blk_rq_bytes(rsp) + 4), pci_dma_in);
+ 	} else {
+@@ -2099,7 +2099,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 		    le16_to_cpu(mpi_reply->ResponseDataLength);
+ 		/* check if the resp needs to be copied from the allocated
+ 		 * pci mem */
+-		if (rsp->bio->bi_vcnt > 1) {
++		if (bio_segments(rsp->bio) > 1) {
+ 			u32 offset = 0;
+ 			u32 bytes_to_copy =
+ 			    le16_to_cpu(mpi_reply->ResponseDataLength);
+--
+1.7.12
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBCAAGBQJQmHFiAAoJEECxmPOUX5FEOpQP/2YLCc5sqVseXJqnGY9sKf+z
-0cPSOeH3aCK2t2upEx/70VK95g+sZ5CbVETKb4WlCusDwELrwVFhNWJSIa+FHq9J
-jedBWgBVg0vb8eziVNfcO0T2lDMhHL5zKL165qiSB0W+kOD2QH3LnorDyjHh9Qrs
-ygxUybesizQT9plYZnu/lIgyqMXdPaCJWRMS4TAKbdvizZZlCD1mRJ4RGG5bPd6h
-GxqawHbzl2GDM23EcE8yMMxUktj2TD8yBfv/QhtvyjJFTYEZ0YBm0qSr1jegPAAP
-2jfxIWeazgLjw8QcX8Ru8mmHZf0WlMzeoausIapgJESSMHauU0hNUT5Rm8Mu3cRr
-fFXm4r3CB/HvoecRZjRaT7Hqt05/Qresd0DUxYAQaQQQaAKg2L6dWw/Op3i0r7Nq
-GMxoxqQh2IQcxYnkgXdU6F0gtV75Ef8MGPbjITwVq26XvaiiXNDNFNdwn4Dyz/E3
-CQsg5r+qrw7GIrV+f9vlK1Trk/vk1hPQhCtI62PxHE4YT96ucLfsDXrUwLig4edD
-cYxTbli49aBHjOJg2yXsgbpZ16PxJhtVlsq/oNC2Upupv03Zz2NVc3VTXYjo6kbM
-ZPcQ3FuCFp5wBbjaqnMbwSNsJR35goOMHh301fUIJlCijEAtz66cudLmTsNUVRKN
-kkoZ54ymDfG8WoimzSUz
-=wqBq
------END PGP SIGNATURE-----
-
---Signature=_Tue__6_Nov_2012_13_09_38_+1100_QQaBDAMDrVmDBjOj--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
