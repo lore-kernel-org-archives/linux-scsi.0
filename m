@@ -1,16 +1,17 @@
 From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: [PATCH 4/5] virtio-scsi: create a separate work queue for virtio-scsi
-Date: Wed, 7 Nov 2012 18:18:13 +0800
-Message-ID: <1352283494-31200-5-git-send-email-gaowanlong@cn.fujitsu.com>
+Subject: [PATCH 5/5] virtio-scsi: tidy up the goto label in init()
+Date: Wed, 7 Nov 2012 18:18:14 +0800
+Message-ID: <1352283494-31200-6-git-send-email-gaowanlong@cn.fujitsu.com>
 References: <1352283494-31200-1-git-send-email-gaowanlong@cn.fujitsu.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <kvm-owner@vger.kernel.org>
 In-Reply-To: <1352283494-31200-1-git-send-email-gaowanlong@cn.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: kvm-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>, Rusty Russell <rusty@rustcorp.com.au>, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, Wanlong Gao <gaowanlong@cn.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Create a separate work queue for virtio-scsi to improve the performance.
+Tidy up the goto label in init(), and remove the useless
+NULL pointer assignment.
 
 Cc: James E.J. Bottomley <JBottomley@parallels.com>
 Cc: Paolo Bonzini <pbonzini@redhat.com>
@@ -19,62 +20,66 @@ Cc: linux-scsi@vger.kernel.org
 Cc: kvm@vger.kernel.org
 Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
 ---
- drivers/scsi/virtio_scsi.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ drivers/scsi/virtio_scsi.c | 28 +++++++++++-----------------
+ 1 file changed, 11 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 765138a..fc05240 100644
+index fc05240..afee1d4 100644
 --- a/drivers/scsi/virtio_scsi.c
 +++ b/drivers/scsi/virtio_scsi.c
-@@ -27,6 +27,8 @@
- #define VIRTIO_SCSI_MEMPOOL_SZ 64
- #define VIRTIO_SCSI_EVENT_LEN 8
+@@ -793,13 +793,13 @@ static int __init init(void)
+ 	virtscsi_wq = alloc_workqueue("virtio-scsi", 0, 0);
+ 	if (!virtscsi_wq) {
+ 		pr_err("alloc_workqueue() for virtscsi_wq failed\n");
+-		goto error;
++		goto workqueue_failed;
+ 	}
  
-+struct workqueue_struct *virtscsi_wq;
-+
- /* Command queue element */
- struct virtio_scsi_cmd {
- 	struct scsi_cmnd *sc;
-@@ -337,7 +339,7 @@ static void virtscsi_complete_event(void *buf)
- 	struct virtio_scsi_event_node *event_node = buf;
- 
- 	INIT_WORK(&event_node->work, virtscsi_handle_event);
--	schedule_work(&event_node->work);
-+	queue_work(virtscsi_wq, &event_node->work);
- }
- 
- static void virtscsi_event_done(struct virtqueue *vq)
-@@ -788,6 +790,12 @@ static int __init init(void)
- {
- 	int ret = -ENOMEM;
- 
-+	virtscsi_wq = alloc_workqueue("virtio-scsi", 0, 0);
-+	if (!virtscsi_wq) {
-+		pr_err("alloc_workqueue() for virtscsi_wq failed\n");
-+		goto error;
-+	}
-+
  	virtscsi_cmd_cache = KMEM_CACHE(virtio_scsi_cmd, 0);
  	if (!virtscsi_cmd_cache) {
  		pr_err("kmem_cache_create() for virtscsi_cmd_cache failed\n");
-@@ -817,6 +825,10 @@ error:
- 		kmem_cache_destroy(virtscsi_cmd_cache);
- 		virtscsi_cmd_cache = NULL;
+-		goto error;
++		goto kmem_cache_failed;
  	}
-+	if (virtscsi_wq) {
-+		destroy_workqueue(virtscsi_wq);
-+		virtscsi_wq = NULL;
-+	}
+ 
+ 
+@@ -808,27 +808,21 @@ static int __init init(void)
+ 					 virtscsi_cmd_cache);
+ 	if (!virtscsi_cmd_pool) {
+ 		pr_err("mempool_create() for virtscsi_cmd_pool failed\n");
+-		goto error;
++		goto mempool_failed;
+ 	}
+ 	ret = register_virtio_driver(&virtio_scsi_driver);
+ 	if (ret < 0)
+-		goto error;
++		goto register_failed;
+ 
+ 	return 0;
+ 
+-error:
+-	if (virtscsi_cmd_pool) {
+-		mempool_destroy(virtscsi_cmd_pool);
+-		virtscsi_cmd_pool = NULL;
+-	}
+-	if (virtscsi_cmd_cache) {
+-		kmem_cache_destroy(virtscsi_cmd_cache);
+-		virtscsi_cmd_cache = NULL;
+-	}
+-	if (virtscsi_wq) {
+-		destroy_workqueue(virtscsi_wq);
+-		virtscsi_wq = NULL;
+-	}
++register_failed:
++	mempool_destroy(virtscsi_cmd_pool);
++mempool_failed:
++	kmem_cache_destroy(virtscsi_cmd_cache);
++kmem_cache_failed:
++	destroy_workqueue(virtscsi_wq);
++workqueue_failed:
  	return ret;
  }
  
-@@ -825,6 +837,7 @@ static void __exit fini(void)
- 	unregister_virtio_driver(&virtio_scsi_driver);
- 	mempool_destroy(virtscsi_cmd_pool);
- 	kmem_cache_destroy(virtscsi_cmd_cache);
-+	destroy_workqueue(virtscsi_wq);
- }
- module_init(init);
- module_exit(fini);
 -- 
 1.8.0
+
