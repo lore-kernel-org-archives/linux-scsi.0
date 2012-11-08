@@ -1,101 +1,101 @@
-From: "Nicholas A. Bellinger" <nab@risingtidesystems.com>
-Subject: Re: scsi target, likely GPL violation
-Date: Thu, 08 Nov 2012 12:05:11 -0800
-Message-ID: <1352405111.29589.476.camel@haakon2.linux-iscsi.org>
-References: <509A915B.30105@redhat.com>
-	 <CAPoiz9wzx_NmuA1ty-U28MGiYr7XKCbDn_e0ZLmz=pNDCqwqFw@mail.gmail.com>
-	 <509B117A.6070708@genband.com>  <509BE460.6010404@redhat.com>
-Reply-To: nab@risingtidesystems.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] target/iblock: Fix double iblock_complete_cmd callback bug
+Date: Thu,  8 Nov 2012 19:58:59 +0000
+Message-ID: <1352404739-22881-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <509BE460.6010404@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: Chris Friesen <chris.friesen@genband.com>, Jon Mason <jdmason@kudzu.us>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-11-08 at 08:57 -0800, Andy Grover wrote:
-> On 11/07/2012 05:57 PM, Chris Friesen wrote:
-> > On 11/07/2012 07:02 PM, Jon Mason wrote:
-> >> I'm not a lawyer, nor do I play one on TV, but if
-> >> I understand the GPL correctly, RTS only needs to provide the rele=
-vant
-> >> source to their customers upon request.
-> >=20
-> > Not quite.
-> >=20
-> > Assuming the GPL applies, and that they have modified the code, the=
-n
-> > they must either:
-> >=20
-> > 1) include the source with the distributed binary
-> >=20
-> > or
-> >=20
-> > 2) include with the binary an offer to provide the source to *any* =
-third
-> > party
->=20
-> So you'd have me find one of their customers, and then get the source
-> via your #2 method...
->=20
-> ...and then turn around and submit it to Nick since he's the target
-> subsystem maintainer? Nick is probably the one who wrote it!
->=20
-> I'm happy to do that, but we should recognize something is seriously
-> skewed when the person nominally in charge of the in-kernel code also
-> has a vested interest in *not* seeing new features added, since it th=
-en
-> competes better with his company's offering.
->=20
-> RTS is trying to use an "open core" business model. This works fine f=
-or
-> BSD-licensed code or code originally authored entirely by you, but th=
-eir
-> code (all of it even the new stuff) is a derivative work of the Linux
-> kernel source code, and the GPL says they need to contribute it back.
->=20
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Andy,
+This patch fixes a double completion bug where ibr->pending = 2 usage
+plus the extra callback to iblock_complete_cmd() invoked after bio
+submission in iblock_execute_rw() can interfere with the normal
+bio->bi_done() -> iblock_bio_done() -> iblock_complete_cmd() completion
+path, causing a double target_complete_cmd() call to occur.
 
-Accusing us of violating GPL is a serious legal claim. =20
+This bug was introduced during v3.4-rc2 code with:
 
-In fact, we are not violating GPL.  In short, this is because we wrote
-the code you are referring to (the SCSI target core in our commercial
-RTS OS product), we have exclusive copyright ownership of it, and this
-code contains no GPL code from the community.  GPL obligations only
-apply downstream to licensees, and not to the author of the code.  Thos=
-e
-who use the code under GPL are subject to its conditions; we are not.
+commit 5787cacd0bd5ee016ad807b244550d34fe2beebe
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Tue Apr 24 00:25:06 2012 -0400
 
-As you know, we contributed the Linux SCSI target core, including the
-relevant interfaces, to the Linux kernel.  To be clear, we wrote that
-code entirely ourselves, so we have the right to use it as we please.
-The version we use in RTS OS is a different, proprietary version, which
-we also wrote ourselves.  However, the fact that we contributed a
-version of the code to the Linux kernel does not require us to provide
-our proprietary version to anyone.
+    target: remove struct se_task
 
-If you want to understand better how dual licensing works, perhaps we
-can talk off list.  But we don=E2=80=99t really have a responsibility t=
-o respond
-to untrue accusations, nor to explain GPL, nor discuss our proprietary
-code.
+Also drop the bio_cnt >= IBLOCK_MAX_BIO_PER_TASK rolling call to
+iblock_submit_bios() to avoid the exception case where outstanding
+bios completing via iblock_bio_done() are not accounted for when
+returning returning non zero from iblock_execute_rw().
 
-We=E2=80=99re very disappointed that Red Hat would not be more professi=
-onal in
-its communications about licensing compliance matters, particularly to =
-a
-company like ours that has been a major contributor to Linux and
-therefore also to Red Hat=E2=80=99s own products.  So, while I invite y=
-ou to
-talk about this with us directly, I also advise you =E2=80=93 respectfu=
-lly =E2=80=93 not
-to make public accusations that are not true.  That is harmful to our
-reputation =E2=80=93 and candidly, it doesn=E2=80=99t reflect well on y=
-ou or your
-company.
+This bug was originally reported by Kelsey when a single se_cmd
+descriptor required more than one bio to complete.
 
---nab
+Reported-by: Kelsey Prantis <kelsey.prantis@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_iblock.c |   11 +----------
+ 1 files changed, 1 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 57d7674..d066932 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -47,7 +47,6 @@
+ 
+ #include "target_core_iblock.h"
+ 
+-#define IBLOCK_MAX_BIO_PER_TASK	 32	/* max # of bios to submit at a time */
+ #define IBLOCK_BIO_POOL_SIZE	128
+ 
+ static struct se_subsystem_api iblock_template;
+@@ -602,7 +601,6 @@ static int iblock_execute_rw(struct se_cmd *cmd)
+ 	struct scatterlist *sg;
+ 	u32 sg_num = sgl_nents;
+ 	sector_t block_lba;
+-	unsigned bio_cnt;
+ 	int rw;
+ 	int i;
+ 
+@@ -658,8 +656,7 @@ static int iblock_execute_rw(struct se_cmd *cmd)
+ 	bio_list_init(&list);
+ 	bio_list_add(&list, bio);
+ 
+-	atomic_set(&ibr->pending, 2);
+-	bio_cnt = 1;
++	atomic_set(&ibr->pending, 1);
+ 
+ 	for_each_sg(sgl, sg, sgl_nents, i) {
+ 		/*
+@@ -669,10 +666,6 @@ static int iblock_execute_rw(struct se_cmd *cmd)
+ 		 */
+ 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
+ 				!= sg->length) {
+-			if (bio_cnt >= IBLOCK_MAX_BIO_PER_TASK) {
+-				iblock_submit_bios(&list, rw);
+-				bio_cnt = 0;
+-			}
+ 
+ 			bio = iblock_get_bio(cmd, block_lba, sg_num);
+ 			if (!bio)
+@@ -680,7 +673,6 @@ static int iblock_execute_rw(struct se_cmd *cmd)
+ 
+ 			atomic_inc(&ibr->pending);
+ 			bio_list_add(&list, bio);
+-			bio_cnt++;
+ 		}
+ 
+ 		/* Always in 512 byte units for Linux/Block */
+@@ -689,7 +681,6 @@ static int iblock_execute_rw(struct se_cmd *cmd)
+ 	}
+ 
+ 	iblock_submit_bios(&list, rw);
+-	iblock_complete_cmd(cmd);
+ 	return 0;
+ 
+ fail_put_bios:
+-- 
+1.7.2.5
