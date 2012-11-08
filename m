@@ -1,32 +1,35 @@
-From: Webmail Admin <pro@housing.go.ke>
-Subject: Messenger from Administrator
-Date: Thu, 8 Nov 2012 08:51:20 +0300 (EAT)
-Message-ID: <14822811.22232.1352353880794.JavaMail.root@mail.housing.go.ke>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 41.206.34.146.accesskenya.com ([41.206.34.146]:46660 "EHLO
-	mail.housing.go.ke" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602Ab2KHGUa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Nov 2012 01:20:30 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Eric Northup <digitaleric@google.com>
+Subject: [PATCH] virtio_scsi: fix memory leak on full queue condition.
+Date: Thu,  8 Nov 2012 01:55:50 -0800
+Message-ID: <1352368550-6694-1-git-send-email-digitaleric@google.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kvm@vger.kernel.org, Eric Northup <digitaleric@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Your E-mail=C2=AE Account needs to be updated with our 2013 F-Secure R-=
-HTK4S new version anti-spam/anti-virus/anti-spyware. Please click this =
-link below=20
+virtscsi_queuecommand was leaking memory when the virtio queue was full.
 
-http://www.contactme.com/509b2c7e59d3f1000202406a
+Tested: Guest operates correctly even with very small queue sizes, validated
+we're not leaking kmalloc-192 sized allocations anymore.
 
-We Are Sorry For Any Inconvenience.
+Signed-off-by: Eric Northup <digitaleric@google.com>
+---
+ drivers/scsi/virtio_scsi.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Regards,
-WEBMAIL ADMINISTRATOR
-Copyright=C2=A9 2012 All rights reserved=C2=AE.ABN 31 088 377 860 All R=
-ights Reserved
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 595af1a..dd8dc27 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -469,6 +469,8 @@ static int virtscsi_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
+ 			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd,
+ 			      GFP_ATOMIC) >= 0)
+ 		ret = 0;
++	else
++		mempool_free(cmd, virtscsi_cmd_pool);
+ 
+ out:
+ 	return ret;
+-- 
+1.7.7.3
