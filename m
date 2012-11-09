@@ -1,116 +1,66 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [patch,v3 01/10] scsi: add scsi_host_alloc_node
-Date: Fri,  9 Nov 2012 14:17:58 -0500
-Message-ID: <1352488687-19935-2-git-send-email-jmoyer@redhat.com>
-References: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] virtio-scsi: Fix incorrect lock release order in
+ virtscsi_kick_cmd
+Date: Fri, 09 Nov 2012 11:31:16 -0800
+Message-ID: <1352489476.29589.544.camel@haakon2.linux-iscsi.org>
+References: <1352442592-2162-1-git-send-email-nab@linux-iscsi.org>
+	 <509CC210.8090908@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
+In-Reply-To: <509CC210.8090908@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <JBottomley@Parallels.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Allow an LLD to specify on which numa node to allocate scsi data
-structures.  Thanks to Bart Van Assche for the suggestion.
+Hi Paolo,
 
-Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
----
- drivers/scsi/hosts.c     |   13 +++++++++++--
- include/scsi/scsi_host.h |   28 ++++++++++++++++++++++++++++
- 2 files changed, 39 insertions(+), 2 deletions(-)
+On Fri, 2012-11-09 at 09:42 +0100, Paolo Bonzini wrote:
+> Il 09/11/2012 07:29, Nicholas A. Bellinger ha scritto:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch fixes a regression bug in virtscsi_kick_cmd() that relinquishes
+> > the acquired spinlocks in the incorrect order using the wrong spin_unlock
+> > macros, namely releasing vq->vq_lock before tgt->tgt_lock while invoking
+> > the calls to virtio_ring.c:virtqueue_add_buf() and friends.
+> > 
+> > This bug was originally introduced in v3.5-rc7 code with:
+> > 
+> > commit 2bd37f0fde99cbf8b78fb55f1128e8c3a63cf1da
+> > Author: Paolo Bonzini <pbonzini@redhat.com>
+> > Date:   Wed Jun 13 16:56:34 2012 +0200
+> > 
+> >     [SCSI] virtio-scsi: split scatterlist per target
+> > 
+> > Go ahead and make sure that vq->vq_lock is relinquished w/ spin_unlock
+> > first, then release tgt->tgt_lock w/ spin_unlock_irqrestore.
+> 
+> That's done on purpose.  After you do virtqueue_add_buf, you don't need
+> the sg list anymore, nor the lock that protects it.  The cover letter is
+> at https://lkml.org/lkml/2012/6/13/295 and had this text:
+> 
+>   This series reorganizes the locking in virtio-scsi, introducing
+>   separate scatterlists for each target and "pipelining" the locks so
+>   that one command can be queued while the other is prepared.  This
+>   improves performance when there are multiple in-flight operations.
+> 
+> In fact, the patch _introduces_ wrong locking because
+> virtqueue_kick_prepare needs the vq_lock.
+> 
+> Perhaps what you want is separate local_irq_save/local_irq_restore?
+> 
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 593085a..06ce602 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -336,16 +336,25 @@ static struct device_type scsi_host_type = {
-  **/
- struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- {
-+	return scsi_host_alloc_node(sht, privsize, NUMA_NO_NODE);
-+}
-+EXPORT_SYMBOL(scsi_host_alloc);
-+
-+struct Scsi_Host *scsi_host_alloc_node(struct scsi_host_template *sht,
-+				       int privsize, int node)
-+{
- 	struct Scsi_Host *shost;
- 	gfp_t gfp_mask = GFP_KERNEL;
- 
- 	if (sht->unchecked_isa_dma && privsize)
- 		gfp_mask |= __GFP_DMA;
- 
--	shost = kzalloc(sizeof(struct Scsi_Host) + privsize, gfp_mask);
-+	shost = kzalloc_node(sizeof(struct Scsi_Host) + privsize,
-+			     gfp_mask, node);
- 	if (!shost)
- 		return NULL;
- 
-+	scsi_host_set_numa_node(shost, node);
- 	shost->host_lock = &shost->default_lock;
- 	spin_lock_init(shost->host_lock);
- 	shost->shost_state = SHOST_CREATED;
-@@ -443,7 +452,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	kfree(shost);
- 	return NULL;
- }
--EXPORT_SYMBOL(scsi_host_alloc);
-+EXPORT_SYMBOL(scsi_host_alloc_node);
- 
- struct Scsi_Host *scsi_register(struct scsi_host_template *sht, int privsize)
- {
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 4908480..438856d 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -732,6 +732,14 @@ struct Scsi_Host {
- 	 */
- 	struct device *dma_dev;
- 
-+#ifdef CONFIG_NUMA
-+	/*
-+	 * Numa node this device is closest to, used for allocating
-+	 * data structures locally.
-+	 */
-+	int numa_node;
-+#endif
-+
- 	/*
- 	 * We should ensure that this is aligned, both for better performance
- 	 * and also because some compilers (m68k) don't automatically force
-@@ -776,6 +784,8 @@ extern int scsi_queue_work(struct Scsi_Host *, struct work_struct *);
- extern void scsi_flush_work(struct Scsi_Host *);
- 
- extern struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *, int);
-+extern struct Scsi_Host *scsi_host_alloc_node(struct scsi_host_template *,
-+					      int, int);
- extern int __must_check scsi_add_host_with_dma(struct Scsi_Host *,
- 					       struct device *,
- 					       struct device *);
-@@ -919,6 +929,24 @@ static inline unsigned char scsi_host_get_guard(struct Scsi_Host *shost)
- 	return shost->prot_guard_type;
- }
- 
-+#ifdef CONFIG_NUMA
-+static inline int scsi_host_get_numa_node(struct Scsi_Host *shost)
-+{
-+	return shost->numa_node;
-+}
-+
-+static inline void scsi_host_set_numa_node(struct Scsi_Host *shost, int node)
-+{
-+	shost->numa_node = node;
-+}
-+#else /* CONFIG_NUMA */
-+static inline int scsi_host_get_numa_node(struct Scsi_Host *shost)
-+{
-+	return NUMA_NO_NODE;
-+}
-+static inline void scsi_host_set_numa_node(struct Scsi_Host *shost, int node) {}
-+#endif
-+
- /* legacy interfaces */
- extern struct Scsi_Host *scsi_register(struct scsi_host_template *, int);
- extern void scsi_unregister(struct Scsi_Host *);
--- 
-1.7.1
+Ahh, that makes more sense now.
+
+Just noticed this while reviewing code that using one spinlock flag's to
+release the other looks suspicious, minus the ordering bit..
+
+Using local_irq_* would probably be cleaner than swapping flags between
+different locks, and a short comment here would be helpful to explain
+the locking order context.
+
+Anyways, no big deal.  Thanks for the explanation.
+
+--nab
