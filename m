@@ -1,108 +1,57 @@
-From: "Nicholas A. Bellinger" <nab@risingtidesystems.com>
-Subject: Re: scsi target, likely GPL violation
-Date: Thu, 08 Nov 2012 18:08:16 -0800
-Message-ID: <1352426896.29589.512.camel@haakon2.linux-iscsi.org>
-References: <509A915B.30105@redhat.com>
-	 <CAPoiz9wzx_NmuA1ty-U28MGiYr7XKCbDn_e0ZLmz=pNDCqwqFw@mail.gmail.com>
-	 <509B117A.6070708@genband.com>  <509BE460.6010404@redhat.com>
-	 <1352405111.29589.476.camel@haakon2.linux-iscsi.org>
-	 <509C22B2.8010600@redhat.com>
-Reply-To: nab@risingtidesystems.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] virtio-scsi: Fix incorrect lock release order in virtscsi_kick_cmd
+Date: Fri,  9 Nov 2012 06:29:52 +0000
+Message-ID: <1352442592-2162-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <509C22B2.8010600@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: Chris Friesen <chris.friesen@genband.com>, Jon Mason <jdmason@kudzu.us>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Paolo Bonzini <pbonzini@redhat.com>, James Bottomley <JBottomley@Parallels.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-11-08 at 13:22 -0800, Andy Grover wrote:
-> On 11/08/2012 12:05 PM, Nicholas A. Bellinger wrote:
-> > Accusing us of violating GPL is a serious legal claim. =20
-> >=20
-> > In fact, we are not violating GPL.  In short, this is because we wr=
-ote
-> > the code you are referring to (the SCSI target core in our commerci=
-al
-> > RTS OS product), we have exclusive copyright ownership of it, and t=
-his
-> > code contains no GPL code from the community.  GPL obligations only
-> > apply downstream to licensees, and not to the author of the code.  =
-Those
-> > who use the code under GPL are subject to its conditions; we are no=
-t.
->=20
-> Hi Nick, thanks for finally responding.
->=20
-> I believe your argument is wrong for two reasons.
->=20
-> First, LIO is a derivative work of the Linux kernel. It uses kernel A=
-PIs
-> and headers. You ship Linux as part of RTS OS. Even if you had not as=
-ked
-> for LIO to be included in mainline, this would still be true and woul=
-d
-> require you to publish your changes under the GPLv2.
->=20
-> Second, you claim you hold exclusive copyright for the code. Not true=
-=2E
-> One example: on http://www.risingtidesystems.com/storage.html you cla=
-im
-> support for FCoE. You didn't build tcm_fc, Intel did. Under the GPLv2=
-=2E
-> Furthermore, SRP support came from SCST, iirc. None of these
-> contributors gave RTS any right to use their copyrighted code except
-> under the conditions of the GPLv2.
->=20
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Andy,
+This patch fixes a regression bug in virtscsi_kick_cmd() that relinquishes
+the acquired spinlocks in the incorrect order using the wrong spin_unlock
+macros, namely releasing vq->vq_lock before tgt->tgt_lock while invoking
+the calls to virtio_ring.c:virtqueue_add_buf() and friends.
 
-Support for certified VAAI is part of our commercial target core. The
-target core constitutes a stand-alone kernel subsystem of which we are
-the sole copyright owners. In addition, our target contains a number of
-backend drivers, of which we are also the sole copyright owners, and a
-number of fabric modules, of which some we are the sole copyright
-owners, and of which others we are not, as you pointed out. A
-substantial fraction of the code of which we own the sole copyright was
-certified by BlackDuck Software as early as in 2007.=20
+This bug was originally introduced in v3.5-rc7 code with:
 
-We contributed our target to the Linux kernel in 2010, at which point w=
-e
-forked it into the upstream version and our commercial version. These
-target versions have been diverging over time, as we keep maintaining
-either one of them independently.
+commit 2bd37f0fde99cbf8b78fb55f1128e8c3a63cf1da
+Author: Paolo Bonzini <pbonzini@redhat.com>
+Date:   Wed Jun 13 16:56:34 2012 +0200
 
-=46or our commercial target core, we only use Linux kernel symbols that
-are not marked as GPL. In addition, we define the API between the targe=
-t
-core and its backend drivers and between the target core and its fabric
-modules, we define the ABI between the target core and user space, and
-we have done so years before our code went upstream into the Linux
-kernel.
+    [SCSI] virtio-scsi: split scatterlist per target
 
-We have been contributing substantially to the upstream target version
-to keep improving Linux. We have also been improving our commercial
-target version to afford the considerable effort and expense involved i=
-n
-our ongoing Linux contributions, and to compensate other top Linux
-kernel developers for their contributions to the upstream target
-version.
+Go ahead and make sure that vq->vq_lock is relinquished w/ spin_unlock
+first, then release tgt->tgt_lock w/ spin_unlock_irqrestore.
 
-RTS OS is based on a stock Linux enterprise kernel. This Linux kernel
-has naturally the ability to load either one of our standalone
-self-contained target module versions without any modifications.
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: James Bottomley <JBottomley@Parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/scsi/virtio_scsi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Again, we=E2=80=99re very disappointed by these untrue and highly damag=
-ing
-accusations from Red Hat. We have generously contributed to Linux, and
-we have generously supported the Linux community for their contribution=
-s
-to our upstream target and other Linux kernel parts. You have mostly
-just incorporated our work into Red Hat=E2=80=99s products.
-
-So yes, Andy, please start behaving properly, so that at least we can
-get back to making Linux better.
-
---nab
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 595af1a..b2abb8a 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -417,11 +417,11 @@ static int virtscsi_kick_cmd(struct virtio_scsi_target_state *tgt,
+ 
+ 	spin_lock(&vq->vq_lock);
+ 	ret = virtqueue_add_buf(vq->vq, tgt->sg, out_num, in_num, cmd, gfp);
+-	spin_unlock(&tgt->tgt_lock);
++	spin_unlock(&vq->vq_lock);
+ 	if (ret >= 0)
+ 		ret = virtqueue_kick_prepare(vq->vq);
+ 
+-	spin_unlock_irqrestore(&vq->vq_lock, flags);
++	spin_unlock_irqrestore(&tgt->tgt_lock, flags);
+ 
+ 	if (ret > 0)
+ 		virtqueue_notify(vq->vq);
+-- 
+1.7.2.5
