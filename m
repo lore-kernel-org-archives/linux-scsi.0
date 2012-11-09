@@ -1,357 +1,66 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Update copyright ownership to 2012
-Date: Fri,  9 Nov 2012 23:00:14 +0000
-Message-ID: <1352502014-9782-1-git-send-email-nab@linux-iscsi.org>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: scsi target, likely GPL violation
+Date: Fri, 09 Nov 2012 15:16:03 -0800
+Message-ID: <509D8EB3.5030408@redhat.com>
+References: <509A915B.30105@redhat.com>  <CAPoiz9wzx_NmuA1ty-U28MGiYr7XKCbDn_e0ZLmz=pNDCqwqFw@mail.gmail.com>  <509B117A.6070708@genband.com>  <509BE460.6010404@redhat.com>  <1352405111.29589.476.camel@haakon2.linux-iscsi.org>  <509C22B2.8010600@redhat.com> <1352426896.29589.512.camel@haakon2.linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1352426896.29589.512.camel@haakon2.linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: nab@risingtidesystems.com
+Cc: Chris Friesen <chris.friesen@genband.com>, Jon Mason <jdmason@kudzu.us>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 11/08/2012 06:08 PM, Nicholas A. Bellinger wrote:
+> Support for certified VAAI is part of our commercial target core. The
+> target core constitutes a stand-alone kernel subsystem of which we are
+> the sole copyright owners. In addition, our target contains a number of
+> backend drivers, of which we are also the sole copyright owners, and a
+> number of fabric modules, of which some we are the sole copyright
+> owners, and of which others we are not, as you pointed out. A
+> substantial fraction of the code of which we own the sole copyright was
+> certified by BlackDuck Software as early as in 2007. 
 
-Hello everyone,
+See this:
 
-This patch to update copyright year to current for principal target core
-ownership is now being pushed into target-pending/for-next.
+http://www.gnu.org/licenses/gpl-2.0.html from section 2
 
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_alua.c            |    5 +++--
- drivers/target/target_core_configfs.c        |    5 +++--
- drivers/target/target_core_device.c          |    7 +++----
- drivers/target/target_core_fabric_configfs.c |    7 ++++---
- drivers/target/target_core_fabric_lib.c      |    5 +++--
- drivers/target/target_core_file.c            |    7 +++----
- drivers/target/target_core_hba.c             |    7 +++----
- drivers/target/target_core_iblock.c          |    7 +++----
- drivers/target/target_core_pr.c              |    5 +++--
- drivers/target/target_core_pscsi.c           |    7 +++----
- drivers/target/target_core_rd.c              |    7 +++----
- drivers/target/target_core_sbc.c             |    7 +++----
- drivers/target/target_core_spc.c             |    7 +++----
- drivers/target/target_core_stat.c            |    7 +++----
- drivers/target/target_core_tmr.c             |    5 +++--
- drivers/target/target_core_tpg.c             |    7 +++----
- drivers/target/target_core_transport.c       |    7 +++----
- drivers/target/target_core_ua.c              |    5 +++--
- 18 files changed, 55 insertions(+), 59 deletions(-)
+"These requirements apply to the modified work as a whole. If
+identifiable sections of that work are not derived from the Program, and
+can be reasonably considered independent and separate works in
+themselves, then this License, and its terms, do not apply to those
+sections when you distribute them as separate works. But when you
+distribute the same sections as part of a whole which is a work based on
+the Program, the distribution of the whole must be on the terms of this
+License, whose permissions for other licensees extend to the entire
+whole, and thus to each and every part regardless of who wrote it."
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 4c8eea2..035c606 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -3,8 +3,9 @@
-  *
-  * This file contains SPC-3 compliant asymmetric logical unit assigntment (ALUA)
-  *
-- * Copyright (c) 2009-2010 Rising Tide Systems
-- * Copyright (c) 2009-2010 Linux-iSCSI.org
-+ * (c) Copyright 2009-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 2b14164..72881cc 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -3,8 +3,9 @@
-  *
-  * This file contains ConfigFS logic for the Generic Target Engine project.
-  *
-- * Copyright (c) 2008-2011 Rising Tide Systems
-- * Copyright (c) 2008-2011 Linux-iSCSI.org
-+ * (c) Copyright 2008-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 54439bc..a9634aa 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -4,10 +4,9 @@
-  * This file contains the TCM Virtual Device and Disk Transport
-  * agnostic related functions.
-  *
-- * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-- * Copyright (c) 2005-2006 SBE, Inc.  All Rights Reserved.
-- * Copyright (c) 2007-2010 Rising Tide Systems
-- * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ * (c) Copyright 2003-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index aa67313..4baac62 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -4,10 +4,11 @@
-  * This file contains generic fabric module configfs infrastructure for
-  * TCM v4.x code
-  *
-- * Copyright (c) 2010,2011 Rising Tide Systems
-- * Copyright (c) 2010,2011 Linux-iSCSI.org
-+ * (c) Copyright 2010-2012 RisingTide Systems LLC.
-  *
-- * Copyright (c) Nicholas A. Bellinger <nab@linux-iscsi.org>
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-+ *
-+ * Nicholas A. Bellinger <nab@linux-iscsi.org>
- *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
-index e460d62..6ec5814 100644
---- a/drivers/target/target_core_fabric_lib.c
-+++ b/drivers/target/target_core_fabric_lib.c
-@@ -4,8 +4,9 @@
-  * This file contains generic high level protocol identifier and PR
-  * handlers for TCM fabric modules
-  *
-- * Copyright (c) 2010 Rising Tide Systems, Inc.
-- * Copyright (c) 2010 Linux-iSCSI.org
-+ * (c) Copyright 2010-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@linux-iscsi.org>
-  *
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 3ccef83..421da5c 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -3,10 +3,9 @@
-  *
-  * This file contains the Storage Engine <-> FILEIO transport specific functions
-  *
-- * Copyright (c) 2005 PyX Technologies, Inc.
-- * Copyright (c) 2005-2006 SBE, Inc.  All Rights Reserved.
-- * Copyright (c) 2007-2010 Rising Tide Systems
-- * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ * (c) Copyright 2005-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
-index 048b7b4..d597d61 100644
---- a/drivers/target/target_core_hba.c
-+++ b/drivers/target/target_core_hba.c
-@@ -3,10 +3,9 @@
-  *
-  * This file contains the TCM HBA Transport related functions.
-  *
-- * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-- * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-- * Copyright (c) 2007-2010 Rising Tide Systems
-- * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ * (c) Copyright 2003-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 33a5248..b5240bc 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -4,10 +4,9 @@
-  * This file contains the Storage Engine  <-> Linux BlockIO transport
-  * specific functions.
-  *
-- * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-- * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-- * Copyright (c) 2007-2010 Rising Tide Systems
-- * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ * (c) Copyright 2003-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index d7101a4..6ed3dc5 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -4,8 +4,9 @@
-  * This file contains SPC-3 compliant persistent reservations and
-  * legacy SPC-2 reservations with compatible reservation handling (CRH=1)
-  *
-- * Copyright (c) 2009, 2010 Rising Tide Systems
-- * Copyright (c) 2009, 2010 Linux-iSCSI.org
-+ * (c) Copyright 2009-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index b5c722b..8c5fb93 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -3,10 +3,9 @@
-  *
-  * This file contains the generic target mode <-> Linux SCSI subsystem plugin.
-  *
-- * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-- * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-- * Copyright (c) 2007-2010 Rising Tide Systems
-- * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ * (c) Copyright 2003-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 126529c..7f4deb9 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -4,10 +4,9 @@
-  * This file contains the Storage Engine <-> Ramdisk transport
-  * specific functions.
-  *
-- * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-- * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-- * Copyright (c) 2007-2010 Rising Tide Systems
-- * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ * (c) Copyright 2003-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index ee9fa52..941092e 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -1,10 +1,9 @@
- /*
-  * SCSI Block Commands (SBC) parsing and emulation.
-  *
-- * Copyright (c) 2002, 2003, 2004, 2005 PyX Technologies, Inc.
-- * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-- * Copyright (c) 2007-2010 Rising Tide Systems
-- * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ * (c) Copyright 2002-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index cf1b8bb..075842f 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -1,10 +1,9 @@
- /*
-  * SCSI Primary Commands (SPC) parsing and emulation.
-  *
-- * Copyright (c) 2002, 2003, 2004, 2005 PyX Technologies, Inc.
-- * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-- * Copyright (c) 2007-2010 Rising Tide Systems
-- * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ * (c) Copyright 2002-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
-index 9bbb017..bf7a619 100644
---- a/drivers/target/target_core_stat.c
-+++ b/drivers/target/target_core_stat.c
-@@ -1,13 +1,12 @@
- /*******************************************************************************
-  * Filename:  target_core_stat.c
-  *
-- * Copyright (c) 2011 Rising Tide Systems
-- * Copyright (c) 2011 Linux-iSCSI.org
-- *
-  * Modern ConfigFS group context specific statistics based on original
-  * target_core_mib.c code
-  *
-- * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
-+ * (c) Copyright 2011-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@linux-iscsi.org>
-  *
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index 2aaceae..5b57039 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -3,8 +3,9 @@
-  *
-  * This file contains SPC-3 task management infrastructure
-  *
-- * Copyright (c) 2009,2010 Rising Tide Systems
-- * Copyright (c) 2009,2010 Linux-iSCSI.org
-+ * (c) Copyright 2009-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index a531fe2..a368329 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -3,10 +3,9 @@
-  *
-  * This file contains generic Target Portal Group related functions.
-  *
-- * Copyright (c) 2002, 2003, 2004, 2005 PyX Technologies, Inc.
-- * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-- * Copyright (c) 2007-2010 Rising Tide Systems
-- * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ * (c) Copyright 2002-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 63d7848..b7f545b 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -3,10 +3,9 @@
-  *
-  * This file contains the Generic Target Engine Core.
-  *
-- * Copyright (c) 2002, 2003, 2004, 2005 PyX Technologies, Inc.
-- * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-- * Copyright (c) 2007-2010 Rising Tide Systems
-- * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ * (c) Copyright 2002-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
-diff --git a/drivers/target/target_core_ua.c b/drivers/target/target_core_ua.c
-index 60c8f41..483ac72 100644
---- a/drivers/target/target_core_ua.c
-+++ b/drivers/target/target_core_ua.c
-@@ -3,8 +3,9 @@
-  *
-  * This file contains logic for SPC-3 Unit Attention emulation
-  *
-- * Copyright (c) 2009,2010 Rising Tide Systems
-- * Copyright (c) 2009,2010 Linux-iSCSI.org
-+ * (c) Copyright 2009-2012 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
-  *
-  * Nicholas A. Bellinger <nab@kernel.org>
-  *
--- 
-1.7.2.5
+Is your code an independent and separate work from the Linux kernel?
+Some tests might be: can it be used without the Linux kernel? Can it be
+used with alternative kernels? Even if the answer to these questions is
+YES (which it isn't) then that second quoted sentence would still put
+your code under the terms of the GPL, since RTS OS distributes its
+changes along with the Linux kernel.
+
+I've spent enough time arguing the factual basis of this issue. It seems
+crystal clear to me, and I have a hard time seeing how anyone could
+disagree.
+
+But let's forget licenses and talk community. Looking back, can anyone
+say that your push to get LIO accepted into mainline as the kernel
+target was in good faith? Back before LIO was merged, James chose LIO
+over SCST saying to the SCST devs:
+
+"Look, let me try to make it simple: It's not about the community you
+bring to the table, it's about the community you have to join when you
+become part of the linux kernel."
+
+RTS behaved long enough to get LIO merged, and then forget community.
+James is right, community is more important than code, and licenses
+enforce community expectations. RTS has appeared just community-focused
+enough to prevent someone else's code from being adopted, so it can
+extract the benefits and still maintain its proprietary advantage.
+
+-- Andy
