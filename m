@@ -1,55 +1,34 @@
-From: Dhiman Sarkar <d.sarkar@ncl.res.in>
-Subject: DEAR EMAIL USER... IMPORTANT MESSAGE.
-Date: Fri, 9 Nov 2012 06:57:32 +0000
-Message-ID: <5AE03C3E4FA90D45BE848817B40442D5427A4417@mailsrv01.ncl.res.in>
+From: Xi Wang <xi.wang@gmail.com>
+Subject: Re: [PATCH 2/3] [SCSI] mvsas: fix shift in mvs_94xx_free_reg_set()
+Date: Fri, 09 Nov 2012 08:44:21 -0500
+Message-ID: <509D08B5.2080303@gmail.com>
+References: <1352145183-29355-1-git-send-email-xi.wang@gmail.com>  <1352145183-29355-3-git-send-email-xi.wang@gmail.com> <1352203618.2529.22.camel@dabdike> <50997955.10000@gmail.com> <F766E4F80769BD478052FB6533FA745D25EA5FB180@SC-VEXCH4.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chandra.ncl.res.in ([59.163.216.11]:45037 "EHLO
-	chandra.ncl.res.in" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752448Ab2KILzL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Nov 2012 06:55:11 -0500
-Content-Language: en-US
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:61459 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753149Ab2KINoY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Nov 2012 08:44:24 -0500
+In-Reply-To: <F766E4F80769BD478052FB6533FA745D25EA5FB180@SC-VEXCH4.marvell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Xiangliang Yu <yuxiangl@marvell.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
+On 11/9/12 2:30 AM, Xiangliang Yu wrote:
+> Agree with James, and just need to do NOT operation one time
 
+Thanks for reviewing the patches.
 
+Okay I'll remove patch 2 in v2 then.
 
-Dear Email User;
+> About patch 3, I check the ffz code and found it will check ~0 conditions.
 
-You have exceeded the limit of 23432 storage on your mailbox set by you=
-r
-WEB SERVICE/Administrator, and you will be having problems in sending
-and receiving mails Until You Re-Validate. You have to update by clicki=
-ng on
-the below link and fill out the information to validate your account.
+Can you point me to the ~0 check in ffz code?  I also feel like using
+__ffs64 makes the code simpler.
 
-Please Click the link Below or copy paste to your browser To Validate Y=
-our
-Mailbox
+Does patch 1 look good to you?  Thanks.
 
-http://www.cc-billing.nl/formss/use/filter/form1.html
-
-Warning!!!
-=46ailure to do this, will result in limited access to your mailbox.
-failure to update your account within Three days of this update
-notification, your account will be closed permanently.
-
-Sincerely,
-System Administrator=AE
-
-________________________________
-
-Disclaimer:
-
-This message and the information contained herein is proprietary and co=
-nfidential and subject to the policy statement of the National Chemical=
- Laboratory, Pune, India. You may review the policy at http://www.ncl-i=
-ndia.org/common/webmailDisclaimer.htm
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+- xi
