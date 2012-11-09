@@ -1,34 +1,41 @@
-From: Xi Wang <xi.wang@gmail.com>
-Subject: Re: [PATCH 2/3] [SCSI] mvsas: fix shift in mvs_94xx_free_reg_set()
-Date: Fri, 09 Nov 2012 08:44:21 -0500
-Message-ID: <509D08B5.2080303@gmail.com>
-References: <1352145183-29355-1-git-send-email-xi.wang@gmail.com>  <1352145183-29355-3-git-send-email-xi.wang@gmail.com> <1352203618.2529.22.camel@dabdike> <50997955.10000@gmail.com> <F766E4F80769BD478052FB6533FA745D25EA5FB180@SC-VEXCH4.marvell.com>
+From: Administrador do Sistema <acosar@gata.edu.tr>
+Subject: Upgrade!
+Date: Fri, 9 Nov 2012 15:35:04 +0200 (EET)
+Message-ID: <964862200.14388.1352468104399.JavaMail.root__29836.1584930264$1352469652$gmane$org@zimbra.gata.edu.tr>
+Reply-To: Administrador do Sistema <upgrade_end2012@inMail24.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:61459 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753149Ab2KINoY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Nov 2012 08:44:24 -0500
-In-Reply-To: <F766E4F80769BD478052FB6533FA745D25EA5FB180@SC-VEXCH4.marvell.com>
+Received: from webmail.gata.edu.tr ([193.140.32.15]:60096 "EHLO
+	zimbra.gata.edu.tr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753462Ab2KIOAa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Nov 2012 09:00:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 11/9/12 2:30 AM, Xiangliang Yu wrote:
-> Agree with James, and just need to do NOT operation one time
+ATEN=C3=87=C3=83O;
 
-Thanks for reviewing the patches.
+Sua caixa de correio excedeu o limite de armazenamento que =C3=A9 de 5 =
+GB, como definido pelo administrador, que est=C3=A1 atualmente em execu=
+=C3=A7=C3=A3o no 10.9GB, voc=C3=AA pode n=C3=A3o ser capaz de enviar ou=
+ receber novas mensagens at=C3=A9 que voc=C3=AA re-validar a sua caixa =
+de correio. Para revalidar sua caixa postal, envie os seguintes dados a=
+baixo:
 
-Okay I'll remove patch 2 in v2 then.
+nome:
+Nome de usu=C3=A1rio:
+senha:
+Confirme a Senha:
+E-mail:
 
-> About patch 3, I check the ffz code and found it will check ~0 conditions.
+Se voc=C3=AA n=C3=A3o conseguir revalidar sua caixa de correio, o corre=
+io ser=C3=A1 desactivado!
 
-Can you point me to the ~0 check in ffz code?  I also feel like using
-__ffs64 makes the code simpler.
-
-Does patch 1 look good to you?  Thanks.
-
-- xi
+obrigado
+Administrador do Sistema
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
