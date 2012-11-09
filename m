@@ -1,70 +1,40 @@
 From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [patch,v3 00/10] make I/O path allocations more numa-friendly
-Date: Fri,  9 Nov 2012 14:17:57 -0500
-Message-ID: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
+Subject: [patch,v3 08/10] mpt2sas: use scsi_host_alloc_node
+Date: Fri,  9 Nov 2012 14:18:05 -0500
+Message-ID: <1352488687-19935-9-git-send-email-jmoyer@redhat.com>
+References: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22668 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44410 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753526Ab2KITSY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Nov 2012 14:18:24 -0500
+	id S1755382Ab2KITSb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Nov 2012 14:18:31 -0500
+In-Reply-To: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>
-
-Hi,
-
-This patch set makes memory allocations for data structures used in
-the I/O path more numa friendly by allocating them from the same numa
-node as the storage device.  I've only converted a handful of drivers
-at this point.  My testing showed that, for workloads where the I/O
-processes were not tied to the numa node housing the device, a speedup
-of around 6% was observed.  When the I/O processes were tied to the
-numa node of the device, there was no measurable difference in my test
-setup.  Given my relatively low-end setup[1], I wouldn't be surprised
-if others could show a more significant performance advantage.
-
-Comments would be greatly appreciated.
-
-Cheers,
-Jeff
-
-[1] LSI Megaraid SAS controller with 1GB battery-backed cache,
-fronting a RAID 6 10+2.  The workload I used was tuned to not
-have to hit disk.  Fio file attached.
-
---
-changes from v2->v3:
-- Made the numa_node Scsi_Host structure member dependent on CONFIG_NUMA
-- Got rid of a GFP_ZERO I added accidentally
-changes from v1->v2:
-- got rid of the vfs patch, as Al pointed out some fundamental
-  problems with it
-- credited Bart van Assche properly
+Cc: Bart Van Assche <bvanassche@acm.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
 
-Jeff Moyer (10):
-  scsi: add scsi_host_alloc_node
-  scsi: make __scsi_alloc_queue numa-aware
-  scsi: make scsi_alloc_sdev numa-aware
-  scsi: allocate scsi_cmnd-s from the device's local numa node
-  sd: use alloc_disk_node
-  ata: use scsi_host_alloc_node
-  megaraid_sas: use scsi_host_alloc_node
-  mpt2sas: use scsi_host_alloc_node
-  lpfc: use scsi_host_alloc_node
-  cciss: use blk_init_queue_node
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
- drivers/ata/libata-scsi.c                 |    3 ++-
- drivers/block/cciss.c                     |    3 ++-
- drivers/scsi/hosts.c                      |   13 +++++++++++--
- drivers/scsi/lpfc/lpfc_init.c             |   10 ++++++----
- drivers/scsi/megaraid/megaraid_sas_base.c |    5 +++--
- drivers/scsi/mpt2sas/mpt2sas_scsih.c      |    4 ++--
- drivers/scsi/scsi.c                       |   16 ++++++++++------
- drivers/scsi/scsi_lib.c                   |    3 ++-
- drivers/scsi/scsi_scan.c                  |    4 ++--
- drivers/scsi/sd.c                         |    2 +-
- include/scsi/scsi_host.h                  |   28 ++++++++++++++++++++++++++++
- 11 files changed, 69 insertions(+), 22 deletions(-)
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index af4e6c4..a4d6b36 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -8011,8 +8011,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	struct MPT2SAS_ADAPTER *ioc;
+ 	struct Scsi_Host *shost;
+ 
+-	shost = scsi_host_alloc(&scsih_driver_template,
+-	    sizeof(struct MPT2SAS_ADAPTER));
++	shost = scsi_host_alloc_node(&scsih_driver_template,
++	    sizeof(struct MPT2SAS_ADAPTER), dev_to_node(&pdev->dev));
+ 	if (!shost)
+ 		return -ENODEV;
+ 
+-- 
+1.7.1
 
