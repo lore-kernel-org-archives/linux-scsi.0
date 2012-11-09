@@ -1,67 +1,38 @@
 From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [patch,v3 04/10] scsi: allocate scsi_cmnd-s from the device's local numa node
-Date: Fri,  9 Nov 2012 14:18:01 -0500
-Message-ID: <1352488687-19935-5-git-send-email-jmoyer@redhat.com>
+Subject: [patch,v3 05/10] sd: use alloc_disk_node
+Date: Fri,  9 Nov 2012 14:18:02 -0500
+Message-ID: <1352488687-19935-6-git-send-email-jmoyer@redhat.com>
 References: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33926 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755367Ab2KITS3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Nov 2012 14:18:29 -0500
 In-Reply-To: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Bart Van Assche <bvanassche@acm.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
-List-Id: linux-scsi@vger.kernel.org
 
 
 Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 ---
- drivers/scsi/scsi.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+ drivers/scsi/sd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 2936b44..1750702 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -173,16 +173,19 @@ static DEFINE_MUTEX(host_cmd_pool_mutex);
-  * NULL on failure
-  */
- static struct scsi_cmnd *
--scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask)
-+scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask,
-+			int node)
- {
- 	struct scsi_cmnd *cmd;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 12f6fdf..a5dae6b 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2714,7 +2714,7 @@ static int sd_probe(struct device *dev)
+ 	if (!sdkp)
+ 		goto out;
  
--	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
-+	cmd = kmem_cache_alloc_node(pool->cmd_slab,
-+				    gfp_mask | pool->gfp_mask | __GFP_ZERO,
-+				    node);
- 	if (!cmd)
- 		return NULL;
- 
--	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
--					     gfp_mask | pool->gfp_mask);
-+	cmd->sense_buffer = kmem_cache_alloc_node(pool->sense_slab,
-+					gfp_mask | pool->gfp_mask, node);
- 	if (!cmd->sense_buffer) {
- 		kmem_cache_free(pool->cmd_slab, cmd);
- 		return NULL;
-@@ -223,7 +226,8 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
- {
- 	struct scsi_cmnd *cmd;
- 
--	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask);
-+	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask,
-+				      scsi_host_get_numa_node(shost));
- 	if (!cmd)
- 		return NULL;
- 
-@@ -435,7 +439,7 @@ struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask)
- 	if (!pool)
- 		return NULL;
- 
--	return scsi_pool_alloc_command(pool, gfp_mask);
-+	return scsi_pool_alloc_command(pool, gfp_mask, NUMA_NO_NODE);
- }
- EXPORT_SYMBOL(scsi_allocate_command);
+-	gd = alloc_disk(SD_MINORS);
++	gd = alloc_disk_node(SD_MINORS, scsi_host_get_numa_node(sdp->host));
+ 	if (!gd)
+ 		goto out_free;
  
 -- 
 1.7.1
+
