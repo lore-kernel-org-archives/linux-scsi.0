@@ -1,66 +1,30 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] virtio-scsi: Fix incorrect lock release order in
- virtscsi_kick_cmd
-Date: Fri, 09 Nov 2012 11:31:16 -0800
-Message-ID: <1352489476.29589.544.camel@haakon2.linux-iscsi.org>
-References: <1352442592-2162-1-git-send-email-nab@linux-iscsi.org>
-	 <509CC210.8090908@redhat.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: scsi target, likely GPL violation
+Date: Fri, 09 Nov 2012 11:52:19 -0800
+Message-ID: <509D5EF3.9030809@redhat.com>
+References: <509A915B.30105@redhat.com> <CAPoiz9wzx_NmuA1ty-U28MGiYr7XKCbDn_e0ZLmz=pNDCqwqFw@mail.gmail.com> <509B117A.6070708@genband.com> <509BE460.6010404@redhat.com> <1352405111.29589.476.camel@haakon2.linux-iscsi.org> <509C22B2.8010600@redhat.com> <1352426896.29589.512.camel@haakon2.linux-iscsi.org> <20121109110336.41833034@pyramind.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <509CC210.8090908@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <JBottomley@Parallels.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:31141 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753665Ab2KITwd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Nov 2012 14:52:33 -0500
+In-Reply-To: <20121109110336.41833034@pyramind.ukuu.org.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: nab@risingtidesystems.com, Chris Friesen <chris.friesen@genband.com>, Jon Mason <jdmason@kudzu.us>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>
 
-Hi Paolo,
+On 11/09/2012 03:03 AM, Alan Cox wrote:
+> I fail to understand the maintainer question however. If you were trying
+> to block people adding target features that competed that would be a
+> different thing.
 
-On Fri, 2012-11-09 at 09:42 +0100, Paolo Bonzini wrote:
-> Il 09/11/2012 07:29, Nicholas A. Bellinger ha scritto:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > This patch fixes a regression bug in virtscsi_kick_cmd() that relinquishes
-> > the acquired spinlocks in the incorrect order using the wrong spin_unlock
-> > macros, namely releasing vq->vq_lock before tgt->tgt_lock while invoking
-> > the calls to virtio_ring.c:virtqueue_add_buf() and friends.
-> > 
-> > This bug was originally introduced in v3.5-rc7 code with:
-> > 
-> > commit 2bd37f0fde99cbf8b78fb55f1128e8c3a63cf1da
-> > Author: Paolo Bonzini <pbonzini@redhat.com>
-> > Date:   Wed Jun 13 16:56:34 2012 +0200
-> > 
-> >     [SCSI] virtio-scsi: split scatterlist per target
-> > 
-> > Go ahead and make sure that vq->vq_lock is relinquished w/ spin_unlock
-> > first, then release tgt->tgt_lock w/ spin_unlock_irqrestore.
-> 
-> That's done on purpose.  After you do virtqueue_add_buf, you don't need
-> the sg list anymore, nor the lock that protects it.  The cover letter is
-> at https://lkml.org/lkml/2012/6/13/295 and had this text:
-> 
->   This series reorganizes the locking in virtio-scsi, introducing
->   separate scatterlists for each target and "pipelining" the locks so
->   that one command can be queued while the other is prepared.  This
->   improves performance when there are multiple in-flight operations.
-> 
-> In fact, the patch _introduces_ wrong locking because
-> virtqueue_kick_prepare needs the vq_lock.
-> 
-> Perhaps what you want is separate local_irq_save/local_irq_restore?
-> 
+You think it's ok for us to have an unrepentant GPL violator as a
+subsystem maintainer??
 
-Ahh, that makes more sense now.
+If that's really what you're saying then I think that's crazy.
 
-Just noticed this while reviewing code that using one spinlock flag's to
-release the other looks suspicious, minus the ordering bit..
-
-Using local_irq_* would probably be cleaner than swapping flags between
-different locks, and a short comment here would be helpful to explain
-the locking order context.
-
-Anyways, no big deal.  Thanks for the explanation.
-
---nab
+-- Andy
