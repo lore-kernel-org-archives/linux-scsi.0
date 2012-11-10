@@ -1,66 +1,19 @@
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: Re: [PATCH] target: Update copyright ownership to 2012
-Date: Sat, 10 Nov 2012 12:15:21 +0200
-Message-ID: <20121110101521.GA17489@shutemov.name>
-References: <1352502014-9782-1-git-send-email-nab@linux-iscsi.org>
+From: PRAKASH BHALODIYA <10dpl037@nirmauni.ac.in>
+Subject: (unknown)
+Date: Sat, 10 Nov 2012 15:34:43 +0100
+Message-ID: <CAMxu0_htXvdwRTO7fUVz3ce5tnb-tPS35e-6aUQW+wDN_3bPRw@mail.gmail.com>
+Reply-To: mamoud_abia@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1352502014-9782-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f194.google.com ([209.85.214.194]:40286 "EHLO
+	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737Ab2KJOep (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Nov 2012 09:34:45 -0500
+Received: by mail-ob0-f194.google.com with SMTP id lz20so53836obb.1
+        for <linux-scsi@vger.kernel.org>; Sat, 10 Nov 2012 06:34:44 -0800 (PST)
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Nov 09, 2012 at 11:00:14PM +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> Hello everyone,
-> 
-> This patch to update copyright year to current for principal target core
-> ownership is now being pushed into target-pending/for-next.
-> 
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/target_core_alua.c            |    5 +++--
->  drivers/target/target_core_configfs.c        |    5 +++--
->  drivers/target/target_core_device.c          |    7 +++----
->  drivers/target/target_core_fabric_configfs.c |    7 ++++---
->  drivers/target/target_core_fabric_lib.c      |    5 +++--
->  drivers/target/target_core_file.c            |    7 +++----
->  drivers/target/target_core_hba.c             |    7 +++----
->  drivers/target/target_core_iblock.c          |    7 +++----
->  drivers/target/target_core_pr.c              |    5 +++--
->  drivers/target/target_core_pscsi.c           |    7 +++----
->  drivers/target/target_core_rd.c              |    7 +++----
->  drivers/target/target_core_sbc.c             |    7 +++----
->  drivers/target/target_core_spc.c             |    7 +++----
->  drivers/target/target_core_stat.c            |    7 +++----
->  drivers/target/target_core_tmr.c             |    5 +++--
->  drivers/target/target_core_tpg.c             |    7 +++----
->  drivers/target/target_core_transport.c       |    7 +++----
->  drivers/target/target_core_ua.c              |    5 +++--
->  18 files changed, 55 insertions(+), 59 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-> index 4c8eea2..035c606 100644
-> --- a/drivers/target/target_core_alua.c
-> +++ b/drivers/target/target_core_alua.c
-> @@ -3,8 +3,9 @@
->   *
->   * This file contains SPC-3 compliant asymmetric logical unit assigntment (ALUA)
->   *
-> - * Copyright (c) 2009-2010 Rising Tide Systems
-> - * Copyright (c) 2009-2010 Linux-iSCSI.org
-> + * (c) Copyright 2009-2012 RisingTide Systems LLC.
-> + *
-> + * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
->   *
->   * Nicholas A. Bellinger <nab@kernel.org>
->   *
 
-Why do you remove Linux-iSCSI.org copyright?
-
--- 
- Kirill A. Shutemov
