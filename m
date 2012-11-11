@@ -1,28 +1,44 @@
-From: favour arisa <favourarisa300@suomi24.fi>
-Subject: Hello My Dear,
-Date: Sun, 11 Nov 2012 17:42:32 +0100 (CET)
-Message-ID: <31519799.43221352652152005.JavaMail.defaultUser__22036.0736515888$1352652167$gmane$org@defaultHost>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: scsi target, likely GPL violation
+Date: Sun, 11 Nov 2012 18:22:37 +0000
+Message-ID: <1352658157.6524.58.camel@dabdike>
+References: <509A915B.30105@redhat.com> <1352626456.6524.46.camel@dabdike>
+	 <20121111130553.GA30943@thunk.org> <87390gxjbd.fsf@ebb.org>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="iso-8859-15"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.suomi24.fi ([80.76.154.16]:57133 "EHLO
-	s24-maa01.sth.basefarm.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751377Ab2KKQme (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Nov 2012 11:42:34 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87390gxjbd.fsf@ebb.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Bradley M. Kuhn" <bkuhn@sfconservancy.org>
+Cc: Theodore Ts'o <tytso@mit.edu>, Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>, Nicholas Bellinger <nab@risingtidesystems.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello My Dear,
-how are you today,i hope your doing ever there. my name is miss
-favour and i am single,I come across your profile today and its my pleasure
-and interesting sending mail to you as a new friend. and I will like you to
-contact me back with my e-mail ( favourarisaa300@live.com  ) so i can
-give you my picture and tell you more about me.Remember good relationship
-goes beyond distance and color, honest, emotions, careering and kind that
-lead both lovers to fly highly on the wings of happiness.
-Awaiting to hear from you soon.
-Have a nice day.
-Yours favour
-                     favourarisaa300@live.com 
+On Sun, 2012-11-11 at 10:15 -0500, Bradley M. Kuhn wrote:
+> James wrote:
+> >> [I'd like to see] a genuine public apology for the libel...
+> >> Because any further discussion of unsubstantiated allegations of
+> this
+> >> nature exposes us all to jeopardy of legal sanction.
+
+Hey that's a complete misrepresentation.  I expressed no such opinion in
+the email.
+
+What I said was:
+
+> I would really appreciate it if the next email I see from you on this
+> subject is either
+> 
+>      1. Yes, I've got first hand proof of a GPL violation (in which case
+>         we'll then move to seeing how we can remedy this) or
+>      2. A genuine public apology for the libel, which I'll do my best to
+>         prevail on RTS to accept.
+> 
+> Because any further discussion of unsubstantiated allegations of this
+> nature exposes us all to jeopardy of legal sanction.
+
+That asks for moderation until we have a better investigation of the
+facts.  It definitely doesn't try to prejudge them or express preference
+for a specific outcome as your misquote makes out.
+
+James
