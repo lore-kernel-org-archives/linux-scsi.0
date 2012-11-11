@@ -1,96 +1,65 @@
-From: Kyle Moffett <kyle@moffetthome.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: Re: [PATCH] target: Update copyright ownership to 2012
-Date: Sat, 10 Nov 2012 16:18:16 -0800
-Message-ID: <CAGZ=bqJ26Y2x9j+QuARAdfxSsU3ncSZV+YRU8ZiCvS6fSx=X_A@mail.gmail.com>
+Date: Sat, 10 Nov 2012 18:44:59 -0800
+Message-ID: <1352601899.4168.35.camel@haakon2.linux-iscsi.org>
 References: <1352502014-9782-1-git-send-email-nab@linux-iscsi.org>
+	 <CAGZ=bqJ26Y2x9j+QuARAdfxSsU3ncSZV+YRU8ZiCvS6fSx=X_A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1352502014-9782-1-git-send-email-nab@linux-iscsi.org>
+In-Reply-To: <CAGZ=bqJ26Y2x9j+QuARAdfxSsU3ncSZV+YRU8ZiCvS6fSx=X_A@mail.gmail.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Kyle Moffett <kyle@moffetthome.net>
 Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, bkuhn@sfconservancy.org, Andy Grover <agrover@redhat.com>, Marc Fleischmann <mwf@risingtidesystems.com>, legal@lists.gpl-violations.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Nov 9, 2012 at 3:00 PM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
-> This patch to update copyright year to current for principal target core
-> ownership is now being pushed into target-pending/for-next.
+On Sat, 2012-11-10 at 16:18 -0800, Kyle Moffett wrote:
+> On Fri, Nov 9, 2012 at 3:00 PM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> > This patch to update copyright year to current for principal target core
+> > ownership is now being pushed into target-pending/for-next.
+> 
+> Pardon me, but you were just publicly accused of violating the GPL, so
+> your response is to send a patch removing the copyright notices of all
+> other organizations from the SCSI-target code?  Have you obtained
+> ownership of all the relevant copyrights for Linux-iSCSI.org, PyX
+> Technologies, Inc, and SBE, Inc?
 
-Pardon me, but you were just publicly accused of violating the GPL, so
-your response is to send a patch removing the copyright notices of all
-other organizations from the SCSI-target code?  Have you obtained
-ownership of all the relevant copyrights for Linux-iSCSI.org, PyX
-Technologies, Inc, and SBE, Inc?  If not, then this patch is an
-attempted violation of those organizations copyrights and of the GPL
-(which requires that you preserve copyright notices).
+I understand and appreciate your concerns.
 
-Further, while these notices are the only ones listed in those files,
-they are not the only individuals outside of RisingTide Systems which
-have significant copyright interest in this code.  If your goal is to
-obtain exclusive copyright ownership over this code then there are a
-great many other people you must contact and convince first.
+To answer your question, we have rightfully obtained ownership of all
+relevant copyrights to the target code for PyX Technologies LLC, and
+SBEi, Inc.
 
-I would encourage you to talk privately with the Software Freedom
-Conservancy before sending more patches of this nature.
+I co-founded PyX in 2002, where we started the development of the target
+code. PyX was subsequently acquired by SBEi in 2005. In 2007, I
+purchased (at significant personal cost) all rights, title and interest
+(incl. the copyright) in the target code. I then co-founded RisingTide
+with this code in 2009.
 
-Cheers,
-Kyle Moffett
+Linux-iSCSI.org is only a URL and website that is owned by RisingTide
+Systems, and not a legal entity or person, so listing it as a copyright
+holder is meaningless.
 
-> diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-> - * Copyright (c) 2009-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-> - * Copyright (c) 2008-2011 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> - * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-> - * Copyright (c) 2005-2006 SBE, Inc.  All Rights Reserved.
-> - * Copyright (c) 2008-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-> - * Copyright (c) 2010,2011 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
-> - * Copyright (c) 2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-> - * Copyright (c) 2005 PyX Technologies, Inc.
-> - * Copyright (c) 2005-2006 SBE, Inc.  All Rights Reserved.
-> - * Copyright (c) 2008-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
-> - * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-> - * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-> - * Copyright (c) 2008-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-> - * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-> - * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-> - * Copyright (c) 2008-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-> - * Copyright (c) 2009, 2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-> - * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-> - * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-> - * Copyright (c) 2008-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-> - * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-> - * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-> - * Copyright (c) 2008-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> - * Copyright (c) 2002, 2003, 2004, 2005 PyX Technologies, Inc.
-> - * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-> - * Copyright (c) 2008-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-> - * Copyright (c) 2002, 2003, 2004, 2005 PyX Technologies, Inc.
-> - * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-> - * Copyright (c) 2008-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
-> - * Copyright (c) 2011 Linux-iSCSI.org
-> - * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
-> diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-> - * Copyright (c) 2009,2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-> - * Copyright (c) 2002, 2003, 2004, 2005 PyX Technologies, Inc.
-> - * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-> - * Copyright (c) 2008-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> - * Copyright (c) 2002, 2003, 2004, 2005 PyX Technologies, Inc.
-> - * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-> - * Copyright (c) 2008-2010 Linux-iSCSI.org
-> diff --git a/drivers/target/target_core_ua.c b/drivers/target/target_core_ua.c
-> - * Copyright (c) 2009,2010 Linux-iSCSI.org
+> If not, then this patch is an
+> attempted violation of those organizations copyrights and of the GPL
+> (which requires that you preserve copyright notices).
+> 
+> Further, while these notices are the only ones listed in those files,
+> they are not the only individuals outside of RisingTide Systems which
+> have significant copyright interest in this code.
+>
+>   If your goal is to
+> obtain exclusive copyright ownership over this code then there are a
+> great many other people you must contact and convince first.
+> 
+
+The goal is to update the copyright to the current year, and to remove
+legal entities that no longer exist or were meaningless.
+
+I hope this clarifies your concerns.
+
+Thank you,
+
+--nab
