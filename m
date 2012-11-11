@@ -1,47 +1,56 @@
-From: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Subject: Re: [PATCH] USB enclosures seem to require read(16) with >2TB
- drives
-Date: Sun, 11 Nov 2012 12:17:36 +0100
-Message-ID: <20121111121736.5672b762@stein>
-References: <1352477289-8133-1-git-send-email-hernejj@gmail.com>
-	<94D0CD8314A33A4D9D801C0FE68B40294C344C61@G1W3652.americas.hpqcorp.net>
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: scsi target, likely GPL violation
+Date: Sun, 11 Nov 2012 08:05:53 -0500
+Message-ID: <20121111130553.GA30943@thunk.org>
+References: <509A915B.30105@redhat.com>
+ <1352626456.6524.46.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40294C344C61-NSOR0jG+XgMSZAcGdq5asR6epYMZPwEe5NbjCUgZEJk@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Elliott, Robert (Server Storage)" <Elliott-VXdhtT5mjnY@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1352626456.6524.46.camel@dabdike>
+Sender: target-devel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>, Nicholas Bellinger <nab@risingtidesystems.com>, "Bradley M. Kuhn" <bkuhn@sfconservancy.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Nov 09 Elliott, Robert (Server Storage) wrote:
-> I recommend broadening this patch.  T10 is discussing making READ (10), WRITE (10), etc. obsolete in SBC-4 in favor of their 16-byte CDB counterparts.  
-> 
-> The algorithm should be:
-> 1. During discovery, determine if 16-byte CDBs are supported.  There are several ways to determine this:
-> a) REPORT SUPPORTED OPERATION CODES command succeeds and reports that READ (16) et al are supported.
-> b) READ (16) command specifying a Transfer Length of zero succeeds.
-> c) READ CAPACITY (16) command succeeds and reports that the capacity is > 2 TiB.
-> d) (future) INQUIRY command succeeds fetching the Block Device Characteristics VPD page and notices a new field added by the SBC-4 simplified SCSI feature set proposal.
-> 
-> Since REPORT SUPPORTED OPERATION CODES is optional, it won't always work. READ CAPACITY (16) used to be optional for < 2 TiB drives, so it won't always work either. READ (16) will always work, but requires the drive to be spun up beforehand (e.g., with START STOP UNIT).
+On Sun, Nov 11, 2012 at 09:34:16AM +0000, James Bottomley wrote:
+> Anybody who does enforcement will tell you that you begin with first
+> hand proof of a violation.  That means obtain the product and make sure
+> it's been modified and that a request for corresponding source fails.
+> In this case, since I presume Red Hat, as a RTS partner, has a bona fide
+> copy of the RTS OS, please verify it does indeed implement or issue the
+> commands which are not in the public git repository and that whoever
+> owns the copy makes a request for the source code.
 
-This won't work.  It will crash badly written device firmwares.
+It should also be noted (although I have no idea if this is what is
+going on here; this is a generalized statement and not one where I
+have attempted to apply the facts to the law --- that requires the
+expertise of a lawyer, and please let's not play lawyer on LKML)
+that it *is* possible for the copyright owner to license the code
+under more than once license.  Yes, once the code has been contributed
+to a GPL'ed project, and changes have been accepted from other people
+which touch said code, things get muddied --- but if someone were to
+keep an original copy of the code where they own 100% of all of the
+lines of code, and then use that in a proprietary project, that can be
+perfectly OK from a copyright perspective.
 
-Instead, try the (10) commands on the SBC-4 device and let it respond that
-it does not implement these commands.  Or have other means to be certain of
-SBC-4 compliance without issuing commands that were optional in or not
-defined by earlier revisions of the spec.  I wonder whether testing for
-INQUIRY_data.VERSION >= something is a sufficiently safe test.
+(I say this speaking as someone who once did exactly this with the
+resizing code found in e2fsprogs.  That work was sponsored and was
+made possible by the company which wrote Partition Magic, a long time
+ago, and the work-for-hire contract I signed with them precisely
+spelled out how it could be released for commercial use as well as
+under the GPL.  As far as I know they may still be shipping resizing
+code for ext2 and ext3 --- but not ext4, since those changes were
+contributed later, under a GPL-only license.)
 
-> 2. if 16-byte CDBs are supported, then use them; only drop down to 10-byte CDBs if 16-byte CDBs are unavailable.  Don't make the decision by comparing the LBA on every IO.
+The bottom line is that copyright licensing can get *complicated* and
+so before you start flinging about accusations, one would be wise to
+be 100% sure of the facts.  You need to make sure that they have
+distributed lines of code which came from the *Linux* kernel, and not
+just from code which they may have originally contributed to the Linux
+kernel.
 
--- 
-Stefan Richter
--=====-===-- =-== -=-==
-http://arcgraph.de/sr/
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Best regards,
+
+					- Ted
