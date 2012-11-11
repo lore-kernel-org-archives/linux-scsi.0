@@ -1,69 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: scsi target, likely GPL violation
-Date: Sun, 11 Nov 2012 09:34:16 +0000
-Message-ID: <1352626456.6524.46.camel@dabdike>
-References: <509A915B.30105@redhat.com>
+From: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
+Subject: Re: [PATCH] USB enclosures seem to require read(16) with >2TB
+ drives
+Date: Sun, 11 Nov 2012 12:17:36 +0100
+Message-ID: <20121111121736.5672b762@stein>
+References: <1352477289-8133-1-git-send-email-hernejj@gmail.com>
+	<94D0CD8314A33A4D9D801C0FE68B40294C344C61@G1W3652.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <509A915B.30105@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>, Nicholas Bellinger <nab@risingtidesystems.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40294C344C61-NSOR0jG+XgMSZAcGdq5asR6epYMZPwEe5NbjCUgZEJk@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Elliott, Robert (Server Storage)" <Elliott-VXdhtT5mjnY@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-11-07 at 08:50 -0800, Andy Grover wrote:
-> Nick,
+On Nov 09 Elliott, Robert (Server Storage) wrote:
+> I recommend broadening this patch.  T10 is discussing making READ (10), WRITE (10), etc. obsolete in SBC-4 in favor of their 16-byte CDB counterparts.  
 > 
-> Your company appears to be shipping kernel features in RTS OS that are
-> not made available under the GPL, specifically support for the
-> EXTENDED_COPY and COMPARE_AND_WRITE SCSI commands, in order to claim
-> full Vmware vSphere 5 VAAI support.
+> The algorithm should be:
+> 1. During discovery, determine if 16-byte CDBs are supported.  There are several ways to determine this:
+> a) REPORT SUPPORTED OPERATION CODES command succeeds and reports that READ (16) et al are supported.
+> b) READ (16) command specifying a Transfer Length of zero succeeds.
+> c) READ CAPACITY (16) command succeeds and reports that the capacity is > 2 TiB.
+> d) (future) INQUIRY command succeeds fetching the Block Device Characteristics VPD page and notices a new field added by the SBC-4 simplified SCSI feature set proposal.
 > 
-> http://www.risingtidesystems.com/storage.html
-> http://www.linux-iscsi.org/wiki/VAAI
-> 
-> Private emails to you and RTS CEO Marc Fleischmann have not elicited a
-> useful response.
-> 
-> You are subsystem maintainer for the in-kernel SCSI target support
-> (drivers/target/*), and your company appears to be violating the GPL.
-> Please explain.
+> Since REPORT SUPPORTED OPERATION CODES is optional, it won't always work. READ CAPACITY (16) used to be optional for < 2 TiB drives, so it won't always work either. READ (16) will always work, but requires the drive to be spun up beforehand (e.g., with START STOP UNIT).
 
-Can we please cool it with the inflammatory accusations.  Please
-remember that statements which damage or seek to damage the reputation
-of a company amount to libel even under US law ... and using phrases
-like "appears to" doesn't shield you from this.
+This won't work.  It will crash badly written device firmwares.
 
-I also note that whatever their website says RTS OS isn't in VMware's
-certified compatibility list:
+Instead, try the (10) commands on the SBC-4 device and let it respond that
+it does not implement these commands.  Or have other means to be certain of
+SBC-4 compliance without issuing commands that were optional in or not
+defined by earlier revisions of the spec.  I wonder whether testing for
+INQUIRY_data.VERSION >= something is a sufficiently safe test.
 
-http://www.vmware.com/resources/compatibility/pdf/vi_io_guide.pdf
+> 2. if 16-byte CDBs are supported, then use them; only drop down to 10-byte CDBs if 16-byte CDBs are unavailable.  Don't make the decision by comparing the LBA on every IO.
 
-Plus it's a grey area what you actually have to support to make that
-list (especially as XCOPY has now been removed from SBC-3 in favour of
-token copy), so I'd say that the chain of reasoning you've used to come
-up with this hearsay allegation of copyright violation is tenuous at
-best.
-
-Anybody who does enforcement will tell you that you begin with first
-hand proof of a violation.  That means obtain the product and make sure
-it's been modified and that a request for corresponding source fails.
-In this case, since I presume Red Hat, as a RTS partner, has a bona fide
-copy of the RTS OS, please verify it does indeed implement or issue the
-commands which are not in the public git repository and that whoever
-owns the copy makes a request for the source code.
-
-I would really appreciate it if the next email I see from you on this
-subject is either
-
-     1. Yes, I've got first hand proof of a GPL violation (in which case
-        we'll then move to seeing how we can remedy this) or
-     2. A genuine public apology for the libel, which I'll do my best to
-        prevail on RTS to accept.
-
-Because any further discussion of unsubstantiated allegations of this
-nature exposes us all to jeopardy of legal sanction.
-
-James
+-- 
+Stefan Richter
+-=====-===-- =-== -=-==
+http://arcgraph.de/sr/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
