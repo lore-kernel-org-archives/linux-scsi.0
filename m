@@ -1,97 +1,60 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: scsi target, likely GPL violation
-Date: Sun, 11 Nov 2012 19:39:39 -0500
-Message-ID: <50A0454B.8070102@interlog.com>
-References: <509A915B.30105@redhat.com> <1352626456.6524.46.camel@dabdike>
-Reply-To: dgilbert@interlog.com
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] USB enclosures seem to require read(16) with >2TB
+ drives
+Date: Mon, 12 Nov 2012 09:18:14 +0100
+Message-ID: <20121112091814.198f0a62@stein>
+References: <1352477289-8133-1-git-send-email-hernejj@gmail.com>
+	<94D0CD8314A33A4D9D801C0FE68B40294C344C61@G1W3652.americas.hpqcorp.net>
+	<20121111121736.5672b762@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:41760 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751091Ab2KLAkE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Nov 2012 19:40:04 -0500
-In-Reply-To: <1352626456.6524.46.camel@dabdike>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:52377 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751255Ab2KLISg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Nov 2012 03:18:36 -0500
+In-Reply-To: <20121111121736.5672b762@stein>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>, Nicholas Bellinger <nab@risingtidesystems.com>
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "Jason J. Herne" <hernejj@gmail.com>, Alan Stern <stern@rowland.harvard.edu>
 
-On 12-11-11 04:34 AM, James Bottomley wrote:
-> On Wed, 2012-11-07 at 08:50 -0800, Andy Grover wrote:
->> Nick,
->>
->> Your company appears to be shipping kernel features in RTS OS that are
->> not made available under the GPL, specifically support for the
->> EXTENDED_COPY and COMPARE_AND_WRITE SCSI commands, in order to claim
->> full Vmware vSphere 5 VAAI support.
->>
->> http://www.risingtidesystems.com/storage.html
->> http://www.linux-iscsi.org/wiki/VAAI
->>
->> Private emails to you and RTS CEO Marc Fleischmann have not elicited a
->> useful response.
->>
->> You are subsystem maintainer for the in-kernel SCSI target support
->> (drivers/target/*), and your company appears to be violating the GPL.
->> Please explain.
->
-> Can we please cool it with the inflammatory accusations.  Please
-> remember that statements which damage or seek to damage the reputation
-> of a company amount to libel even under US law ... and using phrases
-> like "appears to" doesn't shield you from this.
->
-> I also note that whatever their website says RTS OS isn't in VMware's
-> certified compatibility list:
->
-> http://www.vmware.com/resources/compatibility/pdf/vi_io_guide.pdf
->
-> Plus it's a grey area what you actually have to support to make that
-> list (especially as XCOPY has now been removed from SBC-3 in favour of
-> token copy), so I'd say that the chain of reasoning you've used to come
-> up with this hearsay allegation of copyright violation is tenuous at
-> best.
+On Nov 11 Stefan Richter wrote:
+> On Nov 09 Elliott, Robert (Server Storage) wrote:
+> > I recommend broadening this patch.  T10 is discussing making READ (10), WRITE (10), etc. obsolete in SBC-4 in favor of their 16-byte CDB counterparts.  
+> > 
+> > The algorithm should be:
+> > 1. During discovery, determine if 16-byte CDBs are supported.  There are several ways to determine this:
+> > a) REPORT SUPPORTED OPERATION CODES command succeeds and reports that READ (16) et al are supported.
+> > b) READ (16) command specifying a Transfer Length of zero succeeds.
+> > c) READ CAPACITY (16) command succeeds and reports that the capacity is > 2 TiB.
+> > d) (future) INQUIRY command succeeds fetching the Block Device Characteristics VPD page and notices a new field added by the SBC-4 simplified SCSI feature set proposal.
+> > 
+> > Since REPORT SUPPORTED OPERATION CODES is optional, it won't always work. READ CAPACITY (16) used to be optional for < 2 TiB drives, so it won't always work either. READ (16) will always work, but requires the drive to be spun up beforehand (e.g., with START STOP UNIT).
+> 
+> This won't work.  It will crash badly written device firmwares.
+> 
+> Instead, try the (10) commands on the SBC-4 device and let it respond that
+> it does not implement these commands.  Or have other means to be certain of
+> SBC-4 compliance without issuing commands that were optional in or not
+> defined by earlier revisions of the spec.  I wonder whether testing for
+> INQUIRY_data.VERSION >= something is a sufficiently safe test.
 
-The SCSI EXTENDED COPY command (also known by the abbreviation "XCOPY")
-is specified in the SPC (SCSI Primary Commands) series of standards, not
-the SBC (SCSI Block Commands) series. Yes, it has been enhanced in the
-SPC-4 drafts (what you term as "token copy") but as far as I can
-determine, still allows for the original EXTENDED COPY command usage.
-EXTENDED COPY was first standardized in SPC-2 (ANSI INCITS 351-2001) in
-2001. The most recent SPC standard is SPC-3 (ANSI INCITS 408-2005) and
-if VMWare don't mention some other SCSI standard or draft, then the
-SPC-3 specification of the EXTENDED COPY command should be the
-reference. And that is prior to the addition of the "token copy"
-functionality.
+Let me revise this:  Try READ CAPACITY (10) first (unless SPC-3's
+INQUIRY_data.PROTECT is set, in which case I don't know what is safer;
+READ CAPACITY (16) first or READ CAPACITY (10) first).
 
-The latest released version of my sg3_utils package (1.34) contains
-a contributed sg_xcopy utility that invokes the SCSI EXTENDED COPY
-command. At this time it does not support the recently added "token
-copy" functionality.
+If this showed a capacity > 2 TB, then Jason's suggestion to always only
+issue READ (16) to all USB attached devices makes a lot of sense to me if
+it is true that Windows 7 never issues READ (10) to them.
 
-> Anybody who does enforcement will tell you that you begin with first
-> hand proof of a violation.  That means obtain the product and make sure
-> it's been modified and that a request for corresponding source fails.
-> In this case, since I presume Red Hat, as a RTS partner, has a bona fide
-> copy of the RTS OS, please verify it does indeed implement or issue the
-> commands which are not in the public git repository and that whoever
-> owns the copy makes a request for the source code.
->
-> I would really appreciate it if the next email I see from you on this
-> subject is either
->
->       1. Yes, I've got first hand proof of a GPL violation (in which case
->          we'll then move to seeing how we can remedy this) or
->       2. A genuine public apology for the libel, which I'll do my best to
->          prevail on RTS to accept.
+That would be what the proposed patch does.  What about WRITE and the
+various other (10)/(16) pairs of commands though?
 
-Sorry to add another category.
-
-Doug Gilbert
-
-> Because any further discussion of unsubstantiated allegations of this
-> nature exposes us all to jeopardy of legal sanction.
->
-> James
-
+I don't know what's best in case of transports other than USB (after
+capacity > 2 TB was established).
+-- 
+Stefan Richter
+-=====-===-- =-== -==--
+http://arcgraph.de/sr/
