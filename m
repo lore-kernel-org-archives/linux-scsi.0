@@ -1,104 +1,92 @@
-From: "Bradley M. Kuhn" <bkuhn@sfconservancy.org>
-Subject: Re: scsi target, likely GPL violation
-Date: Mon, 12 Nov 2012 09:21:29 -0500
-Message-ID: <87ip9aoqae.fsf@ebb.org>
-References: <509A915B.30105@redhat.com>
-	<CAPoiz9wzx_NmuA1ty-U28MGiYr7XKCbDn_e0ZLmz=pNDCqwqFw@mail.gmail.com>
-	<509B117A.6070708@genband.com> <509BE460.6010404@redhat.com>
-	<1352405111.29589.476.camel@haakon2.linux-iscsi.org>
-	<509C22B2.8010600@redhat.com>
-	<1352426896.29589.512.camel@haakon2.linux-iscsi.org>
-	<20121109110336.41833034@pyramind.ukuu.org.uk>
-	<14c701cdc059$d6fd28b0$84f77a10$@rosenlaw.com>
+From: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] USB enclosures seem to require read(16) with >2TB drives
+Date: Mon, 12 Nov 2012 15:31:50 +0100
+Message-ID: <50A10856.6090009@redhat.com>
+References: <1352477289-8133-1-git-send-email-hernejj@gmail.com> <1352719990.2449.23.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <14c701cdc059$d6fd28b0$84f77a10$@rosenlaw.com> (Lawrence Rosen's
-	message of "Sun, 11 Nov 2012 14:13:53 -0800")
-Sender: target-devel-owner@vger.kernel.org
-To: lrosen@rosenlaw.com, Richard Fontana <rfontana@redhat.com>, kcopenhaver@choate.com, agrover@redhat.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Marc Fleischmann <mwf@risingtidesystems.com>, Nicholas Bellinger <nab@risingtidesystems.com>, alan@lxorguk.ukuu.org.uk
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1352719990.2449.23.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Lawrence Rosen wrote at 17:13 (EST) on Sunday:
-> First, I hope that we can tone down the arguments about whether the
-> use of Linux APIs and headers automatically turns a program into a
-> derivative work of Linux. I think that argument has been largely
-> debunked in the U.S. in the recent decision in Oracle v. Google, and
-> in Europe in SAS v. World Programming. Does anyone here question
-> whether the original work that RTS contributed to Linux (and that *is*
-> under the GPL) is an original work of authorship of RTS despite the
-> fact that it links to other GPL code using headers and APIs?
+Il 12/11/2012 12:33, James Bottomley ha scritto:
+> On Fri, 2012-11-09 at 11:08 -0500, Jason J. Herne wrote:
+>> diff --git a/drivers/usb/storage/scsiglue.c
+>> b/drivers/usb/storage/scsiglue.c
+>> index 13b8bcd..6ff785e 100644
+>> --- a/drivers/usb/storage/scsiglue.c
+>> +++ b/drivers/usb/storage/scsiglue.c
+>> @@ -251,6 +251,11 @@ static int slave_configure(struct scsi_device
+>> *sdev)
+>>                                         US_FL_SCM_MULT_TARG)) &&
+>>                                 us->protocol == USB_PR_BULK)
+>>                         us->use_last_sector_hacks = 1;
+>> +
+>> +               /* Force read-16 for large capacity drives. */
+>> +               sdev->force_read_16 = 1;
+>> +
+>> +
+> 
+> This turns READ_16 on unconditionally for all USB disks ... is that
+> safe?  As in have you tested this with older USB thumb drives?
 
-My point remains that most of us simply don't have enough facts to know
-at this point what case law applies to the situation.  Andy is seeking
-facts to determine if a violation occurred, and I hope he gets them.
+Actually it only turns it on for large capacity drives, as said in the
+comment.  sdp->force_read_16 only matters for >2TB drives: 
+ 
+>> +	/* Many large capacity USB drives/controllers require the use of read(16). */
+>> +	force_read16 = (sdkp->capacity > 0xffffffffULL && sdp->force_read_16);
+>> +
+>>  	if (host_dif == SD_DIF_TYPE2_PROTECTION) {
+>>  		SCpnt->cmnd = mempool_alloc(sd_cdb_pool, GFP_ATOMIC);
+>>  
+>> @@ -833,7 +836,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+>>  		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
+>>  		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
+>>  		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
+>> -	} else if (block > 0xffffffff) {
+>> +	} else if (block > 0xffffffff || force_read16) {
 
-As I said in my previous email at 10:15 (EST) on Sunday:
->> lawyers disagree, and will often just take the position their client
->> wants them to take ...
+so the better name would be never_use_10_for_rw_on_large_disks.  For
+some definitions of better. :)
 
-I realize fully, Larry, that you're taking the position of your client,
-whom you've identified as Rising Tide Systems.  Meanwhile, obviously, I
-know many lawyers who disagree with your widely known interpretation of
-the implications of the two cases you mention.
+Any reason not to do this always on >2TB drives, which basically means
+changing this:
 
-I'd suspect that most lawyers looking at this situation would probably
-agree with me that the facts aren't fully known enough to make an
-assessment about the derivative nature of any code involved (other that
-the code that Rising Tide Systems pushed upstream already).  While the
-facts regarding other code are presumably fully known to you, Larry,
-because you have extra information under attorney-client privilege from
-your client Rising Tide Systems, no one else can make an independent
-evaluation of the facts yet.
+-	} else if (block > 0xffffffff) {
++	} else if (sdkp->capacity > 0xffffffff) {
 
-I therefore suggest that Andy be permitted to continue seeking facts on
-this question without being squelched, and we see what the facts bear
-out.  If some copyright holders believe a violation has occurred,
-provided the facts can be ascertained (which might prove difficult,
-given the political climate this thread has created), I'm sure those
-copyright holders will take up the matter at that point.
+and nothing else?
 
-> Second, we are grateful for the efforts that Bradley Kuhn and others
-> put in to enforce the GPL.
+Paolo
 
-Thank you.
+> 
+>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+>> index 5591ed5..e92b846 100644
+>> --- a/include/scsi/scsi_device.h
+>> +++ b/include/scsi/scsi_device.h
+>> @@ -134,6 +134,7 @@ struct scsi_device {
+>>                                      * because we did a bus reset. */
+>>         unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+>>         unsigned use_10_for_ms:1; /* first try 10-byte mode
+>> sense/select */
+>> +       unsigned force_read_16:1; /* Use read(16) over read(10) */
+> 
+> This should probably be use_16_for_rw:1 for consistency.
+> 
+> James
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-> So Brad[ley], we may solicit your assistance if we find any third
-> party who is distributing an unauthorized non-GPL derivative work of
-> the scsi target now in Linux.
-
-Conservancy is a 501(c)(3) charity in the USA and is thus not able to
-engage in copyright enforcement action on behalf of for-profit companies
-like Rising Tide Systems.  However, individual copyright holders who
-wish to put their copyrights forward as part of the coalition described
-in Conservancy's May announcement at
-http://sfconservancy.org/news/2012/may/29/compliance/ are welcome to do
-so, provided those copyright holders agree in writing that their
-copyrights will only be enforced to advance the public's access to Free
-Software. (Details of that can be discussed in private email; feel free
-to contact me if you're an individual copyright holder in Linux and
-interested in discussing it.)
-
-Larry, Conservancy *could* accept a charitable donation of
-copyright assignment to Conservancy if Rising Tide Systems wishes to
-do that.  Feel free to contact my privately if your client is
-interested in that.
-
-> RTS, of course, retains the exclusive right to do so, but no third
-> party can do so without a license from RTS.
-
-I'm sure you agree that Rising Tide Systems has already granted a
-license under GPLv2 for their contributions to Linux, so parties
-redistributing the derivatives of their code that are part of upstream
-Linux already have a license under GPLv2 for that specific code.
-
-> P.S. In accordance with my obligations as an attorney when
-> communicating with a represented person, I am copying attorneys for
-> Red Hat and Linux Foundation on this email.
-
-This inclusion seems a bit more than necessary to me, but I'm always
-happy to have Karen Copenhaver's and Richard Fontana's input on any
-situation where they're willing to opine. :)
--- 
-Bradley M. Kuhn, Executive Director, Software Freedom Conservancy
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
