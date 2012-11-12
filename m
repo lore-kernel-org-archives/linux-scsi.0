@@ -1,59 +1,60 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH] USB enclosures seem to require read(16) with >2TB drives
-Date: Mon, 12 Nov 2012 11:17:37 +0000
-Message-ID: <1352719057.2449.15.camel@dabdike.int.hansenpartnership.com>
+Date: Mon, 12 Nov 2012 11:33:10 +0000
+Message-ID: <1352719990.2449.23.camel@dabdike.int.hansenpartnership.com>
 References: <1352477289-8133-1-git-send-email-hernejj@gmail.com>
-	 <94D0CD8314A33A4D9D801C0FE68B40294C344C61@G1W3652.americas.hpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40294C344C61-NSOR0jG+XgMSZAcGdq5asR6epYMZPwEe5NbjCUgZEJk@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Elliott, Robert (Server Storage)" <Elliott-VXdhtT5mjnY@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45851 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752654Ab2KLLdO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Nov 2012 06:33:14 -0500
+In-Reply-To: <1352477289-8133-1-git-send-email-hernejj@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Jason J. Herne" <hernejj@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, stern@rowland.harvard.edu
 
-On Fri, 2012-11-09 at 16:33 +0000, Elliott, Robert (Server Storage)
-wrote:
-> I recommend broadening this patch.  T10 is discussing making READ
-> (10), WRITE (10), etc. obsolete in SBC-4 in favor of their 16-byte CDB
-> counterparts.  
-> 
-> The algorithm should be:
-> 1. During discovery, determine if 16-byte CDBs are supported.  There
-> are several ways to determine this:
-> a) REPORT SUPPORTED OPERATION CODES command succeeds and reports that
-> READ (16) et al are supported.
-> b) READ (16) command specifying a Transfer Length of zero succeeds.
-> c) READ CAPACITY (16) command succeeds and reports that the capacity
-> is > 2 TiB.
-> d) (future) INQUIRY command succeeds fetching the Block Device
-> Characteristics VPD page and notices a new field added by the SBC-4
-> simplified SCSI feature set proposal.
+On Fri, 2012-11-09 at 11:08 -0500, Jason J. Herne wrote:
+> diff --git a/drivers/usb/storage/scsiglue.c
+> b/drivers/usb/storage/scsiglue.c
+> index 13b8bcd..6ff785e 100644
+> --- a/drivers/usb/storage/scsiglue.c
+> +++ b/drivers/usb/storage/scsiglue.c
+> @@ -251,6 +251,11 @@ static int slave_configure(struct scsi_device
+> *sdev)
+>                                         US_FL_SCM_MULT_TARG)) &&
+>                                 us->protocol == USB_PR_BULK)
+>                         us->use_last_sector_hacks = 1;
+> +
+> +               /* Force read-16 for large capacity drives. */
+> +               sdev->force_read_16 = 1;
+> +
+> +
 
-When you consider the problem that we must support all devices (which
-means the older ones as well), including the annoying USB ones which
-crash on unexpected commands, you can see that d) is about the only
-viable option.
+This turns READ_16 on unconditionally for all USB disks ... is that
+safe?  As in have you tested this with older USB thumb drives?
 
-We can also force RC16 if the capacity is over 2^32 blocks, because the
-command will be required, so that's probably the place to start.
+Also do we have to worry about TYPE_RBC? ... this looks like a bit of a
+global omission in usbstorage.c
+
+
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 5591ed5..e92b846 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -134,6 +134,7 @@ struct scsi_device {
+>                                      * because we did a bus reset. */
+>         unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+>         unsigned use_10_for_ms:1; /* first try 10-byte mode
+> sense/select */
+> +       unsigned force_read_16:1; /* Use read(16) over read(10) */
+
+This should probably be use_16_for_rw:1 for consistency.
 
 James
 
-> Since REPORT SUPPORTED OPERATION CODES is optional, it won't always
-> work. READ CAPACITY (16) used to be optional for < 2 TiB drives, so it
-> won't always work either. READ (16) will always work, but requires the
-> drive to be spun up beforehand (e.g., with START STOP UNIT).
->  
-> 2. if 16-byte CDBs are supported, then use them; only drop down to
-> 10-byte CDBs if 16-byte CDBs are unavailable.  Don't make the decision
-> by comparing the LBA on every IO.
-> 
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
