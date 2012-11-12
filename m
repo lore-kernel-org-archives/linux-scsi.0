@@ -1,21 +1,76 @@
-From: "Sotelsek Salem Daniel F." <daniel.sotelsek@uah.es>
-Subject: Hello!.
-Date: Mon, 12 Nov 2012 18:46:52 +0100
-Message-ID: <FC521D178B8DDA4184F7C85F1B39069B07001022__10403.806778095$1352743908$gmane$org@X-EVS-01.uah.es>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v9 03/10] ata: zpodd: identify and init ZPODD devices
+Date: Mon, 12 Nov 2012 10:53:01 -0800
+Message-ID: <20121112185301.GB5560@mtj.dyndns.org>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+ <1352443922-13734-4-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx.uah.es ([212.128.64.17]:51561 "EHLO mx.uah.es"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751203Ab2KLSLY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Nov 2012 13:11:24 -0500
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1352443922-13734-4-git-send-email-aaron.lu@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello!. 
-I have to resend this mail to you because I have sent it to you several times without respond. You Have Been Left An Inheritance Under A Will. Contact me via  mail ( ferrandode@aol.com ) for further information.
- 
-Sincerely 
-Barrister.Ferrando.
+Hello,
+
+On Fri, Nov 09, 2012 at 02:51:55PM +0800, Aaron Lu wrote:
+>  void ata_acpi_unbind(struct ata_device *dev)
+>  {
+> +	if (zpodd_dev_enabled(dev))
+> +		zpodd_deinit(dev);
+
+Maybe zpodd_exit() instead?
+
+> +void zpodd_init(struct ata_device *dev)
+> +{
+> +	int ret;
+> +	struct zpodd *zpodd;
+> +
+> +	if (dev->private_data)
+> +		return;
+> +
+> +	if (!device_can_poweroff(dev))
+> +		return;
+> +
+> +	if ((ret = check_loading_mechanism(dev)) == -ENODEV)
+> +		return;
+> +
+> +	zpodd = kzalloc(sizeof(struct zpodd), GFP_KERNEL);
+> +	if (!zpodd)
+> +		return;
+> +
+> +	if (ret)
+> +		zpodd->drawer = true;
+> +	else
+> +		zpodd->slot = true;
+> +
+> +	zpodd->dev = dev;
+> +	dev->private_data = zpodd;
+
+I don't think you're supposed to use dev->private_data from libata
+core layer.  Just add a new field.  Nobody cares about adding 8 more
+bytes to struct ata_device and spending 8 more bytes is way better
+than muddying the ownership of ->private_data.
+
+> +/* libata-zpodd.c */
+> +#ifdef CONFIG_SATA_ZPODD
+> +void zpodd_init(struct ata_device *dev);
+> +void zpodd_deinit(struct ata_device *dev);
+> +static inline bool zpodd_dev_enabled(struct ata_device *dev)
+> +{
+> +	if (dev->flags & ATA_DFLAG_DA && dev->private_data)
+> +		return true;
+> +	else
+> +		return false;
+> +}
+
+And this gets completely wrong.  What if the device supports DA and
+low level driver makes use of ->private_data?
+
+Thanks.
+
+-- 
+tejun
