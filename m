@@ -1,92 +1,97 @@
-From: Dave Airlie <airlied@gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
 Subject: Re: scsi target, likely GPL violation
-Date: Mon, 12 Nov 2012 09:03:09 +1000
-Message-ID: <CAPM=9tyXG+AeNkXr2AUA8v1gHm_rL27dq8dhLWnXKXUOcrMyaw@mail.gmail.com>
-References: <509A915B.30105@redhat.com>
-	<CAPoiz9wzx_NmuA1ty-U28MGiYr7XKCbDn_e0ZLmz=pNDCqwqFw@mail.gmail.com>
-	<509B117A.6070708@genband.com>
-	<509BE460.6010404@redhat.com>
-	<1352405111.29589.476.camel@haakon2.linux-iscsi.org>
-	<509C22B2.8010600@redhat.com>
-	<1352426896.29589.512.camel@haakon2.linux-iscsi.org>
-	<20121109110336.41833034@pyramind.ukuu.org.uk>
-	<14c701cdc059$d6fd28b0$84f77a10$@rosenlaw.com>
-	<CAGRGNgWLE_hf41bz19H-QNJeEY7eGrq7vdEmx4AGFFJ3US6ENw@mail.gmail.com>
+Date: Sun, 11 Nov 2012 19:39:39 -0500
+Message-ID: <50A0454B.8070102@interlog.com>
+References: <509A915B.30105@redhat.com> <1352626456.6524.46.camel@dabdike>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAGRGNgWLE_hf41bz19H-QNJeEY7eGrq7vdEmx4AGFFJ3US6ENw@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: lrosen@rosenlaw.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kcopenhaver@choate.com, Richard Fontana <rfontana@redhat.com>, Marc Fleischmann <mwf@risingtidesystems.com>, Nicholas Bellinger <nab@risingtidesystems.com>, alan@lxorguk.ukuu.org.uk, agrover@redhat.com, bkuhn@sfconservancy.org, tytso@mit.edu
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:41760 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751091Ab2KLAkE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Nov 2012 19:40:04 -0500
+In-Reply-To: <1352626456.6524.46.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>, Nicholas Bellinger <nab@risingtidesystems.com>
 
-On Mon, Nov 12, 2012 at 8:41 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Hi Lawrence,
->
-> On Mon, Nov 12, 2012 at 9:13 AM, Lawrence Rosen <lrosen@rosenlaw.com> wrote:
->> Alan Cox wrote:
->>> So either your work is truely not derivative of the kernel (which I find
->>> wildly improbable) or you have a problem and since you are aware
->>> of the complaints publically I guess probably a triple damages sized
->>> problem. But that's one for your lawyers and whatever opinion they
->>> have on the subject.
+On 12-11-11 04:34 AM, James Bottomley wrote:
+> On Wed, 2012-11-07 at 08:50 -0800, Andy Grover wrote:
+>> Nick,
 >>
->> Hi Alan and others,
+>> Your company appears to be shipping kernel features in RTS OS that are
+>> not made available under the GPL, specifically support for the
+>> EXTENDED_COPY and COMPARE_AND_WRITE SCSI commands, in order to claim
+>> full Vmware vSphere 5 VAAI support.
 >>
->> I've been advising Rising Tide Systems (RTS) in this matter. Please let me
->> reassure you that RTS is acting on advice of counsel.
+>> http://www.risingtidesystems.com/storage.html
+>> http://www.linux-iscsi.org/wiki/VAAI
+>>
+>> Private emails to you and RTS CEO Marc Fleischmann have not elicited a
+>> useful response.
+>>
+>> You are subsystem maintainer for the in-kernel SCSI target support
+>> (drivers/target/*), and your company appears to be violating the GPL.
+>> Please explain.
 >
-> It's nice to hear from legal counsel on this matter.
+> Can we please cool it with the inflammatory accusations.  Please
+> remember that statements which damage or seek to damage the reputation
+> of a company amount to libel even under US law ... and using phrases
+> like "appears to" doesn't shield you from this.
 >
-> I don't think that the *usage* of the kernel APIs is the biggest issue
-> here. There are many examples where proprietary code uses these APIs
-> and is not violating the GPL.
+> I also note that whatever their website says RTS OS isn't in VMware's
+> certified compatibility list:
 >
-> As I see it, one of the main concerns is because the proprietary and
-> in-kernel target systems are, from what I understand, quite similar,
-> there is the possibility that GPL licensed contributions to the
-> in-kernel target code may have "leaked" into to the proprietary code.
-> That said, proving this is a very difficult problem, but the question
-> must still be asked:
+> http://www.vmware.com/resources/compatibility/pdf/vi_io_guide.pdf
 >
-> Can Rising Tide Systems assure us that there is no GPL licensed code
-> within their proprietary target code?
+> Plus it's a grey area what you actually have to support to make that
+> list (especially as XCOPY has now been removed from SBC-3 in favour of
+> token copy), so I'd say that the chain of reasoning you've used to come
+> up with this hearsay allegation of copyright violation is tenuous at
+> best.
 
-Its a bit of both actually.
+The SCSI EXTENDED COPY command (also known by the abbreviation "XCOPY")
+is specified in the SPC (SCSI Primary Commands) series of standards, not
+the SBC (SCSI Block Commands) series. Yes, it has been enhanced in the
+SPC-4 drafts (what you term as "token copy") but as far as I can
+determine, still allows for the original EXTENDED COPY command usage.
+EXTENDED COPY was first standardized in SPC-2 (ANSI INCITS 351-2001) in
+2001. The most recent SPC standard is SPC-3 (ANSI INCITS 408-2005) and
+if VMWare don't mention some other SCSI standard or draft, then the
+SPC-3 specification of the EXTENDED COPY command should be the
+reference. And that is prior to the addition of the "token copy"
+functionality.
 
-The problem is if you design a kernel subsystem specifically for the
-Linux kernel, even if you use the internal APIs, you are most likely
-creating a derived work of the Linux kernel.
+The latest released version of my sg3_utils package (1.34) contains
+a contributed sg_xcopy utility that invokes the SCSI EXTENDED COPY
+command. At this time it does not support the recently added "token
+copy" functionality.
 
-questions that would need to be asked:
-Can the scsi target code work completely separate from a Linux kernel?
-Does it work with another operating system? was it designed for that
-operating system?
+> Anybody who does enforcement will tell you that you begin with first
+> hand proof of a violation.  That means obtain the product and make sure
+> it's been modified and that a request for corresponding source fails.
+> In this case, since I presume Red Hat, as a RTS partner, has a bona fide
+> copy of the RTS OS, please verify it does indeed implement or issue the
+> commands which are not in the public git repository and that whoever
+> owns the copy makes a request for the source code.
+>
+> I would really appreciate it if the next email I see from you on this
+> subject is either
+>
+>       1. Yes, I've got first hand proof of a GPL violation (in which case
+>          we'll then move to seeing how we can remedy this) or
+>       2. A genuine public apology for the libel, which I'll do my best to
+>          prevail on RTS to accept.
 
-The whole in-kernel version under the GPL isn't the problem here and
-has nothing to do with the violation. Its the one they distribute
-separately with their RTS OS kernel, and if they distribute it in one
-combined work, then a GPL violation is possibly indicated.
+Sorry to add another category.
 
-The reasons for non-derived work status that have been suggested (but
-not accepted by all the community):
-a) AFS, a file system clearly not developed for Linux, where it being
-a derived work of something that came after it would be a bit crazy,
-b) binary GPU drivers, built from the same source base on their
-Windows platform, and the code existed on Windows before Linux,
-arguing this driver is a derived work is difficult as well. Also
-nvidia specifically don't distribute this driver linked against the
-kernel, and distros who have done this in the past have been on the
-end of cease-and-desist letters.
+Doug Gilbert
 
-So really this is purely a derived work issue, whether they release a
-trailing edge version of their code afterwards under the GPL isn't
-significant, other than a this might keep the community off our back.
+> Because any further discussion of unsubstantiated allegations of this
+> nature exposes us all to jeopardy of legal sanction.
+>
+> James
 
-(Yes the secondary issue of people who contributed code and cleanups
-back to that code base and if they integrated it back into their
-internal code base, is a problem, but I don't believe its the primary
-issue).
-
-Dave.
