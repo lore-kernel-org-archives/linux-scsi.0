@@ -1,53 +1,45 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 1/1] aacraid: SCSI dma mapping failure case handling
-Date: Wed, 14 Nov 2012 07:03:23 +0000
-Message-ID: <1352841833.8317.0.camel@dabdike>
-References: <1350421170-2436-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com>
-	 <507DD2E1.4080301@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH V4 1/4] [SCSI] drivers/scsi/ufs: Seggregate PCI
+ Specific Code
+Date: Tue, 13 Nov 2012 15:26:38 -0600
+Message-ID: <1352841998.8317.1.camel@dabdike>
+References: <1350474822-7315-1-git-send-email-vinholikatti@gmail.com>
+	 <1350474822-7315-2-git-send-email-vinholikatti@gmail.com>
+	 <507FA52E.9050400@ti.com>
+	 <CAKVbJB_FpmbtcLr5G5sSphNOPnodZUd0sN8ha0C_RtCDtWUG=Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:34451 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754997Ab2KNHD0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Nov 2012 02:03:26 -0500
-In-Reply-To: <507DD2E1.4080301@redhat.com>
-Content-Language: en-US
-Content-ID: <57F0B0583A78054280FE501AF868EA21@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAKVbJB_FpmbtcLr5G5sSphNOPnodZUd0sN8ha0C_RtCDtWUG=Q@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vinayak holikatti <vinholikatti@gmail.com>
+Cc: Venkatraman S <svenkatr@ti.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com, Santosh Yaraganavi <santoshsy@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, "Achim_Leubner@pmc-sierra.com" <Achim_Leubner@pmc-sierra.com>, "Tony_Ruiz@pmc-sierra.com" <Tony_Ruiz@pmc-sierra.com>
 
-T24gVHVlLCAyMDEyLTEwLTE2IGF0IDIzOjM0ICswMjAwLCBUb21hcyBIZW56bCB3cm90ZToNCj4g
-T24gMTAvMTYvMjAxMiAxMDo1OSBQTSwgTWFoZXNoIFJhamFzaGVraGFyYSB3cm90ZToNCj4gPiBU
-aGlzIHBhdGNoIGhhbmRsZXMgU0NTSSBkbWEgbWFwcGluZyBmYWlsdXJlIGNhc2UuIFJlcG9ydGlu
-ZyBlcnJvciBjb2RlIHRvIHRoZSB1cHBlciBsYXllciBpbnN0ZWFkIG9mIEJVR19PTigpLg0KPiA+
-DQo+ID4gVGhpcyBwYXRjaCBpcyBjcmVhdGVkIGFnYWluc3QgY3VycmVudCB1cHN0cmVhbSBrZXJu
-ZWwuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBNYWhlc2ggUmFqYXNoZWtoYXJhIDxNYWhlc2hf
-UmFqYXNoZWtoYXJhQHBtYy1zaWVycmEuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kv
-YWFjcmFpZC9hYWNoYmEuYyAgfCAgIDYzICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKyst
-LS0tLS0tLS0NCj4gPiAgZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oIHwgICAgMiArLQ0K
-PiA+ICAyIGZpbGVzIGNoYW5nZWQsIDUwIGluc2VydGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQ0K
-PiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jIGIvZHJp
-dmVycy9zY3NpL2FhY3JhaWQvYWFjaGJhLmMNCj4gPiBpbmRleCBkNzk0NTdhLi5lZmEyOTAwIDEw
-MDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jDQo+ID4gKysrIGIv
-ZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjaGJhLmMNCj4gPiBAQCAtOTcxLDYgKzk3MSw3IEBAIHN0
-YXRpYyBpbnQgYWFjX3JlYWRfcmF3X2lvKHN0cnVjdCBmaWIgKiBmaWIsIHN0cnVjdCBzY3NpX2Nt
-bmQgKiBjbWQsIHU2NCBsYmEsIHUzDQo+ID4gIHsNCj4gPiAgCXN0cnVjdCBhYWNfZGV2ICpkZXYg
-PSBmaWItPmRldjsNCj4gPiAgCXUxNiBmaWJzaXplLCBjb21tYW5kOw0KPiA+ICsJdW5zaWduZWQg
-bG9uZyByZXQ7DQo+ID4gIA0KPiA+ICAJYWFjX2ZpYl9pbml0KGZpYik7DQo+ID4gIAlpZiAoZGV2
-LT5jb21tX2ludGVyZmFjZSA9PSBBQUNfQ09NTV9NRVNTQUdFX1RZUEUyICYmICFkZXYtPnN5bmNf
-bW9kZSkgew0KPiA+IEBAIC05ODIsNyArOTgzLDEwIEBAIHN0YXRpYyBpbnQgYWFjX3JlYWRfcmF3
-X2lvKHN0cnVjdCBmaWIgKiBmaWIsIHN0cnVjdCBzY3NpX2NtbmQgKiBjbWQsIHU2NCBsYmEsIHUz
-DQo+ID4gIAkJcmVhZGNtZDItPmJ5dGVDb3VudCA9IGNwdV90b19sZTMyKGNvdW50PDw5KTsNCj4g
-PiAgCQlyZWFkY21kMi0+Y2lkID0gY3B1X3RvX2xlMTYoc2NtZF9pZChjbWQpKTsNCj4gPiAgCQly
-ZWFkY21kMi0+ZmxhZ3MgPSBjcHVfdG9fbGUxNihSSU8yX0lPX1RZUEVfUkVBRCk7DQo+ID4gLQkJ
-YWFjX2J1aWxkX3NncmF3MihjbWQsIHJlYWRjbWQyLCBkZXYtPnNjc2lfaG9zdF9wdHItPnNnX3Rh
-Ymxlc2l6ZSk7DQo+ID4gKwkJcmV0ID0gYWFjX2J1aWxkX3NncmF3MihjbWQsIHJlYWRjbWQyLA0K
-PiA+ICsJCQkJZGV2LT5zY3NpX2hvc3RfcHRyLT5zZ190YWJsZXNpemUpOw0KPiA+ICsJCWlmIChy
-ZXQgPCAwKQ0KPiA+ICsJCQlyZXR1cm4gcmV0Ow0KPiANCj4gSGkgTWFoZXNoLCAncmV0JyBpcyAn
-dW5zaWduZWQnLCB0aGUgYWJvdmUgdGVzdCB3aWxsIG5vdCB3b3JrLg0KPiBUb21hcw0KDQpQaW5n
-IG9uIHRoaXMgcGxlYXNlIE1haGVzaD8gIFRoZSBjcml0aWNpc20gc2VlbXMgY29tcGxldGVseSB2
-YWxpZCB0byBtZS4NCg0KSmFtZXMNCg0K
+On Thu, 2012-10-18 at 17:37 +0530, vinayak holikatti wrote:
+> I am Vacation will look into it when i am back to work.
+> > This doesn't apply on 3.7-rc1. Am I missing any patches in between ?
+
+OK, so it doesn't apply for me either:
+
+patching file drivers/scsi/ufs/ufshcd.c
+Hunk #11 FAILED at 902.
+Hunk #15 succeeded at 1157 with fuzz 1 (offset 2 lines).
+Hunk #16 succeeded at 1271 (offset 2 lines).
+Hunk #17 succeeded at 1300 (offset 2 lines).
+Hunk #18 succeeded at 1364 (offset 2 lines).
+Hunk #19 succeeded at 1499 (offset 2 lines).
+Hunk #20 succeeded at 1542 (offset 2 lines).
+Hunk #21 succeeded at 1678 (offset 2 lines).
+Hunk #22 succeeded at 1706 (offset 2 lines).
+Hunk #23 succeeded at 1727 (offset 2 lines).
+Hunk #24 succeeded at 1775 (offset 2 lines).
+Hunk #25 succeeded at 1819 (offset 2 lines).
+Hunk #26 succeeded at 1872 (offset 2 lines).
+Hunk #27 succeeded at 1898 (offset 2 lines).
+Hunk #28 FAILED at 2011.
+2 out of 28 hunks FAILED -- saving rejects to file
+drivers/scsi/ufs/ufshcd.c.rej
+
+James
