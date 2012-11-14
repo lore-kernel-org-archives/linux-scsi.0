@@ -1,45 +1,64 @@
-From: Prashant Barve <pp.barve@ncl.res.in>
-Subject: Important Notice!
-Date: Wed, 14 Nov 2012 08:39:44 +0000
-Message-ID: <16068F71F3C6CC4F8FBFD274DF1FD78342791246@mailsrv01.ncl.res.in>
+From: "Mahesh Rajashekhara" <Mahesh.Rajashekhara@pmcs.com>
+Subject: RE: [PATCH 1/1] aacraid: SCSI dma mapping failure case handling
+Date: Wed, 14 Nov 2012 01:58:33 -0800
+Message-ID: <340C71CD25A7EB49BFA81AE8C83926671A6D6AFA@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <1350421170-2436-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com> <507DD2E1.4080301@redhat.com> <1352841833.8317.0.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chandra.ncl.res.in ([59.163.216.11]:47417 "EHLO
-	chandra.ncl.res.in" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751458Ab2KNI4I convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Nov 2012 03:56:08 -0500
-Content-Language: en-US
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:41239 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752187Ab2KNJ6i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Nov 2012 04:58:38 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1352841833.8317.0.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, aacraid@pmc-sierra.com, Achim Leubner <Achim.Leubner@pmcs.com>, Tony Ruiz <Tony.Ruiz@pmcs.com>
 
-
-
-
-Dear Email User,
-
-You have exceeded the limit of 23432 storage on your mailbox set by your
-WEB IT-SERVICE/Administrator, and you will be having problems in sending
-and receiving mails Until You Re-Validate. You have to update by clicking on
-the below link and fill out the information to validate your account.
-
-Please Click the link Below or copy paste to your browser To Validate Your
-Mailbox
-
-http://www.formbuddy.com/cgi-bin/formdisp.pl?u=netaccess&f=access
-
-Warning!!!
-Failure to do this, will result in limited access to your mailbox.
-failure to update your account within Three days of this update
-notification, your account will be closed permanently.
-
-Sincerely,
-IT Service
-System Administrator
-
-________________________________
-
-Disclaimer:
-
-This message and the information contained herein is proprietary and confidential and subject to the policy statement of the National Chemical Laboratory, Pune, India. You may review the policy at http://www.ncl-india.org/common/webmailDisclaimer.htm
+SGkgSmFtZXMsDQoNCldlIGhhdmUgdGFrZW4gY2FyZSB0aGUgcmV2aWV3IGNvbW1lbnRzIGFuZCBy
+ZS1zdWJtaXR0ZWQgdGhlIHBhdGNoIGEgd2hpbGUgYWdvLg0KaHR0cDovL21hcmMuaW5mby8/bD1s
+aW51eC1zY3NpJm09MTM1MDYzNDc4MjMyMzk2Jnc9Mg0KIA0KDQpUb21hcyBoYXMgcHJvdmlkZWQg
+QWNrZWQtYnkgdG8gdGhlIHBhdGNoLg0KaHR0cDovL21hcmMuaW5mby8/bD1saW51eC1zY3NpJm09
+MTM1MDY1NzA2MzA3OTc0Jnc9Mg0KDQogIA0KVGhhbmtzLA0KTWFoZXNoDQoNCg0KLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEphbWVzIEJvdHRvbWxleSBbbWFpbHRvOmpib3R0b21s
+ZXlAcGFyYWxsZWxzLmNvbV0gDQpTZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDE0LCAyMDEyIDEy
+OjMzIFBNDQpUbzogVG9tYXMgSGVuemwNCkNjOiBNYWhlc2ggUmFqYXNoZWtoYXJhOyBsaW51eC1z
+Y3NpQHZnZXIua2VybmVsLm9yZzsgYWFjcmFpZEBwbWMtc2llcnJhLmNvbTsgQWNoaW0gTGV1Ym5l
+cjsgVG9ueSBSdWl6DQpTdWJqZWN0OiBSZTogW1BBVENIIDEvMV0gYWFjcmFpZDogU0NTSSBkbWEg
+bWFwcGluZyBmYWlsdXJlIGNhc2UgaGFuZGxpbmcNCg0KT24gVHVlLCAyMDEyLTEwLTE2IGF0IDIz
+OjM0ICswMjAwLCBUb21hcyBIZW56bCB3cm90ZToNCj4gT24gMTAvMTYvMjAxMiAxMDo1OSBQTSwg
+TWFoZXNoIFJhamFzaGVraGFyYSB3cm90ZToNCj4gPiBUaGlzIHBhdGNoIGhhbmRsZXMgU0NTSSBk
+bWEgbWFwcGluZyBmYWlsdXJlIGNhc2UuIFJlcG9ydGluZyBlcnJvciBjb2RlIHRvIHRoZSB1cHBl
+ciBsYXllciBpbnN0ZWFkIG9mIEJVR19PTigpLg0KPiA+DQo+ID4gVGhpcyBwYXRjaCBpcyBjcmVh
+dGVkIGFnYWluc3QgY3VycmVudCB1cHN0cmVhbSBrZXJuZWwuDQo+ID4NCj4gPiBTaWduZWQtb2Zm
+LWJ5OiBNYWhlc2ggUmFqYXNoZWtoYXJhIA0KPiA+IDxNYWhlc2hfUmFqYXNoZWtoYXJhQHBtYy1z
+aWVycmEuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyAg
+fCAgIDYzICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0NCj4gPiAgZHJp
+dmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oIHwgICAgMiArLQ0KPiA+ICAyIGZpbGVzIGNoYW5n
+ZWQsIDUwIGluc2VydGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdp
+dCBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jIA0KPiA+IGIvZHJpdmVycy9zY3NpL2Fh
+Y3JhaWQvYWFjaGJhLmMgaW5kZXggZDc5NDU3YS4uZWZhMjkwMCAxMDA2NDQNCj4gPiAtLS0gYS9k
+cml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9hYWNy
+YWlkL2FhY2hiYS5jDQo+ID4gQEAgLTk3MSw2ICs5NzEsNyBAQCBzdGF0aWMgaW50IGFhY19yZWFk
+X3Jhd19pbyhzdHJ1Y3QgZmliICogZmliLCANCj4gPiBzdHJ1Y3Qgc2NzaV9jbW5kICogY21kLCB1
+NjQgbGJhLCB1MyAgew0KPiA+ICAJc3RydWN0IGFhY19kZXYgKmRldiA9IGZpYi0+ZGV2Ow0KPiA+
+ICAJdTE2IGZpYnNpemUsIGNvbW1hbmQ7DQo+ID4gKwl1bnNpZ25lZCBsb25nIHJldDsNCj4gPiAg
+DQo+ID4gIAlhYWNfZmliX2luaXQoZmliKTsNCj4gPiAgCWlmIChkZXYtPmNvbW1faW50ZXJmYWNl
+ID09IEFBQ19DT01NX01FU1NBR0VfVFlQRTIgJiYgDQo+ID4gIWRldi0+c3luY19tb2RlKSB7IEBA
+IC05ODIsNyArOTgzLDEwIEBAIHN0YXRpYyBpbnQgYWFjX3JlYWRfcmF3X2lvKHN0cnVjdCBmaWIg
+KiBmaWIsIHN0cnVjdCBzY3NpX2NtbmQgKiBjbWQsIHU2NCBsYmEsIHUzDQo+ID4gIAkJcmVhZGNt
+ZDItPmJ5dGVDb3VudCA9IGNwdV90b19sZTMyKGNvdW50PDw5KTsNCj4gPiAgCQlyZWFkY21kMi0+
+Y2lkID0gY3B1X3RvX2xlMTYoc2NtZF9pZChjbWQpKTsNCj4gPiAgCQlyZWFkY21kMi0+ZmxhZ3Mg
+PSBjcHVfdG9fbGUxNihSSU8yX0lPX1RZUEVfUkVBRCk7DQo+ID4gLQkJYWFjX2J1aWxkX3NncmF3
+MihjbWQsIHJlYWRjbWQyLCBkZXYtPnNjc2lfaG9zdF9wdHItPnNnX3RhYmxlc2l6ZSk7DQo+ID4g
+KwkJcmV0ID0gYWFjX2J1aWxkX3NncmF3MihjbWQsIHJlYWRjbWQyLA0KPiA+ICsJCQkJZGV2LT5z
+Y3NpX2hvc3RfcHRyLT5zZ190YWJsZXNpemUpOw0KPiA+ICsJCWlmIChyZXQgPCAwKQ0KPiA+ICsJ
+CQlyZXR1cm4gcmV0Ow0KPiANCj4gSGkgTWFoZXNoLCAncmV0JyBpcyAndW5zaWduZWQnLCB0aGUg
+YWJvdmUgdGVzdCB3aWxsIG5vdCB3b3JrLg0KPiBUb21hcw0KDQpQaW5nIG9uIHRoaXMgcGxlYXNl
+IE1haGVzaD8gIFRoZSBjcml0aWNpc20gc2VlbXMgY29tcGxldGVseSB2YWxpZCB0byBtZS4NCg0K
+SmFtZXMNCg0K
