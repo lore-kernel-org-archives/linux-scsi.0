@@ -1,25 +1,45 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/5]  arcmsr: Re-name the HBA Type
-Date: Tue, 13 Nov 2012 13:39:57 +0000
-Message-ID: <1352813997.2505.10.camel@dabdike.sthat4.btopenzone.com>
-References: <E0E58D26E0F44C3580C13BBDE76CBB5D@arecaaebe11fae>
+Subject: Re: [v6 PATCH 1/8] cxgb4/cxgb4vf: Chelsio FCoE offload driver
+ submission (common header updates).
+Date: Tue, 13 Nov 2012 18:26:48 -0800
+Message-ID: <1352860008.28921.2.camel@dabdike>
+References: <1351158621-32222-1-git-send-email-naresh@chelsio.com>
+	 <1351158621-32222-2-git-send-email-naresh@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <E0E58D26E0F44C3580C13BBDE76CBB5D@arecaaebe11fae>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NickCheng <nick.cheng@areca.com.tw>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1351158621-32222-2-git-send-email-naresh@chelsio.com>
+Sender: netdev-owner@vger.kernel.org
+To: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: linux-scsi@vger.kernel.org, dm@chelsio.com, leedom@chelsio.com, netdev@vger.kernel.org, chethan@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2012-10-12 at 17:05 +0800, NickCheng wrote:
-> -#define ARCMSR_HBCMU_OUTBOUND_DOORBELL_ISR_MASK        0x00000004 /*
-> When clear, the General Outbound Doorbell interrupt routes to
-> the host.*/
-> 
-The patch is still linebroken here.  It is a massively long line (like
-about 200 characters).  I suspect you just set your exchange server line
-break to something big, but not bigger than this?
+On Thu, 2012-10-25 at 15:20 +0530, Naresh Kumar Inna wrote:
+> This patch contains updates to firmware/hardware header files shared
+> between csiostor and cxgb4/cxgb4vf, and the resulting changes to the
+> cxgb4/cxgb4vf source files.
+>=20
+> Signed-off-by: Naresh Kumar Inna <naresh@chelsio.com>
+> ---
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |    8 ++--
+>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |    6 ++--
+>  drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |   20 +++++-----
+>  drivers/net/ethernet/chelsio/cxgb4/t4_msg.h     |    1 +
+>  drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |   36 +++++++++++++=
+++++++-
+>  drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h   |   41 +++++++++++++=
++++++++---
+>  drivers/net/ethernet/chelsio/cxgb4vf/sge.c      |    8 ++--
+>  7 files changed, 92 insertions(+), 28 deletions(-)
+
+This still doesn't compile:
+
+drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c: In function =E2=80=98a=
+dap_init0=E2=80=99:
+drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c:3932:10: error: =E2=80=98=
+struct fw_caps_config_cmd=E2=80=99 has no member named =E2=80=98retval_=
+len16=E2=80=99
+make[5]: *** [drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.o] Error 1
 
 James
