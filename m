@@ -1,39 +1,38 @@
-From: "Jason J. Herne" <hernejj@gmail.com>
-Subject: Re: [PATCH] Try #2: Use SCSI read/write(16) with >2TB drives
-Date: Wed, 14 Nov 2012 17:06:06 -0500
-Message-ID: <CAJiM5SZ=b5P5L5iT062GE+TbfUQOafo5YcMWOKTfvwJMYuxjig@mail.gmail.com>
-References: <1352872513-2424-1-git-send-email-hernejj@gmail.com>
-	<20121114190214.GD6439@breakpoint.cc>
+From: Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] Try #3: Use SCSI read/write(16) with > 32-bit LBA drives
+Date: Thu, 15 Nov 2012 02:22:46 +0400
+Message-ID: <50A419B6.4070605@mvista.com>
+References: <1352930602-3505-1-git-send-email-hernejj@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:34663 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933085Ab2KNWGG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Nov 2012 17:06:06 -0500
-In-Reply-To: <20121114190214.GD6439@breakpoint.cc>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1352930602-3505-1-git-send-email-hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sebastian-E0PNVn5OA6ohrxcnuTQ+TQ@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, Elliott-VXdhtT5mjnY@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, JBottomley@parallels.com, Alan Stern <stern@rowland.harvard.edu>
 
-On Wed, Nov 14, 2012 at 2:02 PM, Sebastian Andrzej Siewior
-<sebastian@breakpoint.cc> wrote:
-> On Wed, Nov 14, 2012 at 12:55:13AM -0500, Jason J. Herne wrote:
->>               }
->>       }
->>
->> +     /* Use read/write(16) for > 2TB disks */
->> +     sdp->use_16_for_rw = (sdkp->capacity > 0xffffffff);
->
-> The comment is pointless if you assume the reading is able to read C. What
-> would help is a link either here or in patch's description to the mail thread
-> where it has been descovered that some >2TB devices don't recognize the small
-> command.
+Hello.
 
-I've removed the comment entirely and added a link to the original
-post within the patch
-description. Resending in separate e-mail.
+On 15-11-2012 2:03, Jason J. Herne wrote:
+
+> From: "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+   You have already posted Try #3. And preferrably, information about patch 
+version should be included with [PATCH] prefix like this [PATCH v4].
+
+> Force large capacity (> 0xFFFFFFFF blocks) drives to use READ/WRITE(16) instead
+> of READ/WRITE(10). Some(most/all?) USB enclosures do not like READ(10) commands
+> when a large capacity drive is installed. This issue was reported and discussed
+> here: http://marc.info/?l=linux-usb&m=135247705222324&w=2
+
+> Signed-off-by: Jason J. Herne <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+WBR, Sergei
+
 
 --
-- Jason J. Herne (hernejj@gmail.com)
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
