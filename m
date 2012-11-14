@@ -1,46 +1,53 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: scsi target, likely GPL violation
-Date: Tue, 13 Nov 2012 18:32:54 -0800
-Message-ID: <1352860374.28921.3.camel@dabdike>
-References: <509A915B.30105@redhat.com> <1352626456.6524.46.camel@dabdike>
-	 <20121111130553.GA30943@thunk.org> <87390gxjbd.fsf@ebb.org>
-	 <1352658157.6524.58.camel@dabdike>
-	 <20121111183243.62602d9b@pyramind.ukuu.org.uk>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 1/1] aacraid: SCSI dma mapping failure case handling
+Date: Wed, 14 Nov 2012 07:03:23 +0000
+Message-ID: <1352841833.8317.0.camel@dabdike>
+References: <1350421170-2436-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com>
+	 <507DD2E1.4080301@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20121111183243.62602d9b@pyramind.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "Bradley M. Kuhn" <bkuhn@sfconservancy.org>, Theodore Ts'o <tytso@mit.edu>, Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>, Nicholas Bellinger <nab@risingtidesystems.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([64.131.90.16]:34451 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754997Ab2KNHD0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Nov 2012 02:03:26 -0500
+In-Reply-To: <507DD2E1.4080301@redhat.com>
+Content-Language: en-US
+Content-ID: <57F0B0583A78054280FE501AF868EA21@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, "Achim_Leubner@pmc-sierra.com" <Achim_Leubner@pmc-sierra.com>, "Tony_Ruiz@pmc-sierra.com" <Tony_Ruiz@pmc-sierra.com>
 
-On Sun, 2012-11-11 at 18:32 +0000, Alan Cox wrote:
-> > >      1. Yes, I've got first hand proof of a GPL violation (in which case
-> > >         we'll then move to seeing how we can remedy this) or
-> > >      2. A genuine public apology for the libel, which I'll do my best to
-> > >         prevail on RTS to accept.
-> > > 
-> > > Because any further discussion of unsubstantiated allegations of this
-> > > nature exposes us all to jeopardy of legal sanction.
-> > 
-> > That asks for moderation until we have a better investigation of the
-> > facts.  It definitely doesn't try to prejudge them or express preference
-> > for a specific outcome as your misquote makes out.
-> 
-> So how can you demand a public apology for libel or instant first hand
-> proof and now claim you just wanted moderation ? It's not hard to see why
-> your position was misinterpreted ?
-
-So you want me to be less definite to avoid misinterpretation?
-
-OK, here it is:  I'd really appreciate it if there was more rigour
-behind the initial investigation before going public with suspicions of
-GPL violation.  Based on what I read on the internet is a bit too low a
-bar for me, particularly when, I believe, Red Hat has the proprietary
-target OS and can check directly.
-
-We now have a whole runaway train of suspicion and lawyer involvement
-before anyone has actually confirmed there is a problem.
-James
+T24gVHVlLCAyMDEyLTEwLTE2IGF0IDIzOjM0ICswMjAwLCBUb21hcyBIZW56bCB3cm90ZToNCj4g
+T24gMTAvMTYvMjAxMiAxMDo1OSBQTSwgTWFoZXNoIFJhamFzaGVraGFyYSB3cm90ZToNCj4gPiBU
+aGlzIHBhdGNoIGhhbmRsZXMgU0NTSSBkbWEgbWFwcGluZyBmYWlsdXJlIGNhc2UuIFJlcG9ydGlu
+ZyBlcnJvciBjb2RlIHRvIHRoZSB1cHBlciBsYXllciBpbnN0ZWFkIG9mIEJVR19PTigpLg0KPiA+
+DQo+ID4gVGhpcyBwYXRjaCBpcyBjcmVhdGVkIGFnYWluc3QgY3VycmVudCB1cHN0cmVhbSBrZXJu
+ZWwuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBNYWhlc2ggUmFqYXNoZWtoYXJhIDxNYWhlc2hf
+UmFqYXNoZWtoYXJhQHBtYy1zaWVycmEuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kv
+YWFjcmFpZC9hYWNoYmEuYyAgfCAgIDYzICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKyst
+LS0tLS0tLS0NCj4gPiAgZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oIHwgICAgMiArLQ0K
+PiA+ICAyIGZpbGVzIGNoYW5nZWQsIDUwIGluc2VydGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQ0K
+PiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jIGIvZHJp
+dmVycy9zY3NpL2FhY3JhaWQvYWFjaGJhLmMNCj4gPiBpbmRleCBkNzk0NTdhLi5lZmEyOTAwIDEw
+MDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jDQo+ID4gKysrIGIv
+ZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjaGJhLmMNCj4gPiBAQCAtOTcxLDYgKzk3MSw3IEBAIHN0
+YXRpYyBpbnQgYWFjX3JlYWRfcmF3X2lvKHN0cnVjdCBmaWIgKiBmaWIsIHN0cnVjdCBzY3NpX2Nt
+bmQgKiBjbWQsIHU2NCBsYmEsIHUzDQo+ID4gIHsNCj4gPiAgCXN0cnVjdCBhYWNfZGV2ICpkZXYg
+PSBmaWItPmRldjsNCj4gPiAgCXUxNiBmaWJzaXplLCBjb21tYW5kOw0KPiA+ICsJdW5zaWduZWQg
+bG9uZyByZXQ7DQo+ID4gIA0KPiA+ICAJYWFjX2ZpYl9pbml0KGZpYik7DQo+ID4gIAlpZiAoZGV2
+LT5jb21tX2ludGVyZmFjZSA9PSBBQUNfQ09NTV9NRVNTQUdFX1RZUEUyICYmICFkZXYtPnN5bmNf
+bW9kZSkgew0KPiA+IEBAIC05ODIsNyArOTgzLDEwIEBAIHN0YXRpYyBpbnQgYWFjX3JlYWRfcmF3
+X2lvKHN0cnVjdCBmaWIgKiBmaWIsIHN0cnVjdCBzY3NpX2NtbmQgKiBjbWQsIHU2NCBsYmEsIHUz
+DQo+ID4gIAkJcmVhZGNtZDItPmJ5dGVDb3VudCA9IGNwdV90b19sZTMyKGNvdW50PDw5KTsNCj4g
+PiAgCQlyZWFkY21kMi0+Y2lkID0gY3B1X3RvX2xlMTYoc2NtZF9pZChjbWQpKTsNCj4gPiAgCQly
+ZWFkY21kMi0+ZmxhZ3MgPSBjcHVfdG9fbGUxNihSSU8yX0lPX1RZUEVfUkVBRCk7DQo+ID4gLQkJ
+YWFjX2J1aWxkX3NncmF3MihjbWQsIHJlYWRjbWQyLCBkZXYtPnNjc2lfaG9zdF9wdHItPnNnX3Rh
+Ymxlc2l6ZSk7DQo+ID4gKwkJcmV0ID0gYWFjX2J1aWxkX3NncmF3MihjbWQsIHJlYWRjbWQyLA0K
+PiA+ICsJCQkJZGV2LT5zY3NpX2hvc3RfcHRyLT5zZ190YWJsZXNpemUpOw0KPiA+ICsJCWlmIChy
+ZXQgPCAwKQ0KPiA+ICsJCQlyZXR1cm4gcmV0Ow0KPiANCj4gSGkgTWFoZXNoLCAncmV0JyBpcyAn
+dW5zaWduZWQnLCB0aGUgYWJvdmUgdGVzdCB3aWxsIG5vdCB3b3JrLg0KPiBUb21hcw0KDQpQaW5n
+IG9uIHRoaXMgcGxlYXNlIE1haGVzaD8gIFRoZSBjcml0aWNpc20gc2VlbXMgY29tcGxldGVseSB2
+YWxpZCB0byBtZS4NCg0KSmFtZXMNCg0K
